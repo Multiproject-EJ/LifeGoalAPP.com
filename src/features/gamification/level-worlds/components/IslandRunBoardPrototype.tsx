@@ -12180,15 +12180,12 @@ export function IslandRunBoardPrototype({
                 aria-hidden="true"
               />
               <div className="island-clear-celebration__content">
-                <p className="island-clear-celebration__confetti" aria-hidden="true">
-                  {islandClearStats.isCycleCapstone ? '🌌✨🏆✨🌌' : '🎉✨🏆✨🎉'}
-                </p>
-                <p className="island-clear-celebration__eyebrow">New Island Unlocked</p>
                 <img
                   className="island-clear-celebration__title-image"
                   src="/assets/islands/celebrations/newisland/islandcompletetext.webp"
                   alt="Island Complete"
                 />
+                <p className="island-clear-celebration__eyebrow">New Island Unlocked</p>
                 {isIslandClearRewardClaimed ? (
                   <p className="island-clear-celebration__rewards-collected">✅ Rewards Collected</p>
                 ) : (
@@ -12196,9 +12193,18 @@ export function IslandRunBoardPrototype({
                     key={islandClearRewardPulseKey}
                     className="island-clear-celebration__rewards"
                   >
-                    <span className="island-clear-celebration__reward-item">🎲 +{islandClearStats.diceEarned}</span>
-                    <span className="island-clear-celebration__reward-item">🟣 +{islandClearStats.essenceEarned}</span>
-                    <span className="island-clear-celebration__reward-item">🔷 +3</span>
+                    <span className="island-clear-celebration__reward-item">
+                      <span className="island-clear-celebration__reward-icon" aria-hidden="true">🎲</span>
+                      <span className="island-clear-celebration__reward-value">+{islandClearStats.diceEarned}</span>
+                    </span>
+                    <span className="island-clear-celebration__reward-item">
+                      <span className="island-clear-celebration__reward-icon" aria-hidden="true">🟣</span>
+                      <span className="island-clear-celebration__reward-value">+{islandClearStats.essenceEarned}</span>
+                    </span>
+                    <span className="island-clear-celebration__reward-item">
+                      <span className="island-clear-celebration__reward-icon" aria-hidden="true">🔷</span>
+                      <span className="island-clear-celebration__reward-value">+3</span>
+                    </span>
                   </div>
                 )}
                 <p className="island-clear-celebration__stops">

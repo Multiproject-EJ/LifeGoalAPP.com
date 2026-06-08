@@ -5027,11 +5027,11 @@
   70% { opacity: 0.38; transform: scale(0.92); }
 }
 .island-clear-celebration__eyebrow {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   color: #fff0a8;
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  margin: 0 0 0.4rem;
+  margin: 0 0 0.9rem;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75);
 }
 .island-clear-celebration__hero {
@@ -5060,7 +5060,7 @@
 .island-clear-celebration__title-image {
   display: block;
   width: min(100%, 320px);
-  margin: 0.2rem auto 0.9rem;
+  margin: 0.2rem auto 0.5rem;
   filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.65));
 }
 
@@ -5517,25 +5517,98 @@
 
 .island-clear-celebration__rewards {
   display: flex;
-  gap: 0.75rem;
+  gap: 1.4rem;
   justify-content: center;
+  align-items: flex-start;
   flex-wrap: wrap;
-  margin: 0.2rem 0;
-  padding: 0.7rem 0.8rem;
-  border-radius: 18px;
-  background: rgba(0, 0, 0, 0.52);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  margin: 0.6rem 0 0.4rem;
+  padding: 0.6rem 0.4rem;
+  background: transparent;
 }
 
 .island-clear-celebration__reward-item {
-  background: rgba(218, 165, 32, 0.15);
-  border: 1px solid rgba(218, 165, 32, 0.35);
-  border-radius: 999px;
-  padding: 0.5rem 1.4rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #ffe080;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.6rem 0.3rem 0.2rem;
+  background: none;
+  border: none;
   transform-origin: center;
+  isolation: isolate;
+}
+
+/* Animated background ray fan behind each reward icon */
+.island-clear-celebration__reward-item::before {
+  content: '';
+  position: absolute;
+  top: -0.55rem;
+  left: 50%;
+  width: 150px;
+  height: 150px;
+  transform: translateX(-50%) rotate(0deg);
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 226, 150, 0.55) 0deg 8deg,
+    rgba(255, 226, 150, 0) 8deg 18deg
+  );
+  border-radius: 50%;
+  z-index: -1;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle, #000 8%, rgba(0, 0, 0, 0.55) 34%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 8%, rgba(0, 0, 0, 0.55) 34%, transparent 68%);
+  animation: island-clear-ray-spin 14s linear infinite;
+}
+
+/* Soft glow halo directly behind the icon */
+.island-clear-celebration__reward-item::after {
+  content: '';
+  position: absolute;
+  top: 0.4rem;
+  left: 50%;
+  width: 86px;
+  height: 86px;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(255, 236, 165, 0.55), rgba(255, 200, 90, 0.12) 55%, transparent 72%);
+  border-radius: 50%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.island-clear-celebration__reward-icon {
+  font-size: 3.75rem;
+  line-height: 1;
+  filter:
+    drop-shadow(0 0 10px rgba(255, 224, 130, 0.85))
+    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
+  animation: island-clear-reward-shine 2.4s ease-in-out infinite;
+}
+
+.island-clear-celebration__reward-item:nth-child(2) .island-clear-celebration__reward-icon { animation-delay: 0.4s; }
+.island-clear-celebration__reward-item:nth-child(3) .island-clear-celebration__reward-icon { animation-delay: 0.8s; }
+.island-clear-celebration__reward-item:nth-child(2)::before { animation-direction: reverse; }
+
+.island-clear-celebration__reward-value {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #ffe080;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 200, 90, 0.55);
+}
+
+@keyframes island-clear-ray-spin {
+  to { transform: translateX(-50%) rotate(360deg); }
+}
+
+@keyframes island-clear-reward-shine {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(255, 224, 130, 0.7)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
+  }
+  50% {
+    transform: scale(1.09);
+    filter: drop-shadow(0 0 20px rgba(255, 238, 165, 1)) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
+  }
 }
 
 .island-clear-celebration__rewards-collected {
@@ -5627,6 +5700,8 @@
 @media (prefers-reduced-motion: reduce) {
   .island-clear-celebration__confetti { animation: none; }
   .island-clear-celebration__card--capstone { animation: none; }
+  .island-clear-celebration__reward-icon { animation: none; }
+  .island-clear-celebration__reward-item::before { animation: none; }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
