@@ -64,6 +64,12 @@ export interface IslandArtManifest {
   sceneSpace?: IslandArtSpace;
   /** Optional placement of the existing 1000×1000 playable board inside sceneSpace. */
   playableBoardRect?: IslandArtRect;
+  /**
+   * Optional scale multiplier for the board plate image, overriding the global
+   * BOARD_PLATE_SIZE_SCALE constant. Use to make the board art fill the viewport
+   * width at the default camera zoom for this island (e.g. 1.46 for island-002).
+   */
+  boardPlateImageScale?: number;
   scene?: IslandArtSceneManifest;
   landmarks: IslandArtLandmarkManifest[];
   scenery: IslandArtSceneryManifest[];
@@ -196,6 +202,7 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
     : { ...DEFAULT_COORDINATE_SPACE };
   const normalizedIslandArtSceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
   const normalizedIslandArtPlayableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
+  const normalizedBoardPlateImageScale = positiveFiniteNumber(raw.boardPlateImageScale);
 
   const rawScene = isRecord(raw.scene) ? raw.scene : {};
   const scene: IslandArtSceneManifest = {};
@@ -287,6 +294,7 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
     coordinateSpace,
     ...(normalizedIslandArtSceneSpace ? { sceneSpace: normalizedIslandArtSceneSpace } : {}),
     ...(normalizedIslandArtPlayableBoardRect ? { playableBoardRect: normalizedIslandArtPlayableBoardRect } : {}),
+    ...(normalizedBoardPlateImageScale !== null ? { boardPlateImageScale: normalizedBoardPlateImageScale } : {}),
     ...(Object.keys(scene).length > 0 ? { scene } : {}),
     landmarks,
     scenery,
