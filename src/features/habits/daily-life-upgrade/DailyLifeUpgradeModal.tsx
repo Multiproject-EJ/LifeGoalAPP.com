@@ -60,7 +60,6 @@ export function DailyLifeUpgradeModal(props: {
           </div>
           <div className="habit-day-nav__daily-life-upgrade-prompt">
             <p className="habit-day-nav__daily-life-upgrade-subtitle">{props.candidate.promptTitle}</p>
-            <p className="habit-day-nav__daily-life-upgrade-copy">{props.candidate.promptBody}</p>
           </div>
           {props.candidate.alternatives.length > 0 ? (
             <div className="habit-day-nav__daily-life-upgrade-alternatives" aria-label="Supportive alternative options">
