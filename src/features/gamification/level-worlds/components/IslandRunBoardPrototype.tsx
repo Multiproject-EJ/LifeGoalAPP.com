@@ -4264,6 +4264,24 @@ export function IslandRunBoardPrototype({
       return;
     }
 
+    // 50% chance: instead of the dormant door challenge, open the next active landmark (habit, wisdom, or boss)
+    if (contractV2Stops && Math.random() < 0.5) {
+      const nextActiveStopId = (['habit', 'wisdom', 'boss'] as const).find((candidateId) => {
+        const candidateIndex = stopIndexByStopId.get(candidateId);
+        return typeof candidateIndex === 'number' && contractV2Stops.statusesByIndex[candidateIndex] === 'active';
+      });
+      if (nextActiveStopId) {
+        setFocusedStopId(nextActiveStopId);
+        setDormantDoorMiniGame(null);
+        setDormantDoorSelectedIndices([]);
+        setDormantDoorReward(null);
+        setRequiredDoorStopId(nextActiveStopId);
+        setLandingText(`🚪 Landmark door opened ${nextActiveStopId.toUpperCase()}. Complete it before rolling again.`);
+        requestActiveStopTransition(nextActiveStopId, 'landmark_door_landing');
+        return;
+      }
+    }
+
     const miniGame = buildDormantDoorMiniGame({
       islandNumber: effectiveIslandNumber,
       tileIndex,
