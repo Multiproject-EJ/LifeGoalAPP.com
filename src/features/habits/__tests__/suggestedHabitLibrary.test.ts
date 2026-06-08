@@ -14,7 +14,7 @@ function assert(condition: boolean, message: string): void {
 }
 
 export function runAllSuggestedHabitLibraryTests(): void {
-  const areas: SuggestedHabitLifeWheelArea[] = ['Health', 'Mind', 'Work', 'Money', 'Relationships', 'Home', 'Growth', 'Fun'];
+  const areas: SuggestedHabitLifeWheelArea[] = ['Health', 'Mind', 'Work', 'Money', 'Love', 'Connections', 'Home', 'Fun'];
   const habits = getAllSuggestedHabits();
 
   for (const area of areas) {

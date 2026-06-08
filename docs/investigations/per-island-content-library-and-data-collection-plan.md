@@ -179,9 +179,13 @@ This is shippable on its own and becomes the Act-1/Act-2 entry point of the larg
 
 ## 8) Roadmap (safe slices)
 
-- **A.** Plan/approve this doc.
-- **B.** `lifeWheelTaxonomy.ts` — fix the 8-area ↔ 8-category bridge once.
-- **C.** Adaptive Habit Landmark (section 7) using existing services.
+- **A.** ✅ Plan/approve this doc.
+- **B.** ✅ `lifeWheelTaxonomy.ts` — single source of truth for the 8 areas ↔ 8 check-in keys
+  (Relationships→Love, +Connections=family_friends, Growth folded into Work). Habit library
+  and Island Run templates now derive from it.
+- **C.** ✅ Adaptive Habit Landmark — requires a check-in (gate launches the Full Check-in),
+  surfaces weak (<5) and uncovered areas, hides OK+covered areas, falls back to all areas.
+  Pure logic in `islandRunAdaptiveAreas.ts` with unit tests.
 - **D.** Grow the content pools (habits → ~8–12/area, wisdom tagged by area+band, prompt pool).
 - **E.** `getIslandContentPlan(islandNumber)` recipe layer (fixed early, adaptive later).
 - **F.** `game_life_intake` table + service; route landmark answers/skips through it.

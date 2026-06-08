@@ -2616,6 +2616,19 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setShowMobileHome(false);
   };
 
+  // Island Run habit landmark dispatches this when the player has no check-in
+  // yet and taps "Do a quick check-in". Route them into the Full Check-in view.
+  const launchCheckinsRef = useRef<() => void>(() => {});
+  launchCheckinsRef.current = () => {
+    closeGameBoardOverlayIfOpen();
+    handleMobileNavSelect('rituals', { checkinsOrigin: 'direct' });
+  };
+  useEffect(() => {
+    const handler = () => launchCheckinsRef.current();
+    window.addEventListener('lifegoal:launch-checkins', handler);
+    return () => window.removeEventListener('lifegoal:launch-checkins', handler);
+  }, []);
+
   const openFeedbackSupportFromMobileMenu = (mode: 'feedback' | 'support') => {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
