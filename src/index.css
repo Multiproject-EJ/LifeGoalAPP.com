@@ -33876,8 +33876,8 @@ body.habit-wizard-open .mobile-footer-nav {
 }
 
 .habit-day-nav__daily-life-upgrade-close {
-  top: 15.8%;
-  right: 9.4%;
+  top: 14.2%;
+  right: 7.4%;
   z-index: 3;
   width: 10.4%;
   height: auto;
@@ -33921,11 +33921,17 @@ body.habit-wizard-open .mobile-footer-nav {
   display: grid;
   justify-items: center;
   gap: clamp(0.1rem, 0.42vh, 0.28rem);
+  margin-top: clamp(0.6rem, 3vh, 1.6rem);
 }
 
 .habit-day-nav__daily-life-upgrade-eyebrow {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + clamp(1.1rem, 5vh, 2.6rem));
+  transform: translateX(-50%);
   margin: 0;
-  max-width: 58%;
+  max-width: 70%;
+  white-space: nowrap;
   padding: 0.18rem clamp(0.72rem, 3.5vw, 1.2rem);
   border: 1px solid rgba(248, 207, 112, 0.78);
   border-radius: 999px;
