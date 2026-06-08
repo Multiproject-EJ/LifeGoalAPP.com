@@ -212,6 +212,52 @@ type BillingReturnBanner = {
   message: string;
 } | null;
 
+// --- Footer nav theme system ---
+
+type FooterTheme = 'default' | 'halloween' | 'christmas' | 'winter';
+
+function getActiveFooterTheme(now = new Date()): FooterTheme {
+  const month = now.getMonth() + 1; // 1-based
+  const day = now.getDate();
+  if (month === 10 && day >= 24) return 'halloween';
+  if (month === 12 && day >= 1 && day <= 26) return 'christmas';
+  if ((month === 12 && day >= 27) || (month === 1 && day <= 7)) return 'winter';
+  return 'default';
+}
+
+const FooterNavImg = ({ src, alt = '' }: { src: string; alt?: string }) => (
+  <img src={src} alt={alt} loading="lazy" decoding="async" />
+);
+
+type FooterIconMap = Partial<Record<string, ReactNode>>;
+
+// To add a new theme: add an entry below with the tab IDs you want to override.
+// Tab IDs: 'planning' | 'breathing-space' | 'score' | 'actions'
+// Drop your image files in public/icons/footer/<theme>/<tab-id>.webp
+const FOOTER_ICON_THEMES: Record<FooterTheme, FooterIconMap> = {
+  default: {},
+  halloween: {
+    planning: <FooterNavImg src="/icons/footer/halloween/planning.webp" />,
+    'breathing-space': <FooterNavImg src="/icons/footer/halloween/shield.webp" />,
+    score: <FooterNavImg src="/icons/footer/halloween/score.webp" />,
+    actions: <FooterNavImg src="/icons/footer/halloween/actions.webp" />,
+  },
+  christmas: {
+    planning: <FooterNavImg src="/icons/footer/christmas/planning.webp" />,
+    'breathing-space': <FooterNavImg src="/icons/footer/christmas/shield.webp" />,
+    score: <FooterNavImg src="/icons/footer/christmas/score.webp" />,
+    actions: <FooterNavImg src="/icons/footer/christmas/actions.webp" />,
+  },
+  winter: {
+    planning: <FooterNavImg src="/icons/footer/winter/planning.webp" />,
+    'breathing-space': <FooterNavImg src="/icons/footer/winter/shield.webp" />,
+    score: <FooterNavImg src="/icons/footer/winter/score.webp" />,
+    actions: <FooterNavImg src="/icons/footer/winter/actions.webp" />,
+  },
+};
+
+const ACTIVE_FOOTER_THEME = getActiveFooterTheme();
+
 const ShieldFooterIcon = () => (
   <svg
     className="mobile-footer-nav__shield-icon"
@@ -1083,6 +1129,36 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const findWorkspaceItem = (navId: string) =>
       workspaceNavItems.find((item) => item.id === navId);
 
+    // Per-tab default config (non-themed). Keys are MOBILE_FOOTER_WORKSPACE_IDS values.
+    const FOOTER_TAB_DEFAULTS: Partial<Record<string, Omit<MobileMenuNavItem, 'id'>>> = {
+      account: {
+        label: 'Settings',
+        ariaLabel: 'Settings and profile',
+        icon: '⚙️',
+        summary: 'Manage your profile, ship, and preferences.',
+      },
+      body: {
+        label: 'Health Goals',
+        ariaLabel: 'Health routines and care',
+        icon: '💪',
+        summary: 'Refresh your body-focused routines and personal care rituals.',
+      },
+      'breathing-space': {
+        label: 'Shield',
+        ariaLabel: 'Shield mind and body launchers',
+        icon: <ShieldFooterIcon />,
+        summary: 'Open shield launchers for mind and body tools.',
+      },
+      habits: {
+        label: 'Habits',
+        ariaLabel: 'Habits and routines',
+        icon: '🔄',
+        summary: 'Review weekly habits, streaks, and routines in progress.',
+      },
+    };
+
+    const themeIcons = FOOTER_ICON_THEMES[ACTIVE_FOOTER_THEME];
+
     const baseItems = MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
       const item = findWorkspaceItem(navId);
       const shortLabel = item?.shortLabel ?? item?.label ?? navId;
@@ -1091,16 +1167,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
           ? `${shortLabel.charAt(0)}${shortLabel.slice(1).toLowerCase()}`
           : shortLabel;
 
-      if (navId === 'account') {
-        return {
-          id: navId,
-          label: 'Settings',
-          ariaLabel: 'Settings and profile',
-          icon: '⚙️',
-          summary: 'Manage your profile, ship, and preferences.',
-        } satisfies MobileMenuNavItem;
-      }
-
       // Transform 'identity' slot into 'contracts' button for mobile menu grid
       // (ID button moved to top section in sibling PR)
       if (navId === 'identity') {
@@ -1108,38 +1174,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
           id: 'contracts',
           label: 'Contracts',
           ariaLabel: 'View and manage your contracts',
-          icon: '🤝',
+          icon: themeIcons['contracts'] ?? '🤝',
           summary: 'Create and track commitment contracts.',
         } satisfies MobileMenuNavItem;
       }
 
-      if (navId === 'body') {
+      const defaults = FOOTER_TAB_DEFAULTS[navId];
+      if (defaults) {
         return {
           id: navId,
-          label: 'Health Goals',
-          ariaLabel: 'Health routines and care',
-          icon: '💪',
-          summary: 'Refresh your body-focused routines and personal care rituals.',
-        } satisfies MobileMenuNavItem;
-      }
-
-      if (navId === 'breathing-space') {
-        return {
-          id: navId,
-          label: 'Shield',
-          ariaLabel: 'Shield mind and body launchers',
-          icon: <ShieldFooterIcon />,
-          summary: 'Open shield launchers for mind and body tools.',
-        } satisfies MobileMenuNavItem;
-      }
-
-      if (navId === 'habits') {
-        return {
-          id: navId,
-          label: 'Habits',
-          ariaLabel: 'Habits and routines',
-          icon: '🔄',
-          summary: 'Review weekly habits, streaks, and routines in progress.',
+          ...defaults,
+          icon: themeIcons[navId] ?? defaults.icon,
         } satisfies MobileMenuNavItem;
       }
 
@@ -1147,7 +1192,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         id: navId,
         label: formattedLabel,
         ariaLabel: item?.label ?? formattedLabel,
-        icon: item?.icon ?? '•',
+        icon: themeIcons[navId] ?? item?.icon ?? '•',
         summary: item?.summary ?? 'Open this section.',
       } satisfies MobileMenuNavItem;
     });
