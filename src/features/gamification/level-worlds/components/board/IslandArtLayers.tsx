@@ -171,14 +171,16 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
   if (!manifest) return null;
 
   const boardPlateRect = sceneLayout?.playableBoardRect;
+  const boardPlateScale = manifest.boardPlateImageScale ?? BOARD_PLATE_SIZE_SCALE;
+  const boardPlateYOffsetRatio = manifest.boardPlateImageScale !== undefined ? 0 : BOARD_PLATE_DOWNWARD_OFFSET_RATIO;
   const boardSceneLayerStyle = makeArtLayerStyle({
     manifest,
     x: boardPlateRect ? boardPlateRect.x + boardPlateRect.width / 2 : manifest.coordinateSpace.width / 2,
     y: boardPlateRect
-      ? boardPlateRect.y + boardPlateRect.height * (0.5 + BOARD_PLATE_DOWNWARD_OFFSET_RATIO)
-      : manifest.coordinateSpace.height * (0.5 + BOARD_PLATE_DOWNWARD_OFFSET_RATIO),
-    width: (boardPlateRect?.width ?? manifest.coordinateSpace.width) * BOARD_PLATE_SIZE_SCALE,
-    height: (boardPlateRect?.height ?? manifest.coordinateSpace.height) * BOARD_PLATE_SIZE_SCALE,
+      ? boardPlateRect.y + boardPlateRect.height * (0.5 + boardPlateYOffsetRatio)
+      : manifest.coordinateSpace.height * (0.5 + boardPlateYOffsetRatio),
+    width: (boardPlateRect?.width ?? manifest.coordinateSpace.width) * boardPlateScale,
+    height: (boardPlateRect?.height ?? manifest.coordinateSpace.height) * boardPlateScale,
     uniformScale,
     toScreen,
     sceneLayout,
