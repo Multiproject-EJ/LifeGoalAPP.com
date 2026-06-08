@@ -17,68 +17,68 @@
   },
   "scene": {
     "boardCircle": "board/board-circle-inner.webp",
-    "ambientBackground": "/assets/islands/backgrounds/TODO__level-bg-0X.webp"
+    "ambientBackground": "/assets/islands/backgrounds/level-bg-02.webp"
   },
   "landmarks": [
     {
       "stopIndex": 0,
-      "anchorId": "TODO__landmark-anchor-id",
+      "anchorId": "landmark-02-0",
       "x": 340,
       "y": 340,
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/TODO__[landmark-name]-l1.webp",
-        "landmarks/TODO__[landmark-name]-l2.webp",
-        "landmarks/TODO__[landmark-name]-l3.webp"
+        "landmarks/PLACEHOLDER__[landmark-name]-l1.webp",
+        "landmarks/PLACEHOLDER__[landmark-name]-l2.webp",
+        "landmarks/PLACEHOLDER__[landmark-name]-l3.webp"
       ],
       "zBand": "mid"
     },
     {
       "stopIndex": 1,
-      "anchorId": "TODO__landmark-anchor-id",
+      "anchorId": "landmark-02-1",
       "x": 1060,
       "y": 340,
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/TODO__[landmark-name]-l1.webp",
-        "landmarks/TODO__[landmark-name]-l2.webp",
-        "landmarks/TODO__[landmark-name]-l3.webp"
+        "landmarks/PLACEHOLDER__[landmark-name]-l1.webp",
+        "landmarks/PLACEHOLDER__[landmark-name]-l2.webp",
+        "landmarks/PLACEHOLDER__[landmark-name]-l3.webp"
       ],
       "zBand": "mid"
     },
     {
       "stopIndex": 2,
-      "anchorId": "TODO__landmark-anchor-id",
+      "anchorId": "landmark-02-2",
       "x": 1060,
       "y": 1260,
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/TODO__[landmark-name]-l1.webp",
-        "landmarks/TODO__[landmark-name]-l2.webp",
-        "landmarks/TODO__[landmark-name]-l3.webp"
+        "landmarks/PLACEHOLDER__[landmark-name]-l1.webp",
+        "landmarks/PLACEHOLDER__[landmark-name]-l2.webp",
+        "landmarks/PLACEHOLDER__[landmark-name]-l3.webp"
       ],
       "zBand": "front"
     },
     {
       "stopIndex": 3,
-      "anchorId": "TODO__landmark-anchor-id",
+      "anchorId": "landmark-02-3",
       "x": 340,
       "y": 1260,
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/TODO__[landmark-name]-l1.webp",
-        "landmarks/TODO__[landmark-name]-l2.webp",
-        "landmarks/TODO__[landmark-name]-l3.webp"
+        "landmarks/PLACEHOLDER__[landmark-name]-l1.webp",
+        "landmarks/PLACEHOLDER__[landmark-name]-l2.webp",
+        "landmarks/PLACEHOLDER__[landmark-name]-l3.webp"
       ],
       "zBand": "front"
     }
   ],
   "boss": {
-    "id": "TODO__boss-id",
+    "id": "boss-02",
     "x": 700,
     "y": 800,
     "width": 520,
@@ -86,14 +86,14 @@
     "zBand": "mid",
     "defaultState": "idle",
     "images": {
-      "idle": "bosses/TODO__[boss-name]-idle.webp",
-      "defeated": "bosses/TODO__[boss-name]-defeated.webp"
+      "idle": "bosses/PLACEHOLDER__[boss-name]-idle.webp",
+      "defeated": "bosses/PLACEHOLDER__[boss-name]-defeated.webp"
     }
   },
   "scenery": [
     {
-      "id": "TODO__scenery-id",
-      "src": "scenery/TODO__[scenery-name].webp",
+      "id": "scenery-02-0",
+      "src": "scenery/PLACEHOLDER__[scenery-name].webp",
       "x": 700,
       "y": 950,
       "width": 260,
