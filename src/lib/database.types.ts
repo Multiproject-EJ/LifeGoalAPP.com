@@ -2616,6 +2616,42 @@ export interface Database {
           }
         ];
       };
+      compass_state: {
+        Row: {
+          user_id: string;
+          template_version: number;
+          current_phase: string | null;
+          center_statement: string | null;
+          directions: Json;
+          spokes: Json;
+          completed_phases: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          template_version?: number;
+          current_phase?: string | null;
+          center_statement?: string | null;
+          directions?: Json;
+          spokes?: Json;
+          completed_phases?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          template_version?: number;
+          current_phase?: string | null;
+          center_statement?: string | null;
+          directions?: Json;
+          spokes?: Json;
+          completed_phases?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       reminder_action_logs: {
         Row: {
           id: string;

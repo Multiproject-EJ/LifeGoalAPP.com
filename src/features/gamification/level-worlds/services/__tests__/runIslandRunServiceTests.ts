@@ -38,6 +38,8 @@ import { islandRunLifeIntakeServiceTests } from './islandRunLifeIntakeService.te
 import { islandRunHabitSuggestionEngineTests } from './islandRunHabitSuggestionEngine.test';
 import { islandRunAdaptiveAreasTests } from './islandRunAdaptiveAreas.test';
 import { islandContentManifestTests } from './islandContentManifest.test';
+import { compassCurriculumTests } from './compassCurriculum.test';
+import { compassStateReducerTests } from './compassStateReducer.test';
 import { islandRunStopTapRoutingTests } from './islandRunStopTapRouting.test';
 import { islandRunShopAffordabilityTests } from './islandRunShopAffordability.test';
 import { islandRunPlaceholderServiceTests } from './islandRunPlaceholderService.test';
@@ -128,6 +130,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunHabitSuggestionEngine', tests: islandRunHabitSuggestionEngineTests },
   { label: 'islandRunAdaptiveAreas', tests: islandRunAdaptiveAreasTests },
   { label: 'islandContentManifest', tests: islandContentManifestTests },
+  { label: 'compassCurriculum', tests: compassCurriculumTests },
+  { label: 'compassStateReducer', tests: compassStateReducerTests },
   { label: 'islandRunStopTapRouting', tests: islandRunStopTapRoutingTests },
   { label: 'islandRunShopAffordability', tests: islandRunShopAffordabilityTests },
   { label: 'islandRunPlaceholderService', tests: islandRunPlaceholderServiceTests },
