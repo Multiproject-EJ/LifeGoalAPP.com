@@ -91,6 +91,8 @@ import { ShardClaimModal } from './ShardClaimModal';
 import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
 import { IslandRunLifePromptCard } from './IslandRunLifePromptCard';
 import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
+import { CompassModal } from './CompassModal';
+import { recordCompassContribution } from '../../../../services/compassState';
 import { readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
@@ -10292,8 +10294,8 @@ export function IslandRunBoardPrototype({
         </div>
 
         <div className="island-run-board__rewardbar-cluster">
-          {hatcheryPendingEggs.length > 0 && (
-            <div className="island-run-board__rewardbar-hatchery-tray">
+          <div className="island-run-board__rewardbar-hatchery-tray">
+            {hatcheryPendingEggs.length > 0 && (
               <button
                 type="button"
                 className="island-run-board__rewardbar-hatchery-egg-button"
@@ -10328,17 +10330,17 @@ export function IslandRunBoardPrototype({
                   })}
                 </span>
               </button>
-              <button
-                type="button"
-                className="island-run-board__hatchery-compass-btn"
-                aria-label="Open hatchery compass"
-                title="Hatchery compass"
-                onClick={() => setShowHatcheryCompassModal(true)}
-              >
-                <span className="island-run-board__hatchery-compass-icon" aria-hidden="true" />
-              </button>
-            </div>
-          )}
+            )}
+            <button
+              type="button"
+              className="island-run-board__hatchery-compass-btn"
+              aria-label="Open Compass"
+              title="Compass"
+              onClick={() => setShowHatcheryCompassModal(true)}
+            >
+              <span className="island-run-board__hatchery-compass-icon" aria-hidden="true" />
+            </button>
+          </div>
 
           <button
             type="button"
@@ -10871,24 +10873,11 @@ export function IslandRunBoardPrototype({
       )}
 
       {showHatcheryCompassModal && (
-        <div className="island-stop-modal-backdrop" role="presentation" onClick={() => setShowHatcheryCompassModal(false)}>
-          <section
-            className="island-stop-modal island-run-board__hatchery-compass-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Hatchery compass"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="island-run-board__hatchery-compass-modal-close"
-              aria-label="Close hatchery compass"
-              onClick={() => setShowHatcheryCompassModal(false)}
-            >
-              ×
-            </button>
-          </section>
-        </div>
+        <CompassModal
+          session={session}
+          islandNumber={islandNumber}
+          onClose={() => setShowHatcheryCompassModal(false)}
+        />
       )}
 
       {activeStop && (() => {
@@ -11278,6 +11267,13 @@ export function IslandRunBoardPrototype({
                   card={wisdomTreeCard}
                   islandNumber={islandNumber}
                   onComplete={(message) => {
+                    // Contribute this reflection to the current Compass spoke (best-effort).
+                    void recordCompassContribution({
+                      userId: session.user.id,
+                      islandNumber,
+                      kind: 'wisdom',
+                      text: message,
+                    });
                     setLandingText(message);
                     handleCompleteActiveStop();
                   }}

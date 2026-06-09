@@ -215,17 +215,25 @@ conflict: one picks the *area*, the other records the *spoke contribution*.
 
 ---
 
-## 10) Build slices (when approved)
+## 10) Build slices
 
-- **C0.** Compass icon always-on in the reward-bar slot (yields to hatching egg) + open a real (if
-  minimal) Compass modal. *Contained UI; shippable on its own.*
-- **C1.** `getCompassPhase(islandNumber)` curriculum engine + tests.
-- **C2.** `compass_state` table (migration 0252) + service (best-effort, like `gameLifeIntake`).
-- **C3.** Compass modal — render the template (directions, center, spoke sections, fill %).
-- **C4.** Phase-themed Wisdom stop + Habit-stop tagging → write `game_life_intake` + assemble
-  `compass_state`.
-- **C5.** Phase 1 (ikigai fill) and Phase 11 (re-fill/compare) flows.
-- **C6.** Per-spoke deepening (versions 2.0/3.0) and completion thresholds.
+- **C0.** ✅ Compass icon always-on in the reward-bar slot (yields to a hatching egg), wired to the
+  real Compass modal (replaces the placeholder).
+- **C1.** ✅ `getCompassPhase(islandNumber)` curriculum engine (`compassCurriculum.ts`) + tests —
+  11 phases tiling islands 1–120, ikigai direction blocks, spoke mapping.
+- **C2.** ✅ `compass_state` table (migration 0252 + RLS + `database.types`) + best-effort
+  `compassState.ts` service (read, contribute, set center) with a pure, tested reducer.
+- **C3.** ✅ `CompassModal.tsx` — renders the rose (4 directions + editable active direction), the
+  True North center (editable once all four are filled), and per-spoke fill bars. CSS added.
+- **C4.** ✅ Habit stop tags its habit to the active spoke; Wisdom stop contributes its reflection.
+  Both write `game_life_intake` (`compass_*`) and fold into `compass_state`. Best-effort.
+- **C5.** *(Next)* Dedicated Phase 1 ikigai onboarding + Phase 11 re-fill/compare flow.
+- **C6.** *(Next)* Per-spoke deepening UX for versions 2.0/3.0 and richer completion states.
+
+### Apply the migration
+`supabase/migrations/0252_compass_state.sql` must be applied to Supabase before Compass progress
+persists. Until then the service degrades silently (reads return an empty template, writes are
+swallowed), so gameplay is unaffected.
 
 ---
 

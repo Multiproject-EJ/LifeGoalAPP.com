@@ -28,6 +28,7 @@ import { getLifeWheelAreaMeta } from '../../../life-wheel/lifeWheelTaxonomy';
 import { fetchCheckinsForUser } from '../../../../services/checkins';
 import { listHabitsV2 } from '../../../../services/habitsV2';
 import { recordGameLifeIntake } from '../../../../services/gameLifeIntake';
+import { recordCompassContribution } from '../../../../services/compassState';
 import { getIslandContentPlan, orderAreasForIsland } from '../services/islandContentManifest';
 
 /** Dispatched when the player needs to record a check-in before adding a habit. */
@@ -186,6 +187,15 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete }: I
         timing,
         feedback: { energy: feedbackEnergy, time: feedbackTime, style: feedbackStyle },
       },
+    });
+
+    // Contribute this habit to the current Compass phase's spoke (best-effort).
+    void recordCompassContribution({
+      userId: session.user.id,
+      islandNumber: islandNumber ?? 1,
+      kind: 'habit',
+      text: result.habit?.title ?? selectedHabit.title,
+      linkedHabitId: result.habit?.id ?? null,
     });
 
     const successMessage = `✅ ${result.message}`;

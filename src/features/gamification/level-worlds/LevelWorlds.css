@@ -3744,6 +3744,154 @@
   outline-offset: 2px;
 }
 
+/* ── Compass modal (curriculum template) ── */
+.island-run-compass-modal {
+  position: relative;
+  max-width: 540px;
+  max-height: 86vh;
+  overflow-y: auto;
+}
+
+.island-run-compass-modal__close {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(163, 231, 255, 0.48);
+  border-radius: 999px;
+  background: rgba(8, 15, 24, 0.72);
+  color: #e8fbff;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.island-run-compass-modal__rose {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin: 0.75rem 0;
+}
+
+.island-run-compass-modal__direction,
+.island-run-compass-modal__center,
+.island-run-compass-modal__spoke {
+  border: 1px solid rgba(190, 151, 67, 0.35);
+  border-radius: 12px;
+  padding: 0.6rem 0.7rem;
+  background: rgba(255, 248, 230, 0.06);
+}
+
+.island-run-compass-modal__center {
+  margin-bottom: 0.75rem;
+  border-color: rgba(190, 151, 67, 0.6);
+  background: rgba(254, 243, 199, 0.1);
+}
+
+.island-run-compass-modal__direction--active {
+  border-color: rgba(120, 200, 255, 0.85);
+  box-shadow: 0 0 0 1px rgba(120, 200, 255, 0.4);
+}
+
+.island-run-compass-modal__direction--filled {
+  background: rgba(120, 255, 180, 0.08);
+}
+
+.island-run-compass-modal__direction-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+}
+
+.island-run-compass-modal__point {
+  margin-left: auto;
+  font-size: 0.7rem;
+  opacity: 0.7;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 0 0.3rem;
+}
+
+.island-run-compass-modal__prompt {
+  margin: 0.35rem 0;
+  font-size: 0.82rem;
+  opacity: 0.95;
+}
+
+.island-run-compass-modal__prompt--muted {
+  opacity: 0.65;
+  font-style: italic;
+}
+
+.island-run-compass-modal__captured {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.island-run-compass-modal__input {
+  width: 100%;
+  margin: 0.35rem 0;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(190, 151, 67, 0.45);
+  background: rgba(8, 15, 24, 0.35);
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+
+.island-run-compass-modal__spokes {
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.island-run-compass-modal__spokes-title {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+}
+
+.island-run-compass-modal__spoke--active {
+  border-color: rgba(120, 200, 255, 0.85);
+}
+
+.island-run-compass-modal__spoke-head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.island-run-compass-modal__spoke-version {
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+
+.island-run-compass-modal__spoke-status {
+  margin-left: auto;
+  font-size: 0.72rem;
+  text-transform: capitalize;
+  opacity: 0.75;
+}
+
+.island-run-compass-modal__bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+  margin-top: 0.4rem;
+}
+
+.island-run-compass-modal__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(120, 200, 255, 0.9), rgba(120, 255, 180, 0.9));
+  transition: width 0.3s ease;
+}
+
 
 .island-stop-modal__eyebrow {
   margin: 0;
