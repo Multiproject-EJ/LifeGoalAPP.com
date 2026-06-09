@@ -3550,17 +3550,6 @@
   text-shadow: 0 1px 0 rgba(255, 243, 208, 0.72);
 }
 
-.island-tile--back {
-  filter: saturate(0.55) brightness(0.75);
-  opacity: 0.72;
-}
-.island-tile--mid {
-  filter: saturate(1.0) brightness(0.95);
-}
-.island-tile--front {
-  filter: saturate(1.25) brightness(1.08);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
-}
 .island-tile--stop {
   /* Stop = a cyan beacon echoing the island's glowing portals (distinct from
      the gold reward tiles so landing spots are instantly recognisable). */
@@ -7745,25 +7734,6 @@
 /* Upcoming tiles — subtle glow to show where token will land */
 .island-tile--upcoming {
   box-shadow: 0 0 0 2px rgba(180, 240, 255, 0.7), 0 0 12px rgba(100, 200, 255, 0.5) !important;
-}
-
-/* ── Enhanced depth rendering ──────────────────────────────────────────────── */
-
-/* Stronger back tiles: more desaturation, smaller, dimmer */
-.island-tile--back {
-  filter: saturate(0.55) brightness(0.75);
-  opacity: 0.72;
-}
-
-/* Mid tiles: neutral baseline */
-.island-tile--mid {
-  filter: saturate(1.0) brightness(0.95);
-}
-
-/* Front tiles: vivid, large, pronounced shadow */
-.island-tile--front {
-  filter: saturate(1.25) brightness(1.08);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* ── Token enhancements ────────────────────────────────────────────────────── */
