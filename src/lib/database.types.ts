@@ -2558,6 +2558,64 @@ export interface Database {
           }
         ];
       };
+      game_life_intake: {
+        Row: {
+          id: string;
+          user_id: string;
+          source: string;
+          island_number: number | null;
+          prompt_context: string;
+          intake_stage: string | null;
+          life_wheel_area: string | null;
+          payload: Json;
+          state: string;
+          linked_habit_id: string | null;
+          linked_goal_id: string | null;
+          linked_checkin_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          source?: string;
+          island_number?: number | null;
+          prompt_context: string;
+          intake_stage?: string | null;
+          life_wheel_area?: string | null;
+          payload?: Json;
+          state?: string;
+          linked_habit_id?: string | null;
+          linked_goal_id?: string | null;
+          linked_checkin_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          source?: string;
+          island_number?: number | null;
+          prompt_context?: string;
+          intake_stage?: string | null;
+          life_wheel_area?: string | null;
+          payload?: Json;
+          state?: string;
+          linked_habit_id?: string | null;
+          linked_goal_id?: string | null;
+          linked_checkin_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "game_life_intake_linked_habit_id_fkey";
+            columns: ["linked_habit_id"];
+            referencedRelation: "habits_v2";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       reminder_action_logs: {
         Row: {
           id: string;

@@ -11263,6 +11263,7 @@ export function IslandRunBoardPrototype({
             {activeStopId === 'habit' && openedStopIsPlayable && (
               <IslandRunLifePromptCard
                 session={session}
+                islandNumber={islandNumber}
                 onComplete={(message) => {
                   setLandingText(message);
                   handleCompleteActiveStop();

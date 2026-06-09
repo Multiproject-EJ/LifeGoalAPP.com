@@ -36,6 +36,8 @@ import { islandRunTrafficLightTileTests } from './islandRunTrafficLightTile.test
 import { islandRunStopTicketsTests } from './islandRunStopTickets.test';
 import { islandRunLifeIntakeServiceTests } from './islandRunLifeIntakeService.test';
 import { islandRunHabitSuggestionEngineTests } from './islandRunHabitSuggestionEngine.test';
+import { islandRunAdaptiveAreasTests } from './islandRunAdaptiveAreas.test';
+import { islandContentManifestTests } from './islandContentManifest.test';
 import { islandRunStopTapRoutingTests } from './islandRunStopTapRouting.test';
 import { islandRunShopAffordabilityTests } from './islandRunShopAffordability.test';
 import { islandRunPlaceholderServiceTests } from './islandRunPlaceholderService.test';
@@ -124,6 +126,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunStopTickets', tests: islandRunStopTicketsTests },
   { label: 'islandRunLifeIntakeService', tests: islandRunLifeIntakeServiceTests },
   { label: 'islandRunHabitSuggestionEngine', tests: islandRunHabitSuggestionEngineTests },
+  { label: 'islandRunAdaptiveAreas', tests: islandRunAdaptiveAreasTests },
+  { label: 'islandContentManifest', tests: islandContentManifestTests },
   { label: 'islandRunStopTapRouting', tests: islandRunStopTapRoutingTests },
   { label: 'islandRunShopAffordability', tests: islandRunShopAffordabilityTests },
   { label: 'islandRunPlaceholderService', tests: islandRunPlaceholderServiceTests },

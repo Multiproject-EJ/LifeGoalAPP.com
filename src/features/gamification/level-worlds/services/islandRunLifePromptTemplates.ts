@@ -1,15 +1,12 @@
-export const ISLAND_RUN_LIFE_WHEEL_AREAS = [
-  'Health',
-  'Mind',
-  'Work',
-  'Money',
-  'Relationships',
-  'Home',
-  'Growth',
-  'Fun',
-] as const;
+import { LIFE_WHEEL_AREAS, type LifeWheelArea } from '../../../life-wheel/lifeWheelTaxonomy';
 
-export type IslandRunLifeWheelArea = typeof ISLAND_RUN_LIFE_WHEEL_AREAS[number];
+/**
+ * Island Run uses the canonical life-wheel areas (see lifeWheelTaxonomy.ts) so
+ * the habit landmark can read check-in scores per area directly.
+ */
+export const ISLAND_RUN_LIFE_WHEEL_AREAS = LIFE_WHEEL_AREAS;
+
+export type IslandRunLifeWheelArea = LifeWheelArea;
 
 export const ISLAND_RUN_HABIT_TIMING_CHOICES = ['Morning', 'Afternoon', 'Evening', 'Anytime'] as const;
 export type IslandRunHabitTimingChoice = typeof ISLAND_RUN_HABIT_TIMING_CHOICES[number];
@@ -17,11 +14,11 @@ export type IslandRunHabitTimingChoice = typeof ISLAND_RUN_HABIT_TIMING_CHOICES[
 const AREA_PRESETS: Record<IslandRunLifeWheelArea, readonly string[]> = {
   Health: ['Drink one glass of water', 'Stretch for 5 minutes', 'Take a 10-minute walk'],
   Mind: ['Do 3 mindful breaths', 'Write one gratitude line', 'Read 2 pages of a book'],
-  Work: ['Plan top 1 priority', 'Do a 10-minute deep work sprint', 'Clear one inbox task'],
+  Work: ['Plan top 1 priority', 'Do a 10-minute deep work sprint', 'Write one lesson learned'],
   Money: ['Check account balances', 'Log one expense', 'Transfer $5 to savings'],
-  Relationships: ['Send one caring message', 'Give one appreciation', 'Plan one short check-in call'],
+  Love: ['Send one caring message', 'Give one appreciation', 'Plan one short check-in call'],
+  Connections: ['Text a friend you miss', 'Check in with family', 'Plan one small meetup'],
   Home: ['Reset one small space', 'Do dishes for 5 minutes', 'Tidy one surface'],
-  Growth: ['Watch one learning clip', 'Practice one skill for 10 minutes', 'Write one lesson learned'],
   Fun: ['Do one joyful mini-break', 'Listen to one favorite song', 'Step outside for fresh air'],
 };
 

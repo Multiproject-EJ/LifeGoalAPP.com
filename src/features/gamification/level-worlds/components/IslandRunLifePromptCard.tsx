@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
   createIslandRunHabitFromLifePrompt,
@@ -17,15 +17,31 @@ import {
   type HabitFeedbackStyle,
   type HabitFeedbackTime,
 } from '../services/islandRunHabitSuggestionEngine';
+import {
+  computeAreaReadiness,
+  deriveSupportedAreas,
+  parseCheckinScoreMap,
+  selectOfferableAreas,
+  type AreaReadiness,
+} from '../services/islandRunAdaptiveAreas';
+import { getLifeWheelAreaMeta } from '../../../life-wheel/lifeWheelTaxonomy';
+import { fetchCheckinsForUser } from '../../../../services/checkins';
+import { listHabitsV2 } from '../../../../services/habitsV2';
+import { recordGameLifeIntake } from '../../../../services/gameLifeIntake';
+import { getIslandContentPlan, orderAreasForIsland } from '../services/islandContentManifest';
+
+/** Dispatched when the player needs to record a check-in before adding a habit. */
+export const ISLAND_RUN_LAUNCH_CHECKINS_EVENT = 'lifegoal:launch-checkins';
 
 interface IslandRunLifePromptCardProps {
   session: Session;
+  islandNumber?: number;
   onComplete: (message: string) => void;
 }
 
 const HABIT_SIZES: readonly IslandRunHabitSize[] = ['Tiny', 'Normal', 'Stretch'];
 
-export function IslandRunLifePromptCard({ session, onComplete }: IslandRunLifePromptCardProps) {
+export function IslandRunLifePromptCard({ session, islandNumber, onComplete }: IslandRunLifePromptCardProps) {
   const [area, setArea] = useState<IslandRunLifeWheelArea | null>(null);
   const [selectedHabit, setSelectedHabit] = useState<SuggestedHabit | null>(null);
   const [feedbackEnergy, setFeedbackEnergy] = useState<HabitFeedbackEnergy | null>(null);
@@ -36,6 +52,77 @@ export function IslandRunLifePromptCard({ session, onComplete }: IslandRunLifePr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doneMessage, setDoneMessage] = useState<string | null>(null);
+
+  // Adaptive context: latest check-in + active-habit coverage drive which life
+  // areas we offer. Until this loads we gate the area picker.
+  const [contextStatus, setContextStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [hasCheckin, setHasCheckin] = useState(false);
+  const [readiness, setReadiness] = useState<AreaReadiness[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadContext() {
+      setContextStatus('loading');
+      try {
+        const [checkinResult, habitsResult] = await Promise.all([
+          fetchCheckinsForUser(session.user.id, 1),
+          listHabitsV2(),
+        ]);
+        if (cancelled) return;
+
+        const latestCheckin = checkinResult.data?.[0] ?? null;
+        const supportedAreas = deriveSupportedAreas(habitsResult.data ?? []);
+
+        if (!latestCheckin) {
+          setHasCheckin(false);
+          setReadiness([]);
+          setContextStatus('ready');
+          return;
+        }
+
+        setHasCheckin(true);
+        setReadiness(
+          computeAreaReadiness({
+            checkinScores: parseCheckinScoreMap(latestCheckin.scores),
+            supportedAreas,
+          }),
+        );
+        setContextStatus('ready');
+      } catch {
+        if (!cancelled) {
+          setContextStatus('error');
+        }
+      }
+    }
+
+    void loadContext();
+    return () => {
+      cancelled = true;
+    };
+  }, [session.user.id]);
+
+  const islandPlan = useMemo(() => getIslandContentPlan(islandNumber ?? 1), [islandNumber]);
+
+  const offerableAreas = useMemo(() => {
+    // No check-in data (e.g. load error): fall back to all areas so the player
+    // can still add a habit.
+    const adaptive = readiness.length === 0 ? [...ISLAND_RUN_LIFE_WHEEL_AREAS] : selectOfferableAreas(readiness);
+    // Early islands lead with their fixed onboarding-curriculum area; later
+    // islands keep the adaptive ordering.
+    return orderAreasForIsland(islandNumber ?? 1, adaptive);
+  }, [readiness, islandNumber]);
+  const readinessByArea = useMemo(() => {
+    const map = new Map<IslandRunLifeWheelArea, AreaReadiness>();
+    for (const entry of readiness) {
+      map.set(entry.area, entry);
+    }
+    return map;
+  }, [readiness]);
+
+  const handleLaunchCheckin = () => {
+    window.dispatchEvent(new CustomEvent(ISLAND_RUN_LAUNCH_CHECKINS_EVENT));
+  };
 
   const suggestedHabits = useMemo(() => {
     if (!area) return [];
@@ -49,6 +136,20 @@ export function IslandRunLifePromptCard({ session, onComplete }: IslandRunLifePr
   }, [area, feedbackEnergy, feedbackTime, feedbackStyle]);
 
   const handleSkip = () => {
+    // Best-effort, non-blocking: capture the skip as life-intake signal.
+    void recordGameLifeIntake({
+      userId: session.user.id,
+      promptContext: 'habit_landmark',
+      islandNumber: islandNumber ?? null,
+      intakeStage: islandPlan.intakeStage,
+      lifeWheelArea: area ?? null,
+      state: 'skipped',
+      payload: {
+        had_checkin: hasCheckin,
+        selected_area: area,
+        feedback: { energy: feedbackEnergy, time: feedbackTime, style: feedbackStyle },
+      },
+    });
     onComplete('Habit stop skipped. You can create your habit later in Habits.');
   };
 
@@ -70,6 +171,23 @@ export function IslandRunLifePromptCard({ session, onComplete }: IslandRunLifePr
       return;
     }
 
+    // Best-effort, non-blocking: capture the accepted habit as life-intake signal.
+    void recordGameLifeIntake({
+      userId: session.user.id,
+      promptContext: 'habit_landmark',
+      islandNumber: islandNumber ?? null,
+      intakeStage: islandPlan.intakeStage,
+      lifeWheelArea: selectedHabit.lifeWheelArea,
+      state: 'completed',
+      linkedHabitId: result.habit?.id ?? null,
+      payload: {
+        suggested_habit_id: selectedHabit.suggestedHabitId,
+        size: selectedSize,
+        timing,
+        feedback: { energy: feedbackEnergy, time: feedbackTime, style: feedbackStyle },
+      },
+    });
+
     const successMessage = `✅ ${result.message}`;
     setDoneMessage(successMessage);
     setIsSubmitting(false);
@@ -81,15 +199,34 @@ export function IslandRunLifePromptCard({ session, onComplete }: IslandRunLifePr
       <p className="island-stop-modal__copy"><strong>✅ Habit Landmark</strong></p>
       <p className="island-stop-modal__copy">A small action can change an island.</p>
 
-      {!area ? (
+      {!area && contextStatus === 'loading' ? (
+        <p className="island-stop-modal__copy">Reading your latest check-in…</p>
+      ) : !area && contextStatus === 'ready' && !hasCheckin ? (
         <>
-          <p><strong>Choose your next tiny quest.</strong> Pick one life area:</p>
+          <p><strong>Let’s find your focus first.</strong></p>
+          <p style={{ fontSize: 13, opacity: 0.9 }}>
+            A quick Life Wheel check-in lets us point your tiny quest at the area that needs it most.
+          </p>
           <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem', flexWrap: 'wrap' }}>
-            {ISLAND_RUN_LIFE_WHEEL_AREAS.map((choice) => (
-              <button key={choice} type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setArea(choice)}>
-                {choice}
-              </button>
-            ))}
+            <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleLaunchCheckin}>
+              Do a quick check-in
+            </button>
+          </div>
+        </>
+      ) : !area ? (
+        <>
+          <p><strong>Choose your next tiny quest.</strong> {offerableAreas.length < ISLAND_RUN_LIFE_WHEEL_AREAS.length ? 'These areas need the most love right now:' : 'Pick one life area:'}</p>
+          <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem', flexWrap: 'wrap' }}>
+            {offerableAreas.map((choice) => {
+              const meta = getLifeWheelAreaMeta(choice);
+              const entry = readinessByArea.get(choice);
+              return (
+                <button key={choice} type="button" className="island-stop-modal__btn island-stop-modal__btn--action" onClick={() => setArea(choice)}>
+                  {meta.emoji} {choice}
+                  {entry?.isWeak ? <span style={{ fontSize: 11, opacity: 0.85 }}> · needs focus</span> : null}
+                </button>
+              );
+            })}
           </div>
         </>
       ) : !feedbackEnergy || !feedbackTime || !feedbackStyle ? (
