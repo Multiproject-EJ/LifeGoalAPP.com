@@ -33,7 +33,7 @@ export async function fetchTodayTodos(dateISO: string): Promise<ServiceResponse<
 
 export async function createTodayTodo(
   userId: string,
-  input: { dateISO: string; title: string; notes?: string | null; orderIndex?: number }
+  input: { dateISO: string; title: string; notes?: string | null; orderIndex?: number; estimatedMinutes?: number | null; isFocus?: boolean }
 ): Promise<ServiceResponse<TodayTodo>> {
   if (!canUseSupabaseData()) return { data: null, error: authRequiredError() };
   const supabase = getSupabaseClient();
@@ -45,6 +45,8 @@ export async function createTodayTodo(
       title: input.title,
       notes: input.notes ?? null,
       order_index: input.orderIndex ?? 0,
+      estimated_minutes: input.estimatedMinutes ?? null,
+      is_focus: input.isFocus ?? false,
     })
     .select('*')
     .single();
@@ -52,7 +54,7 @@ export async function createTodayTodo(
 
 export async function updateTodayTodo(
   id: string,
-  patch: Partial<Pick<TodayTodo, 'title' | 'notes' | 'completed' | 'order_index' | 'todo_date'>>
+  patch: Partial<Pick<TodayTodo, 'title' | 'notes' | 'completed' | 'order_index' | 'todo_date' | 'estimated_minutes' | 'is_focus'>>
 ): Promise<ServiceResponse<TodayTodo>> {
   if (!canUseSupabaseData()) return { data: null, error: authRequiredError() };
   const supabase = getSupabaseClient();
