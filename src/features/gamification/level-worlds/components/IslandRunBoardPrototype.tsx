@@ -425,6 +425,8 @@ import {
 import { emitShooterControllerLifecycleTelemetry } from '../services/islandRunShooterControllerTelemetry';
 import { BuildModalV2, type BuildModalV2CardData, type BuildModalV2Milestone } from './BuildModalV2';
 import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWinCelebrationModal';
+import DemoWaitlistModal from './DemoWaitlistModal';
+import '../../../../styles/demo-waitlist-modal.css';
 
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
@@ -1424,6 +1426,7 @@ interface IslandRunBoardPrototypeProps {
   initialPanel?: 'default' | 'sanctuary';
   onExitBoard?: () => void;
   showTopBackButton?: boolean;
+  isAdmin?: boolean;
 }
 
 export function IslandRunBoardPrototype({
@@ -1431,6 +1434,7 @@ export function IslandRunBoardPrototype({
   initialPanel = 'default',
   onExitBoard,
   showTopBackButton: _showTopBackButton = false,
+  isAdmin = false,
 }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
   // Player-level chip: pull levelInfo from the gamification hook so the top-bar
@@ -2049,6 +2053,7 @@ export function IslandRunBoardPrototype({
   const [showWinCelebrationModal, setShowWinCelebrationModal] = useState(false);
   const [winCelebrationRewards, setWinCelebrationRewards] = useState<WinRewardItem[]>([]);
   const [winCelebrationSubtitle, setWinCelebrationSubtitle] = useState('You won');
+  const [showDemoWaitlistModal, setShowDemoWaitlistModal] = useState(false);
   const rewardBarWasClaimableRef = useRef(false);
 
   useEffect(() => {
@@ -7773,6 +7778,13 @@ export function IslandRunBoardPrototype({
       setLandingText('Please wait for the current roll animation to finish before traveling.');
       return;
     }
+
+    if (stats.islandNumber === 3 && !isAdmin) {
+      setShowIslandClearCelebration(false);
+      setShowDemoWaitlistModal(true);
+      return;
+    }
+
     const nextIsland = stats.pendingNextIsland;
     const treasurePathMetadata = getTreasurePathMilestoneMetadata(stats.islandNumber);
     if (treasurePathMetadata) {
@@ -13884,6 +13896,13 @@ export function IslandRunBoardPrototype({
           onClose={() => setShowDebugPanel(false)}
         />
       )}
+
+      <DemoWaitlistModal
+        open={showDemoWaitlistModal}
+        userEmail={session.user.email ?? undefined}
+        accessToken={session.access_token}
+        onClose={() => setShowDemoWaitlistModal(false)}
+      />
 
     </section>
   );
