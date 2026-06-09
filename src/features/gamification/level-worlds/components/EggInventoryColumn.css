@@ -1,0 +1,165 @@
+.egg-inventory-column {
+  display: flex;
+  flex-direction: column;
+  width: 88px;
+  flex-shrink: 0;
+}
+
+.egg-inventory-column__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0 6px;
+}
+
+.egg-inventory-column__header-icon {
+  font-size: 16px;
+}
+
+.egg-inventory-column__count {
+  font-size: 11px;
+  color: #a89070;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.egg-inventory-column__scroll {
+  /* Show exactly 5 slots; each slot is 80px tall */
+  height: 400px;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.egg-inventory-column__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.egg-inventory-column__slot {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  height: 76px;
+  width: 72px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: linear-gradient(160deg, #2a1f10 0%, #1a1208 100%);
+  border: 1.5px solid #3a2a14;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.egg-inventory-column__slot:active {
+  transform: scale(0.93);
+}
+
+.egg-inventory-column__slot:hover {
+  border-color: #c8913a;
+  box-shadow: 0 0 14px rgba(200, 145, 58, 0.3);
+}
+
+.egg-inventory-column__slot--common {
+  border-color: #4a3820;
+}
+
+.egg-inventory-column__slot--rare {
+  border-color: #4060b0;
+  box-shadow: 0 0 10px rgba(100, 140, 220, 0.2);
+}
+
+.egg-inventory-column__slot--rare:hover {
+  border-color: #88aaff;
+  box-shadow: 0 0 16px rgba(136, 170, 255, 0.4);
+}
+
+.egg-inventory-column__egg-img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.6));
+  flex-shrink: 0;
+}
+
+.egg-inventory-column__tier-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.egg-inventory-column__tier-badge--common {
+  color: #c8a860;
+}
+
+.egg-inventory-column__tier-badge--rare {
+  color: #88aaff;
+}
+
+/* Glimmer ring animation on rare eggs */
+@keyframes egg-rare-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(100, 140, 220, 0.2); }
+  50%       { box-shadow: 0 0 20px rgba(136, 170, 255, 0.45); }
+}
+
+.egg-inventory-column__slot--rare {
+  animation: egg-rare-pulse 2.8s ease-in-out infinite;
+}
+
+/* Empty state slot */
+.egg-inventory-column__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 8px;
+  text-align: center;
+}
+
+.egg-inventory-column__empty-icon {
+  font-size: 28px;
+  opacity: 0.35;
+}
+
+.egg-inventory-column__empty-text {
+  font-size: 11px;
+  color: #5a4830;
+  line-height: 1.4;
+}
+
+/* Scroll hint arrow */
+.egg-inventory-column__scroll-hint {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 2px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.egg-inventory-column__scroll-hint--visible {
+  opacity: 1;
+}
+
+.egg-inventory-column__scroll-hint-arrow {
+  font-size: 12px;
+  color: #7a6040;
+  animation: bounce-down 1.5s ease-in-out infinite;
+}
+
+@keyframes bounce-down {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(3px); }
+}

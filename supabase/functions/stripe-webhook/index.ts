@@ -599,6 +599,128 @@ async function applyThemeEntitlement(
   }
 }
 
+type EggPackSkuId = 'egg_pack_small' | 'egg_pack_medium' | 'egg_pack_large';
+
+function isEggPackSkuId(value: string | null | undefined): value is EggPackSkuId {
+  return value === 'egg_pack_small' || value === 'egg_pack_medium' || value === 'egg_pack_large';
+}
+
+function hashU32(input: string): number {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+const EGG_PACK_TIER_DISTRIBUTIONS: Record<EggPackSkuId, Array<'common' | 'rare'>> = {
+  egg_pack_small: ['common', 'common', 'common'],
+  egg_pack_medium: [
+    'common', 'common', 'common', 'common', 'common',
+    'common', 'common', 'common', 'common', 'common',
+    'common', 'common', 'rare', 'rare', 'rare',
+  ],
+  egg_pack_large: [
+    'common', 'common', 'common', 'common', 'common',
+    'common', 'common', 'common', 'common', 'common',
+    'common', 'common', 'common', 'common', 'common',
+    'common', 'common', 'common', 'common', 'rare',
+    'rare', 'rare', 'rare', 'rare', 'rare',
+  ],
+};
+
+async function applyEggPackCredit(
+  supabase: SupabaseLikeClient,
+  event: Stripe.Event,
+  session: Stripe.Checkout.Session,
+): Promise<void> {
+  const sessionId = session.id;
+  const userId = session.metadata?.user_id || session.client_reference_id || null;
+  if (!sessionId || !userId) {
+    throw new Error('Egg Pack checkout session is missing session id or user id metadata.');
+  }
+  if (session.payment_status !== 'paid') {
+    throw new Error(`Egg Pack checkout session is not paid: payment_status=${session.payment_status}`);
+  }
+  const skuId = session.metadata?.sku_id ?? null;
+  if (!isEggPackSkuId(skuId)) {
+    throw new Error(`Egg Pack checkout session metadata has invalid sku_id=${String(skuId)}`);
+  }
+
+  const { data: dedupeReservationRow, error: dedupeError } = await supabase
+    .from('billing_webhook_events')
+    .update({ dedupe_scope: 'egg_pack_credit', dedupe_key: sessionId })
+    .eq('stripe_event_id', event.id)
+    .select('stripe_event_id')
+    .maybeSingle();
+
+  if (dedupeError) {
+    if ((dedupeError as { code?: string }).code === '23505') {
+      await updateWebhookEventStatus(supabase, event.id, 'ignored', `Egg Pack credit already applied for checkout_session_id=${sessionId}`);
+      return;
+    }
+    throw new Error(`Failed to reserve Egg Pack dedupe key: ${dedupeError.message}`);
+  }
+
+  if (!dedupeReservationRow?.stripe_event_id) {
+    throw new Error(`Failed to reserve Egg Pack dedupe key: webhook event row not found for stripe_event_id=${event.id}`);
+  }
+
+  const { data: row, error: readError } = await supabase
+    .from('island_run_runtime_state')
+    .select('user_id, runtime_version, egg_reward_inventory')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (readError) {
+    throw new Error(`Failed to read Island Run runtime state for Egg Pack: ${readError.message}`);
+  }
+
+  const nowMs = Date.now();
+  const runtimeVersion = Number.isFinite(row?.runtime_version) ? Math.max(0, Math.floor(row.runtime_version)) : 0;
+  const existingInventory: unknown[] = Array.isArray(row?.egg_reward_inventory) ? row.egg_reward_inventory : [];
+
+  const tiers = EGG_PACK_TIER_DISTRIBUTIONS[skuId];
+  const newEntries = tiers.map((tier, index) => {
+    const seed = `stripe_egg_pack:${sessionId}:${index}`;
+    return {
+      eggRewardId: `egg_pack:${sessionId}:${index}`,
+      source: 'egg_pack',
+      sourceSessionKey: sessionId,
+      sourceRunId: 'egg_pack',
+      sourceRewardId: skuId,
+      tileId: 0,
+      cycleIndex: 0,
+      targetIslandNumber: 0,
+      eggTier: tier,
+      eggSeed: hashU32(seed),
+      rarityRoll: 0,
+      rarityRollDenominator: 500,
+      rarityThreshold: 5,
+      resolverVersion: 'egg_pack_v1',
+      status: 'unopened',
+      grantedAtMs: nowMs + index,
+      openedAtMs: null,
+    };
+  });
+
+  const mergedInventory = [...existingInventory, ...newEntries];
+
+  const { error: writeError } = await supabase
+    .from('island_run_runtime_state')
+    .upsert({
+      user_id: userId,
+      runtime_version: runtimeVersion + 1,
+      egg_reward_inventory: mergedInventory,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+
+  if (writeError) {
+    throw new Error(`Failed to grant Egg Pack into Island Run runtime state: ${writeError.message}`);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -723,6 +845,11 @@ Deno.serve(async (req) => {
 
         if (session.mode === 'payment' && session.metadata?.product_type === 'theme') {
           await applyThemeEntitlement(supabase, event, session);
+          break;
+        }
+
+        if (session.mode === 'payment' && session.metadata?.product_type === 'egg_pack') {
+          await applyEggPackCredit(supabase, event, session);
           break;
         }
 

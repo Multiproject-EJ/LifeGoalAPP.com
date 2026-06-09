@@ -35,10 +35,10 @@ export interface PerIslandEggEntry {
 /** Key = island number (as string), value = egg entry */
 export type PerIslandEggsLedger = Record<string, PerIslandEggEntry>;
 
-export type EggRewardInventorySource = 'treasure_path';
+export type EggRewardInventorySource = 'treasure_path' | 'egg_pack';
 export type EggRewardInventoryTier = 'common' | 'rare';
 export type EggRewardInventoryStatus = 'unopened' | 'opened';
-export type EggRewardInventoryResolverVersion = 'treasure_path_egg_v1';
+export type EggRewardInventoryResolverVersion = 'treasure_path_egg_v1' | 'egg_pack_v1';
 export const EGG_REWARD_RARITY_ROLL_DENOMINATOR = 500 as const;
 export const EGG_REWARD_RARITY_THRESHOLD = 5 as const;
 
@@ -792,9 +792,9 @@ function toEggRewardInventoryEntry(value: unknown): EggRewardInventoryEntry | nu
   const sourceRunId = typeof candidate.sourceRunId === 'string' ? candidate.sourceRunId.trim() : '';
   const sourceRewardId = typeof candidate.sourceRewardId === 'string' ? candidate.sourceRewardId.trim() : '';
   if (!eggRewardId || !sourceSessionKey || !sourceRunId || !sourceRewardId) return null;
-  if (candidate.source !== 'treasure_path') return null;
+  if (candidate.source !== 'treasure_path' && candidate.source !== 'egg_pack') return null;
   if (candidate.eggTier !== 'common' && candidate.eggTier !== 'rare') return null;
-  if (candidate.resolverVersion !== 'treasure_path_egg_v1') return null;
+  if (candidate.resolverVersion !== 'treasure_path_egg_v1' && candidate.resolverVersion !== 'egg_pack_v1') return null;
   if (candidate.status !== 'unopened' && candidate.status !== 'opened') return null;
   if (
     candidate.rarityRollDenominator !== EGG_REWARD_RARITY_ROLL_DENOMINATOR
@@ -830,21 +830,21 @@ function toEggRewardInventoryEntry(value: unknown): EggRewardInventoryEntry | nu
 
   return {
     eggRewardId,
-    source: 'treasure_path',
+    source: candidate.source as EggRewardInventorySource,
     sourceSessionKey,
     sourceRunId,
     sourceRewardId,
-    tileId: Math.max(0, Math.floor(candidate.tileId)),
-    cycleIndex: Math.max(0, Math.floor(candidate.cycleIndex)),
-    targetIslandNumber: Math.max(1, Math.floor(candidate.targetIslandNumber)),
-    eggTier: candidate.eggTier,
-    eggSeed: Math.max(0, Math.floor(candidate.eggSeed)),
-    rarityRoll: Math.max(0, Math.floor(candidate.rarityRoll)),
+    tileId: Math.max(0, Math.floor(candidate.tileId as number)),
+    cycleIndex: Math.max(0, Math.floor(candidate.cycleIndex as number)),
+    targetIslandNumber: Math.max(0, Math.floor(candidate.targetIslandNumber as number)),
+    eggTier: candidate.eggTier as EggRewardInventoryTier,
+    eggSeed: Math.max(0, Math.floor(candidate.eggSeed as number)),
+    rarityRoll: Math.max(0, Math.floor(candidate.rarityRoll as number)),
     rarityRollDenominator: EGG_REWARD_RARITY_ROLL_DENOMINATOR,
     rarityThreshold: EGG_REWARD_RARITY_THRESHOLD,
-    resolverVersion: 'treasure_path_egg_v1',
-    status: candidate.status,
-    grantedAtMs: Math.max(0, Math.floor(candidate.grantedAtMs)),
+    resolverVersion: candidate.resolverVersion as EggRewardInventoryResolverVersion,
+    status: candidate.status as EggRewardInventoryStatus,
+    grantedAtMs: Math.max(0, Math.floor(candidate.grantedAtMs as number)),
     openedAtMs,
     ...(openedCreatureId ? { openedCreatureId } : {}),
   };

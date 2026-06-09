@@ -1,0 +1,195 @@
+.egg-pack-shop {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 16px;
+}
+
+.egg-pack-shop__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f5e6c8;
+  text-align: center;
+  letter-spacing: 0.02em;
+  margin: 0 0 4px;
+}
+
+.egg-pack-shop__subtitle {
+  font-size: 13px;
+  color: #a89070;
+  text-align: center;
+  margin: 0 0 8px;
+}
+
+.egg-pack-shop__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.egg-pack-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, #2a1f10 0%, #1e1608 100%);
+  border: 1.5px solid #4a3620;
+  border-radius: 16px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+}
+
+.egg-pack-card:active {
+  transform: scale(0.97);
+}
+
+.egg-pack-card:hover {
+  border-color: #c8913a;
+  box-shadow: 0 4px 20px rgba(200, 145, 58, 0.25);
+}
+
+.egg-pack-card--featured {
+  border-color: #c8913a;
+  background: linear-gradient(135deg, #3a2510 0%, #2a1c08 100%);
+}
+
+.egg-pack-card--featured::before {
+  content: 'BEST VALUE';
+  position: absolute;
+  top: 10px;
+  right: -22px;
+  background: #c8913a;
+  color: #1a0f00;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 3px 28px;
+  transform: rotate(35deg);
+}
+
+.egg-pack-card__eggs {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+}
+
+.egg-pack-card__egg-img {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+}
+
+/* Stacked egg layouts per pack size */
+.egg-pack-card__egg-img--solo {
+  width: 52px;
+  height: 52px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.egg-pack-card__egg-img--trio-0 { left: 4px;  top: 16px; transform: rotate(-8deg); }
+.egg-pack-card__egg-img--trio-1 { left: 50%; top: 4px;  transform: translateX(-50%) rotate(4deg); }
+.egg-pack-card__egg-img--trio-2 { right: 4px; top: 16px; transform: rotate(10deg); }
+
+.egg-pack-card__egg-img--stack-0 { left: 2px;  top: 20px; transform: rotate(-12deg); width: 38px; height: 38px; }
+.egg-pack-card__egg-img--stack-1 { left: 50%; top: 6px;  transform: translateX(-50%); width: 42px; height: 42px; }
+.egg-pack-card__egg-img--stack-2 { right: 2px; top: 20px; transform: rotate(12deg); width: 38px; height: 38px; }
+.egg-pack-card__egg-img--stack-rare { right: 4px; bottom: 4px; width: 28px; height: 28px; filter: drop-shadow(0 0 6px rgba(130, 180, 255, 0.8)) drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+
+.egg-pack-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.egg-pack-card__name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #f5e6c8;
+  margin-bottom: 2px;
+}
+
+.egg-pack-card__count {
+  font-size: 13px;
+  color: #c8913a;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.egg-pack-card__desc {
+  font-size: 12px;
+  color: #8a7258;
+  line-height: 1.4;
+}
+
+.egg-pack-card__tier-pills {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.egg-pack-card__tier-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+.egg-pack-card__tier-pill--common {
+  background: rgba(120, 100, 60, 0.35);
+  color: #c8a860;
+  border: 1px solid rgba(200, 168, 96, 0.3);
+}
+
+.egg-pack-card__tier-pill--rare {
+  background: rgba(80, 120, 200, 0.25);
+  color: #88aaff;
+  border: 1px solid rgba(136, 170, 255, 0.35);
+}
+
+.egg-pack-card__buy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 2px;
+}
+
+.egg-pack-card__price {
+  font-size: 16px;
+  font-weight: 800;
+  color: #f5e6c8;
+  white-space: nowrap;
+}
+
+.egg-pack-card__cta {
+  font-size: 11px;
+  color: #c8913a;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.egg-pack-card--loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.egg-pack-shop__error {
+  font-size: 13px;
+  color: #ff6b6b;
+  text-align: center;
+  padding: 8px 12px;
+  background: rgba(255, 80, 80, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 80, 80, 0.2);
+}
