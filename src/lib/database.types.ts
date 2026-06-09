@@ -1208,6 +1208,8 @@ export interface Database {
           completed: boolean;
           completed_at: string | null;
           order_index: number;
+          estimated_minutes: number | null;
+          is_focus: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -1220,6 +1222,8 @@ export interface Database {
           completed?: boolean;
           completed_at?: string | null;
           order_index?: number;
+          estimated_minutes?: number | null;
+          is_focus?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -1232,6 +1236,8 @@ export interface Database {
           completed?: boolean;
           completed_at?: string | null;
           order_index?: number;
+          estimated_minutes?: number | null;
+          is_focus?: boolean;
           created_at?: string;
           updated_at?: string;
         };

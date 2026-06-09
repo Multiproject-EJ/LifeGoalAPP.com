@@ -857,6 +857,8 @@ export function DailyHabitTracker({
   const [todayTodoTitle, setTodayTodoTitle] = useState('');
   const [todayTodoNotes, setTodayTodoNotes] = useState('');
   const [todayTodoDate, setTodayTodoDate] = useState(() => formatISODate(new Date()));
+  const [todayTodoEstimatedMinutes, setTodayTodoEstimatedMinutes] = useState<number | ''>('');
+  const [todayTodoIsFocus, setTodayTodoIsFocus] = useState(false);
   const [todayTodoError, setTodayTodoError] = useState<string | null>(null);
   const [todayTodoStatus, setTodayTodoStatus] = useState<string | null>(null);
   const [todayTodoSaving, setTodayTodoSaving] = useState(false);
@@ -966,6 +968,8 @@ export function DailyHabitTracker({
     setTodayTodoTitle('');
     setTodayTodoNotes('');
     setTodayTodoDate(activeDate);
+    setTodayTodoEstimatedMinutes('');
+    setTodayTodoIsFocus(false);
     setTodayTodoError(null);
     setTodayTodoStatus(null);
     setTodayTodoModalOpen(true);
@@ -976,6 +980,8 @@ export function DailyHabitTracker({
     setTodayTodoTitle(todo.title);
     setTodayTodoNotes(todo.notes ?? '');
     setTodayTodoDate(todo.todo_date);
+    setTodayTodoEstimatedMinutes(todo.estimated_minutes ?? '');
+    setTodayTodoIsFocus(todo.is_focus);
     setTodayTodoError(null);
     setTodayTodoStatus(null);
     setTodayTodoModalOpen(true);
@@ -1004,17 +1010,27 @@ export function DailyHabitTracker({
     setTodayTodoStatus(null);
 
     const notes = todayTodoNotes.trim() || null;
+    const estimatedMinutes = todayTodoEstimatedMinutes !== '' && todayTodoEstimatedMinutes > 0 ? todayTodoEstimatedMinutes : null;
+    // If setting focus, clear it from any other active todo first
+    if (todayTodoIsFocus) {
+      const currentFocus = todayTodos.find((t) => t.is_focus && !t.completed && t.id !== editingTodayTodo?.id);
+      if (currentFocus) await updateTodayTodo(currentFocus.id, { is_focus: false });
+    }
     const { error } = editingTodayTodo
       ? await updateTodayTodo(editingTodayTodo.id, {
         title,
         notes,
         todo_date: scheduledDate,
+        estimated_minutes: estimatedMinutes,
+        is_focus: todayTodoIsFocus,
       })
       : await createTodayTodo(session.user.id, {
         dateISO: scheduledDate,
         title,
         notes,
         orderIndex: todayTodos.filter((todo) => !todo.completed).length,
+        estimatedMinutes,
+        isFocus: todayTodoIsFocus,
       });
 
     setTodayTodoSaving(false);
@@ -1024,7 +1040,7 @@ export function DailyHabitTracker({
     }
     handleCloseTodayTodoModal();
     void loadTodayTodos(activeDate);
-  }, [activeDate, editingTodayTodo, handleCloseTodayTodoModal, loadTodayTodos, session.user.id, todayTodoDate, todayTodoNotes, todayTodoTitle, todayTodos]);
+  }, [activeDate, editingTodayTodo, handleCloseTodayTodoModal, loadTodayTodos, session.user.id, todayTodoDate, todayTodoEstimatedMinutes, todayTodoIsFocus, todayTodoNotes, todayTodoTitle, todayTodos]);
 
   const handleToggleTodayTodo = useCallback(async (todo: TodayTodo) => {
     const isMarkingComplete = !todo.completed;
@@ -7069,22 +7085,30 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           ⭕
                         </button>
                       ) : null}
-                      <div className="habit-checklist__main habit-checklist__main--todo">
+                      <div className={`habit-checklist__main habit-checklist__main--todo${todo.is_focus ? ' habit-checklist__main--todo-focus' : ''}`}>
                         <div className="habit-checklist__todo-header">
-                          <span className="habit-checklist__todo-badge">Todo</span>
-                          <h3>{todoDisplayTitle}</h3>
-                          {onNavigateToTimer && !isPrivateCompactView ? (
-                            <button
-                              type="button"
-                              className="habit-checklist__todo-start-now"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title });
-                              }}
-                            >
-                              Start now
-                            </button>
-                          ) : null}
+                          <div className="habit-checklist__todo-title-row">
+                            {todo.is_focus ? <span className="habit-checklist__todo-focus-star" aria-label="Focus todo">⭐</span> : null}
+                            <h3 className="habit-checklist__todo-title">{todoDisplayTitle}</h3>
+                          </div>
+                          <div className="habit-checklist__todo-badges">
+                            {todo.estimated_minutes ? (
+                              <span className="habit-checklist__todo-time-badge">⏱ {todo.estimated_minutes}m</span>
+                            ) : null}
+                            <span className="habit-checklist__todo-badge">Todo</span>
+                            {onNavigateToTimer && !isPrivateCompactView ? (
+                              <button
+                                type="button"
+                                className="habit-checklist__todo-start-now"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title });
+                                }}
+                              >
+                                Start now
+                              </button>
+                            ) : null}
+                          </div>
                         </div>
                         {isExpanded ? (
                           <>
@@ -7116,8 +7140,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             <li className="habit-checklist__item habit-checklist__item--todo habit-checklist__item--completed">
               <div className="habit-checklist__main habit-checklist__main--todo">
                 <div className="habit-checklist__todo-header">
-                  <span className="habit-checklist__todo-badge">Completed items • todos</span>
-                  <h3>{completedTodos.length}</h3>
+                  <div className="habit-checklist__todo-title-row">
+                    <h3 className="habit-checklist__todo-title">Completed • todos</h3>
+                  </div>
+                  <div className="habit-checklist__todo-badges">
+                    <span className="habit-checklist__todo-badge habit-checklist__todo-badge--done">{completedTodos.length} done</span>
+                  </div>
                 </div>
                 <ul className="habit-checklist" role="list">
                   {completedTodos.map((todo, completedTodoIndex) => {
@@ -7152,9 +7180,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         </button>
                         <div className="habit-checklist__main habit-checklist__main--todo">
                           <div className="habit-checklist__todo-header">
-                            <span className="habit-checklist__todo-badge habit-checklist__todo-badge--done">Done today</span>
-                            <h3>{todoDisplayTitle}</h3>
-                            {todo.updated_at ? <p className="habit-checklist__todo-completed-at">Completed {formatTimeLabel(new Date(todo.updated_at))}</p> : null}
+                            <div className="habit-checklist__todo-title-row">
+                              <h3 className="habit-checklist__todo-title">{todoDisplayTitle}</h3>
+                            </div>
+                            <div className="habit-checklist__todo-badges">
+                              <span className="habit-checklist__todo-badge habit-checklist__todo-badge--done">Done today</span>
+                              {todo.updated_at ? <p className="habit-checklist__todo-completed-at">Completed {formatTimeLabel(new Date(todo.updated_at))}</p> : null}
+                            </div>
                           </div>
                           {isExpanded ? (
                             <>
@@ -9127,6 +9159,28 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   <label>
                     Details / notes (optional)
                     <textarea rows={4} placeholder="Add context, blockers, or first next step." value={todayTodoNotes} onChange={(event) => setTodayTodoNotes(event.target.value)} />
+                  </label>
+                  <label>
+                    Estimated time (minutes, optional)
+                    <input
+                      type="number"
+                      min={1}
+                      max={480}
+                      placeholder="e.g., 25"
+                      value={todayTodoEstimatedMinutes}
+                      onChange={(event) => {
+                        const val = event.target.value;
+                        setTodayTodoEstimatedMinutes(val === '' ? '' : Math.max(1, Math.min(480, parseInt(val, 10))));
+                      }}
+                    />
+                  </label>
+                  <label className="habit-edit-modal-focus-label">
+                    <input
+                      type="checkbox"
+                      checked={todayTodoIsFocus}
+                      onChange={(event) => setTodayTodoIsFocus(event.target.checked)}
+                    />
+                    <span>⭐ Mark as focus todo <span className="habit-edit-modal-focus-hint">(only one todo can be the focus at a time)</span></span>
                   </label>
                   <label>
                     Scheduled date
