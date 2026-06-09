@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { isPushSupported, subscribeToPush, sendSubscriptionToServer } from '../../../../services/pushNotifications';
+import { recordDemoWaitlistSignup } from '../../../../services/demoWaitlist';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 
@@ -7,6 +8,7 @@ type NotifyChannel = 'email' | 'push';
 
 type DemoWaitlistModalProps = {
   open: boolean;
+  userId?: string;
   userEmail?: string;
   accessToken?: string;
   onClose: () => void;
@@ -14,6 +16,7 @@ type DemoWaitlistModalProps = {
 
 export default function DemoWaitlistModal({
   open,
+  userId,
   userEmail,
   accessToken,
   onClose,
@@ -37,6 +40,12 @@ export default function DemoWaitlistModal({
         const sub = await subscribeToPush();
         await sendSubscriptionToServer(sub, SUPABASE_URL, accessToken);
       }
+
+      if (userId && userEmail) {
+        const result = await recordDemoWaitlistSignup({ userId, email: userEmail, channel: selected });
+        if (!result.ok) throw new Error(result.error ?? 'Could not save your signup.');
+      }
+
       setStatus('done');
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.');

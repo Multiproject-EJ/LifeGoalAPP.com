@@ -13899,6 +13899,7 @@ export function IslandRunBoardPrototype({
 
       <DemoWaitlistModal
         open={showDemoWaitlistModal}
+        userId={session.user.id}
         userEmail={session.user.email ?? undefined}
         accessToken={session.access_token}
         onClose={() => setShowDemoWaitlistModal(false)}
