@@ -7,7 +7,7 @@
   "boardPlateImageScale": 1.46,
   "scene": {
     "boardCircle": "board/board-circle-inner.webp",
-    "ambientBackground": "/assets/islands/backgrounds/TODO__level-bg-0X.webp"
+    "ambientBackground": "/assets/islands/backgrounds/level-bg-06.webp"
   },
   "landmarks": [
     { "stopIndex": 0, "anchorId": "landmark-06-0", "x": 340,  "y": 340,  "width": 472, "height": 472, "levels": ["landmarks/PLACEHOLDER__[landmark-name]-l1.webp","landmarks/PLACEHOLDER__[landmark-name]-l2.webp","landmarks/PLACEHOLDER__[landmark-name]-l3.webp"], "zBand": "mid" },
