@@ -5023,6 +5023,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           session={activeSession}
           initialPanel={levelWorldsEntryPanel}
           onClose={handleCloseLevelWorldsEntry}
+          isAdmin={isAdmin === true}
         />
       </RecoverableErrorBoundary>
     </div>
