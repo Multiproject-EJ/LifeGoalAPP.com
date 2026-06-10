@@ -212,51 +212,129 @@ type BillingReturnBanner = {
   message: string;
 } | null;
 
-// --- Footer nav theme system ---
+// --- Footer nav icon system ---
+//
+// Icon resolution order (first match wins):
+//   1. holiday + app-theme  e.g. halloween/themes/dark/planning.webp
+//   2. holiday only         e.g. halloween/planning.webp
+//   3. app-theme only       e.g. themes/dark/planning.webp
+//   4. default              e.g. default/planning.webp
+//   5. hardcoded emoji/SVG fallback
+//
+// To add icons: drop .webp files into public/icons/footer/<folder>/ using
+// the exact filenames below. Nothing else to change.
+//
+// Tab filenames:  planning.webp | shield.webp | score.webp | actions.webp
+//
+// App-theme → icon-folder mapping (FOOTER_THEME_GROUP):
+//   light  → bio-day, flow-day, bright-sky, cherry-blossom, forest-green,
+//             ocean-breeze, lavender-dream, desert-sand, sproutling-grove,
+//             aurora-sky
+//   dark   → dark-glass, flow-night, bio-night, midnight-purple,
+//             dreamt-horizon, nebula-drift, starhorn-celestial
+//   golden → sunset-glow, autumn-harvest, ember-glow, birthday-wish
+//   blue   → arctic-frost
 
-type FooterTheme = 'default' | 'halloween' | 'christmas' | 'winter';
+type FooterIconGroup = 'light' | 'dark' | 'golden' | 'blue';
 
-function getActiveFooterTheme(now = new Date()): FooterTheme {
-  const month = now.getMonth() + 1; // 1-based
-  const day = now.getDate();
-  if (month === 10 && day >= 24) return 'halloween';
-  if (month === 12 && day >= 1 && day <= 26) return 'christmas';
-  if ((month === 12 && day >= 27) || (month === 1 && day <= 7)) return 'winter';
-  return 'default';
-}
+const FOOTER_THEME_GROUP: Partial<Record<string, FooterIconGroup>> = {
+  'bio-day':            'light',
+  'flow-day':           'light',
+  'bright-sky':         'light',
+  'cherry-blossom':     'light',
+  'forest-green':       'light',
+  'ocean-breeze':       'light',
+  'lavender-dream':     'light',
+  'desert-sand':        'light',
+  'sproutling-grove':   'light',
+  'aurora-sky':         'light',
+  'dark-glass':         'dark',
+  'flow-night':         'dark',
+  'bio-night':          'dark',
+  'midnight-purple':    'dark',
+  'dreamt-horizon':     'dark',
+  'nebula-drift':       'dark',
+  'starhorn-celestial': 'dark',
+  'sunset-glow':        'golden',
+  'autumn-harvest':     'golden',
+  'ember-glow':         'golden',
+  'birthday-wish':      'golden',
+  'arctic-frost':       'blue',
+};
 
 const FooterNavImg = ({ src, alt = '' }: { src: string; alt?: string }) => (
   <img src={src} alt={alt} loading="lazy" decoding="async" />
 );
 
-type FooterIconMap = Partial<Record<string, ReactNode>>;
+type FooterTabId = 'planning' | 'breathing-space' | 'score' | 'actions';
+type FooterIconMap = Partial<Record<FooterTabId, ReactNode>>;
 
-// To add a new theme: add an entry below with the tab IDs you want to override.
-// Tab IDs: 'planning' | 'breathing-space' | 'score' | 'actions'
-// Drop your image files in public/icons/footer/<theme>/<tab-id>.webp
-const FOOTER_ICON_THEMES: Record<FooterTheme, FooterIconMap> = {
-  default: {},
+const FOOTER_TAB_FILES: Record<FooterTabId, string> = {
+  planning: 'planning.webp',
+  'breathing-space': 'shield.webp',
+  score: 'score.webp',
+  actions: 'actions.webp',
+};
+
+function makeFooterIconMap(basePath: string): FooterIconMap {
+  const entries = (Object.entries(FOOTER_TAB_FILES) as [FooterTabId, string][]).map(
+    ([tabId, file]) => [tabId, <FooterNavImg key={tabId} src={`${basePath}/${file}`} />] as const,
+  );
+  return Object.fromEntries(entries);
+}
+
+// holiday + theme combos (most specific)
+const FOOTER_ICONS_HOLIDAY_THEME: Partial<Record<string, Partial<Record<FooterIconGroup, FooterIconMap>>>> = {
   halloween: {
-    planning: <FooterNavImg src="/icons/footer/halloween/planning.webp" />,
-    'breathing-space': <FooterNavImg src="/icons/footer/halloween/shield.webp" />,
-    score: <FooterNavImg src="/icons/footer/halloween/score.webp" />,
-    actions: <FooterNavImg src="/icons/footer/halloween/actions.webp" />,
+    dark:   makeFooterIconMap('/icons/footer/halloween/themes/dark'),
+    golden: makeFooterIconMap('/icons/footer/halloween/themes/golden'),
+    light:  makeFooterIconMap('/icons/footer/halloween/themes/light'),
+    blue:   makeFooterIconMap('/icons/footer/halloween/themes/blue'),
   },
   christmas: {
-    planning: <FooterNavImg src="/icons/footer/christmas/planning.webp" />,
-    'breathing-space': <FooterNavImg src="/icons/footer/christmas/shield.webp" />,
-    score: <FooterNavImg src="/icons/footer/christmas/score.webp" />,
-    actions: <FooterNavImg src="/icons/footer/christmas/actions.webp" />,
-  },
-  winter: {
-    planning: <FooterNavImg src="/icons/footer/winter/planning.webp" />,
-    'breathing-space': <FooterNavImg src="/icons/footer/winter/shield.webp" />,
-    score: <FooterNavImg src="/icons/footer/winter/score.webp" />,
-    actions: <FooterNavImg src="/icons/footer/winter/actions.webp" />,
+    dark:   makeFooterIconMap('/icons/footer/christmas/themes/dark'),
+    golden: makeFooterIconMap('/icons/footer/christmas/themes/golden'),
+    light:  makeFooterIconMap('/icons/footer/christmas/themes/light'),
+    blue:   makeFooterIconMap('/icons/footer/christmas/themes/blue'),
   },
 };
 
-const ACTIVE_FOOTER_THEME = getActiveFooterTheme();
+// holiday only (any theme)
+const FOOTER_ICONS_HOLIDAY: Partial<Record<string, FooterIconMap>> = {
+  halloween: makeFooterIconMap('/icons/footer/halloween'),
+  christmas: makeFooterIconMap('/icons/footer/christmas'),
+};
+
+// app-theme group only (no holiday)
+const FOOTER_ICONS_THEME: Record<FooterIconGroup, FooterIconMap> = {
+  light:  makeFooterIconMap('/icons/footer/themes/light'),
+  dark:   makeFooterIconMap('/icons/footer/themes/dark'),
+  golden: makeFooterIconMap('/icons/footer/themes/golden'),
+  blue:   makeFooterIconMap('/icons/footer/themes/blue'),
+};
+
+// default (year-round, any theme)
+const FOOTER_ICONS_DEFAULT: FooterIconMap = makeFooterIconMap('/icons/footer/default');
+
+function resolveFooterIcon(
+  tabId: FooterTabId,
+  holidayKey: string | null | undefined,
+  themeGroup: FooterIconGroup | undefined,
+): ReactNode | undefined {
+  if (holidayKey && themeGroup) {
+    const icon = FOOTER_ICONS_HOLIDAY_THEME[holidayKey]?.[themeGroup]?.[tabId];
+    if (icon) return icon;
+  }
+  if (holidayKey) {
+    const icon = FOOTER_ICONS_HOLIDAY[holidayKey]?.[tabId];
+    if (icon) return icon;
+  }
+  if (themeGroup) {
+    const icon = FOOTER_ICONS_THEME[themeGroup][tabId];
+    if (icon) return icon;
+  }
+  return FOOTER_ICONS_DEFAULT[tabId];
+}
 
 const ShieldFooterIcon = () => (
   <svg
@@ -1157,7 +1235,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
       },
     };
 
-    const themeIcons = FOOTER_ICON_THEMES[ACTIVE_FOOTER_THEME];
+    const holidayKey = activeHolidaySeason?.meta.holiday_key ?? null;
+    const themeGroup = FOOTER_THEME_GROUP[theme];
+
+    const getIcon = (tabId: FooterTabId, fallback: ReactNode): ReactNode =>
+      resolveFooterIcon(tabId, holidayKey, themeGroup) ?? fallback;
 
     const baseItems = MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
       const item = findWorkspaceItem(navId);
@@ -1174,25 +1256,31 @@ export default function App({ forceAuthOnMount }: AppProps) {
           id: 'contracts',
           label: 'Contracts',
           ariaLabel: 'View and manage your contracts',
-          icon: themeIcons['contracts'] ?? '🤝',
+          icon: '🤝',
           summary: 'Create and track commitment contracts.',
         } satisfies MobileMenuNavItem;
       }
 
       const defaults = FOOTER_TAB_DEFAULTS[navId];
       if (defaults) {
+        const isFooterTab = navId in FOOTER_TAB_FILES;
         return {
           id: navId,
           ...defaults,
-          icon: themeIcons[navId] ?? defaults.icon,
+          icon: isFooterTab
+            ? getIcon(navId as FooterTabId, defaults.icon)
+            : defaults.icon,
         } satisfies MobileMenuNavItem;
       }
 
+      const isFooterTab = navId in FOOTER_TAB_FILES;
       return {
         id: navId,
         label: formattedLabel,
         ariaLabel: item?.label ?? formattedLabel,
-        icon: themeIcons[navId] ?? item?.icon ?? '•',
+        icon: isFooterTab
+          ? getIcon(navId as FooterTabId, item?.icon ?? '•')
+          : (item?.icon ?? '•'),
         summary: item?.summary ?? 'Open this section.',
       } satisfies MobileMenuNavItem;
     });
@@ -1220,7 +1308,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       },
     ];
     return [...baseItems, ...extraItems];
-  }, [workspaceNavItems]);
+  }, [workspaceNavItems, theme, activeHolidaySeason]);
 
   const popupLauncherItems = useMemo(() => {
     const orderedIds: MobileMenuNavItem['id'][] = ['my-quest', 'coach', 'account', 'feedback-support'];
