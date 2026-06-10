@@ -1196,6 +1196,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [creatingGoal, setCreatingGoal] = useState(false);
   const [showLegacyHabitAssets, setShowLegacyHabitAssets] = useState(false);
   const [isQuickJournalOpen, setIsQuickJournalOpen] = useState(false);
+  const [showEmptyTodosMessage, setShowEmptyTodosMessage] = useState(true);
   const [quickJournalMorning, setQuickJournalMorning] = useState('');
   const [quickJournalDay, setQuickJournalDay] = useState('');
   const [quickJournalEvening, setQuickJournalEvening] = useState('');
@@ -1303,6 +1304,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setIsCompactView(true);
     }
   }, [forceCompactView, preferredCompactView]);
+
+  const activeTodosCount = todayTodos.filter((t) => !t.completed).length;
+  useEffect(() => {
+    if (activeTodosCount > 0) return;
+    setShowEmptyTodosMessage(true);
+    const timer = setTimeout(() => setShowEmptyTodosMessage(false), 3000);
+    return () => clearTimeout(timer);
+  }, [activeTodosCount, activeDate]);
 
   const isPrivateCompactView = isCompactView;
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
@@ -7156,7 +7165,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           })}
           {todayTodoStatus ? <li className="habit-checklist__empty habit-checklist__empty--success">{todayTodoStatus}</li> : null}
           {todayTodoLoadError ? <li className="habit-checklist__empty">{todayTodoLoadError}</li> : null}
-          {!todayTodoLoadError && activeTodos.length === 0 ? (
+          {!todayTodoLoadError && activeTodos.length === 0 && showEmptyTodosMessage ? (
             <li className="habit-checklist__empty">No todos for this date yet.</li>
           ) : null}
           {showCompletedHabits && completedTodos.length > 0 ? (
