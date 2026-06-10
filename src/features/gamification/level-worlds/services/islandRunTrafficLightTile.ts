@@ -20,6 +20,7 @@ export interface TrafficLightCoinFlipReward {
   dice: number;
   essence: number;
   stickerFragments: number;
+  rewardBarProgress: number;
 }
 
 function seededRandom(seed: number): number {
@@ -101,6 +102,7 @@ export function resolveTrafficLightCoinFlipReward(input: {
       dice: 8,
       essence: 35,
       stickerFragments: grantsPuzzlePieces ? 2 : 0,
+      rewardBarProgress: 3,
     };
   }
 
@@ -111,5 +113,6 @@ export function resolveTrafficLightCoinFlipReward(input: {
     dice: 4,
     essence: 70,
     stickerFragments: grantsPuzzlePieces ? 2 : 0,
+    rewardBarProgress: 3,
   };
 }
