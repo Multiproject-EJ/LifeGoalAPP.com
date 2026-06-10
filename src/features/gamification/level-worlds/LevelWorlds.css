@@ -2344,18 +2344,22 @@
   box-shadow: 0 2px 6px rgba(94, 65, 9, 0.2);
 }
 
-@keyframes hatchery-compass-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* One full spin every 3 minutes: accelerates, overshoots ~30°, elastic snap back */
+@keyframes hatchery-compass-tick {
+  0%    { transform: rotate(0deg); }
+  /* fast acceleration — reaches ~390° (30° overshoot) in the first ~3% of the cycle */
+  3%    { transform: rotate(390deg); animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+  /* bounce under */
+  4.2%  { transform: rotate(348deg); }
+  /* settle at exactly 360° */
+  5%    { transform: rotate(360deg); }
+  /* hold still for the remaining ~95% of the cycle */
+  100%  { transform: rotate(360deg); }
 }
 
 .island-run-board__hatchery-compass-btn {
-  width: 58px;
-  height: 58px;
+  width: 61px;
+  height: 61px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2378,7 +2382,8 @@
   border-radius: 50%;
   background: url('/assets/icons/compass-gold-256.webp') center / contain no-repeat;
   will-change: transform;
-  animation: hatchery-compass-spin 300s linear infinite;
+  /* 180s = 3 minutes; spins once with overshoot then holds still until next cycle */
+  animation: hatchery-compass-tick 180s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .island-run-board__rewardbar-side-rail {
