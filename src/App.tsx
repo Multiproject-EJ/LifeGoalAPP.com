@@ -262,12 +262,7 @@ const FOOTER_THEME_GROUP: Partial<Record<string, FooterIconGroup>> = {
   'arctic-frost':       'blue',
 };
 
-const FooterNavImg = ({ src, alt = '' }: { src: string; alt?: string }) => (
-  <img src={src} alt={alt} loading="lazy" decoding="async" />
-);
-
 type FooterTabId = 'planning' | 'breathing-space' | 'score' | 'actions';
-type FooterIconMap = Partial<Record<FooterTabId, ReactNode>>;
 
 const FOOTER_TAB_FILES: Record<FooterTabId, string> = {
   planning: 'planning.webp',
@@ -276,64 +271,44 @@ const FOOTER_TAB_FILES: Record<FooterTabId, string> = {
   actions: 'actions.webp',
 };
 
-function makeFooterIconMap(basePath: string): FooterIconMap {
-  const entries = (Object.entries(FOOTER_TAB_FILES) as [FooterTabId, string][]).map(
-    ([tabId, file]) => [tabId, <FooterNavImg key={tabId} src={`${basePath}/${file}`} />] as const,
+// Tries each src path in order, showing the emoji/SVG fallback if all fail.
+// This means you can drop image files in incrementally — missing files are
+// invisible to the user, they just see the next level down.
+function FooterNavImg({ paths, fallback }: { paths: string[]; fallback: ReactNode }) {
+  const [failedCount, setFailedCount] = useState(0);
+  if (failedCount >= paths.length) return <>{fallback}</>;
+  return (
+    <img
+      src={paths[failedCount]}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailedCount((n) => n + 1)}
+    />
   );
-  return Object.fromEntries(entries);
 }
-
-// holiday + theme combos (most specific)
-const FOOTER_ICONS_HOLIDAY_THEME: Partial<Record<string, Partial<Record<FooterIconGroup, FooterIconMap>>>> = {
-  halloween: {
-    dark:   makeFooterIconMap('/icons/footer/halloween/themes/dark'),
-    golden: makeFooterIconMap('/icons/footer/halloween/themes/golden'),
-    light:  makeFooterIconMap('/icons/footer/halloween/themes/light'),
-    blue:   makeFooterIconMap('/icons/footer/halloween/themes/blue'),
-  },
-  christmas: {
-    dark:   makeFooterIconMap('/icons/footer/christmas/themes/dark'),
-    golden: makeFooterIconMap('/icons/footer/christmas/themes/golden'),
-    light:  makeFooterIconMap('/icons/footer/christmas/themes/light'),
-    blue:   makeFooterIconMap('/icons/footer/christmas/themes/blue'),
-  },
-};
-
-// holiday only (any theme)
-const FOOTER_ICONS_HOLIDAY: Partial<Record<string, FooterIconMap>> = {
-  halloween: makeFooterIconMap('/icons/footer/halloween'),
-  christmas: makeFooterIconMap('/icons/footer/christmas'),
-};
-
-// app-theme group only (no holiday)
-const FOOTER_ICONS_THEME: Record<FooterIconGroup, FooterIconMap> = {
-  light:  makeFooterIconMap('/icons/footer/themes/light'),
-  dark:   makeFooterIconMap('/icons/footer/themes/dark'),
-  golden: makeFooterIconMap('/icons/footer/themes/golden'),
-  blue:   makeFooterIconMap('/icons/footer/themes/blue'),
-};
-
-// default (year-round, any theme)
-const FOOTER_ICONS_DEFAULT: FooterIconMap = makeFooterIconMap('/icons/footer/default');
 
 function resolveFooterIcon(
   tabId: FooterTabId,
   holidayKey: string | null | undefined,
   themeGroup: FooterIconGroup | undefined,
-): ReactNode | undefined {
+  fallback: ReactNode,
+): ReactNode {
+  const file = FOOTER_TAB_FILES[tabId];
+  const paths: string[] = [];
+
   if (holidayKey && themeGroup) {
-    const icon = FOOTER_ICONS_HOLIDAY_THEME[holidayKey]?.[themeGroup]?.[tabId];
-    if (icon) return icon;
+    paths.push(`/icons/footer/${holidayKey}/themes/${themeGroup}/${file}`);
   }
   if (holidayKey) {
-    const icon = FOOTER_ICONS_HOLIDAY[holidayKey]?.[tabId];
-    if (icon) return icon;
+    paths.push(`/icons/footer/${holidayKey}/${file}`);
   }
   if (themeGroup) {
-    const icon = FOOTER_ICONS_THEME[themeGroup][tabId];
-    if (icon) return icon;
+    paths.push(`/icons/footer/themes/${themeGroup}/${file}`);
   }
-  return FOOTER_ICONS_DEFAULT[tabId];
+  paths.push(`/icons/footer/default/${file}`);
+
+  return <FooterNavImg paths={paths} fallback={fallback} />;
 }
 
 const ShieldFooterIcon = () => (
@@ -1239,7 +1214,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const themeGroup = FOOTER_THEME_GROUP[theme];
 
     const getIcon = (tabId: FooterTabId, fallback: ReactNode): ReactNode =>
-      resolveFooterIcon(tabId, holidayKey, themeGroup) ?? fallback;
+      resolveFooterIcon(tabId, holidayKey, themeGroup, fallback);
 
     const baseItems = MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
       const item = findWorkspaceItem(navId);
