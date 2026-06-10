@@ -6099,6 +6099,32 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }
   };
 
+  const handleCompactToggle = () => {
+    if (forceCompactView) {
+      setIsCompactView(true);
+      setIsCompactToggleLabelVisible(true);
+      if (compactToggleLabelTimeoutRef.current) {
+        window.clearTimeout(compactToggleLabelTimeoutRef.current);
+      }
+      compactToggleLabelTimeoutRef.current = window.setTimeout(() => {
+        setIsCompactToggleLabelVisible(false);
+      }, 2200);
+      return;
+    }
+    setIsCompactView((previous) => {
+      const next = !previous;
+      onPreferredCompactViewChange?.(next);
+      return next;
+    });
+    setIsCompactToggleLabelVisible(true);
+    if (compactToggleLabelTimeoutRef.current) {
+      window.clearTimeout(compactToggleLabelTimeoutRef.current);
+    }
+    compactToggleLabelTimeoutRef.current = window.setTimeout(() => {
+      setIsCompactToggleLabelVisible(false);
+    }, 2200);
+  };
+
   const renderDayNavigation = (variant: 'compact' | 'full', showDetails = true, showNavigationControls = true) => {
     const displayLabel = formatDateLabel(activeDate);
     const canGoForward = activeDate < today;
@@ -8754,32 +8780,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           console.error('Failed to create journal entry for day status:', error);
         }
       }
-    };
-
-    const handleCompactToggle = () => {
-      if (forceCompactView) {
-        setIsCompactView(true);
-        setIsCompactToggleLabelVisible(true);
-        if (compactToggleLabelTimeoutRef.current) {
-          window.clearTimeout(compactToggleLabelTimeoutRef.current);
-        }
-        compactToggleLabelTimeoutRef.current = window.setTimeout(() => {
-          setIsCompactToggleLabelVisible(false);
-        }, 2200);
-        return;
-      }
-      setIsCompactView((previous) => {
-        const next = !previous;
-        onPreferredCompactViewChange?.(next);
-        return next;
-      });
-      setIsCompactToggleLabelVisible(true);
-      if (compactToggleLabelTimeoutRef.current) {
-        window.clearTimeout(compactToggleLabelTimeoutRef.current);
-      }
-      compactToggleLabelTimeoutRef.current = window.setTimeout(() => {
-        setIsCompactToggleLabelVisible(false);
-      }, 2200);
     };
 
     const showIntentionsOnlyRow = Boolean(yesterdayIntentionsEntry && !isIntentionsNoticeViewed && !isCompactView);
