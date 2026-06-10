@@ -21335,10 +21335,19 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring-value {
-  font-size: 1.24rem;
+  font-size: 1.18rem;
   letter-spacing: -0.02em;
   font-weight: 900;
   color: #312e81;
+}
+
+.mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring-top,
+.mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring-bottom {
+  font-size: 0.48rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4338ca;
 }
 
 .mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__mini-subtitle {
@@ -22889,6 +22898,25 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: inset 0 1px 4px rgba(15, 23, 42, 0.15);
+}
+
+.mobile-menu-overlay__profile-ring-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  gap: 0;
+}
+
+.mobile-menu-overlay__profile-ring-top,
+.mobile-menu-overlay__profile-ring-bottom {
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4f46e5;
 }
 
 .mobile-menu-overlay__profile-ring-value {
@@ -32357,6 +32385,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: inset 0 1px 4px rgba(2, 6, 23, 0.45);
 }
 
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-ring-top,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-ring-bottom,
 [data-theme='dark-glass'] .mobile-menu-overlay__profile-ring-value,
 [data-theme='dark-glass'] .mobile-menu-overlay__profile-title,
 [data-theme='dark-glass'] .mobile-menu-overlay__strength-title,

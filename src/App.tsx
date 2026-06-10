@@ -4432,9 +4432,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   onClick={() => setIsProfileStrengthOpen(true)}
                   aria-label="Open Profile Strength"
                 >
-                  <span className="mobile-menu-overlay__mini-title mobile-menu-overlay__mini-title--centered">Profile<br />Strength</span>
                   <span className="mobile-menu-overlay__profile-ring" style={profileStrengthRingStyle} aria-hidden="true">
-                    <span className="mobile-menu-overlay__profile-ring-value">{profileStrengthPercentLabel}</span>
+                    <span className="mobile-menu-overlay__profile-ring-inner">
+                      <span className="mobile-menu-overlay__profile-ring-top">PROFILE</span>
+                      <span className="mobile-menu-overlay__profile-ring-value">{profileStrengthPercentLabel}</span>
+                      <span className="mobile-menu-overlay__profile-ring-bottom">STRENGTH</span>
+                    </span>
                   </span>
                 </button>
               </div>
