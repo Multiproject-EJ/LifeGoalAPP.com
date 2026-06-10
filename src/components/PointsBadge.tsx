@@ -23,7 +23,7 @@ export function PointsBadge({
       role="status"
     >
       <span className="points-badge__icon" aria-hidden="true">
-        🪙
+        🟣
       </span>
       <span className="points-badge__value">{formattedValue}</span>
     </span>
