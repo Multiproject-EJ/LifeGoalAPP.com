@@ -6932,7 +6932,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           );
         })() : null}
         <div className="habit-checklist-card__title">
-          <h2>My Habits</h2>
           <div className="habit-checklist-card__title-actions">
             {shouldShowTimeLimitedOfferToggle ? (
               <button
@@ -7615,7 +7614,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           }
                         }}
                       >
-                        {isQuestHabit ? '⭐' : '☆'}
+                        {isQuestHabit ? '★' : '☆'}
                       </button>
                     </div>
                   </div>
