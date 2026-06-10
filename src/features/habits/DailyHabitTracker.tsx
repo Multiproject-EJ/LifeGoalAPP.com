@@ -1120,6 +1120,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   const [completedActionsCount, setCompletedActionsCount] = useState(0);
   const [isTodayWinsOpen, setIsTodayWinsOpen] = useState(false);
+  const [isStarFlaring, setIsStarFlaring] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsStarFlaring(true);
+      setTimeout(() => setIsStarFlaring(false), 900);
+    }, 4 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
   const [todayWinsSummary, setTodayWinsSummary] = useState<TodayWinsSummary>({
     journalCount: 0,
     lotusEarned: 0,
@@ -1187,6 +1196,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [creatingGoal, setCreatingGoal] = useState(false);
   const [showLegacyHabitAssets, setShowLegacyHabitAssets] = useState(false);
   const [isQuickJournalOpen, setIsQuickJournalOpen] = useState(false);
+  const [showEmptyTodosMessage, setShowEmptyTodosMessage] = useState(true);
   const [quickJournalMorning, setQuickJournalMorning] = useState('');
   const [quickJournalDay, setQuickJournalDay] = useState('');
   const [quickJournalEvening, setQuickJournalEvening] = useState('');
@@ -1294,6 +1304,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setIsCompactView(true);
     }
   }, [forceCompactView, preferredCompactView]);
+
+  const activeTodosCount = todayTodos.filter((t) => !t.completed).length;
+  useEffect(() => {
+    if (activeTodosCount > 0) return;
+    setShowEmptyTodosMessage(true);
+    const timer = setTimeout(() => setShowEmptyTodosMessage(false), 3000);
+    return () => clearTimeout(timer);
+  }, [activeTodosCount, activeDate]);
 
   const isPrivateCompactView = isCompactView;
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
@@ -6932,7 +6950,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           );
         })() : null}
         <div className="habit-checklist-card__title">
-          <h2>My Habits</h2>
           <div className="habit-checklist-card__title-actions">
             {shouldShowTimeLimitedOfferToggle ? (
               <button
@@ -6963,6 +6980,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 + My quest
               </button>
             ) : null}
+            <button
+              type="button"
+              className={`habit-checklist-card__glass-toggle ${
+                isCompactView ? 'habit-checklist-card__glass-toggle--active' : ''
+              } ${!isCompactToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
+              onClick={handleCompactToggle}
+              aria-pressed={isCompactView}
+            >
+              <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true">
+                <span className="habit-checklist-card__glass-toggle-thumb" />
+              </span>
+              <span className="habit-checklist-card__glass-toggle-label">
+                {isCompactView ? 'Private' : 'Detailed'}
+              </span>
+            </button>
           </div>
         </div>
         {shouldShowTimeLimitedOfferToggle && isTimeLimitedOfferDetailsOpen ? (
@@ -7133,7 +7165,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           })}
           {todayTodoStatus ? <li className="habit-checklist__empty habit-checklist__empty--success">{todayTodoStatus}</li> : null}
           {todayTodoLoadError ? <li className="habit-checklist__empty">{todayTodoLoadError}</li> : null}
-          {!todayTodoLoadError && activeTodos.length === 0 ? (
+          {!todayTodoLoadError && activeTodos.length === 0 && showEmptyTodosMessage ? (
             <li className="habit-checklist__empty">No todos for this date yet.</li>
           ) : null}
           {showCompletedHabits && completedTodos.length > 0 ? (
@@ -7615,7 +7647,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           }
                         }}
                       >
-                        {isQuestHabit ? '⭐' : '☆'}
+                        {isQuestHabit ? '★' : '☆'}
                       </button>
                     </div>
                   </div>
@@ -9024,21 +9056,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   <span className="habit-checklist-card__date-text">{dateLabel}</span>
                 </p>
               </div>
-              <button
-                type="button"
-                className={`habit-checklist-card__glass-toggle ${
-                  isCompactView ? 'habit-checklist-card__glass-toggle--active' : ''
-                } ${!isCompactToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
-                onClick={handleCompactToggle}
-                aria-pressed={isCompactView}
-              >
-                <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true">
-                  <span className="habit-checklist-card__glass-toggle-thumb" />
-                </span>
-                <span className="habit-checklist-card__glass-toggle-label">
-                  {isCompactView ? 'Private' : 'Detailed'}
-                </span>
-              </button>
             </div>
             {!isCompactView ? (
               <div className="habit-checklist-card__head-actions">

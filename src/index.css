@@ -5235,6 +5235,70 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-radius: 999px;
 }
 
+@keyframes star-flare-1 {
+  0%   { text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 0 10px rgba(251,191,36,0.58), 0 4px 9px rgba(146,64,14,0.26); color: #f59e0b; }
+  30%  { text-shadow: 0 0 6px #fff, 0 0 18px #ffe066, 0 0 32px rgba(251,191,36,0.9), 0 0 8px #fff8; color: #fff7c2; }
+  55%  { text-shadow: 0 0 3px #fff, 0 0 22px #fbbf24, 0 0 40px rgba(245,158,11,0.7); color: #fde68a; }
+  100% { text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 0 10px rgba(251,191,36,0.58), 0 4px 9px rgba(146,64,14,0.26); color: #f59e0b; }
+}
+
+@keyframes star-flare-3 {
+  0%   { text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 0 10px rgba(251,191,36,0.58), 0 4px 9px rgba(146,64,14,0.26); color: #f59e0b; }
+  20%  { text-shadow: 0 0 8px #fff, 0 0 28px #ffe066, 0 0 52px rgba(251,191,36,0.95), 0 0 12px #fff9; color: #fffde0; }
+  45%  { text-shadow: 0 0 4px #fff, 0 0 20px #fbbf24, 0 0 44px rgba(245,158,11,0.8), 0 0 60px rgba(251,191,36,0.4); color: #fef3c7; }
+  70%  { text-shadow: 0 0 10px #fff, 0 0 32px #fde68a, 0 0 56px rgba(251,191,36,0.6); color: #fffbe6; }
+  100% { text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 0 10px rgba(251,191,36,0.58), 0 4px 9px rgba(146,64,14,0.26); color: #f59e0b; }
+}
+
+@keyframes star-flare-filter-1 {
+  0%   { filter: drop-shadow(0 8px 10px rgba(146,64,14,0.22)); }
+  30%  { filter: drop-shadow(0 0 14px rgba(251,191,36,0.95)) drop-shadow(0 0 6px #fff8); }
+  100% { filter: drop-shadow(0 8px 10px rgba(146,64,14,0.22)); }
+}
+
+@keyframes star-flare-filter-3 {
+  0%   { filter: drop-shadow(0 8px 10px rgba(146,64,14,0.22)); }
+  20%  { filter: drop-shadow(0 0 22px rgba(251,191,36,0.99)) drop-shadow(0 0 10px #fffb) drop-shadow(0 0 36px rgba(245,158,11,0.5)); }
+  70%  { filter: drop-shadow(0 0 14px rgba(251,191,36,0.6)) drop-shadow(0 0 4px #fff6); }
+  100% { filter: drop-shadow(0 8px 10px rgba(146,64,14,0.22)); }
+}
+
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--1 {
+  animation: star-flare-filter-1 0.9s ease-out forwards;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--1 .habit-checklist-card__today-wins-star {
+  animation: star-flare-1 0.9s ease-out forwards;
+}
+
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--2 {
+  animation: star-flare-filter-1 0.9s ease-out forwards;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--2 .habit-checklist-card__today-wins-star {
+  animation: star-flare-1 0.9s ease-out forwards;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--2 .habit-checklist-card__today-wins-star:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--2 .habit-checklist-card__today-wins-star:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--3 {
+  animation: star-flare-filter-3 0.9s ease-out forwards;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--3 .habit-checklist-card__today-wins-star {
+  animation: star-flare-3 0.9s ease-out forwards;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--3 .habit-checklist-card__today-wins-star:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--3 .habit-checklist-card__today-wins-star:nth-child(2) {
+  animation-delay: 0s;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--3 .habit-checklist-card__today-wins-star:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
 .habit-checklist-card__date-group {
   display: flex;
   align-items: center;
@@ -7770,16 +7834,18 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-checklist-card__title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.6rem;
+  margin-top: 0;
 }
 
 .habit-checklist-card__title-actions {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .habit-checklist-card__title h2 {
@@ -7803,24 +7869,23 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 @media (max-width: 480px) {
   .habit-checklist-card__title {
-    align-items: flex-start;
-    flex-wrap: wrap;
+    align-items: center;
+    flex-wrap: nowrap;
   }
 
   .habit-checklist-card__title-actions {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 0.35rem;
+    justify-content: flex-end;
+    gap: 0.3rem;
   }
 
   .habit-checklist-card__starter-launcher {
-    font-size: 0.72rem;
-    padding: 0.22rem 0.55rem;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.45rem;
   }
 
   .habit-checklist-card__todo-launcher,
   .habit-checklist-card__starter-launcher {
-    min-width: 42%;
+    min-width: unset;
     text-align: center;
     justify-content: center;
   }
@@ -8272,15 +8337,16 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-checklist__quest-btn {
   flex-shrink: 0;
   margin-left: 0.2rem;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border: none;
   background: none;
-  font-size: 1.05rem;
+  font-size: 1.45rem;
   line-height: 1;
   cursor: pointer;
-  opacity: 0.35;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  opacity: 0.3;
+  color: #f59e0b;
+  transition: opacity 0.15s ease, transform 0.15s ease, color 0.15s ease;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -8295,12 +8361,13 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .habit-checklist__quest-btn--active {
   opacity: 1;
+  color: #f59e0b;
   animation: questBtnPulse 2.2s ease-in-out infinite;
 }
 
 @keyframes questBtnPulse {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.4)); }
-  50%       { transform: scale(1.12); filter: drop-shadow(0 0 6px rgba(234, 179, 8, 0.65)); }
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(234, 179, 8, 0.5)); }
+  50%       { transform: scale(1.15); filter: drop-shadow(0 0 9px rgba(234, 179, 8, 0.85)); }
 }
 
 .habit-checklist__quest-btn--active:hover {
@@ -21404,10 +21471,19 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring-value {
-  font-size: 1.24rem;
+  font-size: 1.18rem;
   letter-spacing: -0.02em;
   font-weight: 900;
   color: #312e81;
+}
+
+.mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring-top,
+.mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring-bottom {
+  font-size: 0.48rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4338ca;
 }
 
 .mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__mini-subtitle {
@@ -22958,6 +23034,25 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: inset 0 1px 4px rgba(15, 23, 42, 0.15);
+}
+
+.mobile-menu-overlay__profile-ring-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  gap: 0;
+}
+
+.mobile-menu-overlay__profile-ring-top,
+.mobile-menu-overlay__profile-ring-bottom {
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4f46e5;
 }
 
 .mobile-menu-overlay__profile-ring-value {
@@ -32426,6 +32521,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: inset 0 1px 4px rgba(2, 6, 23, 0.45);
 }
 
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-ring-top,
+[data-theme='dark-glass'] .mobile-menu-overlay__profile-ring-bottom,
 [data-theme='dark-glass'] .mobile-menu-overlay__profile-ring-value,
 [data-theme='dark-glass'] .mobile-menu-overlay__profile-title,
 [data-theme='dark-glass'] .mobile-menu-overlay__strength-title,
