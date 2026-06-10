@@ -6858,6 +6858,18 @@ html.platform-ipad .workspace-shell__menu-edge {
   padding: 1.5rem;
   background: rgba(6, 12, 28, 0.72);
   backdrop-filter: blur(10px);
+  animation: todays-offer-backdrop-in 0.4s ease both;
+}
+
+@keyframes todays-offer-backdrop-in {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to   { opacity: 1; backdrop-filter: blur(10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-day-nav__vision-modal-backdrop:has(.habit-day-nav__todays-offer-modal) {
+    animation: none;
+  }
 }
 
 .habit-day-nav__vision-modal-backdrop:has(.habit-day-nav__vision-modal--reward) {

@@ -564,6 +564,18 @@
   justify-content: center;
   padding: 0;
   box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  animation: todays-offer-slide-up 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes todays-offer-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(72px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .habit-day-nav__todays-offer-modal::before {
@@ -596,6 +608,19 @@
   z-index: 2;
   min-width: 170px;
   transform: translateX(-50%);
+  opacity: 0;
+  animation: todays-offer-piece-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both;
+}
+
+@keyframes todays-offer-piece-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(22px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
 }
 
 .habit-day-nav__todays-offer-buy:disabled {
@@ -668,6 +693,19 @@
   max-width: 420px;
   margin-top: auto;
   padding: 1.5rem 2rem 2rem;
+  opacity: 0;
+  animation: todays-offer-spin-section-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.44s both;
+}
+
+@keyframes todays-offer-spin-section-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .habit-day-nav__todays-offer-spin-button {
@@ -768,7 +806,21 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: spin-caption-shimmer 2.4s linear infinite;
+  opacity: 0;
+  animation:
+    todays-offer-caption-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both,
+    spin-caption-shimmer 2.4s linear 1s infinite;
+}
+
+@keyframes todays-offer-caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes spin-caption-shimmer {
@@ -809,5 +861,16 @@
   .habit-day-nav__vision-modal-backdrop:has(.habit-day-nav__daily-life-upgrade-modal),
   .habit-day-nav__daily-life-upgrade-modal {
     animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-day-nav__todays-offer-modal,
+  .habit-day-nav__todays-offer-buy,
+  .habit-day-nav__todays-offer-spin,
+  .habit-day-nav__todays-offer-spin-caption {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
