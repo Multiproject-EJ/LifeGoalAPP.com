@@ -4250,22 +4250,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 onClick={openPlayersHandFromLauncher}
                 aria-label="Open Player's Hand"
               >
-                <span className="mobile-menu-overlay__hero-copy mobile-menu-overlay__hero-copy--hand">
-                  {microTestBadge.showBadge ? (
-                    <span
-                      className={`mobile-menu-overlay__micro-alert ${
-                        showMicroTestNotificationDot ? 'mobile-menu-overlay__micro-alert--unseen' : ''
-                      }`}
-                      aria-label={`${microTestBadge.count} micro-tests ready`}
-                      title={`${microTestBadge.count} micro-tests ready`}
-                    >
-                      <span className="mobile-menu-overlay__micro-alert-icon" aria-hidden="true">✦</span>
-                      {showMicroTestNotificationDot ? (
-                        <span className="mobile-menu-overlay__micro-alert-dot" aria-hidden="true" />
-                      ) : null}
-                    </span>
-                  ) : null}
-                </span>
+                <span className="mobile-menu-overlay__hero-copy mobile-menu-overlay__hero-copy--hand" />
                 <span className="mobile-menu-overlay__visual-slot mobile-menu-overlay__visual-slot--hand" aria-hidden="true">
                   <span
                     className="mobile-menu-overlay__card-stack"
@@ -4309,6 +4294,20 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     </span>
                   </span>
                 </span>
+                {microTestBadge.showBadge ? (
+                  <span
+                    className={`mobile-menu-overlay__micro-alert mobile-menu-overlay__micro-alert--bottom-right ${
+                      showMicroTestNotificationDot ? 'mobile-menu-overlay__micro-alert--unseen' : ''
+                    }`}
+                    aria-label={`${microTestBadge.count} micro-tests ready`}
+                    title={`${microTestBadge.count} micro-tests ready`}
+                  >
+                    <span className="mobile-menu-overlay__micro-alert-icon" aria-hidden="true">✦</span>
+                    {showMicroTestNotificationDot ? (
+                      <span className="mobile-menu-overlay__micro-alert-dot" aria-hidden="true" />
+                    ) : null}
+                  </span>
+                ) : null}
               </button>
 
               {isAdmin === true ? (
@@ -4328,23 +4327,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <div className="mobile-menu-overlay__quick-grid mobile-menu-overlay__quick-grid--featured">
                 <button
                   type="button"
-                  className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--coach"
-                  onClick={() => handleMobileNavSelect('coach')}
-                  aria-label="AI Coach - Get a guided next step"
-                >
-                  <span className="mobile-menu-overlay__online-pill" aria-hidden="true">ONLINE</span>
-                  <span className="mobile-menu-overlay__menu-dots" aria-hidden="true">•••</span>
-                  <span className="mobile-menu-overlay__mini-visual" aria-hidden="true">
-                    <img src="/icons/ai_coach/Aicoach_large.webp" alt="" loading="lazy" decoding="async" />
-                  </span>
-                  <span className="mobile-menu-overlay__mini-copy">
-                    <span className="mobile-menu-overlay__mini-title">Coach</span>
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--strength"
+                  className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--strength mobile-menu-overlay__mini-card--strength-full"
                   onClick={() => setIsProfileStrengthOpen(true)}
                   aria-label="Open Profile Strength"
                 >

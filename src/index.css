@@ -20870,6 +20870,36 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16), 0 4px 10px rgba(239, 68, 68, 0.28);
 }
 
+.mobile-menu-overlay__micro-alert--bottom-right {
+  position: absolute;
+  bottom: 0.72rem;
+  right: 0.72rem;
+}
+
+.mobile-menu-overlay__mini-card--strength-full {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.5rem;
+  min-height: 120px;
+}
+
+.mobile-menu-overlay__mini-card--strength-full .mobile-menu-overlay__profile-ring {
+  min-width: 110px;
+  min-height: 110px;
+}
+
+.mobile-menu-overlay__mini-card--strength-full .mobile-menu-overlay__profile-ring-value {
+  font-size: 1.5rem;
+}
+
+.mobile-menu-overlay__mini-card--strength-full .mobile-menu-overlay__mini-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
 .mobile-menu-overlay__hero-cta,
 .mobile-menu-overlay__quest-cta {
   position: relative;
