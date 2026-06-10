@@ -1343,6 +1343,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [hiddenTodayExtraSections, setHiddenTodayExtraSections] = useState<Set<TodayExpandableSectionKey>>(
     () => readHiddenTodayExtraSections(session.user.id),
   );
+  const [justAddedTodaySection, setJustAddedTodaySection] = useState<TodayExpandableSectionKey | null>(null);
   const [visionImages, setVisionImages] = useState<VisionImage[]>([]);
   const [visionReward, setVisionReward] = useState<VisionReward | null>(null);
   const [visionRewardDate, setVisionRewardDate] = useState<string | null>(null);
@@ -5445,6 +5446,24 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setHiddenTodayExtraSections(readHiddenTodayExtraSections(session.user.id));
   }, [session.user.id]);
 
+  const playBubbleBurst = useCallback(() => {
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(520, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.18);
+      gain.gain.setValueAtTime(0.28, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.22);
+      osc.onended = () => ctx.close();
+    } catch { /* audio not available */ }
+  }, []);
+
   const toggleTodayExtraSectionVisibility = useCallback((section: TodayExpandableSectionKey) => {
     const shouldHide = !hiddenTodayExtraSections.has(section);
     const nextHiddenSections = new Set(hiddenTodayExtraSections);
@@ -5452,13 +5471,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     if (shouldHide) {
       nextHiddenSections.add(section);
       setOpenTodayExpandableSection((current) => current === section ? null : current);
+      playBubbleBurst();
     } else {
       nextHiddenSections.delete(section);
+      setJustAddedTodaySection(section);
+      setTimeout(() => setJustAddedTodaySection(null), 750);
     }
 
     persistHiddenTodayExtraSections(session.user.id, nextHiddenSections);
     setHiddenTodayExtraSections(nextHiddenSections);
-  }, [hiddenTodayExtraSections, session.user.id]);
+  }, [hiddenTodayExtraSections, session.user.id, playBubbleBurst]);
 
   /**
    * Toggle habit completion for the monthly grid using the new habit_completions table.
@@ -9295,6 +9317,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 statusChip={routinesStatusChip}
                 expanded={openTodayExpandableSection === 'routines'}
                 isDemo={!isRoutinesFeatureOpen}
+                justAdded={justAddedTodaySection === 'routines'}
                 onToggle={() => {
                   if (!isRoutinesFeatureOpen) {
                     onOpenFeaturePreview?.('app.routines', 'Routines');
@@ -9326,6 +9349,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 statusChip={contractsStatusChip}
                 expanded={openTodayExpandableSection === 'contracts'}
                 isDemo={!isContractsFeatureOpen}
+                justAdded={justAddedTodaySection === 'contracts'}
                 onToggle={() => {
                   if (!isContractsFeatureOpen) {
                     onOpenFeaturePreview?.('app.contracts', 'Promises');
@@ -9429,6 +9453,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 subtitle={quickJournalDateLabel}
                 statusChip={quickJournalStatusChip}
                 expanded={openTodayExpandableSection === 'quickJournal'}
+                justAdded={justAddedTodaySection === 'quickJournal'}
                 onToggle={() => toggleTodayExpandableSection('quickJournal')}
               >
               <div className="habit-quick-journal" aria-live="polite">
@@ -9795,6 +9820,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   subtitle="Plan for this day"
                   statusChip={intentionsStatusChip}
                   expanded={openTodayExpandableSection === 'intentions'}
+                  justAdded={justAddedTodaySection === 'intentions'}
                   onToggle={() => toggleTodayExpandableSection('intentions')}
                 >
                   <div className="habit-quick-journal habit-quick-journal--intentions" aria-live="polite">
@@ -9908,6 +9934,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       <div className="habit-today-extra-toggles__buttons">
                         {TODAY_EXTRA_SECTION_TOGGLES.map((section) => {
                           const isVisible = !hiddenTodayExtraSections.has(section.key);
+                          const isJustAdded = justAddedTodaySection === section.key;
+                          const isDimmed = justAddedTodaySection !== null && !isJustAdded && isVisible;
 
                           return (
                             <button
@@ -9915,6 +9943,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                               type="button"
                               className={`habit-today-extra-toggles__button${
                                 isVisible ? ' habit-today-extra-toggles__button--active' : ''
+                              }${isJustAdded ? ' habit-today-extra-toggles__button--glow' : ''}${
+                                isDimmed ? ' habit-today-extra-toggles__button--dimming' : ''
                               }`}
                               onClick={() => toggleTodayExtraSectionVisibility(section.key)}
                               aria-label={`${isVisible ? 'Hide' : 'Show'} ${section.label}`}

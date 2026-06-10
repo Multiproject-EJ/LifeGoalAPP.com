@@ -16,6 +16,7 @@ type TodayExpandableActionSectionProps = {
   onToggle: () => void;
   keepMounted?: boolean;
   isDemo?: boolean;
+  justAdded?: boolean;
   children: ReactNode;
 };
 
@@ -29,6 +30,7 @@ export function TodayExpandableActionSection({
   onToggle,
   keepMounted = false,
   isDemo = false,
+  justAdded = false,
   children,
 }: TodayExpandableActionSectionProps) {
   const panelId = `${id}-panel`;
@@ -39,8 +41,11 @@ export function TodayExpandableActionSection({
     <section
       className={`today-expandable-action-section${expanded ? ' today-expandable-action-section--expanded' : ''}${
         isDemo ? ' future-feature-card--demo' : ''
-      }`}
+      }${justAdded ? ' today-expandable-action-section--just-added' : ''}`}
     >
+      {justAdded ? (
+        <span className="today-expandable-action-section__plus-flash" aria-hidden="true">+</span>
+      ) : null}
       <button
         type="button"
         className="today-expandable-action-section__trigger"
