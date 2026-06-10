@@ -548,11 +548,11 @@
 }
 
 .habit-day-nav__todays-offer-modal {
-  width: 95vw;
-  height: 95vh;
-  max-width: 95vw;
-  max-height: 95vh;
-  border-radius: 18px;
+  width: 88vw;
+  max-width: 420px;
+  height: auto;
+  max-height: 88vh;
+  border-radius: 24px;
   border: none;
   background-color: #0f172a;
   background-image: url("/assets/today'soffer/TodaysOffer1.webp");
@@ -563,6 +563,7 @@
   align-items: center;
   justify-content: center;
   padding: 0;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .habit-day-nav__todays-offer-modal::before {
@@ -662,10 +663,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   width: 100%;
   max-width: 420px;
   margin-top: auto;
+  padding: 1.5rem 2rem 2rem;
 }
 
 .habit-day-nav__todays-offer-spin-button {
@@ -673,68 +675,105 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
-  padding: 1rem 2.4rem;
-  width: 100%;
+  gap: 0.55rem;
+  padding: 0.9rem 2.2rem;
+  width: auto;
+  min-width: 200px;
+  max-width: 280px;
   border: none;
   border-radius: 999px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #0f172a;
-  background: linear-gradient(135deg, #facc15, #f59e0b);
-  box-shadow: 0 12px 26px rgba(250, 204, 21, 0.28);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1a0a00;
+  background: linear-gradient(135deg, #fde68a, #f59e0b, #d97706);
+  box-shadow:
+    0 8px 24px rgba(245, 158, 11, 0.45),
+    0 2px 0 rgba(255, 255, 255, 0.25) inset;
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.habit-day-nav__todays-offer-spin-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 12px 32px rgba(245, 158, 11, 0.55),
+    0 2px 0 rgba(255, 255, 255, 0.25) inset;
 }
 
 .habit-day-nav__todays-offer-spin-button--ready {
-  border: 2px solid rgba(220, 38, 38, 0.8);
+  background: linear-gradient(135deg, #fef08a, #fbbf24, #f59e0b);
+  border: 2px solid rgba(255, 200, 50, 0.9);
   box-shadow:
-    0 0 0 2px rgba(220, 38, 38, 0.35),
-    0 12px 26px rgba(250, 204, 21, 0.28);
-  animation: todays-offer-spin-ready-pulse 1.8s ease-in-out infinite;
+    0 0 0 3px rgba(251, 191, 36, 0.3),
+    0 10px 32px rgba(245, 158, 11, 0.5),
+    0 2px 0 rgba(255, 255, 255, 0.3) inset;
+  animation: todays-offer-spin-ready-pulse 1.6s ease-in-out infinite;
 }
 
 @keyframes todays-offer-spin-ready-pulse {
   0%,
   100% {
     transform: scale(1);
+    box-shadow:
+      0 0 0 3px rgba(251, 191, 36, 0.3),
+      0 10px 32px rgba(245, 158, 11, 0.5),
+      0 2px 0 rgba(255, 255, 255, 0.3) inset;
   }
   50% {
-    transform: scale(1.015);
+    transform: scale(1.04);
+    box-shadow:
+      0 0 0 6px rgba(251, 191, 36, 0.18),
+      0 14px 40px rgba(245, 158, 11, 0.65),
+      0 2px 0 rgba(255, 255, 255, 0.3) inset;
   }
 }
 
 .habit-day-nav__todays-offer-spin-icon {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
 }
 
 .habit-day-nav__todays-offer-spin-label {
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
 }
 
 .habit-day-nav__todays-offer-spin-badge {
   position: absolute;
-  top: -0.4rem;
-  right: -0.4rem;
-  min-width: 1.4rem;
-  height: 1.4rem;
+  top: -0.45rem;
+  right: -0.45rem;
+  min-width: 1.5rem;
+  height: 1.5rem;
   padding: 0 0.35rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 800;
   color: #fff;
   background: #dc2626;
-  box-shadow: 0 0 0 2px #111827;
+  box-shadow: 0 0 0 2px #1a0a00, 0 2px 8px rgba(220, 38, 38, 0.5);
 }
 
 .habit-day-nav__todays-offer-spin-caption {
   margin: 0;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   text-align: center;
+  background: linear-gradient(90deg, #fbbf24, #fde68a, #fbbf24);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: spin-caption-shimmer 2.4s linear infinite;
+}
+
+@keyframes spin-caption-shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
 }
 
 .habit-day-nav__vision-modal-backdrop:has(.habit-day-nav__daily-life-upgrade-modal) {

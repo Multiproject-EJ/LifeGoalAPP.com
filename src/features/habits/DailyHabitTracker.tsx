@@ -3566,7 +3566,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 {!onOpenDailySpinWheel
                   ? 'Daily Spin launcher unavailable in this view.'
                   : dailySpinAvailable
-                    ? `${Math.max(1, Math.floor(dailySpinCount))} Spin Ready`
+                    ? `🔥 ${Math.max(1, Math.floor(dailySpinCount))} Free Spin${Math.max(1, Math.floor(dailySpinCount)) > 1 ? 's' : ''} Waiting!`
                     : isDailySpinBonusClaimedToday
                       ? 'Come back tomorrow for your next spin.'
                       : 'Complete 1 habit to earn your bonus spin.'}
