@@ -33876,7 +33876,7 @@ body.habit-wizard-open .mobile-footer-nav {
 .habit-day-nav__daily-life-upgrade-backdrop {
   background:
     radial-gradient(circle at 50% 16%, rgba(59, 130, 246, 0.2), transparent 30%),
-    rgba(2, 6, 23, 0.74);
+    rgba(2, 6, 23, 0.88);
   backdrop-filter: blur(10px) saturate(120%);
   -webkit-backdrop-filter: blur(10px) saturate(120%);
   padding: clamp(0.45rem, 2.5vw, 1.4rem);
@@ -33891,7 +33891,7 @@ body.habit-wizard-open .mobile-footer-nav {
   overflow: visible;
   padding: 0;
   border: 0;
-  border-radius: 0;
+  border-radius: clamp(1rem, 4vw, 1.8rem);
   background:
     linear-gradient(180deg, rgba(2, 6, 23, 0.1), rgba(2, 6, 23, 0.24)),
     url('/assets/Morning_brief/IMG_9600.webp') center / contain no-repeat;
@@ -34085,10 +34085,10 @@ body.habit-wizard-open .mobile-footer-nav {
   align-items: center;
   gap: clamp(0.46rem, 1.8vw, 0.72rem);
   width: 100%;
-  min-height: clamp(2.82rem, 8.85vh, 4.05rem);
+  min-height: clamp(2.2rem, 6.8vh, 3.1rem);
   border: 1px solid rgba(255, 230, 155, 0.86);
   border-radius: 999px;
-  padding: clamp(0.28rem, 0.9vh, 0.44rem) clamp(0.7rem, 2.4vw, 0.92rem) clamp(0.28rem, 0.9vh, 0.44rem) clamp(0.36rem, 1.45vw, 0.5rem);
+  padding: clamp(0.18rem, 0.65vh, 0.32rem) clamp(0.56rem, 2vw, 0.76rem) clamp(0.18rem, 0.65vh, 0.32rem) clamp(0.28rem, 1.2vw, 0.42rem);
   background:
     linear-gradient(135deg, rgba(91, 142, 255, 0.92), rgba(95, 46, 235, 0.96)),
     rgba(13, 33, 76, 0.9);
