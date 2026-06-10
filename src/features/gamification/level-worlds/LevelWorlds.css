@@ -2344,17 +2344,34 @@
   box-shadow: 0 2px 6px rgba(94, 65, 9, 0.2);
 }
 
-/* One full spin every 3 minutes: accelerates, overshoots ~30°, elastic snap back */
+/* 2 full spins every 5 minutes: lucky-wheel ease-out, overshoots 30°, elastic snap, gold flash */
 @keyframes hatchery-compass-tick {
-  0%    { transform: rotate(0deg); }
-  /* fast acceleration — reaches ~390° (30° overshoot) in the first ~3% of the cycle */
-  3%    { transform: rotate(390deg); animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
-  /* bounce under */
-  4.2%  { transform: rotate(348deg); }
-  /* settle at exactly 360° */
-  5%    { transform: rotate(360deg); }
-  /* hold still for the remaining ~95% of the cycle */
-  100%  { transform: rotate(360deg); }
+  /* ease-out spin: starts fast, slows into overshoot */
+  0%    { transform: rotate(0deg);   filter: brightness(1) drop-shadow(0 0 0px transparent);
+          animation-timing-function: cubic-bezier(0.1, 0, 0.15, 1); }
+  /* 2 spins + 30° overshoot (~4 s into the 300 s cycle) */
+  1.33% { transform: rotate(750deg); filter: brightness(1) drop-shadow(0 0 0px transparent);
+          animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+  /* elastic snap back to exactly 720° */
+  1.67% { transform: rotate(720deg); filter: brightness(1) drop-shadow(0 0 0px transparent);
+          animation-timing-function: linear; }
+  /* spark peak — bright gold glow */
+  1.83% { transform: rotate(720deg);
+          filter: brightness(2.2) drop-shadow(0 0 12px rgba(255, 215, 0, 1)) drop-shadow(0 0 24px rgba(255, 180, 0, 0.7)); }
+  /* flash ripple */
+  2.17% { transform: rotate(720deg);
+          filter: brightness(1.5) drop-shadow(0 0 6px rgba(255, 215, 0, 0.5)); }
+  /* fully settled */
+  2.67% { transform: rotate(720deg); filter: brightness(1) drop-shadow(0 0 0px transparent); }
+  /* hold still for the rest of the 5-minute cycle */
+  100%  { transform: rotate(720deg); filter: brightness(1) drop-shadow(0 0 0px transparent); }
+}
+
+@keyframes hatchery-compass-sparkle {
+  0%   { opacity: 0; transform: scale(0.6); }
+  40%  { opacity: 1; transform: scale(1.35); }
+  70%  { opacity: 0.6; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.6); }
 }
 
 .island-run-board__hatchery-compass-btn {
@@ -2381,9 +2398,9 @@
   display: block;
   border-radius: 50%;
   background: url('/assets/icons/compass-gold-256.webp') center / contain no-repeat;
-  will-change: transform;
-  /* 180s = 3 minutes; spins once with overshoot then holds still until next cycle */
-  animation: hatchery-compass-tick 180s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform, filter;
+  /* 300s = 5 minutes; 2 lucky-wheel spins with overshoot + gold flash, then still */
+  animation: hatchery-compass-tick 300s linear infinite;
 }
 
 .island-run-board__rewardbar-side-rail {
