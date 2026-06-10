@@ -1109,7 +1109,37 @@
 
 .score-tab__sanctuary-actions {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.score-tab__dex-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #4c1d95;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(88, 28, 135, 0.1);
+  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+.score-tab__dex-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.score-tab__dex-toggle--open {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.9), rgba(126, 34, 206, 0.92));
+  color: #fff;
+  border-color: rgba(168, 85, 247, 0.65);
+  box-shadow: 0 10px 22px rgba(126, 34, 206, 0.28);
 }
 
 .score-tab__sanctuary-summary {
@@ -1194,8 +1224,150 @@
 
 .score-tab__sanctuary-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+/* Flippable Creature Dex cards — mirrors the Player's Hand presentation. */
+.score-tab__dex-card {
+  position: relative;
+  min-height: 143px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  perspective: 900px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.score-tab__dex-card-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  border-radius: inherit;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.score-tab__dex-card-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.score-tab__dex-card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: inherit;
+  padding: 0.7rem 0.6rem;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.68)),
+    radial-gradient(circle at 50% 22%, rgba(45, 212, 191, 0.18), transparent 42%);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.score-tab__dex-card-face--back {
+  transform: rotateY(180deg);
+  justify-content: center;
+  text-align: center;
+}
+
+.score-tab__dex-card--rare .score-tab__dex-card-face {
+  border-color: rgba(14, 165, 233, 0.3);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(236, 254, 255, 0.74)),
+    radial-gradient(circle at 50% 22%, rgba(14, 165, 233, 0.24), transparent 44%);
+}
+
+.score-tab__dex-card--mythic .score-tab__dex-card-face {
+  border-color: rgba(168, 85, 247, 0.34);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(250, 245, 255, 0.78)),
+    radial-gradient(circle at 50% 22%, rgba(217, 70, 239, 0.23), transparent 44%);
+}
+
+.score-tab__dex-card--locked .score-tab__dex-card-face {
+  border-style: dashed;
+  background:
+    linear-gradient(145deg, rgba(248, 250, 252, 0.86), rgba(226, 232, 240, 0.68)),
+    repeating-linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0 8px, transparent 8px 16px);
+}
+
+.score-tab__dex-card--active .score-tab__dex-card-face {
+  border-color: rgba(245, 158, 11, 0.68);
+  box-shadow: 0 16px 32px rgba(245, 158, 11, 0.2), 0 0 0 2px rgba(253, 224, 71, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.score-tab__dex-card .score-tab__sanctuary-card-topline {
+  width: 100%;
+}
+
+.score-tab__dex-card .score-tab__sanctuary-avatar {
+  width: 3.1rem;
+  height: 3.1rem;
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.score-tab__dex-card .score-tab__sanctuary-power {
+  font-size: 1rem;
+}
+
+.score-tab__dex-card .score-tab__sanctuary-active-pill {
+  top: 0.4rem;
+  right: 0.4rem;
+  font-size: 0.6rem;
+  padding: 0.2rem 0.4rem;
+  z-index: 2;
+}
+
+.score-tab__dex-card-name {
+  margin: 0;
+  color: #1e1b4b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.score-tab__dex-card-back-rarity {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7c3aed;
+}
+
+.score-tab__dex-card-back-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: #64748b;
+  font-size: 0.68rem;
+  line-height: 1.3;
+}
+
+.score-tab__dex-card-flip-hint {
+  margin-top: auto;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .score-tab__dex-card-inner {
+    transition: none;
+  }
 }
 
 .score-tab__sanctuary-card {

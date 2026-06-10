@@ -1754,6 +1754,20 @@ function CreatureSanctuaryScoreHubView({
     [],
   );
   const hasDiscoveredCreatures = galleryModel.summary.discoveredCreatures > 0;
+  const [dexOpen, setDexOpen] = useState(false);
+  const [flippedCardIds, setFlippedCardIds] = useState<Set<string>>(() => new Set());
+
+  const toggleCardFlip = useCallback((creatureId: string) => {
+    setFlippedCardIds((current) => {
+      const next = new Set(current);
+      if (next.has(creatureId)) {
+        next.delete(creatureId);
+      } else {
+        next.add(creatureId);
+      }
+      return next;
+    });
+  }, []);
 
   return (
     <div className="score-tab__sanctuary">
@@ -1761,8 +1775,21 @@ function CreatureSanctuaryScoreHubView({
         <button type="button" className="score-tab__link" onClick={onBack}>
           ← Back to Collections
         </button>
+        <button
+          type="button"
+          className={`score-tab__dex-toggle${dexOpen ? ' score-tab__dex-toggle--open' : ''}`}
+          aria-expanded={dexOpen}
+          aria-controls="creature-dex-panel"
+          onClick={() => setDexOpen((open) => !open)}
+        >
+          <span aria-hidden="true">📖</span> Creature Dex
+        </button>
       </div>
-      <CreatureSanctuarySummary model={galleryModel} />
+      {dexOpen ? (
+        <div id="creature-dex-panel">
+          <CreatureSanctuarySummary model={galleryModel} />
+        </div>
+      ) : null}
       {!hasDiscoveredCreatures ? (
         <section className="score-tab__sanctuary-empty" aria-live="polite">
           <span className="score-tab__sanctuary-empty-orb" aria-hidden="true">
@@ -1778,58 +1805,82 @@ function CreatureSanctuaryScoreHubView({
         </section>
       ) : null}
       <div className="score-tab__sanctuary-grid" aria-label="Creature Sanctuary gallery">
-        {galleryModel.cards.map((card) => (
-          (() => {
-            const creatureDefinition = creatureCatalogById.get(card.creatureId);
-            const creatureArt = creatureDefinition ? resolveCreatureArtManifest(creatureDefinition) : null;
-            return (
-          <article
-            key={card.creatureId}
-            className={`score-tab__sanctuary-card${
-              card.discovered ? '' : ' score-tab__sanctuary-card--locked'
-            }${card.isActiveCompanion ? ' score-tab__sanctuary-card--active' : ''} score-tab__sanctuary-card--${card.tier}`}
-          >
-            {card.isActiveCompanion ? (
-              <span className="score-tab__sanctuary-active-pill">Active companion</span>
-            ) : null}
-            <div className="score-tab__sanctuary-card-topline">
-              <span className="score-tab__sanctuary-level">Lv. {card.discovered && card.bondLevel !== null ? card.bondLevel : 1}</span>
-              <span
-                className={`score-tab__sanctuary-power score-tab__sanctuary-power--${card.tier}`}
-                aria-label={`${card.rarityLabel} power ${card.starCount}`}
-              >
-                {card.starCount}
+        {galleryModel.cards.map((card) => {
+          const creatureDefinition = creatureCatalogById.get(card.creatureId);
+          const creatureArt = creatureDefinition ? resolveCreatureArtManifest(creatureDefinition) : null;
+          const isFlipped = flippedCardIds.has(card.creatureId);
+          const displayName = card.discovered ? card.name : 'Locked Creature';
+          return (
+            <button
+              type="button"
+              key={card.creatureId}
+              className={`score-tab__dex-card${
+                card.discovered ? '' : ' score-tab__dex-card--locked'
+              }${card.isActiveCompanion ? ' score-tab__dex-card--active' : ''} score-tab__dex-card--${card.tier}`}
+              aria-label={
+                isFlipped ? `Show front of ${displayName}` : `Show details for ${displayName}`
+              }
+              aria-pressed={isFlipped}
+              onClick={() => toggleCardFlip(card.creatureId)}
+            >
+              <span className={`score-tab__dex-card-inner${isFlipped ? ' is-flipped' : ''}`}>
+                <span className="score-tab__dex-card-face score-tab__dex-card-face--front">
+                  {card.isActiveCompanion ? (
+                    <span className="score-tab__sanctuary-active-pill">Active</span>
+                  ) : null}
+                  <span className="score-tab__sanctuary-card-topline">
+                    <span className="score-tab__sanctuary-level">
+                      Lv. {card.discovered && card.bondLevel !== null ? card.bondLevel : 1}
+                    </span>
+                    <span
+                      className={`score-tab__sanctuary-power score-tab__sanctuary-power--${card.tier}`}
+                      aria-label={`${card.rarityLabel} power ${card.starCount}`}
+                    >
+                      {card.starCount}
+                    </span>
+                  </span>
+                  <span className="score-tab__sanctuary-avatar" aria-hidden="true">
+                    {card.discovered && creatureArt ? (
+                      <img
+                        src={creatureArt.cutoutSrc}
+                        alt=""
+                        loading="lazy"
+                        onError={(event) => {
+                          applyCreatureArtFallback(event, { pngSrc: creatureArt.cutoutPngSrc, silhouetteSrc: creatureArt.silhouetteSrc });
+                        }}
+                      />
+                    ) : (
+                      '🔒'
+                    )}
+                  </span>
+                  <span className="score-tab__dex-card-name">{displayName}</span>
+                  <span className="score-tab__dex-card-flip-hint" aria-hidden="true">Tap to flip</span>
+                </span>
+                <span className="score-tab__dex-card-face score-tab__dex-card-face--back">
+                  <span className="score-tab__dex-card-name">{displayName}</span>
+                  <span className="score-tab__dex-card-back-rarity">{card.rarityLabel}</span>
+                  <span className="score-tab__dex-card-back-meta">
+                    {card.discovered ? (
+                      <>
+                        <span>{card.habitat}</span>
+                        <span>{card.shipZone} zone</span>
+                        <span>{card.copies} owned</span>
+                        {card.bondLevel !== null ? <span>Bond Lv. {card.bondLevel}</span> : null}
+                      </>
+                    ) : (
+                      <>
+                        <span>{card.shipZone} zone</span>
+                        <span>Locked</span>
+                        <span>Waiting to be discovered</span>
+                      </>
+                    )}
+                  </span>
+                  <span className="score-tab__dex-card-flip-hint" aria-hidden="true">Tap to flip back</span>
+                </span>
               </span>
-            </div>
-            <div className="score-tab__sanctuary-avatar" aria-hidden="true">
-              {card.discovered && creatureArt ? (
-                <img
-                  src={creatureArt.cutoutSrc}
-                  alt=""
-                  loading="lazy"
-                  onError={(event) => {
-                    applyCreatureArtFallback(event, { pngSrc: creatureArt.cutoutPngSrc, silhouetteSrc: creatureArt.silhouetteSrc });
-                  }}
-                />
-              ) : (
-                '🔒'
-              )}
-            </div>
-            <h3 className="score-tab__sanctuary-name">{card.discovered ? card.name : 'Locked Creature'}</h3>
-            <p>
-              {card.discovered
-                ? `${card.rarityLabel} · ${card.habitat}`
-                : `${card.rarityLabel} companion waiting to be discovered.`}
-            </p>
-            <div className="score-tab__sanctuary-card-meta">
-              <span>{card.shipZone} zone</span>
-              {card.discovered ? <span>{card.copies} owned</span> : <span>Locked</span>}
-              {card.discovered && card.bondLevel !== null ? <span>Bond Lv. {card.bondLevel}</span> : null}
-            </div>
-          </article>
-            );
-          })()
-        ))}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
