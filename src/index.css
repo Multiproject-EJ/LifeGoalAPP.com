@@ -5605,6 +5605,26 @@ html.platform-ipad .workspace-shell__menu-edge {
   z-index: 2;
 }
 
+.habit-checklist-card__progress--top-badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 4;
+  transform: translate(-50%, -48%);
+  filter: drop-shadow(0 8px 10px rgba(59, 130, 246, 0.22));
+  width: 44px;
+  height: 44px;
+}
+
+.habit-checklist-card__progress--top-badge .habit-checklist-card__progress-ring {
+  width: 36px;
+  height: 36px;
+}
+
+.habit-checklist-card__progress--top-badge .habit-checklist-card__progress-count {
+  font-size: 0.82rem;
+}
+
 .habit-checklist-card__progress--faint {
   box-shadow: 0 0 8px rgba(56, 189, 248, 0.35), 0 0 16px rgba(168, 85, 247, 0.2);
 }
@@ -5829,6 +5849,55 @@ html.platform-ipad .workspace-shell__menu-edge {
     opacity: 0;
     transform: scale(0.8) translateY(-5px);
   }
+}
+
+.today-wins-modal__progress-ring-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 1rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(56, 189, 248, 0.15) 55%, rgba(168, 85, 247, 0.2));
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  box-shadow: 0 10px 28px rgba(59, 130, 246, 0.2);
+}
+
+.today-wins-modal__progress-ring-svg {
+  width: 90px;
+  height: 90px;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+}
+
+.today-wins-modal__progress-count {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.today-wins-modal__progress-symbol {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.4rem;
+  color: #fbbf24;
+  text-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+  pointer-events: none;
+  opacity: 0.3;
+  z-index: 1;
 }
 
 .today-wins-modal__grid {

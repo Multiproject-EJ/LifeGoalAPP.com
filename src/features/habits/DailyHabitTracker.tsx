@@ -8296,7 +8296,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     const progressNode = (
       <button
         type="button"
-        className={`habit-checklist-card__progress habit-checklist-card__progress--${orbState}${
+        className={`habit-checklist-card__progress habit-checklist-card__progress--top-badge habit-checklist-card__progress--${orbState}${
           progressStage !== 'none' ? ` habit-checklist-card__progress--${progressStage}` : ''
         }`}
         onClick={() => setIsTodayWinsOpen(true)}
@@ -8857,6 +8857,28 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               </p>
             </div>
           </div>
+          <div className="today-wins-modal__progress-ring-wrap" aria-hidden="true">
+            <svg className="today-wins-modal__progress-ring-svg" viewBox="0 0 36 36">
+              <defs>
+                <linearGradient id={`${progressGradientId}-modal`} x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#38bdf8" />
+                  <stop offset="50%" stopColor="#a855f7" />
+                  <stop offset="100%" stopColor="#f59e0b" />
+                </linearGradient>
+              </defs>
+              <circle className="habit-checklist-card__progress-track" cx="18" cy="18" r="16" />
+              <circle
+                className="habit-checklist-card__progress-value"
+                cx="18"
+                cy="18"
+                r="16"
+                strokeDasharray={`${progressPercent} 100`}
+                stroke={`url(#${progressGradientId}-modal)`}
+              />
+            </svg>
+            <span className="today-wins-modal__progress-count">{todayWinsTileCount}</span>
+            <span className="today-wins-modal__progress-symbol">{orbIcon}</span>
+          </div>
           {todayWinsTiles.length > 0 ? (
             <div className="today-wins-modal__grid" role="list" aria-label="Today's completed categories">
               {todayWinsTiles.map((tile) => (
@@ -8978,22 +9000,25 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {intentionsModal}
         {todayWinsModal}
         <div className="habit-checklist-card__board">
-          <button
-            type="button"
-            className={`habit-checklist-card__today-wins-stars habit-checklist-card__today-wins-stars--${todayWinsStarCount}`}
-            onClick={() => setIsTodayWinsOpen(true)}
-            aria-label={`Open Today's Wins: ${todayWinsStarsLabel}`}
-          >
-            {todayWinsStarItems.map((starIndex) => (
-              <span key={starIndex} className="habit-checklist-card__today-wins-star" aria-hidden="true">
-                ★
-              </span>
-            ))}
-          </button>
+          {!isCompactView ? (
+            todayWinsTier !== 'one_star' ? (
+              <button
+                type="button"
+                className={`habit-checklist-card__today-wins-stars habit-checklist-card__today-wins-stars--${todayWinsStarCount}`}
+                onClick={() => setIsTodayWinsOpen(true)}
+                aria-label={`Open Today's Wins: ${todayWinsStarsLabel}`}
+              >
+                {todayWinsStarItems.map((starIndex) => (
+                  <span key={starIndex} className="habit-checklist-card__today-wins-star" aria-hidden="true">
+                    ★
+                  </span>
+                ))}
+              </button>
+            ) : progressNode
+          ) : null}
           <div className="habit-checklist-card__board-head">
             <div className="habit-checklist-card__date-wrap">
               <div className="habit-checklist-card__date-group">
-                {!isCompactView ? progressNode : null}
                 <p className="habit-checklist-card__date">
                   <span className="habit-checklist-card__date-year">{yearLabel}</span>
                   <span className="habit-checklist-card__date-text">{dateLabel}</span>
