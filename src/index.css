@@ -25302,11 +25302,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: grid;
   place-items: center;
   gap: 0.3rem;
-  margin: 0.45rem auto 0.65rem;
-  padding: 0.92rem;
+  margin: 0.65rem auto 0.85rem;
+  padding: 1.2rem;
   overflow: hidden;
   aspect-ratio: 1 / 1;
-  width: min(58vw, 208px);
+  width: min(68vw, 248px);
   border-radius: 30px;
   color: #fff7ed;
   font-size: 0.9rem;
@@ -25493,14 +25493,18 @@ html.platform-ipad .workspace-shell__menu-edge {
   border: none;
   background: rgba(148, 163, 184, 0.2);
   border-radius: 999px;
-  width: 32px;
-  height: 32px;
-  font-size: 1.25rem;
+  width: 24px;
+  height: 24px;
+  font-size: 1rem;
   cursor: pointer;
   color: #0f172a;
   z-index: 2;
   touch-action: manipulation;
   pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .daily-treats-calendar__eyebrow {
