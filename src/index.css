@@ -5235,6 +5235,70 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-radius: 999px;
 }
 
+@keyframes star-flare-1 {
+  0%   { text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 0 10px rgba(251,191,36,0.58), 0 4px 9px rgba(146,64,14,0.26); color: #f59e0b; }
+  30%  { text-shadow: 0 0 6px #fff, 0 0 18px #ffe066, 0 0 32px rgba(251,191,36,0.9), 0 0 8px #fff8; color: #fff7c2; }
+  55%  { text-shadow: 0 0 3px #fff, 0 0 22px #fbbf24, 0 0 40px rgba(245,158,11,0.7); color: #fde68a; }
+  100% { text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 0 10px rgba(251,191,36,0.58), 0 4px 9px rgba(146,64,14,0.26); color: #f59e0b; }
+}
+
+@keyframes star-flare-3 {
+  0%   { text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 0 10px rgba(251,191,36,0.58), 0 4px 9px rgba(146,64,14,0.26); color: #f59e0b; }
+  20%  { text-shadow: 0 0 8px #fff, 0 0 28px #ffe066, 0 0 52px rgba(251,191,36,0.95), 0 0 12px #fff9; color: #fffde0; }
+  45%  { text-shadow: 0 0 4px #fff, 0 0 20px #fbbf24, 0 0 44px rgba(245,158,11,0.8), 0 0 60px rgba(251,191,36,0.4); color: #fef3c7; }
+  70%  { text-shadow: 0 0 10px #fff, 0 0 32px #fde68a, 0 0 56px rgba(251,191,36,0.6); color: #fffbe6; }
+  100% { text-shadow: 0 1px 0 rgba(255,255,255,0.85), 0 0 10px rgba(251,191,36,0.58), 0 4px 9px rgba(146,64,14,0.26); color: #f59e0b; }
+}
+
+@keyframes star-flare-filter-1 {
+  0%   { filter: drop-shadow(0 8px 10px rgba(146,64,14,0.22)); }
+  30%  { filter: drop-shadow(0 0 14px rgba(251,191,36,0.95)) drop-shadow(0 0 6px #fff8); }
+  100% { filter: drop-shadow(0 8px 10px rgba(146,64,14,0.22)); }
+}
+
+@keyframes star-flare-filter-3 {
+  0%   { filter: drop-shadow(0 8px 10px rgba(146,64,14,0.22)); }
+  20%  { filter: drop-shadow(0 0 22px rgba(251,191,36,0.99)) drop-shadow(0 0 10px #fffb) drop-shadow(0 0 36px rgba(245,158,11,0.5)); }
+  70%  { filter: drop-shadow(0 0 14px rgba(251,191,36,0.6)) drop-shadow(0 0 4px #fff6); }
+  100% { filter: drop-shadow(0 8px 10px rgba(146,64,14,0.22)); }
+}
+
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--1 {
+  animation: star-flare-filter-1 0.9s ease-out forwards;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--1 .habit-checklist-card__today-wins-star {
+  animation: star-flare-1 0.9s ease-out forwards;
+}
+
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--2 {
+  animation: star-flare-filter-1 0.9s ease-out forwards;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--2 .habit-checklist-card__today-wins-star {
+  animation: star-flare-1 0.9s ease-out forwards;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--2 .habit-checklist-card__today-wins-star:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--2 .habit-checklist-card__today-wins-star:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--3 {
+  animation: star-flare-filter-3 0.9s ease-out forwards;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--3 .habit-checklist-card__today-wins-star {
+  animation: star-flare-3 0.9s ease-out forwards;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--3 .habit-checklist-card__today-wins-star:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--3 .habit-checklist-card__today-wins-star:nth-child(2) {
+  animation-delay: 0s;
+}
+.habit-checklist-card__today-wins-stars--flaring.habit-checklist-card__today-wins-stars--3 .habit-checklist-card__today-wins-star:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
 .habit-checklist-card__date-group {
   display: flex;
   align-items: center;

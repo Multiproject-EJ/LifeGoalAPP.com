@@ -1120,6 +1120,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   const [completedActionsCount, setCompletedActionsCount] = useState(0);
   const [isTodayWinsOpen, setIsTodayWinsOpen] = useState(false);
+  const [isStarFlaring, setIsStarFlaring] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsStarFlaring(true);
+      setTimeout(() => setIsStarFlaring(false), 900);
+    }, 4 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
   const [todayWinsSummary, setTodayWinsSummary] = useState<TodayWinsSummary>({
     journalCount: 0,
     lotusEarned: 0,
@@ -8980,7 +8989,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         <div className="habit-checklist-card__board">
           <button
             type="button"
-            className={`habit-checklist-card__today-wins-stars habit-checklist-card__today-wins-stars--${todayWinsStarCount}`}
+            className={`habit-checklist-card__today-wins-stars habit-checklist-card__today-wins-stars--${todayWinsStarCount}${isStarFlaring ? ' habit-checklist-card__today-wins-stars--flaring' : ''}`}
             onClick={() => setIsTodayWinsOpen(true)}
             aria-label={`Open Today's Wins: ${todayWinsStarsLabel}`}
           >
