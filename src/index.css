@@ -7774,8 +7774,9 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .habit-checklist-card__title h2 {
@@ -7799,24 +7800,23 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 @media (max-width: 480px) {
   .habit-checklist-card__title {
-    align-items: flex-start;
-    flex-wrap: wrap;
+    align-items: center;
+    flex-wrap: nowrap;
   }
 
   .habit-checklist-card__title-actions {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 0.35rem;
+    justify-content: flex-end;
+    gap: 0.3rem;
   }
 
   .habit-checklist-card__starter-launcher {
-    font-size: 0.72rem;
-    padding: 0.22rem 0.55rem;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.45rem;
   }
 
   .habit-checklist-card__todo-launcher,
   .habit-checklist-card__starter-launcher {
-    min-width: 42%;
+    min-width: unset;
     text-align: center;
     justify-content: center;
   }

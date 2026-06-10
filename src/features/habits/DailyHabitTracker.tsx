@@ -6971,6 +6971,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 + My quest
               </button>
             ) : null}
+            <button
+              type="button"
+              className={`habit-checklist-card__glass-toggle ${
+                isCompactView ? 'habit-checklist-card__glass-toggle--active' : ''
+              } ${!isCompactToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
+              onClick={handleCompactToggle}
+              aria-pressed={isCompactView}
+            >
+              <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true">
+                <span className="habit-checklist-card__glass-toggle-thumb" />
+              </span>
+              <span className="habit-checklist-card__glass-toggle-label">
+                {isCompactView ? 'Private' : 'Detailed'}
+              </span>
+            </button>
           </div>
         </div>
         {shouldShowTimeLimitedOfferToggle && isTimeLimitedOfferDetailsOpen ? (
@@ -9007,21 +9022,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   <span className="habit-checklist-card__date-text">{dateLabel}</span>
                 </p>
               </div>
-              <button
-                type="button"
-                className={`habit-checklist-card__glass-toggle ${
-                  isCompactView ? 'habit-checklist-card__glass-toggle--active' : ''
-                } ${!isCompactToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
-                onClick={handleCompactToggle}
-                aria-pressed={isCompactView}
-              >
-                <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true">
-                  <span className="habit-checklist-card__glass-toggle-thumb" />
-                </span>
-                <span className="habit-checklist-card__glass-toggle-label">
-                  {isCompactView ? 'Private' : 'Detailed'}
-                </span>
-              </button>
             </div>
             {!isCompactView ? (
               <div className="habit-checklist-card__head-actions">
