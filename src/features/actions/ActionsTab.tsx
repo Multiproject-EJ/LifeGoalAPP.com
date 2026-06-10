@@ -498,7 +498,6 @@ export function ActionsTab({
         )}
 
         <div className="actions-tab__launcher-card">
-          <QuickAddAction onAdd={handleAddAction} projects={projects} showTaskImage={false} />
           <div className="actions-tab__launcher-actions">
             {onNavigateToJournal && (
               <div className="actions-tab__launcher-row actions-tab__launcher-row--single">
@@ -545,27 +544,34 @@ export function ActionsTab({
               </div>
             )}
             <div className="actions-tab__launcher-row actions-tab__launcher-row--single">
-              <button
-                type="button"
+              <div
                 className={getActionsFutureFeatureCardClassName(
-                  'actions-tab__launcher-button actions-tab__launcher-button--full-width actions-tab__launcher-button--task-tower',
+                  'actions-tab__launcher-button actions-tab__launcher-button--full-width actions-tab__launcher-button--task-tower actions-tab__launcher-button--task-tower-expanded',
                   'actions.taskTower',
                 )}
-                onClick={() => handleActionLauncherClick('actions.taskTower', 'Task Tower', () => setShowTaskTower(true))}
-                aria-label="Open Task Tower"
               >
-                <span className="actions-tab__launcher-icon" aria-hidden="true">
-                  <img
-                    className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large actions-tab__launcher-icon-image--xl"
-                    src={taskTowerIcon}
-                    alt=""
-                  />
-                </span>
-                <span className="actions-tab__launcher-content">
-                  <span className="actions-tab__launcher-label">Task Tower</span>
-                  <FeatureStatusBadge status={getFeatureAvailability('actions.taskTower').status} />
-                </span>
-              </button>
+                <button
+                  type="button"
+                  className="actions-tab__task-tower-top-row"
+                  onClick={() => handleActionLauncherClick('actions.taskTower', 'Task Tower', () => setShowTaskTower(true))}
+                  aria-label="Open Task Tower"
+                >
+                  <span className="actions-tab__launcher-icon" aria-hidden="true">
+                    <img
+                      className="actions-tab__launcher-icon-image actions-tab__launcher-icon-image--large actions-tab__launcher-icon-image--xl"
+                      src={taskTowerIcon}
+                      alt=""
+                    />
+                  </span>
+                  <span className="actions-tab__launcher-content">
+                    <span className="actions-tab__launcher-label">Task Tower</span>
+                    <FeatureStatusBadge status={getFeatureAvailability('actions.taskTower').status} />
+                  </span>
+                </button>
+                <div className="actions-tab__task-tower-quick-add" onClick={(e) => e.stopPropagation()}>
+                  <QuickAddAction onAdd={handleAddAction} projects={projects} showTaskImage={false} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
