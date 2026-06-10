@@ -4390,7 +4390,8 @@ export function IslandRunBoardPrototype({
     });
     setRuntimeState(record);
     const puzzlePart = reward.stickerFragments > 0 ? `, +${reward.stickerFragments} puzzle pieces` : '';
-    setLandingText(`🚦 ${reward.side === 'heads' ? 'Heads' : 'Tails'} opened ${reward.label}: +${reward.dice} dice, +${reward.essence} essence${puzzlePart}.`);
+    const barPart = reward.rewardBarProgress > 0 ? `, +${reward.rewardBarProgress} bar` : '';
+    setLandingText(`🚦 ${reward.side === 'heads' ? 'Heads' : 'Tails'} opened ${reward.label}: +${reward.dice} dice, +${reward.essence} essence${puzzlePart}${barPart}.`);
     setTrafficLightCoinFlip(null);
   }, [client, session, trafficLightCoinFlip]);
 
@@ -11626,6 +11627,11 @@ export function IslandRunBoardPrototype({
                   {trafficLightCoinFlip.reward.stickerFragments > 0 && (
                     <span className="island-coin-reward__chip island-coin-reward__chip--rare" style={{ animationDelay: '180ms' }}>
                       <b>+{trafficLightCoinFlip.reward.stickerFragments}</b> 🧩
+                    </span>
+                  )}
+                  {trafficLightCoinFlip.reward.rewardBarProgress > 0 && (
+                    <span className="island-coin-reward__chip" style={{ animationDelay: '270ms' }}>
+                      <b>+{trafficLightCoinFlip.reward.rewardBarProgress}</b> ⚡
                     </span>
                   )}
                 </div>

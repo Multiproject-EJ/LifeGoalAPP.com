@@ -745,6 +745,7 @@ export function applyTrafficLightCoinFlipReward(options: {
     dicePool: Math.max(0, current.dicePool + Math.max(0, Math.floor(reward.dice))),
     essence: Math.max(0, current.essence + Math.max(0, Math.floor(reward.essence))),
     stickerProgress: nextStickerProgress,
+    rewardBarProgress: Math.max(0, Math.floor(current.rewardBarProgress)) + Math.max(0, Math.floor(reward.rewardBarProgress)),
     runtimeVersion: current.runtimeVersion + 1,
   };
   recordIslandRunDiceInflow({
