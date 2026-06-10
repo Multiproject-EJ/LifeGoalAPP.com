@@ -4327,11 +4327,24 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <div className="mobile-menu-overlay__quick-grid mobile-menu-overlay__quick-grid--featured">
                 <button
                   type="button"
-                  className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--strength mobile-menu-overlay__mini-card--strength-full"
+                  className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--coach"
+                  onClick={() => handleMobileNavSelect('coach')}
+                  aria-label="AI Coach - Get a guided next step"
+                >
+                  <span className="mobile-menu-overlay__online-pill" aria-hidden="true">ONLINE</span>
+                  <span className="mobile-menu-overlay__menu-dots" aria-hidden="true">•••</span>
+                  <span className="mobile-menu-overlay__mini-visual" aria-hidden="true">
+                    <img src="/icons/ai_coach/Aicoach_large.webp" alt="" loading="lazy" decoding="async" />
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--strength"
                   onClick={() => setIsProfileStrengthOpen(true)}
                   aria-label="Open Profile Strength"
                 >
-                  <span className="mobile-menu-overlay__mini-title">Profile Strength</span>
+                  <span className="mobile-menu-overlay__mini-title mobile-menu-overlay__mini-title--centered">Profile<br />Strength</span>
                   <span className="mobile-menu-overlay__profile-ring" style={profileStrengthRingStyle} aria-hidden="true">
                     <span className="mobile-menu-overlay__profile-ring-value">{profileStrengthPercentLabel}</span>
                   </span>

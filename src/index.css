@@ -20716,12 +20716,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__hero-card--hand {
-  min-height: 132px;
+  min-height: 96px;
   display: grid;
   grid-template-columns: minmax(96px, 0.9fr) minmax(0, 1.35fr) auto;
   align-items: center;
   gap: 0.85rem;
-  padding: 1rem;
+  padding: 0.7rem 1rem;
   background:
     radial-gradient(circle at 16% 12%, rgba(255, 255, 255, 0.98), transparent 36%),
     linear-gradient(135deg, rgba(219, 234, 254, 0.98), rgba(239, 246, 255, 0.94) 48%, rgba(224, 242, 254, 0.92));
@@ -20876,28 +20876,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   right: 0.72rem;
 }
 
-.mobile-menu-overlay__mini-card--strength-full {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.1rem 1.5rem;
-  min-height: 120px;
-}
-
-.mobile-menu-overlay__mini-card--strength-full .mobile-menu-overlay__profile-ring {
-  min-width: 110px;
-  min-height: 110px;
-}
-
-.mobile-menu-overlay__mini-card--strength-full .mobile-menu-overlay__profile-ring-value {
-  font-size: 1.5rem;
-}
-
-.mobile-menu-overlay__mini-card--strength-full .mobile-menu-overlay__mini-title {
-  font-size: 1rem;
-  font-weight: 700;
+.mobile-menu-overlay__mini-title--centered {
+  align-self: center;
+  text-align: center;
+  line-height: 1.25;
 }
 
 .mobile-menu-overlay__hero-cta,
@@ -21029,7 +21011,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-menu-overlay__hero-card--hand {
-  --launcher-hand-min-height: 196px;
+  --launcher-hand-min-height: 152px;
   min-height: var(--launcher-hand-min-height);
   grid-template-columns: 1fr;
   grid-template-rows: auto minmax(0, 1fr);
@@ -21050,7 +21032,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .mobile-menu-overlay__visual-slot--hand {
   grid-area: visual;
   width: 100%;
-  min-height: 152px;
+  min-height: 112px;
   padding: 0.15rem 0.2rem 0;
   border-radius: 22px;
   background:
@@ -21318,7 +21300,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-menu-overlay__mini-card--strength {
   min-height: 176px;
-  align-content: start;
+  align-content: center;
   justify-items: center;
   gap: 0.42rem;
   padding: 0.9rem 0.72rem 0.84rem;
