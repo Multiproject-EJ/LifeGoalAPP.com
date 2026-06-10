@@ -1163,7 +1163,7 @@ const FOOTER_CONTROLLER_SLOT_MAP: Record<FooterControllerSlotId, FooterControlle
   // controller shell as a separate long pill.
   leftUpper: { x: 18, y: 28, rotate: -3.5, scale: 0.96, depth: 'raised' },
   leftLower: { x: 11.5, y: 53, rotate: -8, scale: 0.92, depth: 'raised' },
-  centerCore: { x: 50, y: 32.5, rotate: 0, scale: 1, depth: 'inset' },
+  centerCore: { x: 50, y: 4, rotate: 0, scale: 1, depth: 'inset' },
   centerBadge: { x: 50, y: -1.5, rotate: 0, scale: 1, depth: 'surface' },
   rightLower: { x: 88.5, y: 53, rotate: 8, scale: 0.92, depth: 'raised' },
   rightUpper: { x: 82, y: 28, rotate: 3.5, scale: 0.96, depth: 'raised' },
