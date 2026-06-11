@@ -12,17 +12,7 @@ export interface WelcomePackModalProps {
   isDevPreview?: boolean;
 }
 
-const PLACEHOLDER_CARDS = Array.from({ length: 5 }, (_, index) => ({
-  id: index,
-  title: `Starter Card ${index + 1}`,
-}));
-
-const VISUAL_GIFT_SLOTS = [
-  { icon: '🃏', label: 'Starter cards', value: '5' },
-  { icon: '🎲', label: 'Dice', value: '150' },
-  { icon: '⚡', label: 'Essence', value: '2000' },
-  { icon: '🎟️', label: 'Event tickets', value: '20' },
-] as const;
+type Phase = 'economy' | 'cards-intro' | 'card-reveal';
 
 export function WelcomePackModal({
   open,
@@ -33,6 +23,18 @@ export function WelcomePackModal({
   claimResult = null,
   isDevPreview = false,
 }: WelcomePackModalProps): React.JSX.Element | null {
+  const [phase, setPhase] = React.useState<Phase>('economy');
+  const [collectAnimating, setCollectAnimating] = React.useState(false);
+  const [revealIndex, setRevealIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!open) {
+      setPhase('economy');
+      setCollectAnimating(false);
+      setRevealIndex(0);
+    }
+  }, [open]);
+
   React.useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined;
     const previousOverflow = document.body.style.overflow;
@@ -43,102 +45,125 @@ export function WelcomePackModal({
   }, [open]);
 
   if (!open) return null;
+
   const resolvedCards = claimResult?.cards.revealPayload?.cards ?? [];
-  const isAlreadyClaimed = claimResult?.cards.status === 'already_claimed' && claimResult?.bundle.status === 'already_claimed';
-  const hasClaimedCards = claimResult?.cards.status === 'claimed' && resolvedCards.length > 0;
-  const noActiveEventFallback = claimResult?.bundle.status === 'claimed_without_active_event';
-  const isPartialClaim = claimResult?.status === 'partially_claimed';
-  const ctaLabel = claimPending
-    ? 'Claiming…'
-    : isAlreadyClaimed
-      ? 'Already claimed'
-      : isPartialClaim
-        ? 'Collect remaining rewards'
-        : 'Collect Welcome Pack';
+  const isAlreadyClaimed =
+    claimResult?.cards.status === 'already_claimed' &&
+    claimResult?.bundle.status === 'already_claimed';
 
-  return (
-    <div className="welcome-pack-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-pack-modal-title">
-      <section className="welcome-pack-modal__shell island-stop-modal island-stop-modal--onboarding">
-        <header className="welcome-pack-modal__header">
-          <p className="welcome-pack-modal__eyebrow">🎉 Congratulations{isDevPreview ? ' · dev preview enabled' : ''}</p>
-          <h2 id="welcome-pack-modal-title">Welcome Pack</h2>
-          <p>A one-time starter reward for new Island Run players. Opening this modal does not grant rewards until you press Collect.</p>
-          <p className="welcome-pack-modal__fine-print">Welcome Pack = creature cards plus starter economy. Paid Creature Packs are cards-only.</p>
-        </header>
+  const handleCollectEconomy = async () => {
+    if (claimPending || collectAnimating) return;
+    setCollectAnimating(true);
+    if (!isAlreadyClaimed && onClaim) {
+      await onClaim();
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, 700));
+    setCollectAnimating(false);
+    setPhase('cards-intro');
+  };
 
-        <div className="welcome-pack-modal__gift-grid" aria-label="Welcome Pack gift preview">
-          {VISUAL_GIFT_SLOTS.map((gift, index) => (
-            <article key={`${gift.label}-${index}`} className="welcome-pack-modal__gift-item">
-              <span className="welcome-pack-modal__gift-icon" aria-hidden="true">{gift.icon}</span>
-              <strong>{gift.value}</strong>
-              <small>{gift.label}</small>
-            </article>
-          ))}
-        </div>
+  const handleAdvanceCard = () => {
+    if (revealIndex < resolvedCards.length - 1) {
+      setRevealIndex((i) => i + 1);
+    } else {
+      onClose();
+    }
+  };
 
-        {hasClaimedCards ? (
-          <div className="welcome-pack-modal__cards" aria-label="Welcome Pack revealed cards">
-            {resolvedCards.map((card, index) => {
-              const creature = CREATURE_CATALOG.find((entry) => entry.id === card.creatureId);
-              const creatureName = creature?.name ?? card.creatureId;
-              return (
-                <article key={`${card.slotIndex}:${card.creatureId}:${index}`} className="welcome-pack-modal__card-slot" aria-label={`Card ${index + 1}: ${creatureName}`}>
-                  <span>✦</span>
-                  <strong>{creatureName}</strong>
-                  <small>{card.tier} · card {index + 1}</small>
-                </article>
-              );
-            })}
+  if (phase === 'economy') {
+    return (
+      <div className="wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title">
+        <div className={`wpm-shell wpm-shell--economy${collectAnimating ? ' wpm-shell--pulse' : ''}`}>
+          <p className="wpm-eyebrow">
+            {isDevPreview ? '✦ Dev Preview' : '🎉 Welcome'}
+          </p>
+          <h2 id="wpm-title" className="wpm-title">Welcome Pack</h2>
+
+          <div className="wpm-economy-tiles">
+            <div className="wpm-economy-tile">
+              <span className="wpm-economy-tile__icon">🎲</span>
+              <strong className="wpm-economy-tile__value">150</strong>
+              <span className="wpm-economy-tile__label">Dice</span>
+            </div>
+            <div className="wpm-economy-tile">
+              <span className="wpm-economy-tile__icon">⚡</span>
+              <strong className="wpm-economy-tile__value">2000</strong>
+              <span className="wpm-economy-tile__label">Essence</span>
+            </div>
           </div>
-        ) : (
-          <div className="welcome-pack-modal__cards" aria-label="Welcome Pack placeholder card slots">
-            {PLACEHOLDER_CARDS.map((card) => (
-              <article key={card.id} className="welcome-pack-modal__card-slot" aria-label={card.title}>
-                <span>✦</span>
-                <strong>{card.title}</strong>
-                <small>Weighted starter slot</small>
-              </article>
-            ))}
-          </div>
-        )}
 
-        <div className="welcome-pack-modal__reward-grid" aria-label="Welcome Pack included rewards">
-          <p><strong>5</strong> weighted creature cards</p>
-          <p><strong>150</strong> dice</p>
-          {noActiveEventFallback ? null : <p><strong>20</strong> event tickets (only if an event is active at claim time)</p>}
-          <p><strong>2000</strong> essence</p>
-        </div>
-        <p className="welcome-pack-modal__fine-print">Card slots use common/rare starter odds and guarantee at least 2 new-to-you creatures when enough unowned creatures remain. Duplicate cards increase that creature’s copy count.</p>
-        {isAlreadyClaimed ? (
-          <p className="welcome-pack-modal__status" role="status" aria-live="polite">Already claimed. This pack can only be collected once.</p>
-        ) : null}
-        {hasClaimedCards ? (
-          <p className="welcome-pack-modal__status" role="status" aria-live="polite">Welcome Pack collected successfully.</p>
-        ) : null}
-        {noActiveEventFallback ? (
-          <p className="welcome-pack-modal__status" role="status" aria-live="polite">No active event was running, so event tickets were not granted on this claim.</p>
-        ) : null}
-        {isPartialClaim ? (
-          <p className="welcome-pack-modal__status" role="status" aria-live="polite">Partial claim completed: already-claimed items were skipped, and remaining rewards were granted exactly once.</p>
-        ) : null}
-        {claimError ? (
-          <p className="welcome-pack-modal__status welcome-pack-modal__status--error" role="alert">{claimError}</p>
-        ) : null}
+          {claimError ? (
+            <p className="wpm-error" role="alert">{claimError}</p>
+          ) : null}
 
-        <div className="welcome-pack-modal__actions island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+          {isAlreadyClaimed ? (
+            <p className="wpm-already-claimed" role="status">Already claimed — opening card reveal.</p>
+          ) : null}
+
           <button
             type="button"
-            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-            onClick={() => { void onClaim?.(); }}
-            disabled={claimPending || isAlreadyClaimed || !onClaim}
+            className="wpm-collect-btn"
+            onClick={() => { void handleCollectEconomy(); }}
+            disabled={claimPending || collectAnimating || (!isAlreadyClaimed && !onClaim)}
           >
-            {ctaLabel}
-          </button>
-          <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={onClose}>
-            Close
+            {collectAnimating ? (
+              <span className="wpm-collect-btn__spinner" aria-hidden="true" />
+            ) : null}
+            {collectAnimating ? 'Collecting…' : isAlreadyClaimed ? 'View Cards' : 'Collect'}
           </button>
         </div>
-      </section>
+      </div>
+    );
+  }
+
+  if (phase === 'cards-intro') {
+    return (
+      <div className="wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title-cards">
+        <div className="wpm-shell wpm-shell--cards-intro wpm-shell--enter">
+          <p className="wpm-eyebrow">Starter Pack</p>
+          <h2 id="wpm-title-cards" className="wpm-title">Your 5 Cards</h2>
+
+          <div className="wpm-big-card-icon" aria-hidden="true">🃏</div>
+
+          <button
+            type="button"
+            className="wpm-collect-btn"
+            onClick={() => {
+              setRevealIndex(0);
+              setPhase('card-reveal');
+            }}
+          >
+            Reveal Cards
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // card-reveal phase
+  const card = resolvedCards[revealIndex];
+  const creature = card ? CREATURE_CATALOG.find((e) => e.id === card.creatureId) : null;
+  const creatureName = creature?.name ?? card?.creatureId ?? `Card ${revealIndex + 1}`;
+  const cardTier = card?.tier ?? 'common';
+  const isLastCard = revealIndex === resolvedCards.length - 1;
+
+  return (
+    <div
+      className="wpm-overlay wpm-overlay--card-reveal"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Card ${revealIndex + 1} of ${resolvedCards.length}: ${creatureName}`}
+      onClick={handleAdvanceCard}
+    >
+      <div key={revealIndex} className="wpm-card-reveal">
+        <p className="wpm-card-reveal__counter">{revealIndex + 1} / {resolvedCards.length}</p>
+        <div className="wpm-card-reveal__art" aria-hidden="true">✦</div>
+        <h3 className="wpm-card-reveal__name">{creatureName}</h3>
+        <p className="wpm-card-reveal__tier">{cardTier}</p>
+        <p className="wpm-card-reveal__hint">
+          {isLastCard ? 'Tap to finish' : 'Tap anywhere for next card'}
+        </p>
+      </div>
     </div>
   );
 }
