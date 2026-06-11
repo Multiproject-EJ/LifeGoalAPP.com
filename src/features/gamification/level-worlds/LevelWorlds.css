@@ -9996,10 +9996,23 @@
 }
 
 .wpm-card-reveal__art {
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+
+.wpm-card-reveal__img {
+  width: min(70%, 200px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(200, 160, 255, 0.55));
+}
+
+.wpm-card-reveal__art-fallback {
   font-size: 5rem;
   color: #ffe6a5;
   text-shadow: 0 0 24px rgba(255, 220, 100, 0.7);
-  align-self: center;
 }
 
 .wpm-card-reveal__name {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { CREATURE_CATALOG } from '../services/creatureCatalog';
+import { buildCreatureCutoutWebpPath, buildCreatureCutoutPngPath } from '../services/creatureImageManifest';
 import type { ClaimFullWelcomePackResult } from '../services/islandRunWelcomePackFullClaimAction';
 
 export interface WelcomePackModalProps {
@@ -86,7 +87,7 @@ export function WelcomePackModal({
               <span className="wpm-economy-tile__label">Dice</span>
             </div>
             <div className="wpm-economy-tile">
-              <span className="wpm-economy-tile__icon">⚡</span>
+              <span className="wpm-economy-tile__icon">🟣</span>
               <strong className="wpm-economy-tile__value">2000</strong>
               <span className="wpm-economy-tile__label">Essence</span>
             </div>
@@ -146,6 +147,8 @@ export function WelcomePackModal({
   const creatureName = creature?.name ?? card?.creatureId ?? `Card ${revealIndex + 1}`;
   const cardTier = card?.tier ?? 'common';
   const isLastCard = revealIndex === resolvedCards.length - 1;
+  const imgSrc = creature ? buildCreatureCutoutWebpPath(creature.imageKey) : null;
+  const imgPng = creature ? buildCreatureCutoutPngPath(creature.imageKey) : null;
 
   return (
     <div
@@ -157,7 +160,17 @@ export function WelcomePackModal({
     >
       <div key={revealIndex} className="wpm-card-reveal">
         <p className="wpm-card-reveal__counter">{revealIndex + 1} / {resolvedCards.length}</p>
-        <div className="wpm-card-reveal__art" aria-hidden="true">✦</div>
+        <div className="wpm-card-reveal__art">
+          {imgSrc ? (
+            <picture>
+              <source srcSet={imgSrc} type="image/webp" />
+              {imgPng ? <source srcSet={imgPng} type="image/png" /> : null}
+              <img src={imgSrc} alt={creatureName} className="wpm-card-reveal__img" />
+            </picture>
+          ) : (
+            <span aria-hidden="true" className="wpm-card-reveal__art-fallback">✦</span>
+          )}
+        </div>
         <h3 className="wpm-card-reveal__name">{creatureName}</h3>
         <p className="wpm-card-reveal__tier">{cardTier}</p>
         <p className="wpm-card-reveal__hint">

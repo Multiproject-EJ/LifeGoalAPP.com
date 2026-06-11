@@ -13445,9 +13445,7 @@ export function IslandRunBoardPrototype({
           open={showWelcomePackModal}
           onClose={() => {
             setShowWelcomePackModal(false);
-            if (!welcomePackClaimResult || welcomePackClaimResult.status === 'already_claimed') {
-              setWelcomePackDismissedThisSession(true);
-            }
+            setWelcomePackDismissedThisSession(true);
           }}
           onClaim={handleClaimWelcomePack}
           claimPending={welcomePackClaimPending}
