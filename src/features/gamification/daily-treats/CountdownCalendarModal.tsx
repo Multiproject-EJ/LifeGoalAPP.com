@@ -8,10 +8,8 @@ import {
   type RevealCardResult,
   type ScratchCardState,
 } from './scratchCard';
+import confetti from 'canvas-confetti';
 import { ScratchCardReveal } from './ScratchCardReveal';
-import { CalendarDoorFlip } from './CalendarDoorFlip';
-import { CalendarDoorUnwrap } from './CalendarDoorUnwrap';
-import { CalendarDoorScratch } from './CalendarDoorScratch';
 import { awardDailyTreatDice, awardDailyTreatGold } from '../../../services/dailyTreats';
 import { playIslandRunSound } from '../level-worlds/services/islandRunAudio';
 import { applyEssenceAward } from '../level-worlds/services/islandRunStateActions';
@@ -33,9 +31,7 @@ import {
   type DoorType,
   type DoorStatus,
   type HolidayKey,
-  type RewardTier,
   type RewardCurrency,
-  type RevealMechanic,
   type SeasonType,
 } from '../../../services/treatCalendarService';
 import { fetchHolidayPreferences } from '../../../services/holidayPreferences';
@@ -78,13 +74,15 @@ type RevealOrigin = {
   y: number;
 };
 
-type RevealState = {
-  isRevealing: boolean;
-  isOpening: boolean;
-  dayIndex: number;
-  doorType: DoorType;
-  hatch: CalendarHatch | null;
-  origin: RevealOrigin | null;
+type RewardToast = {
+  /** Monotonic id so re-opening a door retriggers the float-in animation. */
+  id: number;
+  /** Viewport position of the tapped door's center, in px. */
+  x: number;
+  y: number;
+  icon: string;
+  label: string;
+  tier: number;
 };
 
 /** ms to wait after press before opening the reveal — lets the spring snap-back animation complete */
@@ -121,6 +119,62 @@ const markBonusAwakenedSeen = (token: string): void => {
   }
 };
 
+const DAILY_TREAT_CONFETTI_COLORS = [
+  '#fbbf24', // gold
+  '#f59e0b', // amber
+  '#34d399', // emerald
+  '#60a5fa', // sky
+  '#a78bfa', // violet
+  '#ffffff', // white
+];
+
+/**
+ * Burst confetti outward from a screen point — the tapped door's center — so
+ * opening a door feels tactile. Falls back to the viewport center when no
+ * origin is supplied. canvas-confetti renders its own fixed, pointer-events:none
+ * canvas above the calendar modal, and no-ops under reduced motion.
+ */
+const burstDoorConfetti = (origin: RevealOrigin | null): void => {
+  if (typeof window === 'undefined') return;
+  const x = origin ? origin.x / window.innerWidth : 0.5;
+  const y = origin ? origin.y / window.innerHeight : 0.5;
+  confetti({
+    particleCount: 80,
+    spread: 75,
+    startVelocity: 42,
+    gravity: 0.95,
+    scalar: 0.9,
+    ticks: 160,
+    origin: { x, y },
+    colors: DAILY_TREAT_CONFETTI_COLORS,
+    disableForReducedMotion: true,
+  });
+};
+
+/**
+ * Map an authoritative reward into the brief floating toast shown near the
+ * door. Mirrors RewardCard's icon/label conventions (dice vs gold vs essence,
+ * and the tier-1 "nothing" door).
+ */
+const formatRewardToast = (
+  reward: { reward_currency: RewardCurrency; reward_amount: number | null; reward_tier?: number | null },
+  isPersonalQuest: boolean,
+  diceLabel: string,
+): { icon: string; label: string; tier: number } => {
+  const tier = reward.reward_tier ?? 2;
+  const amount = reward.reward_amount ?? 0;
+  if (tier === 1 || amount <= 0) {
+    return { icon: '✦', label: 'Nothing today', tier };
+  }
+  if (reward.reward_currency === 'dice') {
+    return { icon: '🎲', label: `+${amount} ${diceLabel}`.trim(), tier };
+  }
+  if (isPersonalQuest) {
+    return { icon: '🟣', label: `+${amount} Essence`, tier };
+  }
+  return { icon: '🪙', label: `+${amount} Gold`, tier };
+};
+
 export const CountdownCalendarModal = ({
   isOpen,
   onClose,
@@ -136,7 +190,8 @@ export const CountdownCalendarModal = ({
   const [isCalendarLoading, setIsCalendarLoading] = useState(false);
   const [habitCompleted, setHabitCompleted] = useState(false);
   const [questHabit, setQuestHabit] = useState<QuestHabit | null>(null);
-  const [revealState, setRevealState] = useState<RevealState | null>(null);
+  const [rewardToast, setRewardToast] = useState<RewardToast | null>(null);
+  const rewardToastIdRef = useRef(0);
   const [symbolBonusNotification, setSymbolBonusNotification] = useState<string | null>(null);
   const [trackerExpanded, setTrackerExpanded] = useState(false);
   const [showBonusAwakenedPopup, setShowBonusAwakenedPopup] = useState(false);
@@ -159,11 +214,20 @@ export const CountdownCalendarModal = ({
   useEffect(() => {
     if (isOpen) return;
     setRevealResult(null);
-    setRevealState(null);
+    setRewardToast(null);
     setSeasonData(null);
     setActiveAdvent(undefined);
     setIsCalendarLoading(false);
   }, [isOpen]);
+
+  // Auto-dismiss the floating reward toast a couple seconds after it appears.
+  useEffect(() => {
+    if (!rewardToast) return;
+    const timer = window.setTimeout(() => {
+      setRewardToast((current) => (current?.id === rewardToast.id ? null : current));
+    }, 2200);
+    return () => window.clearTimeout(timer);
+  }, [rewardToast]);
 
   // Gate the same-day "bonus awakened" celebration banner to once per day. The
   // bonus stays "awakened" (free door opened + quest habit complete + bonus not
@@ -203,7 +267,7 @@ export const CountdownCalendarModal = ({
     let cancelled = false;
 
     setRevealResult(null);
-    setRevealState(null);
+    setRewardToast(null);
     setSeasonData(null);
     setActiveAdvent(undefined);
     setIsCalendarLoading(true);
@@ -315,19 +379,11 @@ export const CountdownCalendarModal = ({
     if (!userId || !seasonData) return;
     setDoorError(null);
 
-    // Show a lightweight "opening" reveal state immediately so the grid tile
-    // disappears while the backend/local service resolves the reward. The
-    // actual reveal card is built from the authoritative response below so
-    // the user sees exactly what was granted (prevents reveal/award divergence
-    // when server-side rules differ from the locally cached hatch).
-    setRevealState({
-      isRevealing: true,
-      isOpening: true,
-      dayIndex,
-      doorType,
-      hatch,
-      origin,
-    });
+    // Celebrate instantly from the tapped door: confetti bursts outward from the
+    // door's screen position so opening feels tactile, even while the award
+    // request resolves. The reward is granted from the authoritative response
+    // below and surfaced as a brief floating toast — no full-screen reveal modal.
+    burstDoorConfetti(origin);
 
     try {
       // Call backend to record the open
@@ -336,27 +392,15 @@ export const CountdownCalendarModal = ({
       if (error) {
         console.error('Failed to open hatch:', error);
         setDoorError(`Could not open door: ${error.message ?? 'Unknown error'}`);
-        setRevealState(null);
         return;
       }
 
-      // Replace the opening shell with the authoritative server/service reward
-      // so the animated card shows exactly what the user was granted.
+      // The authoritative server/service response is the source of truth for
+      // what was granted (server-side rules can differ from the cached hatch).
       if (!reward) {
         setDoorError('Could not open door: reward details were unavailable.');
-        setRevealState(null);
         return;
       }
-
-      const authoritativeHatch: CalendarHatch = {
-        ...hatch,
-        reward_currency: reward.reward_currency,
-        reward_amount: reward.reward_amount,
-        reward_tier: reward.reward_tier,
-        reveal_mechanic: reward.reveal_mechanic ?? hatch.reveal_mechanic,
-        reward_payload: reward.reward_payload ?? hatch.reward_payload,
-      };
-      setRevealState({ isRevealing: true, isOpening: false, dayIndex, doorType, hatch: authoritativeHatch, origin });
 
       // Award essence in Island Run sessions; award gold elsewhere.
       if (reward?.reward_currency === 'gold' && reward.reward_amount) {
@@ -419,6 +463,26 @@ export const CountdownCalendarModal = ({
         }
       }
 
+      // Surface what was won as a brief floating toast anchored to the door,
+      // replacing the old full-screen reveal card. Tier-1 ("nothing") doors still
+      // show a toast but skip the celebratory reward sound.
+      const rewardSummary = formatRewardToast(
+        reward,
+        seasonData.season.season_type === 'personal_quest',
+        islandRunSession ? '' : 'Game Dice',
+      );
+      if (rewardSummary.tier > 1) {
+        playIslandRunSound('reward_bar_claim_burst');
+      }
+      setRewardToast({
+        id: (rewardToastIdRef.current += 1),
+        x: origin?.x ?? window.innerWidth / 2,
+        y: origin?.y ?? window.innerHeight / 2,
+        icon: rewardSummary.icon,
+        label: rewardSummary.label,
+        tier: rewardSummary.tier,
+      });
+
       // Refresh season data to update progress
       if (seasonData.season.season_type === 'personal_quest') {
         const { data: updated } = await getPersonalQuestSeason(userId);
@@ -437,13 +501,8 @@ export const CountdownCalendarModal = ({
     } catch (err) {
       console.error('Door open failed unexpectedly:', err);
       setDoorError(`Something went wrong opening this door. Please try again.`);
-      setRevealState(null);
     }
   }, [userId, seasonData, islandRunSession]);
-
-  const handleClaimReward = useCallback(() => {
-    setRevealState(null);
-  }, []);
 
   if (!isOpen) return null;
 
@@ -568,103 +627,6 @@ export const CountdownCalendarModal = ({
     ? getHatchesForDay(seasonData.hatches, todayIndex)
     : { bonus: null };
 
-  // Render reveal modal if actively revealing
-  if (revealState?.isRevealing && revealState.hatch) {
-    const { hatch, dayIndex, doorType, isOpening, origin } = revealState;
-    const emoji = hatch.symbol_emoji ?? themeEmojis[(dayIndex - 1) % themeEmojis.length];
-    const tier = hatch.reward_tier ?? 2;
-    const currency = hatch.reward_currency;
-    const amount = hatch.reward_amount;
-    const mechanic = hatch.reveal_mechanic ?? 'flip';
-    const revealOriginStyle = origin
-      ? ({
-          '--daily-treat-origin-x': `${origin.x}px`,
-          '--daily-treat-origin-y': `${origin.y}px`,
-        } as CSSProperties)
-      : undefined;
-
-    return (
-      <div
-        className={`daily-treats-calendar daily-treats-calendar--holiday-${themeMod} daily-treats-calendar--reward-reveal`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Revealing Day ${dayIndex} ${doorType} door`}
-      >
-        <div className="daily-treats-calendar__backdrop" role="presentation" />
-        <div className="daily-treats-calendar__dialog daily-treats-calendar__dialog--reward-reveal" style={revealOriginStyle}>
-          <div className="daily-treats-calendar__reward-orb daily-treats-calendar__reward-orb--one" aria-hidden="true" />
-          <div className="daily-treats-calendar__reward-orb daily-treats-calendar__reward-orb--two" aria-hidden="true" />
-          <div className="daily-treats-calendar__content daily-treats-calendar__content--reward-reveal">
-            <p className="daily-treats-calendar__eyebrow">
-              {doorType === 'bonus' ? '🎁 Bonus Daily Treat' : 'Daily Treat'}
-            </p>
-            <h3 className="daily-treats-calendar__title daily-treats-calendar__title--reward-reveal">Day {dayIndex}</h3>
-            <p className="daily-treats-calendar__subtitle daily-treats-calendar__subtitle--reward-reveal">
-              A little quest magic is waiting inside.
-            </p>
-
-            {isOpening && (
-              <div className="daily-treats-calendar__opening-shell" role="status" aria-live="polite">
-                <div className="daily-treats-calendar__opening-gift" aria-hidden="true">
-                  {doorType === 'bonus' ? '🎁' : emoji}
-                </div>
-                <p className="daily-treats-calendar__opening-title">
-                  Opening your {doorType === 'bonus' ? 'bonus treat' : 'daily treat'}…
-                </p>
-                <p className="daily-treats-calendar__opening-copy">
-                  Confirming your reward before the reveal.
-                </p>
-                <div className="daily-treats-calendar__opening-shimmer" aria-hidden="true" />
-              </div>
-            )}
-            
-            {!isOpening && mechanic === 'flip' && (
-              <CalendarDoorFlip
-                dayNumber={dayIndex}
-                emoji={emoji}
-                tier={tier as RewardTier}
-                currency={currency}
-                amount={amount}
-                holidayKey={holidayKey}
-                onClaim={handleClaimReward}
-                isPersonalQuest={isPersonalQuest}
-                diceLabel={dailyTreatDiceLabel}
-              />
-            )}
-            {!isOpening && mechanic === 'unwrap' && (
-              <CalendarDoorUnwrap
-                dayNumber={dayIndex}
-                emoji={emoji}
-                tier={tier as RewardTier}
-                currency={currency}
-                amount={amount}
-                holidayKey={holidayKey}
-                onClaim={handleClaimReward}
-                isPersonalQuest={isPersonalQuest}
-                diceLabel={dailyTreatDiceLabel}
-                variant={doorType === 'bonus' ? 'gift' : 'envelope'}
-                isBonusDoor={doorType === 'bonus'}
-              />
-            )}
-            {!isOpening && mechanic === 'scratch' && (
-              <CalendarDoorScratch
-                dayNumber={dayIndex}
-                emoji={emoji}
-                tier={tier as RewardTier}
-                currency={currency}
-                amount={amount}
-                holidayKey={holidayKey}
-                onClaim={handleClaimReward}
-                isPersonalQuest={isPersonalQuest}
-                diceLabel={dailyTreatDiceLabel}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const showLockedBonusHint = Boolean(todayBonusHatch && !habitCompleted && !todayBonusOpened);
 
   return (
@@ -675,6 +637,18 @@ export const CountdownCalendarModal = ({
       aria-label={`${themeName} calendar`}
     >
       <div className="daily-treats-calendar__backdrop" onClick={onClose} role="presentation" />
+      {rewardToast && (
+        <div
+          key={rewardToast.id}
+          className={`daily-treats-calendar__reward-toast daily-treats-calendar__reward-toast--tier-${rewardToast.tier}`}
+          style={{ left: `${rewardToast.x}px`, top: `${rewardToast.y}px` } as CSSProperties}
+          role="status"
+          aria-live="polite"
+        >
+          <span className="daily-treats-calendar__reward-toast-icon" aria-hidden="true">{rewardToast.icon}</span>
+          <span className="daily-treats-calendar__reward-toast-label">{rewardToast.label}</span>
+        </div>
+      )}
       <div
         className={`daily-treats-calendar__dialog${
           calendarBackgroundUrl ? ' daily-treats-calendar__dialog--image' : ''
