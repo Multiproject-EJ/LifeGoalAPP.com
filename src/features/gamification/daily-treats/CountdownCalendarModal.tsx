@@ -627,7 +627,14 @@ export const CountdownCalendarModal = ({
     ? getHatchesForDay(seasonData.hatches, todayIndex)
     : { bonus: null };
 
-  const showLockedBonusHint = Boolean(todayBonusHatch && !habitCompleted && !todayBonusOpened);
+  // The same-day bonus is an overlay that only becomes reachable *after* today's
+  // free door is opened (see canOpenSameDayBonus below, which requires freeOpened).
+  // Gate the "Finish your quest habit to wake the door" hint on todayFreeOpened so
+  // the calendar doesn't pop into focused "BONUS" mode before the user has even
+  // opened today's free door.
+  const showLockedBonusHint = Boolean(
+    todayBonusHatch && todayFreeOpened && !habitCompleted && !todayBonusOpened,
+  );
 
   return (
     <div
