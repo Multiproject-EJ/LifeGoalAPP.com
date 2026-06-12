@@ -214,15 +214,21 @@ type BillingReturnBanner = {
 
 // --- Footer nav icon system ---
 //
-// Icon resolution order (first match wins):
+// Icon resolution order (first file that actually loads wins):
 //   1. holiday + app-theme  e.g. halloween/themes/dark/planning.webp
 //   2. holiday only         e.g. halloween/planning.webp
 //   3. app-theme only       e.g. themes/dark/planning.webp
 //   4. default              e.g. default/planning.webp
 //   5. hardcoded emoji/SVG fallback
 //
+// Fallback is per-file and happens at RUNTIME: footerIconCandidates() builds the
+// ordered URL list above and <FooterNavImg> requests each in turn, advancing on
+// any load error (404). So an empty/partial folder (only a _README.txt, or just
+// some of the four icons) no longer shadows /default with a broken image — a
+// missing file transparently falls through to the next layer, then the emoji.
+//
 // To add icons: drop .webp files into public/icons/footer/<folder>/ using
-// the exact filenames below. Nothing else to change.
+// the exact filenames below. Nothing else to change. Each file is optional.
 //
 // Tab filenames:  planning.webp | shield.webp | score.webp | actions.webp
 //
@@ -262,12 +268,9 @@ const FOOTER_THEME_GROUP: Partial<Record<string, FooterIconGroup>> = {
   'arctic-frost':       'blue',
 };
 
-const FooterNavImg = ({ src, alt = '' }: { src: string; alt?: string }) => (
-  <img src={src} alt={alt} loading="lazy" decoding="async" />
-);
+const FOOTER_ICON_BASE = '/icons/footer';
 
 type FooterTabId = 'planning' | 'breathing-space' | 'score' | 'actions';
-type FooterIconMap = Partial<Record<FooterTabId, ReactNode>>;
 
 const FOOTER_TAB_FILES: Record<FooterTabId, string> = {
   planning: 'planning.webp',
@@ -276,65 +279,52 @@ const FOOTER_TAB_FILES: Record<FooterTabId, string> = {
   actions: 'actions.webp',
 };
 
-function makeFooterIconMap(basePath: string): FooterIconMap {
-  const entries = (Object.entries(FOOTER_TAB_FILES) as [FooterTabId, string][]).map(
-    ([tabId, file]) => [tabId, <FooterNavImg key={tabId} src={`${basePath}/${file}`} />] as const,
-  );
-  return Object.fromEntries(entries);
-}
-
-// holiday + theme combos (most specific)
-const FOOTER_ICONS_HOLIDAY_THEME: Partial<Record<string, Partial<Record<FooterIconGroup, FooterIconMap>>>> = {
-  halloween: {
-    dark:   makeFooterIconMap('/icons/footer/halloween/themes/dark'),
-    golden: makeFooterIconMap('/icons/footer/halloween/themes/golden'),
-    light:  makeFooterIconMap('/icons/footer/halloween/themes/light'),
-    blue:   makeFooterIconMap('/icons/footer/halloween/themes/blue'),
-  },
-  christmas: {
-    dark:   makeFooterIconMap('/icons/footer/christmas/themes/dark'),
-    golden: makeFooterIconMap('/icons/footer/christmas/themes/golden'),
-    light:  makeFooterIconMap('/icons/footer/christmas/themes/light'),
-    blue:   makeFooterIconMap('/icons/footer/christmas/themes/blue'),
-  },
-};
-
-// holiday only (any theme)
-const FOOTER_ICONS_HOLIDAY: Partial<Record<string, FooterIconMap>> = {
-  halloween: makeFooterIconMap('/icons/footer/halloween'),
-  christmas: makeFooterIconMap('/icons/footer/christmas'),
-};
-
-// app-theme group only (no holiday)
-const FOOTER_ICONS_THEME: Record<FooterIconGroup, FooterIconMap> = {
-  light:  makeFooterIconMap('/icons/footer/themes/light'),
-  dark:   makeFooterIconMap('/icons/footer/themes/dark'),
-  golden: makeFooterIconMap('/icons/footer/themes/golden'),
-  blue:   makeFooterIconMap('/icons/footer/themes/blue'),
-};
-
-// default (year-round, any theme)
-const FOOTER_ICONS_DEFAULT: FooterIconMap = makeFooterIconMap('/icons/footer/default');
-
-function resolveFooterIcon(
+// Ordered candidate icon URLs for a tab, most-specific first. A candidate whose
+// file is absent (e.g. a theme/holiday folder that doesn't ship this icon)
+// simply 404s and is skipped at runtime by <FooterNavImg>, which walks the
+// chain down to /default and finally the emoji/SVG fallback. This is what makes
+// each layer's files genuinely optional — the presence of a folder no longer
+// shadows /default with a broken image.
+function footerIconCandidates(
   tabId: FooterTabId,
   holidayKey: string | null | undefined,
   themeGroup: FooterIconGroup | undefined,
-): ReactNode | undefined {
-  if (holidayKey && themeGroup) {
-    const icon = FOOTER_ICONS_HOLIDAY_THEME[holidayKey]?.[themeGroup]?.[tabId];
-    if (icon) return icon;
-  }
-  if (holidayKey) {
-    const icon = FOOTER_ICONS_HOLIDAY[holidayKey]?.[tabId];
-    if (icon) return icon;
-  }
-  if (themeGroup) {
-    const icon = FOOTER_ICONS_THEME[themeGroup][tabId];
-    if (icon) return icon;
-  }
-  return FOOTER_ICONS_DEFAULT[tabId];
+): string[] {
+  const file = FOOTER_TAB_FILES[tabId];
+  const bases: string[] = [];
+  if (holidayKey && themeGroup) bases.push(`${FOOTER_ICON_BASE}/${holidayKey}/themes/${themeGroup}`);
+  if (holidayKey) bases.push(`${FOOTER_ICON_BASE}/${holidayKey}`);
+  if (themeGroup) bases.push(`${FOOTER_ICON_BASE}/themes/${themeGroup}`);
+  bases.push(`${FOOTER_ICON_BASE}/default`);
+  return bases.map((base) => `${base}/${file}`);
 }
+
+// Renders the first candidate icon that successfully loads, advancing through
+// the most-specific → default chain on each load error, then rendering the
+// supplied emoji/SVG node once no webp is available. The caller passes a
+// `key` derived from `srcs` so a theme/holiday change remounts this and retries
+// the new candidate list from the top.
+const FooterNavImg = ({
+  srcs,
+  fallback,
+  alt = '',
+}: {
+  srcs: string[];
+  fallback: ReactNode;
+  alt?: string;
+}) => {
+  const [attempt, setAttempt] = useState(0);
+  if (attempt >= srcs.length) return <>{fallback}</>;
+  return (
+    <img
+      src={srcs[attempt]}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      onError={() => setAttempt((n) => n + 1)}
+    />
+  );
+};
 
 const ShieldFooterIcon = () => (
   <svg
@@ -1238,8 +1228,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const holidayKey = activeHolidaySeason?.meta.holiday_key ?? null;
     const themeGroup = FOOTER_THEME_GROUP[theme];
 
-    const getIcon = (tabId: FooterTabId, fallback: ReactNode): ReactNode =>
-      resolveFooterIcon(tabId, holidayKey, themeGroup) ?? fallback;
+    const getIcon = (tabId: FooterTabId, fallback: ReactNode): ReactNode => {
+      const srcs = footerIconCandidates(tabId, holidayKey, themeGroup);
+      return <FooterNavImg key={srcs.join('|')} srcs={srcs} fallback={fallback} />;
+    };
 
     const baseItems = MOBILE_FOOTER_WORKSPACE_IDS.map((navId) => {
       const item = findWorkspaceItem(navId);
