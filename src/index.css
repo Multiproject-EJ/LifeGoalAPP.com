@@ -25409,6 +25409,69 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 
 /* ── Bonus door popup — large centered card, shown only when bonus is ready ── */
+/* Floating reward toast — drifts up from the tapped door and fades, replacing
+   the old full-screen reveal card. Positioned at the door's viewport center; the
+   transform recenters it and the keyframes carry it upward as it fades out. */
+.daily-treats-calendar__reward-toast {
+  position: fixed;
+  z-index: 95;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  font-weight: 800;
+  font-size: 0.98rem;
+  color: #fffaf0;
+  background: linear-gradient(150deg, rgba(217, 119, 6, 0.96), rgba(180, 83, 9, 0.94));
+  border: 1.5px solid rgba(253, 224, 71, 0.7);
+  box-shadow: 0 8px 24px rgba(180, 83, 9, 0.4), 0 0 0 3px rgba(253, 224, 71, 0.18);
+  transform: translate(-50%, -50%);
+  animation: daily-treat-reward-toast-float 2.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.daily-treats-calendar__reward-toast--tier-1 {
+  background: linear-gradient(150deg, rgba(100, 116, 139, 0.95), rgba(71, 85, 105, 0.92));
+  border-color: rgba(203, 213, 225, 0.55);
+  box-shadow: 0 8px 24px rgba(51, 65, 85, 0.4), 0 0 0 3px rgba(203, 213, 225, 0.14);
+}
+
+.daily-treats-calendar__reward-toast--tier-4,
+.daily-treats-calendar__reward-toast--tier-5 {
+  background: linear-gradient(150deg, rgba(124, 58, 237, 0.96), rgba(190, 24, 93, 0.94));
+  border-color: rgba(244, 114, 182, 0.7);
+  box-shadow: 0 8px 26px rgba(124, 58, 237, 0.45), 0 0 0 3px rgba(244, 114, 182, 0.2);
+}
+
+.daily-treats-calendar__reward-toast-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes daily-treat-reward-toast-float {
+  0%   { opacity: 0; transform: translate(-50%, -30%) scale(0.7); }
+  15%  { opacity: 1; transform: translate(-50%, -60%) scale(1.05); }
+  30%  { transform: translate(-50%, -75%) scale(1); }
+  80%  { opacity: 1; transform: translate(-50%, -140%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -185%) scale(0.95); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .daily-treats-calendar__reward-toast {
+    animation: daily-treat-reward-toast-fade 2.2s linear both;
+    transform: translate(-50%, -160%);
+  }
+  @keyframes daily-treat-reward-toast-fade {
+    0%   { opacity: 0; }
+    12%  { opacity: 1; }
+    82%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+}
+
 .daily-treats-calendar__bonus-popup {
   display: grid;
   gap: 0.55rem;

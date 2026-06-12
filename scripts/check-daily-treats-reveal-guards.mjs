@@ -52,75 +52,39 @@ assert(
   'Daily Treat reveal components must not duplicate inline reduced-motion matchMedia checks.',
 );
 
-const revealStateType = sectionBetween(modal, 'type RevealState = {', '};');
-assert(
-  revealStateType.includes('isOpening: boolean;'),
-  'RevealState must keep an explicit isOpening flag for pending authoritative rewards.',
-);
-
+// The full-screen reveal modal (flip/unwrap/scratch card) was replaced by an
+// in-place confetti burst from the tapped door plus a brief floating reward
+// toast. These guards lock in the new flow and ensure the modal stays gone.
 const handleOpenDoor = sectionBetween(
   modal,
   'const handleOpenDoor = useCallback(async (dayIndex: number, doorType: DoorType, hatch: CalendarHatch,',
-  'const handleClaimReward = useCallback(() => {',
+  '// Refresh season data to update progress',
 );
-const openingSetIndex = indexAfter(handleOpenDoor, 'setRevealState({');
+const confettiIndex = indexAfter(handleOpenDoor, 'burstDoorConfetti(origin)');
 const openCallIndex = indexAfter(handleOpenDoor, 'openTodayHatch(userId, seasonData.season.id, dayIndex, doorType)');
 assert(
-  openingSetIndex < openCallIndex,
-  'Opening shell state must be set before awaiting openTodayHatch.',
-);
-assert(
-  handleOpenDoor.slice(openingSetIndex, openCallIndex).includes('isOpening: true'),
-  'Initial reveal state must mark isOpening true while openTodayHatch is pending.',
+  confettiIndex < openCallIndex,
+  'Confetti must burst from the tapped door before awaiting openTodayHatch so opening feels instant.',
 );
 const missingRewardGuardIndex = indexAfter(handleOpenDoor, 'if (!reward)');
-const authoritativeHatchIndex = indexAfter(handleOpenDoor, 'const authoritativeHatch: CalendarHatch');
-const finalRevealIndex = indexAfter(handleOpenDoor, 'isOpening: false');
-const awardEssenceIndex = indexAfter(handleOpenDoor, 'Award essence in Island Run sessions');
+const rewardToastIndex = indexAfter(handleOpenDoor, 'setRewardToast({');
 assert(
-  openCallIndex < missingRewardGuardIndex && missingRewardGuardIndex < authoritativeHatchIndex,
-  'Authoritative reward data must be required before building the final reveal hatch.',
+  openCallIndex < missingRewardGuardIndex && missingRewardGuardIndex < rewardToastIndex,
+  'Authoritative reward data must be required before surfacing the floating reward toast.',
 );
 assert(
-  authoritativeHatchIndex < finalRevealIndex && finalRevealIndex < awardEssenceIndex,
-  'Final reveal state must use the authoritative hatch and clear isOpening before reward-credit side effects.',
-);
-
-const revealRender = sectionBetween(
-  modal,
-  '// Render reveal modal if actively revealing',
-  'return (',
+  handleOpenDoor.includes('formatRewardToast('),
+  'handleOpenDoor must derive the reward toast label/icon from the authoritative reward.',
 );
 assert(
-  revealRender.includes('const { hatch, dayIndex, doorType, isOpening') && revealRender.includes('} = revealState;'),
-  'Reveal render path must read isOpening from revealState.',
-);
-const openingShell = sectionBetween(
-  modal,
-  '{isOpening && (',
-  '{!isOpening && mechanic === \'flip\' && (',
+  !modal.includes('setRevealState(')
+    && !modal.includes('daily-treats-calendar--reward-reveal')
+    && !modal.includes('CalendarDoorFlip'),
+  'The full-screen reveal modal must stay removed (no setRevealState / reward-reveal render / door-flip mount).',
 );
 assert(
-  openingShell.includes('role="status"') && openingShell.includes('aria-live="polite"'),
-  'Opening shell must expose an accessible live status.',
-);
-assert(
-  openingShell.includes('Confirming your reward before the reveal.'),
-  'Opening shell copy must make it clear the reward is being confirmed.',
-);
-assert(
-  !/reward_amount|reward_currency|amount=|currency=|RewardCard/.test(openingShell),
-  'Opening shell must not display cached reward amount/currency or mount RewardCard.',
-);
-assert(
-  modal.includes("{!isOpening && mechanic === 'flip' && (")
-    && modal.includes("{!isOpening && mechanic === 'unwrap' && (")
-    && modal.includes("{!isOpening && mechanic === 'scratch' && ("),
-  'All final reveal mechanics must be gated behind !isOpening.',
-);
-assert(
-  modal.includes("isBonusDoor={doorType === 'bonus'}"),
-  'CountdownCalendarModal must scope bonus unwrap treatment to bonus doors.',
+  modal.includes('disableForReducedMotion: true'),
+  'Door confetti must be disabled under prefers-reduced-motion.',
 );
 
 assert(
