@@ -18557,6 +18557,15 @@ html.platform-ipad .workspace-shell__menu-edge {
   line-height: 1;
 }
 
+/* Enlarge the standard footer icons visually without growing the button/menu.
+   transform: scale() does not affect layout box, so the tap target stays put. */
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__icon,
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__status-icon {
+  display: inline-block;
+  transform: scale(1.28);
+  transform-origin: center center;
+}
+
 .mobile-footer-nav__icon img {
   width: 1.6rem;
   height: 1.6rem;
@@ -18600,6 +18609,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   flex-direction: column;
   align-items: center;
   gap: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
@@ -18890,6 +18901,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 0.88rem;
   font-weight: 700;
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
