@@ -531,7 +531,7 @@ type TodayWinsSummary = {
   gameHeartsEarned: number;
 };
 
-type TodayWinsTier = 'one_star' | 'two_star' | 'three_star';
+type TodayWinsTier = 'zero_star' | 'one_star' | 'two_star' | 'three_star';
 
 type QuickJournalDraft = {
   isOpen: boolean;
@@ -602,6 +602,7 @@ const AUTO_PROGRESS_STAGE_LABELS: Record<AutoProgressTier, string> = {
 const SCALE_STAGE_ORDER: AutoProgressTier[] = ['seed', 'minimum', 'standard'];
 
 const TODAY_WINS_IMAGES: Record<TodayWinsTier, string> = {
+  zero_star: '/icons/todays_win/todays_win1.webp',
   one_star: '/icons/todays_win/todays_win1.webp',
   two_star: '/icons/todays_win/todays_win2.webp',
   three_star: '/icons/todays_win/todays_win3.webp',
@@ -610,7 +611,8 @@ const TODAY_WINS_IMAGES: Record<TodayWinsTier, string> = {
 const getTodayWinsTier = (score: number): TodayWinsTier => {
   if (score >= 75) return 'three_star';
   if (score >= 40) return 'two_star';
-  return 'one_star';
+  if (score > 0) return 'one_star';
+  return 'zero_star';
 };
 const WEEKLY_SNAPSHOT_IMAGES: Record<WeeklySnapshotTier, string> = {
   one_star: '/icons/todays_win/todays_win1.webp',
@@ -8347,9 +8349,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     const todayWinsTier = getTodayWinsTier(todayWinsScore);
     const todayWinsImageSrc = TODAY_WINS_IMAGES[todayWinsTier];
     const todayWinsStarsLabel =
-      todayWinsTier === 'three_star' ? '3 Stars' : todayWinsTier === 'two_star' ? '2 Stars' : '1 Star';
+      todayWinsTier === 'three_star' ? '3 Stars' : todayWinsTier === 'two_star' ? '2 Stars' : todayWinsTier === 'one_star' ? '1 Star' : '0 Stars';
     const todayWinsStarCount =
-      todayWinsTier === 'three_star' ? 3 : todayWinsTier === 'two_star' ? 2 : 1;
+      todayWinsTier === 'three_star' ? 3 : todayWinsTier === 'two_star' ? 2 : todayWinsTier === 'one_star' ? 1 : 0;
     const todayWinsStarItems = Array.from({ length: todayWinsStarCount }, (_, index) => index);
     const todayWinsTierCaption =
       todayWinsTier === 'three_star'
@@ -9055,7 +9057,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {todayWinsModal}
         <div className="habit-checklist-card__board">
           {!isCompactView ? (
-            todayWinsTier !== 'one_star' ? (
+            todayWinsTier !== 'zero_star' ? (
               <button
                 type="button"
                 className={`habit-checklist-card__today-wins-stars habit-checklist-card__today-wins-stars--${todayWinsStarCount}`}
