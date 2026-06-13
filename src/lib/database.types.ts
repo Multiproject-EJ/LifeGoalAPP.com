@@ -363,6 +363,7 @@ export interface Database {
           progress_notes: string | null;
           status_tag: string | null;
           life_wheel_category: string | null;
+          secondary_life_wheel_categories: string[] | null;
           start_date: string | null;
           timing_notes: string | null;
           estimated_duration_days: number | null;
@@ -385,6 +386,7 @@ export interface Database {
           progress_notes?: string | null;
           status_tag?: string | null;
           life_wheel_category?: string | null;
+          secondary_life_wheel_categories?: string[] | null;
           start_date?: string | null;
           timing_notes?: string | null;
           estimated_duration_days?: number | null;
@@ -407,6 +409,7 @@ export interface Database {
           progress_notes?: string | null;
           status_tag?: string | null;
           life_wheel_category?: string | null;
+          secondary_life_wheel_categories?: string[] | null;
           start_date?: string | null;
           timing_notes?: string | null;
           estimated_duration_days?: number | null;

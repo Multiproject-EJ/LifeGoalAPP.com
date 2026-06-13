@@ -111,6 +111,9 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
           title: formData.title,
           description: formData.description || null,
           life_wheel_category: formData.lifeWheelCategory,
+          secondary_life_wheel_categories: Array.isArray(formData.secondaryCategories)
+            ? formData.secondaryCategories
+            : [],
           start_date: formData.startDate || null,
           target_date: formData.targetDate || null,
           estimated_duration_days: formData.estimatedDurationDays

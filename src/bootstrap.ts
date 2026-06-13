@@ -1,6 +1,7 @@
 import './index.css';
 import './themes.css';
 import './styles/workspace.css';
+import './styles/life-wheel-redesign.css';
 
 const DEBUG_STORAGE_KEY = 'lifeGoalApp:debug';
 const bootStartedAt = new Date().toISOString();

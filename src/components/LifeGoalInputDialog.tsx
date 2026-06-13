@@ -1,6 +1,7 @@
 import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
+import { type LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
+import { LifeAreaPicker } from './LifeAreaPicker';
 import type { GoalStatusTag } from '../features/goals/goalStatus';
 import { DEFAULT_GOAL_STATUS, GOAL_STATUS_OPTIONS } from '../features/goals/goalStatus';
 import {
@@ -58,6 +59,7 @@ type LifeGoalFormData = {
   title: string;
   description: string;
   lifeWheelCategory: LifeWheelCategoryKey;
+  secondaryCategories: LifeWheelCategoryKey[];
   startDate: string;
   targetDate: string;
   estimatedDurationDays: string;
@@ -102,6 +104,7 @@ export function LifeGoalInputDialog({
     title: '',
     description: '',
     lifeWheelCategory: initialCategory || 'health_fitness',
+    secondaryCategories: [],
     startDate: '',
     targetDate: '',
     estimatedDurationDays: '',
@@ -292,6 +295,7 @@ export function LifeGoalInputDialog({
       title: initialPromptTitle?.trim() ?? '',
       description: '',
       lifeWheelCategory: initialCategory || current.lifeWheelCategory || 'health_fitness',
+      secondaryCategories: [],
       startDate: '',
       targetDate: '',
       estimatedDurationDays: '',
@@ -806,6 +810,7 @@ export function LifeGoalInputDialog({
         title: '',
         description: '',
         lifeWheelCategory: initialCategory || 'health_fitness',
+        secondaryCategories: [],
         startDate: '',
         targetDate: '',
         estimatedDurationDays: '',
@@ -896,6 +901,17 @@ export function LifeGoalInputDialog({
         <form className="life-goal-dialog__form" onSubmit={handleSubmit}>
           {activeTab === 'basic' && (
             <div className="life-goal-dialog__section">
+              <LifeAreaPicker
+                primary={formData.lifeWheelCategory}
+                secondary={formData.secondaryCategories}
+                onChangePrimary={(key) =>
+                  setFormData((current) => ({ ...current, lifeWheelCategory: key }))
+                }
+                onChangeSecondary={(keys) =>
+                  setFormData((current) => ({ ...current, secondaryCategories: keys }))
+                }
+              />
+
               <label className="life-goal-dialog__field">
                 <span>Goal Title *</span>
                 <input
@@ -1033,17 +1049,6 @@ export function LifeGoalInputDialog({
                   </div>
                 )}
               </div>
-
-              <label className="life-goal-dialog__field">
-                <span>Life Area</span>
-                <select value={formData.lifeWheelCategory} onChange={handleFieldChange('lifeWheelCategory')}>
-                  {LIFE_WHEEL_CATEGORIES.map((category) => (
-                    <option key={category.key} value={category.key}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
 
               <label className="life-goal-dialog__field">
                 <span>Status</span>

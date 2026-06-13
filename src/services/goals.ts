@@ -96,6 +96,7 @@ function makeLocalGoalFromInsert(payload: GoalInsert, localId: string): GoalRow 
     progress_notes: draft.progress_notes ?? null,
     status_tag: draft.status_tag ?? 'on_track',
     life_wheel_category: draft.life_wheel_category ?? null,
+    secondary_life_wheel_categories: draft.secondary_life_wheel_categories ?? [],
     start_date: draft.start_date ?? null,
     estimated_duration_days: draft.estimated_duration_days ?? null,
     timing_notes: draft.timing_notes ?? null,
