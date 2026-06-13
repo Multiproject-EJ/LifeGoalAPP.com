@@ -11,6 +11,7 @@ import {
   normalizeIslandArtManifest,
   type IslandArtManifestFetcher,
 } from '../islandArtManifest';
+import { getIslandBackgroundImageSrc } from '../islandBackgrounds';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 const sampleManifest = {
@@ -72,6 +73,16 @@ export const islandArtManifestTests: TestCase[] = [
       assertEqual(getIslandArtFolderName(12), 'island-012', 'Expected island 12 to use the island-012 folder');
       assertEqual(getIslandArtManifestUrl(1), '/assets/islands/island-001/island-art.json', 'Expected island 1 manifest URL');
       assertEqual(getIslandArtManifestUrl(Number.NaN), '/assets/islands/island-001/island-art.json', 'Expected invalid island to fall back to island 1');
+    },
+  },
+  {
+    name: 'resolves legacy background helper to per-island background placeholder',
+    run: () => {
+      assertEqual(
+        getIslandBackgroundImageSrc(3),
+        '/assets/islands/island-003/background/PLACEHOLDER__ambient-background.svg',
+        'Expected legacy background helper fallback to stay inside the island asset folder',
+      );
     },
   },
   {
