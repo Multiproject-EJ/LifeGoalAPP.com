@@ -8,10 +8,12 @@ const OUTER_RADIUS = 152;
 const INNER_RADIUS = 92;
 const PAD_ANGLE = 0.045; // radians of gap between segments
 
+type AreaStat = { mainCount: number; subCount: number; progress?: number };
+
 type InteractiveLifeWheelProps = {
   onCategorySelect: (categoryKey: LifeWheelCategoryKey) => void;
   selectedCategory: LifeWheelCategoryKey | null;
-  goalStats?: Partial<Record<LifeWheelCategoryKey, { mainCount: number; subCount: number }>>;
+  goalStats?: Partial<Record<LifeWheelCategoryKey, AreaStat>>;
 };
 
 type Segment = {
@@ -20,6 +22,8 @@ type Segment = {
   label: string;
   color: string;
   emoji: string;
+  startAngle: number;
+  endAngle: number;
   path: string;
   midAngle: number;
   emojiX: number;
@@ -32,6 +36,21 @@ function polar(radius: number, angle: number): [number, number] {
   return [CENTER + Math.cos(angle) * radius, CENTER + Math.sin(angle) * radius];
 }
 
+/** Path for an annular sector (donut wedge) between two radii and two angles. */
+function annularPath(innerR: number, outerR: number, start: number, end: number): string {
+  const [oxs, oys] = polar(outerR, start);
+  const [oxe, oye] = polar(outerR, end);
+  const [ixe, iye] = polar(innerR, end);
+  const [ixs, iys] = polar(innerR, start);
+  return [
+    `M ${oxs} ${oys}`,
+    `A ${outerR} ${outerR} 0 0 1 ${oxe} ${oye}`,
+    `L ${ixe} ${iye}`,
+    `A ${innerR} ${innerR} 0 0 0 ${ixs} ${iys}`,
+    'Z',
+  ].join(' ');
+}
+
 function buildSegments(): Segment[] {
   const count = LIFE_WHEEL_CATEGORIES.length;
   const sweep = (Math.PI * 2) / count;
@@ -41,19 +60,6 @@ function buildSegments(): Segment[] {
     const start = sweep * index - Math.PI / 2 + PAD_ANGLE / 2;
     const end = sweep * (index + 1) - Math.PI / 2 - PAD_ANGLE / 2;
     const mid = (start + end) / 2;
-
-    const [oxs, oys] = polar(OUTER_RADIUS, start);
-    const [oxe, oye] = polar(OUTER_RADIUS, end);
-    const [ixe, iye] = polar(INNER_RADIUS, end);
-    const [ixs, iys] = polar(INNER_RADIUS, start);
-
-    const path = [
-      `M ${oxs} ${oys}`,
-      `A ${OUTER_RADIUS} ${OUTER_RADIUS} 0 0 1 ${oxe} ${oye}`,
-      `L ${ixe} ${iye}`,
-      `A ${INNER_RADIUS} ${INNER_RADIUS} 0 0 0 ${ixs} ${iys}`,
-      'Z',
-    ].join(' ');
 
     const labelRadius = (OUTER_RADIUS + INNER_RADIUS) / 2;
     const [emojiX, emojiY] = polar(labelRadius, mid);
@@ -65,7 +71,9 @@ function buildSegments(): Segment[] {
       label: visual.label,
       color: visual.color,
       emoji: visual.emoji,
-      path,
+      startAngle: start,
+      endAngle: end,
+      path: annularPath(INNER_RADIUS, OUTER_RADIUS, start, end),
       midAngle: mid,
       emojiX,
       emojiY,
@@ -97,8 +105,9 @@ export function InteractiveLifeWheel({ onCategorySelect, selectedCategory, goalS
             const isActive = isSelected || isHovered;
             const stats = goalStats?.[segment.categoryKey];
             const mainCount = stats?.mainCount ?? 0;
+            const progress = Math.max(0, Math.min(1, stats?.progress ?? 0));
 
-            const fill = isActive ? segment.color : hexToRgba(segment.color, 0.16);
+            const fill = isActive ? hexToRgba(segment.color, 0.34) : hexToRgba(segment.color, 0.14);
             const className = [
               'life-wheel__segment',
               isSelected ? 'life-wheel__segment--selected' : '',
@@ -106,6 +115,13 @@ export function InteractiveLifeWheel({ onCategorySelect, selectedCategory, goalS
             ]
               .filter(Boolean)
               .join(' ');
+
+            // Progress fills the segment outward from the inner edge.
+            const progressOuter = INNER_RADIUS + (OUTER_RADIUS - INNER_RADIUS) * progress;
+            const progressPath =
+              progress > 0
+                ? annularPath(INNER_RADIUS, progressOuter, segment.startAngle, segment.endAngle)
+                : null;
 
             return (
               <g key={segment.categoryKey}>
@@ -118,7 +134,7 @@ export function InteractiveLifeWheel({ onCategorySelect, selectedCategory, goalS
                   onMouseLeave={() => setHoveredCategory(null)}
                   role="button"
                   aria-pressed={isSelected}
-                  aria-label={`${segment.label}${mainCount > 0 ? `, ${mainCount} goal${mainCount === 1 ? '' : 's'}` : ''} — tap to focus`}
+                  aria-label={`${segment.label}${mainCount > 0 ? `, ${mainCount} goal${mainCount === 1 ? '' : 's'}, ${Math.round(progress * 100)}% done` : ''} — tap to focus`}
                   tabIndex={0}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
@@ -127,6 +143,13 @@ export function InteractiveLifeWheel({ onCategorySelect, selectedCategory, goalS
                     }
                   }}
                 />
+                {progressPath ? (
+                  <path
+                    d={progressPath}
+                    className="life-wheel__progress"
+                    style={{ fill: hexToRgba(segment.color, 0.6) }}
+                  />
+                ) : null}
                 <text
                   x={segment.emojiX}
                   y={segment.emojiY}
@@ -144,7 +167,7 @@ export function InteractiveLifeWheel({ onCategorySelect, selectedCategory, goalS
                       cy={segment.badgeY}
                       r={11}
                       className="life-wheel__badge"
-                      style={{ fill: isActive ? '#ffffff' : segment.color }}
+                      style={{ fill: '#ffffff' }}
                     />
                     <text
                       x={segment.badgeX}
@@ -152,7 +175,7 @@ export function InteractiveLifeWheel({ onCategorySelect, selectedCategory, goalS
                       className="life-wheel__badge-text"
                       textAnchor="middle"
                       dominantBaseline="central"
-                      style={{ fill: isActive ? segment.color : '#ffffff' }}
+                      style={{ fill: segment.color }}
                     >
                       {mainCount}
                     </text>
