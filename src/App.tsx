@@ -117,7 +117,7 @@ import {
 } from './services/todaysWinsReminderPrefs';
 import { DayZeroOnboarding } from './features/onboarding/DayZeroOnboarding';
 import { LeapProgress } from './features/leap-progress/LeapProgress';
-import { FounderWelcome } from './features/onboarding/FounderWelcome';
+import { FounderWelcome, CreatorNoteModal } from './features/onboarding/FounderWelcome';
 import {
   getProfileStrengthDebugSnapshot,
   isProfileStrengthDebugEnabled,
@@ -818,6 +818,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [checkinsEntryOrigin, setCheckinsEntryOrigin] = useState<'my-quest' | 'direct'>('direct');
   const [isQuestCompassModalOpen, setIsQuestCompassModalOpen] = useState(false);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
+  const [isCreatorNoteOpen, setIsCreatorNoteOpen] = useState(false);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
     area: AreaKey;
     task: NextTask | null;
@@ -2786,6 +2787,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
+  const openCreatorNoteFromMobileMenu = () => {
+    setIsMobileProfileDialogOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsEnergyMenuOpen(false);
+    setIsMyQuestSubmenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
+    setIsStarterQuestSheetOpen(false);
+    closeGameBoardOverlayIfOpen();
+    setIsCreatorNoteOpen(true);
+  };
+
   const openPlayersHandFromLauncher = useCallback(() => {
     setHasSeenMicroTestBadge(true);
     setIsMobileProfileDialogOpen(false);
@@ -2948,8 +2960,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
     () => [
       { id: 'feedback', label: 'Feedback', icon: '💬', onSelect: () => openFeedbackSupportFromMobileMenu('feedback') },
       { id: 'support', label: 'Support', icon: '🛟', onSelect: () => openFeedbackSupportFromMobileMenu('support') },
+      { id: 'about', label: 'About HabitGame', icon: '🌱', onSelect: openCreatorNoteFromMobileMenu },
     ],
-    [openFeedbackSupportFromMobileMenu],
+    [openCreatorNoteFromMobileMenu, openFeedbackSupportFromMobileMenu],
   );
 
   const handleEnergySelect = (category: 'mind' | 'body') => {
@@ -5319,6 +5332,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
             sourceSurface="mobile_menu_overlay"
             onClose={() => setShowMobileSupportModal(false)}
           />
+        ) : null}
+        {isCreatorNoteOpen ? (
+          <CreatorNoteModal onClose={() => setIsCreatorNoteOpen(false)} closeLabel="Back to HabitGame" />
         ) : null}
       </div>
     );
