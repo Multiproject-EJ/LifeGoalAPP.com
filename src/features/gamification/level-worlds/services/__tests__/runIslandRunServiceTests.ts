@@ -68,6 +68,7 @@ import { islandRunStateActionsTests } from './islandRunStateActions.test';
 import { islandRunAudioTests } from './islandRunAudio.test';
 import { islandRunMusicTests } from './islandRunMusic.test';
 import { islandRunFirstSessionTutorialUiTests } from './islandRunFirstSessionTutorialUi.test';
+import { islandRunCoreLoopTutorialUiTests } from './islandRunCoreLoopTutorialUi.test';
 import { islandRunBestNextActionAdvisorTests } from './islandRunBestNextActionAdvisor.test';
 import { islandRunBoardEssenceParityTests } from './islandRunBoardEssenceParity.test';
 import { useBoardCameraTests } from './useBoardCamera.test';
@@ -160,6 +161,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunAudio', tests: islandRunAudioTests },
   { label: 'islandRunMusic', tests: islandRunMusicTests },
   { label: 'islandRunFirstSessionTutorialUi', tests: islandRunFirstSessionTutorialUiTests },
+  { label: 'islandRunCoreLoopTutorialUi', tests: islandRunCoreLoopTutorialUiTests },
   { label: 'islandRunBestNextActionAdvisor', tests: islandRunBestNextActionAdvisorTests },
   { label: 'islandRunBoardEssenceParity', tests: islandRunBoardEssenceParityTests },
   { label: 'useBoardCamera', tests: useBoardCameraTests },

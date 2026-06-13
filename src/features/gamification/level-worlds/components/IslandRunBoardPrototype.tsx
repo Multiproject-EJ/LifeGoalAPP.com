@@ -110,6 +110,12 @@ import {
   shouldIslandRunBuildPromptBlockControl,
 } from '../services/islandRunFirstSessionTutorialUi';
 import {
+  ISLAND_RUN_FIRST_ROLL_COACHMARK_COPY,
+  ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY,
+  isIslandRunFirstRollCoachmarkActive,
+  isIslandRunKeepRollingCoachmarkActive,
+} from '../services/islandRunCoreLoopTutorialUi';
+import {
   commitIslandRunState,
   getIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
@@ -1516,6 +1522,8 @@ export function IslandRunBoardPrototype({
   const isBuildModalHatcheryGuidanceActive = isIslandRunHatcheryBuildGuidanceActive(firstSessionTutorialState);
   const showHatcheryL1Celebration = isIslandRunHatcheryL1CelebrationActive(firstSessionTutorialState);
   const isBuildTutorialGameplayBlocked = shouldIslandRunBuildPromptBlockControl(firstSessionTutorialState, 'gameplay');
+  const isFirstRollCoachmarkActive = isIslandRunFirstRollCoachmarkActive(firstSessionTutorialState);
+  const isKeepRollingCoachmarkActive = isIslandRunKeepRollingCoachmarkActive(firstSessionTutorialState);
 
   // C1 shim: setDicePool — commits through the store for unmigrated paths.
   const setDicePool = useCallback((updater: number | ((current: number) => number)) => {
@@ -10690,7 +10698,7 @@ export function IslandRunBoardPrototype({
                 >
                   <button
                     type="button"
-                    className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'} ${rollButtonInteractionClass}`.trim()}
+                    className={`island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--footer ${rollButtonMode === 'roll' ? 'island-run-prototype__roll-btn--primary' : 'island-run-prototype__roll-btn--convert'} ${rollButtonInteractionClass}${isFirstRollCoachmarkActive ? ' island-run-prototype__roll-btn--tutorial-pulse' : ''}`.trim()}
                     onClick={isIslandTimerPendingStart ? activateCurrentIsland : handleRollButtonClick}
                     disabled={isBuildTutorialGameplayBlocked || (!isIslandTimerPendingStart && Boolean(rollDisabledReason))}
                     aria-disabled={isBuildTutorialGameplayBlocked || (!isIslandTimerPendingStart && Boolean(rollDisabledReason))}
@@ -10745,8 +10753,34 @@ export function IslandRunBoardPrototype({
             role="note"
             aria-live="polite"
           >
-            <strong>Build the Hatchery</strong>
-            <span>Tap the highlighted Build button to fund your first island building.</span>
+            <strong>You earned Essence ✨</strong>
+            <span>Essence builds and upgrades your island. Tap the highlighted Build button to fund your first Hatchery.</span>
+          </aside>
+        </div>
+      )}
+
+      {isFirstRollCoachmarkActive && !showBuildPanel && (
+        <div className="island-run-coreloop-tutorial-overlay" role="presentation">
+          <aside
+            className="island-run-build-tutorial-overlay__coachmark"
+            role="note"
+            aria-live="polite"
+          >
+            <strong>{ISLAND_RUN_FIRST_ROLL_COACHMARK_COPY.title}</strong>
+            <span>{ISLAND_RUN_FIRST_ROLL_COACHMARK_COPY.body}</span>
+          </aside>
+        </div>
+      )}
+
+      {isKeepRollingCoachmarkActive && !showBuildPanel && (
+        <div className="island-run-coreloop-tutorial-overlay" role="presentation">
+          <aside
+            className="island-run-build-tutorial-overlay__coachmark"
+            role="note"
+            aria-live="polite"
+          >
+            <strong>{ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY.title}</strong>
+            <span>{ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY.body}</span>
           </aside>
         </div>
       )}

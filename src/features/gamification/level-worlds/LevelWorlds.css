@@ -1247,6 +1247,61 @@
   line-height: 1.35;
 }
 
+/* Core-loop "how to play" coachmark (Phase 3): same card styling as the build
+   coachmark, but NON-blocking — no dimming backdrop and taps pass straight
+   through to the Roll button so the player can actually play the loop. */
+.island-run-coreloop-tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: grid;
+  align-items: end;
+  justify-items: center;
+  padding: 1rem 1rem 9.2rem;
+  background: transparent;
+  pointer-events: none;
+}
+
+.island-run-coreloop-tutorial-overlay .island-run-build-tutorial-overlay__coachmark {
+  animation: island-run-coreloop-coachmark-in 0.28s ease-out;
+}
+
+@keyframes island-run-coreloop-coachmark-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulse the Roll button while the first-roll coachmark is guiding the player. */
+.island-run-prototype__roll-btn--tutorial-pulse {
+  animation: island-run-roll-tutorial-pulse 1.3s ease-in-out infinite;
+}
+
+@keyframes island-run-roll-tutorial-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 230, 109, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(255, 230, 109, 0.28), 0 0 22px rgba(255, 230, 109, 0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-coreloop-tutorial-overlay .island-run-build-tutorial-overlay__coachmark {
+    animation: none;
+  }
+  .island-run-prototype__roll-btn--tutorial-pulse {
+    animation: none;
+    box-shadow: 0 0 0 5px rgba(255, 230, 109, 0.28), 0 0 22px rgba(255, 230, 109, 0.7);
+  }
+}
+
 /* Dice group: multiplier above dice roll button */
 .island-run-prototype__footer-dice-group {
   display: flex;
