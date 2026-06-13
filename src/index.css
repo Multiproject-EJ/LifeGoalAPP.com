@@ -34433,3 +34433,177 @@ body.habit-wizard-open .mobile-footer-nav {
     min-height: clamp(2.5rem, 9.4vh, 3.1rem);
   }
 }
+
+/* ============================================================
+   First-run start flow (Phase 2): founder welcome + spotlight
+   ============================================================ */
+
+.founder-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 4vw, 2rem);
+}
+
+.founder-welcome__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 8, 20, 0.78);
+  backdrop-filter: blur(6px);
+}
+
+.founder-welcome__card {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: clamp(1.5rem, 5vw, 2.25rem);
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(30, 41, 70, 0.98), rgba(15, 23, 42, 0.98));
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 30px 80px rgba(2, 6, 23, 0.6);
+  color: #f8fafc;
+}
+
+.founder-welcome__eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(148, 197, 248, 0.9);
+}
+
+.founder-welcome__title {
+  margin: 0;
+  font-size: clamp(1.4rem, 5vw, 1.85rem);
+  line-height: 1.2;
+}
+
+.founder-welcome__body {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.founder-welcome__signature {
+  margin: 0;
+  font-style: italic;
+  color: rgba(148, 197, 248, 0.9);
+}
+
+.founder-welcome__dots {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.25rem;
+}
+
+.founder-welcome__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.4);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.founder-welcome__dot.is-active {
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  transform: scale(1.25);
+}
+
+.founder-welcome__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.founder-welcome__step-label {
+  font-size: 0.85rem;
+  color: rgba(148, 163, 184, 0.85);
+}
+
+.founder-welcome__primary,
+.founder-welcome__secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+}
+
+.founder-welcome__primary {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.95), rgba(99, 102, 241, 0.95));
+  color: #0f172a;
+}
+
+.founder-welcome__secondary {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: inherit;
+}
+
+/* Scrim that tints the Today screen while the footer Game button glows.
+   Sits below the footer (z-index 30) so the spotlighted button stays usable. */
+.first-run-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 28;
+  background: rgba(4, 8, 20, 0.66);
+  backdrop-filter: blur(1.5px);
+  pointer-events: auto;
+  animation: first-run-scrim-in 0.3s ease-out;
+}
+
+@keyframes first-run-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Footer spotlight: dim/disable every button except the glowing Game card. */
+.mobile-footer-nav--spotlight-status .mobile-footer-nav__menu-row,
+.mobile-footer-nav--spotlight-status
+  .mobile-footer-nav__item:not(.mobile-footer-nav__status) {
+  opacity: 0.32;
+  pointer-events: none;
+  filter: grayscale(0.4);
+}
+
+.mobile-footer-nav__status-card--spotlight {
+  position: relative;
+  z-index: 1;
+  animation: footer-game-spotlight 1.3s ease-in-out infinite;
+}
+
+@keyframes footer-game-spotlight {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.06);
+    box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.18), 0 0 28px rgba(120, 215, 255, 0.85);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .first-run-scrim {
+    animation: none;
+  }
+  .mobile-footer-nav__status-card--spotlight {
+    animation: none;
+    box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.18), 0 0 28px rgba(120, 215, 255, 0.85);
+  }
+}

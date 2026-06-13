@@ -49,6 +49,7 @@ type MobileFooterNavProps = {
   status?: MobileFooterStatus;
   onStatusClick?: () => void;
   onStatusHoldToggle?: () => void;
+  spotlightStatus?: boolean;
   onExpand?: () => void;
   onSnapExpand?: () => void;
   onCollapse?: () => void;
@@ -88,6 +89,7 @@ export function MobileFooterNav({
   status,
   onStatusClick,
   onStatusHoldToggle,
+  spotlightStatus = false,
   onExpand,
   onSnapExpand,
   onCollapse,
@@ -457,7 +459,7 @@ export function MobileFooterNav({
         areControlsFaded ? ' mobile-footer-nav--controls-faded' : ''
       }${isDiamondFaded ? ' mobile-footer-nav--diamond-faded' : ''}${
         isEnergyMenuOpen && isDiodeActive ? ' mobile-footer-nav--energy-focus' : ''
-      }`}
+      }${spotlightStatus ? ' mobile-footer-nav--spotlight-status' : ''}`}
       aria-label="Primary navigation"
       onWheelCapture={blockBackgroundScroll}
       onTouchMoveCapture={blockBackgroundScroll}
@@ -536,7 +538,7 @@ export function MobileFooterNav({
                       onStatusClick ? 'mobile-footer-nav__status-card--interactive' : ''
                     }${isStatusHoldActive ? ' mobile-footer-nav__status-card--hold' : ''}${
                       isStatusHoldSnap ? ' mobile-footer-nav__status-card--snap' : ''
-                    }`}
+                    }${spotlightStatus ? ' mobile-footer-nav__status-card--spotlight' : ''}`}
                     style={
                       {
                         '--status-hold-progress': statusHoldProgress,

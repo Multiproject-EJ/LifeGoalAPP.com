@@ -6,6 +6,8 @@ type GameBoardOverlayProps = {
   isOpen: boolean;
   onClose: () => void;
   onPlayClick?: () => void;
+  /** First-run guided mode: only PLAY is interactive and the backdrop can't dismiss. */
+  spotlightPlay?: boolean;
   onTopbarClick?: () => void;
   onSpinWinClick?: () => void;
   onLuckyRollClick?: () => void;
@@ -39,6 +41,7 @@ export function GameBoardOverlay({
   isOpen,
   onClose,
   onPlayClick,
+  spotlightPlay = false,
   islandSceneSrc = getIslandBackgroundImageSrc(1),
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -66,6 +69,8 @@ export function GameBoardOverlay({
   }
 
   const handleBackdropClick = (e: React.MouseEvent) => {
+    // In guided first-run mode the player can only advance via PLAY.
+    if (spotlightPlay) return;
     if (e.target === e.currentTarget) {
       onClose();
     }
@@ -73,7 +78,9 @@ export function GameBoardOverlay({
 
   return (
     <div
-      className={`game-board-overlay ${isAnimating ? 'game-board-overlay--open' : ''}`}
+      className={`game-board-overlay ${isAnimating ? 'game-board-overlay--open' : ''}${
+        spotlightPlay ? ' game-board-overlay--spotlight-play' : ''
+      }`}
       onClick={handleBackdropClick}
     >
       <div className="game-board-overlay__backdrop" onClick={handleBackdropClick} />
@@ -89,7 +96,9 @@ export function GameBoardOverlay({
         <div className="game-board-overlay__middle game-board-overlay__middle--minimal">
           <button
             type="button"
-            className="game-board-overlay__play-button"
+            className={`game-board-overlay__play-button${
+              spotlightPlay ? ' game-board-overlay__play-button--spotlight' : ''
+            }`}
             onClick={onPlayClick}
             aria-label="Play level one"
           >

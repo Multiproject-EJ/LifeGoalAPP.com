@@ -117,6 +117,7 @@ import {
 } from './services/todaysWinsReminderPrefs';
 import { DayZeroOnboarding } from './features/onboarding/DayZeroOnboarding';
 import { LeapProgress } from './features/leap-progress/LeapProgress';
+import { FounderWelcome } from './features/onboarding/FounderWelcome';
 import {
   getProfileStrengthDebugSnapshot,
   isProfileStrengthDebugEnabled,
@@ -826,6 +827,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
   const [showLeapProgress, setShowLeapProgress] = useState(false);
   const [showDayZeroOnboarding, setShowDayZeroOnboarding] = useState(false);
+  // First-run start flow: founder welcome → spotlight the Game button →
+  // spotlight PLAY → hand off to the in-game welcome pack / how-to-play.
+  const [firstRunStep, setFirstRunStep] = useState<
+    'welcome' | 'spotlight-game' | 'spotlight-play' | null
+  >(null);
+  const firstRunInitializedUserRef = useRef<string | null>(null);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
   const [isMobileMenuFlashActive, setIsMobileMenuFlashActive] = useState(false);
   const mobileMenuFlashTimeoutRef = useRef<number | null>(null);
@@ -2274,6 +2281,49 @@ export default function App({ forceAuthOnMount }: AppProps) {
     [],
   );
 
+  // Kick off the first-run start flow for players who haven't completed it yet.
+  // Gated on a dedicated `start_flow_complete` metadata flag so it stays
+  // independent of the (now optional) Leap Progress / onboarding_complete flag.
+  useEffect(() => {
+    if (!supabaseSession) return;
+    const userId = supabaseSession.user.id;
+    if (firstRunInitializedUserRef.current === userId) return;
+    firstRunInitializedUserRef.current = userId;
+    const startFlowComplete = Boolean(supabaseSession.user.user_metadata?.start_flow_complete);
+    if (!startFlowComplete) {
+      setFirstRunStep('welcome');
+    }
+  }, [supabaseSession]);
+
+  const handleCompleteFounderWelcome = useCallback(() => {
+    // Land the player on Today, then guide them to the glowing Game button.
+    setActiveWorkspaceNav('planning');
+    setShowMobileHome(true);
+    if (isMobileExperience) {
+      setFirstRunStep('spotlight-game');
+    } else {
+      // Desktop has no footer Game button — go straight to the PLAY overlay.
+      setFirstRunStep('spotlight-play');
+      setShowGameBoardOverlay(true);
+    }
+  }, [isMobileExperience]);
+
+  const handleFirstRunGameTap = useCallback(() => {
+    setShowMobileGamification(false);
+    setShowGameBoardOverlay(true);
+    setFirstRunStep('spotlight-play');
+  }, []);
+
+  const completeFirstRunStartFlow = useCallback(() => {
+    setFirstRunStep(null);
+    const supabaseClient = client ?? getSupabaseClient();
+    void supabaseClient.auth
+      .updateUser({ data: { start_flow_complete: true } })
+      .catch((error) => {
+        console.error('Failed to persist start_flow_complete:', error);
+      });
+  }, [client]);
+
   const scheduleDesktopMenuAutoHide = useCallback(() => {
     if (isMobileExperience || !isDesktopMenuOpen || isDesktopMenuPinned) return;
     if (desktopMenuAutoHideTimeoutRef.current !== null) {
@@ -2351,6 +2401,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             data: {
               full_name: formFullName,
               onboarding_complete: false,
+              start_flow_complete: false,
             },
           },
         });
@@ -5143,6 +5194,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
       />
   ) : null;
 
+  const firstRunOverlay = (
+    <>
+      {firstRunStep === 'spotlight-game' ? (
+        <div className="first-run-scrim" aria-hidden="true" />
+      ) : null}
+      {firstRunStep === 'welcome' ? (
+        <FounderWelcome onComplete={handleCompleteFounderWelcome} />
+      ) : null}
+    </>
+  );
+
   if (isMobileExperience && showMobileHome) {
     const mobileHomeAppClassName = `app app--workspace app--mobile-frame app--mobile-home-frame${
       isAnyModalVisible ? ' app--auth-overlay' : ''
@@ -5192,9 +5254,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
             items={mobileFooterNavItems}
             status={mobileFooterStatus}
             activeId={null}
-            onSelect={handleMobileNavSelect}
-            onStatusClick={handleMobileGameStatusClick}
+            onSelect={firstRunStep === 'spotlight-game' ? () => {} : handleMobileNavSelect}
+            onStatusClick={
+              firstRunStep === 'spotlight-game' ? handleFirstRunGameTap : handleMobileGameStatusClick
+            }
             onStatusHoldToggle={handleMobileGameStatusHoldToggle}
+            spotlightStatus={firstRunStep === 'spotlight-game'}
             onOpenMenu={() => {
               setIsMobileMenuOpen(true);
               setIsEnergyMenuOpen(false);
@@ -5230,10 +5295,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
         {levelWorldsEntryModal}
         {levelWorldsMobileExitOverlay}
         {appPreviewOverlay}
+        {firstRunOverlay}
         <GameBoardOverlay
           isOpen={showGameBoardOverlay}
+          spotlightPlay={firstRunStep === 'spotlight-play'}
           onClose={() => setShowGameBoardOverlay(false)}
           onPlayClick={() => {
+            if (firstRunStep === 'spotlight-play') {
+              completeFirstRunStartFlow();
+            }
             setShowGameBoardOverlay(false);
             setReopenGameBoardOverlayOnLevelWorldsClose(true);
             setLevelWorldsEntryPanel('default');
@@ -5516,9 +5586,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
           items={mobileFooterNavItems}
           status={mobileFooterStatus}
           activeId={mobileActiveNavId}
-          onSelect={handleMobileNavSelect}
-          onStatusClick={handleMobileGameStatusClick}
+          onSelect={firstRunStep === 'spotlight-game' ? () => {} : handleMobileNavSelect}
+          onStatusClick={
+            firstRunStep === 'spotlight-game' ? handleFirstRunGameTap : handleMobileGameStatusClick
+          }
           onStatusHoldToggle={handleMobileGameStatusHoldToggle}
+          spotlightStatus={firstRunStep === 'spotlight-game'}
           onOpenMenu={() => {
             setIsMobileMenuOpen(true);
             setIsEnergyMenuOpen(false);
@@ -5554,6 +5627,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       {levelWorldsEntryModal}
       {levelWorldsMobileExitOverlay}
       {appPreviewOverlay}
+      {firstRunOverlay}
       <HolidaySeasonDialog
         activeHoliday={activeHolidaySeason}
         isOpen={showHolidaySeasonDialog}
@@ -5574,8 +5648,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
       {/* Game Board Overlay */}
       <GameBoardOverlay
         isOpen={showGameBoardOverlay}
+        spotlightPlay={firstRunStep === 'spotlight-play'}
         onClose={() => setShowGameBoardOverlay(false)}
         onPlayClick={() => {
+          if (firstRunStep === 'spotlight-play') {
+            completeFirstRunStartFlow();
+          }
           setShowGameBoardOverlay(false);
           setReopenGameBoardOverlayOnLevelWorldsClose(true);
           setLevelWorldsEntryPanel('default');
