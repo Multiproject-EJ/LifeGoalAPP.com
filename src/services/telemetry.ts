@@ -14,6 +14,7 @@ export type TelemetryEventRow = Database['public']['Tables']['telemetry_events']
 
 export type TelemetryEventType =
   | 'onboarding_completed'
+  | 'leap_progress_completed'
   | 'balance_shift'
   | 'intervention_accepted'
   | 'micro_quest_completed'

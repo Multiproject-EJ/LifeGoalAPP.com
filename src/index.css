@@ -14133,7 +14133,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.75rem;
 }
 
-.gol-onboarding {
+.leap-progress {
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 18px;
@@ -14340,12 +14340,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   cursor: not-allowed;
 }
 
-.gol-onboarding__header h3 {
+.leap-progress__header h3 {
   margin: 0 0 0.5rem;
   font-size: 1.35rem;
 }
 
-.gol-onboarding__eyebrow {
+.leap-progress__eyebrow {
   font-size: 0.8rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -14353,13 +14353,13 @@ html.platform-ipad .workspace-shell__menu-edge {
   margin: 0 0 0.35rem;
 }
 
-.gol-onboarding__header p {
+.leap-progress__header p {
   margin: 0;
   color: rgba(248, 250, 252, 0.8);
   font-size: 0.98rem;
 }
 
-.gol-onboarding__step {
+.leap-progress__step {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -14370,14 +14370,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: rgba(148, 197, 248, 0.9);
 }
 
-.gol-onboarding__header-row {
+.leap-progress__header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
 }
 
-.gol-onboarding__close {
+.leap-progress__close {
   border: 1px solid rgba(148, 163, 184, 0.5);
   background: rgba(15, 23, 42, 0.4);
   color: #f8fafc;
@@ -14388,7 +14388,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   letter-spacing: 0.08em;
 }
 
-.gol-onboarding__progress {
+.leap-progress__progress {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -14399,30 +14399,30 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: rgba(148, 197, 248, 0.75);
 }
 
-.gol-onboarding__progress-bar {
+.leap-progress__progress-bar {
   background: rgba(15, 23, 42, 0.6);
   border-radius: 999px;
   height: 6px;
   overflow: hidden;
 }
 
-.gol-onboarding__progress-bar span {
+.leap-progress__progress-bar span {
   display: block;
   height: 100%;
   background: linear-gradient(90deg, #38bdf8, #6366f1);
 }
 
-.gol-onboarding__panel {
+.leap-progress__panel {
   display: grid;
   gap: 1.25rem;
 }
 
-.gol-onboarding__choices {
+.leap-progress__choices {
   display: grid;
   gap: 0.75rem;
 }
 
-.gol-onboarding__choice {
+.leap-progress__choice {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.75rem;
@@ -14435,29 +14435,29 @@ html.platform-ipad .workspace-shell__menu-edge {
   text-align: left;
 }
 
-.gol-onboarding__choice strong {
+.leap-progress__choice strong {
   display: block;
 }
 
-.gol-onboarding__choice small {
+.leap-progress__choice small {
   display: block;
   color: rgba(248, 250, 252, 0.7);
   margin-top: 0.25rem;
 }
 
-.gol-onboarding__choice.is-selected {
+.leap-progress__choice.is-selected {
   border-color: rgba(59, 130, 246, 0.8);
   box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
 }
 
-.gol-onboarding__score {
+.leap-progress__score {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
 
-.gol-onboarding__score button,
-.gol-onboarding__pill-list button {
+.leap-progress__score button,
+.leap-progress__pill-list button {
   border-radius: 999px;
   padding: 0.45rem 0.9rem;
   border: 1px solid rgba(148, 163, 184, 0.4);
@@ -14465,26 +14465,26 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: inherit;
 }
 
-.gol-onboarding__score button.is-selected,
-.gol-onboarding__pill-list button.is-selected {
+.leap-progress__score button.is-selected,
+.leap-progress__pill-list button.is-selected {
   border-color: rgba(59, 130, 246, 0.8);
   background: rgba(59, 130, 246, 0.2);
 }
 
-.gol-onboarding__pill-list {
+.leap-progress__pill-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.gol-onboarding__callout {
+.leap-progress__callout {
   background: rgba(15, 23, 42, 0.5);
   border-radius: 12px;
   padding: 0.9rem 1rem;
   border: 1px solid rgba(148, 163, 184, 0.25);
 }
 
-.gol-onboarding__reward {
+.leap-progress__reward {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -14496,16 +14496,16 @@ html.platform-ipad .workspace-shell__menu-edge {
   border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
-.gol-onboarding__reward h4 {
+.leap-progress__reward h4 {
   margin: 0 0 0.25rem;
 }
 
-.gol-onboarding__reward p {
+.leap-progress__reward p {
   margin: 0;
   color: rgba(248, 250, 252, 0.7);
 }
 
-.gol-onboarding__shop {
+.leap-progress__shop {
   display: grid;
   gap: 0.75rem;
   padding: 1rem;
@@ -14514,24 +14514,24 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(15, 23, 42, 0.35);
 }
 
-.gol-onboarding__shop-header {
+.leap-progress__shop-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
 }
 
-.gol-onboarding__tokens {
+.leap-progress__tokens {
   font-weight: 600;
   color: rgba(148, 197, 248, 0.9);
 }
 
-.gol-onboarding__shop-grid {
+.leap-progress__shop-grid {
   display: grid;
   gap: 0.75rem;
 }
 
-.gol-onboarding__shop-item {
+.leap-progress__shop-item {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -14543,22 +14543,22 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: inherit;
 }
 
-.gol-onboarding__shop-item p {
+.leap-progress__shop-item p {
   margin: 0.35rem 0 0;
   color: rgba(248, 250, 252, 0.7);
   font-size: 0.9rem;
 }
 
-.gol-onboarding__shop-item span {
+.leap-progress__shop-item span {
   white-space: nowrap;
   font-weight: 600;
 }
 
-.gol-onboarding__shop-item.is-owned {
+.leap-progress__shop-item.is-owned {
   border-color: rgba(16, 185, 129, 0.7);
 }
 
-.gol-onboarding__shop-unlocks {
+.leap-progress__shop-unlocks {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
@@ -14567,7 +14567,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: rgba(248, 250, 252, 0.7);
 }
 
-.gol-onboarding__shop-unlocks ul {
+.leap-progress__shop-unlocks ul {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -14576,7 +14576,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   list-style: none;
 }
 
-.gol-onboarding__axes {
+.leap-progress__axes {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -14584,7 +14584,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.85rem;
 }
 
-.gol-onboarding__axes li {
+.leap-progress__axes li {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.75rem;
@@ -14595,20 +14595,20 @@ html.platform-ipad .workspace-shell__menu-edge {
   border: 1px solid rgba(148, 163, 184, 0.25);
 }
 
-.gol-onboarding__axes p {
+.leap-progress__axes p {
   margin: 0.25rem 0 0;
   color: rgba(248, 250, 252, 0.7);
   font-size: 0.92rem;
 }
 
-.gol-onboarding__actions {
+.leap-progress__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
 }
 
-.gol-onboarding__actions--stack {
+.leap-progress__actions--stack {
   flex-direction: column;
   align-items: stretch;
 }
@@ -14661,7 +14661,7 @@ html.platform-ipad .workspace-shell__menu-edge {
     align-items: flex-start;
   }
 
-  .gol-onboarding__actions {
+  .leap-progress__actions {
     flex-direction: column;
     align-items: stretch;
   }
@@ -14669,48 +14669,48 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 /* M11-B: onboarding + coach mobile fixes for ≤375px viewports */
 @media (max-width: 375px) {
-  .gol-onboarding {
+  .leap-progress {
     padding: 1rem;
     border-radius: 12px;
   }
 
-  .gol-onboarding__header h3 {
+  .leap-progress__header h3 {
     font-size: 1.1rem;
   }
 
-  .gol-onboarding__progress {
+  .leap-progress__progress {
     font-size: 0.8rem;
   }
 
-  .gol-onboarding__choices {
+  .leap-progress__choices {
     gap: 0.5rem;
   }
 
-  .gol-onboarding__choice {
+  .leap-progress__choice {
     padding: 0.75rem;
     /* Ensure minimum 44×44px tap target */
     min-height: 44px;
   }
 
-  .gol-onboarding__score button,
-  .gol-onboarding__pill-list button {
+  .leap-progress__score button,
+  .leap-progress__pill-list button {
     /* Ensure minimum 44×44px tap target */
     min-width: 44px;
     min-height: 44px;
   }
 
-  .gol-onboarding__shop-item {
+  .leap-progress__shop-item {
     flex-direction: column;
     gap: 0.5rem;
   }
 
-  .gol-onboarding__actions button {
+  .leap-progress__actions button {
     /* Ensure minimum 44×44px tap target */
     min-height: 44px;
     width: 100%;
   }
 
-  .gol-onboarding__close {
+  .leap-progress__close {
     /* Ensure minimum 44×44px tap target */
     min-height: 44px;
     min-width: 44px;
