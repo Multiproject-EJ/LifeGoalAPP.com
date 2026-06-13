@@ -17,7 +17,7 @@
   },
   "scene": {
     "boardCircle": "board/board-circle-inner.webp",
-    "ambientBackground": "/assets/islands/backgrounds/level-bg-01.webp"
+    "ambientBackground": "background/PLACEHOLDER__ambient-background.svg"
   },
   "landmarks": [
     {
