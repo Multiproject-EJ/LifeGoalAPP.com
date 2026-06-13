@@ -116,7 +116,7 @@ import {
   setTodaysWinsReminderLastShownCycle,
 } from './services/todaysWinsReminderPrefs';
 import { DayZeroOnboarding } from './features/onboarding/DayZeroOnboarding';
-import { GameOfLifeOnboarding } from './features/onboarding/GameOfLifeOnboarding';
+import { LeapProgress } from './features/leap-progress/LeapProgress';
 import {
   getProfileStrengthDebugSnapshot,
   isProfileStrengthDebugEnabled,
@@ -569,8 +569,6 @@ const MOBILE_FOOTER_WORKSPACE_IDS = [
 const MOBILE_FOOTER_AUTO_COLLAPSE_IDS = new Set(['identity', 'account', 'projects', 'timer', 'journal', 'contracts']);
 const MOBILE_FOOTER_AUTO_COLLAPSE_DELAY_MS = 3800;
 const MOBILE_FOOTER_SNAP_RESET_MS = 160;
-const ONBOARDING_NUDGE_KEY = 'gol_onboarding_nudge_at';
-const ONBOARDING_NUDGE_INTERVAL_MS = 1000 * 60 * 60 * 6;
 
 const formatGoldRange = (min: number, max: number) => {
   const normalizedMin = Math.min(min, max);
@@ -826,9 +824,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [activeMobileMenuHelper, setActiveMobileMenuHelper] = useState<MobileMenuNavItem | null>(null);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(true);
   const [isDesktopMenuPinned, setIsDesktopMenuPinned] = useState(false);
-  const [isOnboardingDismissed, setIsOnboardingDismissed] = useState(false);
-  const [isOnboardingOverride, setIsOnboardingOverride] = useState(false);
-  const [showOnboardingNudge, setShowOnboardingNudge] = useState(false);
+  const [showLeapProgress, setShowLeapProgress] = useState(false);
   const [showDayZeroOnboarding, setShowDayZeroOnboarding] = useState(false);
   const desktopMenuAutoHideTimeoutRef = useRef<number | null>(null);
   const [isMobileMenuFlashActive, setIsMobileMenuFlashActive] = useState(false);
@@ -2245,41 +2241,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   }, []);
 
-  const isOnboardingComplete = useMemo(() => {
-    return Boolean(supabaseSession?.user.user_metadata?.onboarding_complete);
-  }, [supabaseSession]);
-
-  useEffect(() => {
-    if (!isOnboardingComplete) return;
-    setIsOnboardingDismissed(false);
-    setIsOnboardingOverride(false);
-    setShowOnboardingNudge(false);
-    setShowDayZeroOnboarding(false);
-  }, [isOnboardingComplete]);
-
-  useEffect(() => {
-    if (isOnboardingComplete || !isOnboardingDismissed) {
-      setShowOnboardingNudge(false);
-      return;
-    }
-    const lastShown = Number(window.localStorage.getItem(ONBOARDING_NUDGE_KEY) || 0);
-    const now = Date.now();
-    if (now - lastShown >= ONBOARDING_NUDGE_INTERVAL_MS) {
-      setShowOnboardingNudge(true);
-      window.localStorage.setItem(ONBOARDING_NUDGE_KEY, String(now));
-    }
-  }, [isOnboardingComplete, isOnboardingDismissed]);
-
-  const handleLaunchOnboarding = useCallback(
+  // Leap Progress is an optional, opt-in leveling sprint — launched on demand
+  // (Account → Leap Progress), never forced on new users.
+  const handleLaunchLeapProgress = useCallback(
     (options?: { reset?: boolean }) => {
       if (options?.reset && supabaseSession?.user.id) {
-        window.localStorage.removeItem(`gol_onboarding_${supabaseSession.user.id}`);
-        window.localStorage.removeItem(`day_zero_onboarding_${supabaseSession.user.id}`);
+        window.localStorage.removeItem(`leap_progress_${supabaseSession.user.id}`);
       }
       setShowDayZeroOnboarding(false);
-      setIsOnboardingDismissed(false);
-      setIsOnboardingOverride(true);
-      setShowOnboardingNudge(false);
+      setShowLeapProgress(true);
       setActiveWorkspaceNav('goals');
     },
     [supabaseSession?.user.id],
@@ -2291,9 +2261,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         window.localStorage.removeItem(`day_zero_onboarding_${supabaseSession.user.id}`);
       }
       setShowDayZeroOnboarding(true);
-      setIsOnboardingDismissed(true);
-      setIsOnboardingOverride(false);
-      setShowOnboardingNudge(false);
+      setShowLeapProgress(false);
       setActiveWorkspaceNav('goals');
     },
     [supabaseSession?.user.id],
@@ -3396,12 +3364,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
   });
 
   const profileSaving = manualProfileSaving || isProfileAutosaving;
-  const isOnboardingGateActive = true;
-  const shouldShowOnboarding =
-    isOnboardingGateActive &&
-    !showDayZeroOnboarding &&
-    (isOnboardingOverride || (!isOnboardingComplete && !isOnboardingDismissed));
-  const canAccessWorkspace = !isOnboardingGateActive || isOnboardingComplete || isOnboardingOverride;
+  // Leap Progress no longer gates the workspace — it only renders when explicitly
+  // launched. The forced new-user onboarding gate is retired here; the new
+  // start-the-app flow will own first-run gating separately.
+  const shouldShowLeapProgress = showLeapProgress && !showDayZeroOnboarding;
+  const canAccessWorkspace = true;
 
   useEffect(() => {
     if (profileAutosaveError) {
@@ -3672,8 +3639,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     if (activeWorkspaceNav === 'goals') {
       return (
         <>
-          {shouldShowOnboarding ? (
-            <GameOfLifeOnboarding
+          {shouldShowLeapProgress ? (
+            <LeapProgress
               session={activeSession}
               displayName={displayName}
               setDisplayName={setDisplayName}
@@ -3683,18 +3650,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
               setAuthError={setAuthError}
               isDemoExperience={isDemoExperience}
               onSaveDemoProfile={handleDemoProfileSave}
-              onNavigateDashboard={() => {
+              onNavigateHub={() => {
+                setShowLeapProgress(false);
                 setActiveWorkspaceNav('goals');
                 setShowMobileHome(false);
               }}
               onOpenCoach={() => {
+                setShowLeapProgress(false);
                 setAiCoachStarterQuestion(undefined);
                 setShowAiCoachModal(true);
               }}
-              onClose={() => {
-                setIsOnboardingDismissed(true);
-                setIsOnboardingOverride(false);
-              }}
+              onClose={() => setShowLeapProgress(false)}
             />
           ) : null}
 
@@ -3709,53 +3675,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
               onSaveDemoProfile={handleDemoProfileSave}
               onClose={() => setShowDayZeroOnboarding(false)}
             />
-          ) : null}
-
-          {!shouldShowOnboarding && !isOnboardingComplete && !showDayZeroOnboarding ? (
-            <div className="onboarding-start-card">
-              <div>
-                <p className="onboarding-start-card__eyebrow">Onboarding</p>
-                <h3>Launch your Game of Life 2.0 setup</h3>
-                <p>
-                  Walk through the Agency, Awareness, Rationality, and Vitality loops to unlock the full
-                  ship.
-                </p>
-              </div>
-              <div className="onboarding-start-card__actions">
-                <button
-                  type="button"
-                  className="supabase-auth__action"
-                  onClick={() => handleLaunchOnboarding()}
-                >
-                  Start Game of Life onboarding
-                </button>
-              </div>
-            </div>
-          ) : null}
-
-          {showOnboardingNudge && !shouldShowOnboarding && !isOnboardingComplete && !showDayZeroOnboarding ? (
-            <div className="onboarding-nudge">
-              <div>
-                <strong>Ready to rebalance your four axes?</strong>
-                <p>Continue the Game of Life 2.0 onboarding to unlock your full ship.</p>
-              </div>
-              <div className="onboarding-nudge__actions">
-                <button
-                  type="button"
-                  className="supabase-auth__action"
-                  onClick={() => handleLaunchOnboarding()}
-                >
-                  Continue Game of Life onboarding
-                </button>
-                <button
-                  type="button"
-                  className="supabase-auth__secondary"
-                  onClick={() => setShowOnboardingNudge(false)}
-                >
-                  Not now
-                </button>
-              </div>
-            </div>
           ) : null}
 
           {canAccessWorkspace ? (
@@ -3799,7 +3718,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             isAuthenticated={isAuthenticated}
             onSignOut={handleSignOut}
             onEditProfile={handleEditAccountDetails}
-            onLaunchOnboarding={handleLaunchOnboarding}
+            onLaunchLeapProgress={handleLaunchLeapProgress}
             onLaunchDayZeroOnboarding={handleLaunchDayZeroOnboarding}
             profile={workspaceProfile}
             stats={workspaceStats}

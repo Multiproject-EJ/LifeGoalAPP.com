@@ -48,7 +48,7 @@ type MyAccountPanelProps = {
   isAuthenticated: boolean;
   onSignOut: () => void | Promise<void>;
   onEditProfile: () => void;
-  onLaunchOnboarding?: (options?: { reset?: boolean }) => void;
+  onLaunchLeapProgress?: (options?: { reset?: boolean }) => void;
   onLaunchDayZeroOnboarding?: (options?: { reset?: boolean }) => void;
   profile: WorkspaceProfileRow | null;
   stats: WorkspaceStats | null;
@@ -82,7 +82,7 @@ export function MyAccountPanel({
   isAuthenticated,
   onSignOut,
   onEditProfile,
-  onLaunchOnboarding,
+  onLaunchLeapProgress,
   onLaunchDayZeroOnboarding,
   profile,
   stats,
@@ -223,8 +223,8 @@ export function MyAccountPanel({
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!onLaunchOnboarding && !onLaunchDayZeroOnboarding) return;
-    const storageKey = `gol_onboarding_${session.user.id}`;
+    if (!onLaunchLeapProgress && !onLaunchDayZeroOnboarding) return;
+    const storageKey = `leap_progress_${session.user.id}`;
     const dayZeroKey = `day_zero_onboarding_${session.user.id}`;
     const storedValue = window.localStorage.getItem(storageKey);
     const dayZeroValue = window.localStorage.getItem(dayZeroKey);
@@ -238,22 +238,22 @@ export function MyAccountPanel({
 
     try {
       const parsed = JSON.parse(storedValue) as {
-        stepIndex?: number;
-        tokens?: number;
-        unlockedItemIds?: string[];
+        stageIndex?: number;
+        xp?: number;
+        unlockedPerkIds?: string[];
       };
-      const stepIndex =
-        typeof parsed.stepIndex === 'number' ? Math.min(parsed.stepIndex + 1, 20) : null;
-      const tokens = typeof parsed.tokens === 'number' ? parsed.tokens : null;
-      const unlockedCount = parsed.unlockedItemIds?.length ?? 0;
-      const stepLabel = stepIndex ? `Loop ${stepIndex} of 20` : 'Loop progress unavailable';
-      const tokenLabel = tokens !== null ? `${tokens} tokens banked` : 'Token balance unavailable';
-      const unlockLabel = `${unlockedCount} shop unlock${unlockedCount === 1 ? '' : 's'}`;
-      setOnboardingSnapshot(`${stepLabel} • ${tokenLabel} • ${unlockLabel}`);
+      const stageIndex =
+        typeof parsed.stageIndex === 'number' ? Math.min(parsed.stageIndex + 1, 12) : null;
+      const xp = typeof parsed.xp === 'number' ? parsed.xp : null;
+      const unlockedCount = parsed.unlockedPerkIds?.length ?? 0;
+      const stageLabel = stageIndex ? `Leap ${stageIndex} of 12` : 'Leap progress unavailable';
+      const xpLabel = xp !== null ? `${xp} XP banked` : 'XP balance unavailable';
+      const unlockLabel = `${unlockedCount} perk unlock${unlockedCount === 1 ? '' : 's'}`;
+      setOnboardingSnapshot(`${stageLabel} • ${xpLabel} • ${unlockLabel}`);
     } catch {
-      setOnboardingSnapshot('Stored onboarding progress is unreadable.');
+      setOnboardingSnapshot('Stored Leap Progress is unreadable.');
     }
-  }, [onLaunchOnboarding, onLaunchDayZeroOnboarding, session.user.id]);
+  }, [onLaunchLeapProgress, onLaunchDayZeroOnboarding, session.user.id]);
 
   useEffect(() => {
     setHapticModeState(getHapticMode());
@@ -666,10 +666,10 @@ export function MyAccountPanel({
               title="AI & Privacy"
               onClick={() => setAiPrivacyFolderOpen(true)}
             />
-            {onLaunchOnboarding ? (
+            {onLaunchLeapProgress ? (
               <SettingsFeatureCard
                 icon="🧭"
-                title="Onboarding"
+                title="Leap Progress"
                 onClick={() => setOnboardingToolsFolderOpen(true)}
               />
             ) : null}
@@ -1073,13 +1073,13 @@ export function MyAccountPanel({
       <SettingsFolderPopup
         isOpen={onboardingToolsFolderOpen}
         onClose={() => setOnboardingToolsFolderOpen(false)}
-        title="Onboarding Tools"
+        title="Leap Progress"
       >
         <section className="account-panel__card" aria-labelledby="account-onboarding">
-          <p className="account-panel__eyebrow">Onboarding</p>
-          <h3 id="account-onboarding">Onboarding tools</h3>
+          <p className="account-panel__eyebrow">Leap Progress</p>
+          <h3 id="account-onboarding">Leap Progress</h3>
           <p className="account-panel__hint">
-            Launch the 20-step Game of Life onboarding or the Day Zero quick start.
+            An optional 12-stage sprint to quickly level up your quest, or the Day Zero quick start.
           </p>
           <dl className="account-panel__details">
             <div>
@@ -1093,7 +1093,7 @@ export function MyAccountPanel({
             <div>
               <dt>Storage key</dt>
               <dd>
-                <code>{`gol_onboarding_${session.user.id}`}</code>
+                <code>{`leap_progress_${session.user.id}`}</code>
               </dd>
             </div>
             <div>
@@ -1104,8 +1104,8 @@ export function MyAccountPanel({
             </div>
           </dl>
           <div className="account-panel__actions-row">
-            <button type="button" className="btn" onClick={() => onLaunchOnboarding?.()} disabled={!onLaunchOnboarding}>
-              Launch onboarding
+            <button type="button" className="btn" onClick={() => onLaunchLeapProgress?.()} disabled={!onLaunchLeapProgress}>
+              Launch Leap Progress
             </button>
             {onLaunchDayZeroOnboarding ? (
               <button
@@ -1119,10 +1119,10 @@ export function MyAccountPanel({
             <button
               type="button"
               className="btn btn--secondary"
-              onClick={() => onLaunchOnboarding?.({ reset: true })}
-              disabled={!onLaunchOnboarding}
+              onClick={() => onLaunchLeapProgress?.({ reset: true })}
+              disabled={!onLaunchLeapProgress}
             >
-              Restart 20-step onboarding
+              Restart Leap Progress
             </button>
             {onLaunchDayZeroOnboarding ? (
               <button
