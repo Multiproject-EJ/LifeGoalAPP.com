@@ -19594,6 +19594,13 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 @media (max-width: 720px) {
   .mobile-menu-overlay {
+    --mobile-menu-panel-max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 0.5rem);
+    padding-block:
+      calc(env(safe-area-inset-top, 0px) + 0.25rem)
+      calc(env(safe-area-inset-bottom, 0px) + 0.25rem);
+  }
+
+  .mobile-menu-overlay {
     padding-inline: clamp(0.45rem, 2.6vw, 0.8rem);
   }
 
@@ -19601,6 +19608,7 @@ html.platform-ipad .workspace-shell__menu-edge {
     width: 100%;
     margin: 0;
     border-radius: 28px;
+    overflow-y: hidden;
   }
 
   .mobile-menu-overlay__panel::before,
@@ -21559,25 +21567,57 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-weight: 900;
 }
 
-@media (max-width: 380px) {
+@media (max-width: 520px) {
+  .mobile-menu-overlay__panel {
+    padding: 0.82rem clamp(0.72rem, 4vw, 1rem) calc(0.78rem + env(safe-area-inset-bottom, 0));
+  }
+
+  .mobile-menu-overlay__header {
+    top: calc(env(safe-area-inset-top, 0px) + 0.62rem);
+    left: clamp(0.72rem, 4vw, 1rem);
+    right: clamp(0.72rem, 4vw, 1rem);
+  }
+
+  .mobile-menu-overlay__dashboard {
+    gap: clamp(0.48rem, 1.5dvh, 0.68rem);
+    padding-top: calc(env(safe-area-inset-top, 0px) + 2.9rem);
+    padding-bottom: 0;
+  }
+
   .mobile-menu-overlay__hero-card--hand {
+    --launcher-hand-min-height: clamp(116px, 17dvh, 138px);
     padding-inline: 0.78rem;
+    padding-block: 0.72rem;
+    row-gap: 0.48rem;
+  }
+
+  .mobile-menu-overlay__visual-slot--hand {
+    min-height: clamp(82px, 13dvh, 104px);
   }
 
   .mobile-menu-overlay__card-stack {
-    min-height: 134px;
+    min-height: clamp(96px, 14dvh, 120px);
     width: min(100%, 320px);
   }
 
   .mobile-menu-overlay__trait-card {
     width: min(30vw, 104px);
-    min-height: 100px;
+    min-height: clamp(82px, 12dvh, 96px);
     padding-inline: 0.42rem;
   }
 
   .mobile-menu-overlay__archetype-card--stacked {
     width: min(38vw, 108px);
-    min-height: 104px;
+    min-height: clamp(86px, 12dvh, 98px);
+  }
+
+  .mobile-menu-overlay__hero-card--quest {
+    max-height: clamp(142px, 26dvh, 210px);
+  }
+
+  .mobile-menu-overlay__quest-art img {
+    max-height: clamp(132px, 25dvh, 200px);
+    object-fit: contain;
   }
 
   .mobile-menu-overlay__quick-grid--featured,
@@ -21585,9 +21625,25 @@ html.platform-ipad .workspace-shell__menu-edge {
     gap: 0.5rem;
   }
 
+  .mobile-menu-overlay__mini-card--coach,
+  .mobile-menu-overlay__mini-card--strength {
+    min-height: clamp(122px, 18dvh, 154px);
+  }
+
+  .mobile-menu-overlay__mini-card--coach .mobile-menu-overlay__mini-visual {
+    height: clamp(72px, 12dvh, 92px);
+    margin-top: 0.2rem;
+  }
+
+  .mobile-menu-overlay__mini-card--strength .mobile-menu-overlay__profile-ring {
+    min-width: clamp(76px, 22vw, 88px);
+    min-height: clamp(76px, 22vw, 88px);
+  }
+
   .mobile-menu-overlay__mini-card--utility {
     gap: 0.35rem;
     padding-inline: 0.48rem;
+    min-height: 52px;
   }
 
   .mobile-menu-overlay__utility-icon {
