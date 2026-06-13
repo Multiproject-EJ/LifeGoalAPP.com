@@ -7,6 +7,7 @@ import {
   type GoalStatusTag,
 } from '../features/goals/goalStatus';
 import { LIFE_WHEEL_CATEGORIES } from '../features/checkins/LifeWheelCheckins';
+import { getLifeWheelVisual, isLifeWheelCategoryKey } from '../features/life-wheel/lifeWheelVisuals';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type GoalUpdate = Database['public']['Tables']['goals']['Update'];
@@ -105,7 +106,25 @@ export function GoalEditDialog({ goal, isOpen, onClose, onSave }: GoalEditDialog
         <header className="goal-edit-dialog__header">
           <div>
             <h3>Edit Goal</h3>
-            <p className="goal-edit-dialog__subtitle">Life area: {categoryLabel}</p>
+            <p className="goal-edit-dialog__subtitle">
+              {isLifeWheelCategoryKey(goal.life_wheel_category) ? (
+                <span
+                  className="life-area-chip life-area-chip--active"
+                  style={{
+                    background: getLifeWheelVisual(goal.life_wheel_category).color,
+                    borderColor: getLifeWheelVisual(goal.life_wheel_category).color,
+                    color: '#fff',
+                  }}
+                >
+                  <span className="life-area-chip__emoji" aria-hidden>
+                    {getLifeWheelVisual(goal.life_wheel_category).emoji}
+                  </span>
+                  <span className="life-area-chip__label">{categoryLabel}</span>
+                </span>
+              ) : (
+                <>Life area: {categoryLabel}</>
+              )}
+            </p>
           </div>
           <button type="button" className="goal-edit-dialog__close" onClick={onClose}>
             ✕
