@@ -45,24 +45,34 @@ const FOUNDER_SLIDES: FounderWelcomeSlide[] = [
 const SEQUENCE_LABEL = 'From the creator';
 const SEQUENCE_TITLE = 'A note from the creator';
 
-// Long-form creator note, opened from panel 3's secondary link.
-// Stanza lines are separated with "\n" and rendered with white-space: pre-line.
+// Long-form founder philosophy note, opened from panel 3's secondary link and
+// from the "About HabitGame" entry in the Feedback & Support menu.
+// Each array entry is its own paragraph, so the short standalone lines are
+// given room to breathe. Multi-line stanzas (the "Sometimes…" block) are
+// separated with "\n" and rendered with white-space: pre-line.
 export const FULL_CREATOR_NOTE = {
   title: 'A note from the creator',
   body: [
-    'I’m building HabitGame because I think self-improvement apps often miss the emotional part.',
-    'Most habit apps start with hope. You feel motivated, you set up your goals, you add new habits, and for a while it feels like you are finally changing your life.',
-    'But then life happens.',
-    'You miss a few days. Your motivation drops. The habits you chose may not fit your real routine. You may have tried to change too much at once. Your environment may be making progress harder, not easier. Your goals may shift. Or maybe you simply needed a break.',
-    'And suddenly, the app that was supposed to help you can start to feel like a reminder that you failed.',
-    'I don’t think it has to work that way.',
-    'HabitGame is my attempt to build something more forgiving, more playful, and easier to return to. The idea is to pair real-life progress with a cozy game world, so there is always a gentle reason to come back. And when you come back, the game can help pull you back toward your habits, goals, reflections, and small improvements.',
-    'The bigger idea is that growth should feel alive.',
-    'Instead of only filling out long templates, static plans, and endless checklists, I want HabitGame to become a journey that adapts with you. A place where your daily actions matter, but where falling off does not mean the story is over. A place where you can reset, adjust, simplify, and continue.',
-    'Sometimes progress is about consistency.\nSometimes it is about rest.\nSometimes it is about changing direction when your life changes.\nAnd sometimes inspiration hits, and you need to leap forward into a new version of your quest.',
-    'HabitGame is still in demo mode. Some features are live, some are previews, and many are still being shaped. It does not solve all of this yet.',
-    'But that is the goal.',
-    'I want early users to help shape what this becomes. Your feedback can influence which features get built, what needs to feel better, what should be simpler, and what actually helps in real life.',
+    'I’m building HabitGame because I believe growth should feel more alive.',
+    'Most habit apps begin with a familiar kind of hope. You open the app, set goals, create habits, and imagine a better version of your life. For a while, it feels exciting.',
+    'Then real life enters the picture.',
+    'You miss a few days. Your energy changes. Your goals stop fitting. You realize you added too much at once. Your environment works against you. Something unexpected happens. Or maybe you simply need to rest.',
+    'And when that happens, many habit apps start to feel like proof that you failed.',
+    'I want HabitGame to feel different.',
+    'The idea is to pair self-improvement with a cozy game world, so there is always a gentle reason to return. Not just to collect rewards, but to be pulled back toward your habits, goals, reflections, and the small real-life actions that move your story forward.',
+    'Your habits, goals, and reflections should feel connected.',
+    'Not like separate checklists. Not like disconnected tools. Not like a flat template you fill out once and forget.',
+    'They should feel like one personal quest.',
+    'A quest that helps you notice what matters. A quest that gives you momentum when you are ready to move. A quest that lets you reset when life gets messy. A quest that can evolve as you evolve.',
+    'HabitGame is also built around the idea of balance.',
+    'Because a better life is not about maximizing one thing at the cost of everything else. Productivity without health can become burnout. Ambition without relationships can become lonely. Discipline without joy can become heavy. Rest without direction can become drifting.',
+    'The goal is not perfection.',
+    'The goal is a Life Wheel that becomes more balanced over time — with health, purpose, relationships, growth, money, energy, joy, and direction supporting each other instead of competing against each other.',
+    'Sometimes the next step is a habit.\nSometimes it is a reflection.\nSometimes it is a reset.\nSometimes it is a small win.\nSometimes it is changing the quest itself.',
+    'That is what I want HabitGame to become: a living system where your real-life progress grows the game, and the game helps guide you back toward a more aligned life.',
+    'HabitGame is still in demo mode. Some features are live, some are previews, and many are still being built. It does not solve all of this yet.',
+    'But that is the mission.',
+    'I want early users to help shape what gets built next. Your feedback can influence what becomes simpler, what becomes deeper, what becomes more useful, and what actually helps people keep returning to their own life.',
     'Thank you for being here early.',
   ],
   signOff: '— EJ',
@@ -115,7 +125,25 @@ function FounderHero({ slideId }: { slideId: string }) {
   );
 }
 
-function FullCreatorNote({ onClose, founderName }: { onClose: () => void; founderName: string }) {
+type CreatorNoteModalProps = {
+  onClose: () => void;
+  /** Signature shown under the note. Defaults to the creator's initials. */
+  founderName?: string;
+  /** Label for the bottom dismiss button. */
+  closeLabel?: string;
+};
+
+/**
+ * The long-form founder philosophy note as a standalone, scrollable dark
+ * modal. Reused from panel 3 of the founder welcome and from the
+ * "About HabitGame" entry in the app menu. The body scrolls within a fixed
+ * max-height card so it stays usable on small iPhone screens.
+ */
+export function CreatorNoteModal({
+  onClose,
+  founderName = 'EJ',
+  closeLabel = 'Back',
+}: CreatorNoteModalProps) {
   return (
     <div
       className="creator-note"
@@ -145,7 +173,7 @@ function FullCreatorNote({ onClose, founderName }: { onClose: () => void; founde
         </div>
         <div className="creator-note__actions">
           <button type="button" className="founder-welcome__primary" onClick={onClose}>
-            Back
+            {closeLabel}
           </button>
         </div>
       </section>
@@ -242,7 +270,7 @@ export function FounderWelcome({ onComplete, founderName = 'EJ' }: FounderWelcom
       </section>
 
       {showFullNote ? (
-        <FullCreatorNote onClose={() => setShowFullNote(false)} founderName={founderName} />
+        <CreatorNoteModal onClose={() => setShowFullNote(false)} founderName={founderName} />
       ) : null}
     </div>
   );
