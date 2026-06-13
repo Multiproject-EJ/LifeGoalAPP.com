@@ -17,6 +17,13 @@
   opacity: 1;
 }
 
+/* First-run guided PLAY step: lift the whole overlay above the mobile footer
+   (z-index 30) so the backdrop covers and blocks every footer button — PLAY
+   becomes the only reachable control and the flow can't be derailed. */
+.game-board-overlay--spotlight-play {
+  z-index: 60;
+}
+
 .game-board-overlay__backdrop {
   position: fixed;
   inset: 0;
