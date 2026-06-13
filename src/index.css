@@ -34457,97 +34457,352 @@ body.habit-wizard-open .mobile-footer-nav {
 
 .founder-welcome__card {
   position: relative;
-  width: min(520px, 100%);
+  width: min(460px, 100%);
   max-height: 92vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.15rem;
   padding: clamp(1.5rem, 5vw, 2.25rem);
-  border-radius: 22px;
-  background: linear-gradient(160deg, rgba(30, 41, 70, 0.98), rgba(15, 23, 42, 0.98));
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  box-shadow: 0 30px 80px rgba(2, 6, 23, 0.6);
+  border-radius: 26px;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(99, 102, 241, 0.28), transparent 60%),
+    linear-gradient(165deg, rgba(23, 27, 54, 0.96), rgba(8, 11, 26, 0.98));
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow:
+    0 30px 90px rgba(2, 6, 23, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   color: #f8fafc;
+}
+
+.founder-welcome__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  text-align: center;
 }
 
 .founder-welcome__eyebrow {
   margin: 0;
-  font-size: 0.78rem;
-  letter-spacing: 0.16em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(148, 197, 248, 0.9);
+  color: rgba(165, 180, 252, 0.85);
+}
+
+.founder-welcome__sequence-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 5.5vw, 1.7rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #f8fafc;
+}
+
+.founder-welcome__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  text-align: center;
 }
 
 .founder-welcome__title {
-  margin: 0;
-  font-size: clamp(1.4rem, 5vw, 1.85rem);
-  line-height: 1.2;
+  margin: 0.25rem 0 0;
+  font-size: clamp(1.15rem, 4.5vw, 1.35rem);
+  font-weight: 600;
+  line-height: 1.3;
+  color: #f1f5f9;
 }
 
 .founder-welcome__body {
   margin: 0;
-  font-size: 1.02rem;
+  font-size: clamp(0.95rem, 4vw, 1.0625rem);
   line-height: 1.6;
-  color: rgba(226, 232, 240, 0.92);
+  color: rgba(226, 232, 240, 0.86);
 }
 
 .founder-welcome__signature {
-  margin: 0;
+  margin: 0.35rem 0 0;
   font-style: italic;
-  color: rgba(148, 197, 248, 0.9);
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: rgba(165, 180, 252, 0.85);
 }
 
 .founder-welcome__dots {
   display: flex;
   gap: 0.45rem;
-  margin-top: 0.25rem;
 }
 
 .founder-welcome__dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.4);
-  transition: background 0.2s ease, transform 0.2s ease;
+  background: rgba(148, 163, 184, 0.35);
+  transition: background 0.25s ease, transform 0.25s ease, width 0.25s ease;
 }
 
 .founder-welcome__dot.is-active {
-  background: linear-gradient(135deg, #38bdf8, #6366f1);
-  transform: scale(1.25);
+  width: 22px;
+  background: linear-gradient(135deg, #818cf8, #38bdf8);
+  box-shadow: 0 0 10px rgba(129, 140, 248, 0.6);
 }
 
 .founder-welcome__actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: 0.5rem;
-}
-
-.founder-welcome__step-label {
-  font-size: 0.85rem;
-  color: rgba(148, 163, 184, 0.85);
-}
-
-.founder-welcome__primary,
-.founder-welcome__secondary {
-  padding: 0.75rem 1.5rem;
-  border-radius: 999px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
+  margin-top: 0.25rem;
 }
 
 .founder-welcome__primary {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.95), rgba(99, 102, 241, 0.95));
-  color: #0f172a;
+  flex: 1;
+  padding: 0.85rem 1.5rem;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  color: #0b1020;
+  background: linear-gradient(135deg, #a5b4fc, #38bdf8);
+  box-shadow: 0 10px 30px rgba(56, 189, 248, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
-.founder-welcome__secondary {
+.founder-welcome__primary:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 12px 36px rgba(56, 189, 248, 0.35);
+}
+
+.founder-welcome__primary:active {
+  transform: translateY(1px);
+}
+
+.founder-welcome__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 1.25rem;
+}
+
+.founder-welcome__text-action {
+  padding: 0.25rem 0.25rem;
   background: transparent;
-  border: 1px solid rgba(148, 163, 184, 0.5);
-  color: inherit;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(148, 163, 184, 0.85);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.founder-welcome__text-action:hover {
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.founder-welcome__primary:focus-visible,
+.founder-welcome__text-action:focus-visible {
+  outline: 2px solid rgba(165, 180, 252, 0.9);
+  outline-offset: 2px;
+}
+
+/* ---- Founder note hero visuals (CSS/icon placeholders) ---- */
+.founder-welcome__hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(96px, 26vw, 124px);
+  margin-bottom: 0.25rem;
+}
+
+.founder-welcome__hero-glow {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.35), transparent 65%);
+  filter: blur(4px);
+}
+
+/* Panel 1 — checklist dissolving into a glowing path */
+.founder-welcome__hero-path {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.founder-welcome__hero-check {
+  width: 26px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.55);
+}
+
+.founder-welcome__hero-check::before {
+  content: '✓';
+  position: absolute;
+  margin-left: -14px;
+  margin-top: -9px;
+  font-size: 0.7rem;
+  color: rgba(165, 180, 252, 0.9);
+}
+
+.founder-welcome__hero-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a5b4fc, #38bdf8);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+}
+
+/* Panel 2 — habit → quest → island → reward chain */
+.founder-welcome__hero-chain {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.founder-welcome__hero-node {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  color: #e0e7ff;
+  background: rgba(99, 102, 241, 0.18);
+  border: 1px solid rgba(165, 180, 252, 0.3);
+}
+
+.founder-welcome__hero-link {
+  width: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(129, 140, 248, 0.3), rgba(56, 189, 248, 0.8));
+}
+
+/* Panel 3 — floating feature tags */
+.founder-welcome__hero-cards {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  max-width: 220px;
+}
+
+.founder-welcome__hero-tag {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #c7d2fe;
+  background: rgba(99, 102, 241, 0.16);
+  border: 1px solid rgba(165, 180, 252, 0.28);
+}
+
+.founder-welcome__hero-tag--spark {
+  color: #0b1020;
+  background: linear-gradient(135deg, #a5b4fc, #38bdf8);
+  border-color: transparent;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
+}
+
+/* ---- Animations (opt-in; respects reduced motion) ---- */
+@media (prefers-reduced-motion: no-preference) {
+  .founder-welcome__card {
+    animation: founder-card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .founder-welcome__panel > * {
+    animation: founder-panel-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .founder-welcome__hero {
+    animation-delay: 0.02s;
+  }
+
+  .founder-welcome__title {
+    animation-delay: 0.08s;
+  }
+
+  .founder-welcome__body {
+    animation-delay: 0.14s;
+  }
+
+  /* signature fades in last */
+  .founder-welcome__signature {
+    animation-delay: 0.26s;
+  }
+
+  .founder-welcome__hero-glow {
+    animation: founder-glow-pulse 4s ease-in-out infinite;
+  }
+
+  .founder-welcome__hero-dot,
+  .founder-welcome__hero-node,
+  .founder-welcome__hero-tag--spark {
+    animation: founder-float 3.5s ease-in-out infinite;
+  }
+
+  .founder-welcome__hero-dot:nth-child(5) {
+    animation-delay: 0.4s;
+  }
+
+  .founder-welcome__hero-dot:nth-child(6) {
+    animation-delay: 0.8s;
+  }
+}
+
+@keyframes founder-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes founder-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes founder-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes founder-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 /* Scrim that tints the Today screen while the footer Game button glows.
