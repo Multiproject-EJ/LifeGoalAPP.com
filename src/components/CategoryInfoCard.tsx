@@ -1,28 +1,26 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import type { LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
 import { getLifeWheelCategoryLabel } from '../features/checkins/LifeWheelCheckins';
-import {
-  getLifeWheelVisual,
-  hexToRgba,
-  isLifeWheelCategoryKey,
-} from '../features/life-wheel/lifeWheelVisuals';
+import { getLifeWheelVisual, hexToRgba } from '../features/life-wheel/lifeWheelVisuals';
 import type { GoalRecommendedAction } from '../features/goals/executionTypes';
 import type { GoalHealthResult } from '../features/goals/goalHealth';
 import type { Database } from '../lib/database.types';
 import { GoalEditDialog } from './GoalEditDialog';
+import { GoalListItem } from './GoalListItem';
+
+type GoalRow = Database['public']['Tables']['goals']['Row'];
+type StepRow = Database['public']['Tables']['life_goal_steps']['Row'];
 
 type CategoryInfoCardProps = {
   categoryKey: LifeWheelCategoryKey | null;
   onAddGoal: () => void;
   onUsePrompt: (prompt: string) => void;
-  goals: Database['public']['Tables']['goals']['Row'][];
+  goals: GoalRow[];
   goalHealthById?: Record<string, GoalHealthResult>;
-  stepsByGoal: Record<string, Database['public']['Tables']['life_goal_steps']['Row'][]>;
+  stepsByGoal: Record<string, StepRow[]>;
   isLoading: boolean;
-  onUpdateGoal: (
-    goalId: string,
-    payload: Database['public']['Tables']['goals']['Update'],
-  ) => Promise<void>;
+  onUpdateGoal: (goalId: string, payload: Database['public']['Tables']['goals']['Update']) => Promise<void>;
+  onToggleStep: (goal: GoalRow, step: StepRow, completed: boolean) => void;
   onApplyRecommendedAction?: (goalId: string, action: GoalRecommendedAction) => Promise<void>;
 };
 
@@ -61,22 +59,6 @@ const CATEGORY_INFO: Record<LifeWheelCategoryKey, { description: string; example
   },
 };
 
-function healthTone(healthState: GoalHealthResult['healthState']): { label: string; className: string } {
-  if (healthState === 'on_track') return { label: 'On track', className: 'goal-card__health--ok' };
-  if (healthState === 'caution') return { label: 'Caution', className: 'goal-card__health--warn' };
-  return { label: 'At risk', className: 'goal-card__health--risk' };
-}
-
-function formatActionLabel(action: GoalHealthResult['recommendedNextAction']): string {
-  return action.split('_').join(' ');
-}
-
-function secondaryKeys(goal: Database['public']['Tables']['goals']['Row']): LifeWheelCategoryKey[] {
-  const raw = (goal as { secondary_life_wheel_categories?: string[] | null }).secondary_life_wheel_categories;
-  if (!Array.isArray(raw)) return [];
-  return raw.filter(isLifeWheelCategoryKey);
-}
-
 export function CategoryInfoCard({
   categoryKey,
   onAddGoal,
@@ -86,11 +68,11 @@ export function CategoryInfoCard({
   stepsByGoal,
   isLoading,
   onUpdateGoal,
+  onToggleStep,
   onApplyRecommendedAction,
 }: CategoryInfoCardProps) {
-  const [editingGoal, setEditingGoal] = useState<Database['public']['Tables']['goals']['Row'] | null>(null);
+  const [editingGoal, setEditingGoal] = useState<GoalRow | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const allSteps = useMemo(() => Object.values(stepsByGoal).flat(), [stepsByGoal]);
 
   if (!categoryKey) {
     return (
@@ -106,7 +88,7 @@ export function CategoryInfoCard({
   const visual = getLifeWheelVisual(categoryKey);
   const categoryLabel = getLifeWheelCategoryLabel(categoryKey);
 
-  const handleOpenDialog = (goal: Database['public']['Tables']['goals']['Row']) => {
+  const handleOpenDialog = (goal: GoalRow) => {
     setEditingGoal(goal);
     setIsDialogOpen(true);
   };
@@ -138,74 +120,30 @@ export function CategoryInfoCard({
       </div>
 
       <div className="category-info-card__section">
-        <h4>Your goals here {goals.length > 0 ? <span className="category-info-card__count">{goals.length}</span> : null}</h4>
+        <h4>
+          Your goals here
+          {goals.length > 0 ? <span className="category-info-card__count">{goals.length}</span> : null}
+        </h4>
         {isLoading ? (
           <p className="category-info-card__empty">Loading goals…</p>
         ) : goals.length === 0 ? (
           <p className="category-info-card__empty">No goals yet in {categoryLabel}. Add your first one below.</p>
         ) : (
           <ul className="category-info-card__goals">
-            {goals.map((goal) => {
-              const health = goalHealthById[goal.id];
-              const tone = health ? healthTone(health.healthState) : null;
-              const secondaries = secondaryKeys(goal);
-              const stepCount = (stepsByGoal[goal.id] ?? []).length;
-              return (
-                <li key={goal.id} className="goal-card">
-                  <button type="button" className="goal-card__body" onClick={() => handleOpenDialog(goal)}>
-                    <div className="goal-card__top">
-                      <span className="goal-card__title">{goal.title}</span>
-                      {tone ? <span className={`goal-card__health ${tone.className}`}>{tone.label}</span> : null}
-                    </div>
-                    <div className="goal-card__meta">
-                      {stepCount > 0 ? <span className="goal-card__chip">{stepCount} step{stepCount === 1 ? '' : 's'}</span> : null}
-                      {secondaries.length > 0 ? (
-                        <span className="goal-card__dots" aria-label="Also touches on">
-                          {secondaries.map((key) => (
-                            <span
-                              key={key}
-                              className="goal-card__dot"
-                              title={getLifeWheelCategoryLabel(key)}
-                              style={{ background: getLifeWheelVisual(key).color }}
-                            />
-                          ))}
-                        </span>
-                      ) : null}
-                      <span className="goal-card__open">View &amp; edit →</span>
-                    </div>
-                  </button>
-                  {health && health.recommendedNextAction !== 'keep_plan' && onApplyRecommendedAction ? (
-                    <button
-                      type="button"
-                      className="goal-card__action"
-                      onClick={() => void onApplyRecommendedAction(goal.id, health.recommendedNextAction)}
-                    >
-                      Apply suggestion: {formatActionLabel(health.recommendedNextAction)}
-                    </button>
-                  ) : null}
-                </li>
-              );
-            })}
+            {goals.map((goal) => (
+              <GoalListItem
+                key={goal.id}
+                goal={goal}
+                steps={stepsByGoal[goal.id] ?? []}
+                health={goalHealthById[goal.id]}
+                onEdit={handleOpenDialog}
+                onToggleStep={onToggleStep}
+                onApplyRecommendedAction={onApplyRecommendedAction ? (id, action) => void onApplyRecommendedAction(id, action) : undefined}
+              />
+            ))}
           </ul>
         )}
       </div>
-
-      {allSteps.length > 0 ? (
-        <div className="category-info-card__section">
-          <h4>Sub goals</h4>
-          <ul className="category-info-card__subgoals">
-            {allSteps.map((step) => {
-              const parentGoal = goals.find((goal) => goal.id === step.goal_id);
-              return (
-                <li key={step.id} className="category-info-card__subgoal">
-                  <span>{step.title}</span>
-                  {parentGoal ? <span className="category-info-card__subgoal-parent">{parentGoal.title}</span> : null}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : null}
 
       <div className="category-info-card__section">
         <h4>Need ideas?</h4>

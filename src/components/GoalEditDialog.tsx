@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import type { Database } from '../lib/database.types';
 import {
   DEFAULT_GOAL_STATUS,
@@ -6,8 +6,9 @@ import {
   normalizeGoalStatus,
   type GoalStatusTag,
 } from '../features/goals/goalStatus';
-import { LIFE_WHEEL_CATEGORIES } from '../features/checkins/LifeWheelCheckins';
-import { getLifeWheelVisual, isLifeWheelCategoryKey } from '../features/life-wheel/lifeWheelVisuals';
+import type { LifeWheelCategoryKey } from '../features/checkins/LifeWheelCheckins';
+import { isLifeWheelCategoryKey } from '../features/life-wheel/lifeWheelVisuals';
+import { LifeAreaPicker } from './LifeAreaPicker';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type GoalUpdate = Database['public']['Tables']['goals']['Update'];
@@ -23,40 +24,41 @@ type GoalEditFormData = {
   title: string;
   description: string;
   statusTag: GoalStatusTag;
+  lifeWheelCategory: LifeWheelCategoryKey;
+  secondaryCategories: LifeWheelCategoryKey[];
   startDate: string;
   targetDate: string;
   estimatedDurationDays: string;
   timingNotes: string;
 };
 
-export function GoalEditDialog({ goal, isOpen, onClose, onSave }: GoalEditDialogProps) {
-  const [formData, setFormData] = useState<GoalEditFormData>({
+function readSecondary(goal: GoalRow): LifeWheelCategoryKey[] {
+  const raw = (goal as { secondary_life_wheel_categories?: string[] | null }).secondary_life_wheel_categories;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(isLifeWheelCategoryKey);
+}
+
+function buildFormData(goal: GoalRow): GoalEditFormData {
+  return {
     title: goal.title,
     description: goal.description ?? '',
     statusTag: normalizeGoalStatus(goal.status_tag),
+    lifeWheelCategory: isLifeWheelCategoryKey(goal.life_wheel_category) ? goal.life_wheel_category : 'health_fitness',
+    secondaryCategories: readSecondary(goal),
     startDate: goal.start_date ?? '',
     targetDate: goal.target_date ?? '',
     estimatedDurationDays: goal.estimated_duration_days?.toString() ?? '',
     timingNotes: goal.timing_notes ?? '',
-  });
+  };
+}
+
+export function GoalEditDialog({ goal, isOpen, onClose, onSave }: GoalEditDialogProps) {
+  const [formData, setFormData] = useState<GoalEditFormData>(() => buildFormData(goal));
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const categoryLabel = useMemo(() => {
-    const match = LIFE_WHEEL_CATEGORIES.find((category) => category.key === goal.life_wheel_category);
-    return match?.label ?? 'Uncategorized';
-  }, [goal.life_wheel_category]);
-
   useEffect(() => {
-    setFormData({
-      title: goal.title,
-      description: goal.description ?? '',
-      statusTag: normalizeGoalStatus(goal.status_tag),
-      startDate: goal.start_date ?? '',
-      targetDate: goal.target_date ?? '',
-      estimatedDurationDays: goal.estimated_duration_days?.toString() ?? '',
-      timingNotes: goal.timing_notes ?? '',
-    });
+    setFormData(buildFormData(goal));
   }, [goal]);
 
   const handleFieldChange =
@@ -81,6 +83,8 @@ export function GoalEditDialog({ goal, isOpen, onClose, onSave }: GoalEditDialog
         title,
         description: formData.description.trim() || null,
         status_tag: formData.statusTag || DEFAULT_GOAL_STATUS,
+        life_wheel_category: formData.lifeWheelCategory,
+        secondary_life_wheel_categories: formData.secondaryCategories,
         start_date: formData.startDate || null,
         target_date: formData.targetDate || null,
         estimated_duration_days: formData.estimatedDurationDays
@@ -106,25 +110,7 @@ export function GoalEditDialog({ goal, isOpen, onClose, onSave }: GoalEditDialog
         <header className="goal-edit-dialog__header">
           <div>
             <h3>Edit Goal</h3>
-            <p className="goal-edit-dialog__subtitle">
-              {isLifeWheelCategoryKey(goal.life_wheel_category) ? (
-                <span
-                  className="life-area-chip life-area-chip--active"
-                  style={{
-                    background: getLifeWheelVisual(goal.life_wheel_category).color,
-                    borderColor: getLifeWheelVisual(goal.life_wheel_category).color,
-                    color: '#fff',
-                  }}
-                >
-                  <span className="life-area-chip__emoji" aria-hidden>
-                    {getLifeWheelVisual(goal.life_wheel_category).emoji}
-                  </span>
-                  <span className="life-area-chip__label">{categoryLabel}</span>
-                </span>
-              ) : (
-                <>Life area: {categoryLabel}</>
-              )}
-            </p>
+            <p className="goal-edit-dialog__subtitle">Update the goal and the life areas it belongs to.</p>
           </div>
           <button type="button" className="goal-edit-dialog__close" onClick={onClose}>
             ✕
@@ -134,6 +120,13 @@ export function GoalEditDialog({ goal, isOpen, onClose, onSave }: GoalEditDialog
         {errorMessage && <p className="goal-edit-dialog__error">{errorMessage}</p>}
 
         <form className="goal-edit-dialog__form" onSubmit={handleSubmit}>
+          <LifeAreaPicker
+            primary={formData.lifeWheelCategory}
+            secondary={formData.secondaryCategories}
+            onChangePrimary={(key) => setFormData((current) => ({ ...current, lifeWheelCategory: key }))}
+            onChangeSecondary={(keys) => setFormData((current) => ({ ...current, secondaryCategories: keys }))}
+          />
+
           <label className="goal-edit-dialog__field">
             Goal title
             <input type="text" value={formData.title} onChange={handleFieldChange('title')} />
@@ -141,11 +134,7 @@ export function GoalEditDialog({ goal, isOpen, onClose, onSave }: GoalEditDialog
 
           <label className="goal-edit-dialog__field">
             Description
-            <textarea
-              rows={3}
-              value={formData.description}
-              onChange={handleFieldChange('description')}
-            />
+            <textarea rows={3} value={formData.description} onChange={handleFieldChange('description')} />
           </label>
 
           <label className="goal-edit-dialog__field">
@@ -182,11 +171,7 @@ export function GoalEditDialog({ goal, isOpen, onClose, onSave }: GoalEditDialog
 
           <label className="goal-edit-dialog__field">
             Timing notes
-            <textarea
-              rows={3}
-              value={formData.timingNotes}
-              onChange={handleFieldChange('timingNotes')}
-            />
+            <textarea rows={3} value={formData.timingNotes} onChange={handleFieldChange('timingNotes')} />
           </label>
 
           <div className="goal-edit-dialog__actions">
