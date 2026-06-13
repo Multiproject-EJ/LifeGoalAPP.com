@@ -1,5 +1,6 @@
 import type { ArchetypeHand, HandCard, HandRole } from '../../identity/archetypes/archetypeHandBuilder';
 import { ARCHETYPE_DECK } from '../../identity/archetypes/archetypeDeck';
+import { getArchetypeActivationCopy } from '../../identity/archetypes/archetypeActivationCopy';
 import type { SparkPreviewCard, SparkPreviewRarity } from './playersHandSparkTypes';
 
 function toCards(hand: ArchetypeHand): HandCard[] {
@@ -25,6 +26,7 @@ export function adaptArchetypeHandToSparkPreview(hand: ArchetypeHand): SparkPrev
     role: entry.role,
     rarity: deriveRarity(entry.role, entry.level),
     isActive: entry.role === 'dominant',
+    activationCopy: getArchetypeActivationCopy(entry.card.id),
   }));
 }
 
@@ -48,5 +50,6 @@ export function buildDevOnlyFallbackSparkPreviewCards(): SparkPreviewCard[] {
     role: entry.role,
     rarity: deriveRarity(entry.role, entry.level),
     isActive: entry.role === 'dominant',
+    activationCopy: getArchetypeActivationCopy(entry.card.id),
   }));
 }

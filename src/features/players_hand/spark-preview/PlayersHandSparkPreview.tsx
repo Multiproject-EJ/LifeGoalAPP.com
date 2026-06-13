@@ -43,6 +43,8 @@ export function PlayersHandSparkPreview({
   const secondaryCard = cards.find((card) => card.role === 'secondary') ?? null;
   const supportCards = cards.filter((card) => card.role === 'support');
   const shadowCard = cards.find((card) => card.role === 'shadow') ?? null;
+  const activeCard = cards[activeIndex] ?? dominantCard;
+  const activeActivationCopy = activeCard?.activationCopy ?? null;
   const identitySummary = [dominantCard?.title, secondaryCard?.title, supportCards[0]?.title]
     .filter(Boolean)
     .join(' • ');
@@ -109,6 +111,67 @@ export function PlayersHandSparkPreview({
   const closeOverlay = () => {
     setExpanded(false);
     onOverlayClose?.();
+  };
+
+  const renderActivationSection = () => {
+    if (!activeCard || !activeActivationCopy) {
+      return (
+        <article className="players-hand-spark-overlay__story-panel players-hand-spark-overlay__activation">
+          <h5>Activation & Shadow</h5>
+          <p>Activation & Shadow details are available for select cards first. This card keeps its existing role, level, and identity details.</p>
+          <p className="players-hand-spark-overlay__activation-context">
+            Every card has a gift and a shadow. Your Shadow Card is the part of your hand that may be asking for growth next.
+          </p>
+        </article>
+      );
+    }
+
+    const fields = [
+      ['Core Gift', activeActivationCopy.coreGift],
+      ['Shadow Pattern', activeActivationCopy.shadowPattern],
+      ['Activation Trigger', activeActivationCopy.activationTrigger],
+      ['Growth Lesson', activeActivationCopy.growthLesson],
+      ['Quest Prompt', activeActivationCopy.questPrompt],
+    ] as const;
+
+    return (
+      <article
+        className="players-hand-spark-overlay__story-panel players-hand-spark-overlay__activation"
+        style={{ '--card-color': activeCard.color } as CSSProperties}
+      >
+        <div className="players-hand-spark-overlay__activation-header">
+          <div>
+            <h5>Activation & Shadow</h5>
+            <p className="players-hand-spark-overlay__activation-subtitle">
+              {activeActivationCopy.elementIcon ? `${activeActivationCopy.elementIcon} ` : ''}{activeCard.title}
+            </p>
+          </div>
+          {activeActivationCopy.element ? (
+            <span className="players-hand-spark-overlay__activation-element">
+              {activeActivationCopy.elementIcon ? <span aria-hidden="true">{activeActivationCopy.elementIcon}</span> : null}
+              {activeActivationCopy.element}
+            </span>
+          ) : null}
+        </div>
+        <p className="players-hand-spark-overlay__activation-context">
+          No emotion is bad. Every emotion is a messenger. But not every impulse should be obeyed.
+        </p>
+        <dl className="players-hand-spark-overlay__activation-list">
+          {fields.map(([label, value]) => (
+            <div key={label} className="players-hand-spark-overlay__activation-item">
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+        {activeActivationCopy.note ? (
+          <p className="players-hand-spark-overlay__activation-note">{activeActivationCopy.note}</p>
+        ) : null}
+        <p className="players-hand-spark-overlay__activation-context">
+          Every card has a gift and a shadow. Your Shadow Card is the part of your hand that may be asking for growth next.
+        </p>
+      </article>
+    );
   };
 
   const swipeThresholdPx = 42;
@@ -318,6 +381,12 @@ export function PlayersHandSparkPreview({
                           <span aria-hidden="true">{card.icon}</span> {card.title}
                         </span>
                         <span className="players-hand-spark-preview__description">{card.description}</span>
+                        {card.activationCopy ? (
+                          <span className="players-hand-spark-preview__activation-tease">
+                            {card.activationCopy.elementIcon ? <span aria-hidden="true">{card.activationCopy.elementIcon}</span> : null}
+                            Activation & Shadow available in Identity tab
+                          </span>
+                        ) : null}
                         <span className="players-hand-spark-preview__card-prompt">Select to show front</span>
                       </div>
                     </div>
@@ -414,6 +483,8 @@ export function PlayersHandSparkPreview({
                     <p>{shadowCard.description}</p>
                   </article>
                 )}
+
+                {renderActivationSection()}
 
                 <article className="players-hand-spark-overlay__story-panel">
                   <h5>Identity summary</h5>

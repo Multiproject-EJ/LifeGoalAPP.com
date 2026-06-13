@@ -1,4 +1,5 @@
 import type { HandRole } from '../../identity/archetypes/archetypeHandBuilder';
+import type { ArchetypeActivationCopy } from '../../identity/archetypes/archetypeActivationCopy';
 
 export type SparkPreviewRarity = 'common' | 'rare' | 'epic' | 'legendary';
 
@@ -13,4 +14,5 @@ export interface SparkPreviewCard {
   role: HandRole;
   rarity: SparkPreviewRarity;
   isActive: boolean;
+  activationCopy?: ArchetypeActivationCopy | null;
 }
