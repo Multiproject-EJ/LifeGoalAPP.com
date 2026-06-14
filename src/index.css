@@ -19181,10 +19181,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button {
+  --compass-translate-y: -46px;
+  --compass-resting-scale: 0.7;
   position: absolute;
   right: 0.4rem;
   top: 0;
-  transform: translateY(-46px);
+  transform: translateY(var(--compass-translate-y)) scale(var(--compass-resting-scale));
   overflow: hidden;
   border-color: rgba(217, 119, 6, 0.22);
   background:
@@ -19193,6 +19195,47 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow:
     0 10px 24px rgba(146, 64, 14, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  animation:
+    mobile-footer-nav-compass-intro-shrink 3.72s cubic-bezier(0.18, 1.08, 0.26, 1) both,
+    mobile-footer-nav-compass-pulse-spin 180s linear 4.2s infinite;
+  will-change: transform, filter;
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button::before,
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button::after {
+  content: '';
+  position: absolute;
+  inset: -18%;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button::before {
+  background:
+    linear-gradient(
+      115deg,
+      transparent 24%,
+      rgba(255, 255, 255, 0.2) 37%,
+      rgba(255, 255, 255, 0.95) 47%,
+      rgba(255, 236, 153, 0.7) 54%,
+      transparent 68%
+    );
+  mix-blend-mode: screen;
+  transform: translateX(-145%) rotate(8deg);
+  opacity: 0;
+  animation: mobile-footer-nav-compass-shrink-beam 3.72s ease-out both;
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button::after {
+  inset: 3%;
+  border: 1px solid rgba(255, 246, 203, 0.5);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.8), rgba(251, 191, 36, 0.22) 34%, transparent 66%);
+  box-shadow:
+    0 0 22px rgba(251, 191, 36, 0.48),
+    inset 0 0 18px rgba(255, 255, 255, 0.36);
+  opacity: 0;
+  animation: mobile-footer-nav-compass-periodic-glint 180s linear 4.2s infinite;
 }
 
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-icon {
@@ -19201,7 +19244,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button:hover,
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button:focus-visible {
-  transform: translateY(-47px);
+  transform: translateY(-47px) scale(0.74);
   border-color: rgba(217, 119, 6, 0.34);
   box-shadow:
     0 14px 28px rgba(146, 64, 14, 0.24),
@@ -19297,6 +19340,13 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button--launching {
   animation-name: mobile-footer-nav-menu-launch-diode-off;
+  animation-duration: 0.78s;
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button--launching::before,
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button--launching::after {
+  animation: none;
+  opacity: 0;
 }
 
 .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__menu-button--launching {
@@ -19426,16 +19476,103 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 @keyframes mobile-footer-nav-menu-launch-diode-off {
   0% {
-    transform: translateY(-46px) rotate(0deg) scale(1);
+    opacity: 1;
+    transform: translateY(-46px) rotate(0deg) scale(0.7);
   }
   42% {
-    transform: translateY(-54px) rotate(250deg) scale(1.08);
+    opacity: 1;
+    transform: translateY(-55px) rotate(250deg) scale(1.08);
   }
   72% {
-    transform: translateY(-43px) rotate(382deg) scale(0.985);
+    opacity: 0.96;
+    transform: translateY(-43px) rotate(382deg) scale(1);
   }
   100% {
-    transform: translateY(-46px) rotate(360deg) scale(1.02);
+    opacity: 0;
+    transform: translateY(-46px) rotate(430deg) scale(1.16);
+  }
+}
+
+@keyframes mobile-footer-nav-compass-intro-shrink {
+  0%,
+  76% {
+    filter: drop-shadow(0 12px 18px rgba(146, 64, 14, 0.22));
+    transform: translateY(var(--compass-translate-y)) rotate(0deg) scale(1);
+  }
+  82% {
+    filter: drop-shadow(0 0 22px rgba(251, 191, 36, 0.58)) brightness(1.12);
+    transform: translateY(calc(var(--compass-translate-y) - 3px)) rotate(-2deg) scale(1.02);
+  }
+  91% {
+    transform: translateY(var(--compass-translate-y)) rotate(2.6deg) scale(var(--compass-resting-scale));
+  }
+  95% {
+    transform: translateY(var(--compass-translate-y)) rotate(-2.2deg) scale(var(--compass-resting-scale));
+  }
+  98% {
+    transform: translateY(var(--compass-translate-y)) rotate(1.1deg) scale(var(--compass-resting-scale));
+  }
+  100% {
+    filter: none;
+    transform: translateY(var(--compass-translate-y)) rotate(0deg) scale(var(--compass-resting-scale));
+  }
+}
+
+@keyframes mobile-footer-nav-compass-shrink-beam {
+  0%,
+  68% {
+    opacity: 0;
+    transform: translateX(-145%) rotate(8deg);
+  }
+  76% {
+    opacity: 0.88;
+  }
+  84% {
+    opacity: 0.45;
+    transform: translateX(145%) rotate(8deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(145%) rotate(8deg);
+  }
+}
+
+@keyframes mobile-footer-nav-compass-pulse-spin {
+  0%,
+  98.85%,
+  100% {
+    filter: none;
+    transform: translateY(var(--compass-translate-y)) rotate(0deg) scale(var(--compass-resting-scale));
+  }
+  99.05% {
+    filter: drop-shadow(0 0 24px rgba(251, 191, 36, 0.55)) brightness(1.16);
+    transform: translateY(var(--compass-translate-y)) rotate(110deg) scale(0.78);
+  }
+  99.32% {
+    filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.72)) brightness(1.24);
+    transform: translateY(var(--compass-translate-y)) rotate(360deg) scale(0.72);
+  }
+  99.55% {
+    filter: none;
+    transform: translateY(var(--compass-translate-y)) rotate(372deg) scale(var(--compass-resting-scale));
+  }
+}
+
+@keyframes mobile-footer-nav-compass-periodic-glint {
+  0%,
+  98.82%,
+  99.72%,
+  100% {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  99.08% {
+    opacity: 0.95;
+    transform: scale(1.06);
+  }
+  99.36% {
+    opacity: 0.3;
+    transform: scale(1.22);
   }
 }
 
@@ -19470,8 +19607,15 @@ html.platform-ipad .workspace-shell__menu-edge {
   .mobile-footer-nav__menu-button--orb,
   .mobile-footer-nav__menu-button--orb::before,
   .mobile-footer-nav__menu-button--orb::after,
-  .mobile-footer-nav__menu-button--launching {
+  .mobile-footer-nav__menu-button--launching,
+  .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button,
+  .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button::before,
+  .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button::after {
     animation: none !important;
+  }
+
+  .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button {
+    transform: translateY(var(--compass-translate-y)) scale(var(--compass-resting-scale));
   }
 }
 
