@@ -1165,12 +1165,12 @@ type FooterControllerSlot = {
 
 const FOOTER_CONTROLLER_SLOT_MAP: Record<FooterControllerSlotId, FooterControllerSlot> = {
   // Side actions sit high on the white shoulder contours, the roll control
-  // occupies the upper blue bowl, and the multiplier badge floats above the
-  // controller shell as a separate long pill.
+  // occupies the upper blue bowl, and the multiplier badge sits just above
+  // the roll control so it stays close without covering the CTA.
   leftUpper: { x: 18, y: 28, rotate: -3.5, scale: 0.96, depth: 'raised' },
   leftLower: { x: 11.5, y: 53, rotate: -8, scale: 0.92, depth: 'raised' },
   centerCore: { x: 50, y: 22, rotate: 0, scale: 1, depth: 'inset' },
-  centerBadge: { x: 50, y: 14, rotate: 0, scale: 1, depth: 'surface' },
+  centerBadge: { x: 50, y: 5, rotate: 0, scale: 0.94, depth: 'surface' },
   rightLower: { x: 88.5, y: 53, rotate: 8, scale: 0.92, depth: 'raised' },
   rightUpper: { x: 82, y: 28, rotate: 3.5, scale: 0.96, depth: 'raised' },
 };
