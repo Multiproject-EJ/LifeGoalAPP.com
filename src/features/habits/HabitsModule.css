@@ -210,7 +210,7 @@
   grid-auto-columns: calc((100% - (3 * var(--offer-gap))) / 4);
   grid-template-rows: 1fr;
   gap: var(--offer-gap);
-  margin: 0.35rem 0 -0.05rem;
+  margin: -0.05rem 0 -0.35rem;
   width: 100%;
   margin-inline: auto;
   /*
@@ -219,7 +219,7 @@
    * padding in the margin. This increases the container's safe area without
    * making the Today header/checklist gap look taller.
    */
-  padding: 0.5rem 0 0.85rem;
+  padding: 0.9rem 0 1.18rem;
   overflow-x: auto;
   overflow-y: visible;
   overscroll-behavior-inline: contain;
