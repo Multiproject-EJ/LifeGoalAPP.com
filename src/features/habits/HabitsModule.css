@@ -205,12 +205,13 @@
   --offer-notification-size: clamp(0.6rem, 2.9vw, 0.86rem);
   --offer-notification-offset: clamp(0.24rem, 1.25vw, 0.4rem);
   --offer-gap: clamp(0.42rem, 1.9vw, 0.72rem);
+  --offer-edge-safe-area: clamp(0.52rem, 2.5vw, 0.8rem);
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: calc((100% - (3 * var(--offer-gap))) / 4);
+  grid-auto-columns: calc((100% - (2 * var(--offer-edge-safe-area)) - (3 * var(--offer-gap))) / 4);
   grid-template-rows: 1fr;
   gap: var(--offer-gap);
-  margin: 0.35rem 0 -0.05rem;
+  margin: -0.05rem 0 -0.35rem;
   width: 100%;
   margin-inline: auto;
   /*
@@ -219,11 +220,11 @@
    * padding in the margin. This increases the container's safe area without
    * making the Today header/checklist gap look taller.
    */
-  padding: 0.5rem 0 0.85rem;
+  padding: 0.9rem var(--offer-edge-safe-area) 1.18rem;
   overflow-x: auto;
   overflow-y: visible;
   overscroll-behavior-inline: contain;
-  scroll-padding-inline: 0;
+  scroll-padding-inline: var(--offer-edge-safe-area);
   scroll-snap-type: inline mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
