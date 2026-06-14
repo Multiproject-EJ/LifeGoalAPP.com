@@ -76,12 +76,17 @@ export const islandArtManifestTests: TestCase[] = [
     },
   },
   {
-    name: 'resolves legacy background helper to per-island background placeholder',
+    name: 'resolves legacy background helper to per-island background asset',
     run: () => {
       assertEqual(
         getIslandBackgroundImageSrc(3),
-        '/assets/islands/island-003/background/PLACEHOLDER__ambient-background.svg',
-        'Expected legacy background helper fallback to stay inside the island asset folder',
+        '/assets/islands/island-003/background/ambient-background.webp',
+        'Expected island 3 to use its checked-in WebP background',
+      );
+      assertEqual(
+        getIslandBackgroundImageSrc(1),
+        '/assets/islands/island-001/background/PLACEHOLDER__ambient-background.svg',
+        'Expected islands without checked-in WebP assets to keep the existing text placeholder fallback',
       );
     },
   },
