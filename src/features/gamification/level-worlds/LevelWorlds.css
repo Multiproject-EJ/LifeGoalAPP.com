@@ -1116,7 +1116,12 @@
 }
 
 .island-run-prototype__footer-nav-btn--slot-market {
-  clip-path: polygon(0% 6%, 90% 0%, 100% 94%, 10% 100%);
+  width: clamp(5.8rem, 15vw, 7.2rem);
+  height: clamp(4.45rem, 11.5vw, 6.1rem);
+  min-height: clamp(4.45rem, 11.5vw, 6.1rem);
+  padding-inline: 0.38rem 0.3rem;
+  border-radius: 18px 12px 28px 20px;
+  clip-path: polygon(20% 2%, 100% 10%, 86% 100%, 42% 94%, 0% 16%);
 }
 
 .island-run-prototype__footer-nav-btn:disabled,
