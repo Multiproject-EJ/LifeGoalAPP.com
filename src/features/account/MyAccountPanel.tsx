@@ -16,6 +16,7 @@ import { TelemetrySettingsSection } from './TelemetrySettingsSection';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { SettingsFeatureCard } from '../../components/SettingsFeatureCard';
+import { CreatorNoteModal } from '../onboarding/FounderWelcome';
 import { ExperimentsModal } from '../../components/ExperimentsModal';
 import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
 import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
@@ -112,6 +113,7 @@ export function MyAccountPanel({
   const [showExperimentsModal, setShowExperimentsModal] = useState(false);
   const [gameRewardsFolderOpen, setGameRewardsFolderOpen] = useState(false);
   const [cacheFolderOpen, setCacheFolderOpen] = useState(false);
+  const [creatorNoteOpen, setCreatorNoteOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
   const [cacheClearing, setCacheClearing] = useState(false);
   const [cacheStatus, setCacheStatus] = useState<string | null>(null);
@@ -698,6 +700,18 @@ export function MyAccountPanel({
             />
           </div>
         </div>
+        <div className="settings-modules__group" aria-label="About settings modules">
+          <div className="settings-modules__group-header">
+            <p className="settings-modules__group-eyebrow">About</p>
+          </div>
+          <div className="settings-modules__grid">
+            <SettingsFeatureCard
+              icon="💌"
+              title="Creator Note"
+              onClick={() => setCreatorNoteOpen(true)}
+            />
+          </div>
+        </div>
       </section>
 
       <section className="account-panel__card" aria-labelledby="feedback-support-tools">
@@ -1229,6 +1243,10 @@ export function MyAccountPanel({
       >
         <ExperimentalFeaturesSection session={session} />
       </SettingsFolderPopup>
+
+      {creatorNoteOpen ? (
+        <CreatorNoteModal onClose={() => setCreatorNoteOpen(false)} closeLabel="Done" />
+      ) : null}
 
       <div className="account-panel__actions">
         <div>
