@@ -32,6 +32,23 @@ function todayDayIndex(startsOn: string): number {
   return diffDays + 1; // 1-based
 }
 
+/** Resolve the next openable Personal Quest day from the user's progress. */
+function personalQuestTodayIndex(
+  progress: { opened_days?: number[] | null; last_opened_date?: string | null } | null,
+  totalDays: number,
+): number {
+  const openedDays = Array.isArray(progress?.opened_days) ? progress.opened_days : [];
+  if (openedDays.length === 0) return 1;
+
+  const maxOpened = Math.max(...openedDays);
+  const today = new Date().toISOString().split('T')[0];
+  if (progress?.last_opened_date === today) {
+    return Math.min(maxOpened, totalDays);
+  }
+
+  return Math.min(maxOpened + 1, totalDays);
+}
+
 Deno.serve(async (req) => {
   // CORS pre-flight
   if (req.method === 'OPTIONS') {
@@ -140,13 +157,38 @@ Deno.serve(async (req) => {
     if (!season) return err('Season not found', 404);
     if (season.status !== 'active') return err('Season is not active', 400);
 
-    // Validate that day_index matches today
-    const todayIndex = todayDayIndex(season.starts_on);
-    if (day_index !== todayIndex) {
-      return err(`You can only open today's hatch (day ${todayIndex}), not day ${day_index}`, 400);
+    // 2. Check existing progress before validating the day. Personal Quest
+    // calendars are sequential by user progress (next unopened door), whereas
+    // holiday calendars are date-indexed from the season start.
+    const { data: progress } = await supabase
+      .from('daily_calendar_progress')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('season_id', season_id)
+      .maybeSingle();
+
+    const openedDays: number[] = progress?.opened_days ?? [];
+    const openedBonusDays: number[] = progress?.opened_bonus_days ?? [];
+
+    const { data: freeHatches, error: freeHatchesError } = await supabase
+      .from('daily_calendar_hatches')
+      .select('day_index')
+      .eq('season_id', season_id)
+      .eq('door_type', 'free')
+      .order('day_index', { ascending: false })
+      .limit(1);
+    if (freeHatchesError) return err(freeHatchesError.message, 500);
+
+    const totalDays = freeHatches?.[0]?.day_index ?? 7;
+    const currentOpenableDay = season.season_type === 'personal_quest'
+      ? personalQuestTodayIndex(progress, totalDays)
+      : todayDayIndex(season.starts_on);
+
+    if (day_index !== currentOpenableDay) {
+      return err(`You can only open today's hatch (day ${currentOpenableDay}), not day ${day_index}`, 400);
     }
 
-    // 2. For bonus doors: verify habit completion server-side
+    // 3. For bonus doors: verify habit completion server-side
     if (validatedDoorType === 'bonus') {
       const today = new Date().toISOString().split('T')[0];
       const { data: habitLogs, error: habitError } = await supabase
@@ -160,17 +202,6 @@ Deno.serve(async (req) => {
         return err('Bonus door requires a completed habit today', 403);
       }
     }
-
-    // 3. Check existing progress — did the user already open this door today?
-    const { data: progress } = await supabase
-      .from('daily_calendar_progress')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('season_id', season_id)
-      .maybeSingle();
-
-    const openedDays: number[] = progress?.opened_days ?? [];
-    const openedBonusDays: number[] = progress?.opened_bonus_days ?? [];
 
     if (validatedDoorType === 'free' && openedDays.includes(day_index)) {
       return err('You already opened today\'s free door', 409);
