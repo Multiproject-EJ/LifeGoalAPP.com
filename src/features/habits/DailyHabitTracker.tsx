@@ -7355,20 +7355,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   isOfferHabit ? 'habit-checklist__item--offer' : ''
                 } ${isQuestHabit ? 'habit-checklist__item--quest' : ''}`}
               >
-                {(shouldShowHabitPoints || isOfferHabit) ? (
-                  <PointsBadge
-                    value={isOfferHabit && offerPrice !== null ? offerPrice : defaultPrice}
-                    className={`points-badge--corner habit-points-badge${
-                      isOfferHabit ? ' habit-points-badge--offer' : ''
-                    }`}
-                    size="mini"
-                    ariaLabel={
-                      isOfferHabit && offerPrice !== null
-                        ? `Limited offer: ${offerPrice} diamonds`
-                        : `Dynamic habit reward: ${defaultPrice} diamonds`
-                    }
-                  />
-                ) : null}
                 <div
                   className="habit-checklist__swipe-frame"
                   aria-hidden={isExpanded ? 'true' : undefined}
@@ -7678,27 +7664,43 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           ) : null}
                         </div>
                       </div>
-                      {/* Quest habit toggle button — tap to designate/remove this habit as the Quest Habit */}
-                      <button
-                        type="button"
-                        className={`habit-checklist__quest-btn${isQuestHabit ? ' habit-checklist__quest-btn--active' : ''}`}
-                        aria-label={isQuestHabit ? 'Remove Quest Habit designation' : 'Set as Quest Habit'}
-                        title={isQuestHabit ? 'Remove Quest Habit' : 'Set as Quest Habit (unlocks bonus door)'}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          if (isQuestHabit) {
-                            handleClearQuestHabit();
-                          } else {
-                            handleSetQuestHabit({
-                              habitId: habit.id,
-                              title: habit.name,
-                              emoji: habit.emoji ?? null,
-                            });
-                          }
-                        }}
-                      >
-                        {isQuestHabit ? '★' : '☆'}
-                      </button>
+                      <div className="habit-checklist__reward-rail" aria-label="Habit rewards and quest marker">
+                        {(shouldShowHabitPoints || isOfferHabit) ? (
+                          <PointsBadge
+                            value={isOfferHabit && offerPrice !== null ? offerPrice : defaultPrice}
+                            className={`habit-points-badge${
+                              isOfferHabit ? ' habit-points-badge--offer' : ''
+                            }`}
+                            size="mini"
+                            ariaLabel={
+                              isOfferHabit && offerPrice !== null
+                                ? `Limited offer: ${offerPrice} diamonds`
+                                : `Dynamic habit reward: ${defaultPrice} diamonds`
+                            }
+                          />
+                        ) : null}
+                        {/* Quest habit toggle button — tap to designate/remove this habit as the Quest Habit */}
+                        <button
+                          type="button"
+                          className={`habit-checklist__quest-btn${isQuestHabit ? ' habit-checklist__quest-btn--active' : ''}`}
+                          aria-label={isQuestHabit ? 'Remove Quest Habit designation' : 'Set as Quest Habit'}
+                          title={isQuestHabit ? 'Remove Quest Habit' : 'Set as Quest Habit (unlocks bonus door)'}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (isQuestHabit) {
+                              handleClearQuestHabit();
+                            } else {
+                              handleSetQuestHabit({
+                                habitId: habit.id,
+                                title: habit.name,
+                                emoji: habit.emoji ?? null,
+                              });
+                            }
+                          }}
+                        >
+                          {isQuestHabit ? '★' : '☆'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
