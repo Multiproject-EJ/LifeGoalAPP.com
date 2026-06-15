@@ -8433,6 +8433,23 @@ html.platform-ipad .workspace-shell__menu-edge {
   min-width: 0;
 }
 
+.habit-checklist__reward-rail {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.22rem;
+  min-width: 3.45rem;
+  align-self: flex-start;
+}
+
+.habit-checklist__reward-rail .habit-points-badge {
+  position: static;
+  z-index: 1;
+}
+
 .habit-checklist__swipe-frame {
   --habit-swipe-right-progress: 0;
   --habit-swipe-left-progress: 0;
@@ -8557,8 +8574,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   transform: translateX(0) scale(1);
 }
 
-.habit-checklist__row--collapsible-checkbox .habit-checklist__quest-btn {
-  margin-left: 0.65rem;
+.habit-checklist__row--collapsible-checkbox .habit-checklist__reward-rail {
+  margin-left: auto;
 }
 
 .habit-checklist__checkbox {
