@@ -34408,7 +34408,7 @@ body.habit-wizard-open .mobile-footer-nav {
   inset: 22.2% 11.4% 10.2%;
   z-index: 1;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: clamp(0.3rem, 0.95vh, 0.58rem);
   min-height: 0;
   color: white;
@@ -34427,7 +34427,7 @@ body.habit-wizard-open .mobile-footer-nav {
   display: grid;
   justify-items: center;
   gap: clamp(0.1rem, 0.42vh, 0.28rem);
-  margin-top: clamp(0.6rem, 3vh, 1.6rem);
+  margin-top: clamp(1.1rem, 4.5vh, 2.5rem);
 }
 
 .habit-day-nav__daily-life-upgrade-eyebrow {
@@ -34453,26 +34453,40 @@ body.habit-wizard-open .mobile-footer-nav {
 }
 
 .habit-day-nav__daily-life-upgrade-title {
+  display: grid;
+  justify-items: center;
+  gap: clamp(0.08rem, 0.35vh, 0.22rem);
+  width: 100%;
   margin: 0;
+  line-height: 0.98;
+}
+
+.habit-day-nav__daily-life-upgrade-title-lead {
+  min-width: 0;
   color: #ffe7a2;
   font-family: Georgia, 'Times New Roman', serif;
+  max-width: 100%;
   font-size: clamp(2.05rem, 10.1vw, 3.35rem);
   font-weight: 800;
   letter-spacing: -0.045em;
-  line-height: 0.95;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-shadow:
     0 2px 0 rgba(112, 61, 16, 0.82),
     0 5px 14px rgba(0, 0, 0, 0.72),
     0 0 18px rgba(248, 207, 112, 0.24);
 }
 
-.habit-day-nav__daily-life-upgrade-habit {
-  margin: 0;
+.habit-day-nav__daily-life-upgrade-title-rest {
+  min-width: 0;
   color: var(--daily-life-upgrade-blue);
   font-family: Georgia, 'Times New Roman', serif;
+  max-width: 100%;
   font-size: clamp(0.94rem, 4.25vw, 1.34rem);
   font-weight: 700;
-  line-height: 1.1;
+  letter-spacing: -0.025em;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-shadow: 0 2px 9px rgba(0, 0, 0, 0.82);
 }
 
@@ -34650,11 +34664,14 @@ body.habit-wizard-open .mobile-footer-nav {
     gap: 0.24rem;
   }
 
-  .habit-day-nav__daily-life-upgrade-title {
+  .habit-day-nav__daily-life-upgrade-title-lead {
     font-size: clamp(1.85rem, 9.2vw, 2.85rem);
   }
 
-  .habit-day-nav__daily-life-upgrade-habit,
+  .habit-day-nav__daily-life-upgrade-title-rest {
+    font-size: clamp(0.84rem, 3.7vw, 1.08rem);
+  }
+
   .habit-day-nav__daily-life-upgrade-copy,
   .habit-day-nav__daily-life-upgrade-button small,
   .habit-day-nav__daily-life-upgrade-alternatives {

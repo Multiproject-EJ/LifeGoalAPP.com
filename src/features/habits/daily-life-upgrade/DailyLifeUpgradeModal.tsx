@@ -19,13 +19,13 @@ function toQuestDisplayName(value: string): string {
     .join(' ');
 }
 
-function getQuestCopy(candidate: DailyLifeUpgradeCandidate): { title: string; context: string } {
-  const [rawTitle, rawContext] = candidate.habitTitle.split(/\s[-–—:]\s|[-–—:]/u, 2);
-  const title = toQuestDisplayName(rawTitle || candidate.habitTitle) || candidate.habitTitle;
-  const contextBase = rawContext?.replace(/^gpt\s+/iu, '').trim();
-  const context = contextBase ? `${toQuestDisplayName(contextBase)} Quest` : 'Adaptive Habit Quest';
+function getQuestCopy(candidate: DailyLifeUpgradeCandidate): { lead: string; rest: string } {
+  const displayTitle = toQuestDisplayName(candidate.habitTitle.replace(/[-–—:]/gu, ' ')) || candidate.habitTitle;
+  const words = displayTitle.split(/\s+/u).filter(Boolean);
+  const lead = words.slice(0, 2).join(' ');
+  const rest = words.slice(2).join(' ');
 
-  return { title, context };
+  return { lead, rest };
 }
 
 export function DailyLifeUpgradeModal(props: {
@@ -55,11 +55,10 @@ export function DailyLifeUpgradeModal(props: {
         <div className="habit-day-nav__daily-life-upgrade-body">
           <div className="habit-day-nav__daily-life-upgrade-heading">
             <p className="habit-day-nav__daily-life-upgrade-eyebrow">Quest adjustment</p>
-            <p id="daily-life-upgrade-title" className="habit-day-nav__daily-life-upgrade-title">Morning Brief</p>
-            <p className="habit-day-nav__daily-life-upgrade-habit">{questCopy.context}</p>
-          </div>
-          <div className="habit-day-nav__daily-life-upgrade-prompt">
-            <p className="habit-day-nav__daily-life-upgrade-subtitle">{props.candidate.promptTitle}</p>
+            <p id="daily-life-upgrade-title" className="habit-day-nav__daily-life-upgrade-title" aria-label={`${questCopy.lead}${questCopy.rest ? ` ${questCopy.rest}` : ''}`}>
+              <span className="habit-day-nav__daily-life-upgrade-title-lead">{questCopy.lead}</span>
+              {questCopy.rest ? <span className="habit-day-nav__daily-life-upgrade-title-rest">{questCopy.rest}</span> : null}
+            </p>
           </div>
           {props.candidate.alternatives.length > 0 ? (
             <div className="habit-day-nav__daily-life-upgrade-alternatives" aria-label="Supportive alternative options">
