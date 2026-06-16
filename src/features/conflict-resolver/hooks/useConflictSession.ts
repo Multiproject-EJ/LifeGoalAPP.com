@@ -37,7 +37,8 @@ type ConflictResolverUiStage =
   | 'resolution_builder'
   | 'apology_alignment'
   | 'agreement_preview'
-  | 'agreement_finalized';
+  | 'agreement_finalized'
+  | 'safety_support_close';
 
 const GROUNDING_STATEMENTS = [
   'People are not evil at heart.',
@@ -184,6 +185,7 @@ const UI_TO_CONFLICT_STAGE: Record<ConflictResolverUiStage, ConflictStage> = {
   apology_alignment: 'apology_alignment',
   agreement_preview: 'agreement',
   agreement_finalized: 'closed',
+  safety_support_close: 'closed',
 };
 const CONFLICT_STAGE_TO_UI: Record<ConflictStage, ConflictResolverUiStage> = {
   draft: 'mode_selection',
@@ -690,6 +692,16 @@ export function useConflictSession() {
     void setStageWithSync('apology_alignment');
   };
 
+  const continueFromResolutionBuilder = () => {
+    if (conflictRouting.safetyFlag === true) {
+      triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
+      void setStageWithSync('safety_support_close');
+      return;
+    }
+
+    moveToApologyAlignment();
+  };
+
   const queueWhiteFlagOffer = () => {
     const normalized = whiteFlagOffer.trim();
     if (!normalized) return;
@@ -1096,6 +1108,7 @@ export function useConflictSession() {
       promoteProposal,
       removeProposal,
       moveToApologyAlignment,
+      continueFromResolutionBuilder,
       selectedApologyType,
       setSelectedApologyType,
       apologyTiming,

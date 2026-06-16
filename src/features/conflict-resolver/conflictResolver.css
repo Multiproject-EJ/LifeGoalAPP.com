@@ -1401,3 +1401,22 @@
   border-color: rgba(255, 191, 87, 0.46);
   background: rgba(255, 191, 87, 0.12);
 }
+
+.conflict-resolver__screen--safety-close {
+  border-color: rgba(255, 191, 87, 0.3);
+}
+
+.conflict-resolver__safety-close-card {
+  border: 1px solid rgba(255, 191, 87, 0.36);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 191, 87, 0.1);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.conflict-resolver__safety-close-card h4,
+.conflict-resolver__safety-close-card p {
+  margin: 0;
+}

@@ -9,6 +9,14 @@ function requirePattern(filePath, pattern, description) {
   console.log(`[PASS] ${description}`);
 }
 
+function rejectPattern(filePath, pattern, description) {
+  const content = readFileSync(filePath, 'utf8');
+  if (pattern.test(content)) {
+    throw new Error(`[FAIL] ${description} (${filePath})`);
+  }
+  console.log(`[PASS] ${description}`);
+}
+
 function run() {
   requirePattern(
     'src/features/conflict-resolver/services/conflictInvites.ts',
@@ -99,6 +107,37 @@ function run() {
     'src/features/conflict-resolver/services/conflictAiOrchestrator.ts',
     /buildConflictRoutingPromptContext\(input\.conflictRouting\)/,
     'Prompt builders include routing context helper output',
+  );
+
+
+  requirePattern(
+    'src/features/conflict-resolver/hooks/useConflictSession.ts',
+    /if \(conflictRouting\.safetyFlag === true\)[\s\S]*setStageWithSync\('safety_support_close'\)[\s\S]*return;[\s\S]*moveToApologyAlignment\(\)/,
+    'Safety-flagged resolution builder route skips apology alignment',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/screens/ResolutionBuilderScreen.tsx',
+    /const canContinue = safetyFlag \|\| Boolean\(selectedOptionId\) \|\| Boolean\(activeProposalId\)/,
+    'Safety-flagged resolution builder can continue without a selected resolution or proposal',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/screens/SafetySupportCloseScreen.tsx',
+    /Support plan saved[\s\S]*focus on safety, support, and what you can control[\s\S]*Finish/,
+    'Safety support close screen uses support-first finish copy',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/ConflictResolverExperience.tsx',
+    /session\.stage === 'safety_support_close'[\s\S]*<SafetySupportCloseScreen onFinish=\{session\.resetFlow\}/,
+    'Safety support close screen is mounted locally in Conflict Resolver',
+  );
+
+  rejectPattern(
+    'src/features/conflict-resolver/screens/SafetySupportCloseScreen.tsx',
+    /agreement|reconciliation|reconcile|invite|both apologize|resolve together/i,
+    'Safety support close screen avoids mutual-repair and shared-finalization language',
   );
 
   requirePattern(

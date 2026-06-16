@@ -9,6 +9,7 @@ import { ParallelReadScreen } from './screens/ParallelReadScreen';
 import { ResolutionBuilderScreen } from './screens/ResolutionBuilderScreen';
 import { ApologyAlignmentScreen } from './screens/ApologyAlignmentScreen';
 import { InnerNextStepScreen } from './screens/InnerNextStepScreen';
+import { SafetySupportCloseScreen } from './screens/SafetySupportCloseScreen';
 import { AgreementCloseCard } from './components/AgreementCloseCard';
 import { StageProgress } from './components/StageProgress';
 import { ConflictKpiSnapshot } from './components/ConflictKpiSnapshot';
@@ -186,8 +187,14 @@ export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictRe
         fairnessWarnings={session.resolutionMeta?.fairnessWarnings ?? []}
         primaryConflictType={session.conflictRouting.primaryConflictType}
         safetyFlag={session.conflictRouting.safetyFlag}
-        onContinue={session.moveToApologyAlignment}
+        onContinue={session.continueFromResolutionBuilder}
       />
+    );
+  }
+
+  if (session.stage === 'safety_support_close') {
+    return withProgress(
+      <SafetySupportCloseScreen onFinish={session.resetFlow} />
     );
   }
 

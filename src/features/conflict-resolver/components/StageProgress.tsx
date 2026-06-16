@@ -11,7 +11,8 @@ type ConflictResolverUiStage =
   | 'resolution_builder'
   | 'apology_alignment'
   | 'agreement_preview'
-  | 'agreement_finalized';
+  | 'agreement_finalized'
+  | 'safety_support_close';
 
 type StageProgressProps = {
   stage: ConflictResolverUiStage;
@@ -33,6 +34,17 @@ const SHARED_STAGE_ORDER: StageDefinition[] = [
   { id: 'agreement_finalized', label: 'Agreement finalized', shortLabel: 'Done' },
 ];
 
+const SAFETY_STAGE_ORDER: StageDefinition[] = [
+  { id: 'mode_selection', label: 'Mode', shortLabel: 'Mode' },
+  { id: 'grounding', label: 'Grounding', shortLabel: 'Ground' },
+  { id: 'conflict_type_routing', label: 'Conflict type', shortLabel: 'Type' },
+  { id: 'private_capture', label: 'Private capture', shortLabel: 'Private' },
+  { id: 'collect_pile', label: 'Collect pile', shortLabel: 'Collect' },
+  { id: 'parallel_read', label: 'Parallel read', shortLabel: 'Read' },
+  { id: 'resolution_builder', label: 'Support options', shortLabel: 'Support' },
+  { id: 'safety_support_close', label: 'Support plan saved', shortLabel: 'Done' },
+];
+
 const INNER_STAGE_ORDER: StageDefinition[] = [
   { id: 'mode_selection', label: 'Mode', shortLabel: 'Mode' },
   { id: 'grounding', label: 'Grounding', shortLabel: 'Ground' },
@@ -43,7 +55,8 @@ const INNER_STAGE_ORDER: StageDefinition[] = [
   { id: 'agreement_finalized', label: 'Agreement finalized', shortLabel: 'Done' },
 ];
 
-function getStageOrder(selectedType: ConflictType | null): StageDefinition[] {
+function getStageOrder(selectedType: ConflictType | null, stage: ConflictResolverUiStage): StageDefinition[] {
+  if (stage === 'safety_support_close') return SAFETY_STAGE_ORDER;
   if (selectedType === 'inner_tension') return INNER_STAGE_ORDER;
   return SHARED_STAGE_ORDER;
 }
@@ -53,7 +66,7 @@ export function StageProgress({ stage, selectedType }: StageProgressProps) {
     return null;
   }
 
-  const stageOrder = getStageOrder(selectedType);
+  const stageOrder = getStageOrder(selectedType, stage);
   const currentIndex = stageOrder.findIndex((item) => item.id === stage);
 
   return (

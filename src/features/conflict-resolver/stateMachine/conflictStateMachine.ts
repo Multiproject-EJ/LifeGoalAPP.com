@@ -7,7 +7,7 @@ const CONFLICT_STAGE_TRANSITIONS: Record<ConflictStage, readonly ConflictStage[]
   grounding: ['private_capture'],
   private_capture: ['shared_read'],
   shared_read: ['negotiation'],
-  negotiation: ['apology_alignment'],
+  negotiation: ['apology_alignment', 'closed'],
   apology_alignment: ['agreement'],
   agreement: ['closed'],
   closed: [],
