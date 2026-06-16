@@ -46,6 +46,25 @@ function run() {
     'Agreement-finalized analytics event is defined',
   );
 
+
+  requirePattern(
+    'src/features/conflict-resolver/services/conflictResolutionGuidance.ts',
+    /personality_annoyance[\s\S]*misunderstanding[\s\S]*boundary_issue[\s\S]*unfairness_imbalance[\s\S]*hurt_broken_trust[\s\S]*different_needs_values[\s\S]*practical_decision[\s\S]*repeated_pattern[\s\S]*unsure/,
+    'Category-aware resolution guidance covers all routing types',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/services/conflictResolutionGuidance.ts',
+    /if \(input\.safetyFlag\)[\s\S]*SAFETY_FIRST_GUIDANCE/,
+    'Safety-first resolution guidance overrides mutual-resolution copy',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/screens/ResolutionBuilderScreen.tsx',
+    /getConflictResolutionGuidance\(\{ primaryConflictType, safetyFlag \}\)/,
+    'Resolution builder renders deterministic routing guidance',
+  );
+
   requirePattern(
     'docs/conflict-resolver/09_ACCEPTANCE_VALIDATION_RUNBOOK.md',
     /PR5 \+ PR6/,
