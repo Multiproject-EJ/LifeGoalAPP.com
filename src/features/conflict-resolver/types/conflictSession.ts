@@ -13,6 +13,26 @@ export type ConflictStage = (typeof CONFLICT_STAGE_ORDER)[number];
 
 export type ConflictType = 'inner_tension' | 'shared_conflict';
 
+export type ConflictRoutingType =
+  | 'personality_annoyance'
+  | 'misunderstanding'
+  | 'boundary_issue'
+  | 'unfairness_imbalance'
+  | 'hurt_broken_trust'
+  | 'different_needs_values'
+  | 'practical_decision'
+  | 'repeated_pattern'
+  | 'unsure';
+
+export type ConflictRoutingMetadata = {
+  primaryConflictType: ConflictRoutingType | null;
+  selectedBy: 'user' | 'system_suggested' | null;
+  confidence: 'user_asserted' | 'system_inferred' | null;
+  secondarySignals: string[];
+  safetyFlag: boolean;
+  canChangeLater: true;
+};
+
 export type ConflictSessionStatus = ConflictStage;
 
 export type ConflictParticipantRole = 'initiator' | 'participant' | 'observer';

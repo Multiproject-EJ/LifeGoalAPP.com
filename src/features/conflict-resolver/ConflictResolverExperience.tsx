@@ -3,6 +3,7 @@ import type { AppSurface } from '../../surfaces/surfaceContext';
 import { ModeSelectionScreen } from './screens/ModeSelectionScreen';
 import { GroundingScreen } from './screens/GroundingScreen';
 import { PrivateCaptureScreen } from './screens/PrivateCaptureScreen';
+import { ConflictTypeRoutingScreen } from './screens/ConflictTypeRoutingScreen';
 import { CollectPileScreen } from './screens/CollectPileScreen';
 import { ParallelReadScreen } from './screens/ParallelReadScreen';
 import { ResolutionBuilderScreen } from './screens/ResolutionBuilderScreen';
@@ -100,7 +101,19 @@ export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictRe
         statementIndex={session.groundingIndex}
         statements={session.groundingStatements}
         onNextStatement={session.nextGroundingStatement}
-        onReady={session.startPrivateCapture}
+        onReady={session.startConflictTypeRouting}
+      />
+    );
+  }
+
+  if (session.stage === 'conflict_type_routing') {
+    return withProgress(
+      <ConflictTypeRoutingScreen
+        selectedRoutingType={session.conflictRouting.primaryConflictType}
+        safetyFlag={session.conflictRouting.safetyFlag}
+        onSelectRoutingType={session.selectConflictRoutingType}
+        onSafetyLink={session.flagConflictRoutingSafety}
+        onContinue={session.continueFromConflictTypeRouting}
       />
     );
   }
