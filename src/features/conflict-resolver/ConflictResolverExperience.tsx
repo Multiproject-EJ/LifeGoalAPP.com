@@ -184,6 +184,8 @@ export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictRe
         parallelAnnotationItems={session.parallelAnnotationItems}
         aiMode={session.resolutionMeta?.aiMode ?? null}
         fairnessWarnings={session.resolutionMeta?.fairnessWarnings ?? []}
+        primaryConflictType={session.conflictRouting.primaryConflictType}
+        safetyFlag={session.conflictRouting.safetyFlag}
         onContinue={session.moveToApologyAlignment}
       />
     );

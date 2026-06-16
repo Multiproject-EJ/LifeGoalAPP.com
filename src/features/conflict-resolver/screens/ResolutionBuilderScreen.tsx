@@ -1,3 +1,6 @@
+import type { ConflictRoutingType } from '../types/conflictSession';
+import { getConflictResolutionGuidance } from '../services/conflictResolutionGuidance';
+
 type ResolutionOption = {
   id: string;
   title: string;
@@ -18,6 +21,8 @@ type ResolutionBuilderScreenProps = {
   parallelAnnotationItems: { id: string; label: string; tag: 'accurate' | 'missing' | 'note' }[];
   aiMode?: 'premium' | 'free_quota' | 'fallback' | null;
   fairnessWarnings?: Array<{ code: string; message: string }>;
+  primaryConflictType?: ConflictRoutingType | null;
+  safetyFlag?: boolean;
   onContinue: () => void;
 };
 
@@ -35,9 +40,12 @@ export function ResolutionBuilderScreen({
   parallelAnnotationItems,
   aiMode,
   fairnessWarnings = [],
+  primaryConflictType = null,
+  safetyFlag = false,
   onContinue,
 }: ResolutionBuilderScreenProps) {
   const canContinue = Boolean(selectedOptionId) || Boolean(activeProposalId);
+  const resolutionGuidance = getConflictResolutionGuidance({ primaryConflictType, safetyFlag });
 
   return (
     <section className="conflict-resolver__screen" aria-labelledby="resolution-builder-title">
@@ -48,6 +56,18 @@ export function ResolutionBuilderScreen({
           <p className="conflict-resolver__ai-mode-pill">Option source: {aiMode === 'premium' ? 'Premium AI' : aiMode === 'free_quota' ? 'Free AI' : 'Fallback'}</p>
         ) : null}
       </header>
+      {resolutionGuidance ? (
+        <section
+          className={`conflict-resolver__resolution-guidance ${
+            resolutionGuidance.tone === 'safety' ? 'conflict-resolver__resolution-guidance--safety' : ''
+          }`}
+          aria-label={resolutionGuidance.tone === 'safety' ? 'Safety-first resolution guidance' : 'Category-aware resolution guidance'}
+        >
+          <span>{resolutionGuidance.tone === 'safety' ? 'Safety first' : 'Resolution guide'}</span>
+          <p>{resolutionGuidance.helperText}</p>
+        </section>
+      ) : null}
+
       {fairnessWarnings.length > 0 ? (
         <section className="conflict-resolver__fairness-note" aria-label="Fairness checks">
           <h4>Fairness checks flagged</h4>
