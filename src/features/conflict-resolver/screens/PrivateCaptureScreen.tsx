@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import type { ConflictRoutingType } from '../types/conflictSession';
+import { getConflictRoutingLabel } from './ConflictTypeRoutingScreen';
 
 export type PrivatePrompt = {
   id: string;
@@ -25,6 +27,8 @@ type PrivateCaptureScreenProps = {
   onBack: () => void;
   onSkip: () => void;
   onFinish: () => void;
+  selectedRoutingType?: ConflictRoutingType | null;
+  onChangeRoutingType?: () => void;
 };
 
 export function PrivateCaptureScreen({
@@ -36,6 +40,8 @@ export function PrivateCaptureScreen({
   onBack,
   onSkip,
   onFinish,
+  selectedRoutingType = null,
+  onChangeRoutingType,
 }: PrivateCaptureScreenProps) {
   const [isMobileComposerOpen, setIsMobileComposerOpen] = useState(false);
   const [isCompactViewport, setIsCompactViewport] = useState(false);
@@ -57,6 +63,7 @@ export function PrivateCaptureScreen({
   }, [isMobileComposerOpen]);
 
   const prompt = prompts[promptIndex];
+  const selectedRoutingLabel = getConflictRoutingLabel(selectedRoutingType);
   const isLast = promptIndex >= prompts.length - 1;
   const suggestedRewrite = value
     .replace(/\balways\b/gi, 'often')
@@ -75,6 +82,22 @@ export function PrivateCaptureScreen({
           Question {promptIndex + 1} of {prompts.length}
         </p>
       </header>
+
+      {selectedRoutingLabel ? (
+        <div className="conflict-resolver__routing-summary" aria-label="Selected conflict shape">
+          <span>
+            Conflict shape: <strong>{selectedRoutingLabel}</strong>
+          </span>
+          {onChangeRoutingType ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <button type="button" className="conflict-resolver__routing-summary-change" onClick={onChangeRoutingType}>
+                Change
+              </button>
+            </>
+          ) : null}
+        </div>
+      ) : null}
 
       <article className="conflict-resolver__prompt-card">
         <label htmlFor={`prompt-${prompt.id}`} className="conflict-resolver__prompt-label">
