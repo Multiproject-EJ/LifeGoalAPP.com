@@ -15,7 +15,7 @@ type RoutingCard = {
   bestFor: string;
 };
 
-const ROUTING_CARDS: RoutingCard[] = [
+export const ROUTING_CARDS: RoutingCard[] = [
   {
     id: 'personality_annoyance',
     title: 'Personality clash / annoyance',
@@ -71,6 +71,9 @@ const ROUTING_CARDS: RoutingCard[] = [
     bestFor: 'Ambiguous situations where no single label feels right yet.',
   },
 ];
+
+export const getConflictRoutingLabel = (routingType: ConflictRoutingType | null) =>
+  ROUTING_CARDS.find((card) => card.id === routingType)?.title ?? null;
 
 export function ConflictTypeRoutingScreen({
   selectedRoutingType,

@@ -129,6 +129,8 @@ export function ConflictResolverExperience({ surface = 'habitgame' }: ConflictRe
         onBack={session.previousPrompt}
         onSkip={session.skipPrompt}
         onFinish={session.finishPrivateCapture}
+        selectedRoutingType={session.conflictRouting.primaryConflictType}
+        onChangeRoutingType={session.changeConflictRoutingType}
       />
     );
   }

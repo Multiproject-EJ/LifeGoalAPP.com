@@ -555,6 +555,10 @@ export function useConflictSession() {
     void setStageWithSync('private_capture');
   };
 
+  const changeConflictRoutingType = () => {
+    setStage('conflict_type_routing');
+  };
+
   const startPrivateCapture = continueFromConflictTypeRouting;
 
   const nextPrompt = () => {
@@ -1074,6 +1078,7 @@ export function useConflictSession() {
       selectConflictRoutingType,
       flagConflictRoutingSafety,
       continueFromConflictTypeRouting,
+      changeConflictRoutingType,
       prompts,
       promptIndex,
       currentAnswer,
