@@ -66,6 +66,42 @@ function run() {
   );
 
   requirePattern(
+    'src/features/conflict-resolver/hooks/useConflictSession.ts',
+    /generateSharedSummaryCards\(\{[\s\S]*conflictRouting/,
+    'Routing context is wired into shared summary generation',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/hooks/useConflictSession.ts',
+    /generateResolutionOptions\(\{[\s\S]*conflictRouting/,
+    'Routing context is wired into resolution option generation',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/services/conflictRoutingPromptContext.ts',
+    /lens\/context, not truth/,
+    'Routing prompt context treats selected category as a lens, not truth',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/services/conflictRoutingPromptContext.ts',
+    /SAFETY OVERRIDE[\s\S]*Do not frame this as a shared problem to solve together[\s\S]*Do not recommend inviting the other person, negotiating, apologizing, reconciling, meeting privately, or creating an agreement/,
+    'Safety override instructions block mutual-resolution pressure',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/services/conflictResolutionFallbacks.ts',
+    /SAFETY_FIRST_RESOLUTION_OPTIONS[\s\S]*trusted support[\s\S]*does not require negotiation, apology, or agreement/,
+    'Safety fallback uses support-oriented language instead of normal mutual-resolution language',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/services/conflictAiOrchestrator.ts',
+    /buildConflictRoutingPromptContext\(input\.conflictRouting\)/,
+    'Prompt builders include routing context helper output',
+  );
+
+  requirePattern(
     'docs/conflict-resolver/09_ACCEPTANCE_VALIDATION_RUNBOOK.md',
     /PR5 \+ PR6/,
     'Acceptance validation runbook exists',
