@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { ConflictType } from '../types/conflictSession';
+import type { ConflictRoutingMetadata, ConflictRoutingType, ConflictType } from '../types/conflictSession';
 import type { PrivatePrompt } from '../screens/PrivateCaptureScreen';
 import { canTransitionConflictStage, isConflictStage } from '../stateMachine/conflictStateMachine';
 import type { ConflictStage } from '../types/conflictSession';
@@ -28,6 +28,7 @@ import { buildFallbackInnerRecommendationsForSurface } from '../conflictSurfaceC
 type ConflictResolverUiStage =
   | 'mode_selection'
   | 'grounding'
+  | 'conflict_type_routing'
   | 'private_capture'
   | 'inner_next_step'
   | 'collect_pile'
@@ -42,6 +43,63 @@ const GROUNDING_STATEMENTS = [
   'Miscommunication creates most conflict.',
   'You’re not required to agree. Just understand first.',
 ] as const;
+
+const DEFAULT_CONFLICT_ROUTING: ConflictRoutingMetadata = {
+  primaryConflictType: null,
+  selectedBy: null,
+  confidence: null,
+  secondarySignals: [],
+  safetyFlag: false,
+  canChangeLater: true,
+};
+
+const ROUTING_FIRST_PRIVATE_PROMPTS: Record<ConflictRoutingType, PrivatePrompt> = {
+  personality_annoyance: {
+    id: 'what_happened',
+    label: 'What specific behavior annoys you, and at what point do you stop being able to act like yourself?',
+    placeholder: 'Name the behavior and the limit where staying kind, normal, or fair gets hard…',
+  },
+  misunderstanding: {
+    id: 'what_happened',
+    label: 'What happened, and what did you think it meant?',
+    placeholder: 'Describe the moment and the meaning you took from it…',
+  },
+  boundary_issue: {
+    id: 'what_happened',
+    label: 'What line felt crossed, and what do you need to protect?',
+    placeholder: 'Name the boundary, the impact, and what would help you feel protected…',
+  },
+  unfairness_imbalance: {
+    id: 'what_happened',
+    label: 'What feels unequal, and what would a fairer version look like?',
+    placeholder: 'Describe the imbalance and what fairer effort, care, or cost would look like…',
+  },
+  hurt_broken_trust: {
+    id: 'what_happened',
+    label: 'What damaged trust, and what would repair require?',
+    placeholder: 'Describe what happened, the impact, and what repair would need to include…',
+  },
+  different_needs_values: {
+    id: 'what_happened',
+    label: 'What do you need, and what do they seem to need?',
+    placeholder: 'Describe both needs as fairly as you can…',
+  },
+  practical_decision: {
+    id: 'what_happened',
+    label: 'What decision needs to be made, and what criteria should guide it?',
+    placeholder: 'Name the choice, constraints, and decision criteria…',
+  },
+  repeated_pattern: {
+    id: 'what_happened',
+    label: 'What keeps happening, and what needs to change this time?',
+    placeholder: 'Describe the loop and what would make this conversation different…',
+  },
+  unsure: {
+    id: 'what_happened',
+    label: 'What feels strongest right now: misunderstood, disrespected, hurt, irritated, unfair, stuck, or exhausted by repetition?',
+    placeholder: 'Start with the strongest feeling or the part that feels hardest to sort…',
+  },
+};
 
 const PRIVATE_CAPTURE_PROMPTS: readonly PrivatePrompt[] = [
   {
@@ -116,6 +174,7 @@ const sanitizeForSharedSummary = (value: string): { text: string; moderationNote
 const UI_TO_CONFLICT_STAGE: Record<ConflictResolverUiStage, ConflictStage> = {
   mode_selection: 'draft',
   grounding: 'grounding',
+  conflict_type_routing: 'private_capture',
   private_capture: 'private_capture',
   inner_next_step: 'agreement',
   collect_pile: 'shared_read',
@@ -140,6 +199,7 @@ type ConflictSessionDraftSnapshot = {
   stage: ConflictResolverUiStage;
   selectedType: ConflictType | null;
   groundingIndex: number;
+  conflictRouting?: ConflictRoutingMetadata;
   promptIndex: number;
   answers: Record<string, string>;
   parallelDecision: 'accurate' | 'missing' | null;
@@ -193,6 +253,7 @@ export function useConflictSession() {
   const [stage, setStage] = useState<ConflictResolverUiStage>('mode_selection');
   const [selectedType, setSelectedType] = useState<ConflictType | null>(null);
   const [groundingIndex, setGroundingIndex] = useState(0);
+  const [conflictRouting, setConflictRouting] = useState<ConflictRoutingMetadata>(DEFAULT_CONFLICT_ROUTING);
   const [promptIndex, setPromptIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [parallelDecision, setParallelDecision] = useState<'accurate' | 'missing' | null>(null);
@@ -239,6 +300,7 @@ export function useConflictSession() {
     setStage(parsed.stage ?? 'mode_selection');
     setSelectedType(parsed.selectedType ?? null);
     setGroundingIndex(parsed.groundingIndex ?? 0);
+    setConflictRouting({ ...DEFAULT_CONFLICT_ROUTING, ...(parsed.conflictRouting ?? {}) });
     setPromptIndex(parsed.promptIndex ?? 0);
     setAnswers(parsed.answers ?? {});
     setParallelDecision(parsed.parallelDecision ?? null);
@@ -272,7 +334,14 @@ export function useConflictSession() {
     }
   };
 
-  const currentPrompt = PRIVATE_CAPTURE_PROMPTS[promptIndex];
+  const prompts = useMemo<readonly PrivatePrompt[]>(() => {
+    const firstPrompt = conflictRouting.primaryConflictType
+      ? ROUTING_FIRST_PRIVATE_PROMPTS[conflictRouting.primaryConflictType]
+      : PRIVATE_CAPTURE_PROMPTS[0];
+    return [firstPrompt, ...PRIVATE_CAPTURE_PROMPTS.slice(1)];
+  }, [conflictRouting.primaryConflictType]);
+
+  const currentPrompt = prompts[promptIndex] ?? prompts[0];
   const currentAnswer = answers[currentPrompt.id] ?? '';
 
   const setCurrentAnswer = (value: string) => {
@@ -454,14 +523,42 @@ export function useConflictSession() {
     setGroundingIndex((prev) => Math.min(prev + 1, GROUNDING_STATEMENTS.length - 1));
   };
 
-  const startPrivateCapture = () => {
-    setPromptIndex(0);
+  const startConflictTypeRouting = () => {
     triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
+    setStage('conflict_type_routing');
+  };
+
+  const selectConflictRoutingType = (routingType: ConflictRoutingType) => {
+    setConflictRouting({
+      ...DEFAULT_CONFLICT_ROUTING,
+      primaryConflictType: routingType,
+      selectedBy: 'user',
+      confidence: 'user_asserted',
+      canChangeLater: true,
+    });
+  };
+
+  const flagConflictRoutingSafety = () => {
+    setConflictRouting((prev) => ({
+      ...DEFAULT_CONFLICT_ROUTING,
+      ...prev,
+      primaryConflictType: prev.primaryConflictType ?? 'boundary_issue',
+      selectedBy: prev.selectedBy ?? 'user',
+      confidence: prev.confidence ?? 'user_asserted',
+      safetyFlag: true,
+      canChangeLater: true,
+    }));
+  };
+
+  const continueFromConflictTypeRouting = () => {
+    setPromptIndex(0);
     void setStageWithSync('private_capture');
   };
 
+  const startPrivateCapture = continueFromConflictTypeRouting;
+
   const nextPrompt = () => {
-    setPromptIndex((prev) => Math.min(prev + 1, PRIVATE_CAPTURE_PROMPTS.length - 1));
+    setPromptIndex((prev) => Math.min(prev + 1, prompts.length - 1));
   };
 
   const previousPrompt = () => {
@@ -470,10 +567,10 @@ export function useConflictSession() {
 
   const skipPrompt = () => {
     trackConflictEvent('conflict.private_capture_skipped', {
-      promptId: PRIVATE_CAPTURE_PROMPTS[promptIndex]?.id ?? 'unknown',
+      promptId: prompts[promptIndex]?.id ?? 'unknown',
       stage,
     });
-    if (promptIndex >= PRIVATE_CAPTURE_PROMPTS.length - 1) {
+    if (promptIndex >= prompts.length - 1) {
       void setStageWithSync('collect_pile');
       return;
     }
@@ -483,7 +580,7 @@ export function useConflictSession() {
   const finishPrivateCapture = async () => {
     trackConflictEvent('conflict.private_capture_advanced', {
       answeredCount: Object.values(answers).filter((value) => value.trim().length > 0).length,
-      totalPrompts: PRIVATE_CAPTURE_PROMPTS.length,
+      totalPrompts: prompts.length,
     });
     if (selectedType === 'inner_tension') {
       triggerCompletionHaptic('medium', { channel: 'conflict', minIntervalMs: 1500 });
@@ -533,7 +630,7 @@ export function useConflictSession() {
   ) => {
     setParallelDecision(decision);
     setParallelAnnotations(annotations);
-    const allCardsAccurate = PRIVATE_CAPTURE_PROMPTS.every((prompt) => annotations[prompt.id] === 'accurate');
+    const allCardsAccurate = prompts.every((prompt) => annotations[prompt.id] === 'accurate');
     setAlignmentReached(decision === 'accurate' && allCardsAccurate);
     trackConflictEvent('conflict.parallel_read_completed', {
       decision,
@@ -860,6 +957,7 @@ export function useConflictSession() {
       stage,
       selectedType,
       groundingIndex,
+      conflictRouting,
       promptIndex,
       answers,
       parallelDecision,
@@ -882,6 +980,7 @@ export function useConflictSession() {
     stage,
     selectedType,
     groundingIndex,
+    conflictRouting,
     promptIndex,
     answers,
     parallelDecision,
@@ -906,6 +1005,7 @@ export function useConflictSession() {
     setStage('mode_selection');
     setSelectedType(null);
     setGroundingIndex(0);
+    setConflictRouting(DEFAULT_CONFLICT_ROUTING);
     setPromptIndex(0);
     setAnswers({});
     setParallelDecision(null);
@@ -969,7 +1069,12 @@ export function useConflictSession() {
       groundingStatements: GROUNDING_STATEMENTS,
       nextGroundingStatement,
       startPrivateCapture,
-      prompts: PRIVATE_CAPTURE_PROMPTS,
+      startConflictTypeRouting,
+      conflictRouting,
+      selectConflictRoutingType,
+      flagConflictRoutingSafety,
+      continueFromConflictTypeRouting,
+      prompts,
       promptIndex,
       currentAnswer,
       setCurrentAnswer,
@@ -1032,6 +1137,7 @@ export function useConflictSession() {
       stage,
       selectedType,
       groundingIndex,
+      conflictRouting,
       promptIndex,
       sharedSessionId,
       sharedSessionCodeInput,
@@ -1042,6 +1148,7 @@ export function useConflictSession() {
       sharedSessionLastSyncedAt,
       recoverableDraft,
       currentAnswer,
+      prompts,
       answers,
       parallelDecision,
       parallelAnnotations,

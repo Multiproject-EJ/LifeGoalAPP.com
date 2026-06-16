@@ -3,6 +3,7 @@ import type { ConflictType } from '../types/conflictSession';
 type ConflictResolverUiStage =
   | 'mode_selection'
   | 'grounding'
+  | 'conflict_type_routing'
   | 'private_capture'
   | 'inner_next_step'
   | 'collect_pile'
@@ -22,6 +23,7 @@ type StageDefinition = { id: ConflictResolverUiStage; label: string; shortLabel:
 const SHARED_STAGE_ORDER: StageDefinition[] = [
   { id: 'mode_selection', label: 'Mode', shortLabel: 'Mode' },
   { id: 'grounding', label: 'Grounding', shortLabel: 'Ground' },
+  { id: 'conflict_type_routing', label: 'Conflict type', shortLabel: 'Type' },
   { id: 'private_capture', label: 'Private capture', shortLabel: 'Private' },
   { id: 'collect_pile', label: 'Collect pile', shortLabel: 'Collect' },
   { id: 'parallel_read', label: 'Parallel read', shortLabel: 'Read' },
@@ -34,6 +36,7 @@ const SHARED_STAGE_ORDER: StageDefinition[] = [
 const INNER_STAGE_ORDER: StageDefinition[] = [
   { id: 'mode_selection', label: 'Mode', shortLabel: 'Mode' },
   { id: 'grounding', label: 'Grounding', shortLabel: 'Ground' },
+  { id: 'conflict_type_routing', label: 'Conflict type', shortLabel: 'Type' },
   { id: 'private_capture', label: 'Private capture', shortLabel: 'Private' },
   { id: 'inner_next_step', label: 'Inner guidance', shortLabel: 'Guidance' },
   { id: 'agreement_preview', label: 'Agreement preview', shortLabel: 'Preview' },
