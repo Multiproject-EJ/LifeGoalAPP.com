@@ -7,11 +7,11 @@
 
 ## 1) Core idea
 
-Add a lightweight categorizer near the beginning of Conflict Resolver, before the deeper capture and summary flow.
+Add a lightweight conflict-type routing moment near the beginning of Conflict Resolver, before the deeper capture and summary flow.
 
-The user should be able to tap one card that says, in plain language, what kind of conflict they think they are in. This gives the system useful direction immediately, before the app asks for long-form context.
+The user should be able to tap one card that says, in plain language, what kind of conflict this feels closest to right now. This gives the system useful direction immediately, before the app asks for long-form context.
 
-The categorizer should not feel diagnostic, clinical, or final. It should feel like:
+The feature should not feel like “choose the official reason for this conflict.” It should feel like “help us choose the best starting map.” The routing moment should not feel diagnostic, clinical, analytical, or final. It should feel like:
 
 > “What does this feel closest to right now?”
 
@@ -80,7 +80,7 @@ Cons:
 
 #### Recommended starting point
 
-Use **Option B** for v1: after grounding and before private capture.
+Use **Option B** for v1: after grounding and before private capture. In other words: choose mode → grounding → conflict type routing → private capture → reflection / neutral summary → resolution suggestion.
 
 Rationale: the category should guide the capture and resolution, but it should not become a hot, blame-based label while the user is still ungrounded.
 
@@ -88,7 +88,10 @@ Rationale: the category should guide the capture and resolution, but it should n
 
 ## 4) One-click categories
 
-Use simple user-facing cards. Behind the scenes, each card maps to a conflict type and an adapted prompt strategy.
+Use simple user-facing cards. Behind the scenes, each card maps to a primary routing type and an adapted prompt strategy. The safety affordance should be separate and visually distinct, not just another normal category card. Recommended screen copy:
+
+- Title: `What does this feel closest to right now?`
+- Subtitle: `You can change this later. This just helps us guide the next step.`
 
 ### Suggested v1 cards
 
@@ -97,32 +100,32 @@ Use simple user-facing cards. Behind the scenes, each card maps to a conflict ty
    - Best for: habits, style differences, tone, repeated small frustrations.
 
 2. **Misunderstanding**
-   - “I think we interpreted the same thing differently.”
+   - “I think we read the same thing differently.”
    - Best for: unclear intent, bad wording, assumed meaning.
 
 3. **Boundary issue**
-   - “Something keeps crossing a line for me.”
+   - “Something feels like it crossed a line.”
    - Best for: repeated overreach, unwanted behavior, emotional space, time, privacy.
 
 4. **Unfairness / imbalance**
-   - “The effort, care, money, attention, or responsibility feels unequal.”
+   - “The effort or care feels unequal.”
    - Best for: household labor, emotional labor, workload, reciprocity.
 
-5. **Hurt / betrayal**
+5. **Hurt / broken trust**
    - “Something damaged trust.”
-   - Best for: broken promise, secrecy, disloyalty, public embarrassment, dishonesty.
+   - Best for: broken promises, secrecy, dishonesty, betrayal, public embarrassment.
 
 6. **Different needs or values**
-   - “We both want different things, and both may matter.”
-   - Best for: lifestyle, parenting, priorities, religion, money philosophy, commitment level.
+   - “We both want different things.”
+   - Best for: priorities, lifestyle, commitment, parenting, religion, money, life direction.
 
 7. **Practical decision conflict**
    - “We need to choose what to do.”
-   - Best for: scheduling, plans, spending, moving, tasks, choices.
+   - Best for: plans, scheduling, moving, spending, tasks, decisions.
 
 8. **Repeated pattern**
-   - “This keeps happening, even after we talk.”
-   - Best for: recurring loops, unresolved repair, promises that do not stick.
+   - “This keeps happening.”
+   - Best for: issues already discussed where nothing really changes.
 
 9. **I’m not sure yet**
    - “Help me figure it out.”
@@ -148,11 +151,11 @@ The app should guide the user toward:
 
 ### Core principle
 
-> If you have become mean, the annoyance has gone too long without a boundary.
+> If you’ve become cold, sharp, or mean, it may be a sign that your limit was crossed earlier than you realized.
 
 This should not be framed as blame. It should be framed as a signal:
 
-- “Your meanness may be evidence that your limit was crossed earlier.”
+- “Your coldness, sharpness, or meanness may be evidence that your limit was crossed earlier.”
 - “The goal is not to justify being mean.”
 - “The goal is to find the boundary before you become a version of yourself you do not respect.”
 
@@ -299,21 +302,24 @@ The selected category should become a structured signal for AI orchestration, no
 - override user-provided facts,
 - turn a soft annoyance into a severe moral judgment.
 
-### Category confidence
+### Primary + secondary category model
 
-Store the category as user-selected with optional confidence, not as truth.
+Store one primary user-selected routing type with optional secondary signals, not as truth. Many conflicts are combinations: annoyance + repeated pattern, boundary issue + unfairness, misunderstanding + hurt, different values + practical decision, or broken trust + repeated pattern.
 
 Suggested internal shape:
 
 ```ts
 {
-  selectedConflictType: 'personality_annoyance',
+  primaryConflictType: 'personality_annoyance',
   selectedBy: 'user',
   confidence: 'user_asserted',
-  secondarySignals: ['boundary_possible'],
+  secondarySignals: ['repeated_pattern_possible', 'boundary_possible'],
+  safetyFlag: false,
   canChangeLater: true
 }
 ```
+
+User-facing copy can stay simple: “This sounds like personality friction, with a possible boundary element.”
 
 ---
 
@@ -337,15 +343,93 @@ When safety signals are present, say something closer to:
 
 ### Categorizer safety affordance
 
-Add a small option or secondary link:
+Add a visible secondary safety link:
 
 > “I may not feel safe resolving this directly.”
 
-This should route to a safety-first flow, not a shared invite flow.
+This should route to a safety-first flow, not a shared invite flow. It should not be styled as a normal conflict category.
 
 ---
 
-## 10) Implementation sketch for a future PR
+## 10) Category-specific capture prompt shapes
+
+Each category should adapt private capture enough that the user immediately feels the resolver got smarter.
+
+### Personality clash / annoyance
+
+Primary goal: find sustainable limit before resentment.
+
+Prompts:
+
+1. What specific behavior annoys you?
+2. How often does it happen?
+3. What level of this could you live with while still treating them normally?
+4. What is the first sign you are past your limit?
+5. Did you become cold, sarcastic, sharp, or distant?
+6. What boundary would have helped earlier?
+7. What is one small realistic request, not a demand that they become a different person?
+
+Output should include one repair sentence, one specific request, one self-boundary, and one goodwill assumption if appropriate.
+
+### Misunderstanding
+
+Primary goal: separate intent from interpretation. Avoid arguing against a motive that has not been confirmed.
+
+Output shape:
+
+> “When X happened, I interpreted it as Y. I realize I may not know your intent. Can you help me understand what you meant?”
+
+### Boundary issue
+
+Primary goal: name the line clearly. Avoid over-explaining the boundary as if it needs permission.
+
+Output shape:
+
+> “I need to be clear about a boundary. I’m not okay with X. Going forward, I need Y. If X happens again, I’ll need to Z.”
+
+### Unfairness / imbalance
+
+Primary goal: make the imbalance visible and specific. Avoid “you never care” / “you always make me do everything.”
+
+Output shape:
+
+> “I’m feeling worn down because X seems to be falling mostly on me. I don’t want to turn this into a character attack, but I do need the split to change. Could we agree on Y?”
+
+### Hurt / broken trust
+
+Primary goal: identify repair requirements. Avoid rushing forgiveness or demanding instant trust. This path should be slower and more careful.
+
+Output shape:
+
+> “What hurt most was X. It affected me by Y. I’m not ready to pretend it’s fine. For repair to start, I need Z.”
+
+### Different needs or values
+
+Primary goal: translate difference into tradeoffs. Avoid treating difference as disrespect.
+
+Output shape:
+
+> “I don’t think this is just about one of us being wrong. I think we may be prioritizing different real needs. I need X, and I hear that you need Y. Can we talk about what tradeoff would actually work?”
+
+### Practical decision conflict
+
+Primary goal: define decision criteria. This path can be lighter and faster, but should still ask: “Is this only logistical, or has it started to feel personal?”
+
+Output shape:
+
+> “Maybe we can separate the decision from the emotion for a moment. The decision is X. The criteria seem to be Y. Based on that, option Z seems most workable.”
+
+### Repeated pattern
+
+Primary goal: stop having the same conversation. This path should always include “what changes this time?”
+
+Output shape:
+
+> “I don’t want us to repeat the same conversation without a new structure. The pattern seems to be X. Last time we agreed Y, but Z happened. This time, I think we need A, B, and a check-in by C.”
+
+---
+
+## 11) Implementation sketch for a future PR
 
 No code change is proposed in this brainstorm, but a future implementation could be sliced safely.
 
@@ -380,7 +464,7 @@ No code change is proposed in this brainstorm, but a future implementation could
 
 ---
 
-## 11) Acceptance criteria for a future feature
+## 12) Acceptance criteria for a future feature
 
 A future implementation should be considered successful when:
 
@@ -394,19 +478,19 @@ A future implementation should be considered successful when:
 
 ---
 
-## 12) Open product questions
+## 13) Open product questions
 
-1. Should categorization happen before or after grounding in the first shipped version?
-2. Should “I may not feel safe resolving this directly” be a top-level card or a secondary link?
-3. Should the app allow multiple categories from the start, or force one primary category plus inferred secondary signals?
-4. Should personality-annoyance guidance appear as a mini-coaching screen before private capture?
-5. Should repeated-pattern conflicts automatically prompt for “what changed after the last conversation?”
-6. Should practical decision conflicts bypass some emotional repair steps when both users agree it is only logistical?
-7. How should the app distinguish a normal annoyance from contempt, chronic disrespect, or incompatibility?
+1. Should categorization happen before or after grounding in the first shipped version? Recommended answer: after grounding.
+2. Should “I may not feel safe resolving this directly” be a top-level card or a secondary link? Recommended answer: secondary but visible safety link, not a normal card.
+3. Should the app allow multiple categories from the start, or force one primary category plus inferred secondary signals? Recommended answer: one primary in UI, secondary signals internally.
+4. Should personality-annoyance guidance appear as a mini-coaching screen before private capture? Recommended answer: yes.
+5. Should repeated-pattern conflicts automatically prompt for “what changed after the last conversation?” Recommended answer: yes, always.
+6. Should practical decision conflicts bypass some emotional repair steps when both users agree it is only logistical? Recommended answer: partly, but ask if it has started to feel personal.
+7. How should the app distinguish a normal annoyance from contempt, chronic disrespect, or incompatibility? Recommended checks: can I still act kindly, have I become cold/sarcastic/punitive, and have I communicated a realistic boundary?
 
 ---
 
-## 13) Product thesis
+## 14) Product thesis
 
 A one-click conflict categorizer can make Conflict Resolver feel dramatically smarter without making it more complicated.
 
