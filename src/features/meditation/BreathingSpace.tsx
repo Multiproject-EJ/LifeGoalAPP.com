@@ -71,7 +71,7 @@ const MOBILE_TAB_OPTIONS: Record<
     label: 'Meditation',
     uppercaseLabel: 'MEDITATION',
     launchTitle: 'MEDITATION',
-    launchSubtitle: 'Upgrade your mind',
+    launchSubtitle: 'Peace space or visual exploration',
     iconImageSrc: '/icons/Energy/Meditating_blue.webp',
   },
   conflict: {
@@ -144,7 +144,7 @@ export function BreathingSpace({
   
   // Guided meditation state
   const [guidedPlayerOpen, setGuidedPlayerOpen] = useState(false);
-  const [selectedMeditationId, setSelectedMeditationId] = useState<string>('attempting-breath');
+  const [selectedMeditationId, setSelectedMeditationId] = useState<string>('peace-space-memory');
   const [meditationDuration, setMeditationDuration] = useState<number>(5);
   const [revealMode, setRevealMode] = useState<RevealMode>('sentence');
   const [guidedDetailsOpen, setGuidedDetailsOpen] = useState(false);
@@ -637,6 +637,36 @@ export function BreathingSpace({
                 {guidedDetailsOpen ? 'Hide details' : 'Expand details'}
               </button>
             </div>
+
+            <div className="breathing-space__meditation-core" aria-label="Meditation core concept">
+              <div className="breathing-space__meditation-core-header">
+                <span className="breathing-space__meditation-core-kicker">Core concept</span>
+                <h4 className="breathing-space__meditation-core-title">Two pathways, one meditation tab</h4>
+              </div>
+              <div className="breathing-space__meditation-pathways">
+                <article className="breathing-space__meditation-pathway">
+                  <span className="breathing-space__meditation-pathway-icon" aria-hidden="true">🏡</span>
+                  <div>
+                    <h5>Peace Space</h5>
+                    <p>
+                      Build a familiar mental place you can return to quickly, like a flash memory:
+                      peace first, then a positive chain of thought. Use it regularly so the path stays alive.
+                    </p>
+                  </div>
+                </article>
+                <article className="breathing-space__meditation-pathway">
+                  <span className="breathing-space__meditation-pathway-icon" aria-hidden="true">🧭</span>
+                  <div>
+                    <h5>Visual Exploration</h5>
+                    <p>
+                      Follow curiosity like a child exploring nature, stories, symbols, and realizations.
+                      This pathway is story-driven, explanation-driven, and focused on what each discovery implies.
+                    </p>
+                  </div>
+                </article>
+              </div>
+            </div>
+
 
           <button
             className="btn btn--primary breathing-space__guided-start-button breathing-space__guided-start-button--standalone"
