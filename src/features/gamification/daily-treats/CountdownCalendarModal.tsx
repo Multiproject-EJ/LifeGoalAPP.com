@@ -89,32 +89,28 @@ type RewardToast = {
 const PRESS_ANIMATION_DELAY_MS = 180;
 
 /**
- * The "bonus awakened" celebration banner should fire once — the moment the
- * same-day bonus first wakes up — not every time the calendar is reopened.
- * We persist a per-season/day/date token so that after the first viewing the
- * bonus door simply stays active (glowing + tappable) without re-popping the
- * banner. Keyed by date so a fresh bonus on a new day announces itself again.
+ * The "bonus awakened" celebration banner is a first-use helper, not a daily
+ * reminder. It teaches the same-day bonus mechanic the first time a user's
+ * Personal Quest bonus wakes up; afterwards the door can keep glowing/tappable
+ * without re-showing explanatory copy on future days.
  */
-const BONUS_AWAKENED_SEEN_KEY = 'lifegoal:daily-treats:bonus-awakened-seen';
+const BONUS_AWAKENED_SEEN_KEY = 'lifegoal:daily-treats:bonus-awakened-first-use-seen';
 
-const bonusAwakenedToken = (seasonId: string, dayIndex: number, dateKey: string) =>
-  `${seasonId}:${dayIndex}:${dateKey}`;
-
-const hasSeenBonusAwakened = (token: string): boolean => {
+const hasSeenBonusAwakened = (): boolean => {
   if (typeof window === 'undefined') return false;
   try {
-    return window.localStorage.getItem(BONUS_AWAKENED_SEEN_KEY) === token;
+    return window.localStorage.getItem(BONUS_AWAKENED_SEEN_KEY) === 'true';
   } catch {
     return false;
   }
 };
 
-const markBonusAwakenedSeen = (token: string): void => {
+const markBonusAwakenedSeen = (): void => {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(BONUS_AWAKENED_SEEN_KEY, token);
+    window.localStorage.setItem(BONUS_AWAKENED_SEEN_KEY, 'true');
   } catch {
-    // Ignore storage failures (private mode / quota) — worst case the banner
+    // Ignore storage failures (private mode / quota) — worst case the helper
     // shows again, which is harmless.
   }
 };
@@ -229,13 +225,13 @@ export const CountdownCalendarModal = ({
     return () => window.clearTimeout(timer);
   }, [rewardToast]);
 
-  // Gate the same-day "bonus awakened" celebration banner to once per day. The
-  // bonus stays "awakened" (free door opened + quest habit complete + bonus not
-  // yet opened) until the bonus door is opened, so a live-condition banner would
-  // re-pop every time the auto-opening calendar re-mounts. We persist a token so
-  // the banner fires once; on later opens the glowing bonus door simply stays
-  // active. Self-contained (derives its own values) so it can live with the
-  // other hooks above the component's conditional early returns.
+  // Gate the same-day "bonus awakened" celebration banner as a first-use helper.
+  // The bonus stays "awakened" (free door opened + quest habit complete + bonus
+  // not yet opened) until the bonus door is opened, and the same mechanic can
+  // happen again on future days. Persisting a single first-use flag keeps this
+  // explanation from becoming a recurring reminder while preserving the glowing
+  // active door state. Self-contained (derives its own values) so it can live
+  // with the other hooks above the component's conditional early returns.
   useEffect(() => {
     const progress = seasonData?.progress;
     const dayIndex = seasonData?.today_day_index ?? 0;
@@ -250,14 +246,13 @@ export const CountdownCalendarModal = ({
       setShowBonusAwakenedPopup(false);
       return;
     }
-    const token = bonusAwakenedToken(seasonData.season.id, dayIndex, formatLocalYmd(new Date()));
-    if (hasSeenBonusAwakened(token)) {
-      // Already celebrated today — keep the bonus door active, no banner.
+    if (hasSeenBonusAwakened()) {
+      // Already taught this feature — keep the bonus door active, no banner.
       setShowBonusAwakenedPopup(false);
       return;
     }
     setShowBonusAwakenedPopup(true);
-    markBonusAwakenedSeen(token);
+    markBonusAwakenedSeen();
   }, [seasonData, habitCompleted]);
 
   // Load holiday preferences then derive the active advent window and season data
@@ -746,8 +741,8 @@ export const CountdownCalendarModal = ({
             </div>
           ) : null}
 
-          {/* Same-day bonus hint — fires once when the bonus first awakens; on
-              later opens the glowing Day tile stays active without re-popping. */}
+          {/* Same-day bonus first-use helper — fires only once; on later opens
+              the glowing Day tile stays active without re-popping. */}
           {showBonusAwakenedPopup && (
             <div className="daily-treats-calendar__bonus-popup daily-treats-calendar__bonus-popup--same-day">
               <div className="daily-treats-calendar__bonus-popup-icon">✨</div>
