@@ -44,14 +44,14 @@ export function ResolutionBuilderScreen({
   safetyFlag = false,
   onContinue,
 }: ResolutionBuilderScreenProps) {
-  const canContinue = Boolean(selectedOptionId) || Boolean(activeProposalId);
+  const canContinue = safetyFlag || Boolean(selectedOptionId) || Boolean(activeProposalId);
   const resolutionGuidance = getConflictResolutionGuidance({ primaryConflictType, safetyFlag });
 
   return (
     <section className="conflict-resolver__screen" aria-labelledby="resolution-builder-title">
       <header className="conflict-resolver__header">
         <h3 id="resolution-builder-title" className="conflict-resolver__title">Let’s move forward</h3>
-        <p className="conflict-resolver__subtitle">Pick a constructive option or draft a white-flag offer.</p>
+        <p className="conflict-resolver__subtitle">{safetyFlag ? 'Review support-first options without pressure to choose one.' : 'Pick a constructive option or draft a white-flag offer.'}</p>
         {aiMode ? (
           <p className="conflict-resolver__ai-mode-pill">Option source: {aiMode === 'premium' ? 'Premium AI' : aiMode === 'free_quota' ? 'Free AI' : 'Fallback'}</p>
         ) : null}
@@ -162,7 +162,7 @@ export function ResolutionBuilderScreen({
         disabled={!canContinue}
         onClick={onContinue}
       >
-        Continue to apology alignment
+        {safetyFlag ? 'Finish support plan' : 'Continue to apology alignment'}
       </button>
     </section>
   );
