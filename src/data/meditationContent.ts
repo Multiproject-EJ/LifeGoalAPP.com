@@ -6,6 +6,78 @@ import type { MeditationContent } from '../types/meditation';
 
 export const GUIDED_MEDITATIONS: MeditationContent[] = [
   {
+    id: 'peace-space-memory',
+    title: 'Peace Space: Build the Inner Room',
+    theme: 'Familiar calm · positive chain of thought · use it or lose it',
+    isPlaceholder: false,
+    content: `Find a comfortable position. Let your eyes close, or let your gaze rest softly.
+
+Today we are building a place inside your mind. Not an escape. A familiar room you can return to when you need peace.
+
+Begin with one slow breath. Let your body know: I am safe enough to practice.
+
+Now imagine a simple space that feels peaceful to you. It might be a quiet room, a garden, a shoreline, a forest path, or a place made only of light and color.
+
+Do not worry about making it perfect. Familiarity matters more than detail. A few repeated details are enough.
+
+Choose one anchor in this space. A chair. A tree. A window. A stone. A small flame. Something that says: this is my place.
+
+Let the image flash in your mind like a memory. See it briefly. Feel it briefly. Then let it fade.
+
+Bring it back again. The same anchor. The same feeling. Peace, then a positive next thought.
+
+This is the muscle: return, recognize, and strengthen the path.
+
+If the mind wanders, that is okay. You are not failing. You are finding the doorway again.
+
+Return to the anchor. Let one peaceful thought become the first link in a chain: I can pause. I can breathe. I can choose the next thought gently.
+
+Stay with this familiar space for a few breaths. Each visit makes it easier to find later.
+
+Use it, and it becomes real in memory. Neglect it, and it fades. So we visit for a moment, enough to keep the pathway alive.
+
+Before we close, imagine leaving the space with one small gift: a word, a color, a breath, or a feeling you can remember today.
+
+When you are ready, open your eyes. The space remains available because you practiced returning to it.`,
+  },
+  {
+    id: 'visual-exploration-story',
+    title: 'Visual Meditation: Curiosity Walk',
+    theme: 'Story exploration · childlike curiosity · realizations and implications',
+    isPlaceholder: false,
+    content: `Settle in, and allow your breathing to become easy.
+
+This path is different. We are not trying to hold one peaceful room. We are going exploring.
+
+Imagine you are a child at the edge of a living landscape. A path begins in front of you. You do not need to know where it goes.
+
+Take the first step with curiosity. What do you notice? A texture, a sound, a color, a small movement in the distance.
+
+Let the scene teach you. Nature is full of clues. A leaf shows change. A stream shows movement. A stone shows patience. A bird shows timing.
+
+Now let a small story appear. Perhaps you find a bridge, a hidden door, a clearing, or an old object waiting to be understood.
+
+Ask gently: what is this showing me?
+
+Do not force an answer. Visual meditation is discovery. It is explanation through experience.
+
+Maybe the image reveals a realization: something in your life is growing, something needs care, something can be released, something wants attention.
+
+Pause with the implication. If this were true, what would it mean? What would become easier? What small choice might change?
+
+Continue walking. Let the world remain playful. Like a child learning nature, you are allowed to wonder without needing to own the answer.
+
+If thoughts become too serious, return to curiosity: what else is here?
+
+Notice one final symbol in the scene. Let it be simple. Let it be enough.
+
+Ask: what can I carry from this story into today?
+
+Take one breath with the answer, even if the answer is only a feeling.
+
+When you are ready, open your eyes. The exploration can continue later, because curiosity is a pathway you can reopen.`,
+  },
+  {
     id: 'attempting-breath',
     title: 'Attempting to Stay With the Breath',
     theme: 'Simple focus · presence · returning',
