@@ -22,6 +22,7 @@ import {
   generateResolutionOptions,
   generateSharedSummaryCards,
 } from '../services/conflictAiOrchestrator';
+import { buildResolutionOptionsFallback } from '../services/conflictResolutionFallbacks';
 import { resolveSurface } from '../../../surfaces/surfaceContext';
 import { buildFallbackInnerRecommendationsForSurface } from '../conflictSurfaceConfig';
 
@@ -614,6 +615,7 @@ export function useConflictSession() {
       const summaryResult = await generateSharedSummaryCards({
         sessionId: sharedSessionId,
         answers,
+        conflictRouting,
       });
       setAiSummaryCards(summaryResult.summaryCards);
       setSharedSummaryMeta({ aiMode: summaryResult.mode });
@@ -650,6 +652,7 @@ export function useConflictSession() {
         ];
     const aiOptions = await generateResolutionOptions({
       sessionId: sharedSessionId,
+      conflictRouting,
       summaryCards: summarySource.map((card) => ({
         id: card.id as 'what_happened' | 'what_it_meant' | 'what_is_needed',
         title: card.title,
@@ -676,23 +679,7 @@ export function useConflictSession() {
     triggerCompletionHaptic('medium', { channel: 'conflict', minIntervalMs: 1600 });
   };
 
-  const defaultResolutionOptions = [
-    {
-      id: 'communicate_earlier',
-      title: 'Communicate earlier when plans change',
-      description: 'Set expectation to notify as soon as timing changes.',
-    },
-    {
-      id: 'weekly_check_in',
-      title: 'Run a weekly 10-minute check-in',
-      description: 'Create a predictable moment for concerns before they stack.',
-    },
-    {
-      id: 'repair_protocol',
-      title: 'Use a 24-hour repair protocol',
-      description: 'Agree to acknowledge and respond within 24 hours after friction.',
-    },
-  ] as const;
+  const defaultResolutionOptions = buildResolutionOptionsFallback(conflictRouting);
   const resolutionOptions = aiResolutionOptions && aiResolutionOptions.length > 0
     ? aiResolutionOptions
     : defaultResolutionOptions;

@@ -26,6 +26,9 @@ import {
   shouldUseDeepIntervention,
 } from './conflictInnerIntelligence';
 import { assembleInnerContext, type InnerContextDomain } from './conflictInnerContextAssembler';
+import type { ConflictRoutingMetadata } from '../types/conflictSession';
+import { buildConflictRoutingPromptContext } from './conflictRoutingPromptContext';
+import { buildResolutionOptionsFallback } from './conflictResolutionFallbacks';
 
 type InnerContextInput = {
   sessionId?: string | null;
@@ -112,24 +115,6 @@ const DEFAULT_SHARED_SUMMARY_CARDS: SharedSummaryCard[] = [
   { id: 'what_is_needed', title: 'What is needed', text: 'No needs summary available yet.' },
 ];
 
-const DEFAULT_RESOLUTION_OPTIONS: ResolutionOption[] = [
-  {
-    id: 'communicate_earlier',
-    title: 'Communicate earlier when plans change',
-    description: 'Set expectation to notify as soon as timing changes.',
-  },
-  {
-    id: 'weekly_check_in',
-    title: 'Run a weekly 10-minute check-in',
-    description: 'Create a predictable moment for concerns before they stack.',
-  },
-  {
-    id: 'repair_protocol',
-    title: 'Use a 24-hour repair protocol',
-    description: 'Agree to acknowledge and respond within 24 hours after friction.',
-  },
-];
-
 function hasApiKey(): boolean {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
   return typeof apiKey === 'string' && apiKey.length > 0;
@@ -154,7 +139,10 @@ Context slice: ${input.contextSlice}
 `;
 }
 
-function buildSharedSummaryPrompt(input: { answers: Record<string, string> }): string {
+function buildSharedSummaryPrompt(input: {
+  answers: Record<string, string>;
+  conflictRouting?: Partial<ConflictRoutingMetadata> | null;
+}): string {
   return `You are a neutral conflict mediator.
 Return strict JSON with this shape only:
 {
@@ -165,11 +153,16 @@ Return strict JSON with this shape only:
   ]
 }
 Use balanced language with no blame or insults.
+Routing safety and category rules:
+${buildConflictRoutingPromptContext(input.conflictRouting)}
 Input answers: ${JSON.stringify(input.answers)}
 `;
 }
 
-function buildResolutionOptionsPrompt(input: { summaryCards: SharedSummaryCard[] }): string {
+function buildResolutionOptionsPrompt(input: {
+  summaryCards: SharedSummaryCard[];
+  conflictRouting?: Partial<ConflictRoutingMetadata> | null;
+}): string {
   return `You are a practical conflict coach.
 Return strict JSON only:
 {
@@ -178,6 +171,8 @@ Return strict JSON only:
   ]
 }
 Generate up to 3 concrete next-step resolution options that are fair to both sides.
+Routing safety and category rules:
+${buildConflictRoutingPromptContext(input.conflictRouting)}
 Summary cards: ${JSON.stringify(input.summaryCards)}
 `;
 }
@@ -569,6 +564,7 @@ export async function rewritePrivateCaptureAnswers(input: {
 export async function generateSharedSummaryCards(input: {
   sessionId?: string | null;
   answers: Record<string, string>;
+  conflictRouting?: Partial<ConflictRoutingMetadata> | null;
 }): Promise<SharedSummaryResult> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   const decision = resolveAiEntitlement('conflict_shared_mediation', hasApiKey());
@@ -641,19 +637,21 @@ export async function generateSharedSummaryCards(input: {
 export async function generateResolutionOptions(input: {
   sessionId?: string | null;
   summaryCards: SharedSummaryCard[];
+  conflictRouting?: Partial<ConflictRoutingMetadata> | null;
 }): Promise<ResolutionOptionsResult> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   const decision = resolveAiEntitlement('conflict_shared_mediation', hasApiKey());
   if (!decision.allowed || !decision.model || !apiKey) {
-    const fairnessWarnings = lintResolutionOptionFairness(DEFAULT_RESOLUTION_OPTIONS);
+    const fallbackOptions = buildResolutionOptionsFallback(input.conflictRouting);
+    const fairnessWarnings = lintResolutionOptionFairness(fallbackOptions);
     await persistAiMessage({
       sessionId: input.sessionId,
       stage: 'resolution_options',
       role: 'assistant',
-      message: JSON.stringify({ options: DEFAULT_RESOLUTION_OPTIONS }),
+      message: JSON.stringify({ options: fallbackOptions }),
       metadata: { source: 'fallback', reason: decision.reason, fairnessWarnings },
     });
-    return { options: DEFAULT_RESOLUTION_OPTIONS, fairnessWarnings, mode: decision.mode };
+    return { options: fallbackOptions, fairnessWarnings, mode: decision.mode };
   }
   try {
     const prompt = buildResolutionOptionsPrompt(input);
@@ -666,7 +664,8 @@ export async function generateResolutionOptions(input: {
     });
     const result = await requestOpenAiRawContent(prompt, decision.model, apiKey);
     const parsed = parseResolutionOptionsFromContent(result.content, 3);
-    const options = parsed.length > 0 ? parsed : DEFAULT_RESOLUTION_OPTIONS;
+    const fallbackOptions = buildResolutionOptionsFallback(input.conflictRouting);
+    const options = parsed.length > 0 ? parsed : fallbackOptions;
     const fairnessWarnings = lintResolutionOptionFairness(options);
     await persistAiRun({
       sessionId: input.sessionId,
@@ -698,14 +697,15 @@ export async function generateResolutionOptions(input: {
     });
     return { options, fairnessWarnings, mode: parsed.length > 0 ? decision.mode : 'fallback' };
   } catch {
-    const fairnessWarnings = lintResolutionOptionFairness(DEFAULT_RESOLUTION_OPTIONS);
+    const fallbackOptions = buildResolutionOptionsFallback(input.conflictRouting);
+    const fairnessWarnings = lintResolutionOptionFairness(fallbackOptions);
     await persistAiMessage({
       sessionId: input.sessionId,
       stage: 'resolution_options',
       role: 'assistant',
-      message: JSON.stringify({ options: DEFAULT_RESOLUTION_OPTIONS }),
+      message: JSON.stringify({ options: fallbackOptions }),
       metadata: { source: 'fallback', fairnessWarnings },
     });
-    return { options: DEFAULT_RESOLUTION_OPTIONS, fairnessWarnings, mode: 'fallback' };
+    return { options: fallbackOptions, fairnessWarnings, mode: 'fallback' };
   }
 }
