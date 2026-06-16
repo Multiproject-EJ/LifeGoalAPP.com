@@ -79,6 +79,8 @@ export function ConflictTypeRoutingScreen({
   onContinue,
   onSafetyLink,
 }: ConflictTypeRoutingScreenProps) {
+  const showPersonalityCoaching = selectedRoutingType === 'personality_annoyance' && !safetyFlag;
+
   return (
     <section className="conflict-resolver__screen" aria-labelledby="conflict-routing-title">
       <header className="conflict-resolver__header">
@@ -110,20 +112,31 @@ export function ConflictTypeRoutingScreen({
         })}
       </div>
 
-      <div className="conflict-resolver__safety-link-panel">
+      {showPersonalityCoaching ? (
+        <aside className="conflict-resolver__routing-coaching-panel" aria-label="Personality annoyance coaching">
+          <p>
+            This may not be about making them different. Some conflicts are about finding the level of irritation you can carry while still acting like yourself.
+          </p>
+          <p>
+            If you’ve become cold, sharp, or mean, it may be a sign that your limit was crossed earlier than you realized.
+          </p>
+        </aside>
+      ) : null}
+
+      <div className={`conflict-resolver__safety-link-panel ${safetyFlag ? 'conflict-resolver__safety-link-panel--active' : ''}`.trim()}>
         <button type="button" className="conflict-resolver__safety-link" onClick={onSafetyLink}>
           I may not feel safe resolving this directly.
         </button>
         {safetyFlag ? (
           <p className="conflict-resolver__safety-note" role="status">
-            You do not have to resolve this directly right now. Consider speaking with someone you trust or a local support service before taking action.
+            Safety comes first. This path should move away from normal mutual-resolution framing; you do not have to resolve this directly right now. Consider speaking with someone you trust or a local support service before taking action.
           </p>
         ) : null}
       </div>
 
       <div className="conflict-resolver__footer-actions">
         <button type="button" className="btn btn--primary" onClick={onContinue} disabled={!selectedRoutingType && !safetyFlag}>
-          Continue to private reflection
+          {safetyFlag ? 'Continue to safety-first reflection' : 'Continue to private reflection'}
         </button>
       </div>
     </section>

@@ -95,3 +95,13 @@ Close PR5/PR6 only when:
 - All PR5 acceptance criteria are marked complete with evidence.
 - PR6 acceptance criteria are marked complete with evidence.
 - Test matrix rows are filled and signed off.
+
+## Conflict Type Routing follow-up manual validation (2026-06-16)
+
+Use this focused checklist for the lightweight routing refinement; it does not require schema, auth, invite-token, AI orchestration, or gameplay changes.
+
+- [ ] Mobile-sized layout: routing cards remain single-column, readable, and easy to tap; selected cards show a clear selected state without crowding the card copy.
+- [ ] Normal category route: choose a non-safety routing type and continue to private reflection with the selected category prompt.
+- [ ] Personality annoyance route: choose `personality_annoyance`, confirm the mini-coaching panel appears on the routing screen, then continue to private reflection.
+- [ ] Safety link route: choose “I may not feel safe resolving this directly,” confirm the screen uses safety-first copy and CTA language rather than normal mutual-resolution framing, then continue to private reflection.
+- [ ] Older draft hydration: resume an existing local draft without `conflictRouting` metadata and confirm defaults hydrate without blocking the flow.
