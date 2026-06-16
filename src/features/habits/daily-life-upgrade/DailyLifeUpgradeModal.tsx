@@ -20,13 +20,8 @@ function toQuestDisplayName(value: string): string {
 }
 
 function getQuestCopy(candidate: DailyLifeUpgradeCandidate): { lead: string; rest: string } {
-  const [rawTitle, rawContext] = candidate.habitTitle.split(/\s[-–—:]\s|[-–—:]/u, 2);
-  const title = toQuestDisplayName(rawTitle || candidate.habitTitle) || candidate.habitTitle;
-  const contextBase = rawContext?.replace(/^gpt\s+/iu, '').trim();
-  const fullTitle = [title, contextBase ? toQuestDisplayName(contextBase) : 'Quest']
-    .filter(Boolean)
-    .join(' ');
-  const words = fullTitle.split(/\s+/u).filter(Boolean);
+  const displayTitle = toQuestDisplayName(candidate.habitTitle.replace(/[-–—:]/gu, ' ')) || candidate.habitTitle;
+  const words = displayTitle.split(/\s+/u).filter(Boolean);
   const lead = words.slice(0, 2).join(' ');
   const rest = words.slice(2).join(' ');
 
