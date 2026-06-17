@@ -734,13 +734,7 @@ export function ScoreTab({
   return (
     <section className="score-tab">
       <header className="score-tab__header">
-        <div className="score-tab__title">
-          <span className="score-tab__badge" aria-hidden="true">🏆</span>
-          <div>
-            <p className="score-tab__eyebrow">Score hub</p>
-            <h2 className="score-tab__headline">Score hub</h2>
-          </div>
-        </div>
+        <p className="score-tab__eyebrow">Score hub</p>
       </header>
 
       {activeTab === 'home' && (
