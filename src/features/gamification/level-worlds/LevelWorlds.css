@@ -3779,13 +3779,23 @@
   position: fixed;
   inset: 0;
   z-index: 1100;
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
   background: rgba(0, 0, 0, 0.52);
   display: grid;
   place-items: center;
-  padding: 1rem;
+  padding:
+    max(1rem, calc(env(safe-area-inset-top, 0px) + 0.5rem))
+    max(1rem, calc(env(safe-area-inset-right, 0px) + 0.5rem))
+    max(1rem, calc(env(safe-area-inset-bottom, 0px) + 0.5rem))
+    max(1rem, calc(env(safe-area-inset-left, 0px) + 0.5rem));
+  box-sizing: border-box;
   backdrop-filter: blur(3px);
   /* Allow the backdrop itself to scroll as a last-resort fallback when the
-     modal content is taller than the viewport (e.g. small landscape phones). */
+     modal content is taller than the viewport (e.g. small landscape phones).
+     Dynamic viewport units keep iOS standalone/browser chrome transitions from
+     exposing a temporary black strip outside the fixed overlay. */
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -3801,8 +3811,9 @@
   box-shadow: 0 22px 56px rgba(0, 0, 0, 0.46);
   /* Tall modal bodies (hatchery with timeline + sell options, long wisdom
      copy, etc.) must be scrollable so the primary CTA remains reachable.
-     Leave room for the backdrop's 1rem padding on top and bottom. */
-  max-height: calc(100vh - 2rem);
+     Leave room for backdrop padding plus iOS safe areas. */
+  max-height: calc(100vh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
 }
