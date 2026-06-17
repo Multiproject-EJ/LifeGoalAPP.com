@@ -4410,6 +4410,60 @@
   color: #dff3ff;
 }
 
+.island-run-reflection-composer__progress,
+.island-run-reflection-composer__category {
+  margin-top: 10px;
+  color: #dff3ff;
+  font-size: 0.88rem;
+}
+
+.island-run-reflection-composer__card-grid,
+.island-run-reflection-composer__answer-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.island-run-reflection-composer__judge-card {
+  min-height: 132px;
+  padding: 12px;
+  border: 1px solid rgba(176, 226, 247, 0.45);
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(16, 47, 68, 0.96), rgba(8, 24, 36, 0.92));
+  color: #f3fbff;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+}
+
+.island-run-reflection-composer__judge-card strong,
+.island-run-reflection-composer__prompt strong,
+.island-run-reflection-composer__prompt span,
+.island-run-reflection-composer__judge-card span {
+  display: block;
+}
+
+.island-run-reflection-composer__judge-card span,
+.island-run-reflection-composer__prompt span {
+  margin-top: 6px;
+  line-height: 1.45;
+}
+
+.island-run-reflection-composer__judge-card:hover,
+.island-run-reflection-composer__judge-card:focus-visible {
+  border-color: rgba(226, 247, 255, 0.92);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 520px) {
+  .island-run-reflection-composer__card-grid,
+  .island-run-reflection-composer__answer-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
 .island-run-reflection-composer__prompt {
   margin-top: 12px;
   padding: 12px 14px;
