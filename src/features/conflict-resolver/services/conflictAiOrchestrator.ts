@@ -109,11 +109,7 @@ function getDefaultRecommendations(surface: AppSurface): InnerRecommendation[] {
   ];
 }
 
-const DEFAULT_SHARED_SUMMARY_CARDS: SharedSummaryCard[] = [
-  { id: 'what_happened', title: 'What happened', text: 'No summary available yet.' },
-  { id: 'what_it_meant', title: 'What it meant', text: 'No emotional summary available yet.' },
-  { id: 'what_is_needed', title: 'What is needed', text: 'No needs summary available yet.' },
-];
+const EMPTY_SHARED_SUMMARY_FALLBACK_CARDS: SharedSummaryCard[] = [];
 
 function hasApiKey(): boolean {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
@@ -569,15 +565,15 @@ export async function generateSharedSummaryCards(input: {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   const decision = resolveAiEntitlement('conflict_shared_mediation', hasApiKey());
   if (!decision.allowed || !decision.model || !apiKey) {
-    const fairnessWarnings = lintSharedSummaryFairness(DEFAULT_SHARED_SUMMARY_CARDS);
+    const fairnessWarnings = lintSharedSummaryFairness(EMPTY_SHARED_SUMMARY_FALLBACK_CARDS);
     await persistAiMessage({
       sessionId: input.sessionId,
       stage: 'shared_read_summary',
       role: 'assistant',
-      message: JSON.stringify({ summaryCards: DEFAULT_SHARED_SUMMARY_CARDS }),
+      message: JSON.stringify({ summaryCards: EMPTY_SHARED_SUMMARY_FALLBACK_CARDS }),
       metadata: { source: 'fallback', reason: decision.reason, fairnessWarnings },
     });
-    return { summaryCards: DEFAULT_SHARED_SUMMARY_CARDS, fairnessWarnings, mode: decision.mode };
+    return { summaryCards: EMPTY_SHARED_SUMMARY_FALLBACK_CARDS, fairnessWarnings, mode: 'fallback' };
   }
   try {
     const prompt = buildSharedSummaryPrompt(input);
@@ -590,7 +586,7 @@ export async function generateSharedSummaryCards(input: {
     });
     const result = await requestOpenAiRawContent(prompt, decision.model, apiKey);
     const cards = parseSharedSummaryCardsFromContent(result.content);
-    const summaryCards = cards.length > 0 ? cards : DEFAULT_SHARED_SUMMARY_CARDS;
+    const summaryCards = cards.length > 0 ? cards : EMPTY_SHARED_SUMMARY_FALLBACK_CARDS;
     const fairnessWarnings = lintSharedSummaryFairness(summaryCards);
     await persistAiRun({
       sessionId: input.sessionId,
@@ -622,15 +618,15 @@ export async function generateSharedSummaryCards(input: {
     });
     return { summaryCards, fairnessWarnings, mode: cards.length > 0 ? decision.mode : 'fallback' };
   } catch {
-    const fairnessWarnings = lintSharedSummaryFairness(DEFAULT_SHARED_SUMMARY_CARDS);
+    const fairnessWarnings = lintSharedSummaryFairness(EMPTY_SHARED_SUMMARY_FALLBACK_CARDS);
     await persistAiMessage({
       sessionId: input.sessionId,
       stage: 'shared_read_summary',
       role: 'assistant',
-      message: JSON.stringify({ summaryCards: DEFAULT_SHARED_SUMMARY_CARDS }),
+      message: JSON.stringify({ summaryCards: EMPTY_SHARED_SUMMARY_FALLBACK_CARDS }),
       metadata: { source: 'fallback', fairnessWarnings },
     });
-    return { summaryCards: DEFAULT_SHARED_SUMMARY_CARDS, fairnessWarnings, mode: 'fallback' };
+    return { summaryCards: EMPTY_SHARED_SUMMARY_FALLBACK_CARDS, fairnessWarnings, mode: 'fallback' };
   }
 }
 
