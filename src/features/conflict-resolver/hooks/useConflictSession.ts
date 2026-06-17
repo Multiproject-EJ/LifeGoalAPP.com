@@ -187,10 +187,9 @@ const UI_TO_CONFLICT_STAGE: Record<ConflictResolverUiStage, ConflictStage> = {
   agreement_finalized: 'closed',
   safety_support_close: 'closed',
 };
-const CONFLICT_STAGE_TO_UI: Record<ConflictStage, ConflictResolverUiStage> = {
+const CONFLICT_STAGE_TO_UI: Record<Exclude<ConflictStage, 'private_capture'>, ConflictResolverUiStage> = {
   draft: 'mode_selection',
   grounding: 'grounding',
-  private_capture: 'private_capture',
   shared_read: 'parallel_read',
   negotiation: 'resolution_builder',
   apology_alignment: 'apology_alignment',
@@ -198,11 +197,23 @@ const CONFLICT_STAGE_TO_UI: Record<ConflictStage, ConflictResolverUiStage> = {
   closed: 'agreement_finalized',
 };
 
+const resolveSharedSessionUiStage = (
+  status: ConflictStage,
+  routingCompleted: boolean,
+): ConflictResolverUiStage => {
+  if (status === 'private_capture') {
+    return routingCompleted ? 'private_capture' : 'conflict_type_routing';
+  }
+
+  return CONFLICT_STAGE_TO_UI[status];
+};
+
 type ConflictSessionDraftSnapshot = {
   stage: ConflictResolverUiStage;
   selectedType: ConflictType | null;
   groundingIndex: number;
   conflictRouting?: ConflictRoutingMetadata;
+  conflictTypeRoutingCompleted?: boolean;
   promptIndex: number;
   answers: Record<string, string>;
   parallelDecision: 'accurate' | 'missing' | null;
@@ -257,6 +268,7 @@ export function useConflictSession() {
   const [selectedType, setSelectedType] = useState<ConflictType | null>(null);
   const [groundingIndex, setGroundingIndex] = useState(0);
   const [conflictRouting, setConflictRouting] = useState<ConflictRoutingMetadata>(DEFAULT_CONFLICT_ROUTING);
+  const [conflictTypeRoutingCompleted, setConflictTypeRoutingCompleted] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [parallelDecision, setParallelDecision] = useState<'accurate' | 'missing' | null>(null);
@@ -304,6 +316,7 @@ export function useConflictSession() {
     setSelectedType(parsed.selectedType ?? null);
     setGroundingIndex(parsed.groundingIndex ?? 0);
     setConflictRouting({ ...DEFAULT_CONFLICT_ROUTING, ...(parsed.conflictRouting ?? {}) });
+    setConflictTypeRoutingCompleted(Boolean(parsed.conflictTypeRoutingCompleted));
     setPromptIndex(parsed.promptIndex ?? 0);
     setAnswers(parsed.answers ?? {});
     setParallelDecision(parsed.parallelDecision ?? null);
@@ -360,6 +373,11 @@ export function useConflictSession() {
 
     const fromStatus = sharedSessionStatus ?? UI_TO_CONFLICT_STAGE[stage];
     const toStatus = UI_TO_CONFLICT_STAGE[nextStage];
+    if (fromStatus === toStatus) {
+      setStage(nextStage);
+      return true;
+    }
+
     const guard = canTransitionConflictStage(fromStatus, toStatus);
     if (!guard.allowed) {
       setSharedSessionError('Stage transition blocked until previous step is completed.');
@@ -394,7 +412,7 @@ export function useConflictSession() {
     if (!isConflictStage(snapshot.status)) return;
     setSharedSessionStatus(snapshot.status);
     setSharedSessionLastSyncedAt(snapshot.updatedAt);
-    setStage(CONFLICT_STAGE_TO_UI[snapshot.status]);
+    setStage(resolveSharedSessionUiStage(snapshot.status, conflictTypeRoutingCompleted));
   };
 
   const createSharedSession = async () => {
@@ -473,7 +491,7 @@ export function useConflictSession() {
       const snapshot = await getConflictSessionSnapshot(redeemedInvite.session_id);
       if (isConflictStage(snapshot.status)) {
         setSharedSessionStatus(snapshot.status);
-        setStage(CONFLICT_STAGE_TO_UI[snapshot.status]);
+        setStage(resolveSharedSessionUiStage(snapshot.status, conflictTypeRoutingCompleted));
       }
       setSharedSessionLastSyncedAt(snapshot.updatedAt);
       setInviteJoinMessage('Invite accepted. Session synced.');
@@ -527,6 +545,7 @@ export function useConflictSession() {
   };
 
   const startConflictTypeRouting = () => {
+    setConflictTypeRoutingCompleted(false);
     triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
     setStage('conflict_type_routing');
   };
@@ -555,10 +574,13 @@ export function useConflictSession() {
 
   const continueFromConflictTypeRouting = () => {
     setPromptIndex(0);
-    void setStageWithSync('private_capture');
+    void setStageWithSync('private_capture').then((synced) => {
+      if (synced) setConflictTypeRoutingCompleted(true);
+    });
   };
 
   const changeConflictRoutingType = () => {
+    setConflictTypeRoutingCompleted(false);
     setStage('conflict_type_routing');
   };
 
@@ -894,7 +916,7 @@ export function useConflictSession() {
       onStatusChange: (nextStatus) => {
         if (!isConflictStage(nextStatus)) return;
         setSharedSessionStatus(nextStatus);
-        setStage(CONFLICT_STAGE_TO_UI[nextStatus]);
+        setStage(resolveSharedSessionUiStage(nextStatus, conflictTypeRoutingCompleted));
         setSharedSessionLastSyncedAt(new Date().toISOString());
       },
     });
@@ -905,7 +927,7 @@ export function useConflictSession() {
       window.removeEventListener('online', onOnline);
       unsubscribe();
     };
-  }, [selectedType, sharedSessionId]);
+  }, [selectedType, sharedSessionId, conflictTypeRoutingCompleted]);
 
   useEffect(() => {
     if (inviteJoinBootstrapped || typeof window === 'undefined') return;
@@ -961,6 +983,7 @@ export function useConflictSession() {
       selectedType,
       groundingIndex,
       conflictRouting,
+      conflictTypeRoutingCompleted,
       promptIndex,
       answers,
       parallelDecision,
@@ -984,6 +1007,7 @@ export function useConflictSession() {
     selectedType,
     groundingIndex,
     conflictRouting,
+    conflictTypeRoutingCompleted,
     promptIndex,
     answers,
     parallelDecision,
@@ -1009,6 +1033,7 @@ export function useConflictSession() {
     setSelectedType(null);
     setGroundingIndex(0);
     setConflictRouting(DEFAULT_CONFLICT_ROUTING);
+    setConflictTypeRoutingCompleted(false);
     setPromptIndex(0);
     setAnswers({});
     setParallelDecision(null);
@@ -1143,6 +1168,7 @@ export function useConflictSession() {
       selectedType,
       groundingIndex,
       conflictRouting,
+      conflictTypeRoutingCompleted,
       promptIndex,
       sharedSessionId,
       sharedSessionCodeInput,

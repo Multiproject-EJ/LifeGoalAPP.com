@@ -159,6 +159,25 @@ function run() {
     'Safety support close screen avoids mutual-repair and shared-finalization language',
   );
 
+
+  requirePattern(
+    'src/features/conflict-resolver/hooks/useConflictSession.ts',
+    /const resolveSharedSessionUiStage = \([\s\S]*status === 'private_capture'[\s\S]*routingCompleted \? 'private_capture' : 'conflict_type_routing'/,
+    'Shared-session private_capture hydration routes through conflict type routing until routing is completed',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/hooks/useConflictSession.ts',
+    /conflictTypeRoutingCompleted[\s\S]*setConflictTypeRoutingCompleted\(Boolean\(parsed\.conflictTypeRoutingCompleted\)\)[\s\S]*setConflictTypeRoutingCompleted\(true\)/,
+    'Conflict type routing completion is persisted in local draft/session state',
+  );
+
+  rejectPattern(
+    'src/features/conflict-resolver/hooks/useConflictSession.ts',
+    /CONFLICT_STAGE_TO_UI:[\s\S]*private_capture: 'private_capture'/,
+    'Persisted private_capture is not directly mapped to UI private_capture without routing completion guard',
+  );
+
   requirePattern(
     'docs/conflict-resolver/09_ACCEPTANCE_VALIDATION_RUNBOOK.md',
     /PR5 \+ PR6/,
