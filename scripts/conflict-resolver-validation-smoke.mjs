@@ -99,7 +99,7 @@ function run() {
 
   requirePattern(
     'src/features/conflict-resolver/services/conflictResolutionFallbacks.ts',
-    /SAFETY_FIRST_RESOLUTION_OPTIONS[\s\S]*trusted support[\s\S]*does not require negotiation, apology, or agreement/,
+    /SAFETY_FIRST_RESOLUTION_OPTIONS[\s\S]*trusted support[\s\S]*does not require negotiation or the other person’s participation/,
     'Safety fallback uses support-oriented language instead of normal mutual-resolution language',
   );
 
@@ -119,7 +119,7 @@ function run() {
 
   requirePattern(
     'src/features/conflict-resolver/services/conflictAiOrchestrator.ts',
-    /fallbackReason === 'fairness_warnings'[\s\S]*Fairness warnings:[\s\S]*source: shouldUseFallback \? 'fallback' : 'ai'[\s\S]*rejectedAiOptionCount/,
+    /fallbackReason === 'fairness_warnings'[\s\S]*Fairness warnings:[\s\S]*source: resolvedOptions\.source[\s\S]*rejectedAiOptionCount/,
     'Resolution option fairness fallback records warning metadata without returning warned AI options',
   );
 
@@ -131,7 +131,7 @@ function run() {
 
   requirePattern(
     'src/features/conflict-resolver/hooks/useConflictSession.ts',
-    /if \(conflictRouting\.safetyFlag === true\)[\s\S]*setStageWithSync\('safety_support_close'\)[\s\S]*return;[\s\S]*moveToApologyAlignment\(\)/,
+    /resolveResolutionBuilderNextStage[\s\S]*'safety_support_close'[\s\S]*setStageWithSync\(nextStage\)[\s\S]*moveToApologyAlignment/,
     'Safety-flagged resolution builder route skips apology alignment',
   );
 
@@ -193,7 +193,7 @@ function run() {
 
   requirePattern(
     'src/features/conflict-resolver/hooks/useConflictSession.ts',
-    /aiSummaryCards && aiSummaryCards\.length > 0[\s\S]*sanitizeForSharedSummary\(raw\)/,
+    /buildSharedSummaryCardsForDisplay[\s\S]*aiSummaryCards && input\.aiSummaryCards\.length > 0[\s\S]*sanitizeForSharedSummary\(raw\)/,
     'Local sanitized answer-based summary cards are used when AI summary cards are empty',
   );
 
