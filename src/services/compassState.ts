@@ -45,6 +45,24 @@ export type CompassTemplate = {
 /** Entries needed before a spoke is considered "complete". */
 export const COMPASS_SPOKE_COMPLETE_THRESHOLD = 4;
 
+/**
+ * A playable Compass session is filled once the current island's Compass box has
+ * a saved contribution. During Compass/ikigai phases that means the active
+ * direction card is filled; during spoke phases it means that phase's spoke has
+ * at least one entry from this island. This lets Island Run landmarks treat the
+ * Compass modal as a second, equivalent way to finish the session.
+ */
+export function isCompassSessionFilledForIsland(template: CompassTemplate, islandNumber: number): boolean {
+  const phase = getCompassPhase(islandNumber);
+  const direction = getCompassDirectionForIsland(islandNumber);
+
+  if (phase.theme === 'compass' && direction) {
+    return Boolean(template.directions[direction]?.trim());
+  }
+
+  return template.spokes[phase.spoke].entries.some((entry) => entry.islandNumber === islandNumber);
+}
+
 const SPOKE_KEYS: readonly CompassSpoke[] = ['center', 'personality', 'habits', 'goals', 'shield'];
 
 function emptySpoke(): CompassSpokeState {
