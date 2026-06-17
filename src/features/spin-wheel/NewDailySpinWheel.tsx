@@ -5,7 +5,9 @@ import type { Session } from '@supabase/supabase-js';
 import confetti from 'canvas-confetti';
 import {
   executeSpin,
+  getDailySpinEssenceBalance,
   getDailySpinState,
+  SPIN_REWARD_MULTIPLIER_OPTIONS,
   getSpinHistory,
   getSpinPrizesForUser,
 } from '../../services/dailySpin';
@@ -13,6 +15,7 @@ import type { SpinHistoryEntry, SpinPrize } from '../../types/gamification';
 import { SPIN_PRIZES } from '../../types/gamification';
 import { buildWheelSegments, type WheelSegment } from './spinWheelUtils';
 import { useGamification } from '../../hooks/useGamification';
+import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import './NewDailySpinWheel.css';
 
 interface NewDailySpinWheelProps {
@@ -236,6 +239,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     typeof navigator !== 'undefined' ? !navigator.onLine : false,
   );
   const [prizePool, setPrizePool] = useState<SpinPrize[]>(SPIN_PRIZES);
+  const [essenceBalance, setEssenceBalance] = useState(0);
+  const [selectedMultiplier, setSelectedMultiplier] = useState(1 as 1 | 2 | 3);
   const wheelSegments = useMemo(() => buildWheelSegments(prizePool), [prizePool]);
 
   /* Idle wobble when not spinning */
@@ -276,6 +281,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     const init = async () => {
       const prizes = await getSpinPrizesForUser(session.user.id);
       setPrizePool(prizes);
+      const { data: balance } = await getDailySpinEssenceBalance(session.user.id);
+      setEssenceBalance(balance ?? 0);
       await loadSpinStatus(prizes);
     };
     void init();
@@ -349,12 +356,22 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   };
 
   const handleSpin = async () => {
+    const multiplierOption = SPIN_REWARD_MULTIPLIER_OPTIONS.find((entry) => entry.multiplier === selectedMultiplier) ?? SPIN_REWARD_MULTIPLIER_OPTIONS[0];
     if (!canSpin || spinning) return;
+    if (essenceBalance < multiplierOption.essenceCost) {
+      setError('Not enough essence for this reward boost. Choose Free or earn more essence.');
+      triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 300 });
+      return;
+    }
     setSpinning(true);
     setError(null);
 
     try {
-      const { data, error: spinError } = await executeSpin(session.user.id);
+      triggerCompletionHaptic(selectedMultiplier > 1 ? 'medium' : 'light', { channel: 'gamification', minIntervalMs: 300 });
+      const { data, error: spinError } = await executeSpin(session.user.id, {
+        rewardMultiplier: multiplierOption.multiplier,
+        essenceCost: multiplierOption.essenceCost,
+      });
       if (spinError || !data) throw spinError || new Error('Failed to spin');
 
       const { prize, spinsRemaining } = data;
@@ -370,8 +387,11 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       setTimeout(() => {
         setWonPrize(prize);
         setCanSpin(spinsRemaining > 0);
+        setEssenceBalance((current) => Math.max(0, current - multiplierOption.essenceCost));
         setSpinning(false);
         setShowReward(true);
+
+        triggerCompletionHaptic(prize.type === 'treasure_chest' || prize.type === 'mystery' || selectedMultiplier > 1 ? 'strong' : 'medium', { channel: 'gamification', minIntervalMs: 300 });
 
         confetti({
           particleCount:
@@ -429,6 +449,9 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
         : `${wonPrize.label} added to your account!`
     : '';
 
+  const selectedMultiplierOption = SPIN_REWARD_MULTIPLIER_OPTIONS.find((entry) => entry.multiplier === selectedMultiplier) ?? SPIN_REWARD_MULTIPLIER_OPTIONS[0];
+  const canAffordSelectedMultiplier = essenceBalance >= selectedMultiplierOption.essenceCost;
+
   const headerSubtitle = error
     ? 'We could not load the spin. Check your connection and retry.'
     : canSpin
@@ -484,8 +507,34 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
           </div>
         )}
 
+        <div className="new-daily-spin-modal__boost-panel" aria-label="Reward multiplier">
+          <div>
+            <p className="new-daily-spin-modal__boost-kicker">Essence boost</p>
+            <p className="new-daily-spin-modal__boost-copy">Spend essence before the spin to multiply whatever you land on.</p>
+          </div>
+          <span className="new-daily-spin-modal__essence-balance">🟣 {essenceBalance}</span>
+          <div className="new-daily-spin-modal__boost-options">
+            {SPIN_REWARD_MULTIPLIER_OPTIONS.map((option) => {
+              const affordable = essenceBalance >= option.essenceCost;
+              return (
+                <button
+                  key={option.multiplier}
+                  type="button"
+                  className={`new-daily-spin-modal__boost-option${selectedMultiplier === option.multiplier ? ' new-daily-spin-modal__boost-option--active' : ''}`}
+                  onClick={() => { setSelectedMultiplier(option.multiplier); triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 250 }); }}
+                  disabled={!canSpin || spinning || !affordable}
+                  aria-pressed={selectedMultiplier === option.multiplier}
+                >
+                  <strong>×{option.multiplier}</strong>
+                  <span>{option.essenceCost === 0 ? 'Free' : `${option.essenceCost} essence`}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Wheel */}
-        <div className="new-daily-spin-wheel">
+        <div className={`new-daily-spin-wheel${spinning ? ' new-daily-spin-wheel--spinning' : ''}`}>
           <WheelPointer />
           <div
             className={`new-daily-spin-wheel__disc-wrapper${
@@ -533,9 +582,9 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
               type="button"
               className="new-daily-spin-modal__spin-btn"
               onClick={handleSpin}
-              disabled={spinning}
+              disabled={spinning || !canAffordSelectedMultiplier}
             >
-              {spinning ? '🎡 SPINNING...' : '🎡 SPIN!'}
+              {spinning ? '🎡 SPINNING...' : selectedMultiplier > 1 ? `🎡 SPIN ×${selectedMultiplier}!` : '🎡 SPIN!'}
             </button>
           ) : wonPrize ? (
             <div className="new-daily-spin-modal__result new-daily-spin-modal__result--compact">
