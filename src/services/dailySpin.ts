@@ -475,7 +475,92 @@ export async function claimDailySpinHabitBonusOncePerDay(
 /**
  * Execute a spin and award prize
  */
-export async function executeSpin(userId: string): Promise<ServiceResponse<SpinResult>> {
+export type SpinRewardMultiplier = 1 | 2 | 3;
+
+export const SPIN_REWARD_MULTIPLIER_OPTIONS: Array<{ multiplier: SpinRewardMultiplier; essenceCost: number; label: string }> = [
+  { multiplier: 1, essenceCost: 0, label: 'Free' },
+  { multiplier: 2, essenceCost: 25, label: 'Boost ×2' },
+  { multiplier: 3, essenceCost: 60, label: 'Mega ×3' },
+];
+
+export async function getDailySpinEssenceBalance(userId: string): Promise<ServiceResponse<number>> {
+  if (!canUseSupabaseData()) {
+    return { data: 0, error: null };
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('island_run_runtime_state' as any)
+    .select('essence, essence_lifetime_spent')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    return { data: null, error };
+  }
+
+  const row = data as { essence?: number } | null;
+  return { data: Math.max(0, Number(row?.essence ?? 0)), error: null };
+}
+
+async function spendDailySpinEssence(userId: string, amount: number): Promise<ServiceResponse<number>> {
+  if (amount <= 0) {
+    return getDailySpinEssenceBalance(userId);
+  }
+
+  if (!canUseSupabaseData()) {
+    return { data: 0, error: null };
+  }
+
+  const balanceResult = await getDailySpinEssenceBalance(userId);
+  if (balanceResult.error || balanceResult.data === null) {
+    return { data: null, error: balanceResult.error ?? new Error('Could not check essence balance') };
+  }
+
+  if (balanceResult.data < amount) {
+    return { data: null, error: new Error('Not enough essence for this reward boost') };
+  }
+
+  const nextBalance = balanceResult.data - amount;
+  const supabase = getSupabaseClient();
+  const { data: currentRow } = await supabase
+    .from('island_run_runtime_state' as any)
+    .select('essence_lifetime_spent')
+    .eq('user_id', userId)
+    .maybeSingle();
+  const lifetimeRow = currentRow as { essence_lifetime_spent?: number } | null;
+  const nextLifetimeSpent = Math.max(0, Number(lifetimeRow?.essence_lifetime_spent ?? 0)) + amount;
+  const { error } = await supabase
+    .from('island_run_runtime_state' as any)
+    .update({
+      essence: nextBalance,
+      essence_lifetime_spent: nextLifetimeSpent,
+      updated_at: new Date().toISOString(),
+    } as any)
+    .eq('user_id', userId);
+
+  if (error) {
+    return { data: null, error };
+  }
+
+  void recordTelemetryEvent({
+    userId,
+    eventType: 'economy_spend',
+    metadata: {
+      currency: 'essence',
+      amount,
+      balance: nextBalance,
+      sourceType: 'daily_spin_multiplier',
+    },
+  });
+
+  return { data: nextBalance, error: null };
+}
+
+export async function executeSpin(
+  userId: string,
+  options: { rewardMultiplier?: SpinRewardMultiplier; essenceCost?: number } = {},
+): Promise<ServiceResponse<SpinResult>> {
   const { data: spinState, error: stateError } = await getDailySpinState(userId);
 
   if (stateError || !spinState) {
@@ -489,12 +574,27 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
 
   const today = new Date().toISOString().split('T')[0];
 
+  const rewardMultiplier = options.rewardMultiplier ?? 1;
+  const essenceCost = options.essenceCost ?? 0;
+  const multiplierOption = SPIN_REWARD_MULTIPLIER_OPTIONS.find(
+    (entry) => entry.multiplier === rewardMultiplier && entry.essenceCost === essenceCost,
+  );
+
+  if (!multiplierOption) {
+    return { data: null, error: new Error('Invalid spin reward multiplier') };
+  }
+
+  const spendResult = await spendDailySpinEssence(userId, essenceCost);
+  if (spendResult.error) {
+    return { data: null, error: spendResult.error };
+  }
+
   // Select prize using new weighted algorithm
   const prizePool = await getSpinPrizesForUser(userId);
   const prize = getRandomPrizeFromPool(prizePool);
 
   // Award prize
-  await awardPrize(userId, prize);
+  await awardPrize(userId, prize, rewardMultiplier);
 
   // Update spin state
   const newSpinsAvailable = spinState.spinsAvailable - 1;
@@ -576,7 +676,7 @@ export async function executeSpin(userId: string): Promise<ServiceResponse<SpinR
  * - mystery → 1.5× random single-currency award
  * - gold (legacy) → gamification_profiles.total_points
  */
-async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
+async function awardPrize(userId: string, prize: SpinPrize, rewardMultiplier = 1): Promise<void> {
   const supabase = getSupabaseClient();
 
   const addToProfile = async (field: string, amount: number) => {
@@ -604,6 +704,7 @@ async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
         sourceType: 'daily_spin',
         sourceId: prize.label,
         rewardType: prize.type,
+        rewardMultiplier,
       },
     });
   };
@@ -636,46 +737,49 @@ async function awardPrize(userId: string, prize: SpinPrize): Promise<void> {
         sourceType: 'daily_spin',
         sourceId: prize.label,
         rewardType: prize.type,
+        rewardMultiplier,
       },
     });
   };
 
+  const scaledValue = Math.max(0, Math.floor(prize.value * rewardMultiplier));
+
   switch (prize.type) {
     case 'gold':
-      await addToProfile('total_points', prize.value);
+      await addToProfile('total_points', scaledValue);
       break;
 
     case 'essence':
-      await addToIslandRun('essence', prize.value);
+      await addToIslandRun('essence', scaledValue);
       break;
 
     case 'shards':
-      await addToIslandRun('shards', prize.value);
+      await addToIslandRun('shards', scaledValue);
       break;
 
     case 'dice':
-      await addToIslandRun('dice_pool', prize.value);
+      await addToIslandRun('dice_pool', scaledValue);
       break;
 
     case 'game_tokens':
       // Game tokens are stored as gold-equivalent for now (not timed-event tickets).
-      await addToProfile('total_points', prize.value * 10);
+      await addToProfile('total_points', scaledValue * 10);
       break;
 
     case 'treasure_chest':
       // Multi-currency bundle: 20 essence + 3 shards + 10 dice
-      await addToIslandRun('essence', 20);
-      await addToIslandRun('shards', 3);
-      await addToIslandRun('dice_pool', 10);
+      await addToIslandRun('essence', 20 * rewardMultiplier);
+      await addToIslandRun('shards', 3 * rewardMultiplier);
+      await addToIslandRun('dice_pool', 10 * rewardMultiplier);
       break;
 
     case 'mystery': {
       // 1.5× random single-currency award
       const mysteryOptions: Array<{ field: string; amount: number; table: 'profile' | 'island' }> = [
-        { field: 'essence', amount: 40, table: 'island' },
-        { field: 'shards', amount: 5, table: 'island' },
-        { field: 'dice_pool', amount: 18, table: 'island' },
-        { field: 'total_points', amount: 50, table: 'profile' },
+        { field: 'essence', amount: 40 * rewardMultiplier, table: 'island' },
+        { field: 'shards', amount: 5 * rewardMultiplier, table: 'island' },
+        { field: 'dice_pool', amount: 18 * rewardMultiplier, table: 'island' },
+        { field: 'total_points', amount: 50 * rewardMultiplier, table: 'profile' },
       ];
       const pick = mysteryOptions[Math.floor(Math.random() * mysteryOptions.length)];
       if (pick.table === 'profile') {
