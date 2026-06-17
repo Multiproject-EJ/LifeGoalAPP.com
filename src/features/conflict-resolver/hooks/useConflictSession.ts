@@ -139,7 +139,7 @@ const BLAME_PATTERNS: Array<{ pattern: RegExp; replacement: string }> = [
   { pattern: /\byou are\b/gi, replacement: 'I experienced this as' },
 ];
 
-const sanitizeForSharedSummary = (value: string): { text: string; moderationNotes: string[] } => {
+export const sanitizeForSharedSummary = (value: string): { text: string; moderationNotes: string[] } => {
   const trimmed = value.trim();
   if (!trimmed) return { text: '', moderationNotes: [] };
 
@@ -197,7 +197,7 @@ const CONFLICT_STAGE_TO_UI: Record<Exclude<ConflictStage, 'private_capture'>, Co
   closed: 'agreement_finalized',
 };
 
-const resolveSharedSessionUiStage = (
+export const resolveSharedSessionUiStage = (
   status: ConflictStage,
   routingCompleted: boolean,
 ): ConflictResolverUiStage => {
@@ -207,6 +207,56 @@ const resolveSharedSessionUiStage = (
 
   return CONFLICT_STAGE_TO_UI[status];
 };
+
+
+export type ConflictSharedSummaryDisplayCard = {
+  id: 'what_happened' | 'what_it_meant' | 'what_is_needed' | string;
+  title: string;
+  text: string;
+  toneSoftened: boolean;
+  moderationNotes: string[];
+};
+
+export function buildSharedSummaryCardsForDisplay(input: {
+  aiSummaryCards?: Array<{ id: string; title: string; text: string }> | null;
+  answers: Record<string, string>;
+  selectedType: ConflictType | null;
+}): ConflictSharedSummaryDisplayCard[] {
+  if (input.aiSummaryCards && input.aiSummaryCards.length > 0) {
+    return input.aiSummaryCards.map((card) => ({
+      id: card.id,
+      title: card.title,
+      text: card.text,
+      toneSoftened: false,
+      moderationNotes: [],
+    }));
+  }
+
+  return [
+    { id: 'what_happened', title: 'What happened' },
+    { id: 'what_it_meant', title: 'What it meant' },
+    { id: 'what_is_needed', title: 'What is needed' },
+  ].map((card) => {
+    const raw = input.answers[card.id] ?? '';
+    const sanitized = sanitizeForSharedSummary(raw);
+    const useSanitized = input.selectedType === 'shared_conflict';
+    return {
+      ...card,
+      text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
+      toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
+      moderationNotes: useSanitized ? sanitized.moderationNotes : [],
+    };
+  });
+}
+
+export function resolveResolutionBuilderNextStage(input: {
+  conflictRouting: Pick<ConflictRoutingMetadata, 'safetyFlag'>;
+  selectedResolution: string | null;
+  activeProposalId: string | null;
+}): 'safety_support_close' | 'apology_alignment' | null {
+  if (input.conflictRouting.safetyFlag === true) return 'safety_support_close';
+  return input.selectedResolution || input.activeProposalId ? 'apology_alignment' : null;
+}
 
 type ConflictSessionDraftSnapshot = {
   stage: ConflictResolverUiStage;
@@ -709,19 +759,18 @@ export function useConflictSession() {
     : defaultResolutionOptions;
 
   const moveToApologyAlignment = () => {
-    const hasNegotiationPath = Boolean(selectedResolution) || Boolean(activeProposalId);
-    if (!hasNegotiationPath) return;
+    const nextStage = resolveResolutionBuilderNextStage({ conflictRouting, selectedResolution, activeProposalId });
+    if (nextStage !== 'apology_alignment') return;
     void setStageWithSync('apology_alignment');
   };
 
   const continueFromResolutionBuilder = () => {
-    if (conflictRouting.safetyFlag === true) {
+    const nextStage = resolveResolutionBuilderNextStage({ conflictRouting, selectedResolution, activeProposalId });
+    if (!nextStage) return;
+    if (nextStage === 'safety_support_close') {
       triggerCompletionHaptic('light', { channel: 'conflict', minIntervalMs: 1200 });
-      void setStageWithSync('safety_support_close');
-      return;
     }
-
-    moveToApologyAlignment();
+    void setStageWithSync(nextStage);
   };
 
   const queueWhiteFlagOffer = () => {
@@ -812,52 +861,7 @@ export function useConflictSession() {
     tag,
   }));
 
-  const summaryCards = aiSummaryCards && aiSummaryCards.length > 0
-    ? aiSummaryCards.map((card) => ({
-        id: card.id,
-        title: card.title,
-        text: card.text,
-        toneSoftened: false,
-        moderationNotes: [],
-      }))
-    : [
-    (() => {
-      const raw = answers.what_happened ?? '';
-      const sanitized = sanitizeForSharedSummary(raw);
-      const useSanitized = selectedType === 'shared_conflict';
-      return {
-        id: 'what_happened',
-        title: 'What happened',
-        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
-        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
-        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
-      };
-    })(),
-    (() => {
-      const raw = answers.what_it_meant ?? '';
-      const sanitized = sanitizeForSharedSummary(raw);
-      const useSanitized = selectedType === 'shared_conflict';
-      return {
-        id: 'what_it_meant',
-        title: 'What it meant',
-        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
-        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
-        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
-      };
-    })(),
-    (() => {
-      const raw = answers.what_is_needed ?? '';
-      const sanitized = sanitizeForSharedSummary(raw);
-      const useSanitized = selectedType === 'shared_conflict';
-      return {
-        id: 'what_is_needed',
-        title: 'What is needed',
-        text: useSanitized ? sanitized.text || 'No entry yet.' : raw || 'No entry yet.',
-        toneSoftened: useSanitized && Boolean(raw.trim()) && sanitized.text !== raw.trim(),
-        moderationNotes: useSanitized ? sanitized.moderationNotes : [],
-      };
-    })(),
-  ] as const;
+  const summaryCards = buildSharedSummaryCardsForDisplay({ aiSummaryCards, answers, selectedType });
 
   const computedInnerRecommendations = innerRecommendations.length > 0
     ? innerRecommendations

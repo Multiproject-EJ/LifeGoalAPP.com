@@ -38,7 +38,7 @@ export const SAFETY_FIRST_RESOLUTION_OPTIONS: ResolutionOption[] = [
     id: 'boundary_next_step',
     title: 'Set a safety-first boundary',
     description:
-      'Choose one boundary or distance step that reduces risk and does not require negotiation, apology, or agreement.',
+      'Choose one boundary or distance step that reduces risk and does not require negotiation or the other person’s participation.',
   },
 ];
 
