@@ -178,6 +178,25 @@ function run() {
     'Persisted private_capture is not directly mapped to UI private_capture without routing completion guard',
   );
 
+
+  requirePattern(
+    'src/features/conflict-resolver/services/conflictAiOrchestrator.ts',
+    /EMPTY_SHARED_SUMMARY_FALLBACK_CARDS:\s*SharedSummaryCard\[\]\s*=\s*\[\]/,
+    'AI-unavailable shared summary returns empty fallback cards so local sanitized answer cards can render',
+  );
+
+  rejectPattern(
+    'src/features/conflict-resolver/services/conflictAiOrchestrator.ts',
+    /No summary available yet|No emotional summary available yet|No needs summary available yet/,
+    'Shared-summary AI fallback does not return generic unavailable placeholder cards',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/hooks/useConflictSession.ts',
+    /aiSummaryCards && aiSummaryCards\.length > 0[\s\S]*sanitizeForSharedSummary\(raw\)/,
+    'Local sanitized answer-based summary cards are used when AI summary cards are empty',
+  );
+
   requirePattern(
     'docs/conflict-resolver/09_ACCEPTANCE_VALIDATION_RUNBOOK.md',
     /PR5 \+ PR6/,
