@@ -665,19 +665,27 @@ export async function generateResolutionOptions(input: {
     const result = await requestOpenAiRawContent(prompt, decision.model, apiKey);
     const parsed = parseResolutionOptionsFromContent(result.content, 3);
     const fallbackOptions = buildResolutionOptionsFallback(input.conflictRouting);
-    const options = parsed.length > 0 ? parsed : fallbackOptions;
-    const fairnessWarnings = lintResolutionOptionFairness(options);
+    const parsedFairnessWarnings = parsed.length > 0 ? lintResolutionOptionFairness(parsed) : [];
+    const shouldUseFallback = parsed.length === 0 || parsedFairnessWarnings.length > 0;
+    const options = shouldUseFallback ? fallbackOptions : parsed;
+    const fallbackFairnessWarnings = shouldUseFallback ? lintResolutionOptionFairness(fallbackOptions) : [];
+    const fairnessWarnings = parsedFairnessWarnings.length > 0 ? parsedFairnessWarnings : fallbackFairnessWarnings;
+    const fallbackReason = parsed.length === 0
+      ? 'schema_invalid'
+      : parsedFairnessWarnings.length > 0
+        ? 'fairness_warnings'
+        : null;
     await persistAiRun({
       sessionId: input.sessionId,
       stage: 'resolution_options',
       mode: decision.mode,
       model: decision.model,
       usedContextDomains: ['reflections'],
-      fallbackUsed: parsed.length === 0 || fairnessWarnings.length > 0,
-      errorMessage: parsed.length === 0
+      fallbackUsed: shouldUseFallback,
+      errorMessage: fallbackReason === 'schema_invalid'
         ? 'Resolution options schema invalid'
-        : fairnessWarnings.length > 0
-          ? `Fairness warnings: ${fairnessWarnings.map((warning) => warning.code).join(',')}`
+        : fallbackReason === 'fairness_warnings'
+          ? `Fairness warnings: ${parsedFairnessWarnings.map((warning) => warning.code).join(',')}`
           : null,
       tokenInput: result.tokenInput,
       tokenOutput: result.tokenOutput,
@@ -686,16 +694,22 @@ export async function generateResolutionOptions(input: {
     await persistArtifact({
       sessionId: input.sessionId,
       stage: 'resolution_options',
-      artifact: { options, fairnessWarnings, source: parsed.length > 0 ? 'ai' : 'fallback' },
+      artifact: {
+        options,
+        fairnessWarnings,
+        source: shouldUseFallback ? 'fallback' : 'ai',
+        fallbackReason,
+        rejectedAiOptionCount: parsedFairnessWarnings.length > 0 ? parsed.length : 0,
+      },
     });
     await persistAiMessage({
       sessionId: input.sessionId,
       stage: 'resolution_options',
       role: 'assistant',
       message: JSON.stringify({ options }),
-      metadata: { source: parsed.length > 0 ? 'ai' : 'fallback', fairnessWarnings },
+      metadata: { source: shouldUseFallback ? 'fallback' : 'ai', fairnessWarnings, fallbackReason },
     });
-    return { options, fairnessWarnings, mode: parsed.length > 0 ? decision.mode : 'fallback' };
+    return { options, fairnessWarnings, mode: shouldUseFallback ? 'fallback' : decision.mode };
   } catch {
     const fallbackOptions = buildResolutionOptionsFallback(input.conflictRouting);
     const fairnessWarnings = lintResolutionOptionFairness(fallbackOptions);
