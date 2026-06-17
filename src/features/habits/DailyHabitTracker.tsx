@@ -7713,33 +7713,44 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   <section className="habit-checklist__detail-block habit-checklist__detail-block--info" aria-label="Habit info">
                     <div className="habit-checklist__detail-block-header">
                       <span className="habit-checklist__detail-block-label">Info</span>
-                      {linkedVisionImage ? (
-                        <button
-                          type="button"
-                          className="habit-checklist__vision-preview"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setVisionPreviewImage(linkedVisionImage);
-                          }}
-                          aria-label={`View vision board image for ${habitDisplayName}`}
-                        >
-                          <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
-                        </button>
-                      ) : null}
                     </div>
                     {isPrivateCompactView ? (
                       <p className="habit-checklist__todo-note-placeholder">Habit details hidden in compact private view.</p>
                     ) : (
                       <>
-                        <div className="habit-checklist__meta-group">
-                          <p className="habit-checklist__meta">
-                            Life wheel • {domainLabel ?? 'Unassigned'}
-                          </p>
-                          <p className="habit-checklist__meta habit-checklist__meta--secondary">
-                            Goal • {goalLabel}
-                          </p>
+                        <div
+                          className={`habit-checklist__info-grid${
+                            linkedVisionImage ? ' habit-checklist__info-grid--with-image' : ''
+                          }`}
+                        >
+                          {linkedVisionImage ? (
+                            <button
+                              type="button"
+                              className="habit-checklist__vision-tile"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setVisionPreviewImage(linkedVisionImage);
+                              }}
+                              aria-label={`View vision board image for ${habitDisplayName}`}
+                            >
+                              <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
+                            </button>
+                          ) : null}
+                          <div className="habit-checklist__info-tile habit-checklist__info-tile--domain">
+                            <span className="habit-checklist__info-tile-label">Life wheel</span>
+                            <span className="habit-checklist__info-tile-value">{domainLabel ?? 'Unassigned'}</span>
+                          </div>
+                          <div className="habit-checklist__info-tile habit-checklist__info-tile--goal">
+                            <span className="habit-checklist__info-tile-label">Goal</span>
+                            <span className="habit-checklist__info-tile-value">{goalLabel}</span>
+                          </div>
                           {lastCompletedText ? (
-                            <p className="habit-checklist__note">{lastCompletedText}</p>
+                            <div className="habit-checklist__info-tile habit-checklist__info-tile--last-completed">
+                              <span className="habit-checklist__info-tile-label">Last completed</span>
+                              <span className="habit-checklist__info-tile-value">
+                                {lastCompletedText.replace(/^Last completed\s*/i, '')}
+                              </span>
+                            </div>
                           ) : null}
                         </div>
                         {habit.habit_environment ? (

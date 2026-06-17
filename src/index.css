@@ -8809,6 +8809,111 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.25rem;
 }
 
+
+.habit-checklist__info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(4.35rem, auto);
+  gap: 0.45rem;
+}
+
+.habit-checklist__info-grid--with-image {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.habit-checklist__vision-tile {
+  grid-column: 3 / span 2;
+  grid-row: 1 / span 2;
+  min-height: 9.15rem;
+  width: 100%;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 16px;
+  padding: 0;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.14);
+  cursor: pointer;
+}
+
+.habit-checklist__vision-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.habit-checklist__info-tile {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.65rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.habit-checklist__info-grid--with-image .habit-checklist__info-tile--domain {
+  grid-column: 1 / span 2;
+  grid-row: 1;
+}
+
+.habit-checklist__info-grid--with-image .habit-checklist__info-tile--goal {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.habit-checklist__info-grid--with-image .habit-checklist__info-tile--last-completed {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.habit-checklist__info-tile-label {
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.habit-checklist__info-tile-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.25;
+  color: rgba(15, 23, 42, 0.74);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__info-tile {
+  background: rgba(15, 23, 42, 0.38);
+  border-color: rgba(148, 163, 184, 0.2);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__info-tile-label {
+  color: rgba(226, 232, 240, 0.66);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__info-tile-value {
+  color: rgba(226, 232, 240, 0.82);
+}
+
 .habit-checklist__meta {
   font-size: 0.9rem;
   color: rgba(15, 23, 42, 0.75);
