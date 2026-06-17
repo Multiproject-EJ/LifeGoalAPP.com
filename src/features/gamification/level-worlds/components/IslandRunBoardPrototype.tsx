@@ -10347,30 +10347,18 @@ export function IslandRunBoardPrototype({
                 onClick={openHatcheryQuickAccess}
               >
                 <span className="island-run-board__rewardbar-hatchery-egg-stack" aria-hidden="true">
-                  {Array.from({ length: rewardBarSideSlotCount }, (_, index) => {
-                    const egg = hatcheryPendingEggs[index];
-                    if (!egg) {
-                      return (
-                        <span
-                          key={`hatchery-placeholder-${index}`}
-                          className="island-run-board__rewardbar-hatchery-egg-slot island-run-board__rewardbar-side-slot island-run-board__rewardbar-side-slot--empty"
-                        />
-                      );
-                    }
-
-                    return (
-                      <span key={egg.id} className="island-run-board__rewardbar-hatchery-egg-slot island-run-board__rewardbar-side-slot">
-                        <span className="island-run-board__rewardbar-hatchery-egg-circle">
-                          <span className="island-run-board__rewardbar-hatchery-egg">🥚</span>
-                        </span>
-                        {index === 0 && hatcheryPendingEggTimeLabel && (
-                          <span className="island-run-board__rewardbar-hatchery-time">
-                            {hatcheryPendingEggTimeLabel}
-                          </span>
-                        )}
+                  {hatcheryPendingEggs.map((egg, index) => (
+                    <span key={egg.id} className="island-run-board__rewardbar-hatchery-egg-slot island-run-board__rewardbar-side-slot">
+                      <span className="island-run-board__rewardbar-hatchery-egg-circle">
+                        <span className="island-run-board__rewardbar-hatchery-egg">🥚</span>
                       </span>
-                    );
-                  })}
+                      {index === 0 && hatcheryPendingEggTimeLabel && (
+                        <span className="island-run-board__rewardbar-hatchery-time">
+                          {hatcheryPendingEggTimeLabel}
+                        </span>
+                      )}
+                    </span>
+                  ))}
                 </span>
               </button>
             )}
