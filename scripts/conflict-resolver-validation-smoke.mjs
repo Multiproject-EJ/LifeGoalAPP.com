@@ -110,6 +110,25 @@ function run() {
   );
 
 
+
+  requirePattern(
+    'src/features/conflict-resolver/services/conflictAiOrchestrator.ts',
+    /parsedFairnessWarnings[\s\S]*shouldUseFallback = parsed\.length === 0 \|\| parsedFairnessWarnings\.length > 0[\s\S]*const options = shouldUseFallback \? fallbackOptions : parsed/,
+    'Resolution options treat AI fairness warnings as hard fallback before returning options',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/services/conflictAiOrchestrator.ts',
+    /fallbackReason === 'fairness_warnings'[\s\S]*Fairness warnings:[\s\S]*source: shouldUseFallback \? 'fallback' : 'ai'[\s\S]*rejectedAiOptionCount/,
+    'Resolution option fairness fallback records warning metadata without returning warned AI options',
+  );
+
+  requirePattern(
+    'src/features/conflict-resolver/services/conflictAiOrchestrator.ts',
+    /return \{ options, fairnessWarnings, mode: shouldUseFallback \? 'fallback' : decision\.mode \}/,
+    'Resolution option fairness fallback returns fallback mode when warned AI options are rejected',
+  );
+
   requirePattern(
     'src/features/conflict-resolver/hooks/useConflictSession.ts',
     /if \(conflictRouting\.safetyFlag === true\)[\s\S]*setStageWithSync\('safety_support_close'\)[\s\S]*return;[\s\S]*moveToApologyAlignment\(\)/,
