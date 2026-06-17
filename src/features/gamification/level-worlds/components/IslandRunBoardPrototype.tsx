@@ -92,7 +92,11 @@ import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
 import { IslandRunLifePromptCard } from './IslandRunLifePromptCard';
 import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
 import { CompassModal } from './CompassModal';
-import { recordCompassContribution } from '../../../../services/compassState';
+import {
+  fetchCompassState,
+  isCompassSessionFilledForIsland,
+  recordCompassContribution,
+} from '../../../../services/compassState';
 import { readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
@@ -1635,6 +1639,7 @@ export function IslandRunBoardPrototype({
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
+  const [isActiveCompassSessionFilled, setIsActiveCompassSessionFilled] = useState(false);
   const [requiredDoorStopId, setRequiredDoorStopId] = useState<IslandLandmarkDoorStopId | null>(null);
   const [dormantDoorMiniGame, setDormantDoorMiniGame] = useState<DormantDoorMiniGameState | null>(null);
   const [dormantDoorSelectedIndices, setDormantDoorSelectedIndices] = useState<number[]>([]);
@@ -1659,6 +1664,26 @@ export function IslandRunBoardPrototype({
   // after the animation runs. Driven by a useEffect+prev ref pattern below.
   const [islandLevelFlash, setIslandLevelFlash] = useState(false);
   const prevIslandNumberForFlashRef = useRef<number>(1);
+  useEffect(() => {
+    let cancelled = false;
+
+    if (activeStopId !== 'habit' && activeStopId !== 'wisdom') {
+      setIsActiveCompassSessionFilled(false);
+      return undefined;
+    }
+
+    void (async () => {
+      const template = await fetchCompassState(session.user.id);
+      if (!cancelled) {
+        setIsActiveCompassSessionFilled(isCompassSessionFilledForIsland(template, islandNumber));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeStopId, islandNumber, session.user.id]);
+
   useEffect(() => {
     const prev = prevIslandNumberForFlashRef.current;
     prevIslandNumberForFlashRef.current = islandNumber;
@@ -11487,6 +11512,24 @@ export function IslandRunBoardPrototype({
                   </div>
                 );
               })()
+            ) : null}
+
+            {isActiveCompassSessionFilled && (activeStop.stopId === 'habit' || activeStop.stopId === 'wisdom') && openedStopIsPlayable ? (
+              <div className="island-stop-modal__copy" role="status">
+                <strong>Compass box already filled.</strong> You can use that saved session to finish this landmark now.
+                <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                    onClick={() => {
+                      setLandingText(`${activeStop.title} completed from your filled Compass session.`);
+                      handleCompleteActiveStop();
+                    }}
+                  >
+                    Use filled Compass box & Complete Landmark
+                  </button>
+                </div>
+              </div>
             ) : null}
 
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">

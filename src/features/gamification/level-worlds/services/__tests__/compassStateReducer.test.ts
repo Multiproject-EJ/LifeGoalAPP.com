@@ -1,6 +1,7 @@
 import {
   COMPASS_SPOKE_COMPLETE_THRESHOLD,
   applyContribution,
+  isCompassSessionFilledForIsland,
   parseCompassState,
   type CompassTemplate,
 } from '../../../../../services/compassState';
@@ -72,6 +73,29 @@ export const compassStateReducerTests: TestCase[] = [
       assert(Boolean(template.directions.heart), 'Heart direction captured');
       assert(Boolean(template.directions.livelihood), 'Livelihood direction captured');
       assertEqual(template.templateVersion, 1, 'Template version bumps to 1 when all four directions are filled');
+    },
+  },
+  {
+    name: 'filled Compass sessions are detected for both direction and spoke phases',
+    run: () => {
+      const directionTemplate = applyContribution(blankTemplate(), {
+        phase: getCompassPhase(1),
+        direction: 'heart',
+        kind: 'wisdom',
+        text: 'I love building useful things',
+        islandNumber: 1,
+      });
+      assertEqual(isCompassSessionFilledForIsland(directionTemplate, 1), true, 'Filled direction counts as current Compass session');
+      assertEqual(isCompassSessionFilledForIsland(directionTemplate, 6), false, 'Other direction remains unfilled');
+
+      const spokeTemplate = applyContribution(blankTemplate(), {
+        phase: getCompassPhase(31),
+        kind: 'habit',
+        text: 'Drink one glass of water',
+        islandNumber: 31,
+      });
+      assertEqual(isCompassSessionFilledForIsland(spokeTemplate, 31), true, 'Same-island spoke entry counts as current session');
+      assertEqual(isCompassSessionFilledForIsland(spokeTemplate, 32), false, 'Another island in the same spoke still needs its own session box');
     },
   },
   {
