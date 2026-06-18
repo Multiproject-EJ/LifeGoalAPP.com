@@ -7984,6 +7984,39 @@
   95%           { box-shadow: 0 0 10px rgba(255, 107, 53, 0.5); }
 }
 
+/* Landmark-door tiles need a dedicated glow animation in addition to the
+   movement/idle animation. Keep the idle transform keyframes in the same
+   animation list so door tiles on the circular board keep bobbing while the
+   landmark entrance cue pulses. */
+.island-run-board--spark40 .island-tile--landmark_door.island-tile--alive {
+  animation:
+    island-tile-idle-spark40 3.5s ease-in-out infinite,
+    island-tile-landmark-door-pulse 1.65s ease-in-out infinite;
+  animation-delay: calc(var(--tile-index, 0) * 0.06s), calc(var(--tile-index, 0) * 0.045s);
+}
+
+.island-run-board--spark40 .island-tile--active-door-cluster.island-tile--alive {
+  animation:
+    island-tile-idle-spark40 3.5s ease-in-out infinite,
+    island-tile-active-door-glow 1.25s ease-in-out infinite;
+  animation-delay: calc(var(--tile-index, 0) * 0.06s), 0s;
+}
+
+@keyframes island-tile-landmark-door-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(245, 208, 254, 0.62),
+      0 0 12px rgba(192, 132, 252, 0.72),
+      0 0 24px rgba(124, 58, 237, 0.42);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(245, 208, 254, 0.95),
+      0 0 24px rgba(216, 180, 254, 0.98),
+      0 0 48px rgba(168, 85, 247, 0.72);
+  }
+}
+
 @keyframes island-tile-active-door-glow {
   0%, 100% {
     box-shadow:
@@ -7993,9 +8026,9 @@
   }
   50% {
     box-shadow:
-      0 0 0 3px rgba(220, 252, 231, 1),
-      0 0 26px rgba(34, 197, 94, 1),
-      0 0 52px rgba(22, 163, 74, 0.78);
+      0 0 0 4px rgba(220, 252, 231, 1),
+      0 0 30px rgba(34, 197, 94, 1),
+      0 0 60px rgba(22, 163, 74, 0.82);
   }
 }
 
