@@ -9087,6 +9087,160 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: #eef2ff;
 }
 
+.habit-checklist__progress-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.65rem;
+}
+
+.habit-checklist__progress-icon,
+.habit-checklist__stage-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.habit-checklist__progress-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 12px;
+  background: #eef2ff;
+  color: #4f46e5;
+  box-shadow: inset 0 0 0 1px rgba(79, 70, 229, 0.14);
+}
+
+.habit-checklist__progress-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.habit-checklist__progress-helper {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.habit-checklist__logged-stage {
+  margin-top: 0.65rem;
+  margin-bottom: 0;
+}
+
+.habit-checklist__stage-chip {
+  display: inline-grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.6rem;
+  text-align: left;
+}
+
+.habit-checklist__stage-chip-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.habit-checklist__stage-chip-icon svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.habit-checklist__stage-chip-copy {
+  display: grid;
+  gap: 0.05rem;
+}
+
+.habit-checklist__stage-chip-title {
+  color: #0f172a;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.habit-checklist__stage-chip-meta {
+  color: #64748b;
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.habit-checklist__stage-chip--momentum.habit-checklist__stage-chip--active,
+.habit-checklist__detail-block--kind-momentum .habit-checklist__progress-icon {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.habit-checklist__stage-chip--progress.habit-checklist__stage-chip--active,
+.habit-checklist__detail-block--kind-progress .habit-checklist__progress-icon {
+  background: #ecfeff;
+  color: #0891b2;
+}
+
+.habit-checklist__stage-chip--session.habit-checklist__stage-chip--active,
+.habit-checklist__detail-block--kind-session .habit-checklist__progress-icon {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.habit-checklist__stage-chip--control.habit-checklist__stage-chip--active,
+.habit-checklist__detail-block--kind-control .habit-checklist__progress-icon {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.habit-checklist__stage-chip--active .habit-checklist__stage-chip-icon {
+  background: rgba(255, 255, 255, 0.78);
+  color: currentColor;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__progress-helper,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__stage-chip-meta {
+  color: rgba(226, 232, 240, 0.68);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__progress-icon,
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__stage-chip-icon {
+  background: rgba(129, 140, 248, 0.16);
+  color: #c4b5fd;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .habit-checklist__stage-chip-title {
+  color: #f8fafc;
+}
+
 .habit-checklist__vision-preview img {
   width: 100%;
   height: 100%;
