@@ -250,7 +250,7 @@ export function MobileFooterNav({
     }
     controlFadeTimeoutRef.current = window.setTimeout(() => {
       setAreControlsFaded(true);
-    }, 560);
+    }, 1680);
     diamondFadeTimeoutRef.current = window.setTimeout(() => {
       setIsDiamondFaded(true);
     }, 2000);
