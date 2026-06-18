@@ -1703,11 +1703,11 @@ export function ScoreTab({
                 'score-tab__hub-card score-tab__hub-card--full',
                 'score.stickersGallery',
               )}
-              onClick={() => handleHubCardClick('score.stickersGallery', 'Stickers Gallery')}
+              onClick={() => handleHubCardClick('score.stickersGallery', 'Puzzle Gallery')}
             >
               <span className="score-tab__hub-visual score-tab__hub-visual--icon" aria-hidden="true">🌟</span>
               <span className="score-tab__hub-title">
-                Stickers Gallery
+                Puzzle Gallery
                 <FeatureStatusBadge status={getFeatureAvailability('score.stickersGallery').status} />
                 {renderFeatureFeedbackSent('score.stickersGallery')}
               </span>
