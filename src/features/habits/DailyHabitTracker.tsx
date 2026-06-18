@@ -1496,6 +1496,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const isPrivateCompactView = isCompactView;
   const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
   const compactToggleLabelTimeoutRef = useRef<number | null>(null);
+  const [isAmbianceToggleLabelVisible, setIsAmbianceToggleLabelVisible] = useState(false);
+  const ambianceToggleLabelTimeoutRef = useRef<number | null>(null);
   const reviewAutoArchivingHabitIdsRef = useRef<Set<string>>(new Set());
   const [isIdentitySignalsOpen, setIsIdentitySignalsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => new Date());
@@ -6339,6 +6341,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }
   };
 
+  const revealAmbianceToggleLabel = () => {
+    setIsAmbianceToggleLabelVisible(true);
+    if (ambianceToggleLabelTimeoutRef.current) {
+      window.clearTimeout(ambianceToggleLabelTimeoutRef.current);
+    }
+    ambianceToggleLabelTimeoutRef.current = window.setTimeout(() => {
+      setIsAmbianceToggleLabelVisible(false);
+    }, 2200);
+  };
+
+  const handleAmbianceToggle = () => {
+    setSelectedAmbiance((current) => (current === 'starlight' ? null : 'starlight'));
+    revealAmbianceToggleLabel();
+  };
+
   const handleCompactToggle = () => {
     if (forceCompactView) {
       setIsCompactView(true);
@@ -7227,14 +7244,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             >
               Todo
             </button>
-            <button
-              type="button"
-              className="habit-checklist-card__starter-launcher habit-checklist-card__ambiance-launcher"
-              onClick={() => setAmbianceModalOpen(true)}
-              aria-label="Open ambiance picker"
-            >
-              Ambiance
-            </button>
             {onOpenStarterQuest ? (
               <button
                 type="button"
@@ -7247,12 +7256,28 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             ) : null}
             <button
               type="button"
+              className={`habit-checklist-card__glass-toggle habit-checklist-card__ambiance-toggle ${
+                selectedAmbiance ? 'habit-checklist-card__glass-toggle--active habit-checklist-card__ambiance-toggle--active' : ''
+              } ${!isAmbianceToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
+              onClick={handleAmbianceToggle}
+              aria-pressed={Boolean(selectedAmbiance)}
+              aria-label={selectedAmbiance ? 'Turn ambiance off' : 'Turn ambiance on'}
+            >
+              <span className="habit-checklist-card__glass-toggle-icon" aria-hidden="true">🖌️</span>
+              <span className="habit-checklist-card__glass-toggle-label">Ambiance</span>
+            </button>
+            <button
+              type="button"
               className={`habit-checklist-card__glass-toggle ${
                 isCompactView ? 'habit-checklist-card__glass-toggle--active' : ''
               } ${!isCompactToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
               onClick={handleCompactToggle}
               aria-pressed={isCompactView}
+              aria-label={isCompactView ? 'Switch to detailed view' : 'Switch to private view'}
             >
+              <span className="habit-checklist-card__glass-toggle-icon" aria-hidden="true">
+                {isCompactView ? '🙈' : '👁️'}
+              </span>
               <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true">
                 <span className="habit-checklist-card__glass-toggle-thumb" />
               </span>
