@@ -601,6 +601,137 @@ const AUTO_PROGRESS_STAGE_LABELS: Record<AutoProgressTier, string> = {
 
 const SCALE_STAGE_ORDER: AutoProgressTier[] = ['seed', 'minimum', 'standard'];
 
+type HabitVersionIconName = 'spark' | 'target' | 'timer' | 'shield' | 'steps';
+
+type HabitProgressContent = {
+  sectionLabel: string;
+  helperText: string;
+  actionLabel: string;
+  ariaLabel: string;
+  iconName: HabitVersionIconName;
+  chipVariant: 'momentum' | 'progress' | 'session' | 'control';
+};
+
+function isReductionLikeHabit(habit: Pick<HabitWithGoal, 'name' | 'target_unit'>): boolean {
+  const text = `${habit.name ?? ''} ${habit.target_unit ?? ''}`.toLowerCase();
+  return /\b(zero|avoid|quit|stop|limit|reduce|less|under|no\s+|without|caffeine|alcohol|sugar|smoking)\b/.test(text);
+}
+
+function getHabitProgressContent(habit: HabitWithGoal, scalePlanEnabled: boolean): HabitProgressContent {
+  const habitType = habit.type ?? 'boolean';
+  const isReduction = isReductionLikeHabit(habit);
+
+  if (isReduction) {
+    return {
+      sectionLabel: 'Control today',
+      helperText: 'Pick the clearest match for how well you stayed aligned with this limit.',
+      actionLabel: 'Log control as',
+      ariaLabel: 'Habit control choices',
+      iconName: 'shield',
+      chipVariant: 'control',
+    };
+  }
+
+  if (habitType === 'quantity') {
+    const unit = habit.target_unit?.trim() || 'units';
+    return {
+      sectionLabel: 'Progress today',
+      helperText: habit.target_num
+        ? `Choose the amount that best matches today's progress toward ${habit.target_num} ${unit}.`
+        : 'Choose the amount that best matches today\'s measurable progress.',
+      actionLabel: scalePlanEnabled ? 'Log progress as' : 'Progress',
+      ariaLabel: 'Habit progress choices',
+      iconName: 'target',
+      chipVariant: 'progress',
+    };
+  }
+
+  if (habitType === 'duration') {
+    const unit = habit.target_unit?.trim() || 'minutes';
+    return {
+      sectionLabel: 'Session today',
+      helperText: habit.target_num
+        ? `Choose the session size that best matches today's time toward ${habit.target_num} ${unit}.`
+        : 'Choose the session size that best matches today\'s time spent.',
+      actionLabel: scalePlanEnabled ? 'Log session as' : 'Session',
+      ariaLabel: 'Habit session choices',
+      iconName: 'timer',
+      chipVariant: 'session',
+    };
+  }
+
+  return {
+    sectionLabel: scalePlanEnabled ? 'Today\'s version' : 'Partial credit',
+    helperText: scalePlanEnabled
+      ? 'Choose the version you completed so the habit stays honest and easy to understand.'
+      : 'If you did a meaningful piece of this habit, log partial credit instead of losing momentum.',
+    actionLabel: scalePlanEnabled ? 'Log version as' : 'Partial credit',
+    ariaLabel: 'Habit version choices',
+    iconName: 'spark',
+    chipVariant: 'momentum',
+  };
+}
+
+function HabitVersionIcon({ name }: { name: HabitVersionIconName }) {
+  const commonProps = {
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    focusable: false,
+    'aria-hidden': true,
+  };
+
+  if (name === 'target') {
+    return (
+      <svg {...commonProps}>
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+      </svg>
+    );
+  }
+
+  if (name === 'timer') {
+    return (
+      <svg {...commonProps}>
+        <path d="M10 2h4" />
+        <path d="M12 14l3-3" />
+        <circle cx="12" cy="14" r="7" />
+      </svg>
+    );
+  }
+
+  if (name === 'shield') {
+    return (
+      <svg {...commonProps}>
+        <path d="M12 3l7 3v5c0 4.6-2.8 8-7 10-4.2-2-7-5.4-7-10V6l7-3z" />
+        <path d="M9 12l2 2 4-5" />
+      </svg>
+    );
+  }
+
+  if (name === 'steps') {
+    return (
+      <svg {...commonProps}>
+        <path d="M7 20h4" />
+        <path d="M13 20h4" />
+        <path d="M9 16c-1.3-1.5-2-3-2-4.5C7 9.6 8.1 8 9.5 8S12 9.6 12 11.5c0 1.5-.7 3-2 4.5" />
+        <path d="M15 16c-1.3-1.5-2-3-2-4.5C13 9.6 14.1 8 15.5 8S18 9.6 18 11.5c0 1.5-.7 3-2 4.5" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...commonProps}>
+      <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" />
+      <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z" />
+    </svg>
+  );
+}
+
 const TODAY_WINS_IMAGES: Record<TodayWinsTier, string> = {
   zero_star: '/icons/todays_win/todays_win1.webp',
   one_star: '/icons/todays_win/todays_win1.webp',
@@ -7314,6 +7445,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const autoProgressHabit = buildAutoProgressHabit(habit);
             const autoProgressState = getAutoProgressState(autoProgressHabit);
             const scalePlan = getHabitScalePlan(autoProgressHabit);
+            const progressContent = getHabitProgressContent(habit, scalePlan.enabled);
             const downshiftTier = getNextDownshiftTier(autoProgressState.tier);
             const upgradeTier = getNextUpgradeTier(autoProgressState.tier);
             const adherenceSnapshot = adherenceByHabit[habit.id];
@@ -7762,11 +7894,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       </>
                     )}
                   </section>
-                  <section className="habit-checklist__detail-block habit-checklist__detail-block--progress" aria-label="Habit progress">
-                    <div className="habit-checklist__detail-block-header">
-                      <span className="habit-checklist__detail-block-label">Progress</span>
+                  <section className={`habit-checklist__detail-block habit-checklist__detail-block--progress habit-checklist__detail-block--kind-${progressContent.chipVariant}`} aria-label={progressContent.ariaLabel}>
+                    <div className="habit-checklist__detail-block-header habit-checklist__progress-header">
+                      <span className="habit-checklist__progress-icon">
+                        <HabitVersionIcon name={progressContent.iconName} />
+                      </span>
+                      <div>
+                        <span className="habit-checklist__detail-block-label">{progressContent.sectionLabel}</span>
+                        <p className="habit-checklist__progress-helper">{progressContent.helperText}</p>
+                      </div>
                     </div>
-                    {state?.progressState === 'doneIsh' && state?.completionPercentage && (
+                    {state?.progressState === 'doneIsh' && state?.completionPercentage ? (
                       <div className="habit-checklist__progress">
                         <div className="progress-bar-container">
                           <div
@@ -7775,36 +7913,43 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           />
                         </div>
                         <p className="habit-checklist__progress-text">
-                          {state.completionPercentage}% complete
+                          Logged as {state.completionPercentage}% complete
                         </p>
                       </div>
-                    )}
+                    ) : null}
                     {state?.loggedStage ? (
-                      <p className="habit-checklist__note" style={{ marginTop: 0 }}>
-                        Logged stage: <strong>{AUTO_PROGRESS_STAGE_LABELS[state.loggedStage]}</strong>
+                      <p className="habit-checklist__note habit-checklist__logged-stage">
+                        Logged today: <strong>{scalePlan.stages[state.loggedStage]?.label ?? AUTO_PROGRESS_STAGE_LABELS[state.loggedStage]}</strong>
                       </p>
                     ) : null}
                     {scalePlan.enabled ? (
                       <div className="habit-checklist__stage-group">
-                        <span className="habit-checklist__stage-group-label">Log as</span>
+                        <span className="habit-checklist__stage-group-label">{progressContent.actionLabel}</span>
                         <div className="habit-checklist__stage-actions">
                           {SCALE_STAGE_ORDER.map((stage) => {
                             const stageInfo = scalePlan.stages[stage];
+                            const fallbackLabel = AUTO_PROGRESS_STAGE_LABELS[stage];
+                            const stageLabel = stageInfo.label || fallbackLabel;
                             return (
                               <button
                                 key={`${habit.id}-${stage}`}
                                 type="button"
-                                className={`habit-checklist__stage-chip ${
+                                className={`habit-checklist__stage-chip habit-checklist__stage-chip--${progressContent.chipVariant} ${
                                   stage === autoProgressState.tier ? 'habit-checklist__stage-chip--active' : ''
                                 }`}
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  void handleLogHabitAtStage(habit, stage);
+                                  void handleLogHabitAtStage(habit, stage, event.currentTarget);
                                 }}
                                 disabled={isSaving}
-                                title={`Log as ${AUTO_PROGRESS_STAGE_LABELS[stage]}: ${stageInfo.label}`}
+                                title={`Log ${progressContent.sectionLabel.toLowerCase()} as ${stageLabel}: ${stageInfo.completionPercent}% credit`}
+                                aria-label={`Log ${habit.name} as ${stageLabel}, ${stageInfo.completionPercent} percent credit`}
                               >
-                                {AUTO_PROGRESS_STAGE_LABELS[stage]} · {stageInfo.completionPercent}%
+                                <span className="habit-checklist__stage-chip-icon"><HabitVersionIcon name={stage === 'standard' ? progressContent.iconName : stage === 'minimum' ? 'steps' : 'spark'} /></span>
+                                <span className="habit-checklist__stage-chip-copy">
+                                  <span className="habit-checklist__stage-chip-title">{stageLabel}</span>
+                                  <span className="habit-checklist__stage-chip-meta">{fallbackLabel} · {stageInfo.completionPercent}%</span>
+                                </span>
                               </button>
                             );
                           })}
