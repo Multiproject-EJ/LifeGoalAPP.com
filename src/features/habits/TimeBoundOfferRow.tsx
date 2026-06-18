@@ -25,7 +25,7 @@ export type TimeBoundOfferItem = {
   isVisible: boolean;
   isActionable?: boolean;
   isPlaceholder?: boolean;
-  visualVariant?: 'bonus';
+  visualVariant?: 'bonus' | 'vision-star';
   sortPriority?: number;
   slotRole?: 'core' | 'filler';
 };
@@ -101,6 +101,9 @@ export function TimeBoundOfferRow({ offers, onOfferClick, daysAgo = 0 }: TimeBou
                 : '',
           offer.visualVariant === 'bonus' && !isPlaceholder && !isDone
             ? 'time-bound-offers__item--bonus-ready'
+            : '',
+          offer.visualVariant === 'vision-star' && !isPlaceholder && !isDone
+            ? 'time-bound-offers__item--vision-star'
             : '',
         ].filter(Boolean).join(' ');
 
