@@ -20180,6 +20180,142 @@ html.platform-ipad .workspace-shell__menu-edge {
   .mobile-footer-nav__surface--image::before {
     background-size: 100% auto;
   }
+
+  .mobile-footer-nav__surface--image {
+    --controller-w: min(100%, var(--mobile-controller-max-width));
+    --controller-h: clamp(158px, calc(var(--controller-w) * 0.32), 190px);
+    width: var(--controller-w);
+    height: var(--controller-h);
+    max-width: 100%;
+    padding: 0;
+    gap: 0;
+    flex-direction: initial;
+    align-items: initial;
+    justify-content: initial;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__list {
+    transform: none;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__menu-row,
+  .mobile-footer-nav__surface--image .mobile-footer-nav__list--stacked {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    transform: none;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__menu-row {
+    top: 0;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__menu-button {
+    position: absolute;
+    left: 50%;
+    top: 26%;
+    width: clamp(63px, calc(var(--controller-w) * 0.138), 84px);
+    height: clamp(63px, calc(var(--controller-w) * 0.138), 84px);
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__menu-button:hover,
+  .mobile-footer-nav__surface--image .mobile-footer-nav__menu-button:focus-visible {
+    transform: translate(-50%, -50%) scale(1.03);
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__list--stacked {
+    display: block;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__item,
+  .mobile-footer-nav__surface--image .mobile-footer-nav__status {
+    position: absolute;
+    width: clamp(64px, calc(var(--controller-w) * 0.16), 88px);
+    height: clamp(46px, calc(var(--controller-h) * 0.34), 62px);
+    margin: 0;
+    transform: translate(-50%, -50%);
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__item--planning {
+    left: 17%;
+    top: 48%;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__status {
+    left: 50%;
+    top: 54%;
+    width: clamp(74px, calc(var(--controller-w) * 0.18), 98px);
+    height: clamp(54px, calc(var(--controller-h) * 0.4), 74px);
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__item--actions {
+    left: 83%;
+    top: 48%;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__item--breathing-space {
+    left: 31%;
+    top: 68%;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__item--score {
+    left: 69%;
+    top: 68%;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__button,
+  .mobile-footer-nav__surface--image .mobile-footer-nav__status-card {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: clamp(0.14rem, calc(var(--controller-w) * 0.006), 0.28rem);
+    gap: clamp(0.04rem, calc(var(--controller-w) * 0.002), 0.1rem);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    position: relative;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__icon,
+  .mobile-footer-nav__surface--image .mobile-footer-nav__status-icon {
+    font-size: clamp(0.96rem, calc(var(--controller-w) * 0.034), 1.32rem);
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__icon img {
+    width: clamp(0.96rem, calc(var(--controller-w) * 0.034), 1.32rem);
+    height: clamp(0.96rem, calc(var(--controller-w) * 0.034), 1.32rem);
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__label,
+  .mobile-footer-nav__surface--image .mobile-footer-nav__status-label {
+    align-items: center;
+    font-size: clamp(0.56rem, calc(var(--controller-w) * 0.017), 0.72rem);
+    line-height: 1.02;
+    text-align: center;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__status-level {
+    font-size: clamp(0.5rem, calc(var(--controller-w) * 0.014), 0.62rem);
+    line-height: 1;
+  }
+
+  .mobile-footer-nav__surface--image .mobile-footer-nav__status-progress {
+    width: min(72%, 64px);
+    height: 3px;
+    margin-inline: auto;
+  }
+
 }
 
 @media (min-width: 721px) {

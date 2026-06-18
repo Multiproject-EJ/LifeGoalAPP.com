@@ -94,6 +94,7 @@ export function GameBoardOverlay({
         </div>
 
         <div className="game-board-overlay__middle game-board-overlay__middle--minimal">
+          <h2 className="game-board-overlay__title">My Quest, 2 track Progress</h2>
           <button
             type="button"
             className={`game-board-overlay__play-button${
