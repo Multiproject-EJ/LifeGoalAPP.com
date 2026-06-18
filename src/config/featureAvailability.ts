@@ -414,7 +414,7 @@ export const featureAvailabilityRegistry = {
   },
   'score.stickersGallery': {
     id: 'score.stickersGallery',
-    label: 'Stickers Gallery',
+    label: 'Puzzle Gallery',
     description: 'Future Score hub entry point for sticker collections.',
     status: 'demo',
     publicAccess: 'previewOnly',
