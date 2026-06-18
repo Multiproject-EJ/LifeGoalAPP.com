@@ -8553,7 +8553,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       canUseCompactPullRefresh ? ' habit-checklist-card--pull-enabled' : ''
     }${compactPullDistance > 0 ? ' habit-checklist-card--pulling' : ''}${
       isPullArmed ? ' habit-checklist-card--pull-armed' : ''
-    }`;
+    }${selectedAmbiance ? ' habit-checklist-card--ambiance' : ''}`;
     const checklistCardStyle = canUseCompactPullRefresh
       ? ({
           '--habit-compact-pull-offset': `${compactPullDistance}px`,
@@ -9271,6 +9271,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         onTouchEnd={canUseCompactPullRefresh ? handleCompactPullTouchEnd : undefined}
         onTouchCancel={canUseCompactPullRefresh ? handleCompactPullTouchEnd : undefined}
       >
+        {selectedAmbiance === 'starlight' ? (
+          <div className="habit-checklist-card__ambiance-layer habit-checklist-card__ambiance-layer--starlight" aria-hidden="true">
+            <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--one" />
+            <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--two" />
+            <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--three" />
+          </div>
+        ) : null}
         {shouldShowPullIndicator ? (
           <div
             className={`habit-checklist-card__pull-indicator${
@@ -9290,14 +9297,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         ) : null}
         {intentionsModal}
         {todayWinsModal}
-        <div className={`habit-checklist-card__board${selectedAmbiance ? ' habit-checklist-card__board--ambiance' : ''}`}>
-          {selectedAmbiance === 'starlight' ? (
-            <div className="habit-checklist-card__ambiance-layer habit-checklist-card__ambiance-layer--starlight" aria-hidden="true">
-              <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--one" />
-              <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--two" />
-              <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--three" />
-            </div>
-          ) : null}
+        <div className="habit-checklist-card__board">
           {!isCompactView ? (
             todayWinsTier !== 'zero_star' ? (
               <button
