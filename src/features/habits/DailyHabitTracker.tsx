@@ -885,6 +885,17 @@ const visionStarStorageKey = (userId: string, dateISO: string) =>
   `lifegoal.vision-star:${userId}:${dateISO}`;
 const visionStarRewardKey = (userId: string, dateISO: string) =>
   `lifegoal.vision-star-reward:${userId}:${dateISO}`;
+const visionStarAppearanceKey = (userId: string, dateISO: string) =>
+  `lifegoal.vision-star-appearance:${userId}:${dateISO}`;
+const VISION_STAR_APPEARANCE_DURATION_MS = 2 * 60 * 1000;
+const VISION_STAR_DAYTIME_START_HOUR = 6;
+const VISION_STAR_NIGHT_START_HOUR = 18;
+const isVisionStarVisitEligible = (now = new Date()) => {
+  const hour = now.getHours();
+  const isDaytimeVisit = hour >= VISION_STAR_DAYTIME_START_HOUR && hour < VISION_STAR_NIGHT_START_HOUR;
+  const isFirstNightVisit = hour >= VISION_STAR_NIGHT_START_HOUR || hour < VISION_STAR_DAYTIME_START_HOUR;
+  return isDaytimeVisit || isFirstNightVisit;
+};
 const visionStarCountKey = (userId: string) => `lifegoal.vision-star-count:${userId}`;
 const weeklySpecialVisionStarKey = (userId: string, weekStartISO: string) =>
   `lifegoal.special-vision-star-week:${userId}:${weekStartISO}`;
@@ -1542,6 +1553,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [isStarBursting, setIsStarBursting] = useState(false);
   const [isVisionImageLoaded, setIsVisionImageLoaded] = useState(false);
   const [hasClaimedVisionStar, setHasClaimedVisionStar] = useState(false);
+  const [visionStarAppearanceWindow, setVisionStarAppearanceWindow] = useState<{ appearedAtMs: number; expiresAtMs: number } | null>(null);
+  const [visionStarNowMs, setVisionStarNowMs] = useState(() => Date.now());
   const [hasClaimedZenTreeToday, setHasClaimedZenTreeToday] = useState(false);
   const [hasClaimedFeedCreaturesToday, setHasClaimedFeedCreaturesToday] = useState(false);
   const [isZenTreeModalOpen, setIsZenTreeModalOpen] = useState(false);
@@ -1557,6 +1570,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const zenTreeClaimInFlightRef = useRef(false);
   const feedCreaturesClaimInFlightRef = useRef(false);
   const [visionStarCount, setVisionStarCount] = useState(0);
+  const isVisionStarAppearanceActive = Boolean(
+    visionStarAppearanceWindow && visionStarAppearanceWindow.expiresAtMs > visionStarNowMs,
+  );
   const [isVisionVisualizationOpen, setIsVisionVisualizationOpen] = useState(false);
   const [visionVisualizationStep, setVisionVisualizationStep] = useState<1 | 2 | 3>(1);
   const [visionNowImagePreview, setVisionNowImagePreview] = useState<string | null>(null);
@@ -2840,8 +2856,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return;
     }
 
-    if (hasClaimedVisionStar || !isViewingToday) {
-      setVisionRewardError('Vision star already collected for today. Come back tomorrow for a new one.');
+    if (hasClaimedVisionStar || !isViewingToday || !isVisionStarAppearanceActive) {
+      setVisionRewardError('Vision star is only available during its rare 2-minute daily appearance. Come back tomorrow for a new one.');
       setIsVisionRewardSelecting(false);
       return;
     }
@@ -2945,6 +2961,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     earnXP,
     goals,
     hasClaimedVisionStar,
+    isVisionStarAppearanceActive,
     isConfigured,
     isDemoExperience,
     isViewingToday,
@@ -3004,6 +3021,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return;
     }
 
+    if (!isVisionStarAppearanceActive && isViewingToday) {
+      setVisionRewardError('Vision star has faded for today. Watch for tomorrow’s 2-minute glow.');
+      return;
+    }
+
     if (visionButtonRef.current) {
       const rect = visionButtonRef.current.getBoundingClientRect();
       setCelebrationOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
@@ -3020,7 +3042,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   };
 
   const handleVisionRewardClaim = async () => {
-    if (!visionReward || hasClaimedVisionStar || !isViewingToday || visionRewarding) {
+    if (!visionReward || hasClaimedVisionStar || !isViewingToday || visionRewarding || !isVisionStarAppearanceActive) {
       return;
     }
 
@@ -3364,11 +3386,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         id: 'vision_star',
         label: 'Vision Star',
         icon: isSpecialVisionStarDay ? '🌌' : '🌟',
-        expiresAtMs: nextUtcMidnight,
-        badgeLabelOverride: isVisionStarPreviewOnly ? DEMO_FEATURE_LABEL : (hasClaimedVisionStar ? '✓ Done' : 'Open'),
+        expiresAtMs: visionStarAppearanceWindow?.expiresAtMs ?? nextUtcMidnight,
+        badgeLabelOverride: isVisionStarPreviewOnly ? DEMO_FEATURE_LABEL : (hasClaimedVisionStar ? '✓ Done' : undefined),
         isCollected: isVisionStarPreviewOnly ? false : hasClaimedVisionStar,
-        isVisible: true,
-        isActionable: isVisionStarPreviewOnly ? true : !hasClaimedVisionStar,
+        isVisible: isVisionStarPreviewOnly ? true : (!hasClaimedVisionStar && isVisionStarAppearanceActive),
+        isActionable: isVisionStarPreviewOnly ? true : (!hasClaimedVisionStar && isVisionStarAppearanceActive),
+        visualVariant: 'vision-star',
         sortPriority: 1,
         slotRole: 'core',
       },
@@ -3498,6 +3521,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     dailySpinCount,
     isDailySpinBonusClaimedToday,
     isTodaysOfferSpinEntryEnabled,
+    isVisionStarAppearanceActive,
+    isVisionStarPreviewOnly,
+    visionStarAppearanceWindow,
   ]);
 
 
@@ -4448,6 +4474,42 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     const stored = loadDraft<boolean>(visionStarStorageKey(session.user.id, activeDate));
     setHasClaimedVisionStar(Boolean(stored));
   }, [activeDate, session.user.id]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setVisionStarNowMs(Date.now()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    if (!isViewingToday || hasClaimedVisionStar) {
+      setVisionStarAppearanceWindow(null);
+      return;
+    }
+
+    const storageKey = visionStarAppearanceKey(session.user.id, activeDate);
+    const stored = loadDraft<{ appearedAtMs: number; expiresAtMs: number }>(storageKey);
+    const now = Date.now();
+
+    if (stored?.appearedAtMs && stored?.expiresAtMs) {
+      setVisionStarAppearanceWindow(stored);
+      return;
+    }
+
+    // Create exactly one short-lived appearance when Today is opened during daytime,
+    // or on the user's first Today visit if that happens at night.
+    if (!isVisionStarVisitEligible(new Date(now))) {
+      setVisionStarAppearanceWindow(null);
+      return;
+    }
+
+    const nextWindow = {
+      appearedAtMs: now,
+      expiresAtMs: now + VISION_STAR_APPEARANCE_DURATION_MS,
+    };
+    saveDraft(storageKey, nextWindow);
+    setVisionStarAppearanceWindow(nextWindow);
+  }, [activeDate, hasClaimedVisionStar, isViewingToday, session.user.id]);
+
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
