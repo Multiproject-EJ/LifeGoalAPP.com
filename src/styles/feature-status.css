@@ -81,6 +81,7 @@
 .future-feature-card--demo :is(
   .breathing-space__mobile-launch-icon-image,
   .breathing-space__mobile-launch-icon,
+  .actions-tab__launcher-icon-image,
   .score-tab__hub-image,
   .score-tab__hub-visual--icon,
   .settings-module-card__icon,
