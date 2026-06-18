@@ -5372,6 +5372,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  min-height: 32px;
   cursor: pointer;
   color: #475569;
   font-weight: 700;
@@ -5392,6 +5393,28 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(255, 255, 255, 0.9));
   border-color: rgba(56, 189, 248, 0.6);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 22px rgba(14, 165, 233, 0.22);
+}
+
+.habit-checklist-card__glass-toggle-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  font-size: 0.92rem;
+  line-height: 1;
+}
+
+.habit-checklist-card__ambiance-toggle {
+  border-color: rgba(220, 38, 38, 0.45);
+  background: rgba(254, 226, 226, 0.72);
+  color: #b91c1c;
+}
+
+.habit-checklist-card__ambiance-toggle--active {
+  background: linear-gradient(135deg, rgba(254, 226, 226, 0.95), rgba(255, 255, 255, 0.9));
+  border-color: rgba(220, 38, 38, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 22px rgba(220, 38, 38, 0.18);
 }
 
 .habit-checklist-card__glass-toggle-indicator {
@@ -7851,7 +7874,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   min-width: 0;
 }
 
-.habit-checklist-card__title-actions .habit-checklist-card__glass-toggle {
+.habit-checklist-card__title-actions .habit-checklist-card__ambiance-toggle {
   margin-left: auto;
 }
 
@@ -35752,13 +35775,6 @@ body.habit-wizard-open .mobile-footer-nav {
   50% {
     filter: brightness(1.12);
   }
-}
-
-.habit-checklist-card__ambiance-launcher {
-  border-color: rgba(220, 38, 38, 0.45);
-  background: rgba(254, 226, 226, 0.9);
-  color: #b91c1c;
-  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.12);
 }
 
 .habit-checklist-card--ambiance {
