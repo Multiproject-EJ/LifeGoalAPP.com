@@ -43,6 +43,13 @@ const TILE_SVG_ICONS: Record<string, JSX.Element> = {
       <path d="M10 2L12 7L8 11H13L11 15" stroke="#FF4500" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
     </svg>
   ),
+  card: (
+    <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
+      <rect x="5" y="2.5" width="9" height="12" rx="1.6" fill="#7C3AED" stroke="#F5D0FE" strokeWidth="1" transform="rotate(8 9.5 8.5)"/>
+      <rect x="3.5" y="3.5" width="9" height="12" rx="1.6" fill="#FDE68A" stroke="#A16207" strokeWidth="1"/>
+      <path d="M8 6L9 8.2L11.4 8.5L9.7 10.1L10.1 12.4L8 11.2L5.9 12.4L6.3 10.1L4.6 8.5L7 8.2L8 6Z" fill="#7C3AED"/>
+    </svg>
+  ),
   landmark_door: (
     <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
       <path d="M5 3.5H13V15H5V3.5Z" fill="#7C3AED" stroke="#F5D0FE" strokeWidth="1"/>
@@ -169,6 +176,10 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
       }}
     >
       {!isMinimalBoardArt && <span className="island-tile__shine" aria-hidden="true" />}
+
+      {(tileType === 'currency' || tileType === 'chest' || tileType === 'micro' || tileType === 'card') && (
+        <span className={`island-tile__popout island-tile__popout--${tileType}`} aria-hidden="true" />
+      )}
 
       <span className="island-tile__value">
         {iconContent}

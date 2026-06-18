@@ -10306,3 +10306,93 @@
     animation: none;
   }
 }
+
+/* Island tech discovery slice: object/knowledge tiles get tactile pop-out props. */
+:root {
+  --tile-card-light: #f5d0fe;
+  --tile-card-mid: #c084fc;
+  --tile-card-deep: #7c3aed;
+  --tile-card-border: rgba(245, 208, 254, 0.96);
+  --tile-card-glow: rgba(192, 132, 252, 0.58);
+}
+
+.island-tile--card {
+  background:
+    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, var(--tile-card-light) 0%, var(--tile-card-mid) 52%, var(--tile-card-deep) 100%);
+  border: 1.5px solid var(--tile-card-border);
+  box-shadow: 0 0 12px var(--tile-card-glow), 0 0 22px rgba(124, 58, 237, 0.34);
+}
+
+.island-tile__popout {
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  transform: translate(-50%, -72%) rotate(var(--tile-upright-rotation-deg, 0deg));
+  transform-origin: center bottom;
+  filter: drop-shadow(0 9px 5px rgba(45, 30, 10, 0.34));
+  z-index: 3;
+  animation: island-tile-popout-hover 2.4s ease-in-out infinite;
+}
+
+.island-tile__popout--currency {
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, #fff8bd 0 18%, #ffd54f 19% 58%, #b7791f 59% 100%);
+  box-shadow:
+    -5px 6px 0 -1px #d69e2e,
+    5px 7px 0 -2px #f6c344;
+}
+
+.island-tile__popout--chest {
+  width: 24px;
+  height: 17px;
+  border-radius: 4px 4px 3px 3px;
+  background:
+    linear-gradient(90deg, transparent 42%, rgba(255, 238, 128, 0.95) 43% 57%, transparent 58%),
+    linear-gradient(#f6ad55 0 42%, #9c4221 43% 100%);
+  border: 1px solid rgba(92, 45, 12, 0.75);
+}
+
+.island-tile__popout--micro {
+  background: radial-gradient(circle, #fff7ad 0 20%, #fde68a 21% 38%, transparent 39%);
+}
+
+.island-tile__popout--micro::before,
+.island-tile__popout--micro::after {
+  content: '';
+  position: absolute;
+  inset: 2px 8px;
+  border-radius: 999px;
+  background: #f59e0b;
+}
+
+.island-tile__popout--micro::after {
+  transform: rotate(90deg);
+}
+
+.island-tile__popout--card {
+  width: 17px;
+  height: 23px;
+  border-radius: 3px;
+  background: linear-gradient(145deg, #fff7ed 0%, #fde68a 48%, #c084fc 49%, #7c3aed 100%);
+  border: 1px solid rgba(76, 29, 149, 0.7);
+  box-shadow: -6px 4px 0 -2px rgba(245, 208, 254, 0.92);
+}
+
+.island-tile--token-current .island-tile__popout {
+  animation: island-tile-popout-collect 0.72s cubic-bezier(0.2, 0.9, 0.25, 1.25) both;
+}
+
+@keyframes island-tile-popout-hover {
+  0%, 100% { transform: translate(-50%, -72%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(0) scale(1); }
+  50% { transform: translate(-50%, -72%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-6px) scale(1.08); }
+}
+
+@keyframes island-tile-popout-collect {
+  0% { opacity: 1; transform: translate(-50%, -72%) rotate(var(--tile-upright-rotation-deg, 0deg)) scale(1); }
+  45% { opacity: 1; transform: translate(-50%, -110%) rotate(var(--tile-upright-rotation-deg, 0deg)) scale(1.35); }
+  100% { opacity: 0.25; transform: translate(-50%, -160%) rotate(var(--tile-upright-rotation-deg, 0deg)) scale(0.45); }
+}
