@@ -121,6 +121,22 @@
   margin-top: -0.4rem;
 }
 
+.game-board-overlay__title {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - 4.25rem);
+  transform: translate(-50%, -50%);
+  width: min(86vw, 390px);
+  margin: 0;
+  color: #eaf8ff;
+  font-size: clamp(1rem, 4vw, 1.35rem);
+  font-weight: 900;
+  letter-spacing: 0.045em;
+  text-align: center;
+  text-shadow: 0 2px 7px rgba(4, 14, 45, 0.78), 0 0 16px rgba(56, 189, 248, 0.42);
+  z-index: 2;
+}
+
 .game-board-overlay__play-button {
   position: absolute;
   left: 50%;
