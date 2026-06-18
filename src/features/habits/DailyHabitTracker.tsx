@@ -1024,6 +1024,8 @@ export function DailyHabitTracker({
 
   const [todayTodos, setTodayTodos] = useState<TodayTodo[]>([]);
   const [todayTodoModalOpen, setTodayTodoModalOpen] = useState(false);
+  const [ambianceModalOpen, setAmbianceModalOpen] = useState(false);
+  const [selectedAmbiance, setSelectedAmbiance] = useState<'starlight' | null>(null);
   const [editingTodayTodo, setEditingTodayTodo] = useState<TodayTodo | null>(null);
   const [todayTodoTitle, setTodayTodoTitle] = useState('');
   const [todayTodoNotes, setTodayTodoNotes] = useState('');
@@ -1129,13 +1131,13 @@ export function DailyHabitTracker({
   }, [activeDate, loadTodayTodos]);
 
   useEffect(() => {
-    if (!todayTodoModalOpen || typeof document === 'undefined') return;
+    if ((!todayTodoModalOpen && !ambianceModalOpen) || typeof document === 'undefined') return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [todayTodoModalOpen]);
+  }, [todayTodoModalOpen, ambianceModalOpen]);
 
   const handleOpenCreateTodayTodo = useCallback(() => {
     setEditingTodayTodo(null);
@@ -7219,6 +7221,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             >
               Todo
             </button>
+            <button
+              type="button"
+              className="habit-checklist-card__starter-launcher habit-checklist-card__ambiance-launcher"
+              onClick={() => setAmbianceModalOpen(true)}
+              aria-label="Open ambiance picker"
+            >
+              Ambiance
+            </button>
             {onOpenStarterQuest ? (
               <button
                 type="button"
@@ -9280,7 +9290,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         ) : null}
         {intentionsModal}
         {todayWinsModal}
-        <div className="habit-checklist-card__board">
+        <div className={`habit-checklist-card__board${selectedAmbiance ? ' habit-checklist-card__board--ambiance' : ''}`}>
+          {selectedAmbiance === 'starlight' ? (
+            <div className="habit-checklist-card__ambiance-layer habit-checklist-card__ambiance-layer--starlight" aria-hidden="true">
+              <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--one" />
+              <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--two" />
+              <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--three" />
+            </div>
+          ) : null}
           {!isCompactView ? (
             todayWinsTier !== 'zero_star' ? (
               <button
@@ -9428,6 +9445,52 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             ) : (
               renderCompactList()
             )}
+            {ambianceModalOpen ? createPortal(
+              <div className="habit-edit-modal-overlay" role="presentation" onClick={() => setAmbianceModalOpen(false)}>
+                <div
+                  className="habit-edit-modal-content habit-ambiance-modal"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Ambiance picker"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <h3>Ambiance</h3>
+                  <p className="habit-edit-modal-subcopy">
+                    Placeholder picker: ambiance lives on the Today tab bottom layer, then the task surface above it blurs so higher UI stays clear.
+                  </p>
+                  <div className="habit-ambiance-modal__grid" role="list" aria-label="Ambiance animation options">
+                    {Array.from({ length: 24 }, (_, index) => {
+                      const isFirst = index === 0;
+                      return (
+                        <button
+                          key={index}
+                          type="button"
+                          className={`habit-ambiance-modal__option${isFirst && selectedAmbiance === 'starlight' ? ' habit-ambiance-modal__option--active' : ''}`}
+                          onClick={() => {
+                            if (isFirst) {
+                              setSelectedAmbiance((current) => (current === 'starlight' ? null : 'starlight'));
+                            }
+                          }}
+                          disabled={!isFirst}
+                          aria-pressed={isFirst ? selectedAmbiance === 'starlight' : undefined}
+                        >
+                          <span>{isFirst ? '✨' : '＋'}</span>
+                          <small>{isFirst ? 'Starlight drift' : `Idea ${index + 1}`}</small>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="habit-ambiance-modal__ideas">
+                    <strong>Brainstorm queue:</strong> fireflies, rain on glass, aurora waves, floating petals, ocean shimmer, fireplace glow, soft snow, drifting clouds.
+                  </div>
+                  <div className="habit-edit-modal-actions">
+                    <button type="button" className="habit-edit-modal-secondary" onClick={() => setSelectedAmbiance(null)}>Clear</button>
+                    <button type="button" className="habit-edit-modal-primary" onClick={() => setAmbianceModalOpen(false)}>Done</button>
+                  </div>
+                </div>
+              </div>,
+              document.body,
+            ) : null}
             {todayTodoModalOpen ? createPortal(
               <div className="habit-edit-modal-overlay" role="presentation" onClick={handleCloseTodayTodoModal}>
                 <div

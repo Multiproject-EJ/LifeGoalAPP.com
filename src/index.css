@@ -35752,3 +35752,138 @@ body.habit-wizard-open .mobile-footer-nav {
     filter: brightness(1.12);
   }
 }
+
+.habit-checklist-card__ambiance-launcher {
+  border-color: rgba(220, 38, 38, 0.45);
+  background: rgba(254, 226, 226, 0.9);
+  color: #b91c1c;
+  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.12);
+}
+
+.habit-checklist-card__board--ambiance {
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.habit-checklist-card__ambiance-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.habit-checklist-card__ambiance-layer--starlight {
+  background:
+    radial-gradient(circle at 18% 24%, rgba(255, 255, 255, 0.95) 0 1px, transparent 2px),
+    radial-gradient(circle at 78% 18%, rgba(255, 240, 180, 0.9) 0 1px, transparent 2px),
+    radial-gradient(circle at 68% 72%, rgba(186, 230, 253, 0.9) 0 1px, transparent 2px),
+    linear-gradient(145deg, rgba(14, 165, 233, 0.18), rgba(168, 85, 247, 0.16), rgba(250, 204, 21, 0.12));
+  background-size: 120px 120px, 170px 170px, 150px 150px, 100% 100%;
+  animation: habit-ambiance-starlight-drift 16s linear infinite;
+}
+
+.habit-checklist-card__ambiance-orb {
+  position: absolute;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 999px;
+  filter: blur(18px);
+  opacity: 0.52;
+  animation: habit-ambiance-orb-float 9s ease-in-out infinite alternate;
+}
+
+.habit-checklist-card__ambiance-orb--one {
+  top: 14%;
+  left: 6%;
+  background: rgba(125, 211, 252, 0.72);
+}
+
+.habit-checklist-card__ambiance-orb--two {
+  right: -8%;
+  top: 32%;
+  background: rgba(216, 180, 254, 0.7);
+  animation-delay: -3s;
+}
+
+.habit-checklist-card__ambiance-orb--three {
+  left: 34%;
+  bottom: -7%;
+  background: rgba(253, 224, 71, 0.48);
+  animation-delay: -5s;
+}
+
+.habit-checklist-card__board--ambiance > :not(.habit-checklist-card__ambiance-layer) {
+  position: relative;
+  z-index: 1;
+}
+
+.habit-checklist-card__board--ambiance .habit-checklist-card__board-body {
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(12px) saturate(145%);
+}
+
+.habit-ambiance-modal {
+  width: min(92vw, 520px);
+}
+
+.habit-ambiance-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.habit-ambiance-modal__option {
+  min-height: 4.35rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.92);
+  color: #334155;
+  display: grid;
+  place-items: center;
+  gap: 0.15rem;
+  cursor: pointer;
+}
+
+.habit-ambiance-modal__option:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.habit-ambiance-modal__option span {
+  font-size: 1.35rem;
+}
+
+.habit-ambiance-modal__option small {
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.habit-ambiance-modal__option--active {
+  border-color: rgba(220, 38, 38, 0.6);
+  background: linear-gradient(135deg, rgba(254, 226, 226, 0.96), rgba(219, 234, 254, 0.96));
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.habit-ambiance-modal__ideas {
+  margin-top: 0.9rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: rgba(239, 246, 255, 0.86);
+  color: #334155;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+@keyframes habit-ambiance-starlight-drift {
+  from { background-position: 0 0, 30px 20px, 10px 60px, 0 0; }
+  to { background-position: 120px 80px, -140px 190px, 150px -90px, 0 0; }
+}
+
+@keyframes habit-ambiance-orb-float {
+  from { transform: translate3d(-0.5rem, 0.25rem, 0) scale(0.94); }
+  to { transform: translate3d(0.85rem, -0.75rem, 0) scale(1.08); }
+}
