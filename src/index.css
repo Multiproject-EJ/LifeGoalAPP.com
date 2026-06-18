@@ -18916,6 +18916,26 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: inline-block;
   transform: scale(1.28);
   transform-origin: center center;
+  transition: transform 180ms cubic-bezier(0.2, 1.35, 0.32, 1);
+  will-change: transform;
+}
+
+.mobile-footer-nav__surface--diode-off
+  .mobile-footer-nav__item--icon-expanded
+  .mobile-footer-nav__icon,
+.mobile-footer-nav__surface--diode-off
+  .mobile-footer-nav__item--icon-expanded
+  .mobile-footer-nav__status-icon {
+  transform: scale(2);
+}
+
+.mobile-footer-nav__surface--diode-off
+  .mobile-footer-nav__item--icon-neighbor-expanded
+  .mobile-footer-nav__icon,
+.mobile-footer-nav__surface--diode-off
+  .mobile-footer-nav__item--icon-neighbor-expanded
+  .mobile-footer-nav__status-icon {
+  transform: scale(1.5);
 }
 
 .mobile-footer-nav__icon img {

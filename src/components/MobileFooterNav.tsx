@@ -101,6 +101,7 @@ export function MobileFooterNav({
   const [areControlsFaded, setAreControlsFaded] = useState(false);
   const [isDiamondFaded, setIsDiamondFaded] = useState(false);
   const [isMenuLaunchAnimating, setIsMenuLaunchAnimating] = useState(false);
+  const [expandedFooterIconId, setExpandedFooterIconId] = useState<string | null>(null);
   const [displayPointsBalance, setDisplayPointsBalance] = useState<number | null>(
     typeof pointsBalance === 'number' ? Math.max(0, Math.floor(pointsBalance)) : null,
   );
@@ -116,6 +117,7 @@ export function MobileFooterNav({
   const controlFadeTimeoutRef = useRef<number | null>(null);
   const diamondFadeTimeoutRef = useRef<number | null>(null);
   const menuLaunchTimeoutRef = useRef<number | null>(null);
+  const expandedFooterIconTimeoutRef = useRef<number | null>(null);
   const swipeStartYRef = useRef<number | null>(null);
   const swipeStartXRef = useRef<number | null>(null);
   const isSwipeCollapseTriggeredRef = useRef(false);
@@ -137,6 +139,46 @@ export function MobileFooterNav({
   const shouldShowDiamondCounter = Boolean(isDiodeActive && goldBreakdown);
   const isCompactGameStatus = isDiodeOff;
   const compactGameIcon = isDiodeOff ? getDailyGameIcon() : null;
+  const visualFooterIconIds = listItems.map((item) => (isNavItem(item) ? item.id : 'status'));
+
+  const getStandardFooterIconExpansionClass = (iconId: string) => {
+    if (isDiodeActive || expandedFooterIconId === null) {
+      return '';
+    }
+
+    const expandedIndex = visualFooterIconIds.indexOf(expandedFooterIconId);
+    const iconIndex = visualFooterIconIds.indexOf(iconId);
+
+    if (expandedIndex === -1 || iconIndex === -1) {
+      return '';
+    }
+
+    if (iconIndex === expandedIndex) {
+      return ' mobile-footer-nav__item--icon-expanded';
+    }
+
+    if (Math.abs(iconIndex - expandedIndex) === 1) {
+      return ' mobile-footer-nav__item--icon-neighbor-expanded';
+    }
+
+    return '';
+  };
+
+  const triggerStandardFooterIconExpansion = (iconId: string) => {
+    if (isDiodeActive) {
+      return;
+    }
+
+    if (expandedFooterIconTimeoutRef.current !== null) {
+      window.clearTimeout(expandedFooterIconTimeoutRef.current);
+    }
+
+    setExpandedFooterIconId(iconId);
+    expandedFooterIconTimeoutRef.current = window.setTimeout(() => {
+      setExpandedFooterIconId(null);
+      expandedFooterIconTimeoutRef.current = null;
+    }, 7000);
+  };
   const handlePointerDown = () => {
     if (isDiodeActive) {
       revealControllerUI();
@@ -272,6 +314,9 @@ export function MobileFooterNav({
       clearFadeTimers();
       if (menuLaunchTimeoutRef.current !== null) {
         window.clearTimeout(menuLaunchTimeoutRef.current);
+      }
+      if (expandedFooterIconTimeoutRef.current !== null) {
+        window.clearTimeout(expandedFooterIconTimeoutRef.current);
       }
     };
   }, []);
@@ -448,6 +493,7 @@ export function MobileFooterNav({
     if (isDiodeActive) {
       revealControllerUI();
     }
+    triggerStandardFooterIconExpansion('status');
     onStatusClick?.();
   };
 
@@ -531,7 +577,7 @@ export function MobileFooterNav({
           {listItems.map((item) => {
             if ('type' in item && item.type === 'status' && status) {
               return (
-                <li key="status" className="mobile-footer-nav__item mobile-footer-nav__status" aria-live="polite">
+                <li key="status" className={`mobile-footer-nav__item mobile-footer-nav__status${getStandardFooterIconExpansionClass('status')}`} aria-live="polite">
                   <button
                     type="button"
                     className={`mobile-footer-nav__status-card ${
@@ -586,7 +632,7 @@ export function MobileFooterNav({
             const pointsBadgeValue = showPointsBadges ? pointsBadges[item.id] : undefined;
             const isEnergyItem = item.id === 'breathing-space' && Boolean(onEnergySelect);
             return (
-              <li key={item.id} className={`mobile-footer-nav__item mobile-footer-nav__item--${item.id}`}>
+              <li key={item.id} className={`mobile-footer-nav__item mobile-footer-nav__item--${item.id}${getStandardFooterIconExpansionClass(item.id)}`}>
                 {isEnergyItem ? (
                   <div
                     className={`mobile-footer-nav__energy-menu${
@@ -629,6 +675,7 @@ export function MobileFooterNav({
                   onClick={() => {
                     playFooterClickSound(getFooterClickSoundKind(item.id, isEnergyItem));
                     revealControllerUI();
+                    triggerStandardFooterIconExpansion(item.id);
                     if (isEnergyItem) {
                       onEnergyToggle?.();
                       return;
