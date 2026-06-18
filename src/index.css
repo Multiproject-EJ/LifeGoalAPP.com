@@ -35621,15 +35621,47 @@ body.habit-wizard-open .mobile-footer-nav {
   height: clamp(1.12rem, calc(var(--controller-w) * 0.034), 1.48rem);
   flex-basis: clamp(1.12rem, calc(var(--controller-w) * 0.034), 1.48rem);
   font-size: clamp(1rem, calc(var(--controller-w) * 0.03), 1.34rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   transform: none;
 }
 
-.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__icon img {
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__icon img,
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__icon svg,
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__status-icon img,
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__status-icon svg {
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  object-fit: contain;
 }
 
 .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__shield-icon {
   width: clamp(1.2rem, calc(var(--controller-w) * 0.036), 1.56rem);
   height: clamp(1.2rem, calc(var(--controller-w) * 0.036), 1.56rem);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.app--mobile-frame
+  .mobile-footer-nav__surface--image
+  .mobile-footer-nav__item--icon-expanded
+  .mobile-footer-nav__icon,
+.app--mobile-frame
+  .mobile-footer-nav__surface--image
+  .mobile-footer-nav__item--icon-expanded
+  .mobile-footer-nav__status-icon,
+.app--mobile-frame
+  .mobile-footer-nav__surface--image
+  .mobile-footer-nav__item--icon-neighbor-expanded
+  .mobile-footer-nav__icon,
+.app--mobile-frame
+  .mobile-footer-nav__surface--image
+  .mobile-footer-nav__item--icon-neighbor-expanded
+  .mobile-footer-nav__status-icon {
+  transform: none;
 }
