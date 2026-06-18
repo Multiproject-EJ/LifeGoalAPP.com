@@ -35596,7 +35596,7 @@ body.habit-wizard-open .mobile-footer-nav {
 }
 
 
-/* Controller-footer overlay tuning: keep labels above enlarged controls and slow text fade. */
+/* Controller-footer overlay tuning: keep labels above controls and slow text fade. */
 .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__icon,
 .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__status-icon {
   position: relative;
@@ -35614,10 +35614,16 @@ body.habit-wizard-open .mobile-footer-nav {
 
 .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__icon,
 .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__status-icon {
-  font-size: clamp(2.36rem, calc(var(--controller-w) * 0.08), 3.1rem);
+  font-size: clamp(1.12rem, calc(var(--controller-w) * 0.034), 1.48rem);
+  transform: none;
 }
 
 .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__icon img {
-  width: clamp(2.36rem, calc(var(--controller-w) * 0.08), 3.1rem);
-  height: clamp(2.36rem, calc(var(--controller-w) * 0.08), 3.1rem);
+  width: clamp(1.12rem, calc(var(--controller-w) * 0.034), 1.48rem);
+  height: clamp(1.12rem, calc(var(--controller-w) * 0.034), 1.48rem);
+}
+
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__shield-icon {
+  width: clamp(1.2rem, calc(var(--controller-w) * 0.036), 1.56rem);
+  height: clamp(1.2rem, calc(var(--controller-w) * 0.036), 1.56rem);
 }
