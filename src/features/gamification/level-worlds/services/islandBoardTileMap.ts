@@ -17,7 +17,7 @@ import { TRAFFIC_LIGHT_TILE_INDEX } from './islandRunTrafficLightTile';
 
 export type IslandLandmarkDoorStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
 
-export type IslandTileType = 'currency' | 'chest' | 'hazard' | 'micro' | 'encounter' | 'landmark_door' | 'traffic_light';
+export type IslandTileType = 'currency' | 'chest' | 'hazard' | 'micro' | 'encounter' | 'card' | 'landmark_door' | 'traffic_light';
 
 export type IslandRarity = IslandRunIslandRarity;
 
@@ -81,6 +81,10 @@ const ENCOUNTER_FRACTIONS: Record<IslandRarity, number[]> = {
   rare: [0.275, 0.775],
 };
 
+// Two adjacent ring tiles become a card-draw station. Fractions keep the pair
+// topology-aware instead of depending on the current 40-tile production count.
+const CARD_STATION_START_FRACTION = 0.625;
+
 // Non-stop tile pool (weighted). Retired tile types:
 //   - `egg_shard` (shards now only come from reward bar / stops / boss / egg sell).
 //   - `event` (conflicted with the timed minigame terminology; the word "event"
@@ -134,6 +138,15 @@ function seededRandom(seed: number): number {
  */
 export function getIslandRarity(islandNumber: number): IslandRarity {
   return getIslandRunRarity(islandNumber);
+}
+
+function computeCardStationIndicesForProfile(tileCount: number): Set<number> {
+  const indices = new Set<number>();
+  if (tileCount <= 0) return indices;
+  const startIndex = Math.min(tileCount - 1, Math.max(0, Math.floor(CARD_STATION_START_FRACTION * tileCount)));
+  indices.add(startIndex);
+  indices.add((startIndex + 1) % tileCount);
+  return indices;
 }
 
 function computeEncounterIndicesForProfile(rarity: IslandRarity, tileCount: number): Set<number> {
@@ -204,11 +217,17 @@ export function generateTileMap(
   const boardProfile = resolveIslandBoardProfile(options?.profileId);
   const tileCount = boardProfile.tileCount;
   const encounterIndices = computeEncounterIndicesForProfile(rarity, tileCount);
+  const cardStationIndices = computeCardStationIndicesForProfile(tileCount);
   const tiles: IslandTileMapEntry[] = [];
 
   for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
     if (tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
       tiles.push({ index: tileIndex, tileType: 'traffic_light' });
+      continue;
+    }
+
+    if (cardStationIndices.has(tileIndex)) {
+      tiles.push({ index: tileIndex, tileType: 'card' });
       continue;
     }
 

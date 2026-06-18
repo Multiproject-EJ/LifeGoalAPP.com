@@ -1408,6 +1408,7 @@ const TILE_TYPE_ICONS: Record<string, string> = {
   micro: '✨',
   landmark_door: '🚪',
   traffic_light: '🚦',
+  card: '🃏',
 };
 
 const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
@@ -1418,6 +1419,7 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
   encounter: '#ffa765',
   landmark_door: '#f4c7ff',
   traffic_light: '#7cff9b',
+  card: '#d8b4fe',
 };
 
 const DORMANT_DOOR_FIGURE_ICONS: Record<DormantDoorFigure, string> = {
@@ -6081,6 +6083,9 @@ export function IslandRunBoardPrototype({
         break;
       case 'chest':
         setLandingText(`🎁 Treasure chest! +${essenceDelta} essence${multLabel}`);
+        break;
+      case 'card':
+        setLandingText('🃏 Card station! Draw from the island discovery deck to find clues for this island tech.');
         break;
       case 'hazard': {
         const penalty = Math.abs(essenceDelta);
