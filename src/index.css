@@ -18905,44 +18905,47 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-footer-nav__icon {
-  font-size: 1.6rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: inline-flex;
+  flex: 0 0 1.6rem;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 1.35rem;
   line-height: 1;
 }
 
-/* Enlarge the standard footer icons visually without growing the button/menu.
-   transform: scale() does not affect layout box, so the tap target stays put. */
-.mobile-footer-nav__surface--diode-off .mobile-footer-nav__icon,
-.mobile-footer-nav__surface--diode-off .mobile-footer-nav__status-icon {
-  display: inline-block;
-  transform: scale(1.28);
-  transform-origin: center center;
-  transition: transform 180ms cubic-bezier(0.2, 1.35, 0.32, 1);
-  will-change: transform;
-}
-
-.mobile-footer-nav__surface--diode-off
-  .mobile-footer-nav__item--icon-expanded
-  .mobile-footer-nav__icon,
-.mobile-footer-nav__surface--diode-off
-  .mobile-footer-nav__item--icon-expanded
-  .mobile-footer-nav__status-icon {
-  transform: scale(2);
-}
-
-.mobile-footer-nav__surface--diode-off
-  .mobile-footer-nav__item--icon-neighbor-expanded
-  .mobile-footer-nav__icon,
-.mobile-footer-nav__surface--diode-off
-  .mobile-footer-nav__item--icon-neighbor-expanded
-  .mobile-footer-nav__status-icon {
-  transform: scale(1.5);
-}
-
-.mobile-footer-nav__icon img {
-  width: 1.6rem;
-  height: 1.6rem;
+/* Keep footer icons physically bounded to the icon slot. Some footer icons are
+   image/SVG assets, so font-size alone does not constrain their intrinsic size. */
+.mobile-footer-nav__icon img,
+.mobile-footer-nav__icon svg {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   display: block;
   object-fit: contain;
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__icon,
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__status-icon {
+  transform: none;
+}
+
+.mobile-footer-nav__surface--diode-off
+  .mobile-footer-nav__item--icon-expanded
+  .mobile-footer-nav__icon,
+.mobile-footer-nav__surface--diode-off
+  .mobile-footer-nav__item--icon-expanded
+  .mobile-footer-nav__status-icon,
+.mobile-footer-nav__surface--diode-off
+  .mobile-footer-nav__item--icon-neighbor-expanded
+  .mobile-footer-nav__icon,
+.mobile-footer-nav__surface--diode-off
+  .mobile-footer-nav__item--icon-neighbor-expanded
+  .mobile-footer-nav__status-icon {
+  transform: none;
 }
 
 .mobile-footer-nav__shield-icon {
@@ -35614,13 +35617,16 @@ body.habit-wizard-open .mobile-footer-nav {
 
 .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__icon,
 .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__status-icon {
-  font-size: clamp(1.12rem, calc(var(--controller-w) * 0.034), 1.48rem);
+  width: clamp(1.12rem, calc(var(--controller-w) * 0.034), 1.48rem);
+  height: clamp(1.12rem, calc(var(--controller-w) * 0.034), 1.48rem);
+  flex-basis: clamp(1.12rem, calc(var(--controller-w) * 0.034), 1.48rem);
+  font-size: clamp(1rem, calc(var(--controller-w) * 0.03), 1.34rem);
   transform: none;
 }
 
 .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__icon img {
-  width: clamp(1.12rem, calc(var(--controller-w) * 0.034), 1.48rem);
-  height: clamp(1.12rem, calc(var(--controller-w) * 0.034), 1.48rem);
+  width: 100%;
+  height: 100%;
 }
 
 .app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__shield-icon {

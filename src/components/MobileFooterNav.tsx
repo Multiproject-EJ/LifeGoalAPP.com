@@ -177,7 +177,7 @@ export function MobileFooterNav({
     expandedFooterIconTimeoutRef.current = window.setTimeout(() => {
       setExpandedFooterIconId(null);
       expandedFooterIconTimeoutRef.current = null;
-    }, 7000);
+    }, 1200);
   };
   const handlePointerDown = () => {
     if (isDiodeActive) {
