@@ -6017,7 +6017,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       }
 
       if (action === 'redesign') {
-        setExpandedHabits((prev) => ({ ...prev, [habit.id]: true }));
+        setExpandedHabits({ [habit.id]: true });
         await generateReviewRedesignDraft(habit, action);
       }
 
@@ -6082,14 +6082,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     yesterdaySelectedCount > 0 ? `Mark ${yesterdaySelectedCount} done` : 'Mark done';
 
   const toggleExpanded = (habitId: string) => {
-    setExpandedHabits((current) => ({
-      ...current,
-      [habitId]: !current[habitId],
-    }));
+    setExpandedHabits((current) => (current[habitId] ? {} : { [habitId]: true }));
   };
 
   const toggleTodayTodoExpanded = useCallback((todoId: string) => {
-    setExpandedTodayTodoById((current) => ({ ...current, [todoId]: !current[todoId] }));
+    setExpandedTodayTodoById((current) => (current[todoId] ? {} : { [todoId]: true }));
   }, []);
 
   const getSwipeActionIcon = useCallback((action: HabitSwipeAction | TodoSwipeAction | null) => {
@@ -11052,7 +11049,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     <button
                       type="button"
                       className="yesterday-sundown-todo-modal__task"
-                      onClick={() => setExpandedYesterdaySundownTodoById((current) => ({ ...current, [todo.id]: !current[todo.id] }))}
+                      onClick={() => setExpandedYesterdaySundownTodoById((current) => (current[todo.id] ? {} : { [todo.id]: true }))}
                       aria-expanded={isExpanded}
                     >
                       <span className="yesterday-sundown-todo-modal__task-title">{todo.title}</span>
