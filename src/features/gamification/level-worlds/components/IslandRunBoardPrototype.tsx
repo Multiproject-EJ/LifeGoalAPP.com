@@ -63,6 +63,7 @@ import { generateIslandStopPlan, type IslandStopPlanEntry } from '../services/is
 import { getWisdomTreeCardForIsland } from '../services/wisdomTreeCards';
 import {
   getStopTicketCost,
+  getStopTicketPrepayCost,
   getStopTicketsPaidForIsland,
   isStopTicketPaid,
   payStopTicket,
@@ -1501,6 +1502,7 @@ export function IslandRunBoardPrototype({
    * and open the stop, or cancel. Hatchery never uses this path (always free).
    */
   const [ticketPromptStopId, setTicketPromptStopId] = useState<string | null>(null);
+  const [prepayTicketPromptStopId, setPrepayTicketPromptStopId] = useState<string | null>(null);
   const [lockedStopInfoStopId, setLockedStopInfoStopId] = useState<string | null>(null);
   const [showLandmarkCoachmark, setShowLandmarkCoachmark] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -1795,7 +1797,6 @@ export function IslandRunBoardPrototype({
   const effectiveIslandNumber = cycleIndex * 120 + islandNumber;
   const boardProfileExposureTrackedRef = useRef(false);
   const hasPresentedEntryAudioModalRef = useRef(false);
-
 
   useEffect(() => {
     preloadThemeAssets(activeTheme);
@@ -4265,11 +4266,26 @@ export function IslandRunBoardPrototype({
 
     setLockedStopInfoStopId(null);
     setTicketPromptStopId(null);
+    setPrepayTicketPromptStopId(null);
     requestActiveStopTransition(stopId, 'orbit_stop_click');
     setIsTopbarMenuPrimed(false);
     setFocusedStopId(stopId);
     setCameraMode('stop_focus');
   }, [requestActiveStopTransition]);
+
+  const getPrepayPromptSeenKey = useCallback((stopId: string) => (
+    `island_run_prepay_ticket_prompt_seen_${session.user.id}_${islandNumber}_${stopId}`
+  ), [islandNumber, session.user.id]);
+
+  const markPrepayPromptSeen = useCallback((stopId: string) => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(getPrepayPromptSeenKey(stopId), '1');
+  }, [getPrepayPromptSeenKey]);
+
+  const hasSeenPrepayPrompt = useCallback((stopId: string) => {
+    if (typeof window === 'undefined') return true;
+    return window.localStorage.getItem(getPrepayPromptSeenKey(stopId)) === '1';
+  }, [getPrepayPromptSeenKey]);
 
   const handleLandmarkDoorLanding = useCallback((doorStopId: IslandLandmarkDoorStopId, tileIndex: number) => {
     const stopIndex = stopIndexByStopId.get(doorStopId);
@@ -4295,6 +4311,7 @@ export function IslandRunBoardPrototype({
 
     setLockedStopInfoStopId(null);
     setTicketPromptStopId(null);
+    setPrepayTicketPromptStopId(null);
     setIsTopbarMenuPrimed(false);
     setFocusedStopId(doorStopId);
     setCameraMode('stop_focus');
@@ -4306,6 +4323,18 @@ export function IslandRunBoardPrototype({
       setRequiredDoorStopId(doorStopId);
       setLandingText(`🚪 Landmark door opened ${doorStopId.toUpperCase()}. Complete it before rolling again.`);
       requestActiveStopTransition(doorStopId, 'landmark_door_landing');
+      return;
+    }
+
+    if (tapOutcome === 'locked' && typeof stopIndex === 'number' && stopIndex > 0 && needsTicket && !hasSeenPrepayPrompt(doorStopId)) {
+      markPrepayPromptSeen(doorStopId);
+      requestActiveStopTransition(null, 'locked_landmark_door_prepay_offer');
+      setRequiredDoorStopId(null);
+      setDormantDoorMiniGame(null);
+      setDormantDoorSelectedIndices([]);
+      setDormantDoorReward(null);
+      setPrepayTicketPromptStopId(doorStopId);
+      setLandingText('🎫 Early landmark ticket offer: prepay now for 20% off, or skip and keep playing door challenges later.');
       return;
     }
 
@@ -4326,7 +4355,67 @@ export function IslandRunBoardPrototype({
     setDormantDoorReward(null);
     setIsDormantDoorRewardClaiming(false);
     setLandingText('🚪 Dormant door challenge: reveal doors until 3 matching prizes appear.');
-  }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, requestActiveStopTransition, stopIndexByStopId]);
+  }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, hasSeenPrepayPrompt, markPrepayPromptSeen, requestActiveStopTransition, stopIndexByStopId]);
+
+  const handlePrepayStopTicket = useCallback((stopId: string) => {
+    const stopIndex = stopIndexByStopId.get(stopId);
+    if (stopIndex === undefined) return;
+    const result = payStopTicket({
+      effectiveIslandNumber,
+      islandNumber,
+      stopIndex,
+      essence: runtimeStateRef.current.essence,
+      essenceLifetimeSpent: runtimeStateRef.current.essenceLifetimeSpent,
+      stopTicketsPaidByIsland: runtimeStateRef.current.stopTicketsPaidByIsland,
+      stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
+      prepay: true,
+    });
+
+    if (!result.ok) {
+      if (result.reason === 'insufficient_essence') {
+        setLandingText(`Not enough essence — need ${result.cost} 🟣 to prepay this discounted ticket.`);
+      } else if (result.reason === 'already_paid') {
+        setLandingText('That landmark ticket is already prepaid. Finish the prerequisite landmark to enter.');
+        setPrepayTicketPromptStopId(null);
+      } else {
+        setPrepayTicketPromptStopId(null);
+      }
+      return;
+    }
+
+    if (!result.alreadyFree) {
+      const nextRuntimeState = applyStopTicketPayment({
+        session,
+        client,
+        essence: result.essence,
+        essenceLifetimeSpent: result.essenceLifetimeSpent,
+        stopTicketsPaidByIsland: result.stopTicketsPaidByIsland,
+        triggerSource: 'stop_ticket_prepay_discount',
+      });
+      setRuntimeState((current) => ({
+        ...current,
+        essence: nextRuntimeState.essence,
+        essenceLifetimeSpent: nextRuntimeState.essenceLifetimeSpent,
+        stopTicketsPaidByIsland: nextRuntimeState.stopTicketsPaidByIsland,
+      }));
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_spend',
+        metadata: {
+          stage: 'island_run_stop_ticket_prepaid',
+          island_number: islandNumber,
+          stop_id: stopId,
+          stop_index: stopIndex,
+          cost: result.cost,
+          discount_rate: 0.2,
+        },
+      });
+      const paidStop = islandStopPlan.find((s) => s.stopId === stopId);
+      setLandingText(`${paidStop?.title ?? stopId} ticket prepaid for ${result.cost} 🟣 (20% off). Complete the previous landmark to enter.`);
+    }
+    setPrepayTicketPromptStopId(null);
+    setCameraMode('board_follow');
+  }, [client, effectiveIslandNumber, islandNumber, islandStopPlan, session, stopIndexByStopId]);
 
   const requiredDoorStopIndex = requiredDoorStopId ? stopIndexByStopId.get(requiredDoorStopId) : undefined;
   const isDoorLandmarkCompletionRequired = requiredDoorStopId !== null
@@ -4441,11 +4530,15 @@ export function IslandRunBoardPrototype({
   }, [session.user.id]);
 
   useEffect(() => {
-    if (!lockedStopInfoStopId && !ticketPromptStopId) return undefined;
+    if (!lockedStopInfoStopId && !ticketPromptStopId && !prepayTicketPromptStopId) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       if (ticketPromptStopId) {
         setTicketPromptStopId(null);
+        return;
+      }
+      if (prepayTicketPromptStopId) {
+        setPrepayTicketPromptStopId(null);
         return;
       }
       if (lockedStopInfoStopId) {
@@ -4454,7 +4547,7 @@ export function IslandRunBoardPrototype({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [lockedStopInfoStopId, ticketPromptStopId]);
+  }, [lockedStopInfoStopId, prepayTicketPromptStopId, ticketPromptStopId]);
 
   /**
    * Pay the essence ticket for `stopId`. On success: persist the updated
@@ -4758,7 +4851,6 @@ export function IslandRunBoardPrototype({
 
     return () => window.clearInterval(timer);
   }, [isIslandTimerPendingStart, showTravelOverlay, islandNumber, islandExpiresAtMs]);
-
 
   // M15G: Write summary to global key so App.tsx overlay can read islandExpiresAtMs
   useEffect(() => {
@@ -7019,7 +7111,6 @@ export function IslandRunBoardPrototype({
     }
   };
 
-
   const handleClaimOnboardingBooster = () => {
     const trimmedName = boosterName.trim();
     if (!trimmedName) {
@@ -7450,7 +7541,6 @@ export function IslandRunBoardPrototype({
     setIsTimedEventLaunchQueued(false);
     playIslandRunSound('minigame_open');
   };
-
 
   useEffect(() => {
     if (!isTimedEventLaunchQueued) return;
@@ -8726,8 +8816,6 @@ export function IslandRunBoardPrototype({
     }
   }, [client, isDevModeEnabled, session]);
 
-
-
   const handleDevResetWelcomePackFlags = useCallback(async () => {
     if (!isDevModeEnabled) return 'Welcome Pack reset is only available in Island Run dev mode.';
     await withIslandRunActionLock(session.user.id, async () => {
@@ -8951,7 +9039,6 @@ export function IslandRunBoardPrototype({
     });
   };
 
-
   const openShopPanel = () => {
     setShowShopPanel(true);
     setShowMarketPanel(false);
@@ -9017,7 +9104,6 @@ export function IslandRunBoardPrototype({
 
     window.location.assign(result.url);
   }, [islandNumber, session]);
-
 
   const handleStartCreaturePackCheckout = useCallback(async () => {
     if (!isCreaturePackStripeCheckoutEnabled) {
@@ -11647,7 +11733,6 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-
       {trafficLightCoinFlip && (
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--traffic-light island-traffic-light--${trafficLightCoinFlip.phase}`} role="dialog" aria-modal="true" aria-label="Traffic light bonus coin flip">
@@ -13756,6 +13841,73 @@ export function IslandRunBoardPrototype({
           </div>
         );
       })()}
+
+      {prepayTicketPromptStopId && typeof document !== 'undefined' ? createPortal((() => {
+        const promptedStop = islandStopPlan.find((stop) => stop.stopId === prepayTicketPromptStopId);
+        const stopIndex = stopIndexByStopId.get(prepayTicketPromptStopId) ?? 0;
+        const fullCost = getStopTicketCost({ effectiveIslandNumber, stopIndex });
+        const prepayCost = getStopTicketPrepayCost({ effectiveIslandNumber, stopIndex });
+        const savings = Math.max(0, fullCost - prepayCost);
+        const wallet = runtimeState.essence;
+        const canAfford = wallet >= prepayCost;
+        const shortfall = Math.max(0, prepayCost - wallet);
+        const prerequisite = stopIndex > 0 ? islandStopPlan[stopIndex - 1] : null;
+        const closePrepayOffer = () => {
+          setPrepayTicketPromptStopId(null);
+          setLandingText('Offer skipped. Future landings on that locked door will use the normal door challenge.');
+          setCameraMode('board_follow');
+        };
+        return (
+          <div
+            className="island-run-modal-backdrop"
+            role="presentation"
+            onClick={closePrepayOffer}
+          >
+            <div
+              className="island-run-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="stop-ticket-prepay-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <h2 id="stop-ticket-prepay-title" style={{ margin: 0, fontSize: 20 }}>
+                🎫 Prepay {promptedStop?.title ?? prepayTicketPromptStopId} for 20% off?
+              </h2>
+              <p style={{ marginTop: 12, marginBottom: 8, opacity: 0.85 }}>
+                This landmark is not open yet{prerequisite ? <> — finish <strong>{prerequisite.title}</strong> first.</> : null}.
+                Since you found its door early, you can prepay the entry ticket now at a discount.
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16, margin: '12px 0 16px', fontSize: 16 }}>
+                <div><strong>Later:</strong> <s>{fullCost} 🟣</s></div>
+                <div><strong>Prepay:</strong> {prepayCost} 🟣</div>
+                <div><strong>Save:</strong> {savings} 🟣</div>
+                <div><strong>Wallet:</strong> {wallet} 🟣</div>
+              </div>
+              {!canAfford ? (
+                <p style={{ marginTop: 0, marginBottom: 12, fontSize: 13, opacity: 0.85 }}>
+                  You need <strong>{shortfall} more 🟣</strong> to use this one-time prepay offer.
+                </p>
+              ) : null}
+              <p style={{ marginTop: 0, marginBottom: 16, fontSize: 13, opacity: 0.75 }}>
+                This offer appears only on your first early landing for this landmark. If you skip it, later landings continue with the normal dormant door challenge.
+              </p>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button type="button" onClick={closePrepayOffer} style={{ padding: '8px 16px' }}>
+                  Skip offer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePrepayStopTicket(prepayTicketPromptStopId)}
+                  disabled={!canAfford}
+                  style={{ padding: '8px 16px', opacity: canAfford ? 1 : 0.5 }}
+                >
+                  {canAfford ? `Prepay (${prepayCost} 🟣)` : `Need ${shortfall} more 🟣`}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })(), document.body) : null}
 
       {/* ── Stop Ticket Prompt ────────────────────────────────────────────
           Opens when the player clicks an orbit stop whose previous stop is

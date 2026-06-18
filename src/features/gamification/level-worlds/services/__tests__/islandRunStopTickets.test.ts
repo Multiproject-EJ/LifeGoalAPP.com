@@ -1,5 +1,6 @@
 import {
   getStopTicketCost,
+  getStopTicketPrepayCost,
   getStopTicketsPaidForIsland,
   isStopTicketPaid,
   payStopTicket,
@@ -43,6 +44,15 @@ export const islandRunStopTicketsTests: TestCase[] = [
     run: () => {
       assertEqual(getStopTicketCost({ effectiveIslandNumber: 1, stopIndex: -5 }), 0, 'Negative index → clamped to hatchery (free)');
       assertEqual(getStopTicketCost({ effectiveIslandNumber: 1, stopIndex: 99 }), STOP_TICKET_BASE_COSTS[4], 'Huge index → clamped to boss');
+    },
+  },
+
+  {
+    name: 'prepay ticket cost applies a 20% discount',
+    run: () => {
+      assertEqual(getStopTicketPrepayCost({ effectiveIslandNumber: 1, stopIndex: 1 }), 24, 'Stop 1 prepay is 20% off 30');
+      assertEqual(getStopTicketPrepayCost({ effectiveIslandNumber: 1, stopIndex: 4 }), 176, 'Boss prepay is 20% off 220');
+      assertEqual(getStopTicketPrepayCost({ effectiveIslandNumber: 1, stopIndex: 0 }), 0, 'Hatchery remains free');
     },
   },
   {
@@ -146,6 +156,28 @@ export const islandRunStopTicketsTests: TestCase[] = [
       assertEqual(result.essenceLifetimeSpent, 10 + cost, 'Lifetime spent incremented by cost');
       assertEqual(result.cost, cost, 'Cost surfaced in result');
       assertEqual(result.stopTicketsPaidByIsland['1']?.[0], 1, 'Stop 1 marked paid for island 1');
+    },
+  },
+
+  {
+    name: 'payStopTicket prepay succeeds before the previous objective is complete at discounted cost',
+    run: () => {
+      const prepayCost = getStopTicketPrepayCost({ effectiveIslandNumber: 1, stopIndex: 2 });
+      const result = payStopTicket({
+        effectiveIslandNumber: 1,
+        islandNumber: 1,
+        stopIndex: 2,
+        essence: prepayCost + 10,
+        essenceLifetimeSpent: 7,
+        stopTicketsPaidByIsland: {},
+        stopStatesByIndex: OBJECTIVE_DONE(0),
+        prepay: true,
+      });
+      assertEqual(result.ok, true, 'Prepay should not require previous landmark completion');
+      if (!result.ok) return;
+      assertEqual(result.essence, 10, 'Prepay deducts discounted cost');
+      assertEqual(result.essenceLifetimeSpent, 7 + prepayCost, 'Lifetime spent includes discounted prepay cost');
+      assertEqual(result.stopTicketsPaidByIsland['1']?.[0], 2, 'Future stop marked paid for this island');
     },
   },
   {

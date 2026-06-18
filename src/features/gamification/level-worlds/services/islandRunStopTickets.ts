@@ -99,6 +99,18 @@ export function isStopTicketPaid(options: {
   return options.ticketsPaid.includes(options.stopIndex);
 }
 
+export const STOP_TICKET_PREPAY_DISCOUNT_RATE = 0.2;
+
+/** Returns the discounted cost for prepaying a future landmark ticket. */
+export function getStopTicketPrepayCost(options: {
+  effectiveIslandNumber: number;
+  stopIndex: number;
+}): number {
+  const fullCost = getStopTicketCost(options);
+  if (fullCost <= 0) return 0;
+  return Math.max(1, Math.floor(fullCost * (1 - STOP_TICKET_PREPAY_DISCOUNT_RATE)));
+}
+
 export type PayStopTicketReason =
   | 'already_paid'
   | 'invalid_stop_index'
@@ -150,12 +162,19 @@ export function payStopTicket(options: {
   essenceLifetimeSpent: number;
   stopTicketsPaidByIsland: Record<string, number[]> | undefined | null;
   stopStatesByIndex: ReadonlyArray<{ objectiveComplete: boolean } | null | undefined>;
+  /** Allows paying a future, sequence-locked landmark early at a 20% discount. */
+  prepay?: boolean;
 }): PayStopTicketResult {
   const stopIndex = Math.floor(options.stopIndex);
-  const cost = getStopTicketCost({
-    effectiveIslandNumber: options.effectiveIslandNumber,
-    stopIndex,
-  });
+  const cost = options.prepay
+    ? getStopTicketPrepayCost({
+        effectiveIslandNumber: options.effectiveIslandNumber,
+        stopIndex,
+      })
+    : getStopTicketCost({
+        effectiveIslandNumber: options.effectiveIslandNumber,
+        stopIndex,
+      });
 
   if (stopIndex === 0) {
     // Hatchery is implicitly free. Return a no-op success so callers don't
@@ -177,7 +196,7 @@ export function payStopTicket(options: {
   if (paid.includes(stopIndex)) return { ok: false, reason: 'already_paid', cost };
 
   const prev = options.stopStatesByIndex[stopIndex - 1];
-  if (!prev?.objectiveComplete) {
+  if (!options.prepay && !prev?.objectiveComplete) {
     return { ok: false, reason: 'previous_stop_not_complete', cost };
   }
 
