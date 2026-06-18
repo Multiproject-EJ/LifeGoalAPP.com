@@ -35665,3 +35665,90 @@ body.habit-wizard-open .mobile-footer-nav {
   .mobile-footer-nav__status-icon {
   transform: none;
 }
+
+.habit-day-nav__vision-modal-backdrop:has(.habit-day-nav__egg-hatch-movie-modal) {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(6px);
+  padding: 1rem;
+}
+
+.habit-day-nav__egg-hatch-movie-modal {
+  width: min(560px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: hidden;
+  background: #ffffff;
+  border: 2px solid rgba(37, 99, 235, 0.28);
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.2);
+  padding: clamp(1.4rem, 4vw, 2rem);
+}
+
+.habit-day-nav__egg-hatch-movie-modal::before {
+  content: none;
+}
+
+.habit-day-nav__egg-hatch-movie-body {
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 0;
+  overflow: visible;
+}
+
+.habit-day-nav__egg-hatch-movie-stage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #ffffff;
+  isolation: isolate;
+}
+
+.habit-day-nav__egg-hatch-movie-video {
+  width: 100%;
+  max-height: min(62dvh, 520px);
+  margin: 0;
+  border-radius: inherit;
+  background: #ffffff;
+  object-fit: contain;
+}
+
+.habit-day-nav__egg-hatch-movie-tint {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(37, 99, 235, 0.24);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 260ms ease;
+}
+
+.habit-day-nav__egg-hatch-movie-tint--visible {
+  opacity: 1;
+}
+
+.habit-day-nav__egg-hatch-movie-video--tinted {
+  filter: blur(1.5px) saturate(1.08);
+}
+
+.habit-day-nav__egg-hatch-movie-button {
+  position: static;
+  transform: none;
+  margin-top: 0.25rem;
+  min-width: min(320px, 86vw);
+  transition: transform 260ms ease, box-shadow 260ms ease, filter 260ms ease;
+}
+
+.habit-day-nav__egg-hatch-movie-button--ready {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.16), 0 18px 42px rgba(34, 197, 94, 0.48);
+  animation: egg-hatch-movie-button-glow 1.35s ease-in-out infinite;
+}
+
+@keyframes egg-hatch-movie-button-glow {
+  0%, 100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.12);
+  }
+}
