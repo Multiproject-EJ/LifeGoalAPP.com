@@ -35572,3 +35572,30 @@ body.habit-wizard-open .mobile-footer-nav {
     box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.18), 0 0 28px rgba(120, 215, 255, 0.85);
   }
 }
+
+
+/* Controller-footer overlay tuning: keep labels above enlarged controls and slow text fade. */
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__icon,
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__status-icon {
+  position: relative;
+  z-index: 1;
+}
+
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__label,
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__status-label,
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__status-level,
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__status-progress {
+  position: relative;
+  z-index: 2;
+  transition: opacity 0.75s ease, transform 0.75s ease;
+}
+
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__icon,
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__status-icon {
+  font-size: clamp(2.36rem, calc(var(--controller-w) * 0.08), 3.1rem);
+}
+
+.app--mobile-frame .mobile-footer-nav__surface--image .mobile-footer-nav__icon img {
+  width: clamp(2.36rem, calc(var(--controller-w) * 0.08), 3.1rem);
+  height: clamp(2.36rem, calc(var(--controller-w) * 0.08), 3.1rem);
+}
