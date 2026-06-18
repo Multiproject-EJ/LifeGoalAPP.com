@@ -39,7 +39,7 @@ import {
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandDisplayName } from '../services/islandNames';
-import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
+import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import {
   getTrafficLightCharge,
   resolveTrafficLightCoinFlipReward,
@@ -4129,7 +4129,7 @@ export function IslandRunBoardPrototype({
   }, [islandNumber, mergedStopStatesByIndex, resolveCanonicalContractV2Stops, runtimeState.stopTicketsPaidByIsland]);
 
   const allLandmarkDoorsRouteToBoss = contractV2Stops?.statusesByIndex[4] === 'active';
-  const expandedActiveLandmarkDoorStopId = contractV2Stops?.statusesByIndex[1] === 'active' ? 'habit' : undefined;
+  const expandedActiveLandmarkDoorStopId = resolveExpandedLandmarkDoorStopIdForStatuses(contractV2Stops?.statusesByIndex);
   const landmarkDoorTileMap = useMemo(
     () => applyLandmarkDoorTiles(tileMap, {
       allDoorsRouteToBoss: allLandmarkDoorsRouteToBoss,
