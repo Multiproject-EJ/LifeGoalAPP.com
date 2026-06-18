@@ -1967,8 +1967,13 @@ export function IslandRunBoardPrototype({
 
   // Egg-ready in-app banner: shown when egg transitions to stage 4 or on app open with ready egg
   const [showEggReadyBanner, setShowEggReadyBanner] = useState(false);
+  const [hasEggReadyAnimationPlayedOnce, setHasEggReadyAnimationPlayedOnce] = useState(false);
 
   // M14: persistent shop panel state
+  useEffect(() => {
+    setHasEggReadyAnimationPlayedOnce(false);
+  }, [showEggReadyBanner, activeEgg?.setAtMs]);
+
   const [showShopPanel, setShowShopPanel] = useState(false);
   const [showMarketPanel, setShowMarketPanel] = useState(false);
   const [showBuildPanel, setShowBuildPanel] = useState(false);
@@ -12094,23 +12099,27 @@ export function IslandRunBoardPrototype({
 
       {/* ── Egg-ready in-app banner ──────────────────────────────────────── */}
       {showEggReadyBanner && (
-        <div className="island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense" role="dialog" aria-modal="true" aria-label="Egg ready">
-            <h3 className="island-stop-modal__title">🌟🥚 Egg Ready to Open!</h3>
+        <div className="island-stop-modal-backdrop island-egg-ready-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-egg-ready-modal" role="dialog" aria-modal="true" aria-label="Egg ready">
+            <h3 className="island-stop-modal__title island-egg-ready-modal__title">🌟🥚 Egg Ready to Open!</h3>
             {activeEgg ? (
-              <video
-                className="island-hatchery-card__stage-art"
-                src="/assets/creatures/egg-hatch/egg-hatch-alpha-v1.mp4"
-                poster={getEggStageArtSrc(activeEgg.tier, 4)}
-                autoPlay
-                muted
-                playsInline
-                preload="auto"
-                onEnded={(event) => {
-                  event.currentTarget.pause();
-                }}
-                aria-label={`${activeEgg.tier} egg hatching animation`}
-              />
+              <div className={`island-egg-ready-modal__animation-frame${hasEggReadyAnimationPlayedOnce ? ' island-egg-ready-modal__animation-frame--tinted' : ''}`}>
+                <video
+                  className="island-hatchery-card__stage-art island-egg-ready-modal__animation"
+                  src="/assets/creatures/egg-hatch/egg-hatch-alpha-v1.mp4"
+                  poster={getEggStageArtSrc(activeEgg.tier, 4)}
+                  autoPlay
+                  muted
+                  playsInline
+                  preload="auto"
+                  onEnded={(event) => {
+                    setHasEggReadyAnimationPlayedOnce(true);
+                    event.currentTarget.loop = true;
+                    void event.currentTarget.play();
+                  }}
+                  aria-label={`${activeEgg.tier} egg hatching animation`}
+                />
+              </div>
             ) : null}
             <p className="island-stop-modal__copy">
               Your egg has finished incubating and is ready to open. Head to the Hatchery stop to collect your creature or sell for rewards!
@@ -12118,7 +12127,7 @@ export function IslandRunBoardPrototype({
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               <button
                 type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                className={`island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary${hasEggReadyAnimationPlayedOnce ? ' island-egg-ready-modal__primary-btn--ready' : ''}`}
                 onClick={() => {
                   if (activeEgg) {
                     try { window.localStorage.setItem(getEggReadyBannerKey(session.user.id, activeEgg.setAtMs), '1'); } catch { /* ignore */ }
