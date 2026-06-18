@@ -35,6 +35,8 @@ export type IslandLandmarkDoorTileConfig = {
   stopId: Exclude<IslandLandmarkDoorStopId, 'boss'>;
 };
 
+export type IslandLandmarkDoorClusterStopId = Exclude<IslandLandmarkDoorStopId, 'boss'>;
+
 /**
  * Four outer ring tiles nearest the four outer landmark anchors. They become
  * landmark doors; once the boss is open, all four route to the boss instead.
@@ -45,6 +47,28 @@ export const LANDMARK_DOOR_TILE_CONFIGS: readonly IslandLandmarkDoorTileConfig[]
   { tileIndex: 16, stopId: 'mystery' },
   { tileIndex: 26, stopId: 'wisdom' },
 ]);
+
+
+const EXPANDABLE_LANDMARK_DOOR_STOP_IDS: readonly IslandLandmarkDoorClusterStopId[] = ['habit', 'mystery', 'wisdom'];
+
+/**
+ * Returns the non-boss landmark whose circular-board door tiles should glow as
+ * the immediate next interaction target. Ticket-required landmarks count here:
+ * paying the ticket is the next required move to open that landmark, so the
+ * same entrance tiles should pulse before and after the ticket is paid.
+ */
+export function resolveExpandedLandmarkDoorStopIdForStatuses(
+  statusesByIndex: readonly (string | null | undefined)[] | null | undefined,
+): IslandLandmarkDoorClusterStopId | undefined {
+  if (!statusesByIndex) return undefined;
+  for (let stopIndex = 1; stopIndex <= 3; stopIndex += 1) {
+    const status = statusesByIndex[stopIndex];
+    if (status === 'active' || status === 'ticket_required') {
+      return EXPANDABLE_LANDMARK_DOOR_STOP_IDS[stopIndex - 1];
+    }
+  }
+  return undefined;
+}
 
 // Encounter tile placement relative to the board's tileCount.
 // Normal islands: 1 encounter (gated by dayIndex).
@@ -130,7 +154,7 @@ export function applyLandmarkDoorTiles(
   tileMap: IslandTileMapEntry[],
   options?: {
     allDoorsRouteToBoss?: boolean;
-    expandedActiveStopId?: Exclude<IslandLandmarkDoorStopId, 'boss'>;
+    expandedActiveStopId?: IslandLandmarkDoorClusterStopId;
   },
 ): IslandTileMapEntry[] {
   const doorByIndex = new Map<number, IslandLandmarkDoorStopId>();

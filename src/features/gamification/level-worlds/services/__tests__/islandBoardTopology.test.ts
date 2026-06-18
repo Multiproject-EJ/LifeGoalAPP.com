@@ -1,5 +1,5 @@
 import { resolveIslandBoardProfile } from '../islandBoardProfiles';
-import { applyLandmarkDoorTiles, generateTileMap, LANDMARK_DOOR_TILE_CONFIGS } from '../islandBoardTileMap';
+import { applyLandmarkDoorTiles, generateTileMap, LANDMARK_DOOR_TILE_CONFIGS, resolveExpandedLandmarkDoorStopIdForStatuses } from '../islandBoardTileMap';
 import { TRAFFIC_LIGHT_TILE_INDEX } from '../islandRunTrafficLightTile';
 import { resolveWrappedTokenIndex } from '../islandBoardTopology';
 import { generateIslandStopPlan } from '../islandRunStops';
@@ -80,6 +80,21 @@ export const islandBoardTopologyTests: TestCase[] = [
       assertEqual(tileMap[16].doorStopId, 'mystery', 'Expected mystery door to stay unchanged');
       assertEqual(tileMap[26].doorStopId, 'wisdom', 'Expected wisdom door to stay unchanged');
       assertEqual(tileMap.filter((entry) => entry.tileType === 'landmark_door').length, 6, 'Expected 6 total doors: habit expanded to 3, others remain at 1 each');
+    },
+  },
+  {
+    name: 'ticket-required landmark resolves to glowing neighboring door tiles before payment',
+    run: () => {
+      const expandedStopId = resolveExpandedLandmarkDoorStopIdForStatuses(['completed', 'ticket_required', 'locked', 'locked', 'locked']);
+      assertEqual(expandedStopId, 'habit', 'Expected unpaid next habit ticket to select the habit door cluster');
+
+      const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0), { expandedActiveStopId: expandedStopId });
+      for (const tileIndex of [5, 6, 7]) {
+        const entry = tileMap[tileIndex];
+        assertEqual(entry.tileType, 'landmark_door', `Expected unpaid-ticket tile ${tileIndex} to render as a landmark door`);
+        assertEqual(entry.doorStopId, 'habit', `Expected unpaid-ticket tile ${tileIndex} to route to habit`);
+        assertEqual(entry.isActiveDoorCluster, true, `Expected unpaid-ticket tile ${tileIndex} to glow before the ticket is paid`);
+      }
     },
   },
   {
