@@ -896,6 +896,13 @@ const dailyCatchUpLaunchKey = (userId: string) =>
   `lifegoal.daily-catchup-launch:${userId}`;
 const yesterdaySundownTodoShownKey = (userId: string, dateISO: string) =>
   `lifegoal.yesterday-sundown-todos-shown:${userId}:${dateISO}`;
+const todoCleanupDisplayCountsKey = (userId: string) =>
+  `lifegoal.todo-cleanup-display-counts:${userId}`;
+
+type TodoCleanupAction = 'today' | 'tomorrow' | 'schedule' | 'finish' | 'delete';
+type TodoCleanupPendingAction = { action: TodoCleanupAction; scheduledDateISO?: string };
+const TODO_CLEANUP_DELETE_AFTER_DISPLAYS = 3;
+const TODO_CLEANUP_ABOUT_TO_EXPIRE_AT = TODO_CLEANUP_DELETE_AFTER_DISPLAYS - 1;
 const dreamJournalLaunchKey = (userId: string) =>
   `lifegoal.dream-journal-launch:${userId}`;
 const todaysWinsLaunchKey = (userId: string) =>
@@ -1034,6 +1041,9 @@ export function DailyHabitTracker({
   const [yesterdaySundownTodoStatus, setYesterdaySundownTodoStatus] = useState<string | null>(null);
   const [yesterdaySundownTodoSaving, setYesterdaySundownTodoSaving] = useState(false);
   const [expandedYesterdaySundownTodoById, setExpandedYesterdaySundownTodoById] = useState<Record<string, boolean>>({});
+  const [todoCleanupPendingActions, setTodoCleanupPendingActions] = useState<Record<string, TodoCleanupPendingAction>>({});
+  const [todoCleanupDisplayCounts, setTodoCleanupDisplayCounts] = useState<Record<string, number>>({});
+  const [todoCleanupBulkAction, setTodoCleanupBulkAction] = useState<TodoCleanupPendingAction | null>(null);
 
   const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
   const [todaysOfferCheckoutPending, setTodaysOfferCheckoutPending] = useState(false);
@@ -10811,12 +10821,23 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       const { data, error } = await fetchTodayTodos(yesterdayISO);
       if (!isMounted) return;
       if (error) return;
-      const pendingTodos = (data ?? []).filter((todo) => !todo.completed);
+      const displayCounts = loadDraft<Record<string, number>>(todoCleanupDisplayCountsKey(session.user.id)) ?? {};
+      const staleTodos = (data ?? []).filter((todo) => !todo.completed);
+      const expiredTodos = staleTodos.filter((todo) => (displayCounts[todo.id] ?? 0) >= TODO_CLEANUP_DELETE_AFTER_DISPLAYS);
+      if (expiredTodos.length > 0) {
+        await Promise.all(expiredTodos.map((todo) => deleteTodayTodo(todo.id)));
+      }
+      const pendingTodos = staleTodos
+        .filter((todo) => !expiredTodos.some((expiredTodo) => expiredTodo.id === todo.id))
+        .sort((first, second) => (displayCounts[second.id] ?? 0) - (displayCounts[first.id] ?? 0));
       if (pendingTodos.length === 0) {
         saveDraft(shownKey, true);
         return;
       }
       setYesterdaySundownTodos(pendingTodos);
+      setTodoCleanupDisplayCounts(displayCounts);
+      setTodoCleanupPendingActions({});
+      setTodoCleanupBulkAction(null);
       setExpandedYesterdaySundownTodoById({});
       setYesterdaySundownTodoStatus(null);
       setShowYesterdaySundownTodoModal(true);
@@ -10857,11 +10878,63 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     };
   }, [hasViewportModalOpen]);
 
-  const closeYesterdaySundownTodoModal = useCallback(() => {
-    setShowYesterdaySundownTodoModal(false);
+  const applyTodoCleanupActions = useCallback(async (pendingActions: Record<string, TodoCleanupPendingAction>) => {
+    const entries = Object.entries(pendingActions);
+    if (entries.length === 0) return false;
+    setYesterdaySundownTodoSaving(true);
     setYesterdaySundownTodoStatus(null);
-    setExpandedYesterdaySundownTodoById({});
-  }, []);
+    const actionResults = await Promise.all(entries.map(([todoId, pendingAction]) => {
+      if (pendingAction.action === 'delete') return deleteTodayTodo(todoId);
+      if (pendingAction.action === 'finish') return updateTodayTodo(todoId, { completed: true });
+      const nextDateISO = pendingAction.action === 'tomorrow'
+        ? formatISODate(addDays(parseISODate(today), 1))
+        : pendingAction.scheduledDateISO ?? today;
+      return updateTodayTodo(todoId, { todo_date: nextDateISO, completed: false });
+    }));
+    const failed = actionResults.some((result) => result.error);
+    if (failed) {
+      setYesterdaySundownTodoStatus('Some cleanup choices could not be applied. Please try again.');
+      await loadTodayTodos(activeDate);
+      const { data } = await fetchTodayTodos(yesterdayISO);
+      setYesterdaySundownTodos((data ?? []).filter((todo) => !todo.completed));
+      setYesterdaySundownTodoSaving(false);
+      return false;
+    }
+    await loadTodayTodos(activeDate);
+    setYesterdaySundownTodoSaving(false);
+    return true;
+  }, [activeDate, loadTodayTodos, today, yesterdayISO]);
+
+  const recordUnresolvedTodoCleanupDisplays = useCallback((handledTodoIds: Set<string>) => {
+    const nextCounts = { ...todoCleanupDisplayCounts };
+    yesterdaySundownTodos.forEach((todo) => {
+      if (handledTodoIds.has(todo.id)) {
+        delete nextCounts[todo.id];
+        return;
+      }
+      nextCounts[todo.id] = (nextCounts[todo.id] ?? 0) + 1;
+    });
+    saveDraft(todoCleanupDisplayCountsKey(session.user.id), nextCounts);
+    setTodoCleanupDisplayCounts(nextCounts);
+    const todosToDelete = yesterdaySundownTodos.filter((todo) => (nextCounts[todo.id] ?? 0) >= TODO_CLEANUP_DELETE_AFTER_DISPLAYS);
+    if (todosToDelete.length > 0) {
+      void Promise.all(todosToDelete.map((todo) => deleteTodayTodo(todo.id))).then(() => loadTodayTodos(activeDate));
+    }
+  }, [activeDate, loadTodayTodos, session.user.id, todoCleanupDisplayCounts, yesterdaySundownTodos]);
+
+  const closeYesterdaySundownTodoModal = useCallback(async () => {
+    const pendingActions = todoCleanupPendingActions;
+    const handledTodoIds = new Set(Object.keys(pendingActions));
+    const applied = await applyTodoCleanupActions(pendingActions);
+    if (applied || handledTodoIds.size === 0) {
+      recordUnresolvedTodoCleanupDisplays(handledTodoIds);
+      setShowYesterdaySundownTodoModal(false);
+      setYesterdaySundownTodoStatus(null);
+      setExpandedYesterdaySundownTodoById({});
+      setTodoCleanupPendingActions({});
+      setTodoCleanupBulkAction(null);
+    }
+  }, [applyTodoCleanupActions, recordUnresolvedTodoCleanupDisplays, todoCleanupPendingActions]);
 
   const refreshTodosAfterYesterdaySundownAction = useCallback(async () => {
     await loadTodayTodos(activeDate);
@@ -10869,65 +10942,44 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setYesterdaySundownTodos((data ?? []).filter((todo) => !todo.completed));
   }, [activeDate, loadTodayTodos, yesterdayISO]);
 
-  const handleMoveYesterdaySundownTodoToDate = useCallback(async (todo: TodayTodo, nextDateISO: string) => {
-    setYesterdaySundownTodoSaving(true);
-    setYesterdaySundownTodoStatus(null);
-    const { error } = await updateTodayTodo(todo.id, { todo_date: nextDateISO, completed: false });
-    if (error) {
-      setYesterdaySundownTodoStatus('Could not move this todo right now.');
-    } else {
-      setYesterdaySundownTodoStatus(nextDateISO === today ? 'Moved to today.' : `Rescheduled to ${formatDateLabel(nextDateISO)}.`);
-      await refreshTodosAfterYesterdaySundownAction();
-    }
-    setYesterdaySundownTodoSaving(false);
-  }, [refreshTodosAfterYesterdaySundownAction, today]);
-
-  const handleDeleteYesterdaySundownTodo = useCallback(async (todo: TodayTodo) => {
-    setYesterdaySundownTodoSaving(true);
-    setYesterdaySundownTodoStatus(null);
-    const { error } = await deleteTodayTodo(todo.id);
-    if (error) {
-      setYesterdaySundownTodoStatus('Could not delete this todo right now.');
-    } else {
-      setYesterdaySundownTodoStatus('Deleted.');
-      setYesterdaySundownTodos((current) => current.filter((item) => item.id !== todo.id));
-      void loadTodayTodos(activeDate);
-    }
-    setYesterdaySundownTodoSaving(false);
-  }, [activeDate, loadTodayTodos]);
-
-  const handleIgnoreYesterdaySundownTodo = useCallback((todoId: string) => {
-    setYesterdaySundownTodos((current) => current.filter((todo) => todo.id !== todoId));
-    setYesterdaySundownTodoStatus('Ignored for today.');
+  const stageTodoCleanupAction = useCallback((todoId: string, pendingAction: TodoCleanupPendingAction) => {
+    setTodoCleanupPendingActions((current) => ({ ...current, [todoId]: pendingAction }));
+    setExpandedYesterdaySundownTodoById((current) => ({ ...current, [todoId]: false }));
+    setYesterdaySundownTodoStatus('Choice saved. Apply when you are ready.');
   }, []);
 
-  const handleMoveAllYesterdaySundownTodosToToday = useCallback(async () => {
-    if (yesterdaySundownTodos.length === 0) return;
-    setYesterdaySundownTodoSaving(true);
-    setYesterdaySundownTodoStatus(null);
-    const results = await Promise.all(
-      yesterdaySundownTodos.map((todo, index) => updateTodayTodo(todo.id, {
-        todo_date: today,
-        completed: false,
-        order_index: todayTodos.filter((item) => !item.completed).length + index,
-      })),
-    );
-    const failed = results.some((result) => result.error);
-    if (failed) {
-      setYesterdaySundownTodoStatus('Some todos could not be moved. Please try the remaining ones again.');
-      await refreshTodosAfterYesterdaySundownAction();
-    } else {
-      setYesterdaySundownTodoStatus('Moved all yesterday todos to today.');
-      setYesterdaySundownTodos([]);
-      await loadTodayTodos(activeDate);
-      closeYesterdaySundownTodoModal();
-    }
-    setYesterdaySundownTodoSaving(false);
-  }, [activeDate, closeYesterdaySundownTodoModal, loadTodayTodos, refreshTodosAfterYesterdaySundownAction, today, todayTodos, yesterdaySundownTodos]);
+  const clearTodoCleanupAction = useCallback((todoId: string) => {
+    setTodoCleanupPendingActions((current) => {
+      const next = { ...current };
+      delete next[todoId];
+      return next;
+    });
+  }, []);
 
-  const handleIgnoreAllYesterdaySundownTodos = useCallback(() => {
-    closeYesterdaySundownTodoModal();
-  }, [closeYesterdaySundownTodoModal]);
+  const handleApplyTodoCleanup = useCallback(async () => {
+    const handledTodoIds = new Set(Object.keys(todoCleanupPendingActions));
+    const applied = await applyTodoCleanupActions(todoCleanupPendingActions);
+    if (!applied && handledTodoIds.size > 0) return;
+    recordUnresolvedTodoCleanupDisplays(handledTodoIds);
+    setShowYesterdaySundownTodoModal(false);
+    setYesterdaySundownTodoStatus(null);
+    setExpandedYesterdaySundownTodoById({});
+    setTodoCleanupPendingActions({});
+    setTodoCleanupBulkAction(null);
+  }, [applyTodoCleanupActions, recordUnresolvedTodoCleanupDisplays, todoCleanupPendingActions]);
+
+  const handleConfirmBulkTodoCleanup = useCallback(() => {
+    if (!todoCleanupBulkAction) return;
+    setTodoCleanupPendingActions((current) => {
+      const next = { ...current };
+      yesterdaySundownTodos.forEach((todo) => {
+        if (!next[todo.id]) next[todo.id] = todoCleanupBulkAction;
+      });
+      return next;
+    });
+    setTodoCleanupBulkAction(null);
+    setYesterdaySundownTodoStatus('Bulk cleanup choices staged. Tap Apply cleanup to finish.');
+  }, [todoCleanupBulkAction, yesterdaySundownTodos]);
 
   const dailyLifeUpgradeModal = (
     <DailyLifeUpgradeModal
@@ -10939,14 +10991,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     />
   );
 
+  const assignedTodoCleanupCount = Object.keys(todoCleanupPendingActions).length;
+  const allTodoCleanupItemsAssigned = yesterdaySundownTodos.length > 0 && assignedTodoCleanupCount >= yesterdaySundownTodos.length;
+
   const yesterdaySundownTodoModalContent = showYesterdaySundownTodoModal ? (
     <div className="yesterday-sundown-todo-modal" role="dialog" aria-modal="true" aria-labelledby="yesterday-sundown-todo-title">
-      <div className="yesterday-sundown-todo-modal__backdrop" onClick={closeYesterdaySundownTodoModal} role="presentation" />
+      <div className="yesterday-sundown-todo-modal__backdrop" onClick={() => void closeYesterdaySundownTodoModal()} role="presentation" />
       <div className="yesterday-sundown-todo-modal__dialog">
         <header className="yesterday-sundown-todo-modal__header">
           <div>
             <p className="yesterday-sundown-todo-modal__eyebrow">New day reset</p>
-            <h3 id="yesterday-sundown-todo-title">Clear yesterday's sundown todos</h3>
+            <h3 id="yesterday-sundown-todo-title">Todo cleanup</h3>
             <p className="yesterday-sundown-todo-modal__subtitle">
               Decide what to do with unfinished todos from {formatDateLabel(yesterdayISO)}.
             </p>
@@ -10954,22 +11009,46 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           <button
             type="button"
             className="yesterday-sundown-todo-modal__close"
-            onClick={closeYesterdaySundownTodoModal}
-            aria-label="Close yesterday sundown todos"
+            onClick={() => void closeYesterdaySundownTodoModal()}
+            aria-label="Close todo cleanup"
+            disabled={yesterdaySundownTodoSaving}
           >
             ×
           </button>
         </header>
 
         <div className="yesterday-sundown-todo-modal__body">
-          <p className="yesterday-sundown-todo-modal__hint">Tap a task to choose per-task actions. Swipe-style cleanup, without overthinking.</p>
+          <p className="yesterday-sundown-todo-modal__hint">
+            Pick one action per task. Chosen rows gray out, and skipped rows get one more cleanup count.
+          </p>
           {yesterdaySundownTodos.length > 0 ? (
             <ul className="yesterday-sundown-todo-modal__list">
               {yesterdaySundownTodos.map((todo) => {
                 const isExpanded = Boolean(expandedYesterdaySundownTodoById[todo.id]);
+                const pendingAction = todoCleanupPendingActions[todo.id];
+                const displayCount = todoCleanupDisplayCounts[todo.id] ?? 0;
+                const isAboutToExpire = displayCount >= TODO_CLEANUP_ABOUT_TO_EXPIRE_AT;
                 const tomorrowISO = formatISODate(addDays(parseISODate(today), 1));
+                const itemClassName = [
+                  'yesterday-sundown-todo-modal__item',
+                  isExpanded ? 'yesterday-sundown-todo-modal__item--expanded' : '',
+                  pendingAction ? 'yesterday-sundown-todo-modal__item--assigned' : '',
+                  isAboutToExpire ? 'yesterday-sundown-todo-modal__item--expiring' : '',
+                ].filter(Boolean).join(' ');
+                const actionLabel = pendingAction?.action === 'today'
+                  ? 'Move to today'
+                  : pendingAction?.action === 'tomorrow'
+                    ? 'Move to tomorrow'
+                    : pendingAction?.action === 'schedule'
+                      ? `Schedule ${formatDateLabel(pendingAction.scheduledDateISO ?? today)}`
+                      : pendingAction?.action === 'finish'
+                        ? 'Mark finished'
+                        : pendingAction?.action === 'delete'
+                          ? 'Delete'
+                          : null;
                 return (
-                  <li key={todo.id} className={`yesterday-sundown-todo-modal__item${isExpanded ? ' yesterday-sundown-todo-modal__item--expanded' : ''}`}>
+                  <li key={todo.id} className={itemClassName}>
+                    {isAboutToExpire ? <span className="yesterday-sundown-todo-modal__expiry-badge">Last chance</span> : null}
                     <button
                       type="button"
                       className="yesterday-sundown-todo-modal__task"
@@ -10978,25 +11057,28 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     >
                       <span className="yesterday-sundown-todo-modal__task-title">{todo.title}</span>
                       {todo.notes ? <span className="yesterday-sundown-todo-modal__task-notes">{todo.notes}</span> : null}
+                      {actionLabel ? <span className="yesterday-sundown-todo-modal__selected-action">{actionLabel}</span> : null}
                       <span className="yesterday-sundown-todo-modal__task-caret" aria-hidden="true">{isExpanded ? '−' : '+'}</span>
                     </button>
                     {isExpanded ? (
                       <div className="yesterday-sundown-todo-modal__task-actions">
-                        <button type="button" onClick={() => void handleMoveYesterdaySundownTodoToDate(todo, today)} disabled={yesterdaySundownTodoSaving}>Add to today</button>
-                        <button type="button" onClick={() => handleIgnoreYesterdaySundownTodo(todo.id)} disabled={yesterdaySundownTodoSaving}>Ignore</button>
-                        <button type="button" onClick={() => void handleMoveYesterdaySundownTodoToDate(todo, tomorrowISO)} disabled={yesterdaySundownTodoSaving}>Tomorrow</button>
+                        <button type="button" onClick={() => stageTodoCleanupAction(todo.id, { action: 'today' })} disabled={yesterdaySundownTodoSaving}>Today</button>
+                        <button type="button" onClick={() => stageTodoCleanupAction(todo.id, { action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving}>Tomorrow</button>
+                        <button type="button" onClick={() => stageTodoCleanupAction(todo.id, { action: 'finish' })} disabled={yesterdaySundownTodoSaving}>Finished</button>
                         <label className="yesterday-sundown-todo-modal__date-action">
-                          <span>Reschedule</span>
+                          <span>Schedule</span>
                           <input
                             type="date"
                             min={today}
+                            defaultValue={pendingAction?.scheduledDateISO ?? tomorrowISO}
                             onChange={(event) => {
-                              if (event.target.value) void handleMoveYesterdaySundownTodoToDate(todo, event.target.value);
+                              if (event.target.value) stageTodoCleanupAction(todo.id, { action: 'schedule', scheduledDateISO: event.target.value });
                             }}
                             disabled={yesterdaySundownTodoSaving}
                           />
                         </label>
-                        <button type="button" className="yesterday-sundown-todo-modal__delete" onClick={() => void handleDeleteYesterdaySundownTodo(todo)} disabled={yesterdaySundownTodoSaving}>Delete</button>
+                        <button type="button" className="yesterday-sundown-todo-modal__delete" onClick={() => stageTodoCleanupAction(todo.id, { action: 'delete' })} disabled={yesterdaySundownTodoSaving}>Delete</button>
+                        {pendingAction ? <button type="button" onClick={() => clearTodoCleanupAction(todo.id)} disabled={yesterdaySundownTodoSaving}>Undo choice</button> : null}
                       </div>
                     ) : null}
                   </li>
@@ -11010,10 +11092,29 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         </div>
 
         <footer className="yesterday-sundown-todo-modal__footer">
-          <button type="button" className="btn btn--secondary" onClick={handleIgnoreAllYesterdaySundownTodos} disabled={yesterdaySundownTodoSaving}>Ignore all</button>
-          <button type="button" className="btn btn--primary" onClick={() => void handleMoveAllYesterdaySundownTodosToToday()} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>
-            {yesterdaySundownTodoSaving ? 'Saving…' : 'Move all to today'}
-          </button>
+          <div className="yesterday-sundown-todo-modal__bulk">
+            <span>Mark all remaining</span>
+            <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'today' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Today</button>
+            <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Tomorrow</button>
+            <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'finish' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Finished</button>
+            <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'delete' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Delete</button>
+          </div>
+          {todoCleanupBulkAction ? (
+            <div className="yesterday-sundown-todo-modal__confirm" role="alert">
+              <span>Apply this bulk choice to every unassigned todo?</span>
+              <button type="button" onClick={handleConfirmBulkTodoCleanup}>Affirm</button>
+              <button type="button" onClick={() => setTodoCleanupBulkAction(null)}>Cancel</button>
+            </div>
+          ) : null}
+          {allTodoCleanupItemsAssigned ? (
+            <button type="button" className="btn btn--primary" onClick={() => void handleApplyTodoCleanup()} disabled={yesterdaySundownTodoSaving}>
+              {yesterdaySundownTodoSaving ? 'Applying…' : 'Apply cleanup'}
+            </button>
+          ) : (
+            <button type="button" className="btn btn--secondary" onClick={() => void closeYesterdaySundownTodoModal()} disabled={yesterdaySundownTodoSaving}>
+              {assignedTodoCleanupCount > 0 ? `Apply ${assignedTodoCleanupCount} and close` : 'Close'}
+            </button>
+          )}
         </footer>
       </div>
     </div>
