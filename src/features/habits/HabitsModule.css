@@ -779,3 +779,19 @@
     animation: none !important;
   }
 }
+
+.habit-day-nav__egg-hatch-movie-button {
+  position: static;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  margin-top: 0.25rem;
+  min-width: min(320px, 86vw);
+  transition: transform 260ms ease, box-shadow 260ms ease, filter 260ms ease;
+}
+
+.habit-day-nav__egg-hatch-movie-button--ready {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.16), 0 18px 42px rgba(34, 197, 94, 0.48);
+  animation: egg-hatch-movie-button-glow 1.35s ease-in-out infinite;
+}

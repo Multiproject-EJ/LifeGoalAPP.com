@@ -1541,6 +1541,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   // When a ready egg is tapped in Today, we play the hatch movie first; the
   // movie modal's button then launches the island game with the Hatchery open.
   const [isEggHatchMovieOpen, setIsEggHatchMovieOpen] = useState(false);
+  const [hasEggHatchMoviePlayedOnce, setHasEggHatchMoviePlayedOnce] = useState(false);
   const [isZenTreeClaiming, setIsZenTreeClaiming] = useState(false);
   const [isFeedCreaturesClaiming, setIsFeedCreaturesClaiming] = useState(false);
   const [zenTreeClaimError, setZenTreeClaimError] = useState<string | null>(null);
@@ -1560,6 +1561,27 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [visionVisualizationSeconds, setVisionVisualizationSeconds] = useState(120);
   const [isVisionVisualizationRunning, setIsVisionVisualizationRunning] = useState(false);
   const [showYesterdayRecap, setShowYesterdayRecap] = useState(false);
+
+  useEffect(() => {
+    if (!isEggHatchMovieOpen) {
+      setHasEggHatchMoviePlayedOnce(false);
+      return undefined;
+    }
+
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousDocumentOverflow;
+    };
+  }, [isEggHatchMovieOpen]);
 
   useEffect(() => {
     if (typeof document === 'undefined') {
@@ -3880,22 +3902,30 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         >
           ×
         </button>
-        <div className="habit-day-nav__todays-offer-body">
-          <video
-            className="habit-day-nav__egg-hatch-movie-video"
-            src="/assets/movies/egg-hatch-intro-v1.mp4"
-            autoPlay
-            muted
-            playsInline
-            preload="auto"
-            onEnded={(event) => { event.currentTarget.pause(); }}
-            aria-label="Egg hatching animation"
-          />
+        <div className="habit-day-nav__todays-offer-body habit-day-nav__egg-hatch-movie-body">
+          <div className="habit-day-nav__egg-hatch-movie-stage">
+            <video
+              className={`habit-day-nav__egg-hatch-movie-video${hasEggHatchMoviePlayedOnce ? ' habit-day-nav__egg-hatch-movie-video--tinted' : ''}`}
+              src="/assets/movies/egg-hatch-intro-v1.mp4"
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              loop={hasEggHatchMoviePlayedOnce}
+              onEnded={(event) => {
+                setHasEggHatchMoviePlayedOnce(true);
+                event.currentTarget.currentTime = 0;
+                void event.currentTarget.play();
+              }}
+              aria-label="Egg hatching animation"
+            />
+            <div className={`habit-day-nav__egg-hatch-movie-tint${hasEggHatchMoviePlayedOnce ? ' habit-day-nav__egg-hatch-movie-tint--visible' : ''}`} aria-hidden="true" />
+          </div>
           <p className="habit-day-nav__todays-offer-title">Your egg is ready to hatch!</p>
           <p className="habit-day-nav__todays-offer-subtitle">Open the Hatchery to collect your creature or sell it for rewards.</p>
           <button
             type="button"
-            className="habit-day-nav__todays-offer-buy"
+            className={`habit-day-nav__todays-offer-buy habit-day-nav__egg-hatch-movie-button${hasEggHatchMoviePlayedOnce ? ' habit-day-nav__egg-hatch-movie-button--ready' : ''}`}
             onClick={() => {
               setIsEggHatchMovieOpen(false);
               onOpenIslandRunStop?.('hatchery');
