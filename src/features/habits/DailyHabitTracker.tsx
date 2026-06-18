@@ -1069,8 +1069,12 @@ export function DailyHabitTracker({
   });
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const isVisionStarPreviewOnly = resolveFeatureAccess('today.visionStar', { isAdminOrCreator }) !== 'open';
-  const isWaterZenTreePreviewOnly = resolveFeatureAccess('today.waterZenTree', { isAdminOrCreator }) !== 'open';
-  const isFeedCreaturesPreviewOnly = resolveFeatureAccess('today.feedCreatures', { isAdminOrCreator }) !== 'open';
+  const waterZenTreeAccess = resolveFeatureAccess('today.waterZenTree', { isAdminOrCreator });
+  const feedCreaturesAccess = resolveFeatureAccess('today.feedCreatures', { isAdminOrCreator });
+  const isWaterZenTreePreviewOnly = waterZenTreeAccess === 'previewOnly';
+  const isFeedCreaturesPreviewOnly = feedCreaturesAccess === 'previewOnly';
+  const canViewWaterZenTree = waterZenTreeAccess !== 'hidden';
+  const canViewFeedCreatures = feedCreaturesAccess !== 'hidden';
   // Weekly Victory is an admin-only demo feature — only admins can see the snapshot.
   const canViewWeeklyVictory = resolveFeatureAccess('today.weeklyVictory', { isAdminOrCreator }) === 'open';
   const [routinesTodaySummary, setRoutinesTodaySummary] = useState<RoutinesTodayLaneSummary>({
@@ -3448,19 +3452,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         expiresAtMs: nextUtcMidnight,
         badgeLabelOverride: isWaterZenTreePreviewOnly ? DEMO_FEATURE_LABEL : (hasClaimedZenTreeToday ? '✓ Done' : 'Claim'),
         isCollected: isWaterZenTreePreviewOnly ? false : hasClaimedZenTreeToday,
-        isVisible: true,
+        isVisible: canViewWaterZenTree,
         isActionable: isWaterZenTreePreviewOnly ? true : !hasClaimedZenTreeToday,
         sortPriority: 5,
         slotRole: 'core',
       },
       {
         id: 'feed_creatures',
-        label: 'Feed the Creatures',
+        label: 'Feed Pet',
         icon: '🐾',
         expiresAtMs: nextUtcMidnight,
         badgeLabelOverride: isFeedCreaturesPreviewOnly ? DEMO_FEATURE_LABEL : (hasClaimedFeedCreaturesToday ? '✓ Done' : 'Claim'),
         isCollected: isFeedCreaturesPreviewOnly ? false : hasClaimedFeedCreaturesToday,
-        isVisible: true,
+        isVisible: canViewFeedCreatures,
         isActionable: isFeedCreaturesPreviewOnly ? true : !hasClaimedFeedCreaturesToday,
         sortPriority: 6,
         slotRole: 'core',
@@ -3477,6 +3481,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     hasOpenedHolidayCalendarToday,
     isDailyTreatBonusReady,
     isDailyTreatFullyCollected,
+    canViewWaterZenTree,
+    canViewFeedCreatures,
     eggHatchViewedStorageKeyForSlot,
     legacyEggHatchViewedStorageKey,
     islandRunCountdownExpiresAtMs,
@@ -3533,7 +3539,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       award: () => awardDailyTreatDice({
         userId: session.user.id,
         diceAmount: 15,
-        sourceLabel: 'Feed the Creatures',
+        sourceLabel: 'Feed Pet',
         islandRunSession: session,
       }),
       markClaimed: () => {
@@ -3545,7 +3551,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       closeModal: () => setIsFeedCreaturesModalOpen(false),
       setClaiming: setIsFeedCreaturesClaiming,
       setError: setFeedCreaturesClaimError,
-      errorMessage: 'Unable to feed the creatures. Please try again.',
+      errorMessage: 'Unable to feed your pet. Please try again.',
     });
   }, [hasClaimedFeedCreaturesToday, isFeedCreaturesClaiming, feedCreaturesClaimedStorageKey, session]);
 
@@ -3673,7 +3679,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
     if (offerId === 'feed_creatures') {
       if (isFeedCreaturesPreviewOnly) {
-        onOpenFeaturePreview?.('today.feedCreatures', 'Feed the Creatures');
+        onOpenFeaturePreview?.('today.feedCreatures', 'Feed Pet');
         return;
       }
       setFeedCreaturesClaimError(null);
@@ -3847,7 +3853,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       className="habit-day-nav__vision-modal-backdrop"
       role="dialog"
       aria-modal="true"
-      aria-label="Feed the Creatures"
+      aria-label="Feed Pet"
       onClick={() => setIsFeedCreaturesModalOpen(false)}
     >
       <div
@@ -3858,13 +3864,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           type="button"
           className="habit-day-nav__vision-modal-close"
           onClick={() => setIsFeedCreaturesModalOpen(false)}
-          aria-label="Close feed creatures"
+          aria-label="Close feed pet"
         >
           ×
         </button>
         <div className="habit-day-nav__todays-offer-body">
           <p className="habit-day-nav__todays-offer-icon" aria-hidden="true">🐾</p>
-          <p className="habit-day-nav__todays-offer-title">Feed the Creatures</p>
+          <p className="habit-day-nav__todays-offer-title">Feed Pet</p>
           <p className="habit-day-nav__todays-offer-subtitle">Keep your sanctuary thriving. +15 🎲 dice reward.</p>
           <button
             type="button"
