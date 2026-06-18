@@ -63,6 +63,7 @@ export type LegacyHabitWithGoal = LegacyHabitRow & {
   archived?: boolean | null;
   autoprog?: Json | null;
   habit_environment?: string | null;
+  habit_intent?: string | null;
   goal: {
     id: string;
     title: string;
@@ -221,6 +222,7 @@ function toLegacyHabitWithGoal(v2Habit: HabitV2Row): LegacyHabitWithGoal {
     archived: v2Habit.archived ?? null,
     autoprog: v2Habit.autoprog ?? null,
     habit_environment: v2Habit.habit_environment ?? null,
+    habit_intent: v2Habit.habit_intent ?? null,
     goal: v2Habit.goal_id ? {
       id: v2Habit.goal_id,
       title: '', // Goal title not available from v2 habit directly

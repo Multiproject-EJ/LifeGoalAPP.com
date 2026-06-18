@@ -609,12 +609,14 @@ type HabitProgressContent = {
   actionLabel: string;
   ariaLabel: string;
   iconName: HabitVersionIconName;
-  chipVariant: 'momentum' | 'progress' | 'session' | 'control';
+  chipVariant: 'momentum' | 'progress' | 'session' | 'control' | 'effort';
+  stageLabels: Record<AutoProgressTier, string>;
 };
 
-function isReductionLikeHabit(habit: Pick<HabitWithGoal, 'name' | 'target_unit'>): boolean {
+function isReductionLikeHabit(habit: Pick<HabitWithGoal, 'name' | 'target_unit'> & { habit_intent?: string | null }): boolean {
+  if (habit.habit_intent === 'break') return true;
   const text = `${habit.name ?? ''} ${habit.target_unit ?? ''}`.toLowerCase();
-  return /\b(zero|avoid|quit|stop|limit|reduce|less|under|no\s+|without|caffeine|alcohol|sugar|smoking)\b/.test(text);
+  return /\b(zero|avoid|quit|stop|limit|reduce|less|under|without|caffeine|alcohol|sugar|smoking)\b/.test(text) || /(^|\s)no\s+/.test(text);
 }
 
 function getHabitProgressContent(habit: HabitWithGoal, scalePlanEnabled: boolean): HabitProgressContent {
@@ -624,11 +626,16 @@ function getHabitProgressContent(habit: HabitWithGoal, scalePlanEnabled: boolean
   if (isReduction) {
     return {
       sectionLabel: 'Control today',
-      helperText: 'Pick the clearest match for how well you stayed aligned with this limit.',
-      actionLabel: 'Log control as',
+      helperText: 'Choose the result that best matches today.',
+      actionLabel: "Choose today's result",
       ariaLabel: 'Habit control choices',
       iconName: 'shield',
       chipVariant: 'control',
+      stageLabels: {
+        seed: 'Some control',
+        minimum: 'Mostly controlled',
+        standard: 'Fully aligned',
+      },
     };
   }
 
@@ -637,12 +644,17 @@ function getHabitProgressContent(habit: HabitWithGoal, scalePlanEnabled: boolean
     return {
       sectionLabel: 'Progress today',
       helperText: habit.target_num
-        ? `Choose the amount that best matches today's progress toward ${habit.target_num} ${unit}.`
-        : 'Choose the amount that best matches today\'s measurable progress.',
-      actionLabel: scalePlanEnabled ? 'Log progress as' : 'Progress',
+        ? `Pick the closest amount toward ${habit.target_num} ${unit}.`
+        : 'Pick the closest amount for today.',
+      actionLabel: scalePlanEnabled ? 'Choose progress level' : 'Progress',
       ariaLabel: 'Habit progress choices',
       iconName: 'target',
       chipVariant: 'progress',
+      stageLabels: {
+        seed: 'Some progress',
+        minimum: 'Most of it',
+        standard: 'Full target',
+      },
     };
   }
 
@@ -651,25 +663,44 @@ function getHabitProgressContent(habit: HabitWithGoal, scalePlanEnabled: boolean
     return {
       sectionLabel: 'Session today',
       helperText: habit.target_num
-        ? `Choose the session size that best matches today's time toward ${habit.target_num} ${unit}.`
-        : 'Choose the session size that best matches today\'s time spent.',
-      actionLabel: scalePlanEnabled ? 'Log session as' : 'Session',
+        ? `Pick the closest session toward ${habit.target_num} ${unit}.`
+        : 'Pick the closest session size for today.',
+      actionLabel: scalePlanEnabled ? 'Choose session size' : 'Session',
       ariaLabel: 'Habit session choices',
       iconName: 'timer',
       chipVariant: 'session',
+      stageLabels: {
+        seed: 'Short session',
+        minimum: 'Steady session',
+        standard: 'Full session',
+      },
     };
   }
 
   return {
     sectionLabel: scalePlanEnabled ? 'Today\'s version' : 'Partial credit',
     helperText: scalePlanEnabled
-      ? 'Choose the version you completed so the habit stays honest and easy to understand.'
-      : 'If you did a meaningful piece of this habit, log partial credit instead of losing momentum.',
-    actionLabel: scalePlanEnabled ? 'Log version as' : 'Partial credit',
+      ? 'Pick what you actually completed today.'
+      : 'Did a meaningful piece? Log partial credit.',
+    actionLabel: scalePlanEnabled ? 'Choose completed version' : 'Partial credit',
     ariaLabel: 'Habit version choices',
     iconName: 'spark',
-    chipVariant: 'momentum',
+    chipVariant: scalePlanEnabled ? 'effort' : 'momentum',
+    stageLabels: {
+      seed: 'Tiny win',
+      minimum: 'Solid win',
+      standard: 'Full win',
+    },
   };
+}
+
+function isDefaultScaleStageLabel(label: string): boolean {
+  const normalized = label.trim().toLowerCase();
+  return normalized === 'quick fallback' || normalized === 'smaller version' || normalized === 'full version';
+}
+
+function getStageDisplayLabel(stageInfo: { label: string }, stage: AutoProgressTier, progressContent: HabitProgressContent): string {
+  return isDefaultScaleStageLabel(stageInfo.label) ? progressContent.stageLabels[stage] : stageInfo.label;
 }
 
 function HabitVersionIcon({ name }: { name: HabitVersionIconName }) {
@@ -7919,7 +7950,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     ) : null}
                     {state?.loggedStage ? (
                       <p className="habit-checklist__note habit-checklist__logged-stage">
-                        Logged today: <strong>{scalePlan.stages[state.loggedStage]?.label ?? AUTO_PROGRESS_STAGE_LABELS[state.loggedStage]}</strong>
+                        Logged today: <strong>{getStageDisplayLabel(scalePlan.stages[state.loggedStage], state.loggedStage, progressContent)}</strong>
                       </p>
                     ) : null}
                     {scalePlan.enabled ? (
@@ -7928,8 +7959,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         <div className="habit-checklist__stage-actions">
                           {SCALE_STAGE_ORDER.map((stage) => {
                             const stageInfo = scalePlan.stages[stage];
-                            const fallbackLabel = AUTO_PROGRESS_STAGE_LABELS[stage];
-                            const stageLabel = stageInfo.label || fallbackLabel;
+                            const stageLabel = getStageDisplayLabel(stageInfo, stage, progressContent);
                             return (
                               <button
                                 key={`${habit.id}-${stage}`}
@@ -7948,7 +7978,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                                 <span className="habit-checklist__stage-chip-icon"><HabitVersionIcon name={stage === 'standard' ? progressContent.iconName : stage === 'minimum' ? 'steps' : 'spark'} /></span>
                                 <span className="habit-checklist__stage-chip-copy">
                                   <span className="habit-checklist__stage-chip-title">{stageLabel}</span>
-                                  <span className="habit-checklist__stage-chip-meta">{fallbackLabel} · {stageInfo.completionPercent}%</span>
+                                  <span className="habit-checklist__stage-chip-meta">{stageInfo.completionPercent}% credit</span>
                                 </span>
                               </button>
                             );

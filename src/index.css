@@ -9173,7 +9173,9 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__stage-chip--momentum.habit-checklist__stage-chip--active,
-.habit-checklist__detail-block--kind-momentum .habit-checklist__progress-icon {
+.habit-checklist__stage-chip--effort.habit-checklist__stage-chip--active,
+.habit-checklist__detail-block--kind-momentum .habit-checklist__progress-icon,
+.habit-checklist__detail-block--kind-effort .habit-checklist__progress-icon {
   background: #eef2ff;
   color: #4f46e5;
 }
