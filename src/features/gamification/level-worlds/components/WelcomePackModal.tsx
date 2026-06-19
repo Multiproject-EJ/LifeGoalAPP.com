@@ -2,6 +2,7 @@ import React from 'react';
 import { CREATURE_CATALOG } from '../services/creatureCatalog';
 import type { ClaimFullWelcomePackResult } from '../services/islandRunWelcomePackFullClaimAction';
 
+import { lockPageScroll } from '../../../../utils/scrollLock';
 export interface WelcomePackModalProps {
   open: boolean;
   onClose: () => void;
@@ -37,11 +38,7 @@ export function WelcomePackModal({
 
   React.useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return lockPageScroll();
   }, [open]);
 
   if (!open) return null;

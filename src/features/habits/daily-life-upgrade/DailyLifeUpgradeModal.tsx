@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 
 import type { DailyLifeUpgradeCandidate } from '../../../services/dailyLifeUpgradeCandidate';
 
+import { lockPageScroll } from '../../../utils/scrollLock';
 function toQuestDisplayName(value: string): string {
   return value
     .trim()
@@ -38,12 +39,7 @@ export function DailyLifeUpgradeModal(props: {
   useEffect(() => {
     if (!props.open || !props.candidate) return;
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return lockPageScroll();
   }, [props.open, props.candidate]);
 
   if (!props.open || !props.candidate) return null;

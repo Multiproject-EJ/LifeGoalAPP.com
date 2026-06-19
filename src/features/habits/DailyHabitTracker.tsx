@@ -5,6 +5,7 @@ import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import type { ProfileStrengthSignalSnapshot } from '../profile-strength/profileStrengthData';
 import type { ProfileStrengthResult } from '../profile-strength/profileStrengthTypes';
+import { lockPageScroll } from '../../utils/scrollLock';
 import {
   clearHabitCompletion,
   fetchHabitLogsForRange,
@@ -1143,11 +1144,7 @@ export function DailyHabitTracker({
 
   useEffect(() => {
     if ((!todayTodoModalOpen && !ambianceModalOpen) || typeof document === 'undefined') return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return lockPageScroll();
   }, [todayTodoModalOpen, ambianceModalOpen]);
 
   const handleOpenCreateTodayTodo = useCallback(() => {
@@ -1592,15 +1589,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return undefined;
     }
 
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousDocumentOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousDocumentOverflow;
-    };
+    return lockPageScroll(['body', 'documentElement']);
   }, [isEggHatchMovieOpen]);
 
   useEffect(() => {
@@ -1641,11 +1630,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     if (typeof document === 'undefined' || !showDreamJournalReminderModal) {
       return;
     }
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return lockPageScroll();
   }, [showDreamJournalReminderModal]);
 
   const [dayStatusMap, setDayStatusMap] = useState<Record<string, DayStatus>>({});
@@ -4450,12 +4435,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return undefined;
     }
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return lockPageScroll();
   }, [visionPreviewImage]);
 
   useEffect(() => {
@@ -11028,18 +11008,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return undefined;
     }
 
-    const body = document.body;
-    const documentElement = document.documentElement;
-    const previousBodyOverflow = body.style.overflow;
-    const previousDocumentOverflow = documentElement.style.overflow;
-
-    body.style.overflow = 'hidden';
-    documentElement.style.overflow = 'hidden';
-
-    return () => {
-      body.style.overflow = previousBodyOverflow;
-      documentElement.style.overflow = previousDocumentOverflow;
-    };
+    return lockPageScroll(['body', 'documentElement']);
   }, [hasViewportModalOpen]);
 
   const applyTodoCleanupActions = useCallback(async (pendingActions: Record<string, TodoCleanupPendingAction>) => {
