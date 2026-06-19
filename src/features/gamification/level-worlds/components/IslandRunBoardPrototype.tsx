@@ -4290,6 +4290,17 @@ export function IslandRunBoardPrototype({
       return;
     }
 
+    if (tapOutcome === 'ticket_required') {
+      requestActiveStopTransition(null, 'ticket_required_landmark_door_landing');
+      setRequiredDoorStopId(null);
+      setDormantDoorMiniGame(null);
+      setDormantDoorSelectedIndices([]);
+      setDormantDoorReward(null);
+      setTicketPromptStopId(doorStopId);
+      setLandingText('🎫 Landmark ticket required: pay the ticket to enter this stop.');
+      return;
+    }
+
     if (tapOutcome === 'locked' && typeof stopIndex === 'number' && stopIndex > 0 && needsTicket && !hasSeenPrepayPrompt(doorStopId)) {
       markPrepayPromptSeen(doorStopId);
       requestActiveStopTransition(null, 'locked_landmark_door_prepay_offer');
