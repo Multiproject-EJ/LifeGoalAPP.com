@@ -100,11 +100,8 @@ import {
 } from './progressGrading';
 import './progressGrading.css';
 import {
-  getYesterdayRecapEnabled,
   getYesterdayRecapLastCollected,
-  getYesterdayRecapLastShown,
   setYesterdayRecapLastCollected,
-  setYesterdayRecapLastShown,
 } from '../../services/yesterdayRecapPrefs';
 import {
   getDreamJournalReminderEnabled,
@@ -4947,35 +4944,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     void refreshHabits();
   }, [session?.user?.id, isConfigured, isDemoExperience, refreshHabits]);
 
-  useEffect(() => {
-    if (loading || showYesterdayRecap) return;
-    if (!session?.user?.id) return;
-    if (!habits.length) return;
-    if (!getYesterdayRecapEnabled(session.user.id)) return;
-
-    const todayISO = formatISODate(new Date());
-    const lastShown = getYesterdayRecapLastShown(session.user.id);
-    if (lastShown === todayISO) return;
-
-    const scheduledYesterday = habits.filter((habit) => isHabitScheduledOnDate(habit, yesterdayISO));
-    if (scheduledYesterday.length === 0) return;
-
-    const completedYesterday = historicalLogs.some(
-      (log) => log.date === yesterdayISO && log.completed,
-    );
-    if (completedYesterday) return;
-
-    setYesterdayHabits(scheduledYesterday);
-    setYesterdaySelections(
-      scheduledYesterday.reduce<Record<string, boolean>>((acc, habit) => {
-        acc[habit.id] = false;
-        return acc;
-      }, {}),
-    );
-    setYesterdayActionStatus(null);
-    setShowYesterdayRecap(true);
-    setYesterdayRecapLastShown(session.user.id, todayISO);
-  }, [loading, showYesterdayRecap, session?.user?.id, habits, historicalLogs, yesterdayISO]);
+  // Habits intentionally do not auto-open a yesterday cleanup prompt here: habit rows roll forward
+  // through their normal schedule, while the forced next-day attention loop is reserved for todos.
 
   useEffect(() => {
     if (!editHabit) return;
