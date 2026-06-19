@@ -58,6 +58,7 @@ type MyAccountPanelProps = {
   onLaunchWeeklyHabitReview?: () => void;
   onLaunchDailyCatchUpPrompt?: () => void;
   onLaunchDailyTreatCalendar?: () => void;
+  onLaunchYesterdayTodoCleanup?: () => void;
   soundEffectsEnabled: boolean;
   soundPreferenceSaving: boolean;
   soundPreferenceError: string | null;
@@ -92,6 +93,7 @@ export function MyAccountPanel({
   onLaunchWeeklyHabitReview,
   onLaunchDailyCatchUpPrompt,
   onLaunchDailyTreatCalendar,
+  onLaunchYesterdayTodoCleanup,
   soundEffectsEnabled,
   soundPreferenceSaving,
   soundPreferenceError,
@@ -1241,7 +1243,11 @@ export function MyAccountPanel({
         onClose={() => setExperimentalFolderOpen(false)}
         title="Experimental Features"
       >
-        <ExperimentalFeaturesSection session={session} />
+        <ExperimentalFeaturesSection
+          session={session}
+          isAdmin={showAdminTools}
+          onLaunchYesterdayTodoCleanup={onLaunchYesterdayTodoCleanup}
+        />
       </SettingsFolderPopup>
 
       {creatorNoteOpen ? (
