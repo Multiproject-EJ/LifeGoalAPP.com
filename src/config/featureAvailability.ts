@@ -7,6 +7,7 @@ export type FeatureAvailabilityId =
   | 'app.body'
   | 'app.contracts'
   | 'app.routines'
+  | 'app.compass_book'
   | 'today.visionStar'
   | 'today.waterZenTree'
   | 'today.feedCreatures'
@@ -110,6 +111,21 @@ export const featureAvailabilityRegistry = {
     publicLabel: DEMO_FEATURE_LABEL,
     adminLabel: ADMIN_DEMO_MODE_LABEL,
     shortPitch: 'Build repeatable daily flows that make your habits easier to start.',
+    votingEnabled: true,
+    votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
+    voteCategory: 'lifeTools',
+  },
+  'app.compass_book': {
+    id: 'app.compass_book',
+    label: 'Compass Book',
+    description: 'Deep six-chapter curriculum and durable personal model for life direction.',
+    status: 'comingSoon',
+    publicAccess: 'previewOnly',
+    adminAccess: 'previewOnly',
+    surface: 'Player Menu',
+    category: 'lifeTools',
+    publicLabel: 'Coming Soon',
+    shortPitch: 'A future guided book for deeper self-understanding and long-term life direction.',
     votingEnabled: true,
     votingQuestion: DEFAULT_FUTURE_FEATURE_QUESTION,
     voteCategory: 'lifeTools',
