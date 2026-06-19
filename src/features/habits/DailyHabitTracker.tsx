@@ -100,11 +100,8 @@ import {
 } from './progressGrading';
 import './progressGrading.css';
 import {
-  getYesterdayRecapEnabled,
   getYesterdayRecapLastCollected,
-  getYesterdayRecapLastShown,
   setYesterdayRecapLastCollected,
-  setYesterdayRecapLastShown,
 } from '../../services/yesterdayRecapPrefs';
 import {
   getDreamJournalReminderEnabled,
@@ -905,15 +902,13 @@ const weeklyHabitReviewLaunchKey = (userId: string) =>
   `lifegoal.weekly-habit-review-launch:${userId}`;
 const dailyCatchUpLaunchKey = (userId: string) =>
   `lifegoal.daily-catchup-launch:${userId}`;
-const yesterdaySundownTodoShownKey = (userId: string, dateISO: string) =>
-  `lifegoal.yesterday-sundown-todos-shown:${userId}:${dateISO}`;
 const todoCleanupDisplayCountsKey = (userId: string) =>
   `lifegoal.todo-cleanup-display-counts:${userId}`;
 
 type TodoCleanupAction = 'today' | 'tomorrow' | 'schedule' | 'finish' | 'delete';
 type TodoCleanupPendingAction = { action: TodoCleanupAction; scheduledDateISO?: string };
-const TODO_CLEANUP_DELETE_AFTER_DISPLAYS = 3;
-const TODO_CLEANUP_ABOUT_TO_EXPIRE_AT = TODO_CLEANUP_DELETE_AFTER_DISPLAYS - 1;
+const TODO_CLEANUP_MAX_PROMPTS = 3;
+const TODO_CLEANUP_LAST_PROMPT_AT = TODO_CLEANUP_MAX_PROMPTS - 1;
 const dreamJournalLaunchKey = (userId: string) =>
   `lifegoal.dream-journal-launch:${userId}`;
 const todaysWinsLaunchKey = (userId: string) =>
@@ -1057,6 +1052,7 @@ export function DailyHabitTracker({
   const [todoCleanupPendingActions, setTodoCleanupPendingActions] = useState<Record<string, TodoCleanupPendingAction>>({});
   const [todoCleanupDisplayCounts, setTodoCleanupDisplayCounts] = useState<Record<string, number>>({});
   const [todoCleanupBulkAction, setTodoCleanupBulkAction] = useState<TodoCleanupPendingAction | null>(null);
+  const yesterdaySundownTodoPromptOpenedThisSessionRef = useRef(false);
 
   const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
   const [todaysOfferCheckoutPending, setTodaysOfferCheckoutPending] = useState(false);
@@ -4948,35 +4944,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     void refreshHabits();
   }, [session?.user?.id, isConfigured, isDemoExperience, refreshHabits]);
 
-  useEffect(() => {
-    if (loading || showYesterdayRecap) return;
-    if (!session?.user?.id) return;
-    if (!habits.length) return;
-    if (!getYesterdayRecapEnabled(session.user.id)) return;
-
-    const todayISO = formatISODate(new Date());
-    const lastShown = getYesterdayRecapLastShown(session.user.id);
-    if (lastShown === todayISO) return;
-
-    const scheduledYesterday = habits.filter((habit) => isHabitScheduledOnDate(habit, yesterdayISO));
-    if (scheduledYesterday.length === 0) return;
-
-    const completedYesterday = historicalLogs.some(
-      (log) => log.date === yesterdayISO && log.completed,
-    );
-    if (completedYesterday) return;
-
-    setYesterdayHabits(scheduledYesterday);
-    setYesterdaySelections(
-      scheduledYesterday.reduce<Record<string, boolean>>((acc, habit) => {
-        acc[habit.id] = false;
-        return acc;
-      }, {}),
-    );
-    setYesterdayActionStatus(null);
-    setShowYesterdayRecap(true);
-    setYesterdayRecapLastShown(session.user.id, todayISO);
-  }, [loading, showYesterdayRecap, session?.user?.id, habits, historicalLogs, yesterdayISO]);
+  // Habits intentionally do not auto-open a yesterday cleanup prompt here: habit rows roll forward
+  // through their normal schedule, while the forced next-day attention loop is reserved for todos.
 
   useEffect(() => {
     if (!editHabit) return;
@@ -10992,12 +10961,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   useEffect(() => {
     if (loading || !session?.user?.id || !isViewingToday) return;
+    if (yesterdaySundownTodoPromptOpenedThisSessionRef.current) return;
     if (showYesterdaySundownTodoModal || showYesterdayRecap || todayTodoModalOpen) return;
     if (deferDailyLifeUpgradeModal || hasNewDaySequenceModalOpen) return;
-
-    const todayISO = formatISODate(new Date());
-    const shownKey = yesterdaySundownTodoShownKey(session.user.id, todayISO);
-    if (loadDraft<boolean>(shownKey)) return;
 
     let isMounted = true;
     void (async () => {
@@ -11006,25 +10972,18 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       if (error) return;
       const displayCounts = loadDraft<Record<string, number>>(todoCleanupDisplayCountsKey(session.user.id)) ?? {};
       const staleTodos = (data ?? []).filter((todo) => !todo.completed);
-      const expiredTodos = staleTodos.filter((todo) => (displayCounts[todo.id] ?? 0) >= TODO_CLEANUP_DELETE_AFTER_DISPLAYS);
-      if (expiredTodos.length > 0) {
-        await Promise.all(expiredTodos.map((todo) => deleteTodayTodo(todo.id)));
-      }
       const pendingTodos = staleTodos
-        .filter((todo) => !expiredTodos.some((expiredTodo) => expiredTodo.id === todo.id))
+        .filter((todo) => (displayCounts[todo.id] ?? 0) < TODO_CLEANUP_MAX_PROMPTS)
         .sort((first, second) => (displayCounts[second.id] ?? 0) - (displayCounts[first.id] ?? 0));
-      if (pendingTodos.length === 0) {
-        saveDraft(shownKey, true);
-        return;
-      }
+      if (pendingTodos.length === 0) return;
       setYesterdaySundownTodos(pendingTodos);
       setTodoCleanupDisplayCounts(displayCounts);
       setTodoCleanupPendingActions({});
       setTodoCleanupBulkAction(null);
       setExpandedYesterdaySundownTodoById({});
       setYesterdaySundownTodoStatus(null);
+      yesterdaySundownTodoPromptOpenedThisSessionRef.current = true;
       setShowYesterdaySundownTodoModal(true);
-      saveDraft(shownKey, true);
     })();
 
     return () => {
@@ -11099,11 +11058,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     });
     saveDraft(todoCleanupDisplayCountsKey(session.user.id), nextCounts);
     setTodoCleanupDisplayCounts(nextCounts);
-    const todosToDelete = yesterdaySundownTodos.filter((todo) => (nextCounts[todo.id] ?? 0) >= TODO_CLEANUP_DELETE_AFTER_DISPLAYS);
-    if (todosToDelete.length > 0) {
-      void Promise.all(todosToDelete.map((todo) => deleteTodayTodo(todo.id))).then(() => loadTodayTodos(activeDate));
-    }
-  }, [activeDate, loadTodayTodos, session.user.id, todoCleanupDisplayCounts, yesterdaySundownTodos]);
+  }, [session.user.id, todoCleanupDisplayCounts, yesterdaySundownTodos]);
 
   const closeYesterdaySundownTodoModal = useCallback(async () => {
     const pendingActions = todoCleanupPendingActions;
@@ -11210,13 +11165,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 const isExpanded = Boolean(expandedYesterdaySundownTodoById[todo.id]);
                 const pendingAction = todoCleanupPendingActions[todo.id];
                 const displayCount = todoCleanupDisplayCounts[todo.id] ?? 0;
-                const isAboutToExpire = displayCount >= TODO_CLEANUP_ABOUT_TO_EXPIRE_AT;
+                const isLastPrompt = displayCount >= TODO_CLEANUP_LAST_PROMPT_AT;
                 const tomorrowISO = formatISODate(addDays(parseISODate(today), 1));
                 const itemClassName = [
                   'yesterday-sundown-todo-modal__item',
                   isExpanded ? 'yesterday-sundown-todo-modal__item--expanded' : '',
                   pendingAction ? 'yesterday-sundown-todo-modal__item--assigned' : '',
-                  isAboutToExpire ? 'yesterday-sundown-todo-modal__item--expiring' : '',
+                  isLastPrompt ? 'yesterday-sundown-todo-modal__item--expiring' : '',
                 ].filter(Boolean).join(' ');
                 const actionLabel = pendingAction?.action === 'today'
                   ? 'Move to today'
@@ -11231,7 +11186,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           : null;
                 return (
                   <li key={todo.id} className={itemClassName}>
-                    {isAboutToExpire ? <span className="yesterday-sundown-todo-modal__expiry-badge">Last chance</span> : null}
+                    {isLastPrompt ? <span className="yesterday-sundown-todo-modal__expiry-badge">Last reminder</span> : null}
                     <button
                       type="button"
                       className="yesterday-sundown-todo-modal__task"
