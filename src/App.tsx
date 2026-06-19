@@ -5172,7 +5172,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               deferDailyLifeUpgradeModal={shouldDeferDailyLifeUpgradeModal}
             />
           </div>
-        {!showZenGardenFullScreen && !isConflictResolverFullscreen && (
+        {!showGameBoardOverlay && !showZenGardenFullScreen && !isConflictResolverFullscreen && (
           <MobileFooterNav
             items={mobileFooterNavItems}
             status={mobileFooterStatus}
@@ -5223,10 +5223,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           isOpen={showGameBoardOverlay}
           spotlightPlay={firstRunStep === 'spotlight-play'}
           onClose={() => setShowGameBoardOverlay(false)}
-          onTopbarClick={() => {
-            setShowGameBoardOverlay(false);
-            setShowMobileGamification(true);
-          }}
+          onTopbarClick={() => handleMobileNavSelect('planning')}
           onPlayClick={() => {
             if (firstRunStep === 'spotlight-play') {
               completeFirstRunStartFlow();
@@ -5236,24 +5233,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
             setLevelWorldsEntryPanel('default');
             setShowLevelWorldsFromEntry(true);
           }}
-          onSpinWinClick={() => {
-            setShowGameBoardOverlay(false);
-            setReopenGameOverlayOnRewardClose(true);
-            setShowDailySpinWheel(true);
-          }}
-          onCreatureCollectionClick={() => {
-            setShowGameBoardOverlay(false);
-            setReopenGameBoardOverlayOnLevelWorldsClose(true);
-            setLevelWorldsEntryPanel('sanctuary');
-            setShowLevelWorldsFromEntry(true);
-          }}
-          onGarageClick={() => {
-            setShowGameBoardOverlay(false);
-            setReopenGameOverlayOnRewardClose(false);
-            setScoreTabActiveTab('garage');
-            setShowMobileHome(false);
-            setActiveWorkspaceNav('score');
-          }}
+          onSpinWinClick={() => handleMobileNavSelect('score')}
+          onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
+          onGarageClick={() => handleMobileNavSelect('actions')}
           profilePlaystyleIcon={playstyleIcon ?? undefined}
           profileAvatarUrl={profileAvatarUrl}
           profilePlaystyleLabel={playstyleLabel ?? undefined}
@@ -5508,7 +5490,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           </section>
         </main>
       </div>
-      {isMobileExperience && !showZenGardenFullScreen && !isConflictResolverFullscreen ? (
+      {isMobileExperience && !showGameBoardOverlay && !showZenGardenFullScreen && !isConflictResolverFullscreen ? (
         <MobileFooterNav
           items={mobileFooterNavItems}
           status={mobileFooterStatus}
@@ -5577,14 +5559,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         isOpen={showGameBoardOverlay}
         spotlightPlay={firstRunStep === 'spotlight-play'}
         onClose={() => setShowGameBoardOverlay(false)}
-        onTopbarClick={() => {
-          setShowGameBoardOverlay(false);
-          if (isMobileExperience) {
-            setShowMobileGamification(true);
-          } else {
-            setActiveWorkspaceNav('game');
-          }
-        }}
+        onTopbarClick={() => handleMobileNavSelect('planning')}
         onPlayClick={() => {
           if (firstRunStep === 'spotlight-play') {
             completeFirstRunStartFlow();
@@ -5594,22 +5569,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
           setLevelWorldsEntryPanel('default');
           setShowLevelWorldsFromEntry(true);
         }}
-        onSpinWinClick={() => {
-          setShowGameBoardOverlay(false);
-          setReopenGameOverlayOnRewardClose(true);
-          setShowDailySpinWheel(true);
-        }}
-        onCreatureCollectionClick={() => {
-          setShowGameBoardOverlay(false);
-          setReopenGameBoardOverlayOnLevelWorldsClose(true);
-          setLevelWorldsEntryPanel('sanctuary');
-          setShowLevelWorldsFromEntry(true);
-        }}
-        onGarageClick={() => {
-          setShowGameBoardOverlay(false);
-          setScoreTabActiveTab('garage');
-          setActiveWorkspaceNav('score');
-        }}
+        onSpinWinClick={() => handleMobileNavSelect('score')}
+        onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
+        onGarageClick={() => handleMobileNavSelect('actions')}
         profilePlaystyleIcon={playstyleIcon ?? undefined}
         profileAvatarUrl={profileAvatarUrl}
         profilePlaystyleLabel={playstyleLabel ?? undefined}
