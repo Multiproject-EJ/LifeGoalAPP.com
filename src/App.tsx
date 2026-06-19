@@ -4237,85 +4237,103 @@ export default function App({ forceAuthOnMount }: AppProps) {
               </div>
             ) : null}
             <div className="mobile-menu-overlay__dashboard" aria-label="Game Mode dashboard menu">
-              <button
-                type="button"
-                className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--hand"
-                onClick={openPlayersHandFromLauncher}
-                aria-label="Open Player's Hand"
-              >
-                <span className="mobile-menu-overlay__hero-copy mobile-menu-overlay__hero-copy--hand" />
-                <span className="mobile-menu-overlay__visual-slot mobile-menu-overlay__visual-slot--hand" aria-hidden="true">
-                  <span
-                    className="mobile-menu-overlay__card-stack"
-                    style={{ '--stack-card-count': launcherTraitCards.length } as CSSProperties}
+              <div className="mobile-menu-overlay__hero-row">
+                {isAdmin === true ? (
+                  <button
+                    type="button"
+                    className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--quest mobile-menu-overlay__hero-card--quest-compact"
+                    onClick={() => setIsMyQuestSubmenuOpen(true)}
+                    aria-label="Open My Quest"
                   >
-                    {launcherTraitCards.map((handCard, index) => {
-                      const stackCenter = (launcherTraitCards.length - 1) / 2;
-                      const stackDistance = index - stackCenter;
-                      const stackSide = Math.sign(stackDistance);
-                      // Pair the two closest side cards in the front lane; farther cards move into deeper lanes.
-                      const stackDepth = Math.max(0, Math.floor(Math.abs(stackDistance) - 0.5));
+                    <span className="mobile-menu-overlay__quest-art" aria-hidden="true">
+                      <img src="/assets/players_menu/questimg.webp" alt="" loading="lazy" decoding="async" />
+                    </span>
+                    <span className="mobile-menu-overlay__quest-cta" aria-hidden="true">›</span>
+                  </button>
+                ) : null}
 
-                      return (
-                        <span
-                          key={`launcher-stack-${handCard.card.id}`}
-                          className="mobile-menu-overlay__trait-card mobile-menu-overlay__trait-card--stacked"
-                          style={{
-                            '--card-color': handCard.card.color,
-                            '--stack-x': `${stackSide * (56 + stackDepth * 48)}px`,
-                            '--stack-y': `${6 + stackDepth * 12}px`,
-                            '--stack-rotate': `${stackSide * (8 + stackDepth * 5)}deg`,
-                            '--stack-perspective': `${stackSide * (18 + stackDepth * 8)}deg`,
-                            '--stack-scale': `${0.92 - stackDepth * 0.05}`,
-                            '--stack-z': index + 1,
-                          } as CSSProperties}
-                        >
-                          <span className="mobile-menu-overlay__trait-card-role">{handCard.role}</span>
-                          <span className="mobile-menu-overlay__trait-card-name">{handCard.card.icon} {handCard.card.name}</span>
-                        </span>
-                      );
-                    })}
-                    <span className="mobile-menu-overlay__archetype-card mobile-menu-overlay__archetype-card--stacked">
-                      {playstyleIcon ? (
-                        <span className="mobile-menu-overlay__hand-symbol">{playstyleIcon}</span>
-                      ) : (
-                        <span className="mobile-menu-overlay__hand-symbol">🪪</span>
-                      )}
-                      {dominantPlaystyleCard ? (
-                        <span className="mobile-menu-overlay__archetype-name">{dominantPlaystyleCard.name}</span>
-                      ) : null}
+                <button
+                  type="button"
+                  className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--hand mobile-menu-overlay__hero-card--hand-compact"
+                  onClick={openPlayersHandFromLauncher}
+                  aria-label="Open Player's Hand"
+                >
+                  <span className="mobile-menu-overlay__hero-copy mobile-menu-overlay__hero-copy--hand" />
+                  <span className="mobile-menu-overlay__visual-slot mobile-menu-overlay__visual-slot--hand" aria-hidden="true">
+                    <span
+                      className="mobile-menu-overlay__card-stack"
+                      style={{ '--stack-card-count': launcherTraitCards.length } as CSSProperties}
+                    >
+                      {launcherTraitCards.map((handCard, index) => {
+                        const stackCenter = (launcherTraitCards.length - 1) / 2;
+                        const stackDistance = index - stackCenter;
+                        const stackSide = Math.sign(stackDistance);
+                        // Pair the two closest side cards in the front lane; farther cards move into deeper lanes.
+                        const stackDepth = Math.max(0, Math.floor(Math.abs(stackDistance) - 0.5));
+
+                        return (
+                          <span
+                            key={`launcher-stack-${handCard.card.id}`}
+                            className="mobile-menu-overlay__trait-card mobile-menu-overlay__trait-card--stacked"
+                            style={{
+                              '--card-color': handCard.card.color,
+                              '--stack-x': `${stackSide * (56 + stackDepth * 48)}px`,
+                              '--stack-y': `${6 + stackDepth * 12}px`,
+                              '--stack-rotate': `${stackSide * (8 + stackDepth * 5)}deg`,
+                              '--stack-perspective': `${stackSide * (18 + stackDepth * 8)}deg`,
+                              '--stack-scale': `${0.92 - stackDepth * 0.05}`,
+                              '--stack-z': index + 1,
+                            } as CSSProperties}
+                          >
+                            <span className="mobile-menu-overlay__trait-card-role">{handCard.role}</span>
+                            <span className="mobile-menu-overlay__trait-card-name">{handCard.card.icon} {handCard.card.name}</span>
+                          </span>
+                        );
+                      })}
+                      <span className="mobile-menu-overlay__archetype-card mobile-menu-overlay__archetype-card--stacked">
+                        {playstyleIcon ? (
+                          <span className="mobile-menu-overlay__hand-symbol">{playstyleIcon}</span>
+                        ) : (
+                          <span className="mobile-menu-overlay__hand-symbol">🪪</span>
+                        )}
+                        {dominantPlaystyleCard ? (
+                          <span className="mobile-menu-overlay__archetype-name">{dominantPlaystyleCard.name}</span>
+                        ) : null}
+                      </span>
                     </span>
                   </span>
-                </span>
-                {microTestBadge.showBadge ? (
-                  <span
-                    className={`mobile-menu-overlay__micro-alert mobile-menu-overlay__micro-alert--bottom-right ${
-                      showMicroTestNotificationDot ? 'mobile-menu-overlay__micro-alert--unseen' : ''
-                    }`}
-                    aria-label={`${microTestBadge.count} micro-tests ready`}
-                    title={`${microTestBadge.count} micro-tests ready`}
-                  >
-                    <span className="mobile-menu-overlay__micro-alert-icon" aria-hidden="true">✦</span>
-                    {showMicroTestNotificationDot ? (
-                      <span className="mobile-menu-overlay__micro-alert-dot" aria-hidden="true" />
-                    ) : null}
-                  </span>
-                ) : null}
-              </button>
+                  {microTestBadge.showBadge ? (
+                    <span
+                      className={`mobile-menu-overlay__micro-alert mobile-menu-overlay__micro-alert--bottom-right ${
+                        showMicroTestNotificationDot ? 'mobile-menu-overlay__micro-alert--unseen' : ''
+                      }`}
+                      aria-label={`${microTestBadge.count} micro-tests ready`}
+                      title={`${microTestBadge.count} micro-tests ready`}
+                    >
+                      <span className="mobile-menu-overlay__micro-alert-icon" aria-hidden="true">✦</span>
+                      {showMicroTestNotificationDot ? (
+                        <span className="mobile-menu-overlay__micro-alert-dot" aria-hidden="true" />
+                      ) : null}
+                    </span>
+                  ) : null}
+                </button>
+              </div>
 
-              {isAdmin === true ? (
               <button
                 type="button"
-                className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--quest"
-                onClick={() => setIsMyQuestSubmenuOpen(true)}
-                aria-label="Open My Quest"
+                className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--compass-placeholder"
+                onClick={openQuestCompassFromMobileMenu}
+                aria-label="Open Compass Chapters"
               >
-                <span className="mobile-menu-overlay__quest-art" aria-hidden="true">
-                  <img src="/assets/players_menu/questimg.webp" alt="" loading="lazy" decoding="async" />
+                <span className="mobile-menu-overlay__compass-placeholder-copy">
+                  <span className="mobile-menu-overlay__compass-placeholder-title">Compass Book</span>
+                  <span className="mobile-menu-overlay__compass-placeholder-subtitle">Chapters, lessons, and wisdom for your journey.</span>
                 </span>
-                <span className="mobile-menu-overlay__quest-cta" aria-hidden="true">›</span>
+                <span className="mobile-menu-overlay__compass-placeholder-book" aria-hidden="true">
+                  <span className="mobile-menu-overlay__compass-placeholder-page">Chapter I<br />Know Thyself</span>
+                  <span className="mobile-menu-overlay__compass-placeholder-rose">✦</span>
+                </span>
               </button>
-              ) : null}
 
               <div className="mobile-menu-overlay__quick-grid mobile-menu-overlay__quick-grid--featured">
                 <button
