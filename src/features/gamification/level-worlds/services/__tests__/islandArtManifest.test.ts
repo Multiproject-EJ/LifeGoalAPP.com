@@ -2,6 +2,7 @@ import {
   clampIslandArtBuildLevel,
   getIslandArtAmbientBackgroundSrc,
   getIslandArtBoardCircleImageSrc,
+  getIslandArtBoardOuterCircleImageSrc,
   getIslandArtBoardPlateImageSrc,
   getIslandArtBossImageSrc,
   getIslandArtFolderName,
@@ -104,6 +105,40 @@ export const islandArtManifestTests: TestCase[] = [
         getIslandArtBoardCircleImageSrc(manifest),
         '/assets/islands/island-001/scene/board-circle.webp',
         'Expected board-circle art to stay as the board-attached scene asset',
+      );
+      assertEqual(
+        getIslandArtBoardOuterCircleImageSrc(manifest),
+        null,
+        'Expected outer circle to be null when scene.boardOuterCircle is absent',
+      );
+    },
+  },
+  {
+    name: 'normalizes scene.boardOuterCircle as the tiles-background outer ring',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        islandNumber: 4,
+        scene: {
+          ...sampleManifest.scene,
+          boardOuterCircle: 'board-outer/board-circle-outer.webp',
+        },
+      }, 4);
+      if (!manifest) throw new Error('Expected outer-circle manifest to normalize');
+      assertEqual(
+        manifest.scene?.boardOuterCircle,
+        '/assets/islands/island-004/board-outer/board-circle-outer.webp',
+        'Expected scene.boardOuterCircle to normalize against the island base path',
+      );
+      assertEqual(
+        getIslandArtBoardOuterCircleImageSrc(manifest),
+        '/assets/islands/island-004/board-outer/board-circle-outer.webp',
+        'Expected outer-circle helper to resolve the ring asset',
+      );
+      assertEqual(
+        getIslandArtBoardPlateImageSrc(manifest),
+        '/assets/islands/island-004/scene/board-circle.webp',
+        'Expected outer circle to be independent of the inner board plate art',
       );
     },
   },

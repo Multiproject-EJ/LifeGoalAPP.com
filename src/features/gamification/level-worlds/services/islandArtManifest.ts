@@ -10,6 +10,11 @@ export interface IslandArtSceneManifest {
   boardPlate?: string;
   /** Legacy/simple board-attached scene art fallback. */
   boardCircle?: string;
+  /**
+   * Optional outer-circle art for the tiles background. Rendered beneath the
+   * inner board circle/plate so it reads as a ring sitting under the main board.
+   */
+  boardOuterCircle?: string;
 }
 
 export interface IslandArtLandmarkManifest {
@@ -165,6 +170,7 @@ function hasRenderableAsset(raw: Record<string, unknown>): boolean {
     || optionalString(scene.base)
     || optionalString(scene.boardPlate)
     || optionalString(scene.boardCircle)
+    || optionalString(scene.boardOuterCircle)
   ) return true;
 
   if (Array.isArray(raw.landmarks)) {
@@ -211,10 +217,12 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
   const sceneBase = resolveIslandArtAssetPath(basePath, optionalString(rawScene.base));
   const boardPlate = resolveIslandArtAssetPath(basePath, optionalString(rawScene.boardPlate));
   const boardCircle = resolveIslandArtAssetPath(basePath, optionalString(rawScene.boardCircle));
+  const boardOuterCircle = resolveIslandArtAssetPath(basePath, optionalString(rawScene.boardOuterCircle));
   if (ambientBackground) scene.ambientBackground = ambientBackground;
   if (sceneBase) scene.base = sceneBase;
   if (boardPlate) scene.boardPlate = boardPlate;
   if (boardCircle) scene.boardCircle = boardCircle;
+  if (boardOuterCircle) scene.boardOuterCircle = boardOuterCircle;
 
   const landmarks = Array.isArray(raw.landmarks)
     ? raw.landmarks.flatMap((entry): IslandArtLandmarkManifest[] => {
@@ -325,6 +333,10 @@ export function getIslandArtBoardPlateImageSrc(manifest: IslandArtManifest | nul
 
 export function getIslandArtBoardCircleImageSrc(manifest: IslandArtManifest | null | undefined): string | null {
   return getIslandArtBoardPlateImageSrc(manifest);
+}
+
+export function getIslandArtBoardOuterCircleImageSrc(manifest: IslandArtManifest | null | undefined): string | null {
+  return manifest?.scene?.boardOuterCircle ?? null;
 }
 
 export async function loadIslandArtManifest(

@@ -17,7 +17,8 @@
   },
   "scene": {
     "boardCircle": "board/board-circle-inner.webp",
-    "ambientBackground": "background/PLACEHOLDER__ambient-background.svg"
+    "ambientBackground": "background/PLACEHOLDER__ambient-background.svg",
+    "boardOuterCircle": "board-outer/PLACEHOLDER__board-circle-outer.webp"
   },
   "landmarks": [
     {
@@ -28,9 +29,9 @@
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/hatchery-l3.webp",
-        "landmarks/hatchery-l3.webp",
-        "landmarks/hatchery-l3.webp"
+        "landmarks/hatchery/PLACEHOLDER__hatchery-l1.webp",
+        "landmarks/hatchery/PLACEHOLDER__hatchery-l2.webp",
+        "landmarks/hatchery/hatchery-l3.webp"
       ],
       "zBand": "mid"
     },
@@ -42,9 +43,9 @@
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/hatchery-l3.webp",
-        "landmarks/hatchery-l3.webp",
-        "landmarks/hatchery-l3.webp"
+        "landmarks/habit/PLACEHOLDER__habit-l1.webp",
+        "landmarks/habit/PLACEHOLDER__habit-l2.webp",
+        "landmarks/habit/PLACEHOLDER__habit-l3.webp"
       ],
       "zBand": "mid"
     },
@@ -56,9 +57,9 @@
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/hatchery-l3.webp",
-        "landmarks/hatchery-l3.webp",
-        "landmarks/hatchery-l3.webp"
+        "landmarks/mystery/PLACEHOLDER__mystery-l1.webp",
+        "landmarks/mystery/PLACEHOLDER__mystery-l2.webp",
+        "landmarks/mystery/PLACEHOLDER__mystery-l3.webp"
       ],
       "zBand": "front"
     },
@@ -70,9 +71,9 @@
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/hatchery-l3.webp",
-        "landmarks/hatchery-l3.webp",
-        "landmarks/hatchery-l3.webp"
+        "landmarks/wisdom/PLACEHOLDER__wisdom-l1.webp",
+        "landmarks/wisdom/PLACEHOLDER__wisdom-l2.webp",
+        "landmarks/wisdom/PLACEHOLDER__wisdom-l3.webp"
       ],
       "zBand": "front"
     }
