@@ -18543,6 +18543,15 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-color: transparent;
   box-shadow: none;
   backdrop-filter: none;
+  width: min(100%, 430px);
+  aspect-ratio: 430 / 278;
+  min-height: 0;
+  justify-content: flex-end;
+  gap: clamp(0.12rem, 0.9vw, 0.28rem);
+  padding:
+    clamp(0.28rem, 1.1vw, 0.42rem)
+    clamp(1.25rem, 4.2vw, 2rem)
+    clamp(1.35rem, 5vw, 2.25rem);
 }
 
 .mobile-footer-nav__surface--image::before {
@@ -18747,13 +18756,15 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__list {
-  transform: translateY(-2.4rem);
+  transform: translateY(-0.95rem);
+  align-items: center;
+  gap: clamp(0.2rem, 1.45vw, 0.48rem);
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__menu-row {
-  margin-bottom: -0.35rem;
+  margin-bottom: -0.72rem;
   position: relative;
-  top: -0.2rem;
+  top: 0.12rem;
 }
 
 .mobile-footer-nav__list {
@@ -18818,9 +18829,9 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__button {
-  gap: 0.2rem;
+  gap: 0.12rem;
   min-height: 100%;
-  padding: 0.7rem 0.65rem;
+  padding: 0.16rem 0.22rem;
   justify-content: center;
   align-items: center;
   text-align: center;
@@ -18898,12 +18909,14 @@ html.platform-ipad .workspace-shell__menu-edge {
   justify-content: flex-start;
   align-items: flex-start;
   text-align: left;
+  padding-left: 0;
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__item--score .mobile-footer-nav__button {
   justify-content: flex-end;
   align-items: flex-end;
   text-align: right;
+  padding-right: 0;
 }
 
 .mobile-footer-nav__button:hover,
@@ -18938,6 +18951,13 @@ html.platform-ipad .workspace-shell__menu-edge {
   overflow: hidden;
   font-size: 1.35rem;
   line-height: 1;
+}
+
+.mobile-footer-nav__surface--image .mobile-footer-nav__icon {
+  width: clamp(2.2rem, 10vw, 3.4rem);
+  height: clamp(2.2rem, 10vw, 3.4rem);
+  flex-basis: clamp(2.2rem, 10vw, 3.4rem);
+  font-size: clamp(1.25rem, 5vw, 1.75rem);
 }
 
 /* Keep footer icons physically bounded to the icon slot. Some footer icons are
@@ -19091,7 +19111,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__energy-menu {
   left: 50%;
-  transform: translate(-50%, calc(-100% - 0.25rem));
+  transform: translate(-50%, calc(-100% + 0.38rem));
 }
 
 .mobile-footer-nav__energy-menu--open {
@@ -19101,7 +19121,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-footer-nav__surface--image .mobile-footer-nav__energy-menu--open {
-  transform: translate(-50%, calc(-100% - 0.25rem));
+  transform: translate(-50%, calc(-100% + 0.38rem));
 }
 
 .mobile-footer-nav__energy-button {
@@ -19186,6 +19206,16 @@ html.platform-ipad .workspace-shell__menu-edge {
   filter: drop-shadow(0 8px 20px rgba(15, 23, 42, 0.25));
 }
 
+.mobile-footer-nav__surface--image .mobile-footer-nav__energy-icon {
+  width: clamp(3.5rem, 15vw, 5.1rem);
+  height: clamp(3.5rem, 15vw, 5.1rem);
+}
+
+.mobile-footer-nav__surface--image .mobile-footer-nav__energy-label {
+  font-size: 0.52rem;
+  padding: 0.22rem 0.54rem;
+}
+
 .mobile-footer-nav--collapsed .mobile-footer-nav__energy-menu {
   opacity: 0;
   pointer-events: none;
@@ -19225,6 +19255,12 @@ html.platform-ipad .workspace-shell__menu-edge {
     box-shadow 0.25s ease,
     opacity 0.25s ease,
     transform 0.25s ease;
+}
+
+.mobile-footer-nav__surface--image .mobile-footer-nav__status-card {
+  min-height: clamp(4.45rem, 17vw, 5.65rem);
+  padding: clamp(0.42rem, 1.8vw, 0.58rem) clamp(0.38rem, 1.8vw, 0.62rem);
+  gap: 0.22rem;
 }
 
 .mobile-footer-nav__status-card--interactive {
@@ -19287,6 +19323,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-size: 1.4rem;
 }
 
+.mobile-footer-nav__surface--image .mobile-footer-nav__status-icon {
+  font-size: clamp(0.92rem, 3.5vw, 1.14rem);
+}
+
 .mobile-footer-nav__status-level {
   text-align: center;
   font-size: 0.7rem;
@@ -19296,6 +19336,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
+.mobile-footer-nav__surface--image .mobile-footer-nav__status-level {
+  font-size: clamp(0.58rem, 2.4vw, 0.7rem);
+}
+
 .mobile-footer-nav__status-label {
   font-size: 0.88rem;
   font-weight: 700;
@@ -19303,6 +19347,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.mobile-footer-nav__surface--image .mobile-footer-nav__status-label,
+.mobile-footer-nav__surface--image .mobile-footer-nav__label {
+  font-size: clamp(0.6rem, 2.8vw, 0.76rem);
+  line-height: 1.05;
 }
 
 .mobile-footer-nav__status-description {
@@ -19333,6 +19383,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: rgba(59, 130, 246, 0.15);
   overflow: hidden;
   transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.mobile-footer-nav__surface--image .mobile-footer-nav__status-progress {
+  height: 3px;
 }
 
 .mobile-footer-nav__status-progress-bar {

@@ -126,8 +126,15 @@
   left: 50%;
   top: calc(50% - 4.25rem);
   transform: translate(-50%, -50%);
-  width: min(86vw, 390px);
+  width: fit-content;
+  max-width: min(86vw, 390px);
   margin: 0;
+  padding: 0.28rem 0.82rem;
+  border: 1px solid rgba(201, 246, 255, 0.34);
+  border-radius: 999px;
+  background: rgba(7, 21, 44, 0.42);
+  backdrop-filter: blur(8px) saturate(135%);
+  -webkit-backdrop-filter: blur(8px) saturate(135%);
   color: #eaf8ff;
   font-size: clamp(1rem, 4vw, 1.35rem);
   font-weight: 900;
