@@ -84,6 +84,23 @@ export const islandBoardTopologyTests: TestCase[] = [
       }
     },
   },
+
+  {
+    name: 'active hatchery landmark expands to its two neighboring egg-setting tiles',
+    run: () => {
+      const expandedStopId = resolveExpandedLandmarkDoorStopIdForStatuses(['active', 'locked', 'locked', 'locked', 'locked']);
+      assertEqual(expandedStopId, 'hatchery', 'Expected fresh-island active hatchery to select the hatchery door cluster');
+
+      const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0), { expandedActiveStopId: expandedStopId });
+      for (const tileIndex of [35, 36, 37]) {
+        const entry = tileMap[tileIndex];
+        assertEqual(entry.tileType, 'landmark_door', `Expected egg-setting tile ${tileIndex} to render as a landmark door`);
+        assertEqual(entry.doorStopId, 'hatchery', `Expected egg-setting tile ${tileIndex} to route to hatchery`);
+        assertEqual(entry.isActiveDoorCluster, true, `Expected egg-setting tile ${tileIndex} to glow as part of the hatchery cluster`);
+      }
+      assertEqual(tileMap.filter((entry) => entry.tileType === 'landmark_door').length, 6, 'Expected 6 total doors: hatchery expanded to 3, others remain at 1 each');
+    },
+  },
   {
     name: 'active habit landmark expands to its two neighboring door tiles',
     run: () => {

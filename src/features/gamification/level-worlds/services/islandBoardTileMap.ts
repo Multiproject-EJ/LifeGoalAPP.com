@@ -49,11 +49,14 @@ export const LANDMARK_DOOR_TILE_CONFIGS: readonly IslandLandmarkDoorTileConfig[]
 ]);
 
 
-const EXPANDABLE_LANDMARK_DOOR_STOP_IDS: readonly IslandLandmarkDoorClusterStopId[] = ['habit', 'mystery', 'wisdom'];
+const EXPANDABLE_LANDMARK_DOOR_STOP_IDS: readonly IslandLandmarkDoorClusterStopId[] = ['hatchery', 'habit', 'mystery', 'wisdom'];
 
 /**
  * Returns the non-boss landmark whose circular-board door tiles should glow as
- * the immediate next interaction target. Ticket-required landmarks count here:
+ * the immediate next interaction target. This includes Hatchery when it is the
+ * fresh-island active landmark, so players can discover/set the egg by landing
+ * on the hatchery door tile or either neighboring tile instead of receiving an
+ * automatic egg modal on island arrival. Ticket-required landmarks count here:
  * paying the ticket is the next required move to open that landmark, so the
  * same entrance tiles should pulse before and after the ticket is paid.
  */
@@ -61,10 +64,10 @@ export function resolveExpandedLandmarkDoorStopIdForStatuses(
   statusesByIndex: readonly (string | null | undefined)[] | null | undefined,
 ): IslandLandmarkDoorClusterStopId | undefined {
   if (!statusesByIndex) return undefined;
-  for (let stopIndex = 1; stopIndex <= 3; stopIndex += 1) {
+  for (let stopIndex = 0; stopIndex <= 3; stopIndex += 1) {
     const status = statusesByIndex[stopIndex];
     if (status === 'active' || status === 'ticket_required') {
-      return EXPANDABLE_LANDMARK_DOOR_STOP_IDS[stopIndex - 1];
+      return EXPANDABLE_LANDMARK_DOOR_STOP_IDS[stopIndex];
     }
   }
   return undefined;
