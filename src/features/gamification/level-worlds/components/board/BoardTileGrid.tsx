@@ -12,6 +12,7 @@ export interface BoardTileGridProps {
   trafficLightCharge?: number;
   trafficLightChargeTarget?: number;
   completedEncounterIndices: Set<number>;
+  collectedCollectibleTileIndices?: Set<number>;
   tokenIndex: number;
   isSpark40: boolean;
   showDebug: boolean;
@@ -32,6 +33,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
     trafficLightCharge = 0,
     trafficLightChargeTarget = 8,
     completedEncounterIndices,
+    collectedCollectibleTileIndices = new Set<number>(),
     tokenIndex,
     isSpark40,
     showDebug,
@@ -126,6 +128,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
             tileIndex={index}
             showDebug={showDebug}
             isMinimalBoardArt={isMinimalBoardArt}
+            isCollectibleCollected={collectedCollectibleTileIndices.has(index)}
             uniformScale={uniformScale}
           />
         );

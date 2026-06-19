@@ -64,7 +64,8 @@ export type IslandRunSoundEvent =
   | 'multiplier_max'
   // Traffic light coin flip events
   | 'coin_flip'
-  | 'coin_reveal';
+  | 'coin_reveal'
+  | 'tech_item_poof';
 
 export type IslandRunHapticEvent =
   | 'roll'
@@ -88,7 +89,8 @@ export type IslandRunHapticEvent =
   | 'reward_bar_cascade'
   | 'sticker_complete'
   // Traffic light coin flip haptic
-  | 'coin_reveal';
+  | 'coin_reveal'
+  | 'tech_item_poof';
 
 export type IslandRunSoundPlaybackStatus =
   | 'idle'
@@ -130,6 +132,7 @@ const DEFAULT_SFX_MIN_INTERVAL_MS = 40;
 const SFX_MIN_INTERVAL_BY_EVENT: Partial<Record<IslandRunSoundEvent, number>> = {
   token_move: 90,
   reward_bar_fill: 70,
+  tech_item_poof: 110,
 };
 
 const islandRunSfxAudioByEvent = new Map<IslandRunSoundEvent, HTMLAudioElement>();
@@ -229,6 +232,7 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
   sticker_complete: [30, 40, 30, 40, 30, 40, 30],
   // Traffic light coin reveal: a celebratory triple buzz on landing.
   coin_reveal: [25, 35, 25, 45, 30],
+  tech_item_poof: [12, 18, 12],
 };
 
 // ─── Sound event map ─────────────────────────────────────────────────────────
@@ -285,6 +289,7 @@ const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, IslandRunSoundAssetPath> = {
   // until bespoke coin-flip/coin-ting assets exist.
   coin_flip: '/assets/audio/sfx/sfx_dice_roll.mp3',
   coin_reveal: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
+  tech_item_poof: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
 };
 
 export function getIslandRunSoundAssetPath(eventId: IslandRunSoundEvent): IslandRunSoundAssetPath {
