@@ -1987,6 +1987,11 @@
   z-index: 1;
 }
 
+.island-art-layers__board-outer {
+  /* Tiles-background outer ring, rendered beneath the inner board circle. */
+  z-index: 0;
+}
+
 .island-art-layers__scenery {
   z-index: var(--island-art-layer-z, 3);
 }

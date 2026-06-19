@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import {
+  getIslandArtBoardOuterCircleImageSrc,
   getIslandArtBoardPlateImageSrc,
   getIslandArtBossImageSrc,
   getIslandArtLandmarkImageSrc,
@@ -167,6 +168,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
   };
 
   const boardPlateSrc = getIslandArtBoardPlateImageSrc(manifest);
+  const boardOuterCircleSrc = getIslandArtBoardOuterCircleImageSrc(manifest);
 
   if (!manifest) return null;
 
@@ -200,6 +202,18 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
       style={{ width: boardWidth, height: boardHeight }}
       aria-hidden="true"
     >
+      {boardOuterCircleSrc && !hiddenSources.has(boardOuterCircleSrc) ? (
+        <img
+          key={`board-outer-${boardOuterCircleSrc}`}
+          className="island-art-layers__image island-art-layers__board-outer"
+          src={boardOuterCircleSrc}
+          alt=""
+          draggable={false}
+          style={{ ...boardSceneLayerStyle, '--island-art-layer-z': 0 } as BoardArtLayerStyle}
+          onError={() => hideSource(boardOuterCircleSrc)}
+        />
+      ) : null}
+
       {boardPlateSrc && !hiddenSources.has(boardPlateSrc) ? (
         <img
           key={`board-plate-${boardPlateSrc}`}

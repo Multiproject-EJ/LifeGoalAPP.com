@@ -117,6 +117,7 @@ function validateScene(manifestPath, scene) {
   }
   validateAssetReference(manifestPath, 'scene.boardPlate', scene.boardPlate, { required: false, kind: 'image' });
   validateAssetReference(manifestPath, 'scene.boardCircle', scene.boardCircle, { required: false, kind: 'image' });
+  validateAssetReference(manifestPath, 'scene.boardOuterCircle', scene.boardOuterCircle, { required: false, kind: 'image' });
 }
 
 function validateLandmarks(manifestPath, landmarks) {
