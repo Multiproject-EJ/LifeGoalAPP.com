@@ -10396,3 +10396,100 @@
   45% { opacity: 1; transform: translate(-50%, -110%) rotate(var(--tile-upright-rotation-deg, 0deg)) scale(1.35); }
   100% { opacity: 0.25; transform: translate(-50%, -160%) rotate(var(--tile-upright-rotation-deg, 0deg)) scale(0.45); }
 }
+
+/* Gamified journal card draw: make the board station read as a large 3D card stack. */
+.island-tile--card {
+  box-shadow:
+    0 0 0 3px rgba(250, 204, 21, 0.2),
+    0 0 18px rgba(250, 204, 21, 0.7),
+    0 0 34px rgba(168, 85, 247, 0.68),
+    inset 0 1px 8px rgba(255, 255, 255, 0.42);
+}
+
+.island-tile__popout--card {
+  width: 26px;
+  height: 36px;
+  top: 6%;
+  border-radius: 5px;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(255, 255, 255, 0.95) 0 8%, transparent 9%),
+    linear-gradient(145deg, #fff7ed 0%, #fde68a 42%, #c084fc 43%, #7c3aed 100%);
+  border: 1.5px solid rgba(76, 29, 149, 0.82);
+  box-shadow:
+    -9px 7px 0 -3px rgba(245, 208, 254, 0.95),
+    -15px 13px 0 -7px rgba(124, 58, 237, 0.72),
+    0 15px 12px rgba(45, 20, 90, 0.34);
+  transform: translate(-50%, -78%) rotate(var(--tile-upright-rotation-deg, 0deg)) rotateX(18deg) rotateZ(-5deg);
+}
+
+.island-run-gamified-journal-card {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.island-run-gamified-journal-card__hero {
+  position: relative;
+  width: 112px;
+  height: 96px;
+  margin: 0 auto 0.25rem;
+  perspective: 420px;
+}
+
+.island-run-gamified-journal-card__card {
+  position: absolute;
+  width: 62px;
+  height: 84px;
+  border-radius: 12px;
+  box-shadow: 0 18px 30px rgba(45, 20, 90, 0.34);
+}
+
+.island-run-gamified-journal-card__card--back {
+  left: 18px;
+  top: 8px;
+  background: linear-gradient(145deg, #7c3aed, #c084fc);
+  transform: rotate(-12deg) rotateY(18deg);
+}
+
+.island-run-gamified-journal-card__card--front {
+  left: 42px;
+  top: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #fff7ed, #fde68a 48%, #f5d0fe 49%, #7c3aed);
+  border: 2px solid rgba(255, 255, 255, 0.82);
+  color: #4c1d95;
+  font-size: 2.2rem;
+  font-weight: 900;
+  transform: rotate(8deg) rotateY(-18deg);
+}
+
+.island-run-gamified-journal-card__section {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.island-run-gamified-journal-card__choices {
+  margin-top: 0.1rem;
+  flex-wrap: wrap;
+}
+
+.island-run-gamified-journal-card textarea {
+  width: 100%;
+  min-height: 74px;
+  resize: vertical;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  padding: 0.65rem;
+  color: #fff;
+  background: rgba(8, 13, 28, 0.64);
+}
+
+.island-run-gamified-journal-card__error {
+  color: #fecaca;
+  font-weight: 700;
+  margin: 0;
+}
