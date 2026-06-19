@@ -10959,6 +10959,35 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   const hasViewportModalOpen = hasNewDaySequenceModalOpen || showYesterdaySundownTodoModal;
 
+  const openYesterdaySundownTodoCleanup = useCallback(async (options?: { force?: boolean }) => {
+    if (!session?.user?.id) return;
+    const { data, error } = await fetchTodayTodos(yesterdayISO);
+    if (error) return;
+    const displayCounts = loadDraft<Record<string, number>>(todoCleanupDisplayCountsKey(session.user.id)) ?? {};
+    const staleTodos = (data ?? []).filter((todo) => !todo.completed);
+    const pendingTodos = staleTodos
+      .filter((todo) => options?.force || (displayCounts[todo.id] ?? 0) < TODO_CLEANUP_MAX_PROMPTS)
+      .sort((first, second) => (displayCounts[second.id] ?? 0) - (displayCounts[first.id] ?? 0));
+
+    setYesterdaySundownTodos(pendingTodos);
+    setTodoCleanupDisplayCounts(displayCounts);
+    setTodoCleanupPendingActions({});
+    setTodoCleanupBulkAction(null);
+    setExpandedYesterdaySundownTodoById({});
+
+    if (pendingTodos.length === 0) {
+      if (options?.force) {
+        setYesterdaySundownTodoStatus('No unfinished todos were found for yesterday.');
+        setShowYesterdaySundownTodoModal(true);
+      }
+      return;
+    }
+
+    setYesterdaySundownTodoStatus(options?.force ? 'Admin manual cleanup launched.' : null);
+    yesterdaySundownTodoPromptOpenedThisSessionRef.current = true;
+    setShowYesterdaySundownTodoModal(true);
+  }, [session?.user?.id, yesterdayISO]);
+
   useEffect(() => {
     if (loading || !session?.user?.id || !isViewingToday) return;
     if (yesterdaySundownTodoPromptOpenedThisSessionRef.current) return;
@@ -10967,23 +10996,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
     let isMounted = true;
     void (async () => {
-      const { data, error } = await fetchTodayTodos(yesterdayISO);
       if (!isMounted) return;
-      if (error) return;
-      const displayCounts = loadDraft<Record<string, number>>(todoCleanupDisplayCountsKey(session.user.id)) ?? {};
-      const staleTodos = (data ?? []).filter((todo) => !todo.completed);
-      const pendingTodos = staleTodos
-        .filter((todo) => (displayCounts[todo.id] ?? 0) < TODO_CLEANUP_MAX_PROMPTS)
-        .sort((first, second) => (displayCounts[second.id] ?? 0) - (displayCounts[first.id] ?? 0));
-      if (pendingTodos.length === 0) return;
-      setYesterdaySundownTodos(pendingTodos);
-      setTodoCleanupDisplayCounts(displayCounts);
-      setTodoCleanupPendingActions({});
-      setTodoCleanupBulkAction(null);
-      setExpandedYesterdaySundownTodoById({});
-      setYesterdaySundownTodoStatus(null);
-      yesterdaySundownTodoPromptOpenedThisSessionRef.current = true;
-      setShowYesterdaySundownTodoModal(true);
+      await openYesterdaySundownTodoCleanup();
     })();
 
     return () => {
@@ -10994,12 +11008,20 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     hasNewDaySequenceModalOpen,
     isViewingToday,
     loading,
+    openYesterdaySundownTodoCleanup,
     session?.user?.id,
     showYesterdayRecap,
     showYesterdaySundownTodoModal,
     todayTodoModalOpen,
-    yesterdayISO,
   ]);
+
+  useEffect(() => {
+    const handleManualLaunch = () => {
+      void openYesterdaySundownTodoCleanup({ force: true });
+    };
+    window.addEventListener('lifegoal:launch-yesterday-todo-cleanup', handleManualLaunch);
+    return () => window.removeEventListener('lifegoal:launch-yesterday-todo-cleanup', handleManualLaunch);
+  }, [openYesterdaySundownTodoCleanup]);
 
   useEffect(() => {
     if (typeof document === 'undefined' || !hasViewportModalOpen) {

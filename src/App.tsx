@@ -3580,6 +3580,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
     );
   }
 
+  const handleLaunchYesterdayTodoCleanup = () => {
+    setActiveWorkspaceNav('planning');
+    window.setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('lifegoal:launch-yesterday-todo-cleanup'));
+    }, 0);
+  };
+
   const habitGameAuthCard = (
     <HabitGameAuthCard
       activeAuthTab={activeAuthTab}
@@ -3730,6 +3737,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               setCalendarLaunchMode('auto');
               setShowCalendarPlaceholder(true);
             }}
+            onLaunchYesterdayTodoCleanup={handleLaunchYesterdayTodoCleanup}
             billingReturnBanner={billingReturnBanner}
             soundEffectsEnabled={soundEffectsEnabled}
             soundPreferenceSaving={soundPreferenceSaving}

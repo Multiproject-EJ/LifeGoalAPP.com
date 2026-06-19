@@ -9,9 +9,15 @@ import {
 
 interface ExperimentalFeaturesSectionProps {
   session: Session;
+  isAdmin?: boolean;
+  onLaunchYesterdayTodoCleanup?: () => void;
 }
 
-export function ExperimentalFeaturesSection({ session }: ExperimentalFeaturesSectionProps) {
+export function ExperimentalFeaturesSection({
+  session,
+  isAdmin = false,
+  onLaunchYesterdayTodoCleanup,
+}: ExperimentalFeaturesSectionProps) {
   const [features, setFeatures] = useState<ExperimentalFeatureState | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const userId = session.user.id;
@@ -67,6 +73,27 @@ export function ExperimentalFeaturesSection({ session }: ExperimentalFeaturesSec
           </label>
         </div>
       ))}
+
+      {isAdmin ? (
+        <div className="account-panel__setting">
+          <div className="account-panel__setting-label">
+            <span className="account-panel__setting-text">
+              <strong>Yesterday todo cleanup modal</strong>
+              <span className="account-panel__setting-description">
+                Admin-only manual launcher for the cleanup modal that normally appears after yesterday leaves unfinished todos.
+              </span>
+            </span>
+          </div>
+          <button
+            type="button"
+            className="btn btn--secondary"
+            onClick={onLaunchYesterdayTodoCleanup}
+            disabled={!onLaunchYesterdayTodoCleanup}
+          >
+            Launch cleanup modal
+          </button>
+        </div>
+      ) : null}
 
       {message ? <div className="account-panel__message account-panel__message--success">{message}</div> : null}
 
