@@ -95,6 +95,7 @@ import {
 import { ShardClaimModal } from './ShardClaimModal';
 import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
 import { IslandRunLifePromptCard } from './IslandRunLifePromptCard';
+import { IslandRunGamifiedJournalCard } from './IslandRunGamifiedJournalCard';
 import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
 import { CompassModal } from './CompassModal';
 import {
@@ -1682,6 +1683,7 @@ export function IslandRunBoardPrototype({
   const [boosterError, setBoosterError] = useState<string | null>(null);
   const [isDisplayNameLoopCompleted, setIsDisplayNameLoopCompleted] = useState(false);
   const [showEncounterModal, setShowEncounterModal] = useState(false);
+  const [showGamifiedJournalCard, setShowGamifiedJournalCard] = useState(false);
   const [encounterResolved, setEncounterResolved] = useState(false);
   // M6-COMPLETE: per-visit encounter tracking (Set of completed tile indices)
   const [completedEncounterIndices, setCompletedEncounterIndices] = useState<Set<number>>(() => new Set());
@@ -2125,6 +2127,7 @@ export function IslandRunBoardPrototype({
         Boolean(dormantDoorMiniGame) ||
         Boolean(trafficLightCoinFlip) ||
         showEncounterModal ||
+        showGamifiedJournalCard ||
         showClaimModal)
     ) {
       setShowTopbarMenu(false);
@@ -2133,6 +2136,7 @@ export function IslandRunBoardPrototype({
     showBuildPanel,
     showClaimModal,
     showEncounterModal,
+    showGamifiedJournalCard,
     dormantDoorMiniGame,
     trafficLightCoinFlip,
     showMarketPanel,
@@ -6058,7 +6062,8 @@ export function IslandRunBoardPrototype({
         setLandingText(`🎁 Treasure chest! +${essenceDelta} essence${multLabel}`);
         break;
       case 'card':
-        setLandingText('🃏 Card station! Draw from the island discovery deck to find clues for this island tech.');
+        setLandingText('🃏 Card station! Draw a Daily Clue Card for a quick gamified journal loop.');
+        setShowGamifiedJournalCard(true);
         break;
       case 'hazard': {
         const penalty = Math.abs(essenceDelta);
@@ -9698,6 +9703,7 @@ export function IslandRunBoardPrototype({
       showEggReadyBanner ||
       showEntryAudioModal ||
       showEncounterModal ||
+      showGamifiedJournalCard ||
       showFirstCreaturePackModal ||
       showFirstRunCelebration ||
       showHatcheryHelp ||
@@ -10864,6 +10870,23 @@ export function IslandRunBoardPrototype({
             <strong>{ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY.title}</strong>
             <span>{ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY.body}</span>
           </aside>
+        </div>
+      )}
+
+
+      {showGamifiedJournalCard && (
+        <div className="island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Gamified journal card">
+            <IslandRunGamifiedJournalCard
+              session={session}
+              islandNumber={islandNumber}
+              onClose={() => setShowGamifiedJournalCard(false)}
+              onSaved={(message) => {
+                setLandingText(message);
+                setShowGamifiedJournalCard(false);
+              }}
+            />
+          </section>
         </div>
       )}
 
