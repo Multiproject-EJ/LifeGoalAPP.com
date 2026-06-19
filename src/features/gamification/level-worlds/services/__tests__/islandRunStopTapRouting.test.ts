@@ -23,12 +23,22 @@ export const islandRunStopTapRoutingTests: TestCase[] = [
     },
   },
   {
-    name: 'requiresTicket=true resolves to ticket_required even when status is active',
+    name: 'active status opens even when the stop type normally requires tickets',
     run: () => {
       assertEqual(
         resolveIslandRunStopTapOutcome({ stopStatus: 'active', requiresTicket: true }),
+        'open',
+        'Canonical active status should mean the ticket has already been paid',
+      );
+    },
+  },
+  {
+    name: 'missing status still uses legacy derived ticket requirement',
+    run: () => {
+      assertEqual(
+        resolveIslandRunStopTapOutcome({ stopStatus: null, requiresTicket: true }),
         'ticket_required',
-        'Derived ticket requirement should map to ticket_required outcome',
+        'Legacy callers without canonical status should still surface ticket flow',
       );
     },
   },

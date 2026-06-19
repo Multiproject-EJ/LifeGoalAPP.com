@@ -11012,7 +11012,9 @@ export function IslandRunBoardPrototype({
         const openedStopIsLocked = openedStopState === 'locked';
         const openedStopNeedsBuild = openedStopState === 'build_pending';
         const openedStopIsCompleted = openedStopState === 'completed' || openedStopState === 'partial' || openedStopNeedsBuild;
-        const openedStopNeedsTicket = doesStopRequireTicketPayment(activeStop.stopId);
+        const openedStopNeedsTicket = ISLAND_RUN_CONTRACT_V2_ENABLED
+          ? openedStopState === 'ticket_required'
+          : doesStopRequireTicketPayment(activeStop.stopId);
         const openedStopIsPlayable = !openedStopIsLocked && !openedStopIsCompleted && !openedStopNeedsTicket;
         const priorStop = openedStopIndex > 0 ? islandStopPlan[openedStopIndex - 1] : null;
         const openedStopTicketCost =
