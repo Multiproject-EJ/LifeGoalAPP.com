@@ -54,9 +54,6 @@ export function GameBoardOverlay({
   rewardBarProgress = 0,
   rewardBarThreshold = 10,
   islandDisplayName = 'Island',
-  spinsRemaining = 0,
-  creatureCollectionCount = 0,
-  creatureRewardReadyCount = 0,
   islandSceneSrc = getIslandBackgroundImageSrc(1),
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
@@ -94,10 +91,6 @@ export function GameBoardOverlay({
   const progressPercent = rewardBarThreshold > 0
     ? Math.min(100, Math.max(0, Math.round((rewardBarProgress / rewardBarThreshold) * 100)))
     : 0;
-  const creatureLabel = creatureRewardReadyCount > 0
-    ? `🐾 ${creatureRewardReadyCount} ready`
-    : `🐾 ${creatureCollectionCount}`;
-
   return (
     <div
       className={`game-board-overlay ${isAnimating ? 'game-board-overlay--open' : ''}${
@@ -125,7 +118,7 @@ export function GameBoardOverlay({
               onClick={onTopbarClick}
               disabled={!onTopbarClick}
             >
-              🧭 Quest
+              ✅ Today
             </button>
             <button
               type="button"
@@ -134,7 +127,7 @@ export function GameBoardOverlay({
               onClick={onCreatureCollectionClick}
               disabled={!onCreatureCollectionClick}
             >
-              {creatureLabel}
+              🛡️ Shield
             </button>
             <button
               type="button"
@@ -143,7 +136,7 @@ export function GameBoardOverlay({
               onClick={onSpinWinClick}
               disabled={!onSpinWinClick}
             >
-              🎡 Spins {spinsRemaining}
+              🏆 Score
             </button>
             <button
               type="button"
@@ -152,7 +145,7 @@ export function GameBoardOverlay({
               onClick={onGarageClick}
               disabled={!onGarageClick}
             >
-              🧰 Garage
+              ⚡️ Actions
             </button>
             <div
               className="game-board-overlay__controller-badge game-board-overlay__controller-badge--slot"
