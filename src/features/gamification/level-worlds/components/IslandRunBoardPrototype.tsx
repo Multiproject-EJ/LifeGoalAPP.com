@@ -1386,6 +1386,31 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
   card: '#d8b4fe',
 };
 
+type TechCollectionTileType = 'currency' | 'chest' | 'micro' | 'card';
+
+interface TechCollectionModalState {
+  tileIndex: number;
+  tileType: TechCollectionTileType;
+  collectedCount: number;
+  completedLines: number[];
+  rewardDice: number;
+  isFullBoard: boolean;
+}
+
+const TECH_COLLECTION_GRID_SIZE = 3;
+const TECH_COLLECTION_LINE_REWARD_DICE = 10;
+const TECH_COLLECTION_FULL_BOARD_REWARD_DICE = 100;
+const TECH_COLLECTION_LINES = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+] as const;
+
 const DORMANT_DOOR_FIGURE_ICONS: Record<DormantDoorFigure, string> = {
   small: '🟣',
   medium: '💎',
@@ -1653,6 +1678,14 @@ export function IslandRunBoardPrototype({
   }, [activeStopId, islandNumber, session.user.id]);
 
   useEffect(() => {
+    collectedTechTileIndicesRef.current = new Set();
+    rewardedTechCollectionLinesRef.current = new Set();
+    setCollectedTechTileIndices(new Set());
+    setRewardedTechCollectionLines(new Set());
+    setTechCollectionModal(null);
+  }, [islandNumber]);
+
+  useEffect(() => {
     const prev = prevIslandNumberForFlashRef.current;
     prevIslandNumberForFlashRef.current = islandNumber;
     // Only flash when we *advance* (prev < next). Cycle wrap 120 → 1 and
@@ -1688,6 +1721,11 @@ export function IslandRunBoardPrototype({
   const [encounterResolved, setEncounterResolved] = useState(false);
   // M6-COMPLETE: per-visit encounter tracking (Set of completed tile indices)
   const [completedEncounterIndices, setCompletedEncounterIndices] = useState<Set<number>>(() => new Set());
+  const [collectedTechTileIndices, setCollectedTechTileIndices] = useState<Set<number>>(() => new Set());
+  const collectedTechTileIndicesRef = useRef<Set<number>>(new Set());
+  const [rewardedTechCollectionLines, setRewardedTechCollectionLines] = useState<Set<number>>(() => new Set());
+  const rewardedTechCollectionLinesRef = useRef<Set<number>>(new Set());
+  const [techCollectionModal, setTechCollectionModal] = useState<TechCollectionModalState | null>(null);
   const [activeEncounterTileIndex, setActiveEncounterTileIndex] = useState<number | null>(null);
   const [showHatcheryHelp, setShowHatcheryHelp] = useState(false);
   // M6-COMPLETE: encounter challenge state machine
@@ -2127,6 +2165,7 @@ export function IslandRunBoardPrototype({
         showStoryReader ||
         Boolean(dormantDoorMiniGame) ||
         Boolean(trafficLightCoinFlip) ||
+        techCollectionModal ||
         showEncounterModal ||
         showGamifiedJournalCard ||
         showClaimModal)
@@ -6037,6 +6076,62 @@ export function IslandRunBoardPrototype({
   // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
   const rollIndexRef = useRef(0);
 
+  const resolveTechCollectionSlot = useCallback((tileIndex: number) => {
+    const tileCount = Math.max(1, activeTileAnchors.length || ACTIVE_BOARD_PROFILE.tileCount);
+    return Math.abs(Math.floor(tileIndex)) % Math.min(TECH_COLLECTION_GRID_SIZE * TECH_COLLECTION_GRID_SIZE, tileCount);
+  }, [activeTileAnchors.length]);
+
+  const maybeCollectTechItem = useCallback((tileType: string, landingTileIndex: number) => {
+    if (tileType !== 'currency' && tileType !== 'chest' && tileType !== 'micro' && tileType !== 'card') return;
+
+    const slotIndex = resolveTechCollectionSlot(landingTileIndex);
+    const previousCollected = collectedTechTileIndicesRef.current;
+    if (previousCollected.has(slotIndex)) return;
+
+    const nextCollected = new Set(previousCollected);
+    nextCollected.add(slotIndex);
+
+    const previousRewardedLines = rewardedTechCollectionLinesRef.current;
+    const nextRewardedLines = new Set(previousRewardedLines);
+    const completedLines = TECH_COLLECTION_LINES
+      .map((line, lineIndex) => ({ line, lineIndex }))
+      .filter(({ line, lineIndex }) => !previousRewardedLines.has(lineIndex) && line.every((cellIndex) => nextCollected.has(cellIndex)))
+      .map(({ lineIndex }) => lineIndex);
+
+    for (const lineIndex of completedLines) nextRewardedLines.add(lineIndex);
+
+    const isFullBoard = nextCollected.size >= TECH_COLLECTION_GRID_SIZE * TECH_COLLECTION_GRID_SIZE;
+    const rewardDice = (completedLines.length * TECH_COLLECTION_LINE_REWARD_DICE)
+      + (isFullBoard ? TECH_COLLECTION_FULL_BOARD_REWARD_DICE : 0);
+
+    collectedTechTileIndicesRef.current = nextCollected;
+    rewardedTechCollectionLinesRef.current = nextRewardedLines;
+    setCollectedTechTileIndices(nextCollected);
+    setRewardedTechCollectionLines(nextRewardedLines);
+
+    playIslandRunSound('tech_item_poof');
+    triggerIslandRunHaptic('stop_land');
+
+    if (rewardDice > 0) {
+      const rewardRecord = applyTokenHopRewards({
+        session,
+        client,
+        deltas: { dicePool: rewardDice },
+        triggerSource: 'tech_collection_grid_reward',
+      });
+      setRuntimeState(rewardRecord);
+    }
+
+    setTechCollectionModal({
+      tileIndex: slotIndex,
+      tileType,
+      collectedCount: nextCollected.size,
+      completedLines,
+      rewardDice,
+      isFullBoard,
+    });
+  }, [client, playIslandRunSound, resolveTechCollectionSlot, session, triggerIslandRunHaptic]);
+
   // Seed spacing constants. The landing seed packs three independent dimensions
   // into one 32-bit integer: island number × ISLAND_SEED_STRIDE + tile index ×
   // TILE_SEED_STRIDE + roll index. Strides are large enough that no two
@@ -6107,6 +6202,8 @@ export function IslandRunBoardPrototype({
         setLandingText(`Landed on tile #${landingTileIndex}`);
         break;
     }
+
+    maybeCollectTechItem(tileType, landingTileIndex);
 
     if (ISLAND_RUN_CONTRACT_V2_ENABLED) {
       // Trigger flying feed particle animation for feeding tiles
@@ -9717,6 +9814,7 @@ export function IslandRunBoardPrototype({
       showClaimModal ||
       showEggReadyBanner ||
       showEntryAudioModal ||
+      techCollectionModal ||
       showEncounterModal ||
       showGamifiedJournalCard ||
       showFirstCreaturePackModal ||
@@ -10633,6 +10731,7 @@ export function IslandRunBoardPrototype({
           trafficLightChargeTarget={TRAFFIC_LIGHT_CHARGE_TARGET}
           stopMap={stopMap}
           completedEncounterIndices={completedEncounterIndices}
+          collectedCollectibleTileIndices={collectedTechTileIndices}
           tokenIndex={tokenIndex}
           orbitStopVisuals={orbitStopVisuals}
           activeStopId={activeStopId}
@@ -10887,6 +10986,63 @@ export function IslandRunBoardPrototype({
           </aside>
         </div>
       )}
+
+
+      {techCollectionModal && typeof document !== 'undefined' ? createPortal((
+        <div className="island-stop-modal-backdrop island-tech-collection-modal-backdrop" role="presentation">
+          <section
+            className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-tech-collection-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Tech item collection"
+          >
+            <p className="island-stop-modal__eyebrow">Tech build collection</p>
+            <h3 className="island-stop-modal__title">💨 Tech item collected</h3>
+            <p className="island-stop-modal__copy">
+              The landed 3D item poofed from the board and snapped into the build grid.
+            </p>
+            <div className="island-tech-collection-grid" aria-label="Collected tech grid">
+              {Array.from({ length: TECH_COLLECTION_GRID_SIZE * TECH_COLLECTION_GRID_SIZE }, (_, cellIndex) => {
+                const isCollected = collectedTechTileIndices.has(cellIndex);
+                const isNew = cellIndex === techCollectionModal.tileIndex;
+                const isLine = techCollectionModal.completedLines.some((lineIndex) => (TECH_COLLECTION_LINES[lineIndex] as readonly number[] | undefined)?.includes(cellIndex));
+                return (
+                  <span
+                    key={cellIndex}
+                    className={[
+                      'island-tech-collection-grid__cell',
+                      isCollected ? 'island-tech-collection-grid__cell--filled' : '',
+                      isNew ? 'island-tech-collection-grid__cell--new' : '',
+                      isLine ? 'island-tech-collection-grid__cell--line' : '',
+                    ].filter(Boolean).join(' ')}
+                  >
+                    {isCollected ? (isNew ? TILE_TYPE_ICONS[techCollectionModal.tileType] : '⚙️') : ''}
+                  </span>
+                );
+              })}
+            </div>
+            <div className="island-tech-collection-build" aria-hidden="true">
+              <span className="island-tech-collection-build__base" />
+              <span className="island-tech-collection-build__beam" />
+              <span className="island-tech-collection-build__core">⚙️</span>
+            </div>
+            <p className="island-stop-modal__copy" role="status">
+              {techCollectionModal.rewardDice > 0
+                ? `Reward triggered: +${techCollectionModal.rewardDice} dice${techCollectionModal.isFullBoard ? ' — full board bonus!' : ''}`
+                : `${techCollectionModal.collectedCount}/9 tech pieces installed. Complete a row, column, or diagonal for dice.`}
+            </p>
+            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => setTechCollectionModal(null)}
+              >
+                Continue
+              </button>
+            </div>
+          </section>
+        </div>
+      ), document.body) : null}
 
 
       {showGamifiedJournalCard && (

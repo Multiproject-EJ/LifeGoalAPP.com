@@ -10493,3 +10493,133 @@
   font-weight: 700;
   margin: 0;
 }
+
+.island-tile--collectible-collected .island-tile__value {
+  opacity: 0.72;
+}
+
+.island-tile--collectible-collected::after {
+  content: '✓';
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #083522;
+  font-size: 11px;
+  font-weight: 900;
+  background: rgba(167, 243, 208, 0.92);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.72);
+  transform: rotate(var(--tile-upright-rotation-deg, 0deg));
+}
+
+.island-tech-collection-modal-backdrop {
+  background:
+    radial-gradient(circle at 50% 38%, rgba(34, 211, 238, 0.2), transparent 34%),
+    rgba(4, 8, 18, 0.64);
+}
+
+.island-tech-collection-modal {
+  max-width: min(92vw, 430px);
+  overflow: hidden;
+}
+
+.island-tech-collection-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(64px, 1fr));
+  gap: 10px;
+  padding: 14px;
+  margin: 14px 0;
+  border: 1px solid rgba(125, 211, 252, 0.42);
+  border-radius: 20px;
+  background:
+    linear-gradient(rgba(125, 211, 252, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.18) 1px, transparent 1px),
+    rgba(15, 23, 42, 0.36);
+  background-size: 33.333% 33.333%;
+  box-shadow: inset 0 0 28px rgba(14, 165, 233, 0.2);
+}
+
+.island-tech-collection-grid__cell {
+  min-height: 64px;
+  border: 1px dashed rgba(186, 230, 253, 0.45);
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: rgba(224, 242, 254, 0.96);
+  font-size: 1.5rem;
+  background: rgba(8, 47, 73, 0.22);
+}
+
+.island-tech-collection-grid__cell--filled {
+  border-style: solid;
+  background: linear-gradient(145deg, rgba(14, 165, 233, 0.34), rgba(168, 85, 247, 0.3));
+}
+
+.island-tech-collection-grid__cell--new {
+  animation: island-tech-piece-snap 0.72s cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+}
+
+.island-tech-collection-grid__cell--line {
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.72), 0 0 22px rgba(250, 204, 21, 0.44);
+}
+
+.island-tech-collection-build {
+  position: relative;
+  height: 76px;
+  margin: 4px auto 14px;
+  display: grid;
+  place-items: center;
+}
+
+.island-tech-collection-build__base,
+.island-tech-collection-build__beam,
+.island-tech-collection-build__core {
+  position: absolute;
+}
+
+.island-tech-collection-build__base {
+  bottom: 10px;
+  width: 160px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.24), rgba(250, 204, 21, 0.72), rgba(56, 189, 248, 0.24));
+  animation: island-tech-build-glow 1.25s ease-in-out infinite;
+}
+
+.island-tech-collection-build__beam {
+  width: 46px;
+  height: 64px;
+  border-radius: 999px;
+  background: linear-gradient(rgba(250, 204, 21, 0), rgba(250, 204, 21, 0.5), rgba(250, 204, 21, 0));
+  animation: island-tech-build-beam 1s ease-in-out infinite;
+}
+
+.island-tech-collection-build__core {
+  font-size: 2rem;
+  animation: island-tech-build-core 1.1s ease-in-out infinite;
+}
+
+@keyframes island-tech-piece-snap {
+  0% { opacity: 0; transform: translateY(-42px) scale(1.55) rotate(-18deg); }
+  70% { opacity: 1; transform: translateY(4px) scale(0.92) rotate(4deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+@keyframes island-tech-build-glow {
+  0%, 100% { opacity: 0.55; transform: scaleX(0.92); }
+  50% { opacity: 1; transform: scaleX(1.04); }
+}
+
+@keyframes island-tech-build-beam {
+  0%, 100% { opacity: 0.35; transform: scaleY(0.76); }
+  50% { opacity: 0.9; transform: scaleY(1.08); }
+}
+
+@keyframes island-tech-build-core {
+  0%, 100% { transform: translateY(0) rotate(-5deg) scale(0.95); }
+  50% { transform: translateY(-8px) rotate(7deg) scale(1.08); }
+}
