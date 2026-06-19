@@ -70,6 +70,26 @@ export function resolveExpandedLandmarkDoorStopIdForStatuses(
   return undefined;
 }
 
+/**
+ * Boss phase is a special door-routing mode: once the Boss is active, or once
+ * the Boss ticket is the next affordable payment, the four landmark-door tiles
+ * should all advertise and route to the Boss modal instead of opening dormant
+ * door challenges.
+ */
+export function resolveAllLandmarkDoorsRouteToBoss(input: {
+  bossStatus: string | null | undefined;
+  essence: number;
+  bossTicketCost: number | null | undefined;
+}): boolean {
+  if (input.bossStatus === 'active') return true;
+  if (input.bossStatus !== 'ticket_required') return false;
+  const essence = Number.isFinite(input.essence) ? Math.max(0, Math.floor(input.essence)) : 0;
+  const cost = typeof input.bossTicketCost === 'number' && Number.isFinite(input.bossTicketCost)
+    ? Math.max(0, Math.floor(input.bossTicketCost))
+    : null;
+  return cost !== null && essence >= cost;
+}
+
 // Encounter tile placement relative to the board's tileCount.
 // Normal islands: 1 encounter (gated by dayIndex).
 // Seasonal / rare islands: 2 encounters, always active.
@@ -178,6 +198,10 @@ export function applyLandmarkDoorTiles(
   for (const config of LANDMARK_DOOR_TILE_CONFIGS) {
     const doorStopId = options?.allDoorsRouteToBoss ? 'boss' : config.stopId;
     doorByIndex.set(config.tileIndex, doorStopId);
+
+    if (options?.allDoorsRouteToBoss) {
+      activeDoorClusterIndices.add(config.tileIndex);
+    }
 
     if (!options?.allDoorsRouteToBoss && options?.expandedActiveStopId === config.stopId && tileCount > 0) {
       activeDoorClusterIndices.add(config.tileIndex);

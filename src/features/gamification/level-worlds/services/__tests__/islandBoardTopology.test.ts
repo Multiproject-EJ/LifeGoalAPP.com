@@ -1,5 +1,5 @@
 import { resolveIslandBoardProfile } from '../islandBoardProfiles';
-import { applyLandmarkDoorTiles, generateTileMap, LANDMARK_DOOR_TILE_CONFIGS, resolveExpandedLandmarkDoorStopIdForStatuses } from '../islandBoardTileMap';
+import { applyLandmarkDoorTiles, generateTileMap, LANDMARK_DOOR_TILE_CONFIGS, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses } from '../islandBoardTileMap';
 import { TRAFFIC_LIGHT_TILE_INDEX } from '../islandRunTrafficLightTile';
 import { resolveWrappedTokenIndex } from '../islandBoardTopology';
 import { generateIslandStopPlan } from '../islandRunStops';
@@ -63,6 +63,24 @@ export const islandBoardTopologyTests: TestCase[] = [
         const entry = tileMap[door.tileIndex];
         assertEqual(entry.tileType, 'landmark_door', `Expected tile ${door.tileIndex} to stay a landmark door`);
         assertEqual(entry.doorStopId, 'boss', `Expected tile ${door.tileIndex} to route to boss`);
+        assertEqual(entry.isActiveDoorCluster, true, `Expected tile ${door.tileIndex} to glow for boss routing`);
+      }
+    },
+  },
+  {
+    name: 'affordable boss ticket routes and glows all four landmark doors',
+    run: () => {
+      assertEqual(resolveAllLandmarkDoorsRouteToBoss({ bossStatus: 'ticket_required', essence: 219, bossTicketCost: 220 }), false, 'Boss ticket should not reroute doors until affordable');
+      assertEqual(resolveAllLandmarkDoorsRouteToBoss({ bossStatus: 'ticket_required', essence: 220, bossTicketCost: 220 }), true, 'Affordable boss ticket should reroute doors');
+
+      const tileMap = applyLandmarkDoorTiles(generateTileMap(120, 'rare', 'forest', 0), {
+        allDoorsRouteToBoss: resolveAllLandmarkDoorsRouteToBoss({ bossStatus: 'ticket_required', essence: 220, bossTicketCost: 220 }),
+      });
+      for (const door of LANDMARK_DOOR_TILE_CONFIGS) {
+        const entry = tileMap[door.tileIndex];
+        assertEqual(entry.tileType, 'landmark_door', `Expected affordable boss-ticket tile ${door.tileIndex} to stay a landmark door`);
+        assertEqual(entry.doorStopId, 'boss', `Expected affordable boss-ticket tile ${door.tileIndex} to route to boss`);
+        assertEqual(entry.isActiveDoorCluster, true, `Expected affordable boss-ticket tile ${door.tileIndex} to glow for boss entry`);
       }
     },
   },

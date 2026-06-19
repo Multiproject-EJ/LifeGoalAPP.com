@@ -44,7 +44,7 @@ import {
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandDisplayName } from '../services/islandNames';
-import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
+import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import {
   getTrafficLightCharge,
   resolveTrafficLightCoinFlipReward,
@@ -4098,7 +4098,15 @@ export function IslandRunBoardPrototype({
     });
   }, [islandNumber, mergedStopStatesByIndex, resolveCanonicalContractV2Stops, runtimeState.stopTicketsPaidByIsland]);
 
-  const allLandmarkDoorsRouteToBoss = contractV2Stops?.statusesByIndex[4] === 'active';
+  const bossStopStatus = contractV2Stops?.statusesByIndex[4] ?? null;
+  const bossTicketCost = bossStopStatus === 'ticket_required'
+    ? getStopTicketCost({ effectiveIslandNumber, stopIndex: 4 })
+    : null;
+  const allLandmarkDoorsRouteToBoss = resolveAllLandmarkDoorsRouteToBoss({
+    bossStatus: bossStopStatus,
+    essence: runtimeState.essence,
+    bossTicketCost,
+  });
   const expandedActiveLandmarkDoorStopId = resolveExpandedLandmarkDoorStopIdForStatuses(contractV2Stops?.statusesByIndex);
   const landmarkDoorTileMap = useMemo(
     () => applyLandmarkDoorTiles(tileMap, {
@@ -4296,6 +4304,16 @@ export function IslandRunBoardPrototype({
     }
 
     if (tapOutcome === 'ticket_required') {
+      if (doorStopId === 'boss' && allLandmarkDoorsRouteToBoss) {
+        requestActiveStopTransition('boss', 'affordable_boss_ticket_landmark_door_landing');
+        setRequiredDoorStopId(null);
+        setDormantDoorMiniGame(null);
+        setDormantDoorSelectedIndices([]);
+        setDormantDoorReward(null);
+        setLandingText('🎫 Boss ticket ready: pay inside the Boss modal, then play the Boss Trial.');
+        return;
+      }
+
       requestActiveStopTransition(null, 'ticket_required_landmark_door_landing');
       setRequiredDoorStopId(null);
       setDormantDoorMiniGame(null);
