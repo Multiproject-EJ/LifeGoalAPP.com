@@ -2932,7 +2932,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const myQuestSubmenuActions: LauncherSubmenuAction[] = useMemo(
     () => [
-      { id: 'quest-compass', label: 'Quest Compass', icon: '🧭', onSelect: openQuestCompassFromMobileMenu },
+      { id: 'quest-compass', label: 'Quest Pulse', icon: '💓', onSelect: openQuestCompassFromMobileMenu },
       { id: 'starter-quest', label: 'Starter Quest', icon: '🧭', onSelect: openStarterQuestSheetFromMyQuest },
       { id: 'body', label: 'Health Goals', icon: '💪', featureId: 'app.body', onSelect: () => handleMobileNavSelect('body') },
       { id: 'habits', label: 'Habits', icon: '🔄', onSelect: () => handleMobileNavSelect('habits') },
@@ -4330,12 +4330,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <button
                 type="button"
                 className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--compass-placeholder"
-                onClick={openQuestCompassFromMobileMenu}
-                aria-label="Open Compass Chapters"
+                onClick={() => openFeaturePreviewOverlay('app.compass_book', 'Compass Book')}
+                aria-label="Preview Compass Book"
               >
                 <span className="mobile-menu-overlay__compass-placeholder-copy">
                   <span className="mobile-menu-overlay__compass-placeholder-title">Compass Book</span>
-                  <span className="mobile-menu-overlay__compass-placeholder-subtitle">Chapters, lessons, and wisdom for your journey.</span>
+                  <span className="mobile-menu-overlay__compass-placeholder-subtitle">In development: deep chapters for life direction.</span>
                 </span>
                 <span className="mobile-menu-overlay__compass-placeholder-book" aria-hidden="true">
                   <span className="mobile-menu-overlay__compass-placeholder-page">Chapter I<br />Know Thyself</span>
