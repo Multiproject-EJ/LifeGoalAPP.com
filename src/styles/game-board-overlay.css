@@ -145,10 +145,6 @@
 }
 
 .game-board-overlay__play-button {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
   min-width: min(68vw, 320px);
   padding: 0.9rem 2rem;
   border-radius: 999px;
@@ -173,7 +169,7 @@
 }
 
 .game-board-overlay__play-button:active {
-  transform: translate(-50%, -50%) scale(0.98);
+  transform: scale(0.98);
 }
 
 /* First-run guided spotlight: pulse PLAY so it's the only obvious action. */
@@ -188,14 +184,14 @@
       inset 0 1px 0 rgba(255, 255, 255, 0.45),
       0 12px 26px rgba(3, 23, 71, 0.6),
       0 0 18px rgba(56, 189, 248, 0.55);
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
   }
   50% {
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.6),
       0 14px 30px rgba(3, 23, 71, 0.7),
       0 0 42px rgba(120, 215, 255, 0.95);
-    transform: translate(-50%, -50%) scale(1.05);
+    transform: scale(1.05);
   }
 }
 
@@ -216,7 +212,201 @@
 }
 
 .game-board-overlay__middle--minimal .game-board-overlay__play-button:active {
-  transform: translate(-50%, -50%) scale(0.98);
+  transform: scale(0.98);
+}
+
+.game-board-overlay__controller-shell {
+  --controller-control-border: rgba(198, 234, 250, 0.54);
+  --controller-control-highlight: rgba(229, 248, 255, 0.44);
+  --controller-control-shadow: rgba(2, 17, 34, 0.5);
+  --controller-control-disabled-opacity: 0.56;
+  --controller-control-disabled-shadow: inset 0 1px 0 rgba(233, 248, 255, 0.08), inset 0 -10px 16px rgba(5, 14, 28, 0.34);
+  position: absolute;
+  left: 50%;
+  bottom: max(0.45rem, env(safe-area-inset-bottom, 0px));
+  width: min(calc(100% - 1rem), 560px);
+  aspect-ratio: 596 / 350;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.game-board-overlay__controller-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('../assets/Controller_lightblue.webp') center center / contain no-repeat;
+  z-index: 1;
+  pointer-events: none;
+}
+
+:is(
+  [data-theme='sunset-glow'],
+  [data-theme='desert-sand']
+) .game-board-overlay__controller-shell::before {
+  background-image: url('../assets/Gold_controller.webp');
+}
+
+:is(
+  [data-theme='flow-day'],
+  [data-theme='bio-day']
+) .game-board-overlay__controller-shell::before {
+  background-image: url('../assets/Blue_darkcontroller.webp');
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .game-board-overlay__controller-shell::before {
+  background-image: url('../assets/Dark_controller.webp');
+}
+
+.game-board-overlay__controller-nav-btn,
+.game-board-overlay__controller-play-group,
+.game-board-overlay__controller-badge {
+  position: absolute;
+  z-index: 2;
+  left: var(--slot-x, 50%);
+  top: var(--slot-y, 50%);
+  transform: translate(-50%, -50%) rotate(var(--slot-rotate, 0deg)) scale(var(--slot-scale, 1));
+}
+
+.game-board-overlay__controller-play-group {
+  width: clamp(140px, 46vw, 296px);
+}
+
+.game-board-overlay__controller-play-group .game-board-overlay__play-button {
+  width: 100%;
+  min-width: 0;
+  min-height: clamp(4.8rem, 12vw, 5.1rem);
+  padding: 0.72rem 1.25rem 0.84rem;
+  border-radius: 30px 30px 34px 34px / 24px 24px 30px 30px;
+  clip-path: polygon(9% 0, 91% 0, 100% 17%, 88% 100%, 12% 100%, 0 17%);
+  border-width: 1px;
+  border-color: var(--controller-control-border);
+  font-size: clamp(0.98rem, 4.2vw, 1.2rem);
+  box-shadow:
+    inset 0 1px 0 var(--controller-control-highlight),
+    inset 0 -14px 18px rgba(6, 22, 36, 0.24),
+    0 12px 24px var(--controller-control-shadow),
+    0 0 18px rgba(56, 189, 248, 0.55);
+}
+
+.game-board-overlay__play-button-content {
+  display: grid;
+  gap: 0.26rem;
+  justify-items: center;
+  line-height: 1.15;
+}
+
+.game-board-overlay__play-button-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.7rem;
+  padding: 0.25rem 0.58rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  background: rgba(7, 15, 28, 0.5);
+  font-size: 0.83rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.game-board-overlay__controller-nav-btn {
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.24rem;
+  border: 1px solid var(--controller-control-border);
+  background:
+    linear-gradient(180deg, rgba(190, 232, 247, 0.32), rgba(107, 169, 198, 0.2) 56%, rgba(32, 86, 116, 0.26));
+  color: #ebf9ff;
+  text-shadow: 0 1px 0 rgba(0, 8, 16, 0.42);
+  font-weight: 800;
+  font-size: clamp(0.58rem, 2.5vw, 0.76rem);
+  line-height: 1.08;
+  box-shadow:
+    inset 0 1px 0 var(--controller-control-highlight),
+    inset 0 -10px 14px rgba(8, 20, 34, 0.22),
+    0 8px 16px rgba(4, 15, 28, 0.16);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.game-board-overlay__controller-nav-btn--slot-quest,
+.game-board-overlay__controller-nav-btn--slot-garage {
+  width: clamp(5.4rem, 17vw, 7.8rem);
+  height: clamp(2.65rem, 7vw, 3.6rem);
+  padding-inline: 0.52rem;
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.38), transparent 46%),
+    linear-gradient(180deg, rgba(219, 244, 252, 0.34), rgba(119, 184, 211, 0.18) 58%, rgba(31, 91, 123, 0.24));
+}
+
+.game-board-overlay__controller-nav-btn--slot-quest {
+  clip-path: polygon(6% 0%, 100% 0%, 94% 100%, 0% 100%);
+}
+
+.game-board-overlay__controller-nav-btn--slot-garage {
+  clip-path: polygon(0% 0%, 94% 0%, 100% 100%, 6% 100%);
+}
+
+.game-board-overlay__controller-nav-btn--slot-creatures,
+.game-board-overlay__controller-nav-btn--slot-offers {
+  width: clamp(5.8rem, 18vw, 8.2rem);
+  height: clamp(3.2rem, 9vw, 4.9rem);
+  padding-inline: 0.46rem;
+  border-radius: 10px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.32), transparent 44%),
+    linear-gradient(180deg, rgba(168, 218, 238, 0.28), rgba(64, 139, 180, 0.18) 60%, rgba(11, 54, 86, 0.3));
+}
+
+.game-board-overlay__controller-nav-btn--slot-creatures {
+  clip-path: polygon(10% 0%, 100% 6%, 90% 100%, 0% 94%);
+}
+
+.game-board-overlay__controller-nav-btn--slot-offers {
+  width: clamp(5.4rem, 16vw, 7.8rem);
+  height: clamp(4.2rem, 12.5vw, 6.8rem);
+  padding-inline: 0.58rem 0.42rem;
+  border-radius: 22px 12px 34px 28px;
+  clip-path: polygon(20% 0%, 96% 6%, 98% 88%, 82% 100%, 58% 90%, 0% 14%);
+}
+
+.game-board-overlay__controller-nav-btn:disabled {
+  cursor: default;
+  filter: saturate(0.65) brightness(0.85);
+  opacity: var(--controller-control-disabled-opacity);
+  box-shadow: var(--controller-control-disabled-shadow);
+}
+
+.game-board-overlay__controller-badge {
+  z-index: 4;
+  min-width: clamp(9.5rem, 34vw, 13.5rem);
+  min-height: 1.72rem;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.14rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--controller-control-border);
+  background:
+    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.38), transparent 46%),
+    linear-gradient(180deg, rgba(154, 210, 235, 0.3), rgba(64, 120, 154, 0.28));
+  color: #eaf8ff;
+  text-shadow: 0 1px 0 rgba(0, 8, 14, 0.44);
+  box-shadow:
+    inset 0 1px 0 var(--controller-control-highlight),
+    inset 0 -8px 10px rgba(6, 16, 31, 0.22),
+    0 6px 12px rgba(3, 16, 30, 0.19);
+  font-weight: 800;
+  font-size: clamp(0.62rem, 2.4vw, 0.72rem);
+  white-space: nowrap;
 }
 /* Side Icons (Left and Right) */
 .game-board-overlay__side-icons {

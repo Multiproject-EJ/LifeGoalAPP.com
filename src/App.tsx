@@ -5243,6 +5243,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
           isOpen={showGameBoardOverlay}
           spotlightPlay={firstRunStep === 'spotlight-play'}
           onClose={() => setShowGameBoardOverlay(false)}
+          onTopbarClick={() => {
+            setShowGameBoardOverlay(false);
+            setShowMobileGamification(true);
+          }}
           onPlayClick={() => {
             if (firstRunStep === 'spotlight-play') {
               completeFirstRunStartFlow();
@@ -5593,6 +5597,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
         isOpen={showGameBoardOverlay}
         spotlightPlay={firstRunStep === 'spotlight-play'}
         onClose={() => setShowGameBoardOverlay(false)}
+        onTopbarClick={() => {
+          setShowGameBoardOverlay(false);
+          if (isMobileExperience) {
+            setShowMobileGamification(true);
+          } else {
+            setActiveWorkspaceNav('game');
+          }
+        }}
         onPlayClick={() => {
           if (firstRunStep === 'spotlight-play') {
             completeFirstRunStartFlow();

@@ -26,6 +26,10 @@ import {
   OUTER_STOP_ANCHORS,
   type TileAnchor,
 } from '../services/islandBoardLayout';
+import {
+  ISLAND_RUN_CONTROLLER_SLOT_MAP,
+  getIslandRunControllerSlotStyle,
+} from '../services/islandRunControllerVisualContract';
 import { BoardStage, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
 import { StatDriftNumbers } from './StatDriftNumbers';
@@ -1146,48 +1150,6 @@ type OrbitStopVisual = {
   stateChipLabel?: string;
 };
 
-/**
- * Controller shell geometry contract for Island Run footer controls.
- *
- * IMPORTANT: tune slot values here (not ad-hoc CSS percentages) when doing
- * future visual alignment passes against controller contours/cavities.
- */
-type FooterControllerSlotId =
-  | 'leftUpper'
-  | 'leftLower'
-  | 'centerCore'
-  | 'centerBadge'
-  | 'rightLower'
-  | 'rightUpper';
-
-type FooterControllerSlot = {
-  x: number;
-  y: number;
-  rotate: number;
-  scale?: number;
-  depth?: 'surface' | 'raised' | 'inset';
-};
-
-const FOOTER_CONTROLLER_SLOT_MAP: Record<FooterControllerSlotId, FooterControllerSlot> = {
-  // Side actions sit high on the white shoulder contours, the roll control
-  // occupies the upper blue bowl, and the multiplier badge clears the roll
-  // control entirely while staying close enough to read as its control.
-  leftUpper: { x: 18, y: 28, rotate: -3.5, scale: 0.96, depth: 'raised' },
-  leftLower: { x: 11.5, y: 53, rotate: -8, scale: 0.92, depth: 'raised' },
-  centerCore: { x: 50, y: 22, rotate: 0, scale: 1, depth: 'inset' },
-  centerBadge: { x: 50, y: -4, rotate: 0, scale: 0.9, depth: 'surface' },
-  rightLower: { x: 88.5, y: 53, rotate: 8, scale: 0.92, depth: 'raised' },
-  rightUpper: { x: 82, y: 28, rotate: 3.5, scale: 0.96, depth: 'raised' },
-};
-
-function getFooterControllerSlotStyle(slot: FooterControllerSlot): React.CSSProperties {
-  return {
-    '--slot-x': `${slot.x}%`,
-    '--slot-y': `${slot.y}%`,
-    '--slot-rotate': `${slot.rotate}deg`,
-    '--slot-scale': `${slot.scale ?? 1}`,
-  } as React.CSSProperties;
-}
 
 type MysteryStopReward =
   | { type: 'essence'; amount: number; message: string }
@@ -10742,7 +10704,7 @@ export function IslandRunBoardPrototype({
                 <button
                   type="button"
                   className="island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-story"
-                  style={getFooterControllerSlotStyle(FOOTER_CONTROLLER_SLOT_MAP.leftUpper)}
+                  style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.leftUpper)}
                   onClick={() => setShowStoryReader(true)}
                   disabled={isBuildTutorialGameplayBlocked}
                 >
@@ -10751,7 +10713,7 @@ export function IslandRunBoardPrototype({
                 <button
                   type="button"
                   className="island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-creatures"
-                  style={getFooterControllerSlotStyle(FOOTER_CONTROLLER_SLOT_MAP.leftLower)}
+                  style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.leftLower)}
                   onClick={openSanctuaryPanel}
                   disabled={isBuildTutorialGameplayBlocked}
                 >
@@ -10760,7 +10722,7 @@ export function IslandRunBoardPrototype({
                 <button
                   type="button"
                   className="island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-market"
-                  style={getFooterControllerSlotStyle(FOOTER_CONTROLLER_SLOT_MAP.rightLower)}
+                  style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.rightLower)}
                   onClick={openShopPanel}
                   disabled={isBuildTutorialGameplayBlocked}
                 >
@@ -10769,7 +10731,7 @@ export function IslandRunBoardPrototype({
                 <button
                   type="button"
                   className={`island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-build${isBuildTutorialPromptActive ? ' island-run-prototype__footer-nav-btn--build-tutorial-target' : ''}`}
-                  style={getFooterControllerSlotStyle(FOOTER_CONTROLLER_SLOT_MAP.rightUpper)}
+                  style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.rightUpper)}
                   onClick={openBuildPanelFromFooter}
                   aria-describedby={isBuildTutorialPromptActive ? 'island-run-build-tutorial-prompt' : undefined}
                 >
@@ -10785,7 +10747,7 @@ export function IslandRunBoardPrototype({
                 <button
                   type="button"
                   className={`island-run-prototype__footer-multiplier-btn island-run-prototype__footer-multiplier-btn--slot-badge${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}${isAtMaxAvailableMultiplier ? ' island-run-prototype__footer-multiplier-btn--max' : ''}`}
-                  style={getFooterControllerSlotStyle(FOOTER_CONTROLLER_SLOT_MAP.centerBadge)}
+                  style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.centerBadge)}
                   data-max-multiplier={isAtMaxAvailableMultiplier ? 'true' : undefined}
                   disabled={isBuildTutorialGameplayBlocked}
                   onClick={() => {
@@ -10803,7 +10765,7 @@ export function IslandRunBoardPrototype({
                 </button>
                 <div
                   className="island-run-prototype__footer-dice-group island-run-prototype__footer-dice-group--slot-center"
-                  style={getFooterControllerSlotStyle(FOOTER_CONTROLLER_SLOT_MAP.centerCore)}
+                  style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.centerCore)}
                 >
                   <button
                     type="button"
