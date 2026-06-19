@@ -1,22 +1,51 @@
-type ScrollLockTarget = 'body' | 'documentElement';
+type ScrollLockTarget = 'body' | 'documentElement' | 'root';
+type StylePatch = Record<string, string>;
 
-interface TargetSnapshot {
-  overflow: string;
-}
-
-interface LockState {
+interface StyleSnapshot {
   count: number;
-  snapshots: Map<ScrollLockTarget, TargetSnapshot>;
+  originalValue: string;
 }
 
-const state: LockState = {
-  count: 0,
-  snapshots: new Map(),
-};
+const activeStyleLocks = new Map<string, StyleSnapshot>();
 
 const getElement = (target: ScrollLockTarget): HTMLElement | null => {
   if (typeof document === 'undefined') return null;
-  return target === 'body' ? document.body : document.documentElement;
+  if (target === 'body') return document.body;
+  if (target === 'documentElement') return document.documentElement;
+  return document.getElementById('root');
+};
+
+const getLockKey = (target: ScrollLockTarget, property: string) => `${target}.${property}`;
+
+const applyStylePatch = (target: ScrollLockTarget, styles: StylePatch) => {
+  const element = getElement(target);
+  if (!element) return [];
+
+  return Object.entries(styles).map(([propertyName, value]) => {
+    const property = propertyName;
+    const lockKey = getLockKey(target, property);
+    const existing = activeStyleLocks.get(lockKey);
+
+    if (existing) {
+      existing.count += 1;
+    } else {
+      const currentValue = String((element.style as unknown as Record<string, string>)[property] ?? '');
+      activeStyleLocks.set(lockKey, { count: 1, originalValue: currentValue });
+    }
+
+    (element.style as unknown as Record<string, string>)[property] = value;
+
+    return () => {
+      const current = activeStyleLocks.get(lockKey);
+      if (!current) return;
+
+      current.count -= 1;
+      if (current.count > 0) return;
+
+      (element.style as unknown as Record<string, string>)[property] = current.originalValue;
+      activeStyleLocks.delete(lockKey);
+    };
+  });
 };
 
 export function lockPageScroll(targets: ScrollLockTarget[] = ['body']): () => void {
@@ -25,36 +54,44 @@ export function lockPageScroll(targets: ScrollLockTarget[] = ['body']): () => vo
   }
 
   const uniqueTargets = Array.from(new Set(targets));
-  state.count += 1;
-
-  uniqueTargets.forEach((target) => {
-    const element = getElement(target);
-    if (!element) return;
-
-    if (!state.snapshots.has(target)) {
-      state.snapshots.set(target, { overflow: element.style.overflow });
-      element.style.overflow = 'hidden';
-      return;
-    }
-
-    element.style.overflow = 'hidden';
-  });
+  const releases = uniqueTargets.flatMap((target) => applyStylePatch(target, { overflow: 'hidden' }));
 
   let released = false;
   return () => {
     if (released) return;
     released = true;
-    state.count = Math.max(0, state.count - 1);
+    releases.slice().reverse().forEach((release) => release());
+  };
+}
 
-    if (state.count > 0) {
-      return;
-    }
+export function lockFullscreenPageScroll(options: { bodyTop?: string; root?: boolean } = {}): () => void {
+  if (typeof document === 'undefined') {
+    return () => {};
+  }
 
-    state.snapshots.forEach((snapshot, target) => {
-      const element = getElement(target);
-      if (!element) return;
-      element.style.overflow = snapshot.overflow;
-    });
-    state.snapshots.clear();
+  const releases = [
+    ...applyStylePatch('body', {
+      overflow: 'hidden',
+      position: 'fixed',
+      top: options.bodyTop ?? '0px',
+      bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))',
+      width: '100%',
+      touchAction: 'none',
+      overscrollBehaviorY: 'none',
+      backgroundColor: '#000',
+    }),
+    ...applyStylePatch('documentElement', {
+      overflow: 'hidden',
+      overscrollBehaviorY: 'none',
+      backgroundColor: '#000',
+    }),
+    ...(options.root ? applyStylePatch('root', { overflow: 'hidden', height: '100%' }) : []),
+  ];
+
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    releases.slice().reverse().forEach((release) => release());
   };
 }

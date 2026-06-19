@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { lockFullscreenPageScroll } from '../../../utils/scrollLock';
 import type { ArchetypeHand } from '../../identity/archetypes/archetypeHandBuilder';
 import {
   adaptArchetypeHandToSparkPreview,
@@ -76,34 +77,11 @@ export function PlayersHandSparkPreview({
   useEffect(() => {
     if (!expanded || typeof window === 'undefined' || typeof document === 'undefined') return;
 
-    const { body, documentElement } = document;
-    const previous = {
-      bodyOverflow: body.style.overflow,
-      bodyPosition: body.style.position,
-      bodyTop: body.style.top,
-      bodyWidth: body.style.width,
-      bodyTouchAction: body.style.touchAction,
-      docOverflow: documentElement.style.overflow,
-      docOverscrollBehavior: documentElement.style.overscrollBehavior,
-    };
     const scrollY = window.scrollY;
-
-    body.style.overflow = 'hidden';
-    body.style.position = 'fixed';
-    body.style.top = `-${scrollY}px`;
-    body.style.width = '100%';
-    body.style.touchAction = 'none';
-    documentElement.style.overflow = 'hidden';
-    documentElement.style.overscrollBehavior = 'none';
+    const releaseScrollLock = lockFullscreenPageScroll({ bodyTop: `-${scrollY}px` });
 
     return () => {
-      body.style.overflow = previous.bodyOverflow;
-      body.style.position = previous.bodyPosition;
-      body.style.top = previous.bodyTop;
-      body.style.width = previous.bodyWidth;
-      body.style.touchAction = previous.bodyTouchAction;
-      documentElement.style.overflow = previous.docOverflow;
-      documentElement.style.overscrollBehavior = previous.docOverscrollBehavior;
+      releaseScrollLock();
       window.scrollTo(0, scrollY);
     };
   }, [expanded]);
