@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { lockPageScroll } from '../../utils/scrollLock';
 import {
   getDreamJournalReminderEnabled,
   getDreamJournalReminderWindow,
@@ -28,11 +29,7 @@ export function DreamJournalReminderSettings({ session }: DreamJournalReminderSe
     if (typeof document === 'undefined' || !showPreviewModal) {
       return;
     }
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return lockPageScroll();
   }, [showPreviewModal]);
 
   useEffect(() => {

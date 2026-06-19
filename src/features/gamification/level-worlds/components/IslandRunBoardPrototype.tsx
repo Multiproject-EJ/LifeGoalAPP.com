@@ -1,3 +1,4 @@
+import { lockPageScroll } from '../../../../utils/scrollLock';
 /**
  * ISLAND RUN ARCHITECTURE WARNING
  *
@@ -6357,11 +6358,7 @@ export function IslandRunBoardPrototype({
   const collectedCreatures = useMemo(() => getCreatureManifestEntries(session.user.id), [creatureCollection, session.user.id]);
   useEffect(() => {
     if (!pairedThemeOfferModal || typeof document === 'undefined') return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return lockPageScroll();
   }, [pairedThemeOfferModal]);
 
   const creatureThemeAccessContext = useMemo(() => {

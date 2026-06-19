@@ -4,6 +4,7 @@ import { getCreatureCardMetadata } from '../services/creatureCardCatalog';
 import { playIslandRunSound, triggerIslandRunHaptic, type IslandRunHapticEvent } from '../services/islandRunAudio';
 import { CreatureCard } from './CreatureCard';
 
+import { lockPageScroll } from '../../../../utils/scrollLock';
 const SWIPE_REVEAL_THRESHOLD_PX = 36;
 const RARITY_ORDER: CreatureDefinition['tier'][] = ['common', 'rare', 'mythic'];
 
@@ -116,11 +117,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
 
   useEffect(() => {
     if (!props.open || typeof document === 'undefined') return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return lockPageScroll();
   }, [props.open]);
 
   if (!props.open) return null;

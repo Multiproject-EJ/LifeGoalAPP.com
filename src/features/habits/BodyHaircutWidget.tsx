@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { lockPageScroll } from '../../utils/scrollLock';
 
 const HAIRCUT_INTERVAL_OPTIONS = [
   { value: 60, label: 'Every 2 months (60 days)' },
@@ -106,8 +107,7 @@ export function BodyHaircutWidget({ onOpenHealthGoalsQuestMenu }: BodyHaircutWid
   useEffect(() => {
     if (!isHairModalOpen || typeof document === 'undefined') return undefined;
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const releaseScrollLock = lockPageScroll();
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -118,7 +118,7 @@ export function BodyHaircutWidget({ onOpenHealthGoalsQuestMenu }: BodyHaircutWid
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      releaseScrollLock();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isHairModalOpen]);

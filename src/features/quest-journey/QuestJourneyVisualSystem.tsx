@@ -1,5 +1,6 @@
 import { type CSSProperties, type ReactNode, useEffect } from 'react';
 import './questJourneyVisualSystem.css';
+import { lockPageScroll } from '../../utils/scrollLock';
 
 type QuestPillar = 'identity' | 'direction' | 'execution' | 'companion' | 'progression';
 
@@ -268,14 +269,13 @@ type QuestModalSheetProps = {
 export function QuestModalSheet({ open, title, children, footer, onClose }: QuestModalSheetProps) {
   useEffect(() => {
     if (!open || typeof document === 'undefined') return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const releaseScrollLock = lockPageScroll();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => {
-      document.body.style.overflow = originalOverflow;
+      releaseScrollLock();
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [onClose, open]);

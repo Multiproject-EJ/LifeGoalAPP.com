@@ -7,6 +7,7 @@ import { listHabitsV2, listTodayHabitLogsV2 } from '../../services/habitsV2';
 import { getQuestHabit, refreshQuestHabit, type QuestHabit } from '../../services/questHabit';
 import type { Database } from '../../lib/database.types';
 import type { LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
+import { lockPageScroll } from '../../utils/scrollLock';
 import {
   buildQuestCompassForceDetail,
   buildQuestCompassViewModel,
@@ -152,16 +153,15 @@ export function QuestCompassModal({
 
   useEffect(() => {
     if (!selectedForceDetail) return undefined;
-    const originalOverflow = document.body.style.overflow;
+    const releaseScrollLock = lockPageScroll();
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setSelectedForceKey(null);
       }
     };
-    document.body.style.overflow = 'hidden';
     document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.body.style.overflow = originalOverflow;
+      releaseScrollLock();
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [selectedForceDetail]);
