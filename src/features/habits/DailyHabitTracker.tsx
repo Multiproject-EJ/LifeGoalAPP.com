@@ -8452,7 +8452,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         : !isConfigured
           ? 'warning'
           : null;
-    const canUseCompactPullRefresh = isViewingToday && (isConfigured || isDemoExperience);
+    // Custom compact pull-to-refresh installs document-level touch cancellation on the Today card.
+    // On mobile, that competes with native page scrolling in this surface, so keep it disabled
+    // until it can be rebuilt with pointer-events that never cancel vertical scroll.
+    const canUseCompactPullRefresh = false;
     const pullProgress = Math.min(1, compactPullDistance / COMPACT_PULL_REFRESH_THRESHOLD_PX);
     const isPullArmed = canUseCompactPullRefresh && pullProgress >= 1;
     const shouldShowPullIndicator =
