@@ -251,7 +251,7 @@
   content: '';
   position: absolute;
   right: clamp(4.6rem, 18vw, 7.7rem);
-  top: clamp(1.15rem, 8vw, 2.85rem);
+  top: clamp(0.3rem, 5.75vw, 1.9rem);
   width: clamp(2.45rem, 11vw, 4.25rem);
   aspect-ratio: 1;
   border-radius: 999px;
