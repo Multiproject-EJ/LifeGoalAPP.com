@@ -376,16 +376,25 @@ Tasks:
 Out of scope (still): writes, schema changes, habit-log/streak math, new
 reward grants.
 
-### Slice 4 — ladder motion ⏳
+### Slice 4 — ladder motion 🔜 (current)
 
 Goal: add the upward ladder motion when read-model state advances.
 
-Tasks:
+Delivered:
 
-- Add CSS transform states for cards moving from next to current and current to achieved.
-- Trigger animation from changed view-model state only.
-- Respect `prefers-reduced-motion`.
-- Ensure no animation changes gameplay/account state.
+- One-shot "climb" animation: when the island number advances between overlay
+  opens, both ladders rise together, the current box pops, and the shared spine
+  orb pulses ("life + game rise together").
+- Triggered by changed read-model state only — the overlay compares the current
+  island to a presentational, in-memory last-seen value (no gameplay reads or
+  writes); it does not fire on a normal re-open at the same island.
+- CSS transform/opacity keyframes whose end states match each element's resting
+  transform (no snap); `prefers-reduced-motion` disables all climb animations.
+- No animation changes gameplay/account state.
+
+Note: motion is keyed to the reliable island-advance signal and applied to both
+tracks together; a separate per-real-life-milestone animation can follow once
+real-life advancement is modeled more precisely.
 
 ### Slice 5 — polish and accessibility ⏳
 
