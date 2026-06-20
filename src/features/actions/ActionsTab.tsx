@@ -479,8 +479,7 @@ export function ActionsTab({
       <div className="actions-tab actions-tab--launcher">
         <header className="actions-tab__header actions-tab__header--launcher">
           <div className="actions-tab__header-content">
-            <h2 className="actions-tab__title">Actions</h2>
-            <p className="actions-tab__subtitle">Start a task or jump to a workspace.</p>
+            <h2 className="actions-tab__title">ACTIONS</h2>
           </div>
           {isDemoExperience && (
             <span className="actions-tab__demo-badge">Demo Mode</span>
