@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import '../styles/game-board-overlay.css';
 import { getIslandBackgroundImageSrc } from '../features/gamification/level-worlds/services/islandBackgrounds';
 import {
+  buildDualTrackOverlayViewModel,
+  type DualTrackMilestoneCard,
+} from '../features/gamification/level-worlds/services/dualTrackOverlayAdapter';
+import {
   ISLAND_RUN_CONTROLLER_SLOT_MAP,
   getIslandRunControllerSlotStyle,
 } from '../features/gamification/level-worlds/services/islandRunControllerVisualContract';
@@ -41,6 +45,46 @@ type GameBoardOverlayProps = {
   islandSceneSrc?: string;
 };
 
+type DualTrackColumnProps = {
+  title: string;
+  subtitle: string;
+  tone: 'life' | 'game';
+  cards: DualTrackMilestoneCard[];
+};
+
+function DualTrackColumn({ title, subtitle, tone, cards }: DualTrackColumnProps) {
+  return (
+    <section className={`game-board-overlay__track game-board-overlay__track--${tone}`} aria-label={title}>
+      <div className="game-board-overlay__track-header">
+        <h3>{title}</h3>
+        <p>{subtitle}</p>
+      </div>
+      <div className="game-board-overlay__track-ladder">
+        {cards.map((card) => (
+          <article
+            key={card.id}
+            className={`game-board-overlay__milestone game-board-overlay__milestone--${card.position}`}
+            aria-label={`${card.title}: ${card.progressLabel}`}
+          >
+            <span className="game-board-overlay__milestone-icon" aria-hidden="true">
+              {card.icon}
+              {typeof card.islandNumber === 'number' ? (
+                <span className="game-board-overlay__milestone-index">{card.islandNumber}</span>
+              ) : null}
+            </span>
+            <span className="game-board-overlay__milestone-copy">
+              <span className="game-board-overlay__milestone-kicker">{card.progressLabel}</span>
+              <strong>{card.title}</strong>
+              <span>{card.subtitle}</span>
+            </span>
+            <span className="game-board-overlay__milestone-reward">{card.rewardPreviewLabel}</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function GameBoardOverlay({
   isOpen,
   onClose,
@@ -53,6 +97,7 @@ export function GameBoardOverlay({
   essenceBalance = 0,
   rewardBarProgress = 0,
   rewardBarThreshold = 10,
+  islandNumber = 1,
   islandDisplayName = 'Island',
   islandSceneSrc = getIslandBackgroundImageSrc(1),
 }: GameBoardOverlayProps) {
@@ -91,6 +136,17 @@ export function GameBoardOverlay({
   const progressPercent = rewardBarThreshold > 0
     ? Math.min(100, Math.max(0, Math.round((rewardBarProgress / rewardBarThreshold) * 100)))
     : 0;
+  const dualTrackViewModel = buildDualTrackOverlayViewModel({
+    islandNumber,
+    islandDisplayName,
+    rewardBarProgress,
+    rewardBarThreshold,
+  });
+  const { collectedCount, totalCount } = dualTrackViewModel.gameProgress;
+  const gameTrackSubtitle = collectedCount > 0
+    ? `${collectedCount} of ${totalCount} islands explored`
+    : 'Begin your first island adventure.';
+
   return (
     <div
       className={`game-board-overlay ${isAnimating ? 'game-board-overlay--open' : ''}${
@@ -109,7 +165,43 @@ export function GameBoardOverlay({
         </div>
 
         <div className="game-board-overlay__middle game-board-overlay__middle--minimal">
-          <h2 className="game-board-overlay__title">My Quest, 2 track Progress</h2>
+          <section className="game-board-overlay__quest-progress" aria-labelledby="game-board-overlay-title">
+            <header className="game-board-overlay__header">
+              <p className="game-board-overlay__eyebrow">Two tracks · one climb</p>
+              <h2 id="game-board-overlay-title" className="game-board-overlay__title">
+                {dualTrackViewModel.title}
+              </h2>
+              <p className="game-board-overlay__subtitle">{dualTrackViewModel.subtitle}</p>
+            </header>
+
+            <div className="game-board-overlay__dual-track-stage" aria-label="My Quest and Game Progress tracks">
+              <DualTrackColumn
+                title="Real Life Journey"
+                subtitle="Goals, habits, and growth milestones."
+                tone="life"
+                cards={dualTrackViewModel.realLifeTrack}
+              />
+              <div className="game-board-overlay__progress-spine" aria-label={`${dualTrackViewModel.centerSpine.label} progress bridge`}>
+                <span className="game-board-overlay__progress-spine-label">{dualTrackViewModel.centerSpine.label}</span>
+                <span className="game-board-overlay__progress-spine-orb" aria-hidden="true">
+                  {dualTrackViewModel.centerSpine.icon}
+                </span>
+                <span className="game-board-overlay__progress-spine-rail" aria-hidden="true">
+                  <span
+                    className="game-board-overlay__progress-spine-fill"
+                    style={{ height: `${dualTrackViewModel.centerSpine.progressPercent}%` }}
+                  />
+                </span>
+              </div>
+              <DualTrackColumn
+                title="Game Journey"
+                subtitle={gameTrackSubtitle}
+                tone="game"
+                cards={dualTrackViewModel.gameTrack}
+              />
+            </div>
+          </section>
+
           <div className="game-board-overlay__controller-shell" aria-label="Game overlay controller menu">
             <button
               type="button"

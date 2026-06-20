@@ -11028,27 +11028,31 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         </div>
 
         <footer className="yesterday-sundown-todo-modal__footer">
-          <div className="yesterday-sundown-todo-modal__bulk">
-            <span>Mark all remaining</span>
-            <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'today' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Today</button>
-            <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Tomorrow</button>
-            <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'finish' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Finished</button>
-            <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'delete' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Delete</button>
+          <div className="yesterday-sundown-todo-modal__bulk" aria-label="Bulk todo cleanup actions">
+            <span className="yesterday-sundown-todo-modal__bulk-label">Mark all remaining as</span>
+            <div className="yesterday-sundown-todo-modal__bulk-actions">
+              <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'today' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Today</button>
+              <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Tomorrow</button>
+              <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'finish' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Finished</button>
+              <button type="button" className="yesterday-sundown-todo-modal__bulk-delete" onClick={() => setTodoCleanupBulkAction({ action: 'delete' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Delete</button>
+            </div>
           </div>
           {todoCleanupBulkAction ? (
             <div className="yesterday-sundown-todo-modal__confirm" role="alert">
               <span>Apply this bulk choice to every unassigned todo?</span>
-              <button type="button" onClick={handleConfirmBulkTodoCleanup}>Affirm</button>
-              <button type="button" onClick={() => setTodoCleanupBulkAction(null)}>Cancel</button>
+              <div className="yesterday-sundown-todo-modal__confirm-actions">
+                <button type="button" onClick={handleConfirmBulkTodoCleanup}>Apply to all</button>
+                <button type="button" onClick={() => setTodoCleanupBulkAction(null)}>Cancel</button>
+              </div>
             </div>
           ) : null}
           {allTodoCleanupItemsAssigned ? (
-            <button type="button" className="btn btn--primary" onClick={() => void handleApplyTodoCleanup()} disabled={yesterdaySundownTodoSaving}>
+            <button type="button" className="btn btn--primary yesterday-sundown-todo-modal__final-action" onClick={() => void handleApplyTodoCleanup()} disabled={yesterdaySundownTodoSaving}>
               {yesterdaySundownTodoSaving ? 'Applying…' : 'Apply cleanup'}
             </button>
           ) : (
-            <button type="button" className="btn btn--secondary" onClick={() => void closeYesterdaySundownTodoModal()} disabled={yesterdaySundownTodoSaving}>
-              {assignedTodoCleanupCount > 0 ? `Apply ${assignedTodoCleanupCount} and close` : 'Close'}
+            <button type="button" className="btn btn--secondary yesterday-sundown-todo-modal__final-action" onClick={() => void closeYesterdaySundownTodoModal()} disabled={yesterdaySundownTodoSaving}>
+              {assignedTodoCleanupCount > 0 ? `Apply ${assignedTodoCleanupCount} and close` : 'Decide later'}
             </button>
           )}
         </footer>
