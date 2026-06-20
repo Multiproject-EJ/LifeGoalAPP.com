@@ -3358,6 +3358,14 @@ html.platform-ipad .workspace-shell__menu-edge {
     -webkit-backdrop-filter: blur(8px);
   }
 
+  .app--mobile-home-frame .workspace-shell {
+    max-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .app--mobile-frame .mobile-footer-nav {
     display: flex;
     left: 0;
