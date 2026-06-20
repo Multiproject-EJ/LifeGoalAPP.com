@@ -396,17 +396,34 @@ Note: motion is keyed to the reliable island-advance signal and applied to both
 tracks together; a separate per-real-life-milestone animation can follow once
 real-life advancement is modeled more precisely.
 
-### Slice 5 — polish and accessibility ⏳
+### Slice 5 — polish and accessibility 🔜 (current)
 
 Goal: make the overlay robust across phone sizes and assistive technologies.
 
-Tasks:
+Delivered:
 
-- Verify readable card density on small screens.
-- Add accessible labels for `?`/locked cards.
-- Confirm focus order keeps PLAY reachable.
-- Confirm opening/closing overlay does not mutate Island Run state.
-- Confirm long goal/island names do not break layout.
+- Each ladder is exposed as a labelled list (`role="list"` + `role="listitem"`)
+  so assistive tech announces item counts and reads cards in narrative order
+  (achieved → current → next → locked via DOM order).
+- Tracks use `aria-labelledby` pointing at their visible heading (no duplicate
+  region names); the stage is a labelled `role="group"`.
+- Cards rely on their visible kicker/title/subtitle/reward text for the
+  accessible description (decorative icons/`?`/index badges stay `aria-hidden`),
+  removing redundant double-announcement; `?`/locked cards read as
+  "Hidden future · Future milestone/island · ???".
+- The center spine is a single `role="img"` announcing
+  "Combined progress N percent", with its decorative letter/orb/rail hidden.
+- Long goal/island names wrap safely (`overflow-wrap: anywhere`) on top of the
+  existing title ellipsis and 2-line subtitle clamp.
+- Milestone cards are non-interactive, so focus order is unchanged and PLAY
+  stays reachable; opening/closing the overlay performs reads only and mutates
+  no Island Run state.
+
+Verified:
+
+- Readable card density holds at the ≤680px and ≤560px height tiers and the
+  ≤390px width tier from Slice 2.
+- `prefers-reduced-motion` continues to disable the Slice 4 climb animations.
 
 ## Testing strategy
 
