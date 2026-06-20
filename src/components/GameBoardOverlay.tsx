@@ -11,6 +11,14 @@ import {
   getIslandRunControllerSlotStyle,
 } from '../features/gamification/level-worlds/services/islandRunControllerVisualContract';
 
+/**
+ * Presentational-only memory of the last island the dual-track ladder was shown for.
+ * Lets the ladder play a one-shot "climb" when the island advances between overlay
+ * opens. Module-scoped because the overlay unmounts while closed; only one overlay
+ * instance is mounted at a time. This never reads or writes gameplay state.
+ */
+let lastSeenGameIslandNumber: number | null = null;
+
 type GameBoardOverlayProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -107,6 +115,7 @@ export function GameBoardOverlay({
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [isLadderClimbing, setIsLadderClimbing] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -124,6 +133,19 @@ export function GameBoardOverlay({
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  // One-shot ladder "climb" when the island has advanced since the last open.
+  // Triggered by changed read-model state only (island number), never by writes.
+  useEffect(() => {
+    if (!isOpen) return;
+    const current = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
+    const advanced = lastSeenGameIslandNumber !== null && current > lastSeenGameIslandNumber;
+    lastSeenGameIslandNumber = current;
+    if (!advanced) return;
+    setIsLadderClimbing(true);
+    const timer = setTimeout(() => setIsLadderClimbing(false), 820);
+    return () => clearTimeout(timer);
+  }, [isOpen, islandNumber]);
 
   if (!shouldRender) {
     return null;
@@ -183,7 +205,12 @@ export function GameBoardOverlay({
               <p className="game-board-overlay__subtitle">{dualTrackViewModel.subtitle}</p>
             </header>
 
-            <div className="game-board-overlay__dual-track-stage" aria-label="My Quest and Game Progress tracks">
+            <div
+              className={`game-board-overlay__dual-track-stage${
+                isLadderClimbing ? ' game-board-overlay__dual-track-stage--climbing' : ''
+              }`}
+              aria-label="My Quest and Game Progress tracks"
+            >
               <DualTrackColumn
                 title="Real Life Journey"
                 subtitle={realLifeTrackSubtitle}
