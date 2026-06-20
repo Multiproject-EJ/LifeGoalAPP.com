@@ -51,6 +51,15 @@
   color: var(--text-primary, #1a1a1a);
 }
 
+.actions-tab__header--launcher .actions-tab__title {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
 .actions-tab__subtitle {
   font-size: 0.875rem;
   color: var(--text-secondary, #666);
@@ -235,8 +244,8 @@
   font-weight: 700;
   color: #0f172a;
   cursor: pointer;
-  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.12);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   overflow: visible;
   position: relative;
   isolation: isolate;
@@ -245,17 +254,15 @@
 .actions-tab__launcher-button--primary {
   background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(52, 211, 153, 0.2));
   border-color: rgba(59, 130, 246, 0.32);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .actions-tab__launcher-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 20px 36px rgba(15, 23, 42, 0.16);
+  border-color: rgba(59, 130, 246, 0.36);
 }
 
 .actions-tab__launcher-button:active {
   transform: translateY(0);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
 }
 
 .actions-tab__launcher-icon {
@@ -285,8 +292,8 @@
 }
 
 .actions-tab__launcher-icon-image--xl {
-  width: min(22rem, 155%);
-  height: min(22rem, 155%);
+  width: min(22rem, 145%);
+  height: min(22rem, 145%);
 }
 
 .actions-tab__launcher-button--full-width {
@@ -295,13 +302,13 @@
   flex-direction: row;
   justify-content: flex-start;
   gap: 0.4rem;
-  padding: 0.75rem 1rem 0.75rem 0;
+  padding: 0.75rem 1rem 0.75rem 0.5rem;
 }
 
 .actions-tab__launcher-button--full-width .actions-tab__launcher-icon {
-  width: clamp(9.25rem, 42vw, 13.25rem);
-  flex: 0 0 clamp(9.25rem, 42vw, 13.25rem);
-  margin-left: -1.25rem;
+  width: clamp(9.75rem, 43vw, 14rem);
+  flex: 0 0 clamp(9.75rem, 43vw, 14rem);
+  margin-left: -0.45rem;
 }
 
 .actions-tab__launcher-button--full-width .actions-tab__launcher-label {
@@ -330,7 +337,7 @@
   align-items: center;
   justify-content: flex-start;
   gap: 0.4rem;
-  padding: 0.75rem 1rem 0.55rem 0;
+  padding: 0.75rem 1rem 0.55rem 0.5rem;
   background: none;
   border: none;
   cursor: pointer;
@@ -346,9 +353,9 @@
 }
 
 .actions-tab__launcher-button--task-tower-expanded .actions-tab__launcher-icon {
-  width: clamp(9.25rem, 42vw, 13.25rem);
-  flex: 0 0 clamp(9.25rem, 42vw, 13.25rem);
-  margin-left: -1.25rem;
+  width: clamp(9.75rem, 43vw, 14rem);
+  flex: 0 0 clamp(9.75rem, 43vw, 14rem);
+  margin-left: -0.45rem;
 }
 
 .actions-tab__task-tower-quick-add {
@@ -1391,6 +1398,13 @@
   color: var(--color-text-primary, #f1f5f9);
 }
 
+[data-theme='dark-glass'] .actions-tab__header--launcher .actions-tab__title,
+[data-theme='midnight-purple'] .actions-tab__header--launcher .actions-tab__title,
+[data-theme='flow-night'] .actions-tab__header--launcher .actions-tab__title,
+[data-theme='bio-night'] .actions-tab__header--launcher .actions-tab__title {
+  color: var(--color-text-secondary, #94a3b8);
+}
+
 [data-theme='dark-glass'] .actions-tab__category-title,
 [data-theme='midnight-purple'] .actions-tab__category-title,
 [data-theme='flow-night'] .actions-tab__category-title,
@@ -1638,7 +1652,6 @@
 .actions-tab__launcher-content .feature-status-badge {
   border: 2px solid rgba(217, 119, 6, 0.42);
   background: rgba(255, 251, 235, 0.92);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.82), 0 8px 18px rgba(146, 64, 14, 0.12);
   color: #92400e;
   padding: 0.28rem 0.62rem;
 }
