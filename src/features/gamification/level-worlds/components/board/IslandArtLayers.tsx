@@ -174,15 +174,31 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
 
   const boardPlateRect = sceneLayout?.playableBoardRect;
   const boardPlateScale = manifest.boardPlateImageScale ?? BOARD_PLATE_SIZE_SCALE;
+  const boardOuterCircleScale = manifest.boardOuterCircleImageScale ?? boardPlateScale;
   const boardPlateYOffsetRatio = manifest.boardPlateImageScale !== undefined ? 0 : BOARD_PLATE_DOWNWARD_OFFSET_RATIO;
-  const boardSceneLayerStyle = makeArtLayerStyle({
+  const boardPlateCenterX = boardPlateRect ? boardPlateRect.x + boardPlateRect.width / 2 : manifest.coordinateSpace.width / 2;
+  const boardPlateCenterY = boardPlateRect
+    ? boardPlateRect.y + boardPlateRect.height * (0.5 + boardPlateYOffsetRatio)
+    : manifest.coordinateSpace.height * (0.5 + boardPlateYOffsetRatio);
+  const boardPlateWidth = boardPlateRect?.width ?? manifest.coordinateSpace.width;
+  const boardPlateHeight = boardPlateRect?.height ?? manifest.coordinateSpace.height;
+  const boardPlateSceneLayerStyle = makeArtLayerStyle({
     manifest,
-    x: boardPlateRect ? boardPlateRect.x + boardPlateRect.width / 2 : manifest.coordinateSpace.width / 2,
-    y: boardPlateRect
-      ? boardPlateRect.y + boardPlateRect.height * (0.5 + boardPlateYOffsetRatio)
-      : manifest.coordinateSpace.height * (0.5 + boardPlateYOffsetRatio),
-    width: (boardPlateRect?.width ?? manifest.coordinateSpace.width) * boardPlateScale,
-    height: (boardPlateRect?.height ?? manifest.coordinateSpace.height) * boardPlateScale,
+    x: boardPlateCenterX,
+    y: boardPlateCenterY,
+    width: boardPlateWidth * boardPlateScale,
+    height: boardPlateHeight * boardPlateScale,
+    uniformScale,
+    toScreen,
+    sceneLayout,
+    zIndex: 0,
+  });
+  const boardOuterSceneLayerStyle = makeArtLayerStyle({
+    manifest,
+    x: boardPlateCenterX,
+    y: boardPlateCenterY,
+    width: boardPlateWidth * boardOuterCircleScale,
+    height: boardPlateHeight * boardOuterCircleScale,
     uniformScale,
     toScreen,
     sceneLayout,
@@ -209,7 +225,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
           src={boardOuterCircleSrc}
           alt=""
           draggable={false}
-          style={{ ...boardSceneLayerStyle, '--island-art-layer-z': 0 } as BoardArtLayerStyle}
+          style={{ ...boardOuterSceneLayerStyle, '--island-art-layer-z': 0 } as BoardArtLayerStyle}
           onError={() => hideSource(boardOuterCircleSrc)}
         />
       ) : null}
@@ -221,7 +237,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
           src={boardPlateSrc}
           alt=""
           draggable={false}
-          style={{ ...boardSceneLayerStyle, '--island-art-layer-z': 1 } as BoardArtLayerStyle}
+          style={{ ...boardPlateSceneLayerStyle, '--island-art-layer-z': 1 } as BoardArtLayerStyle}
           onError={() => hideSource(boardPlateSrc)}
         />
       ) : null}
