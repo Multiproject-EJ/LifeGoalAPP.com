@@ -7275,6 +7275,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               aria-label={selectedAmbiance ? 'Turn ambiance off' : 'Turn ambiance on'}
             >
               <span className="habit-checklist-card__glass-toggle-icon" aria-hidden="true">🖌️</span>
+              <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true">
+                <span className="habit-checklist-card__glass-toggle-thumb" />
+              </span>
               <span className="habit-checklist-card__glass-toggle-label">Ambiance</span>
             </button>
             <button
