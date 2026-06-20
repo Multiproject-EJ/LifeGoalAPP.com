@@ -100,7 +100,7 @@ export function IslandRunGamifiedJournalCard({
         Quick answers keep the loop moving. If nothing stood out, choose the typical-day card — that is still useful data.
       </p>
 
-      <section className="island-run-gamified-journal-card__section">
+      <section className="island-run-gamified-journal-card__section island-run-gamified-journal-card__section--good">
         <strong>1) What made you feel good today?</strong>
         <div className="island-hatchery-card__actions island-run-gamified-journal-card__choices">
           <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${goodAnswer === 'nothing_typical' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setGoodAnswer('nothing_typical')}>Nothing really, a typical day</button>
@@ -109,7 +109,7 @@ export function IslandRunGamifiedJournalCard({
         {goodAnswer === 'specific' ? <textarea value={goodDetail} onChange={(event) => setGoodDetail(event.target.value)} placeholder="Name the good moment." /> : null}
       </section>
 
-      <section className="island-run-gamified-journal-card__section">
+      <section className="island-run-gamified-journal-card__section island-run-gamified-journal-card__section--bad">
         <strong>2) What, if anything, made you feel bad?</strong>
         <div className="island-hatchery-card__actions island-run-gamified-journal-card__choices">
           <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${badAnswer === 'nothing_typical' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setBadAnswer('nothing_typical')}>Nothing really, a typical day</button>
