@@ -14,6 +14,8 @@ export type DualTrackMilestoneCard = {
   rewardPreviewLabel: string;
   icon: string;
   source: DualTrackMilestoneSource;
+  /** Concrete island number for game cards that map to a real island; omitted for mystery/placeholder cards. */
+  islandNumber?: number;
 };
 
 export type DualTrackOverlayViewModel = {
@@ -21,12 +23,20 @@ export type DualTrackOverlayViewModel = {
   subtitle: string;
   realLifeTrack: DualTrackMilestoneCard[];
   gameTrack: DualTrackMilestoneCard[];
+  /** Display-only gallery summary for the Game Journey track. */
+  gameProgress: {
+    currentIsland: number;
+    collectedCount: number;
+    totalCount: number;
+  };
   centerSpine: {
     label: string;
     progressPercent: number;
     icon: string;
   };
 };
+
+const TOTAL_ISLANDS = 120;
 
 type BuildDualTrackOverlayViewModelInput = {
   islandNumber?: number;
@@ -74,7 +84,7 @@ function clampPercent(numerator: number, denominator: number): number {
 }
 
 function normalizeIslandNumber(islandNumber: number | undefined): number {
-  return Number.isFinite(islandNumber) ? Math.min(120, Math.max(1, Math.floor(islandNumber ?? 1))) : 1;
+  return Number.isFinite(islandNumber) ? Math.min(TOTAL_ISLANDS, Math.max(1, Math.floor(islandNumber ?? 1))) : 1;
 }
 
 function createRealLifeTrack(): DualTrackMilestoneCard[] {
@@ -107,8 +117,8 @@ function createGameTrack(input: BuildDualTrackOverlayViewModelInput): DualTrackM
   const displayName = input.islandDisplayName?.trim() || getIslandDisplayName(currentIsland);
   const progressPercent = clampPercent(input.rewardBarProgress ?? 0, input.rewardBarThreshold ?? 10);
   const previousIsland = Math.max(1, currentIsland - 1);
-  const nextIsland = Math.min(120, currentIsland + 1);
-  const futureIsland = Math.min(120, currentIsland + 2);
+  const nextIsland = Math.min(TOTAL_ISLANDS, currentIsland + 1);
+  const futureIsland = Math.min(TOTAL_ISLANDS, currentIsland + 2);
 
   const cards: DualTrackMilestoneCard[] = [];
 
@@ -120,9 +130,10 @@ function createGameTrack(input: BuildDualTrackOverlayViewModelInput): DualTrackM
       title: `Island ${previousIsland}`,
       subtitle: getIslandDisplayName(previousIsland),
       progressLabel: 'Completed',
-      rewardPreviewLabel: 'Built',
+      rewardPreviewLabel: 'Collected',
       icon: '✓',
       source: 'island',
+      islandNumber: previousIsland,
     });
   } else {
     cards.push({
@@ -132,7 +143,7 @@ function createGameTrack(input: BuildDualTrackOverlayViewModelInput): DualTrackM
       title: 'Adventure begun',
       subtitle: 'Your first island path is open.',
       progressLabel: 'Started',
-      rewardPreviewLabel: 'First step',
+      rewardPreviewLabel: 'Collected',
       icon: '✓',
       source: 'placeholder',
     });
@@ -145,12 +156,13 @@ function createGameTrack(input: BuildDualTrackOverlayViewModelInput): DualTrackM
     title: `Island ${currentIsland}`,
     subtitle: displayName,
     progressLabel: `${progressPercent}% current progress`,
-    rewardPreviewLabel: 'Current island',
+    rewardPreviewLabel: 'Exploring now',
     icon: '🏝️',
     source: 'island',
+    islandNumber: currentIsland,
   });
 
-  if (currentIsland < 120) {
+  if (currentIsland < TOTAL_ISLANDS) {
     cards.push({
       id: `game-island-${nextIsland}`,
       track: 'game',
@@ -158,14 +170,15 @@ function createGameTrack(input: BuildDualTrackOverlayViewModelInput): DualTrackM
       title: `Island ${nextIsland}`,
       subtitle: getIslandDisplayName(nextIsland),
       progressLabel: 'Up next',
-      rewardPreviewLabel: 'Preview',
+      rewardPreviewLabel: 'Next shore',
       icon: '?',
       source: 'island',
+      islandNumber: nextIsland,
     });
   }
 
   cards.push({
-    id: currentIsland < 119 ? `game-island-${futureIsland}` : 'game-island-final-future',
+    id: currentIsland < TOTAL_ISLANDS - 1 ? `game-island-${futureIsland}` : 'game-island-final-future',
     track: 'game',
     position: 'locked',
     title: 'Future island',
@@ -180,11 +193,18 @@ function createGameTrack(input: BuildDualTrackOverlayViewModelInput): DualTrackM
 }
 
 export function buildDualTrackOverlayViewModel(input: BuildDualTrackOverlayViewModelInput = {}): DualTrackOverlayViewModel {
+  const currentIsland = normalizeIslandNumber(input.islandNumber);
+
   return {
     title: 'My Quest & Game Progress',
     subtitle: 'Life growth and adventure progress rise together.',
     realLifeTrack: createRealLifeTrack(),
     gameTrack: createGameTrack(input),
+    gameProgress: {
+      currentIsland,
+      collectedCount: Math.max(0, currentIsland - 1),
+      totalCount: TOTAL_ISLANDS,
+    },
     centerSpine: {
       label: 'Together',
       progressPercent: clampPercent(input.rewardBarProgress ?? 0, input.rewardBarThreshold ?? 10),
