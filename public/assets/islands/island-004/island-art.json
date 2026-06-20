@@ -15,7 +15,8 @@
     "width": 1000,
     "height": 1000
   },
-  "boardPlateImageScale": 1.46,
+  "boardPlateImageScale": 0.4,
+  "boardOuterCircleImageScale": 1.46,
   "scene": {
     "boardCircle": "board/board-circle-inner.webp",
     "ambientBackground": "background/PLACEHOLDER__ambient-background.svg",

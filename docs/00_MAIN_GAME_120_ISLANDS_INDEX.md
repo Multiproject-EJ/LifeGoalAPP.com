@@ -120,6 +120,7 @@ Quality direction:
 
 # Notes / Decisions Locked
 - Board tile positions are fixed across all islands (art only changes); stops are outer POIs accessible via stop trigger tiles on the ring
+- Island art positioning policy: keep the canonical board tile circle fixed globally; place per-island landmarks, boss artwork, scenery, and scene composition through `public/assets/islands/island-00x/island-art.json` (see `docs/gameplay/ISLAND_RUN_ART_POSITIONING_CONTRACT.md`).
 - 60 tile anchors (production board standard)
 - Board visual style: **3D-hybrid** (2D art + pseudo-3D board layer + depth/occlusion masks)
 - Movement: 1 Heart converts into dice pool; each move consumes a **2-dice pair** (each die 1–3, total move 2–6 tiles). Occasional Spin Move (1–5 tiles).

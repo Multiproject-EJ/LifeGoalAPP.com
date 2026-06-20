@@ -145,6 +145,24 @@ export const islandArtManifestTests: TestCase[] = [
 
 
   {
+    name: 'normalizes independent inner and outer board circle scales',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        boardPlateImageScale: 0.4,
+        boardOuterCircleImageScale: 1.46,
+        scene: {
+          ...sampleManifest.scene,
+          boardOuterCircle: 'board-outer/board-circle-outer.webp',
+        },
+      }, 4);
+      if (!manifest) throw new Error('Expected scaled board-art manifest to normalize');
+      assertEqual(manifest.boardPlateImageScale, 0.4, 'Expected inner board plate scale to normalize');
+      assertEqual(manifest.boardOuterCircleImageScale, 1.46, 'Expected outer board circle scale to normalize independently');
+    },
+  },
+
+  {
     name: 'normalizes optional sceneSpace and playableBoardRect',
     run: () => {
       const manifest = normalizeIslandArtManifest({

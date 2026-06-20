@@ -70,11 +70,16 @@ export interface IslandArtManifest {
   /** Optional placement of the existing 1000×1000 playable board inside sceneSpace. */
   playableBoardRect?: IslandArtRect;
   /**
-   * Optional scale multiplier for the board plate image, overriding the global
-   * BOARD_PLATE_SIZE_SCALE constant. Use to make the board art fill the viewport
-   * width at the default camera zoom for this island (e.g. 1.46 for island-002).
+   * Optional scale multiplier for the inner board plate/circle image, overriding
+   * the global BOARD_PLATE_SIZE_SCALE constant. Use to tune the centered
+   * inner-board art without changing tile anchors or gameplay geometry.
    */
   boardPlateImageScale?: number;
+  /**
+   * Optional scale multiplier for the outer board-circle image. Defaults to the
+   * boardPlateImageScale when omitted so existing manifests keep their visuals.
+   */
+  boardOuterCircleImageScale?: number;
   scene?: IslandArtSceneManifest;
   landmarks: IslandArtLandmarkManifest[];
   scenery: IslandArtSceneryManifest[];
@@ -209,6 +214,7 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
   const normalizedIslandArtSceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
   const normalizedIslandArtPlayableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
   const normalizedBoardPlateImageScale = positiveFiniteNumber(raw.boardPlateImageScale);
+  const normalizedBoardOuterCircleImageScale = positiveFiniteNumber(raw.boardOuterCircleImageScale);
 
   const rawScene = isRecord(raw.scene) ? raw.scene : {};
   const scene: IslandArtSceneManifest = {};
@@ -303,6 +309,7 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
     ...(normalizedIslandArtSceneSpace ? { sceneSpace: normalizedIslandArtSceneSpace } : {}),
     ...(normalizedIslandArtPlayableBoardRect ? { playableBoardRect: normalizedIslandArtPlayableBoardRect } : {}),
     ...(normalizedBoardPlateImageScale !== null ? { boardPlateImageScale: normalizedBoardPlateImageScale } : {}),
+    ...(normalizedBoardOuterCircleImageScale !== null ? { boardOuterCircleImageScale: normalizedBoardOuterCircleImageScale } : {}),
     ...(Object.keys(scene).length > 0 ? { scene } : {}),
     landmarks,
     scenery,
