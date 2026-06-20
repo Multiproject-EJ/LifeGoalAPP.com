@@ -18,7 +18,7 @@
   "boardPlateImageScale": 1.46,
   "scene": {
     "boardCircle": "board/board-circle-inner.webp",
-    "ambientBackground": "background/PLACEHOLDER__ambient-background.svg",
+    "ambientBackground": "background/ambient-background.webp",
     "boardOuterCircle": "board-outer/PLACEHOLDER__board-circle-outer.webp"
   },
   "landmarks": [
