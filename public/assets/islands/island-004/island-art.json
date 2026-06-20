@@ -19,7 +19,7 @@
   "scene": {
     "boardCircle": "board/board-circle-inner.webp",
     "ambientBackground": "background/PLACEHOLDER__ambient-background.svg",
-    "boardOuterCircle": "board-outer/PLACEHOLDER__board-circle-outer.webp"
+    "boardOuterCircle": "board-outer/board-circle-outer.webp"
   },
   "landmarks": [
     {
@@ -45,7 +45,7 @@
       "height": 472,
       "levels": [
         "landmarks/habit/PLACEHOLDER__habit-l1.webp",
-        "landmarks/habit/PLACEHOLDER__habit-l2.webp",
+        "landmarks/habit/habit-l2.webp",
         "landmarks/habit/PLACEHOLDER__habit-l3.webp"
       ],
       "zBand": "mid"
