@@ -1,6 +1,6 @@
 import { getIslandArtFolderName, normalizeIslandArtIslandNumber } from './islandArtManifest';
 
-const ISLANDS_WITH_WEBP_AMBIENT_BACKGROUNDS = new Set([3]);
+const ISLANDS_WITH_WEBP_AMBIENT_BACKGROUNDS = new Set([1, 2, 3, 4, 5]);
 
 export function getIslandBackgroundImageSrc(islandNumber: number): string {
   const normalizedIslandNumber = normalizeIslandArtIslandNumber(islandNumber);

@@ -79,14 +79,16 @@ export const islandArtManifestTests: TestCase[] = [
   {
     name: 'resolves legacy background helper to per-island background asset',
     run: () => {
+      for (const islandNumber of [1, 2, 3, 4, 5]) {
+        assertEqual(
+          getIslandBackgroundImageSrc(islandNumber),
+          `/assets/islands/island-${String(islandNumber).padStart(3, '0')}/background/ambient-background.webp`,
+          `Expected island ${islandNumber} to use its checked-in WebP background`,
+        );
+      }
       assertEqual(
-        getIslandBackgroundImageSrc(3),
-        '/assets/islands/island-003/background/ambient-background.webp',
-        'Expected island 3 to use its checked-in WebP background',
-      );
-      assertEqual(
-        getIslandBackgroundImageSrc(1),
-        '/assets/islands/island-001/background/PLACEHOLDER__ambient-background.svg',
+        getIslandBackgroundImageSrc(6),
+        '/assets/islands/island-006/background/PLACEHOLDER__ambient-background.svg',
         'Expected islands without checked-in WebP assets to keep the existing text placeholder fallback',
       );
     },
