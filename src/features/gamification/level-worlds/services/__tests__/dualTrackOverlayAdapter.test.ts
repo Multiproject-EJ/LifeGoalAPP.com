@@ -43,7 +43,40 @@ export const dualTrackOverlayAdapterTests: TestCase[] = [
 
       assertEqual(viewModel.gameTrack[1].title, 'Island 1', 'Expected invalid island number to clamp to island 1');
       assertEqual(viewModel.gameTrack[1].progressLabel, '100% current progress', 'Expected progress to clamp to 100%');
-      assertEqual(viewModel.centerSpine.progressPercent, 100, 'Expected center spine progress to clamp to 100%');
+      assert(
+        viewModel.centerSpine.progressPercent >= 0 && viewModel.centerSpine.progressPercent <= 100,
+        'Expected center spine journey progress to stay within 0..100',
+      );
+    },
+  },
+  {
+    name: 'surfaces a read-only Combined Journey Level summary on the spine',
+    run: () => {
+      const fresh = buildDualTrackOverlayViewModel({ islandNumber: 1, rewardBarProgress: 0, rewardBarThreshold: 10 });
+      assertEqual(fresh.journeyLevel.level, 1, 'Expected a fresh journey to start at level 1');
+      assertEqual(fresh.journeyLevel.nextThresholdLevel, 2, 'Expected the next chest threshold to be level 2');
+      assertEqual(fresh.centerSpine.label, 'Lv 1', 'Expected the spine label to show the journey level');
+      assertEqual(fresh.journeyLevel.nextChestLabel, 'Next chest at Lv 2', 'Expected a next-chest caption');
+
+      const progressed = buildDualTrackOverlayViewModel({
+        islandNumber: 8,
+        rewardBarProgress: 5,
+        rewardBarThreshold: 10,
+        realLife: {
+          isAuthenticated: true,
+          goals: [
+            { id: 'g1', title: 'Run a 5k', status: 'completed' },
+            { id: 'g2', title: 'Read 12 books', status: 'active' },
+          ],
+          habits: [{ id: 'h1', title: 'Meditate' }],
+        },
+      });
+      assert(progressed.journeyLevel.level > fresh.journeyLevel.level, 'Expected real progress to raise the journey level');
+      assertEqual(
+        progressed.centerSpine.label,
+        `Lv ${progressed.journeyLevel.level}`,
+        'Expected spine label to track the derived level',
+      );
     },
   },
   {

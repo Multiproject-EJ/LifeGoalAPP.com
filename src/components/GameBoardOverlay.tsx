@@ -266,7 +266,7 @@ export function GameBoardOverlay({
               <div
                 className="game-board-overlay__progress-spine"
                 role="img"
-                aria-label={`Combined progress ${dualTrackViewModel.centerSpine.progressPercent} percent`}
+                aria-label={`Combined Journey Level ${dualTrackViewModel.journeyLevel.level}, ${dualTrackViewModel.journeyLevel.progressPercentToNextLevel} percent to ${dualTrackViewModel.journeyLevel.nextChestLabel}`}
               >
                 <span className="game-board-overlay__progress-spine-label" aria-hidden="true">{dualTrackViewModel.centerSpine.label}</span>
                 <span className="game-board-overlay__progress-spine-orb" aria-hidden="true">
@@ -277,6 +277,9 @@ export function GameBoardOverlay({
                     className="game-board-overlay__progress-spine-fill"
                     style={{ height: `${dualTrackViewModel.centerSpine.progressPercent}%` }}
                   />
+                </span>
+                <span className="game-board-overlay__progress-spine-caption" aria-hidden="true">
+                  {dualTrackViewModel.journeyLevel.nextChestLabel}
                 </span>
               </div>
               <DualTrackColumn

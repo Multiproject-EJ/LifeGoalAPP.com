@@ -475,11 +475,22 @@
 .game-board-overlay__progress-spine {
   min-width: 0;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   justify-items: center;
   align-items: start;
   gap: 0.3rem;
   padding-top: clamp(2.7rem, 9vh, 4rem);
+}
+
+.game-board-overlay__progress-spine-caption {
+  max-width: 4.5rem;
+  text-align: center;
+  color: rgba(234, 248, 255, 0.66);
+  font-size: 0.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .game-board-overlay__progress-spine-label {
