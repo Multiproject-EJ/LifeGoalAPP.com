@@ -64,18 +64,19 @@ type DualTrackColumnProps = {
 };
 
 function DualTrackColumn({ title, subtitle, tone, cards }: DualTrackColumnProps) {
+  const headingId = `game-board-overlay-track-${tone}`;
   return (
-    <section className={`game-board-overlay__track game-board-overlay__track--${tone}`} aria-label={title}>
+    <section className={`game-board-overlay__track game-board-overlay__track--${tone}`} aria-labelledby={headingId}>
       <div className="game-board-overlay__track-header">
-        <h3>{title}</h3>
+        <h3 id={headingId}>{title}</h3>
         <p>{subtitle}</p>
       </div>
-      <div className="game-board-overlay__track-ladder">
+      <div className="game-board-overlay__track-ladder" role="list" aria-label={`${title} milestones`}>
         {cards.map((card) => (
-          <article
+          <div
             key={card.id}
+            role="listitem"
             className={`game-board-overlay__milestone game-board-overlay__milestone--${card.position}`}
-            aria-label={`${card.title}: ${card.progressLabel}`}
           >
             <span className="game-board-overlay__milestone-icon" aria-hidden="true">
               {card.icon}
@@ -89,7 +90,7 @@ function DualTrackColumn({ title, subtitle, tone, cards }: DualTrackColumnProps)
               <span>{card.subtitle}</span>
             </span>
             <span className="game-board-overlay__milestone-reward">{card.rewardPreviewLabel}</span>
-          </article>
+          </div>
         ))}
       </div>
     </section>
@@ -209,6 +210,7 @@ export function GameBoardOverlay({
               className={`game-board-overlay__dual-track-stage${
                 isLadderClimbing ? ' game-board-overlay__dual-track-stage--climbing' : ''
               }`}
+              role="group"
               aria-label="My Quest and Game Progress tracks"
             >
               <DualTrackColumn
@@ -217,8 +219,12 @@ export function GameBoardOverlay({
                 tone="life"
                 cards={dualTrackViewModel.realLifeTrack}
               />
-              <div className="game-board-overlay__progress-spine" aria-label={`${dualTrackViewModel.centerSpine.label} progress bridge`}>
-                <span className="game-board-overlay__progress-spine-label">{dualTrackViewModel.centerSpine.label}</span>
+              <div
+                className="game-board-overlay__progress-spine"
+                role="img"
+                aria-label={`Combined progress ${dualTrackViewModel.centerSpine.progressPercent} percent`}
+              >
+                <span className="game-board-overlay__progress-spine-label" aria-hidden="true">{dualTrackViewModel.centerSpine.label}</span>
                 <span className="game-board-overlay__progress-spine-orb" aria-hidden="true">
                   {dualTrackViewModel.centerSpine.icon}
                 </span>
