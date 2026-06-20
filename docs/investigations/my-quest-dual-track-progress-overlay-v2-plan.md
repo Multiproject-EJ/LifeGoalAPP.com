@@ -304,59 +304,79 @@ Adapter rules:
 
 ## Implementation slices
 
-### Slice 0 — plan update
+> Status legend: ✅ shipped · 🔜 next · ⏳ planned. Slice numbers reflect the
+> order the work actually shipped, which differs slightly from the original
+> draft (the first implementation PR folded the static shell and the current
+> island read together, so "current island read integration" was not a
+> separate PR).
 
-- Add this plan.
+### Slice 0 — plan update ✅
+
+- Added this plan.
 - No runtime code changes.
 
-### Slice 1 — static dual-track shell
+### Slice 1 — static dual-track shell + current island read ✅
 
-Goal: render the header, two equal tracks, thin center spine, and placeholder cards while leaving the controller/menu/PLAY button untouched.
+Shipped in PR "Add dual-track game overlay shell".
 
-Tasks:
+Goal: render the header, two equal tracks, thin center spine, and cards while
+leaving the controller/menu/PLAY button untouched. The Game track already read
+the current island from existing display props in this slice (so the originally
+separate "current island read integration" step landed here).
 
-- Add read-only adapter with placeholder-safe output.
-- Render header above the dual-track body.
-- Render left Real Life track and right Game track using the same card component.
-- Render thin center spine.
-- Keep current controller/menu/PLAY button exactly where it is.
-- Add CSS classes for achieved/current/next/locked card states.
-- Add `prefers-reduced-motion` handling for any initial animations.
-- Add adapter unit tests.
+Delivered:
 
-Out of scope:
+- Read-only `dualTrackOverlayAdapter` with placeholder-safe output.
+- Header above the dual-track body; left Real Life + right Game tracks sharing
+  one card component; thin center progress spine.
+- Game track derived from existing island display props + island name helper,
+  with achieved/current/next/locked states and safe handling of island 1/120.
+- CSS classes for the four card states; `prefers-reduced-motion` handling.
+- Controller/menu/PLAY button left exactly where it is.
+- Adapter unit tests.
 
-- Real goal/habit fetches.
-- Gameplay writes.
-- Island Run action-service calls.
-- Schema changes.
-- New reward grants.
-- Moving/restyling the controller shell.
+### Slice 2 — Game track collectible gallery refinement ✅
 
-### Slice 2 — current island read integration
+Shipped in PR #2852 "Refine Game Journey track into a collectible island gallery".
 
-Goal: make the right Game track reflect current island number/name safely.
+Goal: make the Game track feel like a collectible island gallery while staying
+display-only.
 
-Tasks:
+Delivered:
 
-- Build game track cards from existing island display props and island name helper.
-- Show achieved/current/next/locked island states.
-- Handle island 1 and island 120 safely.
-- Keep all reward text display-only.
+- Adapter exposes optional `islandNumber` per concrete game card and a
+  display-only `gameProgress` summary (`currentIsland`, `collectedCount`,
+  `totalCount`); refined collectible reward copy.
+- Overlay renders a gallery index badge on island tiles and a dynamic
+  "{n} of 120 islands explored" subtitle.
+- Gallery tile styling, very-short-viewport (≤560px height) responsiveness,
+  `prefers-reduced-motion` preserved.
+- Extended adapter tests for `islandNumber` and `gameProgress`.
 
-### Slice 3 — real-life read integration
+### Slice 3 — real-life read integration 🔜 (current)
 
 Goal: make the left Real Life track lightly personal without writes.
 
 Tasks:
 
-- Load goals only when overlay opens and user is authenticated.
-- Load active habits only when overlay opens and user is authenticated.
-- Map clear statuses to achieved/current/next only when data supports it.
-- Keep placeholders where data is missing or ambiguous.
-- Ensure data loading cannot block PLAY.
+- Load goals only when overlay opens and user is authenticated
+  (`loadGoalsOfflineFirst`, offline-first/non-blocking).
+- Load active habits only when overlay opens and user is authenticated
+  (`listHabitsV2`).
+- Map clear statuses to achieved/current/next only when data supports it
+  (completed goal → achieved, active goals → current/next, habits as
+  foundation/focus fallback).
+- Keep placeholders where data is missing or ambiguous (unauthenticated or
+  empty data → existing placeholder ladder).
+- Ensure data loading cannot block PLAY (effect is fire-and-forget, errors fall
+  back to placeholders).
+- Adapter stays pure: App sources data and passes lightweight read-only
+  summaries via the new optional `realLife` prop.
 
-### Slice 4 — ladder motion
+Out of scope (still): writes, schema changes, habit-log/streak math, new
+reward grants.
+
+### Slice 4 — ladder motion ⏳
 
 Goal: add the upward ladder motion when read-model state advances.
 
@@ -367,7 +387,7 @@ Tasks:
 - Respect `prefers-reduced-motion`.
 - Ensure no animation changes gameplay/account state.
 
-### Slice 5 — polish and accessibility
+### Slice 5 — polish and accessibility ⏳
 
 Goal: make the overlay robust across phone sizes and assistive technologies.
 
@@ -406,11 +426,11 @@ Tasks:
 
 ## Open product questions
 
-1. Should the Real Life ladder start as a fixed narrative ladder, or should it immediately derive from user goals/habits?
-2. Should the center spine show the existing app level, or remain purely decorative in Slice 1?
-3. How many cards per track should be visible on the smallest supported phone height?
-4. Should future boxes show only `?`, or should they reveal a generic title such as `Future milestone` / `Future island`?
-5. Should the Game ladder eventually represent islands only, or also include album/gallery-style collectible progress?
+1. ~~Should the Real Life ladder start as a fixed narrative ladder, or should it immediately derive from user goals/habits?~~ Resolved (Slice 3): starts as a fixed placeholder ladder, then derives from read-only goals/habits once the user is authenticated and has data; placeholders remain the fallback.
+2. Should the center spine show the existing app level, or remain purely decorative? (Currently decorative + reward-bar progress fill.)
+3. How many cards per track should be visible on the smallest supported phone height? (Slice 2: locked hidden ≤680px height; copy tightened ≤560px.)
+4. ~~Should future boxes show only `?`, or should they reveal a generic title such as `Future milestone` / `Future island`?~~ Resolved: locked cards show a generic `Future milestone`/`Future island` title with a `?` icon and `???` reward.
+5. ~~Should the Game ladder eventually represent islands only, or also include album/gallery-style collectible progress?~~ Resolved (Slice 2): islands rendered as a collectible gallery ladder (island tiles + index badges + explored count).
 
 ## Recommended first PR after this plan
 

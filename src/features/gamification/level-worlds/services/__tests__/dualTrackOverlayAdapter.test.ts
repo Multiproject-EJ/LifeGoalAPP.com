@@ -77,4 +77,72 @@ export const dualTrackOverlayAdapterTests: TestCase[] = [
       assertEqual(mid.gameProgress.collectedCount, 11, 'Expected collected count to trail the current island');
     },
   },
+  {
+    name: 'keeps real-life placeholders when unauthenticated or without data',
+    run: () => {
+      const unauth = buildDualTrackOverlayViewModel({
+        realLife: { isAuthenticated: false, goals: [{ id: 'g1', title: 'Run a marathon' }] },
+      });
+      assertEqual(unauth.realLifeTrack.length, 5, 'Expected placeholder ladder when unauthenticated');
+      assertEqual(unauth.realLifeProgress.source, 'placeholder', 'Expected placeholder source when unauthenticated');
+
+      const emptyAuth = buildDualTrackOverlayViewModel({
+        realLife: { isAuthenticated: true, goals: [], habits: [] },
+      });
+      assertEqual(emptyAuth.realLifeTrack.length, 5, 'Expected placeholder ladder when authenticated but empty');
+      assertEqual(emptyAuth.realLifeProgress.source, 'placeholder', 'Expected placeholder source when authenticated but empty');
+    },
+  },
+  {
+    name: 'maps authenticated goals and habits into the real-life ladder',
+    run: () => {
+      const viewModel = buildDualTrackOverlayViewModel({
+        realLife: {
+          isAuthenticated: true,
+          goals: [
+            { id: 'g1', title: 'Finished launch', status: 'completed' },
+            { id: 'g2', title: 'Ship the app', status: 'active' },
+            { id: 'g3', title: 'Grow the team', status: 'in_progress' },
+          ],
+          habits: [{ id: 'h1', title: 'Morning run', emoji: '🏃' }],
+        },
+      });
+
+      const achieved = viewModel.realLifeTrack.find((card) => card.position === 'achieved');
+      const current = viewModel.realLifeTrack.find((card) => card.position === 'current');
+      const next = viewModel.realLifeTrack.find((card) => card.position === 'next');
+      const locked = viewModel.realLifeTrack.find((card) => card.position === 'locked');
+
+      assertEqual(achieved?.title, 'Finished launch', 'Expected completed goal as achieved card');
+      assertEqual(achieved?.source, 'goal', 'Expected achieved card sourced from goal data');
+      assertEqual(current?.title, 'Ship the app', 'Expected first active goal as current focus');
+      assertEqual(next?.title, 'Grow the team', 'Expected second active goal as next milestone');
+      assertEqual(locked?.icon, '?', 'Expected locked future to stay a mystery');
+      assertEqual(viewModel.realLifeProgress.source, 'data', 'Expected data source when goals/habits exist');
+      assertEqual(viewModel.realLifeProgress.goalCount, 3, 'Expected goal count in real-life summary');
+      assertEqual(viewModel.realLifeProgress.habitCount, 1, 'Expected habit count in real-life summary');
+    },
+  },
+  {
+    name: 'falls back to habit foundation when only habits exist',
+    run: () => {
+      const viewModel = buildDualTrackOverlayViewModel({
+        realLife: {
+          isAuthenticated: true,
+          goals: [],
+          habits: [
+            { id: 'h1', title: 'Morning run' },
+            { id: 'h2', title: 'Read 10 pages' },
+          ],
+        },
+      });
+
+      const achieved = viewModel.realLifeTrack.find((card) => card.position === 'achieved');
+      const current = viewModel.realLifeTrack.find((card) => card.position === 'current');
+
+      assertEqual(achieved?.source, 'habit', 'Expected habit-based achieved card without goals');
+      assertEqual(current?.title, 'Daily Habits', 'Expected habit focus as current card without active goals');
+      assertEqual(viewModel.realLifeProgress.source, 'data', 'Expected data source when habits exist');
+    },
+  },
 ];
