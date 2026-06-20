@@ -1441,6 +1441,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [compactPullDistance, setCompactPullDistance] = useState(0);
   const [showCompactRefreshSuccess, setShowCompactRefreshSuccess] = useState(false);
   const compactPullDistanceRef = useRef(0);
+  const checklistCardRef = useRef<HTMLDivElement | null>(null);
   const compactPullGestureRef = useRef<{
     touchId: number;
     startX: number;
@@ -8477,7 +8478,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         !canUseCompactPullRefresh
         || compactPullRefreshInFlightRef.current
         || loading
-        || (typeof window !== 'undefined' && window.scrollY > 0)
+        || !isCompactPullAtScrollTop()
       ) {
         setCompactPullDistanceState(0);
         return;
@@ -8503,12 +8504,32 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       }
     };
 
+    const getCompactPullScrollTop = (target: HTMLElement | null) => {
+      if (typeof window === 'undefined') {
+        return 0;
+      }
+
+      let node = target?.parentElement ?? null;
+      while (node) {
+        const style = window.getComputedStyle(node);
+        const canScrollY = /(auto|scroll|overlay)/.test(style.overflowY);
+        if (canScrollY && node.scrollHeight > node.clientHeight) {
+          return node.scrollTop;
+        }
+        node = node.parentElement;
+      }
+
+      return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    };
+
+    const isCompactPullAtScrollTop = () => getCompactPullScrollTop(checklistCardRef.current) <= 1;
+
     const handleCompactPullTouchStart = (event: TouchEvent<HTMLDivElement>) => {
       if (
         !canUseCompactPullRefresh
         || loading
         || compactPullRefreshInFlightRef.current
-        || (typeof window !== 'undefined' && window.scrollY > 0)
+        || !isCompactPullAtScrollTop()
       ) {
         return;
       }
@@ -8530,7 +8551,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       if (!gesture) {
         return;
       }
-      if (typeof window !== 'undefined' && window.scrollY > 0) {
+      if (!isCompactPullAtScrollTop()) {
         compactPullGestureRef.current = null;
         setCompactPullDistanceState(0);
         return;
@@ -9311,6 +9332,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         style={checklistCardStyle}
         role="region"
         aria-label={ariaLabel}
+        ref={checklistCardRef}
         onTouchStart={canUseCompactPullRefresh ? handleCompactPullTouchStart : undefined}
         onTouchMove={canUseCompactPullRefresh ? handleCompactPullTouchMove : undefined}
         onTouchEnd={canUseCompactPullRefresh ? handleCompactPullTouchEnd : undefined}
