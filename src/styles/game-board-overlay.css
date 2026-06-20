@@ -178,11 +178,54 @@
 }
 
 .game-board-overlay__dual-track-stage {
+  position: relative;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(1.35rem, 5.5vw, 2rem) minmax(0, 1fr);
   align-items: stretch;
   gap: clamp(0.22rem, 1.2vw, 0.44rem);
+}
+
+/* Celebratory "+N islands" chip shown during a catch-up climb. */
+.game-board-overlay__climb-burst {
+  position: absolute;
+  top: 0.15rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.2rem 0.62rem;
+  border-radius: 999px;
+  border: 1px solid rgba(250, 204, 21, 0.7);
+  background: rgba(7, 21, 44, 0.82);
+  color: #fde68a;
+  font-size: clamp(0.62rem, 2.4vw, 0.8rem);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.5), 0 0 18px rgba(250, 204, 21, 0.45);
+  pointer-events: none;
+  animation: game-board-overlay-climb-burst 1100ms ease both;
+}
+
+@keyframes game-board-overlay-climb-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0.4rem) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.05);
+  }
+  70% {
+    opacity: 1;
+    transform: translate(-50%, -0.1rem) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -0.6rem) scale(0.95);
+  }
 }
 
 .game-board-overlay__track {
@@ -282,6 +325,54 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
     0 0 22px color-mix(in srgb, var(--track-accent) 32%, transparent),
     0 14px 30px rgba(2, 6, 23, 0.36);
+  /* Gentle ambient glow so the active box reads as "alive". */
+  animation: game-board-overlay-current-breathe 3.2s ease-in-out infinite;
+}
+
+@keyframes game-board-overlay-current-breathe {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      0 0 22px color-mix(in srgb, var(--track-accent) 32%, transparent),
+      0 14px 30px rgba(2, 6, 23, 0.36);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 0 34px color-mix(in srgb, var(--track-accent) 55%, transparent),
+      0 16px 34px rgba(2, 6, 23, 0.4);
+  }
+}
+
+/* Glowing dashed "pathway" rising from the current box toward the next milestone. */
+.game-board-overlay__milestone--current::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 0.15rem);
+  transform: translateX(-50%);
+  width: 0.16rem;
+  height: clamp(0.4rem, 1.6vh, 0.78rem);
+  border-radius: 999px;
+  background: repeating-linear-gradient(
+    to top,
+    color-mix(in srgb, var(--track-accent) 88%, transparent) 0 0.18rem,
+    transparent 0.18rem 0.36rem
+  );
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--track-accent) 70%, transparent));
+  opacity: 0.9;
+  pointer-events: none;
+  animation: game-board-overlay-path-flow 0.9s linear infinite;
+}
+
+@keyframes game-board-overlay-path-flow {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 -0.36rem;
+  }
 }
 
 .game-board-overlay__milestone--next {
@@ -433,6 +524,20 @@
   border-radius: inherit;
   background: linear-gradient(0deg, #bef264, #38bdf8);
   box-shadow: 0 0 12px rgba(125, 211, 252, 0.7);
+  transform-origin: bottom center;
+  /* Grow from 0 up to the set height each time the overlay opens. */
+  animation: game-board-overlay-spine-grow 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes game-board-overlay-spine-grow {
+  0% {
+    transform: scaleY(0);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
 }
 
 /* One-shot "climb" played when the read-model advances to a new island.
@@ -491,7 +596,11 @@
 @media (prefers-reduced-motion: reduce) {
   .game-board-overlay__dual-track-stage--climbing .game-board-overlay__track-ladder,
   .game-board-overlay__dual-track-stage--climbing .game-board-overlay__milestone--current,
-  .game-board-overlay__dual-track-stage--climbing .game-board-overlay__progress-spine-orb {
+  .game-board-overlay__dual-track-stage--climbing .game-board-overlay__progress-spine-orb,
+  .game-board-overlay__progress-spine-fill,
+  .game-board-overlay__milestone--current,
+  .game-board-overlay__milestone--current::after,
+  .game-board-overlay__climb-burst {
     animation: none;
   }
 }
