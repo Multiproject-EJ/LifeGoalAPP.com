@@ -396,7 +396,7 @@ Note: motion is keyed to the reliable island-advance signal and applied to both
 tracks together; a separate per-real-life-milestone animation can follow once
 real-life advancement is modeled more precisely.
 
-### Slice 5 — polish and accessibility 🔜 (current)
+### Slice 5 — polish and accessibility ✅
 
 Goal: make the overlay robust across phone sizes and assistive technologies.
 
@@ -424,6 +424,27 @@ Verified:
 - Readable card density holds at the ≤680px and ≤560px height tiers and the
   ≤390px width tier from Slice 2.
 - `prefers-reduced-motion` continues to disable the Slice 4 climb animations.
+
+### Slice 6 — animation enrichment 🔜 (current)
+
+Goal: make the overlay feel alive and guarantee the player sees progress motion.
+
+Delivered:
+
+- **Persisted catch-up climb:** the island the viewer last saw is stored per user
+  in `localStorage` (a UI preference, never gameplay state). On the next open, if
+  the current island is higher, both ladders play the consolidated climb and a
+  "+N 🏝️" chip pops. The last-seen value is written only after the climb plays so
+  React StrictMode's double-mount can't consume it; first-ever open just sets the
+  baseline.
+- **Spine fills 0 → value** on every open (scaleY grow), so there is satisfying
+  motion each visit even without progress.
+- **Ambient glow** breathes on both current cards so the active box reads as alive.
+- **Glowing dashed pathway** rises from each current box toward the next milestone.
+- All four respect `prefers-reduced-motion` (animations disabled, final states shown).
+
+Deferred (possible follow-ups): literal step-by-step card transitions, confetti
+burst, the spine orb travelling up the rail, and per-real-life-milestone motion.
 
 ## Testing strategy
 

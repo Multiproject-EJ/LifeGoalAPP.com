@@ -5298,6 +5298,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           creatureCollectionCount={creatureCollectionSummary.total}
           creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
           realLife={overlayRealLifeInput}
+          viewerId={overlayRealLifeUserId ?? undefined}
         />
         {showAiCoachModal && (
           <AiCoach
@@ -5635,6 +5636,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         creatureCollectionCount={creatureCollectionSummary.total}
         creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
         realLife={overlayRealLifeInput}
+        viewerId={overlayRealLifeUserId ?? undefined}
       />
 
       {isAuthOverlayVisible ? (

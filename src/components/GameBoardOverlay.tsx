@@ -12,12 +12,35 @@ import {
 } from '../features/gamification/level-worlds/services/islandRunControllerVisualContract';
 
 /**
- * Presentational-only memory of the last island the dual-track ladder was shown for.
- * Lets the ladder play a one-shot "climb" when the island advances between overlay
- * opens. Module-scoped because the overlay unmounts while closed; only one overlay
- * instance is mounted at a time. This never reads or writes gameplay state.
+ * Presentational-only memory of the last island the dual-track ladder was shown for,
+ * persisted per viewer in localStorage so the ladder can "catch up" (animate from the
+ * island you last viewed up to your current one) on the next open — even across reloads.
+ * This is a UI preference only; it never reads or writes gameplay state.
  */
-let lastSeenGameIslandNumber: number | null = null;
+const DUAL_TRACK_LAST_ISLAND_KEY_PREFIX = 'lifegoal:dual-track:last-island:';
+
+function dualTrackLastIslandKey(viewerId: string | undefined): string {
+  return `${DUAL_TRACK_LAST_ISLAND_KEY_PREFIX}${viewerId ?? 'anon'}`;
+}
+
+function readDualTrackLastIsland(viewerId: string | undefined): number | null {
+  try {
+    const raw = window.localStorage.getItem(dualTrackLastIslandKey(viewerId));
+    if (raw == null) return null;
+    const parsed = Number.parseInt(raw, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeDualTrackLastIsland(viewerId: string | undefined, islandNumber: number): void {
+  try {
+    window.localStorage.setItem(dualTrackLastIslandKey(viewerId), String(islandNumber));
+  } catch {
+    // Ignore storage failures (private mode, quota); the animation simply won't replay.
+  }
+}
 
 type GameBoardOverlayProps = {
   isOpen: boolean;
@@ -54,6 +77,8 @@ type GameBoardOverlayProps = {
   islandSceneSrc?: string;
   /** Read-only goal/habit summary used to personalize the Real Life Journey track. */
   realLife?: DualTrackRealLifeInput;
+  /** Stable per-viewer id used to scope the "catch-up climb" memory (presentational only). */
+  viewerId?: string;
 };
 
 type DualTrackColumnProps = {
@@ -113,10 +138,12 @@ export function GameBoardOverlay({
   islandDisplayName = 'Island',
   islandSceneSrc = getIslandBackgroundImageSrc(1),
   realLife,
+  viewerId,
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
   const [isLadderClimbing, setIsLadderClimbing] = useState(false);
+  const [climbDelta, setClimbDelta] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -135,18 +162,30 @@ export function GameBoardOverlay({
     }
   }, [isOpen]);
 
-  // One-shot ladder "climb" when the island has advanced since the last open.
-  // Triggered by changed read-model state only (island number), never by writes.
+  // One-shot "catch-up climb" when the island has advanced since the viewer last
+  // saw this overlay. Triggered by changed read-model state only (island number),
+  // never by gameplay writes. The last-seen value is persisted only after the climb
+  // has played, so the rapid mount/remount under React StrictMode can't consume it.
   useEffect(() => {
     if (!isOpen) return;
     const current = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
-    const advanced = lastSeenGameIslandNumber !== null && current > lastSeenGameIslandNumber;
-    lastSeenGameIslandNumber = current;
-    if (!advanced) return;
+    const lastSeen = readDualTrackLastIsland(viewerId);
+    const advanced = lastSeen !== null && current > lastSeen;
+
+    if (!advanced) {
+      writeDualTrackLastIsland(viewerId, current);
+      setClimbDelta(0);
+      return;
+    }
+
+    setClimbDelta(current - lastSeen);
     setIsLadderClimbing(true);
-    const timer = setTimeout(() => setIsLadderClimbing(false), 820);
+    const timer = setTimeout(() => {
+      setIsLadderClimbing(false);
+      writeDualTrackLastIsland(viewerId, current);
+    }, 1100);
     return () => clearTimeout(timer);
-  }, [isOpen, islandNumber]);
+  }, [isOpen, islandNumber, viewerId]);
 
   if (!shouldRender) {
     return null;
@@ -213,6 +252,11 @@ export function GameBoardOverlay({
               role="group"
               aria-label="My Quest and Game Progress tracks"
             >
+              {isLadderClimbing && climbDelta > 0 ? (
+                <span className="game-board-overlay__climb-burst" aria-hidden="true">
+                  +{climbDelta} 🏝️
+                </span>
+              ) : null}
               <DualTrackColumn
                 title="Real Life Journey"
                 subtitle={realLifeTrackSubtitle}
