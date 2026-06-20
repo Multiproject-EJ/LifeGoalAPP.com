@@ -32,6 +32,7 @@ export const dualTrackOverlayAdapterTests: TestCase[] = [
       assertEqual(viewModel.gameTrack[1].subtitle, 'Final Horizon', 'Expected supplied current island display name');
       assertEqual(viewModel.gameTrack[1].progressLabel, '90% current progress', 'Expected current island progress label');
       assertEqual(viewModel.gameTrack.some((card) => card.title === 'Island 121'), false, 'Expected no invalid island 121 card');
+      assertEqual(viewModel.gameTrack.some((card) => card.position === 'next'), false, 'Expected no next card past the final island');
       assertEqual(viewModel.gameTrack[viewModel.gameTrack.length - 1]?.position, 'locked', 'Expected final card to remain a locked future placeholder');
     },
   },
@@ -43,6 +44,37 @@ export const dualTrackOverlayAdapterTests: TestCase[] = [
       assertEqual(viewModel.gameTrack[1].title, 'Island 1', 'Expected invalid island number to clamp to island 1');
       assertEqual(viewModel.gameTrack[1].progressLabel, '100% current progress', 'Expected progress to clamp to 100%');
       assertEqual(viewModel.centerSpine.progressPercent, 100, 'Expected center spine progress to clamp to 100%');
+    },
+  },
+  {
+    name: 'exposes gallery island numbers for concrete game cards only',
+    run: () => {
+      const viewModel = buildDualTrackOverlayViewModel({ islandNumber: 5, rewardBarProgress: 2, rewardBarThreshold: 10 });
+
+      const achieved = viewModel.gameTrack.find((card) => card.position === 'achieved');
+      const current = viewModel.gameTrack.find((card) => card.position === 'current');
+      const next = viewModel.gameTrack.find((card) => card.position === 'next');
+      const locked = viewModel.gameTrack.find((card) => card.position === 'locked');
+
+      assertEqual(achieved?.islandNumber, 4, 'Expected achieved card to expose previous island number');
+      assertEqual(current?.islandNumber, 5, 'Expected current card to expose current island number');
+      assertEqual(next?.islandNumber, 6, 'Expected next card to expose next island number');
+      assertEqual(locked?.islandNumber, undefined, 'Expected locked future card to stay a mystery without an island number');
+      assertEqual(current?.rewardPreviewLabel, 'Exploring now', 'Expected collectible current reward copy');
+      assertEqual(achieved?.rewardPreviewLabel, 'Collected', 'Expected collectible achieved reward copy');
+    },
+  },
+  {
+    name: 'summarizes display-only gallery progress for the game track',
+    run: () => {
+      const start = buildDualTrackOverlayViewModel({ islandNumber: 1 });
+      assertEqual(start.gameProgress.currentIsland, 1, 'Expected current island in gallery summary');
+      assertEqual(start.gameProgress.collectedCount, 0, 'Expected zero collected islands at the start');
+      assertEqual(start.gameProgress.totalCount, 120, 'Expected total island count in gallery summary');
+      assertEqual(start.gameTrack[0].islandNumber, undefined, 'Expected the first-run foundation card to have no island number');
+
+      const mid = buildDualTrackOverlayViewModel({ islandNumber: 12 });
+      assertEqual(mid.gameProgress.collectedCount, 11, 'Expected collected count to trail the current island');
     },
   },
 ];

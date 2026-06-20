@@ -297,6 +297,7 @@
 }
 
 .game-board-overlay__milestone-icon {
+  position: relative;
   width: clamp(1.45rem, 5.8vw, 2rem);
   aspect-ratio: 1;
   display: inline-grid;
@@ -307,6 +308,35 @@
   color: var(--track-accent);
   font-size: clamp(0.85rem, 3.2vw, 1.1rem);
   font-weight: 900;
+}
+
+/* Game islands read as collectible gallery tiles rather than plain dots. */
+.game-board-overlay__track--game .game-board-overlay__milestone-icon {
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--track-accent) 30%, transparent), transparent 60%),
+    rgba(2, 6, 23, 0.46);
+}
+
+/* Small gallery index chip pinned to the tile corner (game island cards only). */
+.game-board-overlay__milestone-index {
+  position: absolute;
+  right: -0.28rem;
+  bottom: -0.28rem;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.2rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--track-accent) 60%, rgba(255, 255, 255, 0.2));
+  background: rgba(2, 6, 23, 0.86);
+  color: var(--track-accent);
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(2, 6, 23, 0.5);
 }
 
 .game-board-overlay__milestone-copy {
@@ -959,6 +989,27 @@
   }
 
   .game-board-overlay__milestone--locked {
+    display: none;
+  }
+}
+
+/* Very short viewports: keep one achieved + current + next readable, trim chrome. */
+@media (max-height: 560px) {
+  .game-board-overlay__track-header p {
+    display: none;
+  }
+
+  .game-board-overlay__milestone {
+    min-height: 2.55rem;
+    padding-block: 0.28rem;
+    border-radius: 12px;
+  }
+
+  .game-board-overlay__milestone-copy span:not(.game-board-overlay__milestone-kicker) {
+    -webkit-line-clamp: 1;
+  }
+
+  .game-board-overlay__milestone-reward {
     display: none;
   }
 }

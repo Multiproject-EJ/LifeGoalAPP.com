@@ -66,7 +66,12 @@ function DualTrackColumn({ title, subtitle, tone, cards }: DualTrackColumnProps)
             className={`game-board-overlay__milestone game-board-overlay__milestone--${card.position}`}
             aria-label={`${card.title}: ${card.progressLabel}`}
           >
-            <span className="game-board-overlay__milestone-icon" aria-hidden="true">{card.icon}</span>
+            <span className="game-board-overlay__milestone-icon" aria-hidden="true">
+              {card.icon}
+              {typeof card.islandNumber === 'number' ? (
+                <span className="game-board-overlay__milestone-index">{card.islandNumber}</span>
+              ) : null}
+            </span>
             <span className="game-board-overlay__milestone-copy">
               <span className="game-board-overlay__milestone-kicker">{card.progressLabel}</span>
               <strong>{card.title}</strong>
@@ -137,6 +142,10 @@ export function GameBoardOverlay({
     rewardBarProgress,
     rewardBarThreshold,
   });
+  const { collectedCount, totalCount } = dualTrackViewModel.gameProgress;
+  const gameTrackSubtitle = collectedCount > 0
+    ? `${collectedCount} of ${totalCount} islands explored`
+    : 'Begin your first island adventure.';
 
   return (
     <div
@@ -186,7 +195,7 @@ export function GameBoardOverlay({
               </div>
               <DualTrackColumn
                 title="Game Journey"
-                subtitle="Islands, unlocks, and future shores."
+                subtitle={gameTrackSubtitle}
                 tone="game"
                 cards={dualTrackViewModel.gameTrack}
               />
