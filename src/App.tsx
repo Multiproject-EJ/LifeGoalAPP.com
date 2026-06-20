@@ -165,6 +165,9 @@ import { isConflictRoute, resolveSurface } from './surfaces/surfaceContext';
 import { getFeatureAvailability, type FeatureAvailabilityId } from './config/featureAvailability';
 import { resolveFeatureAccess } from './services/featureAccess';
 import { isAdminUser } from './services/adminRoles';
+import { loadGoalsOfflineFirst } from './data/goalsRepo';
+import { listHabitsV2 } from './services/habitsV2';
+import type { DualTrackRealLifeInput } from './features/gamification/level-worlds/services/dualTrackOverlayAdapter';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -1024,6 +1027,46 @@ export default function App({ forceAuthOnMount }: AppProps) {
       rewardsReady: collection.filter((entry) => getUnclaimedBondMilestones(entry).length > 0).length,
     };
   }, [showGameBoardOverlay, showLevelWorldsFromEntry, supabaseSession?.user?.id]);
+
+  // Read-only Real Life Journey summary for the dual-track overlay.
+  // Loaded only when the overlay opens and the user is authenticated; failures
+  // fall back to placeholders and never block PLAY.
+  const [overlayRealLifeInput, setOverlayRealLifeInput] = useState<DualTrackRealLifeInput | undefined>(undefined);
+  const overlayRealLifeUserId = supabaseSession?.user?.id ?? null;
+  useEffect(() => {
+    if (!showGameBoardOverlay || !overlayRealLifeUserId) return;
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const [goals, habitsResult] = await Promise.all([
+          loadGoalsOfflineFirst(overlayRealLifeUserId).catch(() => []),
+          listHabitsV2().catch(() => ({ data: [], error: null as unknown })),
+        ]);
+        if (cancelled) return;
+
+        const goalSummaries = (goals ?? [])
+          .filter((goal) => goal && !goal._deleted)
+          .map((goal) => ({ id: goal.id, title: goal.title, status: goal.status ?? null }));
+        const habitSummaries = (habitsResult?.data ?? [])
+          .map((habit) => ({ id: habit.id, title: habit.title, emoji: habit.emoji ?? null }));
+
+        setOverlayRealLifeInput({
+          isAuthenticated: true,
+          goals: goalSummaries,
+          habits: habitSummaries,
+        });
+      } catch {
+        if (!cancelled) {
+          setOverlayRealLifeInput({ isAuthenticated: true, goals: [], habits: [] });
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showGameBoardOverlay, overlayRealLifeUserId]);
   const goldValueLabel =
     goldBreakdown.diamonds > 0
       ? `💎 ${goldBreakdown.diamonds.toLocaleString()} · 🪙 ${goldBreakdown.goldRemainder.toLocaleString()}`
@@ -5254,6 +5297,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           showLuckyRoll={false}
           creatureCollectionCount={creatureCollectionSummary.total}
           creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
+          realLife={overlayRealLifeInput}
         />
         {showAiCoachModal && (
           <AiCoach
@@ -5590,6 +5634,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         showLuckyRoll={false}
         creatureCollectionCount={creatureCollectionSummary.total}
         creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
+        realLife={overlayRealLifeInput}
       />
 
       {isAuthOverlayVisible ? (

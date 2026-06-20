@@ -4,6 +4,7 @@ import { getIslandBackgroundImageSrc } from '../features/gamification/level-worl
 import {
   buildDualTrackOverlayViewModel,
   type DualTrackMilestoneCard,
+  type DualTrackRealLifeInput,
 } from '../features/gamification/level-worlds/services/dualTrackOverlayAdapter';
 import {
   ISLAND_RUN_CONTROLLER_SLOT_MAP,
@@ -43,6 +44,8 @@ type GameBoardOverlayProps = {
   creatureCollectionCount?: number;
   creatureRewardReadyCount?: number;
   islandSceneSrc?: string;
+  /** Read-only goal/habit summary used to personalize the Real Life Journey track. */
+  realLife?: DualTrackRealLifeInput;
 };
 
 type DualTrackColumnProps = {
@@ -100,6 +103,7 @@ export function GameBoardOverlay({
   islandNumber = 1,
   islandDisplayName = 'Island',
   islandSceneSrc = getIslandBackgroundImageSrc(1),
+  realLife,
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -141,11 +145,16 @@ export function GameBoardOverlay({
     islandDisplayName,
     rewardBarProgress,
     rewardBarThreshold,
+    realLife,
   });
   const { collectedCount, totalCount } = dualTrackViewModel.gameProgress;
   const gameTrackSubtitle = collectedCount > 0
     ? `${collectedCount} of ${totalCount} islands explored`
     : 'Begin your first island adventure.';
+  const { source: realLifeSource, goalCount, habitCount } = dualTrackViewModel.realLifeProgress;
+  const realLifeTrackSubtitle = realLifeSource === 'data'
+    ? `${goalCount} goal${goalCount === 1 ? '' : 's'} · ${habitCount} habit${habitCount === 1 ? '' : 's'}`
+    : 'Goals, habits, and growth milestones.';
 
   return (
     <div
@@ -177,7 +186,7 @@ export function GameBoardOverlay({
             <div className="game-board-overlay__dual-track-stage" aria-label="My Quest and Game Progress tracks">
               <DualTrackColumn
                 title="Real Life Journey"
-                subtitle="Goals, habits, and growth milestones."
+                subtitle={realLifeTrackSubtitle}
                 tone="life"
                 cards={dualTrackViewModel.realLifeTrack}
               />
