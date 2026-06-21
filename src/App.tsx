@@ -54,6 +54,8 @@ import { MobileFooterNav } from './components/MobileFooterNav';
 import { MobileTopChrome } from './components/MobileTopChrome';
 import { LoadingReadinessScreen, type LoadingReadinessStep } from './components/LoadingReadinessScreen';
 import { GameBoardOverlay } from './components/GameBoardOverlay';
+import { buildJourneyLevelInputFromOverlay } from './features/gamification/level-worlds/services/dualTrackOverlayAdapter';
+import { useCombinedJourneyChest } from './features/gamification/level-worlds/hooks/useCombinedJourneyChest';
 import { HabitGameAuthCard, HabitGameLandingShell, type HabitGameAuthTab } from './components/HabitGameLandingShell';
 import { HolidaySeasonDialog } from './components/HolidaySeasonDialog';
 import { FeaturePreviewOverlay } from './components/FeaturePreviewOverlay';
@@ -1035,6 +1037,24 @@ export default function App({ forceAuthOnMount }: AppProps) {
   // fall back to placeholders and never block PLAY.
   const [overlayRealLifeInput, setOverlayRealLifeInput] = useState<DualTrackRealLifeInput | undefined>(undefined);
   const overlayRealLifeUserId = supabaseSession?.user?.id ?? null;
+
+  // Combined Journey Level chest claim (R5). Flag-gated; no-op while off.
+  const combinedJourneyChest = useCombinedJourneyChest({
+    session: supabaseSession,
+    isOpen: showGameBoardOverlay,
+    milestoneInputs: buildJourneyLevelInputFromOverlay({
+      islandNumber: overlayIslandNumber,
+      rewardBarProgress: overlayRewardBarProgress,
+      rewardBarThreshold: overlayRewardBarThreshold,
+      realLife: overlayRealLifeInput,
+    }),
+  });
+  const combinedJourneyChestProps = {
+    journeyChest: combinedJourneyChest.chest,
+    journeyChestPending: combinedJourneyChest.pending,
+    journeyChestFeedback: combinedJourneyChest.feedback,
+    onClaimJourneyChest: combinedJourneyChest.claim,
+  };
   useEffect(() => {
     if (!showGameBoardOverlay || !overlayRealLifeUserId) return;
     let cancelled = false;
@@ -5308,6 +5328,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
           realLife={overlayRealLifeInput}
           viewerId={overlayRealLifeUserId ?? undefined}
+          {...combinedJourneyChestProps}
         />
         {showAiCoachModal && (
           <AiCoach
@@ -5646,6 +5667,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         creatureRewardReadyCount={creatureCollectionSummary.rewardsReady}
         realLife={overlayRealLifeInput}
         viewerId={overlayRealLifeUserId ?? undefined}
+        {...combinedJourneyChestProps}
       />
 
       {isAuthOverlayVisible ? (

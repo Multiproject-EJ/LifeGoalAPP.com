@@ -6,6 +6,7 @@ import {
   type DualTrackMilestoneCard,
   type DualTrackRealLifeInput,
 } from '../features/gamification/level-worlds/services/dualTrackOverlayAdapter';
+import type { JourneyChestClaimViewModel } from '../features/gamification/level-worlds/services/combinedJourneyChestClaim';
 import {
   ISLAND_RUN_CONTROLLER_SLOT_MAP,
   getIslandRunControllerSlotStyle,
@@ -79,6 +80,14 @@ type GameBoardOverlayProps = {
   realLife?: DualTrackRealLifeInput;
   /** Stable per-viewer id used to scope the "catch-up climb" memory (presentational only). */
   viewerId?: string;
+  /** Claimable Combined Journey Level chest (R5); null/omitted hides the CTA. */
+  journeyChest?: JourneyChestClaimViewModel | null;
+  /** True while a chest claim is in flight. */
+  journeyChestPending?: boolean;
+  /** Transient "+N dice" feedback shown after a successful claim. */
+  journeyChestFeedback?: string | null;
+  /** Invoked when the user claims the current chest. */
+  onClaimJourneyChest?: (thresholdLevel: number) => void;
 };
 
 type DualTrackColumnProps = {
@@ -139,6 +148,10 @@ export function GameBoardOverlay({
   islandSceneSrc = getIslandBackgroundImageSrc(1),
   realLife,
   viewerId,
+  journeyChest,
+  journeyChestPending = false,
+  journeyChestFeedback,
+  onClaimJourneyChest,
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -281,6 +294,25 @@ export function GameBoardOverlay({
                 <span className="game-board-overlay__progress-spine-caption" aria-hidden="true">
                   {dualTrackViewModel.journeyLevel.nextChestLabel}
                 </span>
+                {journeyChest && journeyChest.claimableThreshold != null ? (
+                  <button
+                    type="button"
+                    className="game-board-overlay__progress-spine-chest"
+                    onClick={() => onClaimJourneyChest?.(journeyChest.claimableThreshold as number)}
+                    disabled={journeyChestPending}
+                    aria-label={`${journeyChest.ctaLabel}: ${journeyChest.rewardPreviewLabel}`}
+                  >
+                    <span className="game-board-overlay__progress-spine-chest-icon" aria-hidden="true">🎁</span>
+                    <span className="game-board-overlay__progress-spine-chest-label">
+                      {journeyChestPending ? 'Claiming…' : journeyChest.rewardPreviewLabel}
+                    </span>
+                  </button>
+                ) : null}
+                {journeyChestFeedback ? (
+                  <span className="game-board-overlay__progress-spine-chest-feedback" role="status">
+                    {journeyChestFeedback}
+                  </span>
+                ) : null}
               </div>
               <DualTrackColumn
                 title="Game Journey"

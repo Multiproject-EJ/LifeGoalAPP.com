@@ -1,5 +1,5 @@
 import { getIslandDisplayName } from './islandNames';
-import { deriveCombinedJourneyLevel } from './combinedJourneyLevel';
+import { deriveCombinedJourneyLevel, type CombinedJourneyLevelInput } from './combinedJourneyLevel';
 
 export type DualTrackMilestonePosition = 'achieved' | 'current' | 'next' | 'locked';
 export type DualTrackMilestoneTrack = 'real_life' | 'game';
@@ -386,6 +386,27 @@ function createGameTrack(input: BuildDualTrackOverlayViewModelInput): DualTrackM
   return cards;
 }
 
+/**
+ * Map the overlay's already-loaded inputs into the shared Combined Journey Level
+ * derivation shape. Single source of truth so the spine meter (adapter) and the
+ * claim wiring (App hook) agree on the derived level.
+ */
+export function buildJourneyLevelInputFromOverlay(
+  input: BuildDualTrackOverlayViewModelInput = {},
+): CombinedJourneyLevelInput {
+  const currentIsland = normalizeIslandNumber(input.islandNumber);
+  const validGoals = (input.realLife?.goals ?? []).filter((goal) => goal && typeof goal.title === 'string' && goal.title.trim());
+  const habitCount = (input.realLife?.habits ?? []).filter((habit) => habit && typeof habit.title === 'string' && habit.title.trim()).length;
+  const completedGoalCount = validGoals.filter((goal) => isCompletedGoalStatus(goal.status)).length;
+
+  return {
+    islandsCompleted: Math.max(0, currentIsland - 1),
+    currentIslandProgressPercent: clampPercent(input.rewardBarProgress ?? 0, input.rewardBarThreshold ?? 10),
+    completedGoals: completedGoalCount,
+    habitConsistencyScore: habitCount,
+  };
+}
+
 export function buildDualTrackOverlayViewModel(input: BuildDualTrackOverlayViewModelInput = {}): DualTrackOverlayViewModel {
   const currentIsland = normalizeIslandNumber(input.islandNumber);
   const realLifeTrack = createRealLifeTrack(input.realLife);
@@ -393,15 +414,8 @@ export function buildDualTrackOverlayViewModel(input: BuildDualTrackOverlayViewM
   const validGoals = (input.realLife?.goals ?? []).filter((goal) => goal && typeof goal.title === 'string' && goal.title.trim());
   const goalCount = validGoals.length;
   const habitCount = (input.realLife?.habits ?? []).filter((habit) => habit && typeof habit.title === 'string' && habit.title.trim()).length;
-  const completedGoalCount = validGoals.filter((goal) => isCompletedGoalStatus(goal.status)).length;
 
-  const currentIslandProgressPercent = clampPercent(input.rewardBarProgress ?? 0, input.rewardBarThreshold ?? 10);
-  const journeyLevelSummary = deriveCombinedJourneyLevel({
-    islandsCompleted: Math.max(0, currentIsland - 1),
-    currentIslandProgressPercent,
-    completedGoals: completedGoalCount,
-    habitConsistencyScore: habitCount,
-  });
+  const journeyLevelSummary = deriveCombinedJourneyLevel(buildJourneyLevelInputFromOverlay(input));
 
   return {
     title: 'My Quest & Game Progress',
