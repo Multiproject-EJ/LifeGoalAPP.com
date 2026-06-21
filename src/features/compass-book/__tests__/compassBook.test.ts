@@ -33,6 +33,8 @@ import { projectInnerCompass } from '../logic/projectors/innerCompassProjector';
 import { projectLivingHorizon } from '../logic/projectors/livingHorizonProjector';
 import { projectIkigaiMap } from '../logic/projectors/ikigaiMapProjector';
 import { buildQuestLeapProposalFromIkigai } from '../logic/questLeap';
+import { projectQuestForge } from '../logic/projectors/questForgeProjector';
+import { buildGoalProposalFromQuestForge, describeGoalProposal } from '../logic/goalBridge';
 import { getChapterConfirmedOutput } from '../logic/projectors';
 import type { CompassAnswerRecord, CompassAnswerValue, CompassChapterState } from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
@@ -373,7 +375,7 @@ function testLivingWheelProjector(): void {
   const snapshot = getChapterConfirmedOutput('living_wheel', answers);
   assert(snapshot !== null, 'living_wheel has a projector snapshot');
   assert(
-    getChapterConfirmedOutput('quest_forge', []) === null,
+    getChapterConfirmedOutput('personal_playbook', []) === null,
     'unimplemented chapter has no projector yet',
   );
 }
@@ -513,6 +515,52 @@ function testIkigaiMapProjector(): void {
   assert(getChapterConfirmedOutput('ikigai_map', base) !== null, 'ikigai_map has a projector');
 }
 
+function testQuestForgeAndGoalBridge(): void {
+  assert(
+    getChapterActivities('quest_forge').every((a) => a.authored),
+    'chapter 5 activities are authored',
+  );
+  assert(
+    getChapterActivities('quest_forge').every((a) => a.islandNumber >= 81 && a.islandNumber <= 100),
+    'chapter 5 covers islands 81–100',
+  );
+
+  const answers: CompassAnswerRecord[] = [
+    makeAnswer('quest_forge.a01', 'quest_a', { kind: 'text', text: 'Launch a small course' }),
+    makeAnswer('quest_forge.a02', 'quest_b', { kind: 'text', text: 'Run a half marathon' }),
+    choice('quest_forge.a04', 'primary_candidate', 'quest_a'),
+    choice('quest_forge.a11', 'wheel_impact', 'career_development'),
+    choice('quest_forge.a18', 'support_quest', 'quest_b'),
+    choice('quest_forge.a18', 'release_quest', 'none'),
+    choice('quest_forge.a19', 'accepted_cost', 'comfort'),
+    makeAnswer('quest_forge.a19', 'protected_flame', { kind: 'text', text: 'Family weekends' }),
+    makeAnswer('quest_forge.a20', 'calling', { kind: 'text', text: 'Help people learn' }),
+    makeAnswer('quest_forge.a20', 'first_milestone', { kind: 'text', text: 'Publish lesson 1' }),
+    makeAnswer('quest_forge.a20', 'success_evidence', { kind: 'text', text: '10 finishers' }),
+    choice('quest_forge.a20', 'review_point', '4_weeks'),
+  ];
+
+  const out = projectQuestForge(answers);
+  assert(out.primaryQuestTitle === 'Launch a small course', 'primary quest resolves from primary_candidate');
+  assert(out.supportingQuestTitle === 'Run a half marathon', 'supporting quest resolves');
+  assert(out.releasedQuestTitle === null, 'released quest = none → null');
+  assert(out.wheelImpactAreaId === 'career_development', 'wheel impact mapped to canonical area key');
+
+  // Goal proposal builder is PURE — proposes only, never creates.
+  const proposal = buildGoalProposalFromQuestForge(out, new Date('2026-06-21T00:00:00Z'));
+  assert(proposal !== null, 'goal proposal built from a primary quest');
+  assert(proposal!.title === 'Launch a small course', 'proposal title = primary quest');
+  assert(proposal!.lifeWheelCategory === 'career_development', 'proposal carries canonical life area');
+  assert(proposal!.reviewDate === '2026-07-19', 'review date = +4 weeks (deterministic)');
+  assert(proposal!.originChapterId === 'quest_forge', 'provenance retained');
+  assert(describeGoalProposal(proposal!).includes('Quest Forge'), 'description carries provenance');
+
+  // No primary quest → no proposal (the bridge renders nothing, creates nothing).
+  assert(buildGoalProposalFromQuestForge(projectQuestForge([])) === null, 'no primary quest → no proposal');
+
+  assert(getChapterConfirmedOutput('quest_forge', answers) !== null, 'quest_forge has a projector');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -523,4 +571,5 @@ export function runAllCompassBookTests(): void {
   testInnerCompassProjector();
   testLivingHorizonProjector();
   testIkigaiMapProjector();
+  testQuestForgeAndGoalBridge();
 }

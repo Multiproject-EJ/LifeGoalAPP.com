@@ -11,6 +11,7 @@ import { projectLivingWheel, livingWheelOutputToJson } from './livingWheelProjec
 import { projectInnerCompass, innerCompassOutputToJson } from './innerCompassProjector';
 import { projectLivingHorizon, livingHorizonOutputToJson } from './livingHorizonProjector';
 import { projectIkigaiMap, ikigaiMapOutputToJson } from './ikigaiMapProjector';
+import { projectQuestForge, questForgeOutputToJson } from './questForgeProjector';
 
 export type ChapterProjector = (answers: readonly CompassAnswerRecord[]) => Json;
 
@@ -19,6 +20,7 @@ const PROJECTORS: Partial<Record<CompassBookChapterId, ChapterProjector>> = {
   inner_compass: (answers) => innerCompassOutputToJson(projectInnerCompass(answers)),
   living_horizon: (answers) => livingHorizonOutputToJson(projectLivingHorizon(answers)),
   ikigai_map: (answers) => ikigaiMapOutputToJson(projectIkigaiMap(answers)),
+  quest_forge: (answers) => questForgeOutputToJson(projectQuestForge(answers)),
 };
 
 export function getChapterConfirmedOutput(
@@ -33,3 +35,4 @@ export * from './livingWheelProjector';
 export * from './innerCompassProjector';
 export * from './livingHorizonProjector';
 export * from './ikigaiMapProjector';
+export * from './questForgeProjector';
