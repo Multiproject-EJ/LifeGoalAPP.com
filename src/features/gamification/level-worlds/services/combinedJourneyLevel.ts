@@ -13,8 +13,9 @@
  * - A balance multiplier rewards progressing BOTH sides ("rise together"). It
  *   can only raise XP, never remove earned levels, so the level is monotonic for
  *   a fixed milestone set.
- * - Weights/curve are intentionally simple constants here; the dedicated balance
- *   pass (R7) tunes them before any grants are enabled.
+ * - Weights/curve are simple, reviewed constants (see the launch balance review
+ *   in the plan doc); tune them here and the SQL ladder stays unaffected since it
+ *   keys off threshold level, not XP.
  */
 
 export type CombinedJourneyLevelInput = {
@@ -47,7 +48,7 @@ export type CombinedJourneyLevelSummary = {
   nextThresholdLevel: number;
 };
 
-// XP weights — tunable in the R7 balance pass.
+// XP weights — launch-reviewed values (R8 balance pass).
 export const JOURNEY_XP_WEIGHTS = {
   perCompletedIsland: 100,
   perCurrentIslandPercent: 1, // up to 100 within the current island

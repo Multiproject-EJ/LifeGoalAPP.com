@@ -95,6 +95,7 @@ export const combinedJourneyRewardClaimActionTests: TestCase[] = [
     name: 'returns disabled when the feature flag is off',
     run: async () => {
       resetEnvironment();
+      __setIslandRunFeatureFlagsForTests({ combinedJourneyRewardsEnabled: false });
       await seedState({ currentIslandNumber: UNLOCKED_ISLAND_NUMBER, dicePool: 5 });
       const client = makeFakeClient();
 

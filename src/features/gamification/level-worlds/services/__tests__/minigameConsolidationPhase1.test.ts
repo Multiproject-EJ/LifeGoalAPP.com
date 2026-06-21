@@ -40,7 +40,7 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
           todaysOfferSpinEntryEnabled: true,
           islandRunEarlyFeaturedCreaturePoolEnabled: false,
           islandRunPreIslandLuckyRollEnabled: false,
-          combinedJourneyRewardsEnabled: false,
+          combinedJourneyRewardsEnabled: true,
         },
         'Default feature flags should reflect released phases without enabling unfinished surfaces',
       );

@@ -28,6 +28,12 @@ export interface BuildJourneyChestClaimInput {
   level: number;
   /** Threshold levels already claimed (any order). */
   claimedThresholds: Iterable<number>;
+  /**
+   * Launch baseline: chests are only offered for thresholds strictly above this
+   * level, so existing players don't receive chests for pre-launch progress.
+   * Omit (or undefined) to offer from the first threshold.
+   */
+  baselineLevel?: number;
 }
 
 function describeReward(thresholdLevel: number): string {
@@ -52,7 +58,11 @@ export function buildJourneyChestClaim(input: BuildJourneyChestClaimInput): Jour
     if (Number.isFinite(threshold)) claimed.add(Math.floor(threshold));
   }
 
-  for (let threshold = FIRST_CHEST_THRESHOLD; threshold <= level; threshold += 1) {
+  // Only offer chests above the launch baseline (pre-launch thresholds are skipped).
+  const baseline = Number.isFinite(input.baselineLevel) ? Math.max(0, Math.floor(input.baselineLevel as number)) : 0;
+  const firstThreshold = Math.max(FIRST_CHEST_THRESHOLD, baseline + 1);
+
+  for (let threshold = firstThreshold; threshold <= level; threshold += 1) {
     if (!claimed.has(threshold)) {
       return {
         claimableThreshold: threshold,

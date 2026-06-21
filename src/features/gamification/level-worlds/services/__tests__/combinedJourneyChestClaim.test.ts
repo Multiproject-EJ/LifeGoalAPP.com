@@ -39,4 +39,18 @@ export const combinedJourneyChestClaimTests: TestCase[] = [
       assertEqual(vm.claimableThreshold, 2, 'threshold 2 is still claimable regardless of higher noise');
     },
   },
+  {
+    name: 'only offers chests above the launch baseline',
+    run: () => {
+      const vm = buildJourneyChestClaim({ enabled: true, level: 8, claimedThresholds: [], baselineLevel: 5 });
+      assertEqual(vm.claimableThreshold, 6, 'first claimable chest is just above the baseline');
+    },
+  },
+  {
+    name: 'returns no chest when the level has not risen past the baseline',
+    run: () => {
+      const vm = buildJourneyChestClaim({ enabled: true, level: 5, claimedThresholds: [], baselineLevel: 5 });
+      assertEqual(vm.claimableThreshold, null, 'no chest until the level climbs past the baseline');
+    },
+  },
 ];

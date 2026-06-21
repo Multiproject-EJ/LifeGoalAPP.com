@@ -78,7 +78,7 @@ const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   todaysOfferSpinEntryEnabled: true,
   islandRunEarlyFeaturedCreaturePoolEnabled: false,
   islandRunPreIslandLuckyRollEnabled: false,
-  combinedJourneyRewardsEnabled: false,
+  combinedJourneyRewardsEnabled: true,
 });
 
 let currentFlags: IslandRunFeatureFlags = { ...DEFAULT_FLAGS };
