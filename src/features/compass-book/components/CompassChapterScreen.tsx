@@ -38,6 +38,7 @@ export function CompassChapterScreen({
   const CHAPTERS_WITH_GRAPHIC: ReadonlySet<CompassBookChapterId> = new Set([
     'living_wheel',
     'inner_compass',
+    'living_horizon',
   ]);
   const showGraphic = hasUnlocked && CHAPTERS_WITH_GRAPHIC.has(chapterId);
 
