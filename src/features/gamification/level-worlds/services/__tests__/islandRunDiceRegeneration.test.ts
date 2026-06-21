@@ -35,6 +35,24 @@ export const islandRunDiceRegenerationTests: TestCase[] = [
     },
   },
   {
+    name: 'bonus max dice raises the capacity on top of the level tier',
+    run: () => {
+      assertEqual(resolveDiceRegenConfig(1, 20).maxDice, 50, 'Expected L1 30 + 20 bonus = 50');
+      assertEqual(resolveDiceRegenMinDice(20, 25), 125, 'Expected L20 100 + 25 bonus = 125');
+      assertEqual(resolveDiceRegenConfig(1, -5).maxDice, 30, 'Expected negative bonus to clamp to 0');
+      // Passive regen fills up to the bonus-extended cap.
+      const result = applyDiceRegeneration({
+        currentDicePool: 30,
+        regenState: { maxDice: 30, regenRatePerHour: 7.5, lastRegenAtMs: 0 },
+        playerLevel: 1,
+        nowMs: 8 * 60 * 1000 * 5,
+        bonusMaxDice: 10,
+      });
+      assert(result.regenState.maxDice === 40, 'Expected regen cap to include the bonus');
+      assert(result.dicePool > 30 && result.dicePool <= 40, 'Expected regen to fill past the base cap up to the bonus cap');
+    },
+  },
+  {
     name: 'level-band config: level 125+ maps to 200 dice at 7 minutes',
     run: () => {
       const cfg = resolveDiceRegenConfig(125);

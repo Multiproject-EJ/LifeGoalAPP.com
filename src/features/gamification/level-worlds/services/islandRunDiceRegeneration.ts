@@ -32,8 +32,9 @@ const DICE_REGEN_LEVEL_BANDS: ReadonlyArray<{
   { minLevel: 125, maxDice: 200, regenIntervalMinutes: 7 },
 ] as const;
 
-export function resolveDiceRegenConfig(playerLevel: number): DiceRegenConfig {
+export function resolveDiceRegenConfig(playerLevel: number, bonusMaxDice = 0): DiceRegenConfig {
   const safeLevel = Number.isFinite(playerLevel) ? Math.max(1, Math.floor(playerLevel)) : 1;
+  const safeBonus = Number.isFinite(bonusMaxDice) ? Math.max(0, Math.floor(bonusMaxDice)) : 0;
   let selected = DICE_REGEN_LEVEL_BANDS[0]!;
   for (const band of DICE_REGEN_LEVEL_BANDS) {
     if (safeLevel >= band.minLevel) {
@@ -43,13 +44,13 @@ export function resolveDiceRegenConfig(playerLevel: number): DiceRegenConfig {
     }
   }
   return {
-    maxDice: selected.maxDice,
+    maxDice: selected.maxDice + safeBonus,
     regenIntervalMinutes: selected.regenIntervalMinutes,
   };
 }
 
-export function resolveDiceRegenMinDice(playerLevel: number): number {
-  return resolveDiceRegenConfig(playerLevel).maxDice;
+export function resolveDiceRegenMinDice(playerLevel: number, bonusMaxDice = 0): number {
+  return resolveDiceRegenConfig(playerLevel, bonusMaxDice).maxDice;
 }
 
 /** Historical persisted field still used by runtime schema/debug views. */
@@ -64,8 +65,8 @@ export interface DiceRegenState {
   lastRegenAtMs: number;
 }
 
-export function buildInitialDiceRegenState(playerLevel: number, nowMs: number): DiceRegenState {
-  const config = resolveDiceRegenConfig(playerLevel);
+export function buildInitialDiceRegenState(playerLevel: number, nowMs: number, bonusMaxDice = 0): DiceRegenState {
+  const config = resolveDiceRegenConfig(playerLevel, bonusMaxDice);
   return {
     maxDice: config.maxDice,
     regenRatePerHour: 60 / config.regenIntervalMinutes,
@@ -79,6 +80,7 @@ export function applyDiceRegeneration(params: {
   playerLevel: number;
   nowMs: number;
   companionRegenBoostPct?: number;
+  bonusMaxDice?: number;
 }): {
   dicePool: number;
   regenState: DiceRegenState;
@@ -87,7 +89,7 @@ export function applyDiceRegeneration(params: {
   const { currentDicePool, playerLevel, nowMs } = params;
   const safePool = Math.max(0, Math.floor(currentDicePool));
   const safeNow = Math.floor(nowMs);
-  const config = resolveDiceRegenConfig(playerLevel);
+  const config = resolveDiceRegenConfig(playerLevel, params.bonusMaxDice);
   const baseIntervalMs = config.regenIntervalMinutes * 60 * 1000;
   const intervalMs = resolveEffectiveRegenIntervalMs({
     baseRegenIntervalMs: baseIntervalMs,

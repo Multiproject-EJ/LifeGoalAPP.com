@@ -829,6 +829,7 @@ export function applyPassiveDiceRegenTick(
     playerLevel,
     nowMs,
     companionRegenBoostPct: companionRegenModifier.cappedBoostPct,
+    bonusMaxDice: current.bonusMaxDice,
   });
   if (!regenUpdate) {
     return { record: current, changed: false, diceAdded: 0 };

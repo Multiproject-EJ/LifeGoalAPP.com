@@ -11,9 +11,10 @@ import type { JourneyChestReward } from './combinedJourneyRewardLadder';
  *
  * Pure record transform used by the claim action after the server-authoritative
  * RPC resolves the reward. Currency rewards (dice/essence) are simple increments;
- * eggs append an unopened entry to the existing egg-reward inventory (which is
- * already persisted through the standard commit path). Reroll-capacity grants are
- * wired in a later slice.
+ * eggs append an unopened entry to the existing egg-reward inventory; reroll-
+ * capacity raises the persistent bonusMaxDice modifier the dice-regen system
+ * layers on top of the level-derived cap. All persist through the standard
+ * commit path.
  */
 
 const JOURNEY_EGG_RESOLVER_VERSION = 'egg_pack_v1' as const;
@@ -99,8 +100,13 @@ export function applyJourneyRewardToRecord(
       };
     }
     case 'reroll_capacity':
+      if (reward.amount <= 0) return record;
+      return {
+        ...record,
+        bonusMaxDice: Math.max(0, Math.floor(record.bonusMaxDice ?? 0)) + reward.amount,
+        runtimeVersion: record.runtimeVersion + 1,
+      };
     default:
-      // reroll_capacity is granted in a later slice (needs a persistent capacity modifier).
       return record;
   }
 }

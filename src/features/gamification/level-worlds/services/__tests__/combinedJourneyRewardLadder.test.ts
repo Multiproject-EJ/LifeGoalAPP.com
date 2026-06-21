@@ -3,14 +3,16 @@ import { assertEqual, type TestCase } from './testHarness';
 
 export const combinedJourneyRewardLadderTests: TestCase[] = [
   {
-    name: 'grants eggs on multiples of three, else dice (even) or essence (odd)',
+    name: 'prioritizes reroll-capacity (÷5), then eggs (÷3), then dice/essence',
     run: () => {
       assertEqual(resolveJourneyChestReward(2).kind, 'dice', 'Expected even threshold to grant dice');
       assertEqual(resolveJourneyChestReward(3).kind, 'egg', 'Expected multiple of three to grant an egg');
       assertEqual(resolveJourneyChestReward(4).kind, 'dice', 'Expected even threshold to grant dice');
-      assertEqual(resolveJourneyChestReward(5).kind, 'essence', 'Expected odd non-multiple-of-three to grant essence');
+      assertEqual(resolveJourneyChestReward(5).kind, 'reroll_capacity', 'Expected multiple of five to grant capacity');
       assertEqual(resolveJourneyChestReward(6).kind, 'egg', 'Expected multiple of three to grant an egg');
-      assertEqual(resolveJourneyChestReward(9).kind, 'egg', 'Expected multiple of three to grant an egg');
+      assertEqual(resolveJourneyChestReward(7).kind, 'essence', 'Expected odd non-3/5 to grant essence');
+      assertEqual(resolveJourneyChestReward(10).kind, 'reroll_capacity', 'Expected multiple of five to grant capacity');
+      assertEqual(resolveJourneyChestReward(15).kind, 'reroll_capacity', 'Expected ÷5 to win over ÷3 at level 15');
     },
   },
   {
@@ -18,9 +20,9 @@ export const combinedJourneyRewardLadderTests: TestCase[] = [
     run: () => {
       assertEqual(resolveJourneyChestReward(2).amount, 10, 'dice band 0 = 10');
       assertEqual(resolveJourneyChestReward(3).amount, 1, 'egg amount is always 1');
-      assertEqual(resolveJourneyChestReward(5).amount, 8, 'essence band 1 = 5 + 3');
+      assertEqual(resolveJourneyChestReward(5).amount, 5, 'reroll capacity step = 5');
+      assertEqual(resolveJourneyChestReward(7).amount, 8, 'essence band 1 = 5 + 3');
       assertEqual(resolveJourneyChestReward(8).amount, 15, 'dice band 1 = 10 + 5');
-      assertEqual(resolveJourneyChestReward(10).amount, 20, 'dice band 2 = 10 + 10');
       assertEqual(resolveJourneyChestReward(11).amount, 11, 'essence band 2 = 5 + 6');
     },
   },
