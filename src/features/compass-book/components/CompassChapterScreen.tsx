@@ -1,11 +1,13 @@
-import type { CompassBookChapterId } from '../types';
+import type { CompassBookChapterId, CompassChapterState } from '../types';
 import { getChapterDefinition, getChapterActivities } from '../content/compassBookCurriculum';
 import type { CompassGetProgress } from './CompassBookContents';
+import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
 
 export type CompassChapterScreenProps = {
   chapterId: CompassBookChapterId;
   currentIslandNumber: number;
   getProgress: CompassGetProgress;
+  getChapterState: (chapterId: CompassBookChapterId) => CompassChapterState | null;
   onStartFlow: (activityId?: string) => void;
   onBack: () => void;
   onClose: () => void;
@@ -20,6 +22,7 @@ export function CompassChapterScreen({
   chapterId,
   currentIslandNumber,
   getProgress,
+  getChapterState,
   onStartFlow,
   onBack,
   onClose,
@@ -28,9 +31,11 @@ export function CompassChapterScreen({
   const activities = getChapterActivities(chapterId);
   const progress = getProgress(chapterId, currentIslandNumber);
   const statusByActivityId = new Map(progress.activities.map((a) => [a.activityId, a.status]));
+  const chapterState = getChapterState(chapterId);
 
   const hasUnlocked = progress.unlockedCount > 0;
   const hasProgress = progress.completedCount > 0;
+  const showGraphic = hasUnlocked && chapterId === 'living_wheel';
 
   return (
     <>
@@ -64,6 +69,18 @@ export function CompassChapterScreen({
             ))}
           </div>
         </section>
+
+        {showGraphic ? (
+          <CompassChapterGraphic
+            chapterId={chapterId}
+            answers={chapterState?.answers ?? []}
+            mode="full"
+          />
+        ) : null}
+
+        {progress.status === 'complete' ? (
+          <p className="compass-book__note">✓ This chapter is sealed. You can revisit any fragment to revise it.</p>
+        ) : null}
 
         {hasUnlocked ? (
           <button
