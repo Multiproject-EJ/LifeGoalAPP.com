@@ -12,6 +12,9 @@ export type CompassBookScreenProps = {
   currentIslandNumber: number;
   /** Active Supabase session (may be null in demo/local mode). */
   session: Session | null;
+  /** Optional deep-link: open straight into a chapter (and a fragment). */
+  initialChapterId?: CompassBookChapterId;
+  initialActivityId?: string;
   onClose: () => void;
 };
 
@@ -28,8 +31,20 @@ type CompassBookView =
  * answers via {@link useCompassBook}. Entirely separate from Quest Pulse and the
  * legacy Compass; never mutates Island Run state.
  */
-export function CompassBookScreen({ currentIslandNumber, session, onClose }: CompassBookScreenProps) {
-  const [view, setView] = useState<CompassBookView>({ kind: 'contents' });
+export function CompassBookScreen({
+  currentIslandNumber,
+  session,
+  initialChapterId,
+  initialActivityId,
+  onClose,
+}: CompassBookScreenProps) {
+  const [view, setView] = useState<CompassBookView>(() => {
+    if (initialChapterId && initialActivityId) {
+      return { kind: 'flow', chapterId: initialChapterId, startActivityId: initialActivityId };
+    }
+    if (initialChapterId) return { kind: 'chapter', chapterId: initialChapterId };
+    return { kind: 'contents' };
+  });
   const book = useCompassBook(session);
 
   const backToContents = useCallback(() => setView({ kind: 'contents' }), []);

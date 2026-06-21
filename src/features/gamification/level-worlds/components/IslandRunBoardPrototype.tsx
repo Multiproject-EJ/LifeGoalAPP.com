@@ -98,7 +98,7 @@ import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
 import { IslandRunLifePromptCard } from './IslandRunLifePromptCard';
 import { IslandRunGamifiedJournalCard } from './IslandRunGamifiedJournalCard';
 import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
-import { CompassModal } from './CompassModal';
+import { CompactGameCompassPanel } from '../../../compass-book/components/CompactGameCompassPanel';
 import {
   fetchCompassState,
   isCompassSessionFilledForIsland,
@@ -11193,9 +11193,9 @@ export function IslandRunBoardPrototype({
       )}
 
       {showHatcheryCompassModal && (
-        <CompassModal
+        <CompactGameCompassPanel
           session={session}
-          islandNumber={islandNumber}
+          currentIslandNumber={islandNumber}
           onClose={() => setShowHatcheryCompassModal(false)}
         />
       )}
