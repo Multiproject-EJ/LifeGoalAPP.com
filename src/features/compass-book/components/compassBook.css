@@ -798,3 +798,27 @@
 .compass-wheel__svg--wide {
   max-width: 360px;
 }
+
+/* ---------- Ikigai constellation ---------- */
+
+.compass-wheel__constellation {
+  fill: rgba(99, 102, 241, 0.12);
+  stroke: rgba(129, 140, 248, 0.6);
+  stroke-width: 1;
+}
+
+.compass-wheel__ray {
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 0.8;
+}
+
+.compass-wheel__warning {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: #fcd34d;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 10px;
+  padding: 8px 10px;
+  text-align: left;
+}

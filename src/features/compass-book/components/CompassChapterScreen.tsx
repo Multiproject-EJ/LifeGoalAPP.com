@@ -39,6 +39,7 @@ export function CompassChapterScreen({
     'living_wheel',
     'inner_compass',
     'living_horizon',
+    'ikigai_map',
   ]);
   const showGraphic = hasUnlocked && CHAPTERS_WITH_GRAPHIC.has(chapterId);
 

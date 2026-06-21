@@ -31,6 +31,8 @@ import {
 } from '../logic/projectors/livingWheelProjector';
 import { projectInnerCompass } from '../logic/projectors/innerCompassProjector';
 import { projectLivingHorizon } from '../logic/projectors/livingHorizonProjector';
+import { projectIkigaiMap } from '../logic/projectors/ikigaiMapProjector';
+import { buildQuestLeapProposalFromIkigai } from '../logic/questLeap';
 import { getChapterConfirmedOutput } from '../logic/projectors';
 import type { CompassAnswerRecord, CompassAnswerValue, CompassChapterState } from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
@@ -371,7 +373,7 @@ function testLivingWheelProjector(): void {
   const snapshot = getChapterConfirmedOutput('living_wheel', answers);
   assert(snapshot !== null, 'living_wheel has a projector snapshot');
   assert(
-    getChapterConfirmedOutput('ikigai_map', []) === null,
+    getChapterConfirmedOutput('quest_forge', []) === null,
     'unimplemented chapter has no projector yet',
   );
 }
@@ -456,6 +458,61 @@ function testLivingHorizonProjector(): void {
   assert(getChapterConfirmedOutput('living_horizon', answers) !== null, 'living_horizon has a projector');
 }
 
+function testIkigaiMapProjector(): void {
+  assert(
+    getChapterActivities('ikigai_map').every((a) => a.authored),
+    'chapter 4 activities are authored',
+  );
+  assert(
+    getChapterActivities('ikigai_map').every((a) => a.islandNumber >= 61 && a.islandNumber <= 80),
+    'chapter 4 covers islands 61–80',
+  );
+
+  const base: CompassAnswerRecord[] = [
+    choice('ikigai_map.a04', 'spark_pick', 'writing'),
+    choice('ikigai_map.a08', 'gift_pick', 'teaching'),
+    choice('ikigai_map.a12', 'need_pick', 'education'),
+    choice('ikigai_map.a13', 'income_potential', 'moderate'),
+    choice('ikigai_map.a15', 'horizon_fit', 'strong'),
+    makeAnswer('ikigai_map.a18', 'path_a', { kind: 'text', text: 'Teach writing to beginners' }),
+    makeAnswer('ikigai_map.a18', 'path_b', { kind: 'text', text: 'Edit indie authors' }),
+    choice('ikigai_map.a19', 'trial_choice', 'path_a'),
+    makeAnswer('ikigai_map.a19', 'trial_experiment', { kind: 'text', text: 'Run one free workshop' }),
+    choice('ikigai_map.a19', 'path_type', 'experimental'),
+  ];
+
+  // Willing → no mirage.
+  const willing = projectIkigaiMap([
+    ...base,
+    choice('ikigai_map.a16', 'process_tolerance', 'love_process'),
+    choice('ikigai_map.a17', 'beginner_willingness', 'eager'),
+  ]);
+  assert(willing.sparkId === 'writing', 'spark mapped');
+  assert(willing.giftId === 'teaching', 'gift mapped');
+  assert(willing.needId === 'education', 'need mapped');
+  assert(willing.paths.length === 2, 'paths collected');
+  assert(willing.trialPath === 'Teach writing to beginners', 'trial resolves to chosen path text');
+  assert(willing.mirageWarning === false, 'willing player has no mirage warning');
+
+  // Disliking the process → mirage warning.
+  const mirage = projectIkigaiMap([
+    ...base,
+    choice('ikigai_map.a16', 'process_tolerance', 'dislike'),
+    choice('ikigai_map.a17', 'beginner_willingness', 'eager'),
+  ]);
+  assert(mirage.mirageWarning === true, 'disliking the daily work raises a mirage warning');
+
+  // Quest Leap proposal (architecture seam): proposes from the chosen trial.
+  const proposal = buildQuestLeapProposalFromIkigai(willing);
+  assert(proposal !== null, 'quest leap proposal built from a chosen trial');
+  assert(proposal!.action === 'Run one free workshop', 'proposal action = trial experiment');
+  assert(proposal!.durationType === 'three_days', 'default leap duration');
+  assert(proposal!.evidenceQuestions.length === 3, 'proposal carries evidence questions');
+  assert(buildQuestLeapProposalFromIkigai(projectIkigaiMap([])) === null, 'no trial → no proposal');
+
+  assert(getChapterConfirmedOutput('ikigai_map', base) !== null, 'ikigai_map has a projector');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -465,4 +522,5 @@ export function runAllCompassBookTests(): void {
   testLivingWheelProjector();
   testInnerCompassProjector();
   testLivingHorizonProjector();
+  testIkigaiMapProjector();
 }
