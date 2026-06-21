@@ -74,6 +74,7 @@ export function buildFreshIslandRunRecord(
     tokenIndex: 0,
     spinTokens: 0,
     dicePool: ISLAND_RUN_DEFAULT_STARTING_DICE,
+    bonusMaxDice: 0,
     shardTierIndex: 0,
     shardClaimCount: 0,
     shields: 0,

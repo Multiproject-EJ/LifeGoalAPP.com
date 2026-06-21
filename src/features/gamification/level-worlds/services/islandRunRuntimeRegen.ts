@@ -25,6 +25,7 @@ export function resolveRuntimeDiceRegenUpdate(params: {
   playerLevel: number;
   nowMs: number;
   companionRegenBoostPct?: number;
+  bonusMaxDice?: number;
 }): RuntimeDiceRegenUpdate | null {
   const { snapshot, playerLevel, nowMs } = params;
   const safeLevel = Number.isFinite(playerLevel) ? Math.max(1, Math.floor(playerLevel)) : 1;
@@ -34,6 +35,7 @@ export function resolveRuntimeDiceRegenUpdate(params: {
     playerLevel: safeLevel,
     nowMs,
     companionRegenBoostPct: params.companionRegenBoostPct,
+    bonusMaxDice: params.bonusMaxDice,
   });
 
   const prevRegen = snapshot.diceRegenState;

@@ -59,7 +59,10 @@ function makeFakeClient() {
         const band = Math.floor(level / 5);
         let kind: string;
         let amount: number;
-        if (level % 3 === 0) {
+        if (level % 5 === 0) {
+          kind = 'reroll_capacity';
+          amount = 5;
+        } else if (level % 3 === 0) {
           kind = 'egg';
           amount = 1;
         } else if (level % 2 === 0) {
@@ -84,8 +87,8 @@ function makeFakeClient() {
   return client;
 }
 
-// currentIslandNumber 11 => 10 islands completed => journey level 5 (thresholds 2..5 unlocked).
-const UNLOCKED_ISLAND_NUMBER = 11;
+// currentIslandNumber 15 => 14 islands completed => journey level 7 (thresholds 2..7 unlocked).
+const UNLOCKED_ISLAND_NUMBER = 15;
 
 export const combinedJourneyRewardClaimActionTests: TestCase[] = [
   {
@@ -172,15 +175,36 @@ export const combinedJourneyRewardClaimActionTests: TestCase[] = [
       const result = await claimCombinedJourneyReward({
         session: makeSession(),
         client: client as never,
-        thresholdLevel: 5,
+        thresholdLevel: 7,
       });
 
       const persisted = readIslandRunGameStateRecord(makeSession());
       assertEqual(result.status, 'claimed', 'unlocked odd threshold should claim');
-      assertEqual(result.reward?.kind, 'essence', 'threshold 5 grants essence');
-      assertEqual(result.reward?.amount, 8, 'threshold 5 grants 8 essence (band 1)');
+      assertEqual(result.reward?.kind, 'essence', 'threshold 7 grants essence');
+      assertEqual(result.reward?.amount, 8, 'threshold 7 grants 8 essence (band 1)');
       assertEqual(persisted.essence, 12, 'essence should grow by the reward');
       assertEqual(persisted.essenceLifetimeEarned, 12, 'lifetime essence should grow by the reward');
+    },
+  },
+  {
+    name: 'grants a reroll-capacity bonus for a multiple-of-five threshold',
+    run: async () => {
+      resetEnvironment();
+      __setIslandRunFeatureFlagsForTests({ combinedJourneyRewardsEnabled: true });
+      await seedState({ currentIslandNumber: UNLOCKED_ISLAND_NUMBER, bonusMaxDice: 0 });
+      const client = makeFakeClient();
+
+      const result = await claimCombinedJourneyReward({
+        session: makeSession(),
+        client: client as never,
+        thresholdLevel: 5,
+      });
+
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(result.status, 'claimed', 'unlocked capacity threshold should claim');
+      assertEqual(result.reward?.kind, 'reroll_capacity', 'threshold 5 grants reroll capacity');
+      assertEqual(result.reward?.amount, 5, 'threshold 5 grants +5 capacity');
+      assertEqual(persisted.bonusMaxDice, 5, 'bonus max dice should grow by the reward');
     },
   },
   {

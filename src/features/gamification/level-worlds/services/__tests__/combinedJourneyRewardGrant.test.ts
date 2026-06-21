@@ -53,11 +53,12 @@ export const combinedJourneyRewardGrantTests: TestCase[] = [
     },
   },
   {
-    name: 'reroll_capacity is a no-op until its dedicated slice',
+    name: 'reroll_capacity raises the persistent bonus max dice',
     run: () => {
-      const record = baseRecord({ dicePool: 5 });
+      const record = baseRecord({ bonusMaxDice: 5 });
       const next = applyJourneyRewardToRecord(record, { kind: 'reroll_capacity', amount: 5 }, { thresholdLevel: 10, nowMs: 1 });
-      assert(next === record, 'reroll_capacity does not change the record yet');
+      assertEqual(next.bonusMaxDice, 10, 'bonus max dice grows by the reward amount');
+      assertEqual(next.runtimeVersion, record.runtimeVersion + 1, 'runtime version bumps on grant');
     },
   },
 ];

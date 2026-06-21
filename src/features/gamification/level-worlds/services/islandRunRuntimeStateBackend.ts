@@ -61,6 +61,7 @@ export interface IslandRunRuntimeStateBackend {
       tokenIndex?: number;
       spinTokens?: number;
       dicePool?: number;
+      bonusMaxDice?: number;
       shardTierIndex?: number;
       shardClaimCount?: number;
       shields?: number;
@@ -247,6 +248,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.dicePool === 'number' && Number.isFinite(patch.dicePool)
           ? Math.max(0, Math.floor(patch.dicePool))
           : current.dicePool,
+      bonusMaxDice:
+        typeof patch.bonusMaxDice === 'number' && Number.isFinite(patch.bonusMaxDice)
+          ? Math.max(0, Math.floor(patch.bonusMaxDice))
+          : current.bonusMaxDice,
       shardTierIndex:
         typeof patch.shardTierIndex === 'number' && Number.isFinite(patch.shardTierIndex)
           ? Math.max(0, Math.floor(patch.shardTierIndex))
