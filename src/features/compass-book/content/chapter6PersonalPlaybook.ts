@@ -1,0 +1,42 @@
+/** Chapter 6 — The Personal Playbook (Islands 101–120). Reserved slots; authored in PR 10. */
+import { buildReservedChapter } from './reservedChapter';
+
+export const chapter6PersonalPlaybook = buildReservedChapter({
+  id: 'personal_playbook',
+  order: 6,
+  title: 'The Personal Playbook',
+  coreQuestion: 'How do I personally begin, continue, adapt, recover, and stay oriented?',
+  visualMetaphor: 'A magical-mechanical operating system / personal control panel.',
+  outputFields: [
+    'Start Engine',
+    'Momentum Loop',
+    'Minimum Mode',
+    'Warning Lights',
+    'Environment Rules',
+    'Recovery Route',
+    'Weekly Compass Check',
+    'Operating principle',
+  ],
+  slotTitles: [
+    'What I sustained',
+    'What I abandoned',
+    'Why the difference',
+    'My activation style',
+    'What helps me begin',
+    'First small step',
+    'What keeps me going',
+    'Signals that sustain me',
+    'Rewards vs identity',
+    'Normal version',
+    'Small version',
+    'Crisis version',
+    'Early drift signals',
+    'Overload signals',
+    'Remove helpful friction',
+    'Add protective friction',
+    'Return protocol',
+    'Recovery choices',
+    'Weekly Compass Check',
+    'Complete the Playbook',
+  ],
+});
