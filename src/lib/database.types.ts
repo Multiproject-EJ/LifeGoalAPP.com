@@ -2661,6 +2661,97 @@ export interface Database {
         };
         Relationships: [];
       };
+      compass_books: {
+        Row: {
+          id: string;
+          user_id: string;
+          curriculum_version: string;
+          status: string;
+          current_chapter_id: string | null;
+          current_activity_id: string | null;
+          created_at: string;
+          updated_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          curriculum_version?: string;
+          status?: string;
+          current_chapter_id?: string | null;
+          current_activity_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          completed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          curriculum_version?: string;
+          status?: string;
+          current_chapter_id?: string | null;
+          current_activity_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          completed_at?: string | null;
+        };
+        Relationships: [];
+      };
+      compass_chapter_states: {
+        Row: {
+          id: string;
+          book_id: string;
+          user_id: string;
+          chapter_id: string;
+          content_version: string;
+          status: string;
+          answers: Json;
+          draft_output: Json | null;
+          confirmed_output: Json | null;
+          completed_activity_ids: string[];
+          confirmed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          book_id: string;
+          user_id: string;
+          chapter_id: string;
+          content_version?: string;
+          status?: string;
+          answers?: Json;
+          draft_output?: Json | null;
+          confirmed_output?: Json | null;
+          completed_activity_ids?: string[];
+          confirmed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          book_id?: string;
+          user_id?: string;
+          chapter_id?: string;
+          content_version?: string;
+          status?: string;
+          answers?: Json;
+          draft_output?: Json | null;
+          confirmed_output?: Json | null;
+          completed_activity_ids?: string[];
+          confirmed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "compass_chapter_states_book_id_fkey";
+            columns: ["book_id"];
+            referencedRelation: "compass_books";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       reminder_action_logs: {
         Row: {
           id: string;
