@@ -11,6 +11,7 @@ import {
   type CombinedJourneyLevelInput,
 } from './combinedJourneyLevel';
 import { type JourneyChestReward, type JourneyRewardKind } from './combinedJourneyRewardLadder';
+import { applyJourneyRewardToRecord } from './combinedJourneyRewardGrant';
 
 /**
  * Combined Journey Level — server-authoritative reward claim (R4).
@@ -38,6 +39,7 @@ export interface ClaimCombinedJourneyRewardOptions {
    * trusted runtime record.
    */
   milestoneInputs?: CombinedJourneyLevelInput;
+  nowMs?: number;
   triggerSource?: string;
 }
 
@@ -67,36 +69,14 @@ function parseReward(row: ClaimRpcRow | null): JourneyChestReward | null {
   return { kind: row.reward_kind as JourneyRewardKind, amount };
 }
 
-/** Apply a granted reward to a runtime record. Currency rewards only (R4). */
-function applyRewardToRecord(
-  record: IslandRunGameStateRecord,
-  reward: JourneyChestReward,
-): IslandRunGameStateRecord {
-  if (reward.amount <= 0) return record;
-  if (reward.kind === 'dice') {
-    return {
-      ...record,
-      dicePool: record.dicePool + reward.amount,
-      runtimeVersion: record.runtimeVersion + 1,
-    };
-  }
-  if (reward.kind === 'essence') {
-    return {
-      ...record,
-      essence: record.essence + reward.amount,
-      essenceLifetimeEarned: record.essenceLifetimeEarned + reward.amount,
-      runtimeVersion: record.runtimeVersion + 1,
-    };
-  }
-  // egg / reroll_capacity grants are wired in a later slice.
-  return record;
-}
-
 export function claimCombinedJourneyReward(
   options: ClaimCombinedJourneyRewardOptions,
 ): Promise<ClaimCombinedJourneyRewardResult> {
   return withIslandRunActionLock(options.session.user.id, async () => {
     const { session, client, thresholdLevel, milestoneInputs, triggerSource } = options;
+    const nowMs = typeof options.nowMs === 'number' && Number.isFinite(options.nowMs)
+      ? Math.max(0, Math.floor(options.nowMs))
+      : Date.now();
     const current = readIslandRunGameStateRecord(session);
 
     // Reward claims require both the feature flag and a server connection (the
@@ -141,7 +121,10 @@ export function claimCombinedJourneyReward(
       return { status: 'claimed', reward: null, record: current };
     }
 
-    const next = applyRewardToRecord(current, reward);
+    const next = applyJourneyRewardToRecord(current, reward, {
+      thresholdLevel: normalizedThreshold,
+      nowMs,
+    });
     if (next !== current) {
       await commitIslandRunState({
         session,

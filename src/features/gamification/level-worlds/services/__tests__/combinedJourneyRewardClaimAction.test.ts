@@ -57,8 +57,18 @@ function makeFakeClient() {
         claimCalls += 1;
         const level = Number(params.p_threshold_level);
         const band = Math.floor(level / 5);
-        const kind = level % 2 === 0 ? 'dice' : 'essence';
-        const amount = level % 2 === 0 ? 10 + 5 * band : 5 + 3 * band;
+        let kind: string;
+        let amount: number;
+        if (level % 3 === 0) {
+          kind = 'egg';
+          amount = 1;
+        } else if (level % 2 === 0) {
+          kind = 'dice';
+          amount = 10 + 5 * band;
+        } else {
+          kind = 'essence';
+          amount = 5 + 3 * band;
+        }
         const isNew = !claimed.has(level);
         claimed.add(level);
         return { data: [{ claimed: isNew, reward_kind: kind, reward_amount: amount }], error: null };
@@ -152,7 +162,7 @@ export const combinedJourneyRewardClaimActionTests: TestCase[] = [
     },
   },
   {
-    name: 'grants essence for an odd threshold and tracks lifetime earned',
+    name: 'grants essence for an odd non-egg threshold and tracks lifetime earned',
     run: async () => {
       resetEnvironment();
       __setIslandRunFeatureFlagsForTests({ combinedJourneyRewardsEnabled: true });
@@ -162,15 +172,37 @@ export const combinedJourneyRewardClaimActionTests: TestCase[] = [
       const result = await claimCombinedJourneyReward({
         session: makeSession(),
         client: client as never,
-        thresholdLevel: 3,
+        thresholdLevel: 5,
       });
 
       const persisted = readIslandRunGameStateRecord(makeSession());
       assertEqual(result.status, 'claimed', 'unlocked odd threshold should claim');
-      assertEqual(result.reward?.kind, 'essence', 'threshold 3 grants essence');
-      assertEqual(result.reward?.amount, 5, 'threshold 3 grants 5 essence');
-      assertEqual(persisted.essence, 9, 'essence should grow by the reward');
-      assertEqual(persisted.essenceLifetimeEarned, 9, 'lifetime essence should grow by the reward');
+      assertEqual(result.reward?.kind, 'essence', 'threshold 5 grants essence');
+      assertEqual(result.reward?.amount, 8, 'threshold 5 grants 8 essence (band 1)');
+      assertEqual(persisted.essence, 12, 'essence should grow by the reward');
+      assertEqual(persisted.essenceLifetimeEarned, 12, 'lifetime essence should grow by the reward');
+    },
+  },
+  {
+    name: 'grants an egg for a multiple-of-three threshold and is idempotent',
+    run: async () => {
+      resetEnvironment();
+      __setIslandRunFeatureFlagsForTests({ combinedJourneyRewardsEnabled: true });
+      await seedState({ currentIslandNumber: UNLOCKED_ISLAND_NUMBER });
+      const client = makeFakeClient();
+      const before = readIslandRunGameStateRecord(makeSession()).eggRewardInventory.length;
+
+      const first = await claimCombinedJourneyReward({ session: makeSession(), client: client as never, thresholdLevel: 3 });
+      const afterFirst = readIslandRunGameStateRecord(makeSession()).eggRewardInventory;
+      const second = await claimCombinedJourneyReward({ session: makeSession(), client: client as never, thresholdLevel: 3 });
+      const afterSecond = readIslandRunGameStateRecord(makeSession()).eggRewardInventory;
+
+      assertEqual(first.status, 'claimed', 'unlocked egg threshold should claim');
+      assertEqual(first.reward?.kind, 'egg', 'threshold 3 grants an egg');
+      assertEqual(afterFirst.length, before + 1, 'an egg should be appended to the inventory');
+      assertEqual(afterFirst[afterFirst.length - 1].status, 'unopened', 'the granted egg starts unopened');
+      assertEqual(second.status, 'already_claimed', 'second claim is idempotent');
+      assertEqual(afterSecond.length, before + 1, 'a second claim should not add another egg');
     },
   },
   {
