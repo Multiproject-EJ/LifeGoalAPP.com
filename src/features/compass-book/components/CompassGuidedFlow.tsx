@@ -95,12 +95,11 @@ export function CompassGuidedFlow({
   const isLast = index === unlockedActivities.length - 1;
 
   async function handleSave() {
-    const entries: CompassAnswerEntry[] = activity.blocks
-      .map((block) => {
-        const value = draft[block.questionId];
-        return value ? { questionId: block.questionId, value, confirmed: true } : null;
-      })
-      .filter((entry): entry is CompassAnswerEntry => entry !== null);
+    const entries: CompassAnswerEntry[] = [];
+    for (const block of activity.blocks) {
+      const value = draft[block.questionId];
+      if (value) entries.push({ questionId: block.questionId, value, confirmed: true });
+    }
 
     await onSaveActivity(chapterId, activity.id, entries);
 
