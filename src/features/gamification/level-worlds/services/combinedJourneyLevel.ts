@@ -76,11 +76,6 @@ function sanitizePercent(value: number | undefined): number {
   return Math.min(100, Math.max(0, value as number));
 }
 
-/** Cost to climb from `level` to `level + 1`. */
-function xpCostFromLevel(level: number): number {
-  return LEVEL_BASE_XP + LEVEL_STEP_XP * Math.max(0, level - 1);
-}
-
 /** Total XP required to *reach* `level` (level 1 requires 0). */
 export function cumulativeXpForLevel(level: number): number {
   const target = Math.max(1, Math.floor(level));
