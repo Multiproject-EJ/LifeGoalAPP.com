@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "5.0",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": ".tmp-compass-book-tests",
+    "noEmit": false
+  },
+  "include": [
+    "src/features/compass-book/types.ts",
+    "src/features/compass-book/content/chapter1LivingWheel.ts",
+    "src/features/compass-book/content/reservedChapter.ts",
+    "src/features/compass-book/content/chapter2InnerCompass.ts",
+    "src/features/compass-book/content/chapter3LivingHorizon.ts",
+    "src/features/compass-book/content/chapter4IkigaiMap.ts",
+    "src/features/compass-book/content/chapter5QuestForge.ts",
+    "src/features/compass-book/content/chapter6PersonalPlaybook.ts",
+    "src/features/compass-book/content/compassBookCurriculum.ts",
+    "src/features/compass-book/logic/unlock.ts",
+    "src/features/compass-book/logic/progress.ts",
+    "src/features/compass-book/services/compassBookSerialization.ts",
+    "src/features/compass-book/__tests__/compassBook.test.ts"
+  ]
+}
