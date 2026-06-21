@@ -12,7 +12,36 @@ The new main Coach path now mirrors the app's existing AI pattern:
 - `supabase/functions/ai-coach-chat` authenticates the user, reads the user's OpenAI key/model from `ai_settings`, falls back to `OPENAI_API_KEY`, calls OpenAI, and returns `{ assistant_message }`.
 - `ai_settings` already stores provider/API-key/model preferences per user with owner RLS.
 
-The main Coach already has useful context assembly: privacy-aware access settings, habit environment notes, goals summary, telemetry difficulty, and life-stage context are composed into `loadAiCoachInstructions()`. The first durable storage slice now stores short-term thread/message records; the remaining bridge is compact long-term memory summaries and retrieval so future calls can retrieve only what is useful.
+The main Coach now has server-side context assembly in `ai-coach-chat`: it reads AI access settings, collects summarized Supabase context for goals, goal evolution, active habits, tagged journals, check-in scores, reputation/gamification, Island Run state, and recent game-life intake, then injects that privacy-filtered bundle into the model prompt. The first durable storage slice also stores short-term thread/message records; the remaining bridge is compact long-term memory summaries and retrieval so future calls can retrieve only what is useful.
+
+
+## Central Supabase context bundle
+
+The first working AI-chat slice now includes a central context bundle inside `supabase/functions/ai-coach-chat`. This is the server-side structure that decides what the Coach is allowed to know and how much of it to pass to the model.
+
+Current context sources:
+
+- **AI settings / access:** reads `user.user_metadata.ai_coach_access` and defaults to the existing product defaults.
+- **Goals:** titles, status, life-wheel areas, priority, plan/environment scores, and progress notes.
+- **Goal evolution:** recent `goal_snapshots` summaries.
+- **Habits:** active habits, status, target, environment/risk signals, recent 7-day completion logs, and whether each habit is done today or not logged.
+- **Tagged journals:** recent journal entries with non-empty `tags`, mood, date, title, and short content excerpts.
+- **Scores/reflections:** recent `checkins.scores` bundles.
+- **Game/reputation progress:** `gamification_profiles`, `user_reputation_scores`, `island_run_runtime_state`, and recent `game_life_intake` rows.
+
+Important constraints:
+
+- The context bundle is summarized and capped before being sent to the model.
+- If a data source is blocked in AI settings, that source is omitted from the bundle.
+- Optional source query failures are logged and skipped instead of breaking the whole chat.
+- The Coach is instructed not to claim that it changed app state; it can suggest actions for user confirmation.
+
+Follow-up needed:
+
+- Move the context assembler into a shared server module if more AI endpoints need it.
+- Add active thread loading when the Coach opens.
+- Add compact long-term memory summaries and retrieval on top of this context bundle.
+- Add integration tests against seeded Supabase data to validate each context section.
 
 ## What should be stored?
 
@@ -200,4 +229,4 @@ Status: partially implemented. The schema and Edge Function writes exist; loadin
 
 ## Bottom line
 
-The proper AI is now wired into the main Coach for live authenticated sessions, and the first durable storage slice now saves short-term threads/messages. Compact long-term Coach memory is not implemented yet. The next durable architecture should add summary memories, privacy-scoped retrieval, and strict token budgets so the chat feels continuous and intelligent without sending too much context or storing too much raw private text.
+The proper AI is now wired into the main Coach for live authenticated sessions. It now has server-side Supabase context assembly plus short-term thread/message persistence. Compact long-term Coach memory is not implemented yet. The next durable architecture should add summary memories, active thread loading, privacy-scoped retrieval, and stricter token budgeting so the chat feels continuous and intelligent without sending too much context or storing too much raw private text.
