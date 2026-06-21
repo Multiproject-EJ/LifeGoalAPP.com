@@ -20,9 +20,9 @@ import { filterJournalEntriesForAiContext, listJournalEntries, type JournalEntry
 import { getScheduledCountForWindow } from '../habits/scheduleInterpreter';
 import { classifyHabit } from '../habits/performanceClassifier';
 import { recordTelemetryEvent, getTelemetryDifficultyAdjustment } from '../../services/telemetry';
-import { AI_FEATURE_ICON } from '../../constants/ai';
 import { fetchRecentGoalSnapshots } from '../../services/goalSnapshots';
 import { fetchWorkspaceProfile } from '../../services/workspaceProfile';
+import { getSupabaseClient } from '../../lib/supabaseClient';
 
 export interface AiCoachProps {
   session: Session;
@@ -53,6 +53,17 @@ type CoachIntervention = {
   title: string;
   description: string;
   options: string[];
+};
+
+type AiCoachChatResponse = {
+  thread_id?: string;
+  assistant_message?: string;
+  error?: string;
+};
+
+type AiCoachReply = {
+  assistantMessage: string;
+  threadId: string | null;
 };
 
 type HabitAdherenceSnapshot = {
@@ -403,8 +414,11 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [showTopics, setShowTopics] = useState(true);
+  const [showTopics, setShowTopics] = useState(false);
+  const [showCoachFeatures, setShowCoachFeatures] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const [showStrategyAssistant, setShowStrategyAssistant] = useState(false);
+  const [coachThreadId, setCoachThreadId] = useState<string | null>(null);
   const [interventions, setInterventions] = useState<CoachIntervention[]>([]);
   const [interventionsLoading, setInterventionsLoading] = useState(false);
   const [habitContexts, setHabitContexts] = useState<HabitEnvironmentContext[]>([]);
@@ -714,13 +728,56 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     return `Got it, ${userName}. Want to keep this short or go deeper? I can offer two small options or ask one clarifying question.`;
   };
 
+  const requestAiCoachResponse = async (conversationMessages: Message[], latestUserText: string): Promise<AiCoachReply> => {
+    if (demoMode) {
+      return { assistantMessage: await simulateAiResponse(latestUserText), threadId: null };
+    }
+
+    const supabase = getSupabaseClient();
+    const payloadMessages = conversationMessages
+      .filter((message) => message.role === 'user' || message.role === 'assistant')
+      .map((message) => ({
+        role: message.role,
+        content: message.content,
+      }));
+
+    const { data, error } = await supabase.functions.invoke<AiCoachChatResponse>('ai-coach-chat', {
+      body: {
+        messages: payloadMessages,
+        systemPrompt: instructionPayload.systemPrompt,
+        accessSummary,
+        threadId: coachThreadId,
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message || 'AI coach chat request failed.');
+    }
+
+    if (data?.error) {
+      throw new Error(data.error);
+    }
+
+    const assistantMessage = data?.assistant_message?.trim();
+    if (!assistantMessage) {
+      throw new Error('AI coach returned an empty response.');
+    }
+
+    return {
+      assistantMessage,
+      threadId: data?.thread_id?.trim() || null,
+    };
+  };
+
   const handleTopicClick = (topic: CoachingTopic) => {
     setShowTopics(false);
+    setShowCoachFeatures(false);
     handleSendMessage(topic.prompt);
   };
 
   const handleInterventionAction = (option: string, intervention?: CoachIntervention) => {
     setShowTopics(false);
+    setShowCoachFeatures(false);
     handleSendMessage(option);
     if (intervention) {
       void recordTelemetryEvent({
@@ -747,17 +804,22 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const nextMessages = [...messages, userMessage];
+
+    setMessages(nextMessages);
     setInputValue('');
     setIsTyping(true);
 
     try {
-      const aiResponseText = await simulateAiResponse(textToSend);
+      const aiResponse = await requestAiCoachResponse(nextMessages, textToSend);
+      if (aiResponse.threadId) {
+        setCoachThreadId(aiResponse.threadId);
+      }
       
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
         role: 'assistant',
-        content: aiResponseText,
+        content: aiResponse.assistantMessage,
         timestamp: new Date(),
       };
 
@@ -768,7 +830,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: 'I apologize, but I encountered an error. Please try again.',
+        content: error instanceof Error ? `I couldn’t reach the AI coach right now: ${error.message}` : 'I couldn’t reach the AI coach right now. Please try again.',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -784,7 +846,9 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
 
   const handleReset = () => {
     setMessages(INITIAL_MESSAGES);
-    setShowTopics(true);
+    setShowTopics(false);
+    setShowCoachFeatures(false);
+    setCoachThreadId(null);
     setInputValue('');
     inputRef.current?.focus();
   };
@@ -804,23 +868,10 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         aria-describedby={dialogSubtitleId}
       >
         <div className="ai-coach-modal__header">
-          <div className="ai-coach-modal__header-content">
-            <div className="ai-coach-modal__avatar">
-              <div className="ai-coach-modal__robot">
-                <span className="ai-coach-modal__robot-face">{AI_FEATURE_ICON}</span>
-                <div className="ai-coach-modal__robot-glow" />
-              </div>
-            </div>
-            <div className="ai-coach-modal__header-text">
-              <h2 className="ai-coach-modal__title" id={dialogTitleId}>
-                AI Life Coach
-              </h2>
-              <p className="ai-coach-modal__subtitle" id={dialogSubtitleId}>
-                Your personal guide to achieving your goals
-              </p>
-            </div>
-          </div>
-            <div className="ai-coach-modal__header-actions">
+          <div className="ai-coach-modal__header-spacer" aria-hidden="true" />
+          <h2 className="ai-coach-modal__sr-title" id={dialogTitleId}>Coach</h2>
+          <p className="ai-coach-modal__sr-description" id={dialogSubtitleId}>Chat with your coach.</p>
+          <div className="ai-coach-modal__header-actions">
               <button
                 type="button"
                 className="ai-coach-modal__header-btn ai-coach-modal__reset-btn"
@@ -857,7 +908,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
             aria-live="polite"
             aria-relevant="additions"
           >
-            {interventions.length > 0 && (
+            {showCoachFeatures && interventions.length > 0 && (
               <section className="ai-coach-modal__interventions">
                 <div className="ai-coach-modal__interventions-header">
                   <h3>Coach interventions</h3>
@@ -919,7 +970,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
               </div>
             )}
 
-            {showTopics && messages.length === INITIAL_MESSAGES.length && (
+            {showCoachFeatures && showTopics && messages.length === INITIAL_MESSAGES.length && (
               <div className="ai-coach-modal__topics">
                 <p className="ai-coach-modal__topics-title">Quick start with a topic:</p>
                 <div className="ai-coach-modal__topics-grid">
@@ -945,6 +996,29 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
           </div>
 
           <form className="ai-coach-modal__input-form" onSubmit={handleSubmit}>
+            <button
+              type="button"
+              className="ai-coach-modal__utility-btn ai-coach-modal__features-btn"
+              onClick={() => {
+                setShowCoachFeatures((current) => !current);
+                setShowTopics((current) => (messages.length === INITIAL_MESSAGES.length ? !current : current));
+              }}
+              aria-label={showCoachFeatures ? 'Hide coach features' : 'Show coach features'}
+              aria-pressed={showCoachFeatures}
+              title={showCoachFeatures ? 'Hide coach features' : 'Show coach features'}
+            >
+              +
+            </button>
+            <button
+              type="button"
+              className="ai-coach-modal__utility-btn ai-coach-modal__info-btn"
+              onClick={() => setShowInfo((current) => !current)}
+              aria-label={showInfo ? 'Hide coach information' : 'Show coach information'}
+              aria-pressed={showInfo}
+              title={showInfo ? 'Hide coach information' : 'Show coach information'}
+            >
+              i
+            </button>
             <input
               ref={inputRef}
               type="text"
@@ -966,14 +1040,16 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
           </form>
         </div>
 
-        <div className="ai-coach-modal__footer">
-          <p className="ai-coach-modal__disclaimer">
-            💡 This is a simulated AI coach for demonstration purposes. Responses are generated based on common coaching principles.
-          </p>
-          <p className="ai-coach-modal__disclaimer">
-            Privacy controls: {accessSummary} Update in Account → AI Settings.
-          </p>
-        </div>
+        {showInfo && (
+          <div className="ai-coach-modal__footer">
+            <p className="ai-coach-modal__disclaimer">
+              💡 This is a simulated AI coach for demonstration purposes. Responses are generated based on common coaching principles.
+            </p>
+            <p className="ai-coach-modal__disclaimer">
+              Privacy controls: {accessSummary} Update in Account → AI Settings.
+            </p>
+          </div>
+        )}
 
         {showStrategyAssistant && (
           <div
