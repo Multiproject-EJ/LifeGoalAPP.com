@@ -25,6 +25,11 @@ import {
   isAnswerValuePresent,
 } from '../logic/progress';
 import { parseAnswers, upsertAnswer } from '../services/compassBookSerialization';
+import {
+  projectLivingWheel,
+  buildLivingWheelAreas,
+} from '../logic/projectors/livingWheelProjector';
+import { getChapterConfirmedOutput } from '../logic/projectors';
 import type { CompassAnswerRecord, CompassAnswerValue, CompassChapterState } from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
 
@@ -293,10 +298,87 @@ function testGuidedFlowAnswering(): void {
   assert(completed.length === 1 && completed[0] === 'living_wheel.a01', 'only a01 complete after save');
 }
 
+function scale(activityId: string, questionId: string, value: number): CompassAnswerRecord {
+  return makeAnswer(activityId, questionId, { kind: 'scale', value });
+}
+function choice(activityId: string, questionId: string, optionId: string): CompassAnswerRecord {
+  return makeAnswer(activityId, questionId, { kind: 'choice', optionId });
+}
+function emotion(activityId: string, questionId: string, optionId: string): CompassAnswerRecord {
+  return makeAnswer(activityId, questionId, { kind: 'emotion', optionId });
+}
+
+function testLivingWheelProjector(): void {
+  const answers: CompassAnswerRecord[] = [
+    // health: strong + influential + rising + positive
+    scale('living_wheel.a05', 'current.health_fitness', 8),
+    scale('living_wheel.a06', 'good_enough.health_fitness', 7),
+    scale('living_wheel.a07', 'minimum_safe.health_fitness', 4),
+    scale('living_wheel.a14', 'spillover.health_fitness', 9),
+    choice('living_wheel.a13', 'momentum.health_fitness', 'rising'),
+    emotion('living_wheel.a09', 'emotion.health_fitness', 'joy'),
+    // finance: low + influential + declining + negative + below safe
+    scale('living_wheel.a05', 'current.finance_wealth', 3),
+    scale('living_wheel.a06', 'good_enough.finance_wealth', 7),
+    scale('living_wheel.a07', 'minimum_safe.finance_wealth', 5),
+    scale('living_wheel.a14', 'spillover.finance_wealth', 8),
+    choice('living_wheel.a13', 'momentum.finance_wealth', 'declining'),
+    emotion('living_wheel.a09', 'emotion.finance_wealth', 'anxious'),
+    // career: middling
+    scale('living_wheel.a05', 'current.career_development', 6),
+    scale('living_wheel.a06', 'good_enough.career_development', 8),
+    scale('living_wheel.a07', 'minimum_safe.career_development', 4),
+    scale('living_wheel.a14', 'spillover.career_development', 5),
+    choice('living_wheel.a13', 'momentum.career_development', 'flat'),
+    emotion('living_wheel.a09', 'emotion.career_development', 'calm'),
+    emotion('living_wheel.a12', 'emotional_pattern', 'restless'),
+    choice('living_wheel.a19', 'next_move_area', 'finance_wealth'),
+    makeAnswer('living_wheel.a19', 'next_move', { kind: 'text', text: 'Track spending weekly' }),
+    makeAnswer('living_wheel.a20', 'wheel_statement', { kind: 'text', text: 'Steady the body, mend money' }),
+  ];
+
+  const out = projectLivingWheel(answers);
+  assert(out.engineAreaId === 'health_fitness', 'engine = highest spillover+current (health)');
+  assert(out.brakeAreaId === 'finance_wealth', 'brake = low + influential + negative (finance)');
+  assert(out.fragileAreaId === 'finance_wealth', 'fragile = below safe + declining (finance)');
+  assert(out.leverAreaId === 'finance_wealth', 'lever = high spillover x action gap (finance)');
+  assert(out.season === 'Steady tending', 'season balanced → steady tending');
+  assert(out.emotionalPattern === 'restless', 'explicit emotional pattern wins');
+  assert(out.nextMove?.text === 'Track spending weekly', 'next move text passes through');
+  assert(out.wheelStatement === 'Steady the body, mend money', 'wheel statement passes through');
+
+  const health = out.areas.find((a) => a.areaId === 'health_fitness');
+  assert(health?.actionGap === -1, 'action gap = goodEnough − current (7 − 8 = −1)');
+
+  // Player candidate overrides the derived suggestion.
+  const withCandidate = [
+    ...answers,
+    choice('living_wheel.a16', 'candidate_engine', 'career_development'),
+  ];
+  assert(
+    projectLivingWheel(withCandidate).engineAreaId === 'career_development',
+    'explicit candidate engine wins over derivation',
+  );
+
+  // Empty answers → graceful nulls.
+  const empty = projectLivingWheel([]);
+  assert(empty.engineAreaId === null && empty.season === null, 'empty answers yield null outputs');
+  assert(buildLivingWheelAreas([]).length === 8, 'adapter always returns 8 areas');
+
+  // Registry produces a JSON snapshot for sealing.
+  const snapshot = getChapterConfirmedOutput('living_wheel', answers);
+  assert(snapshot !== null, 'living_wheel has a projector snapshot');
+  assert(
+    getChapterConfirmedOutput('inner_compass', []) === null,
+    'unimplemented chapter has no projector yet',
+  );
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
   testProgress();
   testAnswerParsing();
   testGuidedFlowAnswering();
+  testLivingWheelProjector();
 }

@@ -21,6 +21,7 @@ import {
 } from '../types';
 import { getChapterActivities } from '../content/compassBookCurriculum';
 import { computeChapterProgress, isActivityComplete } from '../logic/progress';
+import { getChapterConfirmedOutput } from '../logic/projectors';
 import {
   emptyChapterState,
   upsertAnswer,
@@ -53,6 +54,8 @@ export type UseCompassBook = {
     activityId: string,
     entries: CompassAnswerEntry[],
   ) => Promise<void>;
+  /** Seal a chapter: run its projector, snapshot confirmed output, mark complete. */
+  sealChapter: (chapterId: CompassBookChapterId) => Promise<void>;
 };
 
 export function useCompassBook(session: Session | null): UseCompassBook {
@@ -98,6 +101,23 @@ export function useCompassBook(session: Session | null): UseCompassBook {
     [states],
   );
 
+  const persist = useCallback(
+    async (next: CompassChapterState) => {
+      setStates((prev) => ({ ...prev, [next.chapterId]: next }));
+      saveLocalChapterState(userId, next);
+      const bookId = bookIdRef.current;
+      if (bookId) {
+        setSaving(true);
+        try {
+          await saveChapterState(userId, bookId, next);
+        } finally {
+          setSaving(false);
+        }
+      }
+    },
+    [userId],
+  );
+
   const saveActivityAnswers = useCallback(
     async (chapterId: CompassBookChapterId, activityId: string, entries: CompassAnswerEntry[]) => {
       const now = new Date().toISOString();
@@ -117,32 +137,60 @@ export function useCompassBook(session: Session | null): UseCompassBook {
         });
       }
 
-      const completedActivityIds = getChapterActivities(chapterId)
+      const activitiesDef = getChapterActivities(chapterId);
+      const completedActivityIds = activitiesDef
         .filter((activity) => isActivityComplete(activity, answers))
         .map((activity) => activity.id);
 
-      const next: CompassChapterState = {
+      let next: CompassChapterState = {
         ...base,
         status: base.status === 'complete' ? 'complete' : 'in_progress',
         answers,
         completedActivityIds,
       };
 
-      setStates((prev) => ({ ...prev, [chapterId]: next }));
-      saveLocalChapterState(userId, next);
-
-      const bookId = bookIdRef.current;
-      if (bookId) {
-        setSaving(true);
-        try {
-          await saveChapterState(userId, bookId, next);
-        } finally {
-          setSaving(false);
+      // Explicit seal: when the player confirms the chapter's confirmation
+      // activity, run the projector and snapshot the confirmed output. This is
+      // the only path that completes a chapter — answering everything else does not.
+      const sealActivity = activitiesDef.find((activity) =>
+        activity.blocks.some((block) => block.type === 'confirmation'),
+      );
+      if (
+        next.confirmedOutput == null &&
+        sealActivity &&
+        completedActivityIds.includes(sealActivity.id)
+      ) {
+        const output = getChapterConfirmedOutput(chapterId, answers);
+        if (output != null) {
+          next = {
+            ...next,
+            status: 'complete',
+            confirmedOutput: output,
+            confirmedAt: now,
+          };
         }
       }
+
+      await persist(next);
     },
-    [states, userId],
+    [states, userId, persist],
   );
 
-  return { ready, saving, getChapterState, getProgress, saveActivityAnswers };
+  const sealChapter = useCallback(
+    async (chapterId: CompassBookChapterId) => {
+      const base = states[chapterId];
+      if (!base) return;
+      const output = getChapterConfirmedOutput(chapterId, base.answers);
+      const next: CompassChapterState = {
+        ...base,
+        status: 'complete',
+        confirmedOutput: output ?? base.confirmedOutput ?? {},
+        confirmedAt: new Date().toISOString(),
+      };
+      await persist(next);
+    },
+    [states, persist],
+  );
+
+  return { ready, saving, getChapterState, getProgress, saveActivityAnswers, sealChapter };
 }

@@ -157,7 +157,8 @@ function BlockInput({
     case 'review':
       return (
         <p className="compass-book__review-note">
-          The proposed chapter outputs will appear here once the chapter graphic is wired up.
+          Review your chapter graphic above — these are proposals you can revise. Confirm below to
+          seal the chapter.
         </p>
       );
 

@@ -74,6 +74,7 @@ export function CompassBookScreen({ currentIslandNumber, session, onClose }: Com
             chapterId={view.chapterId}
             currentIslandNumber={currentIslandNumber}
             getProgress={book.getProgress}
+            getChapterState={book.getChapterState}
             onStartFlow={(activityId) => startFlow(view.chapterId, activityId)}
             onBack={backToContents}
             onClose={onClose}

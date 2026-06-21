@@ -1,14 +1,45 @@
 import { useEffect, useMemo, useState } from 'react';
-import type {
-  CompassAnswerValue,
-  CompassBookChapterId,
-  CompassChapterState,
+import {
+  COMPASS_CURRICULUM_VERSION,
+  type CompassAnswerRecord,
+  type CompassAnswerValue,
+  type CompassBookActivityDefinition,
+  type CompassBookChapterId,
+  type CompassChapterState,
 } from '../types';
 import { getChapterActivities, getChapterDefinition } from '../content/compassBookCurriculum';
 import { getUnlockedActivityCount } from '../logic/unlock';
 import { areRequiredBlocksAnswered } from '../logic/progress';
 import { CompassActivityRenderer } from './CompassActivityRenderer';
+import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
 import type { CompassAnswerEntry } from '../hooks/useCompassBook';
+
+/** Merge saved chapter answers with the in-progress draft so the seal-step
+ * graphic previews live edits (the projector reads questionId → value). */
+function buildPreviewAnswers(
+  state: CompassChapterState | null,
+  activity: CompassBookActivityDefinition,
+  draft: Record<string, CompassAnswerValue | undefined>,
+): CompassAnswerRecord[] {
+  const now = new Date(0).toISOString();
+  const draftAnswers: CompassAnswerRecord[] = [];
+  for (const block of activity.blocks) {
+    const value = draft[block.questionId];
+    if (value) {
+      draftAnswers.push({
+        activityId: activity.id,
+        questionId: block.questionId,
+        value,
+        sourceMode: 'fixed_guided',
+        curriculumVersion: COMPASS_CURRICULUM_VERSION,
+        answeredAt: now,
+        updatedAt: now,
+        confirmed: false,
+      });
+    }
+  }
+  return [...(state?.answers ?? []), ...draftAnswers];
+}
 
 export type CompassGuidedFlowProps = {
   chapterId: CompassBookChapterId;
@@ -93,6 +124,7 @@ export function CompassGuidedFlow({
   const requiredSatisfied = areRequiredBlocksAnswered(activity, draft);
 
   const isLast = index === unlockedActivities.length - 1;
+  const isSealActivity = activity.blocks.some((block) => block.type === 'confirmation');
 
   async function handleSave() {
     const entries: CompassAnswerEntry[] = [];
@@ -137,6 +169,14 @@ export function CompassGuidedFlow({
         <h2 className="compass-book__activity-heading">{activity.title}</h2>
         {activity.description ? (
           <p className="compass-book__card-question">{activity.description}</p>
+        ) : null}
+
+        {isSealActivity ? (
+          <CompassChapterGraphic
+            chapterId={chapterId}
+            answers={buildPreviewAnswers(getChapterState(chapterId), activity, draft)}
+            mode="full"
+          />
         ) : null}
 
         <CompassActivityRenderer blocks={activity.blocks} values={draft} onChange={handleChange} />

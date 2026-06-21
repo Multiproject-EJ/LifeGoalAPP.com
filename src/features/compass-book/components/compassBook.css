@@ -566,3 +566,127 @@
   color: #9fb0e0;
   font-style: italic;
 }
+
+/* ---------- Chapter graphic: Living Wheel ---------- */
+
+.compass-wheel {
+  text-align: center;
+  margin: 0 0 16px;
+}
+
+.compass-wheel--full {
+  border-radius: 16px;
+  padding: 14px;
+  background: rgba(8, 12, 28, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.compass-wheel__svg {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+}
+
+.compass-wheel--compact .compass-wheel__svg {
+  max-width: 180px;
+}
+
+.compass-wheel__rim {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1;
+}
+
+.compass-wheel__track {
+  fill: rgba(255, 255, 255, 0.05);
+  stroke: rgba(8, 12, 28, 0.6);
+  stroke-width: 0.6;
+}
+
+.compass-wheel__hub {
+  fill: rgba(99, 102, 241, 0.25);
+  stroke: rgba(129, 140, 248, 0.6);
+  stroke-width: 1;
+}
+
+.compass-wheel__hub-title {
+  fill: #dbe3ff;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.compass-wheel__label {
+  fill: #c7d2fe;
+  font-size: 7px;
+  font-weight: 600;
+}
+
+.compass-wheel__glyph {
+  fill: #0b1020;
+  font-size: 7px;
+}
+
+.compass-wheel__marker {
+  font-size: 9px;
+}
+
+.compass-wheel__season {
+  margin: 8px 0 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #a5b4fc;
+}
+
+.compass-wheel__mechanics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.compass-wheel--compact .compass-wheel__mechanics {
+  grid-template-columns: 1fr 1fr;
+}
+
+.compass-wheel__mechanic {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.78rem;
+}
+
+.compass-wheel__mechanic-label {
+  color: #93a4d8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.66rem;
+}
+
+.compass-wheel__mechanic-area {
+  margin-left: auto;
+  font-weight: 700;
+  color: #eef2ff;
+}
+
+.compass-wheel__next {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  color: #c7d2fe;
+  text-align: left;
+}
+
+.compass-wheel__statement {
+  margin: 10px 0 0;
+  font-style: italic;
+  color: #bbf7d0;
+}
+
+.compass-wheel__placeholder {
+  padding: 24px 12px;
+  color: #9fb0e0;
+  font-size: 0.85rem;
+}
