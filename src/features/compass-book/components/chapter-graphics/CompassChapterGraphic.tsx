@@ -4,11 +4,13 @@ import { projectInnerCompass } from '../../logic/projectors/innerCompassProjecto
 import { projectLivingHorizon } from '../../logic/projectors/livingHorizonProjector';
 import { projectIkigaiMap } from '../../logic/projectors/ikigaiMapProjector';
 import { projectQuestForge } from '../../logic/projectors/questForgeProjector';
+import { projectPersonalPlaybook } from '../../logic/projectors/personalPlaybookProjector';
 import { LivingWheelGraphic } from './LivingWheelGraphic';
 import { InnerCompassGraphic } from './InnerCompassGraphic';
 import { LivingHorizonGraphic } from './LivingHorizonGraphic';
 import { IkigaiMapGraphic } from './IkigaiMapGraphic';
 import { QuestForgeGraphic } from './QuestForgeGraphic';
+import { PersonalPlaybookGraphic } from './PersonalPlaybookGraphic';
 
 export type CompassChapterGraphicProps = {
   chapterId: CompassBookChapterId;
@@ -37,6 +39,9 @@ export function CompassChapterGraphic({ chapterId, answers, mode }: CompassChapt
   }
   if (chapterId === 'quest_forge') {
     return <QuestForgeGraphic output={projectQuestForge(answers)} mode={mode} />;
+  }
+  if (chapterId === 'personal_playbook') {
+    return <PersonalPlaybookGraphic output={projectPersonalPlaybook(answers)} mode={mode} />;
   }
   return (
     <div className={`compass-wheel compass-wheel--${mode} compass-wheel--placeholder`}>

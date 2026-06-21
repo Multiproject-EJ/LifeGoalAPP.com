@@ -35,7 +35,10 @@ import { projectIkigaiMap } from '../logic/projectors/ikigaiMapProjector';
 import { buildQuestLeapProposalFromIkigai } from '../logic/questLeap';
 import { projectQuestForge } from '../logic/projectors/questForgeProjector';
 import { buildGoalProposalFromQuestForge, describeGoalProposal } from '../logic/goalBridge';
+import { projectPersonalPlaybook } from '../logic/projectors/personalPlaybookProjector';
+import { buildHabitProposalFromPlaybook, describeHabitIntent } from '../logic/habitBridge';
 import { getChapterConfirmedOutput } from '../logic/projectors';
+import { COMPASS_BOOK_CHAPTER_IDS } from '../types';
 import type { CompassAnswerRecord, CompassAnswerValue, CompassChapterState } from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
 
@@ -374,10 +377,10 @@ function testLivingWheelProjector(): void {
   // Registry produces a JSON snapshot for sealing.
   const snapshot = getChapterConfirmedOutput('living_wheel', answers);
   assert(snapshot !== null, 'living_wheel has a projector snapshot');
-  assert(
-    getChapterConfirmedOutput('personal_playbook', []) === null,
-    'unimplemented chapter has no projector yet',
-  );
+  // Every chapter now has a registered projector (returns a snapshot, not null).
+  for (const id of COMPASS_BOOK_CHAPTER_IDS) {
+    assert(getChapterConfirmedOutput(id, []) !== null, `chapter ${id} has a projector`);
+  }
 }
 
 function testInnerCompassProjector(): void {
@@ -561,6 +564,51 @@ function testQuestForgeAndGoalBridge(): void {
   assert(getChapterConfirmedOutput('quest_forge', answers) !== null, 'quest_forge has a projector');
 }
 
+function testPersonalPlaybookAndHabitBridge(): void {
+  assert(
+    getChapterActivities('personal_playbook').every((a) => a.authored),
+    'chapter 6 activities are authored',
+  );
+  assert(
+    getChapterActivities('personal_playbook').every((a) => a.islandNumber >= 101 && a.islandNumber <= 120),
+    'chapter 6 covers islands 101–120',
+  );
+
+  const answers: CompassAnswerRecord[] = [
+    choice('personal_playbook.a04', 'start_style', 'ritual'),
+    choice('personal_playbook.a06', 'start_cue', 'after_waking'),
+    choice('personal_playbook.a07', 'momentum_signal', 'small_wins'),
+    makeAnswer('personal_playbook.a08', 'the_habit', { kind: 'text', text: 'Write for 30 minutes' }),
+    makeAnswer('personal_playbook.a09', 'completion_evidence', { kind: 'text', text: 'One paragraph saved' }),
+    makeAnswer('personal_playbook.a10', 'small_version', { kind: 'text', text: 'Write for 5 minutes' }),
+    makeAnswer('personal_playbook.a11', 'minimum_version', { kind: 'text', text: 'Open the doc' }),
+    choice('personal_playbook.a15', 'env_rule', 'prepare'),
+    makeAnswer('personal_playbook.a16', 'env_detail', { kind: 'text', text: 'Open the doc the night before' }),
+    choice('personal_playbook.a17', 'recovery_route', 'reduce'),
+    choice('personal_playbook.a18', 'protected_area', 'health_fitness'),
+    makeAnswer('personal_playbook.a20', 'operating_principle', { kind: 'text', text: 'Start tiny, protect sleep' }),
+  ];
+
+  const out = projectPersonalPlaybook(answers);
+  assert(out.startEngineId === 'ritual', 'start engine mapped');
+  assert(out.habitNormal === 'Write for 30 minutes', 'habit normal version mapped');
+  assert(out.protectedAreaId === 'health_fitness', 'protected area = canonical key');
+
+  // Habit proposal builder is PURE — proposes only, never creates.
+  const proposal = buildHabitProposalFromPlaybook(out);
+  assert(proposal !== null, 'habit proposal built from a named habit');
+  assert(proposal!.normalVersion === 'Write for 30 minutes', 'proposal normal version');
+  assert(proposal!.smallVersion === 'Write for 5 minutes', 'proposal small version');
+  assert(proposal!.cue === 'After waking', 'cue resolved to label');
+  assert(proposal!.environmentRule === 'Prepare (set it up): Open the doc the night before', 'env rule composed');
+  assert(proposal!.protectedAreaId === 'health_fitness', 'protected area carried');
+  assert(describeHabitIntent(proposal!).includes('Personal Playbook'), 'intent carries provenance');
+  assert(describeHabitIntent(proposal!).includes('Minimum: Open the doc'), 'intent carries minimum mode');
+
+  // No habit named → no proposal (the bridge renders nothing, creates nothing).
+  assert(buildHabitProposalFromPlaybook(projectPersonalPlaybook([])) === null, 'no habit → no proposal');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -572,4 +620,5 @@ export function runAllCompassBookTests(): void {
   testLivingHorizonProjector();
   testIkigaiMapProjector();
   testQuestForgeAndGoalBridge();
+  testPersonalPlaybookAndHabitBridge();
 }
