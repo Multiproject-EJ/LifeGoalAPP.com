@@ -35,7 +35,11 @@ export function CompassChapterScreen({
 
   const hasUnlocked = progress.unlockedCount > 0;
   const hasProgress = progress.completedCount > 0;
-  const showGraphic = hasUnlocked && chapterId === 'living_wheel';
+  const CHAPTERS_WITH_GRAPHIC: ReadonlySet<CompassBookChapterId> = new Set([
+    'living_wheel',
+    'inner_compass',
+  ]);
+  const showGraphic = hasUnlocked && CHAPTERS_WITH_GRAPHIC.has(chapterId);
 
   return (
     <>

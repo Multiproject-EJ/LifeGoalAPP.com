@@ -29,6 +29,7 @@ import {
   projectLivingWheel,
   buildLivingWheelAreas,
 } from '../logic/projectors/livingWheelProjector';
+import { projectInnerCompass } from '../logic/projectors/innerCompassProjector';
 import { getChapterConfirmedOutput } from '../logic/projectors';
 import type { CompassAnswerRecord, CompassAnswerValue, CompassChapterState } from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
@@ -369,9 +370,54 @@ function testLivingWheelProjector(): void {
   const snapshot = getChapterConfirmedOutput('living_wheel', answers);
   assert(snapshot !== null, 'living_wheel has a projector snapshot');
   assert(
-    getChapterConfirmedOutput('inner_compass', []) === null,
+    getChapterConfirmedOutput('living_horizon', []) === null,
     'unimplemented chapter has no projector yet',
   );
+}
+
+function testInnerCompassProjector(): void {
+  // Chapter 2 is fully authored (regression against the reserved-stub form).
+  assert(
+    getChapterActivities('inner_compass').every((a) => a.authored),
+    'chapter 2 activities are authored',
+  );
+  assert(
+    getChapterActivities('inner_compass').every((a) => a.islandNumber >= 21 && a.islandNumber <= 40),
+    'chapter 2 covers islands 21–40',
+  );
+
+  const answers: CompassAnswerRecord[] = [
+    choice('inner_compass.a01', 'alive_context', 'creating'),
+    makeAnswer('inner_compass.a06', 'core_values', { kind: 'multi_choice', optionIds: ['freedom', 'growth', 'honesty'] }),
+    choice('inner_compass.a07', 'behavioral_value', 'growth'),
+    choice('inner_compass.a12', 'essential_need', 'autonomy'),
+    choice('inner_compass.a11', 'neglected_need', 'rest'),
+    choice('inner_compass.a13', 'strength', 'empathy'),
+    choice('inner_compass.a15', 'shadow', 'people_pleasing'),
+    choice('inner_compass.a16', 'counterbalance', 'boundaries'),
+    choice('inner_compass.a18', 'drift_cause', 'comparison'),
+    makeAnswer('inner_compass.a19', 'guardian_boundary', { kind: 'text', text: 'Protect mornings for deep work' }),
+    makeAnswer('inner_compass.a20', 'compass_statement', { kind: 'text', text: 'Create freely, protect rest' }),
+  ];
+  const out = projectInnerCompass(answers);
+  assert(out.trueNorthValueId === 'growth', 'true north = behavioral value');
+  assert(out.lifeSparkId === 'creating', 'life spark = alive context');
+  assert(out.essentialNeedId === 'autonomy', 'essential need wins over neglected');
+  assert(out.shadowPullId === 'people_pleasing', 'shadow pull from shadow answer');
+  assert(out.counterbalanceId === 'boundaries', 'counterbalance passes through');
+  assert(out.guardianBoundary === 'Protect mornings for deep work', 'guardian boundary text');
+  assert(out.coreValueIds.length === 3, 'core values captured');
+
+  // Fallbacks + empty.
+  const fallback = projectInnerCompass([
+    choice('inner_compass.a05', 'protected_value', 'kindness'),
+    choice('inner_compass.a11', 'neglected_need', 'rest'),
+  ]);
+  assert(fallback.trueNorthValueId === 'kindness', 'true north falls back to protected value');
+  assert(fallback.essentialNeedId === 'rest', 'essential need falls back to neglected');
+  assert(projectInnerCompass([]).trueNorthValueId === null, 'empty → null true north');
+
+  assert(getChapterConfirmedOutput('inner_compass', answers) !== null, 'inner_compass has a projector');
 }
 
 export function runAllCompassBookTests(): void {
@@ -381,4 +427,5 @@ export function runAllCompassBookTests(): void {
   testAnswerParsing();
   testGuidedFlowAnswering();
   testLivingWheelProjector();
+  testInnerCompassProjector();
 }

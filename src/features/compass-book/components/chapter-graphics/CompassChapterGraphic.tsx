@@ -1,6 +1,8 @@
 import type { CompassAnswerRecord, CompassBookChapterId } from '../../types';
 import { projectLivingWheel } from '../../logic/projectors/livingWheelProjector';
+import { projectInnerCompass } from '../../logic/projectors/innerCompassProjector';
 import { LivingWheelGraphic } from './LivingWheelGraphic';
+import { InnerCompassGraphic } from './InnerCompassGraphic';
 
 export type CompassChapterGraphicProps = {
   chapterId: CompassBookChapterId;
@@ -17,6 +19,9 @@ export type CompassChapterGraphicProps = {
 export function CompassChapterGraphic({ chapterId, answers, mode }: CompassChapterGraphicProps) {
   if (chapterId === 'living_wheel') {
     return <LivingWheelGraphic output={projectLivingWheel(answers)} mode={mode} />;
+  }
+  if (chapterId === 'inner_compass') {
+    return <InnerCompassGraphic output={projectInnerCompass(answers)} mode={mode} />;
   }
   return (
     <div className={`compass-wheel compass-wheel--${mode} compass-wheel--placeholder`}>
