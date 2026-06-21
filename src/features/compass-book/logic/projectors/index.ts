@@ -8,11 +8,13 @@
 import type { Json } from '../../../../lib/database.types';
 import type { CompassAnswerRecord, CompassBookChapterId } from '../../types';
 import { projectLivingWheel, livingWheelOutputToJson } from './livingWheelProjector';
+import { projectInnerCompass, innerCompassOutputToJson } from './innerCompassProjector';
 
 export type ChapterProjector = (answers: readonly CompassAnswerRecord[]) => Json;
 
 const PROJECTORS: Partial<Record<CompassBookChapterId, ChapterProjector>> = {
   living_wheel: (answers) => livingWheelOutputToJson(projectLivingWheel(answers)),
+  inner_compass: (answers) => innerCompassOutputToJson(projectInnerCompass(answers)),
 };
 
 export function getChapterConfirmedOutput(
@@ -24,3 +26,4 @@ export function getChapterConfirmedOutput(
 }
 
 export * from './livingWheelProjector';
+export * from './innerCompassProjector';
