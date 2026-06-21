@@ -90,6 +90,8 @@ import { outsideRewardGatewayTests } from './outsideRewardGateway.test';
 import { todayRewardsParityTests } from './todayRewardsParity.test';
 import { dualTrackOverlayAdapterTests } from './dualTrackOverlayAdapter.test';
 import { combinedJourneyLevelTests } from './combinedJourneyLevel.test';
+import { combinedJourneyRewardLadderTests } from './combinedJourneyRewardLadder.test';
+import { combinedJourneyRewardClaimActionTests } from './combinedJourneyRewardClaimAction.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -185,6 +187,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'todayRewardsParity', tests: todayRewardsParityTests },
   { label: 'dualTrackOverlayAdapter', tests: dualTrackOverlayAdapterTests },
   { label: 'combinedJourneyLevel', tests: combinedJourneyLevelTests },
+  { label: 'combinedJourneyRewardLadder', tests: combinedJourneyRewardLadderTests },
+  { label: 'combinedJourneyRewardClaimAction', tests: combinedJourneyRewardClaimActionTests },
 ];
 
 async function main() {

@@ -59,6 +59,15 @@ export interface IslandRunFeatureFlags {
    */
   islandRunPreIslandLuckyRollEnabled: boolean;
 
+  /**
+   * Combined Journey Level rewards — when enabled, threshold chests on the
+   * dual-track overlay spine become claimable, granting one server-authoritative
+   * reward per chest (see
+   * docs/investigations/dual-track-combined-journey-level-rewards-plan.md).
+   * While off, the spine shows the read-only level meter only (no claims).
+   */
+  combinedJourneyRewardsEnabled: boolean;
+
 }
 
 const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
@@ -69,6 +78,7 @@ const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   todaysOfferSpinEntryEnabled: true,
   islandRunEarlyFeaturedCreaturePoolEnabled: false,
   islandRunPreIslandLuckyRollEnabled: false,
+  combinedJourneyRewardsEnabled: false,
 });
 
 let currentFlags: IslandRunFeatureFlags = { ...DEFAULT_FLAGS };
