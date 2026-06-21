@@ -14,6 +14,7 @@ import {
   type CompassActivityProgress,
   type CompassActivityProgressStatus,
   type CompassAnswerRecord,
+  type CompassAnswerValue,
   type CompassBookActivityDefinition,
   type CompassBookChapterId,
   type CompassChapterProgress,
@@ -64,25 +65,43 @@ export function isActivityStarted(
   return answers.some((answer) => answer.activityId === activityId);
 }
 
-function hasValue(answer: CompassAnswerRecord): boolean {
-  const v = answer.value;
-  switch (v.kind) {
+/** True when a raw answer value carries a usable response. */
+export function isAnswerValuePresent(value: CompassAnswerValue | undefined): boolean {
+  if (!value) return false;
+  switch (value.kind) {
     case 'choice':
     case 'emotion':
-      return Boolean(v.optionId);
+      return Boolean(value.optionId);
     case 'multi_choice':
-      return v.optionIds.length > 0;
+      return value.optionIds.length > 0;
     case 'ranking':
-      return v.orderedOptionIds.length > 0;
+      return value.orderedOptionIds.length > 0;
     case 'scale':
-      return Number.isFinite(v.value);
+      return Number.isFinite(value.value);
     case 'text':
-      return v.text.trim().length > 0;
+      return value.text.trim().length > 0;
     case 'confirmation':
-      return v.confirmed === true;
+      return value.confirmed === true;
     default:
       return false;
   }
+}
+
+/**
+ * True when every required block of an activity has a usable value. Used by the
+ * guided flow to gate "Save & continue" — kept here so UI and tests share logic.
+ */
+export function areRequiredBlocksAnswered(
+  activity: CompassBookActivityDefinition,
+  valueByQuestionId: Record<string, CompassAnswerValue | undefined>,
+): boolean {
+  return activity.blocks
+    .filter((block) => block.required)
+    .every((block) => isAnswerValuePresent(valueByQuestionId[block.questionId]));
+}
+
+function hasValue(answer: CompassAnswerRecord): boolean {
+  return isAnswerValuePresent(answer.value);
 }
 
 function activityStatus(

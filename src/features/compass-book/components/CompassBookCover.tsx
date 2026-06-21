@@ -1,15 +1,18 @@
 import { COMPASS_BOOK_CHAPTERS } from '../content/compassBookCurriculum';
-import { computeChapterProgress } from '../logic/progress';
+import type { CompassGetProgress } from './CompassBookContents';
 
 export type CompassBookCoverProps = {
   currentIslandNumber: number;
+  getProgress: CompassGetProgress;
 };
 
 /** The book's cover panel: title, promise, and an at-a-glance progress line. */
-export function CompassBookCover({ currentIslandNumber }: CompassBookCoverProps) {
+export function CompassBookCover({ currentIslandNumber, getProgress }: CompassBookCoverProps) {
   const availableChapters = COMPASS_BOOK_CHAPTERS.filter(
-    (chapter) =>
-      computeChapterProgress(chapter.id, null, { currentIslandNumber }).status !== 'locked',
+    (chapter) => getProgress(chapter.id, currentIslandNumber).status !== 'locked',
+  ).length;
+  const sealedChapters = COMPASS_BOOK_CHAPTERS.filter(
+    (chapter) => getProgress(chapter.id, currentIslandNumber).status === 'complete',
   ).length;
 
   return (
@@ -23,6 +26,7 @@ export function CompassBookCover({ currentIslandNumber }: CompassBookCoverProps)
         the directions worth testing.
       </p>
       <span className="compass-book__cover-progress">
+        {sealedChapters > 0 ? `${sealedChapters} sealed · ` : ''}
         {availableChapters} of {COMPASS_BOOK_CHAPTERS.length} chapters unlocked
       </span>
     </section>

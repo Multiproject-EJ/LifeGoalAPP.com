@@ -1,12 +1,17 @@
-import type { CompassBookChapterId } from '../types';
+import type { CompassBookChapterId, CompassChapterProgress } from '../types';
 import { COMPASS_BOOK_CHAPTERS } from '../content/compassBookCurriculum';
-import { computeChapterProgress } from '../logic/progress';
 import { getCurrentChapterId } from '../logic/unlock';
 import { CompassBookCover } from './CompassBookCover';
 import { CompassChapterCard } from './CompassChapterCard';
 
+export type CompassGetProgress = (
+  chapterId: CompassBookChapterId,
+  currentIslandNumber: number,
+) => CompassChapterProgress;
+
 export type CompassBookContentsProps = {
   currentIslandNumber: number;
+  getProgress: CompassGetProgress;
   onClose: () => void;
   onOpenChapter: (chapterId: CompassBookChapterId) => void;
 };
@@ -14,6 +19,7 @@ export type CompassBookContentsProps = {
 /** The book's table of contents: cover + six chapter cards. */
 export function CompassBookContents({
   currentIslandNumber,
+  getProgress,
   onClose,
   onOpenChapter,
 }: CompassBookContentsProps) {
@@ -36,11 +42,11 @@ export function CompassBookContents({
         </button>
       </header>
       <div className="compass-book__scroll">
-        <CompassBookCover currentIslandNumber={currentIslandNumber} />
+        <CompassBookCover currentIslandNumber={currentIslandNumber} getProgress={getProgress} />
         <h2 className="compass-book__contents-heading">Chapters</h2>
         <ul className="compass-book__chapter-list">
           {COMPASS_BOOK_CHAPTERS.map((chapter) => {
-            const progress = computeChapterProgress(chapter.id, null, { currentIslandNumber });
+            const progress = getProgress(chapter.id, currentIslandNumber);
             return (
               <li key={chapter.id}>
                 <CompassChapterCard

@@ -7,6 +7,7 @@ import {
   COMPASS_BOOK_ACTIVITIES,
   COMPASS_BOOK_CHAPTERS,
   validateCompassCurriculum,
+  getActivityDefinition,
   getActivityForIsland,
   getChapterActivities,
 } from '../content/compassBookCurriculum';
@@ -17,9 +18,14 @@ import {
   getChapterActivityIndexForIsland,
   getCurrentChapterId,
 } from '../logic/unlock';
-import { computeChapterProgress, isActivityComplete } from '../logic/progress';
+import {
+  computeChapterProgress,
+  isActivityComplete,
+  areRequiredBlocksAnswered,
+  isAnswerValuePresent,
+} from '../logic/progress';
 import { parseAnswers, upsertAnswer } from '../services/compassBookSerialization';
-import type { CompassAnswerRecord, CompassChapterState } from '../types';
+import type { CompassAnswerRecord, CompassAnswerValue, CompassChapterState } from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
 
 function assert(condition: boolean, message: string): void {
@@ -226,9 +232,71 @@ function baseState(answers: CompassAnswerRecord[]): CompassChapterState {
   };
 }
 
+function testGuidedFlowAnswering(): void {
+  // Single required choice.
+  const a1 = getActivityDefinition('living_wheel.a01');
+  assert(a1 !== null, 'a01 should exist');
+  assert(!areRequiredBlocksAnswered(a1!, {}), 'a01 empty draft is not satisfied');
+  assert(
+    areRequiredBlocksAnswered(a1!, {
+      strongest_area: { kind: 'choice', optionId: 'health_fitness' },
+    }),
+    'a01 satisfied once the choice is set',
+  );
+
+  // Value presence edges.
+  assert(!isAnswerValuePresent(undefined), 'undefined value not present');
+  assert(!isAnswerValuePresent({ kind: 'text', text: '   ' }), 'whitespace text not present');
+  assert(isAnswerValuePresent({ kind: 'scale', value: 0 }), 'scale 0 is a present value');
+
+  // All-8 per-area scale activity.
+  const a5 = getActivityDefinition('living_wheel.a05');
+  assert(a5 !== null && a5.blocks.length === 8, 'a05 has 8 scale blocks');
+  const partial: Record<string, CompassAnswerValue | undefined> = {};
+  a5!.blocks.slice(0, 4).forEach((b) => {
+    partial[b.questionId] = { kind: 'scale', value: 5 };
+  });
+  assert(!areRequiredBlocksAnswered(a5!, partial), 'a05 with 4/8 scales is not satisfied');
+  const full: Record<string, CompassAnswerValue | undefined> = {};
+  a5!.blocks.forEach((b) => {
+    full[b.questionId] = { kind: 'scale', value: 5 };
+  });
+  assert(areRequiredBlocksAnswered(a5!, full), 'a05 with all 8 scales is satisfied');
+
+  // Multi-block activity (choice + required text).
+  const a19 = getActivityDefinition('living_wheel.a19');
+  assert(a19 !== null, 'a19 should exist');
+  assert(
+    !areRequiredBlocksAnswered(a19!, {
+      next_move_area: { kind: 'choice', optionId: 'health_fitness' },
+    }),
+    'a19 without the text is not satisfied',
+  );
+  assert(
+    areRequiredBlocksAnswered(a19!, {
+      next_move_area: { kind: 'choice', optionId: 'health_fitness' },
+      next_move: { kind: 'text', text: 'Walk after lunch' },
+    }),
+    'a19 satisfied with choice + text',
+  );
+
+  // Save/resume parity: the hook upserts confirmed answers then recomputes
+  // completion exactly this way.
+  let answers: CompassAnswerRecord[] = [];
+  answers = upsertAnswer(
+    answers,
+    makeAnswer('living_wheel.a01', 'strongest_area', { kind: 'choice', optionId: 'health_fitness' }),
+  );
+  const completed = getChapterActivities('living_wheel')
+    .filter((activity) => isActivityComplete(activity, answers))
+    .map((activity) => activity.id);
+  assert(completed.length === 1 && completed[0] === 'living_wheel.a01', 'only a01 complete after save');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
   testProgress();
   testAnswerParsing();
+  testGuidedFlowAnswering();
 }
