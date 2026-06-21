@@ -794,3 +794,7 @@
   font-size: 7.5px;
   font-weight: 700;
 }
+
+.compass-wheel__svg--wide {
+  max-width: 360px;
+}

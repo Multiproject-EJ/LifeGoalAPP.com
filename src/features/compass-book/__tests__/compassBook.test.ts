@@ -30,6 +30,7 @@ import {
   buildLivingWheelAreas,
 } from '../logic/projectors/livingWheelProjector';
 import { projectInnerCompass } from '../logic/projectors/innerCompassProjector';
+import { projectLivingHorizon } from '../logic/projectors/livingHorizonProjector';
 import { getChapterConfirmedOutput } from '../logic/projectors';
 import type { CompassAnswerRecord, CompassAnswerValue, CompassChapterState } from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
@@ -370,7 +371,7 @@ function testLivingWheelProjector(): void {
   const snapshot = getChapterConfirmedOutput('living_wheel', answers);
   assert(snapshot !== null, 'living_wheel has a projector snapshot');
   assert(
-    getChapterConfirmedOutput('living_horizon', []) === null,
+    getChapterConfirmedOutput('ikigai_map', []) === null,
     'unimplemented chapter has no projector yet',
   );
 }
@@ -420,6 +421,41 @@ function testInnerCompassProjector(): void {
   assert(getChapterConfirmedOutput('inner_compass', answers) !== null, 'inner_compass has a projector');
 }
 
+function testLivingHorizonProjector(): void {
+  assert(
+    getChapterActivities('living_horizon').every((a) => a.authored),
+    'chapter 3 activities are authored',
+  );
+  assert(
+    getChapterActivities('living_horizon').every((a) => a.islandNumber >= 41 && a.islandNumber <= 60),
+    'chapter 3 covers islands 41–60',
+  );
+
+  const answers: CompassAnswerRecord[] = [
+    choice('living_horizon.a02', 'essential_scene', 'creating'),
+    choice('living_horizon.a03', 'rhythm', 'mostly_free'),
+    choice('living_horizon.a05', 'environment', 'coast'),
+    choice('living_horizon.a07', 'social_intensity', 'small_circle'),
+    choice('living_horizon.a10', 'work_mode', 'create'),
+    choice('living_horizon.a14', 'challenge', 'mastery'),
+    choice('living_horizon.a16', 'financial_enough', 'comfortable'),
+    choice('living_horizon.a18', 'anti_vision', 'rich_but_empty'),
+    choice('living_horizon.a19', 'price_not_paid', 'health'),
+    makeAnswer('living_horizon.a08', 'relationships', { kind: 'multi_choice', optionIds: ['partner', 'close_friends'] }),
+    makeAnswer('living_horizon.a20', 'horizon_statement', { kind: 'text', text: 'Coastal, creative, unhurried' }),
+  ];
+  const out = projectLivingHorizon(answers);
+  assert(out.essentialSceneId === 'creating', 'essential scene mapped');
+  assert(out.desiredRhythmId === 'mostly_free', 'desired rhythm mapped');
+  assert(out.environmentId === 'coast', 'environment (Sanctuary) mapped');
+  assert(out.workModeId === 'create', 'work mode (Workshop) mapped');
+  assert(out.priceNotPaidId === 'health', 'price not paid mapped');
+  assert(out.relationshipIds.length === 2, 'relationships captured');
+  assert(out.horizonStatement === 'Coastal, creative, unhurried', 'horizon statement passes through');
+  assert(projectLivingHorizon([]).essentialSceneId === null, 'empty → null');
+  assert(getChapterConfirmedOutput('living_horizon', answers) !== null, 'living_horizon has a projector');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -428,4 +464,5 @@ export function runAllCompassBookTests(): void {
   testGuidedFlowAnswering();
   testLivingWheelProjector();
   testInnerCompassProjector();
+  testLivingHorizonProjector();
 }
