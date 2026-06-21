@@ -690,3 +690,101 @@
   color: #9fb0e0;
   font-size: 0.85rem;
 }
+
+/* ---------- In-game compact Compass panel ---------- */
+
+.compass-ingame {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.compass-ingame__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 10, 24, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.compass-ingame__card {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  max-height: calc(100% - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 18px;
+  padding: 16px;
+  color: #eef2ff;
+  background: radial-gradient(120% 80% at 50% 0%, #16213e 0%, #0d1326 65%, #090e1d 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.compass-ingame__header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'eyebrow close' 'title close';
+  align-items: center;
+  gap: 0 8px;
+  margin-bottom: 8px;
+}
+
+.compass-ingame__eyebrow {
+  grid-area: eyebrow;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #93a4d8;
+}
+
+.compass-ingame__title {
+  grid-area: title;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.compass-ingame__header .compass-book__close {
+  grid-area: close;
+}
+
+.compass-ingame__progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 6px 0 10px;
+}
+
+.compass-ingame__insight {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: #a5b4fc;
+  text-align: center;
+}
+
+.compass-ingame__next {
+  margin: 0 0 14px;
+  font-size: 0.85rem;
+  color: #c7d2fe;
+  text-align: center;
+}
+
+.compass-ingame__next-island {
+  color: #8b9bd4;
+}
+
+.compass-ingame__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.compass-ingame__actions .compass-book__primary,
+.compass-ingame__actions .compass-book__secondary {
+  flex: 1;
+  text-align: center;
+}
