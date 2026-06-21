@@ -1,11 +1,14 @@
+import type { Session } from '@supabase/supabase-js';
 import type { CompassBookChapterId, CompassChapterState } from '../types';
 import { getChapterDefinition, getChapterActivities } from '../content/compassBookCurriculum';
 import type { CompassGetProgress } from './CompassBookContents';
 import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
+import { CompassGoalBridge } from './CompassGoalBridge';
 
 export type CompassChapterScreenProps = {
   chapterId: CompassBookChapterId;
   currentIslandNumber: number;
+  session: Session | null;
   getProgress: CompassGetProgress;
   getChapterState: (chapterId: CompassBookChapterId) => CompassChapterState | null;
   onStartFlow: (activityId?: string) => void;
@@ -21,6 +24,7 @@ export type CompassChapterScreenProps = {
 export function CompassChapterScreen({
   chapterId,
   currentIslandNumber,
+  session,
   getProgress,
   getChapterState,
   onStartFlow,
@@ -40,6 +44,7 @@ export function CompassChapterScreen({
     'inner_compass',
     'living_horizon',
     'ikigai_map',
+    'quest_forge',
   ]);
   const showGraphic = hasUnlocked && CHAPTERS_WITH_GRAPHIC.has(chapterId);
 
@@ -86,6 +91,10 @@ export function CompassChapterScreen({
 
         {progress.status === 'complete' ? (
           <p className="compass-book__note">✓ This chapter is sealed. You can revisit any fragment to revise it.</p>
+        ) : null}
+
+        {chapterId === 'quest_forge' ? (
+          <CompassGoalBridge answers={chapterState?.answers ?? []} session={session} />
         ) : null}
 
         {hasUnlocked ? (
