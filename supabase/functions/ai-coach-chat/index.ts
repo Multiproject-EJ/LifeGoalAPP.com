@@ -12,6 +12,7 @@ type AiCoachChatRequest = {
   messages: ChatMessage[];
   systemPrompt?: string;
   accessSummary?: string;
+  threadId?: string | null;
 };
 
 const corsHeaders = {
@@ -23,9 +24,20 @@ const DEFAULT_MODEL = 'gpt-5-nano';
 const MAX_TURNS = 18;
 const MAX_MESSAGE_CHARS = 1600;
 const MAX_SYSTEM_CHARS = 5000;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function safeText(value: unknown, limit = 1000): string {
   return typeof value === 'string' ? value.trim().slice(0, limit) : '';
+}
+
+function estimateTokens(value: string): number {
+  return Math.max(1, Math.ceil(value.length / 4));
+}
+
+function normalizeThreadId(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return UUID_PATTERN.test(trimmed) ? trimmed : null;
 }
 
 function isChatRole(role: unknown): role is ChatRole {
@@ -89,6 +101,92 @@ async function getUserModel(userId: string, supabase: ReturnType<typeof createCl
   return DEFAULT_MODEL;
 }
 
+async function getOrCreateThread(options: {
+  supabase: ReturnType<typeof createClient>;
+  userId: string;
+  requestedThreadId: string | null;
+  latestUserMessage: string;
+}): Promise<string> {
+  const { supabase, userId, requestedThreadId, latestUserMessage } = options;
+
+  if (requestedThreadId) {
+    const { data: existingThread, error: existingError } = await supabase
+      .from('ai_coach_threads')
+      .select('id')
+      .eq('id', requestedThreadId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (existingError) {
+      throw new Error(`Failed to load AI coach thread: ${existingError.message}`);
+    }
+
+    if (existingThread?.id) {
+      return existingThread.id;
+    }
+  }
+
+  const title = safeText(latestUserMessage, 80) || 'Coach chat';
+  const { data: insertedThread, error: insertError } = await supabase
+    .from('ai_coach_threads')
+    .insert({
+      user_id: userId,
+      surface: 'main_coach',
+      title,
+      last_message_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single();
+
+  if (insertError || !insertedThread?.id) {
+    throw new Error(`Failed to create AI coach thread: ${insertError?.message ?? 'missing thread id'}`);
+  }
+
+  return insertedThread.id;
+}
+
+async function insertCoachMessage(options: {
+  supabase: ReturnType<typeof createClient>;
+  threadId: string;
+  userId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  const { supabase, threadId, userId, role, content, metadata = {} } = options;
+  const { error } = await supabase
+    .from('ai_coach_messages')
+    .insert({
+      thread_id: threadId,
+      user_id: userId,
+      role,
+      content,
+      token_estimate: estimateTokens(content),
+      metadata,
+    });
+
+  if (error) {
+    throw new Error(`Failed to save AI coach ${role} message: ${error.message}`);
+  }
+}
+
+async function touchThread(options: {
+  supabase: ReturnType<typeof createClient>;
+  threadId: string;
+  userId: string;
+}): Promise<void> {
+  const { supabase, threadId, userId } = options;
+  const { error } = await supabase
+    .from('ai_coach_threads')
+    .update({ last_message_at: new Date().toISOString() })
+    .eq('id', threadId)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(`Failed to update AI coach thread: ${error.message}`);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -130,6 +228,8 @@ Deno.serve(async (req) => {
 
     const body = (await req.json()) as AiCoachChatRequest;
     const messages = normalizeMessages(body.messages);
+    const latestUserMessage = messages[messages.length - 1]?.content ?? '';
+    const requestedThreadId = normalizeThreadId(body.threadId);
 
     if (messages.length === 0 || messages[messages.length - 1]?.role !== 'user') {
       return new Response(JSON.stringify({ error: 'A latest user message is required.' }), {
@@ -137,6 +237,22 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    const threadId = await getOrCreateThread({
+      supabase,
+      userId: user.id,
+      requestedThreadId,
+      latestUserMessage,
+    });
+
+    await insertCoachMessage({
+      supabase,
+      threadId,
+      userId: user.id,
+      role: 'user',
+      content: latestUserMessage,
+      metadata: { source: 'ai_coach_chat' },
+    });
 
     const openai = await getOpenAIForUser(user.id, supabase);
     const model = await getUserModel(user.id, supabase);
@@ -163,7 +279,19 @@ Deno.serve(async (req) => {
       throw new Error('No response from OpenAI');
     }
 
-    return new Response(JSON.stringify({ assistant_message: safeText(assistantMessage, 4000) }), {
+    const safeAssistantMessage = safeText(assistantMessage, 4000);
+
+    await insertCoachMessage({
+      supabase,
+      threadId,
+      userId: user.id,
+      role: 'assistant',
+      content: safeAssistantMessage,
+      metadata: { source: 'openai', model },
+    });
+    await touchThread({ supabase, threadId, userId: user.id });
+
+    return new Response(JSON.stringify({ thread_id: threadId, assistant_message: safeAssistantMessage }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

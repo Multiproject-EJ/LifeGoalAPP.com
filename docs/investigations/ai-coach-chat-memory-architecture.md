@@ -12,7 +12,7 @@ The new main Coach path now mirrors the app's existing AI pattern:
 - `supabase/functions/ai-coach-chat` authenticates the user, reads the user's OpenAI key/model from `ai_settings`, falls back to `OPENAI_API_KEY`, calls OpenAI, and returns `{ assistant_message }`.
 - `ai_settings` already stores provider/API-key/model preferences per user with owner RLS.
 
-The main Coach already has useful context assembly: privacy-aware access settings, habit environment notes, goals summary, telemetry difficulty, and life-stage context are composed into `loadAiCoachInstructions()`. The remaining bridge is durable memory: storing short-term thread records, selected summaries, and compact memory updates so future calls can retrieve only what is useful.
+The main Coach already has useful context assembly: privacy-aware access settings, habit environment notes, goals summary, telemetry difficulty, and life-stage context are composed into `loadAiCoachInstructions()`. The first durable storage slice now stores short-term thread/message records; the remaining bridge is compact long-term memory summaries and retrieval so future calls can retrieve only what is useful.
 
 ## What should be stored?
 
@@ -20,7 +20,7 @@ We should not store every raw chat forever as the primary memory. Raw transcript
 
 ### 1. Short-term thread records
 
-Store recent chat turns so the user can reopen the Coach and continue the current conversation.
+Store recent chat turns so the user can reopen the Coach and continue the current conversation. The first implementation slice adds these tables via `0256_ai_coach_chat_threads.sql` and writes to them from the `ai-coach-chat` Edge Function.
 
 Recommended table: `ai_coach_threads`
 
@@ -165,6 +165,8 @@ The client should not directly write Coach memory. It should only call the endpo
 
 ### Slice 2 — Persist active threads and recent messages
 
+Status: partially implemented. The schema and Edge Function writes exist; loading the active thread when the Coach opens remains a follow-up.
+
 - Add `ai_coach_threads` and `ai_coach_messages` migrations with RLS.
 - Save user/assistant turns from the Edge Function.
 - Load the active thread when the Coach opens.
@@ -198,4 +200,4 @@ The client should not directly write Coach memory. It should only call the endpo
 
 ## Bottom line
 
-The proper AI is now wired into the main Coach for live authenticated sessions, but durable Coach memory is not implemented yet. The next durable architecture is not just “call OpenAI from the modal.” It should add short-term threads, compact long-term memory summaries, privacy-scoped retrieval, and strict token budgets. That gives the user a chat that feels continuous and intelligent without sending too much context or storing too much raw private text.
+The proper AI is now wired into the main Coach for live authenticated sessions, and the first durable storage slice now saves short-term threads/messages. Compact long-term Coach memory is not implemented yet. The next durable architecture should add summary memories, privacy-scoped retrieval, and strict token budgets so the chat feels continuous and intelligent without sending too much context or storing too much raw private text.

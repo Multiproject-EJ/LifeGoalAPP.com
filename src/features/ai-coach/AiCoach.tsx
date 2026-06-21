@@ -56,8 +56,14 @@ type CoachIntervention = {
 };
 
 type AiCoachChatResponse = {
+  thread_id?: string;
   assistant_message?: string;
   error?: string;
+};
+
+type AiCoachReply = {
+  assistantMessage: string;
+  threadId: string | null;
 };
 
 type HabitAdherenceSnapshot = {
@@ -412,6 +418,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const [showCoachFeatures, setShowCoachFeatures] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showStrategyAssistant, setShowStrategyAssistant] = useState(false);
+  const [coachThreadId, setCoachThreadId] = useState<string | null>(null);
   const [interventions, setInterventions] = useState<CoachIntervention[]>([]);
   const [interventionsLoading, setInterventionsLoading] = useState(false);
   const [habitContexts, setHabitContexts] = useState<HabitEnvironmentContext[]>([]);
@@ -721,9 +728,9 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     return `Got it, ${userName}. Want to keep this short or go deeper? I can offer two small options or ask one clarifying question.`;
   };
 
-  const requestAiCoachResponse = async (conversationMessages: Message[], latestUserText: string): Promise<string> => {
+  const requestAiCoachResponse = async (conversationMessages: Message[], latestUserText: string): Promise<AiCoachReply> => {
     if (demoMode) {
-      return simulateAiResponse(latestUserText);
+      return { assistantMessage: await simulateAiResponse(latestUserText), threadId: null };
     }
 
     const supabase = getSupabaseClient();
@@ -739,6 +746,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         messages: payloadMessages,
         systemPrompt: instructionPayload.systemPrompt,
         accessSummary,
+        threadId: coachThreadId,
       },
     });
 
@@ -755,7 +763,10 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
       throw new Error('AI coach returned an empty response.');
     }
 
-    return assistantMessage;
+    return {
+      assistantMessage,
+      threadId: data?.thread_id?.trim() || null,
+    };
   };
 
   const handleTopicClick = (topic: CoachingTopic) => {
@@ -800,12 +811,15 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     setIsTyping(true);
 
     try {
-      const aiResponseText = await requestAiCoachResponse(nextMessages, textToSend);
+      const aiResponse = await requestAiCoachResponse(nextMessages, textToSend);
+      if (aiResponse.threadId) {
+        setCoachThreadId(aiResponse.threadId);
+      }
       
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
         role: 'assistant',
-        content: aiResponseText,
+        content: aiResponse.assistantMessage,
         timestamp: new Date(),
       };
 
@@ -834,6 +848,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     setMessages(INITIAL_MESSAGES);
     setShowTopics(false);
     setShowCoachFeatures(false);
+    setCoachThreadId(null);
     setInputValue('');
     inputRef.current?.focus();
   };
