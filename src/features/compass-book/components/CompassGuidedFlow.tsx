@@ -1,0 +1,167 @@
+import { useEffect, useMemo, useState } from 'react';
+import type {
+  CompassAnswerValue,
+  CompassBookChapterId,
+  CompassChapterState,
+} from '../types';
+import { getChapterActivities, getChapterDefinition } from '../content/compassBookCurriculum';
+import { getUnlockedActivityCount } from '../logic/unlock';
+import { areRequiredBlocksAnswered } from '../logic/progress';
+import { CompassActivityRenderer } from './CompassActivityRenderer';
+import type { CompassAnswerEntry } from '../hooks/useCompassBook';
+
+export type CompassGuidedFlowProps = {
+  chapterId: CompassBookChapterId;
+  currentIslandNumber: number;
+  startActivityId?: string;
+  getChapterState: (chapterId: CompassBookChapterId) => CompassChapterState | null;
+  onSaveActivity: (
+    chapterId: CompassBookChapterId,
+    activityId: string,
+    entries: CompassAnswerEntry[],
+  ) => Promise<void>;
+  saving: boolean;
+  onExit: () => void;
+};
+
+type DraftValues = Record<string, CompassAnswerValue | undefined>;
+
+function savedValuesFor(
+  state: CompassChapterState | null,
+  activityId: string,
+): DraftValues {
+  const draft: DraftValues = {};
+  if (!state) return draft;
+  for (const answer of state.answers) {
+    if (answer.activityId === activityId) draft[answer.questionId] = answer.value;
+  }
+  return draft;
+}
+
+export function CompassGuidedFlow({
+  chapterId,
+  currentIslandNumber,
+  startActivityId,
+  getChapterState,
+  onSaveActivity,
+  saving,
+  onExit,
+}: CompassGuidedFlowProps) {
+  const chapter = getChapterDefinition(chapterId);
+  const unlockedCount = getUnlockedActivityCount({ currentIslandNumber });
+
+  const unlockedActivities = useMemo(
+    () =>
+      getChapterActivities(chapterId).filter(
+        (activity) => activity.islandNumber <= unlockedCount,
+      ),
+    [chapterId, unlockedCount],
+  );
+
+  const initialIndex = useMemo(() => {
+    if (startActivityId) {
+      const idx = unlockedActivities.findIndex((a) => a.id === startActivityId);
+      if (idx >= 0) return idx;
+    }
+    return 0;
+  }, [startActivityId, unlockedActivities]);
+
+  const [index, setIndex] = useState(initialIndex);
+  const activity = unlockedActivities[index];
+  const [draft, setDraft] = useState<DraftValues>(() =>
+    savedValuesFor(getChapterState(chapterId), activity?.id ?? ''),
+  );
+
+  // Re-seed the draft from saved answers whenever the active activity changes.
+  useEffect(() => {
+    if (!activity) return;
+    setDraft(savedValuesFor(getChapterState(chapterId), activity.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activity?.id]);
+
+  if (!activity) {
+    return (
+      <div className="compass-book__scroll">
+        <p className="compass-book__note">No fragments are unlocked in this chapter yet.</p>
+        <button type="button" className="compass-book__primary" onClick={onExit}>
+          Back to chapter
+        </button>
+      </div>
+    );
+  }
+
+  const requiredSatisfied = areRequiredBlocksAnswered(activity, draft);
+
+  const isLast = index === unlockedActivities.length - 1;
+
+  async function handleSave() {
+    const entries: CompassAnswerEntry[] = activity.blocks
+      .map((block) => {
+        const value = draft[block.questionId];
+        return value ? { questionId: block.questionId, value, confirmed: true } : null;
+      })
+      .filter((entry): entry is CompassAnswerEntry => entry !== null);
+
+    await onSaveActivity(chapterId, activity.id, entries);
+
+    if (isLast) {
+      onExit();
+    } else {
+      setIndex((i) => Math.min(i + 1, unlockedActivities.length - 1));
+    }
+  }
+
+  function handleChange(questionId: string, value: CompassAnswerValue | undefined) {
+    setDraft((prev) => ({ ...prev, [questionId]: value }));
+  }
+
+  return (
+    <>
+      <header className="compass-book__topbar">
+        <button
+          type="button"
+          className="compass-book__back"
+          onClick={onExit}
+          aria-label="Exit to chapter"
+        >
+          <span aria-hidden="true">←</span> Chapter
+        </button>
+        <span className="compass-book__topbar-spacer" />
+        <span className="compass-book__count">
+          {index + 1} / {unlockedActivities.length}
+        </span>
+      </header>
+      <div className="compass-book__scroll">
+        <p className="compass-book__chapter-eyebrow">
+          {chapter.title} · Island {activity.islandNumber} · Stage {activity.stage}
+        </p>
+        <h2 className="compass-book__activity-heading">{activity.title}</h2>
+        {activity.description ? (
+          <p className="compass-book__card-question">{activity.description}</p>
+        ) : null}
+
+        <CompassActivityRenderer blocks={activity.blocks} values={draft} onChange={handleChange} />
+
+        <div className="compass-book__flow-actions">
+          {index > 0 ? (
+            <button
+              type="button"
+              className="compass-book__secondary"
+              onClick={() => setIndex((i) => Math.max(0, i - 1))}
+            >
+              Previous
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="compass-book__primary"
+            disabled={!requiredSatisfied || saving}
+            onClick={handleSave}
+          >
+            {saving ? 'Saving…' : isLast ? 'Save & finish' : 'Save & continue'}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}

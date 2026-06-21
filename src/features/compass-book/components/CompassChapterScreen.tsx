@@ -1,29 +1,36 @@
 import type { CompassBookChapterId } from '../types';
 import { getChapterDefinition, getChapterActivities } from '../content/compassBookCurriculum';
-import { computeChapterProgress } from '../logic/progress';
+import type { CompassGetProgress } from './CompassBookContents';
 
 export type CompassChapterScreenProps = {
   chapterId: CompassBookChapterId;
   currentIslandNumber: number;
+  getProgress: CompassGetProgress;
+  onStartFlow: (activityId?: string) => void;
   onBack: () => void;
   onClose: () => void;
 };
 
 /**
- * Chapter detail (PR 2 shell): chapter framing + the 20 island-linked fragments
- * with their locked/available state. The guided answer flow and the evolving
- * one-page graphic arrive in PR 3 / PR 4.
+ * Chapter detail: chapter framing, a Begin/Continue button, and the 20
+ * island-linked fragments with their locked/available/done state. Tapping an
+ * available fragment opens the guided flow at that fragment.
  */
 export function CompassChapterScreen({
   chapterId,
   currentIslandNumber,
+  getProgress,
+  onStartFlow,
   onBack,
   onClose,
 }: CompassChapterScreenProps) {
   const chapter = getChapterDefinition(chapterId);
   const activities = getChapterActivities(chapterId);
-  const progress = computeChapterProgress(chapterId, null, { currentIslandNumber });
+  const progress = getProgress(chapterId, currentIslandNumber);
   const statusByActivityId = new Map(progress.activities.map((a) => [a.activityId, a.status]));
+
+  const hasUnlocked = progress.unlockedCount > 0;
+  const hasProgress = progress.completedCount > 0;
 
   return (
     <>
@@ -58,31 +65,51 @@ export function CompassChapterScreen({
           </div>
         </section>
 
-        <p className="compass-book__note">
-          {chapter.activities.every((a) => a.authored)
-            ? 'Each island you reach unlocks the next fragment of this chapter. Guided answering and the evolving chapter graphic arrive in the next update.'
-            : 'This chapter is being written. Its fragments unlock as you travel, and full guided content arrives in a later update.'}
-        </p>
+        {hasUnlocked ? (
+          <button
+            type="button"
+            className="compass-book__primary compass-book__primary--block"
+            onClick={() => onStartFlow(progress.nextActivityId ?? undefined)}
+          >
+            {hasProgress
+              ? `Continue · ${progress.completedCount}/${progress.totalCount}`
+              : 'Begin chapter'}
+          </button>
+        ) : (
+          <p className="compass-book__note">
+            Reach Island {chapter.islandRange[0]} to unlock the first fragment of this chapter.
+          </p>
+        )}
 
         <ul className="compass-book__activity-list">
           {activities.map((activity) => {
             const status = statusByActivityId.get(activity.id) ?? 'locked';
             const locked = status === 'locked';
+            const done = status === 'complete';
             return (
-              <li
-                key={activity.id}
-                className={`compass-book__activity ${locked ? 'compass-book__activity--locked' : ''}`}
-              >
-                <span className="compass-book__activity-order" aria-hidden="true">
-                  {locked ? '🔒' : activity.order}
-                </span>
-                <span>
-                  <p className="compass-book__activity-title">{activity.title}</p>
-                  <span className="compass-book__activity-island">Island {activity.islandNumber}</span>
-                </span>
-                <span className={`compass-book__badge compass-book__badge--${status === 'locked' ? 'locked' : status === 'complete' ? 'complete' : 'unlocked'}`}>
-                  {locked ? 'Locked' : status === 'complete' ? 'Done' : 'Available'}
-                </span>
+              <li key={activity.id}>
+                <button
+                  type="button"
+                  className={`compass-book__activity ${locked ? 'compass-book__activity--locked' : ''}`}
+                  disabled={locked}
+                  onClick={() => onStartFlow(activity.id)}
+                  aria-label={`${activity.title} — ${locked ? 'locked' : done ? 'done' : 'available'}`}
+                >
+                  <span className="compass-book__activity-order" aria-hidden="true">
+                    {locked ? '🔒' : done ? '✓' : activity.order}
+                  </span>
+                  <span>
+                    <span className="compass-book__activity-title">{activity.title}</span>
+                    <span className="compass-book__activity-island">Island {activity.islandNumber}</span>
+                  </span>
+                  <span
+                    className={`compass-book__badge compass-book__badge--${
+                      locked ? 'locked' : done ? 'complete' : 'unlocked'
+                    }`}
+                  >
+                    {locked ? 'Locked' : done ? 'Done' : 'Open'}
+                  </span>
+                </button>
               </li>
             );
           })}

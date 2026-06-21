@@ -360,6 +360,11 @@
 }
 
 .compass-book__activity {
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
   display: grid;
   grid-template-columns: 30px 1fr auto;
   gap: 12px;
@@ -368,6 +373,15 @@
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.compass-book__activity:hover:not(:disabled) {
+  border-color: rgba(129, 140, 248, 0.5);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.compass-book__activity:disabled {
+  cursor: not-allowed;
 }
 
 .compass-book__activity--locked {
@@ -381,11 +395,13 @@
 }
 
 .compass-book__activity-title {
+  display: block;
   font-size: 0.9rem;
   margin: 0;
 }
 
 .compass-book__activity-island {
+  display: block;
   font-size: 0.72rem;
   color: #8b9bd4;
 }
@@ -394,4 +410,159 @@
   .compass-book__chapter-list {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+/* ---------- Buttons ---------- */
+
+.compass-book__primary,
+.compass-book__secondary {
+  appearance: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 12px 18px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.compass-book__primary {
+  background: linear-gradient(90deg, #6366f1, #38bdf8);
+  color: #06122a;
+}
+
+.compass-book__primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.compass-book__primary--block {
+  display: block;
+  width: 100%;
+  margin: 0 0 16px;
+}
+
+.compass-book__secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #eef2ff;
+}
+
+/* ---------- Guided flow ---------- */
+
+.compass-book__activity-heading {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 4px 0 10px;
+}
+
+.compass-book__flow-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+.compass-book__blocks {
+  display: grid;
+  gap: 18px;
+}
+
+.compass-book__block {
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.compass-book__block-prompt {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.compass-book__block-help {
+  margin: -6px 0 10px;
+  font-size: 0.78rem;
+  color: #9fb0e0;
+}
+
+.compass-book__req {
+  color: #f9a8d4;
+}
+
+.compass-book__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.compass-book__option {
+  appearance: none;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  color: #dbe3ff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.compass-book__option--on {
+  background: rgba(99, 102, 241, 0.32);
+  border-color: rgba(129, 140, 248, 0.8);
+  color: #fff;
+}
+
+.compass-book__scale input[type='range'] {
+  width: 100%;
+}
+
+.compass-book__scale-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.76rem;
+  color: #9fb0e0;
+  margin-top: 4px;
+}
+
+.compass-book__scale-value {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #eef2ff;
+}
+
+.compass-book__textarea {
+  width: 100%;
+  resize: vertical;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  color: #eef2ff;
+  background: rgba(8, 12, 28, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.compass-book__confirm {
+  appearance: none;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 700;
+  color: #dbe3ff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.compass-book__confirm--on {
+  background: rgba(52, 211, 153, 0.24);
+  border-color: rgba(52, 211, 153, 0.7);
+  color: #d1fae5;
+}
+
+.compass-book__review-note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #9fb0e0;
+  font-style: italic;
 }
