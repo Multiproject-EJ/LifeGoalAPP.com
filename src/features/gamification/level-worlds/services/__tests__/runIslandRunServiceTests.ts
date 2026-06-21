@@ -92,6 +92,8 @@ import { dualTrackOverlayAdapterTests } from './dualTrackOverlayAdapter.test';
 import { combinedJourneyLevelTests } from './combinedJourneyLevel.test';
 import { combinedJourneyRewardLadderTests } from './combinedJourneyRewardLadder.test';
 import { combinedJourneyRewardClaimActionTests } from './combinedJourneyRewardClaimAction.test';
+import { combinedJourneyChestClaimTests } from './combinedJourneyChestClaim.test';
+import { combinedJourneyRewardClaimsReadTests } from './combinedJourneyRewardClaimsRead.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -189,6 +191,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'combinedJourneyLevel', tests: combinedJourneyLevelTests },
   { label: 'combinedJourneyRewardLadder', tests: combinedJourneyRewardLadderTests },
   { label: 'combinedJourneyRewardClaimAction', tests: combinedJourneyRewardClaimActionTests },
+  { label: 'combinedJourneyChestClaim', tests: combinedJourneyChestClaimTests },
+  { label: 'combinedJourneyRewardClaimsRead', tests: combinedJourneyRewardClaimsReadTests },
 ];
 
 async function main() {

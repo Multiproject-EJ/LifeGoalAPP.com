@@ -493,6 +493,51 @@
   text-transform: uppercase;
 }
 
+.game-board-overlay__progress-spine-chest {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(250, 204, 21, 0.8);
+  background: radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.32), rgba(15, 23, 42, 0.92));
+  color: #fde68a;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.4);
+  animation: game-board-overlay-spine-pulse 1600ms ease-in-out infinite;
+}
+
+.game-board-overlay__progress-spine-chest:disabled {
+  cursor: default;
+  opacity: 0.7;
+  animation: none;
+}
+
+.game-board-overlay__progress-spine-chest-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.game-board-overlay__progress-spine-chest-label {
+  max-width: 4.5rem;
+  text-align: center;
+  font-size: 0.5rem;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.game-board-overlay__progress-spine-chest-feedback {
+  max-width: 4.8rem;
+  text-align: center;
+  color: #bef264;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+}
+
 .game-board-overlay__progress-spine-label {
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -611,6 +656,7 @@
   .game-board-overlay__progress-spine-fill,
   .game-board-overlay__milestone--current,
   .game-board-overlay__milestone--current::after,
+  .game-board-overlay__progress-spine-chest,
   .game-board-overlay__climb-burst {
     animation: none;
   }
