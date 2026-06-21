@@ -22,6 +22,7 @@ import { VisionBoard } from './features/vision-board';
 import type { LifeWheelCategoryKey } from './features/checkins/LifeWheelCheckins';
 import { LifeWheelCheckins } from './features/checkins';
 import { QuestCompassModal } from './features/quest-compass';
+import { CompassBookScreen } from './features/compass-book/components/CompassBookScreen';
 import { NotificationPreferences } from './features/notifications';
 import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { PlayerAvatarPanel } from './features/avatar/PlayerAvatarPanel';
@@ -821,6 +822,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [starterQuestInitialDomainKey, setStarterQuestInitialDomainKey] = useState<LifeWheelCategoryKey | null>(null);
   const [checkinsEntryOrigin, setCheckinsEntryOrigin] = useState<'my-quest' | 'direct'>('direct');
   const [isQuestCompassModalOpen, setIsQuestCompassModalOpen] = useState(false);
+  const [isCompassBookOpen, setIsCompassBookOpen] = useState(false);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
     area: AreaKey;
@@ -4327,12 +4329,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <button
                 type="button"
                 className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--compass-placeholder"
-                onClick={() => openFeaturePreviewOverlay('app.compass_book', 'Compass Book')}
-                aria-label="Preview Compass Book"
+                onClick={() => setIsCompassBookOpen(true)}
+                aria-label="Open Compass Book"
               >
                 <span className="mobile-menu-overlay__compass-placeholder-copy">
                   <span className="mobile-menu-overlay__compass-placeholder-title">Compass Book</span>
-                  <span className="mobile-menu-overlay__compass-placeholder-subtitle">In development: deep chapters for life direction.</span>
+                  <span className="mobile-menu-overlay__compass-placeholder-subtitle">Open your six-chapter journey of self-discovery.</span>
                 </span>
                 <span className="mobile-menu-overlay__compass-placeholder-book" aria-hidden="true">
                   <span className="mobile-menu-overlay__compass-placeholder-page">Chapter I<br />Know Thyself</span>
@@ -4492,6 +4494,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 onStartNextQuest={openQuestCompassNextQuest}
                 onOpenGoals={openQuestCompassGoals}
                 onOpenJournal={openQuestCompassJournal}
+              />
+            ) : null}
+            {isCompassBookOpen ? (
+              <CompassBookScreen
+                currentIslandNumber={overlayIslandNumber}
+                onClose={() => setIsCompassBookOpen(false)}
               />
             ) : null}
             {isFeedbackSupportSubmenuOpen ? (
