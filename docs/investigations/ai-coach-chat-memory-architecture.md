@@ -4,15 +4,15 @@ Date: 2026-06-20
 
 ## Current answer: is the proper AI wired into the main Coach chat?
 
-No. The main `AiCoach` modal is still a simulated front-end chat. `handleSendMessage()` appends the user message and calls `simulateAiResponse()`, which returns canned responses from local keyword checks after a delay. It does not call the OpenAI-backed Supabase Edge Function.
+As of the first wiring slice, yes for live authenticated sessions: the main `AiCoach` modal calls a dedicated `ai-coach-chat` Supabase Edge Function instead of relying only on local keyword responses. Demo sessions still use `simulateAiResponse()` as an intentional no-network fallback.
 
-The repo does have a proper AI path, but it is currently scoped to the goal-creation coach:
+The new main Coach path now mirrors the app's existing AI pattern:
 
-- `useGoalCoachChat()` posts authenticated messages to `VITE_AI_GOAL_COACH_CHAT_URL`.
-- `supabase/functions/goal-coach-chat` reads the user's OpenAI key/model from `ai_settings`, falls back to `OPENAI_API_KEY`, calls OpenAI, and returns `{ assistant_message, draft_goal }`.
+- The client sends recent chat turns, the Coach system prompt, and the privacy summary to `supabase.functions.invoke('ai-coach-chat')`.
+- `supabase/functions/ai-coach-chat` authenticates the user, reads the user's OpenAI key/model from `ai_settings`, falls back to `OPENAI_API_KEY`, calls OpenAI, and returns `{ assistant_message }`.
 - `ai_settings` already stores provider/API-key/model preferences per user with owner RLS.
 
-The main Coach also already has useful context assembly: privacy-aware access settings, habit environment notes, goals summary, telemetry difficulty, and life-stage context are composed into `loadAiCoachInstructions()`. The missing bridge is an authenticated Coach endpoint that receives the current message, selected context summary, and conversation memory, then returns a response plus compact memory updates.
+The main Coach already has useful context assembly: privacy-aware access settings, habit environment notes, goals summary, telemetry difficulty, and life-stage context are composed into `loadAiCoachInstructions()`. The remaining bridge is durable memory: storing short-term thread records, selected summaries, and compact memory updates so future calls can retrieve only what is useful.
 
 ## What should be stored?
 
@@ -198,4 +198,4 @@ The client should not directly write Coach memory. It should only call the endpo
 
 ## Bottom line
 
-The proper AI is not wired into the main Coach yet. The next durable architecture is not just “call OpenAI from the modal.” It should be a server-owned Coach endpoint with short-term threads, compact long-term memory summaries, privacy-scoped retrieval, and strict token budgets. That gives the user a chat that feels continuous and intelligent without sending too much context or storing too much raw private text.
+The proper AI is now wired into the main Coach for live authenticated sessions, but durable Coach memory is not implemented yet. The next durable architecture is not just “call OpenAI from the modal.” It should add short-term threads, compact long-term memory summaries, privacy-scoped retrieval, and strict token budgets. That gives the user a chat that feels continuous and intelligent without sending too much context or storing too much raw private text.

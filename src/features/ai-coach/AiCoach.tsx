@@ -22,6 +22,7 @@ import { classifyHabit } from '../habits/performanceClassifier';
 import { recordTelemetryEvent, getTelemetryDifficultyAdjustment } from '../../services/telemetry';
 import { fetchRecentGoalSnapshots } from '../../services/goalSnapshots';
 import { fetchWorkspaceProfile } from '../../services/workspaceProfile';
+import { getSupabaseClient } from '../../lib/supabaseClient';
 
 export interface AiCoachProps {
   session: Session;
@@ -52,6 +53,11 @@ type CoachIntervention = {
   title: string;
   description: string;
   options: string[];
+};
+
+type AiCoachChatResponse = {
+  assistant_message?: string;
+  error?: string;
 };
 
 type HabitAdherenceSnapshot = {
@@ -715,6 +721,43 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     return `Got it, ${userName}. Want to keep this short or go deeper? I can offer two small options or ask one clarifying question.`;
   };
 
+  const requestAiCoachResponse = async (conversationMessages: Message[], latestUserText: string): Promise<string> => {
+    if (demoMode) {
+      return simulateAiResponse(latestUserText);
+    }
+
+    const supabase = getSupabaseClient();
+    const payloadMessages = conversationMessages
+      .filter((message) => message.role === 'user' || message.role === 'assistant')
+      .map((message) => ({
+        role: message.role,
+        content: message.content,
+      }));
+
+    const { data, error } = await supabase.functions.invoke<AiCoachChatResponse>('ai-coach-chat', {
+      body: {
+        messages: payloadMessages,
+        systemPrompt: instructionPayload.systemPrompt,
+        accessSummary,
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message || 'AI coach chat request failed.');
+    }
+
+    if (data?.error) {
+      throw new Error(data.error);
+    }
+
+    const assistantMessage = data?.assistant_message?.trim();
+    if (!assistantMessage) {
+      throw new Error('AI coach returned an empty response.');
+    }
+
+    return assistantMessage;
+  };
+
   const handleTopicClick = (topic: CoachingTopic) => {
     setShowTopics(false);
     setShowCoachFeatures(false);
@@ -750,12 +793,14 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const nextMessages = [...messages, userMessage];
+
+    setMessages(nextMessages);
     setInputValue('');
     setIsTyping(true);
 
     try {
-      const aiResponseText = await simulateAiResponse(textToSend);
+      const aiResponseText = await requestAiCoachResponse(nextMessages, textToSend);
       
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
@@ -771,7 +816,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: 'I apologize, but I encountered an error. Please try again.',
+        content: error instanceof Error ? `I couldn’t reach the AI coach right now: ${error.message}` : 'I couldn’t reach the AI coach right now. Please try again.',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
