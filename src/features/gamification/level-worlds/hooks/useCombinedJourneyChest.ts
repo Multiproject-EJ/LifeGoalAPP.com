@@ -12,6 +12,7 @@ import {
 } from '../services/combinedJourneyChestClaim';
 import { claimCombinedJourneyReward } from '../services/combinedJourneyRewardClaimAction';
 import { fetchClaimedJourneyThresholds } from '../services/combinedJourneyRewardClaimsRead';
+import { ensureJourneyBaseline } from '../services/combinedJourneyRewardBaseline';
 
 /**
  * Combined Journey Level — claimable chest wiring (R5).
@@ -42,6 +43,7 @@ export function useCombinedJourneyChest(params: {
   const userId = session?.user?.id ?? null;
 
   const [claimedThresholds, setClaimedThresholds] = useState<number[]>([]);
+  const [baselineLevel, setBaselineLevel] = useState<number | null>(null);
   const [pending, setPending] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -50,24 +52,35 @@ export function useCombinedJourneyChest(params: {
   const milestoneInputsRef = useRef(milestoneInputs);
   milestoneInputsRef.current = milestoneInputs;
 
+  const level = deriveCombinedJourneyLevel(milestoneInputs).level;
+
   useEffect(() => {
     if (!enabled || !isOpen || !userId) {
       setClaimedThresholds([]);
+      setBaselineLevel(null);
       setFeedback(null);
       return;
     }
     let cancelled = false;
-    fetchClaimedJourneyThresholds(getSupabaseClient()).then((thresholds) => {
-      if (!cancelled) setClaimedThresholds(thresholds);
+    const client = getSupabaseClient();
+    const openLevel = deriveCombinedJourneyLevel(milestoneInputsRef.current).level;
+    void Promise.all([
+      fetchClaimedJourneyThresholds(client),
+      ensureJourneyBaseline(client, openLevel),
+    ]).then(([thresholds, baseline]) => {
+      if (cancelled) return;
+      setClaimedThresholds(thresholds);
+      setBaselineLevel(baseline);
     });
     return () => {
       cancelled = true;
     };
   }, [enabled, isOpen, userId]);
 
-  const level = deriveCombinedJourneyLevel(milestoneInputs).level;
-  const chest = enabled
-    ? buildJourneyChestClaim({ enabled, level, claimedThresholds })
+  // Withhold the CTA until the baseline is resolved so pre-launch chests are
+  // never briefly offered.
+  const chest = enabled && baselineLevel !== null
+    ? buildJourneyChestClaim({ enabled, level, claimedThresholds, baselineLevel })
     : null;
 
   const claim = useCallback(

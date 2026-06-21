@@ -6,6 +6,7 @@ import {
   type IslandRunGameStateRecord,
 } from './islandRunGameStateStore';
 import { commitIslandRunState } from './islandRunStateStore';
+import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import {
   deriveCombinedJourneyLevel,
   type CombinedJourneyLevelInput,
@@ -133,6 +134,15 @@ export function claimCombinedJourneyReward(
         triggerSource: triggerSource ?? 'claim_combined_journey_reward',
       });
     }
+
+    logIslandRunEntryDebug('combined_journey_reward_claimed', {
+      userId: session.user.id,
+      thresholdLevel: normalizedThreshold,
+      derivedLevel: summary.level,
+      rewardKind: reward.kind,
+      rewardAmount: reward.amount,
+      triggerSource: triggerSource ?? 'claim_combined_journey_reward',
+    });
 
     return { status: 'claimed', reward, record: next };
   });

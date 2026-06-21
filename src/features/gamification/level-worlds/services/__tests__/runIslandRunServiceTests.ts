@@ -95,6 +95,7 @@ import { combinedJourneyRewardClaimActionTests } from './combinedJourneyRewardCl
 import { combinedJourneyRewardGrantTests } from './combinedJourneyRewardGrant.test';
 import { combinedJourneyChestClaimTests } from './combinedJourneyChestClaim.test';
 import { combinedJourneyRewardClaimsReadTests } from './combinedJourneyRewardClaimsRead.test';
+import { combinedJourneyRewardBaselineTests } from './combinedJourneyRewardBaseline.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -195,6 +196,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'combinedJourneyRewardGrant', tests: combinedJourneyRewardGrantTests },
   { label: 'combinedJourneyChestClaim', tests: combinedJourneyChestClaimTests },
   { label: 'combinedJourneyRewardClaimsRead', tests: combinedJourneyRewardClaimsReadTests },
+  { label: 'combinedJourneyRewardBaseline', tests: combinedJourneyRewardBaselineTests },
 ];
 
 async function main() {

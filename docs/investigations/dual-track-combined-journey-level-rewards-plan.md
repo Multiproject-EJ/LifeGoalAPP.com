@@ -256,5 +256,36 @@ Gate the whole subsystem behind an Island Run feature flag (pattern:
   writes; grants only via the claim action/gateway.
 - **Overlay**: PLAY still fires once and is unaffected; opening/closing without
   claiming mutates nothing.
-</content>
-</invoke>
+
+## Launch status (delivered)
+
+The feature shipped across slices R1–R8. Notes where the build diverged from the
+original plan above:
+
+- **Rollout (final slicing).** R1 plan · R2 read-only meter · R3 claims ledger ·
+  R4 server-authoritative claim (dice/essence) · R5 overlay claim CTA · R6 eggs ·
+  R7 reroll-capacity (`bonus_max_dice` column) · R8 balance/telemetry + launch.
+  Reroll-capacity was split into its own slice (R7) once it became clear the
+  runtime state is columnar and needed a new persisted column.
+- **Reward ladder (live).** Priority: level ÷5 → reroll-capacity (+5 max dice);
+  else ÷3 → egg; else even → dice (`10 + 5·band`); else odd → essence
+  (`5 + 3·band`), `band = ⌊level/5⌋`. The TS table
+  (`combinedJourneyRewardLadder.ts`) and the SQL RPC are kept in exact lockstep.
+- **Grants path.** `outsideRewardGateway` turned out to be a request *validator*,
+  not a granter, so rewards apply through the standard `commitIslandRunState`
+  path (same as welcome pack / eggs). Reward kind/amount are resolved
+  authoritatively in SQL, so the client cannot choose them.
+- **Reroll-capacity.** Added a persistent `island_run_runtime_state.bonus_max_dice`
+  column (migration 0260), threaded through the dice-regen system as an additive
+  bonus on top of the level tier.
+- **Launch reconciliation (decision).** Existing players get chests **only from
+  launch onward**: a per-user baseline (`combined_journey_reward_baseline`,
+  migration 0262) records their journey level at first post-launch open via the
+  idempotent `ensure_combined_journey_baseline` RPC; the overlay only offers
+  chests for thresholds strictly above that baseline.
+- **Balance pass.** XP weights, level curve, and the balance multiplier were
+  reviewed and locked at their launch values (constants in
+  `combinedJourneyLevel.ts`).
+- **Telemetry.** Successful claims emit a `combined_journey_reward_claimed` entry
+  (threshold, derived level, reward kind/amount) via `logIslandRunEntryDebug`.
+- **Flag.** `combinedJourneyRewardsEnabled` is **on** as of R8.
