@@ -1,4 +1,5 @@
 import { getIslandDisplayName } from './islandNames';
+import { deriveCombinedJourneyLevel } from './combinedJourneyLevel';
 
 export type DualTrackMilestonePosition = 'achieved' | 'current' | 'next' | 'locked';
 export type DualTrackMilestoneTrack = 'real_life' | 'game';
@@ -39,6 +40,17 @@ export type DualTrackOverlayViewModel = {
     label: string;
     progressPercent: number;
     icon: string;
+  };
+  /**
+   * Read-only Combined Journey Level summary (R2). Derived from durable
+   * milestones; no rewards are granted here.
+   */
+  journeyLevel: {
+    level: number;
+    progressPercentToNextLevel: number;
+    nextThresholdLevel: number;
+    /** Short caption for the spine, e.g. "Next chest at Lv 5". */
+    nextChestLabel: string;
   };
 };
 
@@ -378,8 +390,18 @@ export function buildDualTrackOverlayViewModel(input: BuildDualTrackOverlayViewM
   const currentIsland = normalizeIslandNumber(input.islandNumber);
   const realLifeTrack = createRealLifeTrack(input.realLife);
   const usesRealLifeData = realLifeTrack.some((card) => card.source === 'goal' || card.source === 'habit');
-  const goalCount = (input.realLife?.goals ?? []).filter((goal) => goal && typeof goal.title === 'string' && goal.title.trim()).length;
+  const validGoals = (input.realLife?.goals ?? []).filter((goal) => goal && typeof goal.title === 'string' && goal.title.trim());
+  const goalCount = validGoals.length;
   const habitCount = (input.realLife?.habits ?? []).filter((habit) => habit && typeof habit.title === 'string' && habit.title.trim()).length;
+  const completedGoalCount = validGoals.filter((goal) => isCompletedGoalStatus(goal.status)).length;
+
+  const currentIslandProgressPercent = clampPercent(input.rewardBarProgress ?? 0, input.rewardBarThreshold ?? 10);
+  const journeyLevelSummary = deriveCombinedJourneyLevel({
+    islandsCompleted: Math.max(0, currentIsland - 1),
+    currentIslandProgressPercent,
+    completedGoals: completedGoalCount,
+    habitConsistencyScore: habitCount,
+  });
 
   return {
     title: 'My Quest & Game Progress',
@@ -397,9 +419,15 @@ export function buildDualTrackOverlayViewModel(input: BuildDualTrackOverlayViewM
       totalCount: TOTAL_ISLANDS,
     },
     centerSpine: {
-      label: 'Together',
-      progressPercent: clampPercent(input.rewardBarProgress ?? 0, input.rewardBarThreshold ?? 10),
+      label: `Lv ${journeyLevelSummary.level}`,
+      progressPercent: journeyLevelSummary.progressPercentToNextLevel,
       icon: '✦',
+    },
+    journeyLevel: {
+      level: journeyLevelSummary.level,
+      progressPercentToNextLevel: journeyLevelSummary.progressPercentToNextLevel,
+      nextThresholdLevel: journeyLevelSummary.nextThresholdLevel,
+      nextChestLabel: `Next chest at Lv ${journeyLevelSummary.nextThresholdLevel}`,
     },
   };
 }

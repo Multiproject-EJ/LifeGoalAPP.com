@@ -89,6 +89,7 @@ import { islandRunShooterControllerQaMatrixTests } from './islandRunShooterContr
 import { outsideRewardGatewayTests } from './outsideRewardGateway.test';
 import { todayRewardsParityTests } from './todayRewardsParity.test';
 import { dualTrackOverlayAdapterTests } from './dualTrackOverlayAdapter.test';
+import { combinedJourneyLevelTests } from './combinedJourneyLevel.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -183,6 +184,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'outsideRewardGateway', tests: outsideRewardGatewayTests },
   { label: 'todayRewardsParity', tests: todayRewardsParityTests },
   { label: 'dualTrackOverlayAdapter', tests: dualTrackOverlayAdapterTests },
+  { label: 'combinedJourneyLevel', tests: combinedJourneyLevelTests },
 ];
 
 async function main() {
