@@ -21,9 +21,13 @@ try {
   const { runAllWisdomTreeGrowthTests } = require(
     path.join(outDir, 'features/zen-garden/__tests__/treeGrowth.test.js'),
   );
+  const { runAllHabitCoachTests } = require(
+    path.join(outDir, 'features/habits/__tests__/habitCoach.test.js'),
+  );
   runAllTimeBoundOfferSortTests();
   await runAllDailyOfferClaimTests();
   runAllWisdomTreeGrowthTests();
+  runAllHabitCoachTests();
   console.log('habit-offer-tests: all assertions passed');
 } finally {
   rmSync(outDir, { recursive: true, force: true });

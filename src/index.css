@@ -8771,6 +8771,115 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.25rem;
 }
 
+/* ── Struggling-habit coach (inside the expanded card) ───────────────── */
+.habit-checklist__coach {
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: linear-gradient(180deg, rgba(254, 243, 199, 0.55), rgba(255, 255, 255, 0.65));
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.habit-checklist__coach--stalled {
+  border-color: rgba(249, 115, 22, 0.4);
+  background: linear-gradient(180deg, rgba(255, 237, 213, 0.6), rgba(255, 255, 255, 0.65));
+}
+
+.habit-checklist__coach--in_review {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: linear-gradient(180deg, rgba(254, 226, 226, 0.6), rgba(255, 255, 255, 0.65));
+}
+
+.habit-checklist__coach .habit-checklist__detail-block-header {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.habit-checklist__coach-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.18);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+}
+
+.habit-checklist__coach--in_review .habit-checklist__coach-badge {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.16);
+}
+
+.habit-checklist__coach .habit-checklist__detail-block-label {
+  color: #0f172a;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.95rem;
+}
+
+.habit-checklist__coach-message {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: #334155;
+}
+
+.habit-checklist__coach-tips {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.habit-checklist__coach-tip {
+  display: grid;
+  gap: 0.1rem;
+  padding-left: 0.85rem;
+  position: relative;
+}
+
+.habit-checklist__coach-tip::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  color: #f59e0b;
+  font-weight: 800;
+}
+
+.habit-checklist__coach-tip-label {
+  font-weight: 700;
+  font-size: 0.84rem;
+  color: #0f172a;
+}
+
+.habit-checklist__coach-tip-detail {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #475569;
+}
+
+.habit-checklist__coach-ai-btn {
+  justify-self: start;
+  border: none;
+  border-radius: 0.7rem;
+  padding: 0.5rem 0.9rem;
+  font-weight: 700;
+  font-size: 0.84rem;
+  color: #fff;
+  background: linear-gradient(180deg, #f59e0b, #d97706);
+  cursor: pointer;
+}
+
+.habit-checklist__coach-ai-btn:hover {
+  filter: brightness(1.05);
+}
+
 
 .habit-checklist__info-grid {
   display: grid;
