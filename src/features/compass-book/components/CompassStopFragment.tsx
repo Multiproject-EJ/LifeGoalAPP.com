@@ -52,6 +52,7 @@ export function CompassStopFragment({
 
   const [draft, setDraft] = useState<DraftValues>(() => ({ ...(savedValues ?? {}) }));
   const [playerData, setPlayerData] = useState<CompassPlayerData>(EMPTY_COMPASS_PLAYER_DATA);
+  const [justSaved, setJustSaved] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,16 +76,18 @@ export function CompassStopFragment({
   const activityId = fragment.activityId;
 
   function handleChange(questionId: string, value: CompassAnswerValue | undefined) {
+    setJustSaved(false);
     setDraft((prev) => ({ ...prev, [questionId]: value }));
   }
 
-  function handleSave() {
+  async function handleSave() {
     const entries: CompassAnswerEntry[] = [];
     for (const block of blocks) {
       const value = draft[block.questionId];
       if (value) entries.push({ questionId: block.questionId, value, confirmed: true });
     }
-    void onSave(activityId, entries);
+    await onSave(activityId, entries);
+    setJustSaved(true);
   }
 
   return (
@@ -105,6 +108,8 @@ export function CompassStopFragment({
         renderHelp={makeHelpSlot(fragment.chapterId, draft, handleChange)}
       />
 
+      {justSaved ? <p className="compass-stop__saved">✓ Saved to your Compass Book.</p> : null}
+
       <div className="compass-stop__actions">
         {onSkip ? (
           <button type="button" className="compass-book__secondary" onClick={onSkip} disabled={saving}>
@@ -117,7 +122,7 @@ export function CompassStopFragment({
           onClick={handleSave}
           disabled={!complete || saving}
         >
-          {saving ? 'Saving…' : 'Save'}
+          {saving ? 'Saving…' : justSaved ? 'Update' : 'Save'}
         </button>
       </div>
     </section>

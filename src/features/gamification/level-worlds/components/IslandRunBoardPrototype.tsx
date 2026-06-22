@@ -99,6 +99,7 @@ import { IslandRunLifePromptCard } from './IslandRunLifePromptCard';
 import { IslandRunGamifiedJournalCard } from './IslandRunGamifiedJournalCard';
 import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
 import { CompactGameCompassPanel } from '../../../compass-book/components/CompactGameCompassPanel';
+import { CompassStopFragmentMount } from '../../../compass-book/components/CompassStopFragmentMount';
 import {
   fetchCompassState,
   isCompassSessionFilledForIsland,
@@ -11572,14 +11573,23 @@ export function IslandRunBoardPrototype({
 
             {/* ── Stop 2: Habit (deterministic no-AI intake MVP) ── */}
             {activeStopId === 'habit' && openedStopIsPlayable && (
-              <IslandRunLifePromptCard
-                session={session}
-                islandNumber={islandNumber}
-                onComplete={(message) => {
-                  setLandingText(message);
-                  handleCompleteActiveStop();
-                }}
-              />
+              <>
+                <IslandRunLifePromptCard
+                  session={session}
+                  islandNumber={islandNumber}
+                  onComplete={(message) => {
+                    setLandingText(message);
+                    handleCompleteActiveStop();
+                  }}
+                />
+                {/* Optional: answer this island's overflow Compass inputs here.
+                    Never gates stop completion. */}
+                <CompassStopFragmentMount
+                  session={session}
+                  islandNumber={islandNumber}
+                  slot="habit_overflow"
+                />
+              </>
             )}
 
             {/* ── Stop 4: Wisdom Tree ── */}
@@ -11599,6 +11609,13 @@ export function IslandRunBoardPrototype({
                     setLandingText(message);
                     handleCompleteActiveStop();
                   }}
+                />
+                {/* Optional: answer this island's Compass fragment here. Never
+                    gates stop completion (the Wisdom card above does that). */}
+                <CompassStopFragmentMount
+                  session={session}
+                  islandNumber={islandNumber}
+                  slot="wisdom"
                 />
                 {ISLAND_RUN_CONTRACT_V2_ENABLED && diamonds >= WISDOM_ESSENCE_BONUS_COST_DIAMONDS ? (
                   <div className="island-hatchery-card__actions" style={{ marginTop: '0.5rem' }}>

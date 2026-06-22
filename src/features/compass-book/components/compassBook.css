@@ -960,6 +960,12 @@
   line-height: 1.4;
 }
 
+.compass-stop__saved {
+  margin: 10px 0 0;
+  font-weight: 700;
+  color: #a5b4fc;
+}
+
 .compass-stop__actions {
   display: flex;
   gap: 10px;
