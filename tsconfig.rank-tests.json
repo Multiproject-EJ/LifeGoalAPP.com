@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "5.0",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": ".tmp-rank-tests",
+    "noEmit": false
+  },
+  "include": [
+    "src/features/rank/rankModel.ts",
+    "src/features/rank/rankAssets.ts",
+    "src/features/rank/index.ts",
+    "src/features/rank/__tests__/rankModel.test.ts"
+  ]
+}
