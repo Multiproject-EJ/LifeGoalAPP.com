@@ -286,15 +286,23 @@ function testGuidedFlowAnswering(): void {
     'no Living Wheel island exceeds 4 input blocks (Wisdom + Habit-overflow budget)',
   );
 
-  // Multi-block activity (Lever choice + next-move area + required text).
+  // Multi-block activity (Lever choice + next-move area + OPTIONAL free-text).
+  // The two required taps satisfy the island; the mid-chapter next_move line is
+  // optional so it never gates completion (only the finale statement is required).
   const a19 = getActivityDefinition('living_wheel.a19');
   assert(a19 !== null, 'a19 should exist');
   assert(
-    !areRequiredBlocksAnswered(a19!, {
+    areRequiredBlocksAnswered(a19!, {
       candidate_lever: { kind: 'choice', optionId: 'health_fitness' },
       next_move_area: { kind: 'choice', optionId: 'health_fitness' },
     }),
-    'a19 without the text is not satisfied',
+    'a19 satisfied by the two required area taps (free-text is optional)',
+  );
+  assert(
+    !areRequiredBlocksAnswered(a19!, {
+      candidate_lever: { kind: 'choice', optionId: 'health_fitness' },
+    }),
+    'a19 still needs both required taps',
   );
   assert(
     areRequiredBlocksAnswered(a19!, {
@@ -302,7 +310,7 @@ function testGuidedFlowAnswering(): void {
       next_move_area: { kind: 'choice', optionId: 'health_fitness' },
       next_move: { kind: 'text', text: 'Walk after lunch' },
     }),
-    'a19 satisfied with lever + area + text',
+    'a19 also satisfied when the optional next_move text is supplied',
   );
 
   // Save/resume parity: the hook upserts confirmed answers then recomputes

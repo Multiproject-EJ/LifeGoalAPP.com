@@ -220,8 +220,11 @@ const SEEDS: ActivitySeed[] = [
       {
         questionId: 'guardian_boundary',
         type: 'short_text',
-        prompt: 'What boundary would protect your direction? (one line)',
-        required: true,
+        // Optional mid-chapter free-text: players who want to name a boundary
+        // still can, but only the finale Compass statement (island 20) is
+        // required. The projector tolerates a null boundary.
+        prompt: 'What boundary would protect your direction? (one line, optional)',
+        required: false,
         placeholder: 'e.g. No new commitments until the current one ships.',
         maxLength: 200,
       },

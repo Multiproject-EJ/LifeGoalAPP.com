@@ -293,8 +293,11 @@ const SEEDS: ActivitySeed[] = [
       {
         questionId: 'next_move',
         type: 'short_text',
-        prompt: 'In one line, what is the single next move?',
-        required: true,
+        // Mid-chapter free-text is optional: the two area taps above carry the
+        // required signal. Players who want to name the move still can, and the
+        // finale statement (island 20) remains the one required line.
+        required: false,
+        prompt: 'In one line, what is the single next move? (optional)',
         placeholder: 'e.g. Walk 15 minutes after lunch on weekdays.',
         maxLength: 200,
       },
