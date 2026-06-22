@@ -932,6 +932,41 @@
   color: #6ee7b7;
 }
 
+/* In-game stop fragment (compact answering at an Island Run stop). */
+.compass-stop {
+  border-radius: 16px;
+  padding: 16px;
+  background: linear-gradient(150deg, rgba(99, 102, 241, 0.14), rgba(56, 189, 248, 0.07));
+  border: 1px solid rgba(129, 140, 248, 0.32);
+}
+
+.compass-stop__eyebrow {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #a5b4fc;
+}
+
+.compass-stop__title {
+  margin: 4px 0 6px;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.compass-stop__note {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  color: #b8c4e6;
+  line-height: 1.4;
+}
+
+.compass-stop__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
 .compass-bridge__error {
   margin: 0 0 10px;
   color: #fca5a5;

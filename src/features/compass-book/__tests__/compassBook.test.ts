@@ -50,6 +50,13 @@ import {
   optionsForPickSource,
   pickSourceNoun,
 } from '../logic/playerOptions';
+import {
+  WISDOM_STOP_MAX_INPUTS,
+  getIslandFragment,
+  isFragmentSlotComplete,
+  isIslandFragmentComplete,
+  splitIslandInputs,
+} from '../logic/islandFragment';
 import { COMPASS_BOOK_CHAPTER_IDS } from '../types';
 import type { CompassAnswerRecord, CompassAnswerValue, CompassBlockDefinition, CompassChapterState } from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
@@ -732,6 +739,59 @@ function testCompassAiCore(): void {
   assert(applyHelpToValue(textBlock, { suggestion: 's' }) === null, 'no draftText → no text value');
 }
 
+function testIslandFragment(): void {
+  // Island 19 (living_wheel.a19): two required area taps + one optional free-text.
+  // Answerable inputs only (review/confirmation excluded); split Wisdom / overflow.
+  const f19 = getIslandFragment(19);
+  assert(f19 !== null, 'island 19 has a fragment');
+  assert(f19!.activityId === 'living_wheel.a19', 'fragment maps to the island activity');
+  assert(f19!.inputs.length === 3, 'island 19 has three answerable inputs');
+  assert(f19!.wisdom.length === WISDOM_STOP_MAX_INPUTS, 'wisdom slice is capped at 2');
+  assert(f19!.wisdom.every((b) => b.questionId !== 'next_move'), 'optional free-text overflows to habit slice');
+  assert(
+    f19!.habitOverflow.length === 1 && f19!.habitOverflow[0].questionId === 'next_move',
+    'the third input is the habit overflow',
+  );
+
+  // Slice completeness: the Wisdom slice needs both required taps; the overflow
+  // slice (optional next_move) is trivially complete.
+  assert(!isFragmentSlotComplete(f19!, 'wisdom', {}), 'empty wisdom slice is incomplete');
+  assert(
+    !isFragmentSlotComplete(f19!, 'wisdom', {
+      candidate_lever: { kind: 'choice', optionId: 'health_fitness' },
+    }),
+    'one of two required taps is still incomplete',
+  );
+  const bothTaps = {
+    candidate_lever: { kind: 'choice', optionId: 'health_fitness' } as CompassAnswerValue,
+    next_move_area: { kind: 'choice', optionId: 'health_fitness' } as CompassAnswerValue,
+  };
+  assert(isFragmentSlotComplete(f19!, 'wisdom', bothTaps), 'both required taps complete the wisdom slice');
+  assert(isFragmentSlotComplete(f19!, 'habit_overflow', {}), 'optional overflow slice is complete when empty');
+
+  // Whole-island gating: only required inputs gate; the optional next_move does not.
+  assert(!isIslandFragmentComplete(19, {}), 'island 19 incomplete with no answers');
+  assert(isIslandFragmentComplete(19, bothTaps), 'island 19 complete once required taps are answered');
+
+  // Seal island (living_wheel.a20): the confirmation/review blocks are excluded;
+  // only the finale statement remains an answerable input.
+  const f20 = getIslandFragment(20);
+  assert(f20 !== null && f20.inputs.length === 1, 'seal island exposes only the finale statement input');
+  assert(
+    f20!.inputs[0].questionId === 'wheel_statement',
+    'seal island input is the statement (confirmation/review excluded)',
+  );
+
+  // No activity for the island → no fragment, and gating is trivially satisfied.
+  assert(getIslandFragment(999) === null, 'out-of-range island has no fragment');
+  assert(isIslandFragmentComplete(999, {}), 'no fragment → trivially complete (never blocks a stop)');
+
+  // splitIslandInputs is a pure split over an activity's blocks.
+  const a20 = getActivityDefinition('living_wheel.a20');
+  const split = splitIslandInputs(a20!);
+  assert(split.inputs.every((b) => b.type !== 'review' && b.type !== 'confirmation'), 'split excludes non-input blocks');
+}
+
 function testPlayerOptionPickers(): void {
   // Normalization: trim labels, drop blank/idless, de-dupe by id (first wins).
   const normalized = normalizePlayerOptions([
@@ -788,4 +848,5 @@ export function runAllCompassBookTests(): void {
   testPersonalPlaybookAndHabitBridge();
   testCompassAiCore();
   testPlayerOptionPickers();
+  testIslandFragment();
 }
