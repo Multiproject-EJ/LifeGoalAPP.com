@@ -43,6 +43,13 @@ import {
   buildCompassHelpRequest,
   parseCompassHelpResponse,
 } from '../services/compassAiCore';
+import {
+  EMPTY_COMPASS_PLAYER_DATA,
+  MAX_PICK_OPTIONS,
+  normalizePlayerOptions,
+  optionsForPickSource,
+  pickSourceNoun,
+} from '../logic/playerOptions';
 import { COMPASS_BOOK_CHAPTER_IDS } from '../types';
 import type { CompassAnswerRecord, CompassAnswerValue, CompassBlockDefinition, CompassChapterState } from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
@@ -676,6 +683,48 @@ function testCompassAiCore(): void {
   assert(applyHelpToValue(textBlock, { suggestion: 's' }) === null, 'no draftText → no text value');
 }
 
+function testPlayerOptionPickers(): void {
+  // Normalization: trim labels, drop blank/idless, de-dupe by id (first wins).
+  const normalized = normalizePlayerOptions([
+    { id: 'g1', label: '  Launch a course  ' },
+    { id: 'g2', label: '' },
+    { id: '', label: 'No id' },
+    { id: 'g1', label: 'Duplicate id, ignored' },
+    { id: 'g3', label: 'Run a half marathon' },
+  ]);
+  assert(normalized.length === 2, 'blank label, missing id, and duplicate id are dropped');
+  assert(normalized[0].id === 'g1' && normalized[0].label === 'Launch a course', 'label trimmed; first id wins');
+  assert(normalized[1].id === 'g3', 'order preserved');
+
+  // Cap: never floods a fragment with more than MAX_PICK_OPTIONS chips.
+  const many = Array.from({ length: MAX_PICK_OPTIONS + 5 }, (_, i) => ({
+    id: `g${i}`,
+    label: `Goal ${i}`,
+  }));
+  assert(normalizePlayerOptions(many).length === MAX_PICK_OPTIONS, 'option list is capped');
+
+  // Source selection + noun.
+  const data = {
+    goals: normalizePlayerOptions([{ id: 'g1', label: 'A goal' }]),
+    habits: normalizePlayerOptions([{ id: 'h1', label: 'A habit' }]),
+  };
+  assert(optionsForPickSource(data, 'player_goals')[0].id === 'g1', 'goals source resolves goals');
+  assert(optionsForPickSource(data, 'player_habits')[0].id === 'h1', 'habits source resolves habits');
+  assert(pickSourceNoun('player_goals') === 'goals', 'goals noun');
+  assert(pickSourceNoun('player_habits') === 'habits', 'habits noun');
+
+  // Empty data → empty options (picker renders nothing, falls back to text).
+  assert(optionsForPickSource(EMPTY_COMPASS_PLAYER_DATA, 'player_goals').length === 0, 'empty data → no goal chips');
+  assert(optionsForPickSource(EMPTY_COMPASS_PLAYER_DATA, 'player_habits').length === 0, 'empty data → no habit chips');
+
+  // Content wiring: the goal/habit "name it" prompts declare a pick source, and
+  // they stay text blocks so projectors/bridges are unaffected.
+  const questA = getActivityDefinition('quest_forge.a01')?.blocks.find((b) => b.questionId === 'quest_a');
+  assert(questA?.type === 'short_text' && questA.pickFrom === 'player_goals', 'quest_a picks from goals, stays text');
+  const theHabit = getActivityDefinition('personal_playbook.a08')?.blocks.find((b) => b.questionId === 'the_habit');
+  assert(theHabit?.type === 'short_text' && theHabit.pickFrom === 'player_habits', 'the_habit picks from habits, stays text');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -689,4 +738,5 @@ export function runAllCompassBookTests(): void {
   testQuestForgeAndGoalBridge();
   testPersonalPlaybookAndHabitBridge();
   testCompassAiCore();
+  testPlayerOptionPickers();
 }

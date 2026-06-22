@@ -13,6 +13,7 @@ import type {
   CompassBookActivityDefinition,
   CompassBookChapterDefinition,
   CompassChapterStageIndex,
+  CompassPickSource,
 } from '../types';
 import { LIFE_AREA_OPTIONS } from './chapter1LivingWheel';
 
@@ -140,8 +141,14 @@ export const QUEST_FORGE_LABELS: Record<string, string> = Object.fromEntries(
 function single(questionId: string, prompt: string, options: readonly CompassBlockOption[], required = true): CompassBlockDefinition {
   return { questionId, type: 'single_choice', prompt, required, options: [...options] };
 }
-function shortText(questionId: string, prompt: string, placeholder: string, required = true): CompassBlockDefinition {
-  return { questionId, type: 'short_text', prompt, required, placeholder, maxLength: 140 };
+function shortText(
+  questionId: string,
+  prompt: string,
+  placeholder: string,
+  required = true,
+  pickFrom?: CompassPickSource,
+): CompassBlockDefinition {
+  return { questionId, type: 'short_text', prompt, required, placeholder, maxLength: 140, pickFrom };
 }
 
 function stageForOrder(order: number): CompassChapterStageIndex {
@@ -165,11 +172,11 @@ const SEEDS: ActivitySeed[] = [
   // Stage 1 — Gather raw material (81–84)
   { order: 1, title: 'Candidate quest', shortTitle: 'Quest A', required: true,
     description: 'Gather the goals you are considering for this season.',
-    blocks: [shortText('quest_a', 'A goal you are considering', 'e.g. Launch a small course', true)] },
+    blocks: [shortText('quest_a', 'A goal you are considering', 'e.g. Launch a small course', true, 'player_goals')] },
   { order: 2, title: 'Another candidate', shortTitle: 'Quest B', required: false,
-    blocks: [shortText('quest_b', 'Another goal (optional)', 'e.g. Run a half marathon', false)] },
+    blocks: [shortText('quest_b', 'Another goal (optional)', 'e.g. Run a half marathon', false, 'player_goals')] },
   { order: 3, title: 'A third candidate', shortTitle: 'Quest C', required: false,
-    blocks: [shortText('quest_c', 'A third goal (optional)', 'e.g. Save a 6-month buffer', false)] },
+    blocks: [shortText('quest_c', 'A third goal (optional)', 'e.g. Save a 6-month buffer', false, 'player_goals')] },
   { order: 4, title: 'Which pulls most', shortTitle: 'Primary', required: true,
     description: 'Your Primary Quest — one main commitment.',
     blocks: [single('primary_candidate', 'Which one deserves the most of you right now?', QUEST_REF_OPTIONS)] },

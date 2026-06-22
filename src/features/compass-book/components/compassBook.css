@@ -513,6 +513,40 @@
   color: #fff;
 }
 
+.compass-book__picker {
+  margin: 0 0 10px;
+}
+
+.compass-book__picker-hint {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  color: #9fb0e0;
+}
+
+.compass-book__picker-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.compass-book__picker-chip {
+  appearance: none;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 7px 13px;
+  font-size: 0.82rem;
+  color: #dbe3ff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(129, 140, 248, 0.55);
+}
+
+.compass-book__picker-chip:hover,
+.compass-book__picker-chip:focus-visible {
+  background: rgba(99, 102, 241, 0.22);
+  border-style: solid;
+  color: #fff;
+}
+
 .compass-book__scale input[type='range'] {
   width: 100%;
 }

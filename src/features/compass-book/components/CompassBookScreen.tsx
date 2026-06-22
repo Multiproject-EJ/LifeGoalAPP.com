@@ -100,6 +100,7 @@ export function CompassBookScreen({
           <CompassGuidedFlow
             chapterId={view.chapterId}
             currentIslandNumber={currentIslandNumber}
+            userId={session?.user?.id ?? null}
             startActivityId={view.startActivityId}
             getChapterState={book.getChapterState}
             onSaveActivity={book.saveActivityAnswers}
