@@ -11,28 +11,11 @@ import { getChapterActivities, getChapterDefinition } from '../content/compassBo
 import { getUnlockedActivityCount } from '../logic/unlock';
 import { areRequiredBlocksAnswered } from '../logic/progress';
 import { CompassActivityRenderer } from './CompassActivityRenderer';
-import { CompassAIHelper } from './CompassAIHelper';
-import { CompassPlayerPicker } from './CompassPlayerPicker';
+import { makeHelpSlot, makePickSlot } from './compassBlockSlots';
 import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
-import { isCompassAiAvailable } from '../services/compassAi';
 import { loadCompassPlayerData } from '../services/compassPlayerData';
-import {
-  EMPTY_COMPASS_PLAYER_DATA,
-  optionsForPickSource,
-  pickSourceNoun,
-  type CompassPlayerData,
-} from '../logic/playerOptions';
+import { EMPTY_COMPASS_PLAYER_DATA, type CompassPlayerData } from '../logic/playerOptions';
 import type { CompassAnswerEntry } from '../hooks/useCompassBook';
-
-/** Block types the "Help me think" affordance can assist with. */
-const AI_HELP_BLOCK_TYPES = new Set([
-  'single_choice',
-  'multi_choice',
-  'emotion_choice',
-  'short_text',
-  'reflection',
-  'sentence_completion',
-]);
 
 /** Merge saved chapter answers with the in-progress draft so the seal-step
  * graphic previews live edits (the projector reads questionId → value). */
@@ -222,42 +205,8 @@ export function CompassGuidedFlow({
           blocks={activity.blocks}
           values={draft}
           onChange={handleChange}
-          renderPick={(block) => {
-            if (!block.pickFrom) return null;
-            const options = optionsForPickSource(playerData, block.pickFrom);
-            if (options.length === 0) return null;
-            const refKind = block.pickFrom === 'player_goals' ? 'goal' : 'habit';
-            return (
-              <CompassPlayerPicker
-                options={options}
-                sourceNoun={pickSourceNoun(block.pickFrom)}
-                onPick={(option) =>
-                  handleChange(block.questionId, {
-                    kind: 'text',
-                    text: option.label,
-                    sourceRef: { kind: refKind, id: option.id },
-                  })
-                }
-              />
-            );
-          }}
-          renderHelp={
-            isCompassAiAvailable()
-              ? (block) =>
-                  AI_HELP_BLOCK_TYPES.has(block.type) ? (
-                    <CompassAIHelper
-                      chapterId={chapterId}
-                      block={block}
-                      currentText={
-                        draft[block.questionId]?.kind === 'text'
-                          ? (draft[block.questionId] as { kind: 'text'; text: string }).text
-                          : undefined
-                      }
-                      onApply={(value) => handleChange(block.questionId, value)}
-                    />
-                  ) : null
-              : undefined
-          }
+          renderPick={makePickSlot(playerData, handleChange)}
+          renderHelp={makeHelpSlot(chapterId, draft, handleChange)}
         />
 
         <div className="compass-book__flow-actions">
