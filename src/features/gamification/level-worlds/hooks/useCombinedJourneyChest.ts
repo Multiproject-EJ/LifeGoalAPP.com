@@ -13,6 +13,7 @@ import {
 import { claimCombinedJourneyReward } from '../services/combinedJourneyRewardClaimAction';
 import { fetchClaimedJourneyThresholds } from '../services/combinedJourneyRewardClaimsRead';
 import { ensureJourneyBaseline } from '../services/combinedJourneyRewardBaseline';
+import { persistCombinedJourneyProgress } from '../services/persistCombinedJourneyProgress';
 
 /**
  * Combined Journey Level — claimable chest wiring (R5).
@@ -76,6 +77,15 @@ export function useCombinedJourneyChest(params: {
       cancelled = true;
     };
   }, [enabled, isOpen, userId]);
+
+  // Write-through: persist the canonical Combined Journey Level snapshot to the
+  // viewer's profile whenever they open their progress, so the leaderboard can
+  // rank by it. Independent of the rewards feature flag and best-effort — a
+  // failed write never blocks the overlay.
+  useEffect(() => {
+    if (!isOpen || !userId) return;
+    void persistCombinedJourneyProgress(getSupabaseClient(), userId, milestoneInputsRef.current);
+  }, [isOpen, userId]);
 
   // Withhold the CTA until the baseline is resolved so pre-launch chests are
   // never briefly offered.

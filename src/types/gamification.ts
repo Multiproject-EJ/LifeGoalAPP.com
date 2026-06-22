@@ -25,6 +25,10 @@ export interface GamificationProfile {
   total_points: number;
   zen_tokens?: number;
   gamification_enabled: boolean;
+  /** Write-through snapshot of the derived Combined Journey Level (leaderboard/rank). */
+  combined_journey_level?: number;
+  /** Write-through snapshot of derived Combined Journey XP (canonical leaderboard score). */
+  combined_journey_xp?: number;
   created_at: string;
   updated_at: string;
 }

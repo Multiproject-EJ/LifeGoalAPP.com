@@ -1728,6 +1728,8 @@ export interface Database {
           streak_freezes: number;
           total_points: number;
           gamification_enabled: boolean;
+          combined_journey_level: number;
+          combined_journey_xp: number;
           created_at: string;
           updated_at: string;
         };
@@ -1744,6 +1746,8 @@ export interface Database {
           streak_freezes?: number;
           total_points?: number;
           gamification_enabled?: boolean;
+          combined_journey_level?: number;
+          combined_journey_xp?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -1760,6 +1764,8 @@ export interface Database {
           streak_freezes?: number;
           total_points?: number;
           gamification_enabled?: boolean;
+          combined_journey_level?: number;
+          combined_journey_xp?: number;
           created_at?: string;
           updated_at?: string;
         };

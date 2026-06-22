@@ -1,11 +1,18 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import {
+  buildRankAheadFilter,
+  toLeaderboardScore,
+  type GamificationProfileLeaderboardRow,
+} from './leaderboardScore';
 
 export interface LeaderboardEntry {
   rank: number;
   userId: string;
   playerName: string;
   archetype: string;
+  /** Displayed as the player's level — the Combined Journey Level. */
   level: number;
+  /** The canonical leaderboard score — Combined Journey XP. */
   combinedWealth: number;
 }
 
@@ -13,13 +20,6 @@ export interface LeaderboardSnapshot {
   topEntries: LeaderboardEntry[];
   viewerRank: number | null;
   viewerEntries: LeaderboardEntry[];
-}
-
-interface GamificationProfileLeaderboardRow {
-  user_id: string;
-  current_level: number | null;
-  total_points: number | null;
-  total_xp: number | null;
 }
 
 interface ProfileLeaderboardRow {
@@ -34,9 +34,7 @@ interface FetchLeaderboardSnapshotOptions {
   contextRadius?: number;
 }
 
-function toCombinedWealth(row: GamificationProfileLeaderboardRow): number {
-  return (row.total_points ?? 0) + (row.total_xp ?? 0);
-}
+const LEADERBOARD_COLUMNS = 'user_id,combined_journey_level,combined_journey_xp';
 
 function toLeaderboardEntry(
   row: GamificationProfileLeaderboardRow,
@@ -44,14 +42,15 @@ function toLeaderboardEntry(
   profileByUserId: Map<string, ProfileLeaderboardRow>,
 ): LeaderboardEntry {
   const profile = profileByUserId.get(row.user_id);
+  const { level, score } = toLeaderboardScore(row);
 
   return {
     rank,
     userId: row.user_id,
     playerName: profile?.display_name?.trim() || 'Player',
     archetype: profile?.personality_profile_type?.trim() || 'Unknown',
-    level: row.current_level ?? 1,
-    combinedWealth: toCombinedWealth(row),
+    level,
+    combinedWealth: score,
   };
 }
 
@@ -89,11 +88,10 @@ export async function fetchLeaderboardSnapshot({
     const orderedBaseQuery = () =>
       supabase
         .from('gamification_profiles')
-        .select('user_id,current_level,total_points,total_xp')
+        .select(LEADERBOARD_COLUMNS)
         .eq('gamification_enabled', true)
-        .order('total_points', { ascending: false })
-        .order('total_xp', { ascending: false })
-        .order('current_level', { ascending: false })
+        .order('combined_journey_xp', { ascending: false })
+        .order('combined_journey_level', { ascending: false })
         .order('user_id', { ascending: true });
 
     const { data: topRowsRaw, error: topRowsError } = await orderedBaseQuery().range(0, safeTopLimit - 1);
@@ -102,7 +100,7 @@ export async function fetchLeaderboardSnapshot({
 
     const { data: viewerRowRaw, error: viewerRowError } = await supabase
       .from('gamification_profiles')
-      .select('user_id,current_level,total_points,total_xp')
+      .select(LEADERBOARD_COLUMNS)
       .eq('user_id', viewerUserId)
       .eq('gamification_enabled', true)
       .maybeSingle();
@@ -121,16 +119,8 @@ export async function fetchLeaderboardSnapshot({
     }
 
     const viewerRow = viewerRowRaw as GamificationProfileLeaderboardRow;
-    const viewerPoints = viewerRow.total_points ?? 0;
-    const viewerXp = viewerRow.total_xp ?? 0;
-    const viewerLevel = viewerRow.current_level ?? 1;
-
-    const rankAheadFilter = [
-      `total_points.gt.${viewerPoints}`,
-      `and(total_points.eq.${viewerPoints},total_xp.gt.${viewerXp})`,
-      `and(total_points.eq.${viewerPoints},total_xp.eq.${viewerXp},current_level.gt.${viewerLevel})`,
-      `and(total_points.eq.${viewerPoints},total_xp.eq.${viewerXp},current_level.eq.${viewerLevel},user_id.lt.${viewerUserId})`,
-    ].join(',');
+    const viewerScore = toLeaderboardScore(viewerRow);
+    const rankAheadFilter = buildRankAheadFilter(viewerScore, viewerUserId);
 
     const { count: aheadCount, error: aheadCountError } = await supabase
       .from('gamification_profiles')
