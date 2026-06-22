@@ -12,8 +12,16 @@ import { getUnlockedActivityCount } from '../logic/unlock';
 import { areRequiredBlocksAnswered } from '../logic/progress';
 import { CompassActivityRenderer } from './CompassActivityRenderer';
 import { CompassAIHelper } from './CompassAIHelper';
+import { CompassPlayerPicker } from './CompassPlayerPicker';
 import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
 import { isCompassAiAvailable } from '../services/compassAi';
+import { loadCompassPlayerData } from '../services/compassPlayerData';
+import {
+  EMPTY_COMPASS_PLAYER_DATA,
+  optionsForPickSource,
+  pickSourceNoun,
+  type CompassPlayerData,
+} from '../logic/playerOptions';
 import type { CompassAnswerEntry } from '../hooks/useCompassBook';
 
 /** Block types the "Help me think" affordance can assist with. */
@@ -56,6 +64,8 @@ function buildPreviewAnswers(
 export type CompassGuidedFlowProps = {
   chapterId: CompassBookChapterId;
   currentIslandNumber: number;
+  /** Signed-in user id, used to load the player's real goals/habits for pickers. */
+  userId?: string | null;
   startActivityId?: string;
   getChapterState: (chapterId: CompassBookChapterId) => CompassChapterState | null;
   onSaveActivity: (
@@ -84,6 +94,7 @@ function savedValuesFor(
 export function CompassGuidedFlow({
   chapterId,
   currentIslandNumber,
+  userId,
   startActivityId,
   getChapterState,
   onSaveActivity,
@@ -121,6 +132,22 @@ export function CompassGuidedFlow({
     setDraft(savedValuesFor(getChapterState(chapterId), activity.id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activity?.id]);
+
+  // Load the player's real goals/habits once, for the tap-to-fill pickers.
+  const [playerData, setPlayerData] = useState<CompassPlayerData>(EMPTY_COMPASS_PLAYER_DATA);
+  useEffect(() => {
+    let cancelled = false;
+    loadCompassPlayerData(userId)
+      .then((data) => {
+        if (!cancelled) setPlayerData(data);
+      })
+      .catch(() => {
+        /* Pickers degrade to plain text on failure. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   if (!activity) {
     return (
@@ -195,6 +222,18 @@ export function CompassGuidedFlow({
           blocks={activity.blocks}
           values={draft}
           onChange={handleChange}
+          renderPick={(block) => {
+            if (!block.pickFrom) return null;
+            const options = optionsForPickSource(playerData, block.pickFrom);
+            if (options.length === 0) return null;
+            return (
+              <CompassPlayerPicker
+                options={options}
+                sourceNoun={pickSourceNoun(block.pickFrom)}
+                onPick={(label) => handleChange(block.questionId, { kind: 'text', text: label })}
+              />
+            );
+          }}
           renderHelp={
             isCompassAiAvailable()
               ? (block) =>

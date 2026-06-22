@@ -74,6 +74,15 @@ export type CompassBlockOption = {
   label: string;
 };
 
+/**
+ * A text block may offer a one-tap "pick from your own data" affordance sourced
+ * from the player's real app entities, so the heaviest "name your goal/habit"
+ * prompts become a tap instead of typing. The picker only fills the text answer
+ * (the block stays a text block) — it never changes the answer shape, so
+ * projectors and the goal/habit bridges are unaffected.
+ */
+export type CompassPickSource = 'player_goals' | 'player_habits';
+
 export type CompassBlockDefinition = {
   /** Stable id, unique within its activity. Never use array position as identity. */
   questionId: string;
@@ -91,6 +100,12 @@ export type CompassBlockDefinition = {
   placeholder?: string;
   maxLength?: number;
   helpText?: string;
+  /**
+   * For text blocks only: offer a one-tap chip picker sourced from the player's
+   * real goals/habits that fills this text answer. Optional and additive — when
+   * absent or when the player has no such data, the block behaves as plain text.
+   */
+  pickFrom?: CompassPickSource;
 };
 
 export type CompassBookActivityDefinition = {

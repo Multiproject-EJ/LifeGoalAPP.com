@@ -14,6 +14,7 @@ import type {
   CompassBookActivityDefinition,
   CompassBookChapterDefinition,
   CompassChapterStageIndex,
+  CompassPickSource,
 } from '../types';
 import { LIFE_AREA_OPTIONS } from './chapter1LivingWheel';
 
@@ -126,8 +127,14 @@ export const PLAYBOOK_LABELS: Record<string, string> = Object.fromEntries(
 function single(questionId: string, prompt: string, options: readonly CompassBlockOption[], required = true): CompassBlockDefinition {
   return { questionId, type: 'single_choice', prompt, required, options: [...options] };
 }
-function shortText(questionId: string, prompt: string, placeholder: string, required = true): CompassBlockDefinition {
-  return { questionId, type: 'short_text', prompt, required, placeholder, maxLength: 140 };
+function shortText(
+  questionId: string,
+  prompt: string,
+  placeholder: string,
+  required = true,
+  pickFrom?: CompassPickSource,
+): CompassBlockDefinition {
+  return { questionId, type: 'short_text', prompt, required, placeholder, maxLength: 140, pickFrom };
 }
 
 function stageForOrder(order: number): CompassChapterStageIndex {
@@ -151,9 +158,9 @@ const SEEDS: ActivitySeed[] = [
   // Stage 1 — Study previous movement (101–103) + Start Engine (104)
   { order: 1, title: 'Something I sustained', shortTitle: 'Sustained', required: true,
     description: 'Study what has worked before.',
-    blocks: [shortText('sustained_effort', 'Name something you actually sustained', 'e.g. Morning walks for a year', true)] },
+    blocks: [shortText('sustained_effort', 'Name something you actually sustained', 'e.g. Morning walks for a year', true, 'player_habits')] },
   { order: 2, title: 'Something I abandoned', shortTitle: 'Abandoned', required: true,
-    blocks: [shortText('abandoned_effort', 'Name something you abandoned', 'e.g. A nightly journaling habit', true)] },
+    blocks: [shortText('abandoned_effort', 'Name something you abandoned', 'e.g. A nightly journaling habit', true, 'player_habits')] },
   { order: 3, title: 'What made the difference', shortTitle: 'Difference', required: true,
     blocks: [single('difference', 'What made the difference between them?', DIFFERENCE_OPTIONS)] },
   { order: 4, title: 'My Start Engine', shortTitle: 'Start Engine', required: true,
@@ -170,7 +177,7 @@ const SEEDS: ActivitySeed[] = [
     blocks: [single('momentum_signal', 'What keeps you engaged over time?', MOMENTUM_OPTIONS)] },
   { order: 8, title: 'The habit', shortTitle: 'The habit', required: true,
     description: 'One habit that moves your Primary Quest.',
-    blocks: [shortText('the_habit', 'The normal version of the habit', 'e.g. Write for 30 minutes', true)] },
+    blocks: [shortText('the_habit', 'The normal version of the habit', 'e.g. Write for 30 minutes', true, 'player_habits')] },
 
   // Stage 3 — Completion + Minimum Mode (109–112)
   { order: 9, title: 'What counts as done', shortTitle: 'Done', required: true,
