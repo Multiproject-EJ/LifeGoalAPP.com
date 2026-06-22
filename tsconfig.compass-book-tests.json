@@ -28,9 +28,11 @@
     "src/features/compass-book/logic/projectors/livingHorizonProjector.ts",
     "src/features/compass-book/logic/projectors/ikigaiMapProjector.ts",
     "src/features/compass-book/logic/projectors/questForgeProjector.ts",
+    "src/features/compass-book/logic/projectors/personalPlaybookProjector.ts",
     "src/features/compass-book/logic/projectors/index.ts",
     "src/features/compass-book/logic/questLeap.ts",
     "src/features/compass-book/logic/goalBridge.ts",
+    "src/features/compass-book/logic/habitBridge.ts",
     "src/features/compass-book/services/compassBookSerialization.ts",
     "src/features/compass-book/__tests__/compassBook.test.ts"
   ]

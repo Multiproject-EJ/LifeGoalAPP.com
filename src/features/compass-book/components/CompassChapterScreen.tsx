@@ -4,6 +4,7 @@ import { getChapterDefinition, getChapterActivities } from '../content/compassBo
 import type { CompassGetProgress } from './CompassBookContents';
 import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
 import { CompassGoalBridge } from './CompassGoalBridge';
+import { CompassHabitBridge } from './CompassHabitBridge';
 
 export type CompassChapterScreenProps = {
   chapterId: CompassBookChapterId;
@@ -45,6 +46,7 @@ export function CompassChapterScreen({
     'living_horizon',
     'ikigai_map',
     'quest_forge',
+    'personal_playbook',
   ]);
   const showGraphic = hasUnlocked && CHAPTERS_WITH_GRAPHIC.has(chapterId);
 
@@ -95,6 +97,10 @@ export function CompassChapterScreen({
 
         {chapterId === 'quest_forge' ? (
           <CompassGoalBridge answers={chapterState?.answers ?? []} session={session} />
+        ) : null}
+
+        {chapterId === 'personal_playbook' ? (
+          <CompassHabitBridge answers={chapterState?.answers ?? []} session={session} />
         ) : null}
 
         {hasUnlocked ? (
