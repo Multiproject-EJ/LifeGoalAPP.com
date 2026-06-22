@@ -4,8 +4,8 @@ export type CompassPlayerPickerProps = {
   options: readonly CompassPlayerOption[];
   /** Noun for the hint, e.g. "goals" / "habits". */
   sourceNoun: string;
-  /** Fills the text answer with the tapped option's label. */
-  onPick: (label: string) => void;
+  /** Fills the text answer from the tapped option (label + canonical id). */
+  onPick: (option: CompassPlayerOption) => void;
 };
 
 /**
@@ -24,7 +24,7 @@ export function CompassPlayerPicker({ options, sourceNoun, onPick }: CompassPlay
             key={option.id}
             type="button"
             className="compass-book__picker-chip"
-            onClick={() => onPick(option.label)}
+            onClick={() => onPick(option)}
           >
             {option.label}
           </button>

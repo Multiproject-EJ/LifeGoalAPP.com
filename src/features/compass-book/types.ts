@@ -83,6 +83,14 @@ export type CompassBlockOption = {
  */
 export type CompassPickSource = 'player_goals' | 'player_habits';
 
+/**
+ * A reference to the canonical app entity a text answer was picked from (via the
+ * goals/habits picker). Lets the goal/habit bridge update the existing entity
+ * instead of creating a duplicate. Absent when the player typed their own text
+ * (typing in the box clears any prior reference).
+ */
+export type CompassSourceRef = { kind: 'goal' | 'habit'; id: string };
+
 export type CompassBlockDefinition = {
   /** Stable id, unique within its activity. Never use array position as identity. */
   questionId: string;
@@ -155,7 +163,7 @@ export type CompassAnswerValue =
   | { kind: 'scale'; value: number }
   | { kind: 'ranking'; orderedOptionIds: string[] }
   | { kind: 'emotion'; optionId: string }
-  | { kind: 'text'; text: string }
+  | { kind: 'text'; text: string; sourceRef?: CompassSourceRef }
   | { kind: 'confirmation'; confirmed: boolean };
 
 export type CompassAnswerRecord = {

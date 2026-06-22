@@ -24,6 +24,11 @@ export type CompassGoalProposal = {
   reviewPointId: string | null;
   /** ISO date computed from the review point (or null). */
   reviewDate: string | null;
+  /**
+   * Canonical id of an existing goal the Primary Quest was picked from. When set,
+   * the bridge updates that goal instead of creating a duplicate.
+   */
+  existingGoalId: string | null;
 };
 
 function labelOf(id: string | null): string | null {
@@ -63,6 +68,7 @@ export function buildGoalProposalFromQuestForge(
     lifeWheelCategory: output.wheelImpactAreaId,
     reviewPointId: output.reviewPointId,
     reviewDate: computeReviewDate(output.reviewPointId, now),
+    existingGoalId: output.primaryQuestSourceGoalId,
   };
 }
 

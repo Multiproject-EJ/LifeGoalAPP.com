@@ -24,6 +24,8 @@ export type PersonalPlaybookOutput = {
   protectedAreaId: string | null;
   weeklyCheckId: string | null;
   operatingPrinciple: string | null;
+  /** Canonical habit id when the habit was picked from an existing habit. */
+  habitSourceId: string | null;
 };
 
 function valueMap(answers: readonly CompassAnswerRecord[]): Map<string, CompassAnswerValue> {
@@ -40,6 +42,12 @@ function optionOf(map: Map<string, CompassAnswerValue>, questionId: string): str
 function textOf(map: Map<string, CompassAnswerValue>, questionId: string): string | null {
   const v = map.get(questionId);
   return v && v.kind === 'text' && v.text.trim() ? v.text.trim() : null;
+}
+
+/** The canonical habit id a text answer was picked from (if any). */
+function sourceHabitIdOf(map: Map<string, CompassAnswerValue>, questionId: string): string | null {
+  const v = map.get(questionId);
+  return v && v.kind === 'text' && v.sourceRef?.kind === 'habit' ? v.sourceRef.id : null;
 }
 
 export function projectPersonalPlaybook(
@@ -64,6 +72,7 @@ export function projectPersonalPlaybook(
     protectedAreaId: optionOf(map, 'protected_area'),
     weeklyCheckId: optionOf(map, 'weekly_check'),
     operatingPrinciple: textOf(map, 'operating_principle'),
+    habitSourceId: sourceHabitIdOf(map, 'the_habit'),
   };
 }
 

@@ -22,6 +22,11 @@ export type CompassHabitProposal = {
   recoveryRule: string | null;
   /** Canonical Life Wheel category key the habit must protect (or null). */
   protectedAreaId: string | null;
+  /**
+   * Canonical id of an existing habit this design was picked from. When set, the
+   * bridge updates that habit instead of creating a duplicate.
+   */
+  existingHabitId: string | null;
 };
 
 function labelOf(id: string | null): string | null {
@@ -57,6 +62,7 @@ export function buildHabitProposalFromPlaybook(
     completionEvidence: output.completionEvidence,
     recoveryRule: labelOf(output.recoveryRouteId),
     protectedAreaId: output.protectedAreaId,
+    existingHabitId: output.habitSourceId,
   };
 }
 
