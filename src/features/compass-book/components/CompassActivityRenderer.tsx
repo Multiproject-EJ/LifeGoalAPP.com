@@ -1,13 +1,16 @@
+import type { ReactNode } from 'react';
 import type { CompassAnswerValue, CompassBlockDefinition } from '../types';
 
 export type CompassActivityRendererProps = {
   blocks: readonly CompassBlockDefinition[];
   values: Record<string, CompassAnswerValue | undefined>;
   onChange: (questionId: string, value: CompassAnswerValue | undefined) => void;
+  /** Optional per-block slot (e.g. the AI "Help me think" affordance). */
+  renderHelp?: (block: CompassBlockDefinition) => ReactNode;
 };
 
 /** Renders the input blocks for a single activity (fixed-guided mode). */
-export function CompassActivityRenderer({ blocks, values, onChange }: CompassActivityRendererProps) {
+export function CompassActivityRenderer({ blocks, values, onChange, renderHelp }: CompassActivityRendererProps) {
   return (
     <div className="compass-book__blocks">
       {blocks.map((block) => (
@@ -18,6 +21,7 @@ export function CompassActivityRenderer({ blocks, values, onChange }: CompassAct
           </p>
           {block.helpText ? <p className="compass-book__block-help">{block.helpText}</p> : null}
           <BlockInput block={block} value={values[block.questionId]} onChange={onChange} />
+          {renderHelp ? renderHelp(block) : null}
         </div>
       ))}
     </div>
