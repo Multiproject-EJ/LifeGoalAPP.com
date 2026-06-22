@@ -879,6 +879,10 @@ function formatRewardMarkerAmount(value: number): string {
 /* ── Reward bar helpers ──────────────────────────────────────── */
 const TIMER_OK_THRESHOLD_MS = 4 * 60 * 60 * 1000;    // > 4 h  → green
 const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 h → red
+// Reward-bar timer/multiplier row auto-hide: with > 1 h left it reveals for 10 s
+// on navigation then slides up; with ≤ 1 h left it stays visible for urgency.
+const REWARDBAR_TIMERS_AUTO_HIDE_THRESHOLD_MS = 60 * 60 * 1000;
+const REWARDBAR_TIMERS_AUTO_HIDE_DELAY_MS = 10_000;
 const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
 const AUTO_ROLL_HOLD_DELAY_MS = 1400;
 const AUTO_ROLL_INTERVAL_MS = 2300;
@@ -5248,6 +5252,21 @@ export function IslandRunBoardPrototype({
   const timedEventRemainingLabel = effectiveActiveTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
+  // Auto-hide the reward-bar timer/multiplier row: when navigating to the board
+  // with more than an hour left on the timer it shows for 10s, then slides up
+  // into the bar. With an hour or less remaining it stays visible for urgency.
+  const [rewardBarTimersCollapsed, setRewardBarTimersCollapsed] = useState(false);
+  useEffect(() => {
+    if (timedEventRemainingMs <= REWARDBAR_TIMERS_AUTO_HIDE_THRESHOLD_MS) return;
+    const hideTimer = window.setTimeout(
+      () => setRewardBarTimersCollapsed(true),
+      REWARDBAR_TIMERS_AUTO_HIDE_DELAY_MS,
+    );
+    return () => window.clearTimeout(hideTimer);
+    // Restart the reveal countdown only on mount/navigation, using the timer
+    // value captured at entry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const timedEventTokenPresentation = resolveEventTokenPresentation(effectiveActiveTimedEvent?.eventType ?? null);
   const timedEventTokenIcon = timedEventTokenPresentation.icon;
   const nextRewardAmountLabel = formatRewardMarkerAmount(nextRewardAmount);
@@ -6672,13 +6691,15 @@ export function IslandRunBoardPrototype({
   const hasRewardBarTimedEventQuickAction = Boolean(effectiveActiveTimedEvent && activeEventMeta);
   const rewardBarEggManiaSlotIndex = isEggManiaActive ? 0 : -1;
   const rewardBarTimedEventSlotIndex = isEggManiaActive ? 1 : 0;
-  const rewardBarStickerSlotIndex = Math.max(
+  // Sticker album moved to the left hatchery tray; the side rail now only holds
+  // the active minigame quick-actions (egg mania / timed event).
+  const rewardBarRailContentSlotCount = Math.max(
     isEggManiaActive ? 1 : 0,
     hasRewardBarTimedEventQuickAction ? rewardBarTimedEventSlotIndex + 1 : 0,
   );
   const rewardBarSideSlotCount = Math.max(
     hatcheryPendingEggCount,
-    rewardBarStickerSlotIndex + 1,
+    rewardBarRailContentSlotCount,
   );
   const openHatcheryQuickAccess = useCallback(() => {
     requestActiveStopTransition('hatchery', 'manifest_quick_access');
@@ -10552,12 +10573,11 @@ export function IslandRunBoardPrototype({
             )}
             <button
               type="button"
-              className="island-run-board__hatchery-compass-btn"
-              aria-label="Open Compass"
-              title="Compass"
-              onClick={() => setShowHatcheryCompassModal(true)}
+              className="island-run-board__sticker-album-btn"
+              aria-label="Sticker album"
+              onClick={() => setShowStickerAlbumDialog(true)}
             >
-              <span className="island-run-board__hatchery-compass-icon" aria-hidden="true" />
+              🧩 {runtimeState.stickerProgress.fragments}/5
             </button>
           </div>
 
@@ -10617,7 +10637,7 @@ export function IslandRunBoardPrototype({
               </span>
             </div>
             {/* Event timer + multiplier row */}
-            <div className={`island-run-board__rewardbar-timers${showSpaceExcavatorRewardBarHint && spaceExcavatorRewardBarHint ? ' island-run-board__rewardbar-timers--ticket-hint-visible' : ''}`}>
+            <div className={`island-run-board__rewardbar-timers${rewardBarTimersCollapsed ? ' island-run-board__rewardbar-timers--collapsed' : ''}${showSpaceExcavatorRewardBarHint && spaceExcavatorRewardBarHint ? ' island-run-board__rewardbar-timers--ticket-hint-visible' : ''}`}>
               <span className={getTimerUrgencyClass(timedEventRemainingMs)}>{timedEventRemainingLabel}</span>
               {effectiveMultiplier > 1 && (
                 <span className="island-run-board__rewardbar-multiplier-badge">×{effectiveMultiplier}</span>
@@ -10682,21 +10702,6 @@ export function IslandRunBoardPrototype({
                           DEV override tickets
                         </span>
                       )}
-                    </button>
-                  </span>
-                );
-              }
-
-              if (index === rewardBarStickerSlotIndex) {
-                return (
-                  <span key="sticker-album" className="island-run-board__rewardbar-side-slot">
-                    <button
-                      type="button"
-                      className="island-run-board__sticker-album-btn"
-                      aria-label="Sticker album"
-                      onClick={() => setShowStickerAlbumDialog(true)}
-                    >
-                      🧩 {runtimeState.stickerProgress.fragments}/5
                     </button>
                   </span>
                 );
@@ -10818,6 +10823,16 @@ export function IslandRunBoardPrototype({
         onClick={resetCameraFromTopbarMenu}
       >
         🔎
+      </button>
+
+      <button
+        type="button"
+        className="island-run-prototype__compass-floating"
+        aria-label="Open Compass"
+        title="Compass"
+        onClick={() => setShowHatcheryCompassModal(true)}
+      >
+        <span className="island-run-board__hatchery-compass-icon" aria-hidden="true" />
       </button>
 
       <div
