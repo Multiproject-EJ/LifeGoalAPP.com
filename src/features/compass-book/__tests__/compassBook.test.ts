@@ -587,6 +587,37 @@ function testQuestForgeAndGoalBridge(): void {
   // No primary quest → no proposal (the bridge renders nothing, creates nothing).
   assert(buildGoalProposalFromQuestForge(projectQuestForge([])) === null, 'no primary quest → no proposal');
 
+  // Default (typed text) → no existing-goal link → the bridge creates a new goal.
+  assert(out.primaryQuestSourceGoalId === null, 'typed primary quest has no source goal id');
+  assert(proposal!.existingGoalId === null, 'typed primary quest → proposal creates new');
+
+  // Picked from an existing goal → the source id flows through to the proposal so
+  // the bridge updates that goal instead of creating a duplicate.
+  const pickedAnswers: CompassAnswerRecord[] = [
+    makeAnswer('quest_forge.a01', 'quest_a', {
+      kind: 'text',
+      text: 'Launch a small course',
+      sourceRef: { kind: 'goal', id: 'goal-123' },
+    }),
+    choice('quest_forge.a04', 'primary_candidate', 'quest_a'),
+  ];
+  const pickedOut = projectQuestForge(pickedAnswers);
+  assert(pickedOut.primaryQuestSourceGoalId === 'goal-123', 'primary quest source goal id resolved from picked slot');
+  assert(
+    buildGoalProposalFromQuestForge(pickedOut)!.existingGoalId === 'goal-123',
+    'picked primary quest → proposal updates the existing goal',
+  );
+  // A habit-kind sourceRef must NOT be read as a goal id.
+  const wrongKind = projectQuestForge([
+    makeAnswer('quest_forge.a01', 'quest_a', {
+      kind: 'text',
+      text: 'A goal',
+      sourceRef: { kind: 'habit', id: 'habit-9' },
+    }),
+    choice('quest_forge.a04', 'primary_candidate', 'quest_a'),
+  ]);
+  assert(wrongKind.primaryQuestSourceGoalId === null, 'habit sourceRef is not treated as a goal id');
+
   assert(getChapterConfirmedOutput('quest_forge', answers) !== null, 'quest_forge has a projector');
 }
 
@@ -633,6 +664,24 @@ function testPersonalPlaybookAndHabitBridge(): void {
 
   // No habit named → no proposal (the bridge renders nothing, creates nothing).
   assert(buildHabitProposalFromPlaybook(projectPersonalPlaybook([])) === null, 'no habit → no proposal');
+
+  // Default (typed habit) → no existing-habit link → the bridge creates a new habit.
+  assert(out.habitSourceId === null, 'typed habit has no source habit id');
+  assert(proposal!.existingHabitId === null, 'typed habit → proposal creates new');
+
+  // Picked from an existing habit → the source id flows through to the proposal.
+  const pickedOut = projectPersonalPlaybook([
+    makeAnswer('personal_playbook.a08', 'the_habit', {
+      kind: 'text',
+      text: 'Write for 30 minutes',
+      sourceRef: { kind: 'habit', id: 'habit-77' },
+    }),
+  ]);
+  assert(pickedOut.habitSourceId === 'habit-77', 'habit source id resolved from picked habit');
+  assert(
+    buildHabitProposalFromPlaybook(pickedOut)!.existingHabitId === 'habit-77',
+    'picked habit → proposal updates the existing habit',
+  );
 }
 
 function testCompassAiCore(): void {

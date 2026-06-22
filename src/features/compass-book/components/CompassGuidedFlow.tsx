@@ -226,11 +226,18 @@ export function CompassGuidedFlow({
             if (!block.pickFrom) return null;
             const options = optionsForPickSource(playerData, block.pickFrom);
             if (options.length === 0) return null;
+            const refKind = block.pickFrom === 'player_goals' ? 'goal' : 'habit';
             return (
               <CompassPlayerPicker
                 options={options}
                 sourceNoun={pickSourceNoun(block.pickFrom)}
-                onPick={(label) => handleChange(block.questionId, { kind: 'text', text: label })}
+                onPick={(option) =>
+                  handleChange(block.questionId, {
+                    kind: 'text',
+                    text: option.label,
+                    sourceRef: { kind: refKind, id: option.id },
+                  })
+                }
               />
             );
           }}

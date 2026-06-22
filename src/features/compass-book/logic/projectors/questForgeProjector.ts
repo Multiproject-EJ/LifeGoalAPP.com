@@ -22,6 +22,8 @@ export type QuestForgeOutput = {
   acceptedCostId: string | null;
   protectedFlame: string | null;
   reviewPointId: string | null;
+  /** Canonical goal id when the Primary Quest was picked from an existing goal. */
+  primaryQuestSourceGoalId: string | null;
 };
 
 function valueMap(answers: readonly CompassAnswerRecord[]): Map<string, CompassAnswerValue> {
@@ -47,6 +49,22 @@ function resolveQuest(map: Map<string, CompassAnswerValue>, refQuestionId: strin
   return textOf(map, ref);
 }
 
+/** The canonical goal id a text answer was picked from (if any). */
+function sourceGoalIdOf(map: Map<string, CompassAnswerValue>, questionId: string): string | null {
+  const v = map.get(questionId);
+  return v && v.kind === 'text' && v.sourceRef?.kind === 'goal' ? v.sourceRef.id : null;
+}
+
+/** Resolve the source goal id of the quest slot a reference points to. */
+function resolveQuestSourceGoalId(
+  map: Map<string, CompassAnswerValue>,
+  refQuestionId: string,
+): string | null {
+  const ref = optionOf(map, refQuestionId);
+  if (!ref || ref === 'none') return null;
+  return sourceGoalIdOf(map, ref);
+}
+
 export function projectQuestForge(answers: readonly CompassAnswerRecord[]): QuestForgeOutput {
   const map = valueMap(answers);
   return {
@@ -65,6 +83,8 @@ export function projectQuestForge(answers: readonly CompassAnswerRecord[]): Ques
     acceptedCostId: optionOf(map, 'accepted_cost'),
     protectedFlame: textOf(map, 'protected_flame'),
     reviewPointId: optionOf(map, 'review_point'),
+    primaryQuestSourceGoalId:
+      resolveQuestSourceGoalId(map, 'primary_candidate') ?? sourceGoalIdOf(map, 'quest_a'),
   };
 }
 
