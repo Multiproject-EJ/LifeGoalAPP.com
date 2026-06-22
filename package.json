@@ -33,7 +33,8 @@
     "test:today-todos": "node scripts/run-today-todos-tests.mjs",
     "test:theme-access": "node scripts/run-theme-access-tests.mjs",
     "test:compass-book": "node scripts/run-compass-book-tests.mjs",
-    "test:rank": "node scripts/run-rank-tests.mjs"
+    "test:rank": "node scripts/run-rank-tests.mjs",
+    "test:membership": "node scripts/run-membership-tests.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

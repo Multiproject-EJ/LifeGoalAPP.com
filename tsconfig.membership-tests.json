@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "5.0",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": ".tmp-membership-tests",
+    "noEmit": false
+  },
+  "include": [
+    "src/features/rank/rankAssets.ts",
+    "src/features/rank/rankModel.ts",
+    "src/features/membership/membershipModel.ts",
+    "src/features/membership/index.ts",
+    "src/features/membership/__tests__/membershipModel.test.ts"
+  ]
+}
