@@ -38,8 +38,13 @@ import { buildGoalProposalFromQuestForge, describeGoalProposal } from '../logic/
 import { projectPersonalPlaybook } from '../logic/projectors/personalPlaybookProjector';
 import { buildHabitProposalFromPlaybook, describeHabitIntent } from '../logic/habitBridge';
 import { getChapterConfirmedOutput } from '../logic/projectors';
+import {
+  applyHelpToValue,
+  buildCompassHelpRequest,
+  parseCompassHelpResponse,
+} from '../services/compassAiCore';
 import { COMPASS_BOOK_CHAPTER_IDS } from '../types';
-import type { CompassAnswerRecord, CompassAnswerValue, CompassChapterState } from '../types';
+import type { CompassAnswerRecord, CompassAnswerValue, CompassBlockDefinition, CompassChapterState } from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
 
 function assert(condition: boolean, message: string): void {
@@ -609,6 +614,54 @@ function testPersonalPlaybookAndHabitBridge(): void {
   assert(buildHabitProposalFromPlaybook(projectPersonalPlaybook([])) === null, 'no habit → no proposal');
 }
 
+function testCompassAiCore(): void {
+  const choiceBlock: CompassBlockDefinition = {
+    questionId: 'q1',
+    type: 'single_choice',
+    prompt: 'Pick one',
+    required: true,
+    options: [
+      { id: 'a', label: 'A' },
+      { id: 'b', label: 'B' },
+    ],
+  };
+  const textBlock: CompassBlockDefinition = {
+    questionId: 'q2',
+    type: 'short_text',
+    prompt: 'Say something',
+    required: true,
+  };
+
+  // Privacy: request carries only this question — no other answers/fields.
+  const req = buildCompassHelpRequest('living_wheel', choiceBlock, '  ');
+  assert(req.questionId === 'q1' && req.prompt === 'Pick one', 'request carries the block');
+  assert(req.options?.length === 2, 'request carries the block options');
+  assert(req.currentDraft === undefined, 'blank draft is omitted');
+  assert(!('answers' in (req as Record<string, unknown>)), 'request never includes other answers');
+
+  // Defensive parsing — never throws, handles every bad case.
+  assert(parseCompassHelpResponse(null) === null, 'null → null');
+  assert(parseCompassHelpResponse('not json') === null, 'string → null');
+  assert(parseCompassHelpResponse({}) === null, 'empty object → null');
+  assert(parseCompassHelpResponse({ suggestion: '' }) === null, 'empty suggestion + nothing → null');
+  const valid = parseCompassHelpResponse({ suggestion: 'One possibility…' });
+  assert(valid?.suggestion === 'One possibility…', 'valid suggestion parsed');
+  const partial = parseCompassHelpResponse({ recommendedOptionIds: ['a', 5, ''] });
+  assert(partial !== null && partial.recommendedOptionIds?.length === 1, 'non-string option ids filtered');
+  assert(partial !== null && partial.suggestion.length > 0, 'partial gets a default suggestion');
+
+  // Apply mapping — proposes only; rejects invalid ids; never throws.
+  const applied = applyHelpToValue(choiceBlock, { suggestion: 's', recommendedOptionIds: ['b'] });
+  assert(applied?.kind === 'choice' && applied.optionId === 'b', 'valid recommendation → choice value');
+  assert(
+    applyHelpToValue(choiceBlock, { suggestion: 's', recommendedOptionIds: ['zzz'] }) === null,
+    'invalid option id → no value (never auto-applies junk)',
+  );
+  const textApplied = applyHelpToValue(textBlock, { suggestion: 's', draftText: 'A draft' });
+  assert(textApplied?.kind === 'text' && textApplied.text === 'A draft', 'draftText → text value');
+  assert(applyHelpToValue(textBlock, { suggestion: 's' }) === null, 'no draftText → no text value');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -621,4 +674,5 @@ export function runAllCompassBookTests(): void {
   testIkigaiMapProjector();
   testQuestForgeAndGoalBridge();
   testPersonalPlaybookAndHabitBridge();
+  testCompassAiCore();
 }

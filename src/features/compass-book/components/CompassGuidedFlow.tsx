@@ -11,8 +11,20 @@ import { getChapterActivities, getChapterDefinition } from '../content/compassBo
 import { getUnlockedActivityCount } from '../logic/unlock';
 import { areRequiredBlocksAnswered } from '../logic/progress';
 import { CompassActivityRenderer } from './CompassActivityRenderer';
+import { CompassAIHelper } from './CompassAIHelper';
 import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
+import { isCompassAiAvailable } from '../services/compassAi';
 import type { CompassAnswerEntry } from '../hooks/useCompassBook';
+
+/** Block types the "Help me think" affordance can assist with. */
+const AI_HELP_BLOCK_TYPES = new Set([
+  'single_choice',
+  'multi_choice',
+  'emotion_choice',
+  'short_text',
+  'reflection',
+  'sentence_completion',
+]);
 
 /** Merge saved chapter answers with the in-progress draft so the seal-step
  * graphic previews live edits (the projector reads questionId → value). */
@@ -179,7 +191,28 @@ export function CompassGuidedFlow({
           />
         ) : null}
 
-        <CompassActivityRenderer blocks={activity.blocks} values={draft} onChange={handleChange} />
+        <CompassActivityRenderer
+          blocks={activity.blocks}
+          values={draft}
+          onChange={handleChange}
+          renderHelp={
+            isCompassAiAvailable()
+              ? (block) =>
+                  AI_HELP_BLOCK_TYPES.has(block.type) ? (
+                    <CompassAIHelper
+                      chapterId={chapterId}
+                      block={block}
+                      currentText={
+                        draft[block.questionId]?.kind === 'text'
+                          ? (draft[block.questionId] as { kind: 'text'; text: string }).text
+                          : undefined
+                      }
+                      onApply={(value) => handleChange(block.questionId, value)}
+                    />
+                  ) : null
+              : undefined
+          }
+        />
 
         <div className="compass-book__flow-actions">
           {index > 0 ? (
