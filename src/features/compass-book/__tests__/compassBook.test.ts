@@ -268,35 +268,49 @@ function testGuidedFlowAnswering(): void {
   assert(!isAnswerValuePresent({ kind: 'text', text: '   ' }), 'whitespace text not present');
   assert(isAnswerValuePresent({ kind: 'scale', value: 0 }), 'scale 0 is a present value');
 
-  // All-8 per-area scale activity.
+  // Per-area scale activity (4 areas per island after the Chapter 1 rebalance).
   const a5 = getActivityDefinition('living_wheel.a05');
-  assert(a5 !== null && a5.blocks.length === 8, 'a05 has 8 scale blocks');
+  assert(a5 !== null && a5.blocks.length === 4, 'a05 has 4 scale blocks (core four)');
   const partial: Record<string, CompassAnswerValue | undefined> = {};
-  a5!.blocks.slice(0, 4).forEach((b) => {
+  a5!.blocks.slice(0, 2).forEach((b) => {
     partial[b.questionId] = { kind: 'scale', value: 5 };
   });
-  assert(!areRequiredBlocksAnswered(a5!, partial), 'a05 with 4/8 scales is not satisfied');
+  assert(!areRequiredBlocksAnswered(a5!, partial), 'a05 with 2/4 scales is not satisfied');
   const full: Record<string, CompassAnswerValue | undefined> = {};
   a5!.blocks.forEach((b) => {
     full[b.questionId] = { kind: 'scale', value: 5 };
   });
-  assert(areRequiredBlocksAnswered(a5!, full), 'a05 with all 8 scales is satisfied');
+  assert(areRequiredBlocksAnswered(a5!, full), 'a05 with all 4 scales is satisfied');
+  assert(
+    getChapterActivities('living_wheel').every((act) => act.blocks.length <= 4),
+    'no Living Wheel island exceeds 4 input blocks (Wisdom + Habit-overflow budget)',
+  );
 
-  // Multi-block activity (choice + required text).
+  // Multi-block activity (Lever choice + next-move area + OPTIONAL free-text).
+  // The two required taps satisfy the island; the mid-chapter next_move line is
+  // optional so it never gates completion (only the finale statement is required).
   const a19 = getActivityDefinition('living_wheel.a19');
   assert(a19 !== null, 'a19 should exist');
   assert(
-    !areRequiredBlocksAnswered(a19!, {
+    areRequiredBlocksAnswered(a19!, {
+      candidate_lever: { kind: 'choice', optionId: 'health_fitness' },
       next_move_area: { kind: 'choice', optionId: 'health_fitness' },
     }),
-    'a19 without the text is not satisfied',
+    'a19 satisfied by the two required area taps (free-text is optional)',
+  );
+  assert(
+    !areRequiredBlocksAnswered(a19!, {
+      candidate_lever: { kind: 'choice', optionId: 'health_fitness' },
+    }),
+    'a19 still needs both required taps',
   );
   assert(
     areRequiredBlocksAnswered(a19!, {
+      candidate_lever: { kind: 'choice', optionId: 'health_fitness' },
       next_move_area: { kind: 'choice', optionId: 'health_fitness' },
       next_move: { kind: 'text', text: 'Walk after lunch' },
     }),
-    'a19 satisfied with choice + text',
+    'a19 also satisfied when the optional next_move text is supplied',
   );
 
   // Save/resume parity: the hook upserts confirmed answers then recomputes
