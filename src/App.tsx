@@ -1118,6 +1118,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
     saveAcknowledgedRankId(supabaseSession?.user?.id ?? null, pendingPromotion.toRankId);
     setAcknowledgedRankId(pendingPromotion.toRankId);
   };
+  // Rank node shown on the Game Progress dual-track spine (opens the rank
+  // journey modal; pulses while a promotion is unacknowledged).
+  const rankSpineProps = {
+    currentRank: menuRankProgress.current,
+    rankProgress: menuRankProgress,
+    rankLevel: menuJourneySummary.level,
+    rankHasPendingPromotion: pendingPromotion !== null,
+  };
 
   useEffect(() => {
     if (!showGameBoardOverlay || !overlayRealLifeUserId) return;
@@ -5435,6 +5443,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           realLife={overlayRealLifeInput}
           viewerId={overlayRealLifeUserId ?? undefined}
           {...combinedJourneyChestProps}
+          {...rankSpineProps}
         />
         {showAiCoachModal && (
           <AiCoach
@@ -5774,6 +5783,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         realLife={overlayRealLifeInput}
         viewerId={overlayRealLifeUserId ?? undefined}
         {...combinedJourneyChestProps}
+        {...rankSpineProps}
       />
 
       {isAuthOverlayVisible ? (
