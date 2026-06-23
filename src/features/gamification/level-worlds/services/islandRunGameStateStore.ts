@@ -251,6 +251,20 @@ export interface IslandRunGameStateRecord {
    * on write. See `islandRunBonusTile.ts` for the accumulator semantics.
    */
   bonusTileChargeByIsland: BonusTileChargeByIsland;
+  /**
+   * Per-island "tech build" pickup grid. Outer key = islandNumber (string).
+   * Value = list of 3×3 grid slot indices (0–8) whose tech piece has been
+   * collected on that island visit. Drives the picked-up-items overlay grid
+   * and its row/column/diagonal completion rewards. See
+   * `maybeCollectTechItem` in the board prototype for the accumulator semantics.
+   */
+  techCollectionByIsland: Record<string, number[]>;
+  /**
+   * Per-island ledger of tech-grid line indices (0–7, see
+   * `TECH_COLLECTION_LINES`) that have already paid out a completion reward,
+   * so a row/column/diagonal never double-pays after a reload/sync.
+   */
+  techCollectionRewardedLinesByIsland: Record<string, number[]>;
   marketOwnedBundlesByIsland: Record<string, {
     dice_bundle: boolean;
     heart_bundle: boolean;
@@ -333,6 +347,59 @@ const ISLAND_RUN_REMOTE_BACKOFF_MS = 60 * 1000;
 const CONTRACT_V2_STOP_COUNT = 5;
 const DEFAULT_STOP_BUILD_REQUIRED_ESSENCE = 100; // Placeholder for phase-2 tuning.
 const DEFAULT_REWARD_BAR_THRESHOLD = 10; // Placeholder for phase-2 tuning.
+
+/** Tech-collection pickup grid is a fixed 3×3 board → 9 cells, 8 winning lines. */
+const TECH_COLLECTION_GRID_CELL_COUNT = 9;
+const TECH_COLLECTION_LINE_COUNT = 8;
+
+/**
+ * Sanitize a per-island ledger of non-negative integer indices (e.g. collected
+ * tech-grid slots or rewarded line indices). Drops malformed values, clamps to
+ * `[0, maxExclusive)`, dedupes, sorts, and prunes empty island buckets.
+ */
+function sanitizeIslandIndexLedger(
+  ledger: Record<string, number[]> | undefined | null,
+  maxExclusive: number,
+): Record<string, number[]> {
+  if (!ledger || typeof ledger !== 'object') return {};
+  const out: Record<string, number[]> = {};
+  for (const [key, value] of Object.entries(ledger)) {
+    if (!Array.isArray(value)) continue;
+    const seen = new Set<number>();
+    const cleaned: number[] = [];
+    for (const raw of value) {
+      const idx = Math.floor(raw);
+      if (!Number.isFinite(idx) || idx < 0 || idx >= maxExclusive) continue;
+      if (seen.has(idx)) continue;
+      seen.add(idx);
+      cleaned.push(idx);
+    }
+    cleaned.sort((a, b) => a - b);
+    if (cleaned.length > 0) out[key] = cleaned;
+  }
+  return out;
+}
+
+/** Union-merge two per-island integer-index ledgers (used in remote/local reconcile). */
+function mergeIslandIndexLedgerByUnion(
+  remote: Record<string, number[]> | undefined | null,
+  local: Record<string, number[]> | undefined | null,
+): Record<string, number[]> {
+  const out: Record<string, number[]> = {};
+  const islandKeys = new Set<string>([
+    ...Object.keys(remote ?? {}),
+    ...Object.keys(local ?? {}),
+  ]);
+  islandKeys.forEach((islandKey) => {
+    const unionSet = new Set<number>([
+      ...(remote?.[islandKey] ?? []),
+      ...(local?.[islandKey] ?? []),
+    ]);
+    const merged = Array.from(unionSet).filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
+    if (merged.length > 0) out[islandKey] = merged;
+  });
+  return out;
+}
 
 type IslandRunRuntimeCommitSyncState = 'idle' | 'committing' | 'blocked_remote_backoff' | 'blocked_conflict_recovery';
 type IslandRunRuntimeCommitParkReason = 'single_flight' | 'backoff' | 'conflict_recovery';
@@ -648,6 +715,8 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     completedStopsByIsland: {},
     stopTicketsPaidByIsland: {},
     bonusTileChargeByIsland: {},
+    techCollectionByIsland: {},
+    techCollectionRewardedLinesByIsland: {},
     marketOwnedBundlesByIsland: {},
     creatureCollection: [],
     activeCompanionId: null,
@@ -1067,6 +1136,14 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       value.bonusTileChargeByIsland !== null && typeof value.bonusTileChargeByIsland === 'object' && !Array.isArray(value.bonusTileChargeByIsland)
         ? sanitizeBonusTileChargeByIsland(value.bonusTileChargeByIsland as BonusTileChargeByIsland)
         : fallback.bonusTileChargeByIsland,
+    techCollectionByIsland:
+      value.techCollectionByIsland !== null && typeof value.techCollectionByIsland === 'object' && !Array.isArray(value.techCollectionByIsland)
+        ? sanitizeIslandIndexLedger(value.techCollectionByIsland as Record<string, number[]>, TECH_COLLECTION_GRID_CELL_COUNT)
+        : fallback.techCollectionByIsland,
+    techCollectionRewardedLinesByIsland:
+      value.techCollectionRewardedLinesByIsland !== null && typeof value.techCollectionRewardedLinesByIsland === 'object' && !Array.isArray(value.techCollectionRewardedLinesByIsland)
+        ? sanitizeIslandIndexLedger(value.techCollectionRewardedLinesByIsland as Record<string, number[]>, TECH_COLLECTION_LINE_COUNT)
+        : fallback.techCollectionRewardedLinesByIsland,
     marketOwnedBundlesByIsland:
       value.marketOwnedBundlesByIsland !== null && typeof value.marketOwnedBundlesByIsland === 'object' && !Array.isArray(value.marketOwnedBundlesByIsland)
         ? Object.fromEntries(
@@ -1685,6 +1762,11 @@ function mergeRecordForConflict(options: {
     completedStopsByIsland: mergedCompletedStopsByIsland,
     stopTicketsPaidByIsland: mergedStopTicketsPaidByIsland,
     bonusTileChargeByIsland: mergedBonusTileChargeByIsland,
+    techCollectionByIsland: mergeIslandIndexLedgerByUnion(remote.techCollectionByIsland, local.techCollectionByIsland),
+    techCollectionRewardedLinesByIsland: mergeIslandIndexLedgerByUnion(
+      remote.techCollectionRewardedLinesByIsland,
+      local.techCollectionRewardedLinesByIsland,
+    ),
     marketOwnedBundlesByIsland: mergedMarketOwnedBundlesByIsland,
     creatureCollection: mergeCreatureCollection(remote.creatureCollection, local.creatureCollection),
     perfectCompanionIds: local.perfectCompanionIds.length > 0 ? local.perfectCompanionIds : remote.perfectCompanionIds,
@@ -1769,6 +1851,8 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     completed_stops_by_island: record.completedStopsByIsland,
     stop_tickets_paid_by_island: record.stopTicketsPaidByIsland,
     bonus_tile_charge_by_island: record.bonusTileChargeByIsland,
+    tech_collection_by_island: record.techCollectionByIsland,
+    tech_collection_rewarded_lines_by_island: record.techCollectionRewardedLinesByIsland,
     market_owned_bundles_by_island: record.marketOwnedBundlesByIsland,
     creature_collection: record.creatureCollection,
     active_companion_id: record.activeCompanionId,
@@ -1865,7 +1949,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,tech_collection_rewarded_lines_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -1929,6 +2013,14 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             ),
             bonusTileChargeByIsland: sanitizeBonusTileChargeByIsland(
               ((legacyData as Record<string, unknown>).bonus_tile_charge_by_island as BonusTileChargeByIsland | undefined) ?? {},
+            ),
+            techCollectionByIsland: sanitizeIslandIndexLedger(
+              ((legacyData as Record<string, unknown>).tech_collection_by_island as Record<string, number[]> | undefined) ?? {},
+              TECH_COLLECTION_GRID_CELL_COUNT,
+            ),
+            techCollectionRewardedLinesByIsland: sanitizeIslandIndexLedger(
+              ((legacyData as Record<string, unknown>).tech_collection_rewarded_lines_by_island as Record<string, number[]> | undefined) ?? {},
+              TECH_COLLECTION_LINE_COUNT,
             ),
             marketOwnedBundlesByIsland: legacyData.market_owned_bundles_by_island ?? {},
             creatureCollection: legacyData.creature_collection ?? [],
@@ -2073,6 +2165,14 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       ),
       bonusTileChargeByIsland: sanitizeBonusTileChargeByIsland(
         ((data as Record<string, unknown>).bonus_tile_charge_by_island as BonusTileChargeByIsland | undefined) ?? {},
+      ),
+      techCollectionByIsland: sanitizeIslandIndexLedger(
+        ((data as Record<string, unknown>).tech_collection_by_island as Record<string, number[]> | undefined) ?? {},
+        TECH_COLLECTION_GRID_CELL_COUNT,
+      ),
+      techCollectionRewardedLinesByIsland: sanitizeIslandIndexLedger(
+        ((data as Record<string, unknown>).tech_collection_rewarded_lines_by_island as Record<string, number[]> | undefined) ?? {},
+        TECH_COLLECTION_LINE_COUNT,
       ),
       marketOwnedBundlesByIsland: data.market_owned_bundles_by_island ?? {},
       creatureCollection: data.creature_collection ?? [],
