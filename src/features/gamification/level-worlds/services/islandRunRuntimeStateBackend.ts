@@ -76,6 +76,8 @@ export interface IslandRunRuntimeStateBackend {
       completedStopsByIsland?: Record<string, string[]>;
       stopTicketsPaidByIsland?: Record<string, number[]>;
       bonusTileChargeByIsland?: BonusTileChargeByIsland;
+      techCollectionByIsland?: Record<string, number[]>;
+      techCollectionRewardedLinesByIsland?: Record<string, number[]>;
       marketOwnedBundlesByIsland?: Record<string, {
         dice_bundle: boolean;
         heart_bundle: boolean;
@@ -347,6 +349,14 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               ),
             }
           : current.bonusTileChargeByIsland,
+      techCollectionByIsland:
+        patch.techCollectionByIsland !== null && typeof patch.techCollectionByIsland === 'object' && !Array.isArray(patch.techCollectionByIsland)
+          ? { ...current.techCollectionByIsland, ...patch.techCollectionByIsland }
+          : current.techCollectionByIsland,
+      techCollectionRewardedLinesByIsland:
+        patch.techCollectionRewardedLinesByIsland !== null && typeof patch.techCollectionRewardedLinesByIsland === 'object' && !Array.isArray(patch.techCollectionRewardedLinesByIsland)
+          ? { ...current.techCollectionRewardedLinesByIsland, ...patch.techCollectionRewardedLinesByIsland }
+          : current.techCollectionRewardedLinesByIsland,
       marketOwnedBundlesByIsland:
         patch.marketOwnedBundlesByIsland !== null && typeof patch.marketOwnedBundlesByIsland === 'object' && !Array.isArray(patch.marketOwnedBundlesByIsland)
           ? {

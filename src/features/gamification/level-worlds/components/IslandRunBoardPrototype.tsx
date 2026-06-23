@@ -185,6 +185,7 @@ import {
   applyTrafficLightTilePass,
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
+  applyTechCollectionState,
   applyTimedEventTicketSpend,
   applySpaceExcavatorDig,
   advanceSpaceExcavatorBoard,
@@ -1400,6 +1401,8 @@ interface TechCollectionModalState {
   completedLines: number[];
   rewardDice: number;
   isFullBoard: boolean;
+  /** True when this pickup completed a row/column/diagonal or the full board. */
+  isLineEvent: boolean;
 }
 
 const TECH_COLLECTION_GRID_SIZE = 3;
@@ -1656,6 +1659,14 @@ export function IslandRunBoardPrototype({
   }, [dormantDoorSelectedFigures]);
   const dormantDoorBestMatchCount = Math.max(dormantDoorPrizeCounts.small, dormantDoorPrizeCounts.medium, dormantDoorPrizeCounts.large);
   const [trafficLightCoinFlip, setTrafficLightCoinFlip] = useState<{ seed: number; reward: TrafficLightCoinFlipReward | null; phase: 'ready' | 'flipping' | 'revealed' } | null>(null);
+  /**
+   * Optimistic traffic-light charge shown the instant the token HOPS OVER the
+   * traffic-light tile mid-roll, instead of waiting for the authoritative charge
+   * to commit at the end of the roll (which made the lights appear to change
+   * only "on landing"). Reset at each roll start; the authoritative
+   * `trafficLightCharge` catches up when the roll resolves.
+   */
+  const [trafficLightVisualCharge, setTrafficLightVisualCharge] = useState<number | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
   // PR7: brief "level-up flash" class driver. Flips true when `islandNumber`
   // advances to a higher value (ignoring cycle wrap 120→1) and auto-resets
@@ -1682,13 +1693,33 @@ export function IslandRunBoardPrototype({
     };
   }, [activeStopId, islandNumber, session.user.id]);
 
+  // Load the persisted picked-up tech grid for this island (cross-reload /
+  // cross-device). The per-island ledgers live on the canonical runtime state
+  // record, so reading them here rehydrates the overlay grid and prevents
+  // already-rewarded rows/columns/diagonals from paying out twice.
   useEffect(() => {
-    collectedTechTileIndicesRef.current = new Set();
-    rewardedTechCollectionLinesRef.current = new Set();
-    setCollectedTechTileIndices(new Set());
-    setRewardedTechCollectionLines(new Set());
+    const islandKey = String(islandNumber);
+    const persistedCollected = runtimeStateRef.current.techCollectionByIsland?.[islandKey] ?? [];
+    const persistedRewardedLines = runtimeStateRef.current.techCollectionRewardedLinesByIsland?.[islandKey] ?? [];
+    const collectedSet = new Set<number>(persistedCollected);
+    const rewardedLinesSet = new Set<number>(persistedRewardedLines);
+    collectedTechTileIndicesRef.current = collectedSet;
+    rewardedTechCollectionLinesRef.current = rewardedLinesSet;
+    setCollectedTechTileIndices(collectedSet);
+    setRewardedTechCollectionLines(rewardedLinesSet);
     setTechCollectionModal(null);
+    if (techCollectionDismissTimerRef.current !== null) {
+      window.clearTimeout(techCollectionDismissTimerRef.current);
+      techCollectionDismissTimerRef.current = null;
+    }
   }, [islandNumber]);
+
+  useEffect(() => () => {
+    if (techCollectionDismissTimerRef.current !== null) {
+      window.clearTimeout(techCollectionDismissTimerRef.current);
+      techCollectionDismissTimerRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     const prev = prevIslandNumberForFlashRef.current;
@@ -1731,6 +1762,7 @@ export function IslandRunBoardPrototype({
   const [rewardedTechCollectionLines, setRewardedTechCollectionLines] = useState<Set<number>>(() => new Set());
   const rewardedTechCollectionLinesRef = useRef<Set<number>>(new Set());
   const [techCollectionModal, setTechCollectionModal] = useState<TechCollectionModalState | null>(null);
+  const techCollectionDismissTimerRef = useRef<number | null>(null);
   const [activeEncounterTileIndex, setActiveEncounterTileIndex] = useState<number | null>(null);
   const [showHatcheryHelp, setShowHatcheryHelp] = useState(false);
   // M6-COMPLETE: encounter challenge state machine
@@ -4160,6 +4192,11 @@ export function IslandRunBoardPrototype({
     [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, tileMap],
   );
   const trafficLightCharge = getTrafficLightCharge(runtimeState.bonusTileChargeByIsland, islandNumber);
+  // Show the optimistic mid-hop charge while a roll is animating so the lights
+  // change the moment the token passes the traffic tile, not when it lands.
+  const displayedTrafficLightCharge = trafficLightVisualCharge !== null
+    ? Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, Math.max(trafficLightCharge, trafficLightVisualCharge))
+    : trafficLightCharge;
 
   const stopStateMap = useMemo(() => {
     if (ISLAND_RUN_CONTRACT_V2_ENABLED && contractV2Stops) {
@@ -4380,6 +4417,35 @@ export function IslandRunBoardPrototype({
       return;
     }
 
+    // Bring landmark hiring into the roll loop: if any landmark on this island
+    // is currently waiting on a ticket payment (the sequentially-next "gate"),
+    // landing on ANY landmark door surfaces that ticket-payment modal instead of
+    // a filler door minigame. Previously hiring only happened when the token
+    // landed exactly on the one hireable landmark (or via a manual orbit tap),
+    // leaving payment outside the roll loop.
+    const ticketRequiredStopIndex = contractV2Stops
+      ? contractV2Stops.statusesByIndex.findIndex((status) => status === 'ticket_required')
+      : -1;
+    const ticketRequiredStopId = ticketRequiredStopIndex >= 0
+      ? islandStopPlan[ticketRequiredStopIndex]?.stopId ?? null
+      : null;
+    if (ticketRequiredStopId) {
+      setRequiredDoorStopId(null);
+      setDormantDoorMiniGame(null);
+      setDormantDoorSelectedIndices([]);
+      setDormantDoorReward(null);
+      setFocusedStopId(ticketRequiredStopId);
+      if (ticketRequiredStopId === 'boss' && allLandmarkDoorsRouteToBoss) {
+        requestActiveStopTransition('boss', 'affordable_boss_ticket_landmark_door_landing_loop');
+        setLandingText('🎫 Boss ticket ready: pay inside the Boss modal, then play the Boss Trial.');
+        return;
+      }
+      requestActiveStopTransition(null, 'ticket_required_landmark_door_landing_loop');
+      setTicketPromptStopId(ticketRequiredStopId);
+      setLandingText('🎫 Landmark ticket ready: pay to hire and enter this landmark.');
+      return;
+    }
+
     const miniGame = buildDormantDoorMiniGame({
       islandNumber: effectiveIslandNumber,
       tileIndex,
@@ -4397,7 +4463,7 @@ export function IslandRunBoardPrototype({
     setDormantDoorReward(null);
     setIsDormantDoorRewardClaiming(false);
     setLandingText('🚪 Dormant door challenge: reveal doors until 3 matching prizes appear.');
-  }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, hasSeenPrepayPrompt, markPrepayPromptSeen, requestActiveStopTransition, stopIndexByStopId]);
+  }, [allLandmarkDoorsRouteToBoss, contractV2Stops, doesStopRequireTicketPayment, effectiveIslandNumber, hasSeenPrepayPrompt, islandStopPlan, markPrepayPromptSeen, requestActiveStopTransition, stopIndexByStopId]);
 
   const handlePrepayStopTicket = useCallback((stopId: string) => {
     const stopIndex = stopIndexByStopId.get(stopId);
@@ -4477,6 +4543,7 @@ export function IslandRunBoardPrototype({
     setDormantDoorReward(null);
     setIsDormantDoorRewardClaiming(false);
     setTrafficLightCoinFlip(null);
+    setTrafficLightVisualCharge(null);
   }, [islandNumber]);
 
   const handleDormantDoorSelect = useCallback((doorIndex: number) => {
@@ -5240,6 +5307,12 @@ export function IslandRunBoardPrototype({
     return `${devTimedEventOverrideType}:dev:${nonce}`;
   }, [devTimedEventOverrideType]);
   const effectiveActiveTimedEvent = useMemo(() => {
+    // The four rotating event games (Feeding Frenzy, Lucky Spin, Space
+    // Excavator, Companion Feast) are demo-only: surface them to admins/creators
+    // exclusively. Non-admins never see the event banner, ticket chip, quick
+    // launch, or minigame launcher. The underlying reward-bar/event rotation on
+    // the runtime record is untouched, so core progression keeps working.
+    if (!isAdmin) return null;
     if (!isDevModeEnabled || !devTimedEventOverrideType || !devTimedEventOverrideEventId) return activeTimedEvent;
     const now = Date.now();
     return {
@@ -5249,7 +5322,7 @@ export function IslandRunBoardPrototype({
       expiresAtMs: now + (24 * 60 * 60 * 1000),
       version: 1,
     };
-  }, [activeTimedEvent, devTimedEventOverrideEventId, devTimedEventOverrideType, isDevModeEnabled]);
+  }, [activeTimedEvent, devTimedEventOverrideEventId, devTimedEventOverrideType, isAdmin, isDevModeEnabled]);
   const timedEventRemainingLabel = effectiveActiveTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
@@ -5855,6 +5928,9 @@ export function IslandRunBoardPrototype({
       let rollActionBarrierActive = false;
       try {
         isAnimatingRollRef.current = true;
+        // Clear any prior optimistic traffic-light charge so this roll's
+        // mid-hop pass starts from the authoritative value.
+        setTrafficLightVisualCharge(null);
       // P0-3: once the roll service has committed tokenIndex/dice/runtimeVersion,
       // block all queued action-lock writers until this renderer applies the
       // post-hop sync (`applyRollResult`). This closes the stale-base window
@@ -6129,7 +6205,9 @@ export function IslandRunBoardPrototype({
     setCollectedTechTileIndices(nextCollected);
     setRewardedTechCollectionLines(nextRewardedLines);
 
-    playIslandRunSound('tech_item_poof');
+    const isLineEvent = completedLines.length > 0 || isFullBoard;
+
+    playIslandRunSound(isLineEvent ? 'reward_bar_claim_burst' : 'tech_item_poof');
     triggerIslandRunHaptic('stop_land');
 
     if (rewardDice > 0) {
@@ -6142,6 +6220,17 @@ export function IslandRunBoardPrototype({
       setRuntimeState(rewardRecord);
     }
 
+    // Persist the picked-up grid through the canonical store path so it survives
+    // reloads and syncs across devices (rewarded lines never double-pay).
+    applyTechCollectionState({
+      session,
+      client,
+      islandNumber,
+      collectedSlots: Array.from(nextCollected),
+      rewardedLines: Array.from(nextRewardedLines),
+      triggerSource: 'tech_collection_pickup',
+    });
+
     setTechCollectionModal({
       tileIndex: slotIndex,
       tileType,
@@ -6149,8 +6238,21 @@ export function IslandRunBoardPrototype({
       completedLines,
       rewardDice,
       isFullBoard,
+      isLineEvent,
     });
-  }, [client, playIslandRunSound, resolveTechCollectionSlot, session, triggerIslandRunHaptic]);
+
+    // A plain pickup is a quick poof-into-grid flourish that auto-clears so it
+    // never interrupts the roll loop. Completing a row/column/diagonal (or the
+    // full board) lingers longer so the highlighted line + reward can register.
+    if (techCollectionDismissTimerRef.current !== null) {
+      window.clearTimeout(techCollectionDismissTimerRef.current);
+    }
+    const dwellMs = isLineEvent ? 2600 : 900;
+    techCollectionDismissTimerRef.current = window.setTimeout(() => {
+      setTechCollectionModal(null);
+      techCollectionDismissTimerRef.current = null;
+    }, dwellMs);
+  }, [client, islandNumber, playIslandRunSound, resolveTechCollectionSlot, session, triggerIslandRunHaptic]);
 
   // Seed spacing constants. The landing seed packs three independent dimensions
   // into one 32-bit integer: island number × ISLAND_SEED_STRIDE + tile index ×
@@ -10733,7 +10835,7 @@ export function IslandRunBoardPrototype({
           boardTiltXDeg={boardTiltXDeg}
           boardRotateZDeg={boardRotateZDeg}
           tileMap={landmarkDoorTileMap}
-          trafficLightCharge={trafficLightCharge}
+          trafficLightCharge={displayedTrafficLightCharge}
           trafficLightChargeTarget={TRAFFIC_LIGHT_CHARGE_TARGET}
           stopMap={stopMap}
           completedEncounterIndices={completedEncounterIndices}
@@ -10765,6 +10867,15 @@ export function IslandRunBoardPrototype({
           onCameraGesture={() => setIsTopbarMenuPrimed(false)}
           onTokenHop={(tileIndex) => {
             playTokenMoveSound();
+            // Light the traffic-light tile the instant the token passes over it
+            // (mid-roll), rather than waiting for the landing/commit. Functional
+            // update handles the rare big-roll case of passing it twice.
+            if (tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
+              setTrafficLightVisualCharge((prev) => {
+                const base = prev ?? trafficLightCharge;
+                return Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, base + 1);
+              });
+            }
           }}
           onTokenLand={(tileIndex) => {
             playIslandRunSound('stop_land');
@@ -11005,12 +11116,37 @@ export function IslandRunBoardPrototype({
 
 
       {techCollectionModal && typeof document !== 'undefined' ? createPortal((
-        <div className="island-stop-modal-backdrop island-tech-collection-modal-backdrop" role="presentation">
+        <div
+          className={[
+            'island-stop-modal-backdrop',
+            'island-tech-collection-modal-backdrop',
+            techCollectionModal.isLineEvent
+              ? 'island-tech-collection-modal-backdrop--line'
+              : 'island-tech-collection-modal-backdrop--fast',
+          ].join(' ')}
+          role="presentation"
+          onClick={() => {
+            if (techCollectionDismissTimerRef.current !== null) {
+              window.clearTimeout(techCollectionDismissTimerRef.current);
+              techCollectionDismissTimerRef.current = null;
+            }
+            setTechCollectionModal(null);
+          }}
+        >
           <section
-            className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-tech-collection-modal"
+            className={[
+              'island-stop-modal',
+              'island-stop-modal--readable',
+              'island-stop-modal--dense',
+              'island-tech-collection-modal',
+              techCollectionModal.isLineEvent
+                ? 'island-tech-collection-modal--line'
+                : 'island-tech-collection-modal--fast',
+            ].join(' ')}
             role="dialog"
             aria-modal="true"
             aria-label="Tech item collection"
+            onClick={(e) => e.stopPropagation()}
           >
             <p className="island-stop-modal__eyebrow">Tech build collection</p>
             <h3 className="island-stop-modal__title">💨 Tech item collected</h3>
@@ -11047,15 +11183,25 @@ export function IslandRunBoardPrototype({
                 ? `Reward triggered: +${techCollectionModal.rewardDice} dice${techCollectionModal.isFullBoard ? ' — full board bonus!' : ''}`
                 : `${techCollectionModal.collectedCount}/9 tech pieces installed. Complete a row, column, or diagonal for dice.`}
             </p>
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                onClick={() => setTechCollectionModal(null)}
-              >
-                Continue
-              </button>
-            </div>
+            {techCollectionModal.isLineEvent ? (
+              <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                  onClick={() => {
+                    if (techCollectionDismissTimerRef.current !== null) {
+                      window.clearTimeout(techCollectionDismissTimerRef.current);
+                      techCollectionDismissTimerRef.current = null;
+                    }
+                    setTechCollectionModal(null);
+                  }}
+                >
+                  Continue
+                </button>
+              </div>
+            ) : (
+              <p className="island-tech-collection-modal__hint" aria-hidden="true">Tap to dismiss</p>
+            )}
           </section>
         </div>
       ), document.body) : null}

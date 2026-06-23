@@ -693,6 +693,62 @@ export function applyTokenHopRewards(options: {
   return next;
 }
 
+/**
+ * Persists the per-island "tech build" pickup grid (collected slot indices and
+ * the line indices that have already paid a completion reward) through the
+ * canonical store path. UI passes the full next-state arrays for the active
+ * island; this action sorts/dedupes/prunes and commits.
+ */
+export function applyTechCollectionState(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  collectedSlots: number[];
+  rewardedLines: number[];
+  triggerSource?: string;
+}): IslandRunGameStateRecord {
+  const { session, client, islandNumber, collectedSlots, rewardedLines, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const islandKey = String(Math.max(1, Math.trunc(islandNumber)));
+
+  const normalizeIndices = (values: number[], maxExclusive: number): number[] => {
+    const seen = new Set<number>();
+    const out: number[] = [];
+    for (const raw of values) {
+      const idx = Math.floor(raw);
+      if (!Number.isFinite(idx) || idx < 0 || idx >= maxExclusive || seen.has(idx)) continue;
+      seen.add(idx);
+      out.push(idx);
+    }
+    return out.sort((a, b) => a - b);
+  };
+
+  const nextCollected = normalizeIndices(collectedSlots, 9);
+  const nextRewardedLines = normalizeIndices(rewardedLines, 8);
+
+  const nextCollectedLedger = { ...current.techCollectionByIsland };
+  if (nextCollected.length > 0) nextCollectedLedger[islandKey] = nextCollected;
+  else delete nextCollectedLedger[islandKey];
+
+  const nextRewardedLedger = { ...current.techCollectionRewardedLinesByIsland };
+  if (nextRewardedLines.length > 0) nextRewardedLedger[islandKey] = nextRewardedLines;
+  else delete nextRewardedLedger[islandKey];
+
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    techCollectionByIsland: nextCollectedLedger,
+    techCollectionRewardedLinesByIsland: nextRewardedLedger,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_tech_collection_state',
+  });
+  return next;
+}
+
 export interface ApplyTrafficLightPassResult {
   record: IslandRunGameStateRecord;
   chargeAfter: number;

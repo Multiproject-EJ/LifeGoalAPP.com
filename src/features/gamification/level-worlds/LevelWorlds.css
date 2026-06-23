@@ -10686,3 +10686,96 @@
   0%, 100% { transform: translateY(0) rotate(-5deg) scale(0.95); }
   50% { transform: translateY(-8px) rotate(7deg) scale(1.08); }
 }
+
+/* ── Fast pickup flourish ───────────────────────────────────────────────────
+   A plain pickup should feel like a quick poof-into-grid, never a blocking
+   dialog. The fast backdrop does not dim the board and lets taps fall through
+   visually; the panel pops in and auto-dismisses. */
+.island-tech-collection-modal-backdrop--fast {
+  background: transparent;
+  align-items: flex-start;
+  padding-top: clamp(64px, 18vh, 200px);
+  pointer-events: auto;
+  animation: island-tech-fast-backdrop 0.9s ease forwards;
+}
+
+.island-tech-collection-modal--fast {
+  max-width: min(82vw, 320px);
+  padding: 14px 16px;
+  border-radius: 22px;
+  transform-origin: center top;
+  animation: island-tech-fast-pop 0.9s cubic-bezier(0.18, 0.9, 0.24, 1.1) forwards;
+  box-shadow: 0 18px 48px rgba(4, 8, 18, 0.5), 0 0 0 1px rgba(125, 211, 252, 0.4);
+}
+
+/* Compact the fast variant: smaller grid, no tall build column. */
+.island-tech-collection-modal--fast .island-tech-collection-grid {
+  grid-template-columns: repeat(3, minmax(40px, 1fr));
+  gap: 6px;
+  padding: 10px;
+  margin: 10px 0 6px;
+}
+
+.island-tech-collection-modal--fast .island-tech-collection-grid__cell {
+  min-height: 40px;
+  font-size: 1.1rem;
+  border-radius: 12px;
+}
+
+.island-tech-collection-modal--fast .island-tech-collection-build {
+  display: none;
+}
+
+.island-tech-collection-modal__hint {
+  margin: 2px 0 0;
+  text-align: center;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+/* ── Line-completion celebration ────────────────────────────────────────────
+   Completing a row/column/diagonal (or the full board) lingers and pulses the
+   highlighted line so the win registers before the panel clears. */
+.island-tech-collection-modal--line {
+  animation: island-tech-line-pop 0.42s cubic-bezier(0.18, 0.9, 0.24, 1.2) both;
+}
+
+.island-tech-collection-modal--line .island-tech-collection-grid__cell--line {
+  animation: island-tech-line-pulse 0.7s ease-in-out infinite;
+}
+
+@keyframes island-tech-fast-backdrop {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  82% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes island-tech-fast-pop {
+  0% { opacity: 0; transform: translateY(-16px) scale(0.86); }
+  16% { opacity: 1; transform: translateY(0) scale(1); }
+  80% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-10px) scale(0.94); }
+}
+
+@keyframes island-tech-line-pop {
+  0% { transform: scale(0.94); }
+  60% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@keyframes island-tech-line-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.7), 0 0 18px rgba(250, 204, 21, 0.4); }
+  50% { box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.95), 0 0 34px rgba(250, 204, 21, 0.7); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-tech-collection-modal-backdrop--fast,
+  .island-tech-collection-modal--fast,
+  .island-tech-collection-modal--line,
+  .island-tech-collection-modal--line .island-tech-collection-grid__cell--line {
+    animation: none;
+  }
+}
