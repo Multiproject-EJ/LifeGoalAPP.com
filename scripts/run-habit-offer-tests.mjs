@@ -24,10 +24,14 @@ try {
   const { runAllHabitCoachTests } = require(
     path.join(outDir, 'features/habits/__tests__/habitCoach.test.js'),
   );
+  const { runAllHabitChainLogicTests } = require(
+    path.join(outDir, 'features/habits/__tests__/habitChainLogic.test.js'),
+  );
   runAllTimeBoundOfferSortTests();
   await runAllDailyOfferClaimTests();
   runAllWisdomTreeGrowthTests();
   runAllHabitCoachTests();
+  runAllHabitChainLogicTests();
   console.log('habit-offer-tests: all assertions passed');
 } finally {
   rmSync(outDir, { recursive: true, force: true });

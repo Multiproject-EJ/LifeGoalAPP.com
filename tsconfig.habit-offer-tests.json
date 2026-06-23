@@ -19,6 +19,8 @@
     "src/features/habits/habitHealth.ts",
     "src/features/habits/habitCoach.ts",
     "src/features/habits/__tests__/habitCoach.test.ts",
+    "src/features/habits/habitChainLogic.ts",
+    "src/features/habits/__tests__/habitChainLogic.test.ts",
     "src/features/zen-garden/treeGrowth.ts",
     "src/features/zen-garden/__tests__/treeGrowth.test.ts"
   ]

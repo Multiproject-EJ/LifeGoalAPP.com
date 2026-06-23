@@ -91,6 +91,7 @@ import {
   rankHabitsForTimeLimitedOffer,
 } from './timeLimitedOffer';
 import { HabitImprovementAnalysisModal } from './HabitImprovementAnalysisModal';
+import { HabitChainAnalysisModal } from './HabitChainAnalysisModal';
 import { buildEnhancedRationale } from './aiRationale';
 import { generateHabitSuggestion, type HabitAiSuggestion } from '../../services/habitAiSuggestions';
 import {
@@ -1109,6 +1110,7 @@ export function DailyHabitTracker({
   const [reviewAiLoadingHabitIds, setReviewAiLoadingHabitIds] = useState<Set<string>>(new Set());
   const [reviewAiDraftByHabitId, setReviewAiDraftByHabitId] = useState<Record<string, HabitReviewAiDraft>>({});
   const [analysisHabitId, setAnalysisHabitId] = useState<string | null>(null);
+  const [chainHabitId, setChainHabitId] = useState<string | null>(null);
   const [pendingReviewAiApply, setPendingReviewAiApply] = useState<{ habitId: string; title: string; rationale: string } | null>(null);
   const [completions, setCompletions] = useState<Record<string, HabitCompletionState>>({});
   const [monthlyCompletions, setMonthlyCompletions] = useState<
@@ -8198,6 +8200,45 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       </div>
                     ) : null}
                   </section>
+                  {!isPrivateCompactView ? (
+                    <section
+                      className="habit-checklist__detail-block habit-checklist__detail-block--understand"
+                      aria-label="Understand and improve this habit"
+                    >
+                      <div className="habit-checklist__detail-block-header">
+                        <span className="habit-checklist__detail-block-label">Understand &amp; Improve</span>
+                      </div>
+                      <p className="habit-checklist__understand-hint">
+                        Optional — explore what drives this habit when you’re curious.
+                      </p>
+                      <div className="habit-checklist__understand-actions">
+                        <button
+                          type="button"
+                          className="habit-checklist__understand-btn"
+                          disabled={isSaving}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setAnalysisHabitId(habit.id);
+                          }}
+                        >
+                          <span className="habit-checklist__understand-btn-title">Cue → routine → reward</span>
+                          <small>Guided deep dive into the habit loop</small>
+                        </button>
+                        <button
+                          type="button"
+                          className="habit-checklist__understand-btn"
+                          disabled={isSaving}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setChainHabitId(habit.id);
+                          }}
+                        >
+                          <span className="habit-checklist__understand-btn-title">Chain &amp; keystone</span>
+                          <small>Map ripple effects on other habits &amp; life areas</small>
+                        </button>
+                      </div>
+                    </section>
+                  ) : null}
                   <section className="habit-checklist__detail-block habit-checklist__detail-block--manage" aria-label="Habit actions">
                     <div className="habit-checklist__detail-block-header">
                       <span className="habit-checklist__detail-block-label">Manage</span>
@@ -9465,6 +9506,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 habitName={habits.find((habit) => habit.id === analysisHabitId)?.name ?? 'Habit'}
                 onClose={() => setAnalysisHabitId(null)}
                 onProtocolStarted={() => handleHabitReviewDeepFixProtocolStarted(analysisHabitId)}
+              />
+            ) : null}
+
+            {chainHabitId ? (
+              <HabitChainAnalysisModal
+                isOpen={Boolean(chainHabitId)}
+                userId={session.user.id}
+                sourceHabitId={chainHabitId}
+                sourceHabitName={habits.find((habit) => habit.id === chainHabitId)?.name ?? 'Habit'}
+                otherHabits={habits
+                  .filter((habit) => habit.id !== chainHabitId)
+                  .map((habit) => ({ id: habit.id, name: habit.name }))}
+                onClose={() => setChainHabitId(null)}
               />
             ) : null}
 
