@@ -5224,6 +5224,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setShowLevelWorldsFromEntry(true);
               }}
               onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
+              onOpenAiCoach={(starterQuestion) => {
+                setAiCoachStarterQuestion(starterQuestion ?? undefined);
+                setShowAiCoachModal(true);
+              }}
               forceCompactView={!isGameModeActive}
               preferredCompactView={!isGameModeActive ? true : workspaceProfile?.private_compact_view_enabled ?? false}
               onPreferredCompactViewChange={handlePreferredCompactViewChange}
