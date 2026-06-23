@@ -16,6 +16,9 @@
     "src/features/habits/__tests__/dailyOfferClaim.test.ts",
     "src/features/habits/timeBoundOfferSort.ts",
     "src/features/habits/__tests__/timeBoundOfferSort.test.ts",
+    "src/features/habits/habitHealth.ts",
+    "src/features/habits/habitCoach.ts",
+    "src/features/habits/__tests__/habitCoach.test.ts",
     "src/features/zen-garden/treeGrowth.ts",
     "src/features/zen-garden/__tests__/treeGrowth.test.ts"
   ]

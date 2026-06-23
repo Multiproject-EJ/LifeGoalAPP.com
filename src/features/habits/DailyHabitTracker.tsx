@@ -84,6 +84,7 @@ import {
   shouldAutoArchiveHabitFromReview,
   type HabitHealthState,
 } from './habitHealth';
+import { buildHabitCoachCard } from './habitCoach';
 import {
   getDefaultHabitRewardGold,
   isEligibleTimeLimitedOfferHabit,
@@ -7549,6 +7550,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const upgradeTier = getNextUpgradeTier(autoProgressState.tier);
             const adherenceSnapshot = adherenceByHabit[habit.id];
             const habitHealthState = habitHealthByHabitId[habit.id] ?? 'active';
+            const habitHealthAssessment = habitHealthAssessmentsByHabitId[habit.id] ?? null;
             const streakDays = habitInsights[habit.id]?.currentStreak ?? 0;
             const adherencePercent = adherenceSnapshot?.percentage ?? 0;
             const canUpgrade =
@@ -7576,6 +7578,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             });
             const isQuestHabit = questHabit?.habitId === habit.id;
             const habitDisplayName = isPrivateCompactView ? `Private habit ${habitIndex + 1}` : habit.name;
+            // Struggling-habit coach (deterministic; shown inside the expanded card).
+            // Hidden in compact private view to avoid leaking habit specifics.
+            const coachCard =
+              !isPrivateCompactView && habitHealthAssessment
+                ? buildHabitCoachCard({
+                    habitName: habit.name,
+                    assessment: habitHealthAssessment,
+                    adherencePercent: adherenceSnapshot ? adherencePercent : null,
+                    streakDays,
+                    hasDownshiftOption: Boolean(downshiftTier) || Boolean(suggestedDownshiftStage),
+                    hasEnvironmentCue: Boolean(habit.habit_environment && habit.habit_environment.trim()),
+                  })
+                : null;
 
             return (
               <li
@@ -7941,6 +7956,40 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   }`}
                   id={detailPanelId}
                 >
+                  {coachCard ? (
+                    <section
+                      className={`habit-checklist__detail-block habit-checklist__coach habit-checklist__coach--${coachCard.state}`}
+                      aria-label="Habit coach"
+                    >
+                      <div className="habit-checklist__detail-block-header">
+                        <span className="habit-checklist__coach-badge">
+                          {getHabitHealthBadgeLabel(coachCard.state)}
+                        </span>
+                        <span className="habit-checklist__detail-block-label">{coachCard.headline}</span>
+                      </div>
+                      <p className="habit-checklist__coach-message">{coachCard.message}</p>
+                      <ul className="habit-checklist__coach-tips">
+                        {coachCard.tips.map((tip) => (
+                          <li key={tip.id} className="habit-checklist__coach-tip">
+                            <span className="habit-checklist__coach-tip-label">{tip.label}</span>
+                            <span className="habit-checklist__coach-tip-detail">{tip.detail}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {onOpenAiCoach ? (
+                        <button
+                          type="button"
+                          className="habit-checklist__coach-ai-btn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onOpenAiCoach(coachCard.aiPrompt);
+                          }}
+                        >
+                          Ask the coach for a plan
+                        </button>
+                      ) : null}
+                    </section>
+                  ) : null}
                   <section className="habit-checklist__detail-block habit-checklist__detail-block--info" aria-label="Habit info">
                     <div className="habit-checklist__detail-block-header">
                       <span className="habit-checklist__detail-block-label">Info</span>
