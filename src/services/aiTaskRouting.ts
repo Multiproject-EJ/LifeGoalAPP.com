@@ -5,6 +5,7 @@ export type AiTaskKey =
   | 'habit_title_rewrite'
   | 'habit_suggestion_structured'
   | 'habit_rationale_rewrite'
+  | 'habit_chain_suggestion'
   | 'environment_idea_generation'
   | 'conflict_inner_reflection'
   | 'conflict_shared_mediation';
@@ -26,6 +27,10 @@ const AI_TASK_REGISTRY: Record<AiTaskKey, AiTaskDefinition> = {
   habit_rationale_rewrite: {
     level: 'level_1',
     description: 'Polish rationale copy with clarity and encouragement.',
+  },
+  habit_chain_suggestion: {
+    level: 'level_1',
+    description: 'Suggest possible keystone / chain-reaction links between habits and life areas.',
   },
   environment_idea_generation: {
     level: 'level_1',
