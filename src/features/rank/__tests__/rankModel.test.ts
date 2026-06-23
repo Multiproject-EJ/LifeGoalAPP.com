@@ -21,6 +21,7 @@ import {
   everyRankHasBadge,
 } from '../rankAssets';
 import { buildRankProgressView } from '../rankProgressView';
+import { computePendingPromotion } from '../rankAcknowledgement';
 
 // Linear stand-in for the XP curve so band math is easy to reason about in tests
 // (the real curve is injected from combinedJourneyLevel.ts at runtime).
@@ -224,6 +225,36 @@ const tests: Array<{ name: string; run: () => void }> = [
       const view = buildRankProgressView({ level: 6, xp: 0, cumulativeXpForLevel: linearCurve });
       assert(view.xpIntoRank >= 0, 'Expected non-negative xp into band');
       assert(view.percent >= 0 && view.percent <= 100, 'Expected percent within bounds');
+    },
+  },
+  {
+    name: 'computePendingPromotion returns null when nothing new to celebrate',
+    run: () => {
+      assertEqual(computePendingPromotion(3, 3), null, 'Same rank → no promotion');
+      assertEqual(computePendingPromotion(5, 3), null, 'Lower current (rollback) → no promotion');
+    },
+  },
+  {
+    name: 'computePendingPromotion reports a single-rank promotion with no skips',
+    run: () => {
+      const promo = computePendingPromotion(3, 4);
+      assert(promo !== null, 'Expected a promotion');
+      assertEqual(promo?.fromRankId, 3, 'Expected from rank 3');
+      assertEqual(promo?.toRankId, 4, 'Expected to rank 4');
+      assertEqual(promo?.skippedRankIds.length, 0, 'Expected no skipped ranks');
+    },
+  },
+  {
+    name: 'computePendingPromotion lists intermediate ranks for a multi-rank jump',
+    run: () => {
+      const promo = computePendingPromotion(1, 5);
+      assert(promo !== null, 'Expected a promotion');
+      assertEqual(promo?.toRankId, 5, 'Expected to rank 5');
+      assertEqual(
+        JSON.stringify(promo?.skippedRankIds),
+        JSON.stringify([2, 3, 4]),
+        'Expected ranks 2,3,4 as skipped',
+      );
     },
   },
 ];

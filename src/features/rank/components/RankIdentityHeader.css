@@ -58,6 +58,28 @@
   cursor: pointer;
   flex: 0 0 auto;
   line-height: 0;
+  border-radius: 999px;
+}
+
+.rank-identity__badge-btn--pulse {
+  animation: rank-identity-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes rank-identity-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 97, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(52, 97, 255, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rank-identity__badge-btn--pulse {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(52, 97, 255, 0.5);
+  }
 }
 
 /* Identity text */

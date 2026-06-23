@@ -2,6 +2,7 @@
   "compilerOptions": {
     "strict": true,
     "target": "ES2022",
+    "lib": ["DOM", "ES2022"],
     "module": "CommonJS",
     "moduleResolution": "Node10",
     "ignoreDeprecations": "5.0",
@@ -15,6 +16,7 @@
     "src/features/rank/rankModel.ts",
     "src/features/rank/rankAssets.ts",
     "src/features/rank/rankProgressView.ts",
+    "src/features/rank/rankAcknowledgement.ts",
     "src/features/rank/__tests__/rankModel.test.ts"
   ]
 }
