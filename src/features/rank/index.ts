@@ -29,3 +29,9 @@ export {
   everyRankHasBadge,
   type MembershipBadge,
 } from './rankAssets';
+
+export { buildRankProgressView, type RankProgressView } from './rankProgressView';
+
+export { RankBadge, type RankBadgeProps } from './components/RankBadge';
+export { RankIdentityHeader, type RankIdentityHeaderProps } from './components/RankIdentityHeader';
+export { RankJourneyModal, type RankJourneyModalProps } from './components/RankJourneyModal';

@@ -1,0 +1,34 @@
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--rank-badge-size, 48px);
+  height: var(--rank-badge-size, 48px);
+  flex: 0 0 auto;
+  line-height: 0;
+}
+
+.rank-badge__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(8, 14, 38, 0.28));
+}
+
+.rank-badge--locked .rank-badge__img {
+  filter: grayscale(1) brightness(0.7) contrast(0.9);
+  opacity: 0.45;
+}
+
+.rank-badge__fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(160deg, #2b3a72, #131a36);
+  color: #f4f7ff;
+  font-weight: 700;
+  font-size: calc(var(--rank-badge-size, 48px) * 0.42);
+}
