@@ -23,6 +23,8 @@ export interface RankIdentityHeaderProps {
   progress: RankProgressView;
   /** Membership tier; drives the single current-tier pill (free → no pill). */
   tier: MembershipTier;
+  /** When true, the rank badge pulses to signal an unacknowledged promotion. */
+  hasPendingPromotion?: boolean;
   onOpenRank: () => void;
   onTierClick?: () => void;
 }
@@ -35,6 +37,7 @@ export function RankIdentityHeader({
   level,
   progress,
   tier,
+  hasPendingPromotion = false,
   onOpenRank,
   onTierClick,
 }: RankIdentityHeaderProps) {
@@ -57,9 +60,9 @@ export function RankIdentityHeader({
 
         <button
           type="button"
-          className="rank-identity__badge-btn"
+          className={`rank-identity__badge-btn${hasPendingPromotion ? ' rank-identity__badge-btn--pulse' : ''}`}
           onClick={onOpenRank}
-          aria-label={`Rank: ${current.title}. Open rank journey`}
+          aria-label={`Rank: ${current.title}.${hasPendingPromotion ? ' New rank earned.' : ''} Open rank journey`}
         >
           <RankBadge rank={current} size={84} />
         </button>

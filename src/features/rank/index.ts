@@ -32,6 +32,17 @@ export {
 
 export { buildRankProgressView, type RankProgressView } from './rankProgressView';
 
+export {
+  computePendingPromotion,
+  loadAcknowledgedRankId,
+  saveAcknowledgedRankId,
+  type PendingPromotion,
+} from './rankAcknowledgement';
+
 export { RankBadge, type RankBadgeProps } from './components/RankBadge';
 export { RankIdentityHeader, type RankIdentityHeaderProps } from './components/RankIdentityHeader';
 export { RankJourneyModal, type RankJourneyModalProps } from './components/RankJourneyModal';
+export {
+  RankPromotionCelebration,
+  type RankPromotionCelebrationProps,
+} from './components/RankPromotionCelebration';

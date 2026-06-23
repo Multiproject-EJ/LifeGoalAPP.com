@@ -60,7 +60,17 @@ import {
   deriveCombinedJourneyLevel,
   cumulativeXpForLevel,
 } from './features/gamification/level-worlds/services/combinedJourneyLevel';
-import { buildRankProgressView, RankIdentityHeader, RankJourneyModal } from './features/rank';
+import {
+  buildRankProgressView,
+  computePendingPromotion,
+  loadAcknowledgedRankId,
+  saveAcknowledgedRankId,
+  getRankById,
+  MIN_RANK,
+  RankIdentityHeader,
+  RankJourneyModal,
+  RankPromotionCelebration,
+} from './features/rank';
 import { tierFromIsPro, type MembershipTier } from './features/membership';
 import { fetchBillingSnapshot } from './services/billing';
 import { HabitGameAuthCard, HabitGameLandingShell, type HabitGameAuthTab } from './components/HabitGameLandingShell';
@@ -1094,6 +1104,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
       cancelled = true;
     };
   }, [supabaseSession?.user?.id]);
+
+  // Rank promotion: surfaced at the safe moment the player opens their menu.
+  // Acknowledgement is persisted (v1: localStorage) so each promotion shows once.
+  const [acknowledgedRankId, setAcknowledgedRankId] = useState<number>(MIN_RANK.id);
+  useEffect(() => {
+    setAcknowledgedRankId(loadAcknowledgedRankId(supabaseSession?.user?.id ?? null));
+  }, [supabaseSession?.user?.id, isMobileMenuOpen]);
+  const menuCurrentRankId = menuRankProgress.current.id;
+  const pendingPromotion = computePendingPromotion(acknowledgedRankId, menuCurrentRankId);
+  const acknowledgePromotion = () => {
+    if (!pendingPromotion) return;
+    saveAcknowledgedRankId(supabaseSession?.user?.id ?? null, pendingPromotion.toRankId);
+    setAcknowledgedRankId(pendingPromotion.toRankId);
+  };
+
   useEffect(() => {
     if (!showGameBoardOverlay || !overlayRealLifeUserId) return;
     let cancelled = false;
@@ -4229,6 +4254,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 level={menuJourneySummary.level}
                 progress={menuRankProgress}
                 tier={menuMembershipTier}
+                hasPendingPromotion={pendingPromotion !== null}
                 onOpenRank={() => setIsRankJourneyOpen(true)}
               />
             </div>
@@ -4238,6 +4264,24 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 progress={menuRankProgress}
                 onClose={() => setIsRankJourneyOpen(false)}
               />
+            ) : null}
+            {pendingPromotion ? (
+              (() => {
+                const fromRank = getRankById(pendingPromotion.fromRankId);
+                const toRank = getRankById(pendingPromotion.toRankId);
+                if (!fromRank || !toRank) return null;
+                const skippedRanks = pendingPromotion.skippedRankIds
+                  .map((id) => getRankById(id))
+                  .filter((rank): rank is NonNullable<typeof rank> => Boolean(rank));
+                return (
+                  <RankPromotionCelebration
+                    fromRank={fromRank}
+                    toRank={toRank}
+                    skippedRanks={skippedRanks}
+                    onContinue={acknowledgePromotion}
+                  />
+                );
+              })()
             ) : null}
             {isMobileProfileDialogOpen ? (
               <div className="mobile-menu-overlay__profile-dialog" role="dialog" aria-modal="true" aria-label="Player profile details">
