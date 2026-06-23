@@ -8,6 +8,12 @@ import {
 } from '../features/gamification/level-worlds/services/dualTrackOverlayAdapter';
 import type { JourneyChestClaimViewModel } from '../features/gamification/level-worlds/services/combinedJourneyChestClaim';
 import {
+  RankBadge,
+  RankJourneyModal,
+  type RankDefinition,
+  type RankProgressView,
+} from '../features/rank';
+import {
   ISLAND_RUN_CONTROLLER_SLOT_MAP,
   getIslandRunControllerSlotStyle,
 } from '../features/gamification/level-worlds/services/islandRunControllerVisualContract';
@@ -88,6 +94,14 @@ type GameBoardOverlayProps = {
   journeyChestFeedback?: string | null;
   /** Invoked when the user claims the current chest. */
   onClaimJourneyChest?: (thresholdLevel: number) => void;
+  /** Current player rank (Combined Journey Level) shown as a node on the spine. */
+  currentRank?: RankDefinition;
+  /** Rank-band progress for the rank journey modal opened from the spine node. */
+  rankProgress?: RankProgressView;
+  /** Combined Journey Level (for the rank journey modal). */
+  rankLevel?: number;
+  /** When true, the spine rank node pulses to signal an unacknowledged promotion. */
+  rankHasPendingPromotion?: boolean;
 };
 
 type DualTrackColumnProps = {
@@ -152,9 +166,14 @@ export function GameBoardOverlay({
   journeyChestPending = false,
   journeyChestFeedback,
   onClaimJourneyChest,
+  currentRank,
+  rankProgress,
+  rankLevel,
+  rankHasPendingPromotion = false,
 }: GameBoardOverlayProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [isRankJourneyOpen, setIsRankJourneyOpen] = useState(false);
   const [isLadderClimbing, setIsLadderClimbing] = useState(false);
   const [climbDelta, setClimbDelta] = useState(0);
 
@@ -282,6 +301,20 @@ export function GameBoardOverlay({
                 aria-label={`Combined Journey Level ${dualTrackViewModel.journeyLevel.level}, ${dualTrackViewModel.journeyLevel.progressPercentToNextLevel} percent to ${dualTrackViewModel.journeyLevel.nextChestLabel}`}
               >
                 <span className="game-board-overlay__progress-spine-label" aria-hidden="true">{dualTrackViewModel.centerSpine.label}</span>
+                {currentRank ? (
+                  <button
+                    type="button"
+                    className={`game-board-overlay__progress-spine-rank${
+                      rankHasPendingPromotion ? ' game-board-overlay__progress-spine-rank--pulse' : ''
+                    }`}
+                    onClick={() => setIsRankJourneyOpen(true)}
+                    aria-label={`Rank: ${currentRank.title}.${
+                      rankHasPendingPromotion ? ' New rank earned.' : ''
+                    } Open rank journey`}
+                  >
+                    <RankBadge rank={currentRank} size={44} />
+                  </button>
+                ) : null}
                 <span className="game-board-overlay__progress-spine-orb" aria-hidden="true">
                   {dualTrackViewModel.centerSpine.icon}
                 </span>
@@ -322,6 +355,14 @@ export function GameBoardOverlay({
               />
             </div>
           </section>
+
+          {isRankJourneyOpen && currentRank && rankProgress ? (
+            <RankJourneyModal
+              level={rankLevel ?? dualTrackViewModel.journeyLevel.level}
+              progress={rankProgress}
+              onClose={() => setIsRankJourneyOpen(false)}
+            />
+          ) : null}
 
           <div className="game-board-overlay__controller-shell" aria-label="Game overlay controller menu">
             <button
