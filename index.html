@@ -21,9 +21,20 @@
 
           document.documentElement.setAttribute('data-theme', resolvedTheme);
           document.documentElement.style.colorScheme = isDarkTheme ? 'dark' : 'light';
+
+          // Paint the document background on the FIRST paint — before the JS
+          // bundle (index.css / themes.css) loads and before React/ThemeContext
+          // mounts. Without this the browser shows its default white canvas for a
+          // few frames ("white drip"), and on iOS standalone PWAs the unpainted
+          // home-indicator/status-bar safe-area strip reads as a "cut off" white
+          // band until the app finishes booting. ThemeContext refines this to the
+          // exact per-theme colour once mounted; this is just the boot fallback.
+          var bootBackground = isDarkTheme ? '#0a0e1a' : '#f7f8fb';
+          document.documentElement.style.backgroundColor = bootBackground;
         } catch {
           document.documentElement.setAttribute('data-theme', 'dark-glass');
           document.documentElement.style.colorScheme = 'dark';
+          document.documentElement.style.backgroundColor = '#0a0e1a';
         }
       })();
     </script>
