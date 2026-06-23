@@ -56,6 +56,13 @@ import { LoadingReadinessScreen, type LoadingReadinessStep } from './components/
 import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { buildJourneyLevelInputFromOverlay } from './features/gamification/level-worlds/services/dualTrackOverlayAdapter';
 import { useCombinedJourneyChest } from './features/gamification/level-worlds/hooks/useCombinedJourneyChest';
+import {
+  deriveCombinedJourneyLevel,
+  cumulativeXpForLevel,
+} from './features/gamification/level-worlds/services/combinedJourneyLevel';
+import { buildRankProgressView, RankIdentityHeader, RankJourneyModal } from './features/rank';
+import { tierFromIsPro, type MembershipTier } from './features/membership';
+import { fetchBillingSnapshot } from './services/billing';
 import { HabitGameAuthCard, HabitGameLandingShell, type HabitGameAuthTab } from './components/HabitGameLandingShell';
 import { HolidaySeasonDialog } from './components/HolidaySeasonDialog';
 import { FeaturePreviewOverlay } from './components/FeaturePreviewOverlay';
@@ -1038,16 +1045,19 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [overlayRealLifeInput, setOverlayRealLifeInput] = useState<DualTrackRealLifeInput | undefined>(undefined);
   const overlayRealLifeUserId = supabaseSession?.user?.id ?? null;
 
+  // Shared Combined Journey Level inputs (chest claim + player-menu rank header).
+  const journeyLevelInput = buildJourneyLevelInputFromOverlay({
+    islandNumber: overlayIslandNumber,
+    rewardBarProgress: overlayRewardBarProgress,
+    rewardBarThreshold: overlayRewardBarThreshold,
+    realLife: overlayRealLifeInput,
+  });
+
   // Combined Journey Level chest claim (R5). Flag-gated; no-op while off.
   const combinedJourneyChest = useCombinedJourneyChest({
     session: supabaseSession,
     isOpen: showGameBoardOverlay,
-    milestoneInputs: buildJourneyLevelInputFromOverlay({
-      islandNumber: overlayIslandNumber,
-      rewardBarProgress: overlayRewardBarProgress,
-      rewardBarThreshold: overlayRewardBarThreshold,
-      realLife: overlayRealLifeInput,
-    }),
+    milestoneInputs: journeyLevelInput,
   });
   const combinedJourneyChestProps = {
     journeyChest: combinedJourneyChest.chest,
@@ -1055,6 +1065,35 @@ export default function App({ forceAuthOnMount }: AppProps) {
     journeyChestFeedback: combinedJourneyChest.feedback,
     onClaimJourneyChest: combinedJourneyChest.claim,
   };
+
+  // Player-menu rank header: derive the canonical Combined Journey Level and the
+  // rank-band XP progress used by the identity header + rank journey modal.
+  const menuJourneySummary = deriveCombinedJourneyLevel(journeyLevelInput);
+  const menuRankProgress = buildRankProgressView({
+    level: menuJourneySummary.level,
+    xp: menuJourneySummary.xp,
+    cumulativeXpForLevel,
+  });
+  const [isRankJourneyOpen, setIsRankJourneyOpen] = useState(false);
+
+  // Membership tier for the player-menu pill (single current tier). Derived from
+  // the canonical Pro entitlement; defaults to free without a session.
+  const [menuMembershipTier, setMenuMembershipTier] = useState<MembershipTier>('free');
+  useEffect(() => {
+    const userId = supabaseSession?.user?.id;
+    if (!userId) {
+      setMenuMembershipTier('free');
+      return;
+    }
+    let cancelled = false;
+    void fetchBillingSnapshot(userId).then(({ data }) => {
+      if (cancelled) return;
+      setMenuMembershipTier(tierFromIsPro(Boolean(data?.entitlement?.is_pro)));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabaseSession?.user?.id]);
   useEffect(() => {
     if (!showGameBoardOverlay || !overlayRealLifeUserId) return;
     let cancelled = false;
@@ -4181,6 +4220,25 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 </div>
               </div>
             </div>
+            <div className="mobile-menu-overlay__rank-identity">
+              <RankIdentityHeader
+                displayName={accountDisplayName}
+                avatarUrl={profileAvatarUrl}
+                initials={accountInitials}
+                isOnline
+                level={menuJourneySummary.level}
+                progress={menuRankProgress}
+                tier={menuMembershipTier}
+                onOpenRank={() => setIsRankJourneyOpen(true)}
+              />
+            </div>
+            {isRankJourneyOpen ? (
+              <RankJourneyModal
+                level={menuJourneySummary.level}
+                progress={menuRankProgress}
+                onClose={() => setIsRankJourneyOpen(false)}
+              />
+            ) : null}
             {isMobileProfileDialogOpen ? (
               <div className="mobile-menu-overlay__profile-dialog" role="dialog" aria-modal="true" aria-label="Player profile details">
                 <div

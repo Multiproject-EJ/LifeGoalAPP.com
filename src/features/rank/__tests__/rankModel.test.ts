@@ -20,6 +20,11 @@ import {
   membershipBadgeLabel,
   everyRankHasBadge,
 } from '../rankAssets';
+import { buildRankProgressView } from '../rankProgressView';
+
+// Linear stand-in for the XP curve so band math is easy to reason about in tests
+// (the real curve is injected from combinedJourneyLevel.ts at runtime).
+const linearCurve = (level: number) => Math.max(0, (level - 1) * 100);
 
 function assert(condition: boolean, message: string): void {
   if (!condition) {
@@ -186,6 +191,39 @@ const tests: Array<{ name: string; run: () => void }> = [
       assert(membershipBadgeSrc('pro').startsWith('/assets/ranks/'), 'Expected a pro badge path');
       assertEqual(membershipBadgeLabel('member'), 'Member', 'Expected Member label');
       assertEqual(membershipBadgeLabel('pro'), 'Pro', 'Expected Pro label');
+    },
+  },
+  {
+    name: 'buildRankProgressView reports XP toward the next rank',
+    run: () => {
+      // Deckhand band: levels 1..2 (Crewmate starts at 3). With the linear curve,
+      // band start xp = 0, band end xp = (3-1)*100 = 200. At xp 100 → 50%.
+      const view = buildRankProgressView({ level: 2, xp: 100, cumulativeXpForLevel: linearCurve });
+      assertEqual(view.current.key, 'deckhand', 'Expected current rank Deckhand');
+      assertEqual(view.next?.key, 'crewmate', 'Expected next rank Crewmate');
+      assertEqual(view.xpForRank, 200, 'Expected the Deckhand band to span 200 xp');
+      assertEqual(view.xpIntoRank, 100, 'Expected 100 xp into the band');
+      assertEqual(view.percent, 50, 'Expected 50% toward Crewmate');
+      assertEqual(view.xpRemaining, 100, 'Expected 100 xp remaining');
+    },
+  },
+  {
+    name: 'buildRankProgressView saturates a full bar at the max rank',
+    run: () => {
+      const view = buildRankProgressView({ level: 90, xp: 99999, cumulativeXpForLevel: linearCurve });
+      assertEqual(view.current.key, 'sky-marshal', 'Expected current rank Sky Marshal');
+      assertEqual(view.next, null, 'Expected no next rank');
+      assertEqual(view.percent, 100, 'Expected a full bar at the max rank');
+      assertEqual(view.xpRemaining, 0, 'Expected no xp remaining at the max rank');
+    },
+  },
+  {
+    name: 'buildRankProgressView clamps xp below the current band start',
+    run: () => {
+      // xp below the band start should not produce negative progress.
+      const view = buildRankProgressView({ level: 6, xp: 0, cumulativeXpForLevel: linearCurve });
+      assert(view.xpIntoRank >= 0, 'Expected non-negative xp into band');
+      assert(view.percent >= 0 && view.percent <= 100, 'Expected percent within bounds');
     },
   },
 ];

@@ -14,7 +14,7 @@
   "include": [
     "src/features/rank/rankModel.ts",
     "src/features/rank/rankAssets.ts",
-    "src/features/rank/index.ts",
+    "src/features/rank/rankProgressView.ts",
     "src/features/rank/__tests__/rankModel.test.ts"
   ]
 }
