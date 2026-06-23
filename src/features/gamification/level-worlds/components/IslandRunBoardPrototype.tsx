@@ -6172,17 +6172,21 @@ export function IslandRunBoardPrototype({
   // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
   const rollIndexRef = useRef(0);
 
-  const resolveTechCollectionSlot = useCallback((tileIndex: number) => {
-    const tileCount = Math.max(1, activeTileAnchors.length || ACTIVE_BOARD_PROFILE.tileCount);
-    return Math.abs(Math.floor(tileIndex)) % Math.min(TECH_COLLECTION_GRID_SIZE * TECH_COLLECTION_GRID_SIZE, tileCount);
-  }, [activeTileAnchors.length]);
-
   const maybeCollectTechItem = useCallback((tileType: string, landingTileIndex: number) => {
     if (tileType !== 'currency' && tileType !== 'chest' && tileType !== 'micro' && tileType !== 'card') return;
 
-    const slotIndex = resolveTechCollectionSlot(landingTileIndex);
+    const cellCount = TECH_COLLECTION_GRID_SIZE * TECH_COLLECTION_GRID_SIZE;
     const previousCollected = collectedTechTileIndicesRef.current;
-    if (previousCollected.has(slotIndex)) return;
+    // Each collectible pickup snaps into the NEXT empty grid slot (not a
+    // tile-derived slot) so every pickup reliably advances the build by one
+    // piece and plays its animation. Once all 9 are placed the island's grid is
+    // complete and further pickups no-op until the next island's fresh grid.
+    if (previousCollected.size >= cellCount) return;
+    let slotIndex = -1;
+    for (let i = 0; i < cellCount; i += 1) {
+      if (!previousCollected.has(i)) { slotIndex = i; break; }
+    }
+    if (slotIndex < 0) return;
 
     const nextCollected = new Set(previousCollected);
     nextCollected.add(slotIndex);
@@ -6247,12 +6251,12 @@ export function IslandRunBoardPrototype({
     if (techCollectionDismissTimerRef.current !== null) {
       window.clearTimeout(techCollectionDismissTimerRef.current);
     }
-    const dwellMs = isLineEvent ? 2600 : 900;
+    const dwellMs = isLineEvent ? 2800 : 1300;
     techCollectionDismissTimerRef.current = window.setTimeout(() => {
       setTechCollectionModal(null);
       techCollectionDismissTimerRef.current = null;
     }, dwellMs);
-  }, [client, islandNumber, playIslandRunSound, resolveTechCollectionSlot, session, triggerIslandRunHaptic]);
+  }, [client, islandNumber, playIslandRunSound, session, triggerIslandRunHaptic]);
 
   // Seed spacing constants. The landing seed packs three independent dimensions
   // into one 32-bit integer: island number × ISLAND_SEED_STRIDE + tile index ×
