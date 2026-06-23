@@ -51,11 +51,18 @@ body,
 }
 
 html {
-  background: #f8fafc;
+  /* Solid base colour so the iOS standalone safe-area strip is always painted
+     (never a white band). Falls back to the dark app colour until the active
+     theme's --color-bg-main is available; themes.css then overrides per theme. */
+  background-color: var(--color-bg-main, #0a0e1a);
 }
 
 body {
-  background: radial-gradient(circle at top, #e0f2fe, #f8fafc 62%);
+  /* Use background-color (solid safe-area fallback) + background-image (gradient)
+     rather than the `background` shorthand: the shorthand resets background-color
+     to transparent, which exposed the white home-indicator band on iOS. */
+  background-color: var(--color-bg-main, #0a0e1a);
+  background-image: radial-gradient(circle at top, #e0f2fe, #f8fafc 62%);
   color: #0f172a;
   overflow-x: hidden;
   scrollbar-gutter: stable both-edges;
