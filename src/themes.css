@@ -238,9 +238,17 @@ html {
 }
 
 body {
+  /* `background-color` is the solid fallback that paints the safe-area
+     (home-indicator) strip in standalone PWAs. Use `background-image` for the
+     gradient instead of the `background` shorthand — the shorthand would reset
+     `background-color` back to transparent, leaving the safe area unpainted
+     (it showed through as an intermittent white bar on iOS). */
   background-color: var(--color-bg-main);
-  background: var(--color-bg-body);
-  background-attachment: fixed;
+  background-image: var(--color-bg-body);
+  /* `background-attachment: fixed` is unreliable in iOS standalone PWAs:
+     WebKit intermittently fails to paint it into the home-indicator band,
+     which exposed the white strip. Default (scroll) attachment paints
+     reliably and looks identical for an `ellipse at top` gradient. */
   color: var(--color-text-primary);
   animation: fadeIn 0.6s ease-out;
 }
@@ -266,7 +274,8 @@ body {
 /* Workspace background and styling with enhanced glass effect */
 .app--workspace {
   background: var(--color-workspace-bg);
-  background-attachment: fixed;
+  /* No `background-attachment: fixed` — see body rule above: it fails to paint
+     the safe-area strip in iOS standalone PWAs, causing the white footer band. */
 }
 
 .app--workspace::before {

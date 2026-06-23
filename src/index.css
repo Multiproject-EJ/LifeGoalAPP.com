@@ -423,6 +423,7 @@ body {
   --workspace-shell-gutter: clamp(16px, 3vw, 28px);
   --workspace-safe-inline: max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   padding: var(--workspace-shell-padding) 0;
   display: flex;
