@@ -31,6 +31,32 @@ export async function fetchTodayTodos(dateISO: string): Promise<ServiceResponse<
     .order('created_at', { ascending: true });
 }
 
+/**
+ * Fetch undone todos dated strictly before `beforeDateISO` (typically "today"),
+ * optionally bounded to dates on/after `sinceDateISO` to avoid surfacing very old
+ * items. Used by the day-change cleanup prompt so it can catch up undone todos from
+ * any recent past day, not just the immediately preceding day.
+ */
+export async function fetchUndonePastTodos(
+  beforeDateISO: string,
+  sinceDateISO?: string,
+): Promise<ServiceResponse<TodayTodo[]>> {
+  if (!canUseSupabaseData()) return { data: [], error: null };
+  const supabase = getSupabaseClient();
+  let query = supabase
+    .from('today_todos')
+    .select('*')
+    .lt('todo_date', beforeDateISO)
+    .eq('completed', false);
+  if (sinceDateISO) {
+    query = query.gte('todo_date', sinceDateISO);
+  }
+  return query
+    .order('todo_date', { ascending: false })
+    .order('order_index', { ascending: true })
+    .order('created_at', { ascending: true });
+}
+
 export async function createTodayTodo(
   userId: string,
   input: { dateISO: string; title: string; notes?: string | null; orderIndex?: number; estimatedMinutes?: number | null; isFocus?: boolean }

@@ -15,7 +15,6 @@ interface ExperimentalFeaturesSectionProps {
 
 export function ExperimentalFeaturesSection({
   session,
-  isAdmin = false,
   onLaunchYesterdayTodoCleanup,
 }: ExperimentalFeaturesSectionProps) {
   const [features, setFeatures] = useState<ExperimentalFeatureState | null>(null);
@@ -74,13 +73,13 @@ export function ExperimentalFeaturesSection({
         </div>
       ))}
 
-      {isAdmin ? (
+      {onLaunchYesterdayTodoCleanup ? (
         <div className="account-panel__setting">
           <div className="account-panel__setting-label">
             <span className="account-panel__setting-text">
-              <strong>Yesterday todo cleanup modal</strong>
+              <strong>Todo cleanup modal</strong>
               <span className="account-panel__setting-description">
-                Admin-only manual launcher for the cleanup modal that normally appears after yesterday leaves unfinished todos.
+                Manually launch the cleanup modal that normally appears after a day change when you have unfinished todos from earlier days.
               </span>
             </span>
           </div>
@@ -88,7 +87,6 @@ export function ExperimentalFeaturesSection({
             type="button"
             className="btn btn--secondary"
             onClick={onLaunchYesterdayTodoCleanup}
-            disabled={!onLaunchYesterdayTodoCleanup}
           >
             Launch cleanup modal
           </button>

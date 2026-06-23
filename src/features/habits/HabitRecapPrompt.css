@@ -414,6 +414,14 @@
   line-height: 1.2;
 }
 
+.yesterday-sundown-todo-modal__task-date {
+  grid-column: 1 / -1;
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .yesterday-sundown-todo-modal__task-notes {
   grid-column: 1 / -1;
   color: #64748b;
@@ -581,6 +589,10 @@
 [data-theme='dark-glass'] .yesterday-sundown-todo-modal__hint,
 [data-theme='dark-glass'] .yesterday-sundown-todo-modal__task-notes {
   color: rgba(226, 232, 240, 0.72);
+}
+
+[data-theme='dark-glass'] .yesterday-sundown-todo-modal__task-date {
+  color: #7dd3fc;
 }
 
 [data-theme='dark-glass'] .yesterday-sundown-todo-modal__item,

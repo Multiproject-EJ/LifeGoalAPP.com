@@ -43,7 +43,7 @@ import {
   type JournalEntry,
 } from '../../services/journal';
 import { fetchCompletedActionsForDate } from '../../services/actions';
-import { createTodayTodo, deleteTodayTodo, fetchTodayTodos, updateTodayTodo, type TodayTodo } from '../../services/todayTodos';
+import { createTodayTodo, deleteTodayTodo, fetchTodayTodos, fetchUndonePastTodos, updateTodayTodo, type TodayTodo } from '../../services/todayTodos';
 import {
   claimDailySpinHabitBonusOncePerDay,
   hasClaimedDailySpinHabitBonus,
@@ -907,6 +907,10 @@ type TodoCleanupAction = 'today' | 'tomorrow' | 'schedule' | 'finish' | 'delete'
 type TodoCleanupPendingAction = { action: TodoCleanupAction; scheduledDateISO?: string };
 const TODO_CLEANUP_MAX_PROMPTS = 3;
 const TODO_CLEANUP_LAST_PROMPT_AT = TODO_CLEANUP_MAX_PROMPTS - 1;
+// How many days back the day-change cleanup prompt scans for undone todos. The
+// prompt is keyed to "today" so this catches up items left behind on any recent
+// day, not just the immediately preceding one (e.g. after a weekend away).
+const TODO_CLEANUP_LOOKBACK_DAYS = 14;
 const dreamJournalLaunchKey = (userId: string) =>
   `lifegoal.dream-journal-launch:${userId}`;
 const todaysWinsLaunchKey = (userId: string) =>
@@ -2533,6 +2537,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   const yesterdayISO = useMemo(
     () => formatISODate(addDays(parseISODate(today), -1)),
+    [today],
+  );
+  const cleanupLookbackStartISO = useMemo(
+    () => formatISODate(addDays(parseISODate(today), -TODO_CLEANUP_LOOKBACK_DAYS)),
     [today],
   );
 
@@ -10851,7 +10859,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   const openYesterdaySundownTodoCleanup = useCallback(async (options?: { force?: boolean }) => {
     if (!session?.user?.id) return;
-    const { data, error } = await fetchTodayTodos(yesterdayISO);
+    const { data, error } = await fetchUndonePastTodos(today, cleanupLookbackStartISO);
     if (error) return;
     const displayCounts = loadDraft<Record<string, number>>(todoCleanupDisplayCountsKey(session.user.id)) ?? {};
     const staleTodos = (data ?? []).filter((todo) => !todo.completed);
@@ -10867,22 +10875,25 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
     if (pendingTodos.length === 0) {
       if (options?.force) {
-        setYesterdaySundownTodoStatus('No unfinished todos were found for yesterday.');
+        setYesterdaySundownTodoStatus('No unfinished todos were found from earlier days.');
         setShowYesterdaySundownTodoModal(true);
       }
       return;
     }
 
-    setYesterdaySundownTodoStatus(options?.force ? 'Admin manual cleanup launched.' : null);
+    setYesterdaySundownTodoStatus(options?.force ? 'Manual cleanup launched.' : null);
     yesterdaySundownTodoPromptOpenedThisSessionRef.current = true;
     setShowYesterdaySundownTodoModal(true);
-  }, [session?.user?.id, yesterdayISO]);
+  }, [session?.user?.id, today, cleanupLookbackStartISO]);
 
   useEffect(() => {
     if (loading || !session?.user?.id || !isViewingToday) return;
     if (yesterdaySundownTodoPromptOpenedThisSessionRef.current) return;
     if (showYesterdaySundownTodoModal || showYesterdayRecap || todayTodoModalOpen) return;
-    if (deferDailyLifeUpgradeModal || hasNewDaySequenceModalOpen) return;
+    // Only wait while a new-day-sequence modal is actually on screen. The daily-treat
+    // deferral (deferDailyLifeUpgradeModal) is intentionally NOT a blocker here because
+    // it can stay "due" for the whole day and would otherwise permanently suppress this prompt.
+    if (hasNewDaySequenceModalOpen) return;
 
     let isMounted = true;
     void (async () => {
@@ -10894,7 +10905,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       isMounted = false;
     };
   }, [
-    deferDailyLifeUpgradeModal,
     hasNewDaySequenceModalOpen,
     isViewingToday,
     loading,
@@ -10938,7 +10948,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     if (failed) {
       setYesterdaySundownTodoStatus('Some cleanup choices could not be applied. Please try again.');
       await loadTodayTodos(activeDate);
-      const { data } = await fetchTodayTodos(yesterdayISO);
+      const { data } = await fetchUndonePastTodos(today, cleanupLookbackStartISO);
       setYesterdaySundownTodos((data ?? []).filter((todo) => !todo.completed));
       setYesterdaySundownTodoSaving(false);
       return false;
@@ -10946,7 +10956,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     await loadTodayTodos(activeDate);
     setYesterdaySundownTodoSaving(false);
     return true;
-  }, [activeDate, loadTodayTodos, today, yesterdayISO]);
+  }, [activeDate, loadTodayTodos, today, cleanupLookbackStartISO]);
 
   const recordUnresolvedTodoCleanupDisplays = useCallback((handledTodoIds: Set<string>) => {
     const nextCounts = { ...todoCleanupDisplayCounts };
@@ -10977,9 +10987,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   const refreshTodosAfterYesterdaySundownAction = useCallback(async () => {
     await loadTodayTodos(activeDate);
-    const { data } = await fetchTodayTodos(yesterdayISO);
+    const { data } = await fetchUndonePastTodos(today, cleanupLookbackStartISO);
     setYesterdaySundownTodos((data ?? []).filter((todo) => !todo.completed));
-  }, [activeDate, loadTodayTodos, yesterdayISO]);
+  }, [activeDate, loadTodayTodos, today, cleanupLookbackStartISO]);
 
   const stageTodoCleanupAction = useCallback((todoId: string, pendingAction: TodoCleanupPendingAction) => {
     setTodoCleanupPendingActions((current) => ({ ...current, [todoId]: pendingAction }));
@@ -11042,7 +11052,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             <p className="yesterday-sundown-todo-modal__eyebrow">New day reset</p>
             <h3 id="yesterday-sundown-todo-title">Todo cleanup</h3>
             <p className="yesterday-sundown-todo-modal__subtitle">
-              Decide what to do with unfinished todos from {formatDateLabel(yesterdayISO)}.
+              Decide what to do with todos you left unfinished on earlier days.
             </p>
           </div>
           <button
@@ -11095,6 +11105,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       aria-expanded={isExpanded}
                     >
                       <span className="yesterday-sundown-todo-modal__task-title">{todo.title}</span>
+                      <span className="yesterday-sundown-todo-modal__task-date">From {formatDateLabel(todo.todo_date)}</span>
                       {todo.notes ? <span className="yesterday-sundown-todo-modal__task-notes">{todo.notes}</span> : null}
                       {actionLabel ? <span className="yesterday-sundown-todo-modal__selected-action">{actionLabel}</span> : null}
                       <span className="yesterday-sundown-todo-modal__task-caret" aria-hidden="true">{isExpanded ? '−' : '+'}</span>
