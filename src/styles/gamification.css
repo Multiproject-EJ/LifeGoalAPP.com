@@ -3653,3 +3653,74 @@
   overflow: hidden;
   background: #050816;
 }
+
+.score-tab__dex-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 14000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(14px);
+}
+
+.score-tab__dex-fullcard {
+  position: relative;
+  width: min(94vw, 430px);
+  max-height: 92vh;
+  overflow-y: auto;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 24px;
+  padding: 0.9rem;
+  background: radial-gradient(circle at 20% 20%, rgba(134, 214, 255, 0.2), rgba(6, 16, 30, 0.94));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+  touch-action: pan-y;
+}
+
+.score-tab__dex-fullcard--rare {
+  background: radial-gradient(circle at 20% 20%, rgba(178, 154, 255, 0.24), rgba(22, 20, 56, 0.94));
+}
+
+.score-tab__dex-fullcard--mythic {
+  background: radial-gradient(circle at 20% 20%, rgba(255, 216, 133, 0.26), rgba(56, 34, 8, 0.96));
+}
+
+.score-tab__dex-fullcard-close {
+  margin-bottom: 0.6rem;
+}
+
+.score-tab__dex-fullcard-swipe-hint {
+  margin: 0 0 0.5rem;
+  text-align: center;
+  color: rgba(226, 246, 255, 0.78);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.score-tab__dex-fullcard-nav {
+  position: absolute;
+  top: 45%;
+  z-index: 3;
+  width: 2.4rem;
+  height: 3.8rem;
+  border: 1px solid rgba(191, 219, 254, 0.5);
+  border-radius: 999px;
+  background: rgba(4, 12, 26, 0.68);
+  color: #e0f2fe;
+  font-size: 2.4rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
+}
+
+.score-tab__dex-fullcard-nav--prev {
+  left: 0.35rem;
+}
+
+.score-tab__dex-fullcard-nav--next {
+  right: 0.35rem;
+}

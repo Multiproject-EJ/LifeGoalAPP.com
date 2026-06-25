@@ -10786,3 +10786,42 @@
     animation: none;
   }
 }
+
+.island-run-sanctuary-fullcard {
+  position: relative;
+  touch-action: pan-y;
+}
+
+.island-run-sanctuary-fullcard__swipe-hint {
+  margin: 0 0 0.5rem;
+  text-align: center;
+  color: rgba(226, 246, 255, 0.78);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.island-run-sanctuary-fullcard__nav {
+  position: absolute;
+  top: 45%;
+  z-index: 3;
+  width: 2.4rem;
+  height: 3.8rem;
+  border: 1px solid rgba(191, 219, 254, 0.5);
+  border-radius: 999px;
+  background: rgba(4, 12, 26, 0.68);
+  color: #e0f2fe;
+  font-size: 2.4rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
+}
+
+.island-run-sanctuary-fullcard__nav--prev {
+  left: 0.2rem;
+}
+
+.island-run-sanctuary-fullcard__nav--next {
+  right: 0.2rem;
+}
