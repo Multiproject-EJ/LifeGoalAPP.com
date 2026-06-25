@@ -479,6 +479,10 @@ const FIRST_CREATURE_PACK_REVEAL_DELAY_MS = 650;
 // the `.island-coin--flipping` keyframe duration in LevelWorlds.css.
 const TRAFFIC_LIGHT_COIN_FLIP_DURATION_MS = 1300;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_VISIBLE_MS = 5_000;
+const SPACE_EXCAVATOR_EVENT_ICON_SRC = '/assets/icons/Eventgame_excavator.webp';
+const TRAFFIC_LIGHT_MODAL_IMAGE_SRC = '/assets/traffic_light/Traffic_img.webp';
+const TRAFFIC_LIGHT_BOX_IMAGE_SRC = '/assets/traffic_light/IMG_box.webp';
+const TRAFFIC_LIGHT_GIFT_IMAGE_SRC = '/assets/traffic_light/IMG_gift.webp';
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Reward bar can award Space Excavator tickets';
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV = 'Reward bar can award Space Excavator tickets (DEV override tickets)';
 
@@ -5364,9 +5368,13 @@ export function IslandRunBoardPrototype({
     ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)
     : 0;
   const activeEventMeta = effectiveActiveTimedEvent ? getEventDisplayMeta(effectiveActiveTimedEvent.eventType) : null;
+  const activeEventIcon = effectiveActiveTimedEvent?.eventType === 'space_excavator' ? SPACE_EXCAVATOR_EVENT_ICON_SRC : activeEventMeta?.icon ?? '';
+  const renderEventIcon = (className: string) => activeEventIcon.startsWith('/')
+    ? <img className={`${className} ${className}--image`} src={activeEventIcon} alt="" aria-hidden="true" loading="lazy" />
+    : <i className={className} aria-hidden="true">{activeEventIcon}</i>;
   const isSpaceExcavatorEffectiveEvent = effectiveActiveTimedEvent?.eventType === 'space_excavator';
   const isDevTimedEventOverrideActive = isDevModeEnabled && Boolean(devTimedEventOverrideType && devTimedEventOverrideEventId);
-  const rewardBarAvatarIcon = activeEventMeta?.icon ?? timedEventTokenIcon;
+  const rewardBarAvatarIcon = activeEventIcon || timedEventTokenIcon;
   const spaceExcavatorRewardBarHint = isSpaceExcavatorEffectiveEvent
     ? (isDevTimedEventOverrideActive ? SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV : SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT)
     : null;
@@ -10740,15 +10748,15 @@ export function IslandRunBoardPrototype({
             {/* Decorative themed event banner — only shown when an event is active */}
             {effectiveActiveTimedEvent && activeEventMeta ? (
               <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${effectiveActiveTimedEvent.eventType}`}>
-                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{activeEventMeta.icon}</i>
+                {renderEventIcon('island-run-board__rewardbar-banner-icon')}
                 <span>{activeEventMeta.displayName}</span>
-                <i className="island-run-board__rewardbar-banner-icon" aria-hidden="true">{activeEventMeta.icon}</i>
+                {renderEventIcon('island-run-board__rewardbar-banner-icon')}
               </div>
             ) : null}
             {/* Track row: event feed icon → track → single reward endcap (no milestones) */}
             <div className="island-run-board__rewardbar-track-row">
               <span className="island-run-board__rewardbar-avatar-indicator" aria-hidden="true">
-                {rewardBarAvatarIcon}
+                {rewardBarAvatarIcon.startsWith('/') ? <img className="island-run-board__rewardbar-avatar-image" src={rewardBarAvatarIcon} alt="" loading="lazy" /> : rewardBarAvatarIcon}
               </span>
               <div className="island-run-board__rewardbar-track" role="progressbar" aria-valuenow={Math.floor(rewardBarPercent)} aria-valuemin={0} aria-valuemax={100}>
                 <span className={`island-run-board__rewardbar-track-fill${rewardBarSnapActive ? ' island-run-board__rewardbar-track-fill--snap' : ''}`} style={{ width: `${rewardBarPercent}%` }} />
@@ -10816,7 +10824,7 @@ export function IslandRunBoardPrototype({
                       onClick={handleLaunchTimedEventMinigame}
                     >
                       <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
-                        {activeEventMeta.icon}
+                        {activeEventIcon.startsWith('/') ? <img className="island-run-board__minigame-icon-image" src={activeEventIcon} alt="" loading="lazy" /> : activeEventIcon}
                       </span>
                       <span className="island-run-board__minigame-icon-label">{activeEventTickets} {timedEventTokenIcon}</span>
                       {isTimedEventLaunchQueued && (
@@ -12119,6 +12127,11 @@ export function IslandRunBoardPrototype({
         <div className="island-stop-modal-backdrop" role="presentation">
           <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--traffic-light island-traffic-light--${trafficLightCoinFlip.phase}`} role="dialog" aria-modal="true" aria-label="Traffic light bonus coin flip">
             <h3 className="island-stop-modal__title">🚦 Traffic Light Bonus</h3>
+            <div className="island-traffic-light__art-row" aria-hidden="true">
+              <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_BOX_IMAGE_SRC} alt="" loading="lazy" />
+              <img className="island-traffic-light__art island-traffic-light__art--signal" src={TRAFFIC_LIGHT_MODAL_IMAGE_SRC} alt="" loading="lazy" />
+              <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_GIFT_IMAGE_SRC} alt="" loading="lazy" />
+            </div>
 
             {trafficLightCoinFlip.phase !== 'revealed' && (
               <p className="island-traffic-light__intro">
