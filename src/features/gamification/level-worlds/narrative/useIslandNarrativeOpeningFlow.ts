@@ -8,15 +8,18 @@ export type ActiveIslandStoryEpisode = {
 } | null;
 
 export type ActiveIslandNarrativeDialogue = {
-  beatId: 'I001-B03' | 'I001-B04';
-  speakerName: 'Miri' | 'Poko';
+  beatId: 'I001-B03' | 'I001-B04' | 'I001-B26';
+  speakerName: 'Miri' | 'Poko' | 'Elder Sava';
   text: string;
+  secondaryText?: string;
   continueLabel: string;
+  tone?: 'standard' | 'wisdom' | 'guardian';
 } | null;
 
 type OpeningBeatId = 'I001-B02' | 'I001-B03' | 'I001-B04';
 type AmbientBeatId = 'I001-B24';
-type IslandNarrativeControllerBeatId = OpeningBeatId | AmbientBeatId;
+type BossEligibleBeatId = 'I001-B26';
+type IslandNarrativeControllerBeatId = OpeningBeatId | AmbientBeatId | BossEligibleBeatId;
 
 export type ActiveIslandNarrativeToast = {
   beatId: AmbientBeatId;
@@ -41,6 +44,8 @@ export type IslandNarrativeOpeningFlowInput = {
   isNarrativeSurfaceBlocked: boolean;
   activeStopId: string | null;
   hatcheryBuildLevel: number | null | undefined;
+  canChallengeCurrentBoss: boolean;
+  isCurrentIslandBossDefeated: boolean;
   activeStoryEpisode: ActiveIslandStoryEpisode;
   setActiveStoryEpisode: (episode: ActiveIslandStoryEpisode) => void;
 };
@@ -50,11 +55,12 @@ export const ISLAND_001_NARRATIVE_SEEN_BEATS = {
   miriFirstObjective: 'I001-B03',
   pokoHatcheryIntro: 'I001-B04',
   hatcheryLevel1Restoration: 'I001-B24',
+  finaleSetup: 'I001-B26',
 } as const;
 
 const ISLAND_001_ARRIVAL_EPISODE_ID = 'island_1_arrival';
 const ISLAND_001_ARRIVAL_MANIFEST_PATH = '/islands/001/story/arrival/manifest.json';
-const QUEUE_PRIORITY: Record<IslandNarrativeControllerBeatId, number> = { 'I001-B02': 0, 'I001-B03': 1, 'I001-B04': 2, 'I001-B24': 3 };
+const QUEUE_PRIORITY: Record<IslandNarrativeControllerBeatId, number> = { 'I001-B02': 0, 'I001-B03': 1, 'I001-B04': 2, 'I001-B26': 3, 'I001-B24': 4 };
 const HATCHERY_LEVEL_1_TOAST_DURATION_MS = 3600;
 
 export function getIslandNarrativeSeenStorageKey(userId?: string | null): string {
@@ -119,14 +125,24 @@ function getToastForBeat(beatId: AmbientBeatId): ActiveIslandNarrativeToast {
   return null;
 }
 
-function getDialogueForBeat(beatId: OpeningBeatId): ActiveIslandNarrativeDialogue | null {
-  const beat = getOpeningBeat(beatId);
+function getDialogueForBeat(beatId: OpeningBeatId | BossEligibleBeatId): ActiveIslandNarrativeDialogue | null {
+  const beat = getIsland001Beat(beatId);
   if (!beat || beat.surface !== 'dialogue_sheet' || !beat.text) return null;
   if (beatId === 'I001-B03') {
     return { beatId, speakerName: 'Miri', text: beat.text, continueLabel: 'Return to the island' };
   }
   if (beatId === 'I001-B04') {
     return { beatId, speakerName: 'Poko', text: beat.text, continueLabel: 'Return to the island' };
+  }
+  if (beatId === 'I001-B26') {
+    return {
+      beatId,
+      speakerName: 'Elder Sava',
+      text: beat.text,
+      secondaryText: beat.secondaryText,
+      continueLabel: 'Face Noctyra',
+      tone: 'wisdom',
+    };
   }
   return null;
 }
@@ -141,6 +157,8 @@ export function useIslandNarrativeOpeningFlow({
   isNarrativeSurfaceBlocked,
   activeStopId,
   hatcheryBuildLevel,
+  canChallengeCurrentBoss,
+  isCurrentIslandBossDefeated,
   activeStoryEpisode,
   setActiveStoryEpisode,
 }: IslandNarrativeOpeningFlowInput) {
@@ -151,6 +169,7 @@ export function useIslandNarrativeOpeningFlow({
   const sessionDisplayedRef = useRef<Set<string>>(new Set());
   const previousActiveStopIdRef = useRef<string | null>(null);
   const previousHatcheryBuildLevelRef = useRef<number | null>(null);
+  const previousCanChallengeBossRef = useRef<boolean | null>(null);
   const storyReaderClosingRef = useRef(false);
   const seenStateRef = useRef<SeenState>({ beats: {}, episodes: {} });
 
@@ -160,10 +179,16 @@ export function useIslandNarrativeOpeningFlow({
     setActiveDialogue(null);
     setActiveToast(null);
     previousHatcheryBuildLevelRef.current = null;
+    previousCanChallengeBossRef.current = null;
     sessionDisplayedRef.current = new Set();
   }, [storageKey]);
 
   const isEligible = hasHydratedRuntimeState && isEligibleForIsland001OpeningFlow(currentIslandNumber, cycleIndex);
+
+  useEffect(() => {
+    if (isEligible) return;
+    setQueue((current) => current.filter((beatId) => beatId !== 'I001-B26'));
+  }, [isEligible]);
 
   const isSeen = useCallback((beatId: IslandNarrativeControllerBeatId) => {
     const seen = seenStateRef.current;
@@ -231,6 +256,24 @@ export function useIslandNarrativeOpeningFlow({
   }, [enqueueBeat, hasHydratedRuntimeState, hatcheryBuildLevel, isEligible]);
 
   useEffect(() => {
+    if (!hasHydratedRuntimeState) {
+      previousCanChallengeBossRef.current = null;
+      return;
+    }
+
+    const previous = previousCanChallengeBossRef.current;
+    const current = Boolean(canChallengeCurrentBoss);
+    previousCanChallengeBossRef.current = current;
+
+    // Hydration/old-save rule for I001-B26: the first hydrated canonical
+    // canChallengeCurrentBoss value is only a baseline. Queue the finale setup
+    // solely for a live false -> true transition observed in this session.
+    if (previous === null) return;
+    if (!isEligible || isCurrentIslandBossDefeated || previous || !current) return;
+    enqueueBeat('I001-B26');
+  }, [canChallengeCurrentBoss, enqueueBeat, hasHydratedRuntimeState, isCurrentIslandBossDefeated, isEligible]);
+
+  useEffect(() => {
     if (activeStoryEpisode) return;
     if (!storyReaderClosingRef.current) return;
     storyReaderClosingRef.current = false;
@@ -241,6 +284,11 @@ export function useIslandNarrativeOpeningFlow({
     const nextBeatId = queue[0];
     if (!nextBeatId) return;
     if (isSeen(nextBeatId)) {
+      setQueue((current) => current.slice(1));
+      return;
+    }
+
+    if (nextBeatId === 'I001-B26' && (!canChallengeCurrentBoss || isCurrentIslandBossDefeated || currentIslandNumber !== 1 || cycleIndex !== 0)) {
       setQueue((current) => current.slice(1));
       return;
     }
@@ -257,7 +305,7 @@ export function useIslandNarrativeOpeningFlow({
       return;
     }
 
-    if (!isOpeningBeatId(nextBeatId)) {
+    if (nextBeatId !== 'I001-B26' && !isOpeningBeatId(nextBeatId)) {
       setQueue((current) => current.slice(1));
       return;
     }
@@ -282,7 +330,7 @@ export function useIslandNarrativeOpeningFlow({
     sessionDisplayedRef.current.add(nextBeatId);
     setQueue((current) => current.slice(1));
     setActiveDialogue(dialogue);
-  }, [activeDialogue, activeStoryEpisode, activeToast, isEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, setActiveStoryEpisode]);
+  }, [activeDialogue, activeStoryEpisode, activeToast, canChallengeCurrentBoss, currentIslandNumber, cycleIndex, isCurrentIslandBossDefeated, isEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, setActiveStoryEpisode]);
 
   const handleStoryEpisodeClosed = useCallback((episode: Exclude<ActiveIslandStoryEpisode, null>) => {
     if (episode.kind !== 'island_arrival') return;
