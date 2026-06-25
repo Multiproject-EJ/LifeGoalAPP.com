@@ -290,7 +290,7 @@ export function GameBoardOverlay({
                 </span>
               ) : null}
               <DualTrackColumn
-                title="Real Life Journey"
+                title="REAL LIFE JOURNEY"
                 subtitle={realLifeTrackSubtitle}
                 tone="life"
                 cards={dualTrackViewModel.realLifeTrack}
@@ -348,7 +348,7 @@ export function GameBoardOverlay({
                 ) : null}
               </div>
               <DualTrackColumn
-                title="Game Journey"
+                title="GAME JOURNEY"
                 subtitle={gameTrackSubtitle}
                 tone="game"
                 cards={dualTrackViewModel.gameTrack}
