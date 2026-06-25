@@ -128,7 +128,7 @@ export function deriveIslandRunSequentialBuildParts(options: {
   return Array.from({ length: PART_COUNT }, (_, index) => {
     const partNumber = (index + 1) as IslandRunSequentialBuildPartNumber;
     const thresholdEssence = requiredEssence > 0 ? Math.ceil((requiredEssence * partNumber) / PART_COUNT) : 0;
-    const isComplete = requiredEssence <= 0 || spentEssence >= thresholdEssence;
+    const isComplete = requiredEssence > 0 && spentEssence >= thresholdEssence;
     let status: IslandRunSequentialBuildPartStatus = 'locked';
     if (isComplete) {
       status = 'complete';

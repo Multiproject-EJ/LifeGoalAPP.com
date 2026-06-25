@@ -321,12 +321,14 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
           source.includes('aria-disabled={isBuildDisabled}') ||
           source.includes('aria-disabled={isBuildInteractionDisabled}') ||
           buildModalV2Source.includes('aria-disabled={isBuildDisabled}') ||
-          buildModalV2Source.includes('aria-disabled={isBuildInteractionDisabled}')
+          buildModalV2Source.includes('aria-disabled={isBuildInteractionDisabled}') ||
+          buildModalV2Source.includes('aria-disabled={isDisabled}')
         ) &&
           (
             source.includes('const isBuildDisabled = isFullyBuilt || !canAfford;') ||
             source.includes('const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;') ||
-            source.includes('const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;')
+            source.includes('const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;') ||
+            buildModalV2Source.includes('const isDisabled = !isActive || disabledByWalletOrTutorial;')
           ) &&
           source.includes('⚒️ Max build…'),
         'Build button should expose disabled state for true non-buildable rows and provide hold feedback.',
