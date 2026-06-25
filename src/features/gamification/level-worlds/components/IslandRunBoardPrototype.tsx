@@ -9974,6 +9974,8 @@ export function IslandRunBoardPrototype({
     isNarrativeSurfaceBlocked,
     activeStopId,
     hatcheryBuildLevel: runtimeState.stopBuildStateByIndex[0]?.buildLevel,
+    canChallengeCurrentBoss,
+    isCurrentIslandBossDefeated,
     activeStoryEpisode,
     setActiveStoryEpisode,
   });
@@ -14130,7 +14132,8 @@ export function IslandRunBoardPrototype({
           isOpen={true}
           speakerName={islandNarrativeOpeningFlow.activeDialogue.speakerName}
           text={islandNarrativeOpeningFlow.activeDialogue.text}
-          tone="standard"
+          secondaryText={islandNarrativeOpeningFlow.activeDialogue.secondaryText}
+          tone={islandNarrativeOpeningFlow.activeDialogue.tone ?? 'standard'}
           continueLabel={islandNarrativeOpeningFlow.activeDialogue.continueLabel}
           onContinue={islandNarrativeOpeningFlow.handleDialogueContinue}
           onClose={islandNarrativeOpeningFlow.handleDialogueClose}
