@@ -10825,3 +10825,61 @@
 .island-run-sanctuary-fullcard__nav--next {
   right: 0.2rem;
 }
+
+.island-run-board__rewardbar-banner-icon--image {
+  width: 1.2rem;
+  height: 1.2rem;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
+.island-run-board__minigame-icon-image {
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.28));
+}
+
+.island-traffic-light__art-row {
+  display: grid;
+  grid-template-columns: minmax(54px, 0.8fr) minmax(82px, 1fr) minmax(54px, 0.8fr);
+  align-items: end;
+  justify-items: center;
+  gap: 0.45rem;
+  margin: 0.4rem auto 0.25rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgba(125, 216, 255, 0.28);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(125, 216, 255, 0.24), transparent 58%),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.42), rgba(3, 7, 18, 0.22));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 12px 24px rgba(2, 6, 23, 0.22);
+}
+
+.island-traffic-light__art {
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.32));
+  pointer-events: none;
+  user-select: none;
+}
+
+.island-traffic-light__art--signal {
+  width: min(104px, 28vw);
+  transform: translateY(2px);
+}
+
+.island-traffic-light__art--prize {
+  width: min(78px, 20vw);
+  opacity: 0.96;
+}
+
+.island-run-board__rewardbar-avatar-image {
+  width: 1.65rem;
+  height: 1.65rem;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.32));
+}

@@ -4,6 +4,6 @@ import type { MinigameManifest } from '../../level-worlds/services/islandRunMini
 export const spaceExcavatorManifest: MinigameManifest = {
   id: 'space_excavator',
   title: 'Space Excavator',
-  icon: '🚀',
+  icon: '/assets/icons/Eventgame_excavator.webp',
   Component: lazy(() => import('./SpaceExcavatorMinigame').then((module) => ({ default: module.SpaceExcavatorMinigame }))),
 };
