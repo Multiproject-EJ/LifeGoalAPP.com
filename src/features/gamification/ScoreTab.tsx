@@ -10,7 +10,8 @@
  *
  * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
  */
-import { useEffect, useMemo, useState, useCallback, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import type {
   GamificationProfile,
@@ -24,6 +25,7 @@ import type {
   ZenTokenTransaction,
 } from '../../types/gamification';
 import { GamificationHeader } from '../../components/GamificationHeader';
+import { lockPageScroll } from '../../utils/scrollLock';
 import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { FeatureStatusBadge } from '../../components/FeatureStatusBadge';
 import { XP_TO_GOLD_RATIO, splitGoldBalance } from '../../constants/economy';
@@ -55,6 +57,8 @@ import {
   type CreatureSanctuaryGalleryModel,
 } from './level-worlds/services/creatureSanctuaryAdapter';
 import { applyCreatureArtFallback } from './level-worlds/components/creatureArtFallback';
+import { CreatureCard } from './level-worlds/components/CreatureCard';
+import { getCreatureCardMetadata } from './level-worlds/services/creatureCardCatalog';
 import {
   DEFAULT_PERFECT_COMPANION_RUNTIME_CONFIG,
   readPerfectCompanionRuntimeConfig,
@@ -1750,6 +1754,44 @@ function CreatureSanctuaryScoreHubView({
   const hasDiscoveredCreatures = galleryModel.summary.discoveredCreatures > 0;
   const [dexOpen, setDexOpen] = useState(false);
   const [flippedCardIds, setFlippedCardIds] = useState<Set<string>>(() => new Set());
+  const [selectedDexCreatureId, setSelectedDexCreatureId] = useState<string | null>(null);
+  const discoveredDexCards = useMemo(
+    () => galleryModel.cards.filter((card) => card.discovered),
+    [galleryModel.cards],
+  );
+  const selectedDexCard = useMemo(
+    () => discoveredDexCards.find((card) => card.creatureId === selectedDexCreatureId) ?? null,
+    [discoveredDexCards, selectedDexCreatureId],
+  );
+  const selectedDexCreature = selectedDexCreatureId ? creatureCatalogById.get(selectedDexCreatureId) ?? null : null;
+  const selectedDexCardIndex = selectedDexCreatureId
+    ? discoveredDexCards.findIndex((card) => card.creatureId === selectedDexCreatureId)
+    : -1;
+  const canSwipeDexCards = selectedDexCardIndex >= 0 && discoveredDexCards.length > 1;
+  const openAdjacentDexCreature = useCallback((direction: -1 | 1) => {
+    if (!selectedDexCreatureId || discoveredDexCards.length < 2) return;
+    const currentIndex = discoveredDexCards.findIndex((card) => card.creatureId === selectedDexCreatureId);
+    if (currentIndex < 0) return;
+    const nextIndex = (currentIndex + direction + discoveredDexCards.length) % discoveredDexCards.length;
+    setSelectedDexCreatureId(discoveredDexCards[nextIndex]?.creatureId ?? selectedDexCreatureId);
+  }, [discoveredDexCards, selectedDexCreatureId]);
+  const dexCardSwipeStartXRef = useRef<number | null>(null);
+  const dexCardSwipeStartYRef = useRef<number | null>(null);
+  const handleDexFullcardPointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    dexCardSwipeStartXRef.current = event.clientX;
+    dexCardSwipeStartYRef.current = event.clientY;
+  }, []);
+  const handleDexFullcardPointerUp = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const startX = dexCardSwipeStartXRef.current;
+    const startY = dexCardSwipeStartYRef.current;
+    dexCardSwipeStartXRef.current = null;
+    dexCardSwipeStartYRef.current = null;
+    if (startX === null || startY === null || !canSwipeDexCards) return;
+    const deltaX = event.clientX - startX;
+    const deltaY = event.clientY - startY;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
+    openAdjacentDexCreature(deltaX < 0 ? 1 : -1);
+  }, [canSwipeDexCards, openAdjacentDexCreature]);
 
   const toggleCardFlip = useCallback((creatureId: string) => {
     setFlippedCardIds((current) => {
@@ -1762,6 +1804,11 @@ function CreatureSanctuaryScoreHubView({
       return next;
     });
   }, []);
+
+  useEffect(() => {
+    if (!selectedDexCreatureId) return undefined;
+    return lockPageScroll();
+  }, [selectedDexCreatureId]);
 
   return (
     <div className="score-tab__sanctuary">
@@ -1798,6 +1845,36 @@ function CreatureSanctuaryScoreHubView({
           </div>
         </section>
       ) : null}
+      {selectedDexCard && selectedDexCreature && typeof document !== 'undefined' ? createPortal((
+        <div className="score-tab__dex-fullscreen" role="dialog" aria-modal="true" aria-label={`${selectedDexCreature.name} creature card`}>
+          <div
+            className={`score-tab__dex-fullcard score-tab__dex-fullcard--${selectedDexCreature.tier}`}
+            onPointerDown={handleDexFullcardPointerDown}
+            onPointerUp={handleDexFullcardPointerUp}
+          >
+            {canSwipeDexCards ? <p className="score-tab__dex-fullcard-swipe-hint">Swipe left or right to browse creatures</p> : null}
+            <button type="button" className="score-tab__link score-tab__dex-fullcard-close" onClick={() => setSelectedDexCreatureId(null)}>
+              ✕ Close
+            </button>
+            {canSwipeDexCards ? (
+              <>
+                <button type="button" className="score-tab__dex-fullcard-nav score-tab__dex-fullcard-nav--prev" aria-label="Previous creature" onClick={() => openAdjacentDexCreature(-1)}>‹</button>
+                <button type="button" className="score-tab__dex-fullcard-nav score-tab__dex-fullcard-nav--next" aria-label="Next creature" onClick={() => openAdjacentDexCreature(1)}>›</button>
+              </>
+            ) : null}
+            <CreatureCard
+              creature={selectedDexCreature}
+              metadata={getCreatureCardMetadata(selectedDexCreature)}
+              owned
+              active={selectedDexCard.isActiveCompanion}
+            />
+            <p className="score-tab__meta">
+              {selectedDexCard.rarityLabel} · {selectedDexCard.habitat} · {selectedDexCard.copies} owned
+              {selectedDexCard.bondLevel !== null ? ` · Bond Lv. ${selectedDexCard.bondLevel}` : ''}
+            </p>
+          </div>
+        </div>
+      ), document.body) : null}
       <div className="score-tab__sanctuary-grid" aria-label="Creature Sanctuary gallery">
         {galleryModel.cards.map((card) => {
           const creatureDefinition = creatureCatalogById.get(card.creatureId);
@@ -1815,7 +1892,13 @@ function CreatureSanctuaryScoreHubView({
                 isFlipped ? `Show front of ${displayName}` : `Show details for ${displayName}`
               }
               aria-pressed={isFlipped}
-              onClick={() => toggleCardFlip(card.creatureId)}
+              onClick={() => {
+                if (card.discovered) {
+                  setSelectedDexCreatureId(card.creatureId);
+                  return;
+                }
+                toggleCardFlip(card.creatureId);
+              }}
             >
               <span className={`score-tab__dex-card-inner${isFlipped ? ' is-flipped' : ''}`}>
                 <span className="score-tab__dex-card-face score-tab__dex-card-face--front">

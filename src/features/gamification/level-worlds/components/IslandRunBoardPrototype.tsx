@@ -17,7 +17,7 @@ import { lockPageScroll } from '../../../../utils/scrollLock';
  *
  * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type SetStateAction } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type SetStateAction } from 'react';
 import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -6671,6 +6671,35 @@ export function IslandRunBoardPrototype({
     () => collectedCreatures.find((creature) => creature.creatureId === selectedSanctuaryCreatureId) ?? null,
     [collectedCreatures, selectedSanctuaryCreatureId],
   );
+  const selectedSanctuaryCreatureIndex = selectedSanctuaryCreatureId
+    ? collectedCreatures.findIndex((creature) => creature.creatureId === selectedSanctuaryCreatureId)
+    : -1;
+  const canSwipeSanctuaryCreatureCards = selectedSanctuaryCreatureIndex >= 0 && collectedCreatures.length > 1;
+  const openAdjacentSanctuaryCreature = useCallback((direction: -1 | 1) => {
+    if (!selectedSanctuaryCreatureId || collectedCreatures.length < 2) return;
+    const currentIndex = collectedCreatures.findIndex((creature) => creature.creatureId === selectedSanctuaryCreatureId);
+    if (currentIndex < 0) return;
+    const nextIndex = (currentIndex + direction + collectedCreatures.length) % collectedCreatures.length;
+    setSelectedSanctuaryCreatureId(collectedCreatures[nextIndex]?.creatureId ?? selectedSanctuaryCreatureId);
+    setShowPerfectCompanionReason(false);
+  }, [collectedCreatures, selectedSanctuaryCreatureId]);
+  const sanctuaryCardSwipeStartXRef = useRef<number | null>(null);
+  const sanctuaryCardSwipeStartYRef = useRef<number | null>(null);
+  const handleSanctuaryFullcardPointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    sanctuaryCardSwipeStartXRef.current = event.clientX;
+    sanctuaryCardSwipeStartYRef.current = event.clientY;
+  }, []);
+  const handleSanctuaryFullcardPointerUp = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const startX = sanctuaryCardSwipeStartXRef.current;
+    const startY = sanctuaryCardSwipeStartYRef.current;
+    sanctuaryCardSwipeStartXRef.current = null;
+    sanctuaryCardSwipeStartYRef.current = null;
+    if (startX === null || startY === null || !canSwipeSanctuaryCreatureCards) return;
+    const deltaX = event.clientX - startX;
+    const deltaY = event.clientY - startY;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
+    openAdjacentSanctuaryCreature(deltaX < 0 ? 1 : -1);
+  }, [canSwipeSanctuaryCreatureCards, openAdjacentSanctuaryCreature]);
   const selectedSanctuaryCreatureBonus = useMemo(
     () => (selectedSanctuaryCreature ? getCompanionBonusForCreature(selectedSanctuaryCreature.creature, selectedSanctuaryCreature.bondLevel) : null),
     [selectedSanctuaryCreature],
@@ -13543,7 +13572,14 @@ export function IslandRunBoardPrototype({
                 {(() => {
                   const creatureCardMetadata = getCreatureCardMetadata(selectedSanctuaryCreature.creature);
                   return (
-                    <div className={`island-run-sanctuary-fullcard island-run-sanctuary-fullcard--${selectedSanctuaryCreature.creature.tier}`}>
+                    <div
+                      className={`island-run-sanctuary-fullcard island-run-sanctuary-fullcard--${selectedSanctuaryCreature.creature.tier}`}
+                      onPointerDown={handleSanctuaryFullcardPointerDown}
+                      onPointerUp={handleSanctuaryFullcardPointerUp}
+                    >
+                      {canSwipeSanctuaryCreatureCards ? (
+                        <p className="island-run-sanctuary-fullcard__swipe-hint">Swipe left or right to browse creatures</p>
+                      ) : null}
                       <button
                         type="button"
                         className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary island-run-sanctuary-fullcard__close"
@@ -13554,6 +13590,12 @@ export function IslandRunBoardPrototype({
                       >
                         ✕ Close
                       </button>
+                      {canSwipeSanctuaryCreatureCards ? (
+                        <>
+                          <button type="button" className="island-run-sanctuary-fullcard__nav island-run-sanctuary-fullcard__nav--prev" aria-label="Previous creature" onClick={() => openAdjacentSanctuaryCreature(-1)}>‹</button>
+                          <button type="button" className="island-run-sanctuary-fullcard__nav island-run-sanctuary-fullcard__nav--next" aria-label="Next creature" onClick={() => openAdjacentSanctuaryCreature(1)}>›</button>
+                        </>
+                      ) : null}
                       <CreatureCard
                         creature={selectedSanctuaryCreature.creature}
                         metadata={creatureCardMetadata}
