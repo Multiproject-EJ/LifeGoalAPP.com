@@ -10821,6 +10821,25 @@ export function IslandRunBoardPrototype({
           </div>
         </div>
 
+        {shouldShowBestNextActionChip && bestNextAction && (
+          <button
+            type="button"
+            className="island-run-prototype__best-next-action-chip island-run-prototype__best-next-action-chip--below-rewardbar"
+            onClick={() => {
+              if (bestNextAction.action === 'claim_reward_bar') {
+                handleContractV2RewardBarClaim();
+                return;
+              }
+              if (bestNextAction.action === 'claim_island_clear') {
+                showIslandClearCelebrationFromAnywhere('best_next_action_chip');
+              }
+            }}
+            aria-label={bestNextAction.ctaLabel}
+          >
+            ✨ {bestNextAction.ctaLabel}
+          </button>
+        )}
+
         <BoardStage
           anchors={activeTileAnchors}
           theme={activeTheme}
@@ -11053,24 +11072,6 @@ export function IslandRunBoardPrototype({
               </div>
             )}
           </div>
-          {shouldShowBestNextActionChip && bestNextAction && (
-            <button
-              type="button"
-              className="island-run-prototype__best-next-action-chip"
-              onClick={() => {
-                if (bestNextAction.action === 'claim_reward_bar') {
-                  handleContractV2RewardBarClaim();
-                  return;
-                }
-                if (bestNextAction.action === 'claim_island_clear') {
-                  showIslandClearCelebrationFromAnywhere('best_next_action_chip');
-                }
-              }}
-              aria-label={bestNextAction.ctaLabel}
-            >
-              ✨ {bestNextAction.ctaLabel}
-            </button>
-          )}
         </div>
       </div>
 
