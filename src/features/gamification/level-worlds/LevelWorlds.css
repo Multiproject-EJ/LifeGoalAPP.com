@@ -11040,3 +11040,273 @@
   .bm2-level-rail__item,
   .bm2-artwork__img { transition: none !important; animation: none !important; }
 }
+
+/* Island 001 narrative dialogue sheet — reusable presentation surface only. */
+.island-narrative-dialogue {
+  --ind-accent: #f4c76f;
+  --ind-accent-strong: #ffd98a;
+  --ind-crystal: rgba(80, 213, 198, 0.34);
+  --ind-panel: rgba(15, 25, 35, 0.94);
+  --ind-panel-2: rgba(27, 42, 52, 0.9);
+  --ind-copy: #fff8df;
+  --ind-muted: rgba(255, 248, 223, 0.74);
+  position: fixed;
+  inset: 0;
+  z-index: 2600;
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--ind-copy);
+  font-family: inherit;
+  isolation: isolate;
+}
+
+.island-narrative-dialogue--standard {
+  --ind-accent: #f4c76f;
+  --ind-accent-strong: #ffd98a;
+  --ind-crystal: rgba(80, 213, 198, 0.34);
+}
+
+.island-narrative-dialogue--wisdom {
+  --ind-accent: #d9c5ff;
+  --ind-accent-strong: #f3e8ff;
+  --ind-crystal: rgba(180, 146, 255, 0.34);
+  --ind-panel: rgba(23, 24, 43, 0.95);
+  --ind-panel-2: rgba(49, 42, 70, 0.88);
+}
+
+.island-narrative-dialogue--guardian {
+  --ind-accent: #c28cff;
+  --ind-accent-strong: #f0d7ff;
+  --ind-crystal: rgba(117, 68, 214, 0.45);
+  --ind-panel: rgba(13, 10, 25, 0.96);
+  --ind-panel-2: rgba(37, 24, 58, 0.9);
+}
+
+.island-narrative-dialogue__backdrop {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 82%, rgba(244, 199, 111, 0.12), transparent 34%),
+    rgba(2, 7, 12, 0.62);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.island-narrative-dialogue__viewport {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top, 0px) + 1rem) max(1rem, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 1rem) max(1rem, env(safe-area-inset-left, 0px));
+  pointer-events: none;
+}
+
+.island-narrative-dialogue__card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(5.25rem, 30vw) minmax(0, 1fr);
+  gap: clamp(0.8rem, 3vw, 1.25rem);
+  width: min(100%, 34rem);
+  max-height: min(78dvh, 34rem);
+  padding: clamp(1rem, 4vw, 1.45rem);
+  border: 1px solid rgba(255, 232, 173, 0.22);
+  border-radius: 28px 28px 24px 24px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), transparent 34%),
+    radial-gradient(circle at 8% 0%, var(--ind-crystal), transparent 36%),
+    linear-gradient(160deg, var(--ind-panel), var(--ind-panel-2));
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.48), 0 0 34px var(--ind-crystal);
+  overflow: visible;
+  pointer-events: auto;
+  animation: island-narrative-dialogue-enter 180ms ease-out both;
+}
+
+.island-narrative-dialogue__card:focus {
+  outline: none;
+}
+
+.island-narrative-dialogue__card:focus-visible,
+.island-narrative-dialogue__close:focus-visible,
+.island-narrative-dialogue__continue:focus-visible {
+  outline: 3px solid var(--ind-accent-strong);
+  outline-offset: 3px;
+}
+
+.island-narrative-dialogue__portrait-wrap {
+  align-self: end;
+  min-width: 0;
+  transform: translateY(-1.65rem);
+}
+
+.island-narrative-dialogue__portrait-image {
+  display: block;
+  width: min(8.5rem, 31vw);
+  max-height: min(15rem, 38dvh);
+  object-fit: contain;
+  filter: drop-shadow(0 20px 26px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 16px var(--ind-crystal));
+}
+
+.island-narrative-dialogue__portrait-fallback {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(7.5rem, 28vw);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16), var(--ind-crystal) 44%, rgba(0, 0, 0, 0.18) 72%);
+  box-shadow: inset 0 0 26px rgba(255, 255, 255, 0.12), 0 18px 32px rgba(0, 0, 0, 0.34);
+}
+
+.island-narrative-dialogue__portrait-orb {
+  position: absolute;
+  inset: 13%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 40% 60% 48% 52%;
+  transform: rotate(-12deg);
+}
+
+.island-narrative-dialogue__portrait-initial {
+  font-size: clamp(2rem, 11vw, 3.4rem);
+  font-weight: 800;
+  color: var(--ind-accent-strong);
+  text-shadow: 0 0 18px var(--ind-crystal);
+}
+
+.island-narrative-dialogue__content {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.island-narrative-dialogue__close {
+  position: absolute;
+  top: -0.55rem;
+  right: -0.55rem;
+  display: grid;
+  min-width: 44px;
+  min-height: 44px;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.island-narrative-dialogue__speaker-kicker {
+  margin: 0;
+  color: var(--ind-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.island-narrative-dialogue__speaker {
+  margin: 0;
+  max-width: calc(100% - 2.7rem);
+  color: #fffdf4;
+  font-size: clamp(1.35rem, 6vw, 2rem);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.island-narrative-dialogue__copy-wrap {
+  display: grid;
+  gap: 0.55rem;
+  max-height: min(31dvh, 13rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.15rem;
+}
+
+.island-narrative-dialogue__copy {
+  margin: 0;
+  font-size: clamp(1rem, 4.4vw, 1.22rem);
+  line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+
+.island-narrative-dialogue__copy--secondary {
+  padding-left: 0.8rem;
+  border-left: 2px solid var(--ind-accent);
+  color: var(--ind-muted);
+  font-size: clamp(0.92rem, 4vw, 1.05rem);
+}
+
+.island-narrative-dialogue__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}
+
+.island-narrative-dialogue__continue {
+  min-height: 48px;
+  min-width: min(100%, 9rem);
+  border: 0;
+  border-radius: 999px;
+  padding: 0.78rem 1.25rem;
+  background: linear-gradient(135deg, var(--ind-accent-strong), var(--ind-accent));
+  color: #221704;
+  font-weight: 900;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28), 0 0 22px var(--ind-crystal);
+}
+
+@media (min-width: 720px) {
+  .island-narrative-dialogue__viewport {
+    align-items: center;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 3rem);
+  }
+
+  .island-narrative-dialogue__card {
+    grid-template-columns: minmax(8.5rem, 12rem) minmax(0, 1fr);
+    width: min(42rem, calc(100vw - 3rem));
+    padding: 1.35rem 1.5rem;
+    border-radius: 32px;
+  }
+
+  .island-narrative-dialogue__portrait-wrap {
+    transform: translateY(0);
+  }
+
+  .island-narrative-dialogue__portrait-image,
+  .island-narrative-dialogue__portrait-fallback {
+    width: min(11rem, 24vw);
+  }
+}
+
+@media (max-width: 360px) {
+  .island-narrative-dialogue__card {
+    grid-template-columns: 4.7rem minmax(0, 1fr);
+    gap: 0.65rem;
+    padding: 0.9rem;
+  }
+
+  .island-narrative-dialogue__speaker {
+    font-size: 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-narrative-dialogue__card {
+    animation: island-narrative-dialogue-fade 1ms linear both;
+  }
+
+  .island-narrative-dialogue__portrait-wrap {
+    transform: none;
+  }
+}
+
+@keyframes island-narrative-dialogue-enter {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes island-narrative-dialogue-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
