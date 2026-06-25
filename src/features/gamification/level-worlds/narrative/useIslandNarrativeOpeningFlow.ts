@@ -15,6 +15,16 @@ export type ActiveIslandNarrativeDialogue = {
 } | null;
 
 type OpeningBeatId = 'I001-B02' | 'I001-B03' | 'I001-B04';
+type AmbientBeatId = 'I001-B24';
+type IslandNarrativeControllerBeatId = OpeningBeatId | AmbientBeatId;
+
+export type ActiveIslandNarrativeToast = {
+  beatId: AmbientBeatId;
+  speakerName: 'Miri';
+  text: string;
+  supportingLabel: string;
+  durationMs: number;
+} | null;
 
 type SeenState = {
   beats: Record<string, number>;
@@ -30,6 +40,7 @@ export type IslandNarrativeOpeningFlowInput = {
   isGlobalPrologueSeen: boolean;
   isNarrativeSurfaceBlocked: boolean;
   activeStopId: string | null;
+  hatcheryBuildLevel: number | null | undefined;
   activeStoryEpisode: ActiveIslandStoryEpisode;
   setActiveStoryEpisode: (episode: ActiveIslandStoryEpisode) => void;
 };
@@ -38,11 +49,13 @@ export const ISLAND_001_NARRATIVE_SEEN_BEATS = {
   arrival: 'I001-B02',
   miriFirstObjective: 'I001-B03',
   pokoHatcheryIntro: 'I001-B04',
+  hatcheryLevel1Restoration: 'I001-B24',
 } as const;
 
 const ISLAND_001_ARRIVAL_EPISODE_ID = 'island_1_arrival';
 const ISLAND_001_ARRIVAL_MANIFEST_PATH = '/islands/001/story/arrival/manifest.json';
-const QUEUE_PRIORITY: Record<OpeningBeatId, number> = { 'I001-B02': 0, 'I001-B03': 1, 'I001-B04': 2 };
+const QUEUE_PRIORITY: Record<IslandNarrativeControllerBeatId, number> = { 'I001-B02': 0, 'I001-B03': 1, 'I001-B04': 2, 'I001-B24': 3 };
+const HATCHERY_LEVEL_1_TOAST_DURATION_MS = 3600;
 
 export function getIslandNarrativeSeenStorageKey(userId?: string | null): string {
   return `island_run_narrative_seen_v1_${userId || 'anonymous'}_island_1`;
@@ -86,8 +99,24 @@ function isOpeningBeatId(beatId: string): beatId is OpeningBeatId {
   return beatId === 'I001-B02' || beatId === 'I001-B03' || beatId === 'I001-B04';
 }
 
-function getOpeningBeat(beatId: OpeningBeatId): IslandNarrativeBeat | null {
+function getIsland001Beat(beatId: IslandNarrativeControllerBeatId): IslandNarrativeBeat | null {
   return getIslandNarrativeDefinition(1)?.beats.find((beat) => beat.id === beatId) ?? null;
+}
+
+function getOpeningBeat(beatId: OpeningBeatId): IslandNarrativeBeat | null {
+  return getIsland001Beat(beatId);
+}
+
+export function didHatcheryReachLevelOne(previousBuildLevel: number | null | undefined, currentBuildLevel: number | null | undefined): boolean {
+  return typeof previousBuildLevel === 'number' && previousBuildLevel < 1 && typeof currentBuildLevel === 'number' && currentBuildLevel >= 1;
+}
+
+function getToastForBeat(beatId: AmbientBeatId): ActiveIslandNarrativeToast {
+  const beat = getIsland001Beat(beatId);
+  if (beatId === 'I001-B24' && beat?.surface === 'toast' && beat.text === 'The island noticed.') {
+    return { beatId, speakerName: 'Miri', text: beat.text, supportingLabel: 'Hatchery restored to Level 1', durationMs: HATCHERY_LEVEL_1_TOAST_DURATION_MS };
+  }
+  return null;
 }
 
 function getDialogueForBeat(beatId: OpeningBeatId): ActiveIslandNarrativeDialogue | null {
@@ -111,14 +140,17 @@ export function useIslandNarrativeOpeningFlow({
   isGlobalPrologueSeen,
   isNarrativeSurfaceBlocked,
   activeStopId,
+  hatcheryBuildLevel,
   activeStoryEpisode,
   setActiveStoryEpisode,
 }: IslandNarrativeOpeningFlowInput) {
   const storageKey = useMemo(() => getIslandNarrativeSeenStorageKey(userId), [userId]);
-  const [queue, setQueue] = useState<OpeningBeatId[]>([]);
+  const [queue, setQueue] = useState<IslandNarrativeControllerBeatId[]>([]);
   const [activeDialogue, setActiveDialogue] = useState<ActiveIslandNarrativeDialogue>(null);
+  const [activeToast, setActiveToast] = useState<ActiveIslandNarrativeToast>(null);
   const sessionDisplayedRef = useRef<Set<string>>(new Set());
   const previousActiveStopIdRef = useRef<string | null>(null);
+  const previousHatcheryBuildLevelRef = useRef<number | null>(null);
   const storyReaderClosingRef = useRef(false);
   const seenStateRef = useRef<SeenState>({ beats: {}, episodes: {} });
 
@@ -126,19 +158,21 @@ export function useIslandNarrativeOpeningFlow({
     seenStateRef.current = readSeenState(storageKey);
     setQueue([]);
     setActiveDialogue(null);
+    setActiveToast(null);
+    previousHatcheryBuildLevelRef.current = null;
     sessionDisplayedRef.current = new Set();
   }, [storageKey]);
 
   const isEligible = hasHydratedRuntimeState && isEligibleForIsland001OpeningFlow(currentIslandNumber, cycleIndex);
 
-  const isSeen = useCallback((beatId: OpeningBeatId) => {
+  const isSeen = useCallback((beatId: IslandNarrativeControllerBeatId) => {
     const seen = seenStateRef.current;
     if (seen.beats[beatId]) return true;
     if (beatId === 'I001-B02' && seen.episodes[ISLAND_001_ARRIVAL_EPISODE_ID]) return true;
     return sessionDisplayedRef.current.has(beatId);
   }, []);
 
-  const markSeen = useCallback((beatId: OpeningBeatId) => {
+  const markSeen = useCallback((beatId: IslandNarrativeControllerBeatId) => {
     const now = Date.now();
     sessionDisplayedRef.current.add(beatId);
     const next: SeenState = {
@@ -152,7 +186,7 @@ export function useIslandNarrativeOpeningFlow({
     writeSeenState(storageKey, next);
   }, [storageKey]);
 
-  const enqueueBeat = useCallback((beatId: OpeningBeatId) => {
+  const enqueueBeat = useCallback((beatId: IslandNarrativeControllerBeatId) => {
     if (!isEligible || isSeen(beatId)) return;
     setQueue((current) => {
       if (current.includes(beatId)) return current;
@@ -178,6 +212,24 @@ export function useIslandNarrativeOpeningFlow({
     enqueueBeat('I001-B04');
   }, [activeStopId, enqueueBeat, isEligible]);
 
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) {
+      previousHatcheryBuildLevelRef.current = null;
+      return;
+    }
+
+    const previous = previousHatcheryBuildLevelRef.current;
+    const current = typeof hatcheryBuildLevel === 'number' ? hatcheryBuildLevel : null;
+    previousHatcheryBuildLevelRef.current = current;
+
+    // Hydration/old-save rule: seed the baseline on first hydrated observation,
+    // but do not emit a stale catch-up reaction for saves already at Level 1+.
+    if (previous === null) return;
+    if (!isEligible || !didHatcheryReachLevelOne(previous, current)) return;
+    enqueueBeat('I001-B24');
+  }, [enqueueBeat, hasHydratedRuntimeState, hatcheryBuildLevel, isEligible]);
+
   useEffect(() => {
     if (activeStoryEpisode) return;
     if (!storyReaderClosingRef.current) return;
@@ -185,10 +237,27 @@ export function useIslandNarrativeOpeningFlow({
   }, [activeStoryEpisode]);
 
   useEffect(() => {
-    if (!isEligible || activeStoryEpisode || activeDialogue || isGlobalPrologueActive || isNarrativeSurfaceBlocked || storyReaderClosingRef.current) return;
+    if (!isEligible || activeStoryEpisode || activeDialogue || activeToast || isGlobalPrologueActive || isNarrativeSurfaceBlocked || storyReaderClosingRef.current) return;
     const nextBeatId = queue[0];
     if (!nextBeatId) return;
-    if (!isOpeningBeatId(nextBeatId) || isSeen(nextBeatId)) {
+    if (isSeen(nextBeatId)) {
+      setQueue((current) => current.slice(1));
+      return;
+    }
+
+    if (nextBeatId === 'I001-B24') {
+      const toast = getToastForBeat(nextBeatId);
+      if (!toast) {
+        setQueue((current) => current.slice(1));
+        return;
+      }
+      sessionDisplayedRef.current.add(nextBeatId);
+      setQueue((current) => current.slice(1));
+      setActiveToast(toast);
+      return;
+    }
+
+    if (!isOpeningBeatId(nextBeatId)) {
       setQueue((current) => current.slice(1));
       return;
     }
@@ -213,7 +282,7 @@ export function useIslandNarrativeOpeningFlow({
     sessionDisplayedRef.current.add(nextBeatId);
     setQueue((current) => current.slice(1));
     setActiveDialogue(dialogue);
-  }, [activeDialogue, activeStoryEpisode, isEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, setActiveStoryEpisode]);
+  }, [activeDialogue, activeStoryEpisode, activeToast, isEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, setActiveStoryEpisode]);
 
   const handleStoryEpisodeClosed = useCallback((episode: Exclude<ActiveIslandStoryEpisode, null>) => {
     if (episode.kind !== 'island_arrival') return;
@@ -233,11 +302,19 @@ export function useIslandNarrativeOpeningFlow({
 
   const handleDialogueClose = handleDialogueContinue;
 
+  const handleToastDismiss = useCallback(() => {
+    if (!activeToast) return;
+    markSeen(activeToast.beatId);
+    setActiveToast(null);
+  }, [activeToast, markSeen]);
+
   return {
     activeDialogue,
+    activeToast,
     queuedBeatIds: queue,
     handleStoryEpisodeClosed,
     handleDialogueContinue,
     handleDialogueClose,
+    handleToastDismiss,
   };
 }

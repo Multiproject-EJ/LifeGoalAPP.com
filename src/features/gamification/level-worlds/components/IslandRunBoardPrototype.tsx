@@ -302,6 +302,7 @@ import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { ShooterControllerAdapter } from './ShooterControllerAdapter';
 import { IslandStoryReader } from './IslandStoryReader';
 import { IslandNarrativeDialogue } from '../narrative/components/IslandNarrativeDialogue';
+import { IslandNarrativeToast } from '../narrative/components/IslandNarrativeToast';
 import { useIslandNarrativeOpeningFlow, type ActiveIslandStoryEpisode } from '../narrative/useIslandNarrativeOpeningFlow';
 import {
   resolveMinigameForStop,
@@ -9972,6 +9973,7 @@ export function IslandRunBoardPrototype({
     isGlobalPrologueSeen: isGlobalPrologueSeenForNarrative,
     isNarrativeSurfaceBlocked,
     activeStopId,
+    hatcheryBuildLevel: runtimeState.stopBuildStateByIndex[0]?.buildLevel,
     activeStoryEpisode,
     setActiveStoryEpisode,
   });
@@ -14132,6 +14134,18 @@ export function IslandRunBoardPrototype({
           continueLabel={islandNarrativeOpeningFlow.activeDialogue.continueLabel}
           onContinue={islandNarrativeOpeningFlow.handleDialogueContinue}
           onClose={islandNarrativeOpeningFlow.handleDialogueClose}
+        />
+      ) : null}
+
+
+      {islandNarrativeOpeningFlow.activeToast ? (
+        <IslandNarrativeToast
+          isOpen={true}
+          speakerName={islandNarrativeOpeningFlow.activeToast.speakerName}
+          text={islandNarrativeOpeningFlow.activeToast.text}
+          supportingLabel={islandNarrativeOpeningFlow.activeToast.supportingLabel}
+          durationMs={islandNarrativeOpeningFlow.activeToast.durationMs}
+          onDismiss={islandNarrativeOpeningFlow.handleToastDismiss}
         />
       ) : null}
 
