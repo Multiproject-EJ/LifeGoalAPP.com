@@ -98,6 +98,8 @@ import { combinedJourneyRewardGrantTests } from './combinedJourneyRewardGrant.te
 import { combinedJourneyChestClaimTests } from './combinedJourneyChestClaim.test';
 import { combinedJourneyRewardClaimsReadTests } from './combinedJourneyRewardClaimsRead.test';
 import { combinedJourneyRewardBaselineTests } from './combinedJourneyRewardBaseline.test';
+import { island001NarrativeTests } from '../../narrative/__tests__/island001Narrative.test';
+import { islandNarrativeValidationTests, islandStoryManifestValidationTests } from '../../narrative/__tests__/islandNarrativeValidation.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -119,6 +121,9 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunIslandMetadata', tests: islandRunIslandMetadataTests },
   { label: 'islandRunPreIslandLuckyRollGate', tests: islandRunPreIslandLuckyRollGateTests },
   { label: 'islandArtManifest', tests: islandArtManifestTests },
+  { label: 'islandNarrativeValidation', tests: islandNarrativeValidationTests },
+  { label: 'island001Narrative', tests: island001NarrativeTests },
+  { label: 'islandStoryManifestValidation', tests: islandStoryManifestValidationTests },
   { label: 'islandRunContractV2Energy', tests: islandRunContractV2EnergyTests },
   { label: 'islandRunContractV2Semantics', tests: islandRunContractV2SemanticsTests },
   { label: 'islandRunContractV2StopResolver', tests: islandRunContractV2StopResolverTests },

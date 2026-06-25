@@ -1,0 +1,32 @@
+{
+  "id": "island-001-resolution",
+  "title": "Luma Isle — Resolution",
+  "panels": [
+    {
+      "id": "warning-breaks",
+      "type": "image",
+      "src": "/assets/islands/island-001/bosses/black-crystal-dragon-defeated.webp",
+      "alt": "Noctyra resting as the corrupted crystal warning breaks",
+      "caption": "The warning breaks."
+    },
+    {
+      "id": "luma-answers",
+      "type": "image",
+      "src": "/assets/islands/island-001/landmarks/hatchery/hatchery-l3.webp",
+      "alt": "The restored Hatchery on Luma Isle",
+      "caption": "Luma Isle begins to answer again."
+    },
+    {
+      "id": "great-drift-clue",
+      "type": "text",
+      "text": "Inside the corrupted crystal, Sava finds a symbol no Lumin craftsperson recognizes."
+    },
+    {
+      "id": "route-opens",
+      "type": "image",
+      "src": "/assets/islands/island-001/background/ambient-background.webp",
+      "alt": "A restored route opening from Luma Isle",
+      "caption": "One route opens. Another answers."
+    }
+  ]
+}

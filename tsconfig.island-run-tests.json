@@ -7,8 +7,13 @@
     "module": "ES2020",
     "moduleResolution": "Bundler",
     "target": "ES2022",
-    "lib": ["DOM", "ES2020"],
-    "types": ["vite/client"],
+    "lib": [
+      "DOM",
+      "ES2020"
+    ],
+    "types": [
+      "vite/client"
+    ],
     "isolatedModules": false,
     "allowImportingTsExtensions": false
   },
@@ -43,6 +48,7 @@
     "src/features/annual-review/components/ReviewWizard.tsx",
     "src/features/annual-review/components/HabitPlanning.tsx",
     "src/features/annual-review/components/ShareableYearInReview.tsx",
-    "src/features/gamification/level-worlds/services/__tests__/**/*.ts"
+    "src/features/gamification/level-worlds/services/__tests__/**/*.ts",
+    "src/features/gamification/level-worlds/narrative/**/*.ts"
   ]
 }

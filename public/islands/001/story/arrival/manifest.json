@@ -1,0 +1,32 @@
+{
+  "id": "island-001-arrival",
+  "title": "Luma Isle — Arrival",
+  "panels": [
+    {
+      "id": "luma-quiet",
+      "type": "image",
+      "src": "/assets/islands/island-001/background/ambient-background.webp",
+      "alt": "Luma Isle ambient shoreline and sky",
+      "caption": "Luma Isle should be shining by now."
+    },
+    {
+      "id": "landmarks-quiet",
+      "type": "image",
+      "src": "/assets/islands/island-001/board/board-circle-inner.webp",
+      "alt": "Luma Isle board path and quiet landmarks",
+      "caption": "The landmarks are standing… but quiet."
+    },
+    {
+      "id": "island-heart",
+      "type": "image",
+      "src": "/assets/islands/island-001/scenery/battle-arena-crystal.webp",
+      "alt": "Crystal scenery at the Island Heart",
+      "caption": "At the Island Heart, Noctyra waits."
+    },
+    {
+      "id": "first-step",
+      "type": "text",
+      "text": "Start small. Help us wake one gentle place."
+    }
+  ]
+}
