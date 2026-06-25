@@ -3006,44 +3006,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return;
     }
 
-    setVisionRewarding(true);
-    try {
-      const result = await earnXP(
-        visionReward.xpAwarded,
-        visionReward.isSpecial ? 'vision_board_star_special' : 'vision_board_star',
-        undefined,
-        visionReward.isSpecial ? 'Special weekly vision star story' : 'Vision board star boost',
-      );
-      awardDailyTreatDice({
-        userId: session.user.id,
-        diceAmount: visionReward.diceAwarded,
-        sourceLabel: 'Vision Star reward',
-        islandRunSession: session,
-      });
-      await recordActivity();
-
-      const nextCount = visionStarCount + 1;
-      const persistImageUrl =
-        visionReward.imageUrl.startsWith('data:image/') && visionReward.imageUrl.length > 200_000
-          ? (visionReward.imageUrls?.[0] ?? visionReward.imageUrl)
-          : visionReward.imageUrl;
-      const claimedReward: VisionReward = {
-        ...visionReward,
-        xpAwarded: result?.xpAwarded ?? visionReward.xpAwarded,
-      };
-      setVisionReward(claimedReward);
-      setVisionRewardDate(activeDate);
-      setHasClaimedVisionStar(true);
-      saveDraft(visionStarStorageKey(session.user.id, activeDate), true);
-      saveDraft(visionStarRewardKey(session.user.id, activeDate), {
-        ...claimedReward,
-        imageUrl: persistImageUrl,
-      } satisfies VisionReward);
-      saveDraft(visionStarCountKey(session.user.id), nextCount);
-      setVisionStarCount(nextCount);
-    } finally {
-      setVisionRewarding(false);
-    }
+    const rewardToClaim = visionReward;
+    const nextCount = visionStarCount + 1;
+    const persistImageUrl =
+      rewardToClaim.imageUrl.startsWith('data:image/') && rewardToClaim.imageUrl.length > 200_000
+        ? (rewardToClaim.imageUrls?.[0] ?? rewardToClaim.imageUrl)
+        : rewardToClaim.imageUrl;
 
     if (visionClaimButtonRef.current) {
       const rect = visionClaimButtonRef.current.getBoundingClientRect();
@@ -3052,12 +3020,58 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setCelebrationOrigin(null);
     }
 
+    setVisionRewarding(true);
+    setVisionRewardDate(activeDate);
+    setHasClaimedVisionStar(true);
+    saveDraft(visionStarStorageKey(session.user.id, activeDate), true);
+    saveDraft(visionStarRewardKey(session.user.id, activeDate), {
+      ...rewardToClaim,
+      imageUrl: persistImageUrl,
+    } satisfies VisionReward);
+    saveDraft(visionStarCountKey(session.user.id), nextCount);
+    setVisionStarCount(nextCount);
+
     triggerVisionClaimFlight();
     triggerCompletionHaptic('medium', { channel: 'habit', minIntervalMs: 2200 });
     setCelebrationType('vision');
-    setCelebrationXP(visionReward?.xpAwarded ?? 0);
+    setCelebrationXP(rewardToClaim.xpAwarded);
     setShowCelebration(true);
     closeVisionReward();
+
+    // Let the browser paint the instant collect animation before starting any
+    // XP/dice persistence work that may perform synchronous setup.
+    window.setTimeout(() => {
+      void (async () => {
+        try {
+          const result = await earnXP(
+            rewardToClaim.xpAwarded,
+            rewardToClaim.isSpecial ? 'vision_board_star_special' : 'vision_board_star',
+            undefined,
+            rewardToClaim.isSpecial ? 'Special weekly vision star story' : 'Vision board star boost',
+          );
+          awardDailyTreatDice({
+            userId: session.user.id,
+            diceAmount: rewardToClaim.diceAwarded,
+            sourceLabel: 'Vision Star reward',
+            islandRunSession: session,
+          });
+          await recordActivity();
+
+          if (result?.xpAwarded != null && result.xpAwarded !== rewardToClaim.xpAwarded) {
+            saveDraft(visionStarRewardKey(session.user.id, activeDate), {
+              ...rewardToClaim,
+              xpAwarded: result.xpAwarded,
+              imageUrl: persistImageUrl,
+            } satisfies VisionReward);
+          }
+        } catch (error) {
+          console.error('Unable to finish Vision Star reward persistence:', error);
+          setVisionRewardError('Vision Star was collected, but reward sync is still catching up.');
+        } finally {
+          setVisionRewarding(false);
+        }
+      })();
+    }, 0);
   };
 
   useEffect(() => {
@@ -3146,7 +3160,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   const isVisionRewardReady = Boolean(visionReward);
   const visionRewardClaimLabel = visionReward
-    ? `Claim ${visionReward.xpAwarded} XP + ${visionReward.diceAwarded} Dice`
+    ? 'Collect prize'
     : 'Preparing reward';
   const isCollageReward = Boolean(visionReward?.imageUrls && visionReward.imageUrls.length > 1);
   const isRewardImageReady =
