@@ -36619,3 +36619,77 @@ body.habit-wizard-open .mobile-footer-nav {
     min-height: clamp(118px, 19dvh, 152px);
   }
 }
+
+/* Player menu settings toggle row: game-mode control now lives with Settings. */
+.mobile-menu-overlay__settings-toggle-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  min-height: 58px;
+  padding: 0.68rem 0.78rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.mobile-menu-overlay__settings-toggle-copy {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.mobile-menu-overlay__settings-toggle-title {
+  color: #0f172a;
+  font-size: clamp(0.78rem, 3vw, 0.9rem);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
+.mobile-menu-overlay__settings-toggle-note {
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__settings-toggle-row {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__settings-toggle-title {
+  color: #f8fafc;
+}
+
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-menu-overlay__settings-toggle-note {
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.mobile-menu-overlay__top-controls {
+  justify-content: flex-end;
+}
+
+@media (max-width: 520px) {
+  .mobile-menu-overlay__header {
+    top: calc(env(safe-area-inset-top, 0px) + 0.42rem);
+    right: clamp(0.54rem, 3vw, 0.74rem);
+  }
+}

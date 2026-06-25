@@ -6,6 +6,7 @@
  * badge opens the rank journey modal. Presentational; all values are passed in.
  */
 
+import { useEffect, useState } from 'react';
 import type { MembershipTier } from '../../membership';
 import { membershipBadgeForTier } from '../../membership';
 import { membershipBadgeSrc, membershipBadgeLabel } from '../rankAssets';
@@ -43,6 +44,13 @@ export function RankIdentityHeader({
 }: RankIdentityHeaderProps) {
   const { current, next } = progress;
   const membershipBadge = membershipBadgeForTier(tier);
+  const [showNextRankProgress, setShowNextRankProgress] = useState(true);
+
+  useEffect(() => {
+    setShowNextRankProgress(true);
+    const hideTimer = window.setTimeout(() => setShowNextRankProgress(false), 1000);
+    return () => window.clearTimeout(hideTimer);
+  }, [current.id, next?.id, progress.percent, progress.xpIntoRank, progress.xpForRank]);
 
   return (
     <div className="rank-identity">
@@ -92,7 +100,7 @@ export function RankIdentityHeader({
         </div>
       </div>
 
-      <div className="rank-identity__nextrank">
+      <div className={`rank-identity__nextrank${showNextRankProgress ? '' : ' rank-identity__nextrank--hidden'}`}>
         <RankBadge rank={next ?? current} size={36} locked={Boolean(next)} />
         <div className="rank-identity__nextrank-text">
           <span className="rank-identity__nextrank-eyebrow">{next ? 'Next Rank' : 'Top Rank'}</span>
