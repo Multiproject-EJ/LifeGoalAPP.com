@@ -1029,6 +1029,13 @@
   transform: translateY(1px) scale(0.98);
 }
 
+.island-run-prototype__best-next-action-chip--below-rewardbar {
+  position: relative;
+  z-index: 9;
+  display: block;
+  margin: 0.45rem auto 0;
+}
+
 /* Prevent mobile long-press text selection/copy handles on footer controls. */
 .island-run-prototype__footer-actions button,
 .island-run-prototype__footer-actions button * {
