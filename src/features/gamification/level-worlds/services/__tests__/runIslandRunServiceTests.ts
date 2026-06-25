@@ -100,6 +100,7 @@ import { combinedJourneyRewardClaimsReadTests } from './combinedJourneyRewardCla
 import { combinedJourneyRewardBaselineTests } from './combinedJourneyRewardBaseline.test';
 import { island001NarrativeTests } from '../../narrative/__tests__/island001Narrative.test';
 import { islandNarrativeDialogueComponentTests } from '../../narrative/__tests__/islandNarrativeDialogueComponent.test';
+import { islandNarrativeOpeningFlowTests } from '../../narrative/__tests__/islandNarrativeOpeningFlow.test';
 import { islandNarrativeValidationTests, islandStoryManifestValidationTests } from '../../narrative/__tests__/islandNarrativeValidation.test';
 import type { TestCase } from './testHarness';
 
@@ -125,6 +126,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandNarrativeValidation', tests: islandNarrativeValidationTests },
   { label: 'island001Narrative', tests: island001NarrativeTests },
   { label: 'islandNarrativeDialogueComponent', tests: islandNarrativeDialogueComponentTests },
+  { label: 'islandNarrativeOpeningFlow', tests: islandNarrativeOpeningFlowTests },
   { label: 'islandStoryManifestValidation', tests: islandStoryManifestValidationTests },
   { label: 'islandRunContractV2Energy', tests: islandRunContractV2EnergyTests },
   { label: 'islandRunContractV2Semantics', tests: islandRunContractV2SemanticsTests },

@@ -149,7 +149,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Duplicate local story reward handler should remain removed to prevent split wiring.',
       );
       assert(
-        source.includes('onRewardClaim={sanctuaryHandlers.storyRewardClaim}'),
+        source.includes("onRewardClaim={activeStoryEpisode?.kind === 'global_prologue' ? sanctuaryHandlers.storyRewardClaim : undefined}"),
         'IslandStoryReader should remain wired to sanctuaryHandlers.storyRewardClaim.',
       );
       assert(
