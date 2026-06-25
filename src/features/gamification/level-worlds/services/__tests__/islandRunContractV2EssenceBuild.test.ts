@@ -121,7 +121,7 @@ export const islandRunContractV2EssenceBuildTests: TestCase[] = [
     },
   },
   {
-    name: 'v2 on: build can be funded on any stop regardless of which stop is active for objectives',
+    name: 'v2 on: inactive sequential landmark spend is rejected without mutation',
     run: () => {
       // Simulate stop 0 objective done (stop 1 is now active), but funding stop 2 (boss build).
       const statesWithObjective0 = BASE_STOP_STATES.map((s, i) =>
@@ -137,8 +137,10 @@ export const islandRunContractV2EssenceBuildTests: TestCase[] = [
         stopStatesByIndex: statesWithObjective0,
         effectiveIslandNumber: EFFECTIVE_ISLAND_1,
       });
-      assertEqual(result.spent > 0, true, 'Expected build spend to succeed on any stop');
-      assertEqual(result.stopBuildStateByIndex[0].spentEssence, 0, 'Other stops unchanged');
+      assertEqual(result.spent, 0, 'Expected inactive build spend to be blocked');
+      assertEqual(result.failureReason, 'not_active_sequential_target', 'Expected sequential active-target rejection');
+      assertEqual(result.essence, 30, 'Blocked spend should not deduct essence');
+      assertEqual(result.stopBuildStateByIndex[4].spentEssence, 0, 'Inactive stop progress unchanged');
     },
   },
   {
@@ -167,7 +169,9 @@ export const islandRunContractV2EssenceBuildTests: TestCase[] = [
     run: () => {
       // Simulate a stop at level MAX_BUILD_LEVEL - 1 with 1 essence left to finish.
       const nearlyDone = BASE_BUILD_STATES.map((s, i) =>
-        i === 0 ? { requiredEssence: 10, spentEssence: 0, buildLevel: MAX_BUILD_LEVEL - 1 } : s,
+        i === 0
+          ? { requiredEssence: 10, spentEssence: 0, buildLevel: MAX_BUILD_LEVEL - 1 }
+          : { ...s, buildLevel: MAX_BUILD_LEVEL - 1 },
       );
       const result = spendIslandRunContractV2EssenceOnStopBuild({
         islandRunContractV2Enabled: true,
@@ -185,6 +189,50 @@ export const islandRunContractV2EssenceBuildTests: TestCase[] = [
       assertEqual(isStopBuildFullyComplete(result.stopBuildStateByIndex[0]), true, 'isStopBuildFullyComplete should return true');
     },
   },
+
+  {
+    name: 'sequential build enforcement covers fresh, uneven, partial, boss, and complete states',
+    run: () => {
+      const spend = (stopIndex: number, states = BASE_BUILD_STATES, essence = 1000) => spendIslandRunContractV2EssenceOnStopBuild({
+        islandRunContractV2Enabled: true,
+        stopIndex,
+        spendAmount: 10,
+        essence,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: states,
+        stopStatesByIndex: BASE_STOP_STATES,
+        effectiveIslandNumber: EFFECTIVE_ISLAND_1,
+      });
+
+      assertEqual(spend(0).spent, 10, 'Fresh Hatchery spend allowed');
+      assertEqual(spend(1).failureReason, 'not_active_sequential_target', 'Fresh Habit spend blocked');
+      assertEqual(spend(4).essence, 1000, 'Blocked Boss spend deducts zero');
+
+      const afterHatcheryL1 = BASE_BUILD_STATES.map((s, i) => i === 0 ? { ...s, buildLevel: 1, spentEssence: 0 } : s);
+      assertEqual(spend(1, afterHatcheryL1).spent, 10, 'Habit spend allowed after Hatchery L1');
+
+      const allLevel1 = BASE_BUILD_STATES.map((s) => ({ ...s, buildLevel: 1, spentEssence: 0 }));
+      assertEqual(spend(0, allLevel1).spent, 10, 'Hatchery L2 spend allowed after all Level 1');
+
+      const uneven = BASE_BUILD_STATES.map((s, i) => ({ ...s, buildLevel: [2, 0, 1, 0, 0][i], spentEssence: i === 2 ? 7 : 0 }));
+      assertEqual(spend(1, uneven).spent, 10, '[2,0,1,0,0] Habit allowed');
+      assertEqual(spend(2, uneven).failureReason, 'not_active_sequential_target', 'Inactive partial/completed later stop blocked');
+      assertEqual(spend(2, uneven).stopBuildStateByIndex[2].spentEssence, 7, 'Inactive partial progress preserved');
+
+      const partialReached = BASE_BUILD_STATES.map((s, i) => ({ ...s, buildLevel: [1, 1, 0, 0, 0][i], spentEssence: i === 2 ? 7 : 0 }));
+      const partialResult = spend(2, partialReached);
+      assertEqual(partialResult.spent, 10, 'Preserved partial progress is used when target is reached');
+      assertEqual(partialResult.stopBuildStateByIndex[2].spentEssence, 17, 'Spend continues from preserved partial amount');
+
+      const bossL3Active = BASE_BUILD_STATES.map((s, i) => ({ ...s, buildLevel: i === 4 ? 2 : 3, spentEssence: 0 }));
+      assertEqual(spend(4, bossL3Active).spent, 10, 'Boss L3 spend allowed only when active final target');
+      assertEqual(spend(0, bossL3Active).failureReason, 'stop_already_fully_built', 'Completed non-active stop is already fully built');
+
+      const fullyBuilt = FULL_BUILD_STATES.map((s) => ({ ...s }));
+      assertEqual(spend(0, fullyBuilt).failureReason, 'all_landmarks_fully_built', 'Fully built island rejects all spends');
+    },
+  },
+
   {
     name: 'v2 on: stop sequencing advances on objective completion alone (build does not gate unlock)',
     run: () => {
