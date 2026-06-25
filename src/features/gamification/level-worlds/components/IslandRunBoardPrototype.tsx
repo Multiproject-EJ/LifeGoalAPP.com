@@ -9976,12 +9976,13 @@ export function IslandRunBoardPrototype({
     hatcheryBuildLevel: runtimeState.stopBuildStateByIndex[0]?.buildLevel,
     canChallengeCurrentBoss,
     isCurrentIslandBossDefeated,
+    bossTrialResolvedIslandNumber: runtimeState.bossTrialResolvedIslandNumber,
     activeStoryEpisode,
     setActiveStoryEpisode,
   });
 
   const handleCloseStoryReader = () => {
-    if (activeStoryEpisode?.kind === 'island_arrival') {
+    if (activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution') {
       islandNarrativeOpeningFlow.handleStoryEpisodeClosed(activeStoryEpisode);
       return;
     }
