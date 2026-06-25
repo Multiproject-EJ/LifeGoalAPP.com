@@ -8165,7 +8165,15 @@ export function IslandRunBoardPrototype({
       });
 
       if (spendResult.spent < 1) {
-        setLandingText('Not enough Essence to build. Earn more by rolling!');
+        if (spendResult.failureReason === 'not_active_sequential_target') {
+          setLandingText('This landmark is not active yet.');
+        } else if (spendResult.failureReason === 'all_landmarks_fully_built') {
+          setLandingText('All landmarks are fully restored.');
+        } else if (spendResult.failureReason === 'stop_already_fully_built') {
+          setLandingText('This building is already fully built!');
+        } else {
+          setLandingText('Not enough Essence to build. Earn more by rolling!');
+        }
         return false;
       }
 
@@ -8178,7 +8186,10 @@ export function IslandRunBoardPrototype({
         spendAmount: resolveBuildSpendStepForTier(currentBuildState.requiredEssence),
         triggerSource: maxSteps > 1 ? 'stop_build_spend_batch' : 'stop_build_spend',
       });
-      if (batchResult.stepsApplied < 1) return false;
+      if (batchResult.stepsApplied < 1) {
+        if (batchResult.failureReason === 'not_active_sequential_target') setLandingText('The next landmark is ready.');
+        return false;
+      }
       const nextRuntimeState = batchResult.record;
       setRuntimeState(nextRuntimeState);
       runtimeStateRef.current = nextRuntimeState;

@@ -4124,10 +4124,10 @@ export const islandRunStateActionsTests: TestCase[] = [
         essenceLifetimeSpent: 0,
         stopBuildStateByIndex: [
           { requiredEssence: 10, spentEssence: 0, buildLevel: 2 },
-          { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
-          { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
-          { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
-          { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 70, spentEssence: 70, buildLevel: 2 },
+          { requiredEssence: 90, spentEssence: 90, buildLevel: 2 },
+          { requiredEssence: 120, spentEssence: 120, buildLevel: 2 },
+          { requiredEssence: 200, spentEssence: 200, buildLevel: 2 },
         ],
       });
 
@@ -4155,10 +4155,10 @@ export const islandRunStateActionsTests: TestCase[] = [
         essenceLifetimeSpent: 0,
         stopBuildStateByIndex: [
           { requiredEssence: 50, spentEssence: 40, buildLevel: 2 },
-          { requiredEssence: 70, spentEssence: 0, buildLevel: 0 },
-          { requiredEssence: 90, spentEssence: 0, buildLevel: 0 },
-          { requiredEssence: 120, spentEssence: 0, buildLevel: 0 },
-          { requiredEssence: 200, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 70, spentEssence: 70, buildLevel: 2 },
+          { requiredEssence: 90, spentEssence: 90, buildLevel: 2 },
+          { requiredEssence: 120, spentEssence: 120, buildLevel: 2 },
+          { requiredEssence: 200, spentEssence: 200, buildLevel: 2 },
         ],
       });
 
@@ -4255,6 +4255,51 @@ export const islandRunStateActionsTests: TestCase[] = [
       );
     },
   },
+
+  {
+    name: 'applyStopBuildSpendBatch enforces active target, preserves inactive partials, and stops at level boundary',
+    run: async () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 44,
+        essence: 500,
+        essenceLifetimeSpent: 0,
+        stopBuildStateByIndex: [
+          { requiredEssence: 20, spentEssence: 0, buildLevel: 1 },
+          { requiredEssence: 20, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 20, spentEssence: 7, buildLevel: 0 },
+          { requiredEssence: 20, spentEssence: 0, buildLevel: 0 },
+          { requiredEssence: 20, spentEssence: 0, buildLevel: 0 },
+        ],
+      });
+
+      const stale = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 2,
+        effectiveIslandNumber: 1,
+        maxSteps: 3,
+      });
+      assertEqual(stale.stepsApplied, 0, 'stale queued inactive target should be rejected');
+      assertEqual(stale.failureReason, 'not_active_sequential_target', 'stale queued target should report sequential rejection');
+      assertEqual(stale.record.essence, 500, 'blocked stale queue should deduct zero essence');
+      assertEqual(stale.record.stopBuildStateByIndex[2]?.spentEssence, 7, 'inactive partial progress should be preserved');
+
+      const active = await applyStopBuildSpendBatch({
+        session,
+        client: null,
+        stopIndex: 1,
+        effectiveIslandNumber: 1,
+        maxSteps: 5,
+      });
+      assertEqual(active.stepsApplied, 2, 'batch should stop when active target level completes');
+      assertEqual(active.record.stopBuildStateByIndex[1]?.buildLevel, 1, 'active Habit L1 should complete');
+      assertEqual(active.record.stopBuildStateByIndex[2]?.spentEssence, 7, 'batch should not redirect into next Mystery target');
+      assertEqual(active.record.runtimeVersion, 45, 'successful boundary-limited batch commits once');
+    },
+  },
+
 
   {
     name: 'applyEggResolution commits egg clear + ledger + completed stops and optional essence in one publish',

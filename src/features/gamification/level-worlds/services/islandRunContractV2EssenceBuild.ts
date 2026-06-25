@@ -10,6 +10,13 @@ export type IslandRunContractV2BuildState = {
   buildLevel: number;
 };
 
+export type IslandRunContractV2BuildSpendFailureReason =
+  | 'invalid_stop'
+  | 'not_active_sequential_target'
+  | 'stop_already_fully_built'
+  | 'all_landmarks_fully_built'
+  | 'insufficient_essence';
+
 /**
  * Maximum build level per stop (number of cost tiers = number of building levels).
  * A stop's build is fully complete when buildLevel === MAX_BUILD_LEVEL.
@@ -373,11 +380,32 @@ export function awardIslandRunContractV2Essence(options: {
 
 /**
  * Spend essence on a stop's building.
- * Build is DECOUPLED from stop objective/sequencing — any stop can be funded at any time.
+ * Sequential enforcement protects canonical writes: callers may request any stop,
+ * but normal spends are accepted only for the active target re-derived from the
+ * latest stopBuildStateByIndex. Uneven legacy progress is preserved in place;
+ * no active target is persisted.
  * Multi-level: when a level is fully funded the building advances to the next level
  * (spentEssence resets, requiredEssence updates to the next tier cost) until MAX_BUILD_LEVEL
  * is reached, at which point buildComplete is set on the stop state.
  */
+
+function getContractBuildSequentialLockReason(
+  requestedStopIndex: number,
+  stopBuildStateByIndex: ReadonlyArray<IslandRunContractV2BuildState | null | undefined>,
+): 'not_active_target' | 'already_fully_built' | 'all_builds_complete' | null {
+  for (let targetLevel = 1; targetLevel <= MAX_BUILD_LEVEL; targetLevel += 1) {
+    for (let stopIndex = 0; stopIndex < 5; stopIndex += 1) {
+      const buildLevel = Math.min(MAX_BUILD_LEVEL, Math.max(0, Math.floor(stopBuildStateByIndex[stopIndex]?.buildLevel ?? 0)));
+      if (buildLevel < targetLevel) {
+        if (requestedStopIndex === stopIndex) return null;
+        const requestedLevel = Math.min(MAX_BUILD_LEVEL, Math.max(0, Math.floor(stopBuildStateByIndex[requestedStopIndex]?.buildLevel ?? 0)));
+        return requestedLevel >= MAX_BUILD_LEVEL ? 'already_fully_built' : 'not_active_target';
+      }
+    }
+  }
+  return 'all_builds_complete';
+}
+
 export function spendIslandRunContractV2EssenceOnStopBuild(options: {
   islandRunContractV2Enabled: boolean;
   stopIndex: number;
@@ -388,6 +416,8 @@ export function spendIslandRunContractV2EssenceOnStopBuild(options: {
   stopStatesByIndex: IslandRunContractV2StopState[];
   /** Effective island number (cycleIndex × 120 + islandNumber) for next-level cost lookup. */
   effectiveIslandNumber: number;
+  /** DEV-only force actions may explicitly bypass sequential order. Production defaults to true. */
+  enforceSequentialBuildTarget?: boolean;
 }): {
   essence: number;
   essenceLifetimeSpent: number;
@@ -395,6 +425,7 @@ export function spendIslandRunContractV2EssenceOnStopBuild(options: {
   stopStatesByIndex: IslandRunContractV2StopState[];
   spent: number;
   leveledUp: boolean;
+  failureReason?: IslandRunContractV2BuildSpendFailureReason;
 } {
   const noChange = {
     essence: options.essence,
@@ -407,14 +438,30 @@ export function spendIslandRunContractV2EssenceOnStopBuild(options: {
 
   if (!options.islandRunContractV2Enabled) return noChange;
 
-  const normalizedStopIndex = Math.max(0, Math.floor(options.stopIndex));
+  const normalizedStopIndex = Number.isFinite(options.stopIndex) ? Math.floor(options.stopIndex) : -1;
+  if (normalizedStopIndex < 0 || normalizedStopIndex >= options.stopBuildStateByIndex.length) {
+    return { ...noChange, failureReason: 'invalid_stop' };
+  }
+
+  if (options.enforceSequentialBuildTarget !== false) {
+    const sequentialLockReason = getContractBuildSequentialLockReason(normalizedStopIndex, options.stopBuildStateByIndex);
+    if (sequentialLockReason) {
+      const failureReason: IslandRunContractV2BuildSpendFailureReason = sequentialLockReason === 'all_builds_complete'
+        ? 'all_landmarks_fully_built'
+        : sequentialLockReason === 'already_fully_built'
+          ? 'stop_already_fully_built'
+          : 'not_active_sequential_target';
+      return { ...noChange, failureReason };
+    }
+  }
+
   const currentBuildState = options.stopBuildStateByIndex[normalizedStopIndex];
   const currentStopState = options.stopStatesByIndex[normalizedStopIndex] ?? { objectiveComplete: false, buildComplete: false };
 
-  if (!currentBuildState) return noChange;
+  if (!currentBuildState) return { ...noChange, failureReason: 'invalid_stop' };
 
   // Already fully built — nothing to do.
-  if (isStopBuildFullyComplete(currentBuildState)) return noChange;
+  if (isStopBuildFullyComplete(currentBuildState)) return { ...noChange, failureReason: 'stop_already_fully_built' };
 
   const budget = Math.max(0, Math.floor(options.essence));
   const request = Math.max(0, Math.floor(options.spendAmount));
@@ -424,7 +471,7 @@ export function spendIslandRunContractV2EssenceOnStopBuild(options: {
   const spent = Math.max(0, Math.min(request, budget, remaining));
 
   if (spent < 1) {
-    return { ...noChange, essence: budget };
+    return { ...noChange, essence: budget, failureReason: 'insufficient_essence' };
   }
 
   const nextSpentEssence = alreadySpent + spent;

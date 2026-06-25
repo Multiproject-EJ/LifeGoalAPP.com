@@ -69,6 +69,7 @@ import {
   initStopBuildStatesForIsland,
   MAX_BUILD_LEVEL,
   spendIslandRunContractV2EssenceOnStopBuild,
+  type IslandRunContractV2BuildSpendFailureReason,
 } from './islandRunContractV2EssenceBuild';
 import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
@@ -1086,17 +1087,24 @@ export async function applyDevBuildAllToL3(
       stopsCompleted += 1;
       continue;
     }
+    // Explicit debug-only force path: bypasses sequential order but still uses
+    // canonical build spend math/commits. Because production batches stop at each
+    // level boundary, loop per level here until this one stop reaches L3.
     const maxStepsToL3 = 1000;
-    const batchResult = await applyStopBuildSpendBatch({
-      session,
-      client,
-      stopIndex,
-      effectiveIslandNumber,
-      maxSteps: maxStepsToL3,
-      triggerSource: triggerSource ?? 'dev_build_all_to_l3',
-    });
-    workingRecord = batchResult.record;
-    totalStepsApplied += batchResult.stepsApplied;
+    while ((workingRecord.stopBuildStateByIndex[stopIndex]?.buildLevel ?? 0) < 3) {
+      const batchResult = await applyStopBuildSpendBatch({
+        session,
+        client,
+        stopIndex,
+        effectiveIslandNumber,
+        maxSteps: maxStepsToL3,
+        triggerSource: triggerSource ?? 'dev_build_all_to_l3',
+        enforceSequentialBuildTarget: false,
+      });
+      workingRecord = batchResult.record;
+      totalStepsApplied += batchResult.stepsApplied;
+      if (batchResult.stepsApplied < 1) break;
+    }
     const nextBuild = workingRecord.stopBuildStateByIndex[stopIndex];
     if (nextBuild && nextBuild.buildLevel >= 3) {
       stopsCompleted += 1;
@@ -2848,11 +2856,14 @@ export interface ApplyStopBuildSpendBatchOptions {
   maxSteps: number;
   spendAmount?: number;
   triggerSource?: string;
+  /** Explicitly named dev-only force builders may bypass sequential order. */
+  enforceSequentialBuildTarget?: boolean;
 }
 
 export interface ApplyStopBuildSpendBatchResult {
   record: IslandRunGameStateRecord;
   stepsApplied: number;
+  failureReason?: IslandRunContractV2BuildSpendFailureReason;
 }
 
 export interface ApplyStopObjectiveProgressOptions {
@@ -3316,10 +3327,11 @@ export async function applyStopBuildSpendBatch(
     maxSteps,
     spendAmount = 10,
     triggerSource,
+    enforceSequentialBuildTarget = true,
   } = options;
   const current = getIslandRunStateSnapshot(session);
   if (stopIndex < 0 || stopIndex >= current.stopBuildStateByIndex.length) {
-    return { record: current, stepsApplied: 0 };
+    return { record: current, stepsApplied: 0, failureReason: 'invalid_stop' };
   }
 
   const safeMaxSteps = Math.max(1, Math.floor(maxSteps));
@@ -3329,6 +3341,7 @@ export async function applyStopBuildSpendBatch(
   let nextStopBuildStateByIndex = current.stopBuildStateByIndex;
   let nextStopStatesByIndex = current.stopStatesByIndex;
   let stepsApplied = 0;
+  let failureReason: IslandRunContractV2BuildSpendFailureReason | undefined;
 
   for (let stepIndex = 0; stepIndex < safeMaxSteps; stepIndex += 1) {
     const spendResult = spendIslandRunContractV2EssenceOnStopBuild({
@@ -3340,17 +3353,25 @@ export async function applyStopBuildSpendBatch(
       stopBuildStateByIndex: nextStopBuildStateByIndex,
       stopStatesByIndex: nextStopStatesByIndex,
       effectiveIslandNumber,
+      enforceSequentialBuildTarget,
     });
-    if (spendResult.spent < 1) break;
+    if (spendResult.spent < 1) {
+      failureReason = spendResult.failureReason;
+      break;
+    }
     nextEssence = spendResult.essence;
     nextEssenceLifetimeSpent = spendResult.essenceLifetimeSpent;
     nextStopBuildStateByIndex = spendResult.stopBuildStateByIndex;
     nextStopStatesByIndex = spendResult.stopStatesByIndex;
     stepsApplied += 1;
+    // A queued/batched activation may only fund the target level active when
+    // the batch began. Once that level completes, commit it and require a new
+    // user action so batches cannot spill across sequential target boundaries.
+    if (spendResult.leveledUp) break;
   }
 
   if (stepsApplied < 1) {
-    return { record: current, stepsApplied: 0 };
+    return { record: current, stepsApplied: 0, failureReason };
   }
 
   const next: IslandRunGameStateRecord = {
