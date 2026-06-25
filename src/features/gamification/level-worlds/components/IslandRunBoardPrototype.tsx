@@ -301,6 +301,8 @@ import {
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { ShooterControllerAdapter } from './ShooterControllerAdapter';
 import { IslandStoryReader } from './IslandStoryReader';
+import { IslandNarrativeDialogue } from '../narrative/components/IslandNarrativeDialogue';
+import { useIslandNarrativeOpeningFlow, type ActiveIslandStoryEpisode } from '../narrative/useIslandNarrativeOpeningFlow';
 import {
   resolveMinigameForStop,
   type IslandRunMinigameResult,
@@ -2183,7 +2185,8 @@ export function IslandRunBoardPrototype({
   const [perfectCompanionOnboardingCreatureId, setPerfectCompanionOnboardingCreatureId] = useState<string | null>(null);
   const [perfectCompanionOnboardingCreatureName, setPerfectCompanionOnboardingCreatureName] = useState<string | null>(null);
 
-  const [showStoryReader, setShowStoryReader] = useState(false);
+  const [activeStoryEpisode, setActiveStoryEpisode] = useState<ActiveIslandStoryEpisode>(null);
+  const showStoryReader = activeStoryEpisode !== null;
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
 
   useEffect(() => {
@@ -5004,7 +5007,7 @@ export function IslandRunBoardPrototype({
 
     const hasSeenStory = runtimeState.storyPrologueSeen || window.localStorage.getItem(storySeenStorageKey) === 'true';
     if (!hasSeenStory) {
-      setShowStoryReader(true);
+      setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
     }
   }, [hasHydratedRuntimeState, runtimeState.storyPrologueSeen, storySeenStorageKey]);
 
@@ -9855,21 +9858,7 @@ export function IslandRunBoardPrototype({
     });
   };
 
-  const handleCloseStoryReader = () => {
-    setShowStoryReader(false);
-    try {
-      window.localStorage.setItem(storySeenStorageKey, 'true');
-    } catch {
-      // ignore localStorage failures
-    }
-    const next = applyStoryPrologueSeenMarker({
-      session,
-      client,
-      storyPrologueSeen: true,
-      triggerSource: 'close_story_reader_marker',
-    });
-    setRuntimeState(next);
-  };
+
 
   const islandArtAmbientBackgroundSrc = getIslandArtAmbientBackgroundSrc(islandArtManifest);
   const shouldShowIslandArtAmbientBackground = Boolean(islandArtAmbientBackgroundSrc) && isIslandArtAmbientBackgroundLoaded && !isBackgroundHidden;
@@ -9930,6 +9919,83 @@ export function IslandRunBoardPrototype({
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
+  const isNarrativeSurfaceBlocked = Boolean(
+    activeStopId ||
+      activeLaunchedMinigameId ||
+      activePlaceholder ||
+      hatchReveal ||
+      ticketPromptStopId ||
+      lockedStopInfoStopId ||
+      showBuildPanel ||
+      showClaimModal ||
+      showEggReadyBanner ||
+      showEntryAudioModal ||
+      techCollectionModal ||
+      showEncounterModal ||
+      showGamifiedJournalCard ||
+      showFirstCreaturePackModal ||
+      showFirstRunCelebration ||
+      showHatcheryHelp ||
+      showHatcheryL1Celebration ||
+      showHatcheryCompassModal ||
+      showIslandClearCelebration ||
+      showMarketPanel ||
+      showOnboardingBooster ||
+      showOutOfDicePurchasePrompt ||
+      showPerfectCompanionOnboardingHint ||
+      showRewardDetailsModal ||
+      showSanctuaryPanel ||
+      showShopPanel ||
+      showStickerAlbumDialog ||
+      showTravelOverlay ||
+      bossTrialPhase !== 'idle' ||
+      Boolean(dormantDoorMiniGame) ||
+      Boolean(trafficLightCoinFlip) ||
+      walletStoreModalKind !== null
+  );
+
+  let isGlobalPrologueSeenForNarrative = runtimeState.storyPrologueSeen;
+  if (!isGlobalPrologueSeenForNarrative && typeof window !== 'undefined') {
+    try {
+      isGlobalPrologueSeenForNarrative = window.localStorage.getItem(storySeenStorageKey) === 'true';
+    } catch {
+      isGlobalPrologueSeenForNarrative = false;
+    }
+  }
+
+  const islandNarrativeOpeningFlow = useIslandNarrativeOpeningFlow({
+    userId: session.user.id,
+    currentIslandNumber: runtimeState.currentIslandNumber,
+    cycleIndex: runtimeState.cycleIndex,
+    hasHydratedRuntimeState,
+    isGlobalPrologueActive: activeStoryEpisode?.kind === 'global_prologue',
+    isGlobalPrologueSeen: isGlobalPrologueSeenForNarrative,
+    isNarrativeSurfaceBlocked,
+    activeStopId,
+    activeStoryEpisode,
+    setActiveStoryEpisode,
+  });
+
+  const handleCloseStoryReader = () => {
+    if (activeStoryEpisode?.kind === 'island_arrival') {
+      islandNarrativeOpeningFlow.handleStoryEpisodeClosed(activeStoryEpisode);
+      return;
+    }
+
+    setActiveStoryEpisode(null);
+    try {
+      window.localStorage.setItem(storySeenStorageKey, 'true');
+    } catch {
+      // ignore localStorage failures
+    }
+    const next = applyStoryPrologueSeenMarker({
+      session,
+      client,
+      storyPrologueSeen: true,
+      triggerSource: 'close_story_reader_marker',
+    });
+    setRuntimeState(next);
+  };
   // Keep the auto-roll loop's pause gate in sync with modal state so it halts
   // while any modal is open and resumes once they are all dismissed.
   useEffect(() => {
@@ -10112,7 +10178,7 @@ export function IslandRunBoardPrototype({
             type="button"
             className="island-run-prototype__shop-btn"
             aria-label="Open story reader"
-            onClick={() => setShowStoryReader(true)}
+            onClick={() => setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' })}
           >
             📖 Story
           </button>
@@ -10953,7 +11019,7 @@ export function IslandRunBoardPrototype({
                   type="button"
                   className="island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-story"
                   style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.leftUpper)}
-                  onClick={() => setShowStoryReader(true)}
+                  onClick={() => setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' })}
                   disabled={isBuildTutorialGameplayBlocked}
                 >
                   📖 Story
@@ -14051,11 +14117,23 @@ export function IslandRunBoardPrototype({
       />
 
       <IslandStoryReader
-        manifestPath="/storyline/episode-001/manifest.json"
+        manifestPath={activeStoryEpisode?.manifestPath ?? '/storyline/episode-001/manifest.json'}
         isOpen={showStoryReader}
         onClose={handleCloseStoryReader}
-        onRewardClaim={sanctuaryHandlers.storyRewardClaim}
+        onRewardClaim={activeStoryEpisode?.kind === 'global_prologue' ? sanctuaryHandlers.storyRewardClaim : undefined}
       />
+
+      {islandNarrativeOpeningFlow.activeDialogue ? (
+        <IslandNarrativeDialogue
+          isOpen={true}
+          speakerName={islandNarrativeOpeningFlow.activeDialogue.speakerName}
+          text={islandNarrativeOpeningFlow.activeDialogue.text}
+          tone="standard"
+          continueLabel={islandNarrativeOpeningFlow.activeDialogue.continueLabel}
+          onContinue={islandNarrativeOpeningFlow.handleDialogueContinue}
+          onClose={islandNarrativeOpeningFlow.handleDialogueClose}
+        />
+      ) : null}
 
       {/* M16E: Blind-box collectible reveal modal */}
       {showClaimModal && pendingClaimTierIndex !== null && (
