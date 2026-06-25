@@ -21641,7 +21641,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   z-index: 1;
   display: grid;
   gap: 0.75rem;
-  padding-top: calc(env(safe-area-inset-top, 0px) + 3.15rem);
+  padding-top: clamp(0.72rem, 2.2dvh, 1.15rem);
   padding-bottom: 0.25rem;
   animation: mobileMenuElementSettle 0.72s cubic-bezier(0.18, 1.28, 0.32, 1) 0.05s both;
 }
@@ -22380,7 +22380,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
   .mobile-menu-overlay__dashboard {
     gap: clamp(0.48rem, 1.5dvh, 0.68rem);
-    padding-top: calc(env(safe-area-inset-top, 0px) + 2.9rem);
+    padding-top: clamp(0.5rem, 1.6dvh, 0.82rem);
     padding-bottom: 0;
   }
 
