@@ -555,7 +555,7 @@
 
 @media (max-width: 520px) {
   .yesterday-sundown-todo-modal {
-    align-items: flex-end;
+    align-items: center;
     padding: 0.75rem;
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
