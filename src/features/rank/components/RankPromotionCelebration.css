@@ -141,3 +141,16 @@
     transition: none;
   }
 }
+
+.rank-promo__badges {
+  height: 300px;
+}
+
+.rank-promo__title {
+  color: #f8fbff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.42);
+}
+
+.rank-promo__desc {
+  color: #e2e8ff;
+}

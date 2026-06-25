@@ -224,3 +224,23 @@
   color: #2b3566;
   flex: 0 0 auto;
 }
+
+.rank-identity__nextrank {
+  transition: opacity 0.22s ease, max-height 0.22s ease, margin 0.22s ease, padding 0.22s ease;
+}
+
+.rank-identity__nextrank--hidden {
+  max-height: 0;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rank-identity__nextrank {
+    transition: none;
+  }
+}

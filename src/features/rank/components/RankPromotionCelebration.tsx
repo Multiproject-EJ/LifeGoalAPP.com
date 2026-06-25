@@ -64,7 +64,7 @@ export function RankPromotionCelebration({
             <RankBadge rank={fromRank} size={84} />
           </span>
           <span className="rank-promo__badge rank-promo__badge--to">
-            <RankBadge rank={toRank} size={140} />
+            <RankBadge rank={toRank} size={280} />
           </span>
         </div>
 
