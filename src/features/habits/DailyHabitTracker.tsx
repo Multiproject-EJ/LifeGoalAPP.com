@@ -1120,6 +1120,7 @@ export function DailyHabitTracker({
   const [monthlySaving, setMonthlySaving] = useState<Record<string, boolean>>({});
   const [autoProgressHabitIds, setAutoProgressHabitIds] = useState<Set<string>>(new Set());
   const [today, setToday] = useState(() => formatISODate(new Date()));
+  const todayRef = useRef(today);
   const [activeDate, setActiveDate] = useState(() => formatISODate(new Date()));
 
   useEffect(() => {
@@ -1139,6 +1140,40 @@ export function DailyHabitTracker({
   useEffect(() => {
     void loadTodayTodos(activeDate);
   }, [activeDate, loadTodayTodos]);
+
+  useEffect(() => {
+    todayRef.current = today;
+  }, [today]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const syncTodayAfterRollover = () => {
+      const nextToday = formatISODate(new Date());
+      const previousToday = todayRef.current;
+      if (nextToday === previousToday) return;
+
+      todayRef.current = nextToday;
+      yesterdaySundownTodoPromptOpenedThisSessionRef.current = false;
+      setToday(nextToday);
+      setTodoCleanupPendingActions({});
+      setTodoCleanupBulkAction(null);
+      setExpandedYesterdaySundownTodoById({});
+
+      setActiveDate((currentActiveDate) => (currentActiveDate === previousToday ? nextToday : currentActiveDate));
+      void loadTodayTodos(nextToday);
+    };
+
+    const interval = window.setInterval(syncTodayAfterRollover, 60 * 1000);
+    window.addEventListener('focus', syncTodayAfterRollover);
+    document.addEventListener('visibilitychange', syncTodayAfterRollover);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', syncTodayAfterRollover);
+      document.removeEventListener('visibilitychange', syncTodayAfterRollover);
+    };
+  }, [loadTodayTodos]);
 
   useEffect(() => {
     if ((!todayTodoModalOpen && !ambianceModalOpen) || typeof document === 'undefined') return;
