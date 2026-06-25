@@ -125,7 +125,8 @@
   position: relative;
   z-index: 2;
   width: min(100%, 560px);
-  max-height: calc(100dvh - clamp(10.8rem, 34vw, 14.5rem));
+  height: 100%;
+  max-height: none;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: clamp(0.45rem, 1.6vh, 0.85rem);
@@ -766,7 +767,8 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  padding: 0 0.35rem calc(env(safe-area-inset-bottom, 0px) + clamp(9.2rem, 31vw, 12.8rem));
+  min-height: 100dvh;
+  padding: 0 0.35rem env(safe-area-inset-bottom, 0px);
   margin-top: 0;
 }
 
@@ -801,8 +803,8 @@
 .game-board-overlay__controller-shell::after {
   content: '';
   position: absolute;
-  right: clamp(4.6rem, 18vw, 7.7rem);
-  top: clamp(0.3rem, 5.75vw, 1.9rem);
+  right: clamp(3.15rem, 12.5vw, 5.45rem);
+  top: clamp(-1.15rem, -2.2vw, -0.35rem);
   width: clamp(2.45rem, 11vw, 4.25rem);
   aspect-ratio: 1;
   border-radius: 999px;
@@ -1168,7 +1170,8 @@
   }
 
   .game-board-overlay__middle--minimal {
-    padding: 0.4rem 1rem calc(env(safe-area-inset-bottom, 0px) + clamp(9.8rem, 28vw, 13rem));
+    min-height: 100dvh;
+    padding: 0.4rem 1rem env(safe-area-inset-bottom, 0px);
     margin-top: 0;
   }
 
@@ -1214,7 +1217,8 @@
   }
 
   .game-board-overlay__middle--minimal {
-    padding: 0.65rem 2rem calc(env(safe-area-inset-bottom, 0px) + clamp(10rem, 24vw, 13.2rem));
+    min-height: 100dvh;
+    padding: 0.65rem 2rem env(safe-area-inset-bottom, 0px);
     margin-top: 0;
   }
 
@@ -1235,7 +1239,7 @@
 @media (max-height: 680px) {
   .game-board-overlay__quest-progress {
     gap: 0.35rem;
-    max-height: calc(100dvh - clamp(9.4rem, 30vw, 11.4rem));
+    max-height: none;
   }
 
   .game-board-overlay__track-ladder {
