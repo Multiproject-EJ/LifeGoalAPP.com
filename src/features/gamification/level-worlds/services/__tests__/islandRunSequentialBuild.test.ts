@@ -156,6 +156,7 @@ export const islandRunSequentialBuildTests: TestCase[] = [
       assertEqual(negative.spentEssence, 0, 'Expected negative spent essence to clamp to zero');
       assertEqual(negative.requiredEssence, 0, 'Expected invalid required essence to clamp to zero');
       assertDeepEqual(negative.parts.map((part) => part.thresholdEssence), [0, 0, 0, 0, 0], 'Expected zero invalid thresholds');
+      assertEqual(negative.parts[0].status, 'active', 'Expected invalid progress to keep part 1 active');
       assertEqual(resolveIslandRunSequentialBuildTarget(states([9, 9, 9, 9, 9])), null, 'Expected build levels above 3 to clamp complete');
       expectTarget(resolveIslandRunSequentialBuildTarget([...states([3, 3, 3, 3, 3]), state(0)]), null);
     },

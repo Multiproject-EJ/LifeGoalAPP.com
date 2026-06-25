@@ -1,293 +1,177 @@
 import { useState } from 'react';
-import { ShopItemCostLine } from './ShopItemCostLine';
-
-/**
- * BuildModalV2CardData — view-model data for a single landmark card in the
- * horizontal tray.  Derived entirely in IslandRunBoardPrototype; no gameplay
- * logic lives here.
- */
-export interface BuildModalV2CardData {
-  stopIndex: number;
-  stopId: string;
-  title: string;
-  levelIcon: string;
-  buildLevel: number;
-  spentEssence: number;
-  requiredEssence: number;
-  remainingToFull: number;
-  isFullyBuilt: boolean;
-  /** True when the player has enough essence for at least one step. */
-  canAfford: boolean;
-  /** isFullyBuilt || !canAfford */
-  isBuildDisabled: boolean;
-  /** tutorialRowState.isUnavailable || isBuildDisabled */
-  isBuildInteractionDisabled: boolean;
-  objectiveComplete: boolean;
-  isNextCheapest: boolean;
-  isTutorialTarget: boolean;
-  isTutorialMuted: boolean;
-  /** Player essence balance — forwarded to ShopItemCostLine. */
-  essenceBalance: number;
-  maxBuildLevel: number;
-}
-
-export interface BuildModalV2Milestone {
-  label: string;
-  reached: boolean;
-}
+import type { BuildModalV2ViewModel, BuildModalV2PartViewModel } from '../services/islandRunBuildModalV2ViewModel';
 
 export interface BuildModalV2Props {
   isOpen: boolean;
   islandNumber: number;
   essenceAvailable: number;
   onClose: () => void;
-  /** 1 = early, 2 = mid, 3 = late stage artwork */
-  artworkStage: 1 | 2 | 3;
-  milestones: [BuildModalV2Milestone, BuildModalV2Milestone, BuildModalV2Milestone];
+  viewModel: BuildModalV2ViewModel;
   isBuildHoldActive: boolean;
   buildHoldFeedbackLabel: string;
   isBuildModalHatcheryGuidanceActive: boolean;
-  cards: BuildModalV2CardData[];
-  /** Called on tap/click for a card (by stopIndex). */
-  onBuildTap: (stopIndex: number) => void;
+  onBuildActivePart: (stopIndex: number) => void;
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
-
-interface ArtworkImageProps {
-  src: string;
-  stage: 1 | 2 | 3;
-}
-
-function BuildModalV2ArtworkImage({ src, stage }: ArtworkImageProps) {
+function BuildModalV2ArtworkImage(props: { src?: string; alt: string; isPlaceholder: boolean }) {
   const [errored, setErrored] = useState(false);
-
-  if (errored) {
+  if (!props.src || props.isPlaceholder || errored) {
     return (
-      <div className="bm2-artwork__placeholder" aria-label={`Island stage ${stage} artwork unavailable`}>
-        <span className="bm2-artwork__placeholder-icon">🏝️</span>
-        <span className="bm2-artwork__placeholder-label">Construction in progress</span>
+      <div className="bm2-artwork__placeholder" role="img" aria-label={props.alt || 'Landmark artwork unavailable'}>
+        <span className="bm2-artwork__placeholder-icon">🏗️</span>
+        <span className="bm2-artwork__placeholder-label">Landmark art coming soon</span>
       </div>
     );
   }
+  return <img src={props.src} alt={props.alt} className="bm2-artwork__img" onError={() => setErrored(true)} />;
+}
 
+function BuildModalV2CompleteState({ viewModel }: { viewModel: BuildModalV2ViewModel }) {
   return (
-    <img
-      src={src}
-      alt={`Island build progress — stage ${stage}`}
-      className="bm2-artwork__img"
-      onError={() => setErrored(true)}
-      aria-hidden="true"
-    />
+    <div className="bm2-complete-state">
+      <div className="bm2-complete-state__icon" aria-hidden="true">🏝️</div>
+      <h3>All landmarks fully restored</h3>
+      <p>15 of 15 complete</p>
+      <div className="bm2-level-rail" aria-label="All landmark levels completed">
+        {viewModel.levelRail.map((item) => (
+          <span key={item.level} className="bm2-level-rail__item bm2-level-rail__item--complete" aria-label={`Level ${item.level} completed`}>L{item.level}</span>
+        ))}
+      </div>
+    </div>
   );
 }
 
-interface ProgressMeterProps {
-  milestones: [BuildModalV2Milestone, BuildModalV2Milestone, BuildModalV2Milestone];
-}
-
-function BuildModalV2ProgressMeter({ milestones }: ProgressMeterProps) {
-  // Rendered bottom-to-top in DOM via flex-column-reverse so milestone 1
-  // appears at the bottom and milestone 3 at the top.
-  const ordered = [...milestones].reverse() as typeof milestones;
+function BuildModalV2LevelRail({ viewModel }: { viewModel: BuildModalV2ViewModel }) {
   return (
-    <div className="bm2-progress-meter" aria-label="Build progress milestones">
-      {ordered.map((m, i) => (
-        <div
-          key={m.label}
-          className={`bm2-progress-meter__step${m.reached ? ' bm2-progress-meter__step--reached' : ''}`}
-        >
-          <span className="bm2-progress-meter__dot" aria-hidden="true" />
-          {i < ordered.length - 1 && (
-            <span className="bm2-progress-meter__track" aria-hidden="true" />
-          )}
-          <span className="bm2-progress-meter__label">{m.label}</span>
-        </div>
+    <div className="bm2-level-rail" aria-label="Active landmark level progress">
+      {viewModel.levelRail.map((item) => (
+        <span key={item.level} className={`bm2-level-rail__item bm2-level-rail__item--${item.status}`} aria-label={item.ariaLabel}>
+          L{item.level}
+        </span>
       ))}
     </div>
   );
 }
 
-interface CardProps {
-  card: BuildModalV2CardData;
-  onBuildTap: (stopIndex: number) => void;
-}
-
-function BuildModalV2Card({ card, onBuildTap }: CardProps) {
-  const {
-    stopIndex,
-    title,
-    levelIcon,
-    buildLevel,
-    spentEssence,
-    requiredEssence,
-    remainingToFull,
-    isFullyBuilt,
-    isBuildDisabled,
-    isBuildInteractionDisabled,
-    objectiveComplete,
-    isNextCheapest,
-    isTutorialTarget,
-    isTutorialMuted,
-    essenceBalance,
-    maxBuildLevel,
-  } = card;
-
-  const classNames = [
-    'bm2-card',
-    `bm2-card--level-${buildLevel}`,
-    isFullyBuilt ? 'bm2-card--complete' : '',
-    isNextCheapest ? 'bm2-card--next-cheapest' : '',
-    isTutorialTarget ? 'bm2-card--tutorial-target' : '',
-    isTutorialMuted ? 'bm2-card--tutorial-muted' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
+function BuildModalV2PartButton({
+  part,
+  activeTitle,
+  targetLevel,
+  activeStopIndex,
+  disabledByWalletOrTutorial,
+  nextTapCost,
+  onBuildActivePart,
+}: {
+  part: BuildModalV2PartViewModel;
+  activeTitle: string;
+  targetLevel: number;
+  activeStopIndex: number;
+  disabledByWalletOrTutorial: boolean;
+  nextTapCost: number;
+  onBuildActivePart: (stopIndex: number) => void;
+}) {
+  const isActive = part.status === 'active';
+  const isDisabled = !isActive || disabledByWalletOrTutorial;
+  const label = part.status === 'complete'
+    ? 'Done'
+    : part.status === 'locked'
+      ? 'Locked'
+      : `${part.remainingEssence} left`;
+  const ariaLabel = part.status === 'complete'
+    ? `${activeTitle} Level ${targetLevel}, Part ${part.partNumber} complete`
+    : part.status === 'locked'
+      ? `${activeTitle} Level ${targetLevel}, Part ${part.partNumber} locked`
+      : `Build ${activeTitle} Level ${targetLevel}, Part ${part.partNumber}. ${part.remainingEssence} Essence left in this part. Next tap spends ${nextTapCost} Essence.`;
 
   return (
-    <div
-      className={classNames}
-      role="button"
-      tabIndex={isBuildInteractionDisabled ? -1 : 0}
-      aria-disabled={isBuildInteractionDisabled}
-      aria-label={`${title} — Level ${buildLevel} of ${maxBuildLevel}${isTutorialTarget ? ' — tutorial target' : ''}${isTutorialMuted ? ' — unavailable during tutorial' : ''}`}
-      onClick={!isBuildInteractionDisabled ? () => onBuildTap(stopIndex) : undefined}
-      onKeyDown={(e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && !isBuildInteractionDisabled) {
-          e.preventDefault();
-          onBuildTap(stopIndex);
-        }
-      }}
+    <button
+      type="button"
+      className={`bm2-part bm2-part--${part.status}`}
+      disabled={isDisabled}
+      aria-disabled={isDisabled}
+      aria-label={ariaLabel}
+      onClick={isActive && !isDisabled ? () => onBuildActivePart(activeStopIndex) : undefined}
     >
-      <div className={`bm2-card__icon bm2-card__icon--level-${buildLevel}`}>{levelIcon}</div>
-      <span className="bm2-card__name">{title}</span>
-      <span className="bm2-card__status">
-        {isFullyBuilt
-          ? `L${maxBuildLevel} ✅`
-          : `L${buildLevel + 1}: ${spentEssence}/${requiredEssence} 🟣`}
-      </span>
-      {!isFullyBuilt && (
-        <span className="bm2-card__full-cost">
-          <ShopItemCostLine
-            cost={remainingToFull}
-            balance={essenceBalance}
-            currencyIcon="🟣"
-            currencyName="essence"
-          />
-        </span>
-      )}
-      <div className="bm2-card__level-bar" aria-hidden="true">
-        {Array.from({ length: maxBuildLevel }, (_, li) => (
-          <div
-            key={li}
-            className={`bm2-card__level-pip${li < buildLevel ? ' bm2-card__level-pip--done' : li === buildLevel && !isFullyBuilt ? ' bm2-card__level-pip--active' : ''}`}
-          />
-        ))}
-      </div>
-      {!isFullyBuilt && (
-        <span className="bm2-card__objective">
-          Obj: {objectiveComplete ? '✅' : '⏳'}
-        </span>
-      )}
-      {!isFullyBuilt && isBuildDisabled && (
-        <span className="bm2-card__disabled-hint">🔒</span>
-      )}
-    </div>
+      <span className="bm2-part__icon" aria-hidden="true">{part.status === 'complete' ? '✓' : part.status === 'locked' ? '🔒' : '🔨'}</span>
+      <span className="bm2-part__title">Part {part.partNumber}</span>
+      <span className="bm2-part__meta">{label}</span>
+    </button>
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
-/**
- * BuildModalV2 — presentational-only replacement for the vertical Island
- * Buildings modal.
- *
- * Layout:
- *   1. Compact header (title + essence + close)
- *   2. Central artwork area (Island 1 stage images or neutral placeholder)
- *   3. Side vertical progress meter (3 milestones)
- *   4. Bottom horizontal build tray (5 landmark cards, tap-to-build)
- *
- * All state and action callbacks are owned by IslandRunBoardPrototype.
- * Hold-to-build is intentionally omitted in v2 to avoid conflicts with
- * horizontal tray scroll gesture handling.
- */
 export function BuildModalV2({
   isOpen,
   islandNumber,
   essenceAvailable,
   onClose,
-  artworkStage,
-  milestones,
+  viewModel,
   isBuildHoldActive,
   buildHoldFeedbackLabel,
   isBuildModalHatcheryGuidanceActive,
-  cards,
-  onBuildTap,
+  onBuildActivePart,
 }: BuildModalV2Props) {
   if (!isOpen) return null;
-
-  // Artwork is deterministically path-based for Island 1 only.
-  const artworkSrc =
-    islandNumber === 1
-      ? `/assets/islands/island-001/build-modal/stage-${artworkStage}.webp`
-      : null;
+  const active = viewModel.activeLandmark;
+  const isComplete = viewModel.sequentialBuildView.isFullyBuilt || !active;
+  const activePart = active?.activePart ?? 1;
+  const canBuildActive = Boolean(active?.canAffordNextTap);
+  const statusLine = active
+    ? `Part ${activePart} of 5 · ${active.spentEssence}/${active.requiredEssence} Essence funded`
+    : '15 of 15 complete';
 
   return (
     <div className="island-stop-modal-backdrop bm2-backdrop" role="presentation">
-      <section
-        className="bm2-shell"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Build Island"
-      >
-        {/* ── Header ── */}
+      <section className="bm2-shell" role="dialog" aria-modal="true" aria-label={`Island ${islandNumber} Buildings`}>
         <header className="bm2-header">
           <span className="bm2-header__title">🔨 Island {islandNumber} Buildings</span>
-          <span className="bm2-header__essence">🟣 {essenceAvailable}</span>
-          <button
-            type="button"
-            className="bm2-header__close"
-            onClick={onClose}
-            aria-label="Close build panel"
-          >
-            ✕
-          </button>
+          <span className="bm2-header__essence" aria-label={`${essenceAvailable} Essence available`}>🟣 {essenceAvailable}</span>
+          <button type="button" className="bm2-header__close" onClick={onClose} aria-label="Close build panel">✕</button>
         </header>
 
-        {/* ── Tutorial guidance ── */}
         {isBuildModalHatcheryGuidanceActive && (
-          <p className="bm2-tutorial-guidance">
-            Build Hatchery to Level 1 with your tutorial Essence. Other buildings unlock after this step.
-          </p>
+          <p className="bm2-tutorial-guidance">Build Hatchery to Level 1 with your tutorial Essence.</p>
         )}
+        {isBuildHoldActive && <p className="bm2-hold-feedback">{buildHoldFeedbackLabel}</p>}
 
-        {/* ── Hold feedback (hold-to-build not wired in v2; shown if parent triggers it) ── */}
-        {isBuildHoldActive && (
-          <p className="bm2-hold-feedback">{buildHoldFeedbackLabel}</p>
-        )}
-
-        {/* ── Center: artwork + progress meter ── */}
-        <div className="bm2-center">
-          <div className="bm2-artwork">
-            {artworkSrc ? (
-              <BuildModalV2ArtworkImage src={artworkSrc} stage={artworkStage} />
-            ) : (
-              <div className="bm2-artwork__placeholder">
-                <span className="bm2-artwork__placeholder-icon">🏝️</span>
-                <span className="bm2-artwork__placeholder-label">Construction in progress</span>
+        {isComplete ? (
+          <BuildModalV2CompleteState viewModel={viewModel} />
+        ) : (
+          <>
+            <div className="bm2-hero" aria-live="polite">
+              <div className="bm2-hero__copy">
+                <p className="bm2-hero__eyebrow">Step {active.sequencePosition} of {active.totalSequenceSteps}</p>
+                <h3 className="bm2-hero__title">{active.title}</h3>
+                <p className="bm2-hero__subtitle">Building Level {active.targetLevel}</p>
+                <p className="bm2-hero__status">{statusLine}</p>
+                <p className="bm2-hero__cost">
+                  {active.canAffordNextTap
+                    ? `Next tap spends ${active.nextTapCost} Essence`
+                    : `Need ${Math.max(0, active.nextTapCost - essenceAvailable)} more Essence for the next tap`}
+                </p>
               </div>
-            )}
-          </div>
-          <BuildModalV2ProgressMeter milestones={milestones} />
-        </div>
+              <div className="bm2-artwork bm2-artwork--hero">
+                <BuildModalV2ArtworkImage src={active.imageSrc} alt={active.imageAlt} isPlaceholder={active.imageIsPlaceholder} />
+              </div>
+              <BuildModalV2LevelRail viewModel={viewModel} />
+            </div>
 
-        {/* ── Bottom horizontal tray ── */}
-        <div className="bm2-tray" role="list" aria-label="Landmark cards">
-          {cards.map((card) => (
-            <BuildModalV2Card key={`${card.stopId}__${card.stopIndex}`} card={card} onBuildTap={onBuildTap} />
-          ))}
-        </div>
+            <p className="sr-only">{active.title} Level {active.targetLevel}: {active.completedParts} of 5 construction parts complete. Only the active part can be built.</p>
+            <div className="bm2-tray" role="list" aria-label={`${active.title} construction parts`}>
+              {viewModel.parts.map((part) => (
+                <BuildModalV2PartButton
+                  key={part.partNumber}
+                  part={part}
+                  activeTitle={active.title}
+                  targetLevel={active.targetLevel}
+                  activeStopIndex={active.stopIndex}
+                  disabledByWalletOrTutorial={!canBuildActive}
+                  nextTapCost={active.nextTapCost}
+                  onBuildActivePart={onBuildActivePart}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </section>
     </div>
   );

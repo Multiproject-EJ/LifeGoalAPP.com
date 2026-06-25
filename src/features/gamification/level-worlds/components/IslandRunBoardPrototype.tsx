@@ -358,6 +358,7 @@ import {
   initStopBuildStatesForIsland,
   isStopBuildFullyComplete,
   MAX_BUILD_LEVEL,
+  resolveBuildSpendStepForTier,
   resolveIslandRunContractV2EssenceEarnForTile,
   spendIslandRunContractV2EssenceOnStopBuild,
 } from '../services/islandRunContractV2EssenceBuild';
@@ -442,7 +443,8 @@ import {
   createShooterControllerBridge,
 } from '../services/islandRunShooterControllerBridge';
 import { emitShooterControllerLifecycleTelemetry } from '../services/islandRunShooterControllerTelemetry';
-import { BuildModalV2, type BuildModalV2CardData, type BuildModalV2Milestone } from './BuildModalV2';
+import { BuildModalV2 } from './BuildModalV2';
+import { deriveBuildModalV2ViewModel } from '../services/islandRunBuildModalV2ViewModel';
 import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWinCelebrationModal';
 import DemoWaitlistModal from './DemoWaitlistModal';
 import '../../../../styles/demo-waitlist-modal.css';
@@ -761,8 +763,6 @@ const HEART_BOOST_BUNDLE_COST = 80;
 // Kept only essence bonus for wisdom stop (diamonds → essence).
 const WISDOM_ESSENCE_BONUS_COST_DIAMONDS = 3;
 const WISDOM_ESSENCE_BONUS_AMOUNT = 15;
-const CONTRACT_V2_ESSENCE_SPEND_STEP_FLOOR = 10;
-const TARGET_TAPS_PER_BUILD_LEVEL = 5;
 const WALLET_STORE_GRID_SIZE = 9;
 
 type WalletStoreModalKind = 'essence' | 'shards';
@@ -813,10 +813,6 @@ function resolveShardWalletDisabledReason(params: {
   return 'Unavailable';
 }
 
-function resolveBuildSpendStepForTier(requiredEssence: number): number {
-  const required = Math.max(1, Math.floor(requiredEssence));
-  return Math.max(CONTRACT_V2_ESSENCE_SPEND_STEP_FLOOR, Math.ceil(required / TARGET_TAPS_PER_BUILD_LEVEL));
-}
 const CREATURE_FEED_COOLDOWN_MS = 8 * 60 * 60 * 1000;
 const CREATURE_TREAT_OPTIONS: Array<{ type: CreatureTreatType; label: string; xpGain: number; summary: string }> = [
   { type: 'basic', label: 'Basic Treat', xpGain: 1, summary: '+1 bond XP' },
@@ -5094,98 +5090,22 @@ export function IslandRunBoardPrototype({
   ), [buildPanelRemainingToFullByIndex]);
 
   // ── BuildModalV2 adapter model ───────────────────────────────────────────
-  // Derives a view-model for the v2 presentational modal.  All gameplay
-  // reads happen here in the board component; BuildModalV2 is purely
-  // presentational and must not perform gameplay writes.
-
-  /** 1 = early (0 fully built), 2 = mid (1–3), 3 = late (4–5 fully built). */
-  const buildModalV2ArtworkStage = useMemo((): 1 | 2 | 3 => {
-    const fullyBuiltCount = islandStopPlan.reduce((sum, _, idx) => {
-      const buildState = runtimeState.stopBuildStateByIndex[idx];
-      return sum + (buildState && isStopBuildFullyComplete(buildState) ? 1 : 0);
-    }, 0);
-    if (fullyBuiltCount >= 4) return 3;
-    if (fullyBuiltCount >= 1) return 2;
-    return 1;
-  }, [islandStopPlan, runtimeState.stopBuildStateByIndex]);
-
-  const buildModalV2Milestones = useMemo((): [BuildModalV2Milestone, BuildModalV2Milestone, BuildModalV2Milestone] => {
-    const fullyBuiltCount = islandStopPlan.reduce((sum, _, idx) => {
-      const buildState = runtimeState.stopBuildStateByIndex[idx];
-      return sum + (buildState && isStopBuildFullyComplete(buildState) ? 1 : 0);
-    }, 0);
-    const anyStarted = islandStopPlan.some((_, idx) => {
-      const buildState = runtimeState.stopBuildStateByIndex[idx];
-      return buildState && buildState.buildLevel >= 1;
-    });
-    return [
-      { label: 'Started', reached: anyStarted },
-      { label: 'Halfway', reached: fullyBuiltCount >= 2 },
-      { label: 'Complete', reached: fullyBuiltCount >= 5 },
-    ];
-  }, [islandStopPlan, runtimeState.stopBuildStateByIndex]);
-
-  /** Per-card view-model for the horizontal tray (keeps isBuildDisabled /
-   *  isBuildInteractionDisabled derivation visible in board source). */
-  const buildModalV2Cards = useMemo((): BuildModalV2CardData[] => {
-    const result: BuildModalV2CardData[] = [];
-    for (let idx = 0; idx < islandStopPlan.length; idx++) {
-      const stopEntry = islandStopPlan[idx];
-      const buildState = runtimeState.stopBuildStateByIndex[idx];
-      const stopState = runtimeState.stopStatesByIndex[idx];
-      if (!stopEntry || !buildState) continue;
-
-      const tutorialRowState = resolveIslandRunBuildModalTutorialRowState({
-        firstSessionTutorialState,
-        stopIndex: idx,
-      });
-      const isFullyBuilt = isStopBuildFullyComplete(buildState);
-      const remaining = isFullyBuilt ? 0 : Math.max(0, buildState.requiredEssence - buildState.spentEssence);
-      const canAfford = runtimeState.essence >= Math.min(resolveBuildSpendStepForTier(buildState.requiredEssence), remaining);
-      const isBuildDisabled = isFullyBuilt || !canAfford;
-      const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;
-      const remainingToFull = buildPanelRemainingToFullByIndex[idx] ?? 0;
-      const levelIcon = ['🏗️', '🏠', '🏡', '🏰'][Math.min(buildState.buildLevel, 3)];
-
-      result.push({
-        stopIndex: idx,
-        stopId: stopEntry.stopId,
-        title: stopEntry.title ?? stopEntry.stopId,
-        levelIcon,
-        buildLevel: buildState.buildLevel,
-        spentEssence: buildState.spentEssence,
-        requiredEssence: buildState.requiredEssence,
-        remainingToFull,
-        isFullyBuilt,
-        canAfford,
-        isBuildDisabled,
-        isBuildInteractionDisabled,
-        objectiveComplete: stopState?.objectiveComplete ?? false,
-        isNextCheapest: buildPanelNextCheapestIndex === idx && !isFullyBuilt && !tutorialRowState.guidanceActive,
-        isTutorialTarget: tutorialRowState.isHighlighted,
-        isTutorialMuted: tutorialRowState.isUnavailable,
-        essenceBalance: runtimeState.essence,
-        maxBuildLevel: MAX_BUILD_LEVEL,
-      });
-    }
-    return result;
-  }, [
-    buildPanelNextCheapestIndex,
-    buildPanelRemainingToFullByIndex,
-    firstSessionTutorialState,
+  // Derives the focused single-landmark view from PR 1 sequential helpers.
+  // All gameplay reads happen here; BuildModalV2 remains presentational.
+  const buildModalV2ViewModel = useMemo(() => deriveBuildModalV2ViewModel({
+    stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
     islandStopPlan,
-    runtimeState.essence,
-    runtimeState.stopBuildStateByIndex,
-    runtimeState.stopStatesByIndex,
-  ]);
+    essenceAvailable: runtimeState.essence,
+    islandArtManifest,
+  }), [islandArtManifest, islandStopPlan, runtimeState.essence, runtimeState.stopBuildStateByIndex]);
 
   // Footer 🔨 Build attention dot: lights up when at least one not-fully-built
   // landmark has a next build step the player can pay for right now with their
   // current essence wallet. Mirrors the orbit "affordable" cue so the player
   // knows to open Build without having to peek inside the modal first.
   const hasAffordableBuildStep = useMemo(
-    () => buildModalV2Cards.some((card) => !card.isFullyBuilt && card.canAfford),
-    [buildModalV2Cards],
+    () => Boolean(buildModalV2ViewModel.activeLandmark?.canAffordNextTap),
+    [buildModalV2ViewModel],
   );
 
   const showIslandClearCelebrationFromAnywhere = useCallback((source: string) => {
@@ -9818,25 +9738,27 @@ export function IslandRunBoardPrototype({
           }
         : undefined,
     },
-    ...buildModalV2Cards
-      .filter((card) => !card.isFullyBuilt)
-      .map((card): WalletPurchaseOption => {
-        const remaining = Math.max(0, card.requiredEssence - card.spentEssence);
-        const cost = Math.min(resolveBuildSpendStepForTier(card.requiredEssence), remaining);
-        const canBuy = card.canAfford && !card.isBuildInteractionDisabled && cost > 0;
+    ...(buildModalV2ViewModel.activeLandmark
+      ? [buildModalV2ViewModel.activeLandmark].map((landmark): WalletPurchaseOption => {
+        const cost = landmark.nextTapCost;
+        const tutorialRowState = resolveIslandRunBuildModalTutorialRowState({
+          firstSessionTutorialState,
+          stopIndex: landmark.stopIndex,
+        });
+        const canBuy = landmark.canAffordNextTap && !tutorialRowState.isUnavailable && cost > 0;
         return {
-          id: `build_${card.stopIndex}`,
-          icon: card.levelIcon,
-          title: card.title,
+          id: `build_${landmark.stopIndex}`,
+          icon: '🏗️',
+          title: landmark.title,
           cost,
           currencyIcon: '🟣',
           currencyName: 'essence',
-          summary: `Build level ${card.buildLevel}/${card.maxBuildLevel} · ${card.remainingToFull} essence to full.`,
-          rewardLabel: card.isNextCheapest ? 'Cheapest next' : 'Build progress',
+          summary: `Building Level ${landmark.targetLevel} · Step ${landmark.sequencePosition}/${landmark.totalSequenceSteps}.`,
+          rewardLabel: `Part ${landmark.activePart ?? 1}`,
           canAfford: canBuy,
           disabledReason: resolveBuildWalletDisabledReason({
             canBuy,
-            isTutorialMuted: card.isTutorialMuted,
+            isTutorialMuted: tutorialRowState.isUnavailable,
             essence: runtimeState.essence,
             cost,
           }),
@@ -9848,7 +9770,8 @@ export function IslandRunBoardPrototype({
               }
             : undefined,
         };
-      }),
+      })
+      : []),
   ].slice(0, WALLET_STORE_GRID_SIZE);
 
   const shardPurchaseOptions: WalletPurchaseOption[] = collectedCreatures
@@ -12984,13 +12907,11 @@ export function IslandRunBoardPrototype({
           islandNumber={islandNumber}
           essenceAvailable={runtimeState.essence}
           onClose={() => setShowBuildPanel(false)}
-          artworkStage={buildModalV2ArtworkStage}
-          milestones={buildModalV2Milestones}
+          viewModel={buildModalV2ViewModel}
           isBuildHoldActive={isBuildHoldActive}
           buildHoldFeedbackLabel={buildHoldFeedbackLabel}
           isBuildModalHatcheryGuidanceActive={isBuildModalHatcheryGuidanceActive}
-          cards={buildModalV2Cards}
-          onBuildTap={handleBuildCardTap}
+          onBuildActivePart={handleBuildCardTap}
         />
       )}
 

@@ -153,6 +153,15 @@ export function deductIslandRunContractV2Essence(options: {
 // ─── Stop upgrade cost curves (Monopoly GO–style scaling) ─────────────
 // Within a stop: L1 cheap → L2 medium → L3 expensive spike.
 // Between islands: total cost scales ~1.5×–2× per island.
+
+export const CONTRACT_V2_ESSENCE_SPEND_STEP_FLOOR = 10;
+export const TARGET_TAPS_PER_BUILD_LEVEL = 5;
+
+export function resolveBuildSpendStepForTier(requiredEssence: number): number {
+  const required = Math.max(1, Math.floor(requiredEssence));
+  return Math.max(CONTRACT_V2_ESSENCE_SPEND_STEP_FLOOR, Math.ceil(required / TARGET_TAPS_PER_BUILD_LEVEL));
+}
+
 export const STOP_UPGRADE_BASE_COSTS: readonly number[] = [50, 120, 300]; // L1, L2, L3 for island 1 Stop 1
 
 /**
