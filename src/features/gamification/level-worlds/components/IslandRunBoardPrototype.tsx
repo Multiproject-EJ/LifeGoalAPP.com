@@ -9977,6 +9977,7 @@ export function IslandRunBoardPrototype({
     canChallengeCurrentBoss,
     isCurrentIslandBossDefeated,
     bossTrialResolvedIslandNumber: runtimeState.bossTrialResolvedIslandNumber,
+    isIslandClearTravelReady: Boolean(showIslandClearCelebration && isIslandClearRewardClaimed && islandClearStats?.islandNumber === runtimeState.currentIslandNumber),
     activeStoryEpisode,
     setActiveStoryEpisode,
   });
