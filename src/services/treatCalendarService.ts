@@ -150,6 +150,8 @@ export type CalendarProgress = {
    * missed calendar day rather than counting `opened_days.length`.
    */
   streak_count?: number;
+  /** Next sequential Personal Quest day to open. Added by migration 0212. */
+  next_sequential_day?: number | null;
   symbol_counts: Record<string, number>;
   created_at: string;
   updated_at: string;
@@ -268,6 +270,11 @@ function computePersonalQuestTodayIndex(
   progress: CalendarProgress | null,
   totalDays: number = 7,
 ): number {
+  const nextSequentialDay = progress?.next_sequential_day;
+  if (typeof nextSequentialDay === 'number' && nextSequentialDay >= 1 && nextSequentialDay <= totalDays) {
+    return nextSequentialDay;
+  }
+
   if (!progress || progress.opened_days.length === 0) return 1;
   const maxOpened = Math.max(...progress.opened_days);
 
@@ -1375,6 +1382,9 @@ export async function openTodayHatch(
         ? [...(progress.opened_bonus_days ?? []), dayIndex]
         : (progress.opened_bonus_days ?? []),
       streak_count: nextStreak,
+      next_sequential_day: season.season_type === 'personal_quest' && doorType === 'free'
+        ? (dayIndex >= computeTotalFreeDoors(cached?.hatches ?? []) ? 1 : dayIndex + 1)
+        : progress.next_sequential_day,
       updated_at: new Date().toISOString(),
     };
 

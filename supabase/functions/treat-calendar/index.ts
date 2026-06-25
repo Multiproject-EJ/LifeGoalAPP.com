@@ -34,9 +34,14 @@ function todayDayIndex(startsOn: string): number {
 
 /** Resolve the next openable Personal Quest day from the user's progress. */
 function personalQuestTodayIndex(
-  progress: { opened_days?: number[] | null; last_opened_date?: string | null } | null,
+  progress: { opened_days?: number[] | null; last_opened_date?: string | null; next_sequential_day?: number | null } | null,
   totalDays: number,
 ): number {
+  const nextSequentialDay = progress?.next_sequential_day;
+  if (typeof nextSequentialDay === 'number' && nextSequentialDay >= 1 && nextSequentialDay <= totalDays) {
+    return nextSequentialDay;
+  }
+
   const openedDays = Array.isArray(progress?.opened_days) ? progress.opened_days : [];
   if (openedDays.length === 0) return 1;
 
@@ -113,7 +118,15 @@ Deno.serve(async (req) => {
       .eq('season_id', season.id)
       .maybeSingle();
 
-    const currentDayIndex = todayDayIndex(season.starts_on);
+    const totalFreeDays = Math.max(
+      ...((hatches ?? [])
+        .filter((hatch) => hatch.door_type === 'free')
+        .map((hatch) => hatch.day_index)),
+      7,
+    );
+    const currentDayIndex = season.season_type === 'personal_quest'
+      ? personalQuestTodayIndex(progress, totalFreeDays)
+      : todayDayIndex(season.starts_on);
 
     return json({
       season,
@@ -253,6 +266,9 @@ Deno.serve(async (req) => {
         opened_days: updatedOpenedDays,
         opened_bonus_days: updatedOpenedBonusDays,
         symbol_counts: progress?.symbol_counts ?? {},
+        next_sequential_day: season.season_type === 'personal_quest' && validatedDoorType === 'free'
+          ? (day_index >= totalDays ? 1 : day_index + 1)
+          : progress?.next_sequential_day,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'user_id,season_id' },
@@ -269,6 +285,9 @@ Deno.serve(async (req) => {
       door_type: validatedDoorType,
       opened_days: updatedOpenedDays,
       opened_bonus_days: updatedOpenedBonusDays,
+      next_sequential_day: season.season_type === 'personal_quest' && validatedDoorType === 'free'
+        ? (day_index >= totalDays ? 1 : day_index + 1)
+        : progress?.next_sequential_day,
     });
   }
 
