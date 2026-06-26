@@ -14141,6 +14141,9 @@ export function IslandRunBoardPrototype({
         isOpen={showStoryReader}
         onClose={handleCloseStoryReader}
         onRewardClaim={activeStoryEpisode?.kind === 'global_prologue' ? sanctuaryHandlers.storyRewardClaim : undefined}
+        completionTitle={activeStoryEpisode?.kind === 'island_arrival' ? 'Luma Isle awaits' : activeStoryEpisode?.kind === 'island_resolution' ? 'The route is open' : undefined}
+        completionText={activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' ? 'Return to the island' : undefined}
+        completionButtonLabel={activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' ? 'Return to the island' : undefined}
       />
 
       {islandNarrativeOpeningFlow.activeDialogue ? (

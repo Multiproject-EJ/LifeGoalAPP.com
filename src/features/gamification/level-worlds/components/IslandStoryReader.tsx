@@ -53,9 +53,20 @@ interface IslandStoryReaderProps {
   isOpen: boolean;
   onClose: () => void;
   onRewardClaim?: (coins: number) => void;
+  completionTitle?: string;
+  completionText?: string;
+  completionButtonLabel?: string;
 }
 
-export function IslandStoryReader({ manifestPath, isOpen, onClose, onRewardClaim }: IslandStoryReaderProps) {
+export function IslandStoryReader({
+  manifestPath,
+  isOpen,
+  onClose,
+  onRewardClaim,
+  completionTitle = 'Episode complete',
+  completionText = 'Ready for the next episode.',
+  completionButtonLabel = 'Done',
+}: IslandStoryReaderProps) {
   const [manifest, setManifest] = useState<StoryEpisodeManifest | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -268,6 +279,18 @@ export function IslandStoryReader({ manifestPath, isOpen, onClose, onRewardClaim
   }
 
   const rewardCoins = manifest?.reward?.coins ?? 0;
+  const completionMessage = rewardCoins > 0 ? `Reward: +${rewardCoins} coins` : completionText;
+  const completionCtaLabel = rewardClaimed ? 'Reward claimed' : rewardCoins > 0 ? `Claim +${rewardCoins} coins` : completionButtonLabel;
+
+  const handleCompletion = () => {
+    if (rewardClaimed) return;
+    if (rewardCoins > 0) {
+      onRewardClaim?.(rewardCoins);
+      setRewardClaimed(true);
+      return;
+    }
+    onClose();
+  };
 
   return (
     <div className="island-story-reader__backdrop" role="presentation">
@@ -343,19 +366,16 @@ export function IslandStoryReader({ manifestPath, isOpen, onClose, onRewardClaim
 
           {!isLoading && !error && manifest ? (
             <footer className="island-story-reader__end-card">
-              <h4>Episode complete</h4>
-              {rewardCoins > 0 ? <p>Reward: +{rewardCoins} coins</p> : <p>Ready for the next episode.</p>}
+              <p className="island-story-reader__end-card-eyebrow">Story complete</p>
+              <h4>{completionTitle}</h4>
+              <p>{completionMessage}</p>
               <button
                 type="button"
                 disabled={rewardClaimed}
-                onClick={() => {
-                  if (!rewardClaimed && rewardCoins > 0) {
-                    onRewardClaim?.(rewardCoins);
-                    setRewardClaimed(true);
-                  }
-                }}
+                onClick={handleCompletion}
+                aria-label={completionCtaLabel}
               >
-                {rewardClaimed ? 'Reward claimed' : rewardCoins > 0 ? `Claim +${rewardCoins} coins` : 'Done'}
+                {completionCtaLabel}
               </button>
             </footer>
           ) : null}
