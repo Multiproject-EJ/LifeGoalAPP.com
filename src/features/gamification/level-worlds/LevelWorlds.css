@@ -87,6 +87,47 @@
   --tile-stop-glow:  rgba(80, 200, 220, 0.55);
 }
 
+
+/* Island Run-owned modal/overlay typography tokens. Scoped here and on portal roots so
+   Island Run dark surfaces never inherit app/system text colors through document.body. */
+.level-worlds-island-run-shell,
+.island-run-root,
+.island-run-overlay-root {
+  --island-game-text-primary: #eafcff;
+  --island-game-text-secondary: rgba(188, 232, 246, 0.9);
+  --island-game-text-muted: rgba(182, 228, 245, 0.74);
+  --island-game-text-accent: #fff1a8;
+  --island-game-action-text: #ffffff;
+  --island-game-danger-text: #ffd2d2;
+  --island-game-surface: rgba(9, 26, 38, 0.95);
+  --island-game-surface-elevated: rgba(20, 36, 49, 0.99);
+  --island-game-focus: rgba(170, 236, 255, 0.96);
+  color: var(--island-game-text-primary);
+  color-scheme: dark;
+}
+
+.island-run-overlay-root button,
+.island-run-root button {
+  color: var(--island-game-action-text);
+}
+
+.island-run-overlay-root input,
+.island-run-overlay-root textarea,
+.island-run-overlay-root select,
+.island-run-root input,
+.island-run-root textarea,
+.island-run-root select {
+  color: var(--island-game-text-primary);
+  caret-color: var(--island-game-focus);
+}
+
+.island-run-overlay-root input::placeholder,
+.island-run-overlay-root textarea::placeholder,
+.island-run-root input::placeholder,
+.island-run-root textarea::placeholder {
+  color: var(--island-game-text-muted);
+}
+
 /* === Hub Container === */
 .level-worlds-hub {
   position: fixed;
@@ -3994,7 +4035,8 @@
   border-radius: 8px;
   border: 1px solid rgba(190, 151, 67, 0.45);
   background: rgba(8, 15, 24, 0.35);
-  color: inherit;
+  color: var(--island-game-text-primary);
+  caret-color: var(--island-game-focus);
   font: inherit;
   resize: vertical;
 }
@@ -4388,6 +4430,7 @@
 
 .island-stop-modal__cta-btn:disabled,
 .island-stop-modal__btn:disabled {
+  color: rgba(236, 251, 255, 0.72);
   transform: none;
   box-shadow: none;
   filter: saturate(0.66) brightness(0.94);
@@ -4396,6 +4439,7 @@
 
 .island-travel-overlay {
   position: fixed;
+  color: var(--island-game-text-primary);
   inset: 0;
   z-index: 1090;
   display: grid;
@@ -8384,6 +8428,7 @@
 /* Shell — grows up from the bottom edge */
 .bm2-shell {
   display: flex;
+  color: var(--island-game-text-primary);
   flex-direction: column;
   width: 100%;
   max-width: 480px;
@@ -8587,6 +8632,7 @@
 
 /* ── Tray card ── */
 .bm2-card {
+  color: var(--island-game-action-text);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -8718,7 +8764,7 @@
 
 .bm2-card__disabled-hint {
   font-size: 0.58rem;
-  opacity: 0.6;
+  color: rgba(255, 255, 255, 0.68);
 }
 
 /* ── Debug Panel ────────────────────────────────────────────────────────── */
@@ -9306,6 +9352,7 @@
 }
 
 .island-win-celebration__card {
+  color: var(--island-game-text-primary);
   width: min(100%, 420px);
   border-radius: 28px;
   border: 1px solid rgba(255, 221, 120, 0.55);
@@ -10031,6 +10078,7 @@
 
 .wpm-overlay {
   position: fixed;
+  color: var(--island-game-text-primary);
   inset: 0;
   z-index: 9870;
   display: grid;
@@ -11043,6 +11091,7 @@
 
 /* Island 001 narrative dialogue sheet — reusable presentation surface only. */
 .island-narrative-dialogue {
+  color: var(--island-game-text-primary);
   --ind-accent: #f4c76f;
   --ind-accent-strong: #ffd98a;
   --ind-crystal: rgba(80, 213, 198, 0.34);
@@ -11313,6 +11362,7 @@
 
 /* Island 1 narrative ambient toast (I001-B24) */
 .island-narrative-toast {
+  color: var(--island-game-text-primary);
   position: fixed;
   left: 50%;
   bottom: calc(22px + env(safe-area-inset-bottom, 0px));

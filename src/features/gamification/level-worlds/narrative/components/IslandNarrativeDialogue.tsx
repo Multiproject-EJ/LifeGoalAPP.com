@@ -104,7 +104,7 @@ export function IslandNarrativeDialogue({
   if (!isOpen) return null;
 
   const dialogue = (
-    <div className={`island-narrative-dialogue island-narrative-dialogue--${tone} island-narrative-dialogue--motion-ready`} data-reduced-motion-safe="true">
+    <div className={`island-run-overlay-root island-narrative-dialogue island-narrative-dialogue--${tone} island-narrative-dialogue--motion-ready`} data-reduced-motion-safe="true">
       <div className="island-narrative-dialogue__backdrop" aria-hidden="true" />
       <div className="island-narrative-dialogue__viewport">
         <div

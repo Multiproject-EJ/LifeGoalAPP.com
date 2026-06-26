@@ -69,7 +69,7 @@ export function WelcomePackModal({
 
   if (phase === 'economy') {
     return (
-      <div className="wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title">
+      <div className="island-run-overlay-root wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title">
         <div className={`wpm-shell wpm-shell--economy${collectAnimating ? ' wpm-shell--pulse' : ''}`}>
           <p className="wpm-eyebrow">
             {isDevPreview ? '✦ Dev Preview' : '🎉 Welcome'}
@@ -115,7 +115,7 @@ export function WelcomePackModal({
 
   if (phase === 'cards-intro') {
     return (
-      <div className="wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title-cards">
+      <div className="island-run-overlay-root wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title-cards">
         <div className="wpm-shell wpm-shell--cards-intro wpm-shell--enter">
           <p className="wpm-eyebrow">Starter Pack</p>
           <h2 id="wpm-title-cards" className="wpm-title">Your 5 Cards</h2>
@@ -146,7 +146,7 @@ export function WelcomePackModal({
 
   return (
     <div
-      className="wpm-overlay wpm-overlay--card-reveal"
+      className="island-run-overlay-root wpm-overlay wpm-overlay--card-reveal"
       role="dialog"
       aria-modal="true"
       aria-label={`Card ${revealIndex + 1} of ${resolvedCards.length}: ${creatureName}`}

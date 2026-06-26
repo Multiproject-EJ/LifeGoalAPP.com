@@ -82,7 +82,7 @@ export function CompassModal({ session, islandNumber, onClose }: CompassModalPro
   };
 
   return (
-    <div className="island-stop-modal-backdrop" role="presentation" onClick={onClose}>
+    <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation" onClick={onClose}>
       <section
         className="island-stop-modal island-run-compass-modal"
         role="dialog"
