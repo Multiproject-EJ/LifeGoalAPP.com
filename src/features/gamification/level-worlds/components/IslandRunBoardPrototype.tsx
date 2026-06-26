@@ -9922,7 +9922,12 @@ export function IslandRunBoardPrototype({
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
-  const isNarrativeSurfaceBlocked = Boolean(
+  const isIslandClearTravelReady = Boolean(
+    showIslandClearCelebration &&
+      isIslandClearRewardClaimed &&
+      islandClearStats?.islandNumber === runtimeState.currentIslandNumber
+  );
+  const isNarrativeSurfaceBlockedByNonClearCelebration = Boolean(
     activeStopId ||
       activeLaunchedMinigameId ||
       activePlaceholder ||
@@ -9941,7 +9946,6 @@ export function IslandRunBoardPrototype({
       showHatcheryHelp ||
       showHatcheryL1Celebration ||
       showHatcheryCompassModal ||
-      showIslandClearCelebration ||
       showMarketPanel ||
       showOnboardingBooster ||
       showOutOfDicePurchasePrompt ||
@@ -9955,6 +9959,12 @@ export function IslandRunBoardPrototype({
       Boolean(dormantDoorMiniGame) ||
       Boolean(trafficLightCoinFlip) ||
       walletStoreModalKind !== null
+  );
+  const isNarrativeSurfaceBlocked = Boolean(
+    isNarrativeSurfaceBlockedByNonClearCelebration || showIslandClearCelebration
+  );
+  const canDisplayTravelReadyClosingOverClaimedCelebration = Boolean(
+    isIslandClearTravelReady && !isNarrativeSurfaceBlockedByNonClearCelebration
   );
 
   let isGlobalPrologueSeenForNarrative = runtimeState.storyPrologueSeen;
@@ -9974,12 +9984,13 @@ export function IslandRunBoardPrototype({
     isGlobalPrologueActive: activeStoryEpisode?.kind === 'global_prologue',
     isGlobalPrologueSeen: isGlobalPrologueSeenForNarrative,
     isNarrativeSurfaceBlocked,
+    canDisplayTravelReadyClosingOverClaimedCelebration,
     activeStopId,
     hatcheryBuildLevel: runtimeState.stopBuildStateByIndex[0]?.buildLevel,
     canChallengeCurrentBoss,
     isCurrentIslandBossDefeated,
     bossTrialResolvedIslandNumber: runtimeState.bossTrialResolvedIslandNumber,
-    isIslandClearTravelReady: Boolean(showIslandClearCelebration && isIslandClearRewardClaimed && islandClearStats?.islandNumber === runtimeState.currentIslandNumber),
+    isIslandClearTravelReady,
     activeStoryEpisode,
     setActiveStoryEpisode,
   });
@@ -12734,7 +12745,8 @@ export function IslandRunBoardPrototype({
           <div
             className={`island-clear-celebration${islandClearStats.isCycleCapstone ? ' island-clear-celebration--capstone' : ''}`}
             role="dialog"
-            aria-modal="true"
+            aria-modal={islandNarrativeOpeningFlow.activeDialogue?.beatId === 'I001-B30' ? 'false' : 'true'}
+            aria-hidden={islandNarrativeOpeningFlow.activeDialogue?.beatId === 'I001-B30' ? true : undefined}
             aria-label="Island completion celebration"
           >
             <div className="island-clear-celebration__sparkles" aria-hidden="true">
