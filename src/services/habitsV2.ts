@@ -564,7 +564,6 @@ export async function quickAddDailyHabit(params: {
     },
     domain_key: params.domainKey ?? null,
     goal_id: params.goalId ?? null,
-    habit_intent: params.habitIntent ?? null,
     archived: false,
     status: 'active',
     paused_at: null,
