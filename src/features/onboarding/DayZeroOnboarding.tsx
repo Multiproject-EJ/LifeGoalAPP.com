@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { recordTelemetryEvent } from '../../services/telemetry';
+import { ensureDayZeroStarterRecords } from './dayZeroPersistence';
 
 type OnboardingFieldState = {
   lifeArea: string;
@@ -168,6 +169,16 @@ export function DayZeroOnboarding({
         if (error) throw error;
       }
 
+      const starterRecords = isDemoExperience
+        ? { goalId: null, habitId: null, createdGoal: false, createdHabit: false }
+        : await ensureDayZeroStarterRecords({
+          userId: session.user.id,
+          lifeArea: fields.lifeArea,
+          habit: fields.habit,
+          reminder: fields.reminder,
+          reward: fields.reward,
+        });
+
       void recordTelemetryEvent({
         userId: session.user.id,
         eventType: 'onboarding_completed',
@@ -176,10 +187,18 @@ export function DayZeroOnboarding({
           habit: fields.habit,
           reminder: fields.reminder,
           reward: fields.reward,
+          starter_goal_id: starterRecords.goalId,
+          starter_habit_id: starterRecords.habitId,
+          starter_goal_created: starterRecords.createdGoal,
+          starter_habit_created: starterRecords.createdHabit,
         },
       });
 
-      setAuthMessage('Quick-start complete! Welcome to HabitGame.');
+      setAuthMessage(
+        starterRecords.createdGoal || starterRecords.createdHabit
+          ? 'Quick-start complete! Your starter goal and habit are ready.'
+          : 'Quick-start complete! Welcome to HabitGame.',
+      );
       window.localStorage.removeItem(storageKey);
       onClose();
     } catch (error) {

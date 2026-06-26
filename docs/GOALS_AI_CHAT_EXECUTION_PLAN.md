@@ -26,7 +26,9 @@ Primary goals:
 - ✅ Added single-goal mode foundations in Goals workspace (search + previous/next navigation with one-goal card rendering).
 - ✅ Integrated a compact Life Wheel launcher into single-goal mode for category jumping without leaving one-goal view.
 - ✅ Added goal strength/progress indicators to the single-goal card.
-- ⏳ Next: add auth-gated UI automation for the single-goal review flow.
+- ✅ Added auth-gated UI automation smoke coverage for the single-goal review flow.
+- ✅ Persisted Day Zero onboarding outputs into Goals/Habits as duplicate-guarded starter records.
+- ⏳ Next: extend onboarding persistence to the Game of Life onboarding `goalName`/`habitName` path.
 
 ---
 
@@ -258,8 +260,6 @@ Use feature flags for:
 ---
 
 ## Immediate next actions (this week)
-1. Create technical RFC for `goal-coach-chat` payload/response schema.
-2. Add `Chat with AI` button + placeholder panel in `LifeGoalInputDialog`.
-3. Implement telemetry events for mode selection and conversion funnel.
-4. Update Goals redesign status table to reflect Phase 1 partial implementation.
-5. Break this plan into GitHub issues (one per workstream milestone).
+1. Extend onboarding persistence to the Game of Life onboarding `goalName`/`habitName` path.
+2. Add a focused regression check for the Game of Life onboarding persistence path once it lands.
+3. Continue UX polish on the guided/coached creation path without changing single-goal review behavior.
