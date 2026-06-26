@@ -100,6 +100,8 @@ import { combinedJourneyRewardClaimsReadTests } from './combinedJourneyRewardCla
 import { combinedJourneyRewardBaselineTests } from './combinedJourneyRewardBaseline.test';
 import { island001InhabitantTests } from '../../inhabitants/__tests__/island001Inhabitants.test';
 import { islandConversationValidationTests } from '../../inhabitants/__tests__/islandConversationValidation.test';
+import { islandConversationTraversalTests } from '../../inhabitants/__tests__/islandConversationTraversal.test';
+import { islandRetroConversationComponentTests } from '../../inhabitants/__tests__/islandRetroConversationComponent.test';
 import { island001NarrativeTests } from '../../narrative/__tests__/island001Narrative.test';
 import { islandNarrativeDialogueComponentTests } from '../../narrative/__tests__/islandNarrativeDialogueComponent.test';
 import { islandStoryReaderComponentTests } from '../../narrative/__tests__/islandStoryReaderComponent.test';
@@ -128,6 +130,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunPreIslandLuckyRollGate', tests: islandRunPreIslandLuckyRollGateTests },
   { label: 'islandArtManifest', tests: islandArtManifestTests },
   { label: 'islandConversationValidation', tests: islandConversationValidationTests },
+  { label: 'islandConversationTraversal', tests: islandConversationTraversalTests },
+  { label: 'islandRetroConversationComponent', tests: islandRetroConversationComponentTests },
   { label: 'island001Inhabitants', tests: island001InhabitantTests },
   { label: 'islandNarrativeValidation', tests: islandNarrativeValidationTests },
   { label: 'island001Narrative', tests: island001NarrativeTests },
