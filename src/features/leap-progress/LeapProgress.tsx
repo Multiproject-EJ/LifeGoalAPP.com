@@ -9,6 +9,10 @@ import {
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { recordTelemetryEvent } from '../../services/telemetry';
+import {
+  GAME_OF_LIFE_ONBOARDING_SOURCE,
+  persistOnboardingStarterRecords,
+} from '../onboarding/onboardingPersistence';
 
 type QuestPerk = {
   id: string;
@@ -408,6 +412,15 @@ export function LeapProgress({
           },
         });
         if (error) throw error;
+      }
+
+      if (!isDemoExperience) {
+        await persistOnboardingStarterRecords({
+          userId: session.user.id,
+          goalName: questLine,
+          habitName: ritualName,
+          source: GAME_OF_LIFE_ONBOARDING_SOURCE,
+        });
       }
 
       setAuthMessage('Leap complete — your quest just levelled up.');
