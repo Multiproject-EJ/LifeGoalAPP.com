@@ -52,3 +52,15 @@ The Island 1 caretaker metadata reserves these future asset paths without requir
 - `/assets/islands/island-001/inhabitants/luma-caretaker-retro.png`
 
 No placeholder binary assets are added by this PR.
+
+## Production manual Island 1 integration
+
+Island Run now exposes one production manual entry point for the Island 1 caretaker flow: **Talk to Caretaker** in the existing board top-bar menu. The menu was chosen because it is already a non-gameplay board surface, keeps the main board and footer controls clear, and avoids adding a permanent board overlay button.
+
+The entry point is restricted to canonical current island `1` and resolves the caretaker, three topics, and referenced conversations at runtime through the read-only inhabitant registry. If that content is incomplete, the action is not shown and the flow-level missing-content screen remains a secondary safety net.
+
+The action is collision-gated by a pure inhabitant-flow blocker helper and is disabled while higher-priority surfaces are active, including story reader/dialogue, active landmarks, build/shop/market/sanctuary, minigames/boss/travel, clear celebrations, claim/reveal/purchase prompts, placeholders, and board movement. Opening and closing the flow is presentation-only: no gameplay services, rewards, progression, persistence, schema changes, or automatic tile/landing triggers are added.
+
+The encounter reuses Island 1 runtime background art (`islandArtAmbientBackgroundSrc` when available, otherwise the legacy island background resolver). The caretaker metadata still points at the expected future character and retro sprite paths, and the existing component fallbacks render if those binaries are unavailable.
+
+Deferred work remains automatic triggers, seen-state suppression/persistence, Island 2+ rollout, final approved character art, and any Compass/reflection writes.
