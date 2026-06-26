@@ -103,6 +103,8 @@ import { islandConversationValidationTests } from '../../inhabitants/__tests__/i
 import { islandConversationTraversalTests } from '../../inhabitants/__tests__/islandConversationTraversal.test';
 import { islandRetroConversationComponentTests } from '../../inhabitants/__tests__/islandRetroConversationComponent.test';
 import { islandInhabitantEncounterComponentTests } from '../../inhabitants/__tests__/islandInhabitantEncounterComponent.test';
+import { islandInhabitantFlowStateTests } from '../../inhabitants/__tests__/islandInhabitantFlowState.test';
+import { islandInhabitantFlowComponentTests } from '../../inhabitants/__tests__/islandInhabitantFlowComponent.test';
 import { island001NarrativeTests } from '../../narrative/__tests__/island001Narrative.test';
 import { islandNarrativeDialogueComponentTests } from '../../narrative/__tests__/islandNarrativeDialogueComponent.test';
 import { islandStoryReaderComponentTests } from '../../narrative/__tests__/islandStoryReaderComponent.test';
@@ -134,6 +136,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandConversationTraversal', tests: islandConversationTraversalTests },
   { label: 'islandRetroConversationComponent', tests: islandRetroConversationComponentTests },
   { label: 'islandInhabitantEncounterComponent', tests: islandInhabitantEncounterComponentTests },
+  { label: 'islandInhabitantFlowState', tests: islandInhabitantFlowStateTests },
+  { label: 'islandInhabitantFlowComponent', tests: islandInhabitantFlowComponentTests },
   { label: 'island001Inhabitants', tests: island001InhabitantTests },
   { label: 'islandNarrativeValidation', tests: islandNarrativeValidationTests },
   { label: 'island001Narrative', tests: island001NarrativeTests },
