@@ -2359,6 +2359,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [isMobileExperience]);
 
   useEffect(() => {
+    if (!isMobileExperience || isAdmin !== false) return;
+    if (activeWorkspaceNav !== 'planning' || showMobileHome) return;
+    setShowMobileHome(true);
+  }, [activeWorkspaceNav, isAdmin, isMobileExperience, showMobileHome]);
+
+  useEffect(() => {
     if (!authMessage) {
       setAuthMessageVisible(false);
       return;
@@ -3869,6 +3875,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
     switch (activeWorkspaceNav) {
       case 'planning':
+        if (isMobileExperience && isAdmin !== true) {
+          return null;
+        }
+
         return (
           <div className="workspace-content">
             {isMobileExperience ? (
