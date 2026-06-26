@@ -3839,6 +3839,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
             soundPreferenceSaving={soundPreferenceSaving}
             soundPreferenceError={soundPreferenceError}
             onSoundEffectsEnabledChange={handleSoundEffectsEnabledChange}
+            isMobileMenuImageActive={isMobileMenuImageActive}
+            onGameModePreferenceChange={handleGameModePreferenceChange}
           />
         </div>
       );
@@ -4484,26 +4486,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
               </div>
 
               <div className="mobile-menu-overlay__quick-grid mobile-menu-overlay__quick-grid--bottom">
-                <div className="mobile-menu-overlay__settings-toggle-row">
-                  <span className="mobile-menu-overlay__settings-toggle-copy">
-                    <span className="mobile-menu-overlay__settings-toggle-title">Turn off game menu</span>
-                    <span className="mobile-menu-overlay__settings-toggle-note">Hide the visual game-mode menu style.</span>
-                  </span>
-                  <button
-                    type="button"
-                    className={`mobile-footer-nav__diode-toggle ${
-                      isMobileMenuImageActive
-                        ? 'mobile-footer-nav__diode-toggle--on'
-                        : 'mobile-footer-nav__diode-toggle--off'
-                    }`}
-                    aria-pressed={isMobileMenuImageActive}
-                    aria-label="Turn off game menu"
-                    onClick={() => {
-                      const nextIsActive = !isMobileMenuImageActive;
-                      void handleGameModePreferenceChange(nextIsActive);
-                    }}
-                  />
-                </div>
                 <button
                   type="button"
                   className="mobile-menu-overlay__mini-card mobile-menu-overlay__mini-card--utility"
