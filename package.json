@@ -35,7 +35,8 @@
     "test:compass-book": "node scripts/run-compass-book-tests.mjs",
     "test:rank": "node scripts/run-rank-tests.mjs",
     "test:membership": "node scripts/run-membership-tests.mjs",
-    "test:leaderboard": "node scripts/run-leaderboard-tests.mjs"
+    "test:leaderboard": "node scripts/run-leaderboard-tests.mjs",
+    "check:goals-single-goal-review": "node scripts/check-goals-single-goal-review-smoke.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
