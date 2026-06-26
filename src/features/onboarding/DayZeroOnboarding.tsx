@@ -172,13 +172,24 @@ export function DayZeroOnboarding({
         if (error) throw error;
       }
 
+      const starterRecords = {
+        goalId: null as string | null,
+        habitId: null as string | null,
+        createdGoal: false,
+        createdHabit: false,
+      };
+
       if (!isDemoExperience) {
-        await persistOnboardingStarterRecords({
+        const result = await persistOnboardingStarterRecords({
           userId: session.user.id,
           goalName: fields.lifeArea ? `Build momentum in ${fields.lifeArea}` : null,
           habitName: fields.habit,
           source: DAY_ZERO_ONBOARDING_SOURCE,
         });
+        starterRecords.goalId = result.goal.id;
+        starterRecords.habitId = result.habit.id;
+        starterRecords.createdGoal = result.goal.created;
+        starterRecords.createdHabit = result.habit.created;
       }
 
       void recordTelemetryEvent({

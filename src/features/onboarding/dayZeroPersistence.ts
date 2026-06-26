@@ -82,7 +82,7 @@ export async function ensureDayZeroStarterRecords(
         domainKey: lifeWheelCategory,
         goalId,
         emoji: '🌱',
-        habitIntent: `Source: ${DAY_ZERO_SOURCE}\nSeed: ${seedKey}`,
+        habit_intent: `Source: ${DAY_ZERO_SOURCE}\nSeed: ${seedKey}`,
       },
       input.userId,
     );

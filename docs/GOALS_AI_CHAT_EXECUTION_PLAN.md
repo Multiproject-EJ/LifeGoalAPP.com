@@ -29,7 +29,8 @@ Primary goals:
 - ✅ Added auth-gated UI automation smoke coverage for the single-goal review flow.
 - ✅ Day Zero onboarding outputs persist into duplicate-guarded Goals/Habits starter records.
 - ✅ Game of Life onboarding (`goalName` / `habitName`) now persists into duplicate-guarded Goals/Habits starter records.
-- ⏳ Next: add a small authenticated smoke/E2E pass that verifies onboarding-created starter records appear in the Goals and Habits workspaces after navigation.
+- ✅ Added lightweight authenticated/domain-boundary smoke coverage that verifies onboarding-created starter records flow through Goals/Habits service paths and UI-facing workspace loaders after navigation.
+- ⏳ Next: add seeded browser-auth E2E coverage for onboarding → Goals/Habits visibility when stable test credentials and a disposable Supabase project are available.
 
 ---
 
@@ -261,6 +262,6 @@ Use feature flags for:
 ---
 
 ## Immediate next actions (this week)
-1. Extend onboarding persistence to the Game of Life onboarding `goalName`/`habitName` path.
-2. Add a focused regression check for the Game of Life onboarding persistence path once it lands.
-3. Continue UX polish on the guided/coached creation path without changing single-goal review behavior.
+1. Add seeded browser-auth E2E coverage for onboarding-created starter records once stable test credentials and a disposable Supabase project are available.
+2. Continue UX polish on the guided/coached creation path without changing single-goal review behavior.
+3. Keep onboarding persistence checks lightweight and focused on canonical Goals/Habits service paths during the interim.
