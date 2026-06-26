@@ -4333,7 +4333,7 @@ export function IslandRunBoardPrototype({
     setIsTopbarMenuPrimed(false);
     setFocusedStopId(stopId);
     setCameraMode('stop_focus');
-  }, [requestActiveStopTransition]);
+  }, [contractV2Stops, doesStopRequireTicketPayment, requestActiveStopTransition, stopIndexByStopId]);
 
   const getPrepayPromptSeenKey = useCallback((stopId: string) => (
     `island_run_prepay_ticket_prompt_seen_${session.user.id}_${islandNumber}_${stopId}`
@@ -4399,13 +4399,13 @@ export function IslandRunBoardPrototype({
         return;
       }
 
-      requestActiveStopTransition(null, 'ticket_required_landmark_door_landing');
+      requestActiveStopTransition(doorStopId, 'ticket_required_landmark_door_landing');
       setRequiredDoorStopId(null);
       setDormantDoorMiniGame(null);
       setDormantDoorSelectedIndices([]);
       setDormantDoorReward(null);
-      setTicketPromptStopId(doorStopId);
-      setLandingText('🎫 Landmark ticket required: pay the ticket to enter this stop.');
+      setTicketPromptStopId(null);
+      setLandingText('🎫 Landmark ticket required: pay inside the landmark modal to enter this stop.');
       return;
     }
 
@@ -4444,9 +4444,9 @@ export function IslandRunBoardPrototype({
         setLandingText('🎫 Boss ticket ready: pay inside the Boss modal, then play the Boss Trial.');
         return;
       }
-      requestActiveStopTransition(null, 'ticket_required_landmark_door_landing_loop');
-      setTicketPromptStopId(ticketRequiredStopId);
-      setLandingText('🎫 Landmark ticket ready: pay to hire and enter this landmark.');
+      requestActiveStopTransition(ticketRequiredStopId, 'ticket_required_landmark_door_landing_loop');
+      setTicketPromptStopId(null);
+      setLandingText('🎫 Landmark ticket ready: pay inside the landmark modal to enter this stop.');
       return;
     }
 
@@ -8020,7 +8020,9 @@ export function IslandRunBoardPrototype({
     // value). Removed 2026-04-19.
     setTokenIndex(TOKEN_START_TILE_INDEX);
     setRollValue(null);
-    setActiveStopId(null);
+    setActiveStopId('hatchery');
+    setFocusedStopId('hatchery');
+    setCameraMode('stop_focus');
     setShowEncounterModal(false);
     setEncounterResolved(false);
     // M6-COMPLETE: reset per-visit encounter completion tracking on island travel
@@ -8059,8 +8061,8 @@ export function IslandRunBoardPrototype({
     setRollValue(null);
     setRollingDiceFaces([1, 1]);
     setLandingText(startTimer
-      ? 'Arrived at new island. Roll dice to move!'
-      : 'New island unlocked. Start it when you are ready.');
+      ? 'Arrived at new island. Set your Hatchery egg first, then roll dice to move!'
+      : 'New island unlocked. Set your Hatchery egg first when you are ready.');
     // M10D: island travel complete sound + haptic
     playIslandRunSound('island_travel_complete');
     triggerIslandRunHaptic('island_travel_complete');
