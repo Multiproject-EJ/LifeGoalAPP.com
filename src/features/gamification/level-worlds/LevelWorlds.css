@@ -11440,3 +11440,31 @@
     to { opacity: 1; transform: translate(-50%, 0) scale(1); }
   }
 }
+
+.island-run-board__topbar-menu-item--caretaker {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: linear-gradient(135deg, rgba(40, 111, 88, 0.96), rgba(20, 69, 86, 0.96));
+  border-color: rgba(178, 246, 202, 0.72);
+  color: #f0fff6;
+}
+
+.island-run-board__topbar-menu-item--caretaker:focus-visible {
+  outline: 3px solid rgba(255, 244, 166, 0.96);
+  outline-offset: 2px;
+}
+
+.island-run-board__topbar-menu-item--caretaker:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.island-run-board__topbar-menu-hint {
+  margin: 0;
+  padding: 0 0.2rem 0.1rem;
+  color: #c7e6ef;
+  font-size: 0.72rem;
+  line-height: 1.25;
+}

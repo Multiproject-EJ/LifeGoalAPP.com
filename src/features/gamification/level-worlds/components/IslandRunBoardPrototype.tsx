@@ -42,6 +42,9 @@ import {
   type IslandBoardTheme,
 } from '../services/islandBoardThemes';
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
+import { IslandInhabitantFlow, type IslandInhabitantFlowResult } from '../inhabitants/components/IslandInhabitantFlow';
+import { getIslandConversationDefinition, getIslandInhabitantDefinition, getIslandInhabitantTopics } from '../inhabitants/islandInhabitantRegistry';
+import { isIslandInhabitantFlowBlocked } from '../inhabitants/islandInhabitantFlowBlocking';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
@@ -1464,6 +1467,7 @@ export function IslandRunBoardPrototype({
   const topbarMenuRef = useRef<HTMLDivElement>(null);
   const topbarMenuFirstItemRef = useRef<HTMLButtonElement>(null);
   const audioMenuFirstItemRef = useRef<HTMLButtonElement>(null);
+  const talkToCaretakerButtonRef = useRef<HTMLButtonElement>(null);
   // M16D: track previous shard count to detect island-travel reset (snap fill bar to 0, no animation)
   const prevShardsRef = useRef<number>(0);
   const [shardFillNoTransition, setShardFillNoTransition] = useState(false);
@@ -1490,6 +1494,7 @@ export function IslandRunBoardPrototype({
   });
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
+  const [isIslandInhabitantFlowOpen, setIsIslandInhabitantFlowOpen] = useState(false);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -2204,6 +2209,7 @@ export function IslandRunBoardPrototype({
         showStickerAlbumDialog ||
         showSanctuaryPanel ||
         showStoryReader ||
+        isIslandInhabitantFlowOpen ||
         Boolean(dormantDoorMiniGame) ||
         Boolean(trafficLightCoinFlip) ||
         techCollectionModal ||
@@ -2229,6 +2235,7 @@ export function IslandRunBoardPrototype({
     showSanctuaryPanel,
     showShopPanel,
     showStoryReader,
+    isIslandInhabitantFlowOpen,
     showTopbarMenu,
   ]);
 
@@ -2260,6 +2267,17 @@ export function IslandRunBoardPrototype({
   } | null>(null);
 
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
+  const caretakerInhabitant = useMemo(() => getIslandInhabitantDefinition('luma-caretaker'), []);
+  const caretakerTopics = useMemo(() => getIslandInhabitantTopics(1, 'luma-caretaker'), []);
+  const caretakerConversations = useMemo(
+    () => caretakerTopics
+      .map((topic) => getIslandConversationDefinition(topic.conversationId))
+      .filter((conversation): conversation is NonNullable<typeof conversation> => Boolean(conversation)),
+    [caretakerTopics],
+  );
+  const hasCaretakerContent = Boolean(caretakerInhabitant) && caretakerTopics.length === 3 && caretakerConversations.length === caretakerTopics.length;
+  const isIslandOneActiveForCaretaker = runtimeState.currentIslandNumber === 1;
+
   const [runtimeHydrationSource, setRuntimeHydrationSource] = useState<IslandRunRuntimeHydrationSource | null>(null);
   const pendingTreasurePathResume = useMemo(
     () => resolvePendingTreasurePathResume({ record: runtimeState }),
@@ -9919,6 +9937,7 @@ export function IslandRunBoardPrototype({
       showShopPanel ||
       showStickerAlbumDialog ||
       showStoryReader ||
+      isIslandInhabitantFlowOpen ||
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
@@ -10015,6 +10034,43 @@ export function IslandRunBoardPrototype({
     });
     setRuntimeState(next);
   };
+  const isCaretakerFlowBlocked = isIslandInhabitantFlowBlocked({
+    isStoryReaderOpen: showStoryReader,
+    isNarrativeDialogueOpen: Boolean(islandNarrativeOpeningFlow.activeDialogue),
+    isActiveStopOpen: Boolean(activeStopId || ticketPromptStopId || lockedStopInfoStopId),
+    isBuildOpen: showBuildPanel,
+    isShopOpen: showShopPanel,
+    isMarketOpen: showMarketPanel,
+    isSanctuaryOpen: showSanctuaryPanel,
+    isMinigameOpen: Boolean(activeLaunchedMinigameId),
+    isBossOpen: bossTrialPhase !== 'idle',
+    isTravelOpen: showTravelOverlay,
+    isClearCelebrationOpen: showIslandClearCelebration || showWinCelebrationModal,
+    isClaimOpen: showClaimModal || Boolean(devPackOpeningPrototype) || showFirstCreaturePackModal || showWelcomePackModal,
+    isHatchRevealOpen: Boolean(hatchReveal || showEggReadyBanner || showEggManiaModal || showHatcheryCompassModal),
+    isPurchasePromptOpen: Boolean(walletStoreModalKind || pairedThemeOfferModal),
+    isOutOfDicePromptOpen: showOutOfDicePurchasePrompt,
+    isRewardDetailsOpen: showRewardDetailsModal || isRewardBarClaiming,
+    isPlaceholderOpen: Boolean(activePlaceholder || showStickerAlbumDialog || techCollectionModal || dormantDoorMiniGame || trafficLightCoinFlip),
+    isBoardMoving: isRolling || pendingHopSequence !== null || isAnimatingRollRef.current || isAutoRolling,
+    isInhabitantFlowOpen: isIslandInhabitantFlowOpen,
+    isOtherModalOpen: showEntryAudioModal || showOnboardingBooster || showFirstRunCelebration || showHatcheryL1Celebration || showPerfectCompanionOnboardingHint || showEncounterModal || showGamifiedJournalCard,
+  });
+  const shouldShowCaretakerTalkAction = isIslandOneActiveForCaretaker && hasCaretakerContent;
+  const caretakerTalkUnavailableMessage = 'Caretaker is unavailable while another island activity is open.';
+  const resolvedCaretakerBackgroundArtSrc = islandArtAmbientBackgroundSrc || islandBackgroundSrc;
+  const handleOpenCaretakerFlow = () => {
+    if (!shouldShowCaretakerTalkAction || isCaretakerFlowBlocked) return;
+    setShowTopbarMenu(false);
+    setIsIslandInhabitantFlowOpen(true);
+  };
+  const handleCaretakerFlowClose = (result: IslandInhabitantFlowResult) => {
+    setIsIslandInhabitantFlowOpen(false);
+    if (result.closeReason === 'missing_content') {
+      console.warn('[IslandRun] Caretaker inhabitant flow closed with missing content.', result);
+    }
+  };
+
   // Keep the auto-roll loop's pause gate in sync with modal state so it halts
   // while any modal is open and resumes once they are all dismissed.
   useEffect(() => {
@@ -10680,6 +10736,26 @@ export function IslandRunBoardPrototype({
               >
                 {isBackgroundHidden ? 'Show background' : 'Hide background'}
               </button>
+              {shouldShowCaretakerTalkAction ? (
+                <button
+                  ref={talkToCaretakerButtonRef}
+                  type="button"
+                  className="island-run-board__topbar-menu-item island-run-board__topbar-menu-item--caretaker"
+                  aria-label="Talk to Caretaker"
+                  aria-describedby={isCaretakerFlowBlocked ? 'island-run-caretaker-talk-unavailable' : undefined}
+                  title={isCaretakerFlowBlocked ? caretakerTalkUnavailableMessage : 'Talk to Caretaker'}
+                  disabled={isCaretakerFlowBlocked}
+                  onClick={handleOpenCaretakerFlow}
+                >
+                  <span aria-hidden="true">🧙</span>
+                  <span>Talk to Caretaker</span>
+                </button>
+              ) : null}
+              {shouldShowCaretakerTalkAction && isCaretakerFlowBlocked ? (
+                <p id="island-run-caretaker-talk-unavailable" className="island-run-board__topbar-menu-hint">
+                  {caretakerTalkUnavailableMessage}
+                </p>
+              ) : null}
               <button
                 type="button"
                 className="island-run-board__topbar-menu-item"
@@ -14135,6 +14211,21 @@ export function IslandRunBoardPrototype({
           setWinCelebrationRewards([]);
         }}
       />
+
+      {shouldShowCaretakerTalkAction && caretakerInhabitant ? (
+        <IslandInhabitantFlow
+          isOpen={isIslandInhabitantFlowOpen}
+          inhabitant={caretakerInhabitant}
+          topics={caretakerTopics}
+          conversations={caretakerConversations}
+          greeting="The island has been listening for footsteps like yours."
+          characterArtSrc={caretakerInhabitant.premiumArtSrc}
+          backgroundArtSrc={resolvedCaretakerBackgroundArtSrc}
+          islandName="Luma Isle"
+          islandStatusLabel="The Lumin"
+          onClose={handleCaretakerFlowClose}
+        />
+      ) : null}
 
       <IslandStoryReader
         manifestPath={activeStoryEpisode?.manifestPath ?? '/storyline/episode-001/manifest.json'}
