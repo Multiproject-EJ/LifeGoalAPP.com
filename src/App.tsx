@@ -813,6 +813,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     );
   });
   const [showCalendarPlaceholder, setShowCalendarPlaceholder] = useState(false);
+  const [isDayChangeDailyTreatSequenceActive, setIsDayChangeDailyTreatSequenceActive] = useState(false);
   const [calendarLaunchMode, setCalendarLaunchMode] = useState<'auto' | 'holiday' | 'personal_quest'>('auto');
   const [pendingTodayOfferOpen, setPendingTodayOfferOpen] = useState<TimeBoundOfferId | null>(null);
   const [activeHolidaySeason, setActiveHolidaySeason] = useState<ActiveAdventMetaResult | null>(null);
@@ -952,7 +953,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [markDailyTreatsSeen, openPersonalQuestDailyTreatsCalendar]);
 
   const isDailyTreatAutoOpenDue = isDailyTreatAutoOpenDueForUser(supabaseSession?.user?.id);
-  const shouldDeferDailyLifeUpgradeModal = showCalendarPlaceholder || isDailyTreatAutoOpenDue;
+  const shouldDeferDailyLifeUpgradeModal = true;
+  const shouldDeferYesterdayTodoCleanupModal = showCalendarPlaceholder || isDailyTreatAutoOpenDue || isDayChangeDailyTreatSequenceActive;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -961,6 +963,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const todayKey = getDailyTreatsAutoOpenDateKey();
     if (!isDailyTreatAutoOpenDue) return;
 
+    setIsDayChangeDailyTreatSequenceActive(true);
     launchDailyTreatsMenu();
     window.localStorage.setItem(DAILY_TREATS_AUTO_OPEN_DATE_KEY, todayKey);
   }, [isDailyTreatAutoOpenDue, launchDailyTreatsMenu, supabaseSession?.user?.id]);
@@ -3671,10 +3674,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     );
   }
 
-  const handleLaunchYesterdayTodoCleanup = () => {
+  const handleLaunchYesterdayTodoCleanup = (options?: { force?: boolean }) => {
     setActiveWorkspaceNav('planning');
     window.setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('lifegoal:launch-yesterday-todo-cleanup'));
+      window.dispatchEvent(new CustomEvent('lifegoal:launch-yesterday-todo-cleanup', {
+        detail: { force: options?.force === true },
+      }));
     }, 0);
   };
 
@@ -3828,7 +3833,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               setCalendarLaunchMode('auto');
               setShowCalendarPlaceholder(true);
             }}
-            onLaunchYesterdayTodoCleanup={handleLaunchYesterdayTodoCleanup}
+            onLaunchYesterdayTodoCleanup={() => handleLaunchYesterdayTodoCleanup({ force: true })}
             billingReturnBanner={billingReturnBanner}
             soundEffectsEnabled={soundEffectsEnabled}
             soundPreferenceSaving={soundPreferenceSaving}
@@ -3920,6 +3925,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               isAdminOrCreator={isAdmin === true}
               onOpenFeaturePreview={openFeaturePreviewOverlay}
               deferDailyLifeUpgradeModal={shouldDeferDailyLifeUpgradeModal}
+              deferYesterdayTodoCleanupModal={shouldDeferYesterdayTodoCleanupModal}
             />
             <HabitsModule
               session={activeSession}
@@ -5195,11 +5201,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
     <CountdownCalendarModal
       isOpen={showCalendarPlaceholder}
       onClose={() => handleRewardModalClose(() => {
+        const shouldContinueDayChangeSequence = isDayChangeDailyTreatSequenceActive;
         setShowCalendarPlaceholder(false);
         setHolidayPreviewKey(null);
         setCalendarLaunchMode('auto');
+        setIsDayChangeDailyTreatSequenceActive(false);
         void refreshDailyTreatsOpenedState();
         void refreshHolidayCalendarOpenedState();
+        if (shouldContinueDayChangeSequence) {
+          handleLaunchYesterdayTodoCleanup({ force: false });
+        }
       })}
       userId={activeSession?.user?.id}
       islandRunSession={activeSession}
@@ -5351,6 +5362,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               isAdminOrCreator={isAdmin === true}
               onOpenFeaturePreview={openFeaturePreviewOverlay}
               deferDailyLifeUpgradeModal={shouldDeferDailyLifeUpgradeModal}
+              deferYesterdayTodoCleanupModal={shouldDeferYesterdayTodoCleanupModal}
             />
           </div>
         {!showGameBoardOverlay && !showZenGardenFullScreen && !isConflictResolverFullscreen && (

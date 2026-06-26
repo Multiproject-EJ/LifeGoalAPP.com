@@ -39,6 +39,7 @@ type MobileHabitHomeProps = {
   isAdminOrCreator?: boolean;
   onOpenFeaturePreview?: (featureId: FeatureAvailabilityId, label: string) => void;
   deferDailyLifeUpgradeModal?: boolean;
+  deferYesterdayTodoCleanupModal?: boolean;
 };
 
 export function MobileHabitHome({
@@ -73,6 +74,7 @@ export function MobileHabitHome({
   isAdminOrCreator = false,
   onOpenFeaturePreview,
   deferDailyLifeUpgradeModal = false,
+  deferYesterdayTodoCleanupModal = false,
 }: MobileHabitHomeProps) {
   void onHideStandaloneHabitsChange;
   return (
@@ -110,6 +112,7 @@ export function MobileHabitHome({
         isAdminOrCreator={isAdminOrCreator}
         onOpenFeaturePreview={onOpenFeaturePreview}
         deferDailyLifeUpgradeModal={deferDailyLifeUpgradeModal}
+        deferYesterdayTodoCleanupModal={deferYesterdayTodoCleanupModal}
       />
     </div>
   );

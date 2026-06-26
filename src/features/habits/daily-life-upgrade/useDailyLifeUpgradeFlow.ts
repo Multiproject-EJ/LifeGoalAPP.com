@@ -83,6 +83,13 @@ export function useDailyLifeUpgradeFlow(params: {
     }
   }, []);
 
+  const openDailyLifeUpgradeModal = useCallback(() => {
+    if (!params.userId || !dailyLifeUpgradeCandidate) return false;
+    if (hasShownDailyLifeUpgradeToday(params.userId)) return false;
+    setShowDailyLifeUpgradeModal(true);
+    return true;
+  }, [dailyLifeUpgradeCandidate, params.userId]);
+
   const closeDailyLifeUpgradeModal = useCallback(() => {
     if (!params.userId) return;
     markDailyLifeUpgradeShownToday(params.userId);
@@ -216,6 +223,7 @@ export function useDailyLifeUpgradeFlow(params: {
     setDailyLifeUpgradePauseStatus,
     dailyLifeUpgradeHighlightedHabitId,
     setDailyLifeUpgradeHighlightedHabitId,
+    openDailyLifeUpgradeModal,
     closeDailyLifeUpgradeModal,
     handleDailyLifeUpgradePrimaryAction,
     handleDailyLifeUpgradeAlternativeAction,

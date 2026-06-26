@@ -455,6 +455,7 @@ type DailyHabitTrackerProps = {
   isAdminOrCreator?: boolean;
   onOpenFeaturePreview?: (featureId: FeatureAvailabilityId, label: string) => void;
   deferDailyLifeUpgradeModal?: boolean;
+  deferYesterdayTodoCleanupModal?: boolean;
 };
 
 type HabitCompletionState = {
@@ -1019,6 +1020,7 @@ export function DailyHabitTracker({
   isAdminOrCreator = false,
   onOpenFeaturePreview,
   deferDailyLifeUpgradeModal = false,
+  deferYesterdayTodoCleanupModal = false,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const sparkHandEnabled = isPlayersHandSparkResultEnabled();
@@ -1660,6 +1662,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [justCompletedHabitId, setJustCompletedHabitId] = useState<string | null>(null);
   const [habitFeedbackById, setHabitFeedbackById] = useState<Record<string, HabitFeedbackType>>({});
   const [isWeeklyHabitReviewOpen, setIsWeeklyHabitReviewOpen] = useState(false);
+  const [shouldOpenDailyLifeUpgradeAfterWeeklyReview, setShouldOpenDailyLifeUpgradeAfterWeeklyReview] = useState(false);
   const [shouldFadeTrackingMeta, setShouldFadeTrackingMeta] = useState(false);
   const trackingMetaFadeTimeoutRef = useRef<number | null>(null);
   const [timeLimitedOffer, setTimeLimitedOffer] = useState<{
@@ -3989,13 +3992,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       role="dialog"
       aria-modal="true"
       aria-label="Weekly habit review"
-      onClick={() => setIsWeeklyHabitReviewOpen(false)}
+      onClick={() => {
+        setIsWeeklyHabitReviewOpen(false);
+        setShouldOpenDailyLifeUpgradeAfterWeeklyReview(true);
+      }}
     >
       <div className="habit-day-nav__vision-modal habit-day-nav__weekly-snapshot-modal" onClick={(event) => event.stopPropagation()}>
         <button
           type="button"
           className="habit-day-nav__vision-modal-close"
-          onClick={() => setIsWeeklyHabitReviewOpen(false)}
+          onClick={() => {
+            setIsWeeklyHabitReviewOpen(false);
+            setShouldOpenDailyLifeUpgradeAfterWeeklyReview(true);
+          }}
           aria-label="Close weekly habit review"
         >
           ✕
@@ -4031,7 +4040,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           </section>
 
           <footer className="habit-day-nav__weekly-snapshot-actions">
-            <button type="button" className="habit-day-nav__weekly-snapshot-button habit-day-nav__weekly-snapshot-button--primary" onClick={() => setIsWeeklyHabitReviewOpen(false)}>
+            <button type="button" className="habit-day-nav__weekly-snapshot-button habit-day-nav__weekly-snapshot-button--primary" onClick={() => {
+                setIsWeeklyHabitReviewOpen(false);
+                setShouldOpenDailyLifeUpgradeAfterWeeklyReview(true);
+              }}>
               Continue
             </button>
           </footer>
@@ -10866,6 +10878,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setDailyLifeUpgradePauseStatus,
     dailyLifeUpgradeHighlightedHabitId,
     setDailyLifeUpgradeHighlightedHabitId,
+    openDailyLifeUpgradeModal,
     closeDailyLifeUpgradeModal,
     handleDailyLifeUpgradePrimaryAction,
     handleDailyLifeUpgradeAlternativeAction,
@@ -10889,6 +10902,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     refreshHabits,
     deferInitialModal: deferDailyLifeUpgradeModal,
   });
+
+  useEffect(() => {
+    if (!shouldOpenDailyLifeUpgradeAfterWeeklyReview) return;
+    openDailyLifeUpgradeModal();
+    setShouldOpenDailyLifeUpgradeAfterWeeklyReview(false);
+  }, [dailyLifeUpgradeCandidate, openDailyLifeUpgradeModal, shouldOpenDailyLifeUpgradeAfterWeeklyReview]);
 
   const hasNewDaySequenceModalOpen =
     isTodayWinsOpen ||
@@ -10931,7 +10950,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     if (loading || !session?.user?.id || !isViewingToday) return;
     if (yesterdaySundownTodoPromptOpenedThisSessionRef.current) return;
     if (showYesterdaySundownTodoModal || showYesterdayRecap || todayTodoModalOpen) return;
-    if (deferDailyLifeUpgradeModal || hasNewDaySequenceModalOpen) return;
+    if (deferDailyLifeUpgradeModal || deferYesterdayTodoCleanupModal || hasNewDaySequenceModalOpen) return;
 
     let isMounted = true;
     void (async () => {
@@ -10944,6 +10963,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     };
   }, [
     deferDailyLifeUpgradeModal,
+    deferYesterdayTodoCleanupModal,
     hasNewDaySequenceModalOpen,
     isViewingToday,
     loading,
@@ -10955,8 +10975,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   ]);
 
   useEffect(() => {
-    const handleManualLaunch = () => {
-      void openYesterdaySundownTodoCleanup({ force: true });
+    const handleManualLaunch = (event: Event) => {
+      const customEvent = event as CustomEvent<{ force?: boolean } | undefined>;
+      void openYesterdaySundownTodoCleanup({ force: customEvent.detail?.force === true });
     };
     window.addEventListener('lifegoal:launch-yesterday-todo-cleanup', handleManualLaunch);
     return () => window.removeEventListener('lifegoal:launch-yesterday-todo-cleanup', handleManualLaunch);
