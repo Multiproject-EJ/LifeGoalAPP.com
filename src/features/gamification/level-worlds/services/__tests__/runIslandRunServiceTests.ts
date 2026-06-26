@@ -103,6 +103,7 @@ import { islandNarrativeDialogueComponentTests } from '../../narrative/__tests__
 import { islandStoryReaderComponentTests } from '../../narrative/__tests__/islandStoryReaderComponent.test';
 import { islandNarrativeOpeningFlowTests } from '../../narrative/__tests__/islandNarrativeOpeningFlow.test';
 import { islandNarrativeValidationTests, islandStoryManifestValidationTests } from '../../narrative/__tests__/islandNarrativeValidation.test';
+import { islandRunModalTextColorGuardTests } from './islandRunModalTextColorGuards.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -129,6 +130,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandNarrativeDialogueComponent', tests: islandNarrativeDialogueComponentTests },
   { label: 'islandStoryReaderComponent', tests: islandStoryReaderComponentTests },
   { label: 'islandNarrativeOpeningFlow', tests: islandNarrativeOpeningFlowTests },
+  { label: 'islandRunModalTextColorGuards', tests: islandRunModalTextColorGuardTests },
   { label: 'islandStoryManifestValidation', tests: islandStoryManifestValidationTests },
   { label: 'islandRunContractV2Energy', tests: islandRunContractV2EnergyTests },
   { label: 'islandRunContractV2Semantics', tests: islandRunContractV2SemanticsTests },

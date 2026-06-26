@@ -21,7 +21,7 @@ export function ShardClaimModal({ collectible, bonusSummary = null, onCollect }:
   }, []);
 
   return (
-    <div className="island-stop-modal-backdrop" role="presentation">
+    <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
       <section
         className="island-stop-modal shard-claim-modal"
         role="dialog"

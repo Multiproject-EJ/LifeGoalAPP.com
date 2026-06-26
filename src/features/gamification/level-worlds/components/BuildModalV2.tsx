@@ -120,7 +120,7 @@ export function BuildModalV2({
     : '15 of 15 complete';
 
   return (
-    <div className="island-stop-modal-backdrop bm2-backdrop" role="presentation">
+    <div className="island-run-overlay-root island-stop-modal-backdrop bm2-backdrop" role="presentation">
       <section className="bm2-shell" role="dialog" aria-modal="true" aria-label={`Island ${islandNumber} Buildings`}>
         <header className="bm2-header">
           <span className="bm2-header__title">🔨 Island {islandNumber} Buildings</span>

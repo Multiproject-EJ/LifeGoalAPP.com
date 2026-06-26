@@ -29,7 +29,7 @@ export function IslandNarrativeToast({
   if (!isOpen) return null;
 
   const toast = (
-    <div className="island-narrative-toast" role="status" aria-live="polite" data-reduced-motion-safe="true">
+    <div className="island-run-overlay-root island-narrative-toast" role="status" aria-live="polite" data-reduced-motion-safe="true">
       <button type="button" className="island-narrative-toast__card" onClick={onDismiss} aria-label="Dismiss narrative note">
         <span className="island-narrative-toast__emblem" aria-hidden="true">✦</span>
         <span className="island-narrative-toast__copy">

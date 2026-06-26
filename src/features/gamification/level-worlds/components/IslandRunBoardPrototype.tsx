@@ -11265,7 +11265,7 @@ export function IslandRunBoardPrototype({
 
 
       {showGamifiedJournalCard && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Gamified journal card">
             <IslandRunGamifiedJournalCard
               session={session}
@@ -11281,7 +11281,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {showFirstRunCelebration && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--onboarding" role="dialog" aria-modal="true" aria-label="First run celebration">
             {firstRunStep === 'celebration' ? (
               <>
@@ -11328,7 +11328,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {showHatcheryL1Celebration && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--onboarding" role="dialog" aria-modal="true" aria-label="Hatchery Level 1 celebration">
             <div className="island-stop-modal__context">
               <p className="island-stop-modal__eyebrow">First island upgrade</p>
@@ -11352,7 +11352,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {showTravelOverlay && (
-        <div className="island-travel-overlay" role="status" aria-live="polite">
+        <div className="island-run-overlay-root island-travel-overlay" role="status" aria-live="polite">
           <div className="island-travel-overlay__card">
             <p className="island-travel-overlay__eyebrow">{travelOverlayMode === 'retry' ? 'Island reset' : 'Island transfer'}</p>
             <p className="island-travel-overlay__title island-travel-overlay__title--headline">
@@ -11439,7 +11439,7 @@ export function IslandRunBoardPrototype({
           && typeof openedStopTicketCost === 'number'
           && runtimeState.essence >= openedStopTicketCost;
         return (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label={activeStop.title}>
             <div className="island-stop-modal__header-row">
               <h3 className="island-stop-modal__title">{activeStop.title}</h3>
@@ -12068,7 +12068,7 @@ export function IslandRunBoardPrototype({
       })()}
 
       {dormantDoorMiniGame && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--dormant-door" role="dialog" aria-modal="true" aria-label="Dormant door challenge">
             <h3 className="island-stop-modal__title">🚪 Dormant Door Challenge</h3>
             <p className="island-dormant-door__intro">
@@ -12143,7 +12143,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {trafficLightCoinFlip && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--traffic-light island-traffic-light--${trafficLightCoinFlip.phase}`} role="dialog" aria-modal="true" aria-label="Traffic light bonus coin flip">
             <h3 className="island-stop-modal__title">🚦 Traffic Light Bonus</h3>
             <div className="island-traffic-light__art-row" aria-hidden="true">
@@ -12231,7 +12231,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {showEncounterModal && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--encounter" role="dialog" aria-modal="true" aria-label="Encounter tile challenge">
             <h3 className="island-stop-modal__title">⚔️ Bonus Encounter</h3>
             {encounterStep === 'challenge' && (
@@ -12358,7 +12358,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {showOnboardingBooster && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--onboarding" role="dialog" aria-modal="true" aria-label="Game of Life onboarding booster">
             <div className="gol-onboarding__header-row">
               <span className="gol-onboarding__step">Loop 1 of 21</span>
@@ -12396,7 +12396,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {showOutOfDicePurchasePrompt && shouldPromptDicePurchase && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Out of dice">
             <h3 className="island-stop-modal__title">🎲 Out of Dice</h3>
             <p className="island-stop-modal__copy">
@@ -12437,7 +12437,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {showEggManiaModal && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Egg Mania details">
             <h3 className="island-stop-modal__title">🔥🥚 Egg Mania</h3>
             <p className="island-stop-modal__copy">
@@ -12479,7 +12479,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {showRewardDetailsModal && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Reward details">
             <h3 className="island-stop-modal__title">🎁 Reward Bar Details</h3>
             <p className="island-stop-modal__copy">
@@ -12598,7 +12598,7 @@ export function IslandRunBoardPrototype({
 
       {/* ── Egg-ready in-app banner ──────────────────────────────────────── */}
       {showEggReadyBanner && (
-        <div className="island-stop-modal-backdrop island-egg-ready-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop island-egg-ready-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-egg-ready-modal" role="dialog" aria-modal="true" aria-label="Egg ready">
             <h3 className="island-stop-modal__title island-egg-ready-modal__title">🌟🥚 Egg Ready to Open!</h3>
             {activeEgg ? (
@@ -12656,7 +12656,7 @@ export function IslandRunBoardPrototype({
 
       {/* ── Safe placeholder dialog ─────────────────────────────────────── */}
       {activePlaceholder && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Island Run placeholder">
             <h3 className="island-stop-modal__title">{activePlaceholder.title}</h3>
             <p className="island-stop-modal__copy">{activePlaceholder.body}</p>
@@ -12687,7 +12687,7 @@ export function IslandRunBoardPrototype({
 
       {/* ── Sticker album dialog ────────────────────────────────────────── */}
       {showStickerAlbumDialog && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Sticker album">
             <h3 className="island-stop-modal__title">🧩 Sticker Album</h3>
             <p className="island-stop-modal__copy">
@@ -12817,7 +12817,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {walletStoreModalKind && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section
             className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--wallet-store"
             role="dialog"
@@ -12878,7 +12878,7 @@ export function IslandRunBoardPrototype({
 
       {/* M14: unified shop panel (merged shop + market) */}
       {showShopPanel && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-run-shop-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Shop">
             <h3 className="island-stop-modal__title">🛍️ Market</h3>
             <p className="island-stop-modal__copy"><strong>🟣 {runtimeState.essence} essence</strong> · Island {islandNumber}</p>
@@ -13013,7 +13013,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {showPerfectCompanionOnboardingHint && (
-        <div className="island-stop-modal-backdrop" role="presentation">
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section
             className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--onboarding"
             role="dialog"
@@ -13081,7 +13081,7 @@ export function IslandRunBoardPrototype({
 
       {showSanctuaryPanel && (
         <div
-          className="island-stop-modal-backdrop"
+          className="island-run-overlay-root island-stop-modal-backdrop"
           role="presentation"
           onClick={(e) => {
             if (e.target === e.currentTarget) {

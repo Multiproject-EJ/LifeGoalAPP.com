@@ -24,7 +24,7 @@ export default function IslandRunWinCelebrationModal({
   if (!open) return null;
 
   return (
-    <div className="island-win-celebration" role="dialog" aria-modal="true" aria-label="Win celebration rewards">
+    <div className="island-run-overlay-root island-win-celebration" role="dialog" aria-modal="true" aria-label="Win celebration rewards">
       <div className="island-win-celebration__card">
         <p className="island-win-celebration__title">{title}</p>
         <p className="island-win-celebration__subtitle">{subtitle}</p>
