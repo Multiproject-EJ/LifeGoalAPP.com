@@ -18,7 +18,6 @@ import {
   GOAL_STATUS_ORDER,
   type GoalStatusTag,
   normalizeGoalStatus,
-  goalStatusToCompletionPct,
 } from './goalStatus';
 import {
   GOAL_STRATEGY_META,
@@ -51,6 +50,7 @@ import { evaluateGoalHealthFromSignals } from '../../services/goalExecution';
 import { GoalDoctorCard } from '../../components/GoalDoctorCard';
 import { EnvironmentStrengthCard } from '../environment/components';
 import { normalizeEnvironmentContext, type EnvironmentContextV1 } from '../environment/environmentSchema';
+import { computeGoalCardIndicators } from './goalCardIndicators';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type StepRow = Database['public']['Tables']['life_goal_steps']['Row'];
@@ -1220,21 +1220,43 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
 
                           {/* GOALS-A-P2: Goal strength + completion */}
                           {(() => {
-                            const strength = computeGoalStrength(goal);
-                            const completionPct = computeGoalCompletionPct(goal);
-                            const strengthStars = '⭐'.repeat(strength) + '☆'.repeat(5 - strength);
+                            const indicators = computeGoalCardIndicators(goal, stepsByGoal[goal.id] ?? []);
+                            const missingCopy = indicators.missingStrengthSignals.length > 0
+                              ? `Add ${indicators.missingStrengthSignals.join(', ')} to strengthen this goal.`
+                              : 'This goal has all core planning signals.';
                             return (
-                              <div className="goal-card__progress">
-                                <div className="goal-card__strength" title="Goal strength is based on: description, target date, life area, progress notes, and status. Fill in more fields to increase strength.">
-                                  <span>Goal Strength: {strength}/5 {strengthStars}</span>
-                                </div>
-                                <div className="goal-card__completion">
-                                  <span>Progress: {completionPct}%</span>
-                                  <div className="goal-card__completion-bar" role="progressbar" aria-valuenow={completionPct} aria-valuemin={0} aria-valuemax={100}>
-                                    <div className="goal-card__completion-fill" style={{ width: `${completionPct}%` }} />
+                              <section
+                                className="goal-card__indicators"
+                                aria-label={`Goal strength ${indicators.strengthScore} of 5 and progress ${indicators.completionPct}%`}
+                              >
+                                <div className="goal-card__indicator">
+                                  <div className="goal-card__indicator-header">
+                                    <span className="goal-card__indicator-label">Strength</span>
+                                    <strong>{indicators.strengthLabel}</strong>
                                   </div>
+                                  <div className="goal-card__strength-stars" aria-label={`${indicators.strengthScore} of 5 strength signals`}>
+                                    {indicators.strengthStars}
+                                  </div>
+                                  <p>{missingCopy}</p>
                                 </div>
-                              </div>
+                                <div className="goal-card__indicator">
+                                  <div className="goal-card__indicator-header">
+                                    <span className="goal-card__indicator-label">Progress</span>
+                                    <strong>{indicators.completionPct}%</strong>
+                                  </div>
+                                  <div
+                                    className="goal-card__completion-bar"
+                                    role="progressbar"
+                                    aria-valuenow={indicators.completionPct}
+                                    aria-valuemin={0}
+                                    aria-valuemax={100}
+                                    aria-label={indicators.completionLabel}
+                                  >
+                                    <div className="goal-card__completion-fill" style={{ width: `${indicators.completionPct}%` }} />
+                                  </div>
+                                  <p>{indicators.completionLabel}</p>
+                                </div>
+                              </section>
                             );
                           })()}
 
@@ -1507,20 +1529,6 @@ function formatRelativeDate(value: string) {
 
   const deltaYears = Math.round(deltaMonths / 12);
   return formatter.format(deltaYears, 'year');
-}
-
-function computeGoalStrength(goal: GoalRow): number {
-  let score = 0;
-  if (goal.description && goal.description.trim().length > 0) score += 1;
-  if (goal.target_date) score += 1;
-  if (goal.life_wheel_category) score += 1;
-  if (goal.progress_notes && goal.progress_notes.trim().length > 0) score += 1;
-  if (goal.status_tag && goal.status_tag !== 'on_track') score += 1;
-  return score;
-}
-
-function computeGoalCompletionPct(goal: GoalRow): number {
-  return goalStatusToCompletionPct(goal.status_tag);
 }
 
 function getBalanceAxisForCategory(category: LifeWheelCategoryKey | string | null): { title: string; description: string } | null {
