@@ -25,7 +25,8 @@ Primary goals:
 - ✅ Guided – Coached now runs a real stepper flow in the creation dialog (Outcome → First actions → Timeline → Confirm).
 - ✅ Added single-goal mode foundations in Goals workspace (search + previous/next navigation with one-goal card rendering).
 - ✅ Integrated a compact Life Wheel launcher into single-goal mode for category jumping without leaving one-goal view.
-- ⏳ Next: add goal strength/progress indicators to the single-goal card.
+- ✅ Added goal strength/progress indicators to the single-goal card.
+- ⏳ Next: add auth-gated UI automation for the single-goal review flow.
 
 ---
 
