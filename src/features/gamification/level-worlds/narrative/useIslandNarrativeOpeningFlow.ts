@@ -21,7 +21,7 @@ type AmbientBeatId = 'I001-B24';
 type BossEligibleBeatId = 'I001-B26';
 type BossResolutionBeatId = 'I001-B29';
 type TravelReadyClosingBeatId = 'I001-B30';
-type IslandNarrativeControllerBeatId = OpeningBeatId | AmbientBeatId | BossEligibleBeatId | BossResolutionBeatId | TravelReadyClosingBeatId;
+export type IslandNarrativeControllerBeatId = OpeningBeatId | AmbientBeatId | BossEligibleBeatId | BossResolutionBeatId | TravelReadyClosingBeatId;
 
 export type ActiveIslandNarrativeToast = {
   beatId: AmbientBeatId;
@@ -44,6 +44,7 @@ export type IslandNarrativeOpeningFlowInput = {
   isGlobalPrologueActive: boolean;
   isGlobalPrologueSeen: boolean;
   isNarrativeSurfaceBlocked: boolean;
+  canDisplayTravelReadyClosingOverClaimedCelebration: boolean;
   activeStopId: string | null;
   hatcheryBuildLevel: number | null | undefined;
   canChallengeCurrentBoss: boolean;
@@ -168,6 +169,15 @@ export function didIslandClearTravelReadyTransition(previous: boolean | null, cu
   return previous === false && current;
 }
 
+export function isNarrativeSurfaceBlockingBeat(
+  beatId: IslandNarrativeControllerBeatId | undefined,
+  isNarrativeSurfaceBlocked: boolean,
+  canDisplayTravelReadyClosingOverClaimedCelebration: boolean,
+): boolean {
+  if (!isNarrativeSurfaceBlocked) return false;
+  return beatId !== 'I001-B30' || !canDisplayTravelReadyClosingOverClaimedCelebration;
+}
+
 export function useIslandNarrativeOpeningFlow({
   userId,
   currentIslandNumber,
@@ -176,6 +186,7 @@ export function useIslandNarrativeOpeningFlow({
   isGlobalPrologueActive,
   isGlobalPrologueSeen,
   isNarrativeSurfaceBlocked,
+  canDisplayTravelReadyClosingOverClaimedCelebration,
   activeStopId,
   hatcheryBuildLevel,
   canChallengeCurrentBoss,
@@ -353,9 +364,10 @@ export function useIslandNarrativeOpeningFlow({
   }, [activeStoryEpisode]);
 
   useEffect(() => {
-    if (!isEligible || activeStoryEpisode || activeDialogue || activeToast || isGlobalPrologueActive || isNarrativeSurfaceBlocked || storyReaderClosingRef.current) return;
+    if (!isEligible || activeStoryEpisode || activeDialogue || activeToast || isGlobalPrologueActive || storyReaderClosingRef.current) return;
     const nextBeatId = queue[0];
     if (!nextBeatId) return;
+    if (isNarrativeSurfaceBlockingBeat(nextBeatId, isNarrativeSurfaceBlocked, canDisplayTravelReadyClosingOverClaimedCelebration)) return;
     if (isSeen(nextBeatId)) {
       setQueue((current) => current.slice(1));
       return;
@@ -420,7 +432,7 @@ export function useIslandNarrativeOpeningFlow({
     sessionDisplayedRef.current.add(nextBeatId);
     setQueue((current) => current.slice(1));
     setActiveDialogue(dialogue);
-  }, [activeDialogue, activeStoryEpisode, activeToast, canChallengeCurrentBoss, currentIslandNumber, cycleIndex, isCurrentIslandBossDefeated, isEligible, isGlobalPrologueActive, isIslandClearTravelReady, isNarrativeSurfaceBlocked, isSeen, queue, setActiveStoryEpisode, bossTrialResolvedIslandNumber]);
+  }, [activeDialogue, activeStoryEpisode, activeToast, canChallengeCurrentBoss, canDisplayTravelReadyClosingOverClaimedCelebration, currentIslandNumber, cycleIndex, isCurrentIslandBossDefeated, isEligible, isGlobalPrologueActive, isIslandClearTravelReady, isNarrativeSurfaceBlocked, isSeen, queue, setActiveStoryEpisode, bossTrialResolvedIslandNumber]);
 
   const handleStoryEpisodeClosed = useCallback((episode: Exclude<ActiveIslandStoryEpisode, null>) => {
     if (episode.kind === 'island_arrival') {

@@ -4,6 +4,7 @@ import { assert, assertEqual, type TestCase } from '../../services/__tests__/tes
 import {
   didHatcheryReachLevelOne,
   didIslandClearTravelReadyTransition,
+  isNarrativeSurfaceBlockingBeat,
   getIslandNarrativeSeenStorageKey,
   isEligibleForIsland001OpeningFlow,
   parseIslandNarrativeSeenState,
@@ -50,10 +51,69 @@ export const islandNarrativeOpeningFlowTests: TestCase[] = [
   { name: 'B29 removes stale queued B26 after boss resolves', run: () => assertIncludes(hookSource, "setQueue((queued) => queued.filter((beatId) => beatId !== 'I001-B26'));", 'Boss resolution should remove stale finale setup') },
   { name: 'B29 marks seen on resolution close and stores episode suppression', run: () => { assertIncludes(hookSource, "markSeen('I001-B29')", 'Resolution close should mark seen'); assertIncludes(hookSource, 'ISLAND_001_RESOLUTION_EPISODE_ID', 'Resolution should use existing seen state episode map'); } },
 
+
+  { name: 'B30 lifecycle remains reachable over claimed clear celebration before canonical travel', run: () => {
+    const state = {
+      currentIslandNumber: 1,
+      cycleIndex: 0,
+      showIslandClearCelebration: true,
+      isIslandClearRewardClaimed: false,
+      islandClearStatsIslandNumber: 1,
+      nonClearBlocker: false,
+      b29Active: true,
+      b29Completed: false,
+      queued: [] as string[],
+      activeDialogue: null as string | null,
+      travelCalls: 0,
+    };
+    const computeTravelReady = () => state.showIslandClearCelebration && state.isIslandClearRewardClaimed && state.islandClearStatsIslandNumber === state.currentIslandNumber;
+    const computeSurfaceBlocked = () => state.nonClearBlocker || state.showIslandClearCelebration;
+    const computeB30CelebrationException = () => computeTravelReady() && !state.nonClearBlocker;
+    const attemptDisplay = () => {
+      if (state.b29Active || state.activeDialogue || state.queued[0] !== 'I001-B30') return;
+      if (isNarrativeSurfaceBlockingBeat('I001-B30', computeSurfaceBlocked(), computeB30CelebrationException())) return;
+      if (!computeTravelReady() || state.currentIslandNumber !== 1 || state.cycleIndex !== 0) {
+        state.queued.shift();
+        return;
+      }
+      state.activeDialogue = 'I001-B30';
+      state.queued.shift();
+    };
+
+    assert(!computeTravelReady(), 'Reward-unclaimed clear celebration must not be travel-ready and must not show B30');
+    state.isIslandClearRewardClaimed = true;
+    if (didIslandClearTravelReadyTransition(false, computeTravelReady())) state.queued.push('I001-B30');
+    assertEqual(state.queued.join(','), 'I001-B30', 'Reward claim should queue B30');
+    attemptDisplay();
+    assertEqual(state.queued.join(','), 'I001-B30', 'B29 active should keep B30 pending');
+    state.b29Active = false;
+    state.b29Completed = true;
+    attemptDisplay();
+    assertEqual(state.activeDialogue, 'I001-B30', 'Closing B29 should make B30 displayable over the claimed clear celebration');
+    assert(computeTravelReady(), 'Canonical travel CTA readiness should remain true while B30 is displayed');
+    assertEqual(state.travelCalls, 0, 'Displaying/continuing B30 must not perform travel');
+    state.activeDialogue = null;
+    assert(computeTravelReady(), 'Closing B30 should preserve the existing Travel CTA state');
+    state.showIslandClearCelebration = false;
+    state.currentIslandNumber = 2;
+    if (didIslandClearTravelReadyTransition(true, computeTravelReady())) state.queued.push('I001-B30');
+    attemptDisplay();
+    assertEqual(state.activeDialogue, null, 'B30 must not display after travel reaches Island 2');
+  } },
+  { name: 'B30 remains blocked by non-celebration modals and safely drops after travel', run: () => {
+    assert(isNarrativeSurfaceBlockingBeat('I001-B30', true, false), 'B30 should remain blocked when any non-celebration blocker exists');
+    assert(!isNarrativeSurfaceBlockingBeat('I001-B30', true, true), 'B30 should bypass only the claimed clear celebration blocker');
+    assert(isNarrativeSurfaceBlockingBeat('I001-B24', true, true), 'The claimed celebration exception must not broadly unblock other beats');
+    let queued = ['I001-B30'];
+    let currentIslandNumber = 2;
+    const isIslandClearTravelReady = false;
+    if (queued[0] === 'I001-B30' && (!isIslandClearTravelReady || currentIslandNumber !== 1)) queued = queued.slice(1);
+    assertEqual(queued.length, 0, 'Travel before B30 display should safely drop the stale queued beat');
+  } },
   { name: 'B30 canonical travel-ready transition helper matches required boundaries', run: () => { assert(didIslandClearTravelReadyTransition(false, true), 'not-ready -> travel-ready should trigger'); assert(!didIslandClearTravelReadyTransition(true, true), 'stable travel-ready should not retrigger'); assert(!didIslandClearTravelReadyTransition(null, true), 'hydration baseline should not trigger stale saves'); assert(!didIslandClearTravelReadyTransition(false, false), 'not-ready stable should not trigger'); } },
-  { name: 'B30 observes existing clear celebration travel CTA readiness', run: () => { assertIncludes(boardSource, 'isIslandClearTravelReady: Boolean(showIslandClearCelebration && isIslandClearRewardClaimed && islandClearStats?.islandNumber === runtimeState.currentIslandNumber)', 'B30 should observe the same claimed clear celebration state that exposes the travel CTA'); assertIncludes(boardSource, 'onClick={isIslandClearRewardClaimed ? handleTravelFromCelebration : handleClaimIslandClearCelebrationRewards}', 'Existing travel CTA handler must remain wired'); } },
+  { name: 'B30 observes existing clear celebration travel CTA readiness', run: () => { assertIncludes(boardSource, 'const isIslandClearTravelReady = Boolean(', 'B30 should observe the same claimed clear celebration state that exposes the travel CTA'); assertIncludes(boardSource, 'islandClearStats?.islandNumber === runtimeState.currentIslandNumber', 'Travel readiness should remain scoped to the current island'); assertIncludes(boardSource, 'onClick={isIslandClearRewardClaimed ? handleTravelFromCelebration : handleClaimIslandClearCelebrationRewards}', 'Existing travel CTA handler must remain wired'); } },
   { name: 'B30 hydration baseline and live transition are documented', run: () => { assertIncludes(hookSource, 'Hydration/old-save rule for I001-B30', 'B30 hydration behavior should be documented'); assertIncludes(hookSource, 'didIslandClearTravelReadyTransition(previous, current)', 'B30 should use transition helper'); assertIncludes(hookSource, "enqueueBeat('I001-B30')", 'Expected B30 enqueue on live travel-ready transition'); } },
-  { name: 'B30 rechecks scope and travel readiness before display', run: () => { assertIncludes(hookSource, "nextBeatId === 'I001-B30' && (!isIslandClearTravelReady || currentIslandNumber !== 1 || cycleIndex !== 0)", 'B30 display should re-check live readiness and Island 1 cycle 0'); assertIncludes(hookSource, 'isNarrativeSurfaceBlocked', 'B30 should share collision gate'); } },
+  { name: 'B30 rechecks scope and travel readiness before display', run: () => { assertIncludes(hookSource, "nextBeatId === 'I001-B30' && (!isIslandClearTravelReady || currentIslandNumber !== 1 || cycleIndex !== 0)", 'B30 display should re-check live readiness and Island 1 cycle 0'); assertIncludes(hookSource, 'isNarrativeSurfaceBlockingBeat(nextBeatId, isNarrativeSurfaceBlocked, canDisplayTravelReadyClosingOverClaimedCelebration)', 'B30 should share collision gate with a claimed-celebration-only exception'); } },
   { name: 'B30 dialogue copy and continue label are display-only', run: () => { assertIncludes(definitionSource, 'The route is open because we opened it together.', 'Expected B30 primary copy'); assertIncludes(definitionSource, 'Follow the restored route', 'Expected B30 continue label'); assertIncludes(hookSource, "speakerName: 'Miri'", 'Expected Miri speaker'); assertIncludes(hookSource, "tone: 'standard'", 'Expected standard tone'); ['handleTravelFromCelebration', 'performIslandTravel', 'travelToNextIsland', 'handleClaimIslandClearCelebrationRewards'].forEach((needle) => assert(!hookSource.includes(needle), `B30 continue must not call ${needle}`)); } },
   { name: 'queue priority puts B30 before ambient B24 and after B29', run: () => assertIncludes(hookSource, "'I001-B29': 3, 'I001-B30': 4, 'I001-B24': 5", 'Expected B30 to wait for B29 and outrank ambient B24') },
 
