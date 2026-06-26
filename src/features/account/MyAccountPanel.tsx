@@ -63,6 +63,8 @@ type MyAccountPanelProps = {
   soundPreferenceSaving: boolean;
   soundPreferenceError: string | null;
   onSoundEffectsEnabledChange: (enabled: boolean) => void | Promise<void>;
+  isMobileMenuImageActive?: boolean;
+  onGameModePreferenceChange?: (nextIsActive: boolean) => void | Promise<void>;
   billingReturnBanner?: {
     kind: 'processing' | 'success' | 'canceled';
     message: string;
@@ -98,6 +100,8 @@ export function MyAccountPanel({
   soundPreferenceSaving,
   soundPreferenceError,
   onSoundEffectsEnabledChange,
+  isMobileMenuImageActive = true,
+  onGameModePreferenceChange,
   billingReturnBanner = null,
 }: MyAccountPanelProps) {
   const [folder1Open, setFolder1Open] = useState(false);
@@ -604,6 +608,28 @@ export function MyAccountPanel({
           <p className="account-panel__eyebrow">Settings</p>
           <h3 id="settings-modules-heading">Feature Hub</h3>
         </div>
+        {onGameModePreferenceChange ? (
+          <div className="mobile-menu-overlay__settings-toggle-row account-panel__game-menu-toggle-row">
+            <span className="mobile-menu-overlay__settings-toggle-copy">
+              <span className="mobile-menu-overlay__settings-toggle-title">Turn off game menu</span>
+              <span className="mobile-menu-overlay__settings-toggle-note">Hide the visual game-mode menu style.</span>
+            </span>
+            <button
+              type="button"
+              className={`mobile-footer-nav__diode-toggle ${
+                isMobileMenuImageActive
+                  ? 'mobile-footer-nav__diode-toggle--on'
+                  : 'mobile-footer-nav__diode-toggle--off'
+              }`}
+              aria-pressed={isMobileMenuImageActive}
+              aria-label="Turn off game menu"
+              onClick={() => {
+                const nextIsActive = !isMobileMenuImageActive;
+                void onGameModePreferenceChange(nextIsActive);
+              }}
+            />
+          </div>
+        ) : null}
         <div className="settings-modules__group" aria-label="Personalization settings modules">
           <div className="settings-modules__group-header">
             <p className="settings-modules__group-eyebrow">Personalization</p>
