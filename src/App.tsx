@@ -216,6 +216,7 @@ type MobileMenuNavItem = {
   icon: ReactNode;
   summary: string;
   modalKey?: 'feedback' | 'support'; // present = opens a modal instead of navigating
+  badgeLabel?: string;
 };
 
 type LauncherSubmenuAction = {
@@ -1481,6 +1482,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item))
       .map((item) => {
+        if (item.id === 'planning' && isAdmin === true && activeWorkspaceNav === 'planning' && !showMobileHome) {
+          return {
+            ...item,
+            ariaLabel: `${item.ariaLabel} — admin only view`,
+            badgeLabel: 'Admin only view',
+          };
+        }
+
         if (item.id !== 'actions') {
           return item;
         }
@@ -1507,7 +1516,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
         return item;
       });
-  }, [mobileMenuNavItems, timerLauncherSeconds, timerLauncherState]);
+  }, [activeWorkspaceNav, isAdmin, mobileMenuNavItems, showMobileHome, timerLauncherSeconds, timerLauncherState]);
   const mobileFooterPointsBadges: Partial<Record<MobileMenuNavItem['id'], string>> = {};
 
   const triggerMobileMenuFlash = () => {
@@ -2357,6 +2366,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
     setShowMobileHome((current) => (current ? current : true));
   }, [isMobileExperience]);
+
+  useEffect(() => {
+    if (!isMobileExperience || isAdmin !== false) return;
+    if (activeWorkspaceNav !== 'planning' || showMobileHome) return;
+    setShowMobileHome(true);
+  }, [activeWorkspaceNav, isAdmin, isMobileExperience, showMobileHome]);
 
   useEffect(() => {
     if (!authMessage) {
@@ -3869,10 +3884,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
     switch (activeWorkspaceNav) {
       case 'planning':
+        if (isMobileExperience && isAdmin !== true) {
+          return null;
+        }
+
         return (
           <div className="workspace-content">
             {isMobileExperience ? (
               <div className="workspace-link-callout">
+                <span className="workspace-link-callout__badge">Admin only view</span>
                 <p className="workspace-link-callout__text">Prefer the simplified Today home?</p>
                 <button
                   type="button"

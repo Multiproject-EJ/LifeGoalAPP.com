@@ -20,6 +20,7 @@ type MobileFooterNavItem = {
   label: string;
   icon: ReactNode;
   ariaLabel?: string;
+  badgeLabel?: string;
 };
 
 type MobileFooterStatus = {
@@ -690,6 +691,9 @@ export function MobileFooterNav({
                   </span>
                   <span className="mobile-footer-nav__label">
                     {item.label}
+                    {item.badgeLabel ? (
+                      <span className="mobile-footer-nav__admin-badge">{item.badgeLabel}</span>
+                    ) : null}
                     {pointsBadgeValue ? (
                       <PointsBadge
                         value={pointsBadgeValue}
