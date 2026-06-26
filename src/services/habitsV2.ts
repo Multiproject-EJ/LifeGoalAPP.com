@@ -547,6 +547,7 @@ export async function quickAddDailyHabit(params: {
   domainKey?: string | null;
   goalId?: string | null;
   emoji?: string | null;
+  habitIntent?: string | null;
 }, userId: string): Promise<ServiceResponse<HabitV2Row>> {
   const schedule = { mode: 'daily' };
   const habitInput: Omit<HabitV2Insert, 'user_id'> = {
@@ -563,6 +564,7 @@ export async function quickAddDailyHabit(params: {
     },
     domain_key: params.domainKey ?? null,
     goal_id: params.goalId ?? null,
+    habit_intent: params.habitIntent ?? null,
     archived: false,
     status: 'active',
     paused_at: null,

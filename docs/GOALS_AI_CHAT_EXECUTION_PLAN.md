@@ -27,7 +27,8 @@ Primary goals:
 - ✅ Integrated a compact Life Wheel launcher into single-goal mode for category jumping without leaving one-goal view.
 - ✅ Added goal strength/progress indicators to the single-goal card.
 - ✅ Added auth-gated UI automation smoke coverage for the single-goal review flow.
-- ⏳ Next: persist onboarding outputs into Goals/Habits as draft starter records.
+- ✅ Persisted Day Zero onboarding outputs into Goals/Habits as duplicate-guarded starter records.
+- ⏳ Next: extend onboarding persistence to the Game of Life onboarding `goalName`/`habitName` path.
 
 ---
 
@@ -259,6 +260,6 @@ Use feature flags for:
 ---
 
 ## Immediate next actions (this week)
-1. Persist onboarding outputs into Goals/Habits as draft starter records with duplicate-resume guards.
-2. Add a small regression check for onboarding-to-domain persistence once the write path lands.
+1. Extend onboarding persistence to the Game of Life onboarding `goalName`/`habitName` path.
+2. Add a focused regression check for the Game of Life onboarding persistence path once it lands.
 3. Continue UX polish on the guided/coached creation path without changing single-goal review behavior.
