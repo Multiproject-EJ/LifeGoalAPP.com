@@ -49,6 +49,7 @@
     "src/features/annual-review/components/HabitPlanning.tsx",
     "src/features/annual-review/components/ShareableYearInReview.tsx",
     "src/features/gamification/level-worlds/services/__tests__/**/*.ts",
-    "src/features/gamification/level-worlds/narrative/**/*.ts"
+    "src/features/gamification/level-worlds/narrative/**/*.ts",
+    "src/features/gamification/level-worlds/inhabitants/**/*.ts"
   ]
 }
