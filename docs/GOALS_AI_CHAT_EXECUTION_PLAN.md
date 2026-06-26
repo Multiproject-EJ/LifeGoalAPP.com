@@ -261,6 +261,6 @@ Use feature flags for:
 ---
 
 ## Immediate next actions (this week)
-1. Persist onboarding outputs into Goals/Habits as draft starter records with duplicate-resume guards.
-2. Add a small regression check for onboarding-to-domain persistence once the write path lands.
+1. Extend onboarding persistence to the Game of Life onboarding `goalName`/`habitName` path.
+2. Add a focused regression check for the Game of Life onboarding persistence path once it lands.
 3. Continue UX polish on the guided/coached creation path without changing single-goal review behavior.

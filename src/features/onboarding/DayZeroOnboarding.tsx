@@ -189,10 +189,18 @@ export function DayZeroOnboarding({
           habit: fields.habit,
           reminder: fields.reminder,
           reward: fields.reward,
+          starter_goal_id: starterRecords.goalId,
+          starter_habit_id: starterRecords.habitId,
+          starter_goal_created: starterRecords.createdGoal,
+          starter_habit_created: starterRecords.createdHabit,
         },
       });
 
-      setAuthMessage('Quick-start complete! Welcome to HabitGame.');
+      setAuthMessage(
+        starterRecords.createdGoal || starterRecords.createdHabit
+          ? 'Quick-start complete! Your starter goal and habit are ready.'
+          : 'Quick-start complete! Welcome to HabitGame.',
+      );
       window.localStorage.removeItem(storageKey);
       onClose();
     } catch (error) {
