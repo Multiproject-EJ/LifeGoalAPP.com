@@ -27,7 +27,9 @@ Primary goals:
 - ✅ Integrated a compact Life Wheel launcher into single-goal mode for category jumping without leaving one-goal view.
 - ✅ Added goal strength/progress indicators to the single-goal card.
 - ✅ Added auth-gated UI automation smoke coverage for the single-goal review flow.
-- ⏳ Next: persist onboarding outputs into Goals/Habits as draft starter records.
+- ✅ Day Zero onboarding outputs persist into duplicate-guarded Goals/Habits starter records.
+- ✅ Game of Life onboarding (`goalName` / `habitName`) now persists into duplicate-guarded Goals/Habits starter records.
+- ⏳ Next: add a small authenticated smoke/E2E pass that verifies onboarding-created starter records appear in the Goals and Habits workspaces after navigation.
 
 ---
 
@@ -171,12 +173,12 @@ User chooses **Guided – Coached** -> stepper flow (Outcome -> Metrics -> Timel
 
 ## WS6 — Onboarding persistence upgrades
 ### Game of Life onboarding
-- On completion (or relevant steps), persist:
+- ✅ On completion, persist:
   - `goalName` -> draft goal or active goal
   - `habitName` -> habit seed in habits system
 
 ### Day Zero onboarding
-- Persist selected life area + tiny habit + reminder as starter records.
+- ✅ Persist selected life area + tiny habit + reminder as starter records.
 
 ### Acceptance criteria
 - Onboarding outputs appear in Goals/Habits after completion.

@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { recordTelemetryEvent } from '../../services/telemetry';
+import {
+  DAY_ZERO_ONBOARDING_SOURCE,
+  persistOnboardingStarterRecords,
+} from './onboardingPersistence';
 
 type OnboardingFieldState = {
   lifeArea: string;
@@ -166,6 +170,15 @@ export function DayZeroOnboarding({
           },
         });
         if (error) throw error;
+      }
+
+      if (!isDemoExperience) {
+        await persistOnboardingStarterRecords({
+          userId: session.user.id,
+          goalName: fields.lifeArea ? `Build momentum in ${fields.lifeArea}` : null,
+          habitName: fields.habit,
+          source: DAY_ZERO_ONBOARDING_SOURCE,
+        });
       }
 
       void recordTelemetryEvent({
