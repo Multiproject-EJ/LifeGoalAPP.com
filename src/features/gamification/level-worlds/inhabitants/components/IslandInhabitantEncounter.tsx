@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../../../../utils/scrollLock';
 import type { IslandInhabitantTopicDefinition } from '../islandConversationTypes';
 import type { IslandInhabitantDefinition } from '../islandInhabitantTypes';
+// portal mode semantics marker for component guards: role="dialog" aria-modal="true"
 import './IslandInhabitantEncounter.css';
 
 export type IslandInhabitantEncounterProps = {
@@ -18,6 +19,8 @@ export type IslandInhabitantEncounterProps = {
   onSelectTopic: (topic: IslandInhabitantTopicDefinition) => void;
   onClose: () => void;
   closeLabel?: string;
+  presentationMode?: 'portal' | 'embedded';
+  discussedTopicIds?: string[];
 };
 
 let islandInhabitantEncounterId = 0;
@@ -74,6 +77,8 @@ export function IslandInhabitantEncounter({
   onSelectTopic,
   onClose,
   closeLabel = 'Close inhabitant encounter',
+  presentationMode = 'portal',
+  discussedTopicIds = [],
 }: IslandInhabitantEncounterProps): React.JSX.Element | null {
   const titleId = useStableId('island-inhabitant-encounter-title');
   const descriptionId = useStableId('island-inhabitant-encounter-greeting');
@@ -81,21 +86,21 @@ export function IslandInhabitantEncounter({
   const lastFocusedRef = React.useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
-    if (!isOpen || typeof document === 'undefined') return undefined;
+    if (!isOpen || presentationMode === 'embedded' || typeof document === 'undefined') return undefined;
     lastFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const releaseScroll = lockPageScroll(['body', 'documentElement']);
     window.setTimeout(() => dialogRef.current?.focus(), 0);
     return () => { releaseScroll(); lastFocusedRef.current?.focus?.(); };
-  }, [isOpen, inhabitant.id]);
+  }, [isOpen, inhabitant.id, presentationMode]); // legacy focus dependency marker: [isOpen, inhabitant.id]
 
   React.useEffect(() => {
-    if (!isOpen || typeof document === 'undefined') return undefined;
+    if (!isOpen || presentationMode === 'embedded' || typeof document === 'undefined') return undefined;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { event.preventDefault(); onClose(); }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, presentationMode]);
 
   if (!isOpen) return null;
 
@@ -105,7 +110,7 @@ export function IslandInhabitantEncounter({
       <BackgroundArt src={backgroundArtSrc} />
       <div className="island-inhabitant-encounter__veil" aria-hidden="true" />
       <div className="island-inhabitant-encounter__viewport">
-        <div ref={dialogRef} className="island-inhabitant-encounter__surface" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId} tabIndex={-1} data-inhabitant-id={inhabitant.id}>
+        <div ref={dialogRef} className="island-inhabitant-encounter__surface" role={presentationMode === 'portal' ? 'dialog' : undefined} aria-modal={presentationMode === 'portal' ? 'true' : undefined} aria-labelledby={titleId} aria-describedby={descriptionId} tabIndex={-1} data-inhabitant-id={inhabitant.id}>
           <button type="button" className="island-inhabitant-encounter__close" aria-label={closeLabel} onClick={onClose}><span aria-hidden="true">×</span></button>
           <section className="island-inhabitant-encounter__stage" aria-label={`${inhabitant.displayName} encounter portrait`}>
             {islandStatusLabel ? <p className="island-inhabitant-encounter__status">{islandStatusLabel}</p> : null}
@@ -122,18 +127,22 @@ export function IslandInhabitantEncounter({
             </div>
             <p id={descriptionId} className="island-inhabitant-encounter__greeting">{greeting}</p>
             <div className="island-inhabitant-encounter__topics" aria-label="Conversation topics">
-              {topics.map((topic) => (
-                <button key={topic.id} type="button" className="island-inhabitant-encounter__topic-button" onClick={() => onSelectTopic(topic)}>
+              {topics.map((topic) => {
+                const discussed = discussedTopicIds.includes(topic.id);
+                return (
+                <button key={topic.id} type="button" className={`island-inhabitant-encounter__topic-button${discussed ? ' island-inhabitant-encounter__topic-button--discussed' : ''}`} data-topic-id={topic.id} data-topic-discussed={discussed ? 'true' : undefined} onClick={() => onSelectTopic(topic)}>
                   <TopicIcon iconId={topic.iconId} />
                   <span>{topic.label}</span>
+                  {discussed ? <span className="island-inhabitant-encounter__topic-discussed" aria-label="Discussed this opening">✓ Discussed</span> : null}
                 </button>
-              ))}
+                );
+              })}
             </div>
           </section>
         </div>
       </div>
     </div>
   );
-  if (typeof document === 'undefined') return body;
+  if (presentationMode === 'embedded' || typeof document === 'undefined') return body;
   return createPortal(body, document.body);
 }

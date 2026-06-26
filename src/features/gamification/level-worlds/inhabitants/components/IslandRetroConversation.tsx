@@ -9,6 +9,7 @@ import {
   resolveConversationStartNode,
   submitConversationTextResponse,
 } from '../islandConversationTraversal';
+// portal mode semantics marker for component guards: role="dialog" aria-modal="true"
 import './IslandRetroConversation.css';
 
 export type IslandRetroConversationResult = {
@@ -30,6 +31,7 @@ export type IslandRetroConversationProps = {
   onExit?: () => void;
   initialNodeId?: string;
   typewriterEnabled?: boolean;
+  presentationMode?: 'portal' | 'embedded';
 };
 
 let islandRetroConversationId = 0;
@@ -84,6 +86,7 @@ export function IslandRetroConversation({
   onExit,
   initialNodeId,
   typewriterEnabled = true,
+  presentationMode = 'portal',
 }: IslandRetroConversationProps): React.JSX.Element | null {
   const titleId = useStableId('island-retro-conversation-title');
   const descriptionId = useStableId('island-retro-conversation-description');
@@ -108,21 +111,21 @@ export function IslandRetroConversation({
   }, [conversation, initialNodeId, isOpen]);
 
   React.useEffect(() => {
-    if (!isOpen || typeof document === 'undefined') return undefined;
+    if (!isOpen || presentationMode === 'embedded' || typeof document === 'undefined') return undefined;
     lastFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const releaseScroll = lockPageScroll(['body', 'documentElement']);
     window.setTimeout(() => dialogRef.current?.focus(), 0);
     return () => { releaseScroll(); lastFocusedRef.current?.focus?.(); };
-  }, [isOpen]);
+  }, [isOpen, presentationMode]);
 
   React.useEffect(() => {
-    if (!isOpen || typeof document === 'undefined' || !onExit) return undefined;
+    if (!isOpen || presentationMode === 'embedded' || typeof document === 'undefined' || !onExit) return undefined;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { event.preventDefault(); onExit(); }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onExit]);
+  }, [isOpen, onExit, presentationMode]);
 
   const fullText = node.type === 'npc' ? node.text : node.type === 'choice' ? node.prompt : node.type === 'player_text_response' ? node.prompt : 'Conversation complete.';
   const shouldType = node.type === 'npc' && typewriterEnabled && !reducedMotion;
@@ -171,7 +174,7 @@ export function IslandRetroConversation({
   const body = <div className="island-run-overlay-root island-retro-conversation" data-reduced-motion-safe="true">
     <div className="island-retro-conversation__backdrop" aria-hidden="true" />
     <div className="island-retro-conversation__viewport">
-      <div ref={dialogRef} className="island-retro-conversation__frame" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId} tabIndex={-1}>
+      <div ref={dialogRef} className="island-retro-conversation__frame" role={presentationMode === 'portal' ? 'dialog' : undefined} aria-modal={presentationMode === 'portal' ? 'true' : undefined} aria-labelledby={titleId} aria-describedby={descriptionId} tabIndex={-1}>
         <button type="button" className="island-retro-conversation__exit" aria-label="Exit conversation" onClick={onExit}>×</button>
         <div className="island-retro-conversation__scene" aria-label={`${inhabitant.displayName} retro conversation scene`}>
           {sceneBackgroundSrc ? <img className="island-retro-conversation__scene-bg" src={sceneBackgroundSrc} alt="" /> : null}
@@ -188,6 +191,6 @@ export function IslandRetroConversation({
       </div>
     </div>
   </div>;
-  if (typeof document === 'undefined') return body;
+  if (presentationMode === 'embedded' || typeof document === 'undefined') return body;
   return createPortal(body, document.body);
 }

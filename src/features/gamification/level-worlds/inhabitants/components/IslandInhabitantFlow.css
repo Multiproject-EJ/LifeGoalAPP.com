@@ -1,0 +1,19 @@
+.island-inhabitant-flow {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  color: #f7fbff;
+}
+.island-inhabitant-flow__backdrop { position: fixed; inset: 0; background: rgba(5, 12, 24, 0.78); }
+.island-inhabitant-flow__viewport { position: fixed; inset: 0; display: grid; place-items: center; min-height: 100dvh; overflow: auto; overflow-x: hidden; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+.island-inhabitant-flow__dialog { width: min(100%, 980px); max-height: min(100dvh, 760px); outline: none; }
+.island-inhabitant-flow__sr-title { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.island-inhabitant-flow__layer { animation: island-inhabitant-flow-fade-slide 150ms ease-out both; }
+.island-inhabitant-flow__error { border: 2px solid rgba(255,255,255,0.46); border-radius: 28px; background: linear-gradient(135deg, #18335c, #281e46); padding: 28px; box-shadow: 0 24px 80px rgba(0,0,0,0.42); color: #ffffff; }
+.island-inhabitant-flow__error h3 { margin: 0 0 8px; color: #ffffff; }
+.island-inhabitant-flow__error p { margin: 0 0 20px; color: #eef5ff; }
+.island-inhabitant-flow__error div { display: flex; flex-wrap: wrap; gap: 12px; }
+.island-inhabitant-flow__error button { min-height: 44px; border: 0; border-radius: 999px; padding: 0 18px; font-weight: 800; color: #10213a; background: #fff0b8; }
+@keyframes island-inhabitant-flow-fade-slide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .island-inhabitant-flow__layer { animation: island-inhabitant-flow-fade-only 1ms linear both; } @keyframes island-inhabitant-flow-fade-only { from { opacity: 0; } to { opacity: 1; } } }
+@media (max-height: 620px) { .island-inhabitant-flow__dialog { max-height: none; } .island-inhabitant-flow__viewport { align-items: start; } }

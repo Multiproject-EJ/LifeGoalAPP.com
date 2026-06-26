@@ -45,3 +45,15 @@
 @media (prefers-reduced-motion: reduce) { .island-inhabitant-encounter *, .island-inhabitant-encounter *::before, .island-inhabitant-encounter *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; transform: none !important; } }
 @keyframes iie-character-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes iie-panel-enter { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+.island-inhabitant-encounter__topic-button--discussed {
+  opacity: 0.84;
+}
+
+.island-inhabitant-encounter__topic-discussed {
+  margin-left: auto;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--iie-action-text);
+  white-space: nowrap;
+}
