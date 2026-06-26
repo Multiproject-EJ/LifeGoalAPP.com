@@ -416,6 +416,11 @@ export function MyAccountPanel({
     onLaunchWeeklyHabitReview?.();
   };
 
+  const handleLaunchYesterdayTodoCleanup = () => {
+    setFolder1Open(false);
+    onLaunchYesterdayTodoCleanup?.();
+  };
+
   const redirectToUrl = (url: string) => {
     if (typeof window === 'undefined') return;
     window.location.assign(url);
@@ -885,6 +890,41 @@ export function MyAccountPanel({
                 </dl>
               ) : null}
             </section>
+            <section className="account-panel__card" aria-labelledby="advanced-weekly-habit-review-launcher">
+              <p className="account-panel__eyebrow">Habits</p>
+              <h3 id="advanced-weekly-habit-review-launcher">Weekly habit review</h3>
+              <p className="account-panel__hint">
+                Open your weekly 30-day stage mix and stalled/on-track habit snapshot at any time.
+              </p>
+              <div className="account-panel__actions-row">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleLaunchWeeklyHabitReview}
+                >
+                  Launch weekly habit review
+                </button>
+              </div>
+            </section>
+
+            <section className="account-panel__card" aria-labelledby="advanced-yesterday-todo-cleanup-launcher">
+              <p className="account-panel__eyebrow">Todo schedule</p>
+              <h3 id="advanced-yesterday-todo-cleanup-launcher">Undone todo schedule popup</h3>
+              <p className="account-panel__hint">
+                Open the cleanup popup that helps schedule unfinished todos from yesterday.
+              </p>
+              <div className="account-panel__actions-row">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleLaunchYesterdayTodoCleanup}
+                  disabled={!onLaunchYesterdayTodoCleanup}
+                >
+                  Launch undone todo schedule popup
+                </button>
+              </div>
+            </section>
+
             <GameDebugLogSection />
 
             <ReminderAnalyticsDashboard session={session} />
@@ -1185,23 +1225,6 @@ export function MyAccountPanel({
         title="Game & Rewards"
       >
         <GamificationSettings session={session} />
-
-        <section className="account-panel__card" aria-labelledby="weekly-habit-review-launcher">
-          <p className="account-panel__eyebrow">Habits</p>
-          <h3 id="weekly-habit-review-launcher">Weekly habit review</h3>
-          <p className="account-panel__hint">
-            Open your weekly 30-day stage mix and stalled/on-track habit snapshot at any time.
-          </p>
-          <div className="account-panel__actions-row">
-            <button
-              type="button"
-              className="btn"
-              onClick={handleLaunchWeeklyHabitReview}
-            >
-              Launch weekly habit review
-            </button>
-          </div>
-        </section>
       </SettingsFolderPopup>
 
       <SettingsFolderPopup
