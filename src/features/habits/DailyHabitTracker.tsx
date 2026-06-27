@@ -97,6 +97,7 @@ import {
   getHabitRhythmBonusGold,
   getHabitRhythmEmoji,
   getHabitRhythmLabel,
+  getHabitRhythmMultiplier,
   rankHabitsByRhythm,
 } from './habitRhythm';
 import { HabitImprovementAnalysisModal } from './HabitImprovementAnalysisModal';
@@ -928,6 +929,10 @@ type HabitPromptWindow = {
   windowStart: number | null;
   windowEnd: number | null;
 };
+// Per-day probability that a random time-bound bonus window (time-limited offer
+// and the habit-review prompt are rolled independently) is scheduled. Raised from
+// the original 0.22 so these bonus periods land on most days instead of being rare.
+const TIME_BOUND_BONUS_WINDOW_PROBABILITY = 0.6;
 const habitRecoveryRewardKey = (userId: string, habitId: string, rewardKey: string) =>
   `lifegoal.habit-recovery-reward:${userId}:${habitId}:${rewardKey}`;
 const habitReviewDiceBountyKey = (userId: string, habitId: string, rewardKey: string) =>
@@ -2202,7 +2207,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const buildTimeLimitedOfferWindow = useCallback((dateISO: string) => {
     return buildPromptWindow({
       dateISO,
-      probability: 0.22,
+      probability: TIME_BOUND_BONUS_WINDOW_PROBABILITY,
       durationMinutesMin: 18,
       durationMinutesMax: 40,
     });
@@ -2211,7 +2216,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const buildHabitReviewWindow = useCallback((dateISO: string, offerWindow: HabitPromptWindow) => {
     return buildPromptWindow({
       dateISO,
-      probability: 0.22,
+      probability: TIME_BOUND_BONUS_WINDOW_PROBABILITY,
       durationMinutesMin: 20,
       durationMinutesMax: 45,
       avoidWindows: [offerWindow],
@@ -8030,7 +8035,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           ) : null}
                           {!isOfferHabit && rhythmBonusPrice ? (
                             <span className="habit-checklist__offer-timer" aria-label={`${getHabitRhythmLabel(rhythm.daypart)} rhythm bonus active`}>
-                              {getHabitRhythmEmoji(rhythm.daypart)} {getHabitRhythmLabel(rhythm.daypart)} 10x
+                              {getHabitRhythmEmoji(rhythm.daypart)} {getHabitRhythmLabel(rhythm.daypart)} {getHabitRhythmMultiplier(habitHealthState)}x
                             </span>
                           ) : null}
                           {/* Quest habit badge — visible on the active quest habit */}
@@ -12044,19 +12049,21 @@ function formatDayOfWeekShort(value: string) {
   return DAY_SHORT_FORMATTER.format(parseISODate(value));
 }
 
+// Boundaries kept in lockstep with HABIT_RHYTHM_WINDOWS so the greeting never
+// disagrees with the daypart the rhythm bonus is actually using.
 function getCircadianEmoji(date: Date) {
   const hour = date.getHours();
-  if (hour >= 5 && hour < 10) return '🌅';
-  if (hour >= 10 && hour < 16) return '☀️';
-  if (hour >= 16 && hour < 20) return '🌇';
+  if (hour >= 5 && hour < 11) return '🌅';
+  if (hour >= 11 && hour < 16) return '☀️';
+  if (hour >= 16 && hour < 21) return '🌇';
   return '🌙';
 }
 
 function getCircadianLabel(date: Date) {
   const hour = date.getHours();
-  if (hour >= 5 && hour < 10) return 'Morning rhythm';
-  if (hour >= 10 && hour < 16) return 'Daytime rhythm';
-  if (hour >= 16 && hour < 20) return 'Evening rhythm';
+  if (hour >= 5 && hour < 11) return 'Morning rhythm';
+  if (hour >= 11 && hour < 16) return 'Daytime rhythm';
+  if (hour >= 16 && hour < 21) return 'Evening rhythm';
   return 'Night rhythm';
 }
 
