@@ -3,7 +3,9 @@ import {
   buildScheduleWithHabitRhythm,
   extractHabitRhythm,
   getHabitRhythmBonusGold,
+  getHabitRhythmMultiplier,
   getCurrentHabitRhythmDaypart,
+  isHabitInCurrentRhythmWindow,
   rankHabitsByRhythm,
 } from '../habitRhythm';
 
@@ -31,7 +33,16 @@ export function runAllHabitRhythmTests(): void {
   assertEqual(legacy.source, 'default', 'legacy fallback source is default');
 
   const schedule = buildScheduleWithHabitRhythm({ mode: 'daily' }, { daypart: 'anytime', source: 'user' });
-  assertEqual(extractHabitRhythm(schedule).daypart, DEFAULT_HABIT_RHYTHM_DAYPART, 'anytime habits are normalized to normal daytime rhythm');
+  assertEqual(extractHabitRhythm(schedule).daypart, 'anytime', 'anytime choice is preserved (not collapsed to daytime)');
+  assert(
+    isHabitInCurrentRhythmWindow({ schedule, now: new Date('2026-06-27T03:00:00') }),
+    'anytime habits are in-window at any hour',
+  );
+
+  assertEqual(getHabitRhythmMultiplier('stalled'), 10, 'struggling habits use the 10x multiplier');
+  assertEqual(getHabitRhythmMultiplier('at_risk'), 10, 'at-risk habits use the 10x multiplier');
+  assertEqual(getHabitRhythmMultiplier('active'), 3, 'healthy habits use the smaller 3x multiplier');
+  assertEqual(getHabitRhythmMultiplier(undefined), 3, 'unknown health defaults to the smaller 3x multiplier');
 
   const bonus = getHabitRhythmBonusGold({
     baseGold: 42,
@@ -42,6 +53,16 @@ export function runAllHabitRhythmTests(): void {
     now: new Date('2026-06-27T08:30:00'),
   });
   assertEqual(bonus, 420, 'struggling in-window habits get a 10x rhythm bonus');
+
+  const healthyBonus = getHabitRhythmBonusGold({
+    baseGold: 42,
+    schedule: { mode: 'daily', rhythm: { daypart: 'morning', source: 'user' } },
+    healthState: 'active',
+    completed: false,
+    scheduledToday: true,
+    now: new Date('2026-06-27T08:30:00'),
+  });
+  assertEqual(healthyBonus, 126, 'healthy in-window habits get a smaller 3x rhythm bonus');
 
   const noBonus = getHabitRhythmBonusGold({
     baseGold: 42,

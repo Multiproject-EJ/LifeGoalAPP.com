@@ -17,7 +17,12 @@ export type HabitRhythmWindow = {
 };
 
 export const DEFAULT_HABIT_RHYTHM_DAYPART: Exclude<HabitRhythmDaypart, 'anytime'> = 'day';
+// Struggling habits (at_risk / stalled) get the headline "happy hour" boost when
+// completed inside their daypart window.
 export const HABIT_RHYTHM_BONUS_MULTIPLIER = 10;
+// Healthy habits still get a smaller in-window boost so consistent users actually
+// see the rhythm bonus exist, instead of it being invisible to anyone on track.
+export const HABIT_RHYTHM_HEALTHY_MULTIPLIER = 3;
 export const HABIT_RHYTHM_BONUS_CAP_GOLD = 500;
 
 export const HABIT_RHYTHM_WINDOWS: HabitRhythmWindow[] = [
@@ -93,7 +98,10 @@ export function buildScheduleWithHabitRhythm<T extends Record<string, unknown>>(
   return {
     ...schedule,
     rhythm: {
-      daypart: rhythm.daypart === 'anytime' ? DEFAULT_HABIT_RHYTHM_DAYPART : rhythm.daypart,
+      // Preserve an explicit 'anytime' choice so the habit can earn its rhythm
+      // bonus in whichever window the user is currently in, rather than being
+      // pinned to the default daytime window.
+      daypart: rhythm.daypart,
       source: rhythm.source ?? 'user',
     },
   };
@@ -104,8 +112,20 @@ export function isHabitInCurrentRhythmWindow(params: {
   now?: Date;
 }): boolean {
   const rhythm = extractHabitRhythm(params.schedule);
-  const effectiveDaypart = rhythm.daypart === 'anytime' ? DEFAULT_HABIT_RHYTHM_DAYPART : rhythm.daypart;
-  return effectiveDaypart === getCurrentHabitRhythmDaypart(params.now);
+  // 'anytime' literally means any time — it is always considered in-window.
+  if (rhythm.daypart === 'anytime') return true;
+  return rhythm.daypart === getCurrentHabitRhythmDaypart(params.now);
+}
+
+/**
+ * Multiplier applied to a habit's base reward when completed inside its rhythm
+ * window. Struggling habits get the headline boost; healthy habits get a smaller
+ * boost so the bonus is still visible to users who are on track.
+ */
+export function getHabitRhythmMultiplier(healthState: HabitHealthState | undefined): number {
+  return STRUGGLING_HEALTH_STATES.has(healthState ?? 'active')
+    ? HABIT_RHYTHM_BONUS_MULTIPLIER
+    : HABIT_RHYTHM_HEALTHY_MULTIPLIER;
 }
 
 export function getHabitRhythmBonusGold(params: {
@@ -117,10 +137,10 @@ export function getHabitRhythmBonusGold(params: {
   now?: Date;
 }): number | null {
   if (params.completed || !params.scheduledToday) return null;
-  if (!STRUGGLING_HEALTH_STATES.has(params.healthState ?? 'active')) return null;
   if (!isHabitInCurrentRhythmWindow({ schedule: params.schedule, now: params.now })) return null;
 
-  return Math.min(HABIT_RHYTHM_BONUS_CAP_GOLD, Math.max(params.baseGold, Math.round(params.baseGold * HABIT_RHYTHM_BONUS_MULTIPLIER)));
+  const multiplier = getHabitRhythmMultiplier(params.healthState);
+  return Math.min(HABIT_RHYTHM_BONUS_CAP_GOLD, Math.max(params.baseGold, Math.round(params.baseGold * multiplier)));
 }
 
 export function rankHabitsByRhythm<T extends { id: string; name: string; schedule: Json | null }>(params: {
