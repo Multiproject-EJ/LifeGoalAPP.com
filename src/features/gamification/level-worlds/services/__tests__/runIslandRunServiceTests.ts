@@ -113,6 +113,9 @@ import { islandStoryReaderComponentTests } from '../../narrative/__tests__/islan
 import { islandNarrativeOpeningFlowTests } from '../../narrative/__tests__/islandNarrativeOpeningFlow.test';
 import { islandNarrativeValidationTests, islandStoryManifestValidationTests } from '../../narrative/__tests__/islandNarrativeValidation.test';
 import { islandRunModalTextColorGuardTests } from './islandRunModalTextColorGuards.test';
+import { islandRunTechCollectionTests } from './islandRunTechCollection.test';
+import { islandRunTechCollectionPersistenceTests } from './islandRunTechCollectionPersistence.test';
+import { islandTechCollectionComponentTests } from './islandTechCollectionComponent.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -232,6 +235,9 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'combinedJourneyChestClaim', tests: combinedJourneyChestClaimTests },
   { label: 'combinedJourneyRewardClaimsRead', tests: combinedJourneyRewardClaimsReadTests },
   { label: 'combinedJourneyRewardBaseline', tests: combinedJourneyRewardBaselineTests },
+  { label: 'islandRunTechCollection', tests: islandRunTechCollectionTests },
+  { label: 'islandRunTechCollectionPersistence', tests: islandRunTechCollectionPersistenceTests },
+  { label: 'islandTechCollectionComponent', tests: islandTechCollectionComponentTests },
 ];
 
 async function main() {
