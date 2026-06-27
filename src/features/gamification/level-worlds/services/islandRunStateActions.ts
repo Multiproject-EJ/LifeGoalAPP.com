@@ -59,6 +59,11 @@ import {
   refreshIslandRunStateFromLocal,
 } from './islandRunStateStore';
 import { isIslandRunFeatureEnabled } from '../../../../config/islandRunFeatureFlags';
+import {
+  type IslandNarrativeSeenState,
+  isIslandNarrativeSeenStateEqual,
+  mergeIslandNarrativeSeenState,
+} from '../narrative/islandNarrativeSeenState';
 import { logIslandRunEntryDebug } from './islandRunEntryDebug';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import {
@@ -1546,6 +1551,14 @@ export interface ApplyStoryPrologueSeenMarkerOptions {
   triggerSource?: string;
 }
 
+export interface ApplyNarrativeSeenStateMarkerOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  /** Full local seen-ledger to union into the canonical record. */
+  narrativeSeenState: IslandNarrativeSeenState;
+  triggerSource?: string;
+}
+
 export interface ApplyCompanionBonusLastVisitKeyMarkerOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -2515,6 +2528,33 @@ export function applyStoryPrologueSeenMarker(options: ApplyStoryPrologueSeenMark
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_story_prologue_seen_marker',
+  });
+  return next;
+}
+
+/**
+ * Commits the cross-device narrative seen-ledger through the canonical store
+ * path. Unions the supplied (local) ledger with the current record so a beat
+ * seen on any device stays suppressed everywhere. Non-gameplay state — never
+ * touches dice, rewards, stops, builds, bosses, or travel.
+ */
+export function applyNarrativeSeenStateMarker(options: ApplyNarrativeSeenStateMarkerOptions): IslandRunGameStateRecord {
+  const { session, client, narrativeSeenState, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const merged = mergeIslandNarrativeSeenState(current.narrativeSeenState, narrativeSeenState);
+  if (isIslandNarrativeSeenStateEqual(current.narrativeSeenState, merged)) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    narrativeSeenState: merged,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_narrative_seen_state_marker',
   });
   return next;
 }

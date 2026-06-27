@@ -2,6 +2,10 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { persistIslandRunProfileMetadata } from './islandRunProfile';
 import type { IslandRunRuntimeState } from './islandRunRuntimeState';
 import type { IslandRunRuntimeHydrationSource } from './islandRunRuntimeTelemetry';
+import {
+  type IslandNarrativeSeenState,
+  mergeIslandNarrativeSeenState,
+} from '../narrative/islandNarrativeSeenState';
 import type {
   CreatureCollectionRuntimeEntry,
   IslandRunFirstSessionTutorialState,
@@ -43,6 +47,7 @@ export interface IslandRunRuntimeStateBackend {
       welcomePackClaimed?: boolean;
       welcomePackRewardBundleClaimed?: boolean;
       storyPrologueSeen?: boolean;
+      narrativeSeenState?: IslandNarrativeSeenState;
       audioEnabled?: boolean;
       musicEnabled?: boolean;
       sfxEnabled?: boolean;
@@ -185,6 +190,9 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         typeof patch.storyPrologueSeen === 'boolean'
           ? patch.storyPrologueSeen
           : current.storyPrologueSeen,
+      narrativeSeenState: patch.narrativeSeenState
+        ? mergeIslandNarrativeSeenState(current.narrativeSeenState, patch.narrativeSeenState)
+        : current.narrativeSeenState,
       audioEnabled: nextAudioEnabled,
       musicEnabled: nextMusicEnabled,
       sfxEnabled: nextSfxEnabled,

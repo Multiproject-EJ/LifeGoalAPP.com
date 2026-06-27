@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getIslandNarrativeDefinition } from './islandNarrativeRegistry';
 import type { IslandNarrativeBeat } from './islandNarrativeTypes';
+import {
+  type IslandNarrativeSeenState,
+  mergeIslandNarrativeSeenState,
+} from './islandNarrativeSeenState';
 
 export type ActiveIslandStoryEpisode = {
   kind: 'global_prologue' | 'island_arrival' | 'island_resolution';
@@ -31,10 +35,7 @@ export type ActiveIslandNarrativeToast = {
   durationMs: number;
 } | null;
 
-type SeenState = {
-  beats: Record<string, number>;
-  episodes: Record<string, number>;
-};
+type SeenState = IslandNarrativeSeenState;
 
 export type IslandNarrativeOpeningFlowInput = {
   userId?: string | null;
@@ -53,6 +54,18 @@ export type IslandNarrativeOpeningFlowInput = {
   isIslandClearTravelReady: boolean;
   activeStoryEpisode: ActiveIslandStoryEpisode;
   setActiveStoryEpisode: (episode: ActiveIslandStoryEpisode) => void;
+  /**
+   * Canonical cross-device seen-ledger from the runtime record. Unioned with
+   * the local (localStorage) ledger so a beat seen on another device stays
+   * suppressed here.
+   */
+  persistedNarrativeSeenState?: IslandNarrativeSeenState | null;
+  /**
+   * Persist the (local) seen-ledger to the canonical record. The board wires
+   * this to the canonical seen-state action so story memory follows the player
+   * across devices. The hook itself stays free of gameplay/persistence imports.
+   */
+  onPersistNarrativeSeen?: (next: IslandNarrativeSeenState) => void;
 };
 
 export const ISLAND_001_NARRATIVE_SEEN_BEATS = {
@@ -195,6 +208,8 @@ export function useIslandNarrativeOpeningFlow({
   isIslandClearTravelReady,
   activeStoryEpisode,
   setActiveStoryEpisode,
+  persistedNarrativeSeenState,
+  onPersistNarrativeSeen,
 }: IslandNarrativeOpeningFlowInput) {
   const storageKey = useMemo(() => getIslandNarrativeSeenStorageKey(userId), [userId]);
   const [queue, setQueue] = useState<IslandNarrativeControllerBeatId[]>([]);
@@ -251,7 +266,10 @@ export function useIslandNarrativeOpeningFlow({
     }
     seenStateRef.current = next;
     writeSeenState(storageKey, next);
-  }, [storageKey]);
+    // Mirror to the canonical record so story memory follows the player across
+    // devices. Local write above keeps the offline-immediate guarantee.
+    onPersistNarrativeSeen?.(next);
+  }, [storageKey, onPersistNarrativeSeen]);
 
   const enqueueBeat = useCallback((beatId: IslandNarrativeControllerBeatId) => {
     if (!isEligible || isSeen(beatId)) return;
@@ -260,6 +278,17 @@ export function useIslandNarrativeOpeningFlow({
       return [...current, beatId].sort((a, b) => QUEUE_PRIORITY[a] - QUEUE_PRIORITY[b]);
     });
   }, [isEligible, isSeen]);
+
+  // Cross-device merge: when the canonical seen-ledger hydrates or updates from
+  // another device, union it into the local ref, mirror to localStorage, and
+  // drop any now-seen beats still waiting in the queue.
+  useEffect(() => {
+    if (!persistedNarrativeSeenState) return;
+    const merged = mergeIslandNarrativeSeenState(seenStateRef.current, persistedNarrativeSeenState);
+    seenStateRef.current = merged;
+    writeSeenState(storageKey, merged);
+    setQueue((current) => current.filter((beatId) => !isSeen(beatId)));
+  }, [persistedNarrativeSeenState, storageKey, isSeen]);
 
   useEffect(() => {
     if (!isEligible || !isGlobalPrologueSeen || isGlobalPrologueActive) return;
