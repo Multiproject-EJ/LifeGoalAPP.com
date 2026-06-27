@@ -2240,6 +2240,18 @@ export function IslandRunBoardPrototype({
     showTopbarMenu,
   ]);
 
+  useEffect(() => {
+    if (!showTopbarMenu || !showEggReadyBanner) return;
+    if (activeEgg) {
+      try {
+        window.localStorage.setItem(getEggReadyBannerKey(session.user.id, activeEgg.setAtMs), '1');
+      } catch {
+        // ignore localStorage failures
+      }
+    }
+    setShowEggReadyBanner(false);
+  }, [activeEgg, session.user.id, showEggReadyBanner, showTopbarMenu]);
+
   // B3-4: utility stop state
   const [utilityInteracted, setUtilityInteracted] = useState(false);
   const [islandIntention, setIslandIntention] = useState('');
