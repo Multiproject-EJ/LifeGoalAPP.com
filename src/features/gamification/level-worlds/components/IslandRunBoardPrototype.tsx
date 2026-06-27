@@ -44,7 +44,6 @@ import {
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { IslandInhabitantFlow, type IslandInhabitantFlowResult } from '../inhabitants/components/IslandInhabitantFlow';
 import { getIslandConversationDefinition, getIslandInhabitantDefinition, getIslandInhabitantTopics } from '../inhabitants/islandInhabitantRegistry';
-import { isIslandInhabitantFlowBlocked, mapIslandInhabitantFlowBlockers } from '../inhabitants/islandInhabitantFlowBlocking';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
@@ -473,6 +472,8 @@ const DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY = 'islandRunDebugTimedEventOverrideNo
 // Only one board profile ships today. Historically this was query-param gated,
 // but every branch collapsed to the same result — so the helper was removed.
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark40_ring');
+// Tile 0 is the visual top of the spark40 ring (see TILE_ANCHORS_40 rotation).
+const ISLAND_ONE_CARETAKER_TILE_INDEX = 0;
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
 // Temporary diagnostics for Stop 1↔2 flicker + roll lock on Island 120 startup.
 const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND = 120;
@@ -1467,7 +1468,6 @@ export function IslandRunBoardPrototype({
   const topbarMenuRef = useRef<HTMLDivElement>(null);
   const topbarMenuFirstItemRef = useRef<HTMLButtonElement>(null);
   const audioMenuFirstItemRef = useRef<HTMLButtonElement>(null);
-  const talkToCaretakerButtonRef = useRef<HTMLButtonElement>(null);
   // M16D: track previous shard count to detect island-travel reset (snap fill bar to 0, no animation)
   const prevShardsRef = useRef<number>(0);
   const [shardFillNoTransition, setShardFillNoTransition] = useState(false);
@@ -1495,7 +1495,6 @@ export function IslandRunBoardPrototype({
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
   const [isIslandInhabitantFlowOpen, setIsIslandInhabitantFlowOpen] = useState(false);
-  const [isCaretakerFlowOpenPending, setIsCaretakerFlowOpenPending] = useState(false);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -5991,6 +5990,15 @@ export function IslandRunBoardPrototype({
           }
         }
 
+        const didPassCaretakerTile = runtimeStateRef.current.currentIslandNumber === 1
+          && rollResult.hopSequence.includes(ISLAND_ONE_CARETAKER_TILE_INDEX);
+        if (didPassCaretakerTile) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          openCaretakerFlow('caretaker_tile_pass');
+          return true;
+        }
+
     // Stops are side-quest structures — the player piece never lands on a stop.
     // Encounter tiles open their challenge modal; every other tile funnels through
     // resolveTileLanding for essence / feed / hazard outcomes.
@@ -10047,51 +10055,18 @@ export function IslandRunBoardPrototype({
     });
     setRuntimeState(next);
   };
-  const caretakerFlowBlockers = mapIslandInhabitantFlowBlockers({
-    isStoryReaderOpen: showStoryReader,
-    isNarrativeDialogueOpen: Boolean(islandNarrativeOpeningFlow.activeDialogue),
-    isActiveStopOpen: Boolean(activeStopId || ticketPromptStopId || lockedStopInfoStopId),
-    isBuildOpen: showBuildPanel,
-    isShopOpen: showShopPanel,
-    isMarketOpen: showMarketPanel,
-    isSanctuaryOpen: showSanctuaryPanel,
-    isMinigameOpen: Boolean(activeLaunchedMinigameId),
-    isBossOpen: bossTrialPhase !== 'idle',
-    isTravelOpen: showTravelOverlay,
-    isClearCelebrationOpen: showIslandClearCelebration || showWinCelebrationModal,
-    isClaimOpen: showClaimModal || Boolean(devPackOpeningPrototype) || showFirstCreaturePackModal || showWelcomePackModal,
-    isHatchRevealOpen: Boolean(hatchReveal || showEggManiaModal || showHatcheryCompassModal),
-    isPurchasePromptOpen: Boolean(walletStoreModalKind || pairedThemeOfferModal),
-    isOutOfDicePromptOpen: showOutOfDicePurchasePrompt,
-    isRewardDetailsOpen: showRewardDetailsModal || isRewardBarClaiming,
-    isPlaceholderOpen: Boolean(activePlaceholder || showStickerAlbumDialog || techCollectionModal || dormantDoorMiniGame || trafficLightCoinFlip),
-    isBoardMoving: isRolling || pendingHopSequence !== null || isAnimatingRollRef.current || isAutoRolling,
-    isInhabitantFlowOpen: isIslandInhabitantFlowOpen,
-    isOtherModalOpen: showEntryAudioModal || showOnboardingBooster || showFirstRunCelebration || showHatcheryL1Celebration || showPerfectCompanionOnboardingHint || showEncounterModal || showGamifiedJournalCard,
-    isHostTopbarMenuOpen: showTopbarMenu,
-    isOverviewCameraMode: cameraMode === 'overview_manual',
-    isHudExpanded: !isHudCollapsed,
-    areCameraControlsVisible: true,
-    isDebugPanelOpen: isDevPanelOpen || showDebugPanel || showDebug,
-    isAudioMenuOpen: showAudioMenu,
-  });
-  const isCaretakerFlowBlocked = isIslandInhabitantFlowBlocked(caretakerFlowBlockers);
   const shouldShowCaretakerTalkAction = isIslandOneActiveForCaretaker && hasCaretakerContent;
-  const caretakerTalkUnavailableMessage = 'Caretaker is unavailable while another island activity is open.';
   const resolvedCaretakerBackgroundArtSrc = islandArtAmbientBackgroundSrc || islandBackgroundSrc;
-  const handleOpenCaretakerFlow = () => {
-    if (!shouldShowCaretakerTalkAction || isIslandInhabitantFlowBlocked(caretakerFlowBlockers)) return;
-    setIsCaretakerFlowOpenPending(true);
+  const openCaretakerFlow = useCallback((source: 'caretaker_tile_pass' | 'dev_hud') => {
+    if (!shouldShowCaretakerTalkAction) return;
     setShowTopbarMenu(false);
-  };
-  useEffect(() => {
-    if (!isCaretakerFlowOpenPending || showTopbarMenu) return;
-    setIsCaretakerFlowOpenPending(false);
-    if (!shouldShowCaretakerTalkAction || isIslandInhabitantFlowBlocked(caretakerFlowBlockers)) return;
+    setShowAudioMenu(false);
     setIsIslandInhabitantFlowOpen(true);
-  }, [caretakerFlowBlockers, isCaretakerFlowOpenPending, shouldShowCaretakerTalkAction, showTopbarMenu]);
+    setLandingText(source === 'caretaker_tile_pass'
+      ? '🧙 You passed the Caretaker. The island pauses to listen.'
+      : '🧙 Dev: opening the Island 1 Caretaker flow.');
+  }, [shouldShowCaretakerTalkAction]);
   const handleCaretakerFlowClose = (result: IslandInhabitantFlowResult) => {
-    setIsCaretakerFlowOpenPending(false);
     setIsIslandInhabitantFlowOpen(false);
     if (result.closeReason === 'missing_content') {
       console.warn('[IslandRun] Caretaker inhabitant flow closed with missing content.', result);
@@ -10581,6 +10556,10 @@ export function IslandRunBoardPrototype({
             <div className="island-run-prototype__qa-controls" role="group" aria-label="DEV MODE actions">
               <p className="island-run-prototype__qa-label">🧪 DEV MODE — canonical actions only</p>
               <div className="island-run-prototype__status-row">
+                <span className="island-run-prototype__stat-chip">Caretaker</span>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => openCaretakerFlow('dev_hud')} disabled={!shouldShowCaretakerTalkAction}>🧙 Talk to Caretaker</button>
+              </div>
+              <div className="island-run-prototype__status-row">
                 <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Grant Dice</span>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantDice(10)}>+10</button>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={() => handleDevGrantDice(50)}>+50</button>
@@ -10771,26 +10750,6 @@ export function IslandRunBoardPrototype({
               >
                 {isBackgroundHidden ? 'Show background' : 'Hide background'}
               </button>
-              {shouldShowCaretakerTalkAction ? (
-                <button
-                  ref={talkToCaretakerButtonRef}
-                  type="button"
-                  className="island-run-board__topbar-menu-item island-run-board__topbar-menu-item--caretaker"
-                  aria-label="Talk to Caretaker"
-                  aria-describedby={isCaretakerFlowBlocked ? 'island-run-caretaker-talk-unavailable' : undefined}
-                  title={isCaretakerFlowBlocked ? caretakerTalkUnavailableMessage : 'Talk to Caretaker'}
-                  disabled={isCaretakerFlowBlocked}
-                  onClick={handleOpenCaretakerFlow}
-                >
-                  <span aria-hidden="true">🧙</span>
-                  <span>Talk to Caretaker</span>
-                </button>
-              ) : null}
-              {shouldShowCaretakerTalkAction && isCaretakerFlowBlocked ? (
-                <p id="island-run-caretaker-talk-unavailable" className="island-run-board__topbar-menu-hint">
-                  {caretakerTalkUnavailableMessage}
-                </p>
-              ) : null}
               <button
                 type="button"
                 className="island-run-board__topbar-menu-item"

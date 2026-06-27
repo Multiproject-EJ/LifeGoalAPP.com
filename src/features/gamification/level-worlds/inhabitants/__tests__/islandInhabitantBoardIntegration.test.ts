@@ -8,12 +8,14 @@ function includes(expected: string) { assert(boardSource.includes(expected), `Mi
 function notIncludes(forbidden: string) { assert(!boardSource.includes(forbidden), `Forbidden ${forbidden}`); }
 
 export const islandInhabitantBoardIntegrationTests: TestCase[] = [
-  { name: 'board integrates one Island 1 Talk to Caretaker topbar menu action', run: () => {
+  { name: 'board integrates Island 1 Caretaker as an automatic top-ring tile encounter and dev-only manual action', run: () => {
     includes('runtimeState.currentIslandNumber === 1');
-    includes('Talk to Caretaker');
-    includes('island-run-board__topbar-menu-item--caretaker');
-    includes('type="button"');
-    includes('aria-label="Talk to Caretaker"');
+    includes('const ISLAND_ONE_CARETAKER_TILE_INDEX = 0;');
+    includes('rollResult.hopSequence.includes(ISLAND_ONE_CARETAKER_TILE_INDEX)');
+    includes("openCaretakerFlow('caretaker_tile_pass')");
+    includes("openCaretakerFlow('dev_hud')");
+    includes('🧙 Talk to Caretaker');
+    notIncludes('island-run-board__topbar-menu-item--caretaker');
   } },
   { name: 'board resolves caretaker content through registries at runtime', run: () => {
     includes("getIslandInhabitantDefinition('luma-caretaker')");
@@ -21,19 +23,18 @@ export const islandInhabitantBoardIntegrationTests: TestCase[] = [
     includes('getIslandConversationDefinition(topic.conversationId)');
     includes('caretakerConversations.length === caretakerTopics.length');
   } },
-  { name: 'board gates caretaker flow with pure collision helper', run: () => {
-    includes('mapIslandInhabitantFlowBlockers({');
-    ['isStoryReaderOpen', 'isNarrativeDialogueOpen', 'isActiveStopOpen', 'isBuildOpen', 'isShopOpen', 'isMarketOpen', 'isSanctuaryOpen', 'isMinigameOpen', 'isBossOpen', 'isTravelOpen', 'isClearCelebrationOpen', 'isClaimOpen', 'isPurchasePromptOpen', 'isOutOfDicePromptOpen', 'isBoardMoving', 'isInhabitantFlowOpen'].forEach(includes);
-    includes('Caretaker is unavailable while another island activity is open.');
+  { name: 'board caretaker flow no longer uses collision blockers', run: () => {
+    notIncludes('mapIslandInhabitantFlowBlockers({');
+    notIncludes('isIslandInhabitantFlowBlocked(caretakerFlowBlockers)');
+    notIncludes('Caretaker is unavailable while another island activity is open.');
+    includes('setIsIslandInhabitantFlowOpen(true)');
   } },
-  { name: 'board dismisses egg-ready dialog before caretaker activation via host topbar', run: () => {
+  { name: 'board keeps existing egg-ready topbar cleanup separate from caretaker activation', run: () => {
     includes('if (!showTopbarMenu || !showEggReadyBanner) return;');
     includes('setShowEggReadyBanner(false);');
-    includes('isHatchRevealOpen: Boolean(hatchReveal || showEggReadyBanner || showEggManiaModal || showHatcheryCompassModal)');
   } },
   { name: 'board opens and closes IslandInhabitantFlow presentation-only', run: () => {
     includes('<IslandInhabitantFlow');
-    includes('setIsCaretakerFlowOpenPending(true)');
     includes('setIsIslandInhabitantFlowOpen(true)');
     includes('setIsIslandInhabitantFlowOpen(false)');
     includes("closeReason === 'missing_content'");
@@ -41,6 +42,6 @@ export const islandInhabitantBoardIntegrationTests: TestCase[] = [
     includes('backgroundArtSrc={resolvedCaretakerBackgroundArtSrc}');
   } },
   { name: 'board integration does not add prohibited automatic or persistence behavior', run: () => {
-    ['localStorage.setItem(\'island_inhabitant', 'sessionStorage.setItem(\'island_inhabitant', 'autoOpenCaretaker', 'completeCaretaker', 'rewardCaretaker', 'persistIslandRunRuntimeStatePatch({ caretaker'].forEach(notIncludes);
+    ['localStorage.setItem(\'island_inhabitant', 'sessionStorage.setItem(\'island_inhabitant', 'completeCaretaker', 'rewardCaretaker', 'persistIslandRunRuntimeStatePatch({ caretaker'].forEach(notIncludes);
   } },
 ];
