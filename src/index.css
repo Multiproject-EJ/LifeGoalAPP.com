@@ -6342,12 +6342,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-habit-home .time-bound-offers {
-  justify-items: center;
-  padding-inline: 0.1rem;
+  justify-items: stretch;
+  padding-inline: 0;
 }
 
 .mobile-habit-home .time-bound-offers__item {
-  width: min(100%, clamp(4.8rem, 22vw, 6.6rem));
+  width: 100%;
   box-sizing: border-box;
 }
 
