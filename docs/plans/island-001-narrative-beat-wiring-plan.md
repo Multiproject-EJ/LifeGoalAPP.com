@@ -218,15 +218,26 @@ Each PR is independently shippable and additive. Feature-flag the new beats
 - **Acceptance:** majority-restored fires once; boss-start framing shows before
   the trial; mid-reveal either fires or is gracefully merged into B29.
 
-### PR 5 — Durable seen-state (optional, product-gated)
-- Today seen-state is **localStorage only** (`island_run_narrative_seen_v1_*`).
-  For cross-device suppression, add a narrative-seen jsonb to the runtime record
-  (new migration) **read/written via the canonical persistence path only** — no
-  writes from React. This is the one place a schema change is even considered,
-  and only if product wants cross-device story memory. Until then, localStorage
-  is the contract-approved Phase-1 mechanism.
-- **Acceptance:** a beat seen on device A is suppressed on device B; offline
-  still falls back to localStorage; no gameplay field touched.
+### PR 5 — Durable seen-state ✅ SHIPPED (product-approved)
+- **Done.** Cross-device story memory is implemented. A `narrativeSeenState`
+  jsonb (`narrative_seen_state`, migration `0265`) now lives on the runtime
+  record and is read/written via the canonical persistence path
+  (`applyNarrativeSeenStateMarker`) — never from React directly. localStorage
+  (`island_run_narrative_seen_v1_*`) remains the offline-immediate mirror; the
+  two layers are **unioned** on hydration (a beat seen anywhere stays
+  suppressed), keeping the most-recent timestamp per key.
+- Files: `narrative/islandNarrativeSeenState.ts` (shape + pure helpers),
+  `islandRunGameStateStore.ts`, `islandRunRuntimeStateBackend.ts`,
+  `islandRunRuntimeState.ts`, `islandRunStateActions.ts`,
+  `islandRunProgressReset.ts`, `useIslandNarrativeOpeningFlow.ts`,
+  `IslandRunBoardPrototype.tsx`, migration `0265`, tests in
+  `narrative/__tests__/islandNarrativeSeenState.test.ts`.
+- **Acceptance (met):** a beat seen on device A is suppressed on device B;
+  offline falls back to localStorage; no gameplay field touched; `tsc -b` clean;
+  island-run suite green.
+- This shipped **ahead of** the controller refactor (PR 1) because it is
+  additive and works for the 7 live beats today and any future beats
+  automatically. PR 1–4 still follow to wire the remaining ~23 beats.
 
 ### PR 6 — QA, fallbacks, accessibility polish
 - Media-fail → text-only panel; audio-off → captions; reduced-motion → stills.
