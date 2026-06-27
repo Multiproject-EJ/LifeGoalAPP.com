@@ -22,12 +22,13 @@ export const islandInhabitantBoardIntegrationTests: TestCase[] = [
     includes('caretakerConversations.length === caretakerTopics.length');
   } },
   { name: 'board gates caretaker flow with pure collision helper', run: () => {
-    includes('isIslandInhabitantFlowBlocked({');
+    includes('mapIslandInhabitantFlowBlockers({');
     ['isStoryReaderOpen', 'isNarrativeDialogueOpen', 'isActiveStopOpen', 'isBuildOpen', 'isShopOpen', 'isMarketOpen', 'isSanctuaryOpen', 'isMinigameOpen', 'isBossOpen', 'isTravelOpen', 'isClearCelebrationOpen', 'isClaimOpen', 'isPurchasePromptOpen', 'isOutOfDicePromptOpen', 'isBoardMoving', 'isInhabitantFlowOpen'].forEach(includes);
     includes('Caretaker is unavailable while another island activity is open.');
   } },
   { name: 'board opens and closes IslandInhabitantFlow presentation-only', run: () => {
     includes('<IslandInhabitantFlow');
+    includes('setIsCaretakerFlowOpenPending(true)');
     includes('setIsIslandInhabitantFlowOpen(true)');
     includes('setIsIslandInhabitantFlowOpen(false)');
     includes("closeReason === 'missing_content'");

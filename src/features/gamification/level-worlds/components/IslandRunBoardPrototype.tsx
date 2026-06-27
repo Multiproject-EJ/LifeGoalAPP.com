@@ -44,7 +44,7 @@ import {
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { IslandInhabitantFlow, type IslandInhabitantFlowResult } from '../inhabitants/components/IslandInhabitantFlow';
 import { getIslandConversationDefinition, getIslandInhabitantDefinition, getIslandInhabitantTopics } from '../inhabitants/islandInhabitantRegistry';
-import { isIslandInhabitantFlowBlocked } from '../inhabitants/islandInhabitantFlowBlocking';
+import { isIslandInhabitantFlowBlocked, mapIslandInhabitantFlowBlockers } from '../inhabitants/islandInhabitantFlowBlocking';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
@@ -1495,6 +1495,7 @@ export function IslandRunBoardPrototype({
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
   const [isIslandInhabitantFlowOpen, setIsIslandInhabitantFlowOpen] = useState(false);
+  const [isCaretakerFlowOpenPending, setIsCaretakerFlowOpenPending] = useState(false);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -10034,7 +10035,7 @@ export function IslandRunBoardPrototype({
     });
     setRuntimeState(next);
   };
-  const isCaretakerFlowBlocked = isIslandInhabitantFlowBlocked({
+  const caretakerFlowBlockers = mapIslandInhabitantFlowBlockers({
     isStoryReaderOpen: showStoryReader,
     isNarrativeDialogueOpen: Boolean(islandNarrativeOpeningFlow.activeDialogue),
     isActiveStopOpen: Boolean(activeStopId || ticketPromptStopId || lockedStopInfoStopId),
@@ -10055,16 +10056,30 @@ export function IslandRunBoardPrototype({
     isBoardMoving: isRolling || pendingHopSequence !== null || isAnimatingRollRef.current || isAutoRolling,
     isInhabitantFlowOpen: isIslandInhabitantFlowOpen,
     isOtherModalOpen: showEntryAudioModal || showOnboardingBooster || showFirstRunCelebration || showHatcheryL1Celebration || showPerfectCompanionOnboardingHint || showEncounterModal || showGamifiedJournalCard,
+    isHostTopbarMenuOpen: showTopbarMenu,
+    isOverviewCameraMode: cameraMode === 'overview_manual',
+    isHudExpanded: !isHudCollapsed,
+    areCameraControlsVisible: true,
+    isDebugPanelOpen: isDevPanelOpen || showDebugPanel || showDebug,
+    isAudioMenuOpen: showAudioMenu,
   });
+  const isCaretakerFlowBlocked = isIslandInhabitantFlowBlocked(caretakerFlowBlockers);
   const shouldShowCaretakerTalkAction = isIslandOneActiveForCaretaker && hasCaretakerContent;
   const caretakerTalkUnavailableMessage = 'Caretaker is unavailable while another island activity is open.';
   const resolvedCaretakerBackgroundArtSrc = islandArtAmbientBackgroundSrc || islandBackgroundSrc;
   const handleOpenCaretakerFlow = () => {
-    if (!shouldShowCaretakerTalkAction || isCaretakerFlowBlocked) return;
+    if (!shouldShowCaretakerTalkAction || isIslandInhabitantFlowBlocked(caretakerFlowBlockers)) return;
+    setIsCaretakerFlowOpenPending(true);
     setShowTopbarMenu(false);
-    setIsIslandInhabitantFlowOpen(true);
   };
+  useEffect(() => {
+    if (!isCaretakerFlowOpenPending || showTopbarMenu) return;
+    setIsCaretakerFlowOpenPending(false);
+    if (!shouldShowCaretakerTalkAction || isIslandInhabitantFlowBlocked(caretakerFlowBlockers)) return;
+    setIsIslandInhabitantFlowOpen(true);
+  }, [caretakerFlowBlockers, isCaretakerFlowOpenPending, shouldShowCaretakerTalkAction, showTopbarMenu]);
   const handleCaretakerFlowClose = (result: IslandInhabitantFlowResult) => {
+    setIsCaretakerFlowOpenPending(false);
     setIsIslandInhabitantFlowOpen(false);
     if (result.closeReason === 'missing_content') {
       console.warn('[IslandRun] Caretaker inhabitant flow closed with missing content.', result);
