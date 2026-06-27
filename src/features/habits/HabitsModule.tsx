@@ -34,6 +34,12 @@ import {
 } from './progressGrading';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { HabitPauseDialog } from './HabitPauseDialog';
+import {
+  DEFAULT_HABIT_RHYTHM_DAYPART,
+  buildScheduleWithHabitRhythm,
+  extractHabitRhythm,
+  type HabitRhythmDaypart,
+} from './habitRhythm';
 
 /**
  * Convert a wizard ScheduleDraft to the habits_v2 DB schedule JSON format.
@@ -50,6 +56,14 @@ function draftScheduleToDbSchedule(s: ScheduleDraft): Record<string, unknown> {
     default:
       return { mode: 'daily' };
   }
+}
+
+function draftScheduleToDbScheduleWithRhythm(draft: HabitWizardDraft): Record<string, unknown> {
+  const daypart: HabitRhythmDaypart = draft.rhythmDaypart ?? DEFAULT_HABIT_RHYTHM_DAYPART;
+  return buildScheduleWithHabitRhythm(draftScheduleToDbSchedule(draft.schedule), {
+    daypart,
+    source: 'user',
+  });
 }
 
 function buildDurationColumnPatchFromDraft(draft: HabitWizardDraft): {
@@ -1308,6 +1322,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           days: Array.isArray(s?.days) ? (s.days as number[]) : undefined,
         };
       })(),
+      rhythmDaypart: extractHabitRhythm(habit.schedule as Database['public']['Tables']['habits_v2']['Row']['schedule']).daypart,
       remindersEnabled: false,
       reminderTimes: [],
       duration:
@@ -1421,7 +1436,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           type: draft.type,
           target_num: draft.targetValue ?? null,
           target_unit: draft.targetUnit ?? null,
-          schedule: draftScheduleToDbSchedule(draft.schedule) as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
+          schedule: draftScheduleToDbScheduleWithRhythm(draft) as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
           habit_environment: draft.habitEnvironment ?? null,
           environment_context: environmentContextToJson(draft.environmentContext ?? null),
           environment_score: draft.environmentScore ?? null,
@@ -1430,7 +1445,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Row']['done_ish_config'],
           autoprog: {
             ...(existingAutoprog ?? buildDefaultAutoProgressState({
-              schedule: draftScheduleToDbSchedule(draft.schedule) as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
+              schedule: draftScheduleToDbScheduleWithRhythm(draft) as unknown as Database['public']['Tables']['habits_v2']['Row']['schedule'],
               target: draft.targetValue ?? null,
             })),
             creation_context: {
@@ -1505,7 +1520,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           type: draft.type,
           target_num: draft.targetValue ?? null,
           target_unit: draft.targetUnit ?? null,
-          schedule: draftScheduleToDbSchedule(draft.schedule) as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
+          schedule: draftScheduleToDbScheduleWithRhythm(draft) as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
           habit_environment: draft.habitEnvironment ?? null,
           environment_context: environmentContextToJson(draft.environmentContext ?? null),
           environment_score: draft.environmentScore ?? null,
@@ -1513,7 +1528,7 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
           ...buildDurationColumnPatchFromDraft(draft),
           done_ish_config: doneIshConfig as unknown as Database['public']['Tables']['habits_v2']['Insert']['done_ish_config'],
           autoprog: buildDefaultAutoProgressState({
-            schedule: draftScheduleToDbSchedule(draft.schedule) as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
+            schedule: draftScheduleToDbScheduleWithRhythm(draft) as unknown as Database['public']['Tables']['habits_v2']['Insert']['schedule'],
             target: draft.targetValue ?? null,
           }) as Database['public']['Tables']['habits_v2']['Insert']['autoprog'],
           archived: false,
