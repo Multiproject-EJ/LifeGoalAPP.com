@@ -27,11 +27,15 @@ try {
   const { runAllHabitChainLogicTests } = require(
     path.join(outDir, 'features/habits/__tests__/habitChainLogic.test.js'),
   );
+  const { runAllHabitRhythmTests } = require(
+    path.join(outDir, 'features/habits/__tests__/habitRhythm.test.js'),
+  );
   runAllTimeBoundOfferSortTests();
   await runAllDailyOfferClaimTests();
   runAllWisdomTreeGrowthTests();
   runAllHabitCoachTests();
   runAllHabitChainLogicTests();
+  runAllHabitRhythmTests();
   console.log('habit-offer-tests: all assertions passed');
 } finally {
   rmSync(outDir, { recursive: true, force: true });

@@ -9,6 +9,12 @@ import {
   normalizeEnvironmentContext,
   type EnvironmentContextV1,
 } from '../environment/environmentSchema';
+import {
+  DEFAULT_HABIT_RHYTHM_DAYPART,
+  HABIT_RHYTHM_WINDOWS,
+  getHabitRhythmLabel,
+  type HabitRhythmDaypart,
+} from './habitRhythm';
 import './HabitWizard.css';
 
 export interface ScheduleDraft {
@@ -25,6 +31,7 @@ export interface HabitWizardDraft {
   targetValue?: number | null;
   targetUnit?: string | null;
   schedule: ScheduleDraft;
+  rhythmDaypart?: HabitRhythmDaypart;
   remindersEnabled?: boolean;
   reminderTimes?: string[];
   duration?: {
@@ -73,6 +80,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
   const [scheduleChoice, setScheduleChoice] = useState<ScheduleChoice>('every_day');
   const [timesPerWeek, setTimesPerWeek] = useState(3);
   const [specificDays, setSpecificDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [rhythmDaypart, setRhythmDaypart] = useState<HabitRhythmDaypart>(DEFAULT_HABIT_RHYTHM_DAYPART);
 
   const [targetValue, setTargetValue] = useState<number | undefined>(undefined);
   const [targetUnit, setTargetUnit] = useState('');
@@ -113,6 +121,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
     setScheduleChoice(initialDraft.schedule.choice);
     setTimesPerWeek(initialDraft.schedule.timesPerWeek ?? 3);
     setSpecificDays(initialDraft.schedule.days ?? [1, 2, 3, 4, 5]);
+    setRhythmDaypart(initialDraft.rhythmDaypart ?? DEFAULT_HABIT_RHYTHM_DAYPART);
     setTargetValue(initialDraft.targetValue ?? undefined);
     setTargetUnit(initialDraft.targetUnit || '');
     setDurationMode(initialDraft.duration?.mode ?? 'none');
@@ -214,6 +223,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
         ...(scheduleChoice === 'x_per_week' && { timesPerWeek: Math.max(1, Math.min(7, timesPerWeek)) }),
         ...(scheduleChoice === 'specific_days' && { days: specificDays }),
       },
+      rhythmDaypart,
       remindersEnabled,
       reminderTimes: remindersEnabled && reminderTime ? [reminderTime] : [],
       duration:
@@ -360,6 +370,26 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
             </div>
           )}
 
+          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem', marginBottom: '1rem' }}>
+            <label htmlFor="habit-rhythm-daypart">Best time of day</label>
+            <select
+              id="habit-rhythm-daypart"
+              value={rhythmDaypart}
+              onChange={(e) => setRhythmDaypart(e.target.value as HabitRhythmDaypart)}
+              style={{ width: '100%', marginBottom: '0.5rem' }}
+            >
+              {HABIT_RHYTHM_WINDOWS.map((window) => (
+                <option key={window.daypart} value={window.daypart}>
+                  {window.emoji} {window.label}
+                </option>
+              ))}
+              <option value="anytime">🕒 Anytime / no preference</option>
+            </select>
+            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
+              We use this to lift the right habits at the right time. Anytime habits use a normal daytime rhythm so every habit has a predictable slot.
+            </p>
+          </div>
+
           <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
             <p style={{ margin: '0 0 0.5rem', fontWeight: 600 }}>Program length</p>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -427,6 +457,7 @@ export function HabitWizard({ onCancel, onCompleteDraft, initialDraft }: HabitWi
             <p style={{ margin: '0.25rem 0 0' }}><strong>Intent:</strong> {intent === 'build' ? 'Build good behavior' : 'Break/reduce bad behavior'}</p>
             <p style={{ margin: '0.25rem 0 0' }}><strong>Type:</strong> {type}</p>
             <p style={{ margin: '0.25rem 0 0' }}><strong>Schedule:</strong> {scheduleChoice === 'every_day' ? 'Every day' : scheduleChoice === 'x_per_week' ? `${timesPerWeek} times/week` : `${specificDays.length} specific days`}</p>
+            <p style={{ margin: '0.25rem 0 0' }}><strong>Best time:</strong> {getHabitRhythmLabel(rhythmDaypart)}</p>
             <p style={{ margin: '0.25rem 0 0' }}><strong>Program length:</strong> {durationMode === 'fixed_window' ? `${durationValue} ${durationUnit}, then ${durationOnEnd}` : 'No end date'}</p>
             <p style={{ margin: '0.25rem 0 0' }}><strong>Reminders:</strong> {remindersEnabled ? `On at ${reminderTime}` : 'Off'}</p>
           </div>

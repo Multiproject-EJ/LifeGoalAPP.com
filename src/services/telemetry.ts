@@ -60,6 +60,7 @@ export type TelemetryEventType =
   | 'habit_time_limited_offer_scheduled'
   | 'habit_time_limited_offer_claimed'
   | 'habit_time_limited_offer_expired'
+  | 'habit_rhythm_bonus_claimed'
   | 'goal_coach_chat_sent'
   | 'goal_coach_chat_draft_received'
   | 'goal_coach_chat_goal_created'

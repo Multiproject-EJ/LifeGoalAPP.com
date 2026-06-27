@@ -90,6 +90,15 @@ import {
   isEligibleTimeLimitedOfferHabit,
   rankHabitsForTimeLimitedOffer,
 } from './timeLimitedOffer';
+import {
+  DEFAULT_HABIT_RHYTHM_DAYPART,
+  buildScheduleWithHabitRhythm,
+  extractHabitRhythm,
+  getHabitRhythmBonusGold,
+  getHabitRhythmEmoji,
+  getHabitRhythmLabel,
+  rankHabitsByRhythm,
+} from './habitRhythm';
 import { HabitImprovementAnalysisModal } from './HabitImprovementAnalysisModal';
 import { HabitChainAnalysisModal } from './HabitChainAnalysisModal';
 import { buildEnhancedRationale } from './aiRationale';
@@ -1300,7 +1309,10 @@ export function DailyHabitTracker({
 
   const handleConvertTodayTodoToHabit = useCallback(async (todo: TodayTodo) => {
     setTodayTodoActionPendingById((current) => ({ ...current, [todo.id]: true }));
-    const schedule = { mode: 'daily' } as Json;
+    const schedule = buildScheduleWithHabitRhythm({ mode: 'daily' }, {
+      daypart: DEFAULT_HABIT_RHYTHM_DAYPART,
+      source: 'default',
+    }) as Json;
     const { error } = await createHabitV2({
       title: todo.title,
       emoji: '✅',
@@ -1945,14 +1957,31 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     });
   }, [habits, hiddenHabitIds, routineHiddenHabitIds, habitInsights, completions]);
 
-  const riskRankedOfferHabits = useMemo(() => {
-    return rankHabitsForTimeLimitedOffer({
+  const rhythmOrderedHabits = useMemo(() => {
+    const scheduledTodayByHabitId = Object.fromEntries(
+      sortedHabits.map((habit) => [
+        habit.id,
+        habitInsights[habit.id]?.scheduledToday ?? isHabitScheduledOnDate(habit, activeDate),
+      ]),
+    ) as Record<string, boolean>;
+
+    return rankHabitsByRhythm({
       habits: sortedHabits,
       completionsByHabitId: completions,
       healthStateByHabitId: habitHealthByHabitId,
       adherenceByHabitId: adherenceByHabit,
+      scheduledTodayByHabitId,
     });
-  }, [adherenceByHabit, completions, habitHealthByHabitId, sortedHabits]);
+  }, [activeDate, adherenceByHabit, completions, habitHealthByHabitId, habitInsights, sortedHabits]);
+
+  const riskRankedOfferHabits = useMemo(() => {
+    return rankHabitsForTimeLimitedOffer({
+      habits: rhythmOrderedHabits,
+      completionsByHabitId: completions,
+      healthStateByHabitId: habitHealthByHabitId,
+      adherenceByHabitId: adherenceByHabit,
+    });
+  }, [adherenceByHabit, completions, habitHealthByHabitId, rhythmOrderedHabits]);
 
   const nowTimestamp = Date.now();
   const isSpecialVisionStarDay = useMemo(() => {
@@ -2009,7 +2038,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   } = useMemo(() => {
     if (!isTimeLimitedOfferActive || offerHabitIds.size === 0) {
       return {
-        orderedHabits: sortedHabits,
+        orderedHabits: rhythmOrderedHabits,
       };
     }
 
@@ -2019,15 +2048,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           timeLimitedOffer.nextHabitId,
           timeLimitedOffer.badHabitId,
         ]
-          .map((habitId) => sortedHabits.find((habit) => habit.id === habitId))
+          .map((habitId) => rhythmOrderedHabits.find((habit) => habit.id === habitId))
           .filter((habit): habit is HabitWithGoal => Boolean(habit)),
-        ...sortedHabits.filter((habit) => !offerHabitIds.has(habit.id)),
+        ...rhythmOrderedHabits.filter((habit) => !offerHabitIds.has(habit.id)),
       ],
     };
   }, [
     isTimeLimitedOfferActive,
     offerHabitIds,
-    sortedHabits,
+    rhythmOrderedHabits,
     timeLimitedOffer.badHabitId,
     timeLimitedOffer.nextHabitId,
   ]);
@@ -5229,7 +5258,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             : XP_REWARDS.HABIT_COMPLETE;
           const offerPrice = offerPriceByHabitId(habit.id);
           const defaultPrice = defaultPriceByHabitId(habit.id);
-          const effectivePrice = offerPrice ?? defaultPrice;
+          const rhythmBonusPrice = getHabitRhythmBonusGold({
+            baseGold: defaultPrice,
+            schedule: habit.schedule,
+            healthState: habitHealthByHabitId[habit.id],
+            completed: false,
+            scheduledToday: true,
+            now,
+          });
+          const effectivePrice = offerPrice ?? rhythmBonusPrice ?? defaultPrice;
           const effectivePriceXpAmount =
             effectivePrice && XP_TO_GOLD_RATIO > 0
               ? Math.round(effectivePrice / XP_TO_GOLD_RATIO)
@@ -5264,9 +5301,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           if (effectivePriceXpAmount) {
             await earnXP(
               effectivePriceXpAmount,
-              offerPrice ? 'habit_offer' : 'habit_dynamic_reward',
+              offerPrice ? 'habit_offer' : rhythmBonusPrice ? 'habit_rhythm_bonus' : 'habit_dynamic_reward',
               habit.id,
-              offerPrice ? 'Time-limited habit offer' : 'Dynamic default habit reward',
+              offerPrice
+                ? 'Time-limited habit offer'
+                : rhythmBonusPrice
+                  ? 'Time-of-day habit rhythm bonus'
+                  : 'Dynamic default habit reward',
             );
 
             if (offerPrice && session?.user?.id && isConfigured && !isDemoExperience) {
@@ -5285,6 +5326,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   ) / 100,
                   isPrimaryOfferHabit: habit.id === timeLimitedOffer.nextHabitId,
                   isBadHabitOffer: habit.id === timeLimitedOffer.badHabitId,
+                },
+              });
+            }
+
+            if (rhythmBonusPrice && session?.user?.id && isConfigured && !isDemoExperience) {
+              void recordTelemetryEvent({
+                userId: session.user.id,
+                eventType: 'habit_rhythm_bonus_claimed',
+                metadata: {
+                  habitId: habit.id,
+                  habitName: habit.name,
+                  rewardGold: rhythmBonusPrice,
+                  rhythm: extractHabitRhythm(habit.schedule),
                 },
               });
             }
@@ -7151,7 +7205,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   };
 
   const renderCompactList = () => {
-    const nonReviewHabits = (isTimeLimitedOfferActive ? timeLimitedOrderedHabits : sortedHabits).filter(
+    const nonReviewHabits = (isTimeLimitedOfferActive ? timeLimitedOrderedHabits : rhythmOrderedHabits).filter(
       (habit) => (habitHealthByHabitId[habit.id] ?? 'active') !== 'in_review',
     );
     const baseHabits = nonReviewHabits;
@@ -7604,6 +7658,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const isOfferHabit = isTimeLimitedOfferActive && offerHabitIds.has(habit.id);
             const offerPrice = offerPriceByHabitId(habit.id);
             const defaultPrice = defaultPriceByHabitId(habit.id);
+            const rhythm = extractHabitRhythm(habit.schedule);
+            const rhythmBonusPrice = getHabitRhythmBonusGold({
+              baseGold: defaultPrice,
+              schedule: habit.schedule,
+              healthState: habitHealthByHabitId[habit.id],
+              completed: isCompleted,
+              scheduledToday,
+            });
+            const effectiveDisplayPrice = offerPrice ?? rhythmBonusPrice ?? defaultPrice;
             const isSkipDisabled = isOfferHabit;
             const autoProgressHabit = buildAutoProgressHabit(habit);
             const autoProgressState = getAutoProgressState(autoProgressHabit);
@@ -7965,6 +8028,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                               ⏳ {timeLimitedCountdownLabel}
                             </span>
                           ) : null}
+                          {!isOfferHabit && rhythmBonusPrice ? (
+                            <span className="habit-checklist__offer-timer" aria-label={`${getHabitRhythmLabel(rhythm.daypart)} rhythm bonus active`}>
+                              {getHabitRhythmEmoji(rhythm.daypart)} {getHabitRhythmLabel(rhythm.daypart)} 10x
+                            </span>
+                          ) : null}
                           {/* Quest habit badge — visible on the active quest habit */}
                           {isQuestHabit ? (
                             <span className="habit-checklist__quest-badge" aria-label="Quest Habit — unlocks your bonus door">
@@ -7974,16 +8042,18 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         </div>
                       </div>
                       <div className="habit-checklist__reward-rail" aria-label="Habit rewards and quest marker">
-                        {(shouldShowHabitPoints || isOfferHabit) ? (
+                        {(shouldShowHabitPoints || isOfferHabit || rhythmBonusPrice) ? (
                           <PointsBadge
-                            value={isOfferHabit && offerPrice !== null ? offerPrice : defaultPrice}
+                            value={effectiveDisplayPrice}
                             className={`habit-points-badge${
-                              isOfferHabit ? ' habit-points-badge--offer' : ''
+                              isOfferHabit || rhythmBonusPrice ? ' habit-points-badge--offer' : ''
                             }`}
                             size="mini"
                             ariaLabel={
                               isOfferHabit && offerPrice !== null
                                 ? `Limited offer: ${offerPrice} diamonds`
+                                : rhythmBonusPrice
+                                  ? `${getHabitRhythmLabel(rhythm.daypart)} rhythm bonus: ${rhythmBonusPrice} diamonds`
                                 : `Dynamic habit reward: ${defaultPrice} diamonds`
                             }
                           />
