@@ -10162,51 +10162,59 @@ export function IslandRunBoardPrototype({
             role="dialog"
             aria-modal="true"
             aria-labelledby="island-run-entry-audio-title"
-            aria-describedby="island-run-entry-audio-copy"
           >
+            <img
+              className="island-run-entry-audio__background"
+              src="/assets/sound-modals/Open-game/IMG_soundmodalbg.webp"
+              alt=""
+              aria-hidden="true"
+            />
             <h2 id="island-run-entry-audio-title" className="island-run-entry-audio__title">Music / Sound</h2>
+            <button
+              type="button"
+              className="island-run-entry-audio__close"
+              onClick={() => {
+                setHasDismissedEntryAudioModal(true);
+                setShowEntryAudioModal(false);
+              }}
+              aria-label="Close Music / Sound modal"
+            />
             <div className="island-run-entry-audio__toggles" role="group" aria-label="Island Run audio settings">
-              <div className="island-run-entry-audio__toggle-row">
-                <span className="island-run-entry-audio__toggle-label">
-                  <span aria-hidden="true">🎵</span> Music
-                </span>
-                <button
-                  type="button"
-                  className={`island-run-entry-audio__pill${musicEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
-                  aria-pressed={musicEnabled}
-                  onClick={() => setMusicEnabled((current) => !current)}
-                  aria-label={`Music ${musicEnabled ? 'on' : 'off'}`}
-                >
-                  <span className="island-run-entry-audio__pill-knob" />
-                </button>
-              </div>
-              <div className="island-run-entry-audio__toggle-row">
-                <span className="island-run-entry-audio__toggle-label">
-                  <span aria-hidden="true">🔔</span> Sounds
-                </span>
-                <button
-                  type="button"
-                  className={`island-run-entry-audio__pill${sfxEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
-                  aria-pressed={sfxEnabled}
-                  onClick={() => { const next = !sfxEnabled; setSfxEnabled(next); }}
-                  aria-label={`Sounds ${sfxEnabled ? 'on' : 'off'}`}
-                >
-                  <span className="island-run-entry-audio__pill-knob" />
-                </button>
-              </div>
-            </div>
-            <div className="island-run-entry-audio__start-wrap">
               <button
                 type="button"
-                className="island-run-entry-audio__start"
-                onClick={() => {
-                  setHasDismissedEntryAudioModal(true);
-                  setShowEntryAudioModal(false);
-                }}
+                className={`island-run-entry-audio__pill island-run-entry-audio__pill--music${musicEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
+                aria-pressed={musicEnabled}
+                onClick={() => setMusicEnabled((current) => !current)}
+                aria-label={`Music ${musicEnabled ? 'on' : 'off'}`}
               >
-                Play Game
+                <span className="island-run-entry-audio__pill-knob" />
+              </button>
+              <button
+                type="button"
+                className={`island-run-entry-audio__pill island-run-entry-audio__pill--sounds${sfxEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
+                aria-pressed={sfxEnabled}
+                onClick={() => { const next = !sfxEnabled; setSfxEnabled(next); }}
+                aria-label={`Sounds ${sfxEnabled ? 'on' : 'off'}`}
+              >
+                <span className="island-run-entry-audio__pill-knob" />
               </button>
             </div>
+            <button
+              type="button"
+              className="island-run-entry-audio__start"
+              onClick={() => {
+                setHasDismissedEntryAudioModal(true);
+                setShowEntryAudioModal(false);
+              }}
+              aria-label="Play Game"
+            >
+              <img
+                className="island-run-entry-audio__start-image"
+                src="/assets/sound-modals/Open-game/IMG_soundmodalplay.webp"
+                alt=""
+                aria-hidden="true"
+              />
+            </button>
           </div>
         </div>
       )}
