@@ -10060,7 +10060,7 @@ export function IslandRunBoardPrototype({
     isTravelOpen: showTravelOverlay,
     isClearCelebrationOpen: showIslandClearCelebration || showWinCelebrationModal,
     isClaimOpen: showClaimModal || Boolean(devPackOpeningPrototype) || showFirstCreaturePackModal || showWelcomePackModal,
-    isHatchRevealOpen: Boolean(hatchReveal || showEggReadyBanner || showEggManiaModal || showHatcheryCompassModal),
+    isHatchRevealOpen: Boolean(hatchReveal || showEggManiaModal || showHatcheryCompassModal),
     isPurchasePromptOpen: Boolean(walletStoreModalKind || pairedThemeOfferModal),
     isOutOfDicePromptOpen: showOutOfDicePurchasePrompt,
     isRewardDetailsOpen: showRewardDetailsModal || isRewardBarClaiming,
