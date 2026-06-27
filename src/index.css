@@ -6301,7 +6301,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .mobile-habit-home .habit-checklist-card__board-body {
-  padding-inline: clamp(1rem, 4vw, 1.15rem);
+  --board-body-inline-pad: clamp(1rem, 4vw, 1.15rem);
+  padding-inline: var(--board-body-inline-pad);
   overflow-x: clip;
 }
 
@@ -6344,6 +6345,16 @@ html.platform-ipad .workspace-shell__menu-edge {
 .mobile-habit-home .time-bound-offers {
   justify-items: stretch;
   padding-inline: 0;
+  /*
+   * Break the circles row out of the board body's inline padding so the four
+   * circles expand to the inner edges of the card. Only this row breaks out —
+   * the Todo/habit cards keep the shared inset. The negative inline margin
+   * cancels the padding on each side and the matching width keeps the grid
+   * full-bleed, so the circles grow to fill the reclaimed width.
+   */
+  width: calc(100% + 2 * var(--board-body-inline-pad, 1.15rem));
+  max-width: none;
+  margin-inline: calc(-1 * var(--board-body-inline-pad, 1.15rem));
 }
 
 .mobile-habit-home .time-bound-offers__item {
