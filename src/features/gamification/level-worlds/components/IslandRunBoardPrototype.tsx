@@ -33,6 +33,19 @@ import {
 } from '../services/islandRunControllerVisualContract';
 import { BoardStage, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
+import {
+  IslandTechCollectionModal,
+  type TechCollectionModalResult,
+} from './IslandTechCollectionModal';
+import {
+  IslandTechCompletionCelebration,
+  type TechCompletionCelebrationResult,
+} from './IslandTechCompletionCelebration';
+import {
+  resolveTechCollection,
+  resolveTechCollectionSlot as resolveTechCollectionSlotIndex,
+  isTechCollectionTileType,
+} from '../services/islandRunTechCollection';
 import { StatDriftNumbers } from './StatDriftNumbers';
 import { OutOfDiceRegenStatus } from './OutOfDiceRegenStatus';
 import { LoadingReadinessScreen } from '../../../../components/LoadingReadinessScreen';
@@ -1399,32 +1412,10 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
   card: '#d8b4fe',
 };
 
-type TechCollectionTileType = 'currency' | 'chest' | 'micro' | 'card';
-
-interface TechCollectionModalState {
-  tileIndex: number;
-  tileType: TechCollectionTileType;
-  collectedCount: number;
-  completedLines: number[];
-  rewardDice: number;
-  isFullBoard: boolean;
-  /** True when this pickup completed a row/column/diagonal or the full board. */
-  isLineEvent: boolean;
-}
-
-const TECH_COLLECTION_GRID_SIZE = 3;
-const TECH_COLLECTION_LINE_REWARD_DICE = 10;
-const TECH_COLLECTION_FULL_BOARD_REWARD_DICE = 100;
-const TECH_COLLECTION_LINES = [
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
-  [0, 4, 8],
-  [2, 4, 6],
-] as const;
+// 3×3 tech-collection gameplay math (slot resolution, line/full-board rewards,
+// idempotency) lives in the pure `islandRunTechCollection` service; the modal +
+// celebration presentation live in their own components. The board only wires
+// landings → canonical actions → presentation state.
 
 const DORMANT_DOOR_FIGURE_ICONS: Record<DormantDoorFigure, string> = {
   small: '🟣',
@@ -1715,19 +1706,11 @@ export function IslandRunBoardPrototype({
     rewardedTechCollectionLinesRef.current = rewardedLinesSet;
     setCollectedTechTileIndices(collectedSet);
     setRewardedTechCollectionLines(rewardedLinesSet);
+    // Close any open tech surface when switching islands (the modal owns its own
+    // auto-dismiss timer, so there is nothing else to clean up here).
     setTechCollectionModal(null);
-    if (techCollectionDismissTimerRef.current !== null) {
-      window.clearTimeout(techCollectionDismissTimerRef.current);
-      techCollectionDismissTimerRef.current = null;
-    }
+    setTechCompletionCelebration(null);
   }, [islandNumber]);
-
-  useEffect(() => () => {
-    if (techCollectionDismissTimerRef.current !== null) {
-      window.clearTimeout(techCollectionDismissTimerRef.current);
-      techCollectionDismissTimerRef.current = null;
-    }
-  }, []);
 
   useEffect(() => {
     const prev = prevIslandNumberForFlashRef.current;
@@ -1769,8 +1752,11 @@ export function IslandRunBoardPrototype({
   const collectedTechTileIndicesRef = useRef<Set<number>>(new Set());
   const [rewardedTechCollectionLines, setRewardedTechCollectionLines] = useState<Set<number>>(() => new Set());
   const rewardedTechCollectionLinesRef = useRef<Set<number>>(new Set());
-  const [techCollectionModal, setTechCollectionModal] = useState<TechCollectionModalState | null>(null);
-  const techCollectionDismissTimerRef = useRef<number | null>(null);
+  // Fast pickup modal (auto-dismissing) vs. full-grid celebration (deliberate
+  // Continue). Only one is ever open at a time; the celebration outranks the
+  // transient pickup modal.
+  const [techCollectionModal, setTechCollectionModal] = useState<TechCollectionModalResult | null>(null);
+  const [techCompletionCelebration, setTechCompletionCelebration] = useState<TechCompletionCelebrationResult | null>(null);
   const [activeEncounterTileIndex, setActiveEncounterTileIndex] = useState<number | null>(null);
   const [showHatcheryHelp, setShowHatcheryHelp] = useState(false);
   // M6-COMPLETE: encounter challenge state machine
@@ -2213,6 +2199,8 @@ export function IslandRunBoardPrototype({
         Boolean(dormantDoorMiniGame) ||
         Boolean(trafficLightCoinFlip) ||
         techCollectionModal ||
+      techCompletionCelebration ||
+        techCompletionCelebration ||
         showEncounterModal ||
         showGamifiedJournalCard ||
         showClaimModal)
@@ -6163,84 +6151,86 @@ export function IslandRunBoardPrototype({
 
   const resolveTechCollectionSlot = useCallback((tileIndex: number) => {
     const tileCount = Math.max(1, activeTileAnchors.length || ACTIVE_BOARD_PROFILE.tileCount);
-    return Math.abs(Math.floor(tileIndex)) % Math.min(TECH_COLLECTION_GRID_SIZE * TECH_COLLECTION_GRID_SIZE, tileCount);
+    return resolveTechCollectionSlotIndex(tileIndex, tileCount);
   }, [activeTileAnchors.length]);
 
   const maybeCollectTechItem = useCallback((tileType: string, landingTileIndex: number) => {
-    if (tileType !== 'currency' && tileType !== 'chest' && tileType !== 'micro' && tileType !== 'card') return;
+    if (!isTechCollectionTileType(tileType)) return;
 
-    const slotIndex = resolveTechCollectionSlot(landingTileIndex);
-    const previousCollected = collectedTechTileIndicesRef.current;
-    if (previousCollected.has(slotIndex)) return;
+    // Pure resolver owns all gameplay math: slot newness, newly-completed lines,
+    // the 8→9 full-board transition, and reward totals. It is idempotent on
+    // duplicates and on an already-full grid, so reloads / rapid repeated calls
+    // / rerenders can never replay the line or +100 full-board rewards.
+    const resolution = resolveTechCollection({
+      slotIndex: resolveTechCollectionSlot(landingTileIndex),
+      collectedSlots: collectedTechTileIndicesRef.current,
+      rewardedLines: rewardedTechCollectionLinesRef.current,
+    });
+    if (resolution.isDuplicate) return;
 
-    const nextCollected = new Set(previousCollected);
-    nextCollected.add(slotIndex);
-
-    const previousRewardedLines = rewardedTechCollectionLinesRef.current;
-    const nextRewardedLines = new Set(previousRewardedLines);
-    const completedLines = TECH_COLLECTION_LINES
-      .map((line, lineIndex) => ({ line, lineIndex }))
-      .filter(({ line, lineIndex }) => !previousRewardedLines.has(lineIndex) && line.every((cellIndex) => nextCollected.has(cellIndex)))
-      .map(({ lineIndex }) => lineIndex);
-
-    for (const lineIndex of completedLines) nextRewardedLines.add(lineIndex);
-
-    const isFullBoard = nextCollected.size >= TECH_COLLECTION_GRID_SIZE * TECH_COLLECTION_GRID_SIZE;
-    const rewardDice = (completedLines.length * TECH_COLLECTION_LINE_REWARD_DICE)
-      + (isFullBoard ? TECH_COLLECTION_FULL_BOARD_REWARD_DICE : 0);
-
+    const nextCollected = new Set(resolution.nextCollectedSlots);
+    const nextRewardedLines = new Set(resolution.nextRewardedLines);
     collectedTechTileIndicesRef.current = nextCollected;
     rewardedTechCollectionLinesRef.current = nextRewardedLines;
     setCollectedTechTileIndices(nextCollected);
     setRewardedTechCollectionLines(nextRewardedLines);
 
-    const isLineEvent = completedLines.length > 0 || isFullBoard;
+    const isLineEvent = resolution.newlyCompletedLines.length > 0 || resolution.isFullBoardNewlyCompleted;
 
-    playIslandRunSound(isLineEvent ? 'reward_bar_claim_burst' : 'tech_item_poof');
-    triggerIslandRunHaptic('stop_land');
+    if (resolution.isFullBoardNewlyCompleted) {
+      playIslandRunSound('boss_island_clear');
+      triggerIslandRunHaptic('reward_claim');
+    } else {
+      playIslandRunSound(isLineEvent ? 'reward_bar_claim_burst' : 'tech_item_poof');
+      triggerIslandRunHaptic('stop_land');
+    }
 
-    if (rewardDice > 0) {
+    // Reward authority stays in the canonical action; the resolver only computed
+    // the delta. Granting once here (keyed off the immutable slot transition)
+    // means the +100 cannot be re-paid on any subsequent landing or rerender.
+    if (resolution.totalRewardDice > 0) {
       const rewardRecord = applyTokenHopRewards({
         session,
         client,
-        deltas: { dicePool: rewardDice },
+        deltas: { dicePool: resolution.totalRewardDice },
         triggerSource: 'tech_collection_grid_reward',
       });
       setRuntimeState(rewardRecord);
     }
 
     // Persist the picked-up grid through the canonical store path so it survives
-    // reloads and syncs across devices (rewarded lines never double-pay).
+    // reloads and syncs across devices (rewarded lines never double-pay). Reuses
+    // the existing tech_collection ledgers — no migration required.
     applyTechCollectionState({
       session,
       client,
       islandNumber,
-      collectedSlots: Array.from(nextCollected),
-      rewardedLines: Array.from(nextRewardedLines),
+      collectedSlots: resolution.nextCollectedSlots,
+      rewardedLines: resolution.nextRewardedLines,
       triggerSource: 'tech_collection_pickup',
     });
 
-    setTechCollectionModal({
-      tileIndex: slotIndex,
-      tileType,
-      collectedCount: nextCollected.size,
-      completedLines,
-      rewardDice,
-      isFullBoard,
-      isLineEvent,
-    });
-
-    // A plain pickup is a quick poof-into-grid flourish that auto-clears so it
-    // never interrupts the roll loop. Completing a row/column/diagonal (or the
-    // full board) lingers longer so the highlighted line + reward can register.
-    if (techCollectionDismissTimerRef.current !== null) {
-      window.clearTimeout(techCollectionDismissTimerRef.current);
-    }
-    const dwellMs = isLineEvent ? 2600 : 900;
-    techCollectionDismissTimerRef.current = window.setTimeout(() => {
+    if (resolution.isFullBoardNewlyCompleted) {
+      // Full grid: deliberate celebration that does NOT auto-dismiss.
       setTechCollectionModal(null);
-      techCollectionDismissTimerRef.current = null;
-    }, dwellMs);
+      setTechCompletionCelebration({
+        collectedSlots: resolution.nextCollectedSlots,
+        finalLineRewardDice: resolution.lineRewardDice,
+        fullBoardRewardDice: resolution.fullBoardRewardDice,
+        totalRewardDice: resolution.totalRewardDice,
+      });
+      return;
+    }
+
+    // Ordinary pickup: fast modal that auto-dismisses (the modal owns its timer).
+    setTechCollectionModal({
+      slotIndex: resolution.slotIndex,
+      tileType,
+      collectedSlots: resolution.nextCollectedSlots,
+      collectedCount: resolution.nextCollectedCount,
+      newlyCompletedLines: resolution.newlyCompletedLines,
+      lineRewardDice: resolution.lineRewardDice,
+    });
   }, [client, islandNumber, playIslandRunSound, resolveTechCollectionSlot, session, triggerIslandRunHaptic]);
 
   // Seed spacing constants. The landing seed packs three independent dimensions
@@ -9959,6 +9949,7 @@ export function IslandRunBoardPrototype({
       showEggReadyBanner ||
       showEntryAudioModal ||
       techCollectionModal ||
+      techCompletionCelebration ||
       showEncounterModal ||
       showGamifiedJournalCard ||
       showFirstCreaturePackModal ||
@@ -9997,6 +9988,7 @@ export function IslandRunBoardPrototype({
       showEggReadyBanner ||
       showEntryAudioModal ||
       techCollectionModal ||
+      techCompletionCelebration ||
       showEncounterModal ||
       showGamifiedJournalCard ||
       showFirstCreaturePackModal ||
@@ -11260,96 +11252,21 @@ export function IslandRunBoardPrototype({
       )}
 
 
-      {techCollectionModal && typeof document !== 'undefined' ? createPortal((
-        <div
-          className={[
-            'island-stop-modal-backdrop',
-            'island-tech-collection-modal-backdrop',
-            techCollectionModal.isLineEvent
-              ? 'island-tech-collection-modal-backdrop--line'
-              : 'island-tech-collection-modal-backdrop--fast',
-          ].join(' ')}
-          role="presentation"
-          onClick={() => {
-            if (techCollectionDismissTimerRef.current !== null) {
-              window.clearTimeout(techCollectionDismissTimerRef.current);
-              techCollectionDismissTimerRef.current = null;
-            }
-            setTechCollectionModal(null);
-          }}
-        >
-          <section
-            className={[
-              'island-stop-modal',
-              'island-stop-modal--readable',
-              'island-stop-modal--dense',
-              'island-tech-collection-modal',
-              techCollectionModal.isLineEvent
-                ? 'island-tech-collection-modal--line'
-                : 'island-tech-collection-modal--fast',
-            ].join(' ')}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Tech item collection"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="island-stop-modal__eyebrow">Tech build collection</p>
-            <h3 className="island-stop-modal__title">💨 Tech item collected</h3>
-            <p className="island-stop-modal__copy">
-              The landed 3D item poofed from the board and snapped into the build grid.
-            </p>
-            <div className="island-tech-collection-grid" aria-label="Collected tech grid">
-              {Array.from({ length: TECH_COLLECTION_GRID_SIZE * TECH_COLLECTION_GRID_SIZE }, (_, cellIndex) => {
-                const isCollected = collectedTechTileIndices.has(cellIndex);
-                const isNew = cellIndex === techCollectionModal.tileIndex;
-                const isLine = techCollectionModal.completedLines.some((lineIndex) => (TECH_COLLECTION_LINES[lineIndex] as readonly number[] | undefined)?.includes(cellIndex));
-                return (
-                  <span
-                    key={cellIndex}
-                    className={[
-                      'island-tech-collection-grid__cell',
-                      isCollected ? 'island-tech-collection-grid__cell--filled' : '',
-                      isNew ? 'island-tech-collection-grid__cell--new' : '',
-                      isLine ? 'island-tech-collection-grid__cell--line' : '',
-                    ].filter(Boolean).join(' ')}
-                  >
-                    {isCollected ? (isNew ? TILE_TYPE_ICONS[techCollectionModal.tileType] : '⚙️') : ''}
-                  </span>
-                );
-              })}
-            </div>
-            <div className="island-tech-collection-build" aria-hidden="true">
-              <span className="island-tech-collection-build__base" />
-              <span className="island-tech-collection-build__beam" />
-              <span className="island-tech-collection-build__core">⚙️</span>
-            </div>
-            <p className="island-stop-modal__copy" role="status">
-              {techCollectionModal.rewardDice > 0
-                ? `Reward triggered: +${techCollectionModal.rewardDice} dice${techCollectionModal.isFullBoard ? ' — full board bonus!' : ''}`
-                : `${techCollectionModal.collectedCount}/9 tech pieces installed. Complete a row, column, or diagonal for dice.`}
-            </p>
-            {techCollectionModal.isLineEvent ? (
-              <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-                <button
-                  type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                  onClick={() => {
-                    if (techCollectionDismissTimerRef.current !== null) {
-                      window.clearTimeout(techCollectionDismissTimerRef.current);
-                      techCollectionDismissTimerRef.current = null;
-                    }
-                    setTechCollectionModal(null);
-                  }}
-                >
-                  Continue
-                </button>
-              </div>
-            ) : (
-              <p className="island-tech-collection-modal__hint" aria-hidden="true">Tap to dismiss</p>
-            )}
-          </section>
-        </div>
-      ), document.body) : null}
+      {/* Fast 3×3 tech pickup modal (auto-dismissing). Full-grid completion is
+          handled by the celebration below, which never auto-dismisses. */}
+      {techCollectionModal && !techCompletionCelebration ? (
+        <IslandTechCollectionModal
+          result={techCollectionModal}
+          onDismiss={() => setTechCollectionModal(null)}
+        />
+      ) : null}
+
+      {techCompletionCelebration ? (
+        <IslandTechCompletionCelebration
+          result={techCompletionCelebration}
+          onContinue={() => setTechCompletionCelebration(null)}
+        />
+      ) : null}
 
 
       {showGamifiedJournalCard && (
