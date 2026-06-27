@@ -72,6 +72,10 @@ export function resolveIslandInhabitantFlowOpeningState(state: IslandInhabitantF
   };
 }
 
+export function getFirstIslandInhabitantFlowBlocker(blockers: IslandInhabitantFlowBlockers): keyof IslandInhabitantFlowBlockers | null {
+  return (Object.keys(blockers) as Array<keyof IslandInhabitantFlowBlockers>).find((key) => Boolean(blockers[key])) ?? null;
+}
+
 export function isIslandInhabitantFlowBlocked(blockers: IslandInhabitantFlowBlockers): boolean {
-  return Object.values(blockers).some(Boolean);
+  return getFirstIslandInhabitantFlowBlocker(blockers) !== null;
 }

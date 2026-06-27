@@ -1,5 +1,6 @@
 import { assert, assertEqual, type TestCase } from '../../services/__tests__/testHarness';
 import {
+  getFirstIslandInhabitantFlowBlocker,
   isIslandInhabitantFlowBlocked,
   mapIslandInhabitantFlowBlockers,
   resolveIslandInhabitantFlowOpeningState,
@@ -45,6 +46,10 @@ export const islandInhabitantFlowBlockingTests: TestCase[] = [
     for (const key of blockerCases) {
       assert(isIslandInhabitantFlowBlocked({ [key]: true }), `Expected ${key} to block inhabitant flow`);
     }
+  } },
+  { name: 'inhabitant flow blocker helper identifies the first active blocker for diagnostics', run: () => {
+    assertEqual(getFirstIslandInhabitantFlowBlocker({ isBuildOpen: false, isBoardMoving: true, isOtherModalOpen: true }), 'isBoardMoving', 'Expected first truthy blocker');
+    assertEqual(getFirstIslandInhabitantFlowBlocker({}), null, 'Expected no blocker');
   } },
   { name: 'inhabitant flow blocker helper is pure for falsey blockers', run: () => assertEqual(isIslandInhabitantFlowBlocked(Object.fromEntries(blockerCases.map((key) => [key, false]))), false, 'Expected false blockers not to block') },
   { name: 'caretaker mapping does not block for top-bar menu, overview, HUD, controls, or debug presentation state', run: () => {

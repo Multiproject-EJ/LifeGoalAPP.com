@@ -44,7 +44,7 @@ import {
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { IslandInhabitantFlow, type IslandInhabitantFlowResult } from '../inhabitants/components/IslandInhabitantFlow';
 import { getIslandConversationDefinition, getIslandInhabitantDefinition, getIslandInhabitantTopics } from '../inhabitants/islandInhabitantRegistry';
-import { isIslandInhabitantFlowBlocked, mapIslandInhabitantFlowBlockers } from '../inhabitants/islandInhabitantFlowBlocking';
+import { getFirstIslandInhabitantFlowBlocker, isIslandInhabitantFlowBlocked, mapIslandInhabitantFlowBlockers } from '../inhabitants/islandInhabitantFlowBlocking';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
@@ -10060,7 +10060,7 @@ export function IslandRunBoardPrototype({
     isTravelOpen: showTravelOverlay,
     isClearCelebrationOpen: showIslandClearCelebration || showWinCelebrationModal,
     isClaimOpen: showClaimModal || Boolean(devPackOpeningPrototype) || showFirstCreaturePackModal || showWelcomePackModal,
-    isHatchRevealOpen: Boolean(hatchReveal || showEggManiaModal || showHatcheryCompassModal),
+    isHatchRevealOpen: Boolean(hatchReveal || showEggReadyBanner || showEggManiaModal || showHatcheryCompassModal),
     isPurchasePromptOpen: Boolean(walletStoreModalKind || pairedThemeOfferModal),
     isOutOfDicePromptOpen: showOutOfDicePurchasePrompt,
     isRewardDetailsOpen: showRewardDetailsModal || isRewardBarClaiming,
@@ -10075,9 +10075,14 @@ export function IslandRunBoardPrototype({
     isDebugPanelOpen: isDevPanelOpen || showDebugPanel || showDebug,
     isAudioMenuOpen: showAudioMenu,
   });
-  const isCaretakerFlowBlocked = isIslandInhabitantFlowBlocked(caretakerFlowBlockers);
+  const caretakerFlowBlocker = getFirstIslandInhabitantFlowBlocker(caretakerFlowBlockers);
+  const isCaretakerFlowBlocked = caretakerFlowBlocker !== null;
   const shouldShowCaretakerTalkAction = isIslandOneActiveForCaretaker && hasCaretakerContent;
-  const caretakerTalkUnavailableMessage = 'Caretaker is unavailable while another island activity is open.';
+  const caretakerTalkUnavailableMessage = caretakerFlowBlocker === 'isBoardMoving'
+    ? 'Caretaker is unavailable while the board piece is moving.'
+    : caretakerFlowBlocker === 'isInhabitantFlowOpen'
+      ? 'Caretaker is already open.'
+      : 'Caretaker is unavailable while another island activity is open.';
   const resolvedCaretakerBackgroundArtSrc = islandArtAmbientBackgroundSrc || islandBackgroundSrc;
   const handleOpenCaretakerFlow = () => {
     if (!shouldShowCaretakerTalkAction || isIslandInhabitantFlowBlocked(caretakerFlowBlockers)) return;
