@@ -425,7 +425,120 @@ legible without a tutorial.
 
 ---
 
-## 14) Related documents
+## 14) The story layer — how narrative wraps the new-player loop
+
+The loop above is the **mechanical** spine. Wrapped around it is a **narrative
+layer** that a new player experiences as story beats, characters, and a reason
+to care. The critical architectural rule (from the storytelling audit and the
+Island-1 content contracts) governs everything here:
+
+> **Story observes; it never drives.** The narrative layer is a thin, mostly
+> read-only wrapper that reacts to canonical gameplay events
+> (`island_entered`, `stop_opened:<id>`, `stop_completed`, `build_level_reached`,
+> `boss_resolved`, `island_cleared`). It **must not** complete stops, resolve
+> bosses, build landmarks, grant rewards, mutate inventory, change stop IDs,
+> couple to tile indices, or block any gameplay action. If story and gameplay
+> ever disagree, **gameplay wins and the player keeps moving.**
+
+So for the new player, story is **additive delight that can always be skipped**
+— it never becomes a wall.
+
+### 14.1 The frame: who the new player is, in-fiction
+
+The player is a new member of the **Compass Expedition**, a restoration crew
+re-opening island routes lost in the **Great Drift**. Their job is framed as
+*"arrive with respect, listen, and help where invited"* — explicitly **not**
+conquest. This reframing matters: every "boss" the new player fights is
+narratively a guardian to be **reached and restored**, not killed.
+
+### 14.2 Island 1 = "Luma Isle," home of the Lumin
+
+The new player's entire first island has authored content (canonical in
+`island001Narrative.ts` + StoryReader manifests under `public/islands/001/`):
+
+| Cast | Role in the new-player experience |
+|---|---|
+| **Miri** (guide) | The friendly first-contact routekeeper who hands the player each objective ("Start with the Hatchery"). She is the new player's primary voice. |
+| **Elder Sava** | Wisdom-stop figure; frames reflection as "listening practice," not therapy. |
+| **Poko** | Comic-relief citizen at the Hatchery; lowers the stakes, keeps tone warm. |
+| **Noctyra** (the Black Crystal Dragon) | The Stop 5 "boss" — a frightened guardian, not a monster. The new player *restores* her, not defeats her. |
+| **Captain Ivo** | Expedition voice in the prologue/transitions. |
+| **The Caretaker** | A servant-wizard inhabitant the new player meets via a board tile encounter on Island 1 (see §14.4). |
+
+The island's emotional throughline — *"small acts of trust reopen
+connection"* — deliberately mirrors the app's real purpose (small, sustainable
+habits). The story is the metaphor for the product.
+
+### 14.3 Where each story beat attaches to the loop
+
+Story beats hang off the **same loop stages** from §1, by gameplay event — not
+by new triggers. Mapping the authored Island-1 beats onto the new-player path:
+
+| Loop stage (this doc) | Story beat(s) | Surface |
+|---|---|---|
+| **A. Welcome** → first ever entry | **Prologue** (8-panel "Great Drift" sequence). Auto-launches once when `storyPrologueSeen` is false; closing sets the marker. | `IslandStoryReader` |
+| **B. Orient** / board ready | **Arrival** (6-panel approach to a dim Luma Isle) → Miri: *"Start small. Help us wake one gentle place."* | StoryReader → dialogue |
+| **C. Stop 1 (Hatchery)** opened | Poko: *"The Hatchery is quiet, not gone."* The egg = a creature **bond**, not loot. | Dialogue modal |
+| **D. Short loop** (rolling) | Optional **companion commentary** + the **Caretaker** tile encounter (§14.4). Both fully non-blocking. | Bubble / encounter screen |
+| **E/F. Stops 2–4** | Habit = **Routekeeper Steps** ("one steady action"), Mystery = **Gathering Grounds** (festival framing), Wisdom = **Listening Terrace** (Sava). Player-facing names only — IDs stay `habit`/`mystery`/`wisdom`. | Stop-modal wrappers |
+| **build levels L1→L3** | Construction reactions ("The island noticed.") as landmarks visibly brighten. | Toast / reaction |
+| **G. Boss (Stop 5)** | **Island Heart** finale: Sava: *"Aim for the crystal around her, not the heart inside it."* Mid-fight reveal — Noctyra was sheltering hatchlings during the Drift. | Finale intro + overlay |
+| **H. Island clear → travel** | **Resolution** (7-panel): the armor cracks, Noctyra is *reached not killed*, a Great-Drift clue appears, and a route to Island 2 opens. Miri: *"The route is open because we opened it together."* | StoryReader → travel CTA |
+
+Note the boss stays the literal `boss` stop with unchanged rewards — only the
+**copy** reinterprets "defeat" as "restore." That's the pattern for all 120
+islands: same 5-stop skeleton, different civilization and finale framing.
+
+### 14.4 The Caretaker inhabitant encounter (live on Island 1)
+
+Unlike most of the narrative (which is authored but not yet UI-wired), the
+**inhabitant conversation flow is already production-wired for Island 1**: when
+a new player's roll passes the **top tile of the 40-tile ring**, the board
+pauses tile handling and opens the Caretaker — a two-stage *premium encounter
+screen → topic buttons → retro conversation → deterministic close*. It is
+presentation-only (no rewards, no persistence, no gameplay writes) and reuses
+the Island-1 background art. For a brand-new player this is their first taste of
+a *character who talks back*, and it cannot soft-lock them: closing always
+returns cleanly to the board.
+
+### 14.5 New-player guardrails specific to story
+
+Everything in §12's guardrails applies, plus these narrative-only ones (all
+from the Island-1 vertical slice + content contracts):
+
+- **Skippable always.** Prologue/arrival/resolution are skippable after the
+  first panel; every dialogue can be closed; *"The story must never prevent stop
+  opening, completion, build, boss, island clear, or travel."*
+- **Tone is non-judgmental.** The Habit stop says *"one steady action is enough
+  for today,"* never *"if you fail, the island suffers."* Critical for a new
+  player's first real-life action.
+- **Graceful degradation.** If media fails → text-only panel with alt copy; if
+  audio is off → captions carry the beat; reduced-motion → stills/fades, no
+  flashing crystal pulses.
+- **Mobile limits.** Dialogue ≤110 chars, 1–2 bubbles per beat (4 only in a
+  user-tapped finale), one story modal at a time, 44×44px tap targets.
+- **No duplicate/duplicated launches.** Beats are first-time-gated
+  (`storyPrologueSeen` today; a durable per-island story ledger is deferred), so
+  a returning new player gets a short *"Welcome back"* status line, not a replay.
+
+### 14.6 Status — what a new player actually sees today vs. authored
+
+Be precise about reality (per the storytelling audit, 2026-06-25):
+
+| Element | State for a new player right now |
+|---|---|
+| Prologue auto-launch + `storyPrologueSeen` | **Live** (placeholder content) |
+| Caretaker tile encounter (Island 1 top tile) | **Live** (presentation-only) |
+| Island-1 narrative beats (Miri/Sava/Poko/Noctyra), arrival/resolution manifests | **Authored, not yet UI-wired** — content exists; orchestration is a planned, feature-flagged, phased rollout |
+| Per-island story ledger, dialogue component, finale-framing facade, environment NPC overlays | **Not built** — Phase 2–4 of the plan |
+
+So today's new player gets the **mechanical loop (§1–§13) in full**, plus a
+prologue and the Caretaker; the rich Luma-Isle story is the **next layer to
+wire on**, island 1 first.
+
+---
+
+## 15) Related documents
 
 - **Authority:** [`docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md`](./gameplay/CANONICAL_GAMEPLAY_CONTRACT.md)
 - Onboarding design principles & in-game rescue UX:
@@ -435,6 +548,14 @@ legible without a tutorial.
   `islandRunDiceRegeneration.ts`, `islandRunEconomy.ts`
 - Stops & landmarks: [`docs/16_ISLAND_RUN_STOPS_CANONICAL.md`](./16_ISLAND_RUN_STOPS_CANONICAL.md)
 - Currencies: [`docs/17_CURRENCIES_AND_SHIELD.md`](./17_CURRENCIES_AND_SHIELD.md)
+- **Story system audit (what exists / what's missing):**
+  [`docs/investigations/holistic-island-storytelling-system-audit.md`](./investigations/holistic-island-storytelling-system-audit.md)
+- **Island 1 narrative vertical slice (full Luma Isle script + beats):**
+  [`docs/design/island-001-narrative-vertical-slice.md`](./design/island-001-narrative-vertical-slice.md)
+- Island 1 narrative content contract (read-only authority rules):
+  [`docs/gameplay/island-001-narrative-content-contract.md`](./gameplay/island-001-narrative-content-contract.md)
+- Inhabitant/Caretaker conversation contract:
+  [`docs/gameplay/island-inhabitant-conversation-content-contract.md`](./gameplay/island-inhabitant-conversation-content-contract.md)
 
 > ⚠️ The economy/level tables in
 > [`docs/12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md`](./12_MINIGAME_BOSS_ECONOMY_PLAYER_LEVEL_DESIGN.md)
