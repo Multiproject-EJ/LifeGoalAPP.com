@@ -25,24 +25,26 @@ export function IslandRunGamifiedJournalCard({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const goodLabel = goodAnswer === 'nothing_typical' ? 'Nothing really — a typical day' : goodDetail.trim();
-  const badLabel = badAnswer === 'nothing_typical' ? 'Nothing really — a typical day' : badDetail.trim();
-  const typicalDayLength = typicalDay.trim().length;
+  const goodLabel = goodAnswer === 'nothing_typical'
+    ? 'Nothing really — a typical day'
+    : (goodDetail.trim() || 'Something specific');
+  const badLabel = badAnswer === 'nothing_typical'
+    ? 'Nothing really — a typical day'
+    : (badDetail.trim() || 'Something specific');
+  // The typed text is optional — answering both feeling cards is all that is
+  // required to save. No minimum character counts.
   const canSave = Boolean(goodAnswer)
     && Boolean(badAnswer)
-    && (goodAnswer === 'nothing_typical' || goodDetail.trim().length >= 3)
-    && (badAnswer === 'nothing_typical' || badDetail.trim().length >= 3)
-    && typicalDayLength >= 15
     && !isSaving;
 
   const progressLabel = useMemo(() => {
-    const complete = [goodAnswer, badAnswer, typicalDayLength >= 15].filter(Boolean).length;
-    return `${complete}/3 clues gathered`;
-  }, [badAnswer, goodAnswer, typicalDayLength]);
+    const complete = [goodAnswer, badAnswer].filter(Boolean).length;
+    return `${complete}/2 clues gathered`;
+  }, [badAnswer, goodAnswer]);
 
   const handleSave = async () => {
     if (!canSave) {
-      setError('Answer both feeling cards and describe a typical day in at least 15 characters.');
+      setError('Answer both feeling cards to save this clue card.');
       return;
     }
 
