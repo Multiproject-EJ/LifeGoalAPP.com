@@ -99,10 +99,9 @@ export function IslandRunReflectionComposer({
   const totalJudgements = REFLECTION_PROMPTS.length - 1;
 
   const categoryLabel = useMemo(() => selectedPrompt.category ?? 'Momentum', [selectedPrompt.category]);
-  const minimumReflectionLength = 20;
-  const trimmedLength = content.trim().length;
-  const charsRemaining = Math.max(minimumReflectionLength - trimmedLength, 0);
-  const canSave = isJudgingComplete && Boolean(selectedAnswer) && trimmedLength >= minimumReflectionLength && !isSaving;
+  // The written effort bonus answer is optional — selecting an effort answer
+  // button is all that is required to complete this stop. No minimum length.
+  const canSave = isJudgingComplete && Boolean(selectedAnswer) && !isSaving;
 
   const handleJudge = (winnerId: string) => {
     if (!challengerPrompt) return;
@@ -127,17 +126,13 @@ export function IslandRunReflectionComposer({
       return;
     }
 
-    if (trimmedContent.length < minimumReflectionLength) {
-      setError('Write at least 20 characters so this effort bonus answer is meaningful in your journal.');
-      return;
-    }
-
     setIsSaving(true);
     setError(null);
 
     const today = new Date().toISOString().split('T')[0];
     const title = `Island Run Effort Bonus — ${selectedPrompt.title}`;
-    const fullContent = `${selectedPrompt.prompt}\n\nChosen effort answer: ${selectedAnswer}\n\nEffort bonus answer:\n${trimmedContent}`;
+    const effortAnswerSection = trimmedContent ? `\n\nEffort bonus answer:\n${trimmedContent}` : '';
+    const fullContent = `${selectedPrompt.prompt}\n\nChosen effort answer: ${selectedAnswer}${effortAnswerSection}`;
 
     const { error: saveError } = await createJournalEntry({
       user_id: session.user.id,
@@ -235,9 +230,7 @@ export function IslandRunReflectionComposer({
           </p>
 
           <p className="island-run-reflection-composer__requirement" aria-live="polite">
-            {charsRemaining > 0
-              ? 'Write at least 20 characters to complete this stop.'
-              : 'Ready to save this effort bonus answer.'}
+            Optional: add a sentence if you like. Picking an effort answer above is enough to complete this stop.
           </p>
         </>
       )}

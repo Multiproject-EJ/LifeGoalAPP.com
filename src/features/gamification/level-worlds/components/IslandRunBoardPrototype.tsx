@@ -2986,11 +2986,19 @@ export function IslandRunBoardPrototype({
     }
   }, [activeStopId, bossTrialResolved, bossTrialPhase]);
 
-  // M3-COMPLETE: Escape key closes active stop modal
+  // M3-COMPLETE: Escape key closes active stop modal — except for behavior
+  // landmarks (Habit/Wisdom) that have been opened but not completed. Those must
+  // be finished (answered) rather than abandoned, otherwise the landmark is left
+  // visited-but-incomplete and rolling stays locked behind "Complete landmark
+  // first". The current non-dismissable state is kept in a ref (assigned during
+  // render below, once stopStateMap is available) so this effect does not need
+  // to re-subscribe on every change.
+  const nonDismissableActiveStopRef = useRef(false);
   useEffect(() => {
     if (!activeStopId) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (nonDismissableActiveStopRef.current) return;
         e.preventDefault();
         requestActiveStopTransition(null, 'escape_close');
       }
@@ -4563,6 +4571,16 @@ export function IslandRunBoardPrototype({
   const isDoorLandmarkCompletionRequired = requiredDoorStopId !== null
     && typeof requiredDoorStopIndex === 'number'
     && contractV2Stops?.statusesByIndex[requiredDoorStopIndex] === 'active';
+
+  // Behavior landmarks the player must answer rather than abandon. When a Habit
+  // or Wisdom stop is open and still playable (active — not completed, locked, or
+  // ticket-gated), the modal cannot be dismissed via Close/Escape; the player has
+  // to finish the in-modal flow (which always offers a completing path) so the
+  // landmark is never left visited-but-incomplete. Eggs/Hatchery are excluded by
+  // design (they incubate over a long time). Update this list to widen the rule.
+  const isActiveBehaviorStopNonDismissable = (activeStopId === 'habit' || activeStopId === 'wisdom')
+    && (stopStateMap.get(activeStopId) ?? 'active') === 'active';
+  nonDismissableActiveStopRef.current = isActiveBehaviorStopNonDismissable;
 
   useEffect(() => {
     if (!requiredDoorStopId) return;
@@ -12128,9 +12146,16 @@ export function IslandRunBoardPrototype({
                     : `Need ${Math.max(0, openedStopTicketCost - runtimeState.essence)} more 🟣`}
                 </button>
               ) : null}
-              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setActiveStopId(null)}>
-                Close
-              </button>
+              {isActiveBehaviorStopNonDismissable ? (
+                <p className="island-stop-modal__locked-notice" role="status">
+                  <span aria-hidden="true">📝</span>{' '}
+                  Finish this landmark to continue — answer the prompt{activeStop.stopId === 'habit' ? ' (or tap “Skip for now”)' : ''} above.
+                </p>
+              ) : (
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setActiveStopId(null)}>
+                  Close
+                </button>
+              )}
             </div>
           </section>
         </div>
