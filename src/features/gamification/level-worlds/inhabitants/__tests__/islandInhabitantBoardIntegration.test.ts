@@ -26,6 +26,11 @@ export const islandInhabitantBoardIntegrationTests: TestCase[] = [
     ['isStoryReaderOpen', 'isNarrativeDialogueOpen', 'isActiveStopOpen', 'isBuildOpen', 'isShopOpen', 'isMarketOpen', 'isSanctuaryOpen', 'isMinigameOpen', 'isBossOpen', 'isTravelOpen', 'isClearCelebrationOpen', 'isClaimOpen', 'isPurchasePromptOpen', 'isOutOfDicePromptOpen', 'isBoardMoving', 'isInhabitantFlowOpen'].forEach(includes);
     includes('Caretaker is unavailable while another island activity is open.');
   } },
+  { name: 'board dismisses egg-ready dialog before caretaker activation via host topbar', run: () => {
+    includes('if (!showTopbarMenu || !showEggReadyBanner) return;');
+    includes('setShowEggReadyBanner(false);');
+    includes('isHatchRevealOpen: Boolean(hatchReveal || showEggReadyBanner || showEggManiaModal || showHatcheryCompassModal)');
+  } },
   { name: 'board opens and closes IslandInhabitantFlow presentation-only', run: () => {
     includes('<IslandInhabitantFlow');
     includes('setIsCaretakerFlowOpenPending(true)');
