@@ -130,8 +130,11 @@ export function buildReshapeDeck(input: {
   health: TipHealthInput;
   streakDays?: number;
   hasDownshiftOption?: boolean;
+  /** Short, comma-joined cue labels from the user's own captured insights. */
+  cueHint?: string | null;
 }): TipDeck {
   const { habit, health } = input;
+  const cueHint = input.cueHint?.trim() || null;
   const signals: HabitCoachSignals = {
     habitName: HABIT_NOUN(habit),
     assessment: health.assessment,
@@ -163,7 +166,9 @@ export function buildReshapeDeck(input: {
       kicker: 'The cue',
       emoji: '⏰',
       heading: 'What triggers it?',
-      body: 'The cue is the trigger that fires the routine — a time of day, or a follow-on to a state like bored, tired, hungry or anxious. Spot the cue and you can aim it.',
+      body: cueHint
+        ? `You’ve flagged this slips when: ${cueHint}. That’s your cue — name it and you can aim it.`
+        : 'The cue is the trigger that fires the routine — a time of day, or a follow-on to a state like bored, tired, hungry or anxious. Spot the cue and you can aim it.',
     },
     {
       id: 'reshape-reward',

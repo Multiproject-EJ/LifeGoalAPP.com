@@ -15,7 +15,11 @@ try {
   const { runTipOfDayContentTests } = require(
     path.join(outDir, 'features/tip-of-day/__tests__/tipOfDayContent.test.js'),
   );
+  const { runHabitInsightModelTests } = require(
+    path.join(outDir, 'features/habits/__tests__/habitInsightModel.test.js'),
+  );
   runTipOfDayContentTests();
+  runHabitInsightModelTests();
   console.log('tip-of-day-tests: all assertions passed');
 } finally {
   rmSync(outDir, { recursive: true, force: true });

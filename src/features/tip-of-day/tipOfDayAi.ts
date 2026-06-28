@@ -28,17 +28,20 @@ function hasOpenAIKey(): boolean {
   return typeof apiKey === 'string' && apiKey.length > 0;
 }
 
-function buildPrompt(habit: TipHabitInput, health: TipHealthInput): string {
+function buildPrompt(habit: TipHabitInput, health: TipHealthInput, insightHint: string | null): string {
   const intent = habit.habitIntent?.trim() ? `Why it matters to them: ${habit.habitIntent.trim()}.` : '';
   const env = habit.habitEnvironment?.trim() ? `Their stated cue/where-and-how: ${habit.habitEnvironment.trim()}.` : '';
   const adherence =
     health.adherencePercent != null ? `Recent 7-day adherence: ${health.adherencePercent}%.` : '';
+  const insights = insightHint ? `${insightHint}` : '';
   const state = health.assessment.state;
 
   return `You are a warm, creative habit coach. A user is struggling with a habit and you will craft a short "Tip of the Day".
 
 Habit: "${habit.title}".
-Health state: ${state}. ${adherence} ${intent} ${env}
+Health state: ${state}. ${adherence} ${intent} ${env} ${insights}
+
+When the user has self-reported cues, anchor your cue field and suggestion to them — quote their reality back to them.
 
 Analyse it through the habit loop (cue -> craving -> routine -> reward). The cue is the most important part — it is the algorithm/trigger that fires the routine, either an internal clock or a follow-on to a state (bored, tired, hungry, anxious...) or something in the environment.
 
@@ -138,12 +141,13 @@ export async function enrichReshapeDeck(
   deck: TipDeck,
   habit: TipHabitInput,
   health: TipHealthInput,
+  insightHint: string | null = null,
 ): Promise<EnrichResult> {
   if (deck.variation !== 'reshape_struggling' || !hasOpenAIKey()) {
     return { deck, source: 'fallback' };
   }
 
-  const payload = await callOpenAI(buildPrompt(habit, health));
+  const payload = await callOpenAI(buildPrompt(habit, health, insightHint));
   if (!payload) {
     return { deck, source: 'fallback' };
   }
