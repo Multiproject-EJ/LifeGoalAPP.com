@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "lib": ["DOM", "ES2022"],
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "5.0",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": ".tmp-tip-of-day-tests",
+    "noEmit": false,
+    "types": ["node"]
+  },
+  "include": [
+    "src/features/tip-of-day/tipOfDayContent.ts",
+    "src/features/habits/habitHealth.ts",
+    "src/features/habits/habitCoach.ts",
+    "src/features/tip-of-day/__tests__/tipOfDayContent.test.ts"
+  ]
+}

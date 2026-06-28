@@ -28,6 +28,7 @@ import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { PlayerAvatarPanel } from './features/avatar/PlayerAvatarPanel';
 import { WorkspaceSetupDialog } from './features/account/WorkspaceSetupDialog';
 import { AiCoach } from './features/ai-coach';
+import { TipOfDayModal } from './features/tip-of-day';
 import { Journal, type JournalType } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
@@ -401,6 +402,7 @@ const PROFILE_STRENGTH_HOLD_DURATION_MS = 520;
 const PROFILE_STRENGTH_HOLD_SLOP_PX = 8;
 const DAILY_TREATS_SEEN_KEY = 'lifegoal_daily_treats_seen';
 const DAILY_TREATS_AUTO_OPEN_DATE_KEY = 'lifegoal_daily_treats_auto_open_date';
+const TIP_OF_DAY_AUTO_OPEN_DATE_KEY = 'lifegoal_tip_of_day_auto_open_date';
 const HABITS_CREATED_EVENT = 'habitgame:habits-created';
 
 function getDailyTreatsAutoOpenDateKey(now = new Date()): string {
@@ -410,6 +412,11 @@ function getDailyTreatsAutoOpenDateKey(now = new Date()): string {
 function isDailyTreatAutoOpenDueForUser(userId: string | null | undefined): boolean {
   if (typeof window === 'undefined' || !userId) return false;
   return window.localStorage.getItem(DAILY_TREATS_AUTO_OPEN_DATE_KEY) !== getDailyTreatsAutoOpenDateKey();
+}
+
+function isTipOfDayAutoOpenDueForUser(userId: string | null | undefined): boolean {
+  if (typeof window === 'undefined' || !userId) return false;
+  return window.localStorage.getItem(TIP_OF_DAY_AUTO_OPEN_DATE_KEY) !== getDailyTreatsAutoOpenDateKey();
 }
 
 function formatTimerSeconds(seconds: number): string {
@@ -798,6 +805,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [isMobileMenuImageActive, setIsMobileMenuImageActive] = useState(true);
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [aiCoachStarterQuestion, setAiCoachStarterQuestion] = useState<string | undefined>(undefined);
+  const [showTipOfDay, setShowTipOfDay] = useState(false);
   const [journalLaunchRequest, setJournalLaunchRequest] = useState<{ type: JournalType; openComposer?: boolean; requestId: number } | null>(null);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
   const [showQuickGainsMenu, setShowQuickGainsMenu] = useState(false);
@@ -968,6 +976,19 @@ export default function App({ forceAuthOnMount }: AppProps) {
     launchDailyTreatsMenu();
     window.localStorage.setItem(DAILY_TREATS_AUTO_OPEN_DATE_KEY, todayKey);
   }, [isDailyTreatAutoOpenDue, launchDailyTreatsMenu, supabaseSession?.user?.id]);
+
+  // Once-a-day "Tip of the Day — AI Coach". Opens after the daily-treats sequence
+  // so the two never stack: only when treats aren't due and the day-change
+  // sequence isn't active. Gated to once per day via localStorage (mirrors treats).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!supabaseSession?.user?.id) return;
+    if (isDailyTreatAutoOpenDue || isDayChangeDailyTreatSequenceActive) return;
+    if (!isTipOfDayAutoOpenDueForUser(supabaseSession.user.id)) return;
+
+    window.localStorage.setItem(TIP_OF_DAY_AUTO_OPEN_DATE_KEY, getDailyTreatsAutoOpenDateKey());
+    setShowTipOfDay(true);
+  }, [isDailyTreatAutoOpenDue, isDayChangeDailyTreatSequenceActive, supabaseSession?.user?.id]);
 
   const launchHolidayCalendar = useCallback(() => {
     setHolidayPreviewKey(null);
@@ -5839,6 +5860,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
             setAiCoachStarterQuestion(undefined);
           }}
         />
+      )}
+      {showTipOfDay && (
+        <TipOfDayModal session={activeSession} onClose={() => setShowTipOfDay(false)} />
       )}
       {showDailySpinWheel && (
         <NewDailySpinWheel session={activeSession} onClose={() => handleRewardModalClose(() => setShowDailySpinWheel(false))} />

@@ -1,0 +1,277 @@
+.tip-of-day__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  padding: 0;
+  animation: tip-of-day-fade 160ms ease-out;
+}
+
+@media (min-width: 600px) {
+  .tip-of-day__overlay {
+    align-items: center;
+    padding: 24px;
+  }
+}
+
+.tip-of-day__sheet {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -8px 40px rgba(15, 23, 42, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: tip-of-day-rise 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (min-width: 600px) {
+  .tip-of-day__sheet {
+    border-radius: 24px;
+    animation: tip-of-day-pop 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+.tip-of-day__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 12px;
+}
+
+.tip-of-day__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tip-of-day__brand-emoji {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.tip-of-day__brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.tip-of-day__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.tip-of-day__subtitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tip-of-day__close {
+  appearance: none;
+  border: none;
+  background: #f1f5f9;
+  color: #475569;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms ease;
+}
+
+.tip-of-day__close:hover {
+  background: #e2e8f0;
+}
+
+.tip-of-day__card-area {
+  padding: 8px 24px 4px;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.tip-of-day__card {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px 8px 12px;
+  background: linear-gradient(160deg, #faf5ff 0%, #eef2ff 100%);
+  border-radius: 20px;
+  transition: transform 120ms ease-out;
+  animation: tip-of-day-card-in 220ms ease-out;
+}
+
+.tip-of-day__kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7c3aed;
+  margin-bottom: 8px;
+}
+
+.tip-of-day__card-emoji {
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.tip-of-day__card-heading {
+  font-size: 21px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 10px;
+  line-height: 1.25;
+}
+
+.tip-of-day__card-body {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #334155;
+  margin: 0;
+  max-width: 32ch;
+}
+
+.tip-of-day__dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 0 6px;
+}
+
+.tip-of-day__dot {
+  appearance: none;
+  border: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  padding: 0;
+  cursor: pointer;
+  transition: background 140ms ease, width 140ms ease;
+}
+
+.tip-of-day__dot--active {
+  width: 22px;
+  border-radius: 4px;
+  background: #7c3aed;
+}
+
+.tip-of-day__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+}
+
+.tip-of-day__btn {
+  appearance: none;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px 22px;
+  cursor: pointer;
+  transition: transform 100ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.tip-of-day__btn--primary {
+  flex: 1;
+  color: #ffffff;
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.32);
+}
+
+.tip-of-day__btn--primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+}
+
+.tip-of-day__btn--ghost {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.tip-of-day__btn--ghost:hover {
+  background: #e2e8f0;
+}
+
+.tip-of-day__btn-spacer {
+  flex: 0 0 auto;
+  width: 1px;
+}
+
+.tip-of-day__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 280px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.tip-of-day__spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid #e9d5ff;
+  border-top-color: #7c3aed;
+  animation: tip-of-day-spin 700ms linear infinite;
+}
+
+@keyframes tip-of-day-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes tip-of-day-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes tip-of-day-rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes tip-of-day-pop {
+  from {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+}
+
+@keyframes tip-of-day-card-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tip-of-day__overlay,
+  .tip-of-day__sheet,
+  .tip-of-day__card {
+    animation: none;
+  }
+}
