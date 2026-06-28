@@ -187,6 +187,14 @@ Each PR is independently shippable and additive. Feature-flag the new beats
   `islandNarrativeDialogueComponent.test.ts`, etc.); 7 beats fire as before;
   no new beats yet.
 
+> **Content status (PRs 2–4): ✅ AUTHORED.** All 21 remaining Island-1 beats are
+> now written into `island001Narrative.ts` as read-only content (stop-open,
+> stop-complete, per-stop build levels, majority-restored, boss start/midpoint),
+> with the new trigger kinds added to `islandNarrativeTypes.ts` +
+> `islandNarrativeValidation.ts` and locked by tests. They are **inert until
+> wired** — the controller (PR 1) still needs to watch the new triggers. Slice
+> B06 is intentionally omitted (shipped B24 already owns the Hatchery-L1 react).
+
 ### PR 2 — Stop-open + stop-complete beats for habit / mystery / wisdom
 - Author B09/B14/B19 (`stop_opened`) and B05/B10/B15/B20 (`stop_completed`) in
   `island001Narrative.ts` with slice copy (Miri/Poko/Sava/companion).

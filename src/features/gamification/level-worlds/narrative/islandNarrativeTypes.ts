@@ -7,7 +7,11 @@ export type IslandNarrativeTrigger =
   | { kind: 'island_entered'; islandNumber: number }
   | { kind: 'arrival_closed'; islandNumber: number }
   | { kind: 'stop_opened'; islandNumber: number; stopId: IslandNarrativeStopId }
+  | { kind: 'stop_completed'; islandNumber: number; stopId: IslandNarrativeStopId }
   | { kind: 'landmark_level_completed'; islandNumber: number; stopId: IslandNarrativeStopId; level: 1 | 2 | 3 }
+  | { kind: 'landmarks_restored_majority'; islandNumber: number; threshold: number }
+  | { kind: 'boss_challenge_started'; islandNumber: number }
+  | { kind: 'boss_midpoint'; islandNumber: number }
   | { kind: 'boss_eligible'; islandNumber: number }
   | { kind: 'boss_resolved'; islandNumber: number }
   | { kind: 'island_clear_travel_ready'; islandNumber: number };
