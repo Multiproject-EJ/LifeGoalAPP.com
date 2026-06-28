@@ -10054,6 +10054,10 @@ export function IslandRunBoardPrototype({
     landmarkBuildLevels: islandArtLandmarkBuildLevels,
     completedStopIds: completedStops,
     bossChallengeActive: bossTrialPhase === 'in_progress',
+    bossChallengeMidpoint:
+      bossTrialPhase === 'in_progress' &&
+      getBossTrialConfig(islandNumber).scoreTarget > 0 &&
+      bossTrialScore * 2 >= getBossTrialConfig(islandNumber).scoreTarget,
     canChallengeCurrentBoss,
     isCurrentIslandBossDefeated,
     bossTrialResolvedIslandNumber: runtimeState.bossTrialResolvedIslandNumber,

@@ -52,6 +52,8 @@ export interface IslandNarrativeReactionSnapshot {
   /** Build level (0..3) per stop, indexed by `STOP_ID_BY_INDEX`. */
   landmarkBuildLevels: readonly number[];
   bossChallengeActive: boolean;
+  /** True once the in-progress boss trial has reached its halfway score. */
+  bossChallengeMidpoint: boolean;
 }
 
 function isStopId(value: string | null | undefined): value is IslandNarrativeStopId {
@@ -111,6 +113,11 @@ export function diffIslandNarrativeReactionTriggers(
   // boss_challenge_started — boss trial just became active.
   if (next.bossChallengeActive && !prev.bossChallengeActive) {
     triggers.push({ kind: 'boss_challenge_started', islandNumber });
+  }
+
+  // boss_midpoint — boss trial first reached its halfway score.
+  if (next.bossChallengeMidpoint && !prev.bossChallengeMidpoint) {
+    triggers.push({ kind: 'boss_midpoint', islandNumber });
   }
 
   return triggers;

@@ -200,15 +200,16 @@ Each PR is independently shippable and additive. Feature-flag the new beats
   `islandNarrativeDialogueComponent.test.ts`, etc.); 7 beats fire as before;
   no new beats yet.
 
-> **Status: ✅ CONTENT AUTHORED + WIRED (live).** All 21 remaining Island-1
-> beats are written into `island001Narrative.ts`, and **20 of them now fire**
-> through a new data-driven reaction layer (`islandNarrativeReactionDispatch.ts`
-> + watcher/display effects in `useIslandNarrativeOpeningFlow.ts`). The legacy
+> **Status: ✅ CONTENT AUTHORED + FULLY WIRED (live).** All 21 remaining Island-1
+> beats are written into `island001Narrative.ts` and **all now fire** through a
+> data-driven reaction layer (`islandNarrativeReactionDispatch.ts` +
+> watcher/display effects in `useIslandNarrativeOpeningFlow.ts`). The legacy
 > 7-beat machinery is untouched. Slice B06 is omitted (shipped B24 owns the
-> Hatchery-L1 react). **B28 (boss_midpoint) is authored but not yet wired** — it
-> needs a mid-fight signal from the boss component; per the slice fallback its
-> reveal can fold into the resolution episode (B29). See the "How it shipped"
-> note under §4.
+> Hatchery-L1 react). **B28 (boss_midpoint) is now wired**: the board derives a
+> midpoint signal (boss trial in progress AND score ≥ half the score target);
+> boss-framing toasts (B27/B28) are allowed to overlay the in-progress boss
+> trial as non-blocking status toasts, and are dropped if the trial ends before
+> they surface so they never appear post-fight. See "How it shipped" under §4.
 
 ### PR 2 — Stop-open + stop-complete beats for habit / mystery / wisdom
 - Author B09/B14/B19 (`stop_opened`) and B05/B10/B15/B20 (`stop_completed`) in

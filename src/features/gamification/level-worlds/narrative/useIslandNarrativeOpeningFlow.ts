@@ -68,6 +68,8 @@ export type IslandNarrativeOpeningFlowInput = {
   completedStopIds?: readonly string[];
   /** True while the boss trial is actively in progress (boss-challenge framing). */
   bossChallengeActive?: boolean;
+  /** True once the in-progress boss trial reaches its halfway score (midpoint reveal). */
+  bossChallengeMidpoint?: boolean;
   canChallengeCurrentBoss: boolean;
   isCurrentIslandBossDefeated: boolean;
   bossTrialResolvedIslandNumber: number | null | undefined;
@@ -225,6 +227,7 @@ export function useIslandNarrativeOpeningFlow({
   landmarkBuildLevels,
   completedStopIds,
   bossChallengeActive,
+  bossChallengeMidpoint,
   canChallengeCurrentBoss,
   isCurrentIslandBossDefeated,
   bossTrialResolvedIslandNumber,
@@ -243,6 +246,7 @@ export function useIslandNarrativeOpeningFlow({
   const [activeReactionDialogue, setActiveReactionDialogue] = useState<ReactionDialoguePayload | null>(null);
   const [activeReactionToast, setActiveReactionToast] = useState<ReactionToastPayload | null>(null);
   const previousReactionSnapshotRef = useRef<IslandNarrativeReactionSnapshot | null>(null);
+  const previousBossChallengeActiveRef = useRef<boolean | null>(null);
   const sessionDisplayedRef = useRef<Set<string>>(new Set());
   const previousActiveStopIdRef = useRef<string | null>(null);
   const previousHatcheryBuildLevelRef = useRef<number | null>(null);
@@ -261,6 +265,7 @@ export function useIslandNarrativeOpeningFlow({
     setActiveReactionDialogue(null);
     setActiveReactionToast(null);
     previousReactionSnapshotRef.current = null;
+    previousBossChallengeActiveRef.current = null;
     previousHatcheryBuildLevelRef.current = null;
     previousCanChallengeBossRef.current = null;
     previousIsland1BossResolvedRef.current = null;
@@ -521,6 +526,7 @@ export function useIslandNarrativeOpeningFlow({
       completedStopIds: completedStopIds ?? [],
       landmarkBuildLevels: landmarkBuildLevels ?? [],
       bossChallengeActive: Boolean(bossChallengeActive),
+      bossChallengeMidpoint: Boolean(bossChallengeMidpoint),
     };
     const previous = previousReactionSnapshotRef.current;
     previousReactionSnapshotRef.current = nextSnapshot;
@@ -544,12 +550,26 @@ export function useIslandNarrativeOpeningFlow({
       return merged.sort((a, b) => reactionBeatRank(a) - reactionBeatRank(b));
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeStopId, bossChallengeActive, completedStopsKey, landmarkLevelsKey, currentIslandNumber, hasHydratedRuntimeState, isEligible, isSeen, reactionBeatRank]);
+  }, [activeStopId, bossChallengeActive, bossChallengeMidpoint, completedStopsKey, landmarkLevelsKey, currentIslandNumber, hasHydratedRuntimeState, isEligible, isSeen, reactionBeatRank]);
+
+  // Boss-framing reactions (B27 start / B28 midpoint) are moment-specific. If the
+  // trial ends before they surface, drop them so they never appear post-fight.
+  useEffect(() => {
+    const previous = previousBossChallengeActiveRef.current;
+    const active = Boolean(bossChallengeActive);
+    previousBossChallengeActiveRef.current = active;
+    if (previous && !active) {
+      setReactionQueue((current) => current.filter((id) => id !== 'I001-B27' && id !== 'I001-B28'));
+    }
+  }, [bossChallengeActive]);
 
   // Reaction display — yields to every legacy surface and the legacy queue.
+  // Exception: non-blocking toasts may overlay an in-progress boss trial so the
+  // boss-framing beats land in the moment instead of after the fight.
   useEffect(() => {
     if (!isEligible) return;
-    if (activeStoryEpisode || isGlobalPrologueActive || isNarrativeSurfaceBlocked) return;
+    // Story reader, legacy surfaces, and the legacy queue always take priority.
+    if (activeStoryEpisode || isGlobalPrologueActive) return;
     if (activeDialogue || activeToast || queue.length > 0) return;
     if (activeReactionDialogue || activeReactionToast) return;
     const nextId = reactionQueue[0];
@@ -563,6 +583,12 @@ export function useIslandNarrativeOpeningFlow({
     if (!beat) {
       setReactionQueue((current) => current.slice(1));
       return;
+    }
+    // Board modals block reactions — except a non-blocking toast may overlay an
+    // in-progress boss trial (the boss-framing beats are meant for that moment).
+    if (isNarrativeSurfaceBlocked) {
+      const toastOverlayDuringBoss = Boolean(bossChallengeActive) && beat.surface === 'toast';
+      if (!toastOverlayDuringBoss) return;
     }
     if (beat.surface === 'dialogue_sheet') {
       const dialogue = buildReactionDialogue(beat, definition);
@@ -588,7 +614,7 @@ export function useIslandNarrativeOpeningFlow({
     }
     // Unsupported surface for a reaction (e.g. story_reader) — drop safely.
     setReactionQueue((current) => current.slice(1));
-  }, [activeDialogue, activeReactionDialogue, activeReactionToast, activeStoryEpisode, activeToast, currentIslandNumber, isEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, reactionQueue]);
+  }, [activeDialogue, activeReactionDialogue, activeReactionToast, activeStoryEpisode, activeToast, bossChallengeActive, currentIslandNumber, isEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, reactionQueue]);
 
   const handleStoryEpisodeClosed = useCallback((episode: Exclude<ActiveIslandStoryEpisode, null>) => {
     if (episode.kind === 'island_arrival') {

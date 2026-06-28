@@ -28,6 +28,7 @@ function snapshot(overrides: Partial<IslandNarrativeReactionSnapshot> = {}): Isl
     completedStopIds: [],
     landmarkBuildLevels: [0, 0, 0, 0, 0],
     bossChallengeActive: false,
+    bossChallengeMidpoint: false,
     ...overrides,
   };
 }
@@ -81,6 +82,16 @@ export const islandNarrativeReactionDispatchTests: TestCase[] = [
     run: () => {
       assertEqual(kinds(diffIslandNarrativeReactionTriggers(snapshot(), snapshot({ bossChallengeActive: true }), 1)).includes('boss_challenge_started'), true, 'fires on activation');
       assertEqual(diffIslandNarrativeReactionTriggers(snapshot({ bossChallengeActive: true }), snapshot({ bossChallengeActive: true }), 1).length, 0, 'no refire while active');
+    },
+  },
+  {
+    name: 'boss_midpoint fires once when the trial reaches halfway',
+    run: () => {
+      const before = snapshot({ bossChallengeActive: true, bossChallengeMidpoint: false });
+      const at = snapshot({ bossChallengeActive: true, bossChallengeMidpoint: true });
+      assertEqual(kinds(diffIslandNarrativeReactionTriggers(before, at, 1)).includes('boss_midpoint'), true, 'fires at midpoint');
+      assertEqual(diffIslandNarrativeReactionTriggers(at, at, 1).length, 0, 'no refire after midpoint');
+      assertEqual(resolveReactionBeat({ kind: 'boss_midpoint', islandNumber: 1 }, 1, definition)?.id, 'I001-B28', 'boss midpoint -> B28');
     },
   },
   {
@@ -142,6 +153,17 @@ export const islandNarrativeReactionDispatchTests: TestCase[] = [
       assertIncludes(boardSource, "bossChallengeActive: bossTrialPhase === 'in_progress'", 'Board feeds boss-trial-active');
       assertIncludes(boardSource, 'islandNarrativeOpeningFlow.activeReactionDialogue', 'Board renders reaction dialogue');
       assertIncludes(boardSource, 'islandNarrativeOpeningFlow.activeReactionToast', 'Board renders reaction toast');
+    },
+  },
+  {
+    name: 'board feeds the boss midpoint signal',
+    run: () => assertIncludes(boardSource, 'bossChallengeMidpoint:', 'Board computes/feeds the boss midpoint signal'),
+  },
+  {
+    name: 'boss-framing toasts may overlay an in-progress boss trial only',
+    run: () => {
+      assertIncludes(hookSource, 'const toastOverlayDuringBoss = Boolean(bossChallengeActive)', 'Toast overlay is gated to the boss trial');
+      assertIncludes(hookSource, "id !== 'I001-B27' && id !== 'I001-B28'", 'Stale boss-framing beats are dropped after the trial');
     },
   },
 ];
