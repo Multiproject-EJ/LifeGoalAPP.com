@@ -184,6 +184,7 @@ import {
   applyOnboardingCompleteMarker,
   applyPerfectCompanionSnapshot,
   applyQaProgressionSnapshot,
+  applyNarrativeSeenStateMarker,
   applyShardClaimProgressMarker,
   applyStoryPrologueSeenMarker,
   applyStopBuildSpendBatch,
@@ -319,6 +320,7 @@ import { IslandStoryReader } from './IslandStoryReader';
 import { IslandNarrativeDialogue } from '../narrative/components/IslandNarrativeDialogue';
 import { IslandNarrativeToast } from '../narrative/components/IslandNarrativeToast';
 import { useIslandNarrativeOpeningFlow, type ActiveIslandStoryEpisode } from '../narrative/useIslandNarrativeOpeningFlow';
+import type { IslandNarrativeSeenState } from '../narrative/islandNarrativeSeenState';
 import {
   resolveMinigameForStop,
   type IslandRunMinigameResult,
@@ -10026,6 +10028,18 @@ export function IslandRunBoardPrototype({
     }
   }
 
+  const handlePersistNarrativeSeen = useCallback(
+    (next: IslandNarrativeSeenState) => {
+      applyNarrativeSeenStateMarker({
+        session,
+        client,
+        narrativeSeenState: next,
+        triggerSource: 'island_narrative_beat_seen',
+      });
+    },
+    [session, client],
+  );
+
   const islandNarrativeOpeningFlow = useIslandNarrativeOpeningFlow({
     userId: session.user.id,
     currentIslandNumber: runtimeState.currentIslandNumber,
@@ -10043,6 +10057,8 @@ export function IslandRunBoardPrototype({
     isIslandClearTravelReady,
     activeStoryEpisode,
     setActiveStoryEpisode,
+    persistedNarrativeSeenState: runtimeState.narrativeSeenState,
+    onPersistNarrativeSeen: handlePersistNarrativeSeen,
   });
 
   const handleCloseStoryReader = () => {

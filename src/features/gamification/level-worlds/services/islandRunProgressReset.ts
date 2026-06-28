@@ -33,6 +33,7 @@ import {
   writeIslandRunGameStateRecord,
 } from './islandRunGameStateStore';
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
+import { createEmptyIslandNarrativeSeenState } from '../narrative/islandNarrativeSeenState';
 import { resetIslandRunStateSnapshot } from './islandRunStateStore';
 import { clearCreatureCollectionForUser } from './creatureCollectionService';
 import { clearCreatureTreatInventoryForUser } from './creatureTreatInventoryService';
@@ -56,6 +57,7 @@ export function buildFreshIslandRunRecord(
     welcomePackClaimed: false,
     welcomePackRewardBundleClaimed: false,
     storyPrologueSeen: false,
+    narrativeSeenState: createEmptyIslandNarrativeSeenState(),
     audioEnabled: current.audioEnabled,
     musicEnabled: current.musicEnabled ?? current.audioEnabled,
     sfxEnabled: current.sfxEnabled ?? current.audioEnabled,

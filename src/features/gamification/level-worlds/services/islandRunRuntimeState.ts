@@ -9,6 +9,7 @@ import type {
   PerfectCompanionReason,
 } from './islandRunGameStateStore';
 import type { BonusTileChargeByIsland } from './islandRunBonusTile';
+import type { IslandNarrativeSeenState } from '../narrative/islandNarrativeSeenState';
 
 /**
  * ISLAND RUN ARCHITECTURE WARNING
@@ -93,6 +94,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     welcomePackClaimed?: boolean;
     welcomePackRewardBundleClaimed?: boolean;
     storyPrologueSeen?: boolean;
+    narrativeSeenState?: IslandNarrativeSeenState;
     audioEnabled?: boolean;
     musicEnabled?: boolean;
     sfxEnabled?: boolean;
