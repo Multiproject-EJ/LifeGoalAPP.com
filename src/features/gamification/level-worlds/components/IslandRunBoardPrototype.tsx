@@ -10051,6 +10051,13 @@ export function IslandRunBoardPrototype({
     canDisplayTravelReadyClosingOverClaimedCelebration,
     activeStopId,
     hatcheryBuildLevel: runtimeState.stopBuildStateByIndex[0]?.buildLevel,
+    landmarkBuildLevels: islandArtLandmarkBuildLevels,
+    completedStopIds: completedStops,
+    bossChallengeActive: bossTrialPhase === 'in_progress',
+    bossChallengeMidpoint:
+      bossTrialPhase === 'in_progress' &&
+      getBossTrialConfig(islandNumber).scoreTarget > 0 &&
+      bossTrialScore * 2 >= getBossTrialConfig(islandNumber).scoreTarget,
     canChallengeCurrentBoss,
     isCurrentIslandBossDefeated,
     bossTrialResolvedIslandNumber: runtimeState.bossTrialResolvedIslandNumber,
@@ -14211,6 +14218,31 @@ export function IslandRunBoardPrototype({
           supportingLabel={islandNarrativeOpeningFlow.activeToast.supportingLabel}
           durationMs={islandNarrativeOpeningFlow.activeToast.durationMs}
           onDismiss={islandNarrativeOpeningFlow.handleToastDismiss}
+        />
+      ) : null}
+
+      {/* Data-driven reaction beats (stop/landmark/majority/boss-start). Render
+          one at a time and only when no legacy narrative surface is active. */}
+      {islandNarrativeOpeningFlow.activeReactionDialogue ? (
+        <IslandNarrativeDialogue
+          isOpen={true}
+          speakerName={islandNarrativeOpeningFlow.activeReactionDialogue.speakerName}
+          text={islandNarrativeOpeningFlow.activeReactionDialogue.text}
+          secondaryText={islandNarrativeOpeningFlow.activeReactionDialogue.secondaryText}
+          tone={islandNarrativeOpeningFlow.activeReactionDialogue.tone}
+          continueLabel={islandNarrativeOpeningFlow.activeReactionDialogue.continueLabel}
+          onContinue={islandNarrativeOpeningFlow.handleReactionDialogueContinue}
+          onClose={islandNarrativeOpeningFlow.handleReactionDialogueContinue}
+        />
+      ) : null}
+
+      {islandNarrativeOpeningFlow.activeReactionToast ? (
+        <IslandNarrativeToast
+          isOpen={true}
+          speakerName={islandNarrativeOpeningFlow.activeReactionToast.speakerName}
+          text={islandNarrativeOpeningFlow.activeReactionToast.text}
+          durationMs={islandNarrativeOpeningFlow.activeReactionToast.durationMs}
+          onDismiss={islandNarrativeOpeningFlow.handleReactionToastDismiss}
         />
       ) : null}
 

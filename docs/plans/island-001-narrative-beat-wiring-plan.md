@@ -173,6 +173,19 @@ Each PR is independently shippable and additive. Feature-flag the new beats
   speakers against the slice §7 table.
 - No code. Output: an updated beat checklist in this doc / the slice.
 
+> **How it shipped (deviation from the original PR 1 framing).** Rather than a
+> clean-room rewrite of the test-locked opening-flow controller (high regression
+> risk on the live prologue/arrival/boss/travel flow, unverifiable without an
+> in-app run), the new beats were wired as an **additive data-driven layer**:
+> a pure `diffIslandNarrativeReactionTriggers` snapshot diff + content-driven
+> beat resolution + content-driven surface payloads, sharing the existing
+> seen-ledger (incl. cross-device sync) and rendering through a second
+> dialogue/toast instance that yields to every legacy surface. The original 7
+> beats keep their exact code, so all prior tests pass unchanged. Adding a future
+> reaction beat is now **content-only** (as long as its trigger kind is covered
+> by the snapshot). Remaining cleanup toward the fully-unified controller in
+> §3 is optional and can follow once the live flow has in-app QA.
+
 ### PR 1 — Controller refactor to data-driven dispatch (no new beats)
 - Add `stop_completed` + aggregate/boss trigger kinds to `islandNarrativeTypes.ts`.
 - Introduce `IslandNarrativeSnapshot` + pure `diffNarrativeSnapshot`.
@@ -186,6 +199,17 @@ Each PR is independently shippable and additive. Feature-flag the new beats
   (`__tests__/islandNarrativeOpeningFlow.test.ts`,
   `islandNarrativeDialogueComponent.test.ts`, etc.); 7 beats fire as before;
   no new beats yet.
+
+> **Status: ✅ CONTENT AUTHORED + FULLY WIRED (live).** All 21 remaining Island-1
+> beats are written into `island001Narrative.ts` and **all now fire** through a
+> data-driven reaction layer (`islandNarrativeReactionDispatch.ts` +
+> watcher/display effects in `useIslandNarrativeOpeningFlow.ts`). The legacy
+> 7-beat machinery is untouched. Slice B06 is omitted (shipped B24 owns the
+> Hatchery-L1 react). **B28 (boss_midpoint) is now wired**: the board derives a
+> midpoint signal (boss trial in progress AND score ≥ half the score target);
+> boss-framing toasts (B27/B28) are allowed to overlay the in-progress boss
+> trial as non-blocking status toasts, and are dropped if the trial ends before
+> they surface so they never appear post-fight. See "How it shipped" under §4.
 
 ### PR 2 — Stop-open + stop-complete beats for habit / mystery / wisdom
 - Author B09/B14/B19 (`stop_opened`) and B05/B10/B15/B20 (`stop_completed`) in

@@ -5,7 +5,9 @@ const REPEAT_POLICIES = new Set(['once', 'repeatable']);
 const SURFACES = new Set(['story_reader', 'dialogue_sheet', 'toast']);
 const STOP_IDS = new Set(['hatchery', 'habit', 'mystery', 'wisdom', 'boss']);
 const TRIGGER_KINDS = new Set([
-  'island_entered', 'arrival_closed', 'stop_opened', 'landmark_level_completed',
+  'island_entered', 'arrival_closed', 'stop_opened', 'stop_completed',
+  'landmark_level_completed', 'landmarks_restored_majority',
+  'boss_challenge_started', 'boss_midpoint',
   'boss_eligible', 'boss_resolved', 'island_clear_travel_ready',
 ]);
 const PROHIBITED_FIELDS = new Set([

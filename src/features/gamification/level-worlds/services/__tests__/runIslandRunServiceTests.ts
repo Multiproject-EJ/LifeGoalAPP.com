@@ -112,6 +112,7 @@ import { islandNarrativeDialogueComponentTests } from '../../narrative/__tests__
 import { islandStoryReaderComponentTests } from '../../narrative/__tests__/islandStoryReaderComponent.test';
 import { islandNarrativeOpeningFlowTests } from '../../narrative/__tests__/islandNarrativeOpeningFlow.test';
 import { islandNarrativeSeenStateTests } from '../../narrative/__tests__/islandNarrativeSeenState.test';
+import { islandNarrativeReactionDispatchTests } from '../../narrative/__tests__/islandNarrativeReactionDispatch.test';
 import { islandNarrativeValidationTests, islandStoryManifestValidationTests } from '../../narrative/__tests__/islandNarrativeValidation.test';
 import { islandRunModalTextColorGuardTests } from './islandRunModalTextColorGuards.test';
 import { islandRunTechCollectionTests } from './islandRunTechCollection.test';
@@ -153,6 +154,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandStoryReaderComponent', tests: islandStoryReaderComponentTests },
   { label: 'islandNarrativeOpeningFlow', tests: islandNarrativeOpeningFlowTests },
   { label: 'islandNarrativeSeenState', tests: islandNarrativeSeenStateTests },
+  { label: 'islandNarrativeReactionDispatch', tests: islandNarrativeReactionDispatchTests },
   { label: 'islandRunModalTextColorGuards', tests: islandRunModalTextColorGuardTests },
   { label: 'islandStoryManifestValidation', tests: islandStoryManifestValidationTests },
   { label: 'islandRunContractV2Energy', tests: islandRunContractV2EnergyTests },
