@@ -156,6 +156,17 @@ with trigger-kind tiebreak, instead of a hard-coded per-ID map.
 
 ### 3.4 Keep island-gating, generalize it
 
+> **✅ DONE.** The reaction layer is now island-agnostic: eligibility is
+> `hasHydratedRuntimeState && cycleIndex === 0 && islandHasReactionBeats(island)`
+> (registry/content-driven), so adding a new island's reaction beats is
+> content-only — no controller edits. The **legacy** opening flow
+> (prologue/arrival/finale/travel) stays Island-1-scoped until per-island
+> arrival/resolution manifests + cast exist. A round-trip test asserts every
+> registered island's reaction beats resolve through the dispatch (and legacy
+> beats don't), guarding future islands. Behavior is unchanged today — Island 1
+> remains the only registered island.
+
+
 `isEligibleForIsland001OpeningFlow(island, cycle)` → keep, but the dispatcher
 should select the definition via `getIslandNarrativeDefinition(islandNumber)`.
 For this plan we still **only ship Island 1 content**, but the controller stops

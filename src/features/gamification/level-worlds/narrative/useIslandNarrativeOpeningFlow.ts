@@ -12,6 +12,7 @@ import {
   buildReactionDialogue,
   buildReactionToast,
   diffIslandNarrativeReactionTriggers,
+  islandHasReactionBeats,
   reactionBeatPriorityRank,
   resolveReactionBeat,
 } from './islandNarrativeReactionDispatch';
@@ -274,16 +275,24 @@ export function useIslandNarrativeOpeningFlow({
   }, [storageKey]);
 
   const isEligible = hasHydratedRuntimeState && isEligibleForIsland001OpeningFlow(currentIslandNumber, cycleIndex);
+  // The legacy opening flow (prologue/arrival/finale/travel) is Island 1 only.
+  // The reaction layer is island-agnostic: it runs on any first-cycle island that
+  // has authored reaction beats (today, still only Island 1 — but content-driven).
+  const reactionEligible = hasHydratedRuntimeState && cycleIndex === 0 && islandHasReactionBeats(currentIslandNumber);
 
   useEffect(() => {
     if (isEligible) return;
     setQueue((current) => current.filter((beatId) => beatId !== 'I001-B26' && beatId !== 'I001-B29' && beatId !== 'I001-B30'));
-    // Reactions are Island 1 / cycle 0 only — drop them when scope is left.
+  }, [isEligible]);
+
+  // Drop reaction state when the island/cycle leaves reaction scope.
+  useEffect(() => {
+    if (reactionEligible) return;
     setReactionQueue([]);
     setActiveReactionDialogue(null);
     setActiveReactionToast(null);
     previousReactionSnapshotRef.current = null;
-  }, [isEligible]);
+  }, [reactionEligible]);
 
   const isSeen = useCallback((beatId: string) => {
     const seen = seenStateRef.current;
@@ -532,7 +541,7 @@ export function useIslandNarrativeOpeningFlow({
     previousReactionSnapshotRef.current = nextSnapshot;
     // Hydration baseline: the first hydrated snapshot seeds the ref only — never
     // replay reactions for progress an existing save already made.
-    if (!isEligible || previous === null) return;
+    if (!reactionEligible || previous === null) return;
 
     const triggers = diffIslandNarrativeReactionTriggers(previous, nextSnapshot, currentIslandNumber);
     if (triggers.length === 0) return;
@@ -550,7 +559,7 @@ export function useIslandNarrativeOpeningFlow({
       return merged.sort((a, b) => reactionBeatRank(a) - reactionBeatRank(b));
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeStopId, bossChallengeActive, bossChallengeMidpoint, completedStopsKey, landmarkLevelsKey, currentIslandNumber, hasHydratedRuntimeState, isEligible, isSeen, reactionBeatRank]);
+  }, [activeStopId, bossChallengeActive, bossChallengeMidpoint, completedStopsKey, landmarkLevelsKey, currentIslandNumber, hasHydratedRuntimeState, reactionEligible, isSeen, reactionBeatRank]);
 
   // Boss-framing reactions (B27 start / B28 midpoint) are moment-specific. If the
   // trial ends before they surface, drop them so they never appear post-fight.
@@ -567,7 +576,7 @@ export function useIslandNarrativeOpeningFlow({
   // Exception: non-blocking toasts may overlay an in-progress boss trial so the
   // boss-framing beats land in the moment instead of after the fight.
   useEffect(() => {
-    if (!isEligible) return;
+    if (!reactionEligible) return;
     // Story reader, legacy surfaces, and the legacy queue always take priority.
     if (activeStoryEpisode || isGlobalPrologueActive) return;
     if (activeDialogue || activeToast || queue.length > 0) return;
@@ -614,7 +623,7 @@ export function useIslandNarrativeOpeningFlow({
     }
     // Unsupported surface for a reaction (e.g. story_reader) — drop safely.
     setReactionQueue((current) => current.slice(1));
-  }, [activeDialogue, activeReactionDialogue, activeReactionToast, activeStoryEpisode, activeToast, bossChallengeActive, currentIslandNumber, isEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, reactionQueue]);
+  }, [activeDialogue, activeReactionDialogue, activeReactionToast, activeStoryEpisode, activeToast, bossChallengeActive, currentIslandNumber, reactionEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, reactionQueue]);
 
   const handleStoryEpisodeClosed = useCallback((episode: Exclude<ActiveIslandStoryEpisode, null>) => {
     if (episode.kind === 'island_arrival') {

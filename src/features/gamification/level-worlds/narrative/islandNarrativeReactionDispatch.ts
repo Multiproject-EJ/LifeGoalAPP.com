@@ -215,6 +215,20 @@ export function buildReactionToast(
   };
 }
 
+/**
+ * Whether an island has any authored **reaction** beats (i.e. beats not owned by
+ * the legacy opening-flow controller). Drives island-agnostic reaction
+ * eligibility: any island with reaction content participates, with no per-island
+ * controller code. Currently only Island 1 qualifies.
+ */
+export function islandHasReactionBeats(
+  islandNumber: number,
+  definition: IslandNarrativeDefinition | null = getIslandNarrativeDefinition(islandNumber) ?? null,
+): boolean {
+  if (!definition) return false;
+  return definition.beats.some((beat) => !REACTION_EXCLUDED_BEAT_IDS.has(beat.id));
+}
+
 /** Priority rank for reaction queue ordering (lower shows first). */
 export function reactionBeatPriorityRank(beat: IslandNarrativeBeat): number {
   if (beat.priority === 'major') return 0;
