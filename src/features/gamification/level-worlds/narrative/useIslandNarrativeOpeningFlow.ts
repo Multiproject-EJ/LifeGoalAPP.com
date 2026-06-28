@@ -5,6 +5,16 @@ import {
   type IslandNarrativeSeenState,
   mergeIslandNarrativeSeenState,
 } from './islandNarrativeSeenState';
+import {
+  type IslandNarrativeReactionSnapshot,
+  type ReactionDialoguePayload,
+  type ReactionToastPayload,
+  buildReactionDialogue,
+  buildReactionToast,
+  diffIslandNarrativeReactionTriggers,
+  reactionBeatPriorityRank,
+  resolveReactionBeat,
+} from './islandNarrativeReactionDispatch';
 
 export type ActiveIslandStoryEpisode = {
   kind: 'global_prologue' | 'island_arrival' | 'island_resolution';
@@ -48,6 +58,16 @@ export type IslandNarrativeOpeningFlowInput = {
   canDisplayTravelReadyClosingOverClaimedCelebration: boolean;
   activeStopId: string | null;
   hatcheryBuildLevel: number | null | undefined;
+  /**
+   * Build level (0..3) per stop, indexed by canonical stop order
+   * (hatchery, habit, mystery, wisdom, boss). Drives the data-driven reaction
+   * beats (stop completions, landmark level reactions, majority-restored).
+   */
+  landmarkBuildLevels?: readonly number[];
+  /** Stop ids whose objective is complete on the current island. */
+  completedStopIds?: readonly string[];
+  /** True while the boss trial is actively in progress (boss-challenge framing). */
+  bossChallengeActive?: boolean;
   canChallengeCurrentBoss: boolean;
   isCurrentIslandBossDefeated: boolean;
   bossTrialResolvedIslandNumber: number | null | undefined;
@@ -202,6 +222,9 @@ export function useIslandNarrativeOpeningFlow({
   canDisplayTravelReadyClosingOverClaimedCelebration,
   activeStopId,
   hatcheryBuildLevel,
+  landmarkBuildLevels,
+  completedStopIds,
+  bossChallengeActive,
   canChallengeCurrentBoss,
   isCurrentIslandBossDefeated,
   bossTrialResolvedIslandNumber,
@@ -215,6 +238,11 @@ export function useIslandNarrativeOpeningFlow({
   const [queue, setQueue] = useState<IslandNarrativeControllerBeatId[]>([]);
   const [activeDialogue, setActiveDialogue] = useState<ActiveIslandNarrativeDialogue>(null);
   const [activeToast, setActiveToast] = useState<ActiveIslandNarrativeToast>(null);
+  // Data-driven "reaction" layer (additive; legacy beats above are untouched).
+  const [reactionQueue, setReactionQueue] = useState<string[]>([]);
+  const [activeReactionDialogue, setActiveReactionDialogue] = useState<ReactionDialoguePayload | null>(null);
+  const [activeReactionToast, setActiveReactionToast] = useState<ReactionToastPayload | null>(null);
+  const previousReactionSnapshotRef = useRef<IslandNarrativeReactionSnapshot | null>(null);
   const sessionDisplayedRef = useRef<Set<string>>(new Set());
   const previousActiveStopIdRef = useRef<string | null>(null);
   const previousHatcheryBuildLevelRef = useRef<number | null>(null);
@@ -229,6 +257,10 @@ export function useIslandNarrativeOpeningFlow({
     setQueue([]);
     setActiveDialogue(null);
     setActiveToast(null);
+    setReactionQueue([]);
+    setActiveReactionDialogue(null);
+    setActiveReactionToast(null);
+    previousReactionSnapshotRef.current = null;
     previousHatcheryBuildLevelRef.current = null;
     previousCanChallengeBossRef.current = null;
     previousIsland1BossResolvedRef.current = null;
@@ -241,9 +273,14 @@ export function useIslandNarrativeOpeningFlow({
   useEffect(() => {
     if (isEligible) return;
     setQueue((current) => current.filter((beatId) => beatId !== 'I001-B26' && beatId !== 'I001-B29' && beatId !== 'I001-B30'));
+    // Reactions are Island 1 / cycle 0 only — drop them when scope is left.
+    setReactionQueue([]);
+    setActiveReactionDialogue(null);
+    setActiveReactionToast(null);
+    previousReactionSnapshotRef.current = null;
   }, [isEligible]);
 
-  const isSeen = useCallback((beatId: IslandNarrativeControllerBeatId) => {
+  const isSeen = useCallback((beatId: string) => {
     const seen = seenStateRef.current;
     if (seen.beats[beatId]) return true;
     if (beatId === 'I001-B02' && seen.episodes[ISLAND_001_ARRIVAL_EPISODE_ID]) return true;
@@ -251,7 +288,7 @@ export function useIslandNarrativeOpeningFlow({
     return sessionDisplayedRef.current.has(beatId);
   }, []);
 
-  const markSeen = useCallback((beatId: IslandNarrativeControllerBeatId) => {
+  const markSeen = useCallback((beatId: string) => {
     const now = Date.now();
     sessionDisplayedRef.current.add(beatId);
     const next: SeenState = {
@@ -288,6 +325,7 @@ export function useIslandNarrativeOpeningFlow({
     seenStateRef.current = merged;
     writeSeenState(storageKey, merged);
     setQueue((current) => current.filter((beatId) => !isSeen(beatId)));
+    setReactionQueue((current) => current.filter((beatId) => !isSeen(beatId)));
   }, [persistedNarrativeSeenState, storageKey, isSeen]);
 
   useEffect(() => {
@@ -463,6 +501,95 @@ export function useIslandNarrativeOpeningFlow({
     setActiveDialogue(dialogue);
   }, [activeDialogue, activeStoryEpisode, activeToast, canChallengeCurrentBoss, canDisplayTravelReadyClosingOverClaimedCelebration, currentIslandNumber, cycleIndex, isCurrentIslandBossDefeated, isEligible, isGlobalPrologueActive, isIslandClearTravelReady, isNarrativeSurfaceBlocked, isSeen, queue, setActiveStoryEpisode, bossTrialResolvedIslandNumber]);
 
+  // --- Reaction layer (data-driven; stop/landmark/majority/boss-start beats) ---
+  // Stable string keys keep the watcher from running on unrelated re-renders.
+  const completedStopsKey = (completedStopIds ?? []).join(',');
+  const landmarkLevelsKey = (landmarkBuildLevels ?? []).join(',');
+
+  const reactionBeatRank = useCallback((beatId: string): number => {
+    const beat = getIslandNarrativeDefinition(currentIslandNumber)?.beats.find((entry) => entry.id === beatId);
+    return beat ? reactionBeatPriorityRank(beat) : 99;
+  }, [currentIslandNumber]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) {
+      previousReactionSnapshotRef.current = null;
+      return;
+    }
+    const nextSnapshot: IslandNarrativeReactionSnapshot = {
+      activeStopId: activeStopId ?? null,
+      completedStopIds: completedStopIds ?? [],
+      landmarkBuildLevels: landmarkBuildLevels ?? [],
+      bossChallengeActive: Boolean(bossChallengeActive),
+    };
+    const previous = previousReactionSnapshotRef.current;
+    previousReactionSnapshotRef.current = nextSnapshot;
+    // Hydration baseline: the first hydrated snapshot seeds the ref only — never
+    // replay reactions for progress an existing save already made.
+    if (!isEligible || previous === null) return;
+
+    const triggers = diffIslandNarrativeReactionTriggers(previous, nextSnapshot, currentIslandNumber);
+    if (triggers.length === 0) return;
+
+    const newBeatIds: string[] = [];
+    for (const trigger of triggers) {
+      const beat = resolveReactionBeat(trigger, currentIslandNumber);
+      if (beat && !isSeen(beat.id) && !newBeatIds.includes(beat.id)) newBeatIds.push(beat.id);
+    }
+    if (newBeatIds.length === 0) return;
+
+    setReactionQueue((current) => {
+      const merged = [...current];
+      for (const id of newBeatIds) if (!merged.includes(id)) merged.push(id);
+      return merged.sort((a, b) => reactionBeatRank(a) - reactionBeatRank(b));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeStopId, bossChallengeActive, completedStopsKey, landmarkLevelsKey, currentIslandNumber, hasHydratedRuntimeState, isEligible, isSeen, reactionBeatRank]);
+
+  // Reaction display — yields to every legacy surface and the legacy queue.
+  useEffect(() => {
+    if (!isEligible) return;
+    if (activeStoryEpisode || isGlobalPrologueActive || isNarrativeSurfaceBlocked) return;
+    if (activeDialogue || activeToast || queue.length > 0) return;
+    if (activeReactionDialogue || activeReactionToast) return;
+    const nextId = reactionQueue[0];
+    if (!nextId) return;
+    if (isSeen(nextId)) {
+      setReactionQueue((current) => current.slice(1));
+      return;
+    }
+    const definition = getIslandNarrativeDefinition(currentIslandNumber) ?? null;
+    const beat = definition?.beats.find((entry) => entry.id === nextId) ?? null;
+    if (!beat) {
+      setReactionQueue((current) => current.slice(1));
+      return;
+    }
+    if (beat.surface === 'dialogue_sheet') {
+      const dialogue = buildReactionDialogue(beat, definition);
+      if (!dialogue) {
+        setReactionQueue((current) => current.slice(1));
+        return;
+      }
+      sessionDisplayedRef.current.add(nextId);
+      setReactionQueue((current) => current.slice(1));
+      setActiveReactionDialogue(dialogue);
+      return;
+    }
+    if (beat.surface === 'toast') {
+      const toast = buildReactionToast(beat, definition);
+      if (!toast) {
+        setReactionQueue((current) => current.slice(1));
+        return;
+      }
+      sessionDisplayedRef.current.add(nextId);
+      setReactionQueue((current) => current.slice(1));
+      setActiveReactionToast(toast);
+      return;
+    }
+    // Unsupported surface for a reaction (e.g. story_reader) — drop safely.
+    setReactionQueue((current) => current.slice(1));
+  }, [activeDialogue, activeReactionDialogue, activeReactionToast, activeStoryEpisode, activeToast, currentIslandNumber, isEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, reactionQueue]);
+
   const handleStoryEpisodeClosed = useCallback((episode: Exclude<ActiveIslandStoryEpisode, null>) => {
     if (episode.kind === 'island_arrival') {
       markSeen('I001-B02');
@@ -494,13 +621,30 @@ export function useIslandNarrativeOpeningFlow({
     setActiveToast(null);
   }, [activeToast, markSeen]);
 
+  const handleReactionDialogueContinue = useCallback(() => {
+    if (!activeReactionDialogue) return;
+    markSeen(activeReactionDialogue.beatId);
+    setActiveReactionDialogue(null);
+  }, [activeReactionDialogue, markSeen]);
+
+  const handleReactionToastDismiss = useCallback(() => {
+    if (!activeReactionToast) return;
+    markSeen(activeReactionToast.beatId);
+    setActiveReactionToast(null);
+  }, [activeReactionToast, markSeen]);
+
   return {
     activeDialogue,
     activeToast,
+    activeReactionDialogue,
+    activeReactionToast,
     queuedBeatIds: queue,
+    reactionQueuedBeatIds: reactionQueue,
     handleStoryEpisodeClosed,
     handleDialogueContinue,
     handleDialogueClose,
     handleToastDismiss,
+    handleReactionDialogueContinue,
+    handleReactionToastDismiss,
   };
 }

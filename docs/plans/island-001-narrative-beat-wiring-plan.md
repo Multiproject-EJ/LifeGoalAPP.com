@@ -173,6 +173,19 @@ Each PR is independently shippable and additive. Feature-flag the new beats
   speakers against the slice §7 table.
 - No code. Output: an updated beat checklist in this doc / the slice.
 
+> **How it shipped (deviation from the original PR 1 framing).** Rather than a
+> clean-room rewrite of the test-locked opening-flow controller (high regression
+> risk on the live prologue/arrival/boss/travel flow, unverifiable without an
+> in-app run), the new beats were wired as an **additive data-driven layer**:
+> a pure `diffIslandNarrativeReactionTriggers` snapshot diff + content-driven
+> beat resolution + content-driven surface payloads, sharing the existing
+> seen-ledger (incl. cross-device sync) and rendering through a second
+> dialogue/toast instance that yields to every legacy surface. The original 7
+> beats keep their exact code, so all prior tests pass unchanged. Adding a future
+> reaction beat is now **content-only** (as long as its trigger kind is covered
+> by the snapshot). Remaining cleanup toward the fully-unified controller in
+> §3 is optional and can follow once the live flow has in-app QA.
+
 ### PR 1 — Controller refactor to data-driven dispatch (no new beats)
 - Add `stop_completed` + aggregate/boss trigger kinds to `islandNarrativeTypes.ts`.
 - Introduce `IslandNarrativeSnapshot` + pure `diffNarrativeSnapshot`.
@@ -187,13 +200,15 @@ Each PR is independently shippable and additive. Feature-flag the new beats
   `islandNarrativeDialogueComponent.test.ts`, etc.); 7 beats fire as before;
   no new beats yet.
 
-> **Content status (PRs 2–4): ✅ AUTHORED.** All 21 remaining Island-1 beats are
-> now written into `island001Narrative.ts` as read-only content (stop-open,
-> stop-complete, per-stop build levels, majority-restored, boss start/midpoint),
-> with the new trigger kinds added to `islandNarrativeTypes.ts` +
-> `islandNarrativeValidation.ts` and locked by tests. They are **inert until
-> wired** — the controller (PR 1) still needs to watch the new triggers. Slice
-> B06 is intentionally omitted (shipped B24 already owns the Hatchery-L1 react).
+> **Status: ✅ CONTENT AUTHORED + WIRED (live).** All 21 remaining Island-1
+> beats are written into `island001Narrative.ts`, and **20 of them now fire**
+> through a new data-driven reaction layer (`islandNarrativeReactionDispatch.ts`
+> + watcher/display effects in `useIslandNarrativeOpeningFlow.ts`). The legacy
+> 7-beat machinery is untouched. Slice B06 is omitted (shipped B24 owns the
+> Hatchery-L1 react). **B28 (boss_midpoint) is authored but not yet wired** — it
+> needs a mid-fight signal from the boss component; per the slice fallback its
+> reveal can fold into the resolution episode (B29). See the "How it shipped"
+> note under §4.
 
 ### PR 2 — Stop-open + stop-complete beats for habit / mystery / wisdom
 - Author B09/B14/B19 (`stop_opened`) and B05/B10/B15/B20 (`stop_completed`) in
