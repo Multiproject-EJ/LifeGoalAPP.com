@@ -6,7 +6,6 @@ export type AiTaskKey =
   | 'habit_suggestion_structured'
   | 'habit_rationale_rewrite'
   | 'habit_chain_suggestion'
-  | 'habit_tip_of_day'
   | 'environment_idea_generation'
   | 'conflict_inner_reflection'
   | 'conflict_shared_mediation';
@@ -32,10 +31,6 @@ const AI_TASK_REGISTRY: Record<AiTaskKey, AiTaskDefinition> = {
   habit_chain_suggestion: {
     level: 'level_1',
     description: 'Suggest possible keystone / chain-reaction links between habits and life areas.',
-  },
-  habit_tip_of_day: {
-    level: 'level_2',
-    description: 'Creatively reshape a struggling habit loop (cue/craving/routine/reward) into a Tip of the Day.',
   },
   environment_idea_generation: {
     level: 'level_1',
