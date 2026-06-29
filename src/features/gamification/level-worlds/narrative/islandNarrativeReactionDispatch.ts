@@ -54,6 +54,8 @@ export interface IslandNarrativeReactionSnapshot {
   bossChallengeActive: boolean;
   /** True once the in-progress boss trial has reached its halfway score. */
   bossChallengeMidpoint: boolean;
+  /** True once the boss is challengeable (all builds done) — the finale-setup moment. */
+  bossEligible: boolean;
 }
 
 function isStopId(value: string | null | undefined): value is IslandNarrativeStopId {
@@ -118,6 +120,11 @@ export function diffIslandNarrativeReactionTriggers(
   // boss_midpoint — boss trial first reached its halfway score.
   if (next.bossChallengeMidpoint && !prev.bossChallengeMidpoint) {
     triggers.push({ kind: 'boss_midpoint', islandNumber });
+  }
+
+  // boss_eligible — the boss became challengeable (finale-setup moment).
+  if (next.bossEligible && !prev.bossEligible) {
+    triggers.push({ kind: 'boss_eligible', islandNumber });
   }
 
   return triggers;

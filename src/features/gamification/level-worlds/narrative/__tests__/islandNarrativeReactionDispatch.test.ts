@@ -29,6 +29,7 @@ function snapshot(overrides: Partial<IslandNarrativeReactionSnapshot> = {}): Isl
     landmarkBuildLevels: [0, 0, 0, 0, 0],
     bossChallengeActive: false,
     bossChallengeMidpoint: false,
+    bossEligible: false,
     ...overrides,
   };
 }
@@ -82,6 +83,13 @@ export const islandNarrativeReactionDispatchTests: TestCase[] = [
     run: () => {
       assertEqual(kinds(diffIslandNarrativeReactionTriggers(snapshot(), snapshot({ bossChallengeActive: true }), 1)).includes('boss_challenge_started'), true, 'fires on activation');
       assertEqual(diffIslandNarrativeReactionTriggers(snapshot({ bossChallengeActive: true }), snapshot({ bossChallengeActive: true }), 1).length, 0, 'no refire while active');
+    },
+  },
+  {
+    name: 'boss_eligible fires once when the boss becomes challengeable',
+    run: () => {
+      assertEqual(kinds(diffIslandNarrativeReactionTriggers(snapshot(), snapshot({ bossEligible: true }), 1)).includes('boss_eligible'), true, 'fires on eligibility');
+      assertEqual(diffIslandNarrativeReactionTriggers(snapshot({ bossEligible: true }), snapshot({ bossEligible: true }), 1).length, 0, 'no refire while eligible');
     },
   },
   {

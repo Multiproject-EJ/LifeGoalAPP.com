@@ -243,5 +243,15 @@ export const island002NarrativeDefinition = {
       repeatPolicy: 'once',
       text: '...the wave... it never came...',
     },
+    {
+      id: 'I002-B24',
+      trigger: { kind: 'boss_eligible', islandNumber: 2 },
+      speakerId: 'bryn',
+      surface: 'dialogue_sheet',
+      priority: 'major',
+      repeatPolicy: 'once',
+      text: 'The bay is breathing again. The basin will hear us now.',
+      secondaryText: 'Help her let go — do not force the tide.',
+    },
   ],
 } satisfies IslandNarrativeDefinition;

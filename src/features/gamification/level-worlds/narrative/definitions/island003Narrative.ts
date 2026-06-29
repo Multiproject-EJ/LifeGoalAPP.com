@@ -49,5 +49,6 @@ export const island003NarrativeDefinition = {
     { id: 'I003-B21', trigger: { kind: 'landmarks_restored_majority', islandNumber: 3, threshold: 3 }, speakerId: 'nuru', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: 'Folk are back in the groves, sharing the haul.' },
     { id: 'I003-B22', trigger: { kind: 'boss_challenge_started', islandNumber: 3 }, speakerId: 'pip', surface: 'toast', priority: 'short', repeatPolicy: 'once', text: 'Show him the grove still gives — do not take.' },
     { id: 'I003-B23', trigger: { kind: 'boss_midpoint', islandNumber: 3 }, speakerId: 'tamba', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: '...so little left... I held it all...' },
+    { id: 'I003-B24', trigger: { kind: 'boss_eligible', islandNumber: 3 }, speakerId: 'liko', surface: 'dialogue_sheet', priority: 'major', repeatPolicy: 'once', text: 'The grove is full again. The canopy will listen now.', secondaryText: 'Show him it gives — do not take.' },
   ],
 } satisfies IslandNarrativeDefinition;
