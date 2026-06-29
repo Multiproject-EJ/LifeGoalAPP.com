@@ -17,6 +17,8 @@
     "src/features/tip-of-day/tipOfDayContent.ts",
     "src/features/habits/habitHealth.ts",
     "src/features/habits/habitCoach.ts",
-    "src/features/tip-of-day/__tests__/tipOfDayContent.test.ts"
+    "src/features/habits/habitInsightModel.ts",
+    "src/features/tip-of-day/__tests__/tipOfDayContent.test.ts",
+    "src/features/habits/__tests__/habitInsightModel.test.ts"
   ]
 }

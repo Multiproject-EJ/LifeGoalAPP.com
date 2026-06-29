@@ -21,10 +21,13 @@ import {
   type HabitV2Row,
 } from '../../services/habitsV2';
 import { recordTipShown } from '../../services/tipOfDayLog';
+import { listRecentHabitInsights } from '../../services/habitInsights';
 import { getScheduledCountForWindow } from '../habits/scheduleInterpreter';
 import { assessHabitHealth } from '../habits/habitHealth';
+import { formatInsightsForPrompt, summarizeInsights } from '../habits/habitInsightModel';
 import { enrichReshapeDeck } from './tipOfDayAi';
 import {
+  buildReshapeDeck,
   selectTipDeck,
   type TipDeck,
   type TipHabitInput,
@@ -137,7 +140,15 @@ export async function buildTipOfDayForSession(
     const habit = tipHabits.find((h) => h.id === deck.habitId);
     const habitHealth = health.find((h) => h.habitId === deck.habitId);
     if (habit && habitHealth) {
-      const enriched = await enrichReshapeDeck(deck, habit, habitHealth);
+      // Close the loop: fold the user's own captured cues into the deck and the
+      // AI prompt so the tip reflects why this habit actually slips for them.
+      const insights = await listRecentHabitInsights(userId, habit.id, 10);
+      const summary = summarizeInsights(insights);
+      const promptHint = formatInsightsForPrompt(summary);
+      const cueHint = summary.topCues.slice(0, 3).map((cue) => cue.label).join(', ') || null;
+
+      const baseDeck = cueHint ? buildReshapeDeck({ habit, health: habitHealth, cueHint }) : deck;
+      const enriched = await enrichReshapeDeck(baseDeck, habit, habitHealth, promptHint);
       finalDeck = enriched.deck;
       source = enriched.source;
     }

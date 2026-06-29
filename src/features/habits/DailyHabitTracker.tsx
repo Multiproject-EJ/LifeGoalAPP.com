@@ -172,6 +172,8 @@ import {
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
 import { HabitPauseDialog } from './HabitPauseDialog';
+import { HabitInsightCaptureSheet } from './HabitInsightCaptureSheet';
+import { recordHabitInsight, awardInsightCaptureDice } from '../../services/habitInsights';
 import { RoutinesTodayLane, type RoutinesTodayLaneSummary } from '../routines';
 import type { ArchetypeHand } from '../identity/archetypes/archetypeHandBuilder';
 import { isPlayersHandSparkResultEnabled } from '../players_hand/playersHandFeatureFlags';
@@ -1123,6 +1125,7 @@ export function DailyHabitTracker({
   const [lifecycleActionHabitIds, setLifecycleActionHabitIds] = useState<Set<string>>(new Set());
   const [todayPauseDialogHabit, setTodayPauseDialogHabit] = useState<HabitWithGoal | null>(null);
   const [reviewPauseDialogHabit, setReviewPauseDialogHabit] = useState<HabitWithGoal | null>(null);
+  const [insightCaptureHabit, setInsightCaptureHabit] = useState<HabitWithGoal | null>(null);
   const [reviewAiLoadingHabitIds, setReviewAiLoadingHabitIds] = useState<Set<string>>(new Set());
   const [reviewAiDraftByHabitId, setReviewAiDraftByHabitId] = useState<Record<string, HabitReviewAiDraft>>({});
   const [analysisHabitId, setAnalysisHabitId] = useState<string | null>(null);
@@ -6877,11 +6880,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       }
       if (action === 'skip') {
         void handleLogHabitSkip(habit);
+        // Capture the cue behind a slip while it's fresh — but only for habits
+        // that are actually struggling, so healthy habits stay friction-free.
+        const healthState = habitHealthByHabitId[habit.id] ?? 'active';
+        if (healthState !== 'active') {
+          setInsightCaptureHabit(habit);
+        }
         return;
       }
       void handleUndoHabitSkip(habit);
     },
-    [activeDate, handleLogHabitSkip, handleUndoHabitSkip, toggleHabitForDate],
+    [activeDate, habitHealthByHabitId, handleLogHabitSkip, handleUndoHabitSkip, toggleHabitForDate],
   );
 
   const buildAutoProgressHabit = useCallback(
@@ -11815,6 +11824,23 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               reason: reason ?? 'review_pause',
               resumeOn: resumeOn ?? null,
             });
+          }}
+        />
+      ) : null}
+
+      {insightCaptureHabit ? (
+        <HabitInsightCaptureSheet
+          habitTitle={insightCaptureHabit.name}
+          onClose={() => setInsightCaptureHabit(null)}
+          onSubmit={async ({ cueTags, note }) => {
+            const saved = await recordHabitInsight({
+              userId: session.user.id,
+              habitId: insightCaptureHabit.id,
+              cueTags,
+              note,
+            });
+            if (!saved) return 0;
+            return gamificationEnabled ? awardInsightCaptureDice(session.user.id) : 0;
           }}
         />
       ) : null}

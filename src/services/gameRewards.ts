@@ -25,7 +25,8 @@ export type GameSource =
   | 'vision_quest'
   | 'wheel_of_wins'
   | 'dice_packs'
-  | 'daily_treats';
+  | 'daily_treats'
+  | 'habit_insight';
 
 type LegacyGameSource = 'pomodoro_sprint';
 
