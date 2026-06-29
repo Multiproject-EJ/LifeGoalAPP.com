@@ -51,5 +51,6 @@ export const island005NarrativeDefinition = {
     { id: 'I005-B21', trigger: { kind: 'landmarks_restored_majority', islandNumber: 5, threshold: 3 }, speakerId: 'sprat', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: 'Folk are back on the reef, singing it awake.' },
     { id: 'I005-B22', trigger: { kind: 'boss_challenge_started', islandNumber: 5 }, speakerId: 'reev', surface: 'toast', priority: 'short', repeatPolicy: 'once', text: 'Help her find her own song — do not silence the Crown.' },
     { id: 'I005-B23', trigger: { kind: 'boss_midpoint', islandNumber: 5 }, speakerId: 'thalassa', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: '...not my voice... it sings through me...' },
+    { id: 'I005-B24', trigger: { kind: 'boss_eligible', islandNumber: 5 }, speakerId: 'cael', surface: 'dialogue_sheet', priority: 'major', repeatPolicy: 'once', text: 'The reef sings in time again. The Crown will answer now.', secondaryText: 'Free her voice — do not silence the song.' },
   ],
 } satisfies IslandNarrativeDefinition;

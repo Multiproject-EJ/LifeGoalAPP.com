@@ -8,7 +8,6 @@ import { assert, assertEqual, type TestCase } from '../../services/__tests__/tes
 const DEFERRED_TRIGGER_KINDS = new Set([
   'island_entered',
   'arrival_closed',
-  'boss_eligible',
   'boss_resolved',
   'island_clear_travel_ready',
 ]);
@@ -34,8 +33,8 @@ export const island003to005NarrativeTests: TestCase[] = ISLANDS.flatMap(({ def, 
       assertEqual(def.civilizationName, civ, 'civilization');
       assertEqual(def.characters.map((c) => c.id).join(','), cast, 'cast ids');
     } },
-    { name: `${name}: 23 beats, all ${prefix}-B## scoped to island ${islandNumber}`, run: () => {
-      assertEqual(def.beats.length, 23, 'beat count');
+    { name: `${name}: 24 beats, all ${prefix}-B## scoped to island ${islandNumber}`, run: () => {
+      assertEqual(def.beats.length, 24, 'beat count');
       def.beats.forEach((b) => {
         assert(new RegExp(`^${prefix}-B\\d{2}$`).test(b.id), `bad id ${b.id}`);
         assertEqual((b.trigger as { islandNumber: number }).islandNumber, islandNumber, `${b.id} island`);
@@ -54,6 +53,11 @@ export const island003to005NarrativeTests: TestCase[] = ISLANDS.flatMap(({ def, 
       assertEqual(beat('22').surface, 'toast', 'B22 toast');
       assertEqual(beat('23').trigger.kind, 'boss_midpoint', 'B23 midpoint');
       assertEqual(beat('23').surface, 'toast', 'B23 toast');
+    } },
+    { name: `${name}: finale-setup beat (B24) fires on boss eligibility`, run: () => {
+      assertEqual(beat('24').trigger.kind, 'boss_eligible', 'B24 boss_eligible');
+      assertEqual(beat('24').priority, 'major', 'B24 is major');
+      assertEqual(resolveReactionBeat({ kind: 'boss_eligible', islandNumber }, islandNumber, def)?.id, `${prefix}-B24`, 'boss_eligible round-trips');
     } },
     { name: `${name}: a sample beat round-trips through the dispatch`, run: () => {
       const opened = resolveReactionBeat({ kind: 'stop_opened', islandNumber, stopId: 'habit' }, islandNumber, def);

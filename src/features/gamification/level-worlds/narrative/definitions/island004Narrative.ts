@@ -49,5 +49,6 @@ export const island004NarrativeDefinition = {
     { id: 'I004-B21', trigger: { kind: 'landmarks_restored_majority', islandNumber: 4, threshold: 3 }, speakerId: 'bodie', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: 'Folk are back on the shore, building again.' },
     { id: 'I004-B22', trigger: { kind: 'boss_challenge_started', islandNumber: 4 }, speakerId: 'wren', surface: 'toast', priority: 'short', repeatPolicy: 'once', text: 'Help him build again — do not break what is left.' },
     { id: 'I004-B23', trigger: { kind: 'boss_midpoint', islandNumber: 4 }, speakerId: 'garran', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: '...all of it... washed away... why rebuild...' },
+    { id: 'I004-B24', trigger: { kind: 'boss_eligible', islandNumber: 4 }, speakerId: 'fenn', surface: 'dialogue_sheet', priority: 'major', repeatPolicy: 'once', text: 'The isle stands rebuilt. The warden will see us now.', secondaryText: 'Build beside him — do not break through.' },
   ],
 } satisfies IslandNarrativeDefinition;

@@ -536,6 +536,7 @@ export function useIslandNarrativeOpeningFlow({
       landmarkBuildLevels: landmarkBuildLevels ?? [],
       bossChallengeActive: Boolean(bossChallengeActive),
       bossChallengeMidpoint: Boolean(bossChallengeMidpoint),
+      bossEligible: Boolean(canChallengeCurrentBoss) && !isCurrentIslandBossDefeated,
     };
     const previous = previousReactionSnapshotRef.current;
     previousReactionSnapshotRef.current = nextSnapshot;
@@ -559,7 +560,7 @@ export function useIslandNarrativeOpeningFlow({
       return merged.sort((a, b) => reactionBeatRank(a) - reactionBeatRank(b));
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeStopId, bossChallengeActive, bossChallengeMidpoint, completedStopsKey, landmarkLevelsKey, currentIslandNumber, hasHydratedRuntimeState, reactionEligible, isSeen, reactionBeatRank]);
+  }, [activeStopId, bossChallengeActive, bossChallengeMidpoint, canChallengeCurrentBoss, isCurrentIslandBossDefeated, completedStopsKey, landmarkLevelsKey, currentIslandNumber, hasHydratedRuntimeState, reactionEligible, isSeen, reactionBeatRank]);
 
   // Boss-framing reactions (B27 start / B28 midpoint) are moment-specific. If the
   // trial ends before they surface, drop them so they never appear post-fight.
