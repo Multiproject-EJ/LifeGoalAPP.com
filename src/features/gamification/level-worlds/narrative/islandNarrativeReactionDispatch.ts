@@ -159,7 +159,9 @@ export function resolveReactionBeat(
 
 function speakerDisplayName(speakerId: string | undefined, definition: IslandNarrativeDefinition | null): string {
   const character = definition?.characters.find((entry) => entry.id === speakerId);
-  return character?.displayName ?? 'Luma Isle';
+  // Speaker-less beats (e.g. ambient companion lines) narrate as the island
+  // itself — island-aware so this works beyond Island 1.
+  return character?.displayName ?? definition?.islandName ?? 'Island';
 }
 
 function toneForSpeaker(speakerId: string | undefined): IslandNarrativeDialogueTone {

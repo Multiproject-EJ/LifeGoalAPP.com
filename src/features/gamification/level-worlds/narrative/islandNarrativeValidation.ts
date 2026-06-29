@@ -52,7 +52,10 @@ export function validateIslandNarrativeDefinition(definition: unknown): IslandNa
       if (!beatId) errors.push(`beats[${index}].id must be a non-empty string`);
       else if (beatIds.has(beatId)) errors.push(`duplicate beat id: ${beatId}`);
       else beatIds.add(beatId);
-      if (def.islandNumber === 1 && beatId && !/^I001-B\d{2}$/.test(beatId)) errors.push(`Island 1 beat id must match I001-B##: ${beatId}`);
+      if (Number.isInteger(def.islandNumber) && Number(def.islandNumber) > 0 && beatId) {
+        const prefix = `I${String(def.islandNumber).padStart(3, '0')}`;
+        if (!new RegExp(`^${prefix}-B\\d{2}$`).test(beatId)) errors.push(`Island ${def.islandNumber} beat id must match ${prefix}-B##: ${beatId}`);
+      }
       if (typeof beat.speakerId === 'string' && !characterIds.has(beat.speakerId)) errors.push(`${beatId || `beats[${index}]`} references unknown speakerId: ${beat.speakerId}`);
       if (!PRIORITIES.has(String(beat.priority))) errors.push(`${beatId || `beats[${index}]`} has unsupported priority: ${String(beat.priority)}`);
       if (!SURFACES.has(String(beat.surface))) errors.push(`${beatId || `beats[${index}]`} has unsupported surface: ${String(beat.surface)}`);

@@ -1,8 +1,10 @@
 import type { IslandNarrativeDefinition } from './islandNarrativeTypes';
 import { island001NarrativeDefinition } from './definitions/island001Narrative';
+import { island002NarrativeDefinition } from './definitions/island002Narrative';
 
 const ISLAND_NARRATIVE_DEFINITIONS: Readonly<Record<number, IslandNarrativeDefinition>> = {
   1: island001NarrativeDefinition,
+  2: island002NarrativeDefinition,
 };
 
 export function getIslandNarrativeDefinition(islandNumber: number): IslandNarrativeDefinition | undefined {
