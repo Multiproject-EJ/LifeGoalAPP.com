@@ -1,25 +1,48 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import {
+  createSpring,
+  stepSpring,
+  SPRING_PRESETS,
+  type SpringConfig,
+  type SpringState,
+} from './springEngine';
 import type { TileAnchor } from '../../services/islandBoardLayout';
 
+// ─── Token animation with Bezier arcs, squash/stretch, and rAF ──────────────
+
 export interface TokenAnimState {
+  /** Current screen x/y of the token (interpolated during animation) */
   x: number;
   y: number;
+  /** Squash/stretch — scaleX and scaleY  */
   scaleX: number;
   scaleY: number;
+  /** Whether the token is currently mid-animation */
   isMoving: boolean;
+  /** Whether the token just landed (for landing effect) */
   isLanding: boolean;
 }
 
 export interface UseTokenAnimationOptions {
+  /** Function to convert a TileAnchor to screen coords */
   toScreen: (anchor: TileAnchor) => { x: number; y: number };
-  tokenRef?: RefObject<HTMLElement | null>;
+  /** Callback on each hop (for sound/haptics) */
   onHop?: (tileIndex: number) => void;
+  /** Callback with screen position on each hop — used for camera follow */
   onHopPosition?: (screenX: number, screenY: number, tileIndex: number) => void;
+  /** Callback when landing on final tile */
   onLand?: (tileIndex: number) => void;
+  /** Ms per hop — defaults to 220.  Used when no per-hop durations are supplied. */
   hopDurationMs?: number;
 }
 
-function bezierPoint(p0: { x: number; y: number }, cp: { x: number; y: number }, p1: { x: number; y: number }, t: number) {
+// Quadratic bezier interpolation at t ∈ [0,1]
+function bezierPoint(
+  p0: { x: number; y: number },
+  cp: { x: number; y: number },
+  p1: { x: number; y: number },
+  t: number,
+) {
   const u = 1 - t;
   return {
     x: u * u * p0.x + 2 * u * t * cp.x + t * t * p1.x,
@@ -27,143 +50,181 @@ function bezierPoint(p0: { x: number; y: number }, cp: { x: number; y: number },
   };
 }
 
+// Easing: ease-out cubic
 function easeOutCubic(t: number) {
   return 1 - Math.pow(1 - t, 3);
 }
 
 export function useTokenAnimation(opts: UseTokenAnimationOptions) {
-  const { toScreen, tokenRef, onHop, onHopPosition, onLand, hopDurationMs = 220 } = opts;
+  const { toScreen, onHop, onHopPosition, onLand, hopDurationMs = 220 } = opts;
 
   const [animState, setAnimState] = useState<TokenAnimState>({
     x: 0, y: 0, scaleX: 1, scaleY: 1, isMoving: false, isLanding: false,
   });
 
   const rafRef = useRef<number>(0);
-  const landingTimeoutRef = useRef<number | null>(null);
-  const activeRunRef = useRef<{
-    id: number;
-    resolve: () => void;
-  } | null>(null);
-  const nextRunIdRef = useRef(1);
+  const isAnimatingRef = useRef(false);
+  /** Tracks the token's current rendered position so animateHops can arc from the live spot,
+   *  even if a previous animation was interrupted mid-flight. */
   const animPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const writeTokenTransform = useCallback((x: number, y: number, scaleX = 1, scaleY = 1) => {
-    animPosRef.current = { x, y };
-    const el = tokenRef?.current;
-    if (!el) return;
-    el.style.setProperty('--token-x', `${x.toFixed(2)}px`);
-    el.style.setProperty('--token-y', `${y.toFixed(2)}px`);
-    el.style.setProperty('--token-scale-x', scaleX.toFixed(3));
-    el.style.setProperty('--token-scale-y', scaleY.toFixed(3));
-  }, [tokenRef]);
-
-  const finishActiveRun = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
-    if (landingTimeoutRef.current !== null) {
-      window.clearTimeout(landingTimeoutRef.current);
-      landingTimeoutRef.current = null;
-    }
-    const active = activeRunRef.current;
-    activeRunRef.current = null;
-    active?.resolve();
-  }, []);
-
+  /** Snap token to a tile (no animation) */
   const snapTo = useCallback((anchor: TileAnchor) => {
-    finishActiveRun();
     const pos = toScreen(anchor);
-    writeTokenTransform(pos.x, pos.y, 1, 1);
-    setAnimState({ x: pos.x, y: pos.y, scaleX: 1, scaleY: 1, isMoving: false, isLanding: false });
-  }, [finishActiveRun, toScreen, writeTokenTransform]);
+    animPosRef.current = pos;
+    setAnimState({
+      x: pos.x, y: pos.y,
+      scaleX: 1, scaleY: 1,
+      isMoving: false, isLanding: false,
+    });
+  }, [toScreen]);
 
-  const animateHops = useCallback((anchors: TileAnchor[], indices: number[], perHopMs?: number[]): Promise<void> => {
-    finishActiveRun();
-    if (indices.length === 0) return Promise.resolve();
-
+  /**
+   * Animate the token hopping through a sequence of tile anchors.
+   * Returns a Promise that resolves when the full animation completes.
+   *
+   * @param anchors   Full tile anchor array for the board
+   * @param indices   Tile indices to hop through (in order)
+   * @param perHopMs  Optional per-hop duration array from `computeHopDurations()`.
+   *                  When supplied, each hop uses its own timing for narrative compression
+   *                  (fast middle hops, slow landing hops).  Falls back to `hopDurationMs`.
+   */
+  const animateHops = useCallback((
+    anchors: TileAnchor[],
+    indices: number[],
+    perHopMs?: number[],
+  ): Promise<void> => {
     return new Promise<void>((resolve) => {
-      const runId = nextRunIdRef.current++;
-      activeRunRef.current = { id: runId, resolve };
+      if (indices.length === 0) { resolve(); return; }
+
+      cancelAnimationFrame(rafRef.current);
+      isAnimatingRef.current = true;
       setAnimState((s) => ({ ...s, isMoving: true, isLanding: false }));
 
       let hopIndex = 0;
       let hopStartTime = 0;
-      let fromPos = { x: animPosRef.current.x, y: animPosRef.current.y };
 
-      function resolveIfCurrent() {
-        if (activeRunRef.current?.id !== runId) return;
-        const active = activeRunRef.current;
-        activeRunRef.current = null;
-        active?.resolve();
-      }
+      // Arc from the token's current live position so that interrupting a
+      // mid-flight animation starts the new arc from the correct screen spot,
+      // rather than inferring the previous tile's anchor position.
+      let fromPos = { x: animPosRef.current.x, y: animPosRef.current.y };
 
       function startNextHop(now: number) {
         hopStartTime = now;
         const currentTileIdx = indices[hopIndex];
-        fromPos = hopIndex === 0 ? fromPos : toScreen(anchors[indices[hopIndex - 1]]);
+        fromPos = hopIndex === 0
+          ? fromPos
+          : toScreen(anchors[indices[hopIndex - 1]]);
+
+        // Fire hop callback
         onHop?.(currentTileIdx);
+
+        // Fire camera-follow callback with target screen position
         const targetPos = toScreen(anchors[currentTileIdx]);
         onHopPosition?.(targetPos.x, targetPos.y, currentTileIdx);
       }
 
       function animLoop(now: number) {
-        if (activeRunRef.current?.id !== runId) { resolve(); return; }
+        if (!isAnimatingRef.current) { resolve(); return; }
         if (hopStartTime === 0) startNextHop(now);
+
+        // Use per-hop duration if provided, otherwise fall back to default
         const currentHopMs = perHopMs?.[hopIndex] ?? hopDurationMs;
+
         const elapsed = now - hopStartTime;
         const progress = Math.min(elapsed / currentHopMs, 1);
         const eased = easeOutCubic(progress);
+
         const currentIdx = indices[hopIndex];
         const toPos = toScreen(anchors[currentIdx]);
-        const cp = { x: (fromPos.x + toPos.x) / 2, y: Math.min(fromPos.y, toPos.y) - 25 };
+
+        // Bezier arc: control point is elevated midpoint
+        const arcHeight = 25; // px lift at apex
+        const cp = {
+          x: (fromPos.x + toPos.x) / 2,
+          y: Math.min(fromPos.y, toPos.y) - arcHeight,
+        };
         const pos = bezierPoint(fromPos, cp, toPos, eased);
+
+        // Squash & stretch
         let scaleX = 1;
         let scaleY = 1;
         const isLastHop = hopIndex === indices.length - 1;
+
         if (progress < 0.3) {
+          // Launch stretch
           const launchT = progress / 0.3;
           scaleX = 1 - 0.15 * launchT;
           scaleY = 1 + 0.20 * launchT;
         } else if (progress < 0.7) {
+          // Normalize
           const midT = (progress - 0.3) / 0.4;
           scaleX = 0.85 + 0.15 * midT;
           scaleY = 1.20 - 0.20 * midT;
         } else if (isLastHop) {
+          // Final landing squash
           const landT = (progress - 0.7) / 0.3;
           scaleX = 1 + 0.15 * (1 - landT);
           scaleY = 1 - 0.20 * (1 - landT);
         }
 
-        writeTokenTransform(pos.x, pos.y, scaleX, scaleY);
+        animPosRef.current = { x: pos.x, y: pos.y };
+        setAnimState({
+          x: pos.x,
+          y: pos.y,
+          scaleX,
+          scaleY,
+          isMoving: true,
+          isLanding: false,
+        });
 
         if (progress >= 1) {
+          // Hop complete
           hopIndex += 1;
           if (hopIndex < indices.length) {
             fromPos = toPos;
             startNextHop(now);
             rafRef.current = requestAnimationFrame(animLoop);
-            return;
+          } else {
+            // All hops done — landing!
+            isAnimatingRef.current = false;
+            animPosRef.current = { x: toPos.x, y: toPos.y };
+            setAnimState({
+              x: toPos.x,
+              y: toPos.y,
+              scaleX: 1,
+              scaleY: 1,
+              isMoving: false,
+              isLanding: true,
+            });
+            onLand?.(currentIdx);
+
+            // Clear landing flag after animation
+            setTimeout(() => {
+              setAnimState((s) => ({ ...s, isLanding: false }));
+            }, 400);
+
+            resolve();
           }
-          writeTokenTransform(toPos.x, toPos.y, 1, 1);
-          setAnimState({ x: toPos.x, y: toPos.y, scaleX: 1, scaleY: 1, isMoving: false, isLanding: true });
-          onLand?.(currentIdx);
-          landingTimeoutRef.current = window.setTimeout(() => {
-            setAnimState((s) => ({ ...s, isLanding: false }));
-            landingTimeoutRef.current = null;
-          }, 400);
-          resolveIfCurrent();
-          return;
+        } else {
+          rafRef.current = requestAnimationFrame(animLoop);
         }
-        rafRef.current = requestAnimationFrame(animLoop);
       }
+
       rafRef.current = requestAnimationFrame(animLoop);
     });
-  }, [finishActiveRun, hopDurationMs, onHop, onHopPosition, onLand, toScreen, writeTokenTransform]);
+  }, [toScreen, onHop, onHopPosition, onLand, hopDurationMs]);
 
+  /** Cancel any in-progress animation */
   const cancelAnimation = useCallback(() => {
-    finishActiveRun();
-    setAnimState((s) => ({ ...s, isMoving: false, isLanding: false }));
-  }, [finishActiveRun]);
+    isAnimatingRef.current = false;
+    cancelAnimationFrame(rafRef.current);
+  }, []);
 
-  useEffect(() => () => finishActiveRun(), [finishActiveRun]);
-
-  return { animState, snapTo, animateHops, cancelAnimation, getCurrentPosition: () => animPosRef.current };
+  return {
+    animState,
+    snapTo,
+    animateHops,
+    cancelAnimation,
+  };
 }

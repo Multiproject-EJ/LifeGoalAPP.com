@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   createSpring,
   stepSprings,
@@ -33,12 +33,6 @@ export interface UseBoardCameraOptions {
   visualBounds?: CameraVisualBounds | null;
   /** Spring preset for programmatic camera moves */
   springPreset?: SpringConfig;
-  /** Camera-stage elements updated imperatively during spring ticks. */
-  artStageRef?: RefObject<HTMLElement | null>;
-  gameplayStageRef?: RefObject<HTMLElement | null>;
-  orbitStageRef?: RefObject<HTMLElement | null>;
-  boardTiltXDeg?: number;
-  boardRotateZDeg?: number;
 }
 
 interface CameraSprings {
@@ -150,17 +144,7 @@ export function clampCameraPanToVisualBounds(
 }
 
 export function useBoardCamera(options: UseBoardCameraOptions) {
-  const {
-    boardWidth,
-    boardHeight,
-    visualBounds = null,
-    springPreset = SPRING_PRESETS.smooth,
-    artStageRef,
-    gameplayStageRef,
-    orbitStageRef,
-    boardTiltXDeg = 40,
-    boardRotateZDeg = 0,
-  } = options;
+  const { boardWidth, boardHeight, visualBounds = null, springPreset = SPRING_PRESETS.smooth } = options;
   const defaultFrame = useMemo(
     () => computeSceneCameraFrame(boardWidth, boardHeight, visualBounds),
     [boardHeight, boardWidth, visualBounds],
@@ -186,22 +170,9 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
   const rafRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
   const activeRef = useRef(false);
-  const cameraRef = useRef<CameraState>(defaultFrame);
-  const stageRefsRef = useRef({ artStageRef, gameplayStageRef, orbitStageRef, boardTiltXDeg, boardRotateZDeg });
 
-  // Keep refs/config in sync.
+  // Keep config ref in sync.
   configRef.current = springPreset;
-  stageRefsRef.current = { artStageRef, gameplayStageRef, orbitStageRef, boardTiltXDeg, boardRotateZDeg };
-
-  const applyCameraToStages = useCallback((nextCamera: CameraState) => {
-    cameraRef.current = nextCamera;
-    const { artStageRef, gameplayStageRef, orbitStageRef, boardTiltXDeg, boardRotateZDeg } = stageRefsRef.current;
-    const baseTransform = `translate(${nextCamera.x.toFixed(2)}px, ${nextCamera.y.toFixed(2)}px) scale(${nextCamera.zoom.toFixed(4)})`;
-    const boardTransform = `${baseTransform} rotateX(${boardTiltXDeg}deg) rotateZ(${boardRotateZDeg}deg)`;
-    if (artStageRef?.current) artStageRef.current.style.transform = baseTransform;
-    if (gameplayStageRef?.current) gameplayStageRef.current.style.transform = boardTransform;
-    if (orbitStageRef?.current) orbitStageRef.current.style.transform = boardTransform;
-  }, []);
 
   useEffect(() => {
     if (defaultFrameKeyRef.current === defaultFrameKey) return;
@@ -222,9 +193,8 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     s.zoom.target = defaultFrame.zoom;
     s.zoom.velocity = 0;
     s.zoom.atRest = true;
-    applyCameraToStages(defaultFrame);
     setCamera(defaultFrame);
-  }, [applyCameraToStages, defaultFrame, defaultFrameKey, mode]);
+  }, [defaultFrame, defaultFrameKey, mode]);
 
   // ── Core animation loop ────────────────────────────────────────────────────
   const tick = useCallback((now: number) => {
@@ -234,16 +204,14 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     const springs = springsRef.current;
     const anyActive = stepSprings(springs, configRef.current, dt);
 
-    const nextCamera = { x: springs.x.value, y: springs.y.value, zoom: springs.zoom.value };
-    applyCameraToStages(nextCamera);
+    setCamera({ x: springs.x.value, y: springs.y.value, zoom: springs.zoom.value });
 
     if (anyActive) {
       rafRef.current = requestAnimationFrame(tick);
     } else {
       activeRef.current = false;
-      setCamera(nextCamera);
     }
-  }, [applyCameraToStages]);
+  }, []);
 
   const ensureAnimating = useCallback(() => {
     if (!activeRef.current) {
@@ -410,11 +378,9 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     s.x.value = clampedPan.x;   s.x.target = clampedPan.x;   s.x.velocity = 0; s.x.atRest = true;
     s.y.value = clampedPan.y;   s.y.target = clampedPan.y;   s.y.velocity = 0; s.y.atRest = true;
     s.zoom.value = clampedZoom; s.zoom.target = clampedZoom; s.zoom.velocity = 0; s.zoom.atRest = true;
-    const nextCamera = { x: clampedPan.x, y: clampedPan.y, zoom: clampedZoom };
-    applyCameraToStages(nextCamera);
-    setCamera(nextCamera);
+    setCamera({ x: clampedPan.x, y: clampedPan.y, zoom: clampedZoom });
     setMode('gesture');
-  }, [applyCameraToStages, boardWidth, boardHeight, minZoom, visualBounds]);
+  }, [boardWidth, boardHeight, minZoom, visualBounds]);
 
   /** Release gesture with momentum — set targets offset by velocity, let spring settle. */
   const releaseGesture = useCallback((velocityX: number, velocityY: number) => {
@@ -441,7 +407,6 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
 
   return {
     camera,
-    cameraRef,
     cameraTransform,
     mode,
     goOverview,
