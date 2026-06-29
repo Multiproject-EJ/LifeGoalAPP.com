@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { useMemo } from 'react';
 import { BoardTile } from './BoardTile';
 import type { TileAnchor } from '../../services/islandBoardLayout';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
@@ -25,7 +25,7 @@ export interface BoardTileGridProps {
 /**
  * Renders the grid of 40 ring tiles using memoized BoardTile components.
  */
-function BoardTileGridComponent(props: BoardTileGridProps) {
+export function BoardTileGrid(props: BoardTileGridProps) {
   const {
     anchors,
     stopMap,
@@ -136,6 +136,3 @@ function BoardTileGridComponent(props: BoardTileGridProps) {
     </div>
   );
 }
-
-
-export const BoardTileGrid = memo(BoardTileGridComponent);
