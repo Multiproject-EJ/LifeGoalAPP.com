@@ -1,15 +1,21 @@
+# 2026-06-29 Supersession Amendment
+
+Status: historical investigation retained, but its hybrid construction recommendation is superseded. Current canonical design is the direct nine-fragment model: Luma Isle has nine island-specific physical Concord fragments, each maps to one 3x3 slot, each reveals one ninth of a coherent Concord image, and all nine distinct slots complete The Concord. There is no current six-general-component requirement and no separate Echo Crystal, Meaning Lens, or Concord Core gameplay gate. Those names may remain lore-only or visual subassembly labels.
+
+The existing 3x3 technology collection persistence and reward behavior remains the gameplay foundation; future implementation should observe full-grid completion through canonical gameplay state and must not let narrative content grant technology unlocks.
+
 # The Concord Repository Investigation (2026-06-27)
 
 Status: Documentation and investigation only. No runtime implementation is included.
 
 ## 1. Executive verdict
 
-**PASS WITH CONDITIONS.** The Concord should proceed as the first Island Run technology, but it should be implemented as a small technology domain that reuses the existing per-island 3×3 tech collection grid as general construction progress. The current grid is real, persisted, and already has user-facing collection/reward UI, but its collection order is tied to board tile index modulo 9 and its economy pays dice line/full-board bonuses. Therefore, The Concord should not depend on arbitrary row/column completion for named story parts.
+**SUPERSEDED PASS WITH CONDITIONS (2026-06-29):** The historical recommendation below has been replaced by the direct nine-fragment Concord model. The Concord should still proceed as the first Island Run technology, but it should reuse the existing per-island 3×3 tech collection grid as nine island-specific invention fragments, not as generic construction progress. The current grid is real, persisted, and already has user-facing collection/reward UI, but its collection order is tied to board tile index modulo 9 and its economy pays dice line/full-board bonuses. Therefore, The Concord should not depend on arbitrary row/column completion for named story parts.
 
-The recommended MVP is **Option C — Hybrid model**:
+SUPERSEDED historical recommendation: **Option C — Hybrid model**:
 
-- the existing 3×3 board tech grid supplies general `Ancient Components` progress;
-- the Echo Crystal, Meaning Lens, and Concord Core are authored Island 1 milestone rewards;
+SUPERSEDED historical detail: - the existing 3×3 board tech grid supplies general `Ancient Components` progress;
+SUPERSEDED historical detail: - the Echo Crystal, Meaning Lens, and Concord Core are authored Island 1 milestone rewards;
 - activation requires both the required component IDs and a defined general piece count;
 - existing line/full-board dice rewards remain until a separate economy-change PR explicitly retunes them.
 
@@ -57,7 +63,7 @@ The recommended MVP is **Option C — Hybrid model**:
 
 ## 6. Recommended Concord construction model
 
-Choose **Option C — Hybrid model**.
+SUPERSEDED: Choose **Option C — Hybrid model**. Current design chooses direct nine-fragment construction.
 
 Rationale:
 
@@ -68,7 +74,7 @@ Rationale:
 - Onboarding complexity: first-session already teaches roll, essence, Hatchery, celebration, low-dice phase, and first creature pack. Hybrid lets general pieces accrue quietly while named beats appear at controlled moments.
 - Future technologies: a general piece count can become reusable technology material without making every technology a row/column bingo board.
 
-Recommended MVP requirement: `requiredGeneralPieceCount: 6` for early tuning, with activation blocked until all three named components are acquired. Use the existing nine-slot count as the source for general pieces; avoid creating a duplicate “technology-piece ledger.”
+SUPERSEDED historical MVP requirement: `requiredGeneralPieceCount: 6` for early tuning, with activation blocked until all three named components are acquired. Use the existing nine-slot count as the source for general pieces; avoid creating a duplicate “technology-piece ledger.”
 
 ## 7. Recommended Island 1 progression timing
 
@@ -77,9 +83,9 @@ The current first-session tutorial already has a dense sequence: `not_started` �
 Recommended timing:
 
 1. **Dormant device discovery:** after the first communication-failure story beat, before or alongside the first roll tutorial, as display-only narrative. Keep it short.
-2. **Echo Crystal:** after Hatchery Level 1 is built and after the existing Hatchery celebration has cleared. This avoids stacking rewards on the build celebration.
-3. **Meaning Lens:** after the first creature pack is claimed, because it pairs naturally with reading creature emotion/intent.
-4. **Concord Core:** after a separate Island 1 milestone, preferably after the player has made meaningful board/Hatchery progress beyond the first-session tutorial. Candidate: first completion of the active Hatchery objective / egg set-to-hatch, not merely Hatchery L1.
+SUPERSEDED historical detail: 2. **Echo Crystal:** after Hatchery Level 1 is built and after the existing Hatchery celebration has cleared. This avoids stacking rewards on the build celebration.
+SUPERSEDED historical detail: 3. **Meaning Lens:** after the first creature pack is claimed, because it pairs naturally with reading creature emotion/intent.
+SUPERSEDED historical detail: 4. **Concord Core:** after a separate Island 1 milestone, preferably after the player has made meaningful board/Hatchery progress beyond the first-session tutorial. Candidate: first completion of the active Hatchery objective / egg set-to-hatch, not merely Hatchery L1.
 5. **Activation celebration:** after the final named component and required general piece count are both satisfied, queued behind existing blocking overlays.
 6. **First full conversation:** immediately after activation animation resolves, entering the existing Caretaker inhabitant flow.
 7. **Creature Channel introduction:** after first translated Caretaker conversation, as a short channel-detected beat; do not open a creature chat in the same stack unless an active companion exists and no blocking overlay is active.
@@ -114,7 +120,7 @@ Answers:
 
 - Progress should be **global**, because The Concord is permanent after Island 1.
 - Activation should remain permanent across travel and later islands.
-- Named components should be stored separately from the 3×3 grid; the grid remains the general-piece source.
+- SUPERSEDED: named components should be stored separately from the 3×3 grid; the grid remains the general-piece source. Current design has no separate named-component gameplay gates; the grid slots are the nine Concord fragments.
 - Adding fields to the existing JSON/local record is straightforward, but DB persistence requires adding explicit columns only if stored outside existing JSON columns. If added as top-level DB columns, hydrate select and write mapping must change and a migration is required. MVP should prefer the current JSON-backed record pattern only if it is already persisted by the store; otherwise schedule a migration PR.
 - Defaults, sanitizers, hydration, merge, write mapping, reset, local store serialization, runtime backend patch typing, and tests must be updated.
 - Reset should clear technology progress for a fresh-start run, except admin/dev snapshots should intentionally choose whether to seed active progress.
@@ -173,9 +179,9 @@ Why:
 
 Use one presentation surface per reward:
 
-- Echo Crystal: small technology-acquisition panel after the Hatchery L1 celebration clears.
-- Meaning Lens: small acquisition panel after first creature pack claim resolves.
-- Concord Core: narrative reward panel after the chosen Island 1 milestone.
+SUPERSEDED historical detail: - Echo Crystal: small technology-acquisition panel after the Hatchery L1 celebration clears.
+SUPERSEDED historical detail: - Meaning Lens: small acquisition panel after first creature pack claim resolves.
+SUPERSEDED historical detail: - Concord Core: narrative reward panel after the chosen Island 1 milestone.
 
 Each acquisition panel should include the component name, one sentence of function, and a “View Concord” CTA. Do not also show a reward modal, story reader, and build celebration for the same component.
 
@@ -271,7 +277,7 @@ Prefer sanitizer-derived lazy compatibility plus a canonical marker written only
 
 ## 21. Existing 3×3 reward compatibility
 
-Keep the existing line and full-board dice rewards for the MVP. Re-labeling the pieces as `Ancient Components` is safe only if the dice reward copy remains visible. If economy changes are desired later, create a separate economy PR with telemetry and migration notes.
+SUPERSEDED historical detail: Keep the existing line and full-board dice rewards for the MVP. Re-labeling the pieces as `Ancient Components` is safe only if the dice reward copy remains visible. If economy changes are desired later, create a separate economy PR with telemetry and migration notes.
 
 After Concord activation, continue allowing per-island tech grid rewards unless/until a broader technology system defines future uses. Do not silently remove +10 line rewards or +100 full-grid rewards.
 
@@ -287,9 +293,9 @@ After Concord activation, continue allowing per-island tech grid rewards unless/
 | Blueprint | `concord-blueprint.webp` | same folder | 1600×1000 | 16:10 | no/optional | WebP | lazy | P1 | Missing |
 | Activation hero | `concord-activation-hero.webp` | same folder | 1920×1080 | 16:9 | no | WebP | preload when ready | P0 | Missing |
 | Screen mask/insert | `concord-screen-mask.png` | same folder | 1200×800 | 3:2 | yes | PNG/WebP | eager for activation | P1 | Missing |
-| Echo Crystal | `component-echo-crystal.webp` | same folder | 512×512 | 1:1 | yes | WebP | eager on acquisition | P0 | Missing |
-| Meaning Lens | `component-meaning-lens.webp` | same folder | 512×512 | 1:1 | yes | WebP | eager on acquisition | P0 | Missing |
-| Concord Core | `component-concord-core.webp` | same folder | 512×512 | 1:1 | yes | WebP | eager on acquisition | P0 | Missing |
+SUPERSEDED historical detail: | Echo Crystal | `component-echo-crystal.webp` | same folder | 512×512 | 1:1 | yes | WebP | eager on acquisition | P0 | Missing |
+SUPERSEDED historical detail: | Meaning Lens | `component-meaning-lens.webp` | same folder | 512×512 | 1:1 | yes | WebP | eager on acquisition | P0 | Missing |
+SUPERSEDED historical detail: | Concord Core | `component-concord-core.webp` | same folder | 512×512 | 1:1 | yes | WebP | eager on acquisition | P0 | Missing |
 | Ancient Component | `component-ancient-piece.webp` | same folder | 256×256 | 1:1 | yes | WebP | eager | P0 | Missing; current UI uses emoji ⚙️ |
 | Empty slot | `component-slot-empty.svg` | same folder | 256×256 | 1:1 | yes | SVG | inline/lazy | P1 | Missing |
 | Completed slot | `component-slot-complete.svg` | same folder | 256×256 | 1:1 | yes | SVG | inline/lazy | P1 | Missing |
@@ -316,9 +322,9 @@ After Concord activation, continue allowing per-island tech grid rewards unless/
 2. Dormant device.
 3. Activated device.
 4. Partially assembled device.
-5. Echo Crystal.
-6. Meaning Lens.
-7. Concord Core.
+SUPERSEDED historical detail: 5. Echo Crystal.
+SUPERSEDED historical detail: 6. Meaning Lens.
+SUPERSEDED historical detail: 7. Concord Core.
 8. Ancient Component.
 9. Technology progress modal mockup.
 10. Activation celebration mockup.
@@ -362,7 +368,7 @@ Must be approved before coding: final device shape, dormant/active states, three
 
 ## 26. Open questions
 
-1. What exact Island 1 milestone should grant the Concord Core: egg set-to-hatch, Island Heart activation, or a new objective?
+SUPERSEDED historical detail: 1. What exact Island 1 milestone should grant the Concord Core: egg set-to-hatch, Island Heart activation, or a new objective?
 2. Should compatibility infer active Concord from current island number > 1, Talk usage, Hatchery completion, or a stricter milestone?
 3. Should the required general piece count be 6, 9, or tuned from analytics?
 4. Should the current grid copy be renamed before or after the Concord progress modal ships?
@@ -371,4 +377,4 @@ Must be approved before coding: final device shape, dormant/active states, three
 
 ## 27. PASS, PASS WITH CONDITIONS, or FAIL
 
-**PASS WITH CONDITIONS.** The Concord is compatible with the repository if implemented through a small canonical technology domain, a hybrid construction model, idempotent actions, existing-grid reuse, explicit locked Talk behavior, and careful overlay queueing. Do not implement it by adding UI-local gameplay writes, a second dialogue engine, a separate tech-piece ledger, or a generic crafting engine.
+**PASS WITH CONDITIONS.** The Concord is compatible with the repository if implemented through a small canonical technology domain, a superseded hybrid construction model, idempotent actions, existing-grid reuse, explicit locked Talk behavior, and careful overlay queueing. Do not implement it by adding UI-local gameplay writes, a second dialogue engine, a separate tech-piece ledger, or a generic crafting engine.
