@@ -160,6 +160,10 @@ export function BoardStage(props: BoardStageProps) {
 
   const boardRef = useRef<HTMLDivElement>(null);
   const gestureLayerRef = useRef<HTMLDivElement>(null);
+  const artCameraStageRef = useRef<HTMLDivElement>(null);
+  const gameplayCameraStageRef = useRef<HTMLDivElement>(null);
+  const orbitStopsPlaneRef = useRef<HTMLDivElement>(null);
+  const tokenElementRef = useRef<HTMLDivElement>(null);
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
 
   // ── Board size tracking ──────────────────────────────────────────────────
@@ -243,6 +247,11 @@ export function BoardStage(props: BoardStageProps) {
     boardWidth: boardSize.width,
     boardHeight: boardSize.height,
     visualBounds: sceneVisualBounds,
+    artStageRef: artCameraStageRef,
+    gameplayStageRef: gameplayCameraStageRef,
+    orbitStageRef: orbitStopsPlaneRef,
+    boardTiltXDeg,
+    boardRotateZDeg,
   });
 
   // Expose camera controls to parent
@@ -261,12 +270,12 @@ export function BoardStage(props: BoardStageProps) {
   const gestureCallbacks = useMemo(() => ({
     onPan: (dx: number, dy: number) => {
       onCameraGesture?.();
-      const c = camera.camera;
+      const c = camera.cameraRef.current;
       camera.setGestureCamera(c.x + dx, c.y + dy, c.zoom);
     },
     onPinchZoom: (scaleFactor: number, focalX: number, focalY: number) => {
       onCameraGesture?.();
-      const c = camera.camera;
+      const c = camera.cameraRef.current;
       const newZoom = Math.max(camera.MIN_ZOOM, Math.min(camera.MAX_ZOOM, c.zoom * scaleFactor));
       // Focal-point zoom: adjust x/y so the point under fingers stays fixed
       const zoomRatio = newZoom / c.zoom;
@@ -286,7 +295,7 @@ export function BoardStage(props: BoardStageProps) {
     },
     onDoubleTap: (_x: number, _y: number) => {
       onCameraGesture?.();
-      if (camera.camera.zoom > 1.2) {
+      if (camera.cameraRef.current.zoom > 1.2) {
         camera.goOverview();
       } else {
         camera.goDefault();
@@ -294,7 +303,7 @@ export function BoardStage(props: BoardStageProps) {
     },
     onWheelZoom: (delta: number, focalX: number, focalY: number) => {
       onCameraGesture?.();
-      const c = camera.camera;
+      const c = camera.cameraRef.current;
       const newZoom = Math.max(camera.MIN_ZOOM, Math.min(camera.MAX_ZOOM, c.zoom + delta));
       const zoomRatio = newZoom / c.zoom;
       const boardRect = boardRef.current?.getBoundingClientRect();
@@ -319,6 +328,7 @@ export function BoardStage(props: BoardStageProps) {
   // ── Token animation ──────────────────────────────────────────────────────
   const tokenAnim = useTokenAnimation({
     toScreen,
+    tokenRef: tokenElementRef,
     onHop: onTokenHop,
     onHopPosition: (screenX, screenY, _tileIndex) => {
       // Compute directional lead from previous hop position
@@ -403,8 +413,9 @@ export function BoardStage(props: BoardStageProps) {
       lastHopSequenceRef.current = pendingHopSequence;
       completedHopSequenceRef.current = null;
       hopSequenceActiveRef.current = true;
-      const tokenX = tokenAnim.animState.x || boardSize.width / 2;
-      const tokenY = tokenAnim.animState.y || boardSize.height / 2;
+      const tokenPos = tokenAnim.getCurrentPosition();
+      const tokenX = tokenPos.x || boardSize.width / 2;
+      const tokenY = tokenPos.y || boardSize.height / 2;
 
       // Pre-roll anticipation beat — micro push-in before movement
       const preRollPreset = getShotPreset('pre_roll');
@@ -529,6 +540,7 @@ export function BoardStage(props: BoardStageProps) {
 
       {/* Art camera stage — follows camera pan/zoom but does not inherit gameplay rotateX/rotateZ. */}
       <div
+        ref={artCameraStageRef}
         className="island-run-board__art-camera-stage"
         style={{ transform: artCameraTransform, willChange: 'transform' }}
       >
@@ -547,6 +559,7 @@ export function BoardStage(props: BoardStageProps) {
 
       {/* Gameplay camera stage — tile UI/token/dice keep the board tilt/rotation. */}
       <div
+        ref={gameplayCameraStageRef}
         className="island-run-board__camera-stage"
         style={{ transform: cameraStageTransform, willChange: 'transform' }}
       >
@@ -605,6 +618,7 @@ export function BoardStage(props: BoardStageProps) {
         {/* Token */}
         <div className="island-run-board__tiles" style={{ pointerEvents: 'none' }}>
           <BoardToken
+            ref={tokenElementRef}
             animState={tokenAnim.animState}
             zBand={anchors[tokenIndex]?.zBand ?? 'mid'}
           />
@@ -649,6 +663,7 @@ export function BoardStage(props: BoardStageProps) {
             boardHeight={boardSize.height}
             tokenX={tokenAnim.animState.x}
             tokenY={tokenAnim.animState.y}
+            getTokenPosition={tokenAnim.getCurrentPosition}
             isTokenMoving={tokenAnim.animState.isMoving}
             burstAt={burstPos}
           />
@@ -671,6 +686,7 @@ export function BoardStage(props: BoardStageProps) {
         behind them (the bug the user reported).
       */}
       <div
+        ref={orbitStopsPlaneRef}
         className="island-run-board__orbit-stops-plane"
         style={{
           position: 'absolute',

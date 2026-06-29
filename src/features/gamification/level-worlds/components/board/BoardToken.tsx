@@ -1,32 +1,36 @@
+import { forwardRef, type CSSProperties } from 'react';
 import type { TokenAnimState } from './useTokenAnimation';
 import type { TileAnchor } from '../../services/islandBoardLayout';
 
 export interface BoardTokenProps {
   animState: TokenAnimState;
-  /** The z-band of the tile the token is currently on */
   zBand: TileAnchor['zBand'];
 }
 
 /**
- * Renders the player token (spaceship) with squash/stretch and landing effects.
- * The token position comes from the animation hook, not from direct tile anchors.
+ * Renders the player token. Frame-by-frame movement is written imperatively to
+ * CSS variables by useTokenAnimation so React only re-renders for movement
+ * boundaries (moving/landing) rather than every animation frame.
  */
-export function BoardToken({ animState, zBand }: BoardTokenProps) {
+export const BoardToken = forwardRef<HTMLDivElement, BoardTokenProps>(function BoardToken({ animState, zBand }, ref) {
   const { x, y, scaleX, scaleY, isMoving, isLanding } = animState;
+  const style = {
+    '--token-x': `${x}px`,
+    '--token-y': `${y}px`,
+    '--token-scale-x': scaleX.toFixed(3),
+    '--token-scale-y': scaleY.toFixed(3),
+  } as CSSProperties;
 
   return (
     <div
+      ref={ref}
       className={[
         'island-token',
         isMoving ? 'island-token--moving' : '',
         isLanding ? 'island-token--landing' : '',
         `island-token--zband-${zBand}`,
       ].filter(Boolean).join(' ')}
-      style={{
-        left: x,
-        top: y,
-        transform: `scaleX(${scaleX.toFixed(3)}) scaleY(${scaleY.toFixed(3)})`,
-      }}
+      style={style}
     >
       <div className="island-token__ship" aria-hidden="true">
         <div className="island-token__ship-body"/>
@@ -36,12 +40,9 @@ export function BoardToken({ animState, zBand }: BoardTokenProps) {
         <div className="island-token__ship-window"/>
       </div>
 
-      {/* Landing ripple effect */}
       {isLanding && (
         <span className="island-token__landing-ripple" aria-hidden="true" />
       )}
-
-      {/* Particle trail is handled by BoardParticles */}
     </div>
   );
-}
+});
