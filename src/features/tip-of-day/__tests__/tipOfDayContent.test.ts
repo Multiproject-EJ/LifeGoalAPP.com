@@ -3,6 +3,8 @@ import {
   buildEnvironmentDeck,
   buildReshapeDeck,
   buildScienceDeck,
+  buildShrinkApplyAction,
+  extractSuggestionSummary,
   orderedVariationsForDate,
   pickAnchorHabit,
   pickStrugglingHabit,
@@ -33,6 +35,9 @@ function habit(id: string, overrides: Partial<TipHabitInput> = {}): TipHabitInpu
     emoji: overrides.emoji ?? null,
     habitEnvironment: overrides.habitEnvironment ?? null,
     habitIntent: overrides.habitIntent ?? null,
+    type: overrides.type,
+    targetNum: overrides.targetNum,
+    targetUnit: overrides.targetUnit,
   };
 }
 
@@ -134,6 +139,33 @@ export function runTipOfDayContentTests(): void {
   const reshapeDay = findDateForVariation('reshape_struggling');
   const selected = selectTipDeck({ habits, health: healths, date: reshapeDay });
   assertEqual(selected.variation, 'reshape_struggling', 'Selects reshape when struggling habit present on reshape day');
+
+  // buildShrinkApplyAction only applies to quantity/duration with a shrinkable target.
+  assertEqual(buildShrinkApplyAction(habit('b', {})), null, 'No shrink for boolean habits (no type)');
+  const qty = habit('q', { title: 'Water', type: 'quantity', targetNum: 8, targetUnit: 'glasses' });
+  const shrink = buildShrinkApplyAction(qty);
+  assert(shrink !== null, 'Shrink available for quantity habit');
+  assertEqual(shrink!.newTarget, 4, 'Halves the target');
+  assertEqual(shrink!.currentTarget, 8, 'Records current target');
+  assert(shrink!.label.includes('4 glasses'), 'Label mentions new target + unit');
+  assertEqual(
+    buildShrinkApplyAction(habit('q1', { type: 'duration', targetNum: 1 })),
+    null,
+    'No shrink when target already minimal',
+  );
+
+  // A reshape deck for a shrinkable habit carries the apply action + matching CTA.
+  const reshapeQty = buildReshapeDeck({ habit: qty, health: healths[1] });
+  assert(reshapeQty.applyAction != null, 'Reshape deck has an apply action for shrinkable habit');
+  assertEqual(reshapeQty.primaryCtaLabel, reshapeQty.applyAction!.label, 'CTA label matches apply action');
+
+  // extractSuggestionSummary prefers the suggestion card and combines heading + body.
+  const summaryText = extractSuggestionSummary(reshape);
+  assert(summaryText !== null, 'Extracts a suggestion summary from a stored deck');
+  assertEqual(extractSuggestionSummary(null), null, 'Null payload yields null');
+  assertEqual(extractSuggestionSummary({ cards: [] }), null, 'Empty cards yields null');
+  const envSummary = extractSuggestionSummary(buildEnvironmentDeck(habits[0]));
+  assert(envSummary !== null, 'Extracts summary from environment deck (env-apply card)');
 }
 
 function findDateForVariation(target: string): Date {

@@ -216,6 +216,35 @@
   width: 1px;
 }
 
+.tip-of-day__checkin {
+  padding: 8px 24px 16px;
+}
+
+.tip-of-day__card--checkin {
+  min-height: 200px;
+  background: linear-gradient(160deg, #fff7ed 0%, #fef2f2 100%);
+}
+
+.tip-of-day__checkin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.tip-of-day__checkin-btn {
+  width: 100%;
+  text-align: center;
+}
+
+.tip-of-day__apply-error {
+  margin: 0;
+  padding: 0 20px 4px;
+  font-size: 13px;
+  color: #b91c1c;
+  text-align: center;
+}
+
 .tip-of-day__loading {
   display: flex;
   flex-direction: column;
