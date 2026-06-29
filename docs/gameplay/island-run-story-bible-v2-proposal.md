@@ -26,19 +26,57 @@ Arc 2 hook: after Crown of Tides, The Concord isolates a second signal under the
 
 ## 3. Role of The Concord
 
-The Concord is an old Lumin communication technology designed to translate words, creature emotion, guardian resonance, and landmark memory into meaning. The Great Drift cracked its interpretive grid and scattered its nine visible repair nodes through Luma Isle.
+The Concord is an old Lumin expedition communication technology designed to translate words, creature emotion, guardian resonance, and landmark memory into meaning. The Great Drift damaged the device and scattered its nine physical fragments through Luma Isle.
 
 For Island 1:
 
-- the **3x3 technology image** represents the Concord Resonance Grid;
-- each piece is both a recovered physical shard and a restored interpretation circuit;
-- named modules remain as subassemblies: Echo Crystal = signal capture, Meaning Lens = context alignment, Concord Core = synthesis;
-- all nine pieces restore a partial translation channel;
+- the **3x3 technology image** represents the completed Concord device;
+- each piece is both a recovered physical Concord fragment and one ninth of the completed invention image;
+- named modules may remain lore-only visual subassemblies: Echo Crystal = signal capture, Meaning Lens = context alignment, Concord Core = synthesis, but they are not separate collectible gates;
+- all nine pieces complete The Concord and enable the future permanent translation unlock;
 - the retro conversation interface is the Concord's low-bandwidth diagnostic mode;
 - the first translated companion line proves it can interpret creature emotion;
 - later islands use The Concord as a translator, not as automatic trust.
 
-Future technologies should emerge only when an island story needs a device. Not every island must unlock a new technology.
+Technology is now a core island-story layer: each island may contain nine technology fragments that reconstruct one culturally and visually specific invention arising from that island civilization, buildings, emotional imbalance, and guardian problem. Most technologies should be local; only rare milestone technologies, such as The Concord, become expedition tools.
+
+
+## 3A. Repeatable island technology model
+
+Each island technology design must answer:
+
+1. Why would this civilization have invented it?
+2. Why was it broken or scattered?
+3. Why do its fragments appear around this island's board?
+4. How does its visual design belong to the island?
+5. Which landmarks help restore, power, test, or understand it?
+6. How does it contribute to the guardian resolution?
+7. What visibly changes when it is completed?
+8. Is it local or expedition scope?
+9. Does it unlock a persistent ability?
+10. How does it reveal the next Great Drift clue?
+
+Illustrative documentation-only model:
+
+```ts
+type IslandTechnologyDefinition = {
+  id: string;
+  islandNumber: number;
+  displayName: string;
+  scope: 'local' | 'expedition';
+  fragmentCount: 9;
+  imageSrc: string;
+  boardFragmentArt: string[];
+  civilizationOrigin: string;
+  visualLanguage: string[];
+  storyPurpose: string;
+  guardianConnection: string;
+  completionEffect: string;
+  persistentAbility?: string;
+};
+```
+
+Rules: fragment count is nine for the current 3x3 system; each slot is a real invention piece; duplicate slot behavior remains governed by existing collection logic; local technologies should not create permanent UI; expedition technologies must be rare; technology supports guardian resolution without replacing building progression; companion reactions must not require owning a specific creature.
 
 ## 4. Role of creatures
 
@@ -86,6 +124,7 @@ Captain Ivo provides route literacy, practical risk framing, and player-facing C
 - **Biome/visual character:** celestial blue crystal, observatory domes, star mirrors, sheltered lantern nurseries.
 - **Sensory motifs:** crystal chimes, distant owl-wing wind, cold blue light warming to gold.
 - **Architecture/material language:** blue crystal ribs, moonstone lenses, brass star tracks, small lantern alcoves.
+- **Technology:** The Concord (expedition): celestial crystal, moonstone lenses, blue/navy/antique-gold observatory geometry, star-track mechanisms, compact device body, retro diagnostic screen.
 - **Arrival atmosphere:** beautiful but watchful; every light is shielded.
 - **Restored atmosphere:** still careful, but curious; lights open toward the sky.
 
@@ -147,11 +186,12 @@ Variants:
 
 ## Identity
 
-- **Civilization:** The Tidelock Kin, tide-pool engineers and breath-rhythm keepers.
+- **Civilization:** The Tidefolk, tide-pool engineers and breath-rhythm keepers.
 - **Guardian:** Maelis.
 - **Biome/visual:** rounded stones, tide pools, lantern paths, breath-like bellows, soft mist.
 - **Arrival:** suspended tension; everything waits for a tide that already passed.
 - **Restored:** gentle movement; lantern paths pulse like breathing.
+- **Technology:** The Tidebreather (local): polished tidal stones, shell valves, mist chambers, soft blue water lenses, slow bellows, tide wheels.
 
 ## Great Drift distortion
 
@@ -187,7 +227,7 @@ Arrival: “Pebble Bay is holding its breath.” CTA “Listen to the tide.” F
 
 ## Identity
 
-Civilization: Canopy Stewards. Guardian: Tamba. Visual: abundant palms, fruit structures, hanging platforms, drums, communal shade. Arrival: lush but guarded; fruit is counted twice. Restored: shared shade, drums, visible abundance.
+Civilization: The Covefolk. Guardian: Tamba. Visual: abundant palms, fruit structures, hanging platforms, drums, communal shade. Arrival: lush but guarded; fruit is counted twice. Restored: shared shade, drums, visible abundance. Technology: The Sharing Canopy (local), a network of pulley baskets, seed counters, growth readers, fruit chutes, drum relays, and wooden balance arms.
 
 ## Great Drift distortion
 
@@ -219,7 +259,7 @@ Arrival: “Coconut Cove is overflowing, yet every basket is locked.” First fa
 
 ## Identity
 
-Civilization: Salvage Menders. Guardian: Garran. Visual: salvaged timber, visible joins, patched sails, reused structures, warm lantern tar. Arrival: careful grief; nothing new is built high. Restored: repairs are visible and honored.
+Civilization: The Driftfolk. Guardian: Garran. Visual: salvaged timber, visible joins, patched sails, reused structures, warm lantern tar. Arrival: careful grief; nothing new is built high. Restored: repairs are visible and honored. Technology: The Mender Engine (local by default; future expedition candidate only with explicit approval), built from salvaged timber, brass clamps, stitched sails, resin lamps, repair seams, and rope tension mechanisms.
 
 ## Great Drift distortion
 
@@ -251,7 +291,7 @@ Arrival: “Driftwood Isle has repaired everything except tomorrow.” Failure: 
 
 ## Identity
 
-Civilization: Chorus Reef. Guardian: Thalassa. Visual: luminous reef architecture, ceremonial crowns, layered aquatic music, shell amphitheaters. Arrival: beautiful harmony with no solo voices. Restored: harmony with distinct voices.
+Civilization: The Reefborn. Guardian: Thalassa. Visual: luminous reef architecture, ceremonial crowns, layered aquatic music, shell amphitheaters. Arrival: beautiful harmony with no solo voices. Restored: harmony with distinct voices. Technology: The Voice Prism (local with possible story relevance), built from luminous coral, pearl amplifiers, shell resonators, current forks, layered aquatic light, and ceremonial crown geometry.
 
 ## Great Drift distortion
 
@@ -304,7 +344,7 @@ Example for Luma finale:
 
 ## 15. Technology progression model
 
-The Concord remains the Arc 1 interpretive tool. Later tech should be story-optional and island-specific. A future island may repair a local instrument, but the Bible should not require a new device every island. Technologies should be presentation/content affordances unless explicitly scoped in a gameplay PR.
+The Concord remains the Arc 1 expedition interpretive tool. Later technologies should normally be local, story-specific inventions: The Tidebreather enables safe movement on Pebble Bay, The Sharing Canopy makes abundance circulation visible on Coconut Cove, The Mender Engine permits repair without erasure on Driftwood Isle, and The Voice Prism separates true voices from forced unison on Crown of Tides. Technology helps reveal, test, communicate, regulate, distribute, repair, or separate signals; it does not magically cure emotion. The community, companion, buildings, and guardian still perform emotional restoration. Technologies should be presentation/content affordances unless explicitly scoped in a gameplay PR.
 
 ## 16. AI/personal-data boundary
 
@@ -313,6 +353,8 @@ The authored island story must work with no AI and no personal-data reads. Optio
 ## 17. Implementation mapping
 
 Existing target files are proposed targets only; this task does not edit them.
+
+Trigger/surface audit status for this proposal: standard narrative triggers such as `island_entered`, `stop_opened`, `stop_completed`, `boss_midpoint`, `boss_resolved`, and `island_clear_travel_ready` are currently supported by the narrative vocabulary; `tech_grid_completed` is proposed and requires a new bridge or trigger; full 3x3 completion is observable in tech-collection logic outside the narrative registry; `retro_conversation` is an inhabitant/conversation flow surface that needs a bridge before StoryReader can hand off to it; Concord completion must not grant gameplay unlocks from narrative content.
 
 | Island | Beat ID | Trigger | Surface | Speaker | Primary copy | Secondary copy | Companion family | Art required | Existing file target | Risk |
 |---:|---|---|---|---|---|---|---|---|---|---|
@@ -330,7 +372,7 @@ Existing target files are proposed targets only; this task does not edit them.
 | 1 | i1.boss.midpoint | boss_midpoint | dialogue_sheet | Companion | That sound is scared, not angry. | The warning changes when no one runs. | all | no | `island001Narrative.ts` | medium |
 | 1 | i1.resolution | boss_resolved | StoryReader | Ivo | The warning remains, but no longer owns the sky. | A second waveform hides beneath it. | fallback | yes | `public/islands/001/story/resolution/manifest.json` | low |
 | 2 | i2.arrival.v2 | island_entered | StoryReader | Ivo | Pebble Bay is holding its breath. | The tide has moved on. | none | yes | future island002 narrative | low |
-| 2 | i2.hatchery.open | stop_opened:hatchery | dialogue_sheet | Tidelock Kin | Let nursery water move without rushing. | Safety can flow. | steadying | no | future island002 narrative | low |
+| 2 | i2.hatchery.open | stop_opened:hatchery | dialogue_sheet | The Tidefolk | Let nursery water move without rushing. | Safety can flow. | steadying | no | future island002 narrative | low |
 | 2 | i2.habit.complete | stop_completed:habit | toast | System | The Breathwheel turns. | Inhale. Exhale. Begin. | steadying | no | future island002 narrative | low |
 | 2 | i2.mystery.complete | stop_completed:mystery | toast | System | One playful step held. | The path did not break. | opening | no | future island002 narrative | low |
 | 2 | i2.wisdom.reveal | stop_opened:wisdom | retro_conversation | Elder | The dangerous tide has passed. | Maelis never heard the change. | brave_action | yes | future conversation definitions | medium |
@@ -350,7 +392,7 @@ Existing target files are proposed targets only; this task does not edit them.
 | 5 | i5.mystery.complete | stop_completed:mystery | toast | System | False unison split. | One note is borrowed. | honesty | no | future island005 narrative | low |
 | 5 | i5.wisdom.reveal | stop_opened:wisdom | retro_conversation | Archive Keeper | Thalassa contains a note she never sang. | The Drift is borrowing voices. | brave_action | yes | future conversation definitions | medium |
 | 5 | i5.boss.resolution | boss_resolved | StoryReader | Thalassa | The chorus returns with solos intact. | Beyond the reef, another voice answers. | all | yes | future island005 story | low |
-| 5 | i5.arc2_hook | island_travel_ready | dialogue_sheet | Concord | SOURCE NOT ISLAND-LOCAL. | The next signal is wearing a borrowed voice. | none | no | future narrative registry | medium |
+| 5 | i5.arc2_hook | island_clear_travel_ready | dialogue_sheet | Concord | SOURCE NOT ISLAND-LOCAL. | The next signal is wearing a borrowed voice. | none | no | future narrative registry | medium |
 
 ## 18. Art and asset implications
 
@@ -362,7 +404,7 @@ Existing target files are proposed targets only; this task does not edit them.
 
 ## 19. Migration from current narrative
 
-Do not overwrite current Island 1 live definitions. Add V2 definitions behind content review in later PRs, then migrate beat-by-beat. Preserve current trigger vocabulary where possible: `island_entered`, `stop_opened`, `stop_completed`, `boss_midpoint`, `boss_resolved`, `island_travel_ready`, `tech_grid_completed` if already available or as display-only narrative observation.
+Do not overwrite current Island 1 live definitions. Add V2 definitions behind content review in later PRs, then migrate beat-by-beat. Preserve current trigger vocabulary where possible: `island_entered`, `stop_opened`, `stop_completed`, `boss_midpoint`, `boss_resolved`, and `island_clear_travel_ready`. `tech_grid_completed` is a proposed bridge/new trigger, not current registered vocabulary. `retro_conversation` is a separate inhabitant/conversation surface rather than a registered StoryReader surface.
 
 ## 20. Proposed implementation PR stack
 
@@ -379,7 +421,7 @@ Do not overwrite current Island 1 live definitions. Add V2 definitions behind co
 1. Should capacities live directly on `CreatureDefinition` or in a separate `creatureEmotionalProfiles.ts` config?
 2. Should `trust` be its own capacity, or should Luma use calm + curiosity + connection?
 3. Does The Concord have a visible device owner after Island 1, or is it shipboard equipment?
-4. Should named modules Echo Crystal, Meaning Lens, and Concord Core be visible 3x3 sublabels or lore-only?
+4. Should lore-only subassemblies Echo Crystal, Meaning Lens, and Concord Core appear as visual labels after the nine-fragment Concord is complete?
 5. How much retro UI should appear in StoryReader versus conversation surfaces?
 6. Which Island 2-5 characters become named recurring inhabitants?
 

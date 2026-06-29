@@ -1,3 +1,16 @@
+# Canonical 2026-06-29 Amendment — Direct Nine-Fragment Concord Model
+
+Status: this amendment supersedes any earlier sections in this document that describe The Concord as requiring six generic technology pieces, Ancient Components, or separate Echo Crystal / Meaning Lens / Concord Core gameplay gates. Those names may remain internal lore or visual subassembly labels only. Current canonical design is: nine island-specific Concord fragments collected through the existing 3x3 technology collection foundation complete The Concord and unlock translated inhabitant/creature communication in a later implementation PR.
+
+- Island: Luma Isle.
+- Scope: expedition technology.
+- Construction: nine physical Concord fragments mapped one-to-one to slots 0-8.
+- Collection UI: existing 3x3 technology collection modal.
+- Completion: all nine distinct slots collected; no separate general-component requirement.
+- Permanent unlock: translated communication with inhabitants and creatures, gated by canonical gameplay state in future implementation.
+
+When the ninth fragment is collected, future implementation should reveal the final image section, illuminate the complete Concord image, play the completion celebration, name The Concord, explain the communication ability, and only then allow the communication system to become available through canonical services. The current 3x3 persistence and reward system remains the gameplay foundation and is not retuned by this documentation.
+
 # The Concord — Universal Communication Technology
 
 Status: Product/story concept and implementation investigation brief.
@@ -29,7 +42,7 @@ Early communication is limited to:
 - visual thought-icons,
 - basic responses such as nodding, pointing, or showing peaceful intent.
 
-During Island 1, the player discovers and assembles the components needed to restore The Concord.
+During Island 1, the player discovers and assembles the nine physical Concord fragments needed to restore The Concord.
 
 Once activated, it becomes the in-world explanation for:
 
@@ -161,20 +174,20 @@ Quest objective:
 
 Recommended named components:
 
-1. Echo Crystal
-2. Meaning Lens
-3. Concord Core
+SUPERSEDED historical detail: 1. Echo Crystal
+SUPERSEDED historical detail: 2. Meaning Lens
+SUPERSEDED historical detail: 3. Concord Core
 
 Optional general construction resource:
 
-- Ancient Components
+SUPERSEDED historical detail: - Ancient Components
 - Resonance Fragments
 - Signal Parts
 - Tech Pieces
 
 ---
 
-### 4.4 Component 1 — Echo Crystal
+### 4.4 Superseded lore subassembly — Echo Crystal
 
 Purpose:
 
@@ -198,7 +211,7 @@ It cannot yet translate full meaning.
 
 ---
 
-### 4.5 Component 2 — Meaning Lens
+### 4.5 Superseded lore subassembly — Meaning Lens
 
 Purpose:
 
@@ -220,7 +233,7 @@ Speech is still incomplete.
 
 ---
 
-### 4.6 Component 3 — Concord Core
+### 4.6 Superseded lore subassembly — Concord Core
 
 Purpose:
 
@@ -249,9 +262,9 @@ The activation should be a short technology-unlock celebration.
 Suggested sequence:
 
 1. The dormant device appears in darkness.
-2. The Echo Crystal illuminates.
-3. The Meaning Lens aligns.
-4. The Concord Core powers on.
+SUPERSEDED historical detail: 2. The Echo Crystal illuminates.
+SUPERSEDED historical detail: 3. The Meaning Lens aligns.
+SUPERSEDED historical detail: 4. The Concord Core powers on.
 5. The screen flickers into retro mode.
 6. Inhabitant and Creature channels become available.
 
@@ -447,18 +460,18 @@ The implementation investigation must determine whether the existing mechanic sh
 
 Every collected grid piece visually assembles part of The Concord.
 
-### Option B — General technology resources
+### Superseded Option B — General technology resources
 
-The grid supplies general Ancient Components.
+SUPERSEDED historical detail: The grid supplies general Ancient Components.
 
 The three named story components come from authored milestones.
 
-### Option C — Hybrid model
+### Superseded Option C — Hybrid model
 
 Recommended candidate:
 
-- board technology pieces provide general construction progress,
-- Echo Crystal, Meaning Lens, and Concord Core come from authored Island 1 milestones,
+- SUPERSEDED: board technology pieces provide generic construction progress,
+- SUPERSEDED: Echo Crystal, Meaning Lens, and Concord Core come from authored Island 1 milestone gameplay gates,
 - both are required to activate The Concord.
 
 Example:
@@ -466,10 +479,10 @@ Example:
 ```text
 THE CONCORD
 [✓] Device Shell
-[✓] Echo Crystal
-[ ] Meaning Lens
-[ ] Concord Core
-Ancient Components: 6 / 9
+SUPERSEDED historical detail: [✓] Echo Crystal
+SUPERSEDED historical detail: [ ] Meaning Lens
+SUPERSEDED historical detail: [ ] Concord Core
+SUPERSEDED historical detail: Ancient Components: 6 / 9
 Communication capability: 42%
 ```
 
@@ -488,19 +501,19 @@ The investigation must select a firm recommendation after auditing the current g
 
 ### Stage 1 — Echo detected
 
-- Echo Crystal acquired.
+SUPERSEDED historical detail: - Echo Crystal acquired.
 - Sounds may be represented.
 - No full translation.
 
 ### Stage 2 — Meaning detected
 
-- Meaning Lens acquired.
+SUPERSEDED historical detail: - Meaning Lens acquired.
 - Emotion and intent become readable.
 - Speech remains incomplete.
 
 ### Stage 3 — Concord online
 
-- Concord Core acquired.
+SUPERSEDED historical detail: - Concord Core acquired.
 - Required technology pieces collected.
 - Activation celebration plays.
 - Full inhabitant and creature translation unlocks.
@@ -533,7 +546,7 @@ Possible future technologies:
 5. Inter-Island Relay — communication between completed civilizations.
 6. Dream Resonator — symbolic sequences tied to goals and reflection.
 
-Each technology should unlock a new interaction type.
+Expedition technology may unlock a new persistent interaction type; local technology should normally affect only its island unless explicitly approved.
 
 Technologies should not merely provide passive stat bonuses.
 
@@ -557,9 +570,9 @@ Technologies should not merely provide passive stat bonuses.
 
 ### Named component assets
 
-- Echo Crystal,
-- Meaning Lens,
-- Concord Core,
+SUPERSEDED historical detail: - Echo Crystal,
+SUPERSEDED historical detail: - Meaning Lens,
+SUPERSEDED historical detail: - Concord Core,
 - Ancient Component or general technology piece,
 - empty component slot,
 - filled component slot.
