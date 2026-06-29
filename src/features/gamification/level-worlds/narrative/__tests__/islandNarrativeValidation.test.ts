@@ -19,7 +19,8 @@ function expectInvalid(mutator: (definition: any) => void, expectedMessage: stri
 export const islandNarrativeValidationTests: TestCase[] = [
   { name: 'Island 1 narrative definition passes validation', run: () => assert(validateIslandNarrativeDefinition(island001NarrativeDefinition).valid, validateIslandNarrativeDefinition(island001NarrativeDefinition).errors.join('; ')) },
   { name: 'narrative registry returns Island 1', run: () => assertEqual(getIslandNarrativeDefinition(1)?.islandName, 'Luma Isle', 'Expected Island 1 definition') },
-  { name: 'narrative registry returns undefined for Island 2', run: () => assertEqual(getIslandNarrativeDefinition(2), undefined, 'Expected no Island 2 definition') },
+  { name: 'narrative registry returns Island 2 (Pebble Bay)', run: () => assertEqual(getIslandNarrativeDefinition(2)?.islandName, 'Pebble Bay', 'Expected Island 2 definition') },
+  { name: 'narrative registry returns undefined for an unauthored island', run: () => assertEqual(getIslandNarrativeDefinition(999), undefined, 'Expected no definition for an unauthored island') },
   { name: 'Island 1 character ids are unique', run: () => assertEqual(new Set(island001NarrativeDefinition.characters.map((character) => character.id)).size, island001NarrativeDefinition.characters.length, 'Character IDs should be unique') },
   { name: 'Island 1 beat ids are unique', run: () => assertEqual(new Set(island001NarrativeDefinition.beats.map((beat) => beat.id)).size, island001NarrativeDefinition.beats.length, 'Beat IDs should be unique') },
   { name: 'unknown speaker fails validation', run: () => expectInvalid((definition) => { definition.beats[1].speakerId = 'unknown'; }, 'unknown speakerId') },
