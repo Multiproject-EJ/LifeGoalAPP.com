@@ -3823,10 +3823,10 @@
   width: 32px;
   height: 32px;
   transform-origin: center center;
-  translate: -50% -50%;
   z-index: 10;
   pointer-events: none;
-  will-change: transform, left, top;
+  transform: translate3d(var(--token-x, 0px), var(--token-y, 0px), 0) translate(-50%, -50%) scaleX(var(--token-scale-x, 1)) scaleY(var(--token-scale-y, 1));
+  will-change: transform;
   contain: layout style;
 }
 
@@ -3884,13 +3884,13 @@
   border: 1px solid rgba(255,255,255,0.6);
 }
 
-.island-token--moving {
+.island-token--moving .island-token__ship {
   animation: island-token-bob 220ms ease-in-out infinite alternate;
 }
 
 @keyframes island-token-bob {
-  from { translate: -50% -54%; transform: scale(1); }
-  to { translate: -50% -46%; transform: scale(1.07); }
+  from { transform: translate3d(0, -4%, 0) scale(1); }
+  to { transform: translate3d(0, 4%, 0) scale(1.07); }
 }
 
 /* Z-band depth tiers — use CSS 'scale' individual property so squash/stretch
@@ -8073,7 +8073,8 @@
 .island-run-board__stage-wrapper .island-token {
   transition: left 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
               top 180ms cubic-bezier(0.22, 0.61, 0.36, 1);
-  will-change: transform, left, top;
+  transform: translate3d(var(--token-x, 0px), var(--token-y, 0px), 0) translate(-50%, -50%) scaleX(var(--token-scale-x, 1)) scaleY(var(--token-scale-y, 1));
+  will-change: transform;
 }
 
 /* Disable CSS position transitions during rAF-controlled hop animation so

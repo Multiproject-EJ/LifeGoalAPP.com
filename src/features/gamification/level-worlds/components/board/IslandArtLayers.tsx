@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react';
+import { memo, useEffect, useState, type CSSProperties } from 'react';
 import {
   getIslandArtBoardOuterCircleImageSrc,
   getIslandArtBoardPlateImageSrc,
@@ -140,7 +140,7 @@ function makeArtLayerStyle(options: {
   });
 }
 
-export function IslandArtLayers(props: IslandArtLayersProps) {
+function IslandArtLayersComponent(props: IslandArtLayersProps) {
   const {
     manifest,
     landmarkBuildLevels,
@@ -324,3 +324,6 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
     </div>
   );
 }
+
+
+export const IslandArtLayers = memo(IslandArtLayersComponent);

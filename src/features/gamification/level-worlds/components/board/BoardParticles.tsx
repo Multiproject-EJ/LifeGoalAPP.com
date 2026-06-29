@@ -21,6 +21,8 @@ export interface BoardParticlesProps {
   /** Token position for trail emission */
   tokenX: number;
   tokenY: number;
+  /** Latest token position source; avoids React state updates per animation frame. */
+  getTokenPosition?: () => { x: number; y: number };
   /** Whether token is currently moving (emit trail) */
   isTokenMoving: boolean;
   /** Trigger a burst at given position */
@@ -29,28 +31,33 @@ export interface BoardParticlesProps {
   accentColor?: string;
 }
 
-const MAX_PARTICLES = 80;
-const AMBIENT_SPAWN_RATE = 0.3; // particles per second
+const MAX_PARTICLES = 72;
+const MAX_DEVICE_PIXEL_RATIO = 2;
+const AMBIENT_SPAWN_RATE = 0.25; // particles per second
+const TRAIL_SPAWN_RATE = 60; // particles per second while moving
 
 export function BoardParticles(props: BoardParticlesProps) {
-  const { boardWidth, boardHeight, tokenX, tokenY, isTokenMoving, burstAt, accentColor = 'rgba(180, 220, 255, 0.6)' } = props;
+  const { boardWidth, boardHeight, tokenX, tokenY, getTokenPosition, isTokenMoving, burstAt, accentColor = 'rgba(180, 220, 255, 0.6)' } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const rafRef = useRef(0);
   const lastTimeRef = useRef(0);
   const ambientAccumRef = useRef(0);
+  const trailAccumRef = useRef(0);
   const lastBurstRef = useRef<{ x: number; y: number } | null>(null);
   const tokenMovingRef = useRef(isTokenMoving);
   const tokenPosRef = useRef({ x: tokenX, y: tokenY });
+  const getTokenPositionRef = useRef(getTokenPosition);
 
   tokenMovingRef.current = isTokenMoving;
   tokenPosRef.current = { x: tokenX, y: tokenY };
+  getTokenPositionRef.current = getTokenPosition;
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ratio = window.devicePixelRatio || 1;
+    const ratio = Math.min(window.devicePixelRatio || 1, MAX_DEVICE_PIXEL_RATIO);
     canvas.width = Math.floor(boardWidth * ratio);
     canvas.height = Math.floor(boardHeight * ratio);
     canvas.style.width = `${boardWidth}px`;
@@ -62,6 +69,12 @@ export function BoardParticles(props: BoardParticlesProps) {
 
       const ctx = canvas!.getContext('2d');
       if (!ctx) { rafRef.current = requestAnimationFrame(loop); return; }
+
+      if (document.visibilityState !== 'visible') {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = 0;
+        return;
+      }
 
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.clearRect(0, 0, boardWidth, boardHeight);
@@ -87,8 +100,10 @@ export function BoardParticles(props: BoardParticlesProps) {
 
       // --- Spawn token trail ---
       if (tokenMovingRef.current && particles.length < MAX_PARTICLES) {
-        const tp = tokenPosRef.current;
-        for (let i = 0; i < 2; i++) {
+        trailAccumRef.current += TRAIL_SPAWN_RATE * dt;
+        const tp = getTokenPositionRef.current?.() ?? tokenPosRef.current;
+        while (trailAccumRef.current >= 1 && particles.length < MAX_PARTICLES) {
+          trailAccumRef.current -= 1;
           particles.push({
             x: tp.x + (Math.random() - 0.5) * 10,
             y: tp.y + (Math.random() - 0.5) * 10,
@@ -101,6 +116,8 @@ export function BoardParticles(props: BoardParticlesProps) {
             type: 'trail',
           });
         }
+      } else {
+        trailAccumRef.current = 0;
       }
 
       // --- Update & draw ---
@@ -129,7 +146,20 @@ export function BoardParticles(props: BoardParticlesProps) {
     lastTimeRef.current = performance.now();
     rafRef.current = requestAnimationFrame(loop);
 
-    return () => cancelAnimationFrame(rafRef.current);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && rafRef.current === 0) {
+        lastTimeRef.current = performance.now();
+        rafRef.current = requestAnimationFrame(loop);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+      particlesRef.current = [];
+    };
   }, [boardWidth, boardHeight, accentColor]);
 
   // Handle burst trigger
