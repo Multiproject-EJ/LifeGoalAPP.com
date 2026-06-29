@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { lockPageScroll } from '../../utils/scrollLock';
+import { formatISODate } from '../../utils/appDay';
 
 const HAIRCUT_INTERVAL_OPTIONS = [
   { value: 60, label: 'Every 2 months (60 days)' },
@@ -64,9 +65,6 @@ function formatDateLabel(value: string | null): string {
   return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function formatISODate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
 
 function addDays(dateValue: string | null, days: number): string | null {
   if (!dateValue) return null;

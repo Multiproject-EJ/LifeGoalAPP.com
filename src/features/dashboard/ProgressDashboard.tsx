@@ -4,6 +4,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import { fetchGoals } from '../../services/goals';
 import { fetchCheckinsForUser } from '../../services/checkins';
+import { formatISODate } from '../../utils/appDay';
 import {
   listHabitsV2,
   listHabitLogsForRangeMultiV2,
@@ -143,9 +144,6 @@ type UrgentTaskNote = {
   accent: 'sunrise' | 'ocean';
 };
 
-function formatISODate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
 
 function getMonthBoundaries(reference: Date) {
   const start = new Date(reference.getFullYear(), reference.getMonth(), 1);

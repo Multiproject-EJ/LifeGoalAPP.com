@@ -100,6 +100,13 @@ import {
   getHabitRhythmMultiplier,
   rankHabitsByRhythm,
 } from './habitRhythm';
+import {
+  addDays,
+  formatISODate,
+  getNextDayBoundaryMs,
+  getTodayKey,
+  parseISODate,
+} from '../../utils/appDay';
 import { HabitImprovementAnalysisModal } from './HabitImprovementAnalysisModal';
 import { HabitChainAnalysisModal } from './HabitChainAnalysisModal';
 import { buildEnhancedRationale } from './aiRationale';
@@ -264,18 +271,6 @@ function playHabitSkipSfx(): void {
 
   source.start(context.currentTime);
   source.stop(context.currentTime + duration);
-}
-
-function getNextUtcMidnightMs(): number {
-  const now = new Date();
-  const next = new Date(now);
-  next.setUTCDate(now.getUTCDate() + 1);
-  next.setUTCHours(0, 0, 0, 0);
-  return next.getTime();
-}
-
-function getTodayUtcDateKey(): string {
-  return new Date().toISOString().split('T')[0];
 }
 
 function isCanonicalEventId(value: string | null | undefined): value is EventId {
@@ -2003,7 +1998,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     () => ({
       id: `${activeDate}-daily`,
       windowStart: nowTimestamp,
-      windowEnd: getNextUtcMidnightMs(),
+      windowEnd: getNextDayBoundaryMs(),
       isSpecial: isSpecialVisionStarDay,
     }),
     [activeDate, isSpecialVisionStarDay, nowTimestamp],
@@ -3374,11 +3369,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const visibleEggSlotsOnActiveIsland = activeIslandEggSlots;
 
   const eggHatchViewedStorageKeyForSlot = useCallback(
-    (slotKey: string) => `lifegoal:egg_hatch_viewed:${session.user.id}:${getTodayUtcDateKey()}:${activeIsland}:${slotKey}`,
+    (slotKey: string) => `lifegoal:egg_hatch_viewed:${session.user.id}:${getTodayKey()}:${activeIsland}:${slotKey}`,
     [session.user.id, activeIsland],
   );
   const legacyEggHatchViewedStorageKey = useMemo(
-    () => `lifegoal:egg_hatch_viewed:${session.user.id}:${getTodayUtcDateKey()}:${activeIsland}`,
+    () => `lifegoal:egg_hatch_viewed:${session.user.id}:${getTodayKey()}:${activeIsland}`,
     [session.user.id, activeIsland],
   );
 
@@ -3410,7 +3405,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     && (!hasDailyTreatBonusDoorToday || hasOpenedDailyTreatBonusToday);
 
   const timeBoundOffers = useMemo<TimeBoundOfferItem[]>(() => {
-    const nextUtcMidnight = getNextUtcMidnightMs();
+    const nextDayBoundaryMs = getNextDayBoundaryMs();
     const holidayCalendarLabel = activeHolidaySeason
       ? `${activeHolidaySeason.meta.displayName} Calendar`
       : 'Holiday Calendar';
@@ -3432,7 +3427,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         id: 'vision_star',
         label: 'Vision Star',
         icon: isSpecialVisionStarDay ? '🌌' : '🌟',
-        expiresAtMs: visionStarAppearanceWindow?.expiresAtMs ?? nextUtcMidnight,
+        expiresAtMs: visionStarAppearanceWindow?.expiresAtMs ?? nextDayBoundaryMs,
         badgeLabelOverride: isVisionStarPreviewOnly ? DEMO_FEATURE_LABEL : (hasClaimedVisionStar ? '✓ Done' : undefined),
         isCollected: isVisionStarPreviewOnly ? false : hasClaimedVisionStar,
         isVisible: isVisionStarPreviewOnly ? true : (!hasClaimedVisionStar && isVisionStarAppearanceActive),
@@ -3445,7 +3440,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         id: 'daily_treats',
         label: 'Daily Treats',
         icon: '🍬',
-        expiresAtMs: nextUtcMidnight,
+        expiresAtMs: nextDayBoundaryMs,
         badgeLabelOverride: isDailyTreatBonusReady
           ? 'Bonus Ready'
           : isDailyTreatFullyCollected
@@ -3464,7 +3459,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         id: 'holiday_calendar',
         label: holidayCalendarLabel,
         icon: '🎁',
-        expiresAtMs: nextUtcMidnight,
+        expiresAtMs: nextDayBoundaryMs,
         isCollected: hasOpenedHolidayCalendarToday,
         isVisible: Boolean(activeHolidaySeason),
         isActionable: !hasOpenedHolidayCalendarToday,
@@ -3520,7 +3515,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         id: 'zen_tree_water',
         label: 'Water the Zen Tree',
         icon: '🌳',
-        expiresAtMs: nextUtcMidnight,
+        expiresAtMs: nextDayBoundaryMs,
         badgeLabelOverride: isWaterZenTreePreviewOnly ? DEMO_FEATURE_LABEL : (hasClaimedZenTreeToday ? '✓ Done' : 'Claim'),
         isCollected: isWaterZenTreePreviewOnly ? false : hasClaimedZenTreeToday,
         isVisible: canViewWaterZenTree,
@@ -3532,7 +3527,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         id: 'feed_creatures',
         label: 'Feed Pet',
         icon: '🐾',
-        expiresAtMs: nextUtcMidnight,
+        expiresAtMs: nextDayBoundaryMs,
         badgeLabelOverride: isFeedCreaturesPreviewOnly ? DEMO_FEATURE_LABEL : (hasClaimedFeedCreaturesToday ? '✓ Done' : 'Claim'),
         isCollected: isFeedCreaturesPreviewOnly ? false : hasClaimedFeedCreaturesToday,
         isVisible: canViewFeedCreatures,
@@ -3573,7 +3568,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   ]);
 
 
-  const offerTeaserKey = useCallback((offerId: TimeBoundOfferId | EggHatchOfferId) => `${getTodayUtcDateKey()}:${offerId}`, []);
+  const offerTeaserKey = useCallback((offerId: TimeBoundOfferId | EggHatchOfferId) => `${getTodayKey()}:${offerId}`, []);
 
   const closeTodaysOfferModal = useCallback(() => {
     setIsTodaysOfferModalOpen(false);
@@ -12093,13 +12088,6 @@ function formatDateLabel(value: string) {
   });
 }
 
-function formatISODate(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 function getLocalDateKeyFromISO(iso: string): string {
   const parsed = new Date(iso);
   if (Number.isNaN(parsed.getTime())) {
@@ -12130,12 +12118,6 @@ function generateDateRange(start: Date, end: Date): string[] {
     cursor.setDate(cursor.getDate() + 1);
   }
   return days;
-}
-
-function addDays(date: Date, amount: number) {
-  const copy = new Date(date.getTime());
-  copy.setDate(copy.getDate() + amount);
-  return copy;
 }
 
 function subtractDays(date: Date, amount: number) {
@@ -12213,17 +12195,6 @@ function createScheduleChecker(frequency: string, schedule: Json | null): Schedu
   }
 
   return () => true;
-}
-
-function parseISODate(value: string): Date {
-  const [yearStr, monthStr, dayStr] = value.split('-');
-  const year = Number(yearStr);
-  const month = Number(monthStr);
-  const day = Number(dayStr);
-  if ([year, month, day].some((part) => Number.isNaN(part))) {
-    return new Date(value);
-  }
-  return new Date(year, month - 1, day);
 }
 
 function isHabitScheduledOnDate(habit: HabitWithGoal, dateISO: string): boolean {

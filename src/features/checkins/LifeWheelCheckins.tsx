@@ -8,6 +8,7 @@ import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { ReviewWizard } from '../annual-review';
+import { formatISODate } from '../../utils/appDay';
 
 type CheckinRow = Database['public']['Tables']['checkins']['Row'];
 
@@ -129,9 +130,6 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 type CheckinView = 'full' | 'annual' | 'area';
 type MobileCheckinScreen = 'chooser' | 'full' | 'area' | 'annual';
 
-function formatISODate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
 
 function createDefaultScores(): CheckinScores {
   return LIFE_WHEEL_CATEGORIES.reduce<CheckinScores>((acc, category) => {

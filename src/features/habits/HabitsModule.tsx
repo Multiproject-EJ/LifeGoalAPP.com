@@ -40,6 +40,7 @@ import {
   extractHabitRhythm,
   type HabitRhythmDaypart,
 } from './habitRhythm';
+import { formatISODate, getTodayKey } from '../../utils/appDay';
 
 /**
  * Convert a wizard ScheduleDraft to the habits_v2 DB schedule JSON format.
@@ -974,8 +975,8 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
     }
 
     const currentState = getAutoProgressState(habit);
-    const todayISO = new Date().toISOString().split('T')[0];
-    if (currentState.lastShiftAt && new Date(currentState.lastShiftAt).toISOString().split('T')[0] === todayISO) {
+    const todayISO = getTodayKey();
+    if (currentState.lastShiftAt && formatISODate(new Date(currentState.lastShiftAt)) === todayISO) {
       setError(`"${habit.title}" already changed tier today. Try again tomorrow.`);
       return;
     }

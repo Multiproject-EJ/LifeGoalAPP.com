@@ -1,6 +1,7 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database, Json } from '../lib/database.types';
+import { formatISODate } from '../utils/appDay';
 import {
   buildLocalCompletionKey,
   buildLocalCompletionRowId,
@@ -176,15 +177,6 @@ export function getMonthBoundaries(year: number, month: number): { startDate: st
   return { startDate, endDate };
 }
 
-/**
- * Format a Date object as an ISO date string (YYYY-MM-DD).
- */
-function formatISODate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 /**
  * Main helper function to get habit completions for a specific month.

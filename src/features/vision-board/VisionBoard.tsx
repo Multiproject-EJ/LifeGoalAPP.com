@@ -1,6 +1,7 @@
 import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
+import { formatISODate } from '../../utils/appDay';
 import {
   clearQueuedVisionImageMutations,
   deleteVisionImage,
@@ -106,10 +107,6 @@ function formatDateLabel(value: string | null): string {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return 'Not scheduled';
   return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function formatISODate(date: Date): string {
-  return date.toISOString().slice(0, 10);
 }
 
 function addDays(dateValue: string | null, days: number): string | null {

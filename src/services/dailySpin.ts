@@ -7,6 +7,7 @@ import { recordTelemetryEvent } from './telemetry';
 import { fetchHolidayPreferences } from './holidayPreferences';
 import { isIslandRunFeatureEnabled } from '../config/islandRunFeatureFlags';
 import { clampSpinsForStrictDailyLimit, STRICT_DAILY_SPIN_LIMIT } from './dailySpinLimit';
+import { formatISODate } from '../utils/appDay';
 
 export { clampSpinsForStrictDailyLimit, STRICT_DAILY_SPIN_LIMIT };
 
@@ -20,7 +21,9 @@ const DEMO_HISTORY_KEY = 'lifegoal_demo_spin_history';
 const DAILY_FREE_SPINS = 1;
 
 function formatDailySpinHabitBonusDate(value = new Date()): string {
-  return value.toISOString().split('T')[0];
+  // Local-day key so the once-per-day claim agrees with the Today tab callers
+  // (which pass a local date) and with the rest of the app's day boundary.
+  return formatISODate(value);
 }
 
 function buildDailySpinHabitBonusClaimKey(userId: string, claimDate: string): string {

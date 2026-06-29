@@ -25,6 +25,7 @@ import {
 } from '../../services/habitsV2';
 import { isHabitScheduledToday, parseSchedule, getTimesPerWeekProgress } from './scheduleInterpreter';
 import { claimDailySpinHabitBonusOncePerDay } from '../../services/dailySpin';
+import { getTodayKey } from '../../utils/appDay';
 import { autoResumeDueHabits } from '../../services/habitLifecycleAutoResume';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
@@ -191,7 +192,7 @@ export function UnifiedTodayView({
       ).length;
 
       if (completedCount > 0) {
-        const todayKey = new Date().toISOString().split('T')[0];
+        const todayKey = getTodayKey();
         const { error } = await claimDailySpinHabitBonusOncePerDay(session.user.id, todayKey);
         if (error) {
           throw error;

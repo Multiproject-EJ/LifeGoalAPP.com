@@ -23,6 +23,8 @@
     "src/features/habits/__tests__/habitChainLogic.test.ts",
     "src/features/habits/habitRhythm.ts",
     "src/features/habits/__tests__/habitRhythm.test.ts",
+    "src/utils/appDay.ts",
+    "src/utils/__tests__/appDay.test.ts",
     "src/features/zen-garden/treeGrowth.ts",
     "src/features/zen-garden/__tests__/treeGrowth.test.ts"
   ]

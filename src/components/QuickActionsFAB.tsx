@@ -9,6 +9,7 @@ import {
 } from '../compat/legacyHabitsAdapter';
 import { useGamification } from '../hooks/useGamification';
 import { XP_REWARDS } from '../types/gamification';
+import { formatISODate, getTodayKey } from '../utils/appDay';
 import { AiCoach } from '../features/ai-coach';
 import '../features/ai-coach/AiCoach.css';
 import { GamificationHeader } from './GamificationHeader';
@@ -197,8 +198,6 @@ export function QuickActionsFAB({
 
     return () => true;
   };
-
-  const formatISODate = (date: Date) => date.toISOString().split('T')[0];
 
   const subtractDays = (date: Date, days: number) => {
     const next = new Date(date);
@@ -464,7 +463,7 @@ export function QuickActionsFAB({
   const toggleHabitCompletion = async (habitId: string) => {
     setSavingHabitId(habitId);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getTodayKey();
       const currentState = habitCompletions[habitId];
       const wasCompleted = currentState?.completed ?? false;
 

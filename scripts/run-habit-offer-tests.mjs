@@ -30,12 +30,16 @@ try {
   const { runAllHabitRhythmTests } = require(
     path.join(outDir, 'features/habits/__tests__/habitRhythm.test.js'),
   );
+  const { runAllAppDayTests } = require(
+    path.join(outDir, 'utils/__tests__/appDay.test.js'),
+  );
   runAllTimeBoundOfferSortTests();
   await runAllDailyOfferClaimTests();
   runAllWisdomTreeGrowthTests();
   runAllHabitCoachTests();
   runAllHabitChainLogicTests();
   runAllHabitRhythmTests();
+  runAllAppDayTests();
   console.log('habit-offer-tests: all assertions passed');
 } finally {
   rmSync(outDir, { recursive: true, force: true });
