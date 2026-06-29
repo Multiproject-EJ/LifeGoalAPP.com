@@ -3,7 +3,9 @@
  *
  * Shows a short, swipeable deck of cards (one idea each, never a wall of text)
  * that teaches the habit loop and nudges the user to improve a habit. Three
- * variations rotate daily (see tipOfDayContent.ts). Loading, AI enrichment and
+ * variations rotate daily (see tipOfDayContent.ts). When a prior tip is awaiting
+ * feedback, a "did you try yesterday's tip?" check-in is shown first; reshape tips
+ * can offer a one-tap "apply" (e.g. shrink the target). Loading, AI enrichment and
  * persistence live in tipOfDayData.ts; this component is presentation + paging.
  */
 
@@ -11,9 +13,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 
-import { recordTipAction } from '../../services/tipOfDayLog';
+import { recordTipAction, recordTipFollowup, type TipFollowupResult } from '../../services/tipOfDayLog';
+import { applyTipAction } from '../../services/tipApply';
 import { buildTipOfDayForSession } from './tipOfDayData';
-import type { TipDeck } from './tipOfDayContent';
+import type { TipCheckIn, TipDeck } from './tipOfDayContent';
 import './TipOfDayModal.css';
 
 export interface TipOfDayModalProps {
@@ -27,12 +30,22 @@ const VARIATION_BADGE: Record<TipDeck['variation'], string> = {
   environment_cue: 'Design your space',
 };
 
+const CHECK_IN_OPTIONS: Array<{ result: TipFollowupResult; emoji: string; label: string }> = [
+  { result: 'worked', emoji: '🎉', label: 'Yes, it helped' },
+  { result: 'not_yet', emoji: '🕒', label: 'Not yet' },
+  { result: 'didnt_work', emoji: '🤔', label: 'Didn’t work' },
+];
+
 const SWIPE_THRESHOLD_PX = 56;
 
 export function TipOfDayModal({ session, onClose }: TipOfDayModalProps): JSX.Element | null {
   const [deck, setDeck] = useState<TipDeck | null>(null);
+  const [checkIn, setCheckIn] = useState<TipCheckIn | null>(null);
+  const [showCheckIn, setShowCheckIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
   const dragStartX = useRef<number | null>(null);
   const [dragDx, setDragDx] = useState(0);
 
@@ -43,6 +56,8 @@ export function TipOfDayModal({ session, onClose }: TipOfDayModalProps): JSX.Ele
       .then((result) => {
         if (!active) return;
         setDeck(result?.deck ?? null);
+        setCheckIn(result?.checkIn ?? null);
+        setShowCheckIn(Boolean(result?.checkIn));
       })
       .catch((err) => {
         console.warn('Tip of the Day failed to build:', err);
@@ -87,15 +102,45 @@ export function TipOfDayModal({ session, onClose }: TipOfDayModalProps): JSX.Ele
     setIndex((i) => Math.max(i - 1, 0));
   }, []);
 
+  const answerCheckIn = useCallback(
+    (result: TipFollowupResult) => {
+      if (checkIn) void recordTipFollowup(checkIn.tipId, result);
+      setShowCheckIn(false);
+    },
+    [checkIn],
+  );
+
+  const handlePrimary = useCallback(async () => {
+    const action = deck?.applyAction ?? null;
+    if (!action) {
+      close(deck?.primaryCtaAction);
+      return;
+    }
+    const userId = session?.user?.id;
+    if (!userId) {
+      close('applied');
+      return;
+    }
+    setApplying(true);
+    setApplyError(null);
+    const result = await applyTipAction(userId, action);
+    setApplying(false);
+    if (result.ok) {
+      close('applied');
+    } else {
+      setApplyError(result.error ?? 'Could not apply — try from the habit instead.');
+    }
+  }, [close, deck?.applyAction, deck?.primaryCtaAction, session?.user?.id]);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') close('dismissed');
-      else if (event.key === 'ArrowRight') goNext();
-      else if (event.key === 'ArrowLeft') goPrev();
+      else if (!showCheckIn && event.key === 'ArrowRight') goNext();
+      else if (!showCheckIn && event.key === 'ArrowLeft') goPrev();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [close, goNext, goPrev]);
+  }, [close, goNext, goPrev, showCheckIn]);
 
   const handlePointerDown = (event: React.PointerEvent) => {
     dragStartX.current = event.clientX;
@@ -125,6 +170,7 @@ export function TipOfDayModal({ session, onClose }: TipOfDayModalProps): JSX.Ele
   }
 
   const card = deck?.cards[index];
+  const renderCheckIn = showCheckIn && checkIn;
 
   return createPortal(
     <div className="tip-of-day__overlay" role="dialog" aria-modal="true" aria-label="Tip of the day">
@@ -135,7 +181,7 @@ export function TipOfDayModal({ session, onClose }: TipOfDayModalProps): JSX.Ele
             <div className="tip-of-day__brand-text">
               <span className="tip-of-day__title">Tip of the Day</span>
               <span className="tip-of-day__subtitle">
-                {deck ? VARIATION_BADGE[deck.variation] : 'AI Coach'}
+                {renderCheckIn ? 'Quick follow-up' : deck ? VARIATION_BADGE[deck.variation] : 'AI Coach'}
               </span>
             </div>
           </div>
@@ -153,6 +199,27 @@ export function TipOfDayModal({ session, onClose }: TipOfDayModalProps): JSX.Ele
           <div className="tip-of-day__loading">
             <div className="tip-of-day__spinner" aria-hidden />
             <p>Finding today’s tip…</p>
+          </div>
+        ) : renderCheckIn ? (
+          <div className="tip-of-day__checkin">
+            <div className="tip-of-day__card tip-of-day__card--checkin">
+              <span className="tip-of-day__kicker">Yesterday’s tip</span>
+              <span className="tip-of-day__card-emoji" aria-hidden>📋</span>
+              <h2 className="tip-of-day__card-heading">Did you try it?</h2>
+              <p className="tip-of-day__card-body">{checkIn.suggestionText}</p>
+            </div>
+            <div className="tip-of-day__checkin-actions">
+              {CHECK_IN_OPTIONS.map((option) => (
+                <button
+                  key={option.result}
+                  type="button"
+                  className="tip-of-day__btn tip-of-day__btn--ghost tip-of-day__checkin-btn"
+                  onClick={() => answerCheckIn(option.result)}
+                >
+                  <span aria-hidden>{option.emoji}</span> {option.label}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <>
@@ -192,9 +259,11 @@ export function TipOfDayModal({ session, onClose }: TipOfDayModalProps): JSX.Ele
               ))}
             </div>
 
+            {applyError && <p className="tip-of-day__apply-error">{applyError}</p>}
+
             <div className="tip-of-day__footer">
               {index > 0 ? (
-                <button type="button" className="tip-of-day__btn tip-of-day__btn--ghost" onClick={goPrev}>
+                <button type="button" className="tip-of-day__btn tip-of-day__btn--ghost" onClick={goPrev} disabled={applying}>
                   Back
                 </button>
               ) : (
@@ -204,9 +273,10 @@ export function TipOfDayModal({ session, onClose }: TipOfDayModalProps): JSX.Ele
                 <button
                   type="button"
                   className="tip-of-day__btn tip-of-day__btn--primary"
-                  onClick={() => close(deck.primaryCtaAction)}
+                  onClick={handlePrimary}
+                  disabled={applying}
                 >
-                  {deck.primaryCtaLabel}
+                  {applying ? 'Applying…' : deck.primaryCtaLabel}
                 </button>
               ) : (
                 <button type="button" className="tip-of-day__btn tip-of-day__btn--primary" onClick={goNext}>

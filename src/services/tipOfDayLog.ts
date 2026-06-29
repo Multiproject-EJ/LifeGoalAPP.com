@@ -11,9 +11,13 @@
  */
 
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
-import type { TipVariation } from '../features/tip-of-day/tipOfDayContent';
+import { extractSuggestionSummary, type TipCheckIn, type TipVariation } from '../features/tip-of-day/tipOfDayContent';
 
 export type TipAction = 'applied' | 'captured' | 'dismissed';
+export type TipFollowupResult = 'worked' | 'partly' | 'not_yet' | 'didnt_work';
+
+/** Variations whose tips suggest a concrete action worth a "did you try it?" check-in. */
+const ACTIONABLE_VARIATIONS: TipVariation[] = ['reshape_struggling', 'environment_cue'];
 
 /** Local calendar date as YYYY-MM-DD. */
 export function getTipDateKey(now: Date = new Date()): string {
@@ -63,6 +67,61 @@ export async function recordTipShown(input: RecordTipShownInput): Promise<void> 
 
   if (error) {
     console.warn('Failed to record Tip of the Day shown:', error.message ?? error);
+  }
+}
+
+/**
+ * Find the most recent prior actionable tip that hasn't had a follow-up yet, so we
+ * can ask "did you try yesterday's tip?". Returns null when none qualifies (e.g.
+ * demo mode, no history, or the last tip was a non-actionable science tip).
+ */
+export async function getPreviousTipForCheckIn(
+  userId: string,
+  beforeDate: string = getTipDateKey(),
+): Promise<TipCheckIn | null> {
+  if (!canUseSupabaseData() || !userId) return null;
+
+  const supabase = getUntypedSupabase();
+  const { data, error } = await supabase
+    .from('tip_of_day_log')
+    .select('id,variation,habit_id,payload,shown_on')
+    .eq('user_id', userId)
+    .lt('shown_on', beforeDate)
+    .is('followup_result', null)
+    .in('variation', ACTIONABLE_VARIATIONS)
+    .order('shown_on', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('Failed to load previous tip for check-in:', error.message ?? error);
+    return null;
+  }
+  if (!data) return null;
+
+  const suggestionText = extractSuggestionSummary(data.payload);
+  if (!suggestionText) return null;
+
+  const habitTitle =
+    data.payload && typeof data.payload === 'object'
+      ? ((data.payload as { habitTitle?: string | null }).habitTitle ?? null)
+      : null;
+
+  return { tipId: data.id as string, habitTitle, suggestionText };
+}
+
+/** Record the user's answer to the "did you try it?" check-in (best-effort). */
+export async function recordTipFollowup(tipId: string, result: TipFollowupResult): Promise<void> {
+  if (!canUseSupabaseData() || !tipId) return;
+
+  const supabase = getUntypedSupabase();
+  const { error } = await supabase
+    .from('tip_of_day_log')
+    .update({ followup_result: result, followup_at: new Date().toISOString() })
+    .eq('id', tipId);
+
+  if (error) {
+    console.warn('Failed to record Tip of the Day follow-up:', error.message ?? error);
   }
 }
 

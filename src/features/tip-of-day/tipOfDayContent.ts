@@ -37,6 +37,22 @@ export interface TipCard {
   body: string;
 }
 
+/**
+ * A concrete, reversible change the closing card can apply in one tap. Today the
+ * only kind is shrinking a quantity/duration target — the canonical "make it
+ * smaller" move — executed through the guardrailed habit-adjustment service.
+ */
+export interface TipApplyAction {
+  kind: 'shrink_target';
+  habitId: string;
+  currentTarget: number;
+  newTarget: number;
+  unit: string | null;
+  /** Button label, e.g. "Shrink to 4 glasses today". */
+  label: string;
+  changeDescription: string;
+}
+
 export interface TipDeck {
   variation: TipVariation;
   /** The habit the tip is about, when applicable. */
@@ -47,6 +63,17 @@ export interface TipDeck {
   primaryCtaLabel: string;
   /** What the primary action records as `action_taken`. */
   primaryCtaAction: 'applied' | 'captured' | 'dismissed';
+  /** When present, the closing CTA applies this change in one tap. */
+  applyAction?: TipApplyAction | null;
+}
+
+/** A "did you try yesterday's tip?" check-in shown at the top of today's deck. */
+export interface TipCheckIn {
+  /** tip_of_day_log row id of the tip being asked about. */
+  tipId: string;
+  habitTitle: string | null;
+  /** Short summary of what that tip suggested. */
+  suggestionText: string;
 }
 
 /** Minimal shape this module needs from a habit (decoupled from HabitV2Row). */
@@ -58,6 +85,38 @@ export interface TipHabitInput {
   habitEnvironment: string | null;
   /** The user's stated reason / intent for the habit, when set. */
   habitIntent: string | null;
+  /** Habit type — drives whether a one-tap "shrink target" apply is possible. */
+  type?: 'boolean' | 'quantity' | 'duration';
+  /** Current numeric target, for quantity/duration habits. */
+  targetNum?: number | null;
+  /** Unit label for the target, e.g. "glasses", "minutes". */
+  targetUnit?: string | null;
+}
+
+/**
+ * Build a safe "shrink the target" apply action for a quantity/duration habit,
+ * or null when shrinking doesn't apply (boolean habits, or target already tiny).
+ * Halves the target, floored, never below 1.
+ */
+export function buildShrinkApplyAction(habit: TipHabitInput): TipApplyAction | null {
+  if (habit.type !== 'quantity' && habit.type !== 'duration') return null;
+  const current = habit.targetNum ?? null;
+  if (current == null || current < 2) return null;
+
+  const next = Math.max(1, Math.floor(current / 2));
+  if (next >= current) return null;
+
+  const unit = habit.targetUnit?.trim() || null;
+  const unitSuffix = unit ? ` ${unit}` : '';
+  return {
+    kind: 'shrink_target',
+    habitId: habit.id,
+    currentTarget: current,
+    newTarget: next,
+    unit,
+    label: `Shrink to ${next}${unitSuffix} today`,
+    changeDescription: `Lower target from ${current}${unitSuffix} to ${next}${unitSuffix}`,
+  };
 }
 
 export interface TipHealthInput {
@@ -145,6 +204,7 @@ export function buildReshapeDeck(input: {
   };
   const coach = buildHabitCoachCard(signals);
   const topTip = coach?.tips[0];
+  const applyAction = buildShrinkApplyAction(habit);
 
   const cards: TipCard[] = [
     {
@@ -191,9 +251,36 @@ export function buildReshapeDeck(input: {
     habitId: habit.id,
     habitTitle: habit.title,
     cards,
-    primaryCtaLabel: 'I’ll try this today',
+    primaryCtaLabel: applyAction ? applyAction.label : 'I’ll try this today',
     primaryCtaAction: 'applied',
+    applyAction,
   };
+}
+
+/**
+ * Extract a short, human summary of what a stored tip deck suggested, for the
+ * "did you try yesterday's tip?" check-in. Pure — operates on a parsed payload.
+ */
+export function extractSuggestionSummary(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const cards = (payload as { cards?: unknown }).cards;
+  if (!Array.isArray(cards) || cards.length === 0) return null;
+
+  const isCard = (c: unknown): c is TipCard =>
+    Boolean(c) && typeof c === 'object' && typeof (c as TipCard).heading === 'string';
+
+  const typed = cards.filter(isCard);
+  if (typed.length === 0) return null;
+
+  const preferred =
+    typed.find((c) => c.id === 'reshape-suggestion') ??
+    typed.find((c) => c.id === 'env-apply') ??
+    typed[typed.length - 1];
+
+  const heading = preferred.heading.trim();
+  const body = preferred.body.trim();
+  if (heading && body) return `${heading} — ${body}`;
+  return heading || body || null;
 }
 
 /** Variation 2 — "Did you know?" habit-science micro-lesson anchored to a habit. */

@@ -20,7 +20,7 @@ import {
   type HabitLogV2Row,
   type HabitV2Row,
 } from '../../services/habitsV2';
-import { recordTipShown } from '../../services/tipOfDayLog';
+import { getPreviousTipForCheckIn, recordTipShown } from '../../services/tipOfDayLog';
 import { listRecentHabitInsights } from '../../services/habitInsights';
 import { getScheduledCountForWindow } from '../habits/scheduleInterpreter';
 import { assessHabitHealth } from '../habits/habitHealth';
@@ -29,6 +29,7 @@ import { enrichReshapeDeck } from './tipOfDayAi';
 import {
   buildReshapeDeck,
   selectTipDeck,
+  type TipCheckIn,
   type TipDeck,
   type TipHabitInput,
   type TipHealthInput,
@@ -48,12 +49,17 @@ function toTipHabit(habit: HabitV2Row): TipHabitInput {
     emoji: habit.emoji ?? null,
     habitEnvironment: habit.habit_environment ?? null,
     habitIntent: habit.habit_intent ?? null,
+    type: habit.type ?? 'boolean',
+    targetNum: habit.target_num ?? null,
+    targetUnit: habit.target_unit ?? null,
   };
 }
 
 export interface TipOfDayResult {
   deck: TipDeck;
   source: 'openai' | 'fallback';
+  /** "Did you try yesterday's tip?" check-in, when one is available. */
+  checkIn: TipCheckIn | null;
 }
 
 /**
@@ -163,5 +169,13 @@ export async function buildTipOfDayForSession(
     shownOn: referenceIso,
   });
 
-  return { deck: finalDeck, source };
+  // "Did you try yesterday's tip?" — independent of today's deck; safe to fail.
+  let checkIn: TipCheckIn | null = null;
+  try {
+    checkIn = await getPreviousTipForCheckIn(userId, referenceIso);
+  } catch (err) {
+    console.warn('Tip of the Day: check-in lookup failed:', err);
+  }
+
+  return { deck: finalDeck, source, checkIn };
 }
