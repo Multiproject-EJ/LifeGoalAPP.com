@@ -17,3 +17,11 @@
 @keyframes island-inhabitant-flow-fade-slide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .island-inhabitant-flow__layer { animation: island-inhabitant-flow-fade-only 1ms linear both; } @keyframes island-inhabitant-flow-fade-only { from { opacity: 0; } to { opacity: 1; } } }
 @media (max-height: 620px) { .island-inhabitant-flow__dialog { max-height: none; } .island-inhabitant-flow__viewport { align-items: start; } }
+.island-inhabitant-flow__partial { border: 2px solid rgba(255,255,255,0.46); border-radius: 28px; background: radial-gradient(circle at 50% 0%, rgba(255,240,184,0.16), transparent 38%), linear-gradient(135deg, #12294f, #261b43); padding: 28px; box-shadow: 0 24px 80px rgba(0,0,0,0.42); color: #ffffff; }
+.island-inhabitant-flow__partial h3 { margin: 0 0 10px; color: #ffffff; }
+.island-inhabitant-flow__partial p { margin: 0 0 14px; color: #eef5ff; }
+.island-inhabitant-flow__partial-eyebrow { letter-spacing: 0.12em; font-size: 0.78rem; font-weight: 900; color: #fff0b8 !important; }
+.island-inhabitant-flow__partial-distorted { display: inline-block; padding: 0.55rem 0.8rem; border: 1px dashed rgba(255,240,184,0.6); border-radius: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; background: rgba(255,255,255,0.08); }
+.island-inhabitant-flow__partial-symbols { font-size: 1.8rem; letter-spacing: 0.18em; }
+.island-inhabitant-flow__partial div { display: flex; flex-wrap: wrap; gap: 12px; }
+.island-inhabitant-flow__partial button { min-height: 44px; border: 0; border-radius: 999px; padding: 0 18px; font-weight: 800; color: #10213a; background: #fff0b8; }

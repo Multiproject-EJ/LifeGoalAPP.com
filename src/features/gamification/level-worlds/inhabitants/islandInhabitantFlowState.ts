@@ -4,6 +4,7 @@ import type { IslandInhabitantDefinition } from './islandInhabitantTypes';
 export type IslandInhabitantFlowLayer =
   | { kind: 'encounter' }
   | { kind: 'conversation'; topicId: string; conversationId: string }
+  | { kind: 'signal_incomplete' }
   | { kind: 'error'; message: string; topicId?: string };
 
 export type IslandInhabitantTopicResolution =
