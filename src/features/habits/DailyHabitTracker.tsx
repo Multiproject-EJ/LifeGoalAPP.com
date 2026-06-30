@@ -199,7 +199,16 @@ const DONE_ISH_DEFAULT_PERCENTAGE = 85;
 const HABIT_SWIPE_MAX_PX = 132;
 const HABIT_SWIPE_ARM_THRESHOLD_PX = 84;
 const HABIT_SWIPE_SUPPRESS_CLICK_MS = 260;
+const STALE_TODO_COACH_PILL_THRESHOLD_MS = 15 * 60 * 60 * 1000;
+const STALE_TODO_COACH_CLOCK_TICK_MS = 60 * 1000;
 const HABIT_SFX_ENABLED_STORAGE_KEY = 'lifegoal.habits.sfx.enabled';
+
+
+function shouldShowStaleTodoCoachPill(todo: TodayTodo, nowMs: number): boolean {
+  if (todo.completed || !todo.created_at) return false;
+  const createdAtMs = Date.parse(todo.created_at);
+  return Number.isFinite(createdAtMs) && nowMs - createdAtMs > STALE_TODO_COACH_PILL_THRESHOLD_MS;
+}
 
 function getUtcDayDifference(fromDateIso: string, toDateIso: string): number {
   const fromMs = Date.parse(`${fromDateIso}T00:00:00.000Z`);
@@ -1060,6 +1069,7 @@ export function DailyHabitTracker({
   const [todayTodoLoadError, setTodayTodoLoadError] = useState<string | null>(null);
   const [justCompletedTodoId, setJustCompletedTodoId] = useState<string | null>(null);
   const [todayTodoActionPendingById, setTodayTodoActionPendingById] = useState<Record<string, boolean>>({});
+  const [staleTodoCoachClockMs, setStaleTodoCoachClockMs] = useState(() => Date.now());
   const [showYesterdaySundownTodoModal, setShowYesterdaySundownTodoModal] = useState(false);
   const [yesterdaySundownTodos, setYesterdaySundownTodos] = useState<TodayTodo[]>([]);
   const [yesterdaySundownTodoStatus, setYesterdaySundownTodoStatus] = useState<string | null>(null);
@@ -1069,6 +1079,13 @@ export function DailyHabitTracker({
   const [todoCleanupDisplayCounts, setTodoCleanupDisplayCounts] = useState<Record<string, number>>({});
   const [todoCleanupBulkAction, setTodoCleanupBulkAction] = useState<TodoCleanupPendingAction | null>(null);
   const yesterdaySundownTodoPromptOpenedThisSessionRef = useRef(false);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setStaleTodoCoachClockMs(Date.now());
+    }, STALE_TODO_COACH_CLOCK_TICK_MS);
+    return () => window.clearInterval(interval);
+  }, []);
 
   const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
   const [todaysOfferCheckoutPending, setTodaysOfferCheckoutPending] = useState(false);
@@ -7430,6 +7447,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const todoSwipeAction: TodoSwipeAction | null = getTodoSwipeAction(isExpanded);
             const todoSwipeArmedDirection = swipeArmedByTodoId[todo.id] ?? null;
             const todoDisplayTitle = isPrivateCompactView ? `Private todo ${todoIndex + 1}` : todo.title;
+            const showCollapsedCoachPill = !isExpanded && !isPrivateCompactView && Boolean(onOpenAiCoach) && shouldShowStaleTodoCoachPill(todo, staleTodoCoachClockMs);
             return (
               <li key={todo.id} className={`habit-checklist__item habit-checklist__item--todo ${isJustCompletedTodo ? 'habit-checklist__item--todo-completing' : ''}`.trim()}>
                 <div
@@ -7550,6 +7568,18 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                                 }}
                               >
                                 Start now
+                              </button>
+                            ) : null}
+                            {showCollapsedCoachPill ? (
+                              <button
+                                type="button"
+                                className="habit-checklist__todo-coach-pill"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  onOpenAiCoach?.(buildTodayTodoCoachPrompt(todo));
+                                }}
+                              >
+                                Help me figure out next step
                               </button>
                             ) : null}
                           </div>

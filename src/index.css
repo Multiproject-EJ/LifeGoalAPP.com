@@ -8222,7 +8222,8 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: transparent;
   font-size: 1rem;
 }
-.habit-checklist__todo-start-now {
+.habit-checklist__todo-start-now,
+.habit-checklist__todo-coach-pill {
   border: 1px solid rgba(37, 99, 235, 0.26);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.85);
@@ -8231,6 +8232,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-weight: 700;
   letter-spacing: 0.02em;
   padding: 0.2rem 0.5rem;
+}
+.habit-checklist__todo-coach-pill {
+  border-color: rgba(124, 58, 237, 0.34);
+  background: linear-gradient(145deg, rgba(250, 245, 255, 0.96), rgba(233, 213, 255, 0.74));
+  color: #5b21b6;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.13);
 }
 .habit-edit-modal-focus-label { display: flex; align-items: flex-start; gap: 0.5rem; cursor: pointer; font-size: 0.9rem; }
 .habit-edit-modal-focus-label input[type="checkbox"] { margin-top: 0.15rem; flex-shrink: 0; width: 1rem; height: 1rem; }

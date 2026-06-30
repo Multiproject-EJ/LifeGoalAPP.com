@@ -20,6 +20,14 @@ function moveYesterdaySundownTodosToToday(todos, yesterdayDate, todayDate) {
   ));
 }
 
+const STALE_TODO_COACH_PILL_THRESHOLD_MS = 15 * 60 * 60 * 1000;
+
+function shouldShowStaleTodoCoachPill(todo, nowMs) {
+  if (todo.completed || !todo.created_at) return false;
+  const createdAtMs = Date.parse(todo.created_at);
+  return Number.isFinite(createdAtMs) && nowMs - createdAtMs > STALE_TODO_COACH_PILL_THRESHOLD_MS;
+}
+
 function getTodoSwipeAction(isExpanded) {
   return isExpanded ? null : 'complete';
 }
@@ -47,6 +55,23 @@ assert.deepEqual(
     .filter((t) => t.todo_date === '2026-05-26' && !t.completed)
     .map((t) => t.id),
   ['a', 'd'],
+);
+const staleTodoNowMs = Date.parse('2026-05-26T16:30:00.000Z');
+assert.equal(
+  shouldShowStaleTodoCoachPill({ id: 'old', completed: false, created_at: '2026-05-26T01:00:00.000Z' }, staleTodoNowMs),
+  true,
+);
+assert.equal(
+  shouldShowStaleTodoCoachPill({ id: 'fresh', completed: false, created_at: '2026-05-26T02:00:00.000Z' }, staleTodoNowMs),
+  false,
+);
+assert.equal(
+  shouldShowStaleTodoCoachPill({ id: 'done-old', completed: true, created_at: '2026-05-26T01:00:00.000Z' }, staleTodoNowMs),
+  false,
+);
+assert.equal(
+  shouldShowStaleTodoCoachPill({ id: 'missing-created-at', completed: false, created_at: null }, staleTodoNowMs),
+  false,
 );
 assert.equal(getTodoSwipeAction(false), 'complete');
 assert.equal(getTodoSwipeAction(true), null);
