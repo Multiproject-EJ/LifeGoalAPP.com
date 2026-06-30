@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import type { TileAnchor } from '../../services/islandBoardLayout';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
+import type { VisibleTechnologyFragment } from '../../services/islandTechnologyFragmentVisuals';
 
 // ─── SVG icon set replacing emojis ───────────────────────────────────────────
 // Inline SVG mini-icons for each tile type.  Sized 18×18 viewBox.
@@ -92,8 +93,7 @@ export interface BoardTileProps {
   tileIndex: number;
   showDebug: boolean;
   isMinimalBoardArt: boolean;
-  hasCollectibleObject?: boolean;
-  isCollectibleCollected?: boolean;
+  technologyFragment?: VisibleTechnologyFragment;
   /** Uniform board scale (canonical 1000px → screen px). Used to size tiles to
    *  match the ring geometry regardless of viewport dimensions. */
   uniformScale: number;
@@ -116,8 +116,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isTrafficLightGreen = false,
     showDebug,
     isMinimalBoardArt,
-    hasCollectibleObject = false,
-    isCollectibleCollected = false,
+    technologyFragment,
     uniformScale,
   } = props;
 
@@ -166,8 +165,9 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         isTokenCurrent ? 'island-tile--token-current' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
         !isMinimalBoardArt ? 'island-tile--alive' : '',
-        isCollectibleCollected ? 'island-tile--collectible-collected' : '',
+        technologyFragment ? 'island-tile--technology-fragment' : '',
       ].filter(Boolean).join(' ')}
+      aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}` : undefined}
       style={{
         left: position.x,
         top: position.y,
@@ -176,14 +176,23 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         ['--tile-index' as string]: String(index),
         ['--tile-scale' as string]: String(anchor.scale),
         ['--tile-render-scale' as string]: (anchor.scale * uniformScale).toFixed(4),
+        ...(technologyFragment ? { ['--fragment-slot' as string]: String(technologyFragment.fragmentSlot), ['--fragment-animation-delay' as string]: `${technologyFragment.fragmentSlot * -0.11}s` } : {}),
         transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${(anchor.scale * uniformScale).toFixed(4)})`,
         ...(isSpark40 ? { width: '58px', height: '58px', clipPath: wedgeClipPath } : {}),
       }}
     >
       {!isMinimalBoardArt && <span className="island-tile__shine" aria-hidden="true" />}
 
-      {hasCollectibleObject && !isCollectibleCollected && (tileType === 'currency' || tileType === 'chest' || tileType === 'micro' || tileType === 'card') && (
-        <span className={`island-tile__popout island-tile__popout--${tileType}`} aria-hidden="true" />
+      {technologyFragment && (
+        <span
+          className="island-tile__popout island-tile__popout--technology-fragment"
+          aria-hidden="true"
+          data-fragment-slot={technologyFragment.fragmentSlot}
+          data-testid={`technology-fragment-${technologyFragment.fragmentSlot}`}
+          title={technologyFragment.ariaLabel}
+        >
+          <span className="island-tile__popout-emoji" aria-hidden="true">{technologyFragment.placeholder}</span>
+        </span>
       )}
 
       <span className="island-tile__value">

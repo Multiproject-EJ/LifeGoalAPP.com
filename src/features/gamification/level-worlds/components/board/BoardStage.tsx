@@ -2,6 +2,7 @@ import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState }
 import { CANONICAL_BOARD_SIZE, type TileAnchor } from '../../services/islandBoardLayout';
 import type { IslandBoardTheme } from '../../services/islandBoardThemes';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
+import type { VisibleTechnologyFragment } from '../../services/islandTechnologyFragmentVisuals';
 import { logIslandRunEntryDebug } from '../../services/islandRunEntryDebug';
 import { useBoardCamera, type CameraVisualBounds } from './useBoardCamera';
 import { useBoardGestures } from './useBoardGestures';
@@ -76,8 +77,7 @@ export interface BoardStageProps {
   trafficLightChargeTarget?: number;
   stopMap: Map<number, string>;
   completedEncounterIndices: Set<number>;
-  collectibleTileIndices?: Set<number>;
-  collectedCollectibleTileIndices?: Set<number>;
+  visibleTechnologyFragments?: readonly VisibleTechnologyFragment[];
 
   /** Token state — the index on the board */
   tokenIndex: number;
@@ -142,8 +142,7 @@ export function BoardStage(props: BoardStageProps) {
     trafficLightChargeTarget = 8,
     stopMap,
     completedEncounterIndices,
-    collectibleTileIndices,
-    collectedCollectibleTileIndices,
+    visibleTechnologyFragments,
     tokenIndex,
     orbitStopVisuals,
     activeStopId,
@@ -595,8 +594,7 @@ export function BoardStage(props: BoardStageProps) {
           trafficLightCharge={trafficLightCharge}
           trafficLightChargeTarget={trafficLightChargeTarget}
           completedEncounterIndices={completedEncounterIndices}
-          collectibleTileIndices={collectibleTileIndices}
-          collectedCollectibleTileIndices={collectedCollectibleTileIndices}
+          visibleTechnologyFragments={visibleTechnologyFragments}
           tokenIndex={tokenIndex}
           isSpark40={isSpark40}
           showDebug={showDebug}

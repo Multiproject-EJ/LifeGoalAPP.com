@@ -119,6 +119,7 @@ import { islandNarrativeRegistryTests } from '../../narrative/__tests__/islandNa
 import { islandNarrativeValidationTests, islandStoryManifestValidationTests } from '../../narrative/__tests__/islandNarrativeValidation.test';
 import { islandRunModalTextColorGuardTests } from './islandRunModalTextColorGuards.test';
 import { islandRunTechCollectionTests } from './islandRunTechCollection.test';
+import { islandRunTechnologyFragmentRenderingGuardTests } from './islandRunTechnologyFragmentRenderingGuards.test';
 import { islandRunTechCollectionPersistenceTests } from './islandRunTechCollectionPersistence.test';
 import { islandTechCollectionComponentTests } from './islandTechCollectionComponent.test';
 import type { TestCase } from './testHarness';
@@ -246,6 +247,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'combinedJourneyRewardClaimsRead', tests: combinedJourneyRewardClaimsReadTests },
   { label: 'combinedJourneyRewardBaseline', tests: combinedJourneyRewardBaselineTests },
   { label: 'islandRunTechCollection', tests: islandRunTechCollectionTests },
+  { label: 'islandRunTechnologyFragmentRenderingGuards', tests: islandRunTechnologyFragmentRenderingGuardTests },
   { label: 'islandRunTechCollectionPersistence', tests: islandRunTechCollectionPersistenceTests },
   { label: 'islandTechCollectionComponent', tests: islandTechCollectionComponentTests },
 ];

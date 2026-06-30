@@ -46,7 +46,7 @@ import {
 } from '../services/islandRunTechCollection';
 import {
   getIslandTechnologyFragmentPlacement,
-  listVisibleTechnologyFragmentTileIndices,
+  listVisibleTechnologyFragments,
 } from '../services/islandTechnologyFragmentPlacements';
 import { StatDriftNumbers } from './StatDriftNumbers';
 import { OutOfDiceRegenStatus } from './OutOfDiceRegenStatus';
@@ -6153,8 +6153,8 @@ export function IslandRunBoardPrototype({
   // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
   const rollIndexRef = useRef(0);
 
-  const visibleTechnologyFragmentTileIndices = useMemo(
-    () => listVisibleTechnologyFragmentTileIndices(islandNumber, collectedTechTileIndices),
+  const visibleTechnologyFragments = useMemo(
+    () => listVisibleTechnologyFragments(islandNumber, collectedTechTileIndices),
     [collectedTechTileIndices, islandNumber],
   );
 
@@ -11020,8 +11020,7 @@ export function IslandRunBoardPrototype({
           trafficLightChargeTarget={TRAFFIC_LIGHT_CHARGE_TARGET}
           stopMap={stopMap}
           completedEncounterIndices={completedEncounterIndices}
-          collectibleTileIndices={visibleTechnologyFragmentTileIndices}
-          collectedCollectibleTileIndices={new Set<number>()}
+          visibleTechnologyFragments={visibleTechnologyFragments}
           tokenIndex={tokenIndex}
           orbitStopVisuals={orbitStopVisuals}
           activeStopId={activeStopId}

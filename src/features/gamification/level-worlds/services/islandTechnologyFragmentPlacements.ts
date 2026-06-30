@@ -1,4 +1,5 @@
 import { TECH_COLLECTION_CELL_COUNT } from './islandRunTechCollection';
+import { getTechnologyFragmentVisual, type VisibleTechnologyFragment } from './islandTechnologyFragmentVisuals';
 
 export type IslandTechnologyFragmentPlacement = {
   tileIndex: number;
@@ -61,10 +62,25 @@ export function listVisibleTechnologyFragmentTileIndices(
   islandNumber: number,
   collectedSlots: ReadonlySet<number> | Iterable<number>,
 ): Set<number> {
+  return new Set(listVisibleTechnologyFragments(islandNumber, collectedSlots).map((fragment) => fragment.tileIndex));
+}
+
+export function listVisibleTechnologyFragments(
+  islandNumber: number,
+  collectedSlots: ReadonlySet<number> | Iterable<number>,
+): VisibleTechnologyFragment[] {
   const collected = collectedSlots instanceof Set ? collectedSlots : new Set(collectedSlots);
-  return new Set(
-    listIslandTechnologyFragmentPlacements(islandNumber)
-      .filter((placement) => !collected.has(placement.fragmentSlot))
-      .map((placement) => placement.tileIndex),
-  );
+  return listIslandTechnologyFragmentPlacements(islandNumber)
+    .filter((placement) => !collected.has(placement.fragmentSlot))
+    .map((placement) => {
+      const visual = getTechnologyFragmentVisual(islandNumber, placement.fragmentSlot);
+      if (!visual) return null;
+      return {
+        tileIndex: placement.tileIndex,
+        fragmentSlot: placement.fragmentSlot,
+        placeholder: visual.placeholder,
+        ariaLabel: visual.ariaLabel,
+      };
+    })
+    .filter((fragment): fragment is VisibleTechnologyFragment => fragment !== null);
 }
