@@ -60,6 +60,8 @@ import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { IslandInhabitantFlow, type IslandInhabitantFlowResult } from '../inhabitants/components/IslandInhabitantFlow';
 import { getIslandConversationDefinition, getIslandInhabitantDefinition, getIslandInhabitantTopics } from '../inhabitants/islandInhabitantRegistry';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
+import { getIslandCommunicationAccess } from '../services/islandCommunicationAccess';
+import { getCreatureChannelLine } from '../services/islandCreatureChannel';
 import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
 import {
@@ -1491,6 +1493,7 @@ export function IslandRunBoardPrototype({
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
   const [isIslandInhabitantFlowOpen, setIsIslandInhabitantFlowOpen] = useState(false);
+  const [showCreatureChannelModal, setShowCreatureChannelModal] = useState(false);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -2201,6 +2204,7 @@ export function IslandRunBoardPrototype({
         showSanctuaryPanel ||
         showStoryReader ||
         isIslandInhabitantFlowOpen ||
+        showCreatureChannelModal ||
         Boolean(dormantDoorMiniGame) ||
         Boolean(trafficLightCoinFlip) ||
         techCollectionModal ||
@@ -2228,6 +2232,7 @@ export function IslandRunBoardPrototype({
     showSanctuaryPanel,
     showShopPanel,
     showStoryReader,
+    showCreatureChannelModal,
     isIslandInhabitantFlowOpen,
     showTopbarMenu,
   ]);
@@ -9982,6 +9987,7 @@ export function IslandRunBoardPrototype({
       showStickerAlbumDialog ||
       showStoryReader ||
       isIslandInhabitantFlowOpen ||
+      showCreatureChannelModal ||
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
@@ -10101,6 +10107,14 @@ export function IslandRunBoardPrototype({
     setRuntimeState(next);
   };
   const shouldShowCaretakerTalkAction = isIslandOneActiveForCaretaker && hasCaretakerContent;
+  const inhabitantCommunicationAccess = useMemo(
+    () => getIslandCommunicationAccess(runtimeState, 'inhabitant'),
+    [runtimeState],
+  );
+  const creatureCommunicationAccess = useMemo(
+    () => getIslandCommunicationAccess(runtimeState, 'creature'),
+    [runtimeState],
+  );
   const resolvedCaretakerBackgroundArtSrc = islandArtAmbientBackgroundSrc || islandBackgroundSrc;
   const openCaretakerFlow = useCallback((source: 'caretaker_tile_pass' | 'dev_hud') => {
     if (!shouldShowCaretakerTalkAction) return;
@@ -10602,7 +10616,8 @@ export function IslandRunBoardPrototype({
               <p className="island-run-prototype__qa-label">🧪 DEV MODE — canonical actions only</p>
               <div className="island-run-prototype__status-row">
                 <span className="island-run-prototype__stat-chip">Caretaker</span>
-                <button type="button" className="island-run-prototype__debug-btn" onClick={() => openCaretakerFlow('dev_hud')} disabled={!shouldShowCaretakerTalkAction}>🧙 Talk to Caretaker</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={() => openCaretakerFlow('dev_hud')} disabled={!shouldShowCaretakerTalkAction} aria-describedby={!inhabitantCommunicationAccess.allowed ? 'caretaker-concord-required' : undefined}>🧙 Talk to Caretaker</button>
+                {!inhabitantCommunicationAccess.allowed ? <span id="caretaker-concord-required" className="island-run-prototype__stat-chip" aria-label="Concord required for full translation">🔒 Concord required</span> : null}
               </div>
               <div className="island-run-prototype__status-row">
                 <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Grant Dice</span>
@@ -13684,7 +13699,24 @@ export function IslandRunBoardPrototype({
                         Found near island {selectedSanctuaryCreature.lastCollectedIslandNumber} in {selectedSanctuaryCreature.creature.habitat}.
                       </p>
                       {activeCompanionId === selectedSanctuaryCreature.creatureId ? (
-                        <p className="island-run-sanctuary-panel__pill"><strong>Active Companion</strong></p>
+                        <>
+                          <p className="island-run-sanctuary-panel__pill"><strong>Active Companion</strong></p>
+                          <button
+                            type="button"
+                            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                            onClick={() => setShowCreatureChannelModal(true)}
+                            aria-describedby={!creatureCommunicationAccess.allowed ? 'creature-channel-status' : undefined}
+                          >
+                            Creature Channel
+                          </button>
+                          {!creatureCommunicationAccess.allowed ? (
+                            <p id="creature-channel-status" className="island-run-sanctuary-card__meta">
+                              {creatureCommunicationAccess.reason === 'concord-not-built'
+                                ? 'Creature Channel locked. Build The Concord to understand your companion.'
+                                : 'Choose an active companion to open the Creature Channel.'}
+                            </p>
+                          ) : null}
+                        </>
                       ) : (
                         <button
                           type="button"
@@ -14194,8 +14226,42 @@ export function IslandRunBoardPrototype({
           backgroundArtSrc={resolvedCaretakerBackgroundArtSrc}
           islandName="Luma Isle"
           islandStatusLabel="The Lumin"
+          communicationAllowed={inhabitantCommunicationAccess.allowed}
           onClose={handleCaretakerFlowClose}
         />
+      ) : null}
+
+      {showCreatureChannelModal ? (
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense" role="dialog" aria-modal="true" aria-label="Creature Channel">
+            <div className="island-stop-modal__context">
+              <p className="island-stop-modal__eyebrow">Creature Channel</p>
+              {creatureCommunicationAccess.reason === 'concord-not-built' ? (
+                <>
+                  <h3 className="island-stop-modal__title">Creature Channel locked</h3>
+                  <p className="island-stop-modal__copy">Build The Concord to understand your companion.</p>
+                </>
+              ) : !activeCompanion ? (
+                <>
+                  <h3 className="island-stop-modal__title">No active companion</h3>
+                  <p className="island-stop-modal__copy">Choose an active companion to open the Creature Channel.</p>
+                </>
+              ) : (
+                <>
+                  <h3 className="island-stop-modal__title">{activeCompanion.creature.name}: “Oh. You can finally hear me.”</h3>
+                  <p className="island-stop-modal__copy">{getCreatureChannelLine(activeCompanion.creature)}</p>
+                  <div className="island-stop-modal__cta island-stop-modal__cta--balanced">
+                    <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setLandingText(`${activeCompanion.creature.name} was trying to point out safe paths, strange signals, and when to slow down.`)}>What were you trying to say?</button>
+                    <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={() => setLandingText(`${activeCompanion.creature.name} feels relieved that the signal is finally clear.`)}>How are you feeling?</button>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
+              <button type="button" className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action" onClick={() => setShowCreatureChannelModal(false)}>We can talk later</button>
+            </div>
+          </section>
+        </div>
       ) : null}
 
       <IslandStoryReader
