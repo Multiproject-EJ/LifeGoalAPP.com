@@ -200,6 +200,15 @@ export interface SpaceExcavatorProgressEntry {
   updatedAtMs: number;
 }
 
+export type IslandRunTechnologyId = 'the-concord';
+
+export interface IslandRunTechnologyUnlock {
+  builtAtMs: number;
+  active: boolean;
+}
+
+export type IslandRunTechnologyUnlocksById = Partial<Record<IslandRunTechnologyId, IslandRunTechnologyUnlock>>;
+
 export interface IslandRunGameStateRecord {
   runtimeVersion: number;
   firstRunClaimed: boolean;
@@ -277,6 +286,8 @@ export interface IslandRunGameStateRecord {
    * so a row/column/diagonal never double-pays after a reload/sync.
    */
   techCollectionRewardedLinesByIsland: Record<string, number[]>;
+  /** Global durable expedition-technology unlocks; independent of current island travel. */
+  technologyUnlocksById: IslandRunTechnologyUnlocksById;
   marketOwnedBundlesByIsland: Record<string, {
     dice_bundle: boolean;
     heart_bundle: boolean;
@@ -390,6 +401,63 @@ function sanitizeIslandIndexLedger(
     if (cleaned.length > 0) out[key] = cleaned;
   }
   return out;
+}
+
+
+function hasAllIslandOneTechnologySlots(recordLike: { techCollectionByIsland?: unknown }): boolean {
+  const ledger = recordLike.techCollectionByIsland;
+  if (!ledger || typeof ledger !== 'object' || Array.isArray(ledger)) return false;
+  const slots = (ledger as Record<string, unknown>)['1'];
+  if (!Array.isArray(slots)) return false;
+  const slotSet = new Set<number>();
+  for (const raw of slots) {
+    const idx = Math.floor(Number(raw));
+    if (Number.isFinite(idx) && idx >= 0 && idx < TECH_COLLECTION_GRID_CELL_COUNT) slotSet.add(idx);
+  }
+  return Array.from({ length: TECH_COLLECTION_GRID_CELL_COUNT }, (_, idx) => idx).every((idx) => slotSet.has(idx));
+}
+
+function isEstablishedBeyondIslandOne(recordLike: { currentIslandNumber?: unknown; completedStopsByIsland?: unknown }): boolean {
+  if (typeof recordLike.currentIslandNumber === 'number' && recordLike.currentIslandNumber > 1) return true;
+  const completed = recordLike.completedStopsByIsland;
+  if (!completed || typeof completed !== 'object' || Array.isArray(completed)) return false;
+  return Object.keys(completed as Record<string, unknown>).some((key) => Number(key) > 1);
+}
+
+function sanitizeTechnologyUnlocksById(
+  value: unknown,
+  fallback: IslandRunTechnologyUnlocksById = {},
+  compatibilityRecord?: { techCollectionByIsland?: unknown; currentIslandNumber?: unknown; completedStopsByIsland?: unknown },
+): IslandRunTechnologyUnlocksById {
+  const out: IslandRunTechnologyUnlocksById = { ...fallback };
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const concord = (value as Record<string, unknown>)['the-concord'];
+    if (concord && typeof concord === 'object' && !Array.isArray(concord)) {
+      const builtAtMs = (concord as Record<string, unknown>).builtAtMs;
+      out['the-concord'] = {
+        builtAtMs: typeof builtAtMs === 'number' && Number.isFinite(builtAtMs) && builtAtMs > 0 ? Math.floor(builtAtMs) : 1,
+        active: (concord as Record<string, unknown>).active !== false,
+      };
+    }
+  }
+  // Compatibility policy: old users with a complete Island 1 grid, or users whose
+  // canonical progression already proves they are established beyond Island 1,
+  // receive durable Concord access without replaying tech-grid rewards.
+  if (!out['the-concord'] && compatibilityRecord && (hasAllIslandOneTechnologySlots(compatibilityRecord) || isEstablishedBeyondIslandOne(compatibilityRecord))) {
+    out['the-concord'] = { builtAtMs: 1, active: true };
+  }
+  return out;
+}
+
+function mergeTechnologyUnlocksById(
+  remote: IslandRunTechnologyUnlocksById | undefined | null,
+  local: IslandRunTechnologyUnlocksById | undefined | null,
+): IslandRunTechnologyUnlocksById {
+  const remoteConcord = remote?.['the-concord'];
+  const localConcord = local?.['the-concord'];
+  if (!remoteConcord && !localConcord) return {};
+  const builtAtMs = Math.min(remoteConcord?.builtAtMs ?? Number.POSITIVE_INFINITY, localConcord?.builtAtMs ?? Number.POSITIVE_INFINITY);
+  return { 'the-concord': { builtAtMs: Number.isFinite(builtAtMs) ? builtAtMs : 1, active: Boolean(remoteConcord?.active ?? localConcord?.active ?? true) } };
 }
 
 /** Union-merge two per-island integer-index ledgers (used in remote/local reconcile). */
@@ -730,6 +798,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     bonusTileChargeByIsland: {},
     techCollectionByIsland: {},
     techCollectionRewardedLinesByIsland: {},
+    technologyUnlocksById: {},
     marketOwnedBundlesByIsland: {},
     creatureCollection: [],
     activeCompanionId: null,
@@ -1161,6 +1230,11 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       value.techCollectionRewardedLinesByIsland !== null && typeof value.techCollectionRewardedLinesByIsland === 'object' && !Array.isArray(value.techCollectionRewardedLinesByIsland)
         ? sanitizeIslandIndexLedger(value.techCollectionRewardedLinesByIsland as Record<string, number[]>, TECH_COLLECTION_LINE_COUNT)
         : fallback.techCollectionRewardedLinesByIsland,
+    technologyUnlocksById: sanitizeTechnologyUnlocksById(
+      (value.technologyUnlocksById ?? (value as Record<string, unknown>).technology_unlocks_by_id) as unknown,
+      fallback.technologyUnlocksById,
+      value,
+    ),
     marketOwnedBundlesByIsland:
       value.marketOwnedBundlesByIsland !== null && typeof value.marketOwnedBundlesByIsland === 'object' && !Array.isArray(value.marketOwnedBundlesByIsland)
         ? Object.fromEntries(
@@ -1785,6 +1859,7 @@ function mergeRecordForConflict(options: {
       remote.techCollectionRewardedLinesByIsland,
       local.techCollectionRewardedLinesByIsland,
     ),
+    technologyUnlocksById: mergeTechnologyUnlocksById(remote.technologyUnlocksById, local.technologyUnlocksById),
     marketOwnedBundlesByIsland: mergedMarketOwnedBundlesByIsland,
     creatureCollection: mergeCreatureCollection(remote.creatureCollection, local.creatureCollection),
     perfectCompanionIds: local.perfectCompanionIds.length > 0 ? local.perfectCompanionIds : remote.perfectCompanionIds,
@@ -1872,6 +1947,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     bonus_tile_charge_by_island: record.bonusTileChargeByIsland,
     tech_collection_by_island: record.techCollectionByIsland,
     tech_collection_rewarded_lines_by_island: record.techCollectionRewardedLinesByIsland,
+    technology_unlocks_by_id: record.technologyUnlocksById,
     market_owned_bundles_by_island: record.marketOwnedBundlesByIsland,
     creature_collection: record.creatureCollection,
     active_companion_id: record.activeCompanionId,
@@ -1968,7 +2044,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,tech_collection_rewarded_lines_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -2043,6 +2119,15 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             techCollectionRewardedLinesByIsland: sanitizeIslandIndexLedger(
               ((legacyData as Record<string, unknown>).tech_collection_rewarded_lines_by_island as Record<string, number[]> | undefined) ?? {},
               TECH_COLLECTION_LINE_COUNT,
+            ),
+            technologyUnlocksById: sanitizeTechnologyUnlocksById(
+              (legacyData as Record<string, unknown>).technology_unlocks_by_id,
+              fallback.technologyUnlocksById,
+              {
+                techCollectionByIsland: legacyData.tech_collection_by_island,
+                currentIslandNumber: legacyData.current_island_number,
+                completedStopsByIsland: legacyData.completed_stops_by_island,
+              },
             ),
             marketOwnedBundlesByIsland: legacyData.market_owned_bundles_by_island ?? {},
             creatureCollection: legacyData.creature_collection ?? [],
@@ -2198,6 +2283,15 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       techCollectionRewardedLinesByIsland: sanitizeIslandIndexLedger(
         ((data as Record<string, unknown>).tech_collection_rewarded_lines_by_island as Record<string, number[]> | undefined) ?? {},
         TECH_COLLECTION_LINE_COUNT,
+      ),
+      technologyUnlocksById: sanitizeTechnologyUnlocksById(
+        (data as Record<string, unknown>).technology_unlocks_by_id,
+        fallback.technologyUnlocksById,
+        {
+          techCollectionByIsland: data.tech_collection_by_island,
+          currentIslandNumber: data.current_island_number,
+          completedStopsByIsland: data.completed_stops_by_island,
+        },
       ),
       marketOwnedBundlesByIsland: data.market_owned_bundles_by_island ?? {},
       creatureCollection: data.creature_collection ?? [],

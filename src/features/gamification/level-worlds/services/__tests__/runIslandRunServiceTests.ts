@@ -122,6 +122,7 @@ import { islandRunTechCollectionTests } from './islandRunTechCollection.test';
 import { islandRunTechnologyFragmentRenderingGuardTests } from './islandRunTechnologyFragmentRenderingGuards.test';
 import { islandRunTechCollectionPersistenceTests } from './islandRunTechCollectionPersistence.test';
 import { islandTechCollectionComponentTests } from './islandTechCollectionComponent.test';
+import { islandRunTechnologyUnlockTests } from './islandRunTechnologyUnlocks.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -250,6 +251,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunTechnologyFragmentRenderingGuards', tests: islandRunTechnologyFragmentRenderingGuardTests },
   { label: 'islandRunTechCollectionPersistence', tests: islandRunTechCollectionPersistenceTests },
   { label: 'islandTechCollectionComponent', tests: islandTechCollectionComponentTests },
+  { label: 'islandRunTechnologyUnlocks', tests: islandRunTechnologyUnlockTests },
 ];
 
 async function main() {
