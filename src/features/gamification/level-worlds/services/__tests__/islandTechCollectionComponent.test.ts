@@ -94,17 +94,17 @@ export const islandTechCollectionComponentTests: TestCase[] = [
 
   // ── Full-grid completion celebration ───────────────────────────────────────
   {
-    name: 'celebration uses a generic technology-restored title (no premature Concord state)',
+    name: 'celebration uses the named Concord built title and ability copy',
     run: () => {
-      includes(celebrationSource, 'TECHNOLOGY RESTORED!');
-      notIncludes(celebrationSource, 'CONCORD');
-      notIncludes(celebrationSource, 'Concord');
+      includes(celebrationSource, 'THE CONCORD BUILT');
+      includes(celebrationSource, 'UNIVERSAL COMMUNICATION UNLOCKED');
+      includes(celebrationSource, 'The Concord can translate inhabitants, creatures, gestures, and emotional signals.');
     },
   },
   {
     name: 'celebration requires a deliberate continue and does NOT auto-dismiss',
     run: () => {
-      includes(celebrationSource, 'Claim &amp; Continue');
+      includes(celebrationSource, 'Continue');
       includes(celebrationSource, 'onClick={() => onContinue()}');
       // No transient auto-dismiss timer that would close the celebration for the player.
       notIncludes(celebrationSource, 'setTimeout');
@@ -113,7 +113,7 @@ export const islandTechCollectionComponentTests: TestCase[] = [
   {
     name: 'celebration shows the reward breakdown and matches granted totals',
     run: () => {
-      ['Final line reward', 'Full collection', 'Total', 'fullBoardRewardDice', 'totalRewardDice'].forEach((n) =>
+      ['Final line reward', 'Full grid reward', 'Total', 'fullBoardRewardDice', 'totalRewardDice'].forEach((n) =>
         includes(celebrationSource, n),
       );
     },
@@ -154,6 +154,8 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     name: 'board routes a newly completed full grid to the deliberate celebration',
     run: () => {
       includes(boardSource, 'resolution.isFullBoardNewlyCompleted');
+      includes(boardSource, 'applyIslandRunTechnologyBuild({');
+      includes(boardSource, 'if (!buildResult.changed) return;');
       includes(boardSource, 'setTechCompletionCelebration({');
       includes(boardSource, 'fullBoardRewardDice: resolution.fullBoardRewardDice');
     },

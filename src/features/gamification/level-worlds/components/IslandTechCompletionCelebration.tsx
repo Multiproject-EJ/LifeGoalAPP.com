@@ -10,13 +10,13 @@ import './IslandTechCollectionModal.css';
  *
  * Unlike the fast pickup modal, this surface does NOT auto-dismiss: the player
  * must press CLAIM & CONTINUE. It reveals the entire technology image fully
- * restored and glowing, confirms all nine components were found, and shows the
- * reward breakdown (any final line reward + the +100 full-collection bonus).
+ * restored and glowing, confirms The Concord is built, introduces the
+ * communication capability, and shows the reward breakdown.
  *
  * Presentation only — the dice were already granted by the canonical action
  * upstream; this component just animates the result and reports the deliberate
- * continue. A generic "TECHNOLOGY RESTORED!" title is used intentionally so this
- * PR does not prematurely introduce named/story technology state.
+ * continue. The named Concord unlock is presentation only; canonical access is committed
+ * before this animation opens.
  */
 
 export interface TechCompletionCelebrationResult {
@@ -94,10 +94,10 @@ export function IslandTechCompletionCelebration(props: IslandTechCompletionCeleb
       >
         <p className="island-tech-celebration__eyebrow">Full collection complete</p>
         <h2 id={titleId} className="island-tech-celebration__title">
-          TECHNOLOGY RESTORED!
+          THE CONCORD BUILT
         </h2>
         <p id={descId} className="island-tech-celebration__subtitle">
-          All {TECH_COLLECTION_CELL_COUNT} components recovered.
+          All nine fragments restored.
         </p>
 
         <div className="island-tech-celebration__device">
@@ -109,6 +109,12 @@ export function IslandTechCompletionCelebration(props: IslandTechCompletionCeleb
           />
         </div>
 
+        <div className="island-tech-celebration__ability" aria-label="Universal communication unlocked">
+          <strong>UNIVERSAL COMMUNICATION UNLOCKED</strong>
+          <span>The Concord can translate inhabitants, creatures, gestures, and emotional signals.</span>
+          <span>The Concord is ready. Communication channels are now available for integration.</span>
+        </div>
+
         <dl className="island-tech-celebration__rewards">
           {hasLineReward ? (
             <div className="island-tech-celebration__reward-row">
@@ -117,7 +123,7 @@ export function IslandTechCompletionCelebration(props: IslandTechCompletionCeleb
             </div>
           ) : null}
           <div className="island-tech-celebration__reward-row">
-            <dt>Full collection</dt>
+            <dt>Full grid reward</dt>
             <dd>+{result.fullBoardRewardDice} dice</dd>
           </div>
           <div className="island-tech-celebration__reward-row island-tech-celebration__reward-row--total">
@@ -133,7 +139,7 @@ export function IslandTechCompletionCelebration(props: IslandTechCompletionCeleb
             className="island-tech-celebration__continue"
             onClick={() => onContinue()}
           >
-            Claim &amp; Continue
+            Continue
           </button>
         </div>
       </section>

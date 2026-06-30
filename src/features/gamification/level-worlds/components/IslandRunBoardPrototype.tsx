@@ -204,6 +204,7 @@ import {
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
   applyTechCollectionState,
+  applyIslandRunTechnologyBuild,
   applyTimedEventTicketSpend,
   applySpaceExcavatorDig,
   advanceSpaceExcavatorBoard,
@@ -6216,6 +6217,14 @@ export function IslandRunBoardPrototype({
     });
 
     if (resolution.isFullBoardNewlyCompleted) {
+      const buildResult = applyIslandRunTechnologyBuild({
+        session,
+        client,
+        technologyId: 'the-concord',
+        source: 'island-1-tech-grid-completed',
+      });
+      setRuntimeState(buildResult.record);
+      if (!buildResult.changed) return;
       // Full grid: deliberate celebration that does NOT auto-dismiss.
       setTechCollectionModal(null);
       setTechCompletionCelebration({

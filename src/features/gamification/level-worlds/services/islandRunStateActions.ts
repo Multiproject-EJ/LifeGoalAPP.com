@@ -47,6 +47,7 @@ import type {
   IslandRunLuckyRollSession,
   PerIslandEggEntry,
   SpaceExcavatorProgressEntry,
+  IslandRunTechnologyId,
 } from './islandRunGameStateStore';
 import {
   compareIslandRunFirstSessionTutorialStates,
@@ -58,6 +59,7 @@ import {
   getIslandRunStateSnapshot,
   refreshIslandRunStateFromLocal,
 } from './islandRunStateStore';
+import { resolveIslandTechnologyBuildEligibility } from './islandRunTechnologyUnlocks';
 import { isIslandRunFeatureEnabled } from '../../../../config/islandRunFeatureFlags';
 import {
   type IslandNarrativeSeenState,
@@ -697,6 +699,46 @@ export function applyTokenHopRewards(options: {
     triggerSource: triggerSource ?? 'apply_token_hop_rewards',
   });
   return next;
+}
+
+export type IslandRunTechnologyBuildReason = 'built' | 'already-built' | 'requirements-not-met' | 'unsupported-technology';
+
+export interface ApplyIslandRunTechnologyBuildResult {
+  ok: boolean;
+  changed: boolean;
+  reason: IslandRunTechnologyBuildReason;
+  record: IslandRunGameStateRecord;
+}
+
+export function applyIslandRunTechnologyBuild(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  technologyId: IslandRunTechnologyId;
+  source: 'island-1-tech-grid-completed' | 'compatibility-hydration';
+  nowMs?: number;
+}): ApplyIslandRunTechnologyBuildResult {
+  const { session, client, technologyId, source } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (technologyId !== 'the-concord') {
+    return { ok: false, changed: false, reason: 'unsupported-technology', record: current };
+  }
+  const eligibility = resolveIslandTechnologyBuildEligibility(current, technologyId);
+  if (eligibility.alreadyBuilt) {
+    return { ok: true, changed: false, reason: 'already-built', record: current };
+  }
+  if (!eligibility.eligible) {
+    return { ok: false, changed: false, reason: 'requirements-not-met', record: current };
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    technologyUnlocksById: {
+      ...current.technologyUnlocksById,
+      [technologyId]: { builtAtMs: Math.max(1, Math.floor(options.nowMs ?? Date.now())), active: true },
+    },
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({ session, client, record: next, triggerSource: `technology_build_${source}` });
+  return { ok: true, changed: true, reason: 'built', record: next };
 }
 
 /**

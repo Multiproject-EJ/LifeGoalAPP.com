@@ -83,6 +83,7 @@ export interface IslandRunRuntimeStateBackend {
       bonusTileChargeByIsland?: BonusTileChargeByIsland;
       techCollectionByIsland?: Record<string, number[]>;
       techCollectionRewardedLinesByIsland?: Record<string, number[]>;
+      technologyUnlocksById?: import('./islandRunGameStateStore').IslandRunTechnologyUnlocksById;
       marketOwnedBundlesByIsland?: Record<string, {
         dice_bundle: boolean;
         heart_bundle: boolean;
@@ -365,6 +366,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         patch.techCollectionRewardedLinesByIsland !== null && typeof patch.techCollectionRewardedLinesByIsland === 'object' && !Array.isArray(patch.techCollectionRewardedLinesByIsland)
           ? { ...current.techCollectionRewardedLinesByIsland, ...patch.techCollectionRewardedLinesByIsland }
           : current.techCollectionRewardedLinesByIsland,
+      technologyUnlocksById:
+        patch.technologyUnlocksById !== null && typeof patch.technologyUnlocksById === 'object' && !Array.isArray(patch.technologyUnlocksById)
+          ? { ...current.technologyUnlocksById, ...patch.technologyUnlocksById }
+          : current.technologyUnlocksById,
       marketOwnedBundlesByIsland:
         patch.marketOwnedBundlesByIsland !== null && typeof patch.marketOwnedBundlesByIsland === 'object' && !Array.isArray(patch.marketOwnedBundlesByIsland)
           ? {
