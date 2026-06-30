@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import { createJournalEntry } from '../../../../services/journal';
 
@@ -24,6 +25,8 @@ export function IslandRunGamifiedJournalCard({
   const [typicalDay, setTypicalDay] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isTypicalDayOpen, setIsTypicalDayOpen] = useState(false);
+  const [specificDetailTarget, setSpecificDetailTarget] = useState<'good' | 'bad' | null>(null);
 
   const goodLabel = goodAnswer === 'nothing_typical'
     ? 'Nothing really — a typical day'
@@ -37,10 +40,45 @@ export function IslandRunGamifiedJournalCard({
     && Boolean(badAnswer)
     && !isSaving;
 
+  const activeSpecificDetailValue = specificDetailTarget === 'good' ? goodDetail : badDetail;
+
   const progressLabel = useMemo(() => {
     const complete = [goodAnswer, badAnswer].filter(Boolean).length;
     return `${complete}/2 clues gathered`;
   }, [badAnswer, goodAnswer]);
+
+  useEffect(() => {
+    if (!specificDetailTarget) {
+      return undefined;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [specificDetailTarget]);
+
+  const selectSpecificAnswer = (target: 'good' | 'bad') => {
+    if (target === 'good') {
+      setGoodAnswer('specific');
+    } else {
+      setBadAnswer('specific');
+    }
+    setSpecificDetailTarget(target);
+  };
+
+  const updateActiveSpecificDetail = (value: string) => {
+    if (specificDetailTarget === 'good') {
+      setGoodDetail(value);
+      return;
+    }
+
+    setBadDetail(value);
+  };
+
+  const closeSpecificDetailModal = () => setSpecificDetailTarget(null);
 
   const handleSave = async () => {
     if (!canSave) {
@@ -106,26 +144,56 @@ export function IslandRunGamifiedJournalCard({
         <strong>1) What made you feel good today?</strong>
         <div className="island-hatchery-card__actions island-run-gamified-journal-card__choices">
           <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${goodAnswer === 'nothing_typical' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setGoodAnswer('nothing_typical')}>Nothing really, a typical day</button>
-          <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${goodAnswer === 'specific' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setGoodAnswer('specific')}>Something specific</button>
+          <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${goodAnswer === 'specific' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => selectSpecificAnswer('good')}>Something specific</button>
         </div>
-        {goodAnswer === 'specific' ? <textarea value={goodDetail} onChange={(event) => setGoodDetail(event.target.value)} placeholder="Name the good moment." /> : null}
+        {goodAnswer === 'specific' && goodDetail.trim() ? <p className="island-run-gamified-journal-card__detail-preview">{goodDetail}</p> : null}
       </section>
 
       <section className="island-run-gamified-journal-card__section island-run-gamified-journal-card__section--bad">
         <strong>2) What, if anything, made you feel bad?</strong>
         <div className="island-hatchery-card__actions island-run-gamified-journal-card__choices">
           <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${badAnswer === 'nothing_typical' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setBadAnswer('nothing_typical')}>Nothing really, a typical day</button>
-          <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${badAnswer === 'specific' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setBadAnswer('specific')}>Something specific</button>
+          <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${badAnswer === 'specific' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => selectSpecificAnswer('bad')}>Something specific</button>
         </div>
-        {badAnswer === 'specific' ? <textarea value={badDetail} onChange={(event) => setBadDetail(event.target.value)} placeholder="Name the rough moment." /> : null}
+        {badAnswer === 'specific' && badDetail.trim() ? <p className="island-run-gamified-journal-card__detail-preview">{badDetail}</p> : null}
       </section>
 
-      <section className="island-run-gamified-journal-card__section">
-        <strong>3) Describe a typical day</strong>
-        <textarea value={typicalDay} onChange={(event) => setTypicalDay(event.target.value)} placeholder="What usually happens from morning to night?" />
+      <section className="island-run-gamified-journal-card__section island-run-gamified-journal-card__section--optional">
+        <button
+          type="button"
+          className="island-run-gamified-journal-card__toggle"
+          aria-expanded={isTypicalDayOpen}
+          onClick={() => setIsTypicalDayOpen((isOpen) => !isOpen)}
+        >
+          <span>Optional: describe a typical day</span>
+          <span aria-hidden="true">{isTypicalDayOpen ? '−' : '+'}</span>
+        </button>
+        {isTypicalDayOpen ? (
+          <textarea value={typicalDay} onChange={(event) => setTypicalDay(event.target.value)} placeholder="What usually happens from morning to night?" />
+        ) : null}
       </section>
 
       {error ? <p className="island-run-gamified-journal-card__error" role="alert">{error}</p> : null}
+
+      {specificDetailTarget ? createPortal(
+        <div className="island-run-gamified-journal-card__detail-modal" role="dialog" aria-modal="true" aria-labelledby="island-run-specific-detail-title">
+          <div className="island-run-gamified-journal-card__detail-modal-panel">
+            <h4 id="island-run-specific-detail-title">Add a quick detail?</h4>
+            <p>{specificDetailTarget === 'good' ? 'What was the good moment?' : 'What was the rough moment?'}</p>
+            <textarea
+              autoFocus
+              value={activeSpecificDetailValue}
+              onChange={(event) => updateActiveSpecificDetail(event.target.value)}
+              placeholder={specificDetailTarget === 'good' ? 'Name the good moment.' : 'Name the rough moment.'}
+            />
+            <div className="island-run-gamified-journal-card__detail-modal-actions">
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={closeSpecificDetailModal}>Skip for now</button>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={closeSpecificDetailModal}>Done</button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      ) : null}
 
       <div className="island-stop-modal__cta island-stop-modal__cta--balanced">
         <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={onClose}>Keep rolling</button>
