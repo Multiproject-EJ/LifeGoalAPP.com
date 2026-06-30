@@ -43,9 +43,11 @@ import {
 } from './IslandTechCompletionCelebration';
 import {
   resolveTechCollection,
-  resolveTechCollectionSlot as resolveTechCollectionSlotIndex,
-  isTechCollectionTileType,
 } from '../services/islandRunTechCollection';
+import {
+  getIslandTechnologyFragmentPlacement,
+  listVisibleTechnologyFragmentTileIndices,
+} from '../services/islandTechnologyFragmentPlacements';
 import { StatDriftNumbers } from './StatDriftNumbers';
 import { OutOfDiceRegenStatus } from './OutOfDiceRegenStatus';
 import { LoadingReadinessScreen } from '../../../../components/LoadingReadinessScreen';
@@ -6151,20 +6153,21 @@ export function IslandRunBoardPrototype({
   // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
   const rollIndexRef = useRef(0);
 
-  const resolveTechCollectionSlot = useCallback((tileIndex: number) => {
-    const tileCount = Math.max(1, activeTileAnchors.length || ACTIVE_BOARD_PROFILE.tileCount);
-    return resolveTechCollectionSlotIndex(tileIndex, tileCount);
-  }, [activeTileAnchors.length]);
+  const visibleTechnologyFragmentTileIndices = useMemo(
+    () => listVisibleTechnologyFragmentTileIndices(islandNumber, collectedTechTileIndices),
+    [collectedTechTileIndices, islandNumber],
+  );
 
   const maybeCollectTechItem = useCallback((tileType: string, landingTileIndex: number) => {
-    if (!isTechCollectionTileType(tileType)) return;
+    const placement = getIslandTechnologyFragmentPlacement(islandNumber, landingTileIndex);
+    if (!placement) return;
 
-    // Pure resolver owns all gameplay math: slot newness, newly-completed lines,
-    // the 8→9 full-board transition, and reward totals. It is idempotent on
+    // Pure resolver owns all gameplay math after the content-driven placement
+    // map supplies the exact fixed 3×3 fragment slot. It is idempotent on
     // duplicates and on an already-full grid, so reloads / rapid repeated calls
     // / rerenders can never replay the line or +100 full-board rewards.
     const resolution = resolveTechCollection({
-      slotIndex: resolveTechCollectionSlot(landingTileIndex),
+      slotIndex: placement.fragmentSlot,
       collectedSlots: collectedTechTileIndicesRef.current,
       rewardedLines: rewardedTechCollectionLinesRef.current,
     });
@@ -6227,13 +6230,13 @@ export function IslandRunBoardPrototype({
     // Ordinary pickup: fast modal that auto-dismisses (the modal owns its timer).
     setTechCollectionModal({
       slotIndex: resolution.slotIndex,
-      tileType,
+      tileType: tileType === 'currency' || tileType === 'chest' || tileType === 'card' ? tileType : 'micro',
       collectedSlots: resolution.nextCollectedSlots,
       collectedCount: resolution.nextCollectedCount,
       newlyCompletedLines: resolution.newlyCompletedLines,
       lineRewardDice: resolution.lineRewardDice,
     });
-  }, [client, islandNumber, playIslandRunSound, resolveTechCollectionSlot, session, triggerIslandRunHaptic]);
+  }, [client, islandNumber, playIslandRunSound, session, triggerIslandRunHaptic]);
 
   // Seed spacing constants. The landing seed packs three independent dimensions
   // into one 32-bit integer: island number × ISLAND_SEED_STRIDE + tile index ×
@@ -11017,7 +11020,8 @@ export function IslandRunBoardPrototype({
           trafficLightChargeTarget={TRAFFIC_LIGHT_CHARGE_TARGET}
           stopMap={stopMap}
           completedEncounterIndices={completedEncounterIndices}
-          collectedCollectibleTileIndices={collectedTechTileIndices}
+          collectibleTileIndices={visibleTechnologyFragmentTileIndices}
+          collectedCollectibleTileIndices={new Set<number>()}
           tokenIndex={tokenIndex}
           orbitStopVisuals={orbitStopVisuals}
           activeStopId={activeStopId}

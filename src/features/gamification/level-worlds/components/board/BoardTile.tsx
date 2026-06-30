@@ -92,6 +92,7 @@ export interface BoardTileProps {
   tileIndex: number;
   showDebug: boolean;
   isMinimalBoardArt: boolean;
+  hasCollectibleObject?: boolean;
   isCollectibleCollected?: boolean;
   /** Uniform board scale (canonical 1000px → screen px). Used to size tiles to
    *  match the ring geometry regardless of viewport dimensions. */
@@ -115,6 +116,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isTrafficLightGreen = false,
     showDebug,
     isMinimalBoardArt,
+    hasCollectibleObject = false,
     isCollectibleCollected = false,
     uniformScale,
   } = props;
@@ -180,7 +182,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     >
       {!isMinimalBoardArt && <span className="island-tile__shine" aria-hidden="true" />}
 
-      {!isCollectibleCollected && (tileType === 'currency' || tileType === 'chest' || tileType === 'micro' || tileType === 'card') && (
+      {hasCollectibleObject && !isCollectibleCollected && (tileType === 'currency' || tileType === 'chest' || tileType === 'micro' || tileType === 'card') && (
         <span className={`island-tile__popout island-tile__popout--${tileType}`} aria-hidden="true" />
       )}
 
