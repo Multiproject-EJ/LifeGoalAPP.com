@@ -76,6 +76,7 @@ export interface BoardStageProps {
   trafficLightChargeTarget?: number;
   stopMap: Map<number, string>;
   completedEncounterIndices: Set<number>;
+  collectibleTileIndices?: Set<number>;
   collectedCollectibleTileIndices?: Set<number>;
 
   /** Token state — the index on the board */
@@ -141,6 +142,7 @@ export function BoardStage(props: BoardStageProps) {
     trafficLightChargeTarget = 8,
     stopMap,
     completedEncounterIndices,
+    collectibleTileIndices,
     collectedCollectibleTileIndices,
     tokenIndex,
     orbitStopVisuals,
@@ -593,6 +595,7 @@ export function BoardStage(props: BoardStageProps) {
           trafficLightCharge={trafficLightCharge}
           trafficLightChargeTarget={trafficLightChargeTarget}
           completedEncounterIndices={completedEncounterIndices}
+          collectibleTileIndices={collectibleTileIndices}
           collectedCollectibleTileIndices={collectedCollectibleTileIndices}
           tokenIndex={tokenIndex}
           isSpark40={isSpark40}

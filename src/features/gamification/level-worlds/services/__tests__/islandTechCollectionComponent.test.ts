@@ -163,7 +163,17 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     run: () => {
       includes(boardSource, 'applyTokenHopRewards({');
       includes(boardSource, 'applyTechCollectionState({');
+      includes(boardSource, 'getIslandTechnologyFragmentPlacement(islandNumber, landingTileIndex)');
       includes(boardSource, "triggerSource: 'tech_collection_grid_reward'");
+    },
+  },
+  {
+    name: 'board renders only visible fixed fragment tile objects instead of every eligible reward tile',
+    run: () => {
+      includes(boardSource, 'listVisibleTechnologyFragmentTileIndices(islandNumber, collectedTechTileIndices)');
+      includes(boardSource, 'collectibleTileIndices={visibleTechnologyFragmentTileIndices}');
+      includes(boardSource, 'getIslandTechnologyFragmentPlacement(islandNumber, landingTileIndex)');
+      notIncludes(boardSource, 'resolveTechCollectionSlotIndex');
     },
   },
 ];

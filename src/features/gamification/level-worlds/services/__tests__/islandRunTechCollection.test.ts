@@ -1,14 +1,19 @@
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 import {
-  isTechCollectionTileType,
   resolveTechCollection,
-  resolveTechCollectionSlot,
   techCollectionCellBackgroundPosition,
   techCollectionRowCol,
   TECH_COLLECTION_CELL_COUNT,
   TECH_COLLECTION_FULL_BOARD_REWARD_DICE,
   TECH_COLLECTION_LINE_REWARD_DICE,
 } from '../islandRunTechCollection';
+import {
+  getIslandTechnologyFragmentPlacement,
+  getTechnologyFragmentSlotForTile,
+  ISLAND_1_CONCORD_FRAGMENT_PLACEMENTS,
+  listIslandTechnologyFragmentPlacements,
+  listVisibleTechnologyFragmentTileIndices,
+} from '../islandTechnologyFragmentPlacements';
 
 export const islandRunTechCollectionTests: TestCase[] = [
   {
@@ -34,16 +39,33 @@ export const islandRunTechCollectionTests: TestCase[] = [
     },
   },
   {
-    name: 'resolves a board tile to a deterministic 3x3 slot',
+    name: 'validates Island 1 fixed Concord fragment placements',
     run: () => {
-      assertEqual(resolveTechCollectionSlot(13, 24), 13 % 9, 'wraps into 0-8 by modulo');
-      assertEqual(resolveTechCollectionSlot(13, 24), resolveTechCollectionSlot(13, 24), 'stable for same input');
-      assertEqual(resolveTechCollectionSlot(-13, 24), 13 % 9, 'negative indices are absolute-valued');
-      assertEqual(resolveTechCollectionSlot(5, 4), 5 % 4, 'small boards clamp the modulo to tile count');
-      assert(
-        resolveTechCollectionSlot(99, 24) >= 0 && resolveTechCollectionSlot(99, 24) < TECH_COLLECTION_CELL_COUNT,
-        'always in range',
-      );
+      const placements = listIslandTechnologyFragmentPlacements(1);
+      assertEqual(placements.length, TECH_COLLECTION_CELL_COUNT, 'exactly nine placements');
+      assertDeepEqual(placements.map((p) => p.fragmentSlot).sort((a, b) => a - b), [0, 1, 2, 3, 4, 5, 6, 7, 8], 'slots are exactly 0-8');
+      assertEqual(new Set(placements.map((p) => p.tileIndex)).size, TECH_COLLECTION_CELL_COUNT, 'no duplicate tile indices');
+      assertEqual(new Set(placements.map((p) => p.fragmentSlot)).size, TECH_COLLECTION_CELL_COUNT, 'no duplicate slots');
+      assert(placements.every((p) => p.fragmentSlot >= 0 && p.fragmentSlot < TECH_COLLECTION_CELL_COUNT), 'all slots are in range');
+    },
+  },
+  {
+    name: 'resolves only explicitly assigned tiles to their fixed slots with no modulo fallback',
+    run: () => {
+      assertDeepEqual(ISLAND_1_CONCORD_FRAGMENT_PLACEMENTS.map((p) => p.tileIndex), [1, 5, 9, 13, 17, 21, 25, 29, 33], 'selected tile indices stay content-driven');
+      assertEqual(getTechnologyFragmentSlotForTile(1, 1), 0, 'tile 1 maps to slot 0');
+      assertEqual(getTechnologyFragmentSlotForTile(1, 5), 1, 'tile 5 maps to slot 1, not 5 % 9');
+      assertEqual(getTechnologyFragmentSlotForTile(1, 13), 3, 'tile 13 maps to fixed slot 3, not 13 % 9');
+      assertEqual(getIslandTechnologyFragmentPlacement(1, 4), null, 'unassigned hazard/non-fragment tile returns no placement');
+      assertEqual(getIslandTechnologyFragmentPlacement(2, 1), null, 'non-Island-1 has no placements in this PR');
+    },
+  },
+  {
+    name: 'visible fragment tiles hide already-collected slots for existing users',
+    run: () => {
+      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [])).sort((a, b) => a - b), [1, 5, 9, 13, 17, 21, 25, 29, 33], 'reset/no progress shows all nine fragments');
+      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [0, 2, 7])).sort((a, b) => a - b), [5, 13, 17, 21, 25, 33], 'existing collected slots hide matching fixed tiles');
+      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [0, 1, 2, 3, 4, 5, 6, 7, 8])), [], 'full collection shows no fragments');
     },
   },
   {
@@ -122,17 +144,6 @@ export const islandRunTechCollectionTests: TestCase[] = [
       assertDeepEqual(techCollectionCellBackgroundPosition(0), { x: 0, y: 0 }, 'top-left ninth');
       assertDeepEqual(techCollectionCellBackgroundPosition(8), { x: 100, y: 100 }, 'bottom-right ninth');
       assertDeepEqual(techCollectionCellBackgroundPosition(4), { x: 50, y: 50 }, 'center ninth');
-    },
-  },
-  {
-    name: 'recognises the eligible collectable tile types',
-    run: () => {
-      ['currency', 'chest', 'micro', 'card'].forEach((t) =>
-        assert(isTechCollectionTileType(t), `${t} is collectable`),
-      );
-      ['hazard', 'landmark_door', 'traffic_light', 'encounter'].forEach((t) =>
-        assert(!isTechCollectionTileType(t), `${t} is not collectable`),
-      );
     },
   },
 ];

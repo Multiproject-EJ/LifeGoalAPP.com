@@ -1,10 +1,9 @@
 /**
  * Island Run — 3×3 Technology Collection (pure resolver).
  *
- * Landing on an eligible board tile snaps a "technology component" into a
- * per-island 3×3 grid. This module owns the *pure* gameplay math:
- *   - which 3×3 slot a landed board tile maps to (deterministic),
- *   - whether that slot is newly collected or a duplicate,
+ * Landing on an explicitly placed technology-fragment tile snaps a component
+ * into a per-island 3×3 grid. This module owns the *pure* gameplay math:
+ *   - whether the fixed fragment slot is newly collected or a duplicate,
  *   - which rows/columns/diagonals are newly completed by this pickup,
  *   - whether the full grid was newly completed (8→9 transition),
  *   - the dice reward totals (line rewards + full-board bonus).
@@ -46,14 +45,6 @@ export const TECH_COLLECTION_LINES: ReadonlyArray<readonly [number, number, numb
 
 export type TechCollectionTileType = 'currency' | 'chest' | 'micro' | 'card';
 
-/** Board tile types that drop a collectable technology component. */
-export const TECH_COLLECTION_ELIGIBLE_TILE_TYPES: readonly TechCollectionTileType[] = [
-  'currency',
-  'chest',
-  'micro',
-  'card',
-];
-
 /**
  * Centralized technology-image asset path. The complete image is rendered into
  * every grid cell and positioned per-slot (see `techCollectionCellBackground`)
@@ -62,21 +53,6 @@ export const TECH_COLLECTION_ELIGIBLE_TILE_TYPES: readonly TechCollectionTileTyp
  * Components must still render a graceful grid fallback if the asset fails.
  */
 export const TECH_COLLECTION_IMAGE_SRC = '/assets/puzzle/island_001/tropical_island_puzzle_09_bottom_right.webp';
-
-export function isTechCollectionTileType(tileType: string): tileType is TechCollectionTileType {
-  return (TECH_COLLECTION_ELIGIBLE_TILE_TYPES as readonly string[]).includes(tileType);
-}
-
-/**
- * Deterministically map a landed board tile index to a 3×3 slot (0–8). The map
- * is stable for a given `(tileIndex, tileCount)` pair so reloads/replays land
- * the same component in the same slot. Mirrors the legacy board behaviour.
- */
-export function resolveTechCollectionSlot(tileIndex: number, tileCount: number): number {
-  const safeTileCount = Math.max(1, Math.floor(tileCount) || 1);
-  const modulo = Math.min(TECH_COLLECTION_CELL_COUNT, safeTileCount);
-  return Math.abs(Math.floor(tileIndex)) % modulo;
-}
 
 /** Row/column (0-based) for a slot index, used for image positioning. */
 export function techCollectionRowCol(slotIndex: number): { row: number; column: number } {
