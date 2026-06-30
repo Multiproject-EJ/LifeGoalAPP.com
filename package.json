@@ -41,7 +41,8 @@
     "check:goals-single-goal-review": "node scripts/check-goals-single-goal-review-smoke.mjs",
     "check:game-of-life-onboarding-persistence": "node scripts/check-game-of-life-onboarding-persistence.mjs",
     "check:day-zero-onboarding-persistence": "node scripts/check-day-zero-onboarding-persistence.mjs",
-    "check:onboarding-starter-record-visibility": "node scripts/check-onboarding-starter-record-visibility-smoke.mjs"
+    "check:onboarding-starter-record-visibility": "node scripts/check-onboarding-starter-record-visibility-smoke.mjs",
+    "test:yesterday-todo-cleanup-modal": "node scripts/check-yesterday-todo-cleanup-modal-portal.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

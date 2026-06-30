@@ -11403,6 +11403,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {todaysOfferPortal}
         {dailyLifeUpgradePortal}
         {dailyLifeUpgradeCreateFlowPortal}
+        {yesterdaySundownTodoPortal}
         {zenTreePortal}
         {feedCreaturesPortal}
         {eggHatchMoviePortal}
