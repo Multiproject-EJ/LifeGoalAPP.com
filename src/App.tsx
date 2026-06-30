@@ -5452,6 +5452,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onSpinWinClick={() => handleMobileNavSelect('score')}
           onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
           onGarageClick={() => handleMobileNavSelect('actions')}
+          onCompassClick={openPlayersHandFromLauncher}
           profilePlaystyleIcon={playstyleIcon ?? undefined}
           profileAvatarUrl={profileAvatarUrl}
           profilePlaystyleLabel={playstyleLabel ?? undefined}
@@ -5792,6 +5793,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         onSpinWinClick={() => handleMobileNavSelect('score')}
         onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
         onGarageClick={() => handleMobileNavSelect('actions')}
+        onCompassClick={openPlayersHandFromLauncher}
         profilePlaystyleIcon={playstyleIcon ?? undefined}
         profileAvatarUrl={profileAvatarUrl}
         profilePlaystyleLabel={playstyleLabel ?? undefined}

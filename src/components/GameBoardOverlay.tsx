@@ -60,6 +60,7 @@ type GameBoardOverlayProps = {
   onLuckyRollClick?: () => void;
   onCreatureCollectionClick?: () => void;
   onGarageClick?: () => void;
+  onCompassClick?: () => void;
   profilePlaystyleIcon?: string;
   profileAvatarUrl?: string;
   profilePlaystyleLabel?: string;
@@ -154,6 +155,7 @@ export function GameBoardOverlay({
   onSpinWinClick,
   onCreatureCollectionClick,
   onGarageClick,
+  onCompassClick,
   essenceBalance = 0,
   rewardBarProgress = 0,
   rewardBarThreshold = 10,
@@ -365,6 +367,16 @@ export function GameBoardOverlay({
           ) : null}
 
           <div className="game-board-overlay__controller-shell" aria-label="Game overlay controller menu">
+            <button
+              type="button"
+              className="game-board-overlay__controller-compass-btn"
+              onClick={onCompassClick}
+              disabled={!onCompassClick}
+              aria-label="Open Player's Hand menu"
+              title="Player's Hand"
+            >
+              <span className="game-board-overlay__controller-compass-icon" aria-hidden="true" />
+            </button>
             <button
               type="button"
               className="game-board-overlay__controller-nav-btn game-board-overlay__controller-nav-btn--slot-quest"
