@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { BoardTile } from './BoardTile';
 import type { TileAnchor } from '../../services/islandBoardLayout';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
+import type { VisibleTechnologyFragment } from '../../services/islandTechnologyFragmentVisuals';
 
 export interface BoardTileGridProps {
   anchors: TileAnchor[];
@@ -12,8 +13,7 @@ export interface BoardTileGridProps {
   trafficLightCharge?: number;
   trafficLightChargeTarget?: number;
   completedEncounterIndices: Set<number>;
-  collectibleTileIndices?: Set<number>;
-  collectedCollectibleTileIndices?: Set<number>;
+  visibleTechnologyFragments?: readonly VisibleTechnologyFragment[];
   tokenIndex: number;
   isSpark40: boolean;
   showDebug: boolean;
@@ -34,8 +34,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
     trafficLightCharge = 0,
     trafficLightChargeTarget = 8,
     completedEncounterIndices,
-    collectibleTileIndices = new Set<number>(),
-    collectedCollectibleTileIndices = new Set<number>(),
+    visibleTechnologyFragments = [],
     tokenIndex,
     isSpark40,
     showDebug,
@@ -43,6 +42,8 @@ export function BoardTileGrid(props: BoardTileGridProps) {
     uniformScale,
     toScreen,
   } = props;
+
+  const visibleTechnologyFragmentsByTile = useMemo(() => new Map(visibleTechnologyFragments.map((fragment) => [fragment.tileIndex, fragment])), [visibleTechnologyFragments]);
 
   const trafficLightTile = useMemo(() => {
     const entry = Object.values(tileMap).find((tile) => tile.tileType === 'traffic_light');
@@ -110,6 +111,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
         const tileType = tileMap[index]?.tileType;
         const isEncounter = tileType === 'encounter';
         const isEncounterCompleted = isEncounter && completedEncounterIndices.has(index);
+        const technologyFragment = visibleTechnologyFragmentsByTile.get(index);
 
         return (
           <BoardTile
@@ -130,8 +132,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
             tileIndex={index}
             showDebug={showDebug}
             isMinimalBoardArt={isMinimalBoardArt}
-            hasCollectibleObject={collectibleTileIndices.has(index)}
-            isCollectibleCollected={collectedCollectibleTileIndices.has(index)}
+            technologyFragment={technologyFragment}
             uniformScale={uniformScale}
           />
         );

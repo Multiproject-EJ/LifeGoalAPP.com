@@ -170,8 +170,8 @@ export const islandTechCollectionComponentTests: TestCase[] = [
   {
     name: 'board renders only visible fixed fragment tile objects instead of every eligible reward tile',
     run: () => {
-      includes(boardSource, 'listVisibleTechnologyFragmentTileIndices(islandNumber, collectedTechTileIndices)');
-      includes(boardSource, 'collectibleTileIndices={visibleTechnologyFragmentTileIndices}');
+      includes(boardSource, 'listVisibleTechnologyFragments(islandNumber, collectedTechTileIndices)');
+      includes(boardSource, 'visibleTechnologyFragments={visibleTechnologyFragments}');
       includes(boardSource, 'getIslandTechnologyFragmentPlacement(islandNumber, landingTileIndex)');
       notIncludes(boardSource, 'resolveTechCollectionSlotIndex');
     },

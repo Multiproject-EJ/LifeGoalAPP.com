@@ -13,7 +13,13 @@ import {
   ISLAND_1_CONCORD_FRAGMENT_PLACEMENTS,
   listIslandTechnologyFragmentPlacements,
   listVisibleTechnologyFragmentTileIndices,
+  listVisibleTechnologyFragments,
 } from '../islandTechnologyFragmentPlacements';
+import {
+  CONCORD_FRAGMENT_PLACEHOLDERS,
+  getTechnologyFragmentPlaceholder,
+  getTechnologyFragmentVisual,
+} from '../islandTechnologyFragmentVisuals';
 
 export const islandRunTechCollectionTests: TestCase[] = [
   {
@@ -66,6 +72,31 @@ export const islandRunTechCollectionTests: TestCase[] = [
       assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [])).sort((a, b) => a - b), [1, 5, 9, 13, 17, 21, 25, 29, 33], 'reset/no progress shows all nine fragments');
       assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [0, 2, 7])).sort((a, b) => a - b), [5, 13, 17, 21, 25, 33], 'existing collected slots hide matching fixed tiles');
       assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [0, 1, 2, 3, 4, 5, 6, 7, 8])), [], 'full collection shows no fragments');
+    },
+  },
+
+  {
+    name: 'resolves slot-specific Concord placeholder visuals for Island 1',
+    run: () => {
+      assertEqual(CONCORD_FRAGMENT_PLACEHOLDERS.length, TECH_COLLECTION_CELL_COUNT, 'exactly nine temporary placeholders');
+      assertDeepEqual([...CONCORD_FRAGMENT_PLACEHOLDERS], ['💠', '🔷', '🔹', '🧿', '⚙️', '🔮', '💎', '🌀', '✨'], 'slot placeholders stay centralized and ordered');
+      CONCORD_FRAGMENT_PLACEHOLDERS.forEach((placeholder, slot) => {
+        assertEqual(getTechnologyFragmentPlaceholder(1, slot), placeholder, `slot ${slot} resolves to its placeholder`);
+        assertEqual(getTechnologyFragmentVisual(1, slot)?.ariaLabel, `Technology fragment available: Concord fragment ${slot + 1}`, `slot ${slot} has accessible copy`);
+      });
+      assertEqual(getTechnologyFragmentPlaceholder(1, 9), '', 'out-of-range slots do not resolve a visual');
+      assertEqual(getTechnologyFragmentPlaceholder(2, 0), '', 'non-Island-1 slots do not resolve a visual');
+    },
+  },
+  {
+    name: 'visible fragment records carry tile, slot, placeholder, and hide collected slots',
+    run: () => {
+      const visible = listVisibleTechnologyFragments(1, [0, 4, 8]);
+      assertDeepEqual(visible.map((fragment) => fragment.tileIndex), [5, 9, 13, 21, 25, 29], 'collected slots remove only their fixed tiles');
+      assertDeepEqual(visible.map((fragment) => fragment.fragmentSlot), [1, 2, 3, 5, 6, 7], 'visible records preserve fixed slot identity');
+      assertDeepEqual(visible.map((fragment) => fragment.placeholder), ['🔷', '🔹', '🧿', '🔮', '💎', '🌀'], 'visible records use slot placeholders, not tile type');
+      assertEqual(listVisibleTechnologyFragments(1, [0, 1, 2, 3, 4, 5, 6, 7, 8]).length, 0, 'collected fragments have no visual records');
+      assertEqual(listVisibleTechnologyFragments(1, []).some((fragment) => fragment.tileIndex === 2), false, 'unmapped object-capable tiles receive no fragment visual');
     },
   },
   {

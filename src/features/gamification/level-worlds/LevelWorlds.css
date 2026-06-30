@@ -11316,3 +11316,80 @@
   font-size: 0.72rem;
   line-height: 1.25;
 }
+
+/* Concord technology fragments: slot-specific temporary emoji objects reuse the
+   tile pop-out layer, but override generic reward props so each fixed fragment
+   reads as a hovering collectible rather than a flat tile icon. */
+.island-tile__popout--technology-fragment {
+  top: 8%;
+  width: clamp(18px, calc(24px / max(var(--tile-render-scale, 1), 0.65)), 26px);
+  height: clamp(18px, calc(24px / max(var(--tile-render-scale, 1), 0.65)), 26px);
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 84%, rgba(84, 47, 18, 0.34) 0 22%, transparent 46%),
+    radial-gradient(circle, rgba(118, 255, 248, 0.18), rgba(116, 84, 255, 0.05) 58%, transparent 72%);
+  box-shadow: 0 10px 14px rgba(20, 10, 45, 0.25);
+  filter: drop-shadow(0 8px 5px rgba(22, 10, 42, 0.32));
+  transform: translate(-50%, -92%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(0) scale(0.92);
+  z-index: 4;
+  pointer-events: none;
+  animation: island-technology-fragment-hover 2.15s ease-in-out infinite;
+  animation-delay: var(--fragment-animation-delay, 0s);
+}
+
+.island-tile__popout--technology-fragment::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 72%;
+  height: 22%;
+  border-radius: 999px;
+  background: radial-gradient(ellipse, rgba(24, 16, 35, 0.36), transparent 68%);
+  transform: translateX(-50%);
+  animation: island-technology-fragment-shadow 2.15s ease-in-out infinite;
+  animation-delay: var(--fragment-animation-delay, 0s);
+}
+
+.island-tile__popout-emoji {
+  position: relative;
+  z-index: 1;
+  display: block;
+  font-size: clamp(1rem, calc(1.35rem / max(var(--tile-render-scale, 1), 0.65)), 1.55rem);
+  line-height: 1;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.5),
+    0 0 8px rgba(126, 255, 248, 0.56),
+    0 5px 9px rgba(12, 8, 32, 0.48);
+  animation: island-technology-fragment-glow 2.15s ease-in-out infinite;
+  animation-delay: var(--fragment-animation-delay, 0s);
+}
+
+.island-tile--token-current .island-tile__popout--technology-fragment {
+  z-index: 4;
+}
+
+@keyframes island-technology-fragment-hover {
+  0%, 100% { transform: translate(-50%, -92%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(0) scale(0.92); }
+  50% { transform: translate(-50%, -92%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-5px) scale(1); }
+}
+
+@keyframes island-technology-fragment-shadow {
+  0%, 100% { opacity: 0.44; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.24; transform: translateX(-50%) scale(0.78); }
+}
+
+@keyframes island-technology-fragment-glow {
+  0%, 100% { filter: saturate(1) brightness(1); }
+  50% { filter: saturate(1.16) brightness(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-tile__popout--technology-fragment,
+  .island-tile__popout--technology-fragment::before,
+  .island-tile__popout-emoji {
+    animation: none;
+  }
+}
