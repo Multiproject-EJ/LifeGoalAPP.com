@@ -394,6 +394,12 @@ function hasQuickJournalDraftState(params: {
   quickJournalInteractions: string;
   quickJournalFreeform: string;
   quickJournalPleasantMoments: string;
+  quickJournalSimplePositive: string;
+  quickJournalSimpleTricky: string;
+  quickJournalHabitSituation: string;
+  quickJournalHabitTrigger: string;
+  quickJournalHabitNeed: string;
+  quickJournalHabitNextExperiment: string;
   quickDreamTitle: string;
   quickDreamSymbols: string;
   quickDreamEmotions: string;
@@ -409,6 +415,12 @@ function hasQuickJournalDraftState(params: {
     || params.quickJournalInteractions.trim()
     || params.quickJournalFreeform.trim()
     || params.quickJournalPleasantMoments.trim()
+    || params.quickJournalSimplePositive.trim()
+    || params.quickJournalSimpleTricky.trim()
+    || params.quickJournalHabitSituation.trim()
+    || params.quickJournalHabitTrigger.trim()
+    || params.quickJournalHabitNeed.trim()
+    || params.quickJournalHabitNextExperiment.trim()
     || params.quickDreamTitle.trim()
     || params.quickDreamSymbols.trim()
     || params.quickDreamEmotions.trim()
@@ -560,6 +572,12 @@ type QuickJournalDraft = {
   interactions: string;
   freeform: string;
   pleasantMoments?: string;
+  simplePositive?: string;
+  simpleTricky?: string;
+  habitSituation?: string;
+  habitTrigger?: string;
+  habitNeed?: string;
+  habitNextExperiment?: string;
   energy: number;
   mood: number;
   focus: number;
@@ -580,7 +598,7 @@ type IntentionsJournalDraft = {
 };
 
 type DayStatus = 'skip' | 'vacation' | 'sick';
-type QuickJournalMode = 'written' | 'pulse' | 'dream';
+type QuickJournalMode = 'written' | 'pulse' | 'dream' | 'simple' | 'habit_investigation';
 type QuickDreamTone = 'pleasant' | 'mixed' | 'nightmare';
 type QuickDreamToneDetail = 'very_uplifting' | 'pleasant' | 'mixed' | 'unsettling' | 'nightmare';
 
@@ -1459,6 +1477,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [quickJournalInteractions, setQuickJournalInteractions] = useState('');
   const [quickJournalFreeform, setQuickJournalFreeform] = useState('');
   const [quickJournalPleasantMoments, setQuickJournalPleasantMoments] = useState('');
+  const [quickJournalSimplePositive, setQuickJournalSimplePositive] = useState('');
+  const [quickJournalSimpleTricky, setQuickJournalSimpleTricky] = useState('');
+  const [quickJournalHabitSituation, setQuickJournalHabitSituation] = useState('');
+  const [quickJournalHabitTrigger, setQuickJournalHabitTrigger] = useState('');
+  const [quickJournalHabitNeed, setQuickJournalHabitNeed] = useState('');
+  const [quickJournalHabitNextExperiment, setQuickJournalHabitNextExperiment] = useState('');
   const [quickJournalMode, setQuickJournalMode] = useState<QuickJournalMode>('written');
   const [quickJournalEnergy, setQuickJournalEnergy] = useState(QUICK_JOURNAL_PULSE_DEFAULTS.energy);
   const [quickJournalMood, setQuickJournalMood] = useState(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
@@ -2790,6 +2814,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setQuickJournalInteractions(draft.interactions ?? '');
       setQuickJournalFreeform(draft.freeform ?? '');
       setQuickJournalPleasantMoments(draft.pleasantMoments ?? '');
+      setQuickJournalSimplePositive(draft.simplePositive ?? '');
+      setQuickJournalSimpleTricky(draft.simpleTricky ?? '');
+      setQuickJournalHabitSituation(draft.habitSituation ?? '');
+      setQuickJournalHabitTrigger(draft.habitTrigger ?? '');
+      setQuickJournalHabitNeed(draft.habitNeed ?? '');
+      setQuickJournalHabitNextExperiment(draft.habitNextExperiment ?? '');
       setQuickJournalEnergy(draft.energy ?? QUICK_JOURNAL_PULSE_DEFAULTS.energy);
       setQuickJournalMood(draft.mood ?? QUICK_JOURNAL_PULSE_DEFAULTS.mood);
       setQuickJournalFocus(draft.focus ?? QUICK_JOURNAL_PULSE_DEFAULTS.focus);
@@ -2812,6 +2842,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           draft.interactions ||
           draft.freeform ||
           draft.pleasantMoments ||
+          draft.simplePositive ||
+          draft.simpleTricky ||
+          draft.habitSituation ||
+          draft.habitTrigger ||
+          draft.habitNeed ||
+          draft.habitNextExperiment ||
           draft.dreamTitle ||
           draft.dreamSymbols ||
           draft.dreamEmotions ||
@@ -2828,6 +2864,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setQuickJournalInteractions('');
       setQuickJournalFreeform('');
       setQuickJournalPleasantMoments('');
+      setQuickJournalSimplePositive('');
+      setQuickJournalSimpleTricky('');
+      setQuickJournalHabitSituation('');
+      setQuickJournalHabitTrigger('');
+      setQuickJournalHabitNeed('');
+      setQuickJournalHabitNextExperiment('');
       setQuickJournalEnergy(QUICK_JOURNAL_PULSE_DEFAULTS.energy);
       setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
       setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);
@@ -4635,6 +4677,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         quickJournalInteractions ||
         quickJournalFreeform ||
         quickJournalPleasantMoments ||
+        quickJournalSimplePositive ||
+        quickJournalSimpleTricky ||
+        quickJournalHabitSituation ||
+        quickJournalHabitTrigger ||
+        quickJournalHabitNeed ||
+        quickJournalHabitNextExperiment ||
         quickDreamTitle ||
         quickDreamSymbols ||
         quickDreamEmotions ||
@@ -4657,6 +4705,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       interactions: quickJournalInteractions,
       freeform: quickJournalFreeform,
       pleasantMoments: quickJournalPleasantMoments,
+      simplePositive: quickJournalSimplePositive,
+      simpleTricky: quickJournalSimpleTricky,
+      habitSituation: quickJournalHabitSituation,
+      habitTrigger: quickJournalHabitTrigger,
+      habitNeed: quickJournalHabitNeed,
+      habitNextExperiment: quickJournalHabitNextExperiment,
       energy: quickJournalEnergy,
       mood: quickJournalMood,
       focus: quickJournalFocus,
@@ -4681,6 +4735,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     quickJournalInteractions,
     quickJournalFreeform,
     quickJournalPleasantMoments,
+    quickJournalSimplePositive,
+    quickJournalSimpleTricky,
+    quickJournalHabitSituation,
+    quickJournalHabitTrigger,
+    quickJournalHabitNeed,
+    quickJournalHabitNextExperiment,
     quickJournalEnergy,
     quickJournalMood,
     quickJournalFocus,
@@ -8809,6 +8869,25 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           setQuickJournalError('Add at least one entry before saving.');
           return;
         }
+      } else if (quickJournalMode === 'simple') {
+        const hasSimpleContent = Boolean(
+          quickJournalSimplePositive.trim() || quickJournalSimpleTricky.trim(),
+        );
+        if (!hasSimpleContent) {
+          setQuickJournalError('Add at least one quick reflection before saving.');
+          return;
+        }
+      } else if (quickJournalMode === 'habit_investigation') {
+        const hasHabitInsightContent = Boolean(
+          quickJournalHabitSituation.trim() ||
+            quickJournalHabitTrigger.trim() ||
+            quickJournalHabitNeed.trim() ||
+            quickJournalHabitNextExperiment.trim(),
+        );
+        if (!hasHabitInsightContent) {
+          setQuickJournalError('Add at least one habit insight before saving.');
+          return;
+        }
       } else if (quickJournalMode === 'dream') {
         const hasDreamContent = Boolean(
           quickDreamTitle.trim() ||
@@ -8835,6 +8914,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         interactions: quickJournalInteractions,
         freeform: quickJournalFreeform,
         pleasantMoments: quickJournalPleasantMoments,
+        simplePositive: quickJournalSimplePositive,
+        simpleTricky: quickJournalSimpleTricky,
+        habitSituation: quickJournalHabitSituation,
+        habitTrigger: quickJournalHabitTrigger,
+        habitNeed: quickJournalHabitNeed,
+        habitNextExperiment: quickJournalHabitNextExperiment,
         energy: quickJournalEnergy,
         mood: quickJournalMood,
         focus: quickJournalFocus,
@@ -8877,6 +8962,26 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         }
         if (quickJournalPleasantMoments.trim()) {
           parts.push(`🌱 Today's gratitude / pleasant moment(s):\n${quickJournalPleasantMoments.trim()}`);
+        }
+      } else if (quickJournalMode === 'simple') {
+        if (quickJournalSimplePositive.trim()) {
+          parts.push(`🌿 What felt good today?\n${quickJournalSimplePositive.trim()}`);
+        }
+        if (quickJournalSimpleTricky.trim()) {
+          parts.push(`🫶 What felt heavy or tricky?\n${quickJournalSimpleTricky.trim()}`);
+        }
+      } else if (quickJournalMode === 'habit_investigation') {
+        if (quickJournalHabitSituation.trim()) {
+          parts.push(`🔎 What happened?\n${quickJournalHabitSituation.trim()}`);
+        }
+        if (quickJournalHabitTrigger.trim()) {
+          parts.push(`🧭 What seemed to trigger it?\n${quickJournalHabitTrigger.trim()}`);
+        }
+        if (quickJournalHabitNeed.trim()) {
+          parts.push(`💛 What was I needing or trying to avoid?\n${quickJournalHabitNeed.trim()}`);
+        }
+        if (quickJournalHabitNextExperiment.trim()) {
+          parts.push(`🌱 What small experiment could I try next time?\n${quickJournalHabitNextExperiment.trim()}`);
         }
       } else {
         const selectedDreamToneDetail = quickDreamToneDetail
@@ -8924,9 +9029,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         ? ['nonverbal', 'pulse-check-in']
         : quickJournalMode === 'dream'
           ? ['dream', 'sleep', 'quick-entry', ...(dreamToneMeta ? [dreamToneMeta.tag] : [])]
-          : quickJournalPleasantMoments.trim()
-            ? ['gratitude-moment', 'pleasant-moments']
-          : null;
+          : quickJournalMode === 'simple'
+            ? ['quick-simple', 'gentle-reflection']
+            : quickJournalMode === 'habit_investigation'
+              ? ['habit-insight', 'behavior-pattern']
+              : quickJournalPleasantMoments.trim()
+                ? ['gratitude-moment', 'pleasant-moments']
+                : null;
       const payloadAttachments: Json | null = quickJournalMode === 'dream' && (quickDreamTone || selectedDreamToneDetail)
         ? ({
             dreamTone: {
@@ -8947,9 +9056,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           linked_habit_ids: null,
           is_private: quickJournalIsPrivate,
           attachments: payloadAttachments,
-          type: quickJournalMode === 'dream' ? 'dream' : 'quick',
+          type: quickJournalMode === 'dream'
+            ? 'dream'
+            : quickJournalMode === 'simple'
+              ? 'quick_simple'
+              : quickJournalMode === 'habit_investigation'
+                ? 'habit_investigation'
+                : 'quick',
           mood_score: quickJournalMode === 'dream' ? dreamToneMeta?.moodScore ?? null : null,
-          category: quickJournalMode === 'pulse' ? 'nonverbal' : null,
+          category: quickJournalMode === 'pulse'
+            ? 'nonverbal'
+            : quickJournalMode === 'simple'
+              ? 'simple_reflection'
+              : quickJournalMode === 'habit_investigation'
+                ? 'habit_insight'
+                : null,
           unlock_date: null,
           goal_id: null,
           tags: payloadTags,
@@ -9222,6 +9343,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       quickJournalInteractions,
       quickJournalFreeform,
       quickJournalPleasantMoments,
+      quickJournalSimplePositive,
+      quickJournalSimpleTricky,
+      quickJournalHabitSituation,
+      quickJournalHabitTrigger,
+      quickJournalHabitNeed,
+      quickJournalHabitNextExperiment,
       quickDreamTitle,
       quickDreamSymbols,
       quickDreamEmotions,
@@ -9896,42 +10023,61 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     ? 'Tap the sliders to capture your day without writing.'
                     : quickJournalMode === 'dream'
                       ? 'Capture your dream while it is still fresh.'
-                      : 'Capture a few thoughts tied to the same date you are tracking above.'}
+                      : quickJournalMode === 'simple'
+                        ? 'A short reflection is enough: note one bright thing and one tricky thing.'
+                        : quickJournalMode === 'habit_investigation'
+                          ? 'No judgment — just noticing patterns around habits and choices.'
+                          : 'Capture a few thoughts tied to the same date you are tracking above.'}
                 </p>
                 <div className="habit-quick-journal__launcher" role="group" aria-label="Quick journal launcher">
-                  <button
-                    type="button"
-                    aria-pressed={quickJournalMode === 'dream'}
-                    className={`habit-quick-journal__orb habit-quick-journal__orb--top ${
-                      quickJournalMode === 'dream' ? 'habit-quick-journal__orb--active' : ''
-                    }`}
-                    onClick={() => handleLaunchQuickJournalMode('dream')}
-                  >
-                    <span className="habit-quick-journal__orb-icon" aria-hidden="true">🌙</span>
-                    <span className="habit-quick-journal__orb-label">Dream Journal</span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={quickJournalMode === 'written'}
-                    className={`habit-quick-journal__orb habit-quick-journal__orb--bottom-left ${
-                      quickJournalMode === 'written' ? 'habit-quick-journal__orb--active' : ''
-                    }`}
-                    onClick={() => handleLaunchQuickJournalMode('written')}
-                  >
-                    <span className="habit-quick-journal__orb-icon" aria-hidden="true">✍️</span>
-                    <span className="habit-quick-journal__orb-label">Written Journal</span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={quickJournalMode === 'pulse'}
-                    className={`habit-quick-journal__orb habit-quick-journal__orb--bottom-right ${
-                      quickJournalMode === 'pulse' ? 'habit-quick-journal__orb--active' : ''
-                    }`}
-                    onClick={() => handleLaunchQuickJournalMode('pulse')}
-                  >
-                    <span className="habit-quick-journal__orb-icon" aria-hidden="true">🎛</span>
-                    <span className="habit-quick-journal__orb-label">Pulse Check-in</span>
-                  </button>
+                  {[
+                    {
+                      mode: 'pulse' as const,
+                      icon: '🎛',
+                      title: "I don’t feel like journaling today",
+                      description: 'Do a quick pulse check instead.',
+                    },
+                    {
+                      mode: 'dream' as const,
+                      icon: '🌙',
+                      title: 'I want to record my dream',
+                      description: 'Capture what you remember before it fades.',
+                    },
+                    {
+                      mode: 'simple' as const,
+                      icon: '🌿',
+                      title: 'Let’s write something quick and simple',
+                      description: 'Two gentle prompts: what felt good, and what felt tricky.',
+                    },
+                    {
+                      mode: 'habit_investigation' as const,
+                      icon: '🔎',
+                      title: 'Investigate a habit pattern',
+                      description: 'Spot triggers, needs, and one small next experiment.',
+                    },
+                    {
+                      mode: 'written' as const,
+                      icon: '✍️',
+                      title: "Yes, let’s write today’s journal",
+                      description: 'Open the full reflection for this day.',
+                    },
+                  ].map((option) => (
+                    <button
+                      key={option.mode}
+                      type="button"
+                      aria-pressed={quickJournalMode === option.mode}
+                      className={`habit-quick-journal__choice ${
+                        quickJournalMode === option.mode ? 'habit-quick-journal__choice--active' : ''
+                      }`}
+                      onClick={() => handleLaunchQuickJournalMode(option.mode)}
+                    >
+                      <span className="habit-quick-journal__choice-icon" aria-hidden="true">{option.icon}</span>
+                      <span className="habit-quick-journal__choice-copy">
+                        <span className="habit-quick-journal__choice-title">{option.title}</span>
+                        <span className="habit-quick-journal__choice-description">{option.description}</span>
+                      </span>
+                    </button>
+                  ))}
                 </div>
                 {isQuickJournalOpen ? (
                   <div className="habit-quick-journal__sheet">
@@ -10049,6 +10195,67 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             value={quickJournalPleasantMoments}
                             onChange={(event) => setQuickJournalPleasantMoments(event.target.value)}
                             placeholder="What felt good, meaningful, or worth appreciating today?"
+                          />
+                        </label>
+                      </>
+                    ) : quickJournalMode === 'simple' ? (
+                      <>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">🌿 What felt good today?</span>
+                          <textarea
+                            rows={4}
+                            value={quickJournalSimplePositive}
+                            onChange={(event) => setQuickJournalSimplePositive(event.target.value)}
+                            placeholder="A small win, kind moment, progress, beauty, relief…"
+                          />
+                        </label>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">🫶 What felt heavy or tricky?</span>
+                          <textarea
+                            rows={4}
+                            value={quickJournalSimpleTricky}
+                            onChange={(event) => setQuickJournalSimpleTricky(event.target.value)}
+                            placeholder="Something hard, confusing, disappointing, or worth releasing…"
+                          />
+                        </label>
+                      </>
+                    ) : quickJournalMode === 'habit_investigation' ? (
+                      <>
+                        <p className="habit-quick-journal__microcopy">No judgment — just pattern spotting.</p>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">🔎 What happened?</span>
+                          <textarea
+                            rows={3}
+                            value={quickJournalHabitSituation}
+                            onChange={(event) => setQuickJournalHabitSituation(event.target.value)}
+                            placeholder="Describe the habit, choice, or moment you noticed…"
+                          />
+                        </label>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">🧭 What seemed to trigger it?</span>
+                          <textarea
+                            rows={3}
+                            value={quickJournalHabitTrigger}
+                            onChange={(event) => setQuickJournalHabitTrigger(event.target.value)}
+                            placeholder="Time, place, mood, energy, people, stress, environment…"
+                          />
+                        </label>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">💛 What was I needing or trying to avoid?</span>
+                          <textarea
+                            rows={3}
+                            value={quickJournalHabitNeed}
+                            onChange={(event) => setQuickJournalHabitNeed(event.target.value)}
+                            placeholder="Rest, comfort, focus, escape, reassurance, connection…"
+                          />
+                        </label>
+                        <label className="habit-quick-journal__field">
+                          <span className="habit-quick-journal__field-label">🌱 What small experiment could I try next time?</span>
+                          <textarea
+                            rows={3}
+                            value={quickJournalHabitNextExperiment}
+                            onChange={(event) => setQuickJournalHabitNextExperiment(event.target.value)}
+                            placeholder="Make it easier, change the cue, ask for support, prepare ahead…"
                           />
                         </label>
                       </>
@@ -10196,6 +10403,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           setQuickJournalInteractions('');
                           setQuickJournalFreeform('');
                           setQuickJournalPleasantMoments('');
+                          setQuickJournalSimplePositive('');
+                          setQuickJournalSimpleTricky('');
+                          setQuickJournalHabitSituation('');
+                          setQuickJournalHabitTrigger('');
+                          setQuickJournalHabitNeed('');
+                          setQuickJournalHabitNextExperiment('');
                           setQuickJournalEnergy(QUICK_JOURNAL_PULSE_DEFAULTS.energy);
                           setQuickJournalMood(QUICK_JOURNAL_PULSE_DEFAULTS.mood);
                           setQuickJournalFocus(QUICK_JOURNAL_PULSE_DEFAULTS.focus);

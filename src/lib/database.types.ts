@@ -17,7 +17,9 @@ export type JournalEntryType =
   | 'standard'
   | 'problem'
   | 'gratitude'
-  | 'dream';
+  | 'dream'
+  | 'quick_simple'
+  | 'habit_investigation';
 
 export interface Database {
   public: {

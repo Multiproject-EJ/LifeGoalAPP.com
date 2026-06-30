@@ -85,6 +85,8 @@ export const CONTENT_LABELS: Record<JournalEntryType, string> = {
   problem: "Brain dump (self-destructs after timer)",
   gratitude: "3 gratitude moments + why",
   dream: 'Dream details',
+  quick_simple: 'Quick & simple reflection',
+  habit_investigation: 'Habit insight notes',
 } as const;
 
 /**
@@ -102,6 +104,8 @@ export const CONTENT_PLACEHOLDERS: Record<JournalEntryType, string> = {
   problem: "Write freely to get your thoughts out quickly. This will self-destruct...",
   gratitude: "List 3 things you are grateful for today, then add why each mattered...",
   dream: 'Capture what you remember: scenes, symbols, feelings, and any meaning you want to keep.',
+  quick_simple: 'Write one thing that felt good and one thing that felt heavy or tricky...',
+  habit_investigation: 'Notice what happened, what may have triggered it, and one tiny experiment for next time...',
 } as const;
 
 /**
@@ -119,6 +123,8 @@ export const JOURNAL_TYPE_LABELS: Record<JournalEntryType, string> = {
   'problem': 'Problem',
   'gratitude': 'Guided Gratitude',
   'dream': 'Dream',
+  'quick_simple': 'Quick & Simple',
+  'habit_investigation': 'Habit Insight',
 };
 
 /**
