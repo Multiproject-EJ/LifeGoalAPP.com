@@ -3,6 +3,7 @@ import {
   resolveIslandRunContractV2Stops,
   resolveIslandRunStep1CompleteForProgression,
   resolveIslandRunFullClearForProgression,
+  isIslandRunFinishedForDepartureV2,
 } from '../islandRunContractV2StopResolver';
 import { MAX_BUILD_LEVEL } from '../islandRunContractV2EssenceBuild';
 import { assertDeepEqual, assertEqual, type TestCase } from './testHarness';
@@ -331,6 +332,61 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
         }),
         true,
         'Expected cleared when all objectives + all builds + egg resolved',
+      );
+    },
+  },
+
+  {
+    name: 'departure finish gate only requires restored landmarks, resolved egg, and defeated boss',
+    run: () => {
+      const incompleteObjectives = Array.from({ length: 5 }, () => ({ objectiveComplete: false, buildComplete: true }));
+
+      assertEqual(
+        isIslandRunFinishedForDepartureV2({
+          stopBuildStateByIndex: FULL_BUILD_STATES,
+          hatcheryEggResolved: true,
+          bossDefeated: true,
+        }),
+        true,
+        'Expected departure-ready when buildings are fully restored, egg is resolved, and boss is defeated',
+      );
+      assertEqual(
+        resolveIslandRunFullClearForProgression({
+          islandRunContractV2Enabled: true,
+          stopStatesByIndex: incompleteObjectives,
+          stopBuildStateByIndex: FULL_BUILD_STATES,
+          hatcheryEggResolved: true,
+          legacyIslandFullyCleared: false,
+        }),
+        false,
+        'Expected broader progression full-clear to remain objective-aware',
+      );
+      assertEqual(
+        isIslandRunFinishedForDepartureV2({
+          stopBuildStateByIndex: FULL_BUILD_STATES,
+          hatcheryEggResolved: true,
+          bossDefeated: false,
+        }),
+        false,
+        'Expected no departure-ready state before boss defeat',
+      );
+      assertEqual(
+        isIslandRunFinishedForDepartureV2({
+          stopBuildStateByIndex: FULL_BUILD_STATES,
+          hatcheryEggResolved: false,
+          bossDefeated: true,
+        }),
+        false,
+        'Expected no departure-ready state before egg collection/sale',
+      );
+      assertEqual(
+        isIslandRunFinishedForDepartureV2({
+          stopBuildStateByIndex: EMPTY_BUILD_STATES,
+          hatcheryEggResolved: true,
+          bossDefeated: true,
+        }),
+        false,
+        'Expected no departure-ready state before all landmark builds reach max level',
       );
     },
   },

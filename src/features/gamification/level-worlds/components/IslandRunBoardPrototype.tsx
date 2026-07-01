@@ -430,6 +430,7 @@ import {
   resolveIslandRunContractV2Stops,
   resolveIslandRunFullClearForProgression,
   isIslandRunFullyClearedV2,
+  isIslandRunFinishedForDepartureV2,
 } from '../services/islandRunContractV2StopResolver';
 import { resolveIslandRunBestNextAction } from '../services/islandRunBestNextActionAdvisor';
 import {
@@ -5128,6 +5129,13 @@ export function IslandRunBoardPrototype({
         hatcheryEggResolved: islandEggSlotUsed,
       })
     : legacyIsCurrentIslandFullyCleared;
+  const isCurrentIslandFinishedForDeparture = ISLAND_RUN_CONTRACT_V2_ENABLED
+    ? isIslandRunFinishedForDepartureV2({
+        stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
+        hatcheryEggResolved: islandEggSlotUsed,
+        bossDefeated: runtimeState.bossTrialResolvedIslandNumber === islandNumber,
+      })
+    : legacyIsCurrentIslandFullyCleared;
   const islandClearVisitKey = `${runtimeState.cycleIndex}:${islandNumber}`;
   const buildPanelRemainingToFullByIndex = useMemo(() => {
     return islandStopPlan.map((_, stopIndex) => {
@@ -5169,8 +5177,9 @@ export function IslandRunBoardPrototype({
   );
 
   const showIslandClearCelebrationFromAnywhere = useCallback((source: string) => {
-    if (islandClearCelebrationShownForVisitRef.current === islandClearVisitKey) return;
+    if (showIslandClearCelebration && islandClearStats?.islandNumber === islandNumber) return;
     islandClearCelebrationShownForVisitRef.current = islandClearVisitKey;
+    const existingStats = islandClearStats?.islandNumber === islandNumber ? islandClearStats : null;
     const bossReward = getBossReward(islandNumber);
     logGameSession(session.user.id, {
       gameId: 'shooter_blitz',
@@ -5183,20 +5192,23 @@ export function IslandRunBoardPrototype({
         rewards_granted: { dice: bossReward.dice, essence: bossReward.essence },
       },
     });
-    setIsIslandClearRewardClaimed(false);
+    if (!existingStats) {
+      setIsIslandClearRewardClaimed(false);
+      setIslandClearStats({
+        islandNumber,
+        diceEarned: bossReward.dice,
+        essenceEarned: bossReward.essence,
+        stopsCleared: 5,
+        pendingNextIsland: islandNumber + 1,
+        isCycleCapstone: islandNumber % 120 === 0,
+      });
+    }
     setShowIslandClearCelebration(true);
-    setIslandClearStats({
-      islandNumber,
-      diceEarned: bossReward.dice,
-      essenceEarned: bossReward.essence,
-      stopsCleared: 5,
-      pendingNextIsland: islandNumber + 1,
-      isCycleCapstone: islandNumber % 120 === 0,
-    });
-  }, [islandClearVisitKey, islandNumber, session.user.id]);
+  }, [islandClearStats, islandClearVisitKey, islandNumber, session.user.id, showIslandClearCelebration]);
 
-  // Island clear is intentionally surfaced through the critical Best Next Action
-  // chip instead of auto-opening this modal, so full clears do not interrupt play.
+  // Island departure is intentionally surfaced through an explicit Finish Island
+  // CTA instead of auto-opening this modal. The departure gate stays narrow:
+  // fully restored buildings, egg collected/sold, and boss defeated.
   const isEnergyDepletedForRoll = isIslandRunRollEnergyDepleted({
     dicePool,
     dicePerRoll: effectiveDiceCost,
@@ -8214,6 +8226,11 @@ export function IslandRunBoardPrototype({
     setLandingText('Rewards claimed! Travel to the next island when you are ready.');
   }, [playIslandRunSound]);
 
+  const handleKeepPlayingAfterIslandClear = useCallback(() => {
+    setShowIslandClearCelebration(false);
+    setLandingText('Island complete! Keep collecting for now — tap Finish Island when you are ready to travel.');
+  }, []);
+
   // B3-2: handleCompleteStopById helper
   const handleCompleteStopById = (stopId: string) => {
     updateCompletedStopsWithSync((current) => current.includes(stopId) ? current : [...current, stopId], { triggerSource: 'handle_complete_stop_by_id' });
@@ -10225,6 +10242,15 @@ export function IslandRunBoardPrototype({
   const shouldShowBestNextActionChip = Boolean(
     bestNextAction &&
       bestNextAction.urgency === 'critical' &&
+      bestNextAction.action !== 'claim_island_clear' &&
+      !isCurrentIslandFinishedForDeparture &&
+      !doesModalOwnAttention &&
+      !isRolling &&
+      pendingHopSequence === null &&
+      !isRewardBarClaiming,
+  );
+  const shouldShowFinishIslandCta = Boolean(
+    isCurrentIslandFinishedForDeparture &&
       !doesModalOwnAttention &&
       !isRolling &&
       pendingHopSequence === null &&
@@ -11091,6 +11117,17 @@ export function IslandRunBoardPrototype({
             })}
           </div>
         </div>
+
+        {shouldShowFinishIslandCta && (
+          <button
+            type="button"
+            className="island-run-prototype__best-next-action-chip island-run-prototype__best-next-action-chip--below-rewardbar island-run-prototype__finish-island-chip"
+            onClick={() => showIslandClearCelebrationFromAnywhere('finish_island_chip')}
+            aria-label="Finish Island"
+          >
+            🏝️ Finish Island
+          </button>
+        )}
 
         {shouldShowBestNextActionChip && bestNextAction && (
           <button
@@ -13010,6 +13047,15 @@ export function IslandRunBoardPrototype({
                         : 'Travel to Next Island')
                       : 'Claim Rewards'}
                   </button>
+                  {isIslandClearRewardClaimed && (
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary island-clear-celebration__cta island-clear-celebration__cta--secondary"
+                      onClick={handleKeepPlayingAfterIslandClear}
+                    >
+                      Keep Playing For Now
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

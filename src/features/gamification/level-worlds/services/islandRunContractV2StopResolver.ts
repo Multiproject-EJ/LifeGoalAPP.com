@@ -82,6 +82,20 @@ export function isIslandRunFullyClearedV2(options: {
   });
 }
 
+
+export function isIslandRunFinishedForDepartureV2(options: {
+  stopBuildStateByIndex: Array<IslandRunContractV2BuildState | null | undefined>;
+  hatcheryEggResolved: boolean;
+  bossDefeated: boolean;
+}): boolean {
+  if (!options.hatcheryEggResolved) return false;
+  if (!options.bossDefeated) return false;
+  return ISLAND_RUN_CONTRACT_V2_STOP_TYPES.every((_, index) => {
+    const build = options.stopBuildStateByIndex[index];
+    return build != null && build.buildLevel >= MAX_BUILD_LEVEL;
+  });
+}
+
 export function resolveIslandRunStep1CompleteForProgression(options: {
   islandRunContractV2Enabled: boolean;
   stopStatesByIndex: Array<StopRuntimeStateEntry | null | undefined>;
