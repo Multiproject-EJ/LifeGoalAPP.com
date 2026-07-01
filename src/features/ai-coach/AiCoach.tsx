@@ -417,6 +417,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
   const [showTopics, setShowTopics] = useState(false);
   const [showCoachFeatures, setShowCoachFeatures] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [showActionMenu, setShowActionMenu] = useState(false);
   const [showStrategyAssistant, setShowStrategyAssistant] = useState(false);
   const [coachThreadId, setCoachThreadId] = useState<string | null>(null);
   const [interventions, setInterventions] = useState<CoachIntervention[]>([]);
@@ -848,9 +849,15 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
     setMessages(INITIAL_MESSAGES);
     setShowTopics(false);
     setShowCoachFeatures(false);
+    setShowActionMenu(false);
     setCoachThreadId(null);
     setInputValue('');
     inputRef.current?.focus();
+  };
+
+  const handleOpenStrategyAssistant = () => {
+    setShowActionMenu(false);
+    setShowStrategyAssistant(true);
   };
 
   return (
@@ -871,34 +878,7 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
           <div className="ai-coach-modal__header-spacer" aria-hidden="true" />
           <h2 className="ai-coach-modal__sr-title" id={dialogTitleId}>Coach</h2>
           <p className="ai-coach-modal__sr-description" id={dialogSubtitleId}>Chat with your coach.</p>
-          <div className="ai-coach-modal__header-actions">
-              <button
-                type="button"
-                className="ai-coach-modal__header-btn ai-coach-modal__reset-btn"
-                onClick={handleReset}
-                aria-label="Reset conversation"
-                title="Start new conversation"
-              >
-                🔄
-              </button>
-              <button
-                type="button"
-                className="ai-coach-modal__header-btn ai-coach-modal__strategy-btn"
-                onClick={() => setShowStrategyAssistant(true)}
-                aria-label="Open AI Strategy Assistant"
-                title="Open AI Strategy Assistant"
-              >
-                🧭
-              </button>
-              <button
-                type="button"
-                className="ai-coach-modal__close-btn"
-                onClick={onClose}
-                aria-label="Close AI Coach"
-            >
-              ×
-            </button>
-          </div>
+          <div className="ai-coach-modal__header-actions" aria-hidden="true" />
         </div>
 
         <div className="ai-coach-modal__body">
@@ -996,29 +976,64 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
           </div>
 
           <form className="ai-coach-modal__input-form" onSubmit={handleSubmit}>
-            <button
-              type="button"
-              className="ai-coach-modal__utility-btn ai-coach-modal__features-btn"
-              onClick={() => {
-                setShowCoachFeatures((current) => !current);
-                setShowTopics((current) => (messages.length === INITIAL_MESSAGES.length ? !current : current));
-              }}
-              aria-label={showCoachFeatures ? 'Hide coach features' : 'Show coach features'}
-              aria-pressed={showCoachFeatures}
-              title={showCoachFeatures ? 'Hide coach features' : 'Show coach features'}
-            >
-              +
-            </button>
-            <button
-              type="button"
-              className="ai-coach-modal__utility-btn ai-coach-modal__info-btn"
-              onClick={() => setShowInfo((current) => !current)}
-              aria-label={showInfo ? 'Hide coach information' : 'Show coach information'}
-              aria-pressed={showInfo}
-              title={showInfo ? 'Hide coach information' : 'Show coach information'}
-            >
-              i
-            </button>
+            <div className="ai-coach-modal__input-actions">
+              <button
+                type="button"
+                className="ai-coach-modal__utility-btn ai-coach-modal__input-close-btn"
+                onClick={onClose}
+                aria-label="Close AI Coach"
+                title="Close AI Coach"
+              >
+                ×
+              </button>
+              <button
+                type="button"
+                className="ai-coach-modal__utility-btn ai-coach-modal__features-btn"
+                onClick={() => {
+                  setShowCoachFeatures((current) => !current);
+                  setShowTopics((current) => (messages.length === INITIAL_MESSAGES.length ? !current : current));
+                }}
+                aria-label={showCoachFeatures ? 'Hide coach features' : 'Show coach features'}
+                aria-pressed={showCoachFeatures}
+                title={showCoachFeatures ? 'Hide coach features' : 'Show coach features'}
+              >
+                +
+              </button>
+              <button
+                type="button"
+                className="ai-coach-modal__utility-btn ai-coach-modal__info-btn"
+                onClick={() => setShowInfo((current) => !current)}
+                aria-label={showInfo ? 'Hide coach information' : 'Show coach information'}
+                aria-pressed={showInfo}
+                title={showInfo ? 'Hide coach information' : 'Show coach information'}
+              >
+                i
+              </button>
+              <div className="ai-coach-modal__action-menu-wrap">
+                <button
+                  type="button"
+                  className="ai-coach-modal__utility-btn ai-coach-modal__more-btn"
+                  onClick={() => setShowActionMenu((current) => !current)}
+                  aria-label={showActionMenu ? 'Hide coach actions' : 'Show coach actions'}
+                  aria-expanded={showActionMenu}
+                  title={showActionMenu ? 'Hide coach actions' : 'Show coach actions'}
+                >
+                  ⋯
+                </button>
+                {showActionMenu && (
+                  <div className="ai-coach-modal__action-menu" role="menu" aria-label="Coach actions">
+                    <button type="button" role="menuitem" onClick={handleReset}>
+                      <span aria-hidden="true">🔄</span>
+                      <span>Start new conversation</span>
+                    </button>
+                    <button type="button" role="menuitem" onClick={handleOpenStrategyAssistant}>
+                      <span aria-hidden="true">🧭</span>
+                      <span>AI Strategy Assistant</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
             <input
               ref={inputRef}
               type="text"
