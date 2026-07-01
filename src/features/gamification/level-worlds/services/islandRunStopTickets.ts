@@ -161,7 +161,7 @@ export function payStopTicket(options: {
   essence: number;
   essenceLifetimeSpent: number;
   stopTicketsPaidByIsland: Record<string, number[]> | undefined | null;
-  stopStatesByIndex: ReadonlyArray<{ objectiveComplete: boolean } | null | undefined>;
+  stopStatesByIndex: ReadonlyArray<{ objectiveComplete: boolean; accessUnlocked?: boolean } | null | undefined>;
   /** Allows paying a future, sequence-locked landmark early at a 20% discount. */
   prepay?: boolean;
 }): PayStopTicketResult {
@@ -196,7 +196,8 @@ export function payStopTicket(options: {
   if (paid.includes(stopIndex)) return { ok: false, reason: 'already_paid', cost };
 
   const prev = options.stopStatesByIndex[stopIndex - 1];
-  if (!options.prepay && !prev?.objectiveComplete) {
+  const requested = options.stopStatesByIndex[stopIndex];
+  if (!options.prepay && !prev?.objectiveComplete && requested?.accessUnlocked !== true) {
     return { ok: false, reason: 'previous_stop_not_complete', cost };
   }
 

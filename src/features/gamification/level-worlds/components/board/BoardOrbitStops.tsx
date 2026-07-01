@@ -1,7 +1,7 @@
 import { memo, useRef } from 'react';
 import type { OrbitStopAnchor, TileAnchor } from '../../services/islandBoardLayout';
 
-export type StopProgressState = 'pending' | 'active' | 'completed' | 'build_pending' | 'partial' | 'locked' | 'ticket_required' | 'shop';
+export type StopProgressState = 'pending' | 'active' | 'accessible' | 'postponed' | 'completed' | 'build_pending' | 'partial' | 'locked' | 'ticket_required' | 'shop';
 
 export interface OrbitStopVisualData {
   id: string;

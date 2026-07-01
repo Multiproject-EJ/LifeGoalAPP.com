@@ -13,12 +13,12 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 ## 1) Core loop (player perspective)
 
 1. Enter an island.
-2. Complete the currently active stop objective.
+2. Complete the recommended stop objective, or choose **Come back later** on eligible reflective stops to keep exploring.
 3. Spend dice to move on the board and land on tiles.
 4. Prioritize feeding tiles to build reward bar progress.
 5. Claim reward bar payouts (tokens, occasional dice, stickers).
 6. Use Essence earned from board play to upgrade island stops/buildings.
-7. Repeat until all 5 stops are completed in order.
+7. Repeat until all 5 stops are genuinely completed.
 8. Defeat Boss (Stop 5) to complete the island and unlock the next island.
 
 ---
@@ -40,8 +40,8 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 
 ### C. Progression loop
 - Each island has exactly 5 sequential stops.
-- Only one stop is active at a time.
-- Completing the active stop unlocks the next stop.
+- Multiple unfinished stops may be accessible when the player intentionally chooses **Come back later** on eligible reflective stops.
+- One unfinished stop is always the recommended destination; completion credit still requires fulfilling each stop objective.
 
 ### D. Meta loop
 - Players progress island-to-island by completing all 5 stops.
@@ -229,16 +229,25 @@ Each island contains exactly 5 stops, in this fixed sequence:
 
 Stop rules:
 - Stops are external structures, never board tiles.
-- Stops are sequential; parallel stop completion is not allowed.
+- Stop completion remains objective-based and meaningful; access may advance through postponement for eligible reflective stops.
 - A stop is considered complete only when its defined objective is fulfilled.
-- Boss is always the final gate for island completion.
+- Boss is always the final gate for island completion and cannot grant final victory/travel while required earlier objectives remain incomplete.
 - The Mystery stop's **content** rotates per island (currently: breathing exercise, action challenge, or check-in reflection). The stop ID is always 'mystery'.
 - All stops are designed to be completed **in-game** — the player should never need to leave the game to complete a stop (e.g., breathing is done via an in-game mini exercise).
+
+### Come back later / postponement rules
+- Eligible ordinary reflective stops are: **Habit**, **Mystery**, and **Wisdom** (`habit`, `mystery`, `wisdom`).
+- Choosing **Come back later** leaves the current stop objective incomplete, records a postponed marker, keeps that stop accessible, and unlocks access eligibility for only the immediate next ordinary stop.
+- Postponement never grants stop rewards, completion credit, boss victory, island-clear rewards, or travel eligibility.
+- If the next stop normally requires an Essence ticket, the ticket is still required; postponement does not waive or prepay tickets.
+- Up to **3** unfinished accessible stops may be open at once (`ISLAND_RUN_MAX_OPEN_INCOMPLETE_STOPS`). At the limit, the player is gently asked to finish one waiting discovery before opening another.
+- The final Boss/Arena stop may be previewed only through existing access rules; true final resolution remains blocked until all required earlier stop objectives are complete.
+- `recommended` is derived deterministically from canonical stop state and is not a separate reward/completion authority.
 
 ### Stop unlock rules
 - When an island starts, only Stop 1 (Hatchery) is **open**. All other stops are **closed**.
 - Each subsequent stop (2, 3, 4, 5) is **gated by two conditions** that must BOTH be satisfied before the stop can be opened:
-  1. The previous stop's objective is complete (for the Hatchery this means the egg is **set to hatch** — not collected/sold/hatched — so "halfway completion" is sufficient to unlock the next stop).
+  1. The previous stop's objective is complete, or the previous eligible ordinary stop was intentionally postponed via **Come back later** (for the Hatchery this means the egg is **set to hatch** — not collected/sold/hatched — so "halfway completion" is sufficient to unlock the next stop).
   2. The player pays an essence **ticket** (opening fee) for that stop.
 - Ticket costs are paid from the essence wallet and scale with `effectiveIslandNumber` using the same multiplier as build costs. The base curve steepens toward the boss so the final gate carries real weight:
   - Canonical ticket vector by stop index is: **`[0, 30, 70, 130, 220]`**.
@@ -268,9 +277,9 @@ Stop rules:
 ## 4A) Stop completion and stop unlock definition
 
 **Stop unlock (sequential progression):**
-- A stop advances to the next stop in sequence when the stop's **objective** is complete.
+- A stop normally advances access to the next stop when the stop's **objective** is complete. Eligible ordinary stops may also advance access, but not completion credit, through **Come back later**.
 - Build completion is **NOT** required to unlock the next stop.
-- Only the active stop's objective can be completed (stops are strictly sequential).
+- Any accessible unfinished stop can be revisited and completed through its ordinary objective path. Completion rewards are paid once, only on genuine objective completion.
 
 **Hatchery stop objective:**
 - Stop 1 (Hatchery) objective = **egg set to hatch**. This immediately unlocks Stop 2.

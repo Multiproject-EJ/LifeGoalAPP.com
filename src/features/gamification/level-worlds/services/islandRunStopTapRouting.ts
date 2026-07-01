@@ -14,7 +14,7 @@ export function resolveIslandRunStopTapOutcome(input: {
   // status already accounts for paid tickets. Do not let the static
   // "this stop type normally requires a ticket" flag re-lock an active paid
   // stop, or landing on Wisdom/Habit doors will suppress the play modal.
-  if (status === 'active' || status === 'completed') return 'open';
+  if (status === 'active' || status === 'accessible' || status === 'postponed' || status === 'completed') return 'open';
 
   // Legacy callers may not have a resolver status yet; keep their derived
   // ticket requirement behavior for migration compatibility.

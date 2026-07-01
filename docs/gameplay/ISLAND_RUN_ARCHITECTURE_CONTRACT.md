@@ -27,6 +27,7 @@ Gameplay state must be mutated through canonical action services:
 2. UI/components creating new gameplay `runtimeState` mirrors.
 3. Duplicating dice/token/reward/stop progression logic in local component code.
 4. Coupling stop progression semantics to board tile indices.
+5. Reintroducing "first incomplete stop is the only accessible stop" assumptions; stop accessibility, postponement, and recommendation must come from canonical stop resolver/action services.
 
 ## Allowed local component state
 UI-only transient state is allowed in React components, including:
@@ -58,4 +59,3 @@ UI-only transient state is allowed in React components, including:
 - `docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md` (this file)
 - `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md`
 - `docs/gameplay/ISLAND_RUN_GUARDRAILS_AND_CONFLICT_MATRIX_2026-04-24.md`
-

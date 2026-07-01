@@ -70,6 +70,7 @@ import {
   applyStopBuildSpendBatch,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
+  postponeIslandRunStop,
   applyWalletShardsDelta,
   applyWalletShieldsDelta,
   applyWalletShieldsSet,
@@ -92,7 +93,7 @@ import {
   shouldGrantIsland120ThemeEntitlementOnTravel,
   travelToNextIsland,
 } from '../islandRunStateActions';
-import { isIslandRunFullyClearedV2 } from '../islandRunContractV2StopResolver';
+import { isIslandRunFullyClearedV2, resolveIslandRunContractV2Stops } from '../islandRunContractV2StopResolver';
 import { getEggSlotLedgerKey } from '../islandRunEggMania';
 import { buildInitialDiceRegenState } from '../islandRunDiceRegeneration';
 import { resolveEffectiveRegenIntervalMs } from '../companionRegenModifier';
@@ -5400,6 +5401,84 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.record.perIslandEggs[getEggSlotLedgerKey(12, 1)]?.status, 'sold', 'selected slot should become terminal');
       assertEqual(result.record.activeEggTier, 'common', 'base active egg should remain for compatibility');
       assertEqual(result.record.perIslandEggs[getEggSlotLedgerKey(12, 0)]?.status, 'ready', 'base slot remains unchanged');
+    },
+  },
+  {
+    name: 'postponeIslandRunStop leaves stop incomplete, unlocks immediate next stop, and grants no completion credit',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 7,
+        currentIslandNumber: 4,
+        completedStopsByIsland: { '4': ['hatchery'] },
+        stopTicketsPaidByIsland: { '4': [1] },
+        stopStatesByIndex: [
+          { objectiveComplete: true, buildComplete: false, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: false, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+      });
+
+      const result = postponeIslandRunStop({
+        session,
+        client: null,
+        islandNumber: 4,
+        stopIndex: 1,
+        nowMs: 12345,
+      });
+
+      assertEqual(result.ok, true, 'postponing accessible Habit should succeed');
+      assertEqual(result.record.stopStatesByIndex[1].objectiveComplete, false, 'Habit objective remains incomplete');
+      assertEqual(result.record.stopStatesByIndex[1].postponedAtMs, 12345, 'Habit records postponement timestamp');
+      assertEqual(result.record.stopStatesByIndex[2].accessUnlocked, true, 'Only immediate next stop unlocks');
+      assertEqual(result.record.stopStatesByIndex[3].accessUnlocked === true, false, 'Wisdom remains locked');
+      assertDeepEqual(result.record.completedStopsByIsland['4'], ['hatchery'], 'Completion ledger does not gain Habit');
+
+      const resolved = resolveIslandRunContractV2Stops({
+        stopStatesByIndex: result.record.stopStatesByIndex,
+        stopTicketsPaidByIsland: result.record.stopTicketsPaidByIsland,
+        islandNumber: 4,
+      });
+      assertDeepEqual(resolved.statusesByIndex, ['completed', 'postponed', 'ticket_required', 'locked', 'locked'], 'Mystery is accessible but still ticket-gated');
+    },
+  },
+  {
+    name: 'completing a postponed stop clears postponed marker and full clear remains objective-based',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 3,
+        currentIslandNumber: 2,
+        stopStatesByIndex: [
+          { objectiveComplete: true, buildComplete: true, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: true, accessUnlocked: true, postponedAtMs: 100 },
+          { objectiveComplete: false, buildComplete: true, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: true },
+          { objectiveComplete: false, buildComplete: true },
+        ],
+      });
+      const current = getIslandRunStateSnapshot(session);
+      const completedHabit = current.stopStatesByIndex.map((entry, index) => index === 1
+        ? { ...entry, objectiveComplete: true, postponedAtMs: null }
+        : entry);
+      const result = applyStopObjectiveProgress({
+        session,
+        client: null,
+        stopStatesByIndex: completedHabit,
+        activeStopIndex: 2,
+        activeStopType: 'mystery',
+      });
+      assertEqual(result.stopStatesByIndex[1].objectiveComplete, true, 'Habit is genuinely complete');
+      assertEqual(result.stopStatesByIndex[1].postponedAtMs, null, 'Postponed marker is cleared');
+      assertEqual(isIslandRunFullyClearedV2({
+        stopStatesByIndex: result.stopStatesByIndex,
+        stopBuildStateByIndex: Array.from({ length: 5 }, () => ({ requiredEssence: 1, spentEssence: 1, buildLevel: 3 })),
+        hatcheryEggResolved: true,
+      }), false, 'Island clear remains blocked while other required objectives are incomplete');
     },
   },
 ];
