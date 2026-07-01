@@ -38,11 +38,12 @@ interface IslandRunLifePromptCardProps {
   session: Session;
   islandNumber?: number;
   onComplete: (message: string) => void;
+  onComeBackLater?: () => void;
 }
 
 const HABIT_SIZES: readonly IslandRunHabitSize[] = ['Tiny', 'Normal', 'Stretch'];
 
-export function IslandRunLifePromptCard({ session, islandNumber, onComplete }: IslandRunLifePromptCardProps) {
+export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onComeBackLater }: IslandRunLifePromptCardProps) {
   const [area, setArea] = useState<IslandRunLifeWheelArea | null>(null);
   const [selectedHabit, setSelectedHabit] = useState<SuggestedHabit | null>(null);
   const [feedbackEnergy, setFeedbackEnergy] = useState<HabitFeedbackEnergy | null>(null);
@@ -136,8 +137,8 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete }: I
     }).slice(0, 3);
   }, [area, feedbackEnergy, feedbackTime, feedbackStyle]);
 
-  const handleSkip = () => {
-    // Best-effort, non-blocking: capture the skip as life-intake signal.
+  const handleComeBackLater = () => {
+    // Best-effort, non-blocking: capture the postponement as life-intake signal.
     void recordGameLifeIntake({
       userId: session.user.id,
       promptContext: 'habit_landmark',
@@ -147,11 +148,12 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete }: I
       state: 'skipped',
       payload: {
         had_checkin: hasCheckin,
+        outcome: 'postponed_stop',
         selected_area: area,
         feedback: { energy: feedbackEnergy, time: feedbackTime, style: feedbackStyle },
       },
     });
-    onComplete('Habit stop skipped. You can create your habit later in Habits.');
+    onComeBackLater?.();
   };
 
   const handleCreateHabit = async () => {
@@ -358,8 +360,8 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete }: I
       {doneMessage ? <p style={{ marginTop: 10 }}>{doneMessage}</p> : null}
 
       <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-        <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={handleSkip}>
-          Skip for now
+        <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={handleComeBackLater}>
+          Come back later
         </button>
       </div>
     </div>

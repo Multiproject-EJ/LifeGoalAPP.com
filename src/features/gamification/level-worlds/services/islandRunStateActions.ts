@@ -78,7 +78,14 @@ import {
   spendIslandRunContractV2EssenceOnStopBuild,
   type IslandRunContractV2BuildSpendFailureReason,
 } from './islandRunContractV2EssenceBuild';
-import { isIslandRunFullyClearedV2 } from './islandRunContractV2StopResolver';
+import {
+  canPostponeIslandRunStop,
+  ISLAND_RUN_CONTRACT_V2_STOP_TYPES,
+  ISLAND_RUN_MAX_OPEN_INCOMPLETE_STOPS,
+  isIslandRunFullyClearedV2,
+  type IslandRunContractV2StopType,
+  type PostponeIslandRunStopReason,
+} from './islandRunContractV2StopResolver';
 import { resolveRuntimeDiceRegenUpdate } from './islandRunRuntimeRegen';
 import { resolveCompanionRegenModifier } from './companionRegenModifier';
 import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuckyRollGate';
@@ -2972,9 +2979,14 @@ export function applyStopObjectiveProgress(options: ApplyStopObjectiveProgressOp
     triggerSource,
   } = options;
   const current = getIslandRunStateSnapshot(session);
+  const normalizedStopStates = stopStatesByIndex.map((entry, index) => ({
+    ...entry,
+    accessUnlocked: index === 0 || entry.accessUnlocked === true || entry.objectiveComplete === true,
+    ...(entry.objectiveComplete === true ? { postponedAtMs: null } : {}),
+  }));
   const next: IslandRunGameStateRecord = {
     ...current,
-    stopStatesByIndex,
+    stopStatesByIndex: normalizedStopStates,
     activeStopIndex,
     activeStopType,
     runtimeVersion: current.runtimeVersion + 1,
@@ -2986,6 +2998,99 @@ export function applyStopObjectiveProgress(options: ApplyStopObjectiveProgressOp
     triggerSource: triggerSource ?? 'apply_stop_objective_progress',
   });
   return next;
+}
+
+export interface PostponeIslandRunStopOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  stopIndex: number;
+  nowMs?: number;
+  triggerSource?: string;
+}
+
+export interface PostponeIslandRunStopResult {
+  ok: boolean;
+  changed: boolean;
+  record: IslandRunGameStateRecord;
+  reason?: PostponeIslandRunStopReason;
+  nextStopIndex?: number;
+  nextStopType?: IslandRunContractV2StopType;
+  openIncompleteCount: number;
+}
+
+export function postponeIslandRunStop(options: PostponeIslandRunStopOptions): PostponeIslandRunStopResult {
+  const { session, client, stopIndex, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const eligibility = canPostponeIslandRunStop({
+    stopStatesByIndex: current.stopStatesByIndex,
+    stopIndex,
+    maxOpenIncompleteStops: ISLAND_RUN_MAX_OPEN_INCOMPLETE_STOPS,
+  });
+  if (!eligibility.ok) {
+    logIslandRunEntryDebug('island_run_stop_postponement_blocked', {
+      islandNumber: options.islandNumber,
+      stopIndex,
+      reason: eligibility.reason,
+      openIncompleteCount: eligibility.openIncompleteCount,
+    });
+    return {
+      ok: false,
+      changed: false,
+      record: current,
+      reason: eligibility.reason,
+      openIncompleteCount: eligibility.openIncompleteCount,
+    };
+  }
+  const nowMs = Math.max(0, Math.floor(options.nowMs ?? Date.now()));
+  const nextStopStates = current.stopStatesByIndex.map((entry, index) => {
+    const base = {
+      ...entry,
+      accessUnlocked: index === 0 || entry.accessUnlocked === true || entry.objectiveComplete === true,
+    };
+    if (index === stopIndex) {
+      return {
+        ...base,
+        objectiveComplete: false,
+        accessUnlocked: true,
+        postponedAtMs: typeof base.postponedAtMs === 'number' ? base.postponedAtMs : nowMs,
+      };
+    }
+    if (index === eligibility.nextStopIndex) {
+      return {
+        ...base,
+        accessUnlocked: true,
+      };
+    }
+    return base;
+  });
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    stopStatesByIndex: nextStopStates,
+    activeStopIndex: eligibility.nextStopIndex,
+    activeStopType: ISLAND_RUN_CONTRACT_V2_STOP_TYPES[eligibility.nextStopIndex],
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  logIslandRunEntryDebug('island_run_stop_postponed', {
+    islandNumber: options.islandNumber,
+    stopIndex,
+    nextStopIndex: eligibility.nextStopIndex,
+    openIncompleteCount: eligibility.openIncompleteCount + 1,
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'postpone_island_run_stop',
+  });
+  return {
+    ok: true,
+    changed: true,
+    record: next,
+    nextStopIndex: eligibility.nextStopIndex,
+    nextStopType: ISLAND_RUN_CONTRACT_V2_STOP_TYPES[eligibility.nextStopIndex],
+    openIncompleteCount: eligibility.openIncompleteCount + 1,
+  };
 }
 
 export interface ApplyEggPlacementOptions {

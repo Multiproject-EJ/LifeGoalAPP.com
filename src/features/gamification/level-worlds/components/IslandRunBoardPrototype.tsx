@@ -194,6 +194,7 @@ import {
   applyStopBuildSpendBatch,
   applyStopObjectiveProgress,
   applyStopTicketPayment,
+  postponeIslandRunStop,
   applyWalletDiamondsSet,
   applyWalletShardsDelta,
   applyEssenceAward,
@@ -1120,7 +1121,7 @@ function getBossReward(islandNumber: number): { dice: number; essence: number; s
   };
 }
 
-type StopProgressState = 'pending' | 'active' | 'completed' | 'build_pending' | 'partial' | 'locked' | 'ticket_required';
+type StopProgressState = 'pending' | 'active' | 'accessible' | 'postponed' | 'completed' | 'build_pending' | 'partial' | 'locked' | 'ticket_required';
 type IslandRunCameraMode = 'board_follow' | 'stop_focus' | 'overview_manual';
 
 type IslandRunMarketPurchaseStatus = 'attempt' | 'insufficient_coins' | 'success' | 'already_owned';
@@ -1376,6 +1377,8 @@ function getStopStateChipLabel(state: StopProgressState): string {
   if (state === 'partial') return 'Egg';
   if (state === 'ticket_required') return 'Ticket';
   if (state === 'locked') return 'Locked';
+  if (state === 'postponed') return 'Later';
+  if (state === 'accessible') return 'Open';
   return 'Open';
 }
 
@@ -1391,6 +1394,8 @@ function getOrbitStopDisplayIcon(state: StopProgressState | 'shop', icon: string
   if (state === 'build_pending') return '🚧';
   if (state === 'partial') return '🟡';
   if (state === 'active') return '🔓';
+  if (state === 'accessible') return icon;
+  if (state === 'postponed') return '🔖';
   return icon;
 }
 
@@ -4414,7 +4419,7 @@ export function IslandRunBoardPrototype({
     setFocusedStopId(doorStopId);
     setCameraMode('stop_focus');
 
-    if (tapOutcome === 'open' && stopStatus === 'active') {
+    if (tapOutcome === 'open' && (stopStatus === 'active' || stopStatus === 'accessible' || stopStatus === 'postponed')) {
       setDormantDoorMiniGame(null);
       setDormantDoorSelectedIndices([]);
       setDormantDoorReward(null);
@@ -4568,7 +4573,11 @@ export function IslandRunBoardPrototype({
   const requiredDoorStopIndex = requiredDoorStopId ? stopIndexByStopId.get(requiredDoorStopId) : undefined;
   const isDoorLandmarkCompletionRequired = requiredDoorStopId !== null
     && typeof requiredDoorStopIndex === 'number'
-    && contractV2Stops?.statusesByIndex[requiredDoorStopIndex] === 'active';
+    && (
+      contractV2Stops?.statusesByIndex[requiredDoorStopIndex] === 'active'
+      || contractV2Stops?.statusesByIndex[requiredDoorStopIndex] === 'accessible'
+      || contractV2Stops?.statusesByIndex[requiredDoorStopIndex] === 'postponed'
+    );
 
   // Behavior landmarks the player must answer rather than abandon. When a Habit
   // or Wisdom stop is open and still playable (active — not completed, locked, or
@@ -4577,7 +4586,7 @@ export function IslandRunBoardPrototype({
   // landmark is never left visited-but-incomplete. Eggs/Hatchery are excluded by
   // design (they incubate over a long time). Update this list to widen the rule.
   const isActiveBehaviorStopNonDismissable = (activeStopId === 'habit' || activeStopId === 'wisdom')
-    && (stopStateMap.get(activeStopId) ?? 'active') === 'active';
+    && ['active', 'accessible', 'postponed'].includes(stopStateMap.get(activeStopId) ?? 'active');
   nonDismissableActiveStopRef.current = isActiveBehaviorStopNonDismissable;
 
   useEffect(() => {
@@ -8450,23 +8459,31 @@ export function IslandRunBoardPrototype({
       const stopIndex = islandStopPlan.findIndex((stop) => stop.stopId === activeStopId);
       if (stopIndex < 0) return;
 
-      const activeStopIndex = resolveCanonicalContractV2Stops({
+      const openedStopStatus = resolveCanonicalContractV2Stops({
         stopStatesByIndex: runtimeStateRef.current.stopStatesByIndex,
         stopTicketsPaidByIsland: runtimeStateRef.current.stopTicketsPaidByIsland,
         islandNumber,
-      }).activeStopIndex;
-      if (stopIndex !== activeStopIndex) {
-        setLandingText('Only the active stop can be progressed in contract-v2.');
+      }).statusesByIndex[stopIndex];
+      if (openedStopStatus !== 'active' && openedStopStatus !== 'accessible' && openedStopStatus !== 'postponed') {
+        setLandingText('Open this landmark before completing it.');
         return;
       }
 
       const priorStopState = runtimeStateRef.current.stopStatesByIndex[stopIndex] ?? { objectiveComplete: false, buildComplete: false };
       // Objective completion is the only gate for stop UNLOCK — builds are tracked separately.
       const nextStopStatesByIndex = runtimeStateRef.current.stopStatesByIndex.map((entry, index) => {
+        if (index === stopIndex + 1 && stopIndex + 1 < islandStopPlan.length) {
+          return {
+            ...entry,
+            accessUnlocked: true,
+          };
+        }
         if (index !== stopIndex) return entry;
         return {
           ...entry,
           objectiveComplete: true,
+          accessUnlocked: true,
+          postponedAtMs: null,
         };
       });
 
@@ -8592,6 +8609,58 @@ export function IslandRunBoardPrototype({
     setMysteryStopReward(null);
     setLandingText(`${activeStopId.toUpperCase()} stop completed.`);
     setActiveStopId(null);
+  };
+
+  const handleComeBackLaterForActiveStop = () => {
+    if (!activeStopId) return;
+    const stopIndex = islandStopPlan.findIndex((stop) => stop.stopId === activeStopId);
+    if (stopIndex < 0) return;
+    const result = postponeIslandRunStop({
+      session,
+      client,
+      islandNumber,
+      stopIndex,
+      triggerSource: 'come_back_later_stop_modal',
+    });
+    if (!result.ok) {
+      const message = result.reason === 'open_limit_reached'
+        ? 'You already have a few discoveries waiting. Finish one of them before opening another.'
+        : 'This landmark needs to stay here for now. You can keep exploring after this step.';
+      setLandingText(message);
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_spend',
+        metadata: {
+          stage: 'postponement_blocked_by_open_limit',
+          island_number: islandNumber,
+          stop_id: activeStopId,
+          reason: result.reason,
+          open_incomplete_count: result.openIncompleteCount,
+        },
+      });
+      return;
+    }
+    setRuntimeState(result.record);
+    const nextStopId = typeof result.nextStopIndex === 'number'
+      ? islandStopPlan[result.nextStopIndex]?.stopId ?? null
+      : null;
+    setLandingText('No pressure — this discovery will wait for you. Keep exploring and return whenever you like.');
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'economy_spend',
+      metadata: {
+        stage: 'stop_postponed',
+        island_number: islandNumber,
+        stop_id: activeStopId,
+        next_unlocked_stop_id: nextStopId,
+        open_incomplete_count: result.openIncompleteCount,
+      },
+    });
+    setActiveStopId(null);
+    if (nextStopId) {
+      setFocusedStopId(nextStopId);
+      setCameraMode('stop_focus');
+    }
   };
 
   const markOnboardingComplete = async () => {
@@ -11844,6 +11913,15 @@ export function IslandRunBoardPrototype({
                     </div>
                   </div>
                 )}
+                <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                    onClick={handleComeBackLaterForActiveStop}
+                  >
+                    Come back later
+                  </button>
+                </div>
               </div>
             )}
 
@@ -11857,6 +11935,7 @@ export function IslandRunBoardPrototype({
                     setLandingText(message);
                     handleCompleteActiveStop();
                   }}
+                  onComeBackLater={handleComeBackLaterForActiveStop}
                 />
                 {/* Optional: answer this island's overflow Compass inputs here.
                     Never gates stop completion. */}
@@ -11893,6 +11972,15 @@ export function IslandRunBoardPrototype({
                   islandNumber={islandNumber}
                   slot="wisdom"
                 />
+                <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                    onClick={handleComeBackLaterForActiveStop}
+                  >
+                    Come back later
+                  </button>
+                </div>
                 {ISLAND_RUN_CONTRACT_V2_ENABLED && diamonds >= WISDOM_ESSENCE_BONUS_COST_DIAMONDS ? (
                   <div className="island-hatchery-card__actions" style={{ marginTop: '0.5rem' }}>
                     <button

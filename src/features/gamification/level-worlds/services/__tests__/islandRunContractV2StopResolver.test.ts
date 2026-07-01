@@ -1,4 +1,5 @@
 import {
+  canPostponeIslandRunStop,
   resolveIslandRunContractV2Stops,
   resolveIslandRunStep1CompleteForProgression,
   resolveIslandRunFullClearForProgression,
@@ -335,6 +336,58 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
         ['completed', 'ticket_required', 'locked', 'locked', 'locked'],
         'Paid ticket on a different island must not leak into another island',
       );
+    },
+  },
+  {
+    name: 'postponed stop remains incomplete and accessible while immediate next stop becomes recommended',
+    run: () => {
+      const states = [
+        { objectiveComplete: true, buildComplete: false, accessUnlocked: true },
+        { objectiveComplete: false, buildComplete: false, accessUnlocked: true, postponedAtMs: 1000 },
+        { objectiveComplete: false, buildComplete: false, accessUnlocked: true },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+      ];
+      const result = resolveIslandRunContractV2Stops({
+        stopStatesByIndex: states,
+        stopTicketsPaidByIsland: { '1': [1, 2] },
+        islandNumber: 1,
+      });
+      assertEqual(result.recommendedStopIndex, 2, 'Immediate next unlocked stop should be recommended');
+      assertDeepEqual(
+        result.statusesByIndex,
+        ['completed', 'postponed', 'active', 'locked', 'locked'],
+        'Habit remains postponed/incomplete while Mystery is the active recommendation',
+      );
+    },
+  },
+  {
+    name: 'postponement eligibility opens only the immediate next ordinary stop and enforces open limit',
+    run: () => {
+      const states = [
+        { objectiveComplete: true, buildComplete: false, accessUnlocked: true },
+        { objectiveComplete: false, buildComplete: false, accessUnlocked: true },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+        { objectiveComplete: false, buildComplete: false },
+      ];
+      const allowed = canPostponeIslandRunStop({ stopStatesByIndex: states, stopIndex: 1 });
+      assertEqual(allowed.ok, true, 'Habit should be postponable after it is accessible');
+      if (allowed.ok) assertEqual(allowed.nextStopIndex, 2, 'Only Mystery should be unlocked next');
+
+      const limit = canPostponeIslandRunStop({
+        stopStatesByIndex: [
+          { objectiveComplete: true, buildComplete: false, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: false, accessUnlocked: true, postponedAtMs: 1 },
+          { objectiveComplete: false, buildComplete: false, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        stopIndex: 2,
+        maxOpenIncompleteStops: 2,
+      });
+      assertEqual(limit.ok, false, 'Configured open incomplete limit should block another postponement');
+      if (!limit.ok) assertEqual(limit.reason, 'open_limit_reached', 'Limit block reason should be explicit');
     },
   },
   {

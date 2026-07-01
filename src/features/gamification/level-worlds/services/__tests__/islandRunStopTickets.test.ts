@@ -121,6 +121,32 @@ export const islandRunStopTicketsTests: TestCase[] = [
     },
   },
   {
+    name: 'payStopTicket allows postponed access without waiving ticket cost',
+    run: () => {
+      const result = payStopTicket({
+        effectiveIslandNumber: 1,
+        islandNumber: 1,
+        stopIndex: 2,
+        essence: 1000,
+        essenceLifetimeSpent: 10,
+        stopTicketsPaidByIsland: { '1': [1] },
+        stopStatesByIndex: [
+          { objectiveComplete: true },
+          { objectiveComplete: false, accessUnlocked: true },
+          { objectiveComplete: false, accessUnlocked: true },
+          { objectiveComplete: false },
+          { objectiveComplete: false },
+        ],
+      });
+      assertEqual(result.ok, true, 'Postponement-unlocked next stop can pay its ticket');
+      if (result.ok) {
+        assertEqual(result.cost, STOP_TICKET_BASE_COSTS[2], 'Normal ticket cost still applies');
+        assertEqual(result.essence, 1000 - STOP_TICKET_BASE_COSTS[2], 'Ticket is charged once');
+        assertEqual(result.stopTicketsPaidByIsland['1'].includes(2), true, 'Ticket ledger records next stop');
+      }
+    },
+  },
+  {
     name: 'payStopTicket rejects when wallet is short of cost',
     run: () => {
       const cost = getStopTicketCost({ effectiveIslandNumber: 1, stopIndex: 1 });

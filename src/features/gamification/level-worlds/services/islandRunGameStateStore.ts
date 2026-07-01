@@ -305,6 +305,8 @@ export interface IslandRunGameStateRecord {
   stopStatesByIndex: Array<{
     objectiveComplete: boolean;
     buildComplete: boolean;
+    accessUnlocked?: boolean;
+    postponedAtMs?: number | null;
     completedAtMs?: number;
   }>;
   stopBuildStateByIndex: Array<{
@@ -585,9 +587,10 @@ export function deriveIslandRunContractV2StopType(index: number): 'hatchery' | '
 }
 
 function getDefaultStopStatesByIndex() {
-  return Array.from({ length: CONTRACT_V2_STOP_COUNT }, () => ({
+  return Array.from({ length: CONTRACT_V2_STOP_COUNT }, (_, index) => ({
     objectiveComplete: false,
     buildComplete: false,
+    accessUnlocked: index === 0,
   }));
 }
 
@@ -599,9 +602,9 @@ function getDefaultStopBuildStateByIndex() {
   }));
 }
 
-function toStopStateEntry(value: unknown): { objectiveComplete: boolean; buildComplete: boolean; completedAtMs?: number } {
+function toStopStateEntry(value: unknown, index = 0): { objectiveComplete: boolean; buildComplete: boolean; accessUnlocked: boolean; postponedAtMs?: number | null; completedAtMs?: number } {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return { objectiveComplete: false, buildComplete: false };
+    return { objectiveComplete: false, buildComplete: false, accessUnlocked: index === 0 };
   }
 
   const candidate = value as Record<string, unknown>;
@@ -609,10 +612,19 @@ function toStopStateEntry(value: unknown): { objectiveComplete: boolean; buildCo
     typeof candidate.completedAtMs === 'number' && Number.isFinite(candidate.completedAtMs)
       ? candidate.completedAtMs
       : undefined;
+  const postponedAtMs =
+    typeof candidate.postponedAtMs === 'number' && Number.isFinite(candidate.postponedAtMs)
+      ? candidate.postponedAtMs
+      : candidate.postponedAtMs === null
+        ? null
+        : undefined;
+  const objectiveComplete = candidate.objectiveComplete === true;
 
   return {
-    objectiveComplete: candidate.objectiveComplete === true,
+    objectiveComplete,
     buildComplete: candidate.buildComplete === true,
+    accessUnlocked: index === 0 || objectiveComplete || candidate.accessUnlocked === true,
+    ...(postponedAtMs !== undefined && !objectiveComplete ? { postponedAtMs } : {}),
     ...(typeof completedAtMs === 'number' ? { completedAtMs } : {}),
   };
 }
@@ -1049,7 +1061,7 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       ? Math.max(0, Math.min(CONTRACT_V2_STOP_COUNT - 1, Math.floor(value.activeStopIndex)))
       : fallback.activeStopIndex;
   const stopStatesByIndex = Array.isArray(value.stopStatesByIndex)
-    ? Array.from({ length: CONTRACT_V2_STOP_COUNT }, (_, index) => toStopStateEntry(value.stopStatesByIndex?.[index]))
+    ? Array.from({ length: CONTRACT_V2_STOP_COUNT }, (_, index) => toStopStateEntry(value.stopStatesByIndex?.[index], index))
     : fallback.stopStatesByIndex;
   const stopBuildStateByIndex = Array.isArray(value.stopBuildStateByIndex)
     ? Array.from({ length: CONTRACT_V2_STOP_COUNT }, (_, index) => toStopBuildStateEntry(value.stopBuildStateByIndex?.[index]))
