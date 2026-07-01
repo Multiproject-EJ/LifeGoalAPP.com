@@ -42,7 +42,7 @@ import {
   updateJournalEntry,
   type JournalEntry,
 } from '../../services/journal';
-import { fetchCompletedActionsForDate } from '../../services/actions';
+import { fetchCompletedActionsForDate, insertAction } from '../../services/actions';
 import { createTodayTodo, deleteTodayTodo, fetchTodayTodos, updateTodayTodo, type TodayTodo } from '../../services/todayTodos';
 import {
   claimDailySpinHabitBonusOncePerDay,
@@ -943,9 +943,10 @@ const dailyCatchUpLaunchKey = (userId: string) =>
 const todoCleanupDisplayCountsKey = (userId: string) =>
   `lifegoal.todo-cleanup-display-counts:${userId}`;
 
-type TodoCleanupAction = 'today' | 'tomorrow' | 'schedule' | 'finish' | 'delete';
+type TodoCleanupAction = 'tomorrow' | 'schedule' | 'finish' | 'delete';
 type TodoCleanupPendingAction = { action: TodoCleanupAction; scheduledDateISO?: string };
-const TODO_CLEANUP_MAX_PROMPTS = 3;
+const TODO_CLEANUP_MAX_PROMPTS = 40;
+const TODO_CLEANUP_TASK_TOWER_TAG = '_todo';
 const TODO_CLEANUP_LAST_PROMPT_AT = TODO_CLEANUP_MAX_PROMPTS - 1;
 const dreamJournalLaunchKey = (userId: string) =>
   `lifegoal.dream-journal-launch:${userId}`;
@@ -1091,6 +1092,7 @@ export function DailyHabitTracker({
   const [showYesterdaySundownTodoModal, setShowYesterdaySundownTodoModal] = useState(false);
   const [yesterdaySundownTodos, setYesterdaySundownTodos] = useState<TodayTodo[]>([]);
   const [yesterdaySundownTodoStatus, setYesterdaySundownTodoStatus] = useState<string | null>(null);
+  const [todoCleanupMovedToTaskTowerTitles, setTodoCleanupMovedToTaskTowerTitles] = useState<string[]>([]);
   const [yesterdaySundownTodoSaving, setYesterdaySundownTodoSaving] = useState(false);
   const [expandedYesterdaySundownTodoById, setExpandedYesterdaySundownTodoById] = useState<Record<string, boolean>>({});
   const [todoCleanupPendingActions, setTodoCleanupPendingActions] = useState<Record<string, TodoCleanupPendingAction>>({});
@@ -11250,7 +11252,36 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     if (error) return;
     const displayCounts = loadDraft<Record<string, number>>(todoCleanupDisplayCountsKey(session.user.id)) ?? {};
     const staleTodos = (data ?? []).filter((todo) => !todo.completed);
-    const pendingTodos = staleTodos
+    const movedToTaskTowerTitles: string[] = [];
+    const rolledTodos: TodayTodo[] = [];
+
+    await Promise.all(staleTodos.map(async (todo) => {
+      const displayCount = displayCounts[todo.id] ?? 0;
+      if (displayCount >= TODO_CLEANUP_LAST_PROMPT_AT) {
+        const { error: actionError } = await insertAction(session.user.id, {
+          title: todo.title,
+          category: 'nice_to_do',
+          notes: [TODO_CLEANUP_TASK_TOWER_TAG, todo.notes].filter(Boolean).join('\n'),
+        });
+        if (!actionError) {
+          const { error: deleteError } = await deleteTodayTodo(todo.id);
+          if (!deleteError) {
+            delete displayCounts[todo.id];
+            movedToTaskTowerTitles.push(todo.title);
+            return;
+          }
+        }
+      }
+
+      const { data: rolledTodo, error: rolloverError } = await updateTodayTodo(todo.id, { todo_date: today, completed: false });
+      if (!rolloverError && rolledTodo) {
+        rolledTodos.push(rolledTodo);
+        return;
+      }
+      rolledTodos.push(todo);
+    }));
+
+    const pendingTodos = rolledTodos
       .filter((todo) => options?.force || (displayCounts[todo.id] ?? 0) < TODO_CLEANUP_MAX_PROMPTS)
       .sort((first, second) => (displayCounts[second.id] ?? 0) - (displayCounts[first.id] ?? 0));
 
@@ -11258,11 +11289,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setTodoCleanupDisplayCounts(displayCounts);
     setTodoCleanupPendingActions({});
     setTodoCleanupBulkAction(null);
+    setTodoCleanupMovedToTaskTowerTitles(movedToTaskTowerTitles);
     setExpandedYesterdaySundownTodoById({});
 
     if (pendingTodos.length === 0) {
-      if (options?.force) {
-        setYesterdaySundownTodoStatus('No unfinished todos were found for yesterday.');
+      if (options?.force || movedToTaskTowerTitles.length > 0) {
+        setYesterdaySundownTodoStatus(movedToTaskTowerTitles.length > 0 ? `${movedToTaskTowerTitles.length} long-rolled todo${movedToTaskTowerTitles.length === 1 ? '' : 's'} moved into Task Tower.` : 'No unfinished todos were found for yesterday.');
+        yesterdaySundownTodoPromptOpenedThisSessionRef.current = true;
         setShowYesterdaySundownTodoModal(true);
       }
       return;
@@ -11271,7 +11304,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setYesterdaySundownTodoStatus(options?.force ? 'Admin manual cleanup launched.' : null);
     yesterdaySundownTodoPromptOpenedThisSessionRef.current = true;
     setShowYesterdaySundownTodoModal(true);
-  }, [session?.user?.id, yesterdayISO]);
+  }, [session?.user?.id, today, yesterdayISO]);
 
   useEffect(() => {
     if (loading || !session?.user?.id || !isViewingToday) return;
@@ -11439,7 +11472,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             <p className="yesterday-sundown-todo-modal__eyebrow">New day reset</p>
             <h3 id="yesterday-sundown-todo-title">Todo cleanup</h3>
             <p className="yesterday-sundown-todo-modal__subtitle">
-              Decide what to do with unfinished todos from {formatDateLabel(yesterdayISO)}.
+              Unfinished todos from {formatDateLabel(yesterdayISO)} have already rolled into today. Finish, reschedule, or delete only the ones you want to change.
             </p>
           </div>
           <button
@@ -11455,8 +11488,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
         <div className="yesterday-sundown-todo-modal__body">
           <p className="yesterday-sundown-todo-modal__hint">
-            Pick one action per task. Chosen rows gray out, and skipped rows get one more cleanup count.
+            No need to tap Today: skipped rows stay on today by default. After {TODO_CLEANUP_MAX_PROMPTS} automatic rollovers, a todo is moved into Task Tower with the {TODO_CLEANUP_TASK_TOWER_TAG} tag.
           </p>
+          {todoCleanupMovedToTaskTowerTitles.length > 0 ? (
+            <div className="yesterday-sundown-todo-modal__status" role="note">
+              Moved to Task Tower with {TODO_CLEANUP_TASK_TOWER_TAG}: {todoCleanupMovedToTaskTowerTitles.join(', ')}
+            </div>
+          ) : null}
           {yesterdaySundownTodos.length > 0 ? (
             <ul className="yesterday-sundown-todo-modal__list">
               {yesterdaySundownTodos.map((todo) => {
@@ -11471,10 +11509,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   pendingAction ? 'yesterday-sundown-todo-modal__item--assigned' : '',
                   isLastPrompt ? 'yesterday-sundown-todo-modal__item--expiring' : '',
                 ].filter(Boolean).join(' ');
-                const actionLabel = pendingAction?.action === 'today'
-                  ? 'Move to today'
-                  : pendingAction?.action === 'tomorrow'
-                    ? 'Move to tomorrow'
+                const actionLabel = pendingAction?.action === 'tomorrow'
+                  ? 'Move to tomorrow'
                     : pendingAction?.action === 'schedule'
                       ? `Schedule ${formatDateLabel(pendingAction.scheduledDateISO ?? today)}`
                       : pendingAction?.action === 'finish'
@@ -11498,7 +11534,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     </button>
                     {isExpanded ? (
                       <div className="yesterday-sundown-todo-modal__task-actions">
-                        <button type="button" onClick={() => stageTodoCleanupAction(todo.id, { action: 'today' })} disabled={yesterdaySundownTodoSaving}>Today</button>
                         <button type="button" onClick={() => stageTodoCleanupAction(todo.id, { action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving}>Tomorrow</button>
                         <button type="button" onClick={() => stageTodoCleanupAction(todo.id, { action: 'finish' })} disabled={yesterdaySundownTodoSaving}>Finished</button>
                         <label className="yesterday-sundown-todo-modal__date-action">
@@ -11529,9 +11564,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
         <footer className="yesterday-sundown-todo-modal__footer">
           <div className="yesterday-sundown-todo-modal__bulk" aria-label="Bulk todo cleanup actions">
-            <span className="yesterday-sundown-todo-modal__bulk-label">Mark all remaining as</span>
+            <span className="yesterday-sundown-todo-modal__bulk-label">Bulk choice for remaining</span>
             <div className="yesterday-sundown-todo-modal__bulk-actions">
-              <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'today' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Today</button>
               <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Tomorrow</button>
               <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'finish' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Finished</button>
               <button type="button" className="yesterday-sundown-todo-modal__bulk-delete" onClick={() => setTodoCleanupBulkAction({ action: 'delete' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Delete</button>
