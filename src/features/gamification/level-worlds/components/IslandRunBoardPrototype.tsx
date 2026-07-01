@@ -430,6 +430,7 @@ import {
   resolveIslandRunContractV2Stops,
   resolveIslandRunFullClearForProgression,
   isIslandRunFullyClearedV2,
+  isIslandRunFinishedForDepartureV2,
 } from '../services/islandRunContractV2StopResolver';
 import { resolveIslandRunBestNextAction } from '../services/islandRunBestNextActionAdvisor';
 import {
@@ -5128,6 +5129,13 @@ export function IslandRunBoardPrototype({
         hatcheryEggResolved: islandEggSlotUsed,
       })
     : legacyIsCurrentIslandFullyCleared;
+  const isCurrentIslandFinishedForDeparture = ISLAND_RUN_CONTRACT_V2_ENABLED
+    ? isIslandRunFinishedForDepartureV2({
+        stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
+        hatcheryEggResolved: islandEggSlotUsed,
+        bossDefeated: runtimeState.bossTrialResolvedIslandNumber === islandNumber,
+      })
+    : legacyIsCurrentIslandFullyCleared;
   const islandClearVisitKey = `${runtimeState.cycleIndex}:${islandNumber}`;
   const buildPanelRemainingToFullByIndex = useMemo(() => {
     return islandStopPlan.map((_, stopIndex) => {
@@ -5198,8 +5206,9 @@ export function IslandRunBoardPrototype({
     setShowIslandClearCelebration(true);
   }, [islandClearStats, islandClearVisitKey, islandNumber, session.user.id, showIslandClearCelebration]);
 
-  // Island clear is intentionally surfaced through an explicit Finish Island CTA
-  // instead of auto-opening this modal, so full clears do not interrupt play.
+  // Island departure is intentionally surfaced through an explicit Finish Island
+  // CTA instead of auto-opening this modal. The departure gate stays narrow:
+  // fully restored buildings, egg collected/sold, and boss defeated.
   const isEnergyDepletedForRoll = isIslandRunRollEnergyDepleted({
     dicePool,
     dicePerRoll: effectiveDiceCost,
@@ -10234,14 +10243,14 @@ export function IslandRunBoardPrototype({
     bestNextAction &&
       bestNextAction.urgency === 'critical' &&
       bestNextAction.action !== 'claim_island_clear' &&
-      !isCurrentIslandFullyCleared &&
+      !isCurrentIslandFinishedForDeparture &&
       !doesModalOwnAttention &&
       !isRolling &&
       pendingHopSequence === null &&
       !isRewardBarClaiming,
   );
   const shouldShowFinishIslandCta = Boolean(
-    isCurrentIslandFullyCleared &&
+    isCurrentIslandFinishedForDeparture &&
       !doesModalOwnAttention &&
       !isRolling &&
       pendingHopSequence === null &&
