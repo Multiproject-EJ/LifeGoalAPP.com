@@ -1268,3 +1268,14 @@ confirmed to be **false positives** (not bugs):
    again → finish island → travel loop on a 40-tile board crossing island
    boundaries.** Unit tests are strong per-module; the seams between modules
    are where the bugs sit.
+
+## Follow-up: postponement production telemetry gap (2026-07-01)
+
+The **Come back later** postponement path currently has debug/service logging and a life-intake side effect from the Habit prompt surface, but this follow-up did not find confirmed wiring for the four core postponement lifecycle events in the production `telemetry_events` pipeline:
+
+- postponement accepted;
+- postponement blocked by the open-stop limit;
+- postponed stop reopened;
+- postponed stop completed later.
+
+Before using postponement as an experiment metric, wire these events through the existing production telemetry service (`recordTelemetryEvent`) or an equivalent analytics pipeline, with tests that confirm event type, island number, stop index/type, outcome, and block reason metadata. This is intentionally recorded as a limitation rather than solved in the regression-test follow-up to avoid broad product/analytics changes in the same patch.

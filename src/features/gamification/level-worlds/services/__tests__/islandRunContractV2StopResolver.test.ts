@@ -19,7 +19,145 @@ const EMPTY_BUILD_STATES = Array.from({ length: 5 }, () => ({
   buildLevel: 0,
 }));
 
+function assertResolvedFrontier(
+  stopStatesByIndex: Array<{ objectiveComplete: boolean; buildComplete: boolean; accessUnlocked?: boolean; postponedAtMs?: number | null }>,
+  expectedStatuses: string[],
+  expectedRecommendedStopIndex: number,
+  message: string,
+  stopTicketsPaidByIsland?: Record<string, number[]>,
+) {
+  const result = resolveIslandRunContractV2Stops({
+    stopStatesByIndex,
+    stopTicketsPaidByIsland,
+    islandNumber: 1,
+  });
+
+  assertDeepEqual(result.statusesByIndex, expectedStatuses, `${message}: statuses`);
+  assertEqual(result.recommendedStopIndex, expectedRecommendedStopIndex, `${message}: recommended stop`);
+}
+
 export const islandRunContractV2StopResolverTests: TestCase[] = [
+  {
+    name: 'legacy save without access fields: brand-new island keeps only Hatchery active',
+    run: () => {
+      assertResolvedFrontier(
+        [
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        ['active', 'locked', 'locked', 'locked', 'locked'],
+        0,
+        'brand-new legacy island',
+      );
+    },
+  },
+  {
+    name: 'legacy save without access fields: Hatchery complete reconstructs Habit frontier',
+    run: () => {
+      assertResolvedFrontier(
+        [
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        ['completed', 'active', 'locked', 'locked', 'locked'],
+        1,
+        'Hatchery-complete legacy island',
+      );
+    },
+  },
+  {
+    name: 'legacy save without access fields: Habit complete reconstructs Mystery frontier',
+    run: () => {
+      assertResolvedFrontier(
+        [
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        ['completed', 'completed', 'active', 'locked', 'locked'],
+        2,
+        'Habit-complete legacy island',
+      );
+    },
+  },
+  {
+    name: 'legacy save without access fields: several completions reconstruct Wisdom frontier',
+    run: () => {
+      assertResolvedFrontier(
+        [
+          { objectiveComplete: true, buildComplete: true },
+          { objectiveComplete: true, buildComplete: true },
+          { objectiveComplete: true, buildComplete: true },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        ['completed', 'completed', 'completed', 'active', 'locked'],
+        3,
+        'Wisdom-next legacy island',
+      );
+    },
+  },
+  {
+    name: 'legacy save without access fields: paid ticket on next incomplete stop preserves active frontier',
+    run: () => {
+      assertResolvedFrontier(
+        [
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        ['completed', 'active', 'locked', 'locked', 'locked'],
+        1,
+        'paid-ticket legacy frontier',
+        { '1': [1] },
+      );
+    },
+  },
+  {
+    name: 'legacy save without access fields: fully completed island stays completed at Boss',
+    run: () => {
+      assertResolvedFrontier(
+        [
+          { objectiveComplete: true, buildComplete: true },
+          { objectiveComplete: true, buildComplete: true },
+          { objectiveComplete: true, buildComplete: true },
+          { objectiveComplete: true, buildComplete: true },
+          { objectiveComplete: true, buildComplete: true },
+        ],
+        ['completed', 'completed', 'completed', 'completed', 'completed'],
+        4,
+        'fully completed legacy island',
+      );
+    },
+  },
+  {
+    name: 'legacy save without access fields: completion plus ticket data does not unlock beyond legitimate frontier',
+    run: () => {
+      assertResolvedFrontier(
+        [
+          { objectiveComplete: true, buildComplete: true },
+          { objectiveComplete: true, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+        ['completed', 'completed', 'active', 'locked', 'locked'],
+        2,
+        'partial legacy island with paid future ticket',
+        { '1': [1, 2, 3] },
+      );
+    },
+  },
   {
     name: 'resolver picks first stop without objective complete as active and locks all later stops',
     run: () => {
@@ -353,6 +491,7 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
         stopTicketsPaidByIsland: { '1': [1, 2] },
         islandNumber: 1,
       });
+      assertEqual(result.activeStopIndex, 1, 'Habit remains the first incomplete objective for completion authority');
       assertEqual(result.recommendedStopIndex, 2, 'Immediate next unlocked stop should be recommended');
       assertDeepEqual(
         result.statusesByIndex,
