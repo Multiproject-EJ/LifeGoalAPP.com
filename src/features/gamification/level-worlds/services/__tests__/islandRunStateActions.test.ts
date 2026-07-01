@@ -145,6 +145,58 @@ function seedState(overrides: Partial<IslandRunGameStateRecord>): void {
   refreshIslandRunStateFromLocal(session);
 }
 
+function seedLegacyStopStateWithoutAccessFields(options: {
+  stopStatesByIndex: Array<{ objectiveComplete: boolean; buildComplete: boolean }>;
+  stopTicketsPaidByIsland?: Record<string, number[]>;
+  currentIslandNumber?: number;
+}): IslandRunGameStateRecord {
+  const session = makeSession();
+  const storageKey = `island_run_runtime_state_${session.user.id}`;
+  window.localStorage.setItem(
+    storageKey,
+    JSON.stringify({
+      runtimeVersion: 1,
+      currentIslandNumber: options.currentIslandNumber ?? 1,
+      completedStopsByIsland: {},
+      stopTicketsPaidByIsland: options.stopTicketsPaidByIsland ?? {},
+      stopStatesByIndex: options.stopStatesByIndex,
+    }),
+  );
+  return readIslandRunGameStateRecord(session);
+}
+
+function assertHydratedLegacyFrontier(options: {
+  name: string;
+  stopStatesByIndex: Array<{ objectiveComplete: boolean; buildComplete: boolean }>;
+  expectedStatuses: string[];
+  expectedRecommendedStopIndex: number;
+  expectedAccessUnlockedByIndex: boolean[];
+  stopTicketsPaidByIsland?: Record<string, number[]>;
+}): void {
+  resetAll();
+  const record = seedLegacyStopStateWithoutAccessFields({
+    stopStatesByIndex: options.stopStatesByIndex,
+    stopTicketsPaidByIsland: options.stopTicketsPaidByIsland,
+  });
+  const resolved = resolveIslandRunContractV2Stops({
+    stopStatesByIndex: record.stopStatesByIndex,
+    stopTicketsPaidByIsland: record.stopTicketsPaidByIsland,
+    islandNumber: 1,
+  });
+
+  assert(
+    record.stopStatesByIndex.every((entry) => typeof entry.postponedAtMs === 'undefined'),
+    `${options.name}: legacy hydration should not invent postponed markers`,
+  );
+  assertDeepEqual(
+    record.stopStatesByIndex.map((entry) => entry.accessUnlocked),
+    options.expectedAccessUnlockedByIndex,
+    `${options.name}: hydrated access flags`,
+  );
+  assertDeepEqual(resolved.statusesByIndex, options.expectedStatuses, `${options.name}: hydrated statuses`);
+  assertEqual(resolved.recommendedStopIndex, options.expectedRecommendedStopIndex, `${options.name}: hydrated recommendation`);
+}
+
 function makeLuckyRollSession(
   status: IslandRunLuckyRollSession['status'],
   overrides: Partial<IslandRunLuckyRollSession> = {},
@@ -215,6 +267,108 @@ function getAdjacentTileIdsForTest(tileId: number, boardSize: number): number[] 
 }
 
 export const islandRunStateActionsTests: TestCase[] = [
+  {
+    name: 'legacy persisted stop hydration reconstructs exact frontier without access or postponed fields',
+    run: () => {
+      const cases = [
+        {
+          name: 'brand-new island',
+          stopStatesByIndex: [
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+          ],
+          expectedStatuses: ['active', 'locked', 'locked', 'locked', 'locked'],
+          expectedRecommendedStopIndex: 0,
+          expectedAccessUnlockedByIndex: [true, false, false, false, false],
+        },
+        {
+          name: 'Hatchery complete, Habit next',
+          stopStatesByIndex: [
+            { objectiveComplete: true, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+          ],
+          expectedStatuses: ['completed', 'ticket_required', 'locked', 'locked', 'locked'],
+          expectedRecommendedStopIndex: 1,
+          expectedAccessUnlockedByIndex: [true, false, false, false, false],
+        },
+        {
+          name: 'Hatchery and Habit complete, Mystery next',
+          stopStatesByIndex: [
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: true, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+          ],
+          expectedStatuses: ['completed', 'completed', 'ticket_required', 'locked', 'locked'],
+          expectedRecommendedStopIndex: 2,
+          expectedAccessUnlockedByIndex: [true, true, false, false, false],
+        },
+        {
+          name: 'several complete, Wisdom next',
+          stopStatesByIndex: [
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+          ],
+          expectedStatuses: ['completed', 'completed', 'completed', 'ticket_required', 'locked'],
+          expectedRecommendedStopIndex: 3,
+          expectedAccessUnlockedByIndex: [true, true, true, false, false],
+        },
+        {
+          name: 'next incomplete ticket already paid',
+          stopStatesByIndex: [
+            { objectiveComplete: true, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+          ],
+          expectedStatuses: ['completed', 'active', 'locked', 'locked', 'locked'],
+          expectedRecommendedStopIndex: 1,
+          expectedAccessUnlockedByIndex: [true, false, false, false, false],
+          stopTicketsPaidByIsland: { '1': [1] },
+        },
+        {
+          name: 'fully completed island',
+          stopStatesByIndex: [
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: true, buildComplete: true },
+          ],
+          expectedStatuses: ['completed', 'completed', 'completed', 'completed', 'completed'],
+          expectedRecommendedStopIndex: 4,
+          expectedAccessUnlockedByIndex: [true, true, true, true, true],
+        },
+        {
+          name: 'partial completion and ticket data',
+          stopStatesByIndex: [
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: true, buildComplete: true },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+            { objectiveComplete: false, buildComplete: false },
+          ],
+          expectedStatuses: ['completed', 'completed', 'active', 'locked', 'locked'],
+          expectedRecommendedStopIndex: 2,
+          expectedAccessUnlockedByIndex: [true, true, false, false, false],
+          stopTicketsPaidByIsland: { '1': [1, 2, 3] },
+        },
+      ];
+
+      cases.forEach(assertHydratedLegacyFrontier);
+    },
+  },
   {
     name: 'upgradeCreatureFormWithShards spends shards and grants Form 3 rewards once',
     run: () => {
@@ -5479,6 +5633,100 @@ export const islandRunStateActionsTests: TestCase[] = [
         stopBuildStateByIndex: Array.from({ length: 5 }, () => ({ requiredEssence: 1, spentEssence: 1, buildLevel: 3 })),
         hatcheryEggResolved: true,
       }), false, 'Island clear remains blocked while other required objectives are incomplete');
+    },
+  },
+  {
+    name: 'postponeIslandRunStop is idempotent for rapid duplicate and already-postponed callbacks',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 11,
+        currentIslandNumber: 4,
+        stopStatesByIndex: [
+          { objectiveComplete: true, buildComplete: false, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: false, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+      });
+
+      const first = postponeIslandRunStop({
+        session,
+        client: null,
+        islandNumber: 4,
+        stopIndex: 1,
+        nowMs: 1000,
+      });
+      const duplicate = postponeIslandRunStop({
+        session,
+        client: null,
+        islandNumber: 4,
+        stopIndex: 1,
+        nowMs: 2000,
+      });
+
+      assertEqual(first.ok, true, 'first postponement should succeed');
+      assertEqual(duplicate.ok, true, 'duplicate postponement should be accepted as the same logical transition');
+      assertEqual(duplicate.record.stopStatesByIndex[1].postponedAtMs, 1000, 'duplicate callback must preserve original postponed timestamp');
+      assertEqual(duplicate.record.stopStatesByIndex[2].accessUnlocked, true, 'duplicate callback keeps immediate next stop unlocked');
+      assertEqual(duplicate.record.stopStatesByIndex[3].accessUnlocked === true, false, 'duplicate callback must not unlock an additional stop');
+    },
+  },
+  {
+    name: 'postponeIslandRunStop stale callback cannot skip the unlocked next stop or bypass open limit',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 12,
+        currentIslandNumber: 5,
+        stopStatesByIndex: [
+          { objectiveComplete: true, buildComplete: false, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: false, accessUnlocked: true, postponedAtMs: 100 },
+          { objectiveComplete: false, buildComplete: false, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+      });
+
+      const staleHabitCallback = postponeIslandRunStop({
+        session,
+        client: null,
+        islandNumber: 5,
+        stopIndex: 1,
+        nowMs: 3000,
+      });
+
+      assertEqual(staleHabitCallback.ok, true, 'stale Habit callback should resolve to the existing Habit-to-Mystery transition');
+      assertEqual(staleHabitCallback.record.stopStatesByIndex[1].postponedAtMs, 100, 'stale callback preserves original Habit postponed marker');
+      assertEqual(staleHabitCallback.record.stopStatesByIndex[2].accessUnlocked, true, 'stale callback keeps Mystery unlocked');
+      assertEqual(staleHabitCallback.record.stopStatesByIndex[3].accessUnlocked === true, false, 'stale callback must not unlock Wisdom');
+
+      seedState({
+        runtimeVersion: 13,
+        currentIslandNumber: 5,
+        stopStatesByIndex: [
+          { objectiveComplete: false, buildComplete: false, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: false, accessUnlocked: true, postponedAtMs: 100 },
+          { objectiveComplete: false, buildComplete: false, accessUnlocked: true },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+      });
+
+      const blockedByLimit = postponeIslandRunStop({
+        session,
+        client: null,
+        islandNumber: 5,
+        stopIndex: 2,
+        nowMs: 4000,
+      });
+
+      assertEqual(blockedByLimit.ok, false, 'postponement should be blocked when opening the next stop would exceed the open limit');
+      if (!blockedByLimit.ok) assertEqual(blockedByLimit.reason, 'open_limit_reached', 'blocked stale callback should report the open-limit reason');
+      assertEqual(blockedByLimit.record.stopStatesByIndex[3].accessUnlocked === true, false, 'blocked stale callback must not unlock Wisdom');
     },
   },
 ];
