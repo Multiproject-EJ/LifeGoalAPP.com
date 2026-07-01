@@ -35725,6 +35725,54 @@ body.habit-wizard-open .mobile-footer-nav {
   color: #f7f1e8;
 }
 
+
+.founder-welcome__intro {
+  position: relative;
+  width: min(420px, 100%);
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: clamp(1.75rem, 6vw, 2.5rem);
+  border-radius: 30px;
+  text-align: center;
+  color: #eef7ff;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 34%, rgba(90, 180, 255, 0.28), transparent 30%),
+    radial-gradient(circle at 20% 15%, rgba(156, 107, 255, 0.2), transparent 26%),
+    linear-gradient(170deg, rgba(10, 18, 36, 0.98), rgba(3, 6, 14, 0.99));
+  border: 1px solid rgba(160, 210, 255, 0.18);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.founder-welcome__intro h2 {
+  position: relative;
+  margin: 0;
+  max-width: 300px;
+  font-size: clamp(1.55rem, 7vw, 2.15rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.founder-welcome__intro p {
+  position: relative;
+  margin: 0;
+  color: rgba(226, 240, 255, 0.78);
+}
+
+.founder-welcome__intro-orb {
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.95), rgba(124, 211, 252, 0.65) 24%, rgba(59, 130, 246, 0.25) 58%, transparent 70%),
+    radial-gradient(circle, rgba(96, 165, 250, 0.5), transparent 70%);
+  box-shadow: 0 0 42px rgba(96, 165, 250, 0.65), 0 0 96px rgba(99, 102, 241, 0.28);
+}
+
 .founder-welcome__head {
   display: flex;
   flex-direction: column;
@@ -36086,6 +36134,7 @@ body.habit-wizard-open .mobile-footer-nav {
 
 /* ---- Animations (opt-in; respects reduced motion) ---- */
 @media (prefers-reduced-motion: no-preference) {
+  .founder-welcome__intro,
   .founder-welcome__card,
   .creator-note__card {
     animation: founder-card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -36114,6 +36163,10 @@ body.habit-wizard-open .mobile-footer-nav {
 
   .founder-welcome__hero-glow {
     animation: founder-glow-pulse 4s ease-in-out infinite;
+  }
+
+  .founder-welcome__intro-orb {
+    animation: founder-glow-pulse 2.6s ease-in-out infinite, founder-float 3s ease-in-out infinite;
   }
 
   .founder-welcome__hero-stone,

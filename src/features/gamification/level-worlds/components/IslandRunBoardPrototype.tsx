@@ -1831,7 +1831,8 @@ export function IslandRunBoardPrototype({
       dicePool?: number;
     };
   } | null>(null);
-  const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'launch'>('celebration');
+  const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'ship-name' | 'mission' | 'launch'>('celebration');
+  const [firstRunShipName, setFirstRunShipName] = useState('Starling');
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const isOnboardingCelebrationVisible = showFirstRunCelebration || showHatcheryL1Celebration;
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
@@ -9328,7 +9329,7 @@ export function IslandRunBoardPrototype({
 
   const handleClaimFirstRunRewards = async () => {
     if (firstRunStep === 'celebration') {
-      const starterDiceBonus = ISLAND_RUN_DEFAULT_STARTING_DICE * 2;
+      const starterDiceBonus = 1500;
       const starterEssenceBonus = 250;
       const record = applyFirstRunStarterRewards({
         session,
@@ -9340,16 +9341,31 @@ export function IslandRunBoardPrototype({
       setRuntimeState(record);
       setDicePool(record.dicePool);
       setLandingText(`Starter claim complete: +${starterEssenceBonus} 🟣 essence, +${starterDiceBonus} dice.`);
-      setFirstRunStep('launch');
+      setFirstRunStep('ship-name');
       void recordTelemetryEvent({
         userId: session.user.id,
         eventType: 'onboarding_completed',
         metadata: {
           stage: 'island_run_first_run_rewards_claimed',
           island: islandNumber,
-          rewards: { essence: starterEssenceBonus, dice_bonus: starterDiceBonus },
+          rewards: { essence: starterEssenceBonus, dice_bonus: starterDiceBonus, dice_packs: [500, 500, 500] },
         },
       });
+      return;
+    }
+
+    if (firstRunStep === 'ship-name') {
+      const normalizedShipName = firstRunShipName.trim() || 'Starling';
+      setFirstRunShipName(normalizedShipName);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(`island_run_spaceship_name_${session.user.id}`, normalizedShipName);
+      }
+      setFirstRunStep('mission');
+      return;
+    }
+
+    if (firstRunStep === 'mission') {
+      setFirstRunStep('launch');
       return;
     }
 
@@ -11416,7 +11432,7 @@ export function IslandRunBoardPrototype({
                   <p className="island-stop-modal__eyebrow">First-run setup</p>
                   <h3 className="island-stop-modal__title">🎉 Welcome to Island Run</h3>
                   <p className="island-stop-modal__copy">Claim your starter gifts to begin your first island.</p>
-                  <p><strong>Starter gifts:</strong> 💎 1 equivalent + 🪙 250 + ❤️ 5</p>
+                  <p><strong>Starter gifts:</strong> 🟣 250 essence + 🎲 three 500-dice caretaker packs</p>
                   <p>✨ 🎊 ✨</p>
                 </div>
                 <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
@@ -11430,21 +11446,53 @@ export function IslandRunBoardPrototype({
                   </button>
                 </div>
               </>
+            ) : firstRunStep === 'ship-name' ? (
+              <>
+                <div className="island-stop-modal__context">
+                  <p className="island-stop-modal__eyebrow">Name your ship</p>
+                  <h3 className="island-stop-modal__title">🚀 The caretaker is ready to hand over your ship</h3>
+                  <p className="island-stop-modal__copy">Choose the name that will appear in your first mission briefing.</p>
+                  <label className="island-stop-modal__copy" htmlFor="first-run-ship-name"><strong>Spaceship name</strong></label>
+                  <input
+                    id="first-run-ship-name"
+                    className="supabase-auth__input"
+                    value={firstRunShipName}
+                    maxLength={32}
+                    onChange={(event) => setFirstRunShipName(event.target.value)}
+                    placeholder="Starling"
+                  />
+                </div>
+                <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
+                  <button type="button" className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action" onClick={() => void handleClaimFirstRunRewards()}>
+                    Set ship name
+                  </button>
+                </div>
+              </>
+            ) : firstRunStep === 'mission' ? (
+              <>
+                <div className="island-stop-modal__context">
+                  <p className="island-stop-modal__eyebrow">Mission briefing</p>
+                  <h3 className="island-stop-modal__title">🛸 {firstRunShipName} begins the first descent</h3>
+                  <p className="island-stop-modal__copy">The caretaker has loaded three emergency dice packs — 500 dice each — so your first route has room to breathe.</p>
+                  <p className="island-stop-modal__copy">Your starting rank is Explorer. Complete landmarks, hatch companions, and let real-life progress help your world grow.</p>
+                  <p className="island-stop-modal__copy">The ship is entering Island 1 atmosphere. When it lands, start rolling.</p>
+                </div>
+                <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
+                  <button type="button" className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action" onClick={() => void handleClaimFirstRunRewards()}>
+                    Continue to landing
+                  </button>
+                </div>
+              </>
             ) : (
               <>
                 <div className="island-stop-modal__context">
                   <p className="island-stop-modal__eyebrow">Launch confirmation</p>
                   <h3 className="island-stop-modal__title">🚀 Launch sequence ready</h3>
-                  <p className="island-stop-modal__copy">Your ship is landing on Island 1. Your player piece deploys at the first stop.</p>
-                  <p className="island-stop-modal__copy">Tip: spend dice to move tile-to-tile and complete all stops before boss.</p>
+                  <p className="island-stop-modal__copy">{firstRunShipName} has landed on Island 1. Your player piece deploys at the first landmark.</p>
+                  <p className="island-stop-modal__copy">Tip: spend dice to move tile-to-tile and complete all landmarks before the boss.</p>
                 </div>
                 <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
-                  <button
-                    type="button"
-                    className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action"
-                    onClick={() => void handleClaimFirstRunRewards()}
-                    disabled={isPersistingFirstRunCompletion}
-                  >
+                  <button type="button" className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action" onClick={() => void handleClaimFirstRunRewards()} disabled={isPersistingFirstRunCompletion}>
                     {isPersistingFirstRunCompletion ? 'Saving profile...' : 'Start Island Run'}
                   </button>
                 </div>
