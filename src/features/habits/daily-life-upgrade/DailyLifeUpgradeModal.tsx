@@ -34,6 +34,7 @@ export function DailyLifeUpgradeModal(props: {
   open: boolean;
   onClose: () => void;
   onPrimary: () => void;
+  onFullQuest: () => void;
   onAlternative: (alternative: DailyLifeUpgradeCandidate['alternatives'][number]) => void;
 }) {
   useEffect(() => {
@@ -67,7 +68,7 @@ export function DailyLifeUpgradeModal(props: {
             </div>
           ) : null}
           <div className="habit-day-nav__daily-life-upgrade-actions">
-            <button type="button" className="habit-day-nav__daily-life-upgrade-button habit-day-nav__daily-life-upgrade-button--secondary" onClick={props.onClose}>
+            <button type="button" className="habit-day-nav__daily-life-upgrade-button habit-day-nav__daily-life-upgrade-button--secondary" onClick={props.onFullQuest}>
               <span className="habit-day-nav__daily-life-upgrade-button-icon" aria-hidden="true">✦</span>
               <span><strong>Full quest</strong><small>Take on the complete challenge</small></span>
             </button>
