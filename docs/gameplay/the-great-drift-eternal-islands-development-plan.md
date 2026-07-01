@@ -2,12 +2,240 @@
 
 ## Status
 
-**Planning stage:** Narrative and systems concept defined at a high level.  
-**Next step:** Investigate the current repository implementation before finalising the story architecture or changing code.
+**Planning stage:** repository-grounded narrative and systems plan.
+**Scope:** documentation-only development plan for the late-game Great Drift arc.
+**Implementation posture:** extend the existing 120-island Island Run architecture; do not replace it with a new progression engine.
+
+This document preserves the original narrative vision while separating confirmed repository facts, locked product decisions, MVP architecture recommendations, open product decisions, deferred features, and future detailed story-writing work.
 
 ---
 
-## 1. Core Narrative Premise
+## 1. Planning Ledger: What Is Fact, Decision, Proposal, or Deferred
+
+| Category | Meaning in this plan | Current status |
+|---|---|---|
+| Confirmed repository facts | Behaviours, structures, or absences found in the repository investigation | Use as constraints for implementation planning |
+| Product decisions already made | Decisions the MVP should treat as locked unless product direction changes | Build future implementation plans around these |
+| Recommended MVP architecture | Practical implementation approach that fits the existing codebase | Recommended, but still needs implementation design and code review |
+| Unresolved product decisions | Questions that still need an owner decision before build | Listed at the end of this document |
+| Deferred features | Ideas that may fit the vision but should not be in the first implementation | Explicitly beyond MVP |
+| Future story-writing work | Detailed scenes, dialogue, caretakers, and island scripts still to author | Planned as a later content phase |
+
+---
+
+## 2. Confirmed Repository Facts
+
+### Overall compatibility
+
+The repository is **partially compatible** with the Great Drift plan. The late-game storyline should be implemented as a small extension of the existing generated island architecture, not as a new progression engine.
+
+The repository already has:
+
+- a 120-island loop;
+- canonical persisted Island Run state;
+- sequential island travel;
+- cycle progression;
+- a narrative beat model;
+- story manifests;
+- narrative repeat policies;
+- a cross-device seen ledger;
+- timed-event state;
+- Compass Book persistence;
+- caretaker/inhabitant structures;
+- creature collection and active companion state;
+- canonical dice state and reward actions.
+
+The repository does **not** currently have:
+
+- a global Great Drift narrative-state model;
+- threat-phase persistence;
+- durable story decisions beyond seen-state;
+- general world-state-dependent dialogue;
+- a true apparent-ending state at Island 115;
+- bespoke content for Islands 114–120;
+- a separate future Essence balance.
+
+### Island architecture
+
+The island system is mostly generated.
+
+Confirmed:
+
+- names are explicitly listed for all 120 islands;
+- act, depth, and intake stage are derived from island number;
+- five acts contain 24 islands each;
+- Islands 97–120 belong to Act 5, **Transcendence**;
+- special-island metadata is defined separately;
+- shared boards, rewards, stops, and completion systems are parameterised by island;
+- Compass Book contains 120 island-linked activities;
+- `currentIslandNumber` is the runtime progression authority;
+- `cycleIndex` tracks completed cycles;
+- progression is sequential;
+- completed islands are not generally selected through a free revisit map.
+
+### Current final-island behaviour
+
+Island 120 is the actual technical capstone.
+
+Confirmed behaviour:
+
+- the maximum island number is hard-coded as 120 in multiple systems;
+- travel after Island 120 wraps to Island 1;
+- `cycleIndex` increments;
+- Island 120 may grant a theme entitlement;
+- Island 120 is a rare, special, milestone, and treasure-path island;
+- Island 115 is currently a normal island;
+- there is no current apparent-ending/post-ending structure.
+
+Therefore this plan must not describe Island 115 as the current technical ending. Island 115 should become the **apparent story ending** while technical progression remains unchanged and still proceeds through Island 120.
+
+### Story architecture
+
+The current narrative system supports:
+
+- island-entered triggers;
+- arrival-closed triggers;
+- stop-opened triggers;
+- stop-completed triggers;
+- landmark-completed triggers;
+- boss triggers;
+- island-clear triggers;
+- once-only narrative beats;
+- speakers;
+- text;
+- CTAs;
+- priorities;
+- story-reader surfaces;
+- dialogue-sheet surfaces;
+- toast surfaces;
+- episode paths;
+- cross-device seen state.
+
+The narrative validation system intentionally prevents authored narrative data from mutating gameplay state. Preserve this rule. Gameplay-affecting state must change through canonical Island Run actions, not through narrative manifests or React components.
+
+The existing narrative implementation is currently strongest around Island 1 and must be generalised and populated for Islands 114–120.
+
+### Caretakers and creatures
+
+Caretaker/inhabitant infrastructure exists, but only Island 1 content is currently registered. Final-island caretakers should be authored through the existing inhabitant registry.
+
+Creature collection and active companion state already persist. However, there is no complete generic creature-dialogue engine. The MVP should use lightweight companion reactions, not a full creature-specific branching system.
+
+### Compass Book
+
+Confirmed:
+
+- there are 6 chapters;
+- each chapter has 20 activities;
+- there are 120 total island-linked activities;
+- Chapter 6 covers Islands 101–120;
+- Chapter 6 is **The Personal Playbook**;
+- answers persist in Supabase;
+- a local fallback/cache exists.
+
+The MVP should reuse or substantially rewrite the existing Island 120 Chapter 6 activity. It should not add a new journal system or a 121st activity.
+
+### Currency
+
+The current internal Essence system is deeply embedded. Current Essence is not merely a label; it is a technical and persisted currency system.
+
+It is used as:
+
+- a persisted wallet;
+- a reward kind;
+- a spend currency;
+- a stop-ticket cost;
+- a build cost;
+- a daily-spin multiplier cost;
+- a dice-pack cost;
+- a reward-bar resource;
+- a minigame reward;
+- a lifetime earned/spent metric;
+- a Supabase runtime-state field;
+- a localStorage field.
+
+---
+
+## 3. Product Decisions Already Made
+
+### Star Tokens
+
+The current ordinary Island Run currency should be renamed **Star Tokens** in user-facing language.
+
+For the first implementation:
+
+- preserve the existing internal `essence` key;
+- preserve existing Supabase columns;
+- preserve old localStorage records;
+- preserve reward and spend logic;
+- introduce a central display-name adapter;
+- do not perform a database rename.
+
+The existing currency represents practical, agreed trade value. It is used for things such as:
+
+- stop tickets;
+- builds;
+- boosts;
+- daily-spin multiplier costs;
+- dice packs;
+- market purchases;
+- ordinary rewards.
+
+The safest Star Token strategy is:
+
+1. display rename;
+2. adapter layer;
+3. optional gradual code cleanup;
+4. avoid database rename unless later justified.
+
+### Future Essence
+
+Future lore **Essence** must be a separate resource. It must not reuse the current persisted `essence` field.
+
+Working concept:
+
+- Star Tokens store agreed value;
+- dice represent immediate movement and action;
+- Essence stores renewal, movement, and life potential;
+- Essence can primarily be converted into dice;
+- Island 114 reveals the deeper nature of Essence;
+- Perfect Memory provides the pattern for restoration;
+- Essence provides the capacity to restore;
+- the combination creates the Eternal Loop.
+
+Use an unambiguous working internal name such as `renewalEssence`. The user-facing name remains **Essence**. Do not present `renewalEssence` as a final player-facing name.
+
+### Great Drift escalation
+
+Use milestone-driven escalation for the MVP. Do not recommend a real-time countdown for the first implementation. The threat should advance through authored island milestones and persisted phase flags.
+
+### Island ending structure
+
+Island 115 should become an apparent narrative ending. It should not become the technical final island.
+
+Island 120 must remain the actual capstone and cycle wrap. The current 120-island travel architecture should remain intact.
+
+### Compass Book
+
+Use the existing Compass Book Chapter 6 for final reflections. Do not add a 121st activity for MVP.
+
+The Island 120 activity should culminate in:
+
+> What are you ready to stop carrying?
+
+### Creatures and caretakers
+
+For MVP:
+
+- caretakers explain the public technical crisis;
+- creatures or the active companion notice the hidden emotional or cultural problem;
+- creature dialogue should be lightweight and flavour-oriented;
+- do not introduce creature inventory removal;
+- do not require fully authored variants for every creature.
+
+---
+
+## 4. Core Narrative Premise
 
 The late-game arc of the 120-island journey explores a civilisation that has progressively solved the limitations of human life:
 
@@ -31,7 +259,7 @@ The player gradually discovers that forgetting, endings, uncertainty, privacy, a
 
 ---
 
-## 2. The Great Drift
+## 5. The Great Drift
 
 The late-game crisis is known as **the Great Drift**.
 
@@ -52,7 +280,7 @@ The Great Drift spreads differently across the island network, but its causes ar
 
 ---
 
-## 3. The Combined Help Signal
+## 6. The Combined Help Signal
 
 The player and the patrol receive an unusual distress signal.
 
@@ -81,17 +309,17 @@ The actual problem is the opposite:
 
 ---
 
-## 4. The Patrol Mission
+## 7. The Patrol Mission and the Permanence Engine
 
 The player travels as part of an inter-island patrol or survey vessel.
 
 Possible working identities:
 
-- **Sanctuary Survey**
-- **Starward Service**
-- **S.S. Luma**
-- **The Patrol**
-- **The Compass Patrol**
+- **Sanctuary Survey**;
+- **Starward Service**;
+- **S.S. Luma**;
+- **The Patrol**;
+- **The Compass Patrol**.
 
 The original mission appears to be a broad investigation into unusual technical failures across the islands.
 
@@ -106,23 +334,11 @@ The patrol's mission evolves from:
 5. reach the civilisation that perfected the underlying technology;
 6. decide how memory, renewal, endings, and identity should work in the future.
 
----
-
-## 5. The Early Timer Event
-
-The journey should begin with a relatively spacious tone.
-
-The player believes there is time to explore, learn, meet caretakers, help creatures, and gradually understand the island network.
-
-Around **Island 7 or Island 8**, the player activates, awakens, or accidentally completes an ancient system.
-
-This event changes the entire shape of the 120-island journey.
-
 ### Working concept: The Permanence Engine
 
-The Permanence Engine was built to protect civilisation from loss.
+Around Island 7 or Island 8, the player activates, awakens, or accidentally completes an ancient system.
 
-Its purpose is to continuously record, restore, and preserve:
+The **Permanence Engine** was built to protect civilisation from loss. Its purpose is to continuously record, restore, and preserve:
 
 - bodies;
 - buildings;
@@ -138,8 +354,6 @@ Its creators treated forgetting, decay, and irreversible loss as defects.
 
 Once activated, the Permanence Engine begins transmitting an expanding field through the island network.
 
-The field causes systems to restore old states automatically.
-
 This means:
 
 - damaged structures rebuild;
@@ -151,34 +365,30 @@ This means:
 - completed conflicts reopen;
 - identities become harder to change.
 
-### The two clocks
+### MVP escalation recommendation
 
-The activation creates two forms of urgency.
+The original plan imagined urgency, clocks, telemetry, and field expansion. Repository findings make milestone escalation the best MVP fit.
 
-#### Local clock
+| Escalation option | Fit for MVP | Notes |
+|---|---:|---|
+| Real-time timer | No | Creates offline reconciliation complexity, device-time issues, higher test burden, inactive-user punishment, and tonal conflict with the game's supportive posture |
+| Island-progression timer | Possible | Feasible but more mechanical and predictable |
+| Milestone escalation | Yes | Reuses island thresholds, is easy to persist, avoids punishing inactivity, fits authored beats, is easier to test, and preserves agency |
+| Hybrid timer | Later | Defer beyond MVP until the Great Drift state model and content are proven |
 
-Each island has an immediate technical or cultural problem that may become irreversible when the Permanence Field reaches it.
-
-#### Journey clock
-
-The patrol must trace the source, understand the network, and prevent permanent lock-in before the field reaches critical islands.
-
-The timer should create urgency without making the player feel constantly rushed.
-
-The story can communicate time pressure through:
+The MVP should communicate pressure through authored milestones rather than a literal countdown:
 
 - telemetry updates;
-- visible expansion maps;
-- changing sky or environmental effects;
+- visible phase changes;
 - altered NPC behaviour;
 - creatures reacting to the field;
-- increasingly urgent patrol communications;
+- patrol communications;
 - island-specific thresholds;
-- countdown milestones rather than a literal real-time clock.
+- late-game narrative reveal flags.
 
 ---
 
-## 6. The Two-Problem Island Structure
+## 8. The Two-Problem Island Structure
 
 Each relevant island should contain two linked problems:
 
@@ -190,8 +400,6 @@ The technical problem is what the island asks the patrol to fix.
 The cultural problem is what prevents the technical solution from working safely.
 
 The player should not be able to fully solve the island by repairing machinery alone.
-
-### Example structure
 
 | Island issue | Technical layer | Moral or cultural layer |
 |---|---|---|
@@ -210,9 +418,11 @@ The player repairs the system only after understanding the belief, fear, incenti
 
 This allows wisdom to become gameplay rather than detached quotations.
 
+For MVP delivery, the caretaker should generally explain the public technical crisis, while the active companion or a lightweight creature reaction reveals the hidden emotional contradiction.
+
 ---
 
-## 7. Thematic Foundations
+## 9. Thematic Foundations
 
 The final arc should explore the difference between:
 
@@ -245,19 +455,122 @@ The late-game story should connect these themes back to the app's broader emotio
 
 ---
 
-## 8. Island 114 — The Fountain of Continuance
+## 10. Recommended MVP Architecture
 
-### Role in the arc
+### Great Drift persisted state
+
+The MVP should store compact Great Drift state in canonical Supabase-backed Island Run persistence. A separate narrative-state table may be considered later if the branching model grows.
+
+The following TypeScript shape is conceptual planning language, not a final schema mandate:
+
+```ts
+type GreatDriftPhase =
+  | 'dormant'
+  | 'activated'
+  | 'restoration_anomalies'
+  | 'memory_saturation'
+  | 'identity_lock'
+  | 'renewal_race'
+  | 'apparent_victory'
+  | 'eternal_loop_revealed'
+  | 'living_memory'
+  | 'final_horizon_resolved';
+
+interface GreatDriftState {
+  phase: GreatDriftPhase;
+  activationSeen: boolean;
+  apparentEndingSeen: boolean;
+  finalArcRevealed: boolean;
+  livingMemoryUnlocked: boolean;
+  finalReflectionCompleted: boolean;
+  milestoneFlags: string[];
+  finalChoiceId?: string;
+}
+```
+
+Implementation principles:
+
+- provide safe defaults for old saves;
+- sanitise persisted state on hydration;
+- derive or advance phases through canonical actions;
+- avoid gameplay writes in React UI components;
+- keep narrative manifests declarative and non-mutating;
+- use once-only beats and the cross-device seen ledger for presentation history;
+- use persisted Great Drift flags for durable story state.
+
+### Future Essence MVP
+
+Future lore Essence should:
+
+- use a separate persisted balance;
+- be hidden before its story reveal;
+- become visible through Great Drift narrative state;
+- convert into dice through a canonical Island Run action;
+- not reuse the current reward key `essence`;
+- have separate analytics and tests;
+- use safe defaults for old saves;
+- support local hydration and cross-device persistence.
+
+For MVP, store it in canonical Island Run runtime state. A generic wallet may be more appropriate later if Essence becomes app-wide.
+
+### Essence-to-dice conversion architecture
+
+The canonical Essence-to-dice action should:
+
+1. read canonical state;
+2. validate the reveal flag;
+3. validate the available future Essence balance;
+4. validate conversion limits;
+5. calculate the dice amount;
+6. debit future Essence;
+7. credit `dicePool`;
+8. commit both in one atomic state change;
+9. emit telemetry;
+10. allow UI animation from the resulting state update.
+
+Do not place conversion logic directly in UI components.
+
+### Narrative generalisation
+
+MVP narrative implementation should extend the existing narrative registry rather than building a new story engine.
+
+Recommended approach:
+
+- register late-game manifests for Islands 114–120;
+- preserve narrative validation that blocks gameplay mutation;
+- use triggers already supported by the narrative system;
+- use phase flags to control visibility;
+- add caretaker definitions through the existing inhabitant registry;
+- keep companion reactions lightweight and non-branch-explosive;
+- rely on canonical Island Run actions for state changes.
+
+---
+
+## 11. Islands 114–120: Confirmed Metadata and Proposed Roles
+
+| Island | Current name | Confirmed repository status | Proposed role |
+|---:|---|---|---|
+| 114 | Galaxy Gate | Act 5 / Transcendence; reflection stage; special/seasonal; no bespoke story, caretaker, or island-specific assets found; uses shared completion systems | Discovery of completed Essence renewal |
+| 115 | Lunar Haven | Ordinary island in current metadata; not technically final; no bespoke story, caretaker, or island-specific assets found | Apparent utopian ending and Perfect Memory civilisation |
+| 116 | Crown of Infinity | Existing Island 116 name in the 120-island sequence | The Right to Forget |
+| 117 | Astral Plains | Existing Island 117 name in the 120-island sequence | The Last First Time |
+| 118 | Voidwalker Isle | Existing Island 118 name in the 120-island sequence | The Voluntary Ending |
+| 119 | Ascension Isle | Existing Island 119 name in the 120-island sequence | The Unrecorded Day |
+| 120 | Final Horizon | True capstone; special; rare; milestone; treasure-path; wraps to Island 1; increments `cycleIndex`; may grant Island 120 theme entitlement; no bespoke story currently authored | The Island That Changes |
+
+### Island 114 — Galaxy Gate
+
+#### Role in the arc
 
 Island 114 appears to deliver the final great technical victory.
 
-The patrol discovers or completes the final form of **Essence**.
+The patrol discovers or completes the final form of future **Essence**.
 
-Essence is not merely life juice. It is a repair language for the body.
+Essence is not merely energy. It is restoration instruction: a renewal language that tells life what state it can return to.
 
-It tells the body what state it should return to.
+The existing name, **Galaxy Gate**, is compatible and should be retained as the working name.
 
-### Technical problem
+#### Technical problem
 
 The formula is unstable because the system cannot determine which version of a person represents the correct self.
 
@@ -274,7 +587,7 @@ Possible restoration targets include:
 
 The technical challenge is therefore an identity problem disguised as biological engineering.
 
-### Cultural problem
+#### Cultural problem
 
 The island is divided over what eternal repair means.
 
@@ -288,7 +601,7 @@ Possible groups include:
 - people who preserve a deceased person's last version;
 - families that disagree over which version of someone is the real one.
 
-### Apparent resolution
+#### Apparent resolution
 
 The player helps stabilise the Essence system.
 
@@ -298,17 +611,15 @@ This unlocks the route to Island 115.
 
 The victory should feel impressive, beautiful, and slightly unsettling.
 
-### Core question
+#### Core question
 
 > Which version of you deserves to be preserved forever?
 
----
+### Island 115 — Lunar Haven
 
-## 9. Island 115 — The Eternal Loop
+#### Role in the arc
 
-### Role in the arc
-
-Island 115 is the apparent final island and the culmination of the civilisation's technological ambitions.
+Island 115 becomes the apparent final island and the culmination of the civilisation's technological ambitions.
 
 It has solved:
 
@@ -325,7 +636,24 @@ At first, it appears to be a utopia.
 
 Then the patrol discovers the consequences.
 
-### Social symptoms
+The existing name, **Lunar Haven**, is compatible and should be retained as the working name.
+
+#### Apparent ending implementation
+
+Island 115 can feel final without changing progression architecture.
+
+Recommended MVP:
+
+- Island 115 presents a full victory sequence;
+- the mission appears resolved;
+- the player receives emotional and narrative closure;
+- a contradiction, delayed signal, memory error, or restored event breaks the victory;
+- `apparentEndingSeen` persists;
+- `finalArcRevealed` unlocks the meaning of Islands 116–120;
+- ordinary travel continues to Island 116;
+- no new island engine or hidden map is required.
+
+#### Social symptoms
 
 People increasingly create danger because consequences no longer feel permanent.
 
@@ -342,7 +670,7 @@ Possible behaviours include:
 - treating other people as novelty devices;
 - escalating risk to feel alive.
 
-### Technical problem: Perfect Memory
+#### Technical problem: Perfect Memory
 
 Every new experience is instantly compared with every previous experience.
 
@@ -358,7 +686,7 @@ Nothing arrives innocently.
 
 The memory system preserves identity so completely that identity can no longer change.
 
-### Cultural problem
+#### Cultural problem
 
 The civilisation has mistaken memory for meaning.
 
@@ -373,7 +701,7 @@ Its people believe:
 
 The island wants relief but cannot consent to losing anything.
 
-### Core dilemma
+#### Core dilemma
 
 The solution should not be:
 
@@ -384,9 +712,7 @@ The solution should not be:
 
 The player must discover a third possibility.
 
----
-
-## 10. Living Memory
+### Living Memory
 
 The proposed solution is **Living Memory**.
 
@@ -406,11 +732,11 @@ The purpose is not to deny what happened.
 
 The purpose is to prevent every event from remaining emotionally present forever.
 
-### Core wisdom
+#### Core wisdom
 
 > To honour something does not require carrying it at full weight forever.
 
-### Gameplay possibilities
+#### Gameplay possibilities
 
 The player may need to:
 
@@ -424,13 +750,9 @@ The player may need to:
 - test different memory policies;
 - experience consequences of over-preservation and over-erasure.
 
----
+### Island 116 — Crown of Infinity: The Right to Forget
 
-## 11. Islands 116–120 — Post-Solution Final Arc
-
-Island 115 should be the apparent final island, but the remaining islands show the consequences of the solution and define the principles of a new civilisation.
-
-### Island 116 — The Right to Forget
+Island 116 begins the revealed final arc beyond the apparent ending.
 
 #### Core conflict
 
@@ -450,9 +772,7 @@ People confuse personal emotional release with historical denial.
 
 A person can stop reliving harm without pretending it never happened.
 
----
-
-### Island 117 — The Last First Time
+### Island 117 — Astral Plains: The Last First Time
 
 #### Core conflict
 
@@ -483,13 +803,13 @@ The island learns that novelty can come from:
 
 > A shallow life needs endless new experiences. A deep life can discover infinity inside one thing.
 
----
-
-### Island 118 — The Voluntary Ending
+### Island 118 — Voidwalker Isle: The Voluntary Ending
 
 #### Core conflict
 
 Some inhabitants want the right to stop renewing themselves.
+
+This island must be handled carefully through consent, completion, dignity, and philosophical limits. Do not frame it casually or as a simplistic lesson about death.
 
 #### Technical problem
 
@@ -503,11 +823,7 @@ Choosing an ending is treated as betrayal, ingratitude, or proof that life was n
 
 > An ending does not prove that something failed. Sometimes the ending is what gives the thing its shape.
 
-This island must be handled with emotional care and should focus on philosophical consent, completion, and dignity rather than despair.
-
----
-
-### Island 119 — The Unrecorded Day
+### Island 119 — Ascension Isle: The Unrecorded Day
 
 #### Core conflict
 
@@ -537,11 +853,13 @@ Possible reactions:
 
 > Privacy is not merely secrecy. It is the space in which an unfinished self can grow.
 
----
-
-### Island 120 — The Island That Changes
+### Island 120 — Final Horizon: The Island That Changes
 
 #### Role in the ending
+
+Island 120 is the true capstone and cycle wrap. The final narrative resolution should integrate with the existing 120-to-1 wrap rather than replacing it.
+
+Retain the existing theme-entitlement behaviour for MVP.
 
 The final island cannot be perfectly mapped, stored, restored, or repeated.
 
@@ -563,23 +881,30 @@ The final challenge is the player's expectation that every mystery must become a
 
 #### Final wisdom
 
-> You were never sent to make the universe permanent.  
+> You were never sent to make the universe permanent.
 > You were sent to help it remain alive.
+
+#### Final Compass reflection
+
+Use the existing Island 120 Chapter 6 Compass activity. Rewrite or substantially extend it so the final prompt culminates in:
+
+> What are you ready to stop carrying?
 
 ---
 
 ## 12. Connection Back to the Early Weapon
 
-The Permanence Engine activated near Island 7 should eventually be revealed as an early or incomplete version of the technology perfected on Island 115.
+The Permanence Engine activated near Island 7 or 8 should eventually be revealed as an early or incomplete version of the technology perfected on Island 115.
 
 This creates a complete narrative loop:
 
 1. an early island introduces the threat;
 2. the middle islands show different symptoms;
-3. the player follows the expanding field;
+3. the player follows the expanding field through milestone-driven escalation;
 4. Island 114 provides the final Essence breakthrough;
 5. Island 115 reveals the fully developed Eternal Loop;
-6. Islands 116–120 define the rules for using the technology wisely.
+6. Islands 116–120 define the rules for using the technology wisely;
+7. Island 120 resolves through the existing cycle wrap instead of replacing it.
 
 The player should eventually realise that repairing the system without changing its philosophy would complete the disaster.
 
@@ -607,17 +932,13 @@ Instead, the final reward may be something that cannot be permanently possessed.
 
 Possible endings:
 
-- the final creature chooses to leave;
 - the final badge changes over time;
 - the final island cannot be replayed identically;
-- the last Compass page remains partly blank;
 - an NPC forgets the player but retains what they learned;
-- the player must release one symbolic object;
+- the last Compass page remains partly blank;
 - the final reward is a future possibility rather than an owned item.
 
-Possible final Compass prompt:
-
-> What are you ready to stop carrying?
+For MVP, do **not** remove creatures, delete inventory, or make permanent loss the emotional mechanism. The story can ask the player to release a symbolic burden without taking away earned progress.
 
 ---
 
@@ -651,227 +972,162 @@ Each island should feel like a place with a functioning society, not merely a le
 
 ---
 
-## 15. Open Narrative Questions
+## 15. Practical Development Phases
 
-These questions should remain open until the repository investigation is complete.
+### Phase 1 — Product decisions
 
-### World structure
+Lock:
 
-- Is Island 115 currently treated as the final island anywhere in code or content?
-- Are islands 116–120 available, reserved, hidden, or already assigned?
-- Is the game currently designed around exactly 120 playable islands?
-- Does the app support a post-final-island sequence?
-- Can an apparent ending occur before the true ending?
+- Island 115 false-ending treatment;
+- Great Drift state location;
+- future Essence internal name;
+- Star Token icon direction;
+- Island 120 Compass activity treatment;
+- companion reaction depth.
 
-### Story systems
+### Phase 2 — Star Token display rename
 
-- What story framework already exists?
-- Are stories island-specific, chapter-specific, or dynamically triggered?
-- How are caretaker encounters represented?
-- How are creatures included in narrative scenes?
-- How is dialogue stored?
-- Is there branching?
-- Are choices persisted?
-- Can island state change after completion?
-- Can global story flags affect later islands?
+- central display adapter;
+- copy updates;
+- icon updates if approved;
+- no database rename;
+- compatibility tests.
 
-### Timer and telemetry
+### Phase 3 — Great Drift state foundation
 
-- Is there already a global countdown, telemetry, corruption, threat, or world-state system?
-- Can a timer progress by island completion rather than real time?
-- Can the game display a network map or field expansion?
-- Can island visuals change based on global progress?
-- Can the timer pause during onboarding, breaks, or inactivity?
+- defaults;
+- sanitisation;
+- hydration;
+- persistence;
+- canonical actions;
+- legacy-save tests;
+- milestone phase derivation.
 
-### Compass Book
+### Phase 4 — Narrative generalisation
 
-- How are Compass chapters currently structured?
-- Can late-game reflections be stored in the Compass?
-- Is Chapter 6 suitable for the final arc?
-- Can the last page remain intentionally incomplete?
-- Can completed pages update later?
+- extend narrative registry beyond Island 1;
+- register Islands 114–120;
+- add late-game manifests;
+- add caretaker definitions;
+- add conditional narrative resolution.
 
-### Essence
+### Phase 5 — Future Essence MVP
 
-- Does Essence already exist as currency, lore, or creature resource?
-- Would “Essence as bodily repair language” conflict with current mechanics?
-- Can the late-game story reinterpret Essence without confusing players?
-- Is another name needed for the immortality formula?
+- separate persisted resource;
+- story reveal gate;
+- canonical Essence-to-dice action;
+- conversion UI;
+- telemetry;
+- tests.
 
-### Memory systems
+### Phase 6 — Detailed Islands 114–120 story writing
 
-- Is there any existing memory, archive, dream, journal, reflection, or replay mechanic?
-- Can a memory-state mechanic be represented without building a large new system?
-- Can the story use existing choice, card, sorting, or ranking UI?
+For each island, define:
 
-### Technical feasibility
-
-- Can story scenes be inserted into the existing island loop?
-- Can individual islands have two-stage problems?
-- Can global flags unlock altered dialogue?
-- Can the same island show multiple states?
-- Can a final creature or reward leave without appearing as lost progress?
-- Can Island 120 change between visits?
-
----
-
-## 16. Repository Investigation Goals
-
-The next task is investigation only.
-
-Do not modify code yet.
-
-The investigation should determine:
-
-1. how the current 120-island structure is represented;
-2. where island metadata and ordering are defined;
-3. how story content is triggered;
-4. what currently happens on the final islands;
-5. whether islands 114–120 already contain content or assumptions;
-6. how caretakers, creatures, encounters, and the Compass Book connect;
-7. what global progression flags exist;
-8. whether time-bound or network-wide state can be supported;
-9. whether the game can support technical and cultural problem stages;
-10. what the smallest viable implementation path would be.
-
----
-
-## 17. Investigation Findings Placeholder
-
-This section will be updated after the repository investigation.
-
-### Relevant files
-
-_To be added._
-
-### Current island architecture
-
-_To be added._
-
-### Existing story systems
-
-_To be added._
-
-### Existing final-island assumptions
-
-_To be added._
-
-### Global state and persistence
-
-_To be added._
-
-### Compass Book integration
-
-_To be added._
-
-### Creature and caretaker integration
-
-_To be added._
-
-### Timer feasibility
-
-_To be added._
-
-### Risks and constraints
-
-_To be added._
-
-### Recommended implementation approach
-
-_To be added._
-
----
-
-## 18. Proposed Development Phases
-
-### Phase 1 — Repository investigation
-
-- map current island data;
-- inspect story architecture;
-- identify late-game content;
-- inspect persistence and progression;
-- locate Compass, creature, caretaker, and Essence systems;
-- identify architectural constraints;
-- recommend the smallest viable narrative framework.
-
-### Phase 2 — Update this development plan
-
-- replace assumptions with repository facts;
-- confirm island numbering;
-- confirm the early timer trigger;
-- confirm final-island structure;
-- define required data changes;
-- define state flags;
-- identify reused UI and systems;
-- separate MVP from later enhancements.
-
-### Phase 3 — Build the final-island storyline
-
-Create detailed story plans for Islands 114–120, including:
-
-- island identity;
 - environment;
+- civilisation;
 - caretaker;
 - creature role;
-- opening incident;
+- arrival scene;
 - technical problem;
-- cultural problem;
-- player investigation;
-- moral tension;
-- gameplay mechanic;
-- choices;
+- moral/cultural problem;
+- investigation;
+- gameplay;
+- decision;
 - resolution;
 - Compass reflection;
-- transition to the next island;
-- cinematic moments;
-- rewards;
-- persistent consequences.
+- reward;
+- consequence;
+- transition.
 
-### Phase 4 — Design the Great Drift across the full journey
+### Phase 7 — Early and middle foreshadowing
 
-- define the early Permanence Engine event;
-- identify foreshadowing islands;
-- map escalation milestones;
-- define telemetry reveals;
-- connect earlier island themes;
-- determine how the threat changes the world;
-- design recurring patrol communications;
-- seed the Perfect Memory and Essence concepts gradually.
+- Permanence Engine activation near Island 7 or 8;
+- telemetry milestones;
+- sparse recurring signals;
+- earlier memory, restoration, novelty, identity, privacy, and ending themes.
 
-### Phase 5 — Implementation planning
+### Phase 8 — Final integration
 
-- data model;
-- story schemas;
-- progression flags;
-- content pipeline;
-- UI requirements;
-- animation requirements;
-- asset list;
-- testing plan;
-- migration strategy;
-- rollout and feature flags.
+- Island 115 false ending;
+- Island 116 reveal;
+- Island 120 final resolution;
+- existing cycle wrap;
+- theme entitlement;
+- Compass Book persistence;
+- cross-device state validation.
 
 ---
 
-## 19. Current Working Decisions
+## 16. Testing Requirements for Future Implementation
 
-These are strong working decisions but may change after repository investigation.
+When implementation begins, add or update tests for:
 
-- Island 114 introduces completed Essence renewal.
-- Island 115 is the apparent final island.
-- Island 115 contains the Eternal Loop and Perfect Memory crisis.
-- Islands 116–120 form a quieter post-solution final arc.
-- The Great Drift is the connected late-game crisis.
-- A Permanence Engine is activated around Island 7 or 8.
-- Each major island contains a technical problem and a cultural problem.
-- The final solution is Living Memory, not total erasure.
-- The final arc should connect to shame, self-forgiveness, identity, restarting, and emotional punishment.
-- Island 120 should resist perfect completion.
-- Repository investigation must happen before implementation or detailed final scripting.
+- Great Drift default state;
+- hydration of old saves;
+- milestone phase derivation;
+- once-only activation beat;
+- Island 115 apparent-ending state;
+- Island 116–120 progression after the reveal;
+- Island 120 wrap remaining unchanged;
+- Island 120 entitlement remaining unchanged;
+- narrative visibility by phase;
+- Star Token display adapter;
+- legacy essence compatibility;
+- separate future Essence balance;
+- atomic Essence-to-dice conversion;
+- failed conversion preserving both balances;
+- cross-device persistence;
+- Island 120 Compass reflection persistence;
+- caretaker registration;
+- narrative validation blocking gameplay mutation.
 
 ---
 
-## 20. North Star
+## 17. Features Deferred Beyond MVP
+
+Do not include these in the first Great Drift implementation:
+
+- real-time Great Drift countdown;
+- database rename of current essence fields;
+- fully branching narrative engine;
+- many permanent story choices;
+- creature inventory removal;
+- unique caretakers for all 120 islands;
+- global visual corruption effects across every island;
+- a 121st Compass activity;
+- generic app-wide wallet architecture;
+- several Essence spending systems;
+- full creature-specific dialogue for every companion.
+
+---
+
+## 18. Open Product Decisions
+
+1. **Should Island 115 merely feel final, or should progression briefly pause until the reveal scene is completed?**
+   Strong recommendation: allow ordinary travel to continue to Island 116, but require the reveal beat to be seen before late-arc narrative beats become visible.
+
+2. **Should Great Drift state be stored as a JSON-like field inside Island Run runtime state or in a separate narrative-state table?**
+   Strong recommendation for MVP: store compact state in canonical Island Run persistence. Reconsider a separate table only if branching and story decisions grow.
+
+3. **Should the future internal resource key be `renewalEssence`, `lifeEssence`, or another unambiguous name?**
+   Strong recommendation: use `renewalEssence` as the working internal name because it distinguishes the resource from current `essence` and aligns with the story reveal.
+
+4. **Should the Island 120 Compass activity replace the current content or substantially extend it?**
+   Recommendation: substantially rewrite or extend the existing Island 120 activity while preserving the Chapter 6 structure and persistence path.
+
+5. **How much companion-affinity variation should exist in MVP?**
+   Recommendation: use broad affinity or active-companion flavour lines only. Do not author full variants for every creature.
+
+6. **Should the existing Island 120 theme entitlement remain tied exactly to the 120-to-1 wrap?**
+   Strong recommendation: yes for MVP. Preserve the existing reward and avoid changing cycle-wrap economics while adding story resolution around it.
+
+7. **Should Star Tokens initially reuse the current icon, or launch with distinct new iconography?**
+   Recommendation needed from product/art. The technical plan supports either, as long as the display adapter centralises naming and presentation.
+
+---
+
+## 19. North Star
 
 The final arc should leave the player with a feeling that is hopeful, unsettling, and personally relevant.
 
@@ -890,5 +1146,5 @@ It is learning:
 - what to allow to end;
 - and how to remain alive in a world where almost anything can be repaired.
 
-> The goal is not to make life permanent.  
+> The goal is not to make life permanent.
 > The goal is to keep it capable of becoming new.
