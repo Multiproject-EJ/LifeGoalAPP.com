@@ -7830,11 +7830,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             return (
               <li
                 key={habit.id}
+                ref={(node) => {
+                  habitCardRefs.current[habit.id] = node;
+                }}
+                tabIndex={-1}
                 className={`habit-checklist__item ${!scheduledToday ? 'habit-checklist__item--rest' : ''} ${
                   isCompleted ? 'habit-checklist__item--completed' : ''
                 } ${isJustCompleted ? `habit-item--just-completed ${feedbackClassName}` : ''} ${
                   isOfferHabit ? 'habit-checklist__item--offer' : ''
-                } ${isQuestHabit ? 'habit-checklist__item--quest' : ''} ${isExpanded ? 'habit-checklist__item--expanded' : ''}`}
+                } ${isQuestHabit ? 'habit-checklist__item--quest' : ''} ${isExpanded ? 'habit-checklist__item--expanded' : ''} ${
+                  dailyLifeUpgradeHighlightedHabitId === habit.id ? 'habit-card--daily-life-upgrade-target' : ''
+                }`}
               >
                 <div
                   className="habit-checklist__swipe-frame"
@@ -11181,18 +11187,22 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   ) : null;
 
   const focusHabitCardById = useCallback((habitId: string) => {
-    const targetCard = habitCardRefs.current[habitId];
-    if (!targetCard) return;
-    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    targetCard.focus({ preventScroll: true });
-    setDailyLifeUpgradeHighlightedHabitId(habitId);
-    if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
-      window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
-    }
-    dailyLifeUpgradeHighlightTimeoutRef.current = window.setTimeout(() => {
-      setDailyLifeUpgradeHighlightedHabitId((current) => (current === habitId ? null : current));
-      dailyLifeUpgradeHighlightTimeoutRef.current = null;
-    }, 1800);
+    setExpandedHabits({ [habitId]: true });
+
+    window.requestAnimationFrame(() => {
+      const targetCard = habitCardRefs.current[habitId];
+      if (!targetCard) return;
+      targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetCard.focus({ preventScroll: true });
+      setDailyLifeUpgradeHighlightedHabitId(habitId);
+      if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
+        window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
+      }
+      dailyLifeUpgradeHighlightTimeoutRef.current = window.setTimeout(() => {
+        setDailyLifeUpgradeHighlightedHabitId((current) => (current === habitId ? null : current));
+        dailyLifeUpgradeHighlightTimeoutRef.current = null;
+      }, 1800);
+    });
   }, []);
 
   const {
@@ -11213,6 +11223,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     openDailyLifeUpgradeModal,
     closeDailyLifeUpgradeModal,
     handleDailyLifeUpgradePrimaryAction,
+    handleDailyLifeUpgradeFullQuestAction,
     handleDailyLifeUpgradeAlternativeAction,
     handleCloseDailyLifeUpgradeCreateFlow,
     handleSaveDailyLifeUpgradeCreateFlow,
@@ -11459,6 +11470,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       open={showDailyLifeUpgradeModal}
       onClose={closeDailyLifeUpgradeModal}
       onPrimary={handleDailyLifeUpgradePrimaryAction}
+      onFullQuest={handleDailyLifeUpgradeFullQuestAction}
       onAlternative={handleDailyLifeUpgradeAlternativeAction}
     />
   );

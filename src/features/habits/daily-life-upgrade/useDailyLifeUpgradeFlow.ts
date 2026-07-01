@@ -96,6 +96,14 @@ export function useDailyLifeUpgradeFlow(params: {
     setShowDailyLifeUpgradeModal(false);
   }, [params.userId]);
 
+
+  const handleDailyLifeUpgradeFullQuestAction = useCallback(() => {
+    if (!params.userId || !dailyLifeUpgradeCandidate) return;
+    markDailyLifeUpgradeShownToday(params.userId);
+    setShowDailyLifeUpgradeModal(false);
+    params.focusHabitCardById(dailyLifeUpgradeCandidate.habitId);
+  }, [params, dailyLifeUpgradeCandidate]);
+
   const handleDailyLifeUpgradePrimaryAction = useCallback(() => {
     if (!params.userId || !dailyLifeUpgradeCandidate) return;
     markDailyLifeUpgradeShownToday(params.userId);
@@ -226,6 +234,7 @@ export function useDailyLifeUpgradeFlow(params: {
     openDailyLifeUpgradeModal,
     closeDailyLifeUpgradeModal,
     handleDailyLifeUpgradePrimaryAction,
+    handleDailyLifeUpgradeFullQuestAction,
     handleDailyLifeUpgradeAlternativeAction,
     handleCloseDailyLifeUpgradeCreateFlow,
     handleSaveDailyLifeUpgradeCreateFlow,
