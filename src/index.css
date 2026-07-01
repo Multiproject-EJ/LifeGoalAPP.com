@@ -36876,8 +36876,24 @@ body.habit-wizard-open .mobile-footer-nav {
   position: relative;
   z-index: 2;
   overflow: visible;
+  filter: none;
+  opacity: 1;
   transform: translateZ(0);
   box-shadow: 0 22px 56px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(99, 102, 241, 0.14);
+}
+
+.mobile-habit-home .habit-checklist__item--expanded,
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__swipe-row,
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__details-panel,
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__detail-block {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__row,
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__details-panel--open {
+  filter: none;
+  opacity: 1;
 }
 
 .mobile-habit-home .habit-checklist__item--expanded .habit-checklist__swipe-frame {

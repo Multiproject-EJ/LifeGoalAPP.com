@@ -6313,8 +6313,33 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const yesterdayMarkLabel =
     yesterdaySelectedCount > 0 ? `Mark ${yesterdaySelectedCount} done` : 'Mark done';
 
+  const scrollExpandedHabitToViewportTop = useCallback((habitId: string) => {
+    window.requestAnimationFrame(() => {
+      const targetCard = habitCardRefs.current[habitId];
+      if (!targetCard) return;
+
+      const safeAreaTopValue = parseFloat(
+        window.getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-top') || '0',
+      );
+      const safeAreaTop = Number.isFinite(safeAreaTopValue) ? safeAreaTopValue : 0;
+      const topOffset = Math.max(12, safeAreaTop + 12);
+      const targetTop = targetCard.getBoundingClientRect().top + window.scrollY - topOffset;
+
+      window.scrollTo({
+        top: Math.max(0, targetTop),
+        behavior: 'smooth',
+      });
+    });
+  }, []);
+
   const toggleExpanded = (habitId: string) => {
-    setExpandedHabits((current) => (current[habitId] ? {} : { [habitId]: true }));
+    setExpandedHabits((current) => {
+      const willExpand = !current[habitId];
+      if (willExpand) {
+        scrollExpandedHabitToViewportTop(habitId);
+      }
+      return willExpand ? { [habitId]: true } : {};
+    });
   };
 
   const toggleTodayTodoExpanded = useCallback((todoId: string) => {
