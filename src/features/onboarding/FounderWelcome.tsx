@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export type FounderWelcomeSlide = {
   id: string;
@@ -7,38 +7,91 @@ export type FounderWelcomeSlide = {
   cta: string;
 };
 
-// Final founder-note copy. Keep three slides: why it exists / falling off
-// isn't failure / this is the beginning. The top label, sequence title, and
+// First-start founder sequence copy. The top label, sequence title, and
 // "— EJ" signature are constant chrome shown on every panel.
 const FOUNDER_SLIDES: FounderWelcomeSlide[] = [
+  { id: 'panel-0', title: 'So…', body: ['Ask yourself:'], cta: 'Continue' },
   {
-    id: 'why',
-    title: 'Why HabitGame exists',
+    id: 'panel-1',
+    title: 'What are you naturally good at?',
     body: [
-      'Most habit apps are easy to stop using.',
-      'HabitGame pairs self-improvement with a cozy game, so coming back feels natural — and each return can gently pull you back into habits, goals, and small real-life progress.',
-    ],
-    cta: 'Continue',
-  },
-  {
-    id: 'forgiving',
-    title: 'Falling off shouldn’t feel like failure',
-    body: [
-      'Too often, habit apps start with excitement, then slowly become reminders that you fell off.',
-      'Life changes. Motivation drops. Goals shift. Sometimes you need a break, a reset, or a better path.',
-      'HabitGame is meant to make growth feel more forgiving, adaptive, and easier to return to.',
+      'What do you care about?',
+      'And what would you genuinely like to do in a world of endless possibilities?',
     ],
     cta: 'Next',
   },
   {
-    id: 'beginning',
-    title: 'This is only the beginning',
+    id: 'panel-2',
+    title: 'Understanding yourself is valuable.',
+    body: ['Turning that insight into meaningful goals is even better.'],
+    cta: 'Next',
+  },
+  {
+    id: 'panel-3',
+    title: 'But setting goals is rarely the hardest part.',
+    body: ['The real challenge is staying connected to them when life gets busy.'],
+    cta: 'Next',
+  },
+  {
+    id: 'panel-4',
+    title: 'Missed days should not become symbols of failure.',
+    body: ['This app helps you return without guilt, pressure, or judgement.'],
+    cta: 'Next',
+  },
+  {
+    id: 'panel-5',
+    title: 'When something has been ignored for too long, it can reappear inside the game in a creative, low-resistance way.',
+    body: ['Not as punishment.', 'As another path back.'],
+    cta: 'Next',
+  },
+  {
+    id: 'panel-6',
+    title: 'Progress does not have to mean a perfect streak.',
+    body: ['What matters is how often you showed up over time—and whether you kept moving forward.'],
+    cta: 'Next',
+  },
+  {
+    id: 'panel-7',
+    title: 'Then we pair it with a game designed to bring you back.',
     body: [
-      'I want the journey itself to feel alive — not just planned on a static page.',
-      'HabitGame is still in demo mode, and it does not solve all of this yet — but that is the goal.',
-      'Your feedback will help shape what gets built next.',
+      'What will the next island be like?',
+      'Which creature will hatch next?',
+      'Will it be the perfect companion for you?',
     ],
-    cta: 'Start exploring',
+    cta: 'Next',
+  },
+  {
+    id: 'panel-8',
+    title: 'Rare rewards.',
+    body: ['Short, engaging stories.', 'New surprises.', 'What will happen next?'],
+    cta: 'Next',
+  },
+  {
+    id: 'panel-9',
+    title: 'Choose the themes you enjoy.',
+    body: [
+      'Shape how your journey feels.',
+      'Connect your real-life progress to a world that grows with you.',
+    ],
+    cta: 'Next',
+  },
+  {
+    id: 'panel-10',
+    title: 'You can also suggest ideas and vote on what should be built next.',
+    body: [
+      'Support the features you believe in, receive special perks, and help keep the app growing.',
+    ],
+    cta: 'Next',
+  },
+  {
+    id: 'final',
+    title: 'A game that helps you notice your progress.',
+    body: [
+      'A game that makes returning feel rewarding.',
+      'A game that brings you back.',
+      'Click Play.',
+    ],
+    cta: 'Play',
   },
 ];
 
@@ -184,6 +237,17 @@ export function CreatorNoteModal({
 export function FounderWelcome({ onComplete, founderName = 'EJ' }: FounderWelcomeProps) {
   const [slideIndex, setSlideIndex] = useState(0);
   const [showFullNote, setShowFullNote] = useState(false);
+  const [introComplete, setIntroComplete] = useState(false);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const timer = window.setTimeout(() => setIntroComplete(true), 2600);
+    return () => {
+      window.clearTimeout(timer);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
   const slide = FOUNDER_SLIDES[slideIndex];
   const isLastSlide = slideIndex >= FOUNDER_SLIDES.length - 1;
 
@@ -207,67 +271,76 @@ export function FounderWelcome({ onComplete, founderName = 'EJ' }: FounderWelcom
       aria-label={SEQUENCE_TITLE}
     >
       <div className="founder-welcome__backdrop" aria-hidden="true" />
-      <section className="founder-welcome__card">
-        <header className="founder-welcome__head">
-          <p className="founder-welcome__eyebrow">{SEQUENCE_LABEL}</p>
-          <h2 className="founder-welcome__sequence-title">{SEQUENCE_TITLE}</h2>
-          <div
-            className="founder-welcome__dots"
-            role="img"
-            aria-label={`Step ${slideIndex + 1} of ${FOUNDER_SLIDES.length}`}
-          >
-            {FOUNDER_SLIDES.map((item, index) => (
-              <span
-                key={item.id}
-                className={`founder-welcome__dot${index === slideIndex ? ' is-active' : ''}`}
-              />
+      {!introComplete ? (
+        <section className="founder-welcome__intro" aria-live="polite">
+          <div className="founder-welcome__intro-orb" aria-hidden="true" />
+          <p className="founder-welcome__eyebrow">First launch</p>
+          <h2>One small spark can become a world.</h2>
+          <p>Preparing your first island…</p>
+        </section>
+      ) : (
+        <section className="founder-welcome__card">
+          <header className="founder-welcome__head">
+            <p className="founder-welcome__eyebrow">{SEQUENCE_LABEL}</p>
+            <h2 className="founder-welcome__sequence-title">{SEQUENCE_TITLE}</h2>
+            <div
+              className="founder-welcome__dots"
+              role="img"
+              aria-label={`Step ${slideIndex + 1} of ${FOUNDER_SLIDES.length}`}
+            >
+              {FOUNDER_SLIDES.map((item, index) => (
+                <span
+                  key={item.id}
+                  className={`founder-welcome__dot${index === slideIndex ? ' is-active' : ''}`}
+                />
+              ))}
+            </div>
+          </header>
+
+          {/* key forces the panel to re-mount per slide so entrance animations replay */}
+          <div className="founder-welcome__panel" key={slide.id}>
+            <FounderHero slideId={slide.id} />
+            <h3 className="founder-welcome__title">{slide.title}</h3>
+            {slide.body.map((paragraph, index) => (
+              <p className="founder-welcome__body" key={index}>
+                {paragraph}
+              </p>
             ))}
+            <p className="founder-welcome__signature">— {founderName}</p>
           </div>
-        </header>
 
-        {/* key forces the panel to re-mount per slide so entrance animations replay */}
-        <div className="founder-welcome__panel" key={slide.id}>
-          <FounderHero slideId={slide.id} />
-          <h3 className="founder-welcome__title">{slide.title}</h3>
-          {slide.body.map((paragraph, index) => (
-            <p className="founder-welcome__body" key={index}>
-              {paragraph}
-            </p>
-          ))}
-          <p className="founder-welcome__signature">— {founderName}</p>
-        </div>
-
-        <div className="founder-welcome__actions">
-          <button type="button" className="founder-welcome__primary" onClick={goNext}>
-            {slide.cta}
-          </button>
-        </div>
-
-        <div className="founder-welcome__footer">
-          {slideIndex > 0 ? (
-            <button
-              type="button"
-              className="founder-welcome__text-action"
-              onClick={goBack}
-            >
-              Back
+          <div className="founder-welcome__actions">
+            <button type="button" className="founder-welcome__primary" onClick={goNext}>
+              {slide.cta}
             </button>
-          ) : (
-            <span />
-          )}
-          {isLastSlide ? (
-            <button
-              type="button"
-              className="founder-welcome__text-action founder-welcome__text-action--quiet"
-              onClick={() => setShowFullNote(true)}
-            >
-              Read the full creator note
-            </button>
-          ) : (
-            <span />
-          )}
-        </div>
-      </section>
+          </div>
+
+          <div className="founder-welcome__footer">
+            {slideIndex > 0 ? (
+              <button
+                type="button"
+                className="founder-welcome__text-action"
+                onClick={goBack}
+              >
+                Back
+              </button>
+            ) : (
+              <span />
+            )}
+            {isLastSlide ? (
+              <button
+                type="button"
+                className="founder-welcome__text-action founder-welcome__text-action--quiet"
+                onClick={() => setShowFullNote(true)}
+              >
+                Read the full creator note
+              </button>
+            ) : (
+              <span />
+            )}
+          </div>
+        </section>
+      )}
 
       {showFullNote ? (
         <CreatorNoteModal onClose={() => setShowFullNote(false)} founderName={founderName} />

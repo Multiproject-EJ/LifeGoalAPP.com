@@ -51,6 +51,7 @@ type MyAccountPanelProps = {
   onEditProfile: () => void;
   onLaunchLeapProgress?: (options?: { reset?: boolean }) => void;
   onLaunchDayZeroOnboarding?: (options?: { reset?: boolean }) => void;
+  onLaunchFirstRunOnboarding?: () => void;
   profile: WorkspaceProfileRow | null;
   stats: WorkspaceStats | null;
   profileLoading: boolean;
@@ -88,6 +89,7 @@ export function MyAccountPanel({
   onEditProfile,
   onLaunchLeapProgress,
   onLaunchDayZeroOnboarding,
+  onLaunchFirstRunOnboarding,
   profile,
   stats,
   profileLoading,
@@ -890,6 +892,28 @@ export function MyAccountPanel({
                 </dl>
               ) : null}
             </section>
+            {onLaunchFirstRunOnboarding ? (
+              <section className="account-panel__card" aria-labelledby="advanced-first-run-onboarding-launcher">
+                <p className="account-panel__eyebrow">Admin-only development</p>
+                <h3 id="advanced-first-run-onboarding-launcher">First-start onboarding</h3>
+                <p className="account-panel__hint">
+                  Manually launch the first-start founder panels and guided game handoff for development review. This control only renders for admins.
+                </p>
+                <div className="account-panel__actions-row">
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => {
+                      setFolder1Open(false);
+                      onLaunchFirstRunOnboarding();
+                    }}
+                  >
+                    Launch first-start onboarding
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
             <section className="account-panel__card" aria-labelledby="advanced-weekly-habit-review-launcher">
               <p className="account-panel__eyebrow">Habits</p>
               <h3 id="advanced-weekly-habit-review-launcher">Weekly habit review</h3>
