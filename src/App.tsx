@@ -2488,6 +2488,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setFirstRunStep('spotlight-play');
   }, []);
 
+  const handleLaunchFirstRunOnboardingFromAdmin = useCallback(() => {
+    if (isAdmin !== true) return;
+    setShowGameBoardOverlay(false);
+    setShowMobileGamification(false);
+    setShowLevelWorldsFromEntry(false);
+    setShowMobileHome(true);
+    setActiveWorkspaceNav('planning');
+    setFirstRunStep('welcome');
+  }, [isAdmin]);
+
   const completeFirstRunStartFlow = useCallback(() => {
     setFirstRunStep(null);
     const supabaseClient = client ?? getSupabaseClient();
@@ -3859,6 +3869,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             onEditProfile={handleEditAccountDetails}
             onLaunchLeapProgress={handleLaunchLeapProgress}
             onLaunchDayZeroOnboarding={handleLaunchDayZeroOnboarding}
+            onLaunchFirstRunOnboarding={isAdmin === true ? handleLaunchFirstRunOnboardingFromAdmin : undefined}
             profile={workspaceProfile}
             stats={workspaceStats}
             profileLoading={workspaceProfileLoading}
