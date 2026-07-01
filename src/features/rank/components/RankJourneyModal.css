@@ -200,3 +200,125 @@
     transition: none;
   }
 }
+
+/* Bottom next-rank progress bar moved from the player menu into this modal. */
+.rank-journey__nextrank {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(16, 24, 56, 0.05);
+}
+
+.rank-journey__nextrank-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rank-journey__nextrank-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7299;
+}
+
+.rank-journey__nextrank-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2b3566;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-journey__nextrank-bar-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rank-journey__nextrank-xp {
+  font-size: 12px;
+  color: #5a6486;
+  text-align: right;
+}
+
+.rank-journey__nextrank-bar {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(16, 24, 56, 0.12);
+  overflow: hidden;
+}
+
+.rank-journey__nextrank-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3461ff, #6f8bff);
+}
+
+.rank-journey__nextrank-percent {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2b3566;
+  flex: 0 0 auto;
+}
+
+.rank-journey__detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.rank-journey__detail-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 10, 28, 0.58);
+  backdrop-filter: blur(3px);
+}
+
+.rank-journey__detail {
+  position: relative;
+  z-index: 1;
+  width: min(360px, 100%);
+  margin-top: 0;
+  padding: 24px 18px 18px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #ffffff, #f3f5fc);
+  box-shadow: 0 22px 55px rgba(8, 14, 38, 0.36);
+  text-align: center;
+}
+
+.rank-journey__detail-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(16, 24, 56, 0.07);
+  color: #1b2348;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.rank-journey__detail .rank-badge {
+  margin: 4px auto 14px;
+}
+
+.rank-journey__detail-head {
+  align-items: center;
+}

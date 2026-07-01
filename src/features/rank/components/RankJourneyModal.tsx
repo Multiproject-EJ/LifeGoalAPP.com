@@ -29,8 +29,8 @@ function rankLevelRangeLabel(rank: RankDefinition): string {
 
 export function RankJourneyModal({ level, progress, onClose }: RankJourneyModalProps) {
   const current = progress.current;
-  const [selectedId, setSelectedId] = useState<number>(current.id);
-  const selected = getRankById(selectedId) ?? current;
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const selected = selectedId ? getRankById(selectedId) : null;
 
   const heroLine = progress.next
     ? `${progress.xpRemaining.toLocaleString()} XP to ${progress.next.title}`
@@ -82,18 +82,54 @@ export function RankJourneyModal({ level, progress, onClose }: RankJourneyModalP
           })}
         </ul>
 
-        <section className="rank-journey__detail" aria-live="polite">
-          <div className="rank-journey__detail-head">
-            <h3 className="rank-journey__detail-title">{selected.title}</h3>
-            <span className="rank-journey__detail-range">{rankLevelRangeLabel(selected)}</span>
+        <div className="rank-journey__nextrank">
+          <RankBadge rank={progress.next ?? current} size={36} locked={Boolean(progress.next)} />
+          <div className="rank-journey__nextrank-text">
+            <span className="rank-journey__nextrank-eyebrow">{progress.next ? 'Next Rank' : 'Top Rank'}</span>
+            <span className="rank-journey__nextrank-title">{progress.next ? progress.next.title : current.title}</span>
           </div>
-          {selected.insignia === 'stars' && selected.stars ? (
-            <p className="rank-journey__detail-stars" aria-label={`${selected.stars} stars`}>
-              {'★'.repeat(selected.stars)}
-            </p>
-          ) : null}
-          <p className="rank-journey__detail-desc">{selected.description}</p>
-        </section>
+          <div className="rank-journey__nextrank-bar-wrap">
+            <span className="rank-journey__nextrank-xp">
+              {progress.next
+                ? `${progress.xpIntoRank.toLocaleString()} / ${progress.xpForRank.toLocaleString()} XP`
+                : 'Max rank reached'}
+            </span>
+            <span className="rank-journey__nextrank-bar" aria-hidden="true">
+              <span
+                className="rank-journey__nextrank-fill"
+                style={{ width: `${progress.percent}%` }}
+              />
+            </span>
+          </div>
+          <span className="rank-journey__nextrank-percent">{progress.percent}%</span>
+        </div>
+
+        {selected ? (
+          <div className="rank-journey__detail-modal" role="dialog" aria-modal="true" aria-label={`${selected.title} rank details`}>
+            <div className="rank-journey__detail-backdrop" onClick={() => setSelectedId(null)} role="presentation" />
+            <section className="rank-journey__detail" aria-live="polite">
+              <button
+                type="button"
+                className="rank-journey__detail-close"
+                aria-label="Close rank details"
+                onClick={() => setSelectedId(null)}
+              >
+                ×
+              </button>
+              <RankBadge rank={selected} size={150} locked={selected.minLevel > level} />
+              <div className="rank-journey__detail-head">
+                <h3 className="rank-journey__detail-title">{selected.title}</h3>
+                <span className="rank-journey__detail-range">{rankLevelRangeLabel(selected)}</span>
+              </div>
+              {selected.insignia === 'stars' && selected.stars ? (
+                <p className="rank-journey__detail-stars" aria-label={`${selected.stars} stars`}>
+                  {'★'.repeat(selected.stars)}
+                </p>
+              ) : null}
+              <p className="rank-journey__detail-desc">{selected.description}</p>
+            </section>
+          </div>
+        ) : null}
       </div>
     </div>
   );
