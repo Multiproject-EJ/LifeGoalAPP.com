@@ -82,6 +82,11 @@ export interface BoardStageProps {
   /** Token state — the index on the board */
   tokenIndex: number;
 
+  /** Visible island caretaker affordance displayed on the board. */
+  caretakerArtSrc?: string;
+  caretakerLabel?: string;
+  onCaretakerClick?: () => void;
+
   /**
    * When provided, the token animates through this full sequence of tile
    * indices one hop at a time (Monopoly GO style).  The parent sets this to
@@ -144,6 +149,9 @@ export function BoardStage(props: BoardStageProps) {
     completedEncounterIndices,
     visibleTechnologyFragments,
     tokenIndex,
+    caretakerArtSrc,
+    caretakerLabel = 'Island caretaker',
+    onCaretakerClick,
     orbitStopVisuals,
     activeStopId,
     getOrbitStopDisplayIcon,
@@ -655,6 +663,18 @@ export function BoardStage(props: BoardStageProps) {
           />
         )}
       </div>
+      {caretakerArtSrc ? (
+        <button
+          type="button"
+          className="island-run-board__caretaker"
+          onClick={onCaretakerClick}
+          aria-label={`Talk to ${caretakerLabel}`}
+        >
+          <span className="island-run-board__caretaker-glow" aria-hidden="true" />
+          <img className="island-run-board__caretaker-img" src={caretakerArtSrc} alt="" loading="lazy" decoding="async" />
+          <span className="island-run-board__caretaker-label">Caretaker</span>
+        </button>
+      ) : null}
       {/* 3D Dice — screen-clamped near the token so rolls never leave the viewport. */}
       <BoardDice3D
         value1={diceFaces[0]}

@@ -10,8 +10,8 @@ export const island001InhabitantDefinitions = [
     civilizationName: 'The Lumin',
     archetype: 'servant_wizard',
     biome: 'woodland',
-    premiumArtSrc: '/assets/islands/island-001/inhabitants/luma-caretaker-full.webp',
-    retroSpriteSrc: '/assets/islands/island-001/inhabitants/luma-caretaker-retro.png',
+    premiumArtSrc: '/assets/island_caretakers/001/IMG_retro_green.webp',
+    retroSpriteSrc: '/assets/island_caretakers/001/IMG_retro_green.webp',
     defaultTopicIds: ['i001-topic-next-step', 'i001-topic-luma-isle', 'i001-topic-caretaker'],
   },
 ] satisfies IslandInhabitantDefinition[];

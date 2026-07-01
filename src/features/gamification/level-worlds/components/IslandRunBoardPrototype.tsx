@@ -11046,6 +11046,9 @@ export function IslandRunBoardPrototype({
           completedEncounterIndices={completedEncounterIndices}
           visibleTechnologyFragments={visibleTechnologyFragments}
           tokenIndex={tokenIndex}
+          caretakerArtSrc={caretakerInhabitant?.retroSpriteSrc ?? '/assets/island_caretakers/001/IMG_retro_green.webp'}
+          caretakerLabel={caretakerInhabitant?.displayName ?? 'Island caretaker'}
+          onCaretakerClick={() => openCaretakerFlow('caretaker_tile_pass')}
           orbitStopVisuals={orbitStopVisuals}
           activeStopId={activeStopId}
           getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
