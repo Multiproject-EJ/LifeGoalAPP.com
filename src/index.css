@@ -36791,3 +36791,59 @@ body.habit-wizard-open .mobile-footer-nav {
     right: clamp(0.54rem, 3vw, 0.74rem);
   }
 }
+
+/* Expanded habit focus layer: keep the open card above nearby habits and keep
+   long detail content inside the visible Today viewport instead of under the nav. */
+.mobile-habit-home .habit-checklist--has-expanded-habit {
+  position: relative;
+  isolation: isolate;
+}
+
+.mobile-habit-home .habit-checklist--has-expanded-habit::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.mobile-habit-home .habit-checklist--has-expanded-habit .habit-checklist__item {
+  transition: filter 180ms ease, opacity 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.mobile-habit-home .habit-checklist--has-expanded-habit .habit-checklist__item:not(.habit-checklist__item--expanded) {
+  filter: blur(1.4px) saturate(0.72);
+  opacity: 0.52;
+}
+
+.mobile-habit-home .habit-checklist__item--expanded {
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+  transform: translateZ(0);
+  box-shadow: 0 22px 56px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(99, 102, 241, 0.14);
+}
+
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__swipe-frame {
+  overflow: visible;
+}
+
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__details-panel--open {
+  max-height: min(72vh, 46rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 0.2rem;
+  scroll-padding-bottom: 1rem;
+}
+
+@supports selector(.habit-checklist-card__board-body:has(.habit-checklist__item--expanded)) {
+  .mobile-habit-home .habit-checklist-card__board-body:has(.habit-checklist__item--expanded) > :not(.habit-checklist) {
+    filter: blur(1.2px) saturate(0.76);
+    opacity: 0.58;
+    transition: filter 180ms ease, opacity 180ms ease;
+  }
+}
