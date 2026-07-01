@@ -7498,7 +7498,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {visibleHabits.length === 0 && completedHabits.length > 0 ? (
           <p className="habit-checklist__empty">All habits checked off for today.</p>
         ) : null}
-        <ul className="habit-checklist" role="list">
+        <ul
+          className={`habit-checklist ${Object.values(expandedHabits).some(Boolean) ? 'habit-checklist--has-expanded-habit' : ''}`}
+          role="list"
+        >
           {activeTodos.map((todo, todoIndex) => {
             const isExpanded = Boolean(expandedTodayTodoById[todo.id]);
             const isJustCompletedTodo = justCompletedTodoId === todo.id;
@@ -7831,7 +7834,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   isCompleted ? 'habit-checklist__item--completed' : ''
                 } ${isJustCompleted ? `habit-item--just-completed ${feedbackClassName}` : ''} ${
                   isOfferHabit ? 'habit-checklist__item--offer' : ''
-                } ${isQuestHabit ? 'habit-checklist__item--quest' : ''}`}
+                } ${isQuestHabit ? 'habit-checklist__item--quest' : ''} ${isExpanded ? 'habit-checklist__item--expanded' : ''}`}
               >
                 <div
                   className="habit-checklist__swipe-frame"
