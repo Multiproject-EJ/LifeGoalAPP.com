@@ -97,6 +97,9 @@ export interface BoardTileProps {
   isEncounter: boolean;
   isEncounterCompleted: boolean;
   isTokenCurrent: boolean;
+  /** True for the tiles adjacent to the token's tile — plays a small delayed
+   *  ripple bounce when the token lands so the landing feels physical. */
+  isLandingNeighbor?: boolean;
   isUpcoming: boolean;
   isSpark40: boolean;
   /** True when this is the traffic-light tile and its green lights are lit.
@@ -123,6 +126,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isEncounter,
     isEncounterCompleted,
     isTokenCurrent,
+    isLandingNeighbor = false,
     isUpcoming,
     isSpark40,
     isTrafficLightGreen = false,
@@ -134,13 +138,6 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
 
   const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
   const doorStopClass = tileType === 'landmark_door' && doorStopId ? `island-tile--door-${doorStopId}` : '';
-  // Clip-path dimensions derived from ring geometry:
-  //   N=40 tiles, radius=340, tile height=58 (half=29), sin(π/40)≈0.07846
-  //   outer arc chord = 2×369×sin(π/40) ≈ 57.9px → box width = 58px → ±29px
-  //   inner arc chord = 2×311×sin(π/40) ≈ 48.8px → top clip ±24.5px
-  const wedgeClipPath = isSpark40
-    ? 'polygon(calc(50% - 24.5px) 0%, calc(50% + 24.5px) 0%, calc(50% + 29px) 100%, calc(50% - 29px) 100%)'
-    : undefined;
 
   // Choose icon
   let iconContent: JSX.Element | string;
@@ -175,6 +172,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         doorStopClass,
         isActiveDoorCluster ? 'island-tile--active-door-cluster' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
+        isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
         !isMinimalBoardArt ? 'island-tile--alive' : '',
         technologyFragment ? 'island-tile--technology-fragment' : '',
@@ -190,10 +188,32 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         ['--tile-render-scale' as string]: (anchor.scale * uniformScale).toFixed(4),
         ...(technologyFragment ? { ['--fragment-slot' as string]: String(technologyFragment.fragmentSlot), ['--fragment-animation-delay' as string]: `${technologyFragment.fragmentSlot * -0.11}s` } : {}),
         transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${(anchor.scale * uniformScale).toFixed(4)})`,
-        ...(isSpark40 ? { width: '58px', height: '58px', clipPath: wedgeClipPath } : {}),
       }}
     >
-      {!isMinimalBoardArt && <span className="island-tile__shine" aria-hidden="true" />}
+      {/* Ground contact shadow — sits on the board plane below the raised tile. */}
+      <span className="island-tile__shadow" aria-hidden="true" />
+
+      {/* Extruded side face — the tile's physical thickness. */}
+      <span className="island-tile__side" aria-hidden="true" />
+
+      {/* Top face — carries the tile material, border, and clipped content. */}
+      <span className="island-tile__face">
+        {!isMinimalBoardArt && <span className="island-tile__shine" aria-hidden="true" />}
+
+        <span className="island-tile__value">
+          {iconContent}
+        </span>
+
+        {/* Completed overlay */}
+        {isEncounterCompleted && (
+          <span className="island-tile__completed-badge" aria-hidden="true">✓</span>
+        )}
+
+        {/* Tile number badge */}
+        <span className="island-tile__badge" aria-hidden="true">{index + 1}</span>
+
+        {showDebug && <small className="island-tile__anchor-id">{anchor.id}</small>}
+      </span>
 
       {technologyFragment && (
         <span
@@ -206,20 +226,6 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
           <span className="island-tile__popout-emoji" aria-hidden="true">{technologyFragment.placeholder}</span>
         </span>
       )}
-
-      <span className="island-tile__value">
-        {iconContent}
-      </span>
-
-      {/* Tile number badge */}
-      <span className="island-tile__badge" aria-hidden="true">{index + 1}</span>
-
-      {/* Completed overlay */}
-      {isEncounterCompleted && (
-        <span className="island-tile__completed-badge" aria-hidden="true">✓</span>
-      )}
-
-      {showDebug && <small className="island-tile__anchor-id">{anchor.id}</small>}
     </div>
   );
 });

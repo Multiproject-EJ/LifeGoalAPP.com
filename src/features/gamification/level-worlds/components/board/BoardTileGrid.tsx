@@ -67,6 +67,13 @@ export function BoardTileGrid(props: BoardTileGridProps) {
     return set;
   }, [tokenIndex, anchors.length]);
 
+  // Tiles adjacent to the token — they get a small delayed ripple bounce on landing.
+  const neighborSet = useMemo(() => {
+    const count = anchors.length;
+    if (count === 0) return new Set<number>();
+    return new Set<number>([(tokenIndex + 1) % count, (tokenIndex - 1 + count) % count]);
+  }, [tokenIndex, anchors.length]);
+
   return (
     <div className="island-run-board__tiles">
       {trafficLightTile && (
@@ -126,6 +133,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
             isEncounter={isEncounter}
             isEncounterCompleted={isEncounterCompleted}
             isTokenCurrent={index === tokenIndex}
+            isLandingNeighbor={neighborSet.has(index)}
             isUpcoming={upcomingSet.has(index)}
             isSpark40={isSpark40}
             isTrafficLightGreen={tileType === 'traffic_light' && trafficLightGreenOn}

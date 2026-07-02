@@ -3783,10 +3783,56 @@
   cursor: default;
 }
 
+/* ── 3D tile anatomy ─────────────────────────────────────────────────────────
+   Each tile is three stacked layers inside a positioning root:
+     __shadow — soft contact shadow on the board plane (sells "raised off board")
+     __side   — the extruded thickness band, same silhouette offset down
+     __face   — the top surface: material, border, clipped content
+   The single scene light comes from the upper-left: speculars sit at ~32%/22%,
+   bevel highlights on top edges, occlusion shading on bottom edges, and the
+   contact shadow falls straight down with a slight southward bias. */
 .island-tile {
   position: absolute;
   width: 52px;
   height: 52px;
+  --tile-thickness: 5px;
+  color: #261605;
+  font-weight: 850;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.62);
+  /* Smooth state changes on the whole unit (completed-encounter mute, …) */
+  transition: filter 300ms ease;
+}
+
+.island-tile__shadow {
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  width: 116%;
+  height: 62%;
+  transform: translateX(-50%);
+  transform-origin: 50% 40%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(22, 12, 3, 0.44) 0%, rgba(22, 12, 3, 0.26) 52%, rgba(22, 12, 3, 0) 74%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.island-tile__side {
+  position: absolute;
+  inset: 0;
+  transform: translateY(var(--tile-thickness));
+  border-radius: 50%;
+  /* Earthen stone edge — darker than any face material so the band reads as
+     an occluded vertical surface under the top-left key light. */
+  background: linear-gradient(180deg, #9a6a2d 0%, #6e4517 48%, #45280b 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.island-tile__face {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
   border-radius: 50%;
   background:
     radial-gradient(circle at 32% 20%, rgba(255, 255, 250, 0.72) 0%, rgba(255, 255, 255, 0) 44%),
@@ -3794,8 +3840,6 @@
     radial-gradient(circle at 30% 24%, rgba(255, 246, 212, 0.98), rgba(226, 172, 94, 0.98) 62%, rgba(188, 133, 62, 0.96));
   border: 2px solid rgba(255, 248, 214, 0.95);
   box-shadow:
-    0 8px 18px rgba(10, 8, 4, 0.36),
-    0 2px 5px rgba(10, 8, 4, 0.24),
     inset 0 2px 1px rgba(255, 255, 255, 0.62),
     inset 0 -3px 6px rgba(94, 54, 12, 0.28),
     inset 0 0 12px rgba(255, 222, 148, 0.26);
@@ -3803,17 +3847,34 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #261605;
-  font-weight: 850;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.62);
   /* Smooth state changes (upcoming glow, current highlight, door pulses…) */
   transition: box-shadow 300ms ease, filter 300ms ease, border-color 300ms ease;
+}
+
+/* Uniform bevel under the single scene light — bright milled top edge, shaded
+   bottom edge — applied above every face material (including the tile-type
+   backgrounds that override the base box-shadow). */
+.island-tile__face::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.5),
+    inset 1px 0 1px rgba(255, 255, 255, 0.18),
+    inset 0 -2.5px 3px rgba(30, 16, 4, 0.34),
+    inset -1px 0 1px rgba(30, 16, 4, 0.12);
+  pointer-events: none;
 }
 
 .island-run-board--spark40 .island-tile {
   /* Width = outer arc chord: 2×369×sin(π/40) ≈ 58px for a 40-tile ring at r=340 */
   width: 58px;
   height: 58px;
+}
+
+.island-run-board--spark40 .island-tile__face,
+.island-run-board--spark40 .island-tile__side {
   border-radius: 6px 6px 10px 10px;
   /* Wedge clip-path: top ±24.5px (inner arc ≈49px), bottom ±29px (outer arc ≈58px) */
   clip-path: polygon(calc(50% - 24.5px) 0%, calc(50% + 24.5px) 0%, calc(50% + 29px) 100%, calc(50% - 29px) 100%);
@@ -3842,6 +3903,9 @@
 }
 
 .island-tile--stop {
+  z-index: 8 !important;
+}
+.island-tile--stop .island-tile__face {
   /* Stop = a cyan beacon echoing the island's glowing portals (distinct from
      the gold reward tiles so landing spots are instantly recognisable). */
   background:
@@ -3849,21 +3913,14 @@
     linear-gradient(160deg, var(--tile-stop-light) 0%, var(--tile-stop-mid) 48%, var(--tile-stop-deep) 100%);
   border: 2.5px solid var(--tile-stop-border);
   box-shadow: 0 0 14px var(--tile-stop-glow), 0 0 28px var(--tile-stop-glow);
-  z-index: 8 !important;
-  animation: island-tile-stop-pulse 2s ease-in-out infinite, island-tile-idle 3.5s ease-in-out infinite;
-  animation-delay: 0s, calc(var(--tile-index, 0) * 0.06s);
+  animation: island-tile-stop-pulse 2s ease-in-out infinite;
 }
-.island-tile--encounter {
-  animation: island-tile-encounter-flicker 2.4s ease-in-out infinite, island-tile-idle 3.5s ease-in-out infinite;
+.island-tile--stop .island-tile__side {
+  background: var(--tile-stop-deep);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tile-stop-deep) 72%, #000) 0%, color-mix(in srgb, var(--tile-stop-deep) 40%, #000) 100%);
 }
-
-.island-tile--token-current {
-  box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(100, 220, 255, 0.9), 0 0 18px rgba(100, 220, 255, 0.7) !important;
-  /* One-shot squash-and-pop when the token lands, then settle into the pulse. */
-  animation:
-    island-tile-current-pulse 1.2s ease-in-out 0.55s infinite,
-    island-tile-landing-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-  z-index: 9 !important;
+.island-tile--encounter .island-tile__face {
+  animation: island-tile-encounter-flicker 2.4s ease-in-out infinite;
 }
 
 .island-token {
@@ -3878,11 +3935,29 @@
   contain: layout style;
 }
 
-/* Styled CSS spaceship token */
+/* Detached ground-shadow blob — inline style drives translateY(elevation) +
+   scale/opacity so the shadow stays planted on the board while the ship arcs
+   overhead, then snaps back underneath on landing. */
+.island-token__shadow {
+  position: absolute;
+  left: 50%;
+  top: 76%;
+  width: 26px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(10, 6, 2, 0.55) 0%, rgba(10, 6, 2, 0.3) 52%, rgba(10, 6, 2, 0) 74%);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Styled CSS spaceship token — squash/stretch applies here (origin at the
+   feet) so it composes with the root's position/z-band styling. */
 .island-token__ship {
   position: relative;
   width: 100%;
   height: 100%;
+  transform-origin: 50% 88%;
+  will-change: transform;
 }
 
 .island-token__ship-body {
@@ -3930,15 +4005,6 @@
   background: radial-gradient(circle, #e0f8ff 30%, #80d0ff 100%);
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.6);
-}
-
-.island-token--moving {
-  animation: island-token-bob 220ms ease-in-out infinite alternate;
-}
-
-@keyframes island-token-bob {
-  from { translate: -50% -54%; transform: scale(1); }
-  to { translate: -50% -46%; transform: scale(1.07); }
 }
 
 /* Z-band depth tiers — use CSS 'scale' individual property so squash/stretch
@@ -5438,65 +5504,80 @@
    (--tile-spec) and a gold-leaning border, so the board reads as a cohesive
    set of jewels rather than a clash of hues. Only the colour family changes.
    See the BOARD TILE COLOR SYSTEM token block at the top of this file. */
-.island-tile--currency {
+.island-tile--currency .island-tile__face {
   background:
     radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
     linear-gradient(160deg, var(--tile-currency-light) 0%, var(--tile-currency-mid) 52%, var(--tile-currency-deep) 100%);
   border: 1.5px solid var(--tile-currency-border);
 }
-.island-tile--chest {
+.island-tile--chest .island-tile__face {
   background:
     radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
     linear-gradient(160deg, var(--tile-chest-light) 0%, var(--tile-chest-mid) 52%, var(--tile-chest-deep) 100%);
   border: 1.5px solid var(--tile-chest-border);
 }
-.island-tile--event {
+.island-tile--event .island-tile__face {
   background:
     radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
     linear-gradient(160deg, var(--tile-event-light) 0%, var(--tile-event-mid) 52%, var(--tile-event-deep) 100%);
   border: 1.5px solid var(--tile-event-border);
 }
-.island-tile--hazard {
+.island-tile--hazard .island-tile__face {
   background:
     radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
     linear-gradient(160deg, var(--tile-hazard-light) 0%, var(--tile-hazard-mid) 52%, var(--tile-hazard-deep) 100%);
   border: 1.5px solid var(--tile-hazard-border);
   box-shadow: 0 0 8px var(--tile-hazard-glow);
 }
-.island-tile--egg_shard {
+.island-tile--hazard .island-tile__side {
+  background: var(--tile-hazard-deep);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tile-hazard-deep) 70%, #000) 0%, color-mix(in srgb, var(--tile-hazard-deep) 40%, #000) 100%);
+}
+.island-tile--egg_shard .island-tile__face {
   background:
     radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
     linear-gradient(160deg, var(--tile-egg_shard-light) 0%, var(--tile-egg_shard-mid) 52%, var(--tile-egg_shard-deep) 100%);
   border: 1.5px solid var(--tile-egg_shard-border);
 }
-.island-tile--micro {
+.island-tile--micro .island-tile__face {
   background:
     radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
     linear-gradient(160deg, var(--tile-micro-light) 0%, var(--tile-micro-mid) 52%, var(--tile-micro-deep) 100%);
   border: 1.5px solid var(--tile-micro-border);
 }
-.island-tile--encounter {
+.island-tile--encounter .island-tile__face {
   background:
     radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
     linear-gradient(160deg, var(--tile-encounter-light) 0%, var(--tile-encounter-mid) 52%, var(--tile-encounter-deep) 100%);
   border: 1.5px solid var(--tile-encounter-border);
   box-shadow: 0 0 10px var(--tile-encounter-glow);
 }
-.island-tile--landmark_door {
+.island-tile--landmark_door .island-tile__face {
   background:
     radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
     linear-gradient(160deg, var(--tile-door-light) 0%, var(--tile-door-mid) 52%, var(--tile-door-deep) 100%);
   border: 1.5px solid var(--tile-door-border);
   box-shadow: 0 0 12px var(--tile-door-glow), 0 0 22px var(--tile-door-glow);
 }
-.island-tile--door-boss {
+.island-tile--landmark_door .island-tile__side {
+  background: var(--tile-door-deep);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tile-door-deep) 70%, #000) 0%, color-mix(in srgb, var(--tile-door-deep) 40%, #000) 100%);
+}
+.island-tile--door-boss .island-tile__face {
   background:
     radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
     linear-gradient(160deg, var(--tile-boss-light) 0%, var(--tile-boss-mid) 52%, var(--tile-boss-deep) 100%);
   border-color: var(--tile-boss-border);
   box-shadow: 0 0 14px var(--tile-boss-glow), 0 0 28px var(--tile-boss-glow);
 }
+.island-tile--door-boss .island-tile__side {
+  background: var(--tile-boss-deep);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tile-boss-deep) 70%, #000) 0%, color-mix(in srgb, var(--tile-boss-deep) 40%, #000) 100%);
+}
 .island-tile--active-door-cluster {
+  z-index: 8;
+}
+.island-tile--active-door-cluster .island-tile__face {
   background: linear-gradient(160deg, #dcfce7 0%, #86efac 44%, #16a34a 100%);
   border-color: rgba(187, 247, 208, 0.98);
   box-shadow:
@@ -5504,7 +5585,9 @@
     0 0 18px rgba(34, 197, 94, 0.95),
     0 0 36px rgba(22, 163, 74, 0.62);
   animation: island-tile-active-door-glow 1.4s ease-in-out infinite;
-  z-index: 8;
+}
+.island-tile--active-door-cluster .island-tile__side {
+  background: linear-gradient(180deg, #14532d 0%, #052e16 100%);
 }
 
 
@@ -5653,6 +5736,9 @@
 
 .island-tile--encounter-completed {
   filter: saturate(0.3) brightness(0.8) !important;
+  animation: none !important;
+}
+.island-tile--encounter-completed .island-tile__face {
   animation: none !important;
 }
 
@@ -8168,19 +8254,21 @@
 }
 
 /* Upcoming tiles — subtle glow to show where token will land */
-.island-tile--upcoming {
+.island-tile--upcoming .island-tile__face {
   box-shadow: 0 0 0 2px rgba(180, 240, 255, 0.7), 0 0 12px rgba(100, 200, 255, 0.5) !important;
 }
 
-/* Soft expanding ping on upcoming tiles — pseudo-element so it never fights
-   the tile's own transform-driven idle/enter animations. */
+/* Soft expanding ping on upcoming tiles — pseudo-element on the (unclipped)
+   root so it never fights the tile's own transform-driven idle/enter
+   animations and can ring outside the wedge silhouette. */
 .island-tile--upcoming::before {
   content: '';
   position: absolute;
   inset: -2px;
-  border-radius: inherit;
+  border-radius: 12px;
   border: 2px solid rgba(160, 235, 255, 0.85);
   pointer-events: none;
+  z-index: 3;
   animation: island-tile-upcoming-ping 1.7s ease-out infinite;
   animation-delay: calc(var(--tile-index, 0) * 0.12s);
 }
@@ -8240,7 +8328,11 @@
   }
   .island-tile--alive,
   .island-tile--active-door-cluster,
+  .island-tile--active-door-cluster .island-tile__face,
   .island-tile--token-current,
+  .island-tile--token-current .island-tile__face,
+  .island-tile--token-current .island-tile__shadow,
+  .island-tile--landing-neighbor .island-tile__face,
   .island-tile--upcoming::before,
   .island-tile__shine::after,
   .island-token__landing-ripple {
@@ -8249,13 +8341,6 @@
   .island-run-board__particles {
     display: none;
   }
-}
-
-/* Stop tiles on the 40-tile ring — same geometry as regular tiles; visual emphasis via color/glow */
-.island-run-board--spark40 .island-tile--stop {
-  width: 58px;
-  height: 58px;
-  clip-path: polygon(calc(50% - 24.5px) 0%, calc(50% + 24.5px) 0%, calc(50% + 29px) 100%, calc(50% - 29px) 100%);
 }
 
 @keyframes island-tile-stop-pulse {
@@ -8268,43 +8353,64 @@
   50%      { box-shadow: 0 0 0 3px #fff, 0 0 0 7px rgba(100, 220, 255, 1.0), 0 0 28px rgba(100, 220, 255, 0.9); }
 }
 
-/* One-shot squash-and-pop played when the token lands on a tile. Uses the
-   full transform stack (position vars + render scale) so it composes with the
-   tile's absolutely-positioned layout on both board profiles. */
-@keyframes island-tile-landing-pop {
-  0% {
-    transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-render-scale, var(--tile-scale, 1)) * 0.84));
-  }
-  45% {
-    transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-render-scale, var(--tile-scale, 1)) * 1.14));
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-render-scale, var(--tile-scale, 1)));
-  }
-}
-
 @keyframes island-tile-encounter-flicker {
   0%, 85%, 100% { box-shadow: 0 0 10px rgba(255, 107, 53, 0.6); }
   90%           { box-shadow: 0 0 20px rgba(255, 80, 20, 0.95), 0 0 35px rgba(255, 60, 0, 0.5); }
   95%           { box-shadow: 0 0 10px rgba(255, 107, 53, 0.5); }
 }
 
-/* Landmark-door tiles need a dedicated glow animation in addition to the
-   movement/idle animation. Keep the idle transform keyframes in the same
-   animation list so door tiles on the circular board keep bobbing while the
-   landmark entrance cue pulses. */
-.island-run-board--spark40 .island-tile--landmark_door.island-tile--alive {
-  animation:
-    island-tile-idle-spark40 3.5s ease-in-out infinite,
-    island-tile-landmark-door-pulse 1.65s ease-in-out infinite;
-  animation-delay: calc(var(--tile-index, 0) * 0.06s), calc(var(--tile-index, 0) * 0.045s);
+/* Landmark-door / active-cluster glow pulses live on the face layer so they
+   never fight the root's transform-driven idle/enter animations. */
+.island-tile--landmark_door .island-tile__face {
+  animation: island-tile-landmark-door-pulse 1.65s ease-in-out infinite;
+  animation-delay: calc(var(--tile-index, 0) * 0.045s);
 }
 
-.island-run-board--spark40 .island-tile--active-door-cluster.island-tile--alive {
+.island-tile--active-door-cluster .island-tile__face {
+  animation: island-tile-active-door-glow 1.25s ease-in-out infinite;
+}
+
+/* Neighbor ripple — the two tiles adjacent to the landing tile dip slightly
+   a beat after impact, as if the board carried the shock. */
+.island-tile--landing-neighbor .island-tile__face {
+  animation: island-tile-neighbor-ripple 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 90ms both;
+}
+
+@keyframes island-tile-neighbor-ripple {
+  0%, 100% { transform: translateY(0); }
+  40%      { transform: translateY(1.6px); }
+}
+
+/* ── Landing press — the tile physically depresses under the token ─────────
+   The face sinks toward the extruded side (the visible thickness band
+   shrinks) and the contact shadow tightens, then everything springs back.
+   Declared after the door/stop face pulses so the press wins on landing. */
+.island-tile--token-current {
+  z-index: 9 !important;
+}
+
+.island-tile--token-current .island-tile__face {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(100, 220, 255, 0.9), 0 0 18px rgba(100, 220, 255, 0.7) !important;
   animation:
-    island-tile-idle-spark40 3.5s ease-in-out infinite,
-    island-tile-active-door-glow 1.25s ease-in-out infinite;
-  animation-delay: calc(var(--tile-index, 0) * 0.06s), 0s;
+    island-tile-face-press 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    island-tile-current-pulse 1.2s ease-in-out 0.5s infinite !important;
+}
+
+.island-tile--token-current .island-tile__shadow {
+  animation: island-tile-shadow-press 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes island-tile-face-press {
+  0%   { transform: translateY(0); }
+  28%  { transform: translateY(calc(var(--tile-thickness, 5px) * 0.65)); }
+  70%  { transform: translateY(-0.8px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes island-tile-shadow-press {
+  0%   { transform: translateX(-50%) scale(1); opacity: 1; }
+  28%  { transform: translateX(-50%) scale(0.93); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
 }
 
 @keyframes island-tile-landmark-door-pulse {
@@ -9901,12 +10007,16 @@
 /* The traffic-light tile stays a neutral board tile (inherits the default
    .island-tile look) while only the red/yellow lights are active, and only
    turns green once the green lights come on — see .island-tile--traffic_light-green. */
-.island-tile--traffic_light-green {
+.island-tile--traffic_light-green .island-tile__face {
   background:
     radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
     linear-gradient(160deg, var(--tile-light-light) 0%, var(--tile-light-mid) 48%, var(--tile-light-deep) 100%);
   border: 1.5px solid var(--tile-light-border);
   box-shadow: 0 0 12px var(--tile-light-glow), 0 0 22px var(--tile-light-glow);
+}
+.island-tile--traffic_light-green .island-tile__side {
+  background: var(--tile-light-deep);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tile-light-deep) 70%, #000) 0%, color-mix(in srgb, var(--tile-light-deep) 40%, #000) 100%);
 }
 
 .island-tile-traffic-light-sign {
@@ -10752,12 +10862,16 @@
   --tile-card-glow: rgba(192, 132, 252, 0.58);
 }
 
-.island-tile--card {
+.island-tile--card .island-tile__face {
   background:
     radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
     linear-gradient(160deg, var(--tile-card-light) 0%, var(--tile-card-mid) 52%, var(--tile-card-deep) 100%);
   border: 1.5px solid var(--tile-card-border);
   box-shadow: 0 0 12px var(--tile-card-glow), 0 0 22px rgba(124, 58, 237, 0.34);
+}
+.island-tile--card .island-tile__side {
+  background: var(--tile-card-deep);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tile-card-deep) 70%, #000) 0%, color-mix(in srgb, var(--tile-card-deep) 40%, #000) 100%);
 }
 
 .island-tile__popout {
@@ -10834,7 +10948,7 @@
 }
 
 /* Gamified journal card draw: make the board station read as a large 3D card stack. */
-.island-tile--card {
+.island-tile--card .island-tile__face {
   box-shadow:
     0 0 0 3px rgba(250, 204, 21, 0.2),
     0 0 18px rgba(250, 204, 21, 0.7),
