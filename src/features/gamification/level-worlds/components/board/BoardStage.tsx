@@ -85,6 +85,12 @@ export interface BoardStageProps {
   /** Visible island caretaker affordance displayed on the board. */
   caretakerArtSrc?: string;
   caretakerLabel?: string;
+  /**
+   * Tile index the caretaker is anchored to. The caretaker sprite renders on
+   * the board plane at this tile (following camera pan/zoom) instead of
+   * floating in screen space. When null/undefined the caretaker is hidden.
+   */
+  caretakerTileIndex?: number | null;
   onCaretakerClick?: () => void;
 
   /**
@@ -151,6 +157,7 @@ export function BoardStage(props: BoardStageProps) {
     tokenIndex,
     caretakerArtSrc,
     caretakerLabel = 'Island caretaker',
+    caretakerTileIndex = null,
     onCaretakerClick,
     orbitStopVisuals,
     activeStopId,
@@ -514,6 +521,17 @@ export function BoardStage(props: BoardStageProps) {
     tokenAnim.animState.x,
     tokenAnim.animState.y,
   ]);
+  // Caretaker anchoring — resolve the caretaker's tile anchor to screen space
+  // so the sprite sits on its tile and moves with the board camera.
+  const caretakerAnchor = caretakerTileIndex !== null && caretakerTileIndex !== undefined
+    ? anchors[caretakerTileIndex]
+    : undefined;
+  const caretakerPlacement = useMemo(() => {
+    if (!caretakerAnchor) return null;
+    const pos = toScreen(caretakerAnchor);
+    return { x: pos.x, y: pos.y, scale: caretakerAnchor.scale * uniformScale };
+  }, [caretakerAnchor, toScreen, uniformScale]);
+
   const diceOverlayStyle = useMemo<CSSProperties>(() => ({
     position: 'absolute',
     left: diceOverlayPosition.x,
@@ -663,18 +681,6 @@ export function BoardStage(props: BoardStageProps) {
           />
         )}
       </div>
-      {caretakerArtSrc ? (
-        <button
-          type="button"
-          className="island-run-board__caretaker"
-          onClick={onCaretakerClick}
-          aria-label={`Talk to ${caretakerLabel}`}
-        >
-          <span className="island-run-board__caretaker-glow" aria-hidden="true" />
-          <img className="island-run-board__caretaker-img" src={caretakerArtSrc} alt="" loading="lazy" decoding="async" />
-          <span className="island-run-board__caretaker-label">Caretaker</span>
-        </button>
-      ) : null}
       {/* 3D Dice — screen-clamped near the token so rolls never leave the viewport. */}
       <BoardDice3D
         value1={diceFaces[0]}
@@ -710,6 +716,27 @@ export function BoardStage(props: BoardStageProps) {
           onStopClick={onStopClick}
           getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
         />
+        {/* Island caretaker — anchored to its home tile on the board plane.
+            Counter-tilted so the sprite stands upright like a standee while
+            its feet stay planted on the tile through camera pan/zoom. */}
+        {caretakerArtSrc && caretakerPlacement ? (
+          <button
+            type="button"
+            className="island-run-board__caretaker"
+            onClick={onCaretakerClick}
+            aria-label={`Talk to ${caretakerLabel}`}
+            style={{
+              left: caretakerPlacement.x,
+              top: caretakerPlacement.y,
+              ['--caretaker-scale' as string]: caretakerPlacement.scale.toFixed(4),
+              ['--caretaker-counter-tilt' as string]: `${-boardTiltXDeg}deg`,
+            }}
+          >
+            <span className="island-run-board__caretaker-glow" aria-hidden="true" />
+            <img className="island-run-board__caretaker-img" src={caretakerArtSrc} alt="" loading="lazy" decoding="async" />
+            <span className="island-run-board__caretaker-label">Caretaker</span>
+          </button>
+        ) : null}
       </div>
     </div>
   );

@@ -6030,12 +6030,14 @@ export function IslandRunBoardPrototype({
           }
         }
 
-        const didPassCaretakerTile = runtimeStateRef.current.currentIslandNumber === 1
-          && rollResult.hopSequence.includes(ISLAND_ONE_CARETAKER_TILE_INDEX);
-        if (didPassCaretakerTile) {
+        // Caretaker chat opens only when the player LANDS on the caretaker's
+        // home tile (the caretaker sprite is anchored there on the board).
+        const didLandOnCaretakerTile = runtimeStateRef.current.currentIslandNumber === 1
+          && currentIndex === ISLAND_ONE_CARETAKER_TILE_INDEX;
+        if (didLandOnCaretakerTile) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
-          openCaretakerFlow('caretaker_tile_pass');
+          openCaretakerFlow('caretaker_tile_land');
           return true;
         }
 
@@ -10220,14 +10222,16 @@ export function IslandRunBoardPrototype({
     [runtimeState],
   );
   const resolvedCaretakerBackgroundArtSrc = islandArtAmbientBackgroundSrc || islandBackgroundSrc;
-  const openCaretakerFlow = useCallback((source: 'caretaker_tile_pass' | 'dev_hud') => {
+  const openCaretakerFlow = useCallback((source: 'caretaker_tile_land' | 'caretaker_board_tap' | 'dev_hud') => {
     if (!shouldShowCaretakerTalkAction) return;
     setShowTopbarMenu(false);
     setShowAudioMenu(false);
     setIsIslandInhabitantFlowOpen(true);
-    setLandingText(source === 'caretaker_tile_pass'
-      ? '🧙 You passed the Caretaker. The island pauses to listen.'
-      : '🧙 Dev: opening the Island 1 Caretaker flow.');
+    setLandingText(source === 'caretaker_tile_land'
+      ? '🧙 You landed on the Caretaker\'s tile. The island pauses to listen.'
+      : source === 'caretaker_board_tap'
+        ? '🧙 The Caretaker waves you over for a chat.'
+        : '🧙 Dev: opening the Island 1 Caretaker flow.');
   }, [shouldShowCaretakerTalkAction]);
   const handleCaretakerFlowClose = (result: IslandInhabitantFlowResult) => {
     setIsIslandInhabitantFlowOpen(false);
@@ -11172,7 +11176,8 @@ export function IslandRunBoardPrototype({
           tokenIndex={tokenIndex}
           caretakerArtSrc={caretakerInhabitant?.retroSpriteSrc ?? '/assets/island_caretakers/001/IMG_retro_green.webp'}
           caretakerLabel={caretakerInhabitant?.displayName ?? 'Island caretaker'}
-          onCaretakerClick={() => openCaretakerFlow('caretaker_tile_pass')}
+          caretakerTileIndex={shouldShowCaretakerTalkAction ? ISLAND_ONE_CARETAKER_TILE_INDEX : null}
+          onCaretakerClick={() => openCaretakerFlow('caretaker_board_tap')}
           orbitStopVisuals={orbitStopVisuals}
           activeStopId={activeStopId}
           getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
