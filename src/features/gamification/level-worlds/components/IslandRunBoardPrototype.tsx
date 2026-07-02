@@ -514,6 +514,8 @@ const SPACE_EXCAVATOR_EVENT_ICON_SRC = '/assets/icons/Eventgame_excavator.webp';
 const TRAFFIC_LIGHT_MODAL_IMAGE_SRC = '/assets/traffic_light/Traffic_img.webp';
 const TRAFFIC_LIGHT_BOX_IMAGE_SRC = '/assets/traffic_light/IMG_box.webp';
 const TRAFFIC_LIGHT_GIFT_IMAGE_SRC = '/assets/traffic_light/IMG_gift.webp';
+const TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC = '/assets/traffic_light/IMG_boxcoin.webp';
+const TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC = '/assets/traffic_light/IMG_giftcoin.webp';
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Reward bar can award Space Excavator tickets';
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV = 'Reward bar can award Space Excavator tickets (DEV override tickets)';
 
@@ -12383,18 +12385,17 @@ export function IslandRunBoardPrototype({
       {trafficLightCoinFlip && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--traffic-light island-traffic-light--${trafficLightCoinFlip.phase}`} role="dialog" aria-modal="true" aria-label="Traffic light bonus coin flip">
-            <h3 className="island-stop-modal__title">🚦 Traffic Light Bonus</h3>
-            <div className="island-traffic-light__art-row" aria-hidden="true">
-              <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_BOX_IMAGE_SRC} alt="" loading="lazy" />
+            <div className="island-traffic-light__hero" aria-hidden="true">
               <img className="island-traffic-light__art island-traffic-light__art--signal" src={TRAFFIC_LIGHT_MODAL_IMAGE_SRC} alt="" loading="lazy" />
-              <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_GIFT_IMAGE_SRC} alt="" loading="lazy" />
             </div>
-
-            {trafficLightCoinFlip.phase !== 'revealed' && (
-              <p className="island-traffic-light__intro">
-                {trafficLightCoinFlip.phase === 'flipping' ? 'Flipping…' : 'Flip the coin for a mystery reward.'}
-              </p>
-            )}
+            <h3 className="island-stop-modal__title island-traffic-light__title">Traffic Light Bonus</h3>
+            <p className="island-traffic-light__intro">
+              {trafficLightCoinFlip.phase === 'flipping'
+                ? 'Flipping…'
+                : trafficLightCoinFlip.phase === 'revealed'
+                  ? 'Your mystery reward is ready.'
+                  : 'All 8 lights are green. Flip the coin to reveal your mystery box.'}
+            </p>
 
             <div className="island-coin-stage" aria-hidden="true">
               <span className="island-coin-stage__sparkles" />
@@ -12407,12 +12408,25 @@ export function IslandRunBoardPrototype({
               >
                 <div className="island-coin__inner">
                   <div className="island-coin__face island-coin__face--heads">
-                    <span className="island-coin__emblem">{trafficLightCoinFlip.phase === 'ready' ? '?' : '🎲'}</span>
+                    <img className="island-coin__image" src={TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC} alt="" loading="lazy" />
                   </div>
                   <div className="island-coin__face island-coin__face--tails">
-                    <span className="island-coin__emblem">🟣</span>
+                    <img className="island-coin__image" src={TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC} alt="" loading="lazy" />
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="island-traffic-light__prizes" aria-label="Mystery box options">
+              <div className={`island-traffic-light__prize-card ${trafficLightCoinFlip.reward?.boxId === 'box_1' ? 'island-traffic-light__prize-card--selected' : ''}`.trim()}>
+                <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_BOX_IMAGE_SRC} alt="" loading="lazy" />
+                <span className="island-traffic-light__prize-title">Mystery Box 1</span>
+                <span className="island-traffic-light__prize-focus">Dice Focus</span>
+              </div>
+              <div className={`island-traffic-light__prize-card island-traffic-light__prize-card--gift ${trafficLightCoinFlip.reward?.boxId === 'box_2' ? 'island-traffic-light__prize-card--selected' : ''}`.trim()}>
+                <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_GIFT_IMAGE_SRC} alt="" loading="lazy" />
+                <span className="island-traffic-light__prize-title">Mystery Box 2</span>
+                <span className="island-traffic-light__prize-focus">Essence Focus</span>
               </div>
             </div>
 
