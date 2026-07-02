@@ -11,9 +11,11 @@ export const islandInhabitantBoardIntegrationTests: TestCase[] = [
   { name: 'board integrates Island 1 Caretaker as an automatic top-ring tile encounter and dev-only manual action', run: () => {
     includes('runtimeState.currentIslandNumber === 1');
     includes('const ISLAND_ONE_CARETAKER_TILE_INDEX = 0;');
-    includes('rollResult.hopSequence.includes(ISLAND_ONE_CARETAKER_TILE_INDEX)');
-    includes("openCaretakerFlow('caretaker_tile_pass')");
+    includes('currentIndex === ISLAND_ONE_CARETAKER_TILE_INDEX');
+    includes("openCaretakerFlow('caretaker_tile_land')");
+    includes("openCaretakerFlow('caretaker_board_tap')");
     includes("openCaretakerFlow('dev_hud')");
+    includes('caretakerTileIndex={shouldShowCaretakerTalkAction ? ISLAND_ONE_CARETAKER_TILE_INDEX : null}');
     includes('🧙 Talk to Caretaker');
     notIncludes('island-run-board__topbar-menu-item--caretaker');
   } },

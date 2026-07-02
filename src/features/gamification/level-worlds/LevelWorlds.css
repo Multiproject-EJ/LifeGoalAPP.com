@@ -3789,15 +3789,16 @@
   height: 52px;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 32% 22%, rgba(255, 255, 248, 0.55) 0%, rgba(255, 255, 255, 0) 48%),
-    radial-gradient(circle at 30% 24%, rgba(255, 243, 202, 0.98), rgba(198, 145, 76, 0.95));
-  border: 2px solid rgba(255, 247, 208, 0.95);
+    radial-gradient(circle at 32% 20%, rgba(255, 255, 250, 0.72) 0%, rgba(255, 255, 255, 0) 44%),
+    radial-gradient(circle at 68% 88%, rgba(139, 87, 32, 0.5) 0%, rgba(139, 87, 32, 0) 52%),
+    radial-gradient(circle at 30% 24%, rgba(255, 246, 212, 0.98), rgba(226, 172, 94, 0.98) 62%, rgba(188, 133, 62, 0.96));
+  border: 2px solid rgba(255, 248, 214, 0.95);
   box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.34),
-    0 2px 4px rgba(0, 0, 0, 0.22),
-    inset 0 2px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.18),
-    inset 0 0 10px rgba(255, 220, 140, 0.22);
+    0 8px 18px rgba(10, 8, 4, 0.36),
+    0 2px 5px rgba(10, 8, 4, 0.24),
+    inset 0 2px 1px rgba(255, 255, 255, 0.62),
+    inset 0 -3px 6px rgba(94, 54, 12, 0.28),
+    inset 0 0 12px rgba(255, 222, 148, 0.26);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3805,6 +3806,8 @@
   color: #261605;
   font-weight: 850;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.62);
+  /* Smooth state changes (upcoming glow, current highlight, door pulses…) */
+  transition: box-shadow 300ms ease, filter 300ms ease, border-color 300ms ease;
 }
 
 .island-run-board--spark40 .island-tile {
@@ -3827,6 +3830,7 @@
   line-height: 1;
   color: #1f1205;
   text-shadow: 0 1px 0 rgba(255, 248, 222, 0.88), 0 0 1px rgba(0, 0, 0, 0.22);
+  filter: drop-shadow(0 1.5px 1.5px rgba(52, 28, 4, 0.35));
 }
 
 .island-tile__anchor-id {
@@ -3855,7 +3859,10 @@
 
 .island-tile--token-current {
   box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(100, 220, 255, 0.9), 0 0 18px rgba(100, 220, 255, 0.7) !important;
-  animation: island-tile-current-pulse 1.2s ease-in-out infinite !important;
+  /* One-shot squash-and-pop when the token lands, then settle into the pulse. */
+  animation:
+    island-tile-current-pulse 1.2s ease-in-out 0.55s infinite,
+    island-tile-landing-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
   z-index: 9 !important;
 }
 
@@ -3967,7 +3974,9 @@
   width: 100vw;
   min-height: 100vh;
   min-height: 100dvh;
-  background: rgba(0, 0, 0, 0.52);
+  /* Vignette: darker at the edges so the modal card pops in the center. */
+  background:
+    radial-gradient(120% 100% at 50% 42%, rgba(4, 14, 26, 0.38) 0%, rgba(1, 5, 11, 0.68) 100%);
   display: grid;
   place-items: center;
   padding:
@@ -3976,7 +3985,9 @@
     max(1rem, calc(env(safe-area-inset-bottom, 0px) + 0.5rem))
     max(1rem, calc(env(safe-area-inset-left, 0px) + 0.5rem));
   box-sizing: border-box;
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(7px) saturate(1.12);
+  -webkit-backdrop-filter: blur(7px) saturate(1.12);
+  animation: island-stop-modal-backdrop-in 240ms ease-out;
   /* Allow the backdrop itself to scroll as a last-resort fallback when the
      modal content is taller than the viewport (e.g. small landscape phones).
      Dynamic viewport units keep iOS standalone/browser chrome transitions from
@@ -3986,14 +3997,23 @@
 }
 
 .island-stop-modal {
+  position: relative;
   width: min(430px, 100%);
-  border-radius: 18px;
-  padding: 1rem;
+  border-radius: 22px;
+  padding: 1.05rem;
   display: grid;
   gap: 0.58rem;
-  background: linear-gradient(180deg, rgba(20, 36, 49, 0.98), rgba(9, 18, 27, 0.97));
-  border: 1px solid rgba(163, 231, 255, 0.58);
-  box-shadow: 0 22px 56px rgba(0, 0, 0, 0.46);
+  background:
+    radial-gradient(130% 70% at 50% 0%, rgba(78, 168, 208, 0.22), transparent 56%),
+    linear-gradient(180deg, rgba(23, 42, 58, 0.99), rgba(8, 16, 25, 0.98));
+  border: 1px solid rgba(163, 231, 255, 0.5);
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.52),
+    0 8px 22px rgba(0, 0, 0, 0.36),
+    0 0 34px rgba(88, 196, 240, 0.14),
+    inset 0 1px 0 rgba(214, 245, 255, 0.24),
+    inset 0 -1px 0 rgba(4, 10, 16, 0.6);
+  animation: island-stop-modal-enter 380ms cubic-bezier(0.22, 1.3, 0.36, 1);
   /* Tall modal bodies (hatchery with timeline + sell options, long wisdom
      copy, etc.) must be scrollable so the primary CTA remains reachable.
      Leave room for backdrop padding plus iOS safe areas. */
@@ -4001,6 +4021,24 @@
   max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+@keyframes island-stop-modal-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Springy pop-in: rises and slightly overshoots via the bouncy timing curve. */
+@keyframes island-stop-modal-enter {
+  from { opacity: 0; transform: translateY(24px) scale(0.93); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-stop-modal-backdrop,
+  .island-stop-modal {
+    animation: none;
+  }
 }
 
 .island-run-board__hatchery-compass-modal {
@@ -4185,18 +4223,21 @@
   margin: 0;
   font-size: 0.62rem;
   line-height: 1.18;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: rgba(171, 220, 238, 0.78);
+  color: rgba(140, 226, 255, 0.92);
+  text-shadow: 0 0 10px rgba(88, 196, 240, 0.4);
 }
 
 .island-stop-modal h3,
 .island-stop-modal__title {
   margin: 0;
-  color: #e8fbff;
-  font-size: 1.08rem;
-  font-weight: 780;
+  color: #eefcff;
+  font-size: 1.12rem;
+  font-weight: 800;
   line-height: 1.3;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 3px rgba(2, 10, 18, 0.55);
 }
 
 .island-stop-modal p {
@@ -4284,6 +4325,12 @@
   font-size: 1rem;
   line-height: 1.2;
   padding: 0.34rem 0.84rem;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease, border-color 140ms ease;
+}
+
+.island-stop-modal button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.985);
 }
 
 .island-stop-modal__actions {
@@ -4336,13 +4383,22 @@
 }
 
 .island-stop-modal__btn--primary {
-  background: linear-gradient(180deg, rgba(48, 127, 162, 0.95), rgba(32, 96, 130, 0.95));
-  border-color: rgba(176, 233, 255, 0.56);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(180deg, rgba(56, 148, 188, 0.98), rgba(30, 96, 134, 0.98));
+  border-color: rgba(176, 233, 255, 0.62);
+  box-shadow:
+    0 4px 12px rgba(6, 26, 40, 0.42),
+    0 0 16px rgba(88, 196, 240, 0.22),
+    inset 0 1px 0 rgba(224, 248, 255, 0.35);
 }
 
 .island-stop-modal__btn--secondary {
-  background: rgba(23, 49, 65, 0.9);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 46%),
+    rgba(23, 49, 65, 0.92);
   border-color: rgba(175, 221, 240, 0.34);
+  box-shadow: inset 0 1px 0 rgba(214, 240, 250, 0.14);
 }
 
 .wisdom-tree-card {
@@ -7994,11 +8050,26 @@
 
 /* ── Tile enhancements ─────────────────────────────────────────────────────── */
 
-/* Idle shimmer animation (staggered per tile) */
+/* Idle shimmer animation (staggered per tile), plus a springy staggered
+   pop-in cascade when the board mounts. The enter animation is listed LAST
+   so it wins the transform while it plays, then hands off to the idle bob. */
 .island-tile--alive {
-  animation: island-tile-idle 3.5s ease-in-out infinite;
-  animation-delay: calc(var(--tile-index, 0) * 0.06s);
+  animation:
+    island-tile-idle 3.5s ease-in-out infinite,
+    island-tile-enter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: calc(var(--tile-index, 0) * 0.06s), calc(var(--tile-index, 0) * 0.022s);
   will-change: transform;
+}
+
+@keyframes island-tile-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 16px)) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-render-scale, var(--tile-scale, 1)) * 0.55));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-render-scale, var(--tile-scale, 1)));
+  }
 }
 
 @keyframes island-tile-idle {
@@ -8012,8 +8083,10 @@
 
 /* Override for spark40 ring — idle bob respects the perspective anchor scale. */
 .island-run-board--spark40 .island-tile--alive {
-  animation: island-tile-idle-spark40 3.5s ease-in-out infinite;
-  animation-delay: calc(var(--tile-index, 0) * 0.06s);
+  animation:
+    island-tile-idle-spark40 3.5s ease-in-out infinite,
+    island-tile-enter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation-delay: calc(var(--tile-index, 0) * 0.06s), calc(var(--tile-index, 0) * 0.022s);
 }
 
 @keyframes island-tile-idle-spark40 {
@@ -8045,8 +8118,8 @@
     rgba(255, 255, 255, 0.25) 52%,
     transparent 70%
   );
-  animation: island-tile-shine-sweep 60s ease-in-out infinite;
-  animation-delay: calc(var(--tile-index, 0) * 0.1s);
+  animation: island-tile-shine-sweep 11s ease-in-out infinite;
+  animation-delay: calc(var(--tile-index, 0) * 0.14s);
 }
 
 .island-run-board__stage-wrapper:has(.island-token--moving) .island-tile__shine::after {
@@ -8054,7 +8127,7 @@
 }
 
 @keyframes island-tile-shine-sweep {
-  0%, 75% { left: -80%; }
+  0%, 82% { left: -80%; }
   100% { left: 180%; }
 }
 
@@ -8097,6 +8170,25 @@
 /* Upcoming tiles — subtle glow to show where token will land */
 .island-tile--upcoming {
   box-shadow: 0 0 0 2px rgba(180, 240, 255, 0.7), 0 0 12px rgba(100, 200, 255, 0.5) !important;
+}
+
+/* Soft expanding ping on upcoming tiles — pseudo-element so it never fights
+   the tile's own transform-driven idle/enter animations. */
+.island-tile--upcoming::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid rgba(160, 235, 255, 0.85);
+  pointer-events: none;
+  animation: island-tile-upcoming-ping 1.7s ease-out infinite;
+  animation-delay: calc(var(--tile-index, 0) * 0.12s);
+}
+
+@keyframes island-tile-upcoming-ping {
+  0%   { opacity: 0.85; transform: scale(0.92); }
+  70%  { opacity: 0;    transform: scale(1.22); }
+  100% { opacity: 0;    transform: scale(1.22); }
 }
 
 /* ── Token enhancements ────────────────────────────────────────────────────── */
@@ -8148,6 +8240,8 @@
   }
   .island-tile--alive,
   .island-tile--active-door-cluster,
+  .island-tile--token-current,
+  .island-tile--upcoming::before,
   .island-tile__shine::after,
   .island-token__landing-ripple {
     animation: none !important;
@@ -8172,6 +8266,21 @@
 @keyframes island-tile-current-pulse {
   0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(100, 220, 255, 0.9), 0 0 18px rgba(100, 220, 255, 0.7); }
   50%      { box-shadow: 0 0 0 3px #fff, 0 0 0 7px rgba(100, 220, 255, 1.0), 0 0 28px rgba(100, 220, 255, 0.9); }
+}
+
+/* One-shot squash-and-pop played when the token lands on a tile. Uses the
+   full transform stack (position vars + render scale) so it composes with the
+   tile's absolutely-positioned layout on both board profiles. */
+@keyframes island-tile-landing-pop {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-render-scale, var(--tile-scale, 1)) * 0.84));
+  }
+  45% {
+    transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-render-scale, var(--tile-scale, 1)) * 1.14));
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-render-scale, var(--tile-scale, 1)));
+  }
 }
 
 @keyframes island-tile-encounter-flicker {
@@ -11701,27 +11810,56 @@
 }
 
 /* ── Island caretaker board affordance ───────────────────────────────────── */
+/* Anchored to its home tile — BoardStage sets left/top inline to the tile's
+   screen position inside the camera plane, so the caretaker pans/zooms with
+   the board. The counter-tilt makes the sprite stand upright (standee style)
+   while its feet stay planted on the tile. */
 .island-run-board__caretaker {
   position: absolute;
-  left: clamp(18px, 18vw, 132px);
-  top: clamp(300px, 46vh, 520px);
   z-index: 12;
-  width: clamp(54px, 15vw, 84px);
-  min-height: clamp(74px, 20vw, 112px);
+  width: 78px;
   border: 0;
   padding: 0;
   background: transparent;
   color: #fff;
   cursor: pointer;
   pointer-events: auto;
+  transform-origin: 50% 100%;
+  transform:
+    translate(-50%, -94%)
+    rotateX(var(--caretaker-counter-tilt, 0deg))
+    scale(calc(var(--caretaker-scale, 1) * 1.08));
   filter: drop-shadow(0 10px 18px rgba(13, 29, 65, 0.36));
+  transition: filter 240ms ease;
+}
+
+.island-run-board__caretaker:hover,
+.island-run-board__caretaker:focus-visible {
+  filter:
+    drop-shadow(0 12px 22px rgba(13, 29, 65, 0.44))
+    drop-shadow(0 0 14px rgba(126, 244, 255, 0.5));
+}
+
+/* Grounding contact shadow under the caretaker's feet */
+.island-run-board__caretaker::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -3px;
+  width: 66%;
+  height: 12px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(ellipse, rgba(10, 18, 40, 0.45), transparent 68%);
+  animation: island-caretaker-ground-shadow 3.2s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .island-run-board__caretaker-glow {
   position: absolute;
   left: 50%;
-  bottom: 16%;
-  width: 72%;
+  bottom: 8%;
+  width: 78%;
   aspect-ratio: 1;
   transform: translateX(-50%);
   border-radius: 999px;
@@ -11739,19 +11877,25 @@
   animation: island-caretaker-idle 3.2s ease-in-out infinite;
 }
 
+.island-run-board__caretaker:hover .island-run-board__caretaker-img {
+  animation-duration: 1.8s;
+}
+
 .island-run-board__caretaker-label {
   position: absolute;
   left: 50%;
-  bottom: -0.35rem;
+  bottom: -0.55rem;
   transform: translateX(-50%);
   max-width: 96px;
-  padding: 0.16rem 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.78);
+  padding: 0.16rem 0.5rem;
+  border: 1px solid rgba(140, 236, 255, 0.72);
   border-radius: 999px;
-  background: rgba(8, 19, 45, 0.76);
-  color: #fff;
-  font-size: clamp(0.56rem, 2.4vw, 0.68rem);
+  background: linear-gradient(180deg, rgba(16, 38, 66, 0.92), rgba(8, 19, 45, 0.92));
+  box-shadow: 0 3px 8px rgba(4, 12, 30, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  color: #eafcff;
+  font-size: 0.6rem;
   font-weight: 800;
+  letter-spacing: 0.04em;
   line-height: 1.1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
   white-space: nowrap;
@@ -11764,11 +11908,26 @@
 }
 
 @keyframes island-caretaker-idle {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-5px) scale(1.03); }
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  25% { transform: translateY(-3px) rotate(-1.2deg) scale(1.015); }
+  50% { transform: translateY(-6px) rotate(0deg) scale(1.03); }
+  75% { transform: translateY(-3px) rotate(1.2deg) scale(1.015); }
 }
 
 @keyframes island-caretaker-pulse {
-  0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(0.9); }
-  50% { opacity: 1; transform: translateX(-50%) scale(1.08); }
+  0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(0.88); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+}
+
+@keyframes island-caretaker-ground-shadow {
+  0%, 100% { opacity: 0.9; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.55; transform: translateX(-50%) scale(0.82); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-board__caretaker::after,
+  .island-run-board__caretaker-glow,
+  .island-run-board__caretaker-img {
+    animation: none;
+  }
 }
