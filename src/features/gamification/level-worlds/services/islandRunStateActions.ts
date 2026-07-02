@@ -1040,6 +1040,50 @@ export function applyDevGrantEssence(options: ApplyDevGrantEssenceOptions): Appl
   return { record: next, applied };
 }
 
+
+export interface ApplyTimedEventTicketTileGrantOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  amount: number;
+  triggerSource?: string;
+}
+
+export interface ApplyTimedEventTicketTileGrantResult {
+  record: IslandRunGameStateRecord;
+  applied: number;
+  eventId: string;
+}
+
+/** Grants event-scoped minigame tickets from board tile landings through the canonical commit path. */
+export function applyTimedEventTicketTileGrant(
+  options: ApplyTimedEventTicketTileGrantOptions,
+): ApplyTimedEventTicketTileGrantResult {
+  const { session, client, eventId, amount, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const canonicalEventId = typeof eventId === 'string' ? eventId.trim() : '';
+  const applied = Number.isFinite(amount) ? Math.max(0, Math.trunc(amount)) : 0;
+  if (!canonicalEventId || applied < 1) {
+    return { record: current, applied: 0, eventId: canonicalEventId };
+  }
+  const currentBucket = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[canonicalEventId] ?? 0));
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    minigameTicketsByEvent: {
+      ...current.minigameTicketsByEvent,
+      [canonicalEventId]: currentBucket + applied,
+    },
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'timed_event_ticket_tile_grant',
+  });
+  return { record: next, applied, eventId: canonicalEventId };
+}
+
 /**
  * DEV-ONLY helper action: grant event-scoped minigame tickets to a specific
  * timed-event bucket through the canonical commit path.
@@ -2944,6 +2988,8 @@ export interface ApplyStopBuildSpendBatchOptions {
   effectiveIslandNumber: number;
   maxSteps: number;
   spendAmount?: number;
+  /** Optional temporary build discount. Progress credits full spendAmount while wallet cost is reduced. */
+  discountRate?: number;
   triggerSource?: string;
   /** Explicitly named dev-only force builders may bypass sequential order. */
   enforceSequentialBuildTarget?: boolean;
@@ -3513,6 +3559,7 @@ export async function applyStopBuildSpendBatch(
     effectiveIslandNumber,
     maxSteps,
     spendAmount = 10,
+    discountRate = 0,
     triggerSource,
     enforceSequentialBuildTarget = true,
   } = options;
@@ -3535,6 +3582,7 @@ export async function applyStopBuildSpendBatch(
       islandRunContractV2Enabled: true,
       stopIndex,
       spendAmount,
+      discountRate,
       essence: nextEssence,
       essenceLifetimeSpent: nextEssenceLifetimeSpent,
       stopBuildStateByIndex: nextStopBuildStateByIndex,

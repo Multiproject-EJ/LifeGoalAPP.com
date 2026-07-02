@@ -170,6 +170,7 @@ import {
   applyDevGrantDice,
   applyDevGrantEssence,
   applyDevGrantTimedEventTickets,
+  applyTimedEventTicketTileGrant,
   applyDevBuildAllToL3,
   applyDevClearCurrentIslandForTravel,
   applyDevSpeedHatchEgg,
@@ -496,6 +497,9 @@ const DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY = 'islandRunDebugTimedEventOverrideNo
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark40_ring');
 // Tile 0 is the visual top of the spark40 ring (see TILE_ANCHORS_40 rotation).
 const ISLAND_ONE_CARETAKER_TILE_INDEX = 0;
+const BUILD_DISCOUNT_RATE = 0.25;
+const BUILD_DISCOUNT_MIN_DURATION_MS = 2 * 60 * 1000;
+const BUILD_DISCOUNT_MAX_DURATION_MS = 15 * 60 * 1000;
 const PERFECT_COMPANION_MODEL_VERSION = 'phase3_v1';
 // Temporary diagnostics for Stop 1↔2 flicker + roll lock on Island 120 startup.
 const ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND = 120;
@@ -1414,6 +1418,8 @@ const TILE_TYPE_ICONS: Record<string, string> = {
   landmark_door: '🚪',
   traffic_light: '🚦',
   card: '🃏',
+  build_discount: '🔨',
+  free_ticket: '🎟️',
 };
 
 const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
@@ -1425,6 +1431,8 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
   landmark_door: '#f4c7ff',
   traffic_light: '#7cff9b',
   card: '#d8b4fe',
+  build_discount: '#22c55e',
+  free_ticket: '#f97316',
 };
 
 // 3×3 tech-collection gameplay math (slot resolution, line/full-board rewards,
@@ -2031,6 +2039,7 @@ export function IslandRunBoardPrototype({
   const [showShopPanel, setShowShopPanel] = useState(false);
   const [showMarketPanel, setShowMarketPanel] = useState(false);
   const [showBuildPanel, setShowBuildPanel] = useState(false);
+  const [buildDiscountExpiresAtMs, setBuildDiscountExpiresAtMs] = useState<number | null>(null);
   const [showRewardDetailsModal, setShowRewardDetailsModal] = useState(false);
   const [showEggManiaModal, setShowEggManiaModal] = useState(false);
   const [showHatcheryCompassModal, setShowHatcheryCompassModal] = useState(false);
@@ -5173,6 +5182,8 @@ export function IslandRunBoardPrototype({
   // landmark has a next build step the player can pay for right now with their
   // current essence wallet. Mirrors the orbit "affordable" cue so the player
   // knows to open Build without having to peek inside the modal first.
+  const activeBuildDiscountRate = buildDiscountExpiresAtMs && buildDiscountExpiresAtMs > Date.now() ? BUILD_DISCOUNT_RATE : 0;
+
   const hasAffordableBuildStep = useMemo(
     () => Boolean(buildModalV2ViewModel.activeLandmark?.canAffordNextTap),
     [buildModalV2ViewModel],
@@ -6054,6 +6065,29 @@ export function IslandRunBoardPrototype({
           setEncounterResolved(false);
           if (!trafficLightUnlocked) {
             setLandingText(`🚦 Traffic light ${trafficLightChargeAfter}/${TRAFFIC_LIGHT_CHARGE_TARGET} lit.`);
+          }
+        } else if (landedTile?.tileType === 'build_discount') {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          const durationMs = BUILD_DISCOUNT_MIN_DURATION_MS + Math.floor(Math.random() * (BUILD_DISCOUNT_MAX_DURATION_MS - BUILD_DISCOUNT_MIN_DURATION_MS + 1));
+          const durationMinutes = Math.max(2, Math.round(durationMs / 60000));
+          setBuildDiscountExpiresAtMs(Date.now() + durationMs);
+          setLandingText(`🔨 Build Rush! 25% off building for ${durationMinutes} minutes.`);
+          setShowBuildPanel(true);
+        } else if (landedTile?.tileType === 'free_ticket') {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          const eventId = activeTimedEventId;
+          if (!eventId) {
+            setLandingText('🎟️ Free ticket tile found — no timed event is active yet.');
+          } else {
+            const currentTickets = Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[eventId] ?? 0));
+            const maxGrant = currentTickets <= 0 ? 3 : currentTickets <= 2 ? 2 : 1;
+            const grant = 1 + Math.floor(Math.random() * maxGrant);
+            const grantResult = applyTimedEventTicketTileGrant({ session, client, eventId, amount: grant, triggerSource: 'free_ticket_tile_land' });
+            setRuntimeState(grantResult.record);
+            runtimeStateRef.current = grantResult.record;
+            setLandingText(`🎟️ Free ticket tile! +${grantResult.applied} event ticket${grantResult.applied === 1 ? '' : 's'}.`);
           }
         } else if (landedTile?.tileType === 'encounter') {
           // M6-COMPLETE: check if this encounter tile was already completed this visit
@@ -8260,6 +8294,7 @@ export function IslandRunBoardPrototype({
         islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
         stopIndex,
         spendAmount: resolveBuildSpendStepForTier(currentBuildState.requiredEssence),
+        discountRate: activeBuildDiscountRate,
         essence: latestRuntimeState.essence,
         essenceLifetimeSpent: latestRuntimeState.essenceLifetimeSpent,
         stopBuildStateByIndex: latestRuntimeState.stopBuildStateByIndex,
@@ -8287,7 +8322,8 @@ export function IslandRunBoardPrototype({
         effectiveIslandNumber,
         maxSteps: Math.max(1, Math.floor(maxSteps)),
         spendAmount: resolveBuildSpendStepForTier(currentBuildState.requiredEssence),
-        triggerSource: maxSteps > 1 ? 'stop_build_spend_batch' : 'stop_build_spend',
+        discountRate: activeBuildDiscountRate,
+        triggerSource: activeBuildDiscountRate > 0 ? 'stop_build_spend_build_tile_discount' : maxSteps > 1 ? 'stop_build_spend_batch' : 'stop_build_spend',
       });
       if (batchResult.stepsApplied < 1) {
         if (batchResult.failureReason === 'not_active_sequential_target') setLandingText('The next landmark is ready.');
@@ -8316,7 +8352,7 @@ export function IslandRunBoardPrototype({
     } finally {
       isBuildSpendInFlightRef.current = false;
     }
-  }, [client, effectiveIslandNumber, islandStopPlan, playIslandRunSound, session]);
+  }, [activeBuildDiscountRate, client, effectiveIslandNumber, islandStopPlan, playIslandRunSound, session]);
 
   const handleRepeatedBuildActivation = useCallback(async (
     stopIndex: number,
@@ -8355,7 +8391,7 @@ export function IslandRunBoardPrototype({
       resetBuildRepeatStreak();
     }
     return true;
-  }, [handleSpendEssenceOnBuild, isBuildModalHatcheryGuidanceActive, resetBuildRepeatStreak]);
+  }, [activeBuildDiscountRate, handleSpendEssenceOnBuild, isBuildModalHatcheryGuidanceActive, resetBuildRepeatStreak]);
 
   // ── BuildModalV2 tap handler ──────────────────────────────────────────────
   // Tap-to-build for the v2 tray.  Hold-to-build is intentionally omitted in
@@ -13274,6 +13310,8 @@ export function IslandRunBoardPrototype({
           isBuildHoldActive={isBuildHoldActive}
           buildHoldFeedbackLabel={buildHoldFeedbackLabel}
           isBuildModalHatcheryGuidanceActive={isBuildModalHatcheryGuidanceActive}
+          discountRate={activeBuildDiscountRate}
+          discountExpiresAtMs={buildDiscountExpiresAtMs}
           onBuildActivePart={handleBuildCardTap}
         />
       )}

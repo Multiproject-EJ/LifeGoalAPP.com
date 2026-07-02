@@ -58,6 +58,18 @@ const TILE_SVG_ICONS: Record<string, JSX.Element> = {
       <circle cx="11" cy="10" r="0.8" fill="#FFF7AD"/>
     </svg>
   ),
+  build_discount: (
+    <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
+      <rect x="3" y="4" width="12" height="10" rx="2" fill="#22C55E" stroke="#064E3B" strokeWidth="1"/>
+      <text x="9" y="11.5" textAnchor="middle" fontSize="6" fontWeight="900" fill="#ECFDF5">25%</text>
+    </svg>
+  ),
+  free_ticket: (
+    <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
+      <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H14v2a2 2 0 0 0 0 4v2H4.5A1.5 1.5 0 0 1 3 11.5V10a1 1 0 0 0 0-2V6.5Z" fill="#F97316" stroke="#7C2D12" strokeWidth="1"/>
+      <text x="8.5" y="11" textAnchor="middle" fontSize="6.5" fontWeight="900" fill="#FFF7ED">T</text>
+    </svg>
+  ),
   traffic_light: (
     <svg viewBox="0 0 18 18" width="14" height="14" fill="none" aria-hidden="true">
       <rect x="5" y="2" width="8" height="14" rx="2" fill="#102A1D" stroke="#BBF7D0" strokeWidth="1"/>

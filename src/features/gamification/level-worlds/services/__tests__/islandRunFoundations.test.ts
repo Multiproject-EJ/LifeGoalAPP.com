@@ -14,7 +14,7 @@ export const islandRunFoundationTests: TestCase[] = [
       assertEqual(stopTiles.length, 0, 'Expected zero tiles with tileType="stop" — stops are off-board');
       // Every tile should be a regular feeding / hazard / encounter / card tile.
       // `event` tile type retired — see TILE_POOL comment in islandBoardTileMap.ts.
-      const validTypes = new Set(['currency', 'chest', 'hazard', 'micro', 'encounter', 'card', 'traffic_light']);
+      const validTypes = new Set(['currency', 'chest', 'hazard', 'micro', 'encounter', 'card', 'traffic_light', 'build_discount', 'free_ticket']);
       map.forEach((tile: { index: number; tileType: string }) => {
         assertEqual(validTypes.has(tile.tileType), true, `Tile #${tile.index} has unexpected tileType "${tile.tileType}"`);
       });

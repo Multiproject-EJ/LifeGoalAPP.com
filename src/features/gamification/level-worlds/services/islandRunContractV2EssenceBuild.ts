@@ -418,6 +418,8 @@ export function spendIslandRunContractV2EssenceOnStopBuild(options: {
   effectiveIslandNumber: number;
   /** DEV-only force actions may explicitly bypass sequential order. Production defaults to true. */
   enforceSequentialBuildTarget?: boolean;
+  /** Optional temporary build discount. Progress credits the full spend amount; Essence cost is reduced. */
+  discountRate?: number;
 }): {
   essence: number;
   essenceLifetimeSpent: number;
@@ -468,9 +470,16 @@ export function spendIslandRunContractV2EssenceOnStopBuild(options: {
   const requiredEssence = Math.max(0, Math.floor(currentBuildState.requiredEssence));
   const alreadySpent = Math.max(0, Math.floor(currentBuildState.spentEssence));
   const remaining = Math.max(0, requiredEssence - alreadySpent);
-  const spent = Math.max(0, Math.min(request, budget, remaining));
+  const normalizedDiscountRate = Number.isFinite(options.discountRate)
+    ? Math.min(0.95, Math.max(0, options.discountRate ?? 0))
+    : 0;
+  const maxAffordableProgress = normalizedDiscountRate > 0
+    ? Math.floor(budget / (1 - normalizedDiscountRate))
+    : budget;
+  const spent = Math.max(0, Math.min(request, maxAffordableProgress, remaining));
+  const essenceCost = Math.max(1, Math.ceil(spent * (1 - normalizedDiscountRate)));
 
-  if (spent < 1) {
+  if (spent < 1 || essenceCost > budget) {
     return { ...noChange, essence: budget, failureReason: 'insufficient_essence' };
   }
 
@@ -520,8 +529,8 @@ export function spendIslandRunContractV2EssenceOnStopBuild(options: {
   });
 
   return {
-    essence: budget - spent,
-    essenceLifetimeSpent: Math.max(0, Math.floor(options.essenceLifetimeSpent)) + spent,
+    essence: Math.max(0, budget - essenceCost),
+    essenceLifetimeSpent: Math.max(0, Math.floor(options.essenceLifetimeSpent)) + essenceCost,
     stopBuildStateByIndex: nextStopBuildStateByIndex,
     stopStatesByIndex: nextStopStatesByIndex,
     spent,

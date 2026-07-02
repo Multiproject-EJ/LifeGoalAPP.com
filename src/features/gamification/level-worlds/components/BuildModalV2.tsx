@@ -10,6 +10,8 @@ export interface BuildModalV2Props {
   isBuildHoldActive: boolean;
   buildHoldFeedbackLabel: string;
   isBuildModalHatcheryGuidanceActive: boolean;
+  discountRate?: number;
+  discountExpiresAtMs?: number | null;
   onBuildActivePart: (stopIndex: number) => void;
 }
 
@@ -108,6 +110,8 @@ export function BuildModalV2({
   isBuildHoldActive,
   buildHoldFeedbackLabel,
   isBuildModalHatcheryGuidanceActive,
+  discountRate = 0,
+  discountExpiresAtMs = null,
   onBuildActivePart,
 }: BuildModalV2Props) {
   if (!isOpen) return null;
@@ -115,6 +119,8 @@ export function BuildModalV2({
   const isComplete = viewModel.sequentialBuildView.isFullyBuilt || !active;
   const activePart = active?.activePart ?? 1;
   const canBuildActive = Boolean(active?.canAffordNextTap);
+  const discountPercent = Math.round(Math.max(0, discountRate) * 100);
+  const discountMinutesLeft = discountExpiresAtMs && discountRate > 0 ? Math.max(1, Math.ceil((discountExpiresAtMs - Date.now()) / 60000)) : 0;
   const statusLine = active
     ? `Part ${activePart} of 5 · ${active.spentEssence}/${active.requiredEssence} Essence funded`
     : '15 of 15 complete';
@@ -132,6 +138,9 @@ export function BuildModalV2({
           <p className="bm2-tutorial-guidance">Build Hatchery to Level 1 with your tutorial Essence.</p>
         )}
         {isBuildHoldActive && <p className="bm2-hold-feedback">{buildHoldFeedbackLabel}</p>}
+        {discountPercent > 0 && discountMinutesLeft > 0 && (
+          <p className="bm2-discount-banner">🔨 Build Rush: {discountPercent}% off for about {discountMinutesLeft} min.</p>
+        )}
 
         {isComplete ? (
           <BuildModalV2CompleteState viewModel={viewModel} />
@@ -145,8 +154,8 @@ export function BuildModalV2({
                 <p className="bm2-hero__status">{statusLine}</p>
                 <p className="bm2-hero__cost">
                   {active.canAffordNextTap
-                    ? `Next tap spends ${active.nextTapCost} Essence`
-                    : `Need ${Math.max(0, active.nextTapCost - essenceAvailable)} more Essence for the next tap`}
+                    ? `Next tap spends ${discountPercent > 0 ? Math.ceil(active.nextTapCost * (1 - discountRate)) : active.nextTapCost} Essence${discountPercent > 0 ? ` (${discountPercent}% off)` : ''}`
+                    : `Need ${Math.max(0, Math.ceil(active.nextTapCost * (1 - discountRate)) - essenceAvailable)} more Essence for the next tap`}
                 </p>
               </div>
               <div className="bm2-artwork bm2-artwork--hero">
