@@ -17,6 +17,13 @@ export interface TokenAnimState {
   /** Squash/stretch — scaleX and scaleY  */
   scaleX: number;
   scaleY: number;
+  /**
+   * Height (px) of the token above the board plane at this frame — the gap
+   * between the hop arc position and the straight ground line between tiles.
+   * Drives the detached ground-shadow blob (shadow stays on the ground and
+   * shrinks/fades while the token is airborne). 0 when idle/landed.
+   */
+  elevation: number;
   /** Whether the token is currently mid-animation */
   isMoving: boolean;
   /** Whether the token just landed (for landing effect) */
@@ -59,7 +66,7 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
   const { toScreen, onHop, onHopPosition, onLand, hopDurationMs = 220 } = opts;
 
   const [animState, setAnimState] = useState<TokenAnimState>({
-    x: 0, y: 0, scaleX: 1, scaleY: 1, isMoving: false, isLanding: false,
+    x: 0, y: 0, scaleX: 1, scaleY: 1, elevation: 0, isMoving: false, isLanding: false,
   });
 
   const rafRef = useRef<number>(0);
@@ -75,6 +82,7 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
     setAnimState({
       x: pos.x, y: pos.y,
       scaleX: 1, scaleY: 1,
+      elevation: 0,
       isMoving: false, isLanding: false,
     });
   }, [toScreen]);
@@ -146,6 +154,12 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
         };
         const pos = bezierPoint(fromPos, cp, toPos, eased);
 
+        // Height above the board plane: distance between the arc position and
+        // the straight ground line between the two tiles. Feeds the detached
+        // ground shadow so it stays planted while the token flies.
+        const groundY = fromPos.y + (toPos.y - fromPos.y) * eased;
+        const elevation = Math.max(0, groundY - pos.y);
+
         // Squash & stretch
         let scaleX = 1;
         let scaleY = 1;
@@ -174,6 +188,7 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
           y: pos.y,
           scaleX,
           scaleY,
+          elevation,
           isMoving: true,
           isLanding: false,
         });
@@ -194,6 +209,7 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
               y: toPos.y,
               scaleX: 1,
               scaleY: 1,
+              elevation: 0,
               isMoving: false,
               isLanding: true,
             });
