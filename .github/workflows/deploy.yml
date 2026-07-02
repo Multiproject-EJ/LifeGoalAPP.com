@@ -11,8 +11,12 @@ permissions:
   id-token: write
 
 concurrency:
+  # Allow only one concurrent Pages deployment. Do NOT cancel in-progress runs:
+  # canceling an in-flight Pages deploy can leave its deployment stuck in the
+  # queue, which blocks every subsequent deploy until it times out. Queue new
+  # pushes behind the running deploy instead (GitHub's recommended setting).
   group: 'pages'
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
