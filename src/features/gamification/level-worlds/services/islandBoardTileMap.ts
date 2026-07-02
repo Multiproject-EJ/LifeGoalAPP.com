@@ -17,7 +17,7 @@ import { TRAFFIC_LIGHT_TILE_INDEX } from './islandRunTrafficLightTile';
 
 export type IslandLandmarkDoorStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
 
-export type IslandTileType = 'currency' | 'chest' | 'hazard' | 'micro' | 'encounter' | 'card' | 'landmark_door' | 'traffic_light';
+export type IslandTileType = 'currency' | 'chest' | 'hazard' | 'micro' | 'encounter' | 'card' | 'landmark_door' | 'traffic_light' | 'build_discount' | 'free_ticket';
 
 export type IslandRarity = IslandRunIslandRarity;
 
@@ -107,6 +107,8 @@ const ENCOUNTER_FRACTIONS: Record<IslandRarity, number[]> = {
 // Two adjacent ring tiles become a card-draw station. Fractions keep the pair
 // topology-aware instead of depending on the current 40-tile production count.
 const CARD_STATION_START_FRACTION = 0.625;
+const BUILD_DISCOUNT_TILE_FRACTION = 0.35;
+const FREE_TICKET_TILE_FRACTION = 0.85;
 
 // Non-stop tile pool (weighted). Retired tile types:
 //   - `egg_shard` (shards now only come from reward bar / stops / boss / egg sell).
@@ -245,11 +247,23 @@ export function generateTileMap(
   const tileCount = boardProfile.tileCount;
   const encounterIndices = computeEncounterIndicesForProfile(rarity, tileCount);
   const cardStationIndices = computeCardStationIndicesForProfile(tileCount);
+  const buildDiscountTileIndex = Math.min(tileCount - 1, Math.max(0, Math.floor(BUILD_DISCOUNT_TILE_FRACTION * tileCount)));
+  const freeTicketTileIndex = Math.min(tileCount - 1, Math.max(0, Math.floor(FREE_TICKET_TILE_FRACTION * tileCount)));
   const tiles: IslandTileMapEntry[] = [];
 
   for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {
     if (tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
       tiles.push({ index: tileIndex, tileType: 'traffic_light' });
+      continue;
+    }
+
+    if (tileIndex === buildDiscountTileIndex) {
+      tiles.push({ index: tileIndex, tileType: 'build_discount' });
+      continue;
+    }
+
+    if (tileIndex === freeTicketTileIndex) {
+      tiles.push({ index: tileIndex, tileType: 'free_ticket' });
       continue;
     }
 

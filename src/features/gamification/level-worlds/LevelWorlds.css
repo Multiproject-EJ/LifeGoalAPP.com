@@ -11931,3 +11931,45 @@
     animation: none;
   }
 }
+
+.island-tile--build_discount {
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, #bbf7d0 0%, #22c55e 52%, #065f46 100%);
+  border: 1.5px solid #fef08a;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.62), 0 0 0 2px rgba(254, 240, 138, 0.28);
+}
+
+.island-tile--free_ticket {
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(160deg, #fed7aa 0%, #f97316 52%, #9a3412 100%);
+  border: 1.5px solid #ffedd5;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.58), 0 0 0 2px rgba(255, 237, 213, 0.24);
+}
+
+.bm2-discount-banner {
+  margin: 0.35rem 1rem 0;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(22, 163, 74, 0.18), rgba(250, 204, 21, 0.2));
+  color: #064e3b;
+  font-weight: 800;
+  text-align: center;
+  border: 1px solid rgba(22, 163, 74, 0.24);
+}
+
+.island-run-board__caretaker::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 82%;
+  height: 18px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  border: 2px solid rgba(255, 245, 157, 0.86);
+  box-shadow: 0 0 14px rgba(255, 245, 157, 0.72), inset 0 0 10px rgba(98, 230, 255, 0.38);
+  animation: island-caretaker-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
