@@ -11,9 +11,6 @@ permissions:
   id-token: write
 
 concurrency:
-  # Keep only the newest Pages deployment active. PR #3010 changed this to
-  # queue every main-branch deploy, which can leave deploy-pages polling
-  # `deployment_queued` through a push burst. Cancel superseded runs instead.
   group: 'pages'
   cancel-in-progress: true
 
