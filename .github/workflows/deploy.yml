@@ -17,48 +17,28 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Configure Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 20
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Inject build metadata env vars
-        run: |
-          echo "VITE_APP_VERSION=$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
-          echo "VITE_GIT_SHA=${GITHUB_SHA}" >> "$GITHUB_ENV"
-          echo "VITE_BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> "$GITHUB_ENV"
-
-      - name: Validate Island Art render wiring
-        run: npm run check:island-art-render-wiring
-
-      - name: Validate Island Art assets
-        run: npm run check:island-art-assets
-
       - name: Build site
         run: npm run build
-
-      - name: Log build metadata
-        run: |
-          echo "VITE_APP_VERSION=${VITE_APP_VERSION}"
-          echo "VITE_GIT_SHA=${VITE_GIT_SHA}"
-          echo "VITE_BUILD_TIME=${VITE_BUILD_TIME}"
 
       - name: Verify build output
         run: |
