@@ -11,12 +11,11 @@ permissions:
   id-token: write
 
 concurrency:
-  # Allow only one concurrent Pages deployment. Do NOT cancel in-progress runs:
-  # canceling an in-flight Pages deploy can leave its deployment stuck in the
-  # queue, which blocks every subsequent deploy until it times out. Queue new
-  # pushes behind the running deploy instead (GitHub's recommended setting).
+  # Keep only the newest Pages deployment active. PR #3010 changed this to
+  # queue every main-branch deploy, which can leave deploy-pages polling
+  # `deployment_queued` through a push burst. Cancel superseded runs instead.
   group: 'pages'
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
