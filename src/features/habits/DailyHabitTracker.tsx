@@ -6333,6 +6333,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, []);
 
   const toggleExpanded = (habitId: string) => {
+    const completion = completions[habitId];
+    const isArchived = Boolean(completion?.completed) || completion?.progressState === 'skipped';
+    if (isArchived) {
+      setExpandedHabits({});
+      return;
+    }
+
     setExpandedHabits((current) => {
       const willExpand = !current[habitId];
       if (willExpand) {
@@ -6343,7 +6350,23 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   };
 
   const toggleTodayTodoExpanded = useCallback((todoId: string) => {
+    const isCompletedTodo = todayTodos.some((todo) => todo.id === todoId && todo.completed);
+    if (isCompletedTodo) {
+      setExpandedTodayTodoById({});
+      return;
+    }
+
     setExpandedTodayTodoById((current) => (current[todoId] ? {} : { [todoId]: true }));
+  }, [todayTodos]);
+
+  const toggleCompletedArchive = useCallback(() => {
+    setShowCompletedHabits((prev) => {
+      if (prev) {
+        setExpandedHabits({});
+        setExpandedTodayTodoById({});
+      }
+      return !prev;
+    });
   }, []);
 
   const getSwipeActionIcon = useCallback((action: HabitSwipeAction | TodoSwipeAction | null) => {
@@ -8706,7 +8729,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           <button
             type="button"
             className="habit-checklist__toggle"
-            onClick={() => setShowCompletedHabits((prev) => !prev)}
+            onClick={toggleCompletedArchive}
             aria-expanded={showCompletedHabits}
           >
             <span className="habit-checklist__toggle-text">

@@ -8314,6 +8314,13 @@ html.platform-ipad .workspace-shell__menu-edge {
   max-width: 12rem;
 }
 
+.habit-checklist-card--private-view .habit-checklist__item--expanded .habit-checklist__name,
+.habit-checklist-card--private-view .habit-checklist__row--expanded .habit-checklist__todo-title {
+  filter: none;
+  letter-spacing: normal;
+  max-width: none;
+}
+
 .habit-checklist-card--private-view .habit-checklist__badges,
 .habit-checklist-card--private-view .habit-checklist__meta-group,
 .habit-checklist-card--private-view .habit-checklist__environment,
