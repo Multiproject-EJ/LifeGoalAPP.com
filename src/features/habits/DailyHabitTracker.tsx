@@ -11476,7 +11476,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const stageTodoCleanupAction = useCallback((todoId: string, pendingAction: TodoCleanupPendingAction) => {
     setTodoCleanupPendingActions((current) => ({ ...current, [todoId]: pendingAction }));
     setExpandedYesterdaySundownTodoById((current) => ({ ...current, [todoId]: false }));
-    setYesterdaySundownTodoStatus('Choice saved. Apply when you are ready.');
   }, []);
 
   const clearTodoCleanupAction = useCallback((todoId: string) => {
@@ -11509,7 +11508,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return next;
     });
     setTodoCleanupBulkAction(null);
-    setYesterdaySundownTodoStatus('Bulk cleanup choices staged. Tap Apply cleanup to finish.');
   }, [todoCleanupBulkAction, yesterdaySundownTodos]);
 
   const dailyLifeUpgradeModal = (
@@ -11531,11 +11529,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       <div className="yesterday-sundown-todo-modal__backdrop" onClick={() => void closeYesterdaySundownTodoModal()} role="presentation" />
       <div className="yesterday-sundown-todo-modal__dialog">
         <header className="yesterday-sundown-todo-modal__header">
-          <div>
-            <p className="yesterday-sundown-todo-modal__eyebrow">New day reset</p>
+          <span className="yesterday-sundown-todo-modal__sun" aria-hidden="true">🌅</span>
+          <div className="yesterday-sundown-todo-modal__heading">
             <h3 id="yesterday-sundown-todo-title">Todo cleanup</h3>
             <p className="yesterday-sundown-todo-modal__subtitle">
-              Unfinished todos from {formatDateLabel(yesterdayISO)} have already rolled into today. Finish, reschedule, or delete only the ones you want to change.
+              {formatDateLabel(yesterdayISO)} → today. Sort or skip — skipped stay on today.
             </p>
           </div>
           <button
@@ -11549,18 +11547,29 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           </button>
         </header>
 
+        {yesterdaySundownTodos.length > 0 ? (
+          <div className="yesterday-sundown-todo-modal__progress" aria-hidden="true">
+            <div className="yesterday-sundown-todo-modal__progress-track">
+              <div
+                className="yesterday-sundown-todo-modal__progress-fill"
+                style={{ width: `${Math.round((assignedTodoCleanupCount / yesterdaySundownTodos.length) * 100)}%` }}
+              />
+            </div>
+            <span className={`yesterday-sundown-todo-modal__progress-count${allTodoCleanupItemsAssigned ? ' yesterday-sundown-todo-modal__progress-count--done' : ''}`}>
+              {allTodoCleanupItemsAssigned ? '🎉 All sorted!' : `${assignedTodoCleanupCount}/${yesterdaySundownTodos.length} sorted`}
+            </span>
+          </div>
+        ) : null}
+
         <div className="yesterday-sundown-todo-modal__body">
-          <p className="yesterday-sundown-todo-modal__hint">
-            No need to tap Today: skipped rows stay on today by default. After {TODO_CLEANUP_MAX_PROMPTS} automatic rollovers, a todo is moved into Task Tower with the {TODO_CLEANUP_TASK_TOWER_TAG} tag.
-          </p>
           {todoCleanupMovedToTaskTowerTitles.length > 0 ? (
             <div className="yesterday-sundown-todo-modal__status" role="note">
-              Moved to Task Tower with {TODO_CLEANUP_TASK_TOWER_TAG}: {todoCleanupMovedToTaskTowerTitles.join(', ')}
+              🏰 Moved to Task Tower ({TODO_CLEANUP_TASK_TOWER_TAG}): {todoCleanupMovedToTaskTowerTitles.join(', ')}
             </div>
           ) : null}
           {yesterdaySundownTodos.length > 0 ? (
             <ul className="yesterday-sundown-todo-modal__list">
-              {yesterdaySundownTodos.map((todo) => {
+              {yesterdaySundownTodos.map((todo, todoIndex) => {
                 const isExpanded = Boolean(expandedYesterdaySundownTodoById[todo.id]);
                 const pendingAction = todoCleanupPendingActions[todo.id];
                 const displayCount = todoCleanupDisplayCounts[todo.id] ?? 0;
@@ -11569,38 +11578,56 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 const itemClassName = [
                   'yesterday-sundown-todo-modal__item',
                   isExpanded ? 'yesterday-sundown-todo-modal__item--expanded' : '',
-                  pendingAction ? 'yesterday-sundown-todo-modal__item--assigned' : '',
+                  pendingAction ? `yesterday-sundown-todo-modal__item--assigned yesterday-sundown-todo-modal__item--${pendingAction.action}` : '',
                   isLastPrompt ? 'yesterday-sundown-todo-modal__item--expiring' : '',
                 ].filter(Boolean).join(' ');
                 const actionLabel = pendingAction?.action === 'tomorrow'
-                  ? 'Move to tomorrow'
+                  ? '☀️ Tomorrow'
                     : pendingAction?.action === 'schedule'
-                      ? `Schedule ${formatDateLabel(pendingAction.scheduledDateISO ?? today)}`
+                      ? `📅 ${formatDateLabel(pendingAction.scheduledDateISO ?? today)}`
                       : pendingAction?.action === 'finish'
-                        ? 'Mark finished'
+                        ? '✅ Done'
                         : pendingAction?.action === 'delete'
-                          ? 'Delete'
+                          ? '🗑️ Delete'
                           : null;
                 return (
-                  <li key={todo.id} className={itemClassName}>
-                    {isLastPrompt ? <span className="yesterday-sundown-todo-modal__expiry-badge">Last reminder</span> : null}
-                    <button
-                      type="button"
-                      className="yesterday-sundown-todo-modal__task"
-                      onClick={() => setExpandedYesterdaySundownTodoById((current) => (current[todo.id] ? {} : { [todo.id]: true }))}
-                      aria-expanded={isExpanded}
-                    >
-                      <span className="yesterday-sundown-todo-modal__task-title">{todo.title}</span>
-                      {todo.notes ? <span className="yesterday-sundown-todo-modal__task-notes">{todo.notes}</span> : null}
-                      {actionLabel ? <span className="yesterday-sundown-todo-modal__selected-action">{actionLabel}</span> : null}
-                      <span className="yesterday-sundown-todo-modal__task-caret" aria-hidden="true">{isExpanded ? '−' : '+'}</span>
-                    </button>
+                  <li key={todo.id} className={itemClassName} style={{ '--todo-i': todoIndex } as CSSProperties}>
+                    <div className="yesterday-sundown-todo-modal__row">
+                      <button
+                        type="button"
+                        className="yesterday-sundown-todo-modal__task"
+                        onClick={() => setExpandedYesterdaySundownTodoById((current) => (current[todo.id] ? {} : { [todo.id]: true }))}
+                        aria-expanded={isExpanded}
+                      >
+                        <span className="yesterday-sundown-todo-modal__task-title">{todo.title}</span>
+                        {isLastPrompt && !pendingAction ? <span className="yesterday-sundown-todo-modal__expiry-badge">⏳ Last call</span> : null}
+                        {todo.notes && isExpanded ? <span className="yesterday-sundown-todo-modal__task-notes">{todo.notes}</span> : null}
+                      </button>
+                      {pendingAction ? (
+                        <div className="yesterday-sundown-todo-modal__stamp">
+                          <span className="yesterday-sundown-todo-modal__selected-action">{actionLabel}</span>
+                          <button
+                            type="button"
+                            className="yesterday-sundown-todo-modal__undo"
+                            onClick={() => clearTodoCleanupAction(todo.id)}
+                            disabled={yesterdaySundownTodoSaving}
+                            aria-label={`Undo choice for ${todo.title}`}
+                          >
+                            ↩
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="yesterday-sundown-todo-modal__quick-actions">
+                          <button type="button" className="yesterday-sundown-todo-modal__chip yesterday-sundown-todo-modal__chip--finish" onClick={() => stageTodoCleanupAction(todo.id, { action: 'finish' })} disabled={yesterdaySundownTodoSaving} aria-label={`Mark ${todo.title} finished`}>✅</button>
+                          <button type="button" className="yesterday-sundown-todo-modal__chip yesterday-sundown-todo-modal__chip--tomorrow" onClick={() => stageTodoCleanupAction(todo.id, { action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving} aria-label={`Move ${todo.title} to tomorrow`}>☀️</button>
+                          <button type="button" className="yesterday-sundown-todo-modal__chip yesterday-sundown-todo-modal__chip--delete" onClick={() => stageTodoCleanupAction(todo.id, { action: 'delete' })} disabled={yesterdaySundownTodoSaving} aria-label={`Delete ${todo.title}`}>🗑️</button>
+                        </div>
+                      )}
+                    </div>
                     {isExpanded ? (
                       <div className="yesterday-sundown-todo-modal__task-actions">
-                        <button type="button" onClick={() => stageTodoCleanupAction(todo.id, { action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving}>Tomorrow</button>
-                        <button type="button" onClick={() => stageTodoCleanupAction(todo.id, { action: 'finish' })} disabled={yesterdaySundownTodoSaving}>Finished</button>
                         <label className="yesterday-sundown-todo-modal__date-action">
-                          <span>Schedule</span>
+                          <span>📅 Pick a day</span>
                           <input
                             type="date"
                             min={today}
@@ -11611,8 +11638,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             disabled={yesterdaySundownTodoSaving}
                           />
                         </label>
-                        <button type="button" className="yesterday-sundown-todo-modal__delete" onClick={() => stageTodoCleanupAction(todo.id, { action: 'delete' })} disabled={yesterdaySundownTodoSaving}>Delete</button>
-                        {pendingAction ? <button type="button" onClick={() => clearTodoCleanupAction(todo.id)} disabled={yesterdaySundownTodoSaving}>Undo choice</button> : null}
                       </div>
                     ) : null}
                   </li>
@@ -11620,36 +11645,38 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               })}
             </ul>
           ) : (
-            <div className="yesterday-sundown-todo-modal__empty">All clear. Yesterday can stay yesterday.</div>
+            <div className="yesterday-sundown-todo-modal__empty">✨ All clear — yesterday can stay yesterday.</div>
           )}
           {yesterdaySundownTodoStatus ? <p className="yesterday-sundown-todo-modal__status" role="status">{yesterdaySundownTodoStatus}</p> : null}
         </div>
 
         <footer className="yesterday-sundown-todo-modal__footer">
-          <div className="yesterday-sundown-todo-modal__bulk" aria-label="Bulk todo cleanup actions">
-            <span className="yesterday-sundown-todo-modal__bulk-label">Bulk choice for remaining</span>
-            <div className="yesterday-sundown-todo-modal__bulk-actions">
-              <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Tomorrow</button>
-              <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'finish' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Finished</button>
-              <button type="button" className="yesterday-sundown-todo-modal__bulk-delete" onClick={() => setTodoCleanupBulkAction({ action: 'delete' })} disabled={yesterdaySundownTodoSaving || yesterdaySundownTodos.length === 0}>Delete</button>
-            </div>
-          </div>
-          {todoCleanupBulkAction ? (
-            <div className="yesterday-sundown-todo-modal__confirm" role="alert">
-              <span>Apply this bulk choice to every unassigned todo?</span>
-              <div className="yesterday-sundown-todo-modal__confirm-actions">
-                <button type="button" onClick={handleConfirmBulkTodoCleanup}>Apply to all</button>
-                <button type="button" onClick={() => setTodoCleanupBulkAction(null)}>Cancel</button>
-              </div>
+          {yesterdaySundownTodos.length > 0 && !allTodoCleanupItemsAssigned ? (
+            <div className="yesterday-sundown-todo-modal__bulk" aria-label="Bulk todo cleanup actions">
+              <span className="yesterday-sundown-todo-modal__bulk-label">Rest:</span>
+              {todoCleanupBulkAction ? (
+                <div className="yesterday-sundown-todo-modal__confirm" role="alert">
+                  <button type="button" className="yesterday-sundown-todo-modal__confirm-yes" onClick={handleConfirmBulkTodoCleanup}>
+                    {todoCleanupBulkAction.action === 'finish' ? '✅ All done?' : todoCleanupBulkAction.action === 'delete' ? '🗑️ Delete all?' : '☀️ All tomorrow?'}
+                  </button>
+                  <button type="button" className="yesterday-sundown-todo-modal__confirm-no" onClick={() => setTodoCleanupBulkAction(null)} aria-label="Cancel bulk choice">✕</button>
+                </div>
+              ) : (
+                <div className="yesterday-sundown-todo-modal__bulk-actions">
+                  <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'finish' })} disabled={yesterdaySundownTodoSaving}>✅ Done</button>
+                  <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving}>☀️ Tomorrow</button>
+                  <button type="button" className="yesterday-sundown-todo-modal__bulk-delete" onClick={() => setTodoCleanupBulkAction({ action: 'delete' })} disabled={yesterdaySundownTodoSaving}>🗑️</button>
+                </div>
+              )}
             </div>
           ) : null}
           {allTodoCleanupItemsAssigned ? (
-            <button type="button" className="btn btn--primary yesterday-sundown-todo-modal__final-action" onClick={() => void handleApplyTodoCleanup()} disabled={yesterdaySundownTodoSaving}>
-              {yesterdaySundownTodoSaving ? 'Applying…' : 'Apply cleanup'}
+            <button type="button" className="btn btn--primary yesterday-sundown-todo-modal__final-action yesterday-sundown-todo-modal__final-action--ready" onClick={() => void handleApplyTodoCleanup()} disabled={yesterdaySundownTodoSaving}>
+              {yesterdaySundownTodoSaving ? 'Applying…' : '✨ Apply cleanup'}
             </button>
           ) : (
             <button type="button" className="btn btn--secondary yesterday-sundown-todo-modal__final-action" onClick={() => void closeYesterdaySundownTodoModal()} disabled={yesterdaySundownTodoSaving}>
-              {assignedTodoCleanupCount > 0 ? `Apply ${assignedTodoCleanupCount} and close` : 'Decide later'}
+              {yesterdaySundownTodoSaving ? 'Applying…' : assignedTodoCleanupCount > 0 ? `Apply ${assignedTodoCleanupCount} & close` : 'Later'}
             </button>
           )}
         </footer>
