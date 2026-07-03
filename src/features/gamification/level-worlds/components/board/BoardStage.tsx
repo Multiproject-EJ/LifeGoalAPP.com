@@ -8,6 +8,7 @@ import { useBoardCamera, type CameraVisualBounds } from './useBoardCamera';
 import { useBoardGestures } from './useBoardGestures';
 import { useTokenAnimation } from './useTokenAnimation';
 import { BoardPathCanvas } from './BoardPathCanvas';
+import { BoardRimDisc } from './BoardRimDisc';
 import { BoardTileGrid } from './BoardTileGrid';
 import { BoardToken } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
@@ -577,6 +578,16 @@ export function BoardStage(props: BoardStageProps) {
         className="island-run-board__camera-stage"
         style={{ transform: cameraStageTransform, willChange: 'transform' }}
       >
+        {/* Carved rim disc the tile ring sits on (behind everything else).
+            Geometry is specific to the spark40 ring layout. */}
+        {!isMinimalBoardArt && isSpark40 && (
+          <BoardRimDisc
+            centerX={offsetX + 500 * uniformScale}
+            centerY={offsetY + 500 * uniformScale}
+            uniformScale={uniformScale}
+          />
+        )}
+
         {/* Path overlay image */}
         {theme.pathOverlayImage && !isMinimalBoardArt && (
           <img

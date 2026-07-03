@@ -3783,6 +3783,68 @@
   cursor: default;
 }
 
+/* ── Board rim disc ──────────────────────────────────────────────────────────
+   The carved stone wheel the tile ring sits on. Three centred layers sized off
+   --rim-size (outer diameter, px), with --rim-hole (inner-edge % of the outer
+   radius) punching the centre out for the island art, and --rim-depth (px) the
+   wall height. Same light model as the tiles: lit top-left, occluded bottom. */
+.island-board-rim {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.island-board-rim__top,
+.island-board-rim__wall,
+.island-board-rim__shadow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--rim-size);
+  height: var(--rim-size);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+/* Lit top face: an annulus of warm stone/gold, brighter on the inner edge and
+   the top-left, darker on the outer edge and bottom-right. */
+.island-board-rim__top {
+  background:
+    radial-gradient(circle at 40% 30%, rgba(255, 250, 232, 0.55), rgba(255, 250, 232, 0) 46%),
+    radial-gradient(circle at 64% 76%, rgba(58, 34, 10, 0.5), rgba(58, 34, 10, 0) 44%),
+    radial-gradient(circle,
+      rgba(0, 0, 0, 0) 0 calc(var(--rim-hole) - 1%),
+      #efd49a var(--rim-hole),
+      #d9b26a 62%,
+      #a9803f 82%,
+      #7c5a2c 100%);
+  box-shadow:
+    inset 0 2px 3px rgba(255, 248, 224, 0.4),
+    inset 0 -4px 8px rgba(42, 24, 6, 0.34);
+}
+/* Wall: the same annulus offset down within the tilted plane and darkened, so
+   its near/front crescent reads as the disc's vertical rim thickness. */
+.island-board-rim__wall {
+  transform: translate(-50%, calc(-50% + var(--rim-depth)));
+  background: radial-gradient(circle,
+    rgba(0, 0, 0, 0) 0 calc(var(--rim-hole) - 1%),
+    #5c4020 var(--rim-hole),
+    #4a3218 62%,
+    #2f2010 100%);
+}
+/* Contact shadow grounding the disc on the board plane. Ring-shaped (not a
+   filled circle) so the centre stays open for the island art beneath — a
+   holed disc casts a holed shadow. */
+.island-board-rim__shadow {
+  width: calc(var(--rim-size) * 1.12);
+  height: calc(var(--rim-size) * 1.12);
+  transform: translate(-50%, calc(-50% + var(--rim-depth) * 1.9));
+  background: radial-gradient(circle,
+    rgba(8, 5, 2, 0) 0 60%,
+    rgba(8, 5, 2, 0.42) 76%,
+    rgba(8, 5, 2, 0) 90%);
+  filter: blur(7px);
+}
+
 /* ── 3D tile anatomy ─────────────────────────────────────────────────────────
    Each tile is three stacked layers inside a positioning root:
      __shadow — soft contact shadow on the board plane (sells "raised off board")
