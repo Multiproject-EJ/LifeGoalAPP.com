@@ -3321,9 +3321,9 @@
 /* pill toggle */
 .island-run-entry-audio__pill {
   position: absolute;
-  right: 16.8%;
-  width: 14.8%;
-  height: 6.25%;
+  right: 11.8%;
+  width: 16.8%;
+  height: 6.85%;
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 999px;
   background: linear-gradient(135deg, rgba(13, 74, 132, 0.96), rgba(17, 155, 255, 0.96));
@@ -3338,11 +3338,11 @@
 }
 
 .island-run-entry-audio__pill--music {
-  top: 46.2%;
+  top: 43.7%;
 }
 
 .island-run-entry-audio__pill--sounds {
-  top: 68.35%;
+  top: 65.2%;
 }
 
 .island-run-entry-audio__pill--sounds.island-run-entry-audio__pill--on {
@@ -3376,14 +3376,14 @@
 }
 
 .island-run-entry-audio__pill--on .island-run-entry-audio__pill-knob {
-  transform: translateX(126%);
+  transform: translateX(132%);
 }
 
 .island-run-entry-audio__start {
   position: absolute;
-  left: 26.6%;
-  bottom: 5.75%;
-  width: 46.9%;
+  left: 21.8%;
+  bottom: 5.35%;
+  width: 56.4%;
   border: 0;
   background: transparent;
   padding: 0;
