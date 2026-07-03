@@ -23,7 +23,7 @@ import {
   landingEventForTile,
 } from './cameraDirector';
 
-const BOARD_TILT_X_DEG = 40;
+const BOARD_TILT_X_DEG = 47;
 const BOARD_ROTATE_Z_DEG = 0;
 /** How long (ms) the pre-roll anticipation push-in holds before travel begins. */
 const PRE_ROLL_HOLD_MS = 150;

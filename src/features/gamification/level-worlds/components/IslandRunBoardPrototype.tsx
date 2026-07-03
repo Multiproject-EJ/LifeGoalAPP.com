@@ -1491,7 +1491,7 @@ export function IslandRunBoardPrototype({
     return {
       showQaHooks: params.get('islandRunQa') === '1',
       isMinimalBoardArt: params.get('minimalBoardArt') === '1',
-      boardTiltXDeg: readNumericParam(params, 'boardTiltX', 40, 0, 80),
+      boardTiltXDeg: readNumericParam(params, 'boardTiltX', 47, 0, 80),
       boardRotateZDeg: readNumericParam(params, 'boardRotateZ', 0, -45, 45),
     };
   }, []);
