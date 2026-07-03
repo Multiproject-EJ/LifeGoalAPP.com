@@ -42,7 +42,12 @@ type MergePop = { id: number; x: number; y: number; score: number; bornAtMs: num
 
 const DROP_COOLDOWN_MS = 420;
 
-/** Session-scoped best score (resets on app reload by design). */
+/**
+ * Session best score. Intentionally module-level (not React state) so the
+ * best survives the game component unmounting between event launches within
+ * the same app session, and intentionally not persisted — it resets on app
+ * reload by design ("session best").
+ */
 let sessionBestScore = 0;
 
 export default function CompanionFeastMinigame({ onComplete, launchConfig }: IslandRunMinigameProps) {

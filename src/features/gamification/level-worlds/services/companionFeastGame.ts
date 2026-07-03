@@ -150,7 +150,13 @@ export function createCompanionFeastBody(options: {
   };
 }
 
-const SETTLED_SPEED_THRESHOLD = 26;
+/**
+ * Speed (|vx| + |vy| in bowl units/s) below which a body counts as settled
+ * for danger-line checks. Chosen just above the residual jitter left by the
+ * positional-correction solver so slowly wobbling piles still count as
+ * settled while airborne/falling food never does.
+ */
+export const COMPANION_FEAST_SETTLED_SPEED_THRESHOLD = 26;
 
 /**
  * Advance the bowl simulation by `dtMs`. Pure: returns new body objects and a
@@ -278,7 +284,7 @@ export function stepCompanionFeastPhysics(
   for (const b of bodies) {
     if (b.spawnGraceMsRemaining > 0) continue;
     const speed = Math.abs(b.vx) + Math.abs(b.vy);
-    if (speed > SETTLED_SPEED_THRESHOLD) continue;
+    if (speed > COMPANION_FEAST_SETTLED_SPEED_THRESHOLD) continue;
     if (b.y - b.radius < COMPANION_FEAST_DANGER_LINE_Y) {
       dangerActive = true;
       break;
