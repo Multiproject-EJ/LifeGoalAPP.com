@@ -105,6 +105,20 @@ function getObjectGridTemplate(shapeTileOffsets: ReadonlyArray<readonly [number,
   }));
   return { cells, columns: maxX + 1, rows: maxY + 1 };
 }
+function getTileAriaLabel(tile: Tile, index: number): string {
+  const position = `Tile ${index + 1}`;
+  if (!tile.dug) {
+    if (tile.cracked) return `${position} — cracked stone, one more dig opens it`;
+    if (tile.hard) return `${position} — stone block, needs 2 digs`;
+    return `${position} — undug, costs 1 ticket`;
+  }
+  if (tile.objectPiece) return `${position} — relic piece found`;
+  if (tile.bonusBomb) return `${position} — bonus bomb triggered`;
+  if (tile.clueType === 'hot') return `${position} — hot, relic is touching this tile`;
+  if (tile.clueType === 'warm') return `${position} — warm, relic within 2 steps`;
+  return `${position} — cold, relic is far away`;
+}
+
 export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig }: IslandRunMinigameProps) {
   const config = (launchConfig ?? {}) as SpaceExcavatorLaunchConfig;
   const initial = config.initialProgress;
@@ -176,7 +190,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const canAdvanceBoard = progressStatus === 'board_complete';
   const currentBoard = (progress?.boardIndex ?? 0) + 1;
   const depth = resolveSpaceExcavatorDepthForBoard(currentBoard);
-  const boardLabel = `Board ${currentBoard}${totalBoards > 1 ? ` / ${totalBoards}` : ''}`;
+  const boardLabel = totalBoards > 1 ? `${currentBoard} / ${totalBoards}` : `${currentBoard}`;
   const eventProgressPoints = Math.max(0, Math.floor(activeProgress?.eventProgressPoints ?? activeProgress?.completedBoardCount ?? 0));
   const claimedMilestoneIds = activeProgress?.claimedMilestoneIds ?? [];
   const rewardUxState = useMemo(() => resolveSpaceExcavatorRewardUxState({
@@ -188,6 +202,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     totalBoards,
   }), [activeProgress?.boardIndex, activeProgress?.completedBoardCount, claimedMilestoneIds, eventProgressPoints, progressStatus, totalBoards]);
   const firstClaimableMilestone = rewardUxState.activeClaimableMilestone;
+  const nextMilestoneDotId = rewardUxState.milestoneDots.find((dot) => !dot.achieved)?.id ?? null;
   const activeClaimModalMilestone = useMemo(
     () => SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.find((milestone) => milestone.id === activeClaimModalMilestoneId) ?? null,
     [activeClaimModalMilestoneId],
@@ -425,9 +440,9 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           <small>Site</small>
           <strong>{boardLabel}</strong>
         </span>
-        <span className="space-excavator__hud-chip space-excavator__hud-chip--accent">
+        <span className={`space-excavator__hud-chip space-excavator__hud-chip--accent ${ticketsRemaining > 0 && ticketsRemaining <= 3 ? 'space-excavator__hud-chip--low' : ''}`}>
           <small>Tickets</small>
-          <strong>{ticketsRemaining}</strong>
+          <strong>🎟️ {ticketsRemaining}</strong>
         </span>
         <span className="space-excavator__hud-chip">
           <small>Pieces</small>
@@ -469,11 +484,12 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           </div>
         </div>
         </div>
-        <div className="space-excavator__clue-legend" aria-label="Clue guide">
-        <span><strong>Hot:</strong> touching distance</span>
-        <span><strong>Warm:</strong> within 2 steps</span>
-        <span><strong>Cold:</strong> far away</span>
-        <span><strong>Relic:</strong> exact piece tile</span>
+        <div className="space-excavator__legend" aria-label="Clue guide">
+          <span className="space-excavator__legend-item"><i className="space-excavator__legend-dot space-excavator__legend-dot--relic" aria-hidden="true" />Relic</span>
+          <span className="space-excavator__legend-item"><i className="space-excavator__legend-dot space-excavator__legend-dot--hot" aria-hidden="true" />Hot</span>
+          <span className="space-excavator__legend-item"><i className="space-excavator__legend-dot space-excavator__legend-dot--warm" aria-hidden="true" />Warm</span>
+          <span className="space-excavator__legend-item"><i className="space-excavator__legend-dot space-excavator__legend-dot--cold" aria-hidden="true" />Cold</span>
+          <span className="space-excavator__legend-item"><i className="space-excavator__legend-stone" aria-hidden="true">🪨</i>2 digs</span>
         </div>
       </div>
 
@@ -495,9 +511,9 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       {isHowItWorksOpen ? (
         <div id={helperPanelId} className="space-excavator__how-panel" aria-label="Space Excavator basics">
           <span><strong>Tickets:</strong> each dig costs exactly 1 event ticket.</span>
-          <span><strong>Clues:</strong> hot = closest, warm = near, cold = farther away.</span>
-          <span><strong>Cracks:</strong> cracked hard blocks need one more dig.</span>
-          <span><strong>Bombs:</strong> blasts reveal nearby tiles and can crack hard blocks.</span>
+          <span><strong>Clues:</strong> hot = touching the relic, warm = within 2 steps, cold = far away.</span>
+          <span><strong>Stone:</strong> 🪨 tiles crack on the first dig and open on the second.</span>
+          <span><strong>Bombs:</strong> blasts reveal nearby tiles and crack stone blocks.</span>
         </div>
       ) : null}
 
@@ -526,26 +542,39 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         </div>
       ) : null}
 
-      <div className="space-excavator__board-shell">
-        <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, minmax(42px, clamp(48px, 15vmin, 68px)))` }}>
+      <div className={`space-excavator__board-shell ${boardComplete ? 'space-excavator__board-shell--cleared' : ''}`}>
+        <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, minmax(40px, clamp(46px, ${size > 5 ? 13 : 15}vmin, 68px)))` }}>
           {tiles.map((tile, i) => (
             <button
               key={i}
               type="button"
-              className={`space-excavator__tile ${tile.hard ? 'space-excavator__tile--hard' : ''} ${tile.cracked ? 'space-excavator__tile--cracked' : ''} ${tile.dug ? (tile.objectPiece ? 'space-excavator__tile--object' : tile.bonusBomb ? 'space-excavator__tile--bomb' : `space-excavator__tile--dug space-excavator__tile--${tile.clueType}`) : ''}`}
+              className={`space-excavator__tile ${tile.hard ? 'space-excavator__tile--hard' : ''} ${tile.cracked ? 'space-excavator__tile--cracked' : ''} ${tile.dug ? (tile.objectPiece ? 'space-excavator__tile--object' : tile.bonusBomb ? 'space-excavator__tile--bomb' : `space-excavator__tile--dug space-excavator__tile--${tile.clueType}`) : ''} ${boardComplete && tile.dug && tile.objectPiece ? 'space-excavator__tile--celebrate' : ''}`}
               onClick={() => onDig(i)}
               disabled={finished || boardComplete || tile.dug}
-              aria-label={`Tile ${i + 1}`}
+              aria-label={getTileAriaLabel(tile, i)}
               data-last-dug={lastDugTileId === i ? 'true' : undefined}
+              data-just-cracked={tile.cracked && !tile.dug && lastDugTileId === i ? 'true' : undefined}
               data-bomb-origin={bombCenterTileId === i ? 'true' : undefined}
               data-bomb-wave={bombWaveTileIds.includes(i) ? 'true' : undefined}
               data-bomb-cleared={bombClearedTileIds.includes(i) ? 'true' : undefined}
               data-bomb-cracked={bombCrackedTileIds.includes(i) ? 'true' : undefined}
             >
-              {tile.dug ? (tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : tile.bonusBomb ? '💣' : <span className="space-excavator__tile-marker" aria-hidden="true" />) : tile.cracked ? <span className="space-excavator__tile-crack" aria-hidden="true">✶</span> : <span className="space-excavator__tile-cover" aria-hidden="true" />}
+              {tile.dug ? (
+                tile.objectPiece ? (progress?.objectIcon ?? initial?.objectIcon ?? '✦') : tile.bonusBomb ? '💣' : <span className="space-excavator__tile-marker" aria-hidden="true" />
+              ) : tile.cracked ? (
+                <span className="space-excavator__tile-stone space-excavator__tile-stone--cracked" aria-hidden="true">
+                  🪨
+                  <i className="space-excavator__tile-crack" aria-hidden="true">✶</i>
+                </span>
+              ) : tile.hard ? (
+                <span className="space-excavator__tile-stone" aria-hidden="true">🪨</span>
+              ) : (
+                <span className="space-excavator__tile-cover" aria-hidden="true" />
+              )}
             </button>
           ))}
         </div>
+        {boardComplete ? <div className="space-excavator__board-clear-glow" aria-hidden="true" /> : null}
       </div>
 
       <div className={`space-excavator__event-progress ${rewardUxState.rewardReady ? 'space-excavator__event-progress--ready' : ''}`} aria-label="Event progress">
@@ -561,7 +590,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             {rewardUxState.milestoneDots.map((dot) => (
               <span
                 key={dot.id}
-                className={`space-excavator__milestone-dot ${dot.claimed ? 'space-excavator__milestone-dot--claimed' : dot.claimable ? 'space-excavator__milestone-dot--ready' : dot.achieved ? 'space-excavator__milestone-dot--achieved' : ''}`}
+                className={`space-excavator__milestone-dot ${dot.claimed ? 'space-excavator__milestone-dot--claimed' : dot.claimable ? 'space-excavator__milestone-dot--ready' : dot.achieved ? 'space-excavator__milestone-dot--achieved' : ''} ${dot.id === nextMilestoneDotId ? 'space-excavator__milestone-dot--next' : ''}`}
                 title={`${dot.label} board${dot.label === '1' ? '' : 's'}`}
               />
             ))}
@@ -600,7 +629,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             <p className="space-excavator__ticket-sheet-hint">Tip: Event tickets come from the Island Run reward bar.</p>
             <div className="space-excavator__ticket-sheet-actions">
               <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={onRequestClose}>
-                Back to Island Run
+                Return to Island
               </button>
               <button type="button" className="space-excavator__button" onClick={dismissOutOfTickets}>
                 Stay here
@@ -677,7 +706,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
                 ? 'Keep digging to uncover the next relic.'
                 : claimModalPhase === 'failed'
                   ? claimModalMessage ?? 'Could not claim this reward right now. Please try again.'
-                  : `${rewardUxState.boardsCleared} boards cleared. Claim this milestone reward to continue.`}
+                  : `${rewardUxState.boardsCleared} board${rewardUxState.boardsCleared === 1 ? '' : 's'} cleared. Claim this milestone reward to continue.`}
             </p>
             <div className="space-excavator__ticket-sheet-actions">
               {claimModalPhase === 'claimed' ? (
@@ -696,7 +725,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
               )}
               {claimModalPhase === 'failed' ? (
                 <button type="button" className="space-excavator__button" onClick={onRequestClose}>
-                  Back to Island Run
+                  Return to Island
                 </button>
               ) : null}
             </div>
@@ -712,7 +741,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             <p className="space-excavator__reward-sheet-body">Congratulations — you cleared {exitCelebrationSummary.boardsCleared} board{exitCelebrationSummary.boardsCleared === 1 ? '' : 's'} this run.</p>
             <p className="space-excavator__reward-sheet-prize">🎲 +{exitCelebrationSummary.diceWon} Dice · 🟣 +{exitCelebrationSummary.essenceWon} Essence · 🧩 +{exitCelebrationSummary.shardsWon} Shards</p>
             <div className="space-excavator__ticket-sheet-actions">
-              <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={dismissExitCelebration}>Back to Island Run</button>
+              <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={dismissExitCelebration}>Return to Island</button>
               <button type="button" className="space-excavator__button" onClick={() => setExitCelebrationSummary(null)}>Keep Digging</button>
             </div>
           </div>
@@ -720,9 +749,11 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       )}
       <div className="space-excavator__footer-actions">
         <div className="space-excavator__actions">
-          <button type="button" className="space-excavator__button" onClick={onRequestClose} disabled={finished}>Close</button>
+          <button type="button" className="space-excavator__button" onClick={onRequestClose} disabled={finished}>
+            <span aria-hidden="true">🏝️</span> Return to Island
+          </button>
         </div>
-        <p className="space-excavator__footer-ticket-count" aria-live="polite">
+        <p className={`space-excavator__footer-ticket-count ${ticketsRemaining > 0 && ticketsRemaining <= 3 ? 'space-excavator__footer-ticket-count--low' : ''}`} aria-live="polite">
         <span aria-hidden="true">🎟️</span>
         <span>Event Tickets: </span>
         <strong>{ticketsRemaining}</strong>
