@@ -192,20 +192,41 @@ function getSpaceExcavatorSeed(input: string): number {
   return Array.from(input).reduce((sum, char) => ((sum * 31) + char.charCodeAt(0)) >>> 0, SPACE_EXCAVATOR_HASH_OFFSET_BASIS);
 }
 
-function chooseSpaceExcavatorBonusBombTileId(options: {
+// Board 3+ digs use a 6x6 grid; boards already in progress keep their stored boardSize.
+function resolveSpaceExcavatorBoardSizeForIndex(boardIndex: number): number {
+  return boardIndex >= 2 ? 6 : 5;
+}
+
+// Crystal Vault depth and deeper (board 6+) hides a second bonus bomb.
+function resolveSpaceExcavatorBonusBombCountForIndex(boardIndex: number): number {
+  return boardIndex >= 5 ? 2 : 1;
+}
+
+function chooseSpaceExcavatorBonusBombTileIds(options: {
   eventId: string;
   boardIndex: number;
   boardSize: number;
   objectTileIds: readonly number[];
-}): number {
-  const { eventId, boardIndex, boardSize, objectTileIds } = options;
+  bombCount: number;
+}): number[] {
+  const { eventId, boardIndex, boardSize, objectTileIds, bombCount } = options;
   const tileCount = Math.max(1, Math.floor(boardSize) * Math.floor(boardSize));
   const objectTileIdSet = new Set(objectTileIds);
-  const candidates = Array.from({ length: tileCount }, (_, tileId) => tileId)
-    .filter((tileId) => !objectTileIdSet.has(tileId));
-  const pool = candidates.length > 0 ? candidates : Array.from({ length: tileCount }, (_, tileId) => tileId);
-  const seed = getSpaceExcavatorSeed(`${eventId}:${boardIndex}:bonus_bomb`);
-  return pool[seed % pool.length];
+  const chosen: number[] = [];
+  for (let bombIndex = 0; bombIndex < Math.max(1, Math.floor(bombCount)); bombIndex += 1) {
+    const chosenSet = new Set(chosen);
+    const candidates = Array.from({ length: tileCount }, (_, tileId) => tileId)
+      .filter((tileId) => !objectTileIdSet.has(tileId) && !chosenSet.has(tileId));
+    const pool = candidates.length > 0
+      ? candidates
+      : Array.from({ length: tileCount }, (_, tileId) => tileId).filter((tileId) => !chosenSet.has(tileId));
+    if (pool.length === 0) break;
+    // The first bomb keeps the historical salt so deterministic layouts stay stable.
+    const salt = bombIndex === 0 ? `${eventId}:${boardIndex}:bonus_bomb` : `${eventId}:${boardIndex}:bonus_bomb:${bombIndex}`;
+    const seed = getSpaceExcavatorSeed(salt);
+    chosen.push(pool[seed % pool.length]);
+  }
+  return chosen.sort((a, b) => a - b);
 }
 
 function chooseSpaceExcavatorHardTileIds(options: {
@@ -220,7 +241,9 @@ function chooseSpaceExcavatorHardTileIds(options: {
   const blocked = new Set([...objectTileIds, ...bonusBombTileIds]);
   const candidates = Array.from({ length: tileCount }, (_, tileId) => tileId).filter((tileId) => !blocked.has(tileId));
   if (candidates.length === 0) return [];
-  const targetCount = Math.min(4, Math.max(2, Math.floor(tileCount / 8)));
+  // Ancient Core depth (board 9+) adds one more reinforced stone tile.
+  const depthBonus = boardIndex >= 8 ? 1 : 0;
+  const targetCount = Math.min(5, Math.max(2, Math.floor(tileCount / 8) + depthBonus));
   const seed = getSpaceExcavatorSeed(`${eventId}:${boardIndex}:hard_tiles`);
   const sortedCandidates = [...candidates].sort((left, right) => {
     const leftSeed = getSpaceExcavatorSeed(`${seed}:${left}`);
@@ -254,10 +277,16 @@ function buildSpaceExcavatorProgress(
   completedBoardCount = boardIndex,
   claimedMilestoneIds: string[] = [],
 ): SpaceExcavatorProgressEntry {
-  const boardSize = 5;
+  const boardSize = resolveSpaceExcavatorBoardSizeForIndex(boardIndex);
   const objectShape = chooseSpaceExcavatorObjectShape(eventId, boardIndex);
   const objectTileIds = placeSpaceExcavatorObjectShape({ eventId, boardIndex, boardSize, shape: objectShape });
-  const bonusBombTileIds = [chooseSpaceExcavatorBonusBombTileId({ eventId, boardIndex, boardSize, objectTileIds })];
+  const bonusBombTileIds = chooseSpaceExcavatorBonusBombTileIds({
+    eventId,
+    boardIndex,
+    boardSize,
+    objectTileIds,
+    bombCount: resolveSpaceExcavatorBonusBombCountForIndex(boardIndex),
+  });
   const hardTileIds = chooseSpaceExcavatorHardTileIds({ eventId, boardIndex, boardSize, objectTileIds, bonusBombTileIds });
   return {
     eventId,
