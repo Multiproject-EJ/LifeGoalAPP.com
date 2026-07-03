@@ -3927,6 +3927,49 @@
     inset 0 -2.5px 3px rgba(30, 16, 4, 0.34),
     inset -1px 0 1px rgba(30, 16, 4, 0.12);
   pointer-events: none;
+  z-index: 1;
+}
+
+/* Machined metallic bezel — a gold gradient-border ring hugging the tile edge
+   so every tile reads as a jewel set in gold, unifying the palette and echoing
+   the rim disc. Built with the two-mask "gradient border" trick: paint a
+   directional gold gradient over the whole face, then knock out everything but
+   a --tile-bezel-wide frame. Lit top-left (bright) → bottom-right (deep) to
+   match the scene light. */
+.island-tile__face {
+  --tile-bezel: 2.8px;
+}
+/* Guarded so browsers without mask-composite fall back to the plain tile face
+   instead of a solid gold rectangle covering the content. */
+@supports ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+  .island-tile__face::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: var(--tile-bezel);
+    /* Higher-contrast gold with a crisp highlight band and a deep shadow band so
+       the frame shimmers like machined metal rather than a flat gold line. */
+    background: linear-gradient(146deg,
+      #fffdf0 0%,
+      #ffe7a0 12%,
+      #d3a848 30%,
+      #6f4f1e 49%,
+      #4a3413 56%,
+      #c99b45 74%,
+      #ffeaa6 88%,
+      #7a561f 100%);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+            mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    z-index: 2;
+  }
 }
 
 .island-run-board--spark40 .island-tile {
