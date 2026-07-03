@@ -1,5 +1,6 @@
 import React from 'react';
 import { CREATURE_CATALOG } from '../services/creatureCatalog';
+import { CreatureCard } from './CreatureCard';
 import type { ClaimFullWelcomePackResult } from '../services/islandRunWelcomePackFullClaimAction';
 
 import { lockPageScroll } from '../../../../utils/scrollLock';
@@ -154,7 +155,17 @@ export function WelcomePackModal({
     >
       <div key={revealIndex} className="wpm-card-reveal">
         <p className="wpm-card-reveal__counter">{revealIndex + 1} / {resolvedCards.length}</p>
-        <div className="wpm-card-reveal__art" aria-hidden="true">✦</div>
+        {creature ? (
+          <CreatureCard
+            creature={creature}
+            owned
+            shiny={cardTier === 'mythic'}
+            foil={cardTier === 'mythic' ? 'premium' : cardTier === 'rare' ? 'soft' : 'none'}
+            className="wpm-card-reveal__creature-card"
+          />
+        ) : (
+          <div className="wpm-card-reveal__art" aria-hidden="true">✦</div>
+        )}
         <h3 className="wpm-card-reveal__name">{creatureName}</h3>
         <p className="wpm-card-reveal__tier">{cardTier}</p>
         <p className="wpm-card-reveal__hint">
