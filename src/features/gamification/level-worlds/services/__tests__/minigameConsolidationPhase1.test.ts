@@ -72,6 +72,7 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
       assert(manifestIds.includes('shooter_blitz'), 'Shooter Blitz manifest should be registered');
       assert(manifestIds.includes('vision_quest'), 'Vision Quest manifest should be registered');
       assert(manifestIds.includes('space_excavator'), 'Space Excavator manifest should be registered');
+      assert(manifestIds.includes('companion_feast'), 'Companion Feast manifest should be registered');
     },
   },
   {

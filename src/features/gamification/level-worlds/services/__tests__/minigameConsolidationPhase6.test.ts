@@ -17,7 +17,7 @@ import { assertEqual, type TestCase } from './testHarness';
 
 function runTimedEventCompletionIntegration(options: {
   descriptor: EventMinigameLaunchDescriptor | null;
-  expectedMinigameId: 'lucky_spin' | 'space_excavator' | 'partner_wheel';
+  expectedMinigameId: 'lucky_spin' | 'space_excavator' | 'companion_feast';
 }) {
   assertEqual(options.descriptor?.minigameId, options.expectedMinigameId, 'event resolver should return the canonical minigame id');
   const completionId = resolveEventMinigameCompletionId({
@@ -75,8 +75,8 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       );
       assertEqual(
         openEventMinigame({ eventId: 'companion_feast', ticketsAvailable: 5 })?.minigameId,
-        'partner_wheel',
-        'companion_feast should launch partner_wheel',
+        'companion_feast',
+        'companion_feast should launch companion_feast',
       );
     },
   },
@@ -166,11 +166,11 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       assertEqual(
         resolveEventMinigameCompletionId({
           launchSource: 'timed_event',
-          minigameId: 'partner_wheel',
+          minigameId: 'companion_feast',
           completed: true,
         }),
-        'partner_wheel',
-        'timed_event completion should accept partner_wheel',
+        'companion_feast',
+        'timed_event completion should accept companion_feast',
       );
       assertEqual(
         resolveEventMinigameCompletionId({
@@ -346,7 +346,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
     },
   },
   {
-    name: 'resolveCompanionFeastEventMinigame routes to Partner Wheel placeholder with default team config',
+    name: 'resolveCompanionFeastEventMinigame routes to the Companion Feast drop-and-merge game',
     run: () => {
       const descriptor = resolveCompanionFeastEventMinigame({
         kind: 'timed_event',
@@ -354,22 +354,13 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         ticketsAvailable: 3,
         ticketsToSpend: 2,
       });
-      assertEqual(descriptor?.minigameId, 'partner_wheel', 'companion_feast should route to partner_wheel');
+      assertEqual(descriptor?.minigameId, 'companion_feast', 'companion_feast should route to companion_feast');
       assertEqual(descriptor?.ticketsSpent, 2, 'resolver should preserve explicit ticket spend request');
+      assertEqual(descriptor?.spendMode, 'entry', 'companion_feast should spend tickets at entry');
       assertEqual(
         descriptor?.config.mode,
         'companion_feast',
         'resolver should tag companion_feast event mode',
-      );
-      assertEqual(
-        descriptor?.config.mode === 'companion_feast' ? descriptor.config.teamSize : null,
-        4,
-        'partner placeholder teamSize should default to 4',
-      );
-      assertEqual(
-        descriptor?.config.mode === 'companion_feast' ? descriptor.config.aiPartnerCount : null,
-        3,
-        'partner placeholder aiPartnerCount should default to 3',
       );
     },
   },
@@ -502,7 +493,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
           eventId: 'companion_feast',
           ticketsAvailable: 3,
         }),
-        expectedMinigameId: 'partner_wheel',
+        expectedMinigameId: 'companion_feast',
       });
     },
   },
