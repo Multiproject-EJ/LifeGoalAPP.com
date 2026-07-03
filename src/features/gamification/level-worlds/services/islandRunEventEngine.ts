@@ -342,7 +342,7 @@ export function emitEventTransitionTelemetry(payload: EventTransitionTelemetryPa
   });
 }
 
-export type EventMinigameId = 'lucky_spin' | 'space_excavator' | 'partner_wheel';
+export type EventMinigameId = 'lucky_spin' | 'space_excavator' | 'companion_feast';
 
 export interface EventMinigameLaunchDescriptor {
   eventId: EventId;
@@ -358,7 +358,7 @@ function resolveEventMinigameId(eventId: EventId): EventMinigameId {
     case 'space_excavator':
       return 'space_excavator';
     case 'companion_feast':
-      return 'partner_wheel';
+      return 'companion_feast';
     default:
       return 'lucky_spin';
   }

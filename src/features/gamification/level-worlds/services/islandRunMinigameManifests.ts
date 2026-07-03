@@ -12,7 +12,7 @@
  * import so the first registration is what actually schedules the chunk.
  */
 
-import { partnerWheelManifest } from '../../games/partner-wheel';
+import { companionFeastManifest } from '../../games/companion-feast';
 import { shooterBlitzManifest } from '../../games/shooter-blitz';
 import { spaceExcavatorManifest } from '../../games/space-excavator';
 import { visionQuestManifest } from '../../games/vision-quest';
@@ -25,7 +25,7 @@ export const ALL_MINIGAME_MANIFESTS: readonly MinigameManifest[] = Object.freeze
   shooterBlitzManifest,
   spaceExcavatorManifest,
   visionQuestManifest,
-  partnerWheelManifest,
+  companionFeastManifest,
 ]);
 
 let registered = false;
@@ -40,7 +40,7 @@ export function registerAllMinigameManifests(): void {
   if (registered) return;
   for (const manifest of ALL_MINIGAME_MANIFESTS) {
     // The registry's `IslandRunMinigameEntry.component` expects
-    // `ComponentType<IslandRunMinigameProps>`, but the existing Vision Quest / Shooter Blitz / Partner Wheel components still use bespoke props
+    // `ComponentType<IslandRunMinigameProps>`, but the existing Vision Quest / Shooter Blitz components still use bespoke props
     // (`{ session, onClose, onComplete }`). Phase 5 introduces per-game
     // adapters that translate registry props → bespoke props and THEN match
     // the type exactly. Until then we narrow through a single explicit cast

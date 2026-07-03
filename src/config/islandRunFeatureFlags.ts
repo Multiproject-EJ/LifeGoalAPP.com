@@ -32,8 +32,9 @@ export interface IslandRunFeatureFlags {
   islandRunVisionQuestMysteryEnabled: boolean;
 
   /**
-   * Phase 6 — enables the new Partner Wheel mini-game (Companion Feast event
-   * surface). While off, Companion Feast has no dedicated mini-game.
+   * Phase 6 — legacy flag for the retired Partner Wheel placeholder (Companion
+   * Feast event surface). The Companion Feast drop-and-merge mini-game now
+   * launches unconditionally through the event resolver; this flag is unused.
    */
   islandRunPartnerWheelEnabled: boolean;
 

@@ -63,7 +63,7 @@ export interface EventMinigameLaunchContext {
 }
 
 export interface EventMinigameLaunchDescriptor {
-  minigameId: 'lucky_spin' | 'space_excavator' | 'partner_wheel';
+  minigameId: 'lucky_spin' | 'space_excavator' | 'companion_feast';
   ticketCost: number;
   ticketsSpent: number;
   spendMode: 'entry' | 'per_action';
@@ -94,8 +94,6 @@ export interface EventMinigameLaunchDescriptor {
         source: 'timed_event';
         eventId: 'companion_feast';
         mode: 'companion_feast';
-        teamSize: 4;
-        aiPartnerCount: 3;
       };
 }
 
@@ -201,7 +199,7 @@ export function resolveEventMinigameCompletionId(options: {
   if (!options.completed || options.launchSource !== 'timed_event') return null;
   if (options.minigameId === 'lucky_spin') return 'lucky_spin';
   if (options.minigameId === 'space_excavator') return 'space_excavator';
-  if (options.minigameId === 'partner_wheel') return 'partner_wheel';
+  if (options.minigameId === 'companion_feast') return 'companion_feast';
   return null;
 }
 
@@ -282,9 +280,10 @@ export function resolveSpaceExcavatorEventMinigame(
 
 
 /**
- * Phase 6 step 4: Companion Feast event surface routes to the Partner Wheel
- * placeholder. This is intentionally a launcher-contract skeleton only: no
- * multiplayer transport or persistent partner state in this step.
+ * Companion Feast event surface routes to the dedicated drop-and-merge
+ * Companion Feast mini-game. Entry spends 1 ticket at launch; replays inside
+ * the game spend additional tickets through launch-config callbacks that call
+ * the canonical `applyTimedEventTicketSpend` action.
  */
 export function resolveCompanionFeastEventMinigame(
   ctx: EventMinigameLaunchContext,
@@ -295,10 +294,10 @@ export function resolveCompanionFeastEventMinigame(
     ticketsAvailable: ctx.ticketsAvailable,
     ticketsToSpend: ctx.ticketsToSpend,
   });
-  if (!launch || launch.minigameId !== 'partner_wheel') return null;
+  if (!launch || launch.minigameId !== 'companion_feast') return null;
 
   return {
-    minigameId: 'partner_wheel',
+    minigameId: 'companion_feast',
     spendMode: 'entry',
     ticketCost: launch.ticketCost,
     ticketsSpent: launch.ticketsSpent,
@@ -306,8 +305,6 @@ export function resolveCompanionFeastEventMinigame(
       source: 'timed_event',
       eventId: 'companion_feast',
       mode: 'companion_feast',
-      teamSize: 4,
-      aiPartnerCount: 3,
     },
   };
 }

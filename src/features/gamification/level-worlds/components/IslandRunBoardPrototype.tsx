@@ -7842,6 +7842,17 @@ export function IslandRunBoardPrototype({
               return { ok: claim.ok, progress: claim.progress, rewardLabel: claim.rewardLabel, failureReason: claim.failureReason };
             },
           }
+        : effectiveActiveTimedEvent.eventType === 'companion_feast'
+        ? {
+            ...descriptor.config,
+            activeEventId: effectiveActiveTimedEvent.eventId,
+            getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)),
+            requestRunTicketSpend: () => {
+              const spend = applyTimedEventTicketSpend({ session, client, eventId: effectiveActiveTimedEvent.eventId, ticketsToSpend: 1, triggerSource: 'companion_feast_play_again' });
+              if (spend.spent > 0) setRuntimeState(spend.record);
+              return { ok: spend.spent > 0, ticketsRemaining: Math.max(0, Math.floor(spend.record.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)) };
+            },
+          }
         : descriptor.config,
     );
     setIsTimedEventLaunchQueued(false);
