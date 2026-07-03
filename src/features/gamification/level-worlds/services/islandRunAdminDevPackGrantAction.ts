@@ -127,6 +127,30 @@ function buildEggRewardEntry(options: {
   };
 }
 
+
+function buildReplayCreatureCardsFromGrantMarker(record: IslandRunGameStateRecord, grantId: string): CreaturePackCardReveal[] {
+  return record.creatureCollection
+    .filter((entry) => entry.grantIds?.includes(grantId))
+    .map((entry, slotIndex): CreaturePackCardReveal | null => {
+      const creature = getCreatureById(entry.creatureId);
+      if (!creature) return null;
+      const copiesAfter = Math.max(1, entry.copies);
+      return {
+        slotIndex,
+        creatureId: creature.id,
+        name: creature.name,
+        tier: creature.tier,
+        imageKey: creature.imageKey,
+        habitat: creature.habitat,
+        affinity: creature.affinity,
+        copiesBefore: Math.max(0, copiesAfter - 1),
+        copiesAfter,
+      };
+    })
+    .filter((card): card is CreaturePackCardReveal => Boolean(card))
+    .slice(0, MAX_CREATURES_PER_DEV_GRANT);
+}
+
 function validateRequest(options: {
   grantId: string;
   creatureIds: string[];
@@ -224,7 +248,7 @@ export function grantAdminDevCreaturePack(
         eggRewardsGranted: 0,
         diceGranted: 0,
         essenceGranted: 0,
-        creatureCards: [],
+        creatureCards: buildReplayCreatureCardsFromGrantMarker(current, grantId),
       };
     }
 

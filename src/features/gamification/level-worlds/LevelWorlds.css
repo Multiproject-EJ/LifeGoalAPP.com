@@ -10811,6 +10811,25 @@
   align-self: center;
 }
 
+.wpm-card-reveal__creature-card {
+  width: min(100%, 250px);
+  transform: none;
+}
+
+.wpm-card-reveal__creature-card .creature-card__inner {
+  min-height: 0;
+  padding: 0.7rem;
+}
+
+.wpm-card-reveal__creature-card .creature-card__art-window {
+  min-height: 150px;
+}
+
+.wpm-card-reveal__creature-card .creature-card__ability,
+.wpm-card-reveal__creature-card .creature-card__quote {
+  display: none;
+}
+
 .wpm-card-reveal__name {
   margin: 0;
   font-size: clamp(1.3rem, 5.5vw, 1.8rem);

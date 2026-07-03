@@ -191,6 +191,49 @@ export const islandRunAdminDevPackGrantActionTests: TestCase[] = [
     },
   },
   {
+    name: 'grantDevDemoCreaturePack repeated dev grant returns replay cards for the free opening modal',
+    run: async () => {
+      resetEnvironment();
+      await seedState({
+        runtimeVersion: 2,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        dicePool: 10,
+        essence: 20,
+        creatureCollection: [],
+        eggRewardInventory: [],
+      });
+
+      const first = await grantDevDemoCreaturePack({
+        session: makeSession(),
+        client: null,
+        allowGrant: true,
+        nowMs: 1111,
+      });
+      const second = await grantDevDemoCreaturePack({
+        session: makeSession(),
+        client: null,
+        allowGrant: true,
+        nowMs: 2222,
+      });
+      const persisted = readIslandRunGameStateRecord(makeSession());
+
+      assertEqual(first.status, 'granted', 'First free dev demo pack should grant normally');
+      assertEqual(second.status, 'already_granted', 'Repeated free dev demo pack should remain idempotent');
+      assertEqual(second.creatureCards?.length ?? 0, DEV_DEMO_CREATURE_PACK_CARD_COUNT, 'Already-granted dev pack should still return cards for replay/opening UI');
+      assertDeepEqual(
+        (second.creatureCards ?? []).map((card) => card.creatureId).sort(),
+        persisted.creatureCollection
+          .filter((entry) => entry.grantIds?.includes(second.grantId))
+          .map((entry) => entry.creatureId)
+          .sort(),
+        'Replay cards should come from canonical collection grant markers',
+      );
+      assertEqual(persisted.dicePool, 10, 'Free dev demo pack replay should not charge or grant dice');
+      assertEqual(persisted.essence, 20, 'Free dev demo pack replay should not charge or grant essence');
+    },
+  },
+  {
     name: 'grantAdminDevCreaturePack handles duplicate creature ids as canonical copy increments',
     run: async () => {
       resetEnvironment();
