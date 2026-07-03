@@ -11591,7 +11591,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           ? '🗑️ Delete'
                           : null;
                 return (
-                  <li key={todo.id} className={itemClassName} style={{ '--todo-i': todoIndex } as CSSProperties}>
+                  <li key={todo.id} className={itemClassName} style={{ '--stagger-index': todoIndex } as CSSProperties}>
                     <div className="yesterday-sundown-todo-modal__row">
                       <button
                         type="button"
