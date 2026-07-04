@@ -29645,6 +29645,9 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .journal-hub-modes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;

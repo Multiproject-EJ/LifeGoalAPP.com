@@ -56,6 +56,7 @@ const MOOD_OPTIONS: JournalMoodOption[] = [
 ];
 
 const SOUNDSCAPE_STORAGE_KEY = 'lifegoal.journal.soundscape';
+const ENTRY_PREVIEW_MAX_LENGTH = 60;
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 // Use V2 habits
@@ -731,21 +732,7 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
     setSeedDraft(null);
   };
 
-  const handleQuickStartPreset = (type: JournalType, title: string, content: string) => {
-    setJournalType(type);
-    setJournalView('write');
-    setEditorMode('create');
-    setEditingEntry(null);
-    setEditorError(null);
-    setSeedDraft({
-      type,
-      title,
-      content,
-    });
-    setEditorOpen(true);
-  };
-
-  const handleStartWriting = (type?: JournalType) => {
+  const handleStartWriting = (type?: JournalType, seed?: Partial<JournalEntryDraft>) => {
     if (type) {
       setJournalType(type);
     }
@@ -753,8 +740,12 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
     setEditorMode('create');
     setEditingEntry(null);
     setEditorError(null);
-    setSeedDraft(type ? { type } : null);
+    setSeedDraft(seed ?? (type ? { type } : null));
     setEditorOpen(true);
+  };
+
+  const handleQuickStartPreset = (type: JournalType, title: string, content: string) => {
+    handleStartWriting(type, { type, title, content });
   };
 
   const handleOpenReadView = () => {
@@ -1270,20 +1261,20 @@ ${thankYouDraft}`,
             <h3>🎨 Pick a mode</h3>
             <p>Tap any mode to start writing in it instantly.</p>
           </header>
-          <div className="journal-hub-modes" role="list">
+          <ul className="journal-hub-modes">
             {JOURNAL_MODE_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                role="listitem"
-                className={`journal-hub-modes__chip ${journalType === option.value ? 'journal-hub-modes__chip--active' : ''}`}
-                onClick={() => handleStartWriting(option.value)}
-                disabled={journalDisabled}
-              >
-                <span aria-hidden="true">{option.icon}</span> {option.label}
-              </button>
+              <li key={option.value}>
+                <button
+                  type="button"
+                  className={`journal-hub-modes__chip ${journalType === option.value ? 'journal-hub-modes__chip--active' : ''}`}
+                  onClick={() => handleStartWriting(option.value)}
+                  disabled={journalDisabled}
+                >
+                  <span aria-hidden="true">{option.icon}</span> {option.label}
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
 
         <section className="journal-hub-section" aria-label="Recent entries">
@@ -1319,7 +1310,7 @@ ${thankYouDraft}`,
                       </span>
                       <span className="journal-hub-recent__body">
                         <span className="journal-hub-recent__title">
-                          {entry.title?.trim() || (locked ? 'Locked time capsule' : entry.content.slice(0, 60) || 'Untitled entry')}
+                          {entry.title?.trim() || (locked ? 'Locked time capsule' : entry.content.slice(0, ENTRY_PREVIEW_MAX_LENGTH) || 'Untitled entry')}
                         </span>
                         <span className="journal-hub-recent__meta">
                           {entryListDateFormatter.format(new Date(entry.entry_date))} · {getModeLabel(entry.type)}
