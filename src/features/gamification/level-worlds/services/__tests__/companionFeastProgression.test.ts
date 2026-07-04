@@ -12,6 +12,7 @@ import {
   COMPANION_FEAST_MAX_LEVEL_INDEX,
   COMPANION_FEAST_REWARD_BAR_MILESTONES,
   COMPANION_FEAST_REWARD_BAR_TOTAL_POINTS,
+  COMPANION_FEAST_SCORE_PER_FEAST_POINT,
   createCompanionFeastProgress,
   getCompanionFeastLevel,
   getCompanionFeastMilestone,
@@ -54,6 +55,29 @@ export const companionFeastProgressionTests: TestCase[] = [
       assertEqual(canDropCompanionFeastFruit({ ticketsRemaining: 0 }), false, 'zero tickets should block a drop');
       assertEqual(canDropCompanionFeastFruit({ ticketsRemaining: 1 }), true, 'one ticket should allow a drop');
       assertEqual(canDropCompanionFeastFruit({ ticketsRemaining: Number.NaN }), false, 'invalid ticket counts should block');
+    },
+  },
+  {
+    name: 'banked run score persists partial-round reward-bar progress',
+    run: () => {
+      const fresh = createCompanionFeastProgress(1_500);
+      const first = applyCompanionFeastMergeToProgress({
+        progress: fresh,
+        mergedToTier: 0,
+        runScore: COMPANION_FEAST_SCORE_PER_FEAST_POINT - 1,
+        nowMs: 1_501,
+      });
+      assertEqual(first.progress.cumulativeScore, COMPANION_FEAST_SCORE_PER_FEAST_POINT - 1, 'partial score should be banked');
+      assertEqual(first.progress.feastPoints, 0, 'score below threshold should not unlock yet');
+
+      const second = applyCompanionFeastMergeToProgress({
+        progress: first.progress,
+        mergedToTier: 0,
+        runScore: 1,
+        nowMs: 1_502,
+      });
+      assertEqual(second.progress.cumulativeScore, COMPANION_FEAST_SCORE_PER_FEAST_POINT, 'second run should continue the bank');
+      assertEqual(second.progress.feastPoints, 1, 'cumulative score should unlock a feast point across runs');
     },
   },
   {

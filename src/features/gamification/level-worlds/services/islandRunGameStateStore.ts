@@ -189,6 +189,8 @@ export interface CompanionFeastProgressEntry {
   highestTierReached: number;
   /** Best single-run merge score for this event. */
   bestScore: number;
+  /** Cumulative score banked at run end so partial rounds still build reward progress. */
+  cumulativeScore: number;
   /** Total fruit drops (each spends one event ticket). */
   totalFruitDropped: number;
   claimedMilestoneIds: string[];
@@ -1773,6 +1775,7 @@ function sanitizeCompanionFeastProgressByEvent(
       feastPoints: toCount(raw.feastPoints),
       highestTierReached: toCount(raw.highestTierReached),
       bestScore: toCount(raw.bestScore),
+      cumulativeScore: toCount(raw.cumulativeScore),
       totalFruitDropped: toCount(raw.totalFruitDropped),
       claimedMilestoneIds: resolveCompanionFeastClaimedMilestoneIds({
         claimedMilestoneIds: Array.isArray(raw.claimedMilestoneIds)
@@ -1807,6 +1810,7 @@ function mergeCompanionFeastProgressByEvent(
       feastPoints: Math.max(remoteProgress.feastPoints, localProgress.feastPoints),
       highestTierReached: Math.max(remoteProgress.highestTierReached, localProgress.highestTierReached),
       bestScore: Math.max(remoteProgress.bestScore, localProgress.bestScore),
+      cumulativeScore: Math.max(remoteProgress.cumulativeScore ?? 0, localProgress.cumulativeScore ?? 0),
       totalFruitDropped: Math.max(remoteProgress.totalFruitDropped, localProgress.totalFruitDropped),
       claimedMilestoneIds: resolveCompanionFeastClaimedMilestoneIds({
         claimedMilestoneIds: [...remoteProgress.claimedMilestoneIds, ...localProgress.claimedMilestoneIds],
@@ -1974,10 +1978,14 @@ function mergeRecordForConflict(options: {
       ...local.stickerInventory,
     },
     lastEssenceDriftLost: Math.max(local.lastEssenceDriftLost, remote.lastEssenceDriftLost),
-    minigameTicketsByEvent: mergeMinigameTicketsByEvent(
-      remote.minigameTicketsByEvent,
-      local.minigameTicketsByEvent,
-    ),
+    minigameTicketsByEvent: mergeMinigameTicketsByEvent({
+      remote: remote.minigameTicketsByEvent,
+      local: local.minigameTicketsByEvent,
+      remoteCompanionFeastProgress: remote.companionFeastProgressByEvent,
+      localCompanionFeastProgress: local.companionFeastProgressByEvent,
+      remoteSpaceExcavatorProgress: remote.spaceExcavatorProgressByEvent,
+      localSpaceExcavatorProgress: local.spaceExcavatorProgressByEvent,
+    }),
     luckyRollSessionsByMilestone: mergeLuckyRollSessionsByMilestone(
       remote.luckyRollSessionsByMilestone,
       local.luckyRollSessionsByMilestone,
@@ -1993,14 +2001,33 @@ function mergeRecordForConflict(options: {
   };
 }
 
-function mergeMinigameTicketsByEvent(
-  remote: Record<string, number>,
-  local: Record<string, number>,
-): Record<string, number> {
+function mergeMinigameTicketsByEvent(options: {
+  remote: Record<string, number>;
+  local: Record<string, number>;
+  remoteCompanionFeastProgress?: Record<string, CompanionFeastProgressEntry>;
+  localCompanionFeastProgress?: Record<string, CompanionFeastProgressEntry>;
+  remoteSpaceExcavatorProgress?: Record<string, SpaceExcavatorProgressEntry>;
+  localSpaceExcavatorProgress?: Record<string, SpaceExcavatorProgressEntry>;
+}): Record<string, number> {
+  const { remote, local } = options;
   const keys = new Set([...Object.keys(remote), ...Object.keys(local)]);
   const merged: Record<string, number> = {};
   keys.forEach((key) => {
-    const count = Math.max(remote[key] ?? 0, local[key] ?? 0);
+    const remoteCount = remote[key] ?? 0;
+    const localCount = local[key] ?? 0;
+    const remoteFeastDrops = options.remoteCompanionFeastProgress?.[key]?.totalFruitDropped ?? 0;
+    const localFeastDrops = options.localCompanionFeastProgress?.[key]?.totalFruitDropped ?? 0;
+    const remoteDigs = (options.remoteSpaceExcavatorProgress?.[key]?.dugTileIds.length ?? 0)
+      + (options.remoteSpaceExcavatorProgress?.[key]?.completedBoardCount ?? 0);
+    const localDigs = (options.localSpaceExcavatorProgress?.[key]?.dugTileIds.length ?? 0)
+      + (options.localSpaceExcavatorProgress?.[key]?.completedBoardCount ?? 0);
+    const localSpentMoreActions = localFeastDrops > remoteFeastDrops || localDigs > remoteDigs;
+    const remoteSpentMoreActions = remoteFeastDrops > localFeastDrops || remoteDigs > localDigs;
+    const count = localSpentMoreActions && !remoteSpentMoreActions
+      ? localCount
+      : remoteSpentMoreActions && !localSpentMoreActions
+        ? remoteCount
+        : Math.max(remoteCount, localCount);
     if (count > 0) merged[key] = count;
   });
   return merged;

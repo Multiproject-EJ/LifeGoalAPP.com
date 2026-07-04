@@ -621,7 +621,12 @@ export function applyCompanionFeastMergeResult(options: {
   }
   const current = initCompanionFeastProgressForEvent({ session, client: null, eventId, triggerSource });
   const progress = current.companionFeastProgressByEvent?.[eventId] ?? createCompanionFeastProgress(Date.now());
-  const mergeResult = applyCompanionFeastMergeToProgress({ progress, mergedToTier, nowMs: Date.now() });
+  const mergeResult = applyCompanionFeastMergeToProgress({
+    progress,
+    mergedToTier,
+    runScore: mergedToTier === 0 ? runScore : undefined,
+    nowMs: Date.now(),
+  });
   const safeRunScore = Number.isFinite(runScore) ? Math.max(0, Math.floor(runScore ?? 0)) : 0;
   const bestScore = Math.max(mergeResult.progress.bestScore, safeRunScore);
   const changed = mergeResult.progress !== progress || bestScore !== progress.bestScore;

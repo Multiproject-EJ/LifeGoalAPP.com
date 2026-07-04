@@ -91,6 +91,7 @@ export function createCompanionFeastProgress(nowMs: number): CompanionFeastProgr
     feastPoints: 0,
     highestTierReached: 0,
     bestScore: 0,
+    cumulativeScore: 0,
     totalFruitDropped: 0,
     claimedMilestoneIds: [],
     updatedAtMs: Math.max(0, Math.floor(nowMs)),
@@ -118,6 +119,8 @@ export function applyCompanionFeastMergeToProgress(options: {
   progress: CompanionFeastProgressEntry;
   /** Tier produced by the merge (null merges at the top of the ladder count as max tier). */
   mergedToTier: number | null;
+  /** Optional final run score to bank at run end so partial rounds keep progressing. */
+  runScore?: number;
   nowMs: number;
 }): CompanionFeastMergeProgressResult {
   const producedTier = options.mergedToTier === null
@@ -127,6 +130,9 @@ export function applyCompanionFeastMergeToProgress(options: {
   const clearedLevels: CompanionFeastLevel[] = [];
   let levelIndex = Math.max(0, Math.floor(previous.levelIndex));
   let feastPoints = Math.max(0, Math.floor(previous.feastPoints));
+  const runScore = Number.isFinite(options.runScore) ? Math.max(0, Math.floor(options.runScore ?? 0)) : 0;
+  const previousCumulativeScore = Math.max(0, Math.floor(previous.cumulativeScore ?? 0));
+  const cumulativeScore = previousCumulativeScore + runScore;
 
   while (levelIndex <= COMPANION_FEAST_MAX_LEVEL_INDEX) {
     const level = COMPANION_FEAST_LEVELS[levelIndex];
@@ -138,7 +144,12 @@ export function applyCompanionFeastMergeToProgress(options: {
 
   const highestTierReached = Math.max(previous.highestTierReached, producedTier);
   const reachedNewHighestTier = highestTierReached > previous.highestTierReached;
-  if (clearedLevels.length === 0 && !reachedNewHighestTier) {
+  const scoreBankedFeastPoints = Math.min(
+    COMPANION_FEAST_REWARD_BAR_TOTAL_POINTS,
+    Math.floor(cumulativeScore / COMPANION_FEAST_SCORE_PER_FEAST_POINT),
+  );
+  feastPoints = Math.max(feastPoints, scoreBankedFeastPoints);
+  if (clearedLevels.length === 0 && !reachedNewHighestTier && cumulativeScore === previousCumulativeScore) {
     return { progress: previous, clearedLevels, reachedNewHighestTier };
   }
   return {
@@ -147,6 +158,7 @@ export function applyCompanionFeastMergeToProgress(options: {
       levelIndex,
       feastPoints,
       highestTierReached,
+      cumulativeScore,
       updatedAtMs: Math.max(0, Math.floor(options.nowMs)),
     },
     clearedLevels,
@@ -187,6 +199,8 @@ export const COMPANION_FEAST_REWARD_BAR_MILESTONES: readonly CompanionFeastRewar
 
 export const COMPANION_FEAST_REWARD_BAR_TOTAL_POINTS =
   COMPANION_FEAST_REWARD_BAR_MILESTONES[COMPANION_FEAST_REWARD_BAR_MILESTONES.length - 1]?.pointsRequired ?? 0;
+
+export const COMPANION_FEAST_SCORE_PER_FEAST_POINT = 250;
 
 export function getCompanionFeastMilestone(milestoneId: string): CompanionFeastRewardBarMilestone | null {
   return COMPANION_FEAST_REWARD_BAR_MILESTONES.find((milestone) => milestone.id === milestoneId) ?? null;
