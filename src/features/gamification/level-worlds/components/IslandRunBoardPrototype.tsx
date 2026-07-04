@@ -4588,8 +4588,18 @@ export function IslandRunBoardPrototype({
   }, [client, effectiveIslandNumber, islandNumber, islandStopPlan, session, stopIndexByStopId]);
 
   const requiredDoorStopIndex = requiredDoorStopId ? stopIndexByStopId.get(requiredDoorStopId) : undefined;
+  // The Boss door's "finish this landmark before rolling again" gate is
+  // released the moment the boss trial itself is resolved. After the trial the
+  // only work left on a boss stop is upgrading every landmark to Level 3, and
+  // that is funded purely by rolling for money — so holding the roll here would
+  // deadlock any player who lands on the boss tile without enough cash to
+  // finish the builds. Once the boss is defeated we let them keep rolling to
+  // earn what the remaining upgrades cost.
+  const isBossDoorTrialResolved = requiredDoorStopId === 'boss'
+    && (bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber);
   const isDoorLandmarkCompletionRequired = requiredDoorStopId !== null
     && typeof requiredDoorStopIndex === 'number'
+    && !isBossDoorTrialResolved
     && (
       contractV2Stops?.statusesByIndex[requiredDoorStopIndex] === 'active'
       || contractV2Stops?.statusesByIndex[requiredDoorStopIndex] === 'accessible'
@@ -12270,18 +12280,89 @@ export function IslandRunBoardPrototype({
                       </div>
                     )}
 
-                    {/* Success phase: reward summary */}
+                    {/* Success phase: reward summary + build-to-clear goal */}
                     {bossTrialPhase === 'success' && (
                       <div className="island-boss-trial__phase island-boss-trial__phase--success">
-                        <p className="island-boss-trial__result island-boss-trial__result--win">🏆 Trial Complete!</p>
+                        <p className="island-boss-trial__result island-boss-trial__result--win">🏆 Boss Defeated!</p>
                         <p className="island-boss-trial__reward-text">
                           {bossRewardSummary ?? `Rewards: +${bossReward.essence} 💰, +3 🟣`}
                         </p>
-                        <p className="island-boss-trial__next-hint">
-                          {isCurrentIslandFullyCleared
-                            ? <>Island clear is ready. A full-screen travel prompt will appear automatically.</>
-                            : <>Boss defeated. <strong>Full island-clear rewards are locked</strong> until every landmark is upgraded to Level {MAX_BUILD_LEVEL}.</>}
-                        </p>
+                        {isCurrentIslandFullyCleared ? (
+                          <p className="island-boss-trial__next-hint">
+                            Island clear is ready. A full-screen travel prompt will appear automatically.
+                          </p>
+                        ) : (() => {
+                          // The boss is beaten — all that stands between the player and
+                          // island clear is money for landmark upgrades. Surface the
+                          // cash gap big and visual, and nudge them to keep rolling to
+                          // earn it (rolling is unblocked once the trial is resolved).
+                          const cash = Math.max(0, Math.round(runtimeState.essence));
+                          const totalRemainingBuildCost = buildPanelRemainingToFullByIndex.reduce((sum, cost) => sum + cost, 0);
+                          const landmarksRemaining = buildPanelRemainingToFullByIndex.filter((cost) => cost > 0).length;
+                          const cashShortfall = Math.max(0, totalRemainingBuildCost - cash);
+                          const canFundAllNow = cashShortfall === 0;
+                          const fundedRatio = totalRemainingBuildCost > 0
+                            ? Math.min(1, cash / totalRemainingBuildCost)
+                            : 1;
+                          return (
+                            <div className="island-boss-build-goal">
+                              <p className="island-boss-build-goal__headline">
+                                🏝️ One step left — upgrade every landmark to Level {MAX_BUILD_LEVEL}
+                              </p>
+                              <div className="island-boss-build-goal__stats">
+                                <div className="island-boss-build-goal__stat">
+                                  <span className="island-boss-build-goal__stat-value">{cash.toLocaleString()} 💰</span>
+                                  <span className="island-boss-build-goal__stat-label">Your money</span>
+                                </div>
+                                <div className="island-boss-build-goal__stat island-boss-build-goal__stat--cost">
+                                  <span className="island-boss-build-goal__stat-value">{totalRemainingBuildCost.toLocaleString()} 💰</span>
+                                  <span className="island-boss-build-goal__stat-label">
+                                    Left to build{landmarksRemaining > 0 ? ` · ${landmarksRemaining} landmark${landmarksRemaining === 1 ? '' : 's'}` : ''}
+                                  </span>
+                                </div>
+                              </div>
+                              <div
+                                className="island-boss-build-goal__meter"
+                                role="progressbar"
+                                aria-valuemin={0}
+                                aria-valuemax={100}
+                                aria-valuenow={Math.round(fundedRatio * 100)}
+                                aria-label="Money saved toward remaining landmark upgrades"
+                              >
+                                <div
+                                  className="island-boss-build-goal__meter-fill"
+                                  style={{ width: `${Math.round(fundedRatio * 100)}%` }}
+                                />
+                              </div>
+                              <p className="island-boss-build-goal__hint">
+                                {canFundAllNow
+                                  ? <>💪 You can afford it all! Open <strong>Build</strong> and finish every landmark to clear the island.</>
+                                  : <>🎲 You need <strong>{cashShortfall.toLocaleString()} 💰</strong> more. Keep rolling to earn money, then Build the rest.</>}
+                              </p>
+                              <div className="island-boss-build-goal__actions">
+                                <button
+                                  type="button"
+                                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                                  onClick={() => {
+                                    setActiveStopId(null);
+                                    openBuildPanelFromFooter();
+                                  }}
+                                >
+                                  🔨 Open Build
+                                </button>
+                                {!canFundAllNow ? (
+                                  <button
+                                    type="button"
+                                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                                    onClick={() => setActiveStopId(null)}
+                                  >
+                                    🎲 Keep Rolling
+                                  </button>
+                                ) : null}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
 
@@ -12353,7 +12434,7 @@ export function IslandRunBoardPrototype({
                   {isCurrentIslandFullyCleared ? '✅ Boss Stop Complete' : '🔒 Full Rewards Locked — Finish Landmark Upgrades'}
                 </button>
               ) : null}
-              {activeStop.stopId === 'boss' && openedStopIsPlayable && !isCurrentIslandFullyCleared ? (
+              {activeStop.stopId === 'boss' && openedStopIsPlayable && !isCurrentIslandFullyCleared && !isCurrentIslandBossDefeated ? (
                 <p className="island-stop-modal__locked-notice" role="status" style={{ marginTop: '0.4rem' }}>
                   <span aria-hidden="true">🧱</span> Landmarks incomplete — finish upgrades to Level {MAX_BUILD_LEVEL} on all stops before you can claim full island-clear rewards and travel.
                 </p>
