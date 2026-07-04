@@ -58,9 +58,9 @@ export const islandRunTechCollectionTests: TestCase[] = [
   {
     name: 'resolves only explicitly assigned tiles to their fixed slots with no modulo fallback',
     run: () => {
-      assertDeepEqual(ISLAND_1_CONCORD_FRAGMENT_PLACEMENTS.map((p) => p.tileIndex), [1, 5, 9, 13, 17, 21, 25, 29, 33], 'selected tile indices stay content-driven');
+      assertDeepEqual(ISLAND_1_CONCORD_FRAGMENT_PLACEMENTS.map((p) => p.tileIndex), [1, 6, 10, 13, 17, 21, 25, 29, 33], 'selected tile indices stay content-driven');
       assertEqual(getTechnologyFragmentSlotForTile(1, 1), 0, 'tile 1 maps to slot 0');
-      assertEqual(getTechnologyFragmentSlotForTile(1, 5), 1, 'tile 5 maps to slot 1, not 5 % 9');
+      assertEqual(getTechnologyFragmentSlotForTile(1, 6), 1, 'tile 6 maps to slot 1, not 6 % 9');
       assertEqual(getTechnologyFragmentSlotForTile(1, 13), 3, 'tile 13 maps to fixed slot 3, not 13 % 9');
       assertEqual(getIslandTechnologyFragmentPlacement(1, 4), null, 'unassigned hazard/non-fragment tile returns no placement');
       assertEqual(getIslandTechnologyFragmentPlacement(2, 1), null, 'non-Island-1 has no placements in this PR');
@@ -69,8 +69,8 @@ export const islandRunTechCollectionTests: TestCase[] = [
   {
     name: 'visible fragment tiles hide already-collected slots for existing users',
     run: () => {
-      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [])).sort((a, b) => a - b), [1, 5, 9, 13, 17, 21, 25, 29, 33], 'reset/no progress shows all nine fragments');
-      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [0, 2, 7])).sort((a, b) => a - b), [5, 13, 17, 21, 25, 33], 'existing collected slots hide matching fixed tiles');
+      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [])).sort((a, b) => a - b), [1, 6, 10, 13, 17, 21, 25, 29, 33], 'reset/no progress shows all nine fragments');
+      assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [0, 2, 7])).sort((a, b) => a - b), [6, 13, 17, 21, 25, 33], 'existing collected slots hide matching fixed tiles');
       assertDeepEqual(Array.from(listVisibleTechnologyFragmentTileIndices(1, [0, 1, 2, 3, 4, 5, 6, 7, 8])), [], 'full collection shows no fragments');
     },
   },
@@ -92,7 +92,7 @@ export const islandRunTechCollectionTests: TestCase[] = [
     name: 'visible fragment records carry tile, slot, placeholder, and hide collected slots',
     run: () => {
       const visible = listVisibleTechnologyFragments(1, [0, 4, 8]);
-      assertDeepEqual(visible.map((fragment) => fragment.tileIndex), [5, 9, 13, 21, 25, 29], 'collected slots remove only their fixed tiles');
+      assertDeepEqual(visible.map((fragment) => fragment.tileIndex), [6, 10, 13, 21, 25, 29], 'collected slots remove only their fixed tiles');
       assertDeepEqual(visible.map((fragment) => fragment.fragmentSlot), [1, 2, 3, 5, 6, 7], 'visible records preserve fixed slot identity');
       assertDeepEqual(visible.map((fragment) => fragment.placeholder), ['🔷', '🔹', '🧿', '🔮', '💎', '🌀'], 'visible records use slot placeholders, not tile type');
       assertEqual(listVisibleTechnologyFragments(1, [0, 1, 2, 3, 4, 5, 6, 7, 8]).length, 0, 'collected fragments have no visual records');

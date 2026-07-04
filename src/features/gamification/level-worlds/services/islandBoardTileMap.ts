@@ -4,7 +4,7 @@
 // IMPORTANT: Per the canonical gameplay contract, the 5 stops (Hatchery, Habit,
 // Mystery, Wisdom, Boss) are EXTERNAL side-quest structures. The player piece
 // never lands on a landmark structure and there is no `'stop'` tile type on the
-// 40-tile ring. Stops are opened by the orbit-stop HUD buttons, or by the four
+// 36-tile ring. Stops are opened by the orbit-stop HUD buttons, or by the four
 // landmark-door access tiles defined below.
 //
 // Landmark-door tiles open the canonical landmark modal without awarding tile
@@ -38,14 +38,20 @@ export type IslandLandmarkDoorTileConfig = {
 export type IslandLandmarkDoorClusterStopId = Exclude<IslandLandmarkDoorStopId, 'boss'>;
 
 /**
- * Four outer ring tiles nearest the four outer landmark anchors. They become
- * landmark doors; once the boss is open, all four route to the boss instead.
+ * Four outer ring tiles nearest the four outer landmark corner anchors. They
+ * become landmark doors; once the boss is open, all four route to the boss
+ * instead.
+ *
+ * Indices are for the 36-tile ring (spark40_ring, tileCount 36): each is the
+ * ring tile closest to its diagonal corner anchor in OUTER_STOP_ANCHORS,
+ * spaced evenly 9 tiles apart. (Previously 36/6/16/26 on the 40-tile ring —
+ * note index 36 is out of range once the ring drops to 36 tiles.)
  */
 export const LANDMARK_DOOR_TILE_CONFIGS: readonly IslandLandmarkDoorTileConfig[] = Object.freeze([
-  { tileIndex: 36, stopId: 'hatchery' },
-  { tileIndex: 6, stopId: 'habit' },
-  { tileIndex: 16, stopId: 'mystery' },
-  { tileIndex: 26, stopId: 'wisdom' },
+  { tileIndex: 32, stopId: 'hatchery' },
+  { tileIndex: 5, stopId: 'habit' },
+  { tileIndex: 14, stopId: 'mystery' },
+  { tileIndex: 23, stopId: 'wisdom' },
 ]);
 
 
@@ -105,7 +111,7 @@ const ENCOUNTER_FRACTIONS: Record<IslandRarity, number[]> = {
 };
 
 // Two adjacent ring tiles become a card-draw station. Fractions keep the pair
-// topology-aware instead of depending on the current 40-tile production count.
+// topology-aware instead of depending on the current 36-tile production count.
 const CARD_STATION_START_FRACTION = 0.625;
 const BUILD_DISCOUNT_TILE_FRACTION = 0.35;
 const FREE_TICKET_TILE_FRACTION = 0.85;

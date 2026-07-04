@@ -9,7 +9,7 @@ export const islandRunFoundationTests: TestCase[] = [
     name: 'generateTileMap produces no stop tiles (stops are external side quests)',
     run: () => {
       const map = generateTileMap(9, getIslandRarity(9), 'forest', 0);
-      assertEqual(map.length, 40, 'Expected 40 tiles on the spark40 ring');
+      assertEqual(map.length, 36, 'Expected 36 tiles on the spark40 ring');
       const stopTiles = map.filter((tile: { tileType: string }) => (tile.tileType as string) === 'stop');
       assertEqual(stopTiles.length, 0, 'Expected zero tiles with tileType="stop" — stops are off-board');
       // Every tile should be a regular feeding / hazard / encounter / card tile.
@@ -25,8 +25,9 @@ export const islandRunFoundationTests: TestCase[] = [
     run: () => {
       const before = generateTileMap(3, 'normal', 'forest', 1);
       const after = generateTileMap(3, 'normal', 'forest', 2);
-      assert(before[6]?.tileType !== 'encounter', 'Expected day 1 encounter to remain hidden on normal islands');
-      assertEqual(after[6]?.tileType, 'encounter', 'Expected day 2 encounter tile to unlock');
+      // Normal-island encounter sits at floor(0.15 × 36) = index 5 on the ring.
+      assert(before[5]?.tileType !== 'encounter', 'Expected day 1 encounter to remain hidden on normal islands');
+      assertEqual(after[5]?.tileType, 'encounter', 'Expected day 2 encounter tile to unlock');
     },
   },
   {

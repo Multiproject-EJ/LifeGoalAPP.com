@@ -37,12 +37,13 @@ export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
   { id: 'shop', x: 120, y: 500 },
 ];
 
-// ─── 40-tile board layout (spark40 / ring40) ─────────────────────────────────
+// ─── 36-tile board layout (spark40 / ring36) ─────────────────────────────────
 //
-// 40 tiles arranged around the island ring in canonical 1000×1000 board space.
-// Matches Monopoly GO's tile count — larger tiles, perfectly readable on mobile.
+// 36 tiles arranged around the island ring in canonical 1000×1000 board space.
+// Reduced from 40 → 36: fewer, larger tiles on the same ring radius so the
+// board reads cleaner on mobile without changing the circle's size.
 //
-// The 40 indices are movement tiles whose on-land effect is picked by the
+// The 36 indices are movement tiles whose on-land effect is picked by the
 // tile-map generator (currency / chest / micro / hazard / encounter / …).
 // Four outer tiles can be overlaid as landmark-door access affordances by the
 // tile-map service; those doors open the same canonical landmark modals and do
@@ -50,13 +51,17 @@ export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
 // positioned in screen space by OUTER_STOP_ANCHORS above.
 // All positions are in the canonical 1000×1000 coordinate space.
 
+// Ring geometry is unchanged from the 40-tile layout — same centre and radius,
+// so the circle keeps its exact size. Only the tile COUNT changes (40 → 36),
+// which widens each tile's arc.
+const SPARK_RING_TILE_COUNT = 36;
 const SPARK40_CENTER_X = 500;
 const SPARK40_CENTER_Y = 500;
 const SPARK40_RADIUS = 340;
 const SPARK40_ROTATION_OFFSET_RAD = (-6 * Math.PI) / 180;
 
-export const TILE_ANCHORS_40: TileAnchor[] = Array.from({ length: 40 }, (_, index) => {
-  const theta = ((index / 40) * Math.PI * 2) - (Math.PI / 2) + SPARK40_ROTATION_OFFSET_RAD;
+export const TILE_ANCHORS_40: TileAnchor[] = Array.from({ length: SPARK_RING_TILE_COUNT }, (_, index) => {
+  const theta = ((index / SPARK_RING_TILE_COUNT) * Math.PI * 2) - (Math.PI / 2) + SPARK40_ROTATION_OFFSET_RAD;
   const x = SPARK40_CENTER_X + Math.cos(theta) * SPARK40_RADIUS;
   const y = SPARK40_CENTER_Y + Math.sin(theta) * SPARK40_RADIUS;
 
@@ -75,5 +80,7 @@ export const TILE_ANCHORS_40: TileAnchor[] = Array.from({ length: 40 }, (_, inde
   };
 });
 
-/** Stop tile indices for the 40-tile ring board (profile: spark40_ring). */
-export const STOP_TILE_INDICES_40 = [0, 10, 20, 30, 39] as const;
+/** Legacy stop tile indices for the ring board (profile: spark40_ring).
+ *  Kept only for backward-compat; stops are decoupled from tile indices.
+ *  Rescaled to the 36-tile ring so no index is out of range. */
+export const STOP_TILE_INDICES_40 = [0, 9, 18, 27, 35] as const;

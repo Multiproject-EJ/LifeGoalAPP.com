@@ -11,7 +11,7 @@ export const islandBoardTopologyTests: TestCase[] = [
     name: 'movement wrap uses profile tile count rather than hardcoded 17',
     run: () => {
       assertEqual(resolveWrappedTokenIndex(16, 1, 17), 0, 'Expected 17-tile topology to wrap 16 -> 0');
-      assertEqual(resolveWrappedTokenIndex(38, 3, 40), 1, 'Expected 40-tile topology to wrap 38 + 3 -> 1');
+      assertEqual(resolveWrappedTokenIndex(34, 3, 36), 1, 'Expected 36-tile topology to wrap 34 + 3 -> 1');
     },
   },
   {
@@ -40,10 +40,10 @@ export const islandBoardTopologyTests: TestCase[] = [
     run: () => {
       const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0));
       const expected = [
-        { tileIndex: 36, stopId: 'hatchery' },
-        { tileIndex: 6, stopId: 'habit' },
-        { tileIndex: 16, stopId: 'mystery' },
-        { tileIndex: 26, stopId: 'wisdom' },
+        { tileIndex: 32, stopId: 'hatchery' },
+        { tileIndex: 5, stopId: 'habit' },
+        { tileIndex: 14, stopId: 'mystery' },
+        { tileIndex: 23, stopId: 'wisdom' },
       ];
 
       assertDeepEqual([...LANDMARK_DOOR_TILE_CONFIGS], expected, 'Expected fixed landmark-door tile placement');
@@ -92,7 +92,7 @@ export const islandBoardTopologyTests: TestCase[] = [
       assertEqual(expandedStopId, 'hatchery', 'Expected fresh-island active hatchery to select the hatchery door cluster');
 
       const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0), { expandedActiveStopId: expandedStopId });
-      for (const tileIndex of [35, 36, 37]) {
+      for (const tileIndex of [31, 32, 33]) {
         const entry = tileMap[tileIndex];
         assertEqual(entry.tileType, 'landmark_door', `Expected egg-setting tile ${tileIndex} to render as a landmark door`);
         assertEqual(entry.doorStopId, 'hatchery', `Expected egg-setting tile ${tileIndex} to route to hatchery`);
@@ -105,15 +105,15 @@ export const islandBoardTopologyTests: TestCase[] = [
     name: 'active habit landmark expands to its two neighboring door tiles',
     run: () => {
       const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0), { expandedActiveStopId: 'habit' });
-      for (const tileIndex of [5, 6, 7]) {
+      for (const tileIndex of [4, 5, 6]) {
         const entry = tileMap[tileIndex];
         assertEqual(entry.tileType, 'landmark_door', `Expected tile ${tileIndex} to be a landmark door`);
         assertEqual(entry.doorStopId, 'habit', `Expected tile ${tileIndex} to route to habit`);
         assertEqual(entry.isActiveDoorCluster, true, `Expected tile ${tileIndex} to glow as part of the active habit cluster`);
       }
-      assertEqual(tileMap[36].doorStopId, 'hatchery', 'Expected hatchery door to stay unchanged');
-      assertEqual(tileMap[16].doorStopId, 'mystery', 'Expected mystery door to stay unchanged');
-      assertEqual(tileMap[26].doorStopId, 'wisdom', 'Expected wisdom door to stay unchanged');
+      assertEqual(tileMap[32].doorStopId, 'hatchery', 'Expected hatchery door to stay unchanged');
+      assertEqual(tileMap[14].doorStopId, 'mystery', 'Expected mystery door to stay unchanged');
+      assertEqual(tileMap[23].doorStopId, 'wisdom', 'Expected wisdom door to stay unchanged');
       assertEqual(tileMap.filter((entry) => entry.tileType === 'landmark_door').length, 6, 'Expected 6 total doors: habit expanded to 3, others remain at 1 each');
     },
   },
@@ -124,7 +124,7 @@ export const islandBoardTopologyTests: TestCase[] = [
       assertEqual(expandedStopId, 'habit', 'Expected unpaid next habit ticket to select the habit door cluster');
 
       const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0), { expandedActiveStopId: expandedStopId });
-      for (const tileIndex of [5, 6, 7]) {
+      for (const tileIndex of [4, 5, 6]) {
         const entry = tileMap[tileIndex];
         assertEqual(entry.tileType, 'landmark_door', `Expected unpaid-ticket tile ${tileIndex} to render as a landmark door`);
         assertEqual(entry.doorStopId, 'habit', `Expected unpaid-ticket tile ${tileIndex} to route to habit`);
@@ -137,10 +137,10 @@ export const islandBoardTopologyTests: TestCase[] = [
     run: () => {
       const defaultProfile = resolveIslandBoardProfile();
       assertEqual(defaultProfile.id, 'spark40_ring', 'Expected spark40_ring as the default active profile');
-      assertEqual(defaultProfile.tileCount, 40, 'Expected 40 tiles for the default profile');
+      assertEqual(defaultProfile.tileCount, 36, 'Expected 36 tiles for the default profile');
 
       const tileMap = generateTileMap(3, 'normal', 'forest', 0);
-      assertEqual(tileMap.length, 40, 'Expected generated tile map length to default to 40');
+      assertEqual(tileMap.length, 36, 'Expected generated tile map length to default to 36');
     },
   },
   {
@@ -155,10 +155,10 @@ export const islandBoardTopologyTests: TestCase[] = [
     name: 'explicit spark40 ring profile resolves safely',
     run: () => {
       const previewProfile = resolveIslandBoardProfile('spark40_ring');
-      assertEqual(previewProfile.tileCount, 40, 'Expected ring profile to expose 40-tile topology');
+      assertEqual(previewProfile.tileCount, 36, 'Expected ring profile to expose 36-tile topology');
 
       const previewTileMap = generateTileMap(3, 'normal', 'forest', 0, { profileId: 'spark40_ring' });
-      assertEqual(previewTileMap.length, 40, 'Expected ring tile map generation to support 40 tiles');
+      assertEqual(previewTileMap.length, 36, 'Expected ring tile map generation to support 36 tiles');
     },
   },
   {
@@ -171,7 +171,7 @@ export const islandBoardTopologyTests: TestCase[] = [
     name: 'P2-10: seed=0 does not collapse the tile pool to a single type',
     run: () => {
       const tileMap = generateTileMap(0, 'normal', 'forest', 0);
-      assertEqual(tileMap.length, 40, 'Expected 40 tiles for seed 0');
+      assertEqual(tileMap.length, 36, 'Expected 36 tiles for seed 0');
       const uniqueTypes = new Set(tileMap.map((t) => t.tileType));
       // Encounter may not appear for every island; but at minimum the four
       // base pool types should collectively produce >=3 distinct entries.
