@@ -6207,6 +6207,98 @@
   margin: 0;
 }
 
+/* Boss defeated, builds pending: big, visual "keep rolling to fund the last
+   upgrades" goal card. Replaces the tiny locked hint with the money picture. */
+.island-boss-build-goal {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.6rem;
+  padding: 0.85rem 0.8rem 0.9rem;
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(255, 205, 90, 0.12), rgba(255, 150, 60, 0.08));
+  border: 1px solid rgba(255, 200, 90, 0.35);
+  text-align: center;
+}
+
+.island-boss-build-goal__headline {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffe6a8;
+  line-height: 1.35;
+}
+
+.island-boss-build-goal__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.island-boss-build-goal__stat {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.55rem 0.4rem;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.island-boss-build-goal__stat--cost {
+  border-color: rgba(255, 180, 90, 0.35);
+}
+
+.island-boss-build-goal__stat-value {
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #fff4d6;
+}
+
+.island-boss-build-goal__stat--cost .island-boss-build-goal__stat-value {
+  color: #ffcaa0;
+}
+
+.island-boss-build-goal__stat-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(255, 240, 210, 0.7);
+}
+
+.island-boss-build-goal__meter {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.island-boss-build-goal__meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffd25a, #ff9f43);
+  transition: width 0.3s ease;
+}
+
+.island-boss-build-goal__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: rgba(255, 244, 220, 0.92);
+}
+
+.island-boss-build-goal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.island-boss-build-goal__actions .island-stop-modal__btn {
+  flex: 1 1 45%;
+  min-width: 130px;
+}
+
 /* Failed phase */
 .island-boss-trial__phase--failed {
   background: rgba(255, 80, 80, 0.07);
