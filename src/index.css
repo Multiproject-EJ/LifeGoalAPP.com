@@ -2298,6 +2298,24 @@ html.platform-ipad .workspace-shell__menu-edge {
   margin-top: 1rem;
 }
 
+.account-panel__maintenance-actions {
+  margin-top: 1rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.28);
+  padding-top: 1rem;
+}
+
+.account-panel__maintenance-actions h4 {
+  margin: 0 0 0.35rem;
+  color: var(--color-text-primary);
+  font-size: 1rem;
+}
+
+.account-panel__maintenance-actions .account-panel__actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .account-panel__subscription-header {
   display: flex;
   justify-content: space-between;

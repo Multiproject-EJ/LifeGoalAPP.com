@@ -123,7 +123,8 @@ export function MyAccountPanel({
   const [cacheFolderOpen, setCacheFolderOpen] = useState(false);
   const [creatorNoteOpen, setCreatorNoteOpen] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
-  const [cacheClearing, setCacheClearing] = useState(false);
+  const [cacheAction, setCacheAction] = useState<'pwa' | 'storage' | 'queue' | 'hard-reset' | null>(null);
+  const cacheClearing = cacheAction !== null;
   const [cacheStatus, setCacheStatus] = useState<string | null>(null);
   const [hapticMode, setHapticModeState] = useState<HapticMode>('balanced');
   const [onboardingSnapshot, setOnboardingSnapshot] = useState<string | null>(null);
@@ -375,39 +376,165 @@ export function MyAccountPanel({
     setLegacyAliasReadiness(getLegacyAliasSunsetReadiness(session.user.id));
   };
 
-  const handleClearAppCache = async () => {
+  const deleteIndexedDbDatabase = (databaseName: string) =>
+    new Promise<boolean>((resolve, reject) => {
+      if (typeof indexedDB === 'undefined') {
+        resolve(false);
+        return;
+      }
+
+      const request = indexedDB.deleteDatabase(databaseName);
+      request.onsuccess = () => resolve(true);
+      request.onblocked = () => resolve(false);
+      request.onerror = () => reject(request.error ?? new Error(`Unable to delete IndexedDB database ${databaseName}`));
+    });
+
+  const clearPwaAssetsAndServiceWorkers = async () => {
+    let clearedCaches = 0;
+    let clearedRegistrations = 0;
+
+    if ('caches' in window) {
+      const cacheKeys = await caches.keys();
+      clearedCaches = cacheKeys.length;
+      await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+    }
+
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      clearedRegistrations = registrations.length;
+      await Promise.all(registrations.map((registration) => registration.unregister()));
+    }
+
+    return { clearedCaches, clearedRegistrations };
+  };
+
+  const clearOfflineQueue = async () => {
+    const deleted = await deleteIndexedDbDatabase('lifegoalapp-sync-queue');
+    return { deletedQueueDatabases: deleted ? 1 : 0 };
+  };
+
+  const shouldPreserveStorageKey = (key: string) => {
+    const normalized = key.toLowerCase();
+    return normalized.startsWith('sb-') || normalized.includes('supabase.auth.token');
+  };
+
+  const clearLocalAppStorage = () => {
+    let clearedLocalStorageKeys = 0;
+    let clearedSessionStorageKeys = 0;
+
+    const clearMatchingStorageKeys = (storage: Storage) => {
+      const keysToRemove = Array.from({ length: storage.length }, (_, index) => storage.key(index)).filter(
+        (key): key is string => typeof key === 'string' && !shouldPreserveStorageKey(key),
+      );
+      keysToRemove.forEach((key) => storage.removeItem(key));
+      return keysToRemove.length;
+    };
+
+    try {
+      clearedLocalStorageKeys = clearMatchingStorageKeys(window.localStorage);
+    } catch (error) {
+      console.warn('Unable to clear localStorage app keys:', error);
+    }
+
+    try {
+      clearedSessionStorageKeys = clearMatchingStorageKeys(window.sessionStorage);
+    } catch (error) {
+      console.warn('Unable to clear sessionStorage app keys:', error);
+    }
+
+    return { clearedLocalStorageKeys, clearedSessionStorageKeys };
+  };
+
+  const handleClearPwaCache = async () => {
     if (typeof window === 'undefined') return;
 
-    setCacheClearing(true);
+    setCacheAction('pwa');
     setCacheStatus(null);
 
     try {
-      let clearedCaches = 0;
-      let clearedRegistrations = 0;
-
-      if ('caches' in window) {
-        const cacheKeys = await caches.keys();
-        clearedCaches = cacheKeys.length;
-        await Promise.all(cacheKeys.map((key) => caches.delete(key)));
-      }
-
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        clearedRegistrations = registrations.length;
-        await Promise.all(registrations.map((registration) => registration.unregister()));
-      }
-
+      const { clearedCaches, clearedRegistrations } = await clearPwaAssetsAndServiceWorkers();
       setCacheStatus(
-        `Cleared ${clearedCaches} cache${clearedCaches === 1 ? '' : 's'} and ${clearedRegistrations} service worker${
+        `Cleared ${clearedCaches} PWA cache${clearedCaches === 1 ? '' : 's'} and ${clearedRegistrations} service worker${
           clearedRegistrations === 1 ? '' : 's'
         }. Reloading…`,
       );
       window.setTimeout(() => window.location.reload(), 750);
     } catch (error) {
-      console.error('Failed to clear cache:', error);
-      setCacheStatus('Unable to clear the PWA cache. Check the console for details.');
+      console.error('Failed to clear PWA cache:', error);
+      setCacheStatus('Unable to clear the PWA asset cache. Check the console for details.');
     } finally {
-      setCacheClearing(false);
+      setCacheAction(null);
+    }
+  };
+
+  const handleClearOfflineQueue = async () => {
+    if (typeof window === 'undefined') return;
+    const confirmed = window.confirm('Clear the offline Supabase write queue on this device? Unsynced offline writes may be lost.');
+    if (!confirmed) return;
+
+    setCacheAction('queue');
+    setCacheStatus(null);
+
+    try {
+      const { deletedQueueDatabases } = await clearOfflineQueue();
+      setCacheStatus(
+        deletedQueueDatabases > 0
+          ? 'Cleared the offline Supabase write queue for this device.'
+          : 'The offline queue could not be deleted because the database is unavailable or currently blocked.',
+      );
+    } catch (error) {
+      console.error('Failed to clear offline queue:', error);
+      setCacheStatus('Unable to clear the offline queue. Check the console for details.');
+    } finally {
+      setCacheAction(null);
+    }
+  };
+
+  const handleClearLocalAppStorage = () => {
+    if (typeof window === 'undefined') return;
+    const confirmed = window.confirm('Clear local LifeGoal app storage on this device? This can reset local preferences, demo data, and offline fallback state while preserving Supabase sign-in tokens.');
+    if (!confirmed) return;
+
+    setCacheAction('storage');
+    setCacheStatus(null);
+
+    const { clearedLocalStorageKeys, clearedSessionStorageKeys } = clearLocalAppStorage();
+    setCacheStatus(
+      `Cleared ${clearedLocalStorageKeys} localStorage key${clearedLocalStorageKeys === 1 ? '' : 's'} and ${clearedSessionStorageKeys} sessionStorage key${
+        clearedSessionStorageKeys === 1 ? '' : 's'
+      }. Reloading…`,
+    );
+    window.setTimeout(() => window.location.reload(), 750);
+    setCacheAction(null);
+  };
+
+  const handleHardResetDeviceCache = async () => {
+    if (typeof window === 'undefined') return;
+    const confirmed = window.confirm(
+      'Hard reset local device caches? This clears PWA caches, unregisters service workers, deletes the offline queue, clears local/session storage keys except Supabase sign-in tokens, then reloads.',
+    );
+    if (!confirmed) return;
+
+    setCacheAction('hard-reset');
+    setCacheStatus(null);
+
+    try {
+      const { clearedCaches, clearedRegistrations } = await clearPwaAssetsAndServiceWorkers();
+      const { deletedQueueDatabases } = await clearOfflineQueue();
+      const { clearedLocalStorageKeys, clearedSessionStorageKeys } = clearLocalAppStorage();
+      setCacheStatus(
+        `Hard reset complete: ${clearedCaches} PWA cache${clearedCaches === 1 ? '' : 's'}, ${clearedRegistrations} service worker${
+          clearedRegistrations === 1 ? '' : 's'
+        }, ${deletedQueueDatabases} offline queue database${deletedQueueDatabases === 1 ? '' : 's'}, ${clearedLocalStorageKeys} localStorage key${
+          clearedLocalStorageKeys === 1 ? '' : 's'
+        }, and ${clearedSessionStorageKeys} sessionStorage key${clearedSessionStorageKeys === 1 ? '' : 's'}. Reloading…`,
+      );
+      window.setTimeout(() => window.location.reload(), 750);
+    } catch (error) {
+      console.error('Failed to hard reset device cache:', error);
+      setCacheStatus('Unable to complete the hard reset. Check the console for details.');
+    } finally {
+      setCacheAction(null);
     }
   };
 
@@ -730,7 +857,7 @@ export function MyAccountPanel({
             />
             <SettingsFeatureCard
               icon="🔄"
-              title="Reset Cache"
+              title="Device Cache"
               onClick={() => setCacheFolderOpen(true)}
             />
           </div>
@@ -827,18 +954,18 @@ export function MyAccountPanel({
 
             <section className="account-panel__card" aria-labelledby="account-cache">
               <p className="account-panel__eyebrow">PWA Tools</p>
-              <h3 id="account-cache">Clear app cache</h3>
+              <h3 id="account-cache">Clear PWA asset cache</h3>
               <p className="account-panel__hint">
-                Remove cached assets and unregister the service worker so you can verify a fresh build.
+                Remove cached PWA assets and unregister the service worker so you can verify a fresh build.
               </p>
               <div className="account-panel__actions-row">
                 <button
                   type="button"
                   className="btn btn--primary"
-                  onClick={handleClearAppCache}
+                  onClick={handleClearPwaCache}
                   disabled={cacheClearing}
                 >
-                  {cacheClearing ? 'Clearing…' : 'Clear cache & refresh'}
+                  {cacheAction === 'pwa' ? 'Clearing…' : 'Clear PWA assets & refresh'}
                 </button>
                 {cacheStatus ? <span className="account-panel__saving-indicator">{cacheStatus}</span> : null}
               </div>
@@ -1079,23 +1206,42 @@ export function MyAccountPanel({
         </section>
       </SettingsFolderPopup>
 
-      <SettingsFolderPopup isOpen={cacheFolderOpen} onClose={() => setCacheFolderOpen(false)} title="Reset cache">
+      <SettingsFolderPopup isOpen={cacheFolderOpen} onClose={() => setCacheFolderOpen(false)} title="Device cache tools">
         <section className="account-panel__card" aria-labelledby="account-reset-cache">
           <p className="account-panel__eyebrow">App maintenance</p>
-          <h3 id="account-reset-cache">Reset app cache</h3>
+          <h3 id="account-reset-cache">Clear PWA asset cache</h3>
           <p className="account-panel__hint">
-            If the app feels stuck or showing outdated content, clearing the cache and reloading usually fixes it.
+            If the app feels stuck or shows outdated content, clear the PWA asset cache first. This removes Cache Storage entries and unregisters the service worker, then reloads.
           </p>
           <div className="account-panel__actions-row">
             <button
               type="button"
               className="btn btn--primary"
-              onClick={handleClearAppCache}
+              onClick={handleClearPwaCache}
               disabled={cacheClearing}
             >
-              {cacheClearing ? 'Clearing…' : 'Clear cache & refresh'}
+              {cacheAction === 'pwa' ? 'Clearing…' : 'Clear PWA assets & refresh'}
             </button>
             {cacheStatus ? <span className="account-panel__saving-indicator">{cacheStatus}</span> : null}
+          </div>
+          <div className="account-panel__maintenance-actions" aria-label="Additional device cache actions">
+            <div>
+              <h4>More local cleanup actions</h4>
+              <p className="account-panel__hint">
+                These are more destructive and only affect this device. They do not delete your Supabase account data, and local storage cleanup preserves Supabase sign-in tokens.
+              </p>
+            </div>
+            <div className="account-panel__actions-row">
+              <button type="button" className="btn btn--secondary" onClick={handleClearOfflineQueue} disabled={cacheClearing}>
+                {cacheAction === 'queue' ? 'Clearing…' : 'Clear offline queue'}
+              </button>
+              <button type="button" className="btn btn--secondary" onClick={handleClearLocalAppStorage} disabled={cacheClearing}>
+                {cacheAction === 'storage' ? 'Clearing…' : 'Clear local app storage'}
+              </button>
+              <button type="button" className="btn btn--danger" onClick={handleHardResetDeviceCache} disabled={cacheClearing}>
+                {cacheAction === 'hard-reset' ? 'Resetting…' : 'Hard reset device caches'}
+              </button>
+            </div>
           </div>
         </section>
       </SettingsFolderPopup>
