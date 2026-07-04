@@ -1,4 +1,5 @@
 import { canUseSupabaseDataAsync, getSupabaseClient, getSupabaseUrl } from '../lib/supabaseClient';
+import type { Json } from '../lib/database.types';
 import {
   getEidGreetingLabelForDate,
 } from './holidayDateRules';
@@ -270,6 +271,15 @@ function computePersonalQuestTodayIndex(
   progress: CalendarProgress | null,
   totalDays: number = 7,
 ): number {
+  // All free doors opened — the week is complete. Stay on the final day so
+  // the UI shows "Day 7 of 7" + the quest-complete state instead of wrapping
+  // back to a phantom "Day 1" (legacy `next_sequential_day` rows wrote 1
+  // after the final door was opened).
+  const openedCount = progress ? new Set(progress.opened_days).size : 0;
+  if (openedCount >= totalDays) {
+    return totalDays;
+  }
+
   const nextSequentialDay = progress?.next_sequential_day;
   if (typeof nextSequentialDay === 'number' && nextSequentialDay >= 1 && nextSequentialDay <= totalDays) {
     return nextSequentialDay;
@@ -834,7 +844,18 @@ function getIsoWeekString(date: Date): string {
   return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
 }
 
-function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()): CalendarSeasonData {
+/** Deterministic Personal Quest week definition shared by demo mode and
+ * Supabase provisioning — the same (userId, ISO week) seed always yields the
+ * same theme + door rewards, so concurrent devices generate identical content. */
+type PersonalQuestWeekDefinition = {
+  mondayStart: Date;
+  startsOn: string;
+  endsOn: string;
+  themeName: string;
+  hatchDefs: Array<Omit<CalendarHatch, 'id' | 'season_id' | 'created_at'>>;
+};
+
+function buildPersonalQuestWeekDefinition(userId: string, refDate: Date = new Date()): PersonalQuestWeekDefinition {
   // Personal Quest runs weekly, starting Monday
   const dayOfWeek = refDate.getDay(); // 0 = Sunday
   const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -855,19 +876,6 @@ function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()
   // Pick theme deterministically based on the seed
   const theme = PERSONAL_QUEST_THEMES[Math.floor(rng() * PERSONAL_QUEST_THEMES.length)];
 
-  const season: CalendarSeason = {
-    id: `demo-personal-quest-${startsOn}`,
-    theme_name: theme.theme_name,
-    starts_on: startsOn,
-    ends_on: endsOn,
-    status: 'active',
-    holiday_key: null,
-    season_type: 'personal_quest',
-    user_id_owner: userId,
-    created_at: mondayStart.toISOString(),
-    updated_at: mondayStart.toISOString(),
-  };
-
   const totalDays = 7;
   const rewardSchedule = generateRewardSchedule(totalDays, rng);
 
@@ -875,16 +883,14 @@ function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()
   const questEmojis = ['🧭', '⭐', '🏆', '🎯', '💪', '🌟', '✨', '🔥', '💎', '🚀'];
 
   // Generate hatches with two-door system (deterministic via rng)
-  const hatches: CalendarHatch[] = [];
+  const hatchDefs: PersonalQuestWeekDefinition['hatchDefs'] = [];
   for (let i = 0; i < totalDays; i++) {
     const dayIndex = i + 1;
     const freeReward = rewardSchedule[i];
     const emoji = questEmojis[(dayIndex - 1) % questEmojis.length];
 
     // Free door (always available)
-    hatches.push({
-      id: `demo-quest-hatch-${dayIndex}-free`,
-      season_id: season.id,
+    hatchDefs.push({
       day_index: dayIndex,
       door_type: 'free',
       symbol_name: null,
@@ -899,7 +905,6 @@ function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()
       reward_amount: freeReward.amount,
       reward_tier: freeReward.tier,
       reveal_mechanic: dayIndex === totalDays ? 'scratch' : 'flip',
-      created_at: season.created_at,
     });
 
     // Bonus door (habit-gated) — at least one tier above free, min Medium Gold
@@ -907,9 +912,7 @@ function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()
     const bonusCurrency: RewardCurrency = bonusTier === 5 ? 'dice' : 'gold';
     const bonusAmount = getRewardAmountForTier(bonusTier, rng);
 
-    hatches.push({
-      id: `demo-quest-hatch-${dayIndex}-bonus`,
-      season_id: season.id,
+    hatchDefs.push({
       day_index: dayIndex,
       door_type: 'bonus',
       symbol_name: null,
@@ -922,9 +925,35 @@ function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()
       reward_amount: bonusAmount,
       reward_tier: bonusTier,
       reveal_mechanic: dayIndex === totalDays ? 'scratch' : 'unwrap',
-      created_at: season.created_at,
     });
   }
+
+  return { mondayStart, startsOn, endsOn, themeName: theme.theme_name, hatchDefs };
+}
+
+function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()): CalendarSeasonData {
+  const week = buildPersonalQuestWeekDefinition(userId, refDate);
+  const { mondayStart, startsOn, endsOn, themeName, hatchDefs } = week;
+
+  const season: CalendarSeason = {
+    id: `demo-personal-quest-${startsOn}`,
+    theme_name: themeName,
+    starts_on: startsOn,
+    ends_on: endsOn,
+    status: 'active',
+    holiday_key: null,
+    season_type: 'personal_quest',
+    user_id_owner: userId,
+    created_at: mondayStart.toISOString(),
+    updated_at: mondayStart.toISOString(),
+  };
+
+  const hatches: CalendarHatch[] = hatchDefs.map((def) => ({
+    ...def,
+    id: `demo-quest-hatch-${def.day_index}-${def.door_type}`,
+    season_id: season.id,
+    created_at: season.created_at,
+  }));
 
   const storedProgress = getDemoProgress(season.id);
   const progress: CalendarProgress = storedProgress ?? {
@@ -940,7 +969,7 @@ function buildPersonalQuestSeasonData(userId: string, refDate: Date = new Date()
   };
 
   // Personal Quest uses sequential day tracking: next day = last opened + 1
-  const todayIndex = computePersonalQuestTodayIndex(progress, totalDays);
+  const todayIndex = computePersonalQuestTodayIndex(progress, computeTotalFreeDoors(hatches));
 
   return { season, hatches, progress, today_day_index: todayIndex };
 }
@@ -1082,29 +1111,25 @@ export async function getPersonalQuestSeason(
   userId: string,
 ): Promise<ServiceResponse<CalendarSeasonData>> {
   const now = new Date();
-  const dayOfWeek = now.getDay();
-  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  const mondayStart = new Date(now);
-  mondayStart.setDate(now.getDate() - daysToMonday);
-  mondayStart.setHours(0, 0, 0, 0);
-  const weekStartsOn = formatLocalYmd(mondayStart);
+  const week = buildPersonalQuestWeekDefinition(userId, now);
+  const weekStartsOn = week.startsOn;
 
   if (await canUseSupabaseDataAsync()) {
     try {
       const supabase = getSupabaseClient();
 
-      const { data: seasons, error: seasonError } = await supabase
-        .from('daily_calendar_seasons')
-        .select('*')
-        .eq('status', 'active')
-        .eq('season_type', 'personal_quest')
-        .eq('user_id_owner', userId)
-        .eq('starts_on', weekStartsOn)
-        .limit(1);
+      let season = await fetchPersonalQuestSeasonRow(userId, weekStartsOn);
 
-      if (!seasonError && seasons && seasons.length > 0) {
-        const season = seasons[0] as unknown as CalendarSeason;
+      // No Supabase season for this week yet — provision one so every device
+      // shares a single server-backed "today" instead of drifting apart on
+      // per-device localStorage progress. Content is deterministic per
+      // (user, ISO week), so concurrent devices generate identical doors and
+      // the unique (user_id_owner, starts_on) index resolves insert races.
+      if (!season) {
+        season = await provisionPersonalQuestSeason(supabase, userId, week);
+      }
 
+      if (season) {
         const [{ data: hatches, error: hatchError }, { data: progress }] = await Promise.all([
           supabase
             .from('daily_calendar_hatches')
@@ -1119,19 +1144,26 @@ export async function getPersonalQuestSeason(
             .maybeSingle(),
         ]);
 
-        if (!hatchError) {
+        if (!hatchError && (hatches?.length ?? 0) > 0) {
           const totalDays = computeTotalFreeDoors(
             (hatches ?? []) as Array<{ door_type: string; day_index: number }>,
+          );
+          // Best-effort: carry any progress recorded on this device's local
+          // fallback season into the server row, so a mid-week upgrade to the
+          // synced season doesn't erase opened doors or the streak.
+          const mergedProgress = await migrateLocalPersonalQuestProgress(
+            supabase,
+            userId,
+            season.id,
+            weekStartsOn,
+            progress as unknown as CalendarProgress | null,
           );
           return {
             data: {
               season,
               hatches: normalizeHatches((hatches ?? []) as unknown as CalendarHatch[]),
-              progress: progress as unknown as CalendarProgress | null,
-              today_day_index: computePersonalQuestTodayIndex(
-                progress as unknown as CalendarProgress | null,
-                totalDays,
-              ),
+              progress: mergedProgress,
+              today_day_index: computePersonalQuestTodayIndex(mergedProgress, totalDays),
             },
             error: null,
           };
@@ -1148,6 +1180,114 @@ export async function getPersonalQuestSeason(
   // locally-generated (non-UUID) season ID is used later.
   setDemoSeason(demo);
   return { data: demo, error: null };
+}
+
+/** Fetch this week's active Personal Quest season row for the user, if any. */
+async function fetchPersonalQuestSeasonRow(
+  userId: string,
+  weekStartsOn: string,
+): Promise<CalendarSeason | null> {
+  const supabase = getSupabaseClient();
+  const { data: seasons, error } = await supabase
+    .from('daily_calendar_seasons')
+    .select('*')
+    .eq('status', 'active')
+    .eq('season_type', 'personal_quest')
+    .eq('user_id_owner', userId)
+    .eq('starts_on', weekStartsOn)
+    .limit(1);
+  if (error || !seasons || seasons.length === 0) return null;
+  return seasons[0] as unknown as CalendarSeason;
+}
+
+/**
+ * Create this week's Personal Quest season + hatches in Supabase.
+ * If another device won the insert race (unique index violation), the
+ * existing row is re-fetched and returned instead.
+ */
+async function provisionPersonalQuestSeason(
+  supabase: ReturnType<typeof getSupabaseClient>,
+  userId: string,
+  week: PersonalQuestWeekDefinition,
+): Promise<CalendarSeason | null> {
+  const { data: inserted, error: insertError } = await supabase
+    .from('daily_calendar_seasons')
+    .insert({
+      theme_name: week.themeName,
+      starts_on: week.startsOn,
+      ends_on: week.endsOn,
+      status: 'active',
+      holiday_key: null,
+      season_type: 'personal_quest',
+      user_id_owner: userId,
+    })
+    .select('*')
+    .single();
+
+  let season = inserted as unknown as CalendarSeason | null;
+  if (insertError || !season) {
+    // Unique-index race with another device, or insert not permitted —
+    // re-select whatever exists.
+    season = await fetchPersonalQuestSeasonRow(userId, week.startsOn);
+    if (!season) return null;
+  } else {
+    // Seed the 14 hatch definitions (7 free + 7 bonus). Ignore conflicts:
+    // the (season_id, day_index, door_type) unique constraint dedupes any
+    // concurrent seeding from another device.
+    const { error: hatchInsertError } = await supabase
+      .from('daily_calendar_hatches')
+      .insert(week.hatchDefs.map((def) => ({
+        ...def,
+        reward_payload: def.reward_payload as Json,
+        season_id: season!.id,
+      })));
+    if (hatchInsertError) {
+      console.warn('Failed to seed personal quest hatches:', hatchInsertError);
+    }
+  }
+  return season;
+}
+
+/**
+ * One-time, best-effort migration of this device's localStorage ("demo")
+ * Personal Quest progress for the current week into the Supabase progress
+ * row. Runs only when the server has no progress row yet, so it never
+ * overwrites server-recorded opens from another device.
+ */
+async function migrateLocalPersonalQuestProgress(
+  supabase: ReturnType<typeof getSupabaseClient>,
+  userId: string,
+  seasonId: string,
+  weekStartsOn: string,
+  serverProgress: CalendarProgress | null,
+): Promise<CalendarProgress | null> {
+  if (serverProgress) return serverProgress;
+
+  const localSeasonId = `demo-personal-quest-${weekStartsOn}`;
+  const local = getDemoProgress(localSeasonId);
+  if (!local || local.opened_days.length === 0) return null;
+
+  try {
+    const { data: migrated, error } = await supabase
+      .from('daily_calendar_progress')
+      .insert({
+        user_id: userId,
+        season_id: seasonId,
+        last_opened_date: local.last_opened_date,
+        last_opened_day: local.last_opened_day,
+        opened_days: local.opened_days,
+        opened_bonus_days: local.opened_bonus_days ?? [],
+        streak_count: local.streak_count ?? null,
+        next_sequential_day: local.next_sequential_day ?? null,
+        symbol_counts: local.symbol_counts ?? {},
+      })
+      .select('*')
+      .single();
+    if (error || !migrated) return null;
+    return migrated as unknown as CalendarProgress;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -1383,7 +1523,7 @@ export async function openTodayHatch(
         : (progress.opened_bonus_days ?? []),
       streak_count: nextStreak,
       next_sequential_day: season.season_type === 'personal_quest' && doorType === 'free'
-        ? (dayIndex >= computeTotalFreeDoors(cached?.hatches ?? []) ? 1 : dayIndex + 1)
+        ? Math.min(dayIndex + 1, computeTotalFreeDoors(cached?.hatches ?? []))
         : progress.next_sequential_day,
       updated_at: new Date().toISOString(),
     };

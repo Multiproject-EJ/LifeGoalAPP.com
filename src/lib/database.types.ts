@@ -3266,7 +3266,7 @@ export interface Database {
           season_id: string;
           day_index: number;
           door_type: 'free' | 'bonus';
-          reward_currency: 'gold' | 'diamond' | null;
+          reward_currency: 'gold' | 'diamond' | 'dice' | null;
           reward_amount: number | null;
           reward_tier: number | null;
           reveal_mechanic: 'flip' | 'scratch' | 'unwrap';
@@ -3283,7 +3283,7 @@ export interface Database {
           season_id: string;
           day_index: number;
           door_type?: 'free' | 'bonus';
-          reward_currency?: 'gold' | 'diamond' | null;
+          reward_currency?: 'gold' | 'diamond' | 'dice' | null;
           reward_amount?: number | null;
           reward_tier?: number | null;
           reveal_mechanic?: 'flip' | 'scratch' | 'unwrap';
@@ -3300,7 +3300,7 @@ export interface Database {
           season_id?: string;
           day_index?: number;
           door_type?: 'free' | 'bonus';
-          reward_currency?: 'gold' | 'diamond' | null;
+          reward_currency?: 'gold' | 'diamond' | 'dice' | null;
           reward_amount?: number | null;
           reward_tier?: number | null;
           reveal_mechanic?: 'flip' | 'scratch' | 'unwrap';
@@ -3330,6 +3330,8 @@ export interface Database {
           last_opened_day: number;
           opened_days: number[];
           opened_bonus_days: number[];
+          streak_count: number | null;
+          next_sequential_day: number | null;
           symbol_counts: Json;
           created_at: string;
           updated_at: string;
@@ -3341,6 +3343,8 @@ export interface Database {
           last_opened_day?: number;
           opened_days?: number[];
           opened_bonus_days?: number[];
+          streak_count?: number | null;
+          next_sequential_day?: number | null;
           symbol_counts?: Json;
           created_at?: string;
           updated_at?: string;
@@ -3352,6 +3356,8 @@ export interface Database {
           last_opened_day?: number;
           opened_days?: number[];
           opened_bonus_days?: number[];
+          streak_count?: number | null;
+          next_sequential_day?: number | null;
           symbol_counts?: Json;
           created_at?: string;
           updated_at?: string;
