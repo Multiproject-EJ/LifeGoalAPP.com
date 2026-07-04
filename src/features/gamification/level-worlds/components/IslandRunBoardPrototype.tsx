@@ -5368,7 +5368,7 @@ export function IslandRunBoardPrototype({
           ? timedEventTokenPresentation.labelSingular
           : timedEventTokenPresentation.labelPlural;
       case 'sticker_fragments':
-        return nextRewardAmount === 1 ? 'essence' : 'essence';
+        return 'essence';
     }
   })();
   const nextRewardAccessibleLabel = `${nextRewardAmountLabel} ${nextRewardUnitLabel}`;
