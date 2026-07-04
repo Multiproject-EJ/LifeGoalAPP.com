@@ -1,5 +1,6 @@
 import type { BonusTileChargeByIsland } from './islandRunBonusTile';
 import { getBonusTileCharge } from './islandRunBonusTile';
+import { STICKER_FRAGMENTS_PER_STICKER } from './islandRunContractV2RewardBar';
 
 export const TRAFFIC_LIGHT_TILE_INDEX = 21;
 export const TRAFFIC_LIGHT_CHARGE_TARGET = 8;
@@ -20,8 +21,14 @@ export interface TrafficLightCoinFlipReward {
   dice: number;
   essence: number;
   stickerFragments: number;
+  /** Progress contributed toward the active timed event's reward bar (see islandRunContractV2RewardBar.ts). */
   rewardBarProgress: number;
+  /** Tickets granted for the active timed event's minigame, range 1-5. */
+  minigameTickets: number;
 }
+
+const MIN_MINIGAME_TICKETS = 1;
+const MAX_MINIGAME_TICKETS = 5;
 
 function seededRandom(seed: number): number {
   let s = (seed | 0) || 1;
@@ -90,9 +97,19 @@ export function resolveTrafficLightCoinFlipReward(input: {
   stickerFragments: number;
 }): TrafficLightCoinFlipReward {
   const side: TrafficLightCoinSide = seededRandom(input.seed) < 0.5 ? 'heads' : 'tails';
-  const missingFragments = Math.max(0, 5 - Math.max(0, Math.floor(input.stickerFragments)));
-  const canGrantTwoPuzzlePieces = missingFragments === 2;
-  const grantsPuzzlePieces = canGrantTwoPuzzlePieces && seededRandom(input.seed + 7919) < 0.35;
+
+  // Only ever offer puzzle pieces when the player is actually missing some —
+  // never top off a full sticker. When exactly one is missing, grant two
+  // (rather than exactly one) so the reward always overflows into the next
+  // sticker instead of landing on a flat, unexciting "just enough" claim.
+  const missingFragments = Math.max(
+    0,
+    Math.min(STICKER_FRAGMENTS_PER_STICKER, STICKER_FRAGMENTS_PER_STICKER - Math.max(0, Math.floor(input.stickerFragments))),
+  );
+  const grantsPuzzlePieces = missingFragments > 0 && seededRandom(input.seed + 7919) < 0.35;
+
+  const minigameTickets = MIN_MINIGAME_TICKETS
+    + Math.floor(seededRandom(input.seed + 104729) * (MAX_MINIGAME_TICKETS - MIN_MINIGAME_TICKETS + 1));
 
   if (side === 'heads') {
     return {
@@ -103,6 +120,7 @@ export function resolveTrafficLightCoinFlipReward(input: {
       essence: 35,
       stickerFragments: grantsPuzzlePieces ? 2 : 0,
       rewardBarProgress: 3,
+      minigameTickets,
     };
   }
 
@@ -114,5 +132,6 @@ export function resolveTrafficLightCoinFlipReward(input: {
     essence: 70,
     stickerFragments: grantsPuzzlePieces ? 2 : 0,
     rewardBarProgress: 3,
+    minigameTickets,
   };
 }

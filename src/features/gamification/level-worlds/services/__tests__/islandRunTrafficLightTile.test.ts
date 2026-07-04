@@ -32,14 +32,41 @@ export const islandRunTrafficLightTileTests: TestCase[] = [
     },
   },
   {
-    name: 'coin flip reward maps heads/tails to mystery boxes and only grants puzzle pieces when two are missing',
+    name: 'coin flip reward maps heads/tails to mystery boxes and only grants puzzle pieces when some are missing',
     run: () => {
       const reward = resolveTrafficLightCoinFlipReward({ seed: 123, stickerFragments: 3 });
       assertEqual(reward.boxId === 'box_1' || reward.boxId === 'box_2', true, 'Expected one of two mystery boxes');
-      assertEqual(reward.stickerFragments === 0 || reward.stickerFragments === 2, true, 'Expected zero or two puzzle pieces when two are missing');
-
-      const noPieces = resolveTrafficLightCoinFlipReward({ seed: 123, stickerFragments: 2 });
-      assertEqual(noPieces.stickerFragments, 0, 'Expected no puzzle pieces unless exactly two are missing');
+      assertEqual(reward.stickerFragments === 0 || reward.stickerFragments === 2, true, 'Expected zero or two puzzle pieces when some are missing');
+    },
+  },
+  {
+    name: 'coin flip reward never grants puzzle pieces once the sticker is fully collected',
+    run: () => {
+      for (let seed = 0; seed < 50; seed++) {
+        const reward = resolveTrafficLightCoinFlipReward({ seed, stickerFragments: 5 });
+        assertEqual(reward.stickerFragments, 0, `Expected no puzzle pieces at seed ${seed} when nothing is missing`);
+      }
+    },
+  },
+  {
+    name: 'coin flip reward grants two or more puzzle pieces (overflow) when exactly one is missing',
+    run: () => {
+      let sawGrant = false;
+      for (let seed = 0; seed < 200; seed++) {
+        const reward = resolveTrafficLightCoinFlipReward({ seed, stickerFragments: 4 });
+        assertEqual(reward.stickerFragments === 0 || reward.stickerFragments >= 2, true, `Expected zero or 2+ puzzle pieces at seed ${seed} when one is missing`);
+        if (reward.stickerFragments > 0) sawGrant = true;
+      }
+      assertEqual(sawGrant, true, 'Expected at least one seed to grant puzzle pieces when one is missing');
+    },
+  },
+  {
+    name: 'coin flip reward always grants 1-5 event minigame tickets',
+    run: () => {
+      for (let seed = 0; seed < 50; seed++) {
+        const reward = resolveTrafficLightCoinFlipReward({ seed, stickerFragments: 3 });
+        assertEqual(reward.minigameTickets >= 1 && reward.minigameTickets <= 5, true, `Expected 1-5 tickets at seed ${seed}, got ${reward.minigameTickets}`);
+      }
     },
   },
 ];
