@@ -12907,90 +12907,119 @@ export function IslandRunBoardPrototype({
 
       {showRewardDetailsModal && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Reward details">
-            <h3 className="island-stop-modal__title">🎁 Reward Bar Details</h3>
-            <p className="island-stop-modal__copy">
-              Next reward: <strong>{nextRewardIcon} {nextRewardKind.replace(/_/g, ' ')}</strong> · Tier {runtimeState.rewardBarEscalationTier}
-            </p>
-            <p className="island-stop-modal__copy">
-              {effectiveActiveTimedEvent?.eventType && activeEventMeta
-                ? `${isDevTimedEventOverrideActive ? 'DEV override event' : 'Active event'}: ${activeEventMeta.displayName}`
-                : 'No active timed event right now.'}
-            </p>
-            {isSpaceExcavatorEffectiveEvent && (
-              <p className="island-stop-modal__copy">
-                {SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT}
-              </p>
-            )}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, margin: '0.4rem 0 0.55rem' }}>
-              {Array.from({ length: 16 }).map((_, index) => {
-                const template = getEventRotationTemplates()[index] ?? null;
-                if (!template) {
-                  return <div key={`event-slot-empty-${index}`} style={{ borderRadius: 10, border: '1px dashed rgba(180,205,220,0.38)', minHeight: 54, opacity: 0.4 }} aria-hidden="true" />;
-                }
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-event-modal" role="dialog" aria-modal="true" aria-label="Event details">
+            <header className="island-event-modal__header">
+              <span className="island-event-modal__header-icon" aria-hidden="true">{activeEventMeta?.icon ?? '🎫'}</span>
+              <div className="island-event-modal__header-text">
+                <h3 className="island-stop-modal__title island-event-modal__title">
+                  {activeEventMeta?.displayName ?? 'No active event'}
+                </h3>
+                <span className="island-event-modal__timer">⏱ {timedEventRemainingLabel} left</span>
+              </div>
+              <button
+                type="button"
+                className="island-event-modal__info-toggle"
+                aria-pressed={isRewardBarDetailsExpanded}
+                aria-label={isRewardBarDetailsExpanded ? 'Hide extra details' : 'Show extra details'}
+                onClick={() => setIsRewardBarDetailsExpanded((value) => !value)}
+              >
+                i
+              </button>
+            </header>
+
+            <div className="island-event-modal__grid" role="list" aria-label="Event mini-games">
+              {getEventRotationTemplates().map((template) => {
                 const isActive = effectiveActiveTimedEvent?.eventType === template.eventId;
                 const isSelected = selectedEventInfoEventId === template.eventId;
                 return (
                   <button
                     key={template.eventId}
                     type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action"
+                    role="listitem"
+                    className={`island-event-modal__grid-item${isActive ? ' island-event-modal__grid-item--active' : ''}${isSelected ? ' island-event-modal__grid-item--selected' : ''}`}
                     onClick={() => setSelectedEventInfoEventId(template.eventId)}
-                    style={{
-                      minHeight: 54,
-                      padding: '0.35rem 0.3rem',
-                      borderWidth: isActive ? 2 : 1,
-                      borderColor: isActive ? 'rgba(245,205,95,0.95)' : undefined,
-                      boxShadow: isActive ? '0 0 18px rgba(245,205,95,0.45)' : undefined,
-                      background: isSelected ? 'rgba(62,157,203,0.34)' : undefined,
-                    }}
-                    aria-label={`${template.displayName}${isActive ? ' (active event)' : ''}`}
+                    aria-label={`${template.displayName}${isActive ? ' (active now)' : ''}`}
                   >
-                    <span aria-hidden="true" style={{ display: 'block', fontSize: '1.05rem', lineHeight: 1.05 }}>{template.icon}</span>
-                    <span style={{ display: 'block', fontSize: '0.6rem', lineHeight: 1.2 }}>{template.displayName}</span>
+                    <span aria-hidden="true" className="island-event-modal__grid-icon">{template.icon}</span>
+                    <span className="island-event-modal__grid-label">{template.displayName}</span>
+                    {isActive && <span className="island-event-modal__grid-active-dot" aria-hidden="true" />}
                   </button>
                 );
               })}
             </div>
-            {selectedEventInfoEventId && (
-              <p className="island-stop-modal__copy">
-                {(() => {
-                  const selected = getEventRotationTemplates().find((template) => template.eventId === selectedEventInfoEventId);
-                  if (!selected) return 'Select an event icon to view details.';
-                  const isActive = effectiveActiveTimedEvent?.eventType === selected.eventId;
-                  return `${selected.icon} ${selected.displayName}${isActive ? ' — currently active now.' : ''}`;
-                })()}
-              </p>
-            )}
-            <button
-              type="button"
-              className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-              onClick={() => setIsRewardBarDetailsExpanded((value) => !value)}
-            >
-              {isRewardBarDetailsExpanded ? 'Hide Reward bar details' : 'Reward bar details'}
-            </button>
+
+            <div className="island-event-modal__stats">
+              <div className="island-event-modal__stat">
+                <span className="island-event-modal__stat-value">🎟️ {activeEventTickets}</span>
+                <span className="island-event-modal__stat-label">Tickets</span>
+              </div>
+              <div className="island-event-modal__stat">
+                <span className="island-event-modal__stat-value">{runtimeState.rewardBarClaimCountInEvent}</span>
+                <span className="island-event-modal__stat-label">Played</span>
+              </div>
+              <div className="island-event-modal__stat">
+                <span className="island-event-modal__stat-value">{Math.floor(rewardBarProgress)}/{Math.floor(rewardBarThreshold)}</span>
+                <span className="island-event-modal__stat-label">Score</span>
+              </div>
+              <div className="island-event-modal__stat">
+                <span className="island-event-modal__stat-value">{nextRewardIcon}</span>
+                <span className="island-event-modal__stat-label">Next reward</span>
+              </div>
+            </div>
+            <div className="island-event-modal__bar-track" aria-hidden="true">
+              <div className="island-event-modal__bar-fill" style={{ width: `${rewardBarPercent}%` }} />
+            </div>
+
             {isRewardBarDetailsExpanded && (
-              <>
+              <div className="island-event-modal__extra">
+                {selectedEventInfoEventId && (() => {
+                  const selected = getEventRotationTemplates().find((template) => template.eventId === selectedEventInfoEventId);
+                  if (!selected) return null;
+                  const isActive = effectiveActiveTimedEvent?.eventType === selected.eventId;
+                  return (
+                    <p className="island-stop-modal__copy">
+                      {selected.icon} {selected.displayName}{isActive ? ' — currently active now.' : ''}
+                    </p>
+                  );
+                })()}
                 <p className="island-stop-modal__copy">
-                  Progress: <strong>{Math.floor(rewardBarProgress)}</strong> / <strong>{Math.floor(rewardBarThreshold)}</strong> · Claims this event: {runtimeState.rewardBarClaimCountInEvent}
+                  Next reward: <strong>{nextRewardIcon} {nextRewardKind.replace(/_/g, ' ')}</strong> · Tier {runtimeState.rewardBarEscalationTier}
+                  {isDevTimedEventOverrideActive ? ' (DEV override event)' : ''}
                 </p>
+                {isSpaceExcavatorEffectiveEvent && (
+                  <p className="island-stop-modal__copy">{SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT}</p>
+                )}
                 <p className="island-stop-modal__copy">
                   🧩 Sticker fragments: {runtimeState.stickerProgress.fragments}/5 · Stickers collected: {Object.values(runtimeState.stickerInventory).reduce((a, b) => a + b, 0)}
                   {runtimeState.stickerProgress.fragments >= 4 ? ' — 🎉 Almost a complete sticker!' : ''}
                 </p>
-              </>
+                {effectiveMultiplier > 1 && (
+                  <p className="island-stop-modal__copy">
+                    🔥 Active multiplier: <strong>×{effectiveMultiplier}</strong> (costs {effectiveDiceCost} dice/roll) — rewards and progress are amplified!
+                  </p>
+                )}
+                <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
+                  The bar escalates: threshold grows each fill. Higher multipliers unlock quickly for small boosts (×2 at 2, ×3 at 3, ×5 at 5), then add runway for bigger bursts (×10 at 20, ×20 at 100, ×50 at 250, ×100 at 1k, ×200 at 2k). Higher multipliers cost more dice per roll but fill the bar faster!
+                </p>
+              </div>
             )}
-            {effectiveMultiplier > 1 && (
-              <p className="island-stop-modal__copy">
-                🔥 Active multiplier: <strong>×{effectiveMultiplier}</strong> (costs {effectiveDiceCost} dice/roll) — rewards and progress are amplified!
-              </p>
-            )}
-            <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
-              The bar escalates: threshold grows each fill. Higher multipliers unlock quickly for small boosts (×2 at 2, ×3 at 3, ×5 at 5), then add runway for bigger bursts (×10 at 20, ×20 at 100, ×50 at 250, ×100 at 1k, ×200 at 2k). Higher multipliers cost more dice per roll but fill the bar faster!
-            </p>
+
             {minigameTicketCheckoutError ? (
               <p className="island-run-prototype__error">{minigameTicketCheckoutError}</p>
             ) : null}
+
+            <div className="island-event-modal__tile-info">
+              <p className="island-event-modal__tile-info-title">Tiles that fill this bar</p>
+              <div className="island-event-modal__tile-list">
+                <span>🎁 Chest <b>+2</b></span>
+                <span>✨ Micro <b>+1</b></span>
+                <span>💰 Currency <b>+1</b></span>
+                <span>🐾 Feed <b>+4</b></span>
+                <span>⚔️ Encounter <b>+3</b></span>
+                <span>🎮 Mini-game <b>+4</b></span>
+              </div>
+            </div>
+
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               {activeTimedEvent && isCanonicalEventId(activeTimedEvent.eventType) && (
                 <button
