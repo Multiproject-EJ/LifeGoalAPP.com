@@ -37213,23 +37213,18 @@ body.habit-wizard-open .mobile-footer-nav {
 }
 
 /* Expanded habit focus layer: keep the open card above nearby habits and keep
-   long detail content inside the visible Today viewport instead of under the nav. */
+   long detail content inside the visible Today viewport instead of under the nav.
+
+   Focus is created purely by blurring the surrounding elements (the sibling
+   habit rows and the neighbouring Today sections) — the expanded card itself and
+   its whole subtree are NEVER given a filter. We deliberately do NOT use a
+   full-viewport fixed overlay for the dim/blur: on iOS Safari (WebKit) a
+   `position: fixed` layer that lives inside this stacking context can composite
+   over the open card, which reads as the card being blurred too. Blurring only
+   the neighbours avoids that entirely. */
 .mobile-habit-home .habit-checklist--has-expanded-habit {
   position: relative;
   isolation: isolate;
-}
-
-.mobile-habit-home .habit-checklist--has-expanded-habit::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: rgba(15, 23, 42, 0.16);
-  /* Keep the expanded habit readable: the backdrop tint provides focus while
-     sibling rows carry the blur, leaving the open card as the clear “hole.” */
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 .mobile-habit-home .habit-checklist--has-expanded-habit .habit-checklist__item {
@@ -37245,27 +37240,26 @@ body.habit-wizard-open .mobile-footer-nav {
   position: relative;
   z-index: 2;
   overflow: visible;
+  /* !important guarantees the open card can never inherit or be overridden into
+     a blur by any surrounding focus rule or browser-specific cascade quirk. */
   filter: none !important;
-  opacity: 1 !important;
+  opacity: 1;
   transform: translateZ(0);
   box-shadow: 0 22px 56px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(99, 102, 241, 0.14);
 }
 
-/* Belt-and-suspenders: nothing inside the open card should ever be able to
-   pick up a blur, no matter what other component styles apply. We only force
-   `filter` (never used intentionally for legitimate UI inside this card) and
-   leave `opacity` to individual elements, since several children rely on
-   opacity for disabled/animation states that must keep working. */
+/* Hard guarantee: neither the open card nor anything inside it is ever blurred,
+   whatever else the cascade or the platform does with the neighbours. */
 .mobile-habit-home .habit-checklist__item--expanded,
-.mobile-habit-home .habit-checklist__item--expanded * {
-  filter: none !important;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__swipe-frame,
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__swipe-row,
 .mobile-habit-home .habit-checklist__item--expanded .habit-checklist__row,
-.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__details-panel--open {
-  filter: none;
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__details-panel,
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__details-panel--open,
+.mobile-habit-home .habit-checklist__item--expanded .habit-checklist__detail-block {
+  filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
   opacity: 1;
 }
 
