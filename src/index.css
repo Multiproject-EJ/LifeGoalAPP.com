@@ -29903,10 +29903,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 
   .journal-hub-quick {
+    grid-template-columns: 1fr;
     gap: 0.5rem;
   }
 
   .journal-hub-quick__pill {
+    min-width: 0;
     padding: 0.7rem 0.35rem;
   }
 
@@ -30975,12 +30977,51 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 @media (max-width: 768px) {
   .journal {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     padding: 0;
     border-radius: 0;
     border: none;
     box-shadow: none;
     background: transparent;
-    overflow-x: visible;
+    overflow-x: clip;
+  }
+
+  .journal__header,
+  .journal-hub,
+  .journal-hub-hero,
+  .journal-hub-section,
+  .journal-hub-section__head,
+  .journal-hub-hero__copy,
+  .journal-hub-quick,
+  .journal-hub-modes,
+  .journal-hub-recent,
+  .journal-hub-recent__item {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .journal-hub-hero__copy h2,
+  .journal-hub-hero__copy p,
+  .journal-hub-section__head h3,
+  .journal-hub-section__head p,
+  .journal-hub-quick__label,
+  .journal-hub-modes__chip,
+  .journal-hub-recent__title,
+  .journal-hub-recent__meta {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .journal-hub-hero__cta,
+  .journal-hub-modes__chip {
+    white-space: normal;
+  }
+
+  .journal-hub-modes > li {
+    max-width: 100%;
   }
 
   .journal-mode-selector {
