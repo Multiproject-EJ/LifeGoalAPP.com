@@ -171,27 +171,34 @@
 
 .rank-journey__detail-title {
   margin: 0;
-  font-size: 17px;
+  font-size: 20px;
   font-weight: 800;
   color: #121a3a;
+  letter-spacing: -0.01em;
 }
 
 .rank-journey__detail-range {
   font-size: 12px;
-  color: #5a6486;
-  font-weight: 600;
+  color: #4053a4;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: rgba(52, 97, 255, 0.1);
+  padding: 3px 9px;
+  border-radius: 999px;
 }
 
 .rank-journey__detail-stars {
-  margin: 6px 0 0;
+  margin: 10px 0 0;
   color: #e7a626;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
+  font-size: 15px;
 }
 
 .rank-journey__detail-desc {
-  margin: 8px 0 0;
+  margin: 12px 0 0;
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.55;
   color: #3a4264;
 }
 
@@ -284,26 +291,29 @@
 .rank-journey__detail-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(6, 10, 28, 0.58);
-  backdrop-filter: blur(3px);
+  background: rgba(6, 10, 28, 0.62);
+  backdrop-filter: blur(5px);
 }
 
 .rank-journey__detail {
   position: relative;
   z-index: 1;
-  width: min(360px, 100%);
+  width: min(400px, 100%);
   margin-top: 0;
-  padding: 24px 18px 18px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #ffffff, #f3f5fc);
-  box-shadow: 0 22px 55px rgba(8, 14, 38, 0.36);
+  padding: 30px 24px 26px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #ffffff, #f2f4fc);
+  border: 1px solid rgba(52, 97, 255, 0.12);
+  box-shadow:
+    0 30px 70px rgba(8, 14, 38, 0.42),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
   text-align: center;
 }
 
 .rank-journey__detail-close {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 12px;
+  right: 12px;
   width: 34px;
   height: 34px;
   border: none;
@@ -313,12 +323,39 @@
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.rank-journey__detail-close:hover {
+  background: rgba(16, 24, 56, 0.12);
+}
+
+.rank-journey__detail-close:active {
+  transform: scale(0.92);
+}
+
+.rank-journey__detail-badge-wrap {
+  position: relative;
+  margin: 6px auto 18px;
+  width: fit-content;
+}
+
+.rank-journey__detail-badge-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  z-index: -1;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(52, 97, 255, 0.16), rgba(52, 97, 255, 0) 70%);
 }
 
 .rank-journey__detail .rank-badge {
-  margin: 4px auto 14px;
+  display: block;
+  margin: 0 auto;
 }
 
 .rank-journey__detail-head {
   align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(16, 24, 56, 0.08);
 }

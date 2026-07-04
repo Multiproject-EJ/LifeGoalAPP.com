@@ -116,7 +116,9 @@ export function RankJourneyModal({ level, progress, onClose }: RankJourneyModalP
               >
                 ×
               </button>
-              <RankBadge rank={selected} size={150} locked={selected.minLevel > level} />
+              <div className="rank-journey__detail-badge-wrap">
+                <RankBadge rank={selected} size={208} locked={selected.minLevel > level} />
+              </div>
               <div className="rank-journey__detail-head">
                 <h3 className="rank-journey__detail-title">{selected.title}</h3>
                 <span className="rank-journey__detail-range">{rankLevelRangeLabel(selected)}</span>
