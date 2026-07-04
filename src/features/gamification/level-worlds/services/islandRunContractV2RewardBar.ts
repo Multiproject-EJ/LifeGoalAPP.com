@@ -54,11 +54,14 @@ type TimedEventTemplate = {
 
 export const TIMED_EVENT_SEQUENCE: readonly TimedEventTemplate[] = [
   {
+    // Player-facing identity is "Island Workshop" (block-placement puzzle);
+    // the internal `feeding_frenzy` ids are preserved so persisted event
+    // records, ladders, stickers, and ticket balances stay valid.
     templateId: 'feeding_frenzy',
     eventType: 'feeding_frenzy',
     ladderId: 'feeding_frenzy_ladder_v1',
     stickerId: 'feeding_frenzy_sticker',
-    icon: '🔥',
+    icon: '🛠️',
     durationMs: 8 * 60 * 60 * 1000, // 8 hours
   },
   {
@@ -93,7 +96,7 @@ export const TIMED_EVENT_SEQUENCE: readonly TimedEventTemplate[] = [
  * `components/GameBoardOverlay.tsx`. Keep in sync with TIMED_EVENT_SEQUENCE above.
  */
 export const EVENT_BANNER_META: Readonly<Record<string, { icon: string; displayName: string }>> = {
-  feeding_frenzy: { icon: '🔥', displayName: 'Feeding Frenzy' },
+  feeding_frenzy: { icon: '🛠️', displayName: 'Island Workshop' },
   space_excavator: { icon: '🚀', displayName: 'Space Excavator' },
   companion_feast: { icon: '🐾', displayName: 'Companion Feast' },
   lucky_spin: { icon: '🎰', displayName: 'Lucky Spin' },

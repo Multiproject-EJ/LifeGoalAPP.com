@@ -5,7 +5,7 @@ import { openEventMinigame, recordEventMinigameCompletion } from '../islandRunEv
 import { buildFreshIslandRunRecord } from '../islandRunProgressReset';
 import {
   resolveEventMinigameCompletionId,
-  resolveFeedingFrenzyEventMinigame,
+  resolveIslandWorkshopEventMinigame,
   resolveLuckySpinEventMinigame,
   resolveSpaceExcavatorEventMinigame,
   resolveCompanionFeastEventMinigame,
@@ -17,7 +17,7 @@ import { assertEqual, type TestCase } from './testHarness';
 
 function runTimedEventCompletionIntegration(options: {
   descriptor: EventMinigameLaunchDescriptor | null;
-  expectedMinigameId: 'lucky_spin' | 'space_excavator' | 'companion_feast';
+  expectedMinigameId: 'island_workshop' | 'lucky_spin' | 'space_excavator' | 'companion_feast';
 }) {
   assertEqual(options.descriptor?.minigameId, options.expectedMinigameId, 'event resolver should return the canonical minigame id');
   const completionId = resolveEventMinigameCompletionId({
@@ -62,6 +62,11 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         String(openEventMinigame({ eventId: 'feeding_frenzy', ticketsAvailable: 5 })?.minigameId) === 'task_tower',
         false,
         'feeding_frenzy must not map to task_tower in Island Run event engine',
+      );
+      assertEqual(
+        openEventMinigame({ eventId: 'feeding_frenzy', ticketsAvailable: 5 })?.minigameId,
+        'island_workshop',
+        'feeding_frenzy slot should launch island_workshop',
       );
       assertEqual(
         openEventMinigame({ eventId: 'lucky_spin', ticketsAvailable: 5 })?.minigameId,
@@ -125,16 +130,14 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       assertEqual(resolveTimedEventLaunchTicketDelta(null), 0, 'null descriptor should not produce a spend delta');
       assertEqual(
         resolveTimedEventLaunchTicketDelta({
-          minigameId: 'lucky_spin',
+          minigameId: 'island_workshop',
           ticketCost: 1,
           ticketsSpent: 0,
           spendMode: 'entry',
           config: {
             source: 'timed_event',
             eventId: 'feeding_frenzy',
-            mode: 'feeding_frenzy',
-            sessionDurationSec: 120,
-            targetRowsCleared: 10,
+            mode: 'island_workshop',
           },
         }),
         0,
@@ -174,6 +177,15 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       );
       assertEqual(
         resolveEventMinigameCompletionId({
+          launchSource: 'timed_event',
+          minigameId: 'island_workshop',
+          completed: true,
+        }),
+        'island_workshop',
+        'timed_event completion should accept island_workshop',
+      );
+      assertEqual(
+        resolveEventMinigameCompletionId({
           launchSource: 'mystery_stop',
           minigameId: 'task_tower',
           completed: true,
@@ -202,37 +214,45 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
     },
   },
   {
-    name: 'resolveFeedingFrenzyEventMinigame is intentionally unavailable',
+    name: 'resolveIslandWorkshopEventMinigame routes the feeding_frenzy slot to Island Workshop',
     run: () => {
-      assertEqual(resolveFeedingFrenzyEventMinigame({
+      const descriptor = resolveIslandWorkshopEventMinigame({
         kind: 'timed_event',
         eventId: 'feeding_frenzy',
         ticketsAvailable: 3,
         ticketsToSpend: 2,
-      }), null, 'feeding_frenzy should not launch an Island Run minigame');
+      });
+      assertEqual(descriptor?.minigameId, 'island_workshop', 'feeding_frenzy slot should route to island_workshop');
+      assertEqual(descriptor?.ticketsSpent, 2, 'resolver should preserve explicit ticket spend request');
+      assertEqual(descriptor?.spendMode, 'entry', 'island_workshop should spend tickets at entry');
+      assertEqual(
+        descriptor?.config.mode,
+        'island_workshop',
+        'resolver should tag island_workshop event mode',
+      );
     },
   },
   {
-    name: 'resolveFeedingFrenzyEventMinigame is non-launching for non-feeding events and insufficient tickets',
+    name: 'resolveIslandWorkshopEventMinigame is non-launching for other events and insufficient tickets',
     run: () => {
       assertEqual(
-        resolveFeedingFrenzyEventMinigame({
+        resolveIslandWorkshopEventMinigame({
           kind: 'timed_event',
           eventId: 'lucky_spin',
           ticketsAvailable: 5,
         }),
         null,
-        'phase-6 step-1 resolver should be scoped to feeding_frenzy only',
+        'resolver should be scoped to the feeding_frenzy slot only',
       );
 
       assertEqual(
-        resolveFeedingFrenzyEventMinigame({
+        resolveIslandWorkshopEventMinigame({
           kind: 'timed_event',
           eventId: 'feeding_frenzy',
           ticketsAvailable: 0,
         }),
         null,
-        'insufficient tickets should block feeding_frenzy event launch',
+        'insufficient tickets should block island_workshop event launch',
       );
     },
   },
@@ -448,13 +468,16 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
     },
   },
   {
-    name: 'integration: Feeding Frenzy launcher path is safely unavailable',
+    name: 'integration: Island Workshop launcher path resolves completion and claim handoff end-to-end',
     run: () => {
-      assertEqual(resolveFeedingFrenzyEventMinigame({
-        kind: 'timed_event',
-        eventId: 'feeding_frenzy',
-        ticketsAvailable: 3,
-      }), null, 'feeding_frenzy should surface unavailable fallback path');
+      runTimedEventCompletionIntegration({
+        descriptor: resolveIslandWorkshopEventMinigame({
+          kind: 'timed_event',
+          eventId: 'feeding_frenzy',
+          ticketsAvailable: 3,
+        }),
+        expectedMinigameId: 'island_workshop',
+      });
     },
   },
   {
