@@ -9718,7 +9718,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             ) : null}
           </div>
 
-          <div className="habit-checklist-card__board-body">
+          <div
+            className={`habit-checklist-card__board-body ${
+              Object.values(expandedHabits).some(Boolean) ? 'habit-checklist-card__board-body--habit-focus' : ''
+            }`}
+          >
             {renderDayNavigation('compact', true, isCompactView)}
             {habits.length === 0 ? (
               <div className="habit-checklist-card__empty">
