@@ -1069,12 +1069,21 @@ export function applyTrafficLightCoinFlipReward(options: {
         fragments: Math.max(0, Math.floor(current.stickerProgress.fragments)) + stickerFragmentsDelta,
       }
     : current.stickerProgress;
+  const ticketEventId = current.activeTimedEvent?.eventId ?? null;
+  const minigameTicketsDelta = Math.max(0, Math.floor(reward.minigameTickets));
+  const nextMinigameTicketsByEvent = ticketEventId && minigameTicketsDelta > 0
+    ? {
+        ...current.minigameTicketsByEvent,
+        [ticketEventId]: Math.max(0, Math.floor(current.minigameTicketsByEvent?.[ticketEventId] ?? 0)) + minigameTicketsDelta,
+      }
+    : current.minigameTicketsByEvent;
   const next: IslandRunGameStateRecord = {
     ...current,
     dicePool: Math.max(0, current.dicePool + Math.max(0, Math.floor(reward.dice))),
     essence: Math.max(0, current.essence + Math.max(0, Math.floor(reward.essence))),
     stickerProgress: nextStickerProgress,
     rewardBarProgress: Math.max(0, Math.floor(current.rewardBarProgress)) + Math.max(0, Math.floor(reward.rewardBarProgress)),
+    minigameTicketsByEvent: nextMinigameTicketsByEvent,
     runtimeVersion: current.runtimeVersion + 1,
   };
   recordIslandRunDiceInflow({

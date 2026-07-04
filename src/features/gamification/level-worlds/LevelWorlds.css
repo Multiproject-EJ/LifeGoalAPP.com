@@ -10667,6 +10667,15 @@
   font-weight: 950;
 }
 
+.island-coin-reward__hint {
+  margin: 0.55rem auto 0;
+  max-width: 26rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  text-align: center;
+  color: rgba(243, 248, 255, 0.68);
+}
+
 .island-coin-reward__chip--rare {
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.85), rgba(99, 102, 241, 0.85));
   border-color: rgba(233, 213, 255, 0.8);

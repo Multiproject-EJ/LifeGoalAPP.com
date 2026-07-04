@@ -328,7 +328,7 @@ export function applyMultiplierToProgress(baseProgress: number, multiplier: numb
 
 const STICKER_COMPLETION_BONUS_DICE = 100;
 const STICKER_COMPLETION_BONUS_ESSENCE = 50;
-const STICKER_FRAGMENTS_PER_STICKER = 5;
+export const STICKER_FRAGMENTS_PER_STICKER = 5;
 
 // ── Core functions ───────────────────────────────────────────────────────────
 

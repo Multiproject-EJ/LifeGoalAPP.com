@@ -4712,8 +4712,9 @@ export function IslandRunBoardPrototype({
     });
     setRuntimeState(record);
     const puzzlePart = reward.stickerFragments > 0 ? `, +${reward.stickerFragments} puzzle pieces` : '';
-    const barPart = reward.rewardBarProgress > 0 ? `, +${reward.rewardBarProgress} bar` : '';
-    setLandingText(`🚦 ${reward.side === 'heads' ? 'Heads' : 'Tails'} opened ${reward.label}: +${reward.dice} dice, +${reward.essence} money${puzzlePart}${barPart}.`);
+    const ticketPart = reward.minigameTickets > 0 ? `, +${reward.minigameTickets} event tickets` : '';
+    const barPart = reward.rewardBarProgress > 0 ? `, +${reward.rewardBarProgress} event bar progress` : '';
+    setLandingText(`🚦 ${reward.side === 'heads' ? 'Heads' : 'Tails'} opened ${reward.label}: +${reward.dice} dice, +${reward.essence} money${puzzlePart}${ticketPart}${barPart}.`);
     setTrafficLightCoinFlip(null);
   }, [client, session, trafficLightCoinFlip]);
 
@@ -12607,12 +12608,26 @@ export function IslandRunBoardPrototype({
                       <b>+{trafficLightCoinFlip.reward.stickerFragments}</b> 🧩
                     </span>
                   )}
+                  {trafficLightCoinFlip.reward.minigameTickets > 0 && (
+                    <span className="island-coin-reward__chip" style={{ animationDelay: '225ms' }}>
+                      <b>+{trafficLightCoinFlip.reward.minigameTickets}</b> 🎫
+                    </span>
+                  )}
                   {trafficLightCoinFlip.reward.rewardBarProgress > 0 && (
-                    <span className="island-coin-reward__chip" style={{ animationDelay: '270ms' }}>
-                      <b>+{trafficLightCoinFlip.reward.rewardBarProgress}</b> ⚡
+                    <span
+                      className="island-coin-reward__chip"
+                      style={{ animationDelay: '270ms' }}
+                      title={`Adds progress toward the ${activeEventMeta?.displayName ?? 'active event'} reward bar — fill it to claim dice, money, tickets, and puzzle pieces.`}
+                    >
+                      <b>+{trafficLightCoinFlip.reward.rewardBarProgress}</b> ⚡ {activeEventMeta?.icon ?? ''} event bar
                     </span>
                   )}
                 </div>
+                {trafficLightCoinFlip.reward.rewardBarProgress > 0 && (
+                  <p className="island-coin-reward__hint">
+                    ⚡ fills the {activeEventMeta?.displayName ?? 'timed event'} reward bar — claim it on the event banner for extra dice, money, tickets, and puzzle pieces.
+                  </p>
+                )}
               </div>
             )}
 
