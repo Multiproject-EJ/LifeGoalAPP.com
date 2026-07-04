@@ -13,6 +13,7 @@
  */
 
 import { companionFeastManifest } from '../../games/companion-feast';
+import { islandWorkshopManifest } from '../../games/island-workshop';
 import { shooterBlitzManifest } from '../../games/shooter-blitz';
 import { spaceExcavatorManifest } from '../../games/space-excavator';
 import { visionQuestManifest } from '../../games/vision-quest';
@@ -26,6 +27,7 @@ export const ALL_MINIGAME_MANIFESTS: readonly MinigameManifest[] = Object.freeze
   spaceExcavatorManifest,
   visionQuestManifest,
   companionFeastManifest,
+  islandWorkshopManifest,
 ]);
 
 let registered = false;

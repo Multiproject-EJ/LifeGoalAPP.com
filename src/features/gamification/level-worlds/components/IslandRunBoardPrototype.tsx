@@ -341,7 +341,7 @@ import { registerAllMinigameManifests } from '../services/islandRunMinigameManif
 import {
   resolveBossStopMinigame,
   resolveCompanionFeastEventMinigame,
-  resolveFeedingFrenzyEventMinigame,
+  resolveIslandWorkshopEventMinigame,
   resolveLuckySpinEventMinigame,
   resolveTimedEventLaunchTicketDelta,
   resolveEventMinigameCompletionId,
@@ -5320,7 +5320,7 @@ export function IslandRunBoardPrototype({
     return `${devTimedEventOverrideType}:dev:${nonce}`;
   }, [devTimedEventOverrideType]);
   const effectiveActiveTimedEvent = useMemo(() => {
-    // The four rotating event games (Feeding Frenzy, Lucky Spin, Space
+    // The four rotating event games (Island Workshop, Lucky Spin, Space
     // Excavator, Companion Feast) are demo-only: surface them to admins/creators
     // exclusively. Non-admins never see the event banner, ticket chip, quick
     // launch, or minigame launcher. The underlying reward-bar/event rotation on
@@ -7780,7 +7780,7 @@ export function IslandRunBoardPrototype({
     const descriptor = (() => {
       switch (effectiveActiveTimedEvent.eventType) {
         case 'feeding_frenzy':
-          return resolveFeedingFrenzyEventMinigame(baseContext);
+          return resolveIslandWorkshopEventMinigame(baseContext);
         case 'lucky_spin':
           return resolveLuckySpinEventMinigame({
             ...baseContext,
@@ -7866,6 +7866,18 @@ export function IslandRunBoardPrototype({
               const claim = claimCompanionFeastMilestoneReward({ session, client, eventId: effectiveActiveTimedEvent.eventId, milestoneId, triggerSource: 'companion_feast_claim_milestone' });
               if (claim.ok) setRuntimeState(claim.record);
               return { ok: claim.ok, progress: claim.progress, rewardLabel: claim.rewardLabel, failureReason: claim.failureReason };
+            },
+          }
+        : effectiveActiveTimedEvent.eventType === 'feeding_frenzy'
+        ? {
+            ...descriptor.config,
+            activeEventId: effectiveActiveTimedEvent.eventId,
+            persistenceScope: session.user.id,
+            getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)),
+            requestRunTicketSpend: () => {
+              const spend = applyTimedEventTicketSpend({ session, client, eventId: effectiveActiveTimedEvent.eventId, ticketsToSpend: 1, triggerSource: 'island_workshop_play_again' });
+              if (spend.spent > 0) setRuntimeState(spend.record);
+              return { ok: spend.spent > 0, ticketsRemaining: Math.max(0, Math.floor(spend.record.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)) };
             },
           }
         : descriptor.config,

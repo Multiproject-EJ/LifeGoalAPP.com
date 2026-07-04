@@ -95,8 +95,8 @@ export const minigameConsolidationPhase3Tests: TestCase[] = [
       const descriptor = getActiveEvent(advanced.state, 5_000);
       assert(descriptor, 'expected active event descriptor after advance');
       assertEqual(descriptor!.eventId, 'feeding_frenzy', 'first event is feeding_frenzy');
-      assertEqual(descriptor!.icon, '🔥', 'icon matches banner meta');
-      assertEqual(descriptor!.displayName, 'Feeding Frenzy', 'display name matches banner meta');
+      assertEqual(descriptor!.icon, '🛠️', 'icon matches banner meta');
+      assertEqual(descriptor!.displayName, 'Island Workshop', 'display name matches banner meta');
       assertEqual(descriptor!.ladderId, 'feeding_frenzy_ladder_v1', 'ladder id carried through');
       assertEqual(descriptor!.stickerId, 'feeding_frenzy_sticker', 'sticker id carried through');
       assertEqual(descriptor!.startedAtMs, 5_000, 'startedAt from nowMs');
@@ -211,7 +211,7 @@ export const minigameConsolidationPhase3Tests: TestCase[] = [
     run: () => {
       assertDeepEqual(
         getEventDisplayMeta('feeding_frenzy'),
-        { icon: '🔥', displayName: 'Feeding Frenzy' },
+        { icon: '🛠️', displayName: 'Island Workshop' },
         'canonical event meta should match banner config',
       );
       assertDeepEqual(

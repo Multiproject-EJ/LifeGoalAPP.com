@@ -1,0 +1,479 @@
+/* Island Workshop mini-game — deep navy panels, teal light, warm gold rewards.
+   Mobile-first portrait layout; all interactive targets ≥ 44px. */
+
+.island-workshop {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(45, 212, 191, 0.16), transparent 55%),
+    linear-gradient(180deg, #060f21 0%, #0b1c33 55%, #0d2240 100%);
+  color: #e9f3ff;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Panels (entry / construction / results) ─────────────────────────────── */
+
+.island-workshop__panel {
+  width: min(420px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgba(16, 36, 62, 0.97), rgba(9, 22, 41, 0.97));
+  border: 1px solid rgba(45, 212, 191, 0.28);
+  border-radius: 22px;
+  box-shadow:
+    0 24px 60px rgba(2, 8, 20, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 0 42px rgba(45, 212, 191, 0.08) inset;
+  padding: 22px 20px 20px;
+  text-align: center;
+}
+
+.island-workshop__eyebrow {
+  margin: 0 0 4px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #7fe7d6;
+}
+
+.island-workshop__title {
+  margin: 0 0 10px;
+  font-size: 26px;
+  line-height: 1.15;
+  color: #fdf4da;
+  text-shadow: 0 2px 14px rgba(243, 209, 107, 0.25);
+}
+
+.island-workshop__copy {
+  margin: 0 0 12px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #c4d7ee;
+}
+
+.island-workshop__rules {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  list-style: none;
+  text-align: left;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #d7e6f7;
+  background: rgba(6, 16, 32, 0.6);
+  border: 1px solid rgba(90, 167, 232, 0.18);
+  border-radius: 14px;
+}
+
+.island-workshop__ticket-note {
+  margin: 10px 0 14px;
+  font-size: 13px;
+  color: #9fc0dd;
+}
+
+.island-workshop__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+
+.island-workshop__btn {
+  min-height: 48px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.4);
+  background: rgba(16, 40, 66, 0.9);
+  color: #dff3ee;
+  font-size: 15.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.island-workshop__btn:active {
+  transform: scale(0.97);
+}
+
+.island-workshop__btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.island-workshop__btn--primary {
+  border: none;
+  background: linear-gradient(180deg, #f7dc8a, #e8b64c);
+  color: #3a2a05;
+  box-shadow: 0 8px 22px rgba(232, 182, 76, 0.35);
+}
+
+.island-workshop__btn--quiet {
+  background: transparent;
+  border-color: rgba(159, 192, 221, 0.3);
+  color: #9fc0dd;
+}
+
+.island-workshop__btn--assist {
+  border-color: rgba(157, 123, 234, 0.5);
+  background: rgba(42, 28, 78, 0.75);
+  color: #e4d8ff;
+}
+
+/* ── Construction progress strip ─────────────────────────────────────────── */
+
+.island-workshop__construction-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 0 0 4px;
+  background: rgba(6, 16, 32, 0.6);
+  border: 1px solid rgba(243, 209, 107, 0.22);
+  border-radius: 14px;
+  text-align: left;
+}
+
+.island-workshop__construction-emoji {
+  font-size: 26px;
+}
+
+.island-workshop__construction-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.island-workshop__construction-label {
+  display: block;
+  font-size: 12.5px;
+  color: #f3d16b;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.island-workshop__construction-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.island-workshop__construction-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2dd4bf, #f3d16b);
+  transition: width 500ms ease;
+}
+
+.island-workshop__construction-count {
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: #c4d7ee;
+}
+
+/* ── Play area ───────────────────────────────────────────────────────────── */
+
+.island-workshop__play-area {
+  position: relative;
+  width: min(430px, 100%);
+  height: 100%;
+  max-height: 820px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+}
+
+.island-workshop__hud {
+  display: flex;
+  gap: 8px;
+}
+
+.island-workshop__hud-stat {
+  flex: 1;
+  padding: 8px 10px;
+  background: rgba(10, 24, 44, 0.85);
+  border: 1px solid rgba(45, 212, 191, 0.2);
+  border-radius: 14px;
+  text-align: center;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.island-workshop__hud-stat--hot {
+  border-color: rgba(243, 158, 76, 0.6);
+  box-shadow: 0 0 16px rgba(243, 158, 76, 0.22);
+}
+
+.island-workshop__hud-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7ea4c6;
+}
+
+.island-workshop__hud-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #fdf4da;
+}
+
+/* ── Bench grid ──────────────────────────────────────────────────────────── */
+
+.island-workshop__bench-wrap {
+  position: relative;
+}
+
+.island-workshop__grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 3px;
+  aspect-ratio: 1;
+  width: 100%;
+  padding: 8px;
+  background: linear-gradient(180deg, rgba(13, 32, 58, 0.95), rgba(8, 20, 38, 0.95));
+  border: 1px solid rgba(45, 212, 191, 0.32);
+  border-radius: 18px;
+  box-shadow:
+    0 18px 44px rgba(2, 8, 20, 0.6),
+    0 0 34px rgba(45, 212, 191, 0.07) inset;
+}
+
+.island-workshop__cell {
+  border-radius: 6px;
+  background: rgba(120, 168, 214, 0.1);
+  box-shadow: 0 0 0 1px rgba(120, 168, 214, 0.08) inset;
+  transition: background-color 100ms ease, box-shadow 100ms ease;
+}
+
+.island-workshop__cell--tint1 { background: linear-gradient(180deg, #f0c15e, #d99e35); box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.22) inset; }
+.island-workshop__cell--tint2 { background: linear-gradient(180deg, #45dcc7, #22a793); box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.22) inset; }
+.island-workshop__cell--tint3 { background: linear-gradient(180deg, #6cb4f2, #3f86cf); box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.22) inset; }
+.island-workshop__cell--tint4 { background: linear-gradient(180deg, #b193f2, #8360d6); box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset, 0 -2px 0 rgba(0,0,0,0.22) inset; }
+
+.island-workshop__cell--preview {
+  background: rgba(45, 212, 191, 0.42);
+  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.75) inset;
+}
+
+.island-workshop__cell--invalid {
+  background: rgba(248, 113, 113, 0.35);
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.6) inset;
+}
+
+.island-workshop__cell--would-clear {
+  box-shadow: 0 0 0 2px rgba(243, 209, 107, 0.9) inset, 0 0 12px rgba(243, 209, 107, 0.45);
+}
+
+.island-workshop__cell--clearing {
+  animation: island-workshop-clear 420ms ease forwards;
+}
+
+.island-workshop__cell--assist {
+  animation: island-workshop-assist 420ms ease forwards;
+}
+
+@keyframes island-workshop-clear {
+  0% { background: #fdf4da; box-shadow: 0 0 18px rgba(243, 209, 107, 0.8); }
+  100% { background: rgba(120, 168, 214, 0.1); box-shadow: 0 0 0 1px rgba(120, 168, 214, 0.08) inset; }
+}
+
+@keyframes island-workshop-assist {
+  0% { background: #cdb7ff; box-shadow: 0 0 18px rgba(157, 123, 234, 0.85); }
+  100% { background: rgba(120, 168, 214, 0.1); box-shadow: 0 0 0 1px rgba(120, 168, 214, 0.08) inset; }
+}
+
+.island-workshop__combo-toast {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(243, 209, 107, 0.95);
+  color: #3a2a05;
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: island-workshop-toast 1400ms ease forwards;
+}
+
+@keyframes island-workshop-toast {
+  0% { opacity: 0; transform: translate(-50%, -60%); }
+  12% { opacity: 1; transform: translate(-50%, -100%); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -140%); }
+}
+
+/* ── Shape tray ──────────────────────────────────────────────────────────── */
+
+.island-workshop__tray {
+  display: flex;
+  gap: 10px;
+}
+
+.island-workshop__tray-slot {
+  flex: 1;
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 24, 44, 0.85);
+  border: 1px solid rgba(90, 167, 232, 0.26);
+  border-radius: 16px;
+  cursor: grab;
+  touch-action: none;
+  padding: 8px;
+}
+
+.island-workshop__tray-slot--dragging {
+  border-color: rgba(45, 212, 191, 0.7);
+  box-shadow: 0 0 16px rgba(45, 212, 191, 0.25);
+}
+
+.island-workshop__tray-slot--dragging .island-workshop__piece {
+  opacity: 0.25;
+}
+
+.island-workshop__tray-slot--empty {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.island-workshop__tray-check {
+  font-size: 20px;
+  color: #2dd4bf;
+}
+
+.island-workshop__piece {
+  display: grid;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.island-workshop__piece-cell {
+  border-radius: 3px;
+}
+
+.island-workshop__piece-cell--empty {
+  background: transparent;
+}
+
+.island-workshop__piece-cell--tint1 { background: linear-gradient(180deg, #f0c15e, #d99e35); }
+.island-workshop__piece-cell--tint2 { background: linear-gradient(180deg, #45dcc7, #22a793); }
+.island-workshop__piece-cell--tint3 { background: linear-gradient(180deg, #6cb4f2, #3f86cf); }
+.island-workshop__piece-cell--tint4 { background: linear-gradient(180deg, #b193f2, #8360d6); }
+
+/* ── Drag ghost ──────────────────────────────────────────────────────────── */
+
+.island-workshop__ghost {
+  position: fixed;
+  z-index: 30;
+  transform: translate(-50%, -100%);
+  opacity: 0.92;
+  filter: drop-shadow(0 10px 18px rgba(2, 8, 20, 0.55));
+  pointer-events: none;
+}
+
+/* ── Controls / stuck prompt ─────────────────────────────────────────────── */
+
+.island-workshop__controls {
+  display: flex;
+  gap: 10px;
+}
+
+.island-workshop__controls .island-workshop__btn {
+  flex: 1;
+  font-size: 14px;
+}
+
+.island-workshop__stuck {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 10, 22, 0.72);
+  backdrop-filter: blur(3px);
+  border-radius: 18px;
+}
+
+.island-workshop__stuck-panel {
+  width: min(320px, 88%);
+  padding: 20px 18px;
+  background: linear-gradient(180deg, rgba(16, 36, 62, 0.98), rgba(9, 22, 41, 0.98));
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: 18px;
+  text-align: center;
+  box-shadow: 0 18px 44px rgba(2, 8, 20, 0.7);
+}
+
+.island-workshop__stuck-title {
+  margin: 0 0 8px;
+  font-size: 19px;
+  color: #fdf4da;
+}
+
+/* ── Construction celebration / results ─────────────────────────────────── */
+
+.island-workshop__beacon {
+  font-size: 64px;
+  margin: 6px 0 10px;
+  animation: island-workshop-beacon 1600ms ease-in-out infinite alternate;
+}
+
+@keyframes island-workshop-beacon {
+  from { text-shadow: 0 0 18px rgba(45, 212, 191, 0.5); transform: scale(1); }
+  to { text-shadow: 0 0 42px rgba(243, 209, 107, 0.9); transform: scale(1.06); }
+}
+
+.island-workshop__result-stats {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.island-workshop__result-stats > div {
+  flex: 1;
+  padding: 10px 8px;
+  background: rgba(6, 16, 32, 0.6);
+  border: 1px solid rgba(45, 212, 191, 0.18);
+  border-radius: 14px;
+}
+
+.island-workshop__result-stats dt {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7ea4c6;
+  margin: 0 0 4px;
+}
+
+.island-workshop__result-stats dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fdf4da;
+}
+
+/* Small phones: tighten paddings so the whole board + tray stays on screen. */
+@media (max-height: 700px) {
+  .island-workshop__play-area { gap: 8px; }
+  .island-workshop__tray-slot { min-height: 72px; }
+  .island-workshop__hud-value { font-size: 16px; }
+}

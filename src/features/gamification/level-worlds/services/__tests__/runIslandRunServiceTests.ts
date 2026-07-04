@@ -4,7 +4,7 @@ import { creatureTreatInventoryServiceTests } from './creatureTreatInventoryServ
 import { creatureFitEngineTests } from './creatureFitEngine.test';
 import { companionRegenModifierTests } from './companionRegenModifier.test';
 import { companionFeastGameTests } from './companionFeastGame.test';
-import { companionFeastProgressionTests } from './companionFeastProgression.test';
+import { islandWorkshopGameTests } from './islandWorkshopGame.test';
 import { creatureImageManifestTests } from './creatureImageManifest.test';
 import { creatureCardCatalogTests } from './creatureCardCatalog.test';
 import { creatureCardAssetManifestTests } from './creatureCardAssetManifest.test';
@@ -135,7 +135,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'creatureFitEngine', tests: creatureFitEngineTests },
   { label: 'companionRegenModifier', tests: companionRegenModifierTests },
   { label: 'companionFeastGame', tests: companionFeastGameTests },
-  { label: 'companionFeastProgression', tests: companionFeastProgressionTests },
+  { label: 'islandWorkshopGame', tests: islandWorkshopGameTests },
   { label: 'creatureImageManifest', tests: creatureImageManifestTests },
   { label: 'creatureCardCatalog', tests: creatureCardCatalogTests },
   { label: 'creatureCardAssetManifest', tests: creatureCardAssetManifestTests },

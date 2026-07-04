@@ -63,7 +63,7 @@ export interface EventMinigameLaunchContext {
 }
 
 export interface EventMinigameLaunchDescriptor {
-  minigameId: 'lucky_spin' | 'space_excavator' | 'companion_feast';
+  minigameId: 'island_workshop' | 'lucky_spin' | 'space_excavator' | 'companion_feast';
   ticketCost: number;
   ticketsSpent: number;
   spendMode: 'entry' | 'per_action';
@@ -71,9 +71,7 @@ export interface EventMinigameLaunchDescriptor {
     | {
         source: 'timed_event';
         eventId: 'feeding_frenzy';
-        mode: 'feeding_frenzy';
-        sessionDurationSec: 120;
-        targetRowsCleared: 10;
+        mode: 'island_workshop';
       }
     | {
         source: 'timed_event';
@@ -197,6 +195,7 @@ export function resolveEventMinigameCompletionId(options: {
   completed: boolean;
 }): EventMinigameId | null {
   if (!options.completed || options.launchSource !== 'timed_event') return null;
+  if (options.minigameId === 'island_workshop') return 'island_workshop';
   if (options.minigameId === 'lucky_spin') return 'lucky_spin';
   if (options.minigameId === 'space_excavator') return 'space_excavator';
   if (options.minigameId === 'companion_feast') return 'companion_feast';
@@ -204,15 +203,34 @@ export function resolveEventMinigameCompletionId(options: {
 }
 
 /**
- * Feeding Frenzy currently has no dedicated Island Run minigame surface.
- * This resolver intentionally returns `null` so callers show their safe
- * unavailable placeholder/fallback UI while keeping players in Island Run.
+ * Island Workshop (the `feeding_frenzy` rotation slot's player-facing surface)
+ * routes to the dedicated block-placement puzzle. Entry spends 1 ticket at
+ * launch; replays inside the game spend additional tickets through the
+ * `requestRunTicketSpend` launchConfig callback which calls the canonical
+ * `applyTimedEventTicketSpend` action.
  */
-export function resolveFeedingFrenzyEventMinigame(
+export function resolveIslandWorkshopEventMinigame(
   ctx: EventMinigameLaunchContext,
 ): EventMinigameLaunchDescriptor | null {
   if (ctx.eventId !== 'feeding_frenzy') return null;
-  return null;
+  const launch = openEventMinigame({
+    eventId: ctx.eventId,
+    ticketsAvailable: ctx.ticketsAvailable,
+    ticketsToSpend: ctx.ticketsToSpend,
+  });
+  if (!launch || launch.minigameId !== 'island_workshop') return null;
+
+  return {
+    minigameId: 'island_workshop',
+    spendMode: 'entry',
+    ticketCost: launch.ticketCost,
+    ticketsSpent: launch.ticketsSpent,
+    config: {
+      source: 'timed_event',
+      eventId: 'feeding_frenzy',
+      mode: 'island_workshop',
+    },
+  };
 }
 
 /**
