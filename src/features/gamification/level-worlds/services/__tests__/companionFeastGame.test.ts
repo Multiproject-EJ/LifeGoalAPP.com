@@ -216,25 +216,20 @@ export const companionFeastGameTests: TestCase[] = [
     },
   },
   {
-    name: 'run guards allow the pre-paid entry run and gate replays on tickets',
+    name: 'run guard gates every run on having a ticket for the first drop',
     run: () => {
       assertEqual(
-        canStartCompanionFeastRun({ entryRunAvailable: true, ticketsRemaining: 0 }),
-        true,
-        'pre-paid entry run should start with zero tickets remaining',
-      );
-      assertEqual(
-        canStartCompanionFeastRun({ entryRunAvailable: false, ticketsRemaining: 0 }),
+        canStartCompanionFeastRun({ ticketsRemaining: 0 }),
         false,
-        'replay without tickets should be blocked',
+        'run without tickets should be blocked (every drop costs a ticket)',
       );
       assertEqual(
-        canStartCompanionFeastRun({ entryRunAvailable: false, ticketsRemaining: 1 }),
+        canStartCompanionFeastRun({ ticketsRemaining: 1 }),
         true,
-        'replay with a ticket should be allowed',
+        'run with a ticket should be allowed',
       );
       assertEqual(
-        canStartCompanionFeastRun({ entryRunAvailable: false, ticketsRemaining: Number.NaN }),
+        canStartCompanionFeastRun({ ticketsRemaining: Number.NaN }),
         false,
         'invalid ticket counts should be blocked',
       );

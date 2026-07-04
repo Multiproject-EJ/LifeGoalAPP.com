@@ -1,16 +1,20 @@
 /**
- * CompanionFeastMinigame.tsx — playable drop-and-merge feast bowl for the
- * Companion Feast timed event.
+ * CompanionFeastMinigame.tsx — playable fruit-drop-and-merge feast bowl for
+ * the Companion Feast timed event.
  *
  * Three states only: entry → playing → results. All rules/physics live in
- * `services/companionFeastGame.ts`; this file owns rendering + input.
+ * `services/companionFeastGame.ts` and campaign progression in
+ * `services/companionFeastProgression.ts`; this file owns rendering + input.
  *
- * Ticket authority stays canonical: the first run is pre-paid by the board
- * launch path (`applyTimedEventTicketSpend`), replays spend one more ticket
- * through the `requestRunTicketSpend` launchConfig callback.
+ * Ticket authority stays canonical: every fruit dropped spends 1 event
+ * ticket through the `requestDropSpend` launchConfig callback
+ * (`applyCompanionFeastDrop`), merges report through `requestMergeResult`
+ * (level clears + rewards-bar feast points), and rewards-bar milestones are
+ * claimed through `requestClaimMilestoneReward`.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { IslandRunMinigameProps } from '../../level-worlds/services/islandRunMinigameTypes';
+import type { CompanionFeastProgressEntry } from '../../level-worlds/services/islandRunGameStateStore';
 import {
   advanceCompanionFeastDangerTimer,
   applyCompanionFeastNudge,
@@ -20,7 +24,6 @@ import {
   COMPANION_FEAST_DANGER_GRACE_MS,
   COMPANION_FEAST_DANGER_LINE_Y,
   COMPANION_FEAST_DEFAULT_PHYSICS,
-  COMPANION_FEAST_RUN_TICKET_COST,
   createCompanionFeastBody,
   getCompanionFeastFoodTier,
   resolveCompanionFeastResultTier,
@@ -28,19 +31,44 @@ import {
   stepCompanionFeastPhysics,
   type CompanionFeastBody,
 } from '../../level-worlds/services/companionFeastGame';
+import {
+  buildCompanionFeastRewardBarViewModel,
+  COMPANION_FEAST_DROP_TICKET_COST,
+  getCompanionFeastLevel,
+  isCompanionFeastCampaignComplete,
+  type CompanionFeastLevel,
+  type CompanionFeastRewardBarViewModel,
+} from '../../level-worlds/services/companionFeastProgression';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
 import './companionFeast.css';
 
 type GamePhase = 'entry' | 'playing' | 'results';
 
 type CompanionFeastLaunchConfig = {
+  initialProgress?: CompanionFeastProgressEntry | null;
   getTicketsRemaining?: () => number;
-  requestRunTicketSpend?: () => { ok: boolean; ticketsRemaining: number };
+  requestDropSpend?: () => {
+    ok: boolean;
+    ticketsRemaining: number;
+    progress: CompanionFeastProgressEntry | null;
+    failureReason?: string;
+  };
+  requestMergeResult?: (mergedToTier: number | null, runScore: number) => {
+    progress: CompanionFeastProgressEntry | null;
+    clearedLevels: CompanionFeastLevel[];
+  };
+  requestClaimMilestoneReward?: (milestoneId: string) => {
+    ok: boolean;
+    progress: CompanionFeastProgressEntry | null;
+    rewardLabel: string | null;
+    failureReason?: string;
+  };
 };
 
 type MergePop = { id: number; x: number; y: number; score: number; bornAtMs: number };
 
 const DROP_COOLDOWN_MS = 420;
+const LEVEL_CLEAR_BANNER_MS = 2600;
 
 /**
  * Session best score. Intentionally module-level (not React state) so the
@@ -59,11 +87,12 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
   const [nudgeUsed, setNudgeUsed] = useState(false);
   const [dangerRatio, setDangerRatio] = useState(0);
   const [ticketsRemaining, setTicketsRemaining] = useState(() => config.getTicketsRemaining?.() ?? 0);
-  /** The launch-time ticket spend pre-pays the first run. */
-  const [entryRunAvailable, setEntryRunAvailable] = useState(true);
+  const [progress, setProgress] = useState<CompanionFeastProgressEntry | null>(() => config.initialProgress ?? null);
+  const [levelClearBanner, setLevelClearBanner] = useState<CompanionFeastLevel | null>(null);
   const [runsFinished, setRunsFinished] = useState(0);
   const [rewardDiceTotal, setRewardDiceTotal] = useState(0);
   const [lastRunScore, setLastRunScore] = useState(0);
+  const [lastClaimLabel, setLastClaimLabel] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const bodiesRef = useRef<CompanionFeastBody[]>([]);
@@ -79,8 +108,11 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
   const rafRef = useRef<number | null>(null);
   const lastFrameAtRef = useRef(0);
   const popIdRef = useRef(1);
+  const progressRef = useRef<CompanionFeastProgressEntry | null>(config.initialProgress ?? null);
+  const bannerTimerRef = useRef<number | null>(null);
 
   phaseRef.current = phase;
+  progressRef.current = progress;
 
   const rollTier = useCallback(() => {
     const [tier, nextState] = rollCompanionFeastDropTier(rngStateRef.current);
@@ -100,29 +132,21 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
     setLastRunScore(finalScore);
     setRunsFinished((n) => n + 1);
     setRewardDiceTotal((total) => total + tier.rewardDice);
+    // Record the run score against the campaign best (tier 0 never clears levels).
+    const outcome = config.requestMergeResult?.(0, finalScore);
+    if (outcome?.progress) setProgress(outcome.progress);
     setPhase('results');
     refreshTickets();
     playIslandRunSound('minigame_complete');
     triggerIslandRunHaptic('reward_claim');
-  }, [refreshTickets]);
+  }, [config, refreshTickets]);
 
   const startRun = useCallback(() => {
     if (!canStartCompanionFeastRun({
-      entryRunAvailable,
       ticketsRemaining: config.getTicketsRemaining?.() ?? 0,
     })) {
       refreshTickets();
       return;
-    }
-    if (entryRunAvailable) {
-      setEntryRunAvailable(false);
-    } else {
-      const spend = config.requestRunTicketSpend?.();
-      if (!spend?.ok) {
-        refreshTickets();
-        return;
-      }
-      setTicketsRemaining(spend.ticketsRemaining);
     }
     bodiesRef.current = [];
     scoreRef.current = 0;
@@ -135,9 +159,11 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
     setScore(0);
     setDangerRatio(0);
     setNudgeUsed(false);
+    setLastClaimLabel(null);
     setPhase('playing');
+    refreshTickets();
     playIslandRunSound('minigame_open');
-  }, [config, entryRunAvailable, refreshTickets, rollTier]);
+  }, [config, refreshTickets, rollTier]);
 
   const handleReturnToIsland = useCallback(() => {
     if (runsFinished > 0) {
@@ -166,6 +192,16 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
   const dropFood = useCallback(() => {
     const now = performance.now();
     if (now - lastDropAtRef.current < DROP_COOLDOWN_MS) return;
+    // Every drop is a ticket: spend through the canonical action first.
+    const spend = config.requestDropSpend?.();
+    if (spend) {
+      setTicketsRemaining(spend.ticketsRemaining);
+      if (spend.progress) setProgress(spend.progress);
+      if (!spend.ok) {
+        triggerIslandRunHaptic('roll');
+        return;
+      }
+    }
     lastDropAtRef.current = now;
     const tier = currentTierRef.current;
     bodiesRef.current = [
@@ -179,7 +215,46 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
     currentTierRef.current = nextTierRef.current;
     nextTierRef.current = rollTier();
     playIslandRunSound('token_move');
-  }, [clampDropX, rollTier]);
+  }, [clampDropX, config, rollTier]);
+
+  const showLevelClearBanner = useCallback((level: CompanionFeastLevel) => {
+    setLevelClearBanner(level);
+    if (bannerTimerRef.current !== null) window.clearTimeout(bannerTimerRef.current);
+    bannerTimerRef.current = window.setTimeout(() => {
+      setLevelClearBanner(null);
+      bannerTimerRef.current = null;
+    }, LEVEL_CLEAR_BANNER_MS);
+  }, []);
+
+  useEffect(() => () => {
+    if (bannerTimerRef.current !== null) window.clearTimeout(bannerTimerRef.current);
+  }, []);
+
+  const reportMerge = useCallback((mergedToTier: number | null) => {
+    const producedTier = mergedToTier === null ? Number.MAX_SAFE_INTEGER : mergedToTier;
+    const known = progressRef.current;
+    // Only escalate merges that can move the campaign (new highest tier).
+    if (known && producedTier <= known.highestTierReached && mergedToTier !== null) return;
+    const outcome = config.requestMergeResult?.(mergedToTier, scoreRef.current);
+    if (!outcome) return;
+    if (outcome.progress) setProgress(outcome.progress);
+    if (outcome.clearedLevels.length > 0) {
+      showLevelClearBanner(outcome.clearedLevels[outcome.clearedLevels.length - 1]);
+      playIslandRunSound('minigame_complete');
+      triggerIslandRunHaptic('reward_claim');
+    }
+  }, [config, showLevelClearBanner]);
+
+  const handleClaimMilestone = useCallback((milestoneId: string) => {
+    const claim = config.requestClaimMilestoneReward?.(milestoneId);
+    if (!claim) return;
+    if (claim.progress) setProgress(claim.progress);
+    if (claim.ok) {
+      setLastClaimLabel(claim.rewardLabel);
+      playIslandRunSound('reward_bar_fill');
+      triggerIslandRunHaptic('reward_claim');
+    }
+  }, [config]);
 
   const handleNudge = useCallback(() => {
     if (nudgeUsed || phaseRef.current !== 'playing') return;
@@ -215,6 +290,9 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
         }
         scoreRef.current += gained;
         setScore(scoreRef.current);
+        for (const merge of step.merges) {
+          reportMerge(merge.toTier);
+        }
         playIslandRunSound('reward_bar_fill');
       }
       mergePopsRef.current = mergePopsRef.current.filter((pop) => nowMs - pop.bornAtMs < 700);
@@ -248,7 +326,7 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
-  }, [phase, endRun]);
+  }, [phase, endRun, reportMerge]);
 
   useEffect(() => {
     refreshTickets();
@@ -257,7 +335,11 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
   const currentTierInfo = getCompanionFeastFoodTier(currentTierRef.current);
   const nextTierInfo = getCompanionFeastFoodTier(nextTierRef.current);
   const resultTier = useMemo(() => resolveCompanionFeastResultTier(lastRunScore), [lastRunScore]);
-  const canPlayAgain = canStartCompanionFeastRun({ entryRunAvailable, ticketsRemaining });
+  const canPlayRun = canStartCompanionFeastRun({ ticketsRemaining });
+  const campaignComplete = isCompanionFeastCampaignComplete(progress);
+  const activeLevel = getCompanionFeastLevel(progress?.levelIndex ?? 0);
+  const activeGoalTierInfo = getCompanionFeastFoodTier(activeLevel.goalTier);
+  const rewardBar = useMemo(() => buildCompanionFeastRewardBarViewModel(progress), [progress]);
 
   return (
     <section className="companion-feast" aria-label="Companion Feast mini-game">
@@ -266,21 +348,42 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
           <p className="companion-feast__eyebrow">Island Event</p>
           <h2 className="companion-feast__title">🐾 Companion Feast</h2>
           <p className="companion-feast__copy">
-            The island creatures are gathering for a magical feast! Drop food into the
+            The island creatures are gathering for a magical feast! Drop fruit into the
             enchanted bowl — matching dishes merge into grander ones.
           </p>
+          <div className="companion-feast__level-card" aria-label={`Level ${activeLevel.levelNumber}: ${activeLevel.name}`}>
+            <span className="companion-feast__level-goal-emoji" aria-hidden="true">{activeGoalTierInfo.emoji}</span>
+            <div>
+              <p className="companion-feast__level-name">
+                {campaignComplete ? 'Campaign complete — encore feasts!' : `Level ${activeLevel.levelNumber} · ${activeLevel.name}`}
+              </p>
+              <p className="companion-feast__level-flavor">
+                {campaignComplete
+                  ? 'Every dish has been forged. Keep merging for the joy of the feast!'
+                  : activeLevel.flavor}
+              </p>
+            </div>
+          </div>
+          <RewardBar rewardBar={rewardBar} onClaim={handleClaimMilestone} />
           <ul className="companion-feast__rules">
-            <li>🍒 Drag to aim, release to drop food.</li>
-            <li>✨ Two matching dishes merge and score.</li>
+            <li>🍒 Drag to aim, release to drop fruit.</li>
+            <li>🎟️ Every fruit dropped spends {COMPANION_FEAST_DROP_TICKET_COST} ticket — earn more on the island loop.</li>
+            <li>✨ Two matching dishes merge and score. Forge the goal dish to clear the level!</li>
             <li>⚠️ Keep the bowl below the glow line — overflow ends the run.</li>
             <li>🐾 Creature Nudge gently shakes the bowl, once per run.</li>
           </ul>
-          <p className="companion-feast__ticket-note">
-            Entry ticket spent — this run is ready to serve. Tickets left: {ticketsRemaining} 🎟️
-          </p>
+          <p className="companion-feast__ticket-note">Tickets left: {ticketsRemaining} 🎟️</p>
+          {lastClaimLabel && (
+            <p className="companion-feast__claim-note">Claimed: {lastClaimLabel} 🎉</p>
+          )}
           <div className="companion-feast__actions">
-            <button type="button" className="companion-feast__btn companion-feast__btn--primary" onClick={startRun}>
-              Start the Feast
+            <button
+              type="button"
+              className="companion-feast__btn companion-feast__btn--primary"
+              onClick={startRun}
+              disabled={!canPlayRun}
+            >
+              {canPlayRun ? 'Start the Feast' : 'No tickets — play the island loop!'}
             </button>
             <button type="button" className="companion-feast__btn" onClick={handleReturnToIsland}>
               Return to Island
@@ -296,15 +399,37 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
               <span className="companion-feast__hud-label">Score</span>
               <span className="companion-feast__hud-value">{score}</span>
             </div>
-            <div className="companion-feast__hud-stat">
-              <span className="companion-feast__hud-label">Best</span>
-              <span className="companion-feast__hud-value">{Math.max(bestScore, score)}</span>
+            <div
+              className="companion-feast__hud-stat"
+              aria-label={campaignComplete
+                ? 'Campaign complete'
+                : `Level ${activeLevel.levelNumber}. Goal: ${activeGoalTierInfo.name}`}
+            >
+              <span className="companion-feast__hud-label">
+                {campaignComplete ? 'Encore' : `Lv ${activeLevel.levelNumber}`}
+              </span>
+              <span className="companion-feast__hud-next">{campaignComplete ? '👑' : activeGoalTierInfo.emoji}</span>
+            </div>
+            <div className="companion-feast__hud-stat" aria-label={`Tickets remaining: ${ticketsRemaining}`}>
+              <span className="companion-feast__hud-label">Tickets</span>
+              <span className="companion-feast__hud-value">{ticketsRemaining} 🎟️</span>
             </div>
             <div className="companion-feast__hud-stat companion-feast__hud-stat--next" aria-label={`Next food: ${nextTierInfo.name}`}>
               <span className="companion-feast__hud-label">Next</span>
               <span className="companion-feast__hud-next">{nextTierInfo.emoji}</span>
             </div>
           </header>
+
+          {levelClearBanner && (
+            <div className="companion-feast__level-clear" role="status">
+              🎉 Level {levelClearBanner.levelNumber} cleared — {levelClearBanner.name}!
+            </div>
+          )}
+          {!canPlayRun && (
+            <div className="companion-feast__no-tickets" role="status">
+              🎟️ Out of tickets — earn more on the island loop, then keep feasting!
+            </div>
+          )}
 
           <canvas
             ref={canvasRef}
@@ -364,16 +489,35 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
               <dd>🎲 +{resultTier.rewardDice} dice</dd>
             </div>
           </dl>
+          <div className="companion-feast__level-card">
+            <span className="companion-feast__level-goal-emoji" aria-hidden="true">{campaignComplete ? '👑' : activeGoalTierInfo.emoji}</span>
+            <div>
+              <p className="companion-feast__level-name">
+                {campaignComplete
+                  ? 'Campaign complete — encore feasts!'
+                  : `Next up: Level ${activeLevel.levelNumber} · ${activeLevel.name}`}
+              </p>
+              <p className="companion-feast__level-flavor">
+                {campaignComplete
+                  ? 'Every dish has been forged. Keep merging for the joy of the feast!'
+                  : activeLevel.flavor}
+              </p>
+            </div>
+          </div>
+          <RewardBar rewardBar={rewardBar} onClaim={handleClaimMilestone} />
+          {lastClaimLabel && (
+            <p className="companion-feast__claim-note">Claimed: {lastClaimLabel} 🎉</p>
+          )}
           <p className="companion-feast__ticket-note">Tickets left: {ticketsRemaining} 🎟️</p>
           <div className="companion-feast__actions">
             <button
               type="button"
               className="companion-feast__btn companion-feast__btn--primary"
               onClick={startRun}
-              disabled={!canPlayAgain}
+              disabled={!canPlayRun}
             >
-              {canPlayAgain
-                ? `Play Again (${COMPANION_FEAST_RUN_TICKET_COST} 🎟️)`
+              {canPlayRun
+                ? `Play Again (${COMPANION_FEAST_DROP_TICKET_COST} 🎟️ per fruit)`
                 : 'No tickets left'}
             </button>
             <button type="button" className="companion-feast__btn" onClick={handleReturnToIsland}>
@@ -383,6 +527,50 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
         </div>
       )}
     </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Rewards bar (visible upcoming rewards along the campaign)
+// ---------------------------------------------------------------------------
+
+function RewardBar({
+  rewardBar,
+  onClaim,
+}: {
+  rewardBar: CompanionFeastRewardBarViewModel;
+  onClaim: (milestoneId: string) => void;
+}) {
+  return (
+    <div className="companion-feast__reward-bar" aria-label={`Rewards bar: ${rewardBar.feastPoints} of ${rewardBar.totalPoints} feast points`}>
+      <div className="companion-feast__reward-track" role="presentation">
+        <div className="companion-feast__reward-fill" style={{ width: `${Math.round(rewardBar.fillRatio * 100)}%` }} />
+      </div>
+      <ol className="companion-feast__reward-nodes">
+        {rewardBar.nodes.map((node) => (
+          <li
+            key={node.milestone.id}
+            className={`companion-feast__reward-node companion-feast__reward-node--${node.state}`}
+          >
+            <span className="companion-feast__reward-node-emoji" aria-hidden="true">{node.goalEmoji}</span>
+            <span className="companion-feast__reward-node-label">{node.milestone.rewardLabel}</span>
+            {node.state === 'claimable' ? (
+              <button
+                type="button"
+                className="companion-feast__btn companion-feast__btn--claim"
+                onClick={() => onClaim(node.milestone.id)}
+              >
+                Claim
+              </button>
+            ) : (
+              <span className="companion-feast__reward-node-state">
+                {node.state === 'claimed' ? '✅' : `Lv ${node.milestone.pointsRequired}`}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 

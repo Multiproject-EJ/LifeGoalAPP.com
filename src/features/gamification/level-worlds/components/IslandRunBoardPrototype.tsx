@@ -214,6 +214,10 @@ import {
   advanceSpaceExcavatorBoard,
   claimSpaceExcavatorMilestoneReward,
   initSpaceExcavatorProgressForEvent,
+  applyCompanionFeastDrop,
+  applyCompanionFeastMergeResult,
+  claimCompanionFeastMilestoneReward,
+  initCompanionFeastProgressForEvent,
   SPACE_EXCAVATOR_TOTAL_BOARDS,
   ISLAND_RUN_MAX_ISLAND,
   travelToNextIsland,
@@ -7846,11 +7850,22 @@ export function IslandRunBoardPrototype({
         ? {
             ...descriptor.config,
             activeEventId: effectiveActiveTimedEvent.eventId,
+            initialProgress: initCompanionFeastProgressForEvent({ session, client: null, eventId: effectiveActiveTimedEvent.eventId }).companionFeastProgressByEvent?.[effectiveActiveTimedEvent.eventId] ?? null,
             getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)),
-            requestRunTicketSpend: () => {
-              const spend = applyTimedEventTicketSpend({ session, client, eventId: effectiveActiveTimedEvent.eventId, ticketsToSpend: 1, triggerSource: 'companion_feast_play_again' });
-              if (spend.spent > 0) setRuntimeState(spend.record);
-              return { ok: spend.spent > 0, ticketsRemaining: Math.max(0, Math.floor(spend.record.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)) };
+            requestDropSpend: () => {
+              const drop = applyCompanionFeastDrop({ session, client, eventId: effectiveActiveTimedEvent.eventId, triggerSource: 'companion_feast_drop' });
+              if (drop.ok) setRuntimeState(drop.record);
+              return { ok: drop.ok, ticketsRemaining: drop.ticketsRemaining, progress: drop.progress, failureReason: drop.failureReason };
+            },
+            requestMergeResult: (mergedToTier: number | null, runScore: number) => {
+              const merge = applyCompanionFeastMergeResult({ session, client, eventId: effectiveActiveTimedEvent.eventId, mergedToTier, runScore, triggerSource: 'companion_feast_merge' });
+              if (merge.clearedLevels.length > 0 || merge.progress) setRuntimeState(merge.record);
+              return { progress: merge.progress, clearedLevels: merge.clearedLevels };
+            },
+            requestClaimMilestoneReward: (milestoneId: string) => {
+              const claim = claimCompanionFeastMilestoneReward({ session, client, eventId: effectiveActiveTimedEvent.eventId, milestoneId, triggerSource: 'companion_feast_claim_milestone' });
+              if (claim.ok) setRuntimeState(claim.record);
+              return { ok: claim.ok, progress: claim.progress, rewardLabel: claim.rewardLabel, failureReason: claim.failureReason };
             },
           }
         : descriptor.config,
