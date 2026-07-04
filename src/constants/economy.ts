@@ -89,12 +89,12 @@ export const ECONOMY_MATRIX = {
       earnedFrom: ['lucky_roll'],
     },
     essence: {
-      label: 'Essence',
+      label: 'Money',
       description: 'Island Run soft currency for stop upgrades. Earned from tile landings and reward bar. Subject to Monopoly GO-style pressure — spend it or lose it.',
       earnedFrom: ['lucky_roll'],
     },
     shards: {
-      label: 'Egg Shards',
+      label: 'Essence',
       description: 'Sanctuary currency for creature feeding and upgrades. Earned from tiles, eggs, and island progression.',
       earnedFrom: ['lucky_roll', 'daily_treats'],
     },

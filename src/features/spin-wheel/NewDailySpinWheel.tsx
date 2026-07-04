@@ -359,7 +359,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     const multiplierOption = SPIN_REWARD_MULTIPLIER_OPTIONS.find((entry) => entry.multiplier === selectedMultiplier) ?? SPIN_REWARD_MULTIPLIER_OPTIONS[0];
     if (!canSpin || spinning) return;
     if (essenceBalance < multiplierOption.essenceCost) {
-      setError('Not enough essence for this reward boost. Choose Free or earn more essence.');
+      setError('Not enough money for this reward boost. Choose Free or earn more money.');
       triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 300 });
       return;
     }
@@ -441,7 +441,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
   const rewardSubtitle = wonPrize
     ? wonPrize.type === 'treasure_chest'
-      ? 'Chest opened! Essence + Shards + Dice added.'
+      ? 'Chest opened! Money + Essence + Dice added.'
       : wonPrize.type === 'mystery'
         ? 'Mystery revealed! Bonus reward added.'
         : wonPrize.type === 'game_tokens'
@@ -509,10 +509,10 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
         <div className="new-daily-spin-modal__boost-panel" aria-label="Reward multiplier">
           <div>
-            <p className="new-daily-spin-modal__boost-kicker">Essence boost</p>
-            <p className="new-daily-spin-modal__boost-copy">Spend essence before the spin to multiply whatever you land on.</p>
+            <p className="new-daily-spin-modal__boost-kicker">Money boost</p>
+            <p className="new-daily-spin-modal__boost-copy">Spend money before the spin to multiply whatever you land on.</p>
           </div>
-          <span className="new-daily-spin-modal__essence-balance">🟣 {essenceBalance}</span>
+          <span className="new-daily-spin-modal__essence-balance">💰 {essenceBalance}</span>
           <div className="new-daily-spin-modal__boost-options">
             {SPIN_REWARD_MULTIPLIER_OPTIONS.map((option) => {
               const affordable = essenceBalance >= option.essenceCost;
@@ -526,7 +526,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
                   aria-pressed={selectedMultiplier === option.multiplier}
                 >
                   <strong>×{option.multiplier}</strong>
-                  <span>{option.essenceCost === 0 ? 'Free' : `${option.essenceCost} essence`}</span>
+                  <span>{option.essenceCost === 0 ? 'Free' : `${option.essenceCost} money`}</span>
                 </button>
               );
             })}

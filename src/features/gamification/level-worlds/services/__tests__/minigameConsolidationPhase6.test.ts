@@ -366,17 +366,16 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
     },
   },
   {
-    name: 'resolveCompanionFeastEventMinigame routes to the Companion Feast drop-and-merge game',
+    name: 'resolveCompanionFeastEventMinigame routes to the Companion Feast fruit-drop game with per-action spend',
     run: () => {
       const descriptor = resolveCompanionFeastEventMinigame({
         kind: 'timed_event',
         eventId: 'companion_feast',
         ticketsAvailable: 3,
-        ticketsToSpend: 2,
       });
       assertEqual(descriptor?.minigameId, 'companion_feast', 'companion_feast should route to companion_feast');
-      assertEqual(descriptor?.ticketsSpent, 2, 'resolver should preserve explicit ticket spend request');
-      assertEqual(descriptor?.spendMode, 'entry', 'companion_feast should spend tickets at entry');
+      assertEqual(descriptor?.ticketsSpent, 0, 'per-action launch should spend no tickets at entry');
+      assertEqual(descriptor?.spendMode, 'per_action', 'companion_feast should spend tickets per fruit drop');
       assertEqual(
         descriptor?.config.mode,
         'companion_feast',
@@ -385,7 +384,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
     },
   },
   {
-    name: 'resolveCompanionFeastEventMinigame is non-launching for non-companion events and insufficient tickets',
+    name: 'resolveCompanionFeastEventMinigame is non-launching for non-companion events and opens with zero tickets',
     run: () => {
       assertEqual(
         resolveCompanionFeastEventMinigame({
@@ -401,9 +400,9 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
           kind: 'timed_event',
           eventId: 'companion_feast',
           ticketsAvailable: 0,
-        }),
-        null,
-        'insufficient tickets should block companion_feast event launch',
+        })?.minigameId,
+        'companion_feast',
+        'zero tickets should not block companion_feast launch (drops are gated in-game)',
       );
     },
   },

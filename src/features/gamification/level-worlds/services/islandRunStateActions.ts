@@ -41,6 +41,7 @@
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type {
+  CompanionFeastProgressEntry,
   CreatureCollectionRuntimeEntry,
   IslandRunGameStateRecord,
   IslandRunFirstSessionTutorialState,
@@ -105,6 +106,14 @@ import {
   getSpaceExcavatorCampaignMilestone,
   resolveSpaceExcavatorClaimedMilestoneIds,
 } from './spaceExcavatorCampaignProgress';
+import {
+  applyCompanionFeastMergeToProgress,
+  COMPANION_FEAST_DROP_TICKET_COST,
+  createCompanionFeastProgress,
+  getCompanionFeastMilestone,
+  resolveCompanionFeastClaimedMilestoneIds,
+  type CompanionFeastLevel,
+} from './companionFeastProgression';
 import {
   ISLAND_RUN_ECONOMY_COUNTERS,
   ISLAND_RUN_ECONOMY_SINKS,
@@ -513,6 +522,181 @@ export function claimSpaceExcavatorMilestoneReward(options: {
     client,
     record: next,
     triggerSource: triggerSource ?? 'claim_space_excavator_milestone_reward',
+  });
+  return { record: next, ok: true, progress: nextProgress, rewardLabel: milestone.rewardLabel };
+}
+
+// ── Companion Feast (fruit-drop) campaign actions ────────────────────────────
+
+export type CompanionFeastDropFailureReason = 'missing_event' | 'insufficient_tickets';
+
+export interface ApplyCompanionFeastDropResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  ticketsRemaining: number;
+  progress: CompanionFeastProgressEntry | null;
+  failureReason?: CompanionFeastDropFailureReason;
+}
+
+export interface ApplyCompanionFeastMergeResultOutcome {
+  record: IslandRunGameStateRecord;
+  progress: CompanionFeastProgressEntry | null;
+  /** Levels cleared by this merge (in order). */
+  clearedLevels: CompanionFeastLevel[];
+}
+
+export type ClaimCompanionFeastMilestoneRewardFailureReason =
+  | 'missing_event'
+  | 'progress_not_found'
+  | 'missing_milestone'
+  | 'not_achieved'
+  | 'already_claimed';
+
+export interface ClaimCompanionFeastMilestoneRewardResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  progress: CompanionFeastProgressEntry | null;
+  rewardLabel: string | null;
+  failureReason?: ClaimCompanionFeastMilestoneRewardFailureReason;
+}
+
+/** Idempotently seed the Companion Feast campaign ledger for an event. */
+export function initCompanionFeastProgressForEvent(options: { session: Session; client: SupabaseClient | null; eventId: string; triggerSource?: string; }): IslandRunGameStateRecord {
+  const { session, client, eventId, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (!eventId) return current;
+  if (current.companionFeastProgressByEvent?.[eventId]) return current;
+  const next = { ...current, runtimeVersion: current.runtimeVersion + 1, companionFeastProgressByEvent: { ...current.companionFeastProgressByEvent, [eventId]: createCompanionFeastProgress(Date.now()) } };
+  void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'init_companion_feast_progress' });
+  return next;
+}
+
+/**
+ * Spend one event ticket for a single fruit drop (per-action ticket economy,
+ * mirroring `applySpaceExcavatorDig`). Fails without mutating state when the
+ * active event bucket cannot cover the drop.
+ */
+export function applyCompanionFeastDrop(options: { session: Session; client: SupabaseClient | null; eventId: string; triggerSource?: string; }): ApplyCompanionFeastDropResult {
+  const { session, client, eventId, triggerSource } = options;
+  if (!eventId) {
+    const current = getIslandRunStateSnapshot(session);
+    return { record: current, ok: false, ticketsRemaining: 0, progress: null, failureReason: 'missing_event' };
+  }
+  const current = initCompanionFeastProgressForEvent({ session, client: null, eventId, triggerSource });
+  const progress = current.companionFeastProgressByEvent?.[eventId] ?? null;
+  const available = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[eventId] ?? 0));
+  if (available < COMPANION_FEAST_DROP_TICKET_COST) {
+    return { record: current, ok: false, ticketsRemaining: available, progress, failureReason: 'insufficient_tickets' };
+  }
+  const nextProgress: CompanionFeastProgressEntry = progress
+    ? { ...progress, totalFruitDropped: progress.totalFruitDropped + 1, updatedAtMs: Date.now() }
+    : { ...createCompanionFeastProgress(Date.now()), totalFruitDropped: 1 };
+  const next = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    minigameTicketsByEvent: { ...current.minigameTicketsByEvent, [eventId]: available - COMPANION_FEAST_DROP_TICKET_COST },
+    companionFeastProgressByEvent: { ...current.companionFeastProgressByEvent, [eventId]: nextProgress },
+  };
+  void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'apply_companion_feast_drop' });
+  return { record: next, ok: true, ticketsRemaining: available - COMPANION_FEAST_DROP_TICKET_COST, progress: nextProgress };
+}
+
+/**
+ * Fold a merge outcome into the campaign: level clears (Level 1 = the first
+ * fruit merged into the Cheese Moon), rewards-bar feast points, highest tier
+ * and best score. Commits only when something actually changed.
+ */
+export function applyCompanionFeastMergeResult(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  mergedToTier: number | null;
+  runScore?: number;
+  triggerSource?: string;
+}): ApplyCompanionFeastMergeResultOutcome {
+  const { session, client, eventId, mergedToTier, runScore, triggerSource } = options;
+  if (!eventId) {
+    const current = getIslandRunStateSnapshot(session);
+    return { record: current, progress: null, clearedLevels: [] };
+  }
+  const current = initCompanionFeastProgressForEvent({ session, client: null, eventId, triggerSource });
+  const progress = current.companionFeastProgressByEvent?.[eventId] ?? createCompanionFeastProgress(Date.now());
+  const mergeResult = applyCompanionFeastMergeToProgress({ progress, mergedToTier, nowMs: Date.now() });
+  const safeRunScore = Number.isFinite(runScore) ? Math.max(0, Math.floor(runScore ?? 0)) : 0;
+  const bestScore = Math.max(mergeResult.progress.bestScore, safeRunScore);
+  const changed = mergeResult.progress !== progress || bestScore !== progress.bestScore;
+  if (!changed) {
+    return { record: current, progress, clearedLevels: [] };
+  }
+  const nextProgress: CompanionFeastProgressEntry = { ...mergeResult.progress, bestScore, updatedAtMs: Date.now() };
+  const next = { ...current, runtimeVersion: current.runtimeVersion + 1, companionFeastProgressByEvent: { ...current.companionFeastProgressByEvent, [eventId]: nextProgress } };
+  void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'apply_companion_feast_merge_result' });
+  return { record: next, progress: nextProgress, clearedLevels: mergeResult.clearedLevels };
+}
+
+/** Claim a rewards-bar milestone once the feast points reach it. */
+export function claimCompanionFeastMilestoneReward(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  milestoneId: string;
+  triggerSource?: string;
+}): ClaimCompanionFeastMilestoneRewardResult {
+  const { session, client, eventId, milestoneId, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const canonicalEventId = eventId.trim();
+  if (!canonicalEventId) {
+    return { record: current, ok: false, progress: null, rewardLabel: null, failureReason: 'missing_event' };
+  }
+  const progress = current.companionFeastProgressByEvent?.[canonicalEventId] ?? null;
+  if (!progress) {
+    return { record: current, ok: false, progress: null, rewardLabel: null, failureReason: 'progress_not_found' };
+  }
+  const milestone = getCompanionFeastMilestone(milestoneId);
+  if (!milestone) {
+    return { record: current, ok: false, progress, rewardLabel: null, failureReason: 'missing_milestone' };
+  }
+  const points = Math.max(0, Math.floor(progress.feastPoints ?? 0));
+  if (points < milestone.pointsRequired) {
+    return { record: current, ok: false, progress, rewardLabel: milestone.rewardLabel, failureReason: 'not_achieved' };
+  }
+  if (progress.claimedMilestoneIds.includes(milestone.id)) {
+    return { record: current, ok: false, progress, rewardLabel: milestone.rewardLabel, failureReason: 'already_claimed' };
+  }
+
+  const nextProgress: CompanionFeastProgressEntry = {
+    ...progress,
+    claimedMilestoneIds: resolveCompanionFeastClaimedMilestoneIds({
+      claimedMilestoneIds: [...progress.claimedMilestoneIds, milestone.id],
+    }),
+    updatedAtMs: Date.now(),
+  };
+  const essenceAward = Math.max(0, Math.floor(milestone.reward.essence ?? 0));
+  const diceAward = Math.max(0, Math.floor(milestone.reward.dicePool ?? 0));
+  const shardAward = Math.max(0, Math.floor(milestone.reward.shards ?? 0));
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    dicePool: Math.max(0, current.dicePool + diceAward),
+    essence: Math.max(0, current.essence + essenceAward),
+    essenceLifetimeEarned: Math.max(0, current.essenceLifetimeEarned + essenceAward),
+    shards: Math.max(0, current.shards + shardAward),
+    companionFeastProgressByEvent: {
+      ...current.companionFeastProgressByEvent,
+      [canonicalEventId]: nextProgress,
+    },
+  };
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.companionFeastMilestoneDice,
+    amount: diceAward,
+    sessionId: session.user.id,
+    metadata: { eventId: canonicalEventId, milestoneId: milestone.id, rewardLabel: milestone.rewardLabel },
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'claim_companion_feast_milestone_reward',
   });
   return { record: next, ok: true, progress: nextProgress, rewardLabel: milestone.rewardLabel };
 }

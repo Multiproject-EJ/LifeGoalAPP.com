@@ -309,7 +309,7 @@ export const RewardCard = ({
   const getRewardIcon = (): string => {
     if (isEmpty) return '✦';
     if (currency === 'dice') return '🎲';
-    if (isPersonalQuest) return '🟣';
+    if (isPersonalQuest) return '💰';
     return '🪙';
   };
 
@@ -318,7 +318,7 @@ export const RewardCard = ({
     if (currency === 'dice') {
       return `${amount} ${diceLabel}`;
     }
-    return isPersonalQuest ? `${amount} Essence` : `${amount} Gold`;
+    return isPersonalQuest ? `${amount} Money` : `${amount} Gold`;
   };
 
   const getFlavourText = (): string => {

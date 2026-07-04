@@ -376,7 +376,7 @@ export function openEventMinigame(options: {
   ticketsToSpend?: number;
 }): EventMinigameLaunchDescriptor | null {
   const ticketCost = 1;
-  const isPerActionSpend = options.eventId === 'space_excavator';
+  const isPerActionSpend = options.eventId === 'space_excavator' || options.eventId === 'companion_feast';
   const requestedSpend = isPerActionSpend ? 0 : Math.floor(options.ticketsToSpend ?? ticketCost);
   if (!Number.isFinite(requestedSpend) || requestedSpend < 0) return null;
   if (!isPerActionSpend && requestedSpend < ticketCost) return null;

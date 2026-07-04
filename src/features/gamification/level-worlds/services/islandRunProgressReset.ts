@@ -143,6 +143,7 @@ export function buildFreshIslandRunRecord(
     minigameTicketsByEvent: {},
     luckyRollSessionsByMilestone: {},
     spaceExcavatorProgressByEvent: {},
+    companionFeastProgressByEvent: {},
   };
 }
 

@@ -48,11 +48,11 @@ function sumRewards(rewards: IslandRunLuckyRollRewardEntry[], rewardType: Island
 function getTreasurePathFieldIcon(kind: IslandRunLuckyRollTileKind): string {
   switch (kind) {
     case 'essence':
-      return '✨';
+      return '💰';
     case 'dice':
       return '🎲';
     case 'shards':
-      return '💎';
+      return '🟣';
     case 'egg':
       return '🥚';
     case 'bonus_detour':
@@ -68,11 +68,11 @@ function getTreasurePathFieldIcon(kind: IslandRunLuckyRollTileKind): string {
 function getTreasurePathFieldLabel(kind: IslandRunLuckyRollTileKind): string {
   switch (kind) {
     case 'essence':
-      return 'Essence field';
+      return 'Money field';
     case 'dice':
       return 'Dice field';
     case 'shards':
-      return 'Shard field';
+      return 'Essence field';
     case 'egg':
       return 'Treasure Egg field';
     case 'bonus_detour':
@@ -89,13 +89,13 @@ function formatReward(entry: IslandRunLuckyRollRewardEntry): string {
   const icon = entry.rewardType === 'dice'
     ? '🎲'
     : entry.rewardType === 'essence'
-      ? '✨'
+      ? '💰'
       : entry.rewardType === 'shards'
-        ? '💎'
+        ? '🟣'
         : entry.rewardType === 'egg'
           ? '🥚'
           : '🎁';
-  const label = entry.rewardType === 'egg' ? 'Treasure Egg' : entry.rewardType;
+  const label = entry.rewardType === 'egg' ? 'Treasure Egg' : entry.rewardType === 'essence' ? 'Money' : entry.rewardType === 'shards' ? 'Essence' : entry.rewardType;
   return `${icon} +${entry.amount} ${label} · field ${entry.tileId}`;
 }
 
@@ -110,7 +110,7 @@ function formatTreasurePathCollectMessage({
   shards: number;
   eggs: number;
 }): string {
-  return `Ready at the treasure gate: 🎲 ${dice} Dice · ✨ ${essence} Essence · 💎 ${shards} Shards · 🥚 ${eggs} Treasure Eggs.`;
+  return `Ready at the treasure gate: 🎲 ${dice} Dice · 💰 ${essence} Money · 🟣 ${shards} Essence · 🥚 ${eggs} Treasure Eggs.`;
 }
 
 function resolveDevRoll(luckyRollSession: IslandRunLuckyRollSession | null): number {
@@ -244,7 +244,7 @@ export function IslandRunLuckyRollDevOverlay({
     const eggsAwarded = result.rewardsBanked
       .filter((entry) => entry.rewardType === 'egg')
       .reduce((total, entry) => total + Math.max(0, Math.floor(entry.amount)), 0);
-    return `Treasure collected (${result.status}): 🎲 +${result.diceAwarded}, ✨ +${result.essenceAwarded}, 💎 +${result.shardsAwarded}, 🥚 +${eggsAwarded}.`;
+    return `Treasure collected (${result.status}): 🎲 +${result.diceAwarded}, 💰 +${result.essenceAwarded}, 🟣 +${result.shardsAwarded}, 🥚 +${eggsAwarded}.`;
   });
 
   const handleCollectAndTravel = () => runAction(async () => {
@@ -366,8 +366,8 @@ export function IslandRunLuckyRollDevOverlay({
 
         <div className="island-run-lucky-roll-dev-overlay__pending-row" aria-label="Pending Treasure Path rewards">
           <span>🎲 Dice <strong>{pendingDice}</strong></span>
-          <span>✨ Essence <strong>{pendingEssence}</strong></span>
-          <span>💎 Shards <strong>{pendingShards}</strong></span>
+          <span>💰 Money <strong>{pendingEssence}</strong></span>
+          <span>🟣 Essence <strong>{pendingShards}</strong></span>
           <span>🥚 Treasure Eggs <strong>{pendingEggs}</strong></span>
         </div>
 
@@ -383,8 +383,8 @@ export function IslandRunLuckyRollDevOverlay({
             })}</p>
             <div className="island-run-lucky-roll-dev-overlay__reward-summary" aria-label="Treasure Path reward summary">
               <span>🎲 Dice total <strong>{completedRewardDice}</strong></span>
-              <span>✨ Essence total <strong>{completedRewardEssence}</strong></span>
-              <span>💎 Shards total <strong>{completedRewardShards}</strong></span>
+              <span>💰 Money total <strong>{completedRewardEssence}</strong></span>
+              <span>🟣 Essence total <strong>{completedRewardShards}</strong></span>
               <span>🥚 Treasure Eggs <strong>{completedRewardEggs}</strong></span>
             </div>
           </section>
@@ -471,12 +471,12 @@ export function IslandRunLuckyRollDevOverlay({
                   <dd>{luckyRollSession?.claimedTileIds.join(', ') || '—'}</dd>
                 </div>
                 <div>
-                  <dt>Canonical dice / essence / shards</dt>
+                  <dt>Canonical dice / money / essence</dt>
                   <dd>{runtimeState.dicePool} / {runtimeState.essence} / {runtimeState.shards}</dd>
                 </div>
                 <div>
                   <dt>Stored rewards</dt>
-                  <dd>🎲 {bankedDice} · ✨ {bankedEssence} · 💎 {bankedShards} · 🥚 {bankedEggs}</dd>
+                  <dd>🎲 {bankedDice} · 💰 {bankedEssence} · 🟣 {bankedShards} · 🥚 {bankedEggs}</dd>
                 </div>
               </dl>
               <section className="island-run-lucky-roll-dev-overlay__details-section">

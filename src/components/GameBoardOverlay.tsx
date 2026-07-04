@@ -432,7 +432,7 @@ export function GameBoardOverlay({
                 aria-label="Play level one"
               >
                 <span className="game-board-overlay__play-button-content">
-                  <span className="game-board-overlay__play-button-chip">✨ {essenceBalance.toLocaleString()}</span>
+                  <span className="game-board-overlay__play-button-chip">💰 {essenceBalance.toLocaleString()}</span>
                   <span>PLAY</span>
                 </span>
               </button>

@@ -141,7 +141,7 @@ function summarizeTreasurePathRewards(rewards: IslandRunLuckyRollRewardEntry[]):
 }
 
 function formatTreasurePathRewardSummary(summary: TreasurePathRewardSummary): string {
-  return `+${summary.dice} dice, +${summary.essence} essence, +${summary.shards} shards, +${summary.egg} eggs`;
+  return `+${summary.dice} dice, +${summary.essence} money, +${summary.shards} essence, +${summary.egg} eggs`;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -393,7 +393,7 @@ export function IslandRunDebugPanel({
         { label: 'Travel overlay visible', value: fmtBool(ls.showTravelOverlay) },
         { label: 'Hydrated', value: fmtBool(ls.hasHydratedRuntimeState) },
         { label: 'Runtime version', value: String(rs.runtimeVersion) },
-        { label: 'Last essence drift lost', value: String(rs.lastEssenceDriftLost ?? 0) },
+        { label: 'Last money drift lost', value: String(rs.lastEssenceDriftLost ?? 0) },
       ],
     };
 
@@ -413,16 +413,16 @@ export function IslandRunDebugPanel({
     const economySection: DebugSection = {
       title: '💰 Economy',
       rows: [
-        { label: 'Essence', value: String(rs.essence) },
-        { label: 'Essence lifetime earned', value: String(rs.essenceLifetimeEarned) },
-        { label: 'Essence lifetime spent', value: String(rs.essenceLifetimeSpent) },
-        { label: 'Shards', value: String(rs.shards) },
+        { label: 'Money', value: String(rs.essence) },
+        { label: 'Money lifetime earned', value: String(rs.essenceLifetimeEarned) },
+        { label: 'Money lifetime spent', value: String(rs.essenceLifetimeSpent) },
+        { label: 'Essence', value: String(rs.shards) },
         { label: 'Shields', value: String(rs.shields) },
         { label: 'Diamonds', value: String(rs.diamonds) },
         { label: 'Spin tokens', value: String(rs.spinTokens) },
-        { label: 'Island shards', value: String(rs.islandShards) },
-        { label: 'Shard tier index', value: String(rs.shardTierIndex) },
-        { label: 'Shard claim count', value: String(rs.shardClaimCount) },
+        { label: 'Island essence', value: String(rs.islandShards) },
+        { label: 'Essence tier index', value: String(rs.shardTierIndex) },
+        { label: 'Essence claim count', value: String(rs.shardClaimCount) },
       ],
     };
 
@@ -459,7 +459,7 @@ export function IslandRunDebugPanel({
         })),
         ...rs.stopBuildStateByIndex.map((b, i) => ({
           label: `  Build ${i}`,
-          value: `L${b.buildLevel} | ${b.spentEssence}/${b.requiredEssence} essence`,
+          value: `L${b.buildLevel} | ${b.spentEssence}/${b.requiredEssence} money`,
         })),
       ],
     };
@@ -844,7 +844,7 @@ export function IslandRunDebugPanel({
                         disabled={luckyRollActionPending || !onAdvanceLuckyRollDevSession}
                         onClick={() => runLuckyRollDevAction(() => onAdvanceLuckyRollDevSession?.(luckyRollTargetIslandNumber, 'essence') ?? Promise.resolve('Lucky Roll launcher unavailable.'))}
                       >
-                        Advance +25 essence
+                        Advance +25 money
                       </button>
                       <button
                         type="button"
@@ -882,15 +882,15 @@ export function IslandRunDebugPanel({
                         </tr>
                         <tr>
                           <td className="island-run-debug-panel__label">Pending rewards</td>
-                          <td className="island-run-debug-panel__value">+{luckyRollPendingDice} dice, +{luckyRollPendingEssence} essence</td>
+                          <td className="island-run-debug-panel__value">+{luckyRollPendingDice} dice, +{luckyRollPendingEssence} money</td>
                         </tr>
                         <tr>
                           <td className="island-run-debug-panel__label">Banked rewards</td>
-                          <td className="island-run-debug-panel__value">+{luckyRollBankedDice} dice, +{luckyRollBankedEssence} essence</td>
+                          <td className="island-run-debug-panel__value">+{luckyRollBankedDice} dice, +{luckyRollBankedEssence} money</td>
                         </tr>
                         <tr>
-                          <td className="island-run-debug-panel__label">Canonical dice / essence</td>
-                          <td className="island-run-debug-panel__value">{runtimeState.dicePool} dice, {runtimeState.essence} essence</td>
+                          <td className="island-run-debug-panel__label">Canonical dice / money</td>
+                          <td className="island-run-debug-panel__value">{runtimeState.dicePool} dice, {runtimeState.essence} money</td>
                         </tr>
                       </tbody>
                     </table>

@@ -18,6 +18,7 @@ import {
   type BonusTileChargeByIsland,
 } from './islandRunBonusTile';
 import { resolveSpaceExcavatorClaimedMilestoneIds } from './spaceExcavatorCampaignProgress';
+import { resolveCompanionFeastClaimedMilestoneIds } from './companionFeastProgression';
 import { normalizeGrantIds } from './islandRunGrantIdUtils';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
@@ -172,6 +173,26 @@ export function compareIslandRunFirstSessionTutorialStates(
 ): number {
   return (ISLAND_RUN_FIRST_SESSION_TUTORIAL_STATE_RANK.get(left) ?? 0)
     - (ISLAND_RUN_FIRST_SESSION_TUTORIAL_STATE_RANK.get(right) ?? 0);
+}
+
+/**
+ * Canonical Companion Feast campaign progress for one timed event: the level
+ * ladder position, rewards-bar feast points, and claimed milestone ids.
+ * Level/milestone definitions live in `companionFeastProgression.ts`.
+ */
+export interface CompanionFeastProgressEntry {
+  /** 0-based active level; one past the last level once the campaign is done. */
+  levelIndex: number;
+  /** Rewards-bar progress: one point per level cleared. */
+  feastPoints: number;
+  /** Highest food-ladder tier ever created during this event. */
+  highestTierReached: number;
+  /** Best single-run merge score for this event. */
+  bestScore: number;
+  /** Total fruit drops (each spends one event ticket). */
+  totalFruitDropped: number;
+  claimedMilestoneIds: string[];
+  updatedAtMs: number;
 }
 
 export interface SpaceExcavatorProgressEntry {
@@ -365,6 +386,7 @@ export interface IslandRunGameStateRecord {
   minigameTicketsByEvent: Record<string, number>;
   luckyRollSessionsByMilestone: IslandRunLuckyRollSessionsByMilestone;
   spaceExcavatorProgressByEvent: Record<string, SpaceExcavatorProgressEntry>;
+  companionFeastProgressByEvent: Record<string, CompanionFeastProgressEntry>;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -853,6 +875,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     minigameTicketsByEvent: {},
     luckyRollSessionsByMilestone: {},
     spaceExcavatorProgressByEvent: {},
+    companionFeastProgressByEvent: {},
   };
 }
 
@@ -1483,6 +1506,10 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       value.spaceExcavatorProgressByEvent,
       fallback.spaceExcavatorProgressByEvent,
     ),
+    companionFeastProgressByEvent: sanitizeCompanionFeastProgressByEvent(
+      value.companionFeastProgressByEvent,
+      fallback.companionFeastProgressByEvent,
+    ),
   };
 }
 
@@ -1730,6 +1757,65 @@ function mergeSpaceExcavatorProgressByEvent(
   return merged;
 }
 
+function sanitizeCompanionFeastProgressByEvent(
+  value: unknown,
+  fallback: Record<string, CompanionFeastProgressEntry>,
+): Record<string, CompanionFeastProgressEntry> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return fallback;
+  const out: Record<string, CompanionFeastProgressEntry> = {};
+  for (const [eventId, rawValue] of Object.entries(value as Record<string, unknown>)) {
+    if (!eventId.trim() || !rawValue || typeof rawValue !== 'object' || Array.isArray(rawValue)) continue;
+    const raw = rawValue as Record<string, unknown>;
+    const toCount = (input: unknown): number =>
+      typeof input === 'number' && Number.isFinite(input) ? Math.max(0, Math.floor(input)) : 0;
+    out[eventId] = {
+      levelIndex: toCount(raw.levelIndex),
+      feastPoints: toCount(raw.feastPoints),
+      highestTierReached: toCount(raw.highestTierReached),
+      bestScore: toCount(raw.bestScore),
+      totalFruitDropped: toCount(raw.totalFruitDropped),
+      claimedMilestoneIds: resolveCompanionFeastClaimedMilestoneIds({
+        claimedMilestoneIds: Array.isArray(raw.claimedMilestoneIds)
+          ? raw.claimedMilestoneIds.filter((id): id is string => typeof id === 'string')
+          : [],
+      }),
+      updatedAtMs: typeof raw.updatedAtMs === 'number' && Number.isFinite(raw.updatedAtMs)
+        ? Math.max(0, Math.floor(raw.updatedAtMs))
+        : Date.now(),
+    };
+  }
+  return out;
+}
+
+function mergeCompanionFeastProgressByEvent(
+  remote: Record<string, CompanionFeastProgressEntry>,
+  local: Record<string, CompanionFeastProgressEntry>,
+): Record<string, CompanionFeastProgressEntry> {
+  const keys = new Set([...Object.keys(remote), ...Object.keys(local)]);
+  const merged: Record<string, CompanionFeastProgressEntry> = {};
+  keys.forEach((eventId) => {
+    const remoteProgress = remote[eventId];
+    const localProgress = local[eventId];
+    if (!remoteProgress || !localProgress) {
+      merged[eventId] = localProgress ?? remoteProgress;
+      return;
+    }
+    const base = localProgress.updatedAtMs >= remoteProgress.updatedAtMs ? localProgress : remoteProgress;
+    merged[eventId] = {
+      ...base,
+      levelIndex: Math.max(remoteProgress.levelIndex, localProgress.levelIndex),
+      feastPoints: Math.max(remoteProgress.feastPoints, localProgress.feastPoints),
+      highestTierReached: Math.max(remoteProgress.highestTierReached, localProgress.highestTierReached),
+      bestScore: Math.max(remoteProgress.bestScore, localProgress.bestScore),
+      totalFruitDropped: Math.max(remoteProgress.totalFruitDropped, localProgress.totalFruitDropped),
+      claimedMilestoneIds: resolveCompanionFeastClaimedMilestoneIds({
+        claimedMilestoneIds: [...remoteProgress.claimedMilestoneIds, ...localProgress.claimedMilestoneIds],
+      }),
+    };
+  });
+  return merged;
+}
+
 function mergeStringArrayByUnion(left: string[] = [], right: string[] = []): string[] {
   return Array.from(new Set([...left, ...right]));
 }
@@ -1900,6 +1986,10 @@ function mergeRecordForConflict(options: {
       remote.spaceExcavatorProgressByEvent,
       local.spaceExcavatorProgressByEvent,
     ),
+    companionFeastProgressByEvent: mergeCompanionFeastProgressByEvent(
+      remote.companionFeastProgressByEvent,
+      local.companionFeastProgressByEvent,
+    ),
   };
 }
 
@@ -1992,6 +2082,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     minigame_tickets_by_event: record.minigameTicketsByEvent,
     lucky_roll_sessions_by_milestone: record.luckyRollSessionsByMilestone,
     space_excavator_progress_by_event: record.spaceExcavatorProgressByEvent,
+    companion_feast_progress_by_event: record.companionFeastProgressByEvent,
     last_writer_device_session_id: deviceSessionId,
     updated_at: new Date().toISOString(),
   };
@@ -2056,7 +2147,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -2181,6 +2272,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             spaceExcavatorProgressByEvent: sanitizeSpaceExcavatorProgressByEvent(
               (legacyData as Record<string, unknown>).space_excavator_progress_by_event,
               fallback.spaceExcavatorProgressByEvent,
+            ),
+            companionFeastProgressByEvent: sanitizeCompanionFeastProgressByEvent(
+              (legacyData as Record<string, unknown>).companion_feast_progress_by_event,
+              fallback.companionFeastProgressByEvent,
             ),
           },
           fallback,
@@ -2345,6 +2440,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       spaceExcavatorProgressByEvent: sanitizeSpaceExcavatorProgressByEvent(
         (data as Record<string, unknown>).space_excavator_progress_by_event,
         fallback.spaceExcavatorProgressByEvent,
+      ),
+      companionFeastProgressByEvent: sanitizeCompanionFeastProgressByEvent(
+        (data as Record<string, unknown>).companion_feast_progress_by_event,
+        fallback.companionFeastProgressByEvent,
       ),
     },
     fallback,

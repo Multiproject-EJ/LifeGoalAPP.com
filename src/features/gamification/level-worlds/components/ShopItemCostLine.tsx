@@ -13,11 +13,11 @@ export interface ShopItemCostLineProps {
   cost: number;
   /** The player's current balance in that currency. */
   balance: number;
-  /** Currency icon, e.g. "🟣" for essence, "💎" for diamonds. */
+  /** Currency icon, e.g. "💰" for money, "💎" for diamonds. */
   currencyIcon: string;
   /**
    * Accessible currency name used in the ARIA label of the progress bar —
-   * e.g. "essence", "diamonds". Defaults to "currency".
+   * e.g. "money", "diamonds". Defaults to "currency".
    */
   currencyName?: string;
 }

@@ -3321,7 +3321,7 @@
 /* pill toggle */
 .island-run-entry-audio__pill {
   position: absolute;
-  right: 11.8%;
+  right: 13.5%;
   width: 16.8%;
   height: 6.85%;
   border: 1px solid rgba(255, 255, 255, 0.72);
@@ -3338,11 +3338,11 @@
 }
 
 .island-run-entry-audio__pill--music {
-  top: 43.7%;
+  top: 39.6%;
 }
 
 .island-run-entry-audio__pill--sounds {
-  top: 65.2%;
+  top: 62.2%;
 }
 
 .island-run-entry-audio__pill--sounds.island-run-entry-audio__pill--on {
@@ -3381,9 +3381,9 @@
 
 .island-run-entry-audio__start {
   position: absolute;
-  left: 21.8%;
-  bottom: 5.35%;
-  width: 56.4%;
+  left: 22.4%;
+  bottom: 11.5%;
+  width: 55.2%;
   border: 0;
   background: transparent;
   padding: 0;
@@ -10809,6 +10809,25 @@
   color: #ffe6a5;
   text-shadow: 0 0 24px rgba(255, 220, 100, 0.7);
   align-self: center;
+}
+
+.wpm-card-reveal__creature-card {
+  width: min(100%, 250px);
+  transform: none;
+}
+
+.wpm-card-reveal__creature-card .creature-card__inner {
+  min-height: 0;
+  padding: 0.7rem;
+}
+
+.wpm-card-reveal__creature-card .creature-card__art-window {
+  min-height: 150px;
+}
+
+.wpm-card-reveal__creature-card .creature-card__ability,
+.wpm-card-reveal__creature-card .creature-card__quote {
+  display: none;
 }
 
 .wpm-card-reveal__name {

@@ -298,10 +298,10 @@ export function resolveSpaceExcavatorEventMinigame(
 
 
 /**
- * Companion Feast event surface routes to the dedicated drop-and-merge
- * Companion Feast mini-game. Entry spends 1 ticket at launch; replays inside
- * the game spend additional tickets through launch-config callbacks that call
- * the canonical `applyTimedEventTicketSpend` action.
+ * Companion Feast event surface routes to the dedicated fruit-drop-and-merge
+ * Companion Feast mini-game. The surface opens for free; every fruit dropped
+ * into the bowl spends 1 event ticket through the canonical
+ * `applyCompanionFeastDrop` action (Space Excavator-style per-action spend).
  */
 export function resolveCompanionFeastEventMinigame(
   ctx: EventMinigameLaunchContext,
@@ -316,7 +316,7 @@ export function resolveCompanionFeastEventMinigame(
 
   return {
     minigameId: 'companion_feast',
-    spendMode: 'entry',
+    spendMode: 'per_action',
     ticketCost: launch.ticketCost,
     ticketsSpent: launch.ticketsSpent,
     config: {
