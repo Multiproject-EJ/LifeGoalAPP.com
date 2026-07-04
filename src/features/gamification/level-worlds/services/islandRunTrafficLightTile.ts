@@ -2,7 +2,11 @@ import type { BonusTileChargeByIsland } from './islandRunBonusTile';
 import { getBonusTileCharge } from './islandRunBonusTile';
 import { STICKER_FRAGMENTS_PER_STICKER } from './islandRunContractV2RewardBar';
 
-export const TRAFFIC_LIGHT_TILE_INDEX = 21;
+// Bottom-centre tile of the ring. On the 36-tile ring index 19 sits at ~6
+// o'clock (was index 21 on the 40-tile ring). Chosen to avoid colliding with
+// the landmark-door indices (5/14/23/32) and the fraction-derived feature
+// tiles (build_discount/free_ticket/card/encounter).
+export const TRAFFIC_LIGHT_TILE_INDEX = 19;
 export const TRAFFIC_LIGHT_CHARGE_TARGET = 8;
 
 export type TrafficLightCoinSide = 'heads' | 'tails';

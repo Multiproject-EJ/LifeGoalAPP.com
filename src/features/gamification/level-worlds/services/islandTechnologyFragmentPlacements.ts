@@ -10,14 +10,19 @@ export type IslandTechnologyFragmentPlacement = {
  * Island 1: The Concord is recovered as nine fixed physical board fragments.
  *
  * These tiles reuse the existing board pop-out collectible structure on normal
- * reachable reward tiles. They deliberately avoid landmark doors (6/16/26/36),
- * traffic-light tile 34, hazards, and encounter overlays so the fragment remains
- * an additive one-time pickup layered onto ordinary tile rewards.
+ * reachable reward tiles. Fragments must sit on ordinary economy tiles only —
+ * special tiles (landmark doors, traffic light, build-discount, free-ticket,
+ * card station, encounters) short-circuit the landing handler before the
+ * fragment-collection step, so a fragment on one of them would be
+ * uncollectable. On the 36-tile ring the reserved indices are: landmark doors
+ * 5/14/23/32, traffic light 19, build-discount 12, free-ticket 30, card
+ * station 22, encounters 5/9/27. The placements below deliberately avoid all
+ * of those (and tile 0, the caretaker/start tile).
  */
 export const ISLAND_1_CONCORD_FRAGMENT_PLACEMENTS: readonly IslandTechnologyFragmentPlacement[] = Object.freeze([
   { tileIndex: 1, fragmentSlot: 0 },
-  { tileIndex: 5, fragmentSlot: 1 },
-  { tileIndex: 9, fragmentSlot: 2 },
+  { tileIndex: 6, fragmentSlot: 1 },
+  { tileIndex: 10, fragmentSlot: 2 },
   { tileIndex: 13, fragmentSlot: 3 },
   { tileIndex: 17, fragmentSlot: 4 },
   { tileIndex: 21, fragmentSlot: 5 },

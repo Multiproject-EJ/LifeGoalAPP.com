@@ -72,7 +72,7 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 
 - Board topology is profile/config-driven.
 - Board tile count is not fixed and must always be derived from the active board topology profile.
-- The current production default profile is `spark40_ring` (40 tiles).
+- The current production default profile is `spark40_ring` (36 tiles; the id keeps its original `spark40` name for telemetry stability).
 - Future profiles are supported.
 - Board topology must be treated as variable and extensible across profiles.
 
@@ -86,7 +86,7 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Landmarks are external gameplay structures, not tile positions.
 - Landmark progression must not depend on landing on specific tile indices.
 - The player token does not land on landmark structures themselves; landmark structures remain external UI/gameplay objects.
-- Landmarks can be accessed by tapping the landmark button on the orbit HUD. A narrow 40-ring exception also exists for **landmark-door tiles**: four outer ring tiles nearest the four non-boss landmarks may open the same canonical landmark modal on landing. When a door is the active, enterable landmark it opens that landmark; when it is dormant/wrong for current progression it may open a lightweight Dormant Door matching minigame with its own small reward ladder. Door tiles do not complete stops, do not award normal tile rewards, and must route all stop completion/progression through canonical stop services.
+- Landmarks can be accessed by tapping the landmark button on the orbit HUD. A narrow ring exception also exists for **landmark-door tiles**: four outer ring tiles nearest the four non-boss landmarks may open the same canonical landmark modal on landing. When a door is the active, enterable landmark it opens that landmark; when it is dormant/wrong for current progression it may open a lightweight Dormant Door matching minigame with its own small reward ladder. Door tiles do not complete stops, do not award normal tile rewards, and must route all stop completion/progression through canonical stop services.
 - When the Boss landmark becomes truly open, the four landmark-door tiles reroute to Boss until island clear.
 - One ring tile may be a **Traffic Light** bonus tile. Passing over it lights one of 8 UI lights; at 8/8 it unlocks a coin-flip bonus where heads opens Mystery Box 1 and tails opens Mystery Box 2. Traffic Light rewards are bonus-wallet/sticker-fragment grants, not landmark progression.
 - Board profiles do not expose per-stop progression indices. Landmark buttons are positioned in screen space by the UI layer (`OUTER_STOP_ANCHORS` in `islandBoardLayout.ts`), while any landmark-door tile mapping lives in the topology/tile-map service layer and must not become an alternate stop-completion authority.
@@ -94,8 +94,8 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Landmark buttons should expose an **attention hint** (small affordability dot) whenever the next sequentially-eligible landmark is payable with current essence and remains unpaid.
 
 ### Board topology compatibility note
-- Current production board uses a 40-tile topology profile.
-- Additional board profiles may exist for experimentation, but production gameplay is standardized on the 40-tile profile.
+- Current production board uses a 36-tile topology profile (`spark40_ring`, tileCount 36).
+- Additional board profiles may exist for experimentation, but production gameplay is standardized on the 36-tile profile.
 
 ---
 
@@ -262,7 +262,7 @@ Stop rules:
   - Stop 5 (Boss): **220 essence** base
 - Tickets are **per-island**: a paid ticket unlocks that stop for the current island only. Travelling to a new island requires paying the ticket again.
 - The Hatchery (Stop 1) **never** has a ticket cost — it is always free on a new island.
-- The ticket rule prevents "rush-through" completion: the player must earn essence on the 40-tile board before each new stop can be opened.
+- The ticket rule prevents "rush-through" completion: the player must earn essence on the 36-tile board before each new stop can be opened.
 - Canonical cost UI/readout component for market + build panel is `<ShopItemCostLine />`; new cost displays should reuse it (or a shared derivative) instead of re-implementing bespoke "need X more" math.
 
 ### Hatchery (Stop 1) — egg lifecycle and checkmark rules
@@ -355,7 +355,7 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
 
 ## 5D) Tile type catalogue (authoritative)
 
-The 40-tile ring uses the following tile types. **Tile-type `'stop'` is fully retired** — stops are external HUD structures, never board tiles (see §Board Topology). **Tile-type `'event'` is also retired** — the word "event" is reserved for the timed-minigame rotation; reward-bar progress that used to come from `event` tiles is fully covered by `micro`.
+The 36-tile ring uses the following tile types. **Tile-type `'stop'` is fully retired** — stops are external HUD structures, never board tiles (see §Board Topology). **Tile-type `'event'` is also retired** — the word "event" is reserved for the timed-minigame rotation; reward-bar progress that used to come from `event` tiles is fully covered by `micro`.
 
 | Tile type | On-land effect | Notes |
 |---|---|---|

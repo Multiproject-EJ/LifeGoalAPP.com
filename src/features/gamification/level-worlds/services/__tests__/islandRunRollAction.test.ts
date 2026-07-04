@@ -263,11 +263,11 @@ export const islandRunRollActionTests: TestCase[] = [
       );
 
       assertEqual(result.status, 'ok', 'Tutorial roll should succeed');
-      assertEqual(result.total, 3, 'Token index 2 should target first reachable positive essence tile at +3');
+      assertEqual(result.total, 2, 'Token index 2 should target first reachable positive essence tile at +2');
       assertEqual(result.dieOne, 1, 'Deterministic total still returns a normal die face');
-      assertEqual(result.dieTwo, 2, 'Deterministic total still returns a normal die face');
-      assertEqual(result.newTokenIndex, 5, 'Roll lands on generated Island 1 tile index 5');
-      assertEqual(result.hopSequence?.length, 3, 'Movement still uses normal hop pipeline');
+      assertEqual(result.dieTwo, 1, 'Deterministic total still returns a normal die face');
+      assertEqual(result.newTokenIndex, 4, 'Roll lands on generated Island 1 tile index 4');
+      assertEqual(result.hopSequence?.length, 2, 'Movement still uses normal hop pipeline');
 
       const tileMap = generateTileMap(1, getIslandRarity(1), 'forest', 0);
       const landedTile = tileMap[result.newTokenIndex!];
@@ -300,7 +300,7 @@ export const islandRunRollActionTests: TestCase[] = [
 
       const first = await executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 });
       assertEqual(first.status, 'ok', 'Initial tutorial roll should succeed');
-      assertEqual(first.total, 3, 'Initial tutorial roll uses deterministic total');
+      assertEqual(first.total, 2, 'Initial tutorial roll uses deterministic total');
 
       const second = await withMockedRandom([0, 0], () =>
         executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),

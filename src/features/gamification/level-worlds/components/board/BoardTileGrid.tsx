@@ -24,7 +24,9 @@ export interface BoardTileGridProps {
 }
 
 /**
- * Renders the grid of 40 ring tiles using memoized BoardTile components.
+ * Renders the ring tiles (36 on the production spark40_ring profile) using
+ * memoized BoardTile components. The count is driven by `anchors.length`, not
+ * hardcoded, so it follows the active board profile.
  */
 export function BoardTileGrid(props: BoardTileGridProps) {
   const {

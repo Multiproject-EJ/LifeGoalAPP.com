@@ -15,7 +15,10 @@ export interface IslandBoardProfile {
 const BOARD_PROFILES: Record<IslandBoardProfileId, IslandBoardProfile> = {
   spark40_ring: {
     id: 'spark40_ring',
-    tileCount: 40,
+    // Reduced from 40 → 36 tiles. Fewer, larger tiles on the SAME ring radius
+    // (see SPARK40_RADIUS in islandBoardLayout.ts). The profile id is kept as
+    // `spark40_ring` so existing telemetry / string call-sites stay stable.
+    tileCount: 36,
   },
 };
 

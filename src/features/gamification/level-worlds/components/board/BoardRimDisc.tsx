@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 // ─── BoardRimDisc: the carved stone wheel the tile ring sits on ──────────────
 // Renders a thick annulus (disc with a hole for the island art in the centre)
-// directly beneath the 40-tile ring so the whole board reads as one solid 3D
+// directly beneath the tile ring so the whole board reads as one solid 3D
 // object with real rim depth, instead of a flat circle of floating cards.
 //
 // Depth is faked the same way the individual tiles fake thickness: a darker
