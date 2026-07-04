@@ -83,7 +83,7 @@ function BuildModalV2PartButton({
     ? `${activeTitle} Level ${targetLevel}, Part ${part.partNumber} complete`
     : part.status === 'locked'
       ? `${activeTitle} Level ${targetLevel}, Part ${part.partNumber} locked`
-      : `Build ${activeTitle} Level ${targetLevel}, Part ${part.partNumber}. ${part.remainingEssence} Essence left in this part. Next tap spends ${nextTapCost} Essence.`;
+      : `Build ${activeTitle} Level ${targetLevel}, Part ${part.partNumber}. ${part.remainingEssence} Money left in this part. Next tap spends ${nextTapCost} Money.`;
 
   return (
     <button
@@ -122,7 +122,7 @@ export function BuildModalV2({
   const discountPercent = Math.round(Math.max(0, discountRate) * 100);
   const discountMinutesLeft = discountExpiresAtMs && discountRate > 0 ? Math.max(1, Math.ceil((discountExpiresAtMs - Date.now()) / 60000)) : 0;
   const statusLine = active
-    ? `Part ${activePart} of 5 · ${active.spentEssence}/${active.requiredEssence} Essence funded`
+    ? `Part ${activePart} of 5 · ${active.spentEssence}/${active.requiredEssence} Money funded`
     : '15 of 15 complete';
 
   return (
@@ -130,12 +130,12 @@ export function BuildModalV2({
       <section className="bm2-shell" role="dialog" aria-modal="true" aria-label={`Island ${islandNumber} Buildings`}>
         <header className="bm2-header">
           <span className="bm2-header__title">🔨 Island {islandNumber} Buildings</span>
-          <span className="bm2-header__essence" aria-label={`${essenceAvailable} Essence available`}>🟣 {essenceAvailable}</span>
+          <span className="bm2-header__essence" aria-label={`${essenceAvailable} Money available`}>💰 {essenceAvailable}</span>
           <button type="button" className="bm2-header__close" onClick={onClose} aria-label="Close build panel">✕</button>
         </header>
 
         {isBuildModalHatcheryGuidanceActive && (
-          <p className="bm2-tutorial-guidance">Build Hatchery to Level 1 with your tutorial Essence.</p>
+          <p className="bm2-tutorial-guidance">Build Hatchery to Level 1 with your tutorial Money.</p>
         )}
         {isBuildHoldActive && <p className="bm2-hold-feedback">{buildHoldFeedbackLabel}</p>}
         {discountPercent > 0 && discountMinutesLeft > 0 && (
@@ -154,8 +154,8 @@ export function BuildModalV2({
                 <p className="bm2-hero__status">{statusLine}</p>
                 <p className="bm2-hero__cost">
                   {active.canAffordNextTap
-                    ? `Next tap spends ${discountPercent > 0 ? Math.ceil(active.nextTapCost * (1 - discountRate)) : active.nextTapCost} Essence${discountPercent > 0 ? ` (${discountPercent}% off)` : ''}`
-                    : `Need ${Math.max(0, Math.ceil(active.nextTapCost * (1 - discountRate)) - essenceAvailable)} more Essence for the next tap`}
+                    ? `Next tap spends ${discountPercent > 0 ? Math.ceil(active.nextTapCost * (1 - discountRate)) : active.nextTapCost} Money${discountPercent > 0 ? ` (${discountPercent}% off)` : ''}`
+                    : `Need ${Math.max(0, Math.ceil(active.nextTapCost * (1 - discountRate)) - essenceAvailable)} more Money for the next tap`}
                 </p>
               </div>
               <div className="bm2-artwork bm2-artwork--hero">

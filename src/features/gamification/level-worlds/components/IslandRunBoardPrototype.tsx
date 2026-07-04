@@ -1076,13 +1076,13 @@ type BondMilestoneReward = {
 function getBondMilestoneReward(level: number): BondMilestoneReward | null {
   switch (level) {
     case 3:
-      return { level, label: 'Level 3 Cache', summary: '+15 essence', essence: 15 };
+      return { level, label: 'Level 3 Cache', summary: '+15 money', essence: 15 };
     case 5:
       return { level, label: 'Level 5 Care Pack', summary: '+8 dice', dice: 8 };
     case 8:
       return { level, label: 'Level 8 Momentum Pack', summary: '+1 spin token', spinTokens: 1 };
     case 10:
-      return { level, label: "Level 10 Captain's Stash", summary: '+25 essence, +8 dice', essence: 25, dice: 8 };
+      return { level, label: "Level 10 Captain's Stash", summary: '+25 money, +8 dice', essence: 25, dice: 8 };
     default:
       return null;
   }
@@ -1309,7 +1309,7 @@ function resolveMysteryStopReward(): MysteryStopReward {
   if (randomValue < 0.65) {
     return { type: 'dice', amount: 6, message: '🎲 Mystery recovery! +6 dice.' };
   }
-  if (randomValue < 0.85) return { type: 'essence', amount: 15, message: '🟣 Mystery essence! +15 essence.' };
+  if (randomValue < 0.85) return { type: 'essence', amount: 15, message: '💰 Mystery money! +15 money.' };
 
   return { type: 'lucky_roll', amount: 1, message: '🎲 Lucky Roll unlocked! +1 bonus run.' };
 }
@@ -4160,7 +4160,7 @@ export function IslandRunBoardPrototype({
       setShardMilestoneReached(true);
       // M16E: store the completed tier so the Claim button / modal can show the right collectible
       setPendingClaimTierIndex(shardTierIndex);
-      setLandingText((prev) => `${prev} ✨ Shard milestone reached!`);
+      setLandingText((prev) => `${prev} ✨ Essence milestone reached!`);
     }
   }, [islandShards, shardTierIndex, shardClaimCount, shardMilestoneReached, session, client]);
 
@@ -4543,7 +4543,7 @@ export function IslandRunBoardPrototype({
 
     if (!result.ok) {
       if (result.reason === 'insufficient_essence') {
-        setLandingText(`Not enough essence — need ${result.cost} 🟣 to prepay this discounted ticket.`);
+        setLandingText(`Not enough money — need ${result.cost} 💰 to prepay this discounted ticket.`);
       } else if (result.reason === 'already_paid') {
         setLandingText('That landmark ticket is already prepaid. Finish the prerequisite landmark to enter.');
         setPrepayTicketPromptStopId(null);
@@ -4581,7 +4581,7 @@ export function IslandRunBoardPrototype({
         },
       });
       const paidStop = islandStopPlan.find((s) => s.stopId === stopId);
-      setLandingText(`${paidStop?.title ?? stopId} ticket prepaid for ${result.cost} 🟣 (20% off). Complete the previous landmark to enter.`);
+      setLandingText(`${paidStop?.title ?? stopId} ticket prepaid for ${result.cost} 💰 (20% off). Complete the previous landmark to enter.`);
     }
     setPrepayTicketPromptStopId(null);
     setCameraMode('board_follow');
@@ -4654,7 +4654,7 @@ export function IslandRunBoardPrototype({
       triggerSource: 'dormant_landmark_door_minigame',
     });
     setRuntimeState(record);
-    setLandingText(`🚪 ${dormantDoorReward.label}: +${dormantDoorReward.essence} essence.`);
+    setLandingText(`🚪 ${dormantDoorReward.label}: +${dormantDoorReward.essence} money.`);
     handleCloseDormantDoorMiniGame();
   }, [client, dormantDoorMiniGame, dormantDoorReward, handleCloseDormantDoorMiniGame, isDormantDoorRewardClaiming, session]);
 
@@ -4703,7 +4703,7 @@ export function IslandRunBoardPrototype({
     setRuntimeState(record);
     const puzzlePart = reward.stickerFragments > 0 ? `, +${reward.stickerFragments} puzzle pieces` : '';
     const barPart = reward.rewardBarProgress > 0 ? `, +${reward.rewardBarProgress} bar` : '';
-    setLandingText(`🚦 ${reward.side === 'heads' ? 'Heads' : 'Tails'} opened ${reward.label}: +${reward.dice} dice, +${reward.essence} essence${puzzlePart}${barPart}.`);
+    setLandingText(`🚦 ${reward.side === 'heads' ? 'Heads' : 'Tails'} opened ${reward.label}: +${reward.dice} dice, +${reward.essence} money${puzzlePart}${barPart}.`);
     setTrafficLightCoinFlip(null);
   }, [client, session, trafficLightCoinFlip]);
 
@@ -4755,7 +4755,7 @@ export function IslandRunBoardPrototype({
 
     if (!result.ok) {
       if (result.reason === 'insufficient_essence') {
-        setLandingText(`Not enough essence — need ${result.cost} 🟣 to open this stop.`);
+        setLandingText(`Not enough money — need ${result.cost} 💰 to open this stop.`);
       } else if (result.reason === 'previous_stop_not_complete') {
         setLandingText('Complete the previous stop before opening this one.');
         setTicketPromptStopId(null);
@@ -4803,7 +4803,7 @@ export function IslandRunBoardPrototype({
         },
       });
       const paidStop = islandStopPlan.find((s) => s.stopId === stopId);
-      setLandingText(`${paidStop?.title ?? stopId} unlocked — ${result.cost} 🟣 paid.`);
+      setLandingText(`${paidStop?.title ?? stopId} unlocked — ${result.cost} 💰 paid.`);
     }
     setTicketPromptStopId(null);
     requestActiveStopTransition(stopId, 'ticket_paid_open');
@@ -5362,13 +5362,13 @@ export function IslandRunBoardPrototype({
       case 'dice':
         return nextRewardAmount === 1 ? 'die' : 'dice';
       case 'essence':
-        return 'essence';
+        return 'money';
       case 'minigame_tokens':
         return nextRewardAmount === 1
           ? timedEventTokenPresentation.labelSingular
           : timedEventTokenPresentation.labelPlural;
       case 'sticker_fragments':
-        return nextRewardAmount === 1 ? 'shard' : 'shards';
+        return 'essence';
     }
   })();
   const nextRewardAccessibleLabel = `${nextRewardAmountLabel} ${nextRewardUnitLabel}`;
@@ -5685,7 +5685,7 @@ export function IslandRunBoardPrototype({
 
     const payoutParts: string[] = [];
     if (totalDice > 0) payoutParts.push(`+${totalDice} 🎲`);
-    if (totalEssence > 0) payoutParts.push(`+${totalEssence} 🟣`);
+    if (totalEssence > 0) payoutParts.push(`+${totalEssence} 💰`);
     if (totalMinigameTokens > 0) payoutParts.push(`+${totalMinigameTokens} ${timedEventTokenIcon}`);
     if (totalStickerFragments > 0) payoutParts.push(`+${totalStickerFragments} 🧩`);
     if (totalStickersGranted > 0) payoutParts.push(`+${totalStickersGranted} 🏆sticker`);
@@ -6354,10 +6354,10 @@ export function IslandRunBoardPrototype({
     // practice that we accept the trade-off in exchange for synchronous UX.
     switch (tileType) {
       case 'currency':
-        setLandingText(`💰 Currency tile! +${essenceDelta} essence${multLabel}`);
+        setLandingText(`💰 Currency tile! +${essenceDelta} money${multLabel}`);
         break;
       case 'chest':
-        setLandingText(`🎁 Treasure chest! +${essenceDelta} essence${multLabel}`);
+        setLandingText(`🎁 Treasure chest! +${essenceDelta} money${multLabel}`);
         break;
       case 'card':
         setLandingText('🃏 Card station! Draw a Daily Clue Card for a quick gamified journal loop.');
@@ -6369,7 +6369,7 @@ export function IslandRunBoardPrototype({
           const walletSnapshot = Math.max(0, Math.floor(runtimeStateRef.current.essence));
           const expectedLoss = Math.min(walletSnapshot, penalty);
           if (expectedLoss > 0) {
-            setLandingText(`☠️ Hazard! −${expectedLoss} essence${multLabel}`);
+            setLandingText(`☠️ Hazard! −${expectedLoss} money${multLabel}`);
           } else {
             // Wallet empty — no essence to take.
             setLandingText(`☠️ Hazard — nothing to lose (empty wallet)${multLabel}`);
@@ -6380,7 +6380,7 @@ export function IslandRunBoardPrototype({
         break;
       }
       case 'micro':
-        setLandingText(essenceDelta > 0 ? `✨ Micro reward! +${essenceDelta} essence${multLabel}` : '✨ Micro reward!');
+        setLandingText(essenceDelta > 0 ? `✨ Micro reward! +${essenceDelta} money${multLabel}` : '✨ Micro reward!');
         break;
       default:
         setLandingText(`Landed on tile #${landingTileIndex}`);
@@ -7407,7 +7407,7 @@ export function IslandRunBoardPrototype({
     }
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
-    setLandingText(`Sold ${creature.name}. Chose: ${picked.label}. +${bundle.essenceDelta} 🟣 essence.`);
+    setLandingText(`Sold ${creature.name}. Chose: ${picked.label}. +${bundle.essenceDelta} 💰 money.`);
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'economy_earn',
@@ -7511,8 +7511,8 @@ export function IslandRunBoardPrototype({
 
     const summary = formatEncounterRewardSummary(reward);
     const specialtySummaryParts: string[] = [];
-    if (specialtyEncounterBonusEssence > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusEssence} essence`);
-    if (perfectCompanionEncounterBonus.essence > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.essence} perfect essence`);
+    if (specialtyEncounterBonusEssence > 0) specialtySummaryParts.push(`+${specialtyEncounterBonusEssence} money`);
+    if (perfectCompanionEncounterBonus.essence > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.essence} perfect money`);
     if (perfectCompanionEncounterBonus.spinTokens > 0) specialtySummaryParts.push(`+${perfectCompanionEncounterBonus.spinTokens} perfect spin`);
     const specialtySuffix = specialtySummaryParts.length > 0 && activeCompanion
       ? ` ${activeCompanion.creature.name} specialty added ${specialtySummaryParts.join(', ')}.`
@@ -7644,7 +7644,7 @@ export function IslandRunBoardPrototype({
     playIslandRunSound('boss_trial_resolve');
     triggerIslandRunHaptic('boss_trial_resolve');
 
-    const rewardText = `Boss challenge resolved: +${bossReward.dice} dice, +${bossReward.essence} essence${bossReward.spinTokens > 0 ? `, ${formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}` : ''}.`;
+    const rewardText = `Boss challenge resolved: +${bossReward.dice} dice, +${bossReward.essence} money${bossReward.spinTokens > 0 ? `, ${formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}` : ''}.`;
     setBossRewardSummary(rewardText);
     setLandingText(`${rewardText} Boss defeated. Finish building all landmarks to Level 3 to clear the island.`);
 
@@ -8017,7 +8017,7 @@ export function IslandRunBoardPrototype({
     });
 
     if (runtimeState.essence < MARKET_DICE_BUNDLE_COST) {
-      const message = `Not enough essence for Dice Bundle (${MARKET_DICE_BUNDLE_COST} required).`;
+      const message = `Not enough money for Dice Bundle (${MARKET_DICE_BUNDLE_COST} required).`;
       emitMarketPurchaseMarker({
         bundle,
         status: 'insufficient_coins',
@@ -8042,7 +8042,7 @@ export function IslandRunBoardPrototype({
       triggerSource: 'market_purchase_dice_bundle',
     });
     if (spent < 1) {
-      const message = `Not enough essence for Dice Bundle (${MARKET_DICE_BUNDLE_COST} required).`;
+      const message = `Not enough money for Dice Bundle (${MARKET_DICE_BUNDLE_COST} required).`;
       emitMarketPurchaseMarker({
         bundle,
         status: 'insufficient_coins',
@@ -8073,7 +8073,7 @@ export function IslandRunBoardPrototype({
     // M10B: market_purchase_success sound + haptic
     playIslandRunSound('market_purchase_success');
     triggerIslandRunHaptic('market_purchase_success');
-    const message = `Purchased Dice Bundle: -${MARKET_DICE_BUNDLE_COST} essence, +${MARKET_DICE_BUNDLE_REWARD} dice.`;
+    const message = `Purchased Dice Bundle: -${MARKET_DICE_BUNDLE_COST} money, +${MARKET_DICE_BUNDLE_REWARD} dice.`;
     updateMarketOwnedBundles((current) => ({ ...current, dice_bundle: true }));
     setMarketPurchaseFeedback(message);
     setLandingText(message);
@@ -8336,7 +8336,7 @@ export function IslandRunBoardPrototype({
         } else if (spendResult.failureReason === 'stop_already_fully_built') {
           setLandingText('This building is already fully built!');
         } else {
-          setLandingText('Not enough Essence to build. Earn more by rolling!');
+          setLandingText('Not enough Money to build. Earn more by rolling!');
         }
         return false;
       }
@@ -8372,7 +8372,7 @@ export function IslandRunBoardPrototype({
         setLandingText(`✨ ${stopLabel} upgraded to Level ${nextBuildState.buildLevel}!`);
       } else {
         const remaining = Math.max(0, nextBuildState.requiredEssence - nextBuildState.spentEssence);
-        setLandingText(`🔨 ${stopLabel}: ${nextBuildState.spentEssence}/${nextBuildState.requiredEssence} 🟣 (${remaining} left for L${nextBuildState.buildLevel + 1})`);
+        setLandingText(`🔨 ${stopLabel}: ${nextBuildState.spentEssence}/${nextBuildState.requiredEssence} 💰 (${remaining} left for L${nextBuildState.buildLevel + 1})`);
       }
       return true;
     } finally {
@@ -8850,10 +8850,10 @@ export function IslandRunBoardPrototype({
       triggerSource: 'dev_grant_essence',
     });
     if (result.applied < 1) {
-      setLandingText('DEV MODE: invalid essence grant amount.');
+      setLandingText('DEV MODE: invalid money grant amount.');
       return;
     }
-    setLandingText(`🧪 DEV MODE: +${result.applied} essence granted via canonical action.`);
+    setLandingText(`🧪 DEV MODE: +${result.applied} money granted via canonical action.`);
   }, [client, isDevModeEnabled, session]);
 
   const handleDevSpeedHatchEgg = useCallback(() => {
@@ -8985,7 +8985,7 @@ export function IslandRunBoardPrototype({
     });
     setRuntimeState(result.record);
     runtimeStateRef.current = result.record;
-    const message = `🍀 DEV Lucky Roll bank ${result.status}: +${result.diceAwarded} dice, +${result.essenceAwarded} essence.`;
+    const message = `🍀 DEV Lucky Roll bank ${result.status}: +${result.diceAwarded} dice, +${result.essenceAwarded} money.`;
     setLandingText(message);
     return message;
   }, [client, isDevModeEnabled, session]);
@@ -9073,7 +9073,7 @@ export function IslandRunBoardPrototype({
       triggerSource: 'post_rare_treasure_path_collect_and_travel',
     });
     applyPostRareTreasurePathCollectTravelRecord(result.record);
-    const rewardSummary = `+${result.diceAwarded} dice, +${result.essenceAwarded} essence, +${result.shardsAwarded} shards`;
+    const rewardSummary = `+${result.diceAwarded} dice, +${result.essenceAwarded} money, +${result.shardsAwarded} essence`;
     const message = result.status === 'banked_and_traveled'
       ? `Treasure collected: ${rewardSummary}. Your journey continues.`
       : `Treasure Path is ${result.status.replace(/_/g, ' ')}.`;
@@ -9179,7 +9179,7 @@ export function IslandRunBoardPrototype({
     setShowDebugPanel(false);
 
     const message = result.status === 'granted'
-      ? `✨ DEV Creature Pack opening prototype ready: ${cards.length} cards, no dice or essence granted.`
+      ? `✨ DEV Creature Pack opening prototype ready: ${cards.length} cards, no dice or money granted.`
       : `✨ DEV Creature Pack opening prototype replaying existing grant ${result.grantId}; cards are previewed but no new rewards are granted.`;
     setLandingText(message);
     return message;
@@ -9216,7 +9216,7 @@ export function IslandRunBoardPrototype({
       runtimeStateRef.current = refreshedRecord;
       const message = result.status === 'already_claimed'
         ? '✨ DEV Welcome Pack: already claimed in canonical state.'
-        : `✨ DEV Welcome Pack ${result.status}: ${result.cards.revealPayload?.cards.length ?? 0} cards, +${result.bundle.granted.dice} dice, +${result.bundle.granted.essence} essence, +${result.bundle.granted.eventTickets} tickets.`;
+        : `✨ DEV Welcome Pack ${result.status}: ${result.cards.revealPayload?.cards.length ?? 0} cards, +${result.bundle.granted.dice} dice, +${result.bundle.granted.essence} money, +${result.bundle.granted.eventTickets} tickets.`;
       setLandingText(message);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to claim Welcome Pack right now.';
@@ -9268,7 +9268,7 @@ export function IslandRunBoardPrototype({
     setRuntimeState(refreshedRecord);
     runtimeStateRef.current = refreshedRecord;
     const message = result.status === 'granted'
-      ? `🧪 DEV Egg Reward Pack granted: +${result.eggRewardsGranted} egg vouchers, +${result.essenceGranted} essence.`
+      ? `🧪 DEV Egg Reward Pack granted: +${result.eggRewardsGranted} egg vouchers, +${result.essenceGranted} money.`
       : result.status === 'already_granted'
         ? `🧪 DEV Egg Reward Pack already granted for ${result.grantId}; no new egg vouchers are expected for repeat clicks on this island/cycle.`
         : `🧪 DEV Egg Reward Pack grant ${result.status}: ${result.failureReason ?? 'unknown reason'}.`;
@@ -9423,7 +9423,7 @@ export function IslandRunBoardPrototype({
       });
       setRuntimeState(record);
       setDicePool(record.dicePool);
-      setLandingText(`Starter claim complete: +${starterEssenceBonus} 🟣 essence, +${starterDiceBonus} dice.`);
+      setLandingText(`Starter claim complete: +${starterEssenceBonus} 💰 money, +${starterDiceBonus} dice.`);
       setFirstRunStep('ship-name');
       void recordTelemetryEvent({
         userId: session.user.id,
@@ -9897,7 +9897,7 @@ export function IslandRunBoardPrototype({
         const reason = result.failureReason === 'bond_level_too_low'
           ? `Reach Bond Lv. ${result.preview.requiredBondLevel} first.`
           : result.failureReason === 'insufficient_shards'
-            ? `Need ${Math.max(0, result.preview.shardCost - runtimeState.shards)} more shards.`
+            ? `Need ${Math.max(0, result.preview.shardCost - runtimeState.shards)} more essence.`
             : result.failureReason === 'max_form_reached'
               ? 'Already at max form.'
               : 'Upgrade is not available yet.';
@@ -9916,7 +9916,7 @@ export function IslandRunBoardPrototype({
       setDicePool(result.record.dicePool);
       setCreatureCollection(result.record.creatureCollection);
       const rewardLabel = result.preview.rewardDice > 0 || result.preview.rewardEssence > 0
-        ? ` Reward: +${result.preview.rewardDice} dice and +${result.preview.rewardEssence} essence.`
+        ? ` Reward: +${result.preview.rewardDice} dice and +${result.preview.rewardEssence} money.`
         : '';
       setSanctuaryFeedback(`${creatureName} upgraded to Form ${result.preview.nextFormLevel}!${rewardLabel}`);
       setLandingText(`${creatureName} Form ${result.preview.nextFormLevel} unlocked.${result.preview.nextFormLevel === CREATURE_THEME_REQUIRED_FORM_LEVEL ? ' Theme checkout is now available.' : ''}`);
@@ -9941,7 +9941,7 @@ export function IslandRunBoardPrototype({
         return;
       }
       awardContractV2Essence(essenceReward, 'island_story_episode_reward');
-      setLandingText(`Story reward claimed: +${essenceReward} essence.`);
+      setLandingText(`Story reward claimed: +${essenceReward} money.`);
     },
     awardBondXp: (creatureId: string, xpAmount: number) => {
       const target = collectedCreatures.find((entry) => entry.creatureId === creatureId) ?? null;
@@ -9973,8 +9973,8 @@ export function IslandRunBoardPrototype({
       icon: '🎲',
       title: marketOwnedBundles.dice_bundle ? 'Dice Bundle owned' : 'Dice Bundle',
       cost: MARKET_DICE_BUNDLE_COST,
-      currencyIcon: '🟣',
-      currencyName: 'essence',
+      currencyIcon: '💰',
+      currencyName: 'money',
       summary: marketOwnedBundles.dice_bundle
         ? 'Already claimed for this island run.'
         : `Top up with ${MARKET_DICE_BUNDLE_REWARD} dice for rolling.`,
@@ -10002,8 +10002,8 @@ export function IslandRunBoardPrototype({
           icon: '🏗️',
           title: landmark.title,
           cost,
-          currencyIcon: '🟣',
-          currencyName: 'essence',
+          currencyIcon: '💰',
+          currencyName: 'money',
           summary: `Building Level ${landmark.targetLevel} · Step ${landmark.sequencePosition}/${landmark.totalSequenceSteps}.`,
           rewardLabel: `Part ${landmark.activePart ?? 1}`,
           canAfford: canBuy,
@@ -10034,11 +10034,11 @@ export function IslandRunBoardPrototype({
         icon: '🌟',
         title: `${creature.creature.name} Form ${preview.nextFormLevel}`,
         cost: preview.shardCost,
-        currencyIcon: '🔮',
-        currencyName: 'shards',
+        currencyIcon: '🟣',
+        currencyName: 'essence',
         summary: `Requires Bond Lv. ${preview.requiredBondLevel ?? '—'} · Current Form ${preview.currentFormLevel}/${preview.maxFormLevel}.`,
         rewardLabel: preview.rewardDice > 0 || preview.rewardEssence > 0
-          ? `+${preview.rewardDice} dice / +${preview.rewardEssence} essence`
+          ? `+${preview.rewardDice} dice / +${preview.rewardEssence} money`
           : 'Form upgrade',
         canAfford: preview.canUpgrade,
         disabledReason: resolveShardWalletDisabledReason({
@@ -10064,8 +10064,8 @@ export function IslandRunBoardPrototype({
 
   const activeWalletPurchaseOptions = walletStoreModalKind === 'shards' ? shardPurchaseOptions : essencePurchaseOptions;
   const activeWalletBalance = walletStoreModalKind === 'shards' ? runtimeState.shards : runtimeState.essence;
-  const activeWalletIcon = walletStoreModalKind === 'shards' ? '🔮' : '🟣';
-  const activeWalletName = walletStoreModalKind === 'shards' ? 'Shard' : 'Essence';
+  const activeWalletIcon = walletStoreModalKind === 'shards' ? '🟣' : '💰';
+  const activeWalletName = walletStoreModalKind === 'shards' ? 'Essence' : 'Money';
   const activeWalletEmptySlotCount = Math.max(0, WALLET_STORE_GRID_SIZE - activeWalletPurchaseOptions.length);
 
   const handleClaimCompanionQuest = () => {
@@ -10526,10 +10526,10 @@ export function IslandRunBoardPrototype({
               className="island-run-prototype__stat-chip island-run-prototype__stat-chip--wallet"
               style={{ position: 'relative' }}
               onClick={() => setWalletStoreModalKind('essence')}
-              aria-label={`Open essence buying options. Balance ${runtimeState.essence} essence.`}
+              aria-label={`Open money buying options. Balance ${runtimeState.essence} money.`}
             >
-              🟣 <strong>{runtimeState.essence}</strong>
-              <StatDriftNumbers value={runtimeState.essence} icon="🟣" />
+              💰 <strong>{runtimeState.essence}</strong>
+              <StatDriftNumbers value={runtimeState.essence} icon="💰" />
             </button>
           )}
           {activeCompanion && activeCompanionBonus ? (
@@ -10566,7 +10566,7 @@ export function IslandRunBoardPrototype({
         </p>
         {driftNotice !== null && (
           <p className="island-run-prototype__drift-notice" aria-live="assertive" role="alert" style={{ color: '#ff6b6b', fontSize: '0.82rem', fontWeight: 600, textAlign: 'center', margin: '0.15rem 0', animation: 'fadeInOut 2.5s ease forwards' }}>
-            − {driftNotice} 🟣 essence drift
+            − {driftNotice} 💰 money drift
           </p>
         )}
         {ISLAND_RUN_CONTRACT_V2_ENABLED && effectiveActiveTimedEvent ? (
@@ -10605,9 +10605,9 @@ export function IslandRunBoardPrototype({
             type="button"
             className="island-run-prototype__stat-chip island-run-prototype__stat-chip--shards island-run-prototype__stat-chip--wallet"
             onClick={() => setWalletStoreModalKind('shards')}
-            aria-label={`Open shard buying options. Balance ${shards} shards.`}
+            aria-label={`Open essence buying options. Balance ${shards} essence.`}
           >
-            ✨ <strong>{shards}</strong>
+            🟣 <strong>{shards}</strong>
           </button>
         )}
         {/* M8-COMPLETE: diamonds HUD chip — only shown when player has at least 1 diamond */}
@@ -10623,7 +10623,7 @@ export function IslandRunBoardPrototype({
           return (
             <div
               className={`island-run-prototype__shard-pill${shardMilestoneReached ? ' island-run-prototype__shard-pill--milestone' : ''}`}
-              aria-label={`Shard progress: ${islandShards} of ${threshold}`}
+              aria-label={`Essence progress: ${islandShards} of ${threshold}`}
             >
               <div
                 className="island-run-prototype__shard-pill-fill"
@@ -10653,7 +10653,7 @@ export function IslandRunBoardPrototype({
             <p className="island-run-prototype__hud-label">Run status</p>
             <div className="island-run-prototype__status-row">
               <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--dice">Dice: <strong>{dicePool}</strong></span>
-              <span className="island-run-prototype__stat-chip">Essence: <strong>{runtimeState.essence}</strong></span>
+              <span className="island-run-prototype__stat-chip">Money: <strong>{runtimeState.essence}</strong></span>
               <span className={`island-run-prototype__stat-chip island-run-prototype__level-chip${islandLevelFlash ? ' island-run-prototype__level-chip--levelup' : ''}`}>LEVEL <strong>{islandNumber}</strong> / 120</span>
               <span className="island-run-prototype__stat-chip">Tile: <strong>{tokenIndex}</strong></span>
               <span className="island-run-prototype__stat-chip">Island: <strong>{islandNumber}</strong></span>
@@ -10788,7 +10788,7 @@ export function IslandRunBoardPrototype({
             className="island-run-prototype__debug-btn"
             onClick={() => awardWalletShards(5)}
           >
-            Simulate wallet shards (+5)
+            Simulate wallet essence (+5)
           </button>
           {isDevModeEnabled && (
             <div className="island-run-prototype__qa-controls" role="group" aria-label="DEV MODE actions">
@@ -10864,7 +10864,7 @@ export function IslandRunBoardPrototype({
               )}
             </button>
             <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
-              🟣 <strong>{formatFullWalletValue(runtimeState.essence)}</strong>
+              💰 <strong>{formatFullWalletValue(runtimeState.essence)}</strong>
             </div>
             <div className="island-run-board__topbar-chip island-run-board__topbar-chip--shards" aria-label="Shard wallet">
               ✨ {formatFullWalletValue(shards)}
@@ -11291,7 +11291,7 @@ export function IslandRunBoardPrototype({
         {showLandmarkCoachmark ? (
           <aside className="island-run-landmark-coachmark" role="note" aria-live="polite">
             <p>
-              🧭 Landmarks unlock in order; some require an essence ticket before entry.
+              🧭 Landmarks unlock in order; some require a money ticket before entry.
             </p>
             <div className="island-run-landmark-coachmark__actions">
               <button
@@ -11397,7 +11397,7 @@ export function IslandRunBoardPrototype({
                     <span
                       className="island-run-prototype__footer-build-dot"
                       role="status"
-                      aria-label="A building can be funded with your essence"
+                      aria-label="A building can be funded with your money"
                     />
                   )}
                 </button>
@@ -11538,7 +11538,7 @@ export function IslandRunBoardPrototype({
                   <p className="island-stop-modal__eyebrow">First-run setup</p>
                   <h3 className="island-stop-modal__title">🎉 Welcome to Island Run</h3>
                   <p className="island-stop-modal__copy">Claim your starter gifts to begin your first island.</p>
-                  <p><strong>Starter gifts:</strong> 🟣 250 essence + 🎲 three 500-dice caretaker packs</p>
+                  <p><strong>Starter gifts:</strong> 💰 250 money + 🎲 three 500-dice caretaker packs</p>
                   <p>✨ 🎊 ✨</p>
                 </div>
                 <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
@@ -11758,7 +11758,7 @@ export function IslandRunBoardPrototype({
               <p className="island-stop-modal__locked-notice" role="status">
                 <span aria-hidden="true">🔒</span>{' '}
                 {openedStopNeedsTicket && openedStopTicketCost
-                  ? <>This stop is ready to open. Pay <strong>{openedStopTicketCost} 🟣</strong> to unlock this island ticket.</>
+                  ? <>This stop is ready to open. Pay <strong>{openedStopTicketCost} 💰</strong> to unlock this island ticket.</>
                   : priorStop
                   ? <>Complete <strong>{priorStop.title}</strong> first to unlock this stop.</>
                   : 'This stop is not open yet. Complete the previous stop first to unlock it.'}
@@ -12150,15 +12150,15 @@ export function IslandRunBoardPrototype({
                         playIslandRunSound('utility_stop_complete');
                         triggerIslandRunHaptic('utility_stop_complete');
                         void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'wisdom_essence_bonus', island_number: islandNumber, cost_diamonds: WISDOM_ESSENCE_BONUS_COST_DIAMONDS, essence_gained: WISDOM_ESSENCE_BONUS_AMOUNT } });
-                        setLandingText(`Wisdom bonus! -${WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎, +${WISDOM_ESSENCE_BONUS_AMOUNT} 🟣`);
+                        setLandingText(`Wisdom bonus! -${WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎, +${WISDOM_ESSENCE_BONUS_AMOUNT} 💰`);
                         handleCompleteActiveStop();
                       }}
                     >
-                      🟣 Essence Bonus — {WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎 → +{WISDOM_ESSENCE_BONUS_AMOUNT} Essence
+                      💰 Money Bonus — {WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎 → +{WISDOM_ESSENCE_BONUS_AMOUNT} Money
                     </button>
                   </div>
                 ) : ISLAND_RUN_CONTRACT_V2_ENABLED ? (
-                  <p style={{ fontSize: '0.85rem', opacity: 0.65, marginTop: '0.5rem' }}>🟣 Essence Bonus — needs {WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎 (have {diamonds})</p>
+                  <p style={{ fontSize: '0.85rem', opacity: 0.65, marginTop: '0.5rem' }}>💰 Money Bonus — needs {WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎 (have {diamonds})</p>
                 ) : null}
               </div>
             )}
@@ -12197,11 +12197,11 @@ export function IslandRunBoardPrototype({
                             <p className="island-boss-trial__reward-preview">
                               🎁 Reward on win:{' '}
                               <strong>+{bossReward.dice} 🎲</strong>,{' '}
-                              <strong>+{bossReward.essence} 🟣</strong>
+                              <strong>+{bossReward.essence} 💰</strong>
                               {bossReward.spinTokens > 0
                                 ? <>, <strong>{formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: bossReward.spinTokens })}</strong></>
                                 : null}
-                              , <strong>+3 🔷 shards</strong>
+                              , <strong>+3 🟣 essence</strong>
                             </p>
                             <p className="island-boss-trial__lives-note">
                               💡 Failed attempts have no penalty. Keep trying!
@@ -12263,7 +12263,7 @@ export function IslandRunBoardPrototype({
                       <div className="island-boss-trial__phase island-boss-trial__phase--success">
                         <p className="island-boss-trial__result island-boss-trial__result--win">🏆 Trial Complete!</p>
                         <p className="island-boss-trial__reward-text">
-                          {bossRewardSummary ?? `Rewards: +${bossReward.essence} 🟣, +3 🔷`}
+                          {bossRewardSummary ?? `Rewards: +${bossReward.essence} 💰, +3 🟣`}
                         </p>
                         <p className="island-boss-trial__next-hint">
                           {isCurrentIslandFullyCleared
@@ -12354,8 +12354,8 @@ export function IslandRunBoardPrototype({
                   disabled={!canAffordOpenedStopTicket}
                 >
                   {canAffordOpenedStopTicket
-                    ? `Pay ${openedStopTicketCost} 🟣 to Unlock`
-                    : `Need ${Math.max(0, openedStopTicketCost - runtimeState.essence)} more 🟣`}
+                    ? `Pay ${openedStopTicketCost} 💰 to Unlock`
+                    : `Need ${Math.max(0, openedStopTicketCost - runtimeState.essence)} more 💰`}
                 </button>
               ) : null}
               {isActiveBehaviorStopNonDismissable ? (
@@ -12393,7 +12393,7 @@ export function IslandRunBoardPrototype({
                   >
                     <span className="island-dormant-door__reward-icon" aria-hidden="true">{DORMANT_DOOR_FIGURE_ICONS[prizeFigure]}</span>
                     <span>{level.label}</span>
-                    <strong>+{level.essence} 🟣</strong>
+                    <strong>+{level.essence} 💰</strong>
                   </span>
                 );
               })}
@@ -12423,7 +12423,7 @@ export function IslandRunBoardPrototype({
             </div>
             {dormantDoorReward ? (
               <p className="island-dormant-door__result" role="status">
-                3 matching prizes found — {dormantDoorReward.label}! Claim +{dormantDoorReward.essence} essence.
+                3 matching prizes found — {dormantDoorReward.label}! Claim +{dormantDoorReward.essence} money.
               </p>
             ) : (
               <p className="island-dormant-door__hint" role="status">
@@ -12507,7 +12507,7 @@ export function IslandRunBoardPrototype({
                     <b>+{trafficLightCoinFlip.reward.dice}</b> 🎲
                   </span>
                   <span className="island-coin-reward__chip" style={{ animationDelay: '90ms' }}>
-                    <b>+{trafficLightCoinFlip.reward.essence}</b> 🟣
+                    <b>+{trafficLightCoinFlip.reward.essence}</b> 💰
                   </span>
                   {trafficLightCoinFlip.reward.stickerFragments > 0 && (
                     <span className="island-coin-reward__chip island-coin-reward__chip--rare" style={{ animationDelay: '180ms' }}>
@@ -12657,8 +12657,8 @@ export function IslandRunBoardPrototype({
               <div className="island-encounter__reward">
                 <p className="island-encounter__eyebrow">Challenge Complete! 🎉</p>
                 <div className="island-encounter__reward-reveal">
-                  <span className="island-encounter__reward-item">🟣 +{encounterRewardData.essence} essence</span>
-                  {encounterRewardData.walletShards && <span className="island-encounter__reward-item">✨ +1 shard</span>}
+                  <span className="island-encounter__reward-item">💰 +{encounterRewardData.essence} money</span>
+                  {encounterRewardData.walletShards && <span className="island-encounter__reward-item">✨ +1 essence</span>}
                   {encounterRewardData.spinTokens > 0 && (
                     <span className="island-encounter__reward-item">{timedEventTokenIcon} {formatIslandRunSpinTokenReward({ islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED, amount: encounterRewardData.spinTokens })}</span>
                   )}
@@ -13033,7 +13033,7 @@ export function IslandRunBoardPrototype({
               })}
             </div>
             <p className="island-stop-modal__copy">
-              Each complete sticker awards <strong>+100 🎲 dice</strong> and <strong>+50 🟣 essence</strong>!
+              Each complete sticker awards <strong>+100 🎲 dice</strong> and <strong>+50 💰 money</strong>!
             </p>
             <p className="island-stop-modal__copy" style={{ opacity: 0.7, fontSize: '0.85em' }}>
               Collect sticker fragments from the reward bar. Every 5 fragments complete one sticker.
@@ -13103,11 +13103,11 @@ export function IslandRunBoardPrototype({
                       <span className="island-clear-celebration__reward-value">+{islandClearStats.diceEarned}</span>
                     </span>
                     <span className="island-clear-celebration__reward-item">
-                      <span className="island-clear-celebration__reward-icon" aria-hidden="true">🟣</span>
+                      <span className="island-clear-celebration__reward-icon" aria-hidden="true">💰</span>
                       <span className="island-clear-celebration__reward-value">+{islandClearStats.essenceEarned}</span>
                     </span>
                     <span className="island-clear-celebration__reward-item">
-                      <span className="island-clear-celebration__reward-icon" aria-hidden="true">🔷</span>
+                      <span className="island-clear-celebration__reward-icon" aria-hidden="true">🟣</span>
                       <span className="island-clear-celebration__reward-value">+3</span>
                     </span>
                   </div>
@@ -13209,7 +13209,7 @@ export function IslandRunBoardPrototype({
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-run-shop-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Shop">
             <h3 className="island-stop-modal__title">🛍️ Market</h3>
-            <p className="island-stop-modal__copy"><strong>🟣 {runtimeState.essence} essence</strong> · Island {islandNumber}</p>
+            <p className="island-stop-modal__copy"><strong>💰 {runtimeState.essence} money</strong> · Island {islandNumber}</p>
 
             <div className="island-hatchery-card">
               <p><strong>Flash Offer — Dice Top-up</strong></p>
@@ -13283,8 +13283,8 @@ export function IslandRunBoardPrototype({
                     <ShopItemCostLine
                       cost={MARKET_DICE_BUNDLE_COST}
                       balance={runtimeState.essence}
-                      currencyIcon="🟣"
-                      currencyName="essence"
+                      currencyIcon="💰"
+                      currencyName="money"
                     />{' '}
                     → +{MARKET_DICE_BUNDLE_REWARD} 🎲
                   </button>
@@ -13473,7 +13473,7 @@ export function IslandRunBoardPrototype({
 
             {showSanctuaryMenu && sanctuaryMenuModule === 'inventory' ? (
             <div className="island-run-sanctuary-panel__summary">
-              <span className="island-run-sanctuary-panel__pill">🔮 Shards: <strong>{runtimeState.shards}</strong></span>
+              <span className="island-run-sanctuary-panel__pill">🟣 Essence: <strong>{runtimeState.shards}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Basic treats: <strong>{creatureTreatInventory.basic}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Favorite snacks: <strong>{creatureTreatInventory.favorite}</strong></span>
               <span className="island-run-sanctuary-panel__pill">Rare feasts: <strong>{creatureTreatInventory.rare}</strong></span>
@@ -13484,7 +13484,7 @@ export function IslandRunBoardPrototype({
             <div className="island-hatchery-card" style={{ marginBottom: '0.75rem' }}>
               <p><strong>🎨 Premium Creature Themes</strong> — one-time real-money Stripe purchases</p>
               <p style={{ fontSize: '0.82rem', opacity: 0.7, marginBottom: '0.5rem' }}>
-                Upgrade a creature to Form 3 with shards to unlock its one-time real-money theme checkout. Perfect Pair creatures keep the 20% discount.
+                Upgrade a creature to Form 3 with essence to unlock its one-time real-money theme checkout. Perfect Pair creatures keep the 20% discount.
               </p>
               {themeEntitlementsLoading ? (
                 <p style={{ fontSize: '0.82rem', opacity: 0.7 }}>Syncing your owned themes…</p>
@@ -13530,9 +13530,9 @@ export function IslandRunBoardPrototype({
             {/* ── Shard Shop: buy treats & creature items with egg shards ── */}
             {showSanctuaryMenu && sanctuaryMenuModule === 'inventory' ? (
             <div className="island-hatchery-card" style={{ marginBottom: '0.75rem' }}>
-              <p><strong>🔮 Shard Shop</strong> — Spend egg shards on your creatures</p>
+              <p><strong>🟣 Essence Shop</strong> — Spend essence on your creatures</p>
               <p style={{ fontSize: '0.82rem', opacity: 0.7, marginBottom: '0.5rem' }}>
-                Shards are earned from tiles, egg hatching, and stop completions. Spend them here!
+                Essence is earned from tiles, egg hatching, and stop completions. Spend it here!
               </p>
               <div className="island-hatchery-card__actions" style={{ flexDirection: 'column', gap: '0.35rem' }}>
                 <button
@@ -13545,11 +13545,11 @@ export function IslandRunBoardPrototype({
                     if (session?.user?.id) {
                       earnCreatureTreatsForUser(session.user.id, { basic: 2 });
                     }
-                    setLandingText('🔮 Bought 2 Basic Treats for 3 shards!');
+                    setLandingText('🟣 Bought 2 Basic Treats for 3 essence!');
                     playIslandRunSound('market_purchase_success');
                   }}
                 >
-                  🍖 Basic Treat ×2 — 3 🔮 {runtimeState.shards < 3 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {3 - runtimeState.shards} more)</span>}
+                  🍖 Basic Treat ×2 — 3 🟣 {runtimeState.shards < 3 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {3 - runtimeState.shards} more)</span>}
                 </button>
                 <button
                   type="button"
@@ -13561,11 +13561,11 @@ export function IslandRunBoardPrototype({
                     if (session?.user?.id) {
                       earnCreatureTreatsForUser(session.user.id, { favorite: 1 });
                     }
-                    setLandingText('🔮 Bought 1 Favorite Snack for 5 shards!');
+                    setLandingText('🟣 Bought 1 Favorite Snack for 5 essence!');
                     playIslandRunSound('market_purchase_success');
                   }}
                 >
-                  🐟 Favorite Snack ×1 — 5 🔮 {runtimeState.shards < 5 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {5 - runtimeState.shards} more)</span>}
+                  🐟 Favorite Snack ×1 — 5 🟣 {runtimeState.shards < 5 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {5 - runtimeState.shards} more)</span>}
                 </button>
                 <button
                   type="button"
@@ -13577,11 +13577,11 @@ export function IslandRunBoardPrototype({
                     if (session?.user?.id) {
                       earnCreatureTreatsForUser(session.user.id, { rare: 1 });
                     }
-                    setLandingText('🔮 Bought 1 Rare Feast for 10 shards!');
+                    setLandingText('🟣 Bought 1 Rare Feast for 10 essence!');
                     playIslandRunSound('market_purchase_success');
                   }}
                 >
-                  🍗 Rare Feast ×1 — 10 🔮 {runtimeState.shards < 10 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {10 - runtimeState.shards} more)</span>}
+                  🍗 Rare Feast ×1 — 10 🟣 {runtimeState.shards < 10 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {10 - runtimeState.shards} more)</span>}
                 </button>
                 <button
                   type="button"
@@ -13592,11 +13592,11 @@ export function IslandRunBoardPrototype({
                     if (!spendWalletShards(8, 'sanctuary_shop_enrichment_kit')) return;
                     // Award 3 bond XP directly to active companion
                     sanctuaryHandlers.awardBondXp(activeCompanion.creatureId, 3);
-                    setLandingText(`🔮 Enrichment Kit applied to ${activeCompanion.creature.name}: +3 bond XP!`);
+                    setLandingText(`🟣 Enrichment Kit applied to ${activeCompanion.creature.name}: +3 bond XP!`);
                     playIslandRunSound('market_purchase_success');
                   }}
                 >
-                  🧸 Enrichment Kit — 8 🔮 → +3 bond XP to active companion {!activeCompanion && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (no active companion)</span>}
+                  🧸 Enrichment Kit — 8 🟣 → +3 bond XP to active companion {!activeCompanion && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (no active companion)</span>}
                   {activeCompanion && runtimeState.shards < 8 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {8 - runtimeState.shards} more)</span>}
                 </button>
                 <button
@@ -13608,12 +13608,12 @@ export function IslandRunBoardPrototype({
                     if (!spendWalletShards(20, 'sanctuary_shop_habitat_upgrade')) return;
                     // Award 8 bond XP (habitat upgrade bonus)
                     sanctuaryHandlers.awardBondXp(activeCompanion.creatureId, 8);
-                    setLandingText(`🔮 Habitat Upgrade for ${activeCompanion.creature.name}: +8 bond XP!`);
+                    setLandingText(`🟣 Habitat Upgrade for ${activeCompanion.creature.name}: +8 bond XP!`);
                     playIslandRunSound('market_purchase_success');
                     triggerIslandRunHaptic('market_purchase_success');
                   }}
                 >
-                  🏠 Habitat Upgrade — 20 🔮 → +8 bond XP to active companion {!activeCompanion && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (no active companion)</span>}
+                  🏠 Habitat Upgrade — 20 🟣 → +8 bond XP to active companion {!activeCompanion && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (no active companion)</span>}
                   {activeCompanion && runtimeState.shards < 20 && <span style={{ fontSize: '0.78rem', opacity: 0.7 }}> (need {20 - runtimeState.shards} more)</span>}
                 </button>
               </div>
@@ -14049,7 +14049,7 @@ export function IslandRunBoardPrototype({
                     </p>
                     {selectedSanctuaryCreatureFormPreview.nextFormLevel ? (
                       <p className="island-run-sanctuary-compare__row">
-                        Next: <strong>Form {selectedSanctuaryCreatureFormPreview.nextFormLevel}</strong> · Cost <strong>{selectedSanctuaryCreatureFormPreview.shardCost} 🔮</strong> · Requires Bond Lv. <strong>{selectedSanctuaryCreatureFormPreview.requiredBondLevel}</strong>
+                        Next: <strong>Form {selectedSanctuaryCreatureFormPreview.nextFormLevel}</strong> · Cost <strong>{selectedSanctuaryCreatureFormPreview.shardCost} 🟣</strong> · Requires Bond Lv. <strong>{selectedSanctuaryCreatureFormPreview.requiredBondLevel}</strong>
                         {selectedSanctuaryCreatureFormPreview.rewardDice > 0 || selectedSanctuaryCreatureFormPreview.rewardEssence > 0
                           ? <> · Reward <strong>+{selectedSanctuaryCreatureFormPreview.rewardDice} dice / +{selectedSanctuaryCreatureFormPreview.rewardEssence} essence</strong></>
                           : null}
@@ -14064,11 +14064,11 @@ export function IslandRunBoardPrototype({
                       onClick={() => sanctuaryHandlers.upgradeCreatureForm(selectedSanctuaryCreature.creatureId)}
                     >
                       {selectedSanctuaryCreatureFormPreview.canUpgrade
-                        ? `Upgrade to Form ${selectedSanctuaryCreatureFormPreview.nextFormLevel} for ${selectedSanctuaryCreatureFormPreview.shardCost} 🔮`
+                        ? `Upgrade to Form ${selectedSanctuaryCreatureFormPreview.nextFormLevel} for ${selectedSanctuaryCreatureFormPreview.shardCost} 🟣`
                         : selectedSanctuaryCreatureFormPreview.failureReason === 'bond_level_too_low'
                           ? `Reach Bond Lv. ${selectedSanctuaryCreatureFormPreview.requiredBondLevel} to upgrade`
                           : selectedSanctuaryCreatureFormPreview.failureReason === 'insufficient_shards'
-                            ? `Need ${Math.max(0, selectedSanctuaryCreatureFormPreview.shardCost - runtimeState.shards)} more shards`
+                            ? `Need ${Math.max(0, selectedSanctuaryCreatureFormPreview.shardCost - runtimeState.shards)} more essence`
                             : 'Max form reached'}
                     </button>
                   </div>
@@ -14452,7 +14452,7 @@ export function IslandRunBoardPrototype({
                 }
                 // M17D: award wallet shards on minigame reward
                 awardWalletShards(1);
-                wonRewards.push({ icon: '🔶', label: 'Shards', value: '+1' });
+                wonRewards.push({ icon: '🟣', label: 'Essence', value: '+1' });
                 openWinCelebrationModal(wonRewards, 'Mini-game rewards');
                 void recordTelemetryEvent({
                   userId: session.user.id,
@@ -14617,7 +14617,7 @@ export function IslandRunBoardPrototype({
               triggerSource: 'shard_progress_claim',
             });
             setRuntimeState(nextRecord);
-            setLandingText('Shard milestone claimed! +1 Lucky Roll run unlocked.');
+            setLandingText('Essence milestone claimed! +1 Lucky Roll run unlocked.');
             void recordTelemetryEvent({
               userId: session.user.id,
               eventType: 'economy_earn',
@@ -14668,7 +14668,7 @@ export function IslandRunBoardPrototype({
               ) : null}
               {upcomingTicketCost > 0 ? (
                 <p style={{ marginTop: 0, marginBottom: 8, fontSize: 13, opacity: 0.75 }}>
-                  Ticket after unlock: <strong>{upcomingTicketCost} 🟣</strong>.
+                  Ticket after unlock: <strong>{upcomingTicketCost} 💰</strong>.
                 </p>
               ) : null}
               {previousStop ? (
@@ -14753,14 +14753,14 @@ export function IslandRunBoardPrototype({
                 Since you found its door early, you can prepay the entry ticket now at a discount.
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16, margin: '12px 0 16px', fontSize: 16 }}>
-                <div><strong>Later:</strong> <s>{fullCost} 🟣</s></div>
-                <div><strong>Prepay:</strong> {prepayCost} 🟣</div>
-                <div><strong>Save:</strong> {savings} 🟣</div>
-                <div><strong>Wallet:</strong> {wallet} 🟣</div>
+                <div><strong>Later:</strong> <s>{fullCost} 💰</s></div>
+                <div><strong>Prepay:</strong> {prepayCost} 💰</div>
+                <div><strong>Save:</strong> {savings} 💰</div>
+                <div><strong>Wallet:</strong> {wallet} 💰</div>
               </div>
               {!canAfford ? (
                 <p style={{ marginTop: 0, marginBottom: 12, fontSize: 13, opacity: 0.85 }}>
-                  You need <strong>{shortfall} more 🟣</strong> to use this one-time prepay offer.
+                  You need <strong>{shortfall} more 💰</strong> to use this one-time prepay offer.
                 </p>
               ) : null}
               <p style={{ marginTop: 0, marginBottom: 16, fontSize: 13, opacity: 0.75 }}>
@@ -14776,7 +14776,7 @@ export function IslandRunBoardPrototype({
                   disabled={!canAfford}
                   style={{ padding: '8px 16px', opacity: canAfford ? 1 : 0.5 }}
                 >
-                  {canAfford ? `Prepay (${prepayCost} 🟣)` : `Need ${shortfall} more 🟣`}
+                  {canAfford ? `Prepay (${prepayCost} 💰)` : `Need ${shortfall} more 💰`}
                 </button>
               </div>
             </div>
@@ -14817,13 +14817,13 @@ export function IslandRunBoardPrototype({
                 </p>
               ) : null}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '12px 0 16px', fontSize: 16 }}>
-                <div><strong>Cost:</strong> {cost} 🟣</div>
-                <div><strong>Wallet:</strong> {wallet} 🟣</div>
+                <div><strong>Cost:</strong> {cost} 💰</div>
+                <div><strong>Wallet:</strong> {wallet} 💰</div>
               </div>
               {!canAfford ? (
                 <div style={{ marginBottom: 12 }}>
                   <p style={{ marginTop: 0, marginBottom: 6, fontSize: 13, opacity: 0.85 }}>
-                    You need <strong>{shortfall} more 🟣</strong> to pay this ticket.
+                    You need <strong>{shortfall} more 💰</strong> to pay this ticket.
                   </p>
                   <div
                     role="progressbar"
@@ -14878,7 +14878,7 @@ export function IslandRunBoardPrototype({
                     onClick={() => {
                       setTicketPromptStopId(null);
                       setCameraMode('board_follow');
-                      setLandingText('Earn a bit more essence, then tap this landmark again to pay the ticket.');
+                      setLandingText('Earn a bit more money, then tap this landmark again to pay the ticket.');
                     }}
                     style={{ padding: '8px 16px' }}
                   >
@@ -14891,7 +14891,7 @@ export function IslandRunBoardPrototype({
                   disabled={!canAfford}
                   style={{ padding: '8px 16px', opacity: canAfford ? 1 : 0.5 }}
                 >
-                  {canAfford ? `Pay ticket & enter (${cost} 🟣)` : `Need ${shortfall} more 🟣`}
+                  {canAfford ? `Pay ticket & enter (${cost} 💰)` : `Need ${shortfall} more 💰`}
                 </button>
               </div>
             </div>
