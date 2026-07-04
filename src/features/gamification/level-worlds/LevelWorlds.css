@@ -4481,6 +4481,202 @@
   border-top: 1px solid rgba(156, 213, 235, 0.16);
 }
 
+/* ── Event modal (mini-game grid + stats + info toggle) ─────────────────── */
+
+.island-event-modal {
+  gap: 0.5rem;
+}
+
+.island-event-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.island-event-modal__header-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex: none;
+}
+
+.island-event-modal__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.06rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.island-event-modal__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-event-modal__timer {
+  color: rgba(186, 228, 243, 0.75);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.island-event-modal__info-toggle {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-style: italic;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  background: rgba(26, 61, 80, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: #ecfbff;
+}
+
+.island-event-modal__info-toggle[aria-pressed='true'] {
+  background: rgba(62, 157, 203, 0.55);
+  border-color: rgba(245, 205, 95, 0.85);
+}
+
+.island-event-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.island-event-modal__grid-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  min-height: 52px;
+  padding: 0.3rem 0.2rem;
+  border-radius: 10px;
+  border: 1px solid rgba(180, 205, 220, 0.32);
+  background: rgba(15, 40, 55, 0.55);
+  color: #ecfbff;
+  cursor: pointer;
+}
+
+.island-event-modal__grid-icon {
+  font-size: 1.05rem;
+  line-height: 1.05;
+}
+
+.island-event-modal__grid-label {
+  font-size: 0.6rem;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.island-event-modal__grid-item--active {
+  border-width: 2px;
+  border-color: rgba(245, 205, 95, 0.95);
+  box-shadow: 0 0 18px rgba(245, 205, 95, 0.45);
+}
+
+.island-event-modal__grid-item--selected {
+  background: rgba(62, 157, 203, 0.34);
+}
+
+.island-event-modal__grid-active-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f5cd5f;
+  box-shadow: 0 0 6px rgba(245, 205, 95, 0.85);
+}
+
+.island-event-modal__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.island-event-modal__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+  padding: 0.3rem 0.15rem;
+  border-radius: 10px;
+  background: rgba(15, 40, 55, 0.4);
+}
+
+.island-event-modal__stat-value {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #eefcff;
+}
+
+.island-event-modal__stat-label {
+  font-size: 0.62rem;
+  color: rgba(186, 228, 243, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.island-event-modal__bar-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(15, 40, 55, 0.6);
+  overflow: hidden;
+}
+
+.island-event-modal__bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #58c4f0, #f5cd5f);
+  transition: width 0.4s ease-out;
+}
+
+.island-event-modal__extra {
+  display: grid;
+  gap: 0.3rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid rgba(156, 213, 235, 0.16);
+}
+
+.island-event-modal__tile-info {
+  display: grid;
+  gap: 0.3rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid rgba(156, 213, 235, 0.16);
+}
+
+.island-event-modal__tile-info-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(186, 228, 243, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.island-event-modal__tile-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+  color: rgba(186, 228, 243, 0.92);
+}
+
+.island-event-modal__tile-list b {
+  color: #f5cd5f;
+}
+
 .island-stop-modal__cta .supabase-auth__action {
   width: 100%;
 }
