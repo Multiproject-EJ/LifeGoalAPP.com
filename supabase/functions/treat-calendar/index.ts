@@ -37,12 +37,20 @@ function personalQuestTodayIndex(
   progress: { opened_days?: number[] | null; last_opened_date?: string | null; next_sequential_day?: number | null } | null,
   totalDays: number,
 ): number {
+  const openedDays = Array.isArray(progress?.opened_days) ? progress.opened_days : [];
+
+  // All free doors opened — the week is complete. Stay on the final day so the
+  // client shows the completed state (legacy rows wrapped next_sequential_day
+  // back to 1 after the final door).
+  if (new Set(openedDays).size >= totalDays) {
+    return totalDays;
+  }
+
   const nextSequentialDay = progress?.next_sequential_day;
   if (typeof nextSequentialDay === 'number' && nextSequentialDay >= 1 && nextSequentialDay <= totalDays) {
     return nextSequentialDay;
   }
 
-  const openedDays = Array.isArray(progress?.opened_days) ? progress.opened_days : [];
   if (openedDays.length === 0) return 1;
 
   const maxOpened = Math.max(...openedDays);
@@ -257,17 +265,31 @@ Deno.serve(async (req) => {
       ? [...openedBonusDays, day_index]
       : openedBonusDays;
 
+    // Consecutive-day streak: increment when the previous open was yesterday,
+    // keep on a same-day second open, otherwise reset to 1.
+    const todayStr = new Date().toISOString().split('T')[0];
+    const yesterdayDate = new Date();
+    yesterdayDate.setUTCDate(yesterdayDate.getUTCDate() - 1);
+    const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
+    const prevStreak = progress?.streak_count ?? openedDays.length;
+    const nextStreak = progress?.last_opened_date === todayStr
+      ? Math.max(1, prevStreak)
+      : progress?.last_opened_date === yesterdayStr
+        ? prevStreak + 1
+        : 1;
+
     const { error: progressError } = await supabase.from('daily_calendar_progress').upsert(
       {
         user_id: user.id,
         season_id,
-        last_opened_date: new Date().toISOString().split('T')[0],
+        last_opened_date: todayStr,
         last_opened_day: day_index,
         opened_days: updatedOpenedDays,
         opened_bonus_days: updatedOpenedBonusDays,
         symbol_counts: progress?.symbol_counts ?? {},
+        streak_count: nextStreak,
         next_sequential_day: season.season_type === 'personal_quest' && validatedDoorType === 'free'
-          ? (day_index >= totalDays ? 1 : day_index + 1)
+          ? Math.min(day_index + 1, totalDays)
           : progress?.next_sequential_day,
         updated_at: new Date().toISOString(),
       },
@@ -286,7 +308,7 @@ Deno.serve(async (req) => {
       opened_days: updatedOpenedDays,
       opened_bonus_days: updatedOpenedBonusDays,
       next_sequential_day: season.season_type === 'personal_quest' && validatedDoorType === 'free'
-        ? (day_index >= totalDays ? 1 : day_index + 1)
+        ? Math.min(day_index + 1, totalDays)
         : progress?.next_sequential_day,
     });
   }

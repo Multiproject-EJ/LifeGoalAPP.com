@@ -369,9 +369,15 @@ export const CountdownCalendarModal = ({
   }, [revealResult, userId]);
 
   const [doorError, setDoorError] = useState<string | null>(null);
+  // Doors currently mid-open request — blocks double-tap double-opens while
+  // the award round-trip is in flight.
+  const [openingDoorKey, setOpeningDoorKey] = useState<string | null>(null);
 
   const handleOpenDoor = useCallback(async (dayIndex: number, doorType: DoorType, hatch: CalendarHatch, origin: RevealOrigin | null = null) => {
     if (!userId || !seasonData) return;
+    const doorKey = `${dayIndex}:${doorType}`;
+    if (openingDoorKey) return;
+    setOpeningDoorKey(doorKey);
     setDoorError(null);
 
     // Celebrate instantly from the tapped door: confetti bursts outward from the
@@ -496,8 +502,10 @@ export const CountdownCalendarModal = ({
     } catch (err) {
       console.error('Door open failed unexpectedly:', err);
       setDoorError(`Something went wrong opening this door. Please try again.`);
+    } finally {
+      setOpeningDoorKey(null);
     }
-  }, [userId, seasonData, islandRunSession]);
+  }, [userId, seasonData, islandRunSession, openingDoorKey]);
 
   if (!isOpen) return null;
 
@@ -584,6 +592,13 @@ export const CountdownCalendarModal = ({
   const calendarBackgroundUrl = isPersonalQuest
     ? '/icons/DAILY%20TREAT/dailymomentumnight.webp'
     : (themeAssets?.calendarBackgroundUrl ?? null);
+  // Which text tone keeps copy readable over the calendar art. The Personal
+  // Quest night background is very dark → all-light text; holiday art declares
+  // its own tone. Without a background image the default light dialog keeps
+  // dark text.
+  const textTone: 'light' | 'dark' = calendarBackgroundUrl
+    ? (isPersonalQuest ? 'light' : (themeAssets?.calendarTextTone ?? 'light'))
+    : 'dark';
 
   // Calculate total doors and today's index
   const totalDoors = seasonData
@@ -633,7 +648,7 @@ export const CountdownCalendarModal = ({
 
   return (
     <div
-      className={`daily-treats-calendar daily-treats-calendar--holiday-${themeMod}`}
+      className={`daily-treats-calendar daily-treats-calendar--holiday-${themeMod} daily-treats-calendar--text-${textTone}`}
       role="dialog"
       aria-modal="true"
       aria-label={`${themeName} calendar`}
@@ -855,6 +870,7 @@ export const CountdownCalendarModal = ({
                         className="daily-treats-calendar__hatch daily-treats-calendar__hatch--bonus-ready daily-treats-calendar__hatch-button"
                         role="listitem"
                         aria-label={label}
+                        disabled={openingDoorKey !== null}
                         onClick={(event) => {
                           const rect = event.currentTarget.getBoundingClientRect();
                           void handleOpenDoor(day, 'bonus', bonusHatch, {
@@ -871,6 +887,7 @@ export const CountdownCalendarModal = ({
                         className={`daily-treats-calendar__hatch daily-treats-calendar__hatch--${status} daily-treats-calendar__hatch-button`}
                         role="listitem"
                         aria-label={label}
+                        disabled={openingDoorKey !== null}
                         onClick={(event) => {
                           if (freeHatch) {
                             const rect = event.currentTarget.getBoundingClientRect();

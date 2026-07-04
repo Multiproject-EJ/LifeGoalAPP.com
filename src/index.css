@@ -37285,3 +37285,196 @@ body.habit-wizard-open .mobile-footer-nav {
     transition: filter 180ms ease, opacity 180ms ease;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Daily Momentum / Treat Calendar — text tone + door polish (2026-07)
+   • --text-light / --text-dark: all modal copy switches tone to stay readable
+     over the calendar background art (night art → all-white text).
+   • Personal Quest doors: bigger snug-fit tiles, staggered entrance, smoother
+     press/pulse animations. Motion respects prefers-reduced-motion.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Text tone: light copy over dark background art ─────────────────────── */
+.daily-treats-calendar--text-light .daily-treats-calendar__eyebrow {
+  color: rgba(226, 232, 240, 0.85);
+  text-shadow: 0 1px 3px rgba(2, 6, 23, 0.65);
+}
+
+.daily-treats-calendar--text-light .daily-treats-calendar__title,
+.daily-treats-calendar--text-light .daily-treats-calendar__countdown {
+  color: #f8fafc;
+  text-shadow: 0 1px 4px rgba(2, 6, 23, 0.7);
+}
+
+.daily-treats-calendar--text-light .daily-treats-calendar__subtitle,
+.daily-treats-calendar--text-light .daily-treats-calendar__hint {
+  color: rgba(226, 232, 240, 0.88);
+  text-shadow: 0 1px 3px rgba(2, 6, 23, 0.6);
+}
+
+.daily-treats-calendar--text-light .daily-treats-calendar__close {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.daily-treats-calendar--text-light .daily-treats-calendar__rest {
+  background: rgba(2, 6, 23, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #e2e8f0;
+  text-shadow: 0 1px 2px rgba(2, 6, 23, 0.6);
+}
+
+.daily-treats-calendar--text-light .daily-treats-calendar__rollover {
+  background: linear-gradient(145deg, rgba(30, 58, 138, 0.45), rgba(2, 6, 23, 0.55));
+  border-color: rgba(96, 165, 250, 0.45);
+  color: #f1f5f9;
+}
+
+.daily-treats-calendar--text-light .daily-treats-calendar__rollover-copy {
+  color: rgba(226, 232, 240, 0.88);
+}
+
+.daily-treats-calendar--text-light .daily-treats-calendar__tracker {
+  background: rgba(2, 6, 23, 0.4);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
+.daily-treats-calendar--text-light .daily-treats-calendar__tracker-toggle,
+.daily-treats-calendar--text-light .daily-treats-calendar__tracker-label {
+  color: rgba(226, 232, 240, 0.85);
+}
+
+/* Dark tone over light background art: keep the default slate palette but
+   lift copy contrast slightly against busy imagery. */
+.daily-treats-calendar--text-dark .daily-treats-calendar__dialog--image .daily-treats-calendar__title,
+.daily-treats-calendar--text-dark .daily-treats-calendar__dialog--image .daily-treats-calendar__countdown {
+  color: #0f172a;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.55);
+}
+
+.daily-treats-calendar--text-dark .daily-treats-calendar__dialog--image .daily-treats-calendar__eyebrow,
+.daily-treats-calendar--text-dark .daily-treats-calendar__dialog--image .daily-treats-calendar__subtitle {
+  color: #1e293b;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+/* ── Personal Quest doors: bigger snug-fit tiles ────────────────────────── */
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__grid {
+  gap: 0.65rem;
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch {
+  min-height: 92px;
+  padding: 0.6rem 0.4rem;
+  border-radius: 18px;
+  gap: 0.22rem;
+  background-color: rgba(15, 23, 42, 0.34);
+  backdrop-filter: blur(3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(148, 163, 184, 0.18),
+    0 6px 16px rgba(2, 6, 23, 0.3);
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch-number {
+  font-size: 1.05rem;
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch-symbol {
+  font-size: 1.35rem;
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch-status {
+  font-size: 0.9rem;
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__hatch-dice {
+  font-size: 0.68rem;
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__day-pair--final .daily-treats-calendar__hatch {
+  min-height: 104px;
+}
+
+.daily-treats-calendar--holiday-personal-quest .daily-treats-calendar__day-pair--final .daily-treats-calendar__hatch-number {
+  font-size: 1.2rem;
+}
+
+/* ── Smoother door animations ───────────────────────────────────────────── */
+.daily-treats-calendar__hatch {
+  transition:
+    transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 260ms ease,
+    background-color 200ms ease,
+    border-color 200ms ease;
+}
+
+.daily-treats-calendar__hatch-button:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.daily-treats-calendar__hatch--today.daily-treats-calendar__hatch-button:hover {
+  transform: translateY(-2px) scale(1.08);
+}
+
+.daily-treats-calendar__hatch-button:active {
+  transform: scale(0.96);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Staggered entrance: doors cascade in as the calendar opens */
+  .daily-treats-calendar__day-pair {
+    opacity: 0;
+    animation: daily-treats-door-in 420ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+  }
+
+  .daily-treats-calendar__day-pair:nth-child(1) { animation-delay: 60ms; }
+  .daily-treats-calendar__day-pair:nth-child(2) { animation-delay: 110ms; }
+  .daily-treats-calendar__day-pair:nth-child(3) { animation-delay: 160ms; }
+  .daily-treats-calendar__day-pair:nth-child(4) { animation-delay: 210ms; }
+  .daily-treats-calendar__day-pair:nth-child(5) { animation-delay: 260ms; }
+  .daily-treats-calendar__day-pair:nth-child(6) { animation-delay: 310ms; }
+  .daily-treats-calendar__day-pair:nth-child(7) { animation-delay: 380ms; }
+
+  /* Today door: gentle breathing scale layered on the glow pulse */
+  .daily-treats-calendar__hatch--today {
+    animation:
+      calendar-today-pulse 2.5s ease-in-out infinite,
+      daily-treats-door-breathe 2.5s ease-in-out infinite;
+  }
+
+  /* Opened doors: the checkmark/symbol pops softly into place */
+  .daily-treats-calendar__hatch--opened .daily-treats-calendar__hatch-symbol {
+    animation: daily-treats-check-pop 480ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+}
+
+@keyframes daily-treats-door-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes daily-treats-door-breathe {
+  0%, 100% { transform: scale(1.06); }
+  50% { transform: scale(1.09); }
+}
+
+@keyframes daily-treats-check-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .daily-treats-calendar__day-pair,
+  .daily-treats-calendar__hatch--opened .daily-treats-calendar__hatch-symbol {
+    animation: none;
+    opacity: 1;
+  }
+}
