@@ -517,6 +517,7 @@ const FIRST_CREATURE_PACK_REVEAL_DELAY_MS = 650;
 // Duration of the traffic-light coin spin before the reward is revealed. Must match
 // the `.island-coin--flipping` keyframe duration in LevelWorlds.css.
 const TRAFFIC_LIGHT_COIN_FLIP_DURATION_MS = 1300;
+const TRAFFIC_LIGHT_COIN_IDLE_HINT_DELAY_MS = 3_000;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_VISIBLE_MS = 5_000;
 const SPACE_EXCAVATOR_EVENT_ICON_SRC = '/assets/icons/Eventgame_excavator.webp';
 const TRAFFIC_LIGHT_MODAL_IMAGE_SRC = '/assets/traffic_light/Traffic_img.webp';
@@ -1686,6 +1687,7 @@ export function IslandRunBoardPrototype({
   }, [dormantDoorSelectedFigures]);
   const dormantDoorBestMatchCount = Math.max(dormantDoorPrizeCounts.small, dormantDoorPrizeCounts.medium, dormantDoorPrizeCounts.large);
   const [trafficLightCoinFlip, setTrafficLightCoinFlip] = useState<{ seed: number; reward: TrafficLightCoinFlipReward | null; phase: 'ready' | 'flipping' | 'revealed' } | null>(null);
+  const [showTrafficLightCoinHint, setShowTrafficLightCoinHint] = useState(false);
   /**
    * Optimistic traffic-light charge shown the instant the token HOPS OVER the
    * traffic-light tile mid-roll, instead of waiting for the authoritative charge
@@ -4629,6 +4631,7 @@ export function IslandRunBoardPrototype({
     setDormantDoorReward(null);
     setIsDormantDoorRewardClaiming(false);
     setTrafficLightCoinFlip(null);
+    setShowTrafficLightCoinHint(false);
     setTrafficLightVisualCharge(null);
   }, [islandNumber]);
 
@@ -4668,11 +4671,26 @@ export function IslandRunBoardPrototype({
     handleCloseDormantDoorMiniGame();
   }, [client, dormantDoorMiniGame, dormantDoorReward, handleCloseDormantDoorMiniGame, isDormantDoorRewardClaiming, session]);
 
+  useEffect(() => {
+    if (trafficLightCoinFlip?.phase !== 'ready') {
+      setShowTrafficLightCoinHint(false);
+      return;
+    }
+
+    const hintTimeoutId = window.setTimeout(() => {
+      setShowTrafficLightCoinHint(true);
+    }, TRAFFIC_LIGHT_COIN_IDLE_HINT_DELAY_MS);
+
+    return () => window.clearTimeout(hintTimeoutId);
+  }, [trafficLightCoinFlip?.phase, trafficLightCoinFlip?.seed]);
+
   const handleCloseTrafficLightCoinFlip = useCallback(() => {
     setTrafficLightCoinFlip(null);
+    setShowTrafficLightCoinHint(false);
   }, []);
 
   const handleFlipTrafficLightCoin = useCallback(() => {
+    setShowTrafficLightCoinHint(false);
     setTrafficLightCoinFlip((current) => {
       if (!current || current.reward) return current;
       const reward = resolveTrafficLightCoinFlipReward({
@@ -4716,6 +4734,7 @@ export function IslandRunBoardPrototype({
     const barPart = reward.rewardBarProgress > 0 ? `, +${reward.rewardBarProgress} event bar progress` : '';
     setLandingText(`🚦 ${reward.side === 'heads' ? 'Heads' : 'Tails'} opened ${reward.label}: +${reward.dice} dice, +${reward.essence} money${puzzlePart}${ticketPart}${barPart}.`);
     setTrafficLightCoinFlip(null);
+    setShowTrafficLightCoinHint(false);
   }, [client, session, trafficLightCoinFlip]);
 
   const dismissLandmarkCoachmark = useCallback(() => {
@@ -12558,24 +12577,31 @@ export function IslandRunBoardPrototype({
                   : 'All 8 lights are green. Flip the coin to reveal your mystery box.'}
             </p>
 
-            <div className="island-coin-stage" aria-hidden="true">
-              <span className="island-coin-stage__sparkles" />
-              <div
+            <div className="island-coin-stage">
+              <span className="island-coin-stage__sparkles" aria-hidden="true" />
+              <button
+                type="button"
                 className={[
                   'island-coin',
                   `island-coin--${trafficLightCoinFlip.phase}`,
                   trafficLightCoinFlip.reward ? `island-coin--lands-${trafficLightCoinFlip.reward.side}` : '',
                 ].filter(Boolean).join(' ')}
+                onClick={handleFlipTrafficLightCoin}
+                disabled={trafficLightCoinFlip.phase !== 'ready'}
+                aria-label={trafficLightCoinFlip.phase === 'ready' ? 'Flip the traffic light bonus coin' : 'Traffic light bonus coin'}
               >
-                <div className="island-coin__inner">
-                  <div className="island-coin__face island-coin__face--heads">
+                <span className="island-coin__inner" aria-hidden="true">
+                  <span className="island-coin__face island-coin__face--heads">
                     <img className="island-coin__image" src={TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC} alt="" loading="lazy" />
-                  </div>
-                  <div className="island-coin__face island-coin__face--tails">
+                  </span>
+                  <span className="island-coin__face island-coin__face--tails">
                     <img className="island-coin__image" src={TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC} alt="" loading="lazy" />
-                  </div>
-                </div>
-              </div>
+                  </span>
+                </span>
+              </button>
+              {showTrafficLightCoinHint && trafficLightCoinFlip.phase === 'ready' && (
+                <p className="island-coin-stage__tap-hint" role="status">Tap the coin to flip it!</p>
+              )}
             </div>
 
             <div className="island-traffic-light__prizes" aria-label="Mystery box options">
@@ -12590,6 +12616,17 @@ export function IslandRunBoardPrototype({
                 <span className="island-traffic-light__prize-focus">Essence Focus</span>
               </div>
             </div>
+
+            {trafficLightCoinFlip.phase === 'revealed' && trafficLightCoinFlip.reward && (
+              <div className="island-traffic-light__winner-spotlight" aria-hidden="true">
+                <img
+                  className="island-traffic-light__winner-image"
+                  src={trafficLightCoinFlip.reward.boxId === 'box_1' ? TRAFFIC_LIGHT_BOX_IMAGE_SRC : TRAFFIC_LIGHT_GIFT_IMAGE_SRC}
+                  alt=""
+                  loading="lazy"
+                />
+              </div>
+            )}
 
             {trafficLightCoinFlip.phase === 'revealed' && trafficLightCoinFlip.reward && (
               <div className="island-coin-reward" role="status">
@@ -12632,16 +12669,6 @@ export function IslandRunBoardPrototype({
             )}
 
             <div className="island-stop-modal__actions">
-              {trafficLightCoinFlip.phase === 'ready' && (
-                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleFlipTrafficLightCoin}>
-                  Flip Coin
-                </button>
-              )}
-              {trafficLightCoinFlip.phase === 'flipping' && (
-                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" disabled>
-                  Flipping…
-                </button>
-              )}
               {trafficLightCoinFlip.phase === 'revealed' && (
                 <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleClaimTrafficLightReward}>
                   Collect
