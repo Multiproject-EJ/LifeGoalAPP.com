@@ -7,9 +7,11 @@
  * and the rules can be exercised by the Island Run service test suite.
  *
  * Canonical wiring (see docs/gameplay/MINIGAME_EVENTS_CONSOLIDATION_PLAN.md):
- * - Entry tickets are spent by the board launch path (`applyTimedEventTicketSpend`).
- * - Restart ("play again") spends 1 more ticket through the same canonical
- *   action, exposed to the game via launchConfig callbacks.
+ * - Every fruit dropped spends 1 event ticket through the canonical
+ *   `applyCompanionFeastDrop` action (per-action spend, like Space Excavator).
+ * - Levels + rewards-bar progression rules live in
+ *   `companionFeastProgression.ts`; persisted campaign state flows through
+ *   `applyCompanionFeastMergeResult` / `claimCompanionFeastMilestoneReward`.
  * - Completion feeds `recordEventMinigameCompletion` for event progress.
  */
 
@@ -395,22 +397,19 @@ export function resolveCompanionFeastResultTier(score: number): CompanionFeastRe
 }
 
 // ---------------------------------------------------------------------------
-// Run entry / restart guards
+// Run entry guard
 // ---------------------------------------------------------------------------
 
-export const COMPANION_FEAST_RUN_TICKET_COST = 1;
-
 /**
- * Whether a new run can start. The first run of a launch is pre-paid by the
- * board's entry-spend path; replays require one more ticket.
+ * Whether a new run can start under the ticket-per-drop economy: the player
+ * needs at least one ticket to drop the first fruit. Ticket costs per drop
+ * live in `companionFeastProgression.ts` (`COMPANION_FEAST_DROP_TICKET_COST`).
  */
 export function canStartCompanionFeastRun(options: {
-  entryRunAvailable: boolean;
   ticketsRemaining: number;
 }): boolean {
-  if (options.entryRunAvailable) return true;
   const tickets = Number.isFinite(options.ticketsRemaining)
     ? Math.floor(options.ticketsRemaining)
     : 0;
-  return tickets >= COMPANION_FEAST_RUN_TICKET_COST;
+  return tickets >= 1;
 }

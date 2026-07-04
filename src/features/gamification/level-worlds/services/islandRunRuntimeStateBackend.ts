@@ -661,6 +661,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
           : current.minigameTicketsByEvent,
       luckyRollSessionsByMilestone: current.luckyRollSessionsByMilestone,
       spaceExcavatorProgressByEvent: current.spaceExcavatorProgressByEvent,
+      companionFeastProgressByEvent: current.companionFeastProgressByEvent,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

@@ -1297,6 +1297,7 @@ export interface Database {
           island_expires_at_ms: number;
           completed_stops_by_island: Json;
           space_excavator_progress_by_event: Json;
+          companion_feast_progress_by_event: Json;
           created_at: string;
           updated_at: string;
         };
@@ -1324,6 +1325,7 @@ export interface Database {
           island_expires_at_ms?: number;
           completed_stops_by_island?: Json;
           space_excavator_progress_by_event?: Json;
+          companion_feast_progress_by_event?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -1351,6 +1353,7 @@ export interface Database {
           island_expires_at_ms?: number;
           completed_stops_by_island?: Json;
           space_excavator_progress_by_event?: Json;
+          companion_feast_progress_by_event?: Json;
           created_at?: string;
           updated_at?: string;
         };
