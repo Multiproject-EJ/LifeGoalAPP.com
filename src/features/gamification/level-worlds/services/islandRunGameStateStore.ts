@@ -1816,7 +1816,8 @@ function mergeCompanionFeastProgressByEvent(
   return merged;
 }
 
-function mergeStringArrayByUnion(left: string[] = [], right: string[] = []): string[] {  return Array.from(new Set([...left, ...right]));
+function mergeStringArrayByUnion(left: string[] = [], right: string[] = []): string[] {
+  return Array.from(new Set([...left, ...right]));
 }
 
 function mergeCreatureCollection(

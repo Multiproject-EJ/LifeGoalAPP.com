@@ -24,6 +24,7 @@ import {
   COMPANION_FEAST_DANGER_GRACE_MS,
   COMPANION_FEAST_DANGER_LINE_Y,
   COMPANION_FEAST_DEFAULT_PHYSICS,
+  COMPANION_FEAST_MAX_TIER,
   createCompanionFeastBody,
   getCompanionFeastFoodTier,
   resolveCompanionFeastResultTier,
@@ -69,6 +70,11 @@ type MergePop = { id: number; x: number; y: number; score: number; bornAtMs: num
 
 const DROP_COOLDOWN_MS = 420;
 const LEVEL_CLEAR_BANNER_MS = 2600;
+/**
+ * Tier reported when only the run score should be recorded (tier 0 can never
+ * clear a level, so this is a safe "score-only" merge report).
+ */
+const SCORE_ONLY_REPORT_TIER = 0;
 
 /**
  * Session best score. Intentionally module-level (not React state) so the
@@ -132,8 +138,8 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
     setLastRunScore(finalScore);
     setRunsFinished((n) => n + 1);
     setRewardDiceTotal((total) => total + tier.rewardDice);
-    // Record the run score against the campaign best (tier 0 never clears levels).
-    const outcome = config.requestMergeResult?.(0, finalScore);
+    // Record the run score against the campaign best (score-only report).
+    const outcome = config.requestMergeResult?.(SCORE_ONLY_REPORT_TIER, finalScore);
     if (outcome?.progress) setProgress(outcome.progress);
     setPhase('results');
     refreshTickets();
@@ -231,10 +237,11 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
   }, []);
 
   const reportMerge = useCallback((mergedToTier: number | null) => {
-    const producedTier = mergedToTier === null ? Number.MAX_SAFE_INTEGER : mergedToTier;
+    // `null` marks a max-tier celebration merge (see CompanionFeastMergeEvent).
+    const producedTier = mergedToTier === null ? COMPANION_FEAST_MAX_TIER : mergedToTier;
     const known = progressRef.current;
     // Only escalate merges that can move the campaign (new highest tier).
-    if (known && producedTier <= known.highestTierReached && mergedToTier !== null) return;
+    if (known && producedTier <= known.highestTierReached) return;
     const outcome = config.requestMergeResult?.(mergedToTier, scoreRef.current);
     if (!outcome) return;
     if (outcome.progress) setProgress(outcome.progress);
