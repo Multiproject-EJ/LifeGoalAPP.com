@@ -739,7 +739,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             <div className="space-excavator__reward-burst" aria-hidden="true">🎉</div>
             <p id="space-excavator-exit-summary-title" className="space-excavator__reward-sheet-title">Great Excavation Session!</p>
             <p className="space-excavator__reward-sheet-body">Congratulations — you cleared {exitCelebrationSummary.boardsCleared} board{exitCelebrationSummary.boardsCleared === 1 ? '' : 's'} this run.</p>
-            <p className="space-excavator__reward-sheet-prize">🎲 +{exitCelebrationSummary.diceWon} Dice · 🟣 +{exitCelebrationSummary.essenceWon} Essence · 🧩 +{exitCelebrationSummary.shardsWon} Shards</p>
+            <p className="space-excavator__reward-sheet-prize">🎲 +{exitCelebrationSummary.diceWon} Dice · 💰 +{exitCelebrationSummary.essenceWon} Money · 🟣 +{exitCelebrationSummary.shardsWon} Essence</p>
             <div className="space-excavator__ticket-sheet-actions">
               <button type="button" className="space-excavator__button space-excavator__button--primary" onClick={dismissExitCelebration}>Return to Island</button>
               <button type="button" className="space-excavator__button" onClick={() => setExitCelebrationSummary(null)}>Keep Digging</button>

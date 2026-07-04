@@ -418,11 +418,11 @@ export interface SpinResult {
 
 // Prize configuration — multi-currency pool aligned with island-run economy
 export const SPIN_PRIZES: SpinPrize[] = [
-  { type: 'essence',        value: 10,  label: '10 Essence',      icon: '🟣', wheelSize: 'medium', wheelWeight: 4 },
-  { type: 'essence',        value: 25,  label: '25 Essence',      icon: '🟣', wheelSize: 'medium', wheelWeight: 3 },
-  { type: 'essence',        value: 50,  label: '50 Essence',      icon: '🟣', wheelSize: 'large',  wheelWeight: 2 },
-  { type: 'shards',         value: 2,   label: '2 Shards',        icon: '🔮', wheelSize: 'medium', wheelWeight: 3 },
-  { type: 'shards',         value: 5,   label: '5 Shards',        icon: '🔮', wheelSize: 'large',  wheelWeight: 2 },
+  { type: 'essence',        value: 10,  label: '10 Money',        icon: '💰', wheelSize: 'medium', wheelWeight: 4 },
+  { type: 'essence',        value: 25,  label: '25 Money',        icon: '💰', wheelSize: 'medium', wheelWeight: 3 },
+  { type: 'essence',        value: 50,  label: '50 Money',        icon: '💰', wheelSize: 'large',  wheelWeight: 2 },
+  { type: 'shards',         value: 2,   label: '2 Essence',       icon: '🟣', wheelSize: 'medium', wheelWeight: 3 },
+  { type: 'shards',         value: 5,   label: '5 Essence',       icon: '🟣', wheelSize: 'large',  wheelWeight: 2 },
   { type: 'dice',           value: 8,   label: '8 Dice',          icon: '🎲', wheelSize: 'medium', wheelWeight: 3 },
   { type: 'dice',           value: 15,  label: '15 Dice',         icon: '🎲', wheelSize: 'large',  wheelWeight: 2 },
   { type: 'game_tokens',    value: 2,   label: '2 Game Tokens',   icon: '🎟️', wheelSize: 'medium', wheelWeight: 3 },

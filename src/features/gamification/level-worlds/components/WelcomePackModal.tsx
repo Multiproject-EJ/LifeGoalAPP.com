@@ -84,9 +84,9 @@ export function WelcomePackModal({
               <span className="wpm-economy-tile__label">Dice</span>
             </div>
             <div className="wpm-economy-tile">
-              <span className="wpm-economy-tile__icon">⚡</span>
+              <span className="wpm-economy-tile__icon">💰</span>
               <strong className="wpm-economy-tile__value">2000</strong>
-              <span className="wpm-economy-tile__label">Essence</span>
+              <span className="wpm-economy-tile__label">Money</span>
             </div>
           </div>
 

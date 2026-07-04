@@ -149,7 +149,7 @@ const burstDoorConfetti = (origin: RevealOrigin | null): void => {
 
 /**
  * Map an authoritative reward into the brief floating toast shown near the
- * door. Mirrors RewardCard's icon/label conventions (dice vs gold vs essence,
+ * door. Mirrors RewardCard's icon/label conventions (dice vs gold vs money,
  * and the tier-1 "nothing" door).
  */
 const formatRewardToast = (
@@ -166,7 +166,7 @@ const formatRewardToast = (
     return { icon: '🎲', label: `+${amount} ${diceLabel}`.trim(), tier };
   }
   if (isPersonalQuest) {
-    return { icon: '🟣', label: `+${amount} Essence`, tier };
+    return { icon: '💰', label: `+${amount} Money`, tier };
   }
   return { icon: '🪙', label: `+${amount} Gold`, tier };
 };

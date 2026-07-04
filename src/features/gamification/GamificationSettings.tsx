@@ -163,7 +163,7 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
               ⚠️ Are you sure?
             </p>
             <p style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', color: 'var(--color-text-secondary, #666)' }}>
-              This will reset your island game to island 1 with 30 dice, 0 essence, and clear all
+              This will reset your island game to island 1 with 30 dice, 0 money, and clear all
               island stops, eggs, and creatures. Your XP and level will also be reset to 1.
               This cannot be undone.
             </p>
