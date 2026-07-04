@@ -37248,8 +37248,26 @@ body.habit-wizard-open .mobile-footer-nav {
   box-shadow: 0 22px 56px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(99, 102, 241, 0.14);
 }
 
-/* Hard guarantee: neither the open card nor anything inside it is ever blurred,
-   whatever else the cascade or the platform does with the neighbours. */
+/* Hard guarantee: neither the open card nor ANYTHING inside it is ever blurred,
+   whatever else the cascade or the platform does with the blurred neighbours.
+   We deliberately use a subtree wildcard rather than a hand-maintained list of
+   descendant classes: every past regression in this area slipped through a class
+   the list had forgotten (the header row, the name span, the coach block, the
+   private-view name blur, a WebKit compositing quirk, …). Blanket-clearing the
+   filter on the expanded item and every descendant makes it impossible for any
+   stray filter to reach through and fog the open card again. */
+.mobile-habit-home .habit-checklist__item--expanded,
+.mobile-habit-home .habit-checklist__item--expanded * {
+  filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Keep the open card and its structural layers fully opaque. The neighbour-dim
+   drops sibling opacity to 0.52; none of that fade must land on the expanded
+   card. Opacity is scoped to the card's own structure (not the wildcard) so
+   intentionally faded children — disabled buttons, muted helper text — keep
+   their own opacity. */
 .mobile-habit-home .habit-checklist__item--expanded,
 .mobile-habit-home .habit-checklist__item--expanded .habit-checklist__swipe-frame,
 .mobile-habit-home .habit-checklist__item--expanded .habit-checklist__swipe-row,
@@ -37257,9 +37275,6 @@ body.habit-wizard-open .mobile-footer-nav {
 .mobile-habit-home .habit-checklist__item--expanded .habit-checklist__details-panel,
 .mobile-habit-home .habit-checklist__item--expanded .habit-checklist__details-panel--open,
 .mobile-habit-home .habit-checklist__item--expanded .habit-checklist__detail-block {
-  filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
   opacity: 1;
 }
 
