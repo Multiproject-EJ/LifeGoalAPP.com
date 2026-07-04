@@ -20,11 +20,11 @@ import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
 import { JournalEntryList } from './JournalEntryList';
 import { JournalEntryDetail } from './JournalEntryDetail';
 import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } from './JournalEntryEditor';
-import { JournalTypeSelector } from './JournalTypeSelector';
+import { JournalTypeSelector, JOURNAL_MODE_OPTIONS } from './JournalTypeSelector';
 import type { Database, JournalEntryType, Json } from '../../lib/database.types';
 import { isValidUuid } from '../../lib/isValidUuid';
 import { DEFAULT_JOURNAL_TYPE } from './constants';
-import { getModeLabel, isEntryLocked } from './utils';
+import { entryListDateFormatter, getModeLabel, isEntryLocked } from './utils';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
@@ -56,6 +56,7 @@ const MOOD_OPTIONS: JournalMoodOption[] = [
 ];
 
 const SOUNDSCAPE_STORAGE_KEY = 'lifegoal.journal.soundscape';
+const ENTRY_PREVIEW_MAX_LENGTH = 60;
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 // Use V2 habits
@@ -686,6 +687,8 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
     };
   }, [journalType, gratitudeAuthenticityStats, gratitudeWarningSummary]);
 
+  const recentEntries = useMemo(() => entries.slice(0, 3), [entries]);
+
   const goalMap = useMemo(() => {
     const map: Record<string, GoalRow> = {};
     goals.forEach((goal) => {
@@ -729,18 +732,34 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
     setSeedDraft(null);
   };
 
-  const handleQuickStartPreset = (type: JournalType, title: string, content: string) => {
-    setJournalType(type);
+  const handleStartWriting = (type?: JournalType, seed?: Partial<JournalEntryDraft>) => {
+    if (type) {
+      setJournalType(type);
+    }
     setJournalView('write');
     setEditorMode('create');
     setEditingEntry(null);
     setEditorError(null);
-    setSeedDraft({
-      type,
-      title,
-      content,
-    });
+    setSeedDraft(seed ?? (type ? { type } : null));
     setEditorOpen(true);
+  };
+
+  const handleQuickStartPreset = (type: JournalType, title: string, content: string) => {
+    handleStartWriting(type, { type, title, content });
+  };
+
+  const handleOpenReadView = () => {
+    setJournalView('read');
+    if (isCompactLayout) {
+      setShowMobileDetail(false);
+    } else if (filteredEntries.length > 0) {
+      handleSelectEntry(filteredEntries[0].id);
+    }
+  };
+
+  const handleOpenEntryFromHub = (entryId: string) => {
+    setJournalView('read');
+    handleSelectEntry(entryId);
   };
 
   const handleCopyThankYouDraft = async () => {
@@ -1154,46 +1173,44 @@ ${thankYouDraft}`,
       </header>
 
       {journalView === 'hub' ? (
-      <section className="journal-hub" aria-label="Journal hub">
-        <button
-          type="button"
-          className="journal-hub__card"
-          onClick={() => {
-            setJournalView('write');
-          }}
-          disabled={journalDisabled}
-        >
-          <span className="journal-hub__icon" aria-hidden="true">✨</span>
-          <span className="journal-hub__title">New journal</span>
-          <span className="journal-hub__description">Start a fresh reflection in {getModeLabel(journalType)} mode.</span>
-        </button>
-        <button
-          type="button"
-          className="journal-hub__card"
-          onClick={() => {
-            setJournalView('read');
-            if (isCompactLayout) {
-              setShowMobileDetail(false);
-            } else if (filteredEntries.length > 0) {
-              handleSelectEntry(filteredEntries[0].id);
-            }
-          }}
-          disabled={journalDisabled}
-        >
-          <span className="journal-hub__icon" aria-hidden="true">📚</span>
-          <span className="journal-hub__title">Read old journal</span>
-          <span className="journal-hub__description">Browse history, revisit patterns, and search older entries.</span>
-        </button>
-      </section>
-      ) : null}
+      <div className="journal-hub" aria-label="Journal hub">
+        <section className="journal-hub-hero">
+          <div className="journal-hub-hero__copy">
+            <h2>What’s on your mind today?</h2>
+            <p>One tap and you’re writing. No setup, no friction.</p>
+          </div>
+          <button
+            type="button"
+            className="journal-hub-hero__cta"
+            onClick={() => handleStartWriting()}
+            disabled={journalDisabled}
+          >
+            <span aria-hidden="true">✍️</span> Start writing
+          </button>
+          <div className="journal-hub-hero__stats" aria-label="This week at a glance">
+            <span className="journal-hub-hero__stat">
+              <strong>{weeklyRecap.totalEntries}</strong> entries this week
+            </span>
+            <span className="journal-hub-hero__stat">
+              <strong>{weeklyRecap.daysPracticed}</strong> day{weeklyRecap.daysPracticed === 1 ? '' : 's'} practiced
+            </span>
+            {weeklyRecap.averageMood !== null ? (
+              <span className="journal-hub-hero__stat">
+                <strong>{weeklyRecap.averageMood}</strong> avg mood
+              </span>
+            ) : null}
+          </div>
+        </section>
 
-      {journalView === 'hub' ? (
-        <section className="journal-write-stage" aria-label="Two minute starts">
-          <p><strong>2-minute starts</strong> — low-friction journaling sprints.</p>
-          <div className="journal-coach-stage__actions">
+        <section className="journal-hub-section" aria-label="Two minute starts">
+          <header className="journal-hub-section__head">
+            <h3>⏱️ 2-minute starts</h3>
+            <p>Low-friction sprints when you only have a moment.</p>
+          </header>
+          <div className="journal-hub-quick">
             <button
               type="button"
-              className="journal__new"
+              className="journal-hub-quick__pill"
               onClick={() =>
                 handleQuickStartPreset(
                   'problem',
@@ -1203,11 +1220,12 @@ ${thankYouDraft}`,
               }
               disabled={journalDisabled}
             >
-              🧠 Clear mind
+              <span className="journal-hub-quick__icon" aria-hidden="true">🧠</span>
+              <span className="journal-hub-quick__label">Clear mind</span>
             </button>
             <button
               type="button"
-              className="journal__new"
+              className="journal-hub-quick__pill"
               onClick={() =>
                 handleQuickStartPreset(
                   'gratitude',
@@ -1217,11 +1235,12 @@ ${thankYouDraft}`,
               }
               disabled={journalDisabled}
             >
-              🙏 Gratitude
+              <span className="journal-hub-quick__icon" aria-hidden="true">🙏</span>
+              <span className="journal-hub-quick__label">Gratitude</span>
             </button>
             <button
               type="button"
-              className="journal__new"
+              className="journal-hub-quick__pill"
               onClick={() =>
                 handleQuickStartPreset(
                   'goal',
@@ -1231,10 +1250,87 @@ ${thankYouDraft}`,
               }
               disabled={journalDisabled}
             >
-              🚀 Plan tomorrow
+              <span className="journal-hub-quick__icon" aria-hidden="true">🚀</span>
+              <span className="journal-hub-quick__label">Plan tomorrow</span>
             </button>
           </div>
         </section>
+
+        <section className="journal-hub-section" aria-label="Journal modes">
+          <header className="journal-hub-section__head">
+            <h3>🎨 Pick a mode</h3>
+            <p>Tap any mode to start writing in it instantly.</p>
+          </header>
+          <ul className="journal-hub-modes">
+            {JOURNAL_MODE_OPTIONS.map((option) => (
+              <li key={option.value}>
+                <button
+                  type="button"
+                  className={`journal-hub-modes__chip ${journalType === option.value ? 'journal-hub-modes__chip--active' : ''}`}
+                  onClick={() => handleStartWriting(option.value)}
+                  disabled={journalDisabled}
+                >
+                  <span aria-hidden="true">{option.icon}</span> {option.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="journal-hub-section" aria-label="Recent entries">
+          <header className="journal-hub-section__head journal-hub-section__head--row">
+            <div>
+              <h3>📚 Recent entries</h3>
+              <p>Pick up where you left off.</p>
+            </div>
+            <button
+              type="button"
+              className="journal-hub-section__link"
+              onClick={handleOpenReadView}
+              disabled={journalDisabled}
+            >
+              View all →
+            </button>
+          </header>
+          {recentEntries.length > 0 ? (
+            <ul className="journal-hub-recent">
+              {recentEntries.map((entry) => {
+                const locked = isEntryLocked(entry);
+                const moodIcon = getMoodMeta(entry.mood)?.icon;
+                return (
+                  <li key={entry.id}>
+                    <button
+                      type="button"
+                      className="journal-hub-recent__item"
+                      onClick={() => handleOpenEntryFromHub(entry.id)}
+                      disabled={journalDisabled}
+                    >
+                      <span className="journal-hub-recent__icon" aria-hidden="true">
+                        {locked ? '🔒' : moodIcon ?? '📝'}
+                      </span>
+                      <span className="journal-hub-recent__body">
+                        <span className="journal-hub-recent__title">
+                          {entry.title?.trim() || (locked ? 'Locked time capsule' : entry.content.slice(0, ENTRY_PREVIEW_MAX_LENGTH) || 'Untitled entry')}
+                        </span>
+                        <span className="journal-hub-recent__meta">
+                          {entryListDateFormatter.format(new Date(entry.entry_date))} · {getModeLabel(entry.type)}
+                        </span>
+                      </span>
+                      <span className="journal-hub-recent__chevron" aria-hidden="true">›</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="journal-hub-recent__empty">
+              {journalDisabled
+                ? 'Connect Supabase or open the demo workspace to unlock your private journal.'
+                : 'No entries yet — your first reflection is one tap away. ✨'}
+            </p>
+          )}
+        </section>
+      </div>
       ) : null}
 
       {journalDisabled ? (

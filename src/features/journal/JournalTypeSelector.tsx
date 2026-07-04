@@ -6,13 +6,13 @@ type JournalTypeSelectorProps = {
   onChange: (type: JournalType) => void;
 };
 
-type JournalModeOption = {
+export type JournalModeOption = {
   value: JournalType;
   label: string;
   icon: string;
 };
 
-const JOURNAL_MODE_OPTIONS: JournalModeOption[] = [
+export const JOURNAL_MODE_OPTIONS: JournalModeOption[] = [
   { value: 'standard', label: 'Standard', icon: '📝' },
   { value: 'quick', label: 'Quick', icon: '⚡' },
   { value: 'deep', label: 'Deep', icon: '🔮' },
