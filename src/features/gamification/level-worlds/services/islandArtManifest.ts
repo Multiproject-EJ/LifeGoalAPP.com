@@ -317,10 +317,15 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
   };
 }
 
+function isPlaceholderIslandArtAsset(src: string | null | undefined): boolean {
+  return typeof src === 'string' && /(?:^|\/)PLACEHOLDER__/i.test(src);
+}
+
 export function getIslandArtLandmarkImageSrc(landmark: IslandArtLandmarkManifest, buildLevel: number): string | null {
   const clampedLevel = clampIslandArtBuildLevel(buildLevel);
   if (clampedLevel < 1) return null;
-  return landmark.levels[clampedLevel - 1] ?? landmark.levels[landmark.levels.length - 1] ?? null;
+  const src = landmark.levels[clampedLevel - 1] ?? landmark.levels[landmark.levels.length - 1] ?? null;
+  return isPlaceholderIslandArtAsset(src) ? null : src;
 }
 
 export function getIslandArtBossImageSrc(boss: IslandArtBossManifest | undefined, isDefeated: boolean): string | null {

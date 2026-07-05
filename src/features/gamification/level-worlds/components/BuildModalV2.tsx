@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LandmarkBuildVisual, normalizeLandmarkBuildVisualStopId } from './board/LandmarkBuildVisual';
 import type { BuildModalV2ViewModel, BuildModalV2PartViewModel } from '../services/islandRunBuildModalV2ViewModel';
 
 export interface BuildModalV2Props {
@@ -15,13 +16,18 @@ export interface BuildModalV2Props {
   onBuildActivePart: (stopIndex: number) => void;
 }
 
-function BuildModalV2ArtworkImage(props: { src?: string; alt: string; isPlaceholder: boolean }) {
+function BuildModalV2ArtworkImage(props: { src?: string; alt: string; isPlaceholder: boolean; stopId?: string; buildLevel?: number; title?: string }) {
   const [errored, setErrored] = useState(false);
   if (!props.src || props.isPlaceholder || errored) {
     return (
-      <div className="bm2-artwork__placeholder" role="img" aria-label={props.alt || 'Landmark artwork unavailable'}>
-        <span className="bm2-artwork__placeholder-icon">🏗️</span>
-        <span className="bm2-artwork__placeholder-label">Landmark art coming soon</span>
+      <div className="bm2-artwork__placeholder">
+        <LandmarkBuildVisual
+          stopId={normalizeLandmarkBuildVisualStopId(props.stopId)}
+          buildLevel={props.buildLevel ?? 0}
+          title={props.title}
+          className="bm2-artwork__placeholder-visual"
+        />
+        <span className="bm2-artwork__placeholder-label">Animated landmark preview</span>
       </div>
     );
   }
@@ -159,7 +165,7 @@ export function BuildModalV2({
                 </p>
               </div>
               <div className="bm2-artwork bm2-artwork--hero">
-                <BuildModalV2ArtworkImage src={active.imageSrc} alt={active.imageAlt} isPlaceholder={active.imageIsPlaceholder} />
+                <BuildModalV2ArtworkImage src={active.imageSrc} alt={active.imageAlt} isPlaceholder={active.imageIsPlaceholder} stopId={active.stopId} buildLevel={active.targetLevel} title={active.title} />
               </div>
               <BuildModalV2LevelRail viewModel={viewModel} />
             </div>

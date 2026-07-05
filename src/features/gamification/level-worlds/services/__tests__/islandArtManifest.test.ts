@@ -340,6 +340,36 @@ export const islandArtManifestTests: TestCase[] = [
     },
   },
   {
+    name: 'placeholder landmark image filenames resolve to null for generated visuals',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        landmarks: [{
+          stopIndex: 0,
+          x: 120,
+          y: 120,
+          width: 180,
+          height: 180,
+          levels: [
+            'landmarks/hatchery/PLACEHOLDER__hatchery-l1.webp',
+            'landmarks/hatchery/PLACEHOLDER__hatchery-l2.webp',
+            'landmarks/hatchery/hatchery-l3.webp',
+          ],
+        }],
+      }, 1);
+      if (!manifest) throw new Error('Expected placeholder landmark manifest to normalize');
+      const landmark = manifest.landmarks[0];
+      assert(landmark, 'Expected normalized placeholder landmark');
+      assertEqual(getIslandArtLandmarkImageSrc(landmark, 1), null, 'Expected placeholder L1 image to fall back to generated landmark visual');
+      assertEqual(getIslandArtLandmarkImageSrc(landmark, 2), null, 'Expected placeholder L2 image to fall back to generated landmark visual');
+      assertEqual(
+        getIslandArtLandmarkImageSrc(landmark, 3),
+        '/assets/islands/island-001/landmarks/hatchery/hatchery-l3.webp',
+        'Expected real L3 image to keep rendering when it exists',
+      );
+    },
+  },
+  {
     name: 'selects boss idle/default and defeated static images',
     run: () => {
       const manifest = normalizeIslandArtManifest(sampleManifest, 1);

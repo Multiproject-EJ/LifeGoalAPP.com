@@ -10,6 +10,7 @@ import {
 } from '../../services/islandArtManifest';
 import type { BossCreatureArtState } from '../../services/islandRunBossEncounter';
 import { CANONICAL_BOARD_SIZE, type TileAnchor, type ZBand } from '../../services/islandBoardLayout';
+import { LandmarkBuildVisual, normalizeLandmarkBuildVisualStopId } from './LandmarkBuildVisual';
 
 export interface IslandArtSceneLayout {
   sceneSpace: IslandArtSpace;
@@ -273,8 +274,31 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
       })}
 
       {manifest.landmarks.map((landmark) => {
-        const src = getIslandArtLandmarkImageSrc(landmark, landmarkBuildLevels[landmark.stopIndex] ?? 0);
-        if (!src || hiddenSources.has(src)) return null;
+        const buildLevel = landmarkBuildLevels[landmark.stopIndex] ?? 0;
+        const src = getIslandArtLandmarkImageSrc(landmark, buildLevel);
+        const style = makeArtLayerStyle({
+          manifest,
+          x: landmark.x,
+          y: landmark.y,
+          width: landmark.width,
+          height: landmark.height,
+          uniformScale,
+          toScreen,
+          sceneLayout,
+          zIndex: zIndexForBand(landmark.zBand, 4),
+        });
+        if (!src || hiddenSources.has(src)) {
+          return (
+            <LandmarkBuildVisual
+              key={`${landmark.stopIndex}-generated-${buildLevel}`}
+              stopId={normalizeLandmarkBuildVisualStopId(landmark.anchorId)}
+              buildLevel={buildLevel}
+              compact
+              className={`island-art-layers__image island-art-layers__landmark island-art-layers__landmark--generated island-art-layers__landmark--${landmark.zBand ?? 'mid'}`}
+              style={style}
+            />
+          );
+        }
         return (
           <img
             key={`${landmark.stopIndex}-${src}`}
@@ -282,17 +306,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
             src={src}
             alt=""
             draggable={false}
-            style={makeArtLayerStyle({
-              manifest,
-              x: landmark.x,
-              y: landmark.y,
-              width: landmark.width,
-              height: landmark.height,
-              uniformScale,
-              toScreen,
-              sceneLayout,
-              zIndex: zIndexForBand(landmark.zBand, 4),
-            })}
+            style={style}
             onError={() => hideSource(src)}
           />
         );
