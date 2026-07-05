@@ -26,6 +26,13 @@ export interface IslandRunFeatureFlags {
   islandRunShooterBlitzBossEnabled: boolean;
 
   /**
+   * Boss Rhythm Battle — routes every Boss stop to the rhythm spacecraft
+   * battle mini-game (`boss_rhythm`), replacing the inline tap-counter trial.
+   * While off, boss stops fall back to the legacy trial flow.
+   */
+  islandRunRhythmBossEnabled: boolean;
+
+  /**
    * Phase 5 — adds `vision_quest` as a Mystery-stop content variant. While
    * off, the rotating Mystery pool is unchanged.
    */
@@ -74,6 +81,7 @@ export interface IslandRunFeatureFlags {
 const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   islandRunEventEngineEnabled: false,
   islandRunShooterBlitzBossEnabled: true,
+  islandRunRhythmBossEnabled: true,
   islandRunVisionQuestMysteryEnabled: true,
   islandRunPartnerWheelEnabled: false,
   todaysOfferSpinEntryEnabled: true,

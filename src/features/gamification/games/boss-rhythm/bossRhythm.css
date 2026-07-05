@@ -1,0 +1,378 @@
+/* Boss Rhythm Battle — mobile-first fullscreen layout.
+   Rendered inside the board's fixed inset-0 launcher wrapper (z-index 9000). */
+
+.boss-rhythm {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #060a1c;
+  color: #eaf2ff;
+  font-family: system-ui, -apple-system, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  overflow: hidden;
+}
+
+/* ── Top HUD ── */
+.boss-rhythm__hud-top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: calc(0.5rem + env(safe-area-inset-top, 0px)) 0.75rem 0.5rem;
+  background: rgba(6, 10, 28, 0.85);
+  z-index: 2;
+}
+
+.boss-rhythm__icon-btn {
+  flex: 0 0 auto;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 1px solid rgba(140, 170, 230, 0.35);
+  background: rgba(20, 28, 60, 0.9);
+  color: #eaf2ff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.boss-rhythm__icon-btn:disabled {
+  opacity: 0.35;
+}
+
+.boss-rhythm__boss-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.boss-rhythm__boss-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.boss-rhythm__boss-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.boss-rhythm__phase-chip {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+}
+
+/* ── HP bars ── */
+.boss-rhythm__bar {
+  height: 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.boss-rhythm__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.15s linear;
+}
+
+.boss-rhythm__bar-fill--boss {
+  background: linear-gradient(90deg, #ff4d6d, #ff2d95);
+}
+
+.boss-rhythm__bar-fill--player {
+  background: linear-gradient(90deg, #35d0ff, #7dffb2);
+}
+
+.boss-rhythm__bar-fill--danger {
+  background: linear-gradient(90deg, #ff6b6b, #ff4d4d);
+  animation: boss-rhythm-danger-blink 0.5s steps(2) infinite;
+}
+
+@keyframes boss-rhythm-danger-blink {
+  50% { opacity: 0.55; }
+}
+
+/* ── Stage ── */
+.boss-rhythm__stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.boss-rhythm__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.boss-rhythm__score {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.6rem;
+  text-align: right;
+  pointer-events: none;
+}
+
+.boss-rhythm__score-value {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-shadow: 0 1px 6px rgba(70, 230, 255, 0.5);
+}
+
+.boss-rhythm__combo {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffd76a;
+}
+
+/* ── Overlays ── */
+.boss-rhythm__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  padding: 1.25rem;
+  background: rgba(6, 10, 28, 0.88);
+  backdrop-filter: blur(3px);
+  text-align: center;
+  z-index: 3;
+}
+
+.boss-rhythm__overlay--victory {
+  background: radial-gradient(circle at 50% 30%, rgba(255, 215, 106, 0.18), rgba(6, 10, 28, 0.92) 60%);
+}
+
+.boss-rhythm__overlay--defeat {
+  background: radial-gradient(circle at 50% 30%, rgba(255, 77, 138, 0.16), rgba(6, 10, 28, 0.92) 60%);
+}
+
+.boss-rhythm__overlay-kicker {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffb347;
+}
+
+.boss-rhythm__overlay-title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.boss-rhythm__overlay-copy {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
+  max-width: 22rem;
+}
+
+.boss-rhythm__howto {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  max-width: 22rem;
+  text-align: left;
+}
+
+.boss-rhythm__stats {
+  display: flex;
+  gap: 1.2rem;
+  margin: 0.2rem 0;
+}
+
+.boss-rhythm__stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.boss-rhythm__stats span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+.boss-rhythm__stats strong {
+  font-size: 1.15rem;
+}
+
+.boss-rhythm__reward-line {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.boss-rhythm__reward-sub {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+.boss-rhythm__btn {
+  min-width: 12rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(140, 170, 230, 0.4);
+  background: rgba(24, 34, 70, 0.95);
+  color: #eaf2ff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.boss-rhythm__btn--primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #35d0ff, #2a72c8);
+  color: #05122a;
+  box-shadow: 0 4px 18px rgba(53, 208, 255, 0.35);
+}
+
+.boss-rhythm__btn--ghost {
+  background: transparent;
+  border-color: rgba(140, 170, 230, 0.25);
+  opacity: 0.8;
+}
+
+/* ── Bottom HUD ── */
+.boss-rhythm__hud-bottom {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.4rem 0.85rem;
+  background: rgba(6, 10, 28, 0.85);
+  z-index: 2;
+}
+
+.boss-rhythm__bar--player {
+  flex: 1 1 auto;
+}
+
+.boss-rhythm__shield-pips {
+  display: flex;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+}
+
+.boss-rhythm__shield-pip {
+  opacity: 0.25;
+  filter: grayscale(1);
+}
+
+.boss-rhythm__shield-pip--full {
+  opacity: 1;
+  filter: none;
+}
+
+/* ── Controller ── */
+.boss-rhythm__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.85rem calc(0.7rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(9, 14, 34, 0.95);
+  z-index: 2;
+}
+
+.boss-rhythm__dpad {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.boss-rhythm__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.boss-rhythm__ctl {
+  border: 1px solid rgba(140, 170, 230, 0.35);
+  background: rgba(24, 34, 70, 0.95);
+  color: #eaf2ff;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.boss-rhythm__ctl:active {
+  transform: scale(0.94);
+  background: rgba(40, 56, 110, 0.95);
+}
+
+.boss-rhythm__ctl--move {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 1rem;
+  font-size: 1.3rem;
+}
+
+.boss-rhythm__ctl--fire {
+  width: 4.6rem;
+  height: 4.6rem;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  border-color: transparent;
+  background: radial-gradient(circle at 35% 30%, #5be0ff, #2a72c8 70%);
+  color: #05122a;
+  box-shadow: 0 4px 16px rgba(53, 208, 255, 0.4);
+}
+
+.boss-rhythm__ctl--shield {
+  position: relative;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  background: radial-gradient(circle at 35% 30%, rgba(122, 184, 255, 0.5), rgba(24, 34, 70, 0.95) 75%);
+}
+
+.boss-rhythm__ctl-count {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.2rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: #ffd76a;
+  color: #05122a;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Slightly larger controls on tall phones; tighter on short landscape. */
+@media (max-height: 560px) {
+  .boss-rhythm__ctl--fire { width: 3.8rem; height: 3.8rem; }
+  .boss-rhythm__ctl--move { width: 3rem; height: 3rem; }
+  .boss-rhythm__ctl--shield { width: 2.9rem; height: 2.9rem; }
+}

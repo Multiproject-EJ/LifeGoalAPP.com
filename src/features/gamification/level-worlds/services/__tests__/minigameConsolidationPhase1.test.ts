@@ -35,6 +35,7 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
         {
           islandRunEventEngineEnabled: false,
           islandRunShooterBlitzBossEnabled: true,
+          islandRunRhythmBossEnabled: true,
           islandRunVisionQuestMysteryEnabled: true,
           islandRunPartnerWheelEnabled: false,
           todaysOfferSpinEntryEnabled: true,

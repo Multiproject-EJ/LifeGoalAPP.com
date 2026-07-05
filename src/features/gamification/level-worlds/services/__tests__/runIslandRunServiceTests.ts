@@ -126,6 +126,7 @@ import { islandRunTechCollectionPersistenceTests } from './islandRunTechCollecti
 import { islandTechCollectionComponentTests } from './islandTechCollectionComponent.test';
 import { islandRunTechnologyUnlockTests } from './islandRunTechnologyUnlocks.test';
 import { islandCommunicationAccessTests } from './islandCommunicationAccess.test';
+import { bossRhythmGameTests } from './bossRhythmGame.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -258,6 +259,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandTechCollectionComponent', tests: islandTechCollectionComponentTests },
   { label: 'islandRunTechnologyUnlocks', tests: islandRunTechnologyUnlockTests },
   { label: 'islandCommunicationAccess', tests: islandCommunicationAccessTests },
+  { label: 'bossRhythmGame', tests: bossRhythmGameTests },
 ];
 
 async function main() {
