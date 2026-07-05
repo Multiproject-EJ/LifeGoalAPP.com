@@ -10570,6 +10570,7 @@
   place-items: center;
   min-height: 150px;
   margin: -0.3rem 0 -0.15rem;
+  transition: opacity 0.3s ease, filter 0.3s ease, transform 0.3s ease;
 }
 
 .island-traffic-light__hero::before {
@@ -10599,6 +10600,7 @@
   text-shadow: 0 2px 0 rgba(84, 43, 0, 0.72), 0 0 16px rgba(250, 204, 21, 0.38);
   background: linear-gradient(180deg, rgba(7, 22, 36, 0.9), rgba(10, 31, 49, 0.78));
   box-shadow: 0 0 18px rgba(250, 204, 21, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.13);
+  transition: opacity 0.3s ease, filter 0.3s ease;
 }
 
 .island-traffic-light__intro {
@@ -10607,6 +10609,23 @@
   color: rgba(220, 242, 255, 0.94);
   font-size: 1rem;
   line-height: 1.28;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* On reveal, the coin + mystery-box picker are swapped out for one big
+   winner image (see .island-traffic-light__winner-spotlight below). Recede
+   the signal art/title/intro so the winner reads as the clear focal point
+   instead of competing with full-brightness chrome above it. */
+.island-traffic-light--revealed .island-traffic-light__hero,
+.island-traffic-light--revealed .island-traffic-light__title,
+.island-traffic-light--revealed .island-traffic-light__intro {
+  opacity: 0.5;
+  filter: saturate(0.55) brightness(0.75);
+}
+
+.island-traffic-light--revealed .island-traffic-light__hero {
+  min-height: 96px;
+  transform: scale(0.82);
 }
 
 /* ── Coin stage (spotlight backdrop + sparkle burst) ─────────────────────────── */
@@ -10655,30 +10674,38 @@
 }
 
 /* ── The coin itself (two supplied image faces in 3D) ────────────────────────── */
-.island-coin {
+/* Scoped under .island-stop-modal so these overrides beat the generic
+   `.island-stop-modal button` pill-chrome rule above (equal specificity would
+   otherwise let source order — or worse, an unrelated stylesheet edit — leave
+   the coin with a visible navy pill background/border/padding behind it). */
+.island-stop-modal .island-coin {
   position: relative;
   width: 128px;
   height: 128px;
+  min-height: 0;
   appearance: none;
   padding: 0;
   border: 0;
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
-  transform-style: preserve-3d;
   touch-action: manipulation;
 }
 
-.island-coin:focus-visible {
+.island-stop-modal .island-coin:focus-visible {
   outline: 3px solid rgba(255, 247, 173, 0.9);
   outline-offset: 0.32rem;
 }
 
-.island-coin:disabled {
+.island-stop-modal .island-coin:disabled {
   cursor: default;
 }
 
 .island-coin__inner {
+  /* Must be block-level: this is a <span>, and percentage width/height are
+     no-ops on inline elements — without this the coin faces (and their
+     images) collapse to a 0x0 box and nothing paints. */
+  display: block;
   position: relative;
   width: 100%;
   height: 100%;
@@ -10904,20 +10931,47 @@
   color: #d486ff;
 }
 
-.island-traffic-light__winner-spotlight {
+/* Replaces the coin + mystery-box picker once the flip lands (see the
+   `phase !== 'revealed'` guards in IslandRunBoardPrototype.tsx) — this is the
+   single, tappable focal point of the win instead of a decorative image
+   competing for space below an unrelated small prize row. Scoped under
+   .island-stop-modal so these resets beat the generic
+   `.island-stop-modal button` pill-chrome rule (background/border/padding). */
+.island-stop-modal .island-traffic-light__winner-spotlight {
   display: grid;
-  place-items: center;
-  min-height: 148px;
-  margin: -0.15rem auto 0.15rem;
-  pointer-events: none;
+  justify-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 0;
+  margin: -0.1rem auto 0.1rem;
+  padding: 0;
+  border: 0;
+  border-radius: 24px;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.island-stop-modal .island-traffic-light__winner-spotlight:focus-visible {
+  outline: 3px solid rgba(255, 247, 173, 0.9);
+  outline-offset: 0.35rem;
 }
 
 .island-traffic-light__winner-image {
-  width: min(235px, 72vw);
+  width: min(220px, 60vw);
+  max-height: 34vh;
   height: auto;
   object-fit: contain;
   filter: drop-shadow(0 0 28px rgba(253, 224, 71, 0.7)) drop-shadow(0 18px 26px rgba(0, 0, 0, 0.42));
   animation: island-traffic-light-winner-zoom 0.72s cubic-bezier(0.16, 1.16, 0.3, 1) both;
+}
+
+.island-traffic-light__winner-tap-hint {
+  color: #fff7ad;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 12px rgba(250, 204, 21, 0.35);
 }
 
 @keyframes island-traffic-light-winner-zoom {
