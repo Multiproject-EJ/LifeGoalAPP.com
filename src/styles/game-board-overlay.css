@@ -41,6 +41,7 @@
 }
 
 .game-board-overlay__content {
+  box-sizing: border-box;
   position: fixed;
   inset: 0;
   width: 100%;
@@ -56,6 +57,7 @@
   transform: none;
   transition: none;
   pointer-events: none;
+  overflow: hidden;
 }
 
 .game-board-overlay--open .game-board-overlay__content {
@@ -110,6 +112,7 @@
 
 /* Middle Section with Side Icons */
 .game-board-overlay__middle {
+  box-sizing: border-box;
   flex: 1;
   width: 100%;
   display: flex;
@@ -122,6 +125,7 @@
 }
 
 .game-board-overlay__quest-progress {
+  box-sizing: border-box;
   position: relative;
   z-index: 2;
   width: min(100%, 560px);
@@ -196,8 +200,9 @@
 }
 
 .game-board-overlay__rank-extension-hero {
+  box-sizing: border-box;
   position: relative;
-  width: min(104vw, 560px);
+  width: min(100%, 560px);
   margin-top: -0.05rem;
   display: grid;
   place-items: center;
@@ -269,7 +274,9 @@
 }
 
 .game-board-overlay__dual-track-stage {
+  box-sizing: border-box;
   position: relative;
+  width: 100%;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(1.35rem, 5.5vw, 2rem) minmax(0, 1fr);
@@ -320,6 +327,7 @@
 }
 
 .game-board-overlay__track {
+  box-sizing: border-box;
   --track-accent: #7dd3fc;
   --track-accent-strong: #38bdf8;
   --track-surface: rgba(7, 21, 44, 0.54);
@@ -618,6 +626,7 @@
 }
 
 .game-board-overlay__progress-spine {
+  position: relative;
   min-width: 0;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
@@ -853,6 +862,48 @@
 
   .game-board-overlay__controller-shell {
     transform: translateX(-50%);
+  }
+}
+
+/* Keep the center spine badge anchored to the LV marker instead of drifting into either track. */
+.game-board-overlay__progress-spine-rank {
+  width: clamp(2.6rem, 11vw, 3.2rem);
+  display: inline-grid;
+  place-items: center;
+  justify-self: center;
+}
+
+.game-board-overlay__progress-spine-rank .rank-badge {
+  max-width: 100%;
+}
+
+@media (max-width: 480px) {
+  .game-board-overlay__middle--minimal {
+    padding-inline: max(0.2rem, env(safe-area-inset-left, 0px)) max(0.2rem, env(safe-area-inset-right, 0px));
+    overflow: hidden;
+  }
+
+  .game-board-overlay__quest-progress {
+    padding-inline: 0.34rem;
+  }
+
+  .game-board-overlay__rank-extension-hero {
+    width: min(100%, calc(100vw - 0.68rem));
+    max-width: calc(100vw - 0.68rem);
+  }
+
+  .game-board-overlay__rank-extension-img {
+    max-width: 100%;
+  }
+
+  .game-board-overlay__dual-track-stage {
+    grid-template-columns: minmax(0, 1fr) clamp(1.55rem, 7vw, 2.1rem) minmax(0, 1fr);
+    gap: 0.18rem;
+  }
+
+  .game-board-overlay__track {
+    padding-inline: 0.34rem;
+    border-radius: 16px;
   }
 }
 
