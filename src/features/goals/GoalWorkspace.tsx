@@ -51,6 +51,8 @@ import { GoalDoctorCard } from '../../components/GoalDoctorCard';
 import { EnvironmentStrengthCard } from '../environment/components';
 import { normalizeEnvironmentContext, type EnvironmentContextV1 } from '../environment/environmentSchema';
 import { computeGoalCardIndicators } from './goalCardIndicators';
+import { GoalPillarMeter } from './GoalPillarMeter';
+import { GOAL_PILLAR_META, computeGoalPillars } from './goalPillars';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type StepRow = Database['public']['Tables']['life_goal_steps']['Row'];
@@ -1221,23 +1223,27 @@ export function GoalWorkspace({ session, onNavigateToTimer, onNavigateToAiCoach 
                           {/* GOALS-A-P2: Goal strength + completion */}
                           {(() => {
                             const indicators = computeGoalCardIndicators(goal, stepsByGoal[goal.id] ?? []);
-                            const missingCopy = indicators.missingStrengthSignals.length > 0
-                              ? `Add ${indicators.missingStrengthSignals.join(', ')} to strengthen this goal.`
-                              : 'This goal has all core planning signals.';
+                            const pillars = computeGoalPillars({
+                              goal,
+                              steps: stepsByGoal[goal.id] ?? [],
+                              habits: allHabits,
+                              healthState: goalHealthById[goal.id]?.healthState ?? null,
+                            });
                             return (
                               <section
                                 className="goal-card__indicators"
-                                aria-label={`Goal strength ${indicators.strengthScore} of 5 and progress ${indicators.completionPct}%`}
+                                aria-label={`Goal strength ${pillars.overall}% and progress ${indicators.completionPct}%`}
                               >
                                 <div className="goal-card__indicator">
                                   <div className="goal-card__indicator-header">
                                     <span className="goal-card__indicator-label">Strength</span>
-                                    <strong>{indicators.strengthLabel}</strong>
+                                    <strong>{pillars.overall}%</strong>
                                   </div>
-                                  <div className="goal-card__strength-stars" aria-label={`${indicators.strengthScore} of 5 strength signals`}>
-                                    {indicators.strengthStars}
-                                  </div>
-                                  <p>{missingCopy}</p>
+                                  <GoalPillarMeter pillars={pillars} size="full" />
+                                  <p>
+                                    {GOAL_PILLAR_META[pillars.weakest].icon}{' '}
+                                    {pillars[pillars.weakest].boost ?? 'All three pillars are full — keep the rhythm.'}
+                                  </p>
                                 </div>
                                 <div className="goal-card__indicator">
                                   <div className="goal-card__indicator-header">

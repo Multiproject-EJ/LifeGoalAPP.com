@@ -68,7 +68,9 @@ export function CompassChapterScreen({
       </header>
       <div className="compass-book__scroll">
         <section className="compass-book__chapter-hero">
-          <p className="compass-book__chapter-eyebrow">Chapter {chapter.order}</p>
+          <p className="compass-book__chapter-eyebrow">
+            Chapter {chapter.order} · Islands {chapter.islandRange[0]}–{chapter.islandRange[1]}
+          </p>
           <h1 className="compass-book__chapter-title">{chapter.title}</h1>
           {chapter.subtitle ? (
             <p className="compass-book__card-subtitle">{chapter.subtitle}</p>

@@ -4939,6 +4939,83 @@ html.platform-ipad .workspace-shell__menu-edge {
   }
 }
 
+/* Goal pillar meter — Insight / Momentum / Support tri-bars */
+.goal-pillar-meter {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.goal-pillar-meter__pillar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.goal-pillar-meter--full .goal-pillar-meter__pillar {
+  grid-template-columns: auto minmax(4.8rem, auto) minmax(0, 1fr);
+}
+
+.goal-pillar-meter__icon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.goal-pillar-meter__labels {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.goal-pillar-meter__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.goal-pillar-meter__score {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary, #111827);
+}
+
+.goal-pillar-meter__track {
+  display: block;
+  height: 7px;
+  background: rgba(15, 23, 42, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.goal-pillar-meter__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.goal-pillar-meter__pillar--insight .goal-pillar-meter__fill {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.goal-pillar-meter__pillar--momentum .goal-pillar-meter__fill {
+  background: linear-gradient(90deg, #6366f1, #38bdf8);
+}
+
+.goal-pillar-meter__pillar--support .goal-pillar-meter__fill {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.goal-pillar-meter__pillar--low .goal-pillar-meter__fill {
+  opacity: 0.75;
+}
+
 /* GOALS-A-P3: Linked sections */
 .goal-card__section {
   margin: 0.5rem 0;
@@ -14282,6 +14359,28 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.9rem;
 }
 
+.my-quest-hub__strength-rings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-items: center;
+  gap: 0.6rem;
+}
+
+.my-quest-hub__strength-card .quest-metric-ring__caption {
+  font-size: 1rem;
+}
+
+.my-quest-hub__strength-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--quest-text-secondary, #31486a);
+}
+
+.my-quest-hub__pillar-boost {
+  margin-top: 0.1rem;
+}
+
 .my-quest-hub__signal-stack {
   display: grid;
   gap: 0.55rem;
@@ -14392,6 +14491,16 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: var(--quest-shadow-xs, 0 4px 12px rgba(15, 35, 70, 0.08)), inset 0 1px 0 rgba(255, 255, 255, 0.72);
   text-align: left;
   cursor: pointer;
+}
+
+.my-quest-hub__tool-card--add {
+  border-color: rgba(99, 102, 241, 0.35);
+  background: linear-gradient(135deg, rgba(224, 231, 255, 0.9), rgba(219, 238, 255, 0.85));
+}
+
+.my-quest-hub__tool-card--add .my-quest-hub__tool-icon {
+  color: #4338ca;
+  font-weight: 800;
 }
 
 .my-quest-hub__tool-icon {

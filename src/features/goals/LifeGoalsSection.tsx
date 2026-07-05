@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { InteractiveLifeWheel } from '../../components/InteractiveLifeWheel';
 import { CategoryInfoCard } from '../../components/CategoryInfoCard';
 import { LifeGoalInputDialog } from '../../components/LifeGoalInputDialog';
+import { QuickAddSheet } from '../../components/QuickAddSheet';
 import { AllGoalsView } from './AllGoalsView';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
 import type { GoalRecommendedAction } from './executionTypes';
@@ -27,6 +28,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState<LifeWheelCategoryKey | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('wheel');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadingGoals, setLoadingGoals] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -288,8 +290,8 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
               place. Each area has its own colour.
             </p>
           </div>
-          <button className="life-goals-section__cta" type="button" onClick={() => handleAddGoal()}>
-            Add a goal
+          <button className="life-goals-section__cta" type="button" onClick={() => setIsQuickAddOpen(true)}>
+            ＋ Add a goal
           </button>
         </div>
         <div className="life-goals-section__viewtoggle" role="tablist" aria-label="Goals view">
@@ -380,6 +382,22 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
         initialCategory={selectedCategory}
         initialPromptTitle={dialogPromptTitle}
       />
+
+      {isQuickAddOpen ? (
+        <QuickAddSheet
+          session={session}
+          initialMode="goal"
+          goalOptions={allGoals.map((goal) => ({ id: goal.id, title: goal.title }))}
+          onCreated={() => {
+            void loadAllGoals();
+          }}
+          onOpenAdvanced={(mode) => {
+            setIsQuickAddOpen(false);
+            if (mode === 'goal') handleAddGoal();
+          }}
+          onClose={() => setIsQuickAddOpen(false)}
+        />
+      ) : null}
     </section>
   );
 }

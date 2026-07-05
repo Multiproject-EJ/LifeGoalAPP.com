@@ -184,6 +184,9 @@ export function CompassGuidedFlow({
           {index + 1} / {unlockedActivities.length}
         </span>
       </header>
+      <div className="compass-book__flow-progress" aria-hidden="true">
+        <span style={{ width: `${((index + 1) / unlockedActivities.length) * 100}%` }} />
+      </div>
       <div className="compass-book__scroll">
         <p className="compass-book__chapter-eyebrow">
           {chapter.title} · Island {activity.islandNumber} · Stage {activity.stage}
