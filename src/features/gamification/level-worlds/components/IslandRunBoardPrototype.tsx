@@ -339,6 +339,7 @@ import {
 import type { IslandRunControllerIntent } from '../services/islandRunMinigameTypes';
 import { registerAllMinigameManifests } from '../services/islandRunMinigameManifests';
 import {
+  resolveBossRhythmStopMinigame,
   resolveBossStopMinigame,
   resolveCompanionFeastEventMinigame,
   resolveIslandWorkshopEventMinigame,
@@ -7730,6 +7731,39 @@ export function IslandRunBoardPrototype({
       return;
     }
 
+    // Canonical boss encounter: the Boss Rhythm Battle (all islands, all boss
+    // types). Entry costs 1 event ticket when the player has one; a player
+    // with an empty ticket wallet still gets in so the mandatory boss stop
+    // can never dead-end island progression. Retries inside the battle are
+    // free — the ticket buys the session, not the attempt.
+    const rhythmBossLaunch = resolveBossRhythmStopMinigame({
+      kind: 'fixed_boss',
+      islandNumber,
+    });
+    if (rhythmBossLaunch) {
+      const ticketsSpent = spinTokens >= rhythmBossLaunch.entryTicketCost
+        ? rhythmBossLaunch.entryTicketCost
+        : 0;
+      if (ticketsSpent > 0) {
+        setSpinTokens((t) => t - ticketsSpent);
+      }
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'economy_spend',
+        metadata: {
+          stage: 'island_run_boss_rhythm_entry',
+          island_number: islandNumber,
+          ticket_cost: rhythmBossLaunch.entryTicketCost,
+          tickets_spent: ticketsSpent,
+        },
+      });
+      registerAllMinigameManifests();
+      setActiveLaunchedMinigameId(rhythmBossLaunch.minigameId);
+      setActiveLaunchedMinigameSource('boss_trial');
+      setActiveLaunchedMinigameConfig(rhythmBossLaunch.config);
+      return;
+    }
+
     if (islandNumber === 1) {
       const bossMinigame = resolveBossStopMinigame({
         kind: 'fixed_boss',
@@ -12210,6 +12244,8 @@ export function IslandRunBoardPrototype({
                 const bossConfig = getBossTrialConfig(islandNumber);
                 const bossReward = getBossReward(islandNumber);
                 const typeColor = getBossTypeColor(bossConfig.type as BossType);
+                const rhythmBossPreview = resolveBossRhythmStopMinigame({ kind: 'fixed_boss', islandNumber });
+                const rhythmEntryAffordable = rhythmBossPreview !== null && spinTokens >= rhythmBossPreview.entryTicketCost;
                 return (
                   <div className="island-boss-trial">
                     {/* Boss type + difficulty badges */}
@@ -12232,10 +12268,19 @@ export function IslandRunBoardPrototype({
                           <>
                             <p className="island-boss-trial__challenge-label">
                               <strong>Challenge:</strong>{' '}
-                              {bossConfig.type === 'fight'
-                                ? `Reach ${bossConfig.scoreTarget} hits before time runs out.`
-                                : `Complete ${bossConfig.scoreTarget} actions in ${bossConfig.trialDurationSec}s.`}
+                              {rhythmBossPreview
+                                ? 'Rhythm Assault — pilot your ship, fire on the beat, and survive 3 phases plus the final attack.'
+                                : bossConfig.type === 'fight'
+                                  ? `Reach ${bossConfig.scoreTarget} hits before time runs out.`
+                                  : `Complete ${bossConfig.scoreTarget} actions in ${bossConfig.trialDurationSec}s.`}
                             </p>
+                            {rhythmBossPreview ? (
+                              <p className="island-boss-trial__entry-cost">
+                                {timedEventTokenIcon} Entry: {rhythmBossPreview.entryTicketCost} event ticket
+                                {rhythmBossPreview.entryTicketCost === 1 ? '' : 's'} (you have {spinTokens})
+                                {rhythmEntryAffordable ? '' : ' — entry waived this time'}
+                              </p>
+                            ) : null}
                             <p className="island-boss-trial__reward-preview">
                               🎁 Reward on win:{' '}
                               <strong>+{bossReward.dice} 🎲</strong>,{' '}
@@ -12254,7 +12299,7 @@ export function IslandRunBoardPrototype({
                                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-boss-trial__begin-btn"
                                 onClick={handleStartBossTrial}
                               >
-                                ⚡ Begin Boss Trial
+                                {rhythmBossPreview ? '🛸 Launch Boss Battle' : '⚡ Begin Boss Trial'}
                               </button>
                             </div>
                           </>
@@ -14604,7 +14649,7 @@ export function IslandRunBoardPrototype({
                 setLandingText('🔮 Vision Quest complete! Mystery stop resolved.');
                 handleCompleteActiveStop();
               } else if (result.completed && result.reward) {
-                const { dice: rewardDice = 0, spinTokens: rewardSpinTokens = 0 } = result.reward;
+                const { dice: rewardDice = 0, spinTokens: rewardSpinTokens = 0, diamonds: rewardDiamonds = 0 } = result.reward;
                 const wonRewards: WinRewardItem[] = [];
                 if (rewardDice > 0) {
                   setDicePool((d) => d + rewardDice);
@@ -14613,6 +14658,12 @@ export function IslandRunBoardPrototype({
                 if (rewardSpinTokens > 0) {
                   setSpinTokens((t) => t + rewardSpinTokens);
                   wonRewards.push({ icon: '🌀', label: 'Spin Tokens', value: `+${rewardSpinTokens}` });
+                }
+                if (rewardDiamonds > 0) {
+                  // Boss Rhythm Battle victory: the rare reward on top of the
+                  // standard boss bounty resolved via handleResolveBossTrial.
+                  setDiamonds((d) => d + rewardDiamonds);
+                  wonRewards.push({ icon: '💎', label: 'Rare Crystals', value: `+${rewardDiamonds}` });
                 }
                 // M17D: award wallet shards on minigame reward
                 awardWalletShards(1);

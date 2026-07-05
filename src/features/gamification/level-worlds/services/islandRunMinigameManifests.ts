@@ -12,6 +12,7 @@
  * import so the first registration is what actually schedules the chunk.
  */
 
+import { bossRhythmManifest } from '../../games/boss-rhythm';
 import { companionFeastManifest } from '../../games/companion-feast';
 import { islandWorkshopManifest } from '../../games/island-workshop';
 import { shooterBlitzManifest } from '../../games/shooter-blitz';
@@ -23,6 +24,7 @@ import type { ComponentType } from 'react';
 
 /** Ordered list of every manifest the game can launch. */
 export const ALL_MINIGAME_MANIFESTS: readonly MinigameManifest[] = Object.freeze([
+  bossRhythmManifest,
   shooterBlitzManifest,
   spaceExcavatorManifest,
   visionQuestManifest,

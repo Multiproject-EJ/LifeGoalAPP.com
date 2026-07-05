@@ -14,6 +14,7 @@
  * See `docs/gameplay/MINIGAME_EVENTS_CONSOLIDATION_PLAN.md` §3.2 / §12 Phase 4.
  */
 import { getIslandRunFeatureFlags } from '../../../../config/islandRunFeatureFlags';
+import { BOSS_RHYTHM_ENTRY_TICKET_COST } from './bossRhythmGame';
 import { getBossTrialConfig, type BossType } from './bossService';
 import { openEventMinigame, type EventId, type EventMinigameId } from './islandRunEventEngine';
 import type { MysteryStopContentKind } from './islandRunStops';
@@ -45,6 +46,23 @@ export interface BossMinigameLaunchDescriptor {
     scoreTarget: number;
     trialDurationSec: number;
     islandNumber: number;
+  };
+}
+
+/**
+ * Boss Rhythm Battle launch descriptor. Unlike the legacy Shooter Blitz boss
+ * route it covers every boss type (fight AND milestone) — the rhythm battle
+ * is the canonical Boss-stop encounter when its flag is on. Entry costs
+ * `entryTicketCost` event tickets, spent by the caller at launch.
+ */
+export interface BossRhythmMinigameLaunchDescriptor {
+  minigameId: 'boss_rhythm';
+  entryTicketCost: number;
+  config: {
+    source: 'boss_stop';
+    islandNumber: number;
+    bossType: BossType;
+    difficulty: string;
   };
 }
 
@@ -98,6 +116,7 @@ export interface EventMinigameLaunchDescriptor {
 export type MinigameLaunchDescriptor = BossMinigameLaunchDescriptor;
 export type AnyMinigameLaunchDescriptor =
   | BossMinigameLaunchDescriptor
+  | BossRhythmMinigameLaunchDescriptor
   | MysteryMinigameLaunchDescriptor
   | EventMinigameLaunchDescriptor;
 
@@ -144,6 +163,35 @@ export function resolveBossStopMinigame(
       scoreTarget: trial.scoreTarget,
       trialDurationSec: trial.trialDurationSec,
       islandNumber: ctx.islandNumber,
+    },
+  };
+}
+
+/**
+ * Resolve the Boss Rhythm Battle launch for a boss stop. Covers every island
+ * and every boss type — when `islandRunRhythmBossEnabled` is on this is the
+ * canonical boss encounter (checked BEFORE the legacy Shooter Blitz route).
+ * Returns `null` when the flag is off so callers fall back to older flows.
+ *
+ * Pure: no I/O, no side effects, deterministic for a given `islandNumber`
+ * and flag snapshot. The entry ticket spend happens in the caller (the board
+ * owns wallet state); this resolver only advertises the cost.
+ */
+export function resolveBossRhythmStopMinigame(
+  ctx: BossStopLaunchContext,
+): BossRhythmMinigameLaunchDescriptor | null {
+  const flags = getIslandRunFeatureFlags();
+  if (!flags.islandRunRhythmBossEnabled) return null;
+
+  const trial = getBossTrialConfig(ctx.islandNumber);
+  return {
+    minigameId: 'boss_rhythm',
+    entryTicketCost: BOSS_RHYTHM_ENTRY_TICKET_COST,
+    config: {
+      source: 'boss_stop',
+      islandNumber: ctx.islandNumber,
+      bossType: trial.type,
+      difficulty: trial.difficulty,
     },
   };
 }

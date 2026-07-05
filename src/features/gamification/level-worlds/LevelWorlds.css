@@ -6276,6 +6276,12 @@
   margin: 0;
 }
 
+.island-boss-trial__entry-cost {
+  font-size: 0.82rem;
+  color: rgba(255, 216, 130, 0.9);
+  margin: 0;
+}
+
 /* Begin button */
 .island-boss-trial__begin-btn {
   background: linear-gradient(135deg, #daa520 0%, #b8860b 100%) !important;
