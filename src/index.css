@@ -37351,13 +37351,20 @@ body.habit-wizard-open .mobile-footer-nav {
 }
 
 /* Blur Today-tab content that sits outside the habit list via an explicit
-   React state class rather than relying on a broad ancestor filter. The open
-   habit remains inside the unfiltered .habit-checklist subtree, so its expanded
-   content stays crisp while neighbouring Today content softens. */
-.mobile-habit-home .habit-checklist-card__board-body--habit-focus > :not(.habit-checklist) {
+   React state class rather than relying on a broad ancestor filter. The compact
+   Today content is wrapped in .habit-checklist__group, so the group itself must
+   stay unfiltered; otherwise the nested .habit-checklist and the expanded habit
+   details inherit the ancestor blur and cannot be made crisp again. */
+.mobile-habit-home .habit-checklist-card__board-body--habit-focus > :not(.habit-checklist__group):not(.habit-checklist),
+.mobile-habit-home .habit-checklist-card__board-body--habit-focus > .habit-checklist__group > :not(.habit-checklist) {
   filter: blur(1.2px) saturate(0.76);
   opacity: 0.58;
   transition: filter 180ms ease, opacity 180ms ease;
+}
+
+.mobile-habit-home .habit-checklist-card__board-body--habit-focus > .habit-checklist__group {
+  filter: none !important;
+  opacity: 1;
 }
 
 .mobile-habit-home .habit-checklist-card__board-body--habit-focus > .habit-checklist {
