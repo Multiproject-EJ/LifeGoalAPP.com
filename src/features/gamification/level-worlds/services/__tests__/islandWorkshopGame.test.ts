@@ -2,8 +2,8 @@
  * Island Workshop block-placement rules tests.
  * Covers: shape catalog integrity, seeded shape sets, placement validation,
  * line clearing + scoring, multi-line and streak combos, stuck detection,
- * Creature Assist, construction progress conversion, result tiers, run
- * entry/replay ticket guards, and saved-run serialization.
+ * Creature Assist, construction progress conversion, score rewards, result tiers,
+ * block ticket guards, and saved-run serialization.
  */
 import {
   applyIslandWorkshopConstructionGain,
@@ -27,6 +27,7 @@ import {
   parseIslandWorkshopConstructionProgress,
   parseIslandWorkshopSavedRun,
   placeIslandWorkshopShape,
+  resolveIslandWorkshopClaimableScoreRewards,
   resolveIslandWorkshopMaterialsEarned,
   resolveIslandWorkshopResultTier,
   resolveIslandWorkshopRunConstructionGain,
@@ -284,22 +285,37 @@ export const islandWorkshopGameTests: TestCase[] = [
     },
   },
   {
-    name: 'run entry mirrors companion feast ticket rules',
+    name: 'run entry treats tickets as placeable blocks',
     run: () => {
       assertEqual(
-        canStartIslandWorkshopRun({ entryRunAvailable: true, ticketsRemaining: 0 }),
-        true,
-        'pre-paid launch run starts without extra tickets',
-      );
-      assertEqual(
-        canStartIslandWorkshopRun({ entryRunAvailable: false, ticketsRemaining: 0 }),
+        canStartIslandWorkshopRun({ ticketsRemaining: 0 }),
         false,
-        'replay without tickets is blocked',
+        'fresh run without block tickets is blocked',
       );
       assertEqual(
-        canStartIslandWorkshopRun({ entryRunAvailable: false, ticketsRemaining: 1 }),
+        canStartIslandWorkshopRun({ ticketsRemaining: 0, hasSavedRun: true }),
         true,
-        'replay with a ticket is allowed',
+        'saved run can reopen even when no blocks remain',
+      );
+      assertEqual(
+        canStartIslandWorkshopRun({ ticketsRemaining: 9 }),
+        true,
+        'nine tickets means nine placeable blocks are available',
+      );
+    },
+  },
+  {
+    name: 'score reward milestones unlock only when crossed',
+    run: () => {
+      assertDeepEqual(
+        resolveIslandWorkshopClaimableScoreRewards({ previousScore: 90, nextScore: 260 }).map((reward) => reward.id),
+        ['supply_box', 'dice_cache'],
+        'crossing 100 and 250 unlocks both rewards',
+      );
+      assertDeepEqual(
+        resolveIslandWorkshopClaimableScoreRewards({ previousScore: 250, nextScore: 260 }).map((reward) => reward.id),
+        [],
+        'already-reached milestones are not claimed again',
       );
     },
   },
