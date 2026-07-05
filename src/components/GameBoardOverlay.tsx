@@ -49,6 +49,22 @@ function writeDualTrackLastIsland(viewerId: string | undefined, islandNumber: nu
   }
 }
 
+
+type RankExtensionTier = 'bronze' | 'silver' | 'gold';
+
+const RANK_EXTENSION_BADGES: Record<RankExtensionTier, { src: string; label: string }> = {
+  bronze: { src: '/assets/ranks/Rank_bronze.webp', label: 'Bronze rank extension' },
+  silver: { src: '/assets/ranks/Rank_silver.webp', label: 'Silver rank extension' },
+  gold: { src: '/assets/ranks/Rank_gold.webp', label: 'Gold rank extension' },
+};
+
+function rankExtensionTierForRank(rank: RankDefinition | undefined): RankExtensionTier {
+  const rankId = rank?.id ?? 1;
+  if (rankId <= 6) return 'bronze';
+  if (rankId <= 10) return 'silver';
+  return 'gold';
+}
+
 type GameBoardOverlayProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -251,6 +267,7 @@ export function GameBoardOverlay({
   const realLifeTrackSubtitle = realLifeSource === 'data'
     ? `${goalCount} goal${goalCount === 1 ? '' : 's'} · ${habitCount} habit${habitCount === 1 ? '' : 's'}`
     : 'Goals, habits, and growth milestones.';
+  const rankExtensionBadge = RANK_EXTENSION_BADGES[rankExtensionTierForRank(currentRank)];
 
   return (
     <div
@@ -271,12 +288,24 @@ export function GameBoardOverlay({
 
         <div className="game-board-overlay__middle game-board-overlay__middle--minimal">
           <section className="game-board-overlay__quest-progress" aria-labelledby="game-board-overlay-title">
-            <header className="game-board-overlay__header">
+            <header className="game-board-overlay__header game-board-overlay__header--rank-extension">
               <p className="game-board-overlay__eyebrow">Two tracks · one climb</p>
-              <h2 id="game-board-overlay-title" className="game-board-overlay__title">
+              <h2 id="game-board-overlay-title" className="game-board-overlay__title game-board-overlay__title--sr-only">
                 {dualTrackViewModel.title}
               </h2>
-              <p className="game-board-overlay__subtitle">{dualTrackViewModel.subtitle}</p>
+              <div className="game-board-overlay__rank-extension-hero" aria-hidden="true">
+                <img
+                  src={rankExtensionBadge.src}
+                  alt=""
+                  className="game-board-overlay__rank-extension-img"
+                  draggable="false"
+                />
+                <span className="game-board-overlay__rank-extension-level">
+                  <span>Lv</span>
+                  <strong>{dualTrackViewModel.journeyLevel.level}</strong>
+                </span>
+              </div>
+              <span className="game-board-overlay__rank-extension-accessible">{rankExtensionBadge.label}</span>
             </header>
 
             <div
