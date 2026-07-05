@@ -12622,3 +12622,105 @@
   animation: island-caretaker-pulse 2.4s ease-in-out infinite;
   pointer-events: none;
 }
+
+/* Generated Landmark build visuals: CSS-only fallback so placeholder image files
+   never have to ship for island-specific landmark art. */
+.landmark-build-visual {
+  --lbv-accent: #67e8f9;
+  --lbv-accent-2: #fef08a;
+  --lbv-stone: rgba(255, 255, 255, 0.72);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-width: 96px;
+  min-height: 96px;
+  isolation: isolate;
+  filter: drop-shadow(0 14px 24px rgba(15, 23, 42, 0.32));
+}
+
+.landmark-build-visual--hatchery { --lbv-accent: #fbbf24; --lbv-accent-2: #f0fdfa; }
+.landmark-build-visual--habit { --lbv-accent: #34d399; --lbv-accent-2: #bef264; }
+.landmark-build-visual--mystery { --lbv-accent: #a78bfa; --lbv-accent-2: #f0abfc; }
+.landmark-build-visual--wisdom { --lbv-accent: #60a5fa; --lbv-accent-2: #fde68a; }
+.landmark-build-visual--boss { --lbv-accent: #fb7185; --lbv-accent-2: #c084fc; }
+
+.landmark-build-visual__aura {
+  position: absolute;
+  inset: 12%;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--lbv-accent) 52%, transparent), transparent 68%);
+  opacity: 0.72;
+  animation: landmark-build-aura-pulse 2.6s ease-in-out infinite;
+}
+
+.landmark-build-visual__base,
+.landmark-build-visual__tower,
+.landmark-build-visual__core {
+  position: absolute;
+  background: linear-gradient(145deg, var(--lbv-stone), color-mix(in srgb, var(--lbv-accent) 34%, #ffffff));
+  border: 2px solid rgba(255, 255, 255, 0.74);
+  box-shadow: inset 0 -10px 18px rgba(15, 23, 42, 0.14), 0 10px 18px rgba(15, 23, 42, 0.18);
+}
+
+.landmark-build-visual__base {
+  width: 58%;
+  height: 18%;
+  bottom: 17%;
+  border-radius: 999px 999px 26px 26px;
+}
+
+.landmark-build-visual__core {
+  width: 42%;
+  height: 38%;
+  bottom: 28%;
+  border-radius: 26% 26% 18% 18%;
+  transform-origin: bottom center;
+}
+
+.landmark-build-visual__tower {
+  width: 13%;
+  height: 34%;
+  bottom: 29%;
+  border-radius: 999px 999px 16px 16px;
+  transform-origin: bottom center;
+}
+
+.landmark-build-visual__tower--left { left: 23%; }
+.landmark-build-visual__tower--right { right: 23%; }
+.landmark-build-visual__emoji { font-size: clamp(1.65rem, 10vw, 4.5rem); filter: drop-shadow(0 3px 4px rgba(15, 23, 42, 0.28)); }
+.landmark-build-visual__flag { position: absolute; top: 16%; width: 8%; height: 18%; border-radius: 999px; background: linear-gradient(var(--lbv-accent-2), var(--lbv-accent)); box-shadow: 0 0 16px var(--lbv-accent); transform-origin: bottom center; animation: landmark-build-flag-sway 1.8s ease-in-out infinite alternate; }
+.landmark-build-visual__spark { position: absolute; color: var(--lbv-accent-2); text-shadow: 0 0 12px var(--lbv-accent); animation: landmark-build-spark-float 2.4s ease-in-out infinite; }
+.landmark-build-visual__spark--one { left: 18%; top: 24%; }
+.landmark-build-visual__spark--two { right: 18%; top: 34%; animation-delay: -0.8s; }
+.landmark-build-visual__level { position: absolute; right: 15%; bottom: 13%; padding: 0.2em 0.45em; border-radius: 999px; background: rgba(15, 23, 42, 0.72); color: #fff; font-size: clamp(0.7rem, 3vw, 1rem); font-weight: 900; }
+
+.landmark-build-visual--level-0 .landmark-build-visual__tower,
+.landmark-build-visual--level-0 .landmark-build-visual__flag { opacity: 0; transform: scaleY(0.2); }
+.landmark-build-visual--level-0 .landmark-build-visual__core { height: 20%; opacity: 0.78; }
+.landmark-build-visual--level-1 .landmark-build-visual__tower--right { opacity: 0; transform: scaleY(0.3); }
+.landmark-build-visual--level-1 .landmark-build-visual__core { animation: landmark-build-bob 2.8s ease-in-out infinite; }
+.landmark-build-visual--level-2 .landmark-build-visual__tower { animation: landmark-build-bob 2.8s ease-in-out infinite; }
+.landmark-build-visual--level-3 .landmark-build-visual__core,
+.landmark-build-visual--level-3 .landmark-build-visual__tower { animation: landmark-build-celebrate 2.4s ease-in-out infinite; }
+
+.landmark-build-visual--compact { min-width: 0; min-height: 0; pointer-events: none; }
+.landmark-build-visual--compact .landmark-build-visual__emoji { font-size: clamp(1rem, 4vw, 2.7rem); }
+.landmark-build-visual--compact .landmark-build-visual__level { display: none; }
+.island-art-layers__landmark--generated { overflow: visible; }
+.bm2-artwork__placeholder-visual { width: min(74%, 280px); height: min(74%, 280px); margin: auto; }
+
+@keyframes landmark-build-aura-pulse { 0%, 100% { transform: scale(0.92); opacity: 0.5; } 50% { transform: scale(1.08); opacity: 0.88; } }
+@keyframes landmark-build-spark-float { 0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.55; } 50% { transform: translateY(-12px) rotate(14deg); opacity: 1; } }
+@keyframes landmark-build-flag-sway { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+@keyframes landmark-build-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4%); } }
+@keyframes landmark-build-celebrate { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5%) scale(1.04); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .landmark-build-visual *,
+  .landmark-build-visual *::before,
+  .landmark-build-visual *::after {
+    animation: none !important;
+  }
+}
