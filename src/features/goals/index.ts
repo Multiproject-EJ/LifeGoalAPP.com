@@ -7,3 +7,5 @@ export * from './goalHealth';
 export * from './executionTypes';
 export * from './goalStrategy';
 export * from './goalDoctor';
+export * from './goalPillars';
+export * from './GoalPillarMeter';

@@ -1,8 +1,25 @@
-/* Compass Book — Player Menu full-screen shell (PR 2).
+/* Compass Book — Player Menu full-screen shell (PR 2, visual pass v2).
    Mobile-first, safe-area aware. Scoped under the `compass-book` namespace so it
-   never couples to Island Run or the mobile-menu overlay styles. */
+   never couples to Island Run or the mobile-menu overlay styles.
+
+   Design language: a night-sky field book. Deep indigo surfaces, a thin gold
+   accent system (borders, progress, the compass rose), and a serif voice for
+   book headings only — controls stay in the app's sans. */
 
 .compass-book {
+  --cbk-gold: #f2c14e;
+  --cbk-gold-soft: rgba(242, 193, 78, 0.55);
+  --cbk-gold-faint: rgba(242, 193, 78, 0.16);
+  --cbk-ink: #eef2ff;
+  --cbk-ink-soft: #c7d2fe;
+  --cbk-ink-muted: #9fb0e0;
+  --cbk-ink-faint: #8b9bd4;
+  --cbk-line: rgba(255, 255, 255, 0.09);
+  --cbk-line-strong: rgba(255, 255, 255, 0.16);
+  --cbk-well: rgba(7, 11, 26, 0.55);
+  --cbk-card: rgba(255, 255, 255, 0.045);
+  --cbk-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+
   position: fixed;
   inset: 0;
   z-index: 1200;
@@ -14,8 +31,9 @@
 .compass-book__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(6, 10, 24, 0.72);
-  backdrop-filter: blur(6px);
+  background: rgba(4, 7, 18, 0.78);
+  backdrop-filter: blur(8px);
+  animation: cbk-fade 180ms ease-out;
 }
 
 .compass-book__sheet {
@@ -24,11 +42,72 @@
   flex-direction: column;
   width: 100%;
   max-width: 680px;
-  background: radial-gradient(120% 80% at 50% 0%, #16213e 0%, #0d1326 60%, #090e1d 100%);
-  color: #eef2ff;
-  box-shadow: 0 0 60px rgba(0, 0, 0, 0.5);
+  background:
+    radial-gradient(120% 80% at 50% 0%, #182448 0%, #0e142c 58%, #090e1d 100%);
+  color: var(--cbk-ink);
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.6);
   overflow: hidden;
+  animation: cbk-rise 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+/* Faint star field + a soft aurora glow, purely decorative. */
+.compass-book__sheet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 9%, rgba(255, 255, 255, 0.42) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 54% 26%, rgba(255, 255, 255, 0.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 31% 41%, rgba(255, 255, 255, 0.26) 50%, transparent 51%),
+    radial-gradient(1px 1px at 89% 33%, rgba(255, 255, 255, 0.3) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 8% 64%, rgba(255, 255, 255, 0.2) 50%, transparent 51%),
+    radial-gradient(1px 1px at 67% 55%, rgba(255, 255, 255, 0.22) 50%, transparent 51%),
+    radial-gradient(1px 1px at 42% 78%, rgba(255, 255, 255, 0.16) 50%, transparent 51%),
+    radial-gradient(1px 1px at 93% 82%, rgba(255, 255, 255, 0.2) 50%, transparent 51%),
+    radial-gradient(60% 30% at 50% 0%, rgba(99, 102, 241, 0.14), transparent 70%);
+  opacity: 0.9;
+}
+
+.compass-book__sheet > * {
+  position: relative;
+}
+
+@media (min-width: 720px) {
+  .compass-book {
+    align-items: center;
+    padding: 28px;
+  }
+
+  .compass-book__sheet {
+    max-height: min(92vh, 940px);
+    border-radius: 26px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+@keyframes cbk-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes cbk-rise {
+  from {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compass-book__backdrop,
+  .compass-book__sheet {
+    animation: none;
+  }
+}
+
+/* ---------- Top bar ---------- */
 
 .compass-book__topbar {
   display: flex;
@@ -36,14 +115,17 @@
   justify-content: space-between;
   gap: 12px;
   padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(8, 12, 28, 0.6);
+  border-bottom: 1px solid var(--cbk-line);
+  background: rgba(8, 12, 28, 0.66);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 1px 0 rgba(242, 193, 78, 0.14);
 }
 
 .compass-book__topbar-title {
+  font-family: var(--cbk-serif);
   font-weight: 700;
-  font-size: 1.05rem;
-  letter-spacing: 0.02em;
+  font-size: 1.08rem;
+  letter-spacing: 0.03em;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -56,17 +138,18 @@
 .compass-book__close,
 .compass-book__back {
   appearance: none;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--cbk-line-strong);
   background: rgba(255, 255, 255, 0.06);
-  color: #eef2ff;
-  width: 40px;
-  height: 40px;
+  color: var(--cbk-ink);
+  width: 38px;
+  height: 38px;
   border-radius: 999px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: background 140ms ease, border-color 140ms ease, transform 100ms ease;
 }
 
 .compass-book__back {
@@ -74,12 +157,19 @@
   padding: 0 14px;
   gap: 6px;
   border-radius: 999px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .compass-book__close:hover,
 .compass-book__back:hover {
   background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.compass-book__close:active,
+.compass-book__back:active {
+  transform: scale(0.95);
 }
 
 .compass-book__scroll {
@@ -92,54 +182,107 @@
 /* ---------- Cover ---------- */
 
 .compass-book__cover {
-  border-radius: 18px;
-  padding: 22px 20px;
-  background: linear-gradient(150deg, rgba(99, 102, 241, 0.22), rgba(56, 189, 248, 0.12));
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  border-radius: 20px;
+  padding: 30px 22px 26px;
+  background:
+    radial-gradient(90% 120% at 50% -10%, rgba(99, 102, 241, 0.3), transparent 60%),
+    linear-gradient(160deg, rgba(30, 41, 82, 0.85), rgba(13, 19, 38, 0.9));
+  border: 1px solid rgba(242, 193, 78, 0.28);
+  box-shadow:
+    inset 0 0 0 1px rgba(8, 12, 28, 0.7),
+    inset 0 0 0 2px rgba(242, 193, 78, 0.12),
+    0 18px 44px rgba(0, 0, 0, 0.35);
   text-align: center;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+/* Gilded corner ticks, like a tooled leather cover. */
+.compass-book__cover::before,
+.compass-book__cover::after {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--cbk-gold-soft);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.compass-book__cover::before {
+  top: 10px;
+  left: 10px;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 10px;
+}
+
+.compass-book__cover::after {
+  bottom: 10px;
+  right: 10px;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 10px;
 }
 
 .compass-book__cover-rose {
-  font-size: 2.4rem;
+  font-size: 2.2rem;
   line-height: 1;
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  color: var(--cbk-gold);
+  text-shadow: 0 0 22px rgba(242, 193, 78, 0.55);
 }
 
 .compass-book__cover-title {
-  font-size: 1.6rem;
-  font-weight: 800;
-  margin: 0 0 4px;
+  font-family: var(--cbk-serif);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0 0 6px;
 }
 
 .compass-book__cover-subtitle {
-  margin: 0 auto 14px;
-  max-width: 36ch;
-  color: #c7d2fe;
+  margin: 0 auto 16px;
+  max-width: 38ch;
+  color: var(--cbk-ink-soft);
   font-size: 0.92rem;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .compass-book__cover-progress {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.82rem;
-  color: #a5b4fc;
-  background: rgba(8, 12, 28, 0.4);
-  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffe9b8;
+  background: rgba(8, 12, 28, 0.55);
+  border: 1px solid rgba(242, 193, 78, 0.3);
+  padding: 7px 14px;
   border-radius: 999px;
 }
 
 /* ---------- Contents ---------- */
 
 .compass-book__contents-heading {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: #8b9bd4;
-  margin: 4px 4px 12px;
+  letter-spacing: 0.16em;
+  color: var(--cbk-ink-faint);
+  margin: 8px 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.compass-book__contents-heading::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--cbk-line-strong), transparent);
 }
 
 .compass-book__chapter-list {
@@ -160,41 +303,63 @@
   gap: 14px;
   align-items: center;
   padding: 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: 18px;
+  border: 1px solid var(--cbk-line);
+  background: var(--cbk-card);
   color: inherit;
   cursor: pointer;
-  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
 }
 
 .compass-book__card:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   border-color: rgba(129, 140, 248, 0.6);
   background: rgba(99, 102, 241, 0.1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.compass-book__card:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .compass-book__card:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.5;
+  filter: saturate(0.4);
 }
 
 .compass-book__card--current {
-  border-color: rgba(56, 189, 248, 0.7);
-  background: rgba(56, 189, 248, 0.08);
+  border-color: var(--cbk-gold-soft);
+  background: linear-gradient(150deg, rgba(242, 193, 78, 0.1), rgba(99, 102, 241, 0.08));
+  box-shadow: inset 0 0 0 1px rgba(242, 193, 78, 0.14), 0 10px 26px rgba(0, 0, 0, 0.3);
+}
+
+.compass-book__card--complete .compass-book__card-num {
+  background: rgba(52, 211, 153, 0.16);
+  border-color: rgba(52, 211, 153, 0.5);
+  color: #a7f3d0;
 }
 
 .compass-book__card-num {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 1.1rem;
-  background: rgba(99, 102, 241, 0.2);
-  border: 1px solid rgba(129, 140, 248, 0.4);
+  font-family: var(--cbk-serif);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #dbe3ff;
+  background: linear-gradient(160deg, rgba(99, 102, 241, 0.28), rgba(56, 189, 248, 0.12));
+  border: 1px solid rgba(129, 140, 248, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.compass-book__card--current .compass-book__card-num {
+  border-color: var(--cbk-gold-soft);
+  color: #ffe9b8;
+  background: linear-gradient(160deg, rgba(242, 193, 78, 0.22), rgba(99, 102, 241, 0.16));
 }
 
 .compass-book__card-body {
@@ -202,22 +367,27 @@
 }
 
 .compass-book__card-title {
+  display: block;
+  font-family: var(--cbk-serif);
   font-weight: 700;
-  font-size: 1.02rem;
-  margin: 0 0 2px;
+  font-size: 1.08rem;
+  letter-spacing: 0.01em;
+  margin: 0 0 3px;
 }
 
 .compass-book__card-subtitle {
+  display: block;
   font-size: 0.78rem;
-  color: #9fb0e0;
+  color: var(--cbk-ink-muted);
   margin: 0 0 8px;
 }
 
 .compass-book__card-question {
-  font-size: 0.82rem;
+  display: block;
+  font-size: 0.84rem;
   color: #c0c9ea;
   margin: 0 0 10px;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .compass-book__card-meta {
@@ -232,47 +402,57 @@
   min-width: 80px;
   height: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
 }
 
 .compass-book__bar-fill {
+  display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #818cf8, #38bdf8);
+  background: linear-gradient(90deg, #b7891f, var(--cbk-gold) 60%, #ffe193);
+  box-shadow: 0 0 10px rgba(242, 193, 78, 0.4);
+  transition: width 300ms ease;
 }
 
 .compass-book__count {
   font-size: 0.76rem;
-  color: #9fb0e0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--cbk-ink-muted);
   white-space: nowrap;
 }
 
 .compass-book__badge {
   align-self: flex-start;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   padding: 4px 9px;
   border-radius: 999px;
   white-space: nowrap;
+  border: 1px solid transparent;
 }
 
 .compass-book__badge--locked {
-  background: rgba(148, 163, 184, 0.18);
+  background: rgba(148, 163, 184, 0.14);
+  border-color: rgba(148, 163, 184, 0.25);
   color: #cbd5e1;
 }
 .compass-book__badge--unlocked {
-  background: rgba(129, 140, 248, 0.22);
+  background: rgba(129, 140, 248, 0.16);
+  border-color: rgba(129, 140, 248, 0.4);
   color: #c7d2fe;
 }
 .compass-book__badge--in_progress {
-  background: rgba(56, 189, 248, 0.2);
-  color: #bae6fd;
+  background: rgba(242, 193, 78, 0.14);
+  border-color: rgba(242, 193, 78, 0.42);
+  color: #ffe9b8;
 }
 .compass-book__badge--complete {
-  background: rgba(52, 211, 153, 0.2);
+  background: rgba(52, 211, 153, 0.16);
+  border-color: rgba(52, 211, 153, 0.42);
   color: #bbf7d0;
 }
 
@@ -287,42 +467,63 @@
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.16);
+  transition: background 200ms ease, box-shadow 200ms ease;
 }
 
 .compass-book__stage-dot--on {
-  background: #38bdf8;
+  background: var(--cbk-gold);
+  box-shadow: 0 0 8px rgba(242, 193, 78, 0.55);
 }
 
 /* ---------- Chapter detail ---------- */
 
 .compass-book__chapter-hero {
-  border-radius: 16px;
-  padding: 18px;
-  background: linear-gradient(150deg, rgba(99, 102, 241, 0.18), rgba(56, 189, 248, 0.08));
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  border-radius: 20px;
+  padding: 22px 20px;
+  background:
+    radial-gradient(80% 120% at 20% -10%, rgba(99, 102, 241, 0.24), transparent 60%),
+    linear-gradient(160deg, rgba(30, 41, 82, 0.7), rgba(13, 19, 38, 0.85));
+  border: 1px solid var(--cbk-line-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 32px rgba(0, 0, 0, 0.3);
   margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.compass-book__chapter-hero::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cbk-gold-soft), transparent);
+  opacity: 0.6;
 }
 
 .compass-book__chapter-eyebrow {
   font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #93a4d8;
+  letter-spacing: 0.14em;
+  color: #ffe9b8;
   margin: 0 0 6px;
 }
 
 .compass-book__chapter-title {
-  font-size: 1.4rem;
-  font-weight: 800;
+  font-family: var(--cbk-serif);
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   margin: 0 0 6px;
 }
 
 .compass-book__chapter-question {
   margin: 0 0 12px;
-  color: #c7d2fe;
-  line-height: 1.4;
-  font-size: 0.92rem;
+  color: var(--cbk-ink-soft);
+  line-height: 1.45;
+  font-size: 0.94rem;
 }
 
 .compass-book__chips {
@@ -333,22 +534,23 @@
 
 .compass-book__chip {
   font-size: 0.72rem;
-  padding: 4px 9px;
+  font-weight: 600;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: #dbe3ff;
 }
 
 .compass-book__note {
-  font-size: 0.82rem;
-  color: #9fb0e0;
-  background: rgba(8, 12, 28, 0.4);
-  border: 1px dashed rgba(255, 255, 255, 0.16);
-  border-radius: 12px;
+  font-size: 0.84rem;
+  color: var(--cbk-ink-muted);
+  background: var(--cbk-well);
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
   padding: 12px 14px;
   margin: 0 0 16px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .compass-book__activity-list {
@@ -366,18 +568,23 @@
   font: inherit;
   cursor: pointer;
   display: grid;
-  grid-template-columns: 30px 1fr auto;
+  grid-template-columns: 32px 1fr auto;
   gap: 12px;
   align-items: center;
-  padding: 11px 13px;
-  border-radius: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: border-color 0.14s ease, background 0.14s ease, transform 0.1s ease;
 }
 
 .compass-book__activity:hover:not(:disabled) {
-  border-color: rgba(129, 140, 248, 0.5);
-  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(129, 140, 248, 0.55);
+  background: rgba(99, 102, 241, 0.09);
+}
+
+.compass-book__activity:active:not(:disabled) {
+  transform: scale(0.995);
 }
 
 .compass-book__activity:disabled {
@@ -385,25 +592,38 @@
 }
 
 .compass-book__activity--locked {
-  opacity: 0.5;
+  opacity: 0.45;
+  filter: saturate(0.4);
 }
 
 .compass-book__activity-order {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
   font-weight: 700;
-  color: #93a4d8;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--cbk-ink-faint);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   text-align: center;
 }
 
 .compass-book__activity-title {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
+  font-weight: 600;
   margin: 0;
 }
 
 .compass-book__activity-island {
   display: block;
   font-size: 0.72rem;
-  color: #8b9bd4;
+  color: var(--cbk-ink-faint);
+  margin-top: 2px;
 }
 
 @media (min-width: 560px) {
@@ -417,22 +637,33 @@
 .compass-book__primary,
 .compass-book__secondary {
   appearance: none;
-  border-radius: 12px;
+  border-radius: 13px;
   font-weight: 700;
   font-size: 0.95rem;
   padding: 12px 18px;
   cursor: pointer;
   border: 1px solid transparent;
+  transition: filter 140ms ease, transform 100ms ease, background 140ms ease;
 }
 
 .compass-book__primary {
-  background: linear-gradient(90deg, #6366f1, #38bdf8);
-  color: #06122a;
+  background: linear-gradient(120deg, #ffd987, var(--cbk-gold) 45%, #cf9a2c);
+  color: #241a04;
+  box-shadow: 0 8px 22px rgba(242, 193, 78, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.compass-book__primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.compass-book__primary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .compass-book__primary:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .compass-book__primary--block {
@@ -443,51 +674,95 @@
 
 .compass-book__secondary {
   background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.18);
-  color: #eef2ff;
+  border-color: var(--cbk-line-strong);
+  color: var(--cbk-ink);
+}
+
+.compass-book__secondary:hover {
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.compass-book__secondary:active {
+  transform: scale(0.98);
 }
 
 /* ---------- Guided flow ---------- */
 
+.compass-book__flow-progress {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.compass-book__flow-progress > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #b7891f, var(--cbk-gold) 60%, #ffe193);
+  box-shadow: 0 0 10px rgba(242, 193, 78, 0.5);
+  transition: width 260ms ease;
+}
+
 .compass-book__activity-heading {
-  font-size: 1.3rem;
-  font-weight: 800;
-  margin: 4px 0 10px;
+  font-family: var(--cbk-serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 6px 0 10px;
 }
 
 .compass-book__flow-actions {
+  position: sticky;
+  bottom: 0;
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  margin-top: 22px;
+  margin: 22px -16px 0;
+  padding: 12px 16px 14px;
+  background: linear-gradient(180deg, rgba(9, 14, 29, 0), rgba(9, 14, 29, 0.9) 34%, rgba(9, 14, 29, 0.97));
+  backdrop-filter: blur(8px);
+}
+
+.compass-book__flow-actions .compass-book__primary {
+  flex: 1;
+}
+
+.compass-book__flow-actions .compass-book__secondary {
+  flex: 0 0 auto;
 }
 
 .compass-book__blocks {
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .compass-book__block {
-  border-radius: 12px;
-  padding: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--cbk-card);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-color 160ms ease;
+}
+
+.compass-book__block:focus-within {
+  border-color: rgba(129, 140, 248, 0.55);
 }
 
 .compass-book__block-prompt {
-  margin: 0 0 10px;
-  font-size: 0.95rem;
+  margin: 0 0 12px;
+  font-size: 0.98rem;
   font-weight: 600;
+  line-height: 1.4;
 }
 
 .compass-book__block-help {
-  margin: -6px 0 10px;
-  font-size: 0.78rem;
-  color: #9fb0e0;
+  margin: -8px 0 12px;
+  font-size: 0.79rem;
+  color: var(--cbk-ink-muted);
+  line-height: 1.4;
 }
 
 .compass-book__req {
-  color: #f9a8d4;
+  color: #fcd34d;
 }
 
 .compass-book__options {
@@ -500,17 +775,28 @@
   appearance: none;
   cursor: pointer;
   border-radius: 999px;
-  padding: 8px 14px;
-  font-size: 0.85rem;
+  padding: 9px 15px;
+  font-size: 0.86rem;
+  font-weight: 600;
   color: #dbe3ff;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.055);
   border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: background 130ms ease, border-color 130ms ease, color 130ms ease, transform 90ms ease;
+}
+
+.compass-book__option:hover {
+  border-color: rgba(129, 140, 248, 0.6);
+}
+
+.compass-book__option:active {
+  transform: scale(0.96);
 }
 
 .compass-book__option--on {
-  background: rgba(99, 102, 241, 0.32);
-  border-color: rgba(129, 140, 248, 0.8);
+  background: rgba(99, 102, 241, 0.36);
+  border-color: rgba(165, 180, 252, 0.9);
   color: #fff;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.35);
 }
 
 .compass-book__picker {
@@ -520,7 +806,7 @@
 .compass-book__picker-hint {
   margin: 0 0 6px;
   font-size: 0.78rem;
-  color: #9fb0e0;
+  color: var(--cbk-ink-muted);
 }
 
 .compass-book__picker-chips {
@@ -538,6 +824,7 @@
   color: #dbe3ff;
   background: rgba(255, 255, 255, 0.05);
   border: 1px dashed rgba(129, 140, 248, 0.55);
+  transition: background 130ms ease, border-color 130ms ease, color 130ms ease;
 }
 
 .compass-book__picker-chip:hover,
@@ -549,6 +836,7 @@
 
 .compass-book__scale input[type='range'] {
   width: 100%;
+  accent-color: var(--cbk-gold);
 }
 
 .compass-book__scale-foot {
@@ -556,36 +844,46 @@
   justify-content: space-between;
   align-items: center;
   font-size: 0.76rem;
-  color: #9fb0e0;
+  color: var(--cbk-ink-muted);
   margin-top: 4px;
 }
 
 .compass-book__scale-value {
   font-weight: 800;
-  font-size: 1rem;
-  color: #eef2ff;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  color: #ffe9b8;
 }
 
 .compass-book__textarea {
   width: 100%;
   resize: vertical;
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: 12px;
+  padding: 11px 13px;
   font: inherit;
-  color: #eef2ff;
-  background: rgba(8, 12, 28, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  line-height: 1.45;
+  color: var(--cbk-ink);
+  background: var(--cbk-well);
+  border: 1px solid var(--cbk-line-strong);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.compass-book__textarea:focus {
+  outline: none;
+  border-color: rgba(129, 140, 248, 0.75);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22);
 }
 
 .compass-book__confirm {
   appearance: none;
   cursor: pointer;
-  border-radius: 10px;
-  padding: 10px 16px;
+  border-radius: 12px;
+  padding: 11px 16px;
   font-weight: 700;
   color: #dbe3ff;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--cbk-line-strong);
+  transition: background 140ms ease, border-color 140ms ease;
 }
 
 .compass-book__confirm--on {
@@ -597,7 +895,7 @@
 .compass-book__review-note {
   margin: 0;
   font-size: 0.82rem;
-  color: #9fb0e0;
+  color: var(--cbk-ink-muted);
   font-style: italic;
 }
 
@@ -609,10 +907,13 @@
 }
 
 .compass-wheel--full {
-  border-radius: 16px;
-  padding: 14px;
-  background: rgba(8, 12, 28, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px;
+  background:
+    radial-gradient(70% 90% at 50% 0%, rgba(99, 102, 241, 0.12), transparent 65%),
+    var(--cbk-well);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .compass-wheel__svg {
@@ -740,8 +1041,9 @@
 .compass-ingame__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(6, 10, 24, 0.72);
-  backdrop-filter: blur(6px);
+  background: rgba(4, 7, 18, 0.78);
+  backdrop-filter: blur(8px);
+  animation: cbk-fade 180ms ease-out;
 }
 
 .compass-ingame__card {
@@ -751,12 +1053,20 @@
   max-height: calc(100% - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  border-radius: 18px;
-  padding: 16px;
+  border-radius: 22px;
+  padding: 18px;
   color: #eef2ff;
-  background: radial-gradient(120% 80% at 50% 0%, #16213e 0%, #0d1326 65%, #090e1d 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  background: radial-gradient(120% 80% at 50% 0%, #182448 0%, #0e142c 62%, #090e1d 100%);
+  border: 1px solid rgba(242, 193, 78, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 70px rgba(0, 0, 0, 0.55);
+  animation: cbk-rise 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compass-ingame__backdrop,
+  .compass-ingame__card {
+    animation: none;
+  }
 }
 
 .compass-ingame__header {
@@ -771,15 +1081,17 @@
 .compass-ingame__eyebrow {
   grid-area: eyebrow;
   font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #93a4d8;
+  letter-spacing: 0.14em;
+  color: #ffe9b8;
 }
 
 .compass-ingame__title {
   grid-area: title;
-  font-size: 1.1rem;
-  font-weight: 800;
+  font-family: var(--cbk-serif);
+  font-size: 1.15rem;
+  font-weight: 700;
 }
 
 .compass-ingame__header .compass-book__close {
@@ -866,37 +1178,46 @@
 /* ---------- Goal/Habit bridge ---------- */
 
 .compass-bridge {
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: 18px;
+  padding: 18px;
   margin: 0 0 16px;
-  background: linear-gradient(150deg, rgba(52, 211, 153, 0.12), rgba(56, 189, 248, 0.08));
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  background:
+    radial-gradient(80% 120% at 85% -10%, rgba(52, 211, 153, 0.14), transparent 60%),
+    linear-gradient(160deg, rgba(16, 38, 46, 0.75), rgba(13, 19, 38, 0.85));
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 30px rgba(0, 0, 0, 0.3);
 }
 
 .compass-bridge__eyebrow {
   font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   color: #6ee7b7;
 }
 
 .compass-bridge__title {
   margin: 4px 0 6px;
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-family: var(--cbk-serif);
+  font-size: 1.12rem;
+  font-weight: 700;
 }
 
 .compass-bridge__note {
   margin: 0 0 12px;
   font-size: 0.8rem;
   color: #b8c4e6;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .compass-bridge__fields {
   margin: 0 0 14px;
   display: grid;
   gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(7, 11, 26, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .compass-bridge__field {
@@ -934,30 +1255,35 @@
 
 /* In-game stop fragment (compact answering at an Island Run stop). */
 .compass-stop {
-  border-radius: 16px;
+  border-radius: 18px;
   padding: 16px;
-  background: linear-gradient(150deg, rgba(99, 102, 241, 0.14), rgba(56, 189, 248, 0.07));
+  background:
+    radial-gradient(80% 120% at 15% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
+    linear-gradient(160deg, rgba(25, 33, 66, 0.8), rgba(13, 19, 38, 0.88));
   border: 1px solid rgba(129, 140, 248, 0.32);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .compass-stop__eyebrow {
   font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   color: #a5b4fc;
 }
 
 .compass-stop__title {
   margin: 4px 0 6px;
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-family: var(--cbk-serif);
+  font-size: 1.12rem;
+  font-weight: 700;
 }
 
 .compass-stop__note {
   margin: 0 0 12px;
   font-size: 0.8rem;
   color: #b8c4e6;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .compass-stop__saved {
@@ -982,9 +1308,9 @@
 /* ---------- AI helper (Help me think) ---------- */
 
 .compass-ai {
-  margin-top: 8px;
-  border-radius: 10px;
-  padding: 10px 12px;
+  margin-top: 10px;
+  border-radius: 12px;
+  padding: 11px 13px;
   background: rgba(99, 102, 241, 0.1);
   border: 1px solid rgba(129, 140, 248, 0.3);
 }
@@ -994,12 +1320,13 @@
   margin-top: 8px;
   cursor: pointer;
   border-radius: 999px;
-  padding: 5px 12px;
+  padding: 6px 13px;
   font-size: 0.78rem;
   font-weight: 600;
   color: #c7d2fe;
   background: rgba(99, 102, 241, 0.16);
   border: 1px solid rgba(129, 140, 248, 0.4);
+  transition: background 140ms ease;
 }
 
 .compass-ai__ask:hover {
@@ -1009,6 +1336,7 @@
 .compass-ai__label {
   margin: 0 0 6px;
   font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #93a4d8;
@@ -1018,7 +1346,7 @@
   margin: 0 0 10px;
   font-size: 0.86rem;
   color: #e6ebff;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .compass-ai__status {
@@ -1038,10 +1366,10 @@
   appearance: none;
   cursor: pointer;
   border-radius: 999px;
-  padding: 5px 14px;
+  padding: 6px 15px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #06122a;
-  background: linear-gradient(90deg, #818cf8, #38bdf8);
+  color: #241a04;
+  background: linear-gradient(120deg, #ffd987, #f2c14e 55%, #cf9a2c);
   border: none;
 }
