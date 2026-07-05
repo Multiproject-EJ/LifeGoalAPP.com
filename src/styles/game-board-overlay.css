@@ -207,7 +207,6 @@
   display: grid;
   place-items: center;
   filter: drop-shadow(0 14px 22px rgba(2, 6, 23, 0.52));
-  pointer-events: none;
   user-select: none;
 }
 
@@ -243,6 +242,32 @@
 .game-board-overlay__rank-extension-level strong {
   font-size: clamp(1.2rem, 5.6vw, 2.05rem);
   line-height: 0.9;
+}
+
+.game-board-overlay__rank-extension-rank {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(0.1rem, 1.1vh, 0.42rem);
+  transform: translate(-50%, 50%);
+  z-index: 2;
+  width: clamp(2.6rem, 11vw, 3.2rem);
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+  pointer-events: auto;
+}
+
+.game-board-overlay__rank-extension-rank .rank-badge {
+  max-width: 100%;
+}
+
+.game-board-overlay__rank-extension-rank--pulse {
+  animation: game-board-overlay-rank-pulse 1.6s ease-in-out infinite;
 }
 
 .game-board-overlay__header {
@@ -629,11 +654,11 @@
   position: relative;
   min-width: 0;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   justify-items: center;
   align-items: start;
   gap: 0.3rem;
-  padding-top: clamp(2.7rem, 9vh, 4rem);
+  padding-top: clamp(1.15rem, 4.2vh, 2rem);
 }
 
 .game-board-overlay__progress-spine-caption {
@@ -702,20 +727,6 @@
   text-transform: uppercase;
 }
 
-.game-board-overlay__progress-spine-rank {
-  border: none;
-  background: none;
-  padding: 0;
-  margin: 0 0 0.3rem;
-  cursor: pointer;
-  line-height: 0;
-  border-radius: 999px;
-}
-
-.game-board-overlay__progress-spine-rank--pulse {
-  animation: game-board-overlay-rank-pulse 1.6s ease-in-out infinite;
-}
-
 @keyframes game-board-overlay-rank-pulse {
   0%,
   100% {
@@ -727,7 +738,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .game-board-overlay__progress-spine-rank--pulse {
+  .game-board-overlay__rank-extension-rank--pulse {
     animation: none;
     box-shadow: 0 0 0 3px rgba(127, 159, 255, 0.55);
   }
@@ -863,18 +874,6 @@
   .game-board-overlay__controller-shell {
     transform: translateX(-50%);
   }
-}
-
-/* Keep the center spine badge anchored to the LV marker instead of drifting into either track. */
-.game-board-overlay__progress-spine-rank {
-  width: clamp(2.6rem, 11vw, 3.2rem);
-  display: inline-grid;
-  place-items: center;
-  justify-self: center;
-}
-
-.game-board-overlay__progress-spine-rank .rank-badge {
-  max-width: 100%;
 }
 
 @media (max-width: 480px) {

@@ -293,17 +293,32 @@ export function GameBoardOverlay({
               <h2 id="game-board-overlay-title" className="game-board-overlay__title game-board-overlay__title--sr-only">
                 {dualTrackViewModel.title}
               </h2>
-              <div className="game-board-overlay__rank-extension-hero" aria-hidden="true">
+              <div className="game-board-overlay__rank-extension-hero">
                 <img
                   src={rankExtensionBadge.src}
                   alt=""
                   className="game-board-overlay__rank-extension-img"
                   draggable="false"
+                  aria-hidden="true"
                 />
-                <span className="game-board-overlay__rank-extension-level">
+                <span className="game-board-overlay__rank-extension-level" aria-hidden="true">
                   <span>Lv</span>
                   <strong>{dualTrackViewModel.journeyLevel.level}</strong>
                 </span>
+                {currentRank ? (
+                  <button
+                    type="button"
+                    className={`game-board-overlay__rank-extension-rank${
+                      rankHasPendingPromotion ? ' game-board-overlay__rank-extension-rank--pulse' : ''
+                    }`}
+                    onClick={() => setIsRankJourneyOpen(true)}
+                    aria-label={`Rank: ${currentRank.title}.${
+                      rankHasPendingPromotion ? ' New rank earned.' : ''
+                    } Open rank journey`}
+                  >
+                    <RankBadge rank={currentRank} size={44} />
+                  </button>
+                ) : null}
               </div>
               <span className="game-board-overlay__rank-extension-accessible">{rankExtensionBadge.label}</span>
             </header>
@@ -332,20 +347,6 @@ export function GameBoardOverlay({
                 aria-label={`Combined Journey Level ${dualTrackViewModel.journeyLevel.level}, ${dualTrackViewModel.journeyLevel.progressPercentToNextLevel} percent to ${dualTrackViewModel.journeyLevel.nextChestLabel}`}
               >
                 <span className="game-board-overlay__progress-spine-label" aria-hidden="true">{dualTrackViewModel.centerSpine.label}</span>
-                {currentRank ? (
-                  <button
-                    type="button"
-                    className={`game-board-overlay__progress-spine-rank${
-                      rankHasPendingPromotion ? ' game-board-overlay__progress-spine-rank--pulse' : ''
-                    }`}
-                    onClick={() => setIsRankJourneyOpen(true)}
-                    aria-label={`Rank: ${currentRank.title}.${
-                      rankHasPendingPromotion ? ' New rank earned.' : ''
-                    } Open rank journey`}
-                  >
-                    <RankBadge rank={currentRank} size={44} />
-                  </button>
-                ) : null}
                 <span className="game-board-overlay__progress-spine-orb" aria-hidden="true">
                   {dualTrackViewModel.centerSpine.icon}
                 </span>
