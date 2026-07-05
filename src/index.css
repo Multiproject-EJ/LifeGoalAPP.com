@@ -8831,12 +8831,17 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__details-panel--open {
-  max-height: 1000px;
+  max-height: min(68vh, 44rem);
   opacity: 1;
   padding-top: 0.5rem;
+  padding-right: 0.2rem;
   border-top: 1px dashed rgba(15, 23, 42, 0.1);
   margin-top: 0.35rem;
-  overflow: visible;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-block: 0.5rem 1rem;
 }
 
 .habit-checklist__detail-block {
@@ -37342,12 +37347,7 @@ body.habit-wizard-open .mobile-footer-nav {
 }
 
 .mobile-habit-home .habit-checklist__item--expanded .habit-checklist__details-panel--open {
-  max-height: min(72vh, 46rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding-right: 0.2rem;
-  scroll-padding-bottom: 1rem;
+  max-height: min(64vh, 42rem);
 }
 
 /* Blur Today-tab content that sits outside the habit list via an explicit
