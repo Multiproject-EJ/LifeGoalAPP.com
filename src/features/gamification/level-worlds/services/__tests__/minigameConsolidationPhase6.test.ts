@@ -224,7 +224,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       });
       assertEqual(descriptor?.minigameId, 'island_workshop', 'feeding_frenzy slot should route to island_workshop');
       assertEqual(descriptor?.ticketsSpent, 2, 'resolver should preserve explicit ticket spend request');
-      assertEqual(descriptor?.spendMode, 'entry', 'island_workshop should spend tickets at entry');
+      assertEqual(descriptor?.spendMode, 'per_action', 'island_workshop should spend tickets per block placement');
       assertEqual(
         descriptor?.config.mode,
         'island_workshop',

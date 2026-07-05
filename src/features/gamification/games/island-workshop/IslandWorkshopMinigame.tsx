@@ -6,10 +6,9 @@
  * rules live in `services/islandWorkshopGame.ts`; this file owns rendering,
  * touch dragging, saved-progress storage and ticket-spend callbacks.
  *
- * Ticket authority stays canonical: the first run is pre-paid by the board
- * launch path (`applyTimedEventTicketSpend`), replays spend one more ticket
- * through the `requestRunTicketSpend` launchConfig callback. Continuing a
- * saved run never consumes the pre-paid launch credit.
+ * Ticket authority stays canonical: event tickets are material blocks. Opening
+ * the bench is free; every successful block placement spends one ticket through
+ * the `requestBlockTicketSpend` launchConfig callback.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { IslandRunMinigameProps } from '../../level-worlds/services/islandRunMinigameTypes';
@@ -26,12 +25,14 @@ import {
   ISLAND_WORKSHOP_CONSTRUCTION_REWARD,
   ISLAND_WORKSHOP_CONSTRUCTION_TARGET,
   ISLAND_WORKSHOP_GRID_SIZE,
-  ISLAND_WORKSHOP_RUN_TICKET_COST,
+  ISLAND_WORKSHOP_BLOCK_TICKET_COST,
+  ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES,
   isIslandWorkshopRunStuck,
   parseIslandWorkshopConstructionProgress,
   parseIslandWorkshopSavedRun,
   placeIslandWorkshopShape,
   resolveIslandWorkshopConstructionStage,
+  resolveIslandWorkshopClaimableScoreRewards,
   resolveIslandWorkshopResultTier,
   resolveIslandWorkshopRunConstructionGain,
   rollIslandWorkshopShapeSet,
@@ -47,7 +48,7 @@ type IslandWorkshopLaunchConfig = {
   activeEventId?: string;
   persistenceScope?: string;
   getTicketsRemaining?: () => number;
-  requestRunTicketSpend?: () => { ok: boolean; ticketsRemaining: number };
+  requestBlockTicketSpend?: () => { ok: boolean; ticketsRemaining: number };
 };
 
 type DragState = {
@@ -105,8 +106,6 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const [assistUsed, setAssistUsed] = useState(false);
   const [setsCompleted, setSetsCompleted] = useState(0);
   const [ticketsRemaining, setTicketsRemaining] = useState(() => config.getTicketsRemaining?.() ?? 0);
-  /** The launch-time ticket spend pre-pays one fresh run. */
-  const [entryRunAvailable, setEntryRunAvailable] = useState(true);
   const [savedRun, setSavedRun] = useState<IslandWorkshopSavedRunV1 | null>(
     () => parseIslandWorkshopSavedRun(readStorage(runStorageKey)),
   );
@@ -116,6 +115,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const [runsFinished, setRunsFinished] = useState(0);
   const [rewardDiceTotal, setRewardDiceTotal] = useState(0);
   const [rewardSpinTokensTotal, setRewardSpinTokensTotal] = useState(0);
+  const [rewardMysteryBoxesTotal, setRewardMysteryBoxesTotal] = useState(0);
   const [lastRunScore, setLastRunScore] = useState(0);
   const [lastRunGain, setLastRunGain] = useState(0);
 
@@ -192,21 +192,10 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
 
   const startFreshRun = useCallback(() => {
     if (!canStartIslandWorkshopRun({
-      entryRunAvailable,
       ticketsRemaining: config.getTicketsRemaining?.() ?? 0,
     })) {
       refreshTickets();
       return;
-    }
-    if (entryRunAvailable) {
-      setEntryRunAvailable(false);
-    } else {
-      const spend = config.requestRunTicketSpend?.();
-      if (!spend?.ok) {
-        refreshTickets();
-        return;
-      }
-      setTicketsRemaining(spend.ticketsRemaining);
     }
     const seed = (Date.now() % 2147483646) + 1;
     const [shapeIds, nextRng] = rollIslandWorkshopShapeSet(seed);
@@ -222,7 +211,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
       assistUsed: false,
       setsCompleted: 0,
     });
-  }, [beginRunState, config, entryRunAvailable, refreshTickets, runStorageKey]);
+  }, [beginRunState, config, refreshTickets, runStorageKey]);
 
   const continueSavedRun = useCallback(() => {
     if (!savedRun) return;
@@ -316,6 +305,14 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     });
     if (!result) return;
 
+    const spend = config.requestBlockTicketSpend?.();
+    if (!spend?.ok) {
+      refreshTickets();
+      showComboToast('Need more material blocks');
+      return;
+    }
+    setTicketsRemaining(spend.ticketsRemaining);
+
     let nextTray = tray.map((id, index) => (index === slotIndex ? null : id));
     let nextRng = rngState;
     let nextSets = setsCompleted;
@@ -327,6 +324,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     }
 
     const nextScore = score + result.placementScore + result.clearScore;
+    const scoreRewards = resolveIslandWorkshopClaimableScoreRewards({ previousScore: score, nextScore });
     const nextMaterials = materialsCollected + result.materialsEarned;
 
     setBoard(result.board);
@@ -336,6 +334,15 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     setScore(nextScore);
     setStreak(result.streakAfter);
     setMaterialsCollected(nextMaterials);
+    if (scoreRewards.length > 0) {
+      const dice = scoreRewards.reduce((sum, reward) => sum + reward.rewardDice, 0);
+      const mysteryBoxes = scoreRewards.reduce((sum, reward) => sum + reward.mysteryBoxes, 0);
+      if (dice > 0) setRewardDiceTotal((total) => total + dice);
+      if (mysteryBoxes > 0) setRewardMysteryBoxesTotal((total) => total + mysteryBoxes);
+      showComboToast(`Reward unlocked! ${scoreRewards.map((reward) => `${reward.emoji} ${reward.label}`).join(' · ')}`);
+      playIslandRunSound('reward_bar_fill');
+      triggerIslandRunHaptic('reward_claim');
+    }
 
     if (result.linesCleared > 0) {
       setClearFxCells(result.clearedCellIndexes);
@@ -356,7 +363,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     }
 
     afterBoardChange(result.board, nextTray, assistUsed, nextScore, nextMaterials);
-  }, [afterBoardChange, assistUsed, board, materialsCollected, rngState, score, setsCompleted, showComboToast, streak, tray]);
+  }, [afterBoardChange, assistUsed, board, config, materialsCollected, refreshTickets, rngState, score, setsCompleted, showComboToast, streak, tray]);
 
   const handleCreatureAssist = useCallback(() => {
     if (assistUsed || phase !== 'playing') return;
@@ -464,7 +471,9 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const constructionStage = resolveIslandWorkshopConstructionStage(constructionProgress);
   const constructionRatio = Math.min(1, constructionProgress / ISLAND_WORKSHOP_CONSTRUCTION_TARGET);
   const resultTier = useMemo(() => resolveIslandWorkshopResultTier(lastRunScore), [lastRunScore]);
-  const canPlayAgain = canStartIslandWorkshopRun({ entryRunAvailable, ticketsRemaining });
+  const canPlayAgain = canStartIslandWorkshopRun({ ticketsRemaining });
+  const nextScoreReward = ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES.find((reward) => score < reward.score) ?? null;
+  const scoreRewardMax = ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES[ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES.length - 1]?.score ?? 1;
 
   const dragShape = drag ? getIslandWorkshopShape(drag.shapeId) : null;
   const gridRect = gridRef.current?.getBoundingClientRect() ?? null;
@@ -514,6 +523,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
             magical materials.
           </p>
           <ul className="island-workshop__rules">
+            <li>🧱 Each ticket is one block placement — 9 tickets means 9 blocks to place, not 9 runs.</li>
             <li>🧱 Drag each shape onto the 8×8 bench — place all three to get a new set.</li>
             <li>✨ Complete a row or column to clear it and earn materials.</li>
             <li>🔥 Multi-line clears and back-to-back clears pay combo bonuses.</li>
@@ -534,8 +544,8 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
           </div>
           <p className="island-workshop__ticket-note">
             {savedRun
-              ? `A saved run is waiting on the bench. Tickets left: ${ticketsRemaining} 🎟️`
-              : `Entry ticket spent — the bench is ready. Tickets left: ${ticketsRemaining} 🎟️`}
+              ? `A saved run is waiting on the bench. Blocks left to place: ${ticketsRemaining} 🧱`
+              : `Blocks left to place: ${ticketsRemaining} 🧱`}
           </p>
           <div className="island-workshop__actions">
             {savedRun ? (
@@ -567,14 +577,35 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
               <span className="island-workshop__hud-value">{score}</span>
             </div>
             <div className="island-workshop__hud-stat">
-              <span className="island-workshop__hud-label">Materials</span>
-              <span className="island-workshop__hud-value">🔮 {materialsCollected}</span>
+              <span className="island-workshop__hud-label">Blocks left</span>
+              <span className="island-workshop__hud-value">🧱 {ticketsRemaining}</span>
             </div>
             <div className={`island-workshop__hud-stat${streak >= 1 ? ' island-workshop__hud-stat--hot' : ''}`}>
               <span className="island-workshop__hud-label">Streak</span>
               <span className="island-workshop__hud-value">{streak > 0 ? `🔥 ${streak}` : '—'}</span>
             </div>
           </header>
+
+
+          <div className="island-workshop__score-rewards" aria-label="Score reward bar">
+            <div className="island-workshop__score-rewards-top">
+              <span>Rewards</span>
+              <strong>{nextScoreReward ? `Next: ${nextScoreReward.score}` : 'All unlocked'}</strong>
+            </div>
+            <div className="island-workshop__score-track">
+              <div className="island-workshop__score-fill" style={{ width: `${Math.min(100, (score / scoreRewardMax) * 100)}%` }} />
+              {ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES.map((reward) => (
+                <span
+                  key={reward.id}
+                  className={`island-workshop__score-node${score >= reward.score ? ' island-workshop__score-node--claimed' : ''}`}
+                  style={{ left: `${Math.min(100, (reward.score / scoreRewardMax) * 100)}%` }}
+                  title={`${reward.label} at ${reward.score} score`}
+                >
+                  {reward.emoji}
+                </span>
+              ))}
+            </div>
+          </div>
 
           <div className="island-workshop__bench-wrap">
             <div
@@ -718,7 +749,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
               <dd>🔮 +{lastRunGain}</dd>
             </div>
             <div>
-              <dt>Reward</dt>
+              <dt>Tier reward</dt>
               <dd>🎲 +{resultTier.rewardDice} dice</dd>
             </div>
           </dl>
@@ -734,7 +765,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
               {constructionProgress}/{ISLAND_WORKSHOP_CONSTRUCTION_TARGET}
             </span>
           </div>
-          <p className="island-workshop__ticket-note">Tickets left: {ticketsRemaining} 🎟️</p>
+          <p className="island-workshop__ticket-note">Blocks left to place: {ticketsRemaining} 🧱 · Mystery boxes unlocked: {rewardMysteryBoxesTotal}</p>
           <div className="island-workshop__actions">
             <button
               type="button"
@@ -743,7 +774,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
               disabled={!canPlayAgain}
             >
               {canPlayAgain
-                ? `Play Again (${ISLAND_WORKSHOP_RUN_TICKET_COST} 🎟️)`
+                ? `Keep Building (${ISLAND_WORKSHOP_BLOCK_TICKET_COST} 🧱 per block)`
                 : 'No tickets left'}
             </button>
             <button type="button" className="island-workshop__btn" onClick={handleReturnToIsland}>

@@ -7938,8 +7938,8 @@ export function IslandRunBoardPrototype({
             activeEventId: effectiveActiveTimedEvent.eventId,
             persistenceScope: session.user.id,
             getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)),
-            requestRunTicketSpend: () => {
-              const spend = applyTimedEventTicketSpend({ session, client, eventId: effectiveActiveTimedEvent.eventId, ticketsToSpend: 1, triggerSource: 'island_workshop_play_again' });
+            requestBlockTicketSpend: () => {
+              const spend = applyTimedEventTicketSpend({ session, client, eventId: effectiveActiveTimedEvent.eventId, ticketsToSpend: 1, triggerSource: 'island_workshop_place_block' });
               if (spend.spent > 0) setRuntimeState(spend.record);
               return { ok: spend.spent > 0, ticketsRemaining: Math.max(0, Math.floor(spend.record.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)) };
             },

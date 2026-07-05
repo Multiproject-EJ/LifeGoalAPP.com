@@ -9,7 +9,7 @@
  * `features/gamification/games/island-workshop/IslandWorkshopMinigame.tsx`.
  *
  * Core loop:
- *   - A run costs 1 event ticket (entry spend via the canonical launch path).
+ *   - Each placed block shape costs 1 event ticket/material block.
  *   - Each set offers 3 shapes; all 3 must be placed before the next set.
  *   - Completing a full row/column clears it and yields crafting materials.
  *   - Multi-line clears and consecutive-turn clear streaks pay combo bonuses.
@@ -22,7 +22,7 @@
 export const ISLAND_WORKSHOP_GRID_SIZE = 8;
 export const ISLAND_WORKSHOP_CELL_COUNT = ISLAND_WORKSHOP_GRID_SIZE * ISLAND_WORKSHOP_GRID_SIZE;
 export const ISLAND_WORKSHOP_SHAPES_PER_SET = 3;
-export const ISLAND_WORKSHOP_RUN_TICKET_COST = 1;
+export const ISLAND_WORKSHOP_BLOCK_TICKET_COST = 1;
 export const ISLAND_WORKSHOP_ASSIST_SIZE = 3;
 
 /** Materials needed to finish constructing the Tidelight Beacon (per event). */
@@ -369,18 +369,45 @@ export function applyIslandWorkshopCreatureAssist(board: IslandWorkshopBoard): I
   return { board: next, cellsCleared: bestFilled, targetRow: bestRow, targetCol: bestCol };
 }
 
-// ── Run entry / tickets ──────────────────────────────────────────────────────
+// ── Run entry / block tickets ────────────────────────────────────────────────
 
 /**
- * Mirror of `canStartCompanionFeastRun`: the launch-time ticket spend pre-pays
- * the first run; replays need 1 ticket remaining.
+ * Island Workshop event tickets are spendable material blocks, not run lives:
+ * opening the bench is free, and each successful shape placement spends one.
  */
 export function canStartIslandWorkshopRun(options: {
-  entryRunAvailable: boolean;
   ticketsRemaining: number;
+  hasSavedRun?: boolean;
 }): boolean {
-  if (options.entryRunAvailable) return true;
-  return Math.max(0, Math.floor(options.ticketsRemaining)) >= ISLAND_WORKSHOP_RUN_TICKET_COST;
+  if (options.hasSavedRun) return true;
+  return Math.max(0, Math.floor(options.ticketsRemaining)) >= ISLAND_WORKSHOP_BLOCK_TICKET_COST;
+}
+
+export interface IslandWorkshopScoreRewardMilestone {
+  id: string;
+  score: number;
+  label: string;
+  emoji: string;
+  rewardDice: number;
+  mysteryBoxes: number;
+}
+
+export const ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES: readonly IslandWorkshopScoreRewardMilestone[] = [
+  { id: 'supply_box', score: 100, label: 'Supply Box', emoji: '🎁', rewardDice: 0, mysteryBoxes: 1 },
+  { id: 'dice_cache', score: 250, label: 'Dice Cache', emoji: '🎲', rewardDice: 3, mysteryBoxes: 0 },
+  { id: 'mystery_crate', score: 450, label: 'Mystery Crate', emoji: '🧰', rewardDice: 0, mysteryBoxes: 1 },
+  { id: 'grand_toolkit', score: 700, label: 'Grand Toolkit', emoji: '🌟', rewardDice: 6, mysteryBoxes: 1 },
+] as const;
+
+export function resolveIslandWorkshopClaimableScoreRewards(options: {
+  previousScore: number;
+  nextScore: number;
+}): IslandWorkshopScoreRewardMilestone[] {
+  const previousScore = Math.max(0, Math.floor(options.previousScore));
+  const nextScore = Math.max(0, Math.floor(options.nextScore));
+  return ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES.filter(
+    (milestone) => previousScore < milestone.score && nextScore >= milestone.score,
+  );
 }
 
 // ── Construction (magical island object) ─────────────────────────────────────

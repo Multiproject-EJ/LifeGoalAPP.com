@@ -252,10 +252,9 @@ export function resolveEventMinigameCompletionId(options: {
 
 /**
  * Island Workshop (the `feeding_frenzy` rotation slot's player-facing surface)
- * routes to the dedicated block-placement puzzle. Entry spends 1 ticket at
- * launch; replays inside the game spend additional tickets through the
- * `requestRunTicketSpend` launchConfig callback which calls the canonical
- * `applyTimedEventTicketSpend` action.
+ * routes to the dedicated block-placement puzzle. Event tickets are material
+ * blocks: the surface opens without spending, and each successful placement
+ * spends one ticket through the canonical `applyTimedEventTicketSpend` action.
  */
 export function resolveIslandWorkshopEventMinigame(
   ctx: EventMinigameLaunchContext,
@@ -270,7 +269,7 @@ export function resolveIslandWorkshopEventMinigame(
 
   return {
     minigameId: 'island_workshop',
-    spendMode: 'entry',
+    spendMode: 'per_action',
     ticketCost: launch.ticketCost,
     ticketsSpent: launch.ticketsSpent,
     config: {
