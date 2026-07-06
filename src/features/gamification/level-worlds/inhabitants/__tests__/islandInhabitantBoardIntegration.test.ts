@@ -8,22 +8,24 @@ function includes(expected: string) { assert(boardSource.includes(expected), `Mi
 function notIncludes(forbidden: string) { assert(!boardSource.includes(forbidden), `Forbidden ${forbidden}`); }
 
 export const islandInhabitantBoardIntegrationTests: TestCase[] = [
-  { name: 'board integrates Island 1 Caretaker as an automatic top-ring tile encounter and dev-only manual action', run: () => {
-    includes('runtimeState.currentIslandNumber === 1');
-    includes('const ISLAND_ONE_CARETAKER_TILE_INDEX = 0;');
-    includes('currentIndex === ISLAND_ONE_CARETAKER_TILE_INDEX');
+  { name: 'board integrates the island Caretaker as an automatic tile encounter and dev-only manual action on every island', run: () => {
+    includes('const ISLAND_CARETAKER_TILE_INDEX = 0;');
+    includes('currentIndex === ISLAND_CARETAKER_TILE_INDEX');
+    includes('hasIslandCaretakerConcordContent(runtimeStateRef.current.currentIslandNumber)');
     includes("openCaretakerFlow('caretaker_tile_land')");
     includes("openCaretakerFlow('caretaker_board_tap')");
     includes("openCaretakerFlow('dev_hud')");
-    includes('caretakerTileIndex={shouldShowCaretakerTalkAction ? ISLAND_ONE_CARETAKER_TILE_INDEX : null}');
+    includes('caretakerTileIndex={shouldShowCaretakerTalkAction ? ISLAND_CARETAKER_TILE_INDEX : null}');
     includes('🧙 Talk to Caretaker');
     notIncludes('island-run-board__topbar-menu-item--caretaker');
+    notIncludes('ISLAND_ONE_CARETAKER_TILE_INDEX');
   } },
-  { name: 'board resolves caretaker content through registries at runtime', run: () => {
-    includes("getIslandInhabitantDefinition('luma-caretaker')");
-    includes("getIslandInhabitantTopics(1, 'luma-caretaker')");
-    includes('getIslandConversationDefinition(topic.conversationId)');
+  { name: 'board resolves caretaker Concord content per current island at runtime', run: () => {
+    includes('getIslandCaretakerConcordContent(runtimeState.currentIslandNumber)');
     includes('caretakerConversations.length === caretakerTopics.length');
+    includes('islandName={caretakerConcordContent?.islandName}');
+    includes('islandStatusLabel={caretakerInhabitant.civilizationName}');
+    notIncludes("getIslandInhabitantDefinition('luma-caretaker')");
   } },
   { name: 'board caretaker flow no longer uses collision blockers', run: () => {
     notIncludes('mapIslandInhabitantFlowBlockers({');

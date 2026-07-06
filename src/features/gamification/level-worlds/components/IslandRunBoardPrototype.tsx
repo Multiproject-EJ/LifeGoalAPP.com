@@ -58,7 +58,8 @@ import {
 } from '../services/islandBoardThemes';
 import { getIslandBackgroundImageSrc } from '../services/islandBackgrounds';
 import { IslandInhabitantFlow, type IslandInhabitantFlowResult } from '../inhabitants/components/IslandInhabitantFlow';
-import { getIslandConversationDefinition, getIslandInhabitantDefinition, getIslandInhabitantTopics } from '../inhabitants/islandInhabitantRegistry';
+import { getIslandCaretakerConcordContent, hasIslandCaretakerConcordContent } from '../inhabitants/islandCaretakerConcord';
+import type { IslandConversationDefinition, IslandInhabitantTopicDefinition } from '../inhabitants/islandConversationTypes';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandCommunicationAccess } from '../services/islandCommunicationAccess';
 import { getCreatureChannelLine } from '../services/islandCreatureChannel';
@@ -501,7 +502,9 @@ const DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY = 'islandRunDebugTimedEventOverrideNo
 // but every branch collapsed to the same result — so the helper was removed.
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark40_ring');
 // Tile 0 is the visual top of the spark40 ring (see TILE_ANCHORS_40 rotation).
-const ISLAND_ONE_CARETAKER_TILE_INDEX = 0;
+const ISLAND_CARETAKER_TILE_INDEX = 0;
+const EMPTY_CARETAKER_TOPICS: IslandInhabitantTopicDefinition[] = [];
+const EMPTY_CARETAKER_CONVERSATIONS: IslandConversationDefinition[] = [];
 const BUILD_DISCOUNT_RATE = 0.25;
 const BUILD_DISCOUNT_MIN_DURATION_MS = 2 * 60 * 1000;
 const BUILD_DISCOUNT_MAX_DURATION_MS = 15 * 60 * 1000;
@@ -2302,16 +2305,16 @@ export function IslandRunBoardPrototype({
   } | null>(null);
 
   const [runtimeState, setRuntimeState] = useState(() => readIslandRunRuntimeState(session));
-  const caretakerInhabitant = useMemo(() => getIslandInhabitantDefinition('luma-caretaker'), []);
-  const caretakerTopics = useMemo(() => getIslandInhabitantTopics(1, 'luma-caretaker'), []);
-  const caretakerConversations = useMemo(
-    () => caretakerTopics
-      .map((topic) => getIslandConversationDefinition(topic.conversationId))
-      .filter((conversation): conversation is NonNullable<typeof conversation> => Boolean(conversation)),
-    [caretakerTopics],
+  // The Concord caretaker content resolves per island: Island 1 keeps the
+  // canonical Luma acquisition story, islands 2+ use authored/fallback entries.
+  const caretakerConcordContent = useMemo(
+    () => getIslandCaretakerConcordContent(runtimeState.currentIslandNumber),
+    [runtimeState.currentIslandNumber],
   );
-  const hasCaretakerContent = Boolean(caretakerInhabitant) && caretakerTopics.length === 3 && caretakerConversations.length === caretakerTopics.length;
-  const isIslandOneActiveForCaretaker = runtimeState.currentIslandNumber === 1;
+  const caretakerInhabitant = caretakerConcordContent?.inhabitant;
+  const caretakerTopics = caretakerConcordContent?.topics ?? EMPTY_CARETAKER_TOPICS;
+  const caretakerConversations = caretakerConcordContent?.conversations ?? EMPTY_CARETAKER_CONVERSATIONS;
+  const hasCaretakerContent = Boolean(caretakerInhabitant) && caretakerTopics.length > 0 && caretakerConversations.length === caretakerTopics.length;
 
   const [runtimeHydrationSource, setRuntimeHydrationSource] = useState<IslandRunRuntimeHydrationSource | null>(null);
   const pendingTreasurePathResume = useMemo(
@@ -6078,8 +6081,8 @@ export function IslandRunBoardPrototype({
 
         // Caretaker chat opens only when the player LANDS on the caretaker's
         // home tile (the caretaker sprite is anchored there on the board).
-        const didLandOnCaretakerTile = runtimeStateRef.current.currentIslandNumber === 1
-          && currentIndex === ISLAND_ONE_CARETAKER_TILE_INDEX;
+        const didLandOnCaretakerTile = currentIndex === ISLAND_CARETAKER_TILE_INDEX
+          && hasIslandCaretakerConcordContent(runtimeStateRef.current.currentIslandNumber);
         if (didLandOnCaretakerTile) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -10350,7 +10353,7 @@ export function IslandRunBoardPrototype({
     });
     setRuntimeState(next);
   };
-  const shouldShowCaretakerTalkAction = isIslandOneActiveForCaretaker && hasCaretakerContent;
+  const shouldShowCaretakerTalkAction = hasCaretakerContent;
   const inhabitantCommunicationAccess = useMemo(
     () => getIslandCommunicationAccess(runtimeState, 'inhabitant'),
     [runtimeState],
@@ -10369,7 +10372,7 @@ export function IslandRunBoardPrototype({
       ? '🧙 You landed on the Caretaker\'s tile. The island pauses to listen.'
       : source === 'caretaker_board_tap'
         ? '🧙 The Caretaker waves you over for a chat.'
-        : '🧙 Dev: opening the Island 1 Caretaker flow.');
+        : '🧙 Dev: opening the Island Caretaker flow.');
   }, [shouldShowCaretakerTalkAction]);
   const handleCaretakerFlowClose = (result: IslandInhabitantFlowResult) => {
     setIsIslandInhabitantFlowOpen(false);
@@ -11314,7 +11317,7 @@ export function IslandRunBoardPrototype({
           tokenIndex={tokenIndex}
           caretakerArtSrc={caretakerInhabitant?.retroSpriteSrc ?? '/assets/island_caretakers/001/IMG_retro_green.webp'}
           caretakerLabel={caretakerInhabitant?.displayName ?? 'Island caretaker'}
-          caretakerTileIndex={shouldShowCaretakerTalkAction ? ISLAND_ONE_CARETAKER_TILE_INDEX : null}
+          caretakerTileIndex={shouldShowCaretakerTalkAction ? ISLAND_CARETAKER_TILE_INDEX : null}
           onCaretakerClick={() => openCaretakerFlow('caretaker_board_tap')}
           orbitStopVisuals={orbitStopVisuals}
           activeStopId={activeStopId}
@@ -14707,8 +14710,8 @@ export function IslandRunBoardPrototype({
           greeting="The island has been listening for footsteps like yours."
           characterArtSrc={caretakerInhabitant.premiumArtSrc}
           backgroundArtSrc={resolvedCaretakerBackgroundArtSrc}
-          islandName="Luma Isle"
-          islandStatusLabel="The Lumin"
+          islandName={caretakerConcordContent?.islandName}
+          islandStatusLabel={caretakerInhabitant.civilizationName}
           communicationAllowed={inhabitantCommunicationAccess.allowed}
           onClose={handleCaretakerFlowClose}
         />
