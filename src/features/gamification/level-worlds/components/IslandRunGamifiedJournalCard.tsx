@@ -142,11 +142,15 @@ export function IslandRunGamifiedJournalCard({
       </div>
       <p className="island-stop-modal__eyebrow">{prompts.themeLabel} · {progressLabel}</p>
       <h3 className="island-stop-modal__title">Gamified Journal: Daily Clue Card</h3>
+      <div className="island-run-gamified-journal-card__pips" aria-hidden="true">
+        <span className={`island-run-gamified-journal-card__pip island-run-gamified-journal-card__pip--good ${goodAnswer ? 'is-filled' : ''}`} />
+        <span className={`island-run-gamified-journal-card__pip island-run-gamified-journal-card__pip--bad ${badAnswer ? 'is-filled' : ''}`} />
+      </div>
       <p className="island-stop-modal__copy">
         Quick answers keep the loop moving. If nothing stood out, choose the typical-day card — that is still useful data.
       </p>
 
-      <section className="island-run-gamified-journal-card__section island-run-gamified-journal-card__section--good">
+      <section className={`island-run-gamified-journal-card__section island-run-gamified-journal-card__section--good ${goodAnswer ? 'is-answered' : ''}`}>
         <strong>1) {prompts.goodQuestion}</strong>
         <div className="island-hatchery-card__actions island-run-gamified-journal-card__choices">
           <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${goodAnswer === 'nothing_typical' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setGoodAnswer('nothing_typical')}>Nothing really, a typical day</button>
@@ -155,7 +159,7 @@ export function IslandRunGamifiedJournalCard({
         {goodAnswer === 'specific' && goodDetail.trim() ? <p className="island-run-gamified-journal-card__detail-preview">{goodDetail}</p> : null}
       </section>
 
-      <section className="island-run-gamified-journal-card__section island-run-gamified-journal-card__section--bad">
+      <section className={`island-run-gamified-journal-card__section island-run-gamified-journal-card__section--bad ${badAnswer ? 'is-answered' : ''}`}>
         <strong>2) {prompts.badQuestion}</strong>
         <div className="island-hatchery-card__actions island-run-gamified-journal-card__choices">
           <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${badAnswer === 'nothing_typical' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setBadAnswer('nothing_typical')}>Nothing really, a typical day</button>

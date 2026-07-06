@@ -103,10 +103,27 @@ export function IslandRunReflectionComposer({
 
       {!isJudgingComplete && challengerPrompt ? (
         <section className="island-run-reflection-composer__judge" aria-label="Judge check-in cards">
-          <p className="island-run-reflection-composer__progress">
-            Judging {judgedCount + 1} of {totalJudgements}: which card fits better right now?
-          </p>
-          <div className="island-run-reflection-composer__card-grid">
+          <div className="island-run-reflection-composer__progress">
+            <span className="island-run-reflection-composer__progress-label">
+              Round {judgedCount + 1} of {totalJudgements} — which card fits better right now?
+            </span>
+            <span className="island-run-reflection-composer__pips" aria-hidden="true">
+              {Array.from({ length: totalJudgements }).map((_, index) => (
+                <span
+                  key={index}
+                  className={`island-run-reflection-composer__pip ${
+                    index < judgedCount
+                      ? 'is-done'
+                      : index === judgedCount
+                        ? 'is-active'
+                        : ''
+                  }`}
+                />
+              ))}
+            </span>
+          </div>
+          {/* key by round so the entry animation replays each time a winner advances */}
+          <div className="island-run-reflection-composer__card-grid" key={judgedCount}>
             {[selectedPrompt, challengerPrompt].map((prompt) => (
               <button
                 key={prompt.id}
@@ -114,15 +131,25 @@ export function IslandRunReflectionComposer({
                 className="island-run-reflection-composer__judge-card"
                 onClick={() => handleJudge(prompt.id)}
               >
+                {prompt.category ? (
+                  <span className="island-run-reflection-composer__judge-tag">{prompt.category}</span>
+                ) : null}
                 <strong>{prompt.title}</strong>
                 <span>{prompt.prompt}</span>
+                <span className="island-run-reflection-composer__judge-pick" aria-hidden="true">
+                  Pick this card
+                </span>
               </button>
             ))}
+            <span className="island-run-reflection-composer__vs" aria-hidden="true">VS</span>
           </div>
         </section>
       ) : (
         <>
-          <div className="island-run-reflection-composer__prompt">
+          <div className="island-run-reflection-composer__prompt island-run-reflection-composer__prompt--winner">
+            <span className="island-run-reflection-composer__winner-badge" aria-hidden="true">
+              🏆 Winning card
+            </span>
             <strong>{selectedPrompt.title}</strong>
             <span>{selectedPrompt.prompt}</span>
           </div>
