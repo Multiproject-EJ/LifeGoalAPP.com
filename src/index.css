@@ -8745,17 +8745,17 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 /* Done-ish button */
 .habit-checklist__doneish-button {
-  width: 2rem;
-  height: 2rem;
-  min-width: 2rem;
-  margin-left: 0.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  margin-left: 0;
   border: 2px solid #f59e0b;
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 1.25rem;
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 0;
@@ -8940,10 +8940,12 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-checklist__detail-block {
   display: grid;
   gap: 0.55rem;
-  padding: 0.8rem;
-  background: rgba(248, 250, 252, 0.92);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 14px;
+  padding: clamp(0.85rem, 2.8vw, 1.15rem);
+  background:
+    radial-gradient(circle at top right, rgba(129, 140, 248, 0.1), transparent 42%),
+    rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(203, 213, 225, 0.72);
+  border-radius: 22px;
   scroll-snap-align: start;
   scroll-snap-stop: always;
   transform-origin: center top;
@@ -8962,6 +8964,87 @@ html.platform-ipad .workspace-shell__menu-edge {
   gap: 0.75rem;
 }
 
+.habit-checklist__detail-block-toggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.habit-checklist__detail-block-heading-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+  gap: 0.22rem;
+}
+
+.habit-checklist__detail-block-body {
+  display: none;
+  min-width: 0;
+}
+
+.habit-checklist__detail-block-body--open {
+  display: grid;
+  gap: 0.7rem;
+  animation: habit-section-reveal 180ms ease-out;
+}
+
+@keyframes habit-section-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-checklist__detail-block-body--open {
+    animation: none;
+  }
+
+  .habit-checklist__section-chevron {
+    transition: none;
+  }
+}
+
+.habit-checklist__section-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  background: #eef2ff;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.16);
+}
+
+.habit-checklist__section-icon--manage {
+  background: #fff7ed;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.22);
+}
+
+.habit-checklist__section-chevron {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: 0.45rem;
+  border-right: 2px solid rgba(71, 85, 105, 0.72);
+  border-bottom: 2px solid rgba(71, 85, 105, 0.72);
+  transform: rotate(45deg);
+  transition: transform 180ms ease;
+  flex: 0 0 auto;
+}
+
+.habit-checklist__section-chevron--open {
+  transform: rotate(225deg);
+}
+
 .habit-checklist__detail-block-label {
   font-size: 0.68rem;
   font-weight: 800;
@@ -8971,23 +9054,22 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__details-panel--open .habit-checklist__detail-block {
-  min-height: min(48vh, 24rem);
+  min-height: auto;
   margin-block: 0.2rem clamp(0.65rem, 2.8vh, 1.15rem);
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.1);
 }
 
 .habit-checklist__details-panel--open .habit-checklist__detail-block-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 1;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
-  padding: 0.34rem 0.64rem;
-  margin: -0.34rem 0 0.1rem -0.18rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition:
@@ -9411,16 +9493,17 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__stage-actions {
-  display: flex;
-  gap: 0.45rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
 }
 
 .habit-checklist__stage-chip {
   border: 1px solid #cbd5e1;
-  background: #fff;
-  border-radius: 999px;
-  padding: 0.3rem 0.7rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+  border-radius: 18px;
+  padding: 0.7rem 0.75rem;
   font-size: 0.72rem;
   font-weight: 600;
   color: #1e293b;
@@ -9439,13 +9522,13 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__stage-chip--active {
-  border-color: #6366f1;
-  background: #eef2ff;
+  border-color: #6d5cff;
+  background: linear-gradient(180deg, #f4f1ff, #eef2ff);
+  box-shadow: 0 0 0 1px rgba(109, 92, 255, 0.18), 0 12px 26px rgba(109, 92, 255, 0.16);
 }
 
 .habit-checklist__progress-header {
-  display: grid;
-  grid-template-columns: auto 1fr;
+  display: flex;
   align-items: start;
   gap: 0.65rem;
 }
@@ -9488,11 +9571,11 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__stage-chip {
-  display: inline-grid;
+  display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 0.45rem;
-  min-height: 2.6rem;
+  min-height: 4rem;
   text-align: left;
 }
 
@@ -9516,16 +9599,22 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .habit-checklist__stage-chip-title {
   color: #0f172a;
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   font-weight: 800;
   line-height: 1.1;
 }
 
 .habit-checklist__stage-chip-meta {
   color: #64748b;
-  font-size: 0.64rem;
+  font-size: 0.7rem;
   font-weight: 700;
   line-height: 1.1;
+}
+
+@media (max-width: 420px) {
+  .habit-checklist__stage-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 .habit-checklist__stage-chip--momentum.habit-checklist__stage-chip--active,
@@ -9749,10 +9838,41 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__detail-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
   align-items: center;
+}
+
+.habit-checklist__alert-btn,
+.habit-checklist__edit-btn,
+.habit-checklist__skip-btn {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid rgba(203, 213, 225, 0.82);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  color: #0f172a;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.habit-checklist__alert-btn {
+  border-color: rgba(99, 102, 241, 0.24);
+  background: linear-gradient(180deg, #f4f1ff, #ffffff);
+}
+
+.habit-checklist__skip-btn {
+  border-color: rgba(251, 146, 60, 0.32);
+  background: linear-gradient(180deg, #fff7ed, #ffffff);
+  color: #9a3412;
+}
+
+.habit-checklist__edit-btn:disabled,
+.habit-checklist__skip-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .habit-checklist__doneish-wrap {
@@ -9760,10 +9880,10 @@ html.platform-ipad .workspace-shell__menu-edge {
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.35rem 0.45rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(245, 158, 11, 0.18);
+  padding: 0.55rem 0.6rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 247, 237, 0.96), rgba(254, 243, 199, 0.9));
+  border: 1px solid rgba(245, 158, 11, 0.28);
 }
 
 .habit-checklist__doneish-label {
@@ -9807,6 +9927,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-checklist__skip-wrap {
   position: relative;
   display: inline-flex;
+  width: 100%;
 }
 
 .habit-checklist__skip-menu {
@@ -33027,15 +33148,18 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 /* Understand & Improve — expanded-habit entry block */
 .habit-checklist__detail-block--understand {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 0.5rem;
 }
 
 .habit-checklist__understand-hint {
   margin: 0;
   font-size: 0.78rem;
-  opacity: 0.7;
+  opacity: 0.74;
+  color: #475569;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
 }
 
 .habit-checklist__understand-actions {
@@ -33051,18 +33175,23 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__understand-btn {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    "icon title chevron"
+    "icon meta chevron";
+  column-gap: 0.65rem;
+  row-gap: 0.12rem;
+  align-items: center;
   text-align: left;
-  padding: 0.6rem 0.7rem;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(148, 163, 184, 0.08);
+  padding: 0.8rem 0.9rem;
+  border-radius: 18px;
+  border: 1px solid rgba(203, 213, 225, 0.78);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.84));
   color: inherit;
   cursor: pointer;
-  min-height: 44px;
+  min-height: 4.25rem;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
 }
 
 .habit-checklist__understand-btn:hover:not(:disabled) {
@@ -33075,13 +33204,33 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 .habit-checklist__understand-btn-title {
+  grid-area: title;
   font-weight: 600;
-  font-size: 0.86rem;
+  font-size: 0.9rem;
 }
 
 .habit-checklist__understand-btn small {
+  grid-area: meta;
   font-size: 0.72rem;
   opacity: 0.7;
+}
+
+.habit-checklist__understand-btn-icon {
+  grid-area: icon;
+  width: 2.15rem;
+  height: 2.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.habit-checklist__understand-btn-chevron {
+  grid-area: chevron;
+  color: #64748b;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
 /* Chain & keystone modal */

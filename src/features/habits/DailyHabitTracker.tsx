@@ -1444,6 +1444,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
+  const [expandedHabitSections, setExpandedHabitSections] = useState<
+    Record<string, { todayVersion?: boolean; understand?: boolean; manage?: boolean }>
+  >({});
   const [expandedTodayTodoById, setExpandedTodayTodoById] = useState<Record<string, boolean>>({});
   const [historicalLogs, setHistoricalLogs] = useState<HabitLogRow[]>([]);
   // State for selected month/year: allows user to navigate between different months
@@ -1512,6 +1515,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [swipeOffsetByTodoId, setSwipeOffsetByTodoId] = useState<Record<string, number>>({});
   const [swipeArmedByTodoId, setSwipeArmedByTodoId] = useState<Record<string, HabitSwipeDirection | null>>({});
   const skipMenuRef = useRef<HTMLDivElement | null>(null);
+  const habitTodayVersionRefs = useRef<Record<string, HTMLElement | null>>({});
   const swipeGestureRef = useRef<{
     habitId: string;
     pointerId: number;
@@ -6349,6 +6353,47 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     });
   };
 
+  const isExpandedHabitSectionOpen = useCallback((
+    habitId: string,
+    section: 'todayVersion' | 'understand' | 'manage',
+    defaultOpen: boolean,
+  ) => expandedHabitSections[habitId]?.[section] ?? defaultOpen, [expandedHabitSections]);
+
+  const toggleExpandedHabitSection = useCallback((
+    habitId: string,
+    section: 'todayVersion' | 'understand' | 'manage',
+    defaultOpen: boolean,
+  ) => {
+    setExpandedHabitSections((current) => {
+      const currentValue = current[habitId]?.[section] ?? defaultOpen;
+      return {
+        ...current,
+        [habitId]: {
+          ...current[habitId],
+          [section]: !currentValue,
+        },
+      };
+    });
+  }, []);
+
+  const openTodayVersionPicker = useCallback((habitId: string) => {
+    setExpandedHabits({ [habitId]: true });
+    setExpandedHabitSections((current) => ({
+      ...current,
+      [habitId]: {
+        ...current[habitId],
+        todayVersion: true,
+      },
+    }));
+
+    window.requestAnimationFrame(() => {
+      const target = habitTodayVersionRefs.current[habitId];
+      target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      const firstOption = target?.querySelector<HTMLButtonElement>('.habit-checklist__stage-chip:not(:disabled)');
+      firstOption?.focus({ preventScroll: true });
+    });
+  }, []);
+
   const toggleTodayTodoExpanded = useCallback((todoId: string) => {
     const isCompletedTodo = todayTodos.some((todo) => todo.id === todoId && todo.completed);
     if (isCompletedTodo) {
@@ -7861,6 +7906,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             });
             const isQuestHabit = questHabit?.habitId === habit.id;
             const habitDisplayName = isPrivateCompactView ? `Private habit ${habitIndex + 1}` : habit.name;
+            const todayVersionOpen = isExpandedHabitSectionOpen(habit.id, 'todayVersion', !isCompleted);
+            const understandOpen = isExpandedHabitSectionOpen(habit.id, 'understand', false);
+            const manageOpen = isExpandedHabitSectionOpen(habit.id, 'manage', true);
+            const todayVersionSectionId = `${detailPanelId}-today-version`;
+            const understandSectionId = `${detailPanelId}-understand`;
+            const manageSectionId = `${detailPanelId}-manage`;
             // Struggling-habit coach (deterministic; shown inside the expanded card).
             // Hidden in compact private view to avoid leaking habit specifics.
             const coachCard =
@@ -8338,16 +8389,36 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       </>
                     )}
                   </section>
-                  <section className={`habit-checklist__detail-block habit-checklist__detail-block--progress habit-checklist__detail-block--kind-${progressContent.chipVariant}`} aria-label={progressContent.ariaLabel}>
-                    <div className="habit-checklist__detail-block-header habit-checklist__progress-header">
+                  <section
+                    ref={(node) => {
+                      habitTodayVersionRefs.current[habit.id] = node;
+                    }}
+                    className={`habit-checklist__detail-block habit-checklist__detail-block--progress habit-checklist__detail-block--kind-${progressContent.chipVariant}`}
+                    aria-label={progressContent.ariaLabel}
+                  >
+                    <button
+                      type="button"
+                      className="habit-checklist__detail-block-header habit-checklist__detail-block-toggle habit-checklist__progress-header"
+                      aria-expanded={todayVersionOpen}
+                      aria-controls={todayVersionSectionId}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleExpandedHabitSection(habit.id, 'todayVersion', !isCompleted);
+                      }}
+                    >
                       <span className="habit-checklist__progress-icon">
                         <HabitVersionIcon name={progressContent.iconName} />
                       </span>
-                      <div>
+                      <span className="habit-checklist__detail-block-heading-copy">
                         <span className="habit-checklist__detail-block-label">{progressContent.sectionLabel}</span>
-                        <p className="habit-checklist__progress-helper">{progressContent.helperText}</p>
-                      </div>
-                    </div>
+                        <span className="habit-checklist__progress-helper">{progressContent.helperText}</span>
+                      </span>
+                      <span className={`habit-checklist__section-chevron ${todayVersionOpen ? 'habit-checklist__section-chevron--open' : ''}`} aria-hidden="true" />
+                    </button>
+                    <div
+                      id={todayVersionSectionId}
+                      className={`habit-checklist__detail-block-body ${todayVersionOpen ? 'habit-checklist__detail-block-body--open' : ''}`}
+                    >
                     {state?.progressState === 'doneIsh' && state?.completionPercentage ? (
                       <div className="habit-checklist__progress">
                         <div className="progress-bar-container">
@@ -8493,18 +8564,36 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         ) : null}
                       </div>
                     ) : null}
+                    </div>
                   </section>
                   {!isPrivateCompactView ? (
                     <section
                       className="habit-checklist__detail-block habit-checklist__detail-block--understand"
                       aria-label="Understand and improve this habit"
                     >
-                      <div className="habit-checklist__detail-block-header">
-                        <span className="habit-checklist__detail-block-label">Understand &amp; Improve</span>
-                      </div>
-                      <p className="habit-checklist__understand-hint">
-                        Optional — explore what drives this habit when you’re curious.
-                      </p>
+                      <button
+                        type="button"
+                        className="habit-checklist__detail-block-header habit-checklist__detail-block-toggle"
+                        aria-expanded={understandOpen}
+                        aria-controls={understandSectionId}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleExpandedHabitSection(habit.id, 'understand', false);
+                        }}
+                      >
+                        <span className="habit-checklist__section-icon" aria-hidden="true">🧠</span>
+                        <span className="habit-checklist__detail-block-heading-copy">
+                          <span className="habit-checklist__detail-block-label">Understand &amp; Improve</span>
+                          <span className="habit-checklist__understand-hint">
+                            Optional — explore what drives this habit when you’re curious.
+                          </span>
+                        </span>
+                        <span className={`habit-checklist__section-chevron ${understandOpen ? 'habit-checklist__section-chevron--open' : ''}`} aria-hidden="true" />
+                      </button>
+                      <div
+                        id={understandSectionId}
+                        className={`habit-checklist__detail-block-body ${understandOpen ? 'habit-checklist__detail-block-body--open' : ''}`}
+                      >
                       <div className="habit-checklist__understand-actions">
                         <button
                           type="button"
@@ -8515,8 +8604,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             setAnalysisHabitId(habit.id);
                           }}
                         >
+                          <span className="habit-checklist__understand-btn-icon" aria-hidden="true">🎯</span>
                           <span className="habit-checklist__understand-btn-title">Cue → routine → reward</span>
                           <small>Guided deep dive into the habit loop</small>
+                          <span className="habit-checklist__understand-btn-chevron" aria-hidden="true">›</span>
                         </button>
                         <button
                           type="button"
@@ -8527,16 +8618,36 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             setChainHabitId(habit.id);
                           }}
                         >
+                          <span className="habit-checklist__understand-btn-icon" aria-hidden="true">🔗</span>
                           <span className="habit-checklist__understand-btn-title">Chain &amp; keystone</span>
                           <small>Map ripple effects on other habits &amp; life areas</small>
+                          <span className="habit-checklist__understand-btn-chevron" aria-hidden="true">›</span>
                         </button>
+                      </div>
                       </div>
                     </section>
                   ) : null}
                   <section className="habit-checklist__detail-block habit-checklist__detail-block--manage" aria-label="Habit actions">
-                    <div className="habit-checklist__detail-block-header">
-                      <span className="habit-checklist__detail-block-label">Manage</span>
-                    </div>
+                    <button
+                      type="button"
+                      className="habit-checklist__detail-block-header habit-checklist__detail-block-toggle"
+                      aria-expanded={manageOpen}
+                      aria-controls={manageSectionId}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleExpandedHabitSection(habit.id, 'manage', true);
+                      }}
+                    >
+                      <span className="habit-checklist__section-icon habit-checklist__section-icon--manage" aria-hidden="true">⚙️</span>
+                      <span className="habit-checklist__detail-block-heading-copy">
+                        <span className="habit-checklist__detail-block-label">Manage</span>
+                      </span>
+                      <span className={`habit-checklist__section-chevron ${manageOpen ? 'habit-checklist__section-chevron--open' : ''}`} aria-hidden="true" />
+                    </button>
+                    <div
+                      id={manageSectionId}
+                      className={`habit-checklist__detail-block-body ${manageOpen ? 'habit-checklist__detail-block-body--open' : ''}`}
+                    >
                     <div className="habit-checklist__detail-actions">
                       {!isCompleted && scheduledToday && habit.type === 'boolean' && (
                         <div className="habit-checklist__doneish-wrap">
@@ -8546,10 +8657,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             className="habit-checklist__doneish-button"
                             onClick={(event) => {
                               event.stopPropagation();
-                              void handleDoneIshCompletion(habit, null);
+                              openTodayVersionPicker(habit.id);
                             }}
                             disabled={isSaving}
-                            aria-label={`Mark ${habit.name} as done-ish (partial completion)`}
+                            aria-label={`Choose the done-ish version completed for ${habit.name}`}
                           >
                             ✨
                           </button>
@@ -8718,6 +8829,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       >
                         <span className="habit-checklist__autoprog-toggle-dot" aria-hidden="true" />
                       </button>
+                    </div>
                     </div>
                   </section>
                 </div>
