@@ -12783,3 +12783,282 @@
     animation: none !important;
   }
 }
+
+/* ============================================================================
+   Modal engagement redesign — Behavior stop (reflection composer) + Card Draw
+   (gamified journal card). Adds motion, visual progress and tactile feedback to
+   the two most-repeated pop-ups so they read as a lively "card game" rather than
+   static walls of text. All motion is gated behind `prefers-reduced-motion`.
+   ============================================================================ */
+
+/* --- Behavior stop: intro + progress ------------------------------------- */
+.island-run-reflection-composer__intro {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(10, 29, 42, 0.6);
+  border: 1px solid rgba(176, 226, 247, 0.22);
+  line-height: 1.45;
+}
+
+.island-run-reflection-composer__progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.island-run-reflection-composer__progress-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #e9f8ff;
+}
+
+.island-run-reflection-composer__pips {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.island-run-reflection-composer__pip {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(176, 226, 247, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(176, 226, 247, 0.35);
+  transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.island-run-reflection-composer__pip.is-done {
+  background: linear-gradient(160deg, #7ee0ff, #38bdf8);
+}
+
+.island-run-reflection-composer__pip.is-active {
+  background: #fde68a;
+  transform: scale(1.35);
+  box-shadow: 0 0 10px rgba(253, 230, 138, 0.7);
+}
+
+/* --- Behavior stop: card duel -------------------------------------------- */
+.island-run-reflection-composer__card-grid {
+  position: relative;
+  column-gap: 30px; /* room for the centred VS token so it clears card text */
+}
+
+.island-run-reflection-composer__judge-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  animation: reflection-card-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.island-run-reflection-composer__card-grid > .island-run-reflection-composer__judge-card:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+/* moving sheen so the cards feel "alive" while the player decides */
+.island-run-reflection-composer__judge-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 40%, rgba(226, 247, 255, 0.16) 50%, transparent 60%);
+  transform: translateX(-120%);
+  animation: reflection-card-sheen 3.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.island-run-reflection-composer__judge-card:hover,
+.island-run-reflection-composer__judge-card:focus-visible {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.32);
+}
+
+.island-run-reflection-composer__judge-card:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.island-run-reflection-composer__judge-tag {
+  align-self: flex-start;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #bfe9ff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(125, 224, 255, 0.4);
+}
+
+.island-run-reflection-composer__judge-pick {
+  margin-top: auto;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #7ee0ff;
+  opacity: 0.65;
+  transition: opacity 0.18s ease;
+}
+
+.island-run-reflection-composer__judge-card:hover .island-run-reflection-composer__judge-pick,
+.island-run-reflection-composer__judge-card:focus-visible .island-run-reflection-composer__judge-pick {
+  opacity: 1;
+}
+
+/* VS token floating between the two contenders */
+.island-run-reflection-composer__vs {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #0a1d2a;
+  background: radial-gradient(circle at 30% 25%, #fff6d6, #fbbf24 70%);
+  box-shadow: 0 6px 16px rgba(251, 191, 36, 0.45), 0 0 0 3px rgba(10, 29, 42, 0.9);
+  pointer-events: none;
+  z-index: 2;
+  animation: reflection-vs-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (max-width: 520px) {
+  .island-run-reflection-composer__vs {
+    top: 50%;
+    left: 50%;
+  }
+}
+
+/* Winning card reveal */
+.island-run-reflection-composer__prompt--winner {
+  position: relative;
+  border-color: rgba(253, 230, 138, 0.65);
+  box-shadow: 0 0 0 1px rgba(253, 230, 138, 0.25), 0 14px 30px rgba(0, 0, 0, 0.28);
+  animation: reflection-winner-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.island-run-reflection-composer__winner-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fde68a;
+}
+
+@keyframes reflection-card-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes reflection-card-sheen {
+  0%, 65% { transform: translateX(-120%); }
+  85%, 100% { transform: translateX(120%); }
+}
+
+@keyframes reflection-vs-pop {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(-25deg); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+}
+
+@keyframes reflection-winner-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- Card Draw: animated hero draw + flip -------------------------------- */
+.island-run-gamified-journal-card__card--back {
+  animation: clue-card-back-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.island-run-gamified-journal-card__card--front {
+  transform-style: preserve-3d;
+  animation: clue-card-front-draw 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+@keyframes clue-card-back-in {
+  from { opacity: 0; transform: rotate(-4deg) rotateY(18deg) translateY(10px); }
+  to { opacity: 1; transform: rotate(-12deg) rotateY(18deg) translateY(0); }
+}
+
+@keyframes clue-card-front-draw {
+  0% { opacity: 0; transform: rotate(-6deg) rotateY(90deg) translateY(14px); }
+  60% { opacity: 1; transform: rotate(8deg) rotateY(-24deg) translateY(-4px); }
+  100% { transform: rotate(8deg) rotateY(-18deg) translateY(0); }
+}
+
+/* --- Card Draw: clue progress pips + answered sections -------------------- */
+.island-run-gamified-journal-card__pips {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: -2px 0 2px;
+}
+
+.island-run-gamified-journal-card__pip {
+  width: 34px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.island-run-gamified-journal-card__pip--good.is-filled {
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.55);
+  transform: scaleY(1.15);
+}
+
+.island-run-gamified-journal-card__pip--bad.is-filled {
+  background: linear-gradient(90deg, #f87171, #ef4444);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+  transform: scaleY(1.15);
+}
+
+.island-run-gamified-journal-card__section {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.island-run-gamified-journal-card__section.is-answered {
+  transform: translateY(-1px);
+}
+
+.island-run-gamified-journal-card__section--good.is-answered {
+  box-shadow: inset 0 0 0 1px rgba(187, 247, 208, 0.3), 0 8px 22px rgba(34, 197, 94, 0.22);
+}
+
+.island-run-gamified-journal-card__section--bad.is-answered {
+  box-shadow: inset 0 0 0 1px rgba(254, 202, 202, 0.3), 0 8px 22px rgba(239, 68, 68, 0.2);
+}
+
+/* --- Shared: "ready to save" glow on the primary CTA --------------------- */
+.island-run-reflection-composer .island-stop-modal__btn--primary:not(:disabled),
+.island-run-gamified-journal-card .island-stop-modal__btn--primary:not(:disabled) {
+  animation: modal-cta-ready 2.2s ease-in-out infinite;
+}
+
+@keyframes modal-cta-ready {
+  0%, 100% { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); }
+  50% { box-shadow: 0 8px 26px rgba(125, 224, 255, 0.45); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-reflection-composer__judge-card,
+  .island-run-reflection-composer__judge-card::after,
+  .island-run-reflection-composer__vs,
+  .island-run-reflection-composer__prompt--winner,
+  .island-run-gamified-journal-card__card--back,
+  .island-run-gamified-journal-card__card--front,
+  .island-run-reflection-composer .island-stop-modal__btn--primary:not(:disabled),
+  .island-run-gamified-journal-card .island-stop-modal__btn--primary:not(:disabled) {
+    animation: none !important;
+  }
+}
