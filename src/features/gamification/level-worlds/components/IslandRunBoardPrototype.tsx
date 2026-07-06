@@ -1782,6 +1782,8 @@ export function IslandRunBoardPrototype({
   const [isDisplayNameLoopCompleted, setIsDisplayNameLoopCompleted] = useState(false);
   const [showEncounterModal, setShowEncounterModal] = useState(false);
   const [showGamifiedJournalCard, setShowGamifiedJournalCard] = useState(false);
+  // 0-based index of the current island's clue-card draw → rotates its questions.
+  const [cardDrawIndex, setCardDrawIndex] = useState(0);
   const [encounterResolved, setEncounterResolved] = useState(false);
   // M6-COMPLETE: per-visit encounter tracking (Set of completed tile indices)
   const [completedEncounterIndices, setCompletedEncounterIndices] = useState<Set<number>>(() => new Set());
@@ -6408,6 +6410,8 @@ export function IslandRunBoardPrototype({
         });
         cardDrawCadenceRef.current = cardDecision.nextState;
         if (cardDecision.show) {
+          // 0-based index of this draw within the island → rotates the questions.
+          setCardDrawIndex(Math.max(0, cardDecision.nextState.drawsThisIsland - 1));
           setLandingText('🃏 Card station! Draw a Daily Clue Card for a quick gamified journal loop.');
           setShowGamifiedJournalCard(true);
         } else if (cardDecision.reason === 'island_cap') {
@@ -11618,6 +11622,7 @@ export function IslandRunBoardPrototype({
             <IslandRunGamifiedJournalCard
               session={session}
               islandNumber={islandNumber}
+              drawIndex={cardDrawIndex}
               onClose={() => setShowGamifiedJournalCard(false)}
               onSaved={(message) => {
                 setLandingText(message);

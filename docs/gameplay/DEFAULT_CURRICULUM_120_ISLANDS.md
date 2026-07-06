@@ -7,7 +7,8 @@ Companion doc: `MODAL_VARIETY_ANALYSIS.md` (why the current two modals feel repe
 
 - **Tier A (Behavior stop) — DONE.** `services/islandRunReflectionCurriculum.ts` sources each island's check-in cards from the Compass Book curriculum (one chapter "core question" card + up to 3 per-island facet cards derived from that island's activity blocks, always ≥2 for the tournament). `IslandRunReflectionComposer` now reads from it instead of the fixed 6-prompt array. Out-of-range islands fall back to the legacy 6 prompts. Covered by `__tests__/islandRunReflectionCurriculum.test.ts`.
 - **Tier B (Card Stack Draw), Option A — DONE.** `services/islandRunClueCardCurriculum.ts` reframes the draw's two questions per chapter (3 themed variants each, selected by the island's position in its chapter). `IslandRunGamifiedJournalCard` now reads from it. Covered by `__tests__/islandRunClueCardCurriculum.test.ts`.
-- **Deferred (noted in Open questions):** within-a-single-island rotation across multiple Card-Draw draws (needs a board-side draw counter), the deeper Option B coupling, and the cycle-2+ repeat decision.
+- **Within-island Card-Draw rotation — DONE.** `getClueCardPromptsForIsland(islandNumber, drawIndex)` now advances through the chapter's three question variants across successive draws on the same island (the board passes the per-island draw index from the cadence gate). Covered by `__tests__/islandRunClueCardCurriculum.test.ts`.
+- **Still deferred:** the deeper Option B coupling, and the cycle-2+ repeat decision / adaptive personalization hook.
 
 ## Goal
 

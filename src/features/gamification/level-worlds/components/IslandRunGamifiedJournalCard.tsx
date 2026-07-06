@@ -9,6 +9,8 @@ type MoodAnswer = 'nothing_typical' | 'specific';
 interface IslandRunGamifiedJournalCardProps {
   session: Session;
   islandNumber: number;
+  /** 0-based count of draws already opened on this island visit (rotates the questions). */
+  drawIndex?: number;
   onSaved: (message: string) => void;
   onClose: () => void;
 }
@@ -16,6 +18,7 @@ interface IslandRunGamifiedJournalCardProps {
 export function IslandRunGamifiedJournalCard({
   session,
   islandNumber,
+  drawIndex = 0,
   onSaved,
   onClose,
 }: IslandRunGamifiedJournalCardProps) {
@@ -32,7 +35,10 @@ export function IslandRunGamifiedJournalCard({
   // Per-island question framing, themed to the island's Compass Book chapter so
   // the draw is not the same two questions on every island. See
   // `islandRunClueCardCurriculum.ts`.
-  const prompts = useMemo(() => getClueCardPromptsForIsland(islandNumber), [islandNumber]);
+  const prompts = useMemo(
+    () => getClueCardPromptsForIsland(islandNumber, drawIndex),
+    [islandNumber, drawIndex],
+  );
 
   const goodLabel = goodAnswer === 'nothing_typical'
     ? 'Nothing really — a typical day'

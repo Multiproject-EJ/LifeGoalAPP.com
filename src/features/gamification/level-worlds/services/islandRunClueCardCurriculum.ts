@@ -163,15 +163,26 @@ const CHAPTER_CLUE_POOL: Record<CompassBookChapterId, ClueVariant[]> = {
   ],
 };
 
-/** The themed clue-card questions for an island (falls back to generic wording). */
-export function getClueCardPromptsForIsland(islandNumber: number): ClueCardPrompts {
+/**
+ * The themed clue-card questions for an island (falls back to generic wording).
+ *
+ * `drawIndex` is the 0-based count of draws already opened on this island visit,
+ * so successive draws on the same island advance through the chapter's variant
+ * pool instead of repeating the same pair. Cross-island variety still comes from
+ * the island's position within its chapter.
+ */
+export function getClueCardPromptsForIsland(
+  islandNumber: number,
+  drawIndex = 0,
+): ClueCardPrompts {
   const activity = getActivityForIsland(islandNumber);
   if (!activity) return DEFAULT_PROMPTS;
 
   const pool = CHAPTER_CLUE_POOL[activity.chapterId];
   if (!pool || pool.length === 0) return DEFAULT_PROMPTS;
 
-  const variant = pool[(activity.order - 1) % pool.length];
+  const safeDraw = Number.isFinite(drawIndex) ? Math.max(0, Math.floor(drawIndex)) : 0;
+  const variant = pool[(activity.order - 1 + safeDraw) % pool.length];
   const chapter = getChapterDefinition(activity.chapterId);
   return { themeLabel: chapter.title, ...variant };
 }
