@@ -116,6 +116,7 @@ import {
 import { ShardClaimModal } from './ShardClaimModal';
 import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
 import { IslandRunBreathingExercise } from './IslandRunBreathingExercise';
+import { IslandRunActionChallenge } from './IslandRunActionChallenge';
 import { IslandRunLifePromptCard } from './IslandRunLifePromptCard';
 import { IslandRunGamifiedJournalCard } from './IslandRunGamifiedJournalCard';
 import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
@@ -12083,22 +12084,13 @@ export function IslandRunBoardPrototype({
                     }}
                   />
                 ) : activeStop.mysteryContentKind === 'habit_action' ? (
-                  <div>
-                    <p className="island-stop-modal__copy">✅ <strong>Action Challenge</strong></p>
-                    <p>Complete one habit or action objective to earn your reward and stabilize momentum.</p>
-                    <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-                      <button
-                        type="button"
-                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                        onClick={() => {
-                          setLandingText('✅ Action challenge complete!');
-                          handleCompleteActiveStop();
-                        }}
-                      >
-                        ✅ Complete Action
-                      </button>
-                    </div>
-                  </div>
+                  <IslandRunActionChallenge
+                    islandNumber={islandNumber}
+                    onComplete={(message) => {
+                      setLandingText(message);
+                      handleCompleteActiveStop();
+                    }}
+                  />
                 ) : activeStop.mysteryContentKind === 'checkin_reflection' ? (
                   <IslandRunReflectionComposer
                     session={session}
