@@ -130,6 +130,7 @@ import { islandCommunicationAccessTests } from './islandCommunicationAccess.test
 import { bossRhythmGameTests } from './bossRhythmGame.test';
 import { islandRunReflectionCurriculumTests } from './islandRunReflectionCurriculum.test';
 import { islandRunClueCardCurriculumTests } from './islandRunClueCardCurriculum.test';
+import { islandRunCardDrawCadenceTests } from './islandRunCardDrawCadence.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -266,6 +267,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'bossRhythmGame', tests: bossRhythmGameTests },
   { label: 'islandRunReflectionCurriculum', tests: islandRunReflectionCurriculumTests },
   { label: 'islandRunClueCardCurriculum', tests: islandRunClueCardCurriculumTests },
+  { label: 'islandRunCardDrawCadence', tests: islandRunCardDrawCadenceTests },
 ];
 
 async function main() {

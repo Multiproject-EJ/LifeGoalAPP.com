@@ -85,6 +85,7 @@ import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
 // is the single authoritative source of truth for token movement and hop order.
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../services/islandRunEconomy';
 import { generateIslandStopPlan, type IslandStopPlanEntry } from '../services/islandRunStops';
+import { decideCardDraw, initialCardDrawCadenceState } from '../services/islandRunCardDrawCadence';
 import { getWisdomTreeCardForIsland } from '../services/wisdomTreeCards';
 import {
   getStopTicketCost,
@@ -6259,6 +6260,10 @@ export function IslandRunBoardPrototype({
   // Track roll index for deterministic (non-time-based) tile-landing RNG seeding.
   const rollIndexRef = useRef(0);
 
+  // Ephemeral cadence gate so the ring-tile Daily Clue Card doesn't pop on every
+  // card-station landing (cooldown + per-island cap). UX-only; not persisted.
+  const cardDrawCadenceRef = useRef(initialCardDrawCadenceState());
+
   const visibleTechnologyFragments = useMemo(
     () => listVisibleTechnologyFragments(islandNumber, collectedTechTileIndices),
     [collectedTechTileIndices, islandNumber],
@@ -6395,10 +6400,23 @@ export function IslandRunBoardPrototype({
       case 'chest':
         setLandingText(`🎁 Treasure chest! +${essenceDelta} money${multLabel}`);
         break;
-      case 'card':
-        setLandingText('🃏 Card station! Draw a Daily Clue Card for a quick gamified journal loop.');
-        setShowGamifiedJournalCard(true);
+      case 'card': {
+        // Gate the draw so it doesn't fire on every card-station landing.
+        const cardDecision = decideCardDraw(cardDrawCadenceRef.current, {
+          islandNumber: effectiveIslandNumber,
+          rollIndex: rollIndexRef.current,
+        });
+        cardDrawCadenceRef.current = cardDecision.nextState;
+        if (cardDecision.show) {
+          setLandingText('🃏 Card station! Draw a Daily Clue Card for a quick gamified journal loop.');
+          setShowGamifiedJournalCard(true);
+        } else if (cardDecision.reason === 'island_cap') {
+          setLandingText('🃏 Card station — you’ve gathered today’s clues here. Keep rolling.');
+        } else {
+          setLandingText('🃏 Card station — clue already noted nearby. Keep rolling.');
+        }
         break;
+      }
       case 'hazard': {
         const penalty = Math.abs(essenceDelta);
         if (penalty > 0) {
