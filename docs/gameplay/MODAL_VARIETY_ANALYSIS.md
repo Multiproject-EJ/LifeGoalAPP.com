@@ -1,7 +1,7 @@
 # Why the "Behavior Stop" and "Card Stack Draw" modals feel boring — analysis
 
-Status: Investigation / planning only. No code changed by this doc.
-Companion doc: `DEFAULT_CURRICULUM_120_ISLANDS.md` (the proposed fix's content plan).
+Status: Analysis. The proposed fix has since been implemented — see the "Implementation status" section of the companion doc `DEFAULT_CURRICULUM_120_ISLANDS.md`.
+Companion doc: `DEFAULT_CURRICULUM_120_ISLANDS.md` (the fix's content plan + implementation status).
 
 ## The two modals in question
 
