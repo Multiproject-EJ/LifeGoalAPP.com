@@ -13062,3 +13062,91 @@
     animation: none !important;
   }
 }
+
+/* ============================================================================
+   Mystery stop — guided breathing exercise (IslandRunBreathingExercise).
+   A real paced inhale/hold/exhale beat so the Mystery slot offers genuine
+   variety instead of a one-tap placeholder. Orb pacing is driven by an inline
+   transition duration; this block styles the resting look and the calm palette.
+   ============================================================================ */
+.island-run-breathing {
+  color: #eaf8ff;
+  text-align: center;
+}
+
+.island-run-breathing__stage {
+  display: grid;
+  place-items: center;
+  height: 168px;
+  margin: 6px 0 10px;
+}
+
+.island-run-breathing__orb {
+  display: grid;
+  place-items: center;
+  width: 132px;
+  height: 132px;
+  border-radius: 999px;
+  transform: scale(0.7);
+  transition-property: transform, box-shadow, background;
+  transition-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
+  background: radial-gradient(circle at 32% 28%, rgba(186, 240, 255, 0.95), rgba(56, 189, 248, 0.55) 55%, rgba(30, 64, 110, 0.35) 100%);
+  box-shadow: 0 0 44px rgba(56, 189, 248, 0.45), inset 0 0 22px rgba(255, 255, 255, 0.28);
+}
+
+.island-run-breathing__orb-inner {
+  width: 46%;
+  height: 46%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.6);
+}
+
+.island-run-breathing__orb--inhale {
+  background: radial-gradient(circle at 32% 28%, rgba(198, 255, 231, 0.95), rgba(52, 211, 153, 0.55) 55%, rgba(20, 83, 90, 0.35) 100%);
+  box-shadow: 0 0 52px rgba(52, 211, 153, 0.5), inset 0 0 22px rgba(255, 255, 255, 0.28);
+}
+
+.island-run-breathing__orb--hold {
+  background: radial-gradient(circle at 32% 28%, rgba(233, 213, 255, 0.95), rgba(167, 139, 250, 0.55) 55%, rgba(59, 46, 110, 0.35) 100%);
+  box-shadow: 0 0 52px rgba(167, 139, 250, 0.5), inset 0 0 22px rgba(255, 255, 255, 0.28);
+}
+
+.island-run-breathing__hint,
+.island-run-breathing__done {
+  color: #dff3ff;
+  line-height: 1.5;
+}
+
+.island-run-breathing__guide {
+  display: grid;
+  gap: 2px;
+}
+
+.island-run-breathing__phase {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #f3fbff;
+}
+
+.island-run-breathing__count {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #7ee0ff;
+  font-variant-numeric: tabular-nums;
+}
+
+.island-run-breathing__cycle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(213, 240, 255, 0.85);
+}
+
+.island-run-breathing__done {
+  font-weight: 700;
+  color: #d1fae5;
+}
