@@ -115,6 +115,7 @@ import {
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
 import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
+import { IslandRunBreathingExercise } from './IslandRunBreathingExercise';
 import { IslandRunLifePromptCard } from './IslandRunLifePromptCard';
 import { IslandRunGamifiedJournalCard } from './IslandRunGamifiedJournalCard';
 import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
@@ -12075,22 +12076,12 @@ export function IslandRunBoardPrototype({
             {activeStopId === 'mystery' && openedStopIsPlayable && (
               <div className="island-hatchery-card">
                 {activeStop.mysteryContentKind === 'breathing' ? (
-                  <div>
-                    <p className="island-stop-modal__copy">🧘 <strong>Guided Breathing / Meditation</strong></p>
-                    <p>Take a moment to breathe. Tap the button below to begin a 1-minute breathing exercise right here.</p>
-                    <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-                      <button
-                        type="button"
-                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                        onClick={() => {
-                          setLandingText('🧘 Breathing exercise complete! Well done.');
-                          handleCompleteActiveStop();
-                        }}
-                      >
-                        🧘 Complete Breathing Exercise
-                      </button>
-                    </div>
-                  </div>
+                  <IslandRunBreathingExercise
+                    onComplete={(message) => {
+                      setLandingText(message);
+                      handleCompleteActiveStop();
+                    }}
+                  />
                 ) : activeStop.mysteryContentKind === 'habit_action' ? (
                   <div>
                     <p className="island-stop-modal__copy">✅ <strong>Action Challenge</strong></p>
