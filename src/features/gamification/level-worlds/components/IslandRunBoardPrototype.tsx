@@ -12625,55 +12625,65 @@ export function IslandRunBoardPrototype({
                   : 'All 8 lights are green. Flip the coin to reveal your mystery box.'}
             </p>
 
-            <div className="island-coin-stage">
-              <span className="island-coin-stage__sparkles" aria-hidden="true" />
-              <button
-                type="button"
-                className={[
-                  'island-coin',
-                  `island-coin--${trafficLightCoinFlip.phase}`,
-                  trafficLightCoinFlip.reward ? `island-coin--lands-${trafficLightCoinFlip.reward.side}` : '',
-                ].filter(Boolean).join(' ')}
-                onClick={handleFlipTrafficLightCoin}
-                disabled={trafficLightCoinFlip.phase !== 'ready'}
-                aria-label={trafficLightCoinFlip.phase === 'ready' ? 'Flip the traffic light bonus coin' : 'Traffic light bonus coin'}
-              >
-                <span className="island-coin__inner" aria-hidden="true">
-                  <span className="island-coin__face island-coin__face--heads">
-                    <img className="island-coin__image" src={TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC} alt="" loading="lazy" />
+            {trafficLightCoinFlip.phase !== 'revealed' && (
+              <div className="island-coin-stage">
+                <span className="island-coin-stage__sparkles" aria-hidden="true" />
+                <button
+                  type="button"
+                  className={[
+                    'island-coin',
+                    `island-coin--${trafficLightCoinFlip.phase}`,
+                    trafficLightCoinFlip.reward ? `island-coin--lands-${trafficLightCoinFlip.reward.side}` : '',
+                  ].filter(Boolean).join(' ')}
+                  onClick={handleFlipTrafficLightCoin}
+                  disabled={trafficLightCoinFlip.phase !== 'ready'}
+                  aria-label={trafficLightCoinFlip.phase === 'ready' ? 'Flip the traffic light bonus coin' : 'Traffic light bonus coin'}
+                >
+                  <span className="island-coin__inner" aria-hidden="true">
+                    <span className="island-coin__face island-coin__face--heads">
+                      <img className="island-coin__image" src={TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC} alt="" loading="lazy" />
+                    </span>
+                    <span className="island-coin__face island-coin__face--tails">
+                      <img className="island-coin__image" src={TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC} alt="" loading="lazy" />
+                    </span>
                   </span>
-                  <span className="island-coin__face island-coin__face--tails">
-                    <img className="island-coin__image" src={TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC} alt="" loading="lazy" />
-                  </span>
-                </span>
-              </button>
-              {showTrafficLightCoinHint && trafficLightCoinFlip.phase === 'ready' && (
-                <p className="island-coin-stage__tap-hint" role="status">Tap the coin to flip it!</p>
-              )}
-            </div>
+                </button>
+                {showTrafficLightCoinHint && trafficLightCoinFlip.phase === 'ready' && (
+                  <p className="island-coin-stage__tap-hint" role="status">Tap the coin to flip it!</p>
+                )}
+              </div>
+            )}
 
-            <div className="island-traffic-light__prizes" aria-label="Mystery box options">
-              <div className={`island-traffic-light__prize-card ${trafficLightCoinFlip.reward?.boxId === 'box_1' ? 'island-traffic-light__prize-card--selected' : ''}`.trim()}>
-                <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_BOX_IMAGE_SRC} alt="" loading="lazy" />
-                <span className="island-traffic-light__prize-title">Mystery Box 1</span>
-                <span className="island-traffic-light__prize-focus">Dice Focus</span>
+            {trafficLightCoinFlip.phase !== 'revealed' && (
+              <div className="island-traffic-light__prizes" aria-label="Mystery box options">
+                <div className={`island-traffic-light__prize-card ${trafficLightCoinFlip.reward?.boxId === 'box_1' ? 'island-traffic-light__prize-card--selected' : ''}`.trim()}>
+                  <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_BOX_IMAGE_SRC} alt="" loading="lazy" />
+                  <span className="island-traffic-light__prize-title">Mystery Box 1</span>
+                  <span className="island-traffic-light__prize-focus">Dice Focus</span>
+                </div>
+                <div className={`island-traffic-light__prize-card island-traffic-light__prize-card--gift ${trafficLightCoinFlip.reward?.boxId === 'box_2' ? 'island-traffic-light__prize-card--selected' : ''}`.trim()}>
+                  <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_GIFT_IMAGE_SRC} alt="" loading="lazy" />
+                  <span className="island-traffic-light__prize-title">Mystery Box 2</span>
+                  <span className="island-traffic-light__prize-focus">Essence Focus</span>
+                </div>
               </div>
-              <div className={`island-traffic-light__prize-card island-traffic-light__prize-card--gift ${trafficLightCoinFlip.reward?.boxId === 'box_2' ? 'island-traffic-light__prize-card--selected' : ''}`.trim()}>
-                <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_GIFT_IMAGE_SRC} alt="" loading="lazy" />
-                <span className="island-traffic-light__prize-title">Mystery Box 2</span>
-                <span className="island-traffic-light__prize-focus">Essence Focus</span>
-              </div>
-            </div>
+            )}
 
             {trafficLightCoinFlip.phase === 'revealed' && trafficLightCoinFlip.reward && (
-              <div className="island-traffic-light__winner-spotlight" aria-hidden="true">
+              <button
+                type="button"
+                className="island-traffic-light__winner-spotlight"
+                onClick={handleClaimTrafficLightReward}
+                aria-label={`Collect ${trafficLightCoinFlip.reward.label}`}
+              >
                 <img
                   className="island-traffic-light__winner-image"
                   src={trafficLightCoinFlip.reward.boxId === 'box_1' ? TRAFFIC_LIGHT_BOX_IMAGE_SRC : TRAFFIC_LIGHT_GIFT_IMAGE_SRC}
                   alt=""
                   loading="lazy"
                 />
-              </div>
+                <span className="island-traffic-light__winner-tap-hint">Tap to collect</span>
+              </button>
             )}
 
             {trafficLightCoinFlip.phase === 'revealed' && trafficLightCoinFlip.reward && (
