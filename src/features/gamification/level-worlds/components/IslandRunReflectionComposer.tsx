@@ -1,74 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import type { JournalEntryType } from '../../../../lib/database.types';
 import { createJournalEntry } from '../../../../services/journal';
-
-type ReflectionPrompt = {
-  id: string;
-  title: string;
-  prompt: string;
-  suggestedType: Extract<JournalEntryType, 'quick' | 'life_wheel'>;
-  category: string | null;
-  buttonAnswers: [string, string];
-  effortBonusHint: string;
-};
-
-const REFLECTION_PROMPTS: ReflectionPrompt[] = [
-  {
-    id: 'momentum',
-    title: 'Momentum Check',
-    prompt: 'Which island card feels most true right now: protecting your current momentum, or changing direction before the day drifts?',
-    suggestedType: 'quick',
-    category: null,
-    buttonAnswers: ['Protect the spark ✨', 'Change the current 🌊'],
-    effortBonusHint: 'Type what would make that answer feel real, and add one emotion you notice.',
-  },
-  {
-    id: 'health',
-    title: 'Health Recalibration',
-    prompt: 'Which card deserves the check-in today: your body asking for care, or your energy asking for a smarter pace?',
-    suggestedType: 'life_wheel',
-    category: 'Health',
-    buttonAnswers: ['Care for my body 🌿', 'Pace my energy 🔋'],
-    effortBonusHint: 'Add what your body needs and the emotion underneath it.',
-  },
-  {
-    id: 'career',
-    title: 'Career Focus',
-    prompt: 'Which card should win this round: one useful work step, or one boundary that makes better work possible?',
-    suggestedType: 'life_wheel',
-    category: 'Career',
-    buttonAnswers: ['Ship one useful step 🚀', 'Protect the boundary 🛡️'],
-    effortBonusHint: 'Type the step or boundary, then add how you want to feel after it.',
-  },
-  {
-    id: 'relationships',
-    title: 'Connection Check',
-    prompt: 'Which card matters more today: reaching toward someone, or listening more honestly to what a relationship needs?',
-    suggestedType: 'life_wheel',
-    category: 'Relationships',
-    buttonAnswers: ['Reach out warmly 🤝', 'Listen beneath words 💙'],
-    effortBonusHint: 'Name the person or situation, and add the emotion you want to bring.',
-  },
-  {
-    id: 'growth',
-    title: 'Growth Lens',
-    prompt: 'Which card is stronger right now: learning from what happened, or choosing the belief you want to practice next?',
-    suggestedType: 'life_wheel',
-    category: 'Personal Growth',
-    buttonAnswers: ['Learn from the clue 🧭', 'Practice the belief 🌱'],
-    effortBonusHint: 'Type the lesson or belief, and add the feeling you want to grow with it.',
-  },
-  {
-    id: 'finance',
-    title: 'Resource Check',
-    prompt: 'Which card should guide your resources today: creating a little more stability, or spending attention with intention?',
-    suggestedType: 'life_wheel',
-    category: 'Finance',
-    buttonAnswers: ['Create stability 🪙', 'Spend attention wisely 🎯'],
-    effortBonusHint: 'Add one money/resource move and the emotion you want around it.',
-  },
-];
+import { getReflectionCardsForIsland } from '../services/islandRunReflectionCurriculum';
 
 interface IslandRunReflectionComposerProps {
   session: Session;
@@ -81,11 +14,11 @@ export function IslandRunReflectionComposer({
   islandNumber,
   onSaved,
 }: IslandRunReflectionComposerProps) {
-  const defaultPromptIndex = islandNumber % REFLECTION_PROMPTS.length;
-  const [contenders, setContenders] = useState(() => {
-    const rotated = [...REFLECTION_PROMPTS.slice(defaultPromptIndex), ...REFLECTION_PROMPTS.slice(0, defaultPromptIndex)];
-    return rotated;
-  });
+  // Per-island check-in cards sourced from the 120-island Compass Book
+  // curriculum (with a legacy fallback for out-of-range islands). Captured once
+  // so the tournament's total-round count stays stable as `contenders` shrinks.
+  const islandCards = useMemo(() => getReflectionCardsForIsland(islandNumber), [islandNumber]);
+  const [contenders, setContenders] = useState(islandCards);
   const [judgedCount, setJudgedCount] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [content, setContent] = useState('');
@@ -96,7 +29,7 @@ export function IslandRunReflectionComposer({
   const selectedPrompt = contenders[0];
   const challengerPrompt = contenders[1] ?? null;
   const journalType = selectedPrompt.suggestedType;
-  const totalJudgements = REFLECTION_PROMPTS.length - 1;
+  const totalJudgements = islandCards.length - 1;
 
   const categoryLabel = useMemo(() => selectedPrompt.category ?? 'Momentum', [selectedPrompt.category]);
   // The written effort bonus answer is optional — selecting an effort answer

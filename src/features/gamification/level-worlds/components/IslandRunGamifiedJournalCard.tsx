@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import { createJournalEntry } from '../../../../services/journal';
+import { getClueCardPromptsForIsland } from '../services/islandRunClueCardCurriculum';
 
 type MoodAnswer = 'nothing_typical' | 'specific';
 
@@ -27,6 +28,11 @@ export function IslandRunGamifiedJournalCard({
   const [error, setError] = useState<string | null>(null);
   const [isTypicalDayOpen, setIsTypicalDayOpen] = useState(false);
   const [specificDetailTarget, setSpecificDetailTarget] = useState<'good' | 'bad' | null>(null);
+
+  // Per-island question framing, themed to the island's Compass Book chapter so
+  // the draw is not the same two questions on every island. See
+  // `islandRunClueCardCurriculum.ts`.
+  const prompts = useMemo(() => getClueCardPromptsForIsland(islandNumber), [islandNumber]);
 
   const goodLabel = goodAnswer === 'nothing_typical'
     ? 'Nothing really — a typical day'
@@ -94,9 +100,9 @@ export function IslandRunGamifiedJournalCard({
     const content = [
       'Gamified journal card from Island Run.',
       '',
-      `1) What made you feel good today?\n${goodLabel}`,
+      `1) ${prompts.goodQuestion}\n${goodLabel}`,
       '',
-      `2) What, if anything, made you feel bad?\n${badLabel}`,
+      `2) ${prompts.badQuestion}\n${badLabel}`,
       '',
       `3) Describe a typical day.\n${typicalDay.trim()}`,
     ].join('\n');
@@ -134,14 +140,14 @@ export function IslandRunGamifiedJournalCard({
         <span className="island-run-gamified-journal-card__card island-run-gamified-journal-card__card--back" />
         <span className="island-run-gamified-journal-card__card island-run-gamified-journal-card__card--front">?</span>
       </div>
-      <p className="island-stop-modal__eyebrow">Card stack draw · {progressLabel}</p>
+      <p className="island-stop-modal__eyebrow">{prompts.themeLabel} · {progressLabel}</p>
       <h3 className="island-stop-modal__title">Gamified Journal: Daily Clue Card</h3>
       <p className="island-stop-modal__copy">
         Quick answers keep the loop moving. If nothing stood out, choose the typical-day card — that is still useful data.
       </p>
 
       <section className="island-run-gamified-journal-card__section island-run-gamified-journal-card__section--good">
-        <strong>1) What made you feel good today?</strong>
+        <strong>1) {prompts.goodQuestion}</strong>
         <div className="island-hatchery-card__actions island-run-gamified-journal-card__choices">
           <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${goodAnswer === 'nothing_typical' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setGoodAnswer('nothing_typical')}>Nothing really, a typical day</button>
           <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${goodAnswer === 'specific' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => selectSpecificAnswer('good')}>Something specific</button>
@@ -150,7 +156,7 @@ export function IslandRunGamifiedJournalCard({
       </section>
 
       <section className="island-run-gamified-journal-card__section island-run-gamified-journal-card__section--bad">
-        <strong>2) What, if anything, made you feel bad?</strong>
+        <strong>2) {prompts.badQuestion}</strong>
         <div className="island-hatchery-card__actions island-run-gamified-journal-card__choices">
           <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${badAnswer === 'nothing_typical' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setBadAnswer('nothing_typical')}>Nothing really, a typical day</button>
           <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${badAnswer === 'specific' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => selectSpecificAnswer('bad')}>Something specific</button>
@@ -165,7 +171,7 @@ export function IslandRunGamifiedJournalCard({
           aria-expanded={isTypicalDayOpen}
           onClick={() => setIsTypicalDayOpen((isOpen) => !isOpen)}
         >
-          <span>Optional: describe a typical day</span>
+          <span>{prompts.typicalDayLabel}</span>
           <span aria-hidden="true">{isTypicalDayOpen ? '−' : '+'}</span>
         </button>
         {isTypicalDayOpen ? (
