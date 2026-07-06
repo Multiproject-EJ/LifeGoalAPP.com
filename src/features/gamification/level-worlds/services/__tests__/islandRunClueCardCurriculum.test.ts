@@ -53,12 +53,50 @@ export const islandRunClueCardCurriculumTests: TestCase[] = [
     },
   },
   {
-    name: 'deterministic: same island returns the same prompts',
+    name: 'deterministic: same island + drawIndex returns the same prompts',
     run: () => {
       const a = getClueCardPromptsForIsland(63);
       const b = getClueCardPromptsForIsland(63);
       assertEqual(a.goodQuestion, b.goodQuestion, 'stable goodQuestion');
       assertEqual(a.badQuestion, b.badQuestion, 'stable badQuestion');
+      assertEqual(
+        getClueCardPromptsForIsland(63, 2).goodQuestion,
+        getClueCardPromptsForIsland(63, 2).goodQuestion,
+        'stable for a given drawIndex',
+      );
+    },
+  },
+  {
+    name: 'successive draws on the same island rotate the questions',
+    run: () => {
+      // Three variants per chapter, so three consecutive draws should each differ
+      // and the third distinct one should exist before wrapping.
+      const q0 = getClueCardPromptsForIsland(10, 0).goodQuestion;
+      const q1 = getClueCardPromptsForIsland(10, 1).goodQuestion;
+      const q2 = getClueCardPromptsForIsland(10, 2).goodQuestion;
+      assert(new Set([q0, q1, q2]).size === 3, 'three draws should give three distinct questions');
+      // Same theme throughout — only the framing rotates.
+      assertEqual(
+        getClueCardPromptsForIsland(10, 0).themeLabel,
+        getClueCardPromptsForIsland(10, 2).themeLabel,
+        'theme label stays constant across draws',
+      );
+    },
+  },
+  {
+    name: 'drawIndex wraps and tolerates junk values',
+    run: () => {
+      assertEqual(
+        getClueCardPromptsForIsland(10, 3).goodQuestion,
+        getClueCardPromptsForIsland(10, 0).goodQuestion,
+        'drawIndex 3 wraps to 0 (pool of 3)',
+      );
+      // Negative / non-finite draw indices clamp to 0 rather than throwing.
+      assertEqual(
+        getClueCardPromptsForIsland(10, -5).goodQuestion,
+        getClueCardPromptsForIsland(10, 0).goodQuestion,
+        'negative drawIndex clamps to 0',
+      );
     },
   },
   {
