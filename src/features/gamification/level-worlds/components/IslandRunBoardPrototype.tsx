@@ -1145,6 +1145,16 @@ function getBossReward(islandNumber: number): { dice: number; essence: number; s
 type StopProgressState = 'pending' | 'active' | 'accessible' | 'postponed' | 'completed' | 'build_pending' | 'partial' | 'locked' | 'ticket_required';
 type IslandRunCameraMode = 'board_follow' | 'stop_focus' | 'overview_manual';
 
+const ISLAND_TRAVEL_STORY_FALLBACK_MANIFEST_PATH = '/islands/story/placeholder-arrival/manifest.json';
+
+function resolveIslandTravelArrivalManifestPath(islandNumber: number): string {
+  if (Number.isFinite(islandNumber) && Math.floor(islandNumber) === 1) {
+    return '/islands/001/story/arrival/manifest.json';
+  }
+  return ISLAND_TRAVEL_STORY_FALLBACK_MANIFEST_PATH;
+}
+
+
 type IslandRunMarketPurchaseStatus = 'attempt' | 'insufficient_coins' | 'success' | 'already_owned';
 
 type IslandRunMarketStatusCoverageReport = {
@@ -2286,6 +2296,7 @@ export function IslandRunBoardPrototype({
 
   // B3-5: island clear celebration
   const [showIslandClearCelebration, setShowIslandClearCelebration] = useState(false);
+  const [isIslandClearCelebrationDeparting, setIsIslandClearCelebrationDeparting] = useState(false);
   const [isIslandClearRewardClaimed, setIsIslandClearRewardClaimed] = useState(false);
   const [islandClearRewardPulseKey, setIslandClearRewardPulseKey] = useState(0);
   const [islandClearStats, setIslandClearStats] = useState<{
@@ -8287,8 +8298,9 @@ export function IslandRunBoardPrototype({
     setTokenIndex(TOKEN_START_TILE_INDEX);
     setRollValue(null);
     setActiveStopId('hatchery');
-    setFocusedStopId('hatchery');
-    setCameraMode('stop_focus');
+    setFocusedStopId(null);
+    setCameraMode('overview_manual');
+    window.requestAnimationFrame(() => boardCameraRef.current?.goDefault());
     setShowEncounterModal(false);
     setEncounterResolved(false);
     // M6-COMPLETE: reset per-visit encounter completion tracking on island travel
@@ -8388,12 +8400,22 @@ export function IslandRunBoardPrototype({
     }
     setTravelOverlayDestinationIsland(nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland);
     setTravelOverlayMode('advance');
-    setShowIslandClearCelebration(false);
-    setShowTravelOverlay(true);
+    setIsIslandClearCelebrationDeparting(true);
     window.setTimeout(() => {
-      setShowTravelOverlay(false);
-      void performIslandTravel(nextIsland, { startTimer: true });
-    }, 1400);
+      setShowIslandClearCelebration(false);
+      setIsIslandClearCelebrationDeparting(false);
+      setShowTravelOverlay(true);
+      window.setTimeout(() => {
+        setShowTravelOverlay(false);
+        void performIslandTravel(nextIsland, { startTimer: true }).then(() => {
+          const resolvedNextIsland = nextIsland > ISLAND_RUN_MAX_ISLAND ? 1 : nextIsland;
+          setActiveStoryEpisode({
+            kind: 'island_travel_arrival',
+            manifestPath: resolveIslandTravelArrivalManifestPath(resolvedNextIsland),
+          });
+        });
+      }, 1400);
+    }, 760);
   };
 
   const handleClaimIslandClearCelebrationRewards = useCallback(() => {
@@ -8405,6 +8427,7 @@ export function IslandRunBoardPrototype({
   }, [playIslandRunSound]);
 
   const handleKeepPlayingAfterIslandClear = useCallback(() => {
+    setIsIslandClearCelebrationDeparting(false);
     setShowIslandClearCelebration(false);
     setLandingText('Island complete! Keep collecting for now — tap Finish Island when you are ready to travel.');
   }, []);
@@ -10371,6 +10394,13 @@ export function IslandRunBoardPrototype({
   const handleCloseStoryReader = () => {
     if (activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution') {
       islandNarrativeOpeningFlow.handleStoryEpisodeClosed(activeStoryEpisode);
+      return;
+    }
+    if (activeStoryEpisode?.kind === 'island_travel_arrival') {
+      setActiveStoryEpisode(null);
+      setCameraMode('overview_manual');
+      setFocusedStopId(null);
+      window.requestAnimationFrame(() => boardCameraRef.current?.goDefault());
       return;
     }
 
@@ -13312,7 +13342,7 @@ export function IslandRunBoardPrototype({
             variant={islandClearStats.isCycleCapstone ? 'capstone' : 'standard'}
           />
           <div
-            className={`island-clear-celebration${islandClearStats.isCycleCapstone ? ' island-clear-celebration--capstone' : ''}`}
+            className={`island-clear-celebration${islandClearStats.isCycleCapstone ? ' island-clear-celebration--capstone' : ''}${isIslandClearCelebrationDeparting ? ' island-clear-celebration--departing' : ''}`}
             role="dialog"
             aria-modal={islandNarrativeOpeningFlow.activeDialogue?.beatId === 'I001-B30' ? 'false' : 'true'}
             aria-hidden={islandNarrativeOpeningFlow.activeDialogue?.beatId === 'I001-B30' ? true : undefined}
@@ -13370,6 +13400,7 @@ export function IslandRunBoardPrototype({
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-clear-celebration__cta"
                     onClick={isIslandClearRewardClaimed ? handleTravelFromCelebration : handleClaimIslandClearCelebrationRewards}
+                    disabled={isIslandClearCelebrationDeparting}
                     autoFocus
                   >
                     {isIslandClearRewardClaimed
@@ -13378,7 +13409,7 @@ export function IslandRunBoardPrototype({
                         : 'Travel to Next Island')
                       : 'Claim Rewards'}
                   </button>
-                  {isIslandClearRewardClaimed && (
+                  {isIslandClearRewardClaimed && !isIslandClearCelebrationDeparting && (
                     <button
                       type="button"
                       className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary island-clear-celebration__cta island-clear-celebration__cta--secondary"
@@ -14842,9 +14873,9 @@ export function IslandRunBoardPrototype({
         isOpen={showStoryReader}
         onClose={handleCloseStoryReader}
         onRewardClaim={activeStoryEpisode?.kind === 'global_prologue' ? sanctuaryHandlers.storyRewardClaim : undefined}
-        completionTitle={activeStoryEpisode?.kind === 'island_arrival' ? 'Luma Isle awaits' : activeStoryEpisode?.kind === 'island_resolution' ? 'The route is open' : undefined}
-        completionText={activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' ? 'Return to the island' : undefined}
-        completionButtonLabel={activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' ? 'Return to the island' : undefined}
+        completionTitle={activeStoryEpisode?.kind === 'island_arrival' ? 'Luma Isle awaits' : activeStoryEpisode?.kind === 'island_resolution' ? 'The route is open' : activeStoryEpisode?.kind === 'island_travel_arrival' ? `${getIslandDisplayName(islandNumber)} awaits` : undefined}
+        completionText={activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' || activeStoryEpisode?.kind === 'island_travel_arrival' ? 'Return to the island' : undefined}
+        completionButtonLabel={activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' || activeStoryEpisode?.kind === 'island_travel_arrival' ? 'Start zoomed out' : undefined}
       />
 
       {islandNarrativeOpeningFlow.activeDialogue ? (

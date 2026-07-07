@@ -1,0 +1,12 @@
+{
+  "id": "island-placeholder-arrival",
+  "title": "Next Island — Story Placeholder",
+  "panels": [
+    {
+      "id": "empty-panel",
+      "type": "text",
+      "text": "A new island story will unfold here. For now, take in the whole island from above before choosing where to begin.",
+      "caption": "Placeholder story panel"
+    }
+  ]
+}
