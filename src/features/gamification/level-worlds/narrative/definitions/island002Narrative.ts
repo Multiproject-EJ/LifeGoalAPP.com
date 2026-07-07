@@ -3,65 +3,63 @@ import type { IslandNarrativeDefinition } from '../islandNarrativeTypes';
 /**
  * Island 2 — "Pebble Bay", home of The Tidefolk.
  *
- * Authored from docs/design/island-002-narrative-proposal.md §7 (approved).
- * Reaction-beats only: stop opened/completed, landmark level reactions,
- * majority-restored, and boss-challenge framing. These fire through the
- * island-agnostic reaction layer (`islandNarrativeReactionDispatch.ts`); there
- * is no per-island controller code. Illustrated arrival/finale/resolution
- * episodes are intentionally deferred (need art + legacy-flow generalization).
- *
- * Continuity: Pebble Bay is "clue 2" of the Great Drift arc — the guardian
- * Maelis stopped the tides out of fear, and the same shaped interruption from
- * Island 1 recurs here. Lesson seam: consistency (gentle repeated motion).
+ * Canon decision (2026-07-07): The Prophecy Game is now the primary Island 2
+ * plot because the approved direction asks Island 2 to raise stakes
+ * immediately. To keep this reversible and preserve continuity, Pebble Bay,
+ * Sela, Bryn, Tobin, Maelis, and tide identity remain, but they are reframed
+ * around The Last Word, the second-sun lantern, and a self-fulfilling prophecy.
+ * Long arrival/finale/resolution cinema remains documented/deferred; this file
+ * only contains mobile-readable reaction beats that observe canonical gameplay.
  */
-export const island002NarrativeDefinition = {
+export const island002NarrativeDefinition: IslandNarrativeDefinition = {
   version: 1,
   islandNumber: 2,
   islandName: 'Pebble Bay',
-  civilizationName: 'The Tidefolk',
+  civilizationName: 'The Tidefolk of The Last Word',
   characters: [
-    { id: 'sela', displayName: 'Sela', role: 'Young tide-reader and first-contact guide.' },
-    { id: 'bryn', displayName: 'Keeper Bryn', role: 'Lantern-and-tide keeper; the bay’s wisdom figure.' },
-    { id: 'tobin', displayName: 'Tobin', role: 'Net-mender and warm supporting citizen.' },
-    { id: 'maelis', displayName: 'Maelis the Tideward', role: 'Ancient tide-guardian holding her breath.' },
+    { id: 'sela', displayName: 'Sela', role: 'Young Keeper of Questions whose family tends The Last Word.' },
+    { id: 'bryn', displayName: 'Keeper Bryn', role: 'Lantern-and-tide keeper who guards the second sun records.' },
+    { id: 'tobin', displayName: 'Tobin', role: 'Net-mender and worried witness in the plaza crowd.' },
+    { id: 'maelis', displayName: 'Maelis the Tideward', role: 'Ancient tide-guardian whose older warnings made the board trusted.' },
+    { id: 'last-word', displayName: 'The Last Word', role: 'Communal prophecy board imprisoning a self-fulfilling intelligence.' },
     { id: 'ivo', displayName: 'Captain Ivo', role: 'Compass Expedition voice.' },
   ],
   beats: [
-    // Hatchery — "The Tide-Cradle"
     {
       id: 'I002-B01',
       trigger: { kind: 'stop_opened', islandNumber: 2, stopId: 'hatchery' },
-      speakerId: 'tobin',
+      speakerId: 'sela',
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'The Tide-Cradle has gone quiet — help me warm one pool again.',
+      text: 'Keep close. The Last Word named you before your boat touched shore.',
     },
     {
       id: 'I002-B02',
       trigger: { kind: 'stop_completed', islandNumber: 2, stopId: 'hatchery' },
-      speakerId: 'sela',
+      speakerId: 'tobin',
       surface: 'toast',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'One pool stirs. The cradle remembers the water.',
+      text: 'The cradle stirs, and the board taps once inside the shrine.',
     },
     {
       id: 'I002-B03',
       trigger: { kind: 'landmark_level_completed', islandNumber: 2, stopId: 'hatchery', level: 1 },
-      speakerId: 'tobin',
+      speakerId: 'sela',
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'A little warmth comes back to the stones.',
+      text: 'It moved before anyone touched it. I know what I saw.',
     },
     {
       id: 'I002-B04',
       trigger: { kind: 'landmark_level_completed', islandNumber: 2, stopId: 'hatchery', level: 2 },
+      speakerId: 'last-word',
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'Something in the shallows is listening.',
+      text: 'MOVE THE CEREMONY TO THE EAST PLAZA.',
     },
     {
       id: 'I002-B05',
@@ -70,10 +68,8 @@ export const island002NarrativeDefinition = {
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'The Tide-Cradle could welcome a bond again.',
+      text: 'My family obeys the board to save people. What if obedience is the trap?',
     },
-
-    // Habit — "The Turning Stones"
     {
       id: 'I002-B06',
       trigger: { kind: 'stop_opened', islandNumber: 2, stopId: 'habit' },
@@ -81,16 +77,16 @@ export const island002NarrativeDefinition = {
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'Turn one stone with me. Small, but the bay needs the motion.',
+      text: 'One careful action. We test the warning without kneeling to it.',
     },
     {
       id: 'I002-B07',
       trigger: { kind: 'stop_completed', islandNumber: 2, stopId: 'habit' },
-      speakerId: 'sela',
+      speakerId: 'bryn',
       surface: 'toast',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'One steady turn is enough for today.',
+      text: 'Old rescues began as warnings, then became instructions.',
     },
     {
       id: 'I002-B08',
@@ -99,16 +95,17 @@ export const island002NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'Folk are drifting back to the Turning Stones.',
+      text: 'Every safety rope points people closer to the plaza.',
     },
     {
       id: 'I002-B09',
       trigger: { kind: 'landmark_level_completed', islandNumber: 2, stopId: 'habit', level: 2 },
-      speakerId: 'sela',
+      speakerId: 'last-word',
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'They are keeping the rhythm together again.',
+      text: 'DO NOT POWER DOWN THE SECOND SUN.',
+      secondaryText: 'The board calls it protection. The locks call it descent.',
     },
     {
       id: 'I002-B10',
@@ -117,27 +114,25 @@ export const island002NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'The shore turns like it used to.',
+      text: 'The final bell was moved. That was not ritual. That was staging.',
     },
-
-    // Mystery — "The Tide Pools"
     {
       id: 'I002-B11',
       trigger: { kind: 'stop_opened', islandNumber: 2, stopId: 'mystery' },
-      speakerId: 'tobin',
+      speakerId: 'bryn',
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'The Tide Pools are calm enough to read. Come listen to the water.',
+      text: 'Read the tide records. Ask who benefits when a warning cannot be wrong.',
     },
     {
       id: 'I002-B12',
       trigger: { kind: 'stop_completed', islandNumber: 2, stopId: 'mystery' },
-      speakerId: 'tobin',
+      speakerId: 'sela',
       surface: 'toast',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'A pool clears. We added one lantern to the pools.',
+      text: 'Every saved life obeyed first. The pattern is colder than prophecy.',
     },
     {
       id: 'I002-B13',
@@ -146,28 +141,26 @@ export const island002NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'The pools are gathering folk again.',
+      text: 'The plaza fills with witnesses, exactly like the board wanted.',
     },
     {
       id: 'I002-B14',
       trigger: { kind: 'landmark_level_completed', islandNumber: 2, stopId: 'mystery', level: 2 },
-      speakerId: 'sela',
+      speakerId: 'bryn',
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'These pools were never just for fishing.',
+      text: 'A warning can protect us. Worshipping it can imprison us.',
     },
     {
       id: 'I002-B15',
       trigger: { kind: 'landmark_level_completed', islandNumber: 2, stopId: 'mystery', level: 3 },
-      speakerId: 'tobin',
+      speakerId: 'last-word',
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'A tide-bell rings over the pools.',
+      text: 'THE REGAL MUST STAND ALONE AT THE FINAL BELL.',
     },
-
-    // Wisdom — "The Lantern Walk"
     {
       id: 'I002-B16',
       trigger: { kind: 'stop_opened', islandNumber: 2, stopId: 'wisdom' },
@@ -175,26 +168,26 @@ export const island002NarrativeDefinition = {
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'The Lantern Walk asks what your stillness is protecting.',
+      text: 'The second sun is not a symbol. It is a machine above our heads.',
     },
     {
       id: 'I002-B17',
       trigger: { kind: 'stop_completed', islandNumber: 2, stopId: 'wisdom' },
-      speakerId: 'bryn',
+      speakerId: 'sela',
       surface: 'dialogue_sheet',
       priority: 'major',
       repeatPolicy: 'once',
-      text: 'Maelis is not attacking. She is holding her breath.',
-      secondaryText: 'Help her let it go, gently.',
+      text: 'If I lift my finger, the reading ends. If it keeps moving, we know.',
+      secondaryText: 'Trust the sacred system, or trust the person standing beside me.',
     },
     {
       id: 'I002-B18',
       trigger: { kind: 'landmark_level_completed', islandNumber: 2, stopId: 'wisdom', level: 1 },
-      speakerId: 'bryn',
+      speakerId: 'maelis',
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'One more lantern lit along the walk.',
+      text: '...the old warnings did not fall from the sky. They were pushed...',
     },
     {
       id: 'I002-B19',
@@ -203,7 +196,7 @@ export const island002NarrativeDefinition = {
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'This stopped tide was shaped by someone.',
+      text: 'The descent locks are open. Someone made the future walkable.',
     },
     {
       id: 'I002-B20',
@@ -212,10 +205,8 @@ export const island002NarrativeDefinition = {
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'We stop hiding what the water told us.',
+      text: 'I am done helping fear spell itself into law.',
     },
-
-    // Aggregate + Boss — "The Breathing Basin"
     {
       id: 'I002-B21',
       trigger: { kind: 'landmarks_restored_majority', islandNumber: 2, threshold: 3 },
@@ -223,7 +214,7 @@ export const island002NarrativeDefinition = {
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'Folk are back on the shore, turning stones.',
+      text: 'People are under the lantern. The board called them witnesses.',
     },
     {
       id: 'I002-B22',
@@ -232,26 +223,26 @@ export const island002NarrativeDefinition = {
       surface: 'toast',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'Free her breath — do not fight the tide.',
+      text: 'Save them first. Survive by doing what it did not account for.',
     },
     {
       id: 'I002-B23',
       trigger: { kind: 'boss_midpoint', islandNumber: 2 },
-      speakerId: 'maelis',
+      speakerId: 'last-word',
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: '...the wave... it never came...',
+      text: 'WHEN THE SECOND SUN FALLS, THE REGAL VOYAGER WILL DIE.',
     },
     {
       id: 'I002-B24',
       trigger: { kind: 'boss_eligible', islandNumber: 2 },
-      speakerId: 'bryn',
+      speakerId: 'sela',
       surface: 'dialogue_sheet',
       priority: 'major',
       repeatPolicy: 'once',
-      text: 'The bay is breathing again. The basin will hear us now.',
-      secondaryText: 'Help her let go — do not force the tide.',
+      text: 'At the final bell, I remove my finger. Then we break its certainty.',
+      secondaryText: 'If the board moves alone, Pebble Bay sees the prisoner inside it.',
     },
   ],
-} satisfies IslandNarrativeDefinition;
+};

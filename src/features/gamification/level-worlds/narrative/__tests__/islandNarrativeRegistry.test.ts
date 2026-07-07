@@ -22,6 +22,9 @@ export const islandNarrativeRegistryTests: TestCase[] = [
     run: () => {
       const islands = getRegisteredNarrativeIslandNumbers();
       assert(islands.includes(1), 'Island 1 is registered');
+      assert(!islands.includes(82), 'Island 82 recurring-villain payoff remains documentation-only');
+      assert(!islands.includes(115), 'Late Memory/Perfect Memory concept remains documentation-only');
+      assert(!islands.includes(117), 'Island 117 paradise concept remains documentation-only');
       assertEqual(getAllIslandNarrativeDefinitions().length, islands.length, 'definitions match island count');
     },
   },
