@@ -522,16 +522,28 @@ export function BoardStage(props: BoardStageProps) {
     tokenAnim.animState.x,
     tokenAnim.animState.y,
   ]);
-  // Caretaker anchoring — resolve the caretaker's tile anchor to screen space
-  // so the sprite sits on its tile and moves with the board camera.
+  // Caretaker anchoring — resolve the caretaker's home tile to screen space,
+  // then nudge the standee outward so it reads as standing next to the board
+  // rather than lying flat on the playable tile.
   const caretakerAnchor = caretakerTileIndex !== null && caretakerTileIndex !== undefined
     ? anchors[caretakerTileIndex]
     : undefined;
   const caretakerPlacement = useMemo(() => {
     if (!caretakerAnchor) return null;
     const pos = toScreen(caretakerAnchor);
-    return { x: pos.x, y: pos.y, scale: caretakerAnchor.scale * uniformScale };
-  }, [caretakerAnchor, toScreen, uniformScale]);
+    const centerX = boardSize.width / 2;
+    const centerY = boardSize.height / 2;
+    const dx = pos.x - centerX;
+    const dy = pos.y - centerY;
+    const distance = Math.hypot(dx, dy) || 1;
+    const outwardOffset = 58 * uniformScale;
+
+    return {
+      x: pos.x + (dx / distance) * outwardOffset,
+      y: pos.y + (dy / distance) * outwardOffset,
+      scale: caretakerAnchor.scale * uniformScale,
+    };
+  }, [boardSize.height, boardSize.width, caretakerAnchor, toScreen, uniformScale]);
 
   const diceOverlayStyle = useMemo<CSSProperties>(() => ({
     position: 'absolute',
@@ -727,9 +739,9 @@ export function BoardStage(props: BoardStageProps) {
           onStopClick={onStopClick}
           getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
         />
-        {/* Island caretaker — anchored to its home tile on the board plane.
-            Counter-tilted so the sprite stands upright like a standee while
-            its feet stay planted on the tile through camera pan/zoom. */}
+        {/* Island caretaker — tracked from its home tile on the board plane,
+            but nudged outside the tile ring and counter-tilted so it reads as
+            an upright standee beside the board. */}
         {caretakerArtSrc && caretakerPlacement ? (
           <button
             type="button"

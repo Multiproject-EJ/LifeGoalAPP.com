@@ -509,6 +509,17 @@ const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark40_ring');
 const ISLAND_CARETAKER_TILE_INDEX = 0;
 const EMPTY_CARETAKER_TOPICS: IslandInhabitantTopicDefinition[] = [];
 const EMPTY_CARETAKER_CONVERSATIONS: IslandConversationDefinition[] = [];
+const PRE_CONCORD_CARETAKER_UTTERANCES = [
+  '🧙 “whrwer@!?”',
+  '🧙 “gruum vella-nok?”',
+  '🧙 “tikka reluun… zhar!”',
+  '🧙 “moro? vellakai!”',
+  '🧙 “shaa-lum briiik?”',
+] as const;
+
+const getPreConcordCaretakerUtterance = () => (
+  PRE_CONCORD_CARETAKER_UTTERANCES[Math.floor(Math.random() * PRE_CONCORD_CARETAKER_UTTERANCES.length)]
+);
 const BUILD_DISCOUNT_RATE = 0.25;
 const BUILD_DISCOUNT_MIN_DURATION_MS = 2 * 60 * 1000;
 const BUILD_DISCOUNT_MAX_DURATION_MS = 15 * 60 * 1000;
@@ -10444,15 +10455,21 @@ export function IslandRunBoardPrototype({
   const resolvedCaretakerBackgroundArtSrc = islandArtAmbientBackgroundSrc || islandBackgroundSrc;
   const openCaretakerFlow = useCallback((source: 'caretaker_tile_land' | 'caretaker_board_tap' | 'dev_hud') => {
     if (!shouldShowCaretakerTalkAction) return;
+
+    if (!inhabitantCommunicationAccess.allowed) {
+      setLandingText(`${getPreConcordCaretakerUtterance()} The Caretaker gestures beside the board, but The Concord is not built yet.`);
+      return;
+    }
+
     setShowTopbarMenu(false);
     setShowAudioMenu(false);
     setIsIslandInhabitantFlowOpen(true);
     setLandingText(source === 'caretaker_tile_land'
-      ? '🧙 You landed on the Caretaker\'s tile. The island pauses to listen.'
+      ? '🧙 You landed near the Caretaker. The Concord translates their greeting.'
       : source === 'caretaker_board_tap'
-        ? '🧙 The Caretaker waves you over for a chat.'
+        ? '🧙 The Caretaker waves you over. The Concord channel opens.'
         : '🧙 Dev: opening the Island Caretaker flow.');
-  }, [shouldShowCaretakerTalkAction]);
+  }, [inhabitantCommunicationAccess.allowed, shouldShowCaretakerTalkAction]);
   const handleCaretakerFlowClose = (result: IslandInhabitantFlowResult) => {
     setIsIslandInhabitantFlowOpen(false);
     if (result.closeReason === 'missing_content') {
