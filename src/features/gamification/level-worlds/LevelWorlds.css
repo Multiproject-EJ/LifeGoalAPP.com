@@ -10555,6 +10555,33 @@
     0 26px 70px rgba(0, 0, 0, 0.56);
 }
 
+.island-traffic-light__close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid rgba(220, 242, 255, 0.42);
+  border-radius: 999px;
+  color: rgba(248, 251, 255, 0.94);
+  font-size: 1.55rem;
+  font-weight: 850;
+  line-height: 1;
+  background: rgba(5, 18, 31, 0.72);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+}
+
+.island-traffic-light__close:focus-visible {
+  outline: 3px solid rgba(125, 216, 255, 0.82);
+  outline-offset: 0.2rem;
+}
+
 .island-stop-modal--traffic-light::before {
   content: '';
   position: absolute;
@@ -10805,7 +10832,7 @@
 
 /* Spin: many rotations, landing on the resolved face. */
 .island-coin--flipping .island-coin__inner {
-  animation: island-coin-spin 1.3s cubic-bezier(0.18, 0.7, 0.2, 1) both;
+  animation: island-coin-spin 2.6s cubic-bezier(0.16, 0.78, 0.18, 1) both;
 }
 
 .island-coin--flipping.island-coin--lands-tails .island-coin__inner {
@@ -10893,8 +10920,8 @@
 }
 
 .island-traffic-light__prize-card--selected {
-  border-color: rgba(253, 224, 71, 0.78);
-  box-shadow: 0 0 0 2px rgba(253, 224, 71, 0.16), 0 0 24px rgba(250, 204, 21, 0.26);
+  border-color: rgba(125, 216, 255, 0.52);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 20px rgba(0, 0, 0, 0.24);
 }
 
 .island-traffic-light--flipping .island-traffic-light__prize-card {
@@ -10915,8 +10942,7 @@
   transform: scale(0.9);
 }
 
-.island-traffic-light__prize-title,
-.island-traffic-light__prize-focus {
+.island-traffic-light__prize-title {
   display: block;
   font-weight: 950;
   line-height: 1.08;
@@ -10927,14 +10953,6 @@
   font-size: 0.98rem;
 }
 
-.island-traffic-light__prize-focus {
-  color: #6fd6ff;
-  font-size: 0.86rem;
-}
-
-.island-traffic-light__prize-card--gift .island-traffic-light__prize-focus {
-  color: #d486ff;
-}
 
 /* Replaces the coin + mystery-box picker once the flip lands (see the
    `phase !== 'revealed'` guards in IslandRunBoardPrototype.tsx) — this is the
@@ -10967,8 +10985,13 @@
   max-height: 34vh;
   height: auto;
   object-fit: contain;
-  filter: drop-shadow(0 0 28px rgba(253, 224, 71, 0.7)) drop-shadow(0 18px 26px rgba(0, 0, 0, 0.42));
-  animation: island-traffic-light-winner-zoom 0.72s cubic-bezier(0.16, 1.16, 0.3, 1) both;
+  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.42));
+  animation: island-traffic-light-winner-zoom 0.72s cubic-bezier(0.16, 1.16, 0.3, 1) both, island-traffic-light-winner-pulse 1.6s ease-in-out 0.72s infinite;
+}
+
+.island-stop-modal .island-traffic-light__winner-spotlight:disabled {
+  cursor: default;
+  opacity: 1;
 }
 
 .island-traffic-light__winner-tap-hint {
@@ -10983,6 +11006,11 @@
   0% { opacity: 0; transform: scale(0.36) translateY(22px); }
   64% { opacity: 1; transform: scale(1.16) translateY(0); }
   100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes island-traffic-light-winner-pulse {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.035); }
 }
 
 /* ── Reward hero (zoomed-in win presentation) ────────────────────────────────── */
@@ -11025,7 +11053,7 @@
   background: rgba(12, 74, 110, 0.78);
   border: 1px solid rgba(125, 216, 255, 0.5);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-  animation: island-coin-chip-pop 0.45s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+  animation: island-coin-chip-pop 0.52s cubic-bezier(0.2, 1.2, 0.3, 1) both;
 }
 
 .island-coin-reward__chip b {
