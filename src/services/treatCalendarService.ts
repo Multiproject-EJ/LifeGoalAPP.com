@@ -280,20 +280,31 @@ function computePersonalQuestTodayIndex(
     return totalDays;
   }
 
-  const nextSequentialDay = progress?.next_sequential_day;
-  if (typeof nextSequentialDay === 'number' && nextSequentialDay >= 1 && nextSequentialDay <= totalDays) {
-    return nextSequentialDay;
+  // No opens yet — honor a stored `next_sequential_day` if valid, else day 1.
+  if (!progress || progress.opened_days.length === 0) {
+    const nsd = progress?.next_sequential_day;
+    if (typeof nsd === 'number' && nsd >= 1 && nsd <= totalDays) return nsd;
+    return 1;
   }
 
-  if (!progress || progress.opened_days.length === 0) return 1;
   const maxOpened = Math.max(...progress.opened_days);
 
   // Gate: only advance past the last opened day if `last_opened_date` is
   // strictly before the current calendar date (local midnight comparison).
+  // This must be checked *before* honoring `next_sequential_day`, because
+  // opening a door eagerly writes `next_sequential_day = dayIndex + 1`. Without
+  // this gate the calendar would immediately unlock the next day on the same
+  // calendar day, letting the user chain all the way to day 7 in one sitting.
   const todayStr = formatLocalYmd(new Date());
   if (progress.last_opened_date === todayStr) {
     // Already opened a door today — stay on that day (shows as "opened")
     return Math.min(maxOpened, totalDays);
+  }
+
+  // A new calendar day since the last open — the next sequential day unlocks.
+  const nextSequentialDay = progress.next_sequential_day;
+  if (typeof nextSequentialDay === 'number' && nextSequentialDay >= 1 && nextSequentialDay <= totalDays) {
+    return nextSequentialDay;
   }
 
   return Math.min(maxOpened + 1, totalDays);

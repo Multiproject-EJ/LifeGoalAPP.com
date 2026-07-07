@@ -26,6 +26,7 @@
     "test:goal-pillars": "node scripts/run-goal-pillar-tests.mjs",
     "test:daily-treats-routing": "node scripts/check-daily-treats-routing.mjs",
     "test:daily-treats-reveal-guards": "node scripts/check-daily-treats-reveal-guards.mjs",
+    "test:personal-quest-day-unlock": "node scripts/check-personal-quest-day-unlock.mjs",
     "check:island-run-lucky-roll-dev-overlay": "node scripts/check-island-run-lucky-roll-dev-overlay.mjs",
     "check:island-run-architecture-guards": "node scripts/check-island-run-architecture-guards.mjs",
     "check:app-boot": "node scripts/check-app-boot-smoke.mjs",
