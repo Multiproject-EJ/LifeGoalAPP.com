@@ -3724,3 +3724,33 @@
 .score-tab__dex-fullcard-nav--next {
   right: 0.35rem;
 }
+
+.score-tab__dex-fullcard .creature-card-modal-close {
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.creature-card-modal-close {
+  position: absolute;
+  z-index: 5;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid rgba(255, 255, 255, 0.96);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff3b30, #bf1515);
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(127, 29, 29, 0.4);
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.creature-card-modal-close:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
+}

@@ -29,9 +29,13 @@
 }
 
 .creature-card-simple-front__image {
-  width: 100%;
-  height: 100%;
+  width: min(86%, 140px);
+  height: min(86%, 140px);
+  max-width: 140px;
+  max-height: 140px;
   object-fit: contain;
+  object-position: center;
+  display: block;
 }
 
 .creature-card-simple-front__emoji {
