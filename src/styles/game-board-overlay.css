@@ -222,9 +222,9 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -47%);
+  transform: translate(-50%, -50%);
   z-index: 2;
-  width: clamp(2.45rem, 10.4vw, 3.35rem);
+  width: clamp(2.85rem, 12vw, 3.95rem);
   aspect-ratio: 1;
   display: inline-grid;
   place-items: center;
@@ -278,7 +278,7 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -47%);
+  transform: translate(-50%, -50%);
   display: grid;
   justify-items: center;
   gap: 0.02rem;
