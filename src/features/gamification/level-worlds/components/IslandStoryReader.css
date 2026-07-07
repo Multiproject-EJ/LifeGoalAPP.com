@@ -198,3 +198,29 @@
   color: var(--island-story-action-text);
   opacity: 0.72;
 }
+
+.island-story-reader__backdrop {
+  animation: island-story-reader-slow-fade-in 900ms ease-out both;
+}
+
+.island-story-reader {
+  width: 100%;
+  max-width: none;
+  animation: island-story-reader-content-rise 1100ms ease-out both;
+}
+
+@keyframes island-story-reader-slow-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes island-story-reader-content-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

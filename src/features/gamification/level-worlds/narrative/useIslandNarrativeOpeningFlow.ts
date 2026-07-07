@@ -18,7 +18,7 @@ import {
 } from './islandNarrativeReactionDispatch';
 
 export type ActiveIslandStoryEpisode = {
-  kind: 'global_prologue' | 'island_arrival' | 'island_resolution';
+  kind: 'global_prologue' | 'island_arrival' | 'island_resolution' | 'island_travel_arrival';
   manifestPath: string;
 } | null;
 
