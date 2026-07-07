@@ -11615,6 +11615,8 @@ export function IslandRunBoardPrototype({
       {techCollectionModal && !techCompletionCelebration ? (
         <IslandTechCollectionModal
           result={techCollectionModal}
+          islandNumber={islandNumber}
+          isAutoRolling={isAutoRolling}
           onDismiss={() => setTechCollectionModal(null)}
         />
       ) : null}
