@@ -402,8 +402,8 @@ export function GameBoardOverlay({
               className="game-board-overlay__controller-compass-btn"
               onClick={onCompassClick}
               disabled={!onCompassClick}
-              aria-label="Open Player's Hand menu"
-              title="Player's Hand"
+              aria-label="Open full navigation menu"
+              title="Open menu"
             >
               <span className="game-board-overlay__controller-compass-icon" aria-hidden="true" />
             </button>

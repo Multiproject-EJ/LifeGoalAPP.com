@@ -3001,6 +3001,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
     handleMobileNavSelect('identity');
   }, [archetypeHand, handleMobileNavSelect]);
 
+  const openFullMobileMenuFromGameOverlay = useCallback(() => {
+    setIsMobileProfileDialogOpen(false);
+    setIsEnergyMenuOpen(false);
+    setIsMyQuestSubmenuOpen(false);
+    setIsFeedbackSupportSubmenuOpen(false);
+    setIsStarterQuestSheetOpen(false);
+    setShowGameBoardOverlay(false);
+    setIsMobileMenuOpen(true);
+    handleMobileFooterExpand(true);
+  }, [handleMobileFooterExpand]);
+
   const openQuestCompassFromMobileMenu = useCallback(() => {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
@@ -5463,7 +5474,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onSpinWinClick={() => handleMobileNavSelect('score')}
           onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
           onGarageClick={() => handleMobileNavSelect('actions')}
-          onCompassClick={openPlayersHandFromLauncher}
+          onCompassClick={openFullMobileMenuFromGameOverlay}
           profilePlaystyleIcon={playstyleIcon ?? undefined}
           profileAvatarUrl={profileAvatarUrl}
           profilePlaystyleLabel={playstyleLabel ?? undefined}
@@ -5804,7 +5815,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         onSpinWinClick={() => handleMobileNavSelect('score')}
         onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
         onGarageClick={() => handleMobileNavSelect('actions')}
-        onCompassClick={openPlayersHandFromLauncher}
+        onCompassClick={openFullMobileMenuFromGameOverlay}
         profilePlaystyleIcon={playstyleIcon ?? undefined}
         profileAvatarUrl={profileAvatarUrl}
         profilePlaystyleLabel={playstyleLabel ?? undefined}
