@@ -170,6 +170,30 @@
   opacity: 0.6;
 }
 
+/* Flying clone (phase 2): pinned over the viewport at the fragment's last rect,
+   then transformed centre-stage → destination cell. The modal drives the
+   transform imperatively; the transition here does the tweening. */
+.island-tech-fragment__flyer {
+  position: fixed;
+  z-index: 190;
+  box-sizing: border-box;
+  border-radius: 22px;
+  background-repeat: no-repeat;
+  border: 2px solid rgba(125, 211, 252, 0.75);
+  box-shadow: 0 0 30px rgba(56, 189, 248, 0.7), 0 0 70px rgba(56, 189, 248, 0.35),
+    inset 0 0 26px rgba(14, 165, 233, 0.35);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transform-origin: center center;
+  will-change: transform, opacity;
+  transition: transform 0.55s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.55s ease;
+}
+
+.island-tech-fragment__flyer--fallback {
+  background: radial-gradient(circle at 50% 40%, rgba(14, 165, 233, 0.5), rgba(8, 16, 34, 0.9));
+}
+
 /* The full-grid celebration outranks the transient pickup modal but sits below
    critical travel/boss/system surfaces. */
 .island-tech-celebration-backdrop {
@@ -561,6 +585,10 @@
   .island-tech-fragment__art {
     animation: none !important;
   }
+
+  .island-tech-fragment__flyer {
+    transition: none !important;
+  }
 }
 
 [data-reduced-motion='true'] .island-tech-fragment,
@@ -568,6 +596,10 @@
 [data-reduced-motion='true'] .island-tech-fragment__halo,
 [data-reduced-motion='true'] .island-tech-fragment__art {
   animation: none !important;
+}
+
+[data-reduced-motion='true'] .island-tech-fragment__flyer {
+  transition: none !important;
 }
 
 [data-reduced-motion='true'] .island-tech-modal,

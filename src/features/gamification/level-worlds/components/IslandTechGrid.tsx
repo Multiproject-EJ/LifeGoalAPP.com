@@ -79,6 +79,7 @@ export function IslandTechGrid(props: IslandTechGridProps) {
         return (
           <span
             key={cellIndex}
+            data-tech-slot={cellIndex}
             className={[
               'island-tech-grid__cell',
               isCollected ? 'island-tech-grid__cell--collected' : 'island-tech-grid__cell--locked',
