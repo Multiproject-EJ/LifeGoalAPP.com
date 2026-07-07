@@ -224,7 +224,7 @@
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 2;
-  width: clamp(2.85rem, 12vw, 3.95rem);
+  width: clamp(3.05rem, 13vw, 4.1rem);
   aspect-ratio: 1;
   display: inline-grid;
   place-items: center;
@@ -261,8 +261,8 @@
 }
 
 .game-board-overlay__rank-extension-flip-face--back .rank-badge {
-  width: min(100%, var(--rank-badge-size, 46px));
-  height: min(100%, var(--rank-badge-size, 46px));
+  width: 100%;
+  height: 100%;
 }
 
 .game-board-overlay__rank-extension-center--pulse {
