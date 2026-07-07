@@ -62,6 +62,7 @@ import { getIslandCaretakerConcordContent, hasIslandCaretakerConcordContent } fr
 import type { IslandConversationDefinition, IslandInhabitantTopicDefinition } from '../inhabitants/islandConversationTypes';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandCommunicationAccess } from '../services/islandCommunicationAccess';
+import { resolveIslandRunConcordHubEntryState } from '../services/islandRunConcordHubEntry';
 import { getCreatureChannelLine } from '../services/islandCreatureChannel';
 import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
@@ -1522,6 +1523,7 @@ export function IslandRunBoardPrototype({
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
   const [isIslandInhabitantFlowOpen, setIsIslandInhabitantFlowOpen] = useState(false);
   const [showCreatureChannelModal, setShowCreatureChannelModal] = useState(false);
+  const [showConcordHubModal, setShowConcordHubModal] = useState(false);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -2238,10 +2240,10 @@ export function IslandRunBoardPrototype({
         showStoryReader ||
         isIslandInhabitantFlowOpen ||
         showCreatureChannelModal ||
+        showConcordHubModal ||
         Boolean(dormantDoorMiniGame) ||
         Boolean(trafficLightCoinFlip) ||
         techCollectionModal ||
-      techCompletionCelebration ||
         techCompletionCelebration ||
         showEncounterModal ||
         showGamifiedJournalCard ||
@@ -2266,6 +2268,7 @@ export function IslandRunBoardPrototype({
     showShopPanel,
     showStoryReader,
     showCreatureChannelModal,
+    showConcordHubModal,
     isIslandInhabitantFlowOpen,
     showTopbarMenu,
   ]);
@@ -10386,6 +10389,20 @@ export function IslandRunBoardPrototype({
     () => getIslandCommunicationAccess(runtimeState, 'creature'),
     [runtimeState],
   );
+  const concordHubEntryState = useMemo(
+    () => resolveIslandRunConcordHubEntryState(runtimeState),
+    [runtimeState],
+  );
+  const openGlobalStoryReader = useCallback(() => {
+    setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
+  }, []);
+  const handleConcordEntryClick = useCallback(() => {
+    if (concordHubEntryState.primaryAction === 'open-concord-hub') {
+      setShowConcordHubModal(true);
+      return;
+    }
+    openGlobalStoryReader();
+  }, [concordHubEntryState.primaryAction, openGlobalStoryReader]);
   const resolvedCaretakerBackgroundArtSrc = islandArtAmbientBackgroundSrc || islandBackgroundSrc;
   const openCaretakerFlow = useCallback((source: 'caretaker_tile_land' | 'caretaker_board_tap' | 'dev_hud') => {
     if (!shouldShowCaretakerTalkAction) return;
@@ -10603,10 +10620,10 @@ export function IslandRunBoardPrototype({
           <button
             type="button"
             className="island-run-prototype__shop-btn"
-            aria-label="Open story reader"
-            onClick={() => setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' })}
+            aria-label={concordHubEntryState.ariaLabel}
+            onClick={handleConcordEntryClick}
           >
-            📖 Story
+            {concordHubEntryState.icon} {concordHubEntryState.label}
           </button>
           </div>
           {isDevModeEnabled && (
@@ -11465,10 +11482,11 @@ export function IslandRunBoardPrototype({
                   type="button"
                   className="island-run-prototype__footer-nav-btn island-run-prototype__footer-nav-btn--slot-story"
                   style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.leftUpper)}
-                  onClick={() => setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' })}
+                  onClick={handleConcordEntryClick}
                   disabled={isBuildTutorialGameplayBlocked}
+                  aria-label={concordHubEntryState.ariaLabel}
                 >
-                  📖 Story
+                  {concordHubEntryState.icon} {concordHubEntryState.label}
                 </button>
                 <button
                   type="button"
@@ -14761,6 +14779,55 @@ export function IslandRunBoardPrototype({
             </div>
             <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
               <button type="button" className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action" onClick={() => setShowCreatureChannelModal(false)}>We can talk later</button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {showConcordHubModal ? (
+        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense" role="dialog" aria-modal="true" aria-label="The Concord hub">
+            <div className="island-stop-modal__context">
+              <p className="island-stop-modal__eyebrow">The Concord</p>
+              <h3 className="island-stop-modal__title">Meaning channels online</h3>
+              <p className="island-stop-modal__copy">The Concord is built. Story, caretaker translation, and creature signals now flow through the same restored device.</p>
+              <p className="island-stop-modal__copy">Fragments restored: {concordHubEntryState.requiredFragmentCount}/{concordHubEntryState.requiredFragmentCount}</p>
+              <div className="island-stop-modal__cta island-stop-modal__cta--balanced">
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                  onClick={() => {
+                    setShowConcordHubModal(false);
+                    openGlobalStoryReader();
+                  }}
+                >
+                  📖 Story Archive
+                </button>
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                  onClick={() => {
+                    setShowConcordHubModal(false);
+                    openCaretakerFlow('dev_hud');
+                  }}
+                  disabled={!shouldShowCaretakerTalkAction}
+                >
+                  🧙 Caretaker Channel
+                </button>
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                  onClick={() => {
+                    setShowConcordHubModal(false);
+                    setShowCreatureChannelModal(true);
+                  }}
+                >
+                  🐾 Creature Channel
+                </button>
+              </div>
+            </div>
+            <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
+              <button type="button" className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action" onClick={() => setShowConcordHubModal(false)}>Return to island</button>
             </div>
           </section>
         </div>
