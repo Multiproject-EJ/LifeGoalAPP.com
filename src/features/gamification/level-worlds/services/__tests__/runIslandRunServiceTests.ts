@@ -126,6 +126,7 @@ import { islandRunTechnologyFragmentRenderingGuardTests } from './islandRunTechn
 import { islandRunTechCollectionPersistenceTests } from './islandRunTechCollectionPersistence.test';
 import { islandTechCollectionComponentTests } from './islandTechCollectionComponent.test';
 import { islandRunTechnologyUnlockTests } from './islandRunTechnologyUnlocks.test';
+import { islandRunConcordHubEntryTests } from './islandRunConcordHubEntry.test';
 import { islandCommunicationAccessTests } from './islandCommunicationAccess.test';
 import { bossRhythmGameTests } from './bossRhythmGame.test';
 import { islandRunReflectionCurriculumTests } from './islandRunReflectionCurriculum.test';
@@ -263,6 +264,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunTechCollectionPersistence', tests: islandRunTechCollectionPersistenceTests },
   { label: 'islandTechCollectionComponent', tests: islandTechCollectionComponentTests },
   { label: 'islandRunTechnologyUnlocks', tests: islandRunTechnologyUnlockTests },
+  { label: 'islandRunConcordHubEntry', tests: islandRunConcordHubEntryTests },
   { label: 'islandCommunicationAccess', tests: islandCommunicationAccessTests },
   { label: 'bossRhythmGame', tests: bossRhythmGameTests },
   { label: 'islandRunReflectionCurriculum', tests: islandRunReflectionCurriculumTests },
