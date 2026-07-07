@@ -36,6 +36,140 @@
     rgba(4, 8, 18, 0.62);
 }
 
+/* Fragment phase: the recovered piece floats over a heavily tinted board so the
+   glowing fragment reads as the sole focus. */
+.island-tech-modal-backdrop--fragment {
+  background: radial-gradient(circle at 50% 46%, rgba(56, 189, 248, 0.24), transparent 42%),
+    rgba(2, 5, 14, 0.82);
+}
+
+.island-tech-modal-backdrop--fragment.island-tech-modal-backdrop--line {
+  background: radial-gradient(circle at 50% 46%, rgba(250, 204, 21, 0.26), transparent 42%),
+    rgba(2, 5, 14, 0.84);
+}
+
+/* ── Fragment reveal (phase 1) ─────────────────────────────────────────────── */
+.island-tech-fragment {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: #eaf4ff;
+  animation: island-tech-fragment-enter 0.42s cubic-bezier(0.18, 0.9, 0.24, 1.1) both;
+}
+
+.island-tech-fragment__eyebrow {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(125, 211, 252, 0.9);
+}
+
+.island-tech-fragment__title {
+  margin: 0 0 18px;
+  font-size: 1.28rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #f4faff;
+  text-shadow: 0 0 22px rgba(56, 189, 248, 0.6);
+}
+
+.island-tech-fragment__stage {
+  position: relative;
+  width: min(62vw, 260px);
+  aspect-ratio: 1 / 1;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  animation: island-tech-fragment-float 3.4s ease-in-out infinite;
+}
+
+.island-tech-fragment__stage:focus-visible {
+  outline: 3px solid #fff7d6;
+  outline-offset: 8px;
+  border-radius: 26px;
+}
+
+/* Radiant glow bleeding out from behind the fragment. */
+.island-tech-fragment__halo {
+  position: absolute;
+  inset: -22%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(125, 211, 252, 0.55), rgba(56, 189, 248, 0.28) 42%, transparent 68%);
+  filter: blur(6px);
+  z-index: 0;
+  animation: island-tech-fragment-halo 2.4s ease-in-out infinite;
+}
+
+.island-tech-fragment__art {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 22px;
+  background-repeat: no-repeat;
+  border: 2px solid rgba(125, 211, 252, 0.75);
+  box-shadow: 0 0 30px rgba(56, 189, 248, 0.7), 0 0 70px rgba(56, 189, 248, 0.35),
+    inset 0 0 26px rgba(14, 165, 233, 0.35);
+  display: grid;
+  place-items: center;
+  animation: island-tech-fragment-glow 2.2s ease-in-out infinite;
+}
+
+.island-tech-fragment__art--fallback {
+  background: radial-gradient(circle at 50% 40%, rgba(14, 165, 233, 0.5), rgba(8, 16, 34, 0.9));
+}
+
+.island-tech-fragment__emoji {
+  font-size: clamp(3rem, 22vw, 6rem);
+  filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.8));
+}
+
+/* Small emblem so the fragment stays recognisable even over the artwork. */
+.island-tech-fragment__badge {
+  position: absolute;
+  z-index: 2;
+  right: -6px;
+  bottom: -6px;
+  width: 2.4em;
+  height: 2.4em;
+  font-size: 1.15rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: linear-gradient(160deg, rgba(13, 24, 46, 0.96), rgba(8, 16, 34, 0.96));
+  border: 1px solid rgba(125, 211, 252, 0.6);
+  box-shadow: 0 6px 18px rgba(2, 6, 16, 0.6);
+}
+
+.island-tech-fragment__probe {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.island-tech-fragment__name {
+  margin: 18px 0 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #d7ecff;
+}
+
+.island-tech-fragment__hint {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
 /* The full-grid celebration outranks the transient pickup modal but sits below
    critical travel/boss/system surfaces. */
 .island-tech-celebration-backdrop {
@@ -383,6 +517,33 @@
   50% { box-shadow: 0 0 46px rgba(56, 189, 248, 0.75), 0 0 70px rgba(168, 85, 247, 0.4); }
 }
 
+@keyframes island-tech-fragment-enter {
+  0% { opacity: 0; transform: scale(0.7); }
+  60% { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes island-tech-fragment-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes island-tech-fragment-halo {
+  0%, 100% { opacity: 0.7; transform: scale(0.94); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+@keyframes island-tech-fragment-glow {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.7), 0 0 70px rgba(56, 189, 248, 0.35),
+      inset 0 0 26px rgba(14, 165, 233, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 46px rgba(125, 211, 252, 0.9), 0 0 100px rgba(56, 189, 248, 0.55),
+      inset 0 0 34px rgba(14, 165, 233, 0.5);
+  }
+}
+
 /* ── Reduced motion ────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .island-tech-modal-backdrop,
@@ -393,9 +554,20 @@
   .island-tech-grid__cell--new,
   .island-tech-grid__cell--new .island-tech-grid__veil,
   .island-tech-grid__cell--line,
-  .island-tech-grid__stamp {
+  .island-tech-grid__stamp,
+  .island-tech-fragment,
+  .island-tech-fragment__stage,
+  .island-tech-fragment__halo,
+  .island-tech-fragment__art {
     animation: none !important;
   }
+}
+
+[data-reduced-motion='true'] .island-tech-fragment,
+[data-reduced-motion='true'] .island-tech-fragment__stage,
+[data-reduced-motion='true'] .island-tech-fragment__halo,
+[data-reduced-motion='true'] .island-tech-fragment__art {
+  animation: none !important;
 }
 
 [data-reduced-motion='true'] .island-tech-modal,
