@@ -5,6 +5,7 @@ import {
   TECH_COLLECTION_LINES,
   techCollectionCellBackgroundPosition,
 } from '../services/islandRunTechCollection';
+import { getTechnologyFragmentVisual } from '../services/islandTechnologyFragmentVisuals';
 
 /**
  * IslandTechGrid — the shared 3×3 technology image grid.
@@ -32,6 +33,7 @@ export interface IslandTechGridProps {
   fullyRestored?: boolean;
   reducedMotion?: boolean;
   imageSrc?: string;
+  islandNumber?: number;
 }
 
 export function IslandTechGrid(props: IslandTechGridProps) {
@@ -42,6 +44,7 @@ export function IslandTechGrid(props: IslandTechGridProps) {
     fullyRestored = false,
     reducedMotion = false,
     imageSrc = TECH_COLLECTION_IMAGE_SRC,
+    islandNumber = 1,
   } = props;
 
   const [assetFailed, setAssetFailed] = useState(false);
@@ -76,6 +79,9 @@ export function IslandTechGrid(props: IslandTechGridProps) {
         const isNew = cellIndex === newSlotIndex;
         const isLine = lineCells.has(cellIndex);
         const position = techCollectionCellBackgroundPosition(cellIndex);
+        const cellImageSrc = getTechnologyFragmentVisual(islandNumber, cellIndex)?.imageSrc;
+        const resolvedImageSrc = cellImageSrc ?? imageSrc;
+        const usesWholeGridSprite = !cellImageSrc;
         return (
           <span
             key={cellIndex}
@@ -92,9 +98,9 @@ export function IslandTechGrid(props: IslandTechGridProps) {
               assetFailed
                 ? undefined
                 : {
-                    backgroundImage: `url("${imageSrc}")`,
-                    backgroundSize: '300% 300%',
-                    backgroundPosition: `${position.x}% ${position.y}%`,
+                    backgroundImage: `url("${resolvedImageSrc}")`,
+                    backgroundSize: usesWholeGridSprite ? '300% 300%' : 'cover',
+                    backgroundPosition: usesWholeGridSprite ? `${position.x}% ${position.y}%` : 'center',
                   }
             }
           >

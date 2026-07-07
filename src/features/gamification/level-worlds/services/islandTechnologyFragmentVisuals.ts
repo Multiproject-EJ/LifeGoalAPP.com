@@ -14,6 +14,8 @@ export type VisibleTechnologyFragment = {
   fragmentSlot: number;
   placeholder: string;
   ariaLabel: string;
+  imageSrc?: string;
+  alt: string;
 };
 
 export const CONCORD_FRAGMENT_PLACEHOLDERS = [
@@ -28,6 +30,11 @@ export const CONCORD_FRAGMENT_PLACEHOLDERS = [
   '✨',
 ] as const;
 
+const CONCORD_FRAGMENT_IMAGE_SRC_BY_SLOT = Array.from(
+  { length: TECH_COLLECTION_CELL_COUNT },
+  (_, index) => `/tech/Concord_frag${index + 1}.webp`,
+) as readonly string[];
+
 const ISLAND_1_CONCORD_FRAGMENT_VISUALS: Readonly<Record<number, IslandTechnologyFragmentVisual>> = Object.freeze(
   Object.fromEntries(
     CONCORD_FRAGMENT_PLACEHOLDERS.map((placeholder, index) => [
@@ -35,6 +42,7 @@ const ISLAND_1_CONCORD_FRAGMENT_VISUALS: Readonly<Record<number, IslandTechnolog
       {
         placeholder,
         fallbackEmoji: placeholder,
+        imageSrc: CONCORD_FRAGMENT_IMAGE_SRC_BY_SLOT[index],
         ariaLabel: `Technology fragment available: Concord fragment ${index + 1}`,
         alt: `Concord fragment ${index + 1}`,
       },

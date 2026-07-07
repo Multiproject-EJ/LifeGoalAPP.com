@@ -19,9 +19,10 @@ function notIncludes(source: string, forbidden: string) {
 export const islandTechCollectionComponentTests: TestCase[] = [
   // ── Shared 3×3 image grid ──────────────────────────────────────────────────
   {
-    name: 'grid splits one coherent image with background-size 300% 300% positioned per slot',
+    name: 'grid renders actual per-fragment Concord images with sprite fallback positioning',
     run: () => {
-      includes(gridSource, "backgroundSize: '300% 300%'");
+      includes(gridSource, 'getTechnologyFragmentVisual');
+      includes(gridSource, "backgroundSize: usesWholeGridSprite ? '300% 300%' : 'cover'");
       includes(gridSource, 'techCollectionCellBackgroundPosition');
       includes(gridSource, 'backgroundPosition');
     },

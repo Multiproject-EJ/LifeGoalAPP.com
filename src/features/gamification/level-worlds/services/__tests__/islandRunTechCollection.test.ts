@@ -83,6 +83,7 @@ export const islandRunTechCollectionTests: TestCase[] = [
       CONCORD_FRAGMENT_PLACEHOLDERS.forEach((placeholder, slot) => {
         assertEqual(getTechnologyFragmentPlaceholder(1, slot), placeholder, `slot ${slot} resolves to its placeholder`);
         assertEqual(getTechnologyFragmentVisual(1, slot)?.ariaLabel, `Technology fragment available: Concord fragment ${slot + 1}`, `slot ${slot} has accessible copy`);
+        assertEqual(getTechnologyFragmentVisual(1, slot)?.imageSrc, `/tech/Concord_frag${slot + 1}.webp`, `slot ${slot} resolves to its actual Concord image`);
       });
       assertEqual(getTechnologyFragmentPlaceholder(1, 9), '', 'out-of-range slots do not resolve a visual');
       assertEqual(getTechnologyFragmentPlaceholder(2, 0), '', 'non-Island-1 slots do not resolve a visual');
@@ -95,6 +96,7 @@ export const islandRunTechCollectionTests: TestCase[] = [
       assertDeepEqual(visible.map((fragment) => fragment.tileIndex), [6, 10, 13, 21, 25, 29], 'collected slots remove only their fixed tiles');
       assertDeepEqual(visible.map((fragment) => fragment.fragmentSlot), [1, 2, 3, 5, 6, 7], 'visible records preserve fixed slot identity');
       assertDeepEqual(visible.map((fragment) => fragment.placeholder), ['🔷', '🔹', '🧿', '🔮', '💎', '🌀'], 'visible records use slot placeholders, not tile type');
+      assertDeepEqual(visible.map((fragment) => fragment.imageSrc), ['/tech/Concord_frag2.webp', '/tech/Concord_frag3.webp', '/tech/Concord_frag4.webp', '/tech/Concord_frag6.webp', '/tech/Concord_frag7.webp', '/tech/Concord_frag8.webp'], 'visible records expose actual fragment image paths');
       assertEqual(listVisibleTechnologyFragments(1, [0, 1, 2, 3, 4, 5, 6, 7, 8]).length, 0, 'collected fragments have no visual records');
       assertEqual(listVisibleTechnologyFragments(1, []).some((fragment) => fragment.tileIndex === 2), false, 'unmapped object-capable tiles receive no fragment visual');
     },
