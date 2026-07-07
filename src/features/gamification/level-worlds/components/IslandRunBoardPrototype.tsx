@@ -2224,54 +2224,47 @@ export function IslandRunBoardPrototype({
   const showStoryReader = activeStoryEpisode !== null;
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
 
+  // A "blocking" surface is any full-attention modal/panel that renders above the
+  // board. When one opens we dismiss the top-bar (☰) menu so it is not left hanging
+  // behind the overlay.
+  const anyBlockingModalOpen =
+    showShopPanel ||
+    showMarketPanel ||
+    showBuildPanel ||
+    showOutOfDicePurchasePrompt ||
+    showRewardDetailsModal ||
+    showEggManiaModal ||
+    showHatcheryCompassModal ||
+    Boolean(activePlaceholder) ||
+    showStickerAlbumDialog ||
+    showSanctuaryPanel ||
+    showStoryReader ||
+    isIslandInhabitantFlowOpen ||
+    showCreatureChannelModal ||
+    showConcordHubModal ||
+    Boolean(dormantDoorMiniGame) ||
+    Boolean(trafficLightCoinFlip) ||
+    Boolean(techCollectionModal) ||
+    Boolean(techCompletionCelebration) ||
+    showEncounterModal ||
+    showGamifiedJournalCard ||
+    showClaimModal;
+  // Only react to a modal *opening* (a false→true edge), never to a flag merely
+  // being set. Previously this effect force-closed the menu on every render where
+  // `showTopbarMenu` was true and any flag was set. That meant if any one of these
+  // flags ever leaked to `true` during gameplay (a modal closing without resetting
+  // its own flag), the ☰ menu could no longer be opened at all: the tap flipped
+  // `showTopbarMenu` true and this effect slammed it shut on the same commit, so
+  // the button appeared to do nothing. Tracking the edge keeps the auto-dismiss
+  // while letting the player reopen the menu whenever no modal is actually opening.
+  const prevAnyBlockingModalOpenRef = useRef(false);
   useEffect(() => {
-    if (
-      showTopbarMenu &&
-      (showShopPanel ||
-        showMarketPanel ||
-        showBuildPanel ||
-        showOutOfDicePurchasePrompt ||
-        showRewardDetailsModal ||
-        showEggManiaModal ||
-        showHatcheryCompassModal ||
-        Boolean(activePlaceholder) ||
-        showStickerAlbumDialog ||
-        showSanctuaryPanel ||
-        showStoryReader ||
-        isIslandInhabitantFlowOpen ||
-        showCreatureChannelModal ||
-        showConcordHubModal ||
-        Boolean(dormantDoorMiniGame) ||
-        Boolean(trafficLightCoinFlip) ||
-        techCollectionModal ||
-        techCompletionCelebration ||
-        showEncounterModal ||
-        showGamifiedJournalCard ||
-        showClaimModal)
-    ) {
+    const justOpened = !prevAnyBlockingModalOpenRef.current && anyBlockingModalOpen;
+    prevAnyBlockingModalOpenRef.current = anyBlockingModalOpen;
+    if (justOpened) {
       setShowTopbarMenu(false);
     }
-  }, [
-    showBuildPanel,
-    showClaimModal,
-    showEncounterModal,
-    showGamifiedJournalCard,
-    dormantDoorMiniGame,
-    trafficLightCoinFlip,
-    showMarketPanel,
-    showOutOfDicePurchasePrompt,
-    activePlaceholder,
-    showRewardDetailsModal,
-    showEggManiaModal,
-    showHatcheryCompassModal,
-    showSanctuaryPanel,
-    showShopPanel,
-    showStoryReader,
-    showCreatureChannelModal,
-    showConcordHubModal,
-    isIslandInhabitantFlowOpen,
-    showTopbarMenu,
-  ]);
+  }, [anyBlockingModalOpen]);
 
   useEffect(() => {
     if (!showTopbarMenu || !showEggReadyBanner) return;
