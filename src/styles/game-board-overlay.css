@@ -218,6 +218,62 @@
   object-fit: contain;
 }
 
+.game-board-overlay__rank-extension-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -47%);
+  z-index: 2;
+  width: clamp(2.45rem, 10.4vw, 3.35rem);
+  aspect-ratio: 1;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  perspective: 520px;
+  pointer-events: auto;
+}
+
+.game-board-overlay__rank-extension-flip {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform-style: preserve-3d;
+  animation: game-board-overlay-rank-center-flip 760ms cubic-bezier(0.2, 0.82, 0.26, 1) 1.5s forwards;
+}
+
+.game-board-overlay__rank-extension-flip-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.game-board-overlay__rank-extension-flip-face--back {
+  transform: rotateY(180deg);
+}
+
+.game-board-overlay__rank-extension-flip-face--back .rank-badge {
+  width: min(100%, var(--rank-badge-size, 46px));
+  height: min(100%, var(--rank-badge-size, 46px));
+}
+
+.game-board-overlay__rank-extension-center--pulse {
+  animation: game-board-overlay-rank-pulse 1.6s ease-in-out infinite;
+}
+
+.game-board-overlay__rank-extension-flip-face .game-board-overlay__rank-extension-level {
+  position: static;
+  transform: none;
+}
+
 .game-board-overlay__rank-extension-level {
   position: absolute;
   left: 50%;
@@ -266,9 +322,6 @@
   max-width: 100%;
 }
 
-.game-board-overlay__rank-extension-rank--pulse {
-  animation: game-board-overlay-rank-pulse 1.6s ease-in-out infinite;
-}
 
 .game-board-overlay__header {
   opacity: 0;
@@ -727,6 +780,15 @@
   text-transform: uppercase;
 }
 
+@keyframes game-board-overlay-rank-center-flip {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(180deg);
+  }
+}
+
 @keyframes game-board-overlay-rank-pulse {
   0%,
   100% {
@@ -738,7 +800,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .game-board-overlay__rank-extension-rank--pulse {
+  .game-board-overlay__rank-extension-flip {
+    animation: none;
+    transform: rotateY(180deg);
+  }
+
+  .game-board-overlay__rank-extension-center--pulse {
     animation: none;
     box-shadow: 0 0 0 3px rgba(127, 159, 255, 0.55);
   }

@@ -301,24 +301,35 @@ export function GameBoardOverlay({
                   draggable="false"
                   aria-hidden="true"
                 />
-                <span className="game-board-overlay__rank-extension-level" aria-hidden="true">
-                  <span>Lv</span>
-                  <strong>{dualTrackViewModel.journeyLevel.level}</strong>
-                </span>
                 {currentRank ? (
                   <button
                     type="button"
-                    className={`game-board-overlay__rank-extension-rank${
-                      rankHasPendingPromotion ? ' game-board-overlay__rank-extension-rank--pulse' : ''
+                    className={`game-board-overlay__rank-extension-center${
+                      rankHasPendingPromotion ? ' game-board-overlay__rank-extension-center--pulse' : ''
                     }`}
                     onClick={() => setIsRankJourneyOpen(true)}
-                    aria-label={`Rank: ${currentRank.title}.${
+                    aria-label={`Level ${dualTrackViewModel.journeyLevel.level}. Rank: ${currentRank.title}.${
                       rankHasPendingPromotion ? ' New rank earned.' : ''
                     } Open rank journey`}
                   >
-                    <RankBadge rank={currentRank} size={44} />
+                    <span className="game-board-overlay__rank-extension-flip" aria-hidden="true">
+                      <span className="game-board-overlay__rank-extension-flip-face game-board-overlay__rank-extension-flip-face--front">
+                        <span className="game-board-overlay__rank-extension-level">
+                          <span>Lv</span>
+                          <strong>{dualTrackViewModel.journeyLevel.level}</strong>
+                        </span>
+                      </span>
+                      <span className="game-board-overlay__rank-extension-flip-face game-board-overlay__rank-extension-flip-face--back">
+                        <RankBadge rank={currentRank} size={46} />
+                      </span>
+                    </span>
                   </button>
-                ) : null}
+                ) : (
+                  <span className="game-board-overlay__rank-extension-level" aria-hidden="true">
+                    <span>Lv</span>
+                    <strong>{dualTrackViewModel.journeyLevel.level}</strong>
+                  </span>
+                )}
               </div>
               <span className="game-board-overlay__rank-extension-accessible">{rankExtensionBadge.label}</span>
             </header>
