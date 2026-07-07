@@ -2097,6 +2097,7 @@ export function IslandRunBoardPrototype({
   const [showSanctuaryMenu, setShowSanctuaryMenu] = useState(false);
   const [sanctuaryMenuModule, setSanctuaryMenuModule] = useState<'collection' | 'inventory' | 'quest' | 'rooms' | 'filters' | null>(null);
   const [hatchReveal, setHatchReveal] = useState<null | { creatureId: string; creatureName: string; rarity: 'common' | 'rare' | 'mythic' }>(null);
+  const [hatchedCreatureCardId, setHatchedCreatureCardId] = useState<string | null>(null);
   const [devPackOpeningPrototype, setDevPackOpeningPrototype] = useState<null | {
     cards: CreaturePackOpeningPrototypeCard[];
     grantId: string;
@@ -6751,6 +6752,11 @@ export function IslandRunBoardPrototype({
     return lockPageScroll();
   }, [pairedThemeOfferModal]);
 
+  useEffect(() => {
+    if (!hatchedCreatureCardId || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [hatchedCreatureCardId]);
+
   const creatureThemeAccessContext = useMemo(() => {
     const ownedCreatureIds = new Set(
       (__storeState.creatureCollection ?? [])
@@ -10277,6 +10283,7 @@ export function IslandRunBoardPrototype({
       activeLaunchedMinigameId ||
       activePlaceholder ||
       hatchReveal ||
+      hatchedCreatureCardId ||
       ticketPromptStopId ||
       lockedStopInfoStopId ||
       showBuildPanel ||
@@ -10317,6 +10324,7 @@ export function IslandRunBoardPrototype({
       activeLaunchedMinigameId ||
       activePlaceholder ||
       hatchReveal ||
+      hatchedCreatureCardId ||
       ticketPromptStopId ||
       lockedStopInfoStopId ||
       showBuildPanel ||
@@ -14647,13 +14655,43 @@ export function IslandRunBoardPrototype({
           pngFallbackSrc={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).cutoutPngSrc) || '/assets/creature-placeholders/silhouette.webp'}
           silhouetteSrc={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).silhouetteSrc) || '/assets/creature-placeholders/silhouette.webp'}
           fallbackEmoji={(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId) && resolveCreatureArtManifest(CREATURE_CATALOG.find((entry) => entry.id === hatchReveal.creatureId)!).emojiFallback) || '🐣'}
-          onClose={() => setHatchReveal(null)}
+          onClose={() => {
+            setHatchedCreatureCardId(hatchReveal.creatureId);
+            setHatchReveal(null);
+          }}
           onSetCompanion={() => {
             sanctuaryHandlers.setActiveCompanion(hatchReveal.creatureId);
+            setHatchedCreatureCardId(hatchReveal.creatureId);
             setHatchReveal(null);
           }}
         />
       ) : null}
+
+      {hatchedCreatureCardId && typeof document !== 'undefined' ? (() => {
+        const hatchedCreature = CREATURE_CATALOG.find((entry) => entry.id === hatchedCreatureCardId) ?? null;
+        if (!hatchedCreature) return null;
+        return createPortal(
+          <div className="island-run-creature-card-modal" role="dialog" aria-modal="true" aria-label={`${hatchedCreature.name} creature card`}>
+            <div className={`island-run-creature-card-modal__shell island-run-creature-card-modal__shell--${hatchedCreature.tier}`}>
+              <button
+                type="button"
+                className="creature-card-modal-close"
+                aria-label="Close creature card"
+                onClick={() => setHatchedCreatureCardId(null)}
+              >
+                ×
+              </button>
+              <CreatureCard
+                creature={hatchedCreature}
+                metadata={getCreatureCardMetadata(hatchedCreature)}
+                owned
+                active={activeCompanionId === hatchedCreature.id}
+              />
+            </div>
+          </div>,
+          document.body,
+        );
+      })() : null}
 
       {devPackOpeningPrototype ? (
         <CreaturePackOpeningPrototypeModal

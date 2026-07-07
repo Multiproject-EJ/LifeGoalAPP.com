@@ -1853,8 +1853,13 @@ function CreatureSanctuaryScoreHubView({
             onPointerUp={handleDexFullcardPointerUp}
           >
             {canSwipeDexCards ? <p className="score-tab__dex-fullcard-swipe-hint">Swipe left or right to browse creatures</p> : null}
-            <button type="button" className="score-tab__link score-tab__dex-fullcard-close" onClick={() => setSelectedDexCreatureId(null)}>
-              ✕ Close
+            <button
+              type="button"
+              className="creature-card-modal-close score-tab__dex-fullcard-close"
+              aria-label="Close creature card"
+              onClick={() => setSelectedDexCreatureId(null)}
+            >
+              ×
             </button>
             {canSwipeDexCards ? (
               <>

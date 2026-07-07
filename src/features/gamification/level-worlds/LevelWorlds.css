@@ -7524,9 +7524,13 @@
 
 .creature-card__art {
   position: relative;
-  width: 88%;
-  height: 88%;
+  width: min(86%, 300px);
+  height: min(86%, 300px);
+  max-width: 300px;
+  max-height: 300px;
   object-fit: contain;
+  object-position: center;
+  display: block;
   z-index: 1;
   filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.34));
 }
@@ -7687,8 +7691,19 @@
   aspect-ratio: 1.2 / 1;
   display: grid;
   place-items: center;
+  overflow: hidden;
+  min-height: 0;
+  max-height: min(42dvh, 320px);
 }
-.island-run-hatch-reveal__art { width: 88%; height: 88%; object-fit: contain; }
+.island-run-hatch-reveal__art {
+  width: min(86%, 300px);
+  height: min(86%, 300px);
+  max-width: 300px;
+  max-height: 300px;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
 .island-run-hatch-reveal__emoji { width: 88%; height: 88%; font-size: 2.4rem; place-items: center; }
 .island-run-hatch-reveal__header { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
 .island-run-hatch-reveal__title { margin: 0; font-size: 1.1rem; font-weight: 700; text-align: left; }
@@ -13307,4 +13322,51 @@
 @keyframes island-clear-backdrop-depart {
   0%, 55% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+.island-run-creature-card-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9900;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(6, 12, 22, 0.78);
+  animation: sanctuary-detail-fade 180ms ease-out;
+}
+
+.island-run-creature-card-modal__shell {
+  position: relative;
+  width: min(430px, 94vw);
+  max-height: min(760px, 88dvh);
+  overflow: visible;
+  display: grid;
+  place-items: center;
+}
+
+.creature-card-modal-close {
+  position: absolute;
+  top: -0.65rem;
+  right: -0.65rem;
+  z-index: 5;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid rgba(255, 255, 255, 0.96);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff3b30, #bf1515);
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(127, 29, 29, 0.4);
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.creature-card-modal-close:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
 }
