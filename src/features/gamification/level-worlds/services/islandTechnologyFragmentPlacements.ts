@@ -85,7 +85,9 @@ export function listVisibleTechnologyFragments(
         fragmentSlot: placement.fragmentSlot,
         placeholder: visual.placeholder,
         ariaLabel: visual.ariaLabel,
-      };
+        ...(visual.imageSrc ? { imageSrc: visual.imageSrc } : {}),
+        alt: visual.alt,
+      } satisfies VisibleTechnologyFragment;
     })
     .filter((fragment): fragment is VisibleTechnologyFragment => fragment !== null);
 }

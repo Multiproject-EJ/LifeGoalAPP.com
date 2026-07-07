@@ -12519,6 +12519,19 @@
   animation-delay: var(--fragment-animation-delay, 0s);
 }
 
+.island-tile__popout-image {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 118%;
+  height: 118%;
+  object-fit: contain;
+  border-radius: 8px;
+  filter: drop-shadow(0 0 8px rgba(126, 255, 248, 0.56)) drop-shadow(0 5px 9px rgba(12, 8, 32, 0.48));
+  animation: island-technology-fragment-glow 2.15s ease-in-out infinite;
+  animation-delay: var(--fragment-animation-delay, 0s);
+}
+
 .island-tile__popout-emoji {
   position: relative;
   z-index: 1;

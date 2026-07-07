@@ -99,9 +99,10 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
   phaseRef.current = phase;
 
   const isLineEvent = result.newlyCompletedLines.length > 0;
-  const fragmentImageSrc = imageSrc ?? TECH_COLLECTION_IMAGE_SRC;
-  const fragmentPosition = techCollectionCellBackgroundPosition(result.slotIndex);
   const fragmentVisual = getTechnologyFragmentVisual(islandNumber, result.slotIndex);
+  const fragmentImageSrc = fragmentVisual?.imageSrc ?? imageSrc ?? TECH_COLLECTION_IMAGE_SRC;
+  const fragmentPosition = techCollectionCellBackgroundPosition(result.slotIndex);
+  const usesWholeGridSprite = !fragmentVisual?.imageSrc;
   const fragmentLabel = fragmentVisual?.alt ?? `Fragment ${result.slotIndex + 1}`;
   const fragmentEmoji = fragmentVisual?.fallbackEmoji ?? '💠';
 
@@ -243,8 +244,8 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
               ? undefined
               : {
                   backgroundImage: `url("${fragmentImageSrc}")`,
-                  backgroundSize: '300% 300%',
-                  backgroundPosition: `${fragmentPosition.x}% ${fragmentPosition.y}%`,
+                  backgroundSize: usesWholeGridSprite ? '300% 300%' : 'cover',
+                  backgroundPosition: usesWholeGridSprite ? `${fragmentPosition.x}% ${fragmentPosition.y}%` : 'center',
                 }
           }
         >
@@ -304,6 +305,7 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
         completedLines={gridCompletedLines}
         reducedMotion={reduced}
         imageSrc={imageSrc}
+        islandNumber={islandNumber}
       />
 
       <p className="island-tech-modal__progress" role="status">
@@ -343,8 +345,8 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
             ? {}
             : {
                 backgroundImage: `url("${fragmentImageSrc}")`,
-                backgroundSize: '300% 300%',
-                backgroundPosition: `${fragmentPosition.x}% ${fragmentPosition.y}%`,
+                backgroundSize: usesWholeGridSprite ? '300% 300%' : 'cover',
+                backgroundPosition: usesWholeGridSprite ? `${fragmentPosition.x}% ${fragmentPosition.y}%` : 'center',
               }),
         }}
       >
