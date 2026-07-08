@@ -86,6 +86,7 @@ export interface BoardStageProps {
   /** Visible island caretaker affordance displayed on the board. */
   caretakerArtSrc?: string;
   caretakerLabel?: string;
+  caretakerBubbleText?: string | null;
   /**
    * Tile index the caretaker is anchored to. The caretaker sprite renders on
    * the board plane at this tile (following camera pan/zoom) instead of
@@ -158,6 +159,7 @@ export function BoardStage(props: BoardStageProps) {
     tokenIndex,
     caretakerArtSrc,
     caretakerLabel = 'Island caretaker',
+    caretakerBubbleText = null,
     caretakerTileIndex = null,
     onCaretakerClick,
     orbitStopVisuals,
@@ -757,6 +759,11 @@ export function BoardStage(props: BoardStageProps) {
           >
             <span className="island-run-board__caretaker-glow" aria-hidden="true" />
             <img className="island-run-board__caretaker-img" src={caretakerArtSrc} alt="" loading="lazy" decoding="async" />
+            {caretakerBubbleText ? (
+              <span className="island-run-board__caretaker-bubble" aria-hidden="true">
+                {caretakerBubbleText}
+              </span>
+            ) : null}
             <span className="island-run-board__caretaker-label">Caretaker</span>
           </button>
         ) : null}

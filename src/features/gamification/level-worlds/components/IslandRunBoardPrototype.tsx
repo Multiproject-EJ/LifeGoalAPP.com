@@ -1545,6 +1545,7 @@ export function IslandRunBoardPrototype({
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
   const [isIslandInhabitantFlowOpen, setIsIslandInhabitantFlowOpen] = useState(false);
+  const [caretakerBoardBubbleText, setCaretakerBoardBubbleText] = useState<string | null>(null);
   const [showCreatureChannelModal, setShowCreatureChannelModal] = useState(false);
   const [showConcordHubModal, setShowConcordHubModal] = useState(false);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
@@ -10475,10 +10476,13 @@ export function IslandRunBoardPrototype({
     if (!shouldShowCaretakerTalkAction) return;
 
     if (!inhabitantCommunicationAccess.allowed) {
-      setLandingText(`${getPreConcordCaretakerUtterance()} The Caretaker gestures beside the board, but The Concord is not built yet.`);
+      const preConcordMessage = `${getPreConcordCaretakerUtterance()} The Caretaker gestures beside the board, but The Concord is not built yet.`;
+      setCaretakerBoardBubbleText(preConcordMessage);
+      setLandingText(preConcordMessage);
       return;
     }
 
+    setCaretakerBoardBubbleText('The Caretaker waves you over. The Concord channel opens.');
     setShowTopbarMenu(false);
     setShowAudioMenu(false);
     setIsIslandInhabitantFlowOpen(true);
@@ -10490,6 +10494,7 @@ export function IslandRunBoardPrototype({
   }, [inhabitantCommunicationAccess.allowed, shouldShowCaretakerTalkAction]);
   const handleCaretakerFlowClose = (result: IslandInhabitantFlowResult) => {
     setIsIslandInhabitantFlowOpen(false);
+    setCaretakerBoardBubbleText(null);
     if (result.closeReason === 'missing_content') {
       console.warn('[IslandRun] Caretaker inhabitant flow closed with missing content.', result);
     }
@@ -11431,6 +11436,7 @@ export function IslandRunBoardPrototype({
           tokenIndex={tokenIndex}
           caretakerArtSrc={caretakerInhabitant?.retroSpriteSrc ?? '/assets/island_caretakers/001/IMG_retro_green.webp'}
           caretakerLabel={caretakerInhabitant?.displayName ?? 'Island caretaker'}
+          caretakerBubbleText={caretakerBoardBubbleText}
           caretakerTileIndex={shouldShowCaretakerTalkAction ? ISLAND_CARETAKER_TILE_INDEX : null}
           onCaretakerClick={() => openCaretakerFlow('caretaker_board_tap')}
           orbitStopVisuals={orbitStopVisuals}
