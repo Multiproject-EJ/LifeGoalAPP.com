@@ -14885,50 +14885,51 @@ export function IslandRunBoardPrototype({
       ) : null}
 
       {showConcordHubModal ? (
-        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense" role="dialog" aria-modal="true" aria-label="The Concord hub">
-            <div className="island-stop-modal__context">
-              <p className="island-stop-modal__eyebrow">The Concord</p>
-              <h3 className="island-stop-modal__title">Meaning channels online</h3>
-              <p className="island-stop-modal__copy">The Concord is built. Story, caretaker translation, and creature signals now flow through the same restored device.</p>
-              <p className="island-stop-modal__copy">Fragments restored: {concordHubEntryState.requiredFragmentCount}/{concordHubEntryState.requiredFragmentCount}</p>
-              <div className="island-stop-modal__cta island-stop-modal__cta--balanced">
+        <div className="island-run-overlay-root island-stop-modal-backdrop island-concord-hub-backdrop" role="presentation">
+          <section className="island-concord-hub-modal" role="dialog" aria-modal="true" aria-label="The Concord hub">
+            <img className="island-concord-hub-modal__device" src="/tech/Concord_on.webp" alt="The restored Concord device with three communication channels" />
+            <div className="island-concord-hub-modal__screen">
+              <p className="island-concord-hub-modal__eyebrow">The Concord</p>
+              <h3 className="island-concord-hub-modal__title">Channel select</h3>
+              <p className="island-concord-hub-modal__copy">Meaning channels online · {concordHubEntryState.requiredFragmentCount}/{concordHubEntryState.requiredFragmentCount} fragments restored</p>
+              <div className="island-concord-hub-modal__channels" aria-label="The Concord channels">
                 <button
                   type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                  className="island-concord-hub-modal__channel"
                   onClick={() => {
                     setShowConcordHubModal(false);
-                    openGlobalStoryReader();
+                    setShowCreatureChannelModal(true);
                   }}
                 >
-                  📖 Story Archive
+                  <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">🐾</span>
+                  <span>Creature Channel</span>
                 </button>
                 <button
                   type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                  className="island-concord-hub-modal__channel"
                   onClick={() => {
                     setShowConcordHubModal(false);
                     openCaretakerFlow('dev_hud');
                   }}
                   disabled={!shouldShowCaretakerTalkAction}
                 >
-                  🧙 Caretaker Channel
+                  <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">🧙</span>
+                  <span>Caretaker Channel</span>
                 </button>
                 <button
                   type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                  className="island-concord-hub-modal__channel"
                   onClick={() => {
                     setShowConcordHubModal(false);
-                    setShowCreatureChannelModal(true);
+                    openGlobalStoryReader();
                   }}
                 >
-                  🐾 Creature Channel
+                  <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">📖</span>
+                  <span>Story Channel</span>
                 </button>
               </div>
             </div>
-            <div className="island-stop-modal__cta island-stop-modal__cta--balanced island-stop-modal__cta--anchored">
-              <button type="button" className="supabase-auth__action island-stop-modal__cta-btn island-stop-modal__btn--action" onClick={() => setShowConcordHubModal(false)}>Return to island</button>
-            </div>
+            <button type="button" className="island-concord-hub-modal__return" onClick={() => setShowConcordHubModal(false)}>Return to island</button>
           </section>
         </div>
       ) : null}
