@@ -16,6 +16,7 @@ export const islandInhabitantBoardIntegrationTests: TestCase[] = [
     includes("openCaretakerFlow('caretaker_board_tap')");
     includes("openCaretakerFlow('dev_hud')");
     includes('caretakerTileIndex={shouldShowCaretakerTalkAction ? ISLAND_CARETAKER_TILE_INDEX : null}');
+    includes('caretakerBubbleText={caretakerBoardBubbleText}');
     includes('🧙 Talk to Caretaker');
     notIncludes('island-run-board__topbar-menu-item--caretaker');
     notIncludes('ISLAND_ONE_CARETAKER_TILE_INDEX');
@@ -43,6 +44,7 @@ export const islandInhabitantBoardIntegrationTests: TestCase[] = [
     includes('setIsIslandInhabitantFlowOpen(false)');
     includes("closeReason === 'missing_content'");
     includes('The island has been listening for footsteps like yours.');
+    includes('setCaretakerBoardBubbleText(preConcordMessage)');
     includes('backgroundArtSrc={resolvedCaretakerBackgroundArtSrc}');
   } },
   { name: 'board integration does not add prohibited automatic or persistence behavior', run: () => {

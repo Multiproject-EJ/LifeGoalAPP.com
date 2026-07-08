@@ -12835,6 +12835,59 @@
   animation-duration: 1.8s;
 }
 
+
+.island-run-board__caretaker-bubble {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 8%;
+  width: clamp(180px, 24vw, 300px);
+  padding: 0.85rem 1rem;
+  border: 2px solid rgba(255, 245, 157, 0.9);
+  border-radius: 22px 22px 22px 8px;
+  background: linear-gradient(180deg, rgba(255, 255, 248, 0.98), rgba(224, 252, 255, 0.96));
+  box-shadow: 0 16px 34px rgba(4, 12, 30, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  color: #123047;
+  font-size: clamp(0.82rem, 1.15vw, 1rem);
+  font-weight: 850;
+  line-height: 1.25;
+  text-align: left;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.island-run-board__caretaker-bubble::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 22px;
+  width: 18px;
+  height: 18px;
+  transform: rotate(45deg);
+  border-left: 2px solid rgba(255, 245, 157, 0.9);
+  border-bottom: 2px solid rgba(255, 245, 157, 0.9);
+  background: rgba(249, 254, 255, 0.98);
+}
+
+@media (max-width: 720px) {
+  .island-run-board__caretaker-bubble {
+    left: 50%;
+    top: auto;
+    bottom: calc(100% + 10px);
+    transform: translateX(-50%);
+    width: min(72vw, 280px);
+    border-radius: 20px 20px 8px 20px;
+  }
+
+  .island-run-board__caretaker-bubble::before {
+    left: calc(50% - 9px);
+    top: auto;
+    bottom: -10px;
+    border: 0;
+    border-right: 2px solid rgba(255, 245, 157, 0.9);
+    border-bottom: 2px solid rgba(255, 245, 157, 0.9);
+  }
+}
+
 .island-run-board__caretaker-label {
   position: absolute;
   left: 50%;
