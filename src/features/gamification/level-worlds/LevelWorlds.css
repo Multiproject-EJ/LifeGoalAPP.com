@@ -12681,6 +12681,7 @@
 .island-narrative-toast__copy,
 .island-narrative-toast__speaker,
 .island-narrative-toast__text,
+.island-narrative-toast__role,
 .island-narrative-toast__label {
   display: block;
 }
@@ -12754,6 +12755,14 @@
   color: #fff6c7;
   font-size: 0.9rem;
   letter-spacing: 0.01em;
+}
+
+.island-narrative-toast__role {
+  display: inline-block;
+  margin: 1px 0 0;
+  color: rgba(255, 246, 199, 0.82);
+  font-size: 0.74rem;
+  font-weight: 900;
 }
 
 .island-narrative-toast__landmark {

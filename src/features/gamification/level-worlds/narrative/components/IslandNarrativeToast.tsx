@@ -12,6 +12,7 @@ export type IslandNarrativeToastProps = {
   variant?: IslandNarrativeToastVariant;
   landmarkLabel?: string;
   landmarkIcon?: string;
+  speakerRoleLabel?: string;
   onDismiss: () => void;
 };
 
@@ -26,6 +27,7 @@ export function IslandNarrativeToast({
   variant = 'default',
   landmarkLabel,
   landmarkIcon,
+  speakerRoleLabel,
   onDismiss,
 }: IslandNarrativeToastProps): React.JSX.Element | null {
   React.useEffect(() => {
@@ -49,7 +51,10 @@ export function IslandNarrativeToast({
         <span className="island-narrative-toast__emblem" aria-hidden="true">{emblem}</span>
         <span className="island-narrative-toast__copy">
           {visibleLabel ? <span className="island-narrative-toast__label">{visibleLabel}</span> : null}
-          <span className="island-narrative-toast__speaker">{speakerName}</span>
+          <span className="island-narrative-toast__speaker">
+            {speakerName}
+            {speakerRoleLabel ? <span className="island-narrative-toast__role"> · {speakerRoleLabel}</span> : null}
+          </span>
           {landmarkLabel ? <span className="island-narrative-toast__landmark">{landmarkLabel}</span> : null}
           <span className="island-narrative-toast__text">{text}</span>
         </span>
