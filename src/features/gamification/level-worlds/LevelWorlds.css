@@ -4209,10 +4209,10 @@
 
 .island-concord-hub-modal {
   position: relative;
-  width: min(96vw, calc((100dvh - 1.5rem) * 0.94), 860px);
+  width: min(96vw, 860px);
+  height: min(90dvh, 900px);
   max-width: calc(100vw - 1.5rem);
   max-height: calc(100dvh - 1.5rem);
-  aspect-ratio: 1 / 1;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -4231,7 +4231,7 @@
   top: -9%;
   width: 118%;
   height: 118%;
-  object-fit: contain;
+  object-fit: fill;
   pointer-events: none;
   user-select: none;
   filter: drop-shadow(0 0 20px rgba(34, 215, 255, 0.18));
