@@ -143,6 +143,23 @@ function DualTrackColumn({ title, subtitle, tone, cards }: DualTrackColumnProps)
             role="listitem"
             className={`game-board-overlay__milestone game-board-overlay__milestone--${card.position}`}
           >
+            {card.imageSrc ? (
+              <img
+                src={card.imageSrc}
+                alt=""
+                className="game-board-overlay__milestone-bg"
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async"
+                onLoad={(event) => {
+                  event.currentTarget.parentElement?.classList.add('game-board-overlay__milestone--with-image');
+                }}
+                onError={(event) => {
+                  event.currentTarget.hidden = true;
+                  event.currentTarget.parentElement?.classList.remove('game-board-overlay__milestone--with-image');
+                }}
+              />
+            ) : null}
             <span className="game-board-overlay__milestone-icon" aria-hidden="true">
               {card.icon}
               {typeof card.islandNumber === 'number' ? (
