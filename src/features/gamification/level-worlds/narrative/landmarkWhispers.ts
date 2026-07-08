@@ -30,7 +30,14 @@ export interface ArenaTransferContext {
   dice?: number;
   essence?: number;
   tickets?: number;
+  creatureTreats?: number;
   rewards?: number;
+}
+
+export interface ArenaTransferWhisperBundle extends ArenaTransferContext {
+  id: string;
+  source: 'daily_treats' | 'reward_claim' | 'inventory_sync' | 'manual_seam';
+  createdAtMs: number;
 }
 
 export const LANDMARK_WHISPER_DURATION_MS = 7200;
@@ -127,12 +134,14 @@ export function buildArenaTransferWhisper(context: ArenaTransferContext, seed = 
   const dice = Math.max(0, Math.floor(context.dice ?? 0));
   const essence = Math.max(0, Math.floor(context.essence ?? 0));
   const tickets = Math.max(0, Math.floor(context.tickets ?? 0));
+  const creatureTreats = Math.max(0, Math.floor(context.creatureTreats ?? 0));
   const rewards = Math.max(0, Math.floor(context.rewards ?? 0));
-  if (dice + essence + tickets + rewards <= 0) return null;
+  if (dice + essence + tickets + creatureTreats + rewards <= 0) return null;
   const parts = [
     dice > 0 ? `+${dice} dice` : null,
     essence > 0 ? `+${essence} essence` : null,
     tickets > 0 ? `+${tickets} tickets` : null,
+    creatureTreats > 0 ? `+${creatureTreats} creature ${creatureTreats === 1 ? 'treat' : 'treats'}` : null,
     rewards > 0 ? `+${rewards} rewards` : null,
   ].filter(Boolean);
   const text = parts.length > 0
@@ -149,4 +158,58 @@ export function buildLandmarkWhisperForStop(
   if (stopId === 'habit') return buildHabitWhisper(context.habit, context.seed ?? stopId);
   if (stopId === 'wisdom') return buildWisdomWhisper(context.seed ?? stopId);
   return null;
+}
+
+export function buildArenaTransferWhisperFromRewardBundle(
+  bundle: Partial<ArenaTransferWhisperBundle> | null | undefined,
+  seed = '',
+): LandmarkWhisperPayload | null {
+  if (!bundle) return null;
+  return buildArenaTransferWhisper(
+    {
+      dice: bundle.dice,
+      essence: bundle.essence,
+      tickets: bundle.tickets,
+      creatureTreats: bundle.creatureTreats,
+      rewards: bundle.rewards,
+    },
+    seed || bundle.id,
+  );
+}
+
+const ARENA_TRANSFER_WHISPER_STORAGE_PREFIX = 'lifegoal:island-run:arena-transfer-whisper:';
+
+function getArenaTransferWhisperStorageKey(userId: string): string {
+  return `${ARENA_TRANSFER_WHISPER_STORAGE_PREFIX}${userId}`;
+}
+
+export function queueArenaTransferWhisperBundle(userId: string, bundle: Omit<ArenaTransferWhisperBundle, 'id' | 'createdAtMs'> & { id?: string; createdAtMs?: number }): void {
+  if (typeof window === 'undefined' || !userId) return;
+  const normalized: ArenaTransferWhisperBundle = {
+    ...bundle,
+    id: bundle.id ?? `${bundle.source}:${Date.now()}`,
+    createdAtMs: bundle.createdAtMs ?? Date.now(),
+  };
+  if (!buildArenaTransferWhisperFromRewardBundle(normalized)) return;
+  try {
+    window.localStorage.setItem(getArenaTransferWhisperStorageKey(userId), JSON.stringify(normalized));
+  } catch {
+    // Presentation-only cue; ignore storage failures.
+  }
+}
+
+export function consumeArenaTransferWhisperBundle(userId: string): ArenaTransferWhisperBundle | null {
+  if (typeof window === 'undefined' || !userId) return null;
+  const key = getArenaTransferWhisperStorageKey(userId);
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
+    window.localStorage.removeItem(key);
+    const parsed = JSON.parse(raw) as Partial<ArenaTransferWhisperBundle>;
+    if (!buildArenaTransferWhisperFromRewardBundle(parsed)) return null;
+    return parsed as ArenaTransferWhisperBundle;
+  } catch {
+    try { window.localStorage.removeItem(key); } catch { /* ignore */ }
+    return null;
+  }
 }

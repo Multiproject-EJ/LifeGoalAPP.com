@@ -10397,6 +10397,7 @@ export function IslandRunBoardPrototype({
     isEggReady: Boolean(activeEgg && nowMs >= activeEgg.hatchAtMs),
     hasHabitProgress: completedStops.includes('habit') || isActiveCompassSessionFilled,
     seed: `${session.user.id}:${runtimeState.currentIslandNumber}:${runtimeState.cycleIndex}`,
+    userId: session.user.id,
   });
 
   const handleCloseStoryReader = () => {

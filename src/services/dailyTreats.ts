@@ -1,5 +1,6 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { queueArenaTransferWhisperBundle } from '../features/gamification/level-worlds/narrative/landmarkWhispers';
 import { applyTokenHopRewards } from '../features/gamification/level-worlds/services/islandRunStateActions';
 import { ISLAND_RUN_ECONOMY_SOURCES } from '../features/gamification/level-worlds/services/islandRunEconomyTelemetry';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
@@ -78,5 +79,11 @@ export function awardDailyTreatDice(options: {
     deltas: { dicePool: safeDiceAmount },
     telemetryDiceSource: ISLAND_RUN_ECONOMY_SOURCES.dailyTreatDice,
     triggerSource: 'daily_treats_dice_award',
+  });
+
+  queueArenaTransferWhisperBundle(userId, {
+    source: 'daily_treats',
+    dice: safeDiceAmount,
+    id: `daily_treats:${sourceLabel}:${safeDiceAmount}`,
   });
 }
