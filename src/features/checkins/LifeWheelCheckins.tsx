@@ -8,6 +8,7 @@ import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { ReviewWizard } from '../annual-review';
+import { LifeWheelCategoryRealmModal } from '../life-wheel/category-stats/LifeWheelCategoryRealmModal';
 
 type CheckinRow = Database['public']['Tables']['checkins']['Row'];
 
@@ -347,6 +348,7 @@ export function LifeWheelCheckins({ session, entryOrigin = 'direct', onBackToMyQ
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [customNote, setCustomNote] = useState('');
   const [isQuickCheckinOpen, setIsQuickCheckinOpen] = useState(false);
+  const [realmCategoryKey, setRealmCategoryKey] = useState<LifeWheelCategoryKey | null>(null);
 
   const loadCheckins = useCallback(async () => {
     if (!isConfigured && !isDemoExperience) {
@@ -734,11 +736,13 @@ export function LifeWheelCheckins({ session, entryOrigin = 'direct', onBackToMyQ
     setSuccessMessage(null);
     setErrorMessage(null);
     setIsQuickCheckinOpen(false);
+    setRealmCategoryKey(null);
   };
 
   const handleBackToChooser = () => {
     setMobileCheckinScreen('chooser');
     setIsQuickCheckinOpen(false);
+    setRealmCategoryKey(null);
   };
 
   const handleStartAreaCheckin = () => {
@@ -1005,9 +1009,19 @@ export function LifeWheelCheckins({ session, entryOrigin = 'direct', onBackToMyQ
                   ) : null}
                 </button>
                 {selectedAreaCategory ? (
-                  <p className="life-wheel__area-meta">
-                    Current score: {selectedAreaScore ?? 0}/10
-                  </p>
+                  <>
+                    <p className="life-wheel__area-meta">
+                      Current score: {selectedAreaScore ?? 0}/10
+                    </p>
+                    <button
+                      type="button"
+                      className="life-wheel-realm-entry"
+                      onClick={() => setRealmCategoryKey(selectedAreaCategory)}
+                    >
+                      <span>Enter Realm</span>
+                      <small>View clarity, momentum, and coverage</small>
+                    </button>
+                  </>
                 ) : (
                   <p className="life-wheel__area-meta">Pick a focus area to see its latest score.</p>
                 )}
@@ -1252,6 +1266,14 @@ export function LifeWheelCheckins({ session, entryOrigin = 'direct', onBackToMyQ
 
       </div>
         </>
+      ) : null}
+
+      {realmCategoryKey ? (
+        <LifeWheelCategoryRealmModal
+          categoryKey={realmCategoryKey}
+          checkins={checkins}
+          onClose={() => setRealmCategoryKey(null)}
+        />
       ) : null}
 
       {activeCheckinView !== 'annual' ? (
