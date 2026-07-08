@@ -334,6 +334,7 @@ import { IslandStoryReader } from './IslandStoryReader';
 import { IslandNarrativeDialogue } from '../narrative/components/IslandNarrativeDialogue';
 import { IslandNarrativeToast } from '../narrative/components/IslandNarrativeToast';
 import { useIslandNarrativeOpeningFlow, type ActiveIslandStoryEpisode } from '../narrative/useIslandNarrativeOpeningFlow';
+import { useLandmarkWhispers } from '../narrative/useLandmarkWhispers';
 import type { IslandNarrativeSeenState } from '../narrative/islandNarrativeSeenState';
 import {
   resolveMinigameForStop,
@@ -10380,6 +10381,24 @@ export function IslandRunBoardPrototype({
     onPersistNarrativeSeen: handlePersistNarrativeSeen,
   });
 
+  const landmarkWhispers = useLandmarkWhispers({
+    activeStopId,
+    hasHydratedRuntimeState,
+    isNarrativeSurfaceBlocked: Boolean(
+      isNarrativeSurfaceBlocked ||
+      islandNarrativeOpeningFlow.activeDialogue ||
+      islandNarrativeOpeningFlow.activeToast ||
+      islandNarrativeOpeningFlow.activeReactionDialogue ||
+      islandNarrativeOpeningFlow.activeReactionToast ||
+      islandNarrativeOpeningFlow.queuedBeatIds.length > 0 ||
+      islandNarrativeOpeningFlow.reactionQueuedBeatIds.length > 0
+    ),
+    hasActiveEgg: Boolean(activeEgg),
+    isEggReady: Boolean(activeEgg && nowMs >= activeEgg.hatchAtMs),
+    hasHabitProgress: completedStops.includes('habit') || isActiveCompassSessionFilled,
+    seed: `${session.user.id}:${runtimeState.currentIslandNumber}:${runtimeState.cycleIndex}`,
+  });
+
   const handleCloseStoryReader = () => {
     if (activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution') {
       islandNarrativeOpeningFlow.handleStoryEpisodeClosed(activeStoryEpisode);
@@ -14928,6 +14947,17 @@ export function IslandRunBoardPrototype({
           text={islandNarrativeOpeningFlow.activeReactionToast.text}
           durationMs={islandNarrativeOpeningFlow.activeReactionToast.durationMs}
           onDismiss={islandNarrativeOpeningFlow.handleReactionToastDismiss}
+        />
+      ) : null}
+
+      {landmarkWhispers.activeWhisper ? (
+        <IslandNarrativeToast
+          isOpen={true}
+          speakerName={landmarkWhispers.activeWhisper.speakerName}
+          text={landmarkWhispers.activeWhisper.text}
+          supportingLabel={landmarkWhispers.activeWhisper.supportingLabel}
+          durationMs={landmarkWhispers.activeWhisper.durationMs}
+          onDismiss={landmarkWhispers.handleWhisperDismiss}
         />
       ) : null}
 
