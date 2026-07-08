@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LandmarkBuildVisual, normalizeLandmarkBuildVisualStopId } from './board/LandmarkBuildVisual';
 import type { BuildModalV2ViewModel, BuildModalV2PartViewModel } from '../services/islandRunBuildModalV2ViewModel';
 
@@ -120,16 +120,45 @@ export function BuildModalV2({
   discountExpiresAtMs = null,
   onBuildActivePart,
 }: BuildModalV2Props) {
-  if (!isOpen) return null;
   const active = viewModel.activeLandmark;
   const isComplete = viewModel.sequentialBuildView.isFullyBuilt || !active;
   const activePart = active?.activePart ?? 1;
   const canBuildActive = Boolean(active?.canAffordNextTap);
   const discountPercent = Math.round(Math.max(0, discountRate) * 100);
   const discountMinutesLeft = discountExpiresAtMs && discountRate > 0 ? Math.max(1, Math.ceil((discountExpiresAtMs - Date.now()) / 60000)) : 0;
+  const hasActiveDiscount = discountPercent > 0 && discountMinutesLeft > 0;
+  const [isDiscountIntroVisible, setIsDiscountIntroVisible] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !hasActiveDiscount) {
+      setIsDiscountIntroVisible(false);
+      return undefined;
+    }
+    setIsDiscountIntroVisible(true);
+    const introTimer = window.setTimeout(() => {
+      setIsDiscountIntroVisible(false);
+    }, 1000);
+    return () => window.clearTimeout(introTimer);
+  }, [hasActiveDiscount, isOpen, discountExpiresAtMs]);
+
+  if (!isOpen) return null;
+
   const statusLine = active
     ? `Part ${activePart} of 5 · ${active.spentEssence}/${active.requiredEssence} Money funded`
     : '15 of 15 complete';
+
+  if (isDiscountIntroVisible) {
+    return (
+      <div className="island-run-overlay-root bm2-discount-intro" role="presentation">
+        <section className="bm2-discount-intro__card" role="dialog" aria-modal="true" aria-label="Build Rush discount unlocked" aria-live="assertive">
+          <div className="bm2-discount-intro__emoji" aria-hidden="true">🔨</div>
+          <p className="bm2-discount-intro__kicker">Special tile!</p>
+          <h2 className="bm2-discount-intro__title">Build Rush</h2>
+          <p className="bm2-discount-intro__copy">{discountPercent}% off your next builds</p>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="island-run-overlay-root island-stop-modal-backdrop bm2-backdrop" role="presentation">
@@ -144,8 +173,15 @@ export function BuildModalV2({
           <p className="bm2-tutorial-guidance">Build Hatchery to Level 1 with your tutorial Money.</p>
         )}
         {isBuildHoldActive && <p className="bm2-hold-feedback">{buildHoldFeedbackLabel}</p>}
-        {discountPercent > 0 && discountMinutesLeft > 0 && (
-          <p className="bm2-discount-banner">🔨 Build Rush: {discountPercent}% off for about {discountMinutesLeft} min.</p>
+        {hasActiveDiscount && (
+          <div className="bm2-discount-spotlight" aria-label={`Build Rush discount active: ${discountPercent}% off for about ${discountMinutesLeft} minutes`}>
+            <span className="bm2-discount-spotlight__bulb" aria-hidden="true">🔨</span>
+            <span className="bm2-discount-spotlight__copy">
+              <strong>Build Rush</strong>
+              <em>{discountPercent}% OFF</em>
+              <small>about {discountMinutesLeft} min left</small>
+            </span>
+          </div>
         )}
 
         {isComplete ? (
