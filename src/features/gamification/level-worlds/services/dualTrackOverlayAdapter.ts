@@ -17,6 +17,8 @@ export type DualTrackMilestoneCard = {
   source: DualTrackMilestoneSource;
   /** Concrete island number for game cards that map to a real island; omitted for mystery/placeholder cards. */
   islandNumber?: number;
+  /** Optional presentational artwork used by visual milestone cards. */
+  imageSrc?: string;
 };
 
 export type DualTrackOverlayViewModel = {
@@ -55,6 +57,12 @@ export type DualTrackOverlayViewModel = {
 };
 
 const TOTAL_ISLANDS = 120;
+const ISLAND_PROGRESS_IMAGE_BASE_PATH = '/assets/two_tracks_progress';
+
+function getIslandProgressImageSrc(islandNumber: number): string {
+  const normalized = normalizeIslandNumber(islandNumber);
+  return `${ISLAND_PROGRESS_IMAGE_BASE_PATH}/Progress_island${String(normalized).padStart(3, '0')}.webp`;
+}
 
 /** Lightweight, read-only real-life inputs the overlay may receive once a user is authenticated. */
 export type DualTrackRealLifeGoalInput = {
@@ -328,6 +336,7 @@ function createGameTrack(input: BuildDualTrackOverlayViewModelInput): DualTrackM
       icon: '✓',
       source: 'island',
       islandNumber: previousIsland,
+      imageSrc: getIslandProgressImageSrc(previousIsland),
     });
   } else {
     cards.push({
@@ -354,6 +363,7 @@ function createGameTrack(input: BuildDualTrackOverlayViewModelInput): DualTrackM
     icon: '🏝️',
     source: 'island',
     islandNumber: currentIsland,
+    imageSrc: getIslandProgressImageSrc(currentIsland),
   });
 
   if (currentIsland < TOTAL_ISLANDS) {
@@ -368,6 +378,7 @@ function createGameTrack(input: BuildDualTrackOverlayViewModelInput): DualTrackM
       icon: '?',
       source: 'island',
       islandNumber: nextIsland,
+      imageSrc: getIslandProgressImageSrc(nextIsland),
     });
   }
 
