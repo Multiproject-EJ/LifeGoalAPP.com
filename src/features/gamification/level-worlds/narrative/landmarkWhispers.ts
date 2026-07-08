@@ -1,12 +1,27 @@
 export type LandmarkKeeperId = 'hatchery' | 'habit' | 'arena' | 'wisdom';
 export type LandmarkWhisperStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
 
+export interface LandmarkKeeperIdentity {
+  characterName?: string;
+  title?: string;
+  roleLabel?: string;
+  landmarkLabel?: string;
+  icon?: string;
+  toneHints?: readonly string[];
+}
+
+export interface LandmarkKeeperIslandIdentityOverride extends LandmarkKeeperIdentity {
+  islandId: string;
+  keeperRole: LandmarkKeeperId;
+}
+
 export interface LandmarkKeeperDefinition {
   id: LandmarkKeeperId;
   speakerName: string;
   purpose: string;
   landmarkLabel: string;
   landmarkIcon: string;
+  identity?: LandmarkKeeperIdentity;
   fallbackLines: readonly string[];
 }
 
@@ -19,6 +34,9 @@ export interface LandmarkWhisperPayload {
   variant: 'landmark_whisper';
   landmarkLabel: string;
   landmarkIcon: string;
+  characterName?: string;
+  title?: string;
+  roleLabel?: string;
   durationMs: number;
 }
 
@@ -51,6 +69,12 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
   hatchery: {
     id: 'hatchery',
     speakerName: 'The Hatchery Keeper',
+    identity: {
+      characterName: 'Ori of the Shells',
+      roleLabel: 'Hatchery Keeper',
+      landmarkLabel: 'Hatchery',
+      icon: '🥚',
+    },
     purpose: 'Comments on eggs, hatching, creature progress, egg status, and creature anticipation.',
     landmarkLabel: 'Hatchery',
     landmarkIcon: '🥚',
@@ -64,6 +88,12 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
   habit: {
     id: 'habit',
     speakerName: 'The Habit Keeper',
+    identity: {
+      characterName: 'Mira of the Path',
+      roleLabel: 'Habit Keeper',
+      landmarkLabel: 'Habit Grove',
+      icon: '🌿',
+    },
     purpose: 'Cheers habit progress and gives non-shaming encouragement when the path needs warmth.',
     landmarkLabel: 'Habit Grove',
     landmarkIcon: '🌿',
@@ -78,6 +108,12 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
   arena: {
     id: 'arena',
     speakerName: 'The Arena Keeper',
+    identity: {
+      characterName: 'Brann of the Gate',
+      roleLabel: 'Arena Keeper',
+      landmarkLabel: 'Arena',
+      icon: '🏟️',
+    },
     purpose: 'Welcomes real resources earned beyond the run when they are brought into Island Run.',
     landmarkLabel: 'Arena',
     landmarkIcon: '🏟️',
@@ -90,6 +126,12 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
   wisdom: {
     id: 'wisdom',
     speakerName: 'The Wisdom Keeper',
+    identity: {
+      characterName: 'Elow of the Lantern',
+      roleLabel: 'Wisdom Keeper',
+      landmarkLabel: 'Wisdom Landmark',
+      icon: '🕯️',
+    },
     purpose: 'Offers short, grounded reflections using safe static wisdom for the MVP.',
     landmarkLabel: 'Wisdom Landmark',
     landmarkIcon: '🕯️',
@@ -111,17 +153,40 @@ function chooseLine(lines: readonly string[], seed: string): string {
   return lines[hash % lines.length] ?? lines[0] ?? '';
 }
 
+export function getLandmarkKeeperFallbackRoleLabel(keeper: Pick<LandmarkKeeperDefinition, 'speakerName'>): string {
+  return keeper.speakerName.replace(/^The /, '');
+}
+
+export function resolveLandmarkKeeperIdentity(
+  keeperId: LandmarkKeeperId,
+  options: { islandId?: string; overrides?: readonly LandmarkKeeperIslandIdentityOverride[] } = {},
+): LandmarkKeeperIdentity {
+  const keeper = LANDMARK_KEEPERS[keeperId];
+  const override = options.overrides?.find((item) => item.keeperRole === keeperId && item.islandId === options.islandId);
+  return {
+    roleLabel: keeper.identity?.roleLabel ?? getLandmarkKeeperFallbackRoleLabel(keeper),
+    landmarkLabel: keeper.identity?.landmarkLabel ?? keeper.landmarkLabel,
+    icon: keeper.identity?.icon ?? keeper.landmarkIcon,
+    ...keeper.identity,
+    ...override,
+  };
+}
+
 function buildPayload(keeperId: LandmarkKeeperId, text: string, reason: string): LandmarkWhisperPayload {
   const keeper = LANDMARK_KEEPERS[keeperId];
+  const identity = resolveLandmarkKeeperIdentity(keeperId);
   return {
     id: `landmark-whisper:${keeperId}:${reason}`,
     keeperId,
-    speakerName: keeper.speakerName,
+    speakerName: identity.characterName ?? keeper.speakerName,
     text,
     supportingLabel: 'Landmark Whisper',
     variant: 'landmark_whisper',
-    landmarkLabel: keeper.landmarkLabel,
-    landmarkIcon: keeper.landmarkIcon,
+    landmarkLabel: identity.landmarkLabel ?? keeper.landmarkLabel,
+    landmarkIcon: identity.icon ?? keeper.landmarkIcon,
+    characterName: identity.characterName,
+    title: identity.title,
+    roleLabel: identity.roleLabel ?? getLandmarkKeeperFallbackRoleLabel(keeper),
     durationMs: LANDMARK_WHISPER_DURATION_MS,
   };
 }

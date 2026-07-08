@@ -1,6 +1,7 @@
 import {
   LANDMARK_KEEPERS,
   LANDMARK_WHISPER_DURATION_MS,
+  getLandmarkKeeperFallbackRoleLabel,
   buildArenaTransferWhisper,
   buildArenaTransferWhisperFromRewardBundle,
   consumeArenaTransferWhisperBundle,
@@ -25,6 +26,15 @@ export const landmarkWhispersTests: TestCase[] = [
       assertEqual(LANDMARK_KEEPERS.habit.speakerName, 'The Habit Keeper', 'Expected habit keeper');
       assertEqual(LANDMARK_KEEPERS.arena.speakerName, 'The Arena Keeper', 'Expected arena keeper');
       assertEqual(LANDMARK_KEEPERS.wisdom.speakerName, 'The Wisdom Keeper', 'Expected wisdom keeper');
+      assertEqual(LANDMARK_KEEPERS.hatchery.identity?.characterName, 'Ori of the Shells', 'Expected hatchery character identity');
+      assertEqual(LANDMARK_KEEPERS.habit.identity?.roleLabel, 'Habit Keeper', 'Expected generic role label to stay available');
+    },
+  },
+  {
+    name: 'Landmark Keeper identity metadata remains optional with role fallbacks',
+    run: () => {
+      assertEqual(getLandmarkKeeperFallbackRoleLabel({ speakerName: 'The Hatchery Keeper' }), 'Hatchery Keeper', 'Expected fallback role label without identity');
+      assertEqual(getLandmarkKeeperFallbackRoleLabel({ speakerName: 'Hatchery Keeper' }), 'Hatchery Keeper', 'Expected existing generic label to pass through');
     },
   },
   {
@@ -41,7 +51,8 @@ export const landmarkWhispersTests: TestCase[] = [
     name: 'Hatchery Keeper uses egg-ready contextual copy',
     run: () => {
       const whisper = buildHatcheryWhisper({ hasActiveEgg: true, isEggReady: true }, 'ready');
-      assertEqual(whisper.speakerName, 'The Hatchery Keeper', 'Expected Hatchery speaker');
+      assertEqual(whisper.speakerName, 'Ori of the Shells', 'Expected Hatchery character speaker');
+      assertEqual(whisper.roleLabel, 'Hatchery Keeper', 'Expected generic Hatchery role label');
       assert(whisper.text.includes('ready') || whisper.text.includes('moment'), 'Expected ready egg copy');
       assertEqual(whisper.durationMs, LANDMARK_WHISPER_DURATION_MS, 'Expected extended story duration');
     },
@@ -51,8 +62,9 @@ export const landmarkWhispersTests: TestCase[] = [
     run: () => {
       const progress = buildHabitWhisper({ hasTodayProgress: true }, 'progress');
       const encouragement = buildHabitWhisper({ hasTodayProgress: false }, 'encouragement');
-      assertEqual(progress.speakerName, 'The Habit Keeper', 'Expected Habit speaker');
-      assertEqual(encouragement.speakerName, 'The Habit Keeper', 'Expected Habit speaker');
+      assertEqual(progress.speakerName, 'Mira of the Path', 'Expected Habit character speaker');
+      assertEqual(progress.roleLabel, 'Habit Keeper', 'Expected generic Habit role label');
+      assertEqual(encouragement.speakerName, 'Mira of the Path', 'Expected Habit character speaker');
       assert(!encouragement.text.toLowerCase().includes('failed'), 'Encouragement should avoid shaming language');
     },
   },
@@ -84,7 +96,8 @@ export const landmarkWhispersTests: TestCase[] = [
     run: () => {
       assertEqual(buildArenaTransferWhisperFromRewardBundle({ id: 'empty', source: 'manual_seam', createdAtMs: 1 }), null, 'Empty bundle should not speak');
       const whisper = buildArenaTransferWhisperFromRewardBundle({ id: 'real', source: 'daily_treats', createdAtMs: 1, dice: 25 });
-      assertEqual(whisper?.speakerName, 'The Arena Keeper', 'Concrete bundle should produce Arena Keeper whisper');
+      assertEqual(whisper?.speakerName, 'Brann of the Gate', 'Concrete bundle should produce Arena Keeper character whisper');
+      assertEqual(whisper?.roleLabel, 'Arena Keeper', 'Concrete bundle should preserve generic Arena role label');
       assert(whisper?.text.includes('+25 dice') === true, 'Expected concrete dice amount in whisper text');
     },
   },
@@ -118,7 +131,8 @@ export const landmarkWhispersTests: TestCase[] = [
     name: 'Wisdom Keeper MVP uses safe static reflection',
     run: () => {
       const whisper = buildWisdomWhisper('wisdom');
-      assertEqual(whisper.speakerName, 'The Wisdom Keeper', 'Expected Wisdom speaker');
+      assertEqual(whisper.speakerName, 'Elow of the Lantern', 'Expected Wisdom character speaker');
+      assertEqual(whisper.roleLabel, 'Wisdom Keeper', 'Expected generic Wisdom role label');
       assert(whisper.text.length > 20, 'Expected meaningful reflection copy');
     },
   },
@@ -134,7 +148,8 @@ export const landmarkWhispersTests: TestCase[] = [
         seed: 'disabled',
       });
       assertEqual(result.source, 'fallback', 'Disabled AI should use fallback');
-      assertEqual(result.whisper.speakerName, 'The Wisdom Keeper', 'Fallback still speaks as Wisdom Keeper');
+      assertEqual(result.whisper.speakerName, 'Elow of the Lantern', 'Fallback still uses Wisdom character identity');
+      assertEqual(result.whisper.roleLabel, 'Wisdom Keeper', 'Fallback still exposes Wisdom Keeper role');
     },
   },
   {
@@ -179,7 +194,8 @@ export const landmarkWhispersTests: TestCase[] = [
       });
       assertEqual(result.source, 'fallback', 'Unsafe AI output should not replace fallback');
       assertEqual(result.reason, 'empty_or_unsafe_output', 'Expected unsafe output reason');
-      assertEqual(result.whisper.speakerName, 'The Wisdom Keeper', 'Fallback remains Wisdom Keeper copy');
+      assertEqual(result.whisper.speakerName, 'Elow of the Lantern', 'Fallback remains Wisdom character copy');
+      assertEqual(result.whisper.roleLabel, 'Wisdom Keeper', 'Fallback still exposes Wisdom Keeper role');
     },
   },
   {
@@ -225,7 +241,7 @@ export const landmarkWhispersTests: TestCase[] = [
       const base = { hatchery: { hasActiveEgg: false, isEggReady: false }, habit: { hasTodayProgress: false }, seed: 'map' };
       assertEqual(buildLandmarkWhisperForStop('boss', base), null, 'Boss/arena is not faked without transfer event');
       assertEqual(buildLandmarkWhisperForStop('mystery', base), null, 'Mystery has no MVP keeper');
-      assertEqual(buildLandmarkWhisperForStop('wisdom', base)?.speakerName, 'The Wisdom Keeper', 'Wisdom should map');
+      assertEqual(buildLandmarkWhisperForStop('wisdom', base)?.speakerName, 'Elow of the Lantern', 'Wisdom should map');
     },
   },
 ];
