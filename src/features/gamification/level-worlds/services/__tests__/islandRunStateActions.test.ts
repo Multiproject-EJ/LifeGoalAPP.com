@@ -2231,6 +2231,10 @@ export const islandRunStateActionsTests: TestCase[] = [
         !/showIslandClearCelebrationFromAnywhere|handleTravelFromCelebration|performIslandTravel/.test(devActionSource),
         'dev clear canonical action must not depend on production UI/travel-only paths',
       );
+      assert(
+        devActionSource.includes("'the-concord': { builtAtMs: Math.max(1, resolvedNowMs), active: true }"),
+        'dev clear action should auto-award Concord on Island 1 for testing-only completion',
+      );
     },
   },
 
