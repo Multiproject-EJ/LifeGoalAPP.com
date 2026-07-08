@@ -38048,8 +38048,11 @@ body.habit-wizard-open .mobile-footer-nav {
 
 .campaign-modal__card {
   width: min(100%, 760px);
+  max-width: calc(100dvw - max(1.2rem, env(safe-area-inset-left) + env(safe-area-inset-right)));
   max-height: min(92dvh, 820px);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border-radius: clamp(20px, 5vw, 32px);
   border: 1px solid rgba(250, 204, 21, 0.52);
   background:
@@ -38060,7 +38063,8 @@ body.habit-wizard-open .mobile-footer-nav {
   padding: clamp(1rem, 4vw, 1.45rem);
 }
 
-.campaign-modal__header { display: flex; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.8rem; }
+.campaign-modal__header { display: flex; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.8rem; min-width: 0; }
+.campaign-modal__header > div { min-width: 0; }
 .campaign-modal__eyebrow { color: #92400e; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.1em; margin: 0 0 0.2rem; text-transform: uppercase; }
 .campaign-modal h3 { color: #422006; font-size: 1.35rem; margin: 0; }
 .campaign-modal__header p { color: #57534e; font-size: 0.86rem; line-height: 1.4; margin: 0.25rem 0 0; }
@@ -38070,14 +38074,36 @@ body.habit-wizard-open .mobile-footer-nav {
 .campaign-modal__active p, .campaign-modal__active li { color: #57534e; font-size: 0.82rem; line-height: 1.4; }
 .campaign-modal__active ul { margin: 0.3rem 0 0; padding-left: 1rem; }
 .campaign-modal__repair { color: #047857 !important; font-weight: 800; }
-.campaign-form { display: grid; gap: 0.72rem; }
-.campaign-form label { color: #422006; display: grid; font-size: 0.82rem; font-weight: 850; gap: 0.28rem; }
+.campaign-form { display: grid; gap: 0.72rem; min-width: 0; }
+.campaign-form label { color: #422006; display: grid; font-size: 0.82rem; font-weight: 850; gap: 0.28rem; min-width: 0; overflow-wrap: anywhere; }
 .campaign-form label span, .campaign-form label em { color: #78716c; font-size: 0.72rem; font-style: normal; font-weight: 600; }
 .campaign-form label em { color: #92400e; }
-.campaign-form input, .campaign-form textarea, .campaign-form select { border: 1px solid rgba(120, 53, 15, 0.18); border-radius: 12px; color: #1f2937; font: inherit; padding: 0.65rem 0.72rem; }
-.campaign-form__types, .campaign-form__durations { display: flex; flex-wrap: wrap; gap: 0.42rem; }
+.campaign-form input, .campaign-form textarea, .campaign-form select { border: 1px solid rgba(120, 53, 15, 0.18); border-radius: 12px; color: #1f2937; font: inherit; max-width: 100%; min-width: 0; padding: 0.65rem 0.72rem; width: 100%; }
+.campaign-form__types, .campaign-form__durations { display: flex; flex-wrap: wrap; gap: 0.42rem; min-width: 0; overflow: hidden; }
 .campaign-form__types button, .campaign-form__durations button { background: #fff7ed; border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 999px; color: #78350f; cursor: pointer; font-size: 0.75rem; font-weight: 800; padding: 0.42rem 0.62rem; }
 .campaign-form__types button.is-active, .campaign-form__durations button.is-active { background: #f59e0b; color: #fff; }
 .campaign-modal__error { background: #fee2e2; border-radius: 12px; color: #991b1b; font-size: 0.8rem; margin: 0; padding: 0.55rem; }
-.campaign-modal__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 0.45rem; }
+.campaign-modal__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 0.45rem; min-width: 0; }
 .campaign-modal__primary { background: linear-gradient(135deg, #92400e, #f59e0b); border: 0; border-radius: 999px; color: white; cursor: pointer; font-weight: 900; padding: 0.58rem 0.9rem; }
+
+
+@media (max-width: 480px) {
+  .campaign-modal {
+    align-items: stretch;
+    padding: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-right)) max(0.5rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
+  }
+
+  .campaign-modal__card {
+    max-height: calc(100dvh - max(1rem, env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+    padding: 1rem;
+  }
+
+  .campaign-modal__header {
+    align-items: flex-start;
+  }
+
+  .campaign-modal__close {
+    flex: 0 0 auto;
+    padding: 0.48rem 0.62rem;
+  }
+}
