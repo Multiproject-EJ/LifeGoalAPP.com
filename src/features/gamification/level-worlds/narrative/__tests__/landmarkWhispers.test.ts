@@ -10,6 +10,11 @@ import {
   buildWisdomWhisper,
   queueArenaTransferWhisperBundle,
 } from '../landmarkWhispers';
+import {
+  buildWisdomKeeperPromptBundle,
+  resolveWisdomKeeperAiWhisper,
+  sanitizeWisdomKeeperReflection,
+} from '../wisdomKeeperAi';
 import { assert, assertEqual, type TestCase } from '../../services/__tests__/testHarness';
 
 export const landmarkWhispersTests: TestCase[] = [
@@ -105,6 +110,71 @@ export const landmarkWhispersTests: TestCase[] = [
       const whisper = buildWisdomWhisper('wisdom');
       assertEqual(whisper.speakerName, 'The Wisdom Keeper', 'Expected Wisdom speaker');
       assert(whisper.text.length > 20, 'Expected meaningful reflection copy');
+    },
+  },
+
+  {
+    name: 'Wisdom Keeper AI disabled uses static fallback',
+    run: async () => {
+      const result = await resolveWisdomKeeperAiWhisper({
+        aiEnabled: false,
+        access: { goals: true, goalEvolution: true, habits: true, journaling: true, reflections: true, visionBoard: true, lifeStage: false },
+        context: { goals: [{ title: 'Practice guitar' }] },
+        generate: async () => 'Generated reflection that should not be used.',
+        seed: 'disabled',
+      });
+      assertEqual(result.source, 'fallback', 'Disabled AI should use fallback');
+      assertEqual(result.whisper.speakerName, 'The Wisdom Keeper', 'Fallback still speaks as Wisdom Keeper');
+    },
+  },
+  {
+    name: 'Wisdom Keeper AI error uses static fallback',
+    run: async () => {
+      const result = await resolveWisdomKeeperAiWhisper({
+        aiEnabled: true,
+        access: { goals: true, goalEvolution: true, habits: true, journaling: true, reflections: true, visionBoard: true, lifeStage: false },
+        generate: async () => { throw new Error('rate limited'); },
+        seed: 'error',
+      });
+      assertEqual(result.source, 'fallback', 'AI errors should use fallback');
+      assertEqual(result.reason, 'ai_error', 'Expected ai_error reason');
+    },
+  },
+  {
+    name: 'Wisdom Keeper thin context prompt asks for safe generic reflection',
+    run: () => {
+      const prompt = buildWisdomKeeperPromptBundle(
+        { goals: false, goalEvolution: false, habits: false, journaling: false, reflections: false, visionBoard: false, lifeStage: false },
+        {},
+      );
+      assert(prompt.userPrompt.includes('No personal app context is available or allowed'), 'Thin context should be explicit');
+      assert(prompt.systemPrompt.includes('priorities, balance, effort, or returning'), 'Prompt should steer generic reflection safely');
+    },
+  },
+  {
+    name: 'Wisdom Keeper prompt excludes disallowed private context',
+    run: () => {
+      const prompt = buildWisdomKeeperPromptBundle(
+        { goals: true, goalEvolution: true, habits: true, journaling: false, reflections: false, visionBoard: true, lifeStage: false },
+        {
+          goals: [{ title: 'Ship demo', progressNote: 'Draft is ready' }],
+          recentReflectionSignals: [{ title: 'Private journal', note: 'SECRET_JOURNAL_DETAIL', tags: ['private'] }],
+          lifeWheelCheckins: [{ date: '2026-07-08', scores: { health: 7 } }],
+        },
+      );
+      assert(prompt.userPrompt.includes('Ship demo'), 'Allowed goals should be included');
+      assert(!prompt.userPrompt.includes('SECRET_JOURNAL_DETAIL'), 'Journal note must be excluded when journaling is disabled');
+      assert(!prompt.userPrompt.includes('health'), 'Life wheel data must be excluded when reflections are disabled');
+    },
+  },
+  {
+    name: 'Wisdom Keeper output is constrained to short reflection copy',
+    run: () => {
+      const cleaned = sanitizeWisdomKeeperReflection('A priority is not always the loudest thing. Sometimes it is the quiet thing you keep returning to. Extra sentence. Fourth sentence should be cut.');
+      assert(cleaned !== null, 'Expected valid reflection');
+      assert((cleaned?.match(/[.!?]/g)?.length ?? 0) <= 3, 'Reflection should be at most 3 sentences');
+      assert((cleaned?.length ?? 0) <= 360, 'Reflection should be short-to-medium');
+      assertEqual(sanitizeWisdomKeeperReflection('As an AI, you must do this.'), null, 'Unsafe/generic AI output should be rejected');
     },
   },
   {
