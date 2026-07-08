@@ -3023,17 +3023,18 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsQuestCompassModalOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
-  const openStarterQuestSheetFromToday = useCallback((initialDomainKey?: LifeWheelCategoryKey) => {
+  const openMyQuestMenuFromToday = useCallback(() => {
     setIsMobileProfileDialogOpen(false);
-    setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
-    setIsMyQuestSubmenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
+    setIsStarterQuestSheetOpen(false);
+    setStarterQuestSheetOrigin(null);
+    setStarterQuestInitialDomainKey(null);
     closeGameBoardOverlayIfOpen();
-    setStarterQuestSheetOrigin('today');
-    setStarterQuestInitialDomainKey(initialDomainKey ?? null);
-    setIsStarterQuestSheetOpen(true);
-  }, [closeGameBoardOverlayIfOpen]);
+    setIsMobileMenuOpen(true);
+    setIsMyQuestSubmenuOpen(true);
+    handleMobileFooterExpand(true);
+  }, [closeGameBoardOverlayIfOpen, handleMobileFooterExpand]);
 
   const openStarterQuestSheetFromMyQuest = useCallback((initialDomainKey?: LifeWheelCategoryKey) => {
     setIsMobileProfileDialogOpen(false);
@@ -5399,7 +5400,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               hasDailyTreatBonusDoorToday={hasDailyTreatBonusDoorToday}
               hasOpenedHolidayCalendarToday={hasOpenedHolidayCalendarToday}
               hiddenHabitIds={[]}
-              onOpenStarterQuest={openStarterQuestSheetFromToday}
+              onOpenStarterQuest={openMyQuestMenuFromToday}
               isContractsFeatureOpen={isContractsWorkspaceOpen}
               isRoutinesFeatureOpen={isRoutinesWorkspaceOpen}
               onNavigateToContracts={openContractsWorkspace}
