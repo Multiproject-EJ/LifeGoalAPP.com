@@ -2010,9 +2010,10 @@
 
 .island-run-board__bg {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: -9%;
+  top: -9%;
+  width: 118%;
+  height: 118%;
   object-fit: cover;
   z-index: 1;
   pointer-events: none;
@@ -4199,19 +4200,18 @@
 }
 
 .island-concord-hub-backdrop {
-  padding: max(0.35rem, env(safe-area-inset-top, 0px)) max(0.35rem, env(safe-area-inset-right, 0px)) max(0.35rem, env(safe-area-inset-bottom, 0px)) max(0.35rem, env(safe-area-inset-left, 0px));
+  padding: max(0.75rem, env(safe-area-inset-top, 0px)) max(0.75rem, env(safe-area-inset-right, 0px)) max(0.75rem, env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-left, 0px));
   background:
-    radial-gradient(85% 92% at 50% 48%, rgba(3, 19, 27, 0.18) 0%, rgba(0, 4, 8, 0.8) 78%, rgba(0, 0, 0, 0.96) 100%),
-    #000;
-  backdrop-filter: blur(3px) saturate(1.2);
-  -webkit-backdrop-filter: blur(3px) saturate(1.2);
+    radial-gradient(85% 92% at 50% 48%, rgba(4, 23, 32, 0.1) 0%, rgba(1, 10, 18, 0.34) 72%, rgba(0, 0, 0, 0.48) 100%);
+  backdrop-filter: blur(1.5px) saturate(1.08);
+  -webkit-backdrop-filter: blur(1.5px) saturate(1.08);
 }
 
 .island-concord-hub-modal {
   position: relative;
-  width: min(96vw, calc((100dvh - 0.7rem) * 0.82), 720px);
-  max-width: calc(100vw - 0.7rem);
-  max-height: calc(100dvh - 0.7rem);
+  width: min(96vw, calc((100dvh - 1.5rem) * 0.94), 860px);
+  max-width: calc(100vw - 1.5rem);
+  max-height: calc(100dvh - 1.5rem);
   aspect-ratio: 1 / 1;
   display: grid;
   place-items: center;
@@ -4227,9 +4227,10 @@
 
 .island-concord-hub-modal__device {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: -9%;
+  top: -9%;
+  width: 118%;
+  height: 118%;
   object-fit: contain;
   pointer-events: none;
   user-select: none;
@@ -4238,19 +4239,19 @@
 
 .island-concord-hub-modal__screen {
   position: absolute;
-  left: 31.6%;
-  top: 17%;
-  width: 36.9%;
-  height: 59.8%;
+  left: 28.3%;
+  top: 11.1%;
+  width: 43.5%;
+  height: 70.6%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: min(1.05vw, 0.7rem);
-  padding: min(2.1vw, 1rem) min(1.55vw, 0.72rem);
+  gap: min(1.25vw, 0.82rem);
+  padding: min(2.35vw, 1.14rem) min(1.75vw, 0.84rem);
   border-radius: min(3.3vw, 20px);
   background:
-    linear-gradient(180deg, rgba(1, 31, 35, 0.72), rgba(2, 20, 26, 0.8)),
-    radial-gradient(circle at 50% 5%, rgba(70, 246, 255, 0.16), transparent 48%);
+    linear-gradient(180deg, rgba(2, 45, 48, 0.92), rgba(3, 25, 32, 0.96)),
+    radial-gradient(circle at 50% 5%, rgba(93, 255, 237, 0.22), transparent 48%);
   box-shadow:
     inset 0 0 18px rgba(0, 0, 0, 0.58),
     inset 0 0 22px rgba(93, 255, 237, 0.08);
@@ -4266,7 +4267,7 @@
 
 .island-concord-hub-modal__eyebrow {
   color: #f3d887;
-  font-size: clamp(0.48rem, 1.4vw, 0.78rem);
+  font-size: clamp(0.56rem, 1.55vw, 0.88rem);
   font-weight: 900;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -4274,7 +4275,7 @@
 
 .island-concord-hub-modal__title {
   color: #fff2b8;
-  font-size: clamp(0.9rem, 3.2vw, 1.65rem);
+  font-size: clamp(1.08rem, 3.55vw, 1.92rem);
   font-weight: 950;
   letter-spacing: 0.035em;
   text-transform: uppercase;
@@ -4282,8 +4283,8 @@
 
 .island-concord-hub-modal__copy {
   max-width: 18rem;
-  color: #81e4d3;
-  font-size: clamp(0.52rem, 1.45vw, 0.76rem);
+  color: #9ffaf0;
+  font-size: clamp(0.6rem, 1.6vw, 0.88rem);
   font-weight: 750;
   line-height: 1.18;
 }
@@ -4291,15 +4292,15 @@
 .island-concord-hub-modal__channels {
   width: 100%;
   display: grid;
-  gap: min(1.1vw, 0.58rem);
+  gap: min(1.22vw, 0.68rem);
   margin-top: auto;
   margin-bottom: auto;
 }
 
 .island-concord-hub-modal__channel,
 .island-concord-hub-modal__return {
-  border: 1px solid rgba(255, 226, 136, 0.8);
-  color: #172028;
+  border: 2px solid rgba(255, 226, 136, 0.95);
+  color: #132936;
   font-weight: 950;
   cursor: pointer;
   transition: transform 140ms ease, filter 140ms ease, box-shadow 140ms ease;
@@ -4315,15 +4316,20 @@
   padding: clamp(0.25rem, 1vw, 0.58rem) clamp(0.38rem, 1.25vw, 0.74rem);
   border-radius: clamp(8px, 1.9vw, 15px);
   background:
-    linear-gradient(180deg, rgba(255, 252, 219, 0.98), rgba(243, 228, 169, 0.98)),
-    #f7edbe;
+    linear-gradient(180deg, rgba(255, 254, 235, 0.99), rgba(249, 231, 143, 0.99)),
+    #fff0a6;
   box-shadow:
     inset 0 0 0 2px rgba(12, 91, 82, 0.35),
     0 5px 12px rgba(0, 0, 0, 0.34),
     0 0 12px rgba(10, 232, 255, 0.12);
-  font-size: clamp(0.66rem, 2.15vw, 1.12rem);
+  font-size: clamp(0.76rem, 2.3vw, 1.26rem);
   line-height: 1.05;
   text-align: left;
+  text-shadow: none;
+}
+
+.island-concord-hub-modal__channel > span:last-child {
+  color: #132936;
 }
 
 .island-concord-hub-modal__channel-icon {
@@ -4357,7 +4363,7 @@
 .island-concord-hub-modal__return {
   position: absolute;
   left: 50%;
-  bottom: 7.2%;
+  bottom: 2.4%;
   transform: translateX(-50%);
   min-height: clamp(1.7rem, 4.3vw, 2.7rem);
   padding: 0 clamp(0.8rem, 2.6vw, 1.5rem);
@@ -4366,7 +4372,7 @@
     linear-gradient(180deg, #27e1ff, #078fcb 68%, #076089),
     #078fcb;
   color: #f7fdff;
-  font-size: clamp(0.62rem, 1.75vw, 0.92rem);
+  font-size: clamp(0.72rem, 1.95vw, 1.06rem);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
@@ -4379,10 +4385,10 @@
 
 @media (max-width: 520px), (max-height: 620px) {
   .island-concord-hub-modal__screen {
-    left: 30.2%;
-    top: 16.7%;
-    width: 39.6%;
-    height: 60.5%;
+    left: 27%;
+    top: 10.9%;
+    width: 46.7%;
+    height: 71.4%;
   }
 }
 
@@ -12301,7 +12307,7 @@
   z-index: 2700;
   display: grid;
   place-items: center;
-  padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+  padding: max(0.75rem, env(safe-area-inset-top, 0px)) max(0.75rem, env(safe-area-inset-right, 0px)) max(0.75rem, env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-left, 0px));
   background:
     radial-gradient(circle at 50% 42%, rgba(255, 230, 120, 0.34), transparent 24rem),
     radial-gradient(circle at 50% 58%, rgba(37, 255, 154, 0.2), transparent 18rem),
