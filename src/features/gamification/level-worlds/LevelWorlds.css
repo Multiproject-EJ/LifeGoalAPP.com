@@ -12707,9 +12707,85 @@
   line-height: 1.24;
 }
 
+
+.island-narrative-toast--landmark-whisper {
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  width: min(94vw, 390px);
+}
+
+.island-narrative-toast__card--landmark-whisper {
+  position: relative;
+  grid-template-columns: 48px 1fr;
+  align-items: start;
+  border-color: rgba(199, 178, 255, 0.72);
+  border-radius: 24px 24px 24px 10px;
+  padding: 13px 15px 14px 13px;
+  color: #f9f2ff;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.22), transparent 28%),
+    linear-gradient(135deg, rgba(55, 38, 104, 0.96), rgba(32, 54, 89, 0.95) 56%, rgba(29, 90, 83, 0.94));
+  box-shadow: 0 20px 52px rgba(17, 16, 45, 0.36), 0 0 32px rgba(161, 132, 255, 0.24);
+  overflow: hidden;
+}
+
+.island-narrative-toast__card--landmark-whisper::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+
+.island-narrative-toast__card--landmark-whisper .island-narrative-toast__emblem {
+  width: 42px;
+  height: 42px;
+  color: #fff6cc;
+  background: radial-gradient(circle, rgba(255, 248, 205, 0.96) 0%, rgba(194, 168, 255, 0.86) 52%, rgba(85, 69, 170, 0.94) 100%);
+  box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.78), 0 0 22px rgba(199, 178, 255, 0.52);
+  font-size: 1.2rem;
+}
+
+.island-narrative-toast__card--landmark-whisper .island-narrative-toast__label {
+  color: rgba(235, 224, 255, 0.82);
+}
+
+.island-narrative-toast__card--landmark-whisper .island-narrative-toast__speaker {
+  color: #fff6c7;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+}
+
+.island-narrative-toast__landmark {
+  display: block;
+  margin: 1px 0 5px;
+  color: rgba(215, 248, 255, 0.78);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.island-narrative-toast__card--landmark-whisper .island-narrative-toast__text {
+  color: #fffaff;
+  font-size: 1rem;
+  font-weight: 850;
+  line-height: 1.32;
+}
+
+.island-narrative-toast__card--landmark-whisper .island-narrative-toast__text::before {
+  content: '“';
+}
+
+.island-narrative-toast__card--landmark-whisper .island-narrative-toast__text::after {
+  content: '”';
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .island-narrative-toast {
     animation: island-narrative-toast-enter 220ms ease-out both;
+  }
+
+  .island-narrative-toast--landmark-whisper {
+    animation-duration: 280ms;
   }
 
   @keyframes island-narrative-toast-enter {
