@@ -67,22 +67,17 @@ export const minigameConsolidationPhase5Tests: TestCase[] = [
     },
   },
   {
-    name: 'phase-5 rollout matrix: first 10 islands include vision_quest mystery variant when flag is enabled',
+    name: 'phase-5 migration: generated third landmark now consistently emits event_minigame',
     run: () => {
-      __resetIslandRunFeatureFlagsForTests();
-      __setIslandRunFeatureFlagsForTests({
-        islandRunVisionQuestMysteryEnabled: true,
-      });
-
       const seen = new Set<string>();
       for (let island = 1; island <= 10; island += 1) {
         const mystery = generateIslandStopPlan(island).find((stop) => stop.stopId === 'mystery');
         if (!mystery?.mysteryContentKind) continue;
         seen.add(mystery.mysteryContentKind);
       }
-      __resetIslandRunFeatureFlagsForTests();
 
-      assertEqual(seen.has('vision_quest'), true, 'first 10 islands should include vision_quest in mystery rotation');
+      assertEqual(seen.has('event_minigame'), true, 'first 10 islands should include the event arena marker');
+      assertEqual(seen.has('vision_quest'), false, 'vision_quest moved from landmark generation to clue cards');
     },
   },
   {

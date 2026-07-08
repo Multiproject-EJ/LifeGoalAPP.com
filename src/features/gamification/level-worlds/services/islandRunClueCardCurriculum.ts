@@ -36,6 +36,9 @@ import type { CompassBookChapterId } from '../../../compass-book/types';
 export type ClueCardPrompts = {
   /** Short theme tag shown in the card eyebrow (the chapter title, or a default). */
   themeLabel: string;
+  /** Legacy Mystery-landmark activity now attached to this board task card. */
+  activityLabel: string;
+  activityDescription: string;
   /** The positive / "toward" feeling question. */
   goodQuestion: string;
   /** The friction / "hard" feeling question. */
@@ -44,15 +47,43 @@ export type ClueCardPrompts = {
   typicalDayLabel: string;
 };
 
-type ClueVariant = Omit<ClueCardPrompts, 'themeLabel'>;
+type ClueVariant = Omit<ClueCardPrompts, 'themeLabel' | 'activityLabel' | 'activityDescription'>;
 
 /** The original wording — used for islands with no authored chapter. */
 const DEFAULT_PROMPTS: ClueCardPrompts = {
   themeLabel: 'Daily clue',
+  activityLabel: '🧭 Check-in Reflection',
+  activityDescription: 'Run a quick check-in/reflection to calibrate your next moves.',
   goodQuestion: 'What made you feel good today?',
   badQuestion: 'What, if anything, made you feel bad?',
   typicalDayLabel: 'Optional: describe a typical day',
 };
+
+
+export const CLUE_CARD_TASK_ACTIVITY_POOL: readonly { label: string; description: string }[] = Object.freeze([
+  {
+    label: '🧘 Breathing / Guided Meditation',
+    description: 'Complete a breathing exercise or guided meditation to center yourself.',
+  },
+  {
+    label: '✅ Action Challenge',
+    description: 'Complete one habit/action objective to stabilize momentum.',
+  },
+  {
+    label: '🧭 Check-in Reflection',
+    description: 'Run a quick check-in/reflection to calibrate your next moves.',
+  },
+  {
+    label: '🔮 Vision Quest',
+    description: 'Reflect on your long-term vision and log a short journal entry.',
+  },
+]);
+
+function getTaskActivityForDraw(islandNumber: number, drawIndex: number) {
+  const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
+  const safeDraw = Number.isFinite(drawIndex) ? Math.max(0, Math.floor(drawIndex)) : 0;
+  return CLUE_CARD_TASK_ACTIVITY_POOL[(safeIsland + safeDraw - 1) % CLUE_CARD_TASK_ACTIVITY_POOL.length];
+}
 
 /**
  * Themed question pairs per chapter. Each chapter has three variants; the island's
@@ -176,13 +207,14 @@ export function getClueCardPromptsForIsland(
   drawIndex = 0,
 ): ClueCardPrompts {
   const activity = getActivityForIsland(islandNumber);
-  if (!activity) return DEFAULT_PROMPTS;
+  const activityTask = getTaskActivityForDraw(islandNumber, drawIndex);
+  if (!activity) return { ...DEFAULT_PROMPTS, activityLabel: activityTask.label, activityDescription: activityTask.description };
 
   const pool = CHAPTER_CLUE_POOL[activity.chapterId];
-  if (!pool || pool.length === 0) return DEFAULT_PROMPTS;
+  if (!pool || pool.length === 0) return { ...DEFAULT_PROMPTS, activityLabel: activityTask.label, activityDescription: activityTask.description };
 
   const safeDraw = Number.isFinite(drawIndex) ? Math.max(0, Math.floor(drawIndex)) : 0;
   const variant = pool[(activity.order - 1 + safeDraw) % pool.length];
   const chapter = getChapterDefinition(activity.chapterId);
-  return { themeLabel: chapter.title, ...variant };
+  return { themeLabel: chapter.title, activityLabel: activityTask.label, activityDescription: activityTask.description, ...variant };
 }

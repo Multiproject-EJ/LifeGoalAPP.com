@@ -155,6 +155,9 @@ export function IslandRunGamifiedJournalCard({
       <p className="island-stop-modal__copy">
         Quick answers keep the loop moving. If nothing stood out, choose the typical-day card — that is still useful data.
       </p>
+      <p className="island-run-gamified-journal-card__task">
+        <strong>{prompts.activityLabel}</strong> · {prompts.activityDescription}
+      </p>
 
       <section className={`island-run-gamified-journal-card__section island-run-gamified-journal-card__section--good ${goodAnswer ? 'is-answered' : ''}`}>
         <strong>1) {prompts.goodQuestion}</strong>

@@ -17,7 +17,6 @@ import { getIslandRunFeatureFlags } from '../../../../config/islandRunFeatureFla
 import { BOSS_RHYTHM_ENTRY_TICKET_COST } from './bossRhythmGame';
 import { getBossTrialConfig, type BossType } from './bossService';
 import { openEventMinigame, type EventId, type EventMinigameId } from './islandRunEventEngine';
-import type { MysteryStopContentKind } from './islandRunStops';
 
 /**
  * Input describing a boss stop about to be opened. Phase 4 only resolves
@@ -29,9 +28,11 @@ export interface BossStopLaunchContext {
   islandNumber: number;
 }
 
+export type LegacyMysteryMinigameContentKind = 'habit_action' | 'checkin_reflection' | 'breathing' | 'vision_quest' | 'event_minigame';
+
 export interface MysteryStopLaunchContext {
   kind: 'fixed_mystery';
-  mysteryContentKind: MysteryStopContentKind;
+  mysteryContentKind: LegacyMysteryMinigameContentKind;
 }
 
 /**

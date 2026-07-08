@@ -139,39 +139,15 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
     },
   },
   {
-    name: 'mystery pool ignores vision_quest while flag is off',
+    name: 'third landmark is the Event Arena instead of rotating mystery content',
     run: () => {
-      __resetIslandRunFeatureFlagsForTests();
-      __setIslandRunFeatureFlagsForTests({
-        islandRunVisionQuestMysteryEnabled: false,
-      });
-      // Walk the first 200 islands — the seeded PRNG should cover the whole pool.
-      for (let island = 1; island <= 200; island += 1) {
-        const plan = generateIslandStopPlan(island);
-        const mystery = plan.find((stop) => stop.stopId === 'mystery');
-        assert(mystery, `island ${island}: mystery stop missing`);
-        const kind = mystery!.mysteryContentKind;
-        assert(
-          kind === 'breathing' || kind === 'habit_action' || kind === 'checkin_reflection',
-          `island ${island}: unexpected mystery kind "${kind}" while flags are off`,
-        );
+      for (let island = 1; island <= 20; island += 1) {
+        const mystery = generateIslandStopPlan(island).find((stop) => stop.stopId === 'mystery');
+        assert(mystery, `island ${island}: third landmark missing`);
+        assertEqual(mystery!.title, '🎪 Event Arena Landmark', `island ${island}: title`);
+        assertEqual(mystery!.mysteryContentKind, 'event_minigame', `island ${island}: event arena kind`);
+        assertEqual(mystery!.isBehaviorStop, false, `island ${island}: event arena is not a behavior stop`);
       }
-      __resetIslandRunFeatureFlagsForTests();
-    },
-  },
-  {
-    name: 'enabling the vision_quest flag admits vision_quest into the mystery pool',
-    run: () => {
-      __resetIslandRunFeatureFlagsForTests();
-      __setIslandRunFeatureFlagsForTests({ islandRunVisionQuestMysteryEnabled: true });
-      let sawVisionQuest = false;
-      for (let island = 1; island <= 400 && !sawVisionQuest; island += 1) {
-        const plan = generateIslandStopPlan(island);
-        const mystery = plan.find((stop) => stop.stopId === 'mystery');
-        if (mystery?.mysteryContentKind === 'vision_quest') sawVisionQuest = true;
-      }
-      assert(sawVisionQuest, 'vision_quest should appear at least once across 400 islands when its flag is on');
-      __resetIslandRunFeatureFlagsForTests();
     },
   },
   {

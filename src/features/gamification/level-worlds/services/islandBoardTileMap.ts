@@ -112,7 +112,7 @@ const ENCOUNTER_FRACTIONS: Record<IslandRarity, number[]> = {
 
 // Two adjacent ring tiles become a card-draw station. Fractions keep the pair
 // topology-aware instead of depending on the current 36-tile production count.
-const CARD_STATION_START_FRACTION = 0.625;
+const CARD_STATION_START_FRACTION = 15 / 36;
 const BUILD_DISCOUNT_TILE_FRACTION = 0.35;
 const FREE_TICKET_TILE_FRACTION = 0.85;
 

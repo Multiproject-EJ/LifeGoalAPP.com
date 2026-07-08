@@ -144,6 +144,14 @@ export const islandBoardTopologyTests: TestCase[] = [
     },
   },
   {
+    name: 'daily clue card task station uses two visible board tiles',
+    run: () => {
+      const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0));
+      assertEqual(tileMap[15].tileType, 'card', 'Expected tile 15 to draw a Daily Clue Card task');
+      assertEqual(tileMap[16].tileType, 'card', 'Expected tile 16 to draw a Daily Clue Card task');
+    },
+  },
+  {
     name: 'traffic light tile is reserved as one non-door bonus tile',
     run: () => {
       const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0));
