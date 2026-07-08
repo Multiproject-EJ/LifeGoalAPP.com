@@ -156,7 +156,7 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     run: () => {
       includes(boardSource, 'resolution.isFullBoardNewlyCompleted');
       includes(boardSource, 'applyIslandRunTechnologyBuild({');
-      includes(boardSource, 'if (!buildResult.changed) return;');
+      includes(boardSource, 'if (!buildResult.changed) return true;');
       includes(boardSource, 'setTechCompletionCelebration({');
       includes(boardSource, 'fullBoardRewardDice: resolution.fullBoardRewardDice');
     },
@@ -179,4 +179,22 @@ export const islandTechCollectionComponentTests: TestCase[] = [
       notIncludes(boardSource, 'resolveTechCollectionSlotIndex');
     },
   },
+  {
+    name: 'board lets Concord fragments collect before special tile routing can steal the landing',
+    run: () => {
+      includes(boardSource, "if (maybeCollectTechItem(landedTile?.tileType ?? 'micro', currentIndex))");
+      includes(boardSource, "} else if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId)");
+      includes(boardSource, 'const maybeCollectTechItem = useCallback((tileType: string, landingTileIndex: number): boolean');
+      includes(boardSource, 'if (resolution.isDuplicate) return false;');
+    },
+  },
+  {
+    name: 'board gates Island 1 departure behind The Concord unless dev clear is used',
+    run: () => {
+      includes(boardSource, "getIslandTechnologyAccess(runtimeState, 'the-concord').active");
+      includes(boardSource, "source !== 'dev_clear_island'");
+      includes(boardSource, 'Build The Concord from all 9 Island 1 fragments before finishing Island 1.');
+    },
+  },
+
 ];

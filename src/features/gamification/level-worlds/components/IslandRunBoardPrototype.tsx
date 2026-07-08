@@ -62,6 +62,7 @@ import { getIslandCaretakerConcordContent, hasIslandCaretakerConcordContent } fr
 import type { IslandConversationDefinition, IslandInhabitantTopicDefinition } from '../inhabitants/islandConversationTypes';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandCommunicationAccess } from '../services/islandCommunicationAccess';
+import { getIslandTechnologyAccess } from '../services/islandRunTechnologyUnlocks';
 import { resolveIslandRunConcordHubEntryState } from '../services/islandRunConcordHubEntry';
 import { getCreatureChannelLine } from '../services/islandCreatureChannel';
 import { getIslandDisplayName } from '../services/islandNames';
@@ -5209,21 +5210,22 @@ export function IslandRunBoardPrototype({
   const contractV2BuildPanelStopState = showContractV2BuildPanel
     ? (runtimeState.stopStatesByIndex[contractV2OpenedStopIndex] ?? null)
     : null;
+  const isIslandOneConcordActive = islandNumber !== 1 || getIslandTechnologyAccess(runtimeState, 'the-concord').active;
   const legacyIsCurrentIslandFullyCleared = isIslandFullyCleared(islandNumber, effectiveCompletedStops);
-  const isCurrentIslandFullyCleared = ISLAND_RUN_CONTRACT_V2_ENABLED
+  const isCurrentIslandFullyCleared = (ISLAND_RUN_CONTRACT_V2_ENABLED
     ? isIslandRunFullyClearedV2({
         stopStatesByIndex: runtimeState.stopStatesByIndex,
         stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
         hatcheryEggResolved: islandEggSlotUsed,
       })
-    : legacyIsCurrentIslandFullyCleared;
-  const isCurrentIslandFinishedForDeparture = ISLAND_RUN_CONTRACT_V2_ENABLED
+    : legacyIsCurrentIslandFullyCleared) && isIslandOneConcordActive;
+  const isCurrentIslandFinishedForDeparture = (ISLAND_RUN_CONTRACT_V2_ENABLED
     ? isIslandRunFinishedForDepartureV2({
         stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
         hatcheryEggResolved: islandEggSlotUsed,
         bossDefeated: runtimeState.bossTrialResolvedIslandNumber === islandNumber,
       })
-    : legacyIsCurrentIslandFullyCleared;
+    : legacyIsCurrentIslandFullyCleared) && isIslandOneConcordActive;
   const islandClearVisitKey = `${runtimeState.cycleIndex}:${islandNumber}`;
   const buildPanelRemainingToFullByIndex = useMemo(() => {
     return islandStopPlan.map((_, stopIndex) => {
@@ -5267,6 +5269,10 @@ export function IslandRunBoardPrototype({
   );
 
   const showIslandClearCelebrationFromAnywhere = useCallback((source: string) => {
+    if (islandNumber === 1 && !getIslandTechnologyAccess(runtimeStateRef.current, 'the-concord').active && source !== 'dev_clear_island') {
+      setLandingText('Build The Concord from all 9 Island 1 fragments before finishing Island 1.');
+      return;
+    }
     if (showIslandClearCelebration && islandClearStats?.islandNumber === islandNumber) return;
     islandClearCelebrationShownForVisitRef.current = islandClearVisitKey;
     const existingStats = islandClearStats?.islandNumber === islandNumber ? islandClearStats : null;
@@ -6133,7 +6139,10 @@ export function IslandRunBoardPrototype({
     // Encounter tiles open their challenge modal; every other tile funnels through
     // resolveTileLanding for essence / feed / hazard outcomes.
         const landedTile = landmarkDoorTileMap[currentIndex];
-        if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId) {
+        if (maybeCollectTechItem(landedTile?.tileType ?? 'micro', currentIndex)) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+        } else if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
           handleLandmarkDoorLanding(landedTile.doorStopId, currentIndex);
@@ -6305,9 +6314,9 @@ export function IslandRunBoardPrototype({
     [collectedTechTileIndices, islandNumber],
   );
 
-  const maybeCollectTechItem = useCallback((tileType: string, landingTileIndex: number) => {
+  const maybeCollectTechItem = useCallback((tileType: string, landingTileIndex: number): boolean => {
     const placement = getIslandTechnologyFragmentPlacement(islandNumber, landingTileIndex);
-    if (!placement) return;
+    if (!placement) return false;
 
     // Pure resolver owns all gameplay math after the content-driven placement
     // map supplies the exact fixed 3×3 fragment slot. It is idempotent on
@@ -6318,7 +6327,7 @@ export function IslandRunBoardPrototype({
       collectedSlots: collectedTechTileIndicesRef.current,
       rewardedLines: rewardedTechCollectionLinesRef.current,
     });
-    if (resolution.isDuplicate) return;
+    if (resolution.isDuplicate) return false;
 
     const nextCollected = new Set(resolution.nextCollectedSlots);
     const nextRewardedLines = new Set(resolution.nextRewardedLines);
@@ -6370,7 +6379,7 @@ export function IslandRunBoardPrototype({
         source: 'island-1-tech-grid-completed',
       });
       setRuntimeState(buildResult.record);
-      if (!buildResult.changed) return;
+      if (!buildResult.changed) return true;
       // Full grid: deliberate celebration that does NOT auto-dismiss.
       setTechCollectionModal(null);
       setTechCompletionCelebration({
@@ -6379,7 +6388,7 @@ export function IslandRunBoardPrototype({
         fullBoardRewardDice: resolution.fullBoardRewardDice,
         totalRewardDice: resolution.totalRewardDice,
       });
-      return;
+      return true;
     }
 
     // Ordinary pickup: fast modal that auto-dismisses (the modal owns its timer).
@@ -6391,6 +6400,7 @@ export function IslandRunBoardPrototype({
       newlyCompletedLines: resolution.newlyCompletedLines,
       lineRewardDice: resolution.lineRewardDice,
     });
+    return true;
   }, [client, islandNumber, playIslandRunSound, session, triggerIslandRunHaptic]);
 
   // Seed spacing constants. The landing seed packs three independent dimensions
@@ -8770,7 +8780,7 @@ export function IslandRunBoardPrototype({
           stopStatesByIndex: nextStopStatesByIndex,
           stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
           hatcheryEggResolved: islandEggSlotUsed,
-        });
+        }) && (islandNumber !== 1 || getIslandTechnologyAccess(runtimeStateRef.current, 'the-concord').active);
 
         if (!nowFullyCleared) {
           setLandingText('👾 Boss defeated, but full rewards are locked. Return to Build and upgrade every landmark to Level 3 to claim island clear.');
