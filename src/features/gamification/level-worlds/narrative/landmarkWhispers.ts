@@ -5,6 +5,8 @@ export interface LandmarkKeeperDefinition {
   id: LandmarkKeeperId;
   speakerName: string;
   purpose: string;
+  landmarkLabel: string;
+  landmarkIcon: string;
   fallbackLines: readonly string[];
 }
 
@@ -14,6 +16,9 @@ export interface LandmarkWhisperPayload {
   speakerName: string;
   text: string;
   supportingLabel: 'Landmark Whisper';
+  variant: 'landmark_whisper';
+  landmarkLabel: string;
+  landmarkIcon: string;
   durationMs: number;
 }
 
@@ -47,6 +52,8 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
     id: 'hatchery',
     speakerName: 'The Hatchery Keeper',
     purpose: 'Comments on eggs, hatching, creature progress, egg status, and creature anticipation.',
+    landmarkLabel: 'Hatchery',
+    landmarkIcon: '🥚',
     fallbackLines: [
       'This egg is listening before it cracks.',
       'Something inside is almost ready.',
@@ -58,6 +65,8 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
     id: 'habit',
     speakerName: 'The Habit Keeper',
     purpose: 'Cheers habit progress and gives non-shaming encouragement when the path needs warmth.',
+    landmarkLabel: 'Habit Grove',
+    landmarkIcon: '🌿',
     fallbackLines: [
       'That streak is becoming a path.',
       'You showed up. That matters more than perfect.',
@@ -70,6 +79,8 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
     id: 'arena',
     speakerName: 'The Arena Keeper',
     purpose: 'Welcomes real resources earned beyond the run when they are brought into Island Run.',
+    landmarkLabel: 'Arena',
+    landmarkIcon: '🏟️',
     fallbackLines: [
       'Good work outside the island. I have brought your rewards in.',
       'The arena received what you earned beyond the run.',
@@ -80,6 +91,8 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
     id: 'wisdom',
     speakerName: 'The Wisdom Keeper',
     purpose: 'Offers short, grounded reflections using safe static wisdom for the MVP.',
+    landmarkLabel: 'Wisdom Landmark',
+    landmarkIcon: '🕯️',
     fallbackLines: [
       'Your goals are not separate islands. What you strengthen in one place changes the weather elsewhere.',
       'Do not only ask what is urgent. Ask what keeps becoming important.',
@@ -106,6 +119,9 @@ function buildPayload(keeperId: LandmarkKeeperId, text: string, reason: string):
     speakerName: keeper.speakerName,
     text,
     supportingLabel: 'Landmark Whisper',
+    variant: 'landmark_whisper',
+    landmarkLabel: keeper.landmarkLabel,
+    landmarkIcon: keeper.landmarkIcon,
     durationMs: LANDMARK_WHISPER_DURATION_MS,
   };
 }

@@ -28,6 +28,16 @@ export const landmarkWhispersTests: TestCase[] = [
     },
   },
   {
+    name: 'Landmark Whisper payloads carry distinct toast presentation metadata',
+    run: () => {
+      const whisper = buildHatcheryWhisper({ hasActiveEgg: true, isEggReady: false }, 'presentation');
+      assertEqual(whisper.variant, 'landmark_whisper', 'Expected distinct toast variant');
+      assertEqual(whisper.supportingLabel, 'Landmark Whisper', 'Expected story-world label');
+      assertEqual(whisper.landmarkLabel, LANDMARK_KEEPERS.hatchery.landmarkLabel, 'Expected landmark source label');
+      assertEqual(whisper.landmarkIcon, LANDMARK_KEEPERS.hatchery.landmarkIcon, 'Expected landmark icon');
+    },
+  },
+  {
     name: 'Hatchery Keeper uses egg-ready contextual copy',
     run: () => {
       const whisper = buildHatcheryWhisper({ hasActiveEgg: true, isEggReady: true }, 'ready');

@@ -14958,6 +14958,9 @@ export function IslandRunBoardPrototype({
           text={landmarkWhispers.activeWhisper.text}
           supportingLabel={landmarkWhispers.activeWhisper.supportingLabel}
           durationMs={landmarkWhispers.activeWhisper.durationMs}
+          variant={landmarkWhispers.activeWhisper.variant}
+          landmarkLabel={landmarkWhispers.activeWhisper.landmarkLabel}
+          landmarkIcon={landmarkWhispers.activeWhisper.landmarkIcon}
           onDismiss={landmarkWhispers.handleWhisperDismiss}
         />
       ) : null}
