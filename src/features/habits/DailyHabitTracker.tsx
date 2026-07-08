@@ -6264,25 +6264,38 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }
   }, [adherenceByHabit, habitHealthByHabitId, habitInsights, reviewAiLoadingHabitIds]);
 
+  const prepareHabitEditDraft = useCallback((habit: HabitWithGoal, options?: { title?: string; notes?: string }) => {
+    const schedule = habit.schedule ?? null;
+    const lifeWheelMeta = extractLifeWheelDomain(schedule);
+    const lifeWheelKey = normalizeLifeWheelKey(lifeWheelMeta?.key ?? null);
+
+    setEditTitle(options?.title ?? habit.name);
+    setEditNotes(options?.notes ?? extractHabitNotes(schedule));
+    setEditLifeWheelKey(lifeWheelKey ?? LIFE_WHEEL_UNASSIGNED);
+    setEditGoalId(habit.goal?.id ?? GOAL_UNASSIGNED);
+    setEditError(null);
+    setEditHabit({
+      id: habit.id,
+      name: habit.name,
+      schedule,
+      goalId: habit.goal?.id ?? null,
+    });
+  }, []);
+
   const handleApplyReviewAiDraftToEdit = useCallback((habit: HabitWithGoal) => {
     const draft = reviewAiDraftByHabitId[habit.id];
     if (!draft) {
       return;
     }
 
-    setEditHabit({
-      id: habit.id,
-      name: draft.suggestion.title || habit.name,
-      schedule: habit.schedule ?? null,
-      goalId: habit.goal?.id ?? null,
-    });
+    prepareHabitEditDraft(habit, { title: draft.suggestion.title || habit.name });
     setPendingReviewAiApply({
       habitId: habit.id,
       title: draft.suggestion.title || habit.name,
       rationale: draft.rationale,
     });
     setErrorMessage(`Loaded AI redesign draft for "${habit.name}". Review and save your changes.`);
-  }, [reviewAiDraftByHabitId]);
+  }, [prepareHabitEditDraft, reviewAiDraftByHabitId]);
 
   const handleHabitReviewAction = useCallback(async (habit: HabitWithGoal, action: HabitReviewAction, options?: { reason?: string; resumeOn?: string | null }) => {
     if (!isConfigured || isDemoExperience) {
@@ -6613,12 +6626,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, []);
 
   const handleOpenEdit = (habit: HabitWithGoal) => {
-    setEditHabit({
-      id: habit.id,
-      name: habit.name,
-      schedule: habit.schedule ?? null,
-      goalId: habit.goal?.id ?? null,
-    });
+    prepareHabitEditDraft(habit);
   };
 
   const handleCloseEdit = () => {
