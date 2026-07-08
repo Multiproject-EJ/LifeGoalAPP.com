@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { AiCoachDataAccess } from '../../../../types/aiCoach';
 import type { LandmarkWhisperPayload, LandmarkWhisperStopId } from './landmarkWhispers';
 import { buildArenaTransferWhisperFromRewardBundle, buildLandmarkWhisperForStop, consumeArenaTransferWhisperBundle } from './landmarkWhispers';
+import { resolveWisdomKeeperAiWhisper, type WisdomKeeperAiContext, type WisdomKeeperAiGenerator } from './wisdomKeeperAi';
 
 export interface UseLandmarkWhispersInput {
   activeStopId: string | null;
@@ -11,6 +13,12 @@ export interface UseLandmarkWhispersInput {
   hasHabitProgress: boolean;
   seed: string;
   userId?: string | null;
+  wisdomKeeperAi?: {
+    enabled: boolean;
+    access: AiCoachDataAccess;
+    context?: WisdomKeeperAiContext;
+    generate?: WisdomKeeperAiGenerator;
+  };
 }
 
 function isLandmarkWhisperStopId(value: string | null): value is LandmarkWhisperStopId {
@@ -26,9 +34,11 @@ export function useLandmarkWhispers({
   hasHabitProgress,
   seed,
   userId = null,
+  wisdomKeeperAi,
 }: UseLandmarkWhispersInput) {
   const [activeWhisper, setActiveWhisper] = useState<LandmarkWhisperPayload | null>(null);
   const lastOpenKeyRef = useRef<string | null>(null);
+  const activeWisdomAiRequestRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) {
@@ -48,8 +58,31 @@ export function useLandmarkWhispers({
       seed: openKey,
     });
     if (whisper) setActiveWhisper(whisper);
-  }, [activeStopId, hasActiveEgg, hasHabitProgress, hasHydratedRuntimeState, isEggReady, isNarrativeSurfaceBlocked, seed]);
 
+    if (activeStopId === 'wisdom' && wisdomKeeperAi?.enabled && wisdomKeeperAi.generate) {
+      activeWisdomAiRequestRef.current = openKey;
+      void resolveWisdomKeeperAiWhisper({
+        aiEnabled: true,
+        access: wisdomKeeperAi.access,
+        context: wisdomKeeperAi.context,
+        generate: wisdomKeeperAi.generate,
+        seed: openKey,
+      }).then((result) => {
+        if (result.source !== 'ai') return;
+        if (activeWisdomAiRequestRef.current !== openKey) return;
+        setActiveWhisper((current) => {
+          if (!current || current.keeperId !== 'wisdom') return current;
+          return result.whisper;
+        });
+      }).catch(() => {
+        // Resolver is fallback-first; keep the static Wisdom Keeper whisper on any late failure.
+      });
+    }
+  }, [activeStopId, hasActiveEgg, hasHabitProgress, hasHydratedRuntimeState, isEggReady, isNarrativeSurfaceBlocked, seed, wisdomKeeperAi]);
+
+  useEffect(() => {
+    if (activeStopId !== 'wisdom') activeWisdomAiRequestRef.current = null;
+  }, [activeStopId]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState || isNarrativeSurfaceBlocked || activeWhisper || !userId) return;

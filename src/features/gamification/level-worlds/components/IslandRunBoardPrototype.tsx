@@ -306,6 +306,7 @@ import { resolveCompanionRegenModifier } from '../services/companionRegenModifie
 import { readPerfectCompanionRuntimeConfig } from '../services/perfectCompanionConfig';
 import { getDefaultZonePreferencesForArchetypes } from '../services/creatureArchetypeBridge';
 import { logIslandRunEntryDebug, setIslandRunDebugRuntimeSnapshotProvider } from '../services/islandRunEntryDebug';
+import { getAiCoachAccess } from '../../../../services/aiCoachAccess';
 import { logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardLuckyRollRuns } from '../../../../services/luckyRollAccess';
@@ -335,6 +336,7 @@ import { IslandNarrativeDialogue } from '../narrative/components/IslandNarrative
 import { IslandNarrativeToast } from '../narrative/components/IslandNarrativeToast';
 import { useIslandNarrativeOpeningFlow, type ActiveIslandStoryEpisode } from '../narrative/useIslandNarrativeOpeningFlow';
 import { useLandmarkWhispers } from '../narrative/useLandmarkWhispers';
+import { createWisdomKeeperAiCoachGenerator } from '../narrative/wisdomKeeperAi';
 import type { IslandNarrativeSeenState } from '../narrative/islandNarrativeSeenState';
 import {
   resolveMinigameForStop,
@@ -1493,6 +1495,13 @@ export function IslandRunBoardPrototype({
   // own refresh via 'gamificationProfileUpdated' events, so any XP award
   // elsewhere in the app will flow into the chip automatically.
   const { levelInfo: playerLevelInfo } = useGamification(session);
+  const wisdomKeeperAiAccess = useMemo(() => getAiCoachAccess(session), [session]);
+  const wisdomKeeperAiGenerate = useMemo(() => createWisdomKeeperAiCoachGenerator(), []);
+  const wisdomKeeperAiOptions = useMemo(() => ({
+    enabled: !isDemoSession(session),
+    access: wisdomKeeperAiAccess,
+    generate: wisdomKeeperAiGenerate,
+  }), [session, wisdomKeeperAiAccess, wisdomKeeperAiGenerate]);
   const activeTileAnchors = useMemo(
     () => TILE_ANCHORS_40,
     [],
@@ -10398,6 +10407,7 @@ export function IslandRunBoardPrototype({
     hasHabitProgress: completedStops.includes('habit') || isActiveCompassSessionFilled,
     seed: `${session.user.id}:${runtimeState.currentIslandNumber}:${runtimeState.cycleIndex}`,
     userId: session.user.id,
+    wisdomKeeperAi: wisdomKeeperAiOptions,
   });
 
   const handleCloseStoryReader = () => {
