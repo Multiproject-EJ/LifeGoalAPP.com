@@ -1359,6 +1359,135 @@ export interface Database {
         };
         Relationships: [];
       };
+      campaigns: {
+        Row: {
+          id: string;
+          owner_id: string;
+          title: string;
+          description: string | null;
+          campaign_type: string;
+          status: 'draft' | 'active' | 'paused' | 'completed' | 'archived';
+          visibility: 'private' | 'unlisted' | 'public';
+          starts_on: string | null;
+          ends_on: string | null;
+          campaign_data: Json;
+          live_state: Json;
+          share_slug: string | null;
+          profile_share_enabled: boolean;
+          profile_snapshot: Json;
+          published_at: string | null;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          title: string;
+          description?: string | null;
+          campaign_type?: string;
+          status?: 'draft' | 'active' | 'paused' | 'completed' | 'archived';
+          visibility?: 'private' | 'unlisted' | 'public';
+          starts_on?: string | null;
+          ends_on?: string | null;
+          campaign_data?: Json;
+          live_state?: Json;
+          share_slug?: string | null;
+          profile_share_enabled?: boolean;
+          profile_snapshot?: Json;
+          published_at?: string | null;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          title?: string;
+          description?: string | null;
+          campaign_type?: string;
+          status?: 'draft' | 'active' | 'paused' | 'completed' | 'archived';
+          visibility?: 'private' | 'unlisted' | 'public';
+          starts_on?: string | null;
+          ends_on?: string | null;
+          campaign_data?: Json;
+          live_state?: Json;
+          share_slug?: string | null;
+          profile_share_enabled?: boolean;
+          profile_snapshot?: Json;
+          published_at?: string | null;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      campaign_participants: {
+        Row: {
+          id: string;
+          campaign_id: string;
+          user_id: string;
+          role: 'owner' | 'member' | 'viewer';
+          participant_profile: Json;
+          progress_data: Json;
+          joined_at: string;
+          last_seen_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          campaign_id: string;
+          user_id: string;
+          role?: 'owner' | 'member' | 'viewer';
+          participant_profile?: Json;
+          progress_data?: Json;
+          joined_at?: string;
+          last_seen_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          campaign_id?: string;
+          user_id?: string;
+          role?: 'owner' | 'member' | 'viewer';
+          participant_profile?: Json;
+          progress_data?: Json;
+          joined_at?: string;
+          last_seen_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      campaign_live_events: {
+        Row: {
+          id: string;
+          campaign_id: string;
+          user_id: string | null;
+          event_type: string;
+          event_data: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          campaign_id: string;
+          user_id?: string | null;
+          event_type: string;
+          event_data?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          campaign_id?: string;
+          user_id?: string | null;
+          event_type?: string;
+          event_data?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       commitment_contracts: {
         Row: {
           id: string;
@@ -3481,6 +3610,19 @@ export interface Database {
       };
     };
     Functions: {
+      get_shared_campaign: {
+        Args: {
+          p_share_slug: string;
+        };
+        Returns: Database['public']['Tables']['campaigns']['Row'][];
+      };
+      get_shared_campaign_live_events: {
+        Args: {
+          p_share_slug: string;
+          p_limit?: number;
+        };
+        Returns: Database['public']['Tables']['campaign_live_events']['Row'][];
+      };
       claim_daily_spin_habit_bonus: {
         Args: {
           p_claim_date?: string;
