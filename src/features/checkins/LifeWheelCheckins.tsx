@@ -1015,7 +1015,7 @@ export function LifeWheelCheckins({ session, entryOrigin = 'direct', onBackToMyQ
                     </p>
                     <button
                       type="button"
-                      className="life-wheel__area-realm"
+                      className="life-wheel-realm-entry"
                       onClick={() => setRealmCategoryKey(selectedAreaCategory)}
                     >
                       <span>Enter Realm</span>

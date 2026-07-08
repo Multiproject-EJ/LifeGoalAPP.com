@@ -16,6 +16,14 @@ function formatStatScore(score: number | null): string {
   return score === null ? '—' : String(score);
 }
 
+function formatRank(score: number | null): string {
+  if (score === null) return 'Unknown';
+  if (score >= 80) return 'Epic';
+  if (score >= 60) return 'Sturdy';
+  if (score >= 40) return 'Emerging';
+  return 'Fragile';
+}
+
 function StatCard({ dimension }: { dimension: RealmStatDimension }) {
   const score = dimension.score ?? 0;
   return (
@@ -34,6 +42,7 @@ function StatCard({ dimension }: { dimension: RealmStatDimension }) {
       <div className="life-wheel-realm-stat__bar" aria-hidden="true">
         <span style={{ width: `${score}%` }} />
       </div>
+      <span className="life-wheel-realm-stat__rank">Attribute rank · {formatRank(dimension.score)}</span>
       <p className="life-wheel-realm-stat__summary">{dimension.summary}</p>
       <ul className="life-wheel-realm-stat__evidence">
         {dimension.evidence.slice(0, 3).map((item) => (
