@@ -342,6 +342,105 @@ const TODAY_EXTRA_SECTION_TOGGLES: ReadonlyArray<{
 const TODAY_EXTRA_SECTION_KEYS = new Set<TodayExpandableSectionKey>(
   TODAY_EXTRA_SECTION_TOGGLES.map((section) => section.key),
 );
+
+type CampaignType = 'body' | 'mind' | 'bad_loop' | 'project' | 'money' | 'sleep' | 'relationship' | 'custom';
+type CampaignStatus = 'active' | 'completed' | 'paused' | 'ended';
+
+type Campaign = {
+  id: string;
+  user_id: string;
+  name: string;
+  type: CampaignType;
+  status: CampaignStatus;
+  start_date: string;
+  end_date: string;
+  duration_days: number;
+  victory_condition: string;
+  keystone_habit_id?: string | null;
+  minimum_move?: string | null;
+  danger_window?: string | null;
+  enemy_loop?: string | null;
+  replacement_move?: string | null;
+  recovery_rule?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type CampaignDraft = {
+  name: string;
+  type: CampaignType;
+  durationDays: number;
+  customDurationDays: string;
+  victoryCondition: string;
+  keystoneHabitId: string;
+  minimumMove: string;
+  dangerWindow: string;
+  enemyLoop: string;
+  replacementMove: string;
+  recoveryRule: string;
+};
+
+const CAMPAIGN_STORAGE_PREFIX = 'lifegoal.habits.campaign';
+const CAMPAIGN_TYPES: ReadonlyArray<{ value: CampaignType; label: string }> = [
+  { value: 'body', label: 'Body' },
+  { value: 'mind', label: 'Mind' },
+  { value: 'bad_loop', label: 'Bad Loop' },
+  { value: 'project', label: 'Project' },
+  { value: 'money', label: 'Money' },
+  { value: 'sleep', label: 'Sleep' },
+  { value: 'relationship', label: 'Relationship' },
+  { value: 'custom', label: 'Custom' },
+];
+const CAMPAIGN_DURATION_OPTIONS = [7, 14, 21, 30] as const;
+const DEFAULT_CAMPAIGN_RECOVERY_RULE = 'The campaign is not over after a slip. The next action repairs it.';
+
+function getCampaignStorageKey(userId: string): string {
+  return `${CAMPAIGN_STORAGE_PREFIX}.${userId}`;
+}
+
+function readStoredCampaign(userId: string): Campaign | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(getCampaignStorageKey(userId)) ?? 'null') as Campaign | null;
+    return parsed?.status === 'active' || parsed?.status === 'paused' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistStoredCampaign(userId: string, campaign: Campaign | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (campaign) window.localStorage.setItem(getCampaignStorageKey(userId), JSON.stringify(campaign));
+    else window.localStorage.removeItem(getCampaignStorageKey(userId));
+  } catch {
+  }
+}
+
+function createDefaultCampaignDraft(): CampaignDraft {
+  return {
+    name: '',
+    type: 'body',
+    durationDays: 21,
+    customDurationDays: '',
+    victoryCondition: '',
+    keystoneHabitId: '',
+    minimumMove: '',
+    dangerWindow: '',
+    enemyLoop: '',
+    replacementMove: '',
+    recoveryRule: DEFAULT_CAMPAIGN_RECOVERY_RULE,
+  };
+}
+
+function getCampaignDay(campaign: Campaign, now = new Date()): number {
+  return Math.min(campaign.duration_days, Math.max(1, getUtcDayDifference(campaign.start_date, formatISODate(now)) + 1));
+}
+
+function getCampaignDaysLeft(campaign: Campaign, now = new Date()): number {
+  return Math.max(0, campaign.duration_days - getCampaignDay(campaign, now) + 1);
+}
+
 const TODAY_EXTRA_SECTION_STORAGE_PREFIX = 'lifegoal.habits.todayExtras.hidden';
 
 function getTodayExtraSectionStorageKey(userId: string): string {
@@ -1076,6 +1175,12 @@ export function DailyHabitTracker({
   const [todayTodoModalOpen, setTodayTodoModalOpen] = useState(false);
   const [ambianceModalOpen, setAmbianceModalOpen] = useState(false);
   const [selectedAmbiance, setSelectedAmbiance] = useState<'starlight' | null>(null);
+  const [campaign, setCampaign] = useState<Campaign | null>(() => readStoredCampaign(session.user.id));
+  const [campaignModalOpen, setCampaignModalOpen] = useState(false);
+  const [campaignDraft, setCampaignDraft] = useState<CampaignDraft>(() => createDefaultCampaignDraft());
+  const [campaignError, setCampaignError] = useState<string | null>(null);
+
+
   const [editingTodayTodo, setEditingTodayTodo] = useState<TodayTodo | null>(null);
   const [todayTodoTitle, setTodayTodoTitle] = useState('');
   const [todayTodoNotes, setTodayTodoNotes] = useState('');
@@ -1232,9 +1337,81 @@ export function DailyHabitTracker({
   }, [loadTodayTodos]);
 
   useEffect(() => {
-    if ((!todayTodoModalOpen && !ambianceModalOpen) || typeof document === 'undefined') return;
+    if ((!todayTodoModalOpen && !ambianceModalOpen && !campaignModalOpen) || typeof document === 'undefined') return;
     return lockPageScroll();
-  }, [todayTodoModalOpen, ambianceModalOpen]);
+  }, [todayTodoModalOpen, ambianceModalOpen, campaignModalOpen]);
+
+  useEffect(() => {
+    setCampaign(readStoredCampaign(session.user.id));
+  }, [session.user.id]);
+
+  const handleOpenCampaignModal = useCallback(() => {
+    if (campaign) {
+      setCampaignDraft({
+        name: campaign.name,
+        type: campaign.type,
+        durationDays: CAMPAIGN_DURATION_OPTIONS.includes(campaign.duration_days as typeof CAMPAIGN_DURATION_OPTIONS[number]) ? campaign.duration_days : 0,
+        customDurationDays: CAMPAIGN_DURATION_OPTIONS.includes(campaign.duration_days as typeof CAMPAIGN_DURATION_OPTIONS[number]) ? '' : String(campaign.duration_days),
+        victoryCondition: campaign.victory_condition,
+        keystoneHabitId: campaign.keystone_habit_id ?? '',
+        minimumMove: campaign.minimum_move ?? '',
+        dangerWindow: campaign.danger_window ?? '',
+        enemyLoop: campaign.enemy_loop ?? '',
+        replacementMove: campaign.replacement_move ?? '',
+        recoveryRule: campaign.recovery_rule ?? DEFAULT_CAMPAIGN_RECOVERY_RULE,
+      });
+    } else {
+      setCampaignDraft(createDefaultCampaignDraft());
+    }
+    setCampaignError(null);
+    setCampaignModalOpen(true);
+  }, [campaign]);
+
+  const handleSaveCampaign = useCallback(() => {
+    const name = campaignDraft.name.trim();
+    const victory = campaignDraft.victoryCondition.trim();
+    const duration = campaignDraft.durationDays || Math.max(1, Math.min(365, Number.parseInt(campaignDraft.customDurationDays, 10) || 21));
+    if (!name) {
+      setCampaignError('Give this chapter a campaign name.');
+      return;
+    }
+    if (!victory) {
+      setCampaignError('Add a victory condition so the campaign knows what winning means.');
+      return;
+    }
+    const now = new Date();
+    const startDate = formatISODate(now);
+    const endDate = formatISODate(addDays(now, duration - 1));
+    const nextCampaign: Campaign = {
+      id: campaign?.id ?? `campaign-${Date.now()}`,
+      user_id: session.user.id,
+      name,
+      type: campaignDraft.type,
+      status: campaign?.status === 'paused' ? 'paused' : 'active',
+      start_date: campaign?.start_date ?? startDate,
+      end_date: campaign?.end_date ?? endDate,
+      duration_days: duration,
+      victory_condition: victory,
+      keystone_habit_id: campaignDraft.keystoneHabitId || null,
+      minimum_move: campaignDraft.minimumMove.trim() || null,
+      danger_window: campaignDraft.dangerWindow.trim() || null,
+      enemy_loop: campaignDraft.enemyLoop.trim() || null,
+      replacement_move: campaignDraft.replacementMove.trim() || null,
+      recovery_rule: campaignDraft.recoveryRule.trim() || DEFAULT_CAMPAIGN_RECOVERY_RULE,
+      created_at: campaign?.created_at ?? now.toISOString(),
+      updated_at: now.toISOString(),
+    };
+    setCampaign(nextCampaign);
+    persistStoredCampaign(session.user.id, nextCampaign);
+    setCampaignModalOpen(false);
+    setCampaignError(null);
+  }, [campaign, campaignDraft, session.user.id]);
+
+  const handleEndCampaign = useCallback(() => {
+    setCampaign(null);
+    persistStoredCampaign(session.user.id, null);
+    setCampaignModalOpen(false);
+  }, [session.user.id]);
 
   const handleOpenCreateTodayTodo = useCallback(() => {
     setEditingTodayTodo(null);
@@ -8253,6 +8430,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                               ⭐ Quest Habit
                             </span>
                           ) : null}
+                          {campaign?.keystone_habit_id === habit.id ? (
+                            <span className="habit-checklist__campaign-badge" aria-label="Campaign Keystone habit">
+                              ⚑ Keystone
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                       <div className="habit-checklist__reward-rail" aria-label="Habit rewards and quest marker">
@@ -9836,6 +10018,49 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             }`}
           >
             {renderDayNavigation('compact', true, isCompactView)}
+            <div className="habit-checklist-card__campaign-launch-row" role="group" aria-label="Today quick launchers">
+              <button
+                type="button"
+                className="habit-checklist-card__starter-launcher habit-checklist-card__todo-launcher"
+                onClick={handleOpenCreateTodayTodo}
+              >
+                Todo
+              </button>
+              {onOpenStarterQuest ? (
+                <button
+                  type="button"
+                  className="habit-checklist-card__starter-empty-launcher"
+                  onClick={() => onOpenStarterQuest()}
+                  aria-label="Open My Quest"
+                >
+                  My quest
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className={`habit-checklist-card__campaign-launcher${campaign ? ' habit-checklist-card__campaign-launcher--active' : ''}`}
+                onClick={handleOpenCampaignModal}
+                aria-label={campaign ? `Open active campaign ${campaign.name}` : 'Start a Campaign'}
+              >
+                {campaign ? `⚑ Day ${getCampaignDay(campaign)}/${campaign.duration_days}` : '⚑ Campaign'}
+              </button>
+            </div>
+            {campaign ? (
+              <section className="campaign-card" aria-label="Active campaign">
+                <div className="campaign-card__head">
+                  <div>
+                    <p className="campaign-card__eyebrow">⚑ Active Campaign</p>
+                    <h3>{campaign.name}</h3>
+                  </div>
+                  <span>Day {getCampaignDay(campaign)}/{campaign.duration_days}</span>
+                </div>
+                <p className="campaign-card__meta">
+                  {campaign.keystone_habit_id ? `Keystone: ${habits.find((habit) => habit.id === campaign.keystone_habit_id)?.name ?? 'Selected habit'}` : 'Add a keystone habit to make this campaign easier to follow.'}
+                </p>
+                <p className="campaign-card__victory"><strong>Victory:</strong> {campaign.victory_condition}</p>
+                <button type="button" className="campaign-card__button" onClick={handleOpenCampaignModal}>View campaign</button>
+              </section>
+            ) : null}
             {habits.length === 0 ? (
               <div className="habit-checklist-card__empty">
                 <p>No habits scheduled for this day.</p>
@@ -9906,6 +10131,53 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 </div>
               </div>,
               document.body,
+            ) : null}
+            {campaignModalOpen ? createPortal(
+              <div className="campaign-modal" role="presentation" onClick={() => setCampaignModalOpen(false)}>
+                <div className="campaign-modal__card" role="dialog" aria-modal="true" aria-label={campaign ? 'Active Campaign' : 'Start Campaign'} onClick={(event) => event.stopPropagation()}>
+                  <div className="campaign-modal__header">
+                    <div>
+                      <p className="campaign-modal__eyebrow">Campaign</p>
+                      <h3>{campaign ? campaign.name : 'Start Campaign'}</h3>
+                      <p>{campaign ? `Day ${getCampaignDay(campaign)} of ${campaign.duration_days} · ${getCampaignDaysLeft(campaign)} days left` : 'Choose one thing that matters now. Not your whole life — just this chapter.'}</p>
+                    </div>
+                    <button type="button" className="campaign-modal__close" onClick={() => setCampaignModalOpen(false)}>Close</button>
+                  </div>
+                  {campaign ? (
+                    <div className="campaign-modal__active">
+                      <section><h4>Victory</h4><p>{campaign.victory_condition}</p></section>
+                      <section><h4>Keystone</h4><p>{campaign.keystone_habit_id ? habits.find((habit) => habit.id === campaign.keystone_habit_id)?.name ?? 'Selected habit' : 'Add a keystone habit to make this campaign easier to follow.'}</p></section>
+                      <section><h4>Strategy</h4><ul>
+                        <li><strong>Minimum move:</strong> {campaign.minimum_move || 'Not set yet'}</li>
+                        <li><strong>Danger window:</strong> {campaign.danger_window || 'Not set yet'}</li>
+                        <li><strong>Enemy loop:</strong> {campaign.enemy_loop || 'Not set yet'}</li>
+                        <li><strong>Replacement move:</strong> {campaign.replacement_move || 'Not set yet'}</li>
+                        <li><strong>Recovery rule:</strong> {campaign.recovery_rule || DEFAULT_CAMPAIGN_RECOVERY_RULE}</li>
+                      </ul></section>
+                      <p className="campaign-modal__repair">A slip is information. The next move matters more.</p>
+                    </div>
+                  ) : null}
+                  <div className="campaign-form">
+                    <div className="campaign-form__types">
+                      {CAMPAIGN_TYPES.map((typeOption) => (
+                        <button key={typeOption.value} type="button" className={campaignDraft.type === typeOption.value ? 'is-active' : ''} onClick={() => setCampaignDraft((current) => ({ ...current, type: typeOption.value }))}>{typeOption.label}</button>
+                      ))}
+                    </div>
+                    <label>Campaign name<input value={campaignDraft.name} onChange={(event) => setCampaignDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Rebuild Strength" maxLength={80} /></label>
+                    <label>Duration<div className="campaign-form__durations">{CAMPAIGN_DURATION_OPTIONS.map((days) => <button key={days} type="button" className={campaignDraft.durationDays === days ? 'is-active' : ''} onClick={() => setCampaignDraft((current) => ({ ...current, durationDays: days, customDurationDays: '' }))}>{days} days</button>)}<button type="button" className={campaignDraft.durationDays === 0 ? 'is-active' : ''} onClick={() => setCampaignDraft((current) => ({ ...current, durationDays: 0 }))}>Custom</button></div></label>
+                    {campaignDraft.durationDays === 0 ? <label>Custom days<input type="number" min={1} max={365} value={campaignDraft.customDurationDays} onChange={(event) => setCampaignDraft((current) => ({ ...current, customDurationDays: event.target.value }))} /></label> : null}
+                    <label>What would make this campaign a win?<textarea rows={3} value={campaignDraft.victoryCondition} onChange={(event) => setCampaignDraft((current) => ({ ...current, victoryCondition: event.target.value }))} placeholder="By the end, I want to complete 9 workouts, miss no more than 2 planned sessions, and feel stronger." /></label>
+                    <label>Choose one habit that makes this campaign real.<select value={campaignDraft.keystoneHabitId} onChange={(event) => setCampaignDraft((current) => ({ ...current, keystoneHabitId: event.target.value }))}><option value="">Continue without one</option>{habits.map((habit) => <option key={habit.id} value={habit.id}>{habit.name}</option>)}</select><span>A keystone habit is the one action that makes the whole campaign more likely to succeed.</span>{!campaignDraft.keystoneHabitId ? <em>Add a keystone habit to make this campaign easier to follow.</em> : null}</label>
+                    <label>Minimum move<span>The tiny version allowed on bad days.</span><input value={campaignDraft.minimumMove} onChange={(event) => setCampaignDraft((current) => ({ ...current, minimumMove: event.target.value }))} placeholder="5 minutes. Open the project. Walk around the block." /></label>
+                    <label>Danger window<span>When is this campaign most likely to break?</span><input value={campaignDraft.dangerWindow} onChange={(event) => setCampaignDraft((current) => ({ ...current, dangerWindow: event.target.value }))} placeholder="Evening after work. Before bed." /></label>
+                    <label>Enemy loop<span>What pattern are you trying to interrupt?</span><textarea rows={2} value={campaignDraft.enemyLoop} onChange={(event) => setCampaignDraft((current) => ({ ...current, enemyLoop: event.target.value }))} placeholder="Stress → craving → short relief → guilt." /></label>
+                    <label>Replacement move<span>What will you do instead when the enemy loop appears?</span><textarea rows={2} value={campaignDraft.replacementMove} onChange={(event) => setCampaignDraft((current) => ({ ...current, replacementMove: event.target.value }))} placeholder="Wait 5 minutes, drink water, walk, then choose." /></label>
+                    <label>Recovery rule<textarea rows={2} value={campaignDraft.recoveryRule} onChange={(event) => setCampaignDraft((current) => ({ ...current, recoveryRule: event.target.value }))} /></label>
+                    {campaignError ? <p className="campaign-modal__error">{campaignError}</p> : null}
+                    <div className="campaign-modal__actions"><button type="button" className="campaign-modal__secondary" onClick={() => setCampaignModalOpen(false)}>Cancel</button>{campaign ? <button type="button" className="campaign-modal__secondary" onClick={handleEndCampaign}>End campaign</button> : null}<button type="button" className="campaign-modal__primary" onClick={handleSaveCampaign}>{campaign ? 'Edit campaign' : 'Start campaign'}</button></div>
+                  </div>
+                </div>
+              </div>, modalRoot ?? document.body
             ) : null}
             {todayTodoModalOpen ? createPortal(
               <div className="habit-edit-modal-overlay" role="presentation" onClick={handleCloseTodayTodoModal}>
