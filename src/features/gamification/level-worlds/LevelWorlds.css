@@ -12288,8 +12288,77 @@
 @media (prefers-reduced-motion: reduce) {
   .bm2-part,
   .bm2-level-rail__item,
-  .bm2-artwork__img { transition: none !important; animation: none !important; }
+  .bm2-artwork__img,
+  .bm2-discount-intro__card,
+  .bm2-discount-intro__emoji,
+  .bm2-discount-spotlight { transition: none !important; animation: none !important; }
 }
+
+
+.bm2-discount-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 2700;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255, 230, 120, 0.34), transparent 24rem),
+    radial-gradient(circle at 50% 58%, rgba(37, 255, 154, 0.2), transparent 18rem),
+    rgba(1, 5, 12, 0.74);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+.bm2-discount-intro__card {
+  display: grid;
+  place-items: center;
+  width: min(92vw, 30rem);
+  min-height: min(68dvh, 34rem);
+  padding: clamp(1.25rem, 6vw, 2rem);
+  text-align: center;
+  border: 2px solid rgba(255, 239, 145, 0.78);
+  border-radius: 34px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.14), transparent 34%),
+    linear-gradient(160deg, rgba(13, 29, 34, 0.96), rgba(34, 20, 51, 0.96));
+  box-shadow: 0 0 42px rgba(255, 229, 111, 0.38), 0 28px 90px rgba(0, 0, 0, 0.52);
+  animation: bm2-discount-intro-pop 1000ms ease both;
+}
+.bm2-discount-intro__emoji {
+  font-size: clamp(7rem, 34vw, 14rem);
+  line-height: 0.9;
+  filter: drop-shadow(0 0 26px rgba(255, 231, 126, 0.8));
+  animation: bm2-discount-intro-bounce 720ms cubic-bezier(.22, 1.2, .36, 1) both;
+}
+.bm2-discount-intro__kicker,
+.bm2-discount-intro__copy { margin: 0; color: rgba(255, 247, 207, 0.9); font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.bm2-discount-intro__title { margin: 0; color: #fff7bf; font-size: clamp(2.4rem, 14vw, 5.25rem); line-height: 0.92; text-transform: uppercase; text-shadow: 0 0 20px rgba(255, 230, 92, 0.95), 0 0 44px rgba(57, 255, 172, 0.46); }
+.bm2-discount-intro__copy { color: #67ffb5; font-size: clamp(1.05rem, 5vw, 1.55rem); text-shadow: 0 0 14px rgba(103, 255, 181, 0.72); }
+
+.bm2-discount-spotlight {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  margin: 0.75rem clamp(0.75rem, 4vw, 1.1rem) 0;
+  padding: 0.72rem 0.95rem;
+  border: 2px solid rgba(113, 255, 187, 0.92);
+  border-radius: 999px;
+  color: #eafff5;
+  background: linear-gradient(90deg, rgba(7, 86, 59, 0.92), rgba(58, 46, 9, 0.9));
+  box-shadow: 0 0 16px rgba(95, 255, 181, 0.75), inset 0 0 18px rgba(255, 244, 147, 0.18);
+  animation: bm2-neon-flicker 3.8s infinite;
+}
+.bm2-discount-spotlight__bulb { font-size: 1.75rem; filter: drop-shadow(0 0 10px rgba(255, 240, 140, 0.88)); }
+.bm2-discount-spotlight__copy { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 0.45rem 0.65rem; min-width: 0; }
+.bm2-discount-spotlight strong { font-size: clamp(1rem, 4.8vw, 1.35rem); letter-spacing: 0.08em; text-transform: uppercase; }
+.bm2-discount-spotlight em { color: #fff27d; font-size: clamp(1.15rem, 6vw, 1.75rem); font-style: normal; font-weight: 1000; text-shadow: 0 0 14px rgba(255, 242, 125, 0.92), 0 0 24px rgba(103, 255, 181, 0.64); }
+.bm2-discount-spotlight small { color: rgba(234, 255, 245, 0.8); font-weight: 800; }
+
+@keyframes bm2-discount-intro-pop { 0% { opacity: 0; transform: scale(0.82); } 16%, 78% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.08); } }
+@keyframes bm2-discount-intro-bounce { 0% { transform: translateY(24px) rotate(-12deg) scale(0.7); } 58% { transform: translateY(-10px) rotate(7deg) scale(1.08); } 100% { transform: translateY(0) rotate(0) scale(1); } }
+@keyframes bm2-neon-flicker { 0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; filter: brightness(1.08); } 20%, 55% { opacity: 0.68; filter: brightness(0.78); } 24% { opacity: 0.9; filter: brightness(1.35); } }
 
 /* Island 001 narrative dialogue sheet — reusable presentation surface only. */
 .island-narrative-dialogue {
