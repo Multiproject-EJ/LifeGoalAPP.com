@@ -1,20 +1,6 @@
 import type { IslandBoardProfileId } from './islandBoardProfiles';
-import { getIslandRunFeatureFlags } from '../../../../config/islandRunFeatureFlags';
 
-/**
- * Mystery stop content kinds — the rotating content that fills the Mystery (Stop 3) slot.
- * Mystery = "big upgrade" stop; currently breathing/guided meditation, expanding over time.
- *
- * `vision_quest` is gated behind its feature flag in
- * `islandRunFeatureFlags.ts` (Phase 5 of the Minigame & Events Consolidation
- * Plan). While the flag is off, that variant is never emitted by
- * `generateIslandStopPlan`.
- */
-export type MysteryStopContentKind =
-  | 'habit_action'
-  | 'checkin_reflection'
-  | 'breathing'
-  | 'vision_quest';
+export type MysteryStopContentKind = 'event_minigame';
 
 export interface IslandStopPlanEntry {
   /** Canonical stop ID matching the V2 contract: hatchery → habit → mystery → wisdom → boss. */
@@ -22,77 +8,26 @@ export interface IslandStopPlanEntry {
   title: string;
   description: string;
   /**
-   * Discriminator for rendering. Mystery rotates its visible content but the
-   * discriminator is always `'fixed_mystery'` — the actual rotation variant
-   * lives on the sibling `mysteryContentKind` field so consumers can enumerate
-   * five stable `kind` values (one per stopId) rather than five content-variant
-   * tags blended into the same union.
+   * Discriminator for rendering. The third landmark keeps the legacy
+   * `'fixed_mystery'` discriminator for compatibility while rendering as the
+   * Event Arena.
    */
   kind: 'fixed_hatchery' | 'fixed_habit' | 'fixed_mystery' | 'fixed_wisdom' | 'fixed_boss';
   /**
-   * Only set when `kind === 'fixed_mystery'` — identifies which rotating
-   * Mystery-stop activity this island draws. `undefined` on every other stop.
+   * Only set when `kind === 'fixed_mystery'` — Stop 3 is now the event
+   * minigame arena landmark. The legacy breathing/action/check-in rotation
+   * lives in board clue-card curriculum instead of landmark completion.
    */
   mysteryContentKind?: MysteryStopContentKind;
   isBehaviorStop: boolean;
 }
 
 /**
- * Content pool for the Mystery stop (Stop 3).
- * Base entries: breathing exercise, habit action, or check-in reflection.
- * Feature-flagged entries (Vision Quest) are appended when the flag is on —
- * see `buildMysteryStopContentPool()`.
+ * Stop 3 used to rotate breathing/action/check-in/vision content. Those
+ * reflective prompts now live on board clue cards, while this landmark is the
+ * stable event-minigame arena that reuses the existing timed-event ticket
+ * launcher.
  */
-const MYSTERY_STOP_CONTENT_POOL_BASE: Array<{
-  kind: MysteryStopContentKind;
-  title: string;
-  description: string;
-}> = [
-  {
-    kind: 'breathing',
-    title: '🧘 Breathing / Guided Meditation',
-    description: 'Complete a breathing exercise or guided meditation to center yourself.',
-  },
-  {
-    kind: 'habit_action',
-    title: '✅ Action Challenge',
-    description: 'Complete one habit/action objective to stabilize momentum.',
-  },
-  {
-    kind: 'checkin_reflection',
-    title: '🧭 Check-in Reflection',
-    description: 'Run a quick check-in/reflection to calibrate your next moves.',
-  },
-];
-
-const MYSTERY_STOP_CONTENT_VISION_QUEST: {
-  kind: MysteryStopContentKind;
-  title: string;
-  description: string;
-} = {
-  kind: 'vision_quest',
-  title: '🔮 Vision Quest',
-  description: 'Reflect on your long-term vision and log a short journal entry.',
-};
-
-/** Build the runtime Mystery-stop content pool honoring feature flags. */
-function buildMysteryStopContentPool(): Array<{
-  kind: MysteryStopContentKind;
-  title: string;
-  description: string;
-}> {
-  const flags = getIslandRunFeatureFlags();
-  const pool = [...MYSTERY_STOP_CONTENT_POOL_BASE];
-  if (flags.islandRunVisionQuestMysteryEnabled) {
-    pool.push(MYSTERY_STOP_CONTENT_VISION_QUEST);
-  }
-  return pool;
-}
-
-function seededRandom(seed: number) {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
 
 /**
  * Generate the canonical 5-stop plan for an island.
@@ -100,12 +35,12 @@ function seededRandom(seed: number) {
  * Stop sequence (unified with Contract V2):
  *   0. Hatchery (fixed) — egg incubation
  *   1. Habit (fixed) — complete a habit/action
- *   2. Mystery (rotating content) — breathing, guided meditation, check-in, etc.
+ *   2. Event Arena (fixed Stop 3) — active timed-event minigame launcher.
  *   3. Wisdom (fixed) — story, questionnaire, learning content
  *   4. Boss (fixed) — boss trial
  *
- * The Mystery stop's *content* rotates per island using seeded random selection
- * from MYSTERY_STOP_CONTENT_POOL, but the stop ID is always 'mystery'.
+ * The third landmark keeps the historical stop ID ('mystery') for save-data and
+ * narrative compatibility, but its player-facing role is now Event Arena.
  *
  * Landmarks are fully decoupled from ring tile indices — the `profileId` arg
  * is accepted for forward-compat with future board profiles but no longer
@@ -115,13 +50,6 @@ export function generateIslandStopPlan(
   islandNumber: number,
   _options?: { profileId?: IslandBoardProfileId },
 ): IslandStopPlanEntry[] {
-  const safeIsland = Number.isFinite(islandNumber) ? Math.max(1, Math.floor(islandNumber)) : 1;
-
-  // Select rotating content for the Mystery stop (seeded per island).
-  const pool = buildMysteryStopContentPool();
-  const mysteryContentIndex = Math.floor(seededRandom(97 + safeIsland * 13) * pool.length);
-  const mysteryContent = pool[mysteryContentIndex];
-
   return [
     {
       stopId: 'hatchery',
@@ -139,11 +67,11 @@ export function generateIslandStopPlan(
     },
     {
       stopId: 'mystery',
-      title: mysteryContent.title,
-      description: mysteryContent.description,
+      title: '🎪 Event Arena Landmark',
+      description: 'Spend active event tickets to play the rotating event mini game and keep island momentum going.',
       kind: 'fixed_mystery',
-      mysteryContentKind: mysteryContent.kind,
-      isBehaviorStop: true,
+      mysteryContentKind: 'event_minigame',
+      isBehaviorStop: false,
     },
     {
       stopId: 'wisdom',

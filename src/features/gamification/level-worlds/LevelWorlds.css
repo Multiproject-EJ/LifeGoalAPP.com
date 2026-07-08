@@ -13699,3 +13699,56 @@
   outline: 3px solid rgba(255, 255, 255, 0.9);
   outline-offset: 2px;
 }
+
+/* Stop 3 Event Arena: reuses the timed-event mini-game role with a visible ticket celebration. */
+.island-event-arena-card {
+  overflow: hidden;
+  position: relative;
+}
+
+.island-event-arena-card__burst {
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 0.15rem 0 0.75rem;
+  pointer-events: none;
+}
+
+.island-event-arena-card__burst span {
+  animation: island-event-arena-float 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 8px 14px rgba(124, 58, 237, 0.25));
+  font-size: 1.7rem;
+}
+
+.island-event-arena-card__burst span:nth-child(2) {
+  animation-delay: 0.16s;
+  font-size: 2.15rem;
+}
+
+.island-event-arena-card__burst span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+.island-event-arena-card__ticket-row {
+  align-items: center;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(34, 211, 238, 0.14));
+  border: 1px solid rgba(124, 58, 237, 0.22);
+  border-radius: 999px;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.85rem;
+  padding: 0.65rem 0.85rem;
+}
+
+@keyframes island-event-arena-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg) scale(1); }
+  50% { transform: translateY(-8px) rotate(4deg) scale(1.08); }
+}
+
+.island-run-gamified-journal-card__task {
+  background: rgba(251, 191, 36, 0.14);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  border-radius: 14px;
+  margin: 0.75rem 0;
+  padding: 0.7rem 0.8rem;
+}

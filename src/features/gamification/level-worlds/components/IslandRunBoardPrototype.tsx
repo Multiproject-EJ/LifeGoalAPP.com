@@ -117,9 +117,6 @@ import {
   type IslandRunRuntimeState,
 } from '../services/islandRunRuntimeState';
 import { ShardClaimModal } from './ShardClaimModal';
-import { IslandRunReflectionComposer } from './IslandRunReflectionComposer';
-import { IslandRunBreathingExercise } from './IslandRunBreathingExercise';
-import { IslandRunActionChallenge } from './IslandRunActionChallenge';
 import { IslandRunLifePromptCard } from './IslandRunLifePromptCard';
 import { IslandRunGamifiedJournalCard } from './IslandRunGamifiedJournalCard';
 import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
@@ -354,7 +351,6 @@ import {
   resolveEventMinigameCompletionId,
   resolveSpaceExcavatorEventMinigame,
   type MinigameLaunchSource,
-  resolveMysteryStopMinigame,
   shouldResolveMysteryStopOnMinigameComplete,
 } from '../services/islandRunMinigameLauncherService';
 import {
@@ -1397,20 +1393,7 @@ function getStopIcon(stop: Pick<IslandStopPlanEntry, 'stopId' | 'mysteryContentK
   if (stop.stopId === 'hatchery') return '🥚';
   if (stop.stopId === 'habit') return '✅';
   if (stop.stopId === 'wisdom') return '📖';
-  if (stop.stopId === 'mystery') {
-    switch (stop.mysteryContentKind) {
-      case 'habit_action':
-        return '✅';
-      case 'checkin_reflection':
-        return '🧭';
-      case 'breathing':
-        return '🧘';
-      case 'vision_quest':
-        return '🔮';
-      default:
-        return '❓';
-    }
-  }
+  if (stop.stopId === 'mystery') return '🎪';
   return '📍';
 }
 
@@ -7870,30 +7853,6 @@ export function IslandRunBoardPrototype({
     });
   };
 
-  const handleLaunchMysteryMinigame = (mysteryContentKind: 'vision_quest') => {
-    if (!canOpenIslandRunOverlayWhileRollingState({
-      isRolling,
-      isAnimatingRoll: isAnimatingRollRef.current,
-      isRollSyncPending: isRollSyncPendingRef.current,
-    })) {
-      setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('launch_blocked_while_rolling'));
-      return;
-    }
-
-    const mysteryMinigame = resolveMysteryStopMinigame({
-      kind: 'fixed_mystery',
-      mysteryContentKind,
-    });
-    if (!mysteryMinigame) {
-      setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('mystery_stop_unfinished'));
-      return;
-    }
-    registerAllMinigameManifests();
-    setActiveLaunchedMinigameId(mysteryMinigame.minigameId);
-    setActiveLaunchedMinigameSource('mystery_stop');
-    setActiveLaunchedMinigameConfig(mysteryMinigame.config);
-  };
-
   const handleLaunchTimedEventMinigame = () => {
     if (!effectiveActiveTimedEvent) return;
     if (!canOpenIslandRunOverlayWhileRollingState({
@@ -12195,63 +12154,32 @@ export function IslandRunBoardPrototype({
               </>
             )}
 
-            {/* ── Stop 3: Mystery (rotating content: breathing/meditation/check-in) ── */}
+            {/* ── Stop 3: Event Arena (timed-event mini-game launcher) ── */}
             {activeStopId === 'mystery' && openedStopIsPlayable && (
-              <div className="island-hatchery-card">
-                {activeStop.mysteryContentKind === 'breathing' ? (
-                  <IslandRunBreathingExercise
-                    onComplete={(message) => {
-                      setLandingText(message);
-                      handleCompleteActiveStop();
-                    }}
-                  />
-                ) : activeStop.mysteryContentKind === 'habit_action' ? (
-                  <IslandRunActionChallenge
-                    islandNumber={islandNumber}
-                    onComplete={(message) => {
-                      setLandingText(message);
-                      handleCompleteActiveStop();
-                    }}
-                  />
-                ) : activeStop.mysteryContentKind === 'checkin_reflection' ? (
-                  <IslandRunReflectionComposer
-                    session={session}
-                    islandNumber={islandNumber}
-                    onSaved={(message) => {
-                      setLandingText(message);
-                      handleCompleteActiveStop();
-                    }}
-                  />
-                ) : activeStop.mysteryContentKind === 'vision_quest' ? (
-                  <div>
-                    <p className="island-stop-modal__copy">🔮 <strong>Vision Quest Reflection</strong></p>
-                    <p>Enter Vision Quest, finish one guided reflection, and return to claim this mystery stop.</p>
-                    <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-                      <button
-                        type="button"
-                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                        onClick={() => handleLaunchMysteryMinigame('vision_quest')}
-                      >
-                        🔮 Launch Vision Quest
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="island-stop-modal__copy">🧩 <strong>Mystery content coming soon</strong></p>
-                    <p>This mystery variant is unfinished. Open a safe placeholder inside Island Run.</p>
-                    <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-                      <button
-                        type="button"
-                        className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                        onClick={() => setActivePlaceholder(resolveIslandRunPlaceholderDescriptor('mystery_stop_unfinished'))}
-                      >
-                        Open Placeholder
-                      </button>
-                    </div>
-                  </div>
-                )}
+              <div className="island-hatchery-card island-event-arena-card">
+                <div className="island-event-arena-card__burst" aria-hidden="true">
+                  <span>🎟️</span>
+                  <span>🎪</span>
+                  <span>✨</span>
+                </div>
+                <p className="island-stop-modal__copy">🎪 <strong>Event Arena</strong></p>
+                <p>
+                  This landmark now reuses the active event mini-game role from the reward-bar event button.
+                  Spend your current event tickets here, keep progress saved, and return to the island when you are done.
+                </p>
+                <div className="island-event-arena-card__ticket-row" aria-live="polite">
+                  <span>{activeEventMeta?.displayName ?? 'Timed event'}</span>
+                  <strong>{activeEventTickets} {timedEventTokenIcon}</strong>
+                </div>
                 <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                    onClick={handleLaunchTimedEventMinigame}
+                    disabled={!effectiveActiveTimedEvent || activeEventTickets <= 0}
+                  >
+                    {activeEventTickets > 0 ? '🎮 Play event mini game' : '🎟️ Earn event tickets on the reward bar'}
+                  </button>
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
@@ -12260,6 +12188,9 @@ export function IslandRunBoardPrototype({
                     Come back later
                   </button>
                 </div>
+                <p className="island-stop-modal__fineprint">
+                  The old Mystery check-in, breathing, action, and vision prompts now appear as board Daily Clue Cards.
+                </p>
               </div>
             )}
 
