@@ -38117,3 +38117,38 @@ body.habit-wizard-open .mobile-footer-nav {
     padding: 0.48rem 0.62rem;
   }
 }
+
+.life-wheel__area-realm {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.18rem;
+  min-height: 58px;
+  border: 1px solid rgba(180, 125, 38, 0.36);
+  border-radius: 16px;
+  padding: 0.75rem 1.2rem;
+  background: linear-gradient(135deg, #1e1b4b, #4c1d95 52%, #b7791f);
+  color: #fff7df;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: 0 14px 26px rgba(76, 29, 149, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.life-wheel__area-realm:hover,
+.life-wheel__area-realm:focus-visible {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 18px 32px rgba(76, 29, 149, 0.28);
+  outline: 2px solid rgba(217, 180, 91, 0.55);
+  outline-offset: 2px;
+}
+
+.life-wheel__area-realm small {
+  color: rgba(255, 247, 223, 0.78);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
