@@ -1582,6 +1582,36 @@ export function applyDevClearCurrentIslandForTravel(
     workingRecord = terminalRecord;
   }
 
+  if (normalizedIslandNumber === 1 && !workingRecord.technologyUnlocksById?.['the-concord']?.active) {
+    const allConcordSlots = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    const next: IslandRunGameStateRecord = {
+      ...workingRecord,
+      techCollectionByIsland: {
+        ...workingRecord.techCollectionByIsland,
+        [islandKey]: allConcordSlots,
+      },
+      // Mark only the three rows as rewarded. Dev clear is a testing affordance,
+      // so it should unlock Concord without minting the normal collection dice.
+      techCollectionRewardedLinesByIsland: {
+        ...workingRecord.techCollectionRewardedLinesByIsland,
+        [islandKey]: [0, 1, 2],
+      },
+      technologyUnlocksById: {
+        ...workingRecord.technologyUnlocksById,
+        'the-concord': { builtAtMs: Math.max(1, resolvedNowMs), active: true },
+      },
+      runtimeVersion: workingRecord.runtimeVersion + 1,
+    };
+    void commitIslandRunState({
+      session,
+      client,
+      record: next,
+      triggerSource: triggerSource ?? 'dev_clear_island_award_concord',
+    });
+    workingRecord = next;
+    changed = true;
+  }
+
   const finalRecord = getIslandRunStateSnapshot(session);
   const hatcheryEggResolved = (() => {
     const entry = finalRecord.perIslandEggs?.[islandKey];
