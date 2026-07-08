@@ -1770,6 +1770,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const compactToggleLabelTimeoutRef = useRef<number | null>(null);
   const [isAmbianceToggleLabelVisible, setIsAmbianceToggleLabelVisible] = useState(false);
   const ambianceToggleLabelTimeoutRef = useRef<number | null>(null);
+  const [isDisplayLauncherOpen, setIsDisplayLauncherOpen] = useState(false);
   const reviewAutoArchivingHabitIdsRef = useRef<Set<string>>(new Set());
   const [isIdentitySignalsOpen, setIsIdentitySignalsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => new Date());
@@ -7724,38 +7725,51 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             ) : null}
             <button
               type="button"
-              className={`habit-checklist-card__glass-toggle habit-checklist-card__ambiance-toggle ${
-                selectedAmbiance ? 'habit-checklist-card__glass-toggle--active habit-checklist-card__ambiance-toggle--active' : ''
-              } ${!isAmbianceToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
-              onClick={handleAmbianceToggle}
-              aria-pressed={Boolean(selectedAmbiance)}
-              aria-label={selectedAmbiance ? 'Turn ambiance off' : 'Turn ambiance on'}
+              className={`habit-checklist-card__campaign-launcher${campaign ? ' habit-checklist-card__campaign-launcher--active' : ''}`}
+              onClick={handleOpenCampaignModal}
+              aria-label={campaign ? `Open active campaign ${campaign.name}` : 'Start a Campaign'}
             >
-              <span className="habit-checklist-card__glass-toggle-icon" aria-hidden="true">🖌️</span>
-              <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true">
-                <span className="habit-checklist-card__glass-toggle-thumb" />
-              </span>
-              <span className="habit-checklist-card__glass-toggle-label">Ambiance</span>
+              {campaign ? `⚑ ${getCampaignDay(campaign)}/${campaign.duration_days}` : '⚑ Campaign'}
             </button>
-            <button
-              type="button"
-              className={`habit-checklist-card__glass-toggle ${
-                isCompactView ? 'habit-checklist-card__glass-toggle--active' : ''
-              } ${!isCompactToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
-              onClick={handleCompactToggle}
-              aria-pressed={isCompactView}
-              aria-label={isCompactView ? 'Switch to detailed view' : 'Switch to private view'}
-            >
-              <span className="habit-checklist-card__glass-toggle-icon" aria-hidden="true">
-                {isCompactView ? '🙈' : '👁️'}
-              </span>
-              <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true">
-                <span className="habit-checklist-card__glass-toggle-thumb" />
-              </span>
-              <span className="habit-checklist-card__glass-toggle-label">
-                {isCompactView ? 'Private' : 'Detailed'}
-              </span>
-            </button>
+            <div className="habit-checklist-card__display-launcher">
+              <button
+                type="button"
+                className={`habit-checklist-card__display-launcher-button${selectedAmbiance || isCompactView ? ' habit-checklist-card__display-launcher-button--active' : ''}`}
+                onClick={() => setIsDisplayLauncherOpen((current) => !current)}
+                aria-expanded={isDisplayLauncherOpen}
+                aria-label="Open display toggles"
+              >
+                ⚙️
+              </button>
+              {isDisplayLauncherOpen ? (
+                <div className="habit-checklist-card__display-popover" role="group" aria-label="Display toggles">
+                  <button
+                    type="button"
+                    className={`habit-checklist-card__glass-toggle habit-checklist-card__ambiance-toggle ${
+                      selectedAmbiance ? 'habit-checklist-card__glass-toggle--active habit-checklist-card__ambiance-toggle--active' : ''
+                    } ${!isAmbianceToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
+                    onClick={handleAmbianceToggle}
+                    aria-pressed={Boolean(selectedAmbiance)}
+                    aria-label={selectedAmbiance ? 'Turn ambiance off' : 'Turn ambiance on'}
+                  >
+                    <span className="habit-checklist-card__glass-toggle-icon" aria-hidden="true">🖌️</span>
+                    <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true"><span className="habit-checklist-card__glass-toggle-thumb" /></span>
+                    <span className="habit-checklist-card__glass-toggle-label">Ambiance</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`habit-checklist-card__glass-toggle ${isCompactView ? 'habit-checklist-card__glass-toggle--active' : ''} ${!isCompactToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
+                    onClick={handleCompactToggle}
+                    aria-pressed={isCompactView}
+                    aria-label={isCompactView ? 'Switch to detailed view' : 'Switch to private view'}
+                  >
+                    <span className="habit-checklist-card__glass-toggle-icon" aria-hidden="true">{isCompactView ? '🙈' : '👁️'}</span>
+                    <span className="habit-checklist-card__glass-toggle-indicator" aria-hidden="true"><span className="habit-checklist-card__glass-toggle-thumb" /></span>
+                    <span className="habit-checklist-card__glass-toggle-label">{isCompactView ? 'Private' : 'Detailed'}</span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
         {shouldShowTimeLimitedOfferToggle && isTimeLimitedOfferDetailsOpen ? (
@@ -10018,33 +10032,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             }`}
           >
             {renderDayNavigation('compact', true, isCompactView)}
-            <div className="habit-checklist-card__campaign-launch-row" role="group" aria-label="Today quick launchers">
-              <button
-                type="button"
-                className="habit-checklist-card__starter-launcher habit-checklist-card__todo-launcher"
-                onClick={handleOpenCreateTodayTodo}
-              >
-                Todo
-              </button>
-              {onOpenStarterQuest ? (
-                <button
-                  type="button"
-                  className="habit-checklist-card__starter-empty-launcher"
-                  onClick={() => onOpenStarterQuest()}
-                  aria-label="Open My Quest"
-                >
-                  My quest
-                </button>
-              ) : null}
-              <button
-                type="button"
-                className={`habit-checklist-card__campaign-launcher${campaign ? ' habit-checklist-card__campaign-launcher--active' : ''}`}
-                onClick={handleOpenCampaignModal}
-                aria-label={campaign ? `Open active campaign ${campaign.name}` : 'Start a Campaign'}
-              >
-                {campaign ? `⚑ Day ${getCampaignDay(campaign)}/${campaign.duration_days}` : '⚑ Campaign'}
-              </button>
-            </div>
             {campaign ? (
               <section className="campaign-card" aria-label="Active campaign">
                 <div className="campaign-card__head">
