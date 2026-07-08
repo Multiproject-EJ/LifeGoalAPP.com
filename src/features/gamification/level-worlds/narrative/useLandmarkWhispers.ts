@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LandmarkWhisperPayload, LandmarkWhisperStopId } from './landmarkWhispers';
-import { buildLandmarkWhisperForStop } from './landmarkWhispers';
+import { buildArenaTransferWhisperFromRewardBundle, buildLandmarkWhisperForStop, consumeArenaTransferWhisperBundle } from './landmarkWhispers';
 
 export interface UseLandmarkWhispersInput {
   activeStopId: string | null;
@@ -10,6 +10,7 @@ export interface UseLandmarkWhispersInput {
   isEggReady: boolean;
   hasHabitProgress: boolean;
   seed: string;
+  userId?: string | null;
 }
 
 function isLandmarkWhisperStopId(value: string | null): value is LandmarkWhisperStopId {
@@ -24,6 +25,7 @@ export function useLandmarkWhispers({
   isEggReady,
   hasHabitProgress,
   seed,
+  userId = null,
 }: UseLandmarkWhispersInput) {
   const [activeWhisper, setActiveWhisper] = useState<LandmarkWhisperPayload | null>(null);
   const lastOpenKeyRef = useRef<string | null>(null);
@@ -47,6 +49,15 @@ export function useLandmarkWhispers({
     });
     if (whisper) setActiveWhisper(whisper);
   }, [activeStopId, hasActiveEgg, hasHabitProgress, hasHydratedRuntimeState, isEggReady, isNarrativeSurfaceBlocked, seed]);
+
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || isNarrativeSurfaceBlocked || activeWhisper || !userId) return;
+    const bundle = consumeArenaTransferWhisperBundle(userId);
+    if (!bundle) return;
+    const whisper = buildArenaTransferWhisperFromRewardBundle(bundle, `${seed}:${bundle.id}`);
+    if (whisper) setActiveWhisper(whisper);
+  }, [activeWhisper, hasHydratedRuntimeState, isNarrativeSurfaceBlocked, seed, userId]);
 
   const handleWhisperDismiss = useCallback(() => {
     setActiveWhisper(null);
