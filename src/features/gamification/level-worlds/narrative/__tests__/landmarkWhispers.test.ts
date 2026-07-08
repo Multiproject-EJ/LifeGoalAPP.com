@@ -150,6 +150,38 @@ export const landmarkWhispersTests: TestCase[] = [
       assertEqual(result.reason, 'ai_error', 'Expected ai_error reason');
     },
   },
+
+  {
+    name: 'Wisdom Keeper AI success returns live Wisdom whisper only after safe output',
+    run: async () => {
+      const result = await resolveWisdomKeeperAiWhisper({
+        aiEnabled: true,
+        access: { goals: true, goalEvolution: true, habits: false, journaling: false, reflections: false, visionBoard: false, lifeStage: false },
+        context: { goals: [{ title: 'Practice guitar' }] },
+        generate: async () => 'The tune you return to becomes easier to hear. Let one small practice note be enough for today.',
+        seed: 'ok',
+      });
+      assertEqual(result.source, 'ai', 'Safe AI output should be used');
+      assertEqual(result.reason, 'ok', 'Expected ok reason');
+      assertEqual(result.whisper.id, 'landmark-whisper:wisdom:ai-reflection', 'Expected AI reflection id');
+      assertEqual(result.whisper.keeperId, 'wisdom', 'Only Wisdom Keeper should receive AI reflections');
+    },
+  },
+  {
+    name: 'Wisdom Keeper AI unsafe or empty output keeps static fallback',
+    run: async () => {
+      const result = await resolveWisdomKeeperAiWhisper({
+        aiEnabled: true,
+        access: { goals: true, goalEvolution: true, habits: false, journaling: false, reflections: false, visionBoard: false, lifeStage: false },
+        context: { goals: [{ title: 'Practice guitar' }] },
+        generate: async () => 'As an AI, you must do this.',
+        seed: 'unsafe',
+      });
+      assertEqual(result.source, 'fallback', 'Unsafe AI output should not replace fallback');
+      assertEqual(result.reason, 'empty_or_unsafe_output', 'Expected unsafe output reason');
+      assertEqual(result.whisper.speakerName, 'The Wisdom Keeper', 'Fallback remains Wisdom Keeper copy');
+    },
+  },
   {
     name: 'Wisdom Keeper thin context prompt asks for safe generic reflection',
     run: () => {

@@ -1,3 +1,4 @@
+import { getSupabaseClient } from '../../../../lib/supabaseClient';
 import type { AiCoachDataAccess } from '../../../../types/aiCoach';
 import { buildWisdomWhisper, type LandmarkWhisperPayload } from './landmarkWhispers';
 
@@ -16,6 +17,11 @@ export type WisdomKeeperPromptBundle = {
 };
 
 export type WisdomKeeperAiGenerator = (prompt: WisdomKeeperPromptBundle) => Promise<string>;
+
+type AiCoachChatResponse = {
+  assistant_message?: string | null;
+  error?: string | null;
+};
 
 export type WisdomKeeperAiResult = {
   whisper: LandmarkWhisperPayload;
@@ -123,6 +129,24 @@ export function sanitizeWisdomKeeperReflection(value: string): string | null {
   const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map((part) => part.trim()).filter(Boolean) ?? [text];
   const constrained = sentences.slice(0, MAX_OUTPUT_SENTENCES).join(' ').slice(0, MAX_OUTPUT_CHARS).trim();
   return constrained.length >= 20 ? constrained : null;
+}
+
+export function createWisdomKeeperAiCoachGenerator(): WisdomKeeperAiGenerator {
+  return async (prompt) => {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.functions.invoke<AiCoachChatResponse>('ai-coach-chat', {
+      body: {
+        messages: [{ role: 'user', content: prompt.userPrompt }],
+        systemPrompt: prompt.systemPrompt,
+        accessSummary: `Wisdom Keeper permitted context: ${prompt.includedContextKinds.length > 0 ? prompt.includedContextKinds.join(', ') : 'none'}.`,
+        threadId: null,
+      },
+    });
+
+    if (error) throw new Error(error.message || 'Wisdom Keeper AI request failed.');
+    if (data?.error) throw new Error(data.error);
+    return data?.assistant_message?.trim() ?? '';
+  };
 }
 
 export async function resolveWisdomKeeperAiWhisper(options: {
