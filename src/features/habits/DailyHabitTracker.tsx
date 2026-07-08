@@ -1177,6 +1177,7 @@ export function DailyHabitTracker({
   const [selectedAmbiance, setSelectedAmbiance] = useState<'starlight' | null>(null);
   const [campaign, setCampaign] = useState<Campaign | null>(() => readStoredCampaign(session.user.id));
   const [campaignModalOpen, setCampaignModalOpen] = useState(false);
+  const [campaignPanelIndex, setCampaignPanelIndex] = useState(0);
   const [campaignDraft, setCampaignDraft] = useState<CampaignDraft>(() => createDefaultCampaignDraft());
   const [campaignError, setCampaignError] = useState<string | null>(null);
 
@@ -1364,6 +1365,7 @@ export function DailyHabitTracker({
       setCampaignDraft(createDefaultCampaignDraft());
     }
     setCampaignError(null);
+    setCampaignPanelIndex(0);
     setCampaignModalOpen(true);
   }, [campaign]);
 
@@ -1404,12 +1406,14 @@ export function DailyHabitTracker({
     setCampaign(nextCampaign);
     persistStoredCampaign(session.user.id, nextCampaign);
     setCampaignModalOpen(false);
+    setCampaignPanelIndex(0);
     setCampaignError(null);
   }, [campaign, campaignDraft, session.user.id]);
 
   const handleEndCampaign = useCallback(() => {
     setCampaign(null);
     persistStoredCampaign(session.user.id, null);
+    setCampaignPanelIndex(0);
     setCampaignModalOpen(false);
   }, [session.user.id]);
 
@@ -10144,24 +10148,41 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       <p className="campaign-modal__repair">A slip is information. The next move matters more.</p>
                     </div>
                   ) : null}
-                  <div className="campaign-form">
-                    <div className="campaign-form__types">
-                      {CAMPAIGN_TYPES.map((typeOption) => (
-                        <button key={typeOption.value} type="button" className={campaignDraft.type === typeOption.value ? 'is-active' : ''} onClick={() => setCampaignDraft((current) => ({ ...current, type: typeOption.value }))}>{typeOption.label}</button>
-                      ))}
+                  <div className="campaign-form campaign-form--slider" style={{ '--campaign-panel-index': campaignPanelIndex } as CSSProperties}>
+                    <div className="campaign-form__viewport">
+                      <div className="campaign-form__track">
+                        <section className="campaign-form__panel" aria-label="Campaign setup">
+                          <div className="campaign-form__types">
+                            {CAMPAIGN_TYPES.map((typeOption) => (
+                              <button key={typeOption.value} type="button" className={campaignDraft.type === typeOption.value ? 'is-active' : ''} onClick={() => setCampaignDraft((current) => ({ ...current, type: typeOption.value }))}>{typeOption.label}</button>
+                            ))}
+                          </div>
+                          <label>Campaign name<input value={campaignDraft.name} onChange={(event) => setCampaignDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Rebuild Strength" maxLength={80} /></label>
+                          <label>Duration<div className="campaign-form__durations">{CAMPAIGN_DURATION_OPTIONS.map((days) => <button key={days} type="button" className={campaignDraft.durationDays === days ? 'is-active' : ''} onClick={() => setCampaignDraft((current) => ({ ...current, durationDays: days, customDurationDays: '' }))}>{days} days</button>)}<button type="button" className={campaignDraft.durationDays === 0 ? 'is-active' : ''} onClick={() => setCampaignDraft((current) => ({ ...current, durationDays: 0 }))}>Custom</button></div></label>
+                          {campaignDraft.durationDays === 0 ? <label>Custom days<input type="number" min={1} max={365} value={campaignDraft.customDurationDays} onChange={(event) => setCampaignDraft((current) => ({ ...current, customDurationDays: event.target.value }))} /></label> : null}
+                          <label>What would make this campaign a win?<textarea rows={3} value={campaignDraft.victoryCondition} onChange={(event) => setCampaignDraft((current) => ({ ...current, victoryCondition: event.target.value }))} placeholder="By the end, I want to complete 9 workouts, miss no more than 2 planned sessions, and feel stronger." /></label>
+                        </section>
+                        <section className="campaign-form__panel" aria-label="Keystone and risks">
+                          <label>Choose one habit that makes this campaign real.<select value={campaignDraft.keystoneHabitId} onChange={(event) => setCampaignDraft((current) => ({ ...current, keystoneHabitId: event.target.value }))}><option value="">Continue without one</option>{habits.map((habit) => <option key={habit.id} value={habit.id}>{habit.name}</option>)}</select><span>A keystone habit is the one action that makes the whole campaign more likely to succeed.</span>{!campaignDraft.keystoneHabitId ? <em>Add a keystone habit to make this campaign easier to follow.</em> : null}</label>
+                          <label>Minimum move<span>The tiny version allowed on bad days.</span><input value={campaignDraft.minimumMove} onChange={(event) => setCampaignDraft((current) => ({ ...current, minimumMove: event.target.value }))} placeholder="5 minutes. Open the project. Walk around the block." /></label>
+                          <label>Danger window<span>When is this campaign most likely to break?</span><input value={campaignDraft.dangerWindow} onChange={(event) => setCampaignDraft((current) => ({ ...current, dangerWindow: event.target.value }))} placeholder="Evening after work. Before bed." /></label>
+                          <label>Enemy loop<span>What pattern are you trying to interrupt?</span><textarea rows={2} value={campaignDraft.enemyLoop} onChange={(event) => setCampaignDraft((current) => ({ ...current, enemyLoop: event.target.value }))} placeholder="Stress → craving → short relief → guilt." /></label>
+                        </section>
+                        <section className="campaign-form__panel" aria-label="Replacement and recovery">
+                          <label>Replacement move<span>What will you do instead when the enemy loop appears?</span><textarea rows={2} value={campaignDraft.replacementMove} onChange={(event) => setCampaignDraft((current) => ({ ...current, replacementMove: event.target.value }))} placeholder="Wait 5 minutes, drink water, walk, then choose." /></label>
+                          <label>Recovery rule<span>What happens after a slip?</span><textarea rows={2} value={campaignDraft.recoveryRule} onChange={(event) => setCampaignDraft((current) => ({ ...current, recoveryRule: event.target.value }))} /></label>
+                        </section>
+                        <section className="campaign-form__panel" aria-label="Campaign review">
+                          <div className="campaign-form__review"><strong>{campaignDraft.name || 'Untitled campaign'}</strong><span>{campaignDraft.durationDays || campaignDraft.customDurationDays || 21} days · {CAMPAIGN_TYPES.find((typeOption) => typeOption.value === campaignDraft.type)?.label}</span><p>{campaignDraft.victoryCondition || 'Add a victory condition on panel 1.'}</p></div>
+                          <p className="campaign-form__review-note">Review your answers, then start. You can use Back to adjust any panel.</p>
+                        </section>
+                      </div>
                     </div>
-                    <label>Campaign name<input value={campaignDraft.name} onChange={(event) => setCampaignDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Rebuild Strength" maxLength={80} /></label>
-                    <label>Duration<div className="campaign-form__durations">{CAMPAIGN_DURATION_OPTIONS.map((days) => <button key={days} type="button" className={campaignDraft.durationDays === days ? 'is-active' : ''} onClick={() => setCampaignDraft((current) => ({ ...current, durationDays: days, customDurationDays: '' }))}>{days} days</button>)}<button type="button" className={campaignDraft.durationDays === 0 ? 'is-active' : ''} onClick={() => setCampaignDraft((current) => ({ ...current, durationDays: 0 }))}>Custom</button></div></label>
-                    {campaignDraft.durationDays === 0 ? <label>Custom days<input type="number" min={1} max={365} value={campaignDraft.customDurationDays} onChange={(event) => setCampaignDraft((current) => ({ ...current, customDurationDays: event.target.value }))} /></label> : null}
-                    <label>What would make this campaign a win?<textarea rows={3} value={campaignDraft.victoryCondition} onChange={(event) => setCampaignDraft((current) => ({ ...current, victoryCondition: event.target.value }))} placeholder="By the end, I want to complete 9 workouts, miss no more than 2 planned sessions, and feel stronger." /></label>
-                    <label>Choose one habit that makes this campaign real.<select value={campaignDraft.keystoneHabitId} onChange={(event) => setCampaignDraft((current) => ({ ...current, keystoneHabitId: event.target.value }))}><option value="">Continue without one</option>{habits.map((habit) => <option key={habit.id} value={habit.id}>{habit.name}</option>)}</select><span>A keystone habit is the one action that makes the whole campaign more likely to succeed.</span>{!campaignDraft.keystoneHabitId ? <em>Add a keystone habit to make this campaign easier to follow.</em> : null}</label>
-                    <label>Minimum move<span>The tiny version allowed on bad days.</span><input value={campaignDraft.minimumMove} onChange={(event) => setCampaignDraft((current) => ({ ...current, minimumMove: event.target.value }))} placeholder="5 minutes. Open the project. Walk around the block." /></label>
-                    <label>Danger window<span>When is this campaign most likely to break?</span><input value={campaignDraft.dangerWindow} onChange={(event) => setCampaignDraft((current) => ({ ...current, dangerWindow: event.target.value }))} placeholder="Evening after work. Before bed." /></label>
-                    <label>Enemy loop<span>What pattern are you trying to interrupt?</span><textarea rows={2} value={campaignDraft.enemyLoop} onChange={(event) => setCampaignDraft((current) => ({ ...current, enemyLoop: event.target.value }))} placeholder="Stress → craving → short relief → guilt." /></label>
-                    <label>Replacement move<span>What will you do instead when the enemy loop appears?</span><textarea rows={2} value={campaignDraft.replacementMove} onChange={(event) => setCampaignDraft((current) => ({ ...current, replacementMove: event.target.value }))} placeholder="Wait 5 minutes, drink water, walk, then choose." /></label>
-                    <label>Recovery rule<textarea rows={2} value={campaignDraft.recoveryRule} onChange={(event) => setCampaignDraft((current) => ({ ...current, recoveryRule: event.target.value }))} /></label>
+                    <div className="campaign-form__pager" aria-label="Campaign panel progress">
+                      {[0, 1, 2, 3].map((panelIndex) => <button key={panelIndex} type="button" className={campaignPanelIndex === panelIndex ? 'is-active' : ''} onClick={() => setCampaignPanelIndex(panelIndex)} aria-label={`Go to panel ${panelIndex + 1}`} aria-current={campaignPanelIndex === panelIndex ? 'step' : undefined} />)}
+                    </div>
                     {campaignError ? <p className="campaign-modal__error">{campaignError}</p> : null}
-                    <div className="campaign-modal__actions"><button type="button" className="campaign-modal__secondary" onClick={() => setCampaignModalOpen(false)}>Cancel</button>{campaign ? <button type="button" className="campaign-modal__secondary" onClick={handleEndCampaign}>End campaign</button> : null}<button type="button" className="campaign-modal__primary" onClick={handleSaveCampaign}>{campaign ? 'Edit campaign' : 'Start campaign'}</button></div>
+                    <div className="campaign-modal__actions"><button type="button" className="campaign-modal__secondary" onClick={() => setCampaignModalOpen(false)}>Cancel</button>{campaign ? <button type="button" className="campaign-modal__secondary" onClick={handleEndCampaign}>End campaign</button> : null}{campaignPanelIndex > 0 ? <button type="button" className="campaign-modal__secondary" onClick={() => setCampaignPanelIndex((current) => Math.max(0, current - 1))}>Back</button> : null}{campaignPanelIndex < 3 ? <button type="button" className="campaign-modal__primary" onClick={() => setCampaignPanelIndex((current) => Math.min(3, current + 1))}>Next</button> : <button type="button" className="campaign-modal__primary" onClick={handleSaveCampaign}>{campaign ? 'Edit campaign' : 'Start campaign'}</button>}</div>
                   </div>
                 </div>
               </div>, modalRoot ?? document.body
