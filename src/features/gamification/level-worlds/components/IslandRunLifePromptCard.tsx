@@ -27,8 +27,18 @@ import {
 import { getLifeWheelAreaMeta } from '../../../life-wheel/lifeWheelTaxonomy';
 import { fetchCheckinsForUser } from '../../../../services/checkins';
 import { listHabitsV2 } from '../../../../services/habitsV2';
+import { useGamification } from '../../../../hooks/useGamification';
+import { XP_REWARDS } from '../../../../types/gamification';
 import { recordGameLifeIntake } from '../../../../services/gameLifeIntake';
 import { recordCompassContribution } from '../../../../services/compassState';
+import {
+  createAndCompleteRoutekeeperTinyAction,
+  hasSuitableRoutekeeperHabit,
+  ROUTEKEEPER_SUCCESS_BODY,
+  ROUTEKEEPER_SUCCESS_TITLE,
+  ROUTEKEEPER_TINY_ACTIONS,
+  type RoutekeeperTinyAction,
+} from '../services/islandRunRoutekeeperTinyActions';
 import { getIslandContentPlan, orderAreasForIsland } from '../services/islandContentManifest';
 
 /** Dispatched when the player needs to record a check-in before adding a habit. */
@@ -54,12 +64,18 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doneMessage, setDoneMessage] = useState<string | null>(null);
+  const [routekeeperAction, setRoutekeeperAction] = useState<RoutekeeperTinyAction>(ROUTEKEEPER_TINY_ACTIONS[0]);
+  const [routekeeperMode, setRoutekeeperMode] = useState(false);
+  const [routekeeperRewardLine, setRoutekeeperRewardLine] = useState<string | null>(null);
 
   // Adaptive context: latest check-in + active-habit coverage drive which life
   // areas we offer. Until this loads we gate the area picker.
   const [contextStatus, setContextStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [hasCheckin, setHasCheckin] = useState(false);
+  const [hasSuitableHabit, setHasSuitableHabit] = useState(false);
   const [readiness, setReadiness] = useState<AreaReadiness[]>([]);
+
+  const { earnXP, recordActivity } = useGamification(session);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,7 +90,11 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
         if (cancelled) return;
 
         const latestCheckin = checkinResult.data?.[0] ?? null;
-        const supportedAreas = deriveSupportedAreas(habitsResult.data ?? []);
+        const habits = habitsResult.data ?? [];
+        const supportedAreas = deriveSupportedAreas(habits);
+        const suitableHabit = hasSuitableRoutekeeperHabit(habits);
+        setHasSuitableHabit(suitableHabit);
+        setRoutekeeperMode(!suitableHabit && (islandNumber ?? 1) === 1);
 
         if (!latestCheckin) {
           setHasCheckin(false);
@@ -102,7 +122,7 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
     return () => {
       cancelled = true;
     };
-  }, [session.user.id]);
+  }, [session.user.id, islandNumber]);
 
   const islandPlan = useMemo(() => getIslandContentPlan(islandNumber ?? 1), [islandNumber]);
 
@@ -154,6 +174,55 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
       },
     });
     onComeBackLater?.();
+  };
+
+  const handleCreateRoutekeeperTinyAction = async () => {
+    setIsSubmitting(true);
+    setError(null);
+    setRoutekeeperRewardLine(null);
+
+    const result = await createAndCompleteRoutekeeperTinyAction({
+      userId: session.user.id,
+      action: routekeeperAction,
+    });
+
+    if (!result.ok || !result.habit) {
+      setError(`Could not relight the Routekeeper Steps right now (${result.message}).`);
+      setIsSubmitting(false);
+      return;
+    }
+
+    void recordGameLifeIntake({
+      userId: session.user.id,
+      promptContext: 'habit_landmark',
+      islandNumber: islandNumber ?? null,
+      intakeStage: islandPlan.intakeStage,
+      lifeWheelArea: null,
+      state: 'completed',
+      linkedHabitId: result.habit.id,
+      payload: {
+        outcome: 'routekeeper_tiny_action_created_and_completed',
+        action: routekeeperAction,
+        completion: result.completion,
+      },
+    });
+
+    void recordCompassContribution({
+      userId: session.user.id,
+      islandNumber: islandNumber ?? 1,
+      kind: 'habit',
+      text: result.habit.title,
+      linkedHabitId: result.habit.id,
+    });
+
+    const xpResult = await earnXP?.(XP_REWARDS.HABIT_COMPLETE, 'habit_complete', result.habit.id, 'Routekeeper tiny action');
+    await recordActivity?.();
+    const rewardLine = xpResult?.success ? `+${XP_REWARDS.HABIT_COMPLETE} XP` : null;
+    setRoutekeeperRewardLine(rewardLine);
+    const successMessage = rewardLine ? `${ROUTEKEEPER_SUCCESS_TITLE} ${rewardLine}` : ROUTEKEEPER_SUCCESS_TITLE;
+    setDoneMessage(`${ROUTEKEEPER_SUCCESS_TITLE} ${ROUTEKEEPER_SUCCESS_BODY}`);
+    setIsSubmitting(false);
+    onComplete(successMessage);
   };
 
   const handleCreateHabit = async () => {
@@ -213,6 +282,42 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
 
       {!area && contextStatus === 'loading' ? (
         <p className="island-stop-modal__copy">Reading your latest check-in…</p>
+      ) : routekeeperMode && !hasSuitableHabit ? (
+        <>
+          <p className="island-stop-modal__copy"><strong>Routekeeper Steps</strong></p>
+          <p className="island-stop-modal__copy">Miri only needs one tiny action to relight the route. Pick something small enough to do today.</p>
+          <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem', flexDirection: 'column', alignItems: 'stretch' }}>
+            {ROUTEKEEPER_TINY_ACTIONS.map((action) => (
+              <button
+                key={action}
+                type="button"
+                className={`island-stop-modal__btn island-stop-modal__btn--action${routekeeperAction === action ? ' island-stop-modal__btn--primary' : ''}`}
+                onClick={() => setRoutekeeperAction(action)}
+                disabled={isSubmitting}
+                style={{ textAlign: 'left' }}
+              >
+                {action}
+              </button>
+            ))}
+          </div>
+          <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
+            <button
+              type="button"
+              className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+              onClick={() => void handleCreateRoutekeeperTinyAction()}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Relighting…' : 'Create my tiny action'}
+            </button>
+          </div>
+          {doneMessage ? (
+            <div className="island-stop-modal__completed-banner" role="status" style={{ marginTop: '0.75rem' }}>
+              <strong>{ROUTEKEEPER_SUCCESS_TITLE}</strong><br />
+              {ROUTEKEEPER_SUCCESS_BODY}
+              {routekeeperRewardLine ? <><br /><span>{routekeeperRewardLine}</span></> : null}
+            </div>
+          ) : null}
+        </>
       ) : !area && contextStatus === 'ready' && !hasCheckin ? (
         <>
           <p><strong>Let’s find your focus first.</strong></p>
