@@ -11645,6 +11645,13 @@
   line-height: 1.1;
 }
 
+.wpm-body {
+  margin: -0.55rem 0 0;
+  color: rgba(255, 248, 220, 0.86);
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
 /* ── Economy tiles ── */
 .wpm-economy-tiles {
   display: grid;
