@@ -297,7 +297,13 @@ import {
 import { WelcomePackModal } from './WelcomePackModal';
 import { getWelcomePackEligibility } from '../services/islandRunWelcomePackEligibility';
 import { shouldAutoShowWelcomePackModal } from '../services/islandRunWelcomePackOnboardingUi';
-import { readIslandRunGuestFunnelState } from '../services/islandRunGuestFunnelState';
+import {
+  markIslandRunGuestSavePromptDismissed,
+  patchIslandRunGuestFunnelState,
+  readIslandRunGuestFunnelState,
+  type IslandRunGuestFunnelStateV1,
+} from '../services/islandRunGuestFunnelState';
+import { resolveIslandRunFirstPlayerModalPrompt } from '../services/islandRunFirstPlayerModalScheduler';
 import { applyCreatureArtFallback } from './creatureArtFallback';
 import {
   rankCreatureFitsForPlayer,
@@ -1496,6 +1502,7 @@ interface IslandRunBoardPrototypeProps {
   onExitBoard?: () => void;
   showTopBackButton?: boolean;
   isAdmin?: boolean;
+  onOpenSaveAccountSignup?: () => void;
 }
 
 export function IslandRunBoardPrototype({
@@ -1504,6 +1511,7 @@ export function IslandRunBoardPrototype({
   onExitBoard,
   showTopBackButton: _showTopBackButton = false,
   isAdmin = false,
+  onOpenSaveAccountSignup,
 }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
   // Player-level chip: pull levelInfo from the gamification hook so the top-bar
@@ -1711,6 +1719,8 @@ export function IslandRunBoardPrototype({
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [arenaBoostStatus, setArenaBoostStatus] = useState<'idle' | 'claimed' | 'already_claimed' | 'no_active_event'>('idle');
+  const [arenaSoftSaveValueMomentReached, setArenaSoftSaveValueMomentReached] = useState(false);
+  const [guestFunnelState, setGuestFunnelState] = useState<IslandRunGuestFunnelStateV1>(() => readIslandRunGuestFunnelState());
   const [isActiveCompassSessionFilled, setIsActiveCompassSessionFilled] = useState(false);
   const [requiredDoorStopId, setRequiredDoorStopId] = useState<IslandLandmarkDoorStopId | null>(null);
   const [dormantDoorMiniGame, setDormantDoorMiniGame] = useState<DormantDoorMiniGameState | null>(null);
@@ -2404,6 +2414,41 @@ export function IslandRunBoardPrototype({
       showRewardDetailsModal ||
       showHatcheryCompassModal
   );
+
+  const isAnonymousGuestSession = Boolean((session.user as { is_anonymous?: boolean }).is_anonymous);
+  const firstPlayerModalDecision = resolveIslandRunFirstPlayerModalPrompt({
+    featureEnabled: true,
+    guestFunnelState: isAnonymousGuestSession ? guestFunnelState : null,
+    isAnonymousGuest: isAnonymousGuestSession,
+    islandNumber,
+    cycleIndex: runtimeState.cycleIndex,
+    arenaCompletedForSoftSavePrompt: arenaSoftSaveValueMomentReached,
+    hasActiveMinigameOrBossOverlay: Boolean(activeLaunchedMinigameId) || bossTrialPhase === 'in_progress',
+    hasStoryReaderMajorNarrative: showStoryReader,
+    needsFirstSessionTutorialHatcheryGuidance: showFirstCreaturePackModal || showHatcheryL1Celebration || isBuildTutorialPromptActive,
+    hasRewardClaimOrWelcomePackReveal: showWelcomePackModal || showClaimModal || showRewardDetailsModal || showWinCelebrationModal,
+    hasActiveStopOrLandmarkModal: Boolean(activeStopId || activePlaceholder || dormantDoorMiniGame || trafficLightCoinFlip || techCollectionModal || techCompletionCelebration || showEncounterModal || showGamifiedJournalCard || showHatcheryCompassModal),
+  });
+  const showSoftSavePromptAfterArena = firstPlayerModalDecision.promptId === 'soft_save_prompt_after_arena';
+
+  useEffect(() => {
+    if (!showSoftSavePromptAfterArena || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [showSoftSavePromptAfterArena]);
+
+  const handleDismissSoftSavePromptAfterArena = useCallback(() => {
+    const next = markIslandRunGuestSavePromptDismissed({ prompt: 'soft_after_arena' });
+    setGuestFunnelState(next);
+  }, []);
+
+  const handleSaveGameForFreeFromArena = useCallback(() => {
+    const next = patchIslandRunGuestFunnelState({
+      hasSeenSoftSavePromptAfterArena: true,
+      claimStatus: 'claim_pending',
+    });
+    setGuestFunnelState(next);
+    onOpenSaveAccountSignup?.();
+  }, [onOpenSaveAccountSignup]);
 
   useEffect(() => {
     // Wait for initial runtime hydration before evaluating welcome-pack auto-show.
@@ -5528,6 +5573,7 @@ export function IslandRunBoardPrototype({
       setRuntimeState(result.record);
       setLandingText('Arena boost unlocked: +3 Event Tickets.');
       setArenaBoostStatus('claimed');
+      setArenaSoftSaveValueMomentReached(true);
       return;
     }
     setArenaBoostStatus(result.status === 'already_claimed' ? 'already_claimed' : 'idle');
@@ -14785,6 +14831,33 @@ export function IslandRunBoardPrototype({
             openSanctuaryPanel();
           }}
         />
+      ) : null}
+
+
+      {showSoftSavePromptAfterArena ? createPortal(
+        <div className="island-soft-save-modal" role="dialog" aria-modal="true" aria-labelledby="island-soft-save-title">
+          <div className="island-soft-save-modal__backdrop" aria-hidden="true" />
+          <div className="island-soft-save-modal__dialog">
+            <p className="island-soft-save-modal__eyebrow">First Light Shore</p>
+            <h2 id="island-soft-save-title">Save My Game for Free</h2>
+            <p>
+              You’ve started your run on First Light Shore. Create a free account to keep your captain name, ship,
+              starter cache, tiny action, event tickets, and island progress safe.
+            </p>
+            <p className="island-soft-save-modal__fineprint">
+              No payment. Your 7-day Pro trial starts after signup, and we’ll warn you before it ends.
+            </p>
+            <div className="island-soft-save-modal__actions">
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--primary" onClick={handleSaveGameForFreeFromArena}>
+                Save My Game for Free
+              </button>
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--secondary" onClick={handleDismissSoftSavePromptAfterArena}>
+                Keep playing as guest
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
       ) : null}
 
       {showWelcomePackModal ? (
