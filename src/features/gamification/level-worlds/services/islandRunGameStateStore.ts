@@ -386,6 +386,8 @@ export interface IslandRunGameStateRecord {
    * Minigame & Events Consolidation Plan).
    */
   minigameTicketsByEvent: Record<string, number>;
+  /** Event-scoped idempotency ledger for the Island 1 Stop 3 first Arena ticket boost. */
+  arenaFirstTicketBoostClaimedByEvent: Record<string, boolean>;
   luckyRollSessionsByMilestone: IslandRunLuckyRollSessionsByMilestone;
   spaceExcavatorProgressByEvent: Record<string, SpaceExcavatorProgressEntry>;
   companionFeastProgressByEvent: Record<string, CompanionFeastProgressEntry>;
@@ -875,6 +877,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     stickerInventory: {},
     lastEssenceDriftLost: 0,
     minigameTicketsByEvent: {},
+    arenaFirstTicketBoostClaimedByEvent: {},
     luckyRollSessionsByMilestone: {},
     spaceExcavatorProgressByEvent: {},
     companionFeastProgressByEvent: {},
@@ -1500,6 +1503,10 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       value.minigameTicketsByEvent,
       fallback.minigameTicketsByEvent,
     ),
+    arenaFirstTicketBoostClaimedByEvent: sanitizeBooleanRecord(
+      value.arenaFirstTicketBoostClaimedByEvent,
+      fallback.arenaFirstTicketBoostClaimedByEvent,
+    ),
     luckyRollSessionsByMilestone: sanitizeIslandRunLuckyRollSessionsByMilestone(
       value.luckyRollSessionsByMilestone,
       fallback.luckyRollSessionsByMilestone,
@@ -1533,6 +1540,23 @@ function sanitizeMinigameTicketsByEvent(
     const count = Math.max(0, Math.floor(rawCount));
     if (count > 0) {
       result[eventId] = count;
+    }
+  }
+  return result;
+}
+
+
+function sanitizeBooleanRecord(
+  value: unknown,
+  fallback: Record<string, boolean>,
+): Record<string, boolean> {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return { ...fallback };
+  }
+  const result: Record<string, boolean> = {};
+  for (const [key, rawValue] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof key === 'string' && key.trim() && rawValue === true) {
+      result[key] = true;
     }
   }
   return result;
@@ -1986,6 +2010,10 @@ function mergeRecordForConflict(options: {
       remoteSpaceExcavatorProgress: remote.spaceExcavatorProgressByEvent,
       localSpaceExcavatorProgress: local.spaceExcavatorProgressByEvent,
     }),
+    arenaFirstTicketBoostClaimedByEvent: {
+      ...remote.arenaFirstTicketBoostClaimedByEvent,
+      ...local.arenaFirstTicketBoostClaimedByEvent,
+    },
     luckyRollSessionsByMilestone: mergeLuckyRollSessionsByMilestone(
       remote.luckyRollSessionsByMilestone,
       local.luckyRollSessionsByMilestone,
@@ -2107,6 +2135,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     sticker_inventory: record.stickerInventory,
     last_essence_drift_lost: record.lastEssenceDriftLost,
     minigame_tickets_by_event: record.minigameTicketsByEvent,
+    arena_first_ticket_boost_claimed_by_event: record.arenaFirstTicketBoostClaimedByEvent,
     lucky_roll_sessions_by_milestone: record.luckyRollSessionsByMilestone,
     space_excavator_progress_by_event: record.spaceExcavatorProgressByEvent,
     companion_feast_progress_by_event: record.companionFeastProgressByEvent,
@@ -2292,6 +2321,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
               (legacyData as Record<string, unknown>).minigame_tickets_by_event,
               fallback.minigameTicketsByEvent,
             ),
+            arenaFirstTicketBoostClaimedByEvent: sanitizeBooleanRecord(
+              (legacyData as Record<string, unknown>).arena_first_ticket_boost_claimed_by_event,
+              fallback.arenaFirstTicketBoostClaimedByEvent,
+            ),
             luckyRollSessionsByMilestone: sanitizeIslandRunLuckyRollSessionsByMilestone(
               (legacyData as Record<string, unknown>).lucky_roll_sessions_by_milestone,
               fallback.luckyRollSessionsByMilestone,
@@ -2459,6 +2492,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       minigameTicketsByEvent: sanitizeMinigameTicketsByEvent(
         (data as Record<string, unknown>).minigame_tickets_by_event,
         fallback.minigameTicketsByEvent,
+      ),
+      arenaFirstTicketBoostClaimedByEvent: sanitizeBooleanRecord(
+        (data as Record<string, unknown>).arena_first_ticket_boost_claimed_by_event,
+        fallback.arenaFirstTicketBoostClaimedByEvent,
       ),
       luckyRollSessionsByMilestone: sanitizeIslandRunLuckyRollSessionsByMilestone(
         (data as Record<string, unknown>).lucky_roll_sessions_by_milestone,

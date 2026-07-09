@@ -141,6 +141,7 @@ export function buildFreshIslandRunRecord(
     stickerInventory: {},
     lastEssenceDriftLost: 0,
     minigameTicketsByEvent: {},
+    arenaFirstTicketBoostClaimedByEvent: {},
     luckyRollSessionsByMilestone: {},
     spaceExcavatorProgressByEvent: {},
     companionFeastProgressByEvent: {},

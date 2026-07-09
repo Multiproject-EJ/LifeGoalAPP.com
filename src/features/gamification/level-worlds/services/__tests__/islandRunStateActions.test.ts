@@ -83,6 +83,8 @@ import {
   advanceSpaceExcavatorBoard,
   applySpaceExcavatorDig,
   applyTimedEventTicketSpend,
+  claimArenaFirstTicketBoost,
+  ARENA_FIRST_TICKET_BOOST_AMOUNT,
   claimSpaceExcavatorMilestoneReward,
   initSpaceExcavatorProgressForEvent,
   SPACE_EXCAVATOR_TOTAL_BOARDS,
@@ -267,6 +269,74 @@ function getAdjacentTileIdsForTest(tileId: number, boardSize: number): number[] 
 }
 
 export const islandRunStateActionsTests: TestCase[] = [
+  {
+    name: 'Event Arena first boost grants active-event tickets once through canonical action',
+    run: () => {
+      resetAll();
+      seedState({
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        minigameTicketsByEvent: { 'feeding_frenzy:arena': 2 },
+        arenaFirstTicketBoostClaimedByEvent: {},
+      });
+      const first = claimArenaFirstTicketBoost({
+        session: makeSession(),
+        client: null,
+        islandNumber: 1,
+        cycleIndex: 0,
+        stopId: 'mystery',
+        activeTimedEventId: 'feeding_frenzy:arena',
+      });
+      const second = claimArenaFirstTicketBoost({
+        session: makeSession(),
+        client: null,
+        islandNumber: 1,
+        cycleIndex: 0,
+        stopId: 'mystery',
+        activeTimedEventId: 'feeding_frenzy:arena',
+      });
+      assertEqual(first.status, 'claimed', 'first Arena open should claim');
+      assertEqual(first.granted, ARENA_FIRST_TICKET_BOOST_AMOUNT, 'grant amount');
+      assertEqual(first.record.minigameTicketsByEvent['feeding_frenzy:arena'], 5, 'tickets added to active event bucket');
+      assertEqual(first.record.arenaFirstTicketBoostClaimedByEvent['feeding_frenzy:arena'], true, 'marker written with ticket grant');
+      assertEqual(second.status, 'already_claimed', 'reopen should not grant again');
+      assertEqual(second.record.minigameTicketsByEvent['feeding_frenzy:arena'], 5, 'ticket bucket stays unchanged on retry');
+    },
+  },
+  {
+    name: 'Event Arena first boost does not grant without active event and scopes marker by event id',
+    run: () => {
+      resetAll();
+      seedState({
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        minigameTicketsByEvent: {},
+        arenaFirstTicketBoostClaimedByEvent: { 'lucky_spin:old': true },
+      });
+      const missing = claimArenaFirstTicketBoost({
+        session: makeSession(),
+        client: null,
+        islandNumber: 1,
+        cycleIndex: 0,
+        stopId: 'mystery',
+        activeTimedEventId: null,
+      });
+      const scoped = claimArenaFirstTicketBoost({
+        session: makeSession(),
+        client: null,
+        islandNumber: 1,
+        cycleIndex: 0,
+        stopId: 'mystery',
+        activeTimedEventId: 'space_excavator:new',
+      });
+      assertEqual(missing.status, 'no_active_event', 'missing active event should not grant');
+      assertEqual(Object.keys(missing.record.minigameTicketsByEvent).length, 0, 'missing active event leaves tickets empty');
+      assertEqual(scoped.status, 'claimed', 'different active event id remains eligible');
+      assertEqual(scoped.record.minigameTicketsByEvent['space_excavator:new'], ARENA_FIRST_TICKET_BOOST_AMOUNT, 'new event bucket receives tickets');
+      assertEqual(scoped.record.arenaFirstTicketBoostClaimedByEvent['lucky_spin:old'], true, 'old event marker preserved');
+      assertEqual(scoped.record.arenaFirstTicketBoostClaimedByEvent['space_excavator:new'], true, 'new event marker written');
+    },
+  },
   {
     name: 'legacy persisted stop hydration reconstructs exact frontier without access or postponed fields',
     run: () => {

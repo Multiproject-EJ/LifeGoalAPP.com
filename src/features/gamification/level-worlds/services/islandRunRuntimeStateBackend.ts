@@ -659,6 +659,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
               return merged;
             })()
           : current.minigameTicketsByEvent,
+      arenaFirstTicketBoostClaimedByEvent: current.arenaFirstTicketBoostClaimedByEvent,
       luckyRollSessionsByMilestone: current.luckyRollSessionsByMilestone,
       spaceExcavatorProgressByEvent: current.spaceExcavatorProgressByEvent,
       companionFeastProgressByEvent: current.companionFeastProgressByEvent,
