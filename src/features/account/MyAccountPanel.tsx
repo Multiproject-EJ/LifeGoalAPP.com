@@ -16,6 +16,7 @@ import { TelemetrySettingsSection } from './TelemetrySettingsSection';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { SettingsFeatureCard } from '../../components/SettingsFeatureCard';
+import { PersonalizationModal } from '../../components/PersonalizationModal';
 import { CreatorNoteModal } from '../onboarding/FounderWelcome';
 import { ExperimentsModal } from '../../components/ExperimentsModal';
 import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferencesSection';
@@ -133,6 +134,7 @@ export function MyAccountPanel({
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [feedbackSupportFolderOpen, setFeedbackSupportFolderOpen] = useState(false);
+  const [personalizationModalOpen, setPersonalizationModalOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [billingSnapshot, setBillingSnapshot] = useState<BillingSnapshot | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
@@ -845,6 +847,11 @@ export function MyAccountPanel({
               />
             ) : null}
             <SettingsFeatureCard
+              icon="✨"
+              title="Personalize"
+              onClick={() => setPersonalizationModalOpen(true)}
+            />
+            <SettingsFeatureCard
               icon="🎮"
               title="Rewards"
               onClick={() => setGameRewardsFolderOpen(true)}
@@ -888,6 +895,24 @@ export function MyAccountPanel({
           </button>
         </div>
       </section>
+
+
+      <PersonalizationModal
+        isOpen={personalizationModalOpen}
+        onClose={() => setPersonalizationModalOpen(false)}
+        initialName={profile?.full_name ?? ''}
+        rankLabel={`Island ${islandRunState.currentIslandNumber ?? 1} Explorer`}
+        progressLabel={`${stats?.habitCount ?? 0} habits • ${stats?.goalCount ?? 0} goals • ${stats?.checkinCount ?? 0} check-ins`}
+        onSaveName={async (nextName) => {
+          if (!profile || isDemoExperience) return;
+          const { data, error } = await upsertWorkspaceProfile({
+            ...profile,
+            full_name: nextName,
+          });
+          if (error) throw error;
+          if (data && onProfileUpdate) onProfileUpdate(data);
+        }}
+      />
 
       <SettingsFolderPopup
         isOpen={feedbackSupportFolderOpen}

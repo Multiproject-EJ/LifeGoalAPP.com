@@ -38152,3 +38152,227 @@ body.habit-wizard-open .mobile-footer-nav {
   font-weight: 600;
   letter-spacing: 0;
 }
+
+.personalization-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+}
+
+.personalization-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  background: radial-gradient(circle at top, rgba(56, 189, 248, 0.35), transparent 35%), rgba(15, 23, 42, 0.66);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+}
+
+.personalization-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(920px, 100%);
+  max-height: min(88vh, 780px);
+  overflow: auto;
+  padding: clamp(1.1rem, 3vw, 2rem);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 30px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.97), rgba(224, 242, 254, 0.94));
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.34);
+  color: #0f172a;
+}
+
+.personalization-modal__header,
+.personalization-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.personalization-modal__eyebrow {
+  margin: 0 0 0.25rem;
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.personalization-modal__header h2,
+.personalization-modal__section h3 {
+  margin: 0;
+}
+
+.personalization-modal__close {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: #0f172a;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.personalization-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.personalization-modal__field,
+.personalization-modal__rank-card,
+.personalization-modal__ship-card,
+.personalization-modal__section {
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.1);
+}
+
+.personalization-modal__field {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem;
+  font-weight: 800;
+}
+
+.personalization-modal__field input {
+  width: 100%;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 16px;
+  padding: 0.85rem 0.95rem;
+  background: white;
+  color: #0f172a;
+  font: inherit;
+}
+
+.personalization-modal__rank-card,
+.personalization-modal__ship-card {
+  padding: 1rem;
+}
+
+.personalization-modal__rank-card span {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.personalization-modal__rank-card strong,
+.personalization-modal__ship-card strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 1.2rem;
+}
+
+.personalization-modal__rank-card p,
+.personalization-modal__ship-card p,
+.personalization-modal__footer p {
+  margin: 0.35rem 0 0;
+  color: #475569;
+}
+
+.personalization-modal__ship-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ship-color) 24%, white), rgba(255, 255, 255, 0.8));
+}
+
+.personalization-modal__ship-logo {
+  display: grid;
+  width: 4rem;
+  height: 4rem;
+  place-items: center;
+  border-radius: 22px;
+  background: var(--ship-color);
+  box-shadow: 0 16px 30px color-mix(in srgb, var(--ship-color) 36%, transparent);
+  font-size: 2rem;
+}
+
+.personalization-modal__section {
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.personalization-modal__swatches,
+.personalization-modal__logos,
+.personalization-modal__themes,
+.personalization-modal__traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+}
+
+.personalization-modal__swatches button {
+  width: 2.8rem;
+  height: 2.8rem;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: var(--swatch);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+  cursor: pointer;
+}
+
+.personalization-modal__logos button,
+.personalization-modal__themes button,
+.personalization-modal__traits button {
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.personalization-modal__logos button {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.45rem;
+}
+
+.personalization-modal__themes button,
+.personalization-modal__traits button {
+  padding: 0.74rem 1rem;
+}
+
+.personalization-modal__traits button {
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.personalization-modal__traits button:hover,
+.personalization-modal__traits button:focus-visible {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 12px 24px rgba(59, 130, 246, 0.18);
+}
+
+.personalization-modal .is-selected {
+  outline: 3px solid rgba(37, 99, 235, 0.34);
+  background: linear-gradient(135deg, #dbeafe, #fef3c7);
+}
+
+.personalization-modal__footer {
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+@media (max-width: 720px) {
+  .personalization-modal__panel {
+    max-height: 92vh;
+    border-radius: 24px;
+  }
+
+  .personalization-modal__grid {
+    grid-template-columns: 1fr;
+  }
+}
