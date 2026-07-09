@@ -7,6 +7,7 @@ import { NotificationSettingsSection, PushNotificationTestPanel, DailyReminderPr
 import { AiSettingsSection } from './AiSettingsSection';
 import { ExperimentalFeaturesSection } from './ExperimentalFeaturesSection';
 import { GameDebugLogSection } from './GameDebugLogSection';
+import { ViewportDiagnosticsSection } from './ViewportDiagnosticsSection';
 import { YesterdayRecapSettings } from './YesterdayRecapSettings';
 import { DreamJournalReminderSettings } from './DreamJournalReminderSettings';
 import { TodaysWinsReminderSettings } from './TodaysWinsReminderSettings';
@@ -1172,6 +1173,8 @@ export function MyAccountPanel({
             </section>
 
             <GameDebugLogSection />
+
+            <ViewportDiagnosticsSection />
 
             <ReminderAnalyticsDashboard session={session} />
 

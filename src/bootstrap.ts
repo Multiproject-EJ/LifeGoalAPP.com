@@ -2,6 +2,7 @@ import './index.css';
 import './themes.css';
 import './styles/workspace.css';
 import './styles/life-wheel-redesign.css';
+import { initViewportWatchdog } from './utils/viewportWatchdog';
 
 const DEBUG_STORAGE_KEY = 'lifeGoalApp:debug';
 const bootStartedAt = new Date().toISOString();
@@ -337,6 +338,8 @@ window.addEventListener('unhandledrejection', (event) => {
   });
 });
 
+
+initViewportWatchdog();
 
 const lockToPortraitIfPossible = async () => {
   const orientationApi = screen.orientation as ScreenOrientation & {
