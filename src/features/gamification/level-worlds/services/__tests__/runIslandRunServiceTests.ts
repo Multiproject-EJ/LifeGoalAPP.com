@@ -133,6 +133,8 @@ import { bossRhythmGameTests } from './bossRhythmGame.test';
 import { islandRunReflectionCurriculumTests } from './islandRunReflectionCurriculum.test';
 import { islandRunClueCardCurriculumTests } from './islandRunClueCardCurriculum.test';
 import { islandRunCardDrawCadenceTests } from './islandRunCardDrawCadence.test';
+import { islandRunGuestFunnelStateTests } from './islandRunGuestFunnelState.test';
+import { islandRunFirstPlayerModalSchedulerTests } from './islandRunFirstPlayerModalScheduler.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -272,6 +274,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunReflectionCurriculum', tests: islandRunReflectionCurriculumTests },
   { label: 'islandRunClueCardCurriculum', tests: islandRunClueCardCurriculumTests },
   { label: 'islandRunCardDrawCadence', tests: islandRunCardDrawCadenceTests },
+  { label: 'islandRunGuestFunnelState', tests: islandRunGuestFunnelStateTests },
+  { label: 'islandRunFirstPlayerModalScheduler', tests: islandRunFirstPlayerModalSchedulerTests },
 ];
 
 async function main() {

@@ -76,6 +76,13 @@ export interface IslandRunFeatureFlags {
    */
   combinedJourneyRewardsEnabled: boolean;
 
+  /**
+   * First-player guest funnel scaffolding. While off, the guest funnel state
+   * helper and modal scheduler remain testable foundation only and do not
+   * surface user-visible entry points or prompts.
+   */
+  islandRunFirstPlayerFunnelScaffoldingEnabled: boolean;
+
 }
 
 const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
@@ -88,6 +95,7 @@ const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   islandRunEarlyFeaturedCreaturePoolEnabled: false,
   islandRunPreIslandLuckyRollEnabled: false,
   combinedJourneyRewardsEnabled: true,
+  islandRunFirstPlayerFunnelScaffoldingEnabled: false,
 });
 
 let currentFlags: IslandRunFeatureFlags = { ...DEFAULT_FLAGS };
