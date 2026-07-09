@@ -213,6 +213,7 @@ import {
   applyTechCollectionState,
   applyIslandRunTechnologyBuild,
   applyTimedEventTicketSpend,
+  claimArenaFirstTicketBoost,
   applySpaceExcavatorDig,
   advanceSpaceExcavatorBoard,
   claimSpaceExcavatorMilestoneReward,
@@ -1709,6 +1710,7 @@ export function IslandRunBoardPrototype({
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
+  const [arenaBoostStatus, setArenaBoostStatus] = useState<'idle' | 'claimed' | 'already_claimed' | 'no_active_event'>('idle');
   const [isActiveCompassSessionFilled, setIsActiveCompassSessionFilled] = useState(false);
   const [requiredDoorStopId, setRequiredDoorStopId] = useState<IslandLandmarkDoorStopId | null>(null);
   const [dormantDoorMiniGame, setDormantDoorMiniGame] = useState<DormantDoorMiniGameState | null>(null);
@@ -5503,6 +5505,33 @@ export function IslandRunBoardPrototype({
   }, [activeTimedEventId, isDevTimedEventOverrideActive, isSpaceExcavatorEffectiveEvent]);
 
   const hasLegacyEventTicketDivergence = Boolean(activeTimedEventId) && activeEventTickets !== spinTokens;
+
+  useEffect(() => {
+    if (activeStopId !== 'mystery') {
+      setArenaBoostStatus('idle');
+      return;
+    }
+    if (!effectiveActiveTimedEvent?.eventId) {
+      setArenaBoostStatus('no_active_event');
+      return;
+    }
+    const result = claimArenaFirstTicketBoost({
+      session,
+      client,
+      islandNumber,
+      cycleIndex: runtimeStateRef.current.cycleIndex,
+      stopId: activeStopId,
+      activeTimedEventId: effectiveActiveTimedEvent.eventId,
+      triggerSource: 'event_arena_stop_open',
+    });
+    if (result.status === 'claimed') {
+      setRuntimeState(result.record);
+      setLandingText('Arena boost unlocked: +3 Event Tickets.');
+      setArenaBoostStatus('claimed');
+      return;
+    }
+    setArenaBoostStatus(result.status === 'already_claimed' ? 'already_claimed' : 'idle');
+  }, [activeStopId, client, effectiveActiveTimedEvent?.eventId, islandNumber, session]);
   const isRewardBarNearlyFull = rewardBarPercent >= 85 && rewardBarPercent < 100;
   // Parity guard breadcrumb for islandRunBoardEssenceParity:
   // const activeEventTickets = activeTimedEventId ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0) : 0;
@@ -12219,11 +12248,26 @@ export function IslandRunBoardPrototype({
                   <span>🎪</span>
                   <span>✨</span>
                 </div>
-                <p className="island-stop-modal__copy">🎪 <strong>Event Arena</strong></p>
-                <p>
-                  This landmark now reuses the active event mini-game role from the reward-bar event button.
-                  Spend your current event tickets here, keep progress saved, and return to the island when you are done.
-                </p>
+                {arenaBoostStatus === 'claimed' ? (
+                  <>
+                    <p className="island-stop-modal__copy">🎪 <strong>Arena boost unlocked</strong></p>
+                    <p>The Event Arena is open. Here are 3 extra event tickets for your first challenge.</p>
+                    <div className="island-event-arena-card__ticket-row" aria-live="polite">
+                      <span>Reward</span>
+                      <strong>+3 Event Tickets</strong>
+                    </div>
+                  </>
+                ) : arenaBoostStatus === 'no_active_event' ? (
+                  <>
+                    <p className="island-stop-modal__copy">🎪 <strong>Event Arena</strong></p>
+                    <p>No event is active right now. The Arena will light up when the next event begins.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="island-stop-modal__copy">🎪 <strong>Event Arena</strong></p>
+                    <p>Spend your current event tickets here, keep progress saved, and return to the island when you are done.</p>
+                  </>
+                )}
                 <div className="island-event-arena-card__ticket-row" aria-live="polite">
                   <span>{activeEventMeta?.displayName ?? 'Timed event'}</span>
                   <strong>{activeEventTickets} {timedEventTokenIcon}</strong>
@@ -12235,14 +12279,14 @@ export function IslandRunBoardPrototype({
                     onClick={handleLaunchTimedEventMinigame}
                     disabled={!effectiveActiveTimedEvent || activeEventTickets <= 0}
                   >
-                    {activeEventTickets > 0 ? '🎮 Play event mini game' : '🎟️ Earn event tickets on the reward bar'}
+                    {activeEventTickets > 0 ? 'Play event minigame' : '🎟️ Earn event tickets on the reward bar'}
                   </button>
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
                     onClick={handleComeBackLaterForActiveStop}
                   >
-                    Come back later
+                    Later
                   </button>
                 </div>
                 <p className="island-stop-modal__fineprint">

@@ -768,6 +768,27 @@ export interface ApplyTimedEventTicketSpendResult {
   spent: number;
 }
 
+export const ARENA_FIRST_TICKET_BOOST_AMOUNT = 3;
+
+export interface ClaimArenaFirstTicketBoostOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  islandNumber: number;
+  cycleIndex: number;
+  stopId: string | null;
+  activeTimedEventId: string | null;
+  triggerSource?: string;
+}
+
+export type ClaimArenaFirstTicketBoostStatus = 'claimed' | 'already_claimed' | 'ineligible' | 'no_active_event';
+
+export interface ClaimArenaFirstTicketBoostResult {
+  record: IslandRunGameStateRecord;
+  status: ClaimArenaFirstTicketBoostStatus;
+  granted: number;
+  eventId: string | null;
+}
+
 export interface ApplyPassiveDiceRegenTickOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -1099,6 +1120,55 @@ export function applyTrafficLightCoinFlipReward(options: {
     triggerSource: triggerSource ?? 'traffic_light_coin_flip_reward',
   });
   return next;
+}
+
+
+/**
+ * Grants the Island 1 Stop 3 Event Arena first-player ticket boost through the
+ * canonical gameplay action path. The idempotency marker is event-scoped so a
+ * refresh, close/reopen, or minigame relaunch cannot duplicate the +3 grant for
+ * the same active timed event.
+ */
+export function claimArenaFirstTicketBoost(
+  options: ClaimArenaFirstTicketBoostOptions,
+): ClaimArenaFirstTicketBoostResult {
+  const { session, client, islandNumber, cycleIndex, stopId, activeTimedEventId, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const eventId = typeof activeTimedEventId === 'string' ? activeTimedEventId.trim() : '';
+  if (!eventId) return { record: current, status: 'no_active_event', granted: 0, eventId: null };
+  if (Math.trunc(islandNumber) !== 1 || Math.trunc(cycleIndex) !== 0 || stopId !== 'mystery') {
+    return { record: current, status: 'ineligible', granted: 0, eventId };
+  }
+  if (current.arenaFirstTicketBoostClaimedByEvent?.[eventId]) {
+    return { record: current, status: 'already_claimed', granted: 0, eventId };
+  }
+
+  const currentBucket = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[eventId] ?? 0));
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    minigameTicketsByEvent: {
+      ...current.minigameTicketsByEvent,
+      [eventId]: currentBucket + ARENA_FIRST_TICKET_BOOST_AMOUNT,
+    },
+    arenaFirstTicketBoostClaimedByEvent: {
+      ...current.arenaFirstTicketBoostClaimedByEvent,
+      [eventId]: true,
+    },
+  };
+  recordIslandRunEconomyCounter({
+    counter: ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsEarned,
+    amount: ARENA_FIRST_TICKET_BOOST_AMOUNT,
+    sessionId: session.user.id,
+    metadata: { source: 'event_arena_first_ticket_boost', eventId },
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'event_arena_first_ticket_boost',
+  });
+  return { record: next, status: 'claimed', granted: ARENA_FIRST_TICKET_BOOST_AMOUNT, eventId };
 }
 
 /**

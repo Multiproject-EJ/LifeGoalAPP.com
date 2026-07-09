@@ -60,6 +60,20 @@ async function readBuildModalV2Source(): Promise<string> {
 
 export const islandRunBoardEssenceParityTests: TestCase[] = [
   {
+    name: 'Event Arena boost UI routes ticket grant through canonical action only',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(
+        source.includes('claimArenaFirstTicketBoost({') && source.includes("triggerSource: 'event_arena_stop_open'"),
+        'Event Arena should request the +3 boost through the canonical state action.',
+      );
+      assert(
+        !source.includes('minigameTicketsByEvent: {\n      ...runtimeState') && !source.includes('arenaFirstTicketBoostClaimedByEvent: {\n      ...runtimeState'),
+        'Event Arena UI must not directly patch gameplay ticket buckets or boost markers.',
+      );
+    },
+  },
+  {
     name: 'event ticket migration visibility keeps event-scoped tickets as launch authority',
     run: async () => {
       const source = await readBoardSource();
