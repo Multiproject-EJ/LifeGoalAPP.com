@@ -135,6 +135,7 @@ import { islandRunReflectionCurriculumTests } from './islandRunReflectionCurricu
 import { islandRunClueCardCurriculumTests } from './islandRunClueCardCurriculum.test';
 import { islandRunCardDrawCadenceTests } from './islandRunCardDrawCadence.test';
 import { islandRunGuestFunnelStateTests } from './islandRunGuestFunnelState.test';
+import { islandRunRoutekeeperTinyActionsTests } from './islandRunRoutekeeperTinyActions.test';
 import { islandRunFirstPlayerModalSchedulerTests } from './islandRunFirstPlayerModalScheduler.test';
 import type { TestCase } from './testHarness';
 
@@ -277,6 +278,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunClueCardCurriculum', tests: islandRunClueCardCurriculumTests },
   { label: 'islandRunCardDrawCadence', tests: islandRunCardDrawCadenceTests },
   { label: 'islandRunGuestFunnelState', tests: islandRunGuestFunnelStateTests },
+  { label: 'islandRunRoutekeeperTinyActions', tests: islandRunRoutekeeperTinyActionsTests },
   { label: 'islandRunFirstPlayerModalScheduler', tests: islandRunFirstPlayerModalSchedulerTests },
 ];
 
