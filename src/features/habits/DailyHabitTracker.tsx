@@ -1066,6 +1066,10 @@ const habitRecoveryRewardKey = (userId: string, habitId: string, rewardKey: stri
   `lifegoal.habit-recovery-reward:${userId}:${habitId}:${rewardKey}`;
 const habitReviewDiceBountyKey = (userId: string, habitId: string, rewardKey: string) =>
   `lifegoal.habit-review-dice-bounty:${userId}:${habitId}:${rewardKey}`;
+// Per-habit preference: whether the always-visible 7-day streak strip is shown
+// on this habit's Today card. Opt-in per habit via the Manage section toggle.
+const habit7DayStreakVisibleKey = (userId: string, habitId: string) =>
+  `lifegoal.habit-7day-streak-visible:${userId}:${habitId}`;
 
 const loadDraft = <T,>(key: string): T | null => {
   if (typeof window === 'undefined') return null;
@@ -1644,6 +1648,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   // State for alert configuration modal
   const [alertConfigHabit, setAlertConfigHabit] = useState<{ id: string; name: string } | null>(null);
   const [autoProgressPanels, setAutoProgressPanels] = useState<Record<string, boolean>>({});
+  // Per-habit set of ids whose always-visible 7-day streak strip is enabled.
+  const [streakVisibleHabitIds, setStreakVisibleHabitIds] = useState<Set<string>>(() => new Set());
   const [editHabit, setEditHabit] = useState<HabitEditDraft | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editNotes, setEditNotes] = useState('');
@@ -2080,6 +2086,27 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }
     return result;
   }, [historicalLogs, weekStartISO, activeDate]);
+  // Rolling 7-day window ending on the active date, used by the always-visible
+  // per-habit streak strip. `streak7CompletedSet` keys are `habitId:date`.
+  const streak7Days = useMemo(() => {
+    const base = parseISODate(activeDate);
+    const days: string[] = [];
+    for (let offset = 6; offset >= 0; offset -= 1) {
+      days.push(formatISODate(subtractDays(base, offset)));
+    }
+    return days;
+  }, [activeDate]);
+  const streak7CompletedSet = useMemo(() => {
+    const windowStart = streak7Days[0];
+    const windowEnd = streak7Days[streak7Days.length - 1];
+    const completed = new Set<string>();
+    for (const log of historicalLogs) {
+      if (log.completed && log.date >= windowStart && log.date <= windowEnd) {
+        completed.add(`${log.habit_id}:${log.date}`);
+      }
+    }
+    return completed;
+  }, [historicalLogs, streak7Days]);
   const weeklySnapshotCompletionPercent = useMemo(() => {
     if (weeklyReviewSnapshot.totalHabits <= 0) return 0;
     return Math.round((weeklyReviewSnapshot.onTrack.length / weeklyReviewSnapshot.totalHabits) * 100);
@@ -6571,6 +6598,34 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     });
   }, []);
 
+  // Toggle whether the always-visible 7-day streak strip shows for a habit, and
+  // persist the choice so it survives reloads. Opt-in per habit.
+  const toggleStreakVisible = useCallback((habitId: string) => {
+    setStreakVisibleHabitIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(habitId)) {
+        next.delete(habitId);
+        removeDraft(habit7DayStreakVisibleKey(session.user.id, habitId));
+      } else {
+        next.add(habitId);
+        saveDraft(habit7DayStreakVisibleKey(session.user.id, habitId), true);
+      }
+      return next;
+    });
+  }, [session.user.id]);
+
+  // Hydrate the per-habit 7-day streak visibility preference from localStorage
+  // whenever the habit list changes.
+  useEffect(() => {
+    const visible = new Set<string>();
+    for (const habit of habits) {
+      if (loadDraft<boolean>(habit7DayStreakVisibleKey(session.user.id, habit.id))) {
+        visible.add(habit.id);
+      }
+    }
+    setStreakVisibleHabitIds(visible);
+  }, [habits, session.user.id]);
+
   const openTodayVersionPicker = useCallback((habitId: string) => {
     setExpandedHabits({ [habitId]: true });
     setExpandedHabitSections((current) => ({
@@ -8083,6 +8138,18 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const habitHealthState = habitHealthByHabitId[habit.id] ?? 'active';
             const habitHealthAssessment = habitHealthAssessmentsByHabitId[habit.id] ?? null;
             const streakDays = habitInsights[habit.id]?.currentStreak ?? 0;
+            const showStreakStrip = streakVisibleHabitIds.has(habit.id);
+            const streakStripDays = showStreakStrip
+              ? streak7Days.map((date) => ({
+                  date,
+                  completed: streak7CompletedSet.has(`${habit.id}:${date}`),
+                  isToday: date === today,
+                }))
+              : [];
+            const streakStripDoneCount = streakStripDays.reduce(
+              (count, day) => count + (day.completed ? 1 : 0),
+              0,
+            );
             const adherencePercent = adherenceSnapshot?.percentage ?? 0;
             const canUpgrade =
               Boolean(upgradeTier) &&
@@ -8462,6 +8529,26 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             </span>
                           ) : null}
                         </div>
+                        {showStreakStrip ? (
+                          <div
+                            className="habit-streak-strip"
+                            aria-label={`7-day streak: ${streakStripDoneCount} of 7 days completed`}
+                          >
+                            <span className="habit-streak-strip__icon" aria-hidden="true">🔥</span>
+                            <div className="habit-streak-strip__cells">
+                              {streakStripDays.map((day) => (
+                                <span
+                                  key={day.date}
+                                  className={`habit-streak-strip__cell${
+                                    day.completed ? ' habit-streak-strip__cell--done' : ''
+                                  }${day.isToday ? ' habit-streak-strip__cell--today' : ''}`}
+                                  title={`${day.date}: ${day.completed ? 'Completed' : 'Not completed'}`}
+                                />
+                              ))}
+                            </div>
+                            <span className="habit-streak-strip__count">{streakStripDoneCount}/7</span>
+                          </div>
+                        ) : null}
                       </div>
                       <div className="habit-checklist__reward-rail" aria-label="Habit rewards and quest marker">
                         {(shouldShowHabitPoints || isOfferHabit || rhythmBonusPrice) ? (
@@ -9020,6 +9107,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           </div>
                         ) : null}
                       </div>
+                      <button
+                        type="button"
+                        className={`habit-checklist__streak-toggle${
+                          showStreakStrip ? ' habit-checklist__streak-toggle--active' : ''
+                        }`}
+                        aria-pressed={showStreakStrip}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleStreakVisible(habit.id);
+                        }}
+                      >
+                        🔥 {showStreakStrip ? 'Hide 7-day streak' : 'Show 7-day streak'}
+                      </button>
                       <button
                         type="button"
                         className={`habit-checklist__autoprog-toggle ${

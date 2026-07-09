@@ -9501,6 +9501,51 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: 0 10px 18px rgba(245, 158, 11, 0.2);
 }
 
+/* Always-visible 7-day streak strip on the Today habit card. Opt-in per habit
+   via the Manage section toggle; sits on its own row beneath the labels. */
+.habit-streak-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.habit-streak-strip__icon {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.habit-streak-strip__cells {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.habit-streak-strip__cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 5px;
+  background: rgba(148, 163, 184, 0.22);
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  box-sizing: border-box;
+}
+
+.habit-streak-strip__cell--done {
+  background: linear-gradient(180deg, #fb923c, #f97316);
+  border-color: rgba(249, 115, 22, 0.55);
+}
+
+.habit-streak-strip__cell--today {
+  outline: 2px solid rgba(249, 115, 22, 0.6);
+  outline-offset: 1px;
+}
+
+.habit-streak-strip__count {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #9a3412;
+  letter-spacing: 0.02em;
+}
+
 .habit-checklist__vision-preview {
   width: 56px;
   height: 56px;
@@ -9884,6 +9929,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .habit-checklist__alert-btn,
 .habit-checklist__edit-btn,
+.habit-checklist__streak-toggle,
 .habit-checklist__skip-btn {
   width: 100%;
   min-height: 2.75rem;
@@ -9894,6 +9940,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.habit-checklist__streak-toggle--active {
+  border-color: rgba(249, 115, 22, 0.5);
+  background: linear-gradient(180deg, #fff7ed, #ffffff);
+  color: #9a3412;
 }
 
 .habit-checklist__alert-btn {
