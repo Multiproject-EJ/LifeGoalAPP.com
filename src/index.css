@@ -38428,3 +38428,85 @@ body.habit-wizard-open .mobile-footer-nav {
     grid-template-columns: 1fr;
   }
 }
+
+.auth-card__guest-entry {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(59, 130, 246, 0.16));
+  border: 1px solid rgba(59, 130, 246, 0.22);
+}
+
+.auth-card__guest-entry p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.guest-free-play-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem max(1rem, env(safe-area-inset-bottom, 0px));
+}
+
+.guest-free-play-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(8px);
+}
+
+.guest-free-play-modal__panel {
+  position: relative;
+  width: min(430px, 100%);
+  max-height: min(720px, calc(100dvh - 2rem));
+  overflow-y: auto;
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1.25rem, 5vw, 2rem);
+  border-radius: 28px;
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+}
+
+.guest-free-play-modal__panel h2,
+.guest-free-play-modal__panel p,
+.guest-free-play-modal__panel ul {
+  margin: 0;
+}
+
+.guest-free-play-modal__panel ul {
+  display: grid;
+  gap: 0.45rem;
+  padding-left: 1.2rem;
+  color: #334155;
+}
+
+.guest-free-play-modal__actions {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.guest-free-play-modal__secondary {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-weight: 700;
+  padding: 0.75rem;
+  cursor: pointer;
+}
+
+.guest-free-play-modal__error {
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-weight: 700;
+}
