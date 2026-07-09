@@ -1474,6 +1474,20 @@ const DORMANT_DOOR_TIER_FIGURE: Record<DormantDoorRewardTier, DormantDoorFigure>
   jackpot: 'large',
 };
 
+// "Vault Rush" presentation names for the dormant-door minigame tiers. The
+// service keeps neutral small/medium/jackpot labels; the modal brands them.
+const DORMANT_DOOR_TIER_NAMES: Record<DormantDoorRewardTier, string> = {
+  small: 'Amethyst',
+  medium: 'Diamond',
+  jackpot: 'Crown Jackpot',
+};
+
+const DORMANT_DOOR_FIGURE_NAMES: Record<DormantDoorFigure, string> = {
+  small: 'Amethyst',
+  medium: 'Diamond',
+  large: 'Crown',
+};
+
 interface IslandRunBoardPrototypeProps {
   session: Session;
   initialPanel?: 'default' | 'sanctuary';
@@ -4693,7 +4707,7 @@ export function IslandRunBoardPrototype({
       triggerSource: 'dormant_landmark_door_minigame',
     });
     setRuntimeState(record);
-    setLandingText(`🚪 ${dormantDoorReward.label}: +${dormantDoorReward.essence} money.`);
+    setLandingText(`🗝️ Vault cracked — ${DORMANT_DOOR_TIER_NAMES[dormantDoorReward.tier]}: +${dormantDoorReward.essence} money.`);
     handleCloseDormantDoorMiniGame();
   }, [client, dormantDoorMiniGame, dormantDoorReward, handleCloseDormantDoorMiniGame, isDormantDoorRewardClaiming, session]);
 
@@ -12603,73 +12617,104 @@ export function IslandRunBoardPrototype({
 
       {dormantDoorMiniGame && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--dormant-door" role="dialog" aria-modal="true" aria-label="Dormant door challenge">
-            <h3 className="island-stop-modal__title">🚪 Dormant Door Challenge</h3>
-            <p className="island-dormant-door__intro">
-              This is not the active landmark door. Reveal doors until you find <strong>3 matching prizes</strong>.
-            </p>
-            <div className="island-dormant-door__reward-row" aria-label="Dormant door reward levels">
+          <section
+            className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--dormant-door island-vault-rush ${dormantDoorReward ? 'island-vault-rush--cracked' : ''}`.trim()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Vault Rush minigame"
+          >
+            {dormantDoorReward && <ConfettiBurst active variant="standard" />}
+            <header className="island-vault-rush__header">
+              <span className="island-vault-rush__eyebrow">🗝️ Secret found behind a dormant door</span>
+              <h3 className="island-stop-modal__title island-vault-rush__title">Vault Rush</h3>
+              <p className="island-vault-rush__intro">
+                {dormantDoorReward
+                  ? 'The lock gives way — your prize is waiting inside.'
+                  : <>Reveal doors and match <strong>3 prizes</strong> to crack the vault open.</>}
+              </p>
+            </header>
+            <div className="island-vault-rush__prizes" aria-label="Vault prize tiers">
               {dormantDoorMiniGame.rewardLevels.map((level) => {
                 const prizeFigure = DORMANT_DOOR_TIER_FIGURE[level.tier];
+                const foundCount = Math.min(3, dormantDoorPrizeCounts[prizeFigure]);
                 const isWinningPrize = dormantDoorReward?.tier === level.tier;
                 const isResolvedNonWinningPrize = Boolean(dormantDoorReward) && !isWinningPrize;
                 return (
-                  <span
+                  <div
                     key={level.tier}
-                    className={`island-dormant-door__reward-chip island-dormant-door__reward-chip--${level.tier} ${isWinningPrize ? 'island-dormant-door__reward-chip--winner' : ''} ${isResolvedNonWinningPrize ? 'island-dormant-door__reward-chip--muted' : ''}`.trim()}
+                    className={`island-vault-rush__prize island-vault-rush__prize--${level.tier} ${isWinningPrize ? 'island-vault-rush__prize--winner' : ''} ${isResolvedNonWinningPrize ? 'island-vault-rush__prize--muted' : ''}`.trim()}
                   >
-                    <span className="island-dormant-door__reward-icon" aria-hidden="true">{DORMANT_DOOR_FIGURE_ICONS[prizeFigure]}</span>
-                    <span>{level.label}</span>
-                    <strong>+{level.essence} 💰</strong>
-                  </span>
+                    <span className="island-vault-rush__prize-icon" aria-hidden="true">{DORMANT_DOOR_FIGURE_ICONS[prizeFigure]}</span>
+                    <span className="island-vault-rush__prize-name">{DORMANT_DOOR_TIER_NAMES[level.tier]}</span>
+                    <strong className="island-vault-rush__prize-value">+{level.essence} 💰</strong>
+                    <span className="island-vault-rush__prize-dots" aria-label={`${foundCount} of 3 ${DORMANT_DOOR_TIER_NAMES[level.tier]} found`}>
+                      {[0, 1, 2].map((dotIndex) => (
+                        <span
+                          key={dotIndex}
+                          className={`island-vault-rush__prize-dot ${dotIndex < foundCount ? 'island-vault-rush__prize-dot--lit' : ''}`.trim()}
+                          aria-hidden="true"
+                        />
+                      ))}
+                    </span>
+                  </div>
                 );
               })}
             </div>
-            <div className="island-dormant-door__grid" aria-label="Choose three dormant doors">
+            <div className="island-vault-rush__grid" aria-label="Sixteen vault doors">
               {dormantDoorMiniGame.doors.map((door, index) => {
                 const isSelected = dormantDoorSelectedIndices.includes(index);
-                const isRevealed = isSelected;
                 const isWinningDoor = isSelected && dormantDoorReward?.tier === (door.figure === 'large' ? 'jackpot' : door.figure);
                 const isResolvedNonWinningDoor = Boolean(dormantDoorReward) && !isWinningDoor;
                 return (
                   <button
                     key={door.id}
                     type="button"
-                    className={`island-dormant-door__door ${isSelected ? 'island-dormant-door__door--selected' : ''} ${isRevealed ? 'island-dormant-door__door--revealed' : ''} ${isWinningDoor ? 'island-dormant-door__door--winner' : ''} ${isResolvedNonWinningDoor ? 'island-dormant-door__door--muted' : ''}`.trim()}
+                    className={[
+                      'island-vault-rush__door',
+                      isSelected ? `island-vault-rush__door--revealed island-vault-rush__door--tier-${door.figure}` : '',
+                      isWinningDoor ? 'island-vault-rush__door--winner' : '',
+                      isResolvedNonWinningDoor ? 'island-vault-rush__door--muted' : '',
+                    ].filter(Boolean).join(' ')}
                     onClick={() => handleDormantDoorSelect(index)}
                     disabled={Boolean(dormantDoorReward) || isSelected}
                     aria-pressed={isSelected}
+                    aria-label={isSelected ? `Door ${index + 1}: ${DORMANT_DOOR_FIGURE_NAMES[door.figure]}` : `Reveal door ${index + 1}`}
                   >
-                    <span className="island-dormant-door__door-face" aria-hidden="true">
-                      {isRevealed ? DORMANT_DOOR_FIGURE_ICONS[door.figure] : '🚪'}
+                    <span className="island-vault-rush__door-arch" aria-hidden="true">
+                      {isSelected
+                        ? <span className="island-vault-rush__door-prize">{DORMANT_DOOR_FIGURE_ICONS[door.figure]}</span>
+                        : <span className="island-vault-rush__door-num">{index + 1}</span>}
                     </span>
-                    <span className="island-dormant-door__door-label">Door {index + 1}</span>
                   </button>
                 );
               })}
             </div>
             {dormantDoorReward ? (
-              <p className="island-dormant-door__result" role="status">
-                3 matching prizes found — {dormantDoorReward.label}! Claim +{dormantDoorReward.essence} money.
-              </p>
+              <div className="island-vault-rush__result" role="status">
+                <span className="island-vault-rush__result-title">💥 Vault cracked!</span>
+                <span className="island-vault-rush__result-copy">
+                  3× {DORMANT_DOOR_FIGURE_ICONS[DORMANT_DOOR_TIER_FIGURE[dormantDoorReward.tier]]} {DORMANT_DOOR_TIER_NAMES[dormantDoorReward.tier]} — worth <strong>+{dormantDoorReward.essence} 💰</strong>
+                </span>
+              </div>
             ) : (
-              <p className="island-dormant-door__hint" role="status">
-                Keep revealing until 3 match. Best match: {dormantDoorBestMatchCount}/3 · {Math.max(0, dormantDoorMiniGame.doors.length - dormantDoorSelectedIndices.length)} doors left.
+              <p className="island-vault-rush__status" role="status">
+                <span className="island-vault-rush__status-chip">🔦 Best match {dormantDoorBestMatchCount}/3</span>
+                <span className="island-vault-rush__status-chip">🚪 {Math.max(0, dormantDoorMiniGame.doors.length - dormantDoorSelectedIndices.length)} doors left</span>
               </p>
             )}
             <div className="island-stop-modal__actions">
               {dormantDoorReward ? (
                 <button
                   type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                  className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary island-vault-rush__claim"
                   onClick={handleClaimDormantDoorReward}
                   disabled={isDormantDoorRewardClaiming}
                 >
-                  {isDormantDoorRewardClaiming ? 'Claiming…' : 'Claim Reward'}
+                  {isDormantDoorRewardClaiming ? 'Claiming…' : `Claim +${dormantDoorReward.essence} 💰`}
                 </button>
               ) : null}
               <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={handleCloseDormantDoorMiniGame}>
-                Close
+                {dormantDoorReward ? 'Close' : 'Leave the vault'}
               </button>
             </div>
           </section>
