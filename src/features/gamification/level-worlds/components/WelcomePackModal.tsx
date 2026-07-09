@@ -2,6 +2,7 @@ import React from 'react';
 import { CREATURE_CATALOG } from '../services/creatureCatalog';
 import { CreatureCard } from './CreatureCard';
 import type { ClaimFullWelcomePackResult } from '../services/islandRunWelcomePackFullClaimAction';
+import { buildWelcomePackStarterCacheBody } from '../services/islandRunWelcomePackCopy';
 
 import { lockPageScroll } from '../../../../utils/scrollLock';
 export interface WelcomePackModalProps {
@@ -12,6 +13,7 @@ export interface WelcomePackModalProps {
   claimError?: string | null;
   claimResult?: ClaimFullWelcomePackResult | null;
   isDevPreview?: boolean;
+  displayName?: string | null;
 }
 
 type Phase = 'economy' | 'cards-intro' | 'card-reveal';
@@ -24,6 +26,7 @@ export function WelcomePackModal({
   claimError = null,
   claimResult = null,
   isDevPreview = false,
+  displayName = null,
 }: WelcomePackModalProps): React.JSX.Element | null {
   const [phase, setPhase] = React.useState<Phase>('economy');
   const [collectAnimating, setCollectAnimating] = React.useState(false);
@@ -45,6 +48,7 @@ export function WelcomePackModal({
   if (!open) return null;
 
   const resolvedCards = claimResult?.cards.revealPayload?.cards ?? [];
+  const starterCacheBody = buildWelcomePackStarterCacheBody({ displayName });
   const isAlreadyClaimed =
     claimResult?.cards.status === 'already_claimed' &&
     claimResult?.bundle.status === 'already_claimed';
@@ -73,9 +77,11 @@ export function WelcomePackModal({
       <div className="island-run-overlay-root wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title">
         <div className={`wpm-shell wpm-shell--economy${collectAnimating ? ' wpm-shell--pulse' : ''}`}>
           <p className="wpm-eyebrow">
-            {isDevPreview ? '✦ Dev Preview' : '🎉 Welcome'}
+            {isDevPreview ? '✦ Dev Preview' : 'Compass Expedition'}
           </p>
-          <h2 id="wpm-title" className="wpm-title">Welcome Pack</h2>
+          <h2 id="wpm-title" className="wpm-title">Compass Expedition Starter Cache</h2>
+
+          <p className="wpm-body">{starterCacheBody}</p>
 
           <div className="wpm-economy-tiles">
             <div className="wpm-economy-tile">
@@ -107,7 +113,7 @@ export function WelcomePackModal({
             {collectAnimating ? (
               <span className="wpm-collect-btn__spinner" aria-hidden="true" />
             ) : null}
-            {collectAnimating ? 'Collecting…' : isAlreadyClaimed ? 'View Cards' : 'Collect'}
+            {collectAnimating ? 'Collecting…' : isAlreadyClaimed ? 'View Cards' : 'Collect Starter Cache'}
           </button>
         </div>
       </div>
@@ -118,7 +124,7 @@ export function WelcomePackModal({
     return (
       <div className="island-run-overlay-root wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title-cards">
         <div className="wpm-shell wpm-shell--cards-intro wpm-shell--enter">
-          <p className="wpm-eyebrow">Starter Pack</p>
+          <p className="wpm-eyebrow">First Light Shore</p>
           <h2 id="wpm-title-cards" className="wpm-title">Your 5 Cards</h2>
 
           <div className="wpm-big-card-icon" aria-hidden="true">🃏</div>

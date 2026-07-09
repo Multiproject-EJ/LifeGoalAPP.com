@@ -296,6 +296,7 @@ import {
 import { WelcomePackModal } from './WelcomePackModal';
 import { getWelcomePackEligibility } from '../services/islandRunWelcomePackEligibility';
 import { shouldAutoShowWelcomePackModal } from '../services/islandRunWelcomePackOnboardingUi';
+import { readIslandRunGuestFunnelState } from '../services/islandRunGuestFunnelState';
 import { applyCreatureArtFallback } from './creatureArtFallback';
 import {
   rankCreatureFitsForPlayer,
@@ -2389,6 +2390,18 @@ export function IslandRunBoardPrototype({
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
   const welcomePackEligibility = useMemo(() => getWelcomePackEligibility(runtimeState), [runtimeState]);
+  const welcomePackGuestDisplayName = useMemo(() => readIslandRunGuestFunnelState().displayName ?? null, []);
+  const isHigherPriorityWelcomePackSurfaceVisible = Boolean(
+    showFirstCreaturePackModal ||
+      showStoryReader ||
+      activeStopId ||
+      activeLaunchedMinigameId ||
+      showEntryAudioModal ||
+      showEncounterModal ||
+      showClaimModal ||
+      showRewardDetailsModal ||
+      showHatcheryCompassModal
+  );
 
   useEffect(() => {
     // Wait for initial runtime hydration before evaluating welcome-pack auto-show.
@@ -2401,7 +2414,7 @@ export function IslandRunBoardPrototype({
       eligibility: welcomePackEligibility,
       hasBeenDismissedThisSession: welcomePackDismissedThisSession,
       isWelcomePackModalVisible: showWelcomePackModal,
-      isHigherPriorityOnboardingModalVisible: showFirstCreaturePackModal,
+      isHigherPriorityOnboardingModalVisible: isHigherPriorityWelcomePackSurfaceVisible,
     });
     if (!shouldShow) return;
     setWelcomePackClaimError(null);
@@ -2409,7 +2422,7 @@ export function IslandRunBoardPrototype({
     setShowWelcomePackModal(true);
   }, [
     hasHydratedRuntimeState,
-    showFirstCreaturePackModal,
+    isHigherPriorityWelcomePackSurfaceVisible,
     showWelcomePackModal,
     welcomePackDismissedThisSession,
     welcomePackEligibility,
@@ -14744,6 +14757,7 @@ export function IslandRunBoardPrototype({
           claimError={welcomePackClaimError}
           claimResult={welcomePackClaimResult}
           isDevPreview={isDevModeEnabled}
+          displayName={welcomePackGuestDisplayName}
         />
       ) : null}
 
