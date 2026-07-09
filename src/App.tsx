@@ -104,6 +104,7 @@ import {
   isIslandRunEntryDebugEnabled,
   logIslandRunEntryDebug,
 } from './features/gamification/level-worlds/services/islandRunEntryDebug';
+import { patchIslandRunGuestFunnelState } from './features/gamification/level-worlds/services/islandRunGuestFunnelState';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
 import { getTopDisplayClass } from './utils/topDisplayClass';
@@ -627,6 +628,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     signInWithPassword,
     signUpWithPassword,
     signInWithGoogle,
+    signInAnonymously,
     signOut,
   } = useSupabaseAuth();
   const { theme } = useTheme();
@@ -813,6 +815,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showLevelWorldsFromEntry, setShowLevelWorldsFromEntry] = useState(false);
   const [levelWorldsEntryPanel, setLevelWorldsEntryPanel] = useState<'default' | 'sanctuary'>('default');
   const [reopenGameBoardOverlayOnLevelWorldsClose, setReopenGameBoardOverlayOnLevelWorldsClose] = useState(false);
+  const [pendingGuestIslandRunEntry, setPendingGuestIslandRunEntry] = useState(false);
   const [shouldAutoOpenIslandRun, setShouldAutoOpenIslandRun] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return (
@@ -3621,6 +3624,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [activeSession, logIslandRunEntryDebug, shouldAutoOpenIslandRun]);
 
   useEffect(() => {
+    if (!pendingGuestIslandRunEntry || !activeSession) return;
+    setPendingGuestIslandRunEntry(false);
+    setLevelWorldsEntryPanel('default');
+    setShowLevelWorldsFromEntry(true);
+  }, [activeSession, pendingGuestIslandRunEntry]);
+
+  useEffect(() => {
     logIslandRunEntryDebug('entry_modal_state_changed', {
       showLevelWorldsFromEntry,
       hasActiveSession: Boolean(activeSession),
@@ -3741,6 +3751,29 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }, 0);
   };
 
+
+  const handlePlayFreeIslandRun = useCallback(async (payload: { displayName: string; shipName: string }) => {
+    patchIslandRunGuestFunnelState({
+      entrySource: 'landing_cta',
+      hasSeenGuestTimeline: true,
+      displayName: payload.displayName || undefined,
+      shipName: payload.shipName || undefined,
+    });
+    setPendingGuestIslandRunEntry(true);
+    try {
+      if (!supabaseSession) {
+        await signInAnonymously();
+        return;
+      }
+      setLevelWorldsEntryPanel('default');
+      setShowLevelWorldsFromEntry(true);
+    } catch (error) {
+      setPendingGuestIslandRunEntry(false);
+      setAuthError(error instanceof Error ? error.message : 'Unable to start guest play right now.');
+      throw error;
+    }
+  }, [signInAnonymously, supabaseSession]);
+
   const habitGameAuthCard = (
     <HabitGameAuthCard
       activeAuthTab={activeAuthTab}
@@ -3762,6 +3795,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       onGoogleSignIn={handleGoogleSignIn}
       onPasswordChange={setPassword}
       onTabChange={setActiveAuthTab}
+      onPlayFree={handlePlayFreeIslandRun}
     />
   );
 
@@ -3788,6 +3822,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         onGoogleSignIn={handleGoogleSignIn}
         onPasswordChange={setPassword}
         onTabChange={setActiveAuthTab}
+        onPlayFree={handlePlayFreeIslandRun}
       />
     );
   }

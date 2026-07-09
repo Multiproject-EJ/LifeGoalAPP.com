@@ -50,6 +50,23 @@ export const islandRunGuestFunnelStateTests: TestCase[] = [
       assertEqual(state.savePromptDismissals, 1, 'Expected dismissal count to persist');
     },
   },
+
+  {
+    name: 'stores free-play timeline completion and lightweight name ship customization',
+    run: () => {
+      const storage = createMemoryStorage();
+      const next = patchIslandRunGuestFunnelState({
+        entrySource: 'landing_cta',
+        hasSeenGuestTimeline: true,
+        displayName: 'Captain Ivo Jr.',
+        shipName: 'First Light Skiff',
+      }, { storage, now: 900 });
+      assertEqual(next.hasSeenGuestTimeline, true, 'Expected timeline completion to persist');
+      assertEqual(next.displayName, 'Captain Ivo Jr.', 'Expected captain name to persist');
+      assertEqual(next.shipName, 'First Light Skiff', 'Expected ship name to persist');
+      assertEqual(next.entrySource, 'landing_cta', 'Expected landing CTA source to persist');
+    },
+  },
   {
     name: 'does not store gameplay fields in guest funnel state patches',
     run: () => {

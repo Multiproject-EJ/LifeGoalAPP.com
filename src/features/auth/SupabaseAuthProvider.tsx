@@ -22,6 +22,7 @@ type AuthContextValue = {
   signUpWithPassword: (credentials: SignUpWithPasswordCredentials) => Promise<void>;
   signInWithOtp: (email: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInAnonymously: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -174,6 +175,14 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     [mode, supabase, supabaseError],
   );
 
+  const signInAnonymously = useCallback(async () => {
+    if (!supabase) {
+      throw supabaseError ?? new Error('Supabase credentials are not configured.');
+    }
+    const { error } = await supabase.auth.signInAnonymously();
+    if (error) throw ensureSupabaseAuthError(error);
+  }, [mode, supabase, supabaseError]);
+
   const signInWithGoogle = useCallback(async () => {
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
@@ -232,6 +241,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       signUpWithPassword,
       signInWithOtp,
       signInWithGoogle,
+      signInAnonymously,
       sendPasswordReset,
       signOut,
     }),
@@ -247,6 +257,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       signUpWithPassword,
       signInWithOtp,
       signInWithGoogle,
+      signInAnonymously,
       sendPasswordReset,
       signOut,
     ],
