@@ -79,10 +79,14 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
     landmarkLabel: 'Hatchery',
     landmarkIcon: '🥚',
     fallbackLines: [
-      'This egg is listening before it cracks.',
-      'Something inside is almost ready.',
-      'A quiet shell can still hold a loud little life.',
-      'No rush. Some creatures need a little more warmth.',
+      'Warmth is doing its quiet work.',
+      'Not every miracle hurries.',
+      'The shell is still closed, but the story inside is moving.',
+      'A small heartbeat is learning the dark.',
+      'The nest remembers every gentle hour.',
+      'Little claws, little dreams, still gathering strength.',
+      'The egg is quiet because it is busy becoming.',
+      'Keep the lantern low. This one likes patient light.',
     ],
   },
   habit: {
@@ -98,11 +102,16 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
     landmarkLabel: 'Habit Grove',
     landmarkIcon: '🌿',
     fallbackLines: [
-      'That streak is becoming a path.',
-      'You showed up. That matters more than perfect.',
-      'One missed step does not erase the road.',
-      'Small repeats become real strength.',
-      'Today does not need to be dramatic. Just honest.',
+      'That repeat is becoming a road.',
+      'You did not just check a box. You strengthened the path.',
+      'Small effort, honestly repeated, is how a life starts to turn.',
+      'You showed up with enough. Enough can carry a day.',
+      'The path notices steady feet, not perfect ones.',
+      'One clear repeat is a real stone in the road.',
+      'This is how change learns your name: one return at a time.',
+      'A simple habit kept honestly has weight.',
+      'You gave the day a handle. That matters.',
+      'Quiet consistency is still consistency.',
     ],
   },
   arena: {
@@ -118,9 +127,14 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
     landmarkLabel: 'Arena',
     landmarkIcon: '🏟️',
     fallbackLines: [
-      'Good work outside the island. I have brought your rewards in.',
-      'The arena received what you earned beyond the run.',
-      'Progress made elsewhere still counts here.',
+      'What you earned beyond the island has crossed the gate: {resources}.',
+      'The arena accepts real effort only. Yours has arrived: {resources}.',
+      'I counted it at the gate. {resources} now belongs to the run.',
+      'No hollow prizes pass this arch. This is yours: {resources}.',
+      'The gate opens for earned things. Enter with {resources}.',
+      'Your work came bearing proof: {resources}.',
+      'Stand tall. What you earned has arrived: {resources}.',
+      'The island ledger is clear. Earned and delivered: {resources}.',
     ],
   },
   wisdom: {
@@ -136,10 +150,20 @@ export const LANDMARK_KEEPERS: Record<LandmarkKeeperId, LandmarkKeeperDefinition
     landmarkLabel: 'Wisdom Landmark',
     landmarkIcon: '🕯️',
     fallbackLines: [
-      'Your goals are not separate islands. What you strengthen in one place changes the weather elsewhere.',
-      'Do not only ask what is urgent. Ask what keeps becoming important.',
-      'A priority is not proven by how loudly it calls, but by what you keep returning to.',
-      'Balance is not doing everything equally. It is noticing what is starting to cost too much.',
+      'A priority is not always the loudest thing. Sometimes it is the quiet thing asking to be chosen.',
+      'Balance is not equal effort everywhere. It is noticing where the cost is becoming too high.',
+      'Your habits are small doors. Your goals enter through them.',
+      'Attention is a lantern. Aim it where you want roots to grow.',
+      'A goal can guide without shouting. Let it point, then take one true step.',
+      'When everything asks for more, choose what protects the life you are building.',
+      'Tradeoffs are not failures. They are the shape of choosing.',
+      'The wheel does not need equal spokes today. It needs one honest adjustment.',
+      'Effort has a direction. Pause long enough to name it.',
+      'When one part of life keeps whispering, give it a kind moment of attention.',
+      'A smaller promise kept can steady a larger dream.',
+      'Some days wisdom is not adding more. It is making room for what matters.',
+      'Choose the next step by the life it serves, not the noise around it.',
+      'The right pace still asks for movement. The right rest still protects the journey.',
     ],
   },
 };
@@ -193,17 +217,43 @@ function buildPayload(keeperId: LandmarkKeeperId, text: string, reason: string):
 
 export function buildHatcheryWhisper(context: HatcheryWhisperContext, seed = ''): LandmarkWhisperPayload {
   const lines = context.isEggReady
-    ? ['Something inside is ready to meet the island.', 'The shell is quiet, but the moment is close.']
+    ? [
+      'The shell is thin now. Something brave is pressing toward the light.',
+      'Listen close. This one is almost ready to meet you.',
+      'A little life has learned the shape of the world from inside the shell.',
+      'The nest is holding its breath. The moment is close.',
+      'Tiny feet are testing the edge of the shell.',
+      'This egg is ready. Keep your hands gentle and your eyes open.',
+      'The last quiet before hatching is the deepest quiet.',
+      'Something bright is tapping from the inside.',
+    ]
     : context.hasActiveEgg
       ? LANDMARK_KEEPERS.hatchery.fallbackLines
-      : ['No rush. Some creatures need a little more warmth.', 'The cradle is ready when a new little life arrives.'];
+      : [
+        'The nests are quiet today. Quiet is allowed.',
+        'Bring an egg when you are ready. I will keep the warmth waiting.',
+        'An empty cradle is still a promise of care.',
+        'No shell rests here yet, but the lanterns are trimmed.',
+        'The hatchery waits softly. Little life should never be rushed.',
+      ];
   return buildPayload('hatchery', chooseLine(lines, seed), context.isEggReady ? 'egg-ready' : context.hasActiveEgg ? 'egg-warming' : 'no-egg');
 }
 
 export function buildHabitWhisper(context: HabitWhisperContext, seed = ''): LandmarkWhisperPayload {
   const lines = context.hasTodayProgress
-    ? ['That streak is becoming a path.', 'You showed up. That matters more than perfect.', 'Small repeats become real strength.']
-    : ['One missed step does not erase the road.', 'Today does not need to be dramatic. Just honest.', 'A gentle restart still counts as care.'];
+    ? LANDMARK_KEEPERS.habit.fallbackLines
+    : [
+      'One missed step does not own the road.',
+      'Come back gently. The path does not punish returners.',
+      'Do the next honest thing, not the perfect thing.',
+      'A restart is still a step with your name on it.',
+      'The road is patient when you return with care.',
+      'Begin small enough that beginning is possible.',
+      'You do not need to recover the whole week. Just meet this moment.',
+      'No drama needed. Place one foot where it can truly land.',
+      'The path is still here. Take the part you can take.',
+      'Honest effort fits in imperfect days.',
+    ];
   return buildPayload('habit', chooseLine(lines, seed), context.hasTodayProgress ? 'progress' : 'encouragement');
 }
 
@@ -225,9 +275,10 @@ export function buildArenaTransferWhisper(context: ArenaTransferContext, seed = 
     creatureTreats > 0 ? `+${creatureTreats} creature ${creatureTreats === 1 ? 'treat' : 'treats'}` : null,
     rewards > 0 ? `+${rewards} rewards` : null,
   ].filter(Boolean);
+  const resourceSummary = parts.join(', ');
   const text = parts.length > 0
-    ? `Your outside effort crossed the bridge: ${parts.join(', ')}.`
-    : chooseLine(LANDMARK_KEEPERS.arena.fallbackLines, seed);
+    ? chooseLine(LANDMARK_KEEPERS.arena.fallbackLines, seed).replace('{resources}', resourceSummary)
+    : chooseLine(LANDMARK_KEEPERS.arena.fallbackLines, seed).replace('{resources}', 'earned rewards');
   return buildPayload('arena', text, 'real-transfer');
 }
 
