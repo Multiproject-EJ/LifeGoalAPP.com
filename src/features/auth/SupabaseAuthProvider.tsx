@@ -158,6 +158,22 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (!supabase) {
         throw supabaseError ?? new Error('Supabase credentials are not configured.');
       }
+      const currentSession = (await supabase.auth.getSession()).data.session;
+      const isAnonymousUser = (currentSession?.user as { is_anonymous?: boolean } | undefined)?.is_anonymous === true;
+
+      if (isAnonymousUser) {
+        // Supabase anonymous users are upgraded in place with updateUser; this
+        // preserves session.user.id, keeping Island Run runtime rows attached.
+        const { error } = await supabase.auth.updateUser({
+          email: 'email' in credentials ? credentials.email : undefined,
+          phone: 'phone' in credentials ? credentials.phone : undefined,
+          password: credentials.password,
+          data: credentials.options?.data,
+        });
+        if (error) throw ensureSupabaseAuthError(error);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp(credentials);
       if (error) throw ensureSupabaseAuthError(error);
     },

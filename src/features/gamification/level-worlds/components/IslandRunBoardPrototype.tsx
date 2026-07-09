@@ -14884,7 +14884,7 @@ export function IslandRunBoardPrototype({
               starter cache, tiny action, event tickets, and island progress safe.
             </p>
             <p className="island-soft-save-modal__fineprint">
-              No payment. Your 7-day Pro trial starts after signup, and we’ll warn you before it ends.
+              No payment. This only saves your guest run to a free account.
             </p>
             <div className="island-soft-save-modal__actions">
               <button type="button" className="island-stop-modal__btn island-stop-modal__btn--primary" onClick={handleSaveGameForFreeFromArena}>

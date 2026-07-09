@@ -104,7 +104,8 @@ import {
   isIslandRunEntryDebugEnabled,
   logIslandRunEntryDebug,
 } from './features/gamification/level-worlds/services/islandRunEntryDebug';
-import { patchIslandRunGuestFunnelState } from './features/gamification/level-worlds/services/islandRunGuestFunnelState';
+import { patchIslandRunGuestFunnelState, readIslandRunGuestFunnelState } from './features/gamification/level-worlds/services/islandRunGuestFunnelState';
+import { claimAnonymousIslandRunGuestInPlace } from './features/gamification/level-worlds/services/islandRunGuestClaimService';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
 import { getTopDisplayClass } from './utils/topDisplayClass';
@@ -2581,6 +2582,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           setAuthError('Share your name so we can personalize your ship.');
           return;
         }
+        const pendingGuestClaim = readIslandRunGuestFunnelState().claimStatus === 'claim_pending';
         await signUpWithPassword({
           email: formEmail,
           password: formPassword,
@@ -2592,10 +2594,28 @@ export default function App({ forceAuthOnMount }: AppProps) {
             },
           },
         });
+
+        if (pendingGuestClaim && supabaseSession) {
+          const claimResult = await claimAnonymousIslandRunGuestInPlace({ session: supabaseSession });
+          if (claimResult.status === 'claimed') {
+            setAuthMessage(claimResult.savedDisplayName || claimResult.savedShipName
+              ? `Your game is saved. Your guest run is now saved to your free account. Captain ${readIslandRunGuestFunnelState().displayName ?? formFullName} and ${readIslandRunGuestFunnelState().shipName ?? 'your ship'} are ready for the next route.`
+              : 'Your game is saved. Your guest run is now saved to your free account.');
+            setShowAuthPanel(false);
+            setLevelWorldsEntryPanel('default');
+            setShowLevelWorldsFromEntry(true);
+            return;
+          }
+        }
+
         setAuthMessage('Check your email to confirm your account, then sign in to continue.');
       }
     } catch (error) {
-      setAuthError(error instanceof Error ? error.message : 'Unable to complete the request.');
+      if (readIslandRunGuestFunnelState().claimStatus === 'claim_failed') {
+        setAuthError('We couldn’t finish saving yet. Your guest game is still on this device. Try again before clearing browser data.');
+      } else {
+        setAuthError(error instanceof Error ? error.message : 'Unable to complete the request.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -5242,6 +5262,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setActiveAuthTab('signup');
     setAuthMode('signup');
     setAuthError(null);
+    const guestState = readIslandRunGuestFunnelState();
+    if (guestState.displayName) setFullName(guestState.displayName);
     setAuthMessage('Create a free account to save this guest run. No payment required.');
     setShowAuthPanel(true);
   }, []);
