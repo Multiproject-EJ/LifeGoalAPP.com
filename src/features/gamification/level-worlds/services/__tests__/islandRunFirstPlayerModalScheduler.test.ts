@@ -32,8 +32,9 @@ export const islandRunFirstPlayerModalSchedulerTests: TestCase[] = [
     run: () => {
       const unseen = guest();
       assertEqual(resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: unseen }).promptId, null, 'Expected no soft prompt before Arena condition');
-      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: unseen, isAnonymousGuest: true, islandNumber: 1, cycleIndex: 0, arenaCompletedForSoftSavePrompt: true }).promptId, 'soft_save_prompt_after_arena', 'Expected soft prompt after Arena condition');
-      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: { ...unseen, hasSeenSoftSavePromptAfterArena: true }, isAnonymousGuest: true, islandNumber: 1, cycleIndex: 0, arenaCompletedForSoftSavePrompt: true }).promptId, null, 'Expected no repeated soft prompt');
+      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: unseen, isAnonymousGuest: true, islandNumber: 1, cycleIndex: 0, arenaCompletedForSoftSavePrompt: true }).promptId, 'first_progress_recap_after_arena', 'Expected progress recap before save prompt after Arena condition');
+      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: { ...unseen, hasSeenFirstProgressRecapAfterArena: true }, isAnonymousGuest: true, islandNumber: 1, cycleIndex: 0, arenaCompletedForSoftSavePrompt: true }).promptId, 'soft_save_prompt_after_arena', 'Expected soft prompt after recap is dismissed');
+      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: { ...unseen, hasSeenFirstProgressRecapAfterArena: true, hasSeenSoftSavePromptAfterArena: true }, isAnonymousGuest: true, islandNumber: 1, cycleIndex: 0, arenaCompletedForSoftSavePrompt: true }).promptId, null, 'Expected no repeated soft prompt');
     },
   },
 

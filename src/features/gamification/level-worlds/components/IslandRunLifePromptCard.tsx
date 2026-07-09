@@ -36,7 +36,10 @@ import {
   hasSuitableRoutekeeperHabit,
   ROUTEKEEPER_SUCCESS_BODY,
   ROUTEKEEPER_SUCCESS_TITLE,
-  ROUTEKEEPER_TINY_ACTIONS,
+  ROUTEKEEPER_BODY_COPY,
+  ROUTEKEEPER_FIRST_QUESTION,
+  ROUTEKEEPER_SIGNAL_CHOICES,
+  type RoutekeeperSignalId,
   type RoutekeeperTinyAction,
 } from '../services/islandRunRoutekeeperTinyActions';
 import { getIslandContentPlan, orderAreasForIsland } from '../services/islandContentManifest';
@@ -64,7 +67,7 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [doneMessage, setDoneMessage] = useState<string | null>(null);
-  const [routekeeperAction, setRoutekeeperAction] = useState<RoutekeeperTinyAction>(ROUTEKEEPER_TINY_ACTIONS[0]);
+  const [routekeeperSignalId, setRoutekeeperSignalId] = useState<RoutekeeperSignalId>('body');
   const [routekeeperMode, setRoutekeeperMode] = useState(false);
   const [routekeeperRewardLine, setRoutekeeperRewardLine] = useState<string | null>(null);
 
@@ -181,9 +184,10 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
     setError(null);
     setRoutekeeperRewardLine(null);
 
+    const selectedSignal = ROUTEKEEPER_SIGNAL_CHOICES.find((choice) => choice.id === routekeeperSignalId) ?? ROUTEKEEPER_SIGNAL_CHOICES[0];
     const result = await createAndCompleteRoutekeeperTinyAction({
       userId: session.user.id,
-      action: routekeeperAction,
+      action: selectedSignal.action,
     });
 
     if (!result.ok || !result.habit) {
@@ -202,7 +206,9 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
       linkedHabitId: result.habit.id,
       payload: {
         outcome: 'routekeeper_tiny_action_created_and_completed',
-        action: routekeeperAction,
+        signalId: selectedSignal.id,
+        signalLabel: selectedSignal.label,
+        action: selectedSignal.action,
         completion: result.completion,
       },
     });
@@ -285,18 +291,20 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
       ) : routekeeperMode && !hasSuitableHabit ? (
         <>
           <p className="island-stop-modal__copy"><strong>Routekeeper Steps</strong></p>
-          <p className="island-stop-modal__copy">Miri only needs one tiny action to relight the route. Pick something small enough to do today.</p>
+          <p className="island-stop-modal__copy">{ROUTEKEEPER_BODY_COPY}</p>
+          <p className="island-stop-modal__copy"><strong>{ROUTEKEEPER_FIRST_QUESTION}</strong></p>
           <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem', flexDirection: 'column', alignItems: 'stretch' }}>
-            {ROUTEKEEPER_TINY_ACTIONS.map((action) => (
+            {ROUTEKEEPER_SIGNAL_CHOICES.map((choice) => (
               <button
-                key={action}
+                key={choice.id}
                 type="button"
-                className={`island-stop-modal__btn island-stop-modal__btn--action${routekeeperAction === action ? ' island-stop-modal__btn--primary' : ''}`}
-                onClick={() => setRoutekeeperAction(action)}
+                className={`island-stop-modal__btn island-stop-modal__btn--action${routekeeperSignalId === choice.id ? ' island-stop-modal__btn--primary' : ''}`}
+                onClick={() => setRoutekeeperSignalId(choice.id)}
                 disabled={isSubmitting}
                 style={{ textAlign: 'left' }}
               >
-                {action}
+                <strong>{choice.label}:</strong> {choice.body}<br />
+                <span style={{ opacity: 0.86 }}>Tiny anchor: {choice.action}</span>
               </button>
             ))}
           </div>
@@ -307,7 +315,7 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
               onClick={() => void handleCreateRoutekeeperTinyAction()}
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Relighting…' : 'Create my tiny action'}
+              {isSubmitting ? 'Relighting…' : 'Anchor this tiny action'}
             </button>
           </div>
           {doneMessage ? (

@@ -14,6 +14,7 @@ export interface IslandRunGuestFunnelStateV1 {
   shipName?: string;
   shipStyleId?: string;
   hasSeenGuestTimeline: boolean;
+  hasSeenFirstProgressRecapAfterArena: boolean;
   hasSeenSoftSavePromptAfterArena: boolean;
   hasSeenStrongSavePromptBeforeTravel: boolean;
   savePromptDismissals: number;
@@ -79,6 +80,7 @@ export function createIslandRunGuestFunnelState(options: {
     updatedAtMs: createdAtMs,
     entrySource: options.entrySource ?? 'unknown',
     hasSeenGuestTimeline: false,
+    hasSeenFirstProgressRecapAfterArena: false,
     hasSeenSoftSavePromptAfterArena: false,
     hasSeenStrongSavePromptBeforeTravel: false,
     savePromptDismissals: 0,
@@ -95,6 +97,7 @@ export function isIslandRunGuestFunnelStateV1(value: unknown): value is IslandRu
     && typeof candidate.updatedAtMs === 'number'
     && typeof candidate.entrySource === 'string'
     && typeof candidate.hasSeenGuestTimeline === 'boolean'
+    && typeof candidate.hasSeenFirstProgressRecapAfterArena === 'boolean'
     && typeof candidate.hasSeenSoftSavePromptAfterArena === 'boolean'
     && typeof candidate.hasSeenStrongSavePromptBeforeTravel === 'boolean'
     && typeof candidate.savePromptDismissals === 'number'
@@ -114,6 +117,10 @@ export function readIslandRunGuestFunnelState(options: {
     if (raw) {
       const parsed = JSON.parse(raw) as unknown;
       if (isIslandRunGuestFunnelStateV1(parsed)) return parsed;
+      if (parsed && typeof parsed === 'object' && (parsed as Record<string, unknown>).version === 1) {
+        const migrated = { ...(parsed as IslandRunGuestFunnelStateV1), hasSeenFirstProgressRecapAfterArena: false };
+        if (isIslandRunGuestFunnelStateV1(migrated)) return writeIslandRunGuestFunnelState(migrated, { storage });
+      }
     }
   } catch {
     // Corrupted JSON/storage access recovers to a fresh UI-only funnel record.
@@ -150,6 +157,15 @@ export function patchIslandRunGuestFunnelState(
     updatedAtMs: options.now ?? nowMs(),
   };
   return writeIslandRunGuestFunnelState(next, options);
+}
+
+export function markIslandRunGuestFirstProgressRecapSeen(options: {
+  storage?: Storage | null;
+  now?: number;
+} = {}): IslandRunGuestFunnelStateV1 {
+  return patchIslandRunGuestFunnelState({
+    hasSeenFirstProgressRecapAfterArena: true,
+  }, options);
 }
 
 export function markIslandRunGuestSavePromptDismissed(options: {

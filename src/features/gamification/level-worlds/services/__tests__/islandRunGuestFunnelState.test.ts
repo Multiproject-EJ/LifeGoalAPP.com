@@ -1,6 +1,7 @@
 import {
   ISLAND_RUN_GUEST_FUNNEL_STORAGE_KEY,
   createIslandRunGuestFunnelState,
+  markIslandRunGuestFirstProgressRecapSeen,
   markIslandRunGuestSavePromptDismissed,
   patchIslandRunGuestFunnelState,
   readIslandRunGuestFunnelState,
@@ -17,6 +18,7 @@ export const islandRunGuestFunnelStateTests: TestCase[] = [
       assertEqual(state.createdAtMs, 100, 'Expected stable creation timestamp');
       assertEqual(state.entrySource, 'direct_island_run', 'Expected entry source');
       assertEqual(state.claimStatus, 'guest', 'Expected new users to start as guests');
+      assertEqual(state.hasSeenFirstProgressRecapAfterArena, false, 'Expected recap to start unseen');
     },
   },
   {
@@ -44,8 +46,10 @@ export const islandRunGuestFunnelStateTests: TestCase[] = [
     run: () => {
       const storage = createMemoryStorage();
       readIslandRunGuestFunnelState({ storage, now: 500 });
+      markIslandRunGuestFirstProgressRecapSeen({ storage, now: 550 });
       markIslandRunGuestSavePromptDismissed({ prompt: 'soft_after_arena', storage, now: 600 });
       const state = readIslandRunGuestFunnelState({ storage });
+      assertEqual(state.hasSeenFirstProgressRecapAfterArena, true, 'Expected first progress recap seen flag');
       assertEqual(state.hasSeenSoftSavePromptAfterArena, true, 'Expected soft save prompt seen flag');
       assertEqual(state.savePromptDismissals, 1, 'Expected dismissal count to persist');
     },
