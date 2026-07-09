@@ -133,13 +133,11 @@ export function HabitGameAuthCard({
         {guestStep === 'timeline' ? (
           <>
             <h2 id="guest-free-play-title">Play free first. Save when you’re ready.</h2>
-            <p>You can explore Luma Isle as a guest, earn rewards, and try the first Island Run loop. When you save your game with a free account, we’ll keep your progress and start a 7-day Pro trial — no payment today.</p>
+            <p>You can explore Luma Isle as a guest, earn rewards, and try the first Island Run loop. When you save your game with a free account, we’ll keep your progress — no payment today.</p>
             <ul>
               <li>Play as a guest.</li>
               <li>Earn starter rewards.</li>
               <li>Save your game for free.</li>
-              <li>Try Pro for 7 days after signup.</li>
-              <li>We’ll warn you before the trial ends.</li>
             </ul>
             {guestError ? <p className="guest-free-play-modal__error" role="alert">{guestError}</p> : null}
             <div className="guest-free-play-modal__actions">

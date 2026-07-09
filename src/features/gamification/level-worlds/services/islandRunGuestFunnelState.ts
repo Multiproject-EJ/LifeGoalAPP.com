@@ -2,7 +2,7 @@ export const ISLAND_RUN_GUEST_FUNNEL_STATE_VERSION = 1;
 export const ISLAND_RUN_GUEST_FUNNEL_STORAGE_KEY = 'islandRunGuestFunnelState.v1';
 
 export type IslandRunGuestFunnelEntrySource = 'unknown' | 'landing_cta' | 'debug' | 'direct_island_run';
-export type IslandRunGuestFunnelClaimStatus = 'guest' | 'claim_pending' | 'claimed' | 'claim_error';
+export type IslandRunGuestFunnelClaimStatus = 'guest' | 'claim_pending' | 'claiming' | 'claimed' | 'claim_failed';
 
 export interface IslandRunGuestFunnelStateV1 {
   version: 1;
