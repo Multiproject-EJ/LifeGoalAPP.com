@@ -5237,6 +5237,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
     showLevelWorldsFromEntry && activeSession && isMobileViewport,
   );
 
+
+  const handleOpenSaveAccountSignup = useCallback(() => {
+    setActiveAuthTab('signup');
+    setAuthMode('signup');
+    setAuthError(null);
+    setAuthMessage('Create a free account to save this guest run. No payment required.');
+    setShowAuthPanel(true);
+  }, []);
+
   const levelWorldsEntryModal = showLevelWorldsFromEntry && activeSession ? (
     <div
       className={`level-worlds-entry-modal${shouldShowLevelWorldsMobileExitOverlay ? ' level-worlds-entry-modal--mobile-exit' : ''}`}
@@ -5260,6 +5269,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           initialPanel={levelWorldsEntryPanel}
           onClose={handleCloseLevelWorldsEntry}
           isAdmin={isAdmin === true}
+          onOpenSaveAccountSignup={handleOpenSaveAccountSignup}
         />
       </RecoverableErrorBoundary>
     </div>

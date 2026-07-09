@@ -14,6 +14,7 @@ interface LevelWorldsHubProps {
   initialPanel?: 'default' | 'sanctuary';
   showTopBackButton?: boolean;
   isAdmin?: boolean;
+  onOpenSaveAccountSignup?: () => void;
 }
 
 export function LevelWorldsHub({
@@ -22,6 +23,7 @@ export function LevelWorldsHub({
   initialPanel = 'default',
   showTopBackButton = false,
   isAdmin = false,
+  onOpenSaveAccountSignup,
 }: LevelWorldsHubProps) {
   const userId = session.user.id;
 
@@ -46,6 +48,7 @@ export function LevelWorldsHub({
         onExitBoard={onClose}
         showTopBackButton={showTopBackButton}
         isAdmin={isAdmin}
+        onOpenSaveAccountSignup={onOpenSaveAccountSignup}
       />
     </div>
   );

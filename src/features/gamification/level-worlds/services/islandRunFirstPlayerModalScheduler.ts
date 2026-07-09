@@ -28,6 +28,9 @@ export interface IslandRunFirstPlayerModalSchedulerInput {
   hasAmbientNarrativeDialogue?: boolean;
   hasOptionalPromotionalModal?: boolean;
   arenaCompletedForSoftSavePrompt?: boolean;
+  isAnonymousGuest?: boolean;
+  islandNumber?: number;
+  cycleIndex?: number;
   beforeMajorTravelForStrongSavePrompt?: boolean;
 }
 
@@ -60,10 +63,13 @@ export function resolveIslandRunFirstPlayerModalPrompt(
 
   const guestState = input.guestFunnelState;
   const claimed = isClaimed(guestState);
-  if (!claimed && input.beforeMajorTravelForStrongSavePrompt && !guestState?.hasSeenStrongSavePromptBeforeTravel) {
+  const isAnonymousIslandOneCycleZeroGuest = input.isAnonymousGuest === true
+    && (input.islandNumber ?? 1) === 1
+    && (input.cycleIndex ?? 0) === 0;
+  if (!claimed && input.isAnonymousGuest === true && input.beforeMajorTravelForStrongSavePrompt && !guestState?.hasSeenStrongSavePromptBeforeTravel) {
     return { promptId: 'strong_save_prompt_before_travel', reason: 'guest is before major travel and has not seen the strong save prompt' };
   }
-  if (!claimed && input.arenaCompletedForSoftSavePrompt && !guestState?.hasSeenSoftSavePromptAfterArena) {
+  if (!claimed && isAnonymousIslandOneCycleZeroGuest && input.arenaCompletedForSoftSavePrompt && !guestState?.hasSeenSoftSavePromptAfterArena) {
     return { promptId: 'soft_save_prompt_after_arena', reason: 'guest completed Arena condition and has not seen the soft save prompt' };
   }
   if (!claimed && input.isGuestNameShipCustomizationEligible && (!guestState?.displayName || !guestState?.shipName || !guestState?.shipStyleId)) {

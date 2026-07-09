@@ -73,6 +73,21 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       );
     },
   },
+
+  {
+    name: 'soft save prompt is account-save only and does not mutate gameplay',
+    run: async () => {
+      const source = await readBoardSource();
+      assert(source.includes('Save My Game for Free'), 'Soft save prompt copy should be present.');
+      assert(source.includes('No payment.'), 'Soft save prompt must explicitly avoid payment.');
+      assert(!source.includes('Become a Pro Member'), 'Soft save prompt must not show a Pro purchase CTA.');
+      assert(source.includes("markIslandRunGuestSavePromptDismissed({ prompt: 'soft_after_arena' })"), 'Secondary CTA should record dismissal in guest funnel state.');
+      assert(source.includes("claimStatus: 'claim_pending'"), 'Primary CTA should mark claim intent pending for the next claim/merge slice.');
+      const promptSection = source.slice(source.indexOf('showSoftSavePromptAfterArena ? createPortal('), source.indexOf('{showWelcomePackModal ? ('));
+      assert(!promptSection.includes('claimArenaFirstTicketBoost('), 'Soft save prompt UI should not call Arena ticket claim services.');
+      assert(!promptSection.includes('persistIslandRunRuntimeStatePatch'), 'Soft save prompt UI should not write gameplay runtime state.');
+    },
+  },
   {
     name: 'event ticket migration visibility keeps event-scoped tickets as launch authority',
     run: async () => {

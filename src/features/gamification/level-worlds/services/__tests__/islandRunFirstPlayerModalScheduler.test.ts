@@ -32,21 +32,31 @@ export const islandRunFirstPlayerModalSchedulerTests: TestCase[] = [
     run: () => {
       const unseen = guest();
       assertEqual(resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: unseen }).promptId, null, 'Expected no soft prompt before Arena condition');
-      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: unseen, arenaCompletedForSoftSavePrompt: true }).promptId, 'soft_save_prompt_after_arena', 'Expected soft prompt after Arena condition');
-      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: { ...unseen, hasSeenSoftSavePromptAfterArena: true }, arenaCompletedForSoftSavePrompt: true }).promptId, null, 'Expected no repeated soft prompt');
+      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: unseen, isAnonymousGuest: true, islandNumber: 1, cycleIndex: 0, arenaCompletedForSoftSavePrompt: true }).promptId, 'soft_save_prompt_after_arena', 'Expected soft prompt after Arena condition');
+      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: { ...unseen, hasSeenSoftSavePromptAfterArena: true }, isAnonymousGuest: true, islandNumber: 1, cycleIndex: 0, arenaCompletedForSoftSavePrompt: true }).promptId, null, 'Expected no repeated soft prompt');
+    },
+  },
+
+  {
+    name: 'soft save prompt is limited to anonymous Island 1 cycle 0 guests',
+    run: () => {
+      const base = { featureEnabled: true, guestFunnelState: guest(), arenaCompletedForSoftSavePrompt: true };
+      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ ...base, isAnonymousGuest: false, islandNumber: 1, cycleIndex: 0 }).promptId, null, 'Expected permanent users to skip soft save prompt');
+      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ ...base, isAnonymousGuest: true, islandNumber: 2, cycleIndex: 0 }).promptId, null, 'Expected non-Island 1 runs to skip soft save prompt');
+      assertEqual(resolveIslandRunFirstPlayerModalPrompt({ ...base, isAnonymousGuest: true, islandNumber: 1, cycleIndex: 1 }).promptId, null, 'Expected non-cycle-0 runs to skip soft save prompt');
     },
   },
   {
     name: 'strong save prompt outranks soft save prompt',
     run: () => {
-      const decision = resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: guest(), arenaCompletedForSoftSavePrompt: true, beforeMajorTravelForStrongSavePrompt: true });
+      const decision = resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: guest(), isAnonymousGuest: true, islandNumber: 1, cycleIndex: 0, arenaCompletedForSoftSavePrompt: true, beforeMajorTravelForStrongSavePrompt: true });
       assertEqual(decision.promptId, 'strong_save_prompt_before_travel', 'Expected strong prompt priority');
     },
   },
   {
     name: 'claimed users do not see guest save prompts',
     run: () => {
-      const decision = resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: { ...guest(), claimStatus: 'claimed', claimedUserId: 'user_1' }, arenaCompletedForSoftSavePrompt: true, beforeMajorTravelForStrongSavePrompt: true });
+      const decision = resolveIslandRunFirstPlayerModalPrompt({ featureEnabled: true, guestFunnelState: { ...guest(), claimStatus: 'claimed', claimedUserId: 'user_1' }, isAnonymousGuest: true, islandNumber: 1, cycleIndex: 0, arenaCompletedForSoftSavePrompt: true, beforeMajorTravelForStrongSavePrompt: true });
       assertEqual(decision.promptId, null, 'Expected claimed users to skip guest save prompts');
     },
   },
