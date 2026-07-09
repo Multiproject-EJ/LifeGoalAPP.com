@@ -42,6 +42,7 @@ import {
   type BillingSnapshot,
 } from '../../services/billing';
 import { fetchOwnedThemeIds, initiateThemeCheckout } from '../../services/themePurchases';
+import { runAccountLifecycleAction, type AccountLifecycleAction } from '../../services/accountLifecycle';
 import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
 
 type MyAccountPanelProps = {
@@ -147,6 +148,8 @@ export function MyAccountPanel({
   const [themeEntitlementsError, setThemeEntitlementsError] = useState<string | null>(null);
   const [themeCheckoutLoadingId, setThemeCheckoutLoadingId] = useState<Theme | null>(null);
   const [themeCheckoutError, setThemeCheckoutError] = useState<string | null>(null);
+  const [accountLifecycleAction, setAccountLifecycleAction] = useState<AccountLifecycleAction | null>(null);
+  const [accountLifecycleStatus, setAccountLifecycleStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const { state: islandRunState, hydrate: hydrateIslandRunState } = useIslandRunState(session, null);
   
   const user = session.user;
@@ -620,9 +623,41 @@ export function MyAccountPanel({
   const handleRemindersClick = () => setRemindersFolderOpen(true);
   const handleExperimentalFeaturesClick = () => setShowExperimentsModal(true);
   const handleAdvancedToolsClick = () => {
-    if (showAdminTools) {
-      setFolder1Open(true);
+    setFolder1Open(true);
+  };
+
+  const handleAccountLifecycleAction = async (action: AccountLifecycleAction) => {
+    if (isDemoExperience || accountLifecycleAction) return;
+    const confirmationWord = action === 'reset' ? 'RESET' : 'DELETE';
+    const description = action === 'reset'
+      ? 'This will delete your LifeGoal app data in Supabase and keep your email login.'
+      : 'This will permanently delete your login and your LifeGoal app data in Supabase.';
+    const typed = window.prompt(`${description} Type ${confirmationWord} to continue.`);
+    if (typed !== confirmationWord) return;
+
+    setAccountLifecycleAction(action);
+    setAccountLifecycleStatus(null);
+
+    const { data, error } = await runAccountLifecycleAction(action);
+
+    if (error) {
+      setAccountLifecycleStatus({ type: 'error', text: error.message });
+      setAccountLifecycleAction(null);
+      return;
     }
+
+    const resetSummary = action === 'reset'
+      ? `Reset complete. Removed ${data?.deletedRows ?? 0} rows across ${data?.deletedTables ?? 0} data area${data?.deletedTables === 1 ? '' : 's'}. Reloading…`
+      : 'Account deleted. Signing out…';
+    setAccountLifecycleStatus({ type: 'success', text: resetSummary });
+
+    window.setTimeout(() => {
+      if (action === 'delete') {
+        void onSignOut();
+        return;
+      }
+      window.location.reload();
+    }, 900);
   };
 
   return (
@@ -839,13 +874,11 @@ export function MyAccountPanel({
                 onClick={() => setOnboardingToolsFolderOpen(true)}
               />
             ) : null}
-            {showAdminTools ? (
-              <SettingsFeatureCard
-                icon="🔧"
-                title="Advanced"
-                onClick={handleAdvancedToolsClick}
-              />
-            ) : null}
+            <SettingsFeatureCard
+              icon="🔧"
+              title="Advanced"
+              onClick={handleAdvancedToolsClick}
+            />
             <SettingsFeatureCard
               icon="✨"
               title="Personalize"
@@ -948,35 +981,72 @@ export function MyAccountPanel({
         </section>
       </SettingsFolderPopup>
 
-      {showAdminTools ? (
-        <>
-          <SettingsFolderPopup
-            isOpen={folder1Open}
-            onClose={() => setFolder1Open(false)}
-            title="Advanced Tools"
-          >
-            <section className="account-panel__card" aria-labelledby="account-data">
-              <p className="account-panel__eyebrow">Data &amp; security</p>
-              <h3 id="account-data">Ship data</h3>
-              <p className="account-panel__hint">
-                View high-level metadata about your profile. Detailed exports are available through Supabase.
-              </p>
-              <dl className="account-panel__details">
-                <div>
-                  <dt>Member since</dt>
-                  <dd>{memberSince}</dd>
-                </div>
-                <div>
-                  <dt>Last sign-in</dt>
-                  <dd>{lastSignIn}</dd>
-                </div>
-                <div>
-                  <dt>Account ID</dt>
-                  <dd className="account-panel__code">{user.id}</dd>
-                </div>
-              </dl>
-            </section>
+      <SettingsFolderPopup
+        isOpen={folder1Open}
+        onClose={() => setFolder1Open(false)}
+        title="Advanced Settings"
+      >
+        <section className="account-panel__card" aria-labelledby="account-data">
+          <p className="account-panel__eyebrow">Data &amp; security</p>
+          <h3 id="account-data">Ship data</h3>
+          <p className="account-panel__hint">
+            View high-level metadata about your profile. Detailed exports are available through Supabase.
+          </p>
+          <dl className="account-panel__details">
+            <div>
+              <dt>Member since</dt>
+              <dd>{memberSince}</dd>
+            </div>
+            <div>
+              <dt>Last sign-in</dt>
+              <dd>{lastSignIn}</dd>
+            </div>
+            <div>
+              <dt>Account ID</dt>
+              <dd className="account-panel__code">{user.id}</dd>
+            </div>
+          </dl>
+        </section>
 
+        <section className="account-panel__card" aria-labelledby="account-danger-zone">
+          <p className="account-panel__eyebrow">Danger zone</p>
+          <h3 id="account-danger-zone">Account reset &amp; deletion</h3>
+          <p className="account-panel__hint">
+            These actions are intentionally tucked away. Reset keeps your email login and removes app data so you can start over. Delete removes your Supabase login and cascades user-owned app data. Neither action cancels an active Stripe subscription; manage billing first if needed.
+          </p>
+          {isDemoExperience ? (
+            <p className="account-panel__hint">Demo mode cannot reset or delete a Supabase account.</p>
+          ) : null}
+          <div className="account-panel__actions-row">
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={() => void handleAccountLifecycleAction('reset')}
+              disabled={isDemoExperience || accountLifecycleAction !== null}
+            >
+              {accountLifecycleAction === 'reset' ? 'Resetting…' : 'Reset account data'}
+            </button>
+            <button
+              type="button"
+              className="btn btn--danger"
+              onClick={() => void handleAccountLifecycleAction('delete')}
+              disabled={isDemoExperience || accountLifecycleAction !== null}
+            >
+              {accountLifecycleAction === 'delete' ? 'Deleting…' : 'Delete account'}
+            </button>
+          </div>
+          <p className="account-panel__hint" style={{ marginTop: '0.5rem' }}>
+            You will be asked to type {`RESET`} or {`DELETE`} before either action runs.
+          </p>
+          {accountLifecycleStatus ? (
+            <p className={`account-panel__saving-indicator account-panel__message--${accountLifecycleStatus.type}`} role={accountLifecycleStatus.type === 'error' ? 'alert' : 'status'}>
+              {accountLifecycleStatus.text}
+            </p>
+          ) : null}
+        </section>
+
+        {showAdminTools ? (
+          <>
             <section className="account-panel__card" aria-labelledby="account-cache">
               <p className="account-panel__eyebrow">PWA Tools</p>
               <h3 id="account-cache">Clear PWA asset cache</h3>
@@ -1140,9 +1210,9 @@ export function MyAccountPanel({
                 </div>
               </section>
             )}
-          </SettingsFolderPopup>
-        </>
-      ) : null}
+          </>
+        ) : null}
+      </SettingsFolderPopup>
 
       {/* Folder 2 Popup */}
       <SettingsFolderPopup
