@@ -298,6 +298,7 @@ import { WelcomePackModal } from './WelcomePackModal';
 import { getWelcomePackEligibility } from '../services/islandRunWelcomePackEligibility';
 import { shouldAutoShowWelcomePackModal } from '../services/islandRunWelcomePackOnboardingUi';
 import {
+  markIslandRunGuestFirstProgressRecapSeen,
   markIslandRunGuestSavePromptDismissed,
   patchIslandRunGuestFunnelState,
   readIslandRunGuestFunnelState,
@@ -2429,12 +2430,18 @@ export function IslandRunBoardPrototype({
     hasRewardClaimOrWelcomePackReveal: showWelcomePackModal || showClaimModal || showRewardDetailsModal || showWinCelebrationModal,
     hasActiveStopOrLandmarkModal: Boolean(activeStopId || activePlaceholder || dormantDoorMiniGame || trafficLightCoinFlip || techCollectionModal || techCompletionCelebration || showEncounterModal || showGamifiedJournalCard || showHatcheryCompassModal),
   });
+  const showFirstProgressRecapAfterArena = firstPlayerModalDecision.promptId === 'first_progress_recap_after_arena';
   const showSoftSavePromptAfterArena = firstPlayerModalDecision.promptId === 'soft_save_prompt_after_arena';
 
   useEffect(() => {
-    if (!showSoftSavePromptAfterArena || typeof document === 'undefined') return undefined;
+    if ((!showFirstProgressRecapAfterArena && !showSoftSavePromptAfterArena) || typeof document === 'undefined') return undefined;
     return lockPageScroll();
-  }, [showSoftSavePromptAfterArena]);
+  }, [showFirstProgressRecapAfterArena, showSoftSavePromptAfterArena]);
+
+  const handleContinueFirstProgressRecapAfterArena = useCallback(() => {
+    const next = markIslandRunGuestFirstProgressRecapSeen();
+    setGuestFunnelState(next);
+  }, []);
 
   const handleDismissSoftSavePromptAfterArena = useCallback(() => {
     const next = markIslandRunGuestSavePromptDismissed({ prompt: 'soft_after_arena' });
@@ -14833,6 +14840,38 @@ export function IslandRunBoardPrototype({
         />
       ) : null}
 
+
+
+      {showFirstProgressRecapAfterArena ? createPortal(
+        <div className="island-soft-save-modal island-first-progress-recap-modal" role="dialog" aria-modal="true" aria-labelledby="island-first-progress-recap-title">
+          <div className="island-soft-save-modal__backdrop" aria-hidden="true" />
+          <div className="island-soft-save-modal__dialog">
+            <p className="island-soft-save-modal__eyebrow">First Light Shore</p>
+            <h2 id="island-first-progress-recap-title">Your Compass Has Begun</h2>
+            <p>You have already opened the first route on First Light Shore.</p>
+            <ul className="island-first-progress-recap-modal__list" aria-label="First Light progress">
+              <li>✓ Captain identity formed</li>
+              <li>✓ Ship named</li>
+              <li>✓ Starter Cache collected</li>
+              <li>✓ Hatchery awakened</li>
+              <li>✓ First real-life signal chosen</li>
+              <li>✓ Routekeeper Steps relit</li>
+              <li>✓ Arena opened</li>
+              <li>✓ Event tickets gained</li>
+              <li>✓ Compass Book started</li>
+            </ul>
+            <p className="island-soft-save-modal__fineprint">
+              Your Compass Book fills as you play. Some pages unlock through island progress. Some pages unlock through the real actions you choose.
+            </p>
+            <div className="island-soft-save-modal__actions">
+              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--primary" onClick={handleContinueFirstProgressRecapAfterArena}>
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      ) : null}
 
       {showSoftSavePromptAfterArena ? createPortal(
         <div className="island-soft-save-modal" role="dialog" aria-modal="true" aria-labelledby="island-soft-save-title">

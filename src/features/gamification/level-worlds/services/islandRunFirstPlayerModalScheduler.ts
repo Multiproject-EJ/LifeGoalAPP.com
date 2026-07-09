@@ -8,6 +8,7 @@ export type IslandRunFirstPlayerPromptId =
   | 'reward_claim_welcome_pack_reveal'
   | 'active_stop_or_landmark_modal'
   | 'strong_save_prompt_before_travel'
+  | 'first_progress_recap_after_arena'
   | 'soft_save_prompt_after_arena'
   | 'guest_name_ship_customization'
   | 'guest_play_timeline_explainer'
@@ -69,8 +70,11 @@ export function resolveIslandRunFirstPlayerModalPrompt(
   if (!claimed && input.isAnonymousGuest === true && input.beforeMajorTravelForStrongSavePrompt && !guestState?.hasSeenStrongSavePromptBeforeTravel) {
     return { promptId: 'strong_save_prompt_before_travel', reason: 'guest is before major travel and has not seen the strong save prompt' };
   }
-  if (!claimed && isAnonymousIslandOneCycleZeroGuest && input.arenaCompletedForSoftSavePrompt && !guestState?.hasSeenSoftSavePromptAfterArena) {
-    return { promptId: 'soft_save_prompt_after_arena', reason: 'guest completed Arena condition and has not seen the soft save prompt' };
+  if (!claimed && isAnonymousIslandOneCycleZeroGuest && input.arenaCompletedForSoftSavePrompt && !guestState?.hasSeenFirstProgressRecapAfterArena) {
+    return { promptId: 'first_progress_recap_after_arena', reason: 'guest completed Arena condition and has not seen the first progress recap' };
+  }
+  if (!claimed && isAnonymousIslandOneCycleZeroGuest && input.arenaCompletedForSoftSavePrompt && guestState?.hasSeenFirstProgressRecapAfterArena && !guestState?.hasSeenSoftSavePromptAfterArena) {
+    return { promptId: 'soft_save_prompt_after_arena', reason: 'guest saw first progress recap and has not seen the soft save prompt' };
   }
   if (!claimed && input.isGuestNameShipCustomizationEligible && (!guestState?.displayName || !guestState?.shipName || !guestState?.shipStyleId)) {
     return { promptId: 'guest_name_ship_customization', reason: 'guest customization is eligible and incomplete' };
