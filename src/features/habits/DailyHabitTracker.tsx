@@ -200,13 +200,16 @@ import { DEMO_FEATURE_LABEL, type FeatureAvailabilityId } from '../../config/fea
 import { DailyLifeUpgradeModal } from './daily-life-upgrade/DailyLifeUpgradeModal';
 import { DailyLifeUpgradeAlternativeCreateModal } from './daily-life-upgrade/DailyLifeUpgradeAlternativeCreateModal';
 import { useDailyLifeUpgradeFlow } from './daily-life-upgrade/useDailyLifeUpgradeFlow';
-import { getTodoSwipeAction, getTodoSwipeArmedDirection, type TodoSwipeAction } from './todoSwipeHelpers';
+import { computeTodoReorderTargetIndex, getTodoSwipeAction, getTodoSwipeArmedDirection, reorderTodoIds, type TodoSwipeAction } from './todoSwipeHelpers';
 
 // Constants
 const DONE_ISH_DEFAULT_PERCENTAGE = 85;
 const HABIT_SWIPE_MAX_PX = 132;
 const HABIT_SWIPE_ARM_THRESHOLD_PX = 84;
 const HABIT_SWIPE_SUPPRESS_CLICK_MS = 260;
+// Long-press-to-reorder tuning for today todos.
+const TODO_REORDER_LONG_PRESS_MS = 360;
+const TODO_REORDER_MOVE_CANCEL_PX = 10;
 const STALE_TODO_COACH_PILL_THRESHOLD_MS = 15 * 60 * 60 * 1000;
 const STALE_TODO_COACH_CLOCK_TICK_MS = 60 * 1000;
 const HABIT_SFX_ENABLED_STORAGE_KEY = 'lifegoal.habits.sfx.enabled';
@@ -1765,11 +1768,31 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     pointerId: number;
     startX: number;
     startY: number;
+    lastY: number;
     isHorizontal: boolean;
     hasSwiped: boolean;
     armedDirection: HabitSwipeDirection | null;
   } | null>(null);
   const swipeSuppressClickUntilByTodoIdRef = useRef<Record<string, number>>({});
+  // Long-press drag-to-reorder for today todos.
+  const [todoDrag, setTodoDrag] = useState<{
+    todoId: string;
+    startIndex: number;
+    currentIndex: number;
+    translateY: number;
+    itemHeight: number;
+  } | null>(null);
+  const todoDragRef = useRef<{
+    pointerId: number;
+    todoId: string;
+    pointerStartY: number;
+    itemRects: { id: string; top: number; height: number; mid: number }[];
+    startIndex: number;
+    currentIndex: number;
+  } | null>(null);
+  const todoLongPressTimerRef = useRef<number | null>(null);
+  const todoItemElRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const todoReorderScrollBlockRef = useRef<((event: TouchEvent) => void) | null>(null);
   const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
   const [isCompactView, setIsCompactView] = useState(() =>
     Boolean(preferredCompactView ?? forceCompactView),
@@ -6701,6 +6724,113 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setExpandedTodayTodoById((current) => (current[todoId] ? {} : { [todoId]: true }));
   }, [todayTodos]);
 
+  // ── Long-press drag-to-reorder for today todos ──
+  const cancelTodoLongPress = useCallback(() => {
+    if (todoLongPressTimerRef.current !== null) {
+      window.clearTimeout(todoLongPressTimerRef.current);
+      todoLongPressTimerRef.current = null;
+    }
+  }, []);
+
+  const endTodoReorderScrollBlock = useCallback(() => {
+    if (todoReorderScrollBlockRef.current) {
+      document.removeEventListener('touchmove', todoReorderScrollBlockRef.current);
+      todoReorderScrollBlockRef.current = null;
+    }
+    if (typeof document !== 'undefined') {
+      document.body.style.removeProperty('user-select');
+    }
+  }, []);
+
+  const beginTodoReorder = useCallback((todoId: string, pointerId: number) => {
+    const activeTodos = todayTodos.filter((todo) => !todo.completed);
+    if (activeTodos.length < 2) return;
+    const rects = activeTodos.map((todo) => {
+      const el = todoItemElRefs.current[todo.id];
+      const rect = el?.getBoundingClientRect();
+      const top = rect?.top ?? 0;
+      const height = rect?.height ?? 0;
+      return { id: todo.id, top, height, mid: top + height / 2 };
+    });
+    const startIndex = rects.findIndex((rect) => rect.id === todoId);
+    if (startIndex === -1) return;
+    const gap = rects.length > 1 ? Math.max(0, rects[1].top - rects[0].top - rects[0].height) : 12;
+    const itemHeight = rects[startIndex].height + gap;
+    const pointerStartY = todoSwipeGestureRef.current?.lastY ?? rects[startIndex].mid;
+    todoDragRef.current = { pointerId, todoId, pointerStartY, itemRects: rects, startIndex, currentIndex: startIndex };
+    setTodoDrag({ todoId, startIndex, currentIndex: startIndex, translateY: 0, itemHeight });
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') navigator.vibrate(12);
+    // Block page scrolling while dragging (touch-action: pan-y would otherwise let the page scroll).
+    if (typeof document !== 'undefined') {
+      const blocker = (event: TouchEvent) => {
+        if (event.cancelable) event.preventDefault();
+      };
+      todoReorderScrollBlockRef.current = blocker;
+      document.addEventListener('touchmove', blocker, { passive: false });
+      document.body.style.userSelect = 'none';
+    }
+  }, [todayTodos]);
+
+  const handleTodoReorderMove = useCallback((clientY: number) => {
+    const drag = todoDragRef.current;
+    if (!drag) return;
+    const { itemRects, startIndex } = drag;
+    const translateY = clientY - drag.pointerStartY;
+    const target = computeTodoReorderTargetIndex({
+      pointerY: clientY,
+      startIndex,
+      midpoints: itemRects.map((rect) => rect.mid),
+    });
+    drag.currentIndex = target;
+    setTodoDrag((current) => (current ? { ...current, translateY, currentIndex: target } : current));
+  }, []);
+
+  const finishTodoReorder = useCallback(async () => {
+    const drag = todoDragRef.current;
+    todoDragRef.current = null;
+    cancelTodoLongPress();
+    endTodoReorderScrollBlock();
+    setTodoDrag(null);
+    if (!drag || drag.startIndex === drag.currentIndex) return;
+    const currentIds = todayTodos.filter((todo) => !todo.completed).map((todo) => todo.id);
+    const from = currentIds.indexOf(drag.todoId);
+    if (from === -1) return;
+    const activeIds = reorderTodoIds(currentIds, from, drag.currentIndex);
+    if (activeIds.every((id, index) => id === currentIds[index])) return;
+    const orderById = new Map(activeIds.map((id, index) => [id, index]));
+    // Optimistically apply the new order so the list does not snap back before the save resolves.
+    setTodayTodos((current) => {
+      const active = current.filter((todo) => !todo.completed);
+      const completed = current.filter((todo) => todo.completed);
+      const reordered = active
+        .map((todo) => ({ ...todo, order_index: orderById.get(todo.id) ?? todo.order_index }))
+        .sort((a, b) => a.order_index - b.order_index);
+      return [...reordered, ...completed];
+    });
+    const updates = activeIds
+      .map((id, index) => {
+        const todo = todayTodos.find((item) => item.id === id);
+        return todo && todo.order_index !== index ? updateTodayTodo(id, { order_index: index }) : null;
+      })
+      .filter((promise): promise is ReturnType<typeof updateTodayTodo> => promise !== null);
+    if (updates.length) {
+      await Promise.all(updates);
+      void loadTodayTodos(activeDate);
+    }
+  }, [activeDate, cancelTodoLongPress, endTodoReorderScrollBlock, loadTodayTodos, todayTodos]);
+
+  const cancelTodoReorder = useCallback(() => {
+    todoDragRef.current = null;
+    cancelTodoLongPress();
+    endTodoReorderScrollBlock();
+    setTodoDrag(null);
+  }, [cancelTodoLongPress, endTodoReorderScrollBlock]);
+
+  useEffect(() => () => {
+    cancelTodoLongPress();
+    endTodoReorderScrollBlock();
+  }, [cancelTodoLongPress, endTodoReorderScrollBlock]);
+
   const toggleCompletedArchive = useCallback(() => {
     setShowCompletedHabits((prev) => {
       if (prev) {
@@ -7911,8 +8041,30 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const todoSwipeArmedDirection = swipeArmedByTodoId[todo.id] ?? null;
             const todoDisplayTitle = isPrivateCompactView ? `Private todo ${todoIndex + 1}` : todo.title;
             const showCollapsedCoachPill = !isExpanded && !isPrivateCompactView && Boolean(onOpenAiCoach) && shouldShowStaleTodoCoachPill(todo, staleTodoCoachClockMs);
+            const isReorderActive = Boolean(todoDrag);
+            const isDraggingTodo = todoDrag?.todoId === todo.id;
+            let dragTranslateY = 0;
+            if (todoDrag) {
+              const { startIndex, currentIndex, itemHeight, translateY } = todoDrag;
+              if (isDraggingTodo) dragTranslateY = translateY;
+              else if (currentIndex > startIndex && todoIndex > startIndex && todoIndex <= currentIndex) dragTranslateY = -itemHeight;
+              else if (currentIndex < startIndex && todoIndex >= currentIndex && todoIndex < startIndex) dragTranslateY = itemHeight;
+            }
             return (
-              <li key={todo.id} className={`habit-checklist__item habit-checklist__item--todo ${isJustCompletedTodo ? 'habit-checklist__item--todo-completing' : ''}`.trim()}>
+              <li
+                key={todo.id}
+                ref={(el) => { todoItemElRefs.current[todo.id] = el; }}
+                className={`habit-checklist__item habit-checklist__item--todo ${isJustCompletedTodo ? 'habit-checklist__item--todo-completing' : ''} ${isDraggingTodo ? 'habit-checklist__item--todo-dragging' : ''}`.trim()}
+                style={{
+                  transform: isDraggingTodo
+                    ? `translateY(${dragTranslateY}px) scale(1.03)`
+                    : dragTranslateY
+                      ? `translateY(${dragTranslateY}px)`
+                      : undefined,
+                  transition: isDraggingTodo ? 'none' : isReorderActive ? 'transform 180ms ease' : undefined,
+                  zIndex: isDraggingTodo ? 5 : undefined,
+                }}
+              >
                 <div
                   className="habit-checklist__swipe-frame"
                   aria-hidden={isExpanded ? 'true' : undefined}
@@ -7941,16 +8093,30 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     style={{ transform: `translateX(${todoSwipeOffset}px)` }}
                     onPointerDown={(event) => {
                       if (todoSwipeGestureRef.current || isExpanded || isInteractiveHabitChild(event.target) || (event.pointerType === 'mouse' && event.button !== 0)) return;
-                      todoSwipeGestureRef.current = { todoId: todo.id, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, isHorizontal: false, hasSwiped: false, armedDirection: todoSwipeArmedDirection };
+                      todoSwipeGestureRef.current = { todoId: todo.id, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, lastY: event.clientY, isHorizontal: false, hasSwiped: false, armedDirection: todoSwipeArmedDirection };
                       event.currentTarget.setPointerCapture(event.pointerId);
+                      cancelTodoLongPress();
+                      const pointerId = event.pointerId;
+                      todoLongPressTimerRef.current = window.setTimeout(() => {
+                        todoLongPressTimerRef.current = null;
+                        beginTodoReorder(todo.id, pointerId);
+                      }, TODO_REORDER_LONG_PRESS_MS);
                     }}
                     onPointerMove={(event) => {
                       const gesture = todoSwipeGestureRef.current;
                       if (!gesture || gesture.todoId !== todo.id || gesture.pointerId !== event.pointerId || isExpanded) return;
+                      gesture.lastY = event.clientY;
+                      if (todoDragRef.current) {
+                        event.preventDefault();
+                        handleTodoReorderMove(event.clientY);
+                        return;
+                      }
                       const deltaX = event.clientX - gesture.startX;
                       const deltaY = event.clientY - gesture.startY;
                       if (!gesture.isHorizontal) {
-                        if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return;
+                        if (Math.abs(deltaX) < TODO_REORDER_MOVE_CANCEL_PX && Math.abs(deltaY) < TODO_REORDER_MOVE_CANCEL_PX) return;
+                        // Movement before the long-press timer fires means this is a swipe or scroll, not a reorder.
+                        cancelTodoLongPress();
                         if (Math.abs(deltaY) > Math.abs(deltaX)) { todoSwipeGestureRef.current = null; return; }
                         gesture.isHorizontal = true;
                       }
@@ -7970,6 +8136,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       const gesture = todoSwipeGestureRef.current;
                       if (!gesture || gesture.todoId !== todo.id || gesture.pointerId !== event.pointerId) return;
                       event.currentTarget.releasePointerCapture(event.pointerId);
+                      cancelTodoLongPress();
+                      if (todoDragRef.current) {
+                        todoSwipeGestureRef.current = null;
+                        swipeSuppressClickUntilByTodoIdRef.current[todo.id] = Date.now() + HABIT_SWIPE_SUPPRESS_CLICK_MS;
+                        void finishTodoReorder();
+                        return;
+                      }
                       todoSwipeGestureRef.current = null;
                       if (gesture.hasSwiped) swipeSuppressClickUntilByTodoIdRef.current[todo.id] = Date.now() + HABIT_SWIPE_SUPPRESS_CLICK_MS;
                       const shouldComplete = gesture.armedDirection === 'right' && todoSwipeAction === 'complete';
@@ -7977,7 +8150,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       setSwipeArmedByTodoId((current) => ({ ...current, [todo.id]: null }));
                       if (shouldComplete) void handleToggleTodayTodo(todo);
                     }}
-                    onPointerCancel={() => { todoSwipeGestureRef.current = null; setSwipeOffsetByTodoId((current) => ({ ...current, [todo.id]: 0 })); setSwipeArmedByTodoId((current) => ({ ...current, [todo.id]: null })); }}
+                    onPointerCancel={() => {
+                      cancelTodoLongPress();
+                      if (todoDragRef.current) { cancelTodoReorder(); todoSwipeGestureRef.current = null; return; }
+                      todoSwipeGestureRef.current = null;
+                      setSwipeOffsetByTodoId((current) => ({ ...current, [todo.id]: 0 }));
+                      setSwipeArmedByTodoId((current) => ({ ...current, [todo.id]: null }));
+                    }}
                   >
                     <div
                       className={`habit-checklist__row ${isExpanded ? 'habit-checklist__row--expanded' : ''}`}

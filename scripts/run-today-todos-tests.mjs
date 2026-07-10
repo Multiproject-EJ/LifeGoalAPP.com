@@ -37,6 +37,34 @@ function getTodoSwipeArmedDirection({ clampedOffsetPx, armThresholdPx, swipeActi
   return clampedOffsetPx >= armThresholdPx ? 'right' : null;
 }
 
+// Mirrors reorderTodoIds in src/features/habits/todoSwipeHelpers.ts
+function reorderTodoIds(ids, fromIndex, toIndex) {
+  if (fromIndex < 0 || fromIndex >= ids.length) return ids.slice();
+  const clampedTo = Math.max(0, Math.min(ids.length - 1, toIndex));
+  if (fromIndex === clampedTo) return ids.slice();
+  const next = ids.slice();
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(clampedTo, 0, moved);
+  return next;
+}
+
+// Mirrors computeTodoReorderTargetIndex in src/features/habits/todoSwipeHelpers.ts
+function computeTodoReorderTargetIndex({ pointerY, startIndex, midpoints }) {
+  let target = startIndex;
+  if (pointerY > (midpoints[startIndex] ?? pointerY)) {
+    for (let i = startIndex + 1; i < midpoints.length; i += 1) {
+      if (pointerY > midpoints[i]) target = i;
+      else break;
+    }
+  } else {
+    for (let i = startIndex - 1; i >= 0; i -= 1) {
+      if (pointerY < midpoints[i]) target = i;
+      else break;
+    }
+  }
+  return target;
+}
+
 const fixtures = [
   { id: 'a', todo_date: '2026-05-26', title: 'Active today', completed: false },
   { id: 'b', todo_date: '2026-05-26', title: 'Done today', completed: true },
@@ -87,5 +115,24 @@ assert.equal(
   getTodoSwipeArmedDirection({ clampedOffsetPx: 200, armThresholdPx: 84, swipeAction: null }),
   null,
 );
+
+// Drag-to-reorder: moving an item down, up, no-op, and out-of-range clamping.
+assert.deepEqual(reorderTodoIds(['a', 'b', 'c', 'd'], 0, 2), ['b', 'c', 'a', 'd']);
+assert.deepEqual(reorderTodoIds(['a', 'b', 'c', 'd'], 3, 1), ['a', 'd', 'b', 'c']);
+assert.deepEqual(reorderTodoIds(['a', 'b', 'c'], 1, 1), ['a', 'b', 'c']);
+assert.deepEqual(reorderTodoIds(['a', 'b', 'c'], 0, 99), ['b', 'c', 'a']);
+assert.deepEqual(reorderTodoIds(['a', 'b', 'c'], -1, 0), ['a', 'b', 'c']);
+
+// Reordering only touches todos, never mutating the source array order used elsewhere.
+const sourceIds = ['a', 'b', 'c'];
+reorderTodoIds(sourceIds, 0, 2);
+assert.deepEqual(sourceIds, ['a', 'b', 'c']);
+
+// Target-index resolution from pointer position vs cached row midpoints (rows at y = 100, 200, 300).
+const midpoints = [100, 200, 300];
+assert.equal(computeTodoReorderTargetIndex({ pointerY: 250, startIndex: 0, midpoints }), 1);
+assert.equal(computeTodoReorderTargetIndex({ pointerY: 320, startIndex: 0, midpoints }), 2);
+assert.equal(computeTodoReorderTargetIndex({ pointerY: 90, startIndex: 2, midpoints }), 0);
+assert.equal(computeTodoReorderTargetIndex({ pointerY: 205, startIndex: 1, midpoints }), 1);
 
 console.log('today-todos-tests: all assertions passed');
