@@ -2,89 +2,85 @@
 /* Warm wood/amber/gold aesthetic matching Lucky Roll */
 
 /* ════════════════════════════════════════════════════════════════════════════
-   BOARD TILE COLOR SYSTEM — "Cohesive & calm" (celestial sky-kingdom)
-   Single source of truth for every tile-type colour. The palette is anchored in
-   Island 001's own gemstone colours — pearl-white marble, gold, amethyst, cyan
-   and emerald — with GOLD as the unifying rim that already runs through the art.
-   Tiles are grouped by meaning so the board reads as signal, not noise:
-     • REWARD  → pearl + gold/amber, varied by SHADE. `micro` (the most common
-                 tile) is a soft pearl-marble neutral so the board stays calm and
-                 loud colour is reserved for rarer, meaningful tiles.
-     • RISK    → warm coral/ember — the only warm hues on a cool board, so danger
-                 stands out instantly (hazard, encounter).
-     • SPECIAL → the island's jewel tones: amethyst door, sapphire-gold boss,
-                 emerald light, cyan stop beacon (echoing the glowing portals).
-   Every type shares the same gradient angle, specular sheen and gold-leaning
-   border weight (see the `.island-tile--<type>` rules) — only the hue changes.
+   BOARD TILE MATERIAL SYSTEM — "premium carved slab" (island tile skins)
+   Every playable ring tile shares ONE physical material: an ivory ceramic /
+   warm carved-stone slab with a soft gold trim, subtle thickness, a carved
+   inner inset line and a top-face sheen. Tile FUNCTION is communicated by the
+   small engraved icon plus a restrained accent (faint inner tint, soft edge
+   glow) — never by repainting the whole slab, so the board reads as one
+   crafted object instead of rainbow confetti.
+
+   SKINNING: the material lives entirely in the custom properties below
+   (default = the `dawnIvory` MVP skin). A future island reskins the tile
+   material by overriding these variables on any board ancestor (see the
+   `.island-tile-skin--*` demo classes) WITHOUT touching tile-function logic.
+   Function accents (--tile-*-accent) should stay recognisable across skins so
+   players can learn the board once.
    ════════════════════════════════════════════════════════════════════════════ */
 :root {
-  /* Shared material: top-left specular highlight applied to every tile */
+  /* ── Slab material (dawnIvory: ivory ceramic, warm gold trim) ── */
+  --tile-base:      #f8f1e2;                    /* top-face ivory ceramic */
+  --tile-base-2:    #e2d2b2;                    /* lower body — warm carved-stone shade */
+  --tile-trim:      #c9a250;                    /* gold bezel / trim core */
+  --tile-trim-soft: rgba(214, 178, 106, 0.65);  /* softer trim for borders & hairlines */
+  --tile-side:      #8a5f28;                    /* extruded thickness band */
+  --tile-shadow:    rgba(22, 12, 3, 0.44);      /* ground contact-shadow ink */
+  --tile-inset:     rgba(186, 145, 66, 0.55);   /* fine gold pinstripe inset line */
+  --tile-shine:     rgba(255, 255, 250, 0.72);  /* top-left specular sheen */
+  --tile-ink:       #4a3618;                    /* engraved icon / number ink */
+
+  /* ── State glows ── */
+  --tile-current-glow: rgba(96, 216, 224, 0.9); /* teal "you are here" */
+  --tile-door-glow:    rgba(178, 148, 216, 0.5);/* generic landmark-door aura */
+
+  /* ── Function accents (consistent across island skins) ── */
+  --tile-risk-accent:      #c05a43;  /* hazard — warning, not horror */
+  --tile-reward-accent:    #d3a044;  /* currency / chest gold */
+  --tile-mystery-accent:   #8f6cc9;  /* card / mystery purple */
+  --tile-growth-accent:    #4e9d6a;  /* traffic-light green / habit */
+  --tile-workshop-accent:  #6f9a5f;  /* build discount — workshop green/copper */
+  --tile-ticket-accent:    #dd9440;  /* free ticket — warm orange/gold */
+  --tile-encounter-accent: #d97b3f;  /* encounter — controlled ember orange */
+
+  /* Legacy: shared specular + the cyan stop-beacon family (external stop
+     tiles only — the 36-tile ring has no `stop` tile type). */
   --tile-spec: rgba(255, 255, 255, 0.5);
-
-  /* ── Reward family (pearl + gold, low–mid saturation) ── */
-  --tile-micro-light: #fbf6ec;   /* majority tile → soft pearl marble */
-  --tile-micro-mid:   #ece2cc;
-  --tile-micro-deep:  #cdbd97;
-  --tile-micro-border:#f3ead4;
-
-  --tile-currency-light: #ffeeb0; /* gold, calm not neon */
-  --tile-currency-mid:   #f4d076;
-  --tile-currency-deep:  #cda23d;
-  --tile-currency-border:#f3dd9a;
-
-  --tile-chest-light: #f0d2a6;    /* bronze / treasure */
-  --tile-chest-mid:   #cf9a5e;
-  --tile-chest-deep:  #97662f;
-  --tile-chest-border:#e3bd8a;
-
-  --tile-egg_shard-light: #e6eff7; /* pale sky-pearl (matches the dragon egg) */
-  --tile-egg_shard-mid:   #b6d2e6;
-  --tile-egg_shard-deep:  #7ba6c4;
-  --tile-egg_shard-border:#d6e6f3;
-
-  /* `event` (legacy) folds into the warm reward family */
-  --tile-event-light: #ffeebd;
-  --tile-event-mid:   #f2cf6d;
-  --tile-event-deep:  #c79c2f;
-  --tile-event-border:#f0db96;
-
-  /* ── Risk family (red/orange — reserved for danger) ── */
-  --tile-hazard-light: #f3b0a0;
-  --tile-hazard-mid:   #d76a52;
-  --tile-hazard-deep:  #a5392a;
-  --tile-hazard-border:#e89684;
-  --tile-hazard-glow:  rgba(199, 80, 55, 0.42);
-
-  --tile-encounter-light: #f6c08a;
-  --tile-encounter-mid:   #e07f3e;
-  --tile-encounter-deep:  #ad511c;
-  --tile-encounter-border:#eea766;
-  --tile-encounter-glow:  rgba(214, 110, 40, 0.5);
-
-  /* ── Special / progress family (cool jewel tones) ── */
-  --tile-door-light: #e7d6f5;     /* landmark door → calm amethyst */
-  --tile-door-mid:   #b694d8;
-  --tile-door-deep:  #7a52a8;
-  --tile-door-border:rgba(231, 214, 245, 0.95);
-  --tile-door-glow:  rgba(150, 110, 210, 0.55);
-
-  --tile-boss-light: #fdeab8;     /* boss door → regal gold, stronger glow */
-  --tile-boss-mid:   #e7b54e;
-  --tile-boss-deep:  #9c6a1f;
-  --tile-boss-border:rgba(255, 243, 200, 0.97);
-  --tile-boss-glow:  rgba(231, 181, 78, 0.62);
-
-  --tile-light-light: #c6ecd4;    /* traffic light (green) → emerald */
-  --tile-light-mid:   #5fb985;
-  --tile-light-deep:  #2f7a52;
-  --tile-light-border:rgba(194, 234, 208, 0.95);
-  --tile-light-glow:  rgba(70, 175, 120, 0.55);
-
-  --tile-stop-light: #d2eff3;     /* stop → teal beacon (matches token + icon) */
+  --tile-stop-light: #d2eff3;
   --tile-stop-mid:   #5fc6d6;
   --tile-stop-deep:  #2a8499;
   --tile-stop-border:rgba(205, 238, 242, 0.96);
   --tile-stop-glow:  rgba(80, 200, 220, 0.55);
+}
+
+/* ── Demo island tile skins ─────────────────────────────────────────────────
+   Apply on the board root (e.g. alongside `.island-run-board`) to reskin the
+   slab material. Function accents intentionally stay inherited. Future skins
+   (lavaBasalt, spaceCeramic, …) follow the same pattern. */
+.island-tile-skin--forest-moss {
+  --tile-base:      #e7ead3;                    /* mossy limestone */
+  --tile-base-2:    #b9c49a;
+  --tile-trim:      #a08b4a;                    /* muted brass */
+  --tile-trim-soft: rgba(160, 139, 74, 0.6);
+  --tile-side:      #5c6437;
+  --tile-shadow:    rgba(14, 18, 8, 0.46);
+  --tile-inset:     rgba(90, 102, 54, 0.42);    /* green ambient seams */
+  --tile-shine:     rgba(250, 255, 240, 0.6);
+  --tile-ink:       #3c4322;
+  --tile-current-glow: rgba(126, 214, 150, 0.85);
+  --tile-door-glow:    rgba(150, 190, 120, 0.5);
+}
+.island-tile-skin--moon-glass {
+  --tile-base:      #eef0f6;                    /* pale moonstone */
+  --tile-base-2:    #c8cde0;
+  --tile-trim:      #a8afc4;                    /* silver trim */
+  --tile-trim-soft: rgba(176, 184, 206, 0.65);
+  --tile-side:      #5d6479;
+  --tile-shadow:    rgba(10, 12, 22, 0.46);
+  --tile-inset:     rgba(104, 112, 140, 0.4);
+  --tile-shine:     rgba(255, 255, 255, 0.78);
+  --tile-ink:       #3a3f52;
+  --tile-current-glow: rgba(196, 176, 255, 0.85); /* lavender glow */
+  --tile-door-glow:    rgba(186, 168, 240, 0.5);
 }
 
 
@@ -3859,7 +3855,7 @@
   width: 52px;
   height: 52px;
   --tile-thickness: 5px;
-  color: #261605;
+  color: var(--tile-ink);
   font-weight: 850;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.62);
   /* Smooth state changes on the whole unit (completed-encounter mute, …) */
@@ -3875,7 +3871,7 @@
   transform: translateX(-50%);
   transform-origin: 50% 40%;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(22, 12, 3, 0.44) 0%, rgba(22, 12, 3, 0.26) 52%, rgba(22, 12, 3, 0) 74%);
+  background: radial-gradient(ellipse at center, var(--tile-shadow) 0%, color-mix(in srgb, var(--tile-shadow) 58%, transparent) 52%, transparent 74%);
   pointer-events: none;
   z-index: 0;
 }
@@ -3885,9 +3881,12 @@
   inset: 0;
   transform: translateY(var(--tile-thickness));
   border-radius: 50%;
-  /* Earthen stone edge — darker than any face material so the band reads as
-     an occluded vertical surface under the top-left key light. */
-  background: linear-gradient(180deg, #9a6a2d 0%, #6e4517 48%, #45280b 100%);
+  /* Skin-driven stone edge — darker than the face material so the band reads
+     as an occluded vertical surface under the top-left key light. */
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--tile-side) 76%, #fff) 0%,
+    var(--tile-side) 48%,
+    color-mix(in srgb, var(--tile-side) 44%, #000) 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -3897,15 +3896,25 @@
   inset: 0;
   z-index: 2;
   border-radius: 50%;
+  /* Neutral carved-slab material shared by EVERY ring tile (see the BOARD
+     TILE MATERIAL SYSTEM block): low-noise ceramic grain, top-left sheen,
+     bottom-edge occlusion, ivory body. Tile types must NOT repaint this —
+     function is carried by the small icon + restrained accents. */
   background:
-    radial-gradient(circle at 32% 20%, rgba(255, 255, 250, 0.72) 0%, rgba(255, 255, 255, 0) 44%),
-    radial-gradient(circle at 68% 88%, rgba(139, 87, 32, 0.5) 0%, rgba(139, 87, 32, 0) 52%),
-    radial-gradient(circle at 30% 24%, rgba(255, 246, 212, 0.98), rgba(226, 172, 94, 0.98) 62%, rgba(188, 133, 62, 0.96));
-  border: 2px solid rgba(255, 248, 214, 0.95);
-  box-shadow:
-    inset 0 2px 1px rgba(255, 255, 255, 0.62),
-    inset 0 -3px 6px rgba(94, 54, 12, 0.28),
-    inset 0 0 12px rgba(255, 222, 148, 0.26);
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0.42 0 0 0 0 0.33 0 0 0 0 0.18 0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
+    radial-gradient(circle at 32% 20%, var(--tile-shine) 0%, rgba(255, 255, 255, 0) 44%),
+    radial-gradient(circle at 68% 88%, color-mix(in srgb, var(--tile-side) 42%, transparent) 0%, transparent 52%),
+    linear-gradient(160deg, color-mix(in srgb, var(--tile-base) 86%, #fff) 0%, var(--tile-base) 46%, var(--tile-base-2) 100%);
+  border: 2px solid var(--tile-trim-soft);
+  /* Material shading + milled bevel merged in one stack so restrained
+     per-type/state accents can extend it via --tile-face-shadow. */
+  --tile-face-shadow:
+    inset 0 2px 1px rgba(255, 255, 255, 0.6),
+    inset 1px 0 1px rgba(255, 255, 255, 0.2),
+    inset 0 -3px 6px color-mix(in srgb, var(--tile-side) 34%, transparent),
+    inset -1px 0 1px color-mix(in srgb, var(--tile-side) 16%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--tile-trim) 20%, transparent);
+  box-shadow: var(--tile-face-shadow);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3914,19 +3923,15 @@
   transition: box-shadow 300ms ease, filter 300ms ease, border-color 300ms ease;
 }
 
-/* Uniform bevel under the single scene light — bright milled top edge, shaded
-   bottom edge — applied above every face material (including the tile-type
-   backgrounds that override the base box-shadow). */
+/* Carved inner inset line — a fine engraved ring a few px inside the trim,
+   with a hairline light catch below it so it reads as incised stone. */
 .island-tile__face::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: 4px;
   border-radius: inherit;
-  box-shadow:
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.5),
-    inset 1px 0 1px rgba(255, 255, 255, 0.18),
-    inset 0 -2.5px 3px rgba(30, 16, 4, 0.34),
-    inset -1px 0 1px rgba(30, 16, 4, 0.12);
+  border: 1px solid var(--tile-inset);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
   pointer-events: none;
   z-index: 1;
 }
@@ -3938,7 +3943,7 @@
    a --tile-bezel-wide frame. Lit top-left (bright) → bottom-right (deep) to
    match the scene light. */
 .island-tile__face {
-  --tile-bezel: 2.8px;
+  --tile-bezel: 2.2px;
 }
 /* Guarded so browsers without mask-composite fall back to the plain tile face
    instead of a solid gold rectangle covering the content. */
@@ -3949,17 +3954,18 @@
     inset: 0;
     border-radius: inherit;
     padding: var(--tile-bezel);
-    /* Higher-contrast gold with a crisp highlight band and a deep shadow band so
-       the frame shimmers like machined metal rather than a flat gold line. */
+    /* Skin-trim metal with a crisp highlight band and a deep shadow band so
+       the frame shimmers like machined metal rather than a flat line. All
+       stops derive from --tile-trim so island skins re-tint the bezel. */
     background: linear-gradient(146deg,
-      #fffdf0 0%,
-      #ffe7a0 12%,
-      #d3a848 30%,
-      #6f4f1e 49%,
-      #4a3413 56%,
-      #c99b45 74%,
-      #ffeaa6 88%,
-      #7a561f 100%);
+      color-mix(in srgb, var(--tile-trim) 10%, #fffdf4) 0%,
+      color-mix(in srgb, var(--tile-trim) 42%, #fff) 12%,
+      var(--tile-trim) 30%,
+      color-mix(in srgb, var(--tile-trim) 52%, #1d1206) 49%,
+      color-mix(in srgb, var(--tile-trim) 34%, #140d05) 56%,
+      color-mix(in srgb, var(--tile-trim) 96%, #fff) 74%,
+      color-mix(in srgb, var(--tile-trim) 38%, #fff) 88%,
+      color-mix(in srgb, var(--tile-trim) 58%, #1d1206) 100%);
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
@@ -3996,12 +4002,26 @@
   transform-origin: center center;
 }
 
+/* Function glyph sizing — icons stay small but readable at iPhone scale
+   (concept target ≈ ⅓ of the slab face). Overrides the SVGs' width/height
+   presentation attributes from one place. */
+.island-tile__value svg {
+  width: 16px;
+  height: 16px;
+}
+.island-run-board--spark40 .island-tile__value svg {
+  width: 19px;
+  height: 19px;
+}
+
 .island-tile__value {
   font-size: 1rem;
   line-height: 1;
-  color: #1f1205;
+  color: var(--tile-ink);
   text-shadow: 0 1px 0 rgba(255, 248, 222, 0.88), 0 0 1px rgba(0, 0, 0, 0.22);
-  filter: drop-shadow(0 1.5px 1.5px rgba(52, 28, 4, 0.35));
+  /* Engraved-inlay read: a soft drop under the glyph + a hint of light below. */
+  filter: drop-shadow(0 1px 1px rgba(52, 28, 4, 0.3)) drop-shadow(0 -0.5px 0.5px rgba(255, 255, 255, 0.28));
+  z-index: 2;
 }
 
 .island-tile__anchor-id {
@@ -4028,9 +4048,6 @@
 .island-tile--stop .island-tile__side {
   background: var(--tile-stop-deep);
   background: linear-gradient(180deg, color-mix(in srgb, var(--tile-stop-deep) 72%, #000) 0%, color-mix(in srgb, var(--tile-stop-deep) 40%, #000) 100%);
-}
-.island-tile--encounter .island-tile__face {
-  animation: island-tile-encounter-flicker 2.4s ease-in-out infinite;
 }
 
 .island-token {
@@ -5998,95 +6015,151 @@
   animation: islandTokenLand 0.48s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
-/* B2-2: Tile type classes — token-driven palette with one shared material.
-   Every tile uses the same 160° gradient + a top-left specular sheen
-   (--tile-spec) and a gold-leaning border, so the board reads as a cohesive
-   set of jewels rather than a clash of hues. Only the colour family changes.
-   See the BOARD TILE COLOR SYSTEM token block at the top of this file. */
+/* B2-2: Tile type classes — every ring tile keeps the SAME neutral carved
+   slab (see .island-tile__face). Function is signalled by the small engraved
+   icon plus, at most, a faint accent tint inside the slab or a restrained
+   edge glow. Accents extend --tile-face-shadow so the material shading never
+   disappears. See the BOARD TILE MATERIAL SYSTEM block at the top of file. */
+
+/* micro — quietest, most common tile: pure neutral slab, icon only. */
+
+/* currency — whisper of gold warmth low in the slab. */
 .island-tile--currency .island-tile__face {
-  background:
-    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, var(--tile-currency-light) 0%, var(--tile-currency-mid) 52%, var(--tile-currency-deep) 100%);
-  border: 1.5px solid var(--tile-currency-border);
+  box-shadow:
+    var(--tile-face-shadow),
+    inset 0 -4px 10px color-mix(in srgb, var(--tile-reward-accent) 16%, transparent);
 }
+
+/* chest — slightly richer gold pooling than currency (more valuable, not loud). */
 .island-tile--chest .island-tile__face {
-  background:
-    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, var(--tile-chest-light) 0%, var(--tile-chest-mid) 52%, var(--tile-chest-deep) 100%);
-  border: 1.5px solid var(--tile-chest-border);
+  box-shadow:
+    var(--tile-face-shadow),
+    inset 0 0 12px color-mix(in srgb, var(--tile-reward-accent) 22%, transparent);
 }
-.island-tile--event .island-tile__face {
-  background:
-    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, var(--tile-event-light) 0%, var(--tile-event-mid) 52%, var(--tile-event-deep) 100%);
-  border: 1.5px solid var(--tile-event-border);
-}
+
+/* hazard — risky, not scary: a faint ember seep along the bottom edge plus a
+   thin risk-tinted trim. The small warning-triangle icon carries the message. */
 .island-tile--hazard .island-tile__face {
-  background:
-    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, var(--tile-hazard-light) 0%, var(--tile-hazard-mid) 52%, var(--tile-hazard-deep) 100%);
-  border: 1.5px solid var(--tile-hazard-border);
-  box-shadow: 0 0 8px var(--tile-hazard-glow);
+  border-color: color-mix(in srgb, var(--tile-risk-accent) 34%, var(--tile-trim-soft));
+  box-shadow:
+    var(--tile-face-shadow),
+    inset 0 -4px 9px color-mix(in srgb, var(--tile-risk-accent) 22%, transparent);
 }
-.island-tile--hazard .island-tile__side {
-  background: var(--tile-hazard-deep);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--tile-hazard-deep) 70%, #000) 0%, color-mix(in srgb, var(--tile-hazard-deep) 40%, #000) 100%);
-}
-.island-tile--egg_shard .island-tile__face {
-  background:
-    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, var(--tile-egg_shard-light) 0%, var(--tile-egg_shard-mid) 52%, var(--tile-egg_shard-deep) 100%);
-  border: 1.5px solid var(--tile-egg_shard-border);
-}
-.island-tile--micro .island-tile__face {
-  background:
-    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, var(--tile-micro-light) 0%, var(--tile-micro-mid) 52%, var(--tile-micro-deep) 100%);
-  border: 1.5px solid var(--tile-micro-border);
-}
+
+/* encounter — controlled ember energy; the soft swell lives on the aura layer. */
 .island-tile--encounter .island-tile__face {
-  background:
-    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, var(--tile-encounter-light) 0%, var(--tile-encounter-mid) 52%, var(--tile-encounter-deep) 100%);
-  border: 1.5px solid var(--tile-encounter-border);
-  box-shadow: 0 0 10px var(--tile-encounter-glow);
+  border-color: color-mix(in srgb, var(--tile-encounter-accent) 30%, var(--tile-trim-soft));
+  box-shadow:
+    var(--tile-face-shadow),
+    inset 0 -4px 9px color-mix(in srgb, var(--tile-encounter-accent) 18%, transparent);
 }
+
+/* card — calm magic: faint amethyst pooling in the slab. */
+.island-tile--card .island-tile__face {
+  border-color: color-mix(in srgb, var(--tile-mystery-accent) 26%, var(--tile-trim-soft));
+  box-shadow:
+    var(--tile-face-shadow),
+    inset 0 0 12px color-mix(in srgb, var(--tile-mystery-accent) 18%, transparent);
+}
+
+/* build_discount — useful workshop bonus: quiet green/copper seep. */
+.island-tile--build_discount .island-tile__face {
+  box-shadow:
+    var(--tile-face-shadow),
+    inset 0 -4px 10px color-mix(in srgb, var(--tile-workshop-accent) 20%, transparent);
+}
+
+/* free_ticket — restrained warm event-entry accent. */
+.island-tile--free_ticket .island-tile__face {
+  box-shadow:
+    var(--tile-face-shadow),
+    inset 0 -4px 10px color-mix(in srgb, var(--tile-ticket-accent) 20%, transparent);
+}
+
+/* landmark_door — the most important ring family: same slab, framed by a
+   brighter trim + a soft per-door aura (--door-accent set below) so doors
+   feel important without overpowering the board. */
 .island-tile--landmark_door .island-tile__face {
-  background:
-    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, var(--tile-door-light) 0%, var(--tile-door-mid) 52%, var(--tile-door-deep) 100%);
-  border: 1.5px solid var(--tile-door-border);
-  box-shadow: 0 0 12px var(--tile-door-glow), 0 0 22px var(--tile-door-glow);
+  border-color: color-mix(in srgb, var(--door-accent, var(--tile-mystery-accent)) 30%, var(--tile-trim));
 }
-.island-tile--landmark_door .island-tile__side {
-  background: var(--tile-door-deep);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--tile-door-deep) 70%, #000) 0%, color-mix(in srgb, var(--tile-door-deep) 40%, #000) 100%);
-}
+.island-tile--door-hatchery { --door-accent: #d9b96a; } /* pearl / egg gold */
+.island-tile--door-habit    { --door-accent: var(--tile-growth-accent); }
+.island-tile--door-mystery  { --door-accent: var(--tile-mystery-accent); }
+.island-tile--door-wisdom   { --door-accent: #3f9ea8; } /* teal / owl */
+.island-tile--door-boss     { --door-accent: #b4552e; } /* bronze-red */
+
+/* boss door — dramatic but premium: the slab stays ivory (per the art
+   direction); drama comes from a bronze-red trim, a slightly deeper body
+   shade and a restrained ember aura (no horror red, no dark flood). */
 .island-tile--door-boss .island-tile__face {
   background:
-    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, var(--tile-boss-light) 0%, var(--tile-boss-mid) 52%, var(--tile-boss-deep) 100%);
-  border-color: var(--tile-boss-border);
-  box-shadow: 0 0 14px var(--tile-boss-glow), 0 0 28px var(--tile-boss-glow);
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0.42 0 0 0 0 0.33 0 0 0 0 0.18 0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
+    radial-gradient(circle at 32% 20%, var(--tile-shine) 0%, rgba(255, 255, 255, 0) 44%),
+    linear-gradient(160deg, color-mix(in srgb, var(--tile-base) 92%, #b4552e) 0%, color-mix(in srgb, var(--tile-base) 82%, #b4552e) 46%, color-mix(in srgb, var(--tile-base-2) 84%, #8f3526) 100%);
+  border-color: color-mix(in srgb, var(--door-accent) 60%, var(--tile-trim));
+  box-shadow:
+    var(--tile-face-shadow),
+    0 0 12px color-mix(in srgb, var(--door-accent) 45%, transparent);
 }
 .island-tile--door-boss .island-tile__side {
-  background: var(--tile-boss-deep);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--tile-boss-deep) 70%, #000) 0%, color-mix(in srgb, var(--tile-boss-deep) 40%, #000) 100%);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--tile-side) 74%, #8f3526) 0%,
+    color-mix(in srgb, var(--tile-side) 60%, #4a1d12) 48%,
+    color-mix(in srgb, var(--tile-side) 36%, #000) 100%);
 }
+
+/* active door cluster — soft inviting pulse on the neutral slab (the aura
+   breathes; the slab itself never floods with colour). */
 .island-tile--active-door-cluster {
   z-index: 8;
 }
 .island-tile--active-door-cluster .island-tile__face {
-  background: linear-gradient(160deg, #dcfce7 0%, #86efac 44%, #16a34a 100%);
-  border-color: rgba(187, 247, 208, 0.98);
-  box-shadow:
-    0 0 0 2px rgba(220, 252, 231, 0.8),
-    0 0 18px rgba(34, 197, 94, 0.95),
-    0 0 36px rgba(22, 163, 74, 0.62);
-  animation: island-tile-active-door-glow 1.4s ease-in-out infinite;
+  border-color: color-mix(in srgb, var(--door-accent, var(--tile-growth-accent)) 55%, #fff);
 }
-.island-tile--active-door-cluster .island-tile__side {
-  background: linear-gradient(180deg, #14532d 0%, #052e16 100%);
+
+/* ── Unclipped aura layer ───────────────────────────────────────────────────
+   Outer glows can NOT live on the face: the spark40 wedge clip-path clips the
+   face's box-shadows away. States that need a halo paint it on the tile
+   root's ::after instead, which is never clipped (the upcoming highlight
+   already uses the root's ::before the same way). */
+.island-tile--landmark_door::after,
+.island-tile--encounter::after,
+.island-tile--traffic_light-green::after,
+.island-tile--token-current::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 3;
+}
+.island-tile--landmark_door::after {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--door-accent, var(--tile-mystery-accent)) 55%, transparent);
+  animation: island-tile-aura-breathe 1.65s ease-in-out infinite;
+  animation-delay: calc(var(--tile-index, 0) * 0.045s);
+}
+.island-tile--encounter::after {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--tile-encounter-accent) 42%, transparent);
+  animation: island-tile-aura-breathe 2.4s ease-in-out infinite;
+}
+.island-tile--encounter-completed::after {
+  content: none;
+}
+.island-tile--traffic_light-green::after {
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--tile-growth-accent) 40%, transparent),
+    0 0 12px color-mix(in srgb, var(--tile-growth-accent) 55%, transparent);
+}
+.island-tile--active-door-cluster::after {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--door-accent, var(--tile-growth-accent)) 45%, #fff),
+    0 0 16px color-mix(in srgb, var(--door-accent, var(--tile-growth-accent)) 65%, transparent);
+  animation: island-tile-aura-breathe 1.25s ease-in-out infinite;
+}
+
+@keyframes island-tile-aura-breathe {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 1; }
 }
 
 
@@ -6234,7 +6307,9 @@
 /* ─── M6-COMPLETE: Encounter tile — completed visual state ──────────────────── */
 
 .island-tile--encounter-completed {
-  filter: saturate(0.3) brightness(0.8) !important;
+  /* Calm resolved state: the slab stays ivory, only the ember accents and
+     flicker switch off; the engraved check carries "done". */
+  filter: saturate(0.75) brightness(0.97) !important;
   animation: none !important;
 }
 .island-tile--encounter-completed .island-tile__face {
@@ -8829,21 +8904,22 @@
   100% { left: 180%; }
 }
 
-/* Tile number badge */
+/* Tile number badge — a small engraved corner mark rather than a dark UI chip. */
 .island-tile__badge {
   position: absolute;
   top: -3px;
   right: -3px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
+  background: color-mix(in srgb, var(--tile-side) 62%, transparent);
+  color: color-mix(in srgb, var(--tile-base) 92%, #fff);
   font-size: 0.45rem;
   font-weight: 700;
   line-height: 1;
   padding: 1.5px 3px;
   border-radius: 4px;
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.28);
   pointer-events: none;
   z-index: 2;
-  opacity: 0.8;
+  opacity: 0.75;
 }
 /* Tile number badge — smaller on ring board but visible since tiles are bigger now */
 .island-run-board--spark40 .island-tile__badge {
@@ -8851,44 +8927,37 @@
   padding: 1px 2px;
 }
 
-/* Completed encounter badge */
-.island-tile__completed-badge {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  color: rgba(255,255,255,0.9);
-  text-shadow: 0 0 4px rgba(0,0,0,0.8);
-  pointer-events: none;
-  z-index: 3;
-}
+/* Completed encounters render a calm engraved check as the tile icon itself
+   (see COMPLETED_CHECK_ICON in BoardTile.tsx) plus the muted-slab filter on
+   .island-tile--encounter-completed — no separate overlay badge. */
 
-/* Upcoming tiles — subtle glow to show where token will land */
+/* Upcoming tiles — a subtle warm edge highlight only (no aggressive glow):
+   the trim brightens as if catching lamplight along the path ahead. */
 .island-tile--upcoming .island-tile__face {
-  box-shadow: 0 0 0 2px rgba(180, 240, 255, 0.7), 0 0 12px rgba(100, 200, 255, 0.5) !important;
+  border-color: color-mix(in srgb, var(--tile-trim) 55%, #fff);
+  box-shadow:
+    var(--tile-face-shadow),
+    0 0 0 1.5px color-mix(in srgb, var(--tile-trim) 45%, transparent),
+    0 0 8px color-mix(in srgb, var(--tile-trim) 35%, transparent) !important;
 }
 
-/* Soft expanding ping on upcoming tiles — pseudo-element on the (unclipped)
-   root so it never fights the tile's own transform-driven idle/enter
-   animations and can ring outside the wedge silhouette. */
+/* Gentle breathing on the warm edge — pseudo-element on the (unclipped) root
+   so it never fights the tile's own transform-driven idle/enter animations. */
 .island-tile--upcoming::before {
   content: '';
   position: absolute;
-  inset: -2px;
+  inset: -1px;
   border-radius: 12px;
-  border: 2px solid rgba(160, 235, 255, 0.85);
+  border: 1.5px solid color-mix(in srgb, var(--tile-trim) 70%, #fff);
   pointer-events: none;
   z-index: 3;
-  animation: island-tile-upcoming-ping 1.7s ease-out infinite;
+  animation: island-tile-upcoming-breathe 2.2s ease-in-out infinite;
   animation-delay: calc(var(--tile-index, 0) * 0.12s);
 }
 
-@keyframes island-tile-upcoming-ping {
-  0%   { opacity: 0.85; transform: scale(0.92); }
-  70%  { opacity: 0;    transform: scale(1.22); }
-  100% { opacity: 0;    transform: scale(1.22); }
+@keyframes island-tile-upcoming-breathe {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 0.7; }
 }
 
 /* ── Token enhancements ────────────────────────────────────────────────────── */
@@ -8946,6 +9015,10 @@
   .island-tile--token-current .island-tile__shadow,
   .island-tile--landing-neighbor .island-tile__face,
   .island-tile--upcoming::before,
+  .island-tile--landmark_door::after,
+  .island-tile--encounter::after,
+  .island-tile--active-door-cluster::after,
+  .island-tile--token-current::after,
   .island-tile__shine::after,
   .island-token__landing-ripple {
     animation: none !important;
@@ -8960,26 +9033,23 @@
   50%      { box-shadow: 0 0 22px var(--tile-stop-mid), 0 0 44px var(--tile-stop-glow), 0 0 60px var(--tile-stop-glow); }
 }
 
+/* "You are here" — soft teal/white halo on the unclipped aura layer; must
+   beat every other tile state without turning harsh. */
 @keyframes island-tile-current-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(100, 220, 255, 0.9), 0 0 18px rgba(100, 220, 255, 0.7); }
-  50%      { box-shadow: 0 0 0 3px #fff, 0 0 0 7px rgba(100, 220, 255, 1.0), 0 0 28px rgba(100, 220, 255, 0.9); }
-}
-
-@keyframes island-tile-encounter-flicker {
-  0%, 85%, 100% { box-shadow: 0 0 10px rgba(255, 107, 53, 0.6); }
-  90%           { box-shadow: 0 0 20px rgba(255, 80, 20, 0.95), 0 0 35px rgba(255, 60, 0, 0.5); }
-  95%           { box-shadow: 0 0 10px rgba(255, 107, 53, 0.5); }
-}
-
-/* Landmark-door / active-cluster glow pulses live on the face layer so they
-   never fight the root's transform-driven idle/enter animations. */
-.island-tile--landmark_door .island-tile__face {
-  animation: island-tile-landmark-door-pulse 1.65s ease-in-out infinite;
-  animation-delay: calc(var(--tile-index, 0) * 0.045s);
-}
-
-.island-tile--active-door-cluster .island-tile__face {
-  animation: island-tile-active-door-glow 1.25s ease-in-out infinite;
+  0%, 100% {
+    box-shadow:
+      0 0 0 2.5px rgba(255, 255, 255, 0.95),
+      0 0 0 6px var(--tile-current-glow),
+      0 0 18px var(--tile-current-glow),
+      0 0 34px color-mix(in srgb, var(--tile-current-glow) 70%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2.5px rgba(255, 255, 255, 1),
+      0 0 0 7.5px var(--tile-current-glow),
+      0 0 28px var(--tile-current-glow),
+      0 0 48px color-mix(in srgb, var(--tile-current-glow) 75%, transparent);
+  }
 }
 
 /* Neighbor ripple — the two tiles adjacent to the landing tile dip slightly
@@ -9002,10 +9072,22 @@
 }
 
 .island-tile--token-current .island-tile__face {
-  box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(100, 220, 255, 0.9), 0 0 18px rgba(100, 220, 255, 0.7) !important;
-  animation:
-    island-tile-face-press 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    island-tile-current-pulse 1.2s ease-in-out 0.5s infinite !important;
+  border-color: rgba(255, 255, 255, 0.92);
+  /* Slight lift: the face rests a hair above the slab so more thickness shows.
+     The one-shot press animation overrides this transform while it plays. */
+  transform: translateY(-1.2px);
+  animation: island-tile-face-press 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* The teal/white "you are here" halo lives on the unclipped aura layer and
+   must beat the door/encounter auras (declared later so it wins). */
+.island-tile--token-current::after {
+  box-shadow:
+    0 0 0 2.5px rgba(255, 255, 255, 0.95),
+    0 0 0 6px var(--tile-current-glow),
+    0 0 18px var(--tile-current-glow),
+    0 0 34px color-mix(in srgb, var(--tile-current-glow) 70%, transparent);
+  animation: island-tile-current-pulse 1.6s ease-in-out infinite;
 }
 
 .island-tile--token-current .island-tile__shadow {
@@ -9023,36 +9105,6 @@
   0%   { transform: translateX(-50%) scale(1); opacity: 1; }
   28%  { transform: translateX(-50%) scale(0.93); opacity: 1; }
   100% { transform: translateX(-50%) scale(1); opacity: 1; }
-}
-
-@keyframes island-tile-landmark-door-pulse {
-  0%, 100% {
-    box-shadow:
-      0 0 0 1px rgba(245, 208, 254, 0.62),
-      0 0 12px rgba(192, 132, 252, 0.72),
-      0 0 24px rgba(124, 58, 237, 0.42);
-  }
-  50% {
-    box-shadow:
-      0 0 0 3px rgba(245, 208, 254, 0.95),
-      0 0 24px rgba(216, 180, 254, 0.98),
-      0 0 48px rgba(168, 85, 247, 0.72);
-  }
-}
-
-@keyframes island-tile-active-door-glow {
-  0%, 100% {
-    box-shadow:
-      0 0 0 2px rgba(220, 252, 231, 0.78),
-      0 0 18px rgba(34, 197, 94, 0.9),
-      0 0 36px rgba(22, 163, 74, 0.58);
-  }
-  50% {
-    box-shadow:
-      0 0 0 4px rgba(220, 252, 231, 1),
-      0 0 30px rgba(34, 197, 94, 1),
-      0 0 60px rgba(22, 163, 74, 0.82);
-  }
 }
 
 .island-tile--pressed {
@@ -10874,19 +10926,16 @@
   }
 }
 
-/* The traffic-light tile stays a neutral board tile (inherits the default
-   .island-tile look) while only the red/yellow lights are active, and only
-   turns green once the green lights come on — see .island-tile--traffic_light-green. */
+/* The traffic-light tile stays a neutral carved slab while only the
+   red/yellow lights are active. Once the green lights come on it gains a
+   RESTRAINED green highlight — brightened trim + soft aura — never a
+   full-tile green flood. */
 .island-tile--traffic_light-green .island-tile__face {
-  background:
-    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, var(--tile-light-light) 0%, var(--tile-light-mid) 48%, var(--tile-light-deep) 100%);
-  border: 1.5px solid var(--tile-light-border);
-  box-shadow: 0 0 12px var(--tile-light-glow), 0 0 22px var(--tile-light-glow);
-}
-.island-tile--traffic_light-green .island-tile__side {
-  background: var(--tile-light-deep);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--tile-light-deep) 70%, #000) 0%, color-mix(in srgb, var(--tile-light-deep) 40%, #000) 100%);
+  border-color: color-mix(in srgb, var(--tile-growth-accent) 45%, var(--tile-trim-soft));
+  box-shadow:
+    var(--tile-face-shadow),
+    0 0 0 1.5px color-mix(in srgb, var(--tile-growth-accent) 35%, transparent),
+    0 0 12px color-mix(in srgb, var(--tile-growth-accent) 50%, transparent);
 }
 
 .island-tile-traffic-light-sign {
@@ -11949,27 +11998,9 @@
   }
 }
 
-/* Island tech discovery slice: object/knowledge tiles get tactile pop-out props. */
-:root {
-  --tile-card-light: #f5d0fe;
-  --tile-card-mid: #c084fc;
-  --tile-card-deep: #7c3aed;
-  --tile-card-border: rgba(245, 208, 254, 0.96);
-  --tile-card-glow: rgba(192, 132, 252, 0.58);
-}
-
-.island-tile--card .island-tile__face {
-  background:
-    radial-gradient(circle at 32% 22%, var(--tile-spec) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, var(--tile-card-light) 0%, var(--tile-card-mid) 52%, var(--tile-card-deep) 100%);
-  border: 1.5px solid var(--tile-card-border);
-  box-shadow: 0 0 12px var(--tile-card-glow), 0 0 22px rgba(124, 58, 237, 0.34);
-}
-.island-tile--card .island-tile__side {
-  background: var(--tile-card-deep);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--tile-card-deep) 70%, #000) 0%, color-mix(in srgb, var(--tile-card-deep) 40%, #000) 100%);
-}
-
+/* Island tech discovery slice: object/knowledge tiles get tactile pop-out
+   props. (The card tile's slab styling lives with the other tile-type rules
+   in the BOARD TILE MATERIAL SYSTEM.) */
 .island-tile__popout {
   position: absolute;
   left: 50%;
@@ -12043,15 +12074,8 @@
   100% { opacity: 0.25; transform: translate(-50%, -160%) rotate(var(--tile-upright-rotation-deg, 0deg)) scale(0.45); }
 }
 
-/* Gamified journal card draw: make the board station read as a large 3D card stack. */
-.island-tile--card .island-tile__face {
-  box-shadow:
-    0 0 0 3px rgba(250, 204, 21, 0.2),
-    0 0 18px rgba(250, 204, 21, 0.7),
-    0 0 34px rgba(168, 85, 247, 0.68),
-    inset 0 1px 8px rgba(255, 255, 255, 0.42);
-}
-
+/* Gamified journal card draw: the floating card-stack popout is the loud
+   part; the tile slab below stays neutral with its calm amethyst accent. */
 .island-tile__popout--card {
   width: 26px;
   height: 36px;
@@ -13362,22 +13386,6 @@
   .island-run-board__caretaker-img {
     animation: none;
   }
-}
-
-.island-tile--build_discount {
-  background:
-    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, #bbf7d0 0%, #22c55e 52%, #065f46 100%);
-  border: 1.5px solid #fef08a;
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.62), 0 0 0 2px rgba(254, 240, 138, 0.28);
-}
-
-.island-tile--free_ticket {
-  background:
-    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(160deg, #fed7aa 0%, #f97316 52%, #9a3412 100%);
-  border: 1.5px solid #ffedd5;
-  box-shadow: 0 0 12px rgba(249, 115, 22, 0.58), 0 0 0 2px rgba(255, 237, 213, 0.24);
 }
 
 .bm2-discount-banner {
