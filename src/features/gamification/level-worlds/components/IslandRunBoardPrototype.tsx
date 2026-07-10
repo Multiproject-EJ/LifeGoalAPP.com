@@ -62,7 +62,7 @@ import { getIslandCaretakerConcordContent, hasIslandCaretakerConcordContent } fr
 import type { IslandConversationDefinition, IslandInhabitantTopicDefinition } from '../inhabitants/islandConversationTypes';
 import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArtManifest } from '../services/islandArtManifest';
 import { getIslandCommunicationAccess } from '../services/islandCommunicationAccess';
-import { getIslandTechnologyAccess } from '../services/islandRunTechnologyUnlocks';
+import { getIslandTechnologyAccess, resolveIslandTechnologyBuildEligibility } from '../services/islandRunTechnologyUnlocks';
 import { resolveIslandRunConcordHubEntryState } from '../services/islandRunConcordHubEntry';
 import { getCreatureChannelLine } from '../services/islandCreatureChannel';
 import { getIslandDisplayName } from '../services/islandNames';
@@ -3190,6 +3190,30 @@ export function IslandRunBoardPrototype({
     setHasDismissedEntryAudioModal(false);
     setShowEntryAudioModal(true);
   }, [hasHydratedRuntimeState]);
+
+  // Compatibility hydration: accounts that finished the full Island 1 grid
+  // BEFORE the Concord-built ledger existed have all nine slots collected but
+  // no `technologyUnlocksById['the-concord']` entry. Without this bridge they
+  // would be permanently blocked by the "build The Concord before finishing
+  // Island 1" gate — every fragment tile is already a duplicate, so the 8→9
+  // build transition can never fire again. Grant the build silently (no
+  // celebration, no dice — the rewards were already paid on collection).
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return;
+    const record = runtimeStateRef.current;
+    const eligibility = resolveIslandTechnologyBuildEligibility(record, 'the-concord');
+    if (eligibility.alreadyBuilt || !eligibility.eligible) return;
+    const buildResult = applyIslandRunTechnologyBuild({
+      session,
+      client,
+      technologyId: 'the-concord',
+      source: 'compatibility-hydration',
+    });
+    if (buildResult.changed) {
+      setRuntimeState(buildResult.record);
+      runtimeStateRef.current = buildResult.record;
+    }
+  }, [client, hasHydratedRuntimeState, session]);
 
   const hasConfirmedEntryAudioChoice = hasDismissedEntryAudioModal && !showEntryAudioModal;
 

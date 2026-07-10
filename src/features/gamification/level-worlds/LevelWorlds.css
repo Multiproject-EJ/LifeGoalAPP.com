@@ -13125,8 +13125,8 @@
    reads as a hovering collectible rather than a flat tile icon. */
 .island-tile__popout--technology-fragment {
   top: 8%;
-  width: clamp(18px, calc(24px / max(var(--tile-render-scale, 1), 0.65)), 26px);
-  height: clamp(18px, calc(24px / max(var(--tile-render-scale, 1), 0.65)), 26px);
+  width: clamp(22px, calc(30px / max(var(--tile-render-scale, 1), 0.65)), 34px);
+  height: clamp(22px, calc(30px / max(var(--tile-render-scale, 1), 0.65)), 34px);
   display: grid;
   place-items: center;
   border-radius: 999px;
@@ -13164,8 +13164,18 @@
   height: 118%;
   object-fit: contain;
   border-radius: 8px;
-  filter: drop-shadow(0 0 8px rgba(126, 255, 248, 0.56)) drop-shadow(0 5px 9px rgba(12, 8, 32, 0.48));
-  animation: island-technology-fragment-glow 2.15s ease-in-out infinite;
+  /* Zero-blur drop-shadow chain extrudes the sprite's silhouette downward so
+     the fragment reads as a solid, thick 3D object instead of a flat sheet.
+     Each solid step stacks on the previous one (≈4px of visible depth), then
+     the soft glow + ground shadow wrap the whole extruded slab. */
+  filter:
+    drop-shadow(0 1px 0 rgba(31, 48, 94, 0.95))
+    drop-shadow(0 1px 0 rgba(24, 38, 78, 0.95))
+    drop-shadow(0 1px 0 rgba(18, 28, 62, 0.95))
+    drop-shadow(0 1px 0 rgba(12, 19, 46, 0.9))
+    drop-shadow(0 0 8px rgba(126, 255, 248, 0.56))
+    drop-shadow(0 5px 9px rgba(12, 8, 32, 0.48));
+  animation: island-technology-fragment-image-glow 2.15s ease-in-out infinite;
   animation-delay: var(--fragment-animation-delay, 0s);
 }
 
@@ -13200,6 +13210,32 @@
 @keyframes island-technology-fragment-glow {
   0%, 100% { filter: saturate(1) brightness(1); }
   50% { filter: saturate(1.16) brightness(1.08); }
+}
+
+/* Image variant keeps the silhouette-extrusion drop-shadow chain alive through
+   every keyframe — animating `filter` replaces the whole chain, so the depth
+   steps must be restated alongside the pulsing saturate/brightness. */
+@keyframes island-technology-fragment-image-glow {
+  0%, 100% {
+    filter:
+      drop-shadow(0 1px 0 rgba(31, 48, 94, 0.95))
+      drop-shadow(0 1px 0 rgba(24, 38, 78, 0.95))
+      drop-shadow(0 1px 0 rgba(18, 28, 62, 0.95))
+      drop-shadow(0 1px 0 rgba(12, 19, 46, 0.9))
+      drop-shadow(0 0 8px rgba(126, 255, 248, 0.56))
+      drop-shadow(0 5px 9px rgba(12, 8, 32, 0.48))
+      saturate(1) brightness(1);
+  }
+  50% {
+    filter:
+      drop-shadow(0 1px 0 rgba(31, 48, 94, 0.95))
+      drop-shadow(0 1px 0 rgba(24, 38, 78, 0.95))
+      drop-shadow(0 1px 0 rgba(18, 28, 62, 0.95))
+      drop-shadow(0 1px 0 rgba(12, 19, 46, 0.9))
+      drop-shadow(0 0 11px rgba(126, 255, 248, 0.72))
+      drop-shadow(0 5px 9px rgba(12, 8, 32, 0.48))
+      saturate(1.16) brightness(1.08);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
