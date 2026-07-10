@@ -9,6 +9,7 @@ import { WorldHome } from './world/WorldHome.tsx';
 import { Lobby } from './world/Lobby.tsx';
 import { TrustPage } from './world/TrustPage.tsx';
 import type { BeforeInstallPromptEvent } from './world/useInstallState.ts';
+import { SafeErrorBoundary } from './components/SafeErrorBoundary.tsx';
 
 if (typeof window !== 'undefined') {
   window.__LifeGoalAppDebugger?.log('Initializing React root.', {
@@ -48,6 +49,46 @@ function QuestVisualSystemPreviewRoute() {
   }, []);
 
   return Preview ? <Preview /> : null;
+}
+
+
+function RootCrashFallback() {
+  return (
+    <main
+      role="alert"
+      style={{
+        minHeight: '100dvh',
+        display: 'grid',
+        placeItems: 'center',
+        padding: '2rem',
+        background: '#0a0e1a',
+        color: '#f8fafc',
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      }}
+    >
+      <section
+        style={{
+          width: 'min(560px, 100%)',
+          border: '1px solid rgba(148, 163, 184, 0.35)',
+          borderRadius: '24px',
+          padding: '1.5rem',
+          background: 'rgba(15, 23, 42, 0.86)',
+          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.35)',
+        }}
+      >
+        <p style={{ margin: '0 0 0.5rem', color: '#93c5fd', fontWeight: 700 }}>
+          HabitGame hit a startup snag
+        </p>
+        <h1 style={{ margin: '0 0 0.75rem', fontSize: '1.5rem' }}>
+          We kept the page from going blank.
+        </h1>
+        <p style={{ margin: 0, lineHeight: 1.6, color: '#cbd5e1' }}>
+          Refresh once to retry. If this keeps happening, open the app with <code>?debug=1</code>
+          and share the latest “React root render failed” entry from the debugger.
+        </p>
+      </section>
+    </main>
+  );
 }
 
 function Root() {
@@ -159,7 +200,18 @@ function LobbyRoute({ onEnterApp }: { onEnterApp: () => void }) {
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <Root />
+    <SafeErrorBoundary
+      fallback={<RootCrashFallback />}
+      onError={(error, info) => {
+        window.__LifeGoalAppDebugger?.error('React root render failed.', {
+          message: error.message,
+          stack: error.stack,
+          componentStack: info.componentStack,
+        });
+      }}
+    >
+      <Root />
+    </SafeErrorBoundary>
   </React.StrictMode>
 );
 
