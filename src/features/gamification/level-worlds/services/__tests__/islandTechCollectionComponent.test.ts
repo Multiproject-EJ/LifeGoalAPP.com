@@ -78,6 +78,16 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     },
   },
   {
+    name: 'pickup modal auto-closes for manual rollers too (not gated on auto-roll)',
+    run: () => {
+      // The close timer must run unconditionally — a manual pickup should place
+      // the fragment and then close itself, using the longer manual dwell.
+      includes(modalSource, 'MANUAL_CLOSE_MS');
+      includes(modalSource, 'isAutoRolling ? AUTO_ROLL_CLOSE_MS : MANUAL_CLOSE_MS');
+      notIncludes(modalSource, 'if (!isAutoRolling) return;');
+    },
+  },
+  {
     name: 'pickup modal surfaces aggregated line-completion reward copy',
     run: () => {
       includes(modalSource, 'LINES COMPLETE');
