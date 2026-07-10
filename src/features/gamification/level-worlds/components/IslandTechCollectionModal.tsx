@@ -27,8 +27,10 @@ import './IslandTechCollectionModal.css';
  *
  * The app places the fragment into the grid automatically: the reveal always
  * advances fragment → flight → grid on its own timer (a tap merely skips
- * ahead). When auto-roll is engaged the modal additionally auto-closes after
- * 4s so the loop can resume; manual rollers tap to dismiss the landed grid.
+ * ahead). The modal then always auto-closes on its own timer so the run keeps
+ * flowing — auto-roll closes fast (so the hands-off loop can resume), while
+ * manual rollers get a longer dwell to admire the landed grid. Either way a tap
+ * still dismisses immediately; no interaction is ever required.
  *
  * Presentation only: it receives a fully resolved result model and the dice were
  * already granted by the canonical action upstream. It performs no gameplay
@@ -66,6 +68,13 @@ export interface IslandTechCollectionModalProps {
 
 /** Total time the whole celebration stays up while auto-rolling. */
 const AUTO_ROLL_CLOSE_MS = 4000;
+/**
+ * Total dwell before auto-close for manual rollers. Longer than the auto-roll
+ * dwell so a player who rolled by hand gets a beat to see the fragment land in
+ * the grid (and read any line-completion reward) before it closes itself. A tap
+ * still dismisses sooner.
+ */
+const MANUAL_CLOSE_MS = 5200;
 /** How long the fragment lingers before settling into the grid while auto-rolling. */
 const AUTO_ROLL_FRAGMENT_MS = 1700;
 /** Safety cap: force the grid to land even if `transitionend` never fires. */
@@ -188,11 +197,12 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
     return () => window.clearTimeout(advanceHandle);
   }, [autoCloseMs, reduced, beginFlightOrGrid]);
 
-  // Auto-roll is fully hands-off, so the celebration also closes itself after a
-  // fixed dwell. Manual rollers keep the grid up until they tap to dismiss.
+  // The celebration always closes itself after a fixed dwell so the run keeps
+  // flowing without requiring a tap — auto-roll (hands-off) closes fast, while
+  // manual rollers get a longer beat to admire the landed grid. A tap still
+  // dismisses sooner in either mode.
   useEffect(() => {
-    if (!isAutoRolling) return;
-    const closeMs = autoCloseMs ?? AUTO_ROLL_CLOSE_MS;
+    const closeMs = autoCloseMs ?? (isAutoRolling ? AUTO_ROLL_CLOSE_MS : MANUAL_CLOSE_MS);
     const closeHandle = window.setTimeout(() => dismissRef.current(), closeMs);
     return () => window.clearTimeout(closeHandle);
   }, [isAutoRolling, autoCloseMs]);
