@@ -52,6 +52,7 @@ import { islandRunShopAffordabilityTests } from './islandRunShopAffordability.te
 import { islandRunPlaceholderServiceTests } from './islandRunPlaceholderService.test';
 import { islandRunEggSellAdvisorTests } from './islandRunEggSellAdvisor.test';
 import { islandRunEggManiaTests } from './islandRunEggMania.test';
+import { islandRunEggConflictMergeTests } from './islandRunEggConflictMerge.test';
 import { islandRunBonusTileTests } from './islandRunBonusTile.test';
 import { islandRunBossEncounterTests } from './islandRunBossEncounter.test';
 import { islandRunBuildAccelerationTests } from './islandRunBuildAcceleration.test';
@@ -221,6 +222,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunPlaceholderService', tests: islandRunPlaceholderServiceTests },
   { label: 'islandRunEggSellAdvisor', tests: islandRunEggSellAdvisorTests },
   { label: 'islandRunEggMania', tests: islandRunEggManiaTests },
+  { label: 'islandRunEggConflictMerge', tests: islandRunEggConflictMergeTests },
   { label: 'islandRunBonusTile', tests: islandRunBonusTileTests },
   { label: 'islandRunBossEncounter', tests: islandRunBossEncounterTests },
   { label: 'islandRunBuildAcceleration', tests: islandRunBuildAccelerationTests },
