@@ -14,6 +14,7 @@
 
 import { bossRhythmManifest } from '../../games/boss-rhythm';
 import { companionFeastManifest } from '../../games/companion-feast';
+import { fortuneEngineManifest } from '../../games/fortune-engine';
 import { islandWorkshopManifest } from '../../games/island-workshop';
 import { shooterBlitzManifest } from '../../games/shooter-blitz';
 import { spaceExcavatorManifest } from '../../games/space-excavator';
@@ -30,6 +31,7 @@ export const ALL_MINIGAME_MANIFESTS: readonly MinigameManifest[] = Object.freeze
   visionQuestManifest,
   companionFeastManifest,
   islandWorkshopManifest,
+  fortuneEngineManifest,
 ]);
 
 let registered = false;

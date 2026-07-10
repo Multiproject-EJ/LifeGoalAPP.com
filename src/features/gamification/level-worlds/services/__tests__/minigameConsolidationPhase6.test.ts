@@ -69,9 +69,9 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         'feeding_frenzy slot should launch island_workshop',
       );
       assertEqual(
-        openEventMinigame({ eventId: 'lucky_spin', ticketsAvailable: 5 })?.minigameId,
+        openEventMinigame({ eventId: 'lucky_spin', ticketsAvailable: 0 })?.minigameId,
         'lucky_spin',
-        'lucky_spin should launch lucky_spin',
+        'lucky_spin should launch lucky_spin even with zero tickets because Fortune Engine launches spend per action',
       );
       assertEqual(
         openEventMinigame({ eventId: 'space_excavator', ticketsAvailable: 0 })?.minigameId,
@@ -109,7 +109,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
     name: 'openEventMinigame uses explicit entry spend amount when affordable',
     run: () => {
       const descriptor = openEventMinigame({
-        eventId: 'lucky_spin',
+        eventId: 'feeding_frenzy',
         ticketsAvailable: 4,
         ticketsToSpend: 2,
       });
@@ -257,44 +257,31 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
     },
   },
   {
-    name: 'resolveLuckySpinEventMinigame routes lucky_spin event and distinguishes free_daily vs ticket_extra mode',
+    name: 'resolveLuckySpinEventMinigame routes the lucky_spin slot to the Fortune Engine with per-action spend',
     run: () => {
-      const freeDailyDescriptor = resolveLuckySpinEventMinigame({
+      const descriptor = resolveLuckySpinEventMinigame({
         kind: 'timed_event',
         eventId: 'lucky_spin',
         ticketsAvailable: 3,
-        freeDailySpinRemaining: 1,
       });
-      assertEqual(freeDailyDescriptor?.minigameId, 'lucky_spin', 'lucky_spin event routes to lucky_spin minigame');
-      assertEqual(freeDailyDescriptor?.config.mode, 'lucky_spin', 'resolver should tag lucky_spin event mode');
+      assertEqual(descriptor?.minigameId, 'lucky_spin', 'lucky_spin event routes to the canonical lucky_spin minigame id');
+      assertEqual(descriptor?.spendMode, 'per_action', 'Fortune Engine should spend tickets per launch inside the game');
+      assertEqual(descriptor?.ticketsSpent, 0, 'opening the Fortune Engine surface should spend no tickets');
       assertEqual(
-        freeDailyDescriptor?.config.mode === 'lucky_spin' ? freeDailyDescriptor.config.spinMode : null,
-        'free_daily',
-        'remaining free daily spin should tag free_daily mode',
-      );
-
-      const ticketDescriptor = resolveLuckySpinEventMinigame({
-        kind: 'timed_event',
-        eventId: 'lucky_spin',
-        ticketsAvailable: 3,
-        freeDailySpinRemaining: 0,
-      });
-      assertEqual(
-        ticketDescriptor?.config.mode === 'lucky_spin' ? ticketDescriptor.config.spinMode : null,
-        'ticket_extra',
-        'no free daily spin should tag ticket_extra mode',
+        descriptor?.config.mode,
+        'fortune_engine',
+        'resolver should tag the Fortune Engine event mode',
       );
     },
   },
   {
-    name: 'resolveLuckySpinEventMinigame is non-launching for non-lucky events or insufficient tickets',
+    name: 'resolveLuckySpinEventMinigame is non-launching for non-lucky events but opens with zero tickets',
     run: () => {
       assertEqual(
         resolveLuckySpinEventMinigame({
           kind: 'timed_event',
           eventId: 'feeding_frenzy',
           ticketsAvailable: 3,
-          freeDailySpinRemaining: 1,
         }),
         null,
         'resolver should be scoped to lucky_spin only',
@@ -304,10 +291,9 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
           kind: 'timed_event',
           eventId: 'lucky_spin',
           ticketsAvailable: 0,
-          freeDailySpinRemaining: 1,
-        }),
-        null,
-        'insufficient tickets should block lucky_spin event launch',
+        })?.minigameId,
+        'lucky_spin',
+        'zero tickets should not block the Fortune Engine surface (the daily Golden Launch is free)',
       );
     },
   },
@@ -487,7 +473,6 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
           kind: 'timed_event',
           eventId: 'lucky_spin',
           ticketsAvailable: 3,
-          freeDailySpinRemaining: 1,
         }),
         expectedMinigameId: 'lucky_spin',
       });

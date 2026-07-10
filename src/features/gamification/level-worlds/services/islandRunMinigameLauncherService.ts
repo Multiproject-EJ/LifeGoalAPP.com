@@ -95,8 +95,7 @@ export interface EventMinigameLaunchDescriptor {
     | {
         source: 'timed_event';
         eventId: 'lucky_spin';
-        mode: 'lucky_spin';
-        spinMode: 'free_daily' | 'ticket_extra';
+        mode: 'fortune_engine';
       }
     | {
         source: 'timed_event';
@@ -282,13 +281,14 @@ export function resolveIslandWorkshopEventMinigame(
 }
 
 /**
- * Phase 6 step 2: Lucky Spin event surface now routes through a dedicated
- * resolver that explicitly tags launch mode:
- * - `free_daily` when the caller indicates a remaining free daily spin
- * - `ticket_extra` otherwise (ticket-funded event spins)
+ * The `lucky_spin` slot's player-facing surface is The Fortune Engine. The
+ * surface opens without spending; each run launch spends 1 event ticket (or
+ * uses the free daily Golden Launch) through the canonical
+ * `applyFortuneEngineLaunch` action, so a ticketless player can still play
+ * their golden run.
  */
 export function resolveLuckySpinEventMinigame(
-  ctx: EventMinigameLaunchContext & { freeDailySpinRemaining?: number },
+  ctx: EventMinigameLaunchContext,
 ): EventMinigameLaunchDescriptor | null {
   if (ctx.eventId !== 'lucky_spin') return null;
   const launch = openEventMinigame({
@@ -300,14 +300,13 @@ export function resolveLuckySpinEventMinigame(
 
   return {
     minigameId: 'lucky_spin',
-    spendMode: 'entry',
+    spendMode: 'per_action',
     ticketCost: launch.ticketCost,
     ticketsSpent: launch.ticketsSpent,
     config: {
       source: 'timed_event',
       eventId: 'lucky_spin',
-      mode: 'lucky_spin',
-      spinMode: (ctx.freeDailySpinRemaining ?? 0) > 0 ? 'free_daily' : 'ticket_extra',
+      mode: 'fortune_engine',
     },
   };
 }

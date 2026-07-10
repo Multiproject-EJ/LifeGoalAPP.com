@@ -19,6 +19,10 @@ import {
 } from './islandRunBonusTile';
 import { resolveSpaceExcavatorClaimedMilestoneIds } from './spaceExcavatorCampaignProgress';
 import { resolveCompanionFeastClaimedMilestoneIds } from './companionFeastProgression';
+import {
+  resolveFortuneCoreFragmentIds,
+  resolveFortuneEngineClaimedMilestoneIds,
+} from './fortuneEngineProgression';
 import { normalizeGrantIds } from './islandRunGrantIdUtils';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
@@ -194,6 +198,30 @@ export interface CompanionFeastProgressEntry {
   /** Total fruit drops (each spends one event ticket). */
   totalFruitDropped: number;
   claimedMilestoneIds: string[];
+  updatedAtMs: number;
+}
+
+/**
+ * Canonical Fortune Engine campaign progress for one timed event (the
+ * `lucky_spin` rotation slot): reward-track event points, collected Fortune
+ * Core fragments (3×3 jackpot grid), claimed milestone ids, the daily free
+ * Golden Launch gate, and the finale trophy flag. Milestone/fragment
+ * definitions live in `fortuneEngineProgression.ts`.
+ */
+export interface FortuneEngineProgressEntry {
+  /** Cumulative event points earned by run scores (reward-track currency). */
+  eventPoints: number;
+  /** Collected Fortune Core fragment ids (0-8), deduped and sorted. */
+  fragmentIds: number[];
+  claimedMilestoneIds: string[];
+  /** Total runs launched this event (golden + ticket-funded). */
+  totalLaunches: number;
+  /** Best single-run score for this event. */
+  bestRunScore: number;
+  /** Local day key (YYYY-MM-DD) of the last free Golden Launch, or null. */
+  goldenLaunchDayKey: string | null;
+  /** True once the ticket-free finale has been stabilised (permanent trophy). */
+  finaleCompleted: boolean;
   updatedAtMs: number;
 }
 
@@ -389,6 +417,7 @@ export interface IslandRunGameStateRecord {
   luckyRollSessionsByMilestone: IslandRunLuckyRollSessionsByMilestone;
   spaceExcavatorProgressByEvent: Record<string, SpaceExcavatorProgressEntry>;
   companionFeastProgressByEvent: Record<string, CompanionFeastProgressEntry>;
+  fortuneEngineProgressByEvent: Record<string, FortuneEngineProgressEntry>;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -878,6 +907,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     luckyRollSessionsByMilestone: {},
     spaceExcavatorProgressByEvent: {},
     companionFeastProgressByEvent: {},
+    fortuneEngineProgressByEvent: {},
   };
 }
 
@@ -1512,6 +1542,10 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       value.companionFeastProgressByEvent,
       fallback.companionFeastProgressByEvent,
     ),
+    fortuneEngineProgressByEvent: sanitizeFortuneEngineProgressByEvent(
+      value.fortuneEngineProgressByEvent,
+      fallback.fortuneEngineProgressByEvent,
+    ),
   };
 }
 
@@ -1820,6 +1854,68 @@ function mergeCompanionFeastProgressByEvent(
   return merged;
 }
 
+function sanitizeFortuneEngineProgressByEvent(
+  value: unknown,
+  fallback: Record<string, FortuneEngineProgressEntry>,
+): Record<string, FortuneEngineProgressEntry> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return fallback;
+  const out: Record<string, FortuneEngineProgressEntry> = {};
+  for (const [eventId, rawValue] of Object.entries(value as Record<string, unknown>)) {
+    if (!eventId.trim() || !rawValue || typeof rawValue !== 'object' || Array.isArray(rawValue)) continue;
+    const raw = rawValue as Record<string, unknown>;
+    const toCount = (input: unknown): number =>
+      typeof input === 'number' && Number.isFinite(input) ? Math.max(0, Math.floor(input)) : 0;
+    out[eventId] = {
+      eventPoints: toCount(raw.eventPoints),
+      fragmentIds: resolveFortuneCoreFragmentIds(raw.fragmentIds),
+      claimedMilestoneIds: resolveFortuneEngineClaimedMilestoneIds({
+        claimedMilestoneIds: Array.isArray(raw.claimedMilestoneIds)
+          ? raw.claimedMilestoneIds.filter((id): id is string => typeof id === 'string')
+          : [],
+      }),
+      totalLaunches: toCount(raw.totalLaunches),
+      bestRunScore: toCount(raw.bestRunScore),
+      goldenLaunchDayKey: typeof raw.goldenLaunchDayKey === 'string' && raw.goldenLaunchDayKey.trim()
+        ? raw.goldenLaunchDayKey
+        : null,
+      finaleCompleted: raw.finaleCompleted === true,
+      updatedAtMs: typeof raw.updatedAtMs === 'number' && Number.isFinite(raw.updatedAtMs)
+        ? Math.max(0, Math.floor(raw.updatedAtMs))
+        : Date.now(),
+    };
+  }
+  return out;
+}
+
+function mergeFortuneEngineProgressByEvent(
+  remote: Record<string, FortuneEngineProgressEntry>,
+  local: Record<string, FortuneEngineProgressEntry>,
+): Record<string, FortuneEngineProgressEntry> {
+  const keys = new Set([...Object.keys(remote), ...Object.keys(local)]);
+  const merged: Record<string, FortuneEngineProgressEntry> = {};
+  keys.forEach((eventId) => {
+    const remoteProgress = remote[eventId];
+    const localProgress = local[eventId];
+    if (!remoteProgress || !localProgress) {
+      merged[eventId] = localProgress ?? remoteProgress;
+      return;
+    }
+    const base = localProgress.updatedAtMs >= remoteProgress.updatedAtMs ? localProgress : remoteProgress;
+    merged[eventId] = {
+      ...base,
+      eventPoints: Math.max(remoteProgress.eventPoints, localProgress.eventPoints),
+      fragmentIds: resolveFortuneCoreFragmentIds([...remoteProgress.fragmentIds, ...localProgress.fragmentIds]),
+      claimedMilestoneIds: resolveFortuneEngineClaimedMilestoneIds({
+        claimedMilestoneIds: [...remoteProgress.claimedMilestoneIds, ...localProgress.claimedMilestoneIds],
+      }),
+      totalLaunches: Math.max(remoteProgress.totalLaunches, localProgress.totalLaunches),
+      bestRunScore: Math.max(remoteProgress.bestRunScore, localProgress.bestRunScore),
+      finaleCompleted: remoteProgress.finaleCompleted || localProgress.finaleCompleted,
+    };
+  });
+  return merged;
+}
+
 function mergeStringArrayByUnion(left: string[] = [], right: string[] = []): string[] {
   return Array.from(new Set([...left, ...right]));
 }
@@ -1998,6 +2094,10 @@ function mergeRecordForConflict(options: {
       remote.companionFeastProgressByEvent,
       local.companionFeastProgressByEvent,
     ),
+    fortuneEngineProgressByEvent: mergeFortuneEngineProgressByEvent(
+      remote.fortuneEngineProgressByEvent,
+      local.fortuneEngineProgressByEvent,
+    ),
   };
 }
 
@@ -2110,6 +2210,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     lucky_roll_sessions_by_milestone: record.luckyRollSessionsByMilestone,
     space_excavator_progress_by_event: record.spaceExcavatorProgressByEvent,
     companion_feast_progress_by_event: record.companionFeastProgressByEvent,
+    fortune_engine_progress_by_event: record.fortuneEngineProgressByEvent,
     last_writer_device_session_id: deviceSessionId,
     updated_at: new Date().toISOString(),
   };
@@ -2174,7 +2275,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -2303,6 +2404,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             companionFeastProgressByEvent: sanitizeCompanionFeastProgressByEvent(
               (legacyData as Record<string, unknown>).companion_feast_progress_by_event,
               fallback.companionFeastProgressByEvent,
+            ),
+            fortuneEngineProgressByEvent: sanitizeFortuneEngineProgressByEvent(
+              (legacyData as Record<string, unknown>).fortune_engine_progress_by_event,
+              fallback.fortuneEngineProgressByEvent,
             ),
           },
           fallback,
@@ -2471,6 +2576,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       companionFeastProgressByEvent: sanitizeCompanionFeastProgressByEvent(
         (data as Record<string, unknown>).companion_feast_progress_by_event,
         fallback.companionFeastProgressByEvent,
+      ),
+      fortuneEngineProgressByEvent: sanitizeFortuneEngineProgressByEvent(
+        (data as Record<string, unknown>).fortune_engine_progress_by_event,
+        fallback.fortuneEngineProgressByEvent,
       ),
     },
     fallback,

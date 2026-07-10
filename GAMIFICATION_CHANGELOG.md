@@ -4,6 +4,21 @@ Track the evolution of LifeGoalApp's gamification system across all phases.
 
 ---
 
+## The Fortune Engine — v1.0.0 (July 2026)
+
+### 🎯 Overview
+The `lucky_spin` timed-event rotation slot's placeholder is now a playable event game: **The Fortune Engine**, a celestial machine suspended above the island. One event ticket launches a run (the first launch each day is a free ✨ Golden Launch with a guaranteed fragment): spin the route wheel (Treasure / Multiplier / Risk / Chrono / rare Jackpot), then play three increasingly fast circular timing rings — tap when the pointer sweeps reward nodes, dodge corrupted sectors, and bank or go deeper after each ring for a higher multiplier.
+
+### New Features
+- 🎡 **Route wheel + timing rings** — the wheel becomes the level itself; push-your-luck bank-or-continue checkpoints between rings; crushed runs keep half (never nothing).
+- ⚡ **Event reward track** — run scores feed event points across 7 visible milestones (dice, essence, shards, and event-ticket returns) claimed in-game.
+- 🧩 **Fortune Core assembly** — nine designed fragments light up a 3×3 grid; Jackpot routes and Golden Launches award fragments on finished runs.
+- 💠 **Ticket-free finale** — a complete core unlocks "Stabilise the Fortune Core": activate three stabiliser sectors on a fast ring before the timer expires for a one-shot final reward, a short ending scene, and a permanent trophy flag.
+- ⏳ **Event departure clock** — "Fortune Engine departs in 3d 14h 22m", with an unstable-sky visual state in the final 24 hours.
+- 💾 **Canonical persistence** — per-event `fortune_engine_progress_by_event` ledger (migration 0273) with cross-device merge, mirroring the Companion Feast/Space Excavator pattern; ticket authority stays on `minigameTicketsByEvent`.
+
+---
+
 ## Contract Engine 2.0 — v2.0.0 (March 2026)
 
 ### 🎯 Overview

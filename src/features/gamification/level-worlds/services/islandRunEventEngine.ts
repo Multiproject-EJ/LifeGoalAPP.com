@@ -376,7 +376,11 @@ export function openEventMinigame(options: {
   ticketsToSpend?: number;
 }): EventMinigameLaunchDescriptor | null {
   const ticketCost = 1;
-  const isPerActionSpend = options.eventId === 'space_excavator' || options.eventId === 'companion_feast';
+  // lucky_spin (The Fortune Engine) spends per launch inside the game so the
+  // surface can open ticketless (the daily free Golden Launch still plays).
+  const isPerActionSpend = options.eventId === 'space_excavator'
+    || options.eventId === 'companion_feast'
+    || options.eventId === 'lucky_spin';
   const requestedSpend = isPerActionSpend ? 0 : Math.floor(options.ticketsToSpend ?? ticketCost);
   if (!Number.isFinite(requestedSpend) || requestedSpend < 0) return null;
   if (!isPerActionSpend && requestedSpend < ticketCost) return null;
