@@ -145,6 +145,7 @@ export function buildFreshIslandRunRecord(
     luckyRollSessionsByMilestone: {},
     spaceExcavatorProgressByEvent: {},
     companionFeastProgressByEvent: {},
+    fortuneEngineProgressByEvent: {},
   };
 }
 

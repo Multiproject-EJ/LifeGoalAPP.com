@@ -222,6 +222,11 @@ import {
   applyCompanionFeastMergeResult,
   claimCompanionFeastMilestoneReward,
   initCompanionFeastProgressForEvent,
+  applyFortuneEngineLaunch,
+  applyFortuneEngineRunResult,
+  applyFortuneEngineFinaleResult,
+  claimFortuneEngineMilestoneReward,
+  initFortuneEngineProgressForEvent,
   SPACE_EXCAVATOR_TOTAL_BOARDS,
   ISLAND_RUN_MAX_ISLAND,
   travelToNextIsland,
@@ -8001,10 +8006,7 @@ export function IslandRunBoardPrototype({
         case 'feeding_frenzy':
           return resolveIslandWorkshopEventMinigame(baseContext);
         case 'lucky_spin':
-          return resolveLuckySpinEventMinigame({
-            ...baseContext,
-            freeDailySpinRemaining: activeEventTickets > 0 ? 1 : 0,
-          });
+          return resolveLuckySpinEventMinigame(baseContext);
         case 'space_excavator':
           return resolveSpaceExcavatorEventMinigame(baseContext);
         case 'companion_feast':
@@ -8085,6 +8087,34 @@ export function IslandRunBoardPrototype({
               const claim = claimCompanionFeastMilestoneReward({ session, client, eventId: effectiveActiveTimedEvent.eventId, milestoneId, triggerSource: 'companion_feast_claim_milestone' });
               if (claim.ok) setRuntimeState(claim.record);
               return { ok: claim.ok, progress: claim.progress, rewardLabel: claim.rewardLabel, failureReason: claim.failureReason };
+            },
+          }
+        : effectiveActiveTimedEvent.eventType === 'lucky_spin'
+        ? {
+            ...descriptor.config,
+            activeEventId: effectiveActiveTimedEvent.eventId,
+            eventExpiresAtMs: effectiveActiveTimedEvent.expiresAtMs,
+            initialProgress: initFortuneEngineProgressForEvent({ session, client: null, eventId: effectiveActiveTimedEvent.eventId }).fortuneEngineProgressByEvent?.[effectiveActiveTimedEvent.eventId] ?? null,
+            getTicketsRemaining: () => Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)),
+            requestLaunchSpend: () => {
+              const launch = applyFortuneEngineLaunch({ session, client, eventId: effectiveActiveTimedEvent.eventId, triggerSource: 'fortune_engine_launch' });
+              if (launch.ok) setRuntimeState(launch.record);
+              return { ok: launch.ok, golden: launch.golden, ticketsRemaining: launch.ticketsRemaining, progress: launch.progress, failureReason: launch.failureReason };
+            },
+            requestRunResult: (payload: { runScore: number; eventPoints: number; fragmentAwarded: boolean; essence: number }) => {
+              const run = applyFortuneEngineRunResult({ session, client, eventId: effectiveActiveTimedEvent.eventId, runScore: payload.runScore, eventPoints: payload.eventPoints, fragmentAwarded: payload.fragmentAwarded, essence: payload.essence, triggerSource: 'fortune_engine_run_result' });
+              setRuntimeState(run.record);
+              return { progress: run.progress, awardedFragmentId: run.awardedFragmentId, coreJustCompleted: run.coreJustCompleted };
+            },
+            requestClaimMilestoneReward: (milestoneId: string) => {
+              const claim = claimFortuneEngineMilestoneReward({ session, client, eventId: effectiveActiveTimedEvent.eventId, milestoneId, triggerSource: 'fortune_engine_claim_milestone' });
+              if (claim.ok) setRuntimeState(claim.record);
+              return { ok: claim.ok, progress: claim.progress, rewardLabel: claim.rewardLabel, ticketsRemaining: claim.ticketsRemaining, failureReason: claim.failureReason };
+            },
+            requestFinaleResult: (success: boolean) => {
+              const finale = applyFortuneEngineFinaleResult({ session, client, eventId: effectiveActiveTimedEvent.eventId, success, triggerSource: 'fortune_engine_finale' });
+              if (finale.ok) setRuntimeState(finale.record);
+              return { ok: finale.ok, progress: finale.progress, rewardLabel: finale.rewardLabel, failureReason: finale.failureReason };
             },
           }
         : effectiveActiveTimedEvent.eventType === 'feeding_frenzy'

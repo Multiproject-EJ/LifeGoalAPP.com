@@ -1298,6 +1298,7 @@ export interface Database {
           completed_stops_by_island: Json;
           space_excavator_progress_by_event: Json;
           companion_feast_progress_by_event: Json;
+          fortune_engine_progress_by_event: Json;
           created_at: string;
           updated_at: string;
         };
@@ -1326,6 +1327,7 @@ export interface Database {
           completed_stops_by_island?: Json;
           space_excavator_progress_by_event?: Json;
           companion_feast_progress_by_event?: Json;
+          fortune_engine_progress_by_event?: Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -1354,6 +1356,7 @@ export interface Database {
           completed_stops_by_island?: Json;
           space_excavator_progress_by_event?: Json;
           companion_feast_progress_by_event?: Json;
+          fortune_engine_progress_by_event?: Json;
           created_at?: string;
           updated_at?: string;
         };

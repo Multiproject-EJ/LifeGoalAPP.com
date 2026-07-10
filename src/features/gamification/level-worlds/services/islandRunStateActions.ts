@@ -43,6 +43,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type {
   CompanionFeastProgressEntry,
   CreatureCollectionRuntimeEntry,
+  FortuneEngineProgressEntry,
   IslandRunGameStateRecord,
   IslandRunFirstSessionTutorialState,
   IslandRunLuckyRollSession,
@@ -114,6 +115,18 @@ import {
   resolveCompanionFeastClaimedMilestoneIds,
   type CompanionFeastLevel,
 } from './companionFeastProgression';
+import {
+  applyFortuneRunToProgress,
+  createFortuneEngineProgress,
+  FORTUNE_ENGINE_FINALE_REWARD,
+  FORTUNE_ENGINE_FINALE_REWARD_LABEL,
+  FORTUNE_ENGINE_LAUNCH_TICKET_COST,
+  getFortuneEngineDayKey,
+  getFortuneEngineMilestone,
+  isFortuneCoreComplete,
+  isFortuneGoldenLaunchAvailable,
+  resolveFortuneEngineClaimedMilestoneIds,
+} from './fortuneEngineProgression';
 import {
   ISLAND_RUN_ECONOMY_COUNTERS,
   ISLAND_RUN_ECONOMY_SINKS,
@@ -704,6 +717,325 @@ export function claimCompanionFeastMilestoneReward(options: {
     triggerSource: triggerSource ?? 'claim_companion_feast_milestone_reward',
   });
   return { record: next, ok: true, progress: nextProgress, rewardLabel: milestone.rewardLabel };
+}
+
+// ── Fortune Engine (lucky_spin slot) campaign actions ────────────────────────
+
+export type FortuneEngineLaunchFailureReason = 'missing_event' | 'insufficient_tickets';
+
+export interface ApplyFortuneEngineLaunchResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  /** True when this launch was the free daily Golden Launch (no ticket spent). */
+  golden: boolean;
+  ticketsRemaining: number;
+  progress: FortuneEngineProgressEntry | null;
+  failureReason?: FortuneEngineLaunchFailureReason;
+}
+
+export interface ApplyFortuneEngineRunResultOutcome {
+  record: IslandRunGameStateRecord;
+  progress: FortuneEngineProgressEntry | null;
+  /** Fortune Core fragment id lit up by this run, or null. */
+  awardedFragmentId: number | null;
+  /** True the moment this run completed the 3×3 core (finale unlocked). */
+  coreJustCompleted: boolean;
+}
+
+export type ClaimFortuneEngineMilestoneRewardFailureReason =
+  | 'missing_event'
+  | 'progress_not_found'
+  | 'missing_milestone'
+  | 'not_achieved'
+  | 'already_claimed';
+
+export interface ClaimFortuneEngineMilestoneRewardResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  progress: FortuneEngineProgressEntry | null;
+  rewardLabel: string | null;
+  ticketsRemaining: number;
+  failureReason?: ClaimFortuneEngineMilestoneRewardFailureReason;
+}
+
+export type FortuneEngineFinaleFailureReason =
+  | 'missing_event'
+  | 'progress_not_found'
+  | 'core_incomplete'
+  | 'already_completed'
+  | 'not_successful';
+
+export interface ApplyFortuneEngineFinaleResultOutcome {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  progress: FortuneEngineProgressEntry | null;
+  rewardLabel: string | null;
+  failureReason?: FortuneEngineFinaleFailureReason;
+}
+
+/** Idempotently seed the Fortune Engine campaign ledger for an event. */
+export function initFortuneEngineProgressForEvent(options: { session: Session; client: SupabaseClient | null; eventId: string; triggerSource?: string; }): IslandRunGameStateRecord {
+  const { session, client, eventId, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  if (!eventId) return current;
+  if (current.fortuneEngineProgressByEvent?.[eventId]) return current;
+  const next = { ...current, runtimeVersion: current.runtimeVersion + 1, fortuneEngineProgressByEvent: { ...current.fortuneEngineProgressByEvent, [eventId]: createFortuneEngineProgress(Date.now()) } };
+  void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'init_fortune_engine_progress' });
+  return next;
+}
+
+/**
+ * Start one Fortune Engine run. The first launch of each local day is the
+ * free Golden Launch; every other launch spends 1 event ticket from the
+ * active event's bucket. Fails without mutating state when neither is
+ * available.
+ */
+export function applyFortuneEngineLaunch(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  nowMs?: number;
+  triggerSource?: string;
+}): ApplyFortuneEngineLaunchResult {
+  const { session, client, eventId, triggerSource } = options;
+  const nowMs = options.nowMs ?? Date.now();
+  if (!eventId) {
+    const current = getIslandRunStateSnapshot(session);
+    return { record: current, ok: false, golden: false, ticketsRemaining: 0, progress: null, failureReason: 'missing_event' };
+  }
+  const current = initFortuneEngineProgressForEvent({ session, client: null, eventId, triggerSource });
+  const progress = current.fortuneEngineProgressByEvent?.[eventId] ?? createFortuneEngineProgress(nowMs);
+  const available = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[eventId] ?? 0));
+  const golden = isFortuneGoldenLaunchAvailable(progress, nowMs);
+
+  if (!golden && available < FORTUNE_ENGINE_LAUNCH_TICKET_COST) {
+    return { record: current, ok: false, golden: false, ticketsRemaining: available, progress, failureReason: 'insufficient_tickets' };
+  }
+
+  const nextProgress: FortuneEngineProgressEntry = {
+    ...progress,
+    totalLaunches: progress.totalLaunches + 1,
+    goldenLaunchDayKey: golden ? getFortuneEngineDayKey(nowMs) : progress.goldenLaunchDayKey,
+    updatedAtMs: nowMs,
+  };
+  const ticketsRemaining = golden ? available : available - FORTUNE_ENGINE_LAUNCH_TICKET_COST;
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    minigameTicketsByEvent: golden
+      ? current.minigameTicketsByEvent
+      : { ...current.minigameTicketsByEvent, [eventId]: ticketsRemaining },
+    fortuneEngineProgressByEvent: { ...current.fortuneEngineProgressByEvent, [eventId]: nextProgress },
+  };
+  if (!golden) {
+    recordIslandRunEconomyCounter({
+      counter: ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsSpent,
+      amount: FORTUNE_ENGINE_LAUNCH_TICKET_COST,
+      sessionId: session.user.id,
+      metadata: { eventId, stage: 'fortune_engine_launch' },
+    });
+  }
+  void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'apply_fortune_engine_launch' });
+  return { record: next, ok: true, golden, ticketsRemaining, progress: nextProgress };
+}
+
+/**
+ * Bank one finished run into the campaign: event points accumulate on the
+ * reward track, the best score updates, an earned Fortune Core fragment
+ * lights up, and essence collected inside the run is credited to the wallet.
+ * (Dice collected in-run flow through the mini-game's `onComplete` reward so
+ * the board's celebration modal stays the single dice-credit path.)
+ */
+export function applyFortuneEngineRunResult(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  runScore: number;
+  eventPoints: number;
+  fragmentAwarded: boolean;
+  essence?: number;
+  triggerSource?: string;
+}): ApplyFortuneEngineRunResultOutcome {
+  const { session, client, eventId, triggerSource } = options;
+  if (!eventId) {
+    const current = getIslandRunStateSnapshot(session);
+    return { record: current, progress: null, awardedFragmentId: null, coreJustCompleted: false };
+  }
+  const nowMs = Date.now();
+  const current = initFortuneEngineProgressForEvent({ session, client: null, eventId, triggerSource });
+  const progress = current.fortuneEngineProgressByEvent?.[eventId] ?? createFortuneEngineProgress(nowMs);
+  const runResult = applyFortuneRunToProgress({
+    progress,
+    runScore: options.runScore,
+    eventPoints: options.eventPoints,
+    fragmentAwarded: options.fragmentAwarded,
+    nowMs,
+  });
+  const essenceAward = Math.max(0, Math.floor(options.essence ?? 0));
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    essence: Math.max(0, current.essence + essenceAward),
+    essenceLifetimeEarned: Math.max(0, current.essenceLifetimeEarned + essenceAward),
+    fortuneEngineProgressByEvent: { ...current.fortuneEngineProgressByEvent, [eventId]: runResult.progress },
+  };
+  void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'apply_fortune_engine_run_result' });
+  return {
+    record: next,
+    progress: runResult.progress,
+    awardedFragmentId: runResult.awardedFragmentId,
+    coreJustCompleted: runResult.coreJustCompleted,
+  };
+}
+
+/**
+ * Claim a reward-track milestone once event points reach it. Milestones can
+ * pay dice/essence/shards straight to the wallet and can also return event
+ * tickets into this event's ticket bucket.
+ */
+export function claimFortuneEngineMilestoneReward(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  milestoneId: string;
+  triggerSource?: string;
+}): ClaimFortuneEngineMilestoneRewardResult {
+  const { session, client, eventId, milestoneId, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const canonicalEventId = eventId.trim();
+  const ticketsAvailable = Math.max(0, Math.floor(current.minigameTicketsByEvent?.[canonicalEventId] ?? 0));
+  if (!canonicalEventId) {
+    return { record: current, ok: false, progress: null, rewardLabel: null, ticketsRemaining: 0, failureReason: 'missing_event' };
+  }
+  const progress = current.fortuneEngineProgressByEvent?.[canonicalEventId] ?? null;
+  if (!progress) {
+    return { record: current, ok: false, progress: null, rewardLabel: null, ticketsRemaining: ticketsAvailable, failureReason: 'progress_not_found' };
+  }
+  const milestone = getFortuneEngineMilestone(milestoneId);
+  if (!milestone) {
+    return { record: current, ok: false, progress, rewardLabel: null, ticketsRemaining: ticketsAvailable, failureReason: 'missing_milestone' };
+  }
+  const points = Math.max(0, Math.floor(progress.eventPoints ?? 0));
+  if (points < milestone.pointsRequired) {
+    return { record: current, ok: false, progress, rewardLabel: milestone.rewardLabel, ticketsRemaining: ticketsAvailable, failureReason: 'not_achieved' };
+  }
+  if (progress.claimedMilestoneIds.includes(milestone.id)) {
+    return { record: current, ok: false, progress, rewardLabel: milestone.rewardLabel, ticketsRemaining: ticketsAvailable, failureReason: 'already_claimed' };
+  }
+
+  const nextProgress: FortuneEngineProgressEntry = {
+    ...progress,
+    claimedMilestoneIds: resolveFortuneEngineClaimedMilestoneIds({
+      claimedMilestoneIds: [...progress.claimedMilestoneIds, milestone.id],
+    }),
+    updatedAtMs: Date.now(),
+  };
+  const essenceAward = Math.max(0, Math.floor(milestone.reward.essence ?? 0));
+  const diceAward = Math.max(0, Math.floor(milestone.reward.dicePool ?? 0));
+  const shardAward = Math.max(0, Math.floor(milestone.reward.shards ?? 0));
+  const ticketAward = Math.max(0, Math.floor(milestone.reward.eventTickets ?? 0));
+  const ticketsRemaining = ticketsAvailable + ticketAward;
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    dicePool: Math.max(0, current.dicePool + diceAward),
+    essence: Math.max(0, current.essence + essenceAward),
+    essenceLifetimeEarned: Math.max(0, current.essenceLifetimeEarned + essenceAward),
+    shards: Math.max(0, current.shards + shardAward),
+    minigameTicketsByEvent: ticketAward > 0
+      ? { ...current.minigameTicketsByEvent, [canonicalEventId]: ticketsRemaining }
+      : current.minigameTicketsByEvent,
+    fortuneEngineProgressByEvent: {
+      ...current.fortuneEngineProgressByEvent,
+      [canonicalEventId]: nextProgress,
+    },
+  };
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.fortuneEngineMilestoneDice,
+    amount: diceAward,
+    sessionId: session.user.id,
+    metadata: { eventId: canonicalEventId, milestoneId: milestone.id, rewardLabel: milestone.rewardLabel },
+  });
+  if (ticketAward > 0) {
+    recordIslandRunEconomyCounter({
+      counter: ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsEarned,
+      amount: ticketAward,
+      sessionId: session.user.id,
+      metadata: { eventId: canonicalEventId, milestoneId: milestone.id, stage: 'fortune_engine_milestone' },
+    });
+  }
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'claim_fortune_engine_milestone_reward',
+  });
+  return { record: next, ok: true, progress: nextProgress, rewardLabel: milestone.rewardLabel, ticketsRemaining };
+}
+
+/**
+ * Resolve the ticket-free finale ("Stabilise the Fortune Core"). Success is
+ * one-shot: it marks the permanent trophy flag and pays the final reward.
+ * Failed attempts mutate nothing — the finale stays open for a free retry,
+ * and rewards already earned are never lost.
+ */
+export function applyFortuneEngineFinaleResult(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  success: boolean;
+  triggerSource?: string;
+}): ApplyFortuneEngineFinaleResultOutcome {
+  const { session, client, eventId, success, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const canonicalEventId = eventId.trim();
+  if (!canonicalEventId) {
+    return { record: current, ok: false, progress: null, rewardLabel: null, failureReason: 'missing_event' };
+  }
+  const progress = current.fortuneEngineProgressByEvent?.[canonicalEventId] ?? null;
+  if (!progress) {
+    return { record: current, ok: false, progress: null, rewardLabel: null, failureReason: 'progress_not_found' };
+  }
+  if (!isFortuneCoreComplete(progress)) {
+    return { record: current, ok: false, progress, rewardLabel: null, failureReason: 'core_incomplete' };
+  }
+  if (progress.finaleCompleted) {
+    return { record: current, ok: false, progress, rewardLabel: null, failureReason: 'already_completed' };
+  }
+  if (!success) {
+    return { record: current, ok: false, progress, rewardLabel: null, failureReason: 'not_successful' };
+  }
+
+  const nextProgress: FortuneEngineProgressEntry = {
+    ...progress,
+    finaleCompleted: true,
+    updatedAtMs: Date.now(),
+  };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    dicePool: Math.max(0, current.dicePool + FORTUNE_ENGINE_FINALE_REWARD.dicePool),
+    essence: Math.max(0, current.essence + FORTUNE_ENGINE_FINALE_REWARD.essence),
+    essenceLifetimeEarned: Math.max(0, current.essenceLifetimeEarned + FORTUNE_ENGINE_FINALE_REWARD.essence),
+    shards: Math.max(0, current.shards + FORTUNE_ENGINE_FINALE_REWARD.shards),
+    fortuneEngineProgressByEvent: {
+      ...current.fortuneEngineProgressByEvent,
+      [canonicalEventId]: nextProgress,
+    },
+  };
+  recordIslandRunDiceInflow({
+    source: ISLAND_RUN_ECONOMY_SOURCES.fortuneEngineFinaleDice,
+    amount: FORTUNE_ENGINE_FINALE_REWARD.dicePool,
+    sessionId: session.user.id,
+    metadata: { eventId: canonicalEventId, stage: 'fortune_engine_finale' },
+  });
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_fortune_engine_finale_result',
+  });
+  return { record: next, ok: true, progress: nextProgress, rewardLabel: FORTUNE_ENGINE_FINALE_REWARD_LABEL };
 }
 // ── applyRollResult ──────────────────────────────────────────────────────────
 

@@ -16,6 +16,15 @@ function rewriteRelativeSpecifiersToJs(filePath) {
     if (KNOWN_RUNTIME_EXTENSIONS.some((ext) => specifier.endsWith(ext))) return specifier;
 
     const basePath = path.resolve(path.dirname(filePath), specifier);
+    // tsc preserves side-effect stylesheet imports (`import './x.css'`) in its
+    // emitted JS. Stub them with an empty module so the node runner can load
+    // compiled components that pull in styles.
+    if (specifier.endsWith('.css')) {
+      if (!existsSync(`${basePath}.js`)) {
+        writeFileSync(`${basePath}.js`, 'export {};\n');
+      }
+      return `${specifier}.js`;
+    }
     if (existsSync(basePath) && statSync(basePath).isDirectory()) {
       return `${specifier}/index.js`;
     }
