@@ -24,28 +24,31 @@
   box-sizing: border-box;
 }
 
+/* The celebration overlay is meant to feel like a heads-up display floating
+   over the live board: the backdrop is almost fully transparent (the board
+   stays visible behind it) and only the neon grid / fragment carry weight. */
 .island-tech-modal-backdrop {
   z-index: 180;
-  background: radial-gradient(circle at 50% 38%, rgba(34, 211, 238, 0.18), transparent 36%),
-    rgba(4, 8, 18, 0.5);
+  background: radial-gradient(circle at 50% 38%, rgba(34, 211, 238, 0.1), transparent 36%),
+    rgba(4, 8, 18, 0.12);
   animation: island-tech-backdrop-in 0.18s ease both;
 }
 
 .island-tech-modal-backdrop--line {
-  background: radial-gradient(circle at 50% 38%, rgba(250, 204, 21, 0.22), transparent 38%),
-    rgba(4, 8, 18, 0.62);
+  background: radial-gradient(circle at 50% 38%, rgba(250, 204, 21, 0.12), transparent 38%),
+    rgba(4, 8, 18, 0.16);
 }
 
-/* Fragment phase: the recovered piece floats over a heavily tinted board so the
-   glowing fragment reads as the sole focus. */
+/* Fragment phase: the recovered piece floats over the barely tinted board so
+   the glowing fragment reads as the sole focus while the board stays visible. */
 .island-tech-modal-backdrop--fragment {
-  background: radial-gradient(circle at 50% 46%, rgba(56, 189, 248, 0.24), transparent 42%),
-    rgba(2, 5, 14, 0.82);
+  background: radial-gradient(circle at 50% 46%, rgba(56, 189, 248, 0.14), transparent 42%),
+    rgba(2, 5, 14, 0.2);
 }
 
 .island-tech-modal-backdrop--fragment.island-tech-modal-backdrop--line {
-  background: radial-gradient(circle at 50% 46%, rgba(250, 204, 21, 0.26), transparent 42%),
-    rgba(2, 5, 14, 0.84);
+  background: radial-gradient(circle at 50% 46%, rgba(250, 204, 21, 0.16), transparent 42%),
+    rgba(2, 5, 14, 0.22);
 }
 
 /* ── Fragment reveal (phase 1) ─────────────────────────────────────────────── */
@@ -63,7 +66,8 @@
   font-size: 0.72rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(125, 211, 252, 0.9);
+  color: rgba(125, 211, 252, 0.95);
+  text-shadow: 0 1px 3px rgba(2, 6, 16, 0.9);
 }
 
 .island-tech-fragment__title {
@@ -72,7 +76,7 @@
   font-weight: 900;
   letter-spacing: 0.06em;
   color: #f4faff;
-  text-shadow: 0 0 22px rgba(56, 189, 248, 0.6);
+  text-shadow: 0 1px 3px rgba(2, 6, 16, 0.95), 0 0 22px rgba(56, 189, 248, 0.6);
 }
 
 .island-tech-fragment__stage {
@@ -113,7 +117,16 @@
   border-radius: 22px;
   background-repeat: no-repeat;
   border: 2px solid rgba(125, 211, 252, 0.75);
-  box-shadow: 0 0 30px rgba(56, 189, 248, 0.7), 0 0 70px rgba(56, 189, 248, 0.35),
+  /* Solid zero-blur steps below the card extrude it into a thick 3D slab
+     (the recovered fragment must read as a physical object, not a flat
+     sheet); the blurred glows then wrap the whole extruded body. */
+  box-shadow:
+    0 3px 0 rgba(30, 58, 108, 0.95),
+    0 6px 0 rgba(22, 44, 86, 0.95),
+    0 9px 0 rgba(15, 30, 62, 0.9),
+    0 12px 0 rgba(10, 20, 44, 0.85),
+    0 16px 22px rgba(2, 6, 16, 0.55),
+    0 0 30px rgba(56, 189, 248, 0.7), 0 0 70px rgba(56, 189, 248, 0.35),
     inset 0 0 26px rgba(14, 165, 233, 0.35);
   display: grid;
   place-items: center;
@@ -160,6 +173,7 @@
   font-weight: 800;
   letter-spacing: 0.04em;
   color: #d7ecff;
+  text-shadow: 0 1px 3px rgba(2, 6, 16, 0.9);
 }
 
 .island-tech-fragment__hint {
@@ -180,7 +194,12 @@
   border-radius: 22px;
   background-repeat: no-repeat;
   border: 2px solid rgba(125, 211, 252, 0.75);
-  box-shadow: 0 0 30px rgba(56, 189, 248, 0.7), 0 0 70px rgba(56, 189, 248, 0.35),
+  box-shadow:
+    0 3px 0 rgba(30, 58, 108, 0.95),
+    0 6px 0 rgba(22, 44, 86, 0.95),
+    0 9px 0 rgba(15, 30, 62, 0.9),
+    0 12px 0 rgba(10, 20, 44, 0.85),
+    0 0 30px rgba(56, 189, 248, 0.7), 0 0 70px rgba(56, 189, 248, 0.35),
     inset 0 0 26px rgba(14, 165, 233, 0.35);
   display: grid;
   place-items: center;
@@ -204,14 +223,16 @@
 }
 
 /* ── Fast pickup modal ─────────────────────────────────────────────────────── */
+/* Near-transparent shell: only the neon frame and the solid 3×3 grid inside
+   carry visual weight, so the board keeps showing through the panel. */
 .island-tech-modal {
   width: min(92vw, 380px);
   box-sizing: border-box;
   padding: 18px 18px 14px;
   border-radius: 22px;
-  border: 1px solid rgba(125, 211, 252, 0.42);
-  background: linear-gradient(160deg, rgba(13, 24, 46, 0.96), rgba(8, 16, 34, 0.96));
-  box-shadow: 0 22px 60px rgba(4, 8, 18, 0.6), inset 0 0 30px rgba(14, 165, 233, 0.16);
+  border: 1px solid rgba(125, 211, 252, 0.55);
+  background: linear-gradient(160deg, rgba(13, 24, 46, 0.22), rgba(8, 16, 34, 0.26));
+  box-shadow: 0 22px 60px rgba(4, 8, 18, 0.35), inset 0 0 30px rgba(14, 165, 233, 0.14);
   color: #eaf4ff;
   text-align: center;
   animation: island-tech-modal-pop 0.42s cubic-bezier(0.18, 0.9, 0.24, 1.1) both;
@@ -223,7 +244,8 @@
   font-size: 0.7rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(125, 211, 252, 0.85);
+  color: rgba(125, 211, 252, 0.95);
+  text-shadow: 0 1px 3px rgba(2, 6, 16, 0.9);
 }
 
 .island-tech-modal__title {
@@ -232,6 +254,9 @@
   font-weight: 900;
   letter-spacing: 0.06em;
   color: #f4faff;
+  /* The shell behind this text is near-transparent, so the copy carries its
+     own contrast against whatever board art sits behind it. */
+  text-shadow: 0 1px 3px rgba(2, 6, 16, 0.9), 0 0 14px rgba(2, 6, 16, 0.7);
 }
 
 .island-tech-modal__progress {
@@ -239,6 +264,7 @@
   font-size: 0.92rem;
   font-weight: 800;
   color: #d7ecff;
+  text-shadow: 0 1px 3px rgba(2, 6, 16, 0.9);
 }
 
 .island-tech-modal__line-reward {
@@ -274,6 +300,8 @@
 }
 
 /* ── Shared 3×3 grid ───────────────────────────────────────────────────────── */
+/* Unlike the see-through shell around it, the grid is deliberately SOLID with
+   a neon frame — it's the one opaque element of the overlay. */
 .island-tech-grid {
   position: relative;
   display: grid;
@@ -284,9 +312,12 @@
   aspect-ratio: 1 / 1;
   padding: 8px;
   border-radius: 18px;
-  border: 1px solid rgba(125, 211, 252, 0.4);
-  background: rgba(15, 23, 42, 0.42);
-  box-shadow: inset 0 0 26px rgba(14, 165, 233, 0.18);
+  border: 2px solid rgba(125, 211, 252, 0.85);
+  background: rgb(9, 15, 30);
+  box-shadow:
+    0 0 18px rgba(56, 189, 248, 0.5),
+    0 0 42px rgba(56, 189, 248, 0.24),
+    inset 0 0 26px rgba(14, 165, 233, 0.22);
 }
 
 .island-tech-grid__probe {
@@ -301,7 +332,7 @@
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  background-color: rgba(8, 47, 73, 0.4);
+  background-color: rgb(10, 36, 56);
   background-repeat: no-repeat;
   display: grid;
   place-items: center;
@@ -558,12 +589,26 @@
 }
 
 @keyframes island-tech-fragment-glow {
+  /* Restate the extrusion steps in every frame — animating box-shadow replaces
+     the whole list, and the slab depth must never flicker away mid-pulse. */
   0%, 100% {
-    box-shadow: 0 0 30px rgba(56, 189, 248, 0.7), 0 0 70px rgba(56, 189, 248, 0.35),
+    box-shadow:
+      0 3px 0 rgba(30, 58, 108, 0.95),
+      0 6px 0 rgba(22, 44, 86, 0.95),
+      0 9px 0 rgba(15, 30, 62, 0.9),
+      0 12px 0 rgba(10, 20, 44, 0.85),
+      0 16px 22px rgba(2, 6, 16, 0.55),
+      0 0 30px rgba(56, 189, 248, 0.7), 0 0 70px rgba(56, 189, 248, 0.35),
       inset 0 0 26px rgba(14, 165, 233, 0.35);
   }
   50% {
-    box-shadow: 0 0 46px rgba(125, 211, 252, 0.9), 0 0 100px rgba(56, 189, 248, 0.55),
+    box-shadow:
+      0 3px 0 rgba(30, 58, 108, 0.95),
+      0 6px 0 rgba(22, 44, 86, 0.95),
+      0 9px 0 rgba(15, 30, 62, 0.9),
+      0 12px 0 rgba(10, 20, 44, 0.85),
+      0 16px 22px rgba(2, 6, 16, 0.55),
+      0 0 46px rgba(125, 211, 252, 0.9), 0 0 100px rgba(56, 189, 248, 0.55),
       inset 0 0 34px rgba(14, 165, 233, 0.5);
   }
 }

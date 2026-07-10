@@ -25,9 +25,10 @@ import './IslandTechCollectionModal.css';
  *      restored and gets a COLLECTED! stamp. Completing a line is surfaced inline
  *      (ROW/COLUMN/LINE COMPLETE +N DICE). Tapping again dismisses.
  *
- * When auto-roll is engaged the player is hands-off, so the celebration drives
- * itself: it advances fragment → grid on a timer and auto-closes after 4s so the
- * loop can resume. When the player is rolling manually it waits for taps.
+ * The app places the fragment into the grid automatically: the reveal always
+ * advances fragment → flight → grid on its own timer (a tap merely skips
+ * ahead). When auto-roll is engaged the modal additionally auto-closes after
+ * 4s so the loop can resume; manual rollers tap to dismiss the landed grid.
  *
  * Presentation only: it receives a fully resolved result model and the dice were
  * already granted by the canonical action upstream. It performs no gameplay
@@ -177,20 +178,24 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
     };
   }, [phase, result.slotIndex]);
 
-  // Auto-roll: the player isn't tapping, so the celebration walks itself through
-  // every phase and closes after a fixed dwell. Manual rollers own the pacing and
-  // no timer runs — they tap the fragment to fly it in, then tap to close.
+  // The app (not the player) places the fragment into the grid: the reveal
+  // always advances fragment → flight → grid on its own timer. A tap can still
+  // skip ahead, but no interaction is required for the placement to happen.
   useEffect(() => {
-    if (!isAutoRolling) return;
     const closeMs = autoCloseMs ?? AUTO_ROLL_CLOSE_MS;
     const advanceMs = reduced ? 600 : Math.min(AUTO_ROLL_FRAGMENT_MS, Math.max(0, closeMs - 400));
     const advanceHandle = window.setTimeout(() => beginFlightOrGrid(), advanceMs);
+    return () => window.clearTimeout(advanceHandle);
+  }, [autoCloseMs, reduced, beginFlightOrGrid]);
+
+  // Auto-roll is fully hands-off, so the celebration also closes itself after a
+  // fixed dwell. Manual rollers keep the grid up until they tap to dismiss.
+  useEffect(() => {
+    if (!isAutoRolling) return;
+    const closeMs = autoCloseMs ?? AUTO_ROLL_CLOSE_MS;
     const closeHandle = window.setTimeout(() => dismissRef.current(), closeMs);
-    return () => {
-      window.clearTimeout(advanceHandle);
-      window.clearTimeout(closeHandle);
-    };
-  }, [isAutoRolling, autoCloseMs, reduced, beginFlightOrGrid]);
+    return () => window.clearTimeout(closeHandle);
+  }, [isAutoRolling, autoCloseMs]);
 
   if (typeof document === 'undefined') return null;
 
