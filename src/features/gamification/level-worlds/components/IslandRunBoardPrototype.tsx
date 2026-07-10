@@ -42,6 +42,7 @@ import {
   type TechCompletionCelebrationResult,
 } from './IslandTechCompletionCelebration';
 import {
+  TECH_COLLECTION_CELL_COUNT,
   resolveTechCollection,
 } from '../services/islandRunTechCollection';
 import {
@@ -9384,6 +9385,62 @@ export function IslandRunBoardPrototype({
     showIslandClearCelebrationFromAnywhere,
   ]);
 
+  // Clears every collected Concord fragment (and rewarded lines) for the
+  // CURRENT island through the canonical ledger, then mirrors the reset into the
+  // component's live refs/state so the nine fragment tokens reappear on the
+  // board immediately. Fragments only collect on an EXACT landing, so a fresh
+  // account (or one reset here) is the reliable way to witness the pickup modal:
+  // reset, then land on a fragment tile (Island 1 tiles 1/6/10/13/17/21/25/29/33).
+  const handleDevResetConcordFragments = useCallback(() => {
+    if (!isDevModeEnabled) return;
+    const record = applyTechCollectionState({
+      session,
+      client,
+      islandNumber,
+      collectedSlots: [],
+      rewardedLines: [],
+      triggerSource: 'dev_reset_tech_fragments',
+    });
+    const emptyCollected = new Set<number>();
+    const emptyLines = new Set<number>();
+    collectedTechTileIndicesRef.current = emptyCollected;
+    rewardedTechCollectionLinesRef.current = emptyLines;
+    setCollectedTechTileIndices(emptyCollected);
+    setRewardedTechCollectionLines(emptyLines);
+    setRuntimeState(record);
+    runtimeStateRef.current = record;
+    setTechCollectionModal(null);
+    setTechCompletionCelebration(null);
+    setLandingText('🧪 DEV MODE: Concord fragments reset — land on a fragment tile to see the pickup modal.');
+  }, [client, islandNumber, isDevModeEnabled, session]);
+
+  // Pure UI preview: opens the 3×3 Concord pickup modal on demand without any
+  // gameplay writes, so the celebration can be reviewed without hunting for an
+  // exact landing. Reveals the lowest not-yet-collected slot on top of whatever
+  // is already collected.
+  const handleDevPreviewConcordModal = useCallback(() => {
+    if (!isDevModeEnabled) return;
+    const alreadyCollected = collectedTechTileIndicesRef.current;
+    let slotIndex = 0;
+    for (let slot = 0; slot < TECH_COLLECTION_CELL_COUNT; slot += 1) {
+      if (!alreadyCollected.has(slot)) {
+        slotIndex = slot;
+        break;
+      }
+    }
+    const collectedSlots = Array.from(new Set([...alreadyCollected, slotIndex])).sort((a, b) => a - b);
+    setTechCompletionCelebration(null);
+    setTechCollectionModal({
+      slotIndex,
+      tileType: 'micro',
+      collectedSlots,
+      collectedCount: collectedSlots.length,
+      newlyCompletedLines: [],
+      lineRewardDice: 0,
+    });
+    setLandingText(`🧪 DEV MODE: previewing Concord pickup modal (fragment ${slotIndex + 1}).`);
+  }, [isDevModeEnabled]);
+
   const handleDevStartLuckyRollSession = useCallback(async (targetIslandNumber: number) => {
     if (!isDevModeEnabled) return 'Lucky Roll dev launcher is only available in Island Run dev mode.';
     const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
@@ -11342,6 +11399,11 @@ export function IslandRunBoardPrototype({
                 <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevSpeedHatchEgg}>🥚 Speed Hatch Egg</button>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevBuildAllToL3}>🏗️ Build All to L3</button>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevClearCurrentIslandForTravel}>🧹 Clear Island (Dev)</button>
+              </div>
+              <div className="island-run-prototype__status-row">
+                <span className="island-run-prototype__stat-chip">Concord Fragments</span>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevPreviewConcordModal}>👁️ Preview Concord Modal</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevResetConcordFragments}>🔄 Reset Fragments (Island {islandNumber})</button>
               </div>
             </div>
           )}
