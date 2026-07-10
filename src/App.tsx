@@ -3727,6 +3727,41 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setWorkspaceSetupDismissed(true);
   };
 
+  // These callbacks must stay above the early returns below (Peace Between
+  // shells + app readiness screen): hooks rendered after a conditional return
+  // change the hook count between renders and crash React (error #310).
+  const handlePlayFreeIslandRun = useCallback(async (payload: { displayName: string; shipName: string }) => {
+    patchIslandRunGuestFunnelState({
+      entrySource: 'landing_cta',
+      hasSeenGuestTimeline: true,
+      displayName: payload.displayName || undefined,
+      shipName: payload.shipName || undefined,
+    });
+    setPendingGuestIslandRunEntry(true);
+    try {
+      if (!supabaseSession) {
+        await signInAnonymously();
+        return;
+      }
+      setLevelWorldsEntryPanel('default');
+      setShowLevelWorldsFromEntry(true);
+    } catch (error) {
+      setPendingGuestIslandRunEntry(false);
+      setAuthError(error instanceof Error ? error.message : 'Unable to start guest play right now.');
+      throw error;
+    }
+  }, [signInAnonymously, supabaseSession]);
+
+  const handleOpenSaveAccountSignup = useCallback(() => {
+    setActiveAuthTab('signup');
+    setAuthMode('signup');
+    setAuthError(null);
+    const guestState = readIslandRunGuestFunnelState();
+    if (guestState.displayName) setFullName(guestState.displayName);
+    setAuthMessage('Create a free account to save this guest run. No payment required.');
+    setShowAuthPanel(true);
+  }, []);
+
   const activeSurface = resolveSurface(typeof window !== 'undefined' ? window.location.hostname : null);
   const shouldRenderPeaceBetweenConflictShell =
     activeSurface === 'peacebetween' &&
@@ -3771,28 +3806,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }, 0);
   };
 
-
-  const handlePlayFreeIslandRun = useCallback(async (payload: { displayName: string; shipName: string }) => {
-    patchIslandRunGuestFunnelState({
-      entrySource: 'landing_cta',
-      hasSeenGuestTimeline: true,
-      displayName: payload.displayName || undefined,
-      shipName: payload.shipName || undefined,
-    });
-    setPendingGuestIslandRunEntry(true);
-    try {
-      if (!supabaseSession) {
-        await signInAnonymously();
-        return;
-      }
-      setLevelWorldsEntryPanel('default');
-      setShowLevelWorldsFromEntry(true);
-    } catch (error) {
-      setPendingGuestIslandRunEntry(false);
-      setAuthError(error instanceof Error ? error.message : 'Unable to start guest play right now.');
-      throw error;
-    }
-  }, [signInAnonymously, supabaseSession]);
 
   const habitGameAuthCard = (
     <HabitGameAuthCard
@@ -5257,16 +5270,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     showLevelWorldsFromEntry && activeSession && isMobileViewport,
   );
 
-
-  const handleOpenSaveAccountSignup = useCallback(() => {
-    setActiveAuthTab('signup');
-    setAuthMode('signup');
-    setAuthError(null);
-    const guestState = readIslandRunGuestFunnelState();
-    if (guestState.displayName) setFullName(guestState.displayName);
-    setAuthMessage('Create a free account to save this guest run. No payment required.');
-    setShowAuthPanel(true);
-  }, []);
 
   const levelWorldsEntryModal = showLevelWorldsFromEntry && activeSession ? (
     <div
