@@ -127,7 +127,8 @@ import {
   isCompassSessionFilledForIsland,
   recordCompassContribution,
 } from '../../../../services/compassState';
-import { readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
+import { flushIslandRunPendingWrite, readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
+import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession';
 import { useIslandRunState } from '../hooks/useIslandRunState';
 import {
   getIslandRunBuildPromptInitialTransitionTarget,
@@ -2378,8 +2379,18 @@ export function IslandRunBoardPrototype({
   const pendingTreasurePathResumeCtaLabel = pendingTreasurePathResume?.status === 'active'
     ? 'Continue Treasure Path'
     : 'Collect Treasure';
-  const activeSessionStatusMessage = null;
-  const isRetryingSync = false;
+  // Soft cross-device handoff: when the server row was written moments ago by
+  // a different device, pause gameplay behind a "take over" prompt instead of
+  // silently playing against (and later clobbering) that device's session.
+  const [otherDeviceTakeoverPrompt, setOtherDeviceTakeoverPrompt] = useState<{
+    lastWriterDeviceSessionId: string;
+    updatedAtMs: number;
+  } | null>(null);
+  const hasCheckedOtherDeviceActivityRef = useRef(false);
+  const [isRetryingSync, setIsRetryingSync] = useState(false);
+  const activeSessionStatusMessage = otherDeviceTakeoverPrompt
+    ? `Island Run was saved from another device ${Math.max(1, Math.round((Date.now() - otherDeviceTakeoverPrompt.updatedAtMs) / 1000))}s before this session opened. Taking over loads that progress and continues here.`
+    : null;
   const [perfectCompanionRuntimeConfig, setPerfectCompanionRuntimeConfig] = useState(() => readPerfectCompanionRuntimeConfig(session.user.id));
   const runtimeStateRef = useRef(runtimeState);
   // Tracks the `runtimeState.runtimeVersion` last applied to local React state
@@ -2733,7 +2744,7 @@ export function IslandRunBoardPrototype({
 
   const isReconcilingRuntimeStateRef = useRef(false);
   const reconcileRuntimeState = useCallback(async (
-    reason: 'focus' | 'visibility',
+    reason: 'focus' | 'visibility' | 'realtime',
   ) => {
     if (!client || isReconcilingRuntimeStateRef.current || !hasHydratedRuntimeState) {
       return;
@@ -3639,7 +3650,45 @@ export function IslandRunBoardPrototype({
     runtimeHydrationSource !== null &&
     (runtimeHydrationSource === 'fallback_query_error' ||
       (runtimeHydrationSource === 'fallback_demo_or_no_client' && !isDemoSession(session)));
-  const isOwnershipBlocked = false;
+  const isOwnershipBlocked = otherDeviceTakeoverPrompt !== null;
+
+  // One-shot check on entry: was the server row written very recently by a
+  // different device? `last_writer_device_session_id` + `updated_at` are
+  // maintained by every commit (islandRunGameStateStore.toRemoteRow), so a
+  // fresh write from another device session means Island Run is (or was
+  // seconds ago) open elsewhere.
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || hasCheckedOtherDeviceActivityRef.current) return;
+    if (!client || isDemoSession(session)) return;
+    hasCheckedOtherDeviceActivityRef.current = true;
+
+    const ownDeviceSessionId = getIslandRunDeviceSessionId(session.user.id);
+    const RECENT_OTHER_DEVICE_WRITE_WINDOW_MS = 45_000;
+    void (async () => {
+      try {
+        const { data, error } = await client
+          .from('island_run_runtime_state')
+          .select('last_writer_device_session_id,updated_at')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        if (error || !data) return;
+        const lastWriter = typeof data.last_writer_device_session_id === 'string'
+          ? data.last_writer_device_session_id
+          : null;
+        const updatedAtMs = typeof data.updated_at === 'string' ? Date.parse(data.updated_at) : Number.NaN;
+        if (!lastWriter || lastWriter === ownDeviceSessionId || !Number.isFinite(updatedAtMs)) return;
+        if (Date.now() - updatedAtMs > RECENT_OTHER_DEVICE_WRITE_WINDOW_MS) return;
+        logIslandRunEntryDebug('island_run_other_device_recent_write_detected', {
+          userId: session.user.id,
+          lastWriterDeviceSessionId: lastWriter,
+          updatedAt: new Date(updatedAtMs).toISOString(),
+        });
+        setOtherDeviceTakeoverPrompt({ lastWriterDeviceSessionId: lastWriter, updatedAtMs });
+      } catch {
+        // Detection is best-effort; never block entry on a failed check.
+      }
+    })();
+  }, [client, hasHydratedRuntimeState, session]);
 
   const retryRuntimeSync = useCallback(async () => {
     logIslandRunEntryDebug('island_run_runtime_retry_sync_started', {
@@ -3699,6 +3748,19 @@ export function IslandRunBoardPrototype({
     }
   }, [client, session.user.id, setRuntimeStateWithTrace]);
 
+  const takeOverFromOtherDevice = useCallback(async () => {
+    setIsRetryingSync(true);
+    try {
+      await retryRuntimeSync();
+      setOtherDeviceTakeoverPrompt(null);
+      logIslandRunEntryDebug('island_run_other_device_takeover_confirmed', {
+        userId: session.user.id,
+      });
+    } finally {
+      setIsRetryingSync(false);
+    }
+  }, [retryRuntimeSync, session.user.id]);
+
   useEffect(() => {
     if (!hasHydratedRuntimeState || typeof window === 'undefined' || typeof document === 'undefined') {
       return;
@@ -3713,17 +3775,86 @@ export function IslandRunBoardPrototype({
       if (document.visibilityState === 'visible') {
         applyPassiveDiceRegen('visibility');
         void reconcileRuntimeState('visibility');
+      } else {
+        // Going to background: push any queued commit now so other devices
+        // see this device's progress while it sleeps. iOS PWAs never fire
+        // beforeunload, so hidden/pagehide are the only exit signals.
+        void flushIslandRunPendingWrite({ session, client, triggerSource: 'visibility_hidden_flush' });
       }
+    };
+
+    const onPageHide = () => {
+      void flushIslandRunPendingWrite({ session, client, triggerSource: 'pagehide_flush' });
     };
 
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pagehide', onPageHide);
 
     return () => {
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', onPageHide);
     };
-  }, [applyPassiveDiceRegen, hasHydratedRuntimeState, reconcileRuntimeState]);
+  }, [applyPassiveDiceRegen, client, hasHydratedRuntimeState, reconcileRuntimeState, session]);
+
+  // Cross-device convergence: reconcile as soon as another device commits a
+  // newer runtime snapshot, instead of waiting for this device's next
+  // focus/visibility event. Without this, a device left open on the game
+  // keeps a stale in-memory snapshot and its next write drags old egg/dice
+  // state through the conflict merge.
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || !client || isDemoSession(session)) {
+      return;
+    }
+
+    const ownDeviceSessionId = getIslandRunDeviceSessionId(session.user.id);
+    const channel = client
+      .channel(`island_run_runtime_state_${session.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'island_run_runtime_state',
+          filter: `user_id=eq.${session.user.id}`,
+        },
+        (payload) => {
+          const next = payload.new as {
+            runtime_version?: number;
+            last_writer_device_session_id?: string | null;
+          } | null;
+          const incomingVersion = typeof next?.runtime_version === 'number' ? next.runtime_version : null;
+          // The commit RPC replaces the row (delete + insert), so DELETE
+          // events arrive with an empty `new` payload — ignore them and act
+          // on the INSERT/UPDATE that carries the fresh row.
+          if (incomingVersion === null) {
+            return;
+          }
+          const lastWriter = typeof next?.last_writer_device_session_id === 'string'
+            ? next.last_writer_device_session_id
+            : null;
+          if (lastWriter && lastWriter === ownDeviceSessionId) {
+            return;
+          }
+          if (incomingVersion <= (runtimeStateRef.current.runtimeVersion ?? 0)) {
+            return;
+          }
+          logIslandRunEntryDebug('island_run_runtime_realtime_change_received', {
+            userId: session.user.id,
+            incomingRuntimeVersion: incomingVersion,
+            currentRuntimeVersion: runtimeStateRef.current.runtimeVersion ?? 0,
+            lastWriterDeviceSessionId: lastWriter,
+          });
+          void reconcileRuntimeState('realtime');
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void client.removeChannel(channel);
+    };
+  }, [client, hasHydratedRuntimeState, reconcileRuntimeState, session]);
 
   useEffect(() => {
     setIsDisplayNameLoopCompleted(runtimeState.onboardingDisplayNameLoopCompleted === true);
@@ -6790,6 +6921,44 @@ export function IslandRunBoardPrototype({
   const handleSetEgg = async () => {
     if (isSettingEgg) return;
     setIsSettingEgg(true);
+    // Cross-device guard: another device may already have set this island's
+    // egg while this device held a stale snapshot. Egg tier + hatch timer are
+    // rolled client-side, so without this check each device would mint its
+    // own divergent egg. Pull the freshest server row first and adopt a live
+    // remote egg instead of rolling a second one.
+    if (client && !isDemoSession(session)) {
+      try {
+        const remote = await hydrateIslandRunRuntimeStateWithSource({ session, client, forceRemote: true });
+        const remoteEntry = remote.source === 'table' ? remote.state.perIslandEggs?.[String(islandNumber)] : undefined;
+        const remoteHasLiveEgg = !!remoteEntry && (remoteEntry.status === 'incubating' || remoteEntry.status === 'ready');
+        if (
+          remoteHasLiveEgg
+          && remoteEntry
+          && (remote.state.runtimeVersion ?? 0) > (runtimeStateRef.current.runtimeVersion ?? 0)
+        ) {
+          setRuntimeStateWithTrace('set_egg_remote_guard_adopt', remote.state);
+          resetIslandRunStateSnapshot(session, remote.state);
+          setActiveEgg({
+            tier: remoteEntry.tier,
+            setAtMs: remoteEntry.setAtMs,
+            hatchAtMs: remoteEntry.hatchAtMs,
+            isDormant: remote.state.activeEggIsDormant,
+          });
+          logIslandRunEntryDebug('island_egg_set_blocked_remote_live_egg', {
+            userId: session.user.id,
+            islandNumber,
+            remoteTier: remoteEntry.tier,
+            remoteSetAtMs: remoteEntry.setAtMs,
+            remoteStatus: remoteEntry.status,
+          });
+          setLandingText('An egg set on another device is already incubating here.');
+          setIsSettingEgg(false);
+          return;
+        }
+      } catch {
+        // Offline or transient hydrate failure: keep the local set-egg path.
+      }
+    }
     const eggCount = isEggManiaUnused ? EGG_MANIA_MAX_EGGS_PER_ISLAND : 1;
     setLandingText(eggCount > 1 ? 'Setting Egg Mania eggs...' : 'Setting egg...');
     const start = Date.now();
@@ -10684,7 +10853,7 @@ export function IslandRunBoardPrototype({
           <p className="island-run-prototype__landing-feed" role="alert">
             {isRuntimeSyncBlocked
               ? 'Island Run sync is currently unavailable for this account, so gameplay is paused on this device to prevent split progress.'
-              : 'A newer Island Run state is available from another device. Reload to continue with the latest synced progress.'}
+              : 'Island Run looks active on another device. Take over here to continue with the latest synced progress.'}
           </p>
           <p className="island-run-prototype__landing-feed">
             {isRuntimeSyncBlocked
@@ -10695,11 +10864,19 @@ export function IslandRunBoardPrototype({
             type="button"
             className="island-run-prototype__roll-btn island-run-prototype__roll-btn--cta island-run-prototype__roll-btn--primary"
             onClick={() => {
-              void retryRuntimeSync();
+              if (isRuntimeSyncBlocked) {
+                void retryRuntimeSync();
+              } else {
+                void takeOverFromOtherDevice();
+              }
             }}
             disabled={isRetryingSync}
           >
-            {isRetryingSync ? 'Retrying…' : 'Reload latest progress'}
+            {isRetryingSync
+              ? 'Syncing…'
+              : isRuntimeSyncBlocked
+                ? 'Reload latest progress'
+                : 'Take over on this device'}
           </button>
         </header>
       </section>

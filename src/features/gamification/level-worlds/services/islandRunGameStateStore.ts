@@ -1944,6 +1944,125 @@ function mergeStringArrayByUnion(left: string[] = [], right: string[] = []): str
   return Array.from(new Set([...left, ...right]));
 }
 
+/**
+ * Lifecycle precedence for a single egg observed on two devices. A terminal
+ * transition (collect/sell) on one device must never be rolled back to
+ * `ready`/`incubating` by a stale writer on another device. `collected`
+ * outranks `sold` so a double-resolution race keeps the creature grant
+ * (creatureCollection merges by union, so the creature exists either way).
+ */
+const PER_ISLAND_EGG_STATUS_PRECEDENCE: Record<PerIslandEggStatus, number> = {
+  incubating: 0,
+  ready: 1,
+  sold: 2,
+  collected: 3,
+};
+
+export function mergePerIslandEggEntryForConflict(
+  remote: PerIslandEggEntry | undefined,
+  local: PerIslandEggEntry | undefined,
+): PerIslandEggEntry | undefined {
+  if (!remote) return local;
+  if (!local) return remote;
+  if (remote.setAtMs !== local.setAtMs) {
+    // Different eggs occupy the same slot: the newer placement is the slot's
+    // current truth. The older egg's rewards already live in ledgers that
+    // merge by union (creatureCollection, eggRewardInventory), so dropping
+    // the stale entry loses nothing.
+    return local.setAtMs > remote.setAtMs ? local : remote;
+  }
+  const remoteRank = PER_ISLAND_EGG_STATUS_PRECEDENCE[remote.status] ?? 0;
+  const localRank = PER_ISLAND_EGG_STATUS_PRECEDENCE[local.status] ?? 0;
+  const winner = localRank >= remoteRank ? local : remote;
+  const loser = winner === local ? remote : local;
+  return {
+    ...winner,
+    location: winner.location ?? loser.location,
+    openedAt: winner.openedAt ?? loser.openedAt,
+    animalCollectedAtMs: winner.animalCollectedAtMs ?? loser.animalCollectedAtMs,
+  };
+}
+
+export function mergePerIslandEggsForConflict(
+  remote: PerIslandEggsLedger | undefined,
+  local: PerIslandEggsLedger | undefined,
+): PerIslandEggsLedger {
+  const keys = new Set([...Object.keys(remote ?? {}), ...Object.keys(local ?? {})]);
+  const merged: PerIslandEggsLedger = {};
+  keys.forEach((key) => {
+    const entry = mergePerIslandEggEntryForConflict(remote?.[key], local?.[key]);
+    if (entry) merged[key] = entry;
+  });
+  return merged;
+}
+
+interface ActiveEggFieldGroup {
+  activeEggTier: IslandRunGameStateRecord['activeEggTier'];
+  activeEggSetAtMs: IslandRunGameStateRecord['activeEggSetAtMs'];
+  activeEggHatchDurationMs: IslandRunGameStateRecord['activeEggHatchDurationMs'];
+  activeEggIsDormant: IslandRunGameStateRecord['activeEggIsDormant'];
+}
+
+const EMPTY_ACTIVE_EGG_GROUP: ActiveEggFieldGroup = {
+  activeEggTier: null,
+  activeEggSetAtMs: null,
+  activeEggHatchDurationMs: null,
+  activeEggIsDormant: false,
+};
+
+function readActiveEggGroup(record: IslandRunGameStateRecord): ActiveEggFieldGroup | null {
+  if (
+    record.activeEggTier === null
+    || typeof record.activeEggSetAtMs !== 'number'
+    || !Number.isFinite(record.activeEggSetAtMs)
+  ) {
+    return null;
+  }
+  return {
+    activeEggTier: record.activeEggTier,
+    activeEggSetAtMs: record.activeEggSetAtMs,
+    activeEggHatchDurationMs: record.activeEggHatchDurationMs,
+    activeEggIsDormant: record.activeEggIsDormant,
+  };
+}
+
+/**
+ * Resolves the `activeEgg*` scalar group on a version conflict. Rules:
+ * 1. The side with the most recent `activeEggSetAtMs` provides the group
+ *    (a side with no active egg only "wins" via rule 2).
+ * 2. If the merged per-island ledger shows the winning egg as already
+ *    collected/sold (same island slot, same setAtMs), the active egg is
+ *    cleared — a resolution on one device beats a stale snapshot on another.
+ */
+export function mergeActiveEggFieldsForConflict(options: {
+  remote: IslandRunGameStateRecord;
+  local: IslandRunGameStateRecord;
+  mergedPerIslandEggs: PerIslandEggsLedger;
+}): ActiveEggFieldGroup {
+  const { remote, local, mergedPerIslandEggs } = options;
+  const localGroup = readActiveEggGroup(local);
+  const remoteGroup = readActiveEggGroup(remote);
+  if (!localGroup && !remoteGroup) return EMPTY_ACTIVE_EGG_GROUP;
+
+  const candidateSide =
+    localGroup && (!remoteGroup || (localGroup.activeEggSetAtMs as number) >= (remoteGroup.activeEggSetAtMs as number))
+      ? local
+      : remote;
+  const candidateGroup = candidateSide === local ? localGroup : remoteGroup;
+  if (!candidateGroup) return EMPTY_ACTIVE_EGG_GROUP;
+
+  const candidateIslandKey = String(candidateSide.currentIslandNumber);
+  const ledgerEntry = mergedPerIslandEggs[candidateIslandKey];
+  if (
+    ledgerEntry
+    && ledgerEntry.setAtMs === candidateGroup.activeEggSetAtMs
+    && (ledgerEntry.status === 'collected' || ledgerEntry.status === 'sold')
+  ) {
+    return EMPTY_ACTIVE_EGG_GROUP;
+  }
+  return candidateGroup;
+}
+
 function mergeCreatureCollection(
   remote: CreatureCollectionRuntimeEntry[],
   local: CreatureCollectionRuntimeEntry[],
@@ -1983,11 +2102,12 @@ function mergeCreatureCollection(
     .sort((a, b) => b.lastCollectedAtMs - a.lastCollectedAtMs);
 }
 
-function mergeRecordForConflict(options: {
+export function mergeRecordForConflict(options: {
   remote: IslandRunGameStateRecord;
   local: IslandRunGameStateRecord;
 }): IslandRunGameStateRecord {
   const { remote, local } = options;
+  const mergedPerIslandEggs = mergePerIslandEggsForConflict(remote.perIslandEggs, local.perIslandEggs);
   const mergedCompletedStopsByIsland = {
     ...remote.completedStopsByIsland,
     ...local.completedStopsByIsland,
@@ -2065,7 +2185,8 @@ function mergeRecordForConflict(options: {
       compareIslandRunFirstSessionTutorialStates(local.firstSessionTutorialState, remote.firstSessionTutorialState) >= 0
         ? local.firstSessionTutorialState
         : remote.firstSessionTutorialState,
-    perIslandEggs: { ...remote.perIslandEggs, ...local.perIslandEggs },
+    ...mergeActiveEggFieldsForConflict({ remote, local, mergedPerIslandEggs }),
+    perIslandEggs: mergedPerIslandEggs,
     eggRewardInventory: mergeEggRewardInventory(remote.eggRewardInventory, local.eggRewardInventory),
     creatureTreatInventory: {
       basic: Math.max(remote.creatureTreatInventory.basic, local.creatureTreatInventory.basic),
@@ -3102,4 +3223,47 @@ export async function writeIslandRunGameStateRecord(options: {
       coordinator.syncState = 'idle';
     }
   }
+}
+
+/**
+ * Best-effort flush of the pending-write queue, meant for
+ * `visibilitychange: hidden` / `pagehide`. Without this, a commit that was
+ * parked or failed stays queued until the app is *reopened on this device*,
+ * so another device can play for hours against a stale server row.
+ *
+ * Honors the normal commit gates (backoff, single-flight); when a gate is
+ * active the record simply stays queued.
+ */
+export async function flushIslandRunPendingWrite(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  triggerSource?: string;
+}): Promise<void> {
+  const { session, client, triggerSource = 'visibility_hidden_flush' } = options;
+  if (typeof window === 'undefined' || !client || isDemoSession(session)) return;
+
+  let pending: IslandRunGameStateRecord | null = null;
+  try {
+    const raw = window.localStorage.getItem(getPendingWriteStorageKey(session.user.id));
+    if (raw) {
+      pending = toRecord(JSON.parse(raw) as Partial<IslandRunGameStateRecord>, getDefaultRecord());
+    }
+  } catch {
+    pending = null;
+  }
+  if (!pending) return;
+
+  logIslandRunEntryDebug('runtime_state_pending_flush_on_hide', {
+    userId: session.user.id,
+    triggerSource,
+    ...getRuntimeStateDebugFields(pending),
+  });
+
+  await writeIslandRunGameStateRecord({
+    session,
+    client,
+    record: pending,
+    skipQueueReplay: true,
+    triggerSource,
+  });
 }

@@ -45,6 +45,14 @@ import {
 import { fetchCompletedActionsForDate, insertAction } from '../../services/actions';
 import { createTodayTodo, deleteTodayTodo, fetchTodayTodos, updateTodayTodo, type TodayTodo } from '../../services/todayTodos';
 import {
+  closeHabitTodayCampaign,
+  fetchHabitTodayCampaign,
+  isRemoteHabitCampaignId,
+  upsertHabitTodayCampaign,
+  type HabitCampaign,
+  type HabitCampaignType,
+} from '../../services/habitCampaigns';
+import {
   claimDailySpinHabitBonusOncePerDay,
   hasClaimedDailySpinHabitBonus,
   updateSpinsAvailable,
@@ -343,28 +351,8 @@ const TODAY_EXTRA_SECTION_KEYS = new Set<TodayExpandableSectionKey>(
   TODAY_EXTRA_SECTION_TOGGLES.map((section) => section.key),
 );
 
-type CampaignType = 'body' | 'mind' | 'bad_loop' | 'project' | 'money' | 'sleep' | 'relationship' | 'custom';
-type CampaignStatus = 'active' | 'completed' | 'paused' | 'ended';
-
-type Campaign = {
-  id: string;
-  user_id: string;
-  name: string;
-  type: CampaignType;
-  status: CampaignStatus;
-  start_date: string;
-  end_date: string;
-  duration_days: number;
-  victory_condition: string;
-  keystone_habit_id?: string | null;
-  minimum_move?: string | null;
-  danger_window?: string | null;
-  enemy_loop?: string | null;
-  replacement_move?: string | null;
-  recovery_rule?: string | null;
-  created_at: string;
-  updated_at: string;
-};
+type CampaignType = HabitCampaignType;
+type Campaign = HabitCampaign;
 
 type CampaignDraft = {
   name: string;
@@ -1346,9 +1334,54 @@ export function DailyHabitTracker({
     return lockPageScroll();
   }, [todayTodoModalOpen, ambianceModalOpen, campaignModalOpen]);
 
+  // Campaign truth lives in Supabase; localStorage is only a render cache.
+  // Render the cached campaign immediately, then reconcile with the server:
+  // - a remote campaign (any status) replaces the cache;
+  // - a closed remote campaign clears the cache (ended on another device);
+  // - a cache-only campaign with a local id is migrated up once.
+  const reconcileCampaignWithRemote = useCallback(async () => {
+    if (isDemoSession(session)) return;
+    const local = readStoredCampaign(session.user.id);
+    const { data: remote, error } = await fetchHabitTodayCampaign(session.user.id);
+    if (error) return;
+    if (remote) {
+      if (remote.status === 'active' || remote.status === 'paused') {
+        setCampaign(remote);
+        persistStoredCampaign(session.user.id, remote);
+      } else {
+        setCampaign(null);
+        persistStoredCampaign(session.user.id, null);
+      }
+      return;
+    }
+    if (local && !isRemoteHabitCampaignId(local.id)) {
+      const { data: uploaded } = await upsertHabitTodayCampaign(session.user.id, local);
+      if (uploaded) {
+        setCampaign(uploaded);
+        persistStoredCampaign(session.user.id, uploaded);
+      }
+    } else if (local) {
+      // Cached copy of a remote row that no longer exists: drop it.
+      setCampaign(null);
+      persistStoredCampaign(session.user.id, null);
+    }
+  }, [session]);
+
   useEffect(() => {
     setCampaign(readStoredCampaign(session.user.id));
-  }, [session.user.id]);
+    void reconcileCampaignWithRemote();
+  }, [session.user.id, reconcileCampaignWithRemote]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void reconcileCampaignWithRemote();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [reconcileCampaignWithRemote]);
 
   const handleOpenCampaignModal = useCallback(() => {
     if (campaign) {
@@ -1412,14 +1445,28 @@ export function DailyHabitTracker({
     setCampaignModalOpen(false);
     setCampaignPanelIndex(0);
     setCampaignError(null);
-  }, [campaign, campaignDraft, session.user.id]);
+    if (!isDemoSession(session)) {
+      // Push to Supabase in the background; adopt the server row (uuid id,
+      // server timestamps) so later saves update in place on every device.
+      void upsertHabitTodayCampaign(session.user.id, nextCampaign).then(({ data: saved }) => {
+        if (saved) {
+          setCampaign((current) => (current && current.id === nextCampaign.id ? saved : current));
+          persistStoredCampaign(session.user.id, saved);
+        }
+      });
+    }
+  }, [campaign, campaignDraft, session]);
 
   const handleEndCampaign = useCallback(() => {
+    const endingCampaign = campaign;
     setCampaign(null);
     persistStoredCampaign(session.user.id, null);
     setCampaignPanelIndex(0);
     setCampaignModalOpen(false);
-  }, [session.user.id]);
+    if (endingCampaign && !isDemoSession(session)) {
+      void closeHabitTodayCampaign(session.user.id, endingCampaign.id, 'ended');
+    }
+  }, [campaign, session]);
 
   const handleOpenCreateTodayTodo = useCallback(() => {
     setEditingTodayTodo(null);
