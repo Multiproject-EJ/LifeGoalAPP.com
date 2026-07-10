@@ -13,10 +13,19 @@
  *   - Each set offers 3 shapes; all 3 must be placed before the next set.
  *   - Completing a full row/column clears it and yields crafting materials.
  *   - Multi-line clears and consecutive-turn clear streaks pay combo bonuses.
+ *   - Pure-colour lines (every cell the same tint) super-flash and add bonus
+ *     blocks to the placeable pool: +1 per pure line, +4 when two pure lines
+ *     of the same colour clear together.
  *   - One Creature Assist per run clears the densest 3×3 pocket of the board.
  *   - The run ends when none of the remaining shapes fits anywhere.
  *   - Final score + materials convert into construction progress toward the
  *     event's magical island object (the Tidelight Beacon).
+ *
+ * Bench levels: filling the score reward bar unlocks the next bench level for
+ * subsequent runs. Level 2 seeds the bench with keystone blocks (solid,
+ * single-colour: a full mixed line clears around them; only a full line of
+ * their own colour releases them, paying bonus blocks) and gem blocks that
+ * unleash a dice reward when cleared.
  */
 
 export const ISLAND_WORKSHOP_GRID_SIZE = 8;
@@ -37,11 +46,53 @@ export const ISLAND_WORKSHOP_LINE_BASE_SCORE = 10;
 /** Consecutive-clear-turn streak multiplier cap. */
 export const ISLAND_WORKSHOP_MAX_STREAK_MULTIPLIER = 3;
 
+/** Highest bench level (level 2 unlocks keystone + gem blocks). */
+export const ISLAND_WORKSHOP_MAX_LEVEL = 2;
+
+/** Bit flag: cell is a solid keystone block (only a pure-colour line clears it). */
+export const ISLAND_WORKSHOP_SOLID_FLAG = 8;
+
+/** Bit flag: cell hides a gem that unleashes a dice reward when cleared. */
+export const ISLAND_WORKSHOP_GEM_FLAG = 16;
+
+/** Bonus blocks added to the pool for a single pure-colour line clear. */
+export const ISLAND_WORKSHOP_MONO_LINE_BONUS_BLOCKS = 1;
+
+/** Bonus blocks when 2+ pure lines of the SAME colour clear simultaneously. */
+export const ISLAND_WORKSHOP_MONO_PAIR_BONUS_BLOCKS = 4;
+
+/** Blocks released into the pool when a keystone block is cleared. */
+export const ISLAND_WORKSHOP_SOLID_RELEASE_BLOCKS = 7;
+
+/** Dice unleashed per gem block cleared. */
+export const ISLAND_WORKSHOP_GEM_REWARD_DICE = 25;
+
+/** Keystone blocks seeded onto a fresh level-2 bench. */
+export const ISLAND_WORKSHOP_LEVEL2_SOLID_SEEDS = 2;
+
+/** Gem blocks seeded onto a fresh level-2 bench. */
+export const ISLAND_WORKSHOP_LEVEL2_GEM_SEEDS = 3;
+
 /**
  * Board is a flat row-major array of ISLAND_WORKSHOP_CELL_COUNT cells.
- * 0 = empty; 1..4 = filled with a material tint index (visual only).
+ * 0 = empty. Bits 0..2 carry the material tint index (1..4, visual only);
+ * ISLAND_WORKSHOP_SOLID_FLAG marks keystone blocks and
+ * ISLAND_WORKSHOP_GEM_FLAG marks gem-bearing blocks.
  */
 export type IslandWorkshopBoard = readonly number[];
+
+/** Material tint index (1..4) of a cell, ignoring solid/gem flags. */
+export function getIslandWorkshopCellTint(cell: number): number {
+  return cell & 7;
+}
+
+export function isIslandWorkshopSolidCell(cell: number): boolean {
+  return cell > 0 && (cell & ISLAND_WORKSHOP_SOLID_FLAG) !== 0;
+}
+
+export function isIslandWorkshopGemCell(cell: number): boolean {
+  return cell > 0 && (cell & ISLAND_WORKSHOP_GEM_FLAG) !== 0;
+}
 
 export interface IslandWorkshopShapeDef {
   id: string;
@@ -214,6 +265,14 @@ export function findIslandWorkshopCompletedLines(board: IslandWorkshopBoard): {
   return { rows, cols };
 }
 
+/** A completed line whose cells all share one tint (pure-colour line). */
+export interface IslandWorkshopMonochromeLine {
+  kind: 'row' | 'col';
+  index: number;
+  tint: number;
+  cellIndexes: number[];
+}
+
 export interface IslandWorkshopPlacementResult {
   board: number[];
   cellsPlaced: number;
@@ -230,6 +289,35 @@ export interface IslandWorkshopPlacementResult {
   materialsEarned: number;
   /** Consecutive-clear-turn streak after this placement. */
   streakAfter: number;
+  /** Cleared lines whose cells were all one colour (super-flash FX). */
+  monochromeLines: IslandWorkshopMonochromeLine[];
+  /** Bonus blocks added to the pool by pure-colour lines (+1 / +4 same-colour pair). */
+  bonusBlocksEarned: number;
+  /** Keystone cells released by pure-colour lines of their own tint. */
+  solidCellsReleased: number[];
+  /** Blocks added to the pool by released keystones (7 each). */
+  releaseBlocksEarned: number;
+  /** Gem cells cleared by this placement. */
+  gemCellsUnleashed: number[];
+  /** Dice unleashed by cleared gems (25 each). */
+  gemRewardDice: number;
+}
+
+/**
+ * Bonus blocks from pure-colour lines: +1 per lone pure line; a same-colour
+ * pair (2+ pure lines of one tint clearing together) pays +4 for that colour.
+ */
+export function resolveIslandWorkshopMonoLineBonusBlocks(
+  lines: readonly { tint: number }[],
+): number {
+  if (lines.length === 0) return 0;
+  const countByTint = new Map<number, number>();
+  for (const line of lines) countByTint.set(line.tint, (countByTint.get(line.tint) ?? 0) + 1);
+  let total = 0;
+  for (const count of countByTint.values()) {
+    total += count >= 2 ? ISLAND_WORKSHOP_MONO_PAIR_BONUS_BLOCKS : ISLAND_WORKSHOP_MONO_LINE_BONUS_BLOCKS;
+  }
+  return total;
 }
 
 /**
@@ -279,23 +367,56 @@ export function placeIslandWorkshopShape(options: {
   const linesCleared = rows.length + cols.length;
 
   const clearedCellIndexes: number[] = [];
+  const monochromeLines: IslandWorkshopMonochromeLine[] = [];
+  const solidCellsReleased: number[] = [];
+  const gemCellsUnleashed: number[] = [];
   if (linesCleared > 0) {
-    const clearedSet = new Set<number>();
+    const completedLines: { kind: 'row' | 'col'; index: number; cellIndexes: number[] }[] = [];
     for (const row of rows) {
+      const cellIndexes: number[] = [];
       for (let col = 0; col < ISLAND_WORKSHOP_GRID_SIZE; col += 1) {
-        clearedSet.add(row * ISLAND_WORKSHOP_GRID_SIZE + col);
+        cellIndexes.push(row * ISLAND_WORKSHOP_GRID_SIZE + col);
       }
+      completedLines.push({ kind: 'row', index: row, cellIndexes });
     }
     for (const col of cols) {
+      const cellIndexes: number[] = [];
       for (let row = 0; row < ISLAND_WORKSHOP_GRID_SIZE; row += 1) {
-        clearedSet.add(row * ISLAND_WORKSHOP_GRID_SIZE + col);
+        cellIndexes.push(row * ISLAND_WORKSHOP_GRID_SIZE + col);
+      }
+      completedLines.push({ kind: 'col', index: col, cellIndexes });
+    }
+
+    // Keystone (solid) cells survive mixed-colour clears: they only leave the
+    // bench inside a pure line of their own colour. A pure line is one whose
+    // cells (keystones included) all share a single tint.
+    const clearedSet = new Set<number>();
+    const releasedSolidSet = new Set<number>();
+    for (const line of completedLines) {
+      const firstTint = getIslandWorkshopCellTint(placed[line.cellIndexes[0]]);
+      const isMonochrome = line.cellIndexes.every(
+        (index) => getIslandWorkshopCellTint(placed[index]) === firstTint,
+      );
+      if (isMonochrome) {
+        monochromeLines.push({ kind: line.kind, index: line.index, tint: firstTint, cellIndexes: line.cellIndexes });
+      }
+      for (const index of line.cellIndexes) {
+        if (isIslandWorkshopSolidCell(placed[index])) {
+          if (!isMonochrome) continue;
+          releasedSolidSet.add(index);
+        }
+        clearedSet.add(index);
       }
     }
     for (const index of clearedSet) {
+      if (isIslandWorkshopGemCell(placed[index])) gemCellsUnleashed.push(index);
       placed[index] = 0;
       clearedCellIndexes.push(index);
     }
+    solidCellsReleased.push(...releasedSolidSet);
     clearedCellIndexes.sort((a, b) => a - b);
+    solidCellsReleased.sort((a, b) => a - b);
+    gemCellsUnleashed.sort((a, b) => a - b);
   }
 
   const streakBefore = Math.max(0, Math.floor(options.streakBefore));
@@ -316,6 +437,12 @@ export function placeIslandWorkshopShape(options: {
     streakMultiplier,
     materialsEarned: resolveIslandWorkshopMaterialsEarned(linesCleared, streakAfter),
     streakAfter,
+    monochromeLines,
+    bonusBlocksEarned: resolveIslandWorkshopMonoLineBonusBlocks(monochromeLines),
+    solidCellsReleased,
+    releaseBlocksEarned: solidCellsReleased.length * ISLAND_WORKSHOP_SOLID_RELEASE_BLOCKS,
+    gemCellsUnleashed,
+    gemRewardDice: gemCellsUnleashed.length * ISLAND_WORKSHOP_GEM_REWARD_DICE,
   };
 }
 
@@ -394,20 +521,92 @@ export interface IslandWorkshopScoreRewardMilestone {
 
 export const ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES: readonly IslandWorkshopScoreRewardMilestone[] = [
   { id: 'supply_box', score: 100, label: 'Supply Box', emoji: '🎁', rewardDice: 0, mysteryBoxes: 1 },
-  { id: 'dice_cache', score: 250, label: 'Dice Cache', emoji: '🎲', rewardDice: 3, mysteryBoxes: 0 },
+  { id: 'dice_cache', score: 250, label: 'Dice Cache', emoji: '🎲', rewardDice: 50, mysteryBoxes: 0 },
   { id: 'mystery_crate', score: 450, label: 'Mystery Crate', emoji: '🧰', rewardDice: 0, mysteryBoxes: 1 },
-  { id: 'grand_toolkit', score: 700, label: 'Grand Toolkit', emoji: '🌟', rewardDice: 6, mysteryBoxes: 1 },
+  { id: 'grand_toolkit', score: 700, label: 'Grand Toolkit', emoji: '🌟', rewardDice: 100, mysteryBoxes: 1 },
 ] as const;
+
+/** Level-2 reward bar: higher bars, richer payouts. */
+export const ISLAND_WORKSHOP_LEVEL2_SCORE_REWARD_MILESTONES: readonly IslandWorkshopScoreRewardMilestone[] = [
+  { id: 'l2_supply_cache', score: 150, label: 'Supply Cache', emoji: '🎁', rewardDice: 0, mysteryBoxes: 1 },
+  { id: 'l2_dice_hoard', score: 350, label: 'Dice Hoard', emoji: '🎲', rewardDice: 75, mysteryBoxes: 0 },
+  { id: 'l2_prism_crate', score: 600, label: 'Prism Crate', emoji: '💎', rewardDice: 0, mysteryBoxes: 2 },
+  { id: 'l2_master_vault', score: 900, label: 'Master Vault', emoji: '🌟', rewardDice: 150, mysteryBoxes: 1 },
+] as const;
+
+export function getIslandWorkshopScoreRewardMilestones(
+  level: number,
+): readonly IslandWorkshopScoreRewardMilestone[] {
+  return Math.max(1, Math.floor(level)) >= 2
+    ? ISLAND_WORKSHOP_LEVEL2_SCORE_REWARD_MILESTONES
+    : ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES;
+}
 
 export function resolveIslandWorkshopClaimableScoreRewards(options: {
   previousScore: number;
   nextScore: number;
+  level?: number;
 }): IslandWorkshopScoreRewardMilestone[] {
   const previousScore = Math.max(0, Math.floor(options.previousScore));
   const nextScore = Math.max(0, Math.floor(options.nextScore));
-  return ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES.filter(
+  return getIslandWorkshopScoreRewardMilestones(options.level ?? 1).filter(
     (milestone) => previousScore < milestone.score && nextScore >= milestone.score,
   );
+}
+
+/**
+ * Bench level after a score change: filling the reward bar (crossing the final
+ * milestone of the current level) promotes the bench to the next level for
+ * future runs. Returns `null` when no level-up occurred.
+ */
+export function resolveIslandWorkshopLevelUp(options: {
+  currentLevel: number;
+  previousScore: number;
+  nextScore: number;
+}): number | null {
+  const level = Math.max(1, Math.floor(options.currentLevel));
+  if (level >= ISLAND_WORKSHOP_MAX_LEVEL) return null;
+  const milestones = getIslandWorkshopScoreRewardMilestones(level);
+  const finalScore = milestones[milestones.length - 1]?.score ?? Infinity;
+  const previousScore = Math.max(0, Math.floor(options.previousScore));
+  const nextScore = Math.max(0, Math.floor(options.nextScore));
+  return previousScore < finalScore && nextScore >= finalScore ? level + 1 : null;
+}
+
+// ── Bench level persistence + level-2 seeding ────────────────────────────────
+
+export function buildIslandWorkshopLevelStorageKey(scope: string, recordEventId: string): string {
+  return `islandRun.islandWorkshop.level.v1.${scope}.${recordEventId}`;
+}
+
+/** Parse + clamp a persisted bench level (plain number, 1..MAX). */
+export function parseIslandWorkshopLevel(raw: string | null | undefined): number {
+  if (!raw) return 1;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 1) return 1;
+  return Math.min(ISLAND_WORKSHOP_MAX_LEVEL, Math.floor(value));
+}
+
+/**
+ * Fresh level-2 bench: seeds keystone and gem blocks at deterministic RNG
+ * positions with random tints. Returns [board, nextRngState].
+ */
+export function seedIslandWorkshopLevelTwoBoard(rngState: number): [number[], number] {
+  const board = createEmptyIslandWorkshopBoard();
+  let rng = rngState;
+  const used = new Set<number>();
+  const seedCell = (flag: number) => {
+    rng = nextIslandWorkshopRngState(rng);
+    let index = rng % ISLAND_WORKSHOP_CELL_COUNT;
+    while (used.has(index)) index = (index + 7) % ISLAND_WORKSHOP_CELL_COUNT;
+    used.add(index);
+    rng = nextIslandWorkshopRngState(rng);
+    const tint = 1 + (rng % 4);
+    board[index] = tint | flag;
+  };
+  for (let i = 0; i < ISLAND_WORKSHOP_LEVEL2_SOLID_SEEDS; i += 1) seedCell(ISLAND_WORKSHOP_SOLID_FLAG);
+  for (let i = 0; i < ISLAND_WORKSHOP_LEVEL2_GEM_SEEDS; i += 1) seedCell(ISLAND_WORKSHOP_GEM_FLAG);
+  return [board, rng];
 }
 
 // ── Construction (magical island object) ─────────────────────────────────────
@@ -470,7 +669,7 @@ export function applyIslandWorkshopConstructionGain(
 }
 
 /** Bonus reward granted once per event when the Beacon finishes building. */
-export const ISLAND_WORKSHOP_CONSTRUCTION_REWARD = Object.freeze({ dice: 6, spinTokens: 2 });
+export const ISLAND_WORKSHOP_CONSTRUCTION_REWARD = Object.freeze({ dice: 250, spinTokens: 2 });
 
 // ── Result tiers ─────────────────────────────────────────────────────────────
 
@@ -483,17 +682,33 @@ export interface IslandWorkshopResultTier {
 }
 
 export const ISLAND_WORKSHOP_RESULT_TIERS: readonly IslandWorkshopResultTier[] = [
-  { id: 'apprentice', label: 'Apprentice Tinkerer', emoji: '🔩', minScore: 0, rewardDice: 1 },
-  { id: 'crafter', label: 'Workshop Crafter', emoji: '🔨', minScore: 80, rewardDice: 2 },
-  { id: 'builder', label: 'Master Builder', emoji: '🏗️', minScore: 200, rewardDice: 3 },
-  { id: 'artificer', label: 'Isle Artificer', emoji: '✨', minScore: 400, rewardDice: 5 },
-  { id: 'wrightmaster', label: 'Legendary Wrightmaster', emoji: '🌟', minScore: 700, rewardDice: 8 },
+  { id: 'apprentice', label: 'Apprentice Tinkerer', emoji: '🔩', minScore: 0, rewardDice: 50 },
+  { id: 'crafter', label: 'Workshop Crafter', emoji: '🔨', minScore: 80, rewardDice: 75 },
+  { id: 'builder', label: 'Master Builder', emoji: '🏗️', minScore: 200, rewardDice: 100 },
+  { id: 'artificer', label: 'Isle Artificer', emoji: '✨', minScore: 400, rewardDice: 150 },
+  { id: 'wrightmaster', label: 'Legendary Wrightmaster', emoji: '🌟', minScore: 700, rewardDice: 250 },
 ] as const;
 
-export function resolveIslandWorkshopResultTier(score: number): IslandWorkshopResultTier {
+/** Level-2 tiers: harder score bars, richer dice payouts. */
+export const ISLAND_WORKSHOP_LEVEL2_RESULT_TIERS: readonly IslandWorkshopResultTier[] = [
+  { id: 'l2_apprentice', label: 'Keystone Apprentice', emoji: '🔩', minScore: 0, rewardDice: 75 },
+  { id: 'l2_crafter', label: 'Prism Crafter', emoji: '🔨', minScore: 100, rewardDice: 110 },
+  { id: 'l2_builder', label: 'Keystone Builder', emoji: '🏗️', minScore: 250, rewardDice: 160 },
+  { id: 'l2_artificer', label: 'Gemwright Artificer', emoji: '✨', minScore: 500, rewardDice: 220 },
+  { id: 'l2_wrightmaster', label: 'Mythic Wrightmaster', emoji: '🌟', minScore: 900, rewardDice: 350 },
+] as const;
+
+export function getIslandWorkshopResultTiers(level: number): readonly IslandWorkshopResultTier[] {
+  return Math.max(1, Math.floor(level)) >= 2
+    ? ISLAND_WORKSHOP_LEVEL2_RESULT_TIERS
+    : ISLAND_WORKSHOP_RESULT_TIERS;
+}
+
+export function resolveIslandWorkshopResultTier(score: number, level = 1): IslandWorkshopResultTier {
   const safeScore = Math.max(0, Math.floor(score));
-  let tier = ISLAND_WORKSHOP_RESULT_TIERS[0];
-  for (const candidate of ISLAND_WORKSHOP_RESULT_TIERS) {
+  const tiers = getIslandWorkshopResultTiers(level);
+  let tier = tiers[0];
+  for (const candidate of tiers) {
     if (safeScore >= candidate.minScore) tier = candidate;
   }
   return tier;
@@ -513,6 +728,8 @@ export interface IslandWorkshopSavedRunV1 {
   assistUsed: boolean;
   setsCompleted: number;
   updatedAtMs: number;
+  /** Bench level the run was started at (absent in pre-level saves → 1). */
+  runLevel: number;
 }
 
 export function buildIslandWorkshopRunStorageKey(scope: string, recordEventId: string): string {
@@ -552,6 +769,11 @@ export function parseIslandWorkshopSavedRun(raw: string | null | undefined): Isl
       if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return null;
     }
     if (typeof candidate.assistUsed !== 'boolean') return null;
+    const rawRunLevel = candidate.runLevel;
+    if (rawRunLevel !== undefined && (typeof rawRunLevel !== 'number' || !Number.isFinite(rawRunLevel) || rawRunLevel < 1)) return null;
+    const runLevel = rawRunLevel === undefined
+      ? 1
+      : Math.min(ISLAND_WORKSHOP_MAX_LEVEL, Math.floor(rawRunLevel));
     return {
       version: 1,
       board: candidate.board.map((cell) => Math.max(0, Math.floor(cell as number))),
@@ -563,6 +785,7 @@ export function parseIslandWorkshopSavedRun(raw: string | null | undefined): Isl
       assistUsed: candidate.assistUsed as boolean,
       setsCompleted: Math.floor(candidate.setsCompleted as number),
       updatedAtMs: Math.floor(candidate.updatedAtMs as number),
+      runLevel,
     };
   } catch {
     return null;

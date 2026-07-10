@@ -8322,6 +8322,11 @@ export function IslandRunBoardPrototype({
               if (spend.spent > 0) setRuntimeState(spend.record);
               return { ok: spend.spent > 0, ticketsRemaining: Math.max(0, Math.floor(spend.record.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)) };
             },
+            requestBlockTicketGrant: (amount: number) => {
+              const grant = applyTimedEventTicketTileGrant({ session, client, eventId: effectiveActiveTimedEvent.eventId, amount, triggerSource: 'island_workshop_bonus_blocks' });
+              if (grant.applied > 0) setRuntimeState(grant.record);
+              return { ok: grant.applied > 0, ticketsRemaining: Math.max(0, Math.floor(grant.record.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)) };
+            },
           }
         : descriptor.config,
     );

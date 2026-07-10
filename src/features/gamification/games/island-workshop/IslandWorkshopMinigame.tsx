@@ -16,26 +16,37 @@ import {
   applyIslandWorkshopConstructionGain,
   applyIslandWorkshopCreatureAssist,
   buildIslandWorkshopConstructionStorageKey,
+  buildIslandWorkshopLevelStorageKey,
   buildIslandWorkshopRunStorageKey,
   canStartIslandWorkshopRun,
   createEmptyIslandWorkshopBoard,
   findIslandWorkshopCompletedLines,
+  getIslandWorkshopCellTint,
   getIslandWorkshopPlacementCells,
+  getIslandWorkshopScoreRewardMilestones,
   getIslandWorkshopShape,
   ISLAND_WORKSHOP_CONSTRUCTION_REWARD,
   ISLAND_WORKSHOP_CONSTRUCTION_TARGET,
+  ISLAND_WORKSHOP_GEM_REWARD_DICE,
   ISLAND_WORKSHOP_GRID_SIZE,
   ISLAND_WORKSHOP_BLOCK_TICKET_COST,
-  ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES,
+  ISLAND_WORKSHOP_MAX_LEVEL,
+  ISLAND_WORKSHOP_MONO_PAIR_BONUS_BLOCKS,
+  ISLAND_WORKSHOP_SOLID_RELEASE_BLOCKS,
+  isIslandWorkshopGemCell,
   isIslandWorkshopRunStuck,
+  isIslandWorkshopSolidCell,
   parseIslandWorkshopConstructionProgress,
+  parseIslandWorkshopLevel,
   parseIslandWorkshopSavedRun,
   placeIslandWorkshopShape,
   resolveIslandWorkshopConstructionStage,
   resolveIslandWorkshopClaimableScoreRewards,
+  resolveIslandWorkshopLevelUp,
   resolveIslandWorkshopResultTier,
   resolveIslandWorkshopRunConstructionGain,
   rollIslandWorkshopShapeSet,
+  seedIslandWorkshopLevelTwoBoard,
   serializeIslandWorkshopRun,
   type IslandWorkshopSavedRunV1,
 } from '../../level-worlds/services/islandWorkshopGame';
@@ -49,6 +60,7 @@ type IslandWorkshopLaunchConfig = {
   persistenceScope?: string;
   getTicketsRemaining?: () => number;
   requestBlockTicketSpend?: () => { ok: boolean; ticketsRemaining: number };
+  requestBlockTicketGrant?: (amount: number) => { ok: boolean; ticketsRemaining: number };
 };
 
 type DragState = {
@@ -68,9 +80,23 @@ type HoverPlacement = {
 
 type ComboToast = { id: number; text: string };
 
+type MonoFlashFx = { cells: number[]; tint: number };
+
+type Celebration = {
+  id: number;
+  /** Confetti burst is rendered for every kind; tint colours mono flashes. */
+  kind: 'milestone' | 'mono-pair' | 'solid-release' | 'gem' | 'level-up' | 'results';
+  title: string;
+  subtitle?: string;
+  tint?: number;
+};
+
 /** Finger lift so the dragged shape stays visible above the thumb on touch. */
 const DRAG_LIFT_PX = 56;
 const CLEAR_FX_MS = 420;
+const MONO_FLASH_MS = 900;
+const CELEBRATION_MS = 2200;
+const CONFETTI_PIECES = 18;
 
 function readStorage(key: string): string | null {
   try {
@@ -95,6 +121,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const recordEventId = config.activeEventId ?? 'default';
   const runStorageKey = buildIslandWorkshopRunStorageKey(persistenceScope, recordEventId);
   const constructionStorageKey = buildIslandWorkshopConstructionStorageKey(persistenceScope, recordEventId);
+  const levelStorageKey = buildIslandWorkshopLevelStorageKey(persistenceScope, recordEventId);
 
   const [phase, setPhase] = useState<GamePhase>('entry');
   const [board, setBoard] = useState<number[]>(() => createEmptyIslandWorkshopBoard());
@@ -112,6 +139,10 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const [constructionProgress, setConstructionProgress] = useState(
     () => parseIslandWorkshopConstructionProgress(readStorage(constructionStorageKey)),
   );
+  const [benchLevel, setBenchLevel] = useState(() => parseIslandWorkshopLevel(readStorage(levelStorageKey)));
+  const [runLevel, setRunLevel] = useState(1);
+  const [lastRunLevel, setLastRunLevel] = useState(1);
+  const [levelUpThisVisit, setLevelUpThisVisit] = useState(false);
   const [runsFinished, setRunsFinished] = useState(0);
   const [rewardDiceTotal, setRewardDiceTotal] = useState(0);
   const [rewardSpinTokensTotal, setRewardSpinTokensTotal] = useState(0);
@@ -123,17 +154,30 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const [hover, setHover] = useState<HoverPlacement | null>(null);
   const [clearFxCells, setClearFxCells] = useState<number[]>([]);
   const [assistFxCells, setAssistFxCells] = useState<number[]>([]);
+  const [monoFlashFx, setMonoFlashFx] = useState<MonoFlashFx[]>([]);
   const [comboToast, setComboToast] = useState<ComboToast | null>(null);
+  const [celebration, setCelebration] = useState<Celebration | null>(null);
   const [stuckPromptOpen, setStuckPromptOpen] = useState(false);
 
   const gridRef = useRef<HTMLDivElement | null>(null);
   const toastIdRef = useRef(1);
+  const celebrationIdRef = useRef(1);
   const fxTimerRef = useRef<number | null>(null);
   const assistFxTimerRef = useRef<number | null>(null);
+  const monoFxTimerRef = useRef<number | null>(null);
+  const celebrationTimerRef = useRef<number | null>(null);
 
   useEffect(() => () => {
     if (fxTimerRef.current !== null) window.clearTimeout(fxTimerRef.current);
     if (assistFxTimerRef.current !== null) window.clearTimeout(assistFxTimerRef.current);
+    if (monoFxTimerRef.current !== null) window.clearTimeout(monoFxTimerRef.current);
+    if (celebrationTimerRef.current !== null) window.clearTimeout(celebrationTimerRef.current);
+  }, []);
+
+  const showCelebration = useCallback((next: Omit<Celebration, 'id'>, durationMs = CELEBRATION_MS) => {
+    setCelebration({ ...next, id: celebrationIdRef.current++ });
+    if (celebrationTimerRef.current !== null) window.clearTimeout(celebrationTimerRef.current);
+    celebrationTimerRef.current = window.setTimeout(() => setCelebration(null), durationMs);
   }, []);
 
   const refreshTickets = useCallback(() => {
@@ -158,9 +202,10 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
       assistUsed,
       setsCompleted,
       updatedAtMs: Date.now(),
+      runLevel,
     };
     writeStorage(runStorageKey, serializeIslandWorkshopRun(payload));
-  }, [phase, board, tray, rngState, score, streak, materialsCollected, assistUsed, setsCompleted, runStorageKey]);
+  }, [phase, board, tray, rngState, score, streak, materialsCollected, assistUsed, setsCompleted, runLevel, runStorageKey]);
 
   const beginRunState = useCallback((run: {
     board: number[];
@@ -171,6 +216,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     materialsCollected: number;
     assistUsed: boolean;
     setsCompleted: number;
+    runLevel: number;
   }) => {
     setBoard(run.board);
     setTray(run.tray);
@@ -180,10 +226,12 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     setMaterialsCollected(run.materialsCollected);
     setAssistUsed(run.assistUsed);
     setSetsCompleted(run.setsCompleted);
+    setRunLevel(run.runLevel);
     setDrag(null);
     setHover(null);
     setClearFxCells([]);
     setAssistFxCells([]);
+    setMonoFlashFx([]);
     setComboToast(null);
     setStuckPromptOpen(false);
     setPhase('playing');
@@ -198,11 +246,15 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
       return;
     }
     const seed = (Date.now() % 2147483646) + 1;
-    const [shapeIds, nextRng] = rollIslandWorkshopShapeSet(seed);
+    // Level 2 benches open pre-seeded with keystone + gem blocks.
+    const [startBoard, seededRng] = benchLevel >= 2
+      ? seedIslandWorkshopLevelTwoBoard(seed)
+      : [createEmptyIslandWorkshopBoard(), seed];
+    const [shapeIds, nextRng] = rollIslandWorkshopShapeSet(seededRng);
     writeStorage(runStorageKey, null);
     setSavedRun(null);
     beginRunState({
-      board: createEmptyIslandWorkshopBoard(),
+      board: startBoard,
       tray: shapeIds,
       rngState: nextRng,
       score: 0,
@@ -210,8 +262,9 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
       materialsCollected: 0,
       assistUsed: false,
       setsCompleted: 0,
+      runLevel: benchLevel,
     });
-  }, [beginRunState, config, refreshTickets, runStorageKey]);
+  }, [beginRunState, benchLevel, config, refreshTickets, runStorageKey]);
 
   const continueSavedRun = useCallback(() => {
     if (!savedRun) return;
@@ -224,6 +277,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
       materialsCollected: savedRun.materialsCollected,
       assistUsed: savedRun.assistUsed,
       setsCompleted: savedRun.setsCompleted,
+      runLevel: savedRun.runLevel,
     });
   }, [beginRunState, savedRun]);
 
@@ -231,7 +285,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     score: number;
     materialsCollected: number;
   }) => {
-    const tier = resolveIslandWorkshopResultTier(finalState.score);
+    const tier = resolveIslandWorkshopResultTier(finalState.score, runLevel);
     const gain = resolveIslandWorkshopRunConstructionGain({
       score: finalState.score,
       materialsCollected: finalState.materialsCollected,
@@ -240,6 +294,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
 
     setLastRunScore(finalState.score);
     setLastRunGain(gain);
+    setLastRunLevel(runLevel);
     setRunsFinished((n) => n + 1);
     setRewardDiceTotal((total) => total + tier.rewardDice);
     setConstructionProgress(applied.progress);
@@ -260,9 +315,14 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
       return;
     }
     setPhase('results');
+    showCelebration({
+      kind: 'results',
+      title: `${tier.emoji} ${tier.label}!`,
+      subtitle: `🎲 +${tier.rewardDice} dice won`,
+    });
     playIslandRunSound('minigame_complete');
     triggerIslandRunHaptic('reward_claim');
-  }, [constructionProgress, constructionStorageKey, refreshTickets, runStorageKey]);
+  }, [constructionProgress, constructionStorageKey, refreshTickets, runLevel, runStorageKey, showCelebration]);
 
   const handleReturnToIsland = useCallback(() => {
     // A live run is already persisted by the save effect — it resumes next visit.
@@ -324,7 +384,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     }
 
     const nextScore = score + result.placementScore + result.clearScore;
-    const scoreRewards = resolveIslandWorkshopClaimableScoreRewards({ previousScore: score, nextScore });
+    const scoreRewards = resolveIslandWorkshopClaimableScoreRewards({ previousScore: score, nextScore, level: runLevel });
     const nextMaterials = materialsCollected + result.materialsEarned;
 
     setBoard(result.board);
@@ -334,13 +394,49 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     setScore(nextScore);
     setStreak(result.streakAfter);
     setMaterialsCollected(nextMaterials);
+
+    // Pure-colour lines and released keystones pay bonus blocks into the pool.
+    const bonusBlocks = result.bonusBlocksEarned + result.releaseBlocksEarned;
+    if (bonusBlocks > 0) {
+      const grant = config.requestBlockTicketGrant?.(bonusBlocks);
+      if (grant?.ok) setTicketsRemaining(grant.ticketsRemaining);
+      else setTicketsRemaining((remaining) => remaining + bonusBlocks);
+    }
+
+    // Gems unleash dice straight into the run's reward pot.
+    if (result.gemRewardDice > 0) {
+      setRewardDiceTotal((total) => total + result.gemRewardDice);
+    }
+
     if (scoreRewards.length > 0) {
       const dice = scoreRewards.reduce((sum, reward) => sum + reward.rewardDice, 0);
       const mysteryBoxes = scoreRewards.reduce((sum, reward) => sum + reward.mysteryBoxes, 0);
       if (dice > 0) setRewardDiceTotal((total) => total + dice);
       if (mysteryBoxes > 0) setRewardMysteryBoxesTotal((total) => total + mysteryBoxes);
-      showComboToast(`Reward unlocked! ${scoreRewards.map((reward) => `${reward.emoji} ${reward.label}`).join(' · ')}`);
+      const rewardBits: string[] = [];
+      if (dice > 0) rewardBits.push(`🎲 +${dice} dice`);
+      if (mysteryBoxes > 0) rewardBits.push(`🎁 +${mysteryBoxes} mystery box${mysteryBoxes > 1 ? 'es' : ''}`);
+      showCelebration({
+        kind: 'milestone',
+        title: `${scoreRewards.map((reward) => `${reward.emoji} ${reward.label}`).join(' · ')} unlocked!`,
+        subtitle: rewardBits.join(' · '),
+      });
       playIslandRunSound('reward_bar_fill');
+      triggerIslandRunHaptic('reward_claim');
+    }
+
+    // Filling the reward bar promotes the bench to the next level.
+    const levelUp = resolveIslandWorkshopLevelUp({ currentLevel: runLevel, previousScore: score, nextScore });
+    if (levelUp !== null && levelUp > benchLevel) {
+      setBenchLevel(levelUp);
+      setLevelUpThisVisit(true);
+      writeStorage(levelStorageKey, String(levelUp));
+      showCelebration({
+        kind: 'level-up',
+        title: `⭐ Bench Level ${levelUp} unlocked!`,
+        subtitle: 'Keystone blocks & hidden gems await your next run',
+      }, 3200);
+      playIslandRunSound('minigame_complete');
       triggerIslandRunHaptic('reward_claim');
     }
 
@@ -348,14 +444,49 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
       setClearFxCells(result.clearedCellIndexes);
       if (fxTimerRef.current !== null) window.clearTimeout(fxTimerRef.current);
       fxTimerRef.current = window.setTimeout(() => setClearFxCells([]), CLEAR_FX_MS);
-      const comboBits: string[] = [];
-      if (result.linesCleared >= 2) comboBits.push(`${result.linesCleared}-line combo!`);
-      if (result.streakMultiplier > 1) comboBits.push(`Streak ×${result.streakMultiplier}`);
-      showComboToast(
-        comboBits.length > 0
-          ? `${comboBits.join(' · ')} +${result.clearScore}`
-          : `Line clear! +${result.clearScore}`,
-      );
+
+      // Pure-colour lines super-flash in their own colour.
+      if (result.monochromeLines.length > 0) {
+        setMonoFlashFx(result.monochromeLines.map((line) => ({ cells: line.cellIndexes, tint: line.tint })));
+        if (monoFxTimerRef.current !== null) window.clearTimeout(monoFxTimerRef.current);
+        monoFxTimerRef.current = window.setTimeout(() => setMonoFlashFx([]), MONO_FLASH_MS);
+      }
+
+      const monoTints = result.monochromeLines.map((line) => line.tint);
+      const hasSameColourPair = monoTints.some((tint, i) => monoTints.indexOf(tint) !== i);
+
+      if (result.solidCellsReleased.length > 0) {
+        showCelebration({
+          kind: 'solid-release',
+          title: '🔓 Keystone released!',
+          subtitle: `🧱 +${result.releaseBlocksEarned} blocks join your pool`,
+          tint: result.monochromeLines[0]?.tint,
+        });
+      } else if (hasSameColourPair) {
+        showCelebration({
+          kind: 'mono-pair',
+          title: '🎊 Double pure line!',
+          subtitle: `🧱 +${ISLAND_WORKSHOP_MONO_PAIR_BONUS_BLOCKS} blocks join your pool`,
+          tint: monoTints[0],
+        });
+      } else if (result.gemCellsUnleashed.length > 0) {
+        showCelebration({
+          kind: 'gem',
+          title: '💎 Gem unleashed!',
+          subtitle: `🎲 +${result.gemRewardDice} dice`,
+        });
+      } else if (result.monochromeLines.length > 0) {
+        showComboToast(`🌈 Pure line! +${result.bonusBlocksEarned} block${result.bonusBlocksEarned > 1 ? 's' : ''} · +${result.clearScore}`);
+      } else {
+        const comboBits: string[] = [];
+        if (result.linesCleared >= 2) comboBits.push(`${result.linesCleared}-line combo!`);
+        if (result.streakMultiplier > 1) comboBits.push(`Streak ×${result.streakMultiplier}`);
+        showComboToast(
+          comboBits.length > 0
+            ? `${comboBits.join(' · ')} +${result.clearScore}`
+            : `Line clear! +${result.clearScore}`,
+        );
+      }
       playIslandRunSound('reward_bar_fill');
       triggerIslandRunHaptic('reward_claim');
     } else {
@@ -363,7 +494,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     }
 
     afterBoardChange(result.board, nextTray, assistUsed, nextScore, nextMaterials);
-  }, [afterBoardChange, assistUsed, board, config, materialsCollected, refreshTickets, rngState, score, setsCompleted, showComboToast, streak, tray]);
+  }, [afterBoardChange, assistUsed, benchLevel, board, config, levelStorageKey, materialsCollected, refreshTickets, rngState, runLevel, score, setsCompleted, showCelebration, showComboToast, streak, tray]);
 
   const handleCreatureAssist = useCallback(() => {
     if (assistUsed || phase !== 'playing') return;
@@ -467,13 +598,21 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const wouldClearSet = useMemo(() => new Set(hover?.wouldClearCells ?? []), [hover]);
   const clearFxSet = useMemo(() => new Set(clearFxCells), [clearFxCells]);
   const assistFxSet = useMemo(() => new Set(assistFxCells), [assistFxCells]);
+  const monoFlashTintByCell = useMemo(() => {
+    const byCell = new Map<number, number>();
+    for (const flash of monoFlashFx) {
+      for (const cell of flash.cells) byCell.set(cell, flash.tint);
+    }
+    return byCell;
+  }, [monoFlashFx]);
 
   const constructionStage = resolveIslandWorkshopConstructionStage(constructionProgress);
   const constructionRatio = Math.min(1, constructionProgress / ISLAND_WORKSHOP_CONSTRUCTION_TARGET);
-  const resultTier = useMemo(() => resolveIslandWorkshopResultTier(lastRunScore), [lastRunScore]);
+  const resultTier = useMemo(() => resolveIslandWorkshopResultTier(lastRunScore, lastRunLevel), [lastRunLevel, lastRunScore]);
   const canPlayAgain = canStartIslandWorkshopRun({ ticketsRemaining });
-  const nextScoreReward = ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES.find((reward) => score < reward.score) ?? null;
-  const scoreRewardMax = ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES[ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES.length - 1]?.score ?? 1;
+  const runMilestones = getIslandWorkshopScoreRewardMilestones(runLevel);
+  const nextScoreReward = runMilestones.find((reward) => score < reward.score) ?? null;
+  const scoreRewardMax = runMilestones[runMilestones.length - 1]?.score ?? 1;
 
   const dragShape = drag ? getIslandWorkshopShape(drag.shapeId) : null;
   const gridRect = gridRef.current?.getBoundingClientRect() ?? null;
@@ -517,6 +656,9 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
         <div className="island-workshop__panel island-workshop__entry" role="dialog" aria-label="Island Workshop entry">
           <p className="island-workshop__eyebrow">Island Event</p>
           <h2 className="island-workshop__title">🛠️ Island Workshop</h2>
+          {benchLevel >= 2 && (
+            <p className="island-workshop__level-banner">⭐ Bench Level {benchLevel} — keystones &amp; hidden gems in play!</p>
+          )}
           <p className="island-workshop__copy">
             The workshop creatures are building the Tidelight Beacon! Fit block
             shapes onto the crafting bench — full rows and columns craft into
@@ -526,9 +668,17 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
             <li>🧱 Each ticket is one block placement — 9 tickets means 9 blocks to place, not 9 runs.</li>
             <li>🧱 Drag each shape onto the 8×8 bench — place all three to get a new set.</li>
             <li>✨ Complete a row or column to clear it and earn materials.</li>
+            <li>🌈 A full line of one single colour super-flashes and adds +1 bonus block to your pool — two pure lines of the same colour rain confetti and add +4!</li>
             <li>🔥 Multi-line clears and back-to-back clears pay combo bonuses.</li>
             <li>🐚 Creature Assist sweeps a crowded pocket clear, once per run.</li>
             <li>🗼 Score and materials build the Beacon for a grand reward.</li>
+            <li>⭐ Fill the reward bar to promote the bench to the next level.</li>
+            {benchLevel >= 2 && (
+              <>
+                <li>🔒 Keystone blocks stay put when a mixed line clears — only a full line of their own colour releases them, adding +{ISLAND_WORKSHOP_SOLID_RELEASE_BLOCKS} blocks to your pool.</li>
+                <li>💎 Gem blocks hide a treasure — clear their line to unleash +{ISLAND_WORKSHOP_GEM_REWARD_DICE} dice each.</li>
+              </>
+            )}
           </ul>
           <div className="island-workshop__construction-strip" aria-label="Beacon construction progress">
             <span className="island-workshop__construction-emoji">{constructionStage.emoji}</span>
@@ -589,12 +739,17 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
 
           <div className="island-workshop__score-rewards" aria-label="Score reward bar">
             <div className="island-workshop__score-rewards-top">
-              <span>Rewards</span>
+              <span>
+                Rewards
+                <span className={`island-workshop__level-chip${runLevel >= ISLAND_WORKSHOP_MAX_LEVEL ? ' island-workshop__level-chip--max' : ''}`}>
+                  Lv {runLevel}
+                </span>
+              </span>
               <strong>{nextScoreReward ? `Next: ${nextScoreReward.score}` : 'All unlocked'}</strong>
             </div>
             <div className="island-workshop__score-track">
               <div className="island-workshop__score-fill" style={{ width: `${Math.min(100, (score / scoreRewardMax) * 100)}%` }} />
-              {ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES.map((reward) => (
+              {runMilestones.map((reward) => (
                 <span
                   key={reward.id}
                   className={`island-workshop__score-node${score >= reward.score ? ' island-workshop__score-node--claimed' : ''}`}
@@ -616,13 +771,26 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
             >
               {board.map((cell, index) => {
                 const classes = ['island-workshop__cell'];
-                if (cell > 0) classes.push(`island-workshop__cell--tint${cell}`);
+                const tint = getIslandWorkshopCellTint(cell);
+                const isSolid = isIslandWorkshopSolidCell(cell);
+                const isGem = isIslandWorkshopGemCell(cell);
+                if (cell > 0) classes.push(`island-workshop__cell--tint${tint}`);
+                if (isSolid) classes.push('island-workshop__cell--solid');
+                if (isGem) classes.push('island-workshop__cell--gem');
                 if (hoverCellSet.has(index)) classes.push('island-workshop__cell--preview');
                 if (hoverInvalidSet.has(index)) classes.push('island-workshop__cell--invalid');
                 if (wouldClearSet.has(index)) classes.push('island-workshop__cell--would-clear');
-                if (clearFxSet.has(index)) classes.push('island-workshop__cell--clearing');
+                const monoTint = monoFlashTintByCell.get(index);
+                if (monoTint !== undefined) {
+                  classes.push('island-workshop__cell--mono-flash', `island-workshop__cell--mono-flash-tint${monoTint}`);
+                } else if (clearFxSet.has(index)) {
+                  classes.push('island-workshop__cell--clearing');
+                }
                 if (assistFxSet.has(index)) classes.push('island-workshop__cell--assist');
-                return <div key={index} className={classes.join(' ')} role="gridcell" aria-label={cell > 0 ? 'filled' : 'empty'} />;
+                const cellLabel = cell > 0
+                  ? (isSolid ? 'keystone block' : isGem ? 'gem block' : 'filled')
+                  : 'empty';
+                return <div key={index} className={classes.join(' ')} role="gridcell" aria-label={cellLabel} />;
               })}
             </div>
             {comboToast && (
@@ -739,6 +907,9 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
           <h2 className="island-workshop__title">
             {resultTier.emoji} {resultTier.label}
           </h2>
+          {levelUpThisVisit && (
+            <p className="island-workshop__level-banner">⭐ Bench Level {benchLevel} unlocked — keystones &amp; gems await your next run!</p>
+          )}
           <dl className="island-workshop__result-stats">
             <div>
               <dt>Run score</dt>
@@ -780,6 +951,23 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
             <button type="button" className="island-workshop__btn" onClick={handleReturnToIsland}>
               Return to Island
             </button>
+          </div>
+        </div>
+      )}
+
+      {celebration && (
+        <div
+          key={celebration.id}
+          className={`island-workshop__celebration island-workshop__celebration--${celebration.kind}${celebration.tint ? ` island-workshop__celebration--tint${celebration.tint}` : ''}`}
+          role="status"
+          aria-live="polite"
+        >
+          <div className="island-workshop__confetti" aria-hidden="true">
+            {Array.from({ length: CONFETTI_PIECES }, (_, piece) => <i key={piece} />)}
+          </div>
+          <div className="island-workshop__celebration-card">
+            <p className="island-workshop__celebration-title">{celebration.title}</p>
+            {celebration.subtitle && <p className="island-workshop__celebration-subtitle">{celebration.subtitle}</p>}
           </div>
         </div>
       )}
