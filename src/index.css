@@ -8330,6 +8330,23 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2), 0 14px 28px rgba(16, 185, 129, 0.2);
   transform: translateY(-1px);
 }
+.habit-checklist__item--todo-dragging {
+  cursor: grabbing;
+  border-color: rgba(37, 99, 235, 0.78);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.42), 0 22px 44px rgba(37, 99, 235, 0.3);
+  opacity: 0.97;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.habit-checklist__item--todo-dragging .habit-checklist__swipe-row {
+  transition: none;
+  touch-action: none;
+}
+/* Keep the long-press feel clean: no iOS text/image callout while holding a todo. */
+.habit-checklist__item--todo .habit-checklist__swipe-row {
+  -webkit-touch-callout: none;
+}
 
 .habit-checklist__main--todo { gap: 0.5rem; }
 .habit-checklist__main--todo-focus {
