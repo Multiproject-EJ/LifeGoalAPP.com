@@ -1588,6 +1588,9 @@ export function DailyHabitTracker({
   }, [activeDate, handleRescheduleTodayTodo]);
 
   const handleConvertTodayTodoToHabit = useCallback(async (todo: TodayTodo) => {
+    if (!window.confirm(`Convert “${todo.title}” into a daily habit? This can’t be undone automatically — the todo will be completed and a new daily habit created.`)) {
+      return;
+    }
     setTodayTodoActionPendingById((current) => ({ ...current, [todo.id]: true }));
     const schedule = buildScheduleWithHabitRhythm({ mode: 'daily' }, {
       daypart: DEFAULT_HABIT_RHYTHM_DAYPART,
