@@ -41,6 +41,7 @@
     "test:membership": "node scripts/run-membership-tests.mjs",
     "test:leaderboard": "node scripts/run-leaderboard-tests.mjs",
     "test:tip-of-day": "node scripts/run-tip-of-day-tests.mjs",
+    "test:task-tower": "node scripts/run-task-tower-tests.mjs",
     "check:goals-single-goal-review": "node scripts/check-goals-single-goal-review-smoke.mjs",
     "check:game-of-life-onboarding-persistence": "node scripts/check-game-of-life-onboarding-persistence.mjs",
     "check:day-zero-onboarding-persistence": "node scripts/check-day-zero-onboarding-persistence.mjs",

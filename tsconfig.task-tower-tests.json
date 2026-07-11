@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "5.0",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": ".tmp-task-tower-tests",
+    "noEmit": false
+  },
+  "include": [
+    "src/types/actions.ts",
+    "src/features/gamification/games/task-tower/taskTowerTypes.ts",
+    "src/features/gamification/games/task-tower/taskTowerState.ts",
+    "src/features/gamification/games/task-tower/__tests__/taskTowerState.test.ts"
+  ]
+}

@@ -1,5 +1,5 @@
 import type { Action, ActionCategory } from '../../../../types/actions';
-import { TOWER_GRID, TASK_TOWER_REWARDS, type TowerBlock, type TaskTowerSession, type BlockSize } from './taskTowerTypes';
+import { TOWER_GRID, TASK_TOWER_REWARDS, type TowerBlock, type BlockSize } from './taskTowerTypes';
 
 /**
  * Map action category to block size
@@ -78,47 +78,48 @@ export function buildTower(actions: Action[]): TowerBlock[] {
     currentCol += width;
   }
 
-  return blocks;
+  // Settle the packed tower so no block floats above a gap the row-by-row
+  // packer left beneath it (e.g. a 1-wide block placed beside a 3-wide one).
+  return settleBlocks(blocks);
+}
+
+/**
+ * Do two blocks overlap horizontally (share at least one column)?
+ */
+function overlapsHorizontally(a: TowerBlock, b: TowerBlock): boolean {
+  return !(a.col >= b.col + b.width || b.col >= a.col + a.width);
+}
+
+/**
+ * Settle all blocks under gravity. Pure: returns new block objects.
+ *
+ * Blocks are processed bottom-up (ascending row); each lands one row above
+ * the highest already-settled block it shares a column with, so no two
+ * settled blocks can overlap and every block above row 0 rests on another.
+ */
+export function settleBlocks(blocks: TowerBlock[]): TowerBlock[] {
+  const settled: TowerBlock[] = [];
+
+  const sorted = [...blocks].sort((a, b) => a.row - b.row || a.col - b.col);
+
+  for (const block of sorted) {
+    let targetRow = 0;
+    for (const support of settled) {
+      if (overlapsHorizontally(block, support)) {
+        targetRow = Math.max(targetRow, support.row + 1);
+      }
+    }
+    settled.push({ ...block, row: targetRow });
+  }
+
+  return settled;
 }
 
 /**
  * Remove a block and apply gravity
  */
 export function removeBlock(blocks: TowerBlock[], blockId: string): TowerBlock[] {
-  // Filter out the completed block
-  const remainingBlocks = blocks.filter(b => b.id !== blockId);
-
-  // Apply gravity: for each column, blocks above gaps drop down
-  const updatedBlocks = [...remainingBlocks];
-  
-  // Process each column independently
-  for (let col = 0; col < TOWER_GRID.COLS; col++) {
-    // Get all blocks that occupy this column (blocks can span multiple columns)
-    const blocksInColumn = updatedBlocks
-      .filter(b => b.col <= col && b.col + b.width > col)
-      .sort((a, b) => a.row - b.row);
-
-    // Apply gravity from bottom to top
-    for (let i = 0; i < blocksInColumn.length; i++) {
-      const block = blocksInColumn[i];
-      
-      // Find the highest row this block can settle in
-      let targetRow = 0;
-      
-      // Check all blocks below this one to find where it should land
-      for (let j = 0; j < i; j++) {
-        const blockBelow = blocksInColumn[j];
-        // If the blocks overlap horizontally
-        if (!(block.col >= blockBelow.col + blockBelow.width || blockBelow.col >= block.col + block.width)) {
-          targetRow = Math.max(targetRow, blockBelow.row + 1);
-        }
-      }
-      
-      block.row = targetRow;
-    }
-  }
-
-  return updatedBlocks;
+  return settleBlocks(blocks.filter(b => b.id !== blockId));
 }
 
 /**
@@ -159,21 +160,6 @@ export function checkLineClears(blocks: TowerBlock[]): { clearedRows: number[], 
   }
 
   return { clearedRows, blocks: updatedBlocks };
-}
-
-/**
- * Calculate session rewards based on blocks cleared and lines cleared
- */
-export function calculateSessionRewards(session: TaskTowerSession): { 
-  coins: number; 
-  dice: number; 
-  tokens: number;
-} {
-  return {
-    coins: session.coinsEarned,
-    dice: session.diceEarned,
-    tokens: session.tokensEarned,
-  };
 }
 
 /**
