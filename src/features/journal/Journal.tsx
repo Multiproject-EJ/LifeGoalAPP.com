@@ -18,6 +18,7 @@ import { fetchGoals } from '../../services/goals';
 import { fetchHabitsForUser } from '../../compat/legacyHabitsAdapter';
 import { listHabitsV2, type HabitV2Row } from '../../services/habitsV2';
 import { JournalEntryList } from './JournalEntryList';
+import { JournalQuickComposer } from './JournalQuickComposer';
 import { JournalEntryDetail } from './JournalEntryDetail';
 import { JournalEntryEditor, type JournalEntryDraft, type JournalMoodOption } from './JournalEntryEditor';
 import { JournalTypeSelector, JOURNAL_MODE_OPTIONS } from './JournalTypeSelector';
@@ -248,6 +249,10 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
   const [handledLaunchRequestId, setHandledLaunchRequestId] = useState<number | null>(null);
   const [queueStatus, setQueueStatus] = useState<JournalQueueStatus>(EMPTY_QUEUE_STATUS);
   const [journalView, setJournalView] = useState<JournalView>('hub');
+  const [composerSaving, setComposerSaving] = useState(false);
+  const [composerError, setComposerError] = useState<string | null>(null);
+  const [showAllModes, setShowAllModes] = useState(false);
+  const [showReportPanel, setShowReportPanel] = useState(false);
   const [soundscape, setSoundscape] = useState<JournalSoundscape>('off');
   const [seedDraft, setSeedDraft] = useState<Partial<JournalEntryDraft> | null>(null);
   const [archetypeHand, setArchetypeHand] = useState<ArchetypeHand | null>(null);
@@ -689,6 +694,40 @@ export function Journal({ session, onNavigateToGoals, onNavigateToHabits, onNavi
 
   const recentEntries = useMemo(() => entries.slice(0, 3), [entries]);
 
+  // Zone 2 cards: the user's 3 most-used journal modes plus one rotating suggestion.
+  // Standard is excluded because the inline composer above already covers it.
+  const modeCards = useMemo(() => {
+    const counts = new Map<JournalEntryType, number>();
+    entries.forEach((entry) => {
+      counts.set(entry.type, (counts.get(entry.type) ?? 0) + 1);
+    });
+
+    const ranked = JOURNAL_MODE_OPTIONS
+      .filter((option) => option.value !== 'standard')
+      .map((option) => ({ option, count: counts.get(option.value) ?? 0 }))
+      .sort((a, b) => b.count - a.count);
+
+    const top = ranked.filter((item) => item.count > 0).slice(0, 3);
+    const starterDefaults: JournalType[] = ['quick', 'gratitude', 'brain_dump'];
+    for (const fallback of starterDefaults) {
+      if (top.length >= 3) break;
+      if (top.some((item) => item.option.value === fallback)) continue;
+      const option = JOURNAL_MODE_OPTIONS.find((candidate) => candidate.value === fallback);
+      if (option) top.push({ option, count: counts.get(fallback) ?? 0 });
+    }
+
+    const remaining = JOURNAL_MODE_OPTIONS.filter(
+      (option) => option.value !== 'standard' && !top.some((item) => item.option.value === option.value),
+    );
+    const dayIndex = Math.floor(Date.now() / 86_400_000);
+    const suggestion = remaining.length > 0 ? remaining[dayIndex % remaining.length] : null;
+
+    return [
+      ...top.map((item) => ({ ...item, suggested: false })),
+      ...(suggestion ? [{ option: suggestion, count: 0, suggested: true }] : []),
+    ];
+  }, [entries]);
+
   const goalMap = useMemo(() => {
     const map: Record<string, GoalRow> = {};
     goals.forEach((goal) => {
@@ -846,7 +885,11 @@ ${thankYouDraft}`,
     });
   };
 
-  const handleSaveEntry = async (draft: JournalEntryDraft) => {
+  const saveEntry = async (
+    draft: JournalEntryDraft,
+    mode: 'create' | 'edit',
+    editing: JournalEntry | null,
+  ): Promise<string | null> => {
     // For problem mode, validate that at least one section has content
     const isProblemMode = draft.type === 'problem';
     if (isProblemMode) {
@@ -855,32 +898,26 @@ ${thankYouDraft}`,
         draft.trainingSolutions,
         draft.concreteSteps
       ].some(field => field?.trim());
-      
+
       if (!hasAnyProblemContent) {
-        setEditorError('Please fill in at least one problem-solving section before saving.');
-        return;
+        return 'Please fill in at least one problem-solving section before saving.';
       }
     }
-    
+
     const isGratitudeMode = draft.type === 'gratitude';
     const gratitudeCoachResult = isGratitudeMode ? getGratitudeCoachFeedback(draft.content) : null;
 
     if (isGratitudeMode) {
       const trimmedContent = draft.content.trim();
       if (trimmedContent.length < 10) {
-        setEditorError('Add at least one meaningful gratitude thought before saving.');
-        return;
+        return 'Add at least one meaningful gratitude thought before saving.';
       }
     }
 
     // For other modes, require content
     if (!isProblemMode && !draft.content.trim()) {
-      setEditorError('Write a few lines before saving.');
-      return;
+      return 'Write a few lines before saving.';
     }
-
-    setEditorSaving(true);
-    setEditorError(null);
 
     try {
       const basePayload: Omit<JournalEntryInsertPayload, 'user_id'> = {
@@ -892,7 +929,7 @@ ${thankYouDraft}`,
         linked_goal_ids: draft.linkedGoalIds.length ? draft.linkedGoalIds : null,
         linked_habit_ids: draft.linkedHabitIds.length ? draft.linkedHabitIds : null,
         attachments: gratitudeCoachResult
-          ? withGratitudeMeta(editingEntry?.attachments ?? null, gratitudeCoachResult)
+          ? withGratitudeMeta(editing?.attachments ?? null, gratitudeCoachResult)
           : undefined,
         is_private: draft.isPrivate,
         type: draft.type ?? DEFAULT_JOURNAL_TYPE,
@@ -906,7 +943,7 @@ ${thankYouDraft}`,
       };
 
       let saved: JournalEntry | null = null;
-      if (editorMode === 'create') {
+      if (mode === 'create') {
         const insertPayload: JournalEntryInsertPayload = {
           ...basePayload,
           user_id: session.user.id,
@@ -917,9 +954,9 @@ ${thankYouDraft}`,
         }
         saved = data;
         setEntries((current) => sortEntries([data, ...current]));
-      } else if (editingEntry) {
+      } else if (editing) {
         const updatePayload: JournalEntryUpdatePayload = basePayload;
-        const { data, error: serviceError } = await updateJournalEntry(editingEntry.id, updatePayload);
+        const { data, error: serviceError } = await updateJournalEntry(editing.id, updatePayload);
         if (serviceError || !data) {
           throw new Error(serviceError?.message ?? 'Unable to update the entry.');
         }
@@ -932,7 +969,7 @@ ${thankYouDraft}`,
       if (saved) {
         const savedPendingSync = saved.id.startsWith('local-');
         // Award XP for journal entry (only for new entries, not edits)
-        if (editorMode === 'create') {
+        if (mode === 'create') {
           const content = draft.content.trim();
           const wordCount = content ? content.split(/\s+/).length : 0;
           const isLongEntry = wordCount >= 500;
@@ -1038,25 +1075,41 @@ ${thankYouDraft}`,
         }
 
         setSelectedEntryId(saved.id);
-        if (!(editorMode === 'create' && draft.type === 'gratitude')) {
+        if (!(mode === 'create' && draft.type === 'gratitude')) {
           setStatus(
             savedPendingSync
               ? { kind: 'warning', message: 'Entry saved locally. It will sync once you are back online.' }
-              : { kind: 'success', message: editorMode === 'create' ? 'Entry saved.' : 'Entry updated.' }
+              : { kind: 'success', message: mode === 'create' ? 'Entry saved.' : 'Entry updated.' }
           );
         }
         setEditorOpen(false);
         setSeedDraft(null);
-        if (isCompactLayout) {
+        if (isCompactLayout && journalView !== 'hub') {
           setShowMobileDetail(true);
         }
         void refreshQueueStatus();
       }
+      return null;
     } catch (err) {
-      setEditorError(err instanceof Error ? err.message : 'Unable to save your entry right now.');
-    } finally {
-      setEditorSaving(false);
+      return err instanceof Error ? err.message : 'Unable to save your entry right now.';
     }
+  };
+
+  const handleSaveEntry = async (draft: JournalEntryDraft) => {
+    setEditorSaving(true);
+    setEditorError(null);
+    const errorMessage = await saveEntry(draft, editorMode, editingEntry);
+    setEditorError(errorMessage);
+    setEditorSaving(false);
+  };
+
+  const handleComposerSave = async (draft: JournalEntryDraft): Promise<boolean> => {
+    setComposerSaving(true);
+    setComposerError(null);
+    const errorMessage = await saveEntry(draft, 'create', null);
+    setComposerError(errorMessage);
+    setComposerSaving(false);
+    return errorMessage === null;
   };
 
   const handleDeleteEntry = async () => {
@@ -1173,163 +1226,248 @@ ${thankYouDraft}`,
       </header>
 
       {journalView === 'hub' ? (
-      <div className="journal-hub" aria-label="Journal hub">
-        <section className="journal-hub-hero">
-          <div className="journal-hub-hero__copy">
-            <h2>What’s on your mind today?</h2>
-            <p>One tap and you’re writing. No setup, no friction.</p>
-          </div>
-          <button
-            type="button"
-            className="journal-hub-hero__cta"
-            onClick={() => handleStartWriting()}
-            disabled={journalDisabled}
-          >
-            <span aria-hidden="true">✍️</span> Start writing
-          </button>
-          <div className="journal-hub-hero__stats" aria-label="This week at a glance">
-            <span className="journal-hub-hero__stat">
-              <strong>{weeklyRecap.totalEntries}</strong> entries this week
-            </span>
-            <span className="journal-hub-hero__stat">
-              <strong>{weeklyRecap.daysPracticed}</strong> day{weeklyRecap.daysPracticed === 1 ? '' : 's'} practiced
-            </span>
-            {weeklyRecap.averageMood !== null ? (
-              <span className="journal-hub-hero__stat">
-                <strong>{weeklyRecap.averageMood}</strong> avg mood
-              </span>
-            ) : null}
-          </div>
-        </section>
+      <div className="journal-home" aria-label="Journal home">
+        <JournalQuickComposer
+          disabled={journalDisabled}
+          saving={composerSaving}
+          error={composerError}
+          moodOptions={MOOD_OPTIONS}
+          availableTags={availableTags}
+          onSave={handleComposerSave}
+        />
 
-        <section className="journal-hub-section" aria-label="Two minute starts">
-          <header className="journal-hub-section__head">
-            <h3>⏱️ 2-minute starts</h3>
-            <p>Low-friction sprints when you only have a moment.</p>
-          </header>
-          <div className="journal-hub-quick">
-            <button
-              type="button"
-              className="journal-hub-quick__pill"
-              onClick={() =>
-                handleQuickStartPreset(
-                  'problem',
-                  '2-minute clear mind',
-                  '1) What is bothering me most right now?\n2) What is true vs story?\n3) One small action in the next 10 minutes.',
-                )
-              }
-              disabled={journalDisabled}
-            >
-              <span className="journal-hub-quick__icon" aria-hidden="true">🧠</span>
-              <span className="journal-hub-quick__label">Clear mind</span>
-            </button>
-            <button
-              type="button"
-              className="journal-hub-quick__pill"
-              onClick={() =>
-                handleQuickStartPreset(
-                  'gratitude',
-                  '2-minute gratitude',
-                  '1) One person I appreciate today.\n2) One small moment that felt good.\n3) Why this mattered.',
-                )
-              }
-              disabled={journalDisabled}
-            >
-              <span className="journal-hub-quick__icon" aria-hidden="true">🙏</span>
-              <span className="journal-hub-quick__label">Gratitude</span>
-            </button>
-            <button
-              type="button"
-              className="journal-hub-quick__pill"
-              onClick={() =>
-                handleQuickStartPreset(
-                  'goal',
-                  '2-minute tomorrow plan',
-                  '1) Most important task tomorrow.\n2) Biggest likely blocker.\n3) First 10-minute starter action.',
-                )
-              }
-              disabled={journalDisabled}
-            >
-              <span className="journal-hub-quick__icon" aria-hidden="true">🚀</span>
-              <span className="journal-hub-quick__label">Plan tomorrow</span>
-            </button>
-          </div>
-        </section>
-
-        <section className="journal-hub-section" aria-label="Journal modes">
-          <header className="journal-hub-section__head">
-            <h3>🎨 Pick a mode</h3>
-            <p>Tap any mode to start writing in it instantly.</p>
-          </header>
-          <ul className="journal-hub-modes">
-            {JOURNAL_MODE_OPTIONS.map((option) => (
-              <li key={option.value}>
-                <button
-                  type="button"
-                  className={`journal-hub-modes__chip ${journalType === option.value ? 'journal-hub-modes__chip--active' : ''}`}
-                  onClick={() => handleStartWriting(option.value)}
-                  disabled={journalDisabled}
-                >
-                  <span aria-hidden="true">{option.icon}</span> {option.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="journal-hub-section" aria-label="Recent entries">
+        <section className="journal-hub-section journal-home-modes" aria-label="Your journal types">
           <header className="journal-hub-section__head journal-hub-section__head--row">
             <div>
-              <h3>📚 Recent entries</h3>
-              <p>Pick up where you left off.</p>
+              <h3>Your journals</h3>
+              <p>The three you use most, plus one worth trying today.</p>
             </div>
             <button
               type="button"
-              className="journal-hub-section__link"
+              className="journal-home-modes__toggle"
+              onClick={() => setShowAllModes((open) => !open)}
+              aria-expanded={showAllModes}
+            >
+              {showAllModes ? 'Show less ▴' : 'All types ▾'}
+            </button>
+          </header>
+          <div className="journal-home-modes__grid">
+            {modeCards.map(({ option, count, suggested }) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`journal-home-modes__card ${suggested ? 'journal-home-modes__card--suggested' : ''}`}
+                onClick={() => handleStartWriting(option.value)}
+                disabled={journalDisabled}
+              >
+                <span className="journal-home-modes__icon" aria-hidden="true">{option.icon}</span>
+                <span className="journal-home-modes__label">{option.label}</span>
+                <span className="journal-home-modes__meta">
+                  {suggested
+                    ? '✦ Today’s suggestion'
+                    : count > 0
+                      ? `${count} entr${count === 1 ? 'y' : 'ies'}`
+                      : 'A good place to start'}
+                </span>
+              </button>
+            ))}
+          </div>
+          {showAllModes ? (
+            <ul className="journal-hub-modes">
+              {JOURNAL_MODE_OPTIONS.map((option) => (
+                <li key={option.value}>
+                  <button
+                    type="button"
+                    className={`journal-hub-modes__chip ${journalType === option.value ? 'journal-hub-modes__chip--active' : ''}`}
+                    onClick={() => handleStartWriting(option.value)}
+                    disabled={journalDisabled}
+                  >
+                    <span aria-hidden="true">{option.icon}</span> {option.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+
+        <section className="journal-hub-section" aria-label="Read and reports">
+          <div className="journal-home-actions">
+            <button
+              type="button"
+              className="journal-home-actions__card"
               onClick={handleOpenReadView}
               disabled={journalDisabled}
             >
-              View all →
+              <span className="journal-home-actions__icon" aria-hidden="true">📖</span>
+              <span className="journal-home-actions__body">
+                <span className="journal-home-actions__label">Read &amp; search</span>
+                <span className="journal-home-actions__meta">Browse, search and filter every entry.</span>
+              </span>
             </button>
-          </header>
-          {recentEntries.length > 0 ? (
-            <ul className="journal-hub-recent">
-              {recentEntries.map((entry) => {
-                const locked = isEntryLocked(entry);
-                const moodIcon = getMoodMeta(entry.mood)?.icon;
-                return (
-                  <li key={entry.id}>
-                    <button
-                      type="button"
-                      className="journal-hub-recent__item"
-                      onClick={() => handleOpenEntryFromHub(entry.id)}
-                      disabled={journalDisabled}
-                    >
-                      <span className="journal-hub-recent__icon" aria-hidden="true">
-                        {locked ? '🔒' : moodIcon ?? '📝'}
+            <button
+              type="button"
+              className="journal-home-actions__card"
+              onClick={() => setShowReportPanel((open) => !open)}
+              aria-expanded={showReportPanel}
+              disabled={journalDisabled}
+            >
+              <span className="journal-home-actions__icon" aria-hidden="true">📊</span>
+              <span className="journal-home-actions__body">
+                <span className="journal-home-actions__label">Smart report</span>
+                <span className="journal-home-actions__meta">Your journaling, summarized.</span>
+              </span>
+            </button>
+          </div>
+          {showReportPanel ? (
+            <div className="journal-home-report" aria-live="polite">
+              <div className="journal-hub-hero__stats" aria-label="This week at a glance">
+                <span className="journal-hub-hero__stat">
+                  <strong>{weeklyRecap.totalEntries}</strong> entries this week
+                </span>
+                <span className="journal-hub-hero__stat">
+                  <strong>{weeklyRecap.daysPracticed}</strong> day{weeklyRecap.daysPracticed === 1 ? '' : 's'} practiced
+                </span>
+                {weeklyRecap.averageMood !== null ? (
+                  <span className="journal-hub-hero__stat">
+                    <strong>{weeklyRecap.averageMood}</strong> avg mood
+                  </span>
+                ) : null}
+              </div>
+              {weeklyRecap.topModes.length > 0 ? (
+                <div className="journal-home-report__modes">
+                  <p className="journal-home-report__label">Most used this week</p>
+                  <div className="journal-gratitude-weekly__themes">
+                    {weeklyRecap.topModes.map((mode) => (
+                      <span key={mode.mode} className="journal-gratitude-weekly__theme">
+                        {getModeLabel(mode.mode)} ({mode.count})
                       </span>
-                      <span className="journal-hub-recent__body">
-                        <span className="journal-hub-recent__title">
-                          {entry.title?.trim() || (locked ? 'Locked time capsule' : entry.content.slice(0, ENTRY_PREVIEW_MAX_LENGTH) || 'Untitled entry')}
-                        </span>
-                        <span className="journal-hub-recent__meta">
-                          {entryListDateFormatter.format(new Date(entry.entry_date))} · {getModeLabel(entry.type)}
-                        </span>
-                      </span>
-                      <span className="journal-hub-recent__chevron" aria-hidden="true">›</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="journal-hub-recent__empty">
-              {journalDisabled
-                ? 'Connect Supabase or open the demo workspace to unlock your private journal.'
-                : 'No entries yet — your first reflection is one tap away. ✨'}
-            </p>
-          )}
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              <div className="journal-home-report__pro">
+                <p className="journal-home-report__pro-title">🔒 Pro reports</p>
+                <p>
+                  A rolling 30-day report and a long-term story of your journaling — mood arcs, recurring
+                  themes, and coach observations. Coming to Pro members.
+                </p>
+              </div>
+            </div>
+          ) : null}
         </section>
+
+        <details className="journal-home-more">
+          <summary className="journal-home-more__summary">More journal tools</summary>
+          <div className="journal-home-more__body">
+            <section className="journal-hub-section" aria-label="Two minute starts">
+              <header className="journal-hub-section__head">
+                <h3>⏱️ 2-minute starts</h3>
+                <p>Low-friction sprints when you only have a moment.</p>
+              </header>
+              <div className="journal-hub-quick">
+                <button
+                  type="button"
+                  className="journal-hub-quick__pill"
+                  onClick={() =>
+                    handleQuickStartPreset(
+                      'problem',
+                      '2-minute clear mind',
+                      '1) What is bothering me most right now?\n2) What is true vs story?\n3) One small action in the next 10 minutes.',
+                    )
+                  }
+                  disabled={journalDisabled}
+                >
+                  <span className="journal-hub-quick__icon" aria-hidden="true">🧠</span>
+                  <span className="journal-hub-quick__label">Clear mind</span>
+                </button>
+                <button
+                  type="button"
+                  className="journal-hub-quick__pill"
+                  onClick={() =>
+                    handleQuickStartPreset(
+                      'gratitude',
+                      '2-minute gratitude',
+                      '1) One person I appreciate today.\n2) One small moment that felt good.\n3) Why this mattered.',
+                    )
+                  }
+                  disabled={journalDisabled}
+                >
+                  <span className="journal-hub-quick__icon" aria-hidden="true">🙏</span>
+                  <span className="journal-hub-quick__label">Gratitude</span>
+                </button>
+                <button
+                  type="button"
+                  className="journal-hub-quick__pill"
+                  onClick={() =>
+                    handleQuickStartPreset(
+                      'goal',
+                      '2-minute tomorrow plan',
+                      '1) Most important task tomorrow.\n2) Biggest likely blocker.\n3) First 10-minute starter action.',
+                    )
+                  }
+                  disabled={journalDisabled}
+                >
+                  <span className="journal-hub-quick__icon" aria-hidden="true">🚀</span>
+                  <span className="journal-hub-quick__label">Plan tomorrow</span>
+                </button>
+              </div>
+            </section>
+
+            <section className="journal-hub-section" aria-label="Recent entries">
+              <header className="journal-hub-section__head journal-hub-section__head--row">
+                <div>
+                  <h3>📚 Recent entries</h3>
+                  <p>Pick up where you left off.</p>
+                </div>
+                <button
+                  type="button"
+                  className="journal-hub-section__link"
+                  onClick={handleOpenReadView}
+                  disabled={journalDisabled}
+                >
+                  View all →
+                </button>
+              </header>
+              {recentEntries.length > 0 ? (
+                <ul className="journal-hub-recent">
+                  {recentEntries.map((entry) => {
+                    const locked = isEntryLocked(entry);
+                    const moodIcon = getMoodMeta(entry.mood)?.icon;
+                    return (
+                      <li key={entry.id}>
+                        <button
+                          type="button"
+                          className="journal-hub-recent__item"
+                          onClick={() => handleOpenEntryFromHub(entry.id)}
+                          disabled={journalDisabled}
+                        >
+                          <span className="journal-hub-recent__icon" aria-hidden="true">
+                            {locked ? '🔒' : moodIcon ?? '📝'}
+                          </span>
+                          <span className="journal-hub-recent__body">
+                            <span className="journal-hub-recent__title">
+                              {entry.title?.trim() || (locked ? 'Locked time capsule' : entry.content.slice(0, ENTRY_PREVIEW_MAX_LENGTH) || 'Untitled entry')}
+                            </span>
+                            <span className="journal-hub-recent__meta">
+                              {entryListDateFormatter.format(new Date(entry.entry_date))} · {getModeLabel(entry.type)}
+                            </span>
+                          </span>
+                          <span className="journal-hub-recent__chevron" aria-hidden="true">›</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="journal-hub-recent__empty">
+                  {journalDisabled
+                    ? 'Connect Supabase or open the demo workspace to unlock your private journal.'
+                    : 'No entries yet — your first reflection is one tap away. ✨'}
+                </p>
+              )}
+            </section>
+          </div>
+        </details>
       </div>
       ) : null}
 
@@ -1339,9 +1477,9 @@ ${thankYouDraft}`,
         </p>
       ) : null}
 
-      {journalView !== 'hub' && status ? <p className={`journal__status journal__status--${status.kind}`}>{status.message}</p> : null}
+      {status ? <p className={`journal__status journal__status--${status.kind}`}>{status.message}</p> : null}
       {journalView !== 'hub' && error ? <p className="journal__status journal__status--error">{error}</p> : null}
-      {journalView !== 'hub' && (queueStatus.pending > 0 || queueStatus.failed > 0) ? (
+      {queueStatus.pending > 0 || queueStatus.failed > 0 ? (
         <p className="journal__status journal__status--warning">
           {queueStatus.failed > 0
             ? `${queueStatus.failed} journal change${queueStatus.failed === 1 ? '' : 's'} failed to sync. We will keep retrying when online.`
