@@ -53,6 +53,7 @@ import { ZenGarden } from './features/zen-garden/ZenGarden';
 import { ThemeToggle } from './components/ThemeToggle';
 import { MobileFooterNav } from './components/MobileFooterNav';
 import { MobileTopChrome } from './components/MobileTopChrome';
+import { SyncIndicator } from './components/service-status';
 import { LoadingReadinessScreen, type LoadingReadinessStep } from './components/LoadingReadinessScreen';
 import { GameBoardOverlay } from './components/GameBoardOverlay';
 import { buildJourneyLevelInputFromOverlay } from './features/gamification/level-worlds/services/dualTrackOverlayAdapter';
@@ -5439,6 +5440,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
     return (
         <div className={mobileHomeAppClassName}>
           {shouldShowMobileTopChrome ? <MobileTopChrome deviceClass={mobileTopChromeDeviceClass} /> : null}
+          <div className="app-sync-indicator">
+            <SyncIndicator />
+          </div>
           <div className="workspace-shell">
             <MobileHabitHome
               session={activeSession}
@@ -5619,6 +5623,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   return (
     <div className={appClassName}>
       {shouldShowMobileTopChrome ? <MobileTopChrome deviceClass={mobileTopChromeDeviceClass} /> : null}
+      <div className="app-sync-indicator">
+        <SyncIndicator />
+      </div>
       <div className={workspaceShellClassName}>
         {!isMobileExperience && !isDesktopMenuOpen && (
             <button

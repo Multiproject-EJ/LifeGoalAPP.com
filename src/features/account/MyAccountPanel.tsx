@@ -14,6 +14,7 @@ import { TodaysWinsReminderSettings } from './TodaysWinsReminderSettings';
 import { DailyLifeUpgradeSettings } from './DailyLifeUpgradeSettings';
 import { GamificationSettings } from '../gamification/GamificationSettings';
 import { TelemetrySettingsSection } from './TelemetrySettingsSection';
+import { ServiceDiagnosticsPanel, SyncIndicator } from '../../components/service-status';
 import { SettingsFolderPopup } from '../../components/SettingsFolderPopup';
 import { FeaturePreviewOverlay } from '../../components/FeaturePreviewOverlay';
 import { SettingsFeatureCard } from '../../components/SettingsFeatureCard';
@@ -1008,6 +1009,18 @@ export function MyAccountPanel({
               <dd className="account-panel__code">{user.id}</dd>
             </div>
           </dl>
+        </section>
+
+        <section className="account-panel__card" aria-labelledby="account-cloud-sync">
+          <p className="account-panel__eyebrow">Data &amp; security</p>
+          <h3 id="account-cloud-sync">
+            Cloud sync &amp; service health <SyncIndicator />
+          </h3>
+          <p className="account-panel__hint">
+            Live status of cloud services, pending offline changes, and a diagnostics export you can
+            share with support. Changes made while offline stay on this device until sync returns.
+          </p>
+          <ServiceDiagnosticsPanel />
         </section>
 
         <section className="account-panel__card" aria-labelledby="account-danger-zone">
