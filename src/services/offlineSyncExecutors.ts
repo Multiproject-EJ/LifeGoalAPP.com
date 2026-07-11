@@ -13,6 +13,7 @@ import { getSyncEngine } from './offline-queue';
 import type { PendingMutation } from './offline-queue';
 import type { Database } from '../lib/database.types';
 import { removeLocalJournalRecord } from '../data/journalOfflineRepo';
+import { removeLocalGoalRecord } from '../data/goalsOfflineRepo';
 
 type TodayTodoInsert = Database['public']['Tables']['today_todos']['Insert'];
 type TodayTodoUpdate = Database['public']['Tables']['today_todos']['Update'];
@@ -20,6 +21,8 @@ type CheckinInsert = Database['public']['Tables']['checkins']['Insert'];
 type CheckinUpdate = Database['public']['Tables']['checkins']['Update'];
 type JournalEntryInsert = Database['public']['Tables']['journal_entries']['Insert'];
 type JournalEntryUpdate = Database['public']['Tables']['journal_entries']['Update'];
+type GoalInsert = Database['public']['Tables']['goals']['Insert'];
+type GoalUpdate = Database['public']['Tables']['goals']['Update'];
 
 let registered = false;
 
@@ -102,6 +105,32 @@ export function registerOfflineSyncExecutors(): void {
     const { error } = await getSupabaseClient().from('journal_entries').delete().eq('id', id);
     if (error) throw error;
     await removeLocalJournalRecord(id);
+    return { outcome: 'success' as const };
+  });
+
+  // ── Goals ─────────────────────────────────────────────────────────────────
+
+  engine.registerExecutor('goal.create', async (mutation) => {
+    const payload = payloadOf<GoalInsert & { id: string }>(mutation);
+    const { error } = await getSupabaseClient().from('goals').upsert(payload, { onConflict: 'id' });
+    if (error) throw error;
+    await removeLocalGoalRecord(payload.id);
+    return { outcome: 'success' as const };
+  });
+
+  engine.registerExecutor('goal.update', async (mutation) => {
+    const { id, patch } = payloadOf<{ id: string; patch: GoalUpdate }>(mutation);
+    const { error } = await getSupabaseClient().from('goals').update(patch).eq('id', id);
+    if (error) throw error;
+    await removeLocalGoalRecord(id);
+    return { outcome: 'success' as const };
+  });
+
+  engine.registerExecutor('goal.delete', async (mutation) => {
+    const { id } = payloadOf<{ id: string }>(mutation);
+    const { error } = await getSupabaseClient().from('goals').delete().eq('id', id);
+    if (error) throw error;
+    await removeLocalGoalRecord(id);
     return { outcome: 'success' as const };
   });
 }
