@@ -552,7 +552,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
             {goldenAvailable && <span className="fortune-engine__golden-chip"> · ✨ Golden Launch ready</span>}
           </p>
 
-          <div className="fortune-engine__actions">
+          <div className="fortune-engine__actions fortune-engine__actions--sticky">
             <button
               type="button"
               className={`fortune-engine__btn fortune-engine__btn--primary${goldenAvailable ? ' fortune-engine__btn--golden' : ''}`}
@@ -721,7 +721,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           <RewardTrack track={trackViewModel} onClaim={handleClaimMilestone} />
           {lastClaimLabel && <p className="fortune-engine__claim-note">Claimed: {lastClaimLabel} 🎉</p>}
           <p className="fortune-engine__ticket-note">Tickets left: {ticketsRemaining} 🎟️</p>
-          <div className="fortune-engine__actions">
+          <div className="fortune-engine__actions fortune-engine__actions--sticky">
             <button
               type="button"
               className="fortune-engine__btn fortune-engine__btn--primary"

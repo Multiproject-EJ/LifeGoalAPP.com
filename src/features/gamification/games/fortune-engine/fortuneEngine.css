@@ -6,9 +6,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  min-height: 100%;
+  /* The launcher overlay is `position: fixed; inset: 0; overflow: hidden`,
+     so this element must own the scroll: a fixed height (not min-height)
+     keeps it viewport-sized and lets overflow-y actually engage. */
+  height: 100%;
   width: 100%;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background:
     radial-gradient(ellipse at 50% -10%, rgba(94, 130, 212, 0.35), transparent 55%),
     linear-gradient(180deg, #070d1d 0%, #0b1c33 60%, #101f3a 100%);
@@ -258,6 +263,18 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* Entry/results panels can be taller than the viewport; keep the primary
+   CTA pinned to the bottom of the scrollport so it is always reachable. */
+.fortune-engine__actions--sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin: 0 -16px -18px;
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(11, 28, 51, 0) 0%, rgba(11, 28, 51, 0.97) 32%);
+  border-radius: 0 0 18px 18px;
 }
 
 .fortune-engine__btn {
