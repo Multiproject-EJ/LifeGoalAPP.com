@@ -1,5 +1,6 @@
 import { ACTION_CATEGORY_CONFIG } from '../../../../types/actions';
 import type { TowerBlock } from './taskTowerTypes';
+import { TOWER_GRID } from './taskTowerTypes';
 
 interface TaskTowerBlockProps {
   block: TowerBlock;
@@ -16,10 +17,12 @@ export function TaskTowerBlock({ block, onTap, isSelected }: TaskTowerBlockProps
     }
   };
 
+  // State row 0 is the ground the tower settles onto, but CSS grid row 1 is
+  // the top of the grid — flip so the tower stands on the scene's ground
+  // strip and blocks visually drop DOWN when the ones beneath them clear.
   const blockStyle: React.CSSProperties = {
     gridColumn: `${block.col + 1} / span ${block.width}`,
-    gridRow: `${block.row + 1}`,
-    backgroundColor: categoryConfig.color,
+    gridRow: `${TOWER_GRID.MAX_ROWS - block.row}`,
   };
 
   const blockClasses = [
