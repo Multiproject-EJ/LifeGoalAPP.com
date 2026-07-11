@@ -65,6 +65,16 @@ const SECRET_DURATION_25_SECONDS = 25;
 const SECRET_DURATION_10_MINUTES = 600; // 10 minutes in seconds
 type SecretDestroyMode = 'off' | '25s' | '10m';
 const DEFAULT_SECRET_DESTROY_MODE: SecretDestroyMode = '25s';
+// How long the burn animation plays before the secret text is destroyed
+const SECRET_BURN_DURATION_MS = 1600;
+
+// How long the time capsule seal animation plays before the entry is saved
+const CAPSULE_SEAL_DURATION_MS = 1500;
+const CAPSULE_SEAL_DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
 
 // Problem mode constants - for brain dump section with self-destruct
 const PROBLEM_BRAIN_DUMP_DURATION_SECONDS = 60;
@@ -264,6 +274,10 @@ export function JournalEntryEditor({
   const [problemTimeLeft, setProblemTimeLeft] = useState(PROBLEM_BRAIN_DUMP_DURATION_SECONDS);
   const [problemHasFinished, setProblemHasFinished] = useState(false);
 
+  // Time capsule mode state - seal animation plays before the entry is saved
+  const [isSealing, setIsSealing] = useState(false);
+  const sealTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!open) return;
     setDraft(createDraft(entry, journalType, seedDraft));
@@ -291,7 +305,26 @@ export function JournalEntryEditor({
       setProblemTimeLeft(PROBLEM_BRAIN_DUMP_DURATION_SECONDS);
       setProblemHasFinished(false);
     }
+    // Reset time capsule seal state when opening/changing entries
+    setIsSealing(false);
+    if (sealTimeoutRef.current) {
+      clearTimeout(sealTimeoutRef.current);
+      sealTimeoutRef.current = null;
+    }
   }, [entry, open, journalType, seedDraft]);
+
+  // A failed save should bring the form back so the error can be addressed
+  useEffect(() => {
+    if (error) {
+      setIsSealing(false);
+    }
+  }, [error]);
+
+  useEffect(() => () => {
+    if (sealTimeoutRef.current) {
+      clearTimeout(sealTimeoutRef.current);
+    }
+  }, []);
 
   // Brain dump countdown timer
   useEffect(() => {
@@ -337,7 +370,7 @@ export function JournalEntryEditor({
       setIsFading(false);
       setIsBurning(false);
       setSecretTimeLeft(secretDestroyMode === '10m' ? SECRET_DURATION_10_MINUTES : SECRET_DURATION_25_SECONDS);
-    }, 500);
+    }, SECRET_BURN_DURATION_MS);
 
     return () => clearTimeout(destroyTimeout);
   }, [open, draft.type, secretDestroyMode, secretTimeLeft]);
@@ -420,6 +453,15 @@ export function JournalEntryEditor({
     // In secret mode, just close the editor without saving
     if (isSecretMode) {
       onClose();
+      return;
+    }
+    // New time capsules play the seal animation before saving
+    if (isTimeCapsuleMode && mode === 'create' && !isSealing) {
+      setIsSealing(true);
+      sealTimeoutRef.current = setTimeout(() => {
+        sealTimeoutRef.current = null;
+        onSave(draft);
+      }, CAPSULE_SEAL_DURATION_MS);
       return;
     }
     onSave(draft);
@@ -539,7 +581,7 @@ export function JournalEntryEditor({
         setSecretTimeLeft(secretDestroyMode === '10m' ? SECRET_DURATION_10_MINUTES : SECRET_DURATION_25_SECONDS);
       }
       secretDestroyTimeoutRef.current = null;
-    }, 500); // Match animation duration
+    }, SECRET_BURN_DURATION_MS); // Match burn animation duration
   };
 
   const handleSecretTextChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -823,6 +865,8 @@ export function JournalEntryEditor({
 
   const renderGratitudeSection = () => {
     if (!isGratitudeMode) return null;
+    const grownFlags = gratitudeItems.map((item) => item.gratitude.trim().length > 0);
+    const grownCount = grownFlags.filter(Boolean).length;
     return (
       <section className="journal-gratitude">
         <header className="journal-gratitude__header">
@@ -850,6 +894,28 @@ export function JournalEntryEditor({
         </div>
 
         {isGuidedGratitude ? (
+          <>
+          <div
+            className="journal-gratitude__garden"
+            role="img"
+            aria-label={`${grownCount} of ${gratitudeItems.length} gratitude moments captured`}
+          >
+            {grownFlags.map((grown, index) => (
+              <span
+                key={index}
+                className={`journal-gratitude__plant ${grown ? 'journal-gratitude__plant--grown' : ''}`}
+                aria-hidden="true"
+              >
+                {grown ? '🌿' : '🌰'}
+              </span>
+            ))}
+            <span
+              className={`journal-gratitude__bloom ${grownCount === gratitudeItems.length ? 'journal-gratitude__bloom--open' : ''}`}
+              aria-hidden="true"
+            >
+              🌸
+            </span>
+          </div>
           <div className="journal-gratitude__list">
             {gratitudeItems.map((item, index) => (
               <article key={index} className="journal-gratitude__item">
@@ -869,6 +935,7 @@ export function JournalEntryEditor({
               </article>
             ))}
           </div>
+          </>
         ) : (
           <label className="journal-editor__field">
             <span>Freeform gratitude</span>
@@ -973,8 +1040,12 @@ export function JournalEntryEditor({
 
   return (
     <div className={`journal-editor ${isFocusMode ? 'journal-editor--fullscreen' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId}>
-      <div className="journal-editor__backdrop" onClick={onClose} />
-      <div className="journal-editor__panel" role="document" onClick={(event) => event.stopPropagation()}>
+      <div className="journal-editor__backdrop" onClick={isSealing ? undefined : onClose} />
+      <div
+        className={`journal-editor__panel journal-editor__panel--skin-${draft.type ?? 'standard'} ${isSealing ? 'journal-editor__panel--sealing' : ''}`}
+        role="document"
+        onClick={(event) => event.stopPropagation()}
+      >
         <header className="journal-editor__header">
           <div>
             <p className="journal-editor__eyebrow">Private journal</p>
@@ -1099,7 +1170,7 @@ export function JournalEntryEditor({
           )}
 
           {!isProblemMode && !isGratitudeMode && (
-          <label className="journal-editor__field">
+          <label className={`journal-editor__field ${isSecretMode ? 'journal-editor__field--secret-stage' : ''}`}>
             <span>{getContentLabel(draft.type)}</span>
             <textarea
               value={isSecretMode ? secretText : draft.content}
@@ -1114,6 +1185,16 @@ export function JournalEntryEditor({
                 transition: 'filter 0.3s'
               } : undefined}
             />
+            {isSecretMode && isBurning ? (
+              <div className="journal-burn" aria-hidden="true">
+                <div className="journal-burn__char" />
+                <div className="journal-burn__flames" />
+                <div className="journal-burn__glow" />
+                {[0, 1, 2, 3, 4, 5, 6, 7].map((ember) => (
+                  <span key={ember} className="journal-burn__ember" />
+                ))}
+              </div>
+            ) : null}
           </label>
           )}
 
@@ -1179,15 +1260,27 @@ export function JournalEntryEditor({
           {error ? <p className="journal-editor__status journal-editor__status--error">{error}</p> : null}
 
           <div className="journal-editor__actions">
-            <button type="button" className="journal-editor__cancel" onClick={onClose}>
+            <button type="button" className="journal-editor__cancel" onClick={onClose} disabled={isSealing}>
               Cancel
             </button>
-            <button type="submit" className="journal-editor__save" disabled={saving}>
-              {isSecretMode ? 'Done' : (saving ? 'Saving…' : 'Save entry')}
+            <button type="submit" className="journal-editor__save" disabled={saving || isSealing}>
+              {isSecretMode ? 'Done' : isSealing ? 'Sealing…' : saving ? 'Saving…' : 'Save entry'}
             </button>
           </div>
         </form>
       </div>
+      {isSealing ? (
+        <div className="journal-capsule-seal" aria-live="polite">
+          <div className="journal-capsule-seal__envelope" aria-hidden="true">
+            <span className="journal-capsule-seal__flap" />
+            <span className="journal-capsule-seal__wax">⏳</span>
+          </div>
+          <p className="journal-capsule-seal__text">
+            Sealed until{' '}
+            {draft.unlockDate ? CAPSULE_SEAL_DATE_FORMATTER.format(new Date(draft.unlockDate)) : 'its unlock date'}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
