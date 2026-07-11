@@ -6,6 +6,8 @@
 import {
   buildFortuneRing,
   FORTUNE_FINALE_TARGET_COUNT,
+  FORTUNE_NEW_BEST_EVENT_BONUS_RATIO,
+  FORTUNE_PERFECT_BASE_MULTIPLIER,
   FORTUNE_RING_BASE_DURATION_MS,
   FORTUNE_RING_COUNT,
   FORTUNE_RING_REVOLUTION_MS,
@@ -15,6 +17,9 @@ import {
   FORTUNE_RUN_MIN_POINTS,
   FORTUNE_WHEEL_SLOTS,
   getFortuneRouteForSlot,
+  isFortunePerfectTapAngle,
+  resolveFortuneCrushKeepDivisor,
+  resolveFortunePerfectPointsMultiplier,
   resolveFortuneRunMultiplier,
   resolveFortuneRunOutcome,
   resolveFortuneSegmentIndexForAngle,
@@ -154,7 +159,7 @@ export const fortuneEngineGameTests: TestCase[] = [
     },
   },
   {
-    name: 'run outcomes: banked runs keep everything, crushed runs keep half, floors apply',
+    name: 'run outcomes: banked runs keep everything, crush penalties deepen per ring, floors apply',
     run: () => {
       const banked = resolveFortuneRunOutcome({
         rawPoints: 100,
@@ -168,9 +173,23 @@ export const fortuneEngineGameTests: TestCase[] = [
       assertEqual(banked.eventPoints, 150, 'event points mirror the run score');
       assertEqual(banked.dice, 4, 'banked runs keep collected dice');
       assertEqual(banked.essence, 10, 'banked runs keep collected essence');
-      assertEqual(banked.fragmentAwarded, false, 'plain routes award no fragment');
+      assertEqual(banked.fragmentAwarded, false, 'plain banked routes award no fragment');
 
-      const crushed = resolveFortuneRunOutcome({
+      assertEqual(resolveFortuneCrushKeepDivisor(0), 2, 'ring 1 crush keeps half');
+      assertEqual(resolveFortuneCrushKeepDivisor(1), 3, 'ring 2 crush keeps a third');
+      assertEqual(resolveFortuneCrushKeepDivisor(2), 4, 'ring 3 crush keeps a quarter');
+
+      const crushedShallow = resolveFortuneRunOutcome({
+        rawPoints: 100,
+        dice: 5,
+        essence: 9,
+        ringIndex: 0,
+        route: FORTUNE_ROUTES.treasure,
+        end: 'crushed',
+      });
+      assertEqual(crushedShallow.runScore, 50, 'ring-1 crush keeps half the multiplied score');
+
+      const crushedDeep = resolveFortuneRunOutcome({
         rawPoints: 100,
         dice: 5,
         essence: 9,
@@ -178,10 +197,10 @@ export const fortuneEngineGameTests: TestCase[] = [
         route: FORTUNE_ROUTES.treasure,
         end: 'crushed',
       });
-      assertEqual(crushed.runScore, 100, 'crushed runs halve the multiplied score');
-      assertEqual(crushed.dice, 2, 'crushed runs drop half the dice');
-      assertEqual(crushed.essence, 4, 'crushed runs drop half the essence');
-      assertEqual(crushed.fragmentAwarded, false, 'crushed runs never award fragments');
+      assertEqual(crushedDeep.runScore, 50, 'ring-3 crush keeps a quarter of the multiplied score');
+      assertEqual(crushedDeep.dice, 2, 'crushed runs drop half the dice');
+      assertEqual(crushedDeep.essence, 4, 'crushed runs drop half the essence');
+      assertEqual(crushedDeep.fragmentAwarded, false, 'crushed runs never award fragments');
 
       const scraped = resolveFortuneRunOutcome({
         rawPoints: 0,
@@ -196,7 +215,7 @@ export const fortuneEngineGameTests: TestCase[] = [
     },
   },
   {
-    name: 'fragments come from the jackpot route or a golden launch, only on finished runs',
+    name: 'fragments come from jackpot, golden launch, or a full descent — only on finished runs',
     run: () => {
       const jackpot = resolveFortuneRunOutcome({
         rawPoints: 20,
@@ -219,6 +238,26 @@ export const fortuneEngineGameTests: TestCase[] = [
       });
       assertEqual(golden.fragmentAwarded, true, 'golden launches guarantee a fragment on finished runs');
 
+      const fullDescent = resolveFortuneRunOutcome({
+        rawPoints: 20,
+        dice: 0,
+        essence: 0,
+        ringIndex: 2,
+        route: FORTUNE_ROUTES.treasure,
+        end: 'completed',
+      });
+      assertEqual(fullDescent.fragmentAwarded, true, 'finishing all three rings standing awards a fragment');
+
+      const bankedPlain = resolveFortuneRunOutcome({
+        rawPoints: 20,
+        dice: 0,
+        essence: 0,
+        ringIndex: 1,
+        route: FORTUNE_ROUTES.treasure,
+        end: 'banked',
+      });
+      assertEqual(bankedPlain.fragmentAwarded, false, 'banking early on a plain route earns no fragment');
+
       const crushedJackpot = resolveFortuneRunOutcome({
         rawPoints: 20,
         dice: 0,
@@ -229,6 +268,111 @@ export const fortuneEngineGameTests: TestCase[] = [
         goldenLaunch: true,
       });
       assertEqual(crushedJackpot.fragmentAwarded, false, 'crushed runs forfeit the fragment');
+    },
+  },
+  {
+    name: 'perfect taps multiply points and build a capped combo; hazards and misses reset it',
+    run: () => {
+      const arc = 360 / FORTUNE_RING_SEGMENT_COUNT;
+      assertEqual(isFortunePerfectTapAngle(arc / 2), true, 'the exact center of a segment is Perfect');
+      assertEqual(isFortunePerfectTapAngle(arc * 5 + arc / 2), true, 'center of any segment is Perfect');
+      assertEqual(isFortunePerfectTapAngle(0.5), false, 'the leading edge of a segment is not Perfect');
+      assertEqual(isFortunePerfectTapAngle(arc - 0.5), false, 'the trailing edge of a segment is not Perfect');
+
+      assertEqual(resolveFortunePerfectPointsMultiplier(0), FORTUNE_PERFECT_BASE_MULTIPLIER, 'first Perfect pays the base multiplier');
+      assertEqual(resolveFortunePerfectPointsMultiplier(1), 2.5, 'combo stack 1 pays ×2.5');
+      assertEqual(resolveFortunePerfectPointsMultiplier(3), 3.5, 'combo stack 3 pays ×3.5');
+      assertEqual(resolveFortunePerfectPointsMultiplier(99), 3.5, 'combo multiplier caps at ×3.5');
+
+      const segments: FortuneRingSegment[] = [
+        { kind: 'points', value: 10, collected: false },
+        { kind: 'points', value: 10, collected: false },
+        { kind: 'hazard', value: 0, collected: false },
+        { kind: 'dice', value: 2, collected: false },
+      ];
+      const first = resolveFortuneTap(segments, 0, { perfect: true, comboBefore: 0 });
+      assertEqual(first.points, 20, 'a Perfect tap doubles the points value');
+      assertEqual(first.perfect, true, 'Perfect flag should be reported');
+      assertEqual(first.comboAfter, 1, 'a Perfect tap starts the combo');
+
+      const second = resolveFortuneTap(first.segments, 1, { perfect: true, comboBefore: first.comboAfter });
+      assertEqual(second.points, 25, 'a combo Perfect pays the escalated multiplier');
+      assertEqual(second.comboAfter, 2, 'consecutive Perfects extend the combo');
+
+      const normal = resolveFortuneTap(second.segments, 3, { perfect: false, comboBefore: second.comboAfter });
+      assertEqual(normal.comboAfter, 0, 'a normal collect resets the combo');
+      assertEqual(normal.dice, 2, 'dice values are unaffected by the Perfect system');
+
+      const hazard = resolveFortuneTap(second.segments, 2, { perfect: true, comboBefore: 5 });
+      assertEqual(hazard.perfect, false, 'a hazard can never be Perfect');
+      assertEqual(hazard.comboAfter, 0, 'a hazard resets the combo');
+
+      const legacy = resolveFortuneTap(segments, 0);
+      assertEqual(legacy.points, 10, 'taps without Perfect options keep the base value');
+      assertEqual(legacy.comboAfter, 0, 'non-Perfect taps carry no combo');
+    },
+  },
+  {
+    name: 'beating the previous best run pays bonus event points',
+    run: () => {
+      const newBest = resolveFortuneRunOutcome({
+        rawPoints: 100,
+        dice: 0,
+        essence: 0,
+        ringIndex: 0,
+        route: FORTUNE_ROUTES.treasure,
+        end: 'banked',
+        previousBestScore: 80,
+      });
+      assertEqual(newBest.newBest, true, 'a higher score should flag a new best');
+      assertEqual(
+        newBest.eventPoints,
+        100 + Math.floor(100 * FORTUNE_NEW_BEST_EVENT_BONUS_RATIO),
+        'a new best pays the bonus event points',
+      );
+
+      const notBest = resolveFortuneRunOutcome({
+        rawPoints: 50,
+        dice: 0,
+        essence: 0,
+        ringIndex: 0,
+        route: FORTUNE_ROUTES.treasure,
+        end: 'banked',
+        previousBestScore: 80,
+      });
+      assertEqual(notBest.newBest, false, 'a lower score is not a new best');
+      assertEqual(notBest.eventPoints, 50, 'no bonus without a new best');
+
+      const firstRun = resolveFortuneRunOutcome({
+        rawPoints: 50,
+        dice: 0,
+        essence: 0,
+        ringIndex: 0,
+        route: FORTUNE_ROUTES.treasure,
+        end: 'banked',
+        previousBestScore: 0,
+      });
+      assertEqual(firstRun.newBest, false, 'the first run has no best to beat');
+    },
+  },
+  {
+    name: 'golden streak bonus multiplier stacks onto the run multiplier',
+    run: () => {
+      assertEqual(
+        resolveFortuneRunMultiplier({ ringIndex: 0, route: FORTUNE_ROUTES.treasure, bonusMultiplier: 0.5 }),
+        1.5,
+        'the streak bonus adds onto the ring multiplier',
+      );
+      const boosted = resolveFortuneRunOutcome({
+        rawPoints: 100,
+        dice: 0,
+        essence: 0,
+        ringIndex: 0,
+        route: FORTUNE_ROUTES.treasure,
+        end: 'banked',
+        bonusMultiplier: 0.5,
+      });
+      assertEqual(boosted.runScore, 150, 'the streak bonus multiplies the banked score');
     },
   },
   {

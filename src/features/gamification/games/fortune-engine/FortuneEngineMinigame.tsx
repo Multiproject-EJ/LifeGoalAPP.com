@@ -31,7 +31,10 @@ import {
   FORTUNE_WHEEL_SLOTS,
   FORTUNE_ROUTES,
   getFortuneRouteForSlot,
+  isFortunePerfectTapAngle,
   nextFortuneRng,
+  resolveFortuneCrushKeepDivisor,
+  resolveFortunePerfectPointsMultiplier,
   resolveFortuneRunMultiplier,
   resolveFortuneRunOutcome,
   resolveFortuneSegmentIndexForAngle,
@@ -50,10 +53,15 @@ import {
   FORTUNE_CORE_FRAGMENTS,
   FORTUNE_ENGINE_FINALE_REWARD_LABEL,
   FORTUNE_ENGINE_LAUNCH_TICKET_COST,
+  FORTUNE_FRAGMENT_PITY_RUNS,
+  FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS,
+  FORTUNE_GOLDEN_STREAK_MULTIPLIER_MIN_DAYS,
+  FORTUNE_GOLDEN_STREAK_SHIELD_MIN_DAYS,
   isFortuneCoreComplete,
   isFortuneFinaleUnlocked,
   isFortuneGoldenLaunchAvailable,
   resolveFortuneCoreFragmentIds,
+  resolveGoldenStreakPerks,
   type FortuneEngineTrackViewModel,
 } from '../../level-worlds/services/fortuneEngineProgression';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
@@ -155,6 +163,9 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
   const [runDice, setRunDice] = useState(0);
   const [runEssence, setRunEssence] = useState(0);
   const [hazardsHit, setHazardsHit] = useState(0);
+  const [comboCount, setComboCount] = useState(0);
+  const [shieldsLeft, setShieldsLeft] = useState(0);
+  const [runMultiplierBonus, setRunMultiplierBonus] = useState(0);
   const [ringTimeLeftMs, setRingTimeLeftMs] = useState(0);
   const [lastOutcome, setLastOutcome] = useState<FortuneRunOutcome | null>(null);
   const [lastFragmentId, setLastFragmentId] = useState<number | null>(null);
@@ -176,6 +187,9 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
   const phaseRef = useRef<GamePhase>('entry');
   const routeRef = useRef<FortuneRoute | null>(null);
   const runTotalsRef = useRef({ rawPoints: 0, dice: 0, essence: 0, hazards: 0 });
+  const comboRef = useRef(0);
+  const shieldsRef = useRef(0);
+  const runBonusRef = useRef(0);
   const wheelSpinRef = useRef<{ startAtMs: number; fromDeg: number; toDeg: number; slotIndex: number } | null>(null);
   const finaleTargetsRef = useRef<number[]>([]);
   const finaleHitsRef = useRef<Set<number>>(new Set());
@@ -213,6 +227,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
 
   const handleLaunch = useCallback(() => {
     const spend = config.requestLaunchSpend?.();
+    let goldenRun = false;
     if (spend) {
       setTicketsRemaining(spend.ticketsRemaining);
       if (spend.progress) setProgress(spend.progress);
@@ -220,10 +235,22 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
         triggerIslandRunHaptic('roll');
         return;
       }
+      goldenRun = spend.golden;
       setRunGolden(spend.golden);
     } else {
       setRunGolden(false);
     }
+
+    // Golden Launch streak perks apply to the whole golden run.
+    const perks = goldenRun
+      ? resolveGoldenStreakPerks(spend?.progress?.goldenStreakCount ?? 0)
+      : { startMultiplierBonus: 0, hazardShields: 0 };
+    runBonusRef.current = perks.startMultiplierBonus;
+    setRunMultiplierBonus(perks.startMultiplierBonus);
+    shieldsRef.current = perks.hazardShields;
+    setShieldsLeft(perks.hazardShields);
+    comboRef.current = 0;
+    setComboCount(0);
 
     const [slotIndex, nextState] = rollFortuneWheelSlot(rngRef.current);
     rngRef.current = nextState;
@@ -274,6 +301,8 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
       route,
       end,
       goldenLaunch: runGolden,
+      bonusMultiplier: runBonusRef.current,
+      previousBestScore: progress?.bestRunScore ?? 0,
     });
     const persisted = config.requestRunResult?.({
       runScore: outcome.runScore,
@@ -290,7 +319,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
     setPhase('results');
     playIslandRunSound(end === 'crushed' ? 'token_move' : 'minigame_complete');
     triggerIslandRunHaptic(end === 'crushed' ? 'roll' : 'reward_claim');
-  }, [config, refreshTickets, runGolden]);
+  }, [config, progress, refreshTickets, runGolden]);
 
   const handleBank = useCallback(() => {
     finishRun('banked', ringIndex);
@@ -346,9 +375,23 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
   const handleRingTap = useCallback(() => {
     if (phaseRef.current === 'ring') {
       const segmentIndex = resolveFortuneSegmentIndexForAngle(pointerAngleRef.current);
-      const outcome = resolveFortuneTap(segmentsRef.current, segmentIndex);
+      const perfect = isFortunePerfectTapAngle(pointerAngleRef.current);
+      const outcome = resolveFortuneTap(segmentsRef.current, segmentIndex, {
+        perfect,
+        comboBefore: comboRef.current,
+      });
       segmentsRef.current = outcome.segments;
+      comboRef.current = outcome.comboAfter;
+      setComboCount(outcome.comboAfter);
       if (!outcome.collectedSomething) return;
+      if (outcome.hazardHit && shieldsRef.current > 0) {
+        // Golden-streak shield absorbs one corrupted hit for free.
+        shieldsRef.current -= 1;
+        setShieldsLeft(shieldsRef.current);
+        playIslandRunSound('coin_flip');
+        triggerIslandRunHaptic('reward_claim');
+        return;
+      }
       const totals = runTotalsRef.current;
       totals.rawPoints += outcome.points;
       totals.dice += outcome.dice;
@@ -369,7 +412,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
       setRawPoints(totals.rawPoints);
       setRunDice(totals.dice);
       setRunEssence(totals.essence);
-      playIslandRunSound('reward_bar_fill');
+      playIslandRunSound(outcome.perfect ? 'coin_flip' : 'reward_bar_fill');
       triggerIslandRunHaptic('reward_claim');
       return;
     }
@@ -499,8 +542,11 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const multiplier = activeRoute
-    ? resolveFortuneRunMultiplier({ ringIndex, route: activeRoute })
+    ? resolveFortuneRunMultiplier({ ringIndex, route: activeRoute, bonusMultiplier: runMultiplierBonus })
     : 1;
+  const bestRunScore = progress?.bestRunScore ?? 0;
+  const goldenStreak = progress?.goldenStreakCount ?? 0;
+  const isFirstEverLaunch = (progress?.totalLaunches ?? 0) === 0;
 
   return (
     <section className={`fortune-engine${eventUnstable ? ' fortune-engine--unstable' : ''}`} aria-label="The Fortune Engine mini-game">
@@ -539,13 +585,33 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           <RewardTrack track={trackViewModel} onClaim={handleClaimMilestone} />
           {lastClaimLabel && <p className="fortune-engine__claim-note">Claimed: {lastClaimLabel} 🎉</p>}
 
-          <ul className="fortune-engine__rules">
-            <li>🎟️ 1 ticket per launch — the first launch each day is a free <strong>Golden Launch</strong> with a guaranteed fragment.</li>
-            <li>🎯 Tap while the pointer crosses ⭐ points, 🎲 dice, 🟣 essence and ⏳ bonus time.</li>
-            <li>☠️ {FORTUNE_RUN_HAZARD_LIMIT} corrupted hits crush the run (you keep half — never nothing).</li>
-            <li>💰 After each ring: bank it all, or go deeper for a bigger multiplier.</li>
-            <li>🧩 Collect all 9 Fortune Core fragments to unlock the finale.</li>
-          </ul>
+          {bestRunScore > 0 && (
+            <p className="fortune-engine__best-note">
+              🏆 Best run: <strong>{bestRunScore}</strong> — beat it for +20% event points!
+            </p>
+          )}
+          {goldenStreak >= 2 && (
+            <p className="fortune-engine__streak-note">
+              🔥 {goldenStreak}-day Golden streak
+              {goldenStreak >= FORTUNE_GOLDEN_STREAK_SHIELD_MIN_DAYS
+                ? ` — golden runs start at +${FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS}× with a 🛡 hazard shield!`
+                : goldenStreak >= FORTUNE_GOLDEN_STREAK_MULTIPLIER_MIN_DAYS
+                  ? ` — golden runs start at +${FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS}×! (🛡 shield at ${FORTUNE_GOLDEN_STREAK_SHIELD_MIN_DAYS} days)`
+                  : ` — reach ${FORTUNE_GOLDEN_STREAK_MULTIPLIER_MIN_DAYS} days for a +${FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS}× boost!`}
+            </p>
+          )}
+
+          <details className="fortune-engine__rules-details" open={isFirstEverLaunch}>
+            <summary>ℹ️ How it works</summary>
+            <ul className="fortune-engine__rules">
+              <li>🎟️ 1 ticket per launch — the first launch each day is a free <strong>Golden Launch</strong> with a guaranteed fragment.</li>
+              <li>🎯 Tap while the pointer crosses ⭐ points, 🎲 dice, 🟣 essence and ⏳ bonus time. Hit a segment's <strong>center</strong> for a Perfect (×2 points, combos climb to ×3.5).</li>
+              <li>☠️ {FORTUNE_RUN_HAZARD_LIMIT} corrupted hits crush the run. Deeper rings keep less of a crushed run (½ → ⅓ → ¼) — but never nothing.</li>
+              <li>💰 After each ring: bank it all, or go deeper for a bigger multiplier.</li>
+              <li>🧩 Fragments drop from the Jackpot route, Golden Launches, full three-ring descents, reward-track milestones — and every {FORTUNE_FRAGMENT_PITY_RUNS}th fragmentless run for free. Light all 9 to unlock the finale.</li>
+              <li>🔥 Golden Launch streaks upgrade golden runs: +{FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS}× at {FORTUNE_GOLDEN_STREAK_MULTIPLIER_MIN_DAYS} days, a 🛡 hazard shield at {FORTUNE_GOLDEN_STREAK_SHIELD_MIN_DAYS}.</li>
+            </ul>
+          </details>
 
           <p className="fortune-engine__ticket-note">
             Tickets left: {ticketsRemaining} 🎟️
@@ -600,10 +666,10 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
                   <span className="fortune-engine__hud-label">Loot</span>
                   <span className="fortune-engine__hud-value">🎲{runDice} 🟣{runEssence}</span>
                 </div>
-                <div className="fortune-engine__hud-stat" aria-label={`Corruption: ${hazardsHit} of ${FORTUNE_RUN_HAZARD_LIMIT}`}>
+                <div className="fortune-engine__hud-stat" aria-label={`Corruption: ${hazardsHit} of ${FORTUNE_RUN_HAZARD_LIMIT}${shieldsLeft > 0 ? `, ${shieldsLeft} shield` : ''}`}>
                   <span className="fortune-engine__hud-label">Hazards</span>
                   <span className="fortune-engine__hud-value fortune-engine__hud-value--hazard">
-                    {'☠️'.repeat(hazardsHit) || '—'}
+                    {`${'🛡'.repeat(shieldsLeft)}${'☠️'.repeat(hazardsHit)}` || '—'}
                   </span>
                 </div>
               </>
@@ -611,7 +677,18 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           </header>
 
           {runGolden && phase !== 'finale' && (
-            <p className="fortune-engine__golden-banner" role="status">✨ Golden Launch — fragment guaranteed on a finished run!</p>
+            <p className="fortune-engine__golden-banner" role="status">
+              ✨ Golden Launch — fragment guaranteed on a finished run!
+              {runMultiplierBonus > 0 && ` +${runMultiplierBonus}× streak boost.`}
+            </p>
+          )}
+          {phase === 'ring' && comboCount >= 2 && (
+            <p className="fortune-engine__combo" role="status" key={comboCount}>
+              ⚡ Perfect ×{comboCount} — next pays ×{resolveFortunePerfectPointsMultiplier(comboCount)}
+            </p>
+          )}
+          {phase === 'ring' && hazardsHit === FORTUNE_RUN_HAZARD_LIMIT - 1 && (
+            <p className="fortune-engine__danger-warning" role="alert">☠️ One more corrupted hit crushes the run!</p>
           )}
           {showRouteBanner && activeRoute && (
             <div className="fortune-engine__route-banner" role="status" style={{ borderColor: ROUTE_COLORS[activeRoute.id] }}>
@@ -625,7 +702,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
 
           <canvas
             ref={canvasRef}
-            className="fortune-engine__canvas"
+            className={`fortune-engine__canvas${phase === 'ring' && hazardsHit >= FORTUNE_RUN_HAZARD_LIMIT - 1 ? ' fortune-engine__canvas--danger' : ''}`}
             width={CANVAS_SIZE}
             height={CANVAS_SIZE}
             role="img"
@@ -640,7 +717,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           <footer className="fortune-engine__controls">
             {phase === 'ring' ? (
               <>
-                <p className="fortune-engine__hint">Tap anywhere to collect the segment under the pointer!</p>
+                <p className="fortune-engine__hint">Tap anywhere to collect the segment under the pointer — center hits are Perfect!</p>
                 <button type="button" className="fortune-engine__btn fortune-engine__btn--quiet" onClick={handleBank}>
                   💰 Bank now
                 </button>
@@ -665,30 +742,35 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
             </div>
             <div>
               <dt>Current multiplier</dt>
-              <dd>×{resolveFortuneRunMultiplier({ ringIndex, route: activeRoute })}</dd>
+              <dd>×{resolveFortuneRunMultiplier({ ringIndex, route: activeRoute, bonusMultiplier: runMultiplierBonus })}</dd>
             </div>
             <div>
               <dt>Next ring multiplier</dt>
-              <dd>×{resolveFortuneRunMultiplier({ ringIndex: ringIndex + 1, route: activeRoute })}</dd>
+              <dd>×{resolveFortuneRunMultiplier({ ringIndex: ringIndex + 1, route: activeRoute, bonusMultiplier: runMultiplierBonus })}</dd>
             </div>
           </dl>
           <p className="fortune-engine__copy">
-            The next ring spins faster and hides more corruption — but its rewards are richer.
+            The next ring spins faster and hides more corruption — and a crush there keeps
+            only 1/{resolveFortuneCrushKeepDivisor(ringIndex + 1)} of your points.
             Corruption carries over: {'☠️'.repeat(hazardsHit) || 'none'} so far.
           </p>
           <div className="fortune-engine__actions">
             <button type="button" className="fortune-engine__btn fortune-engine__btn--primary" onClick={handleGoDeeper}>
-              🌀 Go deeper (×{resolveFortuneRunMultiplier({ ringIndex: ringIndex + 1, route: activeRoute })})
+              🌀 Go deeper (×{resolveFortuneRunMultiplier({ ringIndex: ringIndex + 1, route: activeRoute, bonusMultiplier: runMultiplierBonus })})
             </button>
             <button type="button" className="fortune-engine__btn" onClick={handleBank}>
-              💰 Bank {Math.floor(rawPoints * resolveFortuneRunMultiplier({ ringIndex, route: activeRoute }))} points
+              💰 Bank {Math.floor(rawPoints * resolveFortuneRunMultiplier({ ringIndex, route: activeRoute, bonusMultiplier: runMultiplierBonus }))} points
             </button>
           </div>
         </div>
       )}
 
       {phase === 'results' && lastOutcome && (
-        <div className="fortune-engine__panel fortune-engine__results" role="dialog" aria-label="Fortune Engine results">
+        <div
+          className={`fortune-engine__panel fortune-engine__results${lastOutcome.end === 'crushed' ? ' fortune-engine__panel--crushed' : ''}`}
+          role="dialog"
+          aria-label="Fortune Engine results"
+        >
           <p className="fortune-engine__eyebrow">
             {lastOutcome.end === 'crushed' ? 'Run crushed by corruption!' : lastOutcome.end === 'banked' ? 'Rewards banked' : 'Full descent complete'}
           </p>
@@ -709,6 +791,11 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
               <dd>🎲 +{lastOutcome.dice} · 🟣 +{lastOutcome.essence}</dd>
             </div>
           </dl>
+          {lastOutcome.newBest && (
+            <p className="fortune-engine__best-note" role="status">
+              🏆 New personal best! +20% event points banked.
+            </p>
+          )}
           {lastFragmentId !== null && (
             <p className="fortune-engine__fragment-note" role="status">
               🧩 Fragment recovered: {FORTUNE_CORE_FRAGMENTS[lastFragmentId]?.icon} {FORTUNE_CORE_FRAGMENTS[lastFragmentId]?.name}!

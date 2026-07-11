@@ -220,6 +220,10 @@ export interface FortuneEngineProgressEntry {
   bestRunScore: number;
   /** Local day key (YYYY-MM-DD) of the last free Golden Launch, or null. */
   goldenLaunchDayKey: string | null;
+  /** Consecutive-day Golden Launch streak (upgrades golden runs at 3 and 5 days). */
+  goldenStreakCount: number;
+  /** Consecutive fragmentless runs; a pity fragment drops when it fills. */
+  fragmentPityCount: number;
   /** True once the ticket-free finale has been stabilised (permanent trophy). */
   finaleCompleted: boolean;
   updatedAtMs: number;
@@ -1902,6 +1906,8 @@ function sanitizeFortuneEngineProgressByEvent(
       goldenLaunchDayKey: typeof raw.goldenLaunchDayKey === 'string' && raw.goldenLaunchDayKey.trim()
         ? raw.goldenLaunchDayKey
         : null,
+      goldenStreakCount: toCount(raw.goldenStreakCount),
+      fragmentPityCount: toCount(raw.fragmentPityCount),
       finaleCompleted: raw.finaleCompleted === true,
       updatedAtMs: typeof raw.updatedAtMs === 'number' && Number.isFinite(raw.updatedAtMs)
         ? Math.max(0, Math.floor(raw.updatedAtMs))
@@ -1934,6 +1940,8 @@ function mergeFortuneEngineProgressByEvent(
       }),
       totalLaunches: Math.max(remoteProgress.totalLaunches, localProgress.totalLaunches),
       bestRunScore: Math.max(remoteProgress.bestRunScore, localProgress.bestRunScore),
+      goldenStreakCount: Math.max(remoteProgress.goldenStreakCount ?? 0, localProgress.goldenStreakCount ?? 0),
+      fragmentPityCount: Math.max(remoteProgress.fragmentPityCount ?? 0, localProgress.fragmentPityCount ?? 0),
       finaleCompleted: remoteProgress.finaleCompleted || localProgress.finaleCompleted,
     };
   });

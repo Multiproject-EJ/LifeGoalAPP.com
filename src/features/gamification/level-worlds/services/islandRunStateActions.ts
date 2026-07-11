@@ -117,6 +117,7 @@ import {
 } from './companionFeastProgression';
 import {
   applyFortuneRunToProgress,
+  awardFortuneCoreFragments,
   createFortuneEngineProgress,
   FORTUNE_ENGINE_FINALE_REWARD,
   FORTUNE_ENGINE_FINALE_REWARD_LABEL,
@@ -126,6 +127,7 @@ import {
   isFortuneCoreComplete,
   isFortuneGoldenLaunchAvailable,
   resolveFortuneEngineClaimedMilestoneIds,
+  resolveNextGoldenLaunchStreak,
 } from './fortuneEngineProgression';
 import {
   ISLAND_RUN_ECONOMY_COUNTERS,
@@ -816,6 +818,7 @@ export function applyFortuneEngineLaunch(options: {
     ...progress,
     totalLaunches: progress.totalLaunches + 1,
     goldenLaunchDayKey: golden ? getFortuneEngineDayKey(nowMs) : progress.goldenLaunchDayKey,
+    goldenStreakCount: golden ? resolveNextGoldenLaunchStreak(progress, nowMs) : progress.goldenStreakCount,
     updatedAtMs: nowMs,
   };
   const ticketsRemaining = golden ? available : available - FORTUNE_ENGINE_LAUNCH_TICKET_COST;
@@ -923,11 +926,13 @@ export function claimFortuneEngineMilestoneReward(options: {
     return { record: current, ok: false, progress, rewardLabel: milestone.rewardLabel, ticketsRemaining: ticketsAvailable, failureReason: 'already_claimed' };
   }
 
+  const fragmentAward = awardFortuneCoreFragments(progress.fragmentIds, milestone.reward.coreFragments ?? 0);
   const nextProgress: FortuneEngineProgressEntry = {
     ...progress,
     claimedMilestoneIds: resolveFortuneEngineClaimedMilestoneIds({
       claimedMilestoneIds: [...progress.claimedMilestoneIds, milestone.id],
     }),
+    fragmentIds: fragmentAward.fragmentIds,
     updatedAtMs: Date.now(),
   };
   const essenceAward = Math.max(0, Math.floor(milestone.reward.essence ?? 0));

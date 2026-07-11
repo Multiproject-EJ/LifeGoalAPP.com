@@ -58,6 +58,49 @@ export function canLaunchFortuneEngine(options: {
 }
 
 // ---------------------------------------------------------------------------
+// Golden Launch streak — consecutive-day golden launches upgrade the run
+// ---------------------------------------------------------------------------
+
+/** Golden streak length that starts golden runs with a bonus multiplier. */
+export const FORTUNE_GOLDEN_STREAK_MULTIPLIER_MIN_DAYS = 3;
+/** Additive run multiplier granted at the streak-multiplier threshold. */
+export const FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS = 0.5;
+/** Golden streak length that grants a one-hit hazard shield on golden runs. */
+export const FORTUNE_GOLDEN_STREAK_SHIELD_MIN_DAYS = 5;
+
+export interface FortuneGoldenStreakPerks {
+  /** Additive run multiplier active for the whole golden run. */
+  startMultiplierBonus: number;
+  /** Hazard hits absorbed for free during the golden run. */
+  hazardShields: number;
+}
+
+/**
+ * The streak count this golden launch reaches: it extends a streak whose last
+ * golden launch was yesterday (local time), otherwise it starts a new one.
+ */
+export function resolveNextGoldenLaunchStreak(
+  progress: Pick<FortuneEngineProgressEntry, 'goldenLaunchDayKey' | 'goldenStreakCount'> | null | undefined,
+  nowMs: number,
+): number {
+  const lastDayKey = progress?.goldenLaunchDayKey ?? null;
+  if (!lastDayKey) return 1;
+  const yesterdayKey = getFortuneEngineDayKey(nowMs - 24 * 60 * 60 * 1000);
+  if (lastDayKey === yesterdayKey) return Math.max(0, Math.floor(progress?.goldenStreakCount ?? 0)) + 1;
+  if (lastDayKey === getFortuneEngineDayKey(nowMs)) return Math.max(1, Math.floor(progress?.goldenStreakCount ?? 0));
+  return 1;
+}
+
+/** Perks earned by the given Golden Launch streak length. */
+export function resolveGoldenStreakPerks(streakCount: number): FortuneGoldenStreakPerks {
+  const streak = Math.max(0, Math.floor(streakCount));
+  return {
+    startMultiplierBonus: streak >= FORTUNE_GOLDEN_STREAK_MULTIPLIER_MIN_DAYS ? FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS : 0,
+    hazardShields: streak >= FORTUNE_GOLDEN_STREAK_SHIELD_MIN_DAYS ? 1 : 0,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Fortune Core fragments — the 3×3 jackpot grid
 // ---------------------------------------------------------------------------
 
@@ -111,6 +154,32 @@ export function isFortuneCoreComplete(
   return resolveFortuneCoreFragmentIds(progress?.fragmentIds ?? []).length >= FORTUNE_CORE_FRAGMENT_COUNT;
 }
 
+/**
+ * Pity system: after this many consecutive fragmentless runs, the next run
+ * drops a fragment for free. Keeps the 3×3 core deterministic-adjacent — a
+ * player can always plan a route to the finale.
+ */
+export const FORTUNE_FRAGMENT_PITY_RUNS = 4;
+
+/**
+ * Light up to `count` missing fragments (lowest slots first). Pure; returns
+ * the new ledger plus the ids that were actually awarded.
+ */
+export function awardFortuneCoreFragments(
+  fragmentIds: readonly number[],
+  count: number,
+): { fragmentIds: number[]; awardedIds: number[] } {
+  const owned = new Set(resolveFortuneCoreFragmentIds([...fragmentIds]));
+  const awardedIds: number[] = [];
+  const wanted = Math.max(0, Math.floor(count));
+  for (let id = 0; id < FORTUNE_CORE_FRAGMENT_COUNT && awardedIds.length < wanted; id += 1) {
+    if (owned.has(id)) continue;
+    owned.add(id);
+    awardedIds.push(id);
+  }
+  return { fragmentIds: Array.from(owned).sort((a, b) => a - b), awardedIds };
+}
+
 /** The finale is playable once the core is complete and not yet stabilised. */
 export function isFortuneFinaleUnlocked(
   progress: Pick<FortuneEngineProgressEntry, 'fragmentIds' | 'finaleCompleted'> | null | undefined,
@@ -129,6 +198,8 @@ export interface FortuneEngineMilestoneReward {
   shards?: number;
   /** Event tickets returned into this event's ticket bucket. */
   eventTickets?: number;
+  /** Fortune Core fragments lit up (lowest missing slots first). */
+  coreFragments?: number;
 }
 
 export interface FortuneEngineMilestone {
@@ -141,11 +212,11 @@ export interface FortuneEngineMilestone {
 
 export const FORTUNE_ENGINE_MILESTONES: readonly FortuneEngineMilestone[] = Object.freeze([
   { id: 'fortune_1', pointsRequired: 50, rewardLabel: '+5 Dice', reward: { dicePool: 5 } },
-  { id: 'fortune_2', pointsRequired: 120, rewardLabel: '+60 Essence', reward: { essence: 60 } },
+  { id: 'fortune_2', pointsRequired: 120, rewardLabel: '+60 Essence +🧩 Fragment', reward: { essence: 60, coreFragments: 1 } },
   { id: 'fortune_3', pointsRequired: 220, rewardLabel: '+3 Event Tickets', reward: { eventTickets: 3 } },
-  { id: 'fortune_4', pointsRequired: 350, rewardLabel: '+10 Dice +1 Shard', reward: { dicePool: 10, shards: 1 } },
+  { id: 'fortune_4', pointsRequired: 350, rewardLabel: '+10 Dice +1 Shard +🧩 Fragment', reward: { dicePool: 10, shards: 1, coreFragments: 1 } },
   { id: 'fortune_5', pointsRequired: 500, rewardLabel: '+120 Essence +2 Shards', reward: { essence: 120, shards: 2 } },
-  { id: 'fortune_6', pointsRequired: 700, rewardLabel: '+5 Event Tickets +15 Dice', reward: { eventTickets: 5, dicePool: 15 } },
+  { id: 'fortune_6', pointsRequired: 700, rewardLabel: '+5 Event Tickets +15 Dice +🧩 Fragment', reward: { eventTickets: 5, dicePool: 15, coreFragments: 1 } },
   { id: 'fortune_7', pointsRequired: 1000, rewardLabel: '+25 Dice +4 Shards +250 Essence', reward: { dicePool: 25, shards: 4, essence: 250 } },
 ]);
 
@@ -201,6 +272,8 @@ export function createFortuneEngineProgress(nowMs: number): FortuneEngineProgres
     totalLaunches: 0,
     bestRunScore: 0,
     goldenLaunchDayKey: null,
+    goldenStreakCount: 0,
+    fragmentPityCount: 0,
     finaleCompleted: false,
     updatedAtMs: Math.max(0, Math.floor(nowMs)),
   };
@@ -210,6 +283,8 @@ export interface FortuneEngineRunProgressResult {
   progress: FortuneEngineProgressEntry;
   /** Fragment id awarded by this run, or null when none was granted. */
   awardedFragmentId: number | null;
+  /** True when the awarded fragment came from the pity counter, not the run. */
+  pityFragment: boolean;
   /** True the moment this run completed the 3×3 core. */
   coreJustCompleted: boolean;
 }
@@ -217,7 +292,9 @@ export interface FortuneEngineRunProgressResult {
 /**
  * Fold one finished run into campaign progress: event points accumulate,
  * best score updates, and (when the run earned one) the lowest missing
- * Fortune Core fragment lights up. Pure — never mutates the input.
+ * Fortune Core fragment lights up. Runs that earn no fragment feed the pity
+ * counter — every `FORTUNE_FRAGMENT_PITY_RUNS`th fragmentless run drops one
+ * for free. Pure — never mutates the input.
  */
 export function applyFortuneRunToProgress(options: {
   progress: FortuneEngineProgressEntry;
@@ -231,7 +308,21 @@ export function applyFortuneRunToProgress(options: {
   const eventPoints = Math.max(0, Math.floor(options.eventPoints));
   const wasComplete = isFortuneCoreComplete(previous);
 
-  const awardedFragmentId = options.fragmentAwarded ? getNextFortuneCoreFragmentId(previous) : null;
+  let pityCount = Math.max(0, Math.floor(previous.fragmentPityCount ?? 0));
+  let fragmentEarned = options.fragmentAwarded;
+  let pityFragment = false;
+  if (fragmentEarned) {
+    pityCount = 0;
+  } else if (!wasComplete) {
+    pityCount += 1;
+    if (pityCount >= FORTUNE_FRAGMENT_PITY_RUNS) {
+      fragmentEarned = true;
+      pityFragment = true;
+      pityCount = 0;
+    }
+  }
+
+  const awardedFragmentId = fragmentEarned ? getNextFortuneCoreFragmentId(previous) : null;
   const fragmentIds = awardedFragmentId !== null
     ? resolveFortuneCoreFragmentIds([...previous.fragmentIds, awardedFragmentId])
     : resolveFortuneCoreFragmentIds(previous.fragmentIds);
@@ -240,6 +331,7 @@ export function applyFortuneRunToProgress(options: {
     ...previous,
     eventPoints: Math.max(0, Math.floor(previous.eventPoints)) + eventPoints,
     fragmentIds,
+    fragmentPityCount: pityCount,
     bestRunScore: Math.max(Math.max(0, Math.floor(previous.bestRunScore)), runScore),
     updatedAtMs: Math.max(0, Math.floor(options.nowMs)),
   };
@@ -247,6 +339,7 @@ export function applyFortuneRunToProgress(options: {
   return {
     progress,
     awardedFragmentId,
+    pityFragment: pityFragment && awardedFragmentId !== null,
     coreJustCompleted: !wasComplete && isFortuneCoreComplete(progress),
   };
 }

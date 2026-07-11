@@ -213,6 +213,39 @@
   gap: 4px;
 }
 
+/* Collapsible "How it works" — open on the very first visit, tucked away after. */
+.fortune-engine__rules-details {
+  margin: 0 0 12px;
+  text-align: left;
+}
+
+.fortune-engine__rules-details summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7cc4ff;
+  padding: 6px 0;
+  user-select: none;
+}
+
+.fortune-engine__rules-details[open] summary {
+  margin-bottom: 6px;
+}
+
+.fortune-engine__best-note {
+  margin: 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffe9a8;
+}
+
+.fortune-engine__streak-note {
+  margin: 6px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fca5a5;
+}
+
 .fortune-engine__ticket-note {
   margin: 0 0 12px;
   font-size: 14px;
@@ -387,6 +420,29 @@
   color: #ffe9a8;
 }
 
+/* Perfect-tap combo readout: pops on every stack (key remount retriggers). */
+.fortune-engine__combo {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #5eead4;
+  animation: fortune-combo-pop 0.3s ease;
+}
+
+@keyframes fortune-combo-pop {
+  0% { transform: scale(0.7); opacity: 0.4; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.fortune-engine__danger-warning {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f87171;
+  animation: fortune-unstable-pulse 0.9s ease-in-out infinite;
+}
+
 .fortune-engine__route-banner {
   position: absolute;
   top: 50%;
@@ -438,6 +494,16 @@
   cursor: pointer;
 }
 
+/* One hazard from a crush: the ring itself throbs red. */
+.fortune-engine__canvas--danger {
+  animation: fortune-danger-glow 0.9s ease-in-out infinite;
+}
+
+@keyframes fortune-danger-glow {
+  0%, 100% { box-shadow: 0 0 40px rgba(248, 113, 113, 0.4); }
+  50% { box-shadow: 0 0 60px rgba(248, 113, 113, 0.8); }
+}
+
 .fortune-engine__controls {
   width: 100%;
   display: flex;
@@ -486,6 +552,19 @@
 
 .fortune-engine__results--finale .fortune-engine__title {
   font-size: 28px;
+}
+
+/* Crushed runs land with a screen shake. */
+.fortune-engine__panel--crushed {
+  animation: fortune-crush-shake 0.45s ease;
+}
+
+@keyframes fortune-crush-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(2px); }
 }
 
 @media (max-width: 420px) {

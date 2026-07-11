@@ -4,6 +4,22 @@ Track the evolution of LifeGoalApp's gamification system across all phases.
 
 ---
 
+## The Fortune Engine — v1.1.0 (July 2026)
+
+### 🎯 Overview
+Depth-and-mastery update for The Fortune Engine: the 3×3 Fortune Core is now reachable by plan instead of pure luck, taps gained a skill tier, the bank-or-go-deeper checkpoint carries real risk, and daily Golden Launches build a streak with perks.
+
+### New Features
+- 🎯 **Perfect taps + combo meter** — hitting the center third of a segment pays ×2 points; consecutive Perfects escalate to ×2.5 / ×3 / ×3.5 (any miss, normal tap, or hazard resets the combo). Distinct sound/haptic and a live combo readout above the ring.
+- 🧩 **Fragment economy rework** — fragments now also drop for finishing a full three-ring descent standing, from three reward-track milestones (120 / 350 / 700 points), and from a pity counter (every 4th fragmentless run drops one for free). The finale is plannable within an event instead of jackpot-gated.
+- ⚖️ **Depth-scaled crush penalty** — a crushed run keeps ½ of its points on ring 1, ⅓ on ring 2, ¼ on ring 3 (currencies still halve, floors unchanged), making the bank-or-deeper decision a real gamble. The checkpoint screen states the stake.
+- 🔥 **Golden Launch streaks** — consecutive-day golden launches build a persisted streak: 3 days starts golden runs at +0.5× multiplier, 5 days adds a one-hit 🛡 hazard shield.
+- 🏆 **Personal best surfaced** — the entry and results screens show your best run; beating it pays +20% event points with a "New personal best!" callout.
+- 💥 **Danger + crush juice** — at 2 corruption hits the ring throbs red with a warning line; crushed runs land with a screen shake.
+- ℹ️ **Collapsible rules** — "How it works" starts open on the first-ever visit and collapses afterwards, so the Launch button is immediately in reach.
+
+---
+
 ## The Fortune Engine — v1.0.0 (July 2026)
 
 ### 🎯 Overview
