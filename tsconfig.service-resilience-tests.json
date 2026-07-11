@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "5.0",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": ".tmp-service-resilience-tests",
+    "noEmit": false
+  },
+  "include": [
+    "src/services/service-health/types.ts",
+    "src/services/service-health/errorTranslation.ts",
+    "src/services/service-health/circuitBreaker.ts",
+    "src/services/service-health/boundedLog.ts",
+    "src/services/service-health/serviceHealthManager.ts",
+    "src/services/service-health/capabilities.ts",
+    "src/services/service-health/incidentStatus.ts",
+    "src/services/service-health/guardedCloudCall.ts",
+    "src/services/offline-queue/types.ts",
+    "src/services/offline-queue/storageAdapters.ts",
+    "src/services/offline-queue/mutationQueue.ts",
+    "src/services/offline-queue/syncEngine.ts",
+    "src/services/service-health/__tests__/serviceResilience.test.ts"
+  ]
+}

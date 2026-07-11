@@ -10,6 +10,11 @@ import { Lobby } from './world/Lobby.tsx';
 import { TrustPage } from './world/TrustPage.tsx';
 import type { BeforeInstallPromptEvent } from './world/useInstallState.ts';
 import { SafeErrorBoundary } from './components/SafeErrorBoundary.tsx';
+import { initServiceHealthForBrowser } from './services/service-health/browserWiring.ts';
+import { ServiceStatusBanner } from './components/service-status/index.ts';
+
+// Start monitoring cloud health before anything assumes Supabase is available.
+initServiceHealthForBrowser();
 
 if (typeof window !== 'undefined') {
   window.__LifeGoalAppDebugger?.log('Initializing React root.', {
@@ -211,6 +216,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       }}
     >
       <Root />
+      <ServiceStatusBanner />
     </SafeErrorBoundary>
   </React.StrictMode>
 );
