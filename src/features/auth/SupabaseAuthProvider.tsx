@@ -7,6 +7,8 @@ import {
   type TypedSupabaseClient,
 } from '../../lib/supabaseClient';
 import { AUTH_INITIALIZATION_TIMEOUT_MS, type AuthInitializationStatus } from './authInitialization';
+import { getServiceHealthManager } from '../../services/service-health/serviceHealthManager';
+import { classifyProviderError } from '../../services/service-health/errorTranslation';
 
 type AuthContextValue = {
   session: Session | null;
@@ -52,6 +54,14 @@ function mapSupabaseAuthError(error: SupabaseLikeError): Error {
 }
 
 function ensureSupabaseAuthError(error: unknown): Error {
+  // Credential mistakes keep Supabase's specific, user-legible message
+  // ("Email not confirmed", …). Everything else — outages, quota, timeouts —
+  // is translated so raw provider payloads never reach the UI (Part 2).
+  const category = classifyProviderError(error, { service: 'auth' });
+  if (category !== 'invalid_credentials' && category !== 'unknown') {
+    const appError = getServiceHealthManager().reportFailure('auth', error);
+    return new Error(appError.explanation);
+  }
   if (error instanceof Error) {
     return mapSupabaseAuthError(error);
   }
@@ -100,6 +110,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       setInitializing(false);
       setInitializationStatus('timeout');
       setInitializationError(new Error('HabitGame auth initialization timed out. Please check your connection and try again.'));
+      const timeoutError = new Error('Auth initialization timed out');
+      timeoutError.name = 'TimeoutError';
+      getServiceHealthManager().reportFailure('auth', timeoutError);
     }, AUTH_INITIALIZATION_TIMEOUT_MS);
 
     setInitializing(true);
@@ -115,13 +128,15 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         setSupabaseSession(nextSession);
         setInitializationStatus('ready');
         setInitializationError(null);
+        getServiceHealthManager().reportSuccess('auth');
       })
       .catch((error) => {
         if (!isMounted) return;
+        // Feed the failure into service health and surface only the
+        // translated explanation — never the raw provider payload.
+        const appError = getServiceHealthManager().reportFailure('auth', error);
         setInitializationStatus('error');
-        setInitializationError(
-          error instanceof Error ? error : new Error('Unable to initialize HabitGame auth. Please check your connection and try again.'),
-        );
+        setInitializationError(new Error(appError.explanation));
       })
       .finally(() => {
         window.clearTimeout(timeoutId);
@@ -136,6 +151,11 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       const normalizedSession = nextSession ?? null;
       setSession(normalizedSession);
       setSupabaseSession(normalizedSession);
+      if (normalizedSession) {
+        const manager = getServiceHealthManager();
+        manager.reportSuccess('auth');
+        manager.setAccountActionRequired(false);
+      }
     });
 
     return () => {

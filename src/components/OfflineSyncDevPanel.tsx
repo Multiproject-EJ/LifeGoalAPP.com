@@ -14,6 +14,7 @@ import {
   type OfflineSyncTelemetrySummary,
 } from '../services/offlineSyncTelemetry';
 import { getVisionImageQueueStatus } from '../services/visionBoard';
+import { ServiceDiagnosticsPanel } from './service-status';
 
 type Props = {
   userId: string | null;
@@ -139,6 +140,8 @@ export function OfflineSyncDevPanel({ userId }: Props) {
       </div>
       {open && (
         <>
+          <hr />
+          <ServiceDiagnosticsPanel />
           <hr />
           <div style={{ display: 'grid', gap: 4 }}>
             {Object.entries(queue).map(([key, value]) => (
