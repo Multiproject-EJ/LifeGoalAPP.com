@@ -6,13 +6,12 @@ import { loadPersonalityTestHistory } from '../data/personalityTestRepo';
 import { putPersonalityTest, type PersonalityTestValue } from '../data/localDb';
 import {
   clearPersonalityTestMutationsForUser,
-  getPersonalityTestMutationCounts,
   listPendingPersonalityTestMutations,
   removePersonalityTestMutation,
-  retryFailedPersonalityTestMutationsForUser,
-  updatePersonalityTestMutation,
 } from '../data/personalityTestOfflineRepo';
-import { buildTopTraitSummary } from '../features/identity/personalitySummary';
+import { guardedCloudCall } from './service-health';
+import { getMutationQueue, getSyncEngine } from './offline-queue';
+import { toPostgrestError } from './offlineWriteThrough';
 import { recordOfflineSyncEvent } from './offlineSyncTelemetry';
 
 export type PersonalityTestRow = Database['public']['Tables']['personality_tests']['Row'];
@@ -98,13 +97,18 @@ export async function upsertPersonalityProfile(
   }
 
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('profiles')
-    .upsert(payload, { onConflict: 'user_id' })
-    .select()
-    .maybeSingle<PersonalityProfileRow>();
+  const result = await guardedCloudCall('database', async () => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select()
+      .maybeSingle<PersonalityProfileRow>();
+    if (error) throw error;
+    return data;
+  });
 
-  return { data, error };
+  if (!result.ok) return { data: null, error: toPostgrestError(result.error) };
+  return { data: result.data, error: null };
 }
 
 export async function fetchPersonalityProfile(
@@ -115,13 +119,18 @@ export async function fetchPersonalityProfile(
   }
 
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle<PersonalityProfileRow>();
+  const result = await guardedCloudCall('database', async () => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle<PersonalityProfileRow>();
+    if (error) throw error;
+    return data;
+  });
 
-  return { data, error };
+  if (!result.ok) return { data: null, error: toPostgrestError(result.error) };
+  return { data: result.data, error: null };
 }
 
 export async function fetchPersonalityTestsFromSupabase(
@@ -132,17 +141,22 @@ export async function fetchPersonalityTestsFromSupabase(
   }
 
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('personality_tests')
-    .select('*')
-    .eq('user_id', userId)
-    .order('taken_at', { ascending: false });
+  const result = await guardedCloudCall('database', async () => {
+    const { data, error } = await supabase
+      .from('personality_tests')
+      .select('*')
+      .eq('user_id', userId)
+      .order('taken_at', { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
 
-  if (error || !data) {
+  if (!result.ok) {
+    // Callers merge with local history, so an outage degrades to local data.
     return [];
   }
 
-  const normalized = data
+  const normalized = result.data
     .map((row) => normalizeSupabasePersonalityTest(row))
     .filter((row): row is PersonalityTestValue => Boolean(row));
 
@@ -175,87 +189,59 @@ export async function loadPersonalityTestHistoryWithSupabase(
   }
 }
 
+let legacyPersonalityQueueMigrated = false;
+
+/**
+ * One-time convergence of the pre-framework personality-test queue onto the
+ * shared MutationQueue. Pending results survive the upgrade.
+ */
+export async function migrateLegacyPersonalityTestQueue(userId: string): Promise<void> {
+  if (legacyPersonalityQueueMigrated) return;
+  legacyPersonalityQueueMigrated = true;
+
+  try {
+    const queue = getMutationQueue();
+    for (const legacy of await listPendingPersonalityTestMutations(userId)) {
+      await queue.enqueue({
+        feature: 'personality_test',
+        operation: 'personality_test.upsert',
+        payload: legacy.payload,
+        dedupeKey: legacy.payload.id ?? legacy.test_id,
+      });
+      await removePersonalityTestMutation(legacy.id);
+    }
+  } catch {
+    // Migration is best-effort; legacy entries stay put for the next attempt.
+    legacyPersonalityQueueMigrated = false;
+  }
+}
+
+/** Manual sync kick; the shared engine also auto-resyncs on reconnect. */
 export async function syncPersonalityTestsWithSupabase(userId: string): Promise<void> {
   if (!canUseSupabaseData() || !canQueryPersonalityData(userId)) {
     return;
   }
 
-  const supabase = getSupabaseClient();
-  const pendingMutations = await listPendingPersonalityTestMutations(userId);
+  await migrateLegacyPersonalityTestQueue(userId);
   recordOfflineSyncEvent({
     feature: 'personality_test',
     event: 'sync_started',
     userId,
-    pending: pendingMutations.length,
   });
-  let latestSynced: PersonalityTestValue | null = null;
-
-  for (const mutation of pendingMutations) {
-    try {
-      await updatePersonalityTestMutation(mutation.id, {
-        status: 'processing',
-        updated_at_ms: Date.now(),
-      });
-      const { error } = await supabase.from('personality_tests').upsert(mutation.payload, { onConflict: 'id' });
-
-      if (error) throw error;
-
-      const syncedRecord: PersonalityTestValue = {
-        id: mutation.payload.id ?? mutation.test_id,
-        user_id: mutation.payload.user_id,
-        taken_at: mutation.payload.taken_at ?? new Date().toISOString(),
-        traits: (mutation.payload.traits ?? {}) as Record<string, number>,
-        axes: (mutation.payload.axes ?? {}) as Record<string, number>,
-        answers: (mutation.payload.answers ?? {}) as Record<string, number>,
-        version: mutation.payload.version ?? 'v1',
-        archetype_hand: mutation.payload.archetype_hand ?? undefined,
-        _dirty: false,
-      };
-
-      await putPersonalityTest(syncedRecord);
-      await removePersonalityTestMutation(mutation.id);
-      recordOfflineSyncEvent({
-        feature: 'personality_test',
-        event: 'sync_succeeded',
-        userId,
-        attemptCount: mutation.attempt_count + 1,
-      });
-
-      if (!latestSynced || syncedRecord.taken_at > latestSynced.taken_at) {
-        latestSynced = syncedRecord;
-      }
-    } catch (error) {
-      await updatePersonalityTestMutation(mutation.id, {
-        status: 'failed',
-        attempt_count: mutation.attempt_count + 1,
-        updated_at_ms: Date.now(),
-        last_error: error instanceof Error ? error.message : String(error),
-      });
-      recordOfflineSyncEvent({
-        feature: 'personality_test',
-        event: 'sync_failed',
-        userId,
-        attemptCount: mutation.attempt_count + 1,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
-  if (latestSynced) {
-    const personalitySummary = buildTopTraitSummary(latestSynced.traits);
-    await upsertPersonalityProfile({
-      user_id: userId,
-      personality_traits: latestSynced.traits,
-      personality_axes: latestSynced.axes,
-      personality_summary: personalitySummary,
-      personality_last_tested_at: latestSynced.taken_at,
-    });
-  }
+  await getSyncEngine().syncNow();
 }
 
-export async function getPersonalityTestQueueStatus(userId: string): Promise<PersonalityTestQueueStatus> {
+export async function getPersonalityTestQueueStatus(_userId: string): Promise<PersonalityTestQueueStatus> {
   if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
-  return getPersonalityTestMutationCounts(userId);
+  const mutations = await getMutationQueue().list();
+  let pending = 0;
+  let failed = 0;
+  for (const mutation of mutations) {
+    if (mutation.feature !== 'personality_test') continue;
+    if (mutation.status === 'pending' || mutation.status === 'syncing') pending += 1;
+    else if (mutation.status === 'failed' || mutation.status === 'blocked') failed += 1;
+  }
+  return { pending, failed };
 }
 
 export async function clearQueuedPersonalityTestMutations(userId: string): Promise<void> {
@@ -268,7 +254,7 @@ export async function clearQueuedPersonalityTestMutations(userId: string): Promi
 }
 
 export async function retryFailedPersonalityTestMutations(userId: string): Promise<void> {
-  await retryFailedPersonalityTestMutationsForUser(userId);
+  await getMutationQueue().retryFailed();
   recordOfflineSyncEvent({
     feature: 'personality_test',
     event: 'queue_retry_requested',

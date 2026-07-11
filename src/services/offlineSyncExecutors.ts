@@ -25,6 +25,9 @@ import {
   buildReminderPrefKey,
   removeLocalReminderPrefRecord,
 } from '../data/habitReminderPrefsOfflineRepo';
+import { putPersonalityTest } from '../data/localDb';
+import { buildTopTraitSummary } from '../features/identity/personalitySummary';
+import { upsertPersonalityProfile } from './personalityTest';
 
 type TodayTodoInsert = Database['public']['Tables']['today_todos']['Insert'];
 type TodayTodoUpdate = Database['public']['Tables']['today_todos']['Update'];
@@ -37,6 +40,7 @@ type GoalUpdate = Database['public']['Tables']['goals']['Update'];
 type HabitV2Insert = Database['public']['Tables']['habits_v2']['Insert'];
 type HabitV2Update = Database['public']['Tables']['habits_v2']['Update'];
 type HabitLogV2Insert = Database['public']['Tables']['habit_logs_v2']['Insert'];
+type PersonalityTestInsert = Database['public']['Tables']['personality_tests']['Insert'];
 
 let registered = false;
 
@@ -310,4 +314,40 @@ export function registerOfflineSyncExecutors(): void {
     },
     'edgeFunctions',
   );
+
+  // ── Personality tests ─────────────────────────────────────────────────────
+  // Results carry client uuids; replays upsert. After sync the local copy is
+  // marked clean and the profile summary refreshed (matches the legacy loop).
+
+  engine.registerExecutor('personality_test.upsert', async (mutation) => {
+    const payload = payloadOf<PersonalityTestInsert & { id: string; user_id: string }>(mutation);
+    const { error } = await getSupabaseClient()
+      .from('personality_tests')
+      .upsert(payload, { onConflict: 'id' });
+    if (error) throw error;
+
+    const traits = (payload.traits ?? {}) as Record<string, number>;
+    const axes = (payload.axes ?? {}) as Record<string, number>;
+    const takenAt = payload.taken_at ?? new Date().toISOString();
+
+    await putPersonalityTest({
+      id: payload.id,
+      user_id: payload.user_id,
+      taken_at: takenAt,
+      traits,
+      axes,
+      answers: (payload.answers ?? {}) as Record<string, number>,
+      version: payload.version ?? 'v1',
+      archetype_hand: payload.archetype_hand ?? undefined,
+      _dirty: false,
+    });
+    await upsertPersonalityProfile({
+      user_id: payload.user_id,
+      personality_traits: traits,
+      personality_axes: axes,
+      personality_summary: buildTopTraitSummary(traits),
+      personality_last_tested_at: takenAt,
+    });
+    return { outcome: 'success' as const };
+  });
 }
