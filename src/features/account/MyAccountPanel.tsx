@@ -24,6 +24,7 @@ import { HolidayPreferencesSection, HOLIDAY_OPTIONS } from './HolidayPreferences
 import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
 import { MyCasesPanel } from '../cases/MyCasesPanel';
 import { AdminInboxPanel } from '../admin/AdminInboxPanel';
+import { AdminTelemetryPanel } from '../admin/AdminTelemetryPanel';
 import { FutureFeatureVotingPanel } from './FutureFeatureVotingPanel';
 import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
 import { resolveFeatureAccess } from '../../services/featureAccess';
@@ -1191,6 +1192,16 @@ export function MyAccountPanel({
               <p className="account-panel__eyebrow">Admin inbox / support ops</p>
               <h3 id="admin-tools-inbox">Admin inbox / support ops</h3>
               <AdminInboxPanel session={session} />
+            </section>
+
+            <section className="account-panel__card" aria-labelledby="admin-tools-telemetry">
+              <p className="account-panel__eyebrow">Admin telemetry</p>
+              <h3 id="admin-tools-telemetry">Telemetry overview</h3>
+              <p className="account-panel__hint">
+                Aggregated usage statistics rolled up nightly from telemetry events. Raw events are pruned
+                after 30 days; these rollups keep the stats forever. Admin-only.
+              </p>
+              <AdminTelemetryPanel session={session} />
             </section>
             {onLaunchDailyTreatCalendar && (
               <section className="account-panel__card" aria-labelledby="dev-daily-treat-calendar">
