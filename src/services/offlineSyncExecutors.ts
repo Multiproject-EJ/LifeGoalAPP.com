@@ -21,6 +21,10 @@ import {
   buildLocalCompletionKey,
   removeLocalHabitCompletionRecord,
 } from '../data/habitCompletionsOfflineRepo';
+import {
+  buildReminderPrefKey,
+  removeLocalReminderPrefRecord,
+} from '../data/habitReminderPrefsOfflineRepo';
 
 type TodayTodoInsert = Database['public']['Tables']['today_todos']['Insert'];
 type TodayTodoUpdate = Database['public']['Tables']['today_todos']['Update'];
@@ -271,4 +275,39 @@ export function registerOfflineSyncExecutors(): void {
     if (error) throw error;
     return { outcome: 'success' as const };
   });
+
+  // ── Habit reminder preferences (edge function) ────────────────────────────
+  // Payloads carry the merged full state per habit, so replays converge.
+
+  engine.registerExecutor(
+    'habit_reminder_pref.update',
+    async (mutation) => {
+      const { userId, habitId, updates } = payloadOf<{
+        userId: string;
+        habitId: string;
+        updates: { enabled?: boolean; preferred_time?: string | null };
+      }>(mutation);
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw { status: 401, message: 'No active session for reminder pref sync' };
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-reminders/habit-prefs`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ habit_id: habitId, ...updates }),
+        },
+      );
+      if (!response.ok) {
+        throw { status: response.status, message: `Reminder preference sync failed (${response.status})` };
+      }
+      await removeLocalReminderPrefRecord(buildReminderPrefKey(userId, habitId));
+      return { outcome: 'success' as const };
+    },
+    'edgeFunctions',
+  );
 }
