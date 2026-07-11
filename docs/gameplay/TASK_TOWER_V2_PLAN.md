@@ -1,6 +1,6 @@
 # Task Tower v2 — From Placeholder to Polished
 
-**Status:** Phases 0–1 complete (correctness + scene/visual overhaul) — Phases 2–4 pending
+**Status:** Phases 0–2 complete (correctness + scene + juice/mechanics) — Phases 3–4 pending
 **Date:** 2026-07-11
 **Owner surface:** Actions tab launcher (`ActionsTab.tsx`), standalone game overlay
 **Related docs:** `docs/gameplay/MINIGAME_EVENTS_CONSOLIDATION_PLAN.md` (Phase 6 manifest item), `HABITGAME_CORE_GAMES_DEV_PLAN.md`, `THEME_LAYER_CONTRACT.md`
@@ -162,12 +162,13 @@ in a satisfying collapse.** Emotion target (per `habitGames.ts`): **Relief.**
 - [x] Crane selection indicator: gantry boom across the stage top; the trolley slides over the selected block's column and lowers its hook while a completion is pending (idle hook sway otherwise).
 - [x] Reduced-motion variants: no drift/sway/twinkle/lift, block removal degrades to a plain fade.
 
-### Phase 2 — Juice & mechanics
-- [ ] Shard-particle demolition + drop bounce + settle squash; combo-pitched audio.
-- [ ] Combo meter with decay + multiplier (balance pass vs. economy constants).
-- [ ] Storey-shorter milestone flash/shake (replaces v1 line-clear semantics; keep bonus values).
-- [ ] Supply-line overflow queue with crane drop-in.
-- [ ] Upgraded rewards screen with stat count-up; floating rewards anchored to block position.
+### Phase 2 — Juice & mechanics ✅
+- [x] Shard-particle demolition (crack flash + 6 material-colored shards) + drop-bounce/squash landing for fallen and crane-delivered blocks; removal tone pitches up with the combo streak.
+- [x] Combo meter (`TASK_TOWER_COMBO`: 20s window, ×1 / ×1.2 / ×1.5 / ×2 coin multiplier, capped) with a visible drain bar; only block coins multiply — dice and bonuses stay flat. `maxCombo` added to the complete-session log.
+- [x] Storey-shorter milestone: `getTowerHeight` drop detection replaces `checkLineClears` (dead code — a settled tower can never have an interior empty row); golden flash on the vanished storey + stage shake, same `LINE_CLEAR_BONUS` values.
+- [x] Supply-line overflow queue: `buildTowerAndQueue` + `placeQueuedBlock` (lowest supported fit); overflow shows as a chip strip under the header and drops in one block per clear with the landing animation. Enter log gains `queuedCount`; all-clear requires an empty queue.
+- [x] Rewards screen stats count up (ease-out, reduced-motion jumps straight to final); floating rewards anchor to the cleared block's stage position.
+- [x] Side benefit: `handleConfirmComplete` state updaters are now pure (no side effects inside `setState`), so React StrictMode double-invocation can't double-award.
 
 ### Phase 3 — Launch readiness
 - [ ] Dedicated launcher icon asset; wire in `ActionsTab.tsx`.

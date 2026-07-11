@@ -1,14 +1,18 @@
 import type { Action, ActionCategory } from '../../../../../types/actions';
 import {
   buildTower,
+  buildTowerAndQueue,
   settleBlocks,
   removeBlock,
-  checkLineClears,
+  placeQueuedBlock,
+  getTowerHeight,
+  getComboMultiplier,
+  applyComboMultiplier,
   calculateBlockRewards,
   calculateLineClearRewards,
   calculateAllClearRewards,
 } from '../taskTowerState';
-import { TOWER_GRID, TASK_TOWER_REWARDS, type TowerBlock } from '../taskTowerTypes';
+import { TOWER_GRID, TASK_TOWER_REWARDS, TASK_TOWER_COMBO, type TowerBlock } from '../taskTowerTypes';
 
 function assert(condition: boolean, message: string): void {
   if (!condition) {
@@ -194,6 +198,7 @@ function testRandomRemovalSequencesKeepGridValid(): void {
   // Regression for the v1 per-column gravity that mutated shared block
   // references and could overlap wide blocks: demolish full towers in many
   // deterministic-random orders and assert grid invariants after every step.
+  // Tower height must also never grow during a demolition.
   const random = makeLcg(20260711);
 
   for (let run = 0; run < 50; run++) {
@@ -208,40 +213,100 @@ function testRandomRemovalSequencesKeepGridValid(): void {
 
     let step = 0;
     while (blocks.length > 0) {
+      const heightBefore = getTowerHeight(blocks);
       const victim = blocks[Math.floor(random() * blocks.length)];
       blocks = removeBlock(blocks, victim.id);
       assertGridInvariants(blocks, `run ${run} after removal ${step}`);
-      const { blocks: compacted } = checkLineClears(blocks);
-      blocks = compacted;
-      assertGridInvariants(blocks, `run ${run} after line clear ${step}`);
+      const heightAfter = getTowerHeight(blocks);
+      assert(heightAfter <= heightBefore,
+        `run ${run} step ${step}: removal must never raise the tower (${heightBefore} -> ${heightAfter})`);
+      assert(heightBefore - heightAfter <= 1,
+        `run ${run} step ${step}: one removal can shrink the tower by at most one storey (${heightBefore} -> ${heightAfter})`);
       step += 1;
     }
   }
 }
 
-function testCheckLineClears(): void {
-  const empty = checkLineClears([]);
-  assert(empty.clearedRows.length === 0 && empty.blocks.length === 0,
-    'empty tower should produce no cleared rows');
+function testGetTowerHeight(): void {
+  assert(getTowerHeight([]) === 0, 'empty tower should have height 0');
 
-  const makeBlock = (id: string, row: number): TowerBlock => ({
-    id, actionId: id, title: id, category: 'project',
-    size: 'small', row, col: 0, width: 1, completed: false, animating: false,
+  const tower = buildTower([
+    makeAction('must_do'),
+    makeAction('nice_to_do'),
+    makeAction('project'),
+  ]);
+  // must_do fills row 0 (width 3), nice_to_do wraps to row 1; the project
+  // settles beside the must_do at row 0 → 2 storeys.
+  assert(getTowerHeight(tower) === 2, `expected height 2, got ${getTowerHeight(tower)}`);
+}
+
+function testBuildTowerAndQueue(): void {
+  // Each must_do (width 3) forces its own row → 10 actions overflow by 2.
+  const actions = Array.from({ length: 10 }, () => makeAction('must_do'));
+  const { blocks, queued } = buildTowerAndQueue(actions);
+
+  assert(blocks.length === TOWER_GRID.MAX_ROWS, `expected ${TOWER_GRID.MAX_ROWS} placed, got ${blocks.length}`);
+  assert(queued.length === 2, `expected 2 queued, got ${queued.length}`);
+
+  const placedIds = new Set(blocks.map(b => b.id));
+  assert(queued.every(action => !placedIds.has(action.id)),
+    'queued actions must not also be placed in the tower');
+
+  // Everything fits → nothing queued.
+  const small = buildTowerAndQueue([makeAction('project'), makeAction('nice_to_do')]);
+  assert(small.queued.length === 0, 'no overflow should mean an empty queue');
+}
+
+function testPlaceQueuedBlock(): void {
+  const makeBlock = (id: string, row: number, col: number, width: number): TowerBlock => ({
+    id, actionId: id, title: id, category: width === 3 ? 'must_do' : width === 2 ? 'nice_to_do' : 'project',
+    size: width === 3 ? 'large' : width === 2 ? 'medium' : 'small',
+    row, col, width, completed: false, animating: false,
   });
 
-  // Gap at row 1: block above should compact down, row 1 counts as cleared.
-  const withGap = checkLineClears([makeBlock('a', 0), makeBlock('b', 2)]);
-  assert(withGap.clearedRows.length === 1 && withGap.clearedRows[0] === 1,
-    `expected row 1 cleared, got [${withGap.clearedRows.join(', ')}]`);
-  const compactedB = withGap.blocks.find(b => b.id === 'b');
-  assert(compactedB !== undefined && compactedB.row === 1,
-    `block above the gap should compact to row 1, got ${compactedB?.row}`);
+  // Ground row has a free single column at col 3 → a project lands there.
+  const tower = [makeBlock('base', 0, 0, 3)];
+  const placedProject = placeQueuedBlock(tower, makeAction('project'));
+  assert(placedProject !== null && placedProject.row === 0 && placedProject.col === 3,
+    `project should fill the ground gap at col 3, got ${placedProject?.row},${placedProject?.col}`);
 
-  // No gaps → nothing cleared, rows untouched.
-  const solid = checkLineClears([makeBlock('a', 0), makeBlock('b', 1)]);
-  assert(solid.clearedRows.length === 0, 'solid tower should clear no rows');
-  assert(solid.blocks.every(b => (b.id === 'a' ? b.row === 0 : b.row === 1)),
-    'solid tower rows should be unchanged');
+  // A must_do (width 3) can't fit beside it, so it stacks on top with support.
+  const placedMustDo = placeQueuedBlock(tower, makeAction('must_do'));
+  assert(placedMustDo !== null && placedMustDo.row === 1 && placedMustDo.col === 0,
+    `must_do should stack supported on row 1, got ${placedMustDo?.row},${placedMustDo?.col}`);
+
+  // Placement never creates a floating block: an empty tower places at ground.
+  const groundPlace = placeQueuedBlock([], makeAction('nice_to_do'));
+  assert(groundPlace !== null && groundPlace.row === 0, 'empty tower placement should be at ground level');
+
+  // A completely full grid rejects the placement.
+  const fullGrid: TowerBlock[] = [];
+  for (let row = 0; row < TOWER_GRID.MAX_ROWS; row++) {
+    for (let col = 0; col < TOWER_GRID.COLS; col++) {
+      fullGrid.push(makeBlock(`full-${row}-${col}`, row, col, 1));
+    }
+  }
+  assert(placeQueuedBlock(fullGrid, makeAction('project')) === null,
+    'a full grid should refuse new placements');
+
+  // Placed blocks satisfy the shared grid invariants alongside the tower.
+  const combined = [...tower, placedProject as TowerBlock];
+  assertGridInvariants(combined, 'placeQueuedBlock result');
+}
+
+function testComboMultipliers(): void {
+  const tiers = TASK_TOWER_COMBO.MULTIPLIERS;
+  assert(getComboMultiplier(1) === tiers[0], 'first clear should be ×1');
+  assert(getComboMultiplier(2) === tiers[1], 'second clear in the window should be tier 2');
+  assert(getComboMultiplier(3) === tiers[2], 'third clear should be tier 3');
+  assert(getComboMultiplier(4) === tiers[3], 'fourth clear should be the cap tier');
+  assert(getComboMultiplier(9) === tiers[tiers.length - 1], 'streaks past the last tier stay capped');
+  assert(getComboMultiplier(0) === tiers[0], 'counts below 1 clamp to the first tier');
+
+  assert(applyComboMultiplier(30, 1) === 30, '×1 leaves coins unchanged');
+  assert(applyComboMultiplier(15, 2) === 18, '15 coins ×1.2 should round to 18');
+  assert(applyComboMultiplier(15, 3) === 23, '15 coins ×1.5 should round to 23');
+  assert(applyComboMultiplier(30, 4) === 60, '30 coins ×2 should be 60');
 }
 
 function testRewardCalculations(): void {
@@ -274,6 +339,9 @@ export function runAllTaskTowerStateTests(): void {
   testSettleWideBlockRestsOnPartialSupport();
   testSettleDoesNotMutateInput();
   testRandomRemovalSequencesKeepGridValid();
-  testCheckLineClears();
+  testGetTowerHeight();
+  testBuildTowerAndQueue();
+  testPlaceQueuedBlock();
+  testComboMultipliers();
   testRewardCalculations();
 }
