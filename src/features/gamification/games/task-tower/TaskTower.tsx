@@ -63,23 +63,29 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
   const [showRewards, setShowRewards] = useState(false);
   const [floatingReward, setFloatingReward] = useState<{ text: string; id: number } | null>(null);
   const [lineClearAnimation, setLineClearAnimation] = useState<number[]>([]);
-  
-  const floatingRewardIdRef = useRef(0);
+  const [towerOpenedEmpty, setTowerOpenedEmpty] = useState(false);
 
-  // Initialize tower on mount
+  const floatingRewardIdRef = useRef(0);
+  const towerBuiltRef = useRef(false);
+
+  // Build the tower exactly once per open, from a snapshot of the loaded
+  // actions. Completing a block refreshes `actions`, and rebuilding from the
+  // refreshed list would wipe gravity/line-clear state mid-animation and
+  // re-log the session enter event.
   useEffect(() => {
-    if (!loading && actions.length > 0) {
-      const blocks = buildTower(actions.filter(a => !a.completed));
-      setGameSession(prev => ({ ...prev, blocks }));
-      
-      // Log game session enter
-      logGameSession(userId, {
-        gameId: 'task_tower',
-        action: 'enter',
-        timestamp: new Date().toISOString(),
-        metadata: { blockCount: blocks.length },
-      });
-    }
+    if (loading || towerBuiltRef.current) return;
+    towerBuiltRef.current = true;
+
+    const blocks = buildTower(actions.filter(a => !a.completed));
+    setTowerOpenedEmpty(blocks.length === 0);
+    setGameSession(prev => ({ ...prev, blocks }));
+
+    logGameSession(userId, {
+      gameId: 'task_tower',
+      action: 'enter',
+      timestamp: new Date().toISOString(),
+      metadata: { blockCount: blocks.length },
+    });
   }, [loading, actions, userId]);
 
   const showFloatingReward = useCallback((text: string) => {
@@ -269,6 +275,10 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
         coinsEarned: gameSession.coinsEarned,
         diceEarned: gameSession.diceEarned,
         tokensEarned: gameSession.tokensEarned,
+        durationSeconds: Math.max(
+          0,
+          Math.round((Date.now() - new Date(gameSession.sessionStartTime).getTime()) / 1000),
+        ),
       },
     });
     
@@ -285,8 +295,10 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
     }
   }, [gameSession.blocksCleared, onClose]);
 
-  // Empty state: no active actions
-  if (!loading && actions.filter(a => !a.completed).length === 0) {
+  // Empty state: the tower had no blocks when it was opened. Checking the
+  // live actions list here instead would flip a just-cleared tower into this
+  // state before the all-clear celebration can play.
+  if (towerOpenedEmpty) {
     return (
       <div className="task-tower">
         <div className="task-tower__backdrop" />

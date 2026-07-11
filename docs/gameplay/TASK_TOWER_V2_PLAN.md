@@ -1,6 +1,6 @@
 # Task Tower v2 — From Placeholder to Polished
 
-**Status:** Planning (investigation complete, no code changes yet)
+**Status:** Phase 0 complete (correctness foundation) — Phases 1–4 pending
 **Date:** 2026-07-11
 **Owner surface:** Actions tab launcher (`ActionsTab.tsx`), standalone game overlay
 **Related docs:** `docs/gameplay/MINIGAME_EVENTS_CONSOLIDATION_PLAN.md` (Phase 6 manifest item), `HABITGAME_CORE_GAMES_DEV_PLAN.md`, `THEME_LAYER_CONTRACT.md`
@@ -149,12 +149,12 @@ in a satisfying collapse.** Emotion target (per `habitGames.ts`): **Relief.**
 
 ## 4. Phased build plan
 
-### Phase 0 — Correctness foundation (prereq for everything)
-- [ ] Snapshot tower build on mount; remove `actions` from the init effect deps; log `enter` exactly once per open.
-- [ ] Fix all-clear vs. empty-state race (empty state only when the tower was empty *at open*).
-- [ ] Rewrite `removeBlock` gravity as a pure whole-grid settle (no shared-reference mutation); keep API.
-- [ ] Add `taskTowerState.test.ts` (a `tsconfig.task-tower-tests.json` following the repo's per-feature test config pattern): packing, gravity, storey compaction, reward math, overflow.
-- [ ] Remove dead `calculateSessionRewards`; add duration to `complete` log.
+### Phase 0 — Correctness foundation (prereq for everything) ✅
+- [x] Snapshot tower build on mount (ref-guarded, once per open); log `enter` exactly once per open.
+- [x] Fix all-clear vs. empty-state race (empty state only when the tower was empty *at open*).
+- [x] Rewrite `removeBlock` gravity as a pure whole-grid settle (`settleBlocks`, no shared-reference mutation); keep API. `buildTower` now settles after packing so freshly built towers can't contain floating blocks (found by the new invariant tests).
+- [x] Add `taskTowerState.test.ts` + `tsconfig.task-tower-tests.json` + `npm run test:task-tower`: packing, gravity invariants (no overlap, no floaters) across 50 randomized demolition sequences, storey compaction, reward math, overflow cap, purity.
+- [x] Remove dead `calculateSessionRewards`; add `durationSeconds` to the `complete` log metadata.
 
 ### Phase 1 — Scene & visual overhaul
 - [ ] Scene backdrop (parallax sky, skyline, ground strip), theme-layer integration, day/night tint.
