@@ -16,6 +16,10 @@ import { removeLocalJournalRecord } from '../data/journalOfflineRepo';
 import { removeLocalGoalRecord } from '../data/goalsOfflineRepo';
 import { removeLocalHabitV2Record } from '../data/habitsV2OfflineRepo';
 import { buildHabitLogKey, removeLocalHabitLogRecord } from '../data/habitLogsOfflineRepo';
+import {
+  buildLocalCompletionKey,
+  removeLocalHabitCompletionRecord,
+} from '../data/habitCompletionsOfflineRepo';
 
 type TodayTodoInsert = Database['public']['Tables']['today_todos']['Insert'];
 type TodayTodoUpdate = Database['public']['Tables']['today_todos']['Update'];
@@ -180,6 +184,47 @@ export function registerOfflineSyncExecutors(): void {
       .eq('date', date);
     if (error) throw error;
     await removeLocalHabitLogRecord(buildHabitLogKey(userId, habitId, date));
+    return { outcome: 'success' as const };
+  });
+
+  // ── Habit completions (monthly grid) ──────────────────────────────────────
+  // The payload carries the absolute desired state, so replays converge.
+
+  engine.registerExecutor('habit_completion.set', async (mutation) => {
+    const { userId, habitId, date, completed } = payloadOf<{
+      userId: string;
+      habitId: string;
+      date: string;
+      completed: boolean;
+    }>(mutation);
+    const supabase = getSupabaseClient();
+
+    const { data: existing, error: fetchError } = await supabase
+      .from('habit_completions')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('habit_id', habitId)
+      .eq('completed_date', date)
+      .maybeSingle<{ id: string }>();
+    if (fetchError) throw fetchError;
+
+    if (existing) {
+      const { error } = await supabase
+        .from('habit_completions')
+        .update({ completed })
+        .eq('id', existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from('habit_completions').insert({
+        user_id: userId,
+        habit_id: habitId,
+        completed_date: date,
+        completed,
+      });
+      if (error) throw error;
+    }
+
+    await removeLocalHabitCompletionRecord(buildLocalCompletionKey(userId, habitId, date));
     return { outcome: 'success' as const };
   });
 }
