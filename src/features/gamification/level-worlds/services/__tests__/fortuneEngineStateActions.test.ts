@@ -205,6 +205,57 @@ export const fortuneEngineStateActionsTests: TestCase[] = [
     },
   },
   {
+    name: 'golden launches stamp and extend the golden streak',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 5,
+        minigameTicketsByEvent: { [EVENT_ID]: 3 },
+      });
+      const dayMs = 24 * 60 * 60 * 1000;
+      const nowMs = Date.now();
+
+      const first = applyFortuneEngineLaunch({ session, client: null, eventId: EVENT_ID, nowMs });
+      assertEqual(first.progress?.goldenStreakCount, 1, 'the first golden launch starts a streak of 1');
+
+      const ticketed = applyFortuneEngineLaunch({ session, client: null, eventId: EVENT_ID, nowMs });
+      assertEqual(ticketed.golden, false, 'the second same-day launch is ticket-funded');
+      assertEqual(ticketed.progress?.goldenStreakCount, 1, 'ticket launches leave the streak untouched');
+
+      const nextDay = applyFortuneEngineLaunch({ session, client: null, eventId: EVENT_ID, nowMs: nowMs + dayMs });
+      assertEqual(nextDay.golden, true, 'the next day offers a new golden launch');
+      assertEqual(nextDay.progress?.goldenStreakCount, 2, 'a consecutive-day golden launch extends the streak');
+
+      const lapsed = applyFortuneEngineLaunch({ session, client: null, eventId: EVENT_ID, nowMs: nowMs + 4 * dayMs });
+      assertEqual(lapsed.golden, true, 'a later day still offers the golden launch');
+      assertEqual(lapsed.progress?.goldenStreakCount, 1, 'a missed day restarts the streak');
+    },
+  },
+  {
+    name: 'fragment milestones light Fortune Core slots when claimed',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({ runtimeVersion: 5 });
+      initFortuneEngineProgressForEvent({ session, client: null, eventId: EVENT_ID });
+      applyFortuneEngineRunResult({
+        session,
+        client: null,
+        eventId: EVENT_ID,
+        runScore: 150,
+        eventPoints: 150,
+        fragmentAwarded: false,
+      });
+
+      const fragmentMilestone = FORTUNE_ENGINE_MILESTONES.find((milestone) => (milestone.reward.coreFragments ?? 0) > 0);
+      assert(fragmentMilestone, 'a fragment milestone should exist on the track');
+      const claim = claimFortuneEngineMilestoneReward({ session, client: null, eventId: EVENT_ID, milestoneId: fragmentMilestone!.id });
+      assertEqual(claim.ok, true, 'the fragment milestone should claim at 150 points');
+      assertDeepEqual(claim.progress?.fragmentIds, [0], 'the claim should light the lowest missing fragment');
+    },
+  },
+  {
     name: 'finale is gated on a complete core, pays once, and failed attempts change nothing',
     run: () => {
       resetAll();

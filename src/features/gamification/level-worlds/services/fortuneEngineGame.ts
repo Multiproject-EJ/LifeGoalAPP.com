@@ -175,6 +175,53 @@ export const FORTUNE_RING_MULTIPLIER_BY_INDEX: readonly number[] = Object.freeze
 export const FORTUNE_RUN_MIN_POINTS = 5;
 /** Milliseconds of ring time restored by a ⏳ time segment. */
 export const FORTUNE_TIME_SEGMENT_BONUS_MS = 2000;
+/**
+ * Crush penalty scales with depth: a crushed run keeps 1/divisor of its
+ * multiplied points (ring 1 keeps ½, ring 2 keeps ⅓, ring 3 keeps ¼) so the
+ * bank-or-go-deeper checkpoint carries real risk on deeper rings.
+ */
+export const FORTUNE_CRUSH_KEEP_DIVISOR_BY_RING: readonly number[] = Object.freeze([2, 3, 4]);
+
+/** Divisor applied to points when a run is crushed on the given ring. */
+export function resolveFortuneCrushKeepDivisor(ringIndex: number): number {
+  const index = Math.max(0, Math.min(FORTUNE_CRUSH_KEEP_DIVISOR_BY_RING.length - 1, Math.floor(ringIndex)));
+  return FORTUNE_CRUSH_KEEP_DIVISOR_BY_RING[index];
+}
+
+// ---------------------------------------------------------------------------
+// Perfect taps — skill tier + combo meter
+// ---------------------------------------------------------------------------
+
+/** A tap is Perfect when the pointer sits inside the middle third of a segment. */
+export const FORTUNE_PERFECT_WINDOW_FRACTION = 1 / 3;
+/** Points multiplier for a Perfect tap with no combo running. */
+export const FORTUNE_PERFECT_BASE_MULTIPLIER = 2;
+/** Extra points multiplier added per consecutive Perfect already in the combo. */
+export const FORTUNE_PERFECT_COMBO_STEP = 0.5;
+/** Combo stacks that still grow the multiplier (×2 → ×2.5 → ×3 → ×3.5 cap). */
+export const FORTUNE_PERFECT_COMBO_CAP = 3;
+
+/**
+ * True when the pointer angle falls inside the Perfect window (the center
+ * third) of whatever segment it is currently sweeping.
+ */
+export function isFortunePerfectTapAngle(angleDeg: number, segmentCount = FORTUNE_RING_SEGMENT_COUNT): boolean {
+  const count = Math.max(1, Math.floor(segmentCount));
+  const arc = 360 / count;
+  const normalized = ((angleDeg % 360) + 360) % 360;
+  const positionInSegment = (normalized % arc) / arc;
+  const edge = (1 - FORTUNE_PERFECT_WINDOW_FRACTION) / 2;
+  return positionInSegment >= edge && positionInSegment < 1 - edge;
+}
+
+/**
+ * Points multiplier paid by a Perfect tap given the number of consecutive
+ * Perfects already banked in the combo before this tap.
+ */
+export function resolveFortunePerfectPointsMultiplier(comboBeforeTap: number): number {
+  const combo = Math.max(0, Math.min(FORTUNE_PERFECT_COMBO_CAP, Math.floor(comboBeforeTap)));
+  return FORTUNE_PERFECT_BASE_MULTIPLIER + combo * FORTUNE_PERFECT_COMBO_STEP;
+}
 
 export type FortuneSegmentKind = 'points' | 'dice' | 'essence' | 'time' | 'hazard' | 'empty';
 
@@ -295,6 +342,10 @@ export interface FortuneTapOutcome {
   hazardHit: boolean;
   /** False when the tap landed on an already-collected or empty segment. */
   collectedSomething: boolean;
+  /** True when this tap landed in the Perfect window and collected a reward. */
+  perfect: boolean;
+  /** Consecutive-Perfect combo after this tap (misses/hazards reset to 0). */
+  comboAfter: number;
   /** New segments array with the tapped segment marked collected. */
   segments: FortuneRingSegment[];
 }
@@ -303,10 +354,18 @@ export interface FortuneTapOutcome {
  * Resolve one tap at the given segment. Pure: returns a new segments array.
  * Hazards are re-tappable only once (they mark collected too, so a single
  * corrupted sector can't instantly drain the whole hazard allowance).
+ *
+ * Perfect taps (pointer in the segment's center third) multiply the points
+ * value and extend the combo; any miss, normal tap, or hazard resets it.
  */
-export function resolveFortuneTap(segments: readonly FortuneRingSegment[], segmentIndex: number): FortuneTapOutcome {
+export function resolveFortuneTap(
+  segments: readonly FortuneRingSegment[],
+  segmentIndex: number,
+  options?: { perfect?: boolean; comboBefore?: number },
+): FortuneTapOutcome {
   const index = Math.max(0, Math.floor(segmentIndex)) % Math.max(1, segments.length);
   const segment = segments[index];
+  const comboBefore = Math.max(0, Math.floor(options?.comboBefore ?? 0));
   const noop: FortuneTapOutcome = {
     segmentIndex: index,
     kind: segment?.kind ?? 'empty',
@@ -316,20 +375,27 @@ export function resolveFortuneTap(segments: readonly FortuneRingSegment[], segme
     timeBonusMs: 0,
     hazardHit: false,
     collectedSomething: false,
+    perfect: false,
+    comboAfter: 0,
     segments: [...segments],
   };
   if (!segment || segment.collected || segment.kind === 'empty') return noop;
 
   const nextSegments = segments.map((entry, i) => (i === index ? { ...entry, collected: true } : entry));
+  const hazardHit = segment.kind === 'hazard';
+  const perfect = options?.perfect === true && !hazardHit;
+  const pointsMultiplier = perfect ? resolveFortunePerfectPointsMultiplier(comboBefore) : 1;
   return {
     segmentIndex: index,
     kind: segment.kind,
-    points: segment.kind === 'points' ? segment.value : 0,
+    points: segment.kind === 'points' ? Math.floor(segment.value * pointsMultiplier) : 0,
     dice: segment.kind === 'dice' ? segment.value : 0,
     essence: segment.kind === 'essence' ? segment.value : 0,
     timeBonusMs: segment.kind === 'time' ? segment.value : 0,
-    hazardHit: segment.kind === 'hazard',
+    hazardHit,
     collectedSomething: true,
+    perfect,
+    comboAfter: hazardHit ? 0 : perfect ? comboBefore + 1 : 0,
     segments: nextSegments,
   };
 }
@@ -342,14 +408,20 @@ export function resolveFortuneTap(segments: readonly FortuneRingSegment[], segme
 export function resolveFortuneRunMultiplier(options: {
   ringIndex: number;
   route: FortuneRoute;
+  /** Extra additive bonus (e.g. the Golden Launch streak perk). */
+  bonusMultiplier?: number;
 }): number {
   const ringMultiplier = FORTUNE_RING_MULTIPLIER_BY_INDEX[
     Math.max(0, Math.min(FORTUNE_RING_MULTIPLIER_BY_INDEX.length - 1, Math.floor(options.ringIndex)))
   ];
-  return ringMultiplier + options.route.startMultiplierBonus;
+  const bonus = Number.isFinite(options.bonusMultiplier) ? Math.max(0, options.bonusMultiplier ?? 0) : 0;
+  return ringMultiplier + options.route.startMultiplierBonus + bonus;
 }
 
 export type FortuneRunEnd = 'banked' | 'completed' | 'crushed';
+
+/** Extra event points (share of run score) paid for beating your best run. */
+export const FORTUNE_NEW_BEST_EVENT_BONUS_RATIO = 0.2;
 
 export interface FortuneRunOutcome {
   /** Final run score after multiplier (and crush penalty). */
@@ -360,17 +432,20 @@ export interface FortuneRunOutcome {
   essence: number;
   /** True when this run should award a Fortune Core fragment. */
   fragmentAwarded: boolean;
+  /** True when this run beat the previous best score (pays bonus event points). */
+  newBest: boolean;
   end: FortuneRunEnd;
 }
 
 /**
  * Fold a finished run into its final rewards.
  * - `banked` / `completed` keep everything at the active multiplier.
- * - `crushed` (hazard limit) halves points and drops half the collected
- *   currencies — but a run always pays at least the consolation floor and
- *   never awards a fragment.
- * - Fragments come from the jackpot route or a golden launch, and only on
- *   runs that finish standing.
+ * - `crushed` (hazard limit) keeps 1/divisor of the points (deeper rings keep
+ *   less: ½ → ⅓ → ¼) and drops half the collected currencies — but a run
+ *   always pays at least the consolation floor and never awards a fragment.
+ * - Fragments come from the jackpot route, a golden launch, or completing the
+ *   full three-ring descent — always on runs that finish standing.
+ * - Beating `previousBestScore` pays bonus event points on top of the score.
  */
 export function resolveFortuneRunOutcome(options: {
   rawPoints: number;
@@ -380,25 +455,41 @@ export function resolveFortuneRunOutcome(options: {
   route: FortuneRoute;
   end: FortuneRunEnd;
   goldenLaunch?: boolean;
+  /** Extra additive run multiplier (Golden Launch streak perk). */
+  bonusMultiplier?: number;
+  /** Best run score before this run; 0/omitted means no best exists yet. */
+  previousBestScore?: number;
 }): FortuneRunOutcome {
   const rawPoints = Math.max(0, Math.floor(options.rawPoints));
   const dice = Math.max(0, Math.floor(options.dice));
   const essence = Math.max(0, Math.floor(options.essence));
-  const multiplier = resolveFortuneRunMultiplier({ ringIndex: options.ringIndex, route: options.route });
+  const multiplier = resolveFortuneRunMultiplier({
+    ringIndex: options.ringIndex,
+    route: options.route,
+    bonusMultiplier: options.bonusMultiplier,
+  });
   const crushed = options.end === 'crushed';
 
   const multiplied = Math.floor(rawPoints * multiplier);
-  const runScore = Math.max(FORTUNE_RUN_MIN_POINTS, crushed ? Math.floor(multiplied / 2) : multiplied);
+  const crushDivisor = resolveFortuneCrushKeepDivisor(options.ringIndex);
+  const runScore = Math.max(FORTUNE_RUN_MIN_POINTS, crushed ? Math.floor(multiplied / crushDivisor) : multiplied);
   const keptDice = crushed ? Math.floor(dice / 2) : dice;
   const keptEssence = crushed ? Math.floor(essence / 2) : essence;
-  const fragmentAwarded = !crushed && (options.route.guaranteesFragment || options.goldenLaunch === true);
+  const fragmentAwarded = !crushed
+    && (options.route.guaranteesFragment || options.goldenLaunch === true || options.end === 'completed');
+  const previousBest = Math.max(0, Math.floor(options.previousBestScore ?? 0));
+  const newBest = previousBest > 0 && runScore > previousBest;
+  const eventPoints = newBest
+    ? runScore + Math.floor(runScore * FORTUNE_NEW_BEST_EVENT_BONUS_RATIO)
+    : runScore;
 
   return {
     runScore,
-    eventPoints: runScore,
+    eventPoints,
     dice: keptDice,
     essence: keptEssence,
     fragmentAwarded,
+    newBest,
     end: options.end,
   };
 }
