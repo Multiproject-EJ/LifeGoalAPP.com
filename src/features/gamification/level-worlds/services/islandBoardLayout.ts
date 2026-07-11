@@ -67,16 +67,21 @@ export const TILE_ANCHORS_40: TileAnchor[] = Array.from({ length: SPARK_RING_TIL
 
   const zBand: ZBand = y < 430 ? 'back' : y > 570 ? 'front' : 'mid';
   const tangentDeg = ((theta * 180) / Math.PI) + 90;
-  const normalizedY = (y - SPARK40_CENTER_Y) / SPARK40_RADIUS;
-  const scale = Number((1 + normalizedY * 0.08).toFixed(2));
 
   return {
     id: `t${String(index).padStart(2, '0')}`,
-    x: Number(x.toFixed(0)),
-    y: Number(y.toFixed(0)),
+    // Sub-pixel anchor precision: the ring tiles are exact tessellating wedges
+    // (see the spark40 tile CSS), so rounding centres to whole pixels opens
+    // hairline seams between neighbouring borders.
+    x: Number(x.toFixed(2)),
+    y: Number(y.toFixed(2)),
     zBand,
     tangentDeg: Number(tangentDeg.toFixed(0)),
-    scale,
+    // Uniform tile scale keeps the wedge tessellation seam-free — any per-tile
+    // depth scaling directly becomes overlap (front) or gaps (back) along the
+    // shared radial edges. Depth is carried by zBand stacking, the extruded
+    // side wall, and the contact shadows instead.
+    scale: 1,
   };
 });
 
