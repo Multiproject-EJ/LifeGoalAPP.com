@@ -1,5 +1,14 @@
 import { useEffect, useState, type FormEventHandler, type ReactNode } from 'react';
-import { shouldShowAuthConnectionNotice, type AuthInitializationStatus } from '../features/auth/authInitialization';
+import {
+  hasCachedAuthSession,
+  isCloudUnavailableForAuthGate,
+  resolveAuthGateOutageBranch,
+  shouldShowAuthConnectionNotice,
+  type AuthInitializationStatus,
+} from '../features/auth/authInitialization';
+import { useServiceHealth } from '../hooks/useServiceHealth';
+import { getServiceHealthManager } from '../services/service-health';
+import { ServiceStatusModal } from './service-status';
 
 export type HabitGameAuthTab = 'login' | 'signup';
 
@@ -103,6 +112,8 @@ export function HabitGameAuthCard({
   const [shipName, setShipName] = useState('');
   const [guestSubmitting, setGuestSubmitting] = useState(false);
   const [guestError, setGuestError] = useState<string | null>(null);
+  const [showServiceStatus, setShowServiceStatus] = useState(false);
+  const { snapshot } = useServiceHealth();
 
   useEffect(() => {
     if (guestStep === 'closed') return undefined;
@@ -166,6 +177,53 @@ export function HabitGameAuthCard({
     isConfigured,
     isOnline: isAuthGateOnline,
   });
+
+  // Startup state machine (Part 3): branch on service health + cached session,
+  // not on initializationStatus strings alone.
+  const outageBranch = resolveAuthGateOutageBranch({
+    connectionTroubled: showAuthConnectionNotice,
+    cloudUnavailable: isCloudUnavailableForAuthGate(snapshot),
+    hasCachedSession: hasCachedAuthSession(),
+  });
+
+  const handleTryAgain = () => {
+    const manager = getServiceHealthManager();
+    manager.setNetworkOnline(typeof navigator === 'undefined' ? true : navigator.onLine);
+    void manager.runRecoveryProbes();
+    onAuthInitializationRetry();
+  };
+
+  const outageNotice =
+    outageBranch === 'none' ? null : outageBranch === 'returning_user' ? (
+      <div className="supabase-auth__status supabase-auth__status--info auth-card__connection-notice" role="status">
+        <p>Cloud services are unreachable, but your game is ready.</p>
+        <p>Changes stay on this device until cloud sync returns.</p>
+        <div className="auth-card__outage-actions">
+          <button type="button" className="auth-card__retry" onClick={handleTryAgain}>
+            Continue locally
+          </button>
+          <button type="button" className="auth-card__retry" onClick={() => setShowServiceStatus(true)}>
+            View service status
+          </button>
+        </div>
+      </div>
+    ) : (
+      <div className="supabase-auth__status supabase-auth__status--info auth-card__connection-notice" role="status">
+        <p>HabitGame is having trouble connecting.</p>
+        <p>Your progress is safe. You can retry, or play a demo while services recover.</p>
+        <div className="auth-card__outage-actions">
+          <button type="button" className="auth-card__retry" onClick={handleTryAgain}>
+            Try again
+          </button>
+          <button type="button" className="auth-card__retry" onClick={() => setGuestStep('timeline')}>
+            Play demo
+          </button>
+          <button type="button" className="auth-card__retry" onClick={() => setShowServiceStatus(true)}>
+            View service status
+          </button>
+        </div>
+      </div>
+    );
 
   const statusElements = (
     <>
@@ -358,19 +416,12 @@ export function HabitGameAuthCard({
           </p>
         ) : null}
 
-        {showAuthConnectionNotice ? (
-          <div className="supabase-auth__status supabase-auth__status--info auth-card__connection-notice" role="status">
-            <p>HabitGame is having trouble connecting.</p>
-            <p>Your progress is safe. Please retry shortly.</p>
-            <button type="button" className="auth-card__retry" onClick={onAuthInitializationRetry}>
-              Retry
-            </button>
-          </div>
-        ) : null}
+        {outageNotice}
 
         {statusElements}
       </div>
       {guestModal}
+      {showServiceStatus ? <ServiceStatusModal onClose={() => setShowServiceStatus(false)} /> : null}
     </div>
   );
 }
