@@ -39,7 +39,11 @@ function readKpiEvents(): KpiEventRecord[] {
 
 function writeKpiEvents(events: KpiEventRecord[]): void {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(KPI_STORAGE_KEY, JSON.stringify(events.slice(-MAX_KPI_EVENTS)));
+  try {
+    window.localStorage.setItem(KPI_STORAGE_KEY, JSON.stringify(events.slice(-MAX_KPI_EVENTS)));
+  } catch {
+    // KPI telemetry is best-effort — quota failures must never break callers.
+  }
 }
 
 export function recordKpiEvent(source: KpiSource, event: string, payload: Record<string, unknown>): void {

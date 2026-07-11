@@ -2,6 +2,7 @@ import type { PostgrestError } from '@supabase/supabase-js';
 import type { Json } from '../lib/database.types';
 import type { Database } from '../lib/database.types';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { guardedCloudCall, BoundedLog, type AppError } from './service-health';
 import {
   addDemoTelemetryEvent,
   getDemoTelemetryEvents,
@@ -84,6 +85,55 @@ export type TelemetryPreferenceResponse = {
 
 const preferenceCache = new Map<string, boolean>();
 
+/**
+ * Telemetry write budget (Part 14). The original incident was a runaway
+ * database filled by client logging — telemetry writes are therefore capped
+ * per session and per minute, and anything over budget (or emitted while the
+ * cloud is unavailable) is dropped, never queued. Drops are visible in the
+ * bounded diagnostics log instead of the database.
+ */
+const MAX_TELEMETRY_WRITES_PER_SESSION = 1_000;
+const MAX_TELEMETRY_WRITES_PER_MINUTE = 60;
+
+const telemetryDropLog = new BoundedLog<{ eventType: string; reason: string }>({
+  maxEntries: 100,
+  aggregationWindowMs: 30_000,
+});
+
+let sessionWriteCount = 0;
+let minuteWindowStart = 0;
+let minuteWindowCount = 0;
+
+function takeTelemetryWriteBudget(eventType: string, now = Date.now()): boolean {
+  if (sessionWriteCount >= MAX_TELEMETRY_WRITES_PER_SESSION) {
+    telemetryDropLog.push(`budget:session:${eventType}`, { eventType, reason: 'session_cap' });
+    return false;
+  }
+  if (now - minuteWindowStart >= 60_000) {
+    minuteWindowStart = now;
+    minuteWindowCount = 0;
+  }
+  if (minuteWindowCount >= MAX_TELEMETRY_WRITES_PER_MINUTE) {
+    telemetryDropLog.push(`budget:minute:${eventType}`, { eventType, reason: 'minute_cap' });
+    return false;
+  }
+  sessionWriteCount += 1;
+  minuteWindowCount += 1;
+  return true;
+}
+
+/** Diagnostics: telemetry that was intentionally dropped (bounded). */
+export function getTelemetryDropLog() {
+  return telemetryDropLog.list();
+}
+
+/** Translated AppError → plain Error safe to surface in UI. */
+function toSafeError(appError: AppError): Error {
+  const error = new Error(appError.explanation);
+  error.name = appError.code;
+  return error;
+}
+
 const BALANCE_SHIFT_STORAGE_KEY = 'lifegoalapp-telemetry-balance-shift';
 
 type BalanceShiftState = {
@@ -123,13 +173,20 @@ export async function fetchTelemetryPreference(userId: string): Promise<Telemetr
   }
 
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('telemetry_preferences')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle<TelemetryPreferenceRow>();
+  const result = await guardedCloudCall('database', async () => {
+    const { data, error } = await supabase
+      .from('telemetry_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle<TelemetryPreferenceRow>();
+    if (error) throw error;
+    return data ?? null;
+  });
 
-  return { data: data ?? null, error };
+  if (!result.ok) {
+    return { data: null, error: toSafeError(result.error) };
+  }
+  return { data: result.data, error: null };
 }
 
 export async function upsertTelemetryPreference(
@@ -146,23 +203,29 @@ export async function upsertTelemetryPreference(
   }
 
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('telemetry_preferences')
-    .upsert(
-      {
-        user_id: userId,
-        telemetry_enabled: telemetryEnabled,
-      },
-      { onConflict: 'user_id' },
-    )
-    .select()
-    .single<TelemetryPreferenceRow>();
+  const result = await guardedCloudCall('database', async () => {
+    const { data, error } = await supabase
+      .from('telemetry_preferences')
+      .upsert(
+        {
+          user_id: userId,
+          telemetry_enabled: telemetryEnabled,
+        },
+        { onConflict: 'user_id' },
+      )
+      .select()
+      .single<TelemetryPreferenceRow>();
+    if (error) throw error;
+    return data;
+  });
 
-  if (!error && data) {
-    preferenceCache.set(userId, data.telemetry_enabled);
+  if (!result.ok) {
+    return { data: null, error: toSafeError(result.error) };
   }
-
-  return { data: data ?? null, error };
+  if (result.data) {
+    preferenceCache.set(userId, result.data.telemetry_enabled);
+  }
+  return { data: result.data ?? null, error: null };
 }
 
 export async function isTelemetryEnabled(userId: string): Promise<boolean> {
@@ -196,18 +259,37 @@ export async function recordTelemetryEvent(options: {
     return { data, error: null };
   }
 
-  const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('telemetry_events')
-    .insert({
-      user_id: options.userId,
-      event_type: options.eventType,
-      metadata: options.metadata ?? {},
-    })
-    .select()
-    .single<TelemetryEventRow>();
+  if (!takeTelemetryWriteBudget(options.eventType)) {
+    // Over budget: telemetry is best-effort, so it drops instead of queueing.
+    return { data: null, error: null };
+  }
 
-  return { data: data ?? null, error };
+  const supabase = getSupabaseClient();
+  const result = await guardedCloudCall('database', async () => {
+    const { data, error } = await supabase
+      .from('telemetry_events')
+      .insert({
+        user_id: options.userId,
+        event_type: options.eventType,
+        metadata: options.metadata ?? {},
+      })
+      .select()
+      .single<TelemetryEventRow>();
+    if (error) throw error;
+    return data;
+  });
+
+  if (!result.ok) {
+    // Cloud unavailable or rejected the write: drop the event (never queue
+    // telemetry) and keep the drop visible in the bounded diagnostics log.
+    telemetryDropLog.push(`cloud:${result.error.category}:${options.eventType}`, {
+      eventType: options.eventType,
+      reason: result.error.code,
+    });
+    return { data: null, error: null };
+  }
+
+  return { data: result.data ?? null, error: null };
 }
 
 export async function recordBalanceShiftEvent(options: {
@@ -253,31 +335,36 @@ export async function listTelemetryEvents(options: {
   }
 
   const supabase = getSupabaseClient();
-  let query = supabase
-    .from('telemetry_events')
-    .select('*')
-    .eq('user_id', options.userId)
-    .order('occurred_at', { ascending: false });
+  const result = await guardedCloudCall('database', async () => {
+    let query = supabase
+      .from('telemetry_events')
+      .select('*')
+      .eq('user_id', options.userId)
+      .order('occurred_at', { ascending: false });
 
-  if (options.sinceISO) {
-    query = query.gte('occurred_at', options.sinceISO);
-  }
+    if (options.sinceISO) {
+      query = query.gte('occurred_at', options.sinceISO);
+    }
 
-  if (options.eventTypes && options.eventTypes.length > 0) {
-    query = query.in('event_type', options.eventTypes);
-  }
+    if (options.eventTypes && options.eventTypes.length > 0) {
+      query = query.in('event_type', options.eventTypes);
+    }
 
-  if (options.limit) {
-    query = query.limit(options.limit);
-  }
+    if (options.limit) {
+      query = query.limit(options.limit);
+    }
 
-  const { data, error } = await query;
-  if (error) {
-    console.error('Failed to load telemetry events:', error);
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data ?? []) as TelemetryEventRow[];
+  });
+
+  if (!result.ok) {
+    // Analytics reads degrade to empty — callers already treat [] as "no data".
     return [];
   }
 
-  return (data ?? []) as TelemetryEventRow[];
+  return result.data;
 }
 
 
