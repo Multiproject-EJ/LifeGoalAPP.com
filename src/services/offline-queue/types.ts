@@ -32,6 +32,20 @@ export interface PendingMutation<TPayload = unknown> {
   nextAttemptAt: string | null;
 }
 
+/** Runtime guard for entries restored from durable storage. */
+export function isPendingMutation(value: unknown): value is PendingMutation {
+  if (!value || typeof value !== 'object') return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.id === 'string' &&
+    typeof record.feature === 'string' &&
+    typeof record.operation === 'string' &&
+    typeof record.createdAt === 'string' &&
+    typeof record.idempotencyKey === 'string' &&
+    typeof record.status === 'string'
+  );
+}
+
 export interface EnqueueInput<TPayload = unknown> {
   feature: string;
   operation: string;

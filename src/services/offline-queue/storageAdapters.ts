@@ -7,7 +7,8 @@
  * failures — losing durability must degrade, not crash.
  */
 
-import type { PendingMutation, QueueStorageAdapter } from './types';
+import { isPendingMutation, type PendingMutation, type QueueStorageAdapter } from './types';
+import { IndexedDBQueueStorage } from './indexedDbStorage';
 
 /** Non-durable adapter for tests and as a last-resort fallback. */
 export class MemoryQueueStorage implements QueueStorageAdapter {
@@ -28,19 +29,6 @@ interface WebStorageLike {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
   removeItem(key: string): void;
-}
-
-function isPendingMutation(value: unknown): value is PendingMutation {
-  if (!value || typeof value !== 'object') return false;
-  const record = value as Record<string, unknown>;
-  return (
-    typeof record.id === 'string' &&
-    typeof record.feature === 'string' &&
-    typeof record.operation === 'string' &&
-    typeof record.createdAt === 'string' &&
-    typeof record.idempotencyKey === 'string' &&
-    typeof record.status === 'string'
-  );
 }
 
 /**
@@ -77,19 +65,53 @@ export class LocalStorageQueueStorage implements QueueStorageAdapter {
   }
 }
 
+function probeLocalStorage(
+  onPersistenceError?: (error: unknown) => void,
+): LocalStorageQueueStorage | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const probeKey = `${DEFAULT_STORAGE_KEY}__probe`;
+    window.localStorage.setItem(probeKey, '1');
+    window.localStorage.removeItem(probeKey);
+    return new LocalStorageQueueStorage(window.localStorage, DEFAULT_STORAGE_KEY, onPersistenceError);
+  } catch {
+    return null;
+  }
+}
+
+/** Test-injectable capabilities of the current environment. */
+export interface QueueStorageEnvironment {
+  indexedDBAvailable: boolean;
+  localStorageAdapter: QueueStorageAdapter | null;
+}
+
+/**
+ * Selection logic, separated from environment detection so it can be tested:
+ * IndexedDB (with localStorage as migration source + fallback) → localStorage
+ * → memory as the last resort.
+ */
+export function selectQueueStorage(
+  environment: QueueStorageEnvironment,
+  onPersistenceError?: (error: unknown) => void,
+): QueueStorageAdapter {
+  if (environment.indexedDBAvailable) {
+    return new IndexedDBQueueStorage({
+      onPersistenceError,
+      legacy: environment.localStorageAdapter ?? undefined,
+    });
+  }
+  return environment.localStorageAdapter ?? new MemoryQueueStorage();
+}
+
 /** Pick the best adapter available in the current environment. */
 export function createDefaultQueueStorage(
   onPersistenceError?: (error: unknown) => void,
 ): QueueStorageAdapter {
-  if (typeof window !== 'undefined') {
-    try {
-      const probeKey = `${DEFAULT_STORAGE_KEY}__probe`;
-      window.localStorage.setItem(probeKey, '1');
-      window.localStorage.removeItem(probeKey);
-      return new LocalStorageQueueStorage(window.localStorage, DEFAULT_STORAGE_KEY, onPersistenceError);
-    } catch {
-      // Fall through to memory storage.
-    }
-  }
-  return new MemoryQueueStorage();
+  return selectQueueStorage(
+    {
+      indexedDBAvailable: IndexedDBQueueStorage.isSupported(),
+      localStorageAdapter: probeLocalStorage(onPersistenceError),
+    },
+    onPersistenceError,
+  );
 }

@@ -17,7 +17,12 @@ import { getFeatureAvailability, isFeatureUsable } from '../capabilities';
 import { parseIncidentPayload } from '../incidentStatus';
 import type { ServiceHealthSnapshot } from '../types';
 import { MutationQueue } from '../../offline-queue/mutationQueue';
-import { MemoryQueueStorage } from '../../offline-queue/storageAdapters';
+import {
+  LocalStorageQueueStorage,
+  MemoryQueueStorage,
+  selectQueueStorage,
+} from '../../offline-queue/storageAdapters';
+import { IndexedDBQueueStorage, type QueueDatabaseLike } from '../../offline-queue/indexedDbStorage';
 import { SyncEngine } from '../../offline-queue/syncEngine';
 import type { PendingMutation } from '../../offline-queue/types';
 
@@ -404,6 +409,146 @@ async function testQueueBounds(): Promise<void> {
   assertTrue(mutations.length <= 10, 'queue growth is bounded (Part 14)');
 }
 
+// ── Storage adapters: IndexedDB preference, migration, fallback ─────────────
+
+/** In-memory fake of the minimal idb surface IndexedDBQueueStorage uses. */
+function createFakeQueueDatabase(options: { failWrites?: boolean } = {}) {
+  const rows = new Map<string, PendingMutation>();
+  const database: QueueDatabaseLike = {
+    async getAll() {
+      return Array.from(rows.values());
+    },
+    transaction() {
+      if (options.failWrites) {
+        throw new Error('QuotaExceededError (simulated)');
+      }
+      return {
+        store: {
+          async clear() {
+            rows.clear();
+          },
+          async put(value: unknown) {
+            const mutation = value as PendingMutation;
+            rows.set(mutation.id, mutation);
+          },
+        },
+        done: Promise.resolve(),
+      };
+    },
+  };
+  return { database, rows };
+}
+
+function makeMutation(id: string): PendingMutation {
+  return {
+    id,
+    feature: 'habits',
+    operation: 'habit_log.insert',
+    payload: { id },
+    createdAt: new Date(0).toISOString(),
+    attempts: 0,
+    status: 'pending',
+    idempotencyKey: `habits:habit_log.insert:${id}`,
+    lastErrorCode: null,
+    nextAttemptAt: null,
+  };
+}
+
+function testQueueStorageSelection(): void {
+  const localAdapter = new MemoryQueueStorage();
+  const withIdb = selectQueueStorage({ indexedDBAvailable: true, localStorageAdapter: localAdapter });
+  assertTrue(withIdb instanceof IndexedDBQueueStorage, 'IndexedDB preferred when available');
+
+  const withoutIdb = selectQueueStorage({ indexedDBAvailable: false, localStorageAdapter: localAdapter });
+  assertEqual(withoutIdb, localAdapter, 'localStorage adapter used when IndexedDB unavailable');
+
+  const bare = selectQueueStorage({ indexedDBAvailable: false, localStorageAdapter: null });
+  assertTrue(bare instanceof MemoryQueueStorage, 'memory storage is the last resort');
+
+  assertEqual(
+    IndexedDBQueueStorage.isSupported({}),
+    false,
+    'support detection is false without indexedDB',
+  );
+  assertEqual(
+    IndexedDBQueueStorage.isSupported({ indexedDB: {} }),
+    true,
+    'support detection is true with indexedDB present',
+  );
+}
+
+async function testIndexedDbAdapterRoundTripAndMigration(): Promise<void> {
+  // Round trip through the fake database.
+  const { database } = createFakeQueueDatabase();
+  const storage = new IndexedDBQueueStorage({ openDatabase: async () => database });
+  await storage.save([makeMutation('a'), makeMutation('b')]);
+  const loaded = await storage.load();
+  assertEqual(loaded.length, 2, 'IndexedDB adapter round-trips mutations');
+
+  // Legacy (localStorage) entries are adopted on first load and the legacy
+  // store is emptied, so upgrading adapters never strands queued work.
+  const legacy = new MemoryQueueStorage();
+  await legacy.save([makeMutation('legacy-1'), makeMutation('legacy-2')]);
+  const fresh = createFakeQueueDatabase();
+  const migrating = new IndexedDBQueueStorage({
+    legacy,
+    openDatabase: async () => fresh.database,
+  });
+  const adopted = await migrating.load();
+  assertEqual(adopted.length, 2, 'legacy queue entries migrate into IndexedDB');
+  assertEqual(fresh.rows.size, 2, 'migrated entries persist in IndexedDB');
+  assertEqual((await legacy.load()).length, 0, 'legacy store is cleared after migration');
+}
+
+async function testIndexedDbAdapterFallback(): Promise<void> {
+  // A broken IndexedDB falls back to the legacy adapter without reporting
+  // UNSAFE (durability degrades, work is not lost).
+  const legacy = new MemoryQueueStorage();
+  let persistenceErrors = 0;
+  const failing = new IndexedDBQueueStorage({
+    legacy,
+    onPersistenceError: () => {
+      persistenceErrors += 1;
+    },
+    openDatabase: async () => {
+      throw new Error('InvalidStateError: A mutation operation was attempted');
+    },
+  });
+  await failing.save([makeMutation('x')]);
+  assertEqual((await legacy.load()).length, 1, 'writes fall back to legacy storage');
+  assertEqual((await failing.load()).length, 1, 'reads fall back to legacy storage');
+  assertEqual(persistenceErrors, 0, 'fallback success does not flip UNSAFE');
+
+  // Without any fallback the failure must surface (→ UNSAFE mode upstream).
+  let reported = 0;
+  const isolated = new IndexedDBQueueStorage({
+    onPersistenceError: () => {
+      reported += 1;
+    },
+    openDatabase: async () => {
+      throw new Error('InvalidStateError');
+    },
+  });
+  await isolated.save([makeMutation('y')]);
+  assertTrue(reported > 0, 'persistence failure without fallback is reported');
+}
+
+async function testLocalStorageAdapterStillWorks(): Promise<void> {
+  const store = new Map<string, string>();
+  const webStorageLike = {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+  };
+  const adapter = new LocalStorageQueueStorage(webStorageLike);
+  await adapter.save([makeMutation('ls-1')]);
+  assertEqual((await adapter.load()).length, 1, 'localStorage adapter round-trips');
+}
+
 // ── Part 7: sync engine ─────────────────────────────────────────────────────
 
 interface SyncHarness {
@@ -631,6 +776,10 @@ export async function runAllServiceResilienceTests(): Promise<void> {
 
   await testMutationQueue();
   await testQueueBounds();
+  testQueueStorageSelection();
+  await testIndexedDbAdapterRoundTripAndMigration();
+  await testIndexedDbAdapterFallback();
+  await testLocalStorageAdapterStillWorks();
   await testSyncEngineSuccessAndIdempotency();
   await testSyncEngineRetryBackoff();
   await testSyncEngineBoundedRetries();

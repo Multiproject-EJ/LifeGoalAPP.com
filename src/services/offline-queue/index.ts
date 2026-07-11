@@ -8,7 +8,14 @@ export {
   MemoryQueueStorage,
   LocalStorageQueueStorage,
   createDefaultQueueStorage,
+  selectQueueStorage,
+  type QueueStorageEnvironment,
 } from './storageAdapters';
+export {
+  IndexedDBQueueStorage,
+  type IndexedDBQueueStorageOptions,
+  type QueueDatabaseLike,
+} from './indexedDbStorage';
 export {
   SyncEngine,
   type SyncEngineOptions,
