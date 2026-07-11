@@ -12,6 +12,7 @@ import { getSupabaseClient } from '../lib/supabaseClient';
 import { getSyncEngine } from './offline-queue';
 import type { PendingMutation } from './offline-queue';
 import type { Database } from '../lib/database.types';
+import type { LifeGoalWritePayload } from './lifeGoals';
 import { removeLocalJournalRecord } from '../data/journalOfflineRepo';
 import { removeLocalGoalRecord } from '../data/goalsOfflineRepo';
 import { removeLocalHabitV2Record } from '../data/habitsV2OfflineRepo';
@@ -225,6 +226,49 @@ export function registerOfflineSyncExecutors(): void {
     }
 
     await removeLocalHabitCompletionRecord(buildLocalCompletionKey(userId, habitId, date));
+    return { outcome: 'success' as const };
+  });
+
+  // ── Life goals (steps / substeps / alerts) ────────────────────────────────
+  // One executor switching on the payload kind. Inserts with client ids
+  // upsert (idempotent); legacy migrated inserts without ids fall back to
+  // plain insert.
+
+  engine.registerExecutor('life_goal.write', async (mutation) => {
+    const payload = payloadOf<LifeGoalWritePayload>(mutation);
+    const supabase = getSupabaseClient();
+
+    const run = async (): Promise<{ error: unknown }> => {
+      switch (payload.kind) {
+        case 'insert_step':
+          return payload.insert.id
+            ? supabase.from('life_goal_steps').upsert(payload.insert, { onConflict: 'id' })
+            : supabase.from('life_goal_steps').insert(payload.insert);
+        case 'update_step':
+          return supabase.from('life_goal_steps').update(payload.patch).eq('id', payload.id);
+        case 'delete_step':
+          return supabase.from('life_goal_steps').delete().eq('id', payload.id);
+        case 'insert_substep':
+          return payload.insert.id
+            ? supabase.from('life_goal_substeps').upsert(payload.insert, { onConflict: 'id' })
+            : supabase.from('life_goal_substeps').insert(payload.insert);
+        case 'update_substep':
+          return supabase.from('life_goal_substeps').update(payload.patch).eq('id', payload.id);
+        case 'delete_substep':
+          return supabase.from('life_goal_substeps').delete().eq('id', payload.id);
+        case 'insert_alert':
+          return payload.insert.id
+            ? supabase.from('life_goal_alerts').upsert(payload.insert, { onConflict: 'id' })
+            : supabase.from('life_goal_alerts').insert(payload.insert);
+        case 'update_alert':
+          return supabase.from('life_goal_alerts').update(payload.patch).eq('id', payload.id);
+        case 'delete_alert':
+          return supabase.from('life_goal_alerts').delete().eq('id', payload.id);
+      }
+    };
+
+    const { error } = await run();
+    if (error) throw error;
     return { outcome: 'success' as const };
   });
 }

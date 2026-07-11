@@ -1,12 +1,16 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
+import { guardedCloudCall } from './service-health';
+import { getMutationQueue, getSyncEngine } from './offline-queue';
 import {
-  enqueueLifeGoalMutation,
-  getLifeGoalMutationCounts,
+  generateClientId,
+  shouldQueueAfterFailure,
+  toPostgrestError,
+} from './offlineWriteThrough';
+import {
   listPendingLifeGoalMutations,
   removeLifeGoalMutation,
-  updateLifeGoalMutation,
 } from '../data/lifeGoalsOfflineRepo';
 
 type StepRow = Database['public']['Tables']['life_goal_steps']['Row'];
@@ -26,17 +30,22 @@ type ServiceResponse<T> = {
   error: PostgrestError | null;
 };
 
-function isNetworkLikeError(error: unknown): boolean {
-  const message =
-    typeof error === 'object' && error && 'message' in error ? String((error as { message?: string }).message ?? '') : '';
-  const normalized = message.toLowerCase();
-  return (
-    normalized.includes('failed to fetch') ||
-    normalized.includes('network') ||
-    normalized.includes('offline') ||
-    normalized.includes('load failed')
-  );
-}
+/**
+ * Every queued life-goal mutation travels as one 'life_goal.write' operation
+ * whose payload carries its kind — the executor in offlineSyncExecutors.ts
+ * switches on it. Inserts carry client-generated ids so replays upsert
+ * idempotently (legacy migrated payloads without ids fall back to insert).
+ */
+export type LifeGoalWritePayload =
+  | { kind: 'insert_step'; insert: StepInsert }
+  | { kind: 'update_step'; id: string; patch: StepUpdate }
+  | { kind: 'delete_step'; id: string }
+  | { kind: 'insert_substep'; insert: SubstepInsert }
+  | { kind: 'update_substep'; id: string; patch: SubstepUpdate }
+  | { kind: 'delete_substep'; id: string }
+  | { kind: 'insert_alert'; insert: AlertInsert }
+  | { kind: 'update_alert'; id: string; patch: AlertUpdate }
+  | { kind: 'delete_alert'; id: string };
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -54,11 +63,6 @@ async function getActiveUserId(): Promise<string | null> {
   }
 }
 
-function buildLocalId(prefix: string): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return `${prefix}-${crypto.randomUUID()}`;
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
 function canQueueWithServerParent(parentId: string | null | undefined): boolean {
   return Boolean(parentId && !parentId.startsWith('local-'));
 }
@@ -67,72 +71,84 @@ function canQueueById(id: string): boolean {
   return !id.startsWith('local-');
 }
 
+/** Guarded write with queue fallback shared by all nine write functions. */
+async function guardedLifeGoalWrite<T>(options: {
+  payload: LifeGoalWritePayload;
+  /** false when a legacy local- parent/id makes queueing unsafe. */
+  canQueue: boolean;
+  dedupeKey?: string;
+  write: () => Promise<T>;
+  optimistic: () => T | null;
+}): Promise<ServiceResponse<T>> {
+  const result = await guardedCloudCall('database', options.write);
+  if (result.ok) {
+    return { data: result.data, error: null };
+  }
+  if (options.canQueue && shouldQueueAfterFailure(result.error)) {
+    await getMutationQueue().enqueue({
+      feature: 'life_goals',
+      operation: 'life_goal.write',
+      payload: options.payload,
+      dedupeKey: options.dedupeKey,
+    });
+    return { data: options.optimistic(), error: null };
+  }
+  return { data: null, error: toPostgrestError(result.error) };
+}
+
 export type LifeGoalQueueStatus = { pending: number; failed: number };
 
 export async function getLifeGoalQueueStatus(): Promise<LifeGoalQueueStatus> {
   if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
-  const userId = await getActiveUserId();
-  if (!userId) return { pending: 0, failed: 0 };
-  return getLifeGoalMutationCounts(userId);
+  const mutations = await getMutationQueue().list();
+  let pending = 0;
+  let failed = 0;
+  for (const mutation of mutations) {
+    if (mutation.feature !== 'life_goals') continue;
+    if (mutation.status === 'pending' || mutation.status === 'syncing') pending += 1;
+    else if (mutation.status === 'failed' || mutation.status === 'blocked') failed += 1;
+  }
+  return { pending, failed };
 }
 
+let legacyLifeGoalQueueMigrated = false;
+
+/**
+ * One-time convergence of the pre-framework life-goal mutation queue onto the
+ * shared MutationQueue. Payload shapes are identical, so entries transfer
+ * directly.
+ */
+export async function migrateLegacyLifeGoalQueue(): Promise<void> {
+  if (legacyLifeGoalQueueMigrated) return;
+  legacyLifeGoalQueueMigrated = true;
+
+  const userId = await getActiveUserId();
+  if (!userId) {
+    legacyLifeGoalQueueMigrated = false; // Retry once a session exists.
+    return;
+  }
+
+  try {
+    const queue = getMutationQueue();
+    for (const legacy of await listPendingLifeGoalMutations(userId)) {
+      await queue.enqueue({
+        feature: 'life_goals',
+        operation: 'life_goal.write',
+        payload: legacy.payload,
+      });
+      await removeLifeGoalMutation(legacy.id);
+    }
+  } catch {
+    // Migration is best-effort; legacy entries stay put for the next attempt.
+    legacyLifeGoalQueueMigrated = false;
+  }
+}
+
+/** Manual sync kick; the shared engine also auto-resyncs on reconnect. */
 export async function syncQueuedLifeGoalMutations(): Promise<void> {
   if (!canUseSupabaseData()) return;
-  const userId = await getActiveUserId();
-  if (!userId) return;
-  const supabase = getSupabaseClient();
-  const pending = await listPendingLifeGoalMutations(userId);
-
-  for (const mutation of pending) {
-    try {
-      await updateLifeGoalMutation(mutation.id, { status: 'processing', updated_at_ms: Date.now() });
-      if (mutation.operation === 'insert_step') {
-        const payload = mutation.payload as { kind: 'insert_step'; insert: StepInsert };
-        const { error } = await supabase.from('life_goal_steps').insert(payload.insert);
-        if (error) throw error;
-      } else if (mutation.operation === 'update_step') {
-        const payload = mutation.payload as { kind: 'update_step'; id: string; patch: StepUpdate };
-        const { error } = await supabase.from('life_goal_steps').update(payload.patch).eq('id', payload.id);
-        if (error) throw error;
-      } else if (mutation.operation === 'delete_step') {
-        const payload = mutation.payload as { kind: 'delete_step'; id: string };
-        const { error } = await supabase.from('life_goal_steps').delete().eq('id', payload.id);
-        if (error) throw error;
-      } else if (mutation.operation === 'insert_substep') {
-        const payload = mutation.payload as { kind: 'insert_substep'; insert: SubstepInsert };
-        const { error } = await supabase.from('life_goal_substeps').insert(payload.insert);
-        if (error) throw error;
-      } else if (mutation.operation === 'update_substep') {
-        const payload = mutation.payload as { kind: 'update_substep'; id: string; patch: SubstepUpdate };
-        const { error } = await supabase.from('life_goal_substeps').update(payload.patch).eq('id', payload.id);
-        if (error) throw error;
-      } else if (mutation.operation === 'delete_substep') {
-        const payload = mutation.payload as { kind: 'delete_substep'; id: string };
-        const { error } = await supabase.from('life_goal_substeps').delete().eq('id', payload.id);
-        if (error) throw error;
-      } else if (mutation.operation === 'insert_alert') {
-        const payload = mutation.payload as { kind: 'insert_alert'; insert: AlertInsert };
-        const { error } = await supabase.from('life_goal_alerts').insert(payload.insert);
-        if (error) throw error;
-      } else if (mutation.operation === 'update_alert') {
-        const payload = mutation.payload as { kind: 'update_alert'; id: string; patch: AlertUpdate };
-        const { error } = await supabase.from('life_goal_alerts').update(payload.patch).eq('id', payload.id);
-        if (error) throw error;
-      } else if (mutation.operation === 'delete_alert') {
-        const payload = mutation.payload as { kind: 'delete_alert'; id: string };
-        const { error } = await supabase.from('life_goal_alerts').delete().eq('id', payload.id);
-        if (error) throw error;
-      }
-      await removeLifeGoalMutation(mutation.id);
-    } catch (error) {
-      await updateLifeGoalMutation(mutation.id, {
-        status: 'failed',
-        attempt_count: mutation.attempt_count + 1,
-        updated_at_ms: Date.now(),
-        last_error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
+  await migrateLegacyLifeGoalQueue();
+  await getSyncEngine().syncNow();
 }
 
 // =====================================================
@@ -146,12 +162,18 @@ export async function fetchStepsForGoal(goalId: string): Promise<ServiceResponse
   }
 
   const supabase = getSupabaseClient();
-  return supabase
-    .from('life_goal_steps')
-    .select('*')
-    .eq('goal_id', goalId)
-    .order('step_order', { ascending: true })
-    .returns<StepRow[]>();
+  const result = await guardedCloudCall('database', async () => {
+    const response = await supabase
+      .from('life_goal_steps')
+      .select('*')
+      .eq('goal_id', goalId)
+      .order('step_order', { ascending: true })
+      .returns<StepRow[]>();
+    if (response.error) throw response.error;
+    return response.data ?? [];
+  });
+  if (!result.ok) return { data: null, error: toPostgrestError(result.error) };
+  return { data: result.data, error: null };
 }
 
 export async function insertStep(payload: StepInsert): Promise<ServiceResponse<StepRow>> {
@@ -172,34 +194,23 @@ export async function insertStep(payload: StepInsert): Promise<ServiceResponse<S
   }
 
   const supabase = getSupabaseClient();
-  const result = await supabase
-    .from('life_goal_steps')
-    .insert(payload)
-    .select()
-    .returns<StepRow>()
-    .single();
-  if (!result.error || !isNetworkLikeError(result.error) || !canQueueWithServerParent(payload.goal_id)) {
-    return result;
-  }
-
-  const userId = await getActiveUserId();
-  if (userId) {
-    const nowMs = Date.now();
-    await enqueueLifeGoalMutation({
-      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
-      user_id: userId,
-      operation: 'insert_step',
-      payload: { kind: 'insert_step', insert: payload },
-      status: 'pending',
-      attempt_count: 0,
-      created_at_ms: nowMs,
-      updated_at_ms: nowMs,
-      last_error: null,
-    });
-  }
-  return {
-    data: {
-      id: buildLocalId('local-step'),
+  const insertPayload = { ...payload, id: payload.id ?? generateClientId() };
+  return guardedLifeGoalWrite<StepRow>({
+    payload: { kind: 'insert_step', insert: insertPayload },
+    canQueue: canQueueWithServerParent(payload.goal_id),
+    dedupeKey: insertPayload.id,
+    write: async () => {
+      const response = await supabase
+        .from('life_goal_steps')
+        .insert(insertPayload)
+        .select()
+        .returns<StepRow>()
+        .single();
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    optimistic: () => ({
+      id: insertPayload.id,
       goal_id: payload.goal_id,
       step_order: payload.step_order ?? 0,
       title: payload.title,
@@ -208,9 +219,8 @@ export async function insertStep(payload: StepInsert): Promise<ServiceResponse<S
       completed_at: payload.completed_at ?? null,
       due_date: payload.due_date ?? null,
       created_at: nowIso(),
-    },
-    error: null,
-  };
+    }),
+  });
 }
 
 export async function updateStep(id: string, payload: StepUpdate): Promise<ServiceResponse<StepRow>> {
@@ -224,33 +234,22 @@ export async function updateStep(id: string, payload: StepUpdate): Promise<Servi
   }
 
   const supabase = getSupabaseClient();
-  const result = await supabase
-    .from('life_goal_steps')
-    .update(payload)
-    .eq('id', id)
-    .select()
-    .returns<StepRow>()
-    .single();
-  if (!result.error || !isNetworkLikeError(result.error)) {
-    return result;
-  }
-
-  const userId = await getActiveUserId();
-  if (userId) {
-    const nowMs = Date.now();
-    await enqueueLifeGoalMutation({
-      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
-      user_id: userId,
-      operation: 'update_step',
-      payload: { kind: 'update_step', id, patch: payload },
-      status: 'pending',
-      attempt_count: 0,
-      created_at_ms: nowMs,
-      updated_at_ms: nowMs,
-      last_error: null,
-    });
-  }
-  return { data: null, error: null };
+  return guardedLifeGoalWrite<StepRow | null>({
+    payload: { kind: 'update_step', id, patch: payload },
+    canQueue: true,
+    write: async () => {
+      const response = await supabase
+        .from('life_goal_steps')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .returns<StepRow>()
+        .single();
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    optimistic: () => null,
+  }) as Promise<ServiceResponse<StepRow>>;
 }
 
 export async function deleteStep(id: string): Promise<ServiceResponse<StepRow>> {
@@ -263,32 +262,22 @@ export async function deleteStep(id: string): Promise<ServiceResponse<StepRow>> 
   }
 
   const supabase = getSupabaseClient();
-  const result = await supabase
-    .from('life_goal_steps')
-    .delete()
-    .eq('id', id)
-    .select()
-    .single();
-  if (!result.error || !isNetworkLikeError(result.error)) {
-    return result;
-  }
-
-  const userId = await getActiveUserId();
-  if (userId) {
-    const nowMs = Date.now();
-    await enqueueLifeGoalMutation({
-      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
-      user_id: userId,
-      operation: 'delete_step',
-      payload: { kind: 'delete_step', id },
-      status: 'pending',
-      attempt_count: 0,
-      created_at_ms: nowMs,
-      updated_at_ms: nowMs,
-      last_error: null,
-    });
-  }
-  return { data: null, error: null };
+  return guardedLifeGoalWrite<StepRow | null>({
+    payload: { kind: 'delete_step', id },
+    canQueue: true,
+    dedupeKey: id,
+    write: async () => {
+      const response = await supabase
+        .from('life_goal_steps')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single<StepRow>();
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    optimistic: () => null,
+  }) as Promise<ServiceResponse<StepRow>>;
 }
 
 // =====================================================
@@ -301,12 +290,18 @@ export async function fetchSubstepsForStep(stepId: string): Promise<ServiceRespo
   }
 
   const supabase = getSupabaseClient();
-  return supabase
-    .from('life_goal_substeps')
-    .select('*')
-    .eq('step_id', stepId)
-    .order('substep_order', { ascending: true })
-    .returns<SubstepRow[]>();
+  const result = await guardedCloudCall('database', async () => {
+    const response = await supabase
+      .from('life_goal_substeps')
+      .select('*')
+      .eq('step_id', stepId)
+      .order('substep_order', { ascending: true })
+      .returns<SubstepRow[]>();
+    if (response.error) throw response.error;
+    return response.data ?? [];
+  });
+  if (!result.ok) return { data: null, error: toPostgrestError(result.error) };
+  return { data: result.data, error: null };
 }
 
 export async function insertSubstep(payload: SubstepInsert): Promise<ServiceResponse<SubstepRow>> {
@@ -324,43 +319,31 @@ export async function insertSubstep(payload: SubstepInsert): Promise<ServiceResp
   }
 
   const supabase = getSupabaseClient();
-  const result = await supabase
-    .from('life_goal_substeps')
-    .insert(payload)
-    .select()
-    .returns<SubstepRow>()
-    .single();
-  if (!result.error || !isNetworkLikeError(result.error) || !canQueueWithServerParent(payload.step_id)) {
-    return result;
-  }
-
-  const userId = await getActiveUserId();
-  if (userId) {
-    const nowMs = Date.now();
-    await enqueueLifeGoalMutation({
-      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
-      user_id: userId,
-      operation: 'insert_substep',
-      payload: { kind: 'insert_substep', insert: payload },
-      status: 'pending',
-      attempt_count: 0,
-      created_at_ms: nowMs,
-      updated_at_ms: nowMs,
-      last_error: null,
-    });
-  }
-  return {
-    data: {
-      id: buildLocalId('local-substep'),
+  const insertPayload = { ...payload, id: payload.id ?? generateClientId() };
+  return guardedLifeGoalWrite<SubstepRow>({
+    payload: { kind: 'insert_substep', insert: insertPayload },
+    canQueue: canQueueWithServerParent(payload.step_id),
+    dedupeKey: insertPayload.id,
+    write: async () => {
+      const response = await supabase
+        .from('life_goal_substeps')
+        .insert(insertPayload)
+        .select()
+        .returns<SubstepRow>()
+        .single();
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    optimistic: () => ({
+      id: insertPayload.id,
       step_id: payload.step_id,
       substep_order: payload.substep_order ?? 0,
       title: payload.title,
       completed: payload.completed ?? false,
       completed_at: payload.completed_at ?? null,
       created_at: nowIso(),
-    },
-    error: null,
-  };
+    }),
+  });
 }
 
 export async function updateSubstep(
@@ -376,33 +359,22 @@ export async function updateSubstep(
   }
 
   const supabase = getSupabaseClient();
-  const result = await supabase
-    .from('life_goal_substeps')
-    .update(payload)
-    .eq('id', id)
-    .select()
-    .returns<SubstepRow>()
-    .single();
-  if (!result.error || !isNetworkLikeError(result.error)) {
-    return result;
-  }
-
-  const userId = await getActiveUserId();
-  if (userId) {
-    const nowMs = Date.now();
-    await enqueueLifeGoalMutation({
-      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
-      user_id: userId,
-      operation: 'update_substep',
-      payload: { kind: 'update_substep', id, patch: payload },
-      status: 'pending',
-      attempt_count: 0,
-      created_at_ms: nowMs,
-      updated_at_ms: nowMs,
-      last_error: null,
-    });
-  }
-  return { data: null, error: null };
+  return guardedLifeGoalWrite<SubstepRow | null>({
+    payload: { kind: 'update_substep', id, patch: payload },
+    canQueue: true,
+    write: async () => {
+      const response = await supabase
+        .from('life_goal_substeps')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .returns<SubstepRow>()
+        .single();
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    optimistic: () => null,
+  }) as Promise<ServiceResponse<SubstepRow>>;
 }
 
 export async function deleteSubstep(id: string): Promise<ServiceResponse<SubstepRow>> {
@@ -415,32 +387,22 @@ export async function deleteSubstep(id: string): Promise<ServiceResponse<Substep
   }
 
   const supabase = getSupabaseClient();
-  const result = await supabase
-    .from('life_goal_substeps')
-    .delete()
-    .eq('id', id)
-    .select()
-    .single();
-  if (!result.error || !isNetworkLikeError(result.error)) {
-    return result;
-  }
-
-  const userId = await getActiveUserId();
-  if (userId) {
-    const nowMs = Date.now();
-    await enqueueLifeGoalMutation({
-      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
-      user_id: userId,
-      operation: 'delete_substep',
-      payload: { kind: 'delete_substep', id },
-      status: 'pending',
-      attempt_count: 0,
-      created_at_ms: nowMs,
-      updated_at_ms: nowMs,
-      last_error: null,
-    });
-  }
-  return { data: null, error: null };
+  return guardedLifeGoalWrite<SubstepRow | null>({
+    payload: { kind: 'delete_substep', id },
+    canQueue: true,
+    dedupeKey: id,
+    write: async () => {
+      const response = await supabase
+        .from('life_goal_substeps')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single<SubstepRow>();
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    optimistic: () => null,
+  }) as Promise<ServiceResponse<SubstepRow>>;
 }
 
 // =====================================================
@@ -453,12 +415,18 @@ export async function fetchAlertsForGoal(goalId: string): Promise<ServiceRespons
   }
 
   const supabase = getSupabaseClient();
-  return supabase
-    .from('life_goal_alerts')
-    .select('*')
-    .eq('goal_id', goalId)
-    .order('alert_time', { ascending: true })
-    .returns<AlertRow[]>();
+  const result = await guardedCloudCall('database', async () => {
+    const response = await supabase
+      .from('life_goal_alerts')
+      .select('*')
+      .eq('goal_id', goalId)
+      .order('alert_time', { ascending: true })
+      .returns<AlertRow[]>();
+    if (response.error) throw response.error;
+    return response.data ?? [];
+  });
+  if (!result.ok) return { data: null, error: toPostgrestError(result.error) };
+  return { data: result.data, error: null };
 }
 
 export async function fetchAlertsForUser(userId: string): Promise<ServiceResponse<AlertRow[]>> {
@@ -467,13 +435,19 @@ export async function fetchAlertsForUser(userId: string): Promise<ServiceRespons
   }
 
   const supabase = getSupabaseClient();
-  return supabase
-    .from('life_goal_alerts')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('enabled', true)
-    .order('alert_time', { ascending: true })
-    .returns<AlertRow[]>();
+  const result = await guardedCloudCall('database', async () => {
+    const response = await supabase
+      .from('life_goal_alerts')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('enabled', true)
+      .order('alert_time', { ascending: true })
+      .returns<AlertRow[]>();
+    if (response.error) throw response.error;
+    return response.data ?? [];
+  });
+  if (!result.ok) return { data: null, error: toPostgrestError(result.error) };
+  return { data: result.data, error: null };
 }
 
 export async function insertAlert(payload: AlertInsert): Promise<ServiceResponse<AlertRow>> {
@@ -496,34 +470,23 @@ export async function insertAlert(payload: AlertInsert): Promise<ServiceResponse
   }
 
   const supabase = getSupabaseClient();
-  const result = await supabase
-    .from('life_goal_alerts')
-    .insert(payload)
-    .select()
-    .returns<AlertRow>()
-    .single();
-  if (!result.error || !isNetworkLikeError(result.error) || !canQueueWithServerParent(payload.goal_id)) {
-    return result;
-  }
-
-  const userId = await getActiveUserId();
-  if (userId) {
-    const nowMs = Date.now();
-    await enqueueLifeGoalMutation({
-      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
-      user_id: userId,
-      operation: 'insert_alert',
-      payload: { kind: 'insert_alert', insert: payload },
-      status: 'pending',
-      attempt_count: 0,
-      created_at_ms: nowMs,
-      updated_at_ms: nowMs,
-      last_error: null,
-    });
-  }
-  return {
-    data: {
-      id: buildLocalId('local-alert'),
+  const insertPayload = { ...payload, id: payload.id ?? generateClientId() };
+  return guardedLifeGoalWrite<AlertRow>({
+    payload: { kind: 'insert_alert', insert: insertPayload },
+    canQueue: canQueueWithServerParent(payload.goal_id),
+    dedupeKey: insertPayload.id,
+    write: async () => {
+      const response = await supabase
+        .from('life_goal_alerts')
+        .insert(insertPayload)
+        .select()
+        .returns<AlertRow>()
+        .single();
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    optimistic: () => ({
+      id: insertPayload.id,
       goal_id: payload.goal_id,
       user_id: payload.user_id,
       alert_type: payload.alert_type,
@@ -535,9 +498,8 @@ export async function insertAlert(payload: AlertInsert): Promise<ServiceResponse
       repeat_pattern: payload.repeat_pattern ?? null,
       enabled: payload.enabled ?? true,
       created_at: nowIso(),
-    },
-    error: null,
-  };
+    }),
+  });
 }
 
 export async function updateAlert(id: string, payload: AlertUpdate): Promise<ServiceResponse<AlertRow>> {
@@ -550,33 +512,22 @@ export async function updateAlert(id: string, payload: AlertUpdate): Promise<Ser
   }
 
   const supabase = getSupabaseClient();
-  const result = await supabase
-    .from('life_goal_alerts')
-    .update(payload)
-    .eq('id', id)
-    .select()
-    .returns<AlertRow>()
-    .single();
-  if (!result.error || !isNetworkLikeError(result.error)) {
-    return result;
-  }
-
-  const userId = await getActiveUserId();
-  if (userId) {
-    const nowMs = Date.now();
-    await enqueueLifeGoalMutation({
-      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
-      user_id: userId,
-      operation: 'update_alert',
-      payload: { kind: 'update_alert', id, patch: payload },
-      status: 'pending',
-      attempt_count: 0,
-      created_at_ms: nowMs,
-      updated_at_ms: nowMs,
-      last_error: null,
-    });
-  }
-  return { data: null, error: null };
+  return guardedLifeGoalWrite<AlertRow | null>({
+    payload: { kind: 'update_alert', id, patch: payload },
+    canQueue: true,
+    write: async () => {
+      const response = await supabase
+        .from('life_goal_alerts')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .returns<AlertRow>()
+        .single();
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    optimistic: () => null,
+  }) as Promise<ServiceResponse<AlertRow>>;
 }
 
 export async function deleteAlert(id: string): Promise<ServiceResponse<AlertRow>> {
@@ -589,30 +540,20 @@ export async function deleteAlert(id: string): Promise<ServiceResponse<AlertRow>
   }
 
   const supabase = getSupabaseClient();
-  const result = await supabase
-    .from('life_goal_alerts')
-    .delete()
-    .eq('id', id)
-    .select()
-    .single();
-  if (!result.error || !isNetworkLikeError(result.error)) {
-    return result;
-  }
-
-  const userId = await getActiveUserId();
-  if (userId) {
-    const nowMs = Date.now();
-    await enqueueLifeGoalMutation({
-      id: `lg-mut-${nowMs}-${Math.random().toString(36).slice(2, 8)}`,
-      user_id: userId,
-      operation: 'delete_alert',
-      payload: { kind: 'delete_alert', id },
-      status: 'pending',
-      attempt_count: 0,
-      created_at_ms: nowMs,
-      updated_at_ms: nowMs,
-      last_error: null,
-    });
-  }
-  return { data: null, error: null };
+  return guardedLifeGoalWrite<AlertRow | null>({
+    payload: { kind: 'delete_alert', id },
+    canQueue: true,
+    dedupeKey: id,
+    write: async () => {
+      const response = await supabase
+        .from('life_goal_alerts')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single<AlertRow>();
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    optimistic: () => null,
+  }) as Promise<ServiceResponse<AlertRow>>;
 }
