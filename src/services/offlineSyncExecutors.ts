@@ -14,6 +14,8 @@ import type { PendingMutation } from './offline-queue';
 import type { Database } from '../lib/database.types';
 import { removeLocalJournalRecord } from '../data/journalOfflineRepo';
 import { removeLocalGoalRecord } from '../data/goalsOfflineRepo';
+import { removeLocalHabitV2Record } from '../data/habitsV2OfflineRepo';
+import { buildHabitLogKey, removeLocalHabitLogRecord } from '../data/habitLogsOfflineRepo';
 
 type TodayTodoInsert = Database['public']['Tables']['today_todos']['Insert'];
 type TodayTodoUpdate = Database['public']['Tables']['today_todos']['Update'];
@@ -23,6 +25,9 @@ type JournalEntryInsert = Database['public']['Tables']['journal_entries']['Inser
 type JournalEntryUpdate = Database['public']['Tables']['journal_entries']['Update'];
 type GoalInsert = Database['public']['Tables']['goals']['Insert'];
 type GoalUpdate = Database['public']['Tables']['goals']['Update'];
+type HabitV2Insert = Database['public']['Tables']['habits_v2']['Insert'];
+type HabitV2Update = Database['public']['Tables']['habits_v2']['Update'];
+type HabitLogV2Insert = Database['public']['Tables']['habit_logs_v2']['Insert'];
 
 let registered = false;
 
@@ -131,6 +136,50 @@ export function registerOfflineSyncExecutors(): void {
     const { error } = await getSupabaseClient().from('goals').delete().eq('id', id);
     if (error) throw error;
     await removeLocalGoalRecord(id);
+    return { outcome: 'success' as const };
+  });
+
+  // ── Habits v2 ─────────────────────────────────────────────────────────────
+
+  engine.registerExecutor('habit_v2.create', async (mutation) => {
+    const payload = payloadOf<HabitV2Insert & { id: string }>(mutation);
+    const { error } = await getSupabaseClient().from('habits_v2').upsert(payload, { onConflict: 'id' });
+    if (error) throw error;
+    await removeLocalHabitV2Record(payload.id);
+    return { outcome: 'success' as const };
+  });
+
+  engine.registerExecutor('habit_v2.update', async (mutation) => {
+    const { id, patch } = payloadOf<{ id: string; patch: HabitV2Update }>(mutation);
+    const { error } = await getSupabaseClient().from('habits_v2').update(patch).eq('id', id);
+    if (error) throw error;
+    await removeLocalHabitV2Record(id);
+    return { outcome: 'success' as const };
+  });
+
+  // ── Habit logs v2 ─────────────────────────────────────────────────────────
+  // (user_id, habit_id, date) is the natural idempotency key: replays upsert.
+
+  engine.registerExecutor('habit_log_v2.upsert', async (mutation) => {
+    const payload = payloadOf<HabitLogV2Insert & { date: string }>(mutation);
+    const { error } = await getSupabaseClient()
+      .from('habit_logs_v2')
+      .upsert(payload, { onConflict: 'user_id,habit_id,date' });
+    if (error) throw error;
+    await removeLocalHabitLogRecord(buildHabitLogKey(payload.user_id, payload.habit_id, payload.date));
+    return { outcome: 'success' as const };
+  });
+
+  engine.registerExecutor('habit_log_v2.delete', async (mutation) => {
+    const { userId, habitId, date } = payloadOf<{ userId: string; habitId: string; date: string }>(mutation);
+    const { error } = await getSupabaseClient()
+      .from('habit_logs_v2')
+      .delete()
+      .eq('user_id', userId)
+      .eq('habit_id', habitId)
+      .eq('date', date);
+    if (error) throw error;
+    await removeLocalHabitLogRecord(buildHabitLogKey(userId, habitId, date));
     return { outcome: 'success' as const };
   });
 }
