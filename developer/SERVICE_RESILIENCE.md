@@ -48,6 +48,36 @@ Feature → ServiceHealth → Capabilities → UI
 - **`ServiceDiagnosticsPanel`** — Part 13 diagnostics: cloud status, pending changes, last sync, current mode, export-diagnostics JSON. Currently embedded in the dev `OfflineSyncDevPanel`; drop it into the Settings surface when ready.
 - **`useServiceHealth()`** — the only way UI learns about outages.
 
+## Phase 2 adoption status
+
+Shared adoption helpers (use these, do not fork):
+
+- `src/services/offlineWriteThrough.ts` — `writeThroughWithQueue` (guarded
+  write → queue on safe-local failures → optimistic local result),
+  `shouldQueueAfterFailure`, `toPostgrestError` (translated error in the
+  legacy `PostgrestError` shape for old signatures), `generateClientId`
+  (client uuids make executor replays idempotent upserts), and a bounded
+  read-fallback cache.
+- `src/services/offlineSyncExecutors.ts` — all SyncEngine executors,
+  registered once from `main.tsx`.
+- `src/services/guardedCheckout.ts` — the single entry point for Stripe
+  checkout flows; consults the `purchases`/`subscriptions` capabilities.
+
+Migrated onto guardedCloudCall + the shared MutationQueue: **todayTodos,
+checkins, journal, goals** (journal and goals include one-time migration of
+their legacy ad-hoc queues — `migrateLegacyJournalQueue` /
+`migrateLegacyGoalQueue` — pending entries are preserved and `local-…` ids
+re-keyed to client uuids). Gated through the capability matrix: all Stripe
+checkouts, AI coach / Wisdom Keeper / compass help / goal suggestions /
+reflection prompts / vision star (`ai_coach`, `ai_generation`), leaderboard
+(`multiplayer`), account reset/delete (`account_ownership`). Telemetry
+writers are budgeted and guarded (see telemetry.ts).
+
+Still on their ad-hoc queues (converge next, following the journal/goals
+pattern): habitsV2, habitMonthlyQueries, lifeGoals, visionBoard (uploads →
+service `'storage'`), habitReminderPrefs, personalityTest, plus gamification
+rewards and island-run runtime checkpoints for plain guarded adoption.
+
 ## Adopting in a feature service
 
 ```ts

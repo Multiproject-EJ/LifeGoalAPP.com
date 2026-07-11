@@ -23,6 +23,11 @@ import { recordTelemetryEvent, getTelemetryDifficultyAdjustment } from '../../se
 import { fetchRecentGoalSnapshots } from '../../services/goalSnapshots';
 import { fetchWorkspaceProfile } from '../../services/workspaceProfile';
 import { getSupabaseClient } from '../../lib/supabaseClient';
+import {
+  getFeatureAvailability,
+  getServiceHealthManager,
+  guardedCloudCall,
+} from '../../services/service-health';
 
 export interface AiCoachProps {
   session: Session;
@@ -734,6 +739,13 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
       return { assistantMessage: await simulateAiResponse(latestUserText), threadId: null };
     }
 
+    // Availability comes from the capability matrix — the coach pauses with
+    // an explanation during outages instead of failing with raw errors.
+    const availability = getFeatureAvailability('ai_coach', getServiceHealthManager().getSnapshot());
+    if (availability.status !== 'available') {
+      throw new Error(availability.reason);
+    }
+
     const supabase = getSupabaseClient();
     const payloadMessages = conversationMessages
       .filter((message) => message.role === 'user' || message.role === 'assistant')
@@ -742,21 +754,27 @@ export function AiCoach({ session, onClose, starterQuestion }: AiCoachProps) {
         content: message.content,
       }));
 
-    const { data, error } = await supabase.functions.invoke<AiCoachChatResponse>('ai-coach-chat', {
-      body: {
-        messages: payloadMessages,
-        systemPrompt: instructionPayload.systemPrompt,
-        accessSummary,
-        threadId: coachThreadId,
-      },
-    });
+    const result = await guardedCloudCall('edgeFunctions', async () => {
+      const { data, error } = await supabase.functions.invoke<AiCoachChatResponse>('ai-coach-chat', {
+        body: {
+          messages: payloadMessages,
+          systemPrompt: instructionPayload.systemPrompt,
+          accessSummary,
+          threadId: coachThreadId,
+        },
+      });
+      if (error) throw error;
+      return data;
+    }, { timeoutMs: 60_000 });
 
-    if (error) {
-      throw new Error(error.message || 'AI coach chat request failed.');
+    if (!result.ok) {
+      throw new Error(result.error.explanation);
     }
 
+    const data = result.data;
     if (data?.error) {
-      throw new Error(data.error);
+      // Server-side failure detail stays out of the chat transcript.
+      throw new Error('The AI coach could not answer right now. Please try again.');
     }
 
     const assistantMessage = data?.assistant_message?.trim();

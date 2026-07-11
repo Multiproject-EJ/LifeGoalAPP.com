@@ -61,6 +61,7 @@ export const FEATURE_CAPABILITIES: readonly FeatureCapability[] = [
   capability('purchases', 'Purchases', { network: true, cloud: true, auth: true, edgeFunctions: true }, 'pause'),
   capability('subscriptions', 'Subscriptions', { network: true, cloud: true, auth: true, edgeFunctions: true }, 'pause'),
   capability('ai_coach', 'AI Coach', { network: true, cloud: true, edgeFunctions: true }, 'pause'),
+  capability('ai_generation', 'AI generation', { network: true, cloud: true, edgeFunctions: true }, 'pause'),
   capability('multiplayer', 'Multiplayer & leaderboards', { network: true, cloud: true, realtime: true }, 'pause'),
   capability('marketplace', 'Marketplace', { network: true, cloud: true, auth: true }, 'pause'),
 

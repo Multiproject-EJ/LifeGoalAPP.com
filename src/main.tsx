@@ -11,10 +11,14 @@ import { TrustPage } from './world/TrustPage.tsx';
 import type { BeforeInstallPromptEvent } from './world/useInstallState.ts';
 import { SafeErrorBoundary } from './components/SafeErrorBoundary.tsx';
 import { initServiceHealthForBrowser } from './services/service-health/browserWiring.ts';
+import { registerOfflineSyncExecutors } from './services/offlineSyncExecutors.ts';
 import { ServiceStatusBanner } from './components/service-status/index.ts';
 
 // Start monitoring cloud health before anything assumes Supabase is available.
 initServiceHealthForBrowser();
+// Register queue executors so mutations recorded in earlier sessions can
+// resume syncing as soon as the cloud returns.
+registerOfflineSyncExecutors();
 
 if (typeof window !== 'undefined') {
   window.__LifeGoalAppDebugger?.log('Initializing React root.', {

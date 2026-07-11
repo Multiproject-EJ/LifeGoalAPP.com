@@ -12,6 +12,11 @@
 
 import { canUseSupabaseData, getSupabaseClient } from '../../../lib/supabaseClient';
 import {
+  getFeatureAvailability,
+  getServiceHealthManager,
+  guardedCloudCall,
+} from '../../../services/service-health';
+import {
   parseCompassHelpResponse,
   type CompassHelpRequest,
   type CompassHelpResult,
@@ -30,36 +35,35 @@ function unavailable(message: string): CompassHelpResult {
   return { data: null, source: 'unavailable', message };
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
-  ]);
-}
-
 export async function requestCompassHelp(request: CompassHelpRequest): Promise<CompassHelpResult> {
   if (!canUseSupabaseData()) {
     return unavailable('AI help isn’t available right now — continue on your own.');
   }
 
-  try {
-    const supabase = getSupabaseClient();
-    const { data, error } = await withTimeout(
-      supabase.functions.invoke<unknown>('compass-help', { body: request }),
-      HELP_TIMEOUT_MS,
-    );
-
-    if (error) {
-      return { data: null, source: 'error', message: 'AI help is unavailable right now.' };
-    }
-
-    const parsed = parseCompassHelpResponse(data);
-    if (!parsed) {
-      return { data: null, source: 'error', message: 'No clear suggestion — trust your own read.' };
-    }
-
-    return { data: parsed, source: 'supabase', message: null };
-  } catch {
-    return { data: null, source: 'error', message: 'AI help timed out — continue on your own.' };
+  const availability = getFeatureAvailability('ai_coach', getServiceHealthManager().getSnapshot());
+  if (availability.status !== 'available') {
+    return unavailable(availability.reason);
   }
+
+  const supabase = getSupabaseClient();
+  const result = await guardedCloudCall(
+    'edgeFunctions',
+    async () => {
+      const { data, error } = await supabase.functions.invoke<unknown>('compass-help', { body: request });
+      if (error) throw error;
+      return data;
+    },
+    { timeoutMs: HELP_TIMEOUT_MS },
+  );
+
+  if (!result.ok) {
+    return { data: null, source: 'error', message: 'AI help is unavailable right now.' };
+  }
+
+  const parsed = parseCompassHelpResponse(result.data);
+  if (!parsed) {
+    return { data: null, source: 'error', message: 'No clear suggestion — trust your own read.' };
+  }
+
+  return { data: parsed, source: 'supabase', message: null };
 }

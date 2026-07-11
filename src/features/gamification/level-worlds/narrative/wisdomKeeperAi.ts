@@ -1,4 +1,9 @@
 import { getSupabaseClient } from '../../../../lib/supabaseClient';
+import {
+  getFeatureAvailability,
+  getServiceHealthManager,
+  guardedCloudCall,
+} from '../../../../services/service-health';
 import type { AiCoachDataAccess } from '../../../../types/aiCoach';
 import { buildWisdomWhisper, type LandmarkWhisperPayload } from './landmarkWhispers';
 
@@ -133,19 +138,29 @@ export function sanitizeWisdomKeeperReflection(value: string): string | null {
 
 export function createWisdomKeeperAiCoachGenerator(): WisdomKeeperAiGenerator {
   return async (prompt) => {
+    const availability = getFeatureAvailability('ai_coach', getServiceHealthManager().getSnapshot());
+    if (availability.status !== 'available') {
+      // Callers catch and fall back to the local whisper.
+      throw new Error(availability.reason);
+    }
+
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase.functions.invoke<AiCoachChatResponse>('ai-coach-chat', {
-      body: {
-        messages: [{ role: 'user', content: prompt.userPrompt }],
-        systemPrompt: prompt.systemPrompt,
-        accessSummary: `Wisdom Keeper permitted context: ${prompt.includedContextKinds.length > 0 ? prompt.includedContextKinds.join(', ') : 'none'}.`,
-        threadId: null,
-      },
+    const result = await guardedCloudCall('edgeFunctions', async () => {
+      const { data, error } = await supabase.functions.invoke<AiCoachChatResponse>('ai-coach-chat', {
+        body: {
+          messages: [{ role: 'user', content: prompt.userPrompt }],
+          systemPrompt: prompt.systemPrompt,
+          accessSummary: `Wisdom Keeper permitted context: ${prompt.includedContextKinds.length > 0 ? prompt.includedContextKinds.join(', ') : 'none'}.`,
+          threadId: null,
+        },
+      });
+      if (error) throw error;
+      return data;
     });
 
-    if (error) throw new Error(error.message || 'Wisdom Keeper AI request failed.');
-    if (data?.error) throw new Error(data.error);
-    return data?.assistant_message?.trim() ?? '';
+    if (!result.ok) throw new Error(result.error.explanation);
+    if (result.data?.error) throw new Error('Wisdom Keeper AI request failed.');
+    return result.data?.assistant_message?.trim() ?? '';
   };
 }
 

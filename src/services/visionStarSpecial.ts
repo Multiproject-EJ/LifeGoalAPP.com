@@ -1,4 +1,9 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import {
+  getFeatureAvailability,
+  getServiceHealthManager,
+  guardedCloudCall,
+} from './service-health';
 import { optimizeImageFileForUpload, IMAGE_UPLOAD_WEBP_MIME_TYPE } from '../utils/imageUploadOptimizer';
 import { VISION_BOARD_BUCKET } from './visionBoard';
 
@@ -27,20 +32,34 @@ export async function generateSpecialVisionStar(
     };
   }
 
+  const availability = getFeatureAvailability('ai_generation', getServiceHealthManager().getSnapshot());
+  if (availability.status !== 'available') {
+    return { data: null, error: new Error(availability.reason), source: 'unavailable' };
+  }
+
   try {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase.functions.invoke<VisionStarSpecialResult>('vision-star-special', {
-      body: payload,
-    });
+    const result = await guardedCloudCall(
+      'edgeFunctions',
+      async () => {
+        const { data, error } = await supabase.functions.invoke<VisionStarSpecialResult>('vision-star-special', {
+          body: payload,
+        });
+        if (error) throw error;
+        return data;
+      },
+      { timeoutMs: 60_000 },
+    );
 
-    if (error) {
+    if (!result.ok) {
       return {
         data: null,
-        error: new Error(error.message || 'Unable to generate special vision star.'),
+        error: new Error(result.error.explanation),
         source: 'supabase',
       };
     }
 
+    const data = result.data;
     if (!data || !data.imageDataUrl || !Array.isArray(data.panels) || data.panels.length === 0) {
       return {
         data: null,

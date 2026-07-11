@@ -14990,6 +14990,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   outline-offset: 3px;
 }
 
+.auth-card__outage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .supabase-auth__demo {
   display: grid;
   gap: 0.75rem;

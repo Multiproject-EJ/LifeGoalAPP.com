@@ -1,4 +1,4 @@
-import { getSupabaseClient } from '../lib/supabaseClient';
+import { createGuardedCheckoutSession } from './guardedCheckout';
 
 export type EggPackSkuId = 'egg_pack_small' | 'egg_pack_medium' | 'egg_pack_large';
 
@@ -41,27 +41,10 @@ export const EGG_PACK_DEFINITIONS: EggPackDefinition[] = [
 export async function createEggPackCheckoutSession(
   skuId: EggPackSkuId,
 ): Promise<{ url: string | null; error: Error | null }> {
-  try {
-    const supabase = getSupabaseClient();
-    const { data, error } = await supabase.functions.invoke<{ url?: string }>(
-      'create-checkout-session-egg-pack',
-      { body: { sku_id: skuId } },
-    );
-
-    if (error) {
-      throw new Error(error.message || 'Failed to start Egg Pack checkout.');
-    }
-
-    const url = data?.url;
-    if (!url) {
-      throw new Error('Egg Pack checkout did not return a checkout URL.');
-    }
-
-    return { url, error: null };
-  } catch (error) {
-    return {
-      url: null,
-      error: error instanceof Error ? error : new Error('Failed to start Egg Pack checkout.'),
-    };
-  }
+  return createGuardedCheckoutSession({
+    feature: 'purchases',
+    functionName: 'create-checkout-session-egg-pack',
+    body: { sku_id: skuId },
+    missingUrlMessage: 'Egg Pack checkout did not return a checkout URL.',
+  });
 }
