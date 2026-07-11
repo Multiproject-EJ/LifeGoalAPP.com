@@ -1,5 +1,6 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { guardedCloudCall } from './service-health';
 import type { GoalReflectionRow } from './goalReflections';
 
 export type FollowUpPrompt = {
@@ -68,19 +69,22 @@ export async function generateFollowUpPrompts(
       })),
     };
 
-    const { data, error } = await supabase.functions.invoke<SupabaseFunctionResponse>(
-      'generate-reflection-prompts',
-      {
-        body: payload,
-      },
-    );
+    const result = await guardedCloudCall('edgeFunctions', async () => {
+      const { data, error } = await supabase.functions.invoke<SupabaseFunctionResponse>(
+        'generate-reflection-prompts',
+        {
+          body: payload,
+        },
+      );
+      if (error) throw error;
+      return data;
+    });
 
-    if (error) {
-      console.warn('Falling back to demo follow-up prompts after Supabase function error.', error);
+    if (!result.ok) {
       return { data: buildDemoFollowUpPrompts(goalId, goalTitle, reflections), error: null, source: 'demo' };
     }
 
-    const prompts = normalizeSupabasePrompts(goalId, data);
+    const prompts = normalizeSupabasePrompts(goalId, result.data);
     if (prompts.length > 0) {
       return { data: prompts, error: null, source: 'supabase' };
     }

@@ -1,5 +1,5 @@
-import { getSupabaseClient } from '../lib/supabaseClient';
 import type { EventId } from '../features/gamification/level-worlds/services/islandRunEventEngine';
+import { createGuardedCheckoutSession } from './guardedCheckout';
 
 export type MinigameTicketSkuId =
   | 'minigame_tickets_10'
@@ -38,31 +38,13 @@ export function resolveMinigameTicketSku(eventId: EventId | null | undefined): M
 export async function initiateMinigameTicketCheckout(
   options: MinigameTicketCheckoutOptions,
 ): Promise<MinigameTicketCheckoutResult> {
-  try {
-    const supabase = getSupabaseClient();
-    const { data, error } = await supabase.functions.invoke<{ url?: string }>(
-      'create-checkout-session-minigame-ticket',
-      {
-        body: {
-          sku_id: options.skuId,
-          event_id: options.eventId ?? null,
-        },
-      },
-    );
-
-    if (error) {
-      throw new Error(error.message || 'Failed to start minigame ticket checkout.');
-    }
-
-    if (!data?.url) {
-      throw new Error('Minigame ticket checkout did not return a checkout URL.');
-    }
-
-    return { url: data.url, error: null };
-  } catch (error) {
-    return {
-      url: null,
-      error: error instanceof Error ? error : new Error('Failed to start minigame ticket checkout.'),
-    };
-  }
+  return createGuardedCheckoutSession({
+    feature: 'purchases',
+    functionName: 'create-checkout-session-minigame-ticket',
+    body: {
+      sku_id: options.skuId,
+      event_id: options.eventId ?? null,
+    },
+    missingUrlMessage: 'Minigame ticket checkout did not return a checkout URL.',
+  });
 }

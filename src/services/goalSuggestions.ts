@@ -6,6 +6,7 @@
  */
 
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { guardedCloudCall } from './service-health';
 
 export interface SuggestGoalRequest {
   description: string;
@@ -53,21 +54,24 @@ export async function suggestGoal(request: SuggestGoalRequest): Promise<SuggestG
   try {
     const supabase = getSupabaseClient();
 
-    // Call the Edge Function
-    const { data, error } = await supabase.functions.invoke<SuggestGoalResponse>('suggest-goal', {
-      body: request,
+    // Call the Edge Function through the resilience layer (circuit breaker +
+    // health reporting); failures fall back to the local demo suggestion.
+    const result = await guardedCloudCall('edgeFunctions', async () => {
+      const { data, error } = await supabase.functions.invoke<SuggestGoalResponse>('suggest-goal', {
+        body: request,
+      });
+      if (error) throw error;
+      return data;
     });
 
-    if (error) {
-      console.error('Error calling suggest-goal function:', error);
-      
-      // Fall back to demo mode on error
+    if (!result.ok) {
       return {
         data: generateDemoSuggestion(request),
         error: null,
         source: 'demo',
       };
     }
+    const data = result.data;
 
     if (!data || !data.goal || !Array.isArray(data.milestones) || !Array.isArray(data.tasks)) {
       console.warn('Invalid response from suggest-goal function:', data);

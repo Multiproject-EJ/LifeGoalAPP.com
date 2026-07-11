@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '../lib/supabaseClient';
+import { createGuardedCheckoutSession } from './guardedCheckout';
 
 export type BillingCycle = 'monthly' | 'yearly';
 
@@ -85,44 +86,29 @@ export async function fetchBillingSnapshot(userId: string): Promise<{ data: Bill
   }
 }
 
-async function invokeCheckoutFunction<TBody extends Record<string, unknown>>(
-  functionName: string,
-  body: TBody,
-): Promise<{ url: string | null; error: Error | null }> {
-  try {
-    const supabase = getSupabaseClient();
-    const { data, error } = await supabase.functions.invoke<{ url?: string }>(functionName, { body });
-
-    if (error) {
-      throw new Error(error.message || `Failed to invoke ${functionName}.`);
-    }
-
-    const url = data?.url;
-    if (!url) {
-      throw new Error(`Function ${functionName} did not return a checkout URL.`);
-    }
-
-    return { url, error: null };
-  } catch (error) {
-    return {
-      url: null,
-      error: error instanceof Error ? error : new Error(`Failed to create ${functionName} session.`),
-    };
-  }
-}
-
 export async function createSubscriptionCheckoutSession(
   billingCycle: BillingCycle,
 ): Promise<{ url: string | null; error: Error | null }> {
-  return invokeCheckoutFunction('create-checkout-session-subscription', {
-    billing_cycle: billingCycle,
+  return createGuardedCheckoutSession({
+    feature: 'subscriptions',
+    functionName: 'create-checkout-session-subscription',
+    body: { billing_cycle: billingCycle },
+    missingUrlMessage: 'Subscription checkout did not return a checkout URL.',
   });
 }
 
 export async function createDicePackCheckoutSession(): Promise<{ url: string | null; error: Error | null }> {
-  return invokeCheckoutFunction('create-checkout-session-payment', {});
+  return createGuardedCheckoutSession({
+    feature: 'purchases',
+    functionName: 'create-checkout-session-payment',
+    missingUrlMessage: 'Checkout did not return a checkout URL.',
+  });
 }
 
 export async function createCustomerPortalSession(): Promise<{ url: string | null; error: Error | null }> {
-  return invokeCheckoutFunction('create-customer-portal-session', {});
+  return createGuardedCheckoutSession({
+    feature: 'subscriptions',
+    functionName: 'create-customer-portal-session',
+    missingUrlMessage: 'Billing portal did not return a URL.',
+  });
 }

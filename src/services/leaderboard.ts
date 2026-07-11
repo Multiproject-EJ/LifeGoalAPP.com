@@ -1,5 +1,10 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import {
+  getFeatureAvailability,
+  getServiceHealthManager,
+  guardedCloudCall,
+} from './service-health';
+import {
   buildRankAheadFilter,
   toLeaderboardScore,
   type GamificationProfileLeaderboardRow,
@@ -73,14 +78,18 @@ export async function fetchLeaderboardSnapshot({
   topLimit = 50,
   contextRadius = 10,
 }: FetchLeaderboardSnapshotOptions): Promise<{ data: LeaderboardSnapshot; error: string | null }> {
-  try {
-    if (!canUseSupabaseData()) {
-      return {
-        data: { topEntries: [], viewerRank: null, viewerEntries: [] },
-        error: 'Leaderboard requires an active Supabase session.',
-      };
-    }
+  const emptySnapshot: LeaderboardSnapshot = { topEntries: [], viewerRank: null, viewerEntries: [] };
 
+  if (!canUseSupabaseData()) {
+    return { data: emptySnapshot, error: 'Leaderboard requires an active Supabase session.' };
+  }
+
+  const availability = getFeatureAvailability('multiplayer', getServiceHealthManager().getSnapshot());
+  if (availability.status !== 'available') {
+    return { data: emptySnapshot, error: availability.reason };
+  }
+
+  const result = await guardedCloudCall('database', async () => {
     const safeTopLimit = Math.max(1, Math.min(topLimit, 100));
     const safeRadius = Math.max(1, Math.min(contextRadius, 20));
     const supabase = getSupabaseClient();
@@ -109,13 +118,10 @@ export async function fetchLeaderboardSnapshot({
     if (!viewerRowRaw) {
       const profileMap = await fetchProfileMap(topRows.map((row) => row.user_id));
       return {
-        data: {
-          topEntries: topRows.map((row, index) => toLeaderboardEntry(row, index + 1, profileMap)),
-          viewerRank: null,
-          viewerEntries: [],
-        },
-        error: null,
-      };
+        topEntries: topRows.map((row, index) => toLeaderboardEntry(row, index + 1, profileMap)),
+        viewerRank: null,
+        viewerEntries: [],
+      } satisfies LeaderboardSnapshot;
     }
 
     const viewerRow = viewerRowRaw as GamificationProfileLeaderboardRow;
@@ -142,20 +148,17 @@ export async function fetchLeaderboardSnapshot({
     const profileMap = await fetchProfileMap(allUserIds);
 
     return {
-      data: {
-        topEntries: topRows.map((row, index) => toLeaderboardEntry(row, index + 1, profileMap)),
-        viewerRank,
-        viewerEntries: viewerRows.map((row, index) =>
-          toLeaderboardEntry(row, startRank + index, profileMap),
-        ),
-      },
-      error: null,
-    };
-  } catch (error) {
-    console.error('Failed to fetch leaderboard snapshot:', error);
-    return {
-      data: { topEntries: [], viewerRank: null, viewerEntries: [] },
-      error: error instanceof Error ? error.message : 'Unable to load leaderboard.',
-    };
+      topEntries: topRows.map((row, index) => toLeaderboardEntry(row, index + 1, profileMap)),
+      viewerRank,
+      viewerEntries: viewerRows.map((row, index) =>
+        toLeaderboardEntry(row, startRank + index, profileMap),
+      ),
+    } satisfies LeaderboardSnapshot;
+  });
+
+  if (!result.ok) {
+    // Translated explanation only — raw provider text never reaches the UI.
+    return { data: emptySnapshot, error: result.error.explanation };
   }
+  return { data: result.data, error: null };
 }
