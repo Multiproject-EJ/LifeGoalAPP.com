@@ -16,7 +16,8 @@
 
 import type { PostgrestError } from '@supabase/supabase-js';
 import { guardedCloudCall, type AppError, type ServiceKind } from './service-health';
-import { getMutationQueue } from './offline-queue';
+import type { ServiceHealthManager } from './service-health';
+import { getMutationQueue, type MutationQueue } from './offline-queue';
 
 /** Categories that must not be parked on the queue. */
 const NEVER_QUEUE_CATEGORIES = new Set(['auth_expired', 'invalid_credentials', 'permission_denied', 'conflict']);
@@ -55,13 +56,18 @@ export async function writeThroughWithQueue<T>(options: {
   write: () => Promise<T>;
   /** Local result handed back when the write had to be queued. */
   optimistic: () => T;
+  /** Test seams — production uses the app-wide singletons. */
+  queue?: MutationQueue;
+  manager?: ServiceHealthManager;
 }): Promise<WriteThroughOutcome<T>> {
-  const result = await guardedCloudCall(options.service ?? 'database', options.write);
+  const result = await guardedCloudCall(options.service ?? 'database', options.write, {
+    manager: options.manager,
+  });
   if (result.ok) {
     return { data: result.data, error: null, queued: false };
   }
   if (shouldQueueAfterFailure(result.error)) {
-    await getMutationQueue().enqueue({
+    await (options.queue ?? getMutationQueue()).enqueue({
       feature: options.feature,
       operation: options.operation,
       payload: options.payload,

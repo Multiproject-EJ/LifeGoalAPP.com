@@ -25,6 +25,11 @@ import {
 import { IndexedDBQueueStorage, type QueueDatabaseLike } from '../../offline-queue/indexedDbStorage';
 import { SyncEngine } from '../../offline-queue/syncEngine';
 import type { PendingMutation } from '../../offline-queue/types';
+import {
+  shouldQueueAfterFailure,
+  toPostgrestError,
+  writeThroughWithQueue,
+} from '../../offlineWriteThrough';
 
 function assertEqual<T>(actual: T, expected: T, message: string): void {
   if (actual !== expected) {
@@ -715,6 +720,108 @@ async function testOfflineToReconnectFlow(): Promise<void> {
   engine.detach();
 }
 
+// ── Feature-service adoption: write-through + queue (Part 6/7) ──────────────
+
+async function testWriteThroughAdoptionFlow(): Promise<void> {
+  const { clock, manager, queue, engine } = createSyncHarness();
+
+  // Online: the write lands directly, nothing queues.
+  const online = await writeThroughWithQueue({
+    feature: 'todos',
+    operation: 'today_todo.create',
+    payload: { id: 'todo-1', title: 'water plants' },
+    dedupeKey: 'todo-1',
+    write: async () => ({ id: 'todo-1', title: 'water plants' }),
+    optimistic: () => ({ id: 'todo-1', title: 'water plants' }),
+    queue,
+    manager,
+  });
+  assertTrue(online.error === null && !online.queued, 'online write goes straight through');
+  assertEqual((await queue.list()).length, 0, 'no queue entry for a direct write');
+
+  // Offline: the write queues and the caller gets the optimistic row.
+  manager.setNetworkOnline(false);
+  const offline = await writeThroughWithQueue({
+    feature: 'todos',
+    operation: 'today_todo.create',
+    payload: { id: 'todo-2', title: 'stretch' },
+    dedupeKey: 'todo-2',
+    write: async () => {
+      throw new TypeError('Failed to fetch');
+    },
+    optimistic: () => ({ id: 'todo-2', title: 'stretch' }),
+    queue,
+    manager,
+  });
+  assertTrue(offline.error === null && offline.queued, 'offline write queues with optimistic result');
+  assertEqual((await queue.counts()).pending, 1, 'queued mutation is pending');
+
+  // Reconnect: the executor replays the payload exactly once.
+  const serverWrites: string[] = [];
+  engine.registerExecutor('today_todo.create', async (mutation: PendingMutation) => {
+    serverWrites.push((mutation.payload as { id: string }).id);
+    return { outcome: 'success' as const };
+  });
+  engine.attachToHealthManager();
+  manager.setNetworkOnline(true);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  clock.advance(1);
+  await engine.syncNow();
+
+  assertEqual(serverWrites.length, 1, 'queued write syncs exactly once on reconnect');
+  assertEqual(serverWrites[0], 'todo-2', 'executor receives the original payload');
+  assertEqual((await queue.counts()).pending, 0, 'queue drains after reconnect');
+  engine.detach();
+}
+
+async function testWriteThroughPermanentFailureSurfacesTranslated(): Promise<void> {
+  const { manager, queue } = createSyncHarness();
+
+  const rawProviderText = 'new row violates row-level security policy "journal_entries_rls"';
+  const outcome = await writeThroughWithQueue({
+    feature: 'journal',
+    operation: 'journal.create',
+    payload: { id: 'j-1' },
+    dedupeKey: 'j-1',
+    write: async () => {
+      throw { status: 403, message: rawProviderText };
+    },
+    optimistic: () => ({ id: 'j-1' }),
+    queue,
+    manager,
+  });
+
+  assertTrue(outcome.error !== null, 'permission failure surfaces an error');
+  assertTrue(!outcome.queued, 'permission failure must not queue');
+  assertEqual((await queue.list()).length, 0, 'nothing parked for non-queueable failures');
+  if (outcome.error) {
+    assertTrue(
+      !outcome.error.explanation.includes('row-level security'),
+      'translated explanation carries no raw provider text',
+    );
+    const legacyShape = toPostgrestError(outcome.error);
+    assertTrue(
+      !legacyShape.message.includes('row-level security'),
+      'legacy PostgrestError shape carries no raw provider text',
+    );
+    assertEqual(legacyShape.code, outcome.error.code, 'legacy shape keeps the stable machine code');
+  }
+}
+
+function testQueuePolicyByCategory(): void {
+  const queueable = translateProviderError(new TypeError('Failed to fetch'), { networkOnline: false });
+  assertTrue(shouldQueueAfterFailure(queueable), 'offline failures queue');
+
+  const timeout = translateProviderError({ message: 'The request timed out' });
+  assertTrue(shouldQueueAfterFailure(timeout), 'timeouts queue');
+
+  const permission = translateProviderError({ status: 403, message: 'violates row-level security' });
+  assertTrue(!shouldQueueAfterFailure(permission), 'permission failures never queue');
+
+  const expired = translateProviderError({ status: 401, message: 'JWT expired' });
+  assertTrue(!shouldQueueAfterFailure(expired), 'expired sessions never queue');
+}
+
 // ── Parts 12 & 14: incident status and bounded logging ─────────────────────
 
 function testIncidentStatusParsing(): void {
@@ -785,4 +892,8 @@ export async function runAllServiceResilienceTests(): Promise<void> {
   await testSyncEngineBoundedRetries();
   await testSyncEngineNonRetryableAndConflict();
   await testOfflineToReconnectFlow();
+
+  await testWriteThroughAdoptionFlow();
+  await testWriteThroughPermanentFailureSurfacesTranslated();
+  testQueuePolicyByCategory();
 }
