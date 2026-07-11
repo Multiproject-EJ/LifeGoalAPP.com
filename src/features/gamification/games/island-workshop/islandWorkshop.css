@@ -341,6 +341,62 @@
   animation: island-workshop-clear 420ms ease forwards;
 }
 
+/* Keystone (solid) blocks: heavier, bolted, only pure-colour lines free them. */
+.island-workshop__cell--solid {
+  position: relative;
+  box-shadow:
+    0 0 0 2px rgba(9, 18, 32, 0.85) inset,
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 -3px 0 rgba(0, 0, 0, 0.35) inset;
+  filter: saturate(1.15);
+}
+
+.island-workshop__cell--solid::after {
+  content: '';
+  position: absolute;
+  inset: 22%;
+  border-radius: 3px;
+  border: 2px solid rgba(9, 18, 32, 0.55);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.25) inset;
+}
+
+/* Gem blocks: a sparkling core hides a reward. */
+.island-workshop__cell--gem {
+  position: relative;
+}
+
+.island-workshop__cell--gem::after {
+  content: '';
+  position: absolute;
+  inset: 28%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff, #ffe9a8 45%, rgba(255, 255, 255, 0.15) 75%);
+  box-shadow: 0 0 10px rgba(255, 244, 214, 0.9);
+  animation: island-workshop-gem-twinkle 1400ms ease-in-out infinite alternate;
+}
+
+@keyframes island-workshop-gem-twinkle {
+  from { transform: scale(0.82); opacity: 0.75; }
+  to { transform: scale(1.08); opacity: 1; }
+}
+
+/* Pure-colour line super flash: the whole line detonates in its own colour. */
+.island-workshop__cell--mono-flash {
+  animation: island-workshop-mono-flash 900ms ease forwards;
+  z-index: 1;
+}
+
+.island-workshop__cell--mono-flash-tint1 { --mono-flash-color: #ffd977; --mono-flash-glow: rgba(240, 193, 94, 0.95); }
+.island-workshop__cell--mono-flash-tint2 { --mono-flash-color: #7ff5e4; --mono-flash-glow: rgba(69, 220, 199, 0.95); }
+.island-workshop__cell--mono-flash-tint3 { --mono-flash-color: #a3d2ff; --mono-flash-glow: rgba(108, 180, 242, 0.95); }
+.island-workshop__cell--mono-flash-tint4 { --mono-flash-color: #d4beff; --mono-flash-glow: rgba(177, 147, 242, 0.95); }
+
+@keyframes island-workshop-mono-flash {
+  0% { background: #ffffff; box-shadow: 0 0 26px var(--mono-flash-glow, #fff), 0 0 8px #ffffff; transform: scale(1.12); }
+  35% { background: var(--mono-flash-color, #fdf4da); box-shadow: 0 0 34px var(--mono-flash-glow, #fff); transform: scale(1.04); }
+  100% { background: rgba(120, 168, 214, 0.1); box-shadow: 0 0 0 1px rgba(120, 168, 214, 0.08) inset; transform: scale(1); }
+}
+
 .island-workshop__cell--assist {
   animation: island-workshop-assist 420ms ease forwards;
 }
@@ -529,6 +585,148 @@
   font-size: 16px;
   font-weight: 700;
   color: #fdf4da;
+}
+
+/* ── Bench level chip / banner ───────────────────────────────────────────── */
+
+.island-workshop__level-chip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.5);
+  background: rgba(16, 40, 66, 0.9);
+  color: #7fe7d6;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  vertical-align: middle;
+}
+
+.island-workshop__level-chip--max {
+  border-color: rgba(243, 209, 107, 0.7);
+  background: linear-gradient(180deg, rgba(247, 220, 138, 0.25), rgba(232, 182, 76, 0.2));
+  color: #f7dc8a;
+  box-shadow: 0 0 10px rgba(243, 209, 107, 0.3);
+}
+
+.island-workshop__level-banner {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(243, 209, 107, 0.45);
+  background: linear-gradient(180deg, rgba(247, 220, 138, 0.16), rgba(232, 182, 76, 0.1));
+  color: #f7dc8a;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+/* ── Celebration overlay + confetti ──────────────────────────────────────── */
+
+.island-workshop__celebration {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.island-workshop__celebration-card {
+  padding: 16px 26px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(16, 36, 62, 0.96), rgba(9, 22, 41, 0.96));
+  border: 1px solid rgba(243, 209, 107, 0.55);
+  box-shadow:
+    0 20px 50px rgba(2, 8, 20, 0.7),
+    0 0 34px rgba(243, 209, 107, 0.25);
+  text-align: center;
+  max-width: min(340px, 86%);
+  animation: island-workshop-celebration-pop 2200ms ease forwards;
+}
+
+.island-workshop__celebration--level-up .island-workshop__celebration-card {
+  animation-duration: 3200ms;
+  border-color: rgba(45, 212, 191, 0.7);
+  box-shadow:
+    0 20px 50px rgba(2, 8, 20, 0.75),
+    0 0 44px rgba(45, 212, 191, 0.35);
+}
+
+.island-workshop__celebration-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  color: #fdf4da;
+  text-shadow: 0 2px 16px rgba(243, 209, 107, 0.45);
+}
+
+.island-workshop__celebration-subtitle {
+  margin: 6px 0 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #7fe7d6;
+}
+
+@keyframes island-workshop-celebration-pop {
+  0% { opacity: 0; transform: scale(0.7) translateY(14px); }
+  10% { opacity: 1; transform: scale(1.06) translateY(0); }
+  16% { transform: scale(1); }
+  82% { opacity: 1; }
+  100% { opacity: 0; transform: scale(0.96) translateY(-10px); }
+}
+
+.island-workshop__confetti {
+  position: absolute;
+  inset: 0;
+}
+
+.island-workshop__confetti i {
+  position: absolute;
+  top: -6%;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: island-workshop-confetti-fall 2100ms ease-in forwards;
+}
+
+.island-workshop__confetti i:nth-child(4n + 1) { background: #f0c15e; }
+.island-workshop__confetti i:nth-child(4n + 2) { background: #45dcc7; }
+.island-workshop__confetti i:nth-child(4n + 3) { background: #6cb4f2; }
+.island-workshop__confetti i:nth-child(4n) { background: #b193f2; }
+
+/* Same-colour pure-line pairs rain confetti in that line's colour. */
+.island-workshop__celebration--tint1 .island-workshop__confetti i { background: #f0c15e; }
+.island-workshop__celebration--tint2 .island-workshop__confetti i { background: #45dcc7; }
+.island-workshop__celebration--tint3 .island-workshop__confetti i { background: #6cb4f2; }
+.island-workshop__celebration--tint4 .island-workshop__confetti i { background: #b193f2; }
+
+.island-workshop__confetti i:nth-child(1) { left: 4%; animation-delay: 0ms; }
+.island-workshop__confetti i:nth-child(2) { left: 10%; animation-delay: 140ms; }
+.island-workshop__confetti i:nth-child(3) { left: 16%; animation-delay: 60ms; }
+.island-workshop__confetti i:nth-child(4) { left: 22%; animation-delay: 220ms; }
+.island-workshop__confetti i:nth-child(5) { left: 28%; animation-delay: 20ms; }
+.island-workshop__confetti i:nth-child(6) { left: 34%; animation-delay: 180ms; }
+.island-workshop__confetti i:nth-child(7) { left: 40%; animation-delay: 100ms; }
+.island-workshop__confetti i:nth-child(8) { left: 46%; animation-delay: 260ms; }
+.island-workshop__confetti i:nth-child(9) { left: 52%; animation-delay: 40ms; }
+.island-workshop__confetti i:nth-child(10) { left: 58%; animation-delay: 200ms; }
+.island-workshop__confetti i:nth-child(11) { left: 64%; animation-delay: 120ms; }
+.island-workshop__confetti i:nth-child(12) { left: 70%; animation-delay: 300ms; }
+.island-workshop__confetti i:nth-child(13) { left: 76%; animation-delay: 80ms; }
+.island-workshop__confetti i:nth-child(14) { left: 82%; animation-delay: 240ms; }
+.island-workshop__confetti i:nth-child(15) { left: 88%; animation-delay: 160ms; }
+.island-workshop__confetti i:nth-child(16) { left: 94%; animation-delay: 320ms; }
+.island-workshop__confetti i:nth-child(17) { left: 7%; animation-delay: 380ms; }
+.island-workshop__confetti i:nth-child(18) { left: 91%; animation-delay: 420ms; }
+
+@keyframes island-workshop-confetti-fall {
+  0% { opacity: 0; transform: translateY(-10px) rotate(0deg); }
+  8% { opacity: 1; }
+  100% { opacity: 0.9; transform: translateY(110vh) rotate(560deg); }
 }
 
 /* Small phones: tighten paddings so the whole board + tray stays on screen. */

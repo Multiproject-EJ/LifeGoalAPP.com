@@ -1,48 +1,66 @@
 /**
  * Island Workshop block-placement rules tests.
  * Covers: shape catalog integrity, seeded shape sets, placement validation,
- * line clearing + scoring, multi-line and streak combos, stuck detection,
- * Creature Assist, construction progress conversion, score rewards, result tiers,
- * block ticket guards, and saved-run serialization.
+ * line clearing + scoring, multi-line and streak combos, pure-colour line
+ * bonuses, keystone (solid) block rules, gem block rewards, bench levels,
+ * stuck detection, Creature Assist, construction progress conversion, score
+ * rewards, result tiers, block ticket guards, and saved-run serialization.
  */
 import {
   applyIslandWorkshopConstructionGain,
   applyIslandWorkshopCreatureAssist,
   buildIslandWorkshopConstructionStorageKey,
+  buildIslandWorkshopLevelStorageKey,
   buildIslandWorkshopRunStorageKey,
   canPlaceIslandWorkshopShape,
   canStartIslandWorkshopRun,
   createEmptyIslandWorkshopBoard,
   findIslandWorkshopCompletedLines,
+  getIslandWorkshopCellTint,
   getIslandWorkshopPlacementCells,
+  getIslandWorkshopScoreRewardMilestones,
   getIslandWorkshopShape,
   hasAnyIslandWorkshopPlacement,
   ISLAND_WORKSHOP_CELL_COUNT,
   ISLAND_WORKSHOP_CONSTRUCTION_TARGET,
+  ISLAND_WORKSHOP_GEM_FLAG,
+  ISLAND_WORKSHOP_GEM_REWARD_DICE,
   ISLAND_WORKSHOP_GRID_SIZE,
+  ISLAND_WORKSHOP_LEVEL2_GEM_SEEDS,
+  ISLAND_WORKSHOP_LEVEL2_SOLID_SEEDS,
   ISLAND_WORKSHOP_LINE_BASE_SCORE,
+  ISLAND_WORKSHOP_MAX_LEVEL,
+  ISLAND_WORKSHOP_MONO_PAIR_BONUS_BLOCKS,
   ISLAND_WORKSHOP_SHAPE_CATALOG,
   ISLAND_WORKSHOP_SHAPES_PER_SET,
+  ISLAND_WORKSHOP_SOLID_FLAG,
+  ISLAND_WORKSHOP_SOLID_RELEASE_BLOCKS,
+  isIslandWorkshopGemCell,
   isIslandWorkshopRunStuck,
+  isIslandWorkshopSolidCell,
   parseIslandWorkshopConstructionProgress,
+  parseIslandWorkshopLevel,
   parseIslandWorkshopSavedRun,
   placeIslandWorkshopShape,
   resolveIslandWorkshopClaimableScoreRewards,
+  resolveIslandWorkshopLevelUp,
   resolveIslandWorkshopMaterialsEarned,
+  resolveIslandWorkshopMonoLineBonusBlocks,
   resolveIslandWorkshopResultTier,
   resolveIslandWorkshopRunConstructionGain,
   resolveIslandWorkshopStreakMultiplier,
   rollIslandWorkshopShapeSet,
+  seedIslandWorkshopLevelTwoBoard,
   serializeIslandWorkshopRun,
   type IslandWorkshopSavedRunV1,
 } from '../islandWorkshopGame';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 /** Board with row `row` filled except the given columns. */
-function boardWithRowGaps(row: number, gapCols: number[]): number[] {
+function boardWithRowGaps(row: number, gapCols: number[], tint = 1): number[] {
   const board = createEmptyIslandWorkshopBoard();
   for (let col = 0; col < ISLAND_WORKSHOP_GRID_SIZE; col += 1) {
-    if (!gapCols.includes(col)) board[row * ISLAND_WORKSHOP_GRID_SIZE + col] = 1;
+    if (!gapCols.includes(col)) board[row * ISLAND_WORKSHOP_GRID_SIZE + col] = tint;
   }
   return board;
 }
@@ -59,6 +77,7 @@ function makeSavedRun(): IslandWorkshopSavedRunV1 {
     assistUsed: false,
     setsCompleted: 2,
     updatedAtMs: 1_000_000,
+    runLevel: 1,
   };
 }
 
@@ -405,6 +424,204 @@ export const islandWorkshopGameTests: TestCase[] = [
         buildIslandWorkshopConstructionStorageKey('user-1', 'feeding_frenzy:100') !== runKey,
         'construction progress and saved run use distinct keys',
       );
+    },
+  },
+  {
+    name: 'pure-colour line clears super-flash and pay +1 bonus block',
+    run: () => {
+      // Row 4 filled with tint 2 except cols 6..7; duo_h is also tint 2.
+      const board = boardWithRowGaps(4, [6, 7], 2);
+      const result = placeIslandWorkshopShape({ board, shapeId: 'duo_h', row: 4, col: 6, streakBefore: 0 });
+      assert(result, 'placement should succeed');
+      assertEqual(result!.monochromeLines.length, 1, 'single pure-colour line detected');
+      assertEqual(result!.monochromeLines[0].tint, 2, 'pure line carries its tint for the flash FX');
+      assertEqual(result!.monochromeLines[0].kind, 'row', 'pure line reports its kind');
+      assertEqual(result!.bonusBlocksEarned, 1, 'lone pure line pays +1 bonus block');
+      assertEqual(result!.releaseBlocksEarned, 0, 'no keystones involved');
+
+      // Mixed colours: same setup but the row is tint 1 while duo_h is tint 2.
+      const mixed = placeIslandWorkshopShape({
+        board: boardWithRowGaps(4, [6, 7], 1),
+        shapeId: 'duo_h',
+        row: 4,
+        col: 6,
+        streakBefore: 0,
+      });
+      assert(mixed, 'mixed placement should succeed');
+      assertEqual(mixed!.linesCleared, 1, 'mixed line still clears');
+      assertEqual(mixed!.monochromeLines.length, 0, 'mixed line is not pure');
+      assertEqual(mixed!.bonusBlocksEarned, 0, 'mixed line pays no bonus blocks');
+    },
+  },
+  {
+    name: 'two pure lines of the same colour pay the +4 confetti bonus',
+    run: () => {
+      // Rows 0 and 1 filled with tint 1 except cols 6..7; square_2 is tint 1.
+      const board = createEmptyIslandWorkshopBoard();
+      for (const row of [0, 1]) {
+        for (let col = 0; col < 6; col += 1) board[row * ISLAND_WORKSHOP_GRID_SIZE + col] = 1;
+      }
+      const result = placeIslandWorkshopShape({ board, shapeId: 'square_2', row: 0, col: 6, streakBefore: 0 });
+      assert(result, 'placement should succeed');
+      assertEqual(result!.monochromeLines.length, 2, 'both rows are pure tint 1');
+      assertEqual(
+        result!.bonusBlocksEarned,
+        ISLAND_WORKSHOP_MONO_PAIR_BONUS_BLOCKS,
+        'same-colour pure pair pays the +4 bonus',
+      );
+      assertEqual(
+        resolveIslandWorkshopMonoLineBonusBlocks([{ tint: 1 }, { tint: 3 }]),
+        2,
+        'two pure lines of different colours pay +1 each',
+      );
+      assertEqual(resolveIslandWorkshopMonoLineBonusBlocks([]), 0, 'no pure lines, no bonus');
+    },
+  },
+  {
+    name: 'keystone blocks survive mixed clears and release +7 blocks on pure clears',
+    run: () => {
+      const solidCell = 2 | ISLAND_WORKSHOP_SOLID_FLAG;
+      assertEqual(isIslandWorkshopSolidCell(solidCell), true, 'flagged cell reads as keystone');
+      assertEqual(getIslandWorkshopCellTint(solidCell), 2, 'keystone keeps its tint');
+
+      // Mixed line: row 3 tint 1 with a tint-2 keystone at col 0; gaps at 6..7.
+      const mixedBoard = boardWithRowGaps(3, [6, 7], 1);
+      mixedBoard[3 * ISLAND_WORKSHOP_GRID_SIZE] = solidCell;
+      const mixed = placeIslandWorkshopShape({ board: mixedBoard, shapeId: 'duo_h', row: 3, col: 6, streakBefore: 0 });
+      assert(mixed, 'placement should succeed');
+      assertEqual(mixed!.linesCleared, 1, 'mixed line still counts as a clear');
+      assertEqual(mixed!.board[3 * ISLAND_WORKSHOP_GRID_SIZE], solidCell, 'keystone remains after a mixed clear');
+      assertEqual(mixed!.board[3 * ISLAND_WORKSHOP_GRID_SIZE + 1], 0, 'other cells in the mixed line clear');
+      assertEqual(mixed!.solidCellsReleased.length, 0, 'mixed clear releases no keystones');
+      assertEqual(mixed!.releaseBlocksEarned, 0, 'no release blocks on a mixed clear');
+
+      // Pure line in the keystone's own colour (tint 2, duo_h is tint 2).
+      const pureBoard = boardWithRowGaps(3, [6, 7], 2);
+      pureBoard[3 * ISLAND_WORKSHOP_GRID_SIZE] = solidCell;
+      const pure = placeIslandWorkshopShape({ board: pureBoard, shapeId: 'duo_h', row: 3, col: 6, streakBefore: 0 });
+      assert(pure, 'placement should succeed');
+      assertEqual(pure!.board[3 * ISLAND_WORKSHOP_GRID_SIZE], 0, 'pure clear releases the keystone');
+      assertDeepEqual(pure!.solidCellsReleased, [3 * ISLAND_WORKSHOP_GRID_SIZE], 'released keystone reported for FX');
+      assertEqual(
+        pure!.releaseBlocksEarned,
+        ISLAND_WORKSHOP_SOLID_RELEASE_BLOCKS,
+        'released keystone pays +7 blocks to the pool',
+      );
+      assertEqual(pure!.monochromeLines.length, 1, 'the releasing line is pure');
+    },
+  },
+  {
+    name: 'gem blocks unleash dice when their line clears',
+    run: () => {
+      const gemCell = 1 | ISLAND_WORKSHOP_GEM_FLAG;
+      assertEqual(isIslandWorkshopGemCell(gemCell), true, 'flagged cell reads as gem');
+      const board = boardWithRowGaps(5, [6, 7], 1);
+      board[5 * ISLAND_WORKSHOP_GRID_SIZE + 2] = gemCell;
+      const result = placeIslandWorkshopShape({ board, shapeId: 'duo_h', row: 5, col: 6, streakBefore: 0 });
+      assert(result, 'placement should succeed');
+      assertDeepEqual(result!.gemCellsUnleashed, [5 * ISLAND_WORKSHOP_GRID_SIZE + 2], 'cleared gem reported');
+      assertEqual(result!.gemRewardDice, ISLAND_WORKSHOP_GEM_REWARD_DICE, 'each gem unleashes its dice reward');
+      assertEqual(result!.board[5 * ISLAND_WORKSHOP_GRID_SIZE + 2], 0, 'gem cell clears with the line');
+    },
+  },
+  {
+    name: 'bench levels: milestones, tiers, level-up detection, and persistence parsing',
+    run: () => {
+      const level1 = getIslandWorkshopScoreRewardMilestones(1);
+      const level2 = getIslandWorkshopScoreRewardMilestones(2);
+      assert(level1 !== level2, 'level 2 has its own reward bar');
+      assert(
+        level2[level2.length - 1].score > level1[level1.length - 1].score,
+        'level 2 bar stretches further',
+      );
+      assertDeepEqual(
+        resolveIslandWorkshopClaimableScoreRewards({ previousScore: 140, nextScore: 360, level: 2 }).map((reward) => reward.id),
+        ['l2_supply_cache', 'l2_dice_hoard'],
+        'level-2 milestones unlock from the level-2 bar',
+      );
+
+      const level1Final = level1[level1.length - 1].score;
+      assertEqual(
+        resolveIslandWorkshopLevelUp({ currentLevel: 1, previousScore: level1Final - 10, nextScore: level1Final }),
+        2,
+        'filling the level-1 bar promotes the bench to level 2',
+      );
+      assertEqual(
+        resolveIslandWorkshopLevelUp({ currentLevel: 1, previousScore: 10, nextScore: 20 }),
+        null,
+        'partial progress does not level up',
+      );
+      assertEqual(
+        resolveIslandWorkshopLevelUp({ currentLevel: ISLAND_WORKSHOP_MAX_LEVEL, previousScore: 0, nextScore: 99_999 }),
+        null,
+        'max level never levels up again',
+      );
+
+      assert(
+        resolveIslandWorkshopResultTier(0, 1).rewardDice >= 50,
+        'level-1 wins start at 50 dice',
+      );
+      assertEqual(resolveIslandWorkshopResultTier(9_999, 1).rewardDice, 250, 'level-1 top win pays 250 dice');
+      assert(
+        resolveIslandWorkshopResultTier(0, 2).rewardDice > resolveIslandWorkshopResultTier(0, 1).rewardDice,
+        'level 2 pays more than level 1 at the same score',
+      );
+
+      assertEqual(parseIslandWorkshopLevel(null), 1, 'missing level parses to 1');
+      assertEqual(parseIslandWorkshopLevel('2'), 2, 'stored level parses');
+      assertEqual(parseIslandWorkshopLevel('99'), ISLAND_WORKSHOP_MAX_LEVEL, 'level clamps at max');
+      assertEqual(parseIslandWorkshopLevel('garbage'), 1, 'garbage level parses to 1');
+      assert(
+        buildIslandWorkshopLevelStorageKey('user-1', 'feeding_frenzy:100')
+          !== buildIslandWorkshopRunStorageKey('user-1', 'feeding_frenzy:100'),
+        'level storage uses its own key',
+      );
+    },
+  },
+  {
+    name: 'level-2 bench seeding is deterministic and seeds keystones + gems',
+    run: () => {
+      const [boardA, rngA] = seedIslandWorkshopLevelTwoBoard(4242);
+      const [boardB, rngB] = seedIslandWorkshopLevelTwoBoard(4242);
+      assertDeepEqual(boardA, boardB, 'same seed produces the same bench');
+      assertEqual(rngA, rngB, 'same seed produces the same next rng state');
+      const solids = boardA.filter((cell) => isIslandWorkshopSolidCell(cell));
+      const gems = boardA.filter((cell) => isIslandWorkshopGemCell(cell));
+      assertEqual(solids.length, ISLAND_WORKSHOP_LEVEL2_SOLID_SEEDS, 'expected keystone count seeded');
+      assertEqual(gems.length, ISLAND_WORKSHOP_LEVEL2_GEM_SEEDS, 'expected gem count seeded');
+      for (const cell of [...solids, ...gems]) {
+        const tint = getIslandWorkshopCellTint(cell);
+        assert(tint >= 1 && tint <= 4, 'seeded cells carry a valid tint');
+      }
+    },
+  },
+  {
+    name: 'saved runs default runLevel to 1 for pre-level payloads and reject corrupt levels',
+    run: () => {
+      const legacy: Record<string, unknown> = { ...makeSavedRun() };
+      delete legacy.runLevel;
+      const parsedLegacy = parseIslandWorkshopSavedRun(JSON.stringify(legacy));
+      assert(parsedLegacy, 'pre-level saves still parse');
+      assertEqual(parsedLegacy!.runLevel, 1, 'missing runLevel defaults to 1');
+
+      const level2Run = { ...makeSavedRun(), runLevel: 2 };
+      const parsedLevel2 = parseIslandWorkshopSavedRun(serializeIslandWorkshopRun(level2Run));
+      assertEqual(parsedLevel2?.runLevel, 2, 'runLevel round-trips');
+
+      assertEqual(
+        parseIslandWorkshopSavedRun(JSON.stringify({ ...makeSavedRun(), runLevel: 'two' })),
+        null,
+        'non-numeric runLevel → null',
+      );
+
+      // Boards carrying keystone/gem flags round-trip through the parser.
+      const flaggedRun = makeSavedRun();
+      flaggedRun.board[10] = 2 | ISLAND_WORKSHOP_SOLID_FLAG;
+      flaggedRun.board[20] = 3 | ISLAND_WORKSHOP_GEM_FLAG;
+      const parsedFlagged = parseIslandWorkshopSavedRun(serializeIslandWorkshopRun(flaggedRun));
+      assert(parsedFlagged, 'flagged boards parse');
+      assertEqual(isIslandWorkshopSolidCell(parsedFlagged!.board[10]), true, 'keystone flag survives the round-trip');
+      assertEqual(isIslandWorkshopGemCell(parsedFlagged!.board[20]), true, 'gem flag survives the round-trip');
     },
   },
 ];
