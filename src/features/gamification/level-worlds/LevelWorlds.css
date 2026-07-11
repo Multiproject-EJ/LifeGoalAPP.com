@@ -3980,20 +3980,100 @@
 }
 
 .island-run-board--spark40 .island-tile {
-  /* 36-tile ring at r=340 (same circle as the old 40-tile ring — only the
-     count changed, so tiles are wider).
-     Width  = outer arc chord: 2×369×sin(π/36) ≈ 64px
-     Height = radial band (inner r≈312 → outer r≈369) ≈ 58px, unchanged. */
-  width: 64px;
-  height: 58px;
+  /* 36-tile ring at r=340. Each tile is an annular-sector wedge that
+     tessellates the circle exactly — no overlap, no gaps:
+       radial band  = 72px (25% longer than the old 58px):
+                      inner r = 340−36 = 304 → outer r = 340+36 = 376
+       half-angle   = 360°/36/2 = 5°, tan 5° ≈ 0.0875
+       inner arc half-width = 304 × 0.0875 ≈ 26.6px
+       outer arc half-width = 376 × 0.0875 ≈ 32.9px
+     Box width 66px comfortably contains the 65.8px outer edge. The tile's
+     local top edge is the short INNER arc, the bottom edge the long OUTER
+     arc, so every tile widens toward the ring's outside. */
+  width: 66px;
+  height: 72px;
+  /* Doubled extrusion (5px → 10px) so the ring's outer rim reads as a low
+     wall around the whole circle. */
+  --tile-thickness: 10px;
 }
 
 .island-run-board--spark40 .island-tile__face,
 .island-run-board--spark40 .island-tile__side {
-  border-radius: 6px 6px 10px 10px;
-  /* Wedge clip-path for the 36-tile ring:
-     top ±27px (inner arc ≈54px), bottom ±32px (outer arc ≈64px) */
-  clip-path: polygon(calc(50% - 27px) 0%, calc(50% + 27px) 0%, calc(50% + 32px) 100%, calc(50% - 32px) 100%);
+  /* Sharp tessellating wedge. Straight radial sides mean each edge lies on
+     the exact same radial line as its neighbour's, so the tiles read as one
+     unified circle. Plain px coordinates (no calc()) for maximum clip-path
+     compatibility; box is 66×72, centre x = 33px. */
+  border-radius: 0;
+  /* ~0.4px bleed beyond the exact 6.4/59.6/65.9/0.1 wedge so neighbouring
+     frames overlap sub-pixel (gold on gold) instead of leaving an
+     anti-aliasing hairline of background between tiles. */
+  clip-path: polygon(6px 0px, 60px 0px, 66px 72px, 0px 72px);
+}
+
+/* The rect-based engraved inner ring can't follow the wedge silhouette —
+   the wedge frame below carries the carved-border read instead. */
+.island-run-board--spark40 .island-tile__face::before {
+  content: none;
+}
+
+/* Per-state frame tint for the wedge border below. States that used to tint
+   the (now clipped-away) rect border set this variable instead. */
+.island-run-board--spark40 .island-tile--stop .island-tile__face {
+  --tile-frame: var(--tile-stop-border);
+}
+.island-run-board--spark40 .island-tile--upcoming .island-tile__face {
+  --tile-frame: color-mix(in srgb, var(--tile-trim) 55%, #fff);
+}
+.island-run-board--spark40 .island-tile--door-boss .island-tile__face {
+  --tile-frame: color-mix(in srgb, var(--door-accent, var(--tile-trim)) 60%, var(--tile-trim));
+}
+.island-run-board--spark40 .island-tile--active-door-cluster .island-tile__face {
+  --tile-frame: color-mix(in srgb, var(--door-accent, var(--tile-growth-accent)) 55%, #fff);
+}
+
+/* ── Wedge frame — the ring tile's thick border ──────────────────────────────
+   An evenodd path frame (outer wedge minus a 4px/2px inset wedge) drawn
+   entirely INSIDE each tile's own silhouette, so neighbouring borders never
+   overlap: along a shared radial edge each tile contributes a 2px half
+   (4px seam total), and along the inner/outer arcs each tile draws the full
+   4px band — uniform 4px separator lines across the whole ring. This replaces
+   the rect mask-composite bezel, which the wedge clip truncated at the sides.
+   Inset wedge: top/bottom edges in by 4px, slanted sides in by 2px along the
+   edge normal (2 ÷ cos 5° ≈ 2px horizontally). */
+@supports (clip-path: path(evenodd, 'M0 0H1V1Z')) {
+  .island-run-board--spark40 .island-tile__face,
+  .island-run-board--spark40 .island-tile--stop .island-tile__face,
+  .island-run-board--spark40 .island-tile--door-boss .island-tile__face,
+  .island-run-board--spark40 .island-tile--upcoming .island-tile__face,
+  .island-run-board--spark40 .island-tile--active-door-cluster .island-tile__face {
+    /* The wedge frame IS the border on the ring board; the rect border only
+       survives as a fallback for browsers without path() support. */
+    border: none;
+  }
+  .island-run-board--spark40 .island-tile__face::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    /* Same machined-metal treatment as the generic bezel, keyed off the
+       per-state --tile-frame tint (defaults to the skin's gold trim). */
+    background: linear-gradient(146deg,
+      color-mix(in srgb, var(--tile-frame, var(--tile-trim)) 10%, #fffdf4) 0%,
+      color-mix(in srgb, var(--tile-frame, var(--tile-trim)) 42%, #fff) 12%,
+      var(--tile-frame, var(--tile-trim)) 30%,
+      color-mix(in srgb, var(--tile-frame, var(--tile-trim)) 52%, #1d1206) 49%,
+      color-mix(in srgb, var(--tile-frame, var(--tile-trim)) 34%, #140d05) 56%,
+      color-mix(in srgb, var(--tile-frame, var(--tile-trim)) 96%, #fff) 74%,
+      color-mix(in srgb, var(--tile-frame, var(--tile-trim)) 38%, #fff) 88%,
+      color-mix(in srgb, var(--tile-frame, var(--tile-trim)) 58%, #1d1206) 100%);
+    -webkit-mask: none;
+            mask: none;
+    -webkit-mask-composite: source-over;
+            mask-composite: add;
+    clip-path: path(evenodd, 'M6 0L60 0L66 72L0 72ZM8.05 4L57.95 4L63.55 68L2.45 68Z');
+    pointer-events: none;
+    z-index: 2;
+  }
 }
 
 .island-run-board--spark40 .island-tile__value {
@@ -8921,10 +9001,14 @@
   z-index: 2;
   opacity: 0.75;
 }
-/* Tile number badge — smaller on ring board but visible since tiles are bigger now */
+/* Tile number badge — smaller on ring board, and tucked inside the wedge
+   silhouette (the rect corner position would be clipped away by the tile's
+   annular-sector clip-path + eaten by the 4px wedge frame). */
 .island-run-board--spark40 .island-tile__badge {
   font-size: 0.38rem;
   padding: 1px 2px;
+  top: 7px;
+  right: 10px;
 }
 
 /* Completed encounters render a calm engraved check as the tile icon itself
