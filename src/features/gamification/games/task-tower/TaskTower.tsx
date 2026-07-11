@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { useActions } from '../../../actions/hooks/useActions';
 import { buildTower, removeBlock, checkLineClears, calculateBlockRewards, calculateLineClearRewards, calculateAllClearRewards } from './taskTowerState';
 import { TaskTowerBlock } from './TaskTowerBlock';
+import { TaskTowerScene } from './TaskTowerScene';
 import { TaskTowerRewards } from './TaskTowerRewards';
 import { LuckyRollCelebration } from '../../daily-treats/LuckyRollCelebration';
 import { logGameSession, awardDice, awardGameTokens } from '../../../../services/gameRewards';
@@ -43,6 +44,15 @@ interface TaskTowerProps {
   onComplete: (rewards: { coins: number; dice: number; tokens: number }) => void;
 }
 
+type TimeOfDay = 'day' | 'dusk' | 'night';
+
+function resolveTimeOfDay(): TimeOfDay {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 17) return 'day';
+  if (hour >= 17 && hour < 20) return 'dusk';
+  return 'night';
+}
+
 export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
   const userId = session.user.id;
   const { actions, loading, completeAction: completeActionHook } = useActions(session);
@@ -64,6 +74,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
   const [floatingReward, setFloatingReward] = useState<{ text: string; id: number } | null>(null);
   const [lineClearAnimation, setLineClearAnimation] = useState<number[]>([]);
   const [towerOpenedEmpty, setTowerOpenedEmpty] = useState(false);
+  const [timeOfDay] = useState<TimeOfDay>(resolveTimeOfDay);
 
   const floatingRewardIdRef = useRef(0);
   const towerBuiltRef = useRef(false);
@@ -300,7 +311,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
   // state before the all-clear celebration can play.
   if (towerOpenedEmpty) {
     return (
-      <div className="task-tower">
+      <div className={`task-tower task-tower--${timeOfDay}`}>
         <div className="task-tower__backdrop" />
         
         <div className="task-tower__container">
@@ -334,10 +345,14 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
     );
   }
 
+  const craneTargetPercent = selectedBlock
+    ? ((selectedBlock.col + selectedBlock.width / 2) / TOWER_GRID.COLS) * 100
+    : 50;
+
   return (
-    <div className="task-tower">
+    <div className={`task-tower task-tower--${timeOfDay}`}>
       <div className="task-tower__backdrop" />
-      
+
       <div className="task-tower__container">
         <div className="task-tower__header">
           <h2 className="task-tower__title">🗼 Task Tower</h2>
@@ -357,32 +372,47 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
           </button>
         </div>
         
-        <div className="task-tower__game-area">
-          <div 
-            className="task-tower__grid"
-            style={{
-              gridTemplateColumns: `repeat(${TOWER_GRID.COLS}, 1fr)`,
-              gridTemplateRows: `repeat(${TOWER_GRID.MAX_ROWS}, auto)`,
-            }}
-          >
-            {gameSession.blocks.map(block => (
-              <TaskTowerBlock
-                key={block.id}
-                block={block}
-                onTap={handleBlockTap}
-                isSelected={selectedBlock?.id === block.id}
-              />
-            ))}
-            
-            {lineClearAnimation.map(row => (
-              <div
-                key={row}
-                className="task-tower__line-clear-flash"
-                style={{ gridRow: `${row + 1}` }}
-              />
-            ))}
+        <div className="task-tower__stage">
+          <TaskTowerScene />
+
+          <div className="task-tower__crane" aria-hidden="true">
+            <div className="task-tower__crane-boom" />
+            <div
+              className={`task-tower__crane-trolley${selectedBlock ? ' task-tower__crane-trolley--engaged' : ''}`}
+              style={{ left: `${craneTargetPercent}%` }}
+            >
+              <div className="task-tower__crane-cable" />
+              <div className="task-tower__crane-hook" />
+            </div>
           </div>
-          
+
+          <div className="task-tower__game-area">
+            <div
+              className="task-tower__grid"
+              style={{
+                gridTemplateColumns: `repeat(${TOWER_GRID.COLS}, 1fr)`,
+                gridTemplateRows: `repeat(${TOWER_GRID.MAX_ROWS}, auto)`,
+              }}
+            >
+              {gameSession.blocks.map(block => (
+                <TaskTowerBlock
+                  key={block.id}
+                  block={block}
+                  onTap={handleBlockTap}
+                  isSelected={selectedBlock?.id === block.id}
+                />
+              ))}
+
+              {lineClearAnimation.map(row => (
+                <div
+                  key={row}
+                  className="task-tower__line-clear-flash"
+                  style={{ gridRow: `${TOWER_GRID.MAX_ROWS - row}` }}
+                />
+              ))}
+            </div>
+          </div>
+
           {floatingReward && (
             <div className="task-tower__floating-reward" key={floatingReward.id}>
               {floatingReward.text}

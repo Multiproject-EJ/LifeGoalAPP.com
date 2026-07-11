@@ -1,6 +1,6 @@
 # Task Tower v2 — From Placeholder to Polished
 
-**Status:** Phase 0 complete (correctness foundation) — Phases 1–4 pending
+**Status:** Phases 0–1 complete (correctness + scene/visual overhaul) — Phases 2–4 pending
 **Date:** 2026-07-11
 **Owner surface:** Actions tab launcher (`ActionsTab.tsx`), standalone game overlay
 **Related docs:** `docs/gameplay/MINIGAME_EVENTS_CONSOLIDATION_PLAN.md` (Phase 6 manifest item), `HABITGAME_CORE_GAMES_DEV_PLAN.md`, `THEME_LAYER_CONTRACT.md`
@@ -156,11 +156,11 @@ in a satisfying collapse.** Emotion target (per `habitGames.ts`): **Relief.**
 - [x] Add `taskTowerState.test.ts` + `tsconfig.task-tower-tests.json` + `npm run test:task-tower`: packing, gravity invariants (no overlap, no floaters) across 50 randomized demolition sequences, storey compaction, reward math, overflow cap, purity.
 - [x] Remove dead `calculateSessionRewards`; add `durationSeconds` to the `complete` log metadata.
 
-### Phase 1 — Scene & visual overhaul
-- [ ] Scene backdrop (parallax sky, skyline, ground strip), theme-layer integration, day/night tint.
-- [ ] Block material treatments per category + refreshed typography/badging.
-- [ ] Crane selection indicator replacing plain highlight ring.
-- [ ] Reduced-motion variants.
+### Phase 1 — Scene & visual overhaul ✅
+- [x] Scene backdrop (`TaskTowerScene.tsx`): sky + drifting clouds + two skyline silhouette layers + ground strip, with day/dusk/night palettes keyed to local time via `task-tower--{timeOfDay}` CSS variables (lit windows at night, stars, sun/moon orb).
+- [x] Block material treatments per category — brick (must_do, with warning-stripe footing), glass (nice_to_do), timber (project) — plus refreshed typography/badging. Fixed the inverted grid mapping while at it: state row 0 now renders at the *bottom* so the tower stands on the ground and blocks visually drop down as it shrinks.
+- [x] Crane selection indicator: gantry boom across the stage top; the trolley slides over the selected block's column and lowers its hook while a completion is pending (idle hook sway otherwise).
+- [x] Reduced-motion variants: no drift/sway/twinkle/lift, block removal degrades to a plain fade.
 
 ### Phase 2 — Juice & mechanics
 - [ ] Shard-particle demolition + drop bounce + settle squash; combo-pitched audio.
