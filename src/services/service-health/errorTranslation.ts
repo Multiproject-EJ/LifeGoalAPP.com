@@ -146,6 +146,15 @@ const CATEGORY_DEFINITIONS: Record<AppErrorCategory, CategoryDefinition> = {
     explanation:
       'This item was changed on another device. The newer version was kept; nothing was deleted.',
   },
+  user_limit_reached: {
+    code: 'USER_DATA_LIMIT_REACHED',
+    severity: 'warning',
+    retryable: false,
+    safeLocalMode: false,
+    title: 'Storage limit reached for this feature',
+    explanation:
+      'This item was not saved because your account reached the maximum amount of stored data for this feature. Delete items you no longer need and try again.',
+  },
   unknown: {
     code: 'SVC_UNKNOWN',
     severity: 'error',
@@ -200,6 +209,12 @@ export function classifyProviderError(
   }
   if (matchesAny(text, ['abort', 'timeout', 'timed out', 'deadline exceeded', 'etimedout', '57014'])) {
     return 'timeout';
+  }
+  // Per-account data cap raised by the enforce_user_data_limit() database
+  // trigger (migration 0278). Checked before the platform-quota needles
+  // because both mention "limit", but this one is the user's own cap.
+  if (matchesAny(text, ['user_data_limit_exceeded'])) {
+    return 'user_limit_reached';
   }
   if (status === 540 || matchesAny(text, ['quota', 'exceeded the limit', 'egress limit', 'usage limit', 'db_size', 'disk quota', 'over_request_rate_limit_quota'])) {
     return 'quota_exceeded';

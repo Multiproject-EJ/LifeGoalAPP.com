@@ -75,6 +75,23 @@ function testErrorTranslation(): void {
     'quota message classifies as quota_exceeded',
   );
   assertEqual(
+    classifyProviderError({
+      message: 'USER_DATA_LIMIT_EXCEEDED: journal_entries is limited to 10000 items per account',
+      code: 'P0001',
+    }),
+    'user_limit_reached',
+    'per-user data cap classifies as user_limit_reached, not quota_exceeded',
+  );
+  assertEqual(
+    classifyProviderError({ message: 'USER_DATA_LIMIT_EXCEEDED: item too large for vb_cards (20000 bytes, limit 10240 bytes)' }),
+    'user_limit_reached',
+    'row-size cap classifies as user_limit_reached',
+  );
+  assertTrue(
+    !translateProviderError({ message: 'USER_DATA_LIMIT_EXCEEDED: habits is limited to 200 items per account' }).safeLocalMode,
+    'user_limit_reached is not safe-local, so writes are never queued for retry',
+  );
+  assertEqual(
     classifyProviderError({ message: 'Project is paused', status: 400 }),
     'project_restricted',
     'paused project classifies as project_restricted',

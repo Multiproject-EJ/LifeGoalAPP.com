@@ -54,6 +54,7 @@ export type AppErrorCategory =
   | 'edge_function_unavailable'
   | 'rate_limited'
   | 'conflict'
+  | 'user_limit_reached'
   | 'unknown';
 
 export type AppErrorSeverity = 'info' | 'warning' | 'error' | 'critical';

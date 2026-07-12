@@ -20,7 +20,15 @@ import type { ServiceHealthManager } from './service-health';
 import { getMutationQueue, type MutationQueue } from './offline-queue';
 
 /** Categories that must not be parked on the queue. */
-const NEVER_QUEUE_CATEGORIES = new Set(['auth_expired', 'invalid_credentials', 'permission_denied', 'conflict']);
+const NEVER_QUEUE_CATEGORIES = new Set([
+  'auth_expired',
+  'invalid_credentials',
+  'permission_denied',
+  'conflict',
+  // Retrying cannot succeed until the user deletes data; queueing would
+  // just replay the rejection forever.
+  'user_limit_reached',
+]);
 
 export function shouldQueueAfterFailure(error: AppError): boolean {
   return error.safeLocalMode && !NEVER_QUEUE_CATEGORIES.has(error.category);
