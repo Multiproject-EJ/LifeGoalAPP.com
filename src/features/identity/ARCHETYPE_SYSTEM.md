@@ -14,7 +14,7 @@ The 4-Suit Archetype Card System extends the existing personality test to provid
 ### Core Concepts
 
 **Foundation Test = Opening Hand**
-- The existing 29-question personality test generates the initial 5-card hand
+- The existing 28-question personality test generates the initial 5-card hand
 - Archetype scores are derived from existing Big Five + custom axes
 - No new questions required for the foundation
 
@@ -33,7 +33,7 @@ The 4-Suit Archetype Card System extends the existing personality test to provid
 ```
 src/features/identity/
 ├── archetypes/
-│   ├── archetypeDeck.ts          # 16 archetype card definitions
+│   ├── archetypeDeck.ts          # 32 archetype card definitions (8 per suit)
 │   ├── archetypeScoring.ts       # Score cards from personality traits
 │   ├── archetypeHandBuilder.ts   # Build 5-card hand from scores
 │   └── archetypeCopy.ts          # Display copy for cards
@@ -49,31 +49,47 @@ src/features/identity/
 └── PersonalityTest.tsx           # Integrated with results view
 ```
 
-## The 16 Archetypes
+## The 32 Archetypes (8 per suit)
 
 ### Power Suit (Agency)
 - **Commander** ⚔️: Natural leadership and strategic direction
 - **Champion** 🏆: Competitive drive and performance focus
 - **Strategist** ♟️: Long-term planning and systems thinking
 - **Challenger** 🔥: Boundary-pushing and norm-questioning
+- **Guardian** 🛡️: Protection, loyalty, and standing firm
+- **Warlord** ⚡: Crisis leadership through force of will
+- **Diplomat** 🤝: Influence through negotiation and alliances
+- **Enforcer** ⚖️: Standards, discipline, and accountability
 
 ### Heart Suit (Empathy)
 - **Caregiver** 🤲: Nurturing support and emotional attunement
 - **Mentor** 🌱: Patient guidance and growth facilitation
 - **Peacemaker** ☮️: Conflict resolution and harmony-building
 - **Altruist** ❤️: Selfless service and cause-driven action
+- **Empath** 🫂: Deep feeling and emotional understanding
+- **Healer** 💊: Restoring and mending what is broken
+- **Connector** 🔗: Building bridges between people
+- **Devotee** 🕊️: Full commitment and unconditional love
 
 ### Mind Suit (Reason)
 - **Sage** 🧙: Wisdom-seeking and reflective thinking
 - **Analyst** 📊: Data-driven precision and objectivity
 - **Architect** 🏛️: Systems design and structural elegance
 - **Inventor** 💡: Creative problem-solving and innovation
+- **Scholar** 📚: Domain mastery through deep study
+- **Detective** 🔍: Uncovering hidden truths
+- **Philosopher** 🤔: Questioning existence and seeking meaning
+- **Engineer** ⚙️: Practical, reliable solutions
 
 ### Spirit Suit (Vision)
 - **Explorer** 🧭: Adventure-seeking and horizon-expanding
 - **Creator** 🎨: Artistic expression and vision-making
 - **Rebel** ✊: Status-quo challenging and path-forging
 - **Visionary** 🌟: Future-oriented imagination and inspiration
+- **Mystic** 🔮: Connection with the unseen and transcendent
+- **Dreamer** 💭: Imagining worlds that could be
+- **Shaman** 🌿: Bridging worlds and guiding transformation
+- **Pioneer** 🚀: Blazing trails into uncharted territory
 
 ## Scoring Algorithm
 
@@ -178,7 +194,17 @@ After completing the foundation test, users see:
 
 ### ID Tab Badge
 
-(TODO) Wire up `useMicroTestBadge` to show red notification dot when micro-tests are available.
+`useMicroTestBadge` is wired into `App.tsx`, but the badge is hard-gated off
+(`MICRO_TEST_UI_WIRED = false` in `useMicroTestBadge.ts`) because `MicroTestFlow`
+is not mounted anywhere yet. Flip the flag once a surface renders the flow.
+
+### Unmeasured dimensions
+
+The foundation test does not measure `honesty_humility` or `emotionality` —
+those are HEXACO dimensions that only get data from micro-tests. Until then,
+`scorePersonality` pins them at a neutral 50 so they don't skew archetype
+ranking (several cards weight them), and the results UI hides them via
+`isDimensionMeasured` from `personalityScoring.ts`.
 
 ### Supabase Schema
 
@@ -207,10 +233,6 @@ Instead of a single long test, personality insights unfold progressively through
 This creates engagement loops and long-term retention.
 
 ## Future Enhancements
-
-### Full 32-Card Deck
-
-Expand to 8 archetypes per suit (remaining 16 to be added).
 
 ### Hybrid Archetypes
 

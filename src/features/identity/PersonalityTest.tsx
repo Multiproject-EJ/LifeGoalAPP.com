@@ -12,7 +12,7 @@ import {
   PERSONALITY_QUESTION_BANK,
   PersonalityQuestion,
 } from './personalityTestData';
-import { PersonalityScores, scorePersonality } from './personalityScoring';
+import { PersonalityScores, isDimensionMeasured, scorePersonality } from './personalityScoring';
 import {
   buildTopTraitList,
   buildTopTraitSummary,
@@ -400,9 +400,11 @@ const buildSupabaseRecommendations = (
 
 const buildNarrative = (scores: PersonalityScores): string[] => {
   const traitEntries = Object.entries(scores.traits).sort((a, b) => b[1] - a[1]);
-  const axisEntries = Object.entries(scores.axes).sort(
-    (a, b) => Math.abs(b[1] - 50) - Math.abs(a[1] - 50),
-  );
+  // Only narrate axes the foundation test actually measures — unmeasured
+  // HEXACO axes sit at a neutral placeholder and must never be "the key axis".
+  const axisEntries = Object.entries(scores.axes)
+    .filter(([key]) => isDimensionMeasured(key as keyof PersonalityScores['axes']))
+    .sort((a, b) => Math.abs(b[1] - 50) - Math.abs(a[1] - 50));
 
   const [primaryTraitKey] = traitEntries[0];
   const [secondaryTraitKey] = traitEntries[1];
@@ -1027,7 +1029,7 @@ export default function PersonalityTest() {
           </ul>
           <div className="identity-hub__intro-meta">
             <span className="identity-hub__chip">⏱️ 4 minutes</span>
-            <span className="identity-hub__chip">🧠 29 questions</span>
+            <span className="identity-hub__chip">🧠 {PERSONALITY_QUESTION_BANK.length} questions</span>
             <span className="identity-hub__chip">🔒 Private</span>
           </div>
           <div className="identity-hub__actions">
@@ -1131,12 +1133,14 @@ export default function PersonalityTest() {
             <div className="identity-hub__results-section">
               <h4 className="identity-hub__results-title">Custom Axes</h4>
               <ul className="identity-hub__results-list">
-                {Object.entries(scores.axes).map(([key, value]) => (
-                  <li key={key} className="identity-hub__results-item">
-                    <span>{AXIS_LABELS[key as keyof PersonalityScores['axes']]}</span>
-                    <span>{value}%</span>
-                  </li>
-                ))}
+                {Object.entries(scores.axes)
+                  .filter(([key]) => isDimensionMeasured(key as keyof PersonalityScores['axes']))
+                  .map(([key, value]) => (
+                    <li key={key} className="identity-hub__results-item">
+                      <span>{AXIS_LABELS[key as keyof PersonalityScores['axes']]}</span>
+                      <span>{value}%</span>
+                    </li>
+                  ))}
               </ul>
             </div>
           </div>

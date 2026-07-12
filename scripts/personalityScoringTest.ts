@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import { PERSONALITY_QUESTION_BANK, AnswerValue } from '../src/features/identity/personalityTestData';
-import { scorePersonality } from '../src/features/identity/personalityScoring';
+import {
+  isDimensionMeasured,
+  scorePersonality,
+} from '../src/features/identity/personalityScoring';
 
 function buildAnswers({ preferHigh }: { preferHigh: boolean }) {
   return PERSONALITY_QUESTION_BANK.reduce<Record<string, AnswerValue>>((acc, question) => {
@@ -23,8 +26,38 @@ const maxScores = scorePersonality(maxAnswers);
 const minScores = scorePersonality(minAnswers);
 
 Object.values(maxScores.traits).forEach((score) => assert.equal(score, 100));
-Object.values(maxScores.axes).forEach((score) => assert.equal(score, 100));
 Object.values(minScores.traits).forEach((score) => assert.equal(score, 0));
-Object.values(minScores.axes).forEach((score) => assert.equal(score, 0));
+
+// Measured axes span the full range; unmeasured axes (HEXACO micro-test
+// dimensions) must stay pinned at the neutral 50 placeholder.
+(Object.keys(maxScores.axes) as (keyof typeof maxScores.axes)[]).forEach((key) => {
+  if (isDimensionMeasured(key)) {
+    assert.equal(maxScores.axes[key], 100, `${key} should hit 100 with max answers`);
+    assert.equal(minScores.axes[key], 0, `${key} should hit 0 with min answers`);
+  } else {
+    assert.equal(maxScores.axes[key], 50, `${key} is unmeasured and should stay neutral`);
+    assert.equal(minScores.axes[key], 50, `${key} is unmeasured and should stay neutral`);
+  }
+});
+
+assert.equal(isDimensionMeasured('honesty_humility'), false);
+assert.equal(isDimensionMeasured('emotionality'), false);
+
+// cognitive_entry direction: high = understand-first / plan-first.
+// A consistent plan-first person (disagrees with dive-in, agrees with
+// big-picture-first) must land at the top of the axis.
+const planFirstAnswers = {
+  ...buildAnswers({ preferHigh: true }),
+  custom_cognitive_entry_01: 1 as AnswerValue, // "dive in and learn by doing" — disagree
+  custom_cognitive_entry_02: 5 as AnswerValue, // "big picture and a plan first" — agree
+};
+assert.equal(scorePersonality(planFirstAnswers).axes.cognitive_entry, 100);
+
+const diveInAnswers = {
+  ...buildAnswers({ preferHigh: true }),
+  custom_cognitive_entry_01: 5 as AnswerValue,
+  custom_cognitive_entry_02: 1 as AnswerValue,
+};
+assert.equal(scorePersonality(diveInAnswers).axes.cognitive_entry, 0);
 
 console.log('Personality scoring checks passed.');
