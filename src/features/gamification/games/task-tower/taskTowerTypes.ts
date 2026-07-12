@@ -32,7 +32,7 @@ export const TOWER_GRID = {
 export interface TaskTowerSession {
   blocks: TowerBlock[];
   blocksCleared: number;
-  linesCleared: number;
+  linesCleared: number;          // storeys the tower has shrunk by
   coinsEarned: number;
   diceEarned: number;
   tokensEarned: number;
@@ -44,9 +44,17 @@ export interface TaskTowerSession {
 export const TASK_TOWER_REWARDS = {
   CLEAR_BLOCK_COINS: { must_do: 30, nice_to_do: 15, project: 20 },
   CLEAR_BLOCK_DICE: { must_do: 1, nice_to_do: 0, project: 0 },
-  LINE_CLEAR_BONUS_COINS: 50,   // bonus for clearing an entire row
+  LINE_CLEAR_BONUS_COINS: 50,   // bonus each time the tower gets a storey shorter
   LINE_CLEAR_BONUS_DICE: 1,
   ALL_CLEAR_BONUS_COINS: 200,   // bonus for clearing ALL blocks
   ALL_CLEAR_BONUS_DICE: 3,
   ALL_CLEAR_BONUS_TOKENS: 5,
+} as const;
+
+/** Combo streak: consecutive clears inside the window multiply block coins.
+    Dice and storey/all-clear bonuses are never multiplied. */
+export const TASK_TOWER_COMBO = {
+  WINDOW_MS: 20000,
+  /** Multiplier per streak length; index min(count, length) - 1. */
+  MULTIPLIERS: [1, 1.2, 1.5, 2] as readonly number[],
 } as const;

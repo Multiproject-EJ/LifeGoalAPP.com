@@ -1,5 +1,5 @@
 import type { Action, ActionCategory } from '../../../../types/actions';
-import { TOWER_GRID, TASK_TOWER_REWARDS, type TowerBlock, type BlockSize } from './taskTowerTypes';
+import { TOWER_GRID, TASK_TOWER_REWARDS, TASK_TOWER_COMBO, type TowerBlock, type BlockSize } from './taskTowerTypes';
 
 /**
  * Map action category to block size
@@ -23,15 +23,40 @@ function getBlockWidth(size: BlockSize): number {
 }
 
 /**
+ * Sort actions the way the packer consumes them: must_do first (urgent),
+ * then nice_to_do, then project.
+ */
+function sortActionsForPacking(actions: Action[]): Action[] {
+  const order = { must_do: 1, nice_to_do: 2, project: 3 };
+  return [...actions].sort((a, b) => order[a.category] - order[b.category]);
+}
+
+function truncateTitle(title: string): string {
+  return title.length > 40 ? title.substring(0, 40) + '...' : title;
+}
+
+function makeBlock(action: Action, row: number, col: number): TowerBlock {
+  const size = getBlockSize(action.category);
+  return {
+    id: action.id,
+    actionId: action.id,
+    title: truncateTitle(action.title),
+    category: action.category,
+    size,
+    row,
+    col,
+    width: getBlockWidth(size),
+    completed: false,
+    animating: false,
+  };
+}
+
+/**
  * Build tower from actions
  * Arranges actions into a grid using a simple left-to-right, bottom-to-top packing algorithm
  */
 export function buildTower(actions: Action[]): TowerBlock[] {
-  // Sort actions: must_do first (urgent), then nice_to_do, then project
-  const sortedActions = [...actions].sort((a, b) => {
-    const order = { must_do: 1, nice_to_do: 2, project: 3 };
-    return order[a.category] - order[b.category];
-  });
+  const sortedActions = sortActionsForPacking(actions);
 
   const blocks: TowerBlock[] = [];
   let currentRow = 0;
@@ -43,8 +68,7 @@ export function buildTower(actions: Action[]): TowerBlock[] {
       break;
     }
 
-    const size = getBlockSize(action.category);
-    const width = getBlockWidth(size);
+    const width = getBlockWidth(getBlockSize(action.category));
 
     // If block doesn't fit in current row, move to next row
     if (currentCol + width > TOWER_GRID.COLS) {
@@ -57,24 +81,7 @@ export function buildTower(actions: Action[]): TowerBlock[] {
       }
     }
 
-    // Truncate title to 40 chars
-    const truncatedTitle = action.title.length > 40 
-      ? action.title.substring(0, 40) + '...' 
-      : action.title;
-
-    blocks.push({
-      id: action.id,
-      actionId: action.id,
-      title: truncatedTitle,
-      category: action.category,
-      size,
-      row: currentRow,
-      col: currentCol,
-      width,
-      completed: false,
-      animating: false,
-    });
-
+    blocks.push(makeBlock(action, currentRow, currentCol));
     currentCol += width;
   }
 
@@ -84,10 +91,26 @@ export function buildTower(actions: Action[]): TowerBlock[] {
 }
 
 /**
+ * Build the tower and split off the actions that didn't fit under the row
+ * cap. Overflow actions wait in the supply line and crane-drop in as space
+ * frees, instead of being silently dropped.
+ */
+export function buildTowerAndQueue(actions: Action[]): { blocks: TowerBlock[]; queued: Action[] } {
+  const blocks = buildTower(actions);
+  const placedIds = new Set(blocks.map(b => b.id));
+  const queued = sortActionsForPacking(actions).filter(action => !placedIds.has(action.id));
+  return { blocks, queued };
+}
+
+/**
  * Do two blocks overlap horizontally (share at least one column)?
  */
 function overlapsHorizontally(a: TowerBlock, b: TowerBlock): boolean {
   return !(a.col >= b.col + b.width || b.col >= a.col + a.width);
+}
+
+function spanOverlaps(col: number, width: number, block: TowerBlock): boolean {
+  return !(col >= block.col + block.width || block.col >= col + width);
 }
 
 /**
@@ -123,43 +146,51 @@ export function removeBlock(blocks: TowerBlock[], blockId: string): TowerBlock[]
 }
 
 /**
- * Check for line clears (rows that are completely empty)
+ * Place one queued action into the settled tower: lowest supported spot
+ * that fits, scanning left to right. Returns null when nothing fits.
  */
-export function checkLineClears(blocks: TowerBlock[]): { clearedRows: number[], blocks: TowerBlock[] } {
-  if (blocks.length === 0) {
-    return { clearedRows: [], blocks: [] };
-  }
+export function placeQueuedBlock(blocks: TowerBlock[], action: Action): TowerBlock | null {
+  const width = getBlockWidth(getBlockSize(action.category));
 
-  // Find the maximum row that has blocks
-  const maxRow = Math.max(...blocks.map(b => b.row));
-  
-  const clearedRows: number[] = [];
-  
-  // Check each row from 0 to maxRow
-  for (let row = 0; row <= maxRow; row++) {
-    // A row is cleared if it has no blocks
-    const hasBlockInRow = blocks.some(b => b.row === row);
-    
-    if (!hasBlockInRow) {
-      clearedRows.push(row);
+  for (let row = 0; row < TOWER_GRID.MAX_ROWS; row++) {
+    for (let col = 0; col + width <= TOWER_GRID.COLS; col++) {
+      const overlaps = blocks.some(b => b.row === row && spanOverlaps(col, width, b));
+      if (overlaps) continue;
+
+      const supported = row === 0
+        || blocks.some(b => b.row === row - 1 && spanOverlaps(col, width, b));
+      if (!supported) continue;
+
+      return makeBlock(action, row, col);
     }
   }
 
-  // Compact blocks by removing empty rows
-  let updatedBlocks = [...blocks];
-  
-  // Sort cleared rows in descending order to process from top to bottom
-  const sortedClearedRows = [...clearedRows].sort((a, b) => b - a);
-  
-  for (const clearedRow of sortedClearedRows) {
-    // Move all blocks above the cleared row down by 1
-    updatedBlocks = updatedBlocks.map(b => ({
-      ...b,
-      row: b.row > clearedRow ? b.row - 1 : b.row,
-    }));
-  }
+  return null;
+}
 
-  return { clearedRows, blocks: updatedBlocks };
+/**
+ * Tower height in storeys (0 for an empty tower).
+ */
+export function getTowerHeight(blocks: TowerBlock[]): number {
+  return blocks.length === 0 ? 0 : Math.max(...blocks.map(b => b.row)) + 1;
+}
+
+/**
+ * Coin multiplier for the current combo streak length (1-based count of
+ * consecutive clears inside the combo window). Capped at the last tier.
+ */
+export function getComboMultiplier(comboCount: number): number {
+  const tiers = TASK_TOWER_COMBO.MULTIPLIERS;
+  const index = Math.min(Math.max(comboCount, 1), tiers.length) - 1;
+  return tiers[index];
+}
+
+/**
+ * Apply the combo multiplier to a coin amount. Only block coins are ever
+ * multiplied — dice and storey/all-clear bonuses stay flat.
+ */
+export function applyComboMultiplier(coins: number, comboCount: number): number {
+  return Math.round(coins * getComboMultiplier(comboCount));
 }
 
 /**
@@ -176,7 +207,9 @@ export function calculateBlockRewards(category: ActionCategory): {
 }
 
 /**
- * Calculate rewards for line clears
+ * Calculate rewards for the tower getting shorter. A settled tower can
+ * never have an interior empty row, so "the top storey emptied out" is the
+ * line-clear moment: rewarded per storey the tower shrinks by.
  */
 export function calculateLineClearRewards(lineCount: number): {
   coins: number;
