@@ -4,6 +4,11 @@ import {
   isDimensionMeasured,
   scorePersonality,
 } from '../src/features/identity/personalityScoring';
+import {
+  ORDERED_QUIZ_QUESTIONS,
+  QUIZ_SECTIONS,
+  getQuizPosition,
+} from '../src/features/identity/personalityTestSections';
 
 function buildAnswers({ preferHigh }: { preferHigh: boolean }) {
   return PERSONALITY_QUESTION_BANK.reduce<Record<string, AnswerValue>>((acc, question) => {
@@ -59,5 +64,27 @@ const diveInAnswers = {
   custom_cognitive_entry_02: 1 as AnswerValue,
 };
 assert.equal(scorePersonality(diveInAnswers).axes.cognitive_entry, 0);
+
+// Quiz sections must cover the entire question bank exactly once — the quiz
+// iterates ORDERED_QUIZ_QUESTIONS while scoring asserts every bank question
+// is answered, so any drift here would strand users mid-test.
+const orderedIds = ORDERED_QUIZ_QUESTIONS.map((question) => question.id);
+assert.equal(orderedIds.length, PERSONALITY_QUESTION_BANK.length);
+assert.equal(new Set(orderedIds).size, orderedIds.length, 'duplicate question in sections');
+PERSONALITY_QUESTION_BANK.forEach((question) => {
+  assert.ok(orderedIds.includes(question.id), `question ${question.id} missing from quiz sections`);
+});
+
+// Position helper must agree with the section layout at every boundary.
+let flatIndex = 0;
+QUIZ_SECTIONS.forEach((section, sectionIndex) => {
+  section.questionIds.forEach((_, questionIndex) => {
+    const position = getQuizPosition(flatIndex);
+    assert.equal(position.sectionIndex, sectionIndex);
+    assert.equal(position.questionInSection, questionIndex + 1);
+    assert.equal(position.sectionSize, section.questionIds.length);
+    flatIndex += 1;
+  });
+});
 
 console.log('Personality scoring checks passed.');

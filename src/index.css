@@ -27584,6 +27584,68 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: var(--text-secondary, #6b7280);
 }
 
+.identity-hub__progress-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.identity-hub__progress-suit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--suit-color, #4f46e5);
+  background: color-mix(in srgb, var(--suit-color, #4f46e5) 12%, transparent);
+}
+
+.identity-hub__progress-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+}
+
+.identity-hub__progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.identity-hub__section-intro {
+  align-items: center;
+  text-align: center;
+  border-top: 4px solid var(--suit-color, #4f46e5);
+}
+
+.identity-hub__section-intro-kicker {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--suit-color, #4f46e5);
+}
+
+.identity-hub__section-intro-icon {
+  font-size: 3rem;
+  line-height: 1;
+  filter: drop-shadow(0 6px 14px color-mix(in srgb, var(--suit-color, #4f46e5) 35%, transparent));
+}
+
+.identity-hub__section-intro .identity-hub__intro-meta {
+  justify-content: center;
+}
+
+.identity-hub__section-intro .identity-hub__actions {
+  width: 100%;
+}
+
 .identity-hub__options {
   display: flex;
   flex-direction: column;

@@ -9,9 +9,14 @@ import React, {
 
 import {
   AnswerValue,
-  PERSONALITY_QUESTION_BANK,
   PersonalityQuestion,
 } from './personalityTestData';
+import {
+  QUIZ_SECTIONS,
+  ORDERED_QUIZ_QUESTIONS,
+  getQuizPosition,
+  isSectionStart,
+} from './personalityTestSections';
 import { PersonalityScores, isDimensionMeasured, scorePersonality } from './personalityScoring';
 import {
   buildTopTraitList,
@@ -185,8 +190,8 @@ function buildHandSummary(traitCards: TraitCard[]): HandSummary {
   const headlineParts = topCards.map((card) => card.label);
   const headline =
     headlineParts.length === 2
-      ? `Your hand leans ${headlineParts[0]} and ${headlineParts[1]}, shaping how you show up.`
-      : 'Your hand highlights how you show up across your traits.';
+      ? `Your playstyle leans ${headlineParts[0]} and ${headlineParts[1]}, shaping how you show up.`
+      : 'Your playstyle highlights how you show up across your traits.';
 
   const strengths = HAND_SYNERGIES.filter((rule) =>
     hasHighBalanced(scoreMap, rule.a, rule.b),
@@ -443,8 +448,8 @@ const buildAiNarrative = (scores: PersonalityScores, summary: HandSummary | null
       : 'Your top traits shape a balanced, adaptable playstyle.';
 
   const handLine = summary
-    ? `Your current hand highlights ${summary.strengths[0].toLowerCase()}`
-    : 'Your hand highlights how your traits combine into practical strengths.';
+    ? `Your current playstyle highlights ${summary.strengths[0].toLowerCase()}`
+    : 'Your playstyle highlights how your traits combine into practical strengths.';
 
   return [
     'AI narrative (beta): This reflection builds on your trait signals.',
@@ -531,6 +536,7 @@ export default function PersonalityTest() {
   const { session } = useSupabaseAuth();
   const [step, setStep] = useState<TestStep>('intro');
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showSectionIntro, setShowSectionIntro] = useState(true);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const savedResultRef = useRef<string | null>(null);
   const refreshMessageTimeoutRef = useRef<number | null>(null);
@@ -556,7 +562,9 @@ export default function PersonalityTest() {
   const activeUserId = isValidUuid(activeSession?.user?.id) ? activeSession.user.id : null;
 
   const currentQuestion: PersonalityQuestion | undefined =
-    PERSONALITY_QUESTION_BANK[currentIndex];
+    ORDERED_QUIZ_QUESTIONS[currentIndex];
+  const quizPosition = getQuizPosition(currentIndex);
+  const answeredCount = Object.keys(answers).length;
 
   const scores = useMemo<PersonalityScores | null>(() => {
     if (step !== 'results') {
@@ -634,6 +642,7 @@ export default function PersonalityTest() {
   const handleStart = () => {
     setStep('quiz');
     setCurrentIndex(0);
+    setShowSectionIntro(true);
     setAnswers({});
     savedResultRef.current = null;
   };
@@ -658,17 +667,32 @@ export default function PersonalityTest() {
       return;
     }
 
-    if (currentIndex >= PERSONALITY_QUESTION_BANK.length - 1) {
+    if (currentIndex >= ORDERED_QUIZ_QUESTIONS.length - 1) {
       setStep('results');
       return;
     }
 
-    setCurrentIndex((prev) => prev + 1);
+    const nextIndex = currentIndex + 1;
+    setCurrentIndex(nextIndex);
+    // Pause on a suit-intro screen whenever we cross into a new section.
+    if (isSectionStart(nextIndex)) {
+      setShowSectionIntro(true);
+    }
   };
 
   const handleBack = () => {
-    if (currentIndex === 0) {
-      setStep('intro');
+    if (showSectionIntro) {
+      if (quizPosition.sectionIndex === 0) {
+        setStep('intro');
+        return;
+      }
+      setShowSectionIntro(false);
+      setCurrentIndex((prev) => prev - 1);
+      return;
+    }
+
+    if (isSectionStart(currentIndex)) {
+      setShowSectionIntro(true);
       return;
     }
 
@@ -678,6 +702,7 @@ export default function PersonalityTest() {
   const handleRetake = () => {
     setStep('quiz');
     setCurrentIndex(0);
+    setShowSectionIntro(true);
     setAnswers({});
     savedResultRef.current = null;
     setShowSparkReveal(true);
@@ -1029,7 +1054,7 @@ export default function PersonalityTest() {
           </ul>
           <div className="identity-hub__intro-meta">
             <span className="identity-hub__chip">⏱️ 4 minutes</span>
-            <span className="identity-hub__chip">🧠 {PERSONALITY_QUESTION_BANK.length} questions</span>
+            <span className="identity-hub__chip">🧠 {ORDERED_QUIZ_QUESTIONS.length} questions</span>
             <span className="identity-hub__chip">🔒 Private</span>
           </div>
           <div className="identity-hub__actions">
@@ -1049,10 +1074,63 @@ export default function PersonalityTest() {
         </div>
       )}
 
-      {step === 'quiz' && currentQuestion && (
+      {step === 'quiz' && showSectionIntro && (
+        <div
+          className="identity-hub__card identity-hub__section-intro"
+          style={{ '--suit-color': quizPosition.section.color } as CSSProperties}
+        >
+          <span className="identity-hub__section-intro-kicker">
+            Suit {quizPosition.sectionIndex + 1} of {QUIZ_SECTIONS.length}
+          </span>
+          <span className="identity-hub__section-intro-icon" aria-hidden="true">
+            {quizPosition.section.icon}
+          </span>
+          <h3 className="identity-hub__card-title">
+            The {quizPosition.section.title} questions
+          </h3>
+          <p className="identity-hub__card-text">{quizPosition.section.blurb}</p>
+          <div className="identity-hub__intro-meta">
+            <span className="identity-hub__chip identity-hub__chip--subtle">
+              {quizPosition.sectionSize} quick prompts
+            </span>
+          </div>
+          <div className="identity-hub__actions">
+            <button className="identity-hub__secondary" type="button" onClick={handleBack}>
+              Previous
+            </button>
+            <button
+              className="identity-hub__cta"
+              type="button"
+              onClick={() => setShowSectionIntro(false)}
+            >
+              Deal the questions
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 'quiz' && !showSectionIntro && currentQuestion && (
         <div className="identity-hub__card">
-          <div className="identity-hub__progress">
-            Question {currentIndex + 1} / {PERSONALITY_QUESTION_BANK.length}
+          <div className="identity-hub__progress-row">
+            <span
+              className="identity-hub__progress-suit"
+              style={{ '--suit-color': quizPosition.section.color } as CSSProperties}
+            >
+              {quizPosition.section.icon} {quizPosition.section.title} ·{' '}
+              {quizPosition.questionInSection}/{quizPosition.sectionSize}
+            </span>
+            <span className="identity-hub__progress">
+              {currentIndex + 1} / {ORDERED_QUIZ_QUESTIONS.length}
+            </span>
+          </div>
+          <div className="identity-hub__progress-track" aria-hidden="true">
+            <div
+              className="identity-hub__progress-fill"
+              style={{
+                width: `${Math.round((answeredCount / ORDERED_QUIZ_QUESTIONS.length) * 100)}%`,
+                backgroundColor: quizPosition.section.color,
+              }}
+            />
           </div>
           <h3 className="identity-hub__card-title">{currentQuestion.text}</h3>
           <p className="identity-hub__card-text identity-hub__card-text--compact">
@@ -1085,7 +1163,7 @@ export default function PersonalityTest() {
               onClick={handleNext}
               disabled={!answers[currentQuestion.id]}
             >
-              {currentIndex === PERSONALITY_QUESTION_BANK.length - 1
+              {currentIndex === ORDERED_QUIZ_QUESTIONS.length - 1
                 ? 'View results'
                 : 'Continue'}
             </button>
@@ -1219,10 +1297,10 @@ export default function PersonalityTest() {
             )}
           </div>
           <div className="identity-hub__section identity-hub__trait-hand">
-            <h4 className="identity-hub__results-title">Your trait cards</h4>
+            <h4 className="identity-hub__results-title">Your trait stats</h4>
             <p className="identity-hub__card-text">
-              Each card captures a strength and growth edge. Together they form your playstyle
-              hand.
+              Each trait captures a strength and a growth edge. These stats are what power the
+              archetype cards in your hand above.
             </p>
             <div className="identity-hub__trait-grid">
               {traitCards.map((card) => (
@@ -1262,7 +1340,7 @@ export default function PersonalityTest() {
           </div>
           {handSummary && (
             <div className="identity-hub__section identity-hub__hand-summary">
-              <h4 className="identity-hub__results-title">Your hand summary</h4>
+              <h4 className="identity-hub__results-title">Playstyle summary</h4>
               <p className="identity-hub__hand-headline">{handSummary.headline}</p>
               <div className="identity-hub__hand-columns">
                 <div>
