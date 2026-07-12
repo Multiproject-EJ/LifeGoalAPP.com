@@ -50,6 +50,10 @@ import { buildHand, type ArchetypeHand } from './archetypes/archetypeHandBuilder
 import { DeckSummary } from './deck/DeckSummary';
 import { PlayerDeck } from './deck/PlayerDeck';
 import { ShadowQuestCard } from './deck/ShadowQuestCard';
+import { MicroTestPanel } from './deck/MicroTestPanel';
+import type { MicroTestResult } from './microTests/microTestScoring';
+import { loadMicroTestResults } from './microTests/microTestStore';
+import { mergeMicroTestScores } from './microTests/microTestApply';
 import { PlayersHandRevealCeremony, PlayersHandSparkPreview } from '../players_hand/spark-preview';
 import {
   isPlayersHandSparkComparisonEnabled,
@@ -404,12 +408,16 @@ const buildSupabaseRecommendations = (
   return matches;
 };
 
-const buildNarrative = (scores: PersonalityScores): string[] => {
+const buildNarrative = (
+  scores: PersonalityScores,
+  isMeasured: (key: string) => boolean = (key) => isDimensionMeasured(key as never),
+): string[] => {
   const traitEntries = Object.entries(scores.traits).sort((a, b) => b[1] - a[1]);
-  // Only narrate axes the foundation test actually measures — unmeasured
-  // HEXACO axes sit at a neutral placeholder and must never be "the key axis".
+  // Only narrate axes that have real data — an unmeasured HEXACO axis sits at a
+  // neutral placeholder and must never be "the key axis" until a micro-test
+  // measures it.
   const axisEntries = Object.entries(scores.axes)
-    .filter(([key]) => isDimensionMeasured(key as keyof PersonalityScores['axes']))
+    .filter(([key]) => isMeasured(key))
     .sort((a, b) => Math.abs(b[1] - 50) - Math.abs(a[1] - 50));
 
   const [primaryTraitKey] = traitEntries[0];
@@ -567,13 +575,31 @@ export default function PersonalityTest() {
   const quizPosition = getQuizPosition(currentIndex);
   const answeredCount = Object.keys(answers).length;
 
-  const scores = useMemo<PersonalityScores | null>(() => {
+  const foundationScores = useMemo<PersonalityScores | null>(() => {
     if (step !== 'results') {
       return null;
     }
 
     return scorePersonality(answers);
   }, [answers, step]);
+
+  // Completed micro-tests for this user, loaded offline-first. Folded into the
+  // displayed scores so HEXACO reveals the two deeper axes and evolves the hand.
+  const [microResults, setMicroResults] = useState<MicroTestResult[]>([]);
+  useEffect(() => {
+    setMicroResults(activeUserId ? loadMicroTestResults(activeUserId) : []);
+  }, [activeUserId, step]);
+
+  const merged = useMemo(
+    () => (foundationScores ? mergeMicroTestScores(foundationScores, microResults) : null),
+    [foundationScores, microResults],
+  );
+  const scores = merged?.scores ?? foundationScores;
+  const measuredDimensions = merged?.measured ?? null;
+  const isMeasured = useCallback(
+    (key: string) => (measuredDimensions ? measuredDimensions.has(key) : isDimensionMeasured(key as never)),
+    [measuredDimensions],
+  );
 
   const archetypeHand = useMemo<ArchetypeHand | null>(() => {
     if (!scores) {
@@ -585,8 +611,8 @@ export default function PersonalityTest() {
     return buildHand(ranked);
   }, [scores]);
 
-  const narrative = useMemo(() => (scores ? buildNarrative(scores) : []), [scores]);
-  const traitCards = useMemo(() => (scores ? buildTraitCards(scores) : []), [scores]);
+  const narrative = useMemo(() => (scores ? buildNarrative(scores, isMeasured) : []), [scores, isMeasured]);
+  const traitCards = useMemo(() => (scores ? buildTraitCards(scores, isMeasured) : []), [scores, isMeasured]);
   const topTraits = useMemo(
     () => (scores ? buildTopTraitList(scores.traits, 2) : []),
     [scores],
@@ -788,7 +814,7 @@ export default function PersonalityTest() {
   };
 
   useEffect(() => {
-    if (step !== 'results' || !scores || !activeUserId) {
+    if (step !== 'results' || !foundationScores || !activeUserId) {
       return;
     }
 
@@ -796,11 +822,18 @@ export default function PersonalityTest() {
       return;
     }
 
+    // Persist the FOUNDATION scores/hand — the stored record represents the
+    // foundation test event. Micro-test results live in their own local store
+    // and are folded in only for display, so they are never double-counted.
+    const foundationHand = buildHand(
+      rankArchetypes(scoreArchetypes(foundationScores, ARCHETYPE_DECK)),
+    );
+
     queuePersonalityTestResult({
       userId: activeUserId,
       answers,
-      scores,
-      archetypeHand: archetypeHand || undefined, // Save archetype hand if present
+      scores: foundationScores,
+      archetypeHand: foundationHand,
       version: 'v1',
     })
       .then((record) => {
@@ -813,7 +846,7 @@ export default function PersonalityTest() {
       .catch(() => {
         // Fail silently; results are still shown locally.
       });
-  }, [activeUserId, answers, scores, step]);
+  }, [activeUserId, answers, foundationScores, step]);
 
   useEffect(() => {
     if (step !== 'results') {
@@ -1213,7 +1246,7 @@ export default function PersonalityTest() {
               <h4 className="identity-hub__results-title">Custom Axes</h4>
               <ul className="identity-hub__results-list">
                 {Object.entries(scores.axes)
-                  .filter(([key]) => isDimensionMeasured(key as keyof PersonalityScores['axes']))
+                  .filter(([key]) => isMeasured(key))
                   .map(([key, value]) => (
                     <li key={key} className="identity-hub__results-item">
                       <span>{AXIS_LABELS[key as keyof PersonalityScores['axes']]}</span>
@@ -1228,6 +1261,17 @@ export default function PersonalityTest() {
               <div className="identity-hub__section">
                 <DeckSummary hand={archetypeHand} microTestCount={0} />
               </div>
+              {foundationScores && (
+                <div className="identity-hub__section">
+                  <MicroTestPanel
+                    userId={activeUserId}
+                    foundationScores={foundationScores}
+                    results={microResults}
+                    dominantName={archetypeHand.dominant.card.name}
+                    onResultsChange={setMicroResults}
+                  />
+                </div>
+              )}
               <div className="identity-hub__section">
                 <ShadowQuestCard hand={archetypeHand} userId={activeUserId} />
               </div>

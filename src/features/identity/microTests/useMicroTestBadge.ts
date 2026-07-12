@@ -9,11 +9,11 @@ export type MicroTestBadgeState = {
 };
 
 /**
- * MicroTestFlow is not mounted anywhere yet, so the badge must stay hidden —
- * otherwise it advertises quizzes the user has no way to open. Flip this to
- * true once a surface renders MicroTestFlow for the triggered tests.
+ * The Personality results screen now mounts MicroTestFlow via MicroTestPanel,
+ * so the badge points at something the player can actually open. (Kept as a
+ * single switch in case the entry point is ever temporarily removed.)
  */
-const MICRO_TEST_UI_WIRED = false;
+const MICRO_TEST_UI_WIRED = true;
 
 /**
  * Hook that evaluates micro-test triggers and returns badge state
@@ -37,5 +37,6 @@ export function useMicroTestBadge(playerState: PlayerState): MicroTestBadgeState
     playerState.currentStreakDays,
     playerState.daysSinceFoundationTest,
     playerState.completedMicroTests.length, // Use length to avoid deep comparison
+    playerState.foundationTestTaken,
   ]);
 }

@@ -293,7 +293,10 @@ export function getScoreBand(score: number): ScoreBand {
   return 'low';
 }
 
-export function buildTraitCards(scores: PersonalityScores): TraitCard[] {
+export function buildTraitCards(
+  scores: PersonalityScores,
+  isMeasured: (key: string) => boolean = (key) => isDimensionMeasured(key as never),
+): TraitCard[] {
   const traits = TRAIT_ORDER.map((key) => {
     const copy = TRAIT_COPY[key];
     const score = scores.traits[key];
@@ -313,7 +316,7 @@ export function buildTraitCards(scores: PersonalityScores): TraitCard[] {
     };
   });
 
-  const axes = AXIS_ORDER.filter(isDimensionMeasured).map((key) => {
+  const axes = AXIS_ORDER.filter((key) => isMeasured(key)).map((key) => {
     const copy = TRAIT_COPY[key];
     const score = scores.axes[key];
     const band = getScoreBand(score);
