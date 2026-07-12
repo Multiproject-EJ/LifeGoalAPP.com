@@ -215,7 +215,9 @@ export const PERSONALITY_QUESTION_BANK: PersonalityQuestion[] = [
     text: 'When facing a new challenge, I prefer to dive in and learn by doing.',
     axisType: 'custom',
     dimensionKey: 'cognitive_entry',
-    reverseScored: false,
+    // High cognitive_entry = understand-first (see AXIS_NARRATIVES), so the
+    // dive-in/learn-by-doing item must count toward the low end.
+    reverseScored: true,
   },
   {
     id: 'custom_cognitive_entry_02',

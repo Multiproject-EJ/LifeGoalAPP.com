@@ -1,5 +1,5 @@
 import type { AxisKey, TraitKey } from './personalityTestData';
-import type { PersonalityScores } from './personalityScoring';
+import { isDimensionMeasured, type PersonalityScores } from './personalityScoring';
 
 export type ScoreBand = 'low' | 'balanced' | 'high';
 
@@ -313,7 +313,7 @@ export function buildTraitCards(scores: PersonalityScores): TraitCard[] {
     };
   });
 
-  const axes = AXIS_ORDER.map((key) => {
+  const axes = AXIS_ORDER.filter(isDimensionMeasured).map((key) => {
     const copy = TRAIT_COPY[key];
     const score = scores.axes[key];
     const band = getScoreBand(score);

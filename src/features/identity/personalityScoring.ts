@@ -1,6 +1,7 @@
 import {
   AxisKey,
   AnswerValue,
+  DimensionKey,
   PERSONALITY_QUESTION_BANK,
   PersonalityQuestion,
   TraitKey,
@@ -32,6 +33,24 @@ const AXIS_KEYS: AxisKey[] = [
   'honesty_humility',
   'emotionality',
 ];
+
+/**
+ * Dimensions the foundation question bank actually measures.
+ * Axes like honesty_humility and emotionality are HEXACO dimensions that only
+ * get real data from micro-tests; until then they must not be presented as
+ * results or skew archetype scoring.
+ */
+export const FOUNDATION_MEASURED_DIMENSIONS: ReadonlySet<DimensionKey> = new Set(
+  PERSONALITY_QUESTION_BANK.map((question) => question.dimensionKey),
+);
+
+export function isDimensionMeasured(key: DimensionKey): boolean {
+  return FOUNDATION_MEASURED_DIMENSIONS.has(key);
+}
+
+// Neutral Likert midpoint (3 on a 1-5 scale => 50%) for unmeasured dimensions,
+// so they neither read as extreme results nor bias archetype ranking.
+const NEUTRAL_AVERAGE = 3;
 
 function createTotals<T extends string>(keys: T[]): ScoreTotals<T> {
   return keys.reduce((acc, key) => {
@@ -78,14 +97,14 @@ export function scorePersonality(
 
   const traits = TRAIT_KEYS.reduce((acc, key) => {
     const { sum, count } = traitTotals[key];
-    const average = count > 0 ? sum / count : 1;
+    const average = count > 0 ? sum / count : NEUTRAL_AVERAGE;
     acc[key] = normalizeAverageToPercent(average);
     return acc;
   }, {} as ScoreRecord<TraitKey>);
 
   const axes = AXIS_KEYS.reduce((acc, key) => {
     const { sum, count } = axisTotals[key];
-    const average = count > 0 ? sum / count : 1;
+    const average = count > 0 ? sum / count : NEUTRAL_AVERAGE;
     acc[key] = normalizeAverageToPercent(average);
     return acc;
   }, {} as ScoreRecord<AxisKey>);
