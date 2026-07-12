@@ -9,6 +9,9 @@ import {
   QUIZ_SECTIONS,
   getQuizPosition,
 } from '../src/features/identity/personalityTestSections';
+import { mergeMicroTestScores } from '../src/features/identity/microTests/microTestApply';
+import type { MicroTestResult } from '../src/features/identity/microTests/microTestScoring';
+import { evaluateAvailableMicroTests } from '../src/features/identity/microTests/microTestTriggers';
 
 function buildAnswers({ preferHigh }: { preferHigh: boolean }) {
   return PERSONALITY_QUESTION_BANK.reduce<Record<string, AnswerValue>>((acc, question) => {
@@ -86,5 +89,65 @@ QUIZ_SECTIONS.forEach((section, sectionIndex) => {
     flatIndex += 1;
   });
 });
+
+// ── Micro-test wiring ───────────────────────────────────────────────────────
+
+const foundation = scorePersonality(buildAnswers({ preferHigh: false }));
+// Sanity: foundation leaves the unmeasured HEXACO axes at neutral 50.
+assert.equal(foundation.axes.honesty_humility, 50);
+assert.equal(foundation.axes.emotionality, 50);
+
+const now = new Date('2026-07-12T00:00:00Z');
+
+// A HEXACO micro-test reveals the two deeper axes and writes their values
+// directly (no foundation anchor to blend against).
+const hexacoResult: MicroTestResult = {
+  microTestId: 'micro_hexaco_intro',
+  takenAt: now,
+  dimensionScores: { honesty_humility: 80, emotionality: 30 },
+};
+const mergedHexaco = mergeMicroTestScores(foundation, [hexacoResult], now);
+assert.ok(mergedHexaco.measured.has('honesty_humility'), 'honesty_humility now measured');
+assert.ok(mergedHexaco.measured.has('emotionality'), 'emotionality now measured');
+assert.equal(mergedHexaco.scores.axes.honesty_humility, 80);
+assert.equal(mergedHexaco.scores.axes.emotionality, 30);
+
+// A foundation-measured dimension (extraversion via confirm-dominant) blends
+// with the foundation value and is clamped to the ±15 guardrail.
+const extravertFoundation = scorePersonality(buildAnswers({ preferHigh: true }));
+const neutralExtra = { ...extravertFoundation, traits: { ...extravertFoundation.traits, extraversion: 50 } };
+const confirmResult: MicroTestResult = {
+  microTestId: 'micro_confirm_dominant',
+  takenAt: now,
+  dimensionScores: { extraversion: 90 },
+};
+const mergedConfirm = mergeMicroTestScores(neutralExtra, [confirmResult], now);
+assert.equal(mergedConfirm.scores.traits.extraversion, 65, 'extraversion blends, clamped to +15');
+
+// No micro-tests → scores and measured set are unchanged from foundation.
+const mergedNone = mergeMicroTestScores(foundation, [], now);
+assert.equal(mergedNone.measured.has('honesty_humility'), false);
+assert.deepEqual(mergedNone.scores.axes, foundation.axes);
+
+// Triggers: nothing is available until a foundation test exists; once it does,
+// HEXACO is reachable without a high level.
+const noFoundation = {
+  level: 1,
+  currentStreakDays: 0,
+  daysSinceFoundationTest: 0,
+  completedMicroTests: [],
+  foundationTestTaken: false,
+};
+assert.equal(evaluateAvailableMicroTests(noFoundation).length, 0, 'no tests without foundation');
+const withFoundation = { ...noFoundation, foundationTestTaken: true };
+assert.ok(
+  evaluateAvailableMicroTests(withFoundation).some((t) => t.microTestId === 'micro_hexaco_intro'),
+  'HEXACO available right after foundation, not gated behind level 5',
+);
+const hexacoDone = { ...withFoundation, completedMicroTests: ['micro_hexaco_intro'] };
+assert.ok(
+  !evaluateAvailableMicroTests(hexacoDone).some((t) => t.microTestId === 'micro_hexaco_intro'),
+  'HEXACO no longer offered once completed',
+);
 
 console.log('Personality scoring checks passed.');

@@ -175,6 +175,7 @@ import { scoreArchetypes, rankArchetypes } from './features/identity/archetypes/
 import { buildHand, handToArray, type ArchetypeHand, type HandCard } from './features/identity/archetypes/archetypeHandBuilder';
 import { ARCHETYPE_DECK, SUIT_LABELS } from './features/identity/archetypes/archetypeDeck';
 import { useMicroTestBadge } from './features/identity/microTests/useMicroTestBadge';
+import { useMicroTestPlayerState } from './features/identity/microTests/useMicroTestPlayerState';
 import type { PlayerState } from './features/identity/microTests/microTestTriggers';
 import { isPlayersHandSparkResultEnabled } from './features/players_hand/playersHandFeatureFlags';
 import { PlayersHandSparkPreview } from './features/players_hand/spark-preview';
@@ -1206,20 +1207,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const isFooterControllerLayoutActive = isMobileMenuImageActive && showGameBoardOverlay;
   const shouldShowPointsBadges = isGameModeActive && isMobileExperience;
   
-  // Micro-test badge state for identity tab
-  const microTestPlayerState: PlayerState = useMemo(() => {
-    // TODO: Calculate days since foundation test from personality profile
-    // For now, use a placeholder until personality profile is added to component state
-    const daysSinceFoundation = 0;
-    
-    return {
-      level: currentLevel,
-      currentStreakDays: streakMomentum,
-      daysSinceFoundationTest: daysSinceFoundation,
-      completedMicroTests: [], // TODO: Load from storage/Supabase when micro-test tracking is added
-    };
-  }, [currentLevel, streakMomentum]);
-  
+  // Micro-test badge state for identity tab — real foundation/completion state.
+  const microTestUserId = isValidUuid(supabaseSession?.user?.id) ? supabaseSession.user.id : null;
+  const microTestPlayerState: PlayerState = useMicroTestPlayerState(
+    microTestUserId,
+    currentLevel,
+    streakMomentum,
+  );
+
   const microTestBadge = useMicroTestBadge(microTestPlayerState);
   const [hasSeenMicroTestBadge, setHasSeenMicroTestBadge] = useState(false);
   const previousMicroTestBadgeRef = useRef({ count: 0, showBadge: false });

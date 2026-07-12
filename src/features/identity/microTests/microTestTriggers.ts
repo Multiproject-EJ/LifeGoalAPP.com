@@ -27,18 +27,29 @@ export type MicroTestTrigger = {
 };
 
 /**
+ * Micro-tests that currently have a reachable UI surface (the Personality
+ * results-screen MicroTestPanel). Both the panel and the notification badge
+ * key off this set, so the badge never advertises a test the player can't open.
+ * Add a test's id here once a surface renders its flow.
+ */
+export const SELF_SERVE_MICRO_TEST_IDS: ReadonlySet<string> = new Set(['micro_hexaco_intro']);
+
+/**
  * Registry of micro-test triggers.
  * Triggers define when micro-tests become available to the player.
  */
 export const MICRO_TEST_TRIGGERS: MicroTestTrigger[] = [
   {
-    id: 'trigger_level_5_hexaco',
+    id: 'trigger_hexaco_intro',
     type: 'level_milestone',
     microTestId: 'micro_hexaco_intro',
-    label: 'Level 5: HEXACO Unlock',
-    description: 'Unlock deeper personality dimensions with HEXACO assessment',
+    label: 'Unlock deeper dimensions',
+    // HEXACO measures Honesty-Humility and Emotionality — dimensions the
+    // foundation test does not cover at all. Offer it as soon as the player
+    // has a foundation hand, not gated behind a high level, so those two axes
+    // stop reading as neutral placeholders.
+    description: 'Unlock two deeper personality dimensions the foundation test does not measure',
     condition: {
-      minLevel: 5,
       maxTimesCompleted: 1, // Only once
     },
     priority: 100,
@@ -79,13 +90,23 @@ export type PlayerState = {
   currentStreakDays: number;
   daysSinceFoundationTest: number;
   completedMicroTests: string[]; // IDs of completed micro-tests
+  /** Micro-tests are meaningless without a foundation hand to evolve. */
+  foundationTestTaken: boolean;
 };
 
 /**
  * Evaluates which micro-tests are available for the player
  */
 export function evaluateAvailableMicroTests(state: PlayerState): MicroTestTrigger[] {
+  // No foundation hand yet → nothing to confirm, level up, or deepen.
+  if (!state.foundationTestTaken) return [];
+
   return MICRO_TEST_TRIGGERS.filter((trigger) => {
+    // Only surface tests with a reachable UI, so the badge stays honest.
+    if (!SELF_SERVE_MICRO_TEST_IDS.has(trigger.microTestId)) {
+      return false;
+    }
+
     // Check if already completed and not repeatable
     if (!trigger.repeatable && state.completedMicroTests.includes(trigger.microTestId)) {
       return false;
