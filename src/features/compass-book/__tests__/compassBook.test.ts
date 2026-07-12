@@ -59,11 +59,13 @@ import {
 } from '../logic/islandFragment';
 import {
   SHADOW_HINT_QUESTION_IDS,
+  VALUE_HINT_QUESTION_IDS,
   SUGGESTED_SHADOW_OPTION_BY_ARCHETYPE,
+  SUGGESTED_VALUES_BY_ARCHETYPE,
   buildShadowBridgeData,
   coercePersonalityScores,
 } from '../logic/shadowBridge';
-import { SHADOW_OPTIONS, chapter2InnerCompass } from '../content/chapter2InnerCompass';
+import { SHADOW_OPTIONS, VALUE_OPTIONS, chapter2InnerCompass } from '../content/chapter2InnerCompass';
 import { ARCHETYPE_DECK } from '../../identity/archetypes/archetypeDeck';
 import { COMPASS_BOOK_CHAPTER_IDS } from '../types';
 import type { CompassAnswerRecord, CompassAnswerValue, CompassBlockDefinition, CompassChapterState } from '../types';
@@ -905,6 +907,39 @@ function testShadowBridge(): void {
   assert(legacy.axes.emotionality === 50, 'legacy phantom emotionality pinned to neutral');
   const legacyBridge = buildShadowBridgeData(legacy);
   assert(legacyBridge.shadowId === bridge.shadowId, 'legacy record yields same shadow as clean record');
+
+  // Values bridge: the mapping covers the whole deck with valid VALUE_OPTIONS ids,
+  // core_values is a real multi_choice question, and a hand yields deduped suggestions.
+  const valueOptionIds = new Set(VALUE_OPTIONS.map((option) => option.id));
+  assert(
+    Object.keys(SUGGESTED_VALUES_BY_ARCHETYPE).length === ARCHETYPE_DECK.length,
+    'value mapping covers whole deck',
+  );
+  for (const [archetypeId, valueIds] of Object.entries(SUGGESTED_VALUES_BY_ARCHETYPE)) {
+    assert(deckIds.has(archetypeId), `value mapping references real archetype: ${archetypeId}`);
+    assert(valueIds.length > 0, `value mapping has values: ${archetypeId}`);
+    for (const valueId of valueIds) {
+      assert(valueOptionIds.has(valueId), `value mapping targets real value option: ${valueId}`);
+    }
+  }
+  for (const questionId of VALUE_HINT_QUESTION_IDS) {
+    const block = chapterBlocks.find((entry) => entry.questionId === questionId);
+    assert(!!block, `value hint question exists in chapter 2: ${questionId}`);
+    assert(block!.type === 'multi_choice', `value hint question is multi choice: ${questionId}`);
+    assert(
+      (block!.options ?? []).every((option) => valueOptionIds.has(option.id)),
+      `value hint question uses value options: ${questionId}`,
+    );
+  }
+  assert(bridge.suggestedValueIds.length > 0, 'bridge produces value suggestions');
+  assert(
+    bridge.suggestedValueIds.every((id) => valueOptionIds.has(id)),
+    'suggested values are real options',
+  );
+  assert(
+    new Set(bridge.suggestedValueIds).size === bridge.suggestedValueIds.length,
+    'suggested values are deduped',
+  );
 }
 
 export function runAllCompassBookTests(): void {

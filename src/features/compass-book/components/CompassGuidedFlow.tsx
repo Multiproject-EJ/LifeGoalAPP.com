@@ -11,7 +11,7 @@ import { getChapterActivities, getChapterDefinition } from '../content/compassBo
 import { getUnlockedActivityCount } from '../logic/unlock';
 import { areRequiredBlocksAnswered } from '../logic/progress';
 import { CompassActivityRenderer } from './CompassActivityRenderer';
-import { makeHelpSlot, makePickSlot, makeShadowHintSlot } from './compassBlockSlots';
+import { makeHelpSlot, makePickSlot, makeInnerCompassHintSlot } from './compassBlockSlots';
 import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
 import { loadCompassPlayerData } from '../services/compassPlayerData';
 import { loadCompassShadowBridge } from '../services/compassShadowBridge';
@@ -227,7 +227,7 @@ export function CompassGuidedFlow({
           blocks={activity.blocks}
           values={draft}
           onChange={handleChange}
-          renderContext={makeShadowHintSlot(chapterId, shadowBridge, draft, handleChange)}
+          renderContext={makeInnerCompassHintSlot(chapterId, shadowBridge, draft, handleChange)}
           renderPick={makePickSlot(playerData, handleChange)}
           renderHelp={makeHelpSlot(chapterId, draft, handleChange)}
         />

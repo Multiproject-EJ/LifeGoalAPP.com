@@ -21,7 +21,7 @@ import { loadCompassShadowBridge } from '../services/compassShadowBridge';
 import type { CompassShadowBridgeData } from '../logic/shadowBridge';
 import { EMPTY_COMPASS_PLAYER_DATA, type CompassPlayerData } from '../logic/playerOptions';
 import { CompassActivityRenderer } from './CompassActivityRenderer';
-import { makeHelpSlot, makePickSlot, makeShadowHintSlot } from './compassBlockSlots';
+import { makeHelpSlot, makePickSlot, makeInnerCompassHintSlot } from './compassBlockSlots';
 
 type DraftValues = Record<string, CompassAnswerValue | undefined>;
 
@@ -114,7 +114,7 @@ export function CompassStopFragment({
         blocks={blocks}
         values={draft}
         onChange={handleChange}
-        renderContext={makeShadowHintSlot(fragment.chapterId, shadowBridge, draft, handleChange)}
+        renderContext={makeInnerCompassHintSlot(fragment.chapterId, shadowBridge, draft, handleChange)}
         renderPick={makePickSlot(playerData, handleChange)}
         renderHelp={makeHelpSlot(fragment.chapterId, draft, handleChange)}
       />
