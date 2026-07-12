@@ -12,6 +12,10 @@ import {
 import { mergeMicroTestScores } from '../src/features/identity/microTests/microTestApply';
 import type { MicroTestResult } from '../src/features/identity/microTests/microTestScoring';
 import { evaluateAvailableMicroTests } from '../src/features/identity/microTests/microTestTriggers';
+import {
+  buildShadowJourney,
+  distinctShadowCount,
+} from '../src/features/identity/archetypes/shadowJourney';
 
 function buildAnswers({ preferHigh }: { preferHigh: boolean }) {
   return PERSONALITY_QUESTION_BANK.reduce<Record<string, AnswerValue>>((acc, question) => {
@@ -149,5 +153,42 @@ assert.ok(
   !evaluateAvailableMicroTests(hexacoDone).some((t) => t.microTestId === 'micro_hexaco_intro'),
   'HEXACO no longer offered once completed',
 );
+
+// ── Shadow Journey ──────────────────────────────────────────────────────────
+
+// Two records with different profiles that yield different shadow cards. The
+// journey must sort oldest→newest and flag the change on the second entry.
+const leaderRecord = {
+  id: 'r1',
+  taken_at: '2026-01-01T00:00:00Z',
+  traits: { openness: 45, conscientiousness: 85, extraversion: 90, agreeableness: 40, emotional_stability: 75 },
+  axes: { regulation_style: 80, stress_response: 70, identity_sensitivity: 40, cognitive_entry: 60 },
+};
+const creativeRecord = {
+  id: 'r2',
+  taken_at: '2026-06-01T00:00:00Z',
+  traits: { openness: 95, conscientiousness: 30, extraversion: 50, agreeableness: 65, emotional_stability: 40 },
+  axes: { regulation_style: 25, stress_response: 35, identity_sensitivity: 80, cognitive_entry: 30 },
+};
+
+// Pass newest-first to prove the function re-sorts chronologically.
+const journey = buildShadowJourney([creativeRecord, leaderRecord]);
+assert.equal(journey.length, 2);
+assert.ok(journey[0].takenAt < journey[1].takenAt, 'journey is chronological');
+assert.equal(journey[0].changedFromPrevious, false, 'first entry never counts as changed');
+assert.equal(journey[0].shadowId !== journey[1].shadowId, journey[1].changedFromPrevious);
+assert.equal(distinctShadowCount(journey), 2, 'two distinct shadows across these profiles');
+
+// A single record is a valid one-entry journey with no "changed" flag.
+const solo = buildShadowJourney([leaderRecord]);
+assert.equal(solo.length, 1);
+assert.equal(solo[0].changedFromPrevious, false);
+
+// A legacy record with phantom-0 HEXACO axes yields the same shadow as one
+// without those keys (coercion pins them to neutral).
+const legacyShadow = buildShadowJourney([
+  { ...leaderRecord, axes: { ...leaderRecord.axes, honesty_humility: 0, emotionality: 0 } },
+])[0];
+assert.equal(legacyShadow.shadowId, solo[0].shadowId, 'legacy phantom-0 record yields same shadow');
 
 console.log('Personality scoring checks passed.');

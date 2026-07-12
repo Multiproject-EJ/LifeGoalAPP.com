@@ -50,7 +50,9 @@ import { buildHand, type ArchetypeHand } from './archetypes/archetypeHandBuilder
 import { DeckSummary } from './deck/DeckSummary';
 import { PlayerDeck } from './deck/PlayerDeck';
 import { ShadowQuestCard } from './deck/ShadowQuestCard';
+import { ShadowJourneyCard } from './deck/ShadowJourneyCard';
 import { MicroTestPanel } from './deck/MicroTestPanel';
+import { CollapsibleSection } from './CollapsibleSection';
 import type { MicroTestResult } from './microTests/microTestScoring';
 import { loadMicroTestResults } from './microTests/microTestStore';
 import { mergeMicroTestScores } from './microTests/microTestApply';
@@ -1230,32 +1232,34 @@ export default function PersonalityTest() {
                 : 'Your strongest signals feel balanced today.'}
             </p>
           </div>
-          <div className="identity-hub__results">
-            <div className="identity-hub__results-section">
-              <h4 className="identity-hub__results-title">Big Five</h4>
-              <ul className="identity-hub__results-list">
-                {Object.entries(scores.traits).map(([key, value]) => (
-                  <li key={key} className="identity-hub__results-item">
-                    <span>{TRAIT_LABELS[key as keyof PersonalityScores['traits']]}</span>
-                    <span>{value}%</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="identity-hub__results-section">
-              <h4 className="identity-hub__results-title">Custom Axes</h4>
-              <ul className="identity-hub__results-list">
-                {Object.entries(scores.axes)
-                  .filter(([key]) => isMeasured(key))
-                  .map(([key, value]) => (
+          <CollapsibleSection title="Score breakdown" meta="Big Five + axes">
+            <div className="identity-hub__results">
+              <div className="identity-hub__results-section">
+                <h4 className="identity-hub__results-title">Big Five</h4>
+                <ul className="identity-hub__results-list">
+                  {Object.entries(scores.traits).map(([key, value]) => (
                     <li key={key} className="identity-hub__results-item">
-                      <span>{AXIS_LABELS[key as keyof PersonalityScores['axes']]}</span>
+                      <span>{TRAIT_LABELS[key as keyof PersonalityScores['traits']]}</span>
                       <span>{value}%</span>
                     </li>
                   ))}
-              </ul>
+                </ul>
+              </div>
+              <div className="identity-hub__results-section">
+                <h4 className="identity-hub__results-title">Custom Axes</h4>
+                <ul className="identity-hub__results-list">
+                  {Object.entries(scores.axes)
+                    .filter(([key]) => isMeasured(key))
+                    .map(([key, value]) => (
+                      <li key={key} className="identity-hub__results-item">
+                        <span>{AXIS_LABELS[key as keyof PersonalityScores['axes']]}</span>
+                        <span>{value}%</span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
             </div>
-          </div>
+          </CollapsibleSection>
           {archetypeHand && (
             <>
               <div className="identity-hub__section">
@@ -1274,6 +1278,9 @@ export default function PersonalityTest() {
               )}
               <div className="identity-hub__section">
                 <ShadowQuestCard hand={archetypeHand} userId={activeUserId} />
+              </div>
+              <div className="identity-hub__section">
+                <ShadowJourneyCard shadowCard={archetypeHand.shadow.card} records={history} />
               </div>
               {playersHandSparkResultEnabled ? (
                 <div className="identity-hub__section">
@@ -1297,14 +1304,13 @@ export default function PersonalityTest() {
               )}
             </>
           )}
-          <div className="identity-hub__section identity-hub__narrative">
-            <h4 className="identity-hub__results-title">Profile summary</h4>
+          <CollapsibleSection title="Profile summary" className="identity-hub__narrative">
             {narrative.map((paragraph) => (
               <p key={paragraph} className="identity-hub__narrative-text">
                 {paragraph}
               </p>
             ))}
-          </div>
+          </CollapsibleSection>
           <div className="identity-hub__section identity-hub__ai-narrative">
             <div className="identity-hub__ai-header">
               <div>
@@ -1344,8 +1350,11 @@ export default function PersonalityTest() {
               </div>
             )}
           </div>
-          <div className="identity-hub__section identity-hub__trait-hand">
-            <h4 className="identity-hub__results-title">Your trait stats</h4>
+          <CollapsibleSection
+            title="Your trait stats"
+            meta={`${traitCards.length} traits`}
+            className="identity-hub__trait-hand"
+          >
             <p className="identity-hub__card-text">
               Each trait captures a strength and a growth edge. These stats are what power the
               archetype cards in your hand above.
@@ -1385,10 +1394,9 @@ export default function PersonalityTest() {
                 </article>
               ))}
             </div>
-          </div>
+          </CollapsibleSection>
           {handSummary && (
-            <div className="identity-hub__section identity-hub__hand-summary">
-              <h4 className="identity-hub__results-title">Playstyle summary</h4>
+            <CollapsibleSection title="Playstyle summary" className="identity-hub__hand-summary">
               <p className="identity-hub__hand-headline">{handSummary.headline}</p>
               <div className="identity-hub__hand-columns">
                 <div>
@@ -1412,7 +1420,7 @@ export default function PersonalityTest() {
                 <span className="identity-hub__hand-chip">Next move</span>
                 <span>{handSummary.nextMove}</span>
               </div>
-            </div>
+            </CollapsibleSection>
           )}
           <div className="identity-hub__section identity-hub__recommendations">
             <h4 className="identity-hub__results-title">Recommended next actions</h4>
@@ -1428,8 +1436,11 @@ export default function PersonalityTest() {
               ))}
             </ul>
           </div>
-          <div className="identity-hub__section identity-hub__history">
-            <h4 className="identity-hub__results-title">Recent history</h4>
+          <CollapsibleSection
+            title="Recent history"
+            meta={history.length > 0 ? `${history.length}` : undefined}
+            className="identity-hub__history"
+          >
             {history.length === 0 ? (
               <p className="identity-hub__card-text">
                 No saved sessions yet. Complete a test to see your snapshots here.
@@ -1457,7 +1468,7 @@ export default function PersonalityTest() {
                 ))}
               </ul>
             )}
-          </div>
+          </CollapsibleSection>
           <div className="identity-hub__actions">
             <button className="identity-hub__secondary" type="button" onClick={handleRetake}>
               Retake

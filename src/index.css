@@ -27592,6 +27592,51 @@ html.platform-ipad .workspace-shell__menu-edge {
   flex-wrap: wrap;
 }
 
+.identity-hub__collapsible {
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--card-background, #ffffff);
+}
+
+.identity-hub__collapsible-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--text-primary, #111827);
+}
+
+.identity-hub__collapsible-toggle:hover {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.identity-hub__collapsible-title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.identity-hub__collapsible-meta {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.identity-hub__collapsible-chevron {
+  font-size: 0.7rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.identity-hub__collapsible-body {
+  padding: 0 1rem 1rem;
+}
+
 .identity-hub__progress-suit {
   display: inline-flex;
   align-items: center;

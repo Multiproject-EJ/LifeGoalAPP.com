@@ -13,9 +13,14 @@ import type {
 import { CompassAIHelper } from './CompassAIHelper';
 import { CompassPlayerPicker } from './CompassPlayerPicker';
 import { CompassShadowHint } from './CompassShadowHint';
+import { CompassValuesHint } from './CompassValuesHint';
 import { isCompassAiAvailable } from '../services/compassAi';
 import { optionsForPickSource, pickSourceNoun, type CompassPlayerData } from '../logic/playerOptions';
-import { SHADOW_HINT_QUESTION_IDS, type CompassShadowBridgeData } from '../logic/shadowBridge';
+import {
+  SHADOW_HINT_QUESTION_IDS,
+  VALUE_HINT_QUESTION_IDS,
+  type CompassShadowBridgeData,
+} from '../logic/shadowBridge';
 
 type DraftValues = Record<string, CompassAnswerValue | undefined>;
 type OnChange = (questionId: string, value: CompassAnswerValue | undefined) => void;
@@ -57,12 +62,12 @@ export function makePickSlot(
 }
 
 /**
- * A `renderContext` slot for Chapter 2's shadow activities: shows the player's
- * archetype-hand shadow hint above the input. Returns `undefined` when the
- * player has no personality data (or this isn't the Inner Compass chapter) so
- * the activities render exactly as before.
+ * A `renderContext` slot for Chapter 2: shows the player's archetype-hand hints
+ * above the input — a shadow hint on the shadow activities and a values hint on
+ * core_values. Returns `undefined` when the player has no personality data (or
+ * this isn't the Inner Compass chapter) so the activities render as before.
  */
-export function makeShadowHintSlot(
+export function makeInnerCompassHintSlot(
   chapterId: CompassBookChapterId,
   bridge: CompassShadowBridgeData | null,
   draft: DraftValues,
@@ -70,19 +75,31 @@ export function makeShadowHintSlot(
 ): ((block: CompassBlockDefinition) => ReactNode) | undefined {
   if (chapterId !== 'inner_compass' || !bridge) return undefined;
   return (block) => {
-    if (block.type !== 'single_choice' || !SHADOW_HINT_QUESTION_IDS.has(block.questionId)) {
-      return null;
+    if (block.type === 'single_choice' && SHADOW_HINT_QUESTION_IDS.has(block.questionId)) {
+      const value = draft[block.questionId];
+      const selectedOptionId = value && value.kind === 'choice' ? value.optionId : null;
+      return (
+        <CompassShadowHint
+          data={bridge}
+          block={block}
+          selectedOptionId={selectedOptionId}
+          onPick={onChange}
+        />
+      );
     }
-    const value = draft[block.questionId];
-    const selectedOptionId = value && value.kind === 'choice' ? value.optionId : null;
-    return (
-      <CompassShadowHint
-        data={bridge}
-        block={block}
-        selectedOptionId={selectedOptionId}
-        onPick={onChange}
-      />
-    );
+    if (block.type === 'multi_choice' && VALUE_HINT_QUESTION_IDS.has(block.questionId)) {
+      const value = draft[block.questionId];
+      const selectedOptionIds = value && value.kind === 'multi_choice' ? value.optionIds : [];
+      return (
+        <CompassValuesHint
+          data={bridge}
+          block={block}
+          selectedOptionIds={selectedOptionIds}
+          onToggle={onChange}
+        />
+      );
+    }
+    return null;
   };
 }
 
