@@ -28,6 +28,16 @@ import {
 import { putPersonalityTest } from '../data/localDb';
 import { buildTopTraitSummary } from '../features/identity/personalitySummary';
 import { upsertPersonalityProfile } from './personalityTest';
+import { removeLocalVisionImageRecord } from '../data/visionBoardOfflineRepo';
+import {
+  blobFromDataUrl,
+  VISION_BOARD_BUCKET,
+  type VisionImageQueuedCreate,
+} from './visionBoard';
+import {
+  IMAGE_UPLOAD_WEBP_MIME_TYPE,
+  optimizeImageFileForUpload,
+} from '../utils/imageUploadOptimizer';
 
 type TodayTodoInsert = Database['public']['Tables']['today_todos']['Insert'];
 type TodayTodoUpdate = Database['public']['Tables']['today_todos']['Update'];
@@ -348,6 +358,83 @@ export function registerOfflineSyncExecutors(): void {
       personality_summary: buildTopTraitSummary(traits),
       personality_last_tested_at: takenAt,
     });
+    return { outcome: 'success' as const };
+  });
+
+  // ── Vision board images ───────────────────────────────────────────────────
+  // File uploads replay against a path derived from the client image id with
+  // upsert enabled, and the row upserts on that id — fully idempotent.
+
+  engine.registerExecutor(
+    'vision_image.create_file',
+    async (mutation) => {
+      const payload = payloadOf<VisionImageQueuedCreate>(mutation);
+      if (!payload.stagedFileDataUrl) {
+        // Nothing to upload; treat as done rather than retry forever.
+        return { outcome: 'success' as const };
+      }
+      const supabase = getSupabaseClient();
+
+      const blob = await blobFromDataUrl(payload.stagedFileDataUrl);
+      const stagedFile = new File([blob], payload.stagedFileName ?? `queued-${payload.imageId}.webp`, {
+        type: payload.stagedContentType ?? blob.type ?? IMAGE_UPLOAD_WEBP_MIME_TYPE,
+      });
+      const optimizedFile = await optimizeImageFileForUpload(stagedFile, {
+        kind: payload.visionType === 'annual-review' ? 'annual-review' : 'vision-board',
+      });
+      const storagePath = `${payload.userId}/${payload.imageId}.webp`;
+
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from(VISION_BOARD_BUCKET)
+        .upload(storagePath, optimizedFile, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: IMAGE_UPLOAD_WEBP_MIME_TYPE,
+        });
+      if (storageError) throw storageError;
+
+      const { error } = await supabase.from('vision_images').upsert(
+        {
+          id: payload.imageId,
+          user_id: payload.userId,
+          image_path: storageData?.path ?? storagePath,
+          image_source: 'file',
+          caption: payload.caption,
+          file_path: storageData?.path ?? storagePath,
+          file_format: 'webp',
+          vision_type: payload.visionType,
+          review_interval_days: payload.reviewIntervalDays,
+          linked_goal_ids: payload.linkedGoalIds,
+          linked_habit_ids: payload.linkedHabitIds,
+        },
+        { onConflict: 'id' },
+      );
+      if (error) throw error;
+
+      await removeLocalVisionImageRecord(payload.imageId);
+      return { outcome: 'success' as const };
+    },
+    'storage',
+  );
+
+  engine.registerExecutor('vision_image.create_url', async (mutation) => {
+    const payload = payloadOf<VisionImageQueuedCreate>(mutation);
+    const { error } = await getSupabaseClient().from('vision_images').upsert(
+      {
+        id: payload.imageId,
+        user_id: payload.userId,
+        image_url: payload.imageUrl ?? null,
+        image_source: 'url',
+        caption: payload.caption,
+        vision_type: payload.visionType,
+        review_interval_days: payload.reviewIntervalDays,
+        linked_goal_ids: payload.linkedGoalIds,
+        linked_habit_ids: payload.linkedHabitIds,
+      },
+      { onConflict: 'id' },
+    );
+    if (error) throw error;
+    await removeLocalVisionImageRecord(payload.imageId);
     return { outcome: 'success' as const };
   });
 }

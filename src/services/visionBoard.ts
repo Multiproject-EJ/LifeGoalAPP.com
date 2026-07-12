@@ -2,18 +2,19 @@ import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import {
-  buildLocalVisionImageId,
   clearVisionImageMutationsForUser,
-  enqueueVisionImageMutation,
-  getVisionImageMutationCounts,
   listLocalVisionImageRecordsForUser,
   listPendingVisionImageMutations,
-  removeLocalVisionImageRecord,
   removeVisionImageMutation,
-  retryFailedVisionImageMutationsForUser,
-  updateVisionImageMutation,
   upsertLocalVisionImageRecord,
 } from '../data/visionBoardOfflineRepo';
+import { guardedCloudCall } from './service-health';
+import { getMutationQueue, getSyncEngine } from './offline-queue';
+import {
+  generateClientId,
+  shouldQueueAfterFailure,
+  toPostgrestError,
+} from './offlineWriteThrough';
 import {
   fileToDataUrl,
 } from './demoData';
@@ -43,17 +44,20 @@ function authRequiredError(message: string): Error {
 
 export type VisionImageQueueStatus = { pending: number; failed: number };
 
-function isNetworkLikeError(error: unknown): boolean {
-  const message =
-    typeof error === 'object' && error && 'message' in error ? String((error as { message?: string }).message ?? '') : '';
-  const normalized = message.toLowerCase();
-  return (
-    normalized.includes('failed to fetch') ||
-    normalized.includes('network') ||
-    normalized.includes('offline') ||
-    normalized.includes('load failed')
-  );
-}
+/** Payload shape for queued vision-image creates (shared MutationQueue). */
+export type VisionImageQueuedCreate = {
+  imageId: string;
+  userId: string;
+  caption: string | null;
+  visionType: string | null;
+  reviewIntervalDays: number | null;
+  linkedGoalIds: string[];
+  linkedHabitIds: string[];
+  imageUrl?: string | null;
+  stagedFileDataUrl?: string;
+  stagedFileName?: string;
+  stagedContentType?: string;
+};
 
 async function mergeLocalVisionImages(userId: string, remote: VisionImageRow[]): Promise<VisionImageRow[]> {
   const local = await listLocalVisionImageRecordsForUser(userId);
@@ -65,7 +69,7 @@ async function mergeLocalVisionImages(userId: string, remote: VisionImageRow[]):
   return Array.from(byId.values()).sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''));
 }
 
-async function blobFromDataUrl(dataUrl: string): Promise<Blob> {
+export async function blobFromDataUrl(dataUrl: string): Promise<Blob> {
   const response = await fetch(dataUrl);
   return response.blob();
 }
@@ -81,15 +85,24 @@ export async function fetchVisionImages(userId: string): Promise<ServiceResponse
   }
 
   const supabase = getSupabaseClient();
-  const response = await supabase
-    .from('vision_images')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .returns<VisionImageRow[]>();
+  const result = await guardedCloudCall('database', async () => {
+    const response = await supabase
+      .from('vision_images')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .returns<VisionImageRow[]>();
+    if (response.error) throw response.error;
+    return response.data ?? [];
+  });
 
-  if (response.error) return { data: response.data, error: response.error };
-  const merged = await mergeLocalVisionImages(userId, response.data ?? []);
+  if (!result.ok) {
+    // Outage: staged offline uploads stay visible; the translated error lets
+    // the board explain why the rest is missing.
+    const merged = await mergeLocalVisionImages(userId, []);
+    return { data: merged, error: toPostgrestError(result.error) };
+  }
+  const merged = await mergeLocalVisionImages(userId, result.data);
   return { data: merged, error: null };
 }
 
@@ -127,11 +140,11 @@ async function queueLocalVisionFileCreate({
   linkedGoalIds,
   linkedHabitIds,
 }: UploadPayload): Promise<VisionImageRow> {
-  const localId = buildLocalVisionImageId();
+  const imageId = generateClientId();
   const nowIso = new Date().toISOString();
   const stagedDataUrl = await fileToDataUrl(file);
   const localRow: VisionImageRow = {
-    id: localId,
+    id: imageId,
     user_id: userId,
     image_path: stagedDataUrl,
     image_url: null,
@@ -146,40 +159,32 @@ async function queueLocalVisionFileCreate({
     linked_goal_ids: linkedGoalIds ?? [],
     linked_habit_ids: linkedHabitIds ?? [],
   };
-  const nowMs = Date.now();
   await upsertLocalVisionImageRecord({
-    id: localId,
+    id: imageId,
     user_id: userId,
     server_id: null,
     row: localRow,
     sync_state: 'pending_create',
-    updated_at_ms: nowMs,
+    updated_at_ms: Date.now(),
     last_error: null,
   });
-  await enqueueVisionImageMutation({
-    id: `vision-image-mut-${localId}`,
-    user_id: userId,
-    image_id: localId,
-    server_id: null,
-    operation: 'create_file',
-    payload: {
-      user_id: userId,
-      image_source: 'file',
-      caption: caption?.trim() ? caption.trim() : null,
-      file_format: 'webp',
-      vision_type: visionType ?? null,
-      review_interval_days: reviewIntervalDays ?? null,
-      linked_goal_ids: linkedGoalIds ?? [],
-      linked_habit_ids: linkedHabitIds ?? [],
-      staged_file_data_url: stagedDataUrl,
-      staged_file_name: fileName,
-      staged_content_type: IMAGE_UPLOAD_WEBP_MIME_TYPE,
-    },
-    status: 'pending',
-    attempt_count: 0,
-    created_at_ms: nowMs,
-    updated_at_ms: nowMs,
-    last_error: null,
+  const payload: VisionImageQueuedCreate = {
+    imageId,
+    userId,
+    caption: caption?.trim() ? caption.trim() : null,
+    visionType: visionType ?? null,
+    reviewIntervalDays: reviewIntervalDays ?? null,
+    linkedGoalIds: linkedGoalIds ?? [],
+    linkedHabitIds: linkedHabitIds ?? [],
+    stagedFileDataUrl: stagedDataUrl,
+    stagedFileName: fileName,
+    stagedContentType: IMAGE_UPLOAD_WEBP_MIME_TYPE,
+  };
+  await getMutationQueue().enqueue({
+    feature: 'vision_board',
+    operation: 'vision_image.create_file',
+    payload,
+    dedupeKey: imageId,
   });
   recordOfflineSyncEvent({
     feature: 'vision_board',
@@ -229,30 +234,42 @@ export async function uploadVisionImage({
   const sanitizedBaseName = webpFileName.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
   const storagePath = `${userId}/${randomId}-${sanitizedBaseName || 'vision-image'}.webp`;
 
-  const { data: storageData, error: storageError } = await supabase.storage
-    .from(VISION_BOARD_BUCKET)
-    .upload(storagePath, optimizedFile, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: IMAGE_UPLOAD_WEBP_MIME_TYPE,
-    });
+  const queueUpload = async (): Promise<ServiceResponse<VisionImageRow>> => {
+    try {
+      const localRecord = await queueLocalVisionFileCreate({
+        userId,
+        file: optimizedFile,
+        fileName: webpFileName,
+        caption,
+        visionType,
+        reviewIntervalDays,
+        linkedGoalIds,
+        linkedHabitIds,
+      });
+      return { data: localRecord, error: null };
+    } catch (queueError) {
+      return {
+        data: null,
+        error: queueError instanceof Error ? queueError : new Error('Unable to queue vision image upload.'),
+      };
+    }
+  };
 
-  if (storageError) {
-    // Log storage error with context for debugging
-    console.error('[Vision Board] Storage upload failed:', {
-      timestamp: new Date().toISOString(),
-      operation: 'storage_upload',
-      bucket: VISION_BOARD_BUCKET,
-      filePath: storagePath,
-      fileName,
-      fileSize: optimizedFile.size,
-      fileType: IMAGE_UPLOAD_WEBP_MIME_TYPE,
-      userId,
-      error: storageError,
-    });
+  const storageResult = await guardedCloudCall('storage', async () => {
+    const { data, error } = await supabase.storage
+      .from(VISION_BOARD_BUCKET)
+      .upload(storagePath, optimizedFile, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: IMAGE_UPLOAD_WEBP_MIME_TYPE,
+      });
+    if (error) throw error;
+    return data;
+  });
 
-    // Provide a more helpful error message for bucket not found
-    if (isBucketNotFoundError(storageError.message)) {
+  if (!storageResult.ok) {
+    // Keep the actionable configuration hint (app-authored copy, not raw text)
+    if (isBucketNotFoundError(storageResult.error.technicalDetail ?? '')) {
       return {
         data: null,
         error: new Error(
@@ -260,32 +277,13 @@ export async function uploadVisionImage({
         ),
       };
     }
-    if (isNetworkLikeError(storageError)) {
-      try {
-        const localRecord = await queueLocalVisionFileCreate({
-          userId,
-          file: optimizedFile,
-          fileName: webpFileName,
-          caption,
-          visionType,
-          reviewIntervalDays,
-          linkedGoalIds,
-          linkedHabitIds,
-        });
-        return { data: localRecord, error: null };
-      } catch (queueError) {
-        return {
-          data: null,
-          error: queueError instanceof Error ? queueError : new Error('Unable to queue vision image upload.'),
-        };
-      }
+    if (shouldQueueAfterFailure(storageResult.error)) {
+      return queueUpload();
     }
-
-    // Enrich error with context
-    const errorMessage = `Storage upload failed: ${storageError.message} (bucket: ${VISION_BOARD_BUCKET}, path: ${storagePath})`;
-    return { data: null, error: new Error(errorMessage) };
+    return { data: null, error: new Error(storageResult.error.explanation) };
   }
 
+  const storageData = storageResult.data;
   const payload: VisionImageInsert = {
     user_id: userId,
     image_path: storageData?.path ?? storagePath,
@@ -299,51 +297,25 @@ export async function uploadVisionImage({
     linked_habit_ids: linkedHabitIds ?? [],
   };
 
-  const { data, error } = await supabase
-    .from('vision_images')
-    .insert(payload)
-    .select()
-    .returns<VisionImageRow>()
-    .single();
+  const insertResult = await guardedCloudCall('database', async () => {
+    const { data, error } = await supabase
+      .from('vision_images')
+      .insert(payload)
+      .select()
+      .returns<VisionImageRow>()
+      .single();
+    if (error) throw error;
+    return data;
+  });
 
-  if (error) {
-    if (isNetworkLikeError(error)) {
-      try {
-        const localRecord = await queueLocalVisionFileCreate({
-          userId,
-          file: optimizedFile,
-          fileName: webpFileName,
-          caption,
-          visionType,
-          reviewIntervalDays,
-          linkedGoalIds,
-          linkedHabitIds,
-        });
-        return { data: localRecord, error: null };
-      } catch (queueError) {
-        return {
-          data: null,
-          error: queueError instanceof Error ? queueError : new Error('Unable to queue vision image upload.'),
-        };
-      }
+  if (!insertResult.ok) {
+    if (shouldQueueAfterFailure(insertResult.error)) {
+      return queueUpload();
     }
-    // Log database error with context for debugging
-    console.error('[Vision Board] Database insert failed:', {
-      timestamp: new Date().toISOString(),
-      operation: 'database_insert',
-      table: 'vision_images',
-      userId,
-      filePath: storagePath,
-      fileName,
-      error,
-    });
-
-    // Enrich error with context
-    const errorMessage = `Database insert failed: ${error.message} (file: ${fileName})`;
-    return { data: null, error: new Error(errorMessage) };
+    return { data: null, error: new Error(insertResult.error.explanation) };
   }
 
-  return { data, error: null };
+  return { data: insertResult.data, error: null };
 }
 
 type UploadUrlPayload = {
@@ -389,33 +361,26 @@ export async function uploadVisionImageFromUrl({
     linked_habit_ids: linkedHabitIds ?? [],
   };
 
-  const { data, error } = await supabase
-    .from('vision_images')
-    .insert(payload)
-    .select()
-    .returns<VisionImageRow>()
-    .single();
+  const result = await guardedCloudCall('database', async () => {
+    const { data, error } = await supabase
+      .from('vision_images')
+      .insert(payload)
+      .select()
+      .returns<VisionImageRow>()
+      .single();
+    if (error) throw error;
+    return data;
+  });
 
-  if (error && !isNetworkLikeError(error)) {
-    // Log database error with context for debugging
-    console.error('[Vision Board] Database insert failed (URL):', {
-      timestamp: new Date().toISOString(),
-      operation: 'database_insert',
-      table: 'vision_images',
-      userId,
-      imageUrl,
-      error,
-    });
+  if (!result.ok) {
+    if (!shouldQueueAfterFailure(result.error)) {
+      return { data: null, error: new Error(result.error.explanation) };
+    }
 
-    // Enrich error with context
-    const errorMessage = `Database insert failed: ${error.message} (URL: ${imageUrl})`;
-    return { data: null, error: new Error(errorMessage) };
-  }
-  if (error) {
-    const localId = buildLocalVisionImageId();
+    const imageId = generateClientId();
     const nowIso = new Date().toISOString();
     const localRow: VisionImageRow = {
-      id: localId,
+      id: imageId,
       user_id: userId,
       image_path: null,
       image_url: imageUrl,
@@ -430,28 +395,30 @@ export async function uploadVisionImageFromUrl({
       linked_goal_ids: linkedGoalIds ?? [],
       linked_habit_ids: linkedHabitIds ?? [],
     };
-    const nowMs = Date.now();
     await upsertLocalVisionImageRecord({
-      id: localId,
+      id: imageId,
       user_id: userId,
       server_id: null,
       row: localRow,
       sync_state: 'pending_create',
-      updated_at_ms: nowMs,
+      updated_at_ms: Date.now(),
       last_error: null,
     });
-    await enqueueVisionImageMutation({
-      id: `vision-image-mut-${localId}`,
-      user_id: userId,
-      image_id: localId,
-      server_id: null,
-      operation: 'create_url',
-      payload,
-      status: 'pending',
-      attempt_count: 0,
-      created_at_ms: nowMs,
-      updated_at_ms: nowMs,
-      last_error: null,
+    const queuedPayload: VisionImageQueuedCreate = {
+      imageId,
+      userId,
+      caption: caption?.trim() ? caption.trim() : null,
+      visionType: visionType ?? null,
+      reviewIntervalDays: reviewIntervalDays ?? null,
+      linkedGoalIds: linkedGoalIds ?? [],
+      linkedHabitIds: linkedHabitIds ?? [],
+      imageUrl,
+    };
+    await getMutationQueue().enqueue({
+      feature: 'vision_board',
+      operation: 'vision_image.create_url',
+      payload: queuedPayload,
+      dedupeKey: imageId,
     });
     recordOfflineSyncEvent({
       feature: 'vision_board',
@@ -462,104 +429,74 @@ export async function uploadVisionImageFromUrl({
     return { data: localRow, error: null };
   }
 
-  return { data, error: null };
+  return { data: result.data, error: null };
 }
 
+let legacyVisionQueueMigrated = false;
+
+/**
+ * One-time convergence of the pre-framework vision-image queue onto the
+ * shared MutationQueue. Staged file uploads and queued URL images survive
+ * the upgrade.
+ */
+export async function migrateLegacyVisionImageQueue(userId: string): Promise<void> {
+  if (legacyVisionQueueMigrated) return;
+  legacyVisionQueueMigrated = true;
+
+  try {
+    const queue = getMutationQueue();
+    for (const legacy of await listPendingVisionImageMutations(userId)) {
+      const imageId = legacy.image_id.startsWith('local-') ? generateClientId() : legacy.image_id;
+      const shared: VisionImageQueuedCreate = {
+        imageId,
+        userId,
+        caption: legacy.payload.caption ?? null,
+        visionType: legacy.payload.vision_type ?? null,
+        reviewIntervalDays: legacy.payload.review_interval_days ?? null,
+        linkedGoalIds: legacy.payload.linked_goal_ids ?? [],
+        linkedHabitIds: legacy.payload.linked_habit_ids ?? [],
+        imageUrl: legacy.payload.image_url ?? null,
+        stagedFileDataUrl: legacy.payload.staged_file_data_url ?? undefined,
+        stagedFileName: legacy.payload.staged_file_name ?? undefined,
+        stagedContentType: legacy.payload.staged_content_type ?? undefined,
+      };
+      await queue.enqueue({
+        feature: 'vision_board',
+        operation: legacy.operation === 'create_file' ? 'vision_image.create_file' : 'vision_image.create_url',
+        payload: shared,
+        dedupeKey: imageId,
+      });
+      await removeVisionImageMutation(legacy.id);
+    }
+  } catch {
+    // Migration is best-effort; legacy entries stay put for the next attempt.
+    legacyVisionQueueMigrated = false;
+  }
+}
+
+/** Manual sync kick; the shared engine also auto-resyncs on reconnect. */
 export async function syncQueuedVisionImageMutations(userId: string): Promise<void> {
   if (!canUseSupabaseData()) return;
-  const supabase = getSupabaseClient();
-  const pending = await listPendingVisionImageMutations(userId);
+  await migrateLegacyVisionImageQueue(userId);
   recordOfflineSyncEvent({
     feature: 'vision_board',
     event: 'sync_started',
     userId,
-    pending: pending.length,
   });
-  for (const mutation of pending) {
-    try {
-      await updateVisionImageMutation(mutation.id, { status: 'processing', updated_at_ms: Date.now() });
-      let error: PostgrestError | null = null;
-      if (mutation.operation === 'create_file') {
-        const stagedDataUrl = mutation.payload.staged_file_data_url;
-        if (!stagedDataUrl) throw new Error('Missing staged file data for queued vision image.');
-        const blob = await blobFromDataUrl(stagedDataUrl);
-        const fileName = mutation.payload.staged_file_name ?? `queued-${mutation.image_id}.webp`;
-        const stagedFile = new File([blob], fileName, {
-          type: mutation.payload.staged_content_type ?? blob.type ?? IMAGE_UPLOAD_WEBP_MIME_TYPE,
-        });
-        const optimizedFile = await optimizeImageFileForUpload(stagedFile, {
-          kind: mutation.payload.vision_type === 'annual-review' ? 'annual-review' : 'vision-board',
-        });
-        const randomId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}`;
-        const webpFileName = replaceFileExtensionWithWebp(optimizedFile.name);
-        const sanitizedBaseName = webpFileName.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40);
-        const storagePath = `${userId}/${randomId}-${sanitizedBaseName || 'vision-image'}.webp`;
-        const { data: storageData, error: storageError } = await supabase.storage
-          .from(VISION_BOARD_BUCKET)
-          .upload(storagePath, optimizedFile, {
-            cacheControl: '3600',
-            upsert: false,
-            contentType: IMAGE_UPLOAD_WEBP_MIME_TYPE,
-          });
-        if (storageError) throw storageError;
-        const queuedPayload: VisionImageInsert = {
-          user_id: userId,
-          image_path: storageData?.path ?? storagePath,
-          image_source: 'file',
-          caption: mutation.payload.caption ?? null,
-          file_path: storageData?.path ?? storagePath,
-          file_format: 'webp',
-          vision_type: mutation.payload.vision_type ?? null,
-          review_interval_days: mutation.payload.review_interval_days ?? null,
-          linked_goal_ids: mutation.payload.linked_goal_ids ?? [],
-          linked_habit_ids: mutation.payload.linked_habit_ids ?? [],
-        };
-        const response = await supabase.from('vision_images').insert(queuedPayload).select().returns<VisionImageRow>().single();
-        error = response.error;
-      } else {
-        const queuedPayload: VisionImageInsert = {
-          user_id: userId,
-          image_url: mutation.payload.image_url ?? null,
-          image_source: 'url',
-          caption: mutation.payload.caption ?? null,
-          vision_type: mutation.payload.vision_type ?? null,
-          review_interval_days: mutation.payload.review_interval_days ?? null,
-          linked_goal_ids: mutation.payload.linked_goal_ids ?? [],
-          linked_habit_ids: mutation.payload.linked_habit_ids ?? [],
-        };
-        const response = await supabase.from('vision_images').insert(queuedPayload).select().returns<VisionImageRow>().single();
-        error = response.error;
-      }
-      if (error) throw error;
-      await removeLocalVisionImageRecord(mutation.image_id);
-      await removeVisionImageMutation(mutation.id);
-      recordOfflineSyncEvent({
-        feature: 'vision_board',
-        event: 'sync_succeeded',
-        userId,
-        attemptCount: mutation.attempt_count + 1,
-      });
-    } catch (error) {
-      await updateVisionImageMutation(mutation.id, {
-        status: 'failed',
-        attempt_count: mutation.attempt_count + 1,
-        updated_at_ms: Date.now(),
-        last_error: error instanceof Error ? error.message : String(error),
-      });
-      recordOfflineSyncEvent({
-        feature: 'vision_board',
-        event: 'sync_failed',
-        userId,
-        attemptCount: mutation.attempt_count + 1,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
+  await getSyncEngine().syncNow();
 }
 
-export async function getVisionImageQueueStatus(userId: string): Promise<VisionImageQueueStatus> {
+export async function getVisionImageQueueStatus(_userId: string): Promise<VisionImageQueueStatus> {
   if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
-  return getVisionImageMutationCounts(userId);
+  const mutations = await getMutationQueue().list();
+  let pending = 0;
+  let failed = 0;
+  for (const mutation of mutations) {
+    if (mutation.feature !== 'vision_board') continue;
+    if (mutation.status === 'pending' || mutation.status === 'syncing') pending += 1;
+    else if (mutation.status === 'failed' || mutation.status === 'blocked') failed += 1;
+  }
+  return { pending, failed };
 }
 
 export async function clearQueuedVisionImageMutations(userId: string): Promise<void> {
@@ -572,7 +509,7 @@ export async function clearQueuedVisionImageMutations(userId: string): Promise<v
 }
 
 export async function retryFailedVisionImageMutations(userId: string): Promise<void> {
-  await retryFailedVisionImageMutationsForUser(userId);
+  await getMutationQueue().retryFailed();
   recordOfflineSyncEvent({
     feature: 'vision_board',
     event: 'queue_retry_requested',
@@ -589,15 +526,20 @@ export async function updateVisionImage(
   }
 
   const supabase = getSupabaseClient();
-  const response = await supabase
-    .from('vision_images')
-    .update(payload)
-    .eq('id', id)
-    .select()
-    .returns<VisionImageRow>()
-    .single();
+  const result = await guardedCloudCall('database', async () => {
+    const response = await supabase
+      .from('vision_images')
+      .update(payload)
+      .eq('id', id)
+      .select()
+      .returns<VisionImageRow>()
+      .single();
+    if (response.error) throw response.error;
+    return response.data;
+  });
 
-  return { data: response.data, error: response.error };
+  if (!result.ok) return { data: null, error: toPostgrestError(result.error) };
+  return { data: result.data, error: null };
 }
 
 export async function deleteVisionImage(record: VisionImageRow): Promise<ServiceError> {
@@ -607,16 +549,24 @@ export async function deleteVisionImage(record: VisionImageRow): Promise<Service
 
   const supabase = getSupabaseClient();
 
-  const { error: deleteError } = await supabase.from('vision_images').delete().eq('id', record.id);
-  if (deleteError) {
-    return deleteError;
+  const deleteResult = await guardedCloudCall('database', async () => {
+    const { error } = await supabase.from('vision_images').delete().eq('id', record.id);
+    if (error) throw error;
+    return null;
+  });
+  if (!deleteResult.ok) {
+    return toPostgrestError(deleteResult.error);
   }
 
   // Only delete from storage if this is a file-based image
   if (record.image_source === 'file' && record.image_path) {
-    const { error: storageError } = await supabase.storage.from(VISION_BOARD_BUCKET).remove([record.image_path]);
-    if (storageError) {
-      return new Error(storageError.message);
+    const storageResult = await guardedCloudCall('storage', async () => {
+      const { error } = await supabase.storage.from(VISION_BOARD_BUCKET).remove([record.image_path!]);
+      if (error) throw error;
+      return null;
+    });
+    if (!storageResult.ok) {
+      return new Error(storageResult.error.explanation);
     }
   }
 
