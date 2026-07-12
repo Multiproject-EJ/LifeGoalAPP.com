@@ -8,7 +8,7 @@ import {
   putPersonalityTest,
   type PersonalityTestValue,
 } from './localDb';
-import { enqueuePersonalityTestMutation } from './personalityTestOfflineRepo';
+import { getMutationQueue } from '../services/offline-queue';
 import { recordOfflineSyncEvent } from '../services/offlineSyncTelemetry';
 
 export type PersonalityTestRecord = PersonalityTestValue;
@@ -34,12 +34,11 @@ export async function queuePersonalityTestResult(params: {
   };
 
   await putPersonalityTest(record);
-  const nowMs = Date.now();
-  await enqueuePersonalityTestMutation({
-    id: `personality-test-mut-${record.id}`,
-    user_id: params.userId,
-    test_id: record.id,
-    operation: 'upsert_test',
+  // Queue-first by design: the durable shared queue replays this as an
+  // idempotent upsert (client uuid) once the cloud is reachable.
+  await getMutationQueue().enqueue({
+    feature: 'personality_test',
+    operation: 'personality_test.upsert',
     payload: {
       id: record.id,
       user_id: record.user_id,
@@ -50,11 +49,7 @@ export async function queuePersonalityTestResult(params: {
       version: record.version,
       archetype_hand: record.archetype_hand ?? null,
     },
-    status: 'pending',
-    attempt_count: 0,
-    created_at_ms: nowMs,
-    updated_at_ms: nowMs,
-    last_error: null,
+    dedupeKey: record.id,
   });
   recordOfflineSyncEvent({
     feature: 'personality_test',

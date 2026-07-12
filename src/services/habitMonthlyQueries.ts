@@ -1,17 +1,16 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database, Json } from '../lib/database.types';
+import { guardedCloudCall } from './service-health';
+import { getMutationQueue, getSyncEngine } from './offline-queue';
+import { shouldQueueAfterFailure, toPostgrestError } from './offlineWriteThrough';
 import {
   buildLocalCompletionKey,
   buildLocalCompletionRowId,
-  enqueueHabitCompletionMutation,
-  getHabitCompletionMutationCounts,
   getLocalHabitCompletionRecord,
   listLocalHabitCompletionsForUserInRange,
   listPendingHabitCompletionMutations,
   removeHabitCompletionMutation,
-  removeLocalHabitCompletionRecord,
-  updateHabitCompletionMutation,
   upsertLocalHabitCompletionRecord,
 } from '../data/habitCompletionsOfflineRepo';
 import {
@@ -35,18 +34,6 @@ export type HabitCompletionQueueStatus = {
   pending: number;
   failed: number;
 };
-
-function isNetworkLikeError(error: unknown): boolean {
-  const message =
-    typeof error === 'object' && error && 'message' in error ? String((error as { message?: string }).message ?? '') : '';
-  const normalized = message.toLowerCase();
-  return (
-    normalized.includes('failed to fetch') ||
-    normalized.includes('network') ||
-    normalized.includes('offline') ||
-    normalized.includes('load failed')
-  );
-}
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -92,17 +79,12 @@ async function queueLocalHabitCompletionToggle(
     last_error: null,
   });
 
-  await enqueueHabitCompletionMutation({
-    id: `habit-completion-mut-${key}`,
-    user_id: userId,
-    habit_id: habitId,
-    completed_date: date,
-    desired_completed: desiredCompleted,
-    status: 'pending',
-    attempt_count: 0,
-    created_at_ms: nowMs,
-    updated_at_ms: nowMs,
-    last_error: null,
+  // Desired state is absolute for (user, habit, date): latest toggle wins.
+  await getMutationQueue().enqueue({
+    feature: 'habit_completions',
+    operation: 'habit_completion.set',
+    payload: { userId, habitId, date, completed: desiredCompleted },
+    dedupeKey: key,
   });
 
   return localRow;
@@ -226,18 +208,23 @@ export async function getHabitCompletionsByMonth(
     }
     
     const supabase = getSupabaseClient();
-    
+
     // Fetch all habits_v2 for the user (no goal association in habits_v2)
-    const { data: habitsData, error: habitsError } = await supabase
-      .from('habits_v2')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('archived', false);
-    
-    if (habitsError) {
-      return { data: null, error: habitsError };
+    const habitsResult = await guardedCloudCall('database', async () => {
+      const { data, error } = await supabase
+        .from('habits_v2')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('archived', false);
+      if (error) throw error;
+      return data ?? [];
+    });
+
+    if (!habitsResult.ok) {
+      return { data: null, error: toPostgrestError(habitsResult.error) };
     }
-    
+    const habitsData = habitsResult.data;
+
     if (!habitsData || habitsData.length === 0) {
       return {
         data: {
@@ -259,19 +246,23 @@ export async function getHabitCompletionsByMonth(
     const habitIds = habits.map(h => h.id);
     
     // Fetch all habit_completions for these habits within the month range
-    const { data: completionsData, error: completionsError } = await supabase
-      .from('habit_completions')
-      .select('*')
-      .eq('user_id', userId)
-      .in('habit_id', habitIds)
-      .gte('completed_date', startDate)
-      .lte('completed_date', endDate);
-    
-    if (completionsError) {
-      return { data: null, error: completionsError };
+    const completionsResult = await guardedCloudCall('database', async () => {
+      const { data, error } = await supabase
+        .from('habit_completions')
+        .select('*')
+        .eq('user_id', userId)
+        .in('habit_id', habitIds)
+        .gte('completed_date', startDate)
+        .lte('completed_date', endDate);
+      if (error) throw error;
+      return data ?? [];
+    });
+
+    if (!completionsResult.ok) {
+      return { data: null, error: toPostgrestError(completionsResult.error) };
     }
-    
-    const completions = (completionsData || []) as HabitCompletionRow[];
+
+    const completions = completionsResult.data as HabitCompletionRow[];
     
     // Calculate days in month
     const monthStart = new Date(year, month - 1, 1);
@@ -457,14 +448,14 @@ export async function toggleHabitCompletionForDate(
   habitId: string,
   date: string,
 ): Promise<ServiceResponse<HabitCompletionRow>> {
-  try {
-    // Check if we should use demo data or real Supabase data
-    if (!canUseSupabaseData()) {
-      return toggleHabitCompletionForDateDemo(userId, habitId, date);
-    }
-    
-    const supabase = getSupabaseClient();
-    
+  // Check if we should use demo data or real Supabase data
+  if (!canUseSupabaseData()) {
+    return toggleHabitCompletionForDateDemo(userId, habitId, date);
+  }
+
+  const supabase = getSupabaseClient();
+
+  const result = await guardedCloudCall('database', async () => {
     // Check if a completion record already exists for this user/habit/date
     const { data: existingData, error: fetchError } = await supabase
       .from('habit_completions')
@@ -473,13 +464,10 @@ export async function toggleHabitCompletionForDate(
       .eq('habit_id', habitId)
       .eq('completed_date', date)
       .maybeSingle();
-    
-    if (fetchError && !isNetworkLikeError(fetchError)) {
-      return { data: null, error: fetchError };
-    }
-    
+    if (fetchError) throw fetchError;
+
     const existingCompletion = existingData as HabitCompletionRow | null;
-    
+
     if (existingCompletion) {
       // Record exists - toggle the completed value
       const newCompletedValue = !existingCompletion.completed;
@@ -489,52 +477,38 @@ export async function toggleHabitCompletionForDate(
         .eq('id', existingCompletion.id)
         .select()
         .single();
-      
-      if (updateError && !isNetworkLikeError(updateError)) {
-        return { data: null, error: updateError };
-      }
-      if (updateError) {
-        const queued = await queueLocalHabitCompletionToggle(userId, habitId, date, existingCompletion.completed);
-        return { data: queued, error: null };
-      }
-
-      return { data: updateData as HabitCompletionRow, error: null };
-    } else {
-      // Record doesn't exist - insert a new one with completed = true
-      const insertPayload: HabitCompletionInsert = {
-        user_id: userId,
-        habit_id: habitId,
-        completed_date: date,
-        completed: true,
-      };
-      
-      const { data: insertData, error: insertError } = await supabase
-        .from('habit_completions')
-        .insert(insertPayload)
-        .select()
-        .single();
-      
-      if (insertError && !isNetworkLikeError(insertError)) {
-        return { data: null, error: insertError };
-      }
-      if (insertError) {
-        const queued = await queueLocalHabitCompletionToggle(userId, habitId, date, false);
-        return { data: queued, error: null };
-      }
-      
-      return { data: insertData as HabitCompletionRow, error: null };
+      if (updateError) throw updateError;
+      return updateData as HabitCompletionRow;
     }
-  } catch (error) {
-    if (isNetworkLikeError(error)) {
+
+    // Record doesn't exist - insert a new one with completed = true
+    const insertPayload: HabitCompletionInsert = {
+      user_id: userId,
+      habit_id: habitId,
+      completed_date: date,
+      completed: true,
+    };
+
+    const { data: insertData, error: insertError } = await supabase
+      .from('habit_completions')
+      .insert(insertPayload)
+      .select()
+      .single();
+    if (insertError) throw insertError;
+    return insertData as HabitCompletionRow;
+  });
+
+  if (!result.ok) {
+    if (shouldQueueAfterFailure(result.error)) {
+      // Base state unknown during an outage; the local record (if any)
+      // carries the last toggle, so flipping from it is still correct.
       const queued = await queueLocalHabitCompletionToggle(userId, habitId, date, false);
       return { data: queued, error: null };
     }
-    console.error('Error in toggleHabitCompletionForDate:', error);
-    return {
-      data: null,
-      error: error as PostgrestError,
-    };
+    return { data: null, error: toPostgrestError(result.error) };
   }
+
+  return { data: result.data, error: null };
 }
 
 /**
@@ -595,33 +569,33 @@ export async function getMonthlyCompletionGrid(
     }
     
     const supabase = getSupabaseClient();
-    
+
     // Fetch all habit_completions for the user within the month range
-    const { data: completionsData, error: completionsError } = await supabase
-      .from('habit_completions')
-      .select('habit_id, completed_date, completed')
-      .eq('user_id', userId)
-      .gte('completed_date', startDate)
-      .lte('completed_date', endDate);
-    
-    if (completionsError && !isNetworkLikeError(completionsError)) {
-      return { data: null, error: completionsError };
+    const completionsResult = await guardedCloudCall('database', async () => {
+      const { data, error } = await supabase
+        .from('habit_completions')
+        .select('habit_id, completed_date, completed')
+        .eq('user_id', userId)
+        .gte('completed_date', startDate)
+        .lte('completed_date', endDate);
+      if (error) throw error;
+      return (data ?? []) as HabitCompletionRow[];
+    });
+
+    if (!completionsResult.ok) {
+      // Outage: local pending toggles still render on the grid.
+      const localOnly = await buildMergedMonthlyGrid(userId, startDate, endDate, {});
+      return { data: localOnly, error: null };
     }
-    const completions = (completionsData || []) as HabitCompletionRow[];
-    
+
     // Build the grid: habitId -> date -> completed
     const grid: Record<string, Record<string, boolean>> = {};
-    
-    for (const completion of completions) {
+
+    for (const completion of completionsResult.data) {
       if (!grid[completion.habit_id]) {
         grid[completion.habit_id] = {};
       }
       grid[completion.habit_id][completion.completed_date] = completion.completed;
-    }
-
-    if (completionsError && isNetworkLikeError(completionsError)) {
-      const localOnly = await buildMergedMonthlyGrid(userId, startDate, endDate, {});
-      return { data: localOnly, error: null };
     }
 
     const mergedGrid = await buildMergedMonthlyGrid(userId, startDate, endDate, grid);
@@ -635,75 +609,56 @@ export async function getMonthlyCompletionGrid(
   }
 }
 
-export async function syncQueuedHabitCompletions(userId: string): Promise<void> {
-  if (!canUseSupabaseData()) return;
-  const supabase = getSupabaseClient();
-  const pending = await listPendingHabitCompletionMutations(userId);
+let legacyCompletionQueueMigrated = false;
 
-  for (const mutation of pending) {
-    const recordKey = buildLocalCompletionKey(userId, mutation.habit_id, mutation.completed_date);
-    try {
-      await updateHabitCompletionMutation(mutation.id, {
-        status: 'processing',
-        updated_at_ms: Date.now(),
+/**
+ * One-time convergence of the pre-framework habit-completion queue onto the
+ * shared MutationQueue. Pending toggles survive the upgrade.
+ */
+export async function migrateLegacyHabitCompletionQueue(userId: string): Promise<void> {
+  if (legacyCompletionQueueMigrated) return;
+  legacyCompletionQueueMigrated = true;
+
+  try {
+    const queue = getMutationQueue();
+    for (const legacy of await listPendingHabitCompletionMutations(userId)) {
+      await queue.enqueue({
+        feature: 'habit_completions',
+        operation: 'habit_completion.set',
+        payload: {
+          userId,
+          habitId: legacy.habit_id,
+          date: legacy.completed_date,
+          completed: legacy.desired_completed,
+        },
+        dedupeKey: buildLocalCompletionKey(userId, legacy.habit_id, legacy.completed_date),
       });
-
-      const { data: existingData, error: existingError } = await supabase
-        .from('habit_completions')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('habit_id', mutation.habit_id)
-        .eq('completed_date', mutation.completed_date)
-        .maybeSingle<HabitCompletionRow>();
-
-      if (existingError) throw existingError;
-      if (existingData) {
-        const payload: HabitCompletionUpdate = { completed: mutation.desired_completed };
-        const { error: updateError } = await supabase
-          .from('habit_completions')
-          .update(payload)
-          .eq('id', existingData.id);
-        if (updateError) throw updateError;
-      } else {
-        const payload: HabitCompletionInsert = {
-          user_id: userId,
-          habit_id: mutation.habit_id,
-          completed_date: mutation.completed_date,
-          completed: mutation.desired_completed,
-        };
-        const { error: insertError } = await supabase
-          .from('habit_completions')
-          .insert(payload);
-        if (insertError) throw insertError;
-      }
-
-      await removeLocalHabitCompletionRecord(recordKey);
-      await removeHabitCompletionMutation(mutation.id);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      await updateHabitCompletionMutation(mutation.id, {
-        status: 'failed',
-        attempt_count: mutation.attempt_count + 1,
-        updated_at_ms: Date.now(),
-        last_error: message,
-      });
-
-      const local = await getLocalHabitCompletionRecord(recordKey);
-      if (local) {
-        await upsertLocalHabitCompletionRecord({
-          ...local,
-          sync_state: 'failed',
-          updated_at_ms: Date.now(),
-          last_error: message,
-        });
-      }
+      await removeHabitCompletionMutation(legacy.id);
     }
+  } catch {
+    // Migration is best-effort; legacy entries stay put for the next attempt.
+    legacyCompletionQueueMigrated = false;
   }
 }
 
-export async function getHabitCompletionQueueStatus(userId: string): Promise<HabitCompletionQueueStatus> {
+/** Manual sync kick; the shared engine also auto-resyncs on reconnect. */
+export async function syncQueuedHabitCompletions(userId: string): Promise<void> {
+  if (!canUseSupabaseData()) return;
+  await migrateLegacyHabitCompletionQueue(userId);
+  await getSyncEngine().syncNow();
+}
+
+export async function getHabitCompletionQueueStatus(_userId: string): Promise<HabitCompletionQueueStatus> {
   if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
-  return getHabitCompletionMutationCounts(userId);
+  const mutations = await getMutationQueue().list();
+  let pending = 0;
+  let failed = 0;
+  for (const mutation of mutations) {
+    if (mutation.feature !== 'habit_completions') continue;
+    if (mutation.status === 'pending' || mutation.status === 'syncing') pending += 1;
+    else if (mutation.status === 'failed' || mutation.status === 'blocked') failed += 1;
+  }
+  return { pending, failed };
 }
 
 /**

@@ -64,19 +64,23 @@ Shared adoption helpers (use these, do not fork):
   checkout flows; consults the `purchases`/`subscriptions` capabilities.
 
 Migrated onto guardedCloudCall + the shared MutationQueue: **todayTodos,
-checkins, journal, goals** (journal and goals include one-time migration of
-their legacy ad-hoc queues — `migrateLegacyJournalQueue` /
-`migrateLegacyGoalQueue` — pending entries are preserved and `local-…` ids
-re-keyed to client uuids). Gated through the capability matrix: all Stripe
-checkouts, AI coach / Wisdom Keeper / compass help / goal suggestions /
-reflection prompts / vision star (`ai_coach`, `ai_generation`), leaderboard
-(`multiplayer`), account reset/delete (`account_ownership`). Telemetry
-writers are budgeted and guarded (see telemetry.ts).
+checkins, journal, goals, habitsV2 + habit logs, habit completions
+(habitMonthlyQueries), lifeGoals, habitReminderPrefs, personalityTest,
+visionBoard** — every pre-framework ad-hoc queue is converged. Each service
+has a one-time `migrateLegacy…Queue` that drains its old mutation store
+(pending entries preserved, `local-…` ids re-keyed to client uuids), and its
+`syncQueued…`/queue-status functions are thin wrappers over the shared
+engine/queue. Gated through the capability matrix: all Stripe checkouts, AI
+coach / Wisdom Keeper / compass help / goal suggestions / reflection prompts
+/ vision star (`ai_coach`, `ai_generation`), leaderboard (`multiplayer`),
+account reset/delete (`account_ownership`). Telemetry writers are budgeted
+and guarded (see telemetry.ts).
 
-Still on their ad-hoc queues (converge next, following the journal/goals
-pattern): habitsV2, habitMonthlyQueries, lifeGoals, visionBoard (uploads →
-service `'storage'`), habitReminderPrefs, personalityTest, plus gamification
-rewards and island-run runtime checkpoints for plain guarded adoption.
+Reviewed and intentionally deferred: the island-run runtime state store
+(`islandRunGameStateStore.ts`) already implements local-first hydration with
+its own bounded remote backoff and session-deduped telemetry — routing it
+through guardedCloudCall is a dedicated follow-up, as is `gamification.ts`
+(economy semantics need the `block` policy treatment).
 
 ## Adopting in a feature service
 
