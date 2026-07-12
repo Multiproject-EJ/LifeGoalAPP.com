@@ -49,6 +49,7 @@ import { scoreArchetypes, rankArchetypes } from './archetypes/archetypeScoring';
 import { buildHand, type ArchetypeHand } from './archetypes/archetypeHandBuilder';
 import { DeckSummary } from './deck/DeckSummary';
 import { PlayerDeck } from './deck/PlayerDeck';
+import { ShadowQuestCard } from './deck/ShadowQuestCard';
 import { PlayersHandRevealCeremony, PlayersHandSparkPreview } from '../players_hand/spark-preview';
 import {
   isPlayersHandSparkComparisonEnabled,
@@ -1226,6 +1227,9 @@ export default function PersonalityTest() {
             <>
               <div className="identity-hub__section">
                 <DeckSummary hand={archetypeHand} microTestCount={0} />
+              </div>
+              <div className="identity-hub__section">
+                <ShadowQuestCard hand={archetypeHand} userId={activeUserId} />
               </div>
               {playersHandSparkResultEnabled ? (
                 <div className="identity-hub__section">

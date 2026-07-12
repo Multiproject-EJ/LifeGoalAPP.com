@@ -11,9 +11,11 @@ import { getChapterActivities, getChapterDefinition } from '../content/compassBo
 import { getUnlockedActivityCount } from '../logic/unlock';
 import { areRequiredBlocksAnswered } from '../logic/progress';
 import { CompassActivityRenderer } from './CompassActivityRenderer';
-import { makeHelpSlot, makePickSlot } from './compassBlockSlots';
+import { makeHelpSlot, makePickSlot, makeShadowHintSlot } from './compassBlockSlots';
 import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
 import { loadCompassPlayerData } from '../services/compassPlayerData';
+import { loadCompassShadowBridge } from '../services/compassShadowBridge';
+import type { CompassShadowBridgeData } from '../logic/shadowBridge';
 import { EMPTY_COMPASS_PLAYER_DATA, type CompassPlayerData } from '../logic/playerOptions';
 import type { CompassAnswerEntry } from '../hooks/useCompassBook';
 
@@ -132,6 +134,23 @@ export function CompassGuidedFlow({
     };
   }, [userId]);
 
+  // Load the archetype-hand shadow hint (Chapter 2 only; degrades to no hint).
+  const [shadowBridge, setShadowBridge] = useState<CompassShadowBridgeData | null>(null);
+  useEffect(() => {
+    if (chapterId !== 'inner_compass') return;
+    let cancelled = false;
+    loadCompassShadowBridge(userId)
+      .then((data) => {
+        if (!cancelled) setShadowBridge(data);
+      })
+      .catch(() => {
+        /* No personality data — activities render without the hint. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [chapterId, userId]);
+
   if (!activity) {
     return (
       <div className="compass-book__scroll">
@@ -208,6 +227,7 @@ export function CompassGuidedFlow({
           blocks={activity.blocks}
           values={draft}
           onChange={handleChange}
+          renderContext={makeShadowHintSlot(chapterId, shadowBridge, draft, handleChange)}
           renderPick={makePickSlot(playerData, handleChange)}
           renderHelp={makeHelpSlot(chapterId, draft, handleChange)}
         />

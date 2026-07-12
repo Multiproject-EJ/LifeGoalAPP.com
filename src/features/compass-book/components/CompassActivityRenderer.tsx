@@ -9,10 +9,12 @@ export type CompassActivityRendererProps = {
   renderHelp?: (block: CompassBlockDefinition) => ReactNode;
   /** Optional per-block slot rendered above the input (e.g. the goals/habits picker). */
   renderPick?: (block: CompassBlockDefinition) => ReactNode;
+  /** Optional per-block context rendered above the picker (e.g. the shadow-card hint). */
+  renderContext?: (block: CompassBlockDefinition) => ReactNode;
 };
 
 /** Renders the input blocks for a single activity (fixed-guided mode). */
-export function CompassActivityRenderer({ blocks, values, onChange, renderHelp, renderPick }: CompassActivityRendererProps) {
+export function CompassActivityRenderer({ blocks, values, onChange, renderHelp, renderPick, renderContext }: CompassActivityRendererProps) {
   return (
     <div className="compass-book__blocks">
       {blocks.map((block) => (
@@ -22,6 +24,7 @@ export function CompassActivityRenderer({ blocks, values, onChange, renderHelp, 
             {block.required ? <span className="compass-book__req" aria-hidden="true"> *</span> : null}
           </p>
           {block.helpText ? <p className="compass-book__block-help">{block.helpText}</p> : null}
+          {renderContext ? renderContext(block) : null}
           {renderPick ? renderPick(block) : null}
           <BlockInput block={block} value={values[block.questionId]} onChange={onChange} />
           {renderHelp ? renderHelp(block) : null}

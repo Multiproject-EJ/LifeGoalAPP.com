@@ -12,8 +12,10 @@ import type {
 } from '../types';
 import { CompassAIHelper } from './CompassAIHelper';
 import { CompassPlayerPicker } from './CompassPlayerPicker';
+import { CompassShadowHint } from './CompassShadowHint';
 import { isCompassAiAvailable } from '../services/compassAi';
 import { optionsForPickSource, pickSourceNoun, type CompassPlayerData } from '../logic/playerOptions';
+import { SHADOW_HINT_QUESTION_IDS, type CompassShadowBridgeData } from '../logic/shadowBridge';
 
 type DraftValues = Record<string, CompassAnswerValue | undefined>;
 type OnChange = (questionId: string, value: CompassAnswerValue | undefined) => void;
@@ -49,6 +51,36 @@ export function makePickSlot(
             sourceRef: { kind: refKind, id: option.id },
           })
         }
+      />
+    );
+  };
+}
+
+/**
+ * A `renderContext` slot for Chapter 2's shadow activities: shows the player's
+ * archetype-hand shadow hint above the input. Returns `undefined` when the
+ * player has no personality data (or this isn't the Inner Compass chapter) so
+ * the activities render exactly as before.
+ */
+export function makeShadowHintSlot(
+  chapterId: CompassBookChapterId,
+  bridge: CompassShadowBridgeData | null,
+  draft: DraftValues,
+  onChange: OnChange,
+): ((block: CompassBlockDefinition) => ReactNode) | undefined {
+  if (chapterId !== 'inner_compass' || !bridge) return undefined;
+  return (block) => {
+    if (block.type !== 'single_choice' || !SHADOW_HINT_QUESTION_IDS.has(block.questionId)) {
+      return null;
+    }
+    const value = draft[block.questionId];
+    const selectedOptionId = value && value.kind === 'choice' ? value.optionId : null;
+    return (
+      <CompassShadowHint
+        data={bridge}
+        block={block}
+        selectedOptionId={selectedOptionId}
+        onPick={onChange}
       />
     );
   };

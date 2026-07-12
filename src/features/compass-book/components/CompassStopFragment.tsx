@@ -17,9 +17,11 @@ import {
   type IslandFragmentSlot,
 } from '../logic/islandFragment';
 import { loadCompassPlayerData } from '../services/compassPlayerData';
+import { loadCompassShadowBridge } from '../services/compassShadowBridge';
+import type { CompassShadowBridgeData } from '../logic/shadowBridge';
 import { EMPTY_COMPASS_PLAYER_DATA, type CompassPlayerData } from '../logic/playerOptions';
 import { CompassActivityRenderer } from './CompassActivityRenderer';
-import { makeHelpSlot, makePickSlot } from './compassBlockSlots';
+import { makeHelpSlot, makePickSlot, makeShadowHintSlot } from './compassBlockSlots';
 
 type DraftValues = Record<string, CompassAnswerValue | undefined>;
 
@@ -52,6 +54,7 @@ export function CompassStopFragment({
 
   const [draft, setDraft] = useState<DraftValues>(() => ({ ...(savedValues ?? {}) }));
   const [playerData, setPlayerData] = useState<CompassPlayerData>(EMPTY_COMPASS_PLAYER_DATA);
+  const [shadowBridge, setShadowBridge] = useState<CompassShadowBridgeData | null>(null);
   const [justSaved, setJustSaved] = useState(false);
 
   useEffect(() => {
@@ -62,6 +65,13 @@ export function CompassStopFragment({
       })
       .catch(() => {
         /* Pickers degrade to plain text on failure. */
+      });
+    loadCompassShadowBridge(userId)
+      .then((data) => {
+        if (!cancelled) setShadowBridge(data);
+      })
+      .catch(() => {
+        /* No personality data — the fragment renders without the hint. */
       });
     return () => {
       cancelled = true;
@@ -104,6 +114,7 @@ export function CompassStopFragment({
         blocks={blocks}
         values={draft}
         onChange={handleChange}
+        renderContext={makeShadowHintSlot(fragment.chapterId, shadowBridge, draft, handleChange)}
         renderPick={makePickSlot(playerData, handleChange)}
         renderHelp={makeHelpSlot(fragment.chapterId, draft, handleChange)}
       />
