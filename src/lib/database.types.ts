@@ -1272,6 +1272,60 @@ export interface Database {
         };
         Relationships: [];
       };
+      task_tower_sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          entered_at: string;
+          completed_at: string | null;
+          tower_size: number;
+          queued_count: number;
+          blocks_cleared: number;
+          storeys_cleared: number;
+          coins_earned: number;
+          dice_earned: number;
+          tokens_earned: number;
+          max_combo: number;
+          duration_seconds: number;
+          all_clear: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          entered_at?: string;
+          completed_at?: string | null;
+          tower_size?: number;
+          queued_count?: number;
+          blocks_cleared?: number;
+          storeys_cleared?: number;
+          coins_earned?: number;
+          dice_earned?: number;
+          tokens_earned?: number;
+          max_combo?: number;
+          duration_seconds?: number;
+          all_clear?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          entered_at?: string;
+          completed_at?: string | null;
+          tower_size?: number;
+          queued_count?: number;
+          blocks_cleared?: number;
+          storeys_cleared?: number;
+          coins_earned?: number;
+          dice_earned?: number;
+          tokens_earned?: number;
+          max_combo?: number;
+          duration_seconds?: number;
+          all_clear?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       island_run_runtime_state: {
         Row: {
           user_id: string;

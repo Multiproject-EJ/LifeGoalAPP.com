@@ -4,6 +4,21 @@ Track the evolution of LifeGoalApp's gamification system across all phases.
 
 ---
 
+## Task Tower — v2.0.0 (July 2026)
+
+### 🎯 Overview
+Task Tower graduates from a gated demo to a **live, public game**: your entire backlog stacked into one tower you demolish block by block. Full plan and phase history: `docs/gameplay/TASK_TOWER_V2_PLAN.md`.
+
+### New Features
+- 🏗️ **The whole backlog is the tower** — every open task becomes a block (64-storey safety cap with a visible supply-line queue); priority stacks upward: nice-to-do glass base, project timber middle, must-do brick crown.
+- 🌇 **Living scene** — parallax clouds, skyline with windows that light up at night, day/dusk/night ambience keyed to local time, gantry crane that hovers over your selected block.
+- 💥 **Demolition juice** — crack-flash shard demolition, drop-bounce gravity, storey-shorter golden flashes with stage shake, combo streaks (20s window, up to ×2 block coins), count-up rewards screen.
+- 🏙️ **Zoom-out overview** — one tap shows the entire backlog as a single building with a facade reflection and a blinking rooftop beacon; project siblings cluster together and wear their project's color ribbon.
+- 🚀 **Public launch** — `actions.taskTower` flips to `live`/`open`, with a dedicated launcher icon (`actions_tasktower.svg`) and real preview screenshots.
+- 💾 **Durable sessions** — new `task_tower_sessions` table (migration 0277, RLS own-rows, 365-day retention cron): one row per open with final stats (blocks, storeys, coins/dice/tokens, max combo, duration, all-clear) written best-effort so play never blocks on the network.
+
+---
+
 ## The Fortune Engine — v1.1.0 (July 2026)
 
 ### 🎯 Overview
