@@ -23,12 +23,38 @@ function getBlockWidth(size: BlockSize): number {
 }
 
 /**
- * Sort actions the way the packer consumes them: must_do first (urgent),
- * then nice_to_do, then project.
+ * Sort actions the way the packer consumes them. The packer fills the tower
+ * bottom-up, so LOWER priority comes first: nice_to_do forms the base,
+ * project work the middle, and must_do stacks on top — higher priority sits
+ * higher in the tower, where the crane (and the player) reach first.
+ *
+ * Within a category, actions that share a project stay adjacent (first-seen
+ * project order) so project work reads as one cluster of the tower.
  */
 function sortActionsForPacking(actions: Action[]): Action[] {
-  const order = { must_do: 1, nice_to_do: 2, project: 3 };
-  return [...actions].sort((a, b) => order[a.category] - order[b.category]);
+  const bandOrder: ActionCategory[] = ['nice_to_do', 'project', 'must_do'];
+  const bands: Record<ActionCategory, Action[]> = { must_do: [], nice_to_do: [], project: [] };
+  for (const action of actions) {
+    bands[action.category].push(action);
+  }
+
+  const result: Action[] = [];
+  for (const category of bandOrder) {
+    const groups = new Map<string, Action[]>();
+    for (const action of bands[category]) {
+      const key = action.project_id ?? `solo-${action.id}`;
+      const group = groups.get(key);
+      if (group) {
+        group.push(action);
+      } else {
+        groups.set(key, [action]);
+      }
+    }
+    for (const group of groups.values()) {
+      result.push(...group);
+    }
+  }
+  return result;
 }
 
 function truncateTitle(title: string): string {
@@ -46,6 +72,7 @@ function makeBlock(action: Action, row: number, col: number): TowerBlock {
     row,
     col,
     width: getBlockWidth(size),
+    projectId: action.project_id ?? null,
     completed: false,
     animating: false,
   };

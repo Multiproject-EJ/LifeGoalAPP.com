@@ -13,6 +13,7 @@ export interface TowerBlock {
   row: number;                   // grid row position
   col: number;                   // grid column position
   width: number;                 // block width in grid units (large=3, medium=2, small=1)
+  projectId: string | null;      // owning project, for grouping + color accent
   completed: boolean;            // has this block been cleared?
   animating: boolean;            // currently playing removal animation?
 }
@@ -20,7 +21,8 @@ export interface TowerBlock {
 /** Tower grid dimensions */
 export const TOWER_GRID = {
   COLS: 4,                       // 4 columns wide
-  MAX_ROWS: 8,                   // max 8 rows visible
+  MAX_ROWS: 64,                  // safety cap — the tower holds ALL open tasks
+  MIN_VISIBLE_ROWS: 8,           // grid never renders shorter than this
   BLOCK_WIDTHS: {
     large: 3,                    // must_do spans 3 of 4 columns
     medium: 2,                   // nice_to_do spans 2 of 4 columns

@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useActions } from '../../../actions/hooks/useActions';
+import { useProjects } from '../../../projects/hooks/useProjects';
 import {
   buildTowerAndQueue,
   removeBlock,
@@ -86,6 +87,12 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
   const userId = session.user.id;
   const { actions, loading, completeAction: completeActionHook } = useActions(session);
+  const { projects } = useProjects(session);
+
+  const projectColorById = useMemo(
+    () => new Map(projects.map(project => [project.id, project.color])),
+    [projects],
+  );
 
   const [gameSession, setGameSession] = useState<TaskTowerSession>({
     blocks: [],
@@ -109,11 +116,27 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
   const [landingBlockIds, setLandingBlockIds] = useState<Set<string>>(new Set());
   const [combo, setCombo] = useState<ComboState | null>(null);
   const [stageShaking, setStageShaking] = useState(false);
+  const [overviewMode, setOverviewMode] = useState(false);
 
   const floatingRewardIdRef = useRef(0);
   const towerBuiltRef = useRef(false);
   const maxComboRef = useRef(0);
   const stageRef = useRef<HTMLDivElement>(null);
+  const gameAreaRef = useRef<HTMLDivElement>(null);
+
+  const towerHeight = getTowerHeight(gameSession.blocks);
+  // The grid grows with the tower — every open task lives in it — but never
+  // renders shorter than the minimum so small towers keep their proportions.
+  const gridRows = Math.max(towerHeight, TOWER_GRID.MIN_VISIBLE_ROWS);
+
+  // Tall towers overflow the stage: keep the ground (where the tower
+  // stands) in view by resting the scroll at the bottom.
+  useEffect(() => {
+    const gameArea = gameAreaRef.current;
+    if (gameArea) {
+      gameArea.scrollTop = gameArea.scrollHeight;
+    }
+  }, [gameSession.blocks.length, overviewMode]);
 
   // Build the tower exactly once per open, from a snapshot of the loaded
   // actions. Completing a block refreshes `actions`, and rebuilding from the
@@ -438,14 +461,29 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
               <span className="task-tower__stat">Storeys: {gameSession.linesCleared}</span>
             )}
           </div>
-          <button
-            type="button"
-            className="task-tower__close"
-            onClick={handleExit}
-            aria-label="Exit"
-          >
-            ✕
-          </button>
+          <div className="task-tower__header-actions">
+            <button
+              type="button"
+              className={`task-tower__zoom-toggle${overviewMode ? ' task-tower__zoom-toggle--active' : ''}`}
+              onClick={() => {
+                setSelectedBlock(null);
+                setOverviewMode(prev => !prev);
+              }}
+              aria-pressed={overviewMode}
+              aria-label={overviewMode ? 'Zoom in to play' : 'Zoom out to see the whole tower'}
+              title={overviewMode ? 'Zoom in to play' : 'See the whole tower'}
+            >
+              {overviewMode ? '🔍' : '🏙️'}
+            </button>
+            <button
+              type="button"
+              className="task-tower__close"
+              onClick={handleExit}
+              aria-label="Exit"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {queuedActions.length > 0 && (
@@ -468,7 +506,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
 
         <div
           ref={stageRef}
-          className={`task-tower__stage${stageShaking ? ' task-tower__stage--shake' : ''}`}
+          className={`task-tower__stage${stageShaking ? ' task-tower__stage--shake' : ''}${overviewMode ? ' task-tower__stage--overview' : ''}`}
         >
           <TaskTowerScene />
 
@@ -497,18 +535,20 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
             </div>
           )}
 
-          <div className="task-tower__game-area">
+          <div className="task-tower__game-area" ref={gameAreaRef}>
             <div
               className="task-tower__grid"
               style={{
                 gridTemplateColumns: `repeat(${TOWER_GRID.COLS}, 1fr)`,
-                gridTemplateRows: `repeat(${TOWER_GRID.MAX_ROWS}, auto)`,
+                gridTemplateRows: `repeat(${gridRows}, auto)`,
               }}
             >
               {gameSession.blocks.map(block => (
                 <TaskTowerBlock
                   key={block.id}
                   block={block}
+                  gridRows={gridRows}
+                  projectColor={block.projectId ? projectColorById.get(block.projectId) : undefined}
                   onTap={handleBlockTap}
                   isSelected={selectedBlock?.id === block.id}
                   isLanding={landingBlockIds.has(block.id)}
@@ -519,7 +559,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
                 <div
                   key={row}
                   className="task-tower__storey-flash"
-                  style={{ gridRow: `${TOWER_GRID.MAX_ROWS - row}` }}
+                  style={{ gridRow: `${Math.max(1, gridRows - row)}` }}
                 />
               ))}
             </div>

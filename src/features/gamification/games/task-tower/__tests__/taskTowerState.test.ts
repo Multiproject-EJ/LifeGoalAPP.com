@@ -96,27 +96,72 @@ function testBuildTowerPacking(): void {
   const blocks = buildTower(actions);
   assert(blocks.length === 4, `expected 4 blocks, got ${blocks.length}`);
 
-  // must_do sorts first and spans 3 of 4 columns on the bottom row.
-  const mustDo = blocks[0];
-  assert(mustDo.category === 'must_do', 'must_do should be packed first');
-  assert(mustDo.row === 0 && mustDo.col === 0 && mustDo.width === 3,
-    `must_do should sit at row 0, col 0, width 3 (got row=${mustDo.row}, col=${mustDo.col}, width=${mustDo.width})`);
+  // Priority packs bottom-up: nice_to_do forms the base of the tower.
+  const niceToDo = blocks.find(b => b.category === 'nice_to_do');
+  assert(niceToDo !== undefined && niceToDo.row === 0 && niceToDo.col === 0 && niceToDo.width === 2,
+    `nice_to_do should form the base at row 0, col 0 (got row=${niceToDo?.row}, col=${niceToDo?.col})`);
 
-  // nice_to_do (width 2) does not fit next to the must_do (3+2 > 4) → next row.
-  const niceToDo = blocks[1];
-  assert(niceToDo.category === 'nice_to_do', 'nice_to_do should be packed second');
-  assert(niceToDo.row === 1 && niceToDo.col === 0 && niceToDo.width === 2,
-    `nice_to_do should wrap to row 1, col 0 (got row=${niceToDo.row}, col=${niceToDo.col})`);
+  // The two projects (width 1) fill out the ground storey beside it.
+  const projects = blocks.filter(b => b.category === 'project');
+  assert(projects.length === 2 && projects.every(b => b.row === 0),
+    'projects should fill the remaining ground-storey columns');
+  assert(projects.some(b => b.col === 2) && projects.some(b => b.col === 3),
+    'projects should sit at cols 2 and 3');
 
-  // First project (width 1) rests on the must_do block at row 1, col 2.
-  assert(blocks[2].row === 1 && blocks[2].col === 2, 'first project should fill row 1, col 2');
-
-  // Second project lands in column 3 where nothing sits below it, so the
-  // post-pack settle drops it to the ground instead of leaving it floating.
-  assert(blocks[3].row === 0 && blocks[3].col === 3,
-    `second project should settle to row 0, col 3 (got row=${blocks[3].row}, col=${blocks[3].col})`);
+  // must_do stacks on TOP — highest priority sits highest in the tower.
+  const mustDo = blocks.find(b => b.category === 'must_do');
+  assert(mustDo !== undefined && mustDo.width === 3,
+    'must_do should span 3 columns');
+  assert(mustDo !== undefined && blocks.every(b => b.id === mustDo.id || mustDo.row > b.row),
+    `must_do should sit above every other block (got row=${mustDo?.row})`);
 
   assertGridInvariants(blocks, 'buildTower packing');
+}
+
+function testPriorityBandsStackUpward(): void {
+  // 2 nice + 3 projects + 2 must_do: the tower should read bottom-up as
+  // nice_to_do base → project middle → must_do top.
+  const actions = [
+    makeAction('must_do'),
+    makeAction('nice_to_do'),
+    makeAction('project'),
+    makeAction('must_do'),
+    makeAction('project'),
+    makeAction('nice_to_do'),
+    makeAction('project'),
+  ];
+
+  const blocks = buildTower(actions);
+  assertGridInvariants(blocks, 'priority bands');
+
+  const rowsOf = (category: string) => blocks.filter(b => b.category === category).map(b => b.row);
+  const maxNice = Math.max(...rowsOf('nice_to_do'));
+  const minProject = Math.min(...rowsOf('project'));
+  const minMust = Math.min(...rowsOf('must_do'));
+  const maxProject = Math.max(...rowsOf('project'));
+
+  assert(minProject >= maxNice, `projects (${minProject}) should sit at or above the nice_to_do base (${maxNice})`);
+  assert(minMust > maxProject, `must_do (${minMust}) should sit above the project band (${maxProject})`);
+}
+
+function testProjectSiblingsPackAdjacently(): void {
+  // Two actions of the same project separated by an unrelated one should
+  // still end up side by side in the tower.
+  const first = makeAction('project', { project_id: 'proj-42' });
+  const loner = makeAction('project');
+  const second = makeAction('project', { project_id: 'proj-42' });
+
+  const blocks = buildTower([first, loner, second]);
+  const a = blocks.find(b => b.id === first.id);
+  const c = blocks.find(b => b.id === second.id);
+  const b = blocks.find(bl => bl.id === loner.id);
+
+  assert(a !== undefined && c !== undefined && b !== undefined, 'all three blocks placed');
+  assert(a!.projectId === 'proj-42' && c!.projectId === 'proj-42' && b!.projectId === null,
+    'projectId should carry through to the blocks');
+  assert(a!.row === 0 && a!.col === 0 && c!.row === 0 && c!.col === 1,
+    `project siblings should pack adjacently (got ${a!.col} and ${c!.col})`);
+  assert(b!.col === 2, `the unrelated block should pack after the cluster (got col ${b!.col})`);
 }
 
 function testBuildTowerTitleTruncation(): void {
@@ -131,8 +176,9 @@ function testBuildTowerTitleTruncation(): void {
 }
 
 function testBuildTowerRowCap(): void {
-  // Each must_do (width 3) forces its own row, so 10 actions overflow the cap.
-  const actions = Array.from({ length: 10 }, () => makeAction('must_do'));
+  // Each must_do (width 3) forces its own row, so 70 actions overflow the
+  // safety cap by 6.
+  const actions = Array.from({ length: TOWER_GRID.MAX_ROWS + 6 }, () => makeAction('must_do'));
   const blocks = buildTower(actions);
 
   assert(blocks.length === TOWER_GRID.MAX_ROWS,
@@ -149,15 +195,20 @@ function testSettleSimpleDrop(): void {
     makeAction('project'),
     makeAction('nice_to_do'),
   ]);
-  // Row 0: nice(0-1), proj(2), proj(3). Row 1: nice(0-1).
-  const bottomNice = tower[0];
+  // Row 0: nice(0-1), nice(2-3). Row 1: proj(0), proj(1).
+  const projectRows = tower.filter(b => b.category === 'project').map(b => b.row);
+  assert(projectRows.every(row => row === 1), 'both projects should start on row 1');
 
-  const settled = removeBlock(tower, bottomNice.id);
+  // Remove the ground nice_to_do under the projects → they drop to ground.
+  const groundNice = tower.find(b => b.category === 'nice_to_do' && b.col === 0);
+  assert(groundNice !== undefined, 'ground nice_to_do exists');
+
+  const settled = removeBlock(tower, groundNice!.id);
   assert(settled.length === tower.length - 1, 'removed block should be gone');
 
-  const upperNice = settled.find(b => b.category === 'nice_to_do');
-  assert(upperNice !== undefined && upperNice.row === 0,
-    `block above the removed one should drop to row 0, got row ${upperNice?.row}`);
+  const settledProjects = settled.filter(b => b.category === 'project');
+  assert(settledProjects.every(b => b.row === 0),
+    `projects above the removed block should drop to row 0, got [${settledProjects.map(b => b.row).join(', ')}]`);
   assertGridInvariants(settled, 'settle simple drop');
 }
 
@@ -165,11 +216,11 @@ function testSettleWideBlockRestsOnPartialSupport(): void {
   // A wide block stays up as long as any block below overlaps it.
   const wide: TowerBlock = {
     id: 'wide', actionId: 'wide', title: 'Wide', category: 'must_do',
-    size: 'large', row: 1, col: 0, width: 3, completed: false, animating: false,
+    size: 'large', row: 1, col: 0, width: 3, projectId: null, completed: false, animating: false,
   };
   const support: TowerBlock = {
     id: 'support', actionId: 'support', title: 'Support', category: 'project',
-    size: 'small', row: 0, col: 2, width: 1, completed: false, animating: false,
+    size: 'small', row: 0, col: 2, width: 1, projectId: null, completed: false, animating: false,
   };
 
   const settled = settleBlocks([wide, support]);
@@ -235,14 +286,14 @@ function testGetTowerHeight(): void {
     makeAction('nice_to_do'),
     makeAction('project'),
   ]);
-  // must_do fills row 0 (width 3), nice_to_do wraps to row 1; the project
-  // settles beside the must_do at row 0 → 2 storeys.
+  // nice_to_do (width 2) + project (width 1) share the ground storey; the
+  // must_do (width 3) stacks on top → 2 storeys.
   assert(getTowerHeight(tower) === 2, `expected height 2, got ${getTowerHeight(tower)}`);
 }
 
 function testBuildTowerAndQueue(): void {
-  // Each must_do (width 3) forces its own row → 10 actions overflow by 2.
-  const actions = Array.from({ length: 10 }, () => makeAction('must_do'));
+  // Each must_do (width 3) forces its own row → cap + 2 overflows by 2.
+  const actions = Array.from({ length: TOWER_GRID.MAX_ROWS + 2 }, () => makeAction('must_do'));
   const { blocks, queued } = buildTowerAndQueue(actions);
 
   assert(blocks.length === TOWER_GRID.MAX_ROWS, `expected ${TOWER_GRID.MAX_ROWS} placed, got ${blocks.length}`);
@@ -261,7 +312,7 @@ function testPlaceQueuedBlock(): void {
   const makeBlock = (id: string, row: number, col: number, width: number): TowerBlock => ({
     id, actionId: id, title: id, category: width === 3 ? 'must_do' : width === 2 ? 'nice_to_do' : 'project',
     size: width === 3 ? 'large' : width === 2 ? 'medium' : 'small',
-    row, col, width, completed: false, animating: false,
+    row, col, width, projectId: null, completed: false, animating: false,
   });
 
   // Ground row has a free single column at col 3 → a project lands there.
@@ -333,6 +384,8 @@ function testRewardCalculations(): void {
 
 export function runAllTaskTowerStateTests(): void {
   testBuildTowerPacking();
+  testPriorityBandsStackUpward();
+  testProjectSiblingsPackAdjacently();
   testBuildTowerTitleTruncation();
   testBuildTowerRowCap();
   testSettleSimpleDrop();
