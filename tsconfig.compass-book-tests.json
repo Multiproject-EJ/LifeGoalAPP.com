@@ -33,6 +33,12 @@
     "src/features/compass-book/logic/questLeap.ts",
     "src/features/compass-book/logic/goalBridge.ts",
     "src/features/compass-book/logic/habitBridge.ts",
+    "src/features/compass-book/logic/shadowBridge.ts",
+    "src/features/identity/personalityTestData.ts",
+    "src/features/identity/personalityScoring.ts",
+    "src/features/identity/archetypes/archetypeDeck.ts",
+    "src/features/identity/archetypes/archetypeScoring.ts",
+    "src/features/identity/archetypes/archetypeHandBuilder.ts",
     "src/features/compass-book/services/compassBookSerialization.ts",
     "src/features/compass-book/services/compassAiCore.ts",
     "src/features/compass-book/__tests__/compassBook.test.ts"

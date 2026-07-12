@@ -57,6 +57,14 @@ import {
   isIslandFragmentComplete,
   splitIslandInputs,
 } from '../logic/islandFragment';
+import {
+  SHADOW_HINT_QUESTION_IDS,
+  SUGGESTED_SHADOW_OPTION_BY_ARCHETYPE,
+  buildShadowBridgeData,
+  coercePersonalityScores,
+} from '../logic/shadowBridge';
+import { SHADOW_OPTIONS, chapter2InnerCompass } from '../content/chapter2InnerCompass';
+import { ARCHETYPE_DECK } from '../../identity/archetypes/archetypeDeck';
 import { COMPASS_BOOK_CHAPTER_IDS } from '../types';
 import type { CompassAnswerRecord, CompassAnswerValue, CompassBlockDefinition, CompassChapterState } from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
@@ -834,6 +842,71 @@ function testPlayerOptionPickers(): void {
   assert(theHabit?.type === 'short_text' && theHabit.pickFrom === 'player_habits', 'the_habit picks from habits, stays text');
 }
 
+function testShadowBridge(): void {
+  const shadowOptionIds = new Set(SHADOW_OPTIONS.map((option) => option.id));
+
+  // The mapping must cover every archetype exactly, with valid Chapter-2 option ids.
+  const deckIds = new Set(ARCHETYPE_DECK.map((card) => card.id));
+  const mappedIds = Object.keys(SUGGESTED_SHADOW_OPTION_BY_ARCHETYPE);
+  assert(mappedIds.length === ARCHETYPE_DECK.length, 'shadow mapping covers whole deck');
+  for (const [archetypeId, optionId] of Object.entries(SUGGESTED_SHADOW_OPTION_BY_ARCHETYPE)) {
+    assert(deckIds.has(archetypeId), `mapping references real archetype: ${archetypeId}`);
+    assert(shadowOptionIds.has(optionId), `mapping targets real shadow option: ${optionId}`);
+  }
+
+  // Every hint question id must exist in Chapter 2 as a single_choice over SHADOW_OPTIONS.
+  const chapterBlocks = chapter2InnerCompass.activities.flatMap((activity) => activity.blocks);
+  for (const questionId of SHADOW_HINT_QUESTION_IDS) {
+    const block = chapterBlocks.find((entry) => entry.questionId === questionId);
+    assert(!!block, `hint question exists in chapter 2: ${questionId}`);
+    assert(block!.type === 'single_choice', `hint question is single choice: ${questionId}`);
+    assert(
+      (block!.options ?? []).every((option) => shadowOptionIds.has(option.id)),
+      `hint question uses shadow options: ${questionId}`,
+    );
+  }
+
+  // A leader-shaped profile: dominant differs from shadow, suggestion is valid.
+  const scores = coercePersonalityScores(
+    {
+      openness: 45,
+      conscientiousness: 85,
+      extraversion: 90,
+      agreeableness: 40,
+      emotional_stability: 75,
+    },
+    { regulation_style: 80, stress_response: 70, identity_sensitivity: 40, cognitive_entry: 60 },
+  );
+  const bridge = buildShadowBridgeData(scores);
+  assert(bridge.dominantId !== bridge.shadowId, 'dominant and shadow differ');
+  assert(deckIds.has(bridge.dominantId), 'dominant is a real card');
+  assert(deckIds.has(bridge.shadowId), 'shadow is a real card');
+  assert(bridge.dominantStressBehavior.length > 0, 'dominant stress behaviour present');
+  assert(bridge.shadowGift.length > 0, 'shadow gift present');
+  assert(
+    bridge.suggestedShadowOptionId !== null && shadowOptionIds.has(bridge.suggestedShadowOptionId),
+    'suggestion resolves to a shadow option',
+  );
+
+  // Pre-fix records stored phantom 0s for HEXACO axes; coercion must pin them
+  // to neutral so old records don't bias the recomputed hand.
+  const legacy = coercePersonalityScores(
+    { openness: 45, conscientiousness: 85, extraversion: 90, agreeableness: 40, emotional_stability: 75 },
+    {
+      regulation_style: 80,
+      stress_response: 70,
+      identity_sensitivity: 40,
+      cognitive_entry: 60,
+      honesty_humility: 0,
+      emotionality: 0,
+    },
+  );
+  assert(legacy.axes.honesty_humility === 50, 'legacy phantom honesty_humility pinned to neutral');
+  assert(legacy.axes.emotionality === 50, 'legacy phantom emotionality pinned to neutral');
+  const legacyBridge = buildShadowBridgeData(legacy);
+  assert(legacyBridge.shadowId === bridge.shadowId, 'legacy record yields same shadow as clean record');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -849,4 +922,5 @@ export function runAllCompassBookTests(): void {
   testCompassAiCore();
   testPlayerOptionPickers();
   testIslandFragment();
+  testShadowBridge();
 }
