@@ -127,7 +127,8 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
   const towerHeight = getTowerHeight(gameSession.blocks);
   // The grid grows with the tower — every open task lives in it — but never
   // renders shorter than the minimum so small towers keep their proportions.
-  const gridRows = Math.max(towerHeight, TOWER_GRID.MIN_VISIBLE_ROWS);
+  // Overview mode reserves one extra row of air for the rooftop mast.
+  const gridRows = Math.max(towerHeight + (overviewMode ? 1 : 0), TOWER_GRID.MIN_VISIBLE_ROWS);
 
   // Tall towers overflow the stage: keep the ground (where the tower
   // stands) in view by resting the scroll at the bottom.
@@ -512,6 +513,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
 
           <div className="task-tower__crane" aria-hidden="true">
             <div className="task-tower__crane-boom" />
+            <div className="task-tower__crane-beacon" />
             <div
               className={`task-tower__crane-trolley${selectedBlock ? ' task-tower__crane-trolley--engaged' : ''}`}
               style={{ left: `${craneTargetPercent}%` }}
@@ -562,6 +564,20 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
                   style={{ gridRow: `${Math.max(1, gridRows - row)}` }}
                 />
               ))}
+
+              {overviewMode && towerHeight > 0 && (
+                <div
+                  className="task-tower__rooftop"
+                  style={{
+                    gridColumn: '2 / span 2',
+                    gridRow: `${Math.max(1, gridRows - towerHeight)}`,
+                  }}
+                  aria-hidden="true"
+                >
+                  <span className="task-tower__rooftop-mast" />
+                  <span className="task-tower__rooftop-beacon" />
+                </div>
+              )}
             </div>
           </div>
 

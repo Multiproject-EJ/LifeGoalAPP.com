@@ -72,6 +72,7 @@ export function TaskTowerScene() {
       <div className="task-tower__orb" />
       <div className="task-tower__clouds task-tower__clouds--far" />
       <div className="task-tower__clouds task-tower__clouds--near" />
+      <div className="task-tower__haze" />
 
       <svg
         className="task-tower__skyline task-tower__skyline--far"
@@ -117,6 +118,7 @@ export function TaskTowerScene() {
       </svg>
 
       <div className="task-tower__ground" />
+      <div className="task-tower__vignette" />
     </div>
   );
 }
