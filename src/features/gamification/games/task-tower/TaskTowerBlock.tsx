@@ -1,9 +1,12 @@
 import { ACTION_CATEGORY_CONFIG } from '../../../../types/actions';
 import type { TowerBlock } from './taskTowerTypes';
-import { TOWER_GRID } from './taskTowerTypes';
 
 interface TaskTowerBlockProps {
   block: TowerBlock;
+  /** Total rendered grid rows — needed to flip state rows (0 = ground) into CSS grid rows (1 = top). */
+  gridRows: number;
+  /** Owning project's color, shown as a ribbon so project clusters read as one. */
+  projectColor?: string;
   onTap: (block: TowerBlock) => void;
   isSelected: boolean;
   /** Plays the drop-bounce landing animation (block fell or was crane-delivered). */
@@ -20,7 +23,7 @@ const SHARD_VECTORS = [
   { dx: '150%', dy: '80%', rot: '90deg' },
 ] as const;
 
-export function TaskTowerBlock({ block, onTap, isSelected, isLanding = false }: TaskTowerBlockProps) {
+export function TaskTowerBlock({ block, gridRows, projectColor, onTap, isSelected, isLanding = false }: TaskTowerBlockProps) {
   const categoryConfig = ACTION_CATEGORY_CONFIG[block.category];
 
   const handleClick = () => {
@@ -34,7 +37,7 @@ export function TaskTowerBlock({ block, onTap, isSelected, isLanding = false }: 
   // strip and blocks visually drop DOWN when the ones beneath them clear.
   const blockStyle: React.CSSProperties = {
     gridColumn: `${block.col + 1} / span ${block.width}`,
-    gridRow: `${TOWER_GRID.MAX_ROWS - block.row}`,
+    gridRow: `${Math.max(1, gridRows - block.row)}`,
   };
 
   const blockClasses = [
@@ -57,6 +60,13 @@ export function TaskTowerBlock({ block, onTap, isSelected, isLanding = false }: 
       aria-label={`${block.title} - ${categoryConfig.label}`}
     >
       <span className="task-tower-block__icon">{categoryConfig.icon}</span>
+      {projectColor && (
+        <span
+          className="task-tower-block__project-ribbon"
+          style={{ background: projectColor }}
+          aria-hidden="true"
+        />
+      )}
       <span className="task-tower-block__title">{block.title}</span>
       {block.category === 'must_do' && !block.completed && (
         <span className="task-tower-block__pulse" aria-hidden="true" />

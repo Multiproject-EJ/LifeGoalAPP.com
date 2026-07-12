@@ -1,6 +1,6 @@
 # Task Tower v2 — From Placeholder to Polished
 
-**Status:** Phases 0–2 complete (correctness + scene + juice/mechanics) — Phases 3–4 pending
+**Status:** Phases 0–3 complete (correctness + scene + juice + tower vision) — Phases 4–5 pending
 **Date:** 2026-07-11
 **Owner surface:** Actions tab launcher (`ActionsTab.tsx`), standalone game overlay
 **Related docs:** `docs/gameplay/MINIGAME_EVENTS_CONSOLIDATION_PLAN.md` (Phase 6 manifest item), `HABITGAME_CORE_GAMES_DEV_PLAN.md`, `THEME_LAYER_CONTRACT.md`
@@ -76,6 +76,21 @@ Two independent gaps to close:
 The core fantasy to amplify: **your to-do list is a physical tower you demolish
 block by block, and finishing everything levels the whole thing to the ground
 in a satisfying collapse.** Emotion target (per `habitGames.ts`): **Relief.**
+
+### North Star (owner vision, 2026-07-12)
+
+Task Tower is **the one place for all undone tasks and ideas**:
+
+1. Every open task lives in the tower — no hidden overflow.
+2. Main categories read as **colors/materials**, so the tower's bands tell
+   you the shape of your backlog at a glance.
+3. A **zoom-out overview** shows the entire tower as one beautiful building
+   standing in the scene.
+4. Tasks can be **grouped as projects** — project siblings cluster together
+   and share a color accent.
+5. **Priority = height**: higher-priority work sits higher in the tower,
+   where the crane (and the player) reach first. Future: per-task priority
+   adjustment (drag a block up) on top of the category bands.
 
 ---
 
@@ -170,13 +185,20 @@ in a satisfying collapse.** Emotion target (per `habitGames.ts`): **Relief.**
 - [x] Rewards screen stats count up (ease-out, reduced-motion jumps straight to final); floating rewards anchor to the cleared block's stage position.
 - [x] Side benefit: `handleConfirmComplete` state updaters are now pure (no side effects inside `setState`), so React StrictMode double-invocation can't double-award.
 
-### Phase 3 — Launch readiness
+### Phase 3 — The tower vision (North Star mechanics) ✅
+- [x] Whole backlog in one tower: row cap raised to a 64-row safety valve (supply line remains as the escape hatch); grid height grows with the tower and the view rests scrolled to the ground.
+- [x] Priority = height: packing inverted to nice_to_do base → project middle → must_do top, so urgent work crowns the tower. Priority bands covered by tests.
+- [x] Zoom-out overview mode (🏙️ header toggle): blocks collapse to pure material color and the grid narrows so the entire backlog reads as one building in the scene; blocks are non-interactive while zoomed out.
+- [x] Project grouping: blocks of the same project pack adjacently within their band and wear the project's color as a top ribbon (`projectId` on `TowerBlock`, colors from `useProjects`).
+- [ ] Future: per-task priority adjustment (raise a block within its band).
+
+### Phase 4 — Launch readiness
 - [ ] Dedicated launcher icon asset; wire in `ActionsTab.tsx`.
 - [ ] `featureAvailability.ts`: real description, preview screenshots, then graduate `status: 'demo'` → `'beta'` with `publicAccess: 'open'` once QA passes.
 - [ ] Telemetry review: confirm enter/complete metadata answers "do players return?" (session length, combo max, blocks cleared vs. tower size).
 - [ ] Update `GAMIFICATION_CHANGELOG.md` + DEV_PLAN status snapshot.
 
-### Phase 4 — Island Run manifest (from consolidation plan Phase 6)
+### Phase 5 — Island Run manifest (from consolidation plan Phase 6)
 - [ ] Add `task-tower/index.ts` exporting `taskTowerManifest` (`React.lazy`, mirroring `vision-quest/index.ts`).
 - [ ] Switch `ActionsTab.tsx` to lazy import so game code stays out of the main bundle.
 - [ ] Event-config wrapper props (duration, target storeys, theme) for the Feeding Frenzy repurpose — behavior unchanged until that plan activates it.

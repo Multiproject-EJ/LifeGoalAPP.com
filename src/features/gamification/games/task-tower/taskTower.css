@@ -67,6 +67,37 @@
   font-weight: 600;
 }
 
+.task-tower__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.task-tower__zoom-toggle {
+  background: rgba(212, 165, 116, 0.1);
+  border: 1px solid rgba(212, 165, 116, 0.35);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.task-tower__zoom-toggle:hover {
+  background: rgba(212, 165, 116, 0.2);
+  border-color: rgba(212, 165, 116, 0.55);
+  transform: scale(1.05);
+}
+
+.task-tower__zoom-toggle--active {
+  background: rgba(212, 165, 116, 0.3);
+  border-color: rgba(212, 165, 116, 0.7);
+}
+
 .task-tower__close {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
@@ -497,6 +528,19 @@
   animation: shardFly 0.45s cubic-bezier(0.2, 0.6, 0.4, 1) forwards;
 }
 
+/* Project ribbon: blocks of the same project share a colored top edge so
+   the cluster reads as one */
+.task-tower-block__project-ribbon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 5px 5px 0 0;
+  opacity: 0.95;
+  pointer-events: none;
+}
+
 /* Block Content */
 .task-tower-block__icon {
   position: absolute;
@@ -890,6 +934,46 @@
 /* Stage shake when the tower loses a storey */
 .task-tower__stage--shake {
   animation: towerShake 0.4s ease-out;
+}
+
+/* Overview mode: zoom out until the whole tower fits — blocks collapse to
+   pure material color so the backlog reads as one building in the scene. */
+.task-tower__stage--overview .task-tower__game-area {
+  padding: 48px 1.25rem 30px;
+}
+
+.task-tower__stage--overview .task-tower__grid {
+  max-width: 62%;
+  margin: 0 auto;
+  width: 100%;
+  gap: 3px;
+}
+
+.task-tower__stage--overview .task-tower-block {
+  min-height: 13px;
+  padding: 0;
+  border-radius: 2px;
+  border-width: 1px;
+  pointer-events: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.task-tower__stage--overview .task-tower-block__icon,
+.task-tower__stage--overview .task-tower-block__title,
+.task-tower__stage--overview .task-tower-block__pulse,
+.task-tower__stage--overview .task-tower-block__project-ribbon,
+.task-tower__stage--overview .task-tower-block--must_do::after {
+  display: none;
+}
+
+.task-tower__stage--overview .task-tower-block--selected {
+  transform: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border-color: rgba(0, 0, 0, 0.4);
+}
+
+.task-tower__stage--overview .task-tower__crane {
+  opacity: 0.6;
 }
 
 /* Animations */
