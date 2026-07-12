@@ -30,13 +30,13 @@ import './ActionsTab.css';
 const projectsIcon = '/icons/Actions/actions_projects.webp';
 const timerIcon = '/icons/Actions/actions_timer.webp';
 const taskIcon = '/icons/Actions/actions_tasks.webp';
-const taskTowerIcon = '/icons/Actions/actions_tasks.webp';
+const taskTowerIcon = '/icons/Actions/actions_tasktower.svg';
 const journalIcon = '/icons/Actions/actions_journal.webp';
 const visionBoardIcon = '/icons/Actions/actions_visonboard.webp';
 
 // Constants
 const EXPIRING_SOON_THRESHOLD_HOURS = 24;
-const ACTIONS_FUTURE_FEATURE_IDS = ['actions.taskTower', 'actions.visionBoard'] as const;
+const ACTIONS_FUTURE_FEATURE_IDS = ['actions.visionBoard'] as const;
 
 // Helper function to check if MUST DO items should always show
 const shouldAlwaysShow = (action: Action): boolean => {
@@ -544,10 +544,7 @@ export function ActionsTab({
             )}
             <div className="actions-tab__launcher-row actions-tab__launcher-row--single">
               <div
-                className={getActionsFutureFeatureCardClassName(
-                  'actions-tab__launcher-button actions-tab__launcher-button--full-width actions-tab__launcher-button--task-tower actions-tab__launcher-button--task-tower-expanded',
-                  'actions.taskTower',
-                )}
+                className="actions-tab__launcher-button actions-tab__launcher-button--full-width actions-tab__launcher-button--task-tower actions-tab__launcher-button--task-tower-expanded"
               >
                 <button
                   type="button"

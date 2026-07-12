@@ -1,6 +1,6 @@
 # Task Tower v2 — From Placeholder to Polished
 
-**Status:** Phases 0–3 complete (correctness + scene + juice + tower vision) — Phases 4–5 pending
+**Status:** Phases 0–4 complete (correctness + scene + juice + tower vision + launch) — Phase 5 pending
 **Date:** 2026-07-11
 **Owner surface:** Actions tab launcher (`ActionsTab.tsx`), standalone game overlay
 **Related docs:** `docs/gameplay/MINIGAME_EVENTS_CONSOLIDATION_PLAN.md` (Phase 6 manifest item), `HABITGAME_CORE_GAMES_DEV_PLAN.md`, `THEME_LAYER_CONTRACT.md`
@@ -193,11 +193,11 @@ Task Tower is **the one place for all undone tasks and ideas**:
 - [x] Dedicated art pass (owner request): richer multi-stop skies + atmospheric haze + stage vignette, layered sun/moon glow, sidewalk-and-asphalt ground, refined brick/glass/timber materials with proper bevels, crane-gold selection glow, single-building overview treatment (unified drop shadow, facade reflection sweep, rooftop mast with blinking beacon), crane end caps + safety beacon, pill-styled floating rewards.
 - [ ] Future: per-task priority adjustment (raise a block within its band).
 
-### Phase 4 — Launch readiness
-- [ ] Dedicated launcher icon asset; wire in `ActionsTab.tsx`.
-- [ ] `featureAvailability.ts`: real description, preview screenshots, then graduate `status: 'demo'` → `'beta'` with `publicAccess: 'open'` once QA passes.
-- [ ] Telemetry review: confirm enter/complete metadata answers "do players return?" (session length, combo max, blocks cleared vs. tower size).
-- [ ] Update `GAMIFICATION_CHANGELOG.md` + DEV_PLAN status snapshot.
+### Phase 4 — Launch readiness ✅
+- [x] Dedicated launcher icon (`public/icons/Actions/actions_tasktower.svg` — mini tower + crane in the game's art style); wired in `ActionsTab.tsx` (was borrowing the Tasks icon).
+- [x] `featureAvailability.ts`: real description + two preview screenshots (`public/assets/task-tower/*.jpg`); graduated `status: 'demo'` → `'live'` with `publicAccess: 'open'` (registry has no `beta` status — `live` is the launch state). Removed from `ACTIONS_FUTURE_FEATURE_IDS` so the launcher card no longer gets seen/voted dimming.
+- [x] Durable telemetry: `task_tower_sessions` Supabase table (migration `0277`, RLS own-rows policies, retention cron per the 0275 pattern) + `services/taskTowerSessions.ts` best-effort start/complete writes from the game — answers session length, combo max, blocks cleared vs. tower size, abandonment (NULL `completed_at`). Local `logGameSession` remains the offline/demo fallback.
+- [x] `GAMIFICATION_CHANGELOG.md` v2.0.0 entry; `sql/manual.sql` regenerated.
 
 ### Phase 5 — Island Run manifest (from consolidation plan Phase 6)
 - [ ] Add `task-tower/index.ts` exporting `taskTowerManifest` (`React.lazy`, mirroring `vision-quest/index.ts`).

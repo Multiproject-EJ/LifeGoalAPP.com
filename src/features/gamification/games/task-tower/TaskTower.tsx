@@ -18,6 +18,7 @@ import { TaskTowerScene } from './TaskTowerScene';
 import { TaskTowerRewards } from './TaskTowerRewards';
 import { LuckyRollCelebration } from '../../daily-treats/LuckyRollCelebration';
 import { logGameSession, awardDice, awardGameTokens } from '../../../../services/gameRewards';
+import { startTaskTowerSession, completeTaskTowerSession } from '../../../../services/taskTowerSessions';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import type { Action } from '../../../../types/actions';
 import type { TowerBlock, TaskTowerSession } from './taskTowerTypes';
@@ -123,6 +124,7 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
   const maxComboRef = useRef(0);
   const stageRef = useRef<HTMLDivElement>(null);
   const gameAreaRef = useRef<HTMLDivElement>(null);
+  const supabaseSessionIdRef = useRef<string | null>(null);
 
   const towerHeight = getTowerHeight(gameSession.blocks);
   // The grid grows with the tower — every open task lives in it — but never
@@ -157,6 +159,14 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
       action: 'enter',
       timestamp: new Date().toISOString(),
       metadata: { blockCount: blocks.length, queuedCount: queued.length },
+    });
+
+    // Durable session row in Supabase (best-effort; never blocks play)
+    void startTaskTowerSession(userId, {
+      towerSize: blocks.length,
+      queuedCount: queued.length,
+    }).then(sessionId => {
+      supabaseSessionIdRef.current = sessionId;
     });
   }, [loading, actions, userId]);
 
@@ -374,6 +384,11 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
       tokens: gameSession.tokensEarned,
     });
 
+    const durationSeconds = Math.max(
+      0,
+      Math.round((Date.now() - new Date(gameSession.sessionStartTime).getTime()) / 1000),
+    );
+
     // Log session completion
     logGameSession(userId, {
       gameId: 'task_tower',
@@ -386,11 +401,20 @@ export function TaskTower({ session, onClose, onComplete }: TaskTowerProps) {
         diceEarned: gameSession.diceEarned,
         tokensEarned: gameSession.tokensEarned,
         maxCombo: maxComboRef.current,
-        durationSeconds: Math.max(
-          0,
-          Math.round((Date.now() - new Date(gameSession.sessionStartTime).getTime()) / 1000),
-        ),
+        durationSeconds,
       },
+    });
+
+    // Finalize the durable session row (best-effort)
+    void completeTaskTowerSession(supabaseSessionIdRef.current, {
+      blocksCleared: gameSession.blocksCleared,
+      storeysCleared: gameSession.linesCleared,
+      coinsEarned: gameSession.coinsEarned,
+      diceEarned: gameSession.diceEarned,
+      tokensEarned: gameSession.tokensEarned,
+      maxCombo: maxComboRef.current,
+      durationSeconds,
+      allClear: gameSession.isComplete,
     });
 
     onClose();

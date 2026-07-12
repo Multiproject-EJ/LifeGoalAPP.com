@@ -195,17 +195,25 @@ export const featureAvailabilityRegistry = {
   'actions.taskTower': {
     id: 'actions.taskTower',
     label: 'Task Tower',
-    description: 'Actions launcher entry for Task Tower.',
-    status: 'demo',
-    publicAccess: 'previewOnly',
+    description:
+      'Every open task stacked into one tower — demolish it block by block. Priorities crown the top, projects cluster by color, and clearing everything levels the building.',
+    status: 'live',
+    publicAccess: 'open',
     adminAccess: 'open',
     surface: 'ActionsTab',
     category: 'actions',
-    publicLabel: DEMO_FEATURE_LABEL,
-    adminLabel: ADMIN_DEMO_MODE_LABEL,
-    shortPitch: 'Turn your tasks into a focused tower challenge that makes progress feel game-like.',
-    votingEnabled: true,
+    shortPitch: 'Turn your whole backlog into a tower you demolish block by block, with combos and rewards.',
     voteCategory: 'actions',
+    previewScreenshots: [
+      {
+        src: '/assets/task-tower/task-tower-play.jpg',
+        alt: 'Task Tower play mode: colored task blocks stacked in a daytime construction scene with a crane.',
+      },
+      {
+        src: '/assets/task-tower/task-tower-overview.jpg',
+        alt: 'Task Tower zoomed-out overview at night: the whole backlog as one building with a rooftop beacon.',
+      },
+    ],
   },
   'actions.visionBoard': {
     id: 'actions.visionBoard',
