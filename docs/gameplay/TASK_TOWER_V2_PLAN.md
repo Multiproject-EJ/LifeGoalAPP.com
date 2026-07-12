@@ -190,6 +190,7 @@ Task Tower is **the one place for all undone tasks and ideas**:
 - [x] Priority = height: packing inverted to nice_to_do base → project middle → must_do top, so urgent work crowns the tower. Priority bands covered by tests.
 - [x] Zoom-out overview mode (🏙️ header toggle): blocks collapse to pure material color and the grid narrows so the entire backlog reads as one building in the scene; blocks are non-interactive while zoomed out.
 - [x] Project grouping: blocks of the same project pack adjacently within their band and wear the project's color as a top ribbon (`projectId` on `TowerBlock`, colors from `useProjects`).
+- [x] Dedicated art pass (owner request): richer multi-stop skies + atmospheric haze + stage vignette, layered sun/moon glow, sidewalk-and-asphalt ground, refined brick/glass/timber materials with proper bevels, crane-gold selection glow, single-building overview treatment (unified drop shadow, facade reflection sweep, rooftop mast with blinking beacon), crane end caps + safety beacon, pill-styled floating rewards.
 - [ ] Future: per-task priority adjustment (raise a block within its band).
 
 ### Phase 4 — Launch readiness
