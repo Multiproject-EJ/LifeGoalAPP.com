@@ -1,126 +1,114 @@
 # Vision Board Master Plan
 
-This document consolidates all Vision Board planning and implementation status into a single source of truth. It replaces scattered plan fragments and documents what is shipped today versus what is still missing.
+Single source of truth for the Vision Board feature: what is actually shipped
+in the codebase today, what exists only as unused scaffolding, and what is
+genuinely still to build.
+
+> **Correction (2026-07):** Earlier versions of this document described a
+> "Vision Board V2" (`app/vision/vision.js`, `app/vision/buildplan.json`,
+> `QUICK_START_GUIDE.md`) as shipped, with canvas, sections, sharing, story
+> mode, gratitude/mood, thumbnail signing, confetti, and an offline card
+> queue. **None of that frontend exists** — those files have never been
+> present in the repository (`git log --all -- 'app/vision/*'` is empty), and
+> no component consumes the V2 tables. Those claims have been removed. The
+> React feature described below is the only Vision Board implementation.
 
 ## Scope
-- Covers the Vision Board experience in the main app (`src/features/vision-board`).
-- Includes Vision Board V2 roadmap items (multi-board, sections, sharing, canvas), previously listed in scattered plan files.
+- The Vision Board experience lives entirely in `src/features/vision-board/`.
+- A V2 **database schema** was scaffolded (see "Scaffolded but unused" below)
+  but has no frontend and is not wired into the app.
 
 ---
 
-## ✅ Shipped (in repo)
+## ✅ Actually shipped (`src/features/vision-board/`)
 
-### Core Vision Board experience (Phase 3 checklist)
-- Vision Board workspace with Supabase Storage uploads, gallery sorting, captions, and deletion is marked complete in the repo’s Phase 3 checklist and latest updates.【F:README.md†L18-L24】【F:README.md†L231-L233】
+### Uploading & gallery
+- **Image upload** by file (drag-and-drop or file picker, optimized to WebP)
+  or by direct **URL**, with caption, in `VisionUploadForm.tsx`.
+- **Gallery** with sort (newest / oldest / caption) and grid layouts
+  (2-column / 3-column / masonry).
+- **Full-screen lightbox** viewer with keyboard navigation
+  (`VisionLightbox.tsx`).
+- **Broken-image fallback** for dead external URLs.
+- **Caption search** and **multi-select bulk delete** with an undo window.
+- Per-image **delete with undo** (optimistic remove + 5s undo toast).
 
-### Vision Board 2.0 metadata + review loop (already implemented in code)
-Although the master development plan lists this milestone as “not started,” the Vision Board component already includes:
-- **Vision type metadata** and **review interval** options.【F:src/features/vision-board/VisionBoard.tsx†L61-L79】
-- **Review loop UI** with due items, review count, and “Mark reviewed” actions.【F:src/features/vision-board/VisionBoard.tsx†L1077-L1118】
-- **Orphan detection** (items with no linked goals/habits), surfaced as chips and callouts.【F:src/features/vision-board/VisionBoard.tsx†L1341-L1411】
-- **Goal/habit linking UI** that enables orphan detection to function.【F:src/features/vision-board/VisionBoard.tsx†L1020-L1058】
+### Organization & linking
+- **Board views:** All photos / Life wheel categories / The Four Visionaries.
+- **Tagging** images to life-wheel and Four Visionaries categories
+  (`VisionTagModal.tsx`; migrations `0120_vision_board_image_tags.sql`,
+  `0121_vision_board_image_tags_group.sql`).
+- **Vision type** metadata (goal / habit / identity / experience / environment).
+- **Goal/habit linking** with **orphan detection** (chips + callouts) on each
+  card (`VisionCard.tsx`).
 
-### Vision Board V2 storage bucket (Phase 0)
-- **Private `vision` storage bucket migration** added for Vision Board V2 assets.【F:supabase/migrations/0136_vision_board_v2_storage_bucket.sql†L1-L15】
-- **Build checklist** updated to mark the storage bucket task as done.【F:app/vision/buildplan.json†L4-L9】
+### Engagement
+- **Daily Vision Game** — reveal / rank / balance flow
+  (`src/features/visionBoardDailyGame/`; migration
+  `0117_vision_board_daily_game.sql`).
+- **XP rewards** on upload (via `useGamification`).
+- **Haircut widget** on the Body & Style tab, persisted per-user to
+  localStorage (`HaircutWidget.tsx` + `haircutPreferences.ts`).
 
-### Vision Board V2 sections (Phase 1)
-- **Section management UI** for adding, renaming, and reordering sections on a board is now wired up in the Vision Board V2 shell.【F:app/vision/vision.js†L71-L232】
-- **Build checklist** updated to reflect section management as shipped in Phase 1.【F:app/vision/buildplan.json†L8-L14】
+### Platform
+- **Offline sync queue** for uploads/edits with retry/clear UI
+  (`services/visionBoard.ts`, shared mutation queue).
+- **Storage buckets:** `0124_vision_board_storage_bucket.sql` (active
+  `vision-board` bucket) and `0136_vision_board_v2_storage_bucket.sql`.
+- **Modal accessibility:** focus trap + Escape + backdrop close, restore focus
+  (`useModalA11y.ts`).
 
-### Vision Board V2 add card (Phase 1)
-- **Card creation UI** now supports adding URL-based image cards or text-only cards to the active board, with client-side rendering in the canvas grid.【F:app/vision/vision.js†L101-L483】
-- **Build checklist** updated to reflect card creation as shipped in Phase 1.【F:app/vision/buildplan.json†L8-L14】
+### Component structure
+The feature was decomposed from a single ~1,700-line component into:
+`VisionBoard.tsx` (orchestration) plus `VisionUploadForm`, `VisionCard`,
+`VisionCardEditForm`, `VisionLightbox`, `VisionTagModal`, `HaircutWidget`, and
+the `categories`, `visionTypes`, `haircutPreferences`, and `useModalA11y`
+modules.
 
-### Vision Board V2 card metadata edits (Phase 1)
-- **Card edit flow** now covers title, affirmation, tags, color, size, and favorite state directly from the Vision Board shell UI.【F:app/vision/vision.js†L101-L675】
-- **Build checklist** updated to reflect card metadata editing as shipped in Phase 1.【F:app/vision/buildplan.json†L8-L14】
-
-### Vision Board V2 habit linking (Phase 1)
-- **Card linking UI** now lets creators link cards to habits, with a goal linking placeholder for the next milestone.【F:app/vision/vision.js†L247-L476】
-
-### Vision Board V2 canvas filters (Phase 2)
-- **Filter bar** now supports filtering by section, tag, color, and favorites in the Vision Board V2 canvas.【F:app/vision/vision.js†L98-L529】
-
-### Vision Board V2 prompts (Phase 3)
-- **Prompt chips** load from the prompt packs JSON and insert prompts into new text cards.【F:app/vision/vision.js†L291-L801】
-- **Daily mantra highlight** now rotates a prompt each day for the active pack.【F:app/vision/vision.js†L365-L455】
-
-### Vision Board V2 canvas drag/drop (Phase 2)
-- **Drag-drop reorder** now lets creators rearrange cards directly on the canvas, persisting updated order to Supabase.【F:app/vision/vision.js†L333-L401】
-- **Move across sections** is supported by dropping cards onto section rows or onto cards in another section.【F:app/vision/vision.js†L333-L401】
-- **Size-based grid spans** already render S/M/L/XL card sizes in the masonry grid.【F:app/vision/vision.css†L55-L61】
-
-### Vision Board V2 story mode (Phase 4)
-- **Fullscreen slideshow** now plays image + text cards with interval and shuffle controls in the Story section.【F:app/vision/vision.js†L454-L597】【F:app/vision/vision.css†L74-L86】
-- **Daily Spotlight** now includes subscribe controls plus a test send flow in the Story section.【F:app/vision/vision.js†L629-L736】
-
-### Vision Board V2 gratitude & mood (Phase 5)
-- **Daily mood (1–5) + gratitude note** now load and save per board in the Gratitude & Mood panel.【F:app/vision/vision.js†L1387-L1715】
-- **Check-in streak + gentle nudges** now summarize consecutive check-ins and prompt users to keep the streak alive.【F:app/vision/vision.js†L220-L379】
-- **Build checklist** updated to reflect daily check-ins as shipped in Phase 5.【F:app/vision/buildplan.json†L24-L27】
-
-### Vision Board V2 sharing (Phase 6)
-- **Create/disable share link** flow now lives in the Sharing panel, with slug control and status feedback.【F:app/vision/vision.js†L243-L365】
-- **Per-card visibility toggle** is now editable from the card form to hide items from shared boards.【F:app/vision/vision.js†L1662-L1673】
-- **Build checklist** updated to mark Phase 6 sharing items as done.【F:app/vision/buildplan.json†L30-L33】
-
-### Vision Board V2 thumbnail signing (Phase 7)
-- **Signed + transformed URLs** now power Vision Board image thumbnails with fallback to original URLs.【F:app/vision/vision.js†L69-L122】【F:app/vision/vision.js†L674-L716】【F:app/vision/vision.js†L1428-L1519】
-- **Build checklist** updated to mark thumbnail signing as done.【F:app/vision/buildplan.json†L34-L37】
-
-### Vision Board V2 celebrate confetti (Phase 7)
-- **Celebrate hook confetti** now triggers a visual burst when a fresh check-in increases the streak, using the existing Vision Board confetti overlay styling.【F:app/vision/vision.js†L120-L523】【F:app/vision/vision.css†L115-L122】
-- **Build checklist** updated to mark celebrate confetti as done.【F:app/vision/buildplan.json†L34-L38】
-
-### Vision Board V2 offline queue (Phase 7)
-- **Offline queue** now buffers card edits and card reorders locally, syncing queued updates once the device reconnects.【F:app/vision/vision.js†L96-L903】
-- **Build checklist** updated to mark offline queue as done.【F:app/vision/buildplan.json†L34-L38】
-
-### Scaffolded canvas + prompts + build checklist
-The latest update notes a scaffolded Vision Board tab with canvas, prompts, and a build checklist ready for next phases.【F:README.md†L246-L247】
+### Removed
+- The recurring per-image **"review loop"** (due-for-review list, review
+  intervals, "Mark reviewed") was removed as an unwanted interaction model.
+  The `review_interval_days` / `last_reviewed_at` columns remain in the table
+  but are no longer surfaced.
 
 ---
 
-## 🧭 Remaining Work (Vision Board V2 roadmap)
+## 🟡 Scaffolded but unused (V2 database schema, no frontend)
 
-The following items are still marked as **todo** in the Vision Board build plan and/or explicitly called “not yet implemented.”【F:app/vision/buildplan.json†L1-L40】【F:QUICK_START_GUIDE.md†L285-L293】
+These migrations create tables that **no product feature reads or writes**.
+They are referenced only by row-limit config (`config/userDataLimits.ts`) and a
+connection diagnostic (`features/account/SupabaseConnectionTest.tsx`):
 
-### Phase 0 — Bootstrap
-- Run 0101 + 0102 + 0103 migrations.
-  - Helper: `npm run vision-board-v2:migrate` runs `scripts/vision-board-v2-migrations.sh` to apply the three Vision Board V2 migrations in order.
+- `0101_vision_core.sql` — `vb_boards`, `vb_sections`, `vb_cards`
+  (multi-board, S/M/L/XL card sizes, themes).
+- `0102_sharing_push.sql` — `vb_shares`, `push_subscriptions`.
+- `0103_gratitude_mood.sql` — `vb_checkins`.
+- Helper: `npm run vision-board-v2:migrate` (`scripts/vision-board-v2-migrations.sh`).
 
-### Phase 2 — Canvas
-All Phase 2 canvas items are shipped.
-
-### Phase 3 — Prompts & Mantra
-All Phase 3 prompt items are shipped.
-
-### Phase 4 — Story
-All Phase 4 story items are shipped.
-
-### Phase 5 — Gratitude & Mood
-All Phase 5 check-in items are shipped.
-
-### Phase 7 — Polish
-- All Phase 7 polish items are shipped.
+Building a frontend on this schema is optional future work (see below); nothing
+depends on it today.
 
 ---
 
-## Plan Consolidation Notes
+## 🧭 Genuine future roadmap (not started)
 
-### Source of truth
-- **This file** is now the master Vision Board plan.
-- The general development plan and other docs should reference this file instead of duplicating Vision Board details.
+None of the following exists yet. Ordered roughly by value-to-effort:
 
-### Related legacy plan sources (kept as references)
-- `DEV_PLAN.md` includes the Vision Board 2.0 milestone but should now link here for status and scope details.【F:DEV_PLAN.md†L135-L151】
-- `app/vision/buildplan.json` remains a structured backlog but is summarized here for human-readable planning context.【F:app/vision/buildplan.json†L1-L40】
-- `QUICK_START_GUIDE.md` lists Vision Board V2 as not yet implemented; this document details what remains.【F:QUICK_START_GUIDE.md†L285-L293】
+1. **Re-host URL images** so boards don't rot when external links die
+   (fetch-and-store into the bucket, with raw-URL fallback for CORS-blocked
+   hosts).
+2. **Story-mode slideshow** — could reuse `VisionLightbox` for a
+   fullscreen, auto-advancing presentation.
+3. **Canvas / free-arrange boards with sections** — a richer layout than the
+   fixed gallery grid (schema exists: `vb_boards` / `vb_sections` / `vb_cards`).
+4. **Sharing links** (schema: `vb_shares`) and **daily spotlight push**
+   (schema: `push_subscriptions`).
+5. **Gratitude / mood check-ins** (schema: `vb_checkins`).
 
 ---
 
-## Next Recommended Actions
-1. Align `DEV_PLAN.md` M5 status and next task with the “Shipped vs Missing” state above.
-2. Keep `app/vision/buildplan.json` for structured task tracking, but avoid duplicating prose elsewhere.
-3. When new Vision Board features ship, update **only this document** for status changes.
+## Notes
+- When Vision Board features ship or change, update **this file** to match the
+  code. Do not reintroduce status claims that cite files which do not exist.
+- `DEV_PLAN.md` references the Vision Board milestone; keep it pointed here for
+  scope/status.
