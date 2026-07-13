@@ -80,6 +80,21 @@ export const USER_DATA_LIMITS: Readonly<Record<string, UserDataLimit>> = {
   habit_experiment_days: { maxRows: 100, maxRowBytes: 4_096, scope: 'analysis session' },
   life_goal_steps: { maxRows: 100, maxRowBytes: 5_120, scope: 'goal' },
   life_goal_substeps: { maxRows: 50, maxRowBytes: 5_120, scope: 'step' },
+  // Conflict resolver (migration 0281): collaborative, multi-writer.
+  // The session is capped per account; every child is capped per session,
+  // which bounds the shared resource regardless of which participant writes.
+  conflict_sessions: { maxRows: 200, maxRowBytes: 2_048 },
+  conflict_participants: { maxRows: 50, maxRowBytes: 2_048, scope: 'conflict session' },
+  conflict_invites: { maxRows: 100, maxRowBytes: 4_096, scope: 'conflict session' },
+  conflict_messages_private: { maxRows: 1_000, maxRowBytes: 8_192, scope: 'conflict session' },
+  conflict_shared_summaries: { maxRows: 10, maxRowBytes: 51_200, scope: 'conflict session' },
+  conflict_proposals: { maxRows: 300, maxRowBytes: 8_192, scope: 'conflict session' },
+  conflict_apologies: { maxRows: 200, maxRowBytes: 8_192, scope: 'conflict session' },
+  conflict_agreements: { maxRows: 100, maxRowBytes: 16_384, scope: 'conflict session' },
+  conflict_stage_state: { maxRows: 50, maxRowBytes: 8_192, scope: 'conflict session' },
+  conflict_ai_messages: { maxRows: 1_000, maxRowBytes: 8_192, scope: 'conflict session' },
+  conflict_ai_runs: { maxRows: 500, maxRowBytes: 16_384, scope: 'conflict session' },
+  conflict_ai_artifacts: { maxRows: 500, maxRowBytes: 32_768, scope: 'conflict session' },
 };
 
 /** Limit for a table, or null when the table has no configured cap. */

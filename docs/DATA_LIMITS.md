@@ -1,6 +1,6 @@
 # Per-User Data Limits
 
-**Status:** enforced since migration `0278_per_user_data_limits.sql`; Storage object cap in `0279_per_user_storage_object_cap.sql`; parent-scoped child tables in `0280_child_table_data_limits.sql`
+**Status:** enforced since migration `0278_per_user_data_limits.sql`; Storage object cap in `0279_per_user_storage_object_cap.sql`; parent-scoped child tables in `0280_child_table_data_limits.sql`; multi-party conflict tables in `0281_conflict_data_limits.sql`
 **Related:** `0275_log_retention_auto_cleanup.sql` (time-based retention), `docs/quota_emergency_cleanup.sql` (incident runbook), `README_STORAGE_POLICIES.md` (Storage cap deployment)
 
 ## Why
@@ -164,16 +164,46 @@ each individual cap is ~10x realistic use and every row is tiny; typical
 accounts sit orders of magnitude below. Tables absent from a given environment
 are skipped by `attach_user_data_limit_triggers()` with a NOTICE.
 
+## Conflict resolver — multi-party tables (migration 0281)
+
+The conflict resolver is collaborative: a `conflict_sessions` row is owned by
+one user (`owner_user_id`), but multiple invited participants write to its
+child tables (private messages, proposals, apologies, AI runs, …), all scoped
+by `session_id` with no single `user_id`. 0281 bounds the whole feature with
+the two-level pattern from 0280:
+
+1. **`conflict_sessions` is capped per account** (`owner_user_id`, 200) — the
+   multiplier, so bounding it bounds everything below.
+2. **Every child table is capped per session** (`session_id`), which bounds the
+   shared resource *regardless of which participant writes* — a co-participant
+   cannot grow a session past its cap by writing on the owner's behalf.
+
+Per-user bound = `(sessions per user) x (sum of per-session child caps)`. The
+AI-backed children (`conflict_ai_messages`, `conflict_ai_runs`,
+`conflict_ai_artifacts`) also sit behind the app's AI quota service, which
+independently gates how fast they can grow.
+
+| Table | Scope | Per-scope cap | Row size |
+|---|---|---:|---:|
+| `conflict_sessions` | account | 200 | 2 KB |
+| `conflict_participants` | session | 50 | 2 KB |
+| `conflict_invites` | session | 100 | 4 KB |
+| `conflict_messages_private` | session | 1,000 | 8 KB |
+| `conflict_shared_summaries` | session | 10 | 50 KB |
+| `conflict_proposals` | session | 300 | 8 KB |
+| `conflict_apologies` | session | 200 | 8 KB |
+| `conflict_agreements` | session | 100 | 16 KB |
+| `conflict_stage_state` | session | 50 | 8 KB |
+| `conflict_ai_messages` | session | 1,000 | 8 KB |
+| `conflict_ai_runs` | session | 500 | 16 KB |
+| `conflict_ai_artifacts` | session | 500 | 32 KB |
+
 ## Known gaps (deliberately out of scope)
 
 - **Storage total bytes** are bounded only indirectly (object count x 5 MB
   per-file limit), not summed per user. A byte-sum policy is heavier per
   upload and unnecessary given the count cap; revisit only if large files
   become common.
-- **The multi-party `conflict_*` tables** are scoped by `session_id` across
-  multiple participants, not owned by one user. Bounding them means capping
-  conflict *session* creation (and invites) rather than per-parent row counts;
-  it is a distinct collaboration-abuse concern, left for a dedicated pass.
 - **Egress/compute quotas** are unrelated to stored size and remain governed
   by Supabase rate limits and the AI quota service (`aiQuotaService.ts`).
 - **Concurrent inserts** can overshoot a row cap by a handful of rows (the
