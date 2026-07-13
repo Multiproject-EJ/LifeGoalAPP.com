@@ -1,52 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import type { StoryEpisodeManifest, StorySoundtrackConfig } from '../../../story/storyTypes';
+
 import './IslandStoryReader.css';
 
-export type StoryPanel =
-  | {
-      id?: string;
-      type: 'image';
-      src: string;
-      alt?: string;
-      width?: number;
-      height?: number;
-      caption?: string;
-      soundtrack?: StorySoundtrackConfig;
-    }
-  | {
-      id?: string;
-      type: 'video';
-      src: string;
-      poster?: string;
-      mutedAutoplay?: boolean;
-      loop?: boolean;
-      caption?: string;
-      soundtrack?: StorySoundtrackConfig;
-    }
-  | {
-      id?: string;
-      type: 'text';
-      text: string;
-      caption?: string;
-      soundtrack?: StorySoundtrackConfig;
-    };
-
-export interface StorySoundtrackConfig {
-  src: string;
-  loop?: boolean;
-  volume?: number;
-}
-
-export interface StoryEpisodeManifest {
-  id: string;
-  title: string;
-  autoLaunch?: boolean;
-  panels: StoryPanel[];
-  reward?: {
-    coins?: number;
-  };
-  soundtrack?: StorySoundtrackConfig;
-}
+// Re-exported for back-compat; the canonical definitions live in the shared
+// story module (src/features/story) so the island story and the vision board
+// story use one content model.
+export type { StoryPanel, StorySoundtrackConfig, StoryEpisodeManifest } from '../../../story/storyTypes';
 
 interface IslandStoryReaderProps {
   manifestPath: string;

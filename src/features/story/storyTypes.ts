@@ -45,6 +45,22 @@ export type StoryPanel =
       soundtrack?: StorySoundtrackConfig;
     };
 
+/**
+ * A loadable story episode (e.g. an island manifest served from `public/`).
+ * The shared player renders `panels`; consumers own how the manifest is fetched
+ * and how `reward` is granted.
+ */
+export interface StoryEpisodeManifest {
+  id: string;
+  title: string;
+  autoLaunch?: boolean;
+  panels: StoryPanel[];
+  reward?: {
+    coins?: number;
+  };
+  soundtrack?: StorySoundtrackConfig;
+}
+
 export const OPPOSITE_DIRECTION: Record<StoryDirection, StoryDirection> = {
   left: 'right',
   right: 'left',
