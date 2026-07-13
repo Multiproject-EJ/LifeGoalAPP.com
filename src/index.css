@@ -16474,6 +16474,137 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: block;
 }
 
+.vision-board__card-image-button {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+}
+
+.vision-board__card-image-broken {
+  display: none;
+}
+
+.vision-board__card-image-button--broken {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  background: rgba(148, 163, 184, 0.18);
+  color: #64748b;
+  font-size: 0.85rem;
+  cursor: default;
+}
+
+.vision-board__card-image-button--broken .vision-board__card-image-broken {
+  display: inline;
+}
+
+.vision-board__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: rgba(2, 6, 23, 0.92);
+  backdrop-filter: blur(4px);
+}
+
+.vision-board__lightbox-figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: min(92vw, 1100px);
+  max-height: 90vh;
+}
+
+.vision-board__lightbox-image {
+  max-width: 100%;
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+}
+
+.vision-board__lightbox-caption {
+  margin: 0;
+  color: #f1f5f9;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+  max-width: 60ch;
+}
+
+.vision-board__lightbox-counter {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+}
+
+.vision-board__lightbox-close {
+  position: absolute;
+  top: clamp(0.75rem, 2vw, 1.5rem);
+  right: clamp(0.75rem, 2vw, 1.5rem);
+  width: 2.75rem;
+  height: 2.75rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  color: white;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.vision-board__lightbox-close:hover {
+  background: rgba(148, 163, 184, 0.45);
+}
+
+.vision-board__lightbox-nav {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border: none;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  color: white;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.vision-board__lightbox-nav:hover {
+  background: rgba(148, 163, 184, 0.4);
+  transform: scale(1.05);
+}
+
+@media (max-width: 640px) {
+  .vision-board__lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .vision-board__lightbox-nav--prev {
+    left: 0.5rem;
+  }
+
+  .vision-board__lightbox-nav--next {
+    right: 0.5rem;
+  }
+}
+
 /* Masonry layout specific card heights - uses CSS custom property for flexibility */
 :root {
   --masonry-base-height: 20;
