@@ -1,4 +1,4 @@
-import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import {
@@ -10,8 +10,6 @@ import {
   retryFailedVisionImageMutations,
   syncQueuedVisionImageMutations,
   updateVisionImage,
-  uploadVisionImage,
-  uploadVisionImageFromUrl,
 } from '../../services/visionBoard';
 import { fetchVisionImageTags } from '../../services/visionBoardTags';
 import { VisionBoardDailyGame } from '../visionBoardDailyGame/VisionBoardDailyGame';
@@ -19,15 +17,15 @@ import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { HaircutWidget } from './HaircutWidget';
 import { VisionCard } from './VisionCard';
+import { VisionUploadForm } from './VisionUploadForm';
 import { VisionLightbox } from './VisionLightbox';
 import { VisionTagModal } from './VisionTagModal';
 import { FOUR_VISIONARIES, type FourVisionaryCategoryKey } from './categories';
-import { DEFAULT_VISION_TYPE, VISION_TYPES } from './visionTypes';
+import { DEFAULT_VISION_TYPE } from './visionTypes';
 import { useModalA11y } from './useModalA11y';
 import { fetchGoals } from '../../services/goals';
 import { listHabitsV2 } from '../../services/habitsV2';
 import { getDemoHabitsForUser } from '../../services/demoData';
-import { validateImageUploadFile } from '../../utils/imageUploadOptimizer';
 import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { LIFE_WHEEL_CATEGORIES, type LifeWheelCategoryKey } from '../checkins/LifeWheelCheckins';
@@ -74,18 +72,11 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [images, setImages] = useState<VisionImage[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
-  const [fileDraft, setFileDraft] = useState<File | null>(null);
-  const [urlDraft, setUrlDraft] = useState('');
-  const [captionDraft, setCaptionDraft] = useState('');
   const [sortMode, setSortMode] = useState<SortMode>('newest');
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [gridLayout, setGridLayout] = useState<GridLayout>('masonry');
   const [boardView, setBoardView] = useState<BoardView>('all');
   const [isAddEditOpen, setIsAddEditOpen] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [showDailyGame, setShowDailyGame] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,9 +87,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [habits, setHabits] = useState<HabitRow[]>([]);
   const [linkDataLoading, setLinkDataLoading] = useState(false);
-  const [addVisionType, setAddVisionType] = useState(DEFAULT_VISION_TYPE);
-  const [addLinkedGoals, setAddLinkedGoals] = useState<string[]>([]);
-  const [addLinkedHabits, setAddLinkedHabits] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [lifeWheelFilter, setLifeWheelFilter] = useState<LifeWheelFilter>('all');
   const [visionaryFilter, setVisionaryFilter] = useState<VisionaryFilter>('all');
@@ -366,9 +354,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const shouldShowEmptyState = (isConfigured || isDemoExperience) && hasLoadedOnce && !loading && !hasImages;
   const shouldShowAddEditSection = hasImages || (shouldShowEmptyState && isAddEditOpen);
 
-  const toggleSelection = <T extends string>(current: T[], id: T): T[] =>
-    current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
-
   const goalLookup = useMemo(() => new Map(goals.map((goal) => [goal.id, goal.title])), [goals]);
   const habitLookup = useMemo(() => new Map(habits.map((habit) => [habit.id, habit.title])), [habits]);
 
@@ -383,91 +368,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       setVisionaryFilter('all');
     }
   }, [visionariesAvailable, visionaryFilter]);
-
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
-    if (file) {
-      try {
-        validateImageUploadFile(file);
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Please choose a valid image file.');
-        event.target.value = '';
-        setFileDraft(null);
-        setPreviewUrl(null);
-        return;
-      }
-    }
-
-    setErrorMessage(null);
-    setFileDraft(file);
-
-    // Generate preview for file upload
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewUrl(null);
-    }
-  };
-
-  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!uploading && (isConfigured || isDemoExperience)) {
-      setIsDragging(true);
-    }
-  };
-
-  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    setIsDragging(false);
-
-    if (!isConfigured && !isDemoExperience) {
-      return;
-    }
-
-    const file = event.dataTransfer.files[0];
-    if (!file) return;
-
-    try {
-      validateImageUploadFile(file);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Please drop a JPG, PNG, or WebP image.');
-      return;
-    }
-
-    // Set file and generate preview
-    setErrorMessage(null);
-    setFileDraft(file);
-    setUploadMode('file');
-    setIsAddEditOpen(true);
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleUrlChange = (value: string) => {
-    setUrlDraft(value);
-    // Set preview URL for URL-based uploads
-    if (value.trim()) {
-      setPreviewUrl(value.trim());
-    } else {
-      setPreviewUrl(null);
-    }
-  };
 
   const startEditing = (image: VisionImage) => {
     setEditingId(image.id);
@@ -514,156 +414,23 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     }
   };
 
-  const handleUpload = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleUploaded = async (data: VisionImageRow) => {
+    setImages((current) => [
+      {
+        ...data,
+        publicUrl: getVisionImagePublicUrl(data),
+      },
+      ...current,
+    ]);
 
-    if (!session) {
-      setErrorMessage('You need to sign in to curate your vision board.');
-      return;
-    }
+    // Award XP for vision board upload
+    const hasCaption = Boolean(data.caption?.trim());
+    const xpAmount = hasCaption
+      ? XP_REWARDS.VISION_BOARD + XP_REWARDS.VISION_BOARD_CAPTION // 15 XP with caption
+      : XP_REWARDS.VISION_BOARD; // 10 XP base
 
-    if (!isConfigured && !isDemoExperience) {
-      setErrorMessage('Supabase credentials are missing. Update your environment variables to continue.');
-      return;
-    }
-
-    // Validate based on upload mode
-    if (uploadMode === 'file') {
-      if (!fileDraft) {
-        setErrorMessage('Choose an image to upload.');
-        return;
-      }
-
-      try {
-        validateImageUploadFile(fileDraft);
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Please choose a valid image file.');
-        return;
-      }
-    } else {
-      if (!urlDraft.trim()) {
-        setErrorMessage('Enter an image URL.');
-        return;
-      }
-
-      // Basic URL validation
-      try {
-        new URL(urlDraft.trim());
-      } catch {
-        setErrorMessage('Enter a valid URL.');
-        return;
-      }
-    }
-
-    setUploading(true);
-    setErrorMessage(null);
-
-    try {
-      let data, error;
-
-      if (uploadMode === 'file' && fileDraft) {
-        ({ data, error } = await uploadVisionImage({
-          userId: session.user.id,
-          file: fileDraft,
-          fileName: fileDraft.name,
-          caption: captionDraft,
-          visionType: addVisionType,
-          linkedGoalIds: addLinkedGoals,
-          linkedHabitIds: addLinkedHabits,
-        }));
-      } else {
-        ({ data, error } = await uploadVisionImageFromUrl({
-          userId: session.user.id,
-          imageUrl: urlDraft.trim(),
-          caption: captionDraft,
-          visionType: addVisionType,
-          linkedGoalIds: addLinkedGoals,
-          linkedHabitIds: addLinkedHabits,
-        }));
-      }
-
-      if (error) throw error;
-
-      if (data) {
-        setImages((current) => [
-          {
-            ...data,
-            publicUrl: getVisionImagePublicUrl(data),
-          },
-          ...current,
-        ]);
-
-        // Award XP for vision board upload
-        const hasCaption = Boolean(captionDraft?.trim());
-        const xpAmount = hasCaption
-          ? XP_REWARDS.VISION_BOARD + XP_REWARDS.VISION_BOARD_CAPTION  // 15 XP with caption
-          : XP_REWARDS.VISION_BOARD;  // 10 XP base
-
-        await earnXP(xpAmount, 'vision_board_upload', data.id);
-        await recordActivity();
-      }
-      setFileDraft(null);
-      setUrlDraft('');
-      setCaptionDraft('');
-      setPreviewUrl(null);
-      setAddVisionType(DEFAULT_VISION_TYPE);
-      setAddLinkedGoals([]);
-      setAddLinkedHabits([]);
-      (event.target as HTMLFormElement).reset();
-    } catch (error) {
-      // Enhanced error logging for debugging
-      console.group('[Vision Board] Upload failed');
-      console.error('Timestamp:', new Date().toISOString());
-      console.error('User ID:', session?.user?.id);
-      console.error('Upload mode:', uploadMode);
-      
-      if (uploadMode === 'file' && fileDraft) {
-        console.error('File details:', {
-          name: fileDraft.name,
-          size: fileDraft.size,
-          type: fileDraft.type,
-        });
-      } else {
-        console.error('Image URL:', urlDraft.trim());
-      }
-      
-      console.error('Error details:', error);
-      
-      if (error instanceof Error) {
-        console.error('Error message:', error.message);
-        console.error('Stack trace:', error.stack);
-      }
-      console.groupEnd();
-
-      // Provide specific user-facing error messages based on error type
-      const CONSOLE_GUIDANCE = ' Check browser console for details.';
-      let userMessage = 'Unable to upload the image right now.';
-      
-      if (error instanceof Error) {
-        const errorMsg = error.message.toLowerCase();
-        
-        // Storage-related errors
-        if (errorMsg.includes('storage upload failed')) {
-          userMessage = error.message + CONSOLE_GUIDANCE;
-        }
-        // Database-related errors
-        else if (errorMsg.includes('database insert failed')) {
-          userMessage = error.message + CONSOLE_GUIDANCE;
-        }
-        // Bucket not found (already has good message)
-        else if (errorMsg.includes('storage bucket') && errorMsg.includes('not found')) {
-          userMessage = error.message;
-        }
-        // Other specific errors
-        else if (error.message) {
-          userMessage = error.message + CONSOLE_GUIDANCE;
-        }
-      }
-      
-      setErrorMessage(userMessage);
-    } finally {
-      setUploading(false);
-    }
+    await earnXP(xpAmount, 'vision_board_upload', data.id);
+    await recordActivity();
   };
 
   const commitDeletes = useCallback(async (items: PendingDeleteItem[]) => {
@@ -947,10 +714,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
           <button
             type="button"
             className="vision-board__empty-cta"
-            onClick={() => {
-              setUploadMode('file');
-              setIsAddEditOpen(true);
-            }}
+            onClick={() => setIsAddEditOpen(true)}
             disabled={!isConfigured && !isDemoExperience}
           >
             Upload first image
@@ -974,175 +738,15 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
           )}
 
         {isAddEditOpen && (
-          <form className="vision-board__form" onSubmit={handleUpload}>
-            <div className="vision-board__field">
-              <label>Upload method</label>
-              <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input
-                    type="radio"
-                    name="upload-mode"
-                    value="file"
-                    checked={uploadMode === 'file'}
-                    onChange={(e) => setUploadMode(e.target.value as 'file' | 'url')}
-                    disabled={(!isConfigured && !isDemoExperience) || uploading}
-                  />
-                  <span>File upload</span>
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input
-                    type="radio"
-                    name="upload-mode"
-                    value="url"
-                    checked={uploadMode === 'url'}
-                    onChange={(e) => setUploadMode(e.target.value as 'file' | 'url')}
-                    disabled={(!isConfigured && !isDemoExperience) || uploading}
-                  />
-                  <span>Image URL</span>
-                </label>
-              </div>
-            </div>
-            {uploadMode === 'file' ? (
-              <>
-                <div 
-                  className={`vision-board__drop-zone ${isDragging ? 'vision-board__drop-zone--active' : ''}`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  <div className="vision-board__drop-zone-content">
-                    <p className="vision-board__drop-zone-text">
-                      {isDragging ? '📥 Drop image here' : '📁 Drag & drop an image here'}
-                    </p>
-                    <p className="vision-board__drop-zone-divider">or</p>
-                    <label htmlFor="vision-board-file" className="vision-board__file-button">
-                      Choose File
-                    </label>
-                    <input
-                      id="vision-board-file"
-                      type="file"
-                      accept="image/png, image/jpeg, image/webp"
-                      onChange={handleFileChange}
-                      disabled={(!isConfigured && !isDemoExperience) || uploading}
-                      style={{ display: 'none' }}
-                      required
-                    />
-                  </div>
-                  {fileDraft && (
-                    <p className="vision-board__file-selected">
-                      Selected: {fileDraft.name} ({(fileDraft.size / 1024).toFixed(1)} KB)
-                    </p>
-                  )}
-                </div>
-                <span className="vision-board__hint">
-                  PNG, JPG, or WEBP up to 5MB. Images are optimized to WebP before upload.
-                </span>
-              </>
-            ) : (
-              <div className="vision-board__field">
-                <label htmlFor="vision-board-url">Image URL</label>
-                <input
-                  id="vision-board-url"
-                  type="url"
-                  value={urlDraft}
-                  onChange={(event) => handleUrlChange(event.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  disabled={(!isConfigured && !isDemoExperience) || uploading}
-                  required
-                />
-                <span className="vision-board__hint">Enter a direct link to an image.</span>
-              </div>
-            )}
-            <div className="vision-board__field">
-              <label htmlFor="vision-board-caption">Caption</label>
-              <input
-                id="vision-board-caption"
-                type="text"
-                value={captionDraft}
-                onChange={(event) => setCaptionDraft(event.target.value)}
-                placeholder="Describe why this image matters"
-                disabled={(!isConfigured && !isDemoExperience) || uploading}
-              />
-            </div>
-            <div className="vision-board__field">
-              <label htmlFor="vision-board-type">Vision type</label>
-              <select
-                id="vision-board-type"
-                value={addVisionType}
-                onChange={(event) => setAddVisionType(event.target.value)}
-                disabled={(!isConfigured && !isDemoExperience) || uploading}
-              >
-                {VISION_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-              <span className="vision-board__hint">
-                Tag each image to reflect the Game of Life focus it supports.
-              </span>
-            </div>
-            <div className="vision-board__field">
-              <label>Linked goals</label>
-              {linkDataLoading ? (
-                <span className="vision-board__hint">Loading goals…</span>
-              ) : goals.length === 0 ? (
-                <span className="vision-board__hint">No goals available yet.</span>
-              ) : (
-                <div className="vision-board__link-grid">
-                  {goals.map((goal) => (
-                    <label key={goal.id} className="vision-board__link-option">
-                      <input
-                        type="checkbox"
-                        checked={addLinkedGoals.includes(goal.id)}
-                        onChange={() => setAddLinkedGoals((current) => toggleSelection(current, goal.id))}
-                        disabled={(!isConfigured && !isDemoExperience) || uploading}
-                      />
-                      <span>{goal.title}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="vision-board__field">
-              <label>Linked habits</label>
-              {linkDataLoading ? (
-                <span className="vision-board__hint">Loading habits…</span>
-              ) : habits.length === 0 ? (
-                <span className="vision-board__hint">No habits available yet.</span>
-              ) : (
-                <div className="vision-board__link-grid">
-                  {habits.map((habit) => (
-                    <label key={habit.id} className="vision-board__link-option">
-                      <input
-                        type="checkbox"
-                        checked={addLinkedHabits.includes(habit.id)}
-                        onChange={() => setAddLinkedHabits((current) => toggleSelection(current, habit.id))}
-                        disabled={(!isConfigured && !isDemoExperience) || uploading}
-                      />
-                      <span>{habit.title}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-              <span className="vision-board__hint">
-                Connect habits and goals to spot orphans that need a clearer Game of Life tie-in.
-              </span>
-            </div>
-            {previewUrl && (
-              <div className="vision-board__preview">
-                <label>Preview</label>
-                <img src={previewUrl} alt="Upload preview" className="vision-board__preview-image" />
-              </div>
-            )}
-            <button
-              type="submit"
-              className="vision-board__submit"
-              disabled={uploading || (!isConfigured && !isDemoExperience)}
-            >
-              {uploading ? 'Optimizing & uploading…' : 'Add to board'}
-            </button>
-          </form>
+          <VisionUploadForm
+            userId={session.user.id}
+            canUpload={isConfigured || isDemoExperience}
+            goals={goals}
+            habits={habits}
+            linkDataLoading={linkDataLoading}
+            onUploaded={handleUploaded}
+            onError={setErrorMessage}
+          />
         )}
       </div>
       )}
