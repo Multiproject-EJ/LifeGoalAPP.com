@@ -18,9 +18,11 @@ import { VisionBoardDailyGame } from '../visionBoardDailyGame/VisionBoardDailyGa
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { HaircutWidget } from './HaircutWidget';
+import { VisionCard } from './VisionCard';
 import { VisionLightbox } from './VisionLightbox';
 import { VisionTagModal } from './VisionTagModal';
 import { FOUR_VISIONARIES, type FourVisionaryCategoryKey } from './categories';
+import { DEFAULT_VISION_TYPE, VISION_TYPES } from './visionTypes';
 import { useModalA11y } from './useModalA11y';
 import { fetchGoals } from '../../services/goals';
 import { listHabitsV2 } from '../../services/habitsV2';
@@ -64,19 +66,6 @@ const BOARD_VIEW_OPTIONS: { value: BoardView; label: string }[] = [
   { value: 'visionaries', label: 'The Four Visionaries' },
 ];
 
-const DEFAULT_VISION_TYPE = 'goal';
-
-const VISION_TYPES = [
-  { value: 'goal', label: 'Goal' },
-  { value: 'habit', label: 'Habit' },
-  { value: 'identity', label: 'Identity' },
-  { value: 'experience', label: 'Experience' },
-  { value: 'environment', label: 'Environment' },
-];
-
-function getVisionTypeLabel(value: string | null | undefined): string {
-  return VISION_TYPES.find((type) => type.value === value)?.label ?? 'Goal';
-}
 
 export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const { isConfigured } = useSupabaseAuth();
@@ -111,11 +100,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [addLinkedGoals, setAddLinkedGoals] = useState<string[]>([]);
   const [addLinkedHabits, setAddLinkedHabits] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editCaption, setEditCaption] = useState('');
-  const [editVisionType, setEditVisionType] = useState(DEFAULT_VISION_TYPE);
-  const [editLinkedGoals, setEditLinkedGoals] = useState<string[]>([]);
-  const [editLinkedHabits, setEditLinkedHabits] = useState<string[]>([]);
-  const [editSavingId, setEditSavingId] = useState<string | null>(null);
   const [lifeWheelFilter, setLifeWheelFilter] = useState<LifeWheelFilter>('all');
   const [visionaryFilter, setVisionaryFilter] = useState<VisionaryFilter>('all');
   const [lifeWheelTags, setLifeWheelTags] = useState<Record<string, LifeWheelCategoryKey[]>>({});
@@ -487,10 +471,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
 
   const startEditing = (image: VisionImage) => {
     setEditingId(image.id);
-    setEditCaption(image.caption ?? '');
-    setEditVisionType(image.vision_type ?? DEFAULT_VISION_TYPE);
-    setEditLinkedGoals(image.linked_goal_ids ?? []);
-    setEditLinkedHabits(image.linked_habit_ids ?? []);
   };
 
   const stopEditing = () => {
@@ -531,21 +511,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to update the entry.');
       return false;
-    }
-  };
-
-  const handleEditSubmit = async (event: FormEvent<HTMLFormElement>, imageId: string) => {
-    event.preventDefault();
-    setEditSavingId(imageId);
-    const success = await handleUpdateImage(imageId, {
-      caption: editCaption.trim() ? editCaption.trim() : null,
-      vision_type: editVisionType,
-      linked_goal_ids: editLinkedGoals,
-      linked_habit_ids: editLinkedHabits,
-    });
-    setEditSavingId(null);
-    if (success) {
-      stopEditing();
     }
   };
 
@@ -1298,238 +1263,30 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
           <p className="vision-board__empty">No images match this filter yet.</p>
         ) : (
           filteredImages.map((image) => (
-            <article
+            <VisionCard
               key={image.id}
-              className={`vision-board__card${
-                selectMode && selectedIds.includes(image.id) ? ' vision-board__card--selected' : ''
-              }`}
-              role="listitem"
-            >
-              <div className="vision-board__card-image-container">
-                {selectMode && (
-                  <label className="vision-board__select-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(image.id)}
-                      onChange={() => toggleSelected(image.id)}
-                      aria-label={`Select ${image.caption?.trim() || 'vision board entry'}`}
-                    />
-                  </label>
-                )}
-                {image.publicUrl ? (
-                  <button
-                    type="button"
-                    className="vision-board__card-image-button"
-                    onClick={() => openLightbox(image.id)}
-                    aria-label={`View ${image.caption?.trim() || 'vision board entry'} full screen`}
-                  >
-                    <img
-                      src={image.publicUrl}
-                      alt={image.caption ?? 'Vision board entry'}
-                      loading="lazy"
-                      onError={(event) => {
-                        const target = event.currentTarget;
-                        target.style.display = 'none';
-                        target.parentElement?.classList.add('vision-board__card-image-button--broken');
-                      }}
-                    />
-                    <span className="vision-board__card-image-broken" aria-hidden>
-                      Image unavailable
-                    </span>
-                  </button>
-                ) : (
-                  <div className="vision-board__placeholder" aria-hidden>
-                    <span>No preview</span>
-                  </div>
-                )}
-                {image.caption && (
-                  <div className="vision-board__card-overlay">
-                    <p>{image.caption}</p>
-                  </div>
-                )}
-              </div>
-              {(() => {
-                const linkedGoals = image.linked_goal_ids ?? [];
-                const linkedHabits = image.linked_habit_ids ?? [];
-                const isOrphan = linkedGoals.length === 0 && linkedHabits.length === 0;
-                const goalLabels = linkedGoals.map((id) => goalLookup.get(id)).filter(Boolean) as string[];
-                const habitLabels = linkedHabits.map((id) => habitLookup.get(id)).filter(Boolean) as string[];
-                const lifeWheelKeys = lifeWheelTags[image.id] ?? [];
-                const lifeWheelLabels = lifeWheelKeys
-                  .map((key) => lifeWheelLabelLookup.get(key))
-                  .filter(Boolean) as string[];
-                const visionaryKeys = visionaryTags[image.id] ?? [];
-                const visionaryLabels = visionaryKeys
-                  .map((key) => visionaryLabelLookup.get(key))
-                  .filter(Boolean) as string[];
-                return (
-                  <div className="vision-board__card-body">
-                    <div className="vision-board__card-meta">
-                      <span className="vision-board__chip">{getVisionTypeLabel(image.vision_type)}</span>
-                      {isOrphan && <span className="vision-board__chip vision-board__chip--orphan">Orphan</span>}
-                    </div>
-                    {lifeWheelLabels.length > 0 && (
-                      <div className="vision-board__card-tags">
-                        {lifeWheelKeys.map((key) => {
-                          const label = lifeWheelLabelLookup.get(key);
-                          if (!label) return null;
-                          return (
-                            <span key={`${image.id}-${key}`} className="vision-board__chip vision-board__chip--category">
-                              {label}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {visionaryLabels.length > 0 && (
-                      <div className="vision-board__card-tags">
-                        {visionaryKeys.map((key) => {
-                          const label = visionaryLabelLookup.get(key);
-                          if (!label) return null;
-                          return (
-                            <span
-                              key={`${image.id}-${key}`}
-                              className="vision-board__chip vision-board__chip--visionary"
-                            >
-                              {label}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
-                    {goalLabels.length > 0 && (
-                      <p className="vision-board__card-links">
-                        <strong>Goals:</strong> {goalLabels.join(', ')}
-                      </p>
-                    )}
-                    {habitLabels.length > 0 && (
-                      <p className="vision-board__card-links">
-                        <strong>Habits:</strong> {habitLabels.join(', ')}
-                      </p>
-                    )}
-                    {isOrphan && (
-                      <p className="vision-board__card-links vision-board__card-links--orphan">
-                        No links yet—attach a goal or habit to keep this Game of Life anchor grounded.
-                      </p>
-                    )}
-                  </div>
-                );
-              })()}
-              <div className="vision-board__card-actions">
-                <button
-                  type="button"
-                  onClick={() =>
-                    onNavigateToTimer?.({
-                      sourceType: 'vision',
-                      sourceId: image.id,
-                      sourceName: image.caption?.trim() || 'Vision board entry',
-                    })
-                  }
-                  className="vision-board__edit"
-                  aria-label={`Start timer for vision image: ${image.caption?.trim() || 'Vision board entry'}`}
-                  title="Start timer"
-                >
-                  ⏱️ Timer
-                </button>
-                <button type="button" onClick={() => startEditing(image)} className="vision-board__edit">
-                  Edit details
-                </button>
-                <button
-                  type="button"
-                  onClick={() => startTagging(image)}
-                  className="vision-board__edit"
-                  disabled={!isConfigured && !isDemoExperience}
-                >
-                  Tag/Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(image)}
-                  className="vision-board__delete"
-                  disabled={!isConfigured && !isDemoExperience}
-                  title="Remove image"
-                >
-                  Remove
-                </button>
-              </div>
-              {editingId === image.id && (
-                <form className="vision-board__edit-form" onSubmit={(event) => handleEditSubmit(event, image.id)}>
-                  <div className="vision-board__field">
-                    <label htmlFor={`vision-edit-caption-${image.id}`}>Caption</label>
-                    <input
-                      id={`vision-edit-caption-${image.id}`}
-                      type="text"
-                      value={editCaption}
-                      onChange={(event) => setEditCaption(event.target.value)}
-                      disabled={editSavingId === image.id}
-                    />
-                  </div>
-                  <div className="vision-board__field">
-                    <label htmlFor={`vision-edit-type-${image.id}`}>Vision type</label>
-                    <select
-                      id={`vision-edit-type-${image.id}`}
-                      value={editVisionType}
-                      onChange={(event) => setEditVisionType(event.target.value)}
-                      disabled={editSavingId === image.id}
-                    >
-                      {VISION_TYPES.map((type) => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="vision-board__field">
-                    <label>Linked goals</label>
-                    {goals.length === 0 ? (
-                      <span className="vision-board__hint">No goals available yet.</span>
-                    ) : (
-                      <div className="vision-board__link-grid">
-                        {goals.map((goal) => (
-                          <label key={goal.id} className="vision-board__link-option">
-                            <input
-                              type="checkbox"
-                              checked={editLinkedGoals.includes(goal.id)}
-                              onChange={() => setEditLinkedGoals((current) => toggleSelection(current, goal.id))}
-                              disabled={editSavingId === image.id}
-                            />
-                            <span>{goal.title}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="vision-board__field">
-                    <label>Linked habits</label>
-                    {habits.length === 0 ? (
-                      <span className="vision-board__hint">No habits available yet.</span>
-                    ) : (
-                      <div className="vision-board__link-grid">
-                        {habits.map((habit) => (
-                          <label key={habit.id} className="vision-board__link-option">
-                            <input
-                              type="checkbox"
-                              checked={editLinkedHabits.includes(habit.id)}
-                              onChange={() => setEditLinkedHabits((current) => toggleSelection(current, habit.id))}
-                              disabled={editSavingId === image.id}
-                            />
-                            <span>{habit.title}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="vision-board__edit-actions">
-                    <button type="submit" disabled={editSavingId === image.id}>
-                      {editSavingId === image.id ? 'Saving…' : 'Save updates'}
-                    </button>
-                    <button type="button" onClick={stopEditing} disabled={editSavingId === image.id}>
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              )}
-            </article>
+              image={image}
+              selectMode={selectMode}
+              selected={selectedIds.includes(image.id)}
+              canMutate={isConfigured || isDemoExperience}
+              goalLookup={goalLookup}
+              habitLookup={habitLookup}
+              lifeWheelKeys={lifeWheelTags[image.id] ?? []}
+              visionaryKeys={visionaryTags[image.id] ?? []}
+              lifeWheelLabelLookup={lifeWheelLabelLookup}
+              visionaryLabelLookup={visionaryLabelLookup}
+              isEditing={editingId === image.id}
+              goals={goals}
+              habits={habits}
+              onToggleSelected={toggleSelected}
+              onOpenLightbox={openLightbox}
+              onNavigateToTimer={onNavigateToTimer}
+              onStartEditing={startEditing}
+              onStartTagging={startTagging}
+              onDelete={handleDelete}
+              onSaveEdit={handleUpdateImage}
+              onCancelEdit={stopEditing}
+            />
           ))
         )}
         </div>
