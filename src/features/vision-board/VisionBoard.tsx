@@ -1,4 +1,4 @@
-import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import {
@@ -17,6 +17,7 @@ import { fetchVisionImageTags, setVisionImageCategories } from '../../services/v
 import { VisionBoardDailyGame } from '../visionBoardDailyGame/VisionBoardDailyGame';
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
+import { loadHaircutPreferences, saveHaircutPreferences } from './haircutPreferences';
 import { fetchGoals } from '../../services/goals';
 import { listHabitsV2 } from '../../services/habitsV2';
 import { getDemoHabitsForUser } from '../../services/demoData';
@@ -163,6 +164,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [selectedHaircutStyle, setSelectedHaircutStyle] = useState(HAIRCUT_STYLES[0].key);
   const [bestHairLength, setBestHairLength] = useState(HAIRCUT_LENGTHS[1].value);
   const [needsHaircut, setNeedsHaircut] = useState(false);
+  const haircutPrefsLoaded = useRef(false);
   const [queuePending, setQueuePending] = useState(0);
   const [queueFailed, setQueueFailed] = useState(0);
   const lifeWheelAvailable = LIFE_WHEEL_CATEGORIES.length > 0;
@@ -358,6 +360,40 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       setHasLoadedOnce(false);
     }
   }, [isConfigured, isDemoExperience]);
+
+  useEffect(() => {
+    haircutPrefsLoaded.current = false;
+    const userId = session?.user?.id;
+    if (!userId) return;
+    const prefs = loadHaircutPreferences(userId);
+    if (prefs) {
+      if (typeof prefs.intervalDays === 'number') setHaircutIntervalDays(prefs.intervalDays);
+      if (typeof prefs.lastHaircutDate === 'string') setLastHaircutDate(prefs.lastHaircutDate);
+      if (typeof prefs.styleKey === 'string') setSelectedHaircutStyle(prefs.styleKey);
+      if (typeof prefs.bestLength === 'string') setBestHairLength(prefs.bestLength);
+      if (typeof prefs.needsHaircut === 'boolean') setNeedsHaircut(prefs.needsHaircut);
+    }
+    haircutPrefsLoaded.current = true;
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId || !haircutPrefsLoaded.current) return;
+    saveHaircutPreferences(userId, {
+      intervalDays: haircutIntervalDays,
+      lastHaircutDate,
+      styleKey: selectedHaircutStyle,
+      bestLength: bestHairLength,
+      needsHaircut,
+    });
+  }, [
+    session?.user?.id,
+    haircutIntervalDays,
+    lastHaircutDate,
+    selectedHaircutStyle,
+    bestHairLength,
+    needsHaircut,
+  ]);
 
   const sortedImages = useMemo(() => {
     const copy = [...images];
