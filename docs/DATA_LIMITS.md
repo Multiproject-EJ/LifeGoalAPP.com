@@ -1,7 +1,7 @@
 # Per-User Data Limits
 
-**Status:** enforced since migration `0278_per_user_data_limits.sql`
-**Related:** `0275_log_retention_auto_cleanup.sql` (time-based retention), `docs/quota_emergency_cleanup.sql` (incident runbook)
+**Status:** enforced since migration `0278_per_user_data_limits.sql`; Storage object cap added in `0279_per_user_storage_object_cap.sql`
+**Related:** `0275_log_retention_auto_cleanup.sql` (time-based retention), `docs/quota_emergency_cleanup.sql` (incident runbook), `README_STORAGE_POLICIES.md` (Storage cap deployment)
 
 ## Why
 
@@ -120,14 +120,31 @@ row-size cap.
 - **Find who is near a cap:**
   `SELECT user_id, count(*) FROM journal_entries GROUP BY 1 ORDER BY 2 DESC LIMIT 10;`
 
-## Known gaps (deliberately out of scope for 0278)
+## Storage object cap (migration 0279)
 
-- **Storage buckets** are capped per *file* (5 MB `vision-board`, 10 MB
-  `vision`) but not per *user total*. The `vb_cards` row cap (500) indirectly
-  bounds uploads made through the app, but a token-holder calling the Storage
-  API directly can still upload unlimited files. A per-user object-count
-  policy on `storage.objects` requires dashboard-level policy changes (see
-  `README_STORAGE_POLICIES.md`) and is the top follow-up.
+The `vision-board` bucket caps each file at 5 MB (0124) but historically not
+the *number* of files per user, so a token-holder calling the Storage API
+directly (bypassing the app's `vb_cards` cap) could upload without limit.
+Migration `0279` tightens the bucket's INSERT policy to reject uploads once
+an account owns **1000** objects — worst case `1000 x 5 MB` per user, versus
+unbounded before. Because `storage.objects` is owned by
+`supabase_storage_admin`, the cap is **applied via the Supabase Dashboard**
+(the migration degrades to a NOTICE otherwise); the exact SQL, a verification
+query, and a "who's near the cap" query live in `README_STORAGE_POLICIES.md`.
+The count lives in a `SECURITY DEFINER` function
+(`public.vision_board_object_count`) because a policy that reads its own table
+would recurse; running the count outside RLS also keeps it accurate for
+private buckets. The migration
+never removes protection — until applied, the prior uncapped policy stays in
+force. The private `vision` (V2) bucket has no INSERT policy today (it is
+effectively closed) and is deliberately left untouched.
+
+## Known gaps (deliberately out of scope)
+
+- **Storage total bytes** are bounded only indirectly (object count x 5 MB
+  per-file limit), not summed per user. A byte-sum policy is heavier per
+  upload and unnecessary given the count cap; revisit only if large files
+  become common.
 - **Child tables without a `user_id` column** (`annual_goals` via `review_id`,
   `vb_sections` via `board_id`, the multi-party `conflict_*` tables) are only
   indirectly bounded by their parents' caps. Extending the trigger to resolve
