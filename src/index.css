@@ -16399,6 +16399,89 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #0f172a;
 }
 
+.vision-board__search {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.vision-board__search input {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  background: white;
+  color: #0f172a;
+  min-width: 12rem;
+}
+
+.vision-board__bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.vision-board__bulk-count {
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+.vision-board__bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.vision-board__bulk-actions button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(148, 163, 184, 0.3);
+  color: #0f172a;
+}
+
+.vision-board__bulk-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vision-board__bulk-delete {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #b91c1c !important;
+}
+
+.vision-board__select-checkbox {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 2;
+  display: inline-flex;
+  padding: 0.35rem;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.55);
+  cursor: pointer;
+}
+
+.vision-board__select-checkbox input {
+  width: 1.15rem;
+  height: 1.15rem;
+  cursor: pointer;
+}
+
+.vision-board__card--selected {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
 /* Preview image thumbnail */
 .vision-board__preview {
   display: grid;
