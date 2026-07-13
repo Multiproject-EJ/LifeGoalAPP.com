@@ -18,6 +18,7 @@ import { VisionBoardDailyGame } from '../visionBoardDailyGame/VisionBoardDailyGa
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { loadHaircutPreferences, saveHaircutPreferences } from './haircutPreferences';
+import { useModalA11y } from './useModalA11y';
 import { fetchGoals } from '../../services/goals';
 import { listHabitsV2 } from '../../services/habitsV2';
 import { getDemoHabitsForUser } from '../../services/demoData';
@@ -138,6 +139,13 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [showDailyGame, setShowDailyGame] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<VisionImage | null>(null);
+  const pendingDeleteRef = useRef<{
+    record: VisionImage;
+    timeoutId: number;
+    lifeWheel: LifeWheelCategoryKey[];
+    visionary: FourVisionaryCategoryKey[];
+  } | null>(null);
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [habits, setHabits] = useState<HabitRow[]>([]);
   const [linkDataLoading, setLinkDataLoading] = useState(false);
@@ -848,34 +856,93 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     }
   };
 
-  const handleDelete = async (record: VisionImage) => {
+  const commitDelete = useCallback(
+    async (
+      record: VisionImage,
+      lifeWheel: LifeWheelCategoryKey[],
+      visionary: FourVisionaryCategoryKey[],
+    ) => {
+      try {
+        const error = await deleteVisionImage(record);
+        if (error) throw error;
+      } catch (error) {
+        // Restore the item so a failed delete never silently loses data.
+        setImages((current) =>
+          current.some((item) => item.id === record.id) ? current : [record, ...current],
+        );
+        setLifeWheelTags((current) => ({ ...current, [record.id]: lifeWheel }));
+        setVisionaryTags((current) => ({ ...current, [record.id]: visionary }));
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to delete the entry.');
+      }
+    },
+    [],
+  );
+
+  const handleDelete = (record: VisionImage) => {
     if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Connect Supabase to remove items from your vision board.');
       return;
     }
 
-    const confirmed = window.confirm('Remove this vision board entry? This cannot be undone.');
-    if (!confirmed) return;
-
     setErrorMessage(null);
-    try {
-      const error = await deleteVisionImage(record);
-      if (error) throw error;
-      setImages((current) => current.filter((item) => item.id !== record.id));
-      setLifeWheelTags((current) => {
-        const next = { ...current };
-        delete next[record.id];
-        return next;
-      });
-      setVisionaryTags((current) => {
-        const next = { ...current };
-        delete next[record.id];
-        return next;
-      });
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Unable to delete the entry.');
+
+    // Commit any previously-queued delete before starting a new one.
+    const prior = pendingDeleteRef.current;
+    if (prior) {
+      window.clearTimeout(prior.timeoutId);
+      void commitDelete(prior.record, prior.lifeWheel, prior.visionary);
     }
+
+    const lifeWheel = lifeWheelTags[record.id] ?? [];
+    const visionary = visionaryTags[record.id] ?? [];
+
+    // Optimistically remove from the gallery; commit after the undo window.
+    setImages((current) => current.filter((item) => item.id !== record.id));
+    setLifeWheelTags((current) => {
+      const next = { ...current };
+      delete next[record.id];
+      return next;
+    });
+    setVisionaryTags((current) => {
+      const next = { ...current };
+      delete next[record.id];
+      return next;
+    });
+
+    const timeoutId = window.setTimeout(() => {
+      pendingDeleteRef.current = null;
+      setPendingDelete(null);
+      void commitDelete(record, lifeWheel, visionary);
+    }, 5000);
+
+    pendingDeleteRef.current = { record, timeoutId, lifeWheel, visionary };
+    setPendingDelete(record);
   };
+
+  const undoDelete = () => {
+    const pending = pendingDeleteRef.current;
+    if (!pending) return;
+    window.clearTimeout(pending.timeoutId);
+    pendingDeleteRef.current = null;
+    setPendingDelete(null);
+    setImages((current) =>
+      current.some((item) => item.id === pending.record.id)
+        ? current
+        : [pending.record, ...current],
+    );
+    setLifeWheelTags((current) => ({ ...current, [pending.record.id]: pending.lifeWheel }));
+    setVisionaryTags((current) => ({ ...current, [pending.record.id]: pending.visionary }));
+  };
+
+  useEffect(() => {
+    return () => {
+      const pending = pendingDeleteRef.current;
+      if (pending) {
+        window.clearTimeout(pending.timeoutId);
+        void deleteVisionImage(pending.record);
+      }
+    };
+  }, []);
 
   const handleRetryVisionQueue = async () => {
     if (!session) return;
@@ -896,6 +963,10 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     setQueuePending(status.pending);
     setQueueFailed(status.failed);
   };
+
+  const closeDailyGame = useCallback(() => setShowDailyGame(false), []);
+  const tagModalRef = useModalA11y<HTMLDivElement>(Boolean(taggingImage), stopTagging);
+  const dailyGameModalRef = useModalA11y<HTMLDivElement>(showDailyGame && hasImages, closeDailyGame);
 
   return (
     <section className="vision-board">
@@ -1627,16 +1698,32 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       )}
 
       {showDailyGame && hasImages && (
-        <div className="vision-board__modal-backdrop" role="dialog" aria-modal="true">
-          <div className="vision-board__modal">
-            <VisionBoardDailyGame session={session} onClose={() => setShowDailyGame(false)} isConfigured={isConfigured} />
+        <div className="vision-board__modal-backdrop" onClick={closeDailyGame}>
+          <div
+            className="vision-board__modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Daily vision game"
+            tabIndex={-1}
+            ref={dailyGameModalRef}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <VisionBoardDailyGame session={session} onClose={closeDailyGame} isConfigured={isConfigured} />
           </div>
         </div>
       )}
 
       {taggingImage && (
-        <div className="vision-board__modal-backdrop" role="dialog" aria-modal="true">
-          <div className="vision-board__modal vision-board__tag-modal">
+        <div className="vision-board__modal-backdrop" onClick={stopTagging}>
+          <div
+            className="vision-board__modal vision-board__tag-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Tag vision image"
+            tabIndex={-1}
+            ref={tagModalRef}
+            onClick={(event) => event.stopPropagation()}
+          >
             <header className="vision-board__tag-header">
               <h3>Tag vision image</h3>
               <p>Select the life wheel areas and visionary themes this image supports.</p>
@@ -1690,6 +1777,15 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {pendingDelete && (
+        <div className="vision-board__toast" role="status" aria-live="polite">
+          <span>Removed “{pendingDelete.caption?.trim() || 'vision board entry'}”.</span>
+          <button type="button" className="vision-board__toast-undo" onClick={undoDelete}>
+            Undo
+          </button>
         </div>
       )}
 

@@ -16503,6 +16503,39 @@ html.platform-ipad .workspace-shell__menu-edge {
   display: inline;
 }
 
+.vision-board__toast {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(1rem, 4vw, 2.5rem);
+  transform: translateX(-50%);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #f8fafc;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  font-size: 0.9rem;
+  max-width: min(92vw, 480px);
+}
+
+.vision-board__toast-undo {
+  border: none;
+  background: rgba(148, 163, 184, 0.25);
+  color: #bfdbfe;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.vision-board__toast-undo:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+
 .vision-board__lightbox {
   position: fixed;
   inset: 0;
