@@ -16552,12 +16552,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #b91c1c;
 }
 
-.vision-board__card-review {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #475569;
-}
-
 .vision-board__card-links {
   margin: 0;
   font-size: 0.85rem;
@@ -16626,101 +16620,6 @@ html.platform-ipad .workspace-shell__menu-edge {
 .vision-board__edit-actions button[type='button'] {
   background: rgba(148, 163, 184, 0.4);
   color: #0f172a;
-}
-
-.vision-board__review {
-  background: white;
-  border-radius: 16px;
-  padding: clamp(1rem, 2.5vw, 1.5rem);
-  display: grid;
-  gap: 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-}
-
-.vision-board__review-header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.vision-board__review-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-
-.vision-board__review-header p {
-  margin: 0.35rem 0 0;
-  color: #475569;
-  max-width: 52ch;
-}
-
-.vision-board__review-count {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.3rem 0.75rem;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.08);
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: #0f172a;
-}
-
-.vision-board__review-list {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.vision-board__review-card {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.9rem 1rem;
-  border-radius: 14px;
-  background: rgba(241, 245, 249, 0.8);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-}
-
-.vision-board__review-card h4 {
-  margin: 0;
-  font-size: 1rem;
-  color: #0f172a;
-}
-
-.vision-board__review-meta {
-  margin: 0.25rem 0 0;
-  color: #475569;
-  font-size: 0.85rem;
-}
-
-.vision-board__review-prompt {
-  margin: 0.35rem 0 0;
-  color: #1e293b;
-  font-size: 0.85rem;
-}
-
-.vision-board__review-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.vision-board__review-actions button {
-  border: none;
-  border-radius: 999px;
-  padding: 0.4rem 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  background: #0f172a;
-  color: white;
-  font-size: 0.85rem;
-}
-
-.vision-board__review-actions button:first-child {
-  background: rgba(59, 130, 246, 0.15);
-  color: #1d4ed8;
 }
 
 .vision-board__modal-backdrop {

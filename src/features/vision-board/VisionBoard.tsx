@@ -65,7 +65,6 @@ const BOARD_VIEW_OPTIONS: { value: BoardView; label: string }[] = [
 ];
 
 const DEFAULT_VISION_TYPE = 'goal';
-const DEFAULT_REVIEW_INTERVAL = 30;
 
 const VISION_TYPES = [
   { value: 'goal', label: 'Goal' },
@@ -73,14 +72,6 @@ const VISION_TYPES = [
   { value: 'identity', label: 'Identity' },
   { value: 'experience', label: 'Experience' },
   { value: 'environment', label: 'Environment' },
-];
-
-const REVIEW_INTERVAL_OPTIONS = [
-  { value: 7, label: 'Weekly (7 days)' },
-  { value: 14, label: 'Biweekly (14 days)' },
-  { value: 30, label: 'Monthly (30 days)' },
-  { value: 60, label: 'Every 2 months (60 days)' },
-  { value: 90, label: 'Quarterly (90 days)' },
 ];
 
 const HAIRCUT_INTERVAL_OPTIONS = [
@@ -149,13 +140,11 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [habits, setHabits] = useState<HabitRow[]>([]);
   const [linkDataLoading, setLinkDataLoading] = useState(false);
   const [addVisionType, setAddVisionType] = useState(DEFAULT_VISION_TYPE);
-  const [addReviewInterval, setAddReviewInterval] = useState(DEFAULT_REVIEW_INTERVAL);
   const [addLinkedGoals, setAddLinkedGoals] = useState<string[]>([]);
   const [addLinkedHabits, setAddLinkedHabits] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCaption, setEditCaption] = useState('');
   const [editVisionType, setEditVisionType] = useState(DEFAULT_VISION_TYPE);
-  const [editReviewInterval, setEditReviewInterval] = useState(DEFAULT_REVIEW_INTERVAL);
   const [editLinkedGoals, setEditLinkedGoals] = useState<string[]>([]);
   const [editLinkedHabits, setEditLinkedHabits] = useState<string[]>([]);
   const [editSavingId, setEditSavingId] = useState<string | null>(null);
@@ -202,7 +191,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       const mapped = (data ?? []).map((record) => ({
         ...record,
         vision_type: record.vision_type ?? DEFAULT_VISION_TYPE,
-        review_interval_days: record.review_interval_days ?? DEFAULT_REVIEW_INTERVAL,
         linked_goal_ids: record.linked_goal_ids ?? [],
         linked_habit_ids: record.linked_habit_ids ?? [],
         publicUrl: getVisionImagePublicUrl(record),
@@ -429,17 +417,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     ? Math.min(100, Math.round((haircutDaysSince / haircutIntervalDays) * 100))
     : 0;
 
-  const dueReviewItems = useMemo(() => {
-    const now = new Date();
-    return sortedImages.filter((image) => {
-      const interval = image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL;
-      const baseDate = image.last_reviewed_at ?? image.created_at;
-      const nextReviewIso = addDays(baseDate, interval);
-      if (!nextReviewIso) return false;
-      return new Date(nextReviewIso) <= now;
-    });
-  }, [sortedImages]);
-
   const hasImages = sortedImages.length > 0;
   const shouldShowEmptyState = (isConfigured || isDemoExperience) && hasLoadedOnce && !loading && !hasImages;
   const shouldShowAddEditSection = hasImages || (shouldShowEmptyState && isAddEditOpen);
@@ -551,7 +528,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     setEditingId(image.id);
     setEditCaption(image.caption ?? '');
     setEditVisionType(image.vision_type ?? DEFAULT_VISION_TYPE);
-    setEditReviewInterval(image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL);
     setEditLinkedGoals(image.linked_goal_ids ?? []);
     setEditLinkedHabits(image.linked_habit_ids ?? []);
   };
@@ -628,19 +604,12 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     }
   };
 
-  const handleMarkReviewed = async (imageId: string) => {
-    await handleUpdateImage(imageId, {
-      last_reviewed_at: new Date().toISOString(),
-    });
-  };
-
   const handleEditSubmit = async (event: FormEvent<HTMLFormElement>, imageId: string) => {
     event.preventDefault();
     setEditSavingId(imageId);
     const success = await handleUpdateImage(imageId, {
       caption: editCaption.trim() ? editCaption.trim() : null,
       vision_type: editVisionType,
-      review_interval_days: editReviewInterval,
       linked_goal_ids: editLinkedGoals,
       linked_habit_ids: editLinkedHabits,
     });
@@ -704,7 +673,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
           fileName: fileDraft.name,
           caption: captionDraft,
           visionType: addVisionType,
-          reviewIntervalDays: addReviewInterval,
           linkedGoalIds: addLinkedGoals,
           linkedHabitIds: addLinkedHabits,
         }));
@@ -714,7 +682,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
           imageUrl: urlDraft.trim(),
           caption: captionDraft,
           visionType: addVisionType,
-          reviewIntervalDays: addReviewInterval,
           linkedGoalIds: addLinkedGoals,
           linkedHabitIds: addLinkedHabits,
         }));
@@ -745,7 +712,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       setCaptionDraft('');
       setPreviewUrl(null);
       setAddVisionType(DEFAULT_VISION_TYPE);
-      setAddReviewInterval(DEFAULT_REVIEW_INTERVAL);
       setAddLinkedGoals([]);
       setAddLinkedHabits([]);
       (event.target as HTMLFormElement).reset();
@@ -1095,24 +1061,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
               </span>
             </div>
             <div className="vision-board__field">
-              <label htmlFor="vision-board-review-interval">Review interval</label>
-              <select
-                id="vision-board-review-interval"
-                value={addReviewInterval}
-                onChange={(event) => setAddReviewInterval(Number(event.target.value))}
-                disabled={(!isConfigured && !isDemoExperience) || uploading}
-              >
-                {REVIEW_INTERVAL_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <span className="vision-board__hint">
-                Choose how often this vision should be revisited in your review loop.
-              </span>
-            </div>
-            <div className="vision-board__field">
               <label>Linked goals</label>
               {linkDataLoading ? (
                 <span className="vision-board__hint">Loading goals…</span>
@@ -1175,53 +1123,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
           </form>
         )}
       </div>
-      )}
-
-      {(isConfigured || isDemoExperience) && hasImages && (
-        <section className="vision-board__review">
-          <div className="vision-board__review-header">
-            <div>
-              <h3>Vision review loop</h3>
-              <p>
-                Review entries due for a refresh to keep your Game of Life board aligned with your active goals and habits.
-              </p>
-            </div>
-            <span className="vision-board__review-count">{dueReviewItems.length} due</span>
-          </div>
-          {dueReviewItems.length === 0 ? (
-            <p className="vision-board__empty">All caught up—no reviews due right now.</p>
-          ) : (
-            <div className="vision-board__review-list">
-              {dueReviewItems.map((image) => {
-                const nextReview = addDays(
-                  image.last_reviewed_at ?? image.created_at,
-                  image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL,
-                );
-                return (
-                  <article key={image.id} className="vision-board__review-card">
-                    <div className="vision-board__review-info">
-                      <h4>{image.caption || 'Vision board entry'}</h4>
-                      <p className="vision-board__review-meta">
-                        Type: {getVisionTypeLabel(image.vision_type)} · Next review {formatDateLabel(nextReview)}
-                      </p>
-                      <p className="vision-board__review-prompt">
-                        Prompt: Confirm this still supports your Game of Life focus, or update links if it needs a new home.
-                      </p>
-                    </div>
-                    <div className="vision-board__review-actions">
-                      <button type="button" onClick={() => startEditing(image)} disabled={editSavingId === image.id}>
-                        Update details
-                      </button>
-                      <button type="button" onClick={() => handleMarkReviewed(image.id)} disabled={editSavingId === image.id}>
-                        Mark reviewed
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
       )}
 
       {(isConfigured || isDemoExperience) && hasImages && boardView === 'life_wheel' && (
@@ -1446,10 +1347,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
                 const linkedGoals = image.linked_goal_ids ?? [];
                 const linkedHabits = image.linked_habit_ids ?? [];
                 const isOrphan = linkedGoals.length === 0 && linkedHabits.length === 0;
-                const nextReview = addDays(
-                  image.last_reviewed_at ?? image.created_at,
-                  image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL,
-                );
                 const goalLabels = linkedGoals.map((id) => goalLookup.get(id)).filter(Boolean) as string[];
                 const habitLabels = linkedHabits.map((id) => habitLookup.get(id)).filter(Boolean) as string[];
                 const lifeWheelKeys = lifeWheelTags[image.id] ?? [];
@@ -1464,9 +1361,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
                   <div className="vision-board__card-body">
                     <div className="vision-board__card-meta">
                       <span className="vision-board__chip">{getVisionTypeLabel(image.vision_type)}</span>
-                      <span className="vision-board__chip">
-                        Review every {image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL} days
-                      </span>
                       {isOrphan && <span className="vision-board__chip vision-board__chip--orphan">Orphan</span>}
                     </div>
                     {lifeWheelLabels.length > 0 && (
@@ -1498,7 +1392,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
                         })}
                       </div>
                     )}
-                    <p className="vision-board__card-review">Next review: {formatDateLabel(nextReview)}</p>
                     {goalLabels.length > 0 && (
                       <p className="vision-board__card-links">
                         <strong>Goals:</strong> {goalLabels.join(', ')}
@@ -1577,21 +1470,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
                       {VISION_TYPES.map((type) => (
                         <option key={type.value} value={type.value}>
                           {type.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="vision-board__field">
-                    <label htmlFor={`vision-edit-review-${image.id}`}>Review interval</label>
-                    <select
-                      id={`vision-edit-review-${image.id}`}
-                      value={editReviewInterval}
-                      onChange={(event) => setEditReviewInterval(Number(event.target.value))}
-                      disabled={editSavingId === image.id}
-                    >
-                      {REVIEW_INTERVAL_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
                         </option>
                       ))}
                     </select>
