@@ -60,6 +60,12 @@ type FourVisionaryCategoryKey = FourVisionaryCategory['key'];
 
 type VisionaryFilter = 'all' | 'untagged' | FourVisionaryCategoryKey;
 
+type PendingDeleteItem = {
+  record: VisionImage;
+  lifeWheel: LifeWheelCategoryKey[];
+  visionary: FourVisionaryCategoryKey[];
+};
+
 const BOARD_VIEW_OPTIONS: { value: BoardView; label: string }[] = [
   { value: 'all', label: 'All photos' },
   { value: 'life_wheel', label: 'Life wheel categories' },
@@ -139,13 +145,11 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [showDailyGame, setShowDailyGame] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<VisionImage | null>(null);
-  const pendingDeleteRef = useRef<{
-    record: VisionImage;
-    timeoutId: number;
-    lifeWheel: LifeWheelCategoryKey[];
-    visionary: FourVisionaryCategoryKey[];
-  } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pendingDelete, setPendingDelete] = useState<PendingDeleteItem[] | null>(null);
+  const pendingDeleteRef = useRef<{ items: PendingDeleteItem[]; timeoutId: number } | null>(null);
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [habits, setHabits] = useState<HabitRow[]>([]);
   const [linkDataLoading, setLinkDataLoading] = useState(false);
@@ -417,27 +421,28 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   }, [images, sortMode]);
 
   const filteredImages = useMemo(() => {
+    let base = sortedImages;
+
     if (boardView === 'life_wheel' && lifeWheelAvailable) {
-      if (lifeWheelFilter === 'all') {
-        return sortedImages;
-      }
       if (lifeWheelFilter === 'untagged') {
-        return sortedImages.filter((image) => (lifeWheelTags[image.id] ?? []).length === 0);
+        base = base.filter((image) => (lifeWheelTags[image.id] ?? []).length === 0);
+      } else if (lifeWheelFilter !== 'all') {
+        base = base.filter((image) => (lifeWheelTags[image.id] ?? []).includes(lifeWheelFilter));
       }
-      return sortedImages.filter((image) => (lifeWheelTags[image.id] ?? []).includes(lifeWheelFilter));
-    }
-
-    if (boardView === 'visionaries' && visionariesAvailable) {
-      if (visionaryFilter === 'all') {
-        return sortedImages;
-      }
+    } else if (boardView === 'visionaries' && visionariesAvailable) {
       if (visionaryFilter === 'untagged') {
-        return sortedImages.filter((image) => (visionaryTags[image.id] ?? []).length === 0);
+        base = base.filter((image) => (visionaryTags[image.id] ?? []).length === 0);
+      } else if (visionaryFilter !== 'all') {
+        base = base.filter((image) => (visionaryTags[image.id] ?? []).includes(visionaryFilter));
       }
-      return sortedImages.filter((image) => (visionaryTags[image.id] ?? []).includes(visionaryFilter));
     }
 
-    return sortedImages;
+    const query = searchQuery.trim().toLowerCase();
+    if (query) {
+      base = base.filter((image) => (image.caption ?? '').toLowerCase().includes(query));
+    }
+
+    return base;
   }, [
     boardView,
     sortedImages,
@@ -447,6 +452,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     visionaryTags,
     lifeWheelAvailable,
     visionariesAvailable,
+    searchQuery,
   ]);
 
   const openLightbox = useCallback(
@@ -856,67 +862,89 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     }
   };
 
-  const commitDelete = useCallback(
-    async (
-      record: VisionImage,
-      lifeWheel: LifeWheelCategoryKey[],
-      visionary: FourVisionaryCategoryKey[],
-    ) => {
+  const commitDeletes = useCallback(async (items: PendingDeleteItem[]) => {
+    for (const item of items) {
       try {
-        const error = await deleteVisionImage(record);
+        const error = await deleteVisionImage(item.record);
         if (error) throw error;
       } catch (error) {
         // Restore the item so a failed delete never silently loses data.
         setImages((current) =>
-          current.some((item) => item.id === record.id) ? current : [record, ...current],
+          current.some((existing) => existing.id === item.record.id)
+            ? current
+            : [item.record, ...current],
         );
-        setLifeWheelTags((current) => ({ ...current, [record.id]: lifeWheel }));
-        setVisionaryTags((current) => ({ ...current, [record.id]: visionary }));
-        setErrorMessage(error instanceof Error ? error.message : 'Unable to delete the entry.');
+        setLifeWheelTags((current) => ({ ...current, [item.record.id]: item.lifeWheel }));
+        setVisionaryTags((current) => ({ ...current, [item.record.id]: item.visionary }));
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to delete an entry.');
       }
-    },
-    [],
-  );
-
-  const handleDelete = (record: VisionImage) => {
-    if (!isConfigured && !isDemoExperience) {
-      setErrorMessage('Connect Supabase to remove items from your vision board.');
-      return;
     }
+  }, []);
 
-    setErrorMessage(null);
+  const queueDeletes = (items: PendingDeleteItem[]) => {
+    if (items.length === 0) return;
 
-    // Commit any previously-queued delete before starting a new one.
+    // Commit any previously-queued batch before starting a new one.
     const prior = pendingDeleteRef.current;
     if (prior) {
       window.clearTimeout(prior.timeoutId);
-      void commitDelete(prior.record, prior.lifeWheel, prior.visionary);
+      void commitDeletes(prior.items);
     }
 
-    const lifeWheel = lifeWheelTags[record.id] ?? [];
-    const visionary = visionaryTags[record.id] ?? [];
+    const ids = new Set(items.map((item) => item.record.id));
 
     // Optimistically remove from the gallery; commit after the undo window.
-    setImages((current) => current.filter((item) => item.id !== record.id));
+    setImages((current) => current.filter((item) => !ids.has(item.id)));
     setLifeWheelTags((current) => {
       const next = { ...current };
-      delete next[record.id];
+      ids.forEach((id) => delete next[id]);
       return next;
     });
     setVisionaryTags((current) => {
       const next = { ...current };
-      delete next[record.id];
+      ids.forEach((id) => delete next[id]);
       return next;
     });
 
     const timeoutId = window.setTimeout(() => {
       pendingDeleteRef.current = null;
       setPendingDelete(null);
-      void commitDelete(record, lifeWheel, visionary);
+      void commitDeletes(items);
     }, 5000);
 
-    pendingDeleteRef.current = { record, timeoutId, lifeWheel, visionary };
-    setPendingDelete(record);
+    pendingDeleteRef.current = { items, timeoutId };
+    setPendingDelete(items);
+  };
+
+  const toPendingItem = (record: VisionImage): PendingDeleteItem => ({
+    record,
+    lifeWheel: lifeWheelTags[record.id] ?? [],
+    visionary: visionaryTags[record.id] ?? [],
+  });
+
+  const handleDelete = (record: VisionImage) => {
+    if (!isConfigured && !isDemoExperience) {
+      setErrorMessage('Connect Supabase to remove items from your vision board.');
+      return;
+    }
+    setErrorMessage(null);
+    queueDeletes([toPendingItem(record)]);
+  };
+
+  const handleBulkDelete = () => {
+    if (!isConfigured && !isDemoExperience) {
+      setErrorMessage('Connect Supabase to remove items from your vision board.');
+      return;
+    }
+    const items = selectedIds
+      .map((id) => images.find((image) => image.id === id))
+      .filter((image): image is VisionImage => Boolean(image))
+      .map(toPendingItem);
+    if (items.length === 0) return;
+    setErrorMessage(null);
+    queueDeletes(items);
+    setSelectedIds([]);
+    setSelectMode(false);
   };
 
   const undoDelete = () => {
@@ -925,13 +953,27 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     window.clearTimeout(pending.timeoutId);
     pendingDeleteRef.current = null;
     setPendingDelete(null);
-    setImages((current) =>
-      current.some((item) => item.id === pending.record.id)
-        ? current
-        : [pending.record, ...current],
-    );
-    setLifeWheelTags((current) => ({ ...current, [pending.record.id]: pending.lifeWheel }));
-    setVisionaryTags((current) => ({ ...current, [pending.record.id]: pending.visionary }));
+    setImages((current) => {
+      const existing = new Set(current.map((item) => item.id));
+      const restored = pending.items
+        .filter((item) => !existing.has(item.record.id))
+        .map((item) => item.record);
+      return restored.length ? [...restored, ...current] : current;
+    });
+    setLifeWheelTags((current) => {
+      const next = { ...current };
+      pending.items.forEach((item) => {
+        next[item.record.id] = item.lifeWheel;
+      });
+      return next;
+    });
+    setVisionaryTags((current) => {
+      const next = { ...current };
+      pending.items.forEach((item) => {
+        next[item.record.id] = item.visionary;
+      });
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -939,10 +981,21 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       const pending = pendingDeleteRef.current;
       if (pending) {
         window.clearTimeout(pending.timeoutId);
-        void deleteVisionImage(pending.record);
+        pending.items.forEach((item) => void deleteVisionImage(item.record));
       }
     };
   }, []);
+
+  const toggleSelected = (imageId: string) => {
+    setSelectedIds((current) =>
+      current.includes(imageId) ? current.filter((id) => id !== imageId) : [...current, imageId],
+    );
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds([]);
+  };
 
   const handleRetryVisionQueue = async () => {
     if (!session) return;
@@ -1018,6 +1071,24 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
                 <option value="masonry">Masonry</option>
               </select>
             </div>
+            <div className="vision-board__search">
+              <label htmlFor="vision-board-search">Search</label>
+              <input
+                id="vision-board-search"
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search captions…"
+              />
+            </div>
+            <button
+              type="button"
+              className="vision-board__daily-game-button"
+              onClick={() => (selectMode ? exitSelectMode() : setSelectMode(true))}
+              aria-pressed={selectMode}
+            >
+              {selectMode ? 'Done selecting' : 'Select'}
+            </button>
             <button
               type="button"
               className="vision-board__daily-game-button"
@@ -1464,6 +1535,32 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </section>
       )}
 
+      {selectMode && hasImages && (
+        <div className="vision-board__bulk-bar">
+          <span className="vision-board__bulk-count">{selectedIds.length} selected</span>
+          <div className="vision-board__bulk-actions">
+            <button
+              type="button"
+              onClick={() => setSelectedIds(filteredImages.map((image) => image.id))}
+              disabled={filteredImages.length === 0}
+            >
+              Select all
+            </button>
+            <button type="button" onClick={() => setSelectedIds([])} disabled={selectedIds.length === 0}>
+              Clear
+            </button>
+            <button
+              type="button"
+              className="vision-board__bulk-delete"
+              onClick={handleBulkDelete}
+              disabled={selectedIds.length === 0 || (!isConfigured && !isDemoExperience)}
+            >
+              Delete selected
+            </button>
+          </div>
+        </div>
+      )}
+
       {!shouldShowEmptyState && (
         <div className={`vision-board__grid vision-board__grid--${gridLayout}`} role="list">
         {!isConfigured && !isDemoExperience ? (
@@ -1476,8 +1573,24 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
           <p className="vision-board__empty">No images match this filter yet.</p>
         ) : (
           filteredImages.map((image) => (
-            <article key={image.id} className="vision-board__card" role="listitem">
+            <article
+              key={image.id}
+              className={`vision-board__card${
+                selectMode && selectedIds.includes(image.id) ? ' vision-board__card--selected' : ''
+              }`}
+              role="listitem"
+            >
               <div className="vision-board__card-image-container">
+                {selectMode && (
+                  <label className="vision-board__select-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(image.id)}
+                      onChange={() => toggleSelected(image.id)}
+                      aria-label={`Select ${image.caption?.trim() || 'vision board entry'}`}
+                    />
+                  </label>
+                )}
                 {image.publicUrl ? (
                   <button
                     type="button"
@@ -1780,9 +1893,13 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </div>
       )}
 
-      {pendingDelete && (
+      {pendingDelete && pendingDelete.length > 0 && (
         <div className="vision-board__toast" role="status" aria-live="polite">
-          <span>Removed “{pendingDelete.caption?.trim() || 'vision board entry'}”.</span>
+          <span>
+            {pendingDelete.length === 1
+              ? `Removed “${pendingDelete[0].record.caption?.trim() || 'vision board entry'}”.`
+              : `Removed ${pendingDelete.length} images.`}
+          </span>
           <button type="button" className="vision-board__toast-undo" onClick={undoDelete}>
             Undo
           </button>
