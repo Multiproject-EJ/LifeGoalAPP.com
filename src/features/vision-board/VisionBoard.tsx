@@ -1,4 +1,4 @@
-import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, DragEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '../auth/SupabaseAuthProvider';
 import {
@@ -17,6 +17,8 @@ import { fetchVisionImageTags, setVisionImageCategories } from '../../services/v
 import { VisionBoardDailyGame } from '../visionBoardDailyGame/VisionBoardDailyGame';
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
+import { loadHaircutPreferences, saveHaircutPreferences } from './haircutPreferences';
+import { useModalA11y } from './useModalA11y';
 import { fetchGoals } from '../../services/goals';
 import { listHabitsV2 } from '../../services/habitsV2';
 import { getDemoHabitsForUser } from '../../services/demoData';
@@ -65,7 +67,6 @@ const BOARD_VIEW_OPTIONS: { value: BoardView; label: string }[] = [
 ];
 
 const DEFAULT_VISION_TYPE = 'goal';
-const DEFAULT_REVIEW_INTERVAL = 30;
 
 const VISION_TYPES = [
   { value: 'goal', label: 'Goal' },
@@ -73,14 +74,6 @@ const VISION_TYPES = [
   { value: 'identity', label: 'Identity' },
   { value: 'experience', label: 'Experience' },
   { value: 'environment', label: 'Environment' },
-];
-
-const REVIEW_INTERVAL_OPTIONS = [
-  { value: 7, label: 'Weekly (7 days)' },
-  { value: 14, label: 'Biweekly (14 days)' },
-  { value: 30, label: 'Monthly (30 days)' },
-  { value: 60, label: 'Every 2 months (60 days)' },
-  { value: 90, label: 'Quarterly (90 days)' },
 ];
 
 const HAIRCUT_INTERVAL_OPTIONS = [
@@ -145,17 +138,23 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showDailyGame, setShowDailyGame] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<VisionImage | null>(null);
+  const pendingDeleteRef = useRef<{
+    record: VisionImage;
+    timeoutId: number;
+    lifeWheel: LifeWheelCategoryKey[];
+    visionary: FourVisionaryCategoryKey[];
+  } | null>(null);
   const [goals, setGoals] = useState<GoalRow[]>([]);
   const [habits, setHabits] = useState<HabitRow[]>([]);
   const [linkDataLoading, setLinkDataLoading] = useState(false);
   const [addVisionType, setAddVisionType] = useState(DEFAULT_VISION_TYPE);
-  const [addReviewInterval, setAddReviewInterval] = useState(DEFAULT_REVIEW_INTERVAL);
   const [addLinkedGoals, setAddLinkedGoals] = useState<string[]>([]);
   const [addLinkedHabits, setAddLinkedHabits] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCaption, setEditCaption] = useState('');
   const [editVisionType, setEditVisionType] = useState(DEFAULT_VISION_TYPE);
-  const [editReviewInterval, setEditReviewInterval] = useState(DEFAULT_REVIEW_INTERVAL);
   const [editLinkedGoals, setEditLinkedGoals] = useState<string[]>([]);
   const [editLinkedHabits, setEditLinkedHabits] = useState<string[]>([]);
   const [editSavingId, setEditSavingId] = useState<string | null>(null);
@@ -173,6 +172,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [selectedHaircutStyle, setSelectedHaircutStyle] = useState(HAIRCUT_STYLES[0].key);
   const [bestHairLength, setBestHairLength] = useState(HAIRCUT_LENGTHS[1].value);
   const [needsHaircut, setNeedsHaircut] = useState(false);
+  const haircutPrefsLoaded = useRef(false);
   const [queuePending, setQueuePending] = useState(0);
   const [queueFailed, setQueueFailed] = useState(0);
   const lifeWheelAvailable = LIFE_WHEEL_CATEGORIES.length > 0;
@@ -202,7 +202,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       const mapped = (data ?? []).map((record) => ({
         ...record,
         vision_type: record.vision_type ?? DEFAULT_VISION_TYPE,
-        review_interval_days: record.review_interval_days ?? DEFAULT_REVIEW_INTERVAL,
         linked_goal_ids: record.linked_goal_ids ?? [],
         linked_habit_ids: record.linked_habit_ids ?? [],
         publicUrl: getVisionImagePublicUrl(record),
@@ -370,6 +369,40 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     }
   }, [isConfigured, isDemoExperience]);
 
+  useEffect(() => {
+    haircutPrefsLoaded.current = false;
+    const userId = session?.user?.id;
+    if (!userId) return;
+    const prefs = loadHaircutPreferences(userId);
+    if (prefs) {
+      if (typeof prefs.intervalDays === 'number') setHaircutIntervalDays(prefs.intervalDays);
+      if (typeof prefs.lastHaircutDate === 'string') setLastHaircutDate(prefs.lastHaircutDate);
+      if (typeof prefs.styleKey === 'string') setSelectedHaircutStyle(prefs.styleKey);
+      if (typeof prefs.bestLength === 'string') setBestHairLength(prefs.bestLength);
+      if (typeof prefs.needsHaircut === 'boolean') setNeedsHaircut(prefs.needsHaircut);
+    }
+    haircutPrefsLoaded.current = true;
+  }, [session?.user?.id]);
+
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId || !haircutPrefsLoaded.current) return;
+    saveHaircutPreferences(userId, {
+      intervalDays: haircutIntervalDays,
+      lastHaircutDate,
+      styleKey: selectedHaircutStyle,
+      bestLength: bestHairLength,
+      needsHaircut,
+    });
+  }, [
+    session?.user?.id,
+    haircutIntervalDays,
+    lastHaircutDate,
+    selectedHaircutStyle,
+    bestHairLength,
+    needsHaircut,
+  ]);
+
   const sortedImages = useMemo(() => {
     const copy = [...images];
     if (sortMode === 'caption') {
@@ -416,6 +449,46 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     visionariesAvailable,
   ]);
 
+  const openLightbox = useCallback(
+    (imageId: string) => {
+      const index = filteredImages.findIndex((image) => image.id === imageId);
+      if (index >= 0) setLightboxIndex(index);
+    },
+    [filteredImages],
+  );
+
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+
+  const showPrevImage = useCallback(() => {
+    setLightboxIndex((current) => {
+      if (current === null || filteredImages.length === 0) return current;
+      return (current - 1 + filteredImages.length) % filteredImages.length;
+    });
+  }, [filteredImages.length]);
+
+  const showNextImage = useCallback(() => {
+    setLightboxIndex((current) => {
+      if (current === null || filteredImages.length === 0) return current;
+      return (current + 1) % filteredImages.length;
+    });
+  }, [filteredImages.length]);
+
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeLightbox();
+      else if (event.key === 'ArrowLeft') showPrevImage();
+      else if (event.key === 'ArrowRight') showNextImage();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [lightboxIndex, closeLightbox, showPrevImage, showNextImage]);
+
+  const lightboxImage =
+    lightboxIndex !== null && lightboxIndex < filteredImages.length
+      ? filteredImages[lightboxIndex]
+      : null;
+
   const isBodyStyleTab =
     boardView === 'visionaries' && (visionaryFilter === 'body_style' || (!isConfigured && !isDemoExperience));
   const nextHaircutDate = addDays(lastHaircutDate, haircutIntervalDays);
@@ -428,17 +501,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const haircutProgress = haircutIntervalDays > 0
     ? Math.min(100, Math.round((haircutDaysSince / haircutIntervalDays) * 100))
     : 0;
-
-  const dueReviewItems = useMemo(() => {
-    const now = new Date();
-    return sortedImages.filter((image) => {
-      const interval = image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL;
-      const baseDate = image.last_reviewed_at ?? image.created_at;
-      const nextReviewIso = addDays(baseDate, interval);
-      if (!nextReviewIso) return false;
-      return new Date(nextReviewIso) <= now;
-    });
-  }, [sortedImages]);
 
   const hasImages = sortedImages.length > 0;
   const shouldShowEmptyState = (isConfigured || isDemoExperience) && hasLoadedOnce && !loading && !hasImages;
@@ -551,7 +613,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     setEditingId(image.id);
     setEditCaption(image.caption ?? '');
     setEditVisionType(image.vision_type ?? DEFAULT_VISION_TYPE);
-    setEditReviewInterval(image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL);
     setEditLinkedGoals(image.linked_goal_ids ?? []);
     setEditLinkedHabits(image.linked_habit_ids ?? []);
   };
@@ -628,19 +689,12 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     }
   };
 
-  const handleMarkReviewed = async (imageId: string) => {
-    await handleUpdateImage(imageId, {
-      last_reviewed_at: new Date().toISOString(),
-    });
-  };
-
   const handleEditSubmit = async (event: FormEvent<HTMLFormElement>, imageId: string) => {
     event.preventDefault();
     setEditSavingId(imageId);
     const success = await handleUpdateImage(imageId, {
       caption: editCaption.trim() ? editCaption.trim() : null,
       vision_type: editVisionType,
-      review_interval_days: editReviewInterval,
       linked_goal_ids: editLinkedGoals,
       linked_habit_ids: editLinkedHabits,
     });
@@ -704,7 +758,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
           fileName: fileDraft.name,
           caption: captionDraft,
           visionType: addVisionType,
-          reviewIntervalDays: addReviewInterval,
           linkedGoalIds: addLinkedGoals,
           linkedHabitIds: addLinkedHabits,
         }));
@@ -714,7 +767,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
           imageUrl: urlDraft.trim(),
           caption: captionDraft,
           visionType: addVisionType,
-          reviewIntervalDays: addReviewInterval,
           linkedGoalIds: addLinkedGoals,
           linkedHabitIds: addLinkedHabits,
         }));
@@ -745,7 +797,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       setCaptionDraft('');
       setPreviewUrl(null);
       setAddVisionType(DEFAULT_VISION_TYPE);
-      setAddReviewInterval(DEFAULT_REVIEW_INTERVAL);
       setAddLinkedGoals([]);
       setAddLinkedHabits([]);
       (event.target as HTMLFormElement).reset();
@@ -805,34 +856,93 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     }
   };
 
-  const handleDelete = async (record: VisionImage) => {
+  const commitDelete = useCallback(
+    async (
+      record: VisionImage,
+      lifeWheel: LifeWheelCategoryKey[],
+      visionary: FourVisionaryCategoryKey[],
+    ) => {
+      try {
+        const error = await deleteVisionImage(record);
+        if (error) throw error;
+      } catch (error) {
+        // Restore the item so a failed delete never silently loses data.
+        setImages((current) =>
+          current.some((item) => item.id === record.id) ? current : [record, ...current],
+        );
+        setLifeWheelTags((current) => ({ ...current, [record.id]: lifeWheel }));
+        setVisionaryTags((current) => ({ ...current, [record.id]: visionary }));
+        setErrorMessage(error instanceof Error ? error.message : 'Unable to delete the entry.');
+      }
+    },
+    [],
+  );
+
+  const handleDelete = (record: VisionImage) => {
     if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Connect Supabase to remove items from your vision board.');
       return;
     }
 
-    const confirmed = window.confirm('Remove this vision board entry? This cannot be undone.');
-    if (!confirmed) return;
-
     setErrorMessage(null);
-    try {
-      const error = await deleteVisionImage(record);
-      if (error) throw error;
-      setImages((current) => current.filter((item) => item.id !== record.id));
-      setLifeWheelTags((current) => {
-        const next = { ...current };
-        delete next[record.id];
-        return next;
-      });
-      setVisionaryTags((current) => {
-        const next = { ...current };
-        delete next[record.id];
-        return next;
-      });
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Unable to delete the entry.');
+
+    // Commit any previously-queued delete before starting a new one.
+    const prior = pendingDeleteRef.current;
+    if (prior) {
+      window.clearTimeout(prior.timeoutId);
+      void commitDelete(prior.record, prior.lifeWheel, prior.visionary);
     }
+
+    const lifeWheel = lifeWheelTags[record.id] ?? [];
+    const visionary = visionaryTags[record.id] ?? [];
+
+    // Optimistically remove from the gallery; commit after the undo window.
+    setImages((current) => current.filter((item) => item.id !== record.id));
+    setLifeWheelTags((current) => {
+      const next = { ...current };
+      delete next[record.id];
+      return next;
+    });
+    setVisionaryTags((current) => {
+      const next = { ...current };
+      delete next[record.id];
+      return next;
+    });
+
+    const timeoutId = window.setTimeout(() => {
+      pendingDeleteRef.current = null;
+      setPendingDelete(null);
+      void commitDelete(record, lifeWheel, visionary);
+    }, 5000);
+
+    pendingDeleteRef.current = { record, timeoutId, lifeWheel, visionary };
+    setPendingDelete(record);
   };
+
+  const undoDelete = () => {
+    const pending = pendingDeleteRef.current;
+    if (!pending) return;
+    window.clearTimeout(pending.timeoutId);
+    pendingDeleteRef.current = null;
+    setPendingDelete(null);
+    setImages((current) =>
+      current.some((item) => item.id === pending.record.id)
+        ? current
+        : [pending.record, ...current],
+    );
+    setLifeWheelTags((current) => ({ ...current, [pending.record.id]: pending.lifeWheel }));
+    setVisionaryTags((current) => ({ ...current, [pending.record.id]: pending.visionary }));
+  };
+
+  useEffect(() => {
+    return () => {
+      const pending = pendingDeleteRef.current;
+      if (pending) {
+        window.clearTimeout(pending.timeoutId);
+        void deleteVisionImage(pending.record);
+      }
+    };
+  }, []);
 
   const handleRetryVisionQueue = async () => {
     if (!session) return;
@@ -853,6 +963,10 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
     setQueuePending(status.pending);
     setQueueFailed(status.failed);
   };
+
+  const closeDailyGame = useCallback(() => setShowDailyGame(false), []);
+  const tagModalRef = useModalA11y<HTMLDivElement>(Boolean(taggingImage), stopTagging);
+  const dailyGameModalRef = useModalA11y<HTMLDivElement>(showDailyGame && hasImages, closeDailyGame);
 
   return (
     <section className="vision-board">
@@ -1095,24 +1209,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
               </span>
             </div>
             <div className="vision-board__field">
-              <label htmlFor="vision-board-review-interval">Review interval</label>
-              <select
-                id="vision-board-review-interval"
-                value={addReviewInterval}
-                onChange={(event) => setAddReviewInterval(Number(event.target.value))}
-                disabled={(!isConfigured && !isDemoExperience) || uploading}
-              >
-                {REVIEW_INTERVAL_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <span className="vision-board__hint">
-                Choose how often this vision should be revisited in your review loop.
-              </span>
-            </div>
-            <div className="vision-board__field">
               <label>Linked goals</label>
               {linkDataLoading ? (
                 <span className="vision-board__hint">Loading goals…</span>
@@ -1175,53 +1271,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
           </form>
         )}
       </div>
-      )}
-
-      {(isConfigured || isDemoExperience) && hasImages && (
-        <section className="vision-board__review">
-          <div className="vision-board__review-header">
-            <div>
-              <h3>Vision review loop</h3>
-              <p>
-                Review entries due for a refresh to keep your Game of Life board aligned with your active goals and habits.
-              </p>
-            </div>
-            <span className="vision-board__review-count">{dueReviewItems.length} due</span>
-          </div>
-          {dueReviewItems.length === 0 ? (
-            <p className="vision-board__empty">All caught up—no reviews due right now.</p>
-          ) : (
-            <div className="vision-board__review-list">
-              {dueReviewItems.map((image) => {
-                const nextReview = addDays(
-                  image.last_reviewed_at ?? image.created_at,
-                  image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL,
-                );
-                return (
-                  <article key={image.id} className="vision-board__review-card">
-                    <div className="vision-board__review-info">
-                      <h4>{image.caption || 'Vision board entry'}</h4>
-                      <p className="vision-board__review-meta">
-                        Type: {getVisionTypeLabel(image.vision_type)} · Next review {formatDateLabel(nextReview)}
-                      </p>
-                      <p className="vision-board__review-prompt">
-                        Prompt: Confirm this still supports your Game of Life focus, or update links if it needs a new home.
-                      </p>
-                    </div>
-                    <div className="vision-board__review-actions">
-                      <button type="button" onClick={() => startEditing(image)} disabled={editSavingId === image.id}>
-                        Update details
-                      </button>
-                      <button type="button" onClick={() => handleMarkReviewed(image.id)} disabled={editSavingId === image.id}>
-                        Mark reviewed
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
       )}
 
       {(isConfigured || isDemoExperience) && hasImages && boardView === 'life_wheel' && (
@@ -1430,7 +1479,26 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
             <article key={image.id} className="vision-board__card" role="listitem">
               <div className="vision-board__card-image-container">
                 {image.publicUrl ? (
-                  <img src={image.publicUrl} alt={image.caption ?? 'Vision board entry'} loading="lazy" />
+                  <button
+                    type="button"
+                    className="vision-board__card-image-button"
+                    onClick={() => openLightbox(image.id)}
+                    aria-label={`View ${image.caption?.trim() || 'vision board entry'} full screen`}
+                  >
+                    <img
+                      src={image.publicUrl}
+                      alt={image.caption ?? 'Vision board entry'}
+                      loading="lazy"
+                      onError={(event) => {
+                        const target = event.currentTarget;
+                        target.style.display = 'none';
+                        target.parentElement?.classList.add('vision-board__card-image-button--broken');
+                      }}
+                    />
+                    <span className="vision-board__card-image-broken" aria-hidden>
+                      Image unavailable
+                    </span>
+                  </button>
                 ) : (
                   <div className="vision-board__placeholder" aria-hidden>
                     <span>No preview</span>
@@ -1446,10 +1514,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
                 const linkedGoals = image.linked_goal_ids ?? [];
                 const linkedHabits = image.linked_habit_ids ?? [];
                 const isOrphan = linkedGoals.length === 0 && linkedHabits.length === 0;
-                const nextReview = addDays(
-                  image.last_reviewed_at ?? image.created_at,
-                  image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL,
-                );
                 const goalLabels = linkedGoals.map((id) => goalLookup.get(id)).filter(Boolean) as string[];
                 const habitLabels = linkedHabits.map((id) => habitLookup.get(id)).filter(Boolean) as string[];
                 const lifeWheelKeys = lifeWheelTags[image.id] ?? [];
@@ -1464,9 +1528,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
                   <div className="vision-board__card-body">
                     <div className="vision-board__card-meta">
                       <span className="vision-board__chip">{getVisionTypeLabel(image.vision_type)}</span>
-                      <span className="vision-board__chip">
-                        Review every {image.review_interval_days ?? DEFAULT_REVIEW_INTERVAL} days
-                      </span>
                       {isOrphan && <span className="vision-board__chip vision-board__chip--orphan">Orphan</span>}
                     </div>
                     {lifeWheelLabels.length > 0 && (
@@ -1498,7 +1559,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
                         })}
                       </div>
                     )}
-                    <p className="vision-board__card-review">Next review: {formatDateLabel(nextReview)}</p>
                     {goalLabels.length > 0 && (
                       <p className="vision-board__card-links">
                         <strong>Goals:</strong> {goalLabels.join(', ')}
@@ -1582,21 +1642,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
                     </select>
                   </div>
                   <div className="vision-board__field">
-                    <label htmlFor={`vision-edit-review-${image.id}`}>Review interval</label>
-                    <select
-                      id={`vision-edit-review-${image.id}`}
-                      value={editReviewInterval}
-                      onChange={(event) => setEditReviewInterval(Number(event.target.value))}
-                      disabled={editSavingId === image.id}
-                    >
-                      {REVIEW_INTERVAL_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="vision-board__field">
                     <label>Linked goals</label>
                     {goals.length === 0 ? (
                       <span className="vision-board__hint">No goals available yet.</span>
@@ -1653,16 +1698,32 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       )}
 
       {showDailyGame && hasImages && (
-        <div className="vision-board__modal-backdrop" role="dialog" aria-modal="true">
-          <div className="vision-board__modal">
-            <VisionBoardDailyGame session={session} onClose={() => setShowDailyGame(false)} isConfigured={isConfigured} />
+        <div className="vision-board__modal-backdrop" onClick={closeDailyGame}>
+          <div
+            className="vision-board__modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Daily vision game"
+            tabIndex={-1}
+            ref={dailyGameModalRef}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <VisionBoardDailyGame session={session} onClose={closeDailyGame} isConfigured={isConfigured} />
           </div>
         </div>
       )}
 
       {taggingImage && (
-        <div className="vision-board__modal-backdrop" role="dialog" aria-modal="true">
-          <div className="vision-board__modal vision-board__tag-modal">
+        <div className="vision-board__modal-backdrop" onClick={stopTagging}>
+          <div
+            className="vision-board__modal vision-board__tag-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Tag vision image"
+            tabIndex={-1}
+            ref={tagModalRef}
+            onClick={(event) => event.stopPropagation()}
+          >
             <header className="vision-board__tag-header">
               <h3>Tag vision image</h3>
               <p>Select the life wheel areas and visionary themes this image supports.</p>
@@ -1716,6 +1777,84 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {pendingDelete && (
+        <div className="vision-board__toast" role="status" aria-live="polite">
+          <span>Removed “{pendingDelete.caption?.trim() || 'vision board entry'}”.</span>
+          <button type="button" className="vision-board__toast-undo" onClick={undoDelete}>
+            Undo
+          </button>
+        </div>
+      )}
+
+      {lightboxImage && (
+        <div
+          className="vision-board__lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Vision image viewer"
+          onClick={closeLightbox}
+        >
+          <button
+            type="button"
+            className="vision-board__lightbox-close"
+            onClick={closeLightbox}
+            aria-label="Close viewer"
+          >
+            ×
+          </button>
+          {filteredImages.length > 1 && (
+            <button
+              type="button"
+              className="vision-board__lightbox-nav vision-board__lightbox-nav--prev"
+              onClick={(event) => {
+                event.stopPropagation();
+                showPrevImage();
+              }}
+              aria-label="Previous image"
+            >
+              ‹
+            </button>
+          )}
+          <figure
+            className="vision-board__lightbox-figure"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {lightboxImage.publicUrl ? (
+              <img
+                src={lightboxImage.publicUrl}
+                alt={lightboxImage.caption ?? 'Vision board entry'}
+                className="vision-board__lightbox-image"
+              />
+            ) : (
+              <div className="vision-board__placeholder" aria-hidden>
+                <span>No preview</span>
+              </div>
+            )}
+            {lightboxImage.caption && (
+              <figcaption className="vision-board__lightbox-caption">{lightboxImage.caption}</figcaption>
+            )}
+            {filteredImages.length > 1 && (
+              <p className="vision-board__lightbox-counter">
+                {(lightboxIndex ?? 0) + 1} / {filteredImages.length}
+              </p>
+            )}
+          </figure>
+          {filteredImages.length > 1 && (
+            <button
+              type="button"
+              className="vision-board__lightbox-nav vision-board__lightbox-nav--next"
+              onClick={(event) => {
+                event.stopPropagation();
+                showNextImage();
+              }}
+              aria-label="Next image"
+            >
+              ›
+            </button>
+          )}
         </div>
       )}
     </section>
