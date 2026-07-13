@@ -18,6 +18,7 @@ import { VisionBoardDailyGame } from '../visionBoardDailyGame/VisionBoardDailyGa
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { HaircutWidget } from './HaircutWidget';
+import { VisionLightbox } from './VisionLightbox';
 import { useModalA11y } from './useModalA11y';
 import { fetchGoals } from '../../services/goals';
 import { listHabitsV2 } from '../../services/habitsV2';
@@ -385,36 +386,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   );
 
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
-
-  const showPrevImage = useCallback(() => {
-    setLightboxIndex((current) => {
-      if (current === null || filteredImages.length === 0) return current;
-      return (current - 1 + filteredImages.length) % filteredImages.length;
-    });
-  }, [filteredImages.length]);
-
-  const showNextImage = useCallback(() => {
-    setLightboxIndex((current) => {
-      if (current === null || filteredImages.length === 0) return current;
-      return (current + 1) % filteredImages.length;
-    });
-  }, [filteredImages.length]);
-
-  useEffect(() => {
-    if (lightboxIndex === null) return;
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeLightbox();
-      else if (event.key === 'ArrowLeft') showPrevImage();
-      else if (event.key === 'ArrowRight') showNextImage();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [lightboxIndex, closeLightbox, showPrevImage, showNextImage]);
-
-  const lightboxImage =
-    lightboxIndex !== null && lightboxIndex < filteredImages.length
-      ? filteredImages[lightboxIndex]
-      : null;
 
   const isBodyStyleTab =
     boardView === 'visionaries' && (visionaryFilter === 'body_style' || (!isConfigured && !isDemoExperience));
@@ -1704,73 +1675,8 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
         </div>
       )}
 
-      {lightboxImage && (
-        <div
-          className="vision-board__lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Vision image viewer"
-          onClick={closeLightbox}
-        >
-          <button
-            type="button"
-            className="vision-board__lightbox-close"
-            onClick={closeLightbox}
-            aria-label="Close viewer"
-          >
-            ×
-          </button>
-          {filteredImages.length > 1 && (
-            <button
-              type="button"
-              className="vision-board__lightbox-nav vision-board__lightbox-nav--prev"
-              onClick={(event) => {
-                event.stopPropagation();
-                showPrevImage();
-              }}
-              aria-label="Previous image"
-            >
-              ‹
-            </button>
-          )}
-          <figure
-            className="vision-board__lightbox-figure"
-            onClick={(event) => event.stopPropagation()}
-          >
-            {lightboxImage.publicUrl ? (
-              <img
-                src={lightboxImage.publicUrl}
-                alt={lightboxImage.caption ?? 'Vision board entry'}
-                className="vision-board__lightbox-image"
-              />
-            ) : (
-              <div className="vision-board__placeholder" aria-hidden>
-                <span>No preview</span>
-              </div>
-            )}
-            {lightboxImage.caption && (
-              <figcaption className="vision-board__lightbox-caption">{lightboxImage.caption}</figcaption>
-            )}
-            {filteredImages.length > 1 && (
-              <p className="vision-board__lightbox-counter">
-                {(lightboxIndex ?? 0) + 1} / {filteredImages.length}
-              </p>
-            )}
-          </figure>
-          {filteredImages.length > 1 && (
-            <button
-              type="button"
-              className="vision-board__lightbox-nav vision-board__lightbox-nav--next"
-              onClick={(event) => {
-                event.stopPropagation();
-                showNextImage();
-              }}
-              aria-label="Next image"
-            >
-              ›
-            </button>
-          )}
-        </div>
+      {lightboxIndex !== null && (
+        <VisionLightbox images={filteredImages} initialIndex={lightboxIndex} onClose={closeLightbox} />
       )}
     </section>
   );
