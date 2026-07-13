@@ -1,5 +1,10 @@
 import { PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { OPPOSITE_DIRECTION, type StoryDirection, type StoryPanel } from './storyTypes';
+import {
+  OPPOSITE_DIRECTION,
+  type StoryDirection,
+  type StoryPanel,
+  type StorySoundtrackConfig,
+} from './storyTypes';
 import './StoryPlayer.css';
 
 interface StoryPlayerProps {
@@ -7,11 +12,17 @@ interface StoryPlayerProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
-  /** Called when advancing past the final scene. Falls back to onClose. */
+  /** Called when the final-scene CTA is activated. Falls back to onClose. */
   onComplete?: () => void;
   completionLabel?: string;
+  /** Disable the final-scene CTA (e.g. a reward already claimed). */
+  completionDisabled?: boolean;
+  /** Fallback soundtrack when a scene doesn't declare its own. */
+  soundtrack?: StorySoundtrackConfig;
   /** Travel direction used when a scene doesn't specify its own `advance`. */
   defaultAdvance?: StoryDirection;
+  /** Extra class on the root, used by consumers to theme via CSS variables. */
+  className?: string;
 }
 
 const SWIPE_THRESHOLD = 45;
@@ -30,7 +41,7 @@ const ARROW_GLYPH: Record<StoryDirection, string> = {
  * the previous scene's exit so the narrative merges with the physical swipe.
  *
  * The same engine drives the island-game story and the vision-board story;
- * only the `panels` differ.
+ * only the `panels` (and optional theming via `className`) differ.
  */
 export function StoryPlayer({
   panels,
@@ -39,11 +50,16 @@ export function StoryPlayer({
   title,
   onComplete,
   completionLabel = 'Finish',
+  completionDisabled = false,
+  soundtrack,
   defaultAdvance = 'right',
+  className,
 }: StoryPlayerProps) {
   const [index, setIndex] = useState(0);
   const [travelDir, setTravelDir] = useState<StoryDirection>(defaultAdvance);
+  const [audioEnabled, setAudioEnabled] = useState(false);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Reset to the first scene whenever the player (re)opens or content changes.
   useEffect(() => {
@@ -58,6 +74,8 @@ export function StoryPlayer({
   const panel = panels[safeIndex];
   const isLast = safeIndex >= total - 1;
   const nextDir: StoryDirection = panel?.advance ?? defaultAdvance;
+  const hasAudio = panels.some((scene) => scene.soundtrack?.src) || Boolean(soundtrack?.src);
+  const activeSoundtrack = panel?.soundtrack ?? soundtrack ?? null;
 
   const goNext = useCallback(
     (dir: StoryDirection) => {
@@ -112,6 +130,46 @@ export function StoryPlayer({
     return () => window.removeEventListener('keydown', handleKey);
   }, [isOpen, onClose, goNext, goPrev]);
 
+  // Soundtrack for the active scene (falls back to the story-level track).
+  useEffect(() => {
+    if (!isOpen || !audioEnabled || !activeSoundtrack?.src) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      return;
+    }
+    const volume = typeof activeSoundtrack.volume === 'number'
+      ? Math.min(1, Math.max(0, activeSoundtrack.volume))
+      : 0.65;
+    const existing = audioRef.current;
+    if (existing && existing.src.endsWith(activeSoundtrack.src)) {
+      existing.loop = activeSoundtrack.loop ?? true;
+      existing.volume = volume;
+      void existing.play().catch(() => {});
+      return;
+    }
+    if (existing) {
+      existing.pause();
+      existing.currentTime = 0;
+    }
+    const next = new Audio(activeSoundtrack.src);
+    next.loop = activeSoundtrack.loop ?? true;
+    next.volume = volume;
+    audioRef.current = next;
+    void next.play().catch(() => {});
+    return () => {
+      if (audioRef.current === next) next.pause();
+    };
+  }, [isOpen, audioEnabled, activeSoundtrack?.src, activeSoundtrack?.loop, activeSoundtrack?.volume]);
+
+  useEffect(() => {
+    if (!isOpen && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  }, [isOpen]);
+
   if (!isOpen || total === 0 || !panel) {
     return null;
   }
@@ -143,7 +201,12 @@ export function StoryPlayer({
   const enterFrom = OPPOSITE_DIRECTION[travelDir];
 
   return (
-    <div className="story-player" role="dialog" aria-modal="true" aria-label={title ?? 'Story'}>
+    <div
+      className={`story-player${className ? ` ${className}` : ''}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title ?? 'Story'}
+    >
       <header className="story-player__header">
         <div className="story-player__meta">
           {title && <p className="story-player__eyebrow">{title}</p>}
@@ -151,9 +214,27 @@ export function StoryPlayer({
             {safeIndex + 1} / {total}
           </span>
         </div>
-        <button type="button" className="story-player__close" onClick={onClose} aria-label="Close story">
-          ×
-        </button>
+        <div className="story-player__header-right">
+          {hasAudio && (
+            <button
+              type="button"
+              className="story-player__icon-btn"
+              onClick={() => setAudioEnabled((value) => !value)}
+              aria-label={audioEnabled ? 'Mute story audio' : 'Enable story audio'}
+              aria-pressed={audioEnabled}
+            >
+              {audioEnabled ? '🔊' : '🔇'}
+            </button>
+          )}
+          <button
+            type="button"
+            className="story-player__icon-btn story-player__close"
+            onClick={onClose}
+            aria-label="Close story"
+          >
+            ×
+          </button>
+        </div>
       </header>
 
       <div
@@ -161,10 +242,7 @@ export function StoryPlayer({
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
       >
-        <div
-          key={safeIndex}
-          className={`story-player__scene story-player__scene--from-${enterFrom}`}
-        >
+        <div key={safeIndex} className={`story-player__scene story-player__scene--from-${enterFrom}`}>
           {panel.type === 'image' && (
             <img
               className="story-player__media"
@@ -182,7 +260,7 @@ export function StoryPlayer({
               playsInline
               loop={panel.loop}
               autoPlay={panel.mutedAutoplay}
-              muted={panel.mutedAutoplay}
+              muted={panel.mutedAutoplay || !audioEnabled}
             />
           )}
           {panel.type === 'text' && (
@@ -190,9 +268,7 @@ export function StoryPlayer({
               <p>{panel.text}</p>
             </div>
           )}
-          {panel.caption && panel.type !== 'text' && (
-            <p className="story-player__caption">{panel.caption}</p>
-          )}
+          {panel.caption && <p className="story-player__caption">{panel.caption}</p>}
         </div>
 
         {/* Directional arrow hint — points where the story travels next. */}
@@ -229,6 +305,8 @@ export function StoryPlayer({
           type="button"
           className="story-player__nav story-player__nav--primary"
           onClick={() => goNext(nextDir)}
+          disabled={isLast && completionDisabled}
+          aria-label={isLast ? completionLabel : 'Next'}
         >
           {isLast ? completionLabel : 'Next'}
         </button>

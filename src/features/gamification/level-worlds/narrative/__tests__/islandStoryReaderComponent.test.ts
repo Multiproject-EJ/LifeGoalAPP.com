@@ -6,21 +6,29 @@ const readerPath = 'src/features/gamification/level-worlds/components/IslandStor
 const readerCssPath = 'src/features/gamification/level-worlds/components/IslandStoryReader.css';
 const boardPath = 'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx';
 const hookPath = 'src/features/gamification/level-worlds/narrative/useIslandNarrativeOpeningFlow.ts';
+// The reader now delegates scene rendering + the completion CTA to the shared
+// StoryPlayer engine, so several UI-contract assertions target it directly.
+const storyPlayerPath = 'src/features/story/StoryPlayer.tsx';
+const storyPlayerCssPath = 'src/features/story/StoryPlayer.css';
 
 const readerSource = readFileSync(readerPath, 'utf8');
 const readerCss = readFileSync(readerCssPath, 'utf8');
 const boardSource = readFileSync(boardPath, 'utf8');
 const hookSource = readFileSync(hookPath, 'utf8');
+const storyPlayerSource = readFileSync(storyPlayerPath, 'utf8');
+const storyPlayerCss = readFileSync(storyPlayerCssPath, 'utf8');
 
 function assertIncludes(source: string, expected: string, message: string) {
   assert(source.includes(expected), message);
 }
 
 export const islandStoryReaderComponentTests: TestCase[] = [
-  { name: 'final CTA is a button with accessible label and click completion handler', run: () => {
-    assertIncludes(readerSource, 'type="button"', 'CTA must be an explicit button');
-    assertIncludes(readerSource, 'aria-label={completionCtaLabel}', 'CTA must expose an accessible name');
-    assertIncludes(readerSource, 'onClick={handleCompletion}', 'CTA must use standard click activation for mouse, keyboard, pointer, and touch compatibility');
+  { name: 'final CTA is a button with accessible label wired to reward completion', run: () => {
+    // The CTA now lives in the shared StoryPlayer; the reader wires reward completion into it.
+    assertIncludes(storyPlayerSource, 'type="button"', 'StoryPlayer CTA must be an explicit button');
+    assertIncludes(storyPlayerSource, "aria-label={isLast ? completionLabel : 'Next'}", 'Final CTA must expose the completion label as its accessible name');
+    assertIncludes(readerSource, 'onComplete={handleCompletion}', 'Reader must wire completion to the StoryPlayer CTA via onComplete');
+    assertIncludes(readerSource, 'completionLabel={completionCtaLabel}', 'Reader must pass the completion CTA label to StoryPlayer');
   } },
   { name: 'non-reward Done CTA closes exactly once through StoryReader onClose', run: () => {
     assertIncludes(readerSource, 'if (rewardClaimed) return;', 'Completion handler should guard duplicate reward clicks');
@@ -51,18 +59,19 @@ export const islandStoryReaderComponentTests: TestCase[] = [
   { name: 'StoryReader root declares game-owned text and surface tokens', run: () => {
     ['--island-story-text-primary', '--island-story-text-secondary', '--island-story-text-muted', '--island-story-surface', '--island-story-surface-elevated', '--island-story-action-text'].forEach((token) => assertIncludes(readerCss, token, `Missing ${token}`));
   } },
-  { name: 'titles, status, body, captions, completion, CTA, and controls use explicit readable colors', run: () => {
-    ['.island-story-reader__title', '.island-story-reader__progress', '.island-story-reader__status', '.island-story-reader__panel--text', '.island-story-reader__caption', '.island-story-reader__end-card h4', '.island-story-reader__end-card p', '.island-story-reader__end-card button', '.island-story-reader__icon-btn'].forEach((selector) => assertIncludes(readerCss, selector, `Missing explicit selector ${selector}`));
-    assertIncludes(readerCss, 'color: var(--island-story-text-primary);', 'Primary text should not inherit generic app color');
-    assertIncludes(readerCss, 'color: var(--island-story-text-secondary);', 'Secondary text should not inherit generic app color');
-    assertIncludes(readerCss, 'color: var(--island-story-action-text);', 'CTA text should not use browser default button color');
-    assert(!readerCss.includes('color: inherit'), 'StoryReader controls must not inherit app text colors');
+  { name: 'story surfaces use explicit readable colors via themeable tokens', run: () => {
+    // StoryPlayer paints from themeable tokens rather than inheriting app colors...
+    assertIncludes(storyPlayerCss, 'color: var(--story-text-primary)', 'Primary text should use the themeable token, not a generic app color');
+    assertIncludes(storyPlayerCss, 'color: var(--story-text-secondary)', 'Secondary text should use the themeable token');
+    assert(!storyPlayerCss.includes('color: inherit'), 'StoryPlayer must not inherit app text colors');
+    // ...and the island theme maps the game-owned colors onto those tokens.
+    assertIncludes(readerCss, '--story-text-primary: var(--island-story-text-primary)', 'Island theme must map game-owned text color onto the shared token');
+    assertIncludes(readerCss, '--story-accent-text: var(--island-story-action-text)', 'Island theme must map game-owned action text onto the shared token');
   } },
-  { name: 'CTA hit target, stacking, focus, and touch-safe wiring are present', run: () => {
-    assertIncludes(readerCss, 'min-height: 44px;', 'Interactive targets must meet 44px minimum');
-    assertIncludes(readerCss, '.island-story-reader__end-card {\n  position: relative;\n  z-index: 3;', 'Completion card should sit above any navigation/hit layers');
-    assertIncludes(readerCss, ':focus-visible', 'Keyboard focus styling must remain visible');
-    assertIncludes(readerCss, 'touch-action: manipulation;', 'CTA should use touch-safe standard click activation');
+  { name: 'CTA hit target, focus, and touch-safe wiring are present', run: () => {
+    assertIncludes(storyPlayerCss, 'min-height: 44px', 'Interactive targets must meet 44px minimum');
+    assertIncludes(storyPlayerCss, ':focus-visible', 'Keyboard focus styling must remain visible');
+    assertIncludes(storyPlayerCss, 'touch-action: manipulation', 'CTA should use touch-safe standard click activation');
   } },
   { name: 'no full-panel navigation overlay is present to intercept completion CTA', run: () => {
     assert(!readerSource.includes('preventDefault'), 'StoryReader should not cancel CTA clicks via preventDefault');

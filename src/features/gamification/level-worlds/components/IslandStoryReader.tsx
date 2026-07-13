@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import type { StoryEpisodeManifest, StorySoundtrackConfig } from '../../../story/storyTypes';
+import { StoryPlayer } from '../../../story/StoryPlayer';
+import type { StoryEpisodeManifest, StoryPanel } from '../../../story/storyTypes';
 
 import './IslandStoryReader.css';
 
@@ -19,6 +20,12 @@ interface IslandStoryReaderProps {
   completionButtonLabel?: string;
 }
 
+/**
+ * Island story reader. Owns manifest loading and the reward/completion flow,
+ * and delegates all scene rendering and navigation to the shared StoryPlayer
+ * engine (themed via the `island-story-theme` class). The vision board uses the
+ * same StoryPlayer with different content.
+ */
 export function IslandStoryReader({
   manifestPath,
   isOpen,
@@ -31,11 +38,7 @@ export function IslandStoryReader({
   const [manifest, setManifest] = useState<StoryEpisodeManifest | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [audioEnabled, setAudioEnabled] = useState(false);
   const [rewardClaimed, setRewardClaimed] = useState(false);
-  const [activePanelSoundtrack, setActivePanelSoundtrack] = useState<StorySoundtrackConfig | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const soundtrackAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -77,171 +80,17 @@ export function IslandStoryReader({
     };
   }, [isOpen, manifestPath]);
 
-  useEffect(() => {
-    if (!isOpen || !manifest) {
-      return;
-    }
-
-    const root = containerRef.current;
-    const videoNodes = Array.from(root?.querySelectorAll<HTMLVideoElement>('video[data-story-video="true"]') ?? []);
-    if (videoNodes.length === 0) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const video = entry.target as HTMLVideoElement;
-          if (entry.isIntersecting) {
-            if (video.dataset.autoplay === 'true') {
-              void video.play().catch(() => {
-                // no-op: autoplay can be blocked in some browser contexts
-              });
-            }
-          } else {
-            video.pause();
-          }
-        });
-      },
-      {
-        threshold: 0.55,
-      },
-    );
-
-    videoNodes.forEach((video) => {
-      observer.observe(video);
-    });
-
-    return () => {
-      observer.disconnect();
-      videoNodes.forEach((video) => {
-        video.pause();
-      });
-    };
-  }, [isOpen, manifest]);
-
-  useEffect(() => {
-    if (!isOpen || !manifest) {
-      return;
-    }
-
-    const root = containerRef.current;
-    const panelNodes = Array.from(root?.querySelectorAll<HTMLElement>('[data-story-panel-index]') ?? []);
-    if (panelNodes.length === 0) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        let topCandidate: { index: number; config: StorySoundtrackConfig; ratio: number } | null = null;
-
-        for (const entry of entries) {
-          if (!entry.isIntersecting) {
-            continue;
-          }
-
-          const panelIndex = Number((entry.target as HTMLElement).dataset.storyPanelIndex);
-          if (!Number.isFinite(panelIndex)) {
-            continue;
-          }
-
-          const panel = manifest.panels[panelIndex];
-          const soundtrack = panel?.soundtrack;
-          if (!soundtrack?.src) {
-            continue;
-          }
-
-          if (!topCandidate || entry.intersectionRatio > topCandidate.ratio) {
-            topCandidate = {
-              index: panelIndex,
-              config: soundtrack,
-              ratio: entry.intersectionRatio,
-            };
-          }
-        }
-
-        setActivePanelSoundtrack(topCandidate ? topCandidate.config : null);
-      },
-      {
-        threshold: [0.35, 0.6, 0.85],
-      },
-    );
-
-    panelNodes.forEach((panelNode) => observer.observe(panelNode));
-
-    return () => {
-      observer.disconnect();
-      setActivePanelSoundtrack(null);
-    };
-  }, [isOpen, manifest]);
-
-  useEffect(() => {
-    const soundtrackConfig = activePanelSoundtrack ?? manifest?.soundtrack ?? null;
-
-    if (!audioEnabled || !isOpen || !soundtrackConfig?.src) {
-      if (soundtrackAudioRef.current) {
-        soundtrackAudioRef.current.pause();
-        soundtrackAudioRef.current.currentTime = 0;
-      }
-      return;
-    }
-
-    const desiredVolume = typeof soundtrackConfig.volume === 'number'
-      ? Math.min(1, Math.max(0, soundtrackConfig.volume))
-      : 0.65;
-
-    const existing = soundtrackAudioRef.current;
-    if (existing && existing.src.endsWith(soundtrackConfig.src)) {
-      existing.loop = soundtrackConfig.loop ?? true;
-      existing.volume = desiredVolume;
-      void existing.play().catch(() => {
-        // user may still be blocked by browser-level autoplay policy
-      });
-      return;
-    }
-
-    if (existing) {
-      existing.pause();
-      existing.currentTime = 0;
-    }
-
-    const nextAudio = new Audio(soundtrackConfig.src);
-    nextAudio.loop = soundtrackConfig.loop ?? true;
-    nextAudio.volume = desiredVolume;
-    soundtrackAudioRef.current = nextAudio;
-    void nextAudio.play().catch(() => {
-      // user may still be blocked by browser-level autoplay policy
-    });
-
-    return () => {
-      if (soundtrackAudioRef.current === nextAudio) {
-        nextAudio.pause();
-      }
-    };
-  }, [activePanelSoundtrack, audioEnabled, isOpen, manifest?.soundtrack]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      if (soundtrackAudioRef.current) {
-        soundtrackAudioRef.current.pause();
-        soundtrackAudioRef.current.currentTime = 0;
-      }
-      setActivePanelSoundtrack(null);
-    }
-  }, [isOpen]);
-
-  const progressLabel = useMemo(() => {
-    if (!manifest || manifest.panels.length === 0) return '0%';
-    return `${manifest.panels.length} panels`;
-  }, [manifest]);
-
   if (!isOpen) {
     return null;
   }
 
   const rewardCoins = manifest?.reward?.coins ?? 0;
   const completionMessage = rewardCoins > 0 ? `Reward: +${rewardCoins} coins` : completionText;
-  const completionCtaLabel = rewardClaimed ? 'Reward claimed' : rewardCoins > 0 ? `Claim +${rewardCoins} coins` : completionButtonLabel;
+  const completionCtaLabel = rewardClaimed
+    ? 'Reward claimed'
+    : rewardCoins > 0
+      ? `Claim +${rewardCoins} coins`
+      : completionButtonLabel;
 
   const handleCompletion = () => {
     if (rewardClaimed) return;
@@ -253,95 +102,54 @@ export function IslandStoryReader({
     onClose();
   };
 
+  if (isLoading || error || !manifest) {
+    return (
+      <div
+        className="island-story-theme island-story-reader-shell"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Island story reader"
+      >
+        <p
+          className={`island-story-reader-shell__status ${
+            error ? 'island-story-reader-shell__status--error' : ''
+          }`}
+        >
+          {error ?? 'Loading episode…'}
+        </p>
+        <button
+          type="button"
+          className="island-story-reader-shell__close"
+          onClick={onClose}
+          aria-label="Close story reader"
+        >
+          Close
+        </button>
+      </div>
+    );
+  }
+
+  // Append a final scene carrying the completion copy so the CTA (reward claim
+  // or "done") lands on it, preserving the reader's end-card semantics.
+  const completionScene: StoryPanel = {
+    id: '__story-completion__',
+    type: 'text',
+    text: completionTitle,
+    caption: completionMessage,
+  };
+  const panels: StoryPanel[] = [...manifest.panels, completionScene];
+
   return (
-    <div className="island-story-reader__backdrop" role="presentation">
-      <section className="island-story-reader" role="dialog" aria-modal="true" aria-label="Island story reader">
-        <header className="island-story-reader__header">
-          <button type="button" className="island-story-reader__icon-btn" onClick={onClose} aria-label="Close story reader">
-            ←
-          </button>
-          <div className="island-story-reader__meta">
-            <p className="island-story-reader__eyebrow">Story</p>
-            <h3 className="island-story-reader__title">{manifest?.title ?? 'Loading story...'}</h3>
-          </div>
-          <div className="island-story-reader__header-right">
-            <span className="island-story-reader__progress">{progressLabel}</span>
-            <button
-              type="button"
-              className="island-story-reader__icon-btn"
-              onClick={() => setAudioEnabled((value) => !value)}
-              aria-label={audioEnabled ? 'Mute story audio' : 'Enable story audio'}
-              aria-pressed={audioEnabled}
-            >
-              {audioEnabled ? '🔊' : '🔇'}
-            </button>
-          </div>
-        </header>
-
-        <div className="island-story-reader__content" ref={containerRef}>
-          {isLoading ? <p className="island-story-reader__status">Loading episode…</p> : null}
-          {error ? <p className="island-story-reader__status island-story-reader__status--error">{error}</p> : null}
-
-          {!isLoading && !error && manifest?.panels.map((panel, index) => {
-            const key = panel.id ?? `${panel.type}-${index}`;
-            if (panel.type === 'image') {
-              const ratio = panel.width && panel.height ? `${panel.width} / ${panel.height}` : undefined;
-              return (
-                <article key={key} className="island-story-reader__panel" data-story-panel-index={index}>
-                  <div className="island-story-reader__media-shell" style={ratio ? { aspectRatio: ratio } : undefined}>
-                    <img src={panel.src} alt={panel.alt ?? ''} loading="lazy" decoding="async" />
-                  </div>
-                  {panel.caption ? <p className="island-story-reader__caption">{panel.caption}</p> : null}
-                </article>
-              );
-            }
-
-            if (panel.type === 'video') {
-              return (
-                <article key={key} className="island-story-reader__panel" data-story-panel-index={index}>
-                  <div className="island-story-reader__media-shell island-story-reader__media-shell--video">
-                    <video
-                      data-story-video="true"
-                      data-autoplay={panel.mutedAutoplay ? 'true' : 'false'}
-                      src={panel.src}
-                      poster={panel.poster}
-                      controls
-                      playsInline
-                      preload="metadata"
-                      muted={!audioEnabled}
-                      loop={panel.loop}
-                    />
-                  </div>
-                  {panel.caption ? <p className="island-story-reader__caption">{panel.caption}</p> : null}
-                </article>
-              );
-            }
-
-            return (
-              <article key={key} className="island-story-reader__panel island-story-reader__panel--text" data-story-panel-index={index}>
-                <p>{panel.text}</p>
-                {panel.caption ? <p className="island-story-reader__caption">{panel.caption}</p> : null}
-              </article>
-            );
-          })}
-
-          {!isLoading && !error && manifest ? (
-            <footer className="island-story-reader__end-card">
-              <p className="island-story-reader__end-card-eyebrow">Story complete</p>
-              <h4>{completionTitle}</h4>
-              <p>{completionMessage}</p>
-              <button
-                type="button"
-                disabled={rewardClaimed}
-                onClick={handleCompletion}
-                aria-label={completionCtaLabel}
-              >
-                {completionCtaLabel}
-              </button>
-            </footer>
-          ) : null}
-        </div>
-      </section>
-    </div>
+    <StoryPlayer
+      isOpen={isOpen}
+      panels={panels}
+      title={manifest.title}
+      className="island-story-theme"
+      soundtrack={manifest.soundtrack}
+      completionLabel={completionCtaLabel}
+      completionDisabled={rewardClaimed}
+      onComplete={handleCompletion}
+      onClose={onClose}
+    />
   );
 }
