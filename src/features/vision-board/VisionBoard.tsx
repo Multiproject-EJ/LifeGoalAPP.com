@@ -13,12 +13,14 @@ import {
   uploadVisionImage,
   uploadVisionImageFromUrl,
 } from '../../services/visionBoard';
-import { fetchVisionImageTags, setVisionImageCategories } from '../../services/visionBoardTags';
+import { fetchVisionImageTags } from '../../services/visionBoardTags';
 import { VisionBoardDailyGame } from '../visionBoardDailyGame/VisionBoardDailyGame';
 import type { Database } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
 import { HaircutWidget } from './HaircutWidget';
 import { VisionLightbox } from './VisionLightbox';
+import { VisionTagModal } from './VisionTagModal';
+import { FOUR_VISIONARIES, type FourVisionaryCategoryKey } from './categories';
 import { useModalA11y } from './useModalA11y';
 import { fetchGoals } from '../../services/goals';
 import { listHabitsV2 } from '../../services/habitsV2';
@@ -47,17 +49,6 @@ type VisionImage = VisionImageRow & { publicUrl: string };
 type BoardView = 'all' | 'life_wheel' | 'visionaries';
 
 type LifeWheelFilter = 'all' | 'untagged' | LifeWheelCategoryKey;
-
-const FOUR_VISIONARIES = [
-  { key: 'things_living', label: 'Things & Living' },
-  { key: 'body_style', label: 'Body & Style' },
-  { key: 'happenings_events', label: 'The Happenings & Events' },
-  { key: 'personality_inspiration', label: 'The Personality Type Inspiration' },
-] as const;
-
-type FourVisionaryCategory = (typeof FOUR_VISIONARIES)[number];
-
-type FourVisionaryCategoryKey = FourVisionaryCategory['key'];
 
 type VisionaryFilter = 'all' | 'untagged' | FourVisionaryCategoryKey;
 
@@ -130,9 +121,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [lifeWheelTags, setLifeWheelTags] = useState<Record<string, LifeWheelCategoryKey[]>>({});
   const [visionaryTags, setVisionaryTags] = useState<Record<string, FourVisionaryCategoryKey[]>>({});
   const [taggingImage, setTaggingImage] = useState<VisionImage | null>(null);
-  const [lifeWheelDraft, setLifeWheelDraft] = useState<LifeWheelCategoryKey[]>([]);
-  const [visionaryDraft, setVisionaryDraft] = useState<FourVisionaryCategoryKey[]>([]);
-  const [tagSaving, setTagSaving] = useState(false);
   const [queuePending, setQueuePending] = useState(0);
   const [queueFailed, setQueueFailed] = useState(0);
   const lifeWheelAvailable = LIFE_WHEEL_CATEGORIES.length > 0;
@@ -511,51 +499,20 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
 
   const startTagging = (image: VisionImage) => {
     setTaggingImage(image);
-    setLifeWheelDraft(lifeWheelTags[image.id] ?? []);
-    setVisionaryDraft(visionaryTags[image.id] ?? []);
   };
 
   const stopTagging = () => {
     setTaggingImage(null);
-    setLifeWheelDraft([]);
-    setVisionaryDraft([]);
   };
 
-  const handleSaveTags = async () => {
-    if (!taggingImage || !session) {
-      setErrorMessage('You need to sign in to tag your vision board images.');
-      return;
-    }
-
-    if (!isConfigured && !isDemoExperience) {
-      setErrorMessage('Connect Supabase to save vision board tags.');
-      return;
-    }
-
-    setTagSaving(true);
-    try {
-      const [lifeWheelResult, visionaryResult] = await Promise.all([
-        setVisionImageCategories(session.user.id, taggingImage.id, lifeWheelDraft, 'life_wheel'),
-        setVisionImageCategories(session.user.id, taggingImage.id, visionaryDraft, 'four_visionaries'),
-      ]);
-      if (lifeWheelResult.error) throw lifeWheelResult.error;
-      if (visionaryResult.error) throw visionaryResult.error;
-      setLifeWheelTags((current) => ({
-        ...current,
-        [taggingImage.id]: (lifeWheelResult.data ?? []).map((tag) => tag.category_key as LifeWheelCategoryKey),
-      }));
-      setVisionaryTags((current) => ({
-        ...current,
-        [taggingImage.id]: (visionaryResult.data ?? []).map(
-          (tag) => tag.category_key as FourVisionaryCategoryKey,
-        ),
-      }));
-      stopTagging();
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Unable to save tags for this image.');
-    } finally {
-      setTagSaving(false);
-    }
+  const handleTagsSaved = (
+    imageId: string,
+    lifeWheel: LifeWheelCategoryKey[],
+    visionary: FourVisionaryCategoryKey[],
+  ) => {
+    setLifeWheelTags((current) => ({ ...current, [imageId]: lifeWheel }));
+    setVisionaryTags((current) => ({ ...current, [imageId]: visionary }));
+    stopTagging();
   };
 
   const handleUpdateImage = async (imageId: string, updates: Partial<VisionImageRow>) => {
@@ -900,7 +857,6 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   };
 
   const closeDailyGame = useCallback(() => setShowDailyGame(false), []);
-  const tagModalRef = useModalA11y<HTMLDivElement>(Boolean(taggingImage), stopTagging);
   const dailyGameModalRef = useModalA11y<HTMLDivElement>(showDailyGame && hasImages, closeDailyGame);
 
   return (
@@ -1596,70 +1552,16 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       )}
 
       {taggingImage && (
-        <div className="vision-board__modal-backdrop" onClick={stopTagging}>
-          <div
-            className="vision-board__modal vision-board__tag-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Tag vision image"
-            tabIndex={-1}
-            ref={tagModalRef}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <header className="vision-board__tag-header">
-              <h3>Tag vision image</h3>
-              <p>Select the life wheel areas and visionary themes this image supports.</p>
-            </header>
-            <div className="vision-board__tag-section">
-              <h4>Life wheel categories</h4>
-              {lifeWheelAvailable ? (
-                <div className="vision-board__tag-list">
-                  {LIFE_WHEEL_CATEGORIES.map((category) => (
-                    <label key={category.key} className="vision-board__tag-option">
-                      <input
-                        type="checkbox"
-                        checked={lifeWheelDraft.includes(category.key)}
-                        onChange={() => setLifeWheelDraft((current) => toggleSelection(current, category.key))}
-                        disabled={tagSaving}
-                      />
-                      <span>{category.label}</span>
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <p className="vision-board__hint">Life wheel categories are unavailable right now.</p>
-              )}
-            </div>
-            <div className="vision-board__tag-section">
-              <h4>The Four Visionaries</h4>
-              {visionariesAvailable ? (
-                <div className="vision-board__tag-list">
-                  {FOUR_VISIONARIES.map((category) => (
-                    <label key={category.key} className="vision-board__tag-option">
-                      <input
-                        type="checkbox"
-                        checked={visionaryDraft.includes(category.key)}
-                        onChange={() => setVisionaryDraft((current) => toggleSelection(current, category.key))}
-                        disabled={tagSaving}
-                      />
-                      <span>{category.label}</span>
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <p className="vision-board__hint">Visionary categories are unavailable right now.</p>
-              )}
-            </div>
-            <div className="vision-board__edit-actions">
-              <button type="button" onClick={handleSaveTags} disabled={tagSaving}>
-                {tagSaving ? 'Saving…' : 'Save tags'}
-              </button>
-              <button type="button" onClick={stopTagging} disabled={tagSaving}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+        <VisionTagModal
+          image={taggingImage}
+          userId={session.user.id}
+          canSave={isConfigured || isDemoExperience}
+          initialLifeWheel={lifeWheelTags[taggingImage.id] ?? []}
+          initialVisionary={visionaryTags[taggingImage.id] ?? []}
+          onClose={stopTagging}
+          onSaved={handleTagsSaved}
+          onError={setErrorMessage}
+        />
       )}
 
       {pendingDelete && pendingDelete.length > 0 && (
