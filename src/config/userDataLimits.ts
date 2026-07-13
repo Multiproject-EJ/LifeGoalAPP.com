@@ -15,10 +15,21 @@
  */
 
 export interface UserDataLimit {
-  /** Maximum rows this account may hold in the table (null = uncapped). */
+  /**
+   * Maximum rows allowed within one counting scope (null = uncapped).
+   * For `scope: 'account'` this is per user; for a parent scope (e.g.
+   * 'board') it is per parent row, so the per-user total is bounded by
+   * (parent cap x this).
+   */
   maxRows: number | null;
   /** Maximum size of a single row in bytes (null = uncapped). */
   maxRowBytes: number | null;
+  /**
+   * What the row-count cap is measured against. 'account' = per user;
+   * anything else names the parent the count is grouped by (migration
+   * 0280). Defaults to 'account' when omitted.
+   */
+  scope?: string;
 }
 
 export const USER_DATA_LIMITS: Readonly<Record<string, UserDataLimit>> = {
@@ -60,6 +71,15 @@ export const USER_DATA_LIMITS: Readonly<Record<string, UserDataLimit>> = {
   power_up_transactions: { maxRows: 10_000, maxRowBytes: 1_024 },
   task_tower_sessions: { maxRows: 10_000, maxRowBytes: 5_120 },
   island_run_action_log: { maxRows: 5_000, maxRowBytes: null },
+  // Directly user-owned but added in 0280 (legacy reference schema).
+  goals: { maxRows: 500, maxRowBytes: 10_240 },
+  // Parent-scoped children (migration 0280): the cap is per parent row,
+  // not per account. Per-user total = parent cap x these.
+  annual_goals: { maxRows: 100, maxRowBytes: 4_096, scope: 'review' },
+  vb_sections: { maxRows: 100, maxRowBytes: 4_096, scope: 'board' },
+  habit_experiment_days: { maxRows: 100, maxRowBytes: 4_096, scope: 'analysis session' },
+  life_goal_steps: { maxRows: 100, maxRowBytes: 5_120, scope: 'goal' },
+  life_goal_substeps: { maxRows: 50, maxRowBytes: 5_120, scope: 'step' },
 };
 
 /** Limit for a table, or null when the table has no configured cap. */
