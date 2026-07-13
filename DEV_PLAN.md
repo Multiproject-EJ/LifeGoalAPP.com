@@ -15,7 +15,7 @@ Use this section first when returning to the plan.
 | M2. Balance / Harmony scoring v1 | ✅ Complete | Balance axes, thresholds, dashboard panel, and gamification bonus XP implemented. |
 | M3. Rationality micro-system v1 | ✅ Complete | Daily rationality prompt with XP rewards and streak tracking implemented. |
 | M4. Auto-progress ladder v1 | ✅ Complete | M4 fully closed: demo fixtures verified, telemetry wired for all 4 progress states, coach context receives habit_environment notes. Move to BUILD_PLAN Phase 2 (M9-A push notification backend + TREAT-A monthly treat calendar backend). |
-| M5. Vision Board 2.0 metadata + review loop | ✅ Complete | Shift focus to Vision Board V2 Phase 0 bootstrap + Phase 7 polish items in docs/VISION_BOARD_PLAN.md |
+| M5. Vision Board 2.0 metadata + review loop | ✅ Complete | Review loop later removed as unwanted; see docs/VISION_BOARD_PLAN.md for actual shipped scope and the genuine (not-started) roadmap. The "V2 phases" this cell previously referenced never existed. |
 | M6. AI Coach instruction system | ✅ Complete | Fully built in `src/services/aiCoachInstructions.ts` with `loadAiCoachInstructions()`, `BASE_INSTRUCTIONS`, env-based overrides, and data access scoping. |
 | M7. AI Coach interventions v1 | ✅ Complete | Fully built in `src/features/ai-coach/AiCoach.tsx` (867+ lines) with 4 intervention types (imbalance, habit-struggle, overconfidence, fixation), telemetry, and strategy assistant. |
 | M8. Micro-quests + retention loop v1 | ✅ Complete | Daily micro-quests with balance/habit/focus sources and harmony bonus implemented. |
@@ -284,7 +284,9 @@ Use this section to ensure standalone feature plans are tracked and eventually s
 
 ## M5. Vision Board 2.0 metadata + review loop (types, review interval, orphan detection)
 
-> **Vision Board master plan:** See [docs/VISION_BOARD_PLAN.md](./docs/VISION_BOARD_PLAN.md) for shipped scope vs remaining gaps.
+> **Vision Board master plan:** See [docs/VISION_BOARD_PLAN.md](./docs/VISION_BOARD_PLAN.md) for the actual shipped scope and roadmap.
+>
+> **Note:** The review loop (due-items list, review intervals, "Mark reviewed") described in the acceptance criteria below was later **removed** as an unwanted interaction model. The type-metadata and orphan-detection parts remain.
 
 **Reuse from existing code**
 - `src/features/vision-board`
