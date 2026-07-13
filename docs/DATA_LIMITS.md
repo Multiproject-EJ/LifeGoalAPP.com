@@ -1,6 +1,6 @@
 # Per-User Data Limits
 
-**Status:** enforced since migration `0278_per_user_data_limits.sql`; Storage object cap added in `0279_per_user_storage_object_cap.sql`
+**Status:** enforced since migration `0278_per_user_data_limits.sql`; Storage object cap in `0279_per_user_storage_object_cap.sql`; parent-scoped child tables in `0280_child_table_data_limits.sql`
 **Related:** `0275_log_retention_auto_cleanup.sql` (time-based retention), `docs/quota_emergency_cleanup.sql` (incident runbook), `README_STORAGE_POLICIES.md` (Storage cap deployment)
 
 ## Why
@@ -139,16 +139,41 @@ never removes protection — until applied, the prior uncapped policy stays in
 force. The private `vision` (V2) bucket has no INSERT policy today (it is
 effectively closed) and is deliberately left untouched.
 
+## Parent-scoped child tables (migration 0280)
+
+Several user-writable tables have no `user_id` column — they hang off a parent
+by a foreign key — so 0278 skipped them. 0280 caps them **per parent** by
+pointing the existing trigger's count at the parent FK (no new trigger logic;
+the count simply groups by a different column, and a `scope_label` makes the
+rejection read "…per board" instead of "…per account"). The per-user total is
+then bounded by `(parent cap) x (per-parent cap)`. `goals` carries a `user_id`
+and is capped per account directly (it was defined in the legacy reference
+schema and missed by 0278).
+
+| Table | Scope (parent) | Per-scope cap | Parent cap | Per-user bound | Row size |
+|---|---|---:|---:|---:|---:|
+| `goals` | account | 500 | — | 500 | 10 KB |
+| `annual_goals` | `annual_reviews` | 100 | 100 | 10,000 | 4 KB |
+| `vb_sections` | `vb_boards` | 100 | 20 | 2,000 | 4 KB |
+| `habit_experiment_days` | `habit_analysis_sessions` | 100 | 1,000 | 100,000 | 4 KB |
+| `life_goal_steps` | `goals` | 100 | 500 | 50,000 | 5 KB |
+| `life_goal_substeps` | `life_goal_steps` | 50 | 50,000 | (bounded by steps) | 5 KB |
+
+The per-user bounds look large because they multiply two generous caps, but
+each individual cap is ~10x realistic use and every row is tiny; typical
+accounts sit orders of magnitude below. Tables absent from a given environment
+are skipped by `attach_user_data_limit_triggers()` with a NOTICE.
+
 ## Known gaps (deliberately out of scope)
 
 - **Storage total bytes** are bounded only indirectly (object count x 5 MB
   per-file limit), not summed per user. A byte-sum policy is heavier per
   upload and unnecessary given the count cap; revisit only if large files
   become common.
-- **Child tables without a `user_id` column** (`annual_goals` via `review_id`,
-  `vb_sections` via `board_id`, the multi-party `conflict_*` tables) are only
-  indirectly bounded by their parents' caps. Extending the trigger to resolve
-  ownership through a parent join is possible if any of them becomes a problem.
+- **The multi-party `conflict_*` tables** are scoped by `session_id` across
+  multiple participants, not owned by one user. Bounding them means capping
+  conflict *session* creation (and invites) rather than per-parent row counts;
+  it is a distinct collaboration-abuse concern, left for a dedicated pass.
 - **Egress/compute quotas** are unrelated to stored size and remain governed
   by Supabase rate limits and the AI quota service (`aiQuotaService.ts`).
 - **Concurrent inserts** can overshoot a row cap by a handful of rows (the
