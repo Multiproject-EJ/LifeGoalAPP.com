@@ -18,6 +18,8 @@ import { isDemoSession } from '../../services/demoSession';
 import { HaircutWidget } from './HaircutWidget';
 import { VisionCard } from './VisionCard';
 import { VisionUploadForm } from './VisionUploadForm';
+import { StoryPlayer } from '../story/StoryPlayer';
+import type { StoryPanel } from '../story/storyTypes';
 import { VisionLightbox } from './VisionLightbox';
 import { VisionTagModal } from './VisionTagModal';
 import { FOUR_VISIONARIES, type FourVisionaryCategoryKey } from './categories';
@@ -78,6 +80,7 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   const [boardView, setBoardView] = useState<BoardView>('all');
   const [isAddEditOpen, setIsAddEditOpen] = useState(false);
   const [showDailyGame, setShowDailyGame] = useState(false);
+  const [showStory, setShowStory] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectMode, setSelectMode] = useState(false);
@@ -346,6 +349,20 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
   );
 
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+
+  const storyScenes = useMemo<StoryPanel[]>(
+    () =>
+      filteredImages
+        .filter((image) => Boolean(image.publicUrl))
+        .map((image) => ({
+          id: image.id,
+          type: 'image' as const,
+          src: image.publicUrl,
+          alt: image.caption ?? 'Vision board image',
+          caption: image.caption ?? undefined,
+        })),
+    [filteredImages],
+  );
 
   const isBodyStyleTab =
     boardView === 'visionaries' && (visionaryFilter === 'body_style' || (!isConfigured && !isDemoExperience));
@@ -662,6 +679,14 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
             <button
               type="button"
               className="vision-board__daily-game-button"
+              onClick={() => setShowStory(true)}
+              disabled={storyScenes.length === 0}
+            >
+              ▶ Story mode
+            </button>
+            <button
+              type="button"
+              className="vision-board__daily-game-button"
               onClick={() => setShowDailyGame(true)}
               disabled={!isConfigured}
             >
@@ -941,6 +966,15 @@ export function VisionBoard({ session, onNavigateToTimer }: VisionBoardProps) {
       {lightboxIndex !== null && (
         <VisionLightbox images={filteredImages} initialIndex={lightboxIndex} onClose={closeLightbox} />
       )}
+
+      <StoryPlayer
+        isOpen={showStory}
+        panels={storyScenes}
+        title="Vision story"
+        completionLabel="Done"
+        onClose={() => setShowStory(false)}
+        onComplete={() => setShowStory(false)}
+      />
     </section>
   );
 }
