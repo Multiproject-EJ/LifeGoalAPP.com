@@ -7,7 +7,7 @@ interface TrustPageProps {
   page: TrustPageSlug;
 }
 
-const LAST_UPDATED = 'March 2025';
+const LAST_UPDATED = '13 July 2026';
 const CONTACT_EMAIL = 'hello@lifegoalapp.com';
 
 function PrivacyContent() {
@@ -26,12 +26,22 @@ function PrivacyContent() {
           Supabase Auth. We never see your raw password.
         </li>
         <li>
-          <strong>App data</strong> — habits, streaks, XP, journal entries, and preferences you
-          create inside the app. This is stored in your Supabase account.
+          <strong>App data</strong> — habits, goals, routines, streaks, XP, journal entries,
+          reflections, check-ins, game progress, and preferences you create inside the app.
+          Account-linked data is stored in Supabase so it can sync across your devices.
         </li>
         <li>
-          <strong>Local storage</strong> — preferences such as theme and install-prompt state are
-          stored locally on your device and never sent to any server.
+          <strong>Device data</strong> — the app stores preferences, cached content, and pending
+          offline changes on your device. Account-linked changes may be sent to Supabase when a
+          connection is available.
+        </li>
+        <li>
+          <strong>Images you choose to upload</strong> — vision board and related images may be
+          stored in Supabase Storage.
+        </li>
+        <li>
+          <strong>Service and usage data</strong> — limited product-interaction events and error
+          information may be recorded to operate, secure, and improve HabitGame.
         </li>
       </ul>
 
@@ -39,14 +49,24 @@ function PrivacyContent() {
       <ul className="trust-page__list">
         <li>No third-party tracking pixels or ad networks.</li>
         <li>No selling of your data to any party.</li>
-        <li>No analytics beyond what is needed to keep the app running.</li>
+        <li>No use of your data for third-party advertising.</li>
       </ul>
 
-      <h2 className="trust-page__section-heading">Data storage</h2>
+      <h2 className="trust-page__section-heading">How we use and share data</h2>
       <p>
-        Your data is stored using <strong>Supabase</strong>, a hosted Postgres platform. Supabase
-        stores data in secure, SOC 2-certified data centres. You can request deletion of your
-        account and all associated data at any time by contacting us.
+        We use your data to provide authentication, synchronization, offline recovery, reminders,
+        support, safety, and the features you choose to use. Supabase processes authentication,
+        database, file-storage, and server-function data for HabitGame. Optional AI features may
+        send the text or context needed for your request to an AI service provider. We do not sell
+        your personal data.
+      </p>
+
+      <h2 className="trust-page__section-heading">Your choices and deletion</h2>
+      <p>
+        You can delete your account from <strong>My Account → Danger zone → Delete account</strong>.
+        This permanently removes your HabitGame login and user-owned cloud data. You can also
+        contact us for help with access or deletion. Data may be retained where required for
+        security, fraud prevention, legal compliance, or payment records.
       </p>
 
       <h2 className="trust-page__section-heading">Contact</h2>
@@ -138,20 +158,19 @@ function SupportContent() {
         <details className="trust-page__faq-item">
           <summary className="trust-page__faq-question">Can I use HabitGame offline?</summary>
           <p className="trust-page__faq-answer">
-            Yes — install HabitGame to your home screen as a PWA and it will continue to work
-            without an internet connection. Your data syncs automatically when you are back online.
+            Many core actions can be saved on your device while you are offline and queued to sync
+            when service returns. Features that require a secure live service—such as account
+            changes, AI, uploads, and purchases—remain unavailable offline.
           </p>
         </details>
 
         <details className="trust-page__faq-item">
           <summary className="trust-page__faq-question">How do I delete my account?</summary>
           <p className="trust-page__faq-answer">
-            Email us at{' '}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="trust-page__link">
-              {CONTACT_EMAIL}
-            </a>{' '}
-            with the subject &ldquo;Delete my account&rdquo; and we will remove your data within 7
-            business days.
+            In the app, open <strong>My Account</strong>, find <strong>Danger zone</strong>, and
+            choose <strong>Delete account</strong>. You will be asked to type DELETE before the
+            permanent action runs. If you cannot access your account, email{' '}
+            <a href={`mailto:${CONTACT_EMAIL}`} className="trust-page__link">{CONTACT_EMAIL}</a>.
           </p>
         </details>
 

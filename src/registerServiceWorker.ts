@@ -1,4 +1,12 @@
+import { Capacitor } from '@capacitor/core';
+
 export async function registerServiceWorker() {
+  // Capacitor ships the production bundle inside WKWebView. Service workers are
+  // a PWA concern and are not supported by the native capacitor:// origin.
+  if (Capacitor.isNativePlatform()) {
+    return;
+  }
+
   if (!('serviceWorker' in navigator)) {
     console.warn('Service workers are not supported in this browser.');
     if (typeof window !== 'undefined') {

@@ -6,6 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "ios:assets": "node scripts/sync-ios-assets.mjs",
+    "cap:sync:ios": "npm run build && npm run ios:assets && cap sync ios",
+    "cap:copy:ios": "npm run build && npm run ios:assets && cap copy ios",
+    "cap:open:ios": "cap open ios",
+    "cap:run:ios": "npm run build && npm run ios:assets && cap sync ios && cap run ios",
     "preview": "vite preview",
     "build:preview": "vite build --config vite.preview.config.ts",
     "check:conflict-resolver-validation": "node scripts/conflict-resolver-validation-smoke.mjs && node scripts/run-conflict-resolver-behavioral-validation.mjs",
@@ -49,6 +54,14 @@
     "test:yesterday-todo-cleanup-modal": "node scripts/check-yesterday-todo-cleanup-modal-portal.mjs"
   },
   "dependencies": {
+    "@capacitor/app": "8.1.0",
+    "@capacitor/core": "8.4.1",
+    "@capacitor/dialog": "8.0.1",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/ios": "8.4.1",
+    "@capacitor/local-notifications": "8.2.0",
+    "@capacitor/network": "8.0.1",
+    "@capacitor/preferences": "8.0.1",
     "@supabase/supabase-js": "^2.45.4",
     "@types/html2canvas": "^0.5.35",
     "canvas-confetti": "^1.9.4",
@@ -60,6 +73,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.4.1",
     "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.26",

@@ -43,5 +43,13 @@ export async function runAccountLifecycleAction(
   if (!result.data?.success) {
     return { data: null, error: new Error(`Account ${action} did not complete.`) };
   }
+
+  if (action === 'delete') {
+    // Removing a Supabase Auth user does not itself erase the JWT cached by
+    // this WebView. Clear the local session immediately after the server has
+    // accepted the deletion so the deleted account cannot remain signed in.
+    await supabase.auth.signOut({ scope: 'local' });
+  }
+
   return { data: result.data, error: null };
 }
