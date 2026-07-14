@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Year Wheel — concept</title>
+<style>
+  :root{
+    --bg: radial-gradient(ellipse at top, #dbeafe 0%, #f0f9ff 42%, #ffffff 100%);
+    --panel: rgba(255,255,255,0.72);
+    --panel-strong: rgba(255,255,255,0.9);
+    --glass-border: rgba(148,163,184,0.28);
+    --text: #0f172a;
+    --text-2: #334155;
+    --muted: #64748b;
+    --accent: #0ea5e9;
+    --accent-soft: rgba(14,165,233,0.14);
+    --ring-track: rgba(148,163,184,0.16);
+    --shadow: 0 24px 64px rgba(15,23,42,0.12), 0 8px 24px rgba(15,23,42,0.07);
+    --shadow-sm: 0 10px 30px rgba(15,23,42,0.08);
+    --star: #f5b301;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg: radial-gradient(ellipse at 50% -10%, rgba(90,176,255,0.14), transparent 55%), linear-gradient(160deg,#0b1220 0%,#0a1424 55%,#0b0f1c 100%);
+      --panel: rgba(20,30,48,0.62);
+      --panel-strong: rgba(23,34,54,0.86);
+      --glass-border: rgba(148,163,184,0.18);
+      --text: #e6edf6;
+      --text-2: #b6c2d4;
+      --muted: #8ea0ba;
+      --accent: #5ab0ff;
+      --accent-soft: rgba(90,176,255,0.16);
+      --ring-track: rgba(148,163,184,0.14);
+      --shadow: 0 30px 70px rgba(0,0,0,0.5), 0 10px 26px rgba(0,0,0,0.4);
+      --shadow-sm: 0 12px 30px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg: radial-gradient(ellipse at top, #dbeafe 0%, #f0f9ff 42%, #ffffff 100%);
+    --panel: rgba(255,255,255,0.72); --panel-strong: rgba(255,255,255,0.9);
+    --glass-border: rgba(148,163,184,0.28); --text:#0f172a; --text-2:#334155; --muted:#64748b;
+    --accent:#0ea5e9; --accent-soft:rgba(14,165,233,0.14); --ring-track:rgba(148,163,184,0.16);
+    --shadow:0 24px 64px rgba(15,23,42,0.12),0 8px 24px rgba(15,23,42,0.07); --shadow-sm:0 10px 30px rgba(15,23,42,0.08);
+  }
+  :root[data-theme="dark"]{
+    --bg: radial-gradient(ellipse at 50% -10%, rgba(90,176,255,0.14), transparent 55%), linear-gradient(160deg,#0b1220 0%,#0a1424 55%,#0b0f1c 100%);
+    --panel: rgba(20,30,48,0.62); --panel-strong: rgba(23,34,54,0.86);
+    --glass-border: rgba(148,163,184,0.18); --text:#e6edf6; --text-2:#b6c2d4; --muted:#8ea0ba;
+    --accent:#5ab0ff; --accent-soft:rgba(90,176,255,0.16); --ring-track:rgba(148,163,184,0.14);
+    --shadow:0 30px 70px rgba(0,0,0,0.5),0 10px 26px rgba(0,0,0,0.4); --shadow-sm:0 12px 30px rgba(0,0,0,0.4);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); background-attachment:fixed; color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:1080px; margin:0 auto; padding:40px 22px 96px; }
+
+  .eyebrow{ font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); }
+  h1{ font-size:clamp(30px,5vw,46px); line-height:1.05; margin:.28em 0 .18em; letter-spacing:-.02em; text-wrap:balance; font-weight:800; }
+  .dek{ color:var(--text-2); font-size:clamp(15px,2.2vw,18px); max-width:62ch; margin:0; }
+
+  .section-label{ display:flex; align-items:baseline; gap:12px; margin:64px 0 20px; flex-wrap:wrap; }
+  .section-label h2{ font-size:22px; margin:0; letter-spacing:-.01em; font-weight:750; }
+  .section-label .n{ font-size:12px; font-weight:700; color:var(--muted); letter-spacing:.12em; padding:3px 9px; border:1px solid var(--glass-border); border-radius:999px; }
+  .section-label p{ margin:0; color:var(--muted); font-size:14px; }
+
+  .panel{ background:var(--panel); border:1px solid var(--glass-border); border-radius:22px; backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:var(--shadow-sm); }
+
+  .modal-frame{ position:relative; padding:26px; display:grid; grid-template-columns:minmax(280px,1fr) minmax(250px,340px); gap:24px; align-items:center; }
+  @media(max-width:760px){ .modal-frame{ grid-template-columns:1fr; } }
+  .modal-frame::before{ content:""; position:absolute; inset:0; border-radius:22px; background:radial-gradient(120% 90% at 50% -10%, var(--accent-soft), transparent 60%); pointer-events:none; }
+  .modal-topbar{ position:absolute; top:16px; right:16px; display:flex; gap:8px; z-index:3; }
+  .chip-x{ width:32px; height:32px; border-radius:50%; border:1px solid var(--glass-border); background:var(--panel-strong); color:var(--muted); font-size:15px; display:grid; place-items:center; cursor:pointer; }
+  .wheel-stage{ display:grid; place-items:center; position:relative; z-index:2; }
+  .wheel-svg{ width:100%; max-width:400px; height:auto; overflow:visible; }
+  .wheel-svg .seg{ cursor:pointer; transition:opacity .16s ease; }
+
+  .center-read{ text-align:left; z-index:2; }
+  .center-read .kick{ font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:10px; }
+  .trk{ display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:13px; border:1px solid transparent; transition:background .15s, border-color .15s; }
+  .trk:hover, .trk.hot{ background:var(--panel-strong); border-color:var(--glass-border); }
+  .trk .dot{ width:13px; height:13px; border-radius:50%; flex:none; box-shadow:0 0 0 4px color-mix(in srgb, currentColor 20%, transparent); }
+  .trk .txt{ flex:1; min-width:0; }
+  .trk .nm{ font-size:11px; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); font-weight:700; }
+  .trk .ch{ font-size:15px; font-weight:700; letter-spacing:-.01em; }
+  .trk .rt{ font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; text-align:right; flex:none; }
+
+  .ribbon{ display:flex; align-items:center; gap:10px; padding:10px 13px; border-radius:15px; margin-top:12px; background:linear-gradient(100deg, color-mix(in srgb, var(--star) 20%, transparent), transparent); border:1px solid color-mix(in srgb, var(--star) 40%, var(--glass-border)); }
+  .ribbon .stars{ display:flex; gap:3px; }
+  .ribbon .stars svg{ width:19px; height:19px; }
+  .ribbon .lab{ font-size:12.5px; color:var(--text-2); }
+  .ribbon .lab b{ color:var(--text); }
+
+  .btn{ font:inherit; font-weight:650; cursor:pointer; border-radius:12px; padding:11px 16px; border:1px solid transparent; }
+  .btn--primary{ background:var(--accent); color:#fff; box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 40%, transparent); }
+  .btn--ghost{ background:var(--panel-strong); color:var(--text); border-color:var(--glass-border); }
+  .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-top:18px; }
+  .seg{ display:inline-flex; background:var(--panel); border:1px solid var(--glass-border); border-radius:12px; padding:3px; gap:2px; }
+  .seg button{ font:inherit; font-size:13px; font-weight:600; border:none; background:transparent; color:var(--muted); padding:7px 13px; border-radius:9px; cursor:pointer; }
+  .seg button[aria-pressed="true"]{ background:var(--accent); color:#fff; }
+  .ctl-label{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-weight:700; }
+
+  .split{ display:grid; grid-template-columns:300px 1fr; gap:36px; align-items:center; }
+  @media(max-width:720px){ .split{ grid-template-columns:1fr; justify-items:center; } }
+  .phone{ width:290px; border-radius:38px; padding:14px; background:var(--panel-strong); border:1px solid var(--glass-border); box-shadow:var(--shadow); position:relative; }
+  .phone .notch{ width:120px; height:22px; border-radius:0 0 16px 16px; background:color-mix(in srgb, var(--text) 12%, transparent); margin:0 auto 10px; }
+  .phone-screen{ border-radius:26px; overflow:hidden; background:var(--bg); background-attachment:fixed; border:1px solid var(--glass-border); }
+  .p-head{ padding:16px 16px 8px; }
+  .p-head .day{ font-size:12px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; font-weight:700; }
+  .p-head h3{ margin:2px 0 0; font-size:20px; letter-spacing:-.01em; }
+  .win-card{ margin:10px 12px; padding:13px; border-radius:16px; background:var(--panel); border:1px solid var(--glass-border); }
+  .win-card .wc-t{ font-size:13px; font-weight:700; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; }
+  .win-card .wc-t span{ color:var(--muted); font-weight:600; font-size:11.5px; }
+  .barrow{ display:flex; gap:6px; }
+  .barrow i{ flex:1; height:7px; border-radius:4px; background:var(--ring-track); }
+  .barrow i.on{ background:var(--accent); }
+  .badge-row{ display:flex; align-items:center; gap:13px; margin:14px 12px 4px; padding:13px; border-radius:16px; background:var(--panel); border:1px solid var(--glass-border); cursor:pointer; transition:transform .16s ease, box-shadow .16s ease; }
+  .badge-row:hover{ transform:translateY(-2px); box-shadow:var(--shadow-sm); }
+  .badge-row .bt{ font-size:13.5px; font-weight:700; }
+  .badge-row .bs{ font-size:12px; color:var(--muted); }
+  .badge-svg{ width:70px; height:70px; flex:none; overflow:visible; }
+  .p-tabs{ display:flex; justify-content:space-around; padding:11px 8px 13px; border-top:1px solid var(--glass-border); margin-top:12px; color:var(--muted); font-size:10px; }
+  .p-tabs b{ color:var(--accent); }
+  .p-tabs div{ display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .p-tabs em{ width:18px; height:18px; border-radius:6px; background:currentColor; opacity:.5; font-style:normal; }
+  .p-tabs .active em{ opacity:1; }
+
+  .notes h4{ margin:0 0 4px; font-size:15px; }
+  .notes p{ margin:0 0 14px; color:var(--text-2); font-size:14.5px; max-width:46ch; }
+  .notes .old{ color:var(--muted); font-size:13px; }
+  .callout{ display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--accent); background:var(--accent-soft); border:1px solid color-mix(in srgb,var(--accent) 30%, transparent); padding:6px 12px; border-radius:999px; }
+
+  .flows{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media(max-width:720px){ .flows{ grid-template-columns:1fr; } }
+  .flow{ padding:20px; }
+  .flow h4{ margin:0 0 3px; font-size:15px; }
+  .flow .sub{ margin:0 0 16px; color:var(--muted); font-size:13px; }
+  .steps{ display:flex; align-items:stretch; gap:8px; }
+  .step{ flex:1; text-align:center; padding:14px 8px; border-radius:14px; border:1px dashed var(--glass-border); background:var(--panel-strong); }
+  .step .ic{ font-size:22px; }
+  .step .nm{ font-size:12.5px; font-weight:700; margin-top:5px; }
+  .step .ds{ font-size:11px; color:var(--muted); }
+  .arrow{ align-self:center; color:var(--muted); font-size:18px; flex:none; }
+  .step.new{ border-style:solid; border-color:color-mix(in srgb,var(--star) 55%, transparent); background:linear-gradient(160deg, color-mix(in srgb,var(--star) 14%, transparent), transparent); }
+
+  .overlay{ position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(8,12,22,0.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+  .overlay.show{ display:flex; animation:fade .2s ease; }
+  @keyframes fade{ from{opacity:0} to{opacity:1} }
+  .overlay-card{ width:100%; max-width:720px; background:var(--panel-strong); border:1px solid var(--glass-border); border-radius:26px; box-shadow:var(--shadow); animation:rise .28s cubic-bezier(.2,.8,.2,1); }
+  @keyframes rise{ from{opacity:0; transform:translateY(16px) scale(.98)} to{opacity:1; transform:none} }
+  .star-modal{ text-align:center; padding:38px 26px; }
+  .star-modal .burst{ font-size:15px; letter-spacing:.14em; text-transform:uppercase; color:var(--star); font-weight:800; }
+  .star-modal h3{ font-size:26px; margin:8px 0 4px; }
+  .star-modal p{ color:var(--text-2); margin:0 0 18px; }
+  .star-modal .bigstars{ display:flex; justify-content:center; gap:8px; margin:14px 0 22px; }
+  .star-modal .bigstars svg{ width:52px; height:52px; }
+  .star-modal .bigstars svg.pop{ animation:pop .4s cubic-bezier(.2,1.4,.3,1) both; }
+  @keyframes pop{ from{opacity:0; transform:scale(.3) rotate(-20deg)} to{opacity:1; transform:none} }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; } }
+
+  .foot{ margin-top:60px; color:var(--muted); font-size:13px; border-top:1px solid var(--glass-border); padding-top:18px; }
+  .foot b{ color:var(--text-2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Today tab · concept</div>
+    <h1>The Year Wheel</h1>
+    <p class="dek">Think Apple's activity rings, but for your year. Several calendars run at once as concentric rings — Work, Body, Creative — each carved into its own periods, all sharing one clock face. A single "today" hand sweeps across every ring. Hover a ring, flip the star tier, tap the badge to see the sequence.</p>
+  </header>
+
+  <!-- FULL WHEEL -->
+  <div class="section-label">
+    <span class="n">01</span>
+    <h2>The full-screen wheel</h2>
+    <p>concentric calendars · one "today" hand · the star ribbon</p>
+  </div>
+  <div class="panel modal-frame">
+    <div class="modal-topbar"><button class="chip-x" aria-label="Close (demo)">✕</button></div>
+    <div class="wheel-stage"><div id="bigWheel"></div></div>
+    <div class="center-read" id="reader"></div>
+  </div>
+  <div class="controls">
+    <span class="ctl-label">Today's stars</span>
+    <div class="seg" id="starSeg" role="group" aria-label="Star tier">
+      <button data-t="1" aria-pressed="false">★ 1</button>
+      <button data-t="2" aria-pressed="true">★ 2</button>
+      <button data-t="3" aria-pressed="false">★ 3</button>
+    </div>
+    <span class="ctl-label" style="margin-left:8px">Rings</span>
+    <div class="seg" id="ringSeg" role="group" aria-label="Ring count">
+      <button data-r="2" aria-pressed="false">2</button>
+      <button data-r="3" aria-pressed="true">3</button>
+      <button data-r="4" aria-pressed="false">4</button>
+    </div>
+  </div>
+
+  <!-- TINY BADGE -->
+  <div class="section-label">
+    <span class="n">02</span>
+    <h2>The tiny badge</h2>
+    <p>replaces the achievement circle · nested rings + star arc</p>
+  </div>
+  <div class="split">
+    <div class="phone" aria-label="Today tab mockup">
+      <div class="notch"></div>
+      <div class="phone-screen">
+        <div class="p-head">
+          <div class="day">Tuesday · Jul 14</div>
+          <h3>Today</h3>
+        </div>
+        <div class="win-card">
+          <div class="wc-t">Today's Wins <span>2 of 3 stars</span></div>
+          <div class="barrow"><i class="on"></i><i class="on"></i><i></i></div>
+        </div>
+        <div class="badge-row" id="badgeRow" role="button" tabindex="0" aria-label="Open the Year Wheel">
+          <div id="tinyBadge"></div>
+          <div>
+            <div class="bt">Your year, at a glance</div>
+            <div class="bs">3 calendars running · tap to open</div>
+          </div>
+        </div>
+        <div class="p-tabs">
+          <div class="active"><em></em><b>Today</b></div>
+          <div><em></em>Goals</div>
+          <div><em></em>Habits</div>
+          <div><em></em>You</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <h4>Rings shrink cleanly</h4>
+      <p>The plain achievement circle becomes a slightly larger disc of nested rings — the same calendars from the full view, miniaturised. A dot marks today; the 1–3 stars ride an arc hugging the bottom.</p>
+      <h4>Nothing new under the hood</h4>
+      <p class="old">Stars are the existing <b style="color:var(--text-2)">getTodayWinsTier</b> (0–3 at score 0 / &gt;0 / 40 / 75) — relocated and resized, no new tier logic.</p>
+      <span class="callout">Tap the badge → see the Star → Wheel sequence ▸</span>
+    </div>
+  </div>
+
+  <!-- SEQUENCE -->
+  <div class="section-label">
+    <span class="n">03</span>
+    <h2>The sequence</h2>
+    <p>same pieces, reordered by what's newest</p>
+  </div>
+  <div class="flows">
+    <div class="panel flow">
+      <h4>Normal day</h4>
+      <p class="sub">Nothing new to celebrate — straight to the rings.</p>
+      <div class="steps">
+        <div class="step"><div class="ic">🏅</div><div class="nm">Today's Wins</div><div class="ds">daily recap</div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="ic">🎯</div><div class="nm">Year Rings</div><div class="ds">where am I</div></div>
+      </div>
+    </div>
+    <div class="panel flow">
+      <h4>New-star day</h4>
+      <p class="sub">You just jumped a tier — the news leads, then the rings.</p>
+      <div class="steps">
+        <div class="step new"><div class="ic">⭐️</div><div class="nm">Star upgrade</div><div class="ds">promoted first</div></div>
+        <div class="arrow">→</div>
+        <div class="step"><div class="ic">🎯</div><div class="nm">Year Rings</div><div class="ds">where am I</div></div>
+      </div>
+    </div>
+  </div>
+  <p style="color:var(--muted);font-size:13px;margin-top:14px">My instinct is drawn above: <b style="color:var(--text-2)">Star → Rings</b> (never three modals deep). Keep the recap on upgrade days instead and it becomes Wins → Star → Rings — easy switch.</p>
+
+  <div class="foot">
+    Working sketch for reaction · calendars ("Work / Body / Creative"), their periods and colors are placeholders · <b>today = Jul 14</b>, so the hand sits ~53% around.
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="overlay-card" id="overlayCard"></div></div>
+
+<script>
+(function(){
+  "use strict";
+  // Each ring = one calendar running the whole year, carved into its own periods.
+  var ALL_TRACKS = [
+    { name:"Work", chapters:[
+      {name:"Plan",   start:1,   end:90,  color:"#7dd3fc"},
+      {name:"Build",  start:91,  end:212, color:"#0ea5e9"},
+      {name:"Launch", start:213, end:273, color:"#6366f1"},
+      {name:"Review", start:274, end:365, color:"#1d4ed8"}
+    ]},
+    { name:"Body", chapters:[
+      {name:"Rebuild",  start:1,   end:120, color:"#6ee7b7"},
+      {name:"Peak",     start:121, end:243, color:"#10b981"},
+      {name:"Maintain", start:244, end:365, color:"#047857"}
+    ]},
+    { name:"Creative", chapters:[
+      {name:"Explore", start:1,   end:60,  color:"#f0abfc"},
+      {name:"Make",    start:61,  end:181, color:"#e879f9"},
+      {name:"Rest",    start:182, end:243, color:"#c084fc"},
+      {name:"Make",    start:244, end:334, color:"#d946ef"},
+      {name:"Reflect", start:335, end:365, color:"#a855f7"}
+    ]},
+    { name:"Learning", chapters:[
+      {name:"Course A", start:1,   end:150, color:"#fdba74"},
+      {name:"Break",    start:151, end:212, color:"#fca5a5"},
+      {name:"Course B", start:213, end:365, color:"#fb923c"}
+    ]}
+  ];
+  var YEAR_DAYS = 365, TODAY = 195; // Jul 14, 2026
+  var MONTHS = ["J","F","M","A","M","J","J","A","S","O","N","D"];
+  var state = { star:2, rings:3, hot:-1 };
+  function tracks(){ return ALL_TRACKS.slice(0, state.rings); }
+
+  function chapterFor(track, day){ for(var i=0;i<track.chapters.length;i++){ var c=track.chapters[i]; if(day>=c.start && day<=c.end) return c; } return track.chapters[0]; }
+  function dayToAngle(day){ return -90 + (day-1)/YEAR_DAYS*360; }
+  function pol(cx,cy,r,a){ var rad=a*Math.PI/180; return {x:cx+r*Math.cos(rad), y:cy+r*Math.sin(rad)}; }
+  function donut(cx,cy,rO,rI,a0,a1){
+    var large=(a1-a0)%360>180?1:0;
+    var p0=pol(cx,cy,rO,a0),p1=pol(cx,cy,rO,a1),p2=pol(cx,cy,rI,a1),p3=pol(cx,cy,rI,a0);
+    return ["M",p0.x,p0.y,"A",rO,rO,0,large,1,p1.x,p1.y,"L",p2.x,p2.y,"A",rI,rI,0,large,0,p3.x,p3.y,"Z"].join(" ");
+  }
+  function starPath(cx,cy,r){ var d="",i,a,rr,p; for(i=0;i<10;i++){ a=-90+i*36; rr=(i%2===0)?r:r*0.44; p=pol(cx,cy,rr,a); d+=(i===0?"M":"L")+p.x.toFixed(2)+" "+p.y.toFixed(2);} return d+"Z"; }
+  function starSVG(f){ return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+starPath(12,12,10)+'" fill="'+(f?'var(--star)':'none')+'" stroke="var(--star)" stroke-width="'+(f?0:1.6)+'" stroke-linejoin="round" opacity="'+(f?1:.5)+'"/></svg>'; }
+  var ns="http://www.w3.org/2000/svg";
+
+  function buildWheel(size, opts){
+    opts=opts||{};
+    var TK=tracks(), cx=size/2, cy=size/2;
+    var rMax=size*0.46, hubR=size*0.15;
+    var span=rMax-hubR, gap=size*0.018;
+    var band=(span-gap*(TK.length-1))/TK.length;
+    var svg=document.createElementNS(ns,"svg");
+    svg.setAttribute("viewBox","0 0 "+size+" "+size); svg.setAttribute("class","wheel-svg");
+
+    TK.forEach(function(track,ti){
+      var rO=rMax - ti*(band+gap), rI=rO-band;
+      // faint track base
+      var base=document.createElementNS(ns,"circle");
+      base.setAttribute("cx",cx); base.setAttribute("cy",cy); base.setAttribute("r",(rO+rI)/2);
+      base.setAttribute("fill","none"); base.setAttribute("stroke","var(--ring-track)"); base.setAttribute("stroke-width",band);
+      svg.appendChild(base);
+      var seggap=1.1;
+      track.chapters.forEach(function(c){
+        var a0=dayToAngle(c.start), a1=dayToAngle(c.end+1);
+        var p=document.createElementNS(ns,"path");
+        p.setAttribute("d",donut(cx,cy,rO,rI,a0+seggap,a1-seggap));
+        p.setAttribute("fill",c.color);
+        p.setAttribute("class","seg");
+        p.style.opacity = (state.hot===-1||state.hot===ti)?1:0.32;
+        if(opts.interactive){
+          p.setAttribute("tabindex","0"); p.setAttribute("role","button"); p.setAttribute("aria-label",track.name+": "+c.name);
+          p.addEventListener("mouseenter",function(){ setHot(ti); });
+          p.addEventListener("mouseleave",function(){ setHot(-1); });
+          p.addEventListener("focus",function(){ setHot(ti); });
+          p.addEventListener("blur",function(){ setHot(-1); });
+        }
+        svg.appendChild(p);
+      });
+      // ring label on the today hand's ring band (small track initial near left)
+      if(opts.labels){
+        var lp=pol(cx,cy,(rO+rI)/2,180);
+        var t=document.createElementNS(ns,"text");
+        t.setAttribute("x",lp.x); t.setAttribute("y",lp.y); t.setAttribute("text-anchor","middle"); t.setAttribute("dominant-baseline","central");
+        t.setAttribute("font-size",size*0.026); t.setAttribute("font-weight","800"); t.setAttribute("fill","rgba(255,255,255,0.92)"); t.setAttribute("pointer-events","none");
+        t.textContent=track.name.charAt(0);
+        svg.appendChild(t);
+      }
+    });
+
+    // month ticks
+    if(opts.ticks){
+      for(var m=0;m<12;m++){ var a=-90+m*30, o=pol(cx,cy,rMax+size*0.045,a);
+        var tk=document.createElementNS(ns,"text"); tk.setAttribute("x",o.x); tk.setAttribute("y",o.y);
+        tk.setAttribute("text-anchor","middle"); tk.setAttribute("dominant-baseline","central");
+        tk.setAttribute("font-size",size*0.026); tk.setAttribute("fill","var(--muted)"); tk.setAttribute("font-weight","700");
+        tk.textContent=MONTHS[m]; svg.appendChild(tk); }
+    }
+    // today hand across all rings
+    var ta=dayToAngle(TODAY), outer=pol(cx,cy,rMax+size*0.012,ta), inner=pol(cx,cy,hubR-size*0.006,ta);
+    var hand=document.createElementNS(ns,"line");
+    hand.setAttribute("x1",inner.x); hand.setAttribute("y1",inner.y); hand.setAttribute("x2",outer.x); hand.setAttribute("y2",outer.y);
+    hand.setAttribute("stroke","var(--text)"); hand.setAttribute("stroke-width",size*0.012); hand.setAttribute("stroke-linecap","round"); hand.setAttribute("opacity",0.85);
+    svg.appendChild(hand);
+    var td=document.createElementNS(ns,"circle"); td.setAttribute("cx",outer.x); td.setAttribute("cy",outer.y); td.setAttribute("r",size*0.024);
+    td.setAttribute("fill","var(--text)"); td.setAttribute("stroke","var(--panel-strong)"); td.setAttribute("stroke-width",size*0.009); svg.appendChild(td);
+
+    // hub
+    var hub=document.createElementNS(ns,"circle"); hub.setAttribute("cx",cx); hub.setAttribute("cy",cy); hub.setAttribute("r",hubR);
+    hub.setAttribute("fill","var(--panel-strong)"); hub.setAttribute("stroke","var(--glass-border)"); svg.appendChild(hub);
+    if(opts.centerText){
+      var pct=Math.round(TODAY/YEAR_DAYS*100);
+      var y=document.createElementNS(ns,"text"); y.setAttribute("x",cx); y.setAttribute("y",cy-size*0.005);
+      y.setAttribute("text-anchor","middle"); y.setAttribute("font-size",size*0.075); y.setAttribute("font-weight","800"); y.setAttribute("fill","var(--text)"); y.textContent="2026"; svg.appendChild(y);
+      var p2=document.createElementNS(ns,"text"); p2.setAttribute("x",cx); p2.setAttribute("y",cy+size*0.055);
+      p2.setAttribute("text-anchor","middle"); p2.setAttribute("font-size",size*0.036); p2.setAttribute("font-weight","700"); p2.setAttribute("fill","var(--muted)"); p2.textContent=pct+"%"; svg.appendChild(p2);
+    }
+    return svg;
+  }
+
+  function buildBadge(size){
+    var TK=tracks(), cx=size/2, cy=size*0.45;
+    var rMax=size*0.40, hubR=size*0.10, span=rMax-hubR, gap=size*0.02;
+    var band=(span-gap*(TK.length-1))/TK.length;
+    var svg=document.createElementNS(ns,"svg"); svg.setAttribute("viewBox","0 0 "+size+" "+size); svg.setAttribute("class","badge-svg");
+    TK.forEach(function(track,ti){
+      var rO=rMax-ti*(band+gap), rI=rO-band;
+      var base=document.createElementNS(ns,"circle"); base.setAttribute("cx",cx); base.setAttribute("cy",cy); base.setAttribute("r",(rO+rI)/2);
+      base.setAttribute("fill","none"); base.setAttribute("stroke","var(--ring-track)"); base.setAttribute("stroke-width",band); svg.appendChild(base);
+      track.chapters.forEach(function(c){ var a0=dayToAngle(c.start),a1=dayToAngle(c.end+1);
+        var p=document.createElementNS(ns,"path"); p.setAttribute("d",donut(cx,cy,rO,rI,a0+1.5,a1-1.5)); p.setAttribute("fill",c.color); svg.appendChild(p); });
+    });
+    var ta=dayToAngle(TODAY), tp=pol(cx,cy,rMax+size*0.008,ta);
+    var dot=document.createElementNS(ns,"circle"); dot.setAttribute("cx",tp.x); dot.setAttribute("cy",tp.y); dot.setAttribute("r",size*0.05);
+    dot.setAttribute("fill","var(--text)"); dot.setAttribute("stroke","var(--panel)"); dot.setAttribute("stroke-width",size*0.018); svg.appendChild(dot);
+    for(var s=0;s<3;s++){ var ang=118+s*22, sp=pol(cx,cy,rMax+size*0.10,ang);
+      var g=document.createElementNS(ns,"path"); g.setAttribute("d",starPath(0,0,size*0.072)); g.setAttribute("transform","translate("+sp.x+","+sp.y+")");
+      var f=s<state.star; g.setAttribute("fill",f?"var(--star)":"none"); g.setAttribute("stroke","var(--star)"); g.setAttribute("stroke-width",f?0:1.3);
+      g.setAttribute("stroke-linejoin","round"); g.setAttribute("opacity",f?1:0.4); svg.appendChild(g); }
+    return svg;
+  }
+
+  function renderReader(host){
+    host=host||document.getElementById("reader");
+    var rows=tracks().map(function(track,ti){
+      var c=chapterFor(track,TODAY), left=c.end-TODAY;
+      return '<div class="trk'+(state.hot===ti?' hot':'')+'" data-ti="'+ti+'" style="color:'+c.color+'">'+
+        '<span class="dot" style="background:'+c.color+'"></span>'+
+        '<span class="txt"><span class="nm">'+track.name+'</span><span class="ch" style="color:var(--text)">'+c.name+'</span></span>'+
+        '<span class="rt">'+left+'d left</span></div>';
+    }).join("");
+    var word = state.star===3?"Blazing":state.star===2?"On a roll":"Getting going";
+    var stars=""; for(var i=0;i<3;i++){ stars+=starSVG(i<state.star); }
+    host.innerHTML='<div class="kick">You are here · '+state.rings+' calendars</div>'+rows+
+      '<div class="ribbon"><span class="stars">'+stars+'</span><span class="lab"><b>'+word+'</b> · today\'s wins</span></div>';
+    host.querySelectorAll(".trk").forEach(function(el){
+      el.addEventListener("mouseenter",function(){ setHot(parseInt(el.getAttribute("data-ti"),10)); });
+      el.addEventListener("mouseleave",function(){ setHot(-1); });
+    });
+  }
+
+  function renderWheel(){ var h=document.getElementById("bigWheel"); h.innerHTML=""; h.appendChild(buildWheel(360,{labels:true,ticks:true,centerText:true,interactive:true})); }
+  function renderBadge(){ var h=document.getElementById("tinyBadge"); h.innerHTML=""; h.appendChild(buildBadge(70)); }
+  function setHot(ti){ if(state.hot===ti) return; state.hot=ti; renderWheel(); renderReader(); }
+  function setStar(t){ state.star=t; renderBadge(); renderReader();
+    document.querySelectorAll("#starSeg button").forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-t")==String(t)?"true":"false"); });
+    document.querySelectorAll(".barrow i").forEach(function(b,idx){ b.classList.toggle("on", idx<t); });
+    document.querySelector(".wc-t span").textContent=t+" of 3 stars";
+  }
+  function setRings(r){ state.rings=r; state.hot=-1; renderWheel(); renderBadge(); renderReader();
+    document.querySelectorAll("#ringSeg button").forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-r")==String(r)?"true":"false"); });
+    document.querySelector(".badge-row .bs").textContent=r+" calendars running · tap to open";
+  }
+
+  document.querySelectorAll("#starSeg button").forEach(function(b){ b.addEventListener("click",function(){ setStar(parseInt(b.getAttribute("data-t"),10)); }); });
+  document.querySelectorAll("#ringSeg button").forEach(function(b){ b.addEventListener("click",function(){ setRings(parseInt(b.getAttribute("data-r"),10)); }); });
+
+  var overlay=document.getElementById("overlay"), card=document.getElementById("overlayCard");
+  function closeOverlay(){ overlay.classList.remove("show"); card.innerHTML=""; }
+  function showWheelModal(){
+    card.innerHTML='<div class="modal-frame" style="border:none;background:none;box-shadow:none"><div class="modal-topbar"><button class="chip-x" id="ovX" aria-label="Close">✕</button></div><div class="wheel-stage"><div id="ovWheel"></div></div><div class="center-read" id="ovReader"></div></div>';
+    document.getElementById("ovWheel").appendChild(buildWheel(320,{labels:true,ticks:true,centerText:true,interactive:false}));
+    renderReader(document.getElementById("ovReader"));
+    document.getElementById("ovX").addEventListener("click",closeOverlay);
+  }
+  function showStarThenWheel(){
+    var stars=""; for(var i=0;i<state.star;i++){ stars+='<svg class="pop" style="animation-delay:'+(i*0.12)+'s" viewBox="0 0 24 24"><path d="'+starPath(12,12,10)+'" fill="var(--star)"/></svg>'; }
+    card.innerHTML='<div class="star-modal"><div class="burst">New tier unlocked</div><h3>'+state.star+'-Star Day!</h3><p>You crossed into a new Today\'s Wins tier.</p><div class="bigstars">'+stars+'</div><button class="btn btn--primary" id="toWheel">See your year ▸</button></div>';
+    document.getElementById("toWheel").addEventListener("click",showWheelModal);
+  }
+  function openFromBadge(){ overlay.classList.add("show"); if(state.star>=2){ showStarThenWheel(); } else { showWheelModal(); } }
+  var badge=document.getElementById("badgeRow");
+  badge.addEventListener("click",openFromBadge);
+  badge.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openFromBadge(); } });
+  overlay.addEventListener("click",function(e){ if(e.target===overlay) closeOverlay(); });
+  document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeOverlay(); });
+
+  renderWheel(); renderBadge(); renderReader(); setStar(2);
+})();
+</script>
+</body>
+</html>
