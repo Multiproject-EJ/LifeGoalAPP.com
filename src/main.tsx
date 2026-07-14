@@ -13,6 +13,7 @@ import { SafeErrorBoundary } from './components/SafeErrorBoundary.tsx';
 import { initServiceHealthForBrowser } from './services/service-health/browserWiring.ts';
 import { registerOfflineSyncExecutors } from './services/offlineSyncExecutors.ts';
 import { ServiceStatusBanner } from './components/service-status/index.ts';
+import { AnimationLab } from './components/AnimationLab.tsx';
 
 // Start monitoring cloud health before anything assumes Supabase is available.
 initServiceHealthForBrowser();
@@ -220,6 +221,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       }}
     >
       <Root />
+      <AnimationLab />
       <ServiceStatusBanner />
     </SafeErrorBoundary>
   </React.StrictMode>

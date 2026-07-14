@@ -1,3 +1,6 @@
+import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+
 export type CompletionHapticProfile = 'light' | 'medium' | 'strong';
 
 type HapticChannel =
@@ -64,6 +67,12 @@ const GLOBAL_MAX_TRIGGERS_PER_WINDOW = 6;
 const lastHapticAtByChannel: Partial<Record<HapticChannel, number>> = {};
 const globalHapticHistory: number[] = [];
 
+const NATIVE_IMPACT_STYLES: Record<CompletionHapticProfile, ImpactStyle> = {
+  light: ImpactStyle.Light,
+  medium: ImpactStyle.Medium,
+  strong: ImpactStyle.Heavy,
+};
+
 function canTriggerHaptic(channel: HapticChannel, minIntervalMs: number): boolean {
   const now = Date.now();
   const lastTriggeredAt = lastHapticAtByChannel[channel] ?? 0;
@@ -86,10 +95,6 @@ function canTriggerHaptic(channel: HapticChannel, minIntervalMs: number): boolea
 }
 
 export function triggerCompletionHaptic(profile: CompletionHapticProfile, options: CompletionHapticOptions = {}): void {
-  if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') {
-    return;
-  }
-
   if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       return;
@@ -108,5 +113,16 @@ export function triggerCompletionHaptic(profile: CompletionHapticProfile, option
     return;
   }
 
-  navigator.vibrate(HAPTIC_PATTERNS[toEffectiveProfile(profile, hapticMode)]);
+  const effectiveProfile = toEffectiveProfile(profile, hapticMode);
+
+  if (Capacitor.isNativePlatform()) {
+    void Haptics.impact({ style: NATIVE_IMPACT_STYLES[effectiveProfile] }).catch(() => {
+      // Haptics are an enhancement; unsupported hardware must not interrupt an action.
+    });
+    return;
+  }
+
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    navigator.vibrate(HAPTIC_PATTERNS[effectiveProfile]);
+  }
 }
