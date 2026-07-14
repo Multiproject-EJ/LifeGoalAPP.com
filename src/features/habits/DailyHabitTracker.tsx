@@ -213,6 +213,28 @@ const TODO_REORDER_MOVE_CANCEL_PX = 10;
 const STALE_TODO_COACH_PILL_THRESHOLD_MS = 15 * 60 * 60 * 1000;
 const STALE_TODO_COACH_CLOCK_TICK_MS = 60 * 1000;
 const HABIT_SFX_ENABLED_STORAGE_KEY = 'lifegoal.habits.sfx.enabled';
+const COMPACT_PULL_REFRESH_THRESHOLD_PX = 72;
+const COMPACT_PULL_REFRESH_MAX_PX = 118;
+const COMPACT_PULL_REFRESH_RESISTANCE = 0.45;
+const COMPACT_PULL_INTENT_THRESHOLD_PX = 10;
+const COMPACT_REFRESH_SUCCESS_FEEDBACK_MS = 2200;
+
+// Pull-to-refresh only arms when the *actual* scroll surface is at the very top.
+// The Today content can scroll inside an inner container rather than the window,
+// so walk up from the card to the nearest scrollable ancestor and read its
+// scrollTop; fall back to document/window scroll.
+function findCardScrollTop(target: HTMLElement | null): number {
+  if (typeof window === 'undefined') return 0;
+  let node = target?.parentElement ?? null;
+  while (node) {
+    const style = window.getComputedStyle(node);
+    if (/(auto|scroll|overlay)/.test(style.overflowY) && node.scrollHeight > node.clientHeight) {
+      return node.scrollTop;
+    }
+    node = node.parentElement;
+  }
+  return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+}
 
 
 function shouldShowStaleTodoCoachPill(todo: TodayTodo, nowMs: number): boolean {
@@ -1962,8 +1984,29 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [showDreamJournalReminderModal, setShowDreamJournalReminderModal] = useState(false);
   const habitCardRefs = useRef<Record<string, HTMLLIElement | null>>({});
   const dailyLifeUpgradeHighlightTimeoutRef = useRef<number | null>(null);
+  // --- Today pull-to-refresh gesture state ---
+  const [compactPullDistance, setCompactPullDistance] = useState(0);
+  const [showCompactRefreshSuccess, setShowCompactRefreshSuccess] = useState(false);
+  const compactPullDistanceRef = useRef(0);
+  const checklistCardRef = useRef<HTMLDivElement | null>(null);
+  const compactPullGestureRef = useRef<{
+    touchId: number;
+    startX: number;
+    startY: number;
+    intent: 'pending' | 'vertical' | 'horizontal';
+  } | null>(null);
+  const compactPullRefreshInFlightRef = useRef(false);
+  const compactRefreshSuccessTimeoutRef = useRef<number | null>(null);
+  const compactPullLoadingRef = useRef(false);
+  const setCompactPullDistanceState = useCallback((nextDistance: number) => {
+    compactPullDistanceRef.current = nextDistance;
+    setCompactPullDistance(nextDistance);
+  }, []);
   useEffect(() => {
     return () => {
+      if (compactRefreshSuccessTimeoutRef.current !== null) {
+        window.clearTimeout(compactRefreshSuccessTimeoutRef.current);
+      }
       if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
         window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
       }
@@ -5436,6 +5479,160 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       failed: completionStatus.failed + logStatus.failed + reminderStatus.failed + habitsStatus.failed,
     });
   }, [isConfigured, session?.user?.id]);
+
+  // Full Today refresh (used by pull-to-refresh): flush queued Supabase writes,
+  // then reload habits — which also re-derives "today" so a date rollover is
+  // picked up — plus monthly stats and the offline queue status.
+  const performTodayRefresh = useCallback(async () => {
+    if (!isConfigured && !isDemoExperience) return false;
+    try {
+      if (isConfigured && session?.user?.id) {
+        await Promise.all([
+          syncQueuedHabitCompletions(session.user.id),
+          syncQueuedHabitLogs(session.user.id),
+          syncQueuedHabitReminderPrefs(session.user.id),
+          syncQueuedHabitsV2Mutations(session.user.id),
+        ]).catch(() => undefined);
+      }
+      const [refreshResult] = await Promise.all([
+        refreshHabits(),
+        loadMonthlyStats(selectedYear, selectedMonth),
+        refreshQueueStatus(),
+      ]);
+      return refreshResult !== false;
+    } catch (error) {
+      console.error('Today pull-to-refresh failed:', error);
+      return false;
+    }
+  }, [
+    isConfigured,
+    isDemoExperience,
+    session?.user?.id,
+    refreshHabits,
+    loadMonthlyStats,
+    refreshQueueStatus,
+    selectedYear,
+    selectedMonth,
+  ]);
+
+  const canUseCompactPullRefresh = isViewingToday && (isConfigured || isDemoExperience);
+  useEffect(() => {
+    compactPullLoadingRef.current = loading;
+  }, [loading]);
+
+  // Native (non-passive) touch gesture for pull-to-refresh. React 18's synthetic
+  // onTouchMove is registered passively, so preventDefault() there is ignored and
+  // the page keeps scrolling while we translate the card — the exact conflict
+  // that got this feature removed. Binding touchmove ourselves with
+  // { passive: false } lets us cancel ONLY a locked vertical pull at the scroll
+  // top, so normal vertical scrolling and horizontal habit swipes are untouched.
+  useEffect(() => {
+    const el = checklistCardRef.current;
+    if (!el || !canUseCompactPullRefresh) return undefined;
+
+    const atTop = () => findCardScrollTop(el) <= 1;
+
+    const clearSuccess = () => {
+      setShowCompactRefreshSuccess(false);
+      if (compactRefreshSuccessTimeoutRef.current !== null) {
+        window.clearTimeout(compactRefreshSuccessTimeoutRef.current);
+        compactRefreshSuccessTimeoutRef.current = null;
+      }
+    };
+
+    const trigger = async () => {
+      if (compactPullRefreshInFlightRef.current || compactPullLoadingRef.current || !atTop()) {
+        setCompactPullDistanceState(0);
+        return;
+      }
+      compactPullRefreshInFlightRef.current = true;
+      setCompactPullDistanceState(0);
+      clearSuccess();
+      try {
+        const ok = await performTodayRefresh();
+        if (ok) {
+          setShowCompactRefreshSuccess(true);
+          compactRefreshSuccessTimeoutRef.current = window.setTimeout(() => {
+            setShowCompactRefreshSuccess(false);
+            compactRefreshSuccessTimeoutRef.current = null;
+          }, COMPACT_REFRESH_SUCCESS_FEEDBACK_MS);
+        }
+      } finally {
+        compactPullRefreshInFlightRef.current = false;
+      }
+    };
+
+    const onStart = (event: TouchEvent) => {
+      if (compactPullLoadingRef.current || compactPullRefreshInFlightRef.current || !atTop()) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      clearSuccess();
+      compactPullGestureRef.current = {
+        touchId: touch.identifier,
+        startX: touch.clientX,
+        startY: touch.clientY,
+        intent: 'pending',
+      };
+    };
+
+    const onMove = (event: TouchEvent) => {
+      const gesture = compactPullGestureRef.current;
+      if (!gesture) return;
+      if (!atTop()) {
+        compactPullGestureRef.current = null;
+        setCompactPullDistanceState(0);
+        return;
+      }
+      const touch = Array.from(event.touches).find((entry) => entry.identifier === gesture.touchId);
+      if (!touch) return;
+      const deltaX = touch.clientX - gesture.startX;
+      const deltaY = touch.clientY - gesture.startY;
+      if (gesture.intent === 'pending') {
+        if (
+          Math.abs(deltaX) < COMPACT_PULL_INTENT_THRESHOLD_PX
+          && Math.abs(deltaY) < COMPACT_PULL_INTENT_THRESHOLD_PX
+        ) {
+          return;
+        }
+        gesture.intent = Math.abs(deltaY) >= Math.abs(deltaX) ? 'vertical' : 'horizontal';
+      }
+      if (gesture.intent === 'horizontal' || deltaY <= 0) {
+        if (compactPullDistanceRef.current !== 0) setCompactPullDistanceState(0);
+        return;
+      }
+      const nextDistance = Math.min(
+        COMPACT_PULL_REFRESH_MAX_PX,
+        Math.round(deltaY * COMPACT_PULL_REFRESH_RESISTANCE),
+      );
+      setCompactPullDistanceState(nextDistance);
+      if (event.cancelable) event.preventDefault();
+    };
+
+    const onEnd = () => {
+      const gesture = compactPullGestureRef.current;
+      if (!gesture) return;
+      compactPullGestureRef.current = null;
+      if (
+        gesture.intent !== 'horizontal'
+        && compactPullDistanceRef.current >= COMPACT_PULL_REFRESH_THRESHOLD_PX
+      ) {
+        void trigger();
+        return;
+      }
+      setCompactPullDistanceState(0);
+    };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd);
+    el.addEventListener('touchcancel', onEnd);
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+      el.removeEventListener('touchcancel', onEnd);
+    };
+  }, [canUseCompactPullRefresh, performTodayRefresh, setCompactPullDistanceState]);
 
   // Load monthly statistics when month changes
   useEffect(() => {
@@ -9460,9 +9657,27 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         : !isConfigured
           ? 'warning'
           : null;
+    const pullProgress = Math.min(1, compactPullDistance / COMPACT_PULL_REFRESH_THRESHOLD_PX);
+    const isPullArmed = canUseCompactPullRefresh && pullProgress >= 1;
+    const shouldShowPullIndicator =
+      canUseCompactPullRefresh && (loading || compactPullDistance > 0 || showCompactRefreshSuccess);
+    const pullIndicatorText = loading
+      ? 'Updating…'
+      : showCompactRefreshSuccess
+        ? 'Updated just now'
+        : isPullArmed
+          ? 'Release to update'
+          : 'Pull to update';
     const checklistCardClassName = `habit-checklist-card${isCompactView ? '' : ' habit-checklist-card--glass'}${
       isPrivateCompactView ? ' habit-checklist-card--private-view' : ''
-    }${selectedAmbiance ? ' habit-checklist-card--ambiance' : ''}`;
+    }${canUseCompactPullRefresh ? ' habit-checklist-card--pull-enabled' : ''}${
+      compactPullDistance > 0 ? ' habit-checklist-card--pulling' : ''
+    }${isPullArmed ? ' habit-checklist-card--pull-armed' : ''}${
+      selectedAmbiance ? ' habit-checklist-card--ambiance' : ''
+    }`;
+    const checklistCardStyle = canUseCompactPullRefresh
+      ? ({ '--habit-compact-pull-offset': `${compactPullDistance}px` } as CSSProperties)
+      : undefined;
 
     const todayWinsTiles = [
       { id: 'habits', icon: '✅', label: 'Habits', value: completedCount },
@@ -10234,6 +10449,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     return (
       <div
         className={checklistCardClassName}
+        style={checklistCardStyle}
+        ref={checklistCardRef}
         role="region"
         aria-label={ariaLabel}
       >
@@ -10242,6 +10459,23 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--one" />
             <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--two" />
             <span className="habit-checklist-card__ambiance-orb habit-checklist-card__ambiance-orb--three" />
+          </div>
+        ) : null}
+        {shouldShowPullIndicator ? (
+          <div
+            className={`habit-checklist-card__pull-indicator${
+              loading
+                ? ' habit-checklist-card__pull-indicator--loading'
+                : showCompactRefreshSuccess
+                  ? ' habit-checklist-card__pull-indicator--success'
+                  : isPullArmed
+                    ? ' habit-checklist-card__pull-indicator--armed'
+                    : ''
+            }`}
+            aria-live="polite"
+          >
+            <span className="habit-checklist-card__pull-dot" aria-hidden="true" />
+            <span className="habit-checklist-card__pull-text">{pullIndicatorText}</span>
           </div>
         ) : null}
         {intentionsModal}
