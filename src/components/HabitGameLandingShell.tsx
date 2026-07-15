@@ -9,6 +9,7 @@ import {
 import { useServiceHealth } from '../hooks/useServiceHealth';
 import { getServiceHealthManager } from '../services/service-health';
 import { ServiceStatusModal } from './service-status';
+import { OfflineJournal } from '../features/offline-journal';
 
 export type HabitGameAuthTab = 'login' | 'signup';
 
@@ -113,6 +114,7 @@ export function HabitGameAuthCard({
   const [guestSubmitting, setGuestSubmitting] = useState(false);
   const [guestError, setGuestError] = useState<string | null>(null);
   const [showServiceStatus, setShowServiceStatus] = useState(false);
+  const [showOfflineJournal, setShowOfflineJournal] = useState(false);
   const { snapshot } = useServiceHealth();
 
   useEffect(() => {
@@ -387,6 +389,17 @@ export function HabitGameAuthCard({
         <p>Start Island Run as a guest. Save your progress later with a free account.</p>
       </div>
 
+      <div className="auth-card__offline-journal-entry">
+        <button
+          type="button"
+          className="auth-card__offline-journal-button"
+          onClick={() => setShowOfflineJournal(true)}
+        >
+          📔 Open your journal
+        </button>
+        <p>Write down a thought right now — no account or connection needed. It saves on this device.</p>
+      </div>
+
       <div className="auth-card__tabs" role="tablist" aria-label="Choose how to access LifeGoal">
         {authTabs.map((tab) => {
           const isActive = activeAuthTab === tab.id;
@@ -422,6 +435,7 @@ export function HabitGameAuthCard({
       </div>
       {guestModal}
       {showServiceStatus ? <ServiceStatusModal onClose={() => setShowServiceStatus(false)} /> : null}
+      {showOfflineJournal ? <OfflineJournal onClose={() => setShowOfflineJournal(false)} /> : null}
     </div>
   );
 }

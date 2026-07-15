@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "lib": ["DOM", "ES2022"],
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "5.0",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": ".tmp-offline-journal-tests",
+    "noEmit": false,
+    "types": ["node"]
+  },
+  "include": [
+    "src/features/offline-journal/offlineJournalStorage.ts",
+    "src/features/offline-journal/__tests__/offlineJournalStorage.test.ts"
+  ]
+}
