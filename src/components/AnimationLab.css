@@ -234,7 +234,9 @@
   text-transform: uppercase;
 }
 
-.animation-lab-table__cadence--fireworks {
+.animation-lab-table__cadence--fireworksCapstone,
+.animation-lab-table__cadence--fireworksHero,
+.animation-lab-table__cadence--fireworksRapid {
   background: rgba(251, 191, 36, 0.15);
   color: #fcd34d;
 }
@@ -288,6 +290,66 @@
 .animation-lab-modal__footer p { margin: 0; }
 .animation-lab-modal__footer code,
 .animation-lab-modal__footer kbd { color: #e5edf8; }
+
+.animation-lab-app-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 16000;
+  display: grid;
+  place-items: center;
+  padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  isolation: isolate;
+}
+
+.animation-lab-app-preview__card {
+  position: relative;
+  z-index: 2;
+  width: min(390px, 100%);
+  border: 1px solid rgba(255, 229, 160, 0.52);
+  border-radius: 28px;
+  padding: 28px 24px;
+  background: linear-gradient(160deg, rgba(34, 24, 70, 0.96), rgba(8, 18, 38, 0.96));
+  color: #f8fafc;
+  text-align: center;
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.62), 0 0 48px rgba(250, 204, 21, 0.18);
+}
+
+.animation-lab-app-preview__eyebrow {
+  margin: 0 0 8px;
+  color: #fde68a;
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.animation-lab-app-preview__gift {
+  margin: 8px 0;
+  font-size: 5rem;
+  filter: drop-shadow(0 8px 22px rgba(250, 204, 21, 0.28));
+}
+
+.animation-lab-app-preview__card h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 6vw, 2.2rem);
+}
+
+.animation-lab-app-preview__card p:not(.animation-lab-app-preview__eyebrow) {
+  margin: 12px 0 20px;
+  color: rgba(226, 232, 240, 0.84);
+  line-height: 1.5;
+}
+
+.animation-lab-app-preview__card button {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  padding: 11px 20px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1e1b4b;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
 
 @media (max-width: 760px) {
   .animation-lab-modal { padding: 8px; }

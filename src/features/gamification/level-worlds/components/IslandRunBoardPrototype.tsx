@@ -33,6 +33,7 @@ import {
 } from '../services/islandRunControllerVisualContract';
 import { BoardStage, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
+import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import {
   IslandTechCollectionModal,
   type TechCollectionModalResult,
@@ -13788,14 +13789,6 @@ export function IslandRunBoardPrototype({
 
       {showIslandClearCelebration && islandClearStats && (
         <>
-          {/* B7 / F6: celebration confetti burst behind the modal backdrop.
-              The overlay is purely decorative (aria-hidden) and self-dismisses
-              once all pieces fall off-screen. Unmounted automatically alongside
-              the celebration modal. */}
-          <ConfettiBurst
-            active={!isIslandClearRewardClaimed}
-            variant={islandClearStats.isCycleCapstone ? 'capstone' : 'standard'}
-          />
           <div
             className={`island-clear-celebration${islandClearStats.isCycleCapstone ? ' island-clear-celebration--capstone' : ''}${isIslandClearCelebrationDeparting ? ' island-clear-celebration--departing' : ''}`}
             role="dialog"
@@ -13803,6 +13796,10 @@ export function IslandRunBoardPrototype({
             aria-hidden={islandNarrativeOpeningFlow.activeDialogue?.beatId === 'I001-B30' ? true : undefined}
             aria-label="Island completion celebration"
           >
+            <CelebrationFireworks
+              key={`${islandClearStats.islandNumber}-${islandClearStats.isCycleCapstone ? 'capstone' : 'hero'}`}
+              variant={islandClearStats.isCycleCapstone ? 'capstone' : 'hero'}
+            />
             <div className="island-clear-celebration__sparkles" aria-hidden="true">
               <span className="island-clear-celebration__sparkle island-clear-celebration__sparkle--one">✦</span>
               <span className="island-clear-celebration__sparkle island-clear-celebration__sparkle--two">✧</span>

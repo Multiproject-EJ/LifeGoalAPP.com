@@ -25,6 +25,7 @@
     "test:holiday-dates": "node scripts/run-holiday-date-tests.mjs",
     "test:auth-resilience": "node scripts/run-auth-resilience-tests.mjs",
     "test:service-resilience": "node scripts/run-service-resilience-tests.mjs",
+    "test:celebration-fireworks": "node scripts/check-celebration-fireworks.mjs",
     "test:energy-feature-gating": "node scripts/run-energy-feature-gating-tests.mjs",
     "test:island-run": "node scripts/run-island-run-service-tests.mjs",
     "test:habit-offer-sort": "node scripts/run-habit-offer-tests.mjs",

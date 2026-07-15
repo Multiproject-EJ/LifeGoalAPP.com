@@ -16,6 +16,7 @@ import { SPIN_PRIZES } from '../../types/gamification';
 import { buildWheelSegments, type WheelSegment } from './spinWheelUtils';
 import { useGamification } from '../../hooks/useGamification';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
+import { CelebrationFireworks } from '../../components/CelebrationFireworks';
 import './NewDailySpinWheel.css';
 
 interface NewDailySpinWheelProps {
@@ -393,12 +394,13 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
         triggerCompletionHaptic(prize.type === 'treasure_chest' || prize.type === 'mystery' || selectedMultiplier > 1 ? 'strong' : 'medium', { channel: 'gamification', minIntervalMs: 300 });
 
-        confetti({
-          particleCount:
-            prize.type === 'treasure_chest' || prize.type === 'mystery' ? 180 : 140,
-          spread: 90,
-          origin: { y: 0.6 },
-        });
+        if (prize.type !== 'treasure_chest' && prize.type !== 'mystery') {
+          confetti({
+            particleCount: 140,
+            spread: 90,
+            origin: { y: 0.6 },
+          });
+        }
 
         refreshProfile();
         window.dispatchEvent(new CustomEvent('dailySpinComplete'));
@@ -616,6 +618,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
             aria-modal="true"
             onClick={() => setShowReward(false)}
           >
+            {isSpecialPrize ? <CelebrationFireworks variant="rapid" /> : null}
             <div
               className={`new-daily-spin-modal__reward-card${
                 isSpecialPrize ? ' new-daily-spin-modal__reward-card--chest' : ''

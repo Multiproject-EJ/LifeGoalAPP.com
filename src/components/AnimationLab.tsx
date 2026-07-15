@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { CelebrationFireworks, type FireworksVariant } from './CelebrationFireworks';
 import './AnimationLab.css';
 
 type AnimationAsset = {
-  id: 'fireworks' | 'egg';
+  id: 'fireworksCapstone' | 'fireworksHero' | 'fireworksRapid' | 'egg';
   name: string;
   cadence: string;
   usage: string;
   src: string;
+  appleSrc: string;
   poster: string;
   delivery: string;
+  appleDelivery: string;
   savings: string;
   dimensions: string;
   fps: string;
@@ -21,28 +24,60 @@ const LAB_STORAGE_KEY = 'habitgame.animationLab.enabled';
 
 const ANIMATIONS: AnimationAsset[] = [
   {
-    id: 'fireworks',
-    name: 'Celebration fireworks',
-    cadence: 'Frequent',
-    usage: 'Wins, streaks, rewards and milestone moments',
-    src: '/assets/animation-lab/fireworks.webm',
-    poster: '/assets/animation-lab/fireworks-poster.png',
-    delivery: '2.1 MB WebM',
+    id: 'fireworksCapstone',
+    name: 'Celebration fireworks — capstone',
+    cadence: 'Exceptional · 1×',
+    usage: 'Cycle endings and exceptionally rare achievements',
+    src: '/assets/animations/fireworks-capstone.webm',
+    appleSrc: '/assets/animations/fireworks-capstone.mov',
+    poster: '/assets/animations/fireworks-poster.png',
+    delivery: '2.1 MB VP9 alpha for Chromium',
+    appleDelivery: '2.4 MB HEVC alpha for Safari & iOS',
     savings: '86% smaller than the 15 MB transparent test export',
     dimensions: '360 × 592',
-    fps: '15 fps',
+    fps: '15 fps · 7.9 seconds',
+  },
+  {
+    id: 'fireworksHero',
+    name: 'Celebration fireworks — hero',
+    cadence: 'Major · 1.5×',
+    usage: 'Welcome packs, level-ups, mythic creatures and island clears',
+    src: '/assets/animations/fireworks-hero.webm',
+    appleSrc: '/assets/animations/fireworks-hero.mov',
+    poster: '/assets/animations/fireworks-poster.png',
+    delivery: '1.3 MB VP9 alpha for Chromium',
+    appleDelivery: '1.8 MB HEVC alpha for Safari & iOS',
+    savings: '35% smaller VP9 · 28% smaller HEVC than capstone',
+    dimensions: '360 × 592',
+    fps: '15 fps · 5.3 seconds',
+  },
+  {
+    id: 'fireworksRapid',
+    name: 'Celebration fireworks — rapid',
+    cadence: 'Frequent · 2.2×',
+    usage: 'Rare card reveals and special daily-spin rewards',
+    src: '/assets/animations/fireworks-rapid.webm',
+    appleSrc: '/assets/animations/fireworks-rapid.mov',
+    poster: '/assets/animations/fireworks-poster.png',
+    delivery: '1.0 MB VP9 alpha for Chromium',
+    appleDelivery: '1.3 MB HEVC alpha for Safari & iOS',
+    savings: '50% smaller VP9 · 47% smaller HEVC than capstone',
+    dimensions: '360 × 592',
+    fps: '15 fps · 3.6 seconds',
   },
   {
     id: 'egg',
     name: 'Crystal egg reveal',
     cadence: 'Occasional',
     usage: 'Hatches, mystery rewards and special discoveries',
-    src: '/assets/animation-lab/crystal-egg.webm',
-    poster: '/assets/animation-lab/crystal-egg-poster.png',
-    delivery: '637 KB WebM',
+    src: '/assets/animations/crystal-egg-reveal.webm',
+    appleSrc: '/assets/animations/crystal-egg-reveal.mov',
+    poster: '/assets/animations/crystal-egg-poster.png',
+    delivery: '637 KB VP9 alpha for Chromium',
+    appleDelivery: '1.1 MB HEVC alpha for Safari & iOS',
     savings: '89% smaller than the 5.6 MB transparent test export',
     dimensions: '320 × 288',
-    fps: '15 fps',
+    fps: '15 fps · 7.9 seconds',
   },
 ];
 
@@ -54,14 +89,24 @@ const BACKGROUNDS: Array<{ id: StageBackground; label: string }> = [
   { id: 'green', label: 'Green' },
 ];
 
+const getFireworksVariant = (id: AnimationAsset['id']): FireworksVariant | null => {
+  if (id === 'fireworksRapid') return 'rapid';
+  if (id === 'fireworksHero') return 'hero';
+  if (id === 'fireworksCapstone') return 'capstone';
+  return null;
+};
+
 export function AnimationLab() {
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const [enabled, setEnabled] = useState(false);
   const [open, setOpen] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [playing, setPlaying] = useState<Record<string, boolean>>({});
+  const [productionPreview, setProductionPreview] = useState<FireworksVariant | null>(null);
   const [backgrounds, setBackgrounds] = useState<Record<string, StageBackground>>({
-    fireworks: 'dark',
+    fireworksCapstone: 'dark',
+    fireworksHero: 'dark',
+    fireworksRapid: 'dark',
     egg: 'checker',
   });
 
@@ -203,7 +248,7 @@ export function AnimationLab() {
             </thead>
             <tbody>
               {ANIMATIONS.map((animation) => (
-                <tr key={animation.id}>
+                <tr key={animation.id} data-animation-id={animation.id}>
                   <td className="animation-lab-table__preview-cell">
                     <div className={`animation-lab-stage animation-lab-stage--${backgrounds[animation.id]}`}>
                       <video
@@ -216,7 +261,8 @@ export function AnimationLab() {
                         onPlay={() => setPlaying((current) => ({ ...current, [animation.id]: true }))}
                         onPause={() => setPlaying((current) => ({ ...current, [animation.id]: false }))}
                       >
-                        <source src={animation.src} type="video/webm" />
+                        <source src={animation.appleSrc} type='video/quicktime; codecs="hvc1"' />
+                        <source src={animation.src} type='video/webm; codecs="vp9"' />
                       </video>
                     </div>
                   </td>
@@ -229,9 +275,10 @@ export function AnimationLab() {
                   </td>
                   <td>
                     <strong>{animation.delivery}</strong>
+                    <small>{animation.appleDelivery}</small>
                     <p>{animation.dimensions} · {animation.fps}</p>
                     <span className="animation-lab-table__savings">{animation.savings}</span>
-                    <small>Transparent VP9 · muted · loopable · lazy entry</small>
+                    <small>Transparent VP9 + HEVC alpha · muted · loopable · lazy entry</small>
                   </td>
                   <td>
                     <div className="animation-lab-table__buttons">
@@ -239,6 +286,14 @@ export function AnimationLab() {
                         {playing[animation.id] ? 'Pause' : 'Play'}
                       </button>
                       <button type="button" onClick={() => restart(animation.id)}>Restart</button>
+                      {getFireworksVariant(animation.id) ? (
+                        <button
+                          type="button"
+                          onClick={() => setProductionPreview(getFireworksVariant(animation.id))}
+                        >
+                          Preview app layer
+                        </button>
+                      ) : null}
                     </div>
                     <fieldset className="animation-lab-backgrounds">
                       <legend>Background</legend>
@@ -269,6 +324,25 @@ export function AnimationLab() {
     </div>
   ) : null;
 
+  const appLayerPreview = productionPreview ? (
+    <div
+      className="animation-lab-app-preview"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${productionPreview} fireworks app-layer preview`}
+      onClick={() => setProductionPreview(null)}
+    >
+      <CelebrationFireworks variant={productionPreview} backdrop="hero" placement="viewport" />
+      <section className="animation-lab-app-preview__card" onClick={(event) => event.stopPropagation()}>
+        <p className="animation-lab-app-preview__eyebrow">Protected foreground</p>
+        <div className="animation-lab-app-preview__gift" aria-hidden="true">🎁</div>
+        <h2>Celebration title stays readable</h2>
+        <p>The animation sits above the page backdrop and behind gifts, creatures, titles, rewards and actions.</p>
+        <button type="button" onClick={() => setProductionPreview(null)}>Close preview</button>
+      </section>
+    </div>
+  ) : null;
+
   if (typeof document === 'undefined') return null;
-  return createPortal(<>{launcher}{modal}</>, document.body);
+  return createPortal(<>{launcher}{modal}{appLayerPreview}</>, document.body);
 }

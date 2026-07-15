@@ -81,6 +81,7 @@ import { FeaturePreviewOverlay } from './components/FeaturePreviewOverlay';
 import { FeatureStatusBadge } from './components/FeatureStatusBadge';
 import { QuickActionsFAB } from './components/QuickActionsFAB';
 import { XPToast } from './components/XPToast';
+import { scheduleRapidFireworksPreload } from './components/CelebrationFireworks';
 import { CaseSubmissionModal } from './features/cases/CaseSubmissionModal';
 import { RecoverableErrorBoundary } from './components/RecoverableErrorBoundary';
 import { PointsBadge } from './components/PointsBadge';
@@ -635,6 +636,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     signOut,
   } = useSupabaseAuth();
   const { theme } = useTheme();
+
+  useEffect(() => scheduleRapidFireworksPreload(), []);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

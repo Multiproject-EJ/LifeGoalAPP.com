@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { createPortal } from 'react-dom';
+import { CelebrationFireworks } from './CelebrationFireworks';
 
 export type CelebrationAnimationProps = {
   type: 'habit' | 'journal' | 'action' | 'breathing' | 'levelup' | 'vision';
@@ -96,12 +97,12 @@ const CONFETTI_CONFIGS: Record<CelebrationType, ConfettiConfig> = {
     ticks: 180,
     colors: ['#facc15', '#f97316', '#38bdf8', '#a78bfa', '#f472b6', '#ffffff'],
     target: 'game-icon',
-    cleanupDelay: 3200,
+    cleanupDelay: 5400,
     pulseDelay: 1150,
     backdropFadeIn: 120,
     xpFadeIn: 260,
-    xpHideDelay: 2400,
-    backdropFadeOut: 2550,
+    xpHideDelay: 3000,
+    backdropFadeOut: 4650,
   },
   vision: {
     particleCount: 78,
@@ -263,7 +264,7 @@ export function CelebrationAnimation({
       y: window.innerHeight * 0.72,
     };
 
-    if (!prefersReducedMotion()) {
+    if (!prefersReducedMotion() && type !== 'levelup') {
       fireConfetti(type, config, originPosition);
     }
 
@@ -365,6 +366,14 @@ export function CelebrationAnimation({
           }`}
         />
       )}
+
+      {type === 'levelup' ? (
+        <CelebrationFireworks
+          variant="hero"
+          placement="viewport"
+          className="celebration-fireworks--level-up"
+        />
+      ) : null}
 
       {/* XP indicator - retained while the heavy emoji swarm is replaced by canvas confetti. */}
       {showXP && allowXP && xpAmount ? (
