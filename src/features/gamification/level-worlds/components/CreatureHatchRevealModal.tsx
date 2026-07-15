@@ -1,5 +1,6 @@
 import React from 'react';
 import { applyCreatureArtFallback } from './creatureArtFallback';
+import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 
 export interface CreatureHatchRevealModalProps {
   open: boolean;
@@ -25,6 +26,9 @@ export function CreatureHatchRevealModal(props: CreatureHatchRevealModalProps): 
 
   return (
     <div className="island-run-hatch-reveal" role="dialog" aria-modal="true" aria-label="Creature hatch reveal">
+      {props.rarity !== 'common' ? (
+        <CelebrationFireworks variant={props.rarity === 'mythic' ? 'hero' : 'rapid'} />
+      ) : null}
       <div className={`island-run-hatch-reveal__card island-run-hatch-reveal__card--${props.rarity}`}>
         <div className="island-run-hatch-reveal__header">
           <p className="island-run-hatch-reveal__title">{props.creatureName}</p>

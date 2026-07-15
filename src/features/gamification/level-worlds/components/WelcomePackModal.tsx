@@ -1,6 +1,7 @@
 import React from 'react';
 import { CREATURE_CATALOG } from '../services/creatureCatalog';
 import { CreatureCard } from './CreatureCard';
+import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import type { ClaimFullWelcomePackResult } from '../services/islandRunWelcomePackFullClaimAction';
 import { buildWelcomePackStarterCacheBody } from '../services/islandRunWelcomePackCopy';
 
@@ -123,6 +124,7 @@ export function WelcomePackModal({
   if (phase === 'cards-intro') {
     return (
       <div className="island-run-overlay-root wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title-cards">
+        <CelebrationFireworks variant="hero" />
         <div className="wpm-shell wpm-shell--cards-intro wpm-shell--enter">
           <p className="wpm-eyebrow">First Light Shore</p>
           <h2 id="wpm-title-cards" className="wpm-title">Your 5 Cards</h2>
@@ -159,6 +161,12 @@ export function WelcomePackModal({
       aria-label={`Card ${revealIndex + 1} of ${resolvedCards.length}: ${creatureName}`}
       onClick={handleAdvanceCard}
     >
+      {cardTier !== 'common' ? (
+        <CelebrationFireworks
+          key={`${cardTier}-${revealIndex}`}
+          variant={cardTier === 'mythic' ? 'hero' : 'rapid'}
+        />
+      ) : null}
       <div key={revealIndex} className="wpm-card-reveal">
         <p className="wpm-card-reveal__counter">{revealIndex + 1} / {resolvedCards.length}</p>
         {creature ? (

@@ -7,7 +7,7 @@ const APP_SHELL = [
   '/icons/app-icon-512.png'
 ];
 const DOCUMENT_FALLBACKS = ['/', '/index.html'];
-const STATIC_ASSET_EXTENSIONS = /\.(?:css|js|mjs|map|woff2?|ttf|otf|eot|png|jpe?g|gif|svg|webp|avif|ico)$/i;
+const STATIC_ASSET_EXTENSIONS = /\.(?:css|js|mjs|map|woff2?|ttf|otf|eot|png|jpe?g|gif|svg|webp|avif|ico|webm|mov|mp4)$/i;
 
 const SUPABASE_HOST_MATCHER = /supabase\.(co|in)$/;
 const SUPABASE_SYNC_TAG = 'lifegoalapp-supabase-sync';

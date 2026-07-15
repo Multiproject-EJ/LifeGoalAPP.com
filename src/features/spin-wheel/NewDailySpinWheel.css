@@ -251,8 +251,11 @@
   justify-content: center;
   padding: 1.5rem;
   z-index: 1100;
+  isolation: isolate;
 }
 .new-daily-spin-modal__reward-card {
+  position: relative;
+  z-index: 2;
   background: linear-gradient(160deg, rgba(59, 7, 100, 0.98), rgba(30, 64, 175, 0.98));
   border-radius: 20px;
   padding: 1.5rem;

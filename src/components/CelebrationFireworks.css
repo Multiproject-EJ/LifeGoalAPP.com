@@ -1,0 +1,55 @@
+.celebration-fireworks {
+  position: absolute;
+  inset: 0;
+  z-index: var(--celebration-fireworks-z, 1);
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.celebration-fireworks--viewport {
+  position: fixed;
+}
+
+.celebration-fireworks--level-up {
+  --celebration-fireworks-z: 9998;
+}
+
+.celebration-fireworks__backdrop,
+.celebration-fireworks__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.celebration-fireworks__backdrop {
+  z-index: 0;
+}
+
+.celebration-fireworks__backdrop--adaptive {
+  background: rgba(5, 12, 28, 0.4);
+}
+
+.celebration-fireworks__backdrop--hero {
+  background: rgba(4, 8, 22, 0.5);
+}
+
+.celebration-fireworks__video {
+  z-index: 1;
+  display: block;
+  object-fit: var(--celebration-fireworks-fit, cover);
+  object-position: center;
+  opacity: 0.94;
+  transform: scale(1.015);
+}
+
+.celebration-fireworks--rapid .celebration-fireworks__video {
+  opacity: 0.9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celebration-fireworks__video {
+    display: none;
+  }
+}

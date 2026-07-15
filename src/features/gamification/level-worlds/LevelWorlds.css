@@ -6256,6 +6256,7 @@
     radial-gradient(circle at 50% 85%, rgba(35, 55, 90, 0.38), rgba(6, 10, 20, 0.74));
   backdrop-filter: blur(8px) saturate(0.75) brightness(0.62);
   z-index: 200;
+  isolation: isolate;
 }
 
 .island-clear-celebration::before {
@@ -6264,10 +6265,11 @@
   inset: 0;
   background: linear-gradient(180deg, rgba(20, 24, 46, 0.48), rgba(10, 12, 24, 0.64));
   pointer-events: none;
+  z-index: 0;
 }
 .island-clear-celebration__card {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6288,7 +6290,7 @@
   position: absolute;
   inset: 6% 8%;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 
 .island-clear-celebration__sparkle {
@@ -8014,9 +8016,12 @@
   animation: sanctuary-detail-fade 180ms ease-out;
   align-content: center;
   gap: 0.75rem;
+  isolation: isolate;
 }
 
 .island-run-hatch-reveal__card {
+  position: relative;
+  z-index: 2;
   width: min(440px, 100%);
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -8058,7 +8063,7 @@
 .island-run-hatch-reveal__title { margin: 0; font-size: 1.1rem; font-weight: 700; text-align: left; }
 .island-run-hatch-reveal__score { margin: 0; font-size: 0.82rem; opacity: 0.86; }
 .island-run-hatch-reveal__rarity, .island-run-hatch-reveal__confirm { margin: 0; }
-.island-run-hatch-reveal__actions { width: min(440px, 100%); display: grid; gap: 0.5rem; }
+.island-run-hatch-reveal__actions { position: relative; z-index: 2; width: min(440px, 100%); display: grid; gap: 0.5rem; }
 
 .island-run-first-creature-pack {
   position: fixed;
@@ -11732,6 +11737,7 @@
   place-items: center;
   background: radial-gradient(circle at 50% 10%, rgba(255, 210, 100, 0.18), rgba(10, 12, 28, 0.92));
   backdrop-filter: blur(10px);
+  isolation: isolate;
 }
 
 .wpm-overlay--card-reveal {
@@ -11741,6 +11747,8 @@
 
 /* ── Shell ── */
 .wpm-shell {
+  position: relative;
+  z-index: 2;
   width: min(92vw, 380px);
   border-radius: 24px;
   border: 1px solid rgba(255, 226, 148, 0.4);
@@ -11886,6 +11894,8 @@
 
 /* ── Card reveal ── */
 .wpm-card-reveal {
+  position: relative;
+  z-index: 2;
   width: min(88vw, 340px);
   aspect-ratio: 2 / 3;
   border-radius: 24px;
