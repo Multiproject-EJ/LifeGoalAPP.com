@@ -3,6 +3,22 @@
 This document defines the stable layer names and CSS hooks used by the mobile-framed workspace UI.
 Use these names in theme specs, tickets, and implementation plans.
 
+## 0) Official Brand Theme Foundation
+- **Purpose:** Shared visual source of truth for public, authentication, PWA, iOS,
+  App Store capture, and marketing surfaces.
+- **Official theme id:** `first-light`
+- **Primary hooks:**
+  - `[data-brand-theme='first-light']`
+  - `src/styles/first-light-theme.css`
+  - `--hg-first-light-*` design tokens
+- **Rules:**
+  - Brand typography, parchment materials, celestial backdrops, gold ornament,
+    focus states, and primary actions must consume the shared tokens.
+  - Keep text and controls live in the UI. Artwork may decorate a layer but must
+    never contain required interface copy.
+  - Public/auth surfaces use First Light consistently even when an authenticated
+    player later selects a personalization theme inside the app.
+
 ## 1) App Backdrop Layer
 - **Purpose:** Global app/environment background behind all frame and content layers.
 - **Primary hook:** `.app--workspace`

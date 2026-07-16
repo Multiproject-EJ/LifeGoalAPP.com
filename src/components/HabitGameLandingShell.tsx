@@ -18,13 +18,64 @@ type HabitGameLandingLayoutProps = {
 };
 
 export function HabitGameLandingLayout({ authCard, themeToggle }: HabitGameLandingLayoutProps) {
+  const { snapshot } = useServiceHealth();
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    const previousThemeColor = metaThemeColor?.getAttribute('content') ?? null;
+
+    root.classList.add('auth-gate-active');
+    metaThemeColor?.setAttribute('content', '#071a36');
+
+    return () => {
+      root.classList.remove('auth-gate-active');
+      if (previousThemeColor) {
+        metaThemeColor?.setAttribute('content', previousThemeColor);
+      }
+    };
+  }, []);
+
+  const syncStatus = (() => {
+    switch (snapshot.overall) {
+      case 'OFFLINE':
+        return 'Offline mode • Your progress is safe';
+      case 'DEGRADED':
+      case 'MAINTENANCE':
+        return 'Cloud sync delayed • Your progress is safe';
+      case 'ACCOUNT_ACTION_REQUIRED':
+        return 'Sign in again • Your progress is safe';
+      case 'UNSAFE':
+        return 'Saving paused • We’ll help you recover';
+      case 'ONLINE':
+      default:
+        return null;
+    }
+  })();
+
   return (
-    <div className="app app--auth-gate">
+    <div className="app app--auth-gate" data-brand-theme="first-light">
       <header className="auth-gate__masthead">
-        <a className="auth-gate__brand" href="/" aria-label="HabitGame home">
-          HabitGame
-        </a>
-        {themeToggle}
+        <div className="auth-gate__theme-control">{themeToggle}</div>
+        <div className="auth-gate__brand-lockup">
+          <img
+            className="auth-gate__brand-compass"
+            src="/assets/icons/compass-gold-256.webp"
+            alt=""
+          />
+          <a className="auth-gate__brand" href="/" aria-label="HabitGame home">
+            HabitGame
+          </a>
+        </div>
+        {syncStatus ? (
+          <p className="auth-gate__sync-pill" role="status">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M7.5 18.5h9a4.5 4.5 0 0 0 .8-8.93A5.75 5.75 0 0 0 6.4 8.2 5.15 5.15 0 0 0 7.5 18.5Z" />
+              <path d="m9.3 13.25 1.65 1.65 3.75-4.1" />
+            </svg>
+            <span>{syncStatus}</span>
+          </p>
+        ) : null}
       </header>
 
       <main className="auth-layout auth-gate__layout">
@@ -65,11 +116,11 @@ const authTabs: { id: HabitGameAuthTab; label: string }[] = [
 const authTabCopy: Record<HabitGameAuthTab, { title: string; subtitle: string }> = {
   login: {
     title: 'Welcome back',
-    subtitle: 'Log in to sync your rituals, goals, and check-ins across devices.',
+    subtitle: 'Continue your journey. Your progress is waiting.',
   },
   signup: {
-    title: 'Create your LifeGoal account',
-    subtitle: 'Sign up with email or Google to unlock your full ship.',
+    title: 'Begin your journey',
+    subtitle: 'Create your free account and carry your progress across devices.',
   },
 };
 
@@ -376,16 +427,11 @@ export function HabitGameAuthCard({
   };
 
   return (
-    <div className="auth-card">
+    <div className="auth-card auth-card--first-light" data-brand-theme="first-light">
       <header className="auth-card__header">
         <h2>{authTabCopy[activeAuthTab].title}</h2>
         <p>{authTabCopy[activeAuthTab].subtitle}</p>
       </header>
-
-      <div className="auth-card__guest-entry">
-        <button type="button" className="auth-card__primary" onClick={() => setGuestStep('timeline')}>Play My Game for Free</button>
-        <p>Start Island Run as a guest. Save your progress later with a free account.</p>
-      </div>
 
       <div className="auth-card__tabs" role="tablist" aria-label="Choose how to access LifeGoal">
         {authTabs.map((tab) => {
@@ -409,6 +455,19 @@ export function HabitGameAuthCard({
 
       <div className="auth-card__body">
         {renderTabPanel()}
+
+        {activeAuthTab === 'login' && outageBranch === 'none' ? (
+          <div className="auth-card__guest-entry">
+            <button type="button" className="auth-card__guest-button" onClick={() => setGuestStep('timeline')}>
+              <span aria-hidden="true">✦</span>
+              <span>
+                <strong>Play as guest</strong>
+                <small>Explore Island Run now. Save your progress later.</small>
+              </span>
+              <span className="auth-card__guest-arrow" aria-hidden="true">›</span>
+            </button>
+          </div>
+        ) : null}
 
         {!isConfigured ? (
           <p className="supabase-auth__status supabase-auth__status--error">
