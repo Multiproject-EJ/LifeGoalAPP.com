@@ -1,3 +1,4 @@
+-- Migration ledger version 02330001
 -- Migration 0233: Add first-class intent and duration program fields to habits_v2
 -- Purpose:
 --   1) Persist wizard intent/duration in typed columns instead of only JSON metadata
@@ -110,3 +111,22 @@ COMMENT ON COLUMN public.habits_v2.duration_unit IS 'Duration unit for fixed_win
 COMMENT ON COLUMN public.habits_v2.duration_start_at IS 'Program start timestamp for duration-bound habits.';
 COMMENT ON COLUMN public.habits_v2.duration_end_at IS 'Program computed end timestamp for duration-bound habits.';
 COMMENT ON COLUMN public.habits_v2.on_duration_end IS 'Action when duration ends: pause or deactivate.';
+
+-- Consolidated companion migration (shared historical version).
+
+-- Migration ledger version 02330002
+-- Migration 0233: Add Today reflection journal types
+-- Enables lightweight simple reflections and habit investigation entries to be stored
+-- in journal_entries with their own type values.
+
+ALTER TABLE public.journal_entries
+  DROP CONSTRAINT IF EXISTS journal_entries_type_allowed_values;
+
+ALTER TABLE public.journal_entries
+ADD CONSTRAINT journal_entries_type_allowed_values
+CHECK (type IN (
+  'quick', 'deep', 'brain_dump', 'life_wheel', 'secret', 'goal', 'time_capsule',
+  'standard', 'problem', 'gratitude', 'dream', 'quick_simple', 'habit_investigation'
+));
+
+COMMENT ON COLUMN public.journal_entries.type IS 'Journal entry mode: quick, deep, brain_dump, life_wheel, secret, goal, time_capsule, standard, problem, gratitude, dream, quick_simple, or habit_investigation';

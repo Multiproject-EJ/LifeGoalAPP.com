@@ -1,3 +1,4 @@
+-- Migration ledger version 02300001
 -- Migration 0230: Add bonus_tile_charge_by_island column to
 -- island_run_runtime_state so the 9-hit accumulator ledger persists across
 -- devices. Unblocks the bonus-tile renderer wiring (contract §5E) and the
@@ -20,3 +21,24 @@ ALTER TABLE public.island_run_runtime_state
 
 COMMENT ON COLUMN public.island_run_runtime_state.bonus_tile_charge_by_island IS
   'Per-(island, tileIndex) charge ledger for the glowing bonus tile. 1..8 charges; cleared to 0 on the 9th landing (release). See islandRunBonusTile.ts BONUS_CHARGE_TARGET.';
+
+-- Consolidated companion migration (shared historical version).
+
+-- Migration ledger version 02300002
+-- Fix: Drop the stale uuid-signature overload of island_run_commit_action.
+--
+-- Migration 0228 changed p_client_action_id from uuid → text and issued a
+-- DROP FUNCTION for the old uuid signature, but the drop was not applied to
+-- production.  As a result two overloads now coexist:
+--
+--   island_run_commit_action(..., p_client_action_id => uuid)   ← stale / 0217
+--   island_run_commit_action(..., p_client_action_id => text)   ← current / 0228
+--
+-- PostgreSQL cannot resolve which candidate to call and raises:
+--   "Could not choose the best candidate function between: ..."
+-- whenever the reset-gameplay (or any other) path invokes the RPC.
+--
+-- This migration unconditionally drops the old uuid overload so that only the
+-- text-parameter version remains.
+
+DROP FUNCTION IF EXISTS public.island_run_commit_action(text, bigint, text, jsonb, uuid);

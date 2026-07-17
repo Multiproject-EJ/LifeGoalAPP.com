@@ -13,15 +13,11 @@
 ALTER TABLE island_run_runtime_state
 ADD COLUMN IF NOT EXISTS dice_regen_state jsonb DEFAULT NULL;
 
--- Set hearts to 0 for all existing rows (hearts retired)
+-- Set the canonical hearts column to 0 for all existing rows. Runtime state is
+-- stored as first-class columns; there is no aggregate runtime_state JSONB.
 UPDATE island_run_runtime_state
-SET runtime_state = jsonb_set(
-  runtime_state,
-  '{hearts}',
-  '0'::jsonb
-)
-WHERE runtime_state->>'hearts' IS NOT NULL
-  AND (runtime_state->>'hearts')::int > 0;
+SET hearts = 0
+WHERE hearts > 0;
 
 -- Initialize dice_regen_state for existing rows that don't have it
 -- Default: level 1 tier (maxDice=30, regenRatePerHour=15)

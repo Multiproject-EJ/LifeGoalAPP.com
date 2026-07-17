@@ -376,7 +376,11 @@ BEGIN
       COALESCE(NULLIF(p_new_habit->>'start_date', '')::date, current_date),
       COALESCE((p_new_habit->>'archived')::boolean, false),
       v_new_habit_goal_id,
-      NULLIF(p_new_habit->>'habit_intent', '')
+      CASE
+        WHEN p_new_habit->>'habit_intent' IN ('build', 'break')
+          THEN p_new_habit->>'habit_intent'
+        ELSE 'build'
+      END
     )
     ON CONFLICT (id) DO UPDATE SET
       title = EXCLUDED.title,
@@ -472,8 +476,15 @@ COMMENT ON FUNCTION public.save_quest_bundle(jsonb, jsonb, jsonb) IS
 -- ── 6. Explicit Data API grants (required by current defaults) ─
 
 REVOKE ALL ON TABLE public.quests, public.quest_habit_links, public.quest_reflections FROM anon;
+REVOKE ALL ON TABLE public.campaigns, public.habits_v2 FROM anon;
 GRANT SELECT, INSERT, UPDATE, DELETE
   ON TABLE public.quests, public.quest_habit_links, public.quest_reflections
+  TO authenticated;
+-- Current Supabase projects require explicit Data API grants. Quest Forge can
+-- create a purpose-built habit inside the SECURITY INVOKER bundle function;
+-- the existing owner-only habits_v2 RLS policy remains the authorization gate.
+GRANT SELECT, INSERT, UPDATE, DELETE
+  ON TABLE public.campaigns, public.habits_v2
   TO authenticated;
 GRANT ALL
   ON TABLE public.quests, public.quest_habit_links, public.quest_reflections

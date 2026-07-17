@@ -1,3 +1,4 @@
+-- Migration ledger version 01860001
 -- ========================================================
 -- Contract sweep v4 — outcome-only + reverse parity in RPC evaluator
 -- ========================================================
@@ -403,3 +404,15 @@ $$;
 
 COMMENT ON FUNCTION public.evaluate_due_commitment_contracts(UUID, INTEGER)
 IS 'Evaluates due active commitment contract windows for a user with parity-safe type logic, including reverse and outcome-only contracts.';
+
+-- Consolidated companion migration (shared historical version).
+
+-- Migration ledger version 01860002
+-- Migration 0186: Add cycle_index to island_run_runtime_state
+-- Tracks completed wraps from island 120 back to island 1.
+
+ALTER TABLE IF EXISTS island_run_runtime_state
+  ADD COLUMN IF NOT EXISTS cycle_index INTEGER NOT NULL DEFAULT 0;
+
+COMMENT ON COLUMN island_run_runtime_state.cycle_index IS
+  'Counts full Island Run wraps (island 120 -> island 1).';

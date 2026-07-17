@@ -77,9 +77,7 @@ DECLARE
     'active_timed_event_progress',
     'sticker_progress',
     'sticker_inventory',
-    'last_writer_device_session_id',
-    'stop_tickets_paid_by_island',
-    'last_essence_drift_lost'
+    'last_writer_device_session_id'
   ];
 
   -- Required RPC functions

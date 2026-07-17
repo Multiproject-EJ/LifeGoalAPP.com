@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(16);
+select plan(29);
 
 select has_table('public', 'quests', 'quests table exists');
 select has_table('public', 'quest_habit_links', 'quest habit links table exists');
@@ -67,6 +67,174 @@ select ok(
 select ok(
   not has_table_privilege('anon', 'public.quests', 'SELECT'),
   'anonymous users cannot read Quests'
+);
+
+-- Behavioral ownership checks. Use deterministic users so the bundle can be
+-- exercised under the same authenticated role used by the Data API.
+insert into auth.users (
+  id, instance_id, aud, role, email, encrypted_password,
+  email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at
+) values
+  (
+    '11111111-1111-4111-8111-111111111111',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated', 'authenticated', 'quest-owner@example.test', '',
+    now(), '{}'::jsonb, '{}'::jsonb, now(), now()
+  ),
+  (
+    '22222222-2222-4222-8222-222222222222',
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated', 'authenticated', 'quest-other@example.test', '',
+    now(), '{}'::jsonb, '{}'::jsonb, now(), now()
+  );
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);
+select set_config('request.jwt.claim.role', 'authenticated', true);
+
+select lives_ok(
+  $$
+    insert into public.goals (id, user_id, title, status_tag)
+    values (
+      'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      '11111111-1111-4111-8111-111111111111',
+      'Build the healthier season',
+      'active'
+    )
+  $$,
+  'an authenticated user can create their own Goal'
+);
+
+select throws_ok(
+  $$
+    insert into public.goals (user_id, title)
+    values ('22222222-2222-4222-8222-222222222222', 'Not mine')
+  $$,
+  '42501',
+  'new row violates row-level security policy for table "goals"',
+  'an authenticated user cannot create a Goal for another user'
+);
+
+select lives_ok(
+  $$
+    select public.save_quest_bundle(
+      '{
+        "id":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        "user_id":"11111111-1111-4111-8111-111111111111",
+        "goal_id":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        "title":"Find a sustainable breakfast loop",
+        "outcome":"Choose and eat a fitting breakfast on five mornings",
+        "quest_kind":"behavior_experiment",
+        "status":"active",
+        "starts_on":"2026-07-17",
+        "ends_on":"2026-07-31",
+        "life_wheel_category":"body_health",
+        "smart_definition":{"measure":"5 mornings"},
+        "behavior_design":{"better_loop":"choose from saved meal alternatives"},
+        "reflection_plan":{"cadence":"weekly"}
+      }'::jsonb,
+      '[{
+        "habit_id":"cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+        "role":"keystone"
+      }]'::jsonb,
+      '{
+        "id":"cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+        "user_id":"11111111-1111-4111-8111-111111111111",
+        "goal_id":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        "title":"Eat a healthy breakfast",
+        "emoji":"🥣",
+        "type":"boolean",
+        "status":"active",
+        "schedule":{"mode":"daily"},
+        "start_date":"2026-07-17",
+        "archived":false,
+        "habit_intent":"build"
+      }'::jsonb
+    )
+  $$,
+  'atomic Quest save creates the Quest, new habit, and link'
+);
+
+select is(
+  (select count(*) from public.quests where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  1::bigint,
+  'Quest owner can read the saved Quest'
+);
+select is(
+  (select count(*) from public.habits_v2 where id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
+  1::bigint,
+  'Quest owner can read the newly created habit'
+);
+select is(
+  (select count(*) from public.quest_habit_links where quest_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  1::bigint,
+  'Quest owner can read the keystone link'
+);
+
+select set_config('request.jwt.claim.sub', '22222222-2222-4222-8222-222222222222', true);
+
+select is(
+  (select count(*) from public.quests where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  0::bigint,
+  'another user cannot read the Quest'
+);
+select is(
+  (select count(*) from public.habits_v2 where id = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
+  0::bigint,
+  'another user cannot read the Quest habit'
+);
+select is(
+  (select count(*) from public.quest_habit_links where quest_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  0::bigint,
+  'another user cannot read the Quest-habit link'
+);
+
+select throws_ok(
+  $$
+    select public.save_quest_bundle(
+      '{
+        "id":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        "user_id":"11111111-1111-4111-8111-111111111111",
+        "title":"Try to claim another user Quest"
+      }'::jsonb,
+      '[]'::jsonb,
+      null
+    )
+  $$,
+  '42501',
+  'Quest owner does not match the authenticated user.',
+  'another user cannot update the Quest through the atomic function'
+);
+
+select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);
+
+select lives_ok(
+  $$
+    insert into public.quest_reflections (
+      user_id, quest_id, reflection_type, content, loop_observation, next_experiment
+    ) values (
+      '11111111-1111-4111-8111-111111111111',
+      'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      'loop_review',
+      'Breakfast worked when the choice was made the night before.',
+      '{"cue":"evening plan","result":"less morning friction"}'::jsonb,
+      'Put the bowl and recipe card out before bed.'
+    )
+  $$,
+  'Quest owner can add behavior-loop evidence'
+);
+select is(
+  (select count(*) from public.quest_reflections where quest_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  1::bigint,
+  'Quest owner can read their reflection'
+);
+
+select set_config('request.jwt.claim.sub', '22222222-2222-4222-8222-222222222222', true);
+select is(
+  (select count(*) from public.quest_reflections where quest_id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+  0::bigint,
+  'another user cannot read the Quest reflection'
 );
 
 select * from finish();

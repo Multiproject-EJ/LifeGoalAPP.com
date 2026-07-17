@@ -21,7 +21,7 @@ BEGIN
   RETURN QUERY
   INSERT INTO public.user_wallets (user_id, dice_rolls)
   VALUES (p_user_id, p_delta)
-  ON CONFLICT (user_id)
+  ON CONFLICT ON CONSTRAINT user_wallets_pkey
   DO UPDATE
     SET dice_rolls = public.user_wallets.dice_rolls + EXCLUDED.dice_rolls,
         updated_at = now()

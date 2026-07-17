@@ -227,7 +227,7 @@ export async function saveQuestBundle(
     start_date: draft.startsOn ?? new Date().toISOString().slice(0, 10),
     archived: false,
     goal_id: draft.goalId,
-    habit_intent: `Quest habit for ${draft.title}`,
+    habit_intent: 'build',
   } : null;
   const payload: QuestBundleQueuePayload = { quest, links, newHabit };
 

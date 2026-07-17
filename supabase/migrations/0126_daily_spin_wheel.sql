@@ -59,6 +59,8 @@ CREATE POLICY "Users can insert their own spin history"
   WITH CHECK (auth.uid() = user_id);
 
 -- Add trigger for updated_at
+DROP TRIGGER IF EXISTS update_daily_spin_state_updated_at
+  ON public.daily_spin_state;
 CREATE TRIGGER update_daily_spin_state_updated_at
   BEFORE UPDATE ON public.daily_spin_state
   FOR EACH ROW

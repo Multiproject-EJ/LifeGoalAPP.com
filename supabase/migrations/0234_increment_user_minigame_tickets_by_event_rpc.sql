@@ -30,7 +30,7 @@ BEGIN
 
   INSERT INTO public.island_run_runtime_state (user_id, minigame_tickets_by_event)
   VALUES (p_user_id, jsonb_build_object(p_event_id, p_delta))
-  ON CONFLICT (user_id)
+  ON CONFLICT ON CONSTRAINT island_run_runtime_state_pkey
   DO UPDATE
     SET minigame_tickets_by_event = jsonb_set(
       coalesce(public.island_run_runtime_state.minigame_tickets_by_event, '{}'::jsonb),
