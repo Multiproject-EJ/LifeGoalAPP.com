@@ -14,6 +14,7 @@ import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
+import { createDemoSession, isDemoSession } from './services/demoSession';
 import { GoalWorkspace, LifeGoalsSection, MyQuestHub } from './features/goals';
 import { BodyHaircutWidget, DailyHabitTracker, HabitsModule, MobileHabitHome, StarterHabitPicker } from './features/habits';
 import type { TimeBoundOfferId } from './features/habits/TimeBoundOfferRow';
@@ -632,10 +633,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
     signInWithPassword,
     signUpWithPassword,
     signInWithGoogle,
-    signInAnonymously,
     signOut,
   } = useSupabaseAuth();
   const { theme } = useTheme();
+  const [localGuestSession, setLocalGuestSession] = useState<Session | null>(null);
 
   useEffect(() => scheduleRapidFireworksPreload(), []);
 
@@ -1745,7 +1746,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const activeSession = useMemo(() => supabaseSession as Session, [supabaseSession]);
+  const activeSession = useMemo(
+    () => (supabaseSession ?? localGuestSession) as Session,
+    [localGuestSession, supabaseSession],
+  );
+
+  useEffect(() => {
+    if (supabaseSession) setLocalGuestSession(null);
+  }, [supabaseSession]);
   const appFutureFeatureCardStates = useFutureFeatureCardStates(['app.body', 'app.contracts', 'app.routines'], {
     loadVotes: Boolean(activeSession?.user?.id),
   });
@@ -2566,6 +2574,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           return;
         }
         await signInWithPassword({ email: formEmail, password: formPassword });
+        setLocalGuestSession(null);
         setAuthMessage('Signed in successfully.');
         setShowAuthPanel(false);
         setActiveWorkspaceNav('planning');
@@ -2667,6 +2676,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setAuthError(null);
     setAuthMessage(null);
     try {
+      if (isDemoSession(activeSession)) {
+        setLocalGuestSession(null);
+        setAuthMessage('Guest preview closed.');
+        setEmail('');
+        setPassword('');
+        setFullName('');
+        return;
+      }
       await flushProfileAutosave().catch((error) => {
         console.warn('Unable to flush profile autosave before signing out.', error);
       });
@@ -2699,7 +2716,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const requiresAuthenticatedAccess = (navId: string) => navId === 'insights';
 
-  const shouldRequireAuthentication = !isAuthenticated;
+  const shouldRequireAuthentication = !activeSession;
 
   const closeGameBoardOverlayIfOpen = () => {
     if (showGameBoardOverlay) {
@@ -3466,7 +3483,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     workspaceNavItems.find((item) => item.id === activeWorkspaceNav) ??
     workspaceNavItems[workspaceNavItems.length - 1];
 
-  const isDemoExperience = false;
+  const isDemoExperience = isDemoSession(activeSession);
   const normalizedDisplayName =
     displayName.trim() ||
     workspaceProfile?.full_name ||
@@ -3736,20 +3753,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
       displayName: payload.displayName || undefined,
       shipName: payload.shipName || undefined,
     });
-    setPendingGuestIslandRunEntry(true);
-    try {
-      if (!supabaseSession) {
-        await signInAnonymously();
-        return;
-      }
-      setLevelWorldsEntryPanel('default');
-      setShowLevelWorldsFromEntry(true);
-    } catch (error) {
-      setPendingGuestIslandRunEntry(false);
-      setAuthError(error instanceof Error ? error.message : 'Unable to start guest play right now.');
-      throw error;
+    setAuthError(null);
+    if (!supabaseSession) {
+      setPendingGuestIslandRunEntry(true);
+      setLocalGuestSession(createDemoSession());
+      return;
     }
-  }, [signInAnonymously, supabaseSession]);
+    setLevelWorldsEntryPanel('default');
+    setShowLevelWorldsFromEntry(true);
+  }, [supabaseSession]);
 
   const handleOpenSaveAccountSignup = useCallback(() => {
     setActiveAuthTab('signup');

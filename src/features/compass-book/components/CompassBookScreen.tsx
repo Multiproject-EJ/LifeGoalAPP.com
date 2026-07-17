@@ -82,6 +82,7 @@ export function CompassBookScreen({
             getProgress={book.getProgress}
             onClose={onClose}
             onOpenChapter={openChapter}
+            userId={session?.user?.id ?? 'local'}
           />
         ) : null}
         {view.kind === 'chapter' ? (

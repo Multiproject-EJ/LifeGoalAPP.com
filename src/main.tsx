@@ -14,6 +14,8 @@ import { initServiceHealthForBrowser } from './services/service-health/browserWi
 import { registerOfflineSyncExecutors } from './services/offlineSyncExecutors.ts';
 import { ServiceStatusBanner } from './components/service-status/index.ts';
 import { AnimationLab } from './components/AnimationLab.tsx';
+import { HabitGameMobileDownloadGate } from './components/HabitGameLandingShell.tsx';
+import { isCurrentClientPhone } from './utils/phoneClient.ts';
 
 // Start monitoring cloud health before anything assumes Supabase is available.
 initServiceHealthForBrowser();
@@ -108,6 +110,7 @@ function Root() {
     window.location.pathname.replace(/\/+$/, '') === QUEST_VISUAL_SYSTEM_PREVIEW_PATH;
 
   const initialRoute = useMemo(() => resolveRoute(), []);
+  const isPhoneEntryClient = useMemo(() => isCurrentClientPhone(), []);
   const [showApp, setShowApp] = useState(() => {
     const shouldRenderAppByDefault = !NON_APP_ROUTES.has(initialRoute);
     if (shouldRenderAppByDefault) return true;
@@ -136,6 +139,10 @@ function Root() {
 
   if (isQuestVisualSystemPreviewRoute) {
     return <QuestVisualSystemPreviewRoute />;
+  }
+
+  if (!isPhoneEntryClient && initialRoute !== 'privacy' && initialRoute !== 'terms' && initialRoute !== 'support') {
+    return <HabitGameMobileDownloadGate />;
   }
 
   if (!showApp && !showLobby) {

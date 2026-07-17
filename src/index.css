@@ -6492,6 +6492,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-habit-home .habit-checklist-card__board-body {
   --board-body-inline-pad: clamp(1rem, 4vw, 1.15rem);
+  container: habit-board / inline-size;
   padding-inline: var(--board-body-inline-pad);
   overflow-x: clip;
 }
@@ -8414,6 +8415,11 @@ html.platform-ipad .workspace-shell__menu-edge {
   background: linear-gradient(155deg, rgba(255, 251, 235, 0.95), rgba(254, 243, 199, 0.9));
   animation: questItemGlow 3s ease-in-out infinite;
 }
+
+.habit-checklist__item--linked-quest:not(.habit-checklist__item--quest) {
+  border-color: rgba(109, 40, 217, 0.32);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.08), 0 10px 24px rgba(15, 23, 42, 0.08);
+}
 .habit-checklist__item--todo {
   border: 1.5px solid rgba(37, 99, 235, 0.58);
   box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.22), 0 12px 28px rgba(37, 99, 235, 0.14);
@@ -8625,6 +8631,61 @@ html.platform-ipad .workspace-shell__menu-edge {
   flex-shrink: 0;
 }
 
+.habit-checklist__goal-badge,
+.habit-checklist__linked-quest-badge,
+.habit-checklist__linked-quest-more {
+  display: inline-flex;
+  align-items: center;
+  max-width: min(100%, 18rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 0.15em 0.55em;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.habit-checklist__goal-badge {
+  color: #075985;
+  border: 1px solid rgba(14, 116, 144, 0.25);
+  background: rgba(207, 250, 254, 0.72);
+}
+
+.habit-checklist__linked-quest-badge {
+  color: #5b21b6;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  background: linear-gradient(135deg, rgba(237, 233, 254, 0.95), rgba(221, 214, 254, 0.82));
+}
+
+.habit-checklist__linked-quest-badge--keystone {
+  color: #6b21a8;
+  border-color: rgba(147, 51, 234, 0.48);
+  box-shadow: inset 0 0 0 1px rgba(192, 132, 252, 0.16);
+}
+
+.habit-checklist__linked-quest-more {
+  color: #6b7280;
+  background: rgba(107, 114, 128, 0.08);
+}
+
+.habit-card__quest-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+}
+
+.habit-card__quest-tags span {
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: 999px;
+  color: #5b21b6;
+  background: rgba(237, 233, 254, 0.78);
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.16rem 0.46rem;
+}
+
 /* Quest toggle button — shown on every habit row */
 .habit-checklist__quest-btn {
   flex-shrink: 0;
@@ -8665,6 +8726,40 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-checklist__quest-btn--active:hover {
   animation: none;
   opacity: 0.75;
+}
+
+.habit-checklist__super-action-btn {
+  flex-shrink: 0;
+  width: 38px;
+  min-height: 42px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  padding: 0.2rem;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 12px;
+  color: #5b21b6;
+  background: linear-gradient(145deg, rgba(245, 243, 255, 0.98), rgba(237, 233, 254, 0.82));
+  box-shadow: 0 6px 14px rgba(76, 29, 149, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.habit-checklist__super-action-btn:hover {
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 9px 18px rgba(76, 29, 149, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.habit-checklist__super-action-btn > span { font-size: 1rem; line-height: 1; }
+.habit-checklist__super-action-btn > small { font-size: 0.52rem; font-weight: 900; letter-spacing: 0.04em; line-height: 1; text-transform: uppercase; }
+.habit-checklist__super-action-btn--live { border-color: rgba(5, 150, 105, 0.4); color: #065f46; background: linear-gradient(145deg, #ecfdf5, #d1fae5); }
+
+.habit-quick-journal__badge--super {
+  border-color: rgba(124, 58, 237, 0.32);
+  color: #5b21b6;
+  background: linear-gradient(135deg, #f5f3ff, #ede9fe);
 }
 
 
@@ -10369,6 +10464,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-checklist__group {
   display: grid;
   gap: 0.6rem;
+  min-width: 0;
+  width: 100%;
 }
 
 
@@ -39283,6 +39380,55 @@ body.habit-wizard-open .mobile-footer-nav {
   background: linear-gradient(135deg, #f59e0b, #facc15 48%, #fef3c7);
   color: #3b2504;
   border-color: rgba(120, 53, 15, 0.42);
+}
+
+.habit-checklist-card__super-habits-launcher {
+  border: 1px solid rgba(124, 58, 237, 0.38);
+  border-radius: 999px;
+  min-height: 2.15rem;
+  padding: 0.42rem 0.62rem;
+  color: #5b21b6;
+  background: linear-gradient(135deg, rgba(245, 243, 255, 0.98), rgba(237, 233, 254, 0.88));
+  box-shadow: 0 8px 20px rgba(76, 29, 149, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+@container habit-board (max-width: 430px) {
+  .habit-checklist-card__title {
+    min-width: 0;
+  }
+
+  .habit-checklist-card__title-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .habit-checklist-card__title-actions > button,
+  .habit-checklist-card__display-launcher,
+  .habit-checklist-card__display-launcher-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .habit-checklist-card__display-launcher {
+    margin-left: 0;
+  }
+}
+
+@container habit-board (max-width: 230px) {
+  .habit-checklist-card__title-actions {
+    gap: 0.3rem;
+  }
+
+  .habit-checklist-card__title-actions > button {
+    padding-inline: 0.35rem;
+    font-size: 0.68rem;
+  }
 }
 
 .campaign-card {

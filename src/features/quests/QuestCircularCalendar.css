@@ -1,0 +1,107 @@
+.quest-ring-container {
+  container: quest-calendar / inline-size;
+  width: 100%;
+  min-width: 0;
+}
+
+.quest-ring {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  margin: 0.4rem 0 0.85rem;
+  padding: 0.9rem;
+  overflow: hidden;
+  border: 1px solid rgba(109, 40, 217, 0.24);
+  border-radius: 20px;
+  color: #312e81;
+  background:
+    radial-gradient(circle at 85% 35%, rgba(196, 181, 253, 0.35), transparent 35%),
+    linear-gradient(145deg, rgba(250, 245, 255, 0.98), rgba(238, 242, 255, 0.92));
+  box-shadow: 0 14px 32px rgba(76, 29, 149, 0.1);
+}
+
+.quest-ring__copy { align-self: start; min-width: 0; }
+.quest-ring__copy h3, .quest-ring__copy p { margin: 0; }
+.quest-ring__copy h3 { font-size: 1.05rem; color: #312e81; }
+.quest-ring__copy > p { margin-top: 0.45rem; color: #5b5b85; font-size: 0.76rem; line-height: 1.45; max-width: 30rem; }
+.quest-ring__create { margin-top: 0.65rem; border: 0; border-radius: 999px; padding: 0.46rem 0.7rem; color: white; background: linear-gradient(135deg, #7c3aed, #4f46e5); cursor: pointer; font-size: 0.7rem; font-weight: 900; box-shadow: 0 8px 18px rgba(79,70,229,0.2); }
+.quest-ring__eyebrow { color: #7c3aed; font-size: 0.62rem; font-weight: 950; letter-spacing: 0.11em; text-transform: uppercase; }
+.quest-ring__layout { display: flex; align-items: center; gap: 0.75rem; }
+.quest-ring__orbit { position: relative; width: 214px; height: 214px; flex: 0 0 214px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.9) 0 47%, transparent 48%), conic-gradient(from -90deg, rgba(124, 58, 237, 0.13), rgba(14, 165, 233, 0.1), rgba(124, 58, 237, 0.13)); box-shadow: inset 0 0 0 1px rgba(124,58,237,0.12); }
+.quest-ring__center { position: absolute; inset: 32%; display: grid; place-content: center; text-align: center; z-index: 2; }
+.quest-ring__center strong { font-size: 1rem; color: #312e81; }
+.quest-ring__center span { color: #7c3aed; font-size: 0.58rem; font-weight: 850; white-space: nowrap; }
+.quest-ring__day { position: absolute; left: calc(50% - 10px); top: calc(50% - 10px); width: 20px; height: 20px; transform: rotate(var(--quest-ring-angle)) translateY(-91px) rotate(calc(-1 * var(--quest-ring-angle))); display: grid; place-items: center; border-radius: 50%; color: #6b7280; background: rgba(255,255,255,0.92); font-size: 0.51rem; font-weight: 850; box-shadow: 0 1px 5px rgba(49,46,129,0.14); }
+.quest-ring__day--today { color: white; background: #4f46e5; box-shadow: 0 0 0 3px rgba(99,102,241,0.22), 0 4px 10px rgba(49,46,129,0.25); }
+.quest-ring__signals { position: absolute; top: -4px; display: flex; gap: 1px; }
+.quest-ring__signal { display: inline-block; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; }
+.quest-ring__signal--goal { background: #0891b2; }
+.quest-ring__signal--campaign { background: #f59e0b; }
+.quest-ring__signal--quest { background: #7c3aed; }
+.quest-ring__legend { display: grid; gap: 0.42rem; color: #57547a; font-size: 0.64rem; font-weight: 760; white-space: nowrap; }
+.quest-ring__legend span { display: flex; align-items: center; gap: 0.32rem; }
+
+@container quest-calendar (max-width: 520px) {
+  .quest-ring {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .quest-ring__copy > p {
+    max-width: none;
+  }
+
+  .quest-ring__layout {
+    justify-content: center;
+    min-width: 0;
+  }
+}
+
+@container quest-calendar (max-width: 280px) {
+  .quest-ring {
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .quest-ring__layout {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .quest-ring__orbit {
+    width: min(170px, 100%);
+    height: auto;
+    aspect-ratio: 1;
+    flex: 0 1 auto;
+  }
+
+  .quest-ring__day {
+    transform: rotate(var(--quest-ring-angle)) translateY(-44px) rotate(calc(-1 * var(--quest-ring-angle)));
+  }
+
+  .quest-ring__legend {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    gap: 0.35rem;
+    white-space: normal;
+    font-size: 0.56rem;
+  }
+
+  .quest-ring__legend span {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .quest-ring { grid-template-columns: 1fr; }
+  .quest-ring__copy > p { max-width: none; }
+  .quest-ring__layout { justify-content: center; }
+}
+
+@media (max-width: 390px) {
+  .quest-ring__layout { align-items: flex-start; }
+  .quest-ring__orbit { width: 190px; height: 190px; flex-basis: 190px; }
+  .quest-ring__day { transform: rotate(var(--quest-ring-angle)) translateY(-80px) rotate(calc(-1 * var(--quest-ring-angle))); }
+  .quest-ring__legend { white-space: normal; }
+}

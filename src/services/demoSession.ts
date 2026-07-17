@@ -30,6 +30,7 @@ export function createDemoSession(): Session {
     phone_confirmed_at: null,
     recovery_sent_at: isoNow,
     role: 'authenticated',
+    is_anonymous: true,
     updated_at: isoNow,
     raw_app_meta_data: { provider: 'demo', providers: ['demo'] },
     raw_user_meta_data: {

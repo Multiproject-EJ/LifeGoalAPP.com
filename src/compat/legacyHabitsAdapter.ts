@@ -35,6 +35,12 @@ import {
   updateHabitLogMutation,
   upsertLocalHabitLogRecord,
 } from '../data/habitLogsOfflineRepo';
+import {
+  DEMO_USER_ID,
+  clearDemoHabitCompletion,
+  getDemoHabitLogsForRange,
+  getDemoHabitsForUser,
+} from '../services/demoData';
 
 // Legacy type definitions for compatibility
 type LegacyHabitRow = Database['public']['Tables']['habits']['Row'];
@@ -291,6 +297,15 @@ export async function fetchHabitsByGoal(goalId: string): Promise<ServiceResponse
  */
 export async function fetchHabitsForUser(userId: string): Promise<ServiceResponse<LegacyHabitWithGoal[]>> {
   logDeprecationWarning('fetchHabitsForUser');
+
+  if (userId === DEMO_USER_ID) {
+    return {
+      data: getDemoHabitsForUser(userId)
+        .filter((habit) => !habit.archived && habit.status === 'active')
+        .map(toLegacyHabitWithGoal),
+      error: null,
+    };
+  }
   
   const { data, error } = await listHabitsV2();
   
@@ -439,6 +454,12 @@ export async function clearHabitCompletion(
   date: string
 ): Promise<ServiceResponse<LegacyHabitLogRow>> {
   logDeprecationWarning('clearHabitCompletion');
+
+  const isDemoHabit = getDemoHabitsForUser(DEMO_USER_ID).some((habit) => habit.id === habitId);
+  if (isDemoHabit) {
+    const removed = clearDemoHabitCompletion(habitId, date);
+    return { data: removed ? toLegacyLog(removed) : null, error: null };
+  }
   
   if (!canUseSupabaseData()) {
     return { data: null, error: { message: 'Not in Supabase mode' } as PostgrestError };
@@ -541,6 +562,13 @@ export async function fetchHabitLogsForRange(
   
   if (!habitIds.length) {
     return { data: [], error: null };
+  }
+
+  if (userId === DEMO_USER_ID) {
+    return {
+      data: getDemoHabitLogsForRange(habitIds, startDate, endDate).map(toLegacyLog),
+      error: null,
+    };
   }
   
   if (!userId) {

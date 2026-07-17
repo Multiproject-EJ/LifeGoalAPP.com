@@ -1415,7 +1415,7 @@ export function getDemoHabitsForUser(userId: string): HabitRow[] {
   const goalIds = new Set(state.goals.filter((goal) => goal.user_id === userId).map((goal) => goal.id));
   return clone(
     state.habits
-      .filter((habit) => habit.goal_id && goalIds.has(habit.goal_id))
+      .filter((habit) => habit.user_id === userId || Boolean(habit.goal_id && goalIds.has(habit.goal_id)))
       .map(normalizeHabitRow)
       .sort((a, b) => a.title.localeCompare(b.title)),
   );

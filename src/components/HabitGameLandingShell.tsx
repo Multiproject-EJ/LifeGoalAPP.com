@@ -15,9 +15,10 @@ export type HabitGameAuthTab = 'login' | 'signup';
 type HabitGameLandingLayoutProps = {
   authCard: ReactNode;
   themeToggle: ReactNode;
+  variant?: 'auth' | 'download';
 };
 
-export function HabitGameLandingLayout({ authCard, themeToggle }: HabitGameLandingLayoutProps) {
+export function HabitGameLandingLayout({ authCard, themeToggle, variant = 'auth' }: HabitGameLandingLayoutProps) {
   const { snapshot } = useServiceHealth();
 
   useEffect(() => {
@@ -78,7 +79,7 @@ export function HabitGameLandingLayout({ authCard, themeToggle }: HabitGameLandi
         ) : null}
       </header>
 
-      <main className="auth-layout auth-gate__layout">
+      <main className={`auth-layout auth-gate__layout${variant === 'download' ? ' auth-gate__layout--download' : ''}`}>
         <div className="auth-panel auth-gate__panel">{authCard}</div>
       </main>
     </div>
@@ -496,4 +497,100 @@ export function HabitGameLandingShell({ themeToggle, ...authCardProps }: HabitGa
       authCard={<HabitGameAuthCard {...authCardProps} />}
     />
   );
+}
+
+export function HabitGameMobileDownloadGate() {
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle');
+  const phoneUrl = typeof window === 'undefined' ? 'habitgame.app' : window.location.origin;
+
+  const copyPhoneUrl = async () => {
+    const fallbackInput = document.createElement('textarea');
+    fallbackInput.value = phoneUrl;
+    fallbackInput.setAttribute('readonly', '');
+    fallbackInput.style.position = 'fixed';
+    fallbackInput.style.opacity = '0';
+    document.body.appendChild(fallbackInput);
+    fallbackInput.select();
+    const fallbackCopied = document.execCommand('copy');
+    fallbackInput.remove();
+
+    if (fallbackCopied) {
+      setCopyState('copied');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(phoneUrl);
+      setCopyState('copied');
+    } catch {
+      setCopyState('error');
+    }
+  };
+
+  const downloadCard = (
+    <section className="mobile-download-card" aria-labelledby="mobile-download-title">
+      <header className="mobile-download-card__header">
+        <div className="mobile-download-card__phone" aria-hidden="true">
+          <span>✦</span>
+        </div>
+        <div>
+          <p className="mobile-download-card__eyebrow">Made for your phone</p>
+          <h1 id="mobile-download-title">Your adventure belongs in your pocket.</h1>
+          <p>HabitGame is a mobile-first PWA and iPhone app. Continue on a phone to log in, play as a guest, and build your real-life game.</p>
+        </div>
+      </header>
+
+      <div className="mobile-download-card__address" aria-label="HabitGame phone address">
+        <div>
+          <span>Open this address on your phone</span>
+          <strong>{phoneUrl}</strong>
+        </div>
+        <button type="button" onClick={copyPhoneUrl}>
+          {copyState === 'copied' ? 'Copied' : 'Copy link'}
+        </button>
+      </div>
+      {copyState === 'error' ? (
+        <p className="mobile-download-card__copy-error">Copy was unavailable. Type the address above into your phone browser.</p>
+      ) : null}
+
+      <div className="mobile-download-card__options">
+        <article>
+          <div className="mobile-download-card__option-title">
+            <span aria-hidden="true"></span>
+            <div><small>iPhone app</small><h2>App Store</h2></div>
+          </div>
+          <p>The native iPhone release is on its way.</p>
+          <button type="button" disabled>Coming soon</button>
+        </article>
+
+        <article>
+          <div className="mobile-download-card__option-title">
+            <span aria-hidden="true">◉</span>
+            <div><small>iPhone · Safari</small><h2>Install the PWA</h2></div>
+          </div>
+          <ol>
+            <li>Open HabitGame in Safari on your iPhone.</li>
+            <li>Tap Share, then <strong>Add to Home Screen</strong>.</li>
+            <li>Tap Add to install it like an app.</li>
+          </ol>
+        </article>
+
+        <article>
+          <div className="mobile-download-card__option-title">
+            <span aria-hidden="true">◆</span>
+            <div><small>Android · Chrome</small><h2>Install the PWA</h2></div>
+          </div>
+          <ol>
+            <li>Open HabitGame in Chrome on your Android phone.</li>
+            <li>Open the browser menu and tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+            <li>Confirm to add HabitGame to your phone.</li>
+          </ol>
+        </article>
+      </div>
+
+      <p className="mobile-download-card__note">Desktop and tablet play are intentionally paused while the phone experience is being shaped.</p>
+    </section>
+  );
+
+  return <HabitGameLandingLayout variant="download" themeToggle={null} authCard={downloadCard} />;
 }

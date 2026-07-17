@@ -3,6 +3,7 @@ import { COMPASS_BOOK_CHAPTERS } from '../content/compassBookCurriculum';
 import { getCurrentChapterId } from '../logic/unlock';
 import { CompassBookCover } from './CompassBookCover';
 import { CompassChapterCard } from './CompassChapterCard';
+import { CompassLiveQuests } from './CompassLiveQuests';
 
 export type CompassGetProgress = (
   chapterId: CompassBookChapterId,
@@ -14,6 +15,7 @@ export type CompassBookContentsProps = {
   getProgress: CompassGetProgress;
   onClose: () => void;
   onOpenChapter: (chapterId: CompassBookChapterId) => void;
+  userId: string;
 };
 
 /** The book's table of contents: cover + six chapter cards. */
@@ -22,6 +24,7 @@ export function CompassBookContents({
   getProgress,
   onClose,
   onOpenChapter,
+  userId,
 }: CompassBookContentsProps) {
   const currentChapterId = getCurrentChapterId({ currentIslandNumber });
 
@@ -43,6 +46,7 @@ export function CompassBookContents({
       </header>
       <div className="compass-book__scroll">
         <CompassBookCover currentIslandNumber={currentIslandNumber} getProgress={getProgress} />
+        <CompassLiveQuests userId={userId} />
         <h2 className="compass-book__contents-heading">Chapters</h2>
         <ul className="compass-book__chapter-list">
           {COMPASS_BOOK_CHAPTERS.map((chapter) => {

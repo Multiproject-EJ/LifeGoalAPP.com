@@ -1430,6 +1430,8 @@ export interface Database {
           visibility: 'private' | 'unlisted' | 'public';
           starts_on: string | null;
           ends_on: string | null;
+          goal_id: string | null;
+          life_wheel_category: string | null;
           campaign_data: Json;
           live_state: Json;
           share_slug: string | null;
@@ -1450,6 +1452,8 @@ export interface Database {
           visibility?: 'private' | 'unlisted' | 'public';
           starts_on?: string | null;
           ends_on?: string | null;
+          goal_id?: string | null;
+          life_wheel_category?: string | null;
           campaign_data?: Json;
           live_state?: Json;
           share_slug?: string | null;
@@ -1470,6 +1474,8 @@ export interface Database {
           visibility?: 'private' | 'unlisted' | 'public';
           starts_on?: string | null;
           ends_on?: string | null;
+          goal_id?: string | null;
+          life_wheel_category?: string | null;
           campaign_data?: Json;
           live_state?: Json;
           share_slug?: string | null;
@@ -1544,6 +1550,135 @@ export interface Database {
           user_id?: string | null;
           event_type?: string;
           event_data?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      quests: {
+        Row: {
+          id: string;
+          user_id: string;
+          goal_id: string | null;
+          campaign_id: string | null;
+          title: string;
+          outcome: string;
+          quest_kind: 'smart_goal' | 'behavior_experiment' | 'milestone' | 'recovery';
+          status: 'draft' | 'active' | 'paused' | 'completed' | 'archived';
+          starts_on: string | null;
+          ends_on: string | null;
+          life_wheel_category: string | null;
+          smart_definition: Json;
+          behavior_design: Json;
+          reflection_plan: Json;
+          source_compass_chapter_id: string | null;
+          source_compass_activity_id: string | null;
+          completed_at: string | null;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          goal_id?: string | null;
+          campaign_id?: string | null;
+          title: string;
+          outcome?: string;
+          quest_kind?: 'smart_goal' | 'behavior_experiment' | 'milestone' | 'recovery';
+          status?: 'draft' | 'active' | 'paused' | 'completed' | 'archived';
+          starts_on?: string | null;
+          ends_on?: string | null;
+          life_wheel_category?: string | null;
+          smart_definition?: Json;
+          behavior_design?: Json;
+          reflection_plan?: Json;
+          source_compass_chapter_id?: string | null;
+          source_compass_activity_id?: string | null;
+          completed_at?: string | null;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          goal_id?: string | null;
+          campaign_id?: string | null;
+          title?: string;
+          outcome?: string;
+          quest_kind?: 'smart_goal' | 'behavior_experiment' | 'milestone' | 'recovery';
+          status?: 'draft' | 'active' | 'paused' | 'completed' | 'archived';
+          starts_on?: string | null;
+          ends_on?: string | null;
+          life_wheel_category?: string | null;
+          smart_definition?: Json;
+          behavior_design?: Json;
+          reflection_plan?: Json;
+          source_compass_chapter_id?: string | null;
+          source_compass_activity_id?: string | null;
+          completed_at?: string | null;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      quest_habit_links: {
+        Row: {
+          id: string;
+          user_id: string;
+          quest_id: string;
+          habit_id: string;
+          role: 'keystone' | 'supporting';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          quest_id: string;
+          habit_id: string;
+          role?: 'keystone' | 'supporting';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          quest_id?: string;
+          habit_id?: string;
+          role?: 'keystone' | 'supporting';
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      quest_reflections: {
+        Row: {
+          id: string;
+          user_id: string;
+          quest_id: string;
+          reflection_type: 'check_in' | 'loop_review' | 'completion' | 'ally_reply';
+          content: string;
+          loop_observation: Json;
+          next_experiment: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          quest_id: string;
+          reflection_type?: 'check_in' | 'loop_review' | 'completion' | 'ally_reply';
+          content?: string;
+          loop_observation?: Json;
+          next_experiment?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          quest_id?: string;
+          reflection_type?: 'check_in' | 'loop_review' | 'completion' | 'ally_reply';
+          content?: string;
+          loop_observation?: Json;
+          next_experiment?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -3670,6 +3805,14 @@ export interface Database {
       };
     };
     Functions: {
+      save_quest_bundle: {
+        Args: {
+          p_quest: Json;
+          p_links?: Json;
+          p_new_habit?: Json | null;
+        };
+        Returns: Database['public']['Tables']['quests']['Row'];
+      };
       get_shared_campaign: {
         Args: {
           p_share_slug: string;

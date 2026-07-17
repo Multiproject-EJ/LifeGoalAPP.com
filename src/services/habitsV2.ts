@@ -34,6 +34,14 @@ import {
 } from '../features/environment/environmentSchema';
 import { getISOWeekBounds } from '../features/habits/scheduleInterpreter';
 import { insertEnvironmentAudit } from './environmentAudits';
+import {
+  DEMO_USER_ID,
+  getDemoHabitLogsForDate,
+  getDemoHabitLogsForRange,
+  getDemoHabitsForUser,
+  logDemoHabitCompletion,
+  upsertDemoHabit,
+} from './demoData';
 
 export type HabitV2Row = Database['public']['Tables']['habits_v2']['Row'];
 export type HabitLogV2Row = Database['public']['Tables']['habit_logs_v2']['Row'];
@@ -72,6 +80,10 @@ export function isHabitLifecycleActive(habit: Pick<HabitV2Row, 'status' | 'archi
 }
 
 const LOCAL_HABIT_PREFIX = 'local-habit-v2-';
+
+function findDemoHabit(habitId: string): HabitV2Row | null {
+  return getDemoHabitsForUser(DEMO_USER_ID).find((habit) => habit.id === habitId) ?? null;
+}
 
 async function getSessionUserId(): Promise<string | null> {
   try {
@@ -119,7 +131,7 @@ async function mergeLocalHabitsOverRemote(remote: HabitV2Row[], includeInactive:
 // converge on the shared queue (executors in offlineSyncExecutors.ts).
 // Creates carry a client uuid so replays upsert idempotently.
 
-async function queueLocalHabitCreate(payload: HabitV2Insert & { id: string }): Promise<HabitV2Row> {
+export async function putLocalHabitCreateOverlay(payload: HabitV2Insert & { id: string }): Promise<HabitV2Row> {
   const now = new Date().toISOString();
   const localRow: HabitV2Row = {
     id: payload.id,
@@ -166,6 +178,11 @@ async function queueLocalHabitCreate(payload: HabitV2Insert & { id: string }): P
     updated_at_ms: Date.now(),
     last_error: null,
   });
+  return localRow;
+}
+
+async function queueLocalHabitCreate(payload: HabitV2Insert & { id: string }): Promise<HabitV2Row> {
+  const localRow = await putLocalHabitCreateOverlay(payload);
   await getMutationQueue().enqueue({
     feature: 'habits_v2',
     operation: 'habit_v2.create',
@@ -360,10 +377,15 @@ export async function listHabitsV2(params?: { includeInactive?: boolean }): Prom
 export async function listTodayHabitLogsV2(
   userId: string,
 ): Promise<ServiceResponse<HabitLogV2Row[]>> {
-  const supabase = getSupabaseClient();
-
   // Get today's date in UTC format (YYYY-MM-DD)
   const today = new Date().toISOString().split('T')[0];
+
+  if (userId === DEMO_USER_ID) {
+    const habitIds = getDemoHabitsForUser(userId).map((habit) => habit.id);
+    return { data: getDemoHabitLogsForDate(today, habitIds), error: null };
+  }
+
+  const supabase = getSupabaseClient();
 
   const result = await guardedCloudCall('database', async () => {
     const response = await supabase
@@ -401,8 +423,6 @@ export async function createHabitV2(
   input: Omit<HabitV2Insert, 'user_id'>,
   userId: string,
 ): Promise<ServiceResponse<HabitV2Row>> {
-  const supabase = getSupabaseClient();
-  
   const payload: HabitV2Insert & { id: string } = {
     ...input,
     id: generateClientId(),
@@ -415,6 +435,12 @@ export async function createHabitV2(
     deactivated_reason: input.deactivated_reason ?? null,
     ...buildHabitEnvironmentPatch(input),
   };
+
+  if (userId === DEMO_USER_ID) {
+    return { data: upsertDemoHabit(payload), error: null };
+  }
+
+  const supabase = getSupabaseClient();
 
   const result = await guardedCloudCall('database', async () => {
     const response = await supabase.from('habits_v2').insert(payload).select().single<HabitV2Row>();
@@ -467,12 +493,16 @@ export async function logHabitCompletionV2(
   input: Omit<HabitLogV2Insert, 'user_id'>,
   userId: string,
 ): Promise<ServiceResponse<HabitLogV2Row>> {
-  const supabase = getSupabaseClient();
-  
   const payload: HabitLogV2Insert = {
     ...input,
     user_id: userId,
   };
+
+  if (userId === DEMO_USER_ID) {
+    return { data: logDemoHabitCompletion(payload), error: null };
+  }
+
+  const supabase = getSupabaseClient();
 
   const result = await guardedCloudCall('database', async () => {
     const response = await supabase.from('habit_logs_v2').insert(payload).select().single<HabitLogV2Row>();
@@ -548,6 +578,12 @@ export async function listHabitLogsForRangeV2(params: {
   startDate: string; // ISO date (YYYY-MM-DD)
   endDate: string;   // ISO date (YYYY-MM-DD)
 }): Promise<ServiceResponse<HabitLogV2Row[]>> {
+  if (params.userId === DEMO_USER_ID) {
+    return {
+      data: getDemoHabitLogsForRange([params.habitId], params.startDate, params.endDate),
+      error: null,
+    };
+  }
   const supabase = getSupabaseClient();
   
   const result = await guardedCloudCall('database', async () => {
@@ -631,6 +667,11 @@ export async function quickAddDailyHabit(params: {
  * @returns Promise with data (null) and error
  */
 export async function archiveHabitV2(habitId: string): Promise<ServiceResponse<null>> {
+  const demoHabit = getDemoHabitsForUser(DEMO_USER_ID).find((habit) => habit.id === habitId);
+  if (demoHabit) {
+    upsertDemoHabit({ id: habitId, archived: true, status: 'archived' });
+    return { data: null, error: null };
+  }
   const supabase = getSupabaseClient();
   const patch: HabitV2Update = {
     archived: true,
@@ -675,10 +716,15 @@ export async function listHabitLogsForWeekV2(
     return { data: [], error: null };
   }
   
-  const supabase = getSupabaseClient();
   const { monday, sunday } = getISOWeekBounds(referenceDate);
   const startDate = monday.toISOString().split('T')[0];
   const endDate = sunday.toISOString().split('T')[0];
+
+  if (userId === DEMO_USER_ID) {
+    return { data: getDemoHabitLogsForRange(habitIds, startDate, endDate), error: null };
+  }
+
+  const supabase = getSupabaseClient();
 
   const result = await guardedCloudCall('database', async () => {
     const response = await supabase
@@ -718,6 +764,13 @@ export async function listHabitLogsForRangeMultiV2(params: {
 }): Promise<ServiceResponse<HabitLogV2Row[]>> {
   if (!params.habitIds || params.habitIds.length === 0) {
     return { data: [], error: null };
+  }
+
+  if (params.userId === DEMO_USER_ID) {
+    return {
+      data: getDemoHabitLogsForRange(params.habitIds, params.startDate, params.endDate),
+      error: null,
+    };
   }
   
   const supabase = getSupabaseClient();
@@ -802,6 +855,11 @@ export async function updateHabitFullV2(
     on_duration_end?: string | null;
   }
 ): Promise<ServiceResponse<HabitV2Row>> {
+  const demoHabit = findDemoHabit(habitId);
+  if (demoHabit) {
+    return { data: upsertDemoHabit({ id: habitId, ...updates }), error: null };
+  }
+
   const supabase = getSupabaseClient();
 
   const beforeResult = await guardedCloudCall('database', async () => {
@@ -883,6 +941,9 @@ export async function updateHabitFullV2(
  * @returns Promise with the habit data and error
  */
 export async function getHabitV2(habitId: string): Promise<ServiceResponse<HabitV2Row>> {
+  const demoHabit = findDemoHabit(habitId);
+  if (demoHabit) return { data: demoHabit, error: null };
+
   const supabase = getSupabaseClient();
   const result = await guardedCloudCall('database', async () => {
     const response = await supabase
@@ -913,8 +974,16 @@ export async function isHabitCompletedToday(
   habitId: string,
   userId: string,
 ): Promise<ServiceResponse<boolean>> {
-  const supabase = getSupabaseClient();
   const today = new Date().toISOString().split('T')[0];
+
+  if (userId === DEMO_USER_ID) {
+    return {
+      data: getDemoHabitLogsForDate(today, [habitId]).some((log) => log.done),
+      error: null,
+    };
+  }
+
+  const supabase = getSupabaseClient();
 
   const result = await guardedCloudCall('database', async () => {
     const { data, error } = await supabase
@@ -978,7 +1047,6 @@ export async function pauseHabitV2(
   habitId: string,
   options?: { reason?: string | null; resumeOn?: string | null },
 ): Promise<ServiceResponse<HabitV2Row>> {
-  const supabase = getSupabaseClient();
   const patch: HabitV2Update = {
     status: 'paused',
     paused_at: new Date().toISOString(),
@@ -988,6 +1056,10 @@ export async function pauseHabitV2(
     deactivated_reason: null,
     archived: false,
   };
+  if (findDemoHabit(habitId)) {
+    return { data: upsertDemoHabit({ id: habitId, ...patch }), error: null };
+  }
+  const supabase = getSupabaseClient();
   return applyLifecyclePatch(supabase, habitId, 'pause', patch);
 }
 
@@ -1019,7 +1091,6 @@ async function applyLifecyclePatch(
 }
 
 export async function resumeHabitV2(habitId: string): Promise<ServiceResponse<HabitV2Row>> {
-  const supabase = getSupabaseClient();
   const patch: HabitV2Update = {
     status: 'active',
     paused_at: null,
@@ -1029,6 +1100,10 @@ export async function resumeHabitV2(habitId: string): Promise<ServiceResponse<Ha
     deactivated_reason: null,
     archived: false,
   };
+  if (findDemoHabit(habitId)) {
+    return { data: upsertDemoHabit({ id: habitId, ...patch }), error: null };
+  }
+  const supabase = getSupabaseClient();
   return applyLifecyclePatch(supabase, habitId, 'resume', patch);
 }
 
@@ -1036,7 +1111,6 @@ export async function deactivateHabitV2(
   habitId: string,
   options?: { reason?: string | null },
 ): Promise<ServiceResponse<HabitV2Row>> {
-  const supabase = getSupabaseClient();
   const patch: HabitV2Update = {
     status: 'deactivated',
     deactivated_at: new Date().toISOString(),
@@ -1046,6 +1120,10 @@ export async function deactivateHabitV2(
     resume_on: null,
     archived: false,
   };
+  if (findDemoHabit(habitId)) {
+    return { data: upsertDemoHabit({ id: habitId, ...patch }), error: null };
+  }
+  const supabase = getSupabaseClient();
   return applyLifecyclePatch(supabase, habitId, 'deactivate', patch);
 }
 

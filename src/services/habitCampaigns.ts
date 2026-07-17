@@ -33,6 +33,8 @@ export type HabitCampaign = {
   end_date: string;
   duration_days: number;
   victory_condition: string;
+  goal_id?: string | null;
+  life_wheel_category?: string | null;
   keystone_habit_id?: string | null;
   minimum_move?: string | null;
   danger_window?: string | null;
@@ -123,6 +125,8 @@ export function mapCampaignRowToHabitCampaign(row: CampaignRow): HabitCampaign {
     end_date: endDate,
     duration_days: durationDays,
     victory_condition: readCampaignDataString(data, 'victory_condition') ?? row.description ?? '',
+    goal_id: row.goal_id,
+    life_wheel_category: row.life_wheel_category,
     keystone_habit_id: readCampaignDataString(data, 'keystone_habit_id'),
     minimum_move: readCampaignDataString(data, 'minimum_move'),
     danger_window: readCampaignDataString(data, 'danger_window'),
@@ -191,6 +195,8 @@ export async function upsertHabitTodayCampaign(
     status: toRowStatus(campaign.status),
     starts_on: campaign.start_date,
     ends_on: campaign.end_date,
+    goal_id: campaign.goal_id ?? null,
+    life_wheel_category: campaign.life_wheel_category ?? null,
     campaign_data: toCampaignData(campaign),
   };
 

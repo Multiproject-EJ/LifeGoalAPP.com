@@ -33,6 +33,7 @@ import {
 } from '../../services/habitMonthlyQueries';
 import type { Database, Json } from '../../lib/database.types';
 import { isDemoSession } from '../../services/demoSession';
+import { getDemoGoals } from '../../services/demoData';
 import { fetchVisionImages, getVisionImagePublicUrl } from '../../services/visionBoard';
 import { generateSpecialVisionStar, persistSpecialVisionStarImage } from '../../services/visionStarSpecial';
 import { HabitAlertConfig } from './HabitAlertConfig';
@@ -110,6 +111,12 @@ import {
 } from './habitRhythm';
 import { HabitImprovementAnalysisModal } from './HabitImprovementAnalysisModal';
 import { HabitChainAnalysisModal } from './HabitChainAnalysisModal';
+import { SuperHabitRosterModal } from './SuperHabitRosterModal';
+import { resolveSuperHabitForTitle, type SuperHabitId } from './superHabits';
+import { fetchQuestHabitTags, fetchQuests } from '../../services/quests';
+import { QuestCircularCalendar } from '../quests/QuestCircularCalendar';
+import { QuestManagerModal } from '../quests/QuestManagerModal';
+import type { Quest, QuestHabitTag } from '../quests/questModel';
 import { buildEnhancedRationale } from './aiRationale';
 import { generateHabitSuggestion, type HabitAiSuggestion } from '../../services/habitAiSuggestions';
 import {
@@ -1197,6 +1204,7 @@ export function DailyHabitTracker({
   const [campaignPanelIndex, setCampaignPanelIndex] = useState(0);
   const [campaignDraft, setCampaignDraft] = useState<CampaignDraft>(() => createDefaultCampaignDraft());
   const [campaignError, setCampaignError] = useState<string | null>(null);
+  const [questManagerOpen, setQuestManagerOpen] = useState(false);
 
 
   const [editingTodayTodo, setEditingTodayTodo] = useState<TodayTodo | null>(null);
@@ -1276,6 +1284,7 @@ export function DailyHabitTracker({
   const [seenOfferTeasers, setSeenOfferTeasers] = useState<Record<string, boolean>>({});
   const progressGradientId = useId();
   const [habits, setHabits] = useState<HabitWithGoal[]>([]);
+  const [questHabitTagsByHabitId, setQuestHabitTagsByHabitId] = useState<Record<string, QuestHabitTag[]>>({});
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [queueStatus, setQueueStatus] = useState<HabitOfflineQueueStatus>({ pending: 0, failed: 0 });
@@ -1733,10 +1742,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [goals, setGoals] = useState<Database['public']['Tables']['goals']['Row'][]>([]);
+  const [calendarQuests, setCalendarQuests] = useState<Quest[]>([]);
   const [goalsLoading, setGoalsLoading] = useState(false);
   const [creatingGoal, setCreatingGoal] = useState(false);
   const [showLegacyHabitAssets, setShowLegacyHabitAssets] = useState(false);
   const [isQuickJournalOpen, setIsQuickJournalOpen] = useState(false);
+  const [superHabitRosterOpen, setSuperHabitRosterOpen] = useState(false);
+  const [selectedSuperHabitId, setSelectedSuperHabitId] = useState<SuperHabitId | null>(null);
+  const [activeSuperHabitSession, setActiveSuperHabitSession] = useState<{
+    superHabitId: 'journal';
+    habitId: string;
+  } | null>(null);
   const [showEmptyTodosMessage, setShowEmptyTodosMessage] = useState(true);
   const [quickJournalMorning, setQuickJournalMorning] = useState('');
   const [quickJournalDay, setQuickJournalDay] = useState('');
@@ -5278,6 +5294,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const refreshHabits = useCallback(async () => {
     if (!isConfigured) {
       setHabits([]);
+      setQuestHabitTagsByHabitId({});
+      setCalendarQuests([]);
       setCompletions({});
       setMonthlyCompletions({});
       setHabitInsights({});
@@ -5318,11 +5336,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         await autoResumeDueHabits(session.user.id);
       }
 
-      const [questHabitResult, habitsResult] = await Promise.all([
+      const [questHabitResult, habitsResult, questTagsResult, questsResult, goalsResult] = await Promise.all([
         refreshQuestHabit(session.user.id),
         fetchHabitsForUser(session.user.id),
+        fetchQuestHabitTags(session.user.id, trackingDateISO),
+        fetchQuests(session.user.id, ['active', 'paused', 'completed']),
+        isDemoExperience
+          ? Promise.resolve({ data: getDemoGoals(session.user.id), error: null })
+          : fetchGoals(),
       ]);
       setQuestHabitState(questHabitResult);
+      setQuestHabitTagsByHabitId(questTagsResult.data ?? {});
+      setCalendarQuests(questsResult.data ?? []);
+      if (goalsResult.data) setGoals(goalsResult.data);
       const { data: habitData, error: habitError } = habitsResult;
       if (habitError) throw habitError;
 
@@ -5344,6 +5370,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         habitIds,
         formatISODate(lookbackStart),
         monthEndISO,
+        session.user.id,
       );
       if (logsError) throw logsError;
 
@@ -5650,6 +5677,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   useEffect(() => {
     if (!isConfigured && !isDemoExperience) {
       setHabits([]);
+      setQuestHabitTagsByHabitId({});
+      setCalendarQuests([]);
       setCompletions({});
       setMonthlyCompletions({});
       setHabitInsights({});
@@ -6330,6 +6359,45 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const toggleTodayExpandableSection = useCallback((section: TodayExpandableSectionKey) => {
     setOpenTodayExpandableSection((current) => current === section ? null : section);
   }, []);
+
+  const openSuperHabitRoster = useCallback((superHabitId: SuperHabitId | null = null) => {
+    setSelectedSuperHabitId(superHabitId);
+    setSuperHabitRosterOpen(true);
+  }, []);
+
+  const launchJournalSuperHabit = useCallback(async (habitId: string | null = null) => {
+    let sourceHabitId = habitId ?? habits.find((habit) => resolveSuperHabitForTitle(habit.name)?.id === 'journal')?.id ?? null;
+    if (!sourceHabitId) {
+      const { data, error } = await createHabitV2({
+        title: 'Journal',
+        emoji: '✍️',
+        type: 'boolean',
+        status: 'active',
+        schedule: { mode: 'daily' },
+        start_date: activeDate,
+        archived: false,
+        goal_id: null,
+        habit_intent: 'Use guided reflection to notice patterns and choose a useful next step.',
+      }, session.user.id);
+      if (error || !data) throw error ?? new Error('Could not add the Journaling habit.');
+      sourceHabitId = data.id;
+      await refreshHabits();
+    }
+    const nextHiddenSections = new Set(hiddenTodayExtraSections);
+    nextHiddenSections.delete('quickJournal');
+    persistHiddenTodayExtraSections(session.user.id, nextHiddenSections);
+    setHiddenTodayExtraSections(nextHiddenSections);
+    setOpenTodayExpandableSection('quickJournal');
+    setQuickJournalMode('written');
+    setIsQuickJournalOpen(true);
+    setQuickJournalError(null);
+    setQuickJournalStatus(null);
+    setActiveSuperHabitSession({ superHabitId: 'journal', habitId: sourceHabitId });
+    setSuperHabitRosterOpen(false);
+    window.setTimeout(() => {
+      document.getElementById('today-quick-journal')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  }, [activeDate, habits, hiddenTodayExtraSections, refreshHabits, session.user.id]);
 
   useEffect(() => {
     setHiddenTodayExtraSections(readHiddenTodayExtraSections(session.user.id));
@@ -8175,6 +8243,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             >
               {campaign ? `⚑ ${getCampaignDay(campaign)}/${campaign.duration_days}` : '⚑ Campaign'}
             </button>
+            <button
+              type="button"
+              className="habit-checklist-card__super-habits-launcher"
+              onClick={() => openSuperHabitRoster(null)}
+              aria-label="Open SuperHabits roster"
+            >
+              ✦ Super
+            </button>
             <div className="habit-checklist-card__display-launcher">
               <button
                 type="button"
@@ -8601,6 +8677,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               isSaving,
             });
             const isQuestHabit = questHabit?.habitId === habit.id;
+            const linkedQuestTags = questHabitTagsByHabitId[habit.id] ?? [];
+            const matchedSuperHabit = resolveSuperHabitForTitle(habit.name);
             const habitDisplayName = isPrivateCompactView ? `Private habit ${habitIndex + 1}` : habit.name;
             const todayVersionOpen = isExpandedHabitSectionOpen(habit.id, 'todayVersion', !isCompleted);
             const understandOpen = isExpandedHabitSectionOpen(habit.id, 'understand', false);
@@ -8634,6 +8712,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 } ${isJustCompleted ? `habit-item--just-completed ${feedbackClassName}` : ''} ${
                   isOfferHabit ? 'habit-checklist__item--offer' : ''
                 } ${isQuestHabit ? 'habit-checklist__item--quest' : ''} ${isExpanded ? 'habit-checklist__item--expanded' : ''} ${
+                  linkedQuestTags.length > 0 ? 'habit-checklist__item--linked-quest' : ''
+                } ${
                   dailyLifeUpgradeHighlightedHabitId === habit.id ? 'habit-card--daily-life-upgrade-target' : ''
                 }`}
               >
@@ -8949,6 +9029,23 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                               ⭐ Quest Habit
                             </span>
                           ) : null}
+                          {habit.goal?.title ? (
+                            <span className="habit-checklist__goal-badge" title={habit.goal.title}>
+                              ◎ Goal · {habit.goal.title}
+                            </span>
+                          ) : null}
+                          {linkedQuestTags.slice(0, 2).map((tag) => (
+                            <span
+                              key={tag.questId}
+                              className={`habit-checklist__linked-quest-badge habit-checklist__linked-quest-badge--${tag.role}`}
+                              title={`${tag.role === 'keystone' ? 'Keystone' : 'Supporting'} habit for ${tag.questTitle}`}
+                            >
+                              🧭 Quest · {tag.questTitle}
+                            </span>
+                          ))}
+                          {linkedQuestTags.length > 2 ? (
+                            <span className="habit-checklist__linked-quest-more">+{linkedQuestTags.length - 2} quests</span>
+                          ) : null}
                           {campaign?.keystone_habit_id === habit.id ? (
                             <span className="habit-checklist__campaign-badge" aria-label="Campaign Keystone habit">
                               ⚑ Keystone
@@ -9013,6 +9110,37 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           }}
                         >
                           {isQuestHabit ? '★' : '☆'}
+                        </button>
+                        <button
+                          type="button"
+                          className={`habit-checklist__super-action-btn${
+                            matchedSuperHabit?.id === 'journal' ? ' habit-checklist__super-action-btn--live' : ''
+                          }`}
+                          aria-label={
+                            matchedSuperHabit?.id === 'journal'
+                              ? `Launch Journaling tool for ${habit.name}`
+                              : matchedSuperHabit
+                                ? `Preview ${matchedSuperHabit.name} SuperHabit for ${habit.name}`
+                                : `Choose a SuperHabit tool for ${habit.name}`
+                          }
+                          title={
+                            matchedSuperHabit?.id === 'journal'
+                              ? 'Launch Journaling'
+                              : matchedSuperHabit
+                                ? `${matchedSuperHabit.name} · Pro demo`
+                                : 'Choose a SuperHabit tool'
+                          }
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (matchedSuperHabit?.id === 'journal') {
+                              launchJournalSuperHabit(habit.id);
+                              return;
+                            }
+                            openSuperHabitRoster(matchedSuperHabit?.id ?? null);
+                          }}
+                        >
+                          <span aria-hidden="true">{matchedSuperHabit?.emoji ?? '✦'}</span>
+                          <small>Tool</small>
                         </button>
                       </div>
                     </div>
@@ -9976,7 +10104,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           content,
           mood: quickJournalMode === 'dream' ? dreamToneMeta?.mood ?? null : null,
           linked_goal_ids: null,
-          linked_habit_ids: null,
+          linked_habit_ids: activeSuperHabitSession ? [activeSuperHabitSession.habitId] : null,
           is_private: quickJournalIsPrivate,
           attachments: payloadAttachments,
           type: quickJournalMode === 'dream'
@@ -10009,6 +10137,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           await earnXP(XP_REWARDS.JOURNAL_ENTRY, 'journal_entry', data.id);
           await recordActivity();
           recordChallengeActivity(session.user.id, 'journal_entry');
+        }
+
+        if (activeSuperHabitSession) {
+          const linkedHabit = habits.find((habit) => habit.id === activeSuperHabitSession.habitId);
+          if (linkedHabit && !completions[linkedHabit.id]?.completed) {
+            await toggleHabit(linkedHabit);
+          }
+          setActiveSuperHabitSession(null);
         }
 
         removeDraft(quickJournalDraftKey(session.user.id, activeDate));
@@ -10607,6 +10743,39 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             }`}
           >
             {renderDayNavigation('compact', true, isCompactView)}
+            <QuestCircularCalendar
+              referenceDate={activeDate}
+              goals={goals.map((goal) => ({
+                id: goal.id,
+                title: goal.title,
+                startsOn: goal.start_date,
+                targetDate: goal.target_date,
+              }))}
+              campaigns={campaign ? [{
+                id: campaign.id,
+                title: campaign.name,
+                startsOn: campaign.start_date,
+                endsOn: campaign.end_date,
+                active: campaign.status === 'active',
+              }] : []}
+              quests={calendarQuests}
+              onCreateQuest={() => setQuestManagerOpen(true)}
+            />
+            <QuestManagerModal
+              open={questManagerOpen}
+              userId={session.user.id}
+              goals={goals.map((goal) => ({
+                id: goal.id,
+                title: goal.title,
+                lifeWheelCategory: goal.life_wheel_category,
+              }))}
+              habits={habits.map((habit) => ({ id: habit.id, name: habit.name, goalId: habit.goal_id || null }))}
+              campaign={campaign ? { id: campaign.id, title: campaign.name, goalId: campaign.goal_id ?? null } : null}
+              onClose={() => setQuestManagerOpen(false)}
+              onChanged={() => {
+                void refreshHabits();
+              }}
+            />
             {campaign ? (
               <section className="campaign-card" aria-label="Active campaign">
                 <div className="campaign-card__head">
@@ -11033,6 +11202,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     <h3 className="habit-quick-journal__title">Quick journal</h3>
                   </div>
                   <div className="habit-quick-journal__meta">
+                    {activeSuperHabitSession ? (
+                      <span className="habit-quick-journal__badge habit-quick-journal__badge--super">✦ Habit tool</span>
+                    ) : null}
                     <span className="habit-quick-journal__badge">{quickJournalDateLabel}</span>
                     {isViewingToday && circadianEmoji ? (
                       <span className="habit-quick-journal__icon" aria-hidden="true">
@@ -11422,6 +11594,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         onClick={() => {
                           removeDraft(quickJournalDraftKey(session.user.id, activeDate));
                           setIsQuickJournalOpen(false);
+                          setActiveSuperHabitSession(null);
                           setQuickJournalMode('written');
                           setQuickJournalMorning('');
                           setQuickJournalDay('');
@@ -12733,6 +12906,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     return (
       <section className="habit-tracker habit-tracker--compact">
         {renderCompactExperience()}
+        <SuperHabitRosterModal
+          open={superHabitRosterOpen}
+          initialSuperHabitId={selectedSuperHabitId}
+          journalHabitExists={habits.some((habit) => resolveSuperHabitForTitle(habit.name)?.id === 'journal')}
+          onClose={() => setSuperHabitRosterOpen(false)}
+          onLaunchJournal={() => launchJournalSuperHabit()}
+        />
         {offerTeaserPortal}
         {todaysOfferPortal}
         {dailyLifeUpgradePortal}
@@ -12809,6 +12989,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   return (
     <section className="habit-tracker">
+      <SuperHabitRosterModal
+        open={superHabitRosterOpen}
+        initialSuperHabitId={selectedSuperHabitId}
+        journalHabitExists={habits.some((habit) => resolveSuperHabitForTitle(habit.name)?.id === 'journal')}
+        onClose={() => setSuperHabitRosterOpen(false)}
+        onLaunchJournal={() => launchJournalSuperHabit()}
+      />
       <header className="habit-tracker__header">
         <div className="habit-tracker__actions">
           <button
@@ -12882,6 +13069,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               const scheduledDays = successSnapshot?.scheduledCount ?? 0;
               const isJustCompleted = justCompletedHabitId === habit.id;
               const feedbackClassName = isJustCompleted ? getHabitFeedbackClassName(habitFeedbackById[habit.id] ?? 'quick-win') : '';
+              const linkedQuestTags = questHabitTagsByHabitId[habit.id] ?? [];
               return (
                 <li
                   key={habit.id}
@@ -12901,6 +13089,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   <div className="habit-card__content">
                     <div className="habit-card__details">
                       <h3>{habit.name}</h3>
+                      {linkedQuestTags.length > 0 ? (
+                        <div className="habit-card__quest-tags" aria-label="Linked quests">
+                          {linkedQuestTags.slice(0, 2).map((tag) => (
+                            <span key={tag.questId}>🧭 Quest · {tag.questTitle}</span>
+                          ))}
+                          {linkedQuestTags.length > 2 ? <span>+{linkedQuestTags.length - 2}</span> : null}
+                        </div>
+                      ) : null}
                       <p className="habit-card__meta-line">
                         <span className="habit-card__goal">
                           Goal: <span>{habit.goal?.title ?? 'Unassigned goal'}</span>

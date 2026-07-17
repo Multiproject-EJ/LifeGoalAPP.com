@@ -13,9 +13,11 @@ import { getSyncEngine } from './offline-queue';
 import type { PendingMutation } from './offline-queue';
 import type { Database } from '../lib/database.types';
 import type { LifeGoalWritePayload } from './lifeGoals';
+import type { QuestBundleQueuePayload } from './quests';
 import { removeLocalJournalRecord } from '../data/journalOfflineRepo';
 import { removeLocalGoalRecord } from '../data/goalsOfflineRepo';
 import { removeLocalHabitV2Record } from '../data/habitsV2OfflineRepo';
+import { clearQuestOfflineOverlay } from '../data/questsOfflineRepo';
 import { buildHabitLogKey, removeLocalHabitLogRecord } from '../data/habitLogsOfflineRepo';
 import {
   buildLocalCompletionKey,
@@ -177,6 +179,35 @@ export function registerOfflineSyncExecutors(): void {
     const { error } = await getSupabaseClient().from('habits_v2').update(patch).eq('id', id);
     if (error) throw error;
     await removeLocalHabitV2Record(id);
+    return { outcome: 'success' as const };
+  });
+
+  // ── Quests ───────────────────────────────────────────────────────────────
+  // A full Quest bundle is replayed through the same atomic database function
+  // as the online path. Client-generated ids make retries idempotent.
+
+  engine.registerExecutor('quest.bundle.save', async (mutation) => {
+    const payload = payloadOf<QuestBundleQueuePayload>(mutation);
+    const { error } = await getSupabaseClient().rpc('save_quest_bundle', {
+      p_quest: payload.quest,
+      p_links: payload.links,
+      p_new_habit: payload.newHabit,
+    });
+    if (error) throw error;
+    clearQuestOfflineOverlay(payload.quest.id);
+    if (payload.newHabit) await removeLocalHabitV2Record(payload.newHabit.id);
+    return { outcome: 'success' as const };
+  });
+
+  engine.registerExecutor('quest.delete', async (mutation) => {
+    const { userId, questId } = payloadOf<{ userId: string; questId: string }>(mutation);
+    const { error } = await getSupabaseClient()
+      .from('quests')
+      .delete()
+      .eq('id', questId)
+      .eq('user_id', userId);
+    if (error) throw error;
+    clearQuestOfflineOverlay(questId);
     return { outcome: 'success' as const };
   });
 
