@@ -15,6 +15,7 @@ import {
   type QuestStatus,
 } from './questModel';
 import { QuestSetupModal } from './QuestSetupModal';
+import { QuestReflectionModal } from './QuestReflectionModal';
 import './QuestManagerModal.css';
 
 type ManagerGoal = { id: string; title: string; lifeWheelCategory: string | null };
@@ -29,6 +30,7 @@ type QuestManagerModalProps = {
   campaign: ManagerCampaign | null;
   onClose: () => void;
   onChanged: () => void;
+  habitCompletionEvidence?: Record<string, number>;
 };
 
 const STATUS_ORDER: QuestStatus[] = ['active', 'draft', 'paused', 'completed', 'archived'];
@@ -45,10 +47,12 @@ export function QuestManagerModal({
   campaign,
   onClose,
   onChanged,
+  habitCompletionEvidence = {},
 }: QuestManagerModalProps) {
   const [quests, setQuests] = useState<Quest[]>([]);
   const [links, setLinks] = useState<QuestHabitLink[]>([]);
   const [editingQuest, setEditingQuest] = useState<Quest | 'new' | null>(null);
+  const [reflectingQuest, setReflectingQuest] = useState<Quest | null>(null);
   const [loading, setLoading] = useState(false);
   const [pendingQuestId, setPendingQuestId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -155,6 +159,11 @@ export function QuestManagerModal({
     );
   }
 
+  if (reflectingQuest) {
+    const completionCount = links.filter((link) => link.quest_id === reflectingQuest.id).reduce((sum, link) => sum + (habitCompletionEvidence[link.habit_id] ?? 0), 0);
+    return <QuestReflectionModal open userId={userId} quest={reflectingQuest} habitCompletionCount={completionCount} onClose={() => setReflectingQuest(null)} onChanged={onChanged} />;
+  }
+
   const content = (
     <div className="quest-manager" role="presentation" onClick={onClose}>
       <div className="quest-manager__dialog" role="dialog" aria-modal="true" aria-label="Manage Quests" onClick={(event) => event.stopPropagation()}>
@@ -175,14 +184,16 @@ export function QuestManagerModal({
           {sortedQuests.map((quest) => {
             const readiness = assessQuestReadiness(quest);
             const habitCount = links.filter((link) => link.quest_id === quest.id).length;
+            const completionCount = links.filter((link) => link.quest_id === quest.id).reduce((sum, link) => sum + (habitCompletionEvidence[link.habit_id] ?? 0), 0);
             const pending = pendingQuestId === quest.id;
             return (
               <article key={quest.id} className={`quest-manager-card quest-manager-card--${quest.status}`}>
-                <div className="quest-manager-card__topline"><span>{statusLabel(quest.status)}</span><span>SMART {readiness.smartScore}/5 · {habitCount} {habitCount === 1 ? 'habit' : 'habits'}</span></div>
+                <div className="quest-manager-card__topline"><span>{statusLabel(quest.status)}</span><span>SMART {readiness.smartScore}/5 · {habitCount} {habitCount === 1 ? 'habit' : 'habits'} · {completionCount} completions</span></div>
                 <h3>{quest.title}</h3>
                 <p>{quest.outcome || 'Outcome not defined yet.'}</p>
                 <div className="quest-manager-card__loop"><span>{quest.behaviorDesign.currentLoop.routine || 'Observe current loop'}</span><b>→</b><span>{quest.behaviorDesign.betterLoop.routine || 'Design better loop'}</span></div>
                 <div className="quest-manager-card__actions">
+                  {quest.status !== 'draft' && quest.status !== 'archived' ? <button type="button" disabled={pending} onClick={() => setReflectingQuest(quest)}>Reflect</button> : null}
                   <button type="button" disabled={pending} onClick={() => setEditingQuest(quest)}>Edit</button>
                   {quest.status === 'draft' ? <button type="button" disabled={pending || !readiness.readyToActivate} onClick={() => void transition(quest, 'active')}>Start</button> : null}
                   {quest.status === 'active' ? <><button type="button" disabled={pending} onClick={() => void transition(quest, 'paused')}>Pause</button><button type="button" disabled={pending} onClick={() => void transition(quest, 'completed')}>Complete</button></> : null}

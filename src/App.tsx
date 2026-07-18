@@ -359,33 +359,6 @@ const FooterNavImg = ({
   );
 };
 
-const ShieldFooterIcon = () => (
-  <svg
-    className="mobile-footer-nav__shield-icon"
-    viewBox="0 0 32 32"
-    role="img"
-    aria-label="Shield"
-    focusable="false"
-  >
-    <path
-      className="mobile-footer-nav__shield-icon-shadow"
-      d="M16 3.6 26.2 7v7.1c0 6.4-4.2 11.7-10.2 14.4C10 25.8 5.8 20.5 5.8 14.1V7L16 3.6Z"
-    />
-    <path
-      className="mobile-footer-nav__shield-icon-face"
-      d="M16 4.8 25 7.8v6.1c0 5.7-3.6 10.3-9 12.8-5.4-2.5-9-7.1-9-12.8V7.8l9-3Z"
-    />
-    <path
-      className="mobile-footer-nav__shield-icon-panel"
-      d="M16 7.2 22.4 9.3v4.4c0 4.1-2.5 7.4-6.4 9.4V7.2Z"
-    />
-    <path
-      className="mobile-footer-nav__shield-icon-ridge"
-      d="M16 7.2v15.9c-3.9-2-6.4-5.3-6.4-9.4V9.3L16 7.2Z"
-    />
-  </svg>
-);
-
 const PROFILE_STRENGTH_AREA_LABELS: Record<AreaKey, string> = {
   goals: 'Goals',
   habits: 'Habits',
@@ -1379,10 +1352,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
         summary: 'Refresh your body-focused routines and personal care rituals.',
       },
       'breathing-space': {
-        label: 'Shield',
-        ariaLabel: 'Shield mind and body launchers',
-        icon: <ShieldFooterIcon />,
-        summary: 'Open shield launchers for mind and body tools.',
+        label: 'Compass',
+        ariaLabel: 'Open Compass Book',
+        icon: '📖',
+        summary: 'Open your Compass Book and its six guided chapters.',
       },
       habits: {
         label: 'Habits',
@@ -1422,7 +1395,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
       const defaults = FOOTER_TAB_DEFAULTS[navId];
       if (defaults) {
-        const isFooterTab = navId in FOOTER_TAB_FILES;
+        const isFooterTab = navId !== 'breathing-space' && navId in FOOTER_TAB_FILES;
         return {
           id: navId,
           ...defaults,
@@ -2910,6 +2883,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
     setShouldShowSettingsMenuReturn(shouldReturnToMobileMenu);
+
+    if (navId === 'breathing-space') {
+      setIsCompassBookOpen(true);
+      return;
+    }
     
     const preserveBreatheTab = options?.preserveBreatheTab ?? false;
 
@@ -3189,14 +3167,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     ],
     [openFeedbackSupportFromMobileMenu],
   );
-
-  const handleEnergySelect = (category: 'mind' | 'body') => {
-    closeGameBoardOverlayIfOpen();
-    
-    setBreathingSpaceMobileCategory(category);
-    setBreathingSpaceMobileTab(null);
-    handleMobileNavSelect('breathing-space', { preserveBreatheTab: true });
-  };
 
   const handleProfileStrengthTaskClick = () => {
     if (profileStrengthTask?.action.type === 'navigate') {
@@ -5510,12 +5480,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
               setIsMobileMenuOpen(true);
               setIsEnergyMenuOpen(false);
             }}
-            isEnergyMenuOpen={isEnergyMenuOpen}
-            onEnergyToggle={() => {
-              setIsEnergyMenuOpen((prev) => !prev);
-              handleMobileFooterExpand(true);
-            }}
-            onEnergySelect={handleEnergySelect}
             isDiodeActive={isFooterControllerLayoutActive}
             pointsBadges={mobileFooterPointsBadges}
             showPointsBadges={shouldShowPointsBadges}
@@ -5836,12 +5800,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
             setIsMobileMenuOpen(true);
             setIsEnergyMenuOpen(false);
           }}
-          isEnergyMenuOpen={isEnergyMenuOpen}
-          onEnergyToggle={() => {
-            setIsEnergyMenuOpen((prev) => !prev);
-            handleMobileFooterExpand(true);
-          }}
-          onEnergySelect={handleEnergySelect}
           isDiodeActive={isFooterControllerLayoutActive}
           pointsBadges={mobileFooterPointsBadges}
           showPointsBadges={shouldShowPointsBadges}

@@ -3,6 +3,24 @@ export type QuestStatus = 'draft' | 'active' | 'paused' | 'completed' | 'archive
 export type QuestHabitRole = 'keystone' | 'supporting';
 export type QuestReflectionType = 'check_in' | 'loop_review' | 'completion' | 'ally_reply';
 
+export type QuestReflection = {
+  id: string;
+  userId: string;
+  questId: string;
+  reflectionType: QuestReflectionType;
+  content: string;
+  loopObservation: Record<string, unknown>;
+  nextExperiment: string | null;
+  createdAt: string;
+};
+
+export type QuestEvidenceSummary = {
+  reflectionCount: number;
+  loopReviewCount: number;
+  latestLearning: string | null;
+  nextExperiment: string;
+};
+
 export type SmartDefinition = {
   specific: string;
   metric: string;
@@ -327,4 +345,37 @@ export function buildCircularCalendarDays(
         .map((goal) => goal.id),
     };
   });
+}
+
+export function summarizeQuestEvidence(
+  quest: Pick<Quest, 'behaviorDesign'>,
+  reflections: QuestReflection[],
+): QuestEvidenceSummary {
+  const ordered = [...reflections].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const explicitNextExperiment = ordered.find((reflection) => reflection.nextExperiment)?.nextExperiment;
+  return {
+    reflectionCount: reflections.length,
+    loopReviewCount: reflections.filter((reflection) => reflection.reflectionType === 'loop_review').length,
+    latestLearning: ordered[0]?.content || null,
+    nextExperiment: explicitNextExperiment
+      || quest.behaviorDesign.experimentQuestion
+      || `Try the better loop once, then note what made it easier or harder.`,
+  };
+}
+
+export function buildQuestAllyLetter(
+  quest: Pick<Quest, 'title' | 'outcome' | 'behaviorDesign'>,
+  reflectionCount: number,
+): { subject: string; body: string; question: string } {
+  const current = quest.behaviorDesign.currentLoop.routine || 'the old routine';
+  const better = quest.behaviorDesign.betterLoop.routine || 'your better loop';
+  const need = quest.behaviorDesign.currentLoop.underlyingNeed || 'the need underneath it';
+  const question = reflectionCount === 0
+    ? `When ${current} usually begins, what would make ${better} feel like the easier next move?`
+    : `What did your latest attempt teach you about ${need}, and what will you change next time?`;
+  return {
+    subject: `A letter about “${quest.title}”`,
+    body: `I’m not checking whether you were perfect. I’m checking whether the experiment taught you something. ${quest.outcome || 'Small evidence still counts.'}`,
+    question,
+  };
 }

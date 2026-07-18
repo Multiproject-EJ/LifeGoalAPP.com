@@ -1,6 +1,7 @@
 import {
   assessQuestReadiness,
   buildCircularCalendarDays,
+  buildQuestAllyLetter,
   emptyBehaviorDesign,
   emptyReflectionPlan,
   emptySmartDefinition,
@@ -10,6 +11,7 @@ import {
   parseReflectionPlan,
   parseSmartDefinition,
   questToDraft,
+  summarizeQuestEvidence,
   type QuestDraft,
   type QuestHabitTag,
 } from '../questModel';
@@ -147,4 +149,11 @@ export function runAllQuestModelTests(): void {
   assertEqual(todayMarker?.goalStartIds[0], 'goal-1', 'Goal starts are marked on the ring');
   const targetMarker = calendar.find((day) => day.date === '2026-07-20');
   assertEqual(targetMarker?.goalTargetIds[0], 'goal-1', 'Goal targets are marked on the ring');
+
+  const quest = { ...completeDraft(), id: 'quest-1', userId: 'user-1', completedAt: null, archivedAt: null, createdAt: '2026-07-01', updatedAt: '2026-07-02' };
+  const reflections = [{ id: 'reflection-1', userId: 'user-1', questId: 'quest-1', reflectionType: 'loop_review' as const, content: 'Preparing water helped.', loopObservation: {}, nextExperiment: 'Prepare it before dinner.', createdAt: '2026-07-19' }];
+  const evidence = summarizeQuestEvidence(quest, reflections);
+  assertEqual(evidence.nextExperiment, 'Prepare it before dinner.', 'Explicit reflection experiments lead the next recommendation');
+  const letter = buildQuestAllyLetter(quest, reflections.length);
+  assert(letter.question.includes('need') || letter.question.includes('transition'), 'Quest Ally letters ask about the underlying need');
 }

@@ -113,6 +113,8 @@ import { HabitImprovementAnalysisModal } from './HabitImprovementAnalysisModal';
 import { HabitChainAnalysisModal } from './HabitChainAnalysisModal';
 import { SuperHabitRosterModal } from './SuperHabitRosterModal';
 import { resolveSuperHabitForTitle, type SuperHabitId } from './superHabits';
+import { WellbeingShieldCard } from './WellbeingShieldCard';
+import { computeWellbeingShield, publishWellbeingShield } from './wellbeingShield';
 import { fetchQuestHabitTags, fetchQuests } from '../../services/quests';
 import { QuestCircularCalendar } from '../quests/QuestCircularCalendar';
 import { QuestManagerModal } from '../quests/QuestManagerModal';
@@ -2239,6 +2241,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }
     return completed;
   }, [historicalLogs, streak7Days]);
+  const wellbeingShield = useMemo(() => computeWellbeingShield(
+    habits,
+    historicalLogs,
+    activeDate,
+    streak7Days[0] ?? activeDate,
+  ), [activeDate, habits, historicalLogs, streak7Days]);
+  useEffect(() => { publishWellbeingShield(wellbeingShield); }, [wellbeingShield]);
   const weeklySnapshotCompletionPercent = useMemo(() => {
     if (weeklyReviewSnapshot.totalHabits <= 0) return 0;
     return Math.round((weeklyReviewSnapshot.onTrack.length / weeklyReviewSnapshot.totalHabits) * 100);
@@ -10743,6 +10752,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             }`}
           >
             {renderDayNavigation('compact', true, isCompactView)}
+            <WellbeingShieldCard score={wellbeingShield} onOpenSuperHabits={() => openSuperHabitRoster(null)} />
             <QuestCircularCalendar
               referenceDate={activeDate}
               goals={goals.map((goal) => ({
@@ -10771,6 +10781,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               }))}
               habits={habits.map((habit) => ({ id: habit.id, name: habit.name, goalId: habit.goal_id || null }))}
               campaign={campaign ? { id: campaign.id, title: campaign.name, goalId: campaign.goal_id ?? null } : null}
+              habitCompletionEvidence={weekCompletionsByHabit}
               onClose={() => setQuestManagerOpen(false)}
               onChanged={() => {
                 void refreshHabits();
@@ -10789,6 +10800,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   {campaign.keystone_habit_id ? `Keystone: ${habits.find((habit) => habit.id === campaign.keystone_habit_id)?.name ?? 'Selected habit'}` : 'Add a keystone habit to make this campaign easier to follow.'}
                 </p>
                 <p className="campaign-card__victory"><strong>Victory:</strong> {campaign.victory_condition}</p>
+                <p className="campaign-card__meta">Wellbeing Shield: {wellbeingShield.total}/100 · +{wellbeingShield.healthContribution} bounded Body & Health support</p>
                 <button type="button" className="campaign-card__button" onClick={handleOpenCampaignModal}>View campaign</button>
               </section>
             ) : null}

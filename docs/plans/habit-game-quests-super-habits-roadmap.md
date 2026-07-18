@@ -1,6 +1,6 @@
 # HabitGame — Goals, Campaigns, Quests, and SuperHabits roadmap
 
-Status: active product direction, 2026-07-16
+Status: release implementation complete, 2026-07-19
 
 ## Product language
 
@@ -20,10 +20,14 @@ Status: active product direction, 2026-07-16
 - Every linked habit receives a named Quest tag on Today. Goal tags and the older single gold-star bonus-door habit remain visually and mechanically distinct.
 - A 28-day circular Today calendar marks Goal milestones, Campaign days, and Quest ranges.
 - Compass Book shows the product hierarchy and live current-loop → better-loop Quest evidence without overwriting sealed reflections.
-- SuperHabits roster, per-habit tool launch button, Free live Journaling that adds or reuses its habit before launch, and Pro demo previews including Eat Well.
-- Quest Ally preference is saved as an explicitly labelled coming-soon option; this slice does not claim to send correspondence.
+- SuperHabits roster, per-habit tool launch button, Free live Journaling that adds or reuses its habit before launch, and interactive device-saved Pro demo tools.
+- Eat Well includes preference prompts, meals 1/2/3, optional feasts, tagged alternatives, a meal plan, and recipe-library progression. It remains clearly marked Pro demo and cannot complete a habit.
+- Quest field journals save quick check-ins, weekly loop reviews, completion reflections, next experiments, and private in-game Quest Ally replies.
+- Calendar days are selectable with accessible Goal, Campaign, and Quest detail.
+- Wellbeing Shield derives a rolling Body + Mind score from SuperHabit evidence, contributes a visible maximum of 10 points to Body & Health, appears on Today/Campaign/Life Wheel, and remains distinct from existing Shield currency/items.
+- The former mobile Shield navigation slot now opens Compass Book.
 
-## Next PR — Quest reflection and evidence loop
+## Completed in this release — Quest reflection and evidence loop
 
 1. Add weekly loop reviews and completion reflection using `quest_reflections`.
 2. Turn Quest Ally letters into occasional in-game correspondence. A letter asks one focused question; the player's reply is saved as an `ally_reply` journal-style Quest reflection. Never send a real external message without a separate, explicit sharing flow.
@@ -32,7 +36,7 @@ Status: active product direction, 2026-07-16
 5. Add database-backed conflict and negative cross-user RLS integration coverage once this repository has a runnable local Supabase configuration.
 6. Repair the existing guest/demo entry path so Today-tab click-through testing does not depend on cloud anonymous sign-in being enabled.
 
-## Following PR — Eat Well SuperHabit
+## Completed as a Pro demo in this release — Eat Well SuperHabit
 
 1. Keep Eat Well Pro and clearly marked demo until its core tool is reliable.
 2. Build “My Meal Plan” around meals 1, 2, 3, and optional feasts, not calorie-accounting complexity.
@@ -40,7 +44,7 @@ Status: active product direction, 2026-07-16
 4. The long-term progression is building a personal recipe library. Preference questions are woven into the game loop in small doses and stop once confidence is high.
 5. Food story content may temporarily influence Arena/Island prompts such as “Get in Shape,” but isolated food islands stay optional and cannot block the main story.
 
-## After the next PR — Shield and Compass menu refactor
+## Completed in this release — Shield and Compass menu refactor
 
 The repository already defines two Shield concepts: the Body Habit Shield wallet currency and a Shop Shield item. The proposed wellbeing system must not silently become a third ambiguous Shield.
 
@@ -48,7 +52,7 @@ The repository already defines two Shield concepts: the Body Habit Shield wallet
 2. Show it in the Body & Health Goal/Campaign area and the Life Wheel. Its contribution to Body & Health progress should be visible and bounded so it informs the score without dominating it.
 3. Move the Wellbeing Shield out of the main-menu slot and give that slot to the Compass Book icon.
 4. Preserve the existing Body Habit Shield currency and Shop Shield item unless a separate migration deliberately renames or retires them. UI copy and icons must distinguish all remaining concepts.
-5. Define the score formula, reset/carry-forward behavior, historical migration, accessibility labels, and analytics before implementation.
+5. Formula: 60% rolling seven-day consistency plus 40% today's completion, calculated separately for Body and Mind; combined score is 0–100 and Body & Health contribution is `round(score / 10)`. The current score is device-cached for cross-surface display and carries forward through its seven-day window. Accessibility labels are included; server history and analytics remain post-demo hardening work.
 
 ## Later SuperHabit tools
 

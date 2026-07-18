@@ -30,6 +30,7 @@ import {
   type QuestHabitRole,
   type QuestHabitTag,
   type QuestReflectionType,
+  type QuestReflection,
   type QuestStatus,
 } from '../features/quests/questModel';
 
@@ -96,6 +97,22 @@ export function mapQuestRow(row: QuestRow): Quest {
     archivedAt: row.archived_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+function mapQuestReflectionRow(row: QuestReflectionRow): QuestReflection {
+  const observation = row.loop_observation;
+  return {
+    id: row.id,
+    userId: row.user_id,
+    questId: row.quest_id,
+    reflectionType: row.reflection_type,
+    content: row.content,
+    loopObservation: observation && typeof observation === 'object' && !Array.isArray(observation)
+      ? observation as Record<string, unknown>
+      : {},
+    nextExperiment: row.next_experiment,
+    createdAt: row.created_at,
   };
 }
 
@@ -412,4 +429,41 @@ export async function addQuestReflection(
     .select('*')
     .single();
   return { data, error };
+}
+
+
+export async function fetchQuestReflections(
+  userId: string,
+  questId?: string,
+): Promise<ServiceResponse<QuestReflection[]>> {
+  const localRows = readQuestOfflineData().reflections.filter((row) => (
+    row.user_id === userId && (!questId || row.quest_id === questId)
+  ));
+  if (!canUseSupabaseData()) {
+    return { data: localRows.map(mapQuestReflectionRow), error: null };
+  }
+  const result = await guardedCloudCall('database', async () => {
+    let query = getSupabaseClient()
+      .from('quest_reflections')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (questId) query = query.eq('quest_id', questId);
+    const response = await query;
+    if (response.error) throw response.error;
+    return response.data ?? [];
+  });
+  if (!result.ok) {
+    if (shouldQueueAfterFailure(result.error)) {
+      return { data: localRows.map(mapQuestReflectionRow), error: null };
+    }
+    return { data: null, error: toPostgrestError(result.error) };
+  }
+  const byId = new Map(result.data.map((row) => [row.id, row]));
+  localRows.forEach((row) => byId.set(row.id, row));
+  return {
+    data: Array.from(byId.values()).map(mapQuestReflectionRow)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    error: null,
+  };
 }

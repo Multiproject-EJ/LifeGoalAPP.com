@@ -8,6 +8,8 @@ import {
   type SuperHabitId,
 } from './superHabits';
 import './SuperHabitRosterModal.css';
+import { EatWellDemo } from './EatWellDemo';
+import { SuperHabitDemoTool } from './SuperHabitDemoTool';
 
 type SuperHabitRosterModalProps = {
   open: boolean;
@@ -118,22 +120,9 @@ export function SuperHabitRosterModal({
             </div>
 
             {showDemo && selected.id === 'eat_well' ? (
-              <div className="super-habit-roster__meal-demo" role="status">
-                <p>My Meal Plan · demo</p>
-                {['Meal 1 · Breakfast', 'Meal 2 · Lunch', 'Meal 3 · Dinner'].map((meal, index) => (
-                  <button key={meal} type="button" onClick={() => undefined}>
-                    <span>{meal}</span>
-                    <small>{index === 0 ? '10 quick alternatives' : index === 1 ? '10 portable alternatives' : '10 delicious alternatives'}</small>
-                    <b>›</b>
-                  </button>
-                ))}
-                <div><span>15 min</span><span>low effort</span><span>filling</span><span>familiar</span></div>
-              </div>
+              <EatWellDemo />
             ) : showDemo ? (
-              <div className="super-habit-roster__generic-demo" role="status">
-                <strong>Demo preview</strong>
-                <span>This tool path is designed, but activation and saved progress are not enabled yet.</span>
-              </div>
+              <SuperHabitDemoTool superHabit={selected} />
             ) : null}
 
             <div className="super-habit-roster__actions">

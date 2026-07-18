@@ -13,6 +13,7 @@
   },
   "include": [
     "src/features/habits/superHabits.ts",
+    "src/features/habits/wellbeingShield.ts",
     "src/features/habits/__tests__/superHabits.test.ts"
   ]
 }

@@ -20,6 +20,9 @@
     linear-gradient(145deg, rgba(250, 245, 255, 0.98), rgba(238, 242, 255, 0.92));
   box-shadow: 0 14px 32px rgba(76, 29, 149, 0.1);
 }
+.quest-ring__details { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.38rem; padding-top: 0.65rem; border-top: 1px solid rgba(79,70,229,0.12); font-size: 0.66rem; }
+.quest-ring__details strong { color: #312e81; margin-right: 0.2rem; }
+.quest-ring__details span { border-radius: 999px; background: rgba(255,255,255,0.65); padding: 0.26rem 0.48rem; color: #57547a; }
 
 .quest-ring__copy { align-self: start; min-width: 0; }
 .quest-ring__copy h3, .quest-ring__copy p { margin: 0; }
@@ -32,8 +35,9 @@
 .quest-ring__center { position: absolute; inset: 32%; display: grid; place-content: center; text-align: center; z-index: 2; }
 .quest-ring__center strong { font-size: 1rem; color: #312e81; }
 .quest-ring__center span { color: #7c3aed; font-size: 0.58rem; font-weight: 850; white-space: nowrap; }
-.quest-ring__day { position: absolute; left: calc(50% - 10px); top: calc(50% - 10px); width: 20px; height: 20px; transform: rotate(var(--quest-ring-angle)) translateY(-91px) rotate(calc(-1 * var(--quest-ring-angle))); display: grid; place-items: center; border-radius: 50%; color: #6b7280; background: rgba(255,255,255,0.92); font-size: 0.51rem; font-weight: 850; box-shadow: 0 1px 5px rgba(49,46,129,0.14); }
+.quest-ring__day { position: absolute; left: calc(50% - 10px); top: calc(50% - 10px); width: 20px; height: 20px; transform: rotate(var(--quest-ring-angle)) translateY(-91px) rotate(calc(-1 * var(--quest-ring-angle))); display: grid; place-items: center; border: 0; padding: 0; border-radius: 50%; color: #6b7280; background: rgba(255,255,255,0.92); font-size: 0.51rem; font-weight: 850; box-shadow: 0 1px 5px rgba(49,46,129,0.14); cursor: pointer; }
 .quest-ring__day--today { color: white; background: #4f46e5; box-shadow: 0 0 0 3px rgba(99,102,241,0.22), 0 4px 10px rgba(49,46,129,0.25); }
+.quest-ring__day--selected { outline: 2px solid #f59e0b; outline-offset: 2px; }
 .quest-ring__signals { position: absolute; top: -4px; display: flex; gap: 1px; }
 .quest-ring__signal { display: inline-block; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; }
 .quest-ring__signal--goal { background: #0891b2; }

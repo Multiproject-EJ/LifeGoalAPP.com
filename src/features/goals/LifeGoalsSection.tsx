@@ -14,6 +14,7 @@ import { fetchStepsForGoal, insertStep, insertSubstep, insertAlert, updateStep }
 import { applyGoalAdaptation, evaluateGoalHealthFromSignals, recordGoalHealthSnapshot } from '../../services/goalExecution';
 import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from '../../hooks/useMediaQuery';
 import type { Database } from '../../lib/database.types';
+import { readWellbeingShield, WELLBEING_SHIELD_EVENT, type WellbeingShieldScore } from '../habits/wellbeingShield';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
 type StepRow = Database['public']['Tables']['life_goal_steps']['Row'];
@@ -38,6 +39,13 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
   const [goalHealthById, setGoalHealthById] = useState<Record<string, GoalHealthResult>>({});
   const [dialogPromptTitle, setDialogPromptTitle] = useState<string | null>(null);
   const isMobile = useMediaQuery(WORKSPACE_MOBILE_MEDIA_QUERY);
+  const [wellbeingShield, setWellbeingShield] = useState<WellbeingShieldScore | null>(() => readWellbeingShield());
+
+  useEffect(() => {
+    const update = () => setWellbeingShield(readWellbeingShield());
+    window.addEventListener(WELLBEING_SHIELD_EVENT, update);
+    return () => window.removeEventListener(WELLBEING_SHIELD_EVENT, update);
+  }, []);
 
   const goalStats = useMemo(() => {
     const byArea: Partial<Record<LifeWheelCategoryKey, { mainCount: number; subCount: number; progress: number }>> = {};
@@ -48,11 +56,12 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
       byArea[category.key] = {
         mainCount: areaGoals.length,
         subCount,
-        progress: computeAreaProgress(areaGoals.map((goal) => goal.id), stepsByGoal),
+        progress: Math.min(100, computeAreaProgress(areaGoals.map((goal) => goal.id), stepsByGoal)
+          + (category.key === 'health_fitness' ? wellbeingShield?.healthContribution ?? 0 : 0)),
       };
     });
     return byArea;
-  }, [allGoals, stepsByGoal]);
+  }, [allGoals, stepsByGoal, wellbeingShield?.healthContribution]);
 
   const categoryGoals = useMemo(
     () => (selectedCategory ? allGoals.filter((goal) => goal.life_wheel_category === selectedCategory) : []),
@@ -345,6 +354,7 @@ export function LifeGoalsSection({ session }: LifeGoalsSectionProps) {
             <p className="life-goals-section__chip" aria-live="polite">
               {activeCategoryLabel}
             </p>
+            {wellbeingShield ? <p className="life-goals-section__chip" aria-label={`Wellbeing Shield ${wellbeingShield.total} out of 100`}>🛡️ Wellbeing Shield {wellbeingShield.total} · Body {wellbeingShield.body} · Mind {wellbeingShield.mind}</p> : null}
           </div>
           <div className="life-goals-section__info">
             <CategoryInfoCard

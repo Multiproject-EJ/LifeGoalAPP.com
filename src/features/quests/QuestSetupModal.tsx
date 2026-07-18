@@ -226,7 +226,7 @@ export function QuestSetupModal({
               ))}
             </div>
             <label>Create a new daily Quest habit<input value={newHabitTitle} onChange={(event) => setNewHabitTitle(event.target.value)} placeholder="Prepare tomorrow’s breakfast" /></label>
-            <label className="quest-setup__check"><input type="checkbox" checked={allyLettersEnabled} onChange={(event) => setAllyLettersEnabled(event.target.checked)} />Prepare for Quest Ally letters <small>Coming soon — this saves your preference but does not send letters yet.</small></label>
+            <label className="quest-setup__check"><input type="checkbox" checked={allyLettersEnabled} onChange={(event) => setAllyLettersEnabled(event.target.checked)} />Invite a Quest Ally <small>Your Ally occasionally writes inside the Quest journal. Your replies stay private in the game and become useful reflection evidence.</small></label>
           </section>
         </div>
         <footer className="quest-setup__footer">

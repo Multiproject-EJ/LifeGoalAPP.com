@@ -4,6 +4,7 @@ import {
   getSuperHabit,
   resolveSuperHabitForTitle,
 } from '../superHabits';
+import { computeWellbeingShield } from '../wellbeingShield';
 
 function assert(condition: boolean, message: string): void {
   if (!condition) throw new Error(message);
@@ -33,6 +34,21 @@ export function runAllSuperHabitTests(): void {
   assertEqual(resolveSuperHabitForTitle('Prepare a healthy dinner')?.id, 'eat_well', 'Food titles resolve');
   assertEqual(resolveSuperHabitForTitle('20 minute workout')?.id, 'move_body', 'Movement titles resolve');
   assertEqual(resolveSuperHabitForTitle('Read a book')?.id ?? null, null, 'Unmatched habits stay unassigned');
+
+  const shield = computeWellbeingShield(
+    [{ id: 'body-1', name: '20 minute workout' }, { id: 'mind-1', name: 'Daily journal' }],
+    [
+      { habit_id: 'body-1', date: '2026-07-19', completed: true },
+      { habit_id: 'mind-1', date: '2026-07-19', completed: true },
+      { habit_id: 'mind-1', date: '2026-07-18', completed: true },
+    ],
+    '2026-07-19',
+    '2026-07-13',
+  );
+  assertEqual(shield.bodyHabitCount, 1, 'Movement powers the Body Shield');
+  assertEqual(shield.mindHabitCount, 1, 'Journaling powers the Mind Shield');
+  assert(shield.total > 0, 'Completed SuperHabits raise the Wellbeing Shield');
+  assert(shield.healthContribution <= 10, 'Body & Health contribution is bounded');
 
   console.log('super-habits-tests: all assertions passed');
 }

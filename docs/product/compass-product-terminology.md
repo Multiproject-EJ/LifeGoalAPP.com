@@ -1,12 +1,14 @@
 # Compass product terminology
 
-_Updated: 2026-07-16_
+_Updated: 2026-07-19_
 
 This note separates the live product surfaces so Compass Book, Quest Pulse, Campaigns, and Quests do not drift into conflicting meanings.
 
 ## Compass Book
 
 Compass Book is the six-chapter field guide for durable self-understanding and life direction. It owns chapter answers and sealed reflections. It may read canonical active Quests as a live evidence layer, but it does not overwrite sealed answers or independently create duplicate Goal/Habit records.
+
+The mobile footer's former Shield slot now opens Compass Book. This makes the Book a first-class navigation destination while the Wellbeing Shield lives where its evidence is useful: Today, SuperHabits, Body & Health, Campaigns, and the Life Wheel.
 
 ## Quest Pulse
 
@@ -26,6 +28,14 @@ My Quest is the active commitment and progress area where players manage current
 - A **Campaign** is HabitGame's time-boxed season of effort toward a Goal; it is not a synonym for the Goal.
 - A **Quest** is a SMART-sized outcome or behavior experiment inside a Campaign. It includes a current loop, a better loop, environment changes, linked habits, minimum moves, recovery rules, and reflections.
 - A **Habit** is the repeatable daily/weekly move. One linked habit may be the Quest's keystone habit.
+
+## Quest field journal and Quest Ally
+
+Every active Quest has a field journal for quick check-ins, weekly loop reviews, completion reflections, evidence, and the next experiment. When enabled, the Quest Ally occasionally asks one focused in-game question. A reply is saved privately as an `ally_reply` reflection; it is journaling, not an external message.
+
+## Wellbeing Shield
+
+The **Wellbeing Shield** is a rolling seven-day Body + Mind resilience score powered only by matched SuperHabits and their completion evidence. It contributes at most 10 points to Body & Health progress. It is distinct from the existing Body Habit Shield currency and Shop Shield item.
 
 ## Quest Leaps
 
