@@ -32,8 +32,7 @@ Run migrations in the order listed below. All files are in `supabase/migrations/
 | `0005_habit_adjustments.sql` | Habit adjustment history table | 🔄 |
 | `0006_habit_adjustments_rollbacks.sql` | Rollback helpers for habit adjustments | 🔄 |
 | `0007_reminder_prefs_and_state.sql` | `user_reminder_prefs` and per-habit reminder preferences | 🔄 |
-| `0008_m4_autoprog_ladder_v1.sql` | M4 auto-progress ladder: `progress_state`, `completion_percentage` columns on `habit_logs_v2`; `habit_environment`, `done_ish_config` on `habits_v2` | No |
-| `0008_per_habit_prefs_actions_logging.sql` | Per-habit action logging and preferences | 🔄 |
+| `0008_m4_autoprog_ladder_v1.sql` | M4 auto-progress ladder plus the consolidated per-habit action logging/preferences companion SQL | No |
 | `0009_reminder_analytics_views.sql` | Analytics views for reminder delivery rates | 🔄 |
 | `0010_timezone_quiet_hours_weekends.sql` | Timezone and quiet-hours columns on `user_reminder_prefs` | 🔄 |
 | `0011_merge_legacy_habits_into_v2.sql` | One-time migration: merges legacy `habits` rows into `habits_v2` | 🔄 |
@@ -55,8 +54,7 @@ Run migrations in the order listed below. All files are in `supabase/migrations/
 |---|---|---|
 | `0106_journal_feature.sql` | `journal_entries` table with tags, mood, type | 🔄 |
 | `0107_workspace_profiles.sql` | `workspace_profiles` for per-user display preferences | 🔄 |
-| `0108_add_initials.sql` | Adds `initials` column to profiles | 🔄 |
-| `0108_ai_settings.sql` | `ai_settings` table for AI coach data-access toggles | 🔄 |
+| `0108_add_initials.sql` | Adds profile initials plus the consolidated `ai_settings` table for AI coach data-access toggles | 🔄 |
 | `0109_habit_completions.sql` | Habit completion summary materialized view | No |
 | `0110_meditation_sessions.sql` | `meditation_sessions` table | 🔄 |
 | `0111_meditation_reminders.sql` | Meditation reminder preferences | 🔄 |
@@ -165,6 +163,14 @@ Run migrations in the order listed below. All files are in `supabase/migrations/
 | `0186_island_run_cycle_index.sql` | Adds `cycle_index` wrap counter to `island_run_runtime_state` | 🔄 |
 | `0187_island_run_per_run_state_columns.sql` | Adds in-flight runtime columns (`token_index`, `hearts`, `coins`, `spin_tokens`) | No |
 | `0188_island_run_dice_pool_column.sql` | Adds `dice_pool` to `island_run_runtime_state` | No |
+
+### Quest, Campaign, and Goal foundations
+
+| File | Description | Idempotent? |
+|---|---|---|
+| `20260716024447_quest_campaign_goal_foundations.sql` | Adds canonical Goal-linked Campaigns, SMART/behavior-experiment Quests, Quest-tagged habit links, Quest reflections/ally replies, atomic Quest Forge saves, ownership RLS, and explicit Data API grants | No |
+
+> The older repository history contains deliberately consolidated companion SQL under a single version number. Do not recreate a second migration file with the same numeric prefix; Supabase tracks the version prefix as the migration identity.
 
 ---
 

@@ -492,12 +492,49 @@ GRANT ALL
 
 -- ── 7. Bound user-generated Quest data ─────────────────────
 
-INSERT INTO public.user_data_limits
-  (table_name, user_column, scope_label, max_rows, max_row_bytes)
-VALUES
-  ('quests',              'user_id', 'account',  500,  32768),
-  ('quest_habit_links',   'user_id', 'account', 5000,   2048),
-  ('quest_reflections',   'user_id', 'account', 10000, 16384)
-ON CONFLICT (table_name) DO NOTHING;
+-- Older production projects can predate the generic limits framework. The
+-- Quest schema must remain deployable there; when the framework is present we
+-- register the caps, and when it is absent the table-level size checks and RLS
+-- above remain the immediate safety boundary.
+DO $$
+BEGIN
+  IF to_regclass('public.user_data_limits') IS NULL THEN
+    RAISE NOTICE 'user_data_limits is not installed; skipping Quest row-count caps';
+    RETURN;
+  END IF;
 
-SELECT public.attach_user_data_limit_triggers();
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'user_data_limits'
+      AND column_name = 'scope_label'
+  ) THEN
+    EXECUTE $limits$
+      INSERT INTO public.user_data_limits
+        (table_name, user_column, scope_label, max_rows, max_row_bytes)
+      VALUES
+        ('quests',              'user_id', 'account',  500,  32768),
+        ('quest_habit_links',   'user_id', 'account', 5000,   2048),
+        ('quest_reflections',   'user_id', 'account', 10000, 16384)
+      ON CONFLICT (table_name) DO NOTHING
+    $limits$;
+  ELSE
+    EXECUTE $limits$
+      INSERT INTO public.user_data_limits
+        (table_name, user_column, max_rows, max_row_bytes)
+      VALUES
+        ('quests',              'user_id',  500,  32768),
+        ('quest_habit_links',   'user_id', 5000,   2048),
+        ('quest_reflections',   'user_id', 10000, 16384)
+      ON CONFLICT (table_name) DO NOTHING
+    $limits$;
+  END IF;
+
+  IF to_regprocedure('public.attach_user_data_limit_triggers()') IS NOT NULL THEN
+    EXECUTE 'SELECT public.attach_user_data_limit_triggers()';
+  ELSE
+    RAISE NOTICE 'attach_user_data_limit_triggers() is not installed; skipping Quest limit triggers';
+  END IF;
+END;
+$$;
