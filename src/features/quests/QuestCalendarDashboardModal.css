@@ -1,0 +1,373 @@
+.quest-calendar-dashboard {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  min-height: 100dvh;
+  color: #f8fafc;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(124, 58, 237, 0.32), transparent 34%),
+    radial-gradient(circle at 92% 84%, rgba(14, 165, 233, 0.2), transparent 34%),
+    linear-gradient(145deg, #090d22, #17123d 52%, #0b2540);
+}
+
+.quest-calendar-dashboard__surface {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: clamp(0.8rem, 2vw, 1.25rem);
+  width: 100%;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding:
+    max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
+}
+
+.quest-calendar-dashboard__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.quest-calendar-dashboard__header p,
+.quest-calendar-dashboard__header h2,
+.quest-calendar-dashboard__header span {
+  margin: 0;
+}
+
+.quest-calendar-dashboard__header p {
+  color: #c4b5fd;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.quest-calendar-dashboard__header h2 {
+  margin-top: 0.18rem;
+  color: #fff;
+  font-size: clamp(1.55rem, 4vw, 2.45rem);
+  line-height: 1.05;
+}
+
+.quest-calendar-dashboard__header span {
+  display: block;
+  max-width: 48rem;
+  margin-top: 0.42rem;
+  color: rgba(226, 232, 240, 0.76);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.quest-calendar-dashboard__header button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.62);
+  cursor: pointer;
+}
+
+.quest-calendar-dashboard__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.quest-calendar-dashboard__summary article {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  border: 1px solid rgba(196, 181, 253, 0.2);
+  border-radius: 18px;
+  padding: 0.72rem 0.85rem;
+  background: rgba(15, 23, 42, 0.46);
+  backdrop-filter: blur(14px);
+}
+
+.quest-calendar-dashboard__summary article > span {
+  color: #fbbf24;
+  font-size: 1.3rem;
+}
+
+.quest-calendar-dashboard__summary article div {
+  display: grid;
+  min-width: 0;
+}
+
+.quest-calendar-dashboard__summary strong {
+  overflow: hidden;
+  color: #fff;
+  font-size: 0.86rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quest-calendar-dashboard__summary small {
+  color: rgba(226, 232, 240, 0.66);
+  font-size: 0.66rem;
+}
+
+.quest-calendar-dashboard__content {
+  display: grid;
+  align-items: center;
+  width: min(100%, 1180px);
+  min-height: 0;
+  margin: 0 auto;
+}
+
+.quest-calendar-dashboard .quest-ring {
+  grid-template-columns: minmax(210px, 0.8fr) minmax(440px, 1.5fr);
+  min-height: 100%;
+  margin: 0;
+  padding: clamp(1rem, 3vw, 2rem);
+  border-color: rgba(196, 181, 253, 0.34);
+  border-radius: clamp(24px, 4vw, 36px);
+  background:
+    radial-gradient(circle at 82% 35%, rgba(196, 181, 253, 0.4), transparent 38%),
+    linear-gradient(145deg, rgba(250, 245, 255, 0.98), rgba(238, 242, 255, 0.95));
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.32);
+}
+
+.quest-calendar-dashboard .quest-ring__orbit {
+  width: min(42vw, 390px);
+  height: min(42vw, 390px);
+  flex-basis: min(42vw, 390px);
+}
+
+.quest-calendar-dashboard .quest-ring__day {
+  width: 27px;
+  height: 27px;
+  left: calc(50% - 13.5px);
+  top: calc(50% - 13.5px);
+  transform: rotate(var(--quest-ring-angle)) translateY(clamp(-166px, -17.8vw, -91px)) rotate(calc(-1 * var(--quest-ring-angle)));
+  font-size: 0.62rem;
+}
+
+.quest-calendar-dashboard .quest-ring__center strong {
+  font-size: clamp(1rem, 2vw, 1.35rem);
+}
+
+.quest-calendar-dashboard .quest-ring__center span {
+  font-size: 0.68rem;
+}
+
+.quest-calendar-dashboard__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+}
+
+.quest-calendar-dashboard__actions button {
+  min-height: 46px;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.quest-calendar-dashboard__secondary {
+  border: 1px solid rgba(196, 181, 253, 0.28);
+  color: #ede9fe;
+  background: rgba(30, 41, 59, 0.7);
+}
+
+.quest-calendar-dashboard__primary {
+  border: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5 58%, #0284c7);
+  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.3);
+}
+
+.quest-dashboard-launcher {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  width: 100%;
+  margin: 0.4rem 0 0.85rem;
+  border: 1px solid rgba(109, 40, 217, 0.24);
+  border-radius: 20px;
+  padding: 0.8rem 0.9rem;
+  text-align: left;
+  color: #312e81;
+  background:
+    radial-gradient(circle at 92% 18%, rgba(196, 181, 253, 0.38), transparent 34%),
+    linear-gradient(145deg, rgba(250, 245, 255, 0.98), rgba(238, 242, 255, 0.94));
+  box-shadow: 0 12px 28px rgba(76, 29, 149, 0.1);
+  cursor: pointer;
+}
+
+.quest-dashboard-launcher__icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  border-radius: 50%;
+  color: #fff;
+  background: conic-gradient(from -40deg, #7c3aed, #0ea5e9, #f59e0b, #7c3aed);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.24);
+  font-size: 1.25rem;
+}
+
+.quest-dashboard-launcher__copy {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.quest-dashboard-launcher__copy small {
+  color: #7c3aed;
+  font-size: 0.62rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.quest-dashboard-launcher__copy strong {
+  color: #312e81;
+  font-size: 0.9rem;
+}
+
+.quest-dashboard-launcher__copy span {
+  overflow: hidden;
+  color: #6b6b8f;
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quest-dashboard-launcher__arrow {
+  color: #6d28d9;
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .quest-calendar-dashboard__surface {
+    grid-template-rows: auto auto auto auto;
+  }
+
+  .quest-calendar-dashboard__summary {
+    grid-template-columns: 1fr;
+  }
+
+  .quest-calendar-dashboard__summary article {
+    padding-block: 0.56rem;
+  }
+
+  .quest-calendar-dashboard .quest-ring {
+    grid-template-columns: 1fr;
+  }
+
+  .quest-calendar-dashboard .quest-ring__layout {
+    justify-content: center;
+  }
+
+  .quest-calendar-dashboard .quest-ring__orbit {
+    width: min(78vw, 330px);
+    height: min(78vw, 330px);
+    flex-basis: min(78vw, 330px);
+  }
+
+  .quest-calendar-dashboard .quest-ring__day {
+    transform: rotate(var(--quest-ring-angle)) translateY(clamp(-140px, -33vw, -102px)) rotate(calc(-1 * var(--quest-ring-angle)));
+  }
+
+  .quest-calendar-dashboard__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .quest-calendar-dashboard__surface {
+    padding-inline: max(0.65rem, env(safe-area-inset-left));
+  }
+
+  .quest-calendar-dashboard__header span {
+    font-size: 0.74rem;
+  }
+
+  .quest-calendar-dashboard__summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .quest-calendar-dashboard__summary article {
+    display: grid;
+    justify-items: center;
+    gap: 0.2rem;
+    padding: 0.52rem 0.3rem;
+    text-align: center;
+  }
+
+  .quest-calendar-dashboard__summary strong,
+  .quest-calendar-dashboard__summary small {
+    white-space: normal;
+  }
+
+  .quest-calendar-dashboard .quest-ring {
+    padding: 0.8rem;
+  }
+
+  .quest-calendar-dashboard .quest-ring__layout {
+    align-items: center;
+  }
+
+  .quest-calendar-dashboard .quest-ring__orbit {
+    width: min(76vw, 285px);
+    height: min(76vw, 285px);
+    flex-basis: min(76vw, 285px);
+  }
+
+  .quest-calendar-dashboard .quest-ring__day {
+    width: 23px;
+    height: 23px;
+    left: calc(50% - 11.5px);
+    top: calc(50% - 11.5px);
+    transform: rotate(var(--quest-ring-angle)) translateY(clamp(-120px, -31vw, -96px)) rotate(calc(-1 * var(--quest-ring-angle)));
+  }
+
+  .quest-calendar-dashboard .quest-ring__legend {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    white-space: normal;
+  }
+
+  .quest-calendar-dashboard__actions {
+    position: sticky;
+    bottom: max(0rem, env(safe-area-inset-bottom));
+    padding-top: 0.35rem;
+    background: linear-gradient(180deg, transparent, #11152f 34%);
+  }
+
+  .quest-calendar-dashboard__actions button {
+    padding-inline: 0.55rem;
+    font-size: 0.7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quest-calendar-dashboard * {
+    scroll-behavior: auto;
+  }
+}

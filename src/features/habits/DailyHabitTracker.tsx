@@ -116,7 +116,7 @@ import { resolveSuperHabitForTitle, type SuperHabitId } from './superHabits';
 import { WellbeingShieldCard } from './WellbeingShieldCard';
 import { computeWellbeingShield, publishWellbeingShield } from './wellbeingShield';
 import { fetchQuestHabitTags, fetchQuests } from '../../services/quests';
-import { QuestCircularCalendar } from '../quests/QuestCircularCalendar';
+import { QuestCalendarDashboardModal } from '../quests/QuestCalendarDashboardModal';
 import { QuestManagerModal } from '../quests/QuestManagerModal';
 import type { Quest, QuestHabitTag } from '../quests/questModel';
 import { buildEnhancedRationale } from './aiRationale';
@@ -1209,6 +1209,7 @@ export function DailyHabitTracker({
   const [campaignDraft, setCampaignDraft] = useState<CampaignDraft>(() => createDefaultCampaignDraft());
   const [campaignError, setCampaignError] = useState<string | null>(null);
   const [questManagerOpen, setQuestManagerOpen] = useState(false);
+  const [questCalendarDashboardOpen, setQuestCalendarDashboardOpen] = useState(false);
 
 
   const [editingTodayTodo, setEditingTodayTodo] = useState<TodayTodo | null>(null);
@@ -10834,7 +10835,23 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           >
             {renderDayNavigation('compact', true, isCompactView)}
             <WellbeingShieldCard score={wellbeingShield} onOpenSuperHabits={() => openSuperHabitRoster(null)} />
-            <QuestCircularCalendar
+            <button
+              type="button"
+              className="quest-dashboard-launcher"
+              onClick={() => setQuestCalendarDashboardOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={questCalendarDashboardOpen}
+            >
+              <span className="quest-dashboard-launcher__icon" aria-hidden="true">◉</span>
+              <span className="quest-dashboard-launcher__copy">
+                <small>Chapter dashboard</small>
+                <strong>Open circular calendar</strong>
+                <span>{calendarQuests.filter((quest) => quest.status === 'active').length} active quests · {campaign ? `Campaign day ${getCampaignDay(campaign)}` : 'No active campaign'}</span>
+              </span>
+              <span className="quest-dashboard-launcher__arrow" aria-hidden="true">→</span>
+            </button>
+            <QuestCalendarDashboardModal
+              open={questCalendarDashboardOpen}
               referenceDate={activeDate}
               goals={goals.map((goal) => ({
                 id: goal.id,
@@ -10850,7 +10867,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 active: campaign.status === 'active',
               }] : []}
               quests={calendarQuests}
-              onCreateQuest={() => setQuestManagerOpen(true)}
+              onClose={() => setQuestCalendarDashboardOpen(false)}
+              onCreateQuest={() => {
+                setQuestCalendarDashboardOpen(false);
+                setQuestManagerOpen(true);
+              }}
+              onOpenCampaign={() => {
+                setQuestCalendarDashboardOpen(false);
+                handleOpenCampaignModal();
+              }}
             />
             <QuestManagerModal
               open={questManagerOpen}
