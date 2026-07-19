@@ -385,8 +385,6 @@ const TODAY_EXTRA_SECTION_TOGGLES: ReadonlyArray<{
   icon: string;
 }> = [
   { key: 'routines', label: 'Routines', icon: '🔁' },
-  { key: 'contracts', label: 'Promises', icon: '🤝' },
-  { key: 'quickJournal', label: 'Quick journal', icon: '📝' },
   { key: 'intentions', label: 'Intentions & Todos', icon: '🎯' },
 ];
 const TODAY_EXTRA_SECTION_KEYS = new Set<TodayExpandableSectionKey>(
@@ -1759,6 +1757,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [isQuickJournalOpen, setIsQuickJournalOpen] = useState(false);
   const [superHabitRosterOpen, setSuperHabitRosterOpen] = useState(false);
   const [selectedSuperHabitId, setSelectedSuperHabitId] = useState<SuperHabitId | null>(null);
+  const [superHabitSourceHabitId, setSuperHabitSourceHabitId] = useState<string | null>(null);
+  const [superHabitHoldHabitId, setSuperHabitHoldHabitId] = useState<string | null>(null);
+  const [superHabitActivatedHabitId, setSuperHabitActivatedHabitId] = useState<string | null>(null);
+  const [journalToolHost, setJournalToolHost] = useState<HTMLDivElement | null>(null);
   const [activeSuperHabitSession, setActiveSuperHabitSession] = useState<{
     superHabitId: 'journal';
     habitId: string;
@@ -1814,6 +1816,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     armedDirection: HabitSwipeDirection | null;
   } | null>(null);
   const swipeSuppressClickUntilByHabitIdRef = useRef<Record<string, number>>({});
+  const superHabitHoldRef = useRef<{
+    habitId: string;
+    pointerId: number;
+    startX: number;
+    startY: number;
+    timerId: number;
+    triggered: boolean;
+  } | null>(null);
+  const superHabitPopTimerRef = useRef<number | null>(null);
   const todoSwipeGestureRef = useRef<{
     todoId: string;
     pointerId: number;
@@ -6382,29 +6393,20 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setOpenTodayExpandableSection((current) => current === section ? null : section);
   }, []);
 
-  const openSuperHabitRoster = useCallback((superHabitId: SuperHabitId | null = null) => {
+  const openSuperHabitRoster = useCallback((habitId: string, superHabitId: SuperHabitId | null = null) => {
+    setSuperHabitSourceHabitId(habitId);
     setSelectedSuperHabitId(superHabitId);
     setSuperHabitRosterOpen(true);
   }, []);
 
+  const captureJournalToolHost = useCallback((node: HTMLDivElement | null) => {
+    setJournalToolHost((current) => current === node ? current : node);
+  }, []);
+
   const launchJournalSuperHabit = useCallback(async (habitId: string | null = null) => {
-    let sourceHabitId = habitId ?? habits.find((habit) => resolveSuperHabitForTitle(habit.name)?.id === 'journal')?.id ?? null;
-    if (!sourceHabitId) {
-      const { data, error } = await createHabitV2({
-        title: 'Journal',
-        emoji: '✍️',
-        type: 'boolean',
-        status: 'active',
-        schedule: { mode: 'daily' },
-        start_date: activeDate,
-        archived: false,
-        goal_id: null,
-        habit_intent: 'Use guided reflection to notice patterns and choose a useful next step.',
-      }, session.user.id);
-      if (error || !data) throw error ?? new Error('Could not add the Journaling habit.');
-      sourceHabitId = data.id;
-      await refreshHabits();
-    }
+    const sourceHabitId = habitId;
+    const sourceHabit = habits.find((habit) => habit.id === sourceHabitId) ?? null;
+    if (!sourceHabitId || !sourceHabit || resolveSuperHabitForTitle(sourceHabit.name)?.id !== 'journal') return;
     const nextHiddenSections = new Set(hiddenTodayExtraSections);
     nextHiddenSections.delete('quickJournal');
     persistHiddenTodayExtraSections(session.user.id, nextHiddenSections);
@@ -6415,11 +6417,65 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setQuickJournalError(null);
     setQuickJournalStatus(null);
     setActiveSuperHabitSession({ superHabitId: 'journal', habitId: sourceHabitId });
+    setExpandedHabits({ [sourceHabitId]: true });
     setSuperHabitRosterOpen(false);
+    setSuperHabitSourceHabitId(null);
     window.setTimeout(() => {
-      document.getElementById('today-quick-journal')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('today-quick-journal-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 80);
-  }, [activeDate, habits, hiddenTodayExtraSections, refreshHabits, session.user.id]);
+  }, [habits, hiddenTodayExtraSections, session.user.id]);
+
+  const cancelSuperHabitHold = useCallback((pointerId?: number) => {
+    const hold = superHabitHoldRef.current;
+    if (!hold || (pointerId !== undefined && hold.pointerId !== pointerId)) return;
+    window.clearTimeout(hold.timerId);
+    superHabitHoldRef.current = null;
+    setSuperHabitHoldHabitId((current) => current === hold.habitId ? null : current);
+  }, []);
+
+  const beginSuperHabitHold = useCallback((
+    habit: HabitWithGoal,
+    pointerId: number,
+    startX: number,
+    startY: number,
+  ) => {
+    cancelSuperHabitHold();
+    setSuperHabitHoldHabitId(habit.id);
+    const hold = {
+      habitId: habit.id,
+      pointerId,
+      startX,
+      startY,
+      timerId: 0,
+      triggered: false,
+    };
+    hold.timerId = window.setTimeout(() => {
+      if (superHabitHoldRef.current !== hold) return;
+      hold.triggered = true;
+      swipeSuppressClickUntilByHabitIdRef.current[habit.id] = Date.now() + 800;
+      setSuperHabitHoldHabitId(null);
+      setSuperHabitActivatedHabitId(habit.id);
+      setExpandedHabits({ [habit.id]: true });
+      triggerCompletionHaptic('medium', { channel: 'habit', minIntervalMs: 120 });
+      const matchedSuperHabit = resolveSuperHabitForTitle(habit.name);
+      if (matchedSuperHabit?.id === 'journal') {
+        void launchJournalSuperHabit(habit.id);
+      } else {
+        openSuperHabitRoster(habit.id, matchedSuperHabit?.id ?? null);
+      }
+      if (superHabitPopTimerRef.current !== null) window.clearTimeout(superHabitPopTimerRef.current);
+      superHabitPopTimerRef.current = window.setTimeout(() => {
+        setSuperHabitActivatedHabitId((current) => current === habit.id ? null : current);
+        superHabitPopTimerRef.current = null;
+      }, 560);
+    }, 650);
+    superHabitHoldRef.current = hold;
+  }, [cancelSuperHabitHold, launchJournalSuperHabit, openSuperHabitRoster]);
+
+  useEffect(() => () => {
+    if (superHabitHoldRef.current) window.clearTimeout(superHabitHoldRef.current.timerId);
+    if (superHabitPopTimerRef.current !== null) window.clearTimeout(superHabitPopTimerRef.current);
+  }, []);
 
   useEffect(() => {
     setHiddenTodayExtraSections(readHiddenTodayExtraSections(session.user.id));
@@ -8342,14 +8398,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             >
               {campaign ? `⚑ ${getCampaignDay(campaign)}/${campaign.duration_days}` : '⚑ Campaign'}
             </button>
-            <button
-              type="button"
-              className="habit-checklist-card__super-habits-launcher"
-              onClick={() => openSuperHabitRoster(null)}
-              aria-label="Open SuperHabits roster"
-            >
-              ✦ Super
-            </button>
             <div className="habit-checklist-card__display-launcher">
               <button
                 type="button"
@@ -8814,6 +8862,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   linkedQuestTags.length > 0 ? 'habit-checklist__item--linked-quest' : ''
                 } ${
                   dailyLifeUpgradeHighlightedHabitId === habit.id ? 'habit-card--daily-life-upgrade-target' : ''
+                } ${superHabitHoldHabitId === habit.id ? 'habit-checklist__item--super-habit-charging' : ''} ${
+                  superHabitActivatedHabitId === habit.id ? 'habit-checklist__item--super-habit-activated' : ''
                 }`}
               >
                 <div
@@ -9031,6 +9081,27 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       tabIndex={0}
                       aria-expanded={isExpanded}
                       aria-controls={detailPanelId}
+                      onPointerDownCapture={(event) => {
+                        if (
+                          isInteractiveHabitChild(event.target)
+                          || (event.pointerType === 'mouse' && event.button !== 0)
+                        ) return;
+                        beginSuperHabitHold(habit, event.pointerId, event.clientX, event.clientY);
+                      }}
+                      onPointerMoveCapture={(event) => {
+                        const hold = superHabitHoldRef.current;
+                        if (!hold || hold.habitId !== habit.id || hold.pointerId !== event.pointerId || hold.triggered) return;
+                        if (Math.hypot(event.clientX - hold.startX, event.clientY - hold.startY) > 10) {
+                          cancelSuperHabitHold(event.pointerId);
+                        }
+                      }}
+                      onPointerUpCapture={(event) => cancelSuperHabitHold(event.pointerId)}
+                      onPointerCancelCapture={(event) => cancelSuperHabitHold(event.pointerId)}
+                      onContextMenu={(event) => {
+                        if (superHabitHoldHabitId === habit.id || superHabitActivatedHabitId === habit.id) {
+                          event.preventDefault();
+                        }
+                      }}
                       onClick={() => {
                         const suppressUntil = swipeSuppressClickUntilByHabitIdRef.current[habit.id] ?? 0;
                         if (Date.now() < suppressUntil) {
@@ -9235,7 +9306,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                               launchJournalSuperHabit(habit.id);
                               return;
                             }
-                            openSuperHabitRoster(matchedSuperHabit?.id ?? null);
+                            openSuperHabitRoster(habit.id, matchedSuperHabit?.id ?? null);
                           }}
                         >
                           <span aria-hidden="true">{matchedSuperHabit?.emoji ?? '✦'}</span>
@@ -9251,6 +9322,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   }`}
                   id={detailPanelId}
                 >
+                  {matchedSuperHabit?.id === 'journal' ? (
+                    <div
+                      ref={captureJournalToolHost}
+                      className={`habit-super-tool-slot${
+                        activeSuperHabitSession?.habitId === habit.id ? ' habit-super-tool-slot--active' : ''
+                      }`}
+                    >
+                      {activeSuperHabitSession?.habitId !== habit.id ? (
+                        <div className="habit-super-tool-slot__hint">
+                          <span aria-hidden="true">✍️</span>
+                          <div><strong>Journaling SuperHabit</strong><small>Press and hold this habit to open its reflection tool here.</small></div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
                   {coachCard ? (
                     <section
                       className={`habit-checklist__detail-block habit-checklist__coach habit-checklist__coach--${coachCard.state}`}
@@ -10834,7 +10920,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             }`}
           >
             {renderDayNavigation('compact', true, isCompactView)}
-            <WellbeingShieldCard score={wellbeingShield} onOpenSuperHabits={() => openSuperHabitRoster(null)} />
+            <WellbeingShieldCard score={wellbeingShield} />
             <button
               type="button"
               className="quest-dashboard-launcher"
@@ -11003,6 +11089,40 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         <li><strong>Replacement move:</strong> {campaign.replacement_move || 'Not set yet'}</li>
                         <li><strong>Recovery rule:</strong> {campaign.recovery_rule || DEFAULT_CAMPAIGN_RECOVERY_RULE}</li>
                       </ul></section>
+                      <section className="campaign-arsenal" aria-label="Campaign tools">
+                        <div className="campaign-arsenal__header">
+                          <div><h4>Tools chest</h4><p>Equip support for this chapter without crowding the Today screen.</p></div>
+                          <span>{todayActionableContracts.length} needing attention</span>
+                        </div>
+                        <div className="campaign-arsenal__grid">
+                          <button
+                            type="button"
+                            className="campaign-arsenal__tool campaign-arsenal__tool--live"
+                            onClick={() => {
+                              setCampaignModalOpen(false);
+                              if (!isContractsFeatureOpen) {
+                                onOpenFeaturePreview?.('app.contracts', 'Promises');
+                                return;
+                              }
+                              onNavigateToContracts?.();
+                            }}
+                          >
+                            <span aria-hidden="true">🤝</span>
+                            <strong>Promises</strong>
+                            <small>Commitment, stakes, and check-ins</small>
+                          </button>
+                          <button type="button" className="campaign-arsenal__tool" disabled>
+                            <span aria-hidden="true">🧭</span>
+                            <strong>Accountability partner</strong>
+                            <small>Reserved for a future campaign tool</small>
+                          </button>
+                          <button type="button" className="campaign-arsenal__tool" disabled>
+                            <span aria-hidden="true">🧰</span>
+                            <strong>Method slot</strong>
+                            <small>Choose a specific approach later</small>
+                          </button>
+                        </div>
+                      </section>
                       <p className="campaign-modal__repair">A slip is information. The next move matters more.</p>
                     </div>
                   ) : null}
@@ -11197,7 +11317,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               </TodayExpandableActionSection>
             ) : null}
 
-            {!hiddenTodayExtraSections.has('contracts') ? (
+            {false && !hiddenTodayExtraSections.has('contracts') ? (
               <TodayExpandableActionSection
                 id="today-contracts"
                 icon="🤝"
@@ -11302,7 +11422,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               </TodayExpandableActionSection>
             ) : null}
 
-            {!hiddenTodayExtraSections.has('quickJournal') ? (
+            {activeSuperHabitSession?.superHabitId === 'journal' && journalToolHost ? createPortal(
               <TodayExpandableActionSection
                 id="today-quick-journal"
                 icon="📝"
@@ -11754,7 +11874,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   </p>
                 ) : null}
               </div>
-            </TodayExpandableActionSection>
+            </TodayExpandableActionSection>,
+            journalToolHost,
             ) : null}
 
             {!isCompactView ? (
@@ -13035,9 +13156,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         <SuperHabitRosterModal
           open={superHabitRosterOpen}
           initialSuperHabitId={selectedSuperHabitId}
-          journalHabitExists={habits.some((habit) => resolveSuperHabitForTitle(habit.name)?.id === 'journal')}
-          onClose={() => setSuperHabitRosterOpen(false)}
-          onLaunchJournal={() => launchJournalSuperHabit()}
+          journalHabitExists={Boolean(
+            superHabitSourceHabitId
+            && resolveSuperHabitForTitle(habits.find((habit) => habit.id === superHabitSourceHabitId)?.name ?? '')?.id === 'journal'
+          )}
+          onClose={() => {
+            setSuperHabitRosterOpen(false);
+            setSuperHabitSourceHabitId(null);
+          }}
+          onLaunchJournal={() => launchJournalSuperHabit(superHabitSourceHabitId)}
         />
         {offerTeaserPortal}
         {todaysOfferPortal}
@@ -13119,9 +13246,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       <SuperHabitRosterModal
         open={superHabitRosterOpen}
         initialSuperHabitId={selectedSuperHabitId}
-        journalHabitExists={habits.some((habit) => resolveSuperHabitForTitle(habit.name)?.id === 'journal')}
-        onClose={() => setSuperHabitRosterOpen(false)}
-        onLaunchJournal={() => launchJournalSuperHabit()}
+        journalHabitExists={Boolean(
+          superHabitSourceHabitId
+          && resolveSuperHabitForTitle(habits.find((habit) => habit.id === superHabitSourceHabitId)?.name ?? '')?.id === 'journal'
+        )}
+        onClose={() => {
+          setSuperHabitRosterOpen(false);
+          setSuperHabitSourceHabitId(null);
+        }}
+        onLaunchJournal={() => launchJournalSuperHabit(superHabitSourceHabitId)}
       />
       <header className="habit-tracker__header">
         <div className="habit-tracker__actions">

@@ -130,12 +130,12 @@ export function SuperHabitRosterModal({
                 <button
                   type="button"
                   className="super-habit-roster__primary"
-                  disabled={launching}
+                  disabled={launching || !journalHabitExists}
                   onClick={() => {
                     setLaunching(true);
                     setLaunchError(null);
                     void onLaunchJournal()
-                      .catch((error) => setLaunchError(error instanceof Error ? error.message : 'Could not add Journaling.'))
+                      .catch((error) => setLaunchError(error instanceof Error ? error.message : 'Could not launch Journaling.'))
                       .finally(() => setLaunching(false));
                   }}
                 >
@@ -143,7 +143,7 @@ export function SuperHabitRosterModal({
                     ? 'Preparing Journaling…'
                     : journalHabitExists
                       ? `Launch ${selected.name}`
-                      : `Add ${selected.name} habit & launch`}
+                      : 'Open from a Journal habit'}
                 </button>
               ) : (
                 <button type="button" className="super-habit-roster__primary" onClick={() => setShowDemo(true)}>
@@ -152,7 +152,9 @@ export function SuperHabitRosterModal({
               )}
               <small>
                 {selected.stage === 'live'
-                  ? 'Available now. A meaningful journal submission completes the tool session.'
+                  ? journalHabitExists
+                    ? 'Available now. A meaningful journal submission completes the attached habit tool session.'
+                    : 'SuperHabits only launch from a real Today habit. Press and hold your Journal habit to use this tool.'
                   : 'Demo only for now. It will not alter your habits, meals, or progress.'}
               </small>
               {launchError ? <p className="super-habit-roster__error" role="alert">{launchError}</p> : null}
