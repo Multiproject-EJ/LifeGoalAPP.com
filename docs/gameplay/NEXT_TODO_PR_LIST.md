@@ -130,7 +130,7 @@ Each entry is sized to be a single focused PR. Items are ordered by impact × ri
 
 If the small-PR queue feels well-handled, these are the next substantive feature arcs:
 
-1. **Island theme variety**: the 40-tile ring currently reuses one background per island modulo theme. Add 3-4 distinct tile-art sets cycled by `effectiveIslandNumber % N`.
+1. **Island theme variety**: the 36-tile ring currently reuses one background per island modulo theme. Add 3-4 distinct tile-art sets cycled by `effectiveIslandNumber % N`.
 2. **Boss fight minigame**: the boss is currently a tap-to-resolve landmark. Design doc (no code) → 2-phase interaction → scope as a separate arc.
 3. **Daily contract**: a per-day optional side quest (e.g. "complete 3 habit stops today") that grants essence/diamonds. Requires a new persistence table.
 4. **Social/leaderboard hook**: optional opt-in weekly essence leaderboard. Needs RLS migration + edge function.
@@ -147,7 +147,7 @@ Each of these is a multi-PR arc — start it by writing a design doc PR (docs on
 - **Type-check:** `./node_modules/.bin/tsc -p tsconfig.json --noEmit`.
 - **Commit via `report_progress`** only — `git push` is sandboxed.
 - **Currency list** (active): dice, essence, shards, diamonds, spin tokens. No hearts, no coins.
-- **Board profile:** `spark40_ring` (40 ring tiles + 5 landmark orbit buttons).
+- **Board profile:** `spark36_ring` (36 ring tiles + 5 landmark orbit buttons).
 - **Stop taxonomy:** `hatchery | habit | mystery | wisdom | boss`.
 - **Two `EVENT_BANNER_META` copies** exist (`IslandRunBoardPrototype.tsx` and `GameBoardOverlay.tsx`) — keep them in sync.
 - **`prefers-reduced-motion`** guard is mandatory for any new keyframe animation.

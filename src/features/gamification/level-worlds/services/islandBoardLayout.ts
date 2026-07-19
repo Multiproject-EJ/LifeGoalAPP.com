@@ -37,7 +37,7 @@ export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
   { id: 'shop', x: 120, y: 500 },
 ];
 
-// ─── 36-tile board layout (spark40 / ring36) ─────────────────────────────────
+// ─── 36-tile board layout (spark36 / ring36) ─────────────────────────────────
 //
 // 36 tiles arranged around the island ring in canonical 1000×1000 board space.
 // Reduced from 40 → 36: fewer, larger tiles on the same ring radius so the
@@ -55,15 +55,15 @@ export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
 // so the circle keeps its exact size. Only the tile COUNT changes (40 → 36),
 // which widens each tile's arc.
 const SPARK_RING_TILE_COUNT = 36;
-const SPARK40_CENTER_X = 500;
-const SPARK40_CENTER_Y = 500;
-const SPARK40_RADIUS = 340;
-const SPARK40_ROTATION_OFFSET_RAD = (-6 * Math.PI) / 180;
+const SPARK36_CENTER_X = 500;
+const SPARK36_CENTER_Y = 500;
+const SPARK36_RADIUS = 340;
+const SPARK36_ROTATION_OFFSET_RAD = (-6 * Math.PI) / 180;
 
-export const TILE_ANCHORS_40: TileAnchor[] = Array.from({ length: SPARK_RING_TILE_COUNT }, (_, index) => {
-  const theta = ((index / SPARK_RING_TILE_COUNT) * Math.PI * 2) - (Math.PI / 2) + SPARK40_ROTATION_OFFSET_RAD;
-  const x = SPARK40_CENTER_X + Math.cos(theta) * SPARK40_RADIUS;
-  const y = SPARK40_CENTER_Y + Math.sin(theta) * SPARK40_RADIUS;
+export const TILE_ANCHORS_36: TileAnchor[] = Array.from({ length: SPARK_RING_TILE_COUNT }, (_, index) => {
+  const theta = ((index / SPARK_RING_TILE_COUNT) * Math.PI * 2) - (Math.PI / 2) + SPARK36_ROTATION_OFFSET_RAD;
+  const x = SPARK36_CENTER_X + Math.cos(theta) * SPARK36_RADIUS;
+  const y = SPARK36_CENTER_Y + Math.sin(theta) * SPARK36_RADIUS;
 
   const zBand: ZBand = y < 430 ? 'back' : y > 570 ? 'front' : 'mid';
   const tangentDeg = ((theta * 180) / Math.PI) + 90;
@@ -71,7 +71,7 @@ export const TILE_ANCHORS_40: TileAnchor[] = Array.from({ length: SPARK_RING_TIL
   return {
     id: `t${String(index).padStart(2, '0')}`,
     // Sub-pixel anchor precision: the ring tiles are exact tessellating wedges
-    // (see the spark40 tile CSS), so rounding centres to whole pixels opens
+    // (see the spark36 tile CSS), so rounding centres to whole pixels opens
     // hairline seams between neighbouring borders.
     x: Number(x.toFixed(2)),
     y: Number(y.toFixed(2)),
@@ -85,7 +85,7 @@ export const TILE_ANCHORS_40: TileAnchor[] = Array.from({ length: SPARK_RING_TIL
   };
 });
 
-/** Legacy stop tile indices for the ring board (profile: spark40_ring).
+/** Legacy stop tile indices for the ring board (profile: spark36_ring).
  *  Kept only for backward-compat; stops are decoupled from tile indices.
  *  Rescaled to the 36-tile ring so no index is out of range. */
-export const STOP_TILE_INDICES_40 = [0, 9, 18, 27, 35] as const;
+export const STOP_TILE_INDICES_36 = [0, 9, 18, 27, 35] as const;

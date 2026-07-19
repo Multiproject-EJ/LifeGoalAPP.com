@@ -33,7 +33,7 @@ Short answers:
   (`islandNames.ts`):
   - Act 1 Awakening (1–24), Act 2 Growth (25–48), Act 3 Power (49–72),
     Act 4 Mastery (73–96), Act 5 Futuristic/Transcendence (97–120).
-- **Same 40-tile board + 5 fixed stops on every island** (`islandRunStops.ts`):
+- **Same 36-tile board + 5 fixed stops on every island** (`islandRunStops.ts`):
   `hatchery`, **`habit`**, `mystery`, `wisdom`, `boss`.
   - Only the **Mystery** stop already varies per island (seeded from a small pool:
     breathing / habit / check-in / vision-quest).

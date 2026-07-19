@@ -751,7 +751,7 @@ switches were updated to read `mysteryContentKind` directly.
 
 ### P2-9. Encounter tile position collisions
 Seasonal/rare encounters at fractions `0.275` / `0.775` land on tile indices
-`11` and `31` on a 40-tile ring — adjacent to the removed landmark anchors.
+`9` and `27` on the 36-tile ring — adjacent to the removed landmark anchors.
 Cosmetically fine now that anchors are gone, but re-evaluate once P1-2 adds
 more tile types and we want an even spread.
 
@@ -1246,7 +1246,7 @@ confirmed to be **false positives** (not bugs):
 - **StopIds drift across islands** — they do not; `stopId` is stable and
   completion is keyed by `(islandNumber, stopId)`.
 
-- **Boss is a tile on the 40-tile ring** — incorrect premise; the ring is pure
+- **Boss is a tile on the 36-tile ring** — incorrect premise; the ring is pure
   traversal. All 5 stops (including boss) are orbit-HUD structures external to
   the ring, per the canonical gameplay contract.
 
@@ -1265,7 +1265,7 @@ confirmed to be **false positives** (not bugs):
    `persistIslandRunRuntimeStatePatch` does not bump `runtimeVersion`.
 
 4. **No integration test covers the full roll → land → complete stop → roll
-   again → finish island → travel loop on a 40-tile board crossing island
+   again → finish island → travel loop on a 36-tile board crossing island
    boundaries.** Unit tests are strong per-module; the seams between modules
    are where the bugs sit.
 

@@ -165,7 +165,7 @@ export interface BoardTileProps {
    *  ripple bounce when the token lands so the landing feels physical. */
   isLandingNeighbor?: boolean;
   isUpcoming: boolean;
-  isSpark40: boolean;
+  isSpark36: boolean;
   /** True when this is the traffic-light tile and its green lights are lit.
    *  Drives the whole-tile green colouring (neutral otherwise). */
   isTrafficLightGreen?: boolean;
@@ -192,7 +192,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isTokenCurrent,
     isLandingNeighbor = false,
     isUpcoming,
-    isSpark40,
+    isSpark36,
     isTrafficLightGreen = false,
     showDebug,
     isMinimalBoardArt,
@@ -241,8 +241,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
       style={{
         left: position.x,
         top: position.y,
-        ['--tile-rotation-deg' as string]: `${isSpark40 ? anchor.tangentDeg + 180 : 0}deg`,
-        ['--tile-upright-rotation-deg' as string]: `${isSpark40 ? -(anchor.tangentDeg + 180) : 0}deg`,
+        ['--tile-rotation-deg' as string]: `${isSpark36 ? anchor.tangentDeg + 180 : 0}deg`,
+        ['--tile-upright-rotation-deg' as string]: `${isSpark36 ? -(anchor.tangentDeg + 180) : 0}deg`,
         ['--tile-index' as string]: String(index),
         ['--tile-scale' as string]: String(anchor.scale),
         ['--tile-render-scale' as string]: (anchor.scale * uniformScale).toFixed(4),

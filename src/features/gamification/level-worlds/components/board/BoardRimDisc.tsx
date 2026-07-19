@@ -12,7 +12,7 @@ import { memo } from 'react';
 // All layers share the camera-stage transform (camera pan/zoom + board tilt).
 
 const CANONICAL_CENTER = 500;
-const RING_RADIUS = 340; // SPARK40_RADIUS — tile ring centre radius (canonical px)
+const RING_RADIUS = 340; // SPARK36_RADIUS — tile ring centre radius (canonical px)
 const TILE_HALF = 29; // half a 58px tile — tiles span RING_RADIUS ± TILE_HALF
 // Rim frames the tiles: outer edge a little past the tiles, inner edge a little
 // inside them, so the tiles sit embedded on the stone band.

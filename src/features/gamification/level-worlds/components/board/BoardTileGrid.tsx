@@ -15,7 +15,7 @@ export interface BoardTileGridProps {
   completedEncounterIndices: Set<number>;
   visibleTechnologyFragments?: readonly VisibleTechnologyFragment[];
   tokenIndex: number;
-  isSpark40: boolean;
+  isSpark36: boolean;
   showDebug: boolean;
   isMinimalBoardArt: boolean;
   /** Uniform board scale forwarded from BoardStage (canonical px → screen px). */
@@ -24,7 +24,7 @@ export interface BoardTileGridProps {
 }
 
 /**
- * Renders the ring tiles (36 on the production spark40_ring profile) using
+ * Renders the ring tiles (36 on the production spark36_ring profile) using
  * memoized BoardTile components. The count is driven by `anchors.length`, not
  * hardcoded, so it follows the active board profile.
  */
@@ -38,7 +38,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
     completedEncounterIndices,
     visibleTechnologyFragments = [],
     tokenIndex,
-    isSpark40,
+    isSpark36,
     showDebug,
     isMinimalBoardArt,
     uniformScale,
@@ -86,8 +86,8 @@ export function BoardTileGrid(props: BoardTileGridProps) {
           style={{
             left: trafficLightTile.position.x,
             top: trafficLightTile.position.y,
-            ['--tile-rotation-deg' as string]: `${isSpark40 ? trafficLightTile.anchor.tangentDeg + 180 : 0}deg`,
-            ['--tile-upright-rotation-deg' as string]: `${isSpark40 ? -(trafficLightTile.anchor.tangentDeg + 180) : 0}deg`,
+            ['--tile-rotation-deg' as string]: `${isSpark36 ? trafficLightTile.anchor.tangentDeg + 180 : 0}deg`,
+            ['--tile-upright-rotation-deg' as string]: `${isSpark36 ? -(trafficLightTile.anchor.tangentDeg + 180) : 0}deg`,
             ['--tile-render-scale' as string]: (trafficLightTile.anchor.scale * uniformScale).toFixed(4),
             transform: `translate(-50%, -50%) rotate(var(--tile-rotation-deg)) scale(${(trafficLightTile.anchor.scale * uniformScale).toFixed(4)})`,
           }}
@@ -137,7 +137,7 @@ export function BoardTileGrid(props: BoardTileGridProps) {
             isTokenCurrent={index === tokenIndex}
             isLandingNeighbor={neighborSet.has(index)}
             isUpcoming={upcomingSet.has(index)}
-            isSpark40={isSpark40}
+            isSpark36={isSpark36}
             isTrafficLightGreen={tileType === 'traffic_light' && trafficLightGreenOn}
             tileIndex={index}
             showDebug={showDebug}

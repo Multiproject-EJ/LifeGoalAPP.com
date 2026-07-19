@@ -34,7 +34,7 @@ SUPERSEDED historical detail: - the Echo Crystal, Meaning Lens, and Concord Core
 - Eligible tile types are exactly `currency`, `chest`, `micro`, and `card`.
 - Piece creation is deterministic from the landed tile index, not random. `resolveTechCollectionSlot` maps `Math.abs(Math.floor(tileIndex)) % min(9, tileCount)`.
 - Duplicate pieces are possible at the tile level but ignored at the grid level: if the resolved slot is already in `previousCollected`, the function returns without UI, reward, or persistence.
-- Slot selection is therefore predictable but board-topology dependent. On the default 40-tile ring, many physical tiles alias to the same nine slots.
+- Slot selection is therefore predictable but board-topology dependent. On the default 36-tile ring, many physical tiles alias to the same nine slots.
 - Collection state is updated locally first, then persisted through `applyTechCollectionState`.
 - The code currently also uses `applyTokenHopRewards` for dice rewards and then `setRuntimeState(rewardRecord)`, so the grid is not fully isolated from legacy board-side gameplay mutation patterns.
 

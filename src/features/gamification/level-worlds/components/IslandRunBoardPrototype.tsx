@@ -22,7 +22,7 @@ import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import {
   CANONICAL_BOARD_SIZE,
-  TILE_ANCHORS_40,
+  TILE_ANCHORS_36,
   TOKEN_START_TILE_INDEX,
   OUTER_STOP_ANCHORS,
   type TileAnchor,
@@ -521,8 +521,8 @@ const DEBUG_TIMED_EVENT_OVERRIDE_KEY = 'islandRunDebugTimedEventOverride';
 const DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY = 'islandRunDebugTimedEventOverrideNonce';
 // Only one board profile ships today. Historically this was query-param gated,
 // but every branch collapsed to the same result — so the helper was removed.
-const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark40_ring');
-// Tile 0 is the visual top of the spark40 ring (see TILE_ANCHORS_40 rotation).
+const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark36_ring');
+// Tile 0 is the visual top of the spark36 ring (see TILE_ANCHORS_36 rotation).
 const ISLAND_CARETAKER_TILE_INDEX = 0;
 const EMPTY_CARETAKER_TOPICS: IslandInhabitantTopicDefinition[] = [];
 const EMPTY_CARETAKER_CONVERSATIONS: IslandConversationDefinition[] = [];
@@ -1536,10 +1536,10 @@ export function IslandRunBoardPrototype({
     generate: wisdomKeeperAiGenerate,
   }), [session, wisdomKeeperAiAccess, wisdomKeeperAiGenerate]);
   const activeTileAnchors = useMemo(
-    () => TILE_ANCHORS_40,
+    () => TILE_ANCHORS_36,
     [],
   );
-  const isSpark40BoardProfile = ACTIVE_BOARD_PROFILE.id === 'spark40_ring';
+  const isSpark36BoardProfile = ACTIVE_BOARD_PROFILE.id === 'spark36_ring';
   const boardRef = useRef<HTMLDivElement>(null);
   const topbarMenuRef = useRef<HTMLDivElement>(null);
   const topbarMenuFirstItemRef = useRef<HTMLButtonElement>(null);
@@ -4576,7 +4576,7 @@ export function IslandRunBoardPrototype({
 
   // stopMap intentionally remains empty: per the canonical gameplay contract,
   // stops are EXTERNAL side-quest structures (orbit HUD buttons). No tile on
-  // the 40-tile ring is rendered as a "stop tile". The Map type is retained
+  // the 36-tile ring is rendered as a "stop tile". The Map type is retained
   // for camera-director backward compatibility.
   const stopMap = useMemo(() => new Map<number, string>(), []);
 
@@ -5771,8 +5771,8 @@ export function IslandRunBoardPrototype({
   })();
   const avatarImageUrl = getAvatarImageUrl(session.user);
   const islandDisplayName = getIslandDisplayName(islandNumber);
-  const spark40RingSegmentsGradient = useMemo(() => {
-    if (!isSpark40BoardProfile || !activeTileAnchors.length) return '';
+  const spark36RingSegmentsGradient = useMemo(() => {
+    if (!isSpark36BoardProfile || !activeTileAnchors.length) return '';
     const segmentSize = 360 / activeTileAnchors.length;
     const segments = Array.from({ length: activeTileAnchors.length }, (_, index) => {
         const tileType = landmarkDoorTileMap[index]?.tileType ?? 'micro';
@@ -5783,7 +5783,7 @@ export function IslandRunBoardPrototype({
       })
       .join(', ');
     return `conic-gradient(from -90deg, ${segments})`;
-  }, [activeTileAnchors.length, isSpark40BoardProfile, landmarkDoorTileMap]);
+  }, [activeTileAnchors.length, isSpark36BoardProfile, landmarkDoorTileMap]);
   const shouldPromptDicePurchase = dicePool < effectiveDiceCost;
   const wasDicePurchasePromptEligibleRef = useRef(false);
 
@@ -11420,7 +11420,7 @@ export function IslandRunBoardPrototype({
         </header>
       ) : null}
 
-      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${shouldUseNoBackgroundFallback ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark40BoardProfile ? 'island-run-board--spark40' : ''}`}>
+      <div ref={boardRef} className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${shouldUseNoBackgroundFallback ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark36BoardProfile ? 'island-run-board--spark36' : ''}`}>
         {shouldShowLegacyIslandBackground && (
           <img
             key={islandBackgroundSrc}
@@ -11818,8 +11818,8 @@ export function IslandRunBoardPrototype({
           landmarkBuildLevels={islandArtLandmarkBuildLevels}
           isBossDefeated={isCurrentIslandBossDefeated}
           bossCreatureArtState={bossCreatureArtState}
-          spark40RingGradient={spark40RingSegmentsGradient}
-          isSpark40={isSpark40BoardProfile}
+          spark36RingGradient={spark36RingSegmentsGradient}
+          isSpark36={isSpark36BoardProfile}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
           boardTiltXDeg={boardTiltXDeg}

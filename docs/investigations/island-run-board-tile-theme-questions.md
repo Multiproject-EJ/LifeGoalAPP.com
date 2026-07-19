@@ -16,7 +16,7 @@ The goal is to make board tiles feel more unique per island while keeping every 
 - Tile identity must remain recognizable across islands. A player should not need to relearn what a hazard, reward, landmark door, encounter, or traffic-light tile means.
 - Do not rely on color alone. Use icon, pattern, border, glow, and motion cues as redundant recognition layers.
 - Landmark/stops remain external structures. Landmark-door tiles can visually route to landmark affordances, but visuals must not imply that the token lands on landmark structures themselves.
-- The design should work with variable board topology, even though production currently uses the 40-tile ring.
+- The design should work with variable board topology, even though production currently uses the 36-tile ring.
 - The system should be safe to implement incrementally as visual tokens/CSS variables before considering any island-specific manifest overrides.
 
 ## Current working hypothesis

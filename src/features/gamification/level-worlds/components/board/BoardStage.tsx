@@ -59,10 +59,10 @@ export interface BoardStageProps {
   isBossDefeated?: boolean;
   /** Visual state for the separate boss creature layer; arena/scenery remains independent. */
   bossCreatureArtState?: BossCreatureArtState;
-  /** Spark60 ring gradient CSS value */
-  spark40RingGradient: string;
-  /** Whether this is a spark40 board */
-  isSpark40: boolean;
+  /** Spark36 ring gradient CSS value */
+  spark36RingGradient: string;
+  /** Whether this is a spark36 board */
+  isSpark36: boolean;
   /** Show debug overlay */
   showDebug: boolean;
   /** Disable decorative board art for production art integration */
@@ -144,8 +144,8 @@ export function BoardStage(props: BoardStageProps) {
     landmarkBuildLevels = [],
     isBossDefeated = false,
     bossCreatureArtState,
-    spark40RingGradient,
-    isSpark40,
+    spark36RingGradient,
+    isSpark36,
     showDebug,
     isMinimalBoardArt = false,
     boardTiltXDeg = BOARD_TILT_X_DEG,
@@ -593,8 +593,8 @@ export function BoardStage(props: BoardStageProps) {
         style={{ transform: cameraStageTransform, willChange: 'transform' }}
       >
         {/* Carved rim disc the tile ring sits on (behind everything else).
-            Geometry is specific to the spark40 ring layout. */}
-        {!isMinimalBoardArt && isSpark40 && (
+            Geometry is specific to the spark36 ring layout. */}
+        {!isMinimalBoardArt && isSpark36 && (
           <BoardRimDisc
             centerX={offsetX + 500 * uniformScale}
             centerY={offsetY + 500 * uniformScale}
@@ -623,13 +623,13 @@ export function BoardStage(props: BoardStageProps) {
           toScreen={toScreen}
         />
 
-        {/* Spark60 ring */}
-        {isSpark40 && (
+        {/* Spark36 ring */}
+        {isSpark36 && (
           <div
-            className="island-run-board__spark40-ring"
+            className="island-run-board__spark36-ring"
             style={{
               ['--spark-segment-count' as string]: String(anchors.length),
-              ['--spark-ring-segments' as string]: spark40RingGradient,
+              ['--spark-ring-segments' as string]: spark36RingGradient,
             }}
             aria-hidden="true"
           />
@@ -647,7 +647,7 @@ export function BoardStage(props: BoardStageProps) {
           completedEncounterIndices={completedEncounterIndices}
           visibleTechnologyFragments={visibleTechnologyFragments}
           tokenIndex={tokenIndex}
-          isSpark40={isSpark40}
+          isSpark36={isSpark36}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
           uniformScale={uniformScale}

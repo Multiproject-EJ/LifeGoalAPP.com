@@ -17,7 +17,7 @@ export const islandBoardTopologyTests: TestCase[] = [
   {
     name: 'v2 stop progression remains strict sequential and independent of board tile indices',
     run: () => {
-      const stopPlan = generateIslandStopPlan(7, { profileId: 'spark40_ring' });
+      const stopPlan = generateIslandStopPlan(7, { profileId: 'spark36_ring' });
       assertEqual(stopPlan.length, 5, 'Expected five-stop plan regardless of board size');
 
       const result = resolveIslandRunContractV2Stops({
@@ -133,10 +133,10 @@ export const islandBoardTopologyTests: TestCase[] = [
     },
   },
   {
-    name: 'default board profile resolves to spark40_ring topology',
+    name: 'default board profile resolves to spark36_ring topology',
     run: () => {
       const defaultProfile = resolveIslandBoardProfile();
-      assertEqual(defaultProfile.id, 'spark40_ring', 'Expected spark40_ring as the default active profile');
+      assertEqual(defaultProfile.id, 'spark36_ring', 'Expected spark36_ring as the default active profile');
       assertEqual(defaultProfile.tileCount, 36, 'Expected 36 tiles for the default profile');
 
       const tileMap = generateTileMap(3, 'normal', 'forest', 0);
@@ -160,13 +160,21 @@ export const islandBoardTopologyTests: TestCase[] = [
     },
   },
   {
-    name: 'explicit spark40 ring profile resolves safely',
+    name: 'explicit spark36 ring profile resolves safely',
     run: () => {
-      const previewProfile = resolveIslandBoardProfile('spark40_ring');
+      const previewProfile = resolveIslandBoardProfile('spark36_ring');
       assertEqual(previewProfile.tileCount, 36, 'Expected ring profile to expose 36-tile topology');
 
-      const previewTileMap = generateTileMap(3, 'normal', 'forest', 0, { profileId: 'spark40_ring' });
+      const previewTileMap = generateTileMap(3, 'normal', 'forest', 0, { profileId: 'spark36_ring' });
       assertEqual(previewTileMap.length, 36, 'Expected ring tile map generation to support 36 tiles');
+    },
+  },
+  {
+    name: 'legacy spark40 ring profile id normalizes to canonical spark36 id',
+    run: () => {
+      const legacyProfile = resolveIslandBoardProfile('spark40_ring');
+      assertEqual(legacyProfile.id, 'spark36_ring', 'Expected legacy profile input to normalize to spark36_ring');
+      assertEqual(legacyProfile.tileCount, 36, 'Expected legacy profile input to retain the 36-tile topology');
     },
   },
   {

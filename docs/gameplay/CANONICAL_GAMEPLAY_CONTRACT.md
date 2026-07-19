@@ -72,7 +72,7 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 
 - Board topology is profile/config-driven.
 - Board tile count is not fixed and must always be derived from the active board topology profile.
-- The current production default profile is `spark40_ring` (36 tiles; the id keeps its original `spark40` name for telemetry stability).
+- The current production default profile is `spark36_ring` (36 tiles).
 - Future profiles are supported.
 - Board topology must be treated as variable and extensible across profiles.
 
@@ -94,7 +94,8 @@ If implementation, planning notes, or legacy docs conflict with this contract, t
 - Landmark buttons should expose an **attention hint** (small affordability dot) whenever the next sequentially-eligible landmark is payable with current essence and remains unpaid.
 
 ### Board topology compatibility note
-- Current production board uses a 36-tile topology profile (`spark40_ring`, tileCount 36).
+- Current production board uses a 36-tile topology profile (`spark36_ring`, tileCount 36).
+- Legacy `spark40_ring` inputs are normalized to `spark36_ring` during migration; runtime state and telemetry use the canonical `spark36_ring` id.
 - Additional board profiles may exist for experimentation, but production gameplay is standardized on the 36-tile profile.
 
 ---
@@ -366,9 +367,9 @@ The 36-tile ring uses the following tile types. **Tile-type `'stop'` is fully re
 | `encounter` | Opens encounter modal | Once-per-visit; completed tiles become inert. See glossary below. |
 | `bonus` | Glowing 9-hit accumulator — see §5E | Dormant in the current production tile map; renderer/tile wiring follows in a later PR. |
 
-Weighting on the production profile (`spark40_ring`) is `currency:3, chest:2, micro:4, hazard:1` drawn deterministically per-island from the pool in `islandBoardTileMap.ts`. Encounter tiles are injected at fixed fractional positions (§5F).
+Weighting on the production profile (`spark36_ring`) is `currency:3, chest:2, micro:4, hazard:1` drawn deterministically per-island from the pool in `islandBoardTileMap.ts`. Encounter tiles are injected at fixed fractional positions (§5F).
 
-Tile topology is **feature-gated via the board profile** — the active profile (`spark40_ring` in production) determines how many tiles of each type exist and their positions, but every tile must be one of the types above.
+Tile topology is **feature-gated via the board profile** — the active profile (`spark36_ring` in production) determines how many tiles of each type exist and their positions, but every tile must be one of the types above.
 
 ### Glossary — encounter modal
 

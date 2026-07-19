@@ -42,7 +42,7 @@ export type IslandLandmarkDoorClusterStopId = Exclude<IslandLandmarkDoorStopId, 
  * become landmark doors; once the boss is open, all four route to the boss
  * instead.
  *
- * Indices are for the 36-tile ring (spark40_ring, tileCount 36): each is the
+ * Indices are for the 36-tile ring (spark36_ring, tileCount 36): each is the
  * ring tile closest to its diagonal corner anchor in OUTER_STOP_ANCHORS,
  * spaced evenly 9 tiles apart. (Previously 36/6/16/26 on the 40-tile ring —
  * note index 36 is out of range once the ring drops to 36 tiles.)

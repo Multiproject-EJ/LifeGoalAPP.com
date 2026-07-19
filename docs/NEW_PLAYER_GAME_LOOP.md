@@ -198,7 +198,7 @@ one.
 1. **Roll.** Tap dice. Cost = `1 × N` (N = ×1 for new players). Two standard
    dice produce **2–12 tiles** of movement. The multiplier never changes the
    *distance* — only cost and reward amplification (§6).
-2. **Move & land.** The token walks the **40-tile `spark40_ring`** board.
+2. **Move & land.** The token walks the **36-tile `spark36_ring`** board.
    New players cannot assume a fixed tile count anywhere — movement wraps on the
    profile-derived count.
 3. **Resolve the tile** (canonical catalogue, contract §5D):
@@ -493,7 +493,7 @@ islands: same 5-stop skeleton, different civilization and finale framing.
 
 Unlike most of the narrative (which is authored but not yet UI-wired), the
 **inhabitant conversation flow is already production-wired for Island 1**: when
-a new player's roll passes the **top tile of the 40-tile ring**, the board
+a new player's roll passes the **top tile of the 36-tile ring**, the board
 pauses tile handling and opens the Caretaker — a two-stage *premium encounter
 screen → topic buttons → retro conversation → deterministic close*. It is
 presentation-only (no rewards, no persistence, no gameplay writes) and reuses

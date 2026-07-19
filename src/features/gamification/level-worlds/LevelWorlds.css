@@ -2082,7 +2082,7 @@
   opacity: 0;
 }
 
-.island-run-board__spark40-ring {
+.island-run-board__spark36-ring {
   display: none;
 }
 
@@ -3979,7 +3979,7 @@
   }
 }
 
-.island-run-board--spark40 .island-tile {
+.island-run-board--spark36 .island-tile {
   /* 36-tile ring at r=340. Each tile is an annular-sector wedge that
      tessellates the circle exactly — no overlap, no gaps:
        radial band  = 72px (25% longer than the old 58px):
@@ -3997,8 +3997,8 @@
   --tile-thickness: 10px;
 }
 
-.island-run-board--spark40 .island-tile__face,
-.island-run-board--spark40 .island-tile__side {
+.island-run-board--spark36 .island-tile__face,
+.island-run-board--spark36 .island-tile__side {
   /* Sharp tessellating wedge. Straight radial sides mean each edge lies on
      the exact same radial line as its neighbour's, so the tiles read as one
      unified circle. Plain px coordinates (no calc()) for maximum clip-path
@@ -4012,22 +4012,22 @@
 
 /* The rect-based engraved inner ring can't follow the wedge silhouette —
    the wedge frame below carries the carved-border read instead. */
-.island-run-board--spark40 .island-tile__face::before {
+.island-run-board--spark36 .island-tile__face::before {
   content: none;
 }
 
 /* Per-state frame tint for the wedge border below. States that used to tint
    the (now clipped-away) rect border set this variable instead. */
-.island-run-board--spark40 .island-tile--stop .island-tile__face {
+.island-run-board--spark36 .island-tile--stop .island-tile__face {
   --tile-frame: var(--tile-stop-border);
 }
-.island-run-board--spark40 .island-tile--upcoming .island-tile__face {
+.island-run-board--spark36 .island-tile--upcoming .island-tile__face {
   --tile-frame: color-mix(in srgb, var(--tile-trim) 55%, #fff);
 }
-.island-run-board--spark40 .island-tile--door-boss .island-tile__face {
+.island-run-board--spark36 .island-tile--door-boss .island-tile__face {
   --tile-frame: color-mix(in srgb, var(--door-accent, var(--tile-trim)) 60%, var(--tile-trim));
 }
-.island-run-board--spark40 .island-tile--active-door-cluster .island-tile__face {
+.island-run-board--spark36 .island-tile--active-door-cluster .island-tile__face {
   --tile-frame: color-mix(in srgb, var(--door-accent, var(--tile-growth-accent)) 55%, #fff);
 }
 
@@ -4041,16 +4041,16 @@
    Inset wedge: top/bottom edges in by 4px, slanted sides in by 2px along the
    edge normal (2 ÷ cos 5° ≈ 2px horizontally). */
 @supports (clip-path: path(evenodd, 'M0 0H1V1Z')) {
-  .island-run-board--spark40 .island-tile__face,
-  .island-run-board--spark40 .island-tile--stop .island-tile__face,
-  .island-run-board--spark40 .island-tile--door-boss .island-tile__face,
-  .island-run-board--spark40 .island-tile--upcoming .island-tile__face,
-  .island-run-board--spark40 .island-tile--active-door-cluster .island-tile__face {
+  .island-run-board--spark36 .island-tile__face,
+  .island-run-board--spark36 .island-tile--stop .island-tile__face,
+  .island-run-board--spark36 .island-tile--door-boss .island-tile__face,
+  .island-run-board--spark36 .island-tile--upcoming .island-tile__face,
+  .island-run-board--spark36 .island-tile--active-door-cluster .island-tile__face {
     /* The wedge frame IS the border on the ring board; the rect border only
        survives as a fallback for browsers without path() support. */
     border: none;
   }
-  .island-run-board--spark40 .island-tile__face::after {
+  .island-run-board--spark36 .island-tile__face::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -4076,7 +4076,7 @@
   }
 }
 
-.island-run-board--spark40 .island-tile__value {
+.island-run-board--spark36 .island-tile__value {
   font-size: 0.65rem;
   transform: rotate(var(--tile-upright-rotation-deg, 0deg));
   transform-origin: center center;
@@ -4089,7 +4089,7 @@
   width: 16px;
   height: 16px;
 }
-.island-run-board--spark40 .island-tile__value svg {
+.island-run-board--spark36 .island-tile__value svg {
   width: 19px;
   height: 19px;
 }
@@ -6198,7 +6198,7 @@
 }
 
 /* ── Unclipped aura layer ───────────────────────────────────────────────────
-   Outer glows can NOT live on the face: the spark40 wedge clip-path clips the
+   Outer glows can NOT live on the face: the spark36 wedge clip-path clips the
    face's box-shadows away. States that need a halo paint it on the tile
    root's ::after instead, which is never clipped (the upcoming highlight
    already uses the root's ::before the same way). */
@@ -8939,15 +8939,15 @@
   }
 }
 
-/* Override for spark40 ring — idle bob respects the perspective anchor scale. */
-.island-run-board--spark40 .island-tile--alive {
+/* Override for spark36 ring — idle bob respects the perspective anchor scale. */
+.island-run-board--spark36 .island-tile--alive {
   animation:
-    island-tile-idle-spark40 3.5s ease-in-out infinite,
+    island-tile-idle-spark36 3.5s ease-in-out infinite,
     island-tile-enter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
   animation-delay: calc(var(--tile-index, 0) * 0.06s), calc(var(--tile-index, 0) * 0.022s);
 }
 
-@keyframes island-tile-idle-spark40 {
+@keyframes island-tile-idle-spark36 {
   0%, 100% { transform: translate(-50%, -50%) rotate(var(--tile-rotation-deg, 0deg)) scale(var(--tile-render-scale, var(--tile-scale, 1))); }
   50% { transform: translate(-50%, calc(-50% - 1.2px)) rotate(var(--tile-rotation-deg, 0deg)) scale(calc(var(--tile-render-scale, var(--tile-scale, 1)) * 1.01)); }
 }
@@ -9009,7 +9009,7 @@
 /* Tile number badge — smaller on ring board, and tucked inside the wedge
    silhouette (the rect corner position would be clipped away by the tile's
    annular-sector clip-path + eaten by the 4px wedge frame). */
-.island-run-board--spark40 .island-tile__badge {
+.island-run-board--spark36 .island-tile__badge {
   font-size: 0.38rem;
   padding: 1px 2px;
   top: 7px;
@@ -11030,7 +11030,7 @@
 .island-tile-traffic-light-sign {
   position: absolute;
   z-index: 12;
-  /* Matches the 36-tile ring tile footprint (see .island-run-board--spark40). */
+  /* Matches the 36-tile ring tile footprint (see .island-run-board--spark36). */
   width: 64px;
   height: 58px;
   pointer-events: none;

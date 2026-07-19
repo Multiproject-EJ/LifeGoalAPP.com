@@ -1,4 +1,6 @@
-export type IslandBoardProfileId = 'spark40_ring';
+export type IslandBoardProfileId = 'spark36_ring';
+export type LegacyIslandBoardProfileId = 'spark40_ring';
+export type IslandBoardProfileInputId = IslandBoardProfileId | LegacyIslandBoardProfileId;
 
 export interface IslandBoardProfile {
   id: IslandBoardProfileId;
@@ -13,17 +15,20 @@ export interface IslandBoardProfile {
  * stop completion/progression remains canonical and independent of door indices.
  */
 const BOARD_PROFILES: Record<IslandBoardProfileId, IslandBoardProfile> = {
-  spark40_ring: {
-    id: 'spark40_ring',
-    // Reduced from 40 → 36 tiles. Fewer, larger tiles on the SAME ring radius
-    // (see SPARK40_RADIUS in islandBoardLayout.ts). The profile id is kept as
-    // `spark40_ring` so existing telemetry / string call-sites stay stable.
+  spark36_ring: {
+    id: 'spark36_ring',
+    // 36 larger tiles on the established ring radius. The old
+    // `spark40_ring` identifier is normalized below for compatibility.
     tileCount: 36,
   },
 };
 
-export const DEFAULT_ISLAND_BOARD_PROFILE_ID: IslandBoardProfileId = 'spark40_ring';
+export const DEFAULT_ISLAND_BOARD_PROFILE_ID: IslandBoardProfileId = 'spark36_ring';
 
-export function resolveIslandBoardProfile(profileId: IslandBoardProfileId = DEFAULT_ISLAND_BOARD_PROFILE_ID): IslandBoardProfile {
-  return BOARD_PROFILES[profileId] ?? BOARD_PROFILES[DEFAULT_ISLAND_BOARD_PROFILE_ID];
+export function resolveIslandBoardProfile(
+  profileId: IslandBoardProfileInputId | string = DEFAULT_ISLAND_BOARD_PROFILE_ID,
+): IslandBoardProfile {
+  const canonicalProfileId = profileId === 'spark40_ring' ? 'spark36_ring' : profileId;
+  return BOARD_PROFILES[canonicalProfileId as IslandBoardProfileId]
+    ?? BOARD_PROFILES[DEFAULT_ISLAND_BOARD_PROFILE_ID];
 }

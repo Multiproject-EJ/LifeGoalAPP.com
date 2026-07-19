@@ -51,7 +51,7 @@ create table if not exists user_island_state (
   island_number int not null,
   started_at timestamptz not null,
   expires_at timestamptz not null,
-  token_tile_index int not null default 0, -- 0..39 (40-tile ring)
+  token_tile_index int not null default 0, -- 0..35 (36-tile ring)
   dice_pool int not null default 30,       -- app-wide dice pool
   essence int not null default 0,          -- app-wide essence currency
   diamonds int not null default 0,        -- app-wide premium currency

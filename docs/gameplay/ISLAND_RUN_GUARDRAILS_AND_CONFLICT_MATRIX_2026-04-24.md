@@ -58,7 +58,7 @@ This means the codebase is still vulnerable to “new code picks wrong path” m
    - Explicitly retired no-op compatibility API.
 
 12. `src/features/gamification/level-worlds/services/islandBoardLayout.ts`
-   - `STOP_TILE_INDICES_40` remains exported despite stop-decoupled contract comments.
+   - `STOP_TILE_INDICES_36` remains exported despite stop-decoupled contract comments.
 
 ---
 

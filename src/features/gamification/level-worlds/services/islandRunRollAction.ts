@@ -127,7 +127,7 @@ function resolveFirstSessionTutorialRollTotal(options: {
     return null;
   }
 
-  const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark40_ring');
+  const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark36_ring');
   const islandOneTheme = getIslandBoardThemeForIslandNumber(1);
   const tileMap = generateTileMap(1, getIslandRarity(1), islandOneTheme.tileThemeId, 0, { profileId: boardProfile.id });
   for (let total = ROLL_MIN * 2; total <= ROLL_MAX * 2; total += 1) {
@@ -218,7 +218,7 @@ export function __resetIslandRunRollActionMutexesForTests(): void {
 export function executeIslandRunRollAction(options: {
   session: Session;
   client: SupabaseClient | null;
-  /** Board profile to use for tile-count and stop-tile resolution. Defaults to 'spark40_ring'. */
+  /** Board profile to use for tile-count and stop-tile resolution. Defaults to 'spark36_ring'. */
   boardProfileId?: IslandBoardProfileId;
   /**
    * Dice multiplier (default 1). The total dice cost per roll = DICE_PER_ROLL × multiplier.
@@ -265,7 +265,7 @@ async function performRollAction(options: {
   //    board wrap-around (lap completion) is handled correctly. Also record each
   //    intermediate index so the renderer can animate hop-by-hop without having
   //    to re-walk the board locally (which could drift from the service's truth).
-  const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark40_ring');
+  const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark36_ring');
   let newTokenIndex = state.tokenIndex;
   const hopSequence: number[] = [];
   for (let step = 0; step < total; step += 1) {

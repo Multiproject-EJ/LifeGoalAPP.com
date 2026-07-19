@@ -9,7 +9,7 @@ export const islandRunFoundationTests: TestCase[] = [
     name: 'generateTileMap produces no stop tiles (stops are external side quests)',
     run: () => {
       const map = generateTileMap(9, getIslandRarity(9), 'forest', 0);
-      assertEqual(map.length, 36, 'Expected 36 tiles on the spark40 ring');
+      assertEqual(map.length, 36, 'Expected 36 tiles on the spark36 ring');
       const stopTiles = map.filter((tile: { tileType: string }) => (tile.tileType as string) === 'stop');
       assertEqual(stopTiles.length, 0, 'Expected zero tiles with tileType="stop" — stops are off-board');
       // Every tile should be a regular feeding / hazard / encounter / card tile.

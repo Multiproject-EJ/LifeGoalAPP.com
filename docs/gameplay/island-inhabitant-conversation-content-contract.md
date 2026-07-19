@@ -55,7 +55,7 @@ No placeholder binary assets are added by this PR.
 
 ## Production Island 1 integration
 
-Island Run now exposes the Island 1 caretaker flow as an automatic board encounter on the top tile of the 40-tile ring. When an Island 1 roll passes that tile, the board pauses post-roll tile handling and opens the caretaker flow. A manual **Talk to Caretaker** launcher remains available only inside the dev-mode HUD tools for QA.
+Island Run now exposes the Island 1 caretaker flow as an automatic board encounter on the top tile of the 36-tile ring. When an Island 1 roll passes that tile, the board pauses post-roll tile handling and opens the caretaker flow. A manual **Talk to Caretaker** launcher remains available only inside the dev-mode HUD tools for QA.
 
 The entry point is restricted to canonical current island `1` and resolves the caretaker, three topics, and referenced conversations at runtime through the read-only inhabitant registry. If that content is incomplete, the action is not shown and the flow-level missing-content screen remains a secondary safety net.
 
