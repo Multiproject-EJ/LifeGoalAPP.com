@@ -150,6 +150,14 @@ import {
   setTodaysWinsReminderLastShownCycle,
 } from '../../services/todaysWinsReminderPrefs';
 import { CelebrationAnimation } from '../../components/CelebrationAnimation';
+import { TodayStarUpgradeCelebration } from './TodayStarUpgradeCelebration';
+import {
+  getTodayStarUpgradeQueue,
+  getTodayWinsStarCount,
+  getTodayWinsTier,
+  type TodayStarCount,
+  type TodayWinsTier,
+} from './todayStarCelebrationModel';
 import { fetchXPTransactions } from '../../services/gamification';
 import { fetchZenTokenTransactions } from '../../services/zenGarden';
 import { getRewardHistory } from '../../services/gameRewards';
@@ -681,8 +689,6 @@ type TodayWinsSummary = {
   gameHeartsEarned: number;
 };
 
-type TodayWinsTier = 'zero_star' | 'one_star' | 'two_star' | 'three_star';
-
 type QuickJournalDraft = {
   isOpen: boolean;
   isPrivate?: boolean;
@@ -926,12 +932,6 @@ const TODAY_WINS_IMAGES: Record<TodayWinsTier, string> = {
   three_star: '/icons/todays_win/todays_win3.webp',
 };
 
-const getTodayWinsTier = (score: number): TodayWinsTier => {
-  if (score >= 75) return 'three_star';
-  if (score >= 40) return 'two_star';
-  if (score > 0) return 'one_star';
-  return 'zero_star';
-};
 const WEEKLY_SNAPSHOT_IMAGES: Record<WeeklySnapshotTier, string> = {
   one_star: '/icons/todays_win/todays_win1.webp',
   two_star: '/icons/todays_win/todays_win2.webp',
@@ -1073,6 +1073,8 @@ const dreamJournalLaunchKey = (userId: string) =>
   `lifegoal.dream-journal-launch:${userId}`;
 const todaysWinsLaunchKey = (userId: string) =>
   `lifegoal.todays-wins-launch:${userId}`;
+const todayStarCelebrationKey = (userId: string, dateISO: string) =>
+  `lifegoal.today-star-celebration:${userId}:${dateISO}`;
 const timeLimitedOfferScheduleKey = (userId: string, dateISO: string) =>
   `lifegoal.time-limited-offer-schedule:${userId}:${dateISO}`;
 
@@ -1666,8 +1668,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, []);
 
   const [completedActionsCount, setCompletedActionsCount] = useState(0);
+  const [completedActionsReady, setCompletedActionsReady] = useState(false);
   const [isTodayWinsOpen, setIsTodayWinsOpen] = useState(false);
   const [isStarFlaring, setIsStarFlaring] = useState(false);
+  const [todayStarCelebrationQueue, setTodayStarCelebrationQueue] = useState<TodayStarCount[]>([]);
+  const todayStarCelebrationScopeRef = useRef<string | null>(null);
+  const todayStarHighestSeenRef = useRef(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1686,6 +1692,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     gameTokensEarned: 0,
     gameHeartsEarned: 0,
   });
+  const [todayWinsSummaryReady, setTodayWinsSummaryReady] = useState(false);
   const isViewingToday = activeDate === today;
   const grantDailySpinHabitBonusOncePerDay = useCallback(async () => {
     if (!session?.user?.id) return;
@@ -2889,15 +2896,18 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   useEffect(() => {
     let isActive = true;
+    setCompletedActionsReady(false);
 
     const loadCompletedActions = async () => {
       const { data, error } = await fetchCompletedActionsForDate(activeDate);
       if (!isActive) return;
       if (error) {
         setCompletedActionsCount(0);
+        setCompletedActionsReady(true);
         return;
       }
       setCompletedActionsCount(data?.length ?? 0);
+      setCompletedActionsReady(true);
     };
 
     void loadCompletedActions();
@@ -2909,6 +2919,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   useEffect(() => {
     let isActive = true;
+    setTodayWinsSummaryReady(false);
 
     const loadTodayWinsSummary = async () => {
       const userId = session.user.id;
@@ -2972,6 +2983,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         gameTokensEarned,
         gameHeartsEarned,
       });
+      setTodayWinsSummaryReady(true);
     };
 
     void loadTodayWinsSummary();
@@ -6577,6 +6589,83 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     return { total: scoringHabits.length, scheduled, completed } as const;
   }, [habits, completions, habitHealthByHabitId, habitInsights, activeDate]);
 
+  const todayWinsProgress = useMemo(() => {
+    const scheduledTarget = compactStats.scheduled || compactStats.total;
+    const completedCount = Math.min(compactStats.completed, scheduledTarget);
+    const habitCompletionPercent = scheduledTarget
+      ? Math.round((completedCount / scheduledTarget) * 100)
+      : 0;
+    const otherWinsCount = [
+      todayWinsSummary.journalCount > 0,
+      completedActionsCount > 0,
+      todayWinsSummary.lotusEarned > 0,
+      todayWinsSummary.xpEarned > 0,
+      todayWinsSummary.gameRewardsTotal > 0,
+    ].filter(Boolean).length;
+    const score = Math.round(
+      (habitCompletionPercent * 0.75) + ((Math.min(otherWinsCount, 5) / 5) * 25),
+    );
+
+    return {
+      score,
+      tier: getTodayWinsTier(score),
+      starCount: getTodayWinsStarCount(score),
+    } as const;
+  }, [compactStats, completedActionsCount, todayWinsSummary]);
+
+  useEffect(() => {
+    if (
+      typeof window === 'undefined'
+      || !session.user.id
+      || !isViewingToday
+      || loading
+      || !completedActionsReady
+      || !todayWinsSummaryReady
+    ) {
+      return;
+    }
+
+    const scope = `${session.user.id}:${today}`;
+    const storageKey = todayStarCelebrationKey(session.user.id, today);
+    if (todayStarCelebrationScopeRef.current !== scope) {
+      const persistedHighest = loadDraft<number>(storageKey);
+      const baseline = persistedHighest === null
+        ? todayWinsProgress.starCount
+        : Math.max(0, Math.min(3, persistedHighest));
+      todayStarCelebrationScopeRef.current = scope;
+      todayStarHighestSeenRef.current = baseline;
+      setTodayStarCelebrationQueue([]);
+      if (persistedHighest === null) saveDraft(storageKey, baseline);
+      return;
+    }
+
+    const upgrades = getTodayStarUpgradeQueue(
+      todayStarHighestSeenRef.current,
+      todayWinsProgress.starCount,
+    );
+    if (upgrades.length === 0) return;
+
+    todayStarHighestSeenRef.current = todayWinsProgress.starCount;
+    saveDraft(storageKey, todayWinsProgress.starCount);
+    setTodayStarCelebrationQueue((current) => [
+      ...current,
+      ...upgrades.filter((upgrade) => !current.includes(upgrade)),
+    ]);
+  }, [
+    completedActionsReady,
+    isViewingToday,
+    loading,
+    session.user.id,
+    today,
+    todayWinsProgress.starCount,
+    todayWinsSummaryReady,
+  ]);
+
+  const activeTodayStarCelebration = todayStarCelebrationQueue[0] ?? null;
+  const closeTodayStarCelebration = useCallback(() => {
+    setTodayStarCelebrationQueue((current) => current.slice(1));
+  }, []);
+
   const generateReviewRedesignDraft = useCallback(async (habit: HabitWithGoal, action: Extract<HabitReviewAction, 'redesign' | 'replace'>) => {
     if (reviewAiLoadingHabitIds.has(habit.id)) {
       return;
@@ -9829,20 +9918,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       { id: 'game-hearts', icon: '❤️', label: 'Hearts', value: todayWinsSummary.gameHeartsEarned },
     ].filter((tile) => tile.value > 0);
     const habitCompletionPercent = scheduledTarget ? Math.round((completedCount / scheduledTarget) * 100) : 0;
-    const otherWinsCount = [
-      todayWinsSummary.journalCount > 0,
-      completedActionsCount > 0,
-      todayWinsSummary.lotusEarned > 0,
-      todayWinsSummary.xpEarned > 0,
-      todayWinsSummary.gameRewardsTotal > 0,
-    ].filter(Boolean).length;
-    const todayWinsScore = Math.round((habitCompletionPercent * 0.75) + ((Math.min(otherWinsCount, 5) / 5) * 25));
-    const todayWinsTier = getTodayWinsTier(todayWinsScore);
+    const todayWinsScore = todayWinsProgress.score;
+    const todayWinsTier = todayWinsProgress.tier;
     const todayWinsImageSrc = TODAY_WINS_IMAGES[todayWinsTier];
     const todayWinsStarsLabel =
       todayWinsTier === 'three_star' ? '3 Stars' : todayWinsTier === 'two_star' ? '2 Stars' : todayWinsTier === 'one_star' ? '1 Star' : '0 Stars';
-    const todayWinsStarCount =
-      todayWinsTier === 'three_star' ? 3 : todayWinsTier === 'two_star' ? 2 : todayWinsTier === 'one_star' ? 1 : 0;
+    const todayWinsStarCount = todayWinsProgress.starCount;
     const todayWinsStarItems = Array.from({ length: todayWinsStarCount }, (_, index) => index);
     const todayWinsTierCaption =
       todayWinsTier === 'three_star'
@@ -12914,10 +12995,18 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       : eggHatchMovieModal
     : null;
 
+  const todayStarUpgradeModal = activeTodayStarCelebration ? (
+    <TodayStarUpgradeCelebration
+      starCount={activeTodayStarCelebration}
+      onClose={closeTodayStarCelebration}
+    />
+  ) : null;
+
   if (isCompact) {
     return (
       <section className="habit-tracker habit-tracker--compact">
         {renderCompactExperience()}
+        {todayStarUpgradeModal}
         <SuperHabitRosterModal
           open={superHabitRosterOpen}
           initialSuperHabitId={selectedSuperHabitId}
@@ -13001,6 +13090,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   return (
     <section className="habit-tracker">
+      {todayStarUpgradeModal}
       <SuperHabitRosterModal
         open={superHabitRosterOpen}
         initialSuperHabitId={selectedSuperHabitId}
