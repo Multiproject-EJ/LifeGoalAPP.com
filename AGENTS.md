@@ -6,6 +6,7 @@ Before modifying Island Run code, read:
 - `docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md`
 - `docs/gameplay/CANONICAL_GAMEPLAY_CONTRACT.md`
 - `docs/gameplay/ISLAND_RUN_GUARDRAILS_AND_CONFLICT_MATRIX_2026-04-24.md`
+- `docs/gameplay/ISLAND_VISUAL_PRODUCTION_CONTRACT.md` for island artwork or manifest work
 
 ### Never
 - Add gameplay writes directly inside React UI components.

@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "islandNumber": 1,
+  "slug": "luma-isle",
+  "displayName": "Luma Isle",
+  "pilotRole": "Adapt an approved tropical waterfall composition to the real board while establishing celestial-observatory identity.",
+  "boardGeometry": {
+    "profileId": "spark36_ring",
+    "tileCount": 36,
+    "canonicalWidth": 1000,
+    "canonicalHeight": 1000,
+    "sceneWidth": 1400,
+    "sceneHeight": 1600,
+    "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 },
+    "boardTiltDegrees": 47,
+    "boardRotationDegrees": 0
+  },
+  "identity": {
+    "civilization": "The Lumin",
+    "guardian": "Noctyra",
+    "biome": "Tropical waterfall sanctuary shaped by celestial crystal observatory craft",
+    "distortion": "Protection has become hypervigilance"
+  },
+  "palette": [
+    { "name": "celestial-blue", "hex": "#2678c8" },
+    { "name": "lagoon", "hex": "#28b8c7" },
+    { "name": "leaf-green", "hex": "#4d8d3b" },
+    { "name": "moonstone", "hex": "#d8e8e7" },
+    { "name": "antique-gold", "hex": "#b88a3b" },
+    { "name": "warning-violet", "hex": "#6d3fa4" }
+  ],
+  "materials": ["celestial blue crystal", "moonstone lenses", "antique brass star tracks", "warm tropical stone", "clear waterfall water", "lush broadleaf foliage"],
+  "motifs": ["waterfall terraces", "star mirrors", "lantern alcoves", "observatory rings", "shielded lights opening toward the sky"],
+  "restorationChange": "Covered warning lights open outward; cold blue crystal light warms with restrained gold.",
+  "referenceAsset": {
+    "sourceArchiveAssetId": "isl-001_tropical_landmark-waterfall_v003_approved.webp",
+    "role": "composition reference for terraces, waterfall, paths, and landmark clearings; never a replacement for the live tile UI"
+  },
+  "landmarks": [
+    { "stopId": "hatchery", "displayName": "Lantern Hatchery", "visual": "Crystal nests beneath star cloth and warm lantern alcoves beside a small waterfall channel.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "habit", "displayName": "Rhythm Observatory", "visual": "Rotating brass star rings and a compact blue-crystal observatory platform.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "mystery", "displayName": "Echo Lens Arcade", "visual": "Fractured blue lenses arranged as a playful signal-testing terrace.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "wisdom", "displayName": "Sava's Star Archive", "visual": "Moonstone shelves and sky maps protected by a low observatory dome.", "levels": ["foundation", "operational", "restored"] }
+  ],
+  "boss": { "name": "Noctyra", "slug": "noctyra", "visual": "Black-crystal owl-dragon guardian with wing-shaped warning light, readable dark silhouette, violet crystal accents." },
+  "arena": { "name": "Noctyra's Moon Gate", "slug": "moon-gate", "visual": "Wing-shaped observatory aperture focused on a crystalline signal dais." },
+  "avoid": ["painted replacement tile ring", "generic medieval castle", "flat top-down camera", "neon sci-fi machinery", "dense props in the tile corridor", "text or UI"],
+  "runtimeRoot": "public/assets/islands/island-001",
+  "sourceNamingExample": "isl-001_landmark-hatchery_l03_v003_approved.webp"
+}
+

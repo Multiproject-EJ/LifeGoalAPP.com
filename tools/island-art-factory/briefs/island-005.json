@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "islandNumber": 5,
+  "slug": "crown-of-tides",
+  "displayName": "Crown of Tides",
+  "pilotRole": "Prove luminous and translucent reef materials remain premium without overpowering board contrast.",
+  "boardGeometry": { "profileId": "spark36_ring", "tileCount": 36, "canonicalWidth": 1000, "canonicalHeight": 1000, "sceneWidth": 1400, "sceneHeight": 1600, "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 }, "boardTiltDegrees": 47, "boardRotationDegrees": 0 },
+  "identity": { "civilization": "The Reefborn", "guardian": "Thalassa", "biome": "Luminous reef architecture, ceremonial crowns, shell amphitheaters, and layered aquatic light", "distortion": "Harmony has become loss of authentic voice" },
+  "palette": [
+    { "name": "deep-current", "hex": "#124d70" },
+    { "name": "reef-cyan", "hex": "#28b8c9" },
+    { "name": "luminous-coral", "hex": "#df6f8d" },
+    { "name": "pearl", "hex": "#f0e2cf" },
+    { "name": "crown-gold", "hex": "#c99b49" },
+    { "name": "voice-violet", "hex": "#7952a8" }
+  ],
+  "materials": ["luminous coral", "pearl amplifiers", "shell resonators", "current forks", "ceremonial gold", "clear reef water"],
+  "motifs": ["distinct waveforms", "call and response", "crown geometry", "shell acoustics", "one true note inside a chorus"],
+  "restorationChange": "Uniform crown-song light separates into distinct harmonious colors and individual reef lights answer one another.",
+  "landmarks": [
+    { "stopId": "hatchery", "displayName": "Pearl Voice Nursery", "visual": "Reef cradles with shell microphones, pearl lights, and individual echo chambers.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "habit", "displayName": "Tide Choir Steps", "visual": "Coral risers shaped for call, response, solo, and rest.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "mystery", "displayName": "Crown Current Arcade", "visual": "Playful current forks, miniature crowns, and signal-splitting water channels.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "wisdom", "displayName": "Thalassa Archive", "visual": "Shell phonograph reef preserving distinct songs as luminous grooves.", "levels": ["foundation", "operational", "restored"] }
+  ],
+  "boss": { "name": "Thalassa", "slug": "thalassa", "visual": "Regal reef guardian with crown-like coral silhouette and layered voice-light, majestic rather than monstrous." },
+  "arena": { "name": "Crown Amphitheater", "slug": "crown-amphitheater", "visual": "Luminous shell amphitheater whose crown geometry gathers many distinct colored waveforms." },
+  "avoid": ["floating sky palace", "generic mermaid castle", "blown-out cyan glow", "transparent detail over tile icons", "painted replacement tile ring", "text or UI"],
+  "runtimeRoot": "public/assets/islands/island-005",
+  "sourceNamingExample": "isl-005_scene-ambient_v001_approved.webp"
+}
+

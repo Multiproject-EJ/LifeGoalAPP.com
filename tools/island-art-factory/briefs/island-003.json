@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "islandNumber": 3,
+  "slug": "coconut-cove",
+  "displayName": "Coconut Cove",
+  "pilotRole": "Prove dense tropical foliage and warm wood can feel abundant without obscuring board state.",
+  "boardGeometry": { "profileId": "spark36_ring", "tileCount": 36, "canonicalWidth": 1000, "canonicalHeight": 1000, "sceneWidth": 1400, "sceneHeight": 1600, "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 }, "boardTiltDegrees": 47, "boardRotationDegrees": 0 },
+  "identity": { "civilization": "The Covefolk", "guardian": "Tamba", "biome": "Abundant coconut palms, fruit structures, hanging platforms, drums, and communal shade", "distortion": "Stewardship has become scarcity protection" },
+  "palette": [
+    { "name": "canopy", "hex": "#397443" },
+    { "name": "young-leaf", "hex": "#81a84d" },
+    { "name": "coconut-husk", "hex": "#8d5f35" },
+    { "name": "sun-fruit", "hex": "#efa543" },
+    { "name": "lagoon", "hex": "#3eb6ad" }
+  ],
+  "materials": ["woven coconut husk", "warm hardwood", "rope pulleys", "fruit baskets", "shell counters", "sunlit leaves"],
+  "motifs": ["sharing baskets", "drum rhythms", "balance arms", "seed counters", "communal shade"],
+  "restorationChange": "Locked baskets open, drum rhythms reconnect, and new blossoms appear across the canopy.",
+  "landmarks": [
+    { "stopId": "hatchery", "displayName": "Canopy Seed Cradle", "visual": "Woven coconut-husk cradles suspended under a protective palm canopy.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "habit", "displayName": "Drumshade Commons", "visual": "Layered drum platforms beneath palms with clear shared rhythm motifs.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "mystery", "displayName": "Fruitfall Exchange", "visual": "Pulley baskets and transparent shell counters for visible exchange games.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "wisdom", "displayName": "Root Memory Grove", "visual": "Ancient exposed roots sheltering shell season records and a listening seat.", "levels": ["foundation", "operational", "restored"] }
+  ],
+  "boss": { "name": "Tamba", "slug": "tamba", "visual": "Powerful crowned palm guardian with fruit-vault armor and a protective, readable silhouette." },
+  "arena": { "name": "Tamba's Crown Palm", "slug": "crown-palm", "visual": "Giant living palm vault with opening fruit baskets and a shared feast dais." },
+  "avoid": ["celestial white marble", "generic jungle ruins", "foliage over tile icons", "tiny indistinct fruit clutter", "painted replacement tile ring", "text or UI"],
+  "runtimeRoot": "public/assets/islands/island-003",
+  "sourceNamingExample": "isl-003_landmark-mystery_l02_v001_selected.webp"
+}
+
