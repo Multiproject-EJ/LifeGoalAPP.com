@@ -4,7 +4,7 @@
   "slug": "pebble-bay",
   "displayName": "Pebble Bay",
   "pilotRole": "Prove soft mist, water, and rounded low-contrast materials remain readable beneath the live tile UI.",
-  "boardGeometry": { "profileId": "spark36_ring", "tileCount": 36, "canonicalWidth": 1000, "canonicalHeight": 1000, "sceneWidth": 1400, "sceneHeight": 1600, "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 }, "boardTiltDegrees": 47, "boardRotationDegrees": 0 },
+  "boardGeometry": { "profileId": "spark36_ring", "tileCount": 36, "canonicalWidth": 1000, "canonicalHeight": 1000, "sceneWidth": 1400, "sceneHeight": 1600, "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 }, "boardTiltDegrees": 47, "boardRotationDegrees": 0, "approvalViewport": { "width": 390, "height": 844 } },
   "identity": { "civilization": "The Tidefolk", "guardian": "Maelis", "biome": "Rounded tidal stones, tide pools, shell mechanisms, lantern paths, and soft sea mist", "distortion": "Caution and stillness have become suspended tension" },
   "palette": [
     { "name": "tide-blue", "hex": "#5faec4" },
@@ -28,4 +28,3 @@
   "runtimeRoot": "public/assets/islands/island-002",
   "sourceNamingExample": "isl-002_board-plate_v001_approved.webp"
 }
-

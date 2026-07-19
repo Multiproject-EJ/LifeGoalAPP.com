@@ -70,17 +70,14 @@ export const TILE_ANCHORS_36: TileAnchor[] = Array.from({ length: SPARK_RING_TIL
 
   return {
     id: `t${String(index).padStart(2, '0')}`,
-    // Sub-pixel anchor precision: the ring tiles are exact tessellating wedges
-    // (see the spark36 tile CSS), so rounding centres to whole pixels opens
-    // hairline seams between neighbouring borders.
+    // Sub-pixel anchor precision keeps the deliberate gaps between individual
+    // 3D blocks visually even around the circular route.
     x: Number(x.toFixed(2)),
     y: Number(y.toFixed(2)),
     zBand,
     tangentDeg: Number(tangentDeg.toFixed(0)),
-    // Uniform tile scale keeps the wedge tessellation seam-free — any per-tile
-    // depth scaling directly becomes overlap (front) or gaps (back) along the
-    // shared radial edges. Depth is carried by zBand stacking, the extruded
-    // side wall, and the contact shadows instead.
+    // Uniform scale keeps every physical block the same size. Depth comes from
+    // each tile's own side wall, lighting, zBand stacking, and contact shadow.
     scale: 1,
   };
 });

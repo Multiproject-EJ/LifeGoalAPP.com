@@ -33,6 +33,8 @@ export interface UseBoardCameraOptions {
   visualBounds?: CameraVisualBounds | null;
   /** Spring preset for programmatic camera moves */
   springPreset?: SpringConfig;
+  /** Optional overview lift for UI that permanently occupies the lower view. */
+  overviewVerticalBiasRatio?: number;
 }
 
 interface CameraSprings {
@@ -100,13 +102,18 @@ export function computeSceneCameraFrame(
   boardHeight: number,
   visualBounds?: CameraVisualBounds | null,
   safeMargin = SCENE_FIT_SAFE_MARGIN,
+  verticalBiasRatio = 0,
 ): CameraState {
   if (!visualBounds) return { x: 0, y: 0, zoom: DEFAULT_CAMERA_ZOOM };
 
   const zoom = computeManualMinCameraZoom(boardWidth, boardHeight, visualBounds, safeMargin);
   return {
     x: centerScenePanForZoom(boardWidth, visualBounds.left, visualBounds.right, zoom),
-    y: centerScenePanForZoom(boardHeight, visualBounds.top, visualBounds.bottom, zoom),
+    // The controller occupies the lower part of the phone. Lift the fitted
+    // scene into the usable play window so its lower edge remains visible and
+    // the island can use the maximum clear height beneath the HUD.
+    y: centerScenePanForZoom(boardHeight, visualBounds.top, visualBounds.bottom, zoom)
+      - boardHeight * verticalBiasRatio,
     zoom,
   };
 }
@@ -144,10 +151,22 @@ export function clampCameraPanToVisualBounds(
 }
 
 export function useBoardCamera(options: UseBoardCameraOptions) {
-  const { boardWidth, boardHeight, visualBounds = null, springPreset = SPRING_PRESETS.smooth } = options;
+  const {
+    boardWidth,
+    boardHeight,
+    visualBounds = null,
+    springPreset = SPRING_PRESETS.smooth,
+    overviewVerticalBiasRatio = 0,
+  } = options;
   const defaultFrame = useMemo(
-    () => computeSceneCameraFrame(boardWidth, boardHeight, visualBounds),
-    [boardHeight, boardWidth, visualBounds],
+    () => computeSceneCameraFrame(
+      boardWidth,
+      boardHeight,
+      visualBounds,
+      SCENE_FIT_SAFE_MARGIN,
+      overviewVerticalBiasRatio,
+    ),
+    [boardHeight, boardWidth, overviewVerticalBiasRatio, visualBounds],
   );
   const defaultFrameKey = useMemo(() => JSON.stringify({ boardWidth, boardHeight, visualBounds }), [boardHeight, boardWidth, visualBounds]);
   const minZoom = useMemo(

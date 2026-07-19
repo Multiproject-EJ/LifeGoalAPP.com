@@ -4,7 +4,7 @@
   "slug": "driftwood-isle",
   "displayName": "Driftwood Isle",
   "pilotRole": "Prove irregular salvaged silhouettes and visible repair seams can stay coherent and uncluttered.",
-  "boardGeometry": { "profileId": "spark36_ring", "tileCount": 36, "canonicalWidth": 1000, "canonicalHeight": 1000, "sceneWidth": 1400, "sceneHeight": 1600, "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 }, "boardTiltDegrees": 47, "boardRotationDegrees": 0 },
+  "boardGeometry": { "profileId": "spark36_ring", "tileCount": 36, "canonicalWidth": 1000, "canonicalHeight": 1000, "sceneWidth": 1400, "sceneHeight": 1600, "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 }, "boardTiltDegrees": 47, "boardRotationDegrees": 0, "approvalViewport": { "width": 390, "height": 844 } },
   "identity": { "civilization": "The Driftfolk", "guardian": "Garran", "biome": "Salvaged timber, patched sails, reused hulls, warm resin lamps, and visible joinery", "distortion": "Remembrance has become grief-frozen resignation" },
   "palette": [
     { "name": "driftwood", "hex": "#8a6544" },
@@ -28,4 +28,3 @@
   "runtimeRoot": "public/assets/islands/island-004",
   "sourceNamingExample": "isl-004_boss-garran_idle_v001_draft.webp"
 }
-

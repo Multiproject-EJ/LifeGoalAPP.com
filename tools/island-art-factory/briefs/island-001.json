@@ -13,7 +13,8 @@
     "sceneHeight": 1600,
     "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 },
     "boardTiltDegrees": 47,
-    "boardRotationDegrees": 0
+    "boardRotationDegrees": 0,
+    "approvalViewport": { "width": 390, "height": 844 }
   },
   "identity": {
     "civilization": "The Lumin",
@@ -44,8 +45,7 @@
   ],
   "boss": { "name": "Noctyra", "slug": "noctyra", "visual": "Black-crystal owl-dragon guardian with wing-shaped warning light, readable dark silhouette, violet crystal accents." },
   "arena": { "name": "Noctyra's Moon Gate", "slug": "moon-gate", "visual": "Wing-shaped observatory aperture focused on a crystalline signal dais." },
-  "avoid": ["painted replacement tile ring", "generic medieval castle", "flat top-down camera", "neon sci-fi machinery", "dense props in the tile corridor", "text or UI"],
+  "avoid": ["painted replacement tiles", "continuous backing ring beneath the route", "flat or pixel-art caretaker", "generic medieval castle", "flat top-down camera", "neon sci-fi machinery", "dense props in the tile corridor", "text or UI"],
   "runtimeRoot": "public/assets/islands/island-001",
   "sourceNamingExample": "isl-001_landmark-hatchery_l03_v003_approved.webp"
 }
-

@@ -4,7 +4,7 @@
   "slug": "coconut-cove",
   "displayName": "Coconut Cove",
   "pilotRole": "Prove dense tropical foliage and warm wood can feel abundant without obscuring board state.",
-  "boardGeometry": { "profileId": "spark36_ring", "tileCount": 36, "canonicalWidth": 1000, "canonicalHeight": 1000, "sceneWidth": 1400, "sceneHeight": 1600, "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 }, "boardTiltDegrees": 47, "boardRotationDegrees": 0 },
+  "boardGeometry": { "profileId": "spark36_ring", "tileCount": 36, "canonicalWidth": 1000, "canonicalHeight": 1000, "sceneWidth": 1400, "sceneHeight": 1600, "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 }, "boardTiltDegrees": 47, "boardRotationDegrees": 0, "approvalViewport": { "width": 390, "height": 844 } },
   "identity": { "civilization": "The Covefolk", "guardian": "Tamba", "biome": "Abundant coconut palms, fruit structures, hanging platforms, drums, and communal shade", "distortion": "Stewardship has become scarcity protection" },
   "palette": [
     { "name": "canopy", "hex": "#397443" },
@@ -28,4 +28,3 @@
   "runtimeRoot": "public/assets/islands/island-003",
   "sourceNamingExample": "isl-003_landmark-mystery_l02_v001_selected.webp"
 }
-

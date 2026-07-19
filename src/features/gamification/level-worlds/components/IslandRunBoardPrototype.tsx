@@ -1553,11 +1553,18 @@ export function IslandRunBoardPrototype({
     return {
       showQaHooks: params.get('islandRunQa') === '1',
       isMinimalBoardArt: params.get('minimalBoardArt') === '1',
+      isIslandVisualPreview: import.meta.env.DEV && params.get('islandVisualPreview') === '1',
       boardTiltXDeg: readNumericParam(params, 'boardTiltX', 47, 0, 80),
       boardRotateZDeg: readNumericParam(params, 'boardRotateZ', 0, -45, 45),
     };
   }, []);
-  const { showQaHooks, isMinimalBoardArt, boardTiltXDeg, boardRotateZDeg } = boardRenderTuning;
+  const {
+    showQaHooks,
+    isMinimalBoardArt,
+    isIslandVisualPreview,
+    boardTiltXDeg,
+    boardRotateZDeg,
+  } = boardRenderTuning;
   const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
   const isCreaturePackStripeCheckoutEnabled = isDevModeEnabled
     || String(import.meta.env.VITE_CREATURE_PACK_STRIPE_CHECKOUT_ENABLED ?? '').toLowerCase() === 'true';
@@ -1580,7 +1587,7 @@ export function IslandRunBoardPrototype({
   const [showDevLuckyRollOverlay, setShowDevLuckyRollOverlay] = useState(false);
   const [devLuckyRollTargetIsland, setDevLuckyRollTargetIsland] = useState<number | null>(null);
   const [devLuckyRollCollectMode, setDevLuckyRollCollectMode] = useState<'bank_only' | 'post_rare_collect_travel'>('bank_only');
-  const [cameraMode, setCameraMode] = useState<IslandRunCameraMode>('board_follow');
+  const [cameraMode, setCameraMode] = useState<IslandRunCameraMode>('overview_manual');
   const [focusedStopId, setFocusedStopId] = useState<string | null>(null);
   /**
    * When set, we show the ticket-price prompt modal for this stop instead of
@@ -1597,8 +1604,8 @@ export function IslandRunBoardPrototype({
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
-  // Guard: prevent repeated stop-focus camera jumps after initial hydration
-  const hasAppliedInitialStopFocusRef = useRef(false);
+  // Guard: prevent repeated overview camera resets after initial hydration.
+  const hasAppliedInitialOverviewRef = useRef(false);
 
   // ── C1 store-derived state: dicePool, tokenIndex, spinTokens ──────────────
   // These fields are read from the authoritative store via `useIslandRunState`.
@@ -3200,9 +3207,14 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     if (!hasHydratedRuntimeState || hasPresentedEntryAudioModalRef.current) return;
     hasPresentedEntryAudioModalRef.current = true;
+    if (isIslandVisualPreview) {
+      setHasDismissedEntryAudioModal(true);
+      setShowEntryAudioModal(false);
+      return;
+    }
     setHasDismissedEntryAudioModal(false);
     setShowEntryAudioModal(true);
-  }, [hasHydratedRuntimeState]);
+  }, [hasHydratedRuntimeState, isIslandVisualPreview]);
 
   // Compatibility hydration: accounts that finished the full Island 1 grid
   // BEFORE the Concord-built ledger existed have all nine slots collected but
@@ -3863,7 +3875,7 @@ export function IslandRunBoardPrototype({
   }, [runtimeState.onboardingDisplayNameLoopCompleted]);
 
   useEffect(() => {
-    if (!hasHydratedRuntimeState || isOnboardingComplete) return;
+    if (!hasHydratedRuntimeState || isOnboardingComplete || isIslandVisualPreview) return;
 
     if (!isFirstRunClaimed) {
       setShowFirstRunCelebration(true);
@@ -3874,7 +3886,7 @@ export function IslandRunBoardPrototype({
         metadata: { stage: 'island_run_first_run_started', island: islandNumber },
       });
     }
-  }, [hasHydratedRuntimeState, isFirstRunClaimed, isOnboardingComplete, islandNumber, session.user.id]);
+  }, [hasHydratedRuntimeState, isFirstRunClaimed, isIslandVisualPreview, isOnboardingComplete, islandNumber, session.user.id]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -4030,16 +4042,15 @@ export function IslandRunBoardPrototype({
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
-    // Only set stop-focus camera on first hydration. Subsequent completedStops
-    // changes (e.g. during gameplay) must not hijack the camera from the token
-    // animation follow mode — that causes the "shaking back and forth" bug.
-    if (hasAppliedInitialStopFocusRef.current) return;
-    const nextActiveStop = islandStopPlan.find((stop) => !completedStops.includes(stop.stopId));
-    if (!nextActiveStop) return;
-    hasAppliedInitialStopFocusRef.current = true;
-    setFocusedStopId(nextActiveStop.stopId);
-    setCameraMode('stop_focus');
-  }, [completedStops, hasHydratedRuntimeState, islandNumber, islandStopPlan]);
+    // Open every island in an honest phone overview. Stop-focus remains an
+    // explicit player/gameplay action after entry; it must not crop the route
+    // behind the controller before the player has seen the whole board.
+    if (hasAppliedInitialOverviewRef.current) return;
+    hasAppliedInitialOverviewRef.current = true;
+    setFocusedStopId(null);
+    setCameraMode('overview_manual');
+    window.requestAnimationFrame(() => boardCameraRef.current?.goOverview());
+  }, [hasHydratedRuntimeState, islandNumber]);
 
   const focusNextAvailableStop = useCallback(() => {
     const nextActiveStop = islandStopPlan.find((stop) => !completedStops.includes(stop.stopId));
@@ -5385,7 +5396,7 @@ export function IslandRunBoardPrototype({
   ]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !hasHydratedRuntimeState) {
+    if (typeof window === 'undefined' || !hasHydratedRuntimeState || isIslandVisualPreview) {
       return;
     }
 
@@ -5393,7 +5404,7 @@ export function IslandRunBoardPrototype({
     if (!hasSeenStory) {
       setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
     }
-  }, [hasHydratedRuntimeState, runtimeState.storyPrologueSeen, storySeenStorageKey]);
+  }, [hasHydratedRuntimeState, isIslandVisualPreview, runtimeState.storyPrologueSeen, storySeenStorageKey]);
 
   useEffect(() => {
     if (!shouldAutoAdvanceIslandOnTimerExpiry({
@@ -10761,7 +10772,7 @@ export function IslandRunBoardPrototype({
     userId: session.user.id,
     currentIslandNumber: runtimeState.currentIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
-    hasHydratedRuntimeState,
+    hasHydratedRuntimeState: hasHydratedRuntimeState && !isIslandVisualPreview,
     isGlobalPrologueActive: activeStoryEpisode?.kind === 'global_prologue',
     isGlobalPrologueSeen: isGlobalPrologueSeenForNarrative,
     isNarrativeSurfaceBlocked,
@@ -11831,7 +11842,7 @@ export function IslandRunBoardPrototype({
           completedEncounterIndices={completedEncounterIndices}
           visibleTechnologyFragments={visibleTechnologyFragments}
           tokenIndex={tokenIndex}
-          caretakerArtSrc={caretakerInhabitant?.retroSpriteSrc ?? '/assets/island_caretakers/001/IMG_retro_green.webp'}
+          caretakerArtSrc={caretakerInhabitant?.premiumArtSrc ?? caretakerInhabitant?.retroSpriteSrc ?? '/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp'}
           caretakerLabel={caretakerInhabitant?.displayName ?? 'Island caretaker'}
           caretakerBubbleText={caretakerBoardBubbleText}
           caretakerTileIndex={shouldShowCaretakerTalkAction ? ISLAND_CARETAKER_TILE_INDEX : null}

@@ -19,8 +19,11 @@ The live board UI is the composition authority:
 - playable board rectangle: x 200, y 300, width 1000, height 1000
 - board-plane tilt: 47°
 - board rotation: 0°
+- primary approval viewport: 390×844 CSS pixels (portrait phone)
 
-The actual React-rendered tile ring, pawn, labels, landmark controls, progress UI, and HUD must remain unchanged. Generated artwork must be composed around that UI. Never paint a replacement tile ring, tile icons, token, labels, buttons, counters, or HUD into a runtime art asset.
+The actual React-rendered tile route, pawn, labels, landmark controls, progress UI, and HUD must remain unchanged. Generated artwork must be composed around that UI. Never paint replacement tiles, tile icons, token, labels, buttons, counters, or HUD into a runtime art asset.
+
+At first entry the camera must show the complete route in the clear phone play window: below the top HUD and above the controller. The fitted scene is biased slightly upward so the lower route is not hidden by the controller. Stop-focus and travel close-ups begin only after this establishing view.
 
 ## Layer model
 
@@ -58,7 +61,13 @@ The approved Island 1 tropical waterfall image is a **composition reference**, n
 
 ## Ring readability rule
 
-The canonical ring is centered at (500, 500) in playable-board space with radius 340. Runtime board-plate art must avoid high-contrast radial seams, text, small props, or fake paving inside the tile corridor. The real wedge tiles, highlights, token, caretaker, technology fragments, and traffic-light tile must remain legible in every state.
+The canonical circular route is centered at (500, 500) in playable-board space with radius 340. Its 36 runtime tiles are **individual raised blocks**, not one continuous annulus: every block needs a readable top face, visible darker side wall, physical thickness, a small gap from its neighbours, and its own contact shadow. Do not place a solid decorative ring or shared raised plinth beneath the tiles.
+
+Runtime board-plate art must avoid high-contrast radial seams, text, small props, or fake paving inside the tile corridor. The real blocks, highlights, token, 3D caretaker, technology fragments, and traffic-light tile must remain legible in every state.
+
+## Caretaker rule
+
+The board caretaker uses a polished 3D character cutout, never the retro/pixel sprite. It stands behind the back edge of the route near the start tile, on a small grounded stone footplate with a contact shadow. The feet may not sit on a playable tile or on the boss affordance, and the character may not collide with the HUD. At the 390×844 approval viewport the character must remain recognizable without dominating the island.
 
 ## Landmark progression rule
 
@@ -113,12 +122,12 @@ The manifest is the only runtime mapping authority.
 An asset moves from draft → selected → approved only after all applicable gates pass:
 
 1. **Identity:** matches the island brief, civilization, guardian problem, palette, and material language.
-2. **UI fit:** composited with the actual current board screenshot; no overlap with top HUD, tile readability, landmark controls, or boss label.
+2. **UI fit:** composited with the actual current 390×844 board screenshot; the full route fits between top HUD and controller with no overlap against tiles, landmark controls, caretaker, or boss label.
 3. **Geometry:** uses the fixed board rectangle and camera; no per-island tile movement changes.
 4. **State continuity:** landmark L1–L3 and boss states preserve identity, footprint, camera, and lighting.
 5. **Technical:** correct alpha behavior, dimensions, file type, color consistency, and no placeholder filename.
 6. **Runtime:** `check:island-art-assets`, `check:island-art-render-wiring`, and Island Run tests pass after wiring.
-7. **Responsive QA:** portrait phone is the primary approval view; desktop and reduced-motion states receive a spot check.
+7. **Responsive QA:** 390×844 portrait phone is the primary approval view; a shorter phone, a wider phone, desktop preview, and reduced-motion states receive spot checks.
 
 ## Pilot roles for Islands 1–5
 
@@ -137,4 +146,3 @@ Once all five pass the same approval gates, their briefs and templates become th
 ## Mass-production rule
 
 Do not generate 115 islands from one generic prompt. Each island must have one validated production brief that supplies identity, palette, materials, landmark names, boss, arena, restoration change, and avoid list. A production worker combines that brief with the shared layer/camera/state templates, exports stable runtime filenames, and runs the validators before an island can be marked complete.
-

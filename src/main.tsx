@@ -111,6 +111,10 @@ function Root() {
 
   const initialRoute = useMemo(() => resolveRoute(), []);
   const isPhoneEntryClient = useMemo(() => isCurrentClientPhone(), []);
+  const isDevPhonePreview = useMemo(() => {
+    if (!import.meta.env.DEV || typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('phonePreview') === '1';
+  }, []);
   const [showApp, setShowApp] = useState(() => {
     const shouldRenderAppByDefault = !NON_APP_ROUTES.has(initialRoute);
     if (shouldRenderAppByDefault) return true;
@@ -141,7 +145,13 @@ function Root() {
     return <QuestVisualSystemPreviewRoute />;
   }
 
-  if (!isPhoneEntryClient && initialRoute !== 'privacy' && initialRoute !== 'terms' && initialRoute !== 'support') {
+  if (
+    !isPhoneEntryClient &&
+    !isDevPhonePreview &&
+    initialRoute !== 'privacy' &&
+    initialRoute !== 'terms' &&
+    initialRoute !== 'support'
+  ) {
     return <HabitGameMobileDownloadGate />;
   }
 

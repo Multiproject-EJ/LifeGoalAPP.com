@@ -8,7 +8,6 @@ import { useBoardCamera, type CameraVisualBounds } from './useBoardCamera';
 import { useBoardGestures } from './useBoardGestures';
 import { useTokenAnimation } from './useTokenAnimation';
 import { BoardPathCanvas } from './BoardPathCanvas';
-import { BoardRimDisc } from './BoardRimDisc';
 import { BoardTileGrid } from './BoardTileGrid';
 import { BoardToken } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
@@ -24,6 +23,7 @@ import {
   landingEventForTile,
 } from './cameraDirector';
 
+const PHONE_OVERVIEW_VERTICAL_BIAS_RATIO = 0.055;
 const BOARD_TILT_X_DEG = 47;
 const BOARD_ROTATE_Z_DEG = 0;
 /** How long (ms) the pre-roll anticipation push-in holds before travel begins. */
@@ -262,6 +262,7 @@ export function BoardStage(props: BoardStageProps) {
     boardWidth: boardSize.width,
     boardHeight: boardSize.height,
     visualBounds: sceneVisualBounds,
+    overviewVerticalBiasRatio: PHONE_OVERVIEW_VERTICAL_BIAS_RATIO,
   });
 
   // Expose camera controls to parent
@@ -524,9 +525,9 @@ export function BoardStage(props: BoardStageProps) {
     tokenAnim.animState.x,
     tokenAnim.animState.y,
   ]);
-  // Caretaker anchoring — resolve the caretaker's home tile to screen space,
-  // then nudge the standee outward so it reads as standing next to the board
-  // rather than lying flat on the playable tile.
+  // Caretaker anchoring — resolve the home tile to screen space, then move the
+  // full 3D character behind the back edge of the route. A small tangent nudge
+  // keeps the feet off both the tile and the central boss affordance.
   const caretakerAnchor = caretakerTileIndex !== null && caretakerTileIndex !== undefined
     ? anchors[caretakerTileIndex]
     : undefined;
@@ -538,11 +539,12 @@ export function BoardStage(props: BoardStageProps) {
     const dx = pos.x - centerX;
     const dy = pos.y - centerY;
     const distance = Math.hypot(dx, dy) || 1;
-    const outwardOffset = 58 * uniformScale;
+    const outwardOffset = 150 * uniformScale;
+    const tangentOffset = 42 * uniformScale;
 
     return {
-      x: pos.x + (dx / distance) * outwardOffset,
-      y: pos.y + (dy / distance) * outwardOffset,
+      x: pos.x + (dx / distance) * outwardOffset + (-dy / distance) * tangentOffset,
+      y: pos.y + (dy / distance) * outwardOffset + (dx / distance) * tangentOffset,
       scale: caretakerAnchor.scale * uniformScale,
     };
   }, [boardSize.height, boardSize.width, caretakerAnchor, toScreen, uniformScale]);
@@ -592,18 +594,8 @@ export function BoardStage(props: BoardStageProps) {
         className="island-run-board__camera-stage"
         style={{ transform: cameraStageTransform, willChange: 'transform' }}
       >
-        {/* Carved rim disc the tile ring sits on (behind everything else).
-            Geometry is specific to the spark36 ring layout. */}
-        {!isMinimalBoardArt && isSpark36 && (
-          <BoardRimDisc
-            centerX={offsetX + 500 * uniformScale}
-            centerY={offsetY + 500 * uniformScale}
-            uniformScale={uniformScale}
-          />
-        )}
-
         {/* Path overlay image */}
-        {theme.pathOverlayImage && !isMinimalBoardArt && (
+        {theme.pathOverlayImage && !isMinimalBoardArt && !isSpark36 && (
           <img
             className="island-run-board__path-overlay"
             src={theme.pathOverlayImage}
@@ -613,15 +605,17 @@ export function BoardStage(props: BoardStageProps) {
         )}
 
         {/* Canvas path */}
-        <BoardPathCanvas
-          anchors={anchors}
-          boardWidth={boardSize.width}
-          boardHeight={boardSize.height}
-          theme={theme}
-          showDebug={showDebug}
-          isMinimalBoardArt={isMinimalBoardArt}
-          toScreen={toScreen}
-        />
+        {!isSpark36 ? (
+          <BoardPathCanvas
+            anchors={anchors}
+            boardWidth={boardSize.width}
+            boardHeight={boardSize.height}
+            theme={theme}
+            showDebug={showDebug}
+            isMinimalBoardArt={isMinimalBoardArt}
+            toScreen={toScreen}
+          />
+        ) : null}
 
         {/* Spark36 ring */}
         {isSpark36 && (

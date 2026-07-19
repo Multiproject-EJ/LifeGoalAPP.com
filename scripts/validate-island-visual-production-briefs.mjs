@@ -79,6 +79,9 @@ for (const file of files) {
   if (geometry.boardTiltDegrees !== 47 || geometry.boardRotationDegrees !== 0) {
     fail(file, 'boardGeometry', 'must match the production 47° tilt and 0° rotation');
   }
+  if (geometry.approvalViewport?.width !== 390 || geometry.approvalViewport?.height !== 844) {
+    fail(file, 'boardGeometry.approvalViewport', 'must remain the 390×844 portrait phone authority');
+  }
 
   const identity = brief.identity ?? {};
   for (const field of ['civilization', 'guardian', 'biome', 'distortion']) {
@@ -124,4 +127,3 @@ if (errors.length) {
 }
 
 console.log(`Island visual production briefs passed (${files.length} briefs).`);
-
