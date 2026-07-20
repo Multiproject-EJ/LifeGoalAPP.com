@@ -17,7 +17,7 @@
   },
   "scene": {
     "boardCircle": "board/board-circle-inner.webp",
-    "ambientBackground": "background/ambient-background.webp",
+    "ambientBackground": "background/ambient-background-v2.webp",
     "boardOuterCircle": "board-outer/PLACEHOLDER__board-circle-outer.webp"
   },
   "landmarks": [
@@ -31,7 +31,7 @@
       "levels": [
         "landmarks/hatchery/PLACEHOLDER__hatchery-l1.webp",
         "landmarks/hatchery/PLACEHOLDER__hatchery-l2.webp",
-        "landmarks/hatchery/hatchery-l3.webp"
+        "landmarks/hatchery/hatchery-l3-v3.webp"
       ],
       "zBand": "mid"
     },
@@ -45,7 +45,7 @@
       "levels": [
         "landmarks/habit/PLACEHOLDER__habit-l1.webp",
         "landmarks/habit/PLACEHOLDER__habit-l2.webp",
-        "landmarks/habit/PLACEHOLDER__habit-l3.webp"
+        "landmarks/habit/habit-l3-v3.webp"
       ],
       "zBand": "mid"
     },
@@ -59,7 +59,7 @@
       "levels": [
         "landmarks/mystery/PLACEHOLDER__mystery-l1.webp",
         "landmarks/mystery/PLACEHOLDER__mystery-l2.webp",
-        "landmarks/mystery/PLACEHOLDER__mystery-l3.webp"
+        "landmarks/mystery/mystery-l3-v3.webp"
       ],
       "zBand": "front"
     },
@@ -73,7 +73,7 @@
       "levels": [
         "landmarks/wisdom/PLACEHOLDER__wisdom-l1.webp",
         "landmarks/wisdom/PLACEHOLDER__wisdom-l2.webp",
-        "landmarks/wisdom/PLACEHOLDER__wisdom-l3.webp"
+        "landmarks/wisdom/wisdom-l3-v3.webp"
       ],
       "zBand": "front"
     }

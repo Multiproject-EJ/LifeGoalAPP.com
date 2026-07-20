@@ -1550,10 +1550,20 @@ export function IslandRunBoardPrototype({
   const [showDebug, setShowDebug] = useState(() => new URLSearchParams(window.location.search).get('debugBoard') === '1');
   const boardRenderTuning = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
+    const requestedVisualLandmark = params.get('islandVisualLandmark');
+    const islandVisualLandmark = requestedVisualLandmark === 'hatchery'
+      || requestedVisualLandmark === 'habit'
+      || requestedVisualLandmark === 'mystery'
+      || requestedVisualLandmark === 'wisdom'
+      || requestedVisualLandmark === 'all'
+      ? requestedVisualLandmark
+      : null;
     return {
       showQaHooks: params.get('islandRunQa') === '1',
       isMinimalBoardArt: params.get('minimalBoardArt') === '1',
       isIslandVisualPreview: import.meta.env.DEV && params.get('islandVisualPreview') === '1',
+      islandVisualLandmark,
+      islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
       boardTiltXDeg: readNumericParam(params, 'boardTiltX', 47, 0, 80),
       boardRotateZDeg: readNumericParam(params, 'boardRotateZ', 0, -45, 45),
     };
@@ -1562,6 +1572,8 @@ export function IslandRunBoardPrototype({
     showQaHooks,
     isMinimalBoardArt,
     isIslandVisualPreview,
+    islandVisualLandmark,
+    islandVisualBuildLevel,
     boardTiltXDeg,
     boardRotateZDeg,
   } = boardRenderTuning;
@@ -10641,7 +10653,13 @@ export function IslandRunBoardPrototype({
   const shouldShowIslandArtAmbientBackground = Boolean(islandArtAmbientBackgroundSrc) && isIslandArtAmbientBackgroundLoaded && !isBackgroundHidden;
   const shouldShowLegacyIslandBackground = !shouldShowIslandArtAmbientBackground && isIslandBackgroundAvailable && !isBackgroundHidden;
   const shouldUseNoBackgroundFallback = !shouldShowIslandArtAmbientBackground && (!isIslandBackgroundAvailable || isBackgroundHidden);
-  const islandArtLandmarkBuildLevels = runtimeState.stopBuildStateByIndex.map((buildState) => buildState.buildLevel);
+  const islandArtLandmarkBuildLevels = runtimeState.stopBuildStateByIndex.map((buildState, stopIndex) => {
+    if (!isIslandVisualPreview || islandVisualLandmark === null) return buildState.buildLevel;
+    const previewLandmarkId = ['hatchery', 'habit', 'mystery', 'wisdom'][stopIndex] ?? null;
+    return islandVisualLandmark === 'all' || islandVisualLandmark === previewLandmarkId
+      ? islandVisualBuildLevel
+      : 0;
+  });
   const isCurrentIslandBossDefeated = bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber;
   const bossCreatureArtState = resolveBossCreatureArtState({
     stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,

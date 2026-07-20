@@ -30,6 +30,10 @@ For a board-fit preview, label the inputs explicitly:
 - Image 1: edit target — current board screenshot; all UI and the exact 36 tiles are invariants
 - Image 2: composition/style reference — never copy its painted board tiles over Image 1
 
+For a runtime landmark review, open the dev PWA with
+`islandVisualPreview=1&islandVisualLandmark={hatchery|habit|mystery|wisdom|all}&islandVisualBuildLevel={0|1|2|3}`.
+The override is presentation-only: it selects art layers without mutating gameplay or persisted build state.
+
 The 36 live tiles must read as separate 3D blocks with gaps, side walls, thickness, and contact shadows. The board caretaker must use its premium 3D cutout and stand behind the start edge on a grounded footplate; never use the retro sprite in approval composites.
 
 ## Deliverable order
