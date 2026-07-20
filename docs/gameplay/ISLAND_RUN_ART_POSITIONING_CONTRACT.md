@@ -72,6 +72,8 @@ This visual contract inherits the canonical Island Run gameplay rules:
 
 ## Future art production rule
 
+The layer inventory, camera/style lock, source/runtime naming split, and approval gates are defined in `docs/gameplay/ISLAND_VISUAL_PRODUCTION_CONTRACT.md`. Machine-readable island briefs live under `tools/island-art-factory/briefs/`.
+
 When adding island artwork for new `island-00x` folders:
 
 1. Keep the canonical tile circle stable.

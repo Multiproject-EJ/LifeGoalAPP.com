@@ -274,20 +274,49 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
       })}
 
       {manifest.landmarks.map((landmark) => {
+        if (!landmark.levelZero || hiddenSources.has(landmark.levelZero)) return null;
+        return (
+          <img
+            key={`${landmark.stopIndex}-level-zero-${landmark.levelZero}`}
+            className={`island-art-layers__image island-art-layers__landmark-base island-art-layers__landmark-base--${landmark.zBand ?? 'mid'}`}
+            src={landmark.levelZero}
+            alt=""
+            draggable={false}
+            style={makeArtLayerStyle({
+              manifest,
+              x: landmark.x,
+              y: landmark.y,
+              width: landmark.width,
+              height: landmark.height,
+              uniformScale,
+              toScreen,
+              sceneLayout,
+              zIndex: 2,
+            })}
+            onError={() => hideSource(landmark.levelZero!)}
+          />
+        );
+      })}
+
+      {manifest.landmarks.map((landmark) => {
         const buildLevel = landmarkBuildLevels[landmark.stopIndex] ?? 0;
         const src = getIslandArtLandmarkImageSrc(landmark, buildLevel);
+        const landmarkImageScale = landmark.imageScale ?? 1;
         const style = makeArtLayerStyle({
           manifest,
           x: landmark.x,
           y: landmark.y,
-          width: landmark.width,
-          height: landmark.height,
+          width: landmark.width * landmarkImageScale,
+          height: landmark.height * landmarkImageScale,
           uniformScale,
           toScreen,
           sceneLayout,
           zIndex: zIndexForBand(landmark.zBand, 4),
         });
         if (!src || hiddenSources.has(src)) {
+          if (buildLevel < 1 && landmark.levelZero && !hiddenSources.has(landmark.levelZero)) {
+            return null;
+          }
           return (
             <LandmarkBuildVisual
               key={`${landmark.stopIndex}-generated-${buildLevel}`}

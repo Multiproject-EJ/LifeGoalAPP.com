@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "islandNumber": 2,
+  "slug": "pebble-bay",
+  "displayName": "Pebble Bay",
+  "pilotRole": "Prove soft mist, water, and rounded low-contrast materials remain readable beneath the live tile UI.",
+  "boardGeometry": { "profileId": "spark36_ring", "tileCount": 36, "canonicalWidth": 1000, "canonicalHeight": 1000, "sceneWidth": 1400, "sceneHeight": 1600, "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 }, "boardTiltDegrees": 47, "boardRotationDegrees": 0, "approvalViewport": { "width": 390, "height": 844 } },
+  "identity": { "civilization": "The Tidefolk", "guardian": "Maelis", "biome": "Rounded tidal stones, tide pools, shell mechanisms, lantern paths, and soft sea mist", "distortion": "Caution and stillness have become suspended tension" },
+  "palette": [
+    { "name": "tide-blue", "hex": "#5faec4" },
+    { "name": "mist", "hex": "#c9dcda" },
+    { "name": "pebble", "hex": "#8b8d84" },
+    { "name": "shell", "hex": "#e1c9a9" },
+    { "name": "lantern-amber", "hex": "#d79a4b" }
+  ],
+  "materials": ["polished tidal stone", "shell valves", "mist glass", "water lenses", "weathered brass", "wet sand"],
+  "motifs": ["breathing bellows", "slow tide wheels", "concentric ripples", "lantern paths", "measured stepping stones"],
+  "restorationChange": "Frozen water channels begin moving slowly; lantern paths pulse in a calm breathing rhythm.",
+  "landmarks": [
+    { "stopId": "hatchery", "displayName": "Tidepool Nursery", "visual": "Pearl bowls nested in rounded stone with a controllable tide gate.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "habit", "displayName": "Breathwheel Mill", "visual": "Slow shell bellows and a compact waterwheel with visible inhale-exhale motion.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "mystery", "displayName": "Skipping-Stone Forum", "visual": "Flat tidal stones and lantern arcs arranged for playful route trials.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "wisdom", "displayName": "Stillwater Listening Steps", "visual": "Partly submerged listening steps with tide-memory shells.", "levels": ["foundation", "operational", "restored"] }
+  ],
+  "boss": { "name": "Maelis", "slug": "maelis", "visual": "Ancient shell-and-stone tidal guardian with calm massive silhouette and mist-lit water seams." },
+  "arena": { "name": "Maelis Tidelock Gate", "slug": "tidelock-gate", "visual": "Large shell lock over a narrow inlet with restrained water pressure." },
+  "avoid": ["forest cathedral", "sharp jagged rocks", "violent surf", "high-frequency mist over tiles", "painted replacement tile ring", "text or UI"],
+  "runtimeRoot": "public/assets/islands/island-002",
+  "sourceNamingExample": "isl-002_board-plate_v001_approved.webp"
+}

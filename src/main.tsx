@@ -16,6 +16,8 @@ import { ServiceStatusBanner } from './components/service-status/index.ts';
 import { AnimationLab } from './components/AnimationLab.tsx';
 import { HabitGameMobileDownloadGate } from './components/HabitGameLandingShell.tsx';
 import { isCurrentClientPhone } from './utils/phoneClient.ts';
+import { LevelWorldsHub } from './features/gamification/level-worlds/LevelWorldsHub.tsx';
+import { createDemoSession } from './services/demoSession.ts';
 
 // Start monitoring cloud health before anything assumes Supabase is available.
 initServiceHealthForBrowser();
@@ -44,6 +46,7 @@ if (typeof window !== 'undefined') {
 // Routes that render public (non-app) views.
 const NON_APP_ROUTES = new Set(['world', 'lobby', 'privacy', 'terms', 'support']);
 const QUEST_VISUAL_SYSTEM_PREVIEW_PATH = '/dev/quest-journey-visual-system';
+const ISLAND_ART_PREVIEW_PATH = '/dev/island-art-preview';
 
 function QuestVisualSystemPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
@@ -61,6 +64,21 @@ function QuestVisualSystemPreviewRoute() {
   }, []);
 
   return Preview ? <Preview /> : null;
+}
+
+function IslandArtPreviewContent() {
+  const session = useMemo(() => createDemoSession(), []);
+  return <LevelWorldsHub session={session} onClose={() => undefined} isAdmin />;
+}
+
+function IslandArtPreviewRoute() {
+  return (
+    <ThemeProvider>
+      <SupabaseAuthProvider>
+        <IslandArtPreviewContent />
+      </SupabaseAuthProvider>
+    </ThemeProvider>
+  );
 }
 
 
@@ -108,9 +126,17 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === QUEST_VISUAL_SYSTEM_PREVIEW_PATH;
+  const isIslandArtPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === ISLAND_ART_PREVIEW_PATH;
 
   const initialRoute = useMemo(() => resolveRoute(), []);
   const isPhoneEntryClient = useMemo(() => isCurrentClientPhone(), []);
+  const isDevPhonePreview = useMemo(() => {
+    if (!import.meta.env.DEV || typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('phonePreview') === '1';
+  }, []);
   const [showApp, setShowApp] = useState(() => {
     const shouldRenderAppByDefault = !NON_APP_ROUTES.has(initialRoute);
     if (shouldRenderAppByDefault) return true;
@@ -141,7 +167,17 @@ function Root() {
     return <QuestVisualSystemPreviewRoute />;
   }
 
-  if (!isPhoneEntryClient && initialRoute !== 'privacy' && initialRoute !== 'terms' && initialRoute !== 'support') {
+  if (isIslandArtPreviewRoute) {
+    return <IslandArtPreviewRoute />;
+  }
+
+  if (
+    !isPhoneEntryClient &&
+    !isDevPhonePreview &&
+    initialRoute !== 'privacy' &&
+    initialRoute !== 'terms' &&
+    initialRoute !== 'support'
+  ) {
     return <HabitGameMobileDownloadGate />;
   }
 

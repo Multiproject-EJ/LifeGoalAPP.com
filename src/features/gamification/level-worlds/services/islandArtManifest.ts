@@ -20,10 +20,14 @@ export interface IslandArtSceneManifest {
 export interface IslandArtLandmarkManifest {
   stopIndex: number;
   anchorId?: string;
+  /** Optional terrain/foundation art that remains beneath this landmark at every build level. */
+  levelZero?: string;
   x: number;
   y: number;
   width: number;
   height: number;
+  /** Optional scale applied only to built landmark art, leaving level-zero terrain unchanged. */
+  imageScale?: number;
   levels: string[];
   zBand?: ZBand;
 }
@@ -181,6 +185,7 @@ function hasRenderableAsset(raw: Record<string, unknown>): boolean {
   if (Array.isArray(raw.landmarks)) {
     for (const entry of raw.landmarks) {
       if (!isRecord(entry)) continue;
+      if (optionalString(entry.levelZero)) return true;
       if (Array.isArray(entry.levels) && entry.levels.some((level) => optionalString(level))) return true;
     }
   }
@@ -242,10 +247,12 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
       return [{
         stopIndex: Math.max(0, Math.floor(finiteNumber(entry.stopIndex, 0))),
         anchorId: optionalString(entry.anchorId),
+        levelZero: resolveIslandArtAssetPath(basePath, optionalString(entry.levelZero)),
         x: finiteNumber(entry.x, 500),
         y: finiteNumber(entry.y, 500),
         width: Math.max(1, finiteNumber(entry.width, 120)),
         height: Math.max(1, finiteNumber(entry.height, 120)),
+        imageScale: positiveFiniteNumber(entry.imageScale) ?? undefined,
         levels,
         zBand: normalizeZBand(entry.zBand),
       }];

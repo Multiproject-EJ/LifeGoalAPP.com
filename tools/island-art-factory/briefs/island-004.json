@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "islandNumber": 4,
+  "slug": "driftwood-isle",
+  "displayName": "Driftwood Isle",
+  "pilotRole": "Prove irregular salvaged silhouettes and visible repair seams can stay coherent and uncluttered.",
+  "boardGeometry": { "profileId": "spark36_ring", "tileCount": 36, "canonicalWidth": 1000, "canonicalHeight": 1000, "sceneWidth": 1400, "sceneHeight": 1600, "playableBoardRect": { "x": 200, "y": 300, "width": 1000, "height": 1000 }, "boardTiltDegrees": 47, "boardRotationDegrees": 0, "approvalViewport": { "width": 390, "height": 844 } },
+  "identity": { "civilization": "The Driftfolk", "guardian": "Garran", "biome": "Salvaged timber, patched sails, reused hulls, warm resin lamps, and visible joinery", "distortion": "Remembrance has become grief-frozen resignation" },
+  "palette": [
+    { "name": "driftwood", "hex": "#8a6544" },
+    { "name": "tar", "hex": "#302b2a" },
+    { "name": "sail-cloth", "hex": "#d2c3a6" },
+    { "name": "resin-amber", "hex": "#d48237" },
+    { "name": "harbor-blue", "hex": "#547f8c" }
+  ],
+  "materials": ["salt-worn timber", "brass clamps", "stitched sailcloth", "rope tension mechanisms", "warm resin lamps", "carved name planks"],
+  "motifs": ["visible repairs", "boat ribs", "patched banners", "carried names", "breakwater becoming gate"],
+  "restorationChange": "Repairs remain visible but rise higher; patched sails become banners and the breakwater opens into a working gate.",
+  "landmarks": [
+    { "stopId": "hatchery", "displayName": "Keel-Nest Hatchery", "visual": "A warm cradle built inside the ribs of a salvaged boat hull.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "habit", "displayName": "Mending Bench", "visual": "Public joinery platform with planks, clamps, tools, and proudly visible seams.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "mystery", "displayName": "Sail-Patch Market", "visual": "Patched sails and useful remnants transformed into bright functional stalls.", "levels": ["foundation", "operational", "restored"] },
+    { "stopId": "wisdom", "displayName": "Names-in-Wood Hall", "visual": "Carved boards and story planks held in an open timber hall.", "levels": ["foundation", "operational", "restored"] }
+  ],
+  "boss": { "name": "Garran", "slug": "garran", "visual": "Massive driftwood harbor guardian bound with brass clamps, rope, and old name planks." },
+  "arena": { "name": "Garran's Breakwater", "slug": "breakwater-gate", "visual": "Layered driftwood sea wall whose central repaired section can open as a gate." },
+  "avoid": ["pristine palace", "crystal spires", "unreadable scrap pile", "random broken debris in tile corridor", "painted replacement tile ring", "text or UI"],
+  "runtimeRoot": "public/assets/islands/island-004",
+  "sourceNamingExample": "isl-004_boss-garran_idle_v001_draft.webp"
+}
