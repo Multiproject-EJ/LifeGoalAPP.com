@@ -1,7 +1,7 @@
 # Island Visual Production Contract
 
-Status: **Active pilot contract**  
-Pilot scope: Islands 1–5  
+Status: **Active pilot contract**
+Pilot scope: Islands 1–5
 Scale target: Islands 1–120
 
 ## Purpose
