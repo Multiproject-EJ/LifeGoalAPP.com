@@ -34,6 +34,14 @@ the UI truth.
 - Increase fine water texture and restrained reflection close to the island so
   the foreground and environment share one lighting model.
 
+The first runtime application of this direction is
+`background/ambient-background-v4.webp`. It preserves the open lagoon while
+using irregular submerged shelves and local water-depth changes around the
+aligned board footprint; no visible placement ring or generated UI is present.
+The corresponding real-phone approval captures are
+`runtime-review/island-001-l0-background-v4-phone.webp` and
+`runtime-review/island-001-l3-background-v4-phone.webp`.
+
 ## Mandatory two-state gate
 
 Every island environment pass must be reviewed at both endpoints before its

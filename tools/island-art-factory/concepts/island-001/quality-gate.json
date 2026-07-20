@@ -3,7 +3,7 @@
   "islandNumber": 1,
   "purpose": "Two-state environmental integration review against the real phone UI",
   "approvalViewport": { "width": 390, "height": 844 },
-  "runtimeBackground": "public/assets/islands/island-001/background/ambient-background-v3.webp",
+  "runtimeBackground": "public/assets/islands/island-001/background/ambient-background-v4.webp",
   "states": [
     {
       "id": "l0",
@@ -11,7 +11,7 @@
       "bossState": "hidden",
       "source": "source/island-001-l0-phone.webp",
       "selectedConcept": "selected/island-001-l0-background-integration-v001-selected.webp",
-      "runtimeReview": "runtime-review/island-001-l0-landmark-pills-phone.webp"
+      "runtimeReview": "runtime-review/island-001-l0-background-v4-phone.webp"
     },
     {
       "id": "l3",
@@ -19,7 +19,7 @@
       "bossState": "idle",
       "source": "source/island-001-l3-phone.webp",
       "selectedConcept": "selected/island-001-l3-background-integration-v001-selected.webp",
-      "runtimeReview": "runtime-review/island-001-l3-landmark-pills-phone.webp"
+      "runtimeReview": "runtime-review/island-001-l3-background-v4-phone.webp"
     }
   ],
   "lockedInvariants": [
