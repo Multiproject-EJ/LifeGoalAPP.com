@@ -30,6 +30,8 @@ interface IslandArtLayersProps {
   uniformScale: number;
   toScreen: (anchor: TileAnchor) => { x: number; y: number };
   sceneLayout?: IslandArtSceneLayout | null;
+  /** Split board-plane art from upright/world art so each uses its correct camera transform. */
+  renderMode?: 'all' | 'board-plane' | 'world';
 }
 
 type BoardArtLayerStyle = CSSProperties & {
@@ -152,6 +154,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
     uniformScale,
     toScreen,
     sceneLayout = null,
+    renderMode = 'all',
   } = props;
   const [hiddenSources, setHiddenSources] = useState<Set<string>>(() => new Set());
 
@@ -176,6 +179,10 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
   const boardPlateRect = sceneLayout?.playableBoardRect;
   const boardPlateScale = manifest.boardPlateImageScale ?? BOARD_PLATE_SIZE_SCALE;
   const boardOuterCircleScale = manifest.boardOuterCircleImageScale ?? boardPlateScale;
+  const boardPlateVerticalScale = manifest.boardPlateImageVerticalScale ?? 1;
+  const boardOuterCircleVerticalScale = manifest.boardOuterCircleImageVerticalScale ?? 1;
+  const showBoardPlane = renderMode !== 'world';
+  const showWorld = renderMode !== 'board-plane';
   const boardPlateYOffsetRatio = manifest.boardPlateImageScale !== undefined ? 0 : BOARD_PLATE_DOWNWARD_OFFSET_RATIO;
   const boardPlateCenterX = boardPlateRect ? boardPlateRect.x + boardPlateRect.width / 2 : manifest.coordinateSpace.width / 2;
   const boardPlateCenterY = boardPlateRect
@@ -218,33 +225,42 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
       className="island-art-layers"
       style={{ width: boardWidth, height: boardHeight }}
       data-island-number={manifest.islandNumber}
+      data-render-mode={renderMode}
       aria-hidden="true"
     >
-      {boardOuterCircleSrc && !hiddenSources.has(boardOuterCircleSrc) ? (
+      {showBoardPlane && boardOuterCircleSrc && !hiddenSources.has(boardOuterCircleSrc) ? (
         <img
           key={`board-outer-${boardOuterCircleSrc}`}
           className="island-art-layers__image island-art-layers__board-outer"
           src={boardOuterCircleSrc}
           alt=""
           draggable={false}
-          style={{ ...boardOuterSceneLayerStyle, '--island-art-layer-z': 0 } as BoardArtLayerStyle}
+          style={{
+            ...boardOuterSceneLayerStyle,
+            transform: `translate(-50%, -50%) scaleY(${boardOuterCircleVerticalScale})`,
+            '--island-art-layer-z': 0,
+          } as BoardArtLayerStyle}
           onError={() => hideSource(boardOuterCircleSrc)}
         />
       ) : null}
 
-      {boardPlateSrc && !hiddenSources.has(boardPlateSrc) ? (
+      {showBoardPlane && boardPlateSrc && !hiddenSources.has(boardPlateSrc) ? (
         <img
           key={`board-plate-${boardPlateSrc}`}
           className="island-art-layers__image island-art-layers__board-circle island-art-layers__board-plate"
           src={boardPlateSrc}
           alt=""
           draggable={false}
-          style={{ ...boardPlateSceneLayerStyle, '--island-art-layer-z': 1 } as BoardArtLayerStyle}
+          style={{
+            ...boardPlateSceneLayerStyle,
+            transform: `translate(-50%, -50%) scaleY(${boardPlateVerticalScale})`,
+            '--island-art-layer-z': 1,
+          } as BoardArtLayerStyle}
           onError={() => hideSource(boardPlateSrc)}
         />
       ) : null}
 
-      {manifest.scenery.map((scenery) => {
+      {showWorld && manifest.scenery.map((scenery) => {
         if (hiddenSources.has(scenery.src)) return null;
         const isBattleCenterScenery = scenery.id === BATTLE_CENTER_SCENERY_ID;
         const scenerySizeScale = isBattleCenterScenery ? BATTLE_CENTER_SIZE_SCALE : 1;
@@ -274,7 +290,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
         );
       })}
 
-      {manifest.landmarks.map((landmark) => {
+      {showWorld && manifest.landmarks.map((landmark) => {
         if (!landmark.levelZero || hiddenSources.has(landmark.levelZero)) return null;
         return (
           <img
@@ -299,7 +315,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
         );
       })}
 
-      {manifest.landmarks.map((landmark) => {
+      {showWorld && manifest.landmarks.map((landmark) => {
         const buildLevel = landmarkBuildLevels[landmark.stopIndex] ?? 0;
         const src = getIslandArtLandmarkImageSrc(landmark, buildLevel);
         const landmarkImageScale = landmark.imageScale ?? 1;
@@ -342,7 +358,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
         );
       })}
 
-      {bossSrc && !hiddenSources.has(bossSrc) && manifest.boss ? (
+      {showWorld && bossSrc && !hiddenSources.has(bossSrc) && manifest.boss ? (
         <img
           key={`${manifest.boss.id}-${bossSrc}`}
           className={`island-art-layers__image island-art-layers__boss island-art-layers__boss--${manifest.boss.zBand ?? 'mid'}`}

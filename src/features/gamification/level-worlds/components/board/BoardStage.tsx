@@ -580,7 +580,28 @@ export function BoardStage(props: BoardStageProps) {
         style={{ position: 'absolute', inset: 0, zIndex: 10, touchAction: 'none' }}
       />
 
-      {/* Art camera stage — follows camera pan/zoom but does not inherit gameplay rotateX/rotateZ. */}
+      {/* Ground-plane art uses the exact same camera and 47deg transform as the
+          live tile route. Source-perspective normalization in the manifest
+          prevents baked-in art perspective from being applied twice. */}
+      <div
+        className="island-run-board__board-plane-camera-stage"
+        style={{ transform: cameraStageTransform, willChange: 'transform' }}
+      >
+        <IslandArtLayers
+          manifest={islandArtManifest}
+          landmarkBuildLevels={landmarkBuildLevels}
+          isBossDefeated={isBossDefeated}
+          bossCreatureArtState={bossCreatureArtState}
+          boardWidth={boardSize.width}
+          boardHeight={boardSize.height}
+          uniformScale={uniformScale}
+          toScreen={toScreen}
+          sceneLayout={sceneLayout}
+          renderMode="board-plane"
+        />
+      </div>
+
+      {/* Upright/world art follows camera pan/zoom without a second rotateX. */}
       <div
         className="island-run-board__art-camera-stage"
         style={{ transform: artCameraTransform, willChange: 'transform' }}
@@ -595,6 +616,7 @@ export function BoardStage(props: BoardStageProps) {
           uniformScale={uniformScale}
           toScreen={toScreen}
           sceneLayout={sceneLayout}
+          renderMode="world"
         />
       </div>
 

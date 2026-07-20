@@ -63,6 +63,13 @@ The approved Island 1 tropical waterfall image is a **composition reference**, n
 
 The canonical circular route is centered at (500, 500) in playable-board space with radius 340. Its 36 runtime tiles form a **seamless connected circle of individual raised blocks**. Every block needs a readable top face, a fine joint at each neighbour, a visible darker side wall, and one shared perspective-correct depth and lighting model. There must be no open gaps between tiles and no solid decorative backing ring or separate raised plinth beneath them.
 
+Every painted ground-plane circle beneath or around that route must inherit the
+same live camera transform, center, rotation, and tilt as the runtime tiles.
+Never approximate the board perspective by independently squashing a circle in
+screen space. If perspective is already baked into a source image, normalize
+the source ellipse back to a circle with the manifest's inner/outer vertical
+scale before the shared board transform is applied.
+
 Runtime board-plate art must avoid high-contrast radial seams, text, small props, or fake paving inside the tile corridor. The real blocks, highlights, token, 3D caretaker, technology fragments, and traffic-light tile must remain legible in every state.
 
 ## Caretaker rule

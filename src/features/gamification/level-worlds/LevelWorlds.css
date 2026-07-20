@@ -1978,6 +1978,7 @@
   inset: 0;
 }
 
+.island-run-board__board-plane-camera-stage,
 .island-run-board__art-camera-stage {
   position: absolute;
   inset: 0;
@@ -1989,7 +1990,14 @@
   transition: none;
   backface-visibility: hidden;
   transform-style: preserve-3d;
+}
+
+.island-run-board__board-plane-camera-stage {
   z-index: 1;
+}
+
+.island-run-board__art-camera-stage {
+  z-index: 2;
 }
 
 .island-run-board__camera-stage {
@@ -2001,7 +2009,7 @@
   transition: none;
   backface-visibility: hidden;
   transform-style: preserve-3d;
-  z-index: 2;
+  z-index: 3;
 }
 
 .island-run-board__bg {
@@ -2049,7 +2057,7 @@
    scene around the same centre so circles, plots, boss arena, and terrain all
    share the route's tilt. This is intentionally island-specific until the
    production asset workflow emits every future island at the canonical angle. */
-.island-art-layers[data-island-number="1"] {
+.island-art-layers[data-island-number="1"][data-render-mode="world"] {
   /* Measured from the rendered connected route at the canonical 390x844
      viewport: its board-plane bounding ratio is 0.746. */
   transform: scaleY(0.746);
@@ -8975,6 +8983,7 @@
 
 /* ── Enhanced camera stages with GPU compositing ───────────────────────────── */
 .island-run-board__stage-wrapper .island-run-board__art-camera-stage,
+.island-run-board__stage-wrapper .island-run-board__board-plane-camera-stage,
 .island-run-board__stage-wrapper .island-run-board__camera-stage {
   transform-origin: center center;
   transform-style: preserve-3d;
@@ -8985,6 +8994,11 @@
 
 .island-run-board__stage-wrapper .island-run-board__art-camera-stage {
   contain: layout style;
+}
+
+.island-run-board__stage-wrapper .island-run-board__board-plane-camera-stage {
+  contain: layout style;
+  pointer-events: none;
 }
 
 .island-run-board__stage-wrapper .island-run-board__camera-stage {

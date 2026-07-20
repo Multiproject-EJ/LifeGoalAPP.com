@@ -25,6 +25,7 @@
   "lockedInvariants": [
     "Use the supplied 390x844 phone capture as the exact composition",
     "Preserve the live seamless circle of 36 individually readable 3D tile blocks",
+    "Render every inner and outer ground-plane circle through the same center and live camera transform as the tile route",
     "Preserve board position, scale, tilt, tile geometry, landmark art, caretaker, controls, and all UI text",
     "L0 must keep all four landmark plots empty and the boss hidden",
     "L3 must keep all four landmarks at their supplied finished forms and the boss visible",
@@ -47,4 +48,3 @@
   ],
   "reviewRule": "Approve the background only after both L0 and L3 real phone composites pass at 390x844. Generated studies guide contact, water, and lighting only."
 }
-

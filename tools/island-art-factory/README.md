@@ -36,6 +36,13 @@ The override is presentation-only: it selects art layers without mutating gamepl
 
 The 36 live tiles must form one seamless connected circular route while every tile remains an individually readable 3D block through fine seams, visible side walls, shared physical thickness, and one perspective-correct lighting model. Do not add a separate backing ring beneath them. The board caretaker must use its premium 3D cutout and stand behind the start edge on a grounded footplate; never use the retro sprite in approval composites.
 
+Inner board circles and outer island-circle plates are ground-plane art. Render
+them through the exact live tile-plane camera, never through an independent CSS
+tilt. For source art with baked perspective, measure its circular outline and
+set `boardPlateImageVerticalScale` or `boardOuterCircleImageVerticalScale` to
+restore a true circle before the live transform. This keeps every concentric
+shape symmetric at all phone sizes and camera zooms.
+
 For an island background to pass, capture and review both progression endpoints:
 an L0 phone view with empty landmark plots and hidden boss, and an L3 phone view
 with all landmarks fully built and the boss visible. Island 001's recorded example

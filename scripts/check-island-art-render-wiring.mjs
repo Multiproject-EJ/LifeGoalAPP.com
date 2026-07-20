@@ -65,16 +65,23 @@ for (const symbol of forbiddenSymbols) {
 }
 
 const islandArtLayerCalls = [...boardStage.matchAll(/<IslandArtLayers[\s\S]*?\/>/g)].map((match) => match[0]);
-if (islandArtLayerCalls.length !== 1) {
-  failures.push(`Expected BoardStage to render exactly one IslandArtLayers call, found ${islandArtLayerCalls.length}.`);
+if (islandArtLayerCalls.length !== 2) {
+  failures.push(`Expected BoardStage to split IslandArtLayers across board-plane and world stages, found ${islandArtLayerCalls.length} calls.`);
 }
 
-const islandArtLayerCall = islandArtLayerCalls[0] ?? '';
-if (!/manifest=\{islandArtManifest\}/.test(islandArtLayerCall)) {
-  failures.push('BoardStage IslandArtLayers must receive manifest={islandArtManifest}.');
+for (const islandArtLayerCall of islandArtLayerCalls) {
+  if (!/manifest=\{islandArtManifest\}/.test(islandArtLayerCall)) {
+    failures.push('Every BoardStage IslandArtLayers call must receive manifest={islandArtManifest}.');
+  }
+  if (/islandNumber=|onAvailabilityChange=/.test(islandArtLayerCall)) {
+    failures.push('BoardStage IslandArtLayers must not use legacy islandNumber/onAvailabilityChange props.');
+  }
 }
-if (/islandNumber=|onAvailabilityChange=/.test(islandArtLayerCall)) {
-  failures.push('BoardStage IslandArtLayers must not use legacy islandNumber/onAvailabilityChange props.');
+if (!islandArtLayerCalls.some((call) => /renderMode="board-plane"/.test(call))) {
+  failures.push('BoardStage must render a board-plane IslandArtLayers pass for concentric ground art.');
+}
+if (!islandArtLayerCalls.some((call) => /renderMode="world"/.test(call))) {
+  failures.push('BoardStage must render a world IslandArtLayers pass for landmarks and scenery.');
 }
 
 if (!islandArtLayers.includes('getIslandArtBoardPlateImageSrc')) {
@@ -92,6 +99,11 @@ if (!artStageMatch || artStageMatch[1].trim() !== 'artCameraTransform') {
   failures.push('Art camera stage must use artCameraTransform without gameplay rotateX/rotateZ.');
 }
 
+const boardPlaneStageMatch = boardStage.match(/className="island-run-board__board-plane-camera-stage"[\s\S]*?style=\{\{ transform: ([^,}]+)/);
+if (!boardPlaneStageMatch || boardPlaneStageMatch[1].trim() !== 'cameraStageTransform') {
+  failures.push('Board-plane art stage must use the exact gameplay cameraStageTransform.');
+}
+
 const gameplayStageMatch = boardStage.match(/className="island-run-board__camera-stage"[\s\S]*?style=\{\{ transform: ([^,}]+)/);
 if (!gameplayStageMatch || gameplayStageMatch[1].trim() !== 'cameraStageTransform') {
   failures.push('Gameplay camera stage must use cameraStageTransform with board tilt/rotation.');
@@ -106,6 +118,12 @@ if (!/const cameraStageTransform = `\$\{camera\.cameraTransform\} rotateX\(\$\{b
 
 if (hasTransformTransition('.island-run-board__art-camera-stage')) {
   failures.push('Island Art camera stage must not define a transform transition; it must track camera updates immediately.');
+}
+if (hasTransformTransition('.island-run-board__board-plane-camera-stage')) {
+  failures.push('Board-plane art stage must not define a transform transition; it must track camera updates immediately.');
+}
+if (!hasTransitionNone('.island-run-board__board-plane-camera-stage')) {
+  failures.push('Board-plane art stage must have a transition: none CSS override.');
 }
 if (!hasTransitionNone('.island-run-board__art-camera-stage')) {
   failures.push('Island Art camera stage must have a transition: none CSS override.');

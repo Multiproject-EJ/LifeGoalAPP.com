@@ -21,6 +21,8 @@
     "boardOuterCircle": "board-outer/board-outer-foundation.webp"
   },
   "boardOuterCircleImageScale": 1.36,
+  "boardPlateImageVerticalScale": 1.123,
+  "boardOuterCircleImageVerticalScale": 1.138,
   "landmarks": [
     {
       "stopIndex": 0,

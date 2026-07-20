@@ -14,6 +14,9 @@ art exports.
   generator for those two studies.
 - `runtime-review/` contains the later real UI captures with the approved
   landmark nameplate plus compact front-centred status-pill treatment.
+- `runtime-review/island-001-l0-shared-circle-plane-phone.webp` and its L3
+  counterpart record the first pass where the inner green circle, outer island
+  circle, and live Spark36 route use the same transformed board plane.
 
 The generated studies are environmental/contact references only. They may not
 replace, repaint, resize, rotate, or reinterpret the real Spark36 tiles,
@@ -42,4 +45,3 @@ background is approved:
 Use the exact viewport and invariants in `quality-gate.json`. A concept passes
 only when the environment feels physically connected in both states and the
 live board UI remains unchanged.
-
