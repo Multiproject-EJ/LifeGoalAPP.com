@@ -301,12 +301,13 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
       {manifest.landmarks.map((landmark) => {
         const buildLevel = landmarkBuildLevels[landmark.stopIndex] ?? 0;
         const src = getIslandArtLandmarkImageSrc(landmark, buildLevel);
+        const landmarkImageScale = landmark.imageScale ?? 1;
         const style = makeArtLayerStyle({
           manifest,
           x: landmark.x,
           y: landmark.y,
-          width: landmark.width,
-          height: landmark.height,
+          width: landmark.width * landmarkImageScale,
+          height: landmark.height * landmarkImageScale,
           uniformScale,
           toScreen,
           sceneLayout,

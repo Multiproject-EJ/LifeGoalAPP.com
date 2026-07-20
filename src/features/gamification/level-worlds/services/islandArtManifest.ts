@@ -26,6 +26,8 @@ export interface IslandArtLandmarkManifest {
   y: number;
   width: number;
   height: number;
+  /** Optional scale applied only to built landmark art, leaving level-zero terrain unchanged. */
+  imageScale?: number;
   levels: string[];
   zBand?: ZBand;
 }
@@ -250,6 +252,7 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
         y: finiteNumber(entry.y, 500),
         width: Math.max(1, finiteNumber(entry.width, 120)),
         height: Math.max(1, finiteNumber(entry.height, 120)),
+        imageScale: positiveFiniteNumber(entry.imageScale) ?? undefined,
         levels,
         zBand: normalizeZBand(entry.zBand),
       }];
