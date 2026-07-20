@@ -3,12 +3,16 @@ import type { CreatureDefinition } from '../services/creatureCatalog';
 import { getCreatureCardMetadata } from '../services/creatureCardCatalog';
 import { playIslandRunSound, triggerIslandRunHaptic, type IslandRunHapticEvent } from '../services/islandRunAudio';
 import { CreatureCard } from './CreatureCard';
+import {
+  CreaturePackOpeningAnimation,
+  preloadCreaturePackOpeningAnimation,
+} from '../../../../components/CreaturePackOpeningAnimation';
 
 import { lockPageScroll } from '../../../../utils/scrollLock';
 const SWIPE_REVEAL_THRESHOLD_PX = 36;
 const RARITY_ORDER: CreatureDefinition['tier'][] = ['common', 'rare', 'mythic'];
 
-type CreaturePackOpeningPrototypePhase = 'intro' | 'revealing' | 'summary';
+type CreaturePackOpeningPrototypePhase = 'intro' | 'opening' | 'revealing' | 'summary';
 
 export interface CreaturePackOpeningPrototypeCard {
   slotIndex: number;
@@ -51,6 +55,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
   const activeCard = props.cards[activeIndex] ?? null;
   const hasCards = props.cards.length > 0;
   const isIntro = phase === 'intro';
+  const isOpening = phase === 'opening';
   const showSummary = phase === 'summary';
   const revealedCount = showSummary ? props.cards.length : Math.min(props.cards.length, activeIndex + 1);
   const newCardCount = useMemo(
@@ -72,6 +77,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
     if (!props.open) return;
     setActiveIndex(0);
     setPhase('intro');
+    preloadCreaturePackOpeningAnimation();
   }, [props.open, props.grantId]);
 
   useEffect(() => {
@@ -86,8 +92,9 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
       props.onClose();
       return;
     }
+    if (isOpening) return;
     if (isIntro) {
-      setPhase('revealing');
+      setPhase('opening');
       triggerIslandRunHaptic('egg_set');
       return;
     }
@@ -97,7 +104,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
       return;
     }
     setActiveIndex((current) => Math.min(props.cards.length - 1, current + 1));
-  }, [activeIndex, hasCards, isIntro, props.cards.length, props.onClose, showSummary]);
+  }, [activeIndex, hasCards, isIntro, isOpening, props.cards.length, props.onClose, showSummary]);
 
   useEffect(() => {
     if (!props.open) return undefined;
@@ -141,7 +148,7 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
           <p className="creature-pack-opening-prototype__eyebrow">Dev-only visual prototype · no public purchase</p>
           <h2 id="creature-pack-opening-title">Creature Pack Opening</h2>
           <p>
-            Canonical grant state: {props.grantStatus.replace('_', ' ')} · {isIntro ? 'ready to open' : `${revealedCount}/${props.cards.length} revealed`}
+            Canonical grant state: {props.grantStatus.replace('_', ' ')} · {isIntro ? 'ready to open' : isOpening ? 'opening pack' : `${revealedCount}/${props.cards.length} revealed`}
           </p>
         </header>
 
@@ -156,6 +163,15 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
               Five weighted demo cards are already resolved; this screen previews the reveal ceremony, duplicate copy changes, and new-to-you results.
             </p>
           </button>
+        ) : isOpening ? (
+          <div className="creature-pack-opening-prototype__stage creature-pack-opening-prototype__stage--opening">
+            <CreaturePackOpeningAnimation
+              onComplete={() => {
+                setActiveIndex(0);
+                setPhase('revealing');
+              }}
+            />
+          </div>
         ) : showSummary ? (
           <div className="creature-pack-opening-prototype__summary" role="status" aria-live="polite">
             <p className="creature-pack-opening-prototype__summary-kicker">Pack complete</p>
@@ -243,8 +259,8 @@ export function CreaturePackOpeningPrototypeModal(props: CreaturePackOpeningProt
               View in Sanctuary
             </button>
           ) : null}
-          <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={advance}>
-            {showSummary ? 'Done' : isIntro ? 'Open pack' : activeIndex >= props.cards.length - 1 ? 'Show summary' : 'Reveal next'}
+          <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={advance} disabled={isOpening}>
+            {showSummary ? 'Done' : isIntro ? 'Open pack' : isOpening ? 'Opening…' : activeIndex >= props.cards.length - 1 ? 'Show summary' : 'Reveal next'}
           </button>
         </div>
       </section>

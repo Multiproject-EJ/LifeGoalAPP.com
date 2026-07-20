@@ -2,6 +2,10 @@ import React from 'react';
 import { CREATURE_CATALOG } from '../services/creatureCatalog';
 import { CreatureCard } from './CreatureCard';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
+import {
+  CreaturePackOpeningAnimation,
+  preloadCreaturePackOpeningAnimation,
+} from '../../../../components/CreaturePackOpeningAnimation';
 import type { ClaimFullWelcomePackResult } from '../services/islandRunWelcomePackFullClaimAction';
 import { buildWelcomePackStarterCacheBody } from '../services/islandRunWelcomePackCopy';
 
@@ -17,7 +21,7 @@ export interface WelcomePackModalProps {
   displayName?: string | null;
 }
 
-type Phase = 'economy' | 'cards-intro' | 'card-reveal';
+type Phase = 'economy' | 'cards-intro' | 'pack-opening' | 'card-reveal';
 
 export function WelcomePackModal({
   open,
@@ -44,6 +48,10 @@ export function WelcomePackModal({
   React.useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined;
     return lockPageScroll();
+  }, [open]);
+
+  React.useEffect(() => {
+    if (open) preloadCreaturePackOpeningAnimation();
   }, [open]);
 
   if (!open) return null;
@@ -136,11 +144,27 @@ export function WelcomePackModal({
             className="wpm-collect-btn"
             onClick={() => {
               setRevealIndex(0);
-              setPhase('card-reveal');
+              setPhase('pack-opening');
             }}
           >
-            Reveal Cards
+            Open Creature Pack
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'pack-opening') {
+    return (
+      <div className="island-run-overlay-root wpm-overlay" role="dialog" aria-modal="true" aria-label="Opening your Welcome Pack creature cards">
+        <div className="wpm-shell wpm-shell--pack-opening wpm-shell--enter">
+          <p className="wpm-eyebrow">First Light Shore</p>
+          <CreaturePackOpeningAnimation
+            onComplete={() => {
+              setRevealIndex(0);
+              setPhase('card-reveal');
+            }}
+          />
         </div>
       </div>
     );
