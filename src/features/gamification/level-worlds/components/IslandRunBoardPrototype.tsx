@@ -417,6 +417,7 @@ import {
   spendIslandRunContractV2EssenceOnStopBuild,
 } from '../services/islandRunContractV2EssenceBuild';
 import {
+  type BossCreatureArtState,
   canChallengeBoss,
   getBossChallengeLockReason,
   resolveBossCreatureArtState,
@@ -1551,6 +1552,7 @@ export function IslandRunBoardPrototype({
   const boardRenderTuning = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
     const requestedVisualLandmark = params.get('islandVisualLandmark');
+    const requestedVisualBossState = params.get('islandVisualBossState');
     const islandVisualLandmark = requestedVisualLandmark === 'hatchery'
       || requestedVisualLandmark === 'habit'
       || requestedVisualLandmark === 'mystery'
@@ -1558,12 +1560,19 @@ export function IslandRunBoardPrototype({
       || requestedVisualLandmark === 'all'
       ? requestedVisualLandmark
       : null;
+    const islandVisualBossState: BossCreatureArtState | null = requestedVisualBossState === 'idle'
+      ? 'alive'
+      : requestedVisualBossState === 'defeated' || requestedVisualBossState === 'hidden'
+        ? requestedVisualBossState
+        : null;
     return {
       showQaHooks: params.get('islandRunQa') === '1',
       isMinimalBoardArt: params.get('minimalBoardArt') === '1',
       isIslandVisualPreview: import.meta.env.DEV && params.get('islandVisualPreview') === '1',
+      islandVisualIslandNumber: Math.round(readNumericParam(params, 'islandVisualIsland', 1, 1, 120)),
       islandVisualLandmark,
       islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
+      islandVisualBossState,
       boardTiltXDeg: readNumericParam(params, 'boardTiltX', 47, 0, 80),
       boardRotateZDeg: readNumericParam(params, 'boardRotateZ', 0, -45, 45),
     };
@@ -1572,8 +1581,10 @@ export function IslandRunBoardPrototype({
     showQaHooks,
     isMinimalBoardArt,
     isIslandVisualPreview,
+    islandVisualIslandNumber,
     islandVisualLandmark,
     islandVisualBuildLevel,
+    islandVisualBossState,
     boardTiltXDeg,
     boardRotateZDeg,
   } = boardRenderTuning;
@@ -1836,8 +1847,9 @@ export function IslandRunBoardPrototype({
     }
     return undefined;
   }, [islandNumber]);
-  const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandNumber), [islandNumber]);
-  const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandNumber), [islandNumber]);
+  const islandArtPreviewNumber = isIslandVisualPreview ? islandVisualIslandNumber : islandNumber;
+  const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandArtPreviewNumber), [islandArtPreviewNumber]);
+  const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandArtPreviewNumber), [islandArtPreviewNumber]);
   const wisdomTreeCard = useMemo(() => getWisdomTreeCardForIsland(islandNumber), [islandNumber]);
   const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
   const [isIslandArtAmbientBackgroundLoaded, setIsIslandArtAmbientBackgroundLoaded] = useState(false);
@@ -1976,7 +1988,7 @@ export function IslandRunBoardPrototype({
     setIslandArtManifest(null);
     setIsIslandArtAmbientBackgroundLoaded(false);
 
-    void loadIslandArtManifest(islandNumber).then((manifest) => {
+    void loadIslandArtManifest(islandArtPreviewNumber).then((manifest) => {
       if (cancelled) return;
       setIslandArtManifest(manifest);
     });
@@ -1984,7 +1996,7 @@ export function IslandRunBoardPrototype({
     return () => {
       cancelled = true;
     };
-  }, [islandNumber]);
+  }, [islandArtPreviewNumber]);
 
   useEffect(() => {
     if (!showTopbarMenu && !showAudioMenu) {
@@ -10661,10 +10673,13 @@ export function IslandRunBoardPrototype({
       : 0;
   });
   const isCurrentIslandBossDefeated = bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber;
-  const bossCreatureArtState = resolveBossCreatureArtState({
+  const runtimeBossCreatureArtState = resolveBossCreatureArtState({
     stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
     isBossDefeated: isCurrentIslandBossDefeated,
   });
+  const bossCreatureArtState = isIslandVisualPreview && islandVisualBossState
+    ? islandVisualBossState
+    : runtimeBossCreatureArtState;
   const canChallengeCurrentBoss = canChallengeBoss({
     stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
     isBossDefeated: isCurrentIslandBossDefeated,

@@ -31,22 +31,22 @@ For a board-fit preview, label the inputs explicitly:
 - Image 2: composition/style reference — never copy its painted board tiles over Image 1
 
 For a runtime landmark review, open the dev PWA with
-`islandVisualPreview=1&islandVisualLandmark={hatchery|habit|mystery|wisdom|all}&islandVisualBuildLevel={0|1|2|3}`.
+`/dev/island-art-preview?phonePreview=1&islandVisualPreview=1&islandVisualIsland={1..120}&islandVisualLandmark={hatchery|habit|mystery|wisdom|all}&islandVisualBuildLevel={0|1|2|3}&islandVisualBossState={idle|defeated|hidden}`.
 The override is presentation-only: it selects art layers without mutating gameplay or persisted build state.
 
 The 36 live tiles must read as separate 3D blocks with gaps, side walls, thickness, and contact shadows. The board caretaker must use its premium 3D cutout and stand behind the start edge on a grounded footplate; never use the retro sprite in approval composites.
 
-## Deliverable order
+## Pilot deliverable order
 
 Use this order to catch expensive composition mistakes early:
 
 1. one integrated board-fit preview
 2. ambient background
-3. board plate
-4. one L1→L3 landmark progression
-5. remaining three landmark progressions
-6. arena/scenery
-7. boss idle and defeated
-8. responsive runtime screenshot
+3. center boss arena and boss states
+4. board plate / larger island circle beneath the real route
+5. four persistent landmark terrain plots (visual L0 foundations)
+6. middle terrain/scenery fill if the island still reads too thin
+7. all four landmark L1→L3 progressions
+8. responsive runtime screenshots and final adjustment pass
 
-Do not start the full 17-image island set until its integrated preview is selected.
+After each added runtime image, inspect the actual 390×844 PWA composition and adjust before continuing. Do not start the full island set until its integrated preview is selected.

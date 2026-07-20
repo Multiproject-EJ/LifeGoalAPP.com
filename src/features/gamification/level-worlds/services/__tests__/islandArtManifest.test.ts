@@ -340,6 +340,31 @@ export const islandArtManifestTests: TestCase[] = [
     },
   },
   {
+    name: 'normalizes a persistent level-zero landmark terrain asset',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        landmarks: [{
+          ...sampleManifest.landmarks[0],
+          levelZero: 'scenery/plots/hatchery-l0.webp',
+        }],
+      }, 1);
+      if (!manifest) throw new Error('Expected level-zero landmark manifest to normalize');
+      const landmark = manifest.landmarks[0];
+      assert(landmark, 'Expected normalized level-zero landmark');
+      assertEqual(
+        landmark.levelZero,
+        '/assets/islands/island-001/scenery/plots/hatchery-l0.webp',
+        'Expected the persistent terrain asset to resolve against the island base path',
+      );
+      assertEqual(
+        getIslandArtLandmarkImageSrc(landmark, 0),
+        null,
+        'Expected level-zero terrain to remain independent from the L1-L3 structure image',
+      );
+    },
+  },
+  {
     name: 'placeholder landmark image filenames resolve to null for generated visuals',
     run: () => {
       const manifest = normalizeIslandArtManifest({

@@ -18,19 +18,21 @@
   "scene": {
     "boardCircle": "board/board-circle-inner.webp",
     "ambientBackground": "background/ambient-background-v2.webp",
-    "boardOuterCircle": "board-outer/PLACEHOLDER__board-circle-outer.webp"
+    "boardOuterCircle": "board-outer/board-outer-foundation.webp"
   },
+  "boardOuterCircleImageScale": 1.36,
   "landmarks": [
     {
       "stopIndex": 0,
       "anchorId": "hatchery",
+      "levelZero": "scenery/plots/hatchery-l0.webp",
       "x": 340,
       "y": 340,
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/hatchery/PLACEHOLDER__hatchery-l1.webp",
-        "landmarks/hatchery/PLACEHOLDER__hatchery-l2.webp",
+        "landmarks/hatchery/hatchery-l1.webp",
+        "landmarks/hatchery/hatchery-l2.webp",
         "landmarks/hatchery/hatchery-l3-v3.webp"
       ],
       "zBand": "mid"
@@ -38,13 +40,14 @@
     {
       "stopIndex": 1,
       "anchorId": "habit",
+      "levelZero": "scenery/plots/habit-l0.webp",
       "x": 1060,
       "y": 340,
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/habit/PLACEHOLDER__habit-l1.webp",
-        "landmarks/habit/PLACEHOLDER__habit-l2.webp",
+        "landmarks/habit/habit-l1.webp",
+        "landmarks/habit/habit-l2.webp",
         "landmarks/habit/habit-l3-v3.webp"
       ],
       "zBand": "mid"
@@ -52,13 +55,14 @@
     {
       "stopIndex": 2,
       "anchorId": "mystery",
+      "levelZero": "scenery/plots/mystery-l0.webp",
       "x": 1060,
       "y": 1260,
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/mystery/PLACEHOLDER__mystery-l1.webp",
-        "landmarks/mystery/PLACEHOLDER__mystery-l2.webp",
+        "landmarks/mystery/mystery-l1.webp",
+        "landmarks/mystery/mystery-l2.webp",
         "landmarks/mystery/mystery-l3-v3.webp"
       ],
       "zBand": "front"
@@ -66,13 +70,14 @@
     {
       "stopIndex": 3,
       "anchorId": "wisdom",
+      "levelZero": "scenery/plots/wisdom-l0.webp",
       "x": 340,
       "y": 1260,
       "width": 472,
       "height": 472,
       "levels": [
-        "landmarks/wisdom/PLACEHOLDER__wisdom-l1.webp",
-        "landmarks/wisdom/PLACEHOLDER__wisdom-l2.webp",
+        "landmarks/wisdom/wisdom-l1.webp",
+        "landmarks/wisdom/wisdom-l2.webp",
         "landmarks/wisdom/wisdom-l3-v3.webp"
       ],
       "zBand": "front"
@@ -82,19 +87,19 @@
     "id": "boss-01",
     "x": 700,
     "y": 800,
-    "width": 520,
-    "height": 420,
+    "width": 320,
+    "height": 320,
     "zBand": "mid",
     "defaultState": "idle",
     "images": {
-      "idle": "bosses/black-crystal-dragon-idle.webp",
-      "defeated": "bosses/black-crystal-dragon-defeated.webp"
+      "idle": "bosses/noctyra-idle.webp",
+      "defeated": "bosses/noctyra-defeated.webp"
     }
   },
   "scenery": [
     {
       "id": "battle-center",
-      "src": "scenery/battle-arena-crystal.webp",
+      "src": "scenery/moon-gate.webp",
       "x": 700,
       "y": 950,
       "width": 260,

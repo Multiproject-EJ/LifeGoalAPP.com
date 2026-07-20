@@ -527,7 +527,9 @@ export function BoardStage(props: BoardStageProps) {
   ]);
   // Caretaker anchoring — resolve the home tile to screen space, then move the
   // full 3D character behind the back edge of the route. A small tangent nudge
-  // keeps the feet off both the tile and the central boss affordance.
+  // keeps the feet off both the tile and the central boss affordance. The
+  // premium character art already carries the scene's isometric perspective,
+  // so it must not receive an extra X-axis counter-rotation here.
   const caretakerAnchor = caretakerTileIndex !== null && caretakerTileIndex !== undefined
     ? anchors[caretakerTileIndex]
     : undefined;
@@ -748,7 +750,7 @@ export function BoardStage(props: BoardStageProps) {
               left: caretakerPlacement.x,
               top: caretakerPlacement.y,
               ['--caretaker-scale' as string]: caretakerPlacement.scale.toFixed(4),
-              ['--caretaker-counter-tilt' as string]: `${-boardTiltXDeg}deg`,
+              ['--caretaker-counter-tilt' as string]: '0deg',
             }}
           >
             <span className="island-run-board__caretaker-glow" aria-hidden="true" />

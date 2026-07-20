@@ -13335,9 +13335,9 @@
 
 /* ── Island caretaker board affordance ───────────────────────────────────── */
 /* Tracked from the caretaker's home tile, then nudged outside the tile ring by
-   BoardStage so the character reads as standing beside the board. The
-   counter-tilt keeps the sprite upright (standee style) instead of lying flat
-   on the board plane. */
+   BoardStage so the premium 3D character reads as standing beside the board.
+   Its source art already uses the scene perspective; the zero counter-tilt
+   avoids flattening the body into the board plane. */
 .island-run-board__caretaker {
   position: absolute;
   z-index: 12;
