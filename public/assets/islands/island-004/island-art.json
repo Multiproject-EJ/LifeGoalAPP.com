@@ -15,67 +15,75 @@
     "width": 1000,
     "height": 1000
   },
-  "boardPlateImageScale": 0.4,
-  "boardOuterCircleImageScale": 0.69,
+  "boardPlateImageScale": 1.03,
+  "boardOuterCircleImageScale": 1.36,
   "scene": {
-    "boardCircle": "board/board-circle-inner.webp",
-    "ambientBackground": "background/ambient-background.webp",
-    "boardOuterCircle": "board-outer/board-circle-outer.webp"
+    "boardCircle": "board/board-circle-inner-spark36.webp",
+    "ambientBackground": "background/ambient-background-v2.webp",
+    "boardOuterCircle": "board-outer/board-outer-foundation.webp"
   },
   "landmarks": [
     {
       "stopIndex": 0,
       "anchorId": "hatchery",
+      "levelZero": "scenery/plots/hatchery-l0.webp",
       "x": 340,
       "y": 340,
       "width": 472,
       "height": 472,
+      "imageScale": 1.3,
       "levels": [
-        "landmarks/hatchery/PLACEHOLDER__hatchery-l1.webp",
-        "landmarks/hatchery/PLACEHOLDER__hatchery-l2.webp",
-        "landmarks/hatchery/PLACEHOLDER__hatchery-l3.webp"
+        "landmarks/hatchery/hatchery-l1.webp",
+        "landmarks/hatchery/hatchery-l2.webp",
+        "landmarks/hatchery/hatchery-l3.webp"
       ],
       "zBand": "mid"
     },
     {
       "stopIndex": 1,
       "anchorId": "habit",
+      "levelZero": "scenery/plots/habit-l0.webp",
       "x": 1060,
       "y": 340,
       "width": 472,
       "height": 472,
+      "imageScale": 1.3,
       "levels": [
-        "landmarks/habit/PLACEHOLDER__habit-l1.webp",
+        "landmarks/habit/habit-l1.webp",
         "landmarks/habit/habit-l2.webp",
-        "landmarks/habit/PLACEHOLDER__habit-l3.webp"
+        "landmarks/habit/habit-l3.webp"
       ],
       "zBand": "mid"
     },
     {
       "stopIndex": 2,
       "anchorId": "mystery",
+      "levelZero": "scenery/plots/mystery-l0.webp",
       "x": 1060,
       "y": 1260,
       "width": 472,
       "height": 472,
+      "imageScale": 1.3,
       "levels": [
-        "landmarks/mystery/PLACEHOLDER__mystery-l1.webp",
-        "landmarks/mystery/PLACEHOLDER__mystery-l2.webp",
-        "landmarks/mystery/PLACEHOLDER__mystery-l3.webp"
+        "landmarks/mystery/mystery-l1.webp",
+        "landmarks/mystery/mystery-l2.webp",
+        "landmarks/mystery/mystery-l3.webp"
       ],
       "zBand": "front"
     },
     {
       "stopIndex": 3,
       "anchorId": "wisdom",
+      "levelZero": "scenery/plots/wisdom-l0.webp",
       "x": 340,
       "y": 1260,
       "width": 472,
       "height": 472,
+      "imageScale": 1.3,
       "levels": [
-        "landmarks/wisdom/PLACEHOLDER__wisdom-l1.webp",
-        "landmarks/wisdom/PLACEHOLDER__wisdom-l2.webp",
-        "landmarks/wisdom/PLACEHOLDER__wisdom-l3.webp"
+        "landmarks/wisdom/wisdom-l1.webp",
+        "landmarks/wisdom/wisdom-l2.webp",
+        "landmarks/wisdom/wisdom-l3.webp"
       ],
       "zBand": "front"
     }
@@ -84,19 +92,19 @@
     "id": "boss-04",
     "x": 700,
     "y": 800,
-    "width": 520,
-    "height": 420,
+    "width": 260,
+    "height": 260,
     "zBand": "mid",
     "defaultState": "idle",
     "images": {
-      "idle": "bosses/PLACEHOLDER__[boss-name]-idle.webp",
-      "defeated": "bosses/PLACEHOLDER__[boss-name]-defeated.webp"
+      "idle": "bosses/garran-idle.webp",
+      "defeated": "bosses/garran-defeated.webp"
     }
   },
   "scenery": [
     {
-      "id": "scenery-04-0",
-      "src": "scenery/PLACEHOLDER__[scenery-name].webp",
+      "id": "battle-center",
+      "src": "scenery/breakwater-gate.webp",
       "x": 700,
       "y": 950,
       "width": 260,
