@@ -6250,6 +6250,16 @@ export function IslandRunBoardPrototype({
       || rollResult.newTokenIndex === undefined
       || !rollResult.hopSequence
     ) {
+      void recordTelemetryEvent({
+        userId: session.user.id,
+        eventType: 'island_run_roll_blocked',
+        metadata: {
+          reason: rollResult.status,
+          island_number: effectiveIslandNumber,
+          dice_multiplier: effectiveMultiplier,
+          dice_cost: effectiveDiceCost,
+        },
+      });
       if (isIsland120StartupDiagnosticActive) {
         logIslandRunEntryDebug('island120_roll_interaction', {
           userId: session.user.id,
@@ -6267,6 +6277,19 @@ export function IslandRunBoardPrototype({
       }
       return false;
     }
+
+    void recordTelemetryEvent({
+      userId: session.user.id,
+      eventType: 'island_run_roll_completed',
+      metadata: {
+        island_number: effectiveIslandNumber,
+        from_tile: runtimeStateRef.current.tokenIndex,
+        to_tile: rollResult.newTokenIndex,
+        roll_total: rollResult.total,
+        dice_multiplier: effectiveMultiplier,
+        dice_cost: rollResult.diceCost ?? effectiveDiceCost,
+      },
+    });
     if (isIsland120StartupDiagnosticActive) {
       logIslandRunEntryDebug('island120_roll_interaction', {
         userId: session.user.id,

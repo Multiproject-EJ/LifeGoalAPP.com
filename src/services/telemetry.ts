@@ -74,7 +74,9 @@ export type TelemetryEventType =
   | 'gratitude_thank_you_draft_refine_requested'
   | 'gratitude_warning_coach_opened'
   | 'runtime_state_hydrated'
-  | 'runtime_state_hydration_failed';
+  | 'runtime_state_hydration_failed'
+  | 'island_run_roll_completed'
+  | 'island_run_roll_blocked';
 
 export type TelemetryEventMetadata = Json;
 
