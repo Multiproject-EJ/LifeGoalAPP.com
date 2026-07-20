@@ -1,0 +1,52 @@
+.creature-pack-opening-animation {
+  position: relative;
+  width: min(78vw, 360px);
+  max-width: 100%;
+  aspect-ratio: 4 / 5;
+  margin-inline: auto;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  pointer-events: none;
+}
+
+@media (max-height: 700px) {
+  .creature-pack-opening-animation {
+    width: min(62vw, 300px);
+  }
+}
+
+.creature-pack-opening-animation__video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: transparent;
+}
+
+.creature-pack-opening-animation__label {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0.25rem;
+  z-index: 1;
+  color: rgba(235, 246, 255, 0.88);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .creature-pack-opening-animation {
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+
+  .creature-pack-opening-animation__label {
+    position: static;
+  }
+}

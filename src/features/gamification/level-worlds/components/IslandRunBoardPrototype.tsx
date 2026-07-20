@@ -550,7 +550,6 @@ const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
 const BUILD_HOLD_INITIAL_DELAY_MS = 400;
-const FIRST_CREATURE_PACK_REVEAL_DELAY_MS = 650;
 // Duration of the traffic-light coin spin before the reward is revealed. Must match
 // the `.island-coin--flipping` keyframe duration in LevelWorlds.css.
 const TRAFFIC_LIGHT_COIN_FLIP_DURATION_MS = 2600;
@@ -2185,18 +2184,11 @@ export function IslandRunBoardPrototype({
   });
   const [isFirstCreaturePackClaiming, setIsFirstCreaturePackClaiming] = useState(false);
   const firstCreaturePackClaimInFlightRef = useRef(false);
-  const firstCreaturePackRevealTimerRef = useRef<number | null>(null);
   const showFirstCreaturePackModal = isIslandRunFirstCreaturePackModalActive(firstSessionTutorialState)
     || firstCreaturePackFlow.phase === 'opening'
     || firstCreaturePackFlow.phase === 'revealed'
     || firstCreaturePackFlow.phase === 'already_claimed'
     || firstCreaturePackFlow.phase === 'error';
-
-  useEffect(() => () => {
-    if (firstCreaturePackRevealTimerRef.current !== null && typeof window !== 'undefined') {
-      window.clearTimeout(firstCreaturePackRevealTimerRef.current);
-    }
-  }, []);
 
   useEffect(() => {
     const targetState = getIslandRunBuildPromptInitialTransitionTarget(firstSessionTutorialState);
@@ -9887,13 +9879,10 @@ export function IslandRunBoardPrototype({
     }
   }, [client, firstSessionTutorialState, session]);
 
-  const showFirstCreaturePackReveal = useCallback((cards: FirstSessionCreaturePackCardReveal[], diceGranted: number) => {
-    setFirstCreaturePackFlow({
-      phase: 'revealed',
-      cards,
-      diceGranted,
-      errorMessage: null,
-    });
+  const handleFirstCreaturePackOpeningAnimationComplete = useCallback(() => {
+    setFirstCreaturePackFlow((current) => current.phase === 'opening' && current.cards.length > 0
+      ? { ...current, phase: 'revealed' }
+      : current);
   }, []);
 
   const handleOpenFirstCreaturePack = useCallback(async () => {
@@ -9928,18 +9917,6 @@ export function IslandRunBoardPrototype({
           diceGranted: nextDiceGranted,
           errorMessage: null,
         });
-        if (firstCreaturePackRevealTimerRef.current !== null && typeof window !== 'undefined') {
-          window.clearTimeout(firstCreaturePackRevealTimerRef.current);
-        }
-        firstCreaturePackRevealTimerRef.current = typeof window !== 'undefined'
-          ? window.setTimeout(() => {
-            showFirstCreaturePackReveal(nextCards, nextDiceGranted);
-            firstCreaturePackRevealTimerRef.current = null;
-          }, FIRST_CREATURE_PACK_REVEAL_DELAY_MS)
-          : null;
-        if (typeof window === 'undefined') {
-          showFirstCreaturePackReveal(nextCards, nextDiceGranted);
-        }
         setLandingText(formatIslandRunFirstCreaturePackBonusCopy(nextDiceGranted));
         return;
       }
@@ -9973,7 +9950,7 @@ export function IslandRunBoardPrototype({
       firstCreaturePackClaimInFlightRef.current = false;
       setIsFirstCreaturePackClaiming(false);
     }
-  }, [client, firstSessionTutorialState, session, showFirstCreaturePackReveal]);
+  }, [client, firstSessionTutorialState, session]);
 
   const handleContinueFirstCreaturePack = useCallback(() => {
     const snapshot = getIslandRunStateSnapshot(session);
@@ -15135,6 +15112,7 @@ export function IslandRunBoardPrototype({
           isClaiming={isFirstCreaturePackClaiming}
           errorMessage={firstCreaturePackFlow.errorMessage}
           onOpenPack={handleOpenFirstCreaturePack}
+          onOpeningAnimationComplete={handleFirstCreaturePackOpeningAnimationComplete}
           onContinue={handleContinueFirstCreaturePack}
         />
       ) : null}

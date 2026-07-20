@@ -3,6 +3,10 @@ import type { FirstSessionCreaturePackCardReveal } from '../services/islandRunFi
 import { CREATURE_CATALOG } from '../services/creatureCatalog';
 import { resolveCreatureArtManifest } from '../services/creatureImageManifest';
 import { applyCreatureArtFallback } from './creatureArtFallback';
+import {
+  CreaturePackOpeningAnimation,
+  preloadCreaturePackOpeningAnimation,
+} from '../../../../components/CreaturePackOpeningAnimation';
 
 export type FirstSessionCreaturePackModalPhase = 'intro' | 'opening' | 'revealed' | 'already_claimed' | 'error';
 
@@ -13,6 +17,7 @@ export interface FirstSessionCreaturePackModalProps {
   isClaiming: boolean;
   errorMessage?: string | null;
   onOpenPack: () => void;
+  onOpeningAnimationComplete: () => void;
   onContinue: () => void;
 }
 
@@ -56,6 +61,10 @@ export function FirstSessionCreaturePackModal(props: FirstSessionCreaturePackMod
     ? 'Your companions and dice bonus are already safe in your island run.'
     : 'Open it to meet your first island companions.';
 
+  React.useEffect(() => {
+    if (props.phase === 'intro') preloadCreaturePackOpeningAnimation();
+  }, [props.phase]);
+
   return (
     <div className="island-run-first-creature-pack" role="dialog" aria-modal="true" aria-labelledby="first-creature-pack-title">
       <section className="island-run-first-creature-pack__card">
@@ -73,9 +82,19 @@ export function FirstSessionCreaturePackModal(props: FirstSessionCreaturePackMod
         ) : null}
 
         {props.phase === 'opening' ? (
-          <div className="island-run-first-creature-pack__opening" role="status" aria-live="polite">
-            <span className="island-run-first-creature-pack__sparkle">✨</span>
-            <p>Opening your pack…</p>
+          <div
+            className={`island-run-first-creature-pack__opening${props.cards.length > 0 ? ' island-run-first-creature-pack__opening--animation' : ''}`}
+            role="status"
+            aria-live="polite"
+          >
+            {props.cards.length > 0 ? (
+              <CreaturePackOpeningAnimation onComplete={props.onOpeningAnimationComplete} />
+            ) : (
+              <>
+                <span className="island-run-first-creature-pack__sparkle">✨</span>
+                <p>Preparing your pack…</p>
+              </>
+            )}
           </div>
         ) : null}
 
