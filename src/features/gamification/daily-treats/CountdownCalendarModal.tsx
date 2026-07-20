@@ -10,6 +10,10 @@ import {
 } from './scratchCard';
 import confetti from 'canvas-confetti';
 import { ScratchCardReveal } from './ScratchCardReveal';
+import {
+  GiftBoxOpeningAnimation,
+  preloadGiftBoxOpeningAnimation,
+} from '../../../components/GiftBoxOpeningAnimation';
 import { awardDailyTreatDice, awardDailyTreatGold } from '../../../services/dailyTreats';
 import { playIslandRunSound } from '../level-worlds/services/islandRunAudio';
 import { applyEssenceAward } from '../level-worlds/services/islandRunStateActions';
@@ -187,6 +191,7 @@ export const CountdownCalendarModal = ({
   const [habitCompleted, setHabitCompleted] = useState(false);
   const [questHabit, setQuestHabit] = useState<QuestHabit | null>(null);
   const [rewardToast, setRewardToast] = useState<RewardToast | null>(null);
+  const [pendingGiftReward, setPendingGiftReward] = useState<RewardToast | null>(null);
   const rewardToastIdRef = useRef(0);
   const [symbolBonusNotification, setSymbolBonusNotification] = useState<string | null>(null);
   const [trackerExpanded, setTrackerExpanded] = useState(false);
@@ -205,12 +210,14 @@ export const CountdownCalendarModal = ({
       playIslandRunSound('shop_open');
       modalOpenSfxPlayedRef.current = true;
     }
+    preloadGiftBoxOpeningAnimation();
   }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) return;
     setRevealResult(null);
     setRewardToast(null);
+    setPendingGiftReward(null);
     setSeasonData(null);
     setActiveAdvent(undefined);
     setIsCalendarLoading(false);
@@ -373,6 +380,16 @@ export const CountdownCalendarModal = ({
   // the award round-trip is in flight.
   const [openingDoorKey, setOpeningDoorKey] = useState<string | null>(null);
 
+  const handleGiftBoxOpeningComplete = useCallback(() => {
+    if (!pendingGiftReward) return;
+    setPendingGiftReward(null);
+    burstDoorConfetti({ x: pendingGiftReward.x, y: pendingGiftReward.y });
+    if (pendingGiftReward.tier > 1) {
+      playIslandRunSound('reward_bar_claim_burst');
+    }
+    setRewardToast(pendingGiftReward);
+  }, [pendingGiftReward]);
+
   const handleOpenDoor = useCallback(async (dayIndex: number, doorType: DoorType, hatch: CalendarHatch, origin: RevealOrigin | null = null) => {
     if (!userId || !seasonData) return;
     const doorKey = `${dayIndex}:${doorType}`;
@@ -380,11 +397,11 @@ export const CountdownCalendarModal = ({
     setOpeningDoorKey(doorKey);
     setDoorError(null);
 
-    // Celebrate instantly from the tapped door: confetti bursts outward from the
-    // door's screen position so opening feels tactile, even while the award
-    // request resolves. The reward is granted from the authoritative response
-    // below and surfaced as a brief floating toast — no full-screen reveal modal.
-    burstDoorConfetti(origin);
+    // Ordinary doors keep their instant tap feedback. Bonus doors reserve the
+    // confetti for the moment the gift animation finishes.
+    if (doorType !== 'bonus') {
+      burstDoorConfetti(origin);
+    }
 
     try {
       // Call backend to record the open
@@ -472,17 +489,22 @@ export const CountdownCalendarModal = ({
         seasonData.season.season_type === 'personal_quest',
         islandRunSession ? '' : 'Game Dice',
       );
-      if (rewardSummary.tier > 1) {
-        playIslandRunSound('reward_bar_claim_burst');
-      }
-      setRewardToast({
+      const nextRewardToast: RewardToast = {
         id: (rewardToastIdRef.current += 1),
         x: origin?.x ?? window.innerWidth / 2,
         y: origin?.y ?? window.innerHeight / 2,
         icon: rewardSummary.icon,
         label: rewardSummary.label,
         tier: rewardSummary.tier,
-      });
+      };
+      if (doorType === 'bonus') {
+        setPendingGiftReward(nextRewardToast);
+      } else {
+        if (rewardSummary.tier > 1) {
+          playIslandRunSound('reward_bar_claim_burst');
+        }
+        setRewardToast(nextRewardToast);
+      }
 
       // Refresh season data to update progress
       if (seasonData.season.season_type === 'personal_quest') {
@@ -654,6 +676,14 @@ export const CountdownCalendarModal = ({
       aria-label={`${themeName} calendar`}
     >
       <div className="daily-treats-calendar__backdrop" onClick={onClose} role="presentation" />
+      {pendingGiftReward && (
+        <div className="daily-treats-calendar__gift-opening" role="presentation">
+          <GiftBoxOpeningAnimation
+            key={pendingGiftReward.id}
+            onComplete={handleGiftBoxOpeningComplete}
+          />
+        </div>
+      )}
       {rewardToast && (
         <div
           key={rewardToast.id}

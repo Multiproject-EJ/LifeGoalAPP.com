@@ -27,6 +27,7 @@
     "test:service-resilience": "node scripts/run-service-resilience-tests.mjs",
     "test:celebration-fireworks": "node scripts/check-celebration-fireworks.mjs",
     "test:creature-pack-opening-animation": "node scripts/check-creature-pack-opening-animation.mjs",
+    "test:gift-box-opening-animation": "node scripts/check-gift-box-opening-animation.mjs",
     "test:energy-feature-gating": "node scripts/run-energy-feature-gating-tests.mjs",
     "test:island-run": "node scripts/run-island-run-service-tests.mjs",
     "test:habit-offer-sort": "node scripts/run-habit-offer-tests.mjs",

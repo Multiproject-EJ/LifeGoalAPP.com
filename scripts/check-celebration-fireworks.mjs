@@ -40,7 +40,7 @@ for (const snippet of expectedComponentSnippets) {
 
 const integrations = [
   ['src/components/CelebrationAnimation.tsx', 'variant="hero"'],
-  ['src/features/spin-wheel/NewDailySpinWheel.tsx', 'isSpecialPrize ? <CelebrationFireworks variant="rapid"'],
+  ['src/features/spin-wheel/NewDailySpinWheel.tsx', 'isTreasureChest ? <CelebrationFireworks variant="rapid"'],
   ['src/features/gamification/level-worlds/components/WelcomePackModal.tsx', '<CelebrationFireworks variant="hero"'],
   ['src/features/gamification/level-worlds/components/CreatureHatchRevealModal.tsx', "props.rarity === 'mythic' ? 'hero' : 'rapid'"],
   ['src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', "isCycleCapstone ? 'capstone' : 'hero'"],

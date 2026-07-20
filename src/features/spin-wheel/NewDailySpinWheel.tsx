@@ -17,6 +17,10 @@ import { buildWheelSegments, type WheelSegment } from './spinWheelUtils';
 import { useGamification } from '../../hooks/useGamification';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { CelebrationFireworks } from '../../components/CelebrationFireworks';
+import {
+  GiftBoxOpeningAnimation,
+  preloadGiftBoxOpeningAnimation,
+} from '../../components/GiftBoxOpeningAnimation';
 import './NewDailySpinWheel.css';
 
 interface NewDailySpinWheelProps {
@@ -201,12 +205,18 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   const [rotation, setRotation] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showReward, setShowReward] = useState(false);
+  const [showGiftOpening, setShowGiftOpening] = useState(false);
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false,
   );
   const [prizePool, setPrizePool] = useState<SpinPrize[]>(SPIN_PRIZES);
   const [essenceBalance, setEssenceBalance] = useState(0);
   const [selectedMultiplier, setSelectedMultiplier] = useState(1 as 1 | 2 | 3);
+
+  useEffect(() => {
+    preloadGiftBoxOpeningAnimation();
+  }, []);
+
   const wheelSegments = useMemo(() => buildWheelSegments(prizePool), [prizePool]);
   const winningSegmentIndex = useMemo(() => {
     if (!wonPrize || spinning) return -1;
@@ -368,7 +378,11 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
         triggerCompletionHaptic(prize.type === 'treasure_chest' || prize.type === 'mystery' || selectedMultiplier > 1 ? 'strong' : 'medium', { channel: 'gamification', minIntervalMs: 300 });
 
         window.setTimeout(() => {
-          setShowReward(true);
+          if (prize.type === 'mystery') {
+            setShowGiftOpening(true);
+          } else {
+            setShowReward(true);
+          }
           if (prize.type !== 'treasure_chest' && prize.type !== 'mystery') {
             confetti({
               particleCount: 140,
@@ -388,6 +402,11 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       setSpinning(false);
     }
   };
+
+  const handleGiftBoxOpeningComplete = useCallback(() => {
+    setShowGiftOpening(false);
+    setShowReward(true);
+  }, []);
 
   /* ── Render ── */
 
@@ -417,6 +436,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
   const isSpecialPrize =
     wonPrize?.type === 'treasure_chest' || wonPrize?.type === 'mystery';
+  const isTreasureChest = wonPrize?.type === 'treasure_chest';
 
   const rewardSubtitle = wonPrize
     ? wonPrize.type === 'treasure_chest'
@@ -614,6 +634,12 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
           )}
         </div>
 
+        {showGiftOpening && wonPrize?.type === 'mystery' && (
+          <div className="new-daily-spin-modal__gift-opening" role="presentation">
+            <GiftBoxOpeningAnimation onComplete={handleGiftBoxOpeningComplete} />
+          </div>
+        )}
+
         {/* Reward overlay */}
         {showReward && wonPrize && (
           <div
@@ -622,7 +648,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
             aria-modal="true"
             onClick={() => setShowReward(false)}
           >
-            {isSpecialPrize ? <CelebrationFireworks variant="rapid" /> : null}
+            {isTreasureChest ? <CelebrationFireworks variant="rapid" /> : null}
             <div
               className={`new-daily-spin-modal__reward-card${
                 isSpecialPrize ? ' new-daily-spin-modal__reward-card--chest' : ''
