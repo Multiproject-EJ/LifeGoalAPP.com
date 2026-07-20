@@ -50,29 +50,45 @@ const WHEEL_SIZE = 280;
 const CX = WHEEL_SIZE / 2;
 const CY = WHEEL_SIZE / 2;
 const OUTER_R = WHEEL_SIZE / 2 - 4;
-const HUB_R = OUTER_R * 0.22;
-const PEG_COUNT = 20;
-const PEG_R = 4;
+const DAILY_MOMENTUM_ASSET_ROOT = '/assets/spin-wheel/daily-momentum';
+
+function getPrizeIconAsset(type: SpinPrize['type']): string {
+  const prizeAssets: Record<SpinPrize['type'], string> = {
+    gold: 'prize-essence-orb-transparent.png',
+    essence: 'prize-essence-orb-transparent.png',
+    shards: 'prize-shards-orb-transparent.png',
+    dice: 'prize-dice-pair-transparent.png',
+    game_tokens: 'prize-game-tickets-transparent.png',
+    treasure_chest: 'prize-treasure-case-transparent.png',
+    mystery: 'prize-lucky-gift-transparent.png',
+  };
+  return `${DAILY_MOMENTUM_ASSET_ROOT}/prizes/${prizeAssets[type]}`;
+}
+
+function getWheelLabelLines(segment: WheelSegment): string[] {
+  const compactLabels: Record<SpinPrize['type'], string> = {
+    gold: `${segment.value} Money`,
+    essence: `${segment.value} Essence`,
+    shards: `${segment.value} Shards`,
+    dice: `${segment.value} Dice`,
+    game_tokens: `${segment.value} Tickets`,
+    treasure_chest: 'Treasure Chest',
+    mystery: 'Mystery Box',
+  };
+  return compactLabels[segment.type].split(' ');
+}
 
 function WheelSVG({
   segments,
   rotation,
   spinning,
+  winningSegmentIndex,
 }: {
   segments: WheelSegment[];
   rotation: number;
   spinning: boolean;
+  winningSegmentIndex: number;
 }) {
-  const pegs = useMemo(() => {
-    const arr: { x: number; y: number }[] = [];
-    for (let i = 0; i < PEG_COUNT; i++) {
-      const angle = (360 / PEG_COUNT) * i;
-      const p = polarToCart(CX, CY, OUTER_R - PEG_R - 2, angle);
-      arr.push(p);
-    }
-    return arr;
-  }, []);
-
   return (
     <svg
       className="spin-wheel-svg"
@@ -87,43 +103,35 @@ function WheelSVG({
           : undefined,
       }}
     >
-      {/* Outer metallic rim */}
-      <circle
-        cx={CX}
-        cy={CY}
-        r={OUTER_R}
-        fill="none"
-        stroke="url(#rimGrad)"
-        strokeWidth="8"
-      />
-
       {/* Segments */}
       {segments.map((seg, i) => (
         <path
           key={i}
-          d={segmentPath(CX, CY, OUTER_R - 5, seg.startAngle, seg.endAngle)}
+          className={winningSegmentIndex === i ? 'spin-wheel-segment spin-wheel-segment--winner' : 'spin-wheel-segment'}
+          d={segmentPath(CX, CY, OUTER_R - 10, seg.startAngle, seg.endAngle)}
           fill={seg.color}
-          stroke="rgba(255,255,255,0.7)"
-          strokeWidth="1.5"
+          stroke="rgba(255,255,255,0.82)"
+          strokeWidth="1.25"
         />
       ))}
 
-      {/* Segment labels - icon */}
+      {/* Segment prize artwork */}
       {segments.map((seg, i) => {
-        const labelR = OUTER_R * 0.62;
-        const p = polarToCart(CX, CY, labelR, seg.centerAngle);
+        const iconR = OUTER_R * 0.67;
+        const p = polarToCart(CX, CY, iconR, seg.centerAngle);
+        const iconSize = seg.wheelSize === 'small' ? 25 : seg.wheelSize === 'large' ? 34 : 30;
         return (
-          <text
-            key={`ico-${i}`}
-            x={p.x}
-            y={p.y}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize="18"
+          <image
+            key={`asset-${i}`}
+            className={winningSegmentIndex === i ? 'spin-wheel-prize-art spin-wheel-prize-art--winner' : 'spin-wheel-prize-art'}
+            href={getPrizeIconAsset(seg.type)}
+            x={p.x - iconSize / 2}
+            y={p.y - iconSize / 2}
+            width={iconSize}
+            height={iconSize}
+            preserveAspectRatio="xMidYMid meet"
             style={{ pointerEvents: 'none' }}
-          >
-            {seg.icon}
-          </text>
+          />
         );
       })}
 
@@ -131,65 +139,35 @@ function WheelSVG({
       {segments.map((seg, i) => {
         const arcDeg = seg.endAngle - seg.startAngle;
         if (arcDeg < 28) return null;
-        const textR = OUTER_R * 0.42;
+        const textR = OUTER_R * 0.43;
         const p = polarToCart(CX, CY, textR, seg.centerAngle);
+        const lines = getWheelLabelLines(seg);
         return (
           <text
             key={`txt-${i}`}
+            className={winningSegmentIndex === i ? 'spin-wheel-label spin-wheel-label--winner' : 'spin-wheel-label'}
             x={p.x}
             y={p.y}
             textAnchor="middle"
             dominantBaseline="central"
-            fontSize="8"
-            fontWeight="700"
+            fontSize="7.4"
+            fontWeight="900"
             fill="#fff"
             style={{ pointerEvents: 'none' }}
           >
-            {seg.label}
+            {lines.map((line, lineIndex) => (
+              <tspan
+                key={`${line}-${lineIndex}`}
+                x={p.x}
+                dy={lineIndex === 0 ? `${-(lines.length - 1) * 0.42}em` : '0.9em'}
+              >
+                {line}
+              </tspan>
+            ))}
           </text>
         );
       })}
 
-      {/* Pegs around rim */}
-      {pegs.map((p, i) => (
-        <circle
-          key={`peg-${i}`}
-          cx={p.x}
-          cy={p.y}
-          r={PEG_R}
-          fill="url(#pegGrad)"
-          stroke="#b8860b"
-          strokeWidth="0.5"
-        />
-      ))}
-
-      {/* Center hub */}
-      <circle
-        cx={CX}
-        cy={CY}
-        r={HUB_R}
-        fill="url(#hubGrad)"
-        stroke="rgba(255,255,255,0.9)"
-        strokeWidth="3"
-      />
-
-      {/* Gradient defs */}
-      <defs>
-        <radialGradient id="hubGrad">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="55%" stopColor="#e2e8f0" />
-          <stop offset="100%" stopColor="#94a3b8" />
-        </radialGradient>
-        <linearGradient id="rimGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ffd700" />
-          <stop offset="50%" stopColor="#fff4b8" />
-          <stop offset="100%" stopColor="#c9960c" />
-        </linearGradient>
-        <radialGradient id="pegGrad">
-          <stop offset="0%" stopColor="#fff4b8" />
-          <stop offset="100%" stopColor="#c9960c" />
-        </radialGradient>
-      </defs>
     </svg>
   );
 }
@@ -200,26 +178,12 @@ function WheelSVG({
 
 function WheelPointer() {
   return (
-    <div className="spin-wheel-pointer" aria-hidden="true">
-      <svg width="32" height="40" viewBox="0 0 32 40">
-        <defs>
-          <linearGradient id="ptrGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ffd700" />
-            <stop offset="100%" stopColor="#c9960c" />
-          </linearGradient>
-          <filter id="ptrShadow">
-            <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.45" />
-          </filter>
-        </defs>
-        <polygon
-          points="16,36 4,8 16,14 28,8"
-          fill="url(#ptrGrad)"
-          stroke="#8b6508"
-          strokeWidth="1.2"
-          filter="url(#ptrShadow)"
-        />
-      </svg>
-    </div>
+    <img
+      className="spin-wheel-pointer"
+      src={`${DAILY_MOMENTUM_ASSET_ROOT}/pointer/daily-momentum-pointer-transparent.png`}
+      alt=""
+      aria-hidden="true"
+    />
   );
 }
 
@@ -230,6 +194,7 @@ function WheelPointer() {
 export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) {
   const { refreshProfile } = useGamification(session);
   const [loading, setLoading] = useState(true);
+  const [charging, setCharging] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [canSpin, setCanSpin] = useState(false);
   const [wonPrize, setWonPrize] = useState<SpinPrize | null>(null);
@@ -243,6 +208,12 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   const [essenceBalance, setEssenceBalance] = useState(0);
   const [selectedMultiplier, setSelectedMultiplier] = useState(1 as 1 | 2 | 3);
   const wheelSegments = useMemo(() => buildWheelSegments(prizePool), [prizePool]);
+  const winningSegmentIndex = useMemo(() => {
+    if (!wonPrize || spinning) return -1;
+    return wheelSegments.findIndex(
+      (segment) => segment.type === wonPrize.type && segment.value === wonPrize.value && segment.label === wonPrize.label,
+    );
+  }, [spinning, wheelSegments, wonPrize]);
 
   /* Idle wobble when not spinning */
   const [idleAngle, setIdleAngle] = useState(0);
@@ -358,17 +329,20 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
   const handleSpin = async () => {
     const multiplierOption = SPIN_REWARD_MULTIPLIER_OPTIONS.find((entry) => entry.multiplier === selectedMultiplier) ?? SPIN_REWARD_MULTIPLIER_OPTIONS[0];
-    if (!canSpin || spinning) return;
+    if (!canSpin || spinning || charging) return;
     if (essenceBalance < multiplierOption.essenceCost) {
       setError('Not enough money for this reward boost. Choose Free or earn more money.');
       triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 300 });
       return;
     }
-    setSpinning(true);
+    setCharging(true);
     setError(null);
 
     try {
       triggerCompletionHaptic(selectedMultiplier > 1 ? 'medium' : 'light', { channel: 'gamification', minIntervalMs: 300 });
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 460));
+      setCharging(false);
+      setSpinning(true);
       const { data, error: spinError } = await executeSpin(session.user.id, {
         rewardMultiplier: multiplierOption.multiplier,
         essenceCost: multiplierOption.essenceCost,
@@ -390,17 +364,19 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
         setCanSpin(spinsRemaining > 0);
         setEssenceBalance((current) => Math.max(0, current - multiplierOption.essenceCost));
         setSpinning(false);
-        setShowReward(true);
 
         triggerCompletionHaptic(prize.type === 'treasure_chest' || prize.type === 'mystery' || selectedMultiplier > 1 ? 'strong' : 'medium', { channel: 'gamification', minIntervalMs: 300 });
 
-        if (prize.type !== 'treasure_chest' && prize.type !== 'mystery') {
-          confetti({
-            particleCount: 140,
-            spread: 90,
-            origin: { y: 0.6 },
-          });
-        }
+        window.setTimeout(() => {
+          setShowReward(true);
+          if (prize.type !== 'treasure_chest' && prize.type !== 'mystery') {
+            confetti({
+              particleCount: 140,
+              spread: 90,
+              origin: { y: 0.6 },
+            });
+          }
+        }, 720);
 
         refreshProfile();
         window.dispatchEvent(new CustomEvent('dailySpinComplete'));
@@ -408,6 +384,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     } catch (err) {
       console.error('Spin failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to spin. Please try again.');
+      setCharging(false);
       setSpinning(false);
     }
   };
@@ -476,7 +453,11 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
         </button>
 
         <header className="new-daily-spin-modal__header">
-          <h2>🎡 Daily Spin Wheel</h2>
+          <img
+            className="new-daily-spin-modal__title-art"
+            src={`${DAILY_MOMENTUM_ASSET_ROOT}/title/daily-momentum-title-v2-transparent.png`}
+            alt="Daily Momentum"
+          />
           <p className="new-daily-spin-modal__subtitle">{headerSubtitle}</p>
         </header>
 
@@ -524,7 +505,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
                   type="button"
                   className={`new-daily-spin-modal__boost-option${selectedMultiplier === option.multiplier ? ' new-daily-spin-modal__boost-option--active' : ''}`}
                   onClick={() => { setSelectedMultiplier(option.multiplier); triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 250 }); }}
-                  disabled={!canSpin || spinning || !affordable}
+                  disabled={!canSpin || charging || spinning || !affordable}
                   aria-pressed={selectedMultiplier === option.multiplier}
                 >
                   <strong>×{option.multiplier}</strong>
@@ -536,18 +517,40 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
         </div>
 
         {/* Wheel */}
-        <div className={`new-daily-spin-wheel${spinning ? ' new-daily-spin-wheel--spinning' : ''}`}>
+        <div className={`new-daily-spin-wheel${charging ? ' new-daily-spin-wheel--charging' : ''}${spinning ? ' new-daily-spin-wheel--spinning' : ''}${winningSegmentIndex >= 0 ? ' new-daily-spin-wheel--winner' : ''}`}>
           <WheelPointer />
           <div
             className={`new-daily-spin-wheel__disc-wrapper${
-              !canSpin && !spinning ? ' new-daily-spin-wheel__disc-wrapper--dimmed' : ''
+              !canSpin && !spinning && !wonPrize ? ' new-daily-spin-wheel__disc-wrapper--dimmed' : ''
             }`}
           >
             <WheelSVG
               segments={wheelSegments}
               rotation={spinning ? rotation : rotation + idleAngle}
               spinning={spinning}
+              winningSegmentIndex={winningSegmentIndex}
             />
+          </div>
+          <div className="new-daily-spin-wheel__shine" aria-hidden="true" />
+          <img
+            className="new-daily-spin-wheel__rim"
+            src={`${DAILY_MOMENTUM_ASSET_ROOT}/rim/daily-momentum-wheel-rim-transparent.png`}
+            alt=""
+            aria-hidden="true"
+          />
+          <div className="new-daily-spin-wheel__rim-sparkle" aria-hidden="true">
+            <span />
+          </div>
+          <div className="new-daily-spin-wheel__hub" aria-hidden="true">
+            <span className="new-daily-spin-wheel__energy-ring" />
+            <span className="new-daily-spin-wheel__energy-ring new-daily-spin-wheel__energy-ring--delayed" />
+            <span className="new-daily-spin-wheel__robot">
+              <span className="new-daily-spin-wheel__robot-antenna" />
+              <span className="new-daily-spin-wheel__robot-face">
+                <span className="new-daily-spin-wheel__robot-eye" />
+                <span className="new-daily-spin-wheel__robot-eye" />
+              </span>
+            </span>
           </div>
         </div>
 
@@ -584,9 +587,10 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
               type="button"
               className="new-daily-spin-modal__spin-btn"
               onClick={handleSpin}
-              disabled={spinning || !canAffordSelectedMultiplier}
+              disabled={charging || spinning || !canAffordSelectedMultiplier}
             >
-              {spinning ? '🎡 SPINNING...' : selectedMultiplier > 1 ? `🎡 SPIN ×${selectedMultiplier}!` : '🎡 SPIN!'}
+              <span className="new-daily-spin-modal__spin-btn-icon" aria-hidden="true">✦</span>
+              {charging ? 'POWERING UP...' : spinning ? 'SPINNING...' : selectedMultiplier > 1 ? `SPIN ×${selectedMultiplier}!` : 'SPIN!'}
             </button>
           ) : wonPrize ? (
             <div className="new-daily-spin-modal__result new-daily-spin-modal__result--compact">

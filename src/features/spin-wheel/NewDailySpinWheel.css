@@ -568,3 +568,541 @@
     animation: none;
   }
 }
+
+/* =====================================================
+   DAILY MOMENTUM ART DIRECTION
+   Keeps the live SVG wheel/logic while matching the visual mockup.
+   ===================================================== */
+
+.new-daily-spin-modal {
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 0.5rem)
+    0.55rem
+    calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+  background: rgba(4, 7, 22, 0.76);
+  backdrop-filter: blur(13px) saturate(0.78);
+}
+
+.new-daily-spin-modal__content {
+  width: min(100%, 460px);
+  max-width: 460px;
+  max-height: min(calc(100dvh - 1rem), 840px);
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 1rem)
+    clamp(0.75rem, 3vw, 1.2rem)
+    1.15rem;
+  overflow-x: hidden;
+  border: 2px solid rgba(75, 74, 190, 0.42);
+  border-radius: clamp(24px, 7vw, 34px);
+  color: #f8f7ff;
+  background:
+    radial-gradient(circle at 15% 19%, rgba(49, 197, 255, 0.24), transparent 21%),
+    radial-gradient(circle at 84% 52%, rgba(148, 62, 255, 0.22), transparent 28%),
+    radial-gradient(circle at 48% 88%, rgba(29, 78, 216, 0.28), transparent 31%),
+    linear-gradient(155deg, #111044 0%, #11124f 38%, #15105a 63%, #0c194f 100%);
+  box-shadow:
+    0 34px 90px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(84, 89, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -22px 50px rgba(4, 7, 34, 0.32);
+}
+
+.new-daily-spin-modal__content::before {
+  z-index: 0;
+  opacity: 0.8;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(circle at 11% 22%, rgba(255,255,255,0.9) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 86% 17%, rgba(255,191,73,0.9) 0 1px, transparent 2px),
+    radial-gradient(circle at 76% 72%, rgba(104,211,255,0.85) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 18% 81%, rgba(255,116,212,0.8) 0 1.2px, transparent 2px),
+    linear-gradient(120deg, transparent 0 38%, rgba(255,255,255,0.055) 48%, transparent 58% 100%);
+}
+
+.new-daily-spin-modal__content > * {
+  position: relative;
+  z-index: 1;
+}
+
+.new-daily-spin-modal__close {
+  top: calc(env(safe-area-inset-top, 0px) + 1rem);
+  right: 0.9rem;
+  z-index: 5;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(145deg, rgba(91,70,176,0.98), rgba(54,40,128,0.98));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 20px rgba(7,5,33,0.35);
+  font-size: 1.55rem;
+}
+
+.new-daily-spin-modal__header {
+  margin: 0 auto 0.6rem;
+  padding: 0 2.8rem;
+}
+
+.new-daily-spin-modal__title-art {
+  display: block;
+  width: min(100%, 320px);
+  height: auto;
+  margin: 0 auto 0.25rem;
+  filter: drop-shadow(0 10px 16px rgba(4, 8, 38, 0.56));
+}
+
+.new-daily-spin-modal__subtitle {
+  margin: 0;
+  color: rgba(238, 238, 255, 0.9);
+  font-size: clamp(0.82rem, 3vw, 1rem);
+  line-height: 1.35;
+  text-shadow: 0 2px 8px rgba(5, 8, 31, 0.6);
+}
+
+.new-daily-spin-modal__boost-panel {
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 auto 0.55rem;
+  padding: 0.48rem 0.58rem;
+  border-color: rgba(255, 205, 71, 0.3);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(25, 20, 78, 0.8), rgba(83, 45, 155, 0.52));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 20px rgba(3,5,28,0.25);
+}
+
+.new-daily-spin-modal__boost-panel > div:first-child {
+  min-width: max-content;
+}
+
+.new-daily-spin-modal__boost-copy {
+  display: none;
+}
+
+.new-daily-spin-modal__boost-kicker {
+  margin: 0;
+  font-size: 0.63rem;
+}
+
+.new-daily-spin-modal__essence-balance {
+  grid-column: 3;
+  grid-row: 1;
+  padding: 0.25rem 0.45rem;
+}
+
+.new-daily-spin-modal__boost-options {
+  grid-column: 2;
+  grid-row: 1;
+  gap: 0.32rem;
+}
+
+.new-daily-spin-modal__boost-option {
+  min-height: 39px;
+  padding: 0.3rem 0.2rem;
+  border-radius: 10px;
+}
+
+.new-daily-spin-modal__boost-option strong {
+  font-size: 0.83rem;
+}
+
+.new-daily-spin-modal__boost-option span {
+  font-size: 0.56rem;
+}
+
+.new-daily-spin-wheel {
+  width: min(82vw, 39dvh, 340px);
+  max-width: 340px;
+  margin: 0.25rem auto 0.8rem;
+  isolation: isolate;
+  filter: drop-shadow(0 18px 24px rgba(3, 6, 35, 0.48));
+}
+
+.new-daily-spin-wheel::before {
+  inset: -7%;
+  background: radial-gradient(circle, rgba(62, 218, 255, 0.2), rgba(80, 66, 255, 0.1) 58%, transparent 73%);
+}
+
+.new-daily-spin-wheel__disc-wrapper {
+  position: absolute;
+  inset: 4.2%;
+  z-index: 1;
+  width: auto;
+  height: auto;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #1f2371;
+  box-shadow: inset 0 0 22px rgba(5, 9, 48, 0.62);
+}
+
+.spin-wheel-svg {
+  filter: drop-shadow(0 8px 14px rgba(10, 7, 50, 0.42));
+}
+
+.new-daily-spin-wheel__rim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.spin-wheel-pointer {
+  position: absolute;
+  top: -3%;
+  left: 50%;
+  z-index: 6;
+  display: block;
+  width: 17%;
+  height: auto;
+  transform: translateX(-50%);
+  transform-origin: 50% 14%;
+  pointer-events: none;
+  filter: drop-shadow(0 7px 8px rgba(68, 36, 0, 0.42));
+}
+
+.new-daily-spin-wheel__hub {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 23%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border: 4px solid rgba(146, 234, 255, 0.95);
+  border-radius: 50%;
+  color: #e9fcff;
+  background:
+    radial-gradient(circle at 42% 35%, rgba(176, 249, 255, 0.92), rgba(44, 119, 255, 0.7) 19%, rgba(27, 24, 112, 0.97) 55%, #090a3b 100%);
+  box-shadow:
+    0 0 0 4px rgba(42, 77, 218, 0.85),
+    0 0 22px 8px rgba(32, 212, 255, 0.66),
+    inset 0 2px 6px rgba(255,255,255,0.56);
+  font-size: clamp(1.15rem, 7vw, 2.15rem);
+  text-shadow: 0 0 12px rgba(255,255,255,0.92);
+}
+
+.new-daily-spin-modal__actions {
+  margin: 0;
+}
+
+.new-daily-spin-modal__spin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 60px;
+  padding: 0.7rem 1.25rem;
+  border: 4px solid #ffbd22;
+  border-radius: 23px;
+  color: #17114c;
+  background: linear-gradient(180deg, #fff26f 0%, #ffc52f 42%, #ff970f 100%);
+  box-shadow:
+    0 0 0 3px rgba(255, 246, 154, 0.82),
+    0 0 22px rgba(255, 166, 23, 0.7),
+    inset 0 3px 0 rgba(255,255,255,0.72),
+    inset 0 -7px 12px rgba(215, 92, 0, 0.24);
+  font-size: clamp(1.55rem, 7vw, 2.2rem);
+  font-weight: 950;
+  letter-spacing: 0.035em;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+
+.new-daily-spin-modal__spin-btn-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  aspect-ratio: 1;
+  border: 2px solid rgba(255,255,255,0.88);
+  border-radius: 50%;
+  color: #bff8ff;
+  background: radial-gradient(circle, #448dff, #17155a 68%);
+  box-shadow: 0 0 12px rgba(47, 209, 255, 0.72);
+  font-size: 1.05rem;
+}
+
+.new-daily-spin-wheel--spinning .new-daily-spin-wheel__hub {
+  animation: none;
+}
+
+@keyframes dsw-hubPower {
+  from { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+  50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.04); }
+  to { transform: translate(-50%, -50%) rotate(360deg) scale(1); }
+}
+
+/* ── Daily Momentum motion system ── */
+.spin-wheel-segment,
+.spin-wheel-prize-art,
+.spin-wheel-label {
+  transition: opacity 0.35s ease, filter 0.35s ease;
+}
+
+.new-daily-spin-wheel--winner .spin-wheel-segment:not(.spin-wheel-segment--winner),
+.new-daily-spin-wheel--winner .spin-wheel-prize-art:not(.spin-wheel-prize-art--winner),
+.new-daily-spin-wheel--winner .spin-wheel-label:not(.spin-wheel-label--winner) {
+  opacity: 0.42;
+  filter: saturate(0.62) brightness(0.72);
+}
+
+.spin-wheel-segment--winner {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dsw-winningWedge 0.72s ease-in-out 2;
+  filter: brightness(1.3) saturate(1.25) drop-shadow(0 0 7px #fff4a8) drop-shadow(0 0 12px #ffb52f);
+}
+
+.spin-wheel-prize-art--winner {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dsw-prizePop 0.82s cubic-bezier(0.2, 1.55, 0.35, 1) both;
+  filter: drop-shadow(0 0 7px rgba(255, 245, 166, 0.95));
+}
+
+.spin-wheel-label--winner {
+  filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 8px #ffc832);
+}
+
+.new-daily-spin-wheel__shine {
+  position: absolute;
+  inset: 4.3%;
+  z-index: 3;
+  overflow: hidden;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.48;
+}
+
+.new-daily-spin-wheel__shine::before {
+  content: "";
+  position: absolute;
+  top: -25%;
+  bottom: -25%;
+  left: -65%;
+  width: 34%;
+  transform: skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.32), rgba(143,232,255,0.58), transparent);
+  filter: blur(2px);
+  animation: dsw-shineSweep 5.8s ease-in-out infinite;
+}
+
+.new-daily-spin-wheel--spinning .new-daily-spin-wheel__shine::before {
+  animation-duration: 0.95s;
+  opacity: 0.9;
+}
+
+.new-daily-spin-wheel__rim-sparkle {
+  position: absolute;
+  inset: 1.8%;
+  z-index: 5;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: dsw-rimOrbit 7s linear infinite;
+}
+
+.new-daily-spin-wheel__rim-sparkle span {
+  position: absolute;
+  top: -1%;
+  left: 50%;
+  width: 8%;
+  aspect-ratio: 1;
+  transform: translateX(-50%) rotate(45deg) scale(0.65);
+  background: radial-gradient(circle, #fff 0 12%, #fffbd2 13% 24%, rgba(73,220,255,0.9) 25% 35%, transparent 67%);
+  filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 9px #46dfff);
+  animation: dsw-sparklePulse 0.8s ease-in-out infinite alternate;
+}
+
+.new-daily-spin-wheel--spinning .new-daily-spin-wheel__rim-sparkle {
+  animation-duration: 0.7s;
+}
+
+.new-daily-spin-wheel__energy-ring {
+  position: absolute;
+  inset: -14%;
+  border: 2px solid rgba(119, 232, 255, 0.72);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.new-daily-spin-wheel__energy-ring--delayed {
+  animation-delay: 0.22s !important;
+}
+
+.new-daily-spin-wheel__robot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 68%;
+  aspect-ratio: 1;
+  animation: dsw-robotHover 2.2s ease-in-out infinite;
+}
+
+.new-daily-spin-wheel__robot-face {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16%;
+  width: 88%;
+  height: 62%;
+  border: 2px solid rgba(231, 253, 255, 0.95);
+  border-radius: 42% 42% 48% 48%;
+  background: linear-gradient(180deg, #effeff 0%, #b8e7f3 22%, #171b55 25%, #080b2f 100%);
+  box-shadow: 0 0 8px rgba(91,224,255,0.85), inset 0 -3px 5px rgba(0,0,0,0.52);
+}
+
+.new-daily-spin-wheel__robot-antenna {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 7%;
+  height: 26%;
+  transform: translate(-50%, -54%);
+  border-radius: 999px;
+  background: #dffcff;
+  box-shadow: 0 -3px 4px #63e8ff;
+}
+
+.new-daily-spin-wheel__robot-eye {
+  width: 18%;
+  aspect-ratio: 1.35;
+  border-radius: 50%;
+  background: #b9fbff;
+  box-shadow: 0 0 5px #65e9ff, 0 0 8px #2a8cff;
+  animation: dsw-robotBlink 4.2s ease-in-out infinite;
+}
+
+.new-daily-spin-wheel--charging .new-daily-spin-wheel__energy-ring,
+.new-daily-spin-wheel--spinning .new-daily-spin-wheel__energy-ring {
+  animation: dsw-energyRing 0.85s ease-out infinite;
+}
+
+.new-daily-spin-wheel--charging .new-daily-spin-wheel__robot {
+  animation: dsw-robotCharge 0.22s ease-in-out infinite alternate;
+}
+
+.new-daily-spin-wheel--spinning .new-daily-spin-wheel__robot {
+  animation: dsw-robotSpin 0.48s linear infinite;
+}
+
+.new-daily-spin-wheel--winner .new-daily-spin-wheel__robot {
+  animation: dsw-robotCelebrate 0.7s cubic-bezier(0.2, 1.5, 0.35, 1) 2;
+}
+
+.new-daily-spin-wheel--winner .spin-wheel-pointer {
+  animation: dsw-pointerWin 0.65s cubic-bezier(0.2, 1.6, 0.3, 1);
+}
+
+@keyframes dsw-winningWedge {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.035); }
+}
+
+@keyframes dsw-prizePop {
+  0% { opacity: 0.45; transform: scale(0.45); }
+  62% { opacity: 1; transform: scale(1.42); }
+  100% { opacity: 1; transform: scale(1.18); }
+}
+
+@keyframes dsw-shineSweep {
+  0%, 12% { left: -65%; opacity: 0; }
+  28% { opacity: 1; }
+  48%, 100% { left: 130%; opacity: 0; }
+}
+
+@keyframes dsw-rimOrbit { to { transform: rotate(360deg); } }
+
+@keyframes dsw-sparklePulse {
+  from { opacity: 0.55; transform: translateX(-50%) rotate(45deg) scale(0.55); }
+  to { opacity: 1; transform: translateX(-50%) rotate(45deg) scale(1.08); }
+}
+
+@keyframes dsw-energyRing {
+  0% { opacity: 0.85; transform: scale(0.72); }
+  100% { opacity: 0; transform: scale(1.42); }
+}
+
+@keyframes dsw-robotHover {
+  0%, 100% { transform: translateY(-2%); }
+  50% { transform: translateY(4%); }
+}
+
+@keyframes dsw-robotBlink {
+  0%, 45%, 50%, 100% { transform: scaleY(1); }
+  47% { transform: scaleY(0.14); }
+}
+
+@keyframes dsw-robotCharge {
+  from { transform: rotate(-7deg) scale(0.94); filter: brightness(1); }
+  to { transform: rotate(7deg) scale(1.05); filter: brightness(1.35); }
+}
+
+@keyframes dsw-robotSpin { to { transform: rotate(360deg); } }
+
+@keyframes dsw-robotCelebrate {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  40% { transform: translateY(-20%) rotate(-10deg) scale(1.14); }
+  70% { transform: translateY(2%) rotate(10deg) scale(1.06); }
+}
+
+@keyframes dsw-pointerWin {
+  0% { transform: translateX(-50%) rotate(0deg) scale(1); }
+  38% { transform: translateX(-50%) rotate(10deg) scale(1.14); filter: brightness(1.6) drop-shadow(0 0 12px #fff3a4); }
+  100% { transform: translateX(-50%) rotate(0deg) scale(1); }
+}
+
+@media (min-width: 640px) {
+  .new-daily-spin-modal__content {
+    max-width: 520px;
+    padding: 1.1rem 1.45rem 1.35rem;
+  }
+
+  .new-daily-spin-modal__title-art {
+    width: min(100%, 320px);
+  }
+
+  .new-daily-spin-wheel {
+    width: min(64vw, 39dvh, 340px);
+    max-width: 340px;
+  }
+}
+
+@media (max-width: 380px), (max-height: 740px) {
+  .new-daily-spin-modal__content {
+    border-radius: 24px;
+  }
+
+  .new-daily-spin-modal__header {
+    padding: 0 2.3rem;
+  }
+
+  .new-daily-spin-wheel {
+    width: min(78vw, 320px);
+    margin-bottom: 0.55rem;
+  }
+
+  .new-daily-spin-modal__spin-btn {
+    min-height: 58px;
+    border-radius: 18px;
+    font-size: 1.45rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .new-daily-spin-wheel--spinning .new-daily-spin-wheel__hub,
+  .new-daily-spin-wheel__shine::before,
+  .new-daily-spin-wheel__rim-sparkle,
+  .new-daily-spin-wheel__rim-sparkle span,
+  .new-daily-spin-wheel__robot,
+  .new-daily-spin-wheel__robot-eye,
+  .new-daily-spin-wheel__energy-ring,
+  .spin-wheel-segment--winner,
+  .spin-wheel-prize-art--winner,
+  .new-daily-spin-wheel--winner .spin-wheel-pointer {
+    animation: none;
+  }
+}
