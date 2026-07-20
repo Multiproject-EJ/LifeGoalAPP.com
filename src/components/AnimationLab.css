@@ -301,6 +301,11 @@
   isolation: isolate;
 }
 
+.animation-lab-app-preview--gift {
+  background: rgba(7, 15, 31, 0.76);
+  backdrop-filter: blur(3px);
+}
+
 .animation-lab-app-preview__card {
   position: relative;
   z-index: 2;

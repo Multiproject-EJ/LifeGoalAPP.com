@@ -74,9 +74,9 @@ assert(
 );
 assert(
   handleOpenDoor.includes("if (doorType === 'bonus')")
-    && handleOpenDoor.includes('setPendingGiftReward(nextRewardToast)')
+    && handleOpenDoor.includes('rewards: [formatGiftReward(')
     && handleOpenDoor.includes('setRewardToast(nextRewardToast)'),
-  'Bonus gifts must stage the animation while ordinary doors keep the direct reward toast.',
+  'Bonus gifts must stage their exact reward inside the animation while ordinary doors keep the direct toast.',
 );
 assert(
   handleOpenDoor.includes('formatRewardToast('),

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CelebrationFireworks, type FireworksVariant } from './CelebrationFireworks';
+import { GiftBoxOpeningAnimation } from './GiftBoxOpeningAnimation';
 import './AnimationLab.css';
 
 type AnimationAsset = {
@@ -129,6 +130,7 @@ export function AnimationLab() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [playing, setPlaying] = useState<Record<string, boolean>>({});
   const [productionPreview, setProductionPreview] = useState<FireworksVariant | null>(null);
+  const [giftPreviewKey, setGiftPreviewKey] = useState(0);
   const [backgrounds, setBackgrounds] = useState<Record<string, StageBackground>>({
     fireworksCapstone: 'dark',
     fireworksHero: 'dark',
@@ -148,6 +150,9 @@ export function AnimationLab() {
     if (requestedByQuery) {
       setOpen(true);
       window.localStorage.setItem(LAB_STORAGE_KEY, '1');
+    }
+    if (params.get('giftPreview') === '1') {
+      setGiftPreviewKey(1);
     }
 
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -322,6 +327,11 @@ export function AnimationLab() {
                           Preview app layer
                         </button>
                       ) : null}
+                      {animation.id === 'giftBox' ? (
+                        <button type="button" onClick={() => setGiftPreviewKey((current) => current + 1)}>
+                          Preview reward pop
+                        </button>
+                      ) : null}
                     </div>
                     <fieldset className="animation-lab-backgrounds">
                       <legend>Background</legend>
@@ -371,6 +381,25 @@ export function AnimationLab() {
     </div>
   ) : null;
 
+  const giftLayerPreview = giftPreviewKey > 0 ? (
+    <div
+      key={giftPreviewKey}
+      className="animation-lab-app-preview animation-lab-app-preview--gift"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Gift Box reward pop-out preview"
+      onClick={() => setGiftPreviewKey(0)}
+    >
+      <GiftBoxOpeningAnimation
+        rewards={[
+          { id: 'preview-dice', icon: '🎲', amount: '500', accessibleLabel: '500 Dice' },
+          { id: 'preview-money', icon: '💰', amount: '40', accessibleLabel: '40 Money' },
+          { id: 'preview-essence', icon: '🟣', amount: '5', accessibleLabel: '5 Essence' },
+        ]}
+      />
+    </div>
+  ) : null;
+
   if (typeof document === 'undefined') return null;
-  return createPortal(<>{launcher}{modal}{appLayerPreview}</>, document.body);
+  return createPortal(<>{launcher}{modal}{appLayerPreview}{giftLayerPreview}</>, document.body);
 }
