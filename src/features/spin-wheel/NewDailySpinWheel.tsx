@@ -11,7 +11,7 @@ import {
   getSpinHistory,
   getSpinPrizesForUser,
 } from '../../services/dailySpin';
-import type { SpinHistoryEntry, SpinPrize } from '../../types/gamification';
+import type { SpinAward, SpinHistoryEntry, SpinPrize } from '../../types/gamification';
 import { SPIN_PRIZES } from '../../types/gamification';
 import { buildWheelSegments, type WheelSegment } from './spinWheelUtils';
 import { useGamification } from '../../hooks/useGamification';
@@ -20,6 +20,7 @@ import { CelebrationFireworks } from '../../components/CelebrationFireworks';
 import {
   GiftBoxOpeningAnimation,
   preloadGiftBoxOpeningAnimation,
+  type GiftBoxRewardItem,
 } from '../../components/GiftBoxOpeningAnimation';
 import './NewDailySpinWheel.css';
 
@@ -33,6 +34,14 @@ interface NewDailySpinWheelProps {
 /* ------------------------------------------------------------------ */
 
 const DEG = Math.PI / 180;
+
+const toGiftBoxRewards = (awards: SpinAward[]): GiftBoxRewardItem[] =>
+  awards.map((award, index) => ({
+    id: `spin-${award.currency}-${index}`,
+    icon: award.icon,
+    amount: String(award.amount),
+    accessibleLabel: `${award.amount} ${award.label}`,
+  }));
 
 function polarToCart(cx: number, cy: number, r: number, angleDeg: number) {
   const rad = (angleDeg - 90) * DEG;
@@ -206,6 +215,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   const [error, setError] = useState<string | null>(null);
   const [showReward, setShowReward] = useState(false);
   const [showGiftOpening, setShowGiftOpening] = useState(false);
+  const [giftRewards, setGiftRewards] = useState<GiftBoxRewardItem[]>([]);
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false,
   );
@@ -286,6 +296,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     setLoading(true);
     setError(null);
     setWonPrize(null);
+    setShowGiftOpening(false);
+    setGiftRewards([]);
 
     try {
       const { data: spinState, error: spinError } = await getDailySpinState(session.user.id);
@@ -359,7 +371,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       });
       if (spinError || !data) throw spinError || new Error('Failed to spin');
 
-      const { prize, spinsRemaining } = data;
+      const { prize, spinsRemaining, awardedRewards } = data;
+      const resolvedGiftRewards = toGiftBoxRewards(awardedRewards);
 
       const segment = wheelSegments.find(
         (c) => c.type === prize.type && c.value === prize.value && c.label === prize.label,
@@ -371,6 +384,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
       setTimeout(() => {
         setWonPrize(prize);
+        setGiftRewards(resolvedGiftRewards);
         setCanSpin(spinsRemaining > 0);
         setEssenceBalance((current) => Math.max(0, current - multiplierOption.essenceCost));
         setSpinning(false);
@@ -405,7 +419,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
   const handleGiftBoxOpeningComplete = useCallback(() => {
     setShowGiftOpening(false);
-    setShowReward(true);
+    setGiftRewards([]);
   }, []);
 
   /* ── Render ── */
@@ -636,7 +650,10 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
         {showGiftOpening && wonPrize?.type === 'mystery' && (
           <div className="new-daily-spin-modal__gift-opening" role="presentation">
-            <GiftBoxOpeningAnimation onComplete={handleGiftBoxOpeningComplete} />
+            <GiftBoxOpeningAnimation
+              rewards={giftRewards}
+              onComplete={handleGiftBoxOpeningComplete}
+            />
           </div>
         )}
 

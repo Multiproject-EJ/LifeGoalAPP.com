@@ -1,6 +1,6 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
 import type { PostgrestError } from '@supabase/supabase-js';
-import type { DailySpinState, SpinResult, SpinPrize } from '../types/gamification';
+import type { DailySpinState, SpinAward, SpinResult, SpinPrize } from '../types/gamification';
 import { SPIN_PRIZES } from '../types/gamification';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import { recordTelemetryEvent } from './telemetry';
@@ -594,7 +594,7 @@ export async function executeSpin(
   const prize = getRandomPrizeFromPool(prizePool);
 
   // Award prize
-  await awardPrize(userId, prize, rewardMultiplier);
+  const awardedRewards = await awardPrize(userId, prize, rewardMultiplier);
 
   // Update spin state
   const newSpinsAvailable = spinState.spinsAvailable - 1;
@@ -615,7 +615,7 @@ export async function executeSpin(
       userId,
       prizeType: prize.type,
       prizeValue: prize.value,
-      prizeDetails: prize.details || {},
+      prizeDetails: { ...(prize.details || {}), awardedRewards },
       spunAt: new Date().toISOString(),
     };
     const history = JSON.parse(localStorage.getItem(DEMO_HISTORY_KEY) || '[]');
@@ -626,6 +626,7 @@ export async function executeSpin(
       data: {
         prize,
         spinsRemaining: newSpinsAvailable,
+        awardedRewards,
       },
       error: null,
     };
@@ -653,13 +654,14 @@ export async function executeSpin(
     user_id: userId,
     prize_type: prize.type,
     prize_value: prize.value,
-    prize_details: prize.details || {},
+    prize_details: { ...(prize.details || {}), awardedRewards },
   });
 
   return {
     data: {
       prize,
       spinsRemaining: newSpinsAvailable,
+      awardedRewards,
     },
     error: null,
   };
@@ -676,7 +678,7 @@ export async function executeSpin(
  * - mystery → 1.5× random single-currency award
  * - gold (legacy) → gamification_profiles.total_points
  */
-async function awardPrize(userId: string, prize: SpinPrize, rewardMultiplier = 1): Promise<void> {
+async function awardPrize(userId: string, prize: SpinPrize, rewardMultiplier = 1): Promise<SpinAward[]> {
   const supabase = getSupabaseClient();
 
   const addToProfile = async (field: string, amount: number) => {
@@ -743,27 +745,33 @@ async function awardPrize(userId: string, prize: SpinPrize, rewardMultiplier = 1
   };
 
   const scaledValue = Math.max(0, Math.floor(prize.value * rewardMultiplier));
+  const awardedRewards: SpinAward[] = [];
 
   switch (prize.type) {
     case 'gold':
       await addToProfile('total_points', scaledValue);
+      awardedRewards.push({ currency: 'gold', amount: scaledValue, label: 'Gold', icon: '🪙' });
       break;
 
     case 'essence':
       await addToIslandRun('essence', scaledValue);
+      awardedRewards.push({ currency: 'essence', amount: scaledValue, label: 'Money', icon: '💰' });
       break;
 
     case 'shards':
       await addToIslandRun('shards', scaledValue);
+      awardedRewards.push({ currency: 'shards', amount: scaledValue, label: 'Essence', icon: '🟣' });
       break;
 
     case 'dice':
       await addToIslandRun('dice_pool', scaledValue);
+      awardedRewards.push({ currency: 'dice', amount: scaledValue, label: 'Dice', icon: '🎲' });
       break;
 
     case 'game_tokens':
       // Game tokens are stored as gold-equivalent for now (not timed-event tickets).
       await addToProfile('total_points', scaledValue * 10);
+      awardedRewards.push({ currency: 'game_tokens', amount: scaledValue, label: 'Game Tokens', icon: '🎟️' });
       break;
 
     case 'treasure_chest':
@@ -771,15 +779,25 @@ async function awardPrize(userId: string, prize: SpinPrize, rewardMultiplier = 1
       await addToIslandRun('essence', 20 * rewardMultiplier);
       await addToIslandRun('shards', 3 * rewardMultiplier);
       await addToIslandRun('dice_pool', 10 * rewardMultiplier);
+      awardedRewards.push(
+        { currency: 'essence', amount: 20 * rewardMultiplier, label: 'Money', icon: '💰' },
+        { currency: 'shards', amount: 3 * rewardMultiplier, label: 'Essence', icon: '🟣' },
+        { currency: 'dice', amount: 10 * rewardMultiplier, label: 'Dice', icon: '🎲' },
+      );
       break;
 
     case 'mystery': {
       // 1.5× random single-currency award
-      const mysteryOptions: Array<{ field: string; amount: number; table: 'profile' | 'island' }> = [
-        { field: 'essence', amount: 40 * rewardMultiplier, table: 'island' },
-        { field: 'shards', amount: 5 * rewardMultiplier, table: 'island' },
-        { field: 'dice_pool', amount: 18 * rewardMultiplier, table: 'island' },
-        { field: 'total_points', amount: 50 * rewardMultiplier, table: 'profile' },
+      const mysteryOptions: Array<{
+        field: string;
+        amount: number;
+        table: 'profile' | 'island';
+        reward: Omit<SpinAward, 'amount'>;
+      }> = [
+        { field: 'essence', amount: 40 * rewardMultiplier, table: 'island', reward: { currency: 'essence', label: 'Money', icon: '💰' } },
+        { field: 'shards', amount: 5 * rewardMultiplier, table: 'island', reward: { currency: 'shards', label: 'Essence', icon: '🟣' } },
+        { field: 'dice_pool', amount: 18 * rewardMultiplier, table: 'island', reward: { currency: 'dice', label: 'Dice', icon: '🎲' } },
+        { field: 'total_points', amount: 50 * rewardMultiplier, table: 'profile', reward: { currency: 'gold', label: 'Gold', icon: '🪙' } },
       ];
       const pick = mysteryOptions[Math.floor(Math.random() * mysteryOptions.length)];
       if (pick.table === 'profile') {
@@ -787,12 +805,15 @@ async function awardPrize(userId: string, prize: SpinPrize, rewardMultiplier = 1
       } else {
         await addToIslandRun(pick.field, pick.amount);
       }
+      awardedRewards.push({ ...pick.reward, amount: pick.amount });
       break;
     }
 
     default:
       console.warn(`Unknown prize type: ${prize.type}`);
   }
+
+  return awardedRewards;
 }
 
 /**

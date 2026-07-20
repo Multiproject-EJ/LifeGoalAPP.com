@@ -21,10 +21,25 @@ for (const snippet of [
   'video/webm; codecs="vp9"',
   "matchMedia('(prefers-reduced-motion: reduce)')",
   'GIFT_BOX_OPENING_ASSET.durationMs + 900',
-  'onError={complete}',
+  'onError={handlePlaybackError}',
+  'setSource(GIFT_BOX_OPENING_ASSET.webm)',
+  'rewards?: readonly GiftBoxRewardItem[]',
+  'onPlaying={() => setStarted(true)}',
 ]) {
   if (!componentSource.includes(snippet)) {
     throw new Error(`Gift Box animation component is missing required behavior: ${snippet}`);
+  }
+}
+
+const componentStyles = await readFile(path.join(root, 'src/components/GiftBoxOpeningAnimation.css'), 'utf8');
+for (const snippet of [
+  'font-size: clamp(3.65rem, 17vw, 5rem)',
+  '@keyframes gift-box-reward-pop',
+  'var(--gift-reward-delay)',
+  'z-index: 1',
+]) {
+  if (!componentStyles.includes(snippet)) {
+    throw new Error(`Gift Box reward pop-out styling is missing required behavior: ${snippet}`);
   }
 }
 
@@ -39,8 +54,9 @@ const integrations = [
     'src/features/gamification/daily-treats/CountdownCalendarModal.tsx',
     [
       "if (doorType === 'bonus')",
-      'setPendingGiftReward(nextRewardToast)',
+      'rewards: [formatGiftReward(',
       '<GiftBoxOpeningAnimation',
+      'rewards={pendingGiftReward.rewards}',
       'onComplete={handleGiftBoxOpeningComplete}',
     ],
   ],
@@ -49,7 +65,8 @@ const integrations = [
     [
       "if (prize.type === 'mystery')",
       'setShowGiftOpening(true)',
-      '<GiftBoxOpeningAnimation onComplete={handleGiftBoxOpeningComplete} />',
+      'const resolvedGiftRewards = toGiftBoxRewards(awardedRewards)',
+      'rewards={giftRewards}',
       'isTreasureChest ? <CelebrationFireworks variant="rapid" /> : null',
     ],
   ],
@@ -59,9 +76,22 @@ const integrations = [
       "id: 'giftBox'",
       "src: '/assets/animations/gift-box-opening.webm'",
       "appleSrc: '/assets/animations/gift-box-opening.mov'",
+      'Preview reward pop',
+      "amount: '500'",
     ],
   ],
 ];
+
+const spinServiceSource = await readFile(path.join(root, 'src/services/dailySpin.ts'), 'utf8');
+for (const snippet of [
+  'const awardedRewards = await awardPrize(userId, prize, rewardMultiplier)',
+  'awardedRewards.push({ ...pick.reward, amount: pick.amount })',
+  'prize_details: { ...(prize.details || {}), awardedRewards }',
+]) {
+  if (!spinServiceSource.includes(snippet)) {
+    throw new Error(`Daily Spin must return and persist the exact granted Mystery reward: ${snippet}`);
+  }
+}
 
 for (const [file, snippets] of integrations) {
   const source = await readFile(path.join(root, file), 'utf8');
