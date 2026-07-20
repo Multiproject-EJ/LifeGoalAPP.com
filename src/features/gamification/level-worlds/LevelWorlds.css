@@ -2044,6 +2044,22 @@
   transition: none;
 }
 
+/* Island 001's first-generation scene pieces were painted from a shallower
+   camera than the live board's 47deg plane. Calibrate the whole composed art
+   scene around the same centre so circles, plots, boss arena, and terrain all
+   share the route's tilt. This is intentionally island-specific until the
+   production asset workflow emits every future island at the canonical angle. */
+.island-art-layers[data-island-number="1"] {
+  /* Measured from the rendered connected route at the canonical 390x844
+     viewport: its board-plane bounding ratio is 0.746. */
+  transform: scaleY(0.746);
+  transform-origin: center center;
+}
+
+.island-art-layers[data-island-number="1"] .island-art-layers__board-outer {
+  filter: drop-shadow(0 18px 16px rgba(2, 45, 59, 0.38));
+}
+
 .island-art-layers__image {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -3860,6 +3876,7 @@
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.62);
   /* Smooth state changes on the whole unit (completed-encounter mute, …) */
   transition: filter 300ms ease;
+  transform-style: preserve-3d;
 }
 
 .island-tile__shadow {
@@ -3980,32 +3997,44 @@
 }
 
 .island-run-board--spark36 .island-tile {
-  /* 36 separate radial blocks at r=340. Deliberate air between neighbours
-     keeps each piece readable as its own object instead of one continuous
-     artificial ring. The wider outer edge preserves the circular route. */
-  width: 48px;
+  /* Exact annular-sector footprint at r=340. The 54px inner chord and 66px
+     outer chord meet their neighbours edge-to-edge, restoring the seamless
+     circular route while retaining 36 individually interactive tiles. */
+  width: 66px;
   height: 64px;
-  --tile-thickness: 18px;
+  --tile-thickness: 24px;
 }
 
 .island-run-board--spark36 .island-tile__face,
 .island-run-board--spark36 .island-tile__side {
-  /* A compact trapezoid block with visible gaps on both radial seams. */
+  /* One annular sector: narrow at the inner edge, wider at the outer edge. */
   border-radius: 0;
-  clip-path: polygon(4px 0, 44px 0, 48px 64px, 0 64px);
+  clip-path: polygon(6px 0, 60px 0, 66px 64px, 0 64px);
+  backface-visibility: hidden;
+}
+
+/* Raise every top face along the board's real Z axis. Because this happens
+   before the shared rotateX camera transform, all 36 blocks expose depth in
+   the same screen direction instead of rotating the shadow/wall around the
+   circle with each tile. */
+.island-run-board--spark36 .island-tile__face {
+  transform: translateZ(var(--tile-thickness));
 }
 
 .island-run-board--spark36 .island-tile__side {
+  transform: translateZ(0);
   background:
-    linear-gradient(90deg, rgba(255, 240, 198, 0.22), transparent 24%, rgba(20, 12, 4, 0.28) 82%),
-    linear-gradient(180deg,
-      color-mix(in srgb, var(--tile-side) 78%, #fff) 0%,
-      var(--tile-side) 34%,
-      color-mix(in srgb, var(--tile-side) 38%, #000) 100%);
+    linear-gradient(146deg, rgba(255, 240, 198, 0.16), transparent 34%, rgba(20, 12, 4, 0.34) 88%),
+    color-mix(in srgb, var(--tile-side) 72%, #171006);
   box-shadow:
-    inset 2px 0 1px rgba(255, 246, 218, 0.2),
-    inset -3px 0 4px rgba(20, 12, 4, 0.32),
-    0 5px 8px rgba(14, 8, 3, 0.3);
+    inset 1px 0 0 rgba(255, 246, 218, 0.12),
+    inset -2px 0 3px rgba(20, 12, 4, 0.28);
+}
+
+/* The old per-tile oval rotated with each wedge and contradicted the camera.
+   The raised face + shared lower silhouette now provide the contact/depth cue. */
+.island-run-board--spark36 .island-tile__shadow {
+  display: none;
 }
 
 /* The rect-based engraved inner ring can't follow the wedge silhouette —
@@ -4030,9 +4059,7 @@
 }
 
 /* ── Wedge frame — each route block's physical top-edge trim ────────────────
-   An evenodd path draws the frame entirely inside the smaller trapezoid. The
-   deliberate space between neighbouring silhouettes stays transparent, so
-   the darker side wall and ground contact shadow belong to one block only. */
+   An evenodd path draws the frame inside the seamless annular sector. */
 @supports (clip-path: path(evenodd, 'M0 0H1V1Z')) {
   .island-run-board--spark36 .island-tile__face,
   .island-run-board--spark36 .island-tile--stop .island-tile__face,
@@ -4063,7 +4090,7 @@
             mask: none;
     -webkit-mask-composite: source-over;
             mask-composite: add;
-    clip-path: path(evenodd, 'M4 0L44 0L48 64L0 64ZM6.2 4L41.8 4L45.1 60L2.9 60Z');
+    clip-path: path(evenodd, 'M6 0L60 0L66 64L0 64ZM9.1 4L56.9 4L61.7 60L4.3 60Z');
     pointer-events: none;
     z-index: 2;
   }

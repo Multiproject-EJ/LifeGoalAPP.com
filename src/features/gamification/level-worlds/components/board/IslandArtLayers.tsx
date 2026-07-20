@@ -217,6 +217,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
     <div
       className="island-art-layers"
       style={{ width: boardWidth, height: boardHeight }}
+      data-island-number={manifest.islandNumber}
       aria-hidden="true"
     >
       {boardOuterCircleSrc && !hiddenSources.has(boardOuterCircleSrc) ? (

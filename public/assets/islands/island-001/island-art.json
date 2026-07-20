@@ -17,7 +17,7 @@
   },
   "scene": {
     "boardCircle": "board/board-circle-inner.webp",
-    "ambientBackground": "background/ambient-background-v2.webp",
+    "ambientBackground": "background/ambient-background-v3.webp",
     "boardOuterCircle": "board-outer/board-outer-foundation.webp"
   },
   "boardOuterCircleImageScale": 1.36,

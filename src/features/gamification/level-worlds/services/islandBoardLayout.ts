@@ -70,14 +70,15 @@ export const TILE_ANCHORS_36: TileAnchor[] = Array.from({ length: SPARK_RING_TIL
 
   return {
     id: `t${String(index).padStart(2, '0')}`,
-    // Sub-pixel anchor precision keeps the deliberate gaps between individual
-    // 3D blocks visually even around the circular route.
+    // Sub-pixel anchor precision keeps the 36 annular sectors locked into one
+    // continuous circle without cumulative drift at the closing seam.
     x: Number(x.toFixed(2)),
     y: Number(y.toFixed(2)),
     zBand,
     tangentDeg: Number(tangentDeg.toFixed(0)),
-    // Uniform scale keeps every physical block the same size. Depth comes from
-    // each tile's own side wall, lighting, zBand stacking, and contact shadow.
+    // Uniform scale keeps every physical block the same size. The shared board
+    // transform supplies the perspective, while the face is raised on the Z
+    // axis so every block has one physically consistent depth direction.
     scale: 1,
   };
 });
