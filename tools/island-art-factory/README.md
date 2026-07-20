@@ -34,7 +34,12 @@ For a runtime landmark review, open the dev PWA with
 `/dev/island-art-preview?phonePreview=1&islandVisualPreview=1&islandVisualIsland={1..120}&islandVisualLandmark={hatchery|habit|mystery|wisdom|all}&islandVisualBuildLevel={0|1|2|3}&islandVisualBossState={idle|defeated|hidden}`.
 The override is presentation-only: it selects art layers without mutating gameplay or persisted build state.
 
-The 36 live tiles must read as separate 3D blocks with gaps, side walls, thickness, and contact shadows. The board caretaker must use its premium 3D cutout and stand behind the start edge on a grounded footplate; never use the retro sprite in approval composites.
+The 36 live tiles must form one seamless connected circular route while every tile remains an individually readable 3D block through fine seams, visible side walls, shared physical thickness, and one perspective-correct lighting model. Do not add a separate backing ring beneath them. The board caretaker must use its premium 3D cutout and stand behind the start edge on a grounded footplate; never use the retro sprite in approval composites.
+
+For an island background to pass, capture and review both progression endpoints:
+an L0 phone view with empty landmark plots and hidden boss, and an L3 phone view
+with all landmarks fully built and the boss visible. Island 001's recorded example
+and reusable gate live in `concepts/island-001/`.
 
 ## Pilot deliverable order
 

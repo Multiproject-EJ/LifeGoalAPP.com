@@ -23,17 +23,16 @@ export const CANONICAL_BOARD_SIZE = {
 
 export const TOKEN_START_TILE_INDEX = 0;
 
-const OUTER_STOP_CORNER_PAD = 120;
-const OUTER_STOP_CORNER_MAX = CANONICAL_BOARD_SIZE.width - OUTER_STOP_CORNER_PAD;
-
 export const OUTER_STOP_ANCHORS: OrbitStopAnchor[] = [
-  // Four non-boss stops at outer corners around the board ring.
-  { id: 'hatchery', x: OUTER_STOP_CORNER_PAD, y: OUTER_STOP_CORNER_PAD },
-  { id: 'stopA', x: OUTER_STOP_CORNER_MAX, y: OUTER_STOP_CORNER_PAD },
-  { id: 'stopB', x: OUTER_STOP_CORNER_MAX, y: OUTER_STOP_CORNER_MAX },
-  { id: 'stopC', x: OUTER_STOP_CORNER_PAD, y: OUTER_STOP_CORNER_MAX },
-  // Boss stop in the middle of the board, inside the ring.
-  { id: 'boss', x: 500, y: 500 },
+  // UI anchors sit over the visual front/base of each landmark. The front
+  // anchors intentionally extend beyond the 1000px gameplay plane because the
+  // calibrated landmark art projects farther towards the player than the ring.
+  { id: 'hatchery', x: 120, y: 320 },
+  { id: 'stopA', x: 960, y: 320 },
+  { id: 'stopB', x: 940, y: 1380 },
+  { id: 'stopC', x: 170, y: 1380 },
+  // Boss pill lands at the front of the central plinth, not over its roof.
+  { id: 'boss', x: 500, y: 740 },
   { id: 'shop', x: 120, y: 500 },
 ];
 

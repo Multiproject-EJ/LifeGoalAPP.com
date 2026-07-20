@@ -5168,7 +5168,9 @@ export function IslandRunBoardPrototype({
 
       const horizontalPadding = 44;
       const verticalPadding = 44;
-      const labelOffsetY = index % 2 === 0 ? -38 : 38;
+      // The nameplate belongs to the same in-world marker as the status pill:
+      // keep it consistently just above the pill for every landmark.
+      const labelOffsetY = -28;
 
       let visualX = clamp(position.x, horizontalPadding, boardSize.width - horizontalPadding);
       let visualY = clamp(position.y, verticalPadding, boardSize.height - verticalPadding);
@@ -5182,7 +5184,9 @@ export function IslandRunBoardPrototype({
       // Prefix a ticket emoji to the label when this stop is sequence-unlocked
       // but still awaiting its essence ticket — makes the ticket gate visible
       // before the player taps the orbit button.
-      const baseLabel = stop.title.replace(/^\S+\s/, '');
+      const baseLabel = stop.title
+        .replace(/^\S+\s/, '')
+        .replace(/\s+Landmark$/i, '');
       const ticketRequirement = ticketRequirementByStopId.get(stop.stopId);
       const needsTicket = ticketRequirement?.needsTicket ?? false;
       const label = needsTicket ? `🎫 ${baseLabel}` : baseLabel;

@@ -98,19 +98,24 @@ export const BoardOrbitStops = memo(function BoardOrbitStops(props: BoardOrbitSt
                 : `${stopVisual.label} — ${stopVisual.state}`
           }
         >
-          <span className="island-orbit-stop__icon" aria-hidden="true">
-            {getOrbitStopDisplayIcon(stopVisual.state, stopVisual.icon)}
+          <span
+            className={`island-orbit-stop__status-pill island-orbit-stop__status-pill--${stopVisual.state}`}
+            aria-hidden="true"
+          >
+            <span className="island-orbit-stop__icon">
+              {getOrbitStopDisplayIcon(stopVisual.state, stopVisual.icon)}
+            </span>
+            {stopVisual.stateChipLabel ? (
+              <span className="island-orbit-stop__status-text">
+                {stopVisual.stateChipLabel}
+              </span>
+            ) : null}
+            {showTicketCost ? (
+              <span className="island-orbit-stop__ticket-cost">
+                {stopVisual.ticketCost} ✨
+              </span>
+            ) : null}
           </span>
-          {stopVisual.stateChipLabel ? (
-            <span className={`island-orbit-stop__state-chip island-orbit-stop__state-chip--${stopVisual.state}`} aria-hidden="true">
-              {stopVisual.stateChipLabel}
-            </span>
-          ) : null}
-          {showTicketCost ? (
-            <span className="island-orbit-stop__ticket-cost" aria-hidden="true">
-              {stopVisual.ticketCost} ✨
-            </span>
-          ) : null}
           {stopVisual.attentionHint === 'affordable' ? (
             <span
               className="island-orbit-stop__attention-dot island-orbit-stop__attention-dot--affordable"

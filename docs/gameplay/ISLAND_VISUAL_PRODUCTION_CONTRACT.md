@@ -61,7 +61,7 @@ The approved Island 1 tropical waterfall image is a **composition reference**, n
 
 ## Ring readability rule
 
-The canonical circular route is centered at (500, 500) in playable-board space with radius 340. Its 36 runtime tiles are **individual raised blocks**, not one continuous annulus: every block needs a readable top face, visible darker side wall, physical thickness, a small gap from its neighbours, and its own contact shadow. Do not place a solid decorative ring or shared raised plinth beneath the tiles.
+The canonical circular route is centered at (500, 500) in playable-board space with radius 340. Its 36 runtime tiles form a **seamless connected circle of individual raised blocks**. Every block needs a readable top face, a fine joint at each neighbour, a visible darker side wall, and one shared perspective-correct depth and lighting model. There must be no open gaps between tiles and no solid decorative backing ring or separate raised plinth beneath them.
 
 Runtime board-plate art must avoid high-contrast radial seams, text, small props, or fake paving inside the tile corridor. The real blocks, highlights, token, 3D caretaker, technology fragments, and traffic-light tile must remain legible in every state.
 
