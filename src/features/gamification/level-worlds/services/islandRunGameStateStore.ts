@@ -551,7 +551,8 @@ type IslandRunRuntimeCommitParkReason = 'single_flight' | 'backoff' | 'conflict_
  * 1. Max 1 in-flight commit per user at any time (single-flight via inFlightCount).
  * 2. No commits are attempted while remote backoff is active.
  * 3. Parked writes resume only after the in-flight slot clears (via setTimeout).
- * 4. clientActionId includes a monotonic counter, guaranteeing no false dedupe.
+ * 4. clientActionId is deterministic for one canonical state/version pair, so
+ *    transport retries dedupe while distinct gameplay states remain distinct.
  * 5. syncState always resets to 'idle' in the finally block when inFlightCount === 0.
  */
 interface IslandRunRuntimeCommitCoordinator {
@@ -609,6 +610,15 @@ function hashRuntimeCommitPayload(input: string): string {
   return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
+function buildDeterministicRuntimeActionUuid(input: string): string {
+  const hex = [0, 1, 2, 3]
+    .map((salt) => hashRuntimeCommitPayload(`${salt}:${input}`))
+    .join('');
+  // UUID-shaped idempotency key: version 5 + RFC 4122 variant bits. The hash
+  // is for retry identity only; authorization remains entirely server-side.
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-5${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
+
 function stableRuntimeCommitStringify(value: unknown): string {
   if (value === null || typeof value !== 'object') {
     return JSON.stringify(value);
@@ -624,9 +634,24 @@ function stableRuntimeCommitStringify(value: unknown): string {
   return `{${entries.join(',')}}`;
 }
 
+function getRuntimeGameplayPayload(record: IslandRunGameStateRecord): Omit<IslandRunGameStateRecord, 'runtimeVersion'> {
+  const { runtimeVersion: _runtimeVersion, ...gameplayPayload } = record;
+  return gameplayPayload;
+}
+
+export function areIslandRunGameStateRecordsGameplayEqual(
+  left: IslandRunGameStateRecord,
+  right: IslandRunGameStateRecord,
+): boolean {
+  return stableRuntimeCommitStringify(getRuntimeGameplayPayload(left))
+    === stableRuntimeCommitStringify(getRuntimeGameplayPayload(right));
+}
+
 function buildRuntimeClientActionId(userId: string, record: IslandRunGameStateRecord): string {
-  runtimeCommitAttemptCounter += 1;
-  return `runtime-${userId}-${runtimeCommitAttemptCounter}-${Math.max(0, Math.floor(record.runtimeVersion))}-${hashRuntimeCommitPayload(stableRuntimeCommitStringify(record))}`;
+  const runtimeVersion = Math.max(0, Math.floor(record.runtimeVersion));
+  return buildDeterministicRuntimeActionUuid(
+    `${userId}:${runtimeVersion}:${stableRuntimeCommitStringify(getRuntimeGameplayPayload(record))}`,
+  );
 }
 
 export function deriveIslandRunContractV2StopType(index: number): 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss' {
@@ -2796,6 +2821,35 @@ export async function writeIslandRunGameStateRecord(options: {
     ...record,
     runtimeVersion: Math.max(record.runtimeVersion, existingLocalRecord.runtimeVersion),
   };
+
+  const hasPendingWrite = (() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return window.localStorage.getItem(getPendingWriteStorageKey(session.user.id)) !== null;
+    } catch {
+      return false;
+    }
+  })();
+
+  if (
+    !hasPendingWrite
+    && areIslandRunGameStateRecordsGameplayEqual(existingLocalRecord, localRecord)
+  ) {
+    if (localRecord.runtimeVersion > existingLocalRecord.runtimeVersion && typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(localRecord));
+      } catch {
+        // ignore local persistence failures in prototype mode
+      }
+    }
+    logIslandRunEntryDebug('runtime_state_persist_noop_skipped', {
+      userId: session.user.id,
+      triggerSource,
+      ...getRuntimeStateDebugFields(localRecord),
+    });
+    return { ok: true };
+  }
+
   const runtimeBaseVersion = Math.max(0, Math.floor(localRecord.runtimeVersion));
   const clientActionId = buildRuntimeClientActionId(session.user.id, localRecord);
   const coordinator = getRuntimeCommitCoordinator(session.user.id);

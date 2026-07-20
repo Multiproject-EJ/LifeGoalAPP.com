@@ -16,6 +16,21 @@ export type RecentTelemetryEventRow = {
   occurred_at: string;
 };
 
+export type AdminTelemetryInsights = {
+  lookback_days: number;
+  active_users: number;
+  returning_users: number;
+  lapsed_users: number;
+  habit_successes: number;
+  habit_struggles: number;
+  offers_scheduled: number;
+  offers_claimed: number;
+  hydrations: number;
+  hydration_failures: number;
+  island_rolls: number;
+  island_roll_blocks: number;
+};
+
 function getUntypedSupabase() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return getSupabaseClient() as any;
@@ -57,6 +72,23 @@ export async function listRecentTelemetryEventsForAdmin(options?: {
     return {
       data: [],
       error: error instanceof Error ? error : new Error('Failed to load recent telemetry events.'),
+    };
+  }
+}
+
+export async function getAdminTelemetryInsights(options: {
+  lookbackDays: number;
+}): Promise<{ data: AdminTelemetryInsights | null; error: Error | null }> {
+  try {
+    const { data, error } = await getUntypedSupabase().rpc('get_admin_telemetry_insights', {
+      p_lookback_days: options.lookbackDays,
+    });
+    if (error) throw error;
+    return { data: (data as AdminTelemetryInsights | null) ?? null, error: null };
+  } catch (error) {
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error('Failed to load telemetry insights.'),
     };
   }
 }

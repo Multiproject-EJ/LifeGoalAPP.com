@@ -575,7 +575,7 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
     },
   },
   {
-    name: 'writeIslandRunGameStateRecord does not false-dedupe content-identical writes; parks and resumes second',
+    name: 'writeIslandRunGameStateRecord dedupes content-identical writes before a second remote commit',
     run: async () => {
       resetStorage();
       const session = makeSession();
@@ -601,16 +601,13 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       });
 
       await Promise.resolve();
-      assertEqual(getCommitCalls(), 1, 'Expected content-identical write to park via single-flight while first is in-flight');
+      assertEqual(getCommitCalls(), 1, 'Expected the first changed snapshot to start one remote commit');
 
       releaseNext();
       await writeA;
       await writeAIdentical;
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      releaseNext();
-      await new Promise((resolve) => setTimeout(resolve, 0));
 
-      assertEqual(getCommitCalls(), 2, 'Expected both content-identical writes to produce separate commits (no false dedupe)');
+      assertEqual(getCommitCalls(), 1, 'Expected the content-identical snapshot to be treated as a no-op');
       assertEqual(getMaxInFlight(), 1, 'Expected max one in-flight commit at any moment');
     },
   },

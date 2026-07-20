@@ -475,6 +475,13 @@ export function BoardStage(props: BoardStageProps) {
       };
     }
 
+    // A completed sequence can remain in props for one render while the parent
+    // commits the canonical post-roll token index. During that hand-off the
+    // tokenIndex prop may still point at the pre-roll tile. Never let the
+    // single-step fallback consume that stale value or the piece visibly hops
+    // back to its starting tile before moving forward again.
+    if (pendingHopSequence === lastHopSequenceRef.current) return;
+
     // --- Single-step fallback (used for snap / non-roll index changes) ---
     if (hopSequenceActiveRef.current) return; // ignore while sequence is playing
 

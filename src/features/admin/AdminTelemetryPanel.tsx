@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import {
+  getAdminTelemetryInsights,
   listRecentTelemetryEventsForAdmin,
   listTelemetryDailyRollups,
+  type AdminTelemetryInsights,
   type RecentTelemetryEventRow,
   type TelemetryDailyRollupRow,
 } from '../../services/adminTelemetry';
@@ -34,12 +36,18 @@ function formatDateTime(value: string) {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
+function formatRate(numerator: number, denominator: number) {
+  if (denominator <= 0) return 'No data';
+  return `${Math.round((numerator / denominator) * 100)}%`;
+}
+
 export function AdminTelemetryPanel({ session }: Props) {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [lookback, setLookback] = useState<LookbackDays>(30);
   const [rollups, setRollups] = useState<TelemetryDailyRollupRow[]>([]);
   const [recentEvents, setRecentEvents] = useState<RecentTelemetryEventRow[]>([]);
+  const [insights, setInsights] = useState<AdminTelemetryInsights | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,17 +68,18 @@ export function AdminTelemetryPanel({ session }: Props) {
     const since = new Date();
     since.setDate(since.getDate() - lookback);
 
-    const [rollupResult, recentResult] = await Promise.all([
+    const [rollupResult, recentResult, insightResult] = await Promise.all([
       listTelemetryDailyRollups({ sinceISODate: toISODate(since) }),
       listRecentTelemetryEventsForAdmin({ limit: 20 }),
+      getAdminTelemetryInsights({ lookbackDays: lookback }),
     ]);
 
-    if (rollupResult.error) {
-      setError(rollupResult.error.message);
-    }
+    const firstError = rollupResult.error ?? recentResult.error ?? insightResult.error;
+    if (firstError) setError(firstError.message);
 
     setRollups(rollupResult.data);
     setRecentEvents(recentResult.data);
+    setInsights(insightResult.data);
     setLoading(false);
   }, [lookback]);
 
@@ -111,6 +120,34 @@ export function AdminTelemetryPanel({ session }: Props) {
     [dailySeries],
   );
   const maxDailyCount = busiestDay?.count ?? 0;
+  const decisionSignals = useMemo(() => {
+    if (!insights) return [];
+    const signals: Array<{ severity: number; label: string }> = [];
+    const habitAttempts = insights.habit_successes + insights.habit_struggles;
+    const rollAttempts = insights.island_rolls + insights.island_roll_blocks;
+    const hydrationAttempts = insights.hydrations + insights.hydration_failures;
+    const habitStruggleRate = habitAttempts > 0 ? insights.habit_struggles / habitAttempts : 0;
+    const rollBlockRate = rollAttempts > 0 ? insights.island_roll_blocks / rollAttempts : 0;
+    const hydrationFailureRate = hydrationAttempts > 0 ? insights.hydration_failures / hydrationAttempts : 0;
+    const returnRate = insights.active_users > 0 ? insights.returning_users / insights.active_users : 0;
+
+    if (habitAttempts > 0 && habitStruggleRate >= 0.25) {
+      signals.push({ severity: habitStruggleRate, label: `${formatRate(insights.habit_struggles, habitAttempts)} of habit outcomes are skips or misses — review habit difficulty and recovery prompts.` });
+    }
+    if (rollAttempts > 0 && rollBlockRate >= 0.1) {
+      signals.push({ severity: rollBlockRate, label: `${formatRate(insights.island_roll_blocks, rollAttempts)} of Island Run roll attempts are blocked — inspect dice availability and purchase prompts.` });
+    }
+    if (hydrationAttempts > 0 && hydrationFailureRate >= 0.02) {
+      signals.push({ severity: hydrationFailureRate, label: `${formatRate(insights.hydration_failures, hydrationAttempts)} of runtime hydrations fail — prioritise sync reliability.` });
+    }
+    if (insights.active_users > 0 && returnRate < 0.4) {
+      signals.push({ severity: 1 - returnRate, label: `Only ${formatRate(insights.returning_users, insights.active_users)} of active players used the app on multiple days — inspect early-session drop-off.` });
+    }
+    if (insights.lapsed_users > 0) {
+      signals.push({ severity: 0.5, label: `${insights.lapsed_users.toLocaleString()} telemetry-enabled player${insights.lapsed_users === 1 ? '' : 's'} were active in the last month but not the last 7 days.` });
+    }
+    return signals.sort((a, b) => b.severity - a.severity);
+  }, [insights]);
 
   if (isAdmin === null) {
     return <p className="account-panel__hint">Checking admin access…</p>;
@@ -141,6 +178,51 @@ export function AdminTelemetryPanel({ session }: Props) {
       </div>
 
       {error ? <p className="account-panel__hint">Could not load telemetry: {error}</p> : null}
+
+      {insights ? (
+        <>
+          <h4 style={{ margin: '1rem 0 0.5rem' }}>Player health</h4>
+          <dl className="account-panel__details account-panel__details--grid">
+            <div>
+              <dt>Active players</dt>
+              <dd>{insights.active_users.toLocaleString()}</dd>
+            </div>
+            <div>
+              <dt>Returned another day</dt>
+              <dd>{formatRate(insights.returning_users, insights.active_users)}</dd>
+            </div>
+            <div>
+              <dt>Lapsed (7+ days)</dt>
+              <dd>{insights.lapsed_users.toLocaleString()}</dd>
+            </div>
+            <div>
+              <dt>Habit struggle rate</dt>
+              <dd>{formatRate(insights.habit_struggles, insights.habit_successes + insights.habit_struggles)}</dd>
+            </div>
+            <div>
+              <dt>Offer claim rate</dt>
+              <dd>{formatRate(insights.offers_claimed, insights.offers_scheduled)}</dd>
+            </div>
+            <div>
+              <dt>Island roll blocked</dt>
+              <dd>{formatRate(insights.island_roll_blocks, insights.island_rolls + insights.island_roll_blocks)}</dd>
+            </div>
+            <div>
+              <dt>State sync failures</dt>
+              <dd>{formatRate(insights.hydration_failures, insights.hydrations + insights.hydration_failures)}</dd>
+            </div>
+          </dl>
+
+          <h4 style={{ margin: '1rem 0 0.5rem' }}>Signals to act on</h4>
+          {decisionSignals.length > 0 ? (
+            <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
+              {decisionSignals.map((signal) => <li key={signal.label}>{signal.label}</li>)}
+            </ul>
+          ) : (
+            <p className="account-panel__hint">No threshold alerts in this window. “No data” means the event has only just been instrumented.</p>
+          )}
+        </>
+      ) : null}
 
       <dl className="account-panel__details account-panel__details--grid" style={{ marginTop: '0.75rem' }}>
         <div>
