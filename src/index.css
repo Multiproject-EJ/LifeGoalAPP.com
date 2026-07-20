@@ -25854,6 +25854,18 @@ html.platform-ipad .workspace-shell__menu-edge {
   backdrop-filter: blur(1px);
 }
 
+.daily-treats-calendar__gift-opening {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  overflow: hidden;
+  background: rgba(7, 15, 31, 0.72);
+  backdrop-filter: blur(3px);
+}
+
 .daily-treats-calendar__dialog {
   position: relative;
   z-index: 1;

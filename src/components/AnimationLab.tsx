@@ -4,7 +4,7 @@ import { CelebrationFireworks, type FireworksVariant } from './CelebrationFirewo
 import './AnimationLab.css';
 
 type AnimationAsset = {
-  id: 'fireworksCapstone' | 'fireworksHero' | 'fireworksRapid' | 'egg' | 'creaturePack';
+  id: 'fireworksCapstone' | 'fireworksHero' | 'fireworksRapid' | 'egg' | 'creaturePack' | 'giftBox';
   name: string;
   cadence: string;
   usage: string;
@@ -92,6 +92,19 @@ const ANIMATIONS: AnimationAsset[] = [
     dimensions: '512 × 640',
     fps: '20 fps · 3.2 seconds',
   },
+  {
+    id: 'giftBox',
+    name: 'Gift Box opening',
+    cadence: 'Gift reward',
+    usage: 'Daily Treat bonus doors and Daily Spin Mystery rewards',
+    src: '/assets/animations/gift-box-opening.webm',
+    appleSrc: '/assets/animations/gift-box-opening.mov',
+    delivery: '109 KB VP9 alpha for Chromium',
+    appleDelivery: '167 KB HEVC alpha for Safari & iOS',
+    savings: 'Compact 4:5 production asset, preloaded only near gift rewards',
+    dimensions: '512 × 640',
+    fps: '20 fps · 2.6 seconds',
+  },
 ];
 
 const BACKGROUNDS: Array<{ id: StageBackground; label: string }> = [
@@ -122,6 +135,7 @@ export function AnimationLab() {
     fireworksRapid: 'dark',
     egg: 'checker',
     creaturePack: 'checker',
+    giftBox: 'checker',
   });
 
   useEffect(() => {

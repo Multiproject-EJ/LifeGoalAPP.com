@@ -242,6 +242,18 @@
 .new-daily-spin-modal__result-subtitle { font-size: 0.85rem; opacity: 0.85; margin: 0; }
 
 /* ── Reward overlay ── */
+.new-daily-spin-modal__gift-opening {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  overflow: hidden;
+  background: rgba(7, 15, 31, 0.72);
+  backdrop-filter: blur(3px);
+}
+
 .new-daily-spin-modal__reward-overlay {
   position: fixed;
   inset: 0;
