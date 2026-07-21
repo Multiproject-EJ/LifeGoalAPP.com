@@ -9,12 +9,13 @@
     "finalAngleRatio": 0.73,
     "centerIsland": { "cx": 700, "cy": 800, "rx": 625, "ry": 456 },
     "tileRing": { "cx": 700, "cy": 800, "rx": 340, "ry": 248 },
+    "tileClearance": { "cx": 700, "cy": 800, "rx": 406, "ry": 296 },
     "bossEnvelope": { "x": 530, "y": 570, "width": 340, "height": 430 },
     "satellites": [
-      { "id": "hatchery", "label": "Hatchery", "cx": 275, "cy": 430, "rx": 275, "ry": 201 },
-      { "id": "habit", "label": "Habit", "cx": 1125, "cy": 430, "rx": 275, "ry": 201 },
-      { "id": "wisdom", "label": "Wisdom", "cx": 275, "cy": 1170, "rx": 275, "ry": 201 },
-      { "id": "event", "label": "Event Arena", "cx": 1125, "cy": 1170, "rx": 275, "ry": 201 }
+      { "id": "hatchery", "label": "Hatchery", "cx": 264, "cy": 410, "rx": 260, "ry": 190 },
+      { "id": "habit", "label": "Habit", "cx": 1136, "cy": 410, "rx": 260, "ry": 190 },
+      { "id": "wisdom", "label": "Wisdom", "cx": 264, "cy": 1190, "rx": 260, "ry": 190 },
+      { "id": "event", "label": "Event Arena", "cx": 1136, "cy": 1190, "rx": 260, "ry": 190 }
     ],
     "landmarkEnvelope": { "levelSizes": [120, 240, 480] },
     "phoneSafeArea": { "x": 24, "y": 160, "width": 1352, "height": 1250 }

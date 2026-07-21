@@ -17,6 +17,16 @@ export function evaluateIslandKit(): IslandKitCheck[] {
   const [topLeft, topRight, bottomLeft, bottomRight] = scene.satellites;
   const minSatelliteDiameter = Math.min(...scene.satellites.map((satellite) => satellite.rx * 2));
   const levelSizes = scene.landmarkEnvelope.levelSizes;
+  const cameraPlaneDistance = (x: number, y: number) => Math.hypot(
+    x - scene.centerX,
+    (y - scene.centerY) / scene.finalAngleRatio,
+  );
+  const satelliteBoardGaps = scene.satellites.map((satellite) => (
+    cameraPlaneDistance(satellite.cx, satellite.cy) - scene.tileClearance.rx - satellite.rx
+  ));
+  const satelliteCenterConnections = scene.satellites.map((satellite) => (
+    scene.centerIsland.rx + satellite.rx - cameraPlaneDistance(satellite.cx, satellite.cy)
+  ));
 
   return [
     {
@@ -44,8 +54,8 @@ export function evaluateIslandKit(): IslandKitCheck[] {
     {
       id: 'capacity',
       label: 'L3 landmark capacity',
-      passed: minSatelliteDiameter >= 550 && levelSizes[2] <= minSatelliteDiameter,
-      detail: 'Each satellite is 550 units wide with a protected 480-unit L3 building footprint.',
+      passed: minSatelliteDiameter >= 520 && levelSizes[2] <= minSatelliteDiameter,
+      detail: 'Each satellite is 520 units wide with a protected 480-unit L3 building footprint.',
     },
     {
       id: 'growth',
@@ -55,9 +65,15 @@ export function evaluateIslandKit(): IslandKitCheck[] {
     },
     {
       id: 'clearance',
-      label: 'Tile ring stays clear',
-      passed: scene.centerIsland.rx > scene.tileRing.rx && scene.centerIsland.ry > scene.tileRing.ry,
-      detail: 'Generated terrain must remain beneath the ring; buildings and labels may not enter it.',
+      label: 'Satellites clear the board',
+      passed: satelliteBoardGaps.every((gap) => gap >= 20),
+      detail: `Every satellite has at least ${Math.floor(Math.min(...satelliteBoardGaps))} units of camera-plane clearance from the protected tile board.`,
+    },
+    {
+      id: 'connection',
+      label: 'Satellites join the outer island',
+      passed: satelliteCenterConnections.every((overlap) => overlap >= 100),
+      detail: 'Each satellite overlaps only the center island’s outer terrain mass, creating a natural border/connection away from gameplay tiles.',
     },
   ];
 }

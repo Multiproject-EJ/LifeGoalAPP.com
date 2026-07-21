@@ -6,7 +6,7 @@ import './IslandTemplateKitPage.css';
 type ViewMode = 'blueprint' | 'clay' | 'proof';
 type BuildLevel = 0 | 1 | 2 | 3;
 
-const PROOF_SCENE_SRC = '/assets/islands/_template/proof/starfall-foundry-camera-locked-v1.webp';
+const PROOF_SCENE_SRC = '/assets/islands/_template/proof/starfall-foundry-camera-locked-v2.webp';
 
 function readInitialPreviewState() {
   const params = new URLSearchParams(window.location.search);
@@ -101,7 +101,7 @@ function IslandScaffold({ mode, buildLevel, overlays }: {
           {scene.satellites.map((satellite) => <ellipse key={`outline-${satellite.id}`} cx={satellite.cx} cy={satellite.cy} rx={satellite.rx} ry={satellite.ry} className="island-kit-phone__outline" />)}
           <line x1={scene.centerX} y1="110" x2={scene.centerX} y2="1450" className="island-kit-phone__axis" />
           <line x1="65" y1={scene.centerY} x2="1335" y2={scene.centerY} className="island-kit-phone__axis" />
-          <ellipse cx={scene.tileRing.cx} cy={scene.tileRing.cy} rx={scene.tileRing.rx + 66} ry={scene.tileRing.ry + 48} className="island-kit-phone__ring-clearance" />
+          <ellipse cx={scene.tileClearance.cx} cy={scene.tileClearance.cy} rx={scene.tileClearance.rx} ry={scene.tileClearance.ry} className="island-kit-phone__ring-clearance" />
           <circle cx={scene.centerX} cy={scene.centerY} r="16" className="island-kit-phone__anchor" />
         </>
       ) : null}
@@ -163,7 +163,7 @@ export default function IslandTemplateKitPage() {
             <div><dt>Scene</dt><dd>1400 × 1600</dd></div>
             <div><dt>Board anchor</dt><dd>700, 800</dd></div>
             <div><dt>Final angle</dt><dd>0.73 ellipse</dd></div>
-            <div><dt>Satellite</dt><dd>550 × 402</dd></div>
+            <div><dt>Satellite</dt><dd>520 × 380</dd></div>
           </dl>
         </aside>
 

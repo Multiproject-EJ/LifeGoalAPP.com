@@ -12,7 +12,8 @@ It is deliberately excluded outside Vite development mode. It is not a player de
 - Playable board: `x=200, y=300, width=1000, height=1000`
 - Shared board, tile-ring and center-island anchor: `(700, 800)`
 - Final baked ground-plane ratio: `0.73`
-- Four mirrored landmark satellites: `550 × 402`
+- Four mirrored landmark satellites: `520 × 380`
+- Satellite rule: overlap/connect with the center island's outer terrain mass, while retaining at least `20` camera-plane units of clearance from the protected tile-board ellipse
 - Landmark envelope ladder: `120 → 240 → 480` (each level doubles)
 - Camera mode: `final-angle`; runtime perspective correction is forbidden
 
@@ -39,7 +40,7 @@ The machine-readable source of truth is `camera-locked-kit-v1.json`. The image-g
 
 `Starfall Foundry` is intentionally not a water island. It uses deep space, floating asteroid terrain and crystal/brass architecture while retaining the exact same board center, final camera, satellite symmetry and tile clearance. Its project asset is:
 
-`public/assets/islands/_template/proof/starfall-foundry-camera-locked-v1.webp`
+`public/assets/islands/_template/proof/starfall-foundry-camera-locked-v2.webp`
 
 This proof stays dev-only. It validates the kit without consuming a numbered player island.
 
