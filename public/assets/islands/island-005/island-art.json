@@ -31,7 +31,7 @@
       "y": 340,
       "width": 472,
       "height": 472,
-      "imageScale": 1.3,
+      "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/hatchery/hatchery-l1.webp",
         "landmarks/hatchery/hatchery-l2.webp",
@@ -47,7 +47,7 @@
       "y": 340,
       "width": 472,
       "height": 472,
-      "imageScale": 1.3,
+      "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/habit/habit-l1.webp",
         "landmarks/habit/habit-l2.webp",
@@ -63,7 +63,7 @@
       "y": 1260,
       "width": 472,
       "height": 472,
-      "imageScale": 1.3,
+      "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/mystery/mystery-l1.webp",
         "landmarks/mystery/mystery-l2.webp",
@@ -79,7 +79,7 @@
       "y": 1260,
       "width": 472,
       "height": 472,
-      "imageScale": 1.3,
+      "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/wisdom/wisdom-l1.webp",
         "landmarks/wisdom/wisdom-l2.webp",

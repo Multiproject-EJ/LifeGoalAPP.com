@@ -198,7 +198,14 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     defaultFrameKeyRef.current = defaultFrameKey;
 
     const s = springsRef.current;
-    if (mode !== 'board_follow' || s.zoom.target > DEFAULT_CAMERA_ZOOM + 0.001) return;
+    // The parent can request overview before the asynchronous island-art
+    // manifest has supplied its scene bounds. When those bounds arrive, both
+    // the initial board-follow mode and overview-manual mode must adopt the
+    // newly fitted frame. Stop-focus and gesture modes remain untouched so a
+    // late asset response never pulls the camera away from the player.
+    const canAdoptUpdatedOverviewFrame = mode === 'board_follow' || mode === 'overview_manual';
+    const isBoardFollowingAtCloserZoom = mode === 'board_follow' && s.zoom.target > DEFAULT_CAMERA_ZOOM + 0.001;
+    if (!canAdoptUpdatedOverviewFrame || isBoardFollowingAtCloserZoom) return;
 
     s.x.value = defaultFrame.x;
     s.x.target = defaultFrame.x;

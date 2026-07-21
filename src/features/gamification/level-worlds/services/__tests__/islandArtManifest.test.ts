@@ -13,7 +13,7 @@ import {
   type IslandArtManifestFetcher,
 } from '../islandArtManifest';
 import { getIslandBackgroundImageSrc } from '../islandBackgrounds';
-import { assert, assertEqual, type TestCase } from './testHarness';
+import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 const sampleManifest = {
   version: 2,
@@ -340,6 +340,38 @@ export const islandArtManifestTests: TestCase[] = [
         getIslandArtLandmarkImageSrc(landmark, 5),
         '/assets/islands/island-001/landmarks/landmark-01-level-03.webp',
         'Expected over-max build level to select level 3 image',
+      );
+    },
+  },
+  {
+    name: 'normalizes one positive landmark scale per build level',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        landmarks: [{
+          ...sampleManifest.landmarks[0],
+          levelScales: [0.275, 0.55, 1.1],
+        }],
+      }, 1);
+      if (!manifest) throw new Error('Expected scaled landmark manifest to normalize');
+      assertDeepEqual(
+        manifest.landmarks[0]?.levelScales,
+        [0.275, 0.55, 1.1],
+        'Expected the exact L1/L2/L3 landmark growth ladder to survive normalization',
+      );
+
+      const invalid = normalizeIslandArtManifest({
+        ...sampleManifest,
+        landmarks: [{
+          ...sampleManifest.landmarks[0],
+          levelScales: [0.5, 1],
+        }],
+      }, 1);
+      if (!invalid) throw new Error('Expected manifest with optional invalid scale ladder to normalize');
+      assertEqual(
+        invalid.landmarks[0]?.levelScales,
+        undefined,
+        'Expected incomplete scale ladders to be ignored safely',
       );
     },
   },

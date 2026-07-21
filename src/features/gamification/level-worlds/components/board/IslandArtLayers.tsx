@@ -318,13 +318,18 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
       {showWorld && manifest.landmarks.map((landmark) => {
         const buildLevel = landmarkBuildLevels[landmark.stopIndex] ?? 0;
         const src = getIslandArtLandmarkImageSrc(landmark, buildLevel);
-        const landmarkImageScale = landmark.imageScale ?? 1;
+        const clampedScaleIndex = Math.max(0, Math.min(2, Math.floor(buildLevel) - 1));
+        const buildLevelScale = landmark.levelScales?.[clampedScaleIndex] ?? 1;
+        const landmarkImageScale = (landmark.imageScale ?? 1) * buildLevelScale;
+        const landmarkHeight = landmark.height * landmarkImageScale;
+        const landmarkBottom = landmark.y + (landmark.height / 2);
+        const landmarkCenterY = landmarkBottom - (landmarkHeight / 2);
         const style = makeArtLayerStyle({
           manifest,
           x: landmark.x,
-          y: landmark.y,
+          y: landmarkCenterY,
           width: landmark.width * landmarkImageScale,
-          height: landmark.height * landmarkImageScale,
+          height: landmarkHeight,
           uniformScale,
           toScreen,
           sceneLayout,
@@ -341,6 +346,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
               buildLevel={buildLevel}
               compact
               className={`island-art-layers__image island-art-layers__landmark island-art-layers__landmark--generated island-art-layers__landmark--${landmark.zBand ?? 'mid'}`}
+              data-landmark-index={landmark.stopIndex}
               style={style}
             />
           );
@@ -352,6 +358,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
             src={src}
             alt=""
             draggable={false}
+            data-landmark-index={landmark.stopIndex}
             style={style}
             onError={() => hideSource(src)}
           />

@@ -12050,7 +12050,28 @@ export function IslandRunBoardPrototype({
                   onClick={openSanctuaryPanel}
                   disabled={isBuildTutorialGameplayBlocked}
                 >
-                  🐾 Creatures
+                  <svg
+                    className="island-run-prototype__footer-handle-btn-shape island-run-prototype__footer-handle-btn-shape--left"
+                    viewBox="0 0 100 170"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <defs>
+                      <linearGradient id="island-controller-handle-left" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stopColor="#dceff7" stopOpacity="0.52" />
+                        <stop offset="0.52" stopColor="#77a9c1" stopOpacity="0.28" />
+                        <stop offset="1" stopColor="#153e59" stopOpacity="0.38" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M18 2C43-2 68 1 80 14C91 29 94 57 97 84C101 116 99 146 88 163C82 173 74 173 66 165C55 152 48 130 39 108C31 87 23 66 15 49C8 35 1 22 3 13C5 7 10 4 18 2Z"
+                      fill="url(#island-controller-handle-left)"
+                      stroke="rgba(205, 239, 252, 0.72)"
+                      strokeWidth="1.4"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </svg>
+                  <span className="island-run-prototype__footer-handle-btn-label">🐾 Creatures</span>
                 </button>
                 <button
                   type="button"
@@ -12059,7 +12080,28 @@ export function IslandRunBoardPrototype({
                   onClick={openShopPanel}
                   disabled={isBuildTutorialGameplayBlocked}
                 >
-                  🛍️ Market
+                  <svg
+                    className="island-run-prototype__footer-handle-btn-shape"
+                    viewBox="0 0 100 170"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <defs>
+                      <linearGradient id="island-controller-handle-right" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stopColor="#dceff7" stopOpacity="0.52" />
+                        <stop offset="0.52" stopColor="#77a9c1" stopOpacity="0.28" />
+                        <stop offset="1" stopColor="#153e59" stopOpacity="0.38" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M18 2C43-2 68 1 80 14C91 29 94 57 97 84C101 116 99 146 88 163C82 173 74 173 66 165C55 152 48 130 39 108C31 87 23 66 15 49C8 35 1 22 3 13C5 7 10 4 18 2Z"
+                      fill="url(#island-controller-handle-right)"
+                      stroke="rgba(205, 239, 252, 0.72)"
+                      strokeWidth="1.4"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </svg>
+                  <span className="island-run-prototype__footer-handle-btn-label">🛍️ Market</span>
                 </button>
                 <button
                   type="button"

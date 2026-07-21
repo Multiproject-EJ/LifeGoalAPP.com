@@ -28,6 +28,12 @@ export interface IslandArtLandmarkManifest {
   height: number;
   /** Optional scale applied only to built landmark art, leaving level-zero terrain unchanged. */
   imageScale?: number;
+  /**
+   * Optional L1/L2/L3 scale ladder for built landmark art. Each value is
+   * multiplied by imageScale. The renderer keeps the bottom of the placement
+   * box fixed so larger levels grow upward from the same foundation.
+   */
+  levelScales?: number[];
   levels: string[];
   zBand?: ZBand;
 }
@@ -254,6 +260,12 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
           .filter((level): level is string => Boolean(level))
         : [];
       if (!levels.length) return [];
+      const levelScales = Array.isArray(entry.levelScales)
+        ? entry.levelScales
+          .slice(0, levels.length)
+          .map((scale) => positiveFiniteNumber(scale))
+          .filter((scale): scale is number => scale !== null)
+        : [];
       return [{
         stopIndex: Math.max(0, Math.floor(finiteNumber(entry.stopIndex, 0))),
         anchorId: optionalString(entry.anchorId),
@@ -263,6 +275,7 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
         width: Math.max(1, finiteNumber(entry.width, 120)),
         height: Math.max(1, finiteNumber(entry.height, 120)),
         imageScale: positiveFiniteNumber(entry.imageScale) ?? undefined,
+        ...(levelScales.length === levels.length ? { levelScales } : {}),
         levels,
         zBand: normalizeZBand(entry.zBand),
       }];

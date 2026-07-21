@@ -149,6 +149,25 @@ function validateLandmarks(manifestPath, landmarks) {
     if (landmark.levels.length < 1 || landmark.levels.length > 3) {
       addError(manifestPath, `${basePath}.levels`, 'must contain 1 to 3 image paths');
     }
+    if (landmark.levelScales !== undefined) {
+      if (!Array.isArray(landmark.levelScales) || landmark.levelScales.length !== landmark.levels.length) {
+        addError(manifestPath, `${basePath}.levelScales`, 'must contain one positive scale for every landmark level');
+      } else {
+        landmark.levelScales.forEach((scale, levelIndex) => {
+          validatePositive(manifestPath, `${basePath}.levelScales[${levelIndex}]`, scale);
+          if (levelIndex > 0 && isFiniteNumber(scale) && isFiniteNumber(landmark.levelScales[levelIndex - 1])) {
+            const expectedDouble = landmark.levelScales[levelIndex - 1] * 2;
+            if (Math.abs(scale - expectedDouble) > 0.000001) {
+              addError(
+                manifestPath,
+                `${basePath}.levelScales[${levelIndex}]`,
+                `must be exactly double levelScales[${levelIndex - 1}] (${expectedDouble})`,
+              );
+            }
+          }
+        });
+      }
+    }
     landmark.levels.forEach((levelPath, levelIndex) => {
       validateAssetReference(manifestPath, `${basePath}.levels[${levelIndex}]`, levelPath, { required: true, kind: 'image' });
     });

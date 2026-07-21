@@ -1152,61 +1152,71 @@
 
 .island-run-prototype__footer-nav-btn--slot-story,
 .island-run-prototype__footer-nav-btn--slot-build {
-  width: clamp(5.1rem, 20%, 7.2rem);
-  height: clamp(3.6rem, 21%, 4.8rem);
+  width: clamp(4.5rem, 20%, 7rem);
+  height: clamp(3.8rem, 30%, 5.8rem);
   min-height: 0;
   padding: 0.34rem 0.46rem;
-  border-radius: 18px;
   background:
     radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.38), transparent 46%),
     linear-gradient(180deg, rgba(219, 244, 252, 0.34), rgba(119, 184, 211, 0.18) 58%, rgba(31, 91, 123, 0.24));
 }
 
 .island-run-prototype__footer-nav-btn--slot-story {
-  clip-path: polygon(
-    28% 0%, 92% 0%, 98% 5%, 100% 28%,
-    96% 57%, 88% 82%, 70% 100%, 42% 98%,
-    12% 92%, 3% 79%, 0% 68%, 2% 38%, 6% 12%
-  );
+  border-radius: 26% 42% 38% 24% / 18% 22% 36% 30%;
 }
 
 .island-run-prototype__footer-nav-btn--slot-build {
-  clip-path: polygon(
-    8% 0%, 72% 0%, 94% 12%, 98% 38%,
-    100% 68%, 97% 79%, 88% 92%, 58% 98%,
-    30% 100%, 12% 82%, 4% 57%, 0% 28%, 2% 5%
-  );
+  border-radius: 42% 26% 24% 38% / 22% 18% 30% 36%;
 }
 
 .island-run-prototype__footer-nav-btn--slot-creatures,
 .island-run-prototype__footer-nav-btn--slot-market {
-  width: clamp(4.5rem, 17%, 6.4rem);
-  height: clamp(5.4rem, 35%, 7.4rem);
+  width: clamp(3.45rem, 15%, 5.4rem);
+  height: clamp(6.8rem, 52%, 10rem);
   min-height: 0;
-  padding: 0.38rem 0.3rem;
+  padding: 0;
   align-items: center;
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.32), transparent 44%),
-    linear-gradient(180deg, rgba(168, 218, 238, 0.28), rgba(64, 139, 180, 0.18) 60%, rgba(11, 54, 86, 0.3));
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  filter: drop-shadow(0 8px 10px rgba(2, 17, 34, 0.34));
+  isolation: isolate;
 }
 
-.island-run-prototype__footer-nav-btn--slot-creatures {
-  clip-path: polygon(
-    25% 0%, 53% 1%, 80% 5%, 95% 14%,
-    100% 31%, 96% 43%, 79% 65%, 64% 84%,
-    53% 96%, 42% 100%, 31% 95%, 23% 79%,
-    21% 58%, 24% 31%, 31% 18%, 47% 6%
-  );
+.island-run-prototype__footer-handle-btn-shape {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
 }
 
-.island-run-prototype__footer-nav-btn--slot-market {
-  clip-path: polygon(
-    75% 0%, 47% 1%, 20% 5%, 5% 14%,
-    0% 31%, 4% 43%, 21% 65%, 36% 84%,
-    47% 96%, 58% 100%, 69% 95%, 77% 79%,
-    79% 58%, 76% 31%, 69% 18%, 53% 6%
-  );
+.island-run-prototype__footer-handle-btn-shape--left {
+  transform: scaleX(-1);
+}
+
+.island-run-prototype__footer-handle-btn-label {
+  position: absolute;
+  top: 40%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  transform: translateY(-50%);
+}
+
+.island-run-prototype__footer-nav-btn--slot-creatures .island-run-prototype__footer-handle-btn-label {
+  left: 0;
+  right: 24%;
+}
+
+.island-run-prototype__footer-nav-btn--slot-market .island-run-prototype__footer-handle-btn-label {
+  left: 24%;
+  right: 0;
 }
 
 .island-run-prototype__footer-nav-btn:disabled,
@@ -2038,6 +2048,8 @@
 
 .island-run-board__bg--v2-ambient {
   z-index: 1;
+  transform-origin: center center;
+  animation: island-art-ambient-drift 18s ease-in-out infinite alternate;
 }
 
 
@@ -2070,7 +2082,11 @@
    scene around the same centre so circles, plots, boss arena, and terrain all
    share the route's tilt. This is intentionally island-specific until the
    production asset workflow emits every future island at the canonical angle. */
-.island-art-layers[data-island-number="1"][data-render-mode="world"] {
+.island-art-layers[data-island-number="1"][data-render-mode="world"],
+.island-art-layers[data-island-number="2"][data-render-mode="world"],
+.island-art-layers[data-island-number="3"][data-render-mode="world"],
+.island-art-layers[data-island-number="4"][data-render-mode="world"],
+.island-art-layers[data-island-number="5"][data-render-mode="world"] {
   /* Measured from the rendered connected route at the canonical 390x844
      viewport: its board-plane bounding ratio is 0.746. */
   transform: scaleY(0.746);
@@ -2108,10 +2124,55 @@
 
 .island-art-layers__landmark {
   z-index: var(--island-art-layer-z, 4);
+  transform-origin: 50% 100%;
+  animation: island-art-landmark-idle 5.4s ease-in-out infinite;
+  will-change: transform, filter;
 }
+
+.island-art-layers__landmark[data-landmark-index="1"] { animation-delay: -1.15s; }
+.island-art-layers__landmark[data-landmark-index="2"] { animation-delay: -2.3s; }
+.island-art-layers__landmark[data-landmark-index="3"] { animation-delay: -3.45s; }
 
 .island-art-layers__boss {
   z-index: var(--island-art-layer-z, 5);
+  transform-origin: 50% 90%;
+  animation: island-art-boss-breathe 4.8s ease-in-out infinite;
+  will-change: transform, filter;
+}
+
+.island-art-layers__scenery {
+  transform-origin: 50% 100%;
+  animation: island-art-scenery-pulse 7.2s ease-in-out infinite;
+  will-change: transform, filter;
+}
+
+@keyframes island-art-ambient-drift {
+  from { transform: translate3d(-0.35%, -0.2%, 0) scale(1.01); filter: saturate(0.98) brightness(0.99); }
+  to { transform: translate3d(0.35%, 0.2%, 0) scale(1.025); filter: saturate(1.035) brightness(1.02); }
+}
+
+@keyframes island-art-landmark-idle {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0) scale(1); filter: brightness(1); }
+  50% { transform: translate(-50%, -50%) translateY(-1.2%) scale(1.006); filter: brightness(1.035); }
+}
+
+@keyframes island-art-boss-breathe {
+  0%, 100% { transform: translate(-50%, -50%) translateY(0) scale(1); filter: brightness(1) saturate(1); }
+  50% { transform: translate(-50%, -50%) translateY(-0.8%) scale(1.018); filter: brightness(1.045) saturate(1.04); }
+}
+
+@keyframes island-art-scenery-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+  50% { transform: translate(-50%, -50%) scale(1.008); filter: brightness(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-board__bg--v2-ambient,
+  .island-art-layers__landmark,
+  .island-art-layers__boss,
+  .island-art-layers__scenery {
+    animation: none !important;
+  }
 }
 
 .island-run-board__path {

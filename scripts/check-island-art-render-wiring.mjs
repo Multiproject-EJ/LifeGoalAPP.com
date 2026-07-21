@@ -3,11 +3,13 @@ import { readFileSync } from 'node:fs';
 
 const boardStagePath = 'src/features/gamification/level-worlds/components/board/BoardStage.tsx';
 const islandArtLayersPath = 'src/features/gamification/level-worlds/components/board/IslandArtLayers.tsx';
+const boardCameraPath = 'src/features/gamification/level-worlds/components/board/useBoardCamera.ts';
 const prototypePath = 'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx';
 const levelWorldsCssPath = 'src/features/gamification/level-worlds/LevelWorlds.css';
 
 const boardStage = readFileSync(boardStagePath, 'utf8');
 const islandArtLayers = readFileSync(islandArtLayersPath, 'utf8');
+const boardCamera = readFileSync(boardCameraPath, 'utf8');
 const prototype = readFileSync(prototypePath, 'utf8');
 const levelWorldsCss = readFileSync(levelWorldsCssPath, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
 const failures = [];
@@ -133,6 +135,10 @@ if (!hasTransitionNone('.island-art-layers')) {
 }
 if (!hasTransitionNone('.island-art-layers__image')) {
   failures.push('Island Art images must have transition: none.');
+}
+
+if (!/mode === 'board_follow' \|\| mode === 'overview_manual'/.test(boardCamera)) {
+  failures.push('Board camera must adopt late island scene bounds in both board-follow and overview-manual modes.');
 }
 
 if (failures.length > 0) {
