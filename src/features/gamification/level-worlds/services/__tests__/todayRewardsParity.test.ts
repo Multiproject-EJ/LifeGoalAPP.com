@@ -46,8 +46,7 @@ export const todayRewardsParityTests: TestCase[] = [
       const dailyTracker = await readSource('src/features/habits/DailyHabitTracker.tsx');
       const unifiedToday = await readSource('src/features/habits/UnifiedTodayView.tsx');
       assert(
-        dailyTracker.includes('claimDailySpinHabitBonusOncePerDay')
-          && dailyTracker.includes('hasClaimedDailySpinHabitBonus'),
+        dailyTracker.includes('claimDailySpinHabitBonusOncePerDay'),
         'DailyHabitTracker should gate habit bonus spins through the server idempotency helper.',
       );
       assert(
@@ -61,14 +60,21 @@ export const todayRewardsParityTests: TestCase[] = [
     },
   },
   {
-    name: 'Today offer copy guides bonus-spin earn flow and strong available state',
+    name: 'Daily Momentum launcher lives in the Island Run quick-action column',
     run: async () => {
       const todayTracker = await readSource('src/features/habits/DailyHabitTracker.tsx');
+      const levelWorldsHub = await readSource('src/features/gamification/level-worlds/LevelWorldsHub.tsx');
+      const islandRunBoard = await readSource('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx');
       assert(
-        todayTracker.includes('Complete 1 habit to earn your bonus spin.')
-          && todayTracker.includes('Spin Ready')
-          && todayTracker.includes('Bonus Spin'),
-        'Today Offer should surface bonus-spin guidance at 0 spins and Spin Ready state when spins are available.',
+        !todayTracker.includes('habit-day-nav__todays-offer-spin')
+          && todayTracker.includes("badgeLabelOverride: 'Open'"),
+        'Today\'s Offer should remain a shop-only entry without Daily Spin status coupling.',
+      );
+      assert(
+        levelWorldsHub.includes('onOpenDailySpinWheel={onOpenDailySpinWheel}')
+          && islandRunBoard.includes('island-run-board__daily-momentum-btn')
+          && islandRunBoard.includes('dailySpinAvailable'),
+        'Island Run should own a Daily Momentum launcher with available/collected presentation.',
       );
     },
   },

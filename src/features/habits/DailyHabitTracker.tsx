@@ -55,7 +55,6 @@ import {
 } from '../../services/habitCampaigns';
 import {
   claimDailySpinHabitBonusOncePerDay,
-  hasClaimedDailySpinHabitBonus,
   updateSpinsAvailable,
 } from '../../services/dailySpin';
 import { useDailySpinStatus } from '../../hooks/useDailySpinStatus';
@@ -343,16 +342,6 @@ function isCanonicalEventId(value: string | null | undefined): value is EventId 
   return Boolean(value) && EVENT_IDS.includes(value as EventId);
 }
 
-function getShowBonusSpinPrompt(params: {
-  isTodaysOfferSpinEntryEnabled: boolean;
-  dailySpinCount: number;
-  isDailySpinBonusClaimedToday: boolean;
-}): boolean {
-  return params.isTodaysOfferSpinEntryEnabled
-    && params.dailySpinCount <= 0
-    && !params.isDailySpinBonusClaimedToday;
-}
-
 function isInteractiveHabitChild(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
     return false;
@@ -584,13 +573,6 @@ type DailyHabitTrackerProps = {
   onOpenDailyTreat?: () => void;
   onOpenHolidayCalendar?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
-  /**
-   * Phase 2 (Minigame & Events Consolidation Plan §2.4): when provided, the
-   * Today's Offer modal renders a "Daily Spin Wheel" launch button at the
-   * bottom that invokes this callback. Only has an effect while the
-   * `todaysOfferSpinEntryEnabled` feature flag is on.
-   */
-  onOpenDailySpinWheel?: () => void;
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
   onPreferredCompactViewChange?: (isCompactView: boolean) => void;
@@ -1164,7 +1146,6 @@ export function DailyHabitTracker({
   onOpenDailyTreat,
   onOpenHolidayCalendar,
   onOpenIslandRunStop,
-  onOpenDailySpinWheel,
   forceCompactView = false,
   preferredCompactView,
   onPreferredCompactViewChange,
@@ -1244,23 +1225,12 @@ export function DailyHabitTracker({
   const [isTodaysOfferModalOpen, setIsTodaysOfferModalOpen] = useState(false);
   const [todaysOfferCheckoutPending, setTodaysOfferCheckoutPending] = useState(false);
   const [todaysOfferModalError, setTodaysOfferModalError] = useState<string | null>(null);
-  // Phase 2: in-dialog Daily Spin Wheel entry. The badge/button is rendered
-  // inside the Today's Offer modal and only when the feature flag is on.
+  // The legacy-named flag still controls bonus-spin policy and strict limits;
+  // the launcher itself is now owned by the Island Run quick-action column.
   const isTodaysOfferSpinEntryEnabled = isIslandRunFeatureEnabled('todaysOfferSpinEntryEnabled');
-  const {
-    spinAvailable: dailySpinAvailable,
-    spinsAvailable: dailySpinCount,
-    refresh: refreshDailySpinStatus,
-  } = useDailySpinStatus(
+  const { refresh: refreshDailySpinStatus } = useDailySpinStatus(
     isTodaysOfferSpinEntryEnabled ? session?.user?.id : undefined,
   );
-  const todaysOfferSpinBadgeActive = isTodaysOfferSpinEntryEnabled && dailySpinAvailable;
-  const [isDailySpinBonusClaimedToday, setIsDailySpinBonusClaimedToday] = useState(false);
-  const showBonusSpinPrompt = getShowBonusSpinPrompt({
-    isTodaysOfferSpinEntryEnabled,
-    dailySpinCount,
-    isDailySpinBonusClaimedToday,
-  });
   const [routineHiddenHabitIds, setRoutineHiddenHabitIds] = useState<string[]>([]);
   const isVisionStarPreviewOnly = resolveFeatureAccess('today.visionStar', { isAdminOrCreator }) !== 'open';
   const waterZenTreeAccess = resolveFeatureAccess('today.waterZenTree', { isAdminOrCreator });
@@ -1701,23 +1671,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       console.error('Failed to claim daily spin habit bonus:', error);
       return;
     }
-    setIsDailySpinBonusClaimedToday(true);
     await refreshDailySpinStatus();
   }, [refreshDailySpinStatus, session?.user?.id]);
-  useEffect(() => {
-    if (!session?.user?.id) {
-      setIsDailySpinBonusClaimedToday(false);
-      return;
-    }
-    const todayKey = formatISODate(new Date());
-    let isMounted = true;
-    void hasClaimedDailySpinHabitBonus(session.user.id, todayKey).then((claimed) => {
-      if (isMounted) setIsDailySpinBonusClaimedToday(claimed);
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, [session?.user?.id, today]);
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
@@ -3918,17 +3873,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         label: "Today's Offer",
         icon: '🛍️',
         expiresAtMs: null,
-        badgeLabelOverride: todaysOfferSpinBadgeActive
-          ? `${Math.max(1, Math.floor(dailySpinCount))} Spin Ready`
-          : showBonusSpinPrompt
-            ? 'Bonus Spin'
-            : 'Open',
+        badgeLabelOverride: 'Open',
         isCollected: false,
         isVisible: true,
-        // Phase 2 second-pass: unify red badge logic with in-dialog Daily Spin CTA.
-        // Notification appears only when a daily spin is available; the circle stays
-        // tappable either way so users can still access the offer modal.
-        isActionable: isTodaysOfferSpinEntryEnabled ? todaysOfferSpinBadgeActive : true,
+        isActionable: true,
         sortPriority: 3,
         slotRole: 'core',
       },
@@ -4005,10 +3953,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     isIslandRunReadyToStart,
     visibleEggSlotsOnActiveIsland,
     isSpecialVisionStarDay,
-    todaysOfferSpinBadgeActive,
-    dailySpinCount,
-    isDailySpinBonusClaimedToday,
-    isTodaysOfferSpinEntryEnabled,
     isVisionStarAppearanceActive,
     isVisionStarPreviewOnly,
     visionStarAppearanceWindow,
@@ -4099,21 +4043,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
     window.location.assign(result.url);
   }, [isDemoExperience, islandRunState.activeTimedEvent?.eventType, todaysOfferCheckoutPending]);
-
-  const launchTodaysOfferDailySpin = useCallback(() => {
-    if (!isTodaysOfferSpinEntryEnabled) {
-      return;
-    }
-
-    if (!onOpenDailySpinWheel) {
-      setTodaysOfferModalError('Daily Spin launcher is unavailable right now.');
-      return;
-    }
-
-    setTodaysOfferModalError(null);
-    setIsTodaysOfferModalOpen(false);
-    onOpenDailySpinWheel();
-  }, [isTodaysOfferSpinEntryEnabled, onOpenDailySpinWheel]);
 
   const openOfferContent = useCallback((offerId: TimeBoundOfferId | EggHatchOfferId) => {
     if (offerId === 'island_run') {
@@ -4251,9 +4180,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       onClick={closeTodaysOfferModal}
     >
       <div
-        className={`habit-day-nav__vision-modal habit-day-nav__todays-offer-modal${
-          isTodaysOfferSpinEntryEnabled ? ' habit-day-nav__todays-offer-modal--scrollable' : ''
-        }`}
+        className="habit-day-nav__vision-modal habit-day-nav__todays-offer-modal"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -4275,43 +4202,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           >
             {todaysOfferCheckoutPending ? 'Opening…' : 'Buy'}
           </button>
-          {isTodaysOfferSpinEntryEnabled ? (
-            <div className="habit-day-nav__todays-offer-spin">
-              <button
-                type="button"
-                className={`habit-day-nav__todays-offer-spin-button${dailySpinAvailable ? ' habit-day-nav__todays-offer-spin-button--ready' : ''}`}
-                disabled={!onOpenDailySpinWheel}
-                onClick={launchTodaysOfferDailySpin}
-                aria-label={
-                  dailySpinAvailable
-                    ? `Spin the Daily Spin Wheel (${Math.max(0, Math.floor(dailySpinCount))} available)`
-                    : isDailySpinBonusClaimedToday
-                      ? 'Daily Spin Wheel (already used today)'
-                      : 'Daily Spin Wheel (complete one habit for bonus spin)'
-                }
-              >
-                <span className="habit-day-nav__todays-offer-spin-icon" aria-hidden="true">🎡</span>
-                <span className="habit-day-nav__todays-offer-spin-label">Daily Spin Wheel</span>
-                {dailySpinAvailable ? (
-                  <span
-                    className="habit-day-nav__todays-offer-spin-badge"
-                    aria-hidden="true"
-                  >
-                    {Math.max(1, Math.floor(dailySpinCount))}
-                  </span>
-                ) : null}
-              </button>
-              <p className="habit-day-nav__todays-offer-spin-caption">
-                {!onOpenDailySpinWheel
-                  ? 'Daily Spin launcher unavailable in this view.'
-                  : dailySpinAvailable
-                    ? `${Math.max(1, Math.floor(dailySpinCount))} Spin Ready`
-                    : isDailySpinBonusClaimedToday
-                      ? 'Come back tomorrow for your next spin.'
-                      : 'Complete 1 habit to earn your bonus spin.'}
-              </p>
-            </div>
-          ) : null}
           {todaysOfferModalError ? (
             <p className="habit-day-nav__bonus-error" role="status" aria-live="polite">
               {todaysOfferModalError}

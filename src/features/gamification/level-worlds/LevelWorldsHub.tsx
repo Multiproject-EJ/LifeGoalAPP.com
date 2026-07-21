@@ -15,6 +15,9 @@ interface LevelWorldsHubProps {
   showTopBackButton?: boolean;
   isAdmin?: boolean;
   onOpenSaveAccountSignup?: () => void;
+  onOpenDailySpinWheel?: () => void;
+  dailySpinAvailable?: boolean;
+  dailySpinCount?: number;
 }
 
 export function LevelWorldsHub({
@@ -24,6 +27,9 @@ export function LevelWorldsHub({
   showTopBackButton = false,
   isAdmin = false,
   onOpenSaveAccountSignup,
+  onOpenDailySpinWheel,
+  dailySpinAvailable = false,
+  dailySpinCount = 0,
 }: LevelWorldsHubProps) {
   const userId = session.user.id;
 
@@ -49,6 +55,9 @@ export function LevelWorldsHub({
         showTopBackButton={showTopBackButton}
         isAdmin={isAdmin}
         onOpenSaveAccountSignup={onOpenSaveAccountSignup}
+        onOpenDailySpinWheel={onOpenDailySpinWheel}
+        dailySpinAvailable={dailySpinAvailable}
+        dailySpinCount={dailySpinCount}
       />
     </div>
   );

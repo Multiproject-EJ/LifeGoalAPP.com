@@ -1038,9 +1038,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const goldBalance = gamificationProfile?.total_points ?? 0;
   const goldBreakdown = splitGoldBalance(goldBalance);
   const { spinAvailable, spinsAvailable } = useDailySpinStatus(supabaseSession?.user?.id);
-  // Phase 2 (Minigame & Events Consolidation Plan §2.5): when the
-  // `todaysOfferSpinEntryEnabled` flag is on, the Daily Spin Wheel moves
-  // into the Today's Offer dialog and is REMOVED from the board overlay.
+  // The legacy-named placement flag keeps Daily Momentum out of the old game
+  // overlay. Its canonical launcher now lives in the Island Run quick-action
+  // column beside the hatchery and sticker album.
   // Treasure Path remains Island Run-owned and is intentionally not exposed
   // as a standalone game overlay entry.
   const overlayShowSpinWheel =
@@ -4012,7 +4012,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setLevelWorldsEntryPanel('default');
                 setShowLevelWorldsFromEntry(true);
               }}
-              onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
               preferredCompactView={workspaceProfile?.private_compact_view_enabled ?? false}
               onPreferredCompactViewChange={handlePreferredCompactViewChange}
               onNavigateToTimer={(context) => {
@@ -5276,6 +5275,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onClose={handleCloseLevelWorldsEntry}
           isAdmin={isAdmin === true}
           onOpenSaveAccountSignup={handleOpenSaveAccountSignup}
+          onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
+          dailySpinAvailable={spinAvailable}
+          dailySpinCount={spinsAvailable}
         />
       </RecoverableErrorBoundary>
     </div>
@@ -5439,7 +5441,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setLevelWorldsEntryPanel('default');
                 setShowLevelWorldsFromEntry(true);
               }}
-              onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
               onOpenAiCoach={(starterQuestion) => {
                 setAiCoachStarterQuestion(starterQuestion ?? undefined);
                 setShowAiCoachModal(true);

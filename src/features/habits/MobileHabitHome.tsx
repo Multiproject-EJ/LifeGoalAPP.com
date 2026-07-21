@@ -17,7 +17,6 @@ type MobileHabitHomeProps = {
   onOpenDailyTreat?: () => void;
   onOpenHolidayCalendar?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
-  onOpenDailySpinWheel?: () => void;
   onOpenAiCoach?: (starterQuestion?: string) => void;
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
@@ -52,7 +51,6 @@ export function MobileHabitHome({
   onOpenDailyTreat,
   onOpenHolidayCalendar,
   onOpenIslandRunStop,
-  onOpenDailySpinWheel,
   onOpenAiCoach,
   forceCompactView = false,
   preferredCompactView,
@@ -90,7 +88,6 @@ export function MobileHabitHome({
         onOpenDailyTreat={onOpenDailyTreat}
         onOpenHolidayCalendar={onOpenHolidayCalendar}
         onOpenIslandRunStop={onOpenIslandRunStop}
-        onOpenDailySpinWheel={onOpenDailySpinWheel}
         onOpenAiCoach={onOpenAiCoach}
         forceCompactView={forceCompactView}
         preferredCompactView={preferredCompactView}
