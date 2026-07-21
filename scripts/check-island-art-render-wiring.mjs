@@ -80,7 +80,7 @@ for (const islandArtLayerCall of islandArtLayerCalls) {
   }
 }
 if (!islandArtLayerCalls.some((call) => /renderMode="board-plane"/.test(call))) {
-  failures.push('BoardStage must render a board-plane IslandArtLayers pass for concentric ground art.');
+  failures.push('BoardStage must retain a board-plane IslandArtLayers pass for legacy ground art.');
 }
 if (!islandArtLayerCalls.some((call) => /renderMode="world"/.test(call))) {
   failures.push('BoardStage must render a world IslandArtLayers pass for landmarks and scenery.');
@@ -94,6 +94,18 @@ if (/manifest\??\.scene\??\.boardCircle|manifest\.scene\.boardCircle/.test(islan
 }
 if (/boardPlate[^?]*&&[^?]*boardCircle|boardCircle[^?]*\?\?[^?]*boardPlate/.test(islandArtLayers)) {
   failures.push('IslandArtLayers must not implement local boardPlate/boardCircle fallback logic; keep fallback in islandArtManifest service.');
+}
+if (!/const usesFinalAssetCamera = manifest\.assetCameraMode === 'final-angle';/.test(islandArtLayers)) {
+  failures.push('IslandArtLayers must recognize the final-angle production camera contract.');
+}
+if (!/const showBoardSurface = usesFinalAssetCamera \? showWorld : showBoardPlane;/.test(islandArtLayers)) {
+  failures.push('Final-angle board surfaces must render in the un-tilted world-art stage.');
+}
+if (!/data-asset-camera-mode=\{manifest\.assetCameraMode \?\? 'legacy-camera'\}/.test(islandArtLayers)) {
+  failures.push('IslandArtLayers must expose the camera contract to CSS.');
+}
+if (!levelWorldsCss.includes('.island-art-layers[data-asset-camera-mode="final-angle"][data-render-mode="world"]')) {
+  failures.push('Final-angle world art must have an explicit no-secondary-transform CSS guard.');
 }
 
 const artStageMatch = boardStage.match(/className="island-run-board__art-camera-stage"[\s\S]*?style=\{\{ transform: ([^,}]+)/);

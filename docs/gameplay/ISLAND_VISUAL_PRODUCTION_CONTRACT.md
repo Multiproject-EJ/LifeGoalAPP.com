@@ -63,12 +63,19 @@ The approved Island 1 tropical waterfall image is a **composition reference**, n
 
 The canonical circular route is centered at (500, 500) in playable-board space with radius 340. Its 36 runtime tiles form a **seamless connected circle of individual raised blocks**. Every block needs a readable top face, a fine joint at each neighbour, a visible darker side wall, and one shared perspective-correct depth and lighting model. There must be no open gaps between tiles and no solid decorative backing ring or separate raised plinth beneath them.
 
-Every painted ground-plane circle beneath or around that route must inherit the
-same live camera transform, center, rotation, and tilt as the runtime tiles.
-Never approximate the board perspective by independently squashing a circle in
-screen space. If perspective is already baked into a source image, normalize
-the source ellipse back to a circle with the manifest's inner/outer vertical
-scale before the shared board transform is applied.
+Every production asset must be generated directly in the circular board's
+finished camera angle. The board is the immutable camera reference: its center,
+ellipse, receding top edge, visible front depth, rotation, light direction, and
+shadow direction are copied into the outer island, landmark foundations,
+buildings, boss, arena, and scenery before export.
+
+Production manifests must set `assetCameraMode` to `final-angle`. In that mode
+the runtime may translate and uniformly size the raster, but it must not apply
+the board-plane `rotateX`, a compensating vertical scale, or any second
+perspective transform. Never generate a top-down island and squash or tilt it
+after import. Never generate a partially tilted asset and tilt it again. Legacy
+camera normalization remains compatibility-only and is not an approved path
+for Islands 1–120 production art.
 
 Runtime board-plate art must avoid high-contrast radial seams, text, small props, or fake paving inside the tile corridor. The real blocks, highlights, token, 3D caretaker, technology fragments, and traffic-light tile must remain legible in every state.
 

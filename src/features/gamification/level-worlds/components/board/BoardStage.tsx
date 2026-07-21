@@ -580,9 +580,10 @@ export function BoardStage(props: BoardStageProps) {
         style={{ position: 'absolute', inset: 0, zIndex: 10, touchAction: 'none' }}
       />
 
-      {/* Ground-plane art uses the exact same camera and 47deg transform as the
-          live tile route. Source-perspective normalization in the manifest
-          prevents baked-in art perspective from being applied twice. */}
+      {/* Legacy ground-plane art follows the live route's 47deg transform.
+          Production `final-angle` assets bypass this stage entirely: their
+          finished perspective is authored into the raster and must never be
+          tilted or vertically normalized a second time. */}
       <div
         className="island-run-board__board-plane-camera-stage"
         style={{ transform: cameraStageTransform, willChange: 'transform' }}

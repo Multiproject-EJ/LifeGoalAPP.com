@@ -2087,7 +2087,6 @@
    share the route's tilt. This is intentionally island-specific until the
    production asset workflow emits every future island at the canonical angle. */
 .island-art-layers[data-island-number="1"][data-render-mode="world"],
-.island-art-layers[data-island-number="2"][data-render-mode="world"],
 .island-art-layers[data-island-number="3"][data-render-mode="world"],
 .island-art-layers[data-island-number="4"][data-render-mode="world"],
 .island-art-layers[data-island-number="5"][data-render-mode="world"] {
@@ -2095,6 +2094,12 @@
      viewport: its board-plane bounding ratio is 0.746. */
   transform: scaleY(0.746);
   transform-origin: center center;
+}
+
+/* Production islands are painted in the board's final camera. They follow
+   pan/zoom only: never apply a second perspective or vertical squash. */
+.island-art-layers[data-asset-camera-mode="final-angle"][data-render-mode="world"] {
+  transform: none;
 }
 
 .island-art-layers[data-island-number="1"] .island-art-layers__board-outer {

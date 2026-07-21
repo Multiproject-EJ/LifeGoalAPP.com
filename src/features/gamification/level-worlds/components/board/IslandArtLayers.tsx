@@ -181,8 +181,10 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
   const boardOuterCircleScale = manifest.boardOuterCircleImageScale ?? boardPlateScale;
   const boardPlateVerticalScale = manifest.boardPlateImageVerticalScale ?? 1;
   const boardOuterCircleVerticalScale = manifest.boardOuterCircleImageVerticalScale ?? 1;
+  const usesFinalAssetCamera = manifest.assetCameraMode === 'final-angle';
   const showBoardPlane = renderMode !== 'world';
   const showWorld = renderMode !== 'board-plane';
+  const showBoardSurface = usesFinalAssetCamera ? showWorld : showBoardPlane;
   const boardPlateYOffsetRatio = manifest.boardPlateImageScale !== undefined ? 0 : BOARD_PLATE_DOWNWARD_OFFSET_RATIO;
   const boardPlateCenterX = boardPlateRect ? boardPlateRect.x + boardPlateRect.width / 2 : manifest.coordinateSpace.width / 2;
   const boardPlateCenterY = boardPlateRect
@@ -226,9 +228,10 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
       style={{ width: boardWidth, height: boardHeight }}
       data-island-number={manifest.islandNumber}
       data-render-mode={renderMode}
+      data-asset-camera-mode={manifest.assetCameraMode ?? 'legacy-camera'}
       aria-hidden="true"
     >
-      {showBoardPlane && boardOuterCircleSrc && !hiddenSources.has(boardOuterCircleSrc) ? (
+      {showBoardSurface && boardOuterCircleSrc && !hiddenSources.has(boardOuterCircleSrc) ? (
         <img
           key={`board-outer-${boardOuterCircleSrc}`}
           className="island-art-layers__image island-art-layers__board-outer"
@@ -244,7 +247,7 @@ export function IslandArtLayers(props: IslandArtLayersProps) {
         />
       ) : null}
 
-      {showBoardPlane && boardPlateSrc && !hiddenSources.has(boardPlateSrc) ? (
+      {showBoardSurface && boardPlateSrc && !hiddenSources.has(boardPlateSrc) ? (
         <img
           key={`board-plate-${boardPlateSrc}`}
           className="island-art-layers__image island-art-layers__board-circle island-art-layers__board-plate"

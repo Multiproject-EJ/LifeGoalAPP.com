@@ -50,7 +50,9 @@ The board circle/plate image is shared gameplay framing, not a movable island pr
 Allowed:
 
 - use different island-themed board circle/plate image files
-- use renderer-supported visual scaling where needed to align art
+- generate every production layer in the final board camera and declare
+  `assetCameraMode: "final-angle"`
+- use uniform renderer scaling where needed to align art
 - keep the board art aligned with the canonical playable board rectangle
 
 Avoid:
@@ -59,6 +61,8 @@ Avoid:
 - adding per-island board movement path overrides
 - using board-circle art coordinates to change gameplay behavior
 - coupling landmark progression to visual board-circle art
+- applying `rotateX`, vertical squash, or another perspective transform to an
+  asset that was already generated in the final board camera
 
 ## Relationship to canonical gameplay rules
 
@@ -81,3 +85,5 @@ When adding island artwork for new `island-00x` folders:
 3. Treat all manifest art placement as visual-only.
 4. Do not add gameplay state writes or progression logic to artwork rendering components.
 5. If a visual requirement appears to need moving the tile ring, first redesign the island art around the fixed canonical board.
+6. Generate all raster layers in the board's final camera angle; never rely on
+   runtime perspective correction for production assets.

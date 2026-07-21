@@ -8,6 +8,7 @@ const publicDir = path.join(repoRoot, 'public');
 const islandsDir = path.join(publicDir, 'assets', 'islands');
 const VALID_Z_BANDS = new Set(['back', 'mid', 'front']);
 const VALID_BOSS_STATES = new Set(['idle', 'active', 'attack', 'defeated', 'reward']);
+const VALID_ASSET_CAMERA_MODES = new Set(['legacy-camera', 'final-angle']);
 const IMAGE_EXTENSIONS = new Set(['.avif', '.gif', '.jpg', '.jpeg', '.png', '.svg', '.webp']);
 const ANIMATION_EXTENSIONS = new Set(['.json', '.lottie', '.mp4', '.webm']);
 
@@ -259,6 +260,65 @@ function validateScenery(manifestPath, scenery) {
   });
 }
 
+function validateCompositionAnchor(manifestPath, manifest) {
+  const { sceneSpace, playableBoardRect, landmarks } = manifest;
+  if (!isRecord(sceneSpace) || !isRecord(playableBoardRect)) return;
+
+  const sceneValues = [sceneSpace.width, sceneSpace.height];
+  const boardValues = [
+    playableBoardRect.x,
+    playableBoardRect.y,
+    playableBoardRect.width,
+    playableBoardRect.height,
+  ];
+  if (![...sceneValues, ...boardValues].every(isFiniteNumber)) return;
+
+  const sceneCenter = {
+    x: sceneSpace.width / 2,
+    y: sceneSpace.height / 2,
+  };
+  const boardCenter = {
+    x: playableBoardRect.x + playableBoardRect.width / 2,
+    y: playableBoardRect.y + playableBoardRect.height / 2,
+  };
+  const tolerance = 0.000001;
+
+  if (
+    Math.abs(boardCenter.x - sceneCenter.x) > tolerance
+    || Math.abs(boardCenter.y - sceneCenter.y) > tolerance
+  ) {
+    addError(
+      manifestPath,
+      'playableBoardRect',
+      `must be centered on sceneSpace (${sceneCenter.x}, ${sceneCenter.y}); received (${boardCenter.x}, ${boardCenter.y})`,
+    );
+  }
+
+  if (!Array.isArray(landmarks) || landmarks.length === 0) return;
+  if (!landmarks.every((landmark) => isRecord(landmark) && isFiniteNumber(landmark.x) && isFiniteNumber(landmark.y))) {
+    return;
+  }
+
+  const landmarkCenter = landmarks.reduce(
+    (center, landmark) => ({
+      x: center.x + landmark.x / landmarks.length,
+      y: center.y + landmark.y / landmarks.length,
+    }),
+    { x: 0, y: 0 },
+  );
+
+  if (
+    Math.abs(landmarkCenter.x - boardCenter.x) > tolerance
+    || Math.abs(landmarkCenter.y - boardCenter.y) > tolerance
+  ) {
+    addError(
+      manifestPath,
+      'landmarks',
+      `must remain balanced around the playable-board anchor (${boardCenter.x}, ${boardCenter.y}); received centroid (${landmarkCenter.x}, ${landmarkCenter.y})`,
+    );
+  }
+}
+
 function validateManifest(manifestPath) {
   let parsed;
   try {
@@ -276,6 +336,29 @@ function validateManifest(manifestPath) {
     addError(manifestPath, 'version', 'must equal 2');
   }
 
+  if (
+    parsed.assetCameraMode !== undefined
+    && (typeof parsed.assetCameraMode !== 'string' || !VALID_ASSET_CAMERA_MODES.has(parsed.assetCameraMode))
+  ) {
+    addError(manifestPath, 'assetCameraMode', 'must be one of: legacy-camera, final-angle');
+  }
+  if (parsed.assetCameraMode === 'final-angle') {
+    if (parsed.boardPlateImageVerticalScale !== undefined) {
+      addError(
+        manifestPath,
+        'boardPlateImageVerticalScale',
+        'must be omitted when assetCameraMode is final-angle; final-camera art cannot receive a second vertical perspective correction',
+      );
+    }
+    if (parsed.boardOuterCircleImageVerticalScale !== undefined) {
+      addError(
+        manifestPath,
+        'boardOuterCircleImageVerticalScale',
+        'must be omitted when assetCameraMode is final-angle; final-camera art cannot receive a second vertical perspective correction',
+      );
+    }
+  }
+
   if (parsed.coordinateSpace !== undefined) {
     if (!isRecord(parsed.coordinateSpace)) {
       addError(manifestPath, 'coordinateSpace', 'must be an object when present');
@@ -289,6 +372,7 @@ function validateManifest(manifestPath) {
   validateLandmarks(manifestPath, parsed.landmarks);
   validateBoss(manifestPath, parsed.boss);
   validateScenery(manifestPath, parsed.scenery);
+  validateCompositionAnchor(manifestPath, parsed);
 }
 
 function findManifestPaths() {

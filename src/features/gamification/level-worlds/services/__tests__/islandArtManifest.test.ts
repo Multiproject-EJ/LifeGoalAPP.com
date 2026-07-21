@@ -448,6 +448,32 @@ export const islandArtManifestTests: TestCase[] = [
     },
   },
   {
+    name: 'preserves the final-angle asset camera contract',
+    run: () => {
+      const finalAngleManifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        assetCameraMode: 'final-angle',
+      }, 2);
+      if (!finalAngleManifest) throw new Error('Expected final-angle manifest to normalize');
+      assertEqual(
+        finalAngleManifest.assetCameraMode,
+        'final-angle',
+        'Expected final-camera art to bypass runtime perspective correction',
+      );
+
+      const invalidModeManifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        assetCameraMode: 'top-down-then-squash',
+      }, 2);
+      if (!invalidModeManifest) throw new Error('Expected unsupported camera mode to preserve the rest of the manifest');
+      assertEqual(
+        invalidModeManifest.assetCameraMode,
+        undefined,
+        'Expected unsupported camera modes to be discarded',
+      );
+    },
+  },
+  {
     name: 'missing optional layers do not break manifest normalization',
     run: () => {
       const manifest = normalizeIslandArtManifest({

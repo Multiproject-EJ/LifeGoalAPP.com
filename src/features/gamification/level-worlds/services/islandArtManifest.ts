@@ -80,6 +80,12 @@ export interface IslandArtManifest {
   /** Optional placement of the existing 1000×1000 playable board inside sceneSpace. */
   playableBoardRect?: IslandArtRect;
   /**
+   * Camera contract for raster art. `final-angle` means every island asset is
+   * authored in the live board's finished perspective and must never receive
+   * the runtime board-plane rotateX or a compensating vertical squash.
+   */
+  assetCameraMode?: 'legacy-camera' | 'final-angle';
+  /**
    * Optional scale multiplier for the inner board plate/circle image, overriding
    * the global BOARD_PLATE_SIZE_SCALE constant. Use to tune the centered
    * inner-board art without changing tile anchors or gameplay geometry.
@@ -232,6 +238,11 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
     : { ...DEFAULT_COORDINATE_SPACE };
   const normalizedIslandArtSceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
   const normalizedIslandArtPlayableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
+  const normalizedAssetCameraMode = raw.assetCameraMode === 'final-angle'
+    ? 'final-angle'
+    : raw.assetCameraMode === 'legacy-camera'
+      ? 'legacy-camera'
+      : null;
   const normalizedBoardPlateImageScale = positiveFiniteNumber(raw.boardPlateImageScale);
   const normalizedBoardOuterCircleImageScale = positiveFiniteNumber(raw.boardOuterCircleImageScale);
   const normalizedBoardPlateImageVerticalScale = positiveFiniteNumber(raw.boardPlateImageVerticalScale);
@@ -338,6 +349,7 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
     coordinateSpace,
     ...(normalizedIslandArtSceneSpace ? { sceneSpace: normalizedIslandArtSceneSpace } : {}),
     ...(normalizedIslandArtPlayableBoardRect ? { playableBoardRect: normalizedIslandArtPlayableBoardRect } : {}),
+    ...(normalizedAssetCameraMode ? { assetCameraMode: normalizedAssetCameraMode } : {}),
     ...(normalizedBoardPlateImageScale !== null ? { boardPlateImageScale: normalizedBoardPlateImageScale } : {}),
     ...(normalizedBoardOuterCircleImageScale !== null ? { boardOuterCircleImageScale: normalizedBoardOuterCircleImageScale } : {}),
     ...(normalizedBoardPlateImageVerticalScale !== null ? { boardPlateImageVerticalScale: normalizedBoardPlateImageVerticalScale } : {}),
