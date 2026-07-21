@@ -2052,6 +2052,10 @@
   animation: island-art-ambient-drift 18s ease-in-out infinite alternate;
 }
 
+.island-run-board[data-island-number="2"] .island-run-board__bg--v2-ambient {
+  animation-name: island-art-ambient-drift-tidelock;
+}
+
 
 .island-run-board__path-overlay {
   position: absolute;
@@ -2129,6 +2133,17 @@
   will-change: transform, filter;
 }
 
+.island-art-layers[data-island-number="2"] .island-art-layers__landmark-base {
+  filter:
+    saturate(1.1)
+    contrast(1.05)
+    drop-shadow(0 10px 9px rgba(9, 47, 53, 0.38));
+}
+
+.island-art-layers[data-island-number="2"] .island-art-layers__landmark {
+  animation-name: island-art-landmark-idle-tidelock;
+}
+
 .island-art-layers__landmark[data-landmark-index="1"] { animation-delay: -1.15s; }
 .island-art-layers__landmark[data-landmark-index="2"] { animation-delay: -2.3s; }
 .island-art-layers__landmark[data-landmark-index="3"] { animation-delay: -3.45s; }
@@ -2140,10 +2155,18 @@
   will-change: transform, filter;
 }
 
+.island-art-layers[data-island-number="2"] .island-art-layers__boss {
+  animation-name: island-art-boss-breathe-tidelock;
+}
+
 .island-art-layers__scenery {
   transform-origin: 50% 100%;
   animation: island-art-scenery-pulse 7.2s ease-in-out infinite;
   will-change: transform, filter;
+}
+
+.island-art-layers[data-island-number="2"] .island-art-layers__scenery {
+  animation-name: island-art-scenery-pulse-tidelock;
 }
 
 @keyframes island-art-ambient-drift {
@@ -2151,9 +2174,39 @@
   to { transform: translate3d(0.35%, 0.2%, 0) scale(1.025); filter: saturate(1.035) brightness(1.02); }
 }
 
+@keyframes island-art-ambient-drift-tidelock {
+  from {
+    transform: translate3d(-0.35%, -0.2%, 0) scale(1.01);
+    filter: saturate(1.12) contrast(1.055) brightness(0.96);
+  }
+  to {
+    transform: translate3d(0.35%, 0.2%, 0) scale(1.025);
+    filter: saturate(1.2) contrast(1.07) brightness(1);
+  }
+}
+
 @keyframes island-art-landmark-idle {
   0%, 100% { transform: translate(-50%, -50%) translateY(0) scale(1); filter: brightness(1); }
   50% { transform: translate(-50%, -50%) translateY(-1.2%) scale(1.006); filter: brightness(1.035); }
+}
+
+@keyframes island-art-landmark-idle-tidelock {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateY(0) scale(1);
+    filter:
+      saturate(1.12)
+      contrast(1.06)
+      brightness(1.01)
+      drop-shadow(0 10px 8px rgba(5, 39, 45, 0.5));
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-1.2%) scale(1.006);
+    filter:
+      saturate(1.16)
+      contrast(1.07)
+      brightness(1.07)
+      drop-shadow(0 12px 10px rgba(5, 39, 45, 0.46));
+  }
 }
 
 @keyframes island-art-boss-breathe {
@@ -2161,9 +2214,45 @@
   50% { transform: translate(-50%, -50%) translateY(-0.8%) scale(1.018); filter: brightness(1.045) saturate(1.04); }
 }
 
+@keyframes island-art-boss-breathe-tidelock {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateY(0) scale(1);
+    filter:
+      saturate(1.2)
+      contrast(1.12)
+      brightness(1.04)
+      drop-shadow(0 12px 11px rgba(1, 28, 36, 0.68))
+      drop-shadow(0 0 12px rgba(78, 246, 239, 0.44));
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-1%) scale(1.025);
+    filter:
+      saturate(1.26)
+      contrast(1.14)
+      brightness(1.11)
+      drop-shadow(0 14px 13px rgba(1, 28, 36, 0.62))
+      drop-shadow(0 0 18px rgba(78, 246, 239, 0.58));
+  }
+}
+
 @keyframes island-art-scenery-pulse {
   0%, 100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
   50% { transform: translate(-50%, -50%) scale(1.008); filter: brightness(1.04); }
+}
+
+@keyframes island-art-scenery-pulse-tidelock {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    filter: saturate(1.22) contrast(1.11) brightness(0.96);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.012);
+    filter:
+      saturate(1.3)
+      contrast(1.14)
+      brightness(1.05)
+      drop-shadow(0 0 14px rgba(79, 241, 235, 0.4));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3721,6 +3810,33 @@
   text-transform: uppercase;
 }
 
+/* Island 002 uses detailed pearl-and-tide architecture at phone scale. Keep
+   the landmark name, but collapse the second text chip to one compact state
+   icon so the art remains readable instead of carrying two stacked labels. */
+.island-run-board[data-island-number="2"] .island-orbit-stop__status-pill {
+  top: 61%;
+  min-width: 24px;
+  max-width: 30px;
+  min-height: 20px;
+  gap: 0;
+  padding: 2px 5px;
+  border-color: rgba(251, 230, 174, 0.9);
+  background: linear-gradient(180deg, rgba(22, 51, 58, 0.97), rgba(4, 24, 31, 0.97));
+  box-shadow:
+    0 5px 11px rgba(0, 20, 28, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.island-run-board[data-island-number="2"] .island-orbit-stop__status-text,
+.island-run-board[data-island-number="2"] .island-orbit-stop__ticket-cost {
+  display: none;
+}
+
+.island-run-board[data-island-number="2"] .island-orbit-stop__icon {
+  font-size: 0.8rem;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.72));
+}
+
 .island-orbit-stop__status-pill--completed {
   background: linear-gradient(180deg, rgba(34, 146, 70, 0.98), rgba(11, 82, 38, 0.98));
   border-color: rgba(208, 255, 226, 0.98);
@@ -3829,6 +3945,29 @@
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.52);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
   pointer-events: none;
+}
+
+.island-run-board[data-island-number="2"] .island-orbit-stop__label {
+  min-width: 68px;
+  padding: 0.17rem 0.4rem;
+  border-color: rgba(238, 220, 174, 0.9);
+  background: linear-gradient(180deg, rgba(18, 45, 52, 0.96), rgba(3, 20, 27, 0.96));
+  color: #fffaf0;
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.76);
+  box-shadow:
+    0 5px 11px rgba(0, 20, 28, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.island-run-board[data-island-number="2"] .island-orbit-stop[aria-label^="Boss"] .island-orbit-stop__label {
+  border-color: rgba(255, 225, 132, 0.98);
+  background: linear-gradient(180deg, rgba(71, 48, 16, 0.98), rgba(24, 22, 20, 0.98));
+  box-shadow:
+    0 0 0 1px rgba(255, 224, 133, 0.32),
+    0 0 14px rgba(87, 240, 232, 0.46);
 }
 
 .island-orbit-stop--scene-1 .island-orbit-stop__label,
