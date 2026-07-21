@@ -411,9 +411,18 @@ export interface SpinPrize {
   wheelWeight?: number;
 }
 
+export interface SpinAward {
+  currency: Exclude<PrizeType, 'treasure_chest' | 'mystery'>;
+  amount: number;
+  label: string;
+  icon: string;
+}
+
 export interface SpinResult {
   prize: SpinPrize;
   spinsRemaining: number;
+  /** Exact items already granted by the authoritative spin service. */
+  awardedRewards: SpinAward[];
 }
 
 // Prize configuration — multi-currency pool aligned with island-run economy

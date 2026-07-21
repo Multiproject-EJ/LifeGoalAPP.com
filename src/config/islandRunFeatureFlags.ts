@@ -46,10 +46,9 @@ export interface IslandRunFeatureFlags {
   islandRunPartnerWheelEnabled: boolean;
 
   /**
-   * Phase 2 — adds a Daily Spin Wheel launch button at the bottom of the
-   * scrollable Today's Offer dialog. While off, the dialog keeps its current
-   * non-scrollable two-button layout and the Daily Spin Wheel remains reachable
-   * from the Game Board Overlay.
+   * Legacy-named Daily Spin consolidation flag. While enabled, strict daily
+   * limits and the Island Run-owned launcher are active, and the retired Game
+   * Board Overlay launcher stays hidden.
    */
   todaysOfferSpinEntryEnabled: boolean;
 

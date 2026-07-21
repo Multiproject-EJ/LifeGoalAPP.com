@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CelebrationFireworks, type FireworksVariant } from './CelebrationFireworks';
+import { GiftBoxOpeningAnimation } from './GiftBoxOpeningAnimation';
 import './AnimationLab.css';
 
 type AnimationAsset = {
-  id: 'fireworksCapstone' | 'fireworksHero' | 'fireworksRapid' | 'egg' | 'creaturePack';
+  id: 'fireworksCapstone' | 'fireworksHero' | 'fireworksRapid' | 'egg' | 'creaturePack' | 'giftBox';
   name: string;
   cadence: string;
   usage: string;
@@ -81,16 +82,29 @@ const ANIMATIONS: AnimationAsset[] = [
   },
   {
     id: 'creaturePack',
-    name: 'Creature Pack opening',
+    name: 'Five-card Creature Pack opening',
     cadence: 'Pack reward',
-    usage: 'Welcome Pack, first-session pack and future purchased-pack reveals',
+    usage: 'Welcome Pack, first-session pack and purchased creature_pack_5 reveals',
     src: '/assets/animations/creature-pack-opening.webm',
     appleSrc: '/assets/animations/creature-pack-opening.mov',
-    delivery: '171 KB VP9 alpha for Chromium',
-    appleDelivery: '275 KB HEVC alpha for Safari & iOS',
-    savings: 'Compact 4:5 production asset with transparent playback fallbacks',
+    delivery: '197 KB VP9 alpha for Chromium',
+    appleDelivery: '241 KB HEVC alpha for Safari & iOS',
+    savings: 'One compact asset matches every canonical five-card pack; eggs keep their separate reveal',
     dimensions: '512 × 640',
     fps: '20 fps · 3.2 seconds',
+  },
+  {
+    id: 'giftBox',
+    name: 'Gift Box opening',
+    cadence: 'Gift reward',
+    usage: 'Daily Treat bonus doors and Daily Spin Mystery rewards',
+    src: '/assets/animations/gift-box-opening.webm',
+    appleSrc: '/assets/animations/gift-box-opening.mov',
+    delivery: '109 KB VP9 alpha for Chromium',
+    appleDelivery: '167 KB HEVC alpha for Safari & iOS',
+    savings: 'Compact 4:5 production asset, preloaded only near gift rewards',
+    dimensions: '512 × 640',
+    fps: '20 fps · 2.6 seconds',
   },
 ];
 
@@ -116,12 +130,14 @@ export function AnimationLab() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [playing, setPlaying] = useState<Record<string, boolean>>({});
   const [productionPreview, setProductionPreview] = useState<FireworksVariant | null>(null);
+  const [giftPreviewKey, setGiftPreviewKey] = useState(0);
   const [backgrounds, setBackgrounds] = useState<Record<string, StageBackground>>({
     fireworksCapstone: 'dark',
     fireworksHero: 'dark',
     fireworksRapid: 'dark',
     egg: 'checker',
     creaturePack: 'checker',
+    giftBox: 'checker',
   });
 
   useEffect(() => {
@@ -134,6 +150,9 @@ export function AnimationLab() {
     if (requestedByQuery) {
       setOpen(true);
       window.localStorage.setItem(LAB_STORAGE_KEY, '1');
+    }
+    if (params.get('giftPreview') === '1') {
+      setGiftPreviewKey(1);
     }
 
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -308,6 +327,11 @@ export function AnimationLab() {
                           Preview app layer
                         </button>
                       ) : null}
+                      {animation.id === 'giftBox' ? (
+                        <button type="button" onClick={() => setGiftPreviewKey((current) => current + 1)}>
+                          Preview reward pop
+                        </button>
+                      ) : null}
                     </div>
                     <fieldset className="animation-lab-backgrounds">
                       <legend>Background</legend>
@@ -357,6 +381,25 @@ export function AnimationLab() {
     </div>
   ) : null;
 
+  const giftLayerPreview = giftPreviewKey > 0 ? (
+    <div
+      key={giftPreviewKey}
+      className="animation-lab-app-preview animation-lab-app-preview--gift"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Gift Box reward pop-out preview"
+      onClick={() => setGiftPreviewKey(0)}
+    >
+      <GiftBoxOpeningAnimation
+        rewards={[
+          { id: 'preview-dice', icon: '🎲', amount: '500', accessibleLabel: '500 Dice' },
+          { id: 'preview-money', icon: '💰', amount: '40', accessibleLabel: '40 Money' },
+          { id: 'preview-essence', icon: '🟣', amount: '5', accessibleLabel: '5 Essence' },
+        ]}
+      />
+    </div>
+  ) : null;
+
   if (typeof document === 'undefined') return null;
-  return createPortal(<>{launcher}{modal}{appLayerPreview}</>, document.body);
+  return createPortal(<>{launcher}{modal}{appLayerPreview}{giftLayerPreview}</>, document.body);
 }

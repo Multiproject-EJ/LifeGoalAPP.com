@@ -53,8 +53,8 @@ assert(
 );
 
 // The full-screen reveal modal (flip/unwrap/scratch card) was replaced by an
-// in-place confetti burst from the tapped door plus a brief floating reward
-// toast. These guards lock in the new flow and ensure the modal stays gone.
+// in-place confetti burst plus a brief floating reward toast. Bonus doors stage
+// that feedback behind the Gift Box animation; ordinary doors remain instant.
 const handleOpenDoor = sectionBetween(
   modal,
   'const handleOpenDoor = useCallback(async (dayIndex: number, doorType: DoorType, hatch: CalendarHatch,',
@@ -63,14 +63,20 @@ const handleOpenDoor = sectionBetween(
 const confettiIndex = indexAfter(handleOpenDoor, 'burstDoorConfetti(origin)');
 const openCallIndex = indexAfter(handleOpenDoor, 'openTodayHatch(userId, seasonData.season.id, dayIndex, doorType)');
 assert(
-  confettiIndex < openCallIndex,
-  'Confetti must burst from the tapped door before awaiting openTodayHatch so opening feels instant.',
+  handleOpenDoor.includes("if (doorType !== 'bonus')") && confettiIndex < openCallIndex,
+  'Ordinary-door confetti must burst before awaiting openTodayHatch while bonus gifts reserve it for the animation.',
 );
 const missingRewardGuardIndex = indexAfter(handleOpenDoor, 'if (!reward)');
-const rewardToastIndex = indexAfter(handleOpenDoor, 'setRewardToast({');
+const rewardToastIndex = indexAfter(handleOpenDoor, 'const nextRewardToast: RewardToast = {');
 assert(
   openCallIndex < missingRewardGuardIndex && missingRewardGuardIndex < rewardToastIndex,
-  'Authoritative reward data must be required before surfacing the floating reward toast.',
+  'Authoritative reward data must be required before preparing the floating reward toast.',
+);
+assert(
+  handleOpenDoor.includes("if (doorType === 'bonus')")
+    && handleOpenDoor.includes('rewards: [formatGiftReward(')
+    && handleOpenDoor.includes('setRewardToast(nextRewardToast)'),
+  'Bonus gifts must stage their exact reward inside the animation while ordinary doors keep the direct toast.',
 );
 assert(
   handleOpenDoor.includes('formatRewardToast('),

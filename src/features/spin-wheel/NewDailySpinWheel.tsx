@@ -11,12 +11,17 @@ import {
   getSpinHistory,
   getSpinPrizesForUser,
 } from '../../services/dailySpin';
-import type { SpinHistoryEntry, SpinPrize } from '../../types/gamification';
+import type { SpinAward, SpinHistoryEntry, SpinPrize } from '../../types/gamification';
 import { SPIN_PRIZES } from '../../types/gamification';
 import { buildWheelSegments, type WheelSegment } from './spinWheelUtils';
 import { useGamification } from '../../hooks/useGamification';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import { CelebrationFireworks } from '../../components/CelebrationFireworks';
+import {
+  GiftBoxOpeningAnimation,
+  preloadGiftBoxOpeningAnimation,
+  type GiftBoxRewardItem,
+} from '../../components/GiftBoxOpeningAnimation';
 import './NewDailySpinWheel.css';
 
 interface NewDailySpinWheelProps {
@@ -29,6 +34,14 @@ interface NewDailySpinWheelProps {
 /* ------------------------------------------------------------------ */
 
 const DEG = Math.PI / 180;
+
+const toGiftBoxRewards = (awards: SpinAward[]): GiftBoxRewardItem[] =>
+  awards.map((award, index) => ({
+    id: `spin-${award.currency}-${index}`,
+    icon: award.icon,
+    amount: String(award.amount),
+    accessibleLabel: `${award.amount} ${award.label}`,
+  }));
 
 function polarToCart(cx: number, cy: number, r: number, angleDeg: number) {
   const rad = (angleDeg - 90) * DEG;
@@ -201,12 +214,21 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
   const [rotation, setRotation] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showReward, setShowReward] = useState(false);
+  const [winnerRevealPending, setWinnerRevealPending] = useState(false);
+  const [showMultiplierInfo, setShowMultiplierInfo] = useState(false);
+  const [showGiftOpening, setShowGiftOpening] = useState(false);
+  const [giftRewards, setGiftRewards] = useState<GiftBoxRewardItem[]>([]);
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== 'undefined' ? !navigator.onLine : false,
   );
   const [prizePool, setPrizePool] = useState<SpinPrize[]>(SPIN_PRIZES);
   const [essenceBalance, setEssenceBalance] = useState(0);
   const [selectedMultiplier, setSelectedMultiplier] = useState(1 as 1 | 2 | 3);
+
+  useEffect(() => {
+    preloadGiftBoxOpeningAnimation();
+  }, []);
+
   const wheelSegments = useMemo(() => buildWheelSegments(prizePool), [prizePool]);
   const winningSegmentIndex = useMemo(() => {
     if (!wonPrize || spinning) return -1;
@@ -276,6 +298,10 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     setLoading(true);
     setError(null);
     setWonPrize(null);
+    setWinnerRevealPending(false);
+    setShowReward(false);
+    setShowGiftOpening(false);
+    setGiftRewards([]);
 
     try {
       const { data: spinState, error: spinError } = await getDailySpinState(session.user.id);
@@ -349,7 +375,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       });
       if (spinError || !data) throw spinError || new Error('Failed to spin');
 
-      const { prize, spinsRemaining } = data;
+      const { prize, spinsRemaining, awardedRewards } = data;
+      const resolvedGiftRewards = toGiftBoxRewards(awardedRewards);
 
       const segment = wheelSegments.find(
         (c) => c.type === prize.type && c.value === prize.value && c.label === prize.label,
@@ -361,6 +388,8 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
       setTimeout(() => {
         setWonPrize(prize);
+        setWinnerRevealPending(true);
+        setGiftRewards(resolvedGiftRewards);
         setCanSpin(spinsRemaining > 0);
         setEssenceBalance((current) => Math.max(0, current - multiplierOption.essenceCost));
         setSpinning(false);
@@ -368,7 +397,12 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
         triggerCompletionHaptic(prize.type === 'treasure_chest' || prize.type === 'mystery' || selectedMultiplier > 1 ? 'strong' : 'medium', { channel: 'gamification', minIntervalMs: 300 });
 
         window.setTimeout(() => {
-          setShowReward(true);
+          setWinnerRevealPending(false);
+          if (prize.type === 'mystery') {
+            setShowGiftOpening(true);
+          } else {
+            setShowReward(true);
+          }
           if (prize.type !== 'treasure_chest' && prize.type !== 'mystery') {
             confetti({
               particleCount: 140,
@@ -384,9 +418,30 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     } catch (err) {
       console.error('Spin failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to spin. Please try again.');
+      setWinnerRevealPending(false);
       setCharging(false);
       setSpinning(false);
     }
+  };
+
+  const handleGiftBoxOpeningComplete = useCallback(() => {
+    setShowGiftOpening(false);
+    setGiftRewards([]);
+  }, []);
+
+  const affordableMultiplierOptions = useMemo(
+    () => SPIN_REWARD_MULTIPLIER_OPTIONS.filter((option) => option.essenceCost <= essenceBalance),
+    [essenceBalance],
+  );
+
+  const cycleMultiplier = () => {
+    if (!canSpin || charging || spinning || affordableMultiplierOptions.length === 0) return;
+    const currentIndex = affordableMultiplierOptions.findIndex(
+      (option) => option.multiplier === selectedMultiplier,
+    );
+    const nextOption = affordableMultiplierOptions[(currentIndex + 1) % affordableMultiplierOptions.length];
+    setSelectedMultiplier(nextOption.multiplier);
+    triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 250 });
   };
 
   /* ── Render ── */
@@ -417,6 +472,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
 
   const isSpecialPrize =
     wonPrize?.type === 'treasure_chest' || wonPrize?.type === 'mystery';
+  const isTreasureChest = wonPrize?.type === 'treasure_chest';
 
   const rewardSubtitle = wonPrize
     ? wonPrize.type === 'treasure_chest'
@@ -435,7 +491,9 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
     ? 'We could not load the spin. Check your connection and retry.'
     : canSpin
       ? 'Your spin is ready — give it a whirl!'
-      : 'No spins left. Earn more by completing habits today.';
+      : wonPrize
+        ? 'Your daily reward is safely collected.'
+        : 'Complete habits to earn your next spin.';
 
   return (
     <div className="new-daily-spin-modal" onClick={onClose}>
@@ -490,30 +548,24 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
           </div>
         )}
 
-        <div className="new-daily-spin-modal__boost-panel" aria-label="Reward multiplier">
-          <div>
-            <p className="new-daily-spin-modal__boost-kicker">Money boost</p>
-            <p className="new-daily-spin-modal__boost-copy">Spend money before the spin to multiply whatever you land on.</p>
-          </div>
-          <span className="new-daily-spin-modal__essence-balance">💰 {essenceBalance}</span>
-          <div className="new-daily-spin-modal__boost-options">
-            {SPIN_REWARD_MULTIPLIER_OPTIONS.map((option) => {
-              const affordable = essenceBalance >= option.essenceCost;
-              return (
-                <button
-                  key={option.multiplier}
-                  type="button"
-                  className={`new-daily-spin-modal__boost-option${selectedMultiplier === option.multiplier ? ' new-daily-spin-modal__boost-option--active' : ''}`}
-                  onClick={() => { setSelectedMultiplier(option.multiplier); triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 250 }); }}
-                  disabled={!canSpin || charging || spinning || !affordable}
-                  aria-pressed={selectedMultiplier === option.multiplier}
-                >
-                  <strong>×{option.multiplier}</strong>
-                  <span>{option.essenceCost === 0 ? 'Free' : `${option.essenceCost} money`}</span>
-                </button>
-              );
-            })}
-          </div>
+        <div className="new-daily-spin-modal__multiplier-controls" aria-label="Reward multiplier controls">
+          <button
+            type="button"
+            className="new-daily-spin-modal__multiplier-orb"
+            onClick={cycleMultiplier}
+            disabled={!canSpin || charging || spinning}
+            aria-label={`Reward multiplier ×${selectedMultiplier}. Click to change.`}
+          >
+            ×{selectedMultiplier}
+          </button>
+          <button
+            type="button"
+            className="new-daily-spin-modal__multiplier-info-button"
+            onClick={() => setShowMultiplierInfo(true)}
+            aria-label="How reward multipliers work"
+          >
+            i
+          </button>
         </div>
 
         {/* Wheel */}
@@ -552,6 +604,63 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
               </span>
             </span>
           </div>
+
+          {!error && !canSpin && !charging && !spinning && !winnerRevealPending && !showReward && !showGiftOpening && (
+            <div className="new-daily-spin-wheel__overlay new-daily-spin-wheel__overlay--status" role="status">
+              <div className="new-daily-spin-wheel__status-card">
+                <span className="new-daily-spin-wheel__status-icon" aria-hidden="true">
+                  {wonPrize ? '✓' : '✦'}
+                </span>
+                <h3>{wonPrize ? 'Reward claimed 🎉' : 'No spins left'}</h3>
+                <p>
+                  {wonPrize
+                    ? 'You already spun today. Come back tomorrow for another spin.'
+                    : 'Complete habits to earn another spin.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {showReward && wonPrize && (
+            <div
+              className="new-daily-spin-wheel__overlay new-daily-spin-wheel__overlay--reward"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Spin reward"
+              onClick={() => setShowReward(false)}
+            >
+              {isTreasureChest ? <CelebrationFireworks variant="rapid" fit="contain" /> : null}
+              <div
+                className={`new-daily-spin-modal__reward-card${
+                  isSpecialPrize ? ' new-daily-spin-modal__reward-card--chest' : ''
+                }`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="new-daily-spin-modal__reward-burst">
+                  {isSpecialPrize ? '🗝️' : '🎉'}
+                </div>
+                <h3 className="new-daily-spin-modal__reward-title">
+                  {wonPrize.type === 'mystery' ? 'Mystery Revealed!' : 'You won!'}
+                </h3>
+                <div
+                  className={`new-daily-spin-modal__reward-icon${
+                    isSpecialPrize ? ' new-daily-spin-modal__reward-icon--chest' : ''
+                  }`}
+                >
+                  {wonPrize.icon}
+                </div>
+                <p className="new-daily-spin-modal__reward-name">{wonPrize.label}</p>
+                <p className="new-daily-spin-modal__reward-subtitle">{rewardSubtitle}</p>
+                <button
+                  type="button"
+                  className="new-daily-spin-modal__reward-close"
+                  onClick={() => setShowReward(false)}
+                >
+                  Collect
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
@@ -592,66 +701,71 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
               <span className="new-daily-spin-modal__spin-btn-icon" aria-hidden="true">✦</span>
               {charging ? 'POWERING UP...' : spinning ? 'SPINNING...' : selectedMultiplier > 1 ? `SPIN ×${selectedMultiplier}!` : 'SPIN!'}
             </button>
-          ) : wonPrize ? (
-            <div className="new-daily-spin-modal__result new-daily-spin-modal__result--compact">
-              <h3 className="new-daily-spin-modal__result-title">Reward claimed 🎉</h3>
-              <p className="new-daily-spin-modal__result-subtitle">
-                You already spun today. Come back tomorrow for another spin.
-              </p>
-            </div>
-          ) : (
-            <div className="new-daily-spin-modal__locked">
-              <p className="new-daily-spin-modal__locked-icon">🔒</p>
-              <p className="new-daily-spin-modal__locked-text">
-                Earn spins by finishing habits:
-              </p>
-              <ul className="new-daily-spin-modal__locked-list">
-                <li>Complete 1+ habits today → 1 spin</li>
-                <li>Complete all of today&apos;s habits → 2 spins</li>
-                <li>Keep a 7+ day streak → +1 bonus spin at reset</li>
-              </ul>
-            </div>
-          )}
+          ) : null}
         </div>
 
-        {/* Reward overlay */}
-        {showReward && wonPrize && (
+        {showMultiplierInfo && (
           <div
-            className="new-daily-spin-modal__reward-overlay"
+            className="new-daily-spin-modal__multiplier-info-overlay"
             role="dialog"
             aria-modal="true"
-            onClick={() => setShowReward(false)}
+            aria-labelledby="daily-spin-multiplier-title"
+            onClick={() => setShowMultiplierInfo(false)}
           >
-            {isSpecialPrize ? <CelebrationFireworks variant="rapid" /> : null}
             <div
-              className={`new-daily-spin-modal__reward-card${
-                isSpecialPrize ? ' new-daily-spin-modal__reward-card--chest' : ''
-              }`}
-              onClick={(e) => e.stopPropagation()}
+              className="new-daily-spin-modal__multiplier-info-card"
+              onClick={(event) => event.stopPropagation()}
             >
-              <div className="new-daily-spin-modal__reward-burst">
-                {isSpecialPrize ? '🗝️' : '🎉'}
-              </div>
-              <h3 className="new-daily-spin-modal__reward-title">
-                {wonPrize.type === 'mystery' ? 'Mystery Revealed!' : 'Reward Claimed!'}
-              </h3>
-              <div
-                className={`new-daily-spin-modal__reward-icon${
-                  isSpecialPrize ? ' new-daily-spin-modal__reward-icon--chest' : ''
-                }`}
-              >
-                {wonPrize.icon}
-              </div>
-              <p className="new-daily-spin-modal__reward-name">{wonPrize.label}</p>
-              <p className="new-daily-spin-modal__reward-subtitle">{rewardSubtitle}</p>
               <button
                 type="button"
-                className="new-daily-spin-modal__reward-close"
-                onClick={() => setShowReward(false)}
+                className="new-daily-spin-modal__multiplier-info-close"
+                onClick={() => setShowMultiplierInfo(false)}
+                aria-label="Close multiplier information"
               >
-                Awesome!
+                ✕
+              </button>
+              <span className="new-daily-spin-modal__multiplier-info-symbol" aria-hidden="true">×</span>
+              <h3 id="daily-spin-multiplier-title">Reward multiplier</h3>
+              <p>Choose a boost before spinning. It multiplies the prize you land on.</p>
+              <div className="new-daily-spin-modal__multiplier-balance">💰 {essenceBalance} available</div>
+              <div className="new-daily-spin-modal__multiplier-info-options">
+                {SPIN_REWARD_MULTIPLIER_OPTIONS.map((option) => {
+                  const affordable = essenceBalance >= option.essenceCost;
+                  return (
+                    <button
+                      key={option.multiplier}
+                      type="button"
+                      className={`new-daily-spin-modal__multiplier-info-option${selectedMultiplier === option.multiplier ? ' new-daily-spin-modal__multiplier-info-option--active' : ''}`}
+                      onClick={() => {
+                        setSelectedMultiplier(option.multiplier);
+                        triggerCompletionHaptic('light', { channel: 'gamification', minIntervalMs: 250 });
+                      }}
+                      disabled={!canSpin || charging || spinning || !affordable}
+                      aria-pressed={selectedMultiplier === option.multiplier}
+                    >
+                      <strong>×{option.multiplier}</strong>
+                      <span>{option.essenceCost === 0 ? 'Free' : `${option.essenceCost} money`}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                className="new-daily-spin-modal__multiplier-done"
+                onClick={() => setShowMultiplierInfo(false)}
+              >
+                Done
               </button>
             </div>
+          </div>
+        )}
+
+        {showGiftOpening && wonPrize?.type === 'mystery' && (
+          <div className="new-daily-spin-modal__gift-opening" role="presentation">
+            <GiftBoxOpeningAnimation
+              rewards={giftRewards}
+              onComplete={handleGiftBoxOpeningComplete}
+            />
           </div>
         )}
 

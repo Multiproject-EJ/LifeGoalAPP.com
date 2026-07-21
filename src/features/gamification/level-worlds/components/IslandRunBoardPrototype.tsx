@@ -1512,6 +1512,9 @@ interface IslandRunBoardPrototypeProps {
   showTopBackButton?: boolean;
   isAdmin?: boolean;
   onOpenSaveAccountSignup?: () => void;
+  onOpenDailySpinWheel?: () => void;
+  dailySpinAvailable?: boolean;
+  dailySpinCount?: number;
 }
 
 export function IslandRunBoardPrototype({
@@ -1521,6 +1524,9 @@ export function IslandRunBoardPrototype({
   showTopBackButton: _showTopBackButton = false,
   isAdmin = false,
   onOpenSaveAccountSignup,
+  onOpenDailySpinWheel,
+  dailySpinAvailable = false,
+  dailySpinCount = 0,
 }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
   // Player-level chip: pull levelInfo from the gamification hook so the top-bar
@@ -11690,6 +11696,31 @@ export function IslandRunBoardPrototype({
             >
               🧩 {runtimeState.stickerProgress.fragments}/5
             </button>
+            {onOpenDailySpinWheel ? (
+              <button
+                type="button"
+                className={`island-run-board__daily-momentum-btn${dailySpinAvailable ? ' island-run-board__daily-momentum-btn--ready' : ' island-run-board__daily-momentum-btn--used'}`}
+                aria-label={
+                  dailySpinAvailable
+                    ? `Open Daily Momentum. ${Math.max(1, Math.floor(dailySpinCount))} spin${Math.floor(dailySpinCount) === 1 ? '' : 's'} ready.`
+                    : 'Open Daily Momentum. Today\'s spin has been collected.'
+                }
+                title={dailySpinAvailable ? 'Daily Momentum — spin ready' : 'Daily Momentum — collected today'}
+                onClick={onOpenDailySpinWheel}
+              >
+                <span className="island-run-board__daily-momentum-wheel" aria-hidden="true">
+                  <span className="island-run-board__daily-momentum-star">✦</span>
+                </span>
+                <span className="island-run-board__daily-momentum-label" aria-hidden="true">
+                  {dailySpinAvailable ? 'SPIN' : '✓'}
+                </span>
+                {dailySpinAvailable ? (
+                  <span className="island-run-board__daily-momentum-badge" aria-hidden="true">
+                    {Math.max(1, Math.floor(dailySpinCount))}
+                  </span>
+                ) : null}
+              </button>
+            ) : null}
           </div>
 
           <button
