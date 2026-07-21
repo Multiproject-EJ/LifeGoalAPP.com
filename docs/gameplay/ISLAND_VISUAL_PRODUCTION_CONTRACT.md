@@ -1,5 +1,10 @@
 # Island Visual Production Contract
 
+The reusable camera, footprint and phone-validation scaffold is defined in
+[`ISLAND_CAMERA_LOCKED_KIT.md`](./ISLAND_CAMERA_LOCKED_KIT.md). New island
+production must begin from that kit rather than inventing scene geometry per
+biome.
+
 Status: **Active pilot contract**
 Pilot scope: Islands 1–5
 Scale target: Islands 1–120

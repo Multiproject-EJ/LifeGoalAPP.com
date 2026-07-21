@@ -47,6 +47,7 @@ if (typeof window !== 'undefined') {
 const NON_APP_ROUTES = new Set(['world', 'lobby', 'privacy', 'terms', 'support']);
 const QUEST_VISUAL_SYSTEM_PREVIEW_PATH = '/dev/quest-journey-visual-system';
 const ISLAND_ART_PREVIEW_PATH = '/dev/island-art-preview';
+const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit';
 
 function QuestVisualSystemPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
@@ -79,6 +80,20 @@ function IslandArtPreviewRoute() {
       </SupabaseAuthProvider>
     </ThemeProvider>
   );
+}
+
+function IslandTemplateKitRoute() {
+  const [TemplateKit, setTemplateKit] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/level-worlds/dev/IslandTemplateKitPage').then((module) => {
+      if (isMounted) setTemplateKit(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return TemplateKit ? <TemplateKit /> : null;
 }
 
 
@@ -130,6 +145,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === ISLAND_ART_PREVIEW_PATH;
+  const isIslandTemplateKitRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === ISLAND_TEMPLATE_KIT_PATH;
 
   const initialRoute = useMemo(() => resolveRoute(), []);
   const isPhoneEntryClient = useMemo(() => isCurrentClientPhone(), []);
@@ -169,6 +188,10 @@ function Root() {
 
   if (isIslandArtPreviewRoute) {
     return <IslandArtPreviewRoute />;
+  }
+
+  if (isIslandTemplateKitRoute) {
+    return <IslandTemplateKitRoute />;
   }
 
   if (

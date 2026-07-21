@@ -142,9 +142,11 @@ import { islandRunGuestFunnelStateTests } from './islandRunGuestFunnelState.test
 import { islandRunGuestClaimServiceTests } from './islandRunGuestClaimService.test';
 import { islandRunRoutekeeperTinyActionsTests } from './islandRunRoutekeeperTinyActions.test';
 import { islandRunFirstPlayerModalSchedulerTests } from './islandRunFirstPlayerModalScheduler.test';
+import { islandCameraLockedKitTests } from './islandCameraLockedKit.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
+  { label: 'islandCameraLockedKit', tests: islandCameraLockedKitTests },
   { label: 'creatureCatalog', tests: creatureCatalogTests },
   { label: 'creatureCollectionService', tests: creatureCollectionServiceTests },
   { label: 'creatureTreatInventoryService', tests: creatureTreatInventoryServiceTests },

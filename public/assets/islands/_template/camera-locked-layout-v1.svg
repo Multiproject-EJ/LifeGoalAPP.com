@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1600" viewBox="0 0 1400 1600">
+  <rect width="1400" height="1600" fill="#07141f"/>
+  <rect x="24" y="160" width="1352" height="1250" rx="24" fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="4" stroke-dasharray="12 14"/>
+  <ellipse cx="700" cy="800" rx="625" ry="456" fill="#36c2d9" fill-opacity=".08" stroke="#ffd56f" stroke-width="7" stroke-dasharray="22 14"/>
+  <ellipse cx="700" cy="800" rx="406" ry="296" fill="#ff5f75" fill-opacity=".08" stroke="#ff7184" stroke-width="7" stroke-dasharray="18 12"/>
+  <ellipse cx="700" cy="800" rx="340" ry="248" fill="none" stroke="#f5e7c1" stroke-width="68" stroke-dasharray="52 7"/>
+  <g fill="#36c2d9" fill-opacity=".08" stroke="#6fffd1" stroke-width="7" stroke-dasharray="18 12">
+    <ellipse cx="275" cy="430" rx="275" ry="201"/>
+    <ellipse cx="1125" cy="430" rx="275" ry="201"/>
+    <ellipse cx="275" cy="1170" rx="275" ry="201"/>
+    <ellipse cx="1125" cy="1170" rx="275" ry="201"/>
+  </g>
+  <g fill="#ff7397" fill-opacity=".12" stroke="#ff7397" stroke-width="5">
+    <rect x="35" y="26" width="480" height="480" rx="22"/>
+    <rect x="885" y="26" width="480" height="480" rx="22"/>
+    <rect x="35" y="766" width="480" height="480" rx="22"/>
+    <rect x="885" y="766" width="480" height="480" rx="22"/>
+  </g>
+  <rect x="530" y="570" width="340" height="430" rx="30" fill="#ff9d6f" fill-opacity=".14" stroke="#ff9d6f" stroke-width="6"/>
+  <path d="M700 90V1510M65 800H1335" stroke="#6fffd1" stroke-opacity=".42" stroke-width="4" stroke-dasharray="8 12"/>
+  <circle cx="700" cy="800" r="16" fill="#ff5f75" stroke="#fff" stroke-width="6"/>
+  <g fill="#fff" font-family="system-ui,sans-serif" font-size="24" font-weight="800" text-anchor="middle">
+    <text x="700" y="140">CAMERA-LOCKED V1 · 1400×1600 · FINAL ANGLE 0.73</text>
+    <text x="700" y="1545">DO NOT MOVE, TILT, SQUASH OR RE-CENTER THE BOARD</text>
+  </g>
+</svg>
