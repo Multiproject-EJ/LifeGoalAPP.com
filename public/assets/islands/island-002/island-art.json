@@ -18,7 +18,7 @@
   "boardPlateImageScale": 1.03,
   "boardOuterCircleImageScale": 1.36,
   "scene": {
-    "boardCircle": "board/board-circle-inner-spark36.webp",
+    "boardCircle": "board/board-circle-inner-tidelock-v2.webp",
     "ambientBackground": "background/ambient-background-v2.webp",
     "boardOuterCircle": "board-outer/board-outer-foundation.webp"
   },
@@ -26,11 +26,11 @@
     {
       "stopIndex": 0,
       "anchorId": "hatchery",
-      "levelZero": "scenery/plots/hatchery-l0.webp",
+      "levelZero": "scenery/plots/hatchery-l0-v2.webp",
       "x": 340,
       "y": 340,
-      "width": 472,
-      "height": 472,
+      "width": 580,
+      "height": 580,
       "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/hatchery/hatchery-l1.webp",
@@ -42,11 +42,11 @@
     {
       "stopIndex": 1,
       "anchorId": "habit",
-      "levelZero": "scenery/plots/habit-l0.webp",
+      "levelZero": "scenery/plots/habit-l0-v2.webp",
       "x": 1060,
       "y": 340,
-      "width": 472,
-      "height": 472,
+      "width": 580,
+      "height": 580,
       "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/habit/habit-l1.webp",
@@ -58,11 +58,11 @@
     {
       "stopIndex": 2,
       "anchorId": "mystery",
-      "levelZero": "scenery/plots/mystery-l0.webp",
+      "levelZero": "scenery/plots/mystery-l0-v2.webp",
       "x": 1060,
       "y": 1260,
-      "width": 472,
-      "height": 472,
+      "width": 580,
+      "height": 580,
       "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/mystery/mystery-l1.webp",
@@ -74,11 +74,11 @@
     {
       "stopIndex": 3,
       "anchorId": "wisdom",
-      "levelZero": "scenery/plots/wisdom-l0.webp",
+      "levelZero": "scenery/plots/wisdom-l0-v2.webp",
       "x": 340,
       "y": 1260,
-      "width": 472,
-      "height": 472,
+      "width": 580,
+      "height": 580,
       "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/wisdom/wisdom-l1.webp",
