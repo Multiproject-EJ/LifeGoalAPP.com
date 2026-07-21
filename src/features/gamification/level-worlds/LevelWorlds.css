@@ -1152,48 +1152,61 @@
 
 .island-run-prototype__footer-nav-btn--slot-story,
 .island-run-prototype__footer-nav-btn--slot-build {
-  width: clamp(6rem, 17vw, 7.8rem);
-  height: clamp(2.9rem, 7vw, 3.6rem);
-  min-height: clamp(2.9rem, 7vw, 3.6rem);
-  padding-inline: 0.52rem;
-  border-radius: 10px;
+  width: clamp(5.1rem, 20%, 7.2rem);
+  height: clamp(3.6rem, 21%, 4.8rem);
+  min-height: 0;
+  padding: 0.34rem 0.46rem;
+  border-radius: 18px;
   background:
     radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.38), transparent 46%),
     linear-gradient(180deg, rgba(219, 244, 252, 0.34), rgba(119, 184, 211, 0.18) 58%, rgba(31, 91, 123, 0.24));
 }
 
 .island-run-prototype__footer-nav-btn--slot-story {
-  clip-path: polygon(6% 0%, 100% 0%, 94% 100%, 0% 100%);
+  clip-path: polygon(
+    28% 0%, 92% 0%, 98% 5%, 100% 28%,
+    96% 57%, 88% 82%, 70% 100%, 42% 98%,
+    12% 92%, 3% 79%, 0% 68%, 2% 38%, 6% 12%
+  );
 }
 
 .island-run-prototype__footer-nav-btn--slot-build {
-  clip-path: polygon(0% 0%, 94% 0%, 100% 100%, 6% 100%);
+  clip-path: polygon(
+    8% 0%, 72% 0%, 94% 12%, 98% 38%,
+    100% 68%, 97% 79%, 88% 92%, 58% 98%,
+    30% 100%, 12% 82%, 4% 57%, 0% 28%, 2% 5%
+  );
 }
 
 .island-run-prototype__footer-nav-btn--slot-creatures,
 .island-run-prototype__footer-nav-btn--slot-market {
-  width: clamp(6.4rem, 18vw, 8.2rem);
-  height: clamp(3.6rem, 9vw, 4.9rem);
-  min-height: clamp(3.6rem, 9vw, 4.9rem);
-  padding-inline: 0.46rem;
+  width: clamp(4.5rem, 17%, 6.4rem);
+  height: clamp(5.4rem, 35%, 7.4rem);
+  min-height: 0;
+  padding: 0.38rem 0.3rem;
   align-items: center;
-  border-radius: 10px;
+  border-radius: 28px;
   background:
     radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.32), transparent 44%),
     linear-gradient(180deg, rgba(168, 218, 238, 0.28), rgba(64, 139, 180, 0.18) 60%, rgba(11, 54, 86, 0.3));
 }
 
 .island-run-prototype__footer-nav-btn--slot-creatures {
-  clip-path: polygon(10% 0%, 100% 6%, 90% 100%, 0% 94%);
+  clip-path: polygon(
+    25% 0%, 53% 1%, 80% 5%, 95% 14%,
+    100% 31%, 96% 43%, 79% 65%, 64% 84%,
+    53% 96%, 42% 100%, 31% 95%, 23% 79%,
+    21% 58%, 24% 31%, 31% 18%, 47% 6%
+  );
 }
 
 .island-run-prototype__footer-nav-btn--slot-market {
-  width: clamp(6rem, 16vw, 7.8rem);
-  height: clamp(4.9rem, 12.5vw, 6.8rem);
-  min-height: clamp(4.9rem, 12.5vw, 6.8rem);
-  padding-inline: 0.58rem 0.42rem;
-  border-radius: 22px 12px 34px 28px;
-  clip-path: polygon(20% 0%, 96% 6%, 98% 88%, 82% 100%, 58% 90%, 0% 14%);
+  clip-path: polygon(
+    75% 0%, 47% 1%, 20% 5%, 5% 14%,
+    0% 31%, 4% 43%, 21% 65%, 36% 84%,
+    47% 96%, 58% 100%, 69% 95%, 77% 79%,
+    79% 58%, 76% 31%, 69% 18%, 53% 6%
+  );
 }
 
 .island-run-prototype__footer-nav-btn:disabled,

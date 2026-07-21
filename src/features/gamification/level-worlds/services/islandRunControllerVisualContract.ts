@@ -25,14 +25,15 @@ export type IslandRunControllerSlot = {
 export const ISLAND_RUN_CONTROLLER_ASPECT_RATIO = '596 / 350';
 
 export const ISLAND_RUN_CONTROLLER_SLOT_MAP: Record<IslandRunControllerSlotId, IslandRunControllerSlot> = {
-  // Side actions sit high on the white shoulder contours, the roll/play control
-  // occupies the upper blue bowl, and the badge clears the center control.
-  leftUpper: { x: 18, y: 28, rotate: -3.5, scale: 0.96, depth: 'raised' },
-  leftLower: { x: 11.5, y: 53, rotate: -8, scale: 0.92, depth: 'raised' },
+  // Side actions are mirrored around the controller's centre line. Upper
+  // wedges stay in the shoulders and clear both the roll core and the lower
+  // handle-slice controls at every responsive shell size.
+  leftUpper: { x: 14.5, y: 21.5, rotate: -3.5, scale: 0.96, depth: 'raised' },
+  leftLower: { x: 10.8, y: 58.5, rotate: -7, scale: 0.92, depth: 'raised' },
   centerCore: { x: 50, y: 22, rotate: 0, scale: 1, depth: 'inset' },
   centerBadge: { x: 50, y: -4, rotate: 0, scale: 0.9, depth: 'surface' },
-  rightLower: { x: 88.5, y: 53, rotate: 8, scale: 0.92, depth: 'raised' },
-  rightUpper: { x: 82, y: 28, rotate: 3.5, scale: 0.96, depth: 'raised' },
+  rightLower: { x: 89.2, y: 58.5, rotate: 7, scale: 0.92, depth: 'raised' },
+  rightUpper: { x: 85.5, y: 21.5, rotate: 3.5, scale: 0.96, depth: 'raised' },
 };
 
 export function getIslandRunControllerSlotStyle(slot: IslandRunControllerSlot): CSSProperties {
