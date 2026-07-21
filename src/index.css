@@ -5199,6 +5199,9 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .habit-checklist-card--pull-enabled {
   --habit-compact-pull-offset: 0px;
+}
+
+.habit-checklist-card__board-head--pull-handle {
   touch-action: pan-y;
 }
 

@@ -1981,6 +1981,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [showCompactRefreshSuccess, setShowCompactRefreshSuccess] = useState(false);
   const compactPullDistanceRef = useRef(0);
   const checklistCardRef = useRef<HTMLDivElement | null>(null);
+  const compactPullHandleRef = useRef<HTMLDivElement | null>(null);
   const compactPullGestureRef = useRef<{
     touchId: number;
     startX: number;
@@ -5470,17 +5471,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     compactPullLoadingRef.current = loading;
   }, [loading]);
 
-  // Native (non-passive) touch gesture for pull-to-refresh. React 18's synthetic
+  // Native (non-passive) touch gesture for pull-to-refresh. The listener lives
+  // only on the date/navigation header: Today contains several independently
+  // scrollable habit surfaces, and a pull inside those must remain normal
+  // scrolling rather than becoming a refresh gesture. React 18's synthetic
   // onTouchMove is registered passively, so preventDefault() there is ignored and
   // the page keeps scrolling while we translate the card — the exact conflict
   // that got this feature removed. Binding touchmove ourselves with
   // { passive: false } lets us cancel ONLY a locked vertical pull at the scroll
   // top, so normal vertical scrolling and horizontal habit swipes are untouched.
   useEffect(() => {
-    const el = checklistCardRef.current;
-    if (!el || !canUseCompactPullRefresh) return undefined;
+    const handle = compactPullHandleRef.current;
+    const card = checklistCardRef.current;
+    if (!handle || !card || !canUseCompactPullRefresh) return undefined;
 
-    const atTop = () => findCardScrollTop(el) <= 1;
+    const atTop = () => findCardScrollTop(card) <= 1;
 
     const clearSuccess = () => {
       setShowCompactRefreshSuccess(false);
@@ -5572,15 +5577,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setCompactPullDistanceState(0);
     };
 
-    el.addEventListener('touchstart', onStart, { passive: true });
-    el.addEventListener('touchmove', onMove, { passive: false });
-    el.addEventListener('touchend', onEnd);
-    el.addEventListener('touchcancel', onEnd);
+    handle.addEventListener('touchstart', onStart, { passive: true });
+    handle.addEventListener('touchmove', onMove, { passive: false });
+    handle.addEventListener('touchend', onEnd);
+    handle.addEventListener('touchcancel', onEnd);
     return () => {
-      el.removeEventListener('touchstart', onStart);
-      el.removeEventListener('touchmove', onMove);
-      el.removeEventListener('touchend', onEnd);
-      el.removeEventListener('touchcancel', onEnd);
+      handle.removeEventListener('touchstart', onStart);
+      handle.removeEventListener('touchmove', onMove);
+      handle.removeEventListener('touchend', onEnd);
+      handle.removeEventListener('touchcancel', onEnd);
     };
   }, [canUseCompactPullRefresh, performTodayRefresh, setCompactPullDistanceState]);
 
@@ -10700,7 +10705,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               </button>
             ) : progressNode
           ) : null}
-          <div className="habit-checklist-card__board-head">
+          <div
+            ref={compactPullHandleRef}
+            className={`habit-checklist-card__board-head${
+              canUseCompactPullRefresh ? ' habit-checklist-card__board-head--pull-handle' : ''
+            }`}
+          >
             <div className="habit-checklist-card__date-wrap">
               <div className="habit-checklist-card__date-group">
                 <p className="habit-checklist-card__date">
