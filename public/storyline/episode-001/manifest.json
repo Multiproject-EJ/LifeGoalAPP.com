@@ -1,26 +1,65 @@
 {
   "id": "episode-001",
-  "title": "Prologue — Arrival",
+  "title": "Before the Lights Went Quiet",
   "autoLaunch": true,
   "soundtrack": {
-    "src": "/storyline/episode-001/bgm.mp3",
+    "src": "/assets/audio/music/Lantern%20Tide.mp3",
     "loop": true,
-    "volume": 0.35
+    "volume": 0.3
   },
   "panels": [
     {
-      "id": "intro-text",
-      "type": "text",
-      "text": "Welcome to Island Run. Upload your prologue images/videos in public/storyline/episode-001 and update this manifest to control reading order.",
-      "caption": "This is a placeholder panel so the reader is usable immediately.",
-      "soundtrack": {
-        "src": "/storyline/episode-001/scene-1.mp3",
-        "loop": true,
-        "volume": 0.5
-      }
+      "id": "connected-islands",
+      "type": "image",
+      "src": "/storyline/episode-001/001-connected-islands.webp",
+      "alt": "Five distinct islands joined across the sea by warm luminous routes",
+      "caption": "Long ago, the islands were connected."
+    },
+    {
+      "id": "shared-world",
+      "type": "image",
+      "src": "/storyline/episode-001/002-shared-world.webp",
+      "alt": "People, creatures, and a gentle guardian sharing knowledge at a luminous island harbor",
+      "caption": "People, creatures, and guardians shared what each island knew."
+    },
+    {
+      "id": "great-drift",
+      "type": "video",
+      "src": "/storyline/episode-001/003-great-drift.mp4",
+      "poster": "/storyline/episode-001/003-great-drift-poster.webp",
+      "mutedAutoplay": true,
+      "loop": false,
+      "caption": "Then came the Great Drift."
+    },
+    {
+      "id": "separated-islands",
+      "type": "image",
+      "src": "/storyline/episode-001/004-separated-islands.webp",
+      "alt": "Intact islands isolated by mist and dark, unfinished sea routes",
+      "caption": "Routes vanished. Meaning went quiet."
+    },
+    {
+      "id": "compass-expedition",
+      "type": "image",
+      "src": "/storyline/episode-001/005-compass-expedition.webp",
+      "alt": "Captain Ivo following a faint route in the Compass Book aboard a small expedition vessel",
+      "caption": "Now, the Compass Expedition follows the lost signals."
+    },
+    {
+      "id": "luma-approach",
+      "type": "image",
+      "src": "/storyline/episode-001/006-luma-approach.webp",
+      "alt": "The expedition approaching Luma Isle at dawn beneath strangely covered lanterns",
+      "caption": "The first signal leads to Luma Isle."
+    },
+    {
+      "id": "noctyra-eye",
+      "type": "video",
+      "src": "/storyline/episode-001/007-noctyra-eye.mp4",
+      "poster": "/storyline/episode-001/007-noctyra-eye-poster.webp",
+      "mutedAutoplay": true,
+      "loop": true,
+      "caption": "Something there is still protecting the light."
     }
-  ],
-  "reward": {
-    "coins": 50
-  }
+  ]
 }

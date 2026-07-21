@@ -6,11 +6,36 @@ export const island001NarrativeDefinition = {
   islandName: 'Luma Isle',
   civilizationName: 'The Lumin',
   characters: [
-    { id: 'miri', displayName: 'Miri', role: 'Local routekeeper and first-contact guide.' },
-    { id: 'sava', displayName: 'Elder Sava', role: 'Memory keeper and former dragon-route engineer.' },
-    { id: 'poko', displayName: 'Poko', role: 'Hatchery tinkerer and warm supporting citizen.' },
-    { id: 'ivo', displayName: 'Captain Ivo', role: 'Compass Expedition voice.' },
-    { id: 'noctyra', displayName: 'Noctyra', role: 'Black Crystal Dragon and guardian of Luma Isle.' },
+    {
+      id: 'miri',
+      displayName: 'Miri',
+      role: 'Local routekeeper and first-contact guide.',
+      portraitSrc: '/islands/001/story/portraits/miri.webp',
+    },
+    {
+      id: 'sava',
+      displayName: 'Elder Sava',
+      role: 'Memory keeper and former dragon-route engineer.',
+      portraitSrc: '/islands/001/story/portraits/sava.webp',
+    },
+    {
+      id: 'poko',
+      displayName: 'Poko',
+      role: 'Hatchery tinkerer and warm supporting citizen.',
+      portraitSrc: '/islands/001/story/portraits/poko.webp',
+    },
+    {
+      id: 'ivo',
+      displayName: 'Captain Ivo',
+      role: 'Compass Expedition voice.',
+      portraitSrc: '/islands/001/story/portraits/ivo.webp',
+    },
+    {
+      id: 'noctyra',
+      displayName: 'Noctyra',
+      role: 'Black Crystal Dragon and guardian of Luma Isle.',
+      portraitSrc: '/islands/001/story/portraits/noctyra.webp',
+    },
   ],
   beats: [
     {

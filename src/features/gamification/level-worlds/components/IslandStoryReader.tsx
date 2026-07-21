@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { StoryPlayer } from '../../../story/StoryPlayer';
 import type { StoryEpisodeManifest, StoryPanel } from '../../../story/storyTypes';
+import { lockPageScroll } from '../../../../utils/scrollLock';
 
 import './IslandStoryReader.css';
 
@@ -80,6 +82,11 @@ export function IslandStoryReader({
     };
   }, [isOpen, manifestPath]);
 
+  useEffect(() => {
+    if (!isOpen || typeof document === 'undefined') return undefined;
+    return lockPageScroll(['body', 'documentElement']);
+  }, [isOpen]);
+
   if (!isOpen) {
     return null;
   }
@@ -103,7 +110,7 @@ export function IslandStoryReader({
   };
 
   if (isLoading || error || !manifest) {
-    return (
+    const shell = (
       <div
         className="island-story-theme island-story-reader-shell"
         role="dialog"
@@ -127,6 +134,8 @@ export function IslandStoryReader({
         </button>
       </div>
     );
+    if (typeof document === 'undefined') return shell;
+    return createPortal(shell, document.body);
   }
 
   // Append a final scene carrying the completion copy so the CTA (reward claim
@@ -148,6 +157,7 @@ export function IslandStoryReader({
       soundtrack={manifest.soundtrack}
       completionLabel={completionCtaLabel}
       completionDisabled={rewardClaimed}
+      closeLabel="Skip story"
       onComplete={handleCompletion}
       onClose={onClose}
     />

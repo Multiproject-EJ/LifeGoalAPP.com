@@ -164,8 +164,12 @@ export function resolveReactionBeat(
   );
 }
 
+function speakerCharacter(speakerId: string | undefined, definition: IslandNarrativeDefinition | null) {
+  return definition?.characters.find((entry) => entry.id === speakerId);
+}
+
 function speakerDisplayName(speakerId: string | undefined, definition: IslandNarrativeDefinition | null): string {
-  const character = definition?.characters.find((entry) => entry.id === speakerId);
+  const character = speakerCharacter(speakerId, definition);
   // Speaker-less beats (e.g. ambient companion lines) narrate as the island
   // itself — island-aware so this works beyond Island 1.
   return character?.displayName ?? definition?.islandName ?? 'Island';
@@ -184,6 +188,8 @@ export interface ReactionDialoguePayload {
   secondaryText?: string;
   continueLabel: string;
   tone: IslandNarrativeDialogueTone;
+  portraitSrc?: string;
+  portraitAlt?: string;
 }
 
 export interface ReactionToastPayload {
@@ -201,6 +207,7 @@ export function buildReactionDialogue(
   definition: IslandNarrativeDefinition | null,
 ): ReactionDialoguePayload | null {
   if (beat.surface !== 'dialogue_sheet' || !beat.text) return null;
+  const character = speakerCharacter(beat.speakerId, definition);
   return {
     beatId: beat.id,
     speakerName: speakerDisplayName(beat.speakerId, definition),
@@ -208,6 +215,8 @@ export function buildReactionDialogue(
     secondaryText: beat.secondaryText,
     continueLabel: beat.displayCtaText ?? 'Continue',
     tone: toneForSpeaker(beat.speakerId),
+    portraitSrc: character?.portraitSrc,
+    portraitAlt: character?.portraitSrc ? `${character.displayName} portrait` : undefined,
   };
 }
 

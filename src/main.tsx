@@ -48,6 +48,7 @@ const NON_APP_ROUTES = new Set(['world', 'lobby', 'privacy', 'terms', 'support']
 const QUEST_VISUAL_SYSTEM_PREVIEW_PATH = '/dev/quest-journey-visual-system';
 const ISLAND_ART_PREVIEW_PATH = '/dev/island-art-preview';
 const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit';
+const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
 
 function QuestVisualSystemPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
@@ -94,6 +95,24 @@ function IslandTemplateKitRoute() {
   }, []);
 
   return TemplateKit ? <TemplateKit /> : null;
+}
+
+function Island001StoryPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/story/Island001StoryPreview').then((module) => {
+      if (isMounted) {
+        setPreview(() => module.default);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
 }
 
 
@@ -149,6 +168,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === ISLAND_TEMPLATE_KIT_PATH;
+  const isIsland001StoryPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === ISLAND_001_STORY_PREVIEW_PATH;
 
   const initialRoute = useMemo(() => resolveRoute(), []);
   const isPhoneEntryClient = useMemo(() => isCurrentClientPhone(), []);
@@ -184,6 +207,10 @@ function Root() {
 
   if (isQuestVisualSystemPreviewRoute) {
     return <QuestVisualSystemPreviewRoute />;
+  }
+
+  if (isIsland001StoryPreviewRoute) {
+    return <Island001StoryPreviewRoute />;
   }
 
   if (isIslandArtPreviewRoute) {

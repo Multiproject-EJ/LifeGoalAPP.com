@@ -1,32 +1,48 @@
 {
   "id": "island-001-arrival",
-  "title": "Luma Isle — Arrival",
+  "title": "The Light Under Glass",
+  "soundtrack": {
+    "src": "/assets/audio/music/Island%20dreamy%20relaxing%20night%20islands.mp3",
+    "loop": true,
+    "volume": 0.26
+  },
   "panels": [
     {
-      "id": "luma-quiet",
+      "id": "covered-lights",
       "type": "image",
-      "src": "/assets/islands/island-001/background/ambient-background.webp",
-      "alt": "Luma Isle ambient shoreline and sky",
+      "src": "/islands/001/story/arrival/001-covered-lights.webp",
+      "alt": "A bright dawn over Luma Isle where every lantern has been deliberately covered",
       "caption": "Luma Isle should be shining by now."
     },
     {
-      "id": "landmarks-quiet",
+      "id": "silent-cradle",
       "type": "image",
-      "src": "/assets/islands/island-001/board/board-circle-inner.webp",
-      "alt": "Luma Isle board path and quiet landmarks",
-      "caption": "The landmarks are standing… but quiet."
+      "src": "/islands/001/story/arrival/002-silent-cradle.webp",
+      "alt": "A carefully tended dragon egg waiting in a cold, unlit Hatchery cradle",
+      "caption": "Even the Hatchery has forgotten dawn."
     },
     {
-      "id": "island-heart",
+      "id": "miri-warning",
       "type": "image",
-      "src": "/assets/islands/island-001/scenery/battle-arena-crystal.webp",
-      "alt": "Crystal scenery at the Island Heart",
-      "caption": "At the Island Heart, Noctyra waits."
+      "src": "/islands/001/story/arrival/003-miri-warning.webp",
+      "alt": "Miri stepping from behind a lantern post with one hand raised in warning",
+      "caption": "Miri: “Careful. The centre hears fear faster than footsteps.”"
     },
     {
-      "id": "first-step",
-      "type": "text",
-      "text": "Start small. Help us wake one gentle place."
+      "id": "warning-pulse",
+      "type": "video",
+      "src": "/islands/001/story/arrival/004-warning-pulse.mp4",
+      "poster": "/islands/001/story/arrival/004-warning-pulse-poster.webp",
+      "mutedAutoplay": true,
+      "loop": true,
+      "caption": "At the Island Heart, Noctyra is still warning someone."
+    },
+    {
+      "id": "start-small",
+      "type": "image",
+      "src": "/islands/001/story/arrival/005-start-small.webp",
+      "alt": "Miri inviting the expedition toward one small newly lit Hatchery lantern",
+      "caption": "Miri: “Start small. Help us wake one gentle place.”"
     }
   ]
 }

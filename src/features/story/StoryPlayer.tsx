@@ -1,4 +1,6 @@
 import { PointerEvent as ReactPointerEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { lockPageScroll } from '../../utils/scrollLock';
 import {
   OPPOSITE_DIRECTION,
   type StoryDirection,
@@ -23,6 +25,8 @@ interface StoryPlayerProps {
   defaultAdvance?: StoryDirection;
   /** Extra class on the root, used by consumers to theme via CSS variables. */
   className?: string;
+  /** Visible and accessible label for leaving the story. */
+  closeLabel?: string;
 }
 
 const SWIPE_THRESHOLD = 45;
@@ -54,12 +58,17 @@ export function StoryPlayer({
   soundtrack,
   defaultAdvance = 'right',
   className,
+  closeLabel = 'Close',
 }: StoryPlayerProps) {
   const [index, setIndex] = useState(0);
   const [travelDir, setTravelDir] = useState<StoryDirection>(defaultAdvance);
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [mediaFailed, setMediaFailed] = useState(false);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
 
   // Reset to the first scene whenever the player (re)opens or content changes.
   useEffect(() => {
@@ -69,6 +78,34 @@ export function StoryPlayer({
     }
   }, [isOpen, panels, defaultAdvance]);
 
+  useEffect(() => {
+    if (!isOpen || typeof document === 'undefined') return undefined;
+    previouslyFocusedElementRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    window.requestAnimationFrame(() => closeButtonRef.current?.focus());
+    const previouslyFocusedElement = previouslyFocusedElementRef.current;
+    const unlockPageScroll = lockPageScroll(['body', 'documentElement']);
+    return () => {
+      unlockPageScroll();
+      previouslyFocusedElement?.focus();
+      previouslyFocusedElementRef.current = null;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const syncPreference = () => setPrefersReducedMotion(mediaQuery.matches);
+    syncPreference();
+    if (mediaQuery.addEventListener) mediaQuery.addEventListener('change', syncPreference);
+    else mediaQuery.addListener?.(syncPreference);
+    return () => {
+      if (mediaQuery.removeEventListener) mediaQuery.removeEventListener('change', syncPreference);
+      else mediaQuery.removeListener?.(syncPreference);
+    };
+  }, []);
+
   const total = panels.length;
   const safeIndex = Math.min(Math.max(index, 0), Math.max(total - 1, 0));
   const panel = panels[safeIndex];
@@ -76,6 +113,13 @@ export function StoryPlayer({
   const nextDir: StoryDirection = panel?.advance ?? defaultAdvance;
   const hasAudio = panels.some((scene) => scene.soundtrack?.src) || Boolean(soundtrack?.src);
   const activeSoundtrack = panel?.soundtrack ?? soundtrack ?? null;
+  const activePanelMediaKey = panel
+    ? (panel.type === 'text' ? panel.text : panel.src)
+    : '';
+
+  useEffect(() => {
+    setMediaFailed(false);
+  }, [safeIndex, activePanelMediaKey]);
 
   const goNext = useCallback(
     (dir: StoryDirection) => {
@@ -200,7 +244,7 @@ export function StoryPlayer({
   // A scene entering after travelling `travelDir` slides in from the opposite side.
   const enterFrom = OPPOSITE_DIRECTION[travelDir];
 
-  return (
+  const player = (
     <div
       className={`story-player${className ? ` ${className}` : ''}`}
       role="dialog"
@@ -229,10 +273,11 @@ export function StoryPlayer({
           <button
             type="button"
             className="story-player__icon-btn story-player__close"
+            ref={closeButtonRef}
             onClick={onClose}
-            aria-label="Close story"
+            aria-label={closeLabel}
           >
-            ×
+            {closeLabel}
           </button>
         </div>
       </header>
@@ -243,15 +288,31 @@ export function StoryPlayer({
         onPointerUp={handlePointerUp}
       >
         <div key={safeIndex} className={`story-player__scene story-player__scene--from-${enterFrom}`}>
-          {panel.type === 'image' && (
+          {mediaFailed && panel.type !== 'text' && (
+            <div className="story-player__media-fallback" role="img" aria-label={panel.caption ?? 'Story visual unavailable'}>
+              <span aria-hidden="true">✦</span>
+              <p>Visual unavailable. The story can continue.</p>
+            </div>
+          )}
+          {!mediaFailed && panel.type === 'image' && (
             <img
               className="story-player__media"
               src={panel.src}
               alt={panel.alt ?? panel.caption ?? ''}
               draggable={false}
+              onError={() => setMediaFailed(true)}
             />
           )}
-          {panel.type === 'video' && (
+          {!mediaFailed && panel.type === 'video' && prefersReducedMotion && panel.poster && (
+            <img
+              className="story-player__media"
+              src={panel.poster}
+              alt={panel.caption ?? ''}
+              draggable={false}
+              onError={() => setMediaFailed(true)}
+            />
+          )}
+          {!mediaFailed && panel.type === 'video' && (!prefersReducedMotion || !panel.poster) && (
             <video
               className="story-player__media"
               src={panel.src}
@@ -259,8 +320,10 @@ export function StoryPlayer({
               controls
               playsInline
               loop={panel.loop}
-              autoPlay={panel.mutedAutoplay}
+              preload="metadata"
+              autoPlay={panel.mutedAutoplay && !prefersReducedMotion}
               muted={panel.mutedAutoplay || !audioEnabled}
+              onError={() => setMediaFailed(true)}
             />
           )}
           {panel.type === 'text' && (
@@ -313,4 +376,7 @@ export function StoryPlayer({
       </footer>
     </div>
   );
+
+  if (typeof document === 'undefined') return player;
+  return createPortal(player, document.body);
 }

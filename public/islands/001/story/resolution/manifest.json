@@ -1,32 +1,69 @@
 {
   "id": "island-001-resolution",
-  "title": "Luma Isle — Resolution",
+  "title": "The Warning Answers",
+  "soundtrack": {
+    "src": "/assets/audio/music/Lantern%20Tide.mp3",
+    "loop": true,
+    "volume": 0.28
+  },
   "panels": [
     {
+      "id": "five-lights-answer",
+      "type": "image",
+      "src": "/islands/001/story/resolution/001-five-lights-answer.webp",
+      "alt": "Five restored landmark lights forming a calm answer around Noctyra at the Island Heart",
+      "caption": "Five lights answer one warning."
+    },
+    {
+      "id": "miri-opens-light",
+      "type": "image",
+      "src": "/islands/001/story/resolution/002-miri-opens-light.webp",
+      "alt": "Miri deliberately uncovering her family lantern while the Lumin watch",
+      "caption": "Miri: “We can be careful without disappearing.”"
+    },
+    {
       "id": "warning-breaks",
-      "type": "image",
-      "src": "/assets/islands/island-001/bosses/black-crystal-dragon-defeated.webp",
-      "alt": "Noctyra resting as the corrupted crystal warning breaks",
-      "caption": "The warning breaks."
+      "type": "video",
+      "src": "/islands/001/story/resolution/003-warning-breaks.mp4",
+      "poster": "/islands/001/story/resolution/003-warning-breaks-poster.webp",
+      "mutedAutoplay": true,
+      "loop": false,
+      "caption": "The crystal breaks. The warning remains—but it no longer owns the sky."
     },
     {
-      "id": "luma-answers",
+      "id": "noctyra-listens",
       "type": "image",
-      "src": "/assets/islands/island-001/landmarks/hatchery/hatchery-l3.webp",
-      "alt": "The restored Hatchery on Luma Isle",
-      "caption": "Luma Isle begins to answer again."
+      "src": "/islands/001/story/resolution/004-noctyra-listens.webp",
+      "alt": "Noctyra lowering her wings and listening to the people of Luma Isle",
+      "caption": "Noctyra: “I was trying to keep the small lights safe.”"
     },
     {
-      "id": "great-drift-clue",
-      "type": "text",
-      "text": "Inside the corrupted crystal, Sava finds a symbol no Lumin craftsperson recognizes."
+      "id": "hatchery-answers",
+      "type": "image",
+      "src": "/islands/001/story/resolution/005-hatchery-answers.webp",
+      "alt": "The Hatchery opening to the stars as the waiting egg glows softly",
+      "caption": "For the first time since the Drift, the Hatchery sees the stars."
+    },
+    {
+      "id": "shaped-interruption",
+      "type": "image",
+      "src": "/islands/001/story/resolution/006-shaped-interruption.webp",
+      "alt": "Elder Sava studying an unfamiliar deliberately marked fragment of dark crystal",
+      "caption": "Sava: “This mark is not Lumin craft. Someone shaped the interruption.”"
     },
     {
       "id": "route-opens",
       "type": "image",
-      "src": "/assets/islands/island-001/background/ambient-background.webp",
-      "alt": "A restored route opening from Luma Isle",
+      "src": "/islands/001/story/resolution/007-route-opens.webp",
+      "alt": "A restored golden route leaving Luma Isle as a distant island answers in pale light",
       "caption": "One route opens. Another answers."
+    },
+    {
+      "id": "first-light-held",
+      "type": "image",
+      "src": "/islands/001/story/resolution/008-first-light-held.webp",
+      "alt": "Miri, Poko, Sava, Ivo, and Noctyra looking together toward the next answering route",
+      "caption": "Miri: “We will keep the light open.”"
     }
   ]
 }

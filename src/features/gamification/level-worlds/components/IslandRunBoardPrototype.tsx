@@ -15551,6 +15551,8 @@ export function IslandRunBoardPrototype({
         <IslandNarrativeDialogue
           isOpen={true}
           speakerName={islandNarrativeOpeningFlow.activeDialogue.speakerName}
+          portraitSrc={islandNarrativeOpeningFlow.activeDialogue.portraitSrc}
+          portraitAlt={islandNarrativeOpeningFlow.activeDialogue.portraitAlt}
           text={islandNarrativeOpeningFlow.activeDialogue.text}
           secondaryText={islandNarrativeOpeningFlow.activeDialogue.secondaryText}
           tone={islandNarrativeOpeningFlow.activeDialogue.tone ?? 'standard'}
@@ -15578,6 +15580,8 @@ export function IslandRunBoardPrototype({
         <IslandNarrativeDialogue
           isOpen={true}
           speakerName={islandNarrativeOpeningFlow.activeReactionDialogue.speakerName}
+          portraitSrc={islandNarrativeOpeningFlow.activeReactionDialogue.portraitSrc}
+          portraitAlt={islandNarrativeOpeningFlow.activeReactionDialogue.portraitAlt}
           text={islandNarrativeOpeningFlow.activeReactionDialogue.text}
           secondaryText={islandNarrativeOpeningFlow.activeReactionDialogue.secondaryText}
           tone={islandNarrativeOpeningFlow.activeReactionDialogue.tone}

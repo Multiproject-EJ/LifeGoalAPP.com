@@ -10,6 +10,7 @@ const hookPath = 'src/features/gamification/level-worlds/narrative/useIslandNarr
 // StoryPlayer engine, so several UI-contract assertions target it directly.
 const storyPlayerPath = 'src/features/story/StoryPlayer.tsx';
 const storyPlayerCssPath = 'src/features/story/StoryPlayer.css';
+const globalPrologueManifestPath = 'public/storyline/episode-001/manifest.json';
 
 const readerSource = readFileSync(readerPath, 'utf8');
 const readerCss = readFileSync(readerCssPath, 'utf8');
@@ -17,6 +18,7 @@ const boardSource = readFileSync(boardPath, 'utf8');
 const hookSource = readFileSync(hookPath, 'utf8');
 const storyPlayerSource = readFileSync(storyPlayerPath, 'utf8');
 const storyPlayerCss = readFileSync(storyPlayerCssPath, 'utf8');
+const globalPrologueManifest = readFileSync(globalPrologueManifestPath, 'utf8');
 
 function assertIncludes(source: string, expected: string, message: string) {
   assert(source.includes(expected), message);
@@ -77,5 +79,20 @@ export const islandStoryReaderComponentTests: TestCase[] = [
     assert(!readerSource.includes('preventDefault'), 'StoryReader should not cancel CTA clicks via preventDefault');
     assert(!readerSource.includes('pointer-events: none'), 'StoryReader source should not disable pointer events on parent content');
     assert(!readerCss.includes('pointer-events: none'), 'StoryReader CSS should not disable pointer events on parent content');
+  } },
+  { name: 'StoryPlayer portals to the viewport and locks background scroll', run: () => {
+    assertIncludes(storyPlayerSource, 'createPortal(player, document.body)', 'StoryPlayer must render at the top-level body portal');
+    assertIncludes(storyPlayerSource, "lockPageScroll(['body', 'documentElement'])", 'StoryPlayer must lock page scrolling while open');
+    assertIncludes(readerSource, 'createPortal(shell, document.body)', 'StoryReader loading and error states must also render at the top-level body portal');
+  } },
+  { name: 'StoryPlayer uses posters for reduced motion and keeps media failure navigable', run: () => {
+    assertIncludes(storyPlayerSource, "matchMedia('(prefers-reduced-motion: reduce)')", 'StoryPlayer must observe reduced-motion preference');
+    assertIncludes(storyPlayerSource, 'prefersReducedMotion && panel.poster', 'Reduced-motion video panels must render their poster');
+    assertIncludes(storyPlayerSource, 'Visual unavailable. The story can continue.', 'Media failures need an explicit non-blocking fallback');
+  } },
+  { name: 'Island story exposes an explicit skip label and the prologue has no reward field', run: () => {
+    assertIncludes(readerSource, 'closeLabel="Skip story"', 'Island StoryReader should label its close action as Skip story');
+    assert(!globalPrologueManifest.includes('"reward"'), 'Global prologue must not contain a gameplay reward');
+    assert(!globalPrologueManifest.includes('"coins"'), 'Retired coins must not appear in the global prologue manifest');
   } },
 ];

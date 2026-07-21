@@ -29,6 +29,8 @@ export type ActiveIslandNarrativeDialogue = {
   secondaryText?: string;
   continueLabel: string;
   tone?: 'standard' | 'wisdom' | 'guardian';
+  portraitSrc?: string;
+  portraitAlt?: string;
 } | null;
 
 type OpeningBeatId = 'I001-B02' | 'I001-B03' | 'I001-B04';
@@ -173,11 +175,15 @@ function getToastForBeat(beatId: AmbientBeatId): ActiveIslandNarrativeToast {
 function getDialogueForBeat(beatId: OpeningBeatId | BossEligibleBeatId | TravelReadyClosingBeatId): ActiveIslandNarrativeDialogue | null {
   const beat = getIsland001Beat(beatId);
   if (!beat || beat.surface !== 'dialogue_sheet' || !beat.text) return null;
+  const character = getIslandNarrativeDefinition(1)?.characters.find((entry) => entry.id === beat.speakerId);
+  const portrait = character?.portraitSrc
+    ? { portraitSrc: character.portraitSrc, portraitAlt: `${character.displayName} portrait` }
+    : {};
   if (beatId === 'I001-B03') {
-    return { beatId, speakerName: 'Miri', text: beat.text, continueLabel: 'Return to the island' };
+    return { beatId, speakerName: 'Miri', text: beat.text, continueLabel: 'Return to the island', ...portrait };
   }
   if (beatId === 'I001-B04') {
-    return { beatId, speakerName: 'Poko', text: beat.text, continueLabel: 'Return to the island' };
+    return { beatId, speakerName: 'Poko', text: beat.text, continueLabel: 'Return to the island', ...portrait };
   }
   if (beatId === 'I001-B26') {
     return {
@@ -187,6 +193,7 @@ function getDialogueForBeat(beatId: OpeningBeatId | BossEligibleBeatId | TravelR
       secondaryText: beat.secondaryText,
       continueLabel: 'Face Noctyra',
       tone: 'wisdom',
+      ...portrait,
     };
   }
   if (beatId === 'I001-B30') {
@@ -196,6 +203,7 @@ function getDialogueForBeat(beatId: OpeningBeatId | BossEligibleBeatId | TravelR
       text: beat.text,
       continueLabel: beat.displayCtaText ?? 'Follow the restored route',
       tone: 'standard',
+      ...portrait,
     };
   }
   return null;

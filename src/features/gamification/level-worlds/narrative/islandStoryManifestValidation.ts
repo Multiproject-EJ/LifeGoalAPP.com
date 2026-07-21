@@ -25,6 +25,7 @@ export function validateIslandStoryManifest(
   } else {
     manifest.panels.forEach((panel, index) => validatePanel(panel, index, options, errors));
   }
+  if ('soundtrack' in manifest) validateSoundtrack(manifest.soundtrack, 'manifest.soundtrack', options, errors);
   return { valid: errors.length === 0, errors };
 }
 
@@ -36,9 +37,41 @@ function validatePanel(panel: unknown, index: number, options: IslandStoryManife
   }
   if (panel.type === 'image' || panel.type === 'video') {
     if (typeof panel.src !== 'string' || !panel.src.trim()) errors.push(`panels[${index}].src is required for media panels`);
-    else validatePublicPath(panel.src, `panels[${index}].src`, options, errors);
-    if ('poster' in panel && typeof panel.poster === 'string') validatePublicPath(panel.poster, `panels[${index}].poster`, options, errors);
+    else {
+      validatePublicPath(panel.src, `panels[${index}].src`, options, errors);
+      validateMediaExtension(panel.src, panel.type, `panels[${index}].src`, errors);
+    }
+    if ('poster' in panel) {
+      if (typeof panel.poster !== 'string' || !panel.poster.trim()) errors.push(`panels[${index}].poster must be a non-empty string`);
+      else {
+        validatePublicPath(panel.poster, `panels[${index}].poster`, options, errors);
+        validateMediaExtension(panel.poster, 'image', `panels[${index}].poster`, errors);
+      }
+    }
   }
+  if ('soundtrack' in panel) validateSoundtrack(panel.soundtrack, `panels[${index}].soundtrack`, options, errors);
+}
+
+function validateSoundtrack(value: unknown, label: string, options: IslandStoryManifestValidationOptions, errors: string[]): void {
+  if (!isObject(value)) { errors.push(`${label} must be an object`); return; }
+  if (typeof value.src !== 'string' || !value.src.trim()) errors.push(`${label}.src must be a non-empty string`);
+  else {
+    validatePublicPath(value.src, `${label}.src`, options, errors);
+    const extension = getExtension(value.src);
+    if (!['mp3', 'm4a', 'ogg', 'wav'].includes(extension)) errors.push(`${label}.src has unsupported audio type: ${extension || 'none'}`);
+  }
+  if ('loop' in value && typeof value.loop !== 'boolean') errors.push(`${label}.loop must be boolean`);
+  if ('volume' in value && (typeof value.volume !== 'number' || value.volume < 0 || value.volume > 1)) errors.push(`${label}.volume must be between 0 and 1`);
+}
+
+function validateMediaExtension(src: string, type: 'image' | 'video', label: string, errors: string[]): void {
+  const extension = getExtension(src);
+  const supported = type === 'image' ? ['webp', 'png', 'jpg', 'jpeg', 'avif'] : ['mp4', 'webm'];
+  if (!supported.includes(extension)) errors.push(`${label} has unsupported ${type} type: ${extension || 'none'}`);
+}
+
+function getExtension(src: string): string {
+  return src.split(/[?#]/, 1)[0].split('.').pop()?.toLowerCase() ?? '';
 }
 
 function validatePublicPath(src: string, label: string, options: IslandStoryManifestValidationOptions, errors: string[]): void {

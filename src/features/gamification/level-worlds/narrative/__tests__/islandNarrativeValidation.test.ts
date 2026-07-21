@@ -1,3 +1,5 @@
+// @ts-expect-error Node types are intentionally absent from the lightweight Island Run test tsconfig.
+import { existsSync, readFileSync } from 'node:fs';
 import { island001NarrativeDefinition } from '../definitions/island001Narrative';
 import { getIslandNarrativeDefinition } from '../islandNarrativeRegistry';
 import { validateIslandNarrativeDefinition } from '../islandNarrativeValidation';
@@ -40,41 +42,47 @@ export const islandNarrativeValidationTests: TestCase[] = [
 
 export const islandStoryManifestValidationTests: TestCase[] = [
   {
-    name: 'arrival story manifest passes validation and references known Island 1 assets',
+    name: 'shipped arrival story manifest passes validation and every media asset exists',
     run: () => {
-      const manifest = {
-        id: 'island-001-arrival',
-        title: 'Luma Isle — Arrival',
-        panels: [
-          { type: 'image', src: '/assets/islands/island-001/background/ambient-background.webp', caption: 'Luma Isle should be shining by now.' },
-          { type: 'image', src: '/assets/islands/island-001/board/board-circle-inner.webp', caption: 'The landmarks are standing… but quiet.' },
-          { type: 'image', src: '/assets/islands/island-001/scenery/battle-arena-crystal.webp', caption: 'At the Island Heart, Noctyra waits.' },
-          { type: 'text', text: 'Start small. Help us wake one gentle place.' },
-        ],
-      };
-      const existingAssets = new Set(['/assets/islands/island-001/background/ambient-background.webp', '/assets/islands/island-001/board/board-circle-inner.webp', '/assets/islands/island-001/scenery/battle-arena-crystal.webp']);
-      const result = validateIslandStoryManifest(manifest, { assetExists: (src) => existingAssets.has(src) });
+      const manifest = JSON.parse(readFileSync('public/islands/001/story/arrival/manifest.json', 'utf8'));
+      const result = validateIslandStoryManifest(manifest, {
+        assetExists: (src) => existsSync(decodeURIComponent(`public${src}`)),
+      });
       assert(result.valid, result.errors.join('; '));
     },
   },
   {
-    name: 'resolution story manifest passes validation and references known Island 1 assets',
+    name: 'shipped resolution story manifest passes validation and every media asset exists',
     run: () => {
-      const manifest = {
-        id: 'island-001-resolution',
-        title: 'Luma Isle — Resolution',
-        panels: [
-          { type: 'image', src: '/assets/islands/island-001/bosses/black-crystal-dragon-defeated.webp', caption: 'The warning breaks.' },
-          { type: 'image', src: '/assets/islands/island-001/landmarks/hatchery/hatchery-l3.webp', caption: 'Luma Isle begins to answer again.' },
-          { type: 'text', text: 'Inside the corrupted crystal, Sava finds a symbol no Lumin craftsperson recognizes.' },
-          { type: 'image', src: '/assets/islands/island-001/background/ambient-background.webp', caption: 'One route opens. Another answers.' },
-        ],
-      };
-      const existingAssets = new Set(['/assets/islands/island-001/bosses/black-crystal-dragon-defeated.webp', '/assets/islands/island-001/landmarks/hatchery/hatchery-l3.webp', '/assets/islands/island-001/background/ambient-background.webp']);
-      const result = validateIslandStoryManifest(manifest, { assetExists: (src) => existingAssets.has(src) });
+      const manifest = JSON.parse(readFileSync('public/islands/001/story/resolution/manifest.json', 'utf8'));
+      const result = validateIslandStoryManifest(manifest, {
+        assetExists: (src) => existsSync(decodeURIComponent(`public${src}`)),
+      });
+      assert(result.valid, result.errors.join('; '));
+    },
+  },
+  {
+    name: 'shipped global prologue manifest passes validation and every media asset exists',
+    run: () => {
+      const manifest = JSON.parse(readFileSync('public/storyline/episode-001/manifest.json', 'utf8'));
+      const result = validateIslandStoryManifest(manifest, {
+        assetExists: (src) => existsSync(decodeURIComponent(`public${src}`)),
+      });
       assert(result.valid, result.errors.join('; '));
     },
   },
   { name: 'invalid reward manifest fails validation', run: () => assert(!validateIslandStoryManifest({ id: 'x', title: 'X', panels: [{ type: 'text', text: 'ok' }], reward: { coins: 1 } }).valid, 'Reward manifest should fail') },
   { name: 'invalid media panel fails validation', run: () => assert(!validateIslandStoryManifest({ id: 'x', title: 'X', panels: [{ type: 'image' }] }).valid, 'Missing media src should fail') },
+  { name: 'invalid video poster type fails validation', run: () => assert(!validateIslandStoryManifest({ id: 'x', title: 'X', panels: [{ type: 'video', src: '/story/clip.mp4', poster: '/story/poster.txt' }] }).valid, 'Unsupported poster type should fail') },
+  { name: 'invalid soundtrack volume fails validation', run: () => assert(!validateIslandStoryManifest({ id: 'x', title: 'X', soundtrack: { src: '/story/music.mp3', volume: 2 }, panels: [{ type: 'text', text: 'ok' }] }).valid, 'Out-of-range soundtrack volume should fail') },
+  { name: 'valid motion-webtoon media passes validation', run: () => {
+    const assets = new Set(['/story/clip.mp4', '/story/poster.webp', '/story/music.mp3']);
+    const result = validateIslandStoryManifest({
+      id: 'x',
+      title: 'X',
+      soundtrack: { src: '/story/music.mp3', loop: true, volume: 0.3 },
+      panels: [{ type: 'video', src: '/story/clip.mp4', poster: '/story/poster.webp', mutedAutoplay: true }],
+    }, { assetExists: (src) => assets.has(src) });
+    assert(result.valid, result.errors.join('; '));
+  } },
 ];
