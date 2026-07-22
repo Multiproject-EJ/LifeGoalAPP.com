@@ -16,6 +16,7 @@ import { BoardDice3D } from './BoardDice3D';
 import { IslandArtLayers, type IslandArtSceneLayout } from './IslandArtLayers';
 import type { IslandArtManifest } from '../../services/islandArtManifest';
 import type { BossCreatureArtState } from '../../services/islandRunBossEncounter';
+import type { IslandRunLandmarkDiscoveryState } from '../../services/islandRunDiscoveryFog';
 import {
   computeDirectionalLead,
   computeHopDurations,
@@ -55,6 +56,10 @@ export interface BoardStageProps {
   islandArtManifest: IslandArtManifest | null;
   /** Current stop build levels used by v2 landmark art; read-only visual input. */
   landmarkBuildLevels?: number[];
+  /** Visual-only landmark discovery states derived from canonical stop status. */
+  landmarkDiscoveryStates?: readonly IslandRunLandmarkDiscoveryState[];
+  /** Whether discovery fog is rendered; DEV clean-art mode can disable it. */
+  discoveryFogEnabled?: boolean;
   /** Whether the current island boss has already been resolved/defeated. */
   isBossDefeated?: boolean;
   /** Visual state for the separate boss creature layer; arena/scenery remains independent. */
@@ -144,6 +149,8 @@ export function BoardStage(props: BoardStageProps) {
     theme,
     islandArtManifest,
     landmarkBuildLevels = [],
+    landmarkDiscoveryStates = [],
+    discoveryFogEnabled = true,
     isBossDefeated = false,
     bossCreatureArtState,
     spark36RingGradient,
@@ -618,6 +625,8 @@ export function BoardStage(props: BoardStageProps) {
         <IslandArtLayers
           manifest={islandArtManifest}
           landmarkBuildLevels={landmarkBuildLevels}
+          landmarkDiscoveryStates={landmarkDiscoveryStates}
+          discoveryFogEnabled={discoveryFogEnabled}
           isBossDefeated={isBossDefeated}
           bossCreatureArtState={bossCreatureArtState}
           boardWidth={boardSize.width}
@@ -638,6 +647,8 @@ export function BoardStage(props: BoardStageProps) {
         <IslandArtLayers
           manifest={islandArtManifest}
           landmarkBuildLevels={landmarkBuildLevels}
+          landmarkDiscoveryStates={landmarkDiscoveryStates}
+          discoveryFogEnabled={discoveryFogEnabled}
           isBossDefeated={isBossDefeated}
           bossCreatureArtState={bossCreatureArtState}
           boardWidth={boardSize.width}

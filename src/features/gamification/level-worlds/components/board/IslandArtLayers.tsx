@@ -9,6 +9,7 @@ import {
   type IslandArtSpace,
 } from '../../services/islandArtManifest';
 import type { BossCreatureArtState } from '../../services/islandRunBossEncounter';
+import type { IslandRunLandmarkDiscoveryState } from '../../services/islandRunDiscoveryFog';
 import { CANONICAL_BOARD_SIZE, type TileAnchor, type ZBand } from '../../services/islandBoardLayout';
 import { LandmarkBuildVisual, normalizeLandmarkBuildVisualStopId } from './LandmarkBuildVisual';
 
@@ -23,6 +24,10 @@ export interface IslandArtSceneLayout {
 interface IslandArtLayersProps {
   manifest: IslandArtManifest | null;
   landmarkBuildLevels: number[];
+  /** Canonical stop state mapped to presentation-only fog/reveal styling. */
+  landmarkDiscoveryStates?: readonly IslandRunLandmarkDiscoveryState[];
+  /** DEV clean-art mode disables every discovery mist and blur at once. */
+  discoveryFogEnabled?: boolean;
   isBossDefeated: boolean;
   bossCreatureArtState?: BossCreatureArtState;
   boardWidth: number;
@@ -147,6 +152,8 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
   const {
     manifest,
     landmarkBuildLevels,
+    landmarkDiscoveryStates = [],
+    discoveryFogEnabled = true,
     isBossDefeated,
     bossCreatureArtState,
     boardWidth,
@@ -221,6 +228,9 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
   const bossSrc = resolvedBossCreatureArtState === 'hidden'
     ? null
     : getIslandArtBossImageSrc(manifest.boss, resolvedBossCreatureArtState === 'defeated');
+  const getDiscoveryState = (stopIndex: number): IslandRunLandmarkDiscoveryState => (
+    landmarkDiscoveryStates[stopIndex] ?? 'revealed'
+  );
 
   return (
     <div
@@ -302,6 +312,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
             src={landmark.levelZero}
             alt=""
             draggable={false}
+            data-discovery-state={getDiscoveryState(landmark.stopIndex)}
             style={makeArtLayerStyle({
               manifest,
               x: landmark.x,
@@ -350,6 +361,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
               compact
               className={`island-art-layers__image island-art-layers__landmark island-art-layers__landmark--generated island-art-layers__landmark--${landmark.zBand ?? 'mid'}`}
               data-landmark-index={landmark.stopIndex}
+              data-discovery-state={getDiscoveryState(landmark.stopIndex)}
               style={style}
             />
           );
@@ -362,11 +374,32 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
             alt=""
             draggable={false}
             data-landmark-index={landmark.stopIndex}
+            data-discovery-state={getDiscoveryState(landmark.stopIndex)}
             style={style}
             onError={() => hideSource(src)}
           />
         );
       })}
+
+      {showWorld && discoveryFogEnabled && manifest.landmarks.map((landmark) => (
+        <div
+          key={`${landmark.stopIndex}-discovery-mist`}
+          className="island-art-layers__discovery-mist"
+          data-landmark-index={landmark.stopIndex}
+          data-discovery-state={getDiscoveryState(landmark.stopIndex)}
+          style={makeArtLayerStyle({
+            manifest,
+            x: landmark.x,
+            y: landmark.y,
+            width: landmark.width * 1.08,
+            height: landmark.height * 0.9,
+            uniformScale,
+            toScreen,
+            sceneLayout,
+            zIndex: zIndexForBand(landmark.zBand, 4) + 1,
+          })}
+        />
+      ))}
 
       {showWorld && bossSrc && !hiddenSources.has(bossSrc) && manifest.boss ? (
         <img
@@ -375,6 +408,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
           src={bossSrc}
           alt=""
           draggable={false}
+          data-discovery-state={getDiscoveryState(4)}
           style={makeArtLayerStyle({
             manifest,
             x: manifest.boss.x,
@@ -389,6 +423,24 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
             zIndex: BOSS_LANDMARK_Z_INDEX,
           })}
           onError={() => hideSource(bossSrc)}
+        />
+      ) : null}
+      {showWorld && discoveryFogEnabled && manifest.boss ? (
+        <div
+          className="island-art-layers__discovery-mist island-art-layers__discovery-mist--boss"
+          data-landmark-index="4"
+          data-discovery-state={getDiscoveryState(4)}
+          style={makeArtLayerStyle({
+            manifest,
+            x: manifest.boss.x,
+            y: manifest.boss.y - (artSpaceHeight * BOSS_LANDMARK_UPWARD_OFFSET_RATIO),
+            width: manifest.boss.width * BOSS_LANDMARK_SIZE_SCALE * 1.15,
+            height: manifest.boss.height * BOSS_LANDMARK_SIZE_SCALE,
+            uniformScale,
+            toScreen,
+            sceneLayout,
+            zIndex: BOSS_LANDMARK_Z_INDEX + 1,
+          })}
         />
       ) : null}
     </div>
