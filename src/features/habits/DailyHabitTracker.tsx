@@ -2633,10 +2633,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         }));
 
     if (hasValidStoredOffer) {
-      setTimeLimitedOffer(storedOffer);
-      setHabitReviewWindow({
-        windowStart: storedOffer.reviewWindowStart ?? null,
-        windowEnd: storedOffer.reviewWindowEnd ?? null,
+      setTimeLimitedOffer((current) =>
+        current.date === storedOffer.date &&
+        current.nextHabitId === storedOffer.nextHabitId &&
+        current.badHabitId === storedOffer.badHabitId &&
+        current.windowStart === storedOffer.windowStart &&
+        current.windowEnd === storedOffer.windowEnd
+          ? current
+          : storedOffer,
+      );
+      setHabitReviewWindow((current) => {
+        const windowStart = storedOffer.reviewWindowStart ?? null;
+        const windowEnd = storedOffer.reviewWindowEnd ?? null;
+        return current.windowStart === windowStart && current.windowEnd === windowEnd
+          ? current
+          : { windowStart, windowEnd };
       });
       recordTimeLimitedOfferTelemetry({
         offerDate: activeDate,
@@ -2669,8 +2680,20 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       reviewWindowEnd: reviewWindow.windowEnd,
     };
 
-    setTimeLimitedOffer(nextOffer);
-    setHabitReviewWindow(reviewWindow);
+    setTimeLimitedOffer((current) =>
+      current.date === nextOffer.date &&
+      current.nextHabitId === nextOffer.nextHabitId &&
+      current.badHabitId === nextOffer.badHabitId &&
+      current.windowStart === nextOffer.windowStart &&
+      current.windowEnd === nextOffer.windowEnd
+        ? current
+        : nextOffer,
+    );
+    setHabitReviewWindow((current) =>
+      current.windowStart === reviewWindow.windowStart && current.windowEnd === reviewWindow.windowEnd
+        ? current
+        : reviewWindow,
+    );
     saveDraft(timeLimitedOfferScheduleKey(session.user.id, activeDate), nextOffer);
     recordTimeLimitedOfferTelemetry({
       offerDate: activeDate,
@@ -12536,6 +12559,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     });
   }, []);
 
+  const dailyLifeUpgradeHistoricalLogs = useMemo(
+    () => historicalLogs.map((log) => ({ habit_id: log.habit_id, completed: log.completed })),
+    [historicalLogs],
+  );
+
   const {
     dailyLifeUpgradeCandidate,
     showDailyLifeUpgradeModal,
@@ -12562,7 +12590,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   } = useDailyLifeUpgradeFlow({
     userId: session?.user?.id,
     habits,
-    historicalLogs: historicalLogs.map((log) => ({ habit_id: log.habit_id, completed: log.completed })),
+    historicalLogs: dailyLifeUpgradeHistoricalLogs,
     sortedHabits,
     isConfigured,
     isDemoExperience,
