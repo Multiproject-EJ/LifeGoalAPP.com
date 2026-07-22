@@ -1998,7 +1998,7 @@ export function IslandRunBoardPrototype({
     boardProfileExposureTrackedRef.current = true;
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_ui_interaction',
       metadata: {
         stage: 'island_run_board_profile_exposed',
         board_profile_id: ACTIVE_BOARD_PROFILE.id,
@@ -3927,7 +3927,7 @@ export function IslandRunBoardPrototype({
       setFirstRunStep('celebration');
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'onboarding_completed',
+        eventType: 'onboarding_step',
         metadata: { stage: 'island_run_first_run_started', island: islandNumber },
       });
     }
@@ -7114,7 +7114,7 @@ export function IslandRunBoardPrototype({
     });
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: eggCount > 1 ? 'island_egg_mania_set' : 'island_egg_set',
         tier: primaryEgg.tier,
@@ -7669,7 +7669,7 @@ export function IslandRunBoardPrototype({
     if (isPerfectCompanionActive && perfectCompanionStartupBonus > 0) {
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'perfect_companion_effect_triggered',
           effect_scope: 'island_startup_bonus',
@@ -7802,7 +7802,7 @@ export function IslandRunBoardPrototype({
     setLandingText(`Collected ${creature.name}! It has been added to your ship's creature manifest.`);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'island_creature_collected',
         tier: resolvedEgg.tier,
@@ -7824,7 +7824,7 @@ export function IslandRunBoardPrototype({
         setShowPerfectCompanionOnboardingHint(true);
         void recordTelemetryEvent({
           userId: session.user.id,
-          eventType: 'onboarding_completed',
+          eventType: 'onboarding_step',
           metadata: {
             stage: 'perfect_companion_onboarding_hint_seen',
             island_number: islandNumber,
@@ -7903,7 +7903,7 @@ export function IslandRunBoardPrototype({
     setLandingText(`Sold ${creature.name}. Chose: ${picked.label}. +${bundle.essenceDelta} 💰 money.`);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: { stage: 'island_creature_sold', island_number: islandNumber, tier: resolvedEgg.tier, creature_id: creature.id, sell_choice: choice, sell_amount: picked.amount },
     });
     const nextRecord = transitionResult.record;
@@ -8013,7 +8013,7 @@ export function IslandRunBoardPrototype({
     setLandingText(`Encounter complete! ${summary}.${specialtySuffix}`);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'island_run_encounter_resolved',
         island_number: islandNumber,
@@ -8032,7 +8032,7 @@ export function IslandRunBoardPrototype({
     if (isPerfectCompanionActive) {
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'perfect_companion_effect_triggered',
           effect_scope: 'encounter_reward_bonus',
@@ -8166,7 +8166,7 @@ export function IslandRunBoardPrototype({
         triggerIslandRunHaptic('stop_land');
         void recordTelemetryEvent({
           userId: session.user.id,
-          eventType: 'economy_earn',
+          eventType: 'island_run_gameplay_event',
           metadata: {
             stage: 'island_run_boss_trial_failed',
             island_number: islandNumber,
@@ -8246,7 +8246,7 @@ export function IslandRunBoardPrototype({
     setBossTrialScore(0);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'island_run_boss_trial_start',
         island_number: islandNumber,
@@ -8466,7 +8466,7 @@ export function IslandRunBoardPrototype({
     setBossTrialScore(0);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'island_run_boss_trial_retry',
         island_number: islandNumber,
@@ -8491,7 +8491,7 @@ export function IslandRunBoardPrototype({
 
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'island_run_market_purchase',
         island_number: islandNumber,
@@ -9155,7 +9155,7 @@ export function IslandRunBoardPrototype({
 
         void recordTelemetryEvent({
           userId: session.user.id,
-          eventType: 'economy_earn',
+          eventType: 'island_run_gameplay_event',
           metadata: {
             stage: 'island_run_boss_objective_complete',
             source: 'shooter_blitz',
@@ -9214,7 +9214,7 @@ export function IslandRunBoardPrototype({
 
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'island_run_boss_island_cleared',
           source: 'shooter_blitz',
@@ -9269,7 +9269,7 @@ export function IslandRunBoardPrototype({
       setLandingText(message);
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_spend',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'postponement_blocked_by_open_limit',
           island_number: islandNumber,
@@ -9287,7 +9287,7 @@ export function IslandRunBoardPrototype({
     setLandingText('No pressure — this discovery will wait for you. Keep exploring and return whenever you like.');
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_spend',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'stop_postponed',
         island_number: islandNumber,
@@ -10024,7 +10024,7 @@ export function IslandRunBoardPrototype({
       setFirstRunStep('ship-name');
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'onboarding_completed',
+        eventType: 'onboarding_step',
         metadata: {
           stage: 'island_run_first_run_rewards_claimed',
           island: islandNumber,
@@ -10074,7 +10074,7 @@ export function IslandRunBoardPrototype({
     playIslandRunSound('shop_open');
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_ui_interaction',
       metadata: { stage: 'shop_open', island_number: islandNumber },
     });
   };
@@ -10089,7 +10089,7 @@ export function IslandRunBoardPrototype({
     setShowRewardDetailsModal(true);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_ui_interaction',
       metadata: {
         stage: 'island_run_reward_bar_details_opened',
         island_number: islandNumber,
@@ -10110,7 +10110,7 @@ export function IslandRunBoardPrototype({
     setDiceCheckoutError(null);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'commerce_checkout_started',
       metadata: { stage: 'dice_checkout_start', entry_point: entryPoint, island_number: islandNumber },
     });
 
@@ -10120,7 +10120,7 @@ export function IslandRunBoardPrototype({
       setIsStartingDiceCheckout(false);
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'commerce_checkout_failed',
         metadata: { stage: 'dice_checkout_error', entry_point: entryPoint, island_number: islandNumber },
       });
       return;
@@ -10143,7 +10143,7 @@ export function IslandRunBoardPrototype({
     setCreaturePackCheckoutError(null);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'commerce_checkout_started',
       metadata: { stage: 'creature_pack_checkout_start', island_number: islandNumber },
     });
 
@@ -10153,7 +10153,7 @@ export function IslandRunBoardPrototype({
       setIsStartingCreaturePackCheckout(false);
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'commerce_checkout_failed',
         metadata: { stage: 'creature_pack_checkout_error', island_number: islandNumber },
       });
       return;
@@ -10176,7 +10176,7 @@ export function IslandRunBoardPrototype({
     setMinigameTicketCheckoutError(null);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'commerce_checkout_started',
       metadata: {
         stage: 'minigame_ticket_checkout_start',
         entry_point: entryPoint,
@@ -10195,7 +10195,7 @@ export function IslandRunBoardPrototype({
       setIsStartingMinigameTicketCheckout(false);
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'commerce_checkout_failed',
         metadata: {
           stage: 'minigame_ticket_checkout_error',
           entry_point: entryPoint,
@@ -10248,7 +10248,7 @@ export function IslandRunBoardPrototype({
     setSanctuaryMenuModule(null);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_ui_interaction',
       metadata: {
         stage: 'sanctuary_open',
         island_number: islandNumber,
@@ -10292,7 +10292,7 @@ export function IslandRunBoardPrototype({
         : null;
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'sanctuary_active_companion_changed',
           island_number: islandNumber,
@@ -10326,7 +10326,7 @@ export function IslandRunBoardPrototype({
       }
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_ui_interaction',
         metadata: {
           stage: 'perfect_companion_chip_selected',
           island_number: islandNumber,
@@ -10369,7 +10369,7 @@ export function IslandRunBoardPrototype({
       const rewardPreview = getBondMilestoneReward(nextBondLevel);
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'sanctuary_creature_fed',
           island_number: islandNumber,
@@ -10521,7 +10521,7 @@ export function IslandRunBoardPrototype({
       triggerIslandRunHaptic('market_purchase_success');
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'sanctuary_creature_form_upgrade',
           island_number: islandNumber,
@@ -10682,7 +10682,7 @@ export function IslandRunBoardPrototype({
     );
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'sanctuary_daily_companion_quest_claimed',
         island_number: islandNumber,
@@ -14206,7 +14206,7 @@ export function IslandRunBoardPrototype({
                 onClick={() => {
                   setShowShopPanel(false);
                   setMarketPurchaseFeedback(null);
-                  void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'shop_close', island_number: islandNumber } });
+                  void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'shop_close', island_number: islandNumber } });
                 }}
               >
                 ✕ Close
@@ -14264,7 +14264,7 @@ export function IslandRunBoardPrototype({
                   setShowPerfectCompanionReason(true);
                   void recordTelemetryEvent({
                     userId: session.user.id,
-                    eventType: 'onboarding_completed',
+                    eventType: 'onboarding_step',
                     metadata: {
                       stage: 'perfect_companion_onboarding_hint_set_active',
                       island_number: islandNumber,
@@ -14283,7 +14283,7 @@ export function IslandRunBoardPrototype({
                   setShowPerfectCompanionOnboardingHint(false);
                   void recordTelemetryEvent({
                     userId: session.user.id,
-                    eventType: 'onboarding_completed',
+                    eventType: 'onboarding_step',
                     metadata: {
                       stage: 'perfect_companion_onboarding_hint_dismissed',
                       island_number: islandNumber,
@@ -14545,7 +14545,7 @@ export function IslandRunBoardPrototype({
                   }
                   void recordTelemetryEvent({
                     userId: session.user.id,
-                    eventType: 'economy_earn',
+                    eventType: 'island_run_ui_interaction',
                     metadata: {
                       stage: 'sanctuary_open_ship_upgrades_bridge',
                       island_number: islandNumber,
@@ -14996,7 +14996,7 @@ export function IslandRunBoardPrototype({
                         sanctuaryHandlers.setActiveCompanion(selectedSanctuaryCreature.creatureId);
                         void recordTelemetryEvent({
                           userId: session.user.id,
-                          eventType: 'economy_earn',
+                          eventType: 'island_run_gameplay_event',
                           metadata: {
                             stage: 'sanctuary_compare_set_active',
                             island_number: islandNumber,
@@ -15022,7 +15022,7 @@ export function IslandRunBoardPrototype({
                         if (nextOpen) {
                           void recordTelemetryEvent({
                             userId: session.user.id,
-                            eventType: 'economy_earn',
+                            eventType: 'island_run_ui_interaction',
                             metadata: {
                               stage: 'perfect_companion_reason_opened',
                               island_number: islandNumber,
@@ -15066,7 +15066,7 @@ export function IslandRunBoardPrototype({
                               sanctuaryHandlers.setActiveCompanion(selectedSanctuaryCreature.creatureId);
                               void recordTelemetryEvent({
                                 userId: session.user.id,
-                                eventType: 'economy_earn',
+                                eventType: 'island_run_gameplay_event',
                                 metadata: {
                                   stage: 'perfect_companion_reason_cta_set_active',
                                   island_number: islandNumber,
