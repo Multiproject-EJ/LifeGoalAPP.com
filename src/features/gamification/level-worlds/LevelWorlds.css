@@ -1592,6 +1592,23 @@
   border: 1px solid rgba(127, 201, 233, 0.34);
 }
 
+.island-run-prototype__visual-capture-row {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  align-items: center;
+  padding: 0.48rem 0.55rem;
+  margin: 0.15rem 0 0.55rem;
+  border: 1px solid rgba(151, 221, 246, 0.42);
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(18, 48, 62, 0.97), rgba(8, 28, 40, 0.97));
+  box-shadow: 0 8px 18px rgba(0, 10, 18, 0.28);
+}
+
+.island-run-prototype__visual-capture-row .island-run-prototype__debug-btn {
+  flex: 1 1 9.5rem;
+}
+
 .island-run-prototype__stat-chip--hearts {
   background: rgba(255, 151, 184, 0.2);
   border-color: rgba(255, 166, 194, 0.46);
