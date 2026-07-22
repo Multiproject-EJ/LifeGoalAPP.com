@@ -53,10 +53,6 @@ import {
   FORTUNE_CORE_FRAGMENTS,
   FORTUNE_ENGINE_FINALE_REWARD_LABEL,
   FORTUNE_ENGINE_LAUNCH_TICKET_COST,
-  FORTUNE_FRAGMENT_PITY_RUNS,
-  FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS,
-  FORTUNE_GOLDEN_STREAK_MULTIPLIER_MIN_DAYS,
-  FORTUNE_GOLDEN_STREAK_SHIELD_MIN_DAYS,
   isFortuneCoreComplete,
   isFortuneFinaleUnlocked,
   isFortuneGoldenLaunchAvailable,
@@ -546,95 +542,136 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
     : 1;
   const bestRunScore = progress?.bestRunScore ?? 0;
   const goldenStreak = progress?.goldenStreakCount ?? 0;
-  const isFirstEverLaunch = (progress?.totalLaunches ?? 0) === 0;
+  const bankedPoints = activeRoute
+    ? Math.floor(
+      rawPoints * resolveFortuneRunMultiplier({ ringIndex, route: activeRoute, bonusMultiplier: runMultiplierBonus }),
+    )
+    : 0;
+  const nextRingMultiplier = activeRoute
+    ? resolveFortuneRunMultiplier({ ringIndex: ringIndex + 1, route: activeRoute, bonusMultiplier: runMultiplierBonus })
+    : 1;
 
   return (
     <section className={`fortune-engine${eventUnstable ? ' fortune-engine--unstable' : ''}`} aria-label="The Fortune Engine mini-game">
       {phase === 'entry' && (
-        <div className="fortune-engine__panel" role="dialog" aria-label="Fortune Engine entry">
-          <p className="fortune-engine__eyebrow">Island Event</p>
-          <h2 className="fortune-engine__title">🎡 The Fortune Engine</h2>
+        <div className="fortune-engine__panel fortune-engine__panel--entry" role="dialog" aria-label="Fortune Engine entry">
+          <header className="fortune-engine__entry-header">
+            <div>
+              <p className="fortune-engine__eyebrow">Island event</p>
+              <h2 className="fortune-engine__title">Fortune Engine</h2>
+            </div>
+            <button
+              type="button"
+              className="fortune-engine__close"
+              onClick={handleReturnToIsland}
+              aria-label="Return to Island"
+            >
+              ×
+            </button>
+          </header>
           {config.eventExpiresAtMs !== undefined && (
             <p className={`fortune-engine__countdown${eventUnstable ? ' fortune-engine__countdown--unstable' : ''}`}>
-              {eventUnstable ? '⚠️ The engine grows unstable — departs in ' : 'Fortune Engine departs in '}
+              {eventUnstable ? '⚠️ Leaving soon · ' : 'Ends in '}
               <strong>{formatEventCountdown(eventRemainingMs)}</strong>
             </p>
           )}
-          <p className="fortune-engine__copy">
-            A celestial machine hangs above the island, its rings turning with trapped
-            fortune. Spin the route wheel, then ride three accelerating rings — tap when
-            the pointer sweeps a glowing node, and steer clear of corrupted sectors.
-          </p>
 
-          <FragmentGrid fragmentIds={fragmentIds} lastFragmentId={null} />
+          <div className="fortune-engine__hero" aria-label="How to play: tap bright slices, avoid red, then bank or risk your reward">
+            <div className="fortune-engine__machine-mark" aria-hidden="true">
+              <span>✦</span>
+            </div>
+            <h3>Catch the light</h3>
+            <p>Tap bright slices. Avoid red.</p>
+            <div className="fortune-engine__quick-guide">
+              <span><b aria-hidden="true">✨</b>Tap bright</span>
+              <span><b aria-hidden="true">☠️</b>Avoid red</span>
+              <span><b aria-hidden="true">💰</b>Bank or risk</span>
+            </div>
+          </div>
 
           {finaleDone ? (
             <p className="fortune-engine__trophy" role="status">
-              🏆 Fortune Core stabilised — the engine hums in gratitude. Trophy earned!
+              🏆 Fortune Core complete
             </p>
           ) : finaleUnlocked ? (
             <div className="fortune-engine__finale-callout" role="status">
-              <p>💠 All nine fragments glow. The core is ready to be stabilised!</p>
-              {finaleFailed && <p className="fortune-engine__finale-retry">The core resisted… but nothing was lost. Try again — it costs nothing.</p>}
-              <button type="button" className="fortune-engine__btn fortune-engine__btn--finale" onClick={handleStartFinale}>
-                💠 Stabilise the Fortune Core (free)
+              <strong>💠 Finale unlocked</strong>
+              <p>{finaleFailed ? 'Try again — nothing was lost.' : 'Your Fortune Core is ready.'}</p>
+              <button
+                type="button"
+                className="fortune-engine__btn fortune-engine__btn--finale"
+                onClick={handleStartFinale}
+              >
+                Play the free finale
               </button>
             </div>
-          ) : null}
-
-          <RewardTrack track={trackViewModel} onClaim={handleClaimMilestone} />
-          {lastClaimLabel && <p className="fortune-engine__claim-note">Claimed: {lastClaimLabel} 🎉</p>}
-
-          {bestRunScore > 0 && (
-            <p className="fortune-engine__best-note">
-              🏆 Best run: <strong>{bestRunScore}</strong> — beat it for +20% event points!
-            </p>
+          ) : (
+            <div className="fortune-engine__launch-card">
+              <div className="fortune-engine__launch-meta">
+                <span>
+                  {goldenAvailable
+                    ? '✨ Free play ready'
+                    : `🎟️ ${ticketsRemaining} ticket${ticketsRemaining === 1 ? '' : 's'}`}
+                </span>
+                {goldenAvailable && <span>🧩 Core piece guaranteed</span>}
+              </div>
+              <button
+                type="button"
+                className={`fortune-engine__btn fortune-engine__btn--primary fortune-engine__btn--launch${goldenAvailable ? ' fortune-engine__btn--golden' : ''}`}
+                onClick={handleLaunch}
+                disabled={!canLaunch}
+              >
+                {goldenAvailable
+                  ? 'Play free'
+                  : canLaunch
+                    ? `Play · ${FORTUNE_ENGINE_LAUNCH_TICKET_COST} ticket`
+                    : 'Earn a ticket on the island'}
+              </button>
+            </div>
           )}
-          {goldenStreak >= 2 && (
-            <p className="fortune-engine__streak-note">
-              🔥 {goldenStreak}-day Golden streak
-              {goldenStreak >= FORTUNE_GOLDEN_STREAK_SHIELD_MIN_DAYS
-                ? ` — golden runs start at +${FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS}× with a 🛡 hazard shield!`
-                : goldenStreak >= FORTUNE_GOLDEN_STREAK_MULTIPLIER_MIN_DAYS
-                  ? ` — golden runs start at +${FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS}×! (🛡 shield at ${FORTUNE_GOLDEN_STREAK_SHIELD_MIN_DAYS} days)`
-                  : ` — reach ${FORTUNE_GOLDEN_STREAK_MULTIPLIER_MIN_DAYS} days for a +${FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS}× boost!`}
-            </p>
+
+          <div className="fortune-engine__progress-grid">
+            <section
+              className="fortune-engine__progress-card"
+              aria-label={`Fortune Core: ${fragmentIds.size} of ${FORTUNE_CORE_FRAGMENTS.length} pieces`}
+            >
+              <div className="fortune-engine__section-heading">
+                <span>Fortune Core</span>
+                <strong>{fragmentIds.size}/{FORTUNE_CORE_FRAGMENTS.length}</strong>
+              </div>
+              <FragmentGrid fragmentIds={fragmentIds} lastFragmentId={null} />
+              <p>Fill the core to unlock the finale.</p>
+            </section>
+            <RewardTrack track={trackViewModel} onClaim={handleClaimMilestone} />
+          </div>
+
+          {lastClaimLabel && <p className="fortune-engine__claim-note">🎁 {lastClaimLabel} claimed</p>}
+
+          {(bestRunScore > 0 || goldenStreak > 1) && (
+            <div className="fortune-engine__records" aria-label="Your Fortune Engine records">
+              {bestRunScore > 0 && <span>🏆 Best {bestRunScore}</span>}
+              {goldenStreak > 1 && <span>🔥 {goldenStreak}-day streak</span>}
+            </div>
           )}
 
-          <details className="fortune-engine__rules-details" open={isFirstEverLaunch}>
-            <summary>ℹ️ How it works</summary>
+          <details className="fortune-engine__rules-details">
+            <summary>Tips and prize details</summary>
             <ul className="fortune-engine__rules">
-              <li>🎟️ 1 ticket per launch — the first launch each day is a free <strong>Golden Launch</strong> with a guaranteed fragment.</li>
-              <li>🎯 Tap while the pointer crosses ⭐ points, 🎲 dice, 🟣 essence and ⏳ bonus time. Hit a segment's <strong>center</strong> for a Perfect (×2 points, combos climb to ×3.5).</li>
-              <li>☠️ {FORTUNE_RUN_HAZARD_LIMIT} corrupted hits crush the run. Deeper rings keep less of a crushed run (½ → ⅓ → ¼) — but never nothing.</li>
-              <li>💰 After each ring: bank it all, or go deeper for a bigger multiplier.</li>
-              <li>🧩 Fragments drop from the Jackpot route, Golden Launches, full three-ring descents, reward-track milestones — and every {FORTUNE_FRAGMENT_PITY_RUNS}th fragmentless run for free. Light all 9 to unlock the finale.</li>
-              <li>🔥 Golden Launch streaks upgrade golden runs: +{FORTUNE_GOLDEN_STREAK_MULTIPLIER_BONUS}× at {FORTUNE_GOLDEN_STREAK_MULTIPLIER_MIN_DAYS} days, a 🛡 hazard shield at {FORTUNE_GOLDEN_STREAK_SHIELD_MIN_DAYS}.</li>
+              <li>Hit the middle of a bright slice for a Perfect and a bigger combo.</li>
+              <li>{FORTUNE_RUN_HAZARD_LIMIT} red hits end the run, but you still keep some points.</li>
+              <li>After each ring, take the safe reward or risk a faster ring for more.</li>
             </ul>
           </details>
 
-          <p className="fortune-engine__ticket-note">
-            Tickets left: {ticketsRemaining} 🎟️
-            {goldenAvailable && <span className="fortune-engine__golden-chip"> · ✨ Golden Launch ready</span>}
-          </p>
-
-          <div className="fortune-engine__actions fortune-engine__actions--sticky">
+          {finaleUnlocked && (
             <button
               type="button"
-              className={`fortune-engine__btn fortune-engine__btn--primary${goldenAvailable ? ' fortune-engine__btn--golden' : ''}`}
-              onClick={handleLaunch}
-              disabled={!canLaunch}
+              className="fortune-engine__btn fortune-engine__btn--text"
+              onClick={handleReturnToIsland}
             >
-              {goldenAvailable
-                ? '✨ Golden Launch (free)'
-                : canLaunch
-                  ? `Launch (${FORTUNE_ENGINE_LAUNCH_TICKET_COST} 🎟️)`
-                  : 'No tickets — play the island loop!'}
-            </button>
-            <button type="button" className="fortune-engine__btn" onClick={handleReturnToIsland}>
               Return to Island
             </button>
-          </div>
+          )}
         </div>
       )}
 
@@ -655,21 +692,17 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
             ) : (
               <>
                 <div className="fortune-engine__hud-stat">
-                  <span className="fortune-engine__hud-label">Points</span>
+                  <span className="fortune-engine__hud-label">Score</span>
                   <span className="fortune-engine__hud-value">{rawPoints}</span>
                 </div>
                 <div className="fortune-engine__hud-stat">
-                  <span className="fortune-engine__hud-label">Multi</span>
+                  <span className="fortune-engine__hud-label">Boost</span>
                   <span className="fortune-engine__hud-value">×{multiplier}</span>
                 </div>
-                <div className="fortune-engine__hud-stat">
-                  <span className="fortune-engine__hud-label">Loot</span>
-                  <span className="fortune-engine__hud-value">🎲{runDice} 🟣{runEssence}</span>
-                </div>
                 <div className="fortune-engine__hud-stat" aria-label={`Corruption: ${hazardsHit} of ${FORTUNE_RUN_HAZARD_LIMIT}${shieldsLeft > 0 ? `, ${shieldsLeft} shield` : ''}`}>
-                  <span className="fortune-engine__hud-label">Hazards</span>
+                  <span className="fortune-engine__hud-label">Danger</span>
                   <span className="fortune-engine__hud-value fortune-engine__hud-value--hazard">
-                    {`${'🛡'.repeat(shieldsLeft)}${'☠️'.repeat(hazardsHit)}` || '—'}
+                    {`${'🛡'.repeat(shieldsLeft)}${'●'.repeat(hazardsHit)}${'○'.repeat(Math.max(0, FORTUNE_RUN_HAZARD_LIMIT - hazardsHit))}`}
                   </span>
                 </div>
               </>
@@ -678,8 +711,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
 
           {runGolden && phase !== 'finale' && (
             <p className="fortune-engine__golden-banner" role="status">
-              ✨ Golden Launch — fragment guaranteed on a finished run!
-              {runMultiplierBonus > 0 && ` +${runMultiplierBonus}× streak boost.`}
+              ✨ Golden play · core piece guaranteed{runMultiplierBonus > 0 ? ` · +${runMultiplierBonus}×` : ''}
             </p>
           )}
           {phase === 'ring' && comboCount >= 2 && (
@@ -717,15 +749,18 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           <footer className="fortune-engine__controls">
             {phase === 'ring' ? (
               <>
-                <p className="fortune-engine__hint">Tap anywhere to collect the segment under the pointer — center hits are Perfect!</p>
+                <div className="fortune-engine__loot-pill" aria-label={`${runDice} dice and ${runEssence} essence collected`}>
+                  <span>🎲 {runDice}</span><span>🟣 {runEssence}</span>
+                </div>
+                <p className="fortune-engine__hint"><strong>Tap bright slices</strong><span>⭐ 🎲 🟣 ⏳ &nbsp; · &nbsp; avoid ☠️</span></p>
                 <button type="button" className="fortune-engine__btn fortune-engine__btn--quiet" onClick={handleBank}>
-                  💰 Bank now
+                  Finish and keep rewards
                 </button>
               </>
             ) : phase === 'finale' ? (
-              <p className="fortune-engine__hint">Tap when the pointer crosses a glowing stabiliser!</p>
+              <p className="fortune-engine__hint"><strong>Tap the glowing diamonds</strong></p>
             ) : (
-              <p className="fortune-engine__hint">The engine chooses your route…</p>
+              <p className="fortune-engine__hint"><strong>Choosing your bonus…</strong></p>
             )}
           </footer>
         </div>
@@ -733,33 +768,19 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
 
       {phase === 'decision' && activeRoute && (
         <div className="fortune-engine__panel fortune-engine__decision" role="dialog" aria-label="Bank or go deeper">
-          <p className="fortune-engine__eyebrow">Checkpoint — Ring {ringIndex + 1} cleared</p>
-          <h2 className="fortune-engine__title">Bank or go deeper?</h2>
-          <dl className="fortune-engine__result-stats">
-            <div>
-              <dt>Unbanked points</dt>
-              <dd>{rawPoints}</dd>
-            </div>
-            <div>
-              <dt>Current multiplier</dt>
-              <dd>×{resolveFortuneRunMultiplier({ ringIndex, route: activeRoute, bonusMultiplier: runMultiplierBonus })}</dd>
-            </div>
-            <div>
-              <dt>Next ring multiplier</dt>
-              <dd>×{resolveFortuneRunMultiplier({ ringIndex: ringIndex + 1, route: activeRoute, bonusMultiplier: runMultiplierBonus })}</dd>
-            </div>
-          </dl>
-          <p className="fortune-engine__copy">
-            The next ring spins faster and hides more corruption — and a crush there keeps
-            only 1/{resolveFortuneCrushKeepDivisor(ringIndex + 1)} of your points.
-            Corruption carries over: {'☠️'.repeat(hazardsHit) || 'none'} so far.
-          </p>
-          <div className="fortune-engine__actions">
-            <button type="button" className="fortune-engine__btn fortune-engine__btn--primary" onClick={handleGoDeeper}>
-              🌀 Go deeper (×{resolveFortuneRunMultiplier({ ringIndex: ringIndex + 1, route: activeRoute, bonusMultiplier: runMultiplierBonus })})
+          <p className="fortune-engine__eyebrow">Ring {ringIndex + 1} complete</p>
+          <h2 className="fortune-engine__title">Choose your reward</h2>
+          <p className="fortune-engine__decision-status">Danger: <strong>{hazardsHit}/{FORTUNE_RUN_HAZARD_LIMIT}</strong></p>
+          <div className="fortune-engine__choice-grid">
+            <button type="button" className="fortune-engine__choice fortune-engine__choice--safe" onClick={handleBank}>
+              <span className="fortune-engine__choice-kicker">Safe</span>
+              <strong>💰 Keep {bankedPoints}</strong>
+              <small>Finish this run</small>
             </button>
-            <button type="button" className="fortune-engine__btn" onClick={handleBank}>
-              💰 Bank {Math.floor(rawPoints * resolveFortuneRunMultiplier({ ringIndex, route: activeRoute, bonusMultiplier: runMultiplierBonus }))} points
+            <button type="button" className="fortune-engine__choice fortune-engine__choice--risk" onClick={handleGoDeeper}>
+              <span className="fortune-engine__choice-kicker">Risk</span>
+              <strong>🌀 Play for ×{nextRingMultiplier}</strong>
+              <small>Faster ring · keep 1/{resolveFortuneCrushKeepDivisor(ringIndex + 1)} if crushed</small>
             </button>
           </div>
         </div>
@@ -772,10 +793,10 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           aria-label="Fortune Engine results"
         >
           <p className="fortune-engine__eyebrow">
-            {lastOutcome.end === 'crushed' ? 'Run crushed by corruption!' : lastOutcome.end === 'banked' ? 'Rewards banked' : 'Full descent complete'}
+            {lastOutcome.end === 'crushed' ? 'Run ended' : lastOutcome.end === 'banked' ? 'Safe reward' : 'All rings complete'}
           </p>
           <h2 className="fortune-engine__title">
-            {lastOutcome.end === 'crushed' ? '☠️ Half saved from the wreck' : '🎉 Run complete'}
+            {lastOutcome.end === 'crushed' ? 'Some rewards saved' : 'Rewards collected!'}
           </h2>
           <dl className="fortune-engine__result-stats">
             <div>
@@ -793,7 +814,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           </dl>
           {lastOutcome.newBest && (
             <p className="fortune-engine__best-note" role="status">
-              🏆 New personal best! +20% event points banked.
+              🏆 New best score!
             </p>
           )}
           {lastFragmentId !== null && (
@@ -807,23 +828,22 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           )}
           <RewardTrack track={trackViewModel} onClaim={handleClaimMilestone} />
           {lastClaimLabel && <p className="fortune-engine__claim-note">Claimed: {lastClaimLabel} 🎉</p>}
-          <p className="fortune-engine__ticket-note">Tickets left: {ticketsRemaining} 🎟️</p>
-          <div className="fortune-engine__actions fortune-engine__actions--sticky">
+          <div className="fortune-engine__actions">
             <button
               type="button"
-              className="fortune-engine__btn fortune-engine__btn--primary"
+              className="fortune-engine__btn fortune-engine__btn--primary fortune-engine__btn--launch"
               onClick={handleLaunch}
               disabled={!canLaunchFortuneEngine({ ticketsRemaining, goldenLaunchAvailable: isFortuneGoldenLaunchAvailable(progress, Date.now()) })}
             >
               {isFortuneGoldenLaunchAvailable(progress, Date.now())
-                ? '✨ Golden Launch (free)'
-                : `Launch again (${FORTUNE_ENGINE_LAUNCH_TICKET_COST} 🎟️)`}
-            </button>
-            <button type="button" className="fortune-engine__btn" onClick={() => setPhase('entry')}>
-              Launch deck
+                ? 'Play again free'
+                : `Play again · ${FORTUNE_ENGINE_LAUNCH_TICKET_COST} ticket`}
             </button>
             <button type="button" className="fortune-engine__btn" onClick={handleReturnToIsland}>
-              Return to Island
+              Done
+            </button>
+            <button type="button" className="fortune-engine__btn fortune-engine__btn--text" onClick={() => setPhase('entry')}>
+              View event progress
             </button>
           </div>
         </div>
@@ -831,23 +851,19 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
 
       {phase === 'finale_results' && (
         <div className="fortune-engine__panel fortune-engine__results fortune-engine__results--finale" role="dialog" aria-label="Fortune Core stabilised">
-          <p className="fortune-engine__eyebrow">The engine falls silent…</p>
-          <h2 className="fortune-engine__title">💠 Fortune Core stabilised!</h2>
-          <p className="fortune-engine__copy">
-            The nine fragments flare as one. Great gears slow, the rings fold inward, and
-            the machine bows its light toward the island — a gift, freely given. The
-            Fortune Engine will drift on between the stars, but its core is yours.
-          </p>
+          <p className="fortune-engine__eyebrow">Finale complete</p>
+          <h2 className="fortune-engine__title">💠 Core stabilised!</h2>
+          <p className="fortune-engine__copy">All nine pieces now shine as one.</p>
           <p className="fortune-engine__fragment-note" role="status">
             🏆 {finaleRewardLabel ?? FORTUNE_ENGINE_FINALE_REWARD_LABEL}
           </p>
           <FragmentGrid fragmentIds={fragmentIds} lastFragmentId={null} />
           <div className="fortune-engine__actions">
             <button type="button" className="fortune-engine__btn fortune-engine__btn--primary" onClick={handleReturnToIsland}>
-              Return to Island
+              Collect and return
             </button>
-            <button type="button" className="fortune-engine__btn" onClick={() => setPhase('entry')}>
-              Launch deck
+            <button type="button" className="fortune-engine__btn fortune-engine__btn--text" onClick={() => setPhase('entry')}>
+              View event progress
             </button>
           </div>
         </div>
@@ -860,9 +876,18 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
 // Fragment grid + reward track (presentation only)
 // ---------------------------------------------------------------------------
 
-function FragmentGrid({ fragmentIds, lastFragmentId }: { fragmentIds: Set<number>; lastFragmentId: number | null }) {
+function FragmentGrid({
+  fragmentIds,
+  lastFragmentId,
+}: {
+  fragmentIds: Set<number>;
+  lastFragmentId: number | null;
+}) {
   return (
-    <div className="fortune-engine__core" aria-label={`Fortune Core: ${fragmentIds.size} of ${FORTUNE_CORE_FRAGMENTS.length} fragments collected`}>
+    <div
+      className="fortune-engine__core"
+      aria-label={`Fortune Core: ${fragmentIds.size} of ${FORTUNE_CORE_FRAGMENTS.length} fragments collected`}
+    >
       {FORTUNE_CORE_FRAGMENTS.map((fragment) => {
         const lit = fragmentIds.has(fragment.fragmentId);
         const justLit = lastFragmentId === fragment.fragmentId;
@@ -880,29 +905,74 @@ function FragmentGrid({ fragmentIds, lastFragmentId }: { fragmentIds: Set<number
   );
 }
 
-function RewardTrack({ track, onClaim }: { track: FortuneEngineTrackViewModel; onClaim: (milestoneId: string) => void }) {
+function RewardTrack({
+  track,
+  onClaim,
+}: {
+  track: FortuneEngineTrackViewModel;
+  onClaim: (milestoneId: string) => void;
+}) {
+  const claimableNodes = track.nodes.filter((node) => node.state === 'claimable');
+  const nextNode = track.nodes.find((node) => node.state === 'upcoming') ?? null;
+
   return (
-    <div className="fortune-engine__track" aria-label={`Reward track: ${track.eventPoints} of ${track.totalPoints} event points`}>
+    <section
+      className="fortune-engine__track fortune-engine__progress-card"
+      aria-label={`Reward path: ${track.eventPoints} of ${track.totalPoints} event points`}
+    >
+      <div className="fortune-engine__section-heading">
+        <span>Reward path</span>
+        <strong>{track.eventPoints}/{track.totalPoints}</strong>
+      </div>
       <div className="fortune-engine__track-bar" role="presentation">
         <div className="fortune-engine__track-fill" style={{ width: `${Math.round(track.fillRatio * 100)}%` }} />
       </div>
-      <ol className="fortune-engine__track-nodes">
-        {track.nodes.map((node) => (
-          <li key={node.milestone.id} className={`fortune-engine__track-node fortune-engine__track-node--${node.state}`}>
-            <span className="fortune-engine__track-node-points">{node.milestone.pointsRequired}</span>
-            <span className="fortune-engine__track-node-label">{node.milestone.rewardLabel}</span>
-            {node.state === 'claimable' ? (
-              <button type="button" className="fortune-engine__btn fortune-engine__btn--claim" onClick={() => onClaim(node.milestone.id)}>
+
+      {claimableNodes.length > 0 ? (
+        <div className="fortune-engine__claim-stack">
+          {claimableNodes.map((node) => (
+            <div key={node.milestone.id} className="fortune-engine__next-reward fortune-engine__next-reward--ready">
+              <span>
+                <small>Ready</small>
+                <strong>{node.milestone.rewardLabel}</strong>
+              </span>
+              <button
+                type="button"
+                className="fortune-engine__btn fortune-engine__btn--claim"
+                onClick={() => onClaim(node.milestone.id)}
+              >
                 Claim
               </button>
-            ) : (
-              <span className="fortune-engine__track-node-state">{node.state === 'claimed' ? '✅' : '🔒'}</span>
-            )}
-          </li>
-        ))}
-      </ol>
-      <p className="fortune-engine__track-points">⚡ {track.eventPoints} event points</p>
-    </div>
+            </div>
+          ))}
+        </div>
+      ) : nextNode ? (
+        <div className="fortune-engine__next-reward">
+          <span>
+            <small>Next prize</small>
+            <strong>{nextNode.milestone.rewardLabel}</strong>
+          </span>
+          <b>{nextNode.milestone.pointsRequired - track.eventPoints} to go</b>
+        </div>
+      ) : (
+        <p className="fortune-engine__track-complete">✅ Reward path complete</p>
+      )}
+
+      <details className="fortune-engine__track-details">
+        <summary>View all prizes</summary>
+        <ol className="fortune-engine__track-nodes">
+          {track.nodes.map((node) => (
+            <li key={node.milestone.id} className={`fortune-engine__track-node fortune-engine__track-node--${node.state}`}>
+              <span className="fortune-engine__track-node-state" aria-label={node.state}>
+                {node.state === 'claimed' ? '✓' : node.state === 'claimable' ? '!' : '·'}
+              </span>
+              <span className="fortune-engine__track-node-label">{node.milestone.rewardLabel}</span>
+              <span className="fortune-engine__track-node-points">{node.milestone.pointsRequired}</span>
+            </li>
+          ))}
+        </ol>
+      </details>
+    </section>
   );
 }
 
@@ -1009,17 +1079,12 @@ function drawTimingRing(
     let fill = SEGMENT_COLORS.empty;
     let alpha = 1;
     let icon = '';
-    let label = '';
 
     if (segment) {
       fill = SEGMENT_COLORS[segment.kind];
       icon = SEGMENT_ICONS[segment.kind];
-      if (segment.kind === 'points' || segment.kind === 'dice' || segment.kind === 'essence') {
-        label = String(segment.value);
-      }
       if (segment.collected || segment.kind === 'empty') {
         alpha = 0.22;
-        label = '';
       }
     } else if (scene.highlightIndices) {
       const isTarget = scene.highlightIndices.includes(index);
@@ -1046,15 +1111,10 @@ function drawTimingRing(
       const iconRadius = (outer + inner) / 2;
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.font = '17px system-ui, sans-serif';
+      ctx.font = '18px system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(icon, cx + Math.cos(midRad) * iconRadius, cy + Math.sin(midRad) * iconRadius - (label ? 8 : 0));
-      if (label) {
-        ctx.font = '700 12px system-ui, sans-serif';
-        ctx.fillStyle = '#0b1c33';
-        ctx.fillText(label, cx + Math.cos(midRad) * iconRadius, cy + Math.sin(midRad) * iconRadius + 11);
-      }
+      ctx.fillText(icon, cx + Math.cos(midRad) * iconRadius, cy + Math.sin(midRad) * iconRadius);
       ctx.restore();
     }
   }
