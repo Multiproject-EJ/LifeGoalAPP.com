@@ -8420,12 +8420,54 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-radius: 21px;
   pointer-events: none;
   content: '';
-  animation: super-habit-hold-charge 650ms linear forwards;
+  animation: super-habit-hold-charge var(--super-habit-hold-duration, 1300ms) linear forwards;
 }
 
-.habit-checklist__item--super-habit-activated {
-  z-index: 4;
-  animation: super-habit-pop-into-place 560ms cubic-bezier(0.16, 1, 0.3, 1);
+.habit-checklist__super-habit-prompt {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  min-height: 36px;
+  max-width: calc(100% - 2rem);
+  padding: 0.42rem 0.72rem;
+  border: 1px solid rgba(196, 181, 253, 0.92);
+  border-radius: 999px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  box-shadow: 0 12px 28px rgba(76, 29, 149, 0.34), 0 0 0 4px rgba(237, 233, 254, 0.82);
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  white-space: nowrap;
+  animation: super-habit-prompt-arrive 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.habit-checklist__super-habit-prompt > span {
+  font-size: 1rem;
+}
+
+.habit-checklist__super-habit-prompt strong {
+  overflow: hidden;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+}
+
+.habit-checklist__super-habit-prompt small {
+  padding-left: 0.42rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.habit-checklist__super-habit-prompt:focus-visible {
+  outline: 3px solid #fbbf24;
+  outline-offset: 3px;
 }
 
 .habit-super-tool-slot {
@@ -8476,11 +8518,9 @@ html.platform-ipad .workspace-shell__menu-edge {
   to { clip-path: inset(0 round 21px); filter: brightness(1.18); }
 }
 
-@keyframes super-habit-pop-into-place {
-  0% { transform: scale(1.03); }
-  42% { transform: scale(0.965); }
-  72% { transform: scale(1.012); }
-  100% { transform: scale(1); }
+@keyframes super-habit-prompt-arrive {
+  from { opacity: 0; transform: translate(-50%, -42%) scale(0.82); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 @keyframes super-habit-tool-slide-down {
@@ -39673,7 +39713,7 @@ body.habit-wizard-open .mobile-footer-nav {
 
 @media (prefers-reduced-motion: reduce) {
   .habit-checklist__item--super-habit-charging::before,
-  .habit-checklist__item--super-habit-activated,
+  .habit-checklist__super-habit-prompt,
   .habit-super-tool-slot--active {
     animation: none;
   }
