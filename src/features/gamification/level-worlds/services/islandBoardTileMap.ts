@@ -14,6 +14,7 @@
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 import { getIslandRunRarity, type IslandRunIslandRarity } from './islandRunIslandMetadata';
 import { TRAFFIC_LIGHT_TILE_INDEX } from './islandRunTrafficLightTile';
+import { isCaretakerClueIsland } from './islandRunCardDrawCadence';
 
 export type IslandLandmarkDoorStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
 
@@ -110,9 +111,12 @@ const ENCOUNTER_FRACTIONS: Record<IslandRarity, number[]> = {
   rare: [0.275, 0.775],
 };
 
-// Two adjacent ring tiles become a card-draw station. Fractions keep the pair
-// topology-aware instead of depending on the current 36-tile production count.
-const CARD_STATION_START_FRACTION = 15 / 36;
+// One milestone ring tile becomes a caretaker clue encounter. Fractions keep
+// its placement topology-aware instead of depending on the current 36-tile
+// production count. Non-milestone islands receive an ordinary economy tile at
+// this position, so there are no dead/suppressed card spaces.
+// Tile 17 is deliberately clear of the four expandable landmark-door clusters.
+const CARD_STATION_START_FRACTION = 17 / 36;
 const BUILD_DISCOUNT_TILE_FRACTION = 0.35;
 const FREE_TICKET_TILE_FRACTION = 0.85;
 
@@ -171,12 +175,11 @@ export function getIslandRarity(islandNumber: number): IslandRarity {
   return getIslandRunRarity(islandNumber);
 }
 
-function computeCardStationIndicesForProfile(tileCount: number): Set<number> {
+function computeCardStationIndicesForProfile(tileCount: number, islandNumber: number): Set<number> {
   const indices = new Set<number>();
-  if (tileCount <= 0) return indices;
+  if (tileCount <= 0 || !isCaretakerClueIsland(islandNumber)) return indices;
   const startIndex = Math.min(tileCount - 1, Math.max(0, Math.floor(CARD_STATION_START_FRACTION * tileCount)));
   indices.add(startIndex);
-  indices.add((startIndex + 1) % tileCount);
   return indices;
 }
 
@@ -252,7 +255,7 @@ export function generateTileMap(
   const boardProfile = resolveIslandBoardProfile(options?.profileId);
   const tileCount = boardProfile.tileCount;
   const encounterIndices = computeEncounterIndicesForProfile(rarity, tileCount);
-  const cardStationIndices = computeCardStationIndicesForProfile(tileCount);
+  const cardStationIndices = computeCardStationIndicesForProfile(tileCount, islandNumber);
   const buildDiscountTileIndex = Math.min(tileCount - 1, Math.max(0, Math.floor(BUILD_DISCOUNT_TILE_FRACTION * tileCount)));
   const freeTicketTileIndex = Math.min(tileCount - 1, Math.max(0, Math.floor(FREE_TICKET_TILE_FRACTION * tileCount)));
   const tiles: IslandTileMapEntry[] = [];

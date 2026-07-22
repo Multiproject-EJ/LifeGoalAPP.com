@@ -4,7 +4,7 @@ import { TRAFFIC_LIGHT_TILE_INDEX } from '../islandRunTrafficLightTile';
 import { resolveWrappedTokenIndex } from '../islandBoardTopology';
 import { generateIslandStopPlan } from '../islandRunStops';
 import { resolveIslandRunContractV2Stops } from '../islandRunContractV2StopResolver';
-import { assertDeepEqual, assertEqual, type TestCase } from './testHarness';
+import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const islandBoardTopologyTests: TestCase[] = [
   {
@@ -144,11 +144,14 @@ export const islandBoardTopologyTests: TestCase[] = [
     },
   },
   {
-    name: 'daily clue card task station uses two visible board tiles',
+    name: 'caretaker clue is a single tile only on every fifth island',
     run: () => {
-      const tileMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0));
-      assertEqual(tileMap[15].tileType, 'card', 'Expected tile 15 to draw a Daily Clue Card task');
-      assertEqual(tileMap[16].tileType, 'card', 'Expected tile 16 to draw a Daily Clue Card task');
+      const ordinaryMap = applyLandmarkDoorTiles(generateTileMap(3, 'normal', 'forest', 0));
+      const milestoneMap = applyLandmarkDoorTiles(generateTileMap(5, 'seasonal', 'forest', 0));
+      assertEqual(ordinaryMap.filter((entry) => entry.tileType === 'card').length, 0, 'Expected no clue tile on island 3');
+      assertEqual(milestoneMap[17].tileType, 'card', 'Expected tile 17 to host the caretaker clue on island 5');
+      assertEqual(milestoneMap.filter((entry) => entry.tileType === 'card').length, 1, 'Expected one rare clue tile');
+      assert(milestoneMap[18].tileType !== 'card', 'Expected adjacent tile 18 to remain an economy tile');
     },
   },
   {

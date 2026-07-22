@@ -438,6 +438,7 @@ import {
   resolveAvailableMultiplierTiers,
   clampMultiplierToPool,
   resolveDiceCostForMultiplier,
+  resolveNextMultiplierCycleStep,
   type RewardBarClaimPayout,
 } from '../services/islandRunContractV2RewardBar';
 import {
@@ -970,6 +971,7 @@ const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 
 const REWARDBAR_TIMERS_AUTO_HIDE_THRESHOLD_MS = 60 * 60 * 1000;
 const REWARDBAR_TIMERS_AUTO_HIDE_DELAY_MS = 10_000;
 const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
+const MULTIPLIER_MAX_JUMP_DURATION_MS = 540;
 const AUTO_ROLL_HOLD_DELAY_MS = 1400;
 const AUTO_ROLL_INTERVAL_MS = 2300;
 // While a modal/overlay owns attention, auto-roll pauses instead of firing the
@@ -2245,6 +2247,8 @@ export function IslandRunBoardPrototype({
 
   // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
   const [diceMultiplier, setDiceMultiplier] = useState(1);
+  const [isMultiplierMaxJumping, setIsMultiplierMaxJumping] = useState(false);
+  const multiplierMaxJumpLockRef = useRef(false);
 
   // Derived: available tiers (with unlocked status), effective cost, and auto-clamp
   const multiplierTiers = resolveAvailableMultiplierTiers(dicePool);
@@ -2261,6 +2265,30 @@ export function IslandRunBoardPrototype({
       setDiceMultiplier(effectiveMultiplier);
     }
   }, [effectiveMultiplier, diceMultiplier]);
+
+  useEffect(() => {
+    if (!isMultiplierMaxJumping) return undefined;
+    const timeoutId = window.setTimeout(() => {
+      multiplierMaxJumpLockRef.current = false;
+      setIsMultiplierMaxJumping(false);
+    }, MULTIPLIER_MAX_JUMP_DURATION_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [isMultiplierMaxJumping]);
+
+  const handleMultiplierPillClick = useCallback(() => {
+    // The max-tier hop is a deliberate beat: taps during it must not wrap the
+    // pill to x1 before the player sees the max state land.
+    if (multiplierMaxJumpLockRef.current || unlockedMultipliers.length <= 1) return;
+
+    const step = resolveNextMultiplierCycleStep(effectiveMultiplier, unlockedMultipliers);
+    playIslandRunSound(step.reachedMax ? 'multiplier_max' : 'multiplier_cycle');
+    setDiceMultiplier(step.nextMultiplier);
+
+    if (step.reachedMax) {
+      multiplierMaxJumpLockRef.current = true;
+      setIsMultiplierMaxJumping(true);
+    }
+  }, [effectiveMultiplier, unlockedMultipliers]);
 
   // ── Dice regen countdown (Monopoly GO style: "Next dice in MM:SS") ───────
   const [diceRegenCountdown, setDiceRegenCountdown] = useState<string | null>(null);
@@ -6804,12 +6832,12 @@ export function IslandRunBoardPrototype({
         if (cardDecision.show) {
           // 0-based index of this draw within the island → rotates the questions.
           setCardDrawIndex(Math.max(0, cardDecision.nextState.drawsThisIsland - 1));
-          setLandingText('🃏 Card station! Draw a Daily Clue Card for a quick gamified journal loop.');
+          setLandingText('🧭 The caretaker found a milestone clue. Take a quick wheel reading.');
           setShowGamifiedJournalCard(true);
         } else if (cardDecision.reason === 'island_cap') {
-          setLandingText('🃏 Card station — you’ve gathered today’s clues here. Keep rolling.');
+          setLandingText('🧭 The caretaker already saved this island’s clue. Keep exploring.');
         } else {
-          setLandingText('🃏 Card station — clue already noted nearby. Keep rolling.');
+          setLandingText('🧭 The caretaker’s wheel clues appear on milestone islands.');
         }
         break;
       }
@@ -9530,6 +9558,16 @@ export function IslandRunBoardPrototype({
     setLandingText(`🧪 DEV MODE: previewing Concord pickup modal (fragment ${slotIndex + 1}).`);
   }, [isDevModeEnabled]);
 
+  // Pure UI preview for the rare caretaker clue encounter. This deliberately
+  // bypasses the milestone cadence and journal write so visual QA never alters
+  // the player's canonical Island Run progress.
+  const handleDevPreviewCaretakerClue = useCallback(() => {
+    if (!isDevModeEnabled) return;
+    setCardDrawIndex(0);
+    setLandingText('🧪 DEV MODE: previewing the caretaker wheel clue encounter.');
+    setShowGamifiedJournalCard(true);
+  }, [isDevModeEnabled]);
+
   const handleDevStartLuckyRollSession = useCallback(async (targetIslandNumber: number) => {
     if (!isDevModeEnabled) return 'Lucky Roll dev launcher is only available in Island Run dev mode.';
     const normalizedTargetIslandNumber = Number.isFinite(targetIslandNumber)
@@ -11471,6 +11509,7 @@ export function IslandRunBoardPrototype({
               <div className="island-run-prototype__status-row">
                 <span className="island-run-prototype__stat-chip">Caretaker</span>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={() => openCaretakerFlow('dev_hud')} disabled={!shouldShowCaretakerTalkAction} aria-describedby={!inhabitantCommunicationAccess.allowed ? 'caretaker-concord-required' : undefined}>🧙 Talk to Caretaker</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevPreviewCaretakerClue}>🧭 Preview wheel clue</button>
                 {!inhabitantCommunicationAccess.allowed ? <span id="caretaker-concord-required" className="island-run-prototype__stat-chip" aria-label="Concord required for full translation">🔒 Concord required</span> : null}
               </div>
               <div className="island-run-prototype__status-row">
@@ -12157,18 +12196,13 @@ export function IslandRunBoardPrototype({
                 </button>
                 <button
                   type="button"
-                  className={`island-run-prototype__footer-multiplier-btn island-run-prototype__footer-multiplier-btn--slot-badge${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}${isAtMaxAvailableMultiplier ? ' island-run-prototype__footer-multiplier-btn--max' : ''}`}
+                  className={`island-run-prototype__footer-multiplier-btn island-run-prototype__footer-multiplier-btn--slot-badge${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}${isAtMaxAvailableMultiplier ? ' island-run-prototype__footer-multiplier-btn--max' : ''}${isMultiplierMaxJumping ? ' island-run-prototype__footer-multiplier-btn--max-jump' : ''}`}
                   style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.centerBadge)}
                   data-max-multiplier={isAtMaxAvailableMultiplier ? 'true' : undefined}
+                  data-max-jumping={isMultiplierMaxJumping ? 'true' : undefined}
                   disabled={isBuildTutorialGameplayBlocked}
-                  onClick={() => {
-                    if (unlockedMultipliers.length <= 1) return;
-                    const currentIdx = unlockedMultipliers.indexOf(effectiveMultiplier);
-                    const nextIdx = (currentIdx + 1) % unlockedMultipliers.length;
-                    const isNextMax = nextIdx === unlockedMultipliers.length - 1;
-                    playIslandRunSound(isNextMax ? 'multiplier_max' : 'multiplier_cycle');
-                    setDiceMultiplier(unlockedMultipliers[nextIdx]!);
-                  }}
+                  aria-disabled={isBuildTutorialGameplayBlocked || isMultiplierMaxJumping}
+                  onClick={handleMultiplierPillClick}
                   title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${maxAvailableMultiplier}`}
                 >
                   ×{effectiveMultiplier}
@@ -12271,11 +12305,13 @@ export function IslandRunBoardPrototype({
 
       {showGamifiedJournalCard && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Gamified journal card">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--caretaker-clue" role="dialog" aria-modal="true" aria-label="Caretaker wheel clue">
             <IslandRunGamifiedJournalCard
               session={session}
               islandNumber={islandNumber}
               drawIndex={cardDrawIndex}
+              caretakerArtSrc={caretakerInhabitant?.premiumArtSrc ?? caretakerInhabitant?.retroSpriteSrc ?? '/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp'}
+              caretakerName={caretakerInhabitant?.displayName ?? 'Caretaker'}
               onClose={() => setShowGamifiedJournalCard(false)}
               onSaved={(message) => {
                 setLandingText(message);

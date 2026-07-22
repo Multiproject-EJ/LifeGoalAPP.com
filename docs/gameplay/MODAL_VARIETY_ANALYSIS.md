@@ -3,6 +3,8 @@
 Status: Analysis. The proposed fix has since been implemented — see the "Implementation status" section of the companion doc `DEFAULT_CURRICULUM_120_ISLANDS.md`.
 Companion doc: `DEFAULT_CURRICULUM_120_ISLANDS.md` (the fix's content plan + implementation status).
 
+> **Current implementation note (2026-07-22):** The Card Stack Draw described below is historical. It has been replaced by a caretaker-led Wheel Clue that appears only on every fifth island, once per visit, and uses a two-pick visual interaction with an optional one-line note.
+
 ## The two modals in question
 
 ### 1. "Behavior stop" — Judge the check-in cards

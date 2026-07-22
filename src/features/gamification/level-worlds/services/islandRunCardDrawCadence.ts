@@ -1,15 +1,10 @@
 /**
- * Cadence gate for the ring-tile "Daily Clue Card" draw.
+ * Cadence gate for the caretaker-led milestone clue encounter.
  *
- * The board has two *adjacent* card-station tiles, so a player circling the ring
- * hits a draw roughly every lap — and the adjacent pair can fire on back-to-back
- * rolls — which made the Card Draw feel like it popped up constantly. This pure
- * helper decides whether a given card-tile landing should actually open the draw,
- * applying:
- *   - a **roll cooldown** so two landings close together don't both fire (covers
- *     the adjacent-tile double and rapid re-laps), and
- *   - a **per-island cap** so a long island visit yields a handful of draws, not
- *     a dozen.
+ * The old Daily Clue Card could appear on every island and several times per
+ * visit. That made a reflective prompt feel like routine modal noise. The
+ * caretaker now offers one visual clue encounter only on milestone islands
+ * (5, 10, 15, ...), at most once per visit.
  *
  * State is intentionally ephemeral (held in a board ref, reset per island / on
  * reload): this gates modal *cadence* only, never gameplay rewards or
@@ -18,10 +13,16 @@
  * Pure — no React, no I/O — so it is unit-testable under a plain tsc compile.
  */
 
-/** Rolls that must pass after a shown draw before another may open. */
-export const CARD_DRAW_COOLDOWN_ROLLS = 6;
-/** Most draws that may open during a single island visit. */
-export const CARD_DRAW_MAX_PER_ISLAND = 3;
+/** The caretaker offers a wheel clue on every fifth island. */
+export const CARETAKER_CLUE_ISLAND_INTERVAL = 5;
+/** A milestone clue is a special encounter, not a repeatable station. */
+export const CARD_DRAW_MAX_PER_ISLAND = 1;
+
+export function isCaretakerClueIsland(islandNumber: number): boolean {
+  if (!Number.isFinite(islandNumber)) return false;
+  const safeIsland = Math.max(1, Math.floor(islandNumber));
+  return safeIsland % CARETAKER_CLUE_ISLAND_INTERVAL === 0;
+}
 
 export type CardDrawCadenceState = {
   /** Island the counters below belong to (-1 = uninitialised). */
@@ -32,7 +33,7 @@ export type CardDrawCadenceState = {
   lastShownRollIndex: number;
 };
 
-export type CardDrawSuppressReason = 'cooldown' | 'island_cap';
+export type CardDrawSuppressReason = 'not_milestone_island' | 'island_cap';
 
 export type CardDrawDecision = {
   show: boolean;
@@ -46,7 +47,7 @@ export function initialCardDrawCadenceState(): CardDrawCadenceState {
 }
 
 /**
- * Decide whether a card-tile landing should open the Daily Clue Card.
+ * Decide whether a card-tile landing should open the caretaker clue encounter.
  * Always returns the next cadence state to store, whether or not it showed.
  */
 export function decideCardDraw(
@@ -61,12 +62,12 @@ export function decideCardDraw(
       ? state
       : { islandNumber, drawsThisIsland: 0, lastShownRollIndex: -Infinity };
 
-  if (base.drawsThisIsland >= CARD_DRAW_MAX_PER_ISLAND) {
-    return { show: false, nextState: { ...base, islandNumber }, reason: 'island_cap' };
+  if (!isCaretakerClueIsland(islandNumber)) {
+    return { show: false, nextState: { ...base, islandNumber }, reason: 'not_milestone_island' };
   }
 
-  if (rollIndex - base.lastShownRollIndex < CARD_DRAW_COOLDOWN_ROLLS) {
-    return { show: false, nextState: { ...base, islandNumber }, reason: 'cooldown' };
+  if (base.drawsThisIsland >= CARD_DRAW_MAX_PER_ISLAND) {
+    return { show: false, nextState: { ...base, islandNumber }, reason: 'island_cap' };
   }
 
   return {
