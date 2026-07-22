@@ -35,6 +35,11 @@ export interface UseBoardCameraOptions {
   springPreset?: SpringConfig;
   /** Optional overview lift for UI that permanently occupies the lower view. */
   overviewVerticalBiasRatio?: number;
+  /**
+   * Imperative visual sink for camera frames. Keeping transform-only frames
+   * outside React prevents the complete board tree from rendering at 60 fps.
+   */
+  onFrame?: (camera: CameraState) => void;
 }
 
 interface CameraSprings {
@@ -157,6 +162,7 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     visualBounds = null,
     springPreset = SPRING_PRESETS.smooth,
     overviewVerticalBiasRatio = 0,
+    onFrame,
   } = options;
   const defaultFrame = useMemo(
     () => computeSceneCameraFrame(
@@ -174,9 +180,9 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     [boardHeight, boardWidth, visualBounds],
   );
 
-  // The "committed" camera state that the renderer reads each frame.
-  const [camera, setCamera] = useState<CameraState>(() => defaultFrame);
   const [mode, setMode] = useState<CameraMode>('board_follow');
+  const cameraRef = useRef<CameraState>(defaultFrame);
+  const onFrameRef = useRef(onFrame);
 
   // Spring state lives in a ref to avoid re-renders per tick.
   const springsRef = useRef<CameraSprings>({
@@ -192,6 +198,12 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
 
   // Keep config ref in sync.
   configRef.current = springPreset;
+  onFrameRef.current = onFrame;
+
+  const emitFrame = useCallback((nextCamera: CameraState) => {
+    cameraRef.current = nextCamera;
+    onFrameRef.current?.(nextCamera);
+  }, []);
 
   useEffect(() => {
     if (defaultFrameKeyRef.current === defaultFrameKey) return;
@@ -219,8 +231,8 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     s.zoom.target = defaultFrame.zoom;
     s.zoom.velocity = 0;
     s.zoom.atRest = true;
-    setCamera(defaultFrame);
-  }, [defaultFrame, defaultFrameKey, mode]);
+    emitFrame(defaultFrame);
+  }, [defaultFrame, defaultFrameKey, emitFrame, mode]);
 
   // ── Core animation loop ────────────────────────────────────────────────────
   const tick = useCallback((now: number) => {
@@ -230,14 +242,14 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     const springs = springsRef.current;
     const anyActive = stepSprings(springs, configRef.current, dt);
 
-    setCamera({ x: springs.x.value, y: springs.y.value, zoom: springs.zoom.value });
+    emitFrame({ x: springs.x.value, y: springs.y.value, zoom: springs.zoom.value });
 
     if (anyActive) {
       rafRef.current = requestAnimationFrame(tick);
     } else {
       activeRef.current = false;
     }
-  }, []);
+  }, [emitFrame]);
 
   const ensureAnimating = useCallback(() => {
     if (!activeRef.current) {
@@ -404,9 +416,9 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
     s.x.value = clampedPan.x;   s.x.target = clampedPan.x;   s.x.velocity = 0; s.x.atRest = true;
     s.y.value = clampedPan.y;   s.y.target = clampedPan.y;   s.y.velocity = 0; s.y.atRest = true;
     s.zoom.value = clampedZoom; s.zoom.target = clampedZoom; s.zoom.velocity = 0; s.zoom.atRest = true;
-    setCamera({ x: clampedPan.x, y: clampedPan.y, zoom: clampedZoom });
+    emitFrame({ x: clampedPan.x, y: clampedPan.y, zoom: clampedZoom });
     setMode('gesture');
-  }, [boardWidth, boardHeight, minZoom, visualBounds]);
+  }, [boardWidth, boardHeight, emitFrame, minZoom, visualBounds]);
 
   /** Release gesture with momentum — set targets offset by velocity, let spring settle. */
   const releaseGesture = useCallback((velocityX: number, velocityY: number) => {
@@ -429,10 +441,12 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
   }, [boardWidth, boardHeight, ensureAnimating, visualBounds]);
 
   /** The CSS transform string the camera-stage element should use. */
-  const cameraTransform = `translate(${camera.x.toFixed(2)}px, ${camera.y.toFixed(2)}px) scale(${camera.zoom.toFixed(4)})`;
+  const camera = cameraRef.current;
+  const cameraTransform = `translate3d(${camera.x.toFixed(2)}px, ${camera.y.toFixed(2)}px, 0) scale(${camera.zoom.toFixed(4)})`;
 
   return {
     camera,
+    cameraRef,
     cameraTransform,
     mode,
     goOverview,

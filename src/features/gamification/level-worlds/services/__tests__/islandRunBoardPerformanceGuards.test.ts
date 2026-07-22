@@ -30,6 +30,37 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
     },
   },
   {
+    name: 'token and camera animation frames bypass full BoardStage React renders',
+    run: () => {
+      const tokenAnimation = readSource('src/features/gamification/level-worlds/components/board/useTokenAnimation.ts');
+      const token = readSource('src/features/gamification/level-worlds/components/board/BoardToken.tsx');
+      const camera = readSource('src/features/gamification/level-worlds/components/board/useBoardCamera.ts');
+      const stage = readSource('src/features/gamification/level-worlds/components/board/BoardStage.tsx');
+      const css = readSource('src/features/gamification/level-worlds/LevelWorlds.css');
+      const tokenFrameLoop = tokenAnimation.slice(tokenAnimation.indexOf('function animLoop'), tokenAnimation.indexOf('if (progress >= 1)'));
+      const cameraFrameLoop = camera.slice(camera.indexOf('const tick = useCallback'), camera.indexOf('const ensureAnimating'));
+      assert(tokenFrameLoop.includes('emitFrame({'), 'token rAF must write to the imperative frame sink');
+      assert(!tokenFrameLoop.includes('setAnimState('), 'token rAF must not update React state per frame');
+      assert(cameraFrameLoop.includes('emitFrame({'), 'camera rAF must write to the imperative frame sink');
+      assert(!cameraFrameLoop.includes('setCamera('), 'camera rAF must not update React state per frame');
+      assert(stage.includes('onFrame: applyCameraFrame'), 'BoardStage must connect camera frames to compositor transforms');
+      assert(stage.includes('onFrame: applyTokenFrame'), 'BoardStage must connect token frames to its imperative renderer');
+      assert(token.includes('memo(forwardRef'), 'unrelated BoardStage renders must not overwrite the live token transform');
+      assert(!css.includes('will-change: transform, left, top;'), 'token motion must not promote layout-driving left/top animation');
+    },
+  },
+  {
+    name: 'traffic-light coin assets are decoded before the compositor flip',
+    run: () => {
+      const prototype = readSource('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx');
+      const css = readSource('src/features/gamification/level-worlds/LevelWorlds.css');
+      assert(prototype.includes('TRAFFIC_LIGHT_ANIMATION_IMAGE_SRCS.map'), 'traffic-light art must be prefetched before the modal opens');
+      assert(prototype.includes("image.decoding = 'async'"), 'traffic-light art must decode asynchronously before use');
+      assert(css.includes('.island-coin--flipping .island-coin__face'), 'coin flip must have a Safari-safe face rendering profile');
+      assert(css.includes('filter: none;'), 'rotating coin faces must not re-rasterize drop-shadow filters each frame');
+    },
+  },
+  {
     name: 'Island 1 early building levels remain legible on the phone board',
     run: () => {
       const manifest = JSON.parse(readSource('public/assets/islands/island-001/island-art.json')) as {

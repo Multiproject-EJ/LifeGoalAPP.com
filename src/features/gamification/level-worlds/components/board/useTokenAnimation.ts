@@ -1,11 +1,4 @@
 import { useCallback, useRef, useState } from 'react';
-import {
-  createSpring,
-  stepSpring,
-  SPRING_PRESETS,
-  type SpringConfig,
-  type SpringState,
-} from './springEngine';
 import type { TileAnchor } from '../../services/islandBoardLayout';
 
 // ─── Token animation with Bezier arcs, squash/stretch, and rAF ──────────────
@@ -41,6 +34,12 @@ export interface UseTokenAnimationOptions {
   onLand?: (tileIndex: number) => void;
   /** Ms per hop — defaults to 220.  Used when no per-hop durations are supplied. */
   hopDurationMs?: number;
+  /**
+   * Imperative visual sink for each animation frame. The hook deliberately
+   * keeps rAF position updates out of React so BoardStage does not re-render
+   * its complete art/tile tree while the token moves.
+   */
+  onFrame?: (state: TokenAnimState) => void;
 }
 
 // Quadratic bezier interpolation at t ∈ [0,1]
@@ -63,7 +62,7 @@ function easeOutCubic(t: number) {
 }
 
 export function useTokenAnimation(opts: UseTokenAnimationOptions) {
-  const { toScreen, onHop, onHopPosition, onLand, hopDurationMs = 220 } = opts;
+  const { toScreen, onHop, onHopPosition, onLand, hopDurationMs = 220, onFrame } = opts;
 
   const [animState, setAnimState] = useState<TokenAnimState>({
     x: 0, y: 0, scaleX: 1, scaleY: 1, elevation: 0, isMoving: false, isLanding: false,
@@ -71,21 +70,29 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
 
   const rafRef = useRef<number>(0);
   const isAnimatingRef = useRef(false);
+  const onFrameRef = useRef(onFrame);
   /** Tracks the token's current rendered position so animateHops can arc from the live spot,
    *  even if a previous animation was interrupted mid-flight. */
   const animPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  onFrameRef.current = onFrame;
+
+  const emitFrame = useCallback((nextState: TokenAnimState) => {
+    animPosRef.current = { x: nextState.x, y: nextState.y };
+    onFrameRef.current?.(nextState);
+  }, []);
 
   /** Snap token to a tile (no animation) */
   const snapTo = useCallback((anchor: TileAnchor) => {
     const pos = toScreen(anchor);
-    animPosRef.current = pos;
-    setAnimState({
+    const nextState: TokenAnimState = {
       x: pos.x, y: pos.y,
       scaleX: 1, scaleY: 1,
       elevation: 0,
       isMoving: false, isLanding: false,
-    });
-  }, [toScreen]);
+    };
+    emitFrame(nextState);
+    setAnimState(nextState);
+  }, [emitFrame, toScreen]);
 
   /**
    * Animate the token hopping through a sequence of tile anchors.
@@ -107,7 +114,17 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
 
       cancelAnimationFrame(rafRef.current);
       isAnimatingRef.current = true;
-      setAnimState((s) => ({ ...s, isMoving: true, isLanding: false }));
+      const movingState: TokenAnimState = {
+        x: animPosRef.current.x,
+        y: animPosRef.current.y,
+        scaleX: 1,
+        scaleY: 1,
+        elevation: 0,
+        isMoving: true,
+        isLanding: false,
+      };
+      emitFrame(movingState);
+      setAnimState(movingState);
 
       let hopIndex = 0;
       let hopStartTime = 0;
@@ -182,8 +199,7 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
           scaleY = 1 - 0.20 * (1 - landT);
         }
 
-        animPosRef.current = { x: pos.x, y: pos.y };
-        setAnimState({
+        emitFrame({
           x: pos.x,
           y: pos.y,
           scaleX,
@@ -203,8 +219,7 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
           } else {
             // All hops done — landing!
             isAnimatingRef.current = false;
-            animPosRef.current = { x: toPos.x, y: toPos.y };
-            setAnimState({
+            const landingState: TokenAnimState = {
               x: toPos.x,
               y: toPos.y,
               scaleX: 1,
@@ -212,7 +227,9 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
               elevation: 0,
               isMoving: false,
               isLanding: true,
-            });
+            };
+            emitFrame(landingState);
+            setAnimState(landingState);
             onLand?.(currentIdx);
 
             // Clear landing flag after animation
@@ -229,7 +246,7 @@ export function useTokenAnimation(opts: UseTokenAnimationOptions) {
 
       rafRef.current = requestAnimationFrame(animLoop);
     });
-  }, [toScreen, onHop, onHopPosition, onLand, hopDurationMs]);
+  }, [emitFrame, toScreen, onHop, onHopPosition, onLand, hopDurationMs]);
 
   /** Cancel any in-progress animation */
   const cancelAnimation = useCallback(() => {

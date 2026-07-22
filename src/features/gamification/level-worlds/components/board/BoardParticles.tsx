@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 
 // ─── Ambient board particles + token trail ───────────────────────────────────
 // Lightweight canvas-based particle system.
@@ -23,6 +23,8 @@ export interface BoardParticlesProps {
   tokenY: number;
   /** Whether token is currently moving (emit trail) */
   isTokenMoving: boolean;
+  /** Live token frame written by the compositor animation path. */
+  tokenFrameRef?: RefObject<{ x: number; y: number; isMoving: boolean }>;
   /** Trigger a burst at given position */
   burstAt?: { x: number; y: number } | null;
   /** Theme accent color for particles */
@@ -35,7 +37,7 @@ const MAX_PARTICLES = 80;
 const AMBIENT_SPAWN_RATE = 0.3; // particles per second
 
 export function BoardParticles(props: BoardParticlesProps) {
-  const { boardWidth, boardHeight, tokenX, tokenY, isTokenMoving, burstAt, accentColor = 'rgba(180, 220, 255, 0.6)', isPaused = false } = props;
+  const { boardWidth, boardHeight, tokenX, tokenY, isTokenMoving, tokenFrameRef, burstAt, accentColor = 'rgba(180, 220, 255, 0.6)', isPaused = false } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const rafRef = useRef(0);
@@ -108,8 +110,9 @@ export function BoardParticles(props: BoardParticlesProps) {
       }
 
       // --- Spawn token trail ---
-      if (tokenMovingRef.current && particles.length < MAX_PARTICLES) {
-        const tp = tokenPosRef.current;
+      const liveTokenFrame = tokenFrameRef?.current;
+      if ((liveTokenFrame?.isMoving ?? tokenMovingRef.current) && particles.length < MAX_PARTICLES) {
+        const tp = liveTokenFrame ?? tokenPosRef.current;
         for (let i = 0; i < 2; i++) {
           particles.push({
             x: tp.x + (Math.random() - 0.5) * 10,
@@ -152,7 +155,7 @@ export function BoardParticles(props: BoardParticlesProps) {
     rafRef.current = requestAnimationFrame(loop);
 
     return () => cancelAnimationFrame(rafRef.current);
-  }, [boardWidth, boardHeight, accentColor, isLightweightMotionDevice, isPaused]);
+  }, [boardWidth, boardHeight, accentColor, isLightweightMotionDevice, isPaused, tokenFrameRef]);
 
   // Handle burst trigger
   useEffect(() => {
