@@ -14,7 +14,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  /* Island Run's full-screen entry layer owns z-index 9999. Daily Momentum is
+     launched from inside that layer, so it must sit above both the board and
+     its mobile exit control instead of rendering invisibly behind them. */
+  z-index: 11050;
   padding:
     calc(env(safe-area-inset-top, 0px) + 1rem)
     1rem

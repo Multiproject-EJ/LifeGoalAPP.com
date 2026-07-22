@@ -78,6 +78,19 @@ export const todayRewardsParityTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'Daily Momentum modal stacks above the full-screen Island Run entry layer',
+    run: async () => {
+      const dailySpinCss = await readSource('src/features/spin-wheel/NewDailySpinWheel.css');
+      const appCss = await readSource('src/index.css');
+      assert(
+        dailySpinCss.includes('z-index: 11050;')
+          && appCss.includes('.level-worlds-entry-modal {')
+          && appCss.includes('z-index: 9999;'),
+        'Daily Momentum must render above the Island Run full-screen entry layer when launched from the board.',
+      );
+    },
+  },
 
   {
     name: 'Today row exposes normal and Egg Mania hatching circles',

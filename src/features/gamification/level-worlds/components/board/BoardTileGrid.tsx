@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { BoardTile } from './BoardTile';
 import type { TileAnchor } from '../../services/islandBoardLayout';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
@@ -28,7 +28,7 @@ export interface BoardTileGridProps {
  * memoized BoardTile components. The count is driven by `anchors.length`, not
  * hardcoded, so it follows the active board profile.
  */
-export function BoardTileGrid(props: BoardTileGridProps) {
+export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridProps) {
   const {
     anchors,
     stopMap,
@@ -147,6 +147,48 @@ export function BoardTileGrid(props: BoardTileGridProps) {
           />
         );
       })}
+
+      {/* Render collectibles as siblings of every tile. A fragment nested in a
+          scaled tile inherits that tile's tiny scale and stacking context,
+          which made the Island 1 collectibles 6–9 px and allowed neighbouring
+          tiles to paint over them on phones. This dedicated overlay keeps the
+          canonical tile association while giving every fragment one reliable
+          above-tile plane and a legible screen size. */}
+      {visibleTechnologyFragments.map((fragment) => {
+        const anchor = anchors[fragment.tileIndex];
+        if (!anchor) return null;
+        const position = toScreen(anchor);
+
+        return (
+          <span
+            key={`technology-fragment-${fragment.fragmentSlot}`}
+            className="island-run-board__technology-fragment"
+            aria-hidden="true"
+            data-fragment-slot={fragment.fragmentSlot}
+            data-testid={`technology-fragment-${fragment.fragmentSlot}`}
+            title={fragment.ariaLabel}
+            style={{
+              left: position.x,
+              top: position.y,
+              ['--fragment-animation-delay' as string]: `${fragment.fragmentSlot * -0.11}s`,
+            }}
+          >
+            {fragment.imageSrc ? (
+              <img
+                className="island-run-board__technology-fragment-image"
+                src={fragment.imageSrc}
+                alt=""
+                aria-hidden="true"
+                draggable={false}
+              />
+            ) : (
+              <span className="island-run-board__technology-fragment-emoji" aria-hidden="true">
+                {fragment.placeholder}
+              </span>
+            )}
+          </span>
+        );
+      })}
     </div>
   );
-}
+});

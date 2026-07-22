@@ -67,6 +67,8 @@ export interface BoardStageProps {
   showDebug: boolean;
   /** Disable decorative board art for production art integration */
   isMinimalBoardArt?: boolean;
+  /** Pause non-essential board motion while a modal owns the user's attention. */
+  isInteractionPaused?: boolean;
   /** Optional tilt overrides for quick camera framing tuning */
   boardTiltXDeg?: number;
   boardRotateZDeg?: number;
@@ -148,6 +150,7 @@ export function BoardStage(props: BoardStageProps) {
     isSpark36,
     showDebug,
     isMinimalBoardArt = false,
+    isInteractionPaused = false,
     boardTiltXDeg = BOARD_TILT_X_DEG,
     boardRotateZDeg = BOARD_ROTATE_Z_DEG,
     tileMap,
@@ -570,7 +573,7 @@ export function BoardStage(props: BoardStageProps) {
   return (
     <div
       ref={boardRef}
-      className={`island-run-board__stage-wrapper ${isMinimalBoardArt ? 'island-run-board__stage-wrapper--minimal-art' : ''}`}
+      className={`island-run-board__stage-wrapper ${isMinimalBoardArt ? 'island-run-board__stage-wrapper--minimal-art' : ''} ${isInteractionPaused ? 'island-run-board__stage-wrapper--paused' : ''}`}
       style={{ position: 'relative', width: '100%', height: '100%' }}
     >
       {/* Gesture capture layer (invisible, on top) */}
@@ -729,6 +732,7 @@ export function BoardStage(props: BoardStageProps) {
             tokenY={tokenAnim.animState.y}
             isTokenMoving={tokenAnim.animState.isMoving}
             burstAt={burstPos}
+            isPaused={isInteractionPaused}
           />
         )}
       </div>
