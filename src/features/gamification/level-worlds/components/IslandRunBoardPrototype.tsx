@@ -11409,6 +11409,24 @@ export function IslandRunBoardPrototype({
         })()}
         {isDevModeEnabled && isDevPanelOpen && (
           <div id="island-run-dev-panel">
+            <div
+              className="island-run-prototype__status-row island-run-prototype__visual-capture-row"
+              role="group"
+              aria-label="Visual capture"
+            >
+              <span className="island-run-prototype__stat-chip">Visual capture</span>
+              <button
+                type="button"
+                className="island-run-prototype__debug-btn"
+                aria-pressed={isDiscoveryFogDisabled}
+                onClick={handleToggleDiscoveryFog}
+              >
+                {isDiscoveryFogDisabled ? '🌤️ Clean art view: On' : '🌫️ Discovery fog: On'}
+              </button>
+              <span className="island-run-prototype__stat-chip">
+                {isDiscoveryFogDisabled ? 'All discovery blur disabled' : `${Math.round(discoveryRevealProgress * 100)}% discovered`}
+              </span>
+            </div>
         <div className="island-run-prototype__hud-grid">
           <div className="island-run-prototype__hud-section">
             <p className="island-run-prototype__hud-label">Run status</p>
@@ -11554,20 +11572,6 @@ export function IslandRunBoardPrototype({
           {isDevModeEnabled && (
             <div className="island-run-prototype__qa-controls" role="group" aria-label="DEV MODE actions">
               <p className="island-run-prototype__qa-label">🧪 DEV MODE — canonical actions only</p>
-              <div className="island-run-prototype__status-row">
-                <span className="island-run-prototype__stat-chip">Visual capture</span>
-                <button
-                  type="button"
-                  className="island-run-prototype__debug-btn"
-                  aria-pressed={isDiscoveryFogDisabled}
-                  onClick={handleToggleDiscoveryFog}
-                >
-                  {isDiscoveryFogDisabled ? '🌤️ Clean art view: On' : '🌫️ Discovery fog: On'}
-                </button>
-                <span className="island-run-prototype__stat-chip">
-                  {isDiscoveryFogDisabled ? 'All discovery blur disabled' : `${Math.round(discoveryRevealProgress * 100)}% discovered`}
-                </span>
-              </div>
               <div className="island-run-prototype__status-row">
                 <span className="island-run-prototype__stat-chip">Caretaker</span>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={() => openCaretakerFlow('dev_hud')} disabled={!shouldShowCaretakerTalkAction} aria-describedby={!inhabitantCommunicationAccess.allowed ? 'caretaker-concord-required' : undefined}>🧙 Talk to Caretaker</button>

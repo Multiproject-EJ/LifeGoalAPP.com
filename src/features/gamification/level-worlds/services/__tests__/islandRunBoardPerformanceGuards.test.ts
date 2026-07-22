@@ -82,8 +82,16 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
         css.indexOf('.island-run-board__background-layer'),
         css.indexOf('.island-run-board__bg {'),
       );
+      const devPanelStart = prototype.indexOf('<div id="island-run-dev-panel">');
+      const visualCaptureControl = prototype.indexOf('aria-label="Visual capture"', devPanelStart);
+      const firstDevHudGrid = prototype.indexOf('className="island-run-prototype__hud-grid"', devPanelStart);
       assert(prototype.includes('island-run-board__background-layer'), 'Background must have a dedicated discovery layer');
       assert(prototype.includes('Clean art view: On'), 'DEV MODE must expose the clean-art master switch');
+      assert(
+        devPanelStart >= 0 && visualCaptureControl > devPanelStart && visualCaptureControl < firstDevHudGrid,
+        'Visual capture must be the first control in the expanded DEV panel',
+      );
+      assert(css.includes('.island-run-prototype__visual-capture-row {\n  position: sticky;'), 'Visual capture must remain reachable while the DEV panel scrolls');
       assert(artLayers.includes('data-discovery-state={getDiscoveryState(landmark.stopIndex)}'), 'Landmark art must consume visual discovery state');
       assert(!discoveryBackgroundCss.includes('backdrop-filter:'), 'Discovery fog must not add a costly live backdrop filter');
       assert(!css.includes('.island-run-board__camera-stage {\n  filter:'), 'Moving tiles/token stage must never receive the discovery filter');
