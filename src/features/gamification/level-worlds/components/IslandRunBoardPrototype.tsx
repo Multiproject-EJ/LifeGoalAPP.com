@@ -17,7 +17,7 @@ import { lockPageScroll } from '../../../../utils/scrollLock';
  *
  * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type SetStateAction } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type SetStateAction } from 'react';
 import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -494,6 +494,10 @@ import {
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { IslandRunLuckyRollDevOverlay } from './lucky-roll/IslandRunLuckyRollDevOverlay';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
+import {
+  resolveIslandRunDiscoveryProgress,
+  resolveIslandRunLandmarkDiscoveryState,
+} from '../services/islandRunDiscoveryFog';
 import { adviseEggSellChoice } from '../services/islandRunEggSellAdvisor';
 import {
   bindKeyboardToShooterBridge,
@@ -521,6 +525,7 @@ const ISLAND_DURATION_SEC = 72 * 60 * 60;
 const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
 const DEBUG_TIMED_EVENT_OVERRIDE_KEY = 'islandRunDebugTimedEventOverride';
 const DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY = 'islandRunDebugTimedEventOverrideNonce';
+const DISCOVERY_FOG_DEV_STORAGE_KEY = 'islandRunDevDisableDiscoveryFog';
 // Only one board profile ships today. Historically this was query-param gated,
 // but every branch collapsed to the same result — so the helper was removed.
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark36_ring');
@@ -1315,6 +1320,19 @@ function isIslandRunDevModeEnabled(): boolean {
   return isNonProdNodeEnv || isViteDev || localStorageDevFlag;
 }
 
+function readDevDiscoveryFogDisabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('disableDiscoveryFog') === '1' || params.get('islandDiscoveryFog') === 'off') {
+    return true;
+  }
+  try {
+    return window.localStorage.getItem(DISCOVERY_FOG_DEV_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Formats a long-form countdown (days / hours / minutes / seconds) for the
  * hatchery incubation timer. Shows the two most-significant units so the
@@ -1603,6 +1621,19 @@ export function IslandRunBoardPrototype({
     boardRotateZDeg,
   } = boardRenderTuning;
   const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
+  const [isDiscoveryFogDisabled, setIsDiscoveryFogDisabled] = useState(readDevDiscoveryFogDisabled);
+  const isDiscoveryFogEnabled = !isDevModeEnabled || !isDiscoveryFogDisabled;
+  const handleToggleDiscoveryFog = useCallback(() => {
+    setIsDiscoveryFogDisabled((current) => {
+      const next = !current;
+      try {
+        window.localStorage.setItem(DISCOVERY_FOG_DEV_STORAGE_KEY, String(next));
+      } catch {
+        // Clean-art mode remains available for this session when storage is blocked.
+      }
+      return next;
+    });
+  }, []);
   const isCreaturePackStripeCheckoutEnabled = isDevModeEnabled
     || String(import.meta.env.VITE_CREATURE_PACK_STRIPE_CHECKOUT_ENABLED ?? '').toLowerCase() === 'true';
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
@@ -4657,6 +4688,23 @@ export function IslandRunBoardPrototype({
 
     return map;
   }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopBuildStateByIndex]);
+
+  const landmarkDiscoveryStates = useMemo(
+    () => islandStopPlan.map((stop) => (
+      resolveIslandRunLandmarkDiscoveryState(stopStateMap.get(stop.stopId))
+    )),
+    [islandStopPlan, stopStateMap],
+  );
+  const discoveryRevealProgress = useMemo(
+    () => resolveIslandRunDiscoveryProgress(landmarkDiscoveryStates),
+    [landmarkDiscoveryStates],
+  );
+  const discoveryFogStyle = useMemo<CSSProperties>(() => ({
+    ['--island-discovery-background-blur' as string]: `${(1.45 - discoveryRevealProgress * 0.85).toFixed(2)}px`,
+    ['--island-discovery-background-saturation' as string]: (0.74 + discoveryRevealProgress * 0.22).toFixed(3),
+    ['--island-discovery-background-brightness' as string]: (0.82 + discoveryRevealProgress * 0.14).toFixed(3),
+    ['--island-discovery-atmosphere-opacity' as string]: (0.42 - discoveryRevealProgress * 0.28).toFixed(3),
+  }), [discoveryRevealProgress]);
 
   // stopMap intentionally remains empty: per the canonical gameplay contract,
   // stops are EXTERNAL side-quest structures (orbit HUD buttons). No tile on
@@ -11507,6 +11555,20 @@ export function IslandRunBoardPrototype({
             <div className="island-run-prototype__qa-controls" role="group" aria-label="DEV MODE actions">
               <p className="island-run-prototype__qa-label">🧪 DEV MODE — canonical actions only</p>
               <div className="island-run-prototype__status-row">
+                <span className="island-run-prototype__stat-chip">Visual capture</span>
+                <button
+                  type="button"
+                  className="island-run-prototype__debug-btn"
+                  aria-pressed={isDiscoveryFogDisabled}
+                  onClick={handleToggleDiscoveryFog}
+                >
+                  {isDiscoveryFogDisabled ? '🌤️ Clean art view: On' : '🌫️ Discovery fog: On'}
+                </button>
+                <span className="island-run-prototype__stat-chip">
+                  {isDiscoveryFogDisabled ? 'All discovery blur disabled' : `${Math.round(discoveryRevealProgress * 100)}% discovered`}
+                </span>
+              </div>
+              <div className="island-run-prototype__status-row">
                 <span className="island-run-prototype__stat-chip">Caretaker</span>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={() => openCaretakerFlow('dev_hud')} disabled={!shouldShowCaretakerTalkAction} aria-describedby={!inhabitantCommunicationAccess.allowed ? 'caretaker-concord-required' : undefined}>🧙 Talk to Caretaker</button>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevPreviewCaretakerClue}>🧭 Preview wheel clue</button>
@@ -11546,36 +11608,39 @@ export function IslandRunBoardPrototype({
 
       <div
         ref={boardRef}
-        className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${shouldUseNoBackgroundFallback ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark36BoardProfile ? 'island-run-board--spark36' : ''} ${doesModalOwnAttention ? 'island-run-board--attention-paused' : ''}`}
+        className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${shouldUseNoBackgroundFallback ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark36BoardProfile ? 'island-run-board--spark36' : ''} ${doesModalOwnAttention ? 'island-run-board--attention-paused' : ''} ${isDiscoveryFogEnabled ? 'island-run-board--discovery-fog' : 'island-run-board--discovery-fog-disabled'}`}
         data-island-number={islandNumber}
+        data-discovery-fog={isDiscoveryFogEnabled ? 'enabled' : 'disabled'}
+        style={discoveryFogStyle}
       >
-        {shouldShowLegacyIslandBackground && (
-          <img
-            key={islandBackgroundSrc}
-            className="island-run-board__bg"
-            src={islandBackgroundSrc}
-            alt=""
-            aria-hidden="true"
-            onError={() => setIsIslandBackgroundAvailable(false)}
-          />
-        )}
-        {islandArtAmbientBackgroundSrc && !isBackgroundHidden && (
-          <img
-            key={islandArtAmbientBackgroundSrc}
-            className="island-run-board__bg island-run-board__bg--v2-ambient"
-            src={islandArtAmbientBackgroundSrc}
-            alt=""
-            aria-hidden="true"
-            style={{ visibility: isIslandArtAmbientBackgroundLoaded ? 'visible' : 'hidden' }}
-            onLoad={() => setIsIslandArtAmbientBackgroundLoaded(true)}
-            onError={() => {
-              setIslandArtManifest((currentManifest) => (
-                getIslandArtAmbientBackgroundSrc(currentManifest) === islandArtAmbientBackgroundSrc ? null : currentManifest
-              ));
-              setIsIslandArtAmbientBackgroundLoaded(false);
-            }}
-          />
-        )}
+        <div className="island-run-board__background-layer" aria-hidden="true">
+          {shouldShowLegacyIslandBackground && (
+            <img
+              key={islandBackgroundSrc}
+              className="island-run-board__bg"
+              src={islandBackgroundSrc}
+              alt=""
+              onError={() => setIsIslandBackgroundAvailable(false)}
+            />
+          )}
+          {islandArtAmbientBackgroundSrc && !isBackgroundHidden && (
+            <img
+              key={islandArtAmbientBackgroundSrc}
+              className="island-run-board__bg island-run-board__bg--v2-ambient"
+              src={islandArtAmbientBackgroundSrc}
+              alt=""
+              style={{ visibility: isIslandArtAmbientBackgroundLoaded ? 'visible' : 'hidden' }}
+              onLoad={() => setIsIslandArtAmbientBackgroundLoaded(true)}
+              onError={() => {
+                setIslandArtManifest((currentManifest) => (
+                  getIslandArtAmbientBackgroundSrc(currentManifest) === islandArtAmbientBackgroundSrc ? null : currentManifest
+                ));
+                setIsIslandArtAmbientBackgroundLoaded(false);
+              }}
+            />
+          )}
+        </div>
+        <div className="island-run-board__discovery-atmosphere" aria-hidden="true" />
 
         <div ref={topbarMenuRef}>
           <div className="island-run-board__topbar" aria-label="Island Run top bar">
@@ -11969,6 +12034,8 @@ export function IslandRunBoardPrototype({
           theme={activeTheme}
           islandArtManifest={islandArtManifest}
           landmarkBuildLevels={islandArtLandmarkBuildLevels}
+          landmarkDiscoveryStates={landmarkDiscoveryStates}
+          discoveryFogEnabled={isDiscoveryFogEnabled}
           isBossDefeated={isCurrentIslandBossDefeated}
           bossCreatureArtState={bossCreatureArtState}
           spark36RingGradient={spark36RingSegmentsGradient}

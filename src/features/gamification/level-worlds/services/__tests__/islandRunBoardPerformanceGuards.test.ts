@@ -72,4 +72,22 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'discovery fog never blurs the moving gameplay camera stage',
+    run: () => {
+      const prototype = readSource('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx');
+      const artLayers = readSource('src/features/gamification/level-worlds/components/board/IslandArtLayers.tsx');
+      const css = readSource('src/features/gamification/level-worlds/LevelWorlds.css');
+      const discoveryBackgroundCss = css.slice(
+        css.indexOf('.island-run-board__background-layer'),
+        css.indexOf('.island-run-board__bg {'),
+      );
+      assert(prototype.includes('island-run-board__background-layer'), 'Background must have a dedicated discovery layer');
+      assert(prototype.includes('Clean art view: On'), 'DEV MODE must expose the clean-art master switch');
+      assert(artLayers.includes('data-discovery-state={getDiscoveryState(landmark.stopIndex)}'), 'Landmark art must consume visual discovery state');
+      assert(!discoveryBackgroundCss.includes('backdrop-filter:'), 'Discovery fog must not add a costly live backdrop filter');
+      assert(!css.includes('.island-run-board__camera-stage {\n  filter:'), 'Moving tiles/token stage must never receive the discovery filter');
+      assert(css.includes('.island-run-board--discovery-fog .island-run-board__background-layer'), 'Only the static background layer should receive full-frame softening');
+    },
+  },
 ];

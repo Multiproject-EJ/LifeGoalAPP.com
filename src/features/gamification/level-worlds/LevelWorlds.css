@@ -2068,6 +2068,47 @@
   z-index: 3;
 }
 
+.island-run-board__background-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateZ(0);
+  transition: filter 850ms ease;
+}
+
+/* The background is the only full-frame layer that receives blur. It stays
+   separate from the camera stages, so tiles, token, caretaker, fragments and
+   controls remain crisp and moving gameplay never re-rasterizes through it. */
+.island-run-board--discovery-fog .island-run-board__background-layer {
+  filter:
+    blur(var(--island-discovery-background-blur, 1.2px))
+    saturate(var(--island-discovery-background-saturation, 0.82))
+    brightness(var(--island-discovery-background-brightness, 0.88));
+}
+
+.island-run-board--discovery-fog-disabled .island-run-board__background-layer {
+  filter: none;
+}
+
+.island-run-board__discovery-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at 18% 24%, rgba(198, 234, 240, 0.2) 0%, rgba(78, 114, 128, 0.1) 28%, transparent 58%),
+    radial-gradient(ellipse at 82% 68%, rgba(183, 219, 230, 0.18) 0%, rgba(70, 99, 115, 0.09) 32%, transparent 62%),
+    linear-gradient(180deg, rgba(5, 18, 27, 0.12), rgba(8, 26, 34, 0.24));
+  transition: opacity 850ms ease;
+}
+
+.island-run-board--discovery-fog .island-run-board__discovery-atmosphere {
+  opacity: var(--island-discovery-atmosphere-opacity, 0.3);
+}
+
 .island-run-board__bg {
   position: absolute;
   left: -9%;
@@ -2186,6 +2227,66 @@
 .island-art-layers__landmark[data-landmark-index="2"] { animation-delay: -2.3s; }
 .island-art-layers__landmark[data-landmark-index="3"] { animation-delay: -3.45s; }
 
+/* Discovery styling is deliberately limited to the small landmark rasters.
+   Locked structures stop their decorative idle loop, saving that animation
+   budget until the player can actually interact with them. */
+.island-run-board--discovery-fog :is(
+  .island-art-layers__landmark-base,
+  .island-art-layers__landmark,
+  .island-art-layers__boss
+) {
+  transition: filter 850ms ease, opacity 850ms ease;
+}
+
+.island-run-board--discovery-fog :is(
+  .island-art-layers__landmark-base,
+  .island-art-layers__landmark,
+  .island-art-layers__boss
+)[data-discovery-state="veiled"] {
+  animation: none;
+  filter: blur(1.25px) saturate(0.36) brightness(0.62);
+  opacity: 0.58;
+}
+
+.island-run-board--discovery-fog :is(
+  .island-art-layers__landmark-base,
+  .island-art-layers__landmark,
+  .island-art-layers__boss
+)[data-discovery-state="emerging"] {
+  animation: none;
+  filter: blur(0.55px) saturate(0.74) brightness(0.84);
+  opacity: 0.82;
+}
+
+.island-run-board--discovery-fog .island-art-layers__landmark-base[data-discovery-state="restored"] {
+  filter: saturate(1.06) brightness(1.035);
+}
+
+.island-art-layers__discovery-mist {
+  position: absolute;
+  z-index: var(--island-art-layer-z, 5);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at 35% 36%, rgba(220, 243, 246, 0.58) 0%, rgba(139, 178, 188, 0.34) 24%, transparent 62%),
+    radial-gradient(ellipse at 68% 58%, rgba(198, 226, 233, 0.42) 0%, rgba(83, 118, 130, 0.2) 34%, transparent 70%);
+  transition: opacity 850ms ease;
+}
+
+.island-art-layers__discovery-mist[data-discovery-state="veiled"] {
+  opacity: 0.72;
+}
+
+.island-art-layers__discovery-mist[data-discovery-state="emerging"] {
+  opacity: 0.34;
+}
+
+.island-art-layers__discovery-mist--boss[data-discovery-state="veiled"] {
+  opacity: 0.78;
+}
+
 .island-art-layers__boss {
   z-index: var(--island-art-layer-z, 5);
   transform-origin: 50% 90%;
@@ -2299,6 +2400,17 @@
   .island-art-layers__boss,
   .island-art-layers__scenery {
     animation: none !important;
+  }
+
+  .island-run-board__background-layer,
+  .island-run-board__discovery-atmosphere,
+  .island-run-board--discovery-fog :is(
+    .island-art-layers__landmark-base,
+    .island-art-layers__landmark,
+    .island-art-layers__boss
+  ),
+  .island-art-layers__discovery-mist {
+    transition: none !important;
   }
 }
 
