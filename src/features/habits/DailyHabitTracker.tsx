@@ -111,7 +111,7 @@ import {
 import { HabitImprovementAnalysisModal } from './HabitImprovementAnalysisModal';
 import { HabitChainAnalysisModal } from './HabitChainAnalysisModal';
 import { SuperHabitRosterModal } from './SuperHabitRosterModal';
-import { resolveSuperHabitForTitle, type SuperHabitId } from './superHabits';
+import { canLaunchSuperHabit, resolveSuperHabitForTitle, type SuperHabitId } from './superHabits';
 import { WellbeingShieldCard } from './WellbeingShieldCard';
 import { computeWellbeingShield, publishWellbeingShield } from './wellbeingShield';
 import { fetchQuestHabitTags, fetchQuests } from '../../services/quests';
@@ -8733,6 +8733,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const isQuestHabit = questHabit?.habitId === habit.id;
             const linkedQuestTags = questHabitTagsByHabitId[habit.id] ?? [];
             const matchedSuperHabit = resolveSuperHabitForTitle(habit.name);
+            const activatedSuperHabit = matchedSuperHabit && canLaunchSuperHabit(matchedSuperHabit)
+              ? matchedSuperHabit
+              : null;
             const habitDisplayName = isPrivateCompactView ? `Private habit ${habitIndex + 1}` : habit.name;
             const todayVersionOpen = isExpandedHabitSectionOpen(habit.id, 'todayVersion', !isCompleted);
             const understandOpen = isExpandedHabitSectionOpen(habit.id, 'understand', false);
@@ -8770,7 +8773,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   linkedQuestTags.length > 0 ? 'habit-checklist__item--linked-quest' : ''
                 } ${
                   dailyLifeUpgradeHighlightedHabitId === habit.id ? 'habit-card--daily-life-upgrade-target' : ''
-                } ${superHabitHoldHabitId === habit.id ? 'habit-checklist__item--super-habit-charging' : ''}`}
+                } ${superHabitHoldHabitId === habit.id ? 'habit-checklist__item--super-habit-charging' : ''} ${
+                  superHabitPromptHabitId === habit.id ? 'habit-checklist__item--super-habit-prompt-open' : ''
+                }`}
+                onContextMenu={(event) => {
+                  if (!isInteractiveHabitChild(event.target)) {
+                    event.preventDefault();
+                  }
+                }}
               >
                 {superHabitPromptHabitId === habit.id ? (
                   <button
@@ -9019,11 +9029,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       }}
                       onPointerUpCapture={(event) => cancelSuperHabitHold(event.pointerId)}
                       onPointerCancelCapture={(event) => cancelSuperHabitHold(event.pointerId)}
-                      onContextMenu={(event) => {
-                        if (superHabitHoldHabitId === habit.id || superHabitPromptHabitId === habit.id) {
-                          event.preventDefault();
-                        }
-                      }}
                       onClick={() => {
                         const suppressUntil = swipeSuppressClickUntilByHabitIdRef.current[habit.id] ?? 0;
                         if (Date.now() < suppressUntil) {
@@ -9203,37 +9208,24 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         >
                           {isQuestHabit ? '★' : '☆'}
                         </button>
-                        <button
-                          type="button"
-                          className={`habit-checklist__super-action-btn${
-                            matchedSuperHabit?.id === 'journal' ? ' habit-checklist__super-action-btn--live' : ''
-                          }`}
-                          aria-label={
-                            matchedSuperHabit?.id === 'journal'
-                              ? `Launch Journaling tool for ${habit.name}`
-                              : matchedSuperHabit
-                                ? `Preview ${matchedSuperHabit.name} SuperHabit for ${habit.name}`
-                                : `Choose a SuperHabit tool for ${habit.name}`
-                          }
-                          title={
-                            matchedSuperHabit?.id === 'journal'
-                              ? 'Launch Journaling'
-                              : matchedSuperHabit
-                                ? `${matchedSuperHabit.name} · Pro demo`
-                                : 'Choose a SuperHabit tool'
-                          }
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            if (matchedSuperHabit?.id === 'journal') {
-                              launchJournalSuperHabit(habit.id);
-                              return;
-                            }
-                            openSuperHabitRoster(habit.id, matchedSuperHabit?.id ?? null);
-                          }}
-                        >
-                          <span aria-hidden="true">{matchedSuperHabit?.emoji ?? '✦'}</span>
-                          <small>Tool</small>
-                        </button>
+                        {activatedSuperHabit ? (
+                          <button
+                            type="button"
+                            className="habit-checklist__super-action-btn habit-checklist__super-action-btn--live"
+                            aria-label={`Launch ${activatedSuperHabit.name} for ${habit.name}`}
+                            title={`Launch ${activatedSuperHabit.name}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (activatedSuperHabit.id === 'journal') {
+                                launchJournalSuperHabit(habit.id);
+                                return;
+                              }
+                              openSuperHabitRoster(habit.id, activatedSuperHabit.id);
+                            }}
+                          >
+                            <span aria-hidden="true">{activatedSuperHabit.emoji}</span>
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   </div>

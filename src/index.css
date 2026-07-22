@@ -8402,6 +8402,26 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-sizing: border-box;
 }
 
+/* Habit cards use long-hold interactions, so suppress native selection/callouts.
+   Todos intentionally remain selectable so their text can still be copied. */
+.habit-checklist__item:not(.habit-checklist__item--todo) {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.habit-checklist__item:not(.habit-checklist__item--todo) input,
+.habit-checklist__item:not(.habit-checklist__item--todo) textarea,
+.habit-checklist__item:not(.habit-checklist__item--todo) [contenteditable='true'] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+.habit-checklist__item--super-habit-prompt-open {
+  margin-top: 2.7rem;
+}
+
 .habit-checklist__item--super-habit-charging {
   z-index: 3;
   transform: scale(1.018);
@@ -8426,7 +8446,7 @@ html.platform-ipad .workspace-shell__menu-edge {
 .habit-checklist__super-habit-prompt {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: -0.4rem;
   z-index: 12;
   display: inline-flex;
   align-items: center;
@@ -8439,7 +8459,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   color: #ffffff;
   background: linear-gradient(135deg, #7c3aed, #4f46e5);
   box-shadow: 0 12px 28px rgba(76, 29, 149, 0.34), 0 0 0 4px rgba(237, 233, 254, 0.82);
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -100%);
   cursor: pointer;
   white-space: nowrap;
   animation: super-habit-prompt-arrive 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -8519,8 +8539,8 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 @keyframes super-habit-prompt-arrive {
-  from { opacity: 0; transform: translate(-50%, -42%) scale(0.82); }
-  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  from { opacity: 0; transform: translate(-50%, -82%) scale(0.82); }
+  to { opacity: 1; transform: translate(-50%, -100%) scale(1); }
 }
 
 @keyframes super-habit-tool-slide-down {
@@ -8573,11 +8593,6 @@ html.platform-ipad .workspace-shell__menu-edge {
   transition: none;
   touch-action: none;
 }
-/* Keep the long-press feel clean: no iOS text/image callout while holding a todo. */
-.habit-checklist__item--todo .habit-checklist__swipe-row {
-  -webkit-touch-callout: none;
-}
-
 .habit-checklist__main--todo { gap: 0.5rem; }
 .habit-checklist__main--todo-focus {
   border-radius: 14px;
@@ -8859,14 +8874,13 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .habit-checklist__super-action-btn {
   flex-shrink: 0;
-  width: 38px;
-  min-height: 42px;
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.05rem;
-  padding: 0.2rem;
+  padding: 0;
   border: 1px solid rgba(124, 58, 237, 0.3);
   border-radius: 12px;
   color: #5b21b6;
@@ -8881,8 +8895,7 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-shadow: 0 9px 18px rgba(76, 29, 149, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
-.habit-checklist__super-action-btn > span { font-size: 1rem; line-height: 1; }
-.habit-checklist__super-action-btn > small { font-size: 0.52rem; font-weight: 900; letter-spacing: 0.04em; line-height: 1; text-transform: uppercase; }
+.habit-checklist__super-action-btn > span { font-size: 1.1rem; line-height: 1; }
 .habit-checklist__super-action-btn--live { border-color: rgba(5, 150, 105, 0.4); color: #065f46; background: linear-gradient(145deg, #ecfdf5, #d1fae5); }
 
 .habit-quick-journal__badge--super {
