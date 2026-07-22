@@ -562,6 +562,13 @@ const TRAFFIC_LIGHT_BOX_IMAGE_SRC = '/assets/traffic_light/IMG_box.webp';
 const TRAFFIC_LIGHT_GIFT_IMAGE_SRC = '/assets/traffic_light/IMG_gift.webp';
 const TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC = '/assets/traffic_light/IMG_boxcoin.webp';
 const TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC = '/assets/traffic_light/IMG_giftcoin.webp';
+const TRAFFIC_LIGHT_ANIMATION_IMAGE_SRCS = [
+  TRAFFIC_LIGHT_MODAL_IMAGE_SRC,
+  TRAFFIC_LIGHT_BOX_IMAGE_SRC,
+  TRAFFIC_LIGHT_GIFT_IMAGE_SRC,
+  TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC,
+  TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC,
+] as const;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Reward bar can award Space Excavator tickets';
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV = 'Reward bar can award Space Excavator tickets (DEV override tickets)';
 
@@ -1786,6 +1793,22 @@ export function IslandRunBoardPrototype({
   const [trafficLightCoinFlip, setTrafficLightCoinFlip] = useState<{ seed: number; reward: TrafficLightCoinFlipReward | null; phase: 'ready' | 'flipping' | 'revealed' | 'opened' } | null>(null);
   const [trafficLightRewardConfettiActive, setTrafficLightRewardConfettiActive] = useState(false);
   const [showTrafficLightCoinHint, setShowTrafficLightCoinHint] = useState(false);
+  useEffect(() => {
+    if (typeof Image === 'undefined') return undefined;
+    const images = TRAFFIC_LIGHT_ANIMATION_IMAGE_SRCS.map((src) => {
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = src;
+      void image.decode?.().catch(() => undefined);
+      return image;
+    });
+    return () => {
+      for (const image of images) {
+        image.onload = null;
+        image.onerror = null;
+      }
+    };
+  }, []);
   /**
    * Optimistic traffic-light charge shown the instant the token HOPS OVER the
    * traffic-light tile mid-roll, instead of waiting for the authoritative charge
@@ -13272,7 +13295,7 @@ export function IslandRunBoardPrototype({
             )}
             {trafficLightRewardConfettiActive && <ConfettiBurst active variant="standard" />}
             <div className="island-traffic-light__hero" aria-hidden="true">
-              <img className="island-traffic-light__art island-traffic-light__art--signal" src={TRAFFIC_LIGHT_MODAL_IMAGE_SRC} alt="" loading="lazy" />
+              <img className="island-traffic-light__art island-traffic-light__art--signal" src={TRAFFIC_LIGHT_MODAL_IMAGE_SRC} alt="" loading="eager" decoding="async" />
             </div>
             <h3 className="island-stop-modal__title island-traffic-light__title">Traffic Light Bonus</h3>
             <p className="island-traffic-light__intro">
@@ -13301,10 +13324,10 @@ export function IslandRunBoardPrototype({
                 >
                   <span className="island-coin__inner" aria-hidden="true">
                     <span className="island-coin__face island-coin__face--heads">
-                      <img className="island-coin__image" src={TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC} alt="" loading="lazy" />
+                      <img className="island-coin__image" src={TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC} alt="" loading="eager" decoding="async" />
                     </span>
                     <span className="island-coin__face island-coin__face--tails">
-                      <img className="island-coin__image" src={TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC} alt="" loading="lazy" />
+                      <img className="island-coin__image" src={TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC} alt="" loading="eager" decoding="async" />
                     </span>
                   </span>
                 </button>
@@ -13317,11 +13340,11 @@ export function IslandRunBoardPrototype({
             {(trafficLightCoinFlip.phase === 'ready' || trafficLightCoinFlip.phase === 'flipping') && (
               <div className="island-traffic-light__prizes" aria-label="Mystery box options">
                 <div className={`island-traffic-light__prize-card ${trafficLightCoinFlip.reward?.boxId === 'box_1' ? 'island-traffic-light__prize-card--selected' : ''}`.trim()}>
-                  <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_BOX_IMAGE_SRC} alt="" loading="lazy" />
+                  <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_BOX_IMAGE_SRC} alt="" loading="eager" decoding="async" />
                   <span className="island-traffic-light__prize-title">Mystery Box 1</span>
                 </div>
                 <div className={`island-traffic-light__prize-card island-traffic-light__prize-card--gift ${trafficLightCoinFlip.reward?.boxId === 'box_2' ? 'island-traffic-light__prize-card--selected' : ''}`.trim()}>
-                  <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_GIFT_IMAGE_SRC} alt="" loading="lazy" />
+                  <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_GIFT_IMAGE_SRC} alt="" loading="eager" decoding="async" />
                   <span className="island-traffic-light__prize-title">Mystery Box 2</span>
                 </div>
               </div>
@@ -13339,7 +13362,8 @@ export function IslandRunBoardPrototype({
                   className="island-traffic-light__winner-image"
                   src={trafficLightCoinFlip.reward.boxId === 'box_1' ? TRAFFIC_LIGHT_BOX_IMAGE_SRC : TRAFFIC_LIGHT_GIFT_IMAGE_SRC}
                   alt=""
-                  loading="lazy"
+                  loading="eager"
+                  decoding="async"
                 />
                 {trafficLightCoinFlip.phase === 'revealed' && (
                   <span className="island-traffic-light__winner-tap-hint">Tap to open</span>

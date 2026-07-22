@@ -4550,14 +4550,15 @@
 
 .island-token {
   position: absolute;
+  left: 0;
+  top: 0;
   width: 32px;
   height: 32px;
   transform-origin: center center;
-  translate: -50% -50%;
   z-index: 10;
   pointer-events: none;
-  will-change: transform, left, top;
-  contain: layout style;
+  will-change: transform;
+  contain: layout style paint;
 }
 
 /* Detached ground-shadow blob — inline style drives translateY(elevation) +
@@ -6513,7 +6514,7 @@
   100% { transform: scaleX(1)    scaleY(1);    }
 }
 
-.island-token--landing {
+.island-token--landing .island-token__ship {
   animation: islandTokenLand 0.48s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
@@ -9516,9 +9517,8 @@
 
 /* Enhanced token with inline transform support (squash/stretch during animateHops) */
 .island-run-board__stage-wrapper .island-token {
-  transition: left 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
-              top 180ms cubic-bezier(0.22, 0.61, 0.36, 1);
-  will-change: transform, left, top;
+  transition: transform 180ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
 }
 
 /* Disable CSS position transitions during rAF-controlled hop animation so
@@ -11777,6 +11777,9 @@
   min-height: 158px;
   margin: 0.45rem auto 0.1rem;
   perspective: 780px;
+  isolation: isolate;
+  contain: layout style paint;
+  transform: translateZ(0);
 }
 
 .island-coin-stage::before {
@@ -11851,6 +11854,7 @@
   height: 100%;
   transform-style: preserve-3d;
   transition: transform 0.4s ease-out;
+  will-change: transform;
 }
 
 .island-coin__face {
@@ -11862,10 +11866,15 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   filter: drop-shadow(0 0 18px rgba(250, 204, 21, 0.55)) drop-shadow(0 12px 18px rgba(0, 0, 0, 0.38));
+  will-change: transform;
+}
+
+.island-coin__face--heads {
+  transform: translateZ(1px);
 }
 
 .island-coin__face--tails {
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(1px);
 }
 
 .island-coin__image {
@@ -11873,6 +11882,8 @@
   height: 100%;
   object-fit: contain;
   display: block;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .island-coin__emblem {
@@ -11941,6 +11952,17 @@
 /* Spin: many rotations, landing on the resolved face. */
 .island-coin--flipping .island-coin__inner {
   animation: island-coin-spin 2.6s cubic-bezier(0.16, 0.78, 0.18, 1) both;
+}
+
+/* Safari can repeatedly re-rasterize layered drop-shadow filters while a 3D
+   child rotates. During the flip, keep one stationary glow on the button and
+   let the two predecoded faces remain filter-free compositor layers. */
+.island-stop-modal .island-coin--flipping {
+  box-shadow: 0 0 26px rgba(250, 204, 21, 0.42), 0 16px 24px rgba(0, 0, 0, 0.34);
+}
+
+.island-coin--flipping .island-coin__face {
+  filter: none;
 }
 
 .island-coin--flipping.island-coin--lands-tails .island-coin__inner {
