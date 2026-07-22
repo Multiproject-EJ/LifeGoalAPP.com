@@ -158,19 +158,27 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
         const anchor = anchors[fragment.tileIndex];
         if (!anchor) return null;
         const position = toScreen(anchor);
+        const isTokenOnFragment = tokenIndex === fragment.tileIndex;
+        const fragmentTileScale = anchor.scale * uniformScale;
 
         return (
           <span
             key={`technology-fragment-${fragment.fragmentSlot}`}
-            className="island-run-board__technology-fragment"
+            className={`island-run-board__technology-fragment${isTokenOnFragment ? ' island-run-board__technology-fragment--landed' : ''}`}
             aria-hidden="true"
             data-fragment-slot={fragment.fragmentSlot}
+            data-token-landed={isTokenOnFragment ? 'true' : undefined}
             data-testid={`technology-fragment-${fragment.fragmentSlot}`}
             title={fragment.ariaLabel}
             style={{
               left: position.x,
               top: position.y,
               ['--fragment-animation-delay' as string]: `${fragment.fragmentSlot * -0.11}s`,
+              ['--fragment-hover-scale' as string]: (fragmentTileScale * 0.9).toFixed(4),
+              ['--fragment-hover-apex-scale' as string]: (fragmentTileScale * 0.96).toFixed(4),
+              ['--fragment-landed-start-scale' as string]: (fragmentTileScale * 0.58).toFixed(4),
+              ['--fragment-landed-peak-scale' as string]: (fragmentTileScale * 1.72).toFixed(4),
+              ['--fragment-landed-settle-scale' as string]: (fragmentTileScale * 1.48).toFixed(4),
             }}
           >
             {fragment.imageSrc ? (

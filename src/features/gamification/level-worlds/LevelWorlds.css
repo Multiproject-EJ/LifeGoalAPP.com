@@ -318,8 +318,8 @@
 .world-node {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 60px;
-  height: 60px;
+  width: 66px;
+  height: 66px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1449,6 +1449,39 @@
   border-color: rgba(255, 214, 102, 0.95);
   background: linear-gradient(135deg, rgba(255, 176, 45, 0.9), rgba(255, 103, 45, 0.9));
   box-shadow: 0 0 10px rgba(255, 214, 102, 0.48);
+}
+
+@keyframes island-run-multiplier-max-jump {
+  0%, 100% {
+    transform: translate(-50%, -50%) rotate(var(--slot-rotate, 0deg)) scale(var(--slot-scale, 1));
+  }
+  34% {
+    transform: translate(-50%, calc(-50% - 9px)) rotate(var(--slot-rotate, 0deg)) scale(var(--slot-scale, 1));
+    box-shadow: 0 0 18px rgba(255, 226, 115, 0.9), 0 9px 16px rgba(15, 23, 42, 0.28);
+  }
+  64% {
+    transform: translate(-50%, calc(-50% + 2px)) rotate(var(--slot-rotate, 0deg)) scale(var(--slot-scale, 1));
+  }
+  82% {
+    transform: translate(-50%, calc(-50% - 2px)) rotate(var(--slot-rotate, 0deg)) scale(var(--slot-scale, 1));
+  }
+}
+
+.island-run-prototype__footer-multiplier-btn--max-jump {
+  animation: island-run-multiplier-max-jump 540ms cubic-bezier(0.22, 0.88, 0.28, 1) both;
+  cursor: wait;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-prototype__footer-multiplier-btn--max-jump {
+    animation-name: island-run-multiplier-max-glow;
+  }
+}
+
+@keyframes island-run-multiplier-max-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.24); }
 }
 
 /* ── Dice regen timer ──────────────────────────────────────────────────────── */
@@ -12722,191 +12755,354 @@
   transform: translate(-50%, -78%) rotate(var(--tile-upright-rotation-deg, 0deg)) rotateX(18deg) rotateZ(-5deg);
 }
 
+.island-stop-modal--caretaker-clue {
+  width: min(92vw, 420px);
+  max-height: min(88dvh, 720px);
+  overflow-y: auto;
+  border-color: rgba(250, 204, 21, 0.44);
+  background:
+    radial-gradient(circle at 50% -8%, rgba(56, 189, 248, 0.2), transparent 42%),
+    linear-gradient(180deg, rgba(13, 27, 61, 0.99), rgba(18, 13, 45, 0.99));
+}
+
 .island-run-gamified-journal-card {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.58rem;
+  color: #f8fafc;
 }
 
-.island-run-gamified-journal-card__hero {
+.island-run-gamified-journal-card__visual {
   position: relative;
-  width: 112px;
-  height: 96px;
-  margin: 0 auto 0.25rem;
-  perspective: 420px;
+  width: min(100%, 330px);
+  height: 104px;
+  margin: -0.15rem auto 0;
+  overflow: hidden;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 72% 42%, rgba(250, 204, 21, 0.23), transparent 34%),
+    radial-gradient(circle at 28% 94%, rgba(45, 212, 191, 0.22), transparent 42%),
+    linear-gradient(145deg, rgba(17, 55, 88, 0.76), rgba(42, 24, 80, 0.8));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13);
 }
 
-.island-run-gamified-journal-card__card {
+.island-run-gamified-journal-card__caretaker-frame {
   position: absolute;
-  width: 62px;
-  height: 84px;
-  border-radius: 12px;
-  box-shadow: 0 18px 30px rgba(45, 20, 90, 0.34);
+  left: 9%;
+  bottom: -5px;
+  width: 116px;
+  height: 112px;
 }
 
-.island-run-gamified-journal-card__card--back {
-  left: 18px;
-  top: 8px;
-  background: linear-gradient(145deg, #7c3aed, #c084fc);
-  transform: rotate(-12deg) rotateY(18deg);
+.island-run-gamified-journal-card__caretaker {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.38));
 }
 
-.island-run-gamified-journal-card__card--front {
-  left: 42px;
-  top: 0;
+.island-run-gamified-journal-card__wheel {
+  position: absolute;
+  top: 10px;
+  right: 16%;
   display: grid;
+  width: 76px;
+  height: 76px;
   place-items: center;
-  background: linear-gradient(145deg, #fff7ed, #fde68a 48%, #f5d0fe 49%, #7c3aed);
-  border: 2px solid rgba(255, 255, 255, 0.82);
-  color: #4c1d95;
-  font-size: 2.2rem;
+  border: 3px solid rgba(254, 240, 138, 0.74);
+  border-radius: 999px;
+  background: conic-gradient(from -20deg, #38bdf8, #a78bfa, #f472b6, #fbbf24, #34d399, #38bdf8);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.34), inset 0 0 0 6px rgba(8, 18, 43, 0.76);
+  animation: island-run-caretaker-clue-wheel 8s linear infinite;
+}
+
+.island-run-gamified-journal-card__wheel img {
+  width: 47px;
+  height: 47px;
+  object-fit: contain;
+  border-radius: 999px;
+  background: rgba(7, 17, 39, 0.86);
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.34));
+}
+
+.island-run-gamified-journal-card__milestone {
+  position: absolute;
+  right: 10%;
+  bottom: 7px;
+  padding: 0.18rem 0.48rem;
+  border: 1px solid rgba(254, 240, 138, 0.46);
+  border-radius: 999px;
+  color: #fef3c7;
+  background: rgba(53, 32, 9, 0.62);
+  font-size: 0.62rem;
   font-weight: 900;
-  transform: rotate(8deg) rotateY(-18deg);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
-.island-run-gamified-journal-card__section {
+@keyframes island-run-caretaker-clue-wheel {
+  to { rotate: 360deg; }
+}
+
+.island-run-gamified-journal-card__heading {
   display: grid;
-  gap: 0.45rem;
-  padding: 0.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.07);
+  gap: 0.2rem;
+  text-align: center;
 }
 
-.island-run-gamified-journal-card__section--good {
-  border-color: rgba(74, 222, 128, 0.72);
-  background:
-    radial-gradient(circle at 92% 18%, rgba(34, 197, 94, 0.18), transparent 42%),
-    rgba(20, 83, 45, 0.24);
-  box-shadow: inset 0 0 0 1px rgba(187, 247, 208, 0.12), 0 0 0 1px rgba(34, 197, 94, 0.12);
+.island-run-gamified-journal-card__heading :is(p, h3) {
+  margin: 0;
 }
 
-.island-run-gamified-journal-card__section--bad {
-  border-color: rgba(248, 113, 113, 0.72);
-  background:
-    radial-gradient(circle at 92% 18%, rgba(239, 68, 68, 0.18), transparent 42%),
-    rgba(127, 29, 29, 0.24);
-  box-shadow: inset 0 0 0 1px rgba(254, 202, 202, 0.12), 0 0 0 1px rgba(239, 68, 68, 0.12);
+.island-run-gamified-journal-card__heading .island-stop-modal__title {
+  font-size: clamp(1.16rem, 5vw, 1.45rem);
+}
+
+.island-run-gamified-journal-card__intro {
+  color: rgba(226, 232, 240, 0.8);
+  font-size: 0.82rem;
+}
+
+.island-run-gamified-journal-card__progress {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 0.36rem;
+  width: min(100%, 250px);
+  margin: 0.05rem auto;
+}
+
+.island-run-gamified-journal-card__progress span {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.24);
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.island-run-gamified-journal-card__progress span.is-filled {
+  background: linear-gradient(90deg, #38bdf8, #fbbf24);
+  box-shadow: 0 0 9px rgba(56, 189, 248, 0.42);
+}
+
+.island-run-gamified-journal-card__progress strong {
+  color: #bae6fd;
+  font-size: 0.7rem;
+}
+
+.island-run-gamified-journal-card__question,
+.island-run-gamified-journal-card__complete {
+  display: grid;
+  gap: 0.55rem;
+  min-height: 186px;
+  padding: 0.72rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 17px;
+  background: rgba(7, 15, 38, 0.55);
+  animation: island-run-caretaker-clue-arrive 220ms ease-out both;
+}
+
+.island-run-gamified-journal-card__question--bright {
+  box-shadow: inset 0 0 36px rgba(250, 204, 21, 0.07);
+}
+
+.island-run-gamified-journal-card__question--heavy {
+  box-shadow: inset 0 0 36px rgba(96, 165, 250, 0.08);
+}
+
+@keyframes island-run-caretaker-clue-arrive {
+  from { opacity: 0; transform: translateY(5px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.island-run-gamified-journal-card__step {
+  margin: 0;
+  color: #fcd34d;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.island-run-gamified-journal-card__question h4 {
+  min-height: 2.45em;
+  margin: 0;
+  color: #f8fafc;
+  font-size: 0.94rem;
+  line-height: 1.22;
+  text-align: center;
 }
 
 .island-run-gamified-journal-card__choices {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
-  margin-top: 0.1rem;
+  gap: 0.5rem;
 }
 
-.island-run-gamified-journal-card__choices .island-stop-modal__btn {
-  width: 100%;
+.island-run-gamified-journal-card__choice {
+  display: grid;
   min-width: 0;
-  justify-content: center;
-  white-space: normal;
+  min-height: 100px;
+  place-items: center;
+  gap: 0.13rem;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  border-radius: 15px;
+  padding: 0.5rem 0.35rem;
+  color: #eff6ff;
+  background: linear-gradient(155deg, rgba(30, 64, 110, 0.78), rgba(20, 28, 65, 0.9));
+  font: inherit;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 8px 16px rgba(0, 0, 0, 0.18);
+  transition: transform 150ms ease, border-color 150ms ease, filter 150ms ease;
 }
 
-.island-run-gamified-journal-card__detail-preview {
-  margin: 0;
-  padding: 0.58rem 0.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 12px;
-  color: rgba(226, 232, 240, 0.92);
-  background: rgba(8, 13, 28, 0.38);
+.island-run-gamified-journal-card__choice--spark {
+  border-color: rgba(250, 204, 21, 0.38);
+  background: linear-gradient(155deg, rgba(112, 65, 25, 0.72), rgba(62, 29, 74, 0.9));
 }
 
-.island-run-gamified-journal-card__section--optional {
-  padding: 0.45rem;
+.island-run-gamified-journal-card__choice:is(:hover, :focus-visible) {
+  border-color: rgba(255, 255, 255, 0.72);
+  filter: brightness(1.12);
+  transform: translateY(-2px);
 }
 
-.island-run-gamified-journal-card__toggle {
+.island-run-gamified-journal-card__choice:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.island-run-gamified-journal-card__choice-art {
+  font-size: 2rem;
+  line-height: 1;
+  filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.28));
+}
+
+.island-run-gamified-journal-card__choice strong {
+  font-size: 0.78rem;
+}
+
+.island-run-gamified-journal-card__choice small {
+  color: rgba(226, 232, 240, 0.67);
+  font-size: 0.62rem;
+}
+
+.island-run-gamified-journal-card__complete-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  width: 100%;
-  border: 0;
-  border-radius: 12px;
-  padding: 0.6rem 0.7rem;
-  color: rgba(241, 245, 249, 0.92);
-  background: rgba(255, 255, 255, 0.08);
-  font: inherit;
-  font-weight: 800;
+  justify-content: center;
+  gap: 0.55rem;
   text-align: left;
 }
 
-.island-run-gamified-journal-card__toggle span:last-child {
-  display: grid;
-  flex: 0 0 auto;
-  width: 1.55rem;
-  height: 1.55rem;
-  place-items: center;
-  border-radius: 999px;
-  background: rgba(14, 165, 233, 0.2);
-  color: #bae6fd;
+.island-run-gamified-journal-card__complete-title > span {
+  font-size: 2rem;
 }
 
-.island-run-gamified-journal-card textarea {
-  width: 100%;
-  min-height: 74px;
-  resize: vertical;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+.island-run-gamified-journal-card__complete-title :is(p, strong) {
+  display: block;
+  margin: 0;
+}
+
+.island-run-gamified-journal-card__complete-title p {
+  color: #fcd34d;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.island-run-gamified-journal-card__summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.island-run-gamified-journal-card__summary button {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  padding: 0.65rem;
+  padding: 0.45rem;
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.06);
+  font: inherit;
+  font-size: 0.7rem;
+  text-align: left;
+}
+
+.island-run-gamified-journal-card__summary button > span {
+  grid-row: 1 / span 2;
+  font-size: 1.25rem;
+}
+
+.island-run-gamified-journal-card__summary small {
+  color: #7dd3fc;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+}
+
+.island-run-gamified-journal-card__note {
+  display: grid;
+  gap: 0.25rem;
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.island-run-gamified-journal-card__note input {
+  width: 100%;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: 11px;
+  padding: 0.52rem 0.65rem;
   color: #fff;
-  background: rgba(8, 13, 28, 0.64);
+  background: rgba(3, 10, 27, 0.68);
+  font: inherit;
+  font-size: 0.76rem;
 }
 
 .island-run-gamified-journal-card__error {
+  margin: 0;
   color: #fecaca;
+  font-size: 0.72rem;
   font-weight: 700;
-  margin: 0;
+  text-align: center;
 }
 
-.island-run-gamified-journal-card__detail-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 10050;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-  background: rgba(2, 6, 23, 0.68);
-  backdrop-filter: blur(7px);
-}
-
-.island-run-gamified-journal-card__detail-modal-panel {
-  display: grid;
-  gap: 0.75rem;
-  width: min(92vw, 420px);
-  border: 1px solid rgba(125, 211, 252, 0.34);
-  border-radius: 22px;
-  padding: 1rem;
-  color: #f8fafc;
-  background:
-    radial-gradient(circle at 92% 8%, rgba(56, 189, 248, 0.22), transparent 36%),
-    rgba(15, 23, 42, 0.96);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.52);
-}
-
-.island-run-gamified-journal-card__detail-modal-panel h4,
-.island-run-gamified-journal-card__detail-modal-panel p {
-  margin: 0;
-}
-
-.island-run-gamified-journal-card__detail-modal-panel p {
-  color: rgba(226, 232, 240, 0.78);
-}
-
-.island-run-gamified-journal-card__detail-modal-panel textarea {
-  min-height: 112px;
-}
-
-.island-run-gamified-journal-card__detail-modal-actions {
+.island-run-gamified-journal-card__actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
-@media (max-width: 420px) {
-  .island-run-gamified-journal-card__choices,
-  .island-run-gamified-journal-card__detail-modal-actions {
-    grid-template-columns: 1fr;
+.island-run-gamified-journal-card__actions > :only-child {
+  grid-column: 1 / -1;
+}
+
+@media (max-height: 700px) {
+  .island-run-gamified-journal-card__visual {
+    height: 88px;
+  }
+  .island-run-gamified-journal-card__caretaker-frame {
+    width: 102px;
+    height: 96px;
+  }
+  .island-run-gamified-journal-card__wheel {
+    width: 64px;
+    height: 64px;
+  }
+  .island-run-gamified-journal-card__wheel img {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-gamified-journal-card__wheel,
+  .island-run-gamified-journal-card__question,
+  .island-run-gamified-journal-card__complete {
+    animation: none;
   }
 }
 
@@ -13792,13 +13988,13 @@
 }
 
 /* Concord technology fragments live on one dedicated plane above the tile
-   roots. Their size is expressed in canonical board pixels so the camera can
-   scale them once; nesting them inside an already-scaled tile made them nearly
-   invisible on phones and trapped them under neighbouring stacking contexts. */
+   roots. At rest they stay within the 66px spark-tile footprint so they read as
+   a collectible on the tile rather than a second game piece. Landing briefly
+   enlarges the fragment for the pickup beat. */
 .island-run-board__technology-fragment {
   position: absolute;
-  width: 104px;
-  height: 104px;
+  width: 60px;
+  height: 60px;
   display: grid;
   place-items: center;
   border-radius: 999px;
@@ -13807,12 +14003,19 @@
     radial-gradient(circle, rgba(118, 255, 248, 0.18), rgba(116, 84, 255, 0.05) 58%, transparent 72%);
   box-shadow: 0 10px 14px rgba(20, 10, 45, 0.25);
   filter: drop-shadow(0 8px 5px rgba(22, 10, 42, 0.32));
-  transform: translate(-50%, -82%) translateY(0) scale(0.94);
+  transform: translate(-50%, -82%) translateY(0) scale(var(--fragment-hover-scale, 0.9));
   transform-origin: 50% 100%;
   z-index: 8;
   pointer-events: none;
   animation: island-technology-fragment-hover 2.15s ease-in-out infinite;
   animation-delay: var(--fragment-animation-delay, 0s);
+  transition: filter 180ms ease-out;
+}
+
+.island-run-board__technology-fragment--landed {
+  z-index: 9;
+  animation: island-technology-fragment-landed 620ms cubic-bezier(0.2, 0.9, 0.24, 1) both;
+  filter: drop-shadow(0 12px 10px rgba(22, 10, 42, 0.4));
 }
 
 .island-run-board__technology-fragment::before {
@@ -13861,8 +14064,14 @@
 }
 
 @keyframes island-technology-fragment-hover {
-  0%, 100% { transform: translate(-50%, -82%) translateY(0) scale(0.94); }
-  50% { transform: translate(-50%, -82%) translateY(-12px) scale(1); }
+  0%, 100% { transform: translate(-50%, -82%) translateY(0) scale(var(--fragment-hover-scale, 0.9)); }
+  50% { transform: translate(-50%, -82%) translateY(-7px) scale(var(--fragment-hover-apex-scale, 0.96)); }
+}
+
+@keyframes island-technology-fragment-landed {
+  0% { transform: translate(-50%, -82%) translateY(0) scale(var(--fragment-landed-start-scale, 0.58)); }
+  58% { transform: translate(-50%, -82%) translateY(-18px) scale(var(--fragment-landed-peak-scale, 1.72)); }
+  100% { transform: translate(-50%, -82%) translateY(-10px) scale(var(--fragment-landed-settle-scale, 1.48)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
