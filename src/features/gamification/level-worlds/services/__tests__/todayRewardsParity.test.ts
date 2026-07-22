@@ -91,6 +91,25 @@ export const todayRewardsParityTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'Daily Momentum results cover the modal rather than the wheel circle',
+    run: async () => {
+      const dailySpin = await readSource('src/features/spin-wheel/NewDailySpinWheel.tsx');
+      const dailySpinCss = await readSource('src/features/spin-wheel/NewDailySpinWheel.css');
+      assert(
+        dailySpin.includes('new-daily-spin-modal__result-overlay new-daily-spin-modal__result-overlay--reward')
+          && dailySpin.includes('new-daily-spin-modal__result-overlay new-daily-spin-modal__result-overlay--status')
+          && !dailySpin.includes('new-daily-spin-wheel__overlay'),
+        'Reward and already-claimed states should be modal-level overlays, not children styled inside the circular wheel.',
+      );
+      assert(
+        dailySpinCss.includes('.new-daily-spin-modal__content > .new-daily-spin-modal__close')
+          && dailySpinCss.includes('position: absolute;')
+          && dailySpinCss.includes('z-index: 30;'),
+        'The close control should stay absolutely anchored above overlays in the modal top-right corner.',
+      );
+    },
+  },
 
   {
     name: 'Today row exposes normal and Egg Mania hatching circles',
