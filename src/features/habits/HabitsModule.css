@@ -201,11 +201,11 @@
 /* T1A: Time-bound offers row */
 .time-bound-offers {
   --offer-circle-size: 100%;
-  --offer-icon-size: clamp(2.45rem, 11.2vw, 3.55rem);
+  --offer-icon-size: clamp(2.2rem, 10.2vw, 3.25rem);
   --offer-notification-size: clamp(0.6rem, 2.9vw, 0.86rem);
   --offer-notification-offset: clamp(0.24rem, 1.25vw, 0.4rem);
-  --offer-gap: clamp(0.42rem, 1.9vw, 0.72rem);
-  --offer-edge-safe-area: 0rem;
+  --offer-gap: clamp(0.28rem, 1.25vw, 0.5rem);
+  --offer-edge-safe-area: clamp(0.32rem, 1.7vw, 0.52rem);
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: calc((100% - (3 * var(--offer-gap))) / 4);
@@ -215,12 +215,11 @@
   width: 100%;
   margin-inline: auto;
   /*
-   * Horizontal scrolling creates a clipping context on mobile browsers, so give
-   * the circles' glow/badges more internal paint room while offsetting that
-   * padding in the margin. This increases the container's safe area without
-   * making the Today header/checklist gap look taller.
+   * Horizontal scrolling creates a clipping context on mobile browsers. Keep a
+   * real inline safe area so the first and fourth circles, their glows, and their
+   * badges never touch that boundary.
    */
-  padding: 0.9rem 0 1.18rem;
+  padding: 0.9rem var(--offer-edge-safe-area) 1.18rem;
   overflow-x: auto;
   overflow-y: visible;
   overscroll-behavior-inline: contain;

@@ -6538,17 +6538,9 @@ html.platform-ipad .workspace-shell__menu-edge {
 
 .mobile-habit-home .time-bound-offers {
   justify-items: stretch;
-  padding-inline: 0;
-  /*
-   * Break the circles row out of the board body's inline padding so the four
-   * circles expand to the inner edges of the card. Only this row breaks out —
-   * the Todo/habit cards keep the shared inset. The negative inline margin
-   * cancels the padding on each side and the matching width keeps the grid
-   * full-bleed, so the circles grow to fill the reclaimed width.
-   */
-  width: calc(100% + 2 * var(--board-body-inline-pad, 1.15rem));
-  max-width: none;
-  margin-inline: calc(-1 * var(--board-body-inline-pad, 1.15rem));
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
 }
 
 .mobile-habit-home .time-bound-offers__item {
@@ -39533,20 +39525,39 @@ body.habit-wizard-open .mobile-footer-nav {
 }
 
 .campaign-card {
+  appearance: none;
   border: 1px solid rgba(245, 158, 11, 0.32);
   border-radius: 18px;
   background: linear-gradient(145deg, rgba(255, 251, 235, 0.95), rgba(255, 255, 255, 0.78));
   box-shadow: 0 14px 28px rgba(120, 53, 15, 0.12);
+  color: inherit;
+  cursor: pointer;
+  display: block;
+  font: inherit;
   margin: 0.4rem 0 0.8rem;
   padding: 0.85rem;
+  text-align: left;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  width: 100%;
+}
+
+.campaign-card:hover,
+.campaign-card:focus-visible {
+  border-color: rgba(217, 119, 6, 0.56);
+  box-shadow: 0 17px 34px rgba(120, 53, 15, 0.16);
+  transform: translateY(-1px);
+}
+
+.campaign-card:focus-visible {
+  outline: 3px solid rgba(245, 158, 11, 0.28);
+  outline-offset: 2px;
 }
 
 .campaign-card__head { display: flex; justify-content: space-between; gap: 0.75rem; align-items: flex-start; }
-.campaign-card__eyebrow { color: #92400e; font-size: 0.68rem; font-weight: 900; letter-spacing: 0.08em; margin: 0 0 0.15rem; text-transform: uppercase; }
-.campaign-card h3 { color: #422006; font-size: 1rem; margin: 0; }
-.campaign-card__head span { background: rgba(146, 64, 14, 0.1); border-radius: 999px; color: #78350f; font-size: 0.72rem; font-weight: 800; padding: 0.25rem 0.5rem; white-space: nowrap; }
-.campaign-card__meta, .campaign-card__victory { color: #57534e; font-size: 0.78rem; line-height: 1.35; margin: 0.45rem 0 0; }
-.campaign-card__button { background: #78350f; border: 0; border-radius: 999px; color: white; cursor: pointer; font-size: 0.75rem; font-weight: 800; margin-top: 0.65rem; padding: 0.45rem 0.75rem; }
+.campaign-card__copy { display: grid; gap: 0.15rem; min-width: 0; }
+.campaign-card__eyebrow { color: #92400e; font-size: 0.68rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.campaign-card__title { color: #422006; font-size: 1rem; font-weight: 900; overflow-wrap: anywhere; }
+.campaign-card__day { background: rgba(146, 64, 14, 0.1); border-radius: 999px; color: #78350f; flex: 0 0 auto; font-size: 0.72rem; font-weight: 800; padding: 0.25rem 0.5rem; white-space: nowrap; }
 
 .habit-checklist__campaign-badge {
   align-items: center;
@@ -39601,6 +39612,14 @@ body.habit-wizard-open .mobile-footer-nav {
 .campaign-modal__active h4 { color: #78350f; margin: 0 0 0.2rem; }
 .campaign-modal__active p, .campaign-modal__active li { color: #57534e; font-size: 0.82rem; line-height: 1.4; }
 .campaign-modal__active ul { margin: 0.3rem 0 0; padding-left: 1rem; }
+.campaign-admin-lab { display: grid; gap: 0.65rem; margin-bottom: 0.9rem; padding: 0.8rem; border: 1px dashed rgba(109, 40, 217, 0.34); border-radius: 18px; background: rgba(245, 243, 255, 0.66); }
+.campaign-admin-lab__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.65rem; }
+.campaign-admin-lab__header p, .campaign-admin-lab__header h4 { margin: 0; }
+.campaign-admin-lab__header p { color: #7c3aed; font-size: 0.62rem; font-weight: 950; letter-spacing: 0.1em; text-transform: uppercase; }
+.campaign-admin-lab__header h4 { color: #312e81; margin-top: 0.1rem; }
+.campaign-admin-lab__header > span { border-radius: 999px; padding: 0.24rem 0.46rem; color: #5b21b6; background: rgba(237, 233, 254, 0.92); font-size: 0.62rem; font-weight: 850; text-align: right; }
+.campaign-admin-lab .wellbeing-shield { margin: 0; }
+.campaign-admin-lab__calendar { margin: 0; }
 .campaign-arsenal { display: grid; gap: 0.58rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(245, 158, 11, 0.2); }
 .campaign-arsenal__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.65rem; }
 .campaign-arsenal__header h4, .campaign-arsenal__header p { margin: 0; }
