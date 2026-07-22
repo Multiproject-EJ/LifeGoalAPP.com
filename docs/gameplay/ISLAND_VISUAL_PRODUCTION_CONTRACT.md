@@ -101,10 +101,10 @@ Levels must read as the same structure growing. Do not swap to a different build
 When the landmark is intended to grow dramatically without moving its terrain
 foundation, manifests may define `levelScales` for L1/L2/L3. The renderer
 bottom-anchors these sizes to the original placement box. Island 1 establishes
-the pilot ladder `[0.275, 0.55, 1.1]`, giving an exact 1x -> 2x -> 4x visible
-placement progression while keeping the restored level within its approved
-phone composition. Future islands may tune the starting scale, but the level
-ratios should remain explicit and should be checked at 390x844.
+the phone-validated ladder `[0.5, 0.78, 1.1]`. L1 must remain large enough to
+read beside the live landmark label at 390x844; smaller placements can render
+successfully while appearing absent to the player. Future islands may tune the
+ladder, but every level must be explicit and checked at 390x844.
 
 The MVP motion pass uses restrained runtime animation for ambient drift,
 landmark lift/glow, arena pulse, and boss breathing. Motion must not move hit

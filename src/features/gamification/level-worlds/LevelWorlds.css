@@ -4676,8 +4676,11 @@
     max(1rem, calc(env(safe-area-inset-bottom, 0px) + 0.5rem))
     max(1rem, calc(env(safe-area-inset-left, 0px) + 0.5rem));
   box-sizing: border-box;
-  backdrop-filter: blur(7px) saturate(1.12);
-  -webkit-backdrop-filter: blur(7px) saturate(1.12);
+  /* Full-screen blur forces Safari to continuously re-composite the animated
+     board underneath every modal. The stronger vignette already separates the
+     surface, so keep the backdrop opaque enough without a live blur pass. */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   animation: island-stop-modal-backdrop-in 240ms ease-out;
   /* Allow the backdrop itself to scroll as a last-resort fallback when the
      modal content is taller than the viewport (e.g. small landscape phones).
@@ -9560,6 +9563,52 @@
   }
 }
 
+/* An open modal owns the frame. Keep the island visible for context, but do
+   not spend main-thread/compositor time animating the obscured board. */
+.island-run-board--attention-paused .island-run-board__bg--v2-ambient,
+.island-run-board--attention-paused .island-art-layers__landmark,
+.island-run-board--attention-paused .island-art-layers__boss,
+.island-run-board--attention-paused .island-art-layers__scenery,
+.island-run-board--attention-paused .island-tile--alive,
+.island-run-board--attention-paused .island-tile__shine::after,
+.island-run-board--attention-paused .island-run-board__technology-fragment,
+.island-run-board--attention-paused .island-run-board__caretaker::after,
+.island-run-board--attention-paused .island-run-board__caretaker-glow,
+.island-run-board--attention-paused .island-run-board__caretaker-img,
+.island-run-board--attention-paused .island-token__ship-thruster,
+.island-run-board--attention-paused .island-orbit-stop__status-pill,
+.island-run-board--attention-paused .island-run-board__minigame-icon-btn {
+  animation-play-state: paused !important;
+}
+
+.island-run-board__stage-wrapper--paused .island-run-board__particles {
+  display: none;
+}
+
+/* Phone GPUs benefit far more from reserving their animation budget for the
+   dice, token and reward feedback than from animating 36 idle tiles and large
+   full-board rasters forever. The one-shot tile entrance still plays. */
+@media (max-width: 720px), (hover: none) {
+  .island-run-board__bg--v2-ambient,
+  .island-art-layers__landmark,
+  .island-art-layers__boss,
+  .island-art-layers__scenery {
+    animation: none !important;
+  }
+
+  .island-tile--alive,
+  .island-run-board--spark36 .island-tile--alive {
+    animation: island-tile-enter 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    animation-delay: calc(var(--tile-index, 0) * 0.012s);
+    will-change: auto;
+  }
+
+  .island-tile__shine::after,
+  .island-run-board__particles {
+    display: none;
+  }
+}
+
 @keyframes island-tile-stop-pulse {
   0%, 100% { box-shadow: 0 0 14px var(--tile-stop-glow), 0 0 28px var(--tile-stop-glow); }
   50%      { box-shadow: 0 0 22px var(--tile-stop-mid), 0 0 44px var(--tile-stop-glow), 0 0 60px var(--tile-stop-glow); }
@@ -9705,12 +9754,23 @@
   will-change: transform;
 }
 
-.board-dice-3d__die--tumbling {
+.board-dice-3d__die-wrapper--rolling {
   animation: board-dice-3d-bounce 0.6s ease-in-out;
 }
 
+.board-dice-3d__die--tumbling {
+  animation: board-dice-3d-tumble 520ms linear infinite;
+  transition: none;
+}
+
 .board-dice-3d__die--settled {
-  /* Settle spring handled inline via transition property */
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes board-dice-3d-tumble {
+  0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  50% { transform: rotateX(270deg) rotateY(180deg) rotateZ(90deg); }
+  100% { transform: rotateX(540deg) rotateY(450deg) rotateZ(180deg); }
 }
 
 @keyframes board-dice-3d-bounce {
@@ -13023,6 +13083,26 @@
 }
 .bm2-hero__cost { color: rgba(255, 223, 156, 0.95); font-weight: 700; }
 
+.bm2-progress {
+  position: relative;
+  height: 8px;
+  margin-top: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.32);
+}
+
+.bm2-progress__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  min-width: 4px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #67e8f9, #ffe39d);
+  box-shadow: 0 0 12px rgba(103, 232, 249, 0.4);
+  transition: width 180ms ease-out;
+}
+
 .bm2-artwork--hero {
   grid-area: art;
   min-height: clamp(180px, 34dvh, 310px);
@@ -13063,14 +13143,17 @@
 .bm2-level-rail__item--locked { opacity: 0.55; }
 
 .bm2-tray {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   padding: 0.7rem 0.75rem max(0.75rem, env(safe-area-inset-bottom, 0px));
   gap: 0.5rem;
+  overflow: visible;
   border-top: 1px solid rgba(255, 207, 122, 0.14);
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.22));
 }
 .bm2-part {
-  min-width: 104px;
+  min-width: 0;
   min-height: 64px;
+  padding: 0.45rem 0.18rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -13081,6 +13164,7 @@
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.78);
   cursor: default;
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 .bm2-part--active:not(:disabled) {
@@ -13098,7 +13182,15 @@
   outline-offset: 2px;
 }
 .bm2-part__icon { font-size: 1.05rem; line-height: 1; }
-.bm2-part__title { font-weight: 900; font-size: 0.82rem; }
+.bm2-part__title {
+  max-width: 100%;
+  overflow: hidden;
+  font-weight: 900;
+  font-size: 0.76rem;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .bm2-part__meta { font-size: 0.72rem; }
 
 .bm2-complete-state {
@@ -13122,10 +13214,19 @@
 }
 
 @media (max-width: 390px) {
-  .bm2-hero { grid-template-columns: minmax(0, 1fr); grid-template-areas: "copy" "art" "rail"; }
+  .bm2-hero {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "copy" "art" "rail";
+    gap: 0.55rem;
+    padding: 0.7rem;
+  }
+  .bm2-artwork--hero { min-height: clamp(180px, 29dvh, 245px); }
   .bm2-level-rail { flex-direction: row; }
   .bm2-level-rail__item { min-height: 44px; flex: 1; }
-  .bm2-part { min-width: 92px; }
+  .bm2-tray { gap: 0.28rem; padding-inline: 0.45rem; }
+  .bm2-part { min-width: 0; min-height: 68px; }
+  .bm2-part__title { font-size: 0.67rem; }
+  .bm2-part__meta { font-size: 0.64rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -13668,13 +13769,14 @@
   line-height: 1.25;
 }
 
-/* Concord technology fragments: slot-specific temporary emoji objects reuse the
-   tile pop-out layer, but override generic reward props so each fixed fragment
-   reads as a hovering collectible rather than a flat tile icon. */
-.island-tile__popout--technology-fragment {
-  top: 8%;
-  width: clamp(22px, calc(30px / max(var(--tile-render-scale, 1), 0.65)), 34px);
-  height: clamp(22px, calc(30px / max(var(--tile-render-scale, 1), 0.65)), 34px);
+/* Concord technology fragments live on one dedicated plane above the tile
+   roots. Their size is expressed in canonical board pixels so the camera can
+   scale them once; nesting them inside an already-scaled tile made them nearly
+   invisible on phones and trapped them under neighbouring stacking contexts. */
+.island-run-board__technology-fragment {
+  position: absolute;
+  width: 104px;
+  height: 104px;
   display: grid;
   place-items: center;
   border-radius: 999px;
@@ -13683,14 +13785,15 @@
     radial-gradient(circle, rgba(118, 255, 248, 0.18), rgba(116, 84, 255, 0.05) 58%, transparent 72%);
   box-shadow: 0 10px 14px rgba(20, 10, 45, 0.25);
   filter: drop-shadow(0 8px 5px rgba(22, 10, 42, 0.32));
-  transform: translate(-50%, -92%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(0) scale(0.92);
-  z-index: 4;
+  transform: translate(-50%, -82%) translateY(0) scale(0.94);
+  transform-origin: 50% 100%;
+  z-index: 8;
   pointer-events: none;
   animation: island-technology-fragment-hover 2.15s ease-in-out infinite;
   animation-delay: var(--fragment-animation-delay, 0s);
 }
 
-.island-tile__popout--technology-fragment::before {
+.island-run-board__technology-fragment::before {
   content: '';
   position: absolute;
   left: 50%;
@@ -13700,16 +13803,14 @@
   border-radius: 999px;
   background: radial-gradient(ellipse, rgba(24, 16, 35, 0.36), transparent 68%);
   transform: translateX(-50%);
-  animation: island-technology-fragment-shadow 2.15s ease-in-out infinite;
-  animation-delay: var(--fragment-animation-delay, 0s);
 }
 
-.island-tile__popout-image {
+.island-run-board__technology-fragment-image {
   position: relative;
   z-index: 1;
   display: block;
-  width: 118%;
-  height: 118%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   border-radius: 8px;
   /* Zero-blur drop-shadow chain extrudes the sprite's silhouette downward so
@@ -13723,73 +13824,27 @@
     drop-shadow(0 1px 0 rgba(12, 19, 46, 0.9))
     drop-shadow(0 0 8px rgba(126, 255, 248, 0.56))
     drop-shadow(0 5px 9px rgba(12, 8, 32, 0.48));
-  animation: island-technology-fragment-image-glow 2.15s ease-in-out infinite;
-  animation-delay: var(--fragment-animation-delay, 0s);
 }
 
-.island-tile__popout-emoji {
+.island-run-board__technology-fragment-emoji {
   position: relative;
   z-index: 1;
   display: block;
-  font-size: clamp(1rem, calc(1.35rem / max(var(--tile-render-scale, 1), 0.65)), 1.55rem);
+  font-size: 3.8rem;
   line-height: 1;
   text-shadow:
     0 1px 0 rgba(255, 255, 255, 0.5),
     0 0 8px rgba(126, 255, 248, 0.56),
     0 5px 9px rgba(12, 8, 32, 0.48);
-  animation: island-technology-fragment-glow 2.15s ease-in-out infinite;
-  animation-delay: var(--fragment-animation-delay, 0s);
-}
-
-.island-tile--token-current .island-tile__popout--technology-fragment {
-  z-index: 4;
 }
 
 @keyframes island-technology-fragment-hover {
-  0%, 100% { transform: translate(-50%, -92%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(0) scale(0.92); }
-  50% { transform: translate(-50%, -92%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-5px) scale(1); }
-}
-
-@keyframes island-technology-fragment-shadow {
-  0%, 100% { opacity: 0.44; transform: translateX(-50%) scale(1); }
-  50% { opacity: 0.24; transform: translateX(-50%) scale(0.78); }
-}
-
-@keyframes island-technology-fragment-glow {
-  0%, 100% { filter: saturate(1) brightness(1); }
-  50% { filter: saturate(1.16) brightness(1.08); }
-}
-
-/* Image variant keeps the silhouette-extrusion drop-shadow chain alive through
-   every keyframe — animating `filter` replaces the whole chain, so the depth
-   steps must be restated alongside the pulsing saturate/brightness. */
-@keyframes island-technology-fragment-image-glow {
-  0%, 100% {
-    filter:
-      drop-shadow(0 1px 0 rgba(31, 48, 94, 0.95))
-      drop-shadow(0 1px 0 rgba(24, 38, 78, 0.95))
-      drop-shadow(0 1px 0 rgba(18, 28, 62, 0.95))
-      drop-shadow(0 1px 0 rgba(12, 19, 46, 0.9))
-      drop-shadow(0 0 8px rgba(126, 255, 248, 0.56))
-      drop-shadow(0 5px 9px rgba(12, 8, 32, 0.48))
-      saturate(1) brightness(1);
-  }
-  50% {
-    filter:
-      drop-shadow(0 1px 0 rgba(31, 48, 94, 0.95))
-      drop-shadow(0 1px 0 rgba(24, 38, 78, 0.95))
-      drop-shadow(0 1px 0 rgba(18, 28, 62, 0.95))
-      drop-shadow(0 1px 0 rgba(12, 19, 46, 0.9))
-      drop-shadow(0 0 11px rgba(126, 255, 248, 0.72))
-      drop-shadow(0 5px 9px rgba(12, 8, 32, 0.48))
-      saturate(1.16) brightness(1.08);
-  }
+  0%, 100% { transform: translate(-50%, -82%) translateY(0) scale(0.94); }
+  50% { transform: translate(-50%, -82%) translateY(-12px) scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .island-tile__popout--technology-fragment,
-  .island-tile__popout--technology-fragment::before,
-  .island-tile__popout-emoji {
+  .island-run-board__technology-fragment {
     animation: none;
   }
 }

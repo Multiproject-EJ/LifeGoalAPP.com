@@ -13,13 +13,14 @@ function assertIncludes(source: string, expected: string, message: string) {
 
 export const islandRunTechnologyFragmentRenderingGuardTests: TestCase[] = [
   {
-    name: 'BoardTile renders decorative slot-specific fragment emoji, not a separate interactive target',
+    name: 'BoardTile exposes fragment availability while the grid renders the decorative overlay',
     run: () => {
       assertIncludes(boardTile, 'technologyFragment?: VisibleTechnologyFragment', 'BoardTile must receive full fragment identity');
-      assertIncludes(boardTile, 'data-fragment-slot={technologyFragment.fragmentSlot}', 'fragment slot must be rendered for deterministic styling/tests');
-      assertIncludes(boardTile, '{technologyFragment.placeholder}', 'emoji must come from fragment placeholder data');
-      assertIncludes(boardTile, 'aria-hidden="true"', 'emoji pop-out remains decorative');
       assertIncludes(boardTile, 'aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}` : undefined}', 'tile exposes accessible fragment availability');
+      assertIncludes(boardTileGrid, 'data-fragment-slot={fragment.fragmentSlot}', 'fragment slot must be rendered for deterministic styling/tests');
+      assertIncludes(boardTileGrid, '{fragment.placeholder}', 'emoji must come from fragment placeholder data');
+      assertIncludes(boardTileGrid, 'aria-hidden="true"', 'fragment overlay remains decorative');
+      assertIncludes(boardTileGrid, 'className="island-run-board__technology-fragment"', 'fragment must use the shared above-tile overlay plane');
       assert(!boardTile.includes('island-tile__popout--${tileType}`'), 'generic tile-type pop-out renderer should not be used for technology fragments');
     },
   },
@@ -35,9 +36,9 @@ export const islandRunTechnologyFragmentRenderingGuardTests: TestCase[] = [
   {
     name: 'fragment CSS provides hover depth, pointer safety, z-index below token, and reduced motion',
     run: () => {
-      assertIncludes(css, '.island-tile__popout--technology-fragment', 'fragment CSS class exists');
+      assertIncludes(css, '.island-run-board__technology-fragment', 'fragment overlay CSS class exists');
       assertIncludes(css, 'pointer-events: none;', 'fragment cannot block tile taps or swipes');
-      assertIncludes(css, 'z-index: 4;', 'fragment z-index stays below token z-index 10');
+      assertIncludes(css, 'z-index: 8;', 'fragment overlay stays above ordinary tiles and below the current token layer');
       assertIncludes(css, 'animation-delay: var(--fragment-animation-delay, 0s);', 'fragment uses deterministic slot animation offsets');
       assertIncludes(css, '@keyframes island-technology-fragment-hover', 'hover bob animation exists');
       assertIncludes(css, '@media (prefers-reduced-motion: reduce)', 'reduced-motion media query exists');

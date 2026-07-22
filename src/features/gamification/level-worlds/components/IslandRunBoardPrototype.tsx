@@ -10675,13 +10675,21 @@ export function IslandRunBoardPrototype({
   const shouldShowIslandArtAmbientBackground = Boolean(islandArtAmbientBackgroundSrc) && isIslandArtAmbientBackgroundLoaded && !isBackgroundHidden;
   const shouldShowLegacyIslandBackground = !shouldShowIslandArtAmbientBackground && isIslandBackgroundAvailable && !isBackgroundHidden;
   const shouldUseNoBackgroundFallback = !shouldShowIslandArtAmbientBackground && (!isIslandBackgroundAvailable || isBackgroundHidden);
-  const islandArtLandmarkBuildLevels = runtimeState.stopBuildStateByIndex.map((buildState, stopIndex) => {
-    if (!isIslandVisualPreview || islandVisualLandmark === null) return buildState.buildLevel;
-    const previewLandmarkId = ['hatchery', 'habit', 'mystery', 'wisdom'][stopIndex] ?? null;
-    return islandVisualLandmark === 'all' || islandVisualLandmark === previewLandmarkId
-      ? islandVisualBuildLevel
-      : 0;
-  });
+  const islandArtLandmarkBuildLevels = useMemo(
+    () => runtimeState.stopBuildStateByIndex.map((buildState, stopIndex) => {
+      if (!isIslandVisualPreview || islandVisualLandmark === null) return buildState.buildLevel;
+      const previewLandmarkId = ['hatchery', 'habit', 'mystery', 'wisdom'][stopIndex] ?? null;
+      return islandVisualLandmark === 'all' || islandVisualLandmark === previewLandmarkId
+        ? islandVisualBuildLevel
+        : 0;
+    }),
+    [
+      islandVisualBuildLevel,
+      islandVisualLandmark,
+      isIslandVisualPreview,
+      runtimeState.stopBuildStateByIndex,
+    ],
+  );
   const isCurrentIslandBossDefeated = bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber;
   const runtimeBossCreatureArtState = resolveBossCreatureArtState({
     stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
@@ -11476,7 +11484,7 @@ export function IslandRunBoardPrototype({
 
       <div
         ref={boardRef}
-        className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${shouldUseNoBackgroundFallback ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark36BoardProfile ? 'island-run-board--spark36' : ''}`}
+        className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${shouldUseNoBackgroundFallback ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark36BoardProfile ? 'island-run-board--spark36' : ''} ${doesModalOwnAttention ? 'island-run-board--attention-paused' : ''}`}
         data-island-number={islandNumber}
       >
         {shouldShowLegacyIslandBackground && (
@@ -11905,6 +11913,7 @@ export function IslandRunBoardPrototype({
           isSpark36={isSpark36BoardProfile}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
+          isInteractionPaused={doesModalOwnAttention}
           boardTiltXDeg={boardTiltXDeg}
           boardRotateZDeg={boardRotateZDeg}
           tileMap={landmarkDoorTileMap}

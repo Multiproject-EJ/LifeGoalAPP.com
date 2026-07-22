@@ -270,27 +270,6 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         {showDebug && <small className="island-tile__anchor-id">{anchor.id}</small>}
       </span>
 
-      {technologyFragment && (
-        <span
-          className="island-tile__popout island-tile__popout--technology-fragment"
-          aria-hidden="true"
-          data-fragment-slot={technologyFragment.fragmentSlot}
-          data-testid={`technology-fragment-${technologyFragment.fragmentSlot}`}
-          title={technologyFragment.ariaLabel}
-        >
-          {technologyFragment.imageSrc ? (
-            <img
-              className="island-tile__popout-image"
-              src={technologyFragment.imageSrc}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-            />
-          ) : (
-            <span className="island-tile__popout-emoji" aria-hidden="true">{technologyFragment.placeholder}</span>
-          )}
-        </span>
-      )}
     </div>
   );
 });
