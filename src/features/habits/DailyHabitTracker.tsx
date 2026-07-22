@@ -2492,6 +2492,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'habit_time_limited_offer_scheduled',
+      dedupeKey: `offer-date:${params.offerDate}`,
       metadata: {
         nextHabitHealthState: params.nextHabitId
           ? (habitHealthByHabitId[params.nextHabitId] ?? 'active')

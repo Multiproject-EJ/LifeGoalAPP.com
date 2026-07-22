@@ -1215,7 +1215,7 @@ export function ScoreTab({
                 if (!session?.user?.id) return;
                 void recordTelemetryEvent({
                   userId: session.user.id,
-                  eventType: 'economy_earn',
+                  eventType: 'island_run_ui_interaction',
                   metadata: { stage: 'ship_shell_tab_opened', tab: 'companions' },
                 });
               }}
@@ -1230,7 +1230,7 @@ export function ScoreTab({
                 if (!session?.user?.id) return;
                 void recordTelemetryEvent({
                   userId: session.user.id,
-                  eventType: 'economy_earn',
+                  eventType: 'island_run_ui_interaction',
                   metadata: { stage: 'ship_shell_tab_opened', tab: 'upgrades' },
                 });
               }}
@@ -1245,7 +1245,7 @@ export function ScoreTab({
                 if (!session?.user?.id) return;
                 void recordTelemetryEvent({
                   userId: session.user.id,
-                  eventType: 'economy_earn',
+                  eventType: 'island_run_ui_interaction',
                   metadata: { stage: 'ship_shell_tab_opened', tab: 'cosmetics' },
                 });
               }}
@@ -1268,7 +1268,7 @@ export function ScoreTab({
                   if (!session?.user?.id) return;
                   void recordTelemetryEvent({
                     userId: session.user.id,
-                    eventType: 'economy_earn',
+                    eventType: 'island_run_ui_interaction',
                     metadata: { stage: 'ship_shell_open_companions_sanctuary' },
                   });
                 }}
