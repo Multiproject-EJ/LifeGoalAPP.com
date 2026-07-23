@@ -11,6 +11,7 @@ import {
   resolveMaxMultiplierForPool,
   resolveDiceCostForMultiplier,
   clampMultiplierToPool,
+  resolveNextMultiplierCycleStep,
   MULTIPLIER_TIERS,
   BASE_DICE_PER_ROLL,
   REWARD_BAR_CURATED_TARGET_SEQUENCE,
@@ -918,6 +919,20 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
       const cost = resolveDiceCostForMultiplier(clamped);
       assert(cost <= 4, `Expected clamped multiplier cost (${cost}) to be affordable with 4 dice`);
       assertEqual(clamped, 3, 'Expected ×3 at 4 dice');
+    },
+  },
+  {
+    name: 'multiplier: entering max is distinct from wrapping back to x1',
+    run: () => {
+      const enterMax = resolveNextMultiplierCycleStep(5, [1, 2, 3, 5, 10]);
+      assertEqual(enterMax.nextMultiplier, 10, 'Expected next tap to enter ×10');
+      assertEqual(enterMax.reachedMax, true, 'Expected max entry to trigger the celebration beat');
+      assertEqual(enterMax.wrappedToOne, false, 'Expected max entry not to wrap');
+
+      const wrap = resolveNextMultiplierCycleStep(10, [1, 2, 3, 5, 10]);
+      assertEqual(wrap.nextMultiplier, 1, 'Expected the tap after max to wrap to ×1');
+      assertEqual(wrap.reachedMax, false, 'Expected wrapping not to retrigger max entry');
+      assertEqual(wrap.wrappedToOne, true, 'Expected max to ×1 transition to be explicit');
     },
   },
 ];

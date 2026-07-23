@@ -111,7 +111,7 @@ import {
 import { HabitImprovementAnalysisModal } from './HabitImprovementAnalysisModal';
 import { HabitChainAnalysisModal } from './HabitChainAnalysisModal';
 import { SuperHabitRosterModal } from './SuperHabitRosterModal';
-import { resolveSuperHabitForTitle, type SuperHabitId } from './superHabits';
+import { canLaunchSuperHabit, resolveSuperHabitForTitle, type SuperHabitId } from './superHabits';
 import { WellbeingShieldCard } from './WellbeingShieldCard';
 import { computeWellbeingShield, publishWellbeingShield } from './wellbeingShield';
 import { fetchQuestHabitTags, fetchQuests } from '../../services/quests';
@@ -223,6 +223,7 @@ const DONE_ISH_DEFAULT_PERCENTAGE = 85;
 const HABIT_SWIPE_MAX_PX = 132;
 const HABIT_SWIPE_ARM_THRESHOLD_PX = 84;
 const HABIT_SWIPE_SUPPRESS_CLICK_MS = 260;
+const SUPER_HABIT_HOLD_MS = 1300;
 // Long-press-to-reorder tuning for today todos.
 const TODO_REORDER_LONG_PRESS_MS = 360;
 const TODO_REORDER_MOVE_CANCEL_PX = 10;
@@ -367,6 +368,7 @@ const DIRECT_OPEN_TIME_BOUND_OFFERS: ReadonlySet<TimeBoundOfferId> = new Set([
 
 type DailyHabitTrackerVariant = 'full' | 'compact';
 type TodayExpandableSectionKey = 'routines' | 'contracts' | 'quickJournal' | 'intentions';
+type HabitDetailSectionKey = 'superHabit' | 'coach' | 'info' | 'todayVersion' | 'understand' | 'manage';
 
 const TODAY_EXTRA_SECTION_TOGGLES: ReadonlyArray<{
   key: TodayExpandableSectionKey;
@@ -1676,9 +1678,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [monthDays, setMonthDays] = useState<string[]>([]);
   const [habitInsights, setHabitInsights] = useState<Record<string, HabitInsights>>({});
   const [expandedHabits, setExpandedHabits] = useState<Record<string, boolean>>({});
-  const [expandedHabitSections, setExpandedHabitSections] = useState<
-    Record<string, { todayVersion?: boolean; understand?: boolean; manage?: boolean }>
-  >({});
+  const [expandedHabitSections, setExpandedHabitSections] = useState<Record<string, HabitDetailSectionKey | null>>({});
   const [expandedTodayTodoById, setExpandedTodayTodoById] = useState<Record<string, boolean>>({});
   const [historicalLogs, setHistoricalLogs] = useState<HabitLogRow[]>([]);
   // State for selected month/year: allows user to navigate between different months
@@ -1714,7 +1714,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [selectedSuperHabitId, setSelectedSuperHabitId] = useState<SuperHabitId | null>(null);
   const [superHabitSourceHabitId, setSuperHabitSourceHabitId] = useState<string | null>(null);
   const [superHabitHoldHabitId, setSuperHabitHoldHabitId] = useState<string | null>(null);
-  const [superHabitActivatedHabitId, setSuperHabitActivatedHabitId] = useState<string | null>(null);
+  const [superHabitPromptHabitId, setSuperHabitPromptHabitId] = useState<string | null>(null);
   const [journalToolHost, setJournalToolHost] = useState<HTMLDivElement | null>(null);
   const [activeSuperHabitSession, setActiveSuperHabitSession] = useState<{
     superHabitId: 'journal';
@@ -1761,6 +1761,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [swipeArmedByTodoId, setSwipeArmedByTodoId] = useState<Record<string, HabitSwipeDirection | null>>({});
   const skipMenuRef = useRef<HTMLDivElement | null>(null);
   const habitTodayVersionRefs = useRef<Record<string, HTMLElement | null>>({});
+  const habitDetailSectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const swipeGestureRef = useRef<{
     habitId: string;
     pointerId: number;
@@ -1779,7 +1780,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     timerId: number;
     triggered: boolean;
   } | null>(null);
-  const superHabitPopTimerRef = useRef<number | null>(null);
   const todoSwipeGestureRef = useRef<{
     todoId: string;
     pointerId: number;
@@ -2492,6 +2492,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'habit_time_limited_offer_scheduled',
+      dedupeKey: `offer-date:${params.offerDate}`,
       metadata: {
         nextHabitHealthState: params.nextHabitId
           ? (habitHealthByHabitId[params.nextHabitId] ?? 'active')
@@ -2632,10 +2633,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         }));
 
     if (hasValidStoredOffer) {
-      setTimeLimitedOffer(storedOffer);
-      setHabitReviewWindow({
-        windowStart: storedOffer.reviewWindowStart ?? null,
-        windowEnd: storedOffer.reviewWindowEnd ?? null,
+      setTimeLimitedOffer((current) =>
+        current.date === storedOffer.date &&
+        current.nextHabitId === storedOffer.nextHabitId &&
+        current.badHabitId === storedOffer.badHabitId &&
+        current.windowStart === storedOffer.windowStart &&
+        current.windowEnd === storedOffer.windowEnd
+          ? current
+          : storedOffer,
+      );
+      setHabitReviewWindow((current) => {
+        const windowStart = storedOffer.reviewWindowStart ?? null;
+        const windowEnd = storedOffer.reviewWindowEnd ?? null;
+        return current.windowStart === windowStart && current.windowEnd === windowEnd
+          ? current
+          : { windowStart, windowEnd };
       });
       recordTimeLimitedOfferTelemetry({
         offerDate: activeDate,
@@ -2668,8 +2680,20 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       reviewWindowEnd: reviewWindow.windowEnd,
     };
 
-    setTimeLimitedOffer(nextOffer);
-    setHabitReviewWindow(reviewWindow);
+    setTimeLimitedOffer((current) =>
+      current.date === nextOffer.date &&
+      current.nextHabitId === nextOffer.nextHabitId &&
+      current.badHabitId === nextOffer.badHabitId &&
+      current.windowStart === nextOffer.windowStart &&
+      current.windowEnd === nextOffer.windowEnd
+        ? current
+        : nextOffer,
+    );
+    setHabitReviewWindow((current) =>
+      current.windowStart === reviewWindow.windowStart && current.windowEnd === reviewWindow.windowEnd
+        ? current
+        : reviewWindow,
+    );
     saveDraft(timeLimitedOfferScheduleKey(session.user.id, activeDate), nextOffer);
     recordTimeLimitedOfferTelemetry({
       offerDate: activeDate,
@@ -6289,6 +6313,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, []);
 
   const openSuperHabitRoster = useCallback((habitId: string, superHabitId: SuperHabitId | null = null) => {
+    setSuperHabitPromptHabitId(null);
     setSuperHabitSourceHabitId(habitId);
     setSelectedSuperHabitId(superHabitId);
     setSuperHabitRosterOpen(true);
@@ -6313,6 +6338,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setQuickJournalStatus(null);
     setActiveSuperHabitSession({ superHabitId: 'journal', habitId: sourceHabitId });
     setExpandedHabits({ [sourceHabitId]: true });
+    setExpandedHabitSections((current) => ({ ...current, [sourceHabitId]: 'superHabit' }));
     setSuperHabitRosterOpen(false);
     setSuperHabitSourceHabitId(null);
     window.setTimeout(() => {
@@ -6349,27 +6375,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       hold.triggered = true;
       swipeSuppressClickUntilByHabitIdRef.current[habit.id] = Date.now() + 800;
       setSuperHabitHoldHabitId(null);
-      setSuperHabitActivatedHabitId(habit.id);
-      setExpandedHabits({ [habit.id]: true });
+      setSuperHabitPromptHabitId(habit.id);
       triggerCompletionHaptic('medium', { channel: 'habit', minIntervalMs: 120 });
-      const matchedSuperHabit = resolveSuperHabitForTitle(habit.name);
-      if (matchedSuperHabit?.id === 'journal') {
-        void launchJournalSuperHabit(habit.id);
-      } else {
-        openSuperHabitRoster(habit.id, matchedSuperHabit?.id ?? null);
-      }
-      if (superHabitPopTimerRef.current !== null) window.clearTimeout(superHabitPopTimerRef.current);
-      superHabitPopTimerRef.current = window.setTimeout(() => {
-        setSuperHabitActivatedHabitId((current) => current === habit.id ? null : current);
-        superHabitPopTimerRef.current = null;
-      }, 560);
-    }, 650);
+    }, SUPER_HABIT_HOLD_MS);
     superHabitHoldRef.current = hold;
-  }, [cancelSuperHabitHold, launchJournalSuperHabit, openSuperHabitRoster]);
+  }, [cancelSuperHabitHold]);
 
   useEffect(() => () => {
     if (superHabitHoldRef.current) window.clearTimeout(superHabitHoldRef.current.timerId);
-    if (superHabitPopTimerRef.current !== null) window.clearTimeout(superHabitPopTimerRef.current);
   }, []);
 
   useEffect(() => {
@@ -6936,13 +6949,24 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         window.getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-top') || '0',
       );
       const safeAreaTop = Number.isFinite(safeAreaTopValue) ? safeAreaTopValue : 0;
-      const topOffset = Math.max(12, safeAreaTop + 12);
-      const targetTop = targetCard.getBoundingClientRect().top + window.scrollY - topOffset;
-
-      window.scrollTo({
+      const topOffset = Math.max(64, safeAreaTop + 64);
+      const pageScrollTop = Math.max(
+        window.scrollY,
+        document.documentElement.scrollTop,
+        document.body.scrollTop,
+      );
+      const targetTop = targetCard.getBoundingClientRect().top + pageScrollTop - topOffset;
+      const scrollOptions: ScrollToOptions = {
         top: Math.max(0, targetTop),
         behavior: 'smooth',
-      });
+      };
+
+      window.scrollTo(scrollOptions);
+      // The framed PWA preview scrolls BODY while window.scrollY remains zero.
+      // Native/mobile browsers normally use window or the document element.
+      if (document.body.scrollTop > 0 && window.scrollY === 0) {
+        document.body.scrollTo(scrollOptions);
+      }
     });
   }, []);
 
@@ -6954,37 +6978,54 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return;
     }
 
-    setExpandedHabits((current) => {
-      const willExpand = !current[habitId];
-      if (willExpand) {
-        scrollExpandedHabitToViewportTop(habitId);
-      }
-      return willExpand ? { [habitId]: true } : {};
-    });
+    const willExpand = !expandedHabits[habitId];
+    if (willExpand) {
+      setExpandedHabitSections((current) => ({ ...current, [habitId]: null }));
+      scrollExpandedHabitToViewportTop(habitId);
+    }
+    setExpandedHabits(willExpand ? { [habitId]: true } : {});
   };
 
   const isExpandedHabitSectionOpen = useCallback((
     habitId: string,
-    section: 'todayVersion' | 'understand' | 'manage',
-    defaultOpen: boolean,
-  ) => expandedHabitSections[habitId]?.[section] ?? defaultOpen, [expandedHabitSections]);
+    section: HabitDetailSectionKey,
+  ) => expandedHabitSections[habitId] === section, [expandedHabitSections]);
+
+  const scrollHabitSectionIntoReadingPosition = useCallback((
+    habitId: string,
+    section: HabitDetailSectionKey,
+  ) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const target = habitDetailSectionRefs.current[`${habitId}:${section}`];
+        const panel = target?.closest<HTMLElement>('.habit-checklist__details-panel');
+        if (target && panel) {
+          const targetTopWithinPanel =
+            target.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop;
+          panel.scrollTo({
+            top: Math.max(0, targetTopWithinPanel - 10),
+            behavior: 'smooth',
+          });
+          target.querySelector<HTMLButtonElement>('.habit-checklist__detail-block-toggle')?.focus({ preventScroll: true });
+        }
+        scrollExpandedHabitToViewportTop(habitId);
+      });
+    });
+  }, [scrollExpandedHabitToViewportTop]);
 
   const toggleExpandedHabitSection = useCallback((
     habitId: string,
-    section: 'todayVersion' | 'understand' | 'manage',
-    defaultOpen: boolean,
+    section: HabitDetailSectionKey,
   ) => {
-    setExpandedHabitSections((current) => {
-      const currentValue = current[habitId]?.[section] ?? defaultOpen;
-      return {
-        ...current,
-        [habitId]: {
-          ...current[habitId],
-          [section]: !currentValue,
-        },
-      };
-    });
-  }, []);
+    const willOpen = expandedHabitSections[habitId] !== section;
+    setExpandedHabitSections((current) => ({
+      ...current,
+      [habitId]: current[habitId] === section ? null : section,
+    }));
+    if (willOpen) {
+      scrollHabitSectionIntoReadingPosition(habitId, section);
+    }
+  }, [expandedHabitSections, scrollHabitSectionIntoReadingPosition]);
 
   // Toggle whether the always-visible 7-day streak strip shows for a habit, and
   // persist the choice so it survives reloads. Opt-in per habit.
@@ -7018,19 +7059,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setExpandedHabits({ [habitId]: true });
     setExpandedHabitSections((current) => ({
       ...current,
-      [habitId]: {
-        ...current[habitId],
-        todayVersion: true,
-      },
+      [habitId]: 'todayVersion',
     }));
 
     window.requestAnimationFrame(() => {
       const target = habitTodayVersionRefs.current[habitId];
-      target?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       const firstOption = target?.querySelector<HTMLButtonElement>('.habit-checklist__stage-chip:not(:disabled)');
       firstOption?.focus({ preventScroll: true });
     });
-  }, []);
+    scrollHabitSectionIntoReadingPosition(habitId, 'todayVersion');
+  }, [scrollHabitSectionIntoReadingPosition]);
 
   const toggleTodayTodoExpanded = useCallback((todoId: string) => {
     const isCompletedTodo = todayTodos.some((todo) => todo.id === todoId && todo.completed);
@@ -8721,10 +8759,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const isQuestHabit = questHabit?.habitId === habit.id;
             const linkedQuestTags = questHabitTagsByHabitId[habit.id] ?? [];
             const matchedSuperHabit = resolveSuperHabitForTitle(habit.name);
+            const activatedSuperHabit = matchedSuperHabit && canLaunchSuperHabit(matchedSuperHabit)
+              ? matchedSuperHabit
+              : null;
             const habitDisplayName = isPrivateCompactView ? `Private habit ${habitIndex + 1}` : habit.name;
-            const todayVersionOpen = isExpandedHabitSectionOpen(habit.id, 'todayVersion', !isCompleted);
-            const understandOpen = isExpandedHabitSectionOpen(habit.id, 'understand', false);
-            const manageOpen = isExpandedHabitSectionOpen(habit.id, 'manage', true);
+            const superHabitSectionOpen = isExpandedHabitSectionOpen(habit.id, 'superHabit');
+            const coachSectionOpen = isExpandedHabitSectionOpen(habit.id, 'coach');
+            const infoSectionOpen = isExpandedHabitSectionOpen(habit.id, 'info');
+            const todayVersionOpen = isExpandedHabitSectionOpen(habit.id, 'todayVersion');
+            const understandOpen = isExpandedHabitSectionOpen(habit.id, 'understand');
+            const manageOpen = isExpandedHabitSectionOpen(habit.id, 'manage');
+            const superHabitSectionId = `${detailPanelId}-super-habit`;
+            const coachSectionId = `${detailPanelId}-coach`;
+            const infoSectionId = `${detailPanelId}-info`;
             const todayVersionSectionId = `${detailPanelId}-today-version`;
             const understandSectionId = `${detailPanelId}-understand`;
             const manageSectionId = `${detailPanelId}-manage`;
@@ -8749,6 +8796,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   habitCardRefs.current[habit.id] = node;
                 }}
                 tabIndex={-1}
+                style={{ '--super-habit-hold-duration': `${SUPER_HABIT_HOLD_MS}ms` } as CSSProperties}
                 className={`habit-checklist__item ${!scheduledToday ? 'habit-checklist__item--rest' : ''} ${
                   isCompleted ? 'habit-checklist__item--completed' : ''
                 } ${isJustCompleted ? `habit-item--just-completed ${feedbackClassName}` : ''} ${
@@ -8758,9 +8806,30 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 } ${
                   dailyLifeUpgradeHighlightedHabitId === habit.id ? 'habit-card--daily-life-upgrade-target' : ''
                 } ${superHabitHoldHabitId === habit.id ? 'habit-checklist__item--super-habit-charging' : ''} ${
-                  superHabitActivatedHabitId === habit.id ? 'habit-checklist__item--super-habit-activated' : ''
+                  superHabitPromptHabitId === habit.id ? 'habit-checklist__item--super-habit-prompt-open' : ''
                 }`}
+                onContextMenu={(event) => {
+                  if (!isInteractiveHabitChild(event.target)) {
+                    event.preventDefault();
+                  }
+                }}
               >
+                {superHabitPromptHabitId === habit.id ? (
+                  <button
+                    type="button"
+                    className="habit-checklist__super-habit-prompt"
+                    aria-label={`Open ${matchedSuperHabit?.name ?? 'SuperHabits'} for ${habit.name}`}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      openSuperHabitRoster(habit.id, matchedSuperHabit?.id ?? null);
+                    }}
+                  >
+                    <span aria-hidden="true">{matchedSuperHabit?.emoji ?? '✦'}</span>
+                    <strong>{matchedSuperHabit?.name ?? 'SuperHabit'}</strong>
+                    <small>Open tools</small>
+                  </button>
+                ) : null}
                 <div
                   className="habit-checklist__swipe-frame"
                   aria-hidden={isExpanded ? 'true' : undefined}
@@ -8992,11 +9061,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       }}
                       onPointerUpCapture={(event) => cancelSuperHabitHold(event.pointerId)}
                       onPointerCancelCapture={(event) => cancelSuperHabitHold(event.pointerId)}
-                      onContextMenu={(event) => {
-                        if (superHabitHoldHabitId === habit.id || superHabitActivatedHabitId === habit.id) {
-                          event.preventDefault();
-                        }
-                      }}
                       onClick={() => {
                         const suppressUntil = swipeSuppressClickUntilByHabitIdRef.current[habit.id] ?? 0;
                         if (Date.now() < suppressUntil) {
@@ -9176,37 +9240,24 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         >
                           {isQuestHabit ? '★' : '☆'}
                         </button>
-                        <button
-                          type="button"
-                          className={`habit-checklist__super-action-btn${
-                            matchedSuperHabit?.id === 'journal' ? ' habit-checklist__super-action-btn--live' : ''
-                          }`}
-                          aria-label={
-                            matchedSuperHabit?.id === 'journal'
-                              ? `Launch Journaling tool for ${habit.name}`
-                              : matchedSuperHabit
-                                ? `Preview ${matchedSuperHabit.name} SuperHabit for ${habit.name}`
-                                : `Choose a SuperHabit tool for ${habit.name}`
-                          }
-                          title={
-                            matchedSuperHabit?.id === 'journal'
-                              ? 'Launch Journaling'
-                              : matchedSuperHabit
-                                ? `${matchedSuperHabit.name} · Pro demo`
-                                : 'Choose a SuperHabit tool'
-                          }
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            if (matchedSuperHabit?.id === 'journal') {
-                              launchJournalSuperHabit(habit.id);
-                              return;
-                            }
-                            openSuperHabitRoster(habit.id, matchedSuperHabit?.id ?? null);
-                          }}
-                        >
-                          <span aria-hidden="true">{matchedSuperHabit?.emoji ?? '✦'}</span>
-                          <small>Tool</small>
-                        </button>
+                        {activatedSuperHabit ? (
+                          <button
+                            type="button"
+                            className="habit-checklist__super-action-btn habit-checklist__super-action-btn--live"
+                            aria-label={`Launch ${activatedSuperHabit.name} for ${habit.name}`}
+                            title={`Launch ${activatedSuperHabit.name}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              if (activatedSuperHabit.id === 'journal') {
+                                launchJournalSuperHabit(habit.id);
+                                return;
+                              }
+                              openSuperHabitRoster(habit.id, activatedSuperHabit.id);
+                            }}
+                          >
+                            <span aria-hidden="true">{activatedSuperHabit.emoji}</span>
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -9218,111 +9269,196 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   id={detailPanelId}
                 >
                   {matchedSuperHabit?.id === 'journal' ? (
-                    <div
-                      ref={captureJournalToolHost}
-                      className={`habit-super-tool-slot${
-                        activeSuperHabitSession?.habitId === habit.id ? ' habit-super-tool-slot--active' : ''
-                      }`}
-                    >
-                      {activeSuperHabitSession?.habitId !== habit.id ? (
-                        <div className="habit-super-tool-slot__hint">
-                          <span aria-hidden="true">✍️</span>
-                          <div><strong>Journaling SuperHabit</strong><small>Press and hold this habit to open its reflection tool here.</small></div>
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-                  {coachCard ? (
                     <section
-                      className={`habit-checklist__detail-block habit-checklist__coach habit-checklist__coach--${coachCard.state}`}
-                      aria-label="Habit coach"
+                      ref={(node) => {
+                        habitDetailSectionRefs.current[`${habit.id}:superHabit`] = node;
+                      }}
+                      className={`habit-checklist__detail-block habit-checklist__detail-block--super-habit${
+                        superHabitSectionOpen ? ' habit-checklist__detail-block--active' : ''
+                      }`}
+                      aria-label="Journaling SuperHabit"
                     >
-                      <div className="habit-checklist__detail-block-header">
-                        <span className="habit-checklist__coach-badge">
-                          {getHabitHealthBadgeLabel(coachCard.state)}
+                      <button
+                        type="button"
+                        className="habit-checklist__detail-block-header habit-checklist__detail-block-toggle"
+                        aria-expanded={superHabitSectionOpen}
+                        aria-controls={superHabitSectionId}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleExpandedHabitSection(habit.id, 'superHabit');
+                        }}
+                      >
+                        <span className="habit-checklist__section-icon" aria-hidden="true">✍️</span>
+                        <span className="habit-checklist__detail-block-heading-copy">
+                          <span className="habit-checklist__detail-block-label">Journaling SuperHabit</span>
+                          <span className="habit-checklist__section-helper">Open the guided writing tool.</span>
                         </span>
-                        <span className="habit-checklist__detail-block-label">{coachCard.headline}</span>
-                      </div>
-                      <p className="habit-checklist__coach-message">{coachCard.message}</p>
-                      <ul className="habit-checklist__coach-tips">
-                        {coachCard.tips.map((tip) => (
-                          <li key={tip.id} className="habit-checklist__coach-tip">
-                            <span className="habit-checklist__coach-tip-label">{tip.label}</span>
-                            <span className="habit-checklist__coach-tip-detail">{tip.detail}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      {onOpenAiCoach ? (
-                        <button
-                          type="button"
-                          className="habit-checklist__coach-ai-btn"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onOpenAiCoach(coachCard.aiPrompt);
-                          }}
-                        >
-                          Ask the coach for a plan
-                        </button>
-                      ) : null}
-                    </section>
-                  ) : null}
-                  <section className="habit-checklist__detail-block habit-checklist__detail-block--info" aria-label="Habit info">
-                    <div className="habit-checklist__detail-block-header">
-                      <span className="habit-checklist__detail-block-label">Info</span>
-                    </div>
-                    {isPrivateCompactView ? (
-                      <p className="habit-checklist__todo-note-placeholder">Habit details hidden in compact private view.</p>
-                    ) : (
-                      <>
+                        <span className={`habit-checklist__section-chevron ${superHabitSectionOpen ? 'habit-checklist__section-chevron--open' : ''}`} aria-hidden="true" />
+                      </button>
+                      <div
+                        id={superHabitSectionId}
+                        className={`habit-checklist__detail-block-body ${superHabitSectionOpen ? 'habit-checklist__detail-block-body--open' : ''}`}
+                      >
                         <div
-                          className={`habit-checklist__info-grid${
-                            linkedVisionImage ? ' habit-checklist__info-grid--with-image' : ''
+                          ref={captureJournalToolHost}
+                          className={`habit-super-tool-slot${
+                            activeSuperHabitSession?.habitId === habit.id ? ' habit-super-tool-slot--active' : ''
                           }`}
                         >
-                          {linkedVisionImage ? (
-                            <button
-                              type="button"
-                              className="habit-checklist__vision-tile"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setVisionPreviewImage(linkedVisionImage);
-                              }}
-                              aria-label={`View vision board image for ${habitDisplayName}`}
-                            >
-                              <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
-                            </button>
-                          ) : null}
-                          <div className="habit-checklist__info-tile habit-checklist__info-tile--domain">
-                            <span className="habit-checklist__info-tile-label">Life wheel</span>
-                            <span className="habit-checklist__info-tile-value">{domainLabel ?? 'Unassigned'}</span>
-                          </div>
-                          <div className="habit-checklist__info-tile habit-checklist__info-tile--goal">
-                            <span className="habit-checklist__info-tile-label">Goal</span>
-                            <span className="habit-checklist__info-tile-value">{goalLabel}</span>
-                          </div>
-                          {lastCompletedText ? (
-                            <div className="habit-checklist__info-tile habit-checklist__info-tile--last-completed">
-                              <span className="habit-checklist__info-tile-label">Last completed</span>
-                              <span className="habit-checklist__info-tile-value">
-                                {lastCompletedText.replace(/^Last completed\s*/i, '')}
-                              </span>
+                          {activeSuperHabitSession?.habitId !== habit.id ? (
+                            <div className="habit-super-tool-slot__hint">
+                              <span aria-hidden="true">✍️</span>
+                              <div><strong>Journaling SuperHabit</strong><small>Tap the journal icon on the habit to begin.</small></div>
                             </div>
                           ) : null}
                         </div>
-                        {habit.habit_environment ? (
-                          <div className="habit-checklist__environment">
-                            <p className="habit-checklist__environment-label">📍 Where &amp; How</p>
-                            <p className="habit-checklist__environment-text">{habit.habit_environment}</p>
-                          </div>
+                      </div>
+                    </section>
+                  ) : null}
+                  {coachCard ? (
+                    <section
+                      ref={(node) => {
+                        habitDetailSectionRefs.current[`${habit.id}:coach`] = node;
+                      }}
+                      className={`habit-checklist__detail-block habit-checklist__coach habit-checklist__coach--${coachCard.state}${
+                        coachSectionOpen ? ' habit-checklist__detail-block--active' : ''
+                      }`}
+                      aria-label="Habit coach"
+                    >
+                      <button
+                        type="button"
+                        className="habit-checklist__detail-block-header habit-checklist__detail-block-toggle"
+                        aria-expanded={coachSectionOpen}
+                        aria-controls={coachSectionId}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleExpandedHabitSection(habit.id, 'coach');
+                        }}
+                      >
+                        <span className="habit-checklist__coach-badge">
+                          {getHabitHealthBadgeLabel(coachCard.state)}
+                        </span>
+                        <span className="habit-checklist__detail-block-heading-copy">
+                          <span className="habit-checklist__detail-block-label">Habit Coach</span>
+                          <span className="habit-checklist__section-helper">{coachCard.headline}</span>
+                        </span>
+                        <span className={`habit-checklist__section-chevron ${coachSectionOpen ? 'habit-checklist__section-chevron--open' : ''}`} aria-hidden="true" />
+                      </button>
+                      <div
+                        id={coachSectionId}
+                        className={`habit-checklist__detail-block-body ${coachSectionOpen ? 'habit-checklist__detail-block-body--open' : ''}`}
+                      >
+                        <p className="habit-checklist__coach-message">{coachCard.message}</p>
+                        <ul className="habit-checklist__coach-tips">
+                          {coachCard.tips.map((tip) => (
+                            <li key={tip.id} className="habit-checklist__coach-tip">
+                              <span className="habit-checklist__coach-tip-label">{tip.label}</span>
+                              <span className="habit-checklist__coach-tip-detail">{tip.detail}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        {onOpenAiCoach ? (
+                          <button
+                            type="button"
+                            className="habit-checklist__coach-ai-btn"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onOpenAiCoach(coachCard.aiPrompt);
+                            }}
+                          >
+                            Ask the coach for a plan
+                          </button>
                         ) : null}
-                      </>
-                    )}
+                      </div>
+                    </section>
+                  ) : null}
+                  <section
+                    ref={(node) => {
+                      habitDetailSectionRefs.current[`${habit.id}:info`] = node;
+                    }}
+                    className={`habit-checklist__detail-block habit-checklist__detail-block--info${
+                      infoSectionOpen ? ' habit-checklist__detail-block--active' : ''
+                    }`}
+                    aria-label="Habit info"
+                  >
+                    <button
+                      type="button"
+                      className="habit-checklist__detail-block-header habit-checklist__detail-block-toggle"
+                      aria-expanded={infoSectionOpen}
+                      aria-controls={infoSectionId}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleExpandedHabitSection(habit.id, 'info');
+                      }}
+                    >
+                      <span className="habit-checklist__section-icon" aria-hidden="true">ℹ️</span>
+                      <span className="habit-checklist__detail-block-heading-copy">
+                        <span className="habit-checklist__detail-block-label">Habit Info</span>
+                        <span className="habit-checklist__section-helper">Goal, life area, environment and history.</span>
+                      </span>
+                      <span className={`habit-checklist__section-chevron ${infoSectionOpen ? 'habit-checklist__section-chevron--open' : ''}`} aria-hidden="true" />
+                    </button>
+                    <div
+                      id={infoSectionId}
+                      className={`habit-checklist__detail-block-body ${infoSectionOpen ? 'habit-checklist__detail-block-body--open' : ''}`}
+                    >
+                      {isPrivateCompactView ? (
+                        <p className="habit-checklist__todo-note-placeholder">Habit details hidden in compact private view.</p>
+                      ) : (
+                        <>
+                          <div
+                            className={`habit-checklist__info-grid${
+                              linkedVisionImage ? ' habit-checklist__info-grid--with-image' : ''
+                            }`}
+                          >
+                            {linkedVisionImage ? (
+                              <button
+                                type="button"
+                                className="habit-checklist__vision-tile"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setVisionPreviewImage(linkedVisionImage);
+                                }}
+                                aria-label={`View vision board image for ${habitDisplayName}`}
+                              >
+                                <img src={linkedVisionImage.publicUrl} alt="" aria-hidden="true" />
+                              </button>
+                            ) : null}
+                            <div className="habit-checklist__info-tile habit-checklist__info-tile--domain">
+                              <span className="habit-checklist__info-tile-label">Life wheel</span>
+                              <span className="habit-checklist__info-tile-value">{domainLabel ?? 'Unassigned'}</span>
+                            </div>
+                            <div className="habit-checklist__info-tile habit-checklist__info-tile--goal">
+                              <span className="habit-checklist__info-tile-label">Goal</span>
+                              <span className="habit-checklist__info-tile-value">{goalLabel}</span>
+                            </div>
+                            {lastCompletedText ? (
+                              <div className="habit-checklist__info-tile habit-checklist__info-tile--last-completed">
+                                <span className="habit-checklist__info-tile-label">Last completed</span>
+                                <span className="habit-checklist__info-tile-value">
+                                  {lastCompletedText.replace(/^Last completed\s*/i, '')}
+                                </span>
+                              </div>
+                            ) : null}
+                          </div>
+                          {habit.habit_environment ? (
+                            <div className="habit-checklist__environment">
+                              <p className="habit-checklist__environment-label">📍 Where &amp; How</p>
+                              <p className="habit-checklist__environment-text">{habit.habit_environment}</p>
+                            </div>
+                          ) : null}
+                        </>
+                      )}
+                    </div>
                   </section>
                   <section
                     ref={(node) => {
                       habitTodayVersionRefs.current[habit.id] = node;
+                      habitDetailSectionRefs.current[`${habit.id}:todayVersion`] = node;
                     }}
-                    className={`habit-checklist__detail-block habit-checklist__detail-block--progress habit-checklist__detail-block--kind-${progressContent.chipVariant}`}
+                    className={`habit-checklist__detail-block habit-checklist__detail-block--progress habit-checklist__detail-block--kind-${progressContent.chipVariant}${
+                      todayVersionOpen ? ' habit-checklist__detail-block--active' : ''
+                    }`}
                     aria-label={progressContent.ariaLabel}
                   >
                     <button
@@ -9332,7 +9468,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       aria-controls={todayVersionSectionId}
                       onClick={(event) => {
                         event.stopPropagation();
-                        toggleExpandedHabitSection(habit.id, 'todayVersion', !isCompleted);
+                        toggleExpandedHabitSection(habit.id, 'todayVersion');
                       }}
                     >
                       <span className="habit-checklist__progress-icon">
@@ -9497,7 +9633,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   </section>
                   {!isPrivateCompactView ? (
                     <section
-                      className="habit-checklist__detail-block habit-checklist__detail-block--understand"
+                      ref={(node) => {
+                        habitDetailSectionRefs.current[`${habit.id}:understand`] = node;
+                      }}
+                      className={`habit-checklist__detail-block habit-checklist__detail-block--understand${
+                        understandOpen ? ' habit-checklist__detail-block--active' : ''
+                      }`}
                       aria-label="Understand and improve this habit"
                     >
                       <button
@@ -9507,7 +9648,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         aria-controls={understandSectionId}
                         onClick={(event) => {
                           event.stopPropagation();
-                          toggleExpandedHabitSection(habit.id, 'understand', false);
+                          toggleExpandedHabitSection(habit.id, 'understand');
                         }}
                       >
                         <span className="habit-checklist__section-icon" aria-hidden="true">🧠</span>
@@ -9556,7 +9697,15 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       </div>
                     </section>
                   ) : null}
-                  <section className="habit-checklist__detail-block habit-checklist__detail-block--manage" aria-label="Habit actions">
+                  <section
+                    ref={(node) => {
+                      habitDetailSectionRefs.current[`${habit.id}:manage`] = node;
+                    }}
+                    className={`habit-checklist__detail-block habit-checklist__detail-block--manage${
+                      manageOpen ? ' habit-checklist__detail-block--active' : ''
+                    }`}
+                    aria-label="Habit actions"
+                  >
                     <button
                       type="button"
                       className="habit-checklist__detail-block-header habit-checklist__detail-block-toggle"
@@ -9564,12 +9713,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       aria-controls={manageSectionId}
                       onClick={(event) => {
                         event.stopPropagation();
-                        toggleExpandedHabitSection(habit.id, 'manage', true);
+                        toggleExpandedHabitSection(habit.id, 'manage');
                       }}
                     >
                       <span className="habit-checklist__section-icon habit-checklist__section-icon--manage" aria-hidden="true">⚙️</span>
                       <span className="habit-checklist__detail-block-heading-copy">
                         <span className="habit-checklist__detail-block-label">Manage</span>
+                        <span className="habit-checklist__section-helper">Alerts, editing, streaks and habit actions.</span>
                       </span>
                       <span className={`habit-checklist__section-chevron ${manageOpen ? 'habit-checklist__section-chevron--open' : ''}`} aria-hidden="true" />
                     </button>
@@ -12546,6 +12696,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     });
   }, []);
 
+  const dailyLifeUpgradeHistoricalLogs = useMemo(
+    () => historicalLogs.map((log) => ({ habit_id: log.habit_id, completed: log.completed })),
+    [historicalLogs],
+  );
+
   const {
     dailyLifeUpgradeCandidate,
     showDailyLifeUpgradeModal,
@@ -12572,7 +12727,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   } = useDailyLifeUpgradeFlow({
     userId: session?.user?.id,
     habits,
-    historicalLogs: historicalLogs.map((log) => ({ habit_id: log.habit_id, completed: log.completed })),
+    historicalLogs: dailyLifeUpgradeHistoricalLogs,
     sortedHabits,
     isConfigured,
     isDemoExperience,

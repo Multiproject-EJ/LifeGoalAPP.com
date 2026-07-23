@@ -1,575 +1,975 @@
-/* The Fortune Engine — mobile-first event mini-game (lucky_spin slot). */
+/* The Fortune Engine — quiet, game-first presentation for the lucky_spin slot. */
 
 .fortune-engine {
+  --fortune-bg: #07101f;
+  --fortune-surface: rgba(14, 27, 49, 0.82);
+  --fortune-surface-strong: rgba(17, 33, 58, 0.96);
+  --fortune-line: rgba(181, 207, 255, 0.14);
+  --fortune-text: #f5f7ff;
+  --fortune-muted: #9dacc5;
+  --fortune-gold: #ffd76a;
+  --fortune-blue: #78b8ff;
+  --fortune-mint: #65e6ca;
+  --fortune-red: #ff7183;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  /* The launcher overlay is `position: fixed; inset: 0; overflow: hidden`,
-     so this element must own the scroll: a fixed height (not min-height)
-     keeps it viewport-sized and lets overflow-y actually engage. */
-  height: 100%;
   width: 100%;
+  height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  background:
-    radial-gradient(ellipse at 50% -10%, rgba(94, 130, 212, 0.35), transparent 55%),
-    linear-gradient(180deg, #070d1d 0%, #0b1c33 60%, #101f3a 100%);
-  color: #e7f0ff;
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-  padding: max(12px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
   box-sizing: border-box;
+  padding: max(14px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+  color: var(--fortune-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(95, 94, 255, 0.22), transparent 34%),
+    radial-gradient(circle at 82% 20%, rgba(35, 184, 200, 0.13), transparent 29%),
+    radial-gradient(circle at 50% 105%, rgba(55, 93, 170, 0.2), transparent 42%),
+    var(--fortune-bg);
 }
 
-/* Final-24h instability: the sky itself starts to flicker. */
+.fortune-engine::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.33;
+  background-image:
+    radial-gradient(circle at 15% 28%, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle at 76% 12%, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle at 86% 64%, #fff 0 1px, transparent 1.5px),
+    radial-gradient(circle at 32% 81%, #fff 0 1px, transparent 1.5px);
+}
+
 .fortune-engine--unstable {
   background:
-    radial-gradient(ellipse at 50% -10%, rgba(212, 94, 105, 0.35), transparent 55%),
-    linear-gradient(180deg, #150a1d 0%, #241033 60%, #1a1f3a 100%);
-  animation: fortune-unstable-sky 3.2s ease-in-out infinite;
-}
-
-@keyframes fortune-unstable-sky {
-  0%, 100% { filter: none; }
-  50% { filter: brightness(1.12) saturate(1.15); }
+    radial-gradient(circle at 18% 12%, rgba(255, 80, 111, 0.22), transparent 34%),
+    radial-gradient(circle at 82% 20%, rgba(140, 64, 194, 0.18), transparent 29%),
+    radial-gradient(circle at 50% 105%, rgba(55, 93, 170, 0.2), transparent 42%),
+    #100b1c;
 }
 
 .fortune-engine__panel {
-  width: min(480px, 100%);
-  background: rgba(11, 28, 51, 0.88);
-  border: 1px solid rgba(124, 196, 255, 0.25);
-  border-radius: 18px;
-  padding: 18px 16px;
-  margin: 8px auto;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  position: relative;
+  z-index: 1;
+  width: min(500px, 100%);
+  box-sizing: border-box;
+  margin: auto;
+  padding: 24px;
+  border: 1px solid var(--fortune-line);
+  border-radius: 26px;
+  background: linear-gradient(160deg, rgba(20, 38, 67, 0.9), rgba(8, 20, 38, 0.92));
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.42);
   text-align: center;
+  backdrop-filter: blur(18px);
+}
+
+.fortune-engine__panel--entry {
+  width: min(560px, 100%);
+  margin-block: 0;
+}
+
+.fortune-engine__entry-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
 }
 
 .fortune-engine__eyebrow {
   margin: 0 0 4px;
-  font-size: 12px;
-  letter-spacing: 0.14em;
+  color: var(--fortune-blue);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #7cc4ff;
 }
 
 .fortune-engine__title {
-  margin: 0 0 8px;
-  font-size: 24px;
-  color: #f3d16b;
+  margin: 0 0 10px;
+  color: var(--fortune-text);
+  font-size: clamp(25px, 6vw, 32px);
+  font-weight: 780;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.fortune-engine__close {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  padding: 0 0 3px;
+  border: 1px solid var(--fortune-line);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.055);
+  color: #c9d3e5;
+  font-size: 27px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .fortune-engine__countdown {
-  margin: 0 0 10px;
-  font-size: 13px;
-  color: #9db4d8;
+  width: fit-content;
+  margin: 3px 0 14px;
+  padding: 5px 9px;
+  border: 1px solid var(--fortune-line);
+  border-radius: 999px;
+  color: var(--fortune-muted);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 12px;
 }
 
 .fortune-engine__countdown--unstable {
-  color: #f8a5a5;
-  animation: fortune-unstable-pulse 1.4s ease-in-out infinite;
+  color: #ffb1bc;
+  border-color: rgba(255, 113, 131, 0.3);
+  background: rgba(255, 113, 131, 0.09);
 }
 
-@keyframes fortune-unstable-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
+.fortune-engine__hero {
+  position: relative;
+  overflow: hidden;
+  margin: 2px 0 12px;
+  padding: 16px 14px 14px;
+  border: 1px solid rgba(129, 157, 255, 0.17);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 33%, rgba(110, 114, 255, 0.17), transparent 45%),
+    rgba(5, 15, 30, 0.54);
 }
 
-.fortune-engine__copy {
-  margin: 0 0 12px;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #c6d6ef;
-}
-
-/* ── Fortune Core 3×3 fragment grid ── */
-
-.fortune-engine__core {
+.fortune-engine__machine-mark {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(3, 46px);
-  gap: 6px;
-  justify-content: center;
-  margin: 10px auto 12px;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 8px;
+  border: 2px solid rgba(120, 184, 255, 0.46);
+  border-radius: 50%;
+  box-shadow: 0 0 32px rgba(96, 116, 255, 0.2), inset 0 0 24px rgba(101, 230, 202, 0.08);
 }
 
-.fortune-engine__core-cell {
-  width: 46px;
-  height: 46px;
+.fortune-engine__machine-mark::before,
+.fortune-engine__machine-mark::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+}
+
+.fortune-engine__machine-mark::before {
+  inset: 10px;
+  border: 5px dotted rgba(255, 215, 106, 0.75);
+  animation: fortune-orbit 14s linear infinite;
+}
+
+.fortune-engine__machine-mark::after {
+  inset: 27px;
+  border: 1px solid rgba(101, 230, 202, 0.75);
+  box-shadow: 0 0 14px rgba(101, 230, 202, 0.28);
+}
+
+.fortune-engine__machine-mark span {
+  color: var(--fortune-gold);
+  font-size: 25px;
+  text-shadow: 0 0 16px rgba(255, 215, 106, 0.72);
+}
+
+@keyframes fortune-orbit {
+  to { transform: rotate(360deg); }
+}
+
+.fortune-engine__hero h3 {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+
+.fortune-engine__hero > p {
+  margin: 3px 0 13px;
+  color: var(--fortune-muted);
+  font-size: 14px;
+}
+
+.fortune-engine__quick-guide {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.fortune-engine__quick-guide span {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
-  border-radius: 10px;
-  background: rgba(15, 34, 62, 0.9);
-  border: 1px solid rgba(124, 196, 255, 0.18);
-  opacity: 0.65;
+  gap: 5px;
+  min-width: 0;
+  padding: 8px 5px;
+  border-radius: 11px;
+  color: #dce5f4;
+  background: rgba(255, 255, 255, 0.055);
+  font-size: 11px;
+  font-weight: 680;
+  white-space: nowrap;
 }
 
-.fortune-engine__core-cell--lit {
-  opacity: 1;
-  background: rgba(35, 60, 100, 0.95);
-  border-color: rgba(243, 209, 107, 0.65);
-  box-shadow: 0 0 14px rgba(243, 209, 107, 0.35);
+.fortune-engine__quick-guide b {
+  font-size: 14px;
 }
 
-.fortune-engine__core-cell--new {
-  animation: fortune-fragment-pop 0.9s ease;
+.fortune-engine__launch-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(155px, 0.75fr);
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255, 215, 106, 0.18);
+  border-radius: 17px;
+  background: rgba(255, 215, 106, 0.055);
 }
 
-@keyframes fortune-fragment-pop {
-  0% { transform: scale(0.4); box-shadow: 0 0 30px rgba(243, 209, 107, 0.9); }
-  60% { transform: scale(1.2); }
-  100% { transform: scale(1); }
-}
-
-/* ── Reward track ── */
-
-.fortune-engine__track {
-  margin: 12px 0;
+.fortune-engine__launch-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
   text-align: left;
 }
 
+.fortune-engine__launch-meta span:first-child {
+  color: var(--fortune-text);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.fortune-engine__launch-meta span:last-child:not(:first-child) {
+  color: var(--fortune-muted);
+  font-size: 11px;
+}
+
+.fortune-engine__progress-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 10px;
+}
+
+.fortune-engine__progress-card {
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 13px;
+  border: 1px solid var(--fortune-line);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.035);
+  text-align: left;
+}
+
+.fortune-engine__section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: #dfe7f5;
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.fortune-engine__section-heading strong {
+  color: var(--fortune-gold);
+  font-size: 12px;
+}
+
+.fortune-engine__progress-card > p {
+  margin: 7px 0 0;
+  color: var(--fortune-muted);
+  font-size: 10px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+/* Fortune Core */
+.fortune-engine__core {
+  display: grid;
+  grid-template-columns: repeat(3, 32px);
+  justify-content: center;
+  gap: 5px;
+  margin: 0 auto;
+}
+
+.fortune-engine__core-cell {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(158, 180, 219, 0.13);
+  border-radius: 9px;
+  color: #56647a;
+  background: rgba(2, 10, 23, 0.36);
+  font-size: 15px;
+  opacity: 0.75;
+}
+
+.fortune-engine__core-cell--lit {
+  color: white;
+  opacity: 1;
+  border-color: rgba(255, 215, 106, 0.52);
+  background: linear-gradient(145deg, rgba(90, 93, 170, 0.48), rgba(255, 215, 106, 0.11));
+  box-shadow: 0 0 12px rgba(255, 215, 106, 0.16);
+}
+
+.fortune-engine__core-cell--new {
+  animation: fortune-fragment-pop 0.8s cubic-bezier(.2, .9, .3, 1.25);
+}
+
+@keyframes fortune-fragment-pop {
+  0% { transform: scale(0.35); box-shadow: 0 0 28px rgba(255, 215, 106, 0.9); }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Compact reward path */
 .fortune-engine__track-bar {
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(15, 34, 62, 0.9);
+  height: 7px;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background: rgba(2, 10, 23, 0.5);
 }
 
 .fortune-engine__track-fill {
   height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #5eead4, #f3d16b);
-  transition: width 0.5s ease;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5d77ff, var(--fortune-mint), var(--fortune-gold));
+  box-shadow: 0 0 12px rgba(101, 230, 202, 0.26);
+  transition: width 0.45s ease;
+}
+
+.fortune-engine__claim-stack {
+  display: grid;
+  gap: 6px;
+}
+
+.fortune-engine__next-reward {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+}
+
+.fortune-engine__next-reward > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fortune-engine__next-reward small {
+  color: var(--fortune-muted);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.fortune-engine__next-reward strong {
+  overflow: hidden;
+  color: #eef3ff;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fortune-engine__next-reward > b {
+  flex: 0 0 auto;
+  color: var(--fortune-mint);
+  font-size: 10px;
+}
+
+.fortune-engine__next-reward--ready {
+  padding: 6px 7px;
+  border: 1px solid rgba(101, 230, 202, 0.22);
+  border-radius: 10px;
+  background: rgba(101, 230, 202, 0.06);
+}
+
+.fortune-engine__track-complete {
+  color: var(--fortune-mint) !important;
+  font-weight: 700;
+}
+
+.fortune-engine__track-details {
+  margin-top: 9px;
+  border-top: 1px solid var(--fortune-line);
+}
+
+.fortune-engine__track-details summary,
+.fortune-engine__rules-details summary {
+  padding-top: 9px;
+  color: var(--fortune-muted);
+  font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+  user-select: none;
 }
 
 .fortune-engine__track-nodes {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 168px;
+  display: grid;
+  gap: 3px;
+  max-height: 152px;
   overflow-y: auto;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
 }
 
 .fortune-engine__track-node {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  padding: 5px 8px;
-  border-radius: 8px;
-  background: rgba(15, 34, 62, 0.7);
-}
-
-.fortune-engine__track-node--claimable {
-  background: rgba(94, 234, 212, 0.14);
-  border: 1px solid rgba(94, 234, 212, 0.5);
+  gap: 6px;
+  padding: 5px 6px;
+  border-radius: 7px;
+  color: #b5c1d4;
+  background: rgba(1, 8, 18, 0.25);
+  font-size: 9px;
 }
 
 .fortune-engine__track-node--claimed {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
-.fortune-engine__track-node-points {
-  min-width: 40px;
-  font-weight: 700;
-  color: #7cc4ff;
+.fortune-engine__track-node--claimable {
+  color: var(--fortune-mint);
+  background: rgba(101, 230, 202, 0.07);
+}
+
+.fortune-engine__track-node-state {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .fortune-engine__track-node-label {
   flex: 1;
-  color: #dbe7fb;
 }
 
-.fortune-engine__track-node-state {
-  font-size: 13px;
+.fortune-engine__track-node-points {
+  color: var(--fortune-muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.fortune-engine__track-points {
+/* Secondary information */
+.fortune-engine__records {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 11px 0 0;
+}
+
+.fortune-engine__records span {
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #cdd7e8;
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 10px;
+}
+
+.fortune-engine__rules-details {
   margin: 6px 0 0;
-  font-size: 12px;
-  color: #9db4d8;
-  text-align: center;
+  text-align: left;
 }
-
-/* ── Rules / notes ── */
 
 .fortune-engine__rules {
-  list-style: none;
-  margin: 0 0 12px;
-  padding: 0;
-  text-align: left;
-  font-size: 13px;
-  line-height: 1.55;
-  color: #c6d6ef;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0 0 0 18px;
+  color: #b8c5d8;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
-/* Collapsible "How it works" — open on the very first visit, tucked away after. */
-.fortune-engine__rules-details {
-  margin: 0 0 12px;
-  text-align: left;
-}
-
-.fortune-engine__rules-details summary {
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  color: #7cc4ff;
-  padding: 6px 0;
-  user-select: none;
-}
-
-.fortune-engine__rules-details[open] summary {
-  margin-bottom: 6px;
-}
-
-.fortune-engine__best-note {
-  margin: 6px 0;
+.fortune-engine__copy {
+  margin: 0 0 14px;
+  color: var(--fortune-muted);
   font-size: 14px;
-  font-weight: 600;
-  color: #ffe9a8;
-}
-
-.fortune-engine__streak-note {
-  margin: 6px 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: #fca5a5;
-}
-
-.fortune-engine__ticket-note {
-  margin: 0 0 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #f3d16b;
-}
-
-.fortune-engine__golden-chip {
-  color: #ffe9a8;
+  line-height: 1.45;
 }
 
 .fortune-engine__claim-note,
-.fortune-engine__fragment-note {
-  margin: 6px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #5eead4;
+.fortune-engine__fragment-note,
+.fortune-engine__best-note,
+.fortune-engine__trophy {
+  margin: 10px 0;
+  color: var(--fortune-mint);
+  font-size: 13px;
+  font-weight: 720;
 }
 
-.fortune-engine__trophy {
-  margin: 8px 0 12px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #ffe9a8;
+.fortune-engine__trophy,
+.fortune-engine__best-note {
+  color: var(--fortune-gold);
 }
 
 .fortune-engine__finale-callout {
-  margin: 8px 0 12px;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(124, 196, 255, 0.5);
-  background: rgba(124, 196, 255, 0.1);
-  font-size: 14px;
+  margin: 0 0 12px;
+  padding: 13px;
+  border: 1px solid rgba(101, 230, 202, 0.32);
+  border-radius: 17px;
+  background: linear-gradient(135deg, rgba(101, 230, 202, 0.1), rgba(100, 103, 255, 0.11));
+}
+
+.fortune-engine__finale-callout > strong {
+  display: block;
+  color: var(--fortune-mint);
+  font-size: 15px;
 }
 
 .fortune-engine__finale-callout p {
-  margin: 0 0 8px;
+  margin: 3px 0 10px;
+  color: #c8d3e5;
+  font-size: 12px;
 }
 
-.fortune-engine__finale-retry {
-  color: #f8a5a5;
-  font-size: 13px;
-}
-
-/* ── Buttons ── */
-
+/* Buttons */
 .fortune-engine__actions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 8px;
-}
-
-/* Entry/results panels can be taller than the viewport; keep the primary
-   CTA pinned to the bottom of the scrollport so it is always reachable. */
-.fortune-engine__actions--sticky {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  margin: 0 -16px -18px;
-  padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(180deg, rgba(11, 28, 51, 0) 0%, rgba(11, 28, 51, 0.97) 32%);
-  border-radius: 0 0 18px 18px;
+  margin-top: 14px;
 }
 
 .fortune-engine__btn {
+  min-height: 44px;
   appearance: none;
-  border: 1px solid rgba(124, 196, 255, 0.4);
-  background: rgba(15, 34, 62, 0.9);
-  color: #e7f0ff;
-  border-radius: 12px;
-  padding: 12px 16px;
-  font-size: 15px;
-  font-weight: 600;
+  box-sizing: border-box;
+  padding: 11px 15px;
+  border: 1px solid rgba(158, 184, 230, 0.24);
+  border-radius: 13px;
+  color: var(--fortune-text);
+  background: rgba(255, 255, 255, 0.055);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 720;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
   touch-action: manipulation;
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
 }
 
 .fortune-engine__btn:active {
-  transform: scale(0.97);
+  transform: scale(0.975);
 }
 
 .fortune-engine__btn:disabled {
-  opacity: 0.45;
+  opacity: 0.42;
   cursor: not-allowed;
 }
 
 .fortune-engine__btn--primary {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-  border-color: rgba(124, 196, 255, 0.7);
-  box-shadow: 0 6px 22px rgba(37, 99, 235, 0.4);
+  border-color: rgba(125, 161, 255, 0.65);
+  background: linear-gradient(135deg, #5268e8, #7d52dc);
+  box-shadow: 0 8px 24px rgba(79, 90, 214, 0.24);
 }
 
 .fortune-engine__btn--golden {
-  background: linear-gradient(135deg, #b98a12, #f3d16b);
-  color: #241a02;
-  border-color: rgba(243, 209, 107, 0.9);
-  box-shadow: 0 6px 22px rgba(243, 209, 107, 0.35);
+  border-color: rgba(255, 220, 126, 0.8);
+  color: #1e1909;
+  background: linear-gradient(135deg, #f3c857, #ffe8a3);
+  box-shadow: 0 8px 25px rgba(243, 200, 87, 0.2);
+}
+
+.fortune-engine__btn--launch {
+  width: 100%;
+  min-height: 48px;
+  font-size: 15px;
 }
 
 .fortune-engine__btn--finale {
   width: 100%;
-  background: linear-gradient(135deg, #0ea5e9, #5eead4);
-  color: #04222b;
-  border-color: rgba(94, 234, 212, 0.9);
+  border-color: rgba(101, 230, 202, 0.72);
+  color: #041c1b;
+  background: linear-gradient(135deg, #62d9c0, #99f3e0);
 }
 
 .fortune-engine__btn--quiet {
-  background: rgba(15, 34, 62, 0.65);
+  min-height: 38px;
+  padding: 8px 13px;
+  color: #aebdd2;
+  background: transparent;
+  font-size: 12px;
+}
+
+.fortune-engine__btn--text {
+  min-height: 34px;
+  padding: 6px 10px;
+  border-color: transparent;
+  color: var(--fortune-muted);
+  background: transparent;
+  font-size: 12px;
 }
 
 .fortune-engine__btn--claim {
-  padding: 5px 10px;
-  font-size: 12px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #059669, #34d399);
-  border-color: rgba(52, 211, 153, 0.8);
-  color: #04220f;
+  min-height: 30px;
+  padding: 5px 9px;
+  border-color: rgba(101, 230, 202, 0.5);
+  color: #061c19;
+  background: var(--fortune-mint);
+  font-size: 10px;
 }
 
-/* ── Play area (spin / rings / finale) ── */
-
+/* Active play */
 .fortune-engine__play-area {
-  width: min(480px, 100%);
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  margin: 4px auto;
+  width: min(460px, 100%);
+  min-height: 100%;
+  box-sizing: border-box;
+  gap: 8px;
+  margin: 0 auto;
 }
 
 .fortune-engine__hud {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   width: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
+  gap: 7px;
 }
 
 .fortune-engine__hud-stat {
-  flex: 1;
-  background: rgba(11, 28, 51, 0.85);
-  border: 1px solid rgba(124, 196, 255, 0.22);
-  border-radius: 10px;
-  padding: 6px 4px;
+  min-width: 0;
+  padding: 7px 5px;
+  border: 1px solid var(--fortune-line);
+  border-radius: 12px;
+  background: var(--fortune-surface);
   text-align: center;
+  backdrop-filter: blur(12px);
 }
 
 .fortune-engine__hud-label {
   display: block;
-  font-size: 10px;
+  margin-bottom: 1px;
+  color: var(--fortune-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #9db4d8;
 }
 
 .fortune-engine__hud-value {
   display: block;
-  font-size: 16px;
-  font-weight: 700;
-  color: #f3d16b;
+  overflow: hidden;
+  color: var(--fortune-text);
+  font-size: 17px;
+  font-weight: 780;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .fortune-engine__hud-value--hazard {
-  color: #f87171;
+  color: var(--fortune-red);
   font-size: 13px;
+  letter-spacing: 0.08em;
 }
 
-.fortune-engine__golden-banner {
+.fortune-engine__golden-banner,
+.fortune-engine__combo,
+.fortune-engine__danger-warning {
   margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: #ffe9a8;
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: var(--fortune-gold);
+  background: rgba(255, 215, 106, 0.08);
+  font-size: 11px;
+  font-weight: 720;
+  text-align: center;
 }
 
-/* Perfect-tap combo readout: pops on every stack (key remount retriggers). */
 .fortune-engine__combo {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: #5eead4;
-  animation: fortune-combo-pop 0.3s ease;
-}
-
-@keyframes fortune-combo-pop {
-  0% { transform: scale(0.7); opacity: 0.4; }
-  60% { transform: scale(1.15); }
-  100% { transform: scale(1); opacity: 1; }
+  color: var(--fortune-mint);
+  background: rgba(101, 230, 202, 0.08);
+  animation: fortune-combo-pop 0.28s ease;
 }
 
 .fortune-engine__danger-warning {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: #f87171;
-  animation: fortune-unstable-pulse 0.9s ease-in-out infinite;
+  color: #ffc0c8;
+  background: rgba(255, 113, 131, 0.11);
+}
+
+@keyframes fortune-combo-pop {
+  0% { transform: scale(0.75); opacity: 0.3; }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .fortune-engine__route-banner {
   position: absolute;
-  top: 50%;
+  top: 48%;
   left: 50%;
-  transform: translate(-50%, -50%);
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: min(340px, 86vw);
-  padding: 14px;
-  border-radius: 14px;
-  border: 2px solid;
-  background: rgba(7, 13, 29, 0.95);
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.6);
-  animation: fortune-banner-in 0.35s ease;
+  gap: 12px;
+  width: min(300px, 82vw);
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border: 1px solid;
+  border-radius: 17px;
+  background: rgba(7, 16, 31, 0.95);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.58);
   text-align: left;
+  transform: translate(-50%, -50%);
+  animation: fortune-banner-in 0.3s ease;
+  backdrop-filter: blur(18px);
 }
 
 @keyframes fortune-banner-in {
-  from { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+  from { transform: translate(-50%, -50%) scale(0.82); opacity: 0; }
   to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 }
 
 .fortune-engine__route-icon {
-  font-size: 34px;
+  font-size: 31px;
 }
 
 .fortune-engine__route-name {
   margin: 0;
-  font-size: 17px;
-  font-weight: 700;
-  color: #f3d16b;
+  color: var(--fortune-text);
+  font-size: 16px;
+  font-weight: 760;
 }
 
 .fortune-engine__route-flavor {
   margin: 2px 0 0;
-  font-size: 13px;
-  color: #c6d6ef;
+  color: var(--fortune-muted);
+  font-size: 11px;
 }
 
 .fortune-engine__canvas {
-  width: min(340px, 92vw);
+  display: block;
+  width: min(340px, 89vw, calc(100dvh - 245px));
+  min-width: min(250px, 78vw);
   height: auto;
   aspect-ratio: 1;
+  border: 1px solid rgba(124, 157, 255, 0.16);
   border-radius: 50%;
-  box-shadow: 0 0 40px rgba(37, 99, 235, 0.35);
-  touch-action: manipulation;
+  box-shadow: 0 0 44px rgba(78, 94, 224, 0.2);
   cursor: pointer;
+  touch-action: manipulation;
 }
 
-/* One hazard from a crush: the ring itself throbs red. */
 .fortune-engine__canvas--danger {
   animation: fortune-danger-glow 0.9s ease-in-out infinite;
 }
 
 @keyframes fortune-danger-glow {
-  0%, 100% { box-shadow: 0 0 40px rgba(248, 113, 113, 0.4); }
-  50% { box-shadow: 0 0 60px rgba(248, 113, 113, 0.8); }
+  0%, 100% { box-shadow: 0 0 35px rgba(255, 113, 131, 0.22); }
+  50% { box-shadow: 0 0 55px rgba(255, 113, 131, 0.52); }
 }
 
 .fortune-engine__controls {
-  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  width: 100%;
+  gap: 7px;
+}
+
+.fortune-engine__loot-pill {
+  display: flex;
+  gap: 12px;
+  padding: 5px 11px;
+  border: 1px solid var(--fortune-line);
+  border-radius: 999px;
+  color: #dbe4f3;
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .fortune-engine__hint {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   margin: 0;
-  font-size: 13px;
-  color: #9db4d8;
+  color: var(--fortune-muted);
+  font-size: 11px;
   text-align: center;
 }
 
-/* ── Decision + results ── */
+.fortune-engine__hint strong {
+  color: #e8eef9;
+  font-size: 14px;
+}
+
+/* Checkpoint and results */
+.fortune-engine__decision-status {
+  margin: -2px 0 15px;
+  color: var(--fortune-muted);
+  font-size: 12px;
+}
+
+.fortune-engine__choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.fortune-engine__choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 144px;
+  padding: 16px;
+  border: 1px solid var(--fortune-line);
+  border-radius: 18px;
+  color: var(--fortune-text);
+  background: rgba(255, 255, 255, 0.04);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.fortune-engine__choice--safe {
+  border-color: rgba(101, 230, 202, 0.28);
+  background: linear-gradient(150deg, rgba(101, 230, 202, 0.12), rgba(101, 230, 202, 0.035));
+}
+
+.fortune-engine__choice--risk {
+  border-color: rgba(161, 124, 255, 0.34);
+  background: linear-gradient(150deg, rgba(137, 99, 231, 0.15), rgba(137, 99, 231, 0.04));
+}
+
+.fortune-engine__choice-kicker {
+  margin-bottom: auto;
+  color: var(--fortune-muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fortune-engine__choice strong {
+  margin: 18px 0 6px;
+  font-size: 16px;
+}
+
+.fortune-engine__choice small {
+  color: var(--fortune-muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
 
 .fortune-engine__result-stats {
-  display: flex;
-  justify-content: center;
-  gap: 14px;
-  margin: 0 0 12px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 6px 0 14px;
 }
 
 .fortune-engine__result-stats div {
-  flex: 1;
-  background: rgba(15, 34, 62, 0.8);
-  border-radius: 10px;
-  padding: 8px 6px;
+  min-width: 0;
+  padding: 10px 6px;
+  border: 1px solid var(--fortune-line);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.035);
 }
 
 .fortune-engine__result-stats dt {
-  font-size: 11px;
-  text-transform: uppercase;
+  overflow: hidden;
+  margin-bottom: 3px;
+  color: var(--fortune-muted);
+  font-size: 9px;
+  font-weight: 700;
   letter-spacing: 0.06em;
-  color: #9db4d8;
-  margin: 0 0 2px;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .fortune-engine__result-stats dd {
+  overflow: hidden;
   margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: #f3d16b;
+  color: var(--fortune-gold);
+  font-size: 15px;
+  font-weight: 780;
+  text-overflow: ellipsis;
 }
 
-.fortune-engine__results--finale .fortune-engine__title {
-  font-size: 28px;
+.fortune-engine__results > .fortune-engine__core {
+  margin-block: 10px 12px;
 }
 
-/* Crushed runs land with a screen shake. */
 .fortune-engine__panel--crushed {
-  animation: fortune-crush-shake 0.45s ease;
+  animation: fortune-crush-shake 0.38s ease;
 }
 
 @keyframes fortune-crush-shake {
   0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-7px); }
-  40% { transform: translateX(6px); }
-  60% { transform: translateX(-4px); }
-  80% { transform: translateX(2px); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
 }
 
-@media (max-width: 420px) {
-  .fortune-engine__result-stats {
+@media (max-width: 520px) {
+  .fortune-engine__panel {
+    padding: 19px 15px;
+    border-radius: 22px;
+  }
+
+  .fortune-engine__progress-grid {
+    grid-template-columns: 0.8fr 1.2fr;
+  }
+}
+
+@media (max-width: 390px) {
+  .fortune-engine__launch-card {
+    grid-template-columns: 1fr;
+  }
+
+  .fortune-engine__launch-meta {
+    align-items: center;
+    text-align: center;
+  }
+
+  .fortune-engine__progress-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fortune-engine__quick-guide span {
     flex-direction: column;
-    gap: 6px;
+    gap: 2px;
+    white-space: normal;
+  }
+
+  .fortune-engine__result-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .fortune-engine__result-stats div:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fortune-engine__machine-mark::before,
+  .fortune-engine__combo,
+  .fortune-engine__canvas--danger,
+  .fortune-engine__panel--crushed,
+  .fortune-engine__core-cell--new {
+    animation: none;
   }
 }

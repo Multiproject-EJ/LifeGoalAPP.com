@@ -270,6 +270,7 @@ const defaultState: DemoState = {
       event_type: 'onboarding_completed',
       metadata: { source: 'game_of_life_onboarding' },
       occurred_at: iso(new Date(today.getFullYear(), today.getMonth() - 1, 1)),
+      dedupe_key: null,
     },
     {
       id: 'demo-tel-002',
@@ -277,6 +278,7 @@ const defaultState: DemoState = {
       event_type: 'intervention_accepted',
       metadata: { interventionType: 'habit_downshift', option: 'Try a 5-minute version' },
       occurred_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 10)),
+      dedupe_key: null,
     },
     {
       id: 'demo-tel-003',
@@ -284,6 +286,7 @@ const defaultState: DemoState = {
       event_type: 'balance_shift',
       metadata: { harmonyStatus: 'rebalancing', fromAxis: 'Agency', toAxis: 'Vitality' },
       occurred_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7)),
+      dedupe_key: null,
     },
     {
       id: 'demo-tel-004',
@@ -291,6 +294,7 @@ const defaultState: DemoState = {
       event_type: 'micro_quest_completed',
       metadata: { questId: 'demo-quest-01', questTitle: '3-day streak on morning habit' },
       occurred_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 5)),
+      dedupe_key: null,
     },
     {
       id: 'demo-tel-005',
@@ -298,6 +302,7 @@ const defaultState: DemoState = {
       event_type: 'intervention_accepted',
       metadata: { interventionType: 'reflection_prompt', option: 'Explore why this habit feels hard' },
       occurred_at: iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 3)),
+      dedupe_key: null,
     },
   ],
   goalReflections: [],
@@ -1283,6 +1288,7 @@ export function addDemoTelemetryEvent(payload: TelemetryEventInsert): TelemetryE
     event_type: payload.event_type,
     metadata: payload.metadata ?? {},
     occurred_at: payload.occurred_at ?? new Date().toISOString(),
+    dedupe_key: payload.dedupe_key ?? null,
   };
 
   updateState((current) => ({ ...current, telemetryEvents: [record, ...current.telemetryEvents] }));

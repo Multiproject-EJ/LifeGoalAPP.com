@@ -4,18 +4,19 @@ import type { IslandBoardTheme } from '../../services/islandBoardThemes';
 import type { IslandTileMapEntry } from '../../services/islandBoardTileMap';
 import type { VisibleTechnologyFragment } from '../../services/islandTechnologyFragmentVisuals';
 import { logIslandRunEntryDebug } from '../../services/islandRunEntryDebug';
-import { useBoardCamera, type CameraVisualBounds } from './useBoardCamera';
+import { useBoardCamera, type CameraState, type CameraVisualBounds } from './useBoardCamera';
 import { useBoardGestures } from './useBoardGestures';
-import { useTokenAnimation } from './useTokenAnimation';
+import { useTokenAnimation, type TokenAnimState } from './useTokenAnimation';
 import { BoardPathCanvas } from './BoardPathCanvas';
 import { BoardTileGrid } from './BoardTileGrid';
-import { BoardToken } from './BoardToken';
+import { BoardToken, type BoardTokenHandle } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
 import { BoardOrbitStops, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';
 import { BoardDice3D } from './BoardDice3D';
 import { IslandArtLayers, type IslandArtSceneLayout } from './IslandArtLayers';
 import type { IslandArtManifest } from '../../services/islandArtManifest';
 import type { BossCreatureArtState } from '../../services/islandRunBossEncounter';
+import type { IslandRunLandmarkDiscoveryState } from '../../services/islandRunDiscoveryFog';
 import {
   computeDirectionalLead,
   computeHopDurations,
@@ -55,6 +56,10 @@ export interface BoardStageProps {
   islandArtManifest: IslandArtManifest | null;
   /** Current stop build levels used by v2 landmark art; read-only visual input. */
   landmarkBuildLevels?: number[];
+  /** Visual-only landmark discovery states derived from canonical stop status. */
+  landmarkDiscoveryStates?: readonly IslandRunLandmarkDiscoveryState[];
+  /** Whether discovery fog is rendered; DEV clean-art mode can disable it. */
+  discoveryFogEnabled?: boolean;
   /** Whether the current island boss has already been resolved/defeated. */
   isBossDefeated?: boolean;
   /** Visual state for the separate boss creature layer; arena/scenery remains independent. */
@@ -67,6 +72,8 @@ export interface BoardStageProps {
   showDebug: boolean;
   /** Disable decorative board art for production art integration */
   isMinimalBoardArt?: boolean;
+  /** Pause non-essential board motion while a modal owns the user's attention. */
+  isInteractionPaused?: boolean;
   /** Optional tilt overrides for quick camera framing tuning */
   boardTiltXDeg?: number;
   boardRotateZDeg?: number;
@@ -142,12 +149,15 @@ export function BoardStage(props: BoardStageProps) {
     theme,
     islandArtManifest,
     landmarkBuildLevels = [],
+    landmarkDiscoveryStates = [],
+    discoveryFogEnabled = true,
     isBossDefeated = false,
     bossCreatureArtState,
     spark36RingGradient,
     isSpark36,
     showDebug,
     isMinimalBoardArt = false,
+    isInteractionPaused = false,
     boardTiltXDeg = BOARD_TILT_X_DEG,
     boardRotateZDeg = BOARD_ROTATE_Z_DEG,
     tileMap,
@@ -179,7 +189,22 @@ export function BoardStage(props: BoardStageProps) {
 
   const boardRef = useRef<HTMLDivElement>(null);
   const gestureLayerRef = useRef<HTMLDivElement>(null);
+  const boardPlaneCameraStageRef = useRef<HTMLDivElement>(null);
+  const artCameraStageRef = useRef<HTMLDivElement>(null);
+  const gameplayCameraStageRef = useRef<HTMLDivElement>(null);
+  const orbitStopsPlaneRef = useRef<HTMLDivElement>(null);
+  const boardTokenRef = useRef<BoardTokenHandle>(null);
+  const liveTokenFrameRef = useRef({ x: 0, y: 0, isMoving: false });
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
+
+  const applyCameraFrame = useCallback((frame: CameraState) => {
+    const cameraTransform = `translate3d(${frame.x.toFixed(2)}px, ${frame.y.toFixed(2)}px, 0) scale(${frame.zoom.toFixed(4)})`;
+    const tiltedTransform = `${cameraTransform} rotateX(${boardTiltXDeg}deg) rotateZ(${boardRotateZDeg}deg)`;
+    if (boardPlaneCameraStageRef.current) boardPlaneCameraStageRef.current.style.transform = tiltedTransform;
+    if (artCameraStageRef.current) artCameraStageRef.current.style.transform = cameraTransform;
+    if (gameplayCameraStageRef.current) gameplayCameraStageRef.current.style.transform = tiltedTransform;
+    if (orbitStopsPlaneRef.current) orbitStopsPlaneRef.current.style.transform = tiltedTransform;
+  }, [boardRotateZDeg, boardTiltXDeg]);
 
   // ── Board size tracking ──────────────────────────────────────────────────
   useEffect(() => {
@@ -263,6 +288,7 @@ export function BoardStage(props: BoardStageProps) {
     boardHeight: boardSize.height,
     visualBounds: sceneVisualBounds,
     overviewVerticalBiasRatio: PHONE_OVERVIEW_VERTICAL_BIAS_RATIO,
+    onFrame: applyCameraFrame,
   });
 
   // Expose camera controls to parent
@@ -281,12 +307,12 @@ export function BoardStage(props: BoardStageProps) {
   const gestureCallbacks = useMemo(() => ({
     onPan: (dx: number, dy: number) => {
       onCameraGesture?.();
-      const c = camera.camera;
+      const c = camera.cameraRef.current;
       camera.setGestureCamera(c.x + dx, c.y + dy, c.zoom);
     },
     onPinchZoom: (scaleFactor: number, focalX: number, focalY: number) => {
       onCameraGesture?.();
-      const c = camera.camera;
+      const c = camera.cameraRef.current;
       const newZoom = Math.max(camera.MIN_ZOOM, Math.min(camera.MAX_ZOOM, c.zoom * scaleFactor));
       // Focal-point zoom: adjust x/y so the point under fingers stays fixed
       const zoomRatio = newZoom / c.zoom;
@@ -306,7 +332,7 @@ export function BoardStage(props: BoardStageProps) {
     },
     onDoubleTap: (_x: number, _y: number) => {
       onCameraGesture?.();
-      if (camera.camera.zoom > 1.2) {
+      if (camera.cameraRef.current.zoom > 1.2) {
         camera.goOverview();
       } else {
         camera.goDefault();
@@ -314,7 +340,7 @@ export function BoardStage(props: BoardStageProps) {
     },
     onWheelZoom: (delta: number, focalX: number, focalY: number) => {
       onCameraGesture?.();
-      const c = camera.camera;
+      const c = camera.cameraRef.current;
       const newZoom = Math.max(camera.MIN_ZOOM, Math.min(camera.MAX_ZOOM, c.zoom + delta));
       const zoomRatio = newZoom / c.zoom;
       const boardRect = boardRef.current?.getBoundingClientRect();
@@ -335,6 +361,11 @@ export function BoardStage(props: BoardStageProps) {
 
   // Track the previous hop position for directional lead computation
   const prevHopPosRef = useRef<{ x: number; y: number }>({ x: boardSize.width / 2, y: boardSize.height / 2 });
+
+  const applyTokenFrame = useCallback((frame: TokenAnimState) => {
+    liveTokenFrameRef.current = { x: frame.x, y: frame.y, isMoving: frame.isMoving };
+    boardTokenRef.current?.applyFrame(frame);
+  }, []);
 
   // ── Token animation ──────────────────────────────────────────────────────
   const tokenAnim = useTokenAnimation({
@@ -380,6 +411,7 @@ export function BoardStage(props: BoardStageProps) {
       }, preset.holdMs);
     },
     hopDurationMs: 200,
+    onFrame: applyTokenFrame,
   });
 
   // Cleanup landing settle + pre-roll anticipation timeouts on unmount.
@@ -508,11 +540,12 @@ export function BoardStage(props: BoardStageProps) {
   const ZBAND_COLORS: Record<string, string> = { back: '#50a5ff', mid: '#ffe066', front: '#ff4ff5' };
   const artCameraTransform = camera.cameraTransform;
   const cameraStageTransform = `${camera.cameraTransform} rotateX(${boardTiltXDeg}deg) rotateZ(${boardRotateZDeg}deg)`;
+  const cameraSnapshot = camera.cameraRef.current;
   const diceOverlayPosition = useMemo(() => {
     const tokenX = tokenAnim.animState.x || boardSize.width / 2;
     const tokenY = tokenAnim.animState.y || boardSize.height / 2;
-    const tokenScreenX = boardSize.width / 2 + camera.camera.x + (tokenX - boardSize.width / 2) * camera.camera.zoom;
-    const tokenScreenY = boardSize.height / 2 + camera.camera.y + (tokenY - boardSize.height / 2) * camera.camera.zoom;
+    const tokenScreenX = boardSize.width / 2 + cameraSnapshot.x + (tokenX - boardSize.width / 2) * cameraSnapshot.zoom;
+    const tokenScreenY = boardSize.height / 2 + cameraSnapshot.y + (tokenY - boardSize.height / 2) * cameraSnapshot.zoom;
     const inwardOffsetX = tokenScreenX > boardSize.width / 2 ? -DICE_TOKEN_OFFSET_X : DICE_TOKEN_OFFSET_X;
     const preferredX = tokenScreenX + inwardOffsetX;
     const preferredY = tokenScreenY + DICE_TOKEN_OFFSET_Y;
@@ -526,9 +559,9 @@ export function BoardStage(props: BoardStageProps) {
   }, [
     boardSize.height,
     boardSize.width,
-    camera.camera.x,
-    camera.camera.y,
-    camera.camera.zoom,
+    cameraSnapshot.x,
+    cameraSnapshot.y,
+    cameraSnapshot.zoom,
     tokenAnim.animState.x,
     tokenAnim.animState.y,
   ]);
@@ -570,7 +603,7 @@ export function BoardStage(props: BoardStageProps) {
   return (
     <div
       ref={boardRef}
-      className={`island-run-board__stage-wrapper ${isMinimalBoardArt ? 'island-run-board__stage-wrapper--minimal-art' : ''}`}
+      className={`island-run-board__stage-wrapper ${isMinimalBoardArt ? 'island-run-board__stage-wrapper--minimal-art' : ''} ${isInteractionPaused ? 'island-run-board__stage-wrapper--paused' : ''}`}
       style={{ position: 'relative', width: '100%', height: '100%' }}
     >
       {/* Gesture capture layer (invisible, on top) */}
@@ -585,12 +618,15 @@ export function BoardStage(props: BoardStageProps) {
           finished perspective is authored into the raster and must never be
           tilted or vertically normalized a second time. */}
       <div
+        ref={boardPlaneCameraStageRef}
         className="island-run-board__board-plane-camera-stage"
         style={{ transform: cameraStageTransform, willChange: 'transform' }}
       >
         <IslandArtLayers
           manifest={islandArtManifest}
           landmarkBuildLevels={landmarkBuildLevels}
+          landmarkDiscoveryStates={landmarkDiscoveryStates}
+          discoveryFogEnabled={discoveryFogEnabled}
           isBossDefeated={isBossDefeated}
           bossCreatureArtState={bossCreatureArtState}
           boardWidth={boardSize.width}
@@ -604,12 +640,15 @@ export function BoardStage(props: BoardStageProps) {
 
       {/* Upright/world art follows camera pan/zoom without a second rotateX. */}
       <div
+        ref={artCameraStageRef}
         className="island-run-board__art-camera-stage"
         style={{ transform: artCameraTransform, willChange: 'transform' }}
       >
         <IslandArtLayers
           manifest={islandArtManifest}
           landmarkBuildLevels={landmarkBuildLevels}
+          landmarkDiscoveryStates={landmarkDiscoveryStates}
+          discoveryFogEnabled={discoveryFogEnabled}
           isBossDefeated={isBossDefeated}
           bossCreatureArtState={bossCreatureArtState}
           boardWidth={boardSize.width}
@@ -623,6 +662,7 @@ export function BoardStage(props: BoardStageProps) {
 
       {/* Gameplay camera stage — tile UI/token/dice keep the board tilt/rotation. */}
       <div
+        ref={gameplayCameraStageRef}
         className="island-run-board__camera-stage"
         style={{ transform: cameraStageTransform, willChange: 'transform' }}
       >
@@ -683,6 +723,7 @@ export function BoardStage(props: BoardStageProps) {
         {/* Token */}
         <div className="island-run-board__tiles" style={{ pointerEvents: 'none' }}>
           <BoardToken
+            ref={boardTokenRef}
             animState={tokenAnim.animState}
             zBand={anchors[tokenIndex]?.zBand ?? 'mid'}
           />
@@ -728,7 +769,9 @@ export function BoardStage(props: BoardStageProps) {
             tokenX={tokenAnim.animState.x}
             tokenY={tokenAnim.animState.y}
             isTokenMoving={tokenAnim.animState.isMoving}
+            tokenFrameRef={liveTokenFrameRef}
             burstAt={burstPos}
+            isPaused={isInteractionPaused}
           />
         )}
       </div>
@@ -749,6 +792,7 @@ export function BoardStage(props: BoardStageProps) {
         behind them (the bug the user reported).
       */}
       <div
+        ref={orbitStopsPlaneRef}
         className="island-run-board__orbit-stops-plane"
         style={{
           position: 'absolute',

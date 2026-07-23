@@ -15,6 +15,7 @@ export type TelemetryEventRow = Database['public']['Tables']['telemetry_events']
 
 export type TelemetryEventType =
   | 'onboarding_completed'
+  | 'onboarding_step'
   | 'leap_progress_completed'
   | 'balance_shift'
   | 'intervention_accepted'
@@ -76,7 +77,11 @@ export type TelemetryEventType =
   | 'runtime_state_hydrated'
   | 'runtime_state_hydration_failed'
   | 'island_run_roll_completed'
-  | 'island_run_roll_blocked';
+  | 'island_run_roll_blocked'
+  | 'island_run_ui_interaction'
+  | 'island_run_gameplay_event'
+  | 'commerce_checkout_started'
+  | 'commerce_checkout_failed';
 
 export type TelemetryEventMetadata = Json;
 
@@ -105,6 +110,19 @@ const telemetryDropLog = new BoundedLog<{ eventType: string; reason: string }>({
 let sessionWriteCount = 0;
 let minuteWindowStart = 0;
 let minuteWindowCount = 0;
+const telemetryDedupeCache = new Set<string>();
+
+function normalizeTelemetryDedupeKey(options: {
+  userId: string;
+  eventType: TelemetryEventType;
+  dedupeKey?: string;
+}): { databaseKey: string | null; cacheKey: string | null } {
+  const databaseKey = options.dedupeKey?.trim() || null;
+  return {
+    databaseKey,
+    cacheKey: databaseKey ? `${options.userId}:${options.eventType}:${databaseKey}` : null,
+  };
+}
 
 function takeTelemetryWriteBudget(eventType: string, now = Date.now()): boolean {
   if (sessionWriteCount >= MAX_TELEMETRY_WRITES_PER_SESSION) {
@@ -246,9 +264,15 @@ export async function recordTelemetryEvent(options: {
   userId: string;
   eventType: TelemetryEventType;
   metadata?: TelemetryEventMetadata;
+  dedupeKey?: string;
 }): Promise<{ data: TelemetryEventRow | null; error: PostgrestError | Error | null }> {
   const telemetryEnabled = await isTelemetryEnabled(options.userId);
   if (!telemetryEnabled) {
+    return { data: null, error: null };
+  }
+
+  const dedupe = normalizeTelemetryDedupeKey(options);
+  if (dedupe.cacheKey && telemetryDedupeCache.has(dedupe.cacheKey)) {
     return { data: null, error: null };
   }
 
@@ -257,7 +281,9 @@ export async function recordTelemetryEvent(options: {
       user_id: options.userId,
       event_type: options.eventType,
       metadata: options.metadata ?? {},
+      dedupe_key: dedupe.databaseKey,
     });
+    if (dedupe.cacheKey) telemetryDedupeCache.add(dedupe.cacheKey);
     return { data, error: null };
   }
 
@@ -268,15 +294,21 @@ export async function recordTelemetryEvent(options: {
 
   const supabase = getSupabaseClient();
   const result = await guardedCloudCall('database', async () => {
-    const { data, error } = await supabase
-      .from('telemetry_events')
-      .insert({
+    const payload = {
         user_id: options.userId,
         event_type: options.eventType,
         metadata: options.metadata ?? {},
-      })
-      .select()
-      .single<TelemetryEventRow>();
+        dedupe_key: dedupe.databaseKey,
+      };
+    const query = dedupe.databaseKey
+      ? supabase
+          .from('telemetry_events')
+          .upsert(payload, {
+            onConflict: 'user_id,event_type,dedupe_key',
+            ignoreDuplicates: true,
+          })
+      : supabase.from('telemetry_events').insert(payload);
+    const { data, error } = await query.select().maybeSingle<TelemetryEventRow>();
     if (error) throw error;
     return data;
   });
@@ -291,6 +323,7 @@ export async function recordTelemetryEvent(options: {
     return { data: null, error: null };
   }
 
+  if (dedupe.cacheKey) telemetryDedupeCache.add(dedupe.cacheKey);
   return { data: result.data ?? null, error: null };
 }
 

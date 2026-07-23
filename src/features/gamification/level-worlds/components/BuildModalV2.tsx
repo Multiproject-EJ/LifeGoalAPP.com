@@ -80,11 +80,12 @@ function BuildModalV2PartButton({
 }) {
   const isActive = part.status === 'active';
   const isDisabled = !isActive || disabledByWalletOrTutorial;
-  const label = part.status === 'complete'
+  const metaLabel = part.status === 'complete'
     ? 'Done'
     : part.status === 'locked'
       ? 'Locked'
-      : `${part.remainingEssence} left`;
+      : `${nextTapCost} Money`;
+  const titleLabel = isActive ? `Build part ${part.partNumber}` : `Part ${part.partNumber}`;
   const ariaLabel = part.status === 'complete'
     ? `${activeTitle} Level ${targetLevel}, Part ${part.partNumber} complete`
     : part.status === 'locked'
@@ -101,8 +102,8 @@ function BuildModalV2PartButton({
       onClick={isActive && !isDisabled ? () => onBuildActivePart(activeStopIndex) : undefined}
     >
       <span className="bm2-part__icon" aria-hidden="true">{part.status === 'complete' ? '✓' : part.status === 'locked' ? '🔒' : '🔨'}</span>
-      <span className="bm2-part__title">Part {part.partNumber}</span>
-      <span className="bm2-part__meta">{label}</span>
+      <span className="bm2-part__title">{titleLabel}</span>
+      <span className="bm2-part__meta">{metaLabel}</span>
     </button>
   );
 }
@@ -124,6 +125,7 @@ export function BuildModalV2({
   const isComplete = viewModel.sequentialBuildView.isFullyBuilt || !active;
   const activePart = active?.activePart ?? 1;
   const canBuildActive = Boolean(active?.canAffordNextTap);
+  const progressPercent = active ? Math.round(Math.max(0, Math.min(1, active.progressRatio)) * 100) : 100;
   const discountPercent = Math.round(Math.max(0, discountRate) * 100);
   const discountMinutesLeft = discountExpiresAtMs && discountRate > 0 ? Math.max(1, Math.ceil((discountExpiresAtMs - Date.now()) / 60000)) : 0;
   const hasActiveDiscount = discountPercent > 0 && discountMinutesLeft > 0;
@@ -164,7 +166,7 @@ export function BuildModalV2({
     <div className="island-run-overlay-root island-stop-modal-backdrop bm2-backdrop" role="presentation">
       <section className="bm2-shell" role="dialog" aria-modal="true" aria-label={`Island ${islandNumber} Buildings`}>
         <header className="bm2-header">
-          <span className="bm2-header__title">🔨 Island {islandNumber} Buildings</span>
+          <span className="bm2-header__title">🔨 Build Island {islandNumber}</span>
           <span className="bm2-header__essence" aria-label={`${essenceAvailable} Money available`}>💰 {essenceAvailable}</span>
           <button type="button" className="bm2-header__close" onClick={onClose} aria-label="Close build panel">✕</button>
         </header>
@@ -194,9 +196,19 @@ export function BuildModalV2({
                 <h3 className="bm2-hero__title">{active.title}</h3>
                 <p className="bm2-hero__subtitle">Building Level {active.targetLevel}</p>
                 <p className="bm2-hero__status">{statusLine}</p>
+                <div
+                  className="bm2-progress"
+                  role="progressbar"
+                  aria-label={`${active.title} Level ${active.targetLevel} funding progress`}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={progressPercent}
+                >
+                  <span className="bm2-progress__fill" style={{ width: `${progressPercent}%` }} />
+                </div>
                 <p className="bm2-hero__cost">
                   {active.canAffordNextTap
-                    ? `Next tap spends ${discountPercent > 0 ? Math.ceil(active.nextTapCost * (1 - discountRate)) : active.nextTapCost} Money${discountPercent > 0 ? ` (${discountPercent}% off)` : ''}`
+                    ? `Build Part ${activePart} for ${discountPercent > 0 ? Math.ceil(active.nextTapCost * (1 - discountRate)) : active.nextTapCost} Money${discountPercent > 0 ? ` (${discountPercent}% off)` : ''}`
                     : `Need ${Math.max(0, Math.ceil(active.nextTapCost * (1 - discountRate)) - essenceAvailable)} more Money for the next tap`}
                 </p>
               </div>

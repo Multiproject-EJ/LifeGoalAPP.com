@@ -79,7 +79,8 @@ try {
 }
 
 const url = `http://localhost:${PORT}/`;
-const preview = spawn('npm', ['run', 'preview', '--', '--port', String(PORT), '--strictPort'], {
+const viteBin = path.resolve('node_modules/vite/bin/vite.js');
+const preview = spawn(process.execPath, [viteBin, 'preview', '--port', String(PORT), '--strictPort'], {
   stdio: 'ignore',
   detached: false,
 });
@@ -92,7 +93,13 @@ try {
 
   const errors = [];
   browser = await chromium.launch({ executablePath: chromiumPath, args: ['--no-sandbox'] });
-  const page = await browser.newPage({ viewport: { width: 414, height: 896 } });
+  const page = await browser.newPage({
+    viewport: { width: 414, height: 896 },
+    userAgent:
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
+    isMobile: true,
+    hasTouch: true,
+  });
   page.on('console', (m) => { if (m.type() === 'error') errors.push(`[console.error] ${m.text()}`); });
   page.on('pageerror', (e) => errors.push(`[pageerror] ${e.message}`));
 
@@ -110,10 +117,21 @@ try {
   if (!shell.mounted || shell.textLen < 20) {
     fail(`app shell did not render (mounted=${shell.mounted}, textLen=${shell.textLen})`);
   }
-  if (errors.length > 0) {
-    fail(`boot produced ${errors.length} error(s):\n${errors.join('\n')}`);
+
+  await page.getByRole('button', { name: 'Start Your Game', exact: true }).click();
+  await page.getByRole('button', { name: /Play as guest/ }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('button', { name: 'Skip for now', exact: true }).click();
+  await page.waitForTimeout(BOOT_WAIT_MS);
+
+  const islandRunLoaded = await page.getByRole('button', { name: 'Exit Island Run', exact: true }).count();
+  if (islandRunLoaded !== 1) {
+    fail(`guest Island Run did not open (matching exit controls=${islandRunLoaded})`);
   }
-  console.log(`PASS check:app-boot — app booted clean (${shell.textLen} chars rendered, 0 errors)`);
+  if (errors.length > 0) {
+    fail(`boot or guest entry produced ${errors.length} error(s):\n${errors.join('\n')}`);
+  }
+  console.log(`PASS check:app-boot — app and guest Island Run booted clean (${shell.textLen} chars rendered, 0 errors)`);
 } catch (err) {
   exitCode = 1;
   console.error(`FAIL check:app-boot — ${err?.message || err}`);

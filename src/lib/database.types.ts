@@ -1255,6 +1255,7 @@ export interface Database {
           event_type: string;
           metadata: Json;
           occurred_at: string;
+          dedupe_key: string | null;
         };
         Insert: {
           id?: string;
@@ -1262,6 +1263,7 @@ export interface Database {
           event_type: string;
           metadata?: Json;
           occurred_at?: string;
+          dedupe_key?: string | null;
         };
         Update: {
           id?: string;
@@ -1269,6 +1271,7 @@ export interface Database {
           event_type?: string;
           metadata?: Json;
           occurred_at?: string;
+          dedupe_key?: string | null;
         };
         Relationships: [];
       };

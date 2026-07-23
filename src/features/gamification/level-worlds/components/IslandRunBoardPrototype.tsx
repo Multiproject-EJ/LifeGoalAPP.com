@@ -17,7 +17,7 @@ import { lockPageScroll } from '../../../../utils/scrollLock';
  *
  * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type SetStateAction } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type SetStateAction } from 'react';
 import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -438,6 +438,7 @@ import {
   resolveAvailableMultiplierTiers,
   clampMultiplierToPool,
   resolveDiceCostForMultiplier,
+  resolveNextMultiplierCycleStep,
   type RewardBarClaimPayout,
 } from '../services/islandRunContractV2RewardBar';
 import {
@@ -493,6 +494,10 @@ import {
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
 import { IslandRunLuckyRollDevOverlay } from './lucky-roll/IslandRunLuckyRollDevOverlay';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
+import {
+  resolveIslandRunDiscoveryProgress,
+  resolveIslandRunLandmarkDiscoveryState,
+} from '../services/islandRunDiscoveryFog';
 import { adviseEggSellChoice } from '../services/islandRunEggSellAdvisor';
 import {
   bindKeyboardToShooterBridge,
@@ -520,6 +525,7 @@ const ISLAND_DURATION_SEC = 72 * 60 * 60;
 const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
 const DEBUG_TIMED_EVENT_OVERRIDE_KEY = 'islandRunDebugTimedEventOverride';
 const DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY = 'islandRunDebugTimedEventOverrideNonce';
+const DISCOVERY_FOG_DEV_STORAGE_KEY = 'islandRunDevDisableDiscoveryFog';
 // Only one board profile ships today. Historically this was query-param gated,
 // but every branch collapsed to the same result — so the helper was removed.
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark36_ring');
@@ -562,6 +568,13 @@ const TRAFFIC_LIGHT_BOX_IMAGE_SRC = '/assets/traffic_light/IMG_box.webp';
 const TRAFFIC_LIGHT_GIFT_IMAGE_SRC = '/assets/traffic_light/IMG_gift.webp';
 const TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC = '/assets/traffic_light/IMG_boxcoin.webp';
 const TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC = '/assets/traffic_light/IMG_giftcoin.webp';
+const TRAFFIC_LIGHT_ANIMATION_IMAGE_SRCS = [
+  TRAFFIC_LIGHT_MODAL_IMAGE_SRC,
+  TRAFFIC_LIGHT_BOX_IMAGE_SRC,
+  TRAFFIC_LIGHT_GIFT_IMAGE_SRC,
+  TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC,
+  TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC,
+] as const;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Reward bar can award Space Excavator tickets';
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV = 'Reward bar can award Space Excavator tickets (DEV override tickets)';
 
@@ -963,6 +976,7 @@ const TIMER_WARN_THRESHOLD_MS = 1 * 60 * 60 * 1000;  // 1–4 h → orange; < 1 
 const REWARDBAR_TIMERS_AUTO_HIDE_THRESHOLD_MS = 60 * 60 * 1000;
 const REWARDBAR_TIMERS_AUTO_HIDE_DELAY_MS = 10_000;
 const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
+const MULTIPLIER_MAX_JUMP_DURATION_MS = 540;
 const AUTO_ROLL_HOLD_DELAY_MS = 1400;
 const AUTO_ROLL_INTERVAL_MS = 2300;
 // While a modal/overlay owns attention, auto-roll pauses instead of firing the
@@ -1306,6 +1320,19 @@ function isIslandRunDevModeEnabled(): boolean {
   return isNonProdNodeEnv || isViteDev || localStorageDevFlag;
 }
 
+function readDevDiscoveryFogDisabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('disableDiscoveryFog') === '1' || params.get('islandDiscoveryFog') === 'off') {
+    return true;
+  }
+  try {
+    return window.localStorage.getItem(DISCOVERY_FOG_DEV_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Formats a long-form countdown (days / hours / minutes / seconds) for the
  * hatchery incubation timer. Shows the two most-significant units so the
@@ -1594,6 +1621,19 @@ export function IslandRunBoardPrototype({
     boardRotateZDeg,
   } = boardRenderTuning;
   const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
+  const [isDiscoveryFogDisabled, setIsDiscoveryFogDisabled] = useState(readDevDiscoveryFogDisabled);
+  const isDiscoveryFogEnabled = !isDevModeEnabled || !isDiscoveryFogDisabled;
+  const handleToggleDiscoveryFog = useCallback(() => {
+    setIsDiscoveryFogDisabled((current) => {
+      const next = !current;
+      try {
+        window.localStorage.setItem(DISCOVERY_FOG_DEV_STORAGE_KEY, String(next));
+      } catch {
+        // Clean-art mode remains available for this session when storage is blocked.
+      }
+      return next;
+    });
+  }, []);
   const isCreaturePackStripeCheckoutEnabled = isDevModeEnabled
     || String(import.meta.env.VITE_CREATURE_PACK_STRIPE_CHECKOUT_ENABLED ?? '').toLowerCase() === 'true';
   const [boardSize, setBoardSize] = useState({ width: 360, height: 640 });
@@ -1786,6 +1826,22 @@ export function IslandRunBoardPrototype({
   const [trafficLightCoinFlip, setTrafficLightCoinFlip] = useState<{ seed: number; reward: TrafficLightCoinFlipReward | null; phase: 'ready' | 'flipping' | 'revealed' | 'opened' } | null>(null);
   const [trafficLightRewardConfettiActive, setTrafficLightRewardConfettiActive] = useState(false);
   const [showTrafficLightCoinHint, setShowTrafficLightCoinHint] = useState(false);
+  useEffect(() => {
+    if (typeof Image === 'undefined') return undefined;
+    const images = TRAFFIC_LIGHT_ANIMATION_IMAGE_SRCS.map((src) => {
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = src;
+      void image.decode?.().catch(() => undefined);
+      return image;
+    });
+    return () => {
+      for (const image of images) {
+        image.onload = null;
+        image.onerror = null;
+      }
+    };
+  }, []);
   /**
    * Optimistic traffic-light charge shown the instant the token HOPS OVER the
    * traffic-light tile mid-roll, instead of waiting for the authoritative charge
@@ -1975,7 +2031,7 @@ export function IslandRunBoardPrototype({
     boardProfileExposureTrackedRef.current = true;
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_ui_interaction',
       metadata: {
         stage: 'island_run_board_profile_exposed',
         board_profile_id: ACTIVE_BOARD_PROFILE.id,
@@ -2222,6 +2278,8 @@ export function IslandRunBoardPrototype({
 
   // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
   const [diceMultiplier, setDiceMultiplier] = useState(1);
+  const [isMultiplierMaxJumping, setIsMultiplierMaxJumping] = useState(false);
+  const multiplierMaxJumpLockRef = useRef(false);
 
   // Derived: available tiers (with unlocked status), effective cost, and auto-clamp
   const multiplierTiers = resolveAvailableMultiplierTiers(dicePool);
@@ -2238,6 +2296,30 @@ export function IslandRunBoardPrototype({
       setDiceMultiplier(effectiveMultiplier);
     }
   }, [effectiveMultiplier, diceMultiplier]);
+
+  useEffect(() => {
+    if (!isMultiplierMaxJumping) return undefined;
+    const timeoutId = window.setTimeout(() => {
+      multiplierMaxJumpLockRef.current = false;
+      setIsMultiplierMaxJumping(false);
+    }, MULTIPLIER_MAX_JUMP_DURATION_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [isMultiplierMaxJumping]);
+
+  const handleMultiplierPillClick = useCallback(() => {
+    // The max-tier hop is a deliberate beat: taps during it must not wrap the
+    // pill to x1 before the player sees the max state land.
+    if (multiplierMaxJumpLockRef.current || unlockedMultipliers.length <= 1) return;
+
+    const step = resolveNextMultiplierCycleStep(effectiveMultiplier, unlockedMultipliers);
+    playIslandRunSound(step.reachedMax ? 'multiplier_max' : 'multiplier_cycle');
+    setDiceMultiplier(step.nextMultiplier);
+
+    if (step.reachedMax) {
+      multiplierMaxJumpLockRef.current = true;
+      setIsMultiplierMaxJumping(true);
+    }
+  }, [effectiveMultiplier, unlockedMultipliers]);
 
   // ── Dice regen countdown (Monopoly GO style: "Next dice in MM:SS") ───────
   const [diceRegenCountdown, setDiceRegenCountdown] = useState<string | null>(null);
@@ -3904,7 +3986,7 @@ export function IslandRunBoardPrototype({
       setFirstRunStep('celebration');
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'onboarding_completed',
+        eventType: 'onboarding_step',
         metadata: { stage: 'island_run_first_run_started', island: islandNumber },
       });
     }
@@ -4606,6 +4688,23 @@ export function IslandRunBoardPrototype({
 
     return map;
   }, [contractV2Stops, effectiveCompletedStops, islandEggSlotUsed, islandStopPlan, runtimeState.stopBuildStateByIndex]);
+
+  const landmarkDiscoveryStates = useMemo(
+    () => islandStopPlan.map((stop) => (
+      resolveIslandRunLandmarkDiscoveryState(stopStateMap.get(stop.stopId))
+    )),
+    [islandStopPlan, stopStateMap],
+  );
+  const discoveryRevealProgress = useMemo(
+    () => resolveIslandRunDiscoveryProgress(landmarkDiscoveryStates),
+    [landmarkDiscoveryStates],
+  );
+  const discoveryFogStyle = useMemo<CSSProperties>(() => ({
+    ['--island-discovery-background-blur' as string]: `${(1.45 - discoveryRevealProgress * 0.85).toFixed(2)}px`,
+    ['--island-discovery-background-saturation' as string]: (0.74 + discoveryRevealProgress * 0.22).toFixed(3),
+    ['--island-discovery-background-brightness' as string]: (0.82 + discoveryRevealProgress * 0.14).toFixed(3),
+    ['--island-discovery-atmosphere-opacity' as string]: (0.42 - discoveryRevealProgress * 0.28).toFixed(3),
+  }), [discoveryRevealProgress]);
 
   // stopMap intentionally remains empty: per the canonical gameplay contract,
   // stops are EXTERNAL side-quest structures (orbit HUD buttons). No tile on
@@ -6781,12 +6880,12 @@ export function IslandRunBoardPrototype({
         if (cardDecision.show) {
           // 0-based index of this draw within the island → rotates the questions.
           setCardDrawIndex(Math.max(0, cardDecision.nextState.drawsThisIsland - 1));
-          setLandingText('🃏 Card station! Draw a Daily Clue Card for a quick gamified journal loop.');
+          setLandingText('🧭 The caretaker found a milestone clue. Take a quick wheel reading.');
           setShowGamifiedJournalCard(true);
         } else if (cardDecision.reason === 'island_cap') {
-          setLandingText('🃏 Card station — you’ve gathered today’s clues here. Keep rolling.');
+          setLandingText('🧭 The caretaker already saved this island’s clue. Keep exploring.');
         } else {
-          setLandingText('🃏 Card station — clue already noted nearby. Keep rolling.');
+          setLandingText('🧭 The caretaker’s wheel clues appear on milestone islands.');
         }
         break;
       }
@@ -7091,7 +7190,7 @@ export function IslandRunBoardPrototype({
     });
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: eggCount > 1 ? 'island_egg_mania_set' : 'island_egg_set',
         tier: primaryEgg.tier,
@@ -7646,7 +7745,7 @@ export function IslandRunBoardPrototype({
     if (isPerfectCompanionActive && perfectCompanionStartupBonus > 0) {
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'perfect_companion_effect_triggered',
           effect_scope: 'island_startup_bonus',
@@ -7779,7 +7878,7 @@ export function IslandRunBoardPrototype({
     setLandingText(`Collected ${creature.name}! It has been added to your ship's creature manifest.`);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'island_creature_collected',
         tier: resolvedEgg.tier,
@@ -7801,7 +7900,7 @@ export function IslandRunBoardPrototype({
         setShowPerfectCompanionOnboardingHint(true);
         void recordTelemetryEvent({
           userId: session.user.id,
-          eventType: 'onboarding_completed',
+          eventType: 'onboarding_step',
           metadata: {
             stage: 'perfect_companion_onboarding_hint_seen',
             island_number: islandNumber,
@@ -7880,7 +7979,7 @@ export function IslandRunBoardPrototype({
     setLandingText(`Sold ${creature.name}. Chose: ${picked.label}. +${bundle.essenceDelta} 💰 money.`);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: { stage: 'island_creature_sold', island_number: islandNumber, tier: resolvedEgg.tier, creature_id: creature.id, sell_choice: choice, sell_amount: picked.amount },
     });
     const nextRecord = transitionResult.record;
@@ -7990,7 +8089,7 @@ export function IslandRunBoardPrototype({
     setLandingText(`Encounter complete! ${summary}.${specialtySuffix}`);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'island_run_encounter_resolved',
         island_number: islandNumber,
@@ -8009,7 +8108,7 @@ export function IslandRunBoardPrototype({
     if (isPerfectCompanionActive) {
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'perfect_companion_effect_triggered',
           effect_scope: 'encounter_reward_bonus',
@@ -8143,7 +8242,7 @@ export function IslandRunBoardPrototype({
         triggerIslandRunHaptic('stop_land');
         void recordTelemetryEvent({
           userId: session.user.id,
-          eventType: 'economy_earn',
+          eventType: 'island_run_gameplay_event',
           metadata: {
             stage: 'island_run_boss_trial_failed',
             island_number: islandNumber,
@@ -8223,7 +8322,7 @@ export function IslandRunBoardPrototype({
     setBossTrialScore(0);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'island_run_boss_trial_start',
         island_number: islandNumber,
@@ -8443,7 +8542,7 @@ export function IslandRunBoardPrototype({
     setBossTrialScore(0);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'island_run_boss_trial_retry',
         island_number: islandNumber,
@@ -8468,7 +8567,7 @@ export function IslandRunBoardPrototype({
 
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'island_run_market_purchase',
         island_number: islandNumber,
@@ -9132,7 +9231,7 @@ export function IslandRunBoardPrototype({
 
         void recordTelemetryEvent({
           userId: session.user.id,
-          eventType: 'economy_earn',
+          eventType: 'island_run_gameplay_event',
           metadata: {
             stage: 'island_run_boss_objective_complete',
             source: 'shooter_blitz',
@@ -9191,7 +9290,7 @@ export function IslandRunBoardPrototype({
 
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'island_run_boss_island_cleared',
           source: 'shooter_blitz',
@@ -9246,7 +9345,7 @@ export function IslandRunBoardPrototype({
       setLandingText(message);
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_spend',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'postponement_blocked_by_open_limit',
           island_number: islandNumber,
@@ -9264,7 +9363,7 @@ export function IslandRunBoardPrototype({
     setLandingText('No pressure — this discovery will wait for you. Keep exploring and return whenever you like.');
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_spend',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'stop_postponed',
         island_number: islandNumber,
@@ -9505,6 +9604,16 @@ export function IslandRunBoardPrototype({
       lineRewardDice: 0,
     });
     setLandingText(`🧪 DEV MODE: previewing Concord pickup modal (fragment ${slotIndex + 1}).`);
+  }, [isDevModeEnabled]);
+
+  // Pure UI preview for the rare caretaker clue encounter. This deliberately
+  // bypasses the milestone cadence and journal write so visual QA never alters
+  // the player's canonical Island Run progress.
+  const handleDevPreviewCaretakerClue = useCallback(() => {
+    if (!isDevModeEnabled) return;
+    setCardDrawIndex(0);
+    setLandingText('🧪 DEV MODE: previewing the caretaker wheel clue encounter.');
+    setShowGamifiedJournalCard(true);
   }, [isDevModeEnabled]);
 
   const handleDevStartLuckyRollSession = useCallback(async (targetIslandNumber: number) => {
@@ -10001,7 +10110,7 @@ export function IslandRunBoardPrototype({
       setFirstRunStep('ship-name');
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'onboarding_completed',
+        eventType: 'onboarding_step',
         metadata: {
           stage: 'island_run_first_run_rewards_claimed',
           island: islandNumber,
@@ -10051,7 +10160,7 @@ export function IslandRunBoardPrototype({
     playIslandRunSound('shop_open');
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_ui_interaction',
       metadata: { stage: 'shop_open', island_number: islandNumber },
     });
   };
@@ -10066,7 +10175,7 @@ export function IslandRunBoardPrototype({
     setShowRewardDetailsModal(true);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_ui_interaction',
       metadata: {
         stage: 'island_run_reward_bar_details_opened',
         island_number: islandNumber,
@@ -10087,7 +10196,7 @@ export function IslandRunBoardPrototype({
     setDiceCheckoutError(null);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'commerce_checkout_started',
       metadata: { stage: 'dice_checkout_start', entry_point: entryPoint, island_number: islandNumber },
     });
 
@@ -10097,7 +10206,7 @@ export function IslandRunBoardPrototype({
       setIsStartingDiceCheckout(false);
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'commerce_checkout_failed',
         metadata: { stage: 'dice_checkout_error', entry_point: entryPoint, island_number: islandNumber },
       });
       return;
@@ -10120,7 +10229,7 @@ export function IslandRunBoardPrototype({
     setCreaturePackCheckoutError(null);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'commerce_checkout_started',
       metadata: { stage: 'creature_pack_checkout_start', island_number: islandNumber },
     });
 
@@ -10130,7 +10239,7 @@ export function IslandRunBoardPrototype({
       setIsStartingCreaturePackCheckout(false);
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'commerce_checkout_failed',
         metadata: { stage: 'creature_pack_checkout_error', island_number: islandNumber },
       });
       return;
@@ -10153,7 +10262,7 @@ export function IslandRunBoardPrototype({
     setMinigameTicketCheckoutError(null);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'commerce_checkout_started',
       metadata: {
         stage: 'minigame_ticket_checkout_start',
         entry_point: entryPoint,
@@ -10172,7 +10281,7 @@ export function IslandRunBoardPrototype({
       setIsStartingMinigameTicketCheckout(false);
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'commerce_checkout_failed',
         metadata: {
           stage: 'minigame_ticket_checkout_error',
           entry_point: entryPoint,
@@ -10225,7 +10334,7 @@ export function IslandRunBoardPrototype({
     setSanctuaryMenuModule(null);
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_ui_interaction',
       metadata: {
         stage: 'sanctuary_open',
         island_number: islandNumber,
@@ -10269,7 +10378,7 @@ export function IslandRunBoardPrototype({
         : null;
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'sanctuary_active_companion_changed',
           island_number: islandNumber,
@@ -10303,7 +10412,7 @@ export function IslandRunBoardPrototype({
       }
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_ui_interaction',
         metadata: {
           stage: 'perfect_companion_chip_selected',
           island_number: islandNumber,
@@ -10346,7 +10455,7 @@ export function IslandRunBoardPrototype({
       const rewardPreview = getBondMilestoneReward(nextBondLevel);
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'sanctuary_creature_fed',
           island_number: islandNumber,
@@ -10498,7 +10607,7 @@ export function IslandRunBoardPrototype({
       triggerIslandRunHaptic('market_purchase_success');
       void recordTelemetryEvent({
         userId: session.user.id,
-        eventType: 'economy_earn',
+        eventType: 'island_run_gameplay_event',
         metadata: {
           stage: 'sanctuary_creature_form_upgrade',
           island_number: islandNumber,
@@ -10659,7 +10768,7 @@ export function IslandRunBoardPrototype({
     );
     void recordTelemetryEvent({
       userId: session.user.id,
-      eventType: 'economy_earn',
+      eventType: 'island_run_gameplay_event',
       metadata: {
         stage: 'sanctuary_daily_companion_quest_claimed',
         island_number: islandNumber,
@@ -10675,13 +10784,21 @@ export function IslandRunBoardPrototype({
   const shouldShowIslandArtAmbientBackground = Boolean(islandArtAmbientBackgroundSrc) && isIslandArtAmbientBackgroundLoaded && !isBackgroundHidden;
   const shouldShowLegacyIslandBackground = !shouldShowIslandArtAmbientBackground && isIslandBackgroundAvailable && !isBackgroundHidden;
   const shouldUseNoBackgroundFallback = !shouldShowIslandArtAmbientBackground && (!isIslandBackgroundAvailable || isBackgroundHidden);
-  const islandArtLandmarkBuildLevels = runtimeState.stopBuildStateByIndex.map((buildState, stopIndex) => {
-    if (!isIslandVisualPreview || islandVisualLandmark === null) return buildState.buildLevel;
-    const previewLandmarkId = ['hatchery', 'habit', 'mystery', 'wisdom'][stopIndex] ?? null;
-    return islandVisualLandmark === 'all' || islandVisualLandmark === previewLandmarkId
-      ? islandVisualBuildLevel
-      : 0;
-  });
+  const islandArtLandmarkBuildLevels = useMemo(
+    () => runtimeState.stopBuildStateByIndex.map((buildState, stopIndex) => {
+      if (!isIslandVisualPreview || islandVisualLandmark === null) return buildState.buildLevel;
+      const previewLandmarkId = ['hatchery', 'habit', 'mystery', 'wisdom'][stopIndex] ?? null;
+      return islandVisualLandmark === 'all' || islandVisualLandmark === previewLandmarkId
+        ? islandVisualBuildLevel
+        : 0;
+    }),
+    [
+      islandVisualBuildLevel,
+      islandVisualLandmark,
+      isIslandVisualPreview,
+      runtimeState.stopBuildStateByIndex,
+    ],
+  );
   const isCurrentIslandBossDefeated = bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber;
   const runtimeBossCreatureArtState = resolveBossCreatureArtState({
     stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
@@ -11292,6 +11409,24 @@ export function IslandRunBoardPrototype({
         })()}
         {isDevModeEnabled && isDevPanelOpen && (
           <div id="island-run-dev-panel">
+            <div
+              className="island-run-prototype__status-row island-run-prototype__visual-capture-row"
+              role="group"
+              aria-label="Visual capture"
+            >
+              <span className="island-run-prototype__stat-chip">Visual capture</span>
+              <button
+                type="button"
+                className="island-run-prototype__debug-btn"
+                aria-pressed={isDiscoveryFogDisabled}
+                onClick={handleToggleDiscoveryFog}
+              >
+                {isDiscoveryFogDisabled ? '🌤️ Clean art view: On' : '🌫️ Discovery fog: On'}
+              </button>
+              <span className="island-run-prototype__stat-chip">
+                {isDiscoveryFogDisabled ? 'All discovery blur disabled' : `${Math.round(discoveryRevealProgress * 100)}% discovered`}
+              </span>
+            </div>
         <div className="island-run-prototype__hud-grid">
           <div className="island-run-prototype__hud-section">
             <p className="island-run-prototype__hud-label">Run status</p>
@@ -11440,6 +11575,7 @@ export function IslandRunBoardPrototype({
               <div className="island-run-prototype__status-row">
                 <span className="island-run-prototype__stat-chip">Caretaker</span>
                 <button type="button" className="island-run-prototype__debug-btn" onClick={() => openCaretakerFlow('dev_hud')} disabled={!shouldShowCaretakerTalkAction} aria-describedby={!inhabitantCommunicationAccess.allowed ? 'caretaker-concord-required' : undefined}>🧙 Talk to Caretaker</button>
+                <button type="button" className="island-run-prototype__debug-btn" onClick={handleDevPreviewCaretakerClue}>🧭 Preview wheel clue</button>
                 {!inhabitantCommunicationAccess.allowed ? <span id="caretaker-concord-required" className="island-run-prototype__stat-chip" aria-label="Concord required for full translation">🔒 Concord required</span> : null}
               </div>
               <div className="island-run-prototype__status-row">
@@ -11476,36 +11612,39 @@ export function IslandRunBoardPrototype({
 
       <div
         ref={boardRef}
-        className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${shouldUseNoBackgroundFallback ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark36BoardProfile ? 'island-run-board--spark36' : ''}`}
+        className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${shouldUseNoBackgroundFallback ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark36BoardProfile ? 'island-run-board--spark36' : ''} ${doesModalOwnAttention ? 'island-run-board--attention-paused' : ''} ${isDiscoveryFogEnabled ? 'island-run-board--discovery-fog' : 'island-run-board--discovery-fog-disabled'}`}
         data-island-number={islandNumber}
+        data-discovery-fog={isDiscoveryFogEnabled ? 'enabled' : 'disabled'}
+        style={discoveryFogStyle}
       >
-        {shouldShowLegacyIslandBackground && (
-          <img
-            key={islandBackgroundSrc}
-            className="island-run-board__bg"
-            src={islandBackgroundSrc}
-            alt=""
-            aria-hidden="true"
-            onError={() => setIsIslandBackgroundAvailable(false)}
-          />
-        )}
-        {islandArtAmbientBackgroundSrc && !isBackgroundHidden && (
-          <img
-            key={islandArtAmbientBackgroundSrc}
-            className="island-run-board__bg island-run-board__bg--v2-ambient"
-            src={islandArtAmbientBackgroundSrc}
-            alt=""
-            aria-hidden="true"
-            style={{ visibility: isIslandArtAmbientBackgroundLoaded ? 'visible' : 'hidden' }}
-            onLoad={() => setIsIslandArtAmbientBackgroundLoaded(true)}
-            onError={() => {
-              setIslandArtManifest((currentManifest) => (
-                getIslandArtAmbientBackgroundSrc(currentManifest) === islandArtAmbientBackgroundSrc ? null : currentManifest
-              ));
-              setIsIslandArtAmbientBackgroundLoaded(false);
-            }}
-          />
-        )}
+        <div className="island-run-board__background-layer" aria-hidden="true">
+          {shouldShowLegacyIslandBackground && (
+            <img
+              key={islandBackgroundSrc}
+              className="island-run-board__bg"
+              src={islandBackgroundSrc}
+              alt=""
+              onError={() => setIsIslandBackgroundAvailable(false)}
+            />
+          )}
+          {islandArtAmbientBackgroundSrc && !isBackgroundHidden && (
+            <img
+              key={islandArtAmbientBackgroundSrc}
+              className="island-run-board__bg island-run-board__bg--v2-ambient"
+              src={islandArtAmbientBackgroundSrc}
+              alt=""
+              style={{ visibility: isIslandArtAmbientBackgroundLoaded ? 'visible' : 'hidden' }}
+              onLoad={() => setIsIslandArtAmbientBackgroundLoaded(true)}
+              onError={() => {
+                setIslandArtManifest((currentManifest) => (
+                  getIslandArtAmbientBackgroundSrc(currentManifest) === islandArtAmbientBackgroundSrc ? null : currentManifest
+                ));
+                setIsIslandArtAmbientBackgroundLoaded(false);
+              }}
+            />
+          )}
+        </div>
+        <div className="island-run-board__discovery-atmosphere" aria-hidden="true" />
 
         <div ref={topbarMenuRef}>
           <div className="island-run-board__topbar" aria-label="Island Run top bar">
@@ -11899,12 +12038,15 @@ export function IslandRunBoardPrototype({
           theme={activeTheme}
           islandArtManifest={islandArtManifest}
           landmarkBuildLevels={islandArtLandmarkBuildLevels}
+          landmarkDiscoveryStates={landmarkDiscoveryStates}
+          discoveryFogEnabled={isDiscoveryFogEnabled}
           isBossDefeated={isCurrentIslandBossDefeated}
           bossCreatureArtState={bossCreatureArtState}
           spark36RingGradient={spark36RingSegmentsGradient}
           isSpark36={isSpark36BoardProfile}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
+          isInteractionPaused={doesModalOwnAttention}
           boardTiltXDeg={boardTiltXDeg}
           boardRotateZDeg={boardRotateZDeg}
           tileMap={landmarkDoorTileMap}
@@ -12125,18 +12267,13 @@ export function IslandRunBoardPrototype({
                 </button>
                 <button
                   type="button"
-                  className={`island-run-prototype__footer-multiplier-btn island-run-prototype__footer-multiplier-btn--slot-badge${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}${isAtMaxAvailableMultiplier ? ' island-run-prototype__footer-multiplier-btn--max' : ''}`}
+                  className={`island-run-prototype__footer-multiplier-btn island-run-prototype__footer-multiplier-btn--slot-badge${effectiveMultiplier > 1 ? ' island-run-prototype__footer-multiplier-btn--active' : ''}${isAtMaxAvailableMultiplier ? ' island-run-prototype__footer-multiplier-btn--max' : ''}${isMultiplierMaxJumping ? ' island-run-prototype__footer-multiplier-btn--max-jump' : ''}`}
                   style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.centerBadge)}
                   data-max-multiplier={isAtMaxAvailableMultiplier ? 'true' : undefined}
+                  data-max-jumping={isMultiplierMaxJumping ? 'true' : undefined}
                   disabled={isBuildTutorialGameplayBlocked}
-                  onClick={() => {
-                    if (unlockedMultipliers.length <= 1) return;
-                    const currentIdx = unlockedMultipliers.indexOf(effectiveMultiplier);
-                    const nextIdx = (currentIdx + 1) % unlockedMultipliers.length;
-                    const isNextMax = nextIdx === unlockedMultipliers.length - 1;
-                    playIslandRunSound(isNextMax ? 'multiplier_max' : 'multiplier_cycle');
-                    setDiceMultiplier(unlockedMultipliers[nextIdx]!);
-                  }}
+                  aria-disabled={isBuildTutorialGameplayBlocked || isMultiplierMaxJumping}
+                  onClick={handleMultiplierPillClick}
                   title={`Cost: ${effectiveDiceCost} dice/roll · Max: ×${maxAvailableMultiplier}`}
                 >
                   ×{effectiveMultiplier}
@@ -12239,11 +12376,13 @@ export function IslandRunBoardPrototype({
 
       {showGamifiedJournalCard && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Gamified journal card">
+          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--caretaker-clue" role="dialog" aria-modal="true" aria-label="Caretaker wheel clue">
             <IslandRunGamifiedJournalCard
               session={session}
               islandNumber={islandNumber}
               drawIndex={cardDrawIndex}
+              caretakerArtSrc={caretakerInhabitant?.premiumArtSrc ?? caretakerInhabitant?.retroSpriteSrc ?? '/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp'}
+              caretakerName={caretakerInhabitant?.displayName ?? 'Caretaker'}
               onClose={() => setShowGamifiedJournalCard(false)}
               onSaved={(message) => {
                 setLandingText(message);
@@ -13263,7 +13402,7 @@ export function IslandRunBoardPrototype({
             )}
             {trafficLightRewardConfettiActive && <ConfettiBurst active variant="standard" />}
             <div className="island-traffic-light__hero" aria-hidden="true">
-              <img className="island-traffic-light__art island-traffic-light__art--signal" src={TRAFFIC_LIGHT_MODAL_IMAGE_SRC} alt="" loading="lazy" />
+              <img className="island-traffic-light__art island-traffic-light__art--signal" src={TRAFFIC_LIGHT_MODAL_IMAGE_SRC} alt="" loading="eager" decoding="async" />
             </div>
             <h3 className="island-stop-modal__title island-traffic-light__title">Traffic Light Bonus</h3>
             <p className="island-traffic-light__intro">
@@ -13292,10 +13431,10 @@ export function IslandRunBoardPrototype({
                 >
                   <span className="island-coin__inner" aria-hidden="true">
                     <span className="island-coin__face island-coin__face--heads">
-                      <img className="island-coin__image" src={TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC} alt="" loading="lazy" />
+                      <img className="island-coin__image" src={TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC} alt="" loading="eager" decoding="async" />
                     </span>
                     <span className="island-coin__face island-coin__face--tails">
-                      <img className="island-coin__image" src={TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC} alt="" loading="lazy" />
+                      <img className="island-coin__image" src={TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC} alt="" loading="eager" decoding="async" />
                     </span>
                   </span>
                 </button>
@@ -13308,11 +13447,11 @@ export function IslandRunBoardPrototype({
             {(trafficLightCoinFlip.phase === 'ready' || trafficLightCoinFlip.phase === 'flipping') && (
               <div className="island-traffic-light__prizes" aria-label="Mystery box options">
                 <div className={`island-traffic-light__prize-card ${trafficLightCoinFlip.reward?.boxId === 'box_1' ? 'island-traffic-light__prize-card--selected' : ''}`.trim()}>
-                  <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_BOX_IMAGE_SRC} alt="" loading="lazy" />
+                  <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_BOX_IMAGE_SRC} alt="" loading="eager" decoding="async" />
                   <span className="island-traffic-light__prize-title">Mystery Box 1</span>
                 </div>
                 <div className={`island-traffic-light__prize-card island-traffic-light__prize-card--gift ${trafficLightCoinFlip.reward?.boxId === 'box_2' ? 'island-traffic-light__prize-card--selected' : ''}`.trim()}>
-                  <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_GIFT_IMAGE_SRC} alt="" loading="lazy" />
+                  <img className="island-traffic-light__art island-traffic-light__art--prize" src={TRAFFIC_LIGHT_GIFT_IMAGE_SRC} alt="" loading="eager" decoding="async" />
                   <span className="island-traffic-light__prize-title">Mystery Box 2</span>
                 </div>
               </div>
@@ -13330,7 +13469,8 @@ export function IslandRunBoardPrototype({
                   className="island-traffic-light__winner-image"
                   src={trafficLightCoinFlip.reward.boxId === 'box_1' ? TRAFFIC_LIGHT_BOX_IMAGE_SRC : TRAFFIC_LIGHT_GIFT_IMAGE_SRC}
                   alt=""
-                  loading="lazy"
+                  loading="eager"
+                  decoding="async"
                 />
                 {trafficLightCoinFlip.phase === 'revealed' && (
                   <span className="island-traffic-light__winner-tap-hint">Tap to open</span>
@@ -14173,7 +14313,7 @@ export function IslandRunBoardPrototype({
                 onClick={() => {
                   setShowShopPanel(false);
                   setMarketPurchaseFeedback(null);
-                  void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_earn', metadata: { stage: 'shop_close', island_number: islandNumber } });
+                  void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'shop_close', island_number: islandNumber } });
                 }}
               >
                 ✕ Close
@@ -14231,7 +14371,7 @@ export function IslandRunBoardPrototype({
                   setShowPerfectCompanionReason(true);
                   void recordTelemetryEvent({
                     userId: session.user.id,
-                    eventType: 'onboarding_completed',
+                    eventType: 'onboarding_step',
                     metadata: {
                       stage: 'perfect_companion_onboarding_hint_set_active',
                       island_number: islandNumber,
@@ -14250,7 +14390,7 @@ export function IslandRunBoardPrototype({
                   setShowPerfectCompanionOnboardingHint(false);
                   void recordTelemetryEvent({
                     userId: session.user.id,
-                    eventType: 'onboarding_completed',
+                    eventType: 'onboarding_step',
                     metadata: {
                       stage: 'perfect_companion_onboarding_hint_dismissed',
                       island_number: islandNumber,
@@ -14512,7 +14652,7 @@ export function IslandRunBoardPrototype({
                   }
                   void recordTelemetryEvent({
                     userId: session.user.id,
-                    eventType: 'economy_earn',
+                    eventType: 'island_run_ui_interaction',
                     metadata: {
                       stage: 'sanctuary_open_ship_upgrades_bridge',
                       island_number: islandNumber,
@@ -14963,7 +15103,7 @@ export function IslandRunBoardPrototype({
                         sanctuaryHandlers.setActiveCompanion(selectedSanctuaryCreature.creatureId);
                         void recordTelemetryEvent({
                           userId: session.user.id,
-                          eventType: 'economy_earn',
+                          eventType: 'island_run_gameplay_event',
                           metadata: {
                             stage: 'sanctuary_compare_set_active',
                             island_number: islandNumber,
@@ -14989,7 +15129,7 @@ export function IslandRunBoardPrototype({
                         if (nextOpen) {
                           void recordTelemetryEvent({
                             userId: session.user.id,
-                            eventType: 'economy_earn',
+                            eventType: 'island_run_ui_interaction',
                             metadata: {
                               stage: 'perfect_companion_reason_opened',
                               island_number: islandNumber,
@@ -15033,7 +15173,7 @@ export function IslandRunBoardPrototype({
                               sanctuaryHandlers.setActiveCompanion(selectedSanctuaryCreature.creatureId);
                               void recordTelemetryEvent({
                                 userId: session.user.id,
-                                eventType: 'economy_earn',
+                                eventType: 'island_run_gameplay_event',
                                 metadata: {
                                   stage: 'perfect_companion_reason_cta_set_active',
                                   island_number: islandNumber,

@@ -605,63 +605,64 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
             </span>
           </div>
 
-          {!error && !canSpin && !charging && !spinning && !winnerRevealPending && !showReward && !showGiftOpening && (
-            <div className="new-daily-spin-wheel__overlay new-daily-spin-wheel__overlay--status" role="status">
-              <div className="new-daily-spin-wheel__status-card">
-                <span className="new-daily-spin-wheel__status-icon" aria-hidden="true">
-                  {wonPrize ? '✓' : '✦'}
-                </span>
-                <h3>{wonPrize ? 'Reward claimed 🎉' : 'No spins left'}</h3>
-                <p>
-                  {wonPrize
-                    ? 'You already spun today. Come back tomorrow for another spin.'
-                    : 'Complete habits to earn another spin.'}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {showReward && wonPrize && (
-            <div
-              className="new-daily-spin-wheel__overlay new-daily-spin-wheel__overlay--reward"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Spin reward"
-              onClick={() => setShowReward(false)}
-            >
-              {isTreasureChest ? <CelebrationFireworks variant="rapid" fit="contain" /> : null}
-              <div
-                className={`new-daily-spin-modal__reward-card${
-                  isSpecialPrize ? ' new-daily-spin-modal__reward-card--chest' : ''
-                }`}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="new-daily-spin-modal__reward-burst">
-                  {isSpecialPrize ? '🗝️' : '🎉'}
-                </div>
-                <h3 className="new-daily-spin-modal__reward-title">
-                  {wonPrize.type === 'mystery' ? 'Mystery Revealed!' : 'You won!'}
-                </h3>
-                <div
-                  className={`new-daily-spin-modal__reward-icon${
-                    isSpecialPrize ? ' new-daily-spin-modal__reward-icon--chest' : ''
-                  }`}
-                >
-                  {wonPrize.icon}
-                </div>
-                <p className="new-daily-spin-modal__reward-name">{wonPrize.label}</p>
-                <p className="new-daily-spin-modal__reward-subtitle">{rewardSubtitle}</p>
-                <button
-                  type="button"
-                  className="new-daily-spin-modal__reward-close"
-                  onClick={() => setShowReward(false)}
-                >
-                  Collect
-                </button>
-              </div>
-            </div>
-          )}
         </div>
+
+        {!error && !canSpin && !charging && !spinning && !winnerRevealPending && !showReward && !showGiftOpening && (
+          <div className="new-daily-spin-modal__result-overlay new-daily-spin-modal__result-overlay--status" role="status">
+            <div className="new-daily-spin-wheel__status-card">
+              <span className="new-daily-spin-wheel__status-icon" aria-hidden="true">
+                {wonPrize ? '✓' : '✦'}
+              </span>
+              <h3>{wonPrize ? 'Reward claimed 🎉' : 'No spins left'}</h3>
+              <p>
+                {wonPrize
+                  ? 'You already spun today. Come back tomorrow for another spin.'
+                  : 'Complete habits to earn another spin.'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {showReward && wonPrize && (
+          <div
+            className="new-daily-spin-modal__result-overlay new-daily-spin-modal__result-overlay--reward"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Spin reward"
+            onClick={() => setShowReward(false)}
+          >
+            {isTreasureChest ? <CelebrationFireworks variant="rapid" fit="contain" /> : null}
+            <div
+              className={`new-daily-spin-modal__reward-card${
+                isSpecialPrize ? ' new-daily-spin-modal__reward-card--chest' : ''
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="new-daily-spin-modal__reward-burst">
+                {isSpecialPrize ? '🗝️' : '🎉'}
+              </div>
+              <h3 className="new-daily-spin-modal__reward-title">
+                {wonPrize.type === 'mystery' ? 'Mystery Revealed!' : 'You won!'}
+              </h3>
+              <div
+                className={`new-daily-spin-modal__reward-icon${
+                  isSpecialPrize ? ' new-daily-spin-modal__reward-icon--chest' : ''
+                }`}
+              >
+                {wonPrize.icon}
+              </div>
+              <p className="new-daily-spin-modal__reward-name">{wonPrize.label}</p>
+              <p className="new-daily-spin-modal__reward-subtitle">{rewardSubtitle}</p>
+              <button
+                type="button"
+                className="new-daily-spin-modal__reward-close"
+                onClick={() => setShowReward(false)}
+              >
+                Collect
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="new-daily-spin-modal__actions">

@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useMemo, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { createJournalEntry } from '../../../../services/journal';
 import { getClueCardPromptsForIsland } from '../services/islandRunClueCardCurriculum';
@@ -9,8 +8,10 @@ type MoodAnswer = 'nothing_typical' | 'specific';
 interface IslandRunGamifiedJournalCardProps {
   session: Session;
   islandNumber: number;
-  /** 0-based count of draws already opened on this island visit (rotates the questions). */
+  /** 0-based count of draws already opened on this island visit. */
   drawIndex?: number;
+  caretakerArtSrc: string;
+  caretakerName?: string;
   onSaved: (message: string) => void;
   onClose: () => void;
 }
@@ -19,82 +20,32 @@ export function IslandRunGamifiedJournalCard({
   session,
   islandNumber,
   drawIndex = 0,
+  caretakerArtSrc,
+  caretakerName = 'Caretaker',
   onSaved,
   onClose,
 }: IslandRunGamifiedJournalCardProps) {
   const [goodAnswer, setGoodAnswer] = useState<MoodAnswer | null>(null);
   const [badAnswer, setBadAnswer] = useState<MoodAnswer | null>(null);
-  const [goodDetail, setGoodDetail] = useState('');
-  const [badDetail, setBadDetail] = useState('');
-  const [typicalDay, setTypicalDay] = useState('');
+  const [note, setNote] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isTypicalDayOpen, setIsTypicalDayOpen] = useState(false);
-  const [specificDetailTarget, setSpecificDetailTarget] = useState<'good' | 'bad' | null>(null);
 
-  // Per-island question framing, themed to the island's Compass Book chapter so
-  // the draw is not the same two questions on every island. See
-  // `islandRunClueCardCurriculum.ts`.
   const prompts = useMemo(
     () => getClueCardPromptsForIsland(islandNumber, drawIndex),
     [islandNumber, drawIndex],
   );
 
-  const goodLabel = goodAnswer === 'nothing_typical'
-    ? 'Nothing really — a typical day'
-    : (goodDetail.trim() || 'Something specific');
-  const badLabel = badAnswer === 'nothing_typical'
-    ? 'Nothing really — a typical day'
-    : (badDetail.trim() || 'Something specific');
-  // The typed text is optional — answering both feeling cards is all that is
-  // required to save. No minimum character counts.
-  const canSave = Boolean(goodAnswer)
-    && Boolean(badAnswer)
-    && !isSaving;
+  const completedClues = [goodAnswer, badAnswer].filter(Boolean).length;
+  const activeClue = goodAnswer === null ? 'bright' : badAnswer === null ? 'heavy' : 'complete';
+  const canSave = completedClues === 2 && !isSaving;
 
-  const activeSpecificDetailValue = specificDetailTarget === 'good' ? goodDetail : badDetail;
-
-  const progressLabel = useMemo(() => {
-    const complete = [goodAnswer, badAnswer].filter(Boolean).length;
-    return `${complete}/2 clues gathered`;
-  }, [badAnswer, goodAnswer]);
-
-  useEffect(() => {
-    if (!specificDetailTarget) {
-      return undefined;
-    }
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [specificDetailTarget]);
-
-  const selectSpecificAnswer = (target: 'good' | 'bad') => {
-    if (target === 'good') {
-      setGoodAnswer('specific');
-    } else {
-      setBadAnswer('specific');
-    }
-    setSpecificDetailTarget(target);
-  };
-
-  const updateActiveSpecificDetail = (value: string) => {
-    if (specificDetailTarget === 'good') {
-      setGoodDetail(value);
-      return;
-    }
-
-    setBadDetail(value);
-  };
-
-  const closeSpecificDetailModal = () => setSpecificDetailTarget(null);
+  const goodLabel = goodAnswer === 'nothing_typical' ? 'Quiet day' : 'A bright moment';
+  const badLabel = badAnswer === 'nothing_typical' ? 'All steady' : 'A rough moment';
 
   const handleSave = async () => {
     if (!canSave) {
-      setError('Answer both feeling cards to save this clue card.');
+      setError('Pick both clue cards first.');
       return;
     }
 
@@ -102,24 +53,22 @@ export function IslandRunGamifiedJournalCard({
     setError(null);
 
     const today = new Date().toISOString().split('T')[0];
-    const title = 'Island Run Daily Clue Card';
     const content = [
-      'Gamified journal card from Island Run.',
+      `Caretaker milestone clue · ${prompts.themeLabel}`,
       '',
-      `1) ${prompts.goodQuestion}\n${goodLabel}`,
+      `Bright clue: ${prompts.goodQuestion}\n${goodLabel}`,
       '',
-      `2) ${prompts.badQuestion}\n${badLabel}`,
-      '',
-      `3) Describe a typical day.\n${typicalDay.trim()}`,
+      `Heavy clue: ${prompts.badQuestion}\n${badLabel}`,
+      ...(note.trim() ? ['', `One-line note: ${note.trim()}`] : []),
     ].join('\n');
 
     const { error: saveError } = await createJournalEntry({
       user_id: session.user.id,
       entry_date: today,
-      title,
+      title: 'Caretaker Wheel Clue',
       content,
       mood: goodAnswer === 'specific' && badAnswer === 'nothing_typical' ? 'happy' : 'neutral',
-      tags: ['island-run', 'gamified-journal', 'daily-clue-card', `island-${islandNumber}`],
+      tags: ['island-run', 'gamified-journal', 'daily-clue-card', 'caretaker-clue', `island-${islandNumber}`],
       linked_goal_ids: null,
       linked_habit_ids: null,
       is_private: true,
@@ -137,86 +86,111 @@ export function IslandRunGamifiedJournalCard({
     }
 
     setIsSaving(false);
-    onSaved('🃏 Daily Clue Card saved to your journal. Keep rolling.');
+    onSaved('🧭 The caretaker saved your wheel clue. Keep exploring.');
   };
 
   return (
-    <div className="island-run-gamified-journal-card">
-      <div className="island-run-gamified-journal-card__hero" aria-hidden="true">
-        <span className="island-run-gamified-journal-card__card island-run-gamified-journal-card__card--back" />
-        <span className="island-run-gamified-journal-card__card island-run-gamified-journal-card__card--front">?</span>
-      </div>
-      <p className="island-stop-modal__eyebrow">{prompts.themeLabel} · {progressLabel}</p>
-      <h3 className="island-stop-modal__title">Gamified Journal: Daily Clue Card</h3>
-      <div className="island-run-gamified-journal-card__pips" aria-hidden="true">
-        <span className={`island-run-gamified-journal-card__pip island-run-gamified-journal-card__pip--good ${goodAnswer ? 'is-filled' : ''}`} />
-        <span className={`island-run-gamified-journal-card__pip island-run-gamified-journal-card__pip--bad ${badAnswer ? 'is-filled' : ''}`} />
-      </div>
-      <p className="island-stop-modal__copy">
-        Quick answers keep the loop moving. If nothing stood out, choose the typical-day card — that is still useful data.
-      </p>
-      <p className="island-run-gamified-journal-card__task">
-        <strong>{prompts.activityLabel}</strong> · {prompts.activityDescription}
-      </p>
-
-      <section className={`island-run-gamified-journal-card__section island-run-gamified-journal-card__section--good ${goodAnswer ? 'is-answered' : ''}`}>
-        <strong>1) {prompts.goodQuestion}</strong>
-        <div className="island-hatchery-card__actions island-run-gamified-journal-card__choices">
-          <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${goodAnswer === 'nothing_typical' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setGoodAnswer('nothing_typical')}>Nothing really, a typical day</button>
-          <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${goodAnswer === 'specific' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => selectSpecificAnswer('good')}>Something specific</button>
+    <div className="island-run-gamified-journal-card" data-clue-step={activeClue}>
+      <div className="island-run-gamified-journal-card__visual" aria-hidden="true">
+        <div className="island-run-gamified-journal-card__caretaker-frame">
+          <img src={caretakerArtSrc} alt="" className="island-run-gamified-journal-card__caretaker" />
         </div>
-        {goodAnswer === 'specific' && goodDetail.trim() ? <p className="island-run-gamified-journal-card__detail-preview">{goodDetail}</p> : null}
-      </section>
-
-      <section className={`island-run-gamified-journal-card__section island-run-gamified-journal-card__section--bad ${badAnswer ? 'is-answered' : ''}`}>
-        <strong>2) {prompts.badQuestion}</strong>
-        <div className="island-hatchery-card__actions island-run-gamified-journal-card__choices">
-          <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${badAnswer === 'nothing_typical' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => setBadAnswer('nothing_typical')}>Nothing really, a typical day</button>
-          <button type="button" className={`island-stop-modal__btn island-stop-modal__btn--action ${badAnswer === 'specific' ? 'island-stop-modal__btn--primary' : ''}`} onClick={() => selectSpecificAnswer('bad')}>Something specific</button>
+        <div className="island-run-gamified-journal-card__wheel">
+          <img src="/assets/icons/compass-gold-256.webp" alt="" />
         </div>
-        {badAnswer === 'specific' && badDetail.trim() ? <p className="island-run-gamified-journal-card__detail-preview">{badDetail}</p> : null}
-      </section>
+        <span className="island-run-gamified-journal-card__milestone">Island {islandNumber}</span>
+      </div>
 
-      <section className="island-run-gamified-journal-card__section island-run-gamified-journal-card__section--optional">
-        <button
-          type="button"
-          className="island-run-gamified-journal-card__toggle"
-          aria-expanded={isTypicalDayOpen}
-          onClick={() => setIsTypicalDayOpen((isOpen) => !isOpen)}
-        >
-          <span>{prompts.typicalDayLabel}</span>
-          <span aria-hidden="true">{isTypicalDayOpen ? '−' : '+'}</span>
-        </button>
-        {isTypicalDayOpen ? (
-          <textarea value={typicalDay} onChange={(event) => setTypicalDay(event.target.value)} placeholder="What usually happens from morning to night?" />
-        ) : null}
-      </section>
+      <div className="island-run-gamified-journal-card__heading">
+        <p className="island-stop-modal__eyebrow">Rare caretaker encounter · {prompts.themeLabel}</p>
+        <h3 className="island-stop-modal__title">{caretakerName} found a wheel clue</h3>
+        <p className="island-run-gamified-journal-card__intro">
+          Two quick picks. I’ll remember the pattern for you.
+        </p>
+      </div>
+
+      <div
+        className="island-run-gamified-journal-card__progress"
+        role="progressbar"
+        aria-label="Wheel clues gathered"
+        aria-valuemin={0}
+        aria-valuemax={2}
+        aria-valuenow={completedClues}
+      >
+        <span className={goodAnswer ? 'is-filled' : ''} />
+        <span className={badAnswer ? 'is-filled' : ''} />
+        <strong>{completedClues}/2</strong>
+      </div>
+
+      {activeClue !== 'complete' ? (
+        <section className={`island-run-gamified-journal-card__question island-run-gamified-journal-card__question--${activeClue}`}>
+          <p className="island-run-gamified-journal-card__step">Clue {activeClue === 'bright' ? '1' : '2'} of 2</p>
+          <h4>{activeClue === 'bright' ? prompts.goodQuestion : prompts.badQuestion}</h4>
+          <div className="island-run-gamified-journal-card__choices">
+            <button
+              type="button"
+              className="island-run-gamified-journal-card__choice"
+              onClick={() => activeClue === 'bright' ? setGoodAnswer('nothing_typical') : setBadAnswer('nothing_typical')}
+            >
+              <span className="island-run-gamified-journal-card__choice-art" aria-hidden="true">
+                {activeClue === 'bright' ? '🌙' : '🌿'}
+              </span>
+              <strong>{activeClue === 'bright' ? 'Quiet day' : 'All steady'}</strong>
+              <small>Nothing stood out</small>
+            </button>
+            <button
+              type="button"
+              className="island-run-gamified-journal-card__choice island-run-gamified-journal-card__choice--spark"
+              onClick={() => activeClue === 'bright' ? setGoodAnswer('specific') : setBadAnswer('specific')}
+            >
+              <span className="island-run-gamified-journal-card__choice-art" aria-hidden="true">
+                {activeClue === 'bright' ? '✨' : '🌧️'}
+              </span>
+              <strong>{activeClue === 'bright' ? 'A bright moment' : 'A rough moment'}</strong>
+              <small>Something stood out</small>
+            </button>
+          </div>
+        </section>
+      ) : (
+        <section className="island-run-gamified-journal-card__complete" aria-live="polite">
+          <div className="island-run-gamified-journal-card__complete-title">
+            <span aria-hidden="true">🧭</span>
+            <div>
+              <p>Wheel clue found</p>
+              <strong>That’s enough for today.</strong>
+            </div>
+          </div>
+          <div className="island-run-gamified-journal-card__summary">
+            <button type="button" onClick={() => setGoodAnswer(null)} aria-label="Change bright clue">
+              <span aria-hidden="true">☀️</span>{goodLabel}<small>Change</small>
+            </button>
+            <button type="button" onClick={() => setBadAnswer(null)} aria-label="Change heavy clue">
+              <span aria-hidden="true">🌧️</span>{badLabel}<small>Change</small>
+            </button>
+          </div>
+          <label className="island-run-gamified-journal-card__note">
+            <span>Optional: one short note</span>
+            <input
+              value={note}
+              maxLength={180}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Name the moment…"
+            />
+          </label>
+        </section>
+      )}
 
       {error ? <p className="island-run-gamified-journal-card__error" role="alert">{error}</p> : null}
 
-      {specificDetailTarget ? createPortal(
-        <div className="island-run-gamified-journal-card__detail-modal" role="dialog" aria-modal="true" aria-labelledby="island-run-specific-detail-title">
-          <div className="island-run-gamified-journal-card__detail-modal-panel">
-            <h4 id="island-run-specific-detail-title">Add a quick detail?</h4>
-            <p>{specificDetailTarget === 'good' ? 'What was the good moment?' : 'What was the rough moment?'}</p>
-            <textarea
-              autoFocus
-              value={activeSpecificDetailValue}
-              onChange={(event) => updateActiveSpecificDetail(event.target.value)}
-              placeholder={specificDetailTarget === 'good' ? 'Name the good moment.' : 'Name the rough moment.'}
-            />
-            <div className="island-run-gamified-journal-card__detail-modal-actions">
-              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={closeSpecificDetailModal}>Skip for now</button>
-              <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={closeSpecificDetailModal}>Done</button>
-            </div>
-          </div>
-        </div>,
-        document.body,
-      ) : null}
-
-      <div className="island-stop-modal__cta island-stop-modal__cta--balanced">
-        <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={onClose}>Keep rolling</button>
-        <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleSave} disabled={!canSave}>{isSaving ? 'Saving…' : 'Save clue card'}</button>
+      <div className="island-run-gamified-journal-card__actions">
+        <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={onClose}>
+          Not now
+        </button>
+        {activeClue === 'complete' ? (
+          <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={() => void handleSave()} disabled={!canSave}>
+            {isSaving ? 'Saving…' : 'Save clue'}
+          </button>
+        ) : null}
       </div>
     </div>
   );

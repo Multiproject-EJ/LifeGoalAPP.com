@@ -31,57 +31,32 @@ const ROLL_DURATION_MS = 900;
 
 function Die({ value, isRolling, delay }: { value: number; isRolling: boolean; delay: number }) {
   const safeValue = Math.max(1, Math.min(6, Math.round(value)));
-  const [tumbleRotation, setTumbleRotation] = useState({ rx: 0, ry: 0, rz: 0 });
   const [settled, setSettled] = useState(true);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    if (isRolling) {
-      setSettled(false);
-      // Start tumbling with random rotations
-      intervalRef.current = setInterval(() => {
-        setTumbleRotation({
-          rx: Math.floor(Math.random() * 4) * 90,
-          ry: Math.floor(Math.random() * 4) * 90,
-          rz: Math.floor(Math.random() * 4) * 90,
-        });
-      }, 100);
-
-      // Settle to final face after roll duration
-      timeoutRef.current = setTimeout(() => {
-        clearInterval(intervalRef.current);
-        const face = FACE_ROTATIONS[safeValue] ?? FACE_ROTATIONS[1];
-        setTumbleRotation({ rx: face.rx, ry: face.ry, rz: 0 });
-        setSettled(true);
-      }, ROLL_DURATION_MS + delay);
-    } else {
-      // Not rolling — show final face immediately
-      clearInterval(intervalRef.current);
-      const face = FACE_ROTATIONS[safeValue] ?? FACE_ROTATIONS[1];
-      setTumbleRotation({ rx: face.rx, ry: face.ry, rz: 0 });
+    if (!isRolling) {
       setSettled(true);
+      return undefined;
     }
 
-    return () => {
-      clearInterval(intervalRef.current);
-      clearTimeout(timeoutRef.current);
-    };
-  }, [isRolling, safeValue, delay]);
+    setSettled(false);
+    const timeout = setTimeout(() => setSettled(true), ROLL_DURATION_MS + delay);
+    return () => clearTimeout(timeout);
+  }, [isRolling, delay]);
 
-  const transitionDuration = isRolling && !settled ? '0.1s' : '0.35s';
-  const transitionTimingFunction = settled ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'ease-out';
+  const face = FACE_ROTATIONS[safeValue] ?? FACE_ROTATIONS[1];
+  const isTumbling = isRolling && !settled;
 
   return (
     <div
-      className="board-dice-3d__die-wrapper"
+      className={`board-dice-3d__die-wrapper ${isTumbling ? 'board-dice-3d__die-wrapper--rolling' : ''}`}
       style={{ animationDelay: `${delay}ms` }}
     >
       <div
-        className={`board-dice-3d__die ${isRolling && !settled ? 'board-dice-3d__die--tumbling' : ''} ${settled ? 'board-dice-3d__die--settled' : ''}`}
+        className={`board-dice-3d__die ${isTumbling ? 'board-dice-3d__die--tumbling' : 'board-dice-3d__die--settled'}`}
         style={{
-          transform: `rotateX(${tumbleRotation.rx}deg) rotateY(${tumbleRotation.ry}deg) rotateZ(${tumbleRotation.rz}deg)`,
-          transition: `transform ${transitionDuration} ${transitionTimingFunction}`,
+          transform: isTumbling ? undefined : `rotateX(${face.rx}deg) rotateY(${face.ry}deg)`,
+          animationDelay: isTumbling ? `${delay}ms` : undefined,
         }}
       >
         {/* Face 1 - front */}

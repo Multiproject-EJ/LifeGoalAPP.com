@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 
 // ─── Ambient board particles + token trail ───────────────────────────────────
 // Lightweight canvas-based particle system.
@@ -23,17 +23,21 @@ export interface BoardParticlesProps {
   tokenY: number;
   /** Whether token is currently moving (emit trail) */
   isTokenMoving: boolean;
+  /** Live token frame written by the compositor animation path. */
+  tokenFrameRef?: RefObject<{ x: number; y: number; isMoving: boolean }>;
   /** Trigger a burst at given position */
   burstAt?: { x: number; y: number } | null;
   /** Theme accent color for particles */
   accentColor?: string;
+  /** Stop the animation loop while a modal or other attention-owning surface is open. */
+  isPaused?: boolean;
 }
 
 const MAX_PARTICLES = 80;
 const AMBIENT_SPAWN_RATE = 0.3; // particles per second
 
 export function BoardParticles(props: BoardParticlesProps) {
-  const { boardWidth, boardHeight, tokenX, tokenY, isTokenMoving, burstAt, accentColor = 'rgba(180, 220, 255, 0.6)' } = props;
+  const { boardWidth, boardHeight, tokenX, tokenY, isTokenMoving, tokenFrameRef, burstAt, accentColor = 'rgba(180, 220, 255, 0.6)', isPaused = false } = props;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const rafRef = useRef(0);
@@ -42,13 +46,33 @@ export function BoardParticles(props: BoardParticlesProps) {
   const lastBurstRef = useRef<{ x: number; y: number } | null>(null);
   const tokenMovingRef = useRef(isTokenMoving);
   const tokenPosRef = useRef({ x: tokenX, y: tokenY });
+  const [isLightweightMotionDevice, setIsLightweightMotionDevice] = useState(() => (
+    typeof window !== 'undefined'
+      ? window.matchMedia('(max-width: 720px), (pointer: coarse), (prefers-reduced-motion: reduce)').matches
+      : true
+  ));
 
   tokenMovingRef.current = isTokenMoving;
   tokenPosRef.current = { x: tokenX, y: tokenY };
 
   useEffect(() => {
+    const query = window.matchMedia('(max-width: 720px), (pointer: coarse), (prefers-reduced-motion: reduce)');
+    const sync = () => setIsLightweightMotionDevice(query.matches);
+    sync();
+    query.addEventListener?.('change', sync);
+    return () => query.removeEventListener?.('change', sync);
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    if (isPaused || isLightweightMotionDevice) {
+      const ctx = canvas.getContext('2d');
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      particlesRef.current = [];
+      return;
+    }
 
     const ratio = window.devicePixelRatio || 1;
     canvas.width = Math.floor(boardWidth * ratio);
@@ -86,8 +110,9 @@ export function BoardParticles(props: BoardParticlesProps) {
       }
 
       // --- Spawn token trail ---
-      if (tokenMovingRef.current && particles.length < MAX_PARTICLES) {
-        const tp = tokenPosRef.current;
+      const liveTokenFrame = tokenFrameRef?.current;
+      if ((liveTokenFrame?.isMoving ?? tokenMovingRef.current) && particles.length < MAX_PARTICLES) {
+        const tp = liveTokenFrame ?? tokenPosRef.current;
         for (let i = 0; i < 2; i++) {
           particles.push({
             x: tp.x + (Math.random() - 0.5) * 10,
@@ -130,11 +155,11 @@ export function BoardParticles(props: BoardParticlesProps) {
     rafRef.current = requestAnimationFrame(loop);
 
     return () => cancelAnimationFrame(rafRef.current);
-  }, [boardWidth, boardHeight, accentColor]);
+  }, [boardWidth, boardHeight, accentColor, isLightweightMotionDevice, isPaused, tokenFrameRef]);
 
   // Handle burst trigger
   useEffect(() => {
-    if (!burstAt || (lastBurstRef.current?.x === burstAt.x && lastBurstRef.current?.y === burstAt.y)) return;
+    if (isPaused || isLightweightMotionDevice || !burstAt || (lastBurstRef.current?.x === burstAt.x && lastBurstRef.current?.y === burstAt.y)) return;
     lastBurstRef.current = burstAt;
 
     const particles = particlesRef.current;
@@ -154,7 +179,7 @@ export function BoardParticles(props: BoardParticlesProps) {
         type: 'burst',
       });
     }
-  }, [burstAt]);
+  }, [burstAt, isLightweightMotionDevice, isPaused]);
 
   return (
     <canvas

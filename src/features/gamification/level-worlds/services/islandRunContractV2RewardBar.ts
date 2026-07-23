@@ -283,6 +283,48 @@ export function resolveDiceCostForMultiplier(multiplier: number): number {
   return BASE_DICE_PER_ROLL * Math.max(1, Math.floor(multiplier));
 }
 
+export type MultiplierCycleStep = {
+  nextMultiplier: number;
+  /** True only when this tap enters the highest currently unlocked tier. */
+  reachedMax: boolean;
+  /** True only when this tap leaves the highest tier and returns to x1. */
+  wrappedToOne: boolean;
+};
+
+/**
+ * Resolve one player tap on the multiplier pill.
+ *
+ * Keeping the tier transition pure lets the UI add a short, input-locked
+ * celebration when `reachedMax` is true without creating a second gameplay
+ * authority for multiplier values.
+ */
+export function resolveNextMultiplierCycleStep(
+  currentMultiplier: number,
+  unlockedMultipliers: readonly number[],
+): MultiplierCycleStep {
+  const tiers = Array.from(new Set(
+    unlockedMultipliers
+      .filter((value) => Number.isFinite(value) && value >= 1)
+      .map((value) => Math.floor(value)),
+  )).sort((a, b) => a - b);
+
+  if (tiers.length === 0) {
+    return { nextMultiplier: 1, reachedMax: false, wrappedToOne: false };
+  }
+
+  const safeCurrent = Math.max(1, Math.floor(currentMultiplier));
+  const currentIndex = tiers.indexOf(safeCurrent);
+  const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % tiers.length : 0;
+  const nextMultiplier = tiers[nextIndex] ?? 1;
+  const maxIndex = tiers.length - 1;
+
+  return {
+    nextMultiplier,
+    reachedMax: tiers.length > 1 && nextIndex === maxIndex,
+    wrappedToOne: currentIndex === maxIndex && nextIndex === 0,
+  };
+}
+
 /**
  * Clamp the selected multiplier down if the player no longer has enough dice.
  * Returns the highest eligible multiplier ≤ the current selection.
