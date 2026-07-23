@@ -15200,3 +15200,128 @@
   font-size: 0.95rem;
   line-height: 1.35;
 }
+
+.island-run-dice-packs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.island-run-dice-pack {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--accent, #6c5ce7) 28%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface, #fff) 94%, var(--accent, #6c5ce7) 6%);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.island-run-dice-pack:disabled {
+  cursor: wait;
+  opacity: 0.66;
+}
+
+.island-run-dice-pack--featured {
+  border-color: color-mix(in srgb, #ffb020 65%, transparent);
+  box-shadow: 0 8px 22px rgb(73 53 15 / 12%);
+}
+
+.island-run-dice-pack__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.island-run-dice-pack__badge {
+  padding: 0.14rem 0.42rem;
+  border-radius: 999px;
+  background: #fff2c8;
+  color: #714a00;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.island-run-dice-pack__rolls {
+  color: #4d36a8;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.island-run-dice-pack__description {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  opacity: 0.72;
+}
+
+.island-run-dice-pack__action {
+  margin-top: 0.2rem;
+  color: #4d36a8;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.island-run-dice-packs__mode {
+  grid-column: 1 / -1;
+  margin: 0.1rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  opacity: 0.64;
+}
+
+.island-run-prototype__shop-btn,
+.island-run-prototype__footer-nav-btn--slot-market {
+  position: relative;
+}
+
+.island-run-commerce-dot,
+.island-run-inline-new-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #f04444;
+  box-shadow: 0 0 0 2px rgb(240 68 68 / 28%);
+}
+
+.island-run-commerce-dot {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+}
+
+.island-run-commerce-dot--footer {
+  top: 13%;
+  right: 18%;
+}
+
+.island-run-inline-new-dot {
+  margin-left: 0.4rem;
+  vertical-align: 0.2em;
+}
+
+.island-run-web-treat-offer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.island-run-web-treat-offer__icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+@media (max-width: 540px) {
+  .island-run-dice-packs {
+    grid-template-columns: 1fr;
+  }
+}

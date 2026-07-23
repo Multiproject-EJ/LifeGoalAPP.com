@@ -22,6 +22,7 @@
  * service test suite can exercise the rules.
  */
 import type { FortuneEngineProgressEntry } from './islandRunGameStateStore';
+import { FORTUNE_ENGINE_PRIZE_LADDER } from './fortuneEngineEconomyModel';
 
 // ---------------------------------------------------------------------------
 // Ticket economy — 1 ticket per launch + the daily free Golden Launch
@@ -210,27 +211,24 @@ export interface FortuneEngineMilestone {
   reward: FortuneEngineMilestoneReward;
 }
 
-export const FORTUNE_ENGINE_MILESTONES: readonly FortuneEngineMilestone[] = Object.freeze([
-  { id: 'fortune_1', pointsRequired: 50, rewardLabel: '+5 Dice', reward: { dicePool: 5 } },
-  { id: 'fortune_2', pointsRequired: 120, rewardLabel: '+60 Essence +🧩 Fragment', reward: { essence: 60, coreFragments: 1 } },
-  { id: 'fortune_3', pointsRequired: 220, rewardLabel: '+3 Event Tickets', reward: { eventTickets: 3 } },
-  { id: 'fortune_4', pointsRequired: 350, rewardLabel: '+10 Dice +1 Shard +🧩 Fragment', reward: { dicePool: 10, shards: 1, coreFragments: 1 } },
-  { id: 'fortune_5', pointsRequired: 500, rewardLabel: '+120 Essence +2 Shards', reward: { essence: 120, shards: 2 } },
-  { id: 'fortune_6', pointsRequired: 700, rewardLabel: '+5 Event Tickets +15 Dice +🧩 Fragment', reward: { eventTickets: 5, dicePool: 15, coreFragments: 1 } },
-  { id: 'fortune_7', pointsRequired: 1000, rewardLabel: '+25 Dice +4 Shards +250 Essence', reward: { dicePool: 25, shards: 4, essence: 250 } },
-]);
+export const FORTUNE_ENGINE_MILESTONES: readonly FortuneEngineMilestone[] = Object.freeze(
+  FORTUNE_ENGINE_PRIZE_LADDER.map((milestone) => ({
+    ...milestone,
+    reward: { ...milestone.reward },
+  })),
+);
 
 export const FORTUNE_ENGINE_TRACK_TOTAL_POINTS =
   FORTUNE_ENGINE_MILESTONES[FORTUNE_ENGINE_MILESTONES.length - 1]?.pointsRequired ?? 0;
 
 /** Reward granted once when the finale is stabilised (plus the trophy flag). */
 export const FORTUNE_ENGINE_FINALE_REWARD: Required<Pick<FortuneEngineMilestoneReward, 'dicePool' | 'essence' | 'shards'>> = {
-  dicePool: 40,
+  dicePool: 500,
   essence: 400,
   shards: 6,
 };
 
-export const FORTUNE_ENGINE_FINALE_REWARD_LABEL = '+40 Dice +400 Essence +6 Shards + Fortune Core trophy';
+export const FORTUNE_ENGINE_FINALE_REWARD_LABEL = '+500 Dice +400 Essence +6 Shards + Fortune Core trophy';
 
 export function getFortuneEngineMilestone(milestoneId: string): FortuneEngineMilestone | null {
   return FORTUNE_ENGINE_MILESTONES.find((milestone) => milestone.id === milestoneId) ?? null;

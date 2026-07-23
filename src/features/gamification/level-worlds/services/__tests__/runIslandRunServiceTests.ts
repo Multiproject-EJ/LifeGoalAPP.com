@@ -6,6 +6,7 @@ import { companionRegenModifierTests } from './companionRegenModifier.test';
 import { companionFeastGameTests } from './companionFeastGame.test';
 import { fortuneEngineGameTests } from './fortuneEngineGame.test';
 import { fortuneEngineProgressionTests } from './fortuneEngineProgression.test';
+import { fortuneEngineEconomyModelTests } from './fortuneEngineEconomyModel.test';
 import { fortuneEngineStateActionsTests } from './fortuneEngineStateActions.test';
 import { islandWorkshopGameTests } from './islandWorkshopGame.test';
 import { creatureImageManifestTests } from './creatureImageManifest.test';
@@ -96,6 +97,8 @@ import { islandRunShooterControllerTelemetryTests } from './islandRunShooterCont
 import { shooterBlitzLaneLogicTests } from './shooterBlitzLaneLogic.test';
 import { islandRunShooterControllerQaMatrixTests } from './islandRunShooterControllerQaMatrix.test';
 import { outsideRewardGatewayTests } from './outsideRewardGateway.test';
+import { landingPageTreatTests } from './landingPageTreat.test';
+import { dicePackPurchasesTests } from './dicePackPurchases.test';
 import { todayRewardsParityTests } from './todayRewardsParity.test';
 import { dualTrackOverlayAdapterTests } from './dualTrackOverlayAdapter.test';
 import { combinedJourneyLevelTests } from './combinedJourneyLevel.test';
@@ -157,6 +160,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'companionFeastGame', tests: companionFeastGameTests },
   { label: 'fortuneEngineGame', tests: fortuneEngineGameTests },
   { label: 'fortuneEngineProgression', tests: fortuneEngineProgressionTests },
+  { label: 'fortuneEngineEconomyModel', tests: fortuneEngineEconomyModelTests },
   { label: 'fortuneEngineStateActions', tests: fortuneEngineStateActionsTests },
   { label: 'islandWorkshopGame', tests: islandWorkshopGameTests },
   { label: 'creatureImageManifest', tests: creatureImageManifestTests },
@@ -270,6 +274,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'shooterBlitzLaneLogic', tests: shooterBlitzLaneLogicTests },
   { label: 'islandRunShooterControllerQaMatrix', tests: islandRunShooterControllerQaMatrixTests },
   { label: 'outsideRewardGateway', tests: outsideRewardGatewayTests },
+  { label: 'landingPageTreat', tests: landingPageTreatTests },
+  { label: 'dicePackPurchases', tests: dicePackPurchasesTests },
   { label: 'todayRewardsParity', tests: todayRewardsParityTests },
   { label: 'dualTrackOverlayAdapter', tests: dualTrackOverlayAdapterTests },
   { label: 'combinedJourneyLevel', tests: combinedJourneyLevelTests },

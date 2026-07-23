@@ -473,7 +473,15 @@ import {
   shouldAutoAdvanceIslandOnTimerExpiry,
 } from '../services/islandRunTimerProgression';
 import { createDicePackCheckoutSession } from '../../../../services/billing';
+import { type DicePackSkuId } from '../../../../services/dicePackPurchases';
+import {
+  hasSeenDicePackShop,
+  hasVisitedLandingPageTreat,
+  markDicePackShopSeen,
+  markLandingPageTreatVisited,
+} from '../../../../services/landingPageTreat';
 import { createCreaturePackCheckoutSession } from '../../../../services/creaturePackPurchases';
+import { DicePackOfferGrid } from './DicePackOfferGrid';
 import {
   initiateMinigameTicketCheckout,
   resolveMinigameTicketSku,
@@ -2200,6 +2208,8 @@ export function IslandRunBoardPrototype({
   }, [showEggReadyBanner, activeEgg?.setAtMs]);
 
   const [showShopPanel, setShowShopPanel] = useState(false);
+  const [hasSeenDicePackOffers, setHasSeenDicePackOffers] = useState(() => hasSeenDicePackShop());
+  const [hasVisitedWebTreat, setHasVisitedWebTreat] = useState(() => hasVisitedLandingPageTreat());
   const [showMarketPanel, setShowMarketPanel] = useState(false);
   const [showBuildPanel, setShowBuildPanel] = useState(false);
   const [buildDiscountExpiresAtMs, setBuildDiscountExpiresAtMs] = useState<number | null>(null);
@@ -2210,7 +2220,7 @@ export function IslandRunBoardPrototype({
   const [isRewardBarDetailsExpanded, setIsRewardBarDetailsExpanded] = useState(false);
   const [selectedEventInfoEventId, setSelectedEventInfoEventId] = useState<EventId | null>(null);
   const [showOutOfDicePurchasePrompt, setShowOutOfDicePurchasePrompt] = useState(false);
-  const [isStartingDiceCheckout, setIsStartingDiceCheckout] = useState(false);
+  const [startingDicePackId, setStartingDicePackId] = useState<DicePackSkuId | null>(null);
   const [diceCheckoutError, setDiceCheckoutError] = useState<string | null>(null);
   const [isStartingCreaturePackCheckout, setIsStartingCreaturePackCheckout] = useState(false);
   const [creaturePackCheckoutError, setCreaturePackCheckoutError] = useState<string | null>(null);
@@ -10150,6 +10160,8 @@ export function IslandRunBoardPrototype({
   };
 
   const openShopPanel = () => {
+    markDicePackShopSeen();
+    setHasSeenDicePackOffers(true);
     setShowShopPanel(true);
     setShowMarketPanel(false);
     setShowBuildPanel(false);
@@ -10186,28 +10198,43 @@ export function IslandRunBoardPrototype({
     });
   };
 
-  const handleStartDiceCheckout = useCallback(async (entryPoint: 'shop_panel' | 'market_panel' | 'out_of_dice_prompt') => {
+  const handleStartDiceCheckout = useCallback(async (
+    entryPoint: 'shop_panel' | 'market_panel' | 'out_of_dice_prompt',
+    packId: DicePackSkuId = 'dice_500',
+  ) => {
     if (isDemoSession(session)) {
-      setDiceCheckoutError('Checkout is unavailable in demo mode.');
+      setDiceCheckoutError('Test checkout needs a signed-in test account. No live purchase is available.');
       return;
     }
 
-    setIsStartingDiceCheckout(true);
+    setStartingDicePackId(packId);
     setDiceCheckoutError(null);
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'commerce_checkout_started',
-      metadata: { stage: 'dice_checkout_start', entry_point: entryPoint, island_number: islandNumber },
+      metadata: {
+        stage: 'dice_checkout_start',
+        entry_point: entryPoint,
+        island_number: islandNumber,
+        pack_id: packId,
+        commerce_mode: 'test',
+      },
     });
 
-    const result = await createDicePackCheckoutSession();
+    const result = await createDicePackCheckoutSession(packId);
     if (!result.url) {
       setDiceCheckoutError(result.error?.message ?? 'Unable to start checkout right now.');
-      setIsStartingDiceCheckout(false);
+      setStartingDicePackId(null);
       void recordTelemetryEvent({
         userId: session.user.id,
         eventType: 'commerce_checkout_failed',
-        metadata: { stage: 'dice_checkout_error', entry_point: entryPoint, island_number: islandNumber },
+        metadata: {
+          stage: 'dice_checkout_error',
+          entry_point: entryPoint,
+          island_number: islandNumber,
+          pack_id: packId,
+          commerce_mode: 'test',
+        },
       });
       return;
     }
@@ -11238,6 +11265,9 @@ export function IslandRunBoardPrototype({
             onClick={openShopPanel}
           >
             🛍️ Market
+            {!hasSeenDicePackOffers ? (
+              <span className="island-run-commerce-dot" aria-label="New dice packs available" />
+            ) : null}
           </button>
           {unclaimedCreatureCount > 0 && (
             <button
@@ -12248,6 +12278,9 @@ export function IslandRunBoardPrototype({
                     />
                   </svg>
                   <span className="island-run-prototype__footer-handle-btn-label">🛍️ Market</span>
+                  {!hasSeenDicePackOffers ? (
+                    <span className="island-run-commerce-dot island-run-commerce-dot--footer" aria-label="New dice packs available" />
+                  ) : null}
                 </button>
                 <button
                   type="button"
@@ -13700,14 +13733,11 @@ export function IslandRunBoardPrototype({
             />
             {diceCheckoutError ? <p className="island-run-prototype__error">{diceCheckoutError}</p> : null}
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                onClick={() => void handleStartDiceCheckout('out_of_dice_prompt')}
-                disabled={isStartingDiceCheckout}
-              >
-                {isStartingDiceCheckout ? 'Starting checkout…' : 'Buy 500 Rolls (Stripe)'}
-              </button>
+              <DicePackOfferGrid
+                compact
+                loadingPackId={startingDicePackId}
+                onSelect={(packId) => void handleStartDiceCheckout('out_of_dice_prompt', packId)}
+              />
               <button
                 type="button"
                 className="island-stop-modal__btn island-stop-modal__btn--action"
@@ -14210,16 +14240,38 @@ export function IslandRunBoardPrototype({
             <p className="island-stop-modal__copy"><strong>💰 {runtimeState.essence} money</strong> · Island {islandNumber}</p>
 
             <div className="island-hatchery-card">
-              <p><strong>Flash Offer — Dice Top-up</strong></p>
-              <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Limited-time checkout entry for 500 rolls.</p>
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                onClick={() => void handleStartDiceCheckout('market_panel')}
-                disabled={isStartingDiceCheckout}
-              >
-                {isStartingDiceCheckout ? 'Starting checkout…' : 'Buy 500 Rolls (Stripe)'}
-              </button>
+              <p><strong>Dice Packs</strong></p>
+              <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>
+                Optional test-mode refills. Free regeneration and reward routes remain visible first.
+              </p>
+              <DicePackOfferGrid
+                loadingPackId={startingDicePackId}
+                onSelect={(packId) => void handleStartDiceCheckout('market_panel', packId)}
+              />
+            </div>
+
+            <div className="island-hatchery-card island-run-web-treat-offer">
+              <span className="island-run-web-treat-offer__icon" aria-hidden="true">🎁</span>
+              <div>
+                <p>
+                  <strong>Daily Web Treat</strong>
+                  {!hasVisitedWebTreat ? <span className="island-run-inline-new-dot" aria-label="New free treat" /> : null}
+                </p>
+                <p style={{ fontSize: '0.85rem', opacity: 0.72 }}>
+                  Visit the HabitGame landing treat page and bring back 50 demo dice. No payment or contact details.
+                </p>
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action"
+                  onClick={() => {
+                    markLandingPageTreatVisited();
+                    setHasVisitedWebTreat(true);
+                    window.location.assign('/daily-treat.html?source=island-run');
+                  }}
+                >
+                  {hasVisitedWebTreat ? 'Visit web treat again' : 'Visit & claim 50 demo dice'}
+                </button>
+              </div>
             </div>
 
             <div className="island-hatchery-card island-run-creature-pack-offer">

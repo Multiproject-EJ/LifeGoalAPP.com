@@ -41,6 +41,55 @@ export function rollFortuneInt(state: number, maxExclusive: number): [value: num
 }
 
 // ---------------------------------------------------------------------------
+// Challenge rotation — every run contains three different skill chambers
+// ---------------------------------------------------------------------------
+
+export type FortuneChallengeModeId = 'pulse' | 'echo' | 'signal';
+
+export interface FortuneChallengeMode {
+  id: FortuneChallengeModeId;
+  name: string;
+  instruction: string;
+}
+
+export const FORTUNE_CHALLENGE_MODES: Readonly<Record<FortuneChallengeModeId, FortuneChallengeMode>> = {
+  pulse: {
+    id: 'pulse',
+    name: 'Pulse Chamber',
+    instruction: 'Tap bright rewards as the needle crosses them.',
+  },
+  echo: {
+    id: 'echo',
+    name: 'Echo Chamber',
+    instruction: 'Memorise the symbol sequence, then collect it in order.',
+  },
+  signal: {
+    id: 'signal',
+    name: 'Signal Chamber',
+    instruction: 'Match the centre signal to the passing wheel symbol.',
+  },
+};
+
+/**
+ * Shuffle the three chamber modes once per run. Each mode appears exactly
+ * once, so consecutive chambers can never repeat the same interaction.
+ */
+export function rollFortuneChallengeSequence(
+  state: number,
+): [sequence: FortuneChallengeModeId[], nextState: number] {
+  const sequence: FortuneChallengeModeId[] = ['pulse', 'echo', 'signal'];
+  let nextState = state;
+  for (let index = sequence.length - 1; index > 0; index -= 1) {
+    const [swapIndex, advanced] = rollFortuneInt(nextState, index + 1);
+    nextState = advanced;
+    const current = sequence[index]!;
+    sequence[index] = sequence[swapIndex]!;
+    sequence[swapIndex] = current;
+  }
+  return [sequence, nextState];
+}
+
+// ---------------------------------------------------------------------------
 // Route wheel — the launch spin that flavors the run
 // ---------------------------------------------------------------------------
 
@@ -238,6 +287,54 @@ export interface FortuneRing {
   segments: FortuneRingSegment[];
   durationMs: number;
   revolutionMs: number;
+}
+
+export const FORTUNE_ECHO_PREVIEW_MS = 2_400;
+
+const ECHO_SIGNAL_KINDS: readonly FortuneSegmentKind[] = ['points', 'dice', 'essence', 'time'];
+
+/** Build a deterministic symbol sequence using reward kinds present in the ring. */
+export function rollFortuneEchoSequence(options: {
+  segments: readonly FortuneRingSegment[];
+  ringIndex: number;
+  rngState: number;
+}): [sequence: FortuneSegmentKind[], nextState: number] {
+  const available = options.segments
+    .filter((segment) => ECHO_SIGNAL_KINDS.includes(segment.kind) && !segment.collected)
+    .map((segment) => segment.kind);
+  if (available.length === 0) return [[], options.rngState];
+
+  let state = options.rngState;
+  for (let index = available.length - 1; index > 0; index -= 1) {
+    const [swapIndex, advanced] = rollFortuneInt(state, index + 1);
+    state = advanced;
+    const current = available[index]!;
+    available[index] = available[swapIndex]!;
+    available[swapIndex] = current;
+  }
+  const wanted = Math.min(5, 3 + Math.max(0, Math.floor(options.ringIndex)));
+  const sequence: FortuneSegmentKind[] = [];
+  for (let index = 0; index < wanted; index += 1) {
+    sequence.push(available[index % available.length]!);
+  }
+  return [sequence, state];
+}
+
+/** Choose the next uncollected reward kind for Signal Chamber. */
+export function rollFortuneSignalTarget(options: {
+  segments: readonly FortuneRingSegment[];
+  rngState: number;
+  previousKind?: FortuneSegmentKind | null;
+}): [target: FortuneSegmentKind | null, nextState: number] {
+  const present = ECHO_SIGNAL_KINDS.filter((kind) =>
+    options.segments.some((segment) => segment.kind === kind && !segment.collected),
+  );
+  if (present.length === 0) return [null, options.rngState];
+  const candidates = present.length > 1 && options.previousKind
+    ? present.filter((kind) => kind !== options.previousKind)
+    : present;
+  const [index, nextState] = rollFortuneInt(options.rngState, candidates.length);
+  return [candidates[index] ?? present[0]!, nextState];
 }
 
 /**

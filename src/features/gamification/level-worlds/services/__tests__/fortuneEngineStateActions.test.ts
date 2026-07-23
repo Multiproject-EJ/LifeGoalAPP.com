@@ -175,8 +175,8 @@ export const fortuneEngineStateActionsTests: TestCase[] = [
         session,
         client: null,
         eventId: EVENT_ID,
-        runScore: 250,
-        eventPoints: 250,
+        runScore: 400,
+        eventPoints: 400,
         fragmentAwarded: false,
       });
 
@@ -192,7 +192,7 @@ export const fortuneEngineStateActionsTests: TestCase[] = [
       const ticketMilestone = FORTUNE_ENGINE_MILESTONES.find((milestone) => (milestone.reward.eventTickets ?? 0) > 0);
       assert(ticketMilestone, 'a ticket-returning milestone should exist');
       const ticketClaim = claimFortuneEngineMilestoneReward({ session, client: null, eventId: EVENT_ID, milestoneId: ticketMilestone!.id });
-      assertEqual(ticketClaim.ok, true, 'ticket milestone should claim at 250 points');
+      assertEqual(ticketClaim.ok, true, 'ticket milestone should claim at 400 points');
       assertEqual(
         ticketClaim.record.minigameTicketsByEvent[EVENT_ID],
         1 + (ticketMilestone!.reward.eventTickets ?? 0),
@@ -243,15 +243,15 @@ export const fortuneEngineStateActionsTests: TestCase[] = [
         session,
         client: null,
         eventId: EVENT_ID,
-        runScore: 150,
-        eventPoints: 150,
+        runScore: 200,
+        eventPoints: 200,
         fragmentAwarded: false,
       });
 
       const fragmentMilestone = FORTUNE_ENGINE_MILESTONES.find((milestone) => (milestone.reward.coreFragments ?? 0) > 0);
       assert(fragmentMilestone, 'a fragment milestone should exist on the track');
       const claim = claimFortuneEngineMilestoneReward({ session, client: null, eventId: EVENT_ID, milestoneId: fragmentMilestone!.id });
-      assertEqual(claim.ok, true, 'the fragment milestone should claim at 150 points');
+      assertEqual(claim.ok, true, 'the fragment milestone should claim at 200 points');
       assertDeepEqual(claim.progress?.fragmentIds, [0], 'the claim should light the lowest missing fragment');
     },
   },

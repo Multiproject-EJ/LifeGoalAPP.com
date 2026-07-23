@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#081b3a" />
+    <title>HabitGame Daily Web Treat</title>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      * { box-sizing: border-box; }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background:
+          radial-gradient(circle at 50% 4%, rgba(63, 222, 255, .3), transparent 34%),
+          linear-gradient(160deg, #081b3a 0%, #10275a 55%, #2e1c67 100%);
+      }
+      main {
+        width: min(100%, 440px);
+        padding: 28px;
+        border: 1px solid rgba(188, 236, 255, .28);
+        border-radius: 28px;
+        background: rgba(6, 20, 48, .86);
+        box-shadow: 0 28px 80px rgba(0, 0, 0, .42);
+        text-align: center;
+      }
+      .eyebrow { color: #8eeaff; font-size: .78rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+      .gift { margin: 18px auto 10px; font-size: 5rem; filter: drop-shadow(0 12px 24px rgba(88, 214, 255, .32)); }
+      h1 { margin: 0; font-size: clamp(1.9rem, 8vw, 2.7rem); }
+      .reward { margin: 12px 0 4px; color: #ffe37a; font-size: 1.45rem; font-weight: 900; }
+      p { color: #d7e8ff; line-height: 1.55; }
+      button {
+        width: 100%;
+        margin-top: 12px;
+        padding: 15px 18px;
+        border: 0;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #ffe274, #ff9e4a);
+        color: #302000;
+        font: inherit;
+        font-weight: 900;
+        cursor: pointer;
+      }
+      small { display: block; margin-top: 14px; color: #9eb8d9; line-height: 1.4; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="eyebrow">HabitGame web treat</div>
+      <div class="gift" aria-hidden="true">🎁</div>
+      <h1>A little momentum</h1>
+      <div class="reward">+50 dice</div>
+      <p>Visit once a day during the demo, then bring this treat back into Island Run.</p>
+      <button id="claim" type="button">Claim demo treat &amp; return</button>
+      <small>Demo reward only. No purchase, payment, or personal details required.</small>
+    </main>
+    <script>
+      document.getElementById('claim').addEventListener('click', function () {
+        var now = new Date();
+        var dayKey = [
+          now.getFullYear(),
+          String(now.getMonth() + 1).padStart(2, '0'),
+          String(now.getDate()).padStart(2, '0')
+        ].join('-');
+        localStorage.setItem('lifegoal.landingTreat.pendingDay.v1', dayKey);
+        localStorage.setItem('lifegoal.landingTreat.visited.v1', 'true');
+        window.location.assign('/?landingTreat=claimed');
+      });
+    </script>
+  </body>
+</html>

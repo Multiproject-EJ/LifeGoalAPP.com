@@ -22,6 +22,8 @@ import type { IslandRunMinigameProps } from '../../level-worlds/services/islandR
 import type { FortuneEngineProgressEntry } from '../../level-worlds/services/islandRunGameStateStore';
 import {
   buildFortuneRing,
+  FORTUNE_CHALLENGE_MODES,
+  FORTUNE_ECHO_PREVIEW_MS,
   FORTUNE_FINALE_DURATION_MS,
   FORTUNE_FINALE_REVOLUTION_MS,
   FORTUNE_FINALE_TARGET_COUNT,
@@ -39,13 +41,18 @@ import {
   resolveFortuneRunOutcome,
   resolveFortuneSegmentIndexForAngle,
   resolveFortuneTap,
+  rollFortuneChallengeSequence,
+  rollFortuneEchoSequence,
   rollFortuneFinaleTargets,
+  rollFortuneSignalTarget,
   rollFortuneWheelSlot,
+  type FortuneChallengeModeId,
   type FortuneRing,
   type FortuneRingSegment,
   type FortuneRoute,
   type FortuneRunEnd,
   type FortuneRunOutcome,
+  type FortuneSegmentKind,
 } from '../../level-worlds/services/fortuneEngineGame';
 import {
   buildFortuneEngineTrackViewModel,
@@ -177,6 +184,11 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
   const [shieldsLeft, setShieldsLeft] = useState(0);
   const [runMultiplierBonus, setRunMultiplierBonus] = useState(0);
   const [ringTimeLeftMs, setRingTimeLeftMs] = useState(0);
+  const [challengeModeId, setChallengeModeId] = useState<FortuneChallengeModeId>('pulse');
+  const [challengeHits, setChallengeHits] = useState(0);
+  const [echoSequence, setEchoSequence] = useState<FortuneSegmentKind[]>([]);
+  const [echoPreviewing, setEchoPreviewing] = useState(false);
+  const [signalTarget, setSignalTarget] = useState<FortuneSegmentKind | null>(null);
   const [lastOutcome, setLastOutcome] = useState<FortuneRunOutcome | null>(null);
   const [lastFragmentId, setLastFragmentId] = useState<number | null>(null);
   const [runsFinished, setRunsFinished] = useState(0);
@@ -204,6 +216,13 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
   const finaleTargetsRef = useRef<number[]>([]);
   const finaleHitsRef = useRef<Set<number>>(new Set());
   const bannerTimerRef = useRef<number | null>(null);
+  const challengeSequenceRef = useRef<FortuneChallengeModeId[]>(['pulse', 'echo', 'signal']);
+  const challengeModeRef = useRef<FortuneChallengeModeId>('pulse');
+  const challengeHitsRef = useRef(0);
+  const echoSequenceRef = useRef<FortuneSegmentKind[]>([]);
+  const echoProgressRef = useRef(0);
+  const echoPreviewUntilRef = useRef(0);
+  const signalTargetRef = useRef<FortuneSegmentKind | null>(null);
 
   phaseRef.current = phase;
   routeRef.current = activeRoute;
@@ -263,7 +282,9 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
     setComboCount(0);
 
     const [slotIndex, nextState] = rollFortuneWheelSlot(rngRef.current);
-    rngRef.current = nextState;
+    const [challengeSequence, challengeState] = rollFortuneChallengeSequence(nextState);
+    rngRef.current = challengeState;
+    challengeSequenceRef.current = challengeSequence;
     const slotArcDeg = 360 / FORTUNE_WHEEL_SLOTS.length;
     const slotCenterDeg = slotIndex * slotArcDeg + slotArcDeg / 2;
     wheelSpinRef.current = {
@@ -281,6 +302,11 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
     setLastOutcome(null);
     setLastFragmentId(null);
     setLastClaimLabel(null);
+    setChallengeModeId(challengeSequence[0] ?? 'pulse');
+    setChallengeHits(0);
+    setEchoSequence([]);
+    setEchoPreviewing(false);
+    setSignalTarget(null);
     setActiveRoute(null);
     setShowRouteBanner(false);
     setPhase('spin');
@@ -291,9 +317,43 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
   const startRing = useCallback((index: number, route: FortuneRoute) => {
     const [ring, nextState] = buildFortuneRing({ ringIndex: index, route, rngState: rngRef.current });
     rngRef.current = nextState;
+    const mode = challengeSequenceRef.current[index] ?? 'pulse';
+    challengeModeRef.current = mode;
+    challengeHitsRef.current = 0;
+    echoProgressRef.current = 0;
+    echoPreviewUntilRef.current = 0;
+    echoSequenceRef.current = [];
+    signalTargetRef.current = null;
+    setChallengeModeId(mode);
+    setChallengeHits(0);
+    setEchoSequence([]);
+    setEchoPreviewing(false);
+    setSignalTarget(null);
+
+    const now = performance.now();
+    if (mode === 'echo') {
+      const [sequence, echoState] = rollFortuneEchoSequence({
+        segments: ring.segments,
+        ringIndex: index,
+        rngState: rngRef.current,
+      });
+      rngRef.current = echoState;
+      echoSequenceRef.current = sequence;
+      echoPreviewUntilRef.current = now + FORTUNE_ECHO_PREVIEW_MS;
+      setEchoSequence(sequence);
+      setEchoPreviewing(true);
+    } else if (mode === 'signal') {
+      const [target, signalState] = rollFortuneSignalTarget({
+        segments: ring.segments,
+        rngState: rngRef.current,
+      });
+      rngRef.current = signalState;
+      signalTargetRef.current = target;
+      setSignalTarget(target);
+    }
     ringRef.current = ring;
     segmentsRef.current = ring.segments;
-    ringStartedAtRef.current = performance.now();
+    ringStartedAtRef.current = mode === 'echo' ? echoPreviewUntilRef.current : now;
     ringTimeLeftRef.current = ring.durationMs;
     setRingTimeLeftMs(ring.durationMs);
     setRingIndex(index);
@@ -342,6 +402,15 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
     playIslandRunSound('minigame_open');
   }, [ringIndex, startRing]);
 
+  const completeCurrentRing = useCallback((completedRingIndex: number) => {
+    if (completedRingIndex >= FORTUNE_RING_COUNT - 1) {
+      finishRun('completed', completedRingIndex);
+      return;
+    }
+    setPhase('decision');
+    playIslandRunSound('coin_flip');
+  }, [finishRun]);
+
   const handleStartFinale = useCallback(() => {
     const [targets, nextState] = rollFortuneFinaleTargets(rngRef.current);
     rngRef.current = nextState;
@@ -385,6 +454,31 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
   const handleRingTap = useCallback(() => {
     if (phaseRef.current === 'ring') {
       const segmentIndex = resolveFortuneSegmentIndexForAngle(pointerAngleRef.current);
+      const mode = challengeModeRef.current;
+      const segment = segmentsRef.current[segmentIndex];
+      if (mode === 'echo' && performance.now() < echoPreviewUntilRef.current) return;
+
+      if (mode === 'echo' && segment?.kind !== 'hazard') {
+        const expected = echoSequenceRef.current[echoProgressRef.current] ?? null;
+        if (!expected || segment?.kind !== expected) {
+          comboRef.current = 0;
+          setComboCount(0);
+          triggerIslandRunHaptic('roll');
+          return;
+        }
+      }
+
+      if (
+        mode === 'signal'
+        && segment?.kind !== 'hazard'
+        && segment?.kind !== signalTargetRef.current
+      ) {
+        comboRef.current = 0;
+        setComboCount(0);
+        triggerIslandRunHaptic('roll');
+        return;
+      }
+
       const perfect = isFortunePerfectTapAngle(pointerAngleRef.current);
       const outcome = resolveFortuneTap(segmentsRef.current, segmentIndex, {
         perfect,
@@ -422,8 +516,36 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
       setRawPoints(totals.rawPoints);
       setRunDice(totals.dice);
       setRunEssence(totals.essence);
+
+      let chamberComplete = false;
+      if (mode === 'echo') {
+        echoProgressRef.current += 1;
+        challengeHitsRef.current = echoProgressRef.current;
+        setChallengeHits(echoProgressRef.current);
+        chamberComplete = echoProgressRef.current >= echoSequenceRef.current.length;
+      } else if (mode === 'signal') {
+        challengeHitsRef.current += 1;
+        setChallengeHits(challengeHitsRef.current);
+        const targetCount = 3 + (ringRef.current?.ringIndex ?? 0);
+        chamberComplete = challengeHitsRef.current >= targetCount;
+        if (!chamberComplete) {
+          const [nextTarget, nextState] = rollFortuneSignalTarget({
+            segments: outcome.segments,
+            rngState: rngRef.current,
+            previousKind: signalTargetRef.current,
+          });
+          rngRef.current = nextState;
+          signalTargetRef.current = nextTarget;
+          setSignalTarget(nextTarget);
+          chamberComplete = nextTarget === null;
+        }
+      }
+
       playIslandRunSound(outcome.perfect ? 'coin_flip' : 'reward_bar_fill');
       triggerIslandRunHaptic('reward_claim');
+      if (chamberComplete) {
+        completeCurrentRing(ringRef.current?.ringIndex ?? 0);
+      }
       return;
     }
 
@@ -446,7 +568,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
         triggerIslandRunHaptic('reward_claim');
       }
     }
-  }, [config, finishRun]);
+  }, [completeCurrentRing, config, finishRun]);
 
   // ── Animation loop ─────────────────────────────────────────────────────────
 
@@ -490,24 +612,40 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
       if (phaseRef.current === 'ring') {
         const ring = ringRef.current;
         if (!ring) return;
+        if (challengeModeRef.current === 'echo' && frameNowMs < echoPreviewUntilRef.current) {
+          drawTimingRing(canvas, {
+            segments: segmentsRef.current,
+            pointerAngleDeg: 0,
+            centerTop: 'Memorise',
+            centerBottom: `${echoSequenceRef.current.length} signals`,
+            highlightIndices: null,
+            hitIndices: null,
+          });
+          rafRef.current = requestAnimationFrame(frame);
+          return;
+        }
+        if (challengeModeRef.current === 'echo' && echoPreviewUntilRef.current > 0) {
+          echoPreviewUntilRef.current = 0;
+          setEchoPreviewing(false);
+        }
         pointerAngleRef.current = (((frameNowMs - ringStartedAtRef.current) / ring.revolutionMs) * 360) % 360;
         ringTimeLeftRef.current -= dtMs;
         setRingTimeLeftMs(Math.max(0, ringTimeLeftRef.current));
+        const centerTop = challengeModeRef.current === 'pulse'
+          ? `Pulse ${ring.ringIndex + 1}/${FORTUNE_RING_COUNT}`
+          : challengeModeRef.current === 'echo'
+            ? `Echo ${echoProgressRef.current}/${echoSequenceRef.current.length}`
+            : `Match ${signalTargetRef.current ? SEGMENT_GLYPHS[signalTargetRef.current] : '✓'}`;
         drawTimingRing(canvas, {
           segments: segmentsRef.current,
           pointerAngleDeg: pointerAngleRef.current,
-          centerTop: `Ring ${ring.ringIndex + 1}/${FORTUNE_RING_COUNT}`,
+          centerTop,
           centerBottom: `${Math.ceil(Math.max(0, ringTimeLeftRef.current) / 1000)}s`,
           highlightIndices: null,
           hitIndices: null,
         });
         if (ringTimeLeftRef.current <= 0) {
-          if (ring.ringIndex >= FORTUNE_RING_COUNT - 1) {
-            finishRun('completed', ring.ringIndex);
-          } else {
-            setPhase('decision');
-            playIslandRunSound('coin_flip');
-          }
+          completeCurrentRing(ring.ringIndex);
           return;
         }
         rafRef.current = requestAnimationFrame(frame);
@@ -543,7 +681,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     };
-  }, [phase, config, finishRun, startRing]);
+  }, [phase, completeCurrentRing, config, finishRun, startRing]);
 
   useEffect(() => {
     refreshTickets();
@@ -564,6 +702,10 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
   const nextRingMultiplier = activeRoute
     ? resolveFortuneRunMultiplier({ ringIndex: ringIndex + 1, route: activeRoute, bonusMultiplier: runMultiplierBonus })
     : 1;
+  const activeChallenge = FORTUNE_CHALLENGE_MODES[challengeModeId];
+  const nextChallenge = FORTUNE_CHALLENGE_MODES[
+    challengeSequenceRef.current[Math.min(FORTUNE_RING_COUNT - 1, ringIndex + 1)] ?? 'pulse'
+  ];
 
   return (
     <section className={`fortune-engine${eventUnstable ? ' fortune-engine--unstable' : ''}`} aria-label="The Fortune Engine mini-game">
@@ -732,6 +874,33 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
               Golden play · core piece guaranteed{runMultiplierBonus > 0 ? ` · +${runMultiplierBonus}×` : ''}
             </p>
           )}
+          {phase !== 'finale' && (
+            <RunPrizeProgress track={trackViewModel} pendingPoints={phase === 'spin' ? 0 : bankedPoints} />
+          )}
+          {phase === 'ring' && (
+            <div className={`fortune-engine__challenge-card fortune-engine__challenge-card--${challengeModeId}`} role="status">
+              <div>
+                <span>Chamber {ringIndex + 1} of {FORTUNE_RING_COUNT}</span>
+                <strong>{activeChallenge.name}</strong>
+              </div>
+              <p>{activeChallenge.instruction}</p>
+              {challengeModeId === 'echo' && (
+                <div className={`fortune-engine__echo-sequence${echoPreviewing ? '' : ' fortune-engine__echo-sequence--hidden'}`}>
+                  {echoSequence.map((kind, index) => (
+                    <span key={`${kind}-${index}`} className={index < challengeHits ? 'is-complete' : ''}>
+                      {echoPreviewing ? SEGMENT_GLYPHS[kind] : index < challengeHits ? '✓' : '?'}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {challengeModeId === 'signal' && signalTarget && (
+                <div className="fortune-engine__signal-target">
+                  Match <strong>{SEGMENT_GLYPHS[signalTarget]}</strong>
+                  <span>{challengeHits}/{3 + ringIndex}</span>
+                </div>
+              )}
+            </div>
+          )}
           {phase === 'ring' && comboCount >= 2 && (
             <p className="fortune-engine__combo" role="status" key={comboCount}>
               Perfect ×{comboCount} — next pays ×{resolveFortunePerfectPointsMultiplier(comboCount)}
@@ -770,9 +939,18 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
                 <div className="fortune-engine__loot-pill" aria-label={`${runDice} dice and ${runEssence} essence collected`}>
                   <span>Dice {runDice}</span><span>Essence {runEssence}</span>
                 </div>
-                <p className="fortune-engine__hint"><strong>Tap the lit slices</strong><span>Gold · Dice · Essence · Time &nbsp; / &nbsp; avoid red</span></p>
+                <p className="fortune-engine__hint">
+                  <strong>
+                    {challengeModeId === 'pulse'
+                      ? 'Tap bright slices'
+                      : challengeModeId === 'echo'
+                        ? echoPreviewing ? 'Memorise the sequence' : 'Repeat the hidden sequence'
+                        : `Tap ${signalTarget ? SEGMENT_GLYPHS[signalTarget] : 'matching'} slices`}
+                  </strong>
+                  <span>Gold · Dice · Essence · Time &nbsp; / &nbsp; avoid red</span>
+                </p>
                 <button type="button" className="fortune-engine__btn fortune-engine__btn--quiet" onClick={handleBank}>
-                  Finish and keep rewards
+                  Bank {bankedPoints} points &amp; end run
                 </button>
               </>
             ) : phase === 'finale' ? (
@@ -786,18 +964,19 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
 
       {phase === 'decision' && activeRoute && (
         <div className="fortune-engine__panel fortune-engine__decision" role="dialog" aria-label="Bank or go deeper">
-          <p className="fortune-engine__eyebrow">Ring {ringIndex + 1} complete</p>
-          <h2 className="fortune-engine__title">Choose your reward</h2>
+          <p className="fortune-engine__eyebrow">{activeChallenge.name} complete</p>
+          <h2 className="fortune-engine__title">Bank your points or risk them?</h2>
           <p className="fortune-engine__decision-status">Danger: <strong>{hazardsHit}/{FORTUNE_RUN_HAZARD_LIMIT}</strong></p>
+          <RunPrizeProgress track={trackViewModel} pendingPoints={bankedPoints} />
           <div className="fortune-engine__choice-grid">
             <button type="button" className="fortune-engine__choice fortune-engine__choice--safe" onClick={handleBank}>
-              <span className="fortune-engine__choice-kicker">Safe</span>
-              <strong>💰 Keep {bankedPoints}</strong>
-              <small>Finish this run</small>
+              <span className="fortune-engine__choice-kicker">Guaranteed</span>
+              <strong>Bank {bankedPoints} event points</strong>
+              <small>Add them to the prize track and end this run</small>
             </button>
             <button type="button" className="fortune-engine__choice fortune-engine__choice--risk" onClick={handleGoDeeper}>
-              <span className="fortune-engine__choice-kicker">Risk</span>
-              <strong>🌀 Play for ×{nextRingMultiplier}</strong>
+              <span className="fortune-engine__choice-kicker">Next: {nextChallenge.name}</span>
+              <strong>Risk them for ×{nextRingMultiplier}</strong>
               <small>Faster ring · keep 1/{resolveFortuneCrushKeepDivisor(ringIndex + 1)} if crushed</small>
             </button>
           </div>
@@ -998,6 +1177,54 @@ function FragmentGrid({
   );
 }
 
+function RunPrizeProgress({
+  track,
+  pendingPoints,
+}: {
+  track: FortuneEngineTrackViewModel;
+  pendingPoints: number;
+}) {
+  const securedPoints = Math.max(0, Math.floor(track.eventPoints));
+  const atRiskPoints = Math.max(0, Math.floor(pendingPoints));
+  const projectedPoints = securedPoints + atRiskPoints;
+  const nextNodeIndex = track.nodes.findIndex((node) => node.milestone.pointsRequired > securedPoints);
+  const nextNode = nextNodeIndex >= 0 ? track.nodes[nextNodeIndex] : null;
+  const previousTarget = nextNodeIndex > 0
+    ? track.nodes[nextNodeIndex - 1]?.milestone.pointsRequired ?? 0
+    : 0;
+  const nextTarget = nextNode?.milestone.pointsRequired ?? track.totalPoints;
+  const targetSpan = Math.max(1, nextTarget - previousTarget);
+  const securedFill = Math.min(1, Math.max(0, (securedPoints - previousTarget) / targetSpan));
+  const projectedFill = Math.min(1, Math.max(securedFill, (projectedPoints - previousTarget) / targetSpan));
+
+  return (
+    <section
+      className="fortune-engine__run-prize"
+      aria-label={`${securedPoints} secured event points${atRiskPoints > 0 ? ` and ${atRiskPoints} points at risk` : ''}`}
+    >
+      <div className="fortune-engine__run-prize-copy">
+        <span>Event prize track</span>
+        <strong>
+          {securedPoints} secured
+          {atRiskPoints > 0 ? ` + ${atRiskPoints} at risk` : ''}
+        </strong>
+        <small>
+          {nextNode
+            ? `Next: ${formatEntryRewardLabel(nextNode.milestone.rewardLabel)} at ${nextTarget}`
+            : 'All event prizes reached'}
+        </small>
+      </div>
+      <div className="fortune-engine__run-prize-bar" aria-hidden="true">
+        <span className="fortune-engine__run-prize-fill" style={{ width: `${securedFill * 100}%` }} />
+        <span
+          className="fortune-engine__run-prize-pending"
+          style={{ left: `${securedFill * 100}%`, width: `${Math.max(0, projectedFill - securedFill) * 100}%` }}
+        />
+      </div>
+    </section>
+  );
+}
+
 function RewardTrack({
   track,
   onClaim,
@@ -1019,15 +1246,18 @@ function RewardTrack({
       <div className="fortune-engine__reward-copy">
         <span>{claimableNodes.length > 0 ? 'Ready reward' : 'Next reward'}</span>
         <strong>{featuredLabel}</strong>
-        {nextNode && claimableNodes.length === 0 && <small>{nextNode.milestone.pointsRequired - track.eventPoints} points to go</small>}
+        {nextNode && claimableNodes.length === 0 && (
+          <small>{track.eventPoints}/{nextNode.milestone.pointsRequired} event points · {nextNode.milestone.pointsRequired - track.eventPoints} to go</small>
+        )}
       </div>
       {claimableNodes.length > 0 && (
         <button
           type="button"
           className="fortune-engine__btn fortune-engine__btn--claim"
           onClick={() => onClaim(claimableNodes[0].milestone.id)}
+          aria-label={`Open reward: ${featuredLabel}`}
         >
-          Claim
+          Open reward
         </button>
       )}
       <div className="fortune-engine__track-bar" role="presentation">

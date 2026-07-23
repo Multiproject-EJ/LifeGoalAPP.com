@@ -1,5 +1,6 @@
 import { getSupabaseClient } from '../lib/supabaseClient';
 import { createGuardedCheckoutSession } from './guardedCheckout';
+import type { DicePackSkuId } from './dicePackPurchases';
 
 export type BillingCycle = 'monthly' | 'yearly';
 
@@ -97,10 +98,13 @@ export async function createSubscriptionCheckoutSession(
   });
 }
 
-export async function createDicePackCheckoutSession(): Promise<{ url: string | null; error: Error | null }> {
+export async function createDicePackCheckoutSession(
+  packId: DicePackSkuId = 'dice_500',
+): Promise<{ url: string | null; error: Error | null }> {
   return createGuardedCheckoutSession({
     feature: 'purchases',
     functionName: 'create-checkout-session-payment',
+    body: { pack_id: packId },
     missingUrlMessage: 'Checkout did not return a checkout URL.',
   });
 }

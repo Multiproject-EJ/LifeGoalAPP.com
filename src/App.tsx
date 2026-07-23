@@ -111,6 +111,8 @@ import { patchIslandRunGuestFunnelState, readIslandRunGuestFunnelState } from '.
 import { claimAnonymousIslandRunGuestInPlace } from './features/gamification/level-worlds/services/islandRunGuestClaimService';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
+import { awardDailyTreatDice } from './services/dailyTreats';
+import { consumePendingLandingPageTreat } from './services/landingPageTreat';
 import { getTopDisplayClass } from './utils/topDisplayClass';
 import {
   fetchWorkspaceProfile,
@@ -1754,6 +1756,23 @@ export default function App({ forceAuthOnMount }: AppProps) {
   useEffect(() => {
     if (supabaseSession) setLocalGuestSession(null);
   }, [supabaseSession]);
+
+  useEffect(() => {
+    if (!activeSession?.user?.id) return;
+    const demoTreatEnabled =
+      isDemoSession(activeSession) || import.meta.env.VITE_LANDING_PAGE_TREAT_DEMO_ENABLED === 'true';
+    if (!demoTreatEnabled) return;
+
+    const diceAmount = consumePendingLandingPageTreat();
+    if (diceAmount <= 0) return;
+
+    awardDailyTreatDice({
+      userId: activeSession.user.id,
+      diceAmount,
+      sourceLabel: 'landing_page_daily_treat_demo',
+      islandRunSession: activeSession,
+    });
+  }, [activeSession]);
   const appFutureFeatureCardStates = useFutureFeatureCardStates(['app.body', 'app.contracts', 'app.routines'], {
     loadVotes: Boolean(activeSession?.user?.id),
   });

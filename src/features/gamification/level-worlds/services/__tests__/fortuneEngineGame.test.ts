@@ -5,6 +5,8 @@
  */
 import {
   buildFortuneRing,
+  FORTUNE_CHALLENGE_MODES,
+  FORTUNE_ECHO_PREVIEW_MS,
   FORTUNE_FINALE_TARGET_COUNT,
   FORTUNE_NEW_BEST_EVENT_BONUS_RATIO,
   FORTUNE_PERFECT_BASE_MULTIPLIER,
@@ -24,13 +26,48 @@ import {
   resolveFortuneRunOutcome,
   resolveFortuneSegmentIndexForAngle,
   resolveFortuneTap,
+  rollFortuneChallengeSequence,
+  rollFortuneEchoSequence,
   rollFortuneFinaleTargets,
+  rollFortuneSignalTarget,
   rollFortuneWheelSlot,
   type FortuneRingSegment,
 } from '../fortuneEngineGame';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 export const fortuneEngineGameTests: TestCase[] = [
+  {
+    name: 'challenge sequence uses Pulse, Echo and Signal exactly once per run',
+    run: () => {
+      const [sequence, nextState] = rollFortuneChallengeSequence(12345);
+      assertEqual(sequence.length, 3, 'Expected three chambers');
+      assertEqual(new Set(sequence).size, 3, 'Chambers must not repeat within a run');
+      for (const mode of sequence) {
+        assert(FORTUNE_CHALLENGE_MODES[mode] !== undefined, `Unknown challenge mode ${mode}`);
+      }
+      const [sameSequence, sameNextState] = rollFortuneChallengeSequence(12345);
+      assertEqual(JSON.stringify(sequence), JSON.stringify(sameSequence), 'Challenge order must be deterministic');
+      assertEqual(nextState, sameNextState, 'Deterministic order must advance to the same state');
+      assert(FORTUNE_ECHO_PREVIEW_MS >= 2_000, 'Echo preview must give the player time to memorise');
+    },
+  },
+  {
+    name: 'Echo and Signal targets only use reward kinds present in the ring',
+    run: () => {
+      const segments: FortuneRingSegment[] = [
+        { kind: 'points', value: 10, collected: false },
+        { kind: 'dice', value: 2, collected: false },
+        { kind: 'essence', value: 5, collected: false },
+        { kind: 'hazard', value: 0, collected: false },
+      ];
+      const [echo] = rollFortuneEchoSequence({ segments, ringIndex: 1, rngState: 77 });
+      assertEqual(echo.length, 4, 'Second chamber Echo sequence should contain four symbols');
+      assert(echo.every((kind) => ['points', 'dice', 'essence'].includes(kind)), 'Echo must not request absent or hazardous symbols');
+
+      const [signal] = rollFortuneSignalTarget({ segments, rngState: 77 });
+      assert(signal !== null && ['points', 'dice', 'essence'].includes(signal), 'Signal target must be an available reward kind');
+    },
+  },
   {
     name: 'route wheel slots cover every route and jackpot stays the rare slice',
     run: () => {

@@ -154,11 +154,11 @@ export const fortuneEngineProgressionTests: TestCase[] = [
         FORTUNE_ENGINE_MILESTONES.some((milestone) => (milestone.reward.eventTickets ?? 0) > 0),
         'the reward track should return event tickets somewhere',
       );
-      assertEqual(getFortuneEngineMilestone('fortune_1')?.pointsRequired, 50, 'milestone lookup by id');
+      assertEqual(getFortuneEngineMilestone('fortune_1')?.pointsRequired, 60, 'milestone lookup by id');
       assertEqual(getFortuneEngineMilestone('nope'), null, 'unknown milestone ids return null');
       assertEqual(
         getNextFortuneEngineMilestone({ eventPoints: 120 })?.id,
-        'fortune_3',
+        'fortune_2',
         'next milestone should be the first unreached one',
       );
       assertDeepEqual(
@@ -173,11 +173,11 @@ export const fortuneEngineProgressionTests: TestCase[] = [
     run: () => {
       const progress = {
         ...createFortuneEngineProgress(NOW_MS),
-        eventPoints: 130,
+        eventPoints: 200,
         claimedMilestoneIds: ['fortune_1'],
       };
       const track = buildFortuneEngineTrackViewModel(progress);
-      assertEqual(track.eventPoints, 130, 'view model should carry the points');
+      assertEqual(track.eventPoints, 200, 'view model should carry the points');
       assertEqual(track.nodes[0].state, 'claimed', 'claimed milestones report claimed');
       assertEqual(track.nodes[1].state, 'claimable', 'reached milestones report claimable');
       assertEqual(track.nodes[2].state, 'upcoming', 'unreached milestones report upcoming');
