@@ -576,16 +576,25 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
             </p>
           )}
 
-          <div className="fortune-engine__hero" aria-label="How to play: tap bright slices, avoid red, then bank or risk your reward">
-            <div className="fortune-engine__machine-mark" aria-hidden="true">
-              <span>✦</span>
+          <div className="fortune-engine__hero" aria-label="How to play: tap the light and avoid the red slice">
+            <div className="fortune-engine__engine-stage" aria-hidden="true">
+              <img
+                className="fortune-engine__engine-art"
+                src="/assets/fortune-engine/fortune-engine-wheel.webp"
+                alt=""
+                decoding="async"
+                draggable={false}
+              />
             </div>
-            <h3>Catch the light</h3>
-            <p>Tap bright slices. Avoid red.</p>
-            <div className="fortune-engine__quick-guide">
-              <span><b aria-hidden="true">✨</b>Tap bright</span>
-              <span><b aria-hidden="true">☠️</b>Avoid red</span>
-              <span><b aria-hidden="true">💰</b>Bank or risk</span>
+            <div className="fortune-engine__instruction-strip">
+              <span>
+                <FortuneInstructionIcon kind="target" />
+                Tap the light.
+              </span>
+              <span>
+                <FortuneInstructionIcon kind="hazard" />
+                Avoid the red.
+              </span>
             </div>
           </div>
 
@@ -608,54 +617,49 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           ) : (
             <div className="fortune-engine__launch-card">
               <div className="fortune-engine__launch-meta">
-                <span>
-                  {goldenAvailable
-                    ? '✨ Free play ready'
-                    : `🎟️ ${ticketsRemaining} ticket${ticketsRemaining === 1 ? '' : 's'}`}
-                </span>
-                {goldenAvailable && <span>🧩 Core piece guaranteed</span>}
+                <span>{goldenAvailable ? 'Golden play ready' : `${ticketsRemaining} ticket${ticketsRemaining === 1 ? '' : 's'} available`}</span>
+                {goldenAvailable && <span>Core piece guaranteed</span>}
               </div>
               <button
                 type="button"
-                className={`fortune-engine__btn fortune-engine__btn--primary fortune-engine__btn--launch${goldenAvailable ? ' fortune-engine__btn--golden' : ''}`}
+                className={`fortune-engine__btn fortune-engine__btn--primary fortune-engine__btn--launch fortune-engine__btn--hero${goldenAvailable ? ' fortune-engine__btn--golden' : ''}`}
                 onClick={handleLaunch}
                 disabled={!canLaunch}
               >
-                {goldenAvailable
-                  ? 'Play free'
-                  : canLaunch
-                    ? `Play · ${FORTUNE_ENGINE_LAUNCH_TICKET_COST} ticket`
-                    : 'Earn a ticket on the island'}
+                <strong>
+                  {goldenAvailable
+                    ? 'Play free'
+                    : canLaunch
+                      ? 'Play now'
+                      : 'Earn a ticket on the island'}
+                </strong>
+                <small>
+                  {goldenAvailable
+                    ? 'Golden play • Core piece guaranteed'
+                    : canLaunch
+                      ? `${FORTUNE_ENGINE_LAUNCH_TICKET_COST} ticket`
+                      : 'Return to the island to continue'}
+                </small>
               </button>
             </div>
           )}
 
           <div className="fortune-engine__progress-grid">
-            <section
-              className="fortune-engine__progress-card"
-              aria-label={`Fortune Core: ${fragmentIds.size} of ${FORTUNE_CORE_FRAGMENTS.length} pieces`}
-            >
-              <div className="fortune-engine__section-heading">
-                <span>Fortune Core</span>
-                <strong>{fragmentIds.size}/{FORTUNE_CORE_FRAGMENTS.length}</strong>
-              </div>
-              <FragmentGrid fragmentIds={fragmentIds} lastFragmentId={null} />
-              <p>Fill the core to unlock the finale.</p>
-            </section>
+            <EntryCoreProgress fragmentIds={fragmentIds} />
             <RewardTrack track={trackViewModel} onClaim={handleClaimMilestone} />
           </div>
 
           {lastClaimLabel && <p className="fortune-engine__claim-note">🎁 {lastClaimLabel} claimed</p>}
 
-          {(bestRunScore > 0 || goldenStreak > 1) && (
-            <div className="fortune-engine__records" aria-label="Your Fortune Engine records">
-              {bestRunScore > 0 && <span>🏆 Best {bestRunScore}</span>}
-              {goldenStreak > 1 && <span>🔥 {goldenStreak}-day streak</span>}
-            </div>
-          )}
-
           <details className="fortune-engine__rules-details">
-            <summary>Tips and prize details</summary>
+            <summary>View rewards and run details</summary>
+            <RewardTrackDetails track={trackViewModel} />
+            {(bestRunScore > 0 || goldenStreak > 1) && (
+              <div className="fortune-engine__records" aria-label="Your Fortune Engine records">
+                {bestRunScore > 0 && <span>Best run {bestRunScore}</span>}
+                {goldenStreak > 1 && <span>{goldenStreak}-day streak</span>}
+              </div>
+            )}
             <ul className="fortune-engine__rules">
               <li>Hit the middle of a bright slice for a Perfect and a bigger combo.</li>
               <li>{FORTUNE_RUN_HAZARD_LIMIT} red hits end the run, but you still keep some points.</li>
@@ -876,6 +880,81 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
 // Fragment grid + reward track (presentation only)
 // ---------------------------------------------------------------------------
 
+function FortuneInstructionIcon({ kind }: { kind: 'target' | 'hazard' }) {
+  if (kind === 'target') {
+    return (
+      <svg className="fortune-engine__instruction-icon fortune-engine__instruction-icon--target" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2.5c.6 4.4 3.1 7 7.5 7.5-4.4.5-6.9 3.1-7.5 7.5-.6-4.4-3.1-7-7.5-7.5 4.4-.5 6.9-3.1 7.5-7.5Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="fortune-engine__instruction-icon fortune-engine__instruction-icon--hazard" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7.2 16.8c-1.9-1.5-3-3.7-3-6.1A7.8 7.8 0 0 1 12 3a7.8 7.8 0 0 1 7.8 7.7c0 2.4-1.1 4.6-3 6.1v3.1h-2.7v-2h-1.2v2h-1.8v-2H9.9v2H7.2v-3.1Zm2.1-5.2a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Zm5.4 0a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Z" />
+    </svg>
+  );
+}
+
+function EntryCoreProgress({ fragmentIds }: { fragmentIds: Set<number> }) {
+  return (
+    <section
+      className="fortune-engine__core-summary"
+      aria-label={`Fortune Core: ${fragmentIds.size} of ${FORTUNE_CORE_FRAGMENTS.length} pieces`}
+    >
+      <div className="fortune-engine__summary-label">
+        <span>Core</span>
+        <strong>{fragmentIds.size}/{FORTUNE_CORE_FRAGMENTS.length}</strong>
+      </div>
+      <div className="fortune-engine__core-dots" aria-hidden="true">
+        {FORTUNE_CORE_FRAGMENTS.map((fragment) => (
+          <span
+            key={fragment.fragmentId}
+            className={fragmentIds.has(fragment.fragmentId) ? 'fortune-engine__core-dot fortune-engine__core-dot--lit' : 'fortune-engine__core-dot'}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function formatEntryRewardLabel(label: string): string {
+  return label.replace(/\s*\+🧩 Fragment/g, ' + Core piece');
+}
+
+function FortuneRewardIcon({ label }: { label: string }) {
+  if (label.includes('Essence')) {
+    return (
+      <img
+        className="fortune-engine__reward-art"
+        src="/assets/fortune-engine/fortune-essence-vial.webp"
+        alt=""
+        decoding="async"
+        draggable={false}
+      />
+    );
+  }
+
+  if (label.includes('Dice')) {
+    return (
+      <svg className="fortune-engine__reward-glyph" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="7" y="7" width="34" height="34" rx="9" />
+        <circle cx="17" cy="17" r="2.5" />
+        <circle cx="31" cy="17" r="2.5" />
+        <circle cx="24" cy="24" r="2.5" />
+        <circle cx="17" cy="31" r="2.5" />
+        <circle cx="31" cy="31" r="2.5" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="fortune-engine__reward-glyph" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M8 14h32l-4 20H12L8 14Zm4-6h24v6H12V8Zm8 10 4 4 4-4-4 12-4-12Z" />
+    </svg>
+  );
+}
+
 function FragmentGrid({
   fragmentIds,
   lastFragmentId,
@@ -914,65 +993,49 @@ function RewardTrack({
 }) {
   const claimableNodes = track.nodes.filter((node) => node.state === 'claimable');
   const nextNode = track.nodes.find((node) => node.state === 'upcoming') ?? null;
+  const featuredNode = claimableNodes[0] ?? nextNode;
+  const featuredLabel = featuredNode ? formatEntryRewardLabel(featuredNode.milestone.rewardLabel) : 'Reward path complete';
 
   return (
     <section
-      className="fortune-engine__track fortune-engine__progress-card"
+      className="fortune-engine__track"
       aria-label={`Reward path: ${track.eventPoints} of ${track.totalPoints} event points`}
     >
-      <div className="fortune-engine__section-heading">
-        <span>Reward path</span>
-        <strong>{track.eventPoints}/{track.totalPoints}</strong>
+      <FortuneRewardIcon label={featuredLabel} />
+      <div className="fortune-engine__reward-copy">
+        <span>{claimableNodes.length > 0 ? 'Ready reward' : 'Next reward'}</span>
+        <strong>{featuredLabel}</strong>
+        {nextNode && claimableNodes.length === 0 && <small>{nextNode.milestone.pointsRequired - track.eventPoints} points to go</small>}
       </div>
+      {claimableNodes.length > 0 && (
+        <button
+          type="button"
+          className="fortune-engine__btn fortune-engine__btn--claim"
+          onClick={() => onClaim(claimableNodes[0].milestone.id)}
+        >
+          Claim
+        </button>
+      )}
       <div className="fortune-engine__track-bar" role="presentation">
         <div className="fortune-engine__track-fill" style={{ width: `${Math.round(track.fillRatio * 100)}%` }} />
       </div>
-
-      {claimableNodes.length > 0 ? (
-        <div className="fortune-engine__claim-stack">
-          {claimableNodes.map((node) => (
-            <div key={node.milestone.id} className="fortune-engine__next-reward fortune-engine__next-reward--ready">
-              <span>
-                <small>Ready</small>
-                <strong>{node.milestone.rewardLabel}</strong>
-              </span>
-              <button
-                type="button"
-                className="fortune-engine__btn fortune-engine__btn--claim"
-                onClick={() => onClaim(node.milestone.id)}
-              >
-                Claim
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : nextNode ? (
-        <div className="fortune-engine__next-reward">
-          <span>
-            <small>Next prize</small>
-            <strong>{nextNode.milestone.rewardLabel}</strong>
-          </span>
-          <b>{nextNode.milestone.pointsRequired - track.eventPoints} to go</b>
-        </div>
-      ) : (
-        <p className="fortune-engine__track-complete">✅ Reward path complete</p>
-      )}
-
-      <details className="fortune-engine__track-details">
-        <summary>View all prizes</summary>
-        <ol className="fortune-engine__track-nodes">
-          {track.nodes.map((node) => (
-            <li key={node.milestone.id} className={`fortune-engine__track-node fortune-engine__track-node--${node.state}`}>
-              <span className="fortune-engine__track-node-state" aria-label={node.state}>
-                {node.state === 'claimed' ? '✓' : node.state === 'claimable' ? '!' : '·'}
-              </span>
-              <span className="fortune-engine__track-node-label">{node.milestone.rewardLabel}</span>
-              <span className="fortune-engine__track-node-points">{node.milestone.pointsRequired}</span>
-            </li>
-          ))}
-        </ol>
-      </details>
     </section>
+  );
+}
+
+function RewardTrackDetails({ track }: { track: FortuneEngineTrackViewModel }) {
+  return (
+    <ol className="fortune-engine__track-nodes">
+      {track.nodes.map((node) => (
+        <li key={node.milestone.id} className={`fortune-engine__track-node fortune-engine__track-node--${node.state}`}>
+          <span className="fortune-engine__track-node-state" aria-label={node.state}>
+            {node.state === 'claimed' ? '✓' : node.state === 'claimable' ? '!' : '·'}
+          </span>
+          <span className="fortune-engine__track-node-label">{formatEntryRewardLabel(node.milestone.rewardLabel)}</span>
+          <span className="fortune-engine__track-node-points">{node.milestone.pointsRequired}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 
