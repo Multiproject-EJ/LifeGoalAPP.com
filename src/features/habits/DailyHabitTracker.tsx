@@ -10970,24 +10970,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             }`}
           >
             {renderDayNavigation('compact', true, isCompactView)}
-            <WellbeingShieldCard score={wellbeingShield} />
-            <button
-              type="button"
-              className="quest-dashboard-launcher"
-              onClick={() => setQuestCalendarDashboardOpen(true)}
-              aria-haspopup="dialog"
-              aria-expanded={questCalendarDashboardOpen}
-            >
-              <span className="quest-dashboard-launcher__icon" aria-hidden="true">◉</span>
-              <span className="quest-dashboard-launcher__copy">
-                <small>Chapter dashboard</small>
-                <strong>Open circular calendar</strong>
-                <span>{calendarQuests.filter((quest) => quest.status === 'active').length} active quests · {campaign ? `Campaign day ${getCampaignDay(campaign)}` : 'No active campaign'}</span>
-              </span>
-              <span className="quest-dashboard-launcher__arrow" aria-hidden="true">→</span>
-            </button>
             <QuestCalendarDashboardModal
-              open={questCalendarDashboardOpen}
+              open={isAdminOrCreator && questCalendarDashboardOpen}
               referenceDate={activeDate}
               goals={goals.map((goal) => ({
                 id: goal.id,
@@ -11014,7 +10998,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               }}
             />
             <QuestManagerModal
-              open={questManagerOpen}
+              open={isAdminOrCreator && questManagerOpen}
               userId={session.user.id}
               goals={goals.map((goal) => ({
                 id: goal.id,
@@ -11030,21 +11014,21 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               }}
             />
             {campaign ? (
-              <section className="campaign-card" aria-label="Active campaign">
-                <div className="campaign-card__head">
-                  <div>
-                    <p className="campaign-card__eyebrow">⚑ Active Campaign</p>
-                    <h3>{campaign.name}</h3>
-                  </div>
-                  <span>Day {getCampaignDay(campaign)}/{campaign.duration_days}</span>
-                </div>
-                <p className="campaign-card__meta">
-                  {campaign.keystone_habit_id ? `Keystone: ${habits.find((habit) => habit.id === campaign.keystone_habit_id)?.name ?? 'Selected habit'}` : 'Add a keystone habit to make this campaign easier to follow.'}
-                </p>
-                <p className="campaign-card__victory"><strong>Victory:</strong> {campaign.victory_condition}</p>
-                <p className="campaign-card__meta">Wellbeing Shield: {wellbeingShield.total}/100 · +{wellbeingShield.healthContribution} bounded Body & Health support</p>
-                <button type="button" className="campaign-card__button" onClick={handleOpenCampaignModal}>View campaign</button>
-              </section>
+              <button
+                type="button"
+                className="campaign-card"
+                onClick={handleOpenCampaignModal}
+                aria-label={`Open active campaign ${campaign.name}, day ${getCampaignDay(campaign)} of ${campaign.duration_days}`}
+                aria-haspopup="dialog"
+              >
+                <span className="campaign-card__head">
+                  <span className="campaign-card__copy">
+                    <span className="campaign-card__eyebrow">⚑ Active Campaign</span>
+                    <span className="campaign-card__title">{campaign.name}</span>
+                  </span>
+                  <span className="campaign-card__day">Day {getCampaignDay(campaign)}/{campaign.duration_days}</span>
+                </span>
+              </button>
             ) : null}
             {habits.length === 0 ? (
               <div className="habit-checklist-card__empty">
@@ -11175,6 +11159,36 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       </section>
                       <p className="campaign-modal__repair">A slip is information. The next move matters more.</p>
                     </div>
+                  ) : null}
+                  {isAdminOrCreator ? (
+                    <section className="campaign-admin-lab" aria-label="Admin-only campaign dashboard tools">
+                      <div className="campaign-admin-lab__header">
+                        <div>
+                          <p>Admin only</p>
+                          <h4>Campaign Lab</h4>
+                        </div>
+                        <span>Hidden from public Today</span>
+                      </div>
+                      <WellbeingShieldCard score={wellbeingShield} />
+                      <button
+                        type="button"
+                        className="quest-dashboard-launcher campaign-admin-lab__calendar"
+                        onClick={() => {
+                          setCampaignModalOpen(false);
+                          setQuestCalendarDashboardOpen(true);
+                        }}
+                        aria-haspopup="dialog"
+                        aria-expanded={questCalendarDashboardOpen}
+                      >
+                        <span className="quest-dashboard-launcher__icon" aria-hidden="true">◉</span>
+                        <span className="quest-dashboard-launcher__copy">
+                          <small>Chapter dashboard</small>
+                          <strong>Open circular calendar</strong>
+                          <span>{calendarQuests.filter((quest) => quest.status === 'active').length} active quests · {campaign ? `Campaign day ${getCampaignDay(campaign)}` : 'No active campaign'}</span>
+                        </span>
+                        <span className="quest-dashboard-launcher__arrow" aria-hidden="true">→</span>
+                      </button>
+                    </section>
                   ) : null}
                   <div className="campaign-form campaign-form--slider" style={{ '--campaign-panel-index': campaignPanelIndex } as CSSProperties}>
                     <div className="campaign-form__viewport">
