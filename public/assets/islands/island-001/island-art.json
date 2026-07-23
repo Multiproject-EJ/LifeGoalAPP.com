@@ -32,7 +32,7 @@
       "y": 340,
       "width": 472,
       "height": 472,
-      "levelScales": [0.5, 0.78, 1.1],
+      "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/hatchery/hatchery-l1-v2.webp",
         "landmarks/hatchery/hatchery-l2-v2.webp",
@@ -48,7 +48,7 @@
       "y": 340,
       "width": 472,
       "height": 472,
-      "levelScales": [0.5, 0.78, 1.1],
+      "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/habit/habit-l1.webp",
         "landmarks/habit/habit-l2.webp",
@@ -64,7 +64,7 @@
       "y": 1260,
       "width": 472,
       "height": 472,
-      "levelScales": [0.5, 0.78, 1.1],
+      "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/mystery/mystery-l1.webp",
         "landmarks/mystery/mystery-l2.webp",
@@ -80,7 +80,7 @@
       "y": 1260,
       "width": 472,
       "height": 472,
-      "levelScales": [0.5, 0.78, 1.1],
+      "levelScales": [0.275, 0.55, 1.1],
       "levels": [
         "landmarks/wisdom/wisdom-l1.webp",
         "landmarks/wisdom/wisdom-l2.webp",
@@ -105,11 +105,14 @@
   "scenery": [
     {
       "id": "battle-center",
-      "src": "scenery/moon-gate.webp",
+      "src": "scenery/moon-arena-final-camera-v2.webp",
       "x": 700,
-      "y": 950,
-      "width": 260,
-      "height": 220,
+      "y": 800,
+      "width": 520,
+      "height": 347,
+      "assetCameraMode": "final-angle",
+      "imageScale": 1,
+      "upwardOffsetRatio": 0,
       "zBand": "front"
     }
   ]

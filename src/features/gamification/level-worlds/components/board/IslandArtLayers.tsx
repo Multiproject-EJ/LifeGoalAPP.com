@@ -4,6 +4,7 @@ import {
   getIslandArtBoardPlateImageSrc,
   getIslandArtBossImageSrc,
   getIslandArtLandmarkImageSrc,
+  type IslandArtCameraMode,
   type IslandArtManifest,
   type IslandArtRect,
   type IslandArtSpace,
@@ -36,7 +37,7 @@ interface IslandArtLayersProps {
   toScreen: (anchor: TileAnchor) => { x: number; y: number };
   sceneLayout?: IslandArtSceneLayout | null;
   /** Split board-plane art from upright/world art so each uses its correct camera transform. */
-  renderMode?: 'all' | 'board-plane' | 'world';
+  renderMode?: 'all' | 'board-plane' | 'world' | 'world-legacy' | 'world-final';
 }
 
 type BoardArtLayerStyle = CSSProperties & {
@@ -47,9 +48,6 @@ type BoardArtLayerStyle = CSSProperties & {
 // they scale with the board without changing tile, stop, or gameplay math.
 const BOARD_PLATE_DOWNWARD_OFFSET_RATIO = 0.04;
 const BOARD_PLATE_SIZE_SCALE = 1.03;
-const BATTLE_CENTER_SCENERY_ID = 'battle-center';
-const BATTLE_CENTER_SIZE_SCALE = 1.5504;
-const BATTLE_CENTER_UPWARD_OFFSET_RATIO = 0.125;
 const BOSS_LANDMARK_SIZE_SCALE = 1.7;
 const BOSS_LANDMARK_UPWARD_OFFSET_RATIO = 0.1;
 const BOSS_LANDMARK_Z_INDEX = 7;
@@ -189,9 +187,18 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
   const boardPlateVerticalScale = manifest.boardPlateImageVerticalScale ?? 1;
   const boardOuterCircleVerticalScale = manifest.boardOuterCircleImageVerticalScale ?? 1;
   const usesFinalAssetCamera = manifest.assetCameraMode === 'final-angle';
-  const showBoardPlane = renderMode !== 'world';
+  const manifestCameraMode: IslandArtCameraMode = manifest.assetCameraMode ?? 'legacy-camera';
   const showWorld = renderMode !== 'board-plane';
-  const showBoardSurface = usesFinalAssetCamera ? showWorld : showBoardPlane;
+  const shouldRenderWorldAsset = (assetCameraMode?: IslandArtCameraMode) => {
+    const cameraMode = assetCameraMode ?? manifestCameraMode;
+    if (!showWorld) return false;
+    if (renderMode === 'world-legacy') return cameraMode === 'legacy-camera';
+    if (renderMode === 'world-final') return cameraMode === 'final-angle';
+    return true;
+  };
+  const showBoardSurface = usesFinalAssetCamera
+    ? renderMode === 'all' || renderMode === 'world' || renderMode === 'world-final'
+    : renderMode === 'all' || renderMode === 'board-plane';
   const boardPlateYOffsetRatio = manifest.boardPlateImageScale !== undefined ? 0 : BOARD_PLATE_DOWNWARD_OFFSET_RATIO;
   const boardPlateCenterX = boardPlateRect ? boardPlateRect.x + boardPlateRect.width / 2 : manifest.coordinateSpace.width / 2;
   const boardPlateCenterY = boardPlateRect
@@ -274,12 +281,9 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
       ) : null}
 
       {showWorld && manifest.scenery.map((scenery) => {
-        if (hiddenSources.has(scenery.src)) return null;
-        const isBattleCenterScenery = scenery.id === BATTLE_CENTER_SCENERY_ID;
-        const scenerySizeScale = isBattleCenterScenery ? BATTLE_CENTER_SIZE_SCALE : 1;
-        const sceneryUpwardOffset = isBattleCenterScenery
-          ? artSpaceHeight * BATTLE_CENTER_UPWARD_OFFSET_RATIO
-          : 0;
+        if (!shouldRenderWorldAsset(scenery.assetCameraMode) || hiddenSources.has(scenery.src)) return null;
+        const scenerySizeScale = scenery.imageScale ?? 1;
+        const sceneryUpwardOffset = artSpaceHeight * (scenery.upwardOffsetRatio ?? 0);
         return (
           <img
             key={scenery.id}
@@ -287,6 +291,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
             src={scenery.src}
             alt=""
             draggable={false}
+            data-asset-camera-mode={scenery.assetCameraMode ?? manifestCameraMode}
             style={makeArtLayerStyle({
               manifest,
               x: scenery.x,
@@ -303,7 +308,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
         );
       })}
 
-      {showWorld && manifest.landmarks.map((landmark) => {
+      {shouldRenderWorldAsset() && manifest.landmarks.map((landmark) => {
         if (!landmark.levelZero || hiddenSources.has(landmark.levelZero)) return null;
         return (
           <img
@@ -329,7 +334,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
         );
       })}
 
-      {showWorld && manifest.landmarks.map((landmark) => {
+      {shouldRenderWorldAsset() && manifest.landmarks.map((landmark) => {
         const buildLevel = landmarkBuildLevels[landmark.stopIndex] ?? 0;
         const src = getIslandArtLandmarkImageSrc(landmark, buildLevel);
         const clampedScaleIndex = Math.max(0, Math.min(2, Math.floor(buildLevel) - 1));
@@ -381,7 +386,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
         );
       })}
 
-      {showWorld && discoveryFogEnabled && manifest.landmarks.map((landmark) => (
+      {shouldRenderWorldAsset() && discoveryFogEnabled && manifest.landmarks.map((landmark) => (
         <div
           key={`${landmark.stopIndex}-discovery-mist`}
           className="island-art-layers__discovery-mist"
@@ -401,7 +406,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
         />
       ))}
 
-      {showWorld && bossSrc && !hiddenSources.has(bossSrc) && manifest.boss ? (
+      {shouldRenderWorldAsset() && bossSrc && !hiddenSources.has(bossSrc) && manifest.boss ? (
         <img
           key={`${manifest.boss.id}-${bossSrc}`}
           className={`island-art-layers__image island-art-layers__boss island-art-layers__boss--${manifest.boss.zBand ?? 'mid'}`}
@@ -425,7 +430,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
           onError={() => hideSource(bossSrc)}
         />
       ) : null}
-      {showWorld && discoveryFogEnabled && manifest.boss ? (
+      {shouldRenderWorldAsset() && discoveryFogEnabled && manifest.boss ? (
         <div
           className="island-art-layers__discovery-mist island-art-layers__discovery-mist--boss"
           data-landmark-index="4"

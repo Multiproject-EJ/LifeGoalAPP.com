@@ -110,6 +110,8 @@
       "y": 980,
       "width": 340,
       "height": 280,
+      "imageScale": 1.5504,
+      "upwardOffsetRatio": 0.125,
       "zBand": "front"
     }
   ]

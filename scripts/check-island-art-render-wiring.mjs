@@ -67,8 +67,8 @@ for (const symbol of forbiddenSymbols) {
 }
 
 const islandArtLayerCalls = [...boardStage.matchAll(/<IslandArtLayers[\s\S]*?\/>/g)].map((match) => match[0]);
-if (islandArtLayerCalls.length !== 2) {
-  failures.push(`Expected BoardStage to split IslandArtLayers across board-plane and world stages, found ${islandArtLayerCalls.length} calls.`);
+if (islandArtLayerCalls.length !== 3) {
+  failures.push(`Expected BoardStage to split IslandArtLayers across board-plane, final-world, and legacy-world stages, found ${islandArtLayerCalls.length} calls.`);
 }
 
 for (const islandArtLayerCall of islandArtLayerCalls) {
@@ -82,8 +82,11 @@ for (const islandArtLayerCall of islandArtLayerCalls) {
 if (!islandArtLayerCalls.some((call) => /renderMode="board-plane"/.test(call))) {
   failures.push('BoardStage must retain a board-plane IslandArtLayers pass for legacy ground art.');
 }
-if (!islandArtLayerCalls.some((call) => /renderMode="world"/.test(call))) {
-  failures.push('BoardStage must render a world IslandArtLayers pass for landmarks and scenery.');
+if (!islandArtLayerCalls.some((call) => /renderMode="world-final"/.test(call))) {
+  failures.push('BoardStage must render an unsquashed final-camera world pass.');
+}
+if (!islandArtLayerCalls.some((call) => /renderMode="world-legacy"/.test(call))) {
+  failures.push('BoardStage must retain a legacy-camera world pass during pilot migration.');
 }
 
 if (!islandArtLayers.includes('getIslandArtBoardPlateImageSrc')) {
@@ -98,14 +101,17 @@ if (/boardPlate[^?]*&&[^?]*boardCircle|boardCircle[^?]*\?\?[^?]*boardPlate/.test
 if (!/const usesFinalAssetCamera = manifest\.assetCameraMode === 'final-angle';/.test(islandArtLayers)) {
   failures.push('IslandArtLayers must recognize the final-angle production camera contract.');
 }
-if (!/const showBoardSurface = usesFinalAssetCamera \? showWorld : showBoardPlane;/.test(islandArtLayers)) {
+if (!/const showBoardSurface = usesFinalAssetCamera[\s\S]*renderMode === 'world-final'[\s\S]*renderMode === 'board-plane';/.test(islandArtLayers)) {
   failures.push('Final-angle board surfaces must render in the un-tilted world-art stage.');
 }
 if (!/data-asset-camera-mode=\{manifest\.assetCameraMode \?\? 'legacy-camera'\}/.test(islandArtLayers)) {
   failures.push('IslandArtLayers must expose the camera contract to CSS.');
 }
-if (!levelWorldsCss.includes('.island-art-layers[data-asset-camera-mode="final-angle"][data-render-mode="world"]')) {
+if (!levelWorldsCss.includes('.island-art-layers[data-render-mode="world-final"]')) {
   failures.push('Final-angle world art must have an explicit no-secondary-transform CSS guard.');
+}
+if (!islandArtLayers.includes('shouldRenderWorldAsset(scenery.assetCameraMode)')) {
+  failures.push('Scenery must be routed through its per-asset camera contract during pilot migration.');
 }
 
 const artStageMatch = boardStage.match(/className="island-run-board__art-camera-stage"[\s\S]*?style=\{\{ transform: ([^,}]+)/);

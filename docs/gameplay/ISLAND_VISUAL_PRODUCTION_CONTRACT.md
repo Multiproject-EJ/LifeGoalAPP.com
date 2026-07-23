@@ -82,6 +82,14 @@ after import. Never generate a partially tilted asset and tilt it again. Legacy
 camera normalization remains compatibility-only and is not an approved path
 for Islands 1–120 production art.
 
+During pilot migration only, an individual scenery entry may declare
+`assetCameraMode: "final-angle"` before the rest of its legacy island has been
+regenerated. The renderer places that asset in the unsquashed world root while
+the remaining legacy assets stay in their compatibility root. The converted
+asset must carry explicit manifest size and offset values; renderer logic may
+not infer placement from an asset ID. This is a migration bridge, not a reason
+to ship newly generated mixed-camera islands.
+
 Runtime board-plate art must avoid high-contrast radial seams, text, small props, or fake paving inside the tile corridor. The real blocks, highlights, token, 3D caretaker, technology fragments, and traffic-light tile must remain legible in every state.
 
 ## Caretaker rule

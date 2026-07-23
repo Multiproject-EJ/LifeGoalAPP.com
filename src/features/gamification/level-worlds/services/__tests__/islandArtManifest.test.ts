@@ -474,6 +474,40 @@ export const islandArtManifestTests: TestCase[] = [
     },
   },
   {
+    name: 'normalizes per-scenery final-camera migration and explicit placement tuning',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        scenery: [{
+          ...sampleManifest.scenery[0],
+          assetCameraMode: 'final-angle',
+          imageScale: 1.2,
+          upwardOffsetRatio: 0,
+        }],
+      }, 1);
+      if (!manifest) throw new Error('Expected mixed-camera scenery manifest to normalize');
+      const scenery = manifest.scenery[0];
+      assert(scenery, 'Expected normalized scenery');
+      assertEqual(scenery.assetCameraMode, 'final-angle', 'Expected converted scenery to bypass the legacy world camera');
+      assertEqual(scenery.imageScale, 1.2, 'Expected scenery scale to come from the manifest');
+      assertEqual(scenery.upwardOffsetRatio, 0, 'Expected an explicit centered placement to retain its zero offset');
+
+      const invalid = normalizeIslandArtManifest({
+        ...sampleManifest,
+        scenery: [{
+          ...sampleManifest.scenery[0],
+          assetCameraMode: 'tilt-it-later',
+          imageScale: -4,
+          upwardOffsetRatio: -1,
+        }],
+      }, 1);
+      if (!invalid) throw new Error('Expected invalid optional scenery tuning to preserve the asset');
+      assertEqual(invalid.scenery[0]?.assetCameraMode, undefined, 'Expected invalid per-scenery camera mode to be discarded');
+      assertEqual(invalid.scenery[0]?.imageScale, undefined, 'Expected invalid scenery scale to be discarded');
+      assertEqual(invalid.scenery[0]?.upwardOffsetRatio, undefined, 'Expected invalid upward offset to be discarded');
+    },
+  },
+  {
     name: 'missing optional layers do not break manifest normalization',
     run: () => {
       const manifest = normalizeIslandArtManifest({

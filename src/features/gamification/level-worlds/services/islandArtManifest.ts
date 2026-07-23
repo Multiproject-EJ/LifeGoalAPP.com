@@ -1,6 +1,7 @@
 import type { ZBand } from './islandBoardLayout';
 
 export type IslandArtBossState = 'idle' | 'active' | 'attack' | 'defeated' | 'reward';
+export type IslandArtCameraMode = 'legacy-camera' | 'final-angle';
 
 export interface IslandArtSceneManifest {
   ambientBackground?: string;
@@ -46,6 +47,12 @@ export interface IslandArtSceneryManifest {
   width: number;
   height: number;
   zBand?: ZBand;
+  /** Optional per-asset camera override used while an island migrates to final-angle art. */
+  assetCameraMode?: IslandArtCameraMode;
+  /** Explicit visual scale; avoids scenery-id-specific renderer tuning. */
+  imageScale?: number;
+  /** Upward placement adjustment as a fraction of the manifest scene height. */
+  upwardOffsetRatio?: number;
 }
 
 export interface IslandArtBossManifest {
@@ -84,7 +91,7 @@ export interface IslandArtManifest {
    * authored in the live board's finished perspective and must never receive
    * the runtime board-plane rotateX or a compensating vertical squash.
    */
-  assetCameraMode?: 'legacy-camera' | 'final-angle';
+  assetCameraMode?: IslandArtCameraMode;
   /**
    * Optional scale multiplier for the inner board plate/circle image, overriding
    * the global BOARD_PLATE_SIZE_SCALE constant. Use to tune the centered
@@ -135,6 +142,10 @@ function positiveFiniteNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
 }
 
+function nonNegativeFiniteNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+}
+
 function normalizeOptionalArtSpace(value: unknown): IslandArtSpace | undefined {
   if (!isRecord(value)) return undefined;
   const width = positiveFiniteNumber(value.width);
@@ -164,6 +175,10 @@ function normalizeBossState(value: unknown): IslandArtBossState | undefined {
   return typeof value === 'string' && VALID_BOSS_STATES.has(value as IslandArtBossState)
     ? value as IslandArtBossState
     : undefined;
+}
+
+function normalizeCameraMode(value: unknown): IslandArtCameraMode | undefined {
+  return value === 'final-angle' || value === 'legacy-camera' ? value : undefined;
 }
 
 export function normalizeIslandArtIslandNumber(islandNumber: number): number {
@@ -238,11 +253,7 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
     : { ...DEFAULT_COORDINATE_SPACE };
   const normalizedIslandArtSceneSpace = normalizeOptionalArtSpace(raw.sceneSpace);
   const normalizedIslandArtPlayableBoardRect = normalizeOptionalArtRect(raw.playableBoardRect);
-  const normalizedAssetCameraMode = raw.assetCameraMode === 'final-angle'
-    ? 'final-angle'
-    : raw.assetCameraMode === 'legacy-camera'
-      ? 'legacy-camera'
-      : null;
+  const normalizedAssetCameraMode = normalizeCameraMode(raw.assetCameraMode);
   const normalizedBoardPlateImageScale = positiveFiniteNumber(raw.boardPlateImageScale);
   const normalizedBoardOuterCircleImageScale = positiveFiniteNumber(raw.boardOuterCircleImageScale);
   const normalizedBoardPlateImageVerticalScale = positiveFiniteNumber(raw.boardPlateImageVerticalScale);
@@ -299,6 +310,9 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
       const src = resolveIslandArtAssetPath(basePath, optionalString(entry.src));
       const id = optionalString(entry.id);
       if (!src || !id) return [];
+      const assetCameraMode = normalizeCameraMode(entry.assetCameraMode);
+      const imageScale = positiveFiniteNumber(entry.imageScale);
+      const upwardOffsetRatio = nonNegativeFiniteNumber(entry.upwardOffsetRatio);
       return [{
         id,
         src,
@@ -307,6 +321,9 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
         width: Math.max(1, finiteNumber(entry.width, 120)),
         height: Math.max(1, finiteNumber(entry.height, 120)),
         zBand: normalizeZBand(entry.zBand),
+        ...(assetCameraMode ? { assetCameraMode } : {}),
+        ...(imageScale !== null ? { imageScale } : {}),
+        ...(upwardOffsetRatio !== null ? { upwardOffsetRatio } : {}),
       }];
     })
     : [];

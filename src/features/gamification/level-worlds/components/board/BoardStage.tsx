@@ -638,7 +638,9 @@ export function BoardStage(props: BoardStageProps) {
         />
       </div>
 
-      {/* Upright/world art follows camera pan/zoom without a second rotateX. */}
+      {/* Upright/world art follows camera pan/zoom without a second rotateX.
+          The two roots let a regenerated final-angle asset bypass the legacy
+          world squash while the rest of that island migrates incrementally. */}
       <div
         ref={artCameraStageRef}
         className="island-run-board__art-camera-stage"
@@ -656,7 +658,21 @@ export function BoardStage(props: BoardStageProps) {
           uniformScale={uniformScale}
           toScreen={toScreen}
           sceneLayout={sceneLayout}
-          renderMode="world"
+          renderMode="world-final"
+        />
+        <IslandArtLayers
+          manifest={islandArtManifest}
+          landmarkBuildLevels={landmarkBuildLevels}
+          landmarkDiscoveryStates={landmarkDiscoveryStates}
+          discoveryFogEnabled={discoveryFogEnabled}
+          isBossDefeated={isBossDefeated}
+          bossCreatureArtState={bossCreatureArtState}
+          boardWidth={boardSize.width}
+          boardHeight={boardSize.height}
+          uniformScale={uniformScale}
+          toScreen={toScreen}
+          sceneLayout={sceneLayout}
+          renderMode="world-legacy"
         />
       </div>
 

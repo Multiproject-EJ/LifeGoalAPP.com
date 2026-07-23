@@ -17,6 +17,9 @@ art exports.
 - `runtime-review/island-001-l0-shared-circle-plane-phone.webp` and its L3
   counterpart record the first pass where the inner green circle, outer island
   circle, and live Spark36 route use the same transformed board plane.
+- `scenery/moon-arena/` records the two center-arena directions and the selected
+  final-camera correction. Its corresponding hidden-boss and idle-boss phone
+  checks are stored in `runtime-review/island-001-moon-arena-final-camera-v2-*`.
 
 The generated studies are environmental/contact references only. They may not
 replace, repaint, resize, rotate, or reinterpret the real Spark36 tiles,

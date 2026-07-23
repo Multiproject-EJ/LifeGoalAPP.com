@@ -2177,10 +2177,10 @@
    scene around the same centre so circles, plots, boss arena, and terrain all
    share the route's tilt. This is intentionally island-specific until the
    production asset workflow emits every future island at the canonical angle. */
-.island-art-layers[data-island-number="1"][data-render-mode="world"],
-.island-art-layers[data-island-number="3"][data-render-mode="world"],
-.island-art-layers[data-island-number="4"][data-render-mode="world"],
-.island-art-layers[data-island-number="5"][data-render-mode="world"] {
+.island-art-layers[data-island-number="1"][data-render-mode="world-legacy"],
+.island-art-layers[data-island-number="3"][data-render-mode="world-legacy"],
+.island-art-layers[data-island-number="4"][data-render-mode="world-legacy"],
+.island-art-layers[data-island-number="5"][data-render-mode="world-legacy"] {
   /* Measured from the rendered connected route at the canonical 390x844
      viewport: its board-plane bounding ratio is 0.746. */
   transform: scaleY(0.746);
@@ -2189,8 +2189,15 @@
 
 /* Production islands are painted in the board's final camera. They follow
    pan/zoom only: never apply a second perspective or vertical squash. */
-.island-art-layers[data-asset-camera-mode="final-angle"][data-render-mode="world"] {
+.island-art-layers[data-render-mode="world-final"] {
   transform: none;
+  z-index: 0;
+}
+
+/* During mixed-camera migration, converted arena/terrain art stays beneath
+   the still-legacy upright structures and bosses. */
+.island-art-layers[data-render-mode="world-legacy"] {
+  z-index: 1;
 }
 
 .island-art-layers[data-island-number="1"] .island-art-layers__board-outer {

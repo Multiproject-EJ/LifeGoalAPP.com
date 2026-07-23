@@ -61,15 +61,37 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
     },
   },
   {
-    name: 'Island 1 early building levels remain legible on the phone board',
+    name: 'Island 1 buildings preserve the camera-kit doubling ladder',
     run: () => {
       const manifest = JSON.parse(readSource('public/assets/islands/island-001/island-art.json')) as {
         landmarks?: Array<{ levelScales?: number[] }>;
       };
       assert(
-        manifest.landmarks?.every((landmark) => landmark.levelScales?.[0] === 0.5 && landmark.levelScales?.[1] === 0.78) ?? false,
-        'Island 1 L1/L2 buildings must retain the phone-validated visible scale ladder',
+        manifest.landmarks?.every((landmark) => (
+          landmark.levelScales?.[0] === 0.275
+          && landmark.levelScales?.[1] === 0.55
+          && landmark.levelScales?.[2] === 1.1
+        )) ?? false,
+        'Island 1 buildings must double from L1 to L2 and again from L2 to L3 while preserving the approved L3 maximum',
       );
+    },
+  },
+  {
+    name: 'final-camera scenery bypasses the legacy world squash during migration',
+    run: () => {
+      const stage = readSource('src/features/gamification/level-worlds/components/board/BoardStage.tsx');
+      const artLayers = readSource('src/features/gamification/level-worlds/components/board/IslandArtLayers.tsx');
+      const css = readSource('src/features/gamification/level-worlds/LevelWorlds.css');
+      const manifest = JSON.parse(readSource('public/assets/islands/island-001/island-art.json')) as {
+        scenery?: Array<{ assetCameraMode?: string; src?: string; x?: number; y?: number }>;
+      };
+      const arena = manifest.scenery?.find((entry) => entry.src?.includes('moon-arena-final-camera'));
+      assert(stage.includes('renderMode="world-final"'), 'BoardStage must provide an untransformed final-camera world root');
+      assert(stage.includes('renderMode="world-legacy"'), 'BoardStage must keep a compatibility root for unconverted world assets');
+      assert(artLayers.includes('shouldRenderWorldAsset(scenery.assetCameraMode)'), 'Scenery must route by its own camera contract');
+      assert(css.includes('[data-render-mode="world-final"] {\n  transform: none;'), 'Final-camera world art must not receive a runtime squash');
+      assert(arena?.assetCameraMode === 'final-angle', 'Island 1 arena must declare its baked final camera');
+      assert(arena?.x === 700 && arena.y === 800, 'Island 1 arena must use the immutable scene center anchor');
     },
   },
   {
