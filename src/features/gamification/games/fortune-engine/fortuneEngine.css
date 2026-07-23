@@ -707,7 +707,7 @@
   width: min(460px, 100%);
   min-height: 100%;
   box-sizing: border-box;
-  gap: 8px;
+  gap: 9px;
   margin: 0 auto;
 }
 
@@ -721,9 +721,9 @@
 .fortune-engine__hud-stat {
   min-width: 0;
   padding: 7px 5px;
-  border: 1px solid var(--fortune-line);
+  border: 1px solid rgba(222, 184, 91, 0.24);
   border-radius: 12px;
-  background: var(--fortune-surface);
+  background: linear-gradient(160deg, rgba(16, 31, 52, 0.94), rgba(5, 15, 29, 0.94));
   text-align: center;
   backdrop-filter: blur(12px);
 }
@@ -731,7 +731,7 @@
 .fortune-engine__hud-label {
   display: block;
   margin-bottom: 1px;
-  color: var(--fortune-muted);
+  color: #b9b397;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -797,8 +797,8 @@
   box-sizing: border-box;
   padding: 14px 16px;
   border: 1px solid;
-  border-radius: 17px;
-  background: rgba(7, 16, 31, 0.95);
+  border-radius: 18px;
+  background: linear-gradient(155deg, rgba(18, 34, 56, 0.98), rgba(5, 14, 27, 0.98));
   box-shadow: 0 20px 55px rgba(0, 0, 0, 0.58);
   text-align: left;
   transform: translate(-50%, -50%);
@@ -812,7 +812,19 @@
 }
 
 .fortune-engine__route-icon {
-  font-size: 31px;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 215, 106, 0.42);
+  border-radius: 50%;
+  color: #ffe7a0;
+  background: rgba(255, 215, 106, 0.08);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 0 18px rgba(255, 215, 106, 0.12);
 }
 
 .fortune-engine__route-name {
@@ -834,9 +846,10 @@
   min-width: min(250px, 78vw);
   height: auto;
   aspect-ratio: 1;
-  border: 1px solid rgba(124, 157, 255, 0.16);
+  border: 0;
   border-radius: 50%;
-  box-shadow: 0 0 44px rgba(78, 94, 224, 0.2);
+  background: transparent;
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.42), 0 0 46px rgba(243, 200, 87, 0.12);
   cursor: pointer;
   touch-action: manipulation;
 }
@@ -862,10 +875,10 @@
   display: flex;
   gap: 12px;
   padding: 5px 11px;
-  border: 1px solid var(--fortune-line);
+  border: 1px solid rgba(222, 184, 91, 0.22);
   border-radius: 999px;
-  color: #dbe4f3;
-  background: rgba(255, 255, 255, 0.045);
+  color: #e8dec8;
+  background: rgba(9, 21, 38, 0.84);
   font-size: 11px;
   font-weight: 700;
 }
