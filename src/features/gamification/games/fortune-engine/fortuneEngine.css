@@ -18,6 +18,7 @@
   justify-content: flex-start;
   width: 100%;
   height: 100%;
+  min-height: 100dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -26,9 +27,10 @@
   color: var(--fortune-text);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background:
-    radial-gradient(circle at 18% 12%, rgba(95, 94, 255, 0.22), transparent 34%),
-    radial-gradient(circle at 82% 20%, rgba(35, 184, 200, 0.13), transparent 29%),
-    radial-gradient(circle at 50% 105%, rgba(55, 93, 170, 0.2), transparent 42%),
+    radial-gradient(circle at 50% 34%, rgba(32, 116, 154, 0.18), transparent 32%),
+    radial-gradient(circle at 12% 26%, rgba(89, 74, 170, 0.17), transparent 27%),
+    radial-gradient(circle at 88% 22%, rgba(18, 111, 133, 0.13), transparent 25%),
+    linear-gradient(180deg, #06101f 0%, #071426 52%, #030a15 100%),
     var(--fortune-bg);
 }
 
@@ -71,6 +73,12 @@
 .fortune-engine__panel--entry {
   width: min(560px, 100%);
   margin-block: 0;
+  padding: 6px 4px 14px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .fortune-engine__entry-header {
@@ -82,34 +90,36 @@
 }
 
 .fortune-engine__eyebrow {
-  margin: 0 0 4px;
-  color: var(--fortune-blue);
-  font-size: 11px;
+  margin: 0 0 5px;
+  color: var(--fortune-mint);
+  font-size: 10px;
   font-weight: 750;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.19em;
   text-transform: uppercase;
 }
 
 .fortune-engine__title {
-  margin: 0 0 10px;
-  color: var(--fortune-text);
-  font-size: clamp(25px, 6vw, 32px);
-  font-weight: 780;
-  letter-spacing: -0.035em;
-  line-height: 1.05;
+  margin: 0;
+  color: #ffe8ad;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(31px, 8vw, 42px);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  text-shadow: 0 2px 0 rgba(75, 43, 8, 0.9), 0 0 24px rgba(255, 199, 74, 0.18);
 }
 
 .fortune-engine__close {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   flex: 0 0 auto;
   padding: 0 0 3px;
-  border: 1px solid var(--fortune-line);
+  border: 1px solid rgba(244, 194, 81, 0.35);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.055);
-  color: #c9d3e5;
+  background: linear-gradient(145deg, rgba(255, 214, 113, 0.09), rgba(255, 255, 255, 0.025));
+  color: #ead9ad;
   font-size: 27px;
   font-weight: 300;
   line-height: 1;
@@ -118,13 +128,13 @@
 
 .fortune-engine__countdown {
   width: fit-content;
-  margin: 3px 0 14px;
-  padding: 5px 9px;
-  border: 1px solid var(--fortune-line);
+  margin: 11px 0 0;
+  padding: 6px 11px;
+  border: 1px solid rgba(244, 194, 81, 0.26);
   border-radius: 999px;
-  color: var(--fortune-muted);
-  background: rgba(255, 255, 255, 0.04);
-  font-size: 12px;
+  color: #cbbf9f;
+  background: rgba(7, 15, 29, 0.66);
+  font-size: 11px;
 }
 
 .fortune-engine__countdown--unstable {
@@ -135,112 +145,106 @@
 
 .fortune-engine__hero {
   position: relative;
-  overflow: hidden;
-  margin: 2px 0 12px;
-  padding: 16px 14px 14px;
-  border: 1px solid rgba(129, 157, 255, 0.17);
-  border-radius: 20px;
-  background:
-    radial-gradient(circle at 50% 33%, rgba(110, 114, 255, 0.17), transparent 45%),
-    rgba(5, 15, 30, 0.54);
-}
-
-.fortune-engine__machine-mark {
-  position: relative;
   display: grid;
-  place-items: center;
-  width: 92px;
-  height: 92px;
-  margin: 0 auto 8px;
-  border: 2px solid rgba(120, 184, 255, 0.46);
-  border-radius: 50%;
-  box-shadow: 0 0 32px rgba(96, 116, 255, 0.2), inset 0 0 24px rgba(101, 230, 202, 0.08);
+  justify-items: center;
+  overflow: visible;
+  margin: -7px 0 8px;
 }
 
-.fortune-engine__machine-mark::before,
-.fortune-engine__machine-mark::after {
+.fortune-engine__engine-stage {
+  position: relative;
+  z-index: 0;
+  width: min(352px, 92vw);
+  aspect-ratio: 1;
+  margin: 0 auto -12px;
+}
+
+.fortune-engine__engine-stage::before {
   content: '';
   position: absolute;
+  inset: 12%;
+  z-index: -1;
   border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 196, 57, 0.32), rgba(23, 160, 171, 0.15) 37%, transparent 70%);
+  filter: blur(18px);
 }
 
-.fortune-engine__machine-mark::before {
-  inset: 10px;
-  border: 5px dotted rgba(255, 215, 106, 0.75);
-  animation: fortune-orbit 14s linear infinite;
+.fortune-engine__engine-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.44));
+  animation: fortune-engine-breathe 4.4s ease-in-out infinite;
+  user-select: none;
 }
 
-.fortune-engine__machine-mark::after {
-  inset: 27px;
-  border: 1px solid rgba(101, 230, 202, 0.75);
-  box-shadow: 0 0 14px rgba(101, 230, 202, 0.28);
+@keyframes fortune-engine-breathe {
+  0%, 100% { transform: scale(0.99); }
+  50% { transform: scale(1.012); }
 }
 
-.fortune-engine__machine-mark span {
-  color: var(--fortune-gold);
-  font-size: 25px;
-  text-shadow: 0 0 16px rgba(255, 215, 106, 0.72);
-}
-
-@keyframes fortune-orbit {
-  to { transform: rotate(360deg); }
-}
-
-.fortune-engine__hero h3 {
-  margin: 0;
-  font-size: 19px;
-  letter-spacing: -0.02em;
-}
-
-.fortune-engine__hero > p {
-  margin: 3px 0 13px;
-  color: var(--fortune-muted);
-  font-size: 14px;
-}
-
-.fortune-engine__quick-guide {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 7px;
-}
-
-.fortune-engine__quick-guide span {
+.fortune-engine__instruction-strip {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  min-width: 0;
-  padding: 8px 5px;
-  border-radius: 11px;
-  color: #dce5f4;
-  background: rgba(255, 255, 255, 0.055);
-  font-size: 11px;
-  font-weight: 680;
-  white-space: nowrap;
+  width: min(420px, 94%);
+  min-height: 54px;
+  box-sizing: border-box;
+  border: 1px solid rgba(222, 184, 91, 0.32);
+  border-radius: 17px;
+  background: linear-gradient(180deg, rgba(17, 31, 51, 0.96), rgba(6, 16, 31, 0.96));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26), inset 0 1px rgba(255, 255, 255, 0.04);
 }
 
-.fortune-engine__quick-guide b {
+.fortune-engine__instruction-strip span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50%;
+  gap: 8px;
+  color: #efe9dc;
+  font-family: Georgia, 'Times New Roman', serif;
   font-size: 14px;
+  font-weight: 700;
+}
+
+.fortune-engine__instruction-strip span + span {
+  border-left: 1px solid rgba(222, 184, 91, 0.28);
+}
+
+.fortune-engine__instruction-icon {
+  width: 25px;
+  height: 25px;
+  flex: 0 0 auto;
+  padding: 4px;
+  border-radius: 50%;
+  fill: currentColor;
+}
+
+.fortune-engine__instruction-icon--target {
+  color: #ffe17b;
+  background: rgba(255, 215, 106, 0.11);
+  box-shadow: 0 0 14px rgba(255, 215, 106, 0.18);
+}
+
+.fortune-engine__instruction-icon--hazard {
+  color: #ff8f7b;
+  background: rgba(255, 113, 131, 0.11);
 }
 
 .fortune-engine__launch-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(155px, 0.75fr);
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  padding: 12px;
-  border: 1px solid rgba(255, 215, 106, 0.18);
-  border-radius: 17px;
-  background: rgba(255, 215, 106, 0.055);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 auto 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .fortune-engine__launch-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-  text-align: left;
+  display: none;
 }
 
 .fortune-engine__launch-meta span:first-child {
@@ -256,42 +260,69 @@
 
 .fortune-engine__progress-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  gap: 10px;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.35fr);
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(222, 184, 91, 0.3);
+  border-radius: 19px;
+  background: linear-gradient(165deg, rgba(15, 29, 49, 0.97), rgba(5, 15, 29, 0.98));
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.26), inset 0 1px rgba(255, 255, 255, 0.035);
 }
 
-.fortune-engine__progress-card {
+.fortune-engine__core-summary,
+.fortune-engine__track {
   min-width: 0;
+  min-height: 108px;
   box-sizing: border-box;
-  padding: 13px;
-  border: 1px solid var(--fortune-line);
-  border-radius: 17px;
-  background: rgba(255, 255, 255, 0.035);
+  padding: 16px 14px;
+}
+
+.fortune-engine__core-summary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid rgba(222, 184, 91, 0.22);
   text-align: left;
 }
 
-.fortune-engine__section-heading {
+.fortune-engine__summary-label {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-  color: #dfe7f5;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 12px;
+  color: #e9e2d2;
   font-size: 12px;
-  font-weight: 720;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
 }
 
-.fortune-engine__section-heading strong {
+.fortune-engine__summary-label strong {
   color: var(--fortune-gold);
-  font-size: 12px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+  letter-spacing: 0;
 }
 
-.fortune-engine__progress-card > p {
-  margin: 7px 0 0;
-  color: var(--fortune-muted);
-  font-size: 10px;
-  line-height: 1.35;
-  text-align: center;
+.fortune-engine__core-dots {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+}
+
+.fortune-engine__core-dot {
+  min-width: 8px;
+  aspect-ratio: 1;
+  border: 1px solid rgba(208, 181, 119, 0.35);
+  border-radius: 50%;
+  background: rgba(1, 8, 18, 0.76);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.fortune-engine__core-dot--lit {
+  border-color: rgba(117, 239, 226, 0.78);
+  background: radial-gradient(circle at 40% 35%, #d9fff8 0 12%, #56e0d2 28%, #127b8d 68%, #092735 100%);
+  box-shadow: 0 0 9px rgba(74, 225, 211, 0.5), inset 0 0 4px rgba(255, 255, 255, 0.5);
 }
 
 /* Fortune Core */
@@ -335,10 +366,80 @@
 }
 
 /* Compact reward path */
+.fortune-engine__track {
+  position: relative;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  grid-template-rows: 1fr auto;
+  align-items: center;
+  gap: 4px 9px;
+  text-align: left;
+}
+
+.fortune-engine__reward-art,
+.fortune-engine__reward-glyph {
+  display: block;
+  width: 46px;
+  height: 46px;
+  grid-row: 1;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.4));
+}
+
+.fortune-engine__reward-glyph {
+  box-sizing: border-box;
+  padding: 5px;
+  border: 1px solid rgba(93, 222, 215, 0.35);
+  border-radius: 13px;
+  color: #65e6ca;
+  background: rgba(71, 198, 190, 0.08);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.fortune-engine__reward-glyph circle,
+.fortune-engine__reward-glyph path:last-child {
+  fill: currentColor;
+  stroke: none;
+}
+
+.fortune-engine__reward-copy {
+  min-width: 0;
+}
+
+.fortune-engine__reward-copy > span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--fortune-mint);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.fortune-engine__reward-copy strong {
+  display: block;
+  overflow: hidden;
+  color: #f7eee0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 14px;
+  line-height: 1.12;
+  text-overflow: ellipsis;
+}
+
+.fortune-engine__reward-copy small {
+  display: block;
+  margin-top: 2px;
+  color: var(--fortune-muted);
+  font-size: 9px;
+}
+
 .fortune-engine__track-bar {
+  grid-column: 1 / -1;
   height: 7px;
   overflow: hidden;
-  margin-bottom: 10px;
+  margin-top: 5px;
   border-radius: 999px;
   background: rgba(2, 10, 23, 0.5);
 }
@@ -351,69 +452,16 @@
   transition: width 0.45s ease;
 }
 
-.fortune-engine__claim-stack {
-  display: grid;
-  gap: 6px;
-}
-
-.fortune-engine__next-reward {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 36px;
-}
-
-.fortune-engine__next-reward > span {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.fortune-engine__next-reward small {
-  color: var(--fortune-muted);
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.fortune-engine__next-reward strong {
-  overflow: hidden;
-  color: #eef3ff;
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.fortune-engine__next-reward > b {
-  flex: 0 0 auto;
-  color: var(--fortune-mint);
-  font-size: 10px;
-}
-
-.fortune-engine__next-reward--ready {
-  padding: 6px 7px;
-  border: 1px solid rgba(101, 230, 202, 0.22);
-  border-radius: 10px;
-  background: rgba(101, 230, 202, 0.06);
-}
-
 .fortune-engine__track-complete {
   color: var(--fortune-mint) !important;
   font-weight: 700;
 }
 
-.fortune-engine__track-details {
-  margin-top: 9px;
-  border-top: 1px solid var(--fortune-line);
-}
-
-.fortune-engine__track-details summary,
 .fortune-engine__rules-details summary {
   padding-top: 9px;
-  color: var(--fortune-muted);
-  font-size: 10px;
-  font-weight: 650;
+  color: #c6b98e;
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
   user-select: none;
 }
@@ -581,16 +629,39 @@
 }
 
 .fortune-engine__btn--golden {
-  border-color: rgba(255, 220, 126, 0.8);
+  border-color: rgba(255, 229, 145, 0.96);
   color: #1e1909;
-  background: linear-gradient(135deg, #f3c857, #ffe8a3);
-  box-shadow: 0 8px 25px rgba(243, 200, 87, 0.2);
+  background: linear-gradient(180deg, #ffe895 0%, #f4c44f 52%, #d59624 100%);
+  box-shadow: 0 10px 30px rgba(242, 181, 44, 0.32), inset 0 2px rgba(255, 255, 255, 0.48), inset 0 -2px rgba(123, 72, 7, 0.25);
 }
 
 .fortune-engine__btn--launch {
   width: 100%;
-  min-height: 48px;
+  min-height: 70px;
+  border-radius: 18px;
   font-size: 15px;
+}
+
+.fortune-engine__btn--hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.fortune-engine__btn--hero strong {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 21px;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.fortune-engine__btn--hero small {
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  opacity: 0.78;
 }
 
 .fortune-engine__btn--finale {
@@ -636,7 +707,7 @@
   width: min(460px, 100%);
   min-height: 100%;
   box-sizing: border-box;
-  gap: 8px;
+  gap: 9px;
   margin: 0 auto;
 }
 
@@ -650,9 +721,9 @@
 .fortune-engine__hud-stat {
   min-width: 0;
   padding: 7px 5px;
-  border: 1px solid var(--fortune-line);
+  border: 1px solid rgba(222, 184, 91, 0.24);
   border-radius: 12px;
-  background: var(--fortune-surface);
+  background: linear-gradient(160deg, rgba(16, 31, 52, 0.94), rgba(5, 15, 29, 0.94));
   text-align: center;
   backdrop-filter: blur(12px);
 }
@@ -660,7 +731,7 @@
 .fortune-engine__hud-label {
   display: block;
   margin-bottom: 1px;
-  color: var(--fortune-muted);
+  color: #b9b397;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -726,8 +797,8 @@
   box-sizing: border-box;
   padding: 14px 16px;
   border: 1px solid;
-  border-radius: 17px;
-  background: rgba(7, 16, 31, 0.95);
+  border-radius: 18px;
+  background: linear-gradient(155deg, rgba(18, 34, 56, 0.98), rgba(5, 14, 27, 0.98));
   box-shadow: 0 20px 55px rgba(0, 0, 0, 0.58);
   text-align: left;
   transform: translate(-50%, -50%);
@@ -741,7 +812,19 @@
 }
 
 .fortune-engine__route-icon {
-  font-size: 31px;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 215, 106, 0.42);
+  border-radius: 50%;
+  color: #ffe7a0;
+  background: rgba(255, 215, 106, 0.08);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 0 18px rgba(255, 215, 106, 0.12);
 }
 
 .fortune-engine__route-name {
@@ -763,9 +846,10 @@
   min-width: min(250px, 78vw);
   height: auto;
   aspect-ratio: 1;
-  border: 1px solid rgba(124, 157, 255, 0.16);
+  border: 0;
   border-radius: 50%;
-  box-shadow: 0 0 44px rgba(78, 94, 224, 0.2);
+  background: transparent;
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.42), 0 0 46px rgba(243, 200, 87, 0.12);
   cursor: pointer;
   touch-action: manipulation;
 }
@@ -791,10 +875,10 @@
   display: flex;
   gap: 12px;
   padding: 5px 11px;
-  border: 1px solid var(--fortune-line);
+  border: 1px solid rgba(222, 184, 91, 0.22);
   border-radius: 999px;
-  color: #dbe4f3;
-  background: rgba(255, 255, 255, 0.045);
+  color: #e8dec8;
+  background: rgba(9, 21, 38, 0.84);
   font-size: 11px;
   font-weight: 700;
 }
@@ -930,29 +1014,45 @@
     border-radius: 22px;
   }
 
-  .fortune-engine__progress-grid {
-    grid-template-columns: 0.8fr 1.2fr;
+  .fortune-engine__panel--entry {
+    padding: 5px 0 12px;
+    border-radius: 0;
   }
 }
 
 @media (max-width: 390px) {
-  .fortune-engine__launch-card {
-    grid-template-columns: 1fr;
+  .fortune-engine__engine-stage {
+    width: min(330px, 92vw);
   }
 
-  .fortune-engine__launch-meta {
-    align-items: center;
-    text-align: center;
+  .fortune-engine__instruction-strip span {
+    gap: 5px;
+    font-size: 12px;
   }
 
-  .fortune-engine__progress-grid {
-    grid-template-columns: 1fr;
+  .fortune-engine__core-summary,
+  .fortune-engine__track {
+    padding: 13px 10px;
   }
 
-  .fortune-engine__quick-guide span {
-    flex-direction: column;
-    gap: 2px;
-    white-space: normal;
+  .fortune-engine__track {
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    gap: 4px 6px;
+  }
+
+  .fortune-engine__reward-art,
+  .fortune-engine__reward-glyph {
+    width: 38px;
+    height: 38px;
+  }
+
+  .fortune-engine__reward-copy strong {
+    font-size: 12px;
+  }
+
+  .fortune-engine__btn--claim {
+    padding-inline: 7px;
+    font-size: 9px;
   }
 
   .fortune-engine__result-stats {
@@ -965,7 +1065,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fortune-engine__machine-mark::before,
+  .fortune-engine__engine-art,
   .fortune-engine__combo,
   .fortune-engine__canvas--danger,
   .fortune-engine__panel--crushed,

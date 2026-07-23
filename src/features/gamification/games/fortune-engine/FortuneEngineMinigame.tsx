@@ -103,25 +103,25 @@ type FortuneEngineLaunchConfig = {
   };
 };
 
-const CANVAS_SIZE = 340;
+const CANVAS_SIZE = 480;
+const CANVAS_LOGICAL_SIZE = 340;
 const WHEEL_SPIN_DURATION_MS = 2600;
 const ROUTE_BANNER_MS = 1600;
-/** Segment colors by kind (collected segments render dimmed). */
-const SEGMENT_COLORS: Record<FortuneRingSegment['kind'], string> = {
-  points: '#f3d16b',
-  dice: '#7cc4ff',
-  essence: '#c39bff',
-  time: '#5eead4',
-  hazard: '#f87171',
-  empty: '#1f2f4d',
-};
-const SEGMENT_ICONS: Record<FortuneRingSegment['kind'], string> = {
-  points: '⭐',
-  dice: '🎲',
-  essence: '🟣',
-  time: '⏳',
-  hazard: '☠️',
+const SEGMENT_GLYPHS: Record<FortuneRingSegment['kind'], string> = {
+  points: '★',
+  dice: 'D6',
+  essence: '◆',
+  time: '+S',
+  hazard: '!',
   empty: '',
+};
+const SEGMENT_SURFACES: Record<FortuneRingSegment['kind'], readonly [string, string]> = {
+  points: ['#5a430f', '#d2a333'],
+  dice: ['#13375e', '#438fd1'],
+  essence: ['#342252', '#8557bd'],
+  time: ['#10443f', '#2a9b85'],
+  hazard: ['#581b25', '#b93f49'],
+  empty: ['#0b172b', '#172943'],
 };
 const ROUTE_COLORS: Record<FortuneRoute['id'], string> = {
   treasure: '#f3d16b',
@@ -129,6 +129,20 @@ const ROUTE_COLORS: Record<FortuneRoute['id'], string> = {
   risk: '#f87171',
   chrono: '#5eead4',
   jackpot: '#7cc4ff',
+};
+const ROUTE_GLYPHS: Record<FortuneRoute['id'], string> = {
+  treasure: '◆',
+  multiplier: '×2',
+  risk: '!',
+  chrono: '+S',
+  jackpot: '★',
+};
+const ROUTE_SURFACES: Record<FortuneRoute['id'], readonly [string, string]> = {
+  treasure: ['#553c0d', '#bf8d24'],
+  multiplier: ['#302350', '#7955ac'],
+  risk: ['#521a22', '#a93a43'],
+  chrono: ['#103f45', '#258b91'],
+  jackpot: ['#153b58', '#4388b4'],
 };
 
 function formatEventCountdown(remainingMs: number): string {
@@ -576,16 +590,25 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
             </p>
           )}
 
-          <div className="fortune-engine__hero" aria-label="How to play: tap bright slices, avoid red, then bank or risk your reward">
-            <div className="fortune-engine__machine-mark" aria-hidden="true">
-              <span>✦</span>
+          <div className="fortune-engine__hero" aria-label="How to play: tap the light and avoid the red slice">
+            <div className="fortune-engine__engine-stage" aria-hidden="true">
+              <img
+                className="fortune-engine__engine-art"
+                src="/assets/fortune-engine/fortune-engine-wheel.webp"
+                alt=""
+                decoding="async"
+                draggable={false}
+              />
             </div>
-            <h3>Catch the light</h3>
-            <p>Tap bright slices. Avoid red.</p>
-            <div className="fortune-engine__quick-guide">
-              <span><b aria-hidden="true">✨</b>Tap bright</span>
-              <span><b aria-hidden="true">☠️</b>Avoid red</span>
-              <span><b aria-hidden="true">💰</b>Bank or risk</span>
+            <div className="fortune-engine__instruction-strip">
+              <span>
+                <FortuneInstructionIcon kind="target" />
+                Tap the light.
+              </span>
+              <span>
+                <FortuneInstructionIcon kind="hazard" />
+                Avoid the red.
+              </span>
             </div>
           </div>
 
@@ -608,54 +631,49 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           ) : (
             <div className="fortune-engine__launch-card">
               <div className="fortune-engine__launch-meta">
-                <span>
-                  {goldenAvailable
-                    ? '✨ Free play ready'
-                    : `🎟️ ${ticketsRemaining} ticket${ticketsRemaining === 1 ? '' : 's'}`}
-                </span>
-                {goldenAvailable && <span>🧩 Core piece guaranteed</span>}
+                <span>{goldenAvailable ? 'Golden play ready' : `${ticketsRemaining} ticket${ticketsRemaining === 1 ? '' : 's'} available`}</span>
+                {goldenAvailable && <span>Core piece guaranteed</span>}
               </div>
               <button
                 type="button"
-                className={`fortune-engine__btn fortune-engine__btn--primary fortune-engine__btn--launch${goldenAvailable ? ' fortune-engine__btn--golden' : ''}`}
+                className={`fortune-engine__btn fortune-engine__btn--primary fortune-engine__btn--launch fortune-engine__btn--hero${goldenAvailable ? ' fortune-engine__btn--golden' : ''}`}
                 onClick={handleLaunch}
                 disabled={!canLaunch}
               >
-                {goldenAvailable
-                  ? 'Play free'
-                  : canLaunch
-                    ? `Play · ${FORTUNE_ENGINE_LAUNCH_TICKET_COST} ticket`
-                    : 'Earn a ticket on the island'}
+                <strong>
+                  {goldenAvailable
+                    ? 'Play free'
+                    : canLaunch
+                      ? 'Play now'
+                      : 'Earn a ticket on the island'}
+                </strong>
+                <small>
+                  {goldenAvailable
+                    ? 'Golden play • Core piece guaranteed'
+                    : canLaunch
+                      ? `${FORTUNE_ENGINE_LAUNCH_TICKET_COST} ticket`
+                      : 'Return to the island to continue'}
+                </small>
               </button>
             </div>
           )}
 
           <div className="fortune-engine__progress-grid">
-            <section
-              className="fortune-engine__progress-card"
-              aria-label={`Fortune Core: ${fragmentIds.size} of ${FORTUNE_CORE_FRAGMENTS.length} pieces`}
-            >
-              <div className="fortune-engine__section-heading">
-                <span>Fortune Core</span>
-                <strong>{fragmentIds.size}/{FORTUNE_CORE_FRAGMENTS.length}</strong>
-              </div>
-              <FragmentGrid fragmentIds={fragmentIds} lastFragmentId={null} />
-              <p>Fill the core to unlock the finale.</p>
-            </section>
+            <EntryCoreProgress fragmentIds={fragmentIds} />
             <RewardTrack track={trackViewModel} onClaim={handleClaimMilestone} />
           </div>
 
           {lastClaimLabel && <p className="fortune-engine__claim-note">🎁 {lastClaimLabel} claimed</p>}
 
-          {(bestRunScore > 0 || goldenStreak > 1) && (
-            <div className="fortune-engine__records" aria-label="Your Fortune Engine records">
-              {bestRunScore > 0 && <span>🏆 Best {bestRunScore}</span>}
-              {goldenStreak > 1 && <span>🔥 {goldenStreak}-day streak</span>}
-            </div>
-          )}
-
           <details className="fortune-engine__rules-details">
-            <summary>Tips and prize details</summary>
+            <summary>View rewards and run details</summary>
+            <RewardTrackDetails track={trackViewModel} />
+            {(bestRunScore > 0 || goldenStreak > 1) && (
+              <div className="fortune-engine__records" aria-label="Your Fortune Engine records">
+                {bestRunScore > 0 && <span>Best run {bestRunScore}</span>}
+                {goldenStreak > 1 && <span>{goldenStreak}-day streak</span>}
+              </div>
+            )}
             <ul className="fortune-engine__rules">
               <li>Hit the middle of a bright slice for a Perfect and a bigger combo.</li>
               <li>{FORTUNE_RUN_HAZARD_LIMIT} red hits end the run, but you still keep some points.</li>
@@ -711,20 +729,20 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
 
           {runGolden && phase !== 'finale' && (
             <p className="fortune-engine__golden-banner" role="status">
-              ✨ Golden play · core piece guaranteed{runMultiplierBonus > 0 ? ` · +${runMultiplierBonus}×` : ''}
+              Golden play · core piece guaranteed{runMultiplierBonus > 0 ? ` · +${runMultiplierBonus}×` : ''}
             </p>
           )}
           {phase === 'ring' && comboCount >= 2 && (
             <p className="fortune-engine__combo" role="status" key={comboCount}>
-              ⚡ Perfect ×{comboCount} — next pays ×{resolveFortunePerfectPointsMultiplier(comboCount)}
+              Perfect ×{comboCount} — next pays ×{resolveFortunePerfectPointsMultiplier(comboCount)}
             </p>
           )}
           {phase === 'ring' && hazardsHit === FORTUNE_RUN_HAZARD_LIMIT - 1 && (
-            <p className="fortune-engine__danger-warning" role="alert">☠️ One more corrupted hit crushes the run!</p>
+            <p className="fortune-engine__danger-warning" role="alert">Danger · one more corrupted hit crushes the run!</p>
           )}
           {showRouteBanner && activeRoute && (
             <div className="fortune-engine__route-banner" role="status" style={{ borderColor: ROUTE_COLORS[activeRoute.id] }}>
-              <span className="fortune-engine__route-icon" aria-hidden="true">{activeRoute.icon}</span>
+              <span className="fortune-engine__route-icon" aria-hidden="true">{ROUTE_GLYPHS[activeRoute.id]}</span>
               <div>
                 <p className="fortune-engine__route-name">{activeRoute.name}</p>
                 <p className="fortune-engine__route-flavor">{activeRoute.flavor}</p>
@@ -750,9 +768,9 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
             {phase === 'ring' ? (
               <>
                 <div className="fortune-engine__loot-pill" aria-label={`${runDice} dice and ${runEssence} essence collected`}>
-                  <span>🎲 {runDice}</span><span>🟣 {runEssence}</span>
+                  <span>Dice {runDice}</span><span>Essence {runEssence}</span>
                 </div>
-                <p className="fortune-engine__hint"><strong>Tap bright slices</strong><span>⭐ 🎲 🟣 ⏳ &nbsp; · &nbsp; avoid ☠️</span></p>
+                <p className="fortune-engine__hint"><strong>Tap the lit slices</strong><span>Gold · Dice · Essence · Time &nbsp; / &nbsp; avoid red</span></p>
                 <button type="button" className="fortune-engine__btn fortune-engine__btn--quiet" onClick={handleBank}>
                   Finish and keep rewards
                 </button>
@@ -876,6 +894,81 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
 // Fragment grid + reward track (presentation only)
 // ---------------------------------------------------------------------------
 
+function FortuneInstructionIcon({ kind }: { kind: 'target' | 'hazard' }) {
+  if (kind === 'target') {
+    return (
+      <svg className="fortune-engine__instruction-icon fortune-engine__instruction-icon--target" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2.5c.6 4.4 3.1 7 7.5 7.5-4.4.5-6.9 3.1-7.5 7.5-.6-4.4-3.1-7-7.5-7.5 4.4-.5 6.9-3.1 7.5-7.5Z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="fortune-engine__instruction-icon fortune-engine__instruction-icon--hazard" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7.2 16.8c-1.9-1.5-3-3.7-3-6.1A7.8 7.8 0 0 1 12 3a7.8 7.8 0 0 1 7.8 7.7c0 2.4-1.1 4.6-3 6.1v3.1h-2.7v-2h-1.2v2h-1.8v-2H9.9v2H7.2v-3.1Zm2.1-5.2a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Zm5.4 0a1.7 1.7 0 1 0 0-3.4 1.7 1.7 0 0 0 0 3.4Z" />
+    </svg>
+  );
+}
+
+function EntryCoreProgress({ fragmentIds }: { fragmentIds: Set<number> }) {
+  return (
+    <section
+      className="fortune-engine__core-summary"
+      aria-label={`Fortune Core: ${fragmentIds.size} of ${FORTUNE_CORE_FRAGMENTS.length} pieces`}
+    >
+      <div className="fortune-engine__summary-label">
+        <span>Core</span>
+        <strong>{fragmentIds.size}/{FORTUNE_CORE_FRAGMENTS.length}</strong>
+      </div>
+      <div className="fortune-engine__core-dots" aria-hidden="true">
+        {FORTUNE_CORE_FRAGMENTS.map((fragment) => (
+          <span
+            key={fragment.fragmentId}
+            className={fragmentIds.has(fragment.fragmentId) ? 'fortune-engine__core-dot fortune-engine__core-dot--lit' : 'fortune-engine__core-dot'}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function formatEntryRewardLabel(label: string): string {
+  return label.replace(/\s*\+🧩 Fragment/g, ' + Core piece');
+}
+
+function FortuneRewardIcon({ label }: { label: string }) {
+  if (label.includes('Essence')) {
+    return (
+      <img
+        className="fortune-engine__reward-art"
+        src="/assets/fortune-engine/fortune-essence-vial.webp"
+        alt=""
+        decoding="async"
+        draggable={false}
+      />
+    );
+  }
+
+  if (label.includes('Dice')) {
+    return (
+      <svg className="fortune-engine__reward-glyph" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="7" y="7" width="34" height="34" rx="9" />
+        <circle cx="17" cy="17" r="2.5" />
+        <circle cx="31" cy="17" r="2.5" />
+        <circle cx="24" cy="24" r="2.5" />
+        <circle cx="17" cy="31" r="2.5" />
+        <circle cx="31" cy="31" r="2.5" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="fortune-engine__reward-glyph" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M8 14h32l-4 20H12L8 14Zm4-6h24v6H12V8Zm8 10 4 4 4-4-4 12-4-12Z" />
+    </svg>
+  );
+}
+
 function FragmentGrid({
   fragmentIds,
   lastFragmentId,
@@ -914,65 +1007,49 @@ function RewardTrack({
 }) {
   const claimableNodes = track.nodes.filter((node) => node.state === 'claimable');
   const nextNode = track.nodes.find((node) => node.state === 'upcoming') ?? null;
+  const featuredNode = claimableNodes[0] ?? nextNode;
+  const featuredLabel = featuredNode ? formatEntryRewardLabel(featuredNode.milestone.rewardLabel) : 'Reward path complete';
 
   return (
     <section
-      className="fortune-engine__track fortune-engine__progress-card"
+      className="fortune-engine__track"
       aria-label={`Reward path: ${track.eventPoints} of ${track.totalPoints} event points`}
     >
-      <div className="fortune-engine__section-heading">
-        <span>Reward path</span>
-        <strong>{track.eventPoints}/{track.totalPoints}</strong>
+      <FortuneRewardIcon label={featuredLabel} />
+      <div className="fortune-engine__reward-copy">
+        <span>{claimableNodes.length > 0 ? 'Ready reward' : 'Next reward'}</span>
+        <strong>{featuredLabel}</strong>
+        {nextNode && claimableNodes.length === 0 && <small>{nextNode.milestone.pointsRequired - track.eventPoints} points to go</small>}
       </div>
+      {claimableNodes.length > 0 && (
+        <button
+          type="button"
+          className="fortune-engine__btn fortune-engine__btn--claim"
+          onClick={() => onClaim(claimableNodes[0].milestone.id)}
+        >
+          Claim
+        </button>
+      )}
       <div className="fortune-engine__track-bar" role="presentation">
         <div className="fortune-engine__track-fill" style={{ width: `${Math.round(track.fillRatio * 100)}%` }} />
       </div>
-
-      {claimableNodes.length > 0 ? (
-        <div className="fortune-engine__claim-stack">
-          {claimableNodes.map((node) => (
-            <div key={node.milestone.id} className="fortune-engine__next-reward fortune-engine__next-reward--ready">
-              <span>
-                <small>Ready</small>
-                <strong>{node.milestone.rewardLabel}</strong>
-              </span>
-              <button
-                type="button"
-                className="fortune-engine__btn fortune-engine__btn--claim"
-                onClick={() => onClaim(node.milestone.id)}
-              >
-                Claim
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : nextNode ? (
-        <div className="fortune-engine__next-reward">
-          <span>
-            <small>Next prize</small>
-            <strong>{nextNode.milestone.rewardLabel}</strong>
-          </span>
-          <b>{nextNode.milestone.pointsRequired - track.eventPoints} to go</b>
-        </div>
-      ) : (
-        <p className="fortune-engine__track-complete">✅ Reward path complete</p>
-      )}
-
-      <details className="fortune-engine__track-details">
-        <summary>View all prizes</summary>
-        <ol className="fortune-engine__track-nodes">
-          {track.nodes.map((node) => (
-            <li key={node.milestone.id} className={`fortune-engine__track-node fortune-engine__track-node--${node.state}`}>
-              <span className="fortune-engine__track-node-state" aria-label={node.state}>
-                {node.state === 'claimed' ? '✓' : node.state === 'claimable' ? '!' : '·'}
-              </span>
-              <span className="fortune-engine__track-node-label">{node.milestone.rewardLabel}</span>
-              <span className="fortune-engine__track-node-points">{node.milestone.pointsRequired}</span>
-            </li>
-          ))}
-        </ol>
-      </details>
     </section>
+  );
+}
+
+function RewardTrackDetails({ track }: { track: FortuneEngineTrackViewModel }) {
+  return (
+    <ol className="fortune-engine__track-nodes">
+      {track.nodes.map((node) => (
+        <li key={node.milestone.id} className={`fortune-engine__track-node fortune-engine__track-node--${node.state}`}>
+          <span className="fortune-engine__track-node-state" aria-label={node.state}>
+            {node.state === 'claimed' ? '✓' : node.state === 'claimable' ? '!' : '·'}
+          </span>
+          <span className="fortune-engine__track-node-label">{formatEntryRewardLabel(node.milestone.rewardLabel)}</span>
+          <span className="fortune-engine__track-node-points">{node.milestone.pointsRequired}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -988,63 +1065,50 @@ function drawRouteWheel(canvas: HTMLCanvasElement | null, rotationDeg: number): 
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  const size = CANVAS_SIZE;
+  const size = CANVAS_LOGICAL_SIZE;
   const cx = size / 2;
   const cy = size / 2;
-  const outer = size / 2 - 10;
+  const outer = size / 2 - 7;
+  const segmentOuter = outer - 17;
+  const inner = 61;
   const arc = 360 / FORTUNE_WHEEL_SLOTS.length;
 
-  ctx.clearRect(0, 0, size, size);
+  prepareFortuneCanvas(canvas, ctx);
   drawSpaceBackdrop(ctx, size);
+  drawEngineFrameBase(ctx, cx, cy, outer);
 
   FORTUNE_WHEEL_SLOTS.forEach((routeId, index) => {
-    const route = FORTUNE_ROUTES[routeId];
     const startDeg = index * arc + rotationDeg;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, outer, degToRad(startDeg), degToRad(startDeg + arc));
-    ctx.closePath();
-    ctx.fillStyle = ROUTE_COLORS[routeId];
-    ctx.globalAlpha = 0.82;
+    const [innerColor, outerColor] = ROUTE_SURFACES[routeId];
+    const surface = ctx.createRadialGradient(cx, cy, inner, cx, cy, segmentOuter);
+    surface.addColorStop(0, innerColor);
+    surface.addColorStop(1, outerColor);
+
+    traceRingSegment(ctx, cx, cy, inner, segmentOuter, startDeg + 0.8, startDeg + arc - 0.8);
+    ctx.fillStyle = surface;
     ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(8, 15, 34, 0.9)';
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = 'rgba(241, 199, 94, 0.58)';
     ctx.stroke();
 
     const midRad = degToRad(startDeg + arc / 2);
-    const labelRadius = outer * 0.68;
+    const labelRadius = (inner + segmentOuter) / 2 + 2;
+    const glyph = ROUTE_GLYPHS[routeId];
     ctx.save();
-    ctx.font = '22px system-ui, sans-serif';
+    ctx.fillStyle = routeId === 'risk' ? '#ffb4a6' : '#ffe9a8';
+    ctx.shadowColor = ROUTE_COLORS[routeId];
+    ctx.shadowBlur = 9;
+    ctx.font = `800 ${glyph.length > 1 ? 13 : 20}px Georgia, serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(route.icon, cx + Math.cos(midRad) * labelRadius, cy + Math.sin(midRad) * labelRadius);
+    ctx.fillText(glyph, cx + Math.cos(midRad) * labelRadius, cy + Math.sin(midRad) * labelRadius + 1);
     ctx.restore();
   });
 
-  // Hub.
-  ctx.beginPath();
-  ctx.arc(cx, cy, 34, 0, Math.PI * 2);
-  ctx.fillStyle = '#0b1c33';
-  ctx.fill();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = 'rgba(243, 209, 107, 0.8)';
-  ctx.stroke();
-  ctx.font = '24px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('🎡', cx, cy + 1);
-
-  // Fixed pointer at the top.
-  ctx.beginPath();
-  ctx.moveTo(cx - 12, 4);
-  ctx.lineTo(cx + 12, 4);
-  ctx.lineTo(cx, 30);
-  ctx.closePath();
-  ctx.fillStyle = '#f3d16b';
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(8, 15, 34, 0.9)';
-  ctx.stroke();
+  drawEngineFrameDetails(ctx, cx, cy, outer, inner, segmentOuter);
+  drawEngineHub(ctx, cx, cy, 54, null, null);
+  drawFixedPointer(ctx, cx);
+  ctx.restore();
 }
 
 function drawTimingRing(
@@ -1063,97 +1127,315 @@ function drawTimingRing(
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  const size = CANVAS_SIZE;
+  const size = CANVAS_LOGICAL_SIZE;
   const cx = size / 2;
   const cy = size / 2;
-  const outer = size / 2 - 8;
-  const inner = outer - 62;
+  const outer = size / 2 - 7;
+  const segmentOuter = outer - 17;
+  const inner = segmentOuter - 57;
   const arc = 360 / FORTUNE_RING_SEGMENT_COUNT;
 
-  ctx.clearRect(0, 0, size, size);
+  prepareFortuneCanvas(canvas, ctx);
   drawSpaceBackdrop(ctx, size);
+  drawEngineFrameBase(ctx, cx, cy, outer);
 
   for (let index = 0; index < FORTUNE_RING_SEGMENT_COUNT; index += 1) {
     const startDeg = index * arc;
     const segment = scene.segments?.[index] ?? null;
-    let fill = SEGMENT_COLORS.empty;
+    let surfaceColors = SEGMENT_SURFACES.empty;
     let alpha = 1;
-    let icon = '';
+    let glyph = '';
 
     if (segment) {
-      fill = SEGMENT_COLORS[segment.kind];
-      icon = SEGMENT_ICONS[segment.kind];
+      surfaceColors = SEGMENT_SURFACES[segment.kind];
+      glyph = SEGMENT_GLYPHS[segment.kind];
       if (segment.collected || segment.kind === 'empty') {
-        alpha = 0.22;
+        alpha = 0.28;
       }
     } else if (scene.highlightIndices) {
       const isTarget = scene.highlightIndices.includes(index);
       const isHit = scene.hitIndices?.has(index) ?? false;
-      fill = isHit ? '#34d399' : isTarget ? '#f3d16b' : SEGMENT_COLORS.empty;
-      icon = isHit ? '✅' : isTarget ? '💠' : '';
+      surfaceColors = isHit
+        ? ['#124438', '#2aaa78']
+        : isTarget
+          ? SEGMENT_SURFACES.points
+          : SEGMENT_SURFACES.empty;
+      glyph = isHit ? '✓' : isTarget ? '◆' : '';
       alpha = isTarget || isHit ? 1 : 0.6;
     }
 
-    ctx.beginPath();
-    ctx.arc(cx, cy, outer, degToRad(startDeg + 1), degToRad(startDeg + arc - 1));
-    ctx.arc(cx, cy, inner, degToRad(startDeg + arc - 1), degToRad(startDeg + 1), true);
-    ctx.closePath();
+    const fill = ctx.createRadialGradient(cx, cy, inner, cx, cy, segmentOuter);
+    fill.addColorStop(0, surfaceColors[0]);
+    fill.addColorStop(1, surfaceColors[1]);
+    traceRingSegment(ctx, cx, cy, inner, segmentOuter, startDeg + 0.9, startDeg + arc - 0.9);
     ctx.globalAlpha = alpha;
     ctx.fillStyle = fill;
     ctx.fill();
     ctx.globalAlpha = 1;
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = 'rgba(8, 15, 34, 0.85)';
+    ctx.lineWidth = 1.25;
+    ctx.strokeStyle = 'rgba(230, 193, 108, 0.48)';
     ctx.stroke();
 
-    if (icon) {
+    if (glyph) {
       const midRad = degToRad(startDeg + arc / 2);
-      const iconRadius = (outer + inner) / 2;
+      const iconRadius = (segmentOuter + inner) / 2 + 1;
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.font = '18px system-ui, sans-serif';
+      ctx.fillStyle = glyph === '!' ? '#ffd0c7' : '#fff0b6';
+      ctx.shadowColor = glyph === '!' ? '#ff5266' : '#ffd76a';
+      ctx.shadowBlur = 8;
+      ctx.font = `800 ${glyph.length > 1 ? 12 : 18}px Georgia, serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(icon, cx + Math.cos(midRad) * iconRadius, cy + Math.sin(midRad) * iconRadius);
+      ctx.fillText(glyph, cx + Math.cos(midRad) * iconRadius, cy + Math.sin(midRad) * iconRadius + 1);
       ctx.restore();
     }
   }
 
+  drawEngineFrameDetails(ctx, cx, cy, outer, inner, segmentOuter);
+
   // Pointer sweep.
   const pointerRad = degToRad(scene.pointerAngleDeg);
+  const pointerInner = inner - 8;
+  const pointerOuter = segmentOuter - 3;
   ctx.save();
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = '#ffffff';
-  ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = 'rgba(91, 226, 215, 0.48)';
+  ctx.shadowColor = '#65e6ca';
+  ctx.shadowBlur = 13;
+  ctx.beginPath();
+  ctx.moveTo(cx + Math.cos(pointerRad) * pointerInner, cy + Math.sin(pointerRad) * pointerInner);
+  ctx.lineTo(cx + Math.cos(pointerRad) * pointerOuter, cy + Math.sin(pointerRad) * pointerOuter);
+  ctx.stroke();
+  ctx.lineWidth = 2.4;
+  ctx.strokeStyle = '#fff3b3';
+  ctx.shadowColor = '#ffd76a';
   ctx.shadowBlur = 8;
   ctx.beginPath();
-  ctx.moveTo(cx + Math.cos(pointerRad) * (inner - 8), cy + Math.sin(pointerRad) * (inner - 8));
-  ctx.lineTo(cx + Math.cos(pointerRad) * (outer + 2), cy + Math.sin(pointerRad) * (outer + 2));
+  ctx.moveTo(cx + Math.cos(pointerRad) * pointerInner, cy + Math.sin(pointerRad) * pointerInner);
+  ctx.lineTo(cx + Math.cos(pointerRad) * pointerOuter, cy + Math.sin(pointerRad) * pointerOuter);
   ctx.stroke();
+  drawFourPointStar(
+    ctx,
+    cx + Math.cos(pointerRad) * pointerOuter,
+    cy + Math.sin(pointerRad) * pointerOuter,
+    7,
+    2.4,
+    '#fff4b0',
+  );
   ctx.restore();
 
-  // Center readout.
-  ctx.beginPath();
-  ctx.arc(cx, cy, inner - 18, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(11, 28, 51, 0.85)';
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = 'rgba(94, 234, 212, 0.4)';
-  ctx.stroke();
-  ctx.fillStyle = '#e7f0ff';
-  ctx.font = '600 16px system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(scene.centerTop, cx, cy - 12);
-  ctx.font = '700 26px system-ui, sans-serif';
-  ctx.fillStyle = '#f3d16b';
-  ctx.fillText(scene.centerBottom, cx, cy + 16);
+  drawEngineHub(ctx, cx, cy, inner - 8, scene.centerTop, scene.centerBottom);
+  ctx.restore();
 }
 
 function drawSpaceBackdrop(ctx: CanvasRenderingContext2D, size: number): void {
   const bg = ctx.createRadialGradient(size / 2, size / 2, 20, size / 2, size / 2, size / 2);
-  bg.addColorStop(0, '#13294a');
-  bg.addColorStop(1, '#070d1d');
+  bg.addColorStop(0, '#17304e');
+  bg.addColorStop(0.55, '#0a1a31');
+  bg.addColorStop(1, '#030914');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, size, size);
+
+  const stars: readonly [number, number, number, number][] = [
+    [45, 54, 1.1, 0.7], [282, 46, 0.8, 0.6], [302, 111, 1.2, 0.48], [35, 244, 0.8, 0.5],
+    [287, 280, 1, 0.55], [61, 302, 1.1, 0.48], [236, 29, 0.7, 0.45], [20, 164, 0.8, 0.4],
+  ];
+  stars.forEach(([x, y, radius, alpha]) => {
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 234, 173, ${alpha})`;
+    ctx.fill();
+  });
+}
+
+function prepareFortuneCanvas(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): void {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.scale(canvas.width / CANVAS_LOGICAL_SIZE, canvas.height / CANVAS_LOGICAL_SIZE);
+}
+
+function traceRingSegment(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  inner: number,
+  outer: number,
+  startDeg: number,
+  endDeg: number,
+): void {
+  ctx.beginPath();
+  ctx.arc(cx, cy, outer, degToRad(startDeg), degToRad(endDeg));
+  ctx.arc(cx, cy, inner, degToRad(endDeg), degToRad(startDeg), true);
+  ctx.closePath();
+}
+
+function drawEngineFrameBase(ctx: CanvasRenderingContext2D, cx: number, cy: number, outer: number): void {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy + 4, outer + 1, 0, Math.PI * 2);
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.78)';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = '#02060c';
+  ctx.fill();
+  ctx.restore();
+
+  const metal = ctx.createRadialGradient(cx - 32, cy - 38, 22, cx, cy, outer);
+  metal.addColorStop(0, '#ffe58b');
+  metal.addColorStop(0.28, '#c88d23');
+  metal.addColorStop(0.62, '#6f4210');
+  metal.addColorStop(0.84, '#d59d31');
+  metal.addColorStop(1, '#42270b');
+  ctx.beginPath();
+  ctx.arc(cx, cy, outer, 0, Math.PI * 2);
+  ctx.fillStyle = metal;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, outer - 9, 0, Math.PI * 2);
+  ctx.fillStyle = '#101b2b';
+  ctx.fill();
+}
+
+function drawEngineFrameDetails(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  outer: number,
+  inner: number,
+  segmentOuter: number,
+): void {
+  [outer - 2, outer - 9, segmentOuter + 2, inner - 2].forEach((radius, index) => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.lineWidth = index === 0 ? 2.2 : 1.2;
+    ctx.strokeStyle = index % 2 === 0 ? 'rgba(255, 220, 126, 0.72)' : 'rgba(62, 34, 8, 0.92)';
+    ctx.stroke();
+  });
+
+  for (let index = 0; index < 16; index += 1) {
+    const angle = (index / 16) * Math.PI * 2;
+    const radius = outer - 5;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    ctx.beginPath();
+    ctx.arc(x, y, index % 4 === 0 ? 4.2 : 2.2, 0, Math.PI * 2);
+    if (index % 4 === 0) {
+      const gem = ctx.createRadialGradient(x - 1, y - 1, 0.4, x, y, 4.2);
+      gem.addColorStop(0, '#e6fffb');
+      gem.addColorStop(0.3, '#65e6ca');
+      gem.addColorStop(1, '#0c626a');
+      ctx.fillStyle = gem;
+      ctx.shadowColor = '#65e6ca';
+      ctx.shadowBlur = 7;
+    } else {
+      ctx.fillStyle = '#d4a341';
+      ctx.shadowBlur = 0;
+    }
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+}
+
+function drawEngineHub(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  radius: number,
+  topLabel: string | null,
+  bottomLabel: string | null,
+): void {
+  const metal = ctx.createRadialGradient(cx - 13, cy - 16, 7, cx, cy, radius);
+  metal.addColorStop(0, '#ffe790');
+  metal.addColorStop(0.35, '#bb7c1d');
+  metal.addColorStop(0.72, '#4b2c0d');
+  metal.addColorStop(1, '#d6a13a');
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.fillStyle = metal;
+  ctx.fill();
+
+  const enamel = ctx.createRadialGradient(cx - 9, cy - 10, 4, cx, cy, radius - 8);
+  enamel.addColorStop(0, '#24436a');
+  enamel.addColorStop(0.58, '#0b1e38');
+  enamel.addColorStop(1, '#050d1a');
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius - 8, 0, Math.PI * 2);
+  ctx.fillStyle = enamel;
+  ctx.fill();
+  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = 'rgba(101, 230, 202, 0.52)';
+  ctx.stroke();
+
+  if (topLabel && bottomLabel) {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#dce8f5';
+    ctx.font = '700 13px system-ui, sans-serif';
+    ctx.fillText(topLabel, cx, cy - 11);
+    ctx.fillStyle = '#ffe17b';
+    ctx.shadowColor = 'rgba(255, 215, 106, 0.5)';
+    ctx.shadowBlur = 7;
+    ctx.font = '800 22px Georgia, serif';
+    ctx.fillText(bottomLabel, cx, cy + 15);
+    ctx.shadowBlur = 0;
+    return;
+  }
+
+  ctx.save();
+  ctx.shadowColor = '#ffd76a';
+  ctx.shadowBlur = 15;
+  drawFourPointStar(ctx, cx, cy, radius * 0.43, radius * 0.13, '#fff0a4');
+  ctx.restore();
+}
+
+function drawFixedPointer(ctx: CanvasRenderingContext2D, cx: number): void {
+  const pointer = ctx.createLinearGradient(cx, 3, cx, 42);
+  pointer.addColorStop(0, '#fff0a2');
+  pointer.addColorStop(0.48, '#d99e2e');
+  pointer.addColorStop(1, '#70400e');
+  ctx.beginPath();
+  ctx.moveTo(cx, 4);
+  ctx.lineTo(cx + 13, 24);
+  ctx.lineTo(cx + 5, 23);
+  ctx.lineTo(cx, 42);
+  ctx.lineTo(cx - 5, 23);
+  ctx.lineTo(cx - 13, 24);
+  ctx.closePath();
+  ctx.fillStyle = pointer;
+  ctx.fill();
+  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = '#3b2208';
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(cx, 15, 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#65e6ca';
+  ctx.shadowColor = '#65e6ca';
+  ctx.shadowBlur = 9;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function drawFourPointStar(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  outerRadius: number,
+  innerRadius: number,
+  fill: string,
+): void {
+  ctx.beginPath();
+  for (let index = 0; index < 8; index += 1) {
+    const radius = index % 2 === 0 ? outerRadius : innerRadius;
+    const angle = -Math.PI / 2 + (index * Math.PI) / 4;
+    const x = cx + Math.cos(angle) * radius;
+    const y = cy + Math.sin(angle) * radius;
+    if (index === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
 }
