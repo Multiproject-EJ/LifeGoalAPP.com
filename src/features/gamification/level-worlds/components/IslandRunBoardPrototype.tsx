@@ -1656,6 +1656,13 @@ export function IslandRunBoardPrototype({
   const [isIslandInhabitantFlowOpen, setIsIslandInhabitantFlowOpen] = useState(false);
   const [caretakerBoardBubbleText, setCaretakerBoardBubbleText] = useState<string | null>(null);
   const [showCreatureChannelModal, setShowCreatureChannelModal] = useState(false);
+  // Auto-dismiss the Caretaker's on-board speech bubble so it never lingers over
+  // the board. Each new message resets the timer.
+  useEffect(() => {
+    if (!caretakerBoardBubbleText) return undefined;
+    const timeoutId = window.setTimeout(() => setCaretakerBoardBubbleText(null), 7000);
+    return () => window.clearTimeout(timeoutId);
+  }, [caretakerBoardBubbleText]);
   const [showConcordHubModal, setShowConcordHubModal] = useState(false);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
