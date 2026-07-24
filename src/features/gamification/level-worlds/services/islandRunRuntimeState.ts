@@ -134,6 +134,7 @@ export async function persistIslandRunRuntimeStatePatch(options: {
     }>;
     creatureCollection?: CreatureCollectionRuntimeEntry[];
     activeCompanionId?: string | null;
+    selectedPlayerPieceId?: string | null;
     perfectCompanionIds?: string[];
     perfectCompanionReasons?: Record<string, PerfectCompanionReason>;
     perfectCompanionComputedAtMs?: number | null;

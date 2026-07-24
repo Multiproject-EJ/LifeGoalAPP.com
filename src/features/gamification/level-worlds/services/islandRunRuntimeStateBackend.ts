@@ -40,6 +40,7 @@ export interface IslandRunRuntimeStateBackend {
     session: Session;
     client: SupabaseClient | null;
     patch: {
+      selectedPlayerPieceId?: string | null;
       firstRunClaimed?: boolean;
       firstSessionTutorialState?: IslandRunFirstSessionTutorialState;
       dailyHeartsClaimedDayKey?: string | null;
@@ -169,6 +170,10 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         : nextMusicEnabled || nextSfxEnabled;
     const nextState: IslandRunRuntimeState = {
       runtimeVersion: current.runtimeVersion,
+      selectedPlayerPieceId:
+        typeof patch.selectedPlayerPieceId === 'string' || patch.selectedPlayerPieceId === null
+          ? patch.selectedPlayerPieceId
+          : current.selectedPlayerPieceId,
       firstRunClaimed: typeof patch.firstRunClaimed === 'boolean' ? patch.firstRunClaimed : current.firstRunClaimed,
       firstSessionTutorialState: patch.firstSessionTutorialState ?? current.firstSessionTutorialState,
       dailyHeartsClaimedDayKey:
