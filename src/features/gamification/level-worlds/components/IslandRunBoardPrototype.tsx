@@ -5697,41 +5697,39 @@ export function IslandRunBoardPrototype({
     dicePool,
     dicePerRoll: effectiveDiceCost,
   });
-  const rollButtonLabel = isDoorLandmarkCompletionRequired
-    ? 'Complete landmark first'
-    : rollButtonMode === 'rolling'
-      ? 'Rolling...'
-      : rollButtonMode === 'roll'
-        ? `Roll (${effectiveDiceCost} dice)`
-        : `Need ${effectiveDiceCost} dice to roll`;
-  const compactRollButtonLabel = isDoorLandmarkCompletionRequired
-    ? 'Landmark first'
-    : rollButtonMode === 'rolling'
-      ? 'Rolling...'
-      : rollButtonMode === 'roll'
-        ? 'Roll'
-        : 'Need dice';
+  // Rolling is always free when dice are available — landing near an incomplete
+  // landmark no longer locks the Roll button. (Previously an open/accessible
+  // door landmark set `isDoorLandmarkCompletionRequired`, which disabled rolling
+  // and could strand the player behind a "Complete landmark first" gate. The
+  // landmark modal itself still enforces completion for behavior stops via the
+  // non-dismissable rule; it just no longer blocks the dice.)
+  const rollButtonLabel = rollButtonMode === 'rolling'
+    ? 'Rolling...'
+    : rollButtonMode === 'roll'
+      ? `Roll (${effectiveDiceCost} dice)`
+      : `Need ${effectiveDiceCost} dice to roll`;
+  const compactRollButtonLabel = rollButtonMode === 'rolling'
+    ? 'Rolling...'
+    : rollButtonMode === 'roll'
+      ? 'Roll'
+      : 'Need dice';
   const rollBlockedReason = isOnboardingCelebrationVisible
     ? 'onboarding_celebration'
     : isRolling
       ? 'already_rolling'
       : showTravelOverlay
         ? 'travel_overlay'
-        : isDoorLandmarkCompletionRequired
-          ? 'landmark_required'
-          : isEnergyDepletedForRoll
-            ? 'insufficient_dice'
-            : null;
+        : isEnergyDepletedForRoll
+          ? 'insufficient_dice'
+          : null;
   const rollDisabledReason = isOnboardingCelebrationVisible
     ? 'onboarding_celebration'
     : isRolling
       ? 'already_rolling'
       : showTravelOverlay
         ? 'travel_overlay'
-        : isDoorLandmarkCompletionRequired
-          ? 'landmark_required'
-          : null;
-  const canRoll = !isOnboardingCelebrationVisible && !isRolling && !showTravelOverlay && !isDoorLandmarkCompletionRequired && dicePool >= effectiveDiceCost;
+        : null;
+  const canRoll = !isOnboardingCelebrationVisible && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
   const canHoldForAutoRoll = canRoll && !isIslandTimerPendingStart;
   const rollButtonInteractionClass = isAutoRolling
     ? 'island-run-prototype__roll-btn--auto-active'
@@ -5748,8 +5746,6 @@ export function IslandRunBoardPrototype({
         return 'A roll is already in progress — please wait.';
       case 'travel_overlay':
         return 'Island travel is in progress — please wait.';
-      case 'landmark_required':
-        return 'Complete the opened landmark before rolling again.';
       default:
         return isEnergyDepletedForRoll
           ? `Not enough dice to roll. You need ${effectiveDiceCost} dice per roll.`
@@ -6254,25 +6250,10 @@ export function IslandRunBoardPrototype({
     }
 
     // M11C: Step 1 enforcement removed — rolling is always free when dice are available.
-
-    if (isDoorLandmarkCompletionRequired) {
-      if (requiredDoorStopId) {
-        requestActiveStopTransition(requiredDoorStopId, 'roll_blocked_reopen_required_landmark');
-        setFocusedStopId(requiredDoorStopId);
-        setCameraMode('stop_focus');
-      }
-      setLandingText('Complete the opened landmark before rolling again.');
-      if (isIsland120StartupDiagnosticActive) {
-        logIslandRunEntryDebug('island120_roll_interaction', {
-          userId: session.user.id,
-          action: 'blocked',
-          blockReason: 'landmark_required',
-          requiredDoorStopId,
-          ...rollDecisionFlags,
-        });
-      }
-      return false;
-    }
+    // Landmark-completion enforcement removed here too: an open/accessible door
+    // landmark no longer blocks rolling (it previously reopened the stop and
+    // returned false, stranding the player). Completion is still encouraged via
+    // the landmark modal's own flow, but the dice are never held hostage.
 
     if (isRolling) {
       if (isIsland120StartupDiagnosticActive) {
