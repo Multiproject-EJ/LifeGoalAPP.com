@@ -13,7 +13,7 @@ Every sound effect in the game: ID, what fires it, how it should sound, the Elev
 | Column | Meaning |
 |---|---|
 | **★** | Tier 1 — ship in Phase 1. Events sharing an asset with something else, the highest-frequency interactions, and **every existing placeholder that needs regenerating**. |
-| **ID / file** | `sfx_<domain>_<name>` → `/assets/audio/sfx/sfx_<domain>_<name>.mp3`. Existing filenames are kept even when the audio behind them is being replaced. |
+| **ID / file** | `sfx_<domain>_<name>` → `/assets/audio/sfx/sfx_<domain>_<name>.mp3`. A file still carrying a `.PLACEHOLDER.mp3` suffix is not yet real — see §0.1. |
 | **Trigger** | The code event. Names in `code font` already exist in `IslandRunSoundEvent` (`src/features/gamification/level-worlds/services/islandRunAudio.ts`) — those need only an asset, no new plumbing. |
 | **Len** | Target duration after trimming. |
 | **Haptic** | Paired pattern. `—` = no haptic. Existing patterns live in `HAPTIC_PATTERNS`. |
@@ -32,17 +32,21 @@ Every sound effect in the game: ID, what fires it, how it should sound, the Elev
 
 > **This does not apply to music.** The tracks under `/assets/audio/music/` are approved Suno Pro originals and must **not** be regenerated or replaced. See `01_MUSIC_ASSET_MANIFEST.md` §0.
 
-### 0.1 Shipped SFX files — all placeholder
+### 0.1 Shipped SFX files — all placeholder, and now named that way
 
-| File | Size | Currently used for | Action |
-|---|---|---|---|
-| `sfx_dice_roll.mp3` | 4.4 KB | `roll`, `reward_bar_fill`, `coin_flip` | 🔶 **Replace.** Then free the other two events |
-| `sfx_tile_land.mp3` | 2.9 KB | `token_move`, `stop_land`, `build_upgrade`, `island_travel`, `multiplier_cycle`, `encounter_trigger`, `encounter_resolve`, `utility_stop_complete` | 🔶 **Replace — highest priority.** 8 events on one bad file |
-| `sfx_egg_open.mp3` | 7.5 KB | `egg_set`, `egg_ready`, `egg_open` | 🔶 **Replace.** Then free the other two |
-| `sfx_market_success.mp3` | 5.0 KB | `market_purchase_success`, `market_stop_complete` | 🔶 **Replace.** Then free `market_stop_complete` |
-| `sfx_island_clear.mp3` | 9.6 KB | `boss_trial_start`, `boss_trial_resolve`, `boss_island_clear`, `island_travel_complete` | 🔶 **Replace.** Then free the other three |
-| `sfx_shop_open.mp3` | 4.2 KB | `shop_open`, `market_purchase_attempt`, `market_insufficient_coins`, `minigame_open` | 🔶 **Replace.** Then free the other three |
-| `sfx_reward_bar_claim_burst.mp3` | 6.9 KB | `reward_bar_claim_burst`, `reward_bar_cascade`, `sticker_complete`, `minigame_complete`, `multiplier_max`, `coin_reveal`, `tech_item_poof` | 🔶 **Replace — highest priority.** 7 events on one bad file |
+Every file on disk carries a **`.PLACEHOLDER.mp3`** suffix so it cannot be mistaken for a finished asset — in a file browser, in a diff, in the network tab. `SOUND_ASSET_MAP` in `islandRunAudio.ts` points at the `.PLACEHOLDER.mp3` paths today.
+
+**When a real replacement lands, drop the `.PLACEHOLDER` suffix** — the file becomes e.g. `sfx_dice_roll.mp3` again, `SOUND_ASSET_MAP` is updated to point at it, and the path is removed from `PLACEHOLDER_SOUND_ASSET_PATHS`. Do not ship a real recording still carrying the `.PLACEHOLDER` suffix, and do not remove the suffix without swapping the audio underneath it.
+
+| Current file on disk | Target filename (on replacement) | Size | Currently used for | Action |
+|---|---|---|---|---|
+| `sfx_dice_roll.PLACEHOLDER.mp3` | `sfx_dice_roll.mp3` | 4.4 KB | `roll`, `reward_bar_fill`, `coin_flip` | 🔶 **Replace.** Then free the other two events |
+| `sfx_tile_land.PLACEHOLDER.mp3` | `sfx_tile_land.mp3` | 2.9 KB | `token_move`, `stop_land`, `build_upgrade`, `island_travel`, `multiplier_cycle`, `encounter_trigger`, `encounter_resolve`, `utility_stop_complete` | 🔶 **Replace — highest priority.** 8 events on one bad file |
+| `sfx_egg_open.PLACEHOLDER.mp3` | `sfx_egg_open.mp3` | 7.5 KB | `egg_set`, `egg_ready`, `egg_open` | 🔶 **Replace.** Then free the other two |
+| `sfx_market_success.PLACEHOLDER.mp3` | `sfx_market_success.mp3` | 5.0 KB | `market_purchase_success`, `market_stop_complete` | 🔶 **Replace.** Then free `market_stop_complete` |
+| `sfx_island_clear.PLACEHOLDER.mp3` | `sfx_island_clear.mp3` | 9.6 KB | `boss_trial_start`, `boss_trial_resolve`, `boss_island_clear`, `island_travel_complete` | 🔶 **Replace.** Then free the other three |
+| `sfx_shop_open.PLACEHOLDER.mp3` | `sfx_shop_open.mp3` | 4.2 KB | `shop_open`, `market_purchase_attempt`, `market_insufficient_coins`, `minigame_open` | 🔶 **Replace.** Then free the other three |
+| `sfx_reward_bar_claim_burst.PLACEHOLDER.mp3` | `sfx_reward_bar_claim_burst.mp3` | 6.9 KB | `reward_bar_claim_burst`, `reward_bar_cascade`, `sticker_complete`, `minigame_complete`, `multiplier_max`, `coin_reveal`, `tech_item_poof` | 🔶 **Replace — highest priority.** 7 events on one bad file |
 
 So there are two independent problems, and fixing only one leaves the game sounding bad:
 
@@ -61,10 +65,11 @@ Call sites to migrate: `MobileFooterNav` (7), `TaskTower` (7), `DailyHabitTracke
 
 ### 0.3 How placeholders are marked in code
 
+- **Filenames.** Every placeholder file on disk carries a `.PLACEHOLDER.mp3` suffix (e.g. `sfx_dice_roll.PLACEHOLDER.mp3`) — loud in a file browser, a diff, or the network tab. Drop the suffix only when the audio underneath has actually been replaced.
 - `islandRunAudio.ts` exports `isPlaceholderSoundAsset(path)` and `getPlaceholderSoundEvents()`, and reports `placeholderEventCount` / `lastSoundWasPlaceholder` through `getIslandRunAudioDiagnostics()` so the dev panel can flag them live.
-- `PLACEHOLDER_SOUND_ASSET_PATHS` currently contains every shipped SFX path. **Remove a path from that set when its real asset lands** — that set reaching empty is the definition of "SFX content is done".
+- `PLACEHOLDER_SOUND_ASSET_PATHS` currently contains every shipped SFX path (the `.PLACEHOLDER.mp3` paths). **Remove a path from that set — and drop the suffix from the file — when its real asset lands.** That set reaching empty is the definition of "SFX content is done".
 - `audioUtils.ts` carries a file-level placeholder banner.
-- `npm run check:audio-assets` (proposed, master plan §8) reports the remaining placeholder count.
+- `npm run check:audio-assets` (proposed, master plan §8) reports the remaining placeholder count and fails if any `SOUND_ASSET_MAP` entry points at a non-`.PLACEHOLDER` path that is still listed in `PLACEHOLDER_SOUND_ASSET_PATHS` (a stale suffix removal).
 
 ---
 

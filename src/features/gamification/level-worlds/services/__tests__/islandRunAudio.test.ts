@@ -136,7 +136,7 @@ export const islandRunAudioTests: TestCase[] = [
         assertEqual(MockAudioElement.created.length, 1, 'expected one SFX audio element');
         assertEqual(
           MockAudioElement.created[0].src,
-          '/assets/audio/sfx/sfx_dice_roll.mp3',
+          '/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3',
           'expected roll SFX asset path',
         );
         assertEqual(MockAudioElement.created[0].playCount, 1, 'expected SFX playback');
