@@ -208,13 +208,6 @@
   transform: scale(0.97);
 }
 
-.welcome-back-celebration__cta--secondary {
-  margin-top: 0.55rem;
-  border-color: rgba(148, 163, 184, 0.4);
-  background: rgba(30, 41, 59, 0.8);
-  color: rgba(226, 232, 240, 0.9);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .welcome-back-celebration__shell,
   .welcome-back-celebration__reward,

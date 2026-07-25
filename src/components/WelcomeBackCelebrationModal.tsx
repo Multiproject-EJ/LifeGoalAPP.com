@@ -5,11 +5,15 @@ import { getEggStageArtSrc } from '../features/gamification/level-worlds/service
 import type { ComebackCelebration, ComebackEggTier } from '../services/comebackCelebration';
 import './WelcomeBackCelebrationModal.css';
 
+/**
+ * Closing is the only exit. A button into the island run would clear this
+ * celebration and un-gate the modals queued behind it — daily treats,
+ * tip-of-day, the task rollover — leaving them to fire underneath the game
+ * overlay. The eggs keep until the user goes there on their own.
+ */
 export interface WelcomeBackCelebrationModalProps {
   celebration: ComebackCelebration;
   onClose: () => void;
-  /** Sends the user to the hatchery, where opening an egg actually grants its creature. */
-  onOpenHatchery?: () => void;
 }
 
 const EGG_TIER_LABELS: Record<ComebackEggTier, string> = {
@@ -29,11 +33,7 @@ function describeAbsence(daysAway: number): string {
   return months <= 1 ? 'a month' : `${months} months`;
 }
 
-export function WelcomeBackCelebrationModal({
-  celebration,
-  onClose,
-  onOpenHatchery,
-}: WelcomeBackCelebrationModalProps) {
+export function WelcomeBackCelebrationModal({ celebration, onClose }: WelcomeBackCelebrationModalProps) {
   const [phase, setPhase] = useState<Phase>('opening');
 
   useEffect(() => {
@@ -111,28 +111,13 @@ export function WelcomeBackCelebrationModal({
                 </ul>
                 <p className="welcome-back-celebration__eggs-note">
                   {eggCount > 4 ? `Showing 4 of ${eggCount}. ` : ''}
-                  Open {eggCount === 1 ? 'it' : 'them'} in the hatchery to meet who's inside.
+                  Visit the game to collect {eggCount === 1 ? 'it' : 'them'}.
                 </p>
               </section>
             ) : null}
 
-            {eggCount > 0 && onOpenHatchery ? (
-              <button
-                type="button"
-                className="welcome-back-celebration__cta"
-                onClick={onOpenHatchery}
-                autoFocus
-              >
-                Open the hatchery
-              </button>
-            ) : null}
-            <button
-              type="button"
-              className={`welcome-back-celebration__cta${eggCount > 0 && onOpenHatchery ? ' welcome-back-celebration__cta--secondary' : ''}`}
-              onClick={onClose}
-              autoFocus={!(eggCount > 0 && onOpenHatchery)}
-            >
-              {eggCount > 0 && onOpenHatchery ? 'Later' : "Let's go"}
+            <button type="button" className="welcome-back-celebration__cta" onClick={onClose} autoFocus>
+              Let's go
             </button>
           </>
         )}

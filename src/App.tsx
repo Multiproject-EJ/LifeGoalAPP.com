@@ -6023,11 +6023,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <WelcomeBackCelebrationModal
           celebration={comebackCelebration}
           onClose={() => setComebackCelebration(null)}
-          onOpenHatchery={() => {
-            setComebackCelebration(null);
-            setLevelWorldsEntryPanel('default');
-            setShowLevelWorldsFromEntry(true);
-          }}
         />
       )}
       {showTipOfDay && (
