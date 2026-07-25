@@ -1051,6 +1051,45 @@ type TodoCleanupPendingAction = { action: TodoCleanupAction; scheduledDateISO?: 
 const TODO_CLEANUP_MAX_PROMPTS = 40;
 const TODO_CLEANUP_TASK_TOWER_TAG = '_todo';
 const TODO_CLEANUP_LAST_PROMPT_AT = TODO_CLEANUP_MAX_PROMPTS - 1;
+
+/**
+ * Guided-mode copy for the task rollover modal.
+ *
+ * Each entry annotates one control. `label` is the collapsed chip; `text` is
+ * what unfolds when the chip is tapped.
+ */
+const TODO_CLEANUP_HELP_TOPICS = {
+  finish: {
+    label: 'Done',
+    text: 'Ticks the task off. It stays on today, marked complete, once you apply.',
+  },
+  tomorrow: {
+    label: 'Tomorrow',
+    text: "Moves the task off today and onto tomorrow's list.",
+  },
+  delete: {
+    label: 'Delete',
+    text: 'Removes the task for good. This one cannot be undone after you apply.',
+  },
+  pickDay: {
+    label: 'Pick a day',
+    text: 'Tap a task to open notes and a date picker, and send it to any day you like.',
+  },
+  undo: {
+    label: 'Undo',
+    text: 'Clears the choice you made for a task so you can pick again. Nothing is saved until you apply.',
+  },
+  bulk: {
+    label: 'Bulk apply',
+    text: 'Applies one choice to every task you have not sorted yet. You get a confirm step first.',
+  },
+  apply: {
+    label: 'Apply',
+    text: 'Saves every choice and closes. Anything you left unsorted simply stays on today.',
+  },
+} as const;
+
+type TodoCleanupHelpTopicId = keyof typeof TODO_CLEANUP_HELP_TOPICS;
 const dreamJournalLaunchKey = (userId: string) =>
   `lifegoal.dream-journal-launch:${userId}`;
 const todaysWinsLaunchKey = (userId: string) =>
@@ -1215,6 +1254,8 @@ export function DailyHabitTracker({
   const [todoCleanupPendingActions, setTodoCleanupPendingActions] = useState<Record<string, TodoCleanupPendingAction>>({});
   const [todoCleanupDisplayCounts, setTodoCleanupDisplayCounts] = useState<Record<string, number>>({});
   const [todoCleanupBulkAction, setTodoCleanupBulkAction] = useState<TodoCleanupPendingAction | null>(null);
+  const [todoCleanupHelpMode, setTodoCleanupHelpMode] = useState(false);
+  const [todoCleanupHelpFocus, setTodoCleanupHelpFocus] = useState<TodoCleanupHelpTopicId | null>(null);
   const yesterdaySundownTodoPromptOpenedThisSessionRef = useRef(false);
 
   useEffect(() => {
@@ -12912,6 +12953,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setExpandedYesterdaySundownTodoById({});
       setTodoCleanupPendingActions({});
       setTodoCleanupBulkAction(null);
+      setTodoCleanupHelpMode(false);
+      setTodoCleanupHelpFocus(null);
     }
   }, [applyTodoCleanupActions, recordUnresolvedTodoCleanupDisplays, todoCleanupPendingActions]);
 
@@ -12944,6 +12987,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setExpandedYesterdaySundownTodoById({});
     setTodoCleanupPendingActions({});
     setTodoCleanupBulkAction(null);
+    setTodoCleanupHelpMode(false);
+    setTodoCleanupHelpFocus(null);
   }, [applyTodoCleanupActions, recordUnresolvedTodoCleanupDisplays, todoCleanupPendingActions]);
 
   const handleConfirmBulkTodoCleanup = useCallback(() => {
@@ -12973,10 +13018,30 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const allTodoCleanupItemsAssigned = yesterdaySundownTodos.length > 0 && assignedTodoCleanupCount >= yesterdaySundownTodos.length;
   const todoCleanupTomorrowISO = formatISODate(addDays(parseISODate(today), 1));
 
+  // Guided mode annotates one control at a time. The chips are the only live
+  // targets while it is on — the controls underneath are inert, so tapping an
+  // explanation can never fire the action it describes.
+  const renderTodoCleanupHelpNote = (topicId: TodoCleanupHelpTopicId) => {
+    if (!todoCleanupHelpMode) return null;
+    const topic = TODO_CLEANUP_HELP_TOPICS[topicId];
+    const isOpen = todoCleanupHelpFocus === topicId;
+    return (
+      <button
+        type="button"
+        className={`yesterday-sundown-todo-modal__help-note${isOpen ? ' yesterday-sundown-todo-modal__help-note--open' : ''}`}
+        onClick={() => setTodoCleanupHelpFocus(isOpen ? null : topicId)}
+        aria-expanded={isOpen}
+      >
+        <span className="yesterday-sundown-todo-modal__help-note-label">{topic.label}</span>
+        {isOpen ? <span className="yesterday-sundown-todo-modal__help-note-text">{topic.text}</span> : null}
+      </button>
+    );
+  };
+
   const yesterdaySundownTodoModalContent = showYesterdaySundownTodoModal ? (
     <div className="yesterday-sundown-todo-modal" role="dialog" aria-modal="true" aria-labelledby="yesterday-sundown-todo-title">
       <div className="yesterday-sundown-todo-modal__backdrop" onClick={() => void closeYesterdaySundownTodoModal()} role="presentation" />
-      <div className="yesterday-sundown-todo-modal__dialog">
+      <div className={`yesterday-sundown-todo-modal__dialog${todoCleanupHelpMode ? ' yesterday-sundown-todo-modal__dialog--help' : ''}`}>
         <header className="yesterday-sundown-todo-modal__header">
           <span className="yesterday-sundown-todo-modal__sun" aria-hidden="true">🌅</span>
           <div className="yesterday-sundown-todo-modal__heading">
@@ -12987,6 +13052,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 : `Nothing left over from ${formatDateLabel(yesterdayISO)}.`}
             </p>
           </div>
+          <button
+            type="button"
+            className={`yesterday-sundown-todo-modal__help-toggle${todoCleanupHelpMode ? ' yesterday-sundown-todo-modal__help-toggle--on' : ''}`}
+            onClick={() => {
+              setTodoCleanupHelpFocus(null);
+              setTodoCleanupHelpMode((current) => !current);
+            }}
+            aria-pressed={todoCleanupHelpMode}
+            aria-label={todoCleanupHelpMode ? 'Turn off button explanations' : 'Explain these buttons'}
+            title={todoCleanupHelpMode ? 'Turn off button explanations' : 'Explain these buttons'}
+          >
+            ?
+          </button>
           <button
             type="button"
             className="yesterday-sundown-todo-modal__close"
@@ -13019,6 +13097,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             </div>
           ) : null}
           {yesterdaySundownTodos.length > 0 ? (
+            <>
+            {/* Sits above the list rather than inside it: the dimmed rows use opacity,
+                which a child can never climb back out of. */}
+            <div className="yesterday-sundown-todo-modal__help-cluster yesterday-sundown-todo-modal__help-cluster--row">
+              {renderTodoCleanupHelpNote('pickDay')}
+              {renderTodoCleanupHelpNote('finish')}
+              {renderTodoCleanupHelpNote('tomorrow')}
+              {renderTodoCleanupHelpNote('delete')}
+              {renderTodoCleanupHelpNote('undo')}
+            </div>
             <ul className="yesterday-sundown-todo-modal__list">
               {yesterdaySundownTodos.map((todo, todoIndex) => {
                 const isExpanded = Boolean(expandedYesterdaySundownTodoById[todo.id]);
@@ -13094,6 +13182,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 );
               })}
             </ul>
+            </>
           ) : (
             <div className="yesterday-sundown-todo-modal__empty">✨ All clear — yesterday can stay yesterday.</div>
           )}
@@ -13101,6 +13190,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         </div>
 
         <footer className="yesterday-sundown-todo-modal__footer">
+          <div className="yesterday-sundown-todo-modal__help-cluster yesterday-sundown-todo-modal__help-cluster--footer">
+            {renderTodoCleanupHelpNote('bulk')}
+            {renderTodoCleanupHelpNote('apply')}
+          </div>
           {yesterdaySundownTodos.length > 0 && !allTodoCleanupItemsAssigned ? (
             <div className="yesterday-sundown-todo-modal__bulk" aria-label="Bulk todo cleanup actions">
               <span className="yesterday-sundown-todo-modal__bulk-label">Bulk apply:</span>

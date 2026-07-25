@@ -377,6 +377,114 @@
   line-height: 1.3;
 }
 
+.yesterday-sundown-todo-modal__help-toggle {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  border: 1px solid rgba(37, 99, 235, 0.32);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #1d4ed8;
+  font-size: 1rem;
+  font-weight: 850;
+  line-height: 1;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.yesterday-sundown-todo-modal__help-toggle:hover {
+  background: rgba(219, 234, 254, 0.95);
+}
+
+.yesterday-sundown-todo-modal__help-toggle--on {
+  border-color: rgba(37, 99, 235, 0.75);
+  background: #2563eb;
+  color: #f8fafc;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+}
+
+/* Guided mode: the modal recedes so the explanation chips read as an overlay.
+   Dim the regions individually rather than the whole body — opacity on an
+   ancestor caps every descendant, and the chips have to stay at full strength.
+   Controls are also made inert, so tapping a chip can never fire the action it
+   describes. */
+.yesterday-sundown-todo-modal__dialog--help .yesterday-sundown-todo-modal__list,
+.yesterday-sundown-todo-modal__dialog--help .yesterday-sundown-todo-modal__progress,
+.yesterday-sundown-todo-modal__dialog--help .yesterday-sundown-todo-modal__bulk,
+.yesterday-sundown-todo-modal__dialog--help .yesterday-sundown-todo-modal__final-action {
+  opacity: 0.32;
+  filter: saturate(0.6);
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.yesterday-sundown-todo-modal__help-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.yesterday-sundown-todo-modal__help-cluster--row {
+  width: 100%;
+  padding: 0.15rem 0.55rem 0.55rem;
+}
+
+.yesterday-sundown-todo-modal__help-cluster--footer {
+  width: 100%;
+  padding-bottom: 0.5rem;
+}
+
+.yesterday-sundown-todo-modal__help-cluster:empty {
+  display: none;
+}
+
+.yesterday-sundown-todo-modal__help-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-start;
+  max-width: 100%;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  border-radius: 0.85rem;
+  background: rgba(239, 246, 255, 0.97);
+  color: #1e3a8a;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-align: left;
+  transition: transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1), box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.yesterday-sundown-todo-modal__help-note:hover {
+  background: #fff;
+}
+
+.yesterday-sundown-todo-modal__help-note--open {
+  flex-basis: 100%;
+  padding: 0.6rem 0.75rem;
+  border-color: rgba(37, 99, 235, 0.8);
+  background: #fff;
+  transform: scale(1.03);
+  box-shadow: 0 10px 26px rgba(30, 64, 175, 0.28), 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.yesterday-sundown-todo-modal__help-note-label {
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.01em;
+}
+
+.yesterday-sundown-todo-modal__help-note--open .yesterday-sundown-todo-modal__help-note-label {
+  font-size: 0.84rem;
+}
+
+.yesterday-sundown-todo-modal__help-note-text {
+  color: #334155;
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
 .yesterday-sundown-todo-modal__close {
   width: 2rem;
   height: 2rem;
@@ -839,8 +947,15 @@
   .yesterday-sundown-todo-modal__chip,
   .yesterday-sundown-todo-modal__close,
   .yesterday-sundown-todo-modal__undo,
+  .yesterday-sundown-todo-modal__help-toggle,
+  .yesterday-sundown-todo-modal__help-note,
   .yesterday-sundown-todo-modal__final-action {
     transition: none;
+  }
+
+  /* The size jump is the signal that a chip opened, so keep it without the spring. */
+  .yesterday-sundown-todo-modal__help-note--open {
+    transform: none;
   }
 }
 
@@ -878,6 +993,27 @@
 
 [data-theme='dark-glass'] .yesterday-sundown-todo-modal__chip,
 [data-theme='dark-glass'] .yesterday-sundown-todo-modal__date-action,
+[data-theme='dark-glass'] .yesterday-sundown-todo-modal__help-toggle {
+  border-color: rgba(125, 211, 252, 0.4);
+  background: rgba(15, 23, 42, 0.72);
+  color: #bfdbfe;
+}
+
+[data-theme='dark-glass'] .yesterday-sundown-todo-modal__help-toggle--on {
+  background: #2563eb;
+  color: #f8fafc;
+}
+
+[data-theme='dark-glass'] .yesterday-sundown-todo-modal__help-note {
+  border-color: rgba(125, 211, 252, 0.42);
+  background: rgba(15, 23, 42, 0.96);
+  color: #bfdbfe;
+}
+
+[data-theme='dark-glass'] .yesterday-sundown-todo-modal__help-note-text {
+  color: rgba(226, 232, 240, 0.86);
+}
+
 [data-theme='dark-glass'] .yesterday-sundown-todo-modal__bulk-actions button,
 [data-theme='dark-glass'] .yesterday-sundown-todo-modal__confirm button {
   background: rgba(30, 41, 59, 0.85);
