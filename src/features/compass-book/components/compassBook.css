@@ -1792,3 +1792,200 @@
   line-height: 1.45;
   color: var(--cbk-ink-muted);
 }
+
+/* ============================================================
+   Opening the book, and turning its pages
+   ============================================================
+   Two motions carry the book metaphor: the front board swings on its spine when
+   the book opens, and paper turns when the player moves between pages. Both are
+   decorative — they never gate content, never block input, and are skipped
+   entirely under prefers-reduced-motion (guarded in CSS *and* in
+   CompassBookScreen, which does not mount the cover at all in that case). */
+
+.compass-book__sheet {
+  /* Depth for the cover swing and the page turn. Without it both flatten. */
+  perspective: 1600px;
+  perspective-origin: left center;
+}
+
+/* ---------- The front board ---------- */
+
+.compass-book__cover-plate {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  animation: cbk-cover-open 900ms cubic-bezier(0.62, 0.02, 0.3, 1) forwards;
+}
+
+/* Tapping the cover cuts the swing short rather than waiting it out. */
+.compass-book__cover-plate--skip {
+  animation-duration: 140ms;
+}
+
+.compass-book__cover-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  padding: 32px 26px;
+  text-align: center;
+  color: var(--cbk-gold);
+  background:
+    radial-gradient(120% 90% at 30% 15%, #1c2a56 0%, #101838 55%, #0a1026 100%);
+  border-right: 2px solid rgba(242, 193, 78, 0.4);
+  box-shadow: inset -18px 0 34px rgba(0, 0, 0, 0.45), 12px 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.compass-book__cover-rule {
+  width: 92px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cbk-gold-soft), transparent);
+}
+
+.compass-book__cover-star {
+  font-size: 1.4rem;
+  text-shadow: 0 0 22px rgba(242, 193, 78, 0.6);
+}
+
+.compass-book__cover-name {
+  font-family: var(--cbk-serif);
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 18px rgba(242, 193, 78, 0.28);
+}
+
+.compass-book__cover-motto {
+  font-family: var(--cbk-serif);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--cbk-ink-soft);
+}
+
+.compass-book__cover-rose {
+  margin-top: 6px;
+  font-size: 2.6rem;
+  opacity: 0.5;
+  text-shadow: 0 0 30px rgba(242, 193, 78, 0.5);
+}
+
+@keyframes cbk-cover-open {
+  0% {
+    transform: rotateY(0deg);
+    opacity: 1;
+  }
+  /* A short hesitation before the board lifts — paper has weight. */
+  18% {
+    transform: rotateY(-4deg);
+    opacity: 1;
+  }
+  /* Stay a solid board for most of the swing. Fading from the first frame makes
+     it read as a translucent overlay rather than a cover being lifted. */
+  74% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(-118deg);
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* ---------- Turning a page ---------- */
+
+.compass-book__page {
+  transform-origin: left center;
+  backface-visibility: hidden;
+}
+
+/* Toward a later chapter: the sheet lifts at the fore edge and falls left. */
+.compass-book__page--turn-forward {
+  animation: cbk-turn-forward var(--cbk-turn-ms, 340ms) cubic-bezier(0.33, 0, 0.2, 1) both;
+}
+
+/* Back toward the Reading: the sheet drops back to the right. */
+.compass-book__page--turn-back {
+  animation: cbk-turn-back var(--cbk-turn-ms, 340ms) cubic-bezier(0.33, 0, 0.2, 1) both;
+}
+
+@keyframes cbk-turn-forward {
+  0% {
+    transform: rotateY(38deg) translateX(9%);
+    opacity: 0;
+    box-shadow: -26px 0 44px rgba(0, 0, 0, 0.5);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(0deg) translateX(0);
+    opacity: 1;
+    box-shadow: none;
+  }
+}
+
+@keyframes cbk-turn-back {
+  0% {
+    transform: rotateY(-32deg) translateX(-7%);
+    opacity: 0;
+    box-shadow: 26px 0 44px rgba(0, 0, 0, 0.5);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(0deg) translateX(0);
+    opacity: 1;
+    box-shadow: none;
+  }
+}
+
+/* ---------- The ribbon bookmark ---------- */
+
+.compass-book__tab-ribbon {
+  position: absolute;
+  top: 100%;
+  right: 9px;
+  width: 9px;
+  height: 26px;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--cbk-gold), rgba(242, 193, 78, 0.35));
+  /* Notched tail, like a real ribbon. */
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 74%, 0 100%);
+  animation: cbk-ribbon-drop 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cbk-ribbon-drop {
+  from {
+    transform: translateY(-14px);
+    opacity: 0;
+  }
+}
+
+/* ---------- Motion opt-out ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .compass-book__sheet {
+    perspective: none;
+  }
+
+  .compass-book__cover-plate,
+  .compass-book__page--turn-forward,
+  .compass-book__page--turn-back,
+  .compass-book__tab-ribbon {
+    animation: none;
+  }
+
+  /* Belt and braces: if the cover is ever mounted under reduced motion, it must
+     not sit over the page as a permanent lid. */
+  .compass-book__cover-plate {
+    display: none;
+  }
+}

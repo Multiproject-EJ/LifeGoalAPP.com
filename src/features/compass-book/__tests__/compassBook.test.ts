@@ -75,6 +75,15 @@ import {
   isChapterPage,
   summarizeCompassReading,
 } from '../logic/reading';
+import {
+  TURN_MAX_MS,
+  TURN_MIN_MS,
+  pageIndex,
+  turnClassName,
+  turnDirection,
+  turnDistance,
+  turnDurationMs,
+} from '../logic/pageTurn';
 import type {
   CompassAnswerRecord,
   CompassAnswerValue,
@@ -1055,6 +1064,42 @@ function testReading(): void {
   );
 }
 
+function testPageTurn(): void {
+  // Page order: the Reading, then the six chapters.
+  assert(pageIndex('reading') === 0, 'the Reading is page 0');
+  assert(pageIndex('living_wheel') === 1, 'chapter I is page 1');
+  assert(pageIndex('personal_playbook') === 6, 'chapter VI is page 6');
+
+  // Opening the book is not a turn — the cover owns that moment.
+  assert(turnDirection(null, 'reading') === 'none', 'first render does not turn');
+  assert(turnDirection(null, 'quest_forge') === 'none', 'deep link does not turn');
+
+  // Direction follows page order, not which page is "more important".
+  assert(turnDirection('reading', 'living_wheel') === 'forward', 'Reading → I turns forward');
+  assert(turnDirection('living_wheel', 'personal_playbook') === 'forward', 'I → VI turns forward');
+  assert(turnDirection('personal_playbook', 'reading') === 'back', 'VI → Reading turns back');
+  assert(turnDirection('inner_compass', 'living_wheel') === 'back', 'II → I turns back');
+  assert(turnDirection('ikigai_map', 'ikigai_map') === 'none', 'same page does not turn');
+
+  assert(turnClassName('forward') === 'compass-book__page--turn-forward', 'forward class');
+  assert(turnClassName('back') === 'compass-book__page--turn-back', 'back class');
+  assert(turnClassName('none') === null, 'no class when there is no turn');
+
+  // Distance drives duration, clamped so navigation never feels slow.
+  assert(turnDistance(null, 'living_wheel') === 0, 'no distance without an origin');
+  assert(turnDistance('reading', 'living_wheel') === 1, 'adjacent pages are one apart');
+  assert(turnDistance('living_wheel', 'personal_playbook') === 5, 'I → VI crosses five sheets');
+  assert(turnDistance('personal_playbook', 'living_wheel') === 5, 'distance is unsigned');
+
+  assert(turnDurationMs(0) === 0, 'no turn takes no time');
+  assert(turnDurationMs(1) === TURN_MIN_MS, 'a single-page turn uses the base duration');
+  assert(
+    turnDurationMs(5) > TURN_MIN_MS && turnDurationMs(5) <= TURN_MAX_MS,
+    'a longer jump takes longer, within the cap',
+  );
+  assert(turnDurationMs(99) === TURN_MAX_MS, 'duration is capped');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -1072,4 +1117,5 @@ export function runAllCompassBookTests(): void {
   testIslandFragment();
   testShadowBridge();
   testReading();
+  testPageTurn();
 }

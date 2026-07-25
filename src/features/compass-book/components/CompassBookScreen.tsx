@@ -1,13 +1,26 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import './compassBook.css';
 import type { CompassBookChapterId } from '../types';
 import { isChapterPage, type CompassBookPageId } from '../logic/reading';
+import {
+  turnClassName,
+  turnDirection,
+  turnDistance,
+  turnDurationMs,
+} from '../logic/pageTurn';
 import { useCompassBook } from '../hooks/useCompassBook';
 import { CompassBookTabs } from './CompassBookTabs';
+import { CompassBookCoverPlate } from './CompassBookCoverPlate';
 import { CompassReading } from './CompassReading';
 import { CompassChapterScreen } from './CompassChapterScreen';
 import { CompassGuidedFlow } from './CompassGuidedFlow';
+
+/** True when the player has asked the OS for less motion. */
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 export type CompassBookScreenProps = {
   /** Current Island Run island (read-only); drives which fragments are answerable. */
@@ -52,10 +65,36 @@ export function CompassBookScreen({
   const book = useCompassBook(session);
   const userId = session?.user?.id ?? 'local';
 
-  const openPage = useCallback(
-    (pageId: CompassBookPageId) => setView({ kind: 'page', pageId }),
-    [],
+  // The cover only swings when the book is actually being opened. A deep link
+  // straight to a fragment skips it — the player asked to write, not to browse.
+  const [coverOpen, setCoverOpen] = useState(
+    () => !initialActivityId && !prefersReducedMotion(),
   );
+
+  // Page-turn state. `turnKey` restarts the CSS animation on every turn, even
+  // when the direction repeats.
+  const [turn, setTurn] = useState<{ className: string | null; ms: number; key: number }>({
+    className: null,
+    ms: 0,
+    key: 0,
+  });
+  const turnSeqRef = useRef(0);
+
+  const openPage = useCallback((pageId: CompassBookPageId) => {
+    setView((current) => {
+      const from = current.kind === 'page' ? current.pageId : current.chapterId;
+      const direction = turnDirection(from, pageId);
+      if (direction !== 'none' && !prefersReducedMotion()) {
+        turnSeqRef.current += 1;
+        setTurn({
+          className: turnClassName(direction),
+          ms: turnDurationMs(turnDistance(from, pageId)),
+          key: turnSeqRef.current,
+        });
+      }
+      return { kind: 'page', pageId };
+    });
+  }, []);
   const startFlow = useCallback(
     (chapterId: CompassBookChapterId, startActivityId?: string) =>
       setView({ kind: 'flow', chapterId, startActivityId }),
@@ -86,8 +125,19 @@ export function CompassBookScreen({
     <div className="compass-book" role="dialog" aria-modal="true" aria-label="Compass Book">
       <div className="compass-book__backdrop" aria-hidden="true" onClick={onClose} />
       <div className="compass-book__sheet">
+        {coverOpen ? <CompassBookCoverPlate onOpened={() => setCoverOpen(false)} /> : null}
         <div className="compass-book__spread">
-          <div className="compass-book__page">
+          <div
+            key={turn.key}
+            className={`compass-book__page ${turn.className ?? ''}`}
+            style={turn.ms ? ({ '--cbk-turn-ms': `${turn.ms}ms` } as CSSProperties) : undefined}
+            // Animation events bubble: a child finishing its own animation must
+            // not cut the page turn short, so only the page's own end counts.
+            onAnimationEnd={(event) => {
+              if (event.target !== event.currentTarget) return;
+              setTurn((t) => ({ ...t, className: null, ms: 0 }));
+            }}
+          >
             {view.kind === 'page' && view.pageId === 'reading' ? (
               <>
                 <header className="compass-book__topbar">

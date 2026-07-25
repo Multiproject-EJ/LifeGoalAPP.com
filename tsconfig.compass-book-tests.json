@@ -24,6 +24,7 @@
     "src/features/compass-book/logic/unlock.ts",
     "src/features/compass-book/logic/progress.ts",
     "src/features/compass-book/logic/reading.ts",
+    "src/features/compass-book/logic/pageTurn.ts",
     "src/features/compass-book/logic/projectors/livingWheelProjector.ts",
     "src/features/compass-book/logic/projectors/innerCompassProjector.ts",
     "src/features/compass-book/logic/projectors/livingHorizonProjector.ts",
