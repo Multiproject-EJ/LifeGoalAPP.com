@@ -50,19 +50,21 @@ This is the "you are here" document. Everything below was verified by reading th
 
 Note the naming inconsistency: three files use the `*-loop-v1.mp3` convention, three use human titles with spaces and capitals. URL-encoding a filename with spaces works but is a papercut every time it's referenced.
 
-### 2.2 `public/assets/audio/sfx/` — 7 files, 40 KB — 🔶 **ALL PLACEHOLDER**
+### 2.2 `public/assets/audio/sfx/` — 7 files, 40 KB — 🔶 **ALL PLACEHOLDER, LOUDLY NAMED**
 
 None of these are approved. All seven are stand-ins of unacceptable quality and are scheduled for regeneration (`02_SFX_ASSET_MANIFEST.md` §0). The 40 KB total is itself a tell — real recorded effects at these durations run 3–15 KB each *after* trimming, and these are carrying eight events apiece.
 
-| File | Size | Serves how many events | Status |
+Every file on disk carries a **`.PLACEHOLDER.mp3`** suffix (e.g. `sfx_dice_roll.PLACEHOLDER.mp3`) so it cannot be mistaken for a finished asset in a file browser, a diff, or the network tab. `SOUND_ASSET_MAP` in `islandRunAudio.ts` points at these `.PLACEHOLDER.mp3` paths. **When a real replacement lands, drop the suffix** (file becomes `sfx_dice_roll.PLACEHOLDER.mp3` again), update `SOUND_ASSET_MAP`, and remove the path from `PLACEHOLDER_SOUND_ASSET_PATHS`.
+
+| File on disk | Size | Serves how many events | Status |
 |---|---|---|---|
-| `sfx_island_clear.mp3` | 9.6 KB | 4 | 🔶 placeholder |
-| `sfx_egg_open.mp3` | 7.5 KB | 3 | 🔶 placeholder |
-| `sfx_reward_bar_claim_burst.mp3` | 6.9 KB | **7** | 🔶 placeholder — worst offender |
-| `sfx_market_success.mp3` | 5.0 KB | 2 | 🔶 placeholder |
-| `sfx_dice_roll.mp3` | 4.4 KB | 3 | 🔶 placeholder — called out as poor |
-| `sfx_shop_open.mp3` | 4.2 KB | 4 | 🔶 placeholder |
-| `sfx_tile_land.mp3` | 2.9 KB | **8** | 🔶 placeholder — worst offender |
+| `sfx_island_clear.PLACEHOLDER.mp3` | 9.6 KB | 4 | 🔶 placeholder |
+| `sfx_egg_open.PLACEHOLDER.mp3` | 7.5 KB | 3 | 🔶 placeholder |
+| `sfx_reward_bar_claim_burst.PLACEHOLDER.mp3` | 6.9 KB | **7** | 🔶 placeholder — worst offender |
+| `sfx_market_success.PLACEHOLDER.mp3` | 5.0 KB | 2 | 🔶 placeholder |
+| `sfx_dice_roll.PLACEHOLDER.mp3` | 4.4 KB | 3 | 🔶 placeholder — called out as poor |
+| `sfx_shop_open.PLACEHOLDER.mp3` | 4.2 KB | 4 | 🔶 placeholder |
+| `sfx_tile_land.PLACEHOLDER.mp3` | 2.9 KB | **8** | 🔶 placeholder — worst offender |
 
 ### 2.3 Elsewhere
 
@@ -95,37 +97,37 @@ Placeholder state is now marked in code: `PLACEHOLDER_SOUND_ASSET_PATHS` lists e
 
 | Event | Asset | Unique? |
 |---|---|---|
-| `roll` | `sfx_dice_roll.mp3` | ✅ |
-| `reward_bar_fill` | `sfx_dice_roll.mp3` | ❌ |
-| `coin_flip` | `sfx_dice_roll.mp3` | ❌ |
-| `stop_land` | `sfx_tile_land.mp3` | ✅ |
-| `token_move` | `sfx_tile_land.mp3` | ❌ |
-| `build_upgrade` | `sfx_tile_land.mp3` | ❌ |
-| `island_travel` | `sfx_tile_land.mp3` | ❌ |
-| `multiplier_cycle` | `sfx_tile_land.mp3` | ❌ |
-| `encounter_trigger` | `sfx_tile_land.mp3` | ❌ |
-| `encounter_resolve` | `sfx_tile_land.mp3` | ❌ |
-| `utility_stop_complete` | `sfx_tile_land.mp3` | ❌ |
-| `egg_open` | `sfx_egg_open.mp3` | ✅ |
-| `egg_set` | `sfx_egg_open.mp3` | ❌ |
-| `egg_ready` | `sfx_egg_open.mp3` | ❌ |
-| `market_purchase_success` | `sfx_market_success.mp3` | ✅ |
-| `market_stop_complete` | `sfx_market_success.mp3` | ❌ *(never fired)* |
-| `boss_island_clear` | `sfx_island_clear.mp3` | ✅ |
-| `boss_trial_start` | `sfx_island_clear.mp3` | ❌ |
-| `boss_trial_resolve` | `sfx_island_clear.mp3` | ❌ |
-| `island_travel_complete` | `sfx_island_clear.mp3` | ❌ |
-| `shop_open` | `sfx_shop_open.mp3` | ✅ |
-| `market_purchase_attempt` | `sfx_shop_open.mp3` | ❌ |
-| `market_insufficient_coins` | `sfx_shop_open.mp3` | ❌ |
-| `minigame_open` | `sfx_shop_open.mp3` | ❌ |
-| `reward_bar_claim_burst` | `sfx_reward_bar_claim_burst.mp3` | ✅ |
-| `reward_bar_cascade` | `sfx_reward_bar_claim_burst.mp3` | ❌ |
-| `sticker_complete` | `sfx_reward_bar_claim_burst.mp3` | ❌ |
-| `minigame_complete` | `sfx_reward_bar_claim_burst.mp3` | ❌ |
-| `multiplier_max` | `sfx_reward_bar_claim_burst.mp3` | ❌ |
-| `coin_reveal` | `sfx_reward_bar_claim_burst.mp3` | ❌ |
-| `tech_item_poof` | `sfx_reward_bar_claim_burst.mp3` | ❌ |
+| `roll` | `sfx_dice_roll.PLACEHOLDER.mp3` | ✅ |
+| `reward_bar_fill` | `sfx_dice_roll.PLACEHOLDER.mp3` | ❌ |
+| `coin_flip` | `sfx_dice_roll.PLACEHOLDER.mp3` | ❌ |
+| `stop_land` | `sfx_tile_land.PLACEHOLDER.mp3` | ✅ |
+| `token_move` | `sfx_tile_land.PLACEHOLDER.mp3` | ❌ |
+| `build_upgrade` | `sfx_tile_land.PLACEHOLDER.mp3` | ❌ |
+| `island_travel` | `sfx_tile_land.PLACEHOLDER.mp3` | ❌ |
+| `multiplier_cycle` | `sfx_tile_land.PLACEHOLDER.mp3` | ❌ |
+| `encounter_trigger` | `sfx_tile_land.PLACEHOLDER.mp3` | ❌ |
+| `encounter_resolve` | `sfx_tile_land.PLACEHOLDER.mp3` | ❌ |
+| `utility_stop_complete` | `sfx_tile_land.PLACEHOLDER.mp3` | ❌ |
+| `egg_open` | `sfx_egg_open.PLACEHOLDER.mp3` | ✅ |
+| `egg_set` | `sfx_egg_open.PLACEHOLDER.mp3` | ❌ |
+| `egg_ready` | `sfx_egg_open.PLACEHOLDER.mp3` | ❌ |
+| `market_purchase_success` | `sfx_market_success.PLACEHOLDER.mp3` | ✅ |
+| `market_stop_complete` | `sfx_market_success.PLACEHOLDER.mp3` | ❌ *(never fired)* |
+| `boss_island_clear` | `sfx_island_clear.PLACEHOLDER.mp3` | ✅ |
+| `boss_trial_start` | `sfx_island_clear.PLACEHOLDER.mp3` | ❌ |
+| `boss_trial_resolve` | `sfx_island_clear.PLACEHOLDER.mp3` | ❌ |
+| `island_travel_complete` | `sfx_island_clear.PLACEHOLDER.mp3` | ❌ |
+| `shop_open` | `sfx_shop_open.PLACEHOLDER.mp3` | ✅ |
+| `market_purchase_attempt` | `sfx_shop_open.PLACEHOLDER.mp3` | ❌ |
+| `market_insufficient_coins` | `sfx_shop_open.PLACEHOLDER.mp3` | ❌ |
+| `minigame_open` | `sfx_shop_open.PLACEHOLDER.mp3` | ❌ |
+| `reward_bar_claim_burst` | `sfx_reward_bar_claim_burst.PLACEHOLDER.mp3` | ✅ |
+| `reward_bar_cascade` | `sfx_reward_bar_claim_burst.PLACEHOLDER.mp3` | ❌ |
+| `sticker_complete` | `sfx_reward_bar_claim_burst.PLACEHOLDER.mp3` | ❌ |
+| `minigame_complete` | `sfx_reward_bar_claim_burst.PLACEHOLDER.mp3` | ❌ |
+| `multiplier_max` | `sfx_reward_bar_claim_burst.PLACEHOLDER.mp3` | ❌ |
+| `coin_reveal` | `sfx_reward_bar_claim_burst.PLACEHOLDER.mp3` | ❌ |
+| `tech_item_poof` | `sfx_reward_bar_claim_burst.PLACEHOLDER.mp3` | ❌ |
 
 **7 unique / 24 borrowed.** Note `market_insufficient_coins` — a *failure* — plays the same sound as opening the shop. And `minigame_complete` plays the same sound as `coin_reveal`, `sticker_complete` and `multiplier_max`.
 

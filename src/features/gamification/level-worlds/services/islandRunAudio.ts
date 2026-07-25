@@ -260,13 +260,13 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
  * `npm run check:audio-assets` reports how many placeholders remain.
  */
 const AVAILABLE_SOUND_ASSET_PATHS = [
-  '/assets/audio/sfx/sfx_dice_roll.mp3',
-  '/assets/audio/sfx/sfx_egg_open.mp3',
-  '/assets/audio/sfx/sfx_island_clear.mp3',
-  '/assets/audio/sfx/sfx_market_success.mp3',
-  '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
-  '/assets/audio/sfx/sfx_shop_open.mp3',
-  '/assets/audio/sfx/sfx_tile_land.mp3',
+  '/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3',
+  '/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3',
+  '/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3',
+  '/assets/audio/sfx/sfx_market_success.PLACEHOLDER.mp3',
+  '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
+  '/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3',
+  '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
 ] as const;
 
 export type IslandRunSoundAssetPath = typeof AVAILABLE_SOUND_ASSET_PATHS[number];
@@ -290,46 +290,46 @@ export function getPlaceholderSoundEvents(): IslandRunSoundEvent[] {
 }
 
 const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, IslandRunSoundAssetPath> = {
-  roll: '/assets/audio/sfx/sfx_dice_roll.mp3',
-  token_move: '/assets/audio/sfx/sfx_tile_land.mp3',
-  stop_land: '/assets/audio/sfx/sfx_tile_land.mp3',
-  build_upgrade: '/assets/audio/sfx/sfx_tile_land.mp3',
-  island_travel: '/assets/audio/sfx/sfx_tile_land.mp3',
+  roll: '/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3',
+  token_move: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
+  stop_land: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
+  build_upgrade: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
+  island_travel: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
   // Multiplier button events: cycle uses the tile-land dunk; reaching max uses the reward burst as a short pling.
-  multiplier_cycle: '/assets/audio/sfx/sfx_tile_land.mp3',
-  multiplier_max: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
+  multiplier_cycle: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
+  multiplier_max: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
   // Hatchery events share the available egg-open chime until bespoke set/ready assets exist.
-  egg_set: '/assets/audio/sfx/sfx_egg_open.mp3',
-  egg_ready: '/assets/audio/sfx/sfx_egg_open.mp3',
-  egg_open: '/assets/audio/sfx/sfx_egg_open.mp3',
+  egg_set: '/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3',
+  egg_ready: '/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3',
+  egg_open: '/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3',
   // Market/shop events share available success/open cues until attempt/fail variants exist.
-  market_purchase_attempt: '/assets/audio/sfx/sfx_shop_open.mp3',
-  market_purchase_success: '/assets/audio/sfx/sfx_market_success.mp3',
-  market_insufficient_coins: '/assets/audio/sfx/sfx_shop_open.mp3',
+  market_purchase_attempt: '/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3',
+  market_purchase_success: '/assets/audio/sfx/sfx_market_success.PLACEHOLDER.mp3',
+  market_insufficient_coins: '/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3',
   // Boss/encounter events use available milestone/tile cues until bespoke combat cues exist.
-  boss_trial_start: '/assets/audio/sfx/sfx_island_clear.mp3',
-  boss_trial_resolve: '/assets/audio/sfx/sfx_island_clear.mp3',
-  boss_island_clear: '/assets/audio/sfx/sfx_island_clear.mp3',
-  encounter_trigger: '/assets/audio/sfx/sfx_tile_land.mp3',
-  encounter_resolve: '/assets/audio/sfx/sfx_tile_land.mp3',
+  boss_trial_start: '/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3',
+  boss_trial_resolve: '/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3',
+  boss_island_clear: '/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3',
+  encounter_trigger: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
+  encounter_resolve: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
   // Stop completion + travel completion.
-  market_stop_complete: '/assets/audio/sfx/sfx_market_success.mp3',
-  island_travel_complete: '/assets/audio/sfx/sfx_island_clear.mp3',
-  shop_open: '/assets/audio/sfx/sfx_shop_open.mp3',
-  utility_stop_complete: '/assets/audio/sfx/sfx_tile_land.mp3',
+  market_stop_complete: '/assets/audio/sfx/sfx_market_success.PLACEHOLDER.mp3',
+  island_travel_complete: '/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3',
+  shop_open: '/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3',
+  utility_stop_complete: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
   // Reward bar/sticker events.
-  reward_bar_fill: '/assets/audio/sfx/sfx_dice_roll.mp3',
-  reward_bar_claim_burst: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
-  reward_bar_cascade: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
+  reward_bar_fill: '/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3',
+  reward_bar_claim_burst: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
+  reward_bar_cascade: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
   // Minigame events use the available shop-open cue as a lightweight modal-open placeholder.
-  minigame_open: '/assets/audio/sfx/sfx_shop_open.mp3',
-  minigame_complete: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
-  sticker_complete: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
+  minigame_open: '/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3',
+  minigame_complete: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
+  sticker_complete: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
   // Coin flip reuses the dice-roll whoosh while spinning, then the reward burst on reveal,
   // until bespoke coin-flip/coin-ting assets exist.
-  coin_flip: '/assets/audio/sfx/sfx_dice_roll.mp3',
-  coin_reveal: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
-  tech_item_poof: '/assets/audio/sfx/sfx_reward_bar_claim_burst.mp3',
+  coin_flip: '/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3',
+  coin_reveal: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
+  tech_item_poof: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
 };
 
 export function getIslandRunSoundAssetPath(eventId: IslandRunSoundEvent): IslandRunSoundAssetPath {
