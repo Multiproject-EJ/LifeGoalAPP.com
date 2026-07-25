@@ -68,7 +68,33 @@ import {
   type FortuneEngineTrackViewModel,
 } from '../../level-worlds/services/fortuneEngineProgression';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
+import {
+  createMinigameParticleBurst,
+  createMinigameShake,
+  MINIGAME_SHAKE_NONE,
+  stepMinigameParticles,
+  stepMinigameShake,
+  type MinigameParticle,
+  type MinigameShakeState,
+} from '../../level-worlds/services/minigameJuice';
+import {
+  degToRad,
+  drawFourPointStar,
+  drawMinigameParticles,
+  finishMinigameCanvas,
+  prefersReducedMotion,
+  prepareMinigameCanvas,
+} from '../_shared/minigameCanvasKit';
 import './fortuneEngine.css';
+
+/** Particle palettes per collected segment kind. */
+const COLLECT_PALETTES: Record<string, readonly string[]> = {
+  points: ['#f3d16b', '#fff0a4', '#ffffff'],
+  dice: ['#7cc4ff', '#cfe8ff', '#ffffff'],
+  essence: ['#c39bff', '#e5d4ff', '#ffffff'],
+  time: ['#5eead4', '#c7fff4', '#ffffff'],
+  hazard: ['#f87171', '#fca5a5', '#fee2e2'],
+};
 
 type GamePhase = 'entry' | 'spin' | 'ring' | 'decision' | 'results' | 'finale' | 'finale_results';
 
@@ -216,6 +242,43 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
   const finaleTargetsRef = useRef<number[]>([]);
   const finaleHitsRef = useRef<Set<number>>(new Set());
   const bannerTimerRef = useRef<number | null>(null);
+  const particlesRef = useRef<MinigameParticle[]>([]);
+  const particlePaletteRef = useRef<readonly string[]>(COLLECT_PALETTES.points);
+  const shakeRef = useRef<MinigameShakeState>(MINIGAME_SHAKE_NONE);
+  const reducedMotionRef = useRef(false);
+
+  useEffect(() => {
+    reducedMotionRef.current = prefersReducedMotion();
+  }, []);
+
+  /**
+   * Spawn a burst on the ring at the pointer's current angle. Radii mirror the
+   * geometry in `drawTimingRing`, so sparks land on the segment that was
+   * actually collected.
+   */
+  const burstAtPointer = useCallback((kind: string, strength: number) => {
+    if (reducedMotionRef.current) return;
+    const size = CANVAS_LOGICAL_SIZE;
+    const outer = size / 2 - 7;
+    const segmentOuter = outer - 17;
+    const inner = segmentOuter - 57;
+    const radius = (segmentOuter + inner) / 2;
+    const rad = degToRad(pointerAngleRef.current);
+    const palette = COLLECT_PALETTES[kind] ?? COLLECT_PALETTES.points;
+    particlePaletteRef.current = palette;
+    const [burst, nextRng] = createMinigameParticleBurst({
+      x: size / 2 + Math.cos(rad) * radius,
+      y: size / 2 + Math.sin(rad) * radius,
+      count: Math.round(10 + strength * 14),
+      speed: 70 + strength * 70,
+      lifeMs: 560,
+      radius: 2 + strength * 1.6,
+      paletteSize: palette.length,
+      rngState: rngRef.current,
+    });
+    rngRef.current = nextRng;
+    particlesRef.current = [...particlesRef.current, ...burst];
+  }, []);
   const challengeSequenceRef = useRef<FortuneChallengeModeId[]>(['pulse', 'echo', 'signal']);
   const challengeModeRef = useRef<FortuneChallengeModeId>('pulse');
   const challengeHitsRef = useRef(0);
@@ -293,6 +356,9 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
       toDeg: 360 * 4 + (360 - slotCenterDeg),
       slotIndex,
     };
+    // Effects are per-run: a new launch must not inherit the last run's sparks.
+    particlesRef.current = [];
+    shakeRef.current = MINIGAME_SHAKE_NONE;
     runTotalsRef.current = { rawPoints: 0, dice: 0, essence: 0, hazards: 0 };
     setRawPoints(0);
     setRunDice(0);
@@ -506,6 +572,15 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
       if (outcome.hazardHit) {
         totals.hazards += 1;
         setHazardsHit(totals.hazards);
+        burstAtPointer('hazard', 1);
+        if (!reducedMotionRef.current) {
+          shakeRef.current = createMinigameShake({
+            magnitude: 6,
+            durationMs: 380,
+            rngState: rngRef.current,
+            previous: shakeRef.current,
+          });
+        }
         triggerIslandRunHaptic('roll');
         playIslandRunSound('token_move');
         if (totals.hazards >= FORTUNE_RUN_HAZARD_LIMIT) {
@@ -516,6 +591,24 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
       setRawPoints(totals.rawPoints);
       setRunDice(totals.dice);
       setRunEssence(totals.essence);
+
+      // Perfect centre hits throw a noticeably bigger spray than a graze.
+      const collectedKind = outcome.dice > 0
+        ? 'dice'
+        : outcome.essence > 0
+          ? 'essence'
+          : outcome.timeBonusMs > 0
+            ? 'time'
+            : 'points';
+      burstAtPointer(collectedKind, outcome.perfect ? 1 : 0.45);
+      if (outcome.perfect && !reducedMotionRef.current) {
+        shakeRef.current = createMinigameShake({
+          magnitude: 2.4 + Math.min(4, outcome.comboAfter * 0.6),
+          durationMs: 220,
+          rngState: rngRef.current,
+          previous: shakeRef.current,
+        });
+      }
 
       let chamberComplete = false;
       if (mode === 'echo') {
@@ -636,6 +729,13 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           : challengeModeRef.current === 'echo'
             ? `Echo ${echoProgressRef.current}/${echoSequenceRef.current.length}`
             : `Match ${signalTargetRef.current ? SEGMENT_GLYPHS[signalTargetRef.current] : '✓'}`;
+        particlesRef.current = stepMinigameParticles(particlesRef.current, {
+          dtMs,
+          gravity: 120,
+          drag: 0.8,
+        });
+        const shakeStep = stepMinigameShake(shakeRef.current, dtMs);
+        shakeRef.current = shakeStep.state;
         drawTimingRing(canvas, {
           segments: segmentsRef.current,
           pointerAngleDeg: pointerAngleRef.current,
@@ -643,6 +743,10 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
           centerBottom: `${Math.ceil(Math.max(0, ringTimeLeftRef.current) / 1000)}s`,
           highlightIndices: null,
           hitIndices: null,
+          particles: particlesRef.current,
+          particlePalette: particlePaletteRef.current,
+          shakeX: shakeStep.offsetX,
+          shakeY: shakeStep.offsetY,
         });
         if (ringTimeLeftRef.current <= 0) {
           completeCurrentRing(ring.ringIndex);
@@ -1287,9 +1391,6 @@ function RewardTrackDetails({ track }: { track: FortuneEngineTrackViewModel }) {
 // Canvas renderers (no gameplay logic)
 // ---------------------------------------------------------------------------
 
-function degToRad(deg: number): number {
-  return ((deg - 90) * Math.PI) / 180;
-}
 
 function drawRouteWheel(canvas: HTMLCanvasElement | null, rotationDeg: number): void {
   if (!canvas) return;
@@ -1303,7 +1404,7 @@ function drawRouteWheel(canvas: HTMLCanvasElement | null, rotationDeg: number): 
   const inner = 61;
   const arc = 360 / FORTUNE_WHEEL_SLOTS.length;
 
-  prepareFortuneCanvas(canvas, ctx);
+  prepareMinigameCanvas(canvas, CANVAS_LOGICAL_SIZE);
   drawSpaceBackdrop(ctx, size);
   drawEngineFrameBase(ctx, cx, cy, outer);
 
@@ -1352,6 +1453,11 @@ function drawTimingRing(
     highlightIndices: readonly number[] | null;
     /** Finale: already-activated targets. */
     hitIndices: ReadonlySet<number> | null;
+    /** Collect sparks; omitted by the finale/echo-preview draws. */
+    particles?: readonly MinigameParticle[];
+    particlePalette?: readonly string[];
+    shakeX?: number;
+    shakeY?: number;
   },
 ): void {
   if (!canvas) return;
@@ -1365,7 +1471,9 @@ function drawTimingRing(
   const inner = segmentOuter - 57;
   const arc = 360 / FORTUNE_RING_SEGMENT_COUNT;
 
-  prepareFortuneCanvas(canvas, ctx);
+  prepareMinigameCanvas(canvas, CANVAS_LOGICAL_SIZE);
+  // The whole engine shakes together, inside the supersample transform.
+  if (scene.shakeX || scene.shakeY) ctx.translate(scene.shakeX ?? 0, scene.shakeY ?? 0);
   drawSpaceBackdrop(ctx, size);
   drawEngineFrameBase(ctx, cx, cy, outer);
 
@@ -1457,7 +1565,13 @@ function drawTimingRing(
   ctx.restore();
 
   drawEngineHub(ctx, cx, cy, inner - 8, scene.centerTop, scene.centerBottom);
-  ctx.restore();
+
+  // Sparks sit above the engine so a collect reads even over the hub.
+  if (scene.particles && scene.particlePalette) {
+    drawMinigameParticles(ctx, scene.particles, scene.particlePalette);
+  }
+
+  finishMinigameCanvas(ctx);
 }
 
 function drawSpaceBackdrop(ctx: CanvasRenderingContext2D, size: number): void {
@@ -1480,12 +1594,6 @@ function drawSpaceBackdrop(ctx: CanvasRenderingContext2D, size: number): void {
   });
 }
 
-function prepareFortuneCanvas(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): void {
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.save();
-  ctx.scale(canvas.width / CANVAS_LOGICAL_SIZE, canvas.height / CANVAS_LOGICAL_SIZE);
-}
 
 function traceRingSegment(
   ctx: CanvasRenderingContext2D,
@@ -1648,24 +1756,3 @@ function drawFixedPointer(ctx: CanvasRenderingContext2D, cx: number): void {
   ctx.shadowBlur = 0;
 }
 
-function drawFourPointStar(
-  ctx: CanvasRenderingContext2D,
-  cx: number,
-  cy: number,
-  outerRadius: number,
-  innerRadius: number,
-  fill: string,
-): void {
-  ctx.beginPath();
-  for (let index = 0; index < 8; index += 1) {
-    const radius = index % 2 === 0 ? outerRadius : innerRadius;
-    const angle = -Math.PI / 2 + (index * Math.PI) / 4;
-    const x = cx + Math.cos(angle) * radius;
-    const y = cy + Math.sin(angle) * radius;
-    if (index === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.fillStyle = fill;
-  ctx.fill();
-}
