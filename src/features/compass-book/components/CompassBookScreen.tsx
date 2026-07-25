@@ -2,13 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import './compassBook.css';
 import type { CompassBookChapterId } from '../types';
+import { isChapterPage, type CompassBookPageId } from '../logic/reading';
 import { useCompassBook } from '../hooks/useCompassBook';
-import { CompassBookContents } from './CompassBookContents';
+import { CompassBookTabs } from './CompassBookTabs';
+import { CompassReading } from './CompassReading';
 import { CompassChapterScreen } from './CompassChapterScreen';
 import { CompassGuidedFlow } from './CompassGuidedFlow';
 
 export type CompassBookScreenProps = {
-  /** Current Island Run island (read-only); drives which fragments are unlocked. */
+  /** Current Island Run island (read-only); drives which fragments are answerable. */
   currentIslandNumber: number;
   /** Active Supabase session (may be null in demo/local mode). */
   session: Session | null;
@@ -19,17 +21,19 @@ export type CompassBookScreenProps = {
 };
 
 type CompassBookView =
-  | { kind: 'contents' }
-  | { kind: 'chapter'; chapterId: CompassBookChapterId }
+  | { kind: 'page'; pageId: CompassBookPageId }
   | { kind: 'flow'; chapterId: CompassBookChapterId; startActivityId?: string };
 
 /**
  * Full-screen Player Menu entry point for the Compass Book.
  *
- * Owns navigation between the table of contents, a chapter detail, and the
- * fixed-guided answering flow. Reads Island position (number only) and persists
- * answers via {@link useCompassBook}. Entirely separate from Quest Pulse and the
- * legacy Compass; never mutates Island Run state.
+ * The book is a set of seven pages — the Reading plus chapters I–VI — reachable
+ * in any order from a persistent fore-edge tab rail. Turning to a page is always
+ * allowed; the island you have reached decides only what you can *answer*.
+ *
+ * Reads Island position (a number only) and persists answers via
+ * {@link useCompassBook}. Entirely separate from Quest Pulse and the legacy
+ * Compass; never mutates Island Run state.
  */
 export function CompassBookScreen({
   currentIslandNumber,
@@ -42,14 +46,14 @@ export function CompassBookScreen({
     if (initialChapterId && initialActivityId) {
       return { kind: 'flow', chapterId: initialChapterId, startActivityId: initialActivityId };
     }
-    if (initialChapterId) return { kind: 'chapter', chapterId: initialChapterId };
-    return { kind: 'contents' };
+    if (initialChapterId) return { kind: 'page', pageId: initialChapterId };
+    return { kind: 'page', pageId: 'reading' };
   });
   const book = useCompassBook(session);
+  const userId = session?.user?.id ?? 'local';
 
-  const backToContents = useCallback(() => setView({ kind: 'contents' }), []);
-  const openChapter = useCallback(
-    (chapterId: CompassBookChapterId) => setView({ kind: 'chapter', chapterId }),
+  const openPage = useCallback(
+    (pageId: CompassBookPageId) => setView({ kind: 'page', pageId }),
     [],
   );
   const startFlow = useCallback(
@@ -62,8 +66,10 @@ export function CompassBookScreen({
     function onKeyDown(event: KeyboardEvent) {
       if (event.key !== 'Escape') return;
       setView((current) => {
-        if (current.kind === 'flow') return { kind: 'chapter', chapterId: current.chapterId };
-        if (current.kind === 'chapter') return { kind: 'contents' };
+        // The flow steps back to its chapter; a chapter steps back to the
+        // Reading; the Reading closes the book.
+        if (current.kind === 'flow') return { kind: 'page', pageId: current.chapterId };
+        if (current.pageId !== 'reading') return { kind: 'page', pageId: 'reading' };
         onClose();
         return current;
       });
@@ -72,43 +78,78 @@ export function CompassBookScreen({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
 
+  // The rail highlights the chapter a flow belongs to, so answering a fragment
+  // never looks like it left the book.
+  const activePageId: CompassBookPageId = view.kind === 'flow' ? view.chapterId : view.pageId;
+
   return (
     <div className="compass-book" role="dialog" aria-modal="true" aria-label="Compass Book">
       <div className="compass-book__backdrop" aria-hidden="true" onClick={onClose} />
       <div className="compass-book__sheet">
-        {view.kind === 'contents' ? (
-          <CompassBookContents
+        <div className="compass-book__spread">
+          <div className="compass-book__page">
+            {view.kind === 'page' && view.pageId === 'reading' ? (
+              <>
+                <header className="compass-book__topbar">
+                  <span className="compass-book__topbar-title">
+                    <span aria-hidden="true">🧭</span> Compass Book
+                  </span>
+                  <span className="compass-book__topbar-spacer" />
+                  <button
+                    type="button"
+                    className="compass-book__close"
+                    onClick={onClose}
+                    aria-label="Close Compass Book"
+                  >
+                    ✕
+                  </button>
+                </header>
+                <CompassReading
+                  currentIslandNumber={currentIslandNumber}
+                  getProgress={book.getProgress}
+                  getChapterState={book.getChapterState}
+                  onOpenChapter={openPage}
+                  userId={userId}
+                />
+              </>
+            ) : null}
+
+            {view.kind === 'page' && isChapterPage(view.pageId) ? (
+              <CompassChapterScreen
+                chapterId={view.pageId}
+                currentIslandNumber={currentIslandNumber}
+                session={session}
+                getProgress={book.getProgress}
+                getChapterState={book.getChapterState}
+                onStartFlow={(activityId) =>
+                  startFlow(view.pageId as CompassBookChapterId, activityId)
+                }
+                onBack={() => openPage('reading')}
+                onClose={onClose}
+              />
+            ) : null}
+
+            {view.kind === 'flow' ? (
+              <CompassGuidedFlow
+                chapterId={view.chapterId}
+                currentIslandNumber={currentIslandNumber}
+                userId={session?.user?.id ?? null}
+                startActivityId={view.startActivityId}
+                getChapterState={book.getChapterState}
+                onSaveActivity={book.saveActivityAnswers}
+                saving={book.saving}
+                onExit={() => openPage(view.chapterId)}
+              />
+            ) : null}
+          </div>
+
+          <CompassBookTabs
+            activePageId={activePageId}
             currentIslandNumber={currentIslandNumber}
             getProgress={book.getProgress}
-            onClose={onClose}
-            onOpenChapter={openChapter}
-            userId={session?.user?.id ?? 'local'}
+            onSelect={openPage}
           />
-        ) : null}
-        {view.kind === 'chapter' ? (
-          <CompassChapterScreen
-            chapterId={view.chapterId}
-            currentIslandNumber={currentIslandNumber}
-            session={session}
-            getProgress={book.getProgress}
-            getChapterState={book.getChapterState}
-            onStartFlow={(activityId) => startFlow(view.chapterId, activityId)}
-            onBack={backToContents}
-            onClose={onClose}
-          />
-        ) : null}
-        {view.kind === 'flow' ? (
-          <CompassGuidedFlow
-            chapterId={view.chapterId}
-            currentIslandNumber={currentIslandNumber}
-            userId={session?.user?.id ?? null}
-            startActivityId={view.startActivityId}
-            getChapterState={book.getChapterState}
-            onSaveActivity={book.saveActivityAnswers}
-            saving={book.saving}
-            onExit={() => setView({ kind: 'chapter', chapterId: view.chapterId })}
-          />
-        ) : null}
+        </div>
       </div>
     </div>
   );

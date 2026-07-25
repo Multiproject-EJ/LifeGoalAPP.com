@@ -68,7 +68,20 @@ import {
 import { SHADOW_OPTIONS, VALUE_OPTIONS, chapter2InnerCompass } from '../content/chapter2InnerCompass';
 import { ARCHETYPE_DECK } from '../../identity/archetypes/archetypeDeck';
 import { COMPASS_BOOK_CHAPTER_IDS } from '../types';
-import type { CompassAnswerRecord, CompassAnswerValue, CompassBlockDefinition, CompassChapterState } from '../types';
+import {
+  COMPASS_BOOK_PAGE_IDS,
+  chapterHeadline,
+  chapterNumeral,
+  isChapterPage,
+  summarizeCompassReading,
+} from '../logic/reading';
+import type {
+  CompassAnswerRecord,
+  CompassAnswerValue,
+  CompassBlockDefinition,
+  CompassBookChapterId,
+  CompassChapterState,
+} from '../types';
 import type { Json as DbJson } from '../../../lib/database.types';
 
 function assert(condition: boolean, message: string): void {
@@ -942,6 +955,106 @@ function testShadowBridge(): void {
   );
 }
 
+function testReading(): void {
+  const activities = getChapterActivities('living_wheel');
+  const sealActivity = activities[activities.length - 1];
+
+  const emptyProgress = (chapterId: CompassBookChapterId) =>
+    computeChapterProgress(chapterId, null, { currentIslandNumber: 0 });
+
+  // Page ids: the Reading leads, then the six chapters in canonical order.
+  assert(COMPASS_BOOK_PAGE_IDS[0] === 'reading', 'the Reading is the first page');
+  assert(
+    COMPASS_BOOK_PAGE_IDS.length === COMPASS_BOOK_CHAPTER_IDS.length + 1,
+    'seven pages: the Reading plus six chapters',
+  );
+  assert(!isChapterPage('reading'), 'the Reading is not a chapter page');
+  assert(isChapterPage('living_wheel'), 'a chapter id is a chapter page');
+
+  assert(chapterNumeral(1) === 'I', 'chapter 1 is I');
+  assert(chapterNumeral(6) === 'VI', 'chapter 6 is VI');
+
+  // Nothing reached: every row is present and "ahead" — locked never means hidden.
+  const untouched = summarizeCompassReading({
+    getProgress: emptyProgress,
+    getChapterState: () => null,
+  });
+  assert(untouched.rows.length === 6, 'the Reading always lists all six chapters');
+  assert(
+    untouched.rows.every((row) => row.status === 'ahead'),
+    'island 0 → every chapter reads as ahead',
+  );
+  assert(
+    untouched.rows.every((row) => row.headline === null && row.promise.length > 0),
+    'an unwritten row still carries the chapter promise',
+  );
+  assert(untouched.fragmentsTotal === 120, 'the book totals 120 fragments');
+  assert(untouched.fragmentsWritten === 0, 'nothing written yet');
+  assert(untouched.writtenRows.length === 0, 'no written rows yet');
+  assert(untouched.openCount === 0, 'nothing answerable at island 0');
+  assert(untouched.focusChapterId === null, 'no focus when nothing is open');
+  assert(
+    untouched.rows[0].unlockIsland === 1 && untouched.rows[5].unlockIsland === 101,
+    'rows carry the island that opens them',
+  );
+
+  // A written statement becomes the row headline, in the player's own words.
+  const stateWithStatement = baseState([
+    makeAnswer(sealActivity.id, 'wheel_statement', {
+      kind: 'text',
+      text: '  Steady on health, easing off work.  ',
+    }),
+  ]);
+  assert(
+    chapterHeadline('living_wheel', stateWithStatement) === 'Steady on health, easing off work.',
+    'headline is the trimmed wheel statement',
+  );
+  assert(chapterHeadline('living_wheel', null) === null, 'no state → no headline');
+  assert(
+    chapterHeadline('living_wheel', baseState([])) === null,
+    'no answers → no headline',
+  );
+  assert(
+    chapterHeadline('living_wheel', baseState([
+      makeAnswer(sealActivity.id, 'wheel_statement', { kind: 'text', text: '   ' }),
+    ])) === null,
+    'a blank statement is not a headline',
+  );
+
+  // Reaching islands opens chapters and moves the focus forward.
+  const reached = summarizeCompassReading({
+    getProgress: (chapterId) =>
+      computeChapterProgress(
+        chapterId,
+        chapterId === 'living_wheel' ? stateWithStatement : null,
+        { currentIslandNumber: 25 },
+      ),
+    getChapterState: (chapterId) => (chapterId === 'living_wheel' ? stateWithStatement : null),
+  });
+  assert(reached.openCount === 2, 'island 25 opens chapters I and II');
+  assert(reached.rows[0].status === 'charting', 'answered chapter reads as charting');
+  assert(reached.rows[2].status === 'ahead', 'chapter III is still ahead at island 25');
+  assert(reached.focusChapterId === 'inner_compass', 'focus is the furthest open chapter');
+  assert(reached.writtenRows.length === 1, 'one chapter carries a written line');
+  assert(reached.rows[0].headline === 'Steady on health, easing off work.', 'row shows the line');
+
+  // A sealed chapter reads as sealed regardless of how many fragments are done.
+  const sealed: CompassChapterState = { ...stateWithStatement, confirmedOutput: {} };
+  const sealedSummary = summarizeCompassReading({
+    getProgress: (chapterId) =>
+      computeChapterProgress(chapterId, chapterId === 'living_wheel' ? sealed : null, {
+        currentIslandNumber: 25,
+      }),
+    getChapterState: (chapterId) => (chapterId === 'living_wheel' ? sealed : null),
+  });
+  assert(sealedSummary.rows[0].status === 'sealed', 'confirmed output → sealed row');
+  assert(sealedSummary.sealedCount === 1, 'one chapter sealed');
+  assert(
+    sealedSummary.focusChapterId === 'inner_compass',
+    'focus skips a sealed chapter for the next open one',
+  );
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -958,4 +1071,5 @@ export function runAllCompassBookTests(): void {
   testPlayerOptionPickers();
   testIslandFragment();
   testShadowBridge();
+  testReading();
 }

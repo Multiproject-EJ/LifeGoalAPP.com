@@ -246,3 +246,13 @@ export type CompassChapterProgress = {
   nextActivityId: string | null;
   activities: CompassActivityProgress[];
 };
+
+/**
+ * Progress lookup passed down from {@link CompassBookScreen} to every page.
+ * Declared here (rather than on a component) so pages can share it without
+ * importing each other.
+ */
+export type CompassGetProgress = (
+  chapterId: CompassBookChapterId,
+  currentIslandNumber: number,
+) => CompassChapterProgress;

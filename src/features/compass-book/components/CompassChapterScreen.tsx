@@ -1,7 +1,11 @@
 import type { Session } from '@supabase/supabase-js';
-import type { CompassBookChapterId, CompassChapterState } from '../types';
+import type {
+  CompassBookChapterId,
+  CompassChapterState,
+  CompassGetProgress,
+} from '../types';
 import { getChapterDefinition, getChapterActivities } from '../content/compassBookCurriculum';
-import type { CompassGetProgress } from './CompassBookContents';
+import { chapterNumeral } from '../logic/reading';
 import { CompassChapterGraphic } from './chapter-graphics/CompassChapterGraphic';
 import { CompassGoalBridge } from './CompassGoalBridge';
 import { CompassHabitBridge } from './CompassHabitBridge';
@@ -18,9 +22,12 @@ export type CompassChapterScreenProps = {
 };
 
 /**
- * Chapter detail: chapter framing, a Begin/Continue button, and the 20
- * island-linked fragments with their locked/available/done state. Tapping an
- * available fragment opens the guided flow at that fragment.
+ * A chapter page: framing, the evolving graphic, a Begin/Continue button, and
+ * the 20 island-linked fragments.
+ *
+ * A chapter the player has not sailed to yet is still fully browsable — it shows
+ * what the chapter will give them and which island opens it. Reaching an island
+ * gates *answering*, never looking, so this screen has no dead end.
  */
 export function CompassChapterScreen({
   chapterId,
@@ -40,21 +47,18 @@ export function CompassChapterScreen({
 
   const hasUnlocked = progress.unlockedCount > 0;
   const hasProgress = progress.completedCount > 0;
-  const CHAPTERS_WITH_GRAPHIC: ReadonlySet<CompassBookChapterId> = new Set([
-    'living_wheel',
-    'inner_compass',
-    'living_horizon',
-    'ikigai_map',
-    'quest_forge',
-    'personal_playbook',
-  ]);
-  const showGraphic = hasUnlocked && CHAPTERS_WITH_GRAPHIC.has(chapterId);
+  const islandsAway = Math.max(0, chapter.islandRange[0] - currentIslandNumber);
 
   return (
     <>
       <header className="compass-book__topbar">
-        <button type="button" className="compass-book__back" onClick={onBack} aria-label="Back to contents">
-          <span aria-hidden="true">←</span> Contents
+        <button
+          type="button"
+          className="compass-book__back"
+          onClick={onBack}
+          aria-label="Back to the Reading"
+        >
+          <span aria-hidden="true">←</span> The Reading
         </button>
         <span className="compass-book__topbar-spacer" />
         <button
@@ -69,7 +73,9 @@ export function CompassChapterScreen({
       <div className="compass-book__scroll">
         <section className="compass-book__chapter-hero">
           <p className="compass-book__chapter-eyebrow">
-            Chapter {chapter.order} · Islands {chapter.islandRange[0]}–{chapter.islandRange[1]}
+            <span className="compass-book__chapter-numeral">{chapterNumeral(chapter.order)}</span>
+            {' · '}
+            Islands {chapter.islandRange[0]}–{chapter.islandRange[1]}
           </p>
           <h1 className="compass-book__chapter-title">{chapter.title}</h1>
           {chapter.subtitle ? (
@@ -85,16 +91,20 @@ export function CompassChapterScreen({
           </div>
         </section>
 
-        {showGraphic ? (
+        {/* The graphic is shown even before the chapter opens — an empty plate
+            the player can see waiting to be filled is the whole invitation. */}
+        <div className={hasUnlocked ? undefined : 'compass-book__graphic--ahead'}>
           <CompassChapterGraphic
             chapterId={chapterId}
             answers={chapterState?.answers ?? []}
             mode="full"
           />
-        ) : null}
+        </div>
 
         {progress.status === 'complete' ? (
-          <p className="compass-book__note">✓ This chapter is sealed. You can revisit any fragment to revise it.</p>
+          <p className="compass-book__note">
+            ✓ This chapter is sealed. You can revisit any fragment to revise it.
+          </p>
         ) : null}
 
         {chapterId === 'quest_forge' ? (
@@ -116,9 +126,15 @@ export function CompassChapterScreen({
               : 'Begin chapter'}
           </button>
         ) : (
-          <p className="compass-book__note">
-            Reach Island {chapter.islandRange[0]} to unlock the first fragment of this chapter.
-          </p>
+          <section className="compass-book__ahead" aria-label="Not reached yet">
+            <p className="compass-book__ahead-title">
+              {islandsAway === 1 ? '1 island away' : `${islandsAway} islands away`}
+            </p>
+            <p className="compass-book__ahead-note">
+              Reach Island {chapter.islandRange[0]} and this chapter starts filling in. Until then
+              you can read what it holds — you just can’t write in it yet.
+            </p>
+          </section>
         )}
 
         <ul className="compass-book__activity-list">
