@@ -12,54 +12,81 @@ Every sound effect in the game: ID, what fires it, how it should sound, the Elev
 
 | Column | Meaning |
 |---|---|
-| **★** | Tier 1 — ship in Phase 1. These are the events currently sharing an asset with something else, plus the highest-frequency interactions. |
-| **ID / file** | `sfx_<domain>_<name>` → `/assets/audio/sfx/sfx_<domain>_<name>.mp3`. Where an existing file already has a name, it is kept. |
+| **★** | Tier 1 — ship in Phase 1. Events sharing an asset with something else, the highest-frequency interactions, and **every existing placeholder that needs regenerating**. |
+| **ID / file** | `sfx_<domain>_<name>` → `/assets/audio/sfx/sfx_<domain>_<name>.mp3`. Existing filenames are kept even when the audio behind them is being replaced. |
 | **Trigger** | The code event. Names in `code font` already exist in `IslandRunSoundEvent` (`src/features/gamification/level-worlds/services/islandRunAudio.ts`) — those need only an asset, no new plumbing. |
 | **Len** | Target duration after trimming. |
 | **Haptic** | Paired pattern. `—` = no haptic. Existing patterns live in `HAPTIC_PATTERNS`. |
 | **Prompt** | Paste into ElevenLabs Sound Effects. |
+| 🔶 | Marks a sound that **exists today but is a placeholder** — the file is there, the audio is not acceptable. Regenerate. |
 
 **Production spec for every SFX:** mono, 44.1 kHz, MP3 128 kbps (96 kbps under 300 ms), trimmed to ≤ 5 ms of head silence, 10 ms tail fade, peaks normalised to −3 dBFS, family-matched by ear.
 
-**Current state:** 30 typed sound events are mapped onto **7 files**. Everything marked ★ below exists as a *concept* in code today and plays a borrowed sound.
+**Current state:** 31 typed sound events are mapped onto **7 placeholder files**, and the app's UI sounds are raw oscillator beeps. Nothing in the SFX layer is approved — see §0.
 
 ---
 
-## 0. What already exists
+## 0. ⚠️ Everything that currently exists is a PLACEHOLDER
+
+**No sound effect in the app today is approved. All 7 shipped SFX files and all 9 procedural UI sounds are placeholders and are scheduled for replacement.** They were stand-ins to get the game moving; the dice roll, tile land and button clicks in particular are actively hurting how the game feels.
+
+> **This does not apply to music.** The tracks under `/assets/audio/music/` are approved Suno Pro originals and must **not** be regenerated or replaced. See `01_MUSIC_ASSET_MANIFEST.md` §0.
+
+### 0.1 Shipped SFX files — all placeholder
 
 | File | Size | Currently used for | Action |
 |---|---|---|---|
-| `sfx_dice_roll.mp3` | 4.4 KB | `roll`, `reward_bar_fill`, `coin_flip` | Keep as dice roll; free the other two |
-| `sfx_tile_land.mp3` | 2.9 KB | `token_move`, `stop_land`, `build_upgrade`, `island_travel`, `multiplier_cycle`, `encounter_trigger`, `encounter_resolve`, `utility_stop_complete` | **8 events on one file.** Keep as `stop_land`; free the rest |
-| `sfx_egg_open.mp3` | 7.5 KB | `egg_set`, `egg_ready`, `egg_open` | Keep as `egg_open`; free the rest |
-| `sfx_market_success.mp3` | 5.0 KB | `market_purchase_success`, `market_stop_complete` | Keep; free `market_stop_complete` |
-| `sfx_island_clear.mp3` | 9.6 KB | `boss_trial_start`, `boss_trial_resolve`, `boss_island_clear`, `island_travel_complete` | Keep as `boss_island_clear`; free the rest |
-| `sfx_shop_open.mp3` | 4.2 KB | `shop_open`, `market_purchase_attempt`, `market_insufficient_coins`, `minigame_open` | Keep as `shop_open`; free the rest |
-| `sfx_reward_bar_claim_burst.mp3` | 6.9 KB | `reward_bar_claim_burst`, `reward_bar_cascade`, `sticker_complete`, `minigame_complete`, `multiplier_max`, `coin_reveal`, `tech_item_poof` | **7 events on one file.** Keep as claim burst; free the rest |
+| `sfx_dice_roll.mp3` | 4.4 KB | `roll`, `reward_bar_fill`, `coin_flip` | 🔶 **Replace.** Then free the other two events |
+| `sfx_tile_land.mp3` | 2.9 KB | `token_move`, `stop_land`, `build_upgrade`, `island_travel`, `multiplier_cycle`, `encounter_trigger`, `encounter_resolve`, `utility_stop_complete` | 🔶 **Replace — highest priority.** 8 events on one bad file |
+| `sfx_egg_open.mp3` | 7.5 KB | `egg_set`, `egg_ready`, `egg_open` | 🔶 **Replace.** Then free the other two |
+| `sfx_market_success.mp3` | 5.0 KB | `market_purchase_success`, `market_stop_complete` | 🔶 **Replace.** Then free `market_stop_complete` |
+| `sfx_island_clear.mp3` | 9.6 KB | `boss_trial_start`, `boss_trial_resolve`, `boss_island_clear`, `island_travel_complete` | 🔶 **Replace.** Then free the other three |
+| `sfx_shop_open.mp3` | 4.2 KB | `shop_open`, `market_purchase_attempt`, `market_insufficient_coins`, `minigame_open` | 🔶 **Replace.** Then free the other three |
+| `sfx_reward_bar_claim_burst.mp3` | 6.9 KB | `reward_bar_claim_burst`, `reward_bar_cascade`, `sticker_complete`, `minigame_complete`, `multiplier_max`, `coin_reveal`, `tech_item_poof` | 🔶 **Replace — highest priority.** 7 events on one bad file |
 
-**23 of the 30 events are borrowing.** That is the Phase 1 target.
+So there are two independent problems, and fixing only one leaves the game sounding bad:
 
-Also note: `src/utils/audioUtils.ts` synthesises UI sounds procedurally (`playClick`, `playFooterClickSound`, `playLauncherOpenSound`…). Those are *fine* — a synthesised click has zero latency and zero bytes. Replace only the ones marked ★ in §1 where a designed sound is meaningfully better; leave the rest procedural.
+1. **24 of 31 events borrow another event's sound** → fixed by generating the missing files.
+2. **The 7 sounds they borrow are themselves poor** → fixed by regenerating those 7 too.
+
+### 0.2 Procedural UI sounds — also placeholder
+
+`src/utils/audioUtils.ts` synthesises its sounds from raw oscillators (`playClick`, `playFooterClickSound`, `playLauncherOpenSound/CloseSound`, `playChime`, `playCoinJingle`, `playSweep`, `playCelebrationCascade`, `playTone`). Zero bytes, zero latency — and they sound like beeps.
+
+**Earlier revisions of this doc recommended keeping them. That was wrong.** The tap/click sounds are the first thing a player hears and among the most-fired sounds in the app; a synthesised square wave is not acceptable there. **Every UI sound in §1 is now Tier 1 (★) and slated for a real recorded asset.**
+
+Call sites to migrate: `MobileFooterNav` (7), `TaskTower` (7), `DailyHabitTracker` (6), `VisionQuest` (3), `App.tsx` (2).
+
+**One deliberate exception:** `bossRhythmAudio.ts` is also procedural but is **not** a placeholder. A rhythm game must stay sample-accurate against the audio clock, so synthesis is the correct choice there. Keep it.
+
+### 0.3 How placeholders are marked in code
+
+- `islandRunAudio.ts` exports `isPlaceholderSoundAsset(path)` and `getPlaceholderSoundEvents()`, and reports `placeholderEventCount` / `lastSoundWasPlaceholder` through `getIslandRunAudioDiagnostics()` so the dev panel can flag them live.
+- `PLACEHOLDER_SOUND_ASSET_PATHS` currently contains every shipped SFX path. **Remove a path from that set when its real asset lands** — that set reaching empty is the definition of "SFX content is done".
+- `audioUtils.ts` carries a file-level placeholder banner.
+- `npm run check:audio-assets` (proposed, master plan §8) reports the remaining placeholder count.
 
 ---
 
 # 1. UI & Navigation — 12 sounds
 
-The most-fired family in the app. Keep them **short, quiet and boring** — a UI sound you notice is a UI sound you'll hate by day three.
+The most-fired family in the app, and **currently the worst**: every one of these is a synthesised oscillator beep from `audioUtils.ts`. The whole family is Tier 1.
+
+Design rule: **short, quiet and boring** — a UI sound you notice is a UI sound you'll hate by day three. Quiet does not mean cheap; these should sound like a well-built physical object, not a tone generator.
 
 | ★ | ID | Trigger | Len | Haptic | Prompt |
 |---|---|---|---|---|---|
-| | `sfx_ui_tap` | Any primary button | 60 ms | selection | `Very short soft UI tap, single subtle wooden click with a tiny warm resonance, clean and quiet, no reverb` |
-| | `sfx_ui_tap_soft` | Secondary/list taps | 50 ms | — | `Extremely short and subtle UI tick, soft muted felt tap, almost inaudible, no tone` |
-| | `sfx_ui_back` | Back / dismiss | 90 ms | — | `Short UI back navigation sound, soft descending two-note blip, muted and quiet, clean` |
+| ★ | `sfx_ui_tap` | Any primary button | 60 ms | selection | `Very short soft UI tap, single subtle wooden click with a tiny warm resonance, clean and quiet, no reverb` |
+| ★ | `sfx_ui_tap_soft` | Secondary/list taps | 50 ms | — | `Extremely short and subtle UI tick, soft muted felt tap, almost inaudible, no tone` |
+| ★ | `sfx_ui_back` | Back / dismiss | 90 ms | — | `Short UI back navigation sound, soft descending two-note blip, muted and quiet, clean` |
 | ★ | `sfx_ui_modal_open` | Any modal opens | 220 ms | — | `Short UI panel open sound, quick soft upward whoosh with a gentle glassy chime at the end, light and clean, no reverb tail` |
 | ★ | `sfx_ui_modal_close` | Any modal closes | 200 ms | — | `Short UI panel close sound, quick soft downward whoosh settling into a muted thud, light and clean` |
-| | `sfx_ui_toggle_on` | Switch → on | 80 ms | selection | `Short crisp toggle switch on, small mechanical click with a bright upward tick, satisfying and tiny` |
-| | `sfx_ui_toggle_off` | Switch → off | 80 ms | selection | `Short crisp toggle switch off, small mechanical click with a muted downward tick` |
-| | `sfx_ui_tab_switch` | Footer nav tab change | 100 ms | selection | `Short UI tab switch sound, soft airy swipe with a subtle pitched blip, quick and light` |
+| ★ | `sfx_ui_toggle_on` | Switch → on | 80 ms | selection | `Short crisp toggle switch on, small mechanical click with a bright upward tick, satisfying and tiny` |
+| ★ | `sfx_ui_toggle_off` | Switch → off | 80 ms | selection | `Short crisp toggle switch off, small mechanical click with a muted downward tick` |
+| ★ | `sfx_ui_tab_switch` | Footer nav tab change | 100 ms | selection | `Short UI tab switch sound, soft airy swipe with a subtle pitched blip, quick and light` |
 | ★ | `sfx_ui_error` | Invalid action, denied | 250 ms | warning `[60,40,60]` | `Short soft UI error sound, two low muted buzzes descending, gentle and non-alarming, not harsh` |
-| | `sfx_ui_confirm` | Confirm/save success | 300 ms | success | `Short pleasant confirmation sound, two-note ascending soft bell chime, warm and clean, satisfying` |
-| | `sfx_ui_swipe` | Card swipe / carousel | 120 ms | — | `Short paper swipe sound, quick soft airy sweep, light card sliding past, subtle` |
+| ★ | `sfx_ui_confirm` | Confirm/save success | 300 ms | success | `Short pleasant confirmation sound, two-note ascending soft bell chime, warm and clean, satisfying` |
+| ★ | `sfx_ui_swipe` | Card swipe / carousel | 120 ms | — | `Short paper swipe sound, quick soft airy sweep, light card sliding past, subtle` |
 | ★ | `sfx_ui_footer_game` | Game tab in footer | 180 ms | selection | `Short playful game menu button sound, warm low bloop with a bright arcade tick on top, inviting` |
 
 ---
@@ -71,9 +98,9 @@ The core loop. Fired more than anything else in the game and the single biggest 
 | ★ | ID | Trigger | Len | Haptic | Prompt |
 |---|---|---|---|---|---|
 | ★ | `sfx_board_dice_shake` | Dice shake begins | 500 ms | `[15,25,15,25,15]` | `Sound of dice being shaken in a cupped hand, several plastic dice rattling together, dry and close-mic'd, half a second, no reverb` |
-| | `sfx_dice_roll` | `roll` | 700 ms | `[30]` | ✅ **exists** — keep. `Dice tumbling and rolling across a wooden board, plastic dice bouncing and settling, dry and close, three quick bounces` |
+| ★ | `sfx_dice_roll` | `roll` | 700 ms | `[30]` | 🔶 **placeholder — regenerate.** Current file is poor. `Dice tumbling and rolling across a wooden board, two plastic dice bouncing three times and settling, dry close-mic'd, warm wooden resonance, tactile and satisfying` |
 | ★ | `sfx_board_dice_settle` | Dice come to rest | 200 ms | selection | `Short sound of two dice clattering to a stop on wood, final two small taps and silence, dry and close` |
-| | `sfx_tile_land` | `stop_land` | 250 ms | `[20,40,20]` | ✅ **exists** — keep. `Short satisfying landing thud on a wooden board tile, soft impact with a warm low body, clean` |
+| ★ | `sfx_tile_land` | `stop_land` | 250 ms | `[20,40,20]` | 🔶 **placeholder — regenerate, highest priority.** Currently serves 8 events. `Short satisfying landing thud of a game piece on a wooden board tile, soft rounded impact with a warm low body and a tiny wooden click, clean and close` |
 | ★ | `sfx_board_token_hop` | `token_move` | 150 ms | — (throttled) | `Very short playful hop sound, soft rounded bloop with a quick upward pitch bend, like a game piece jumping one space, light and bouncy` |
 | ★ | `sfx_board_token_hop_final` | Last hop of a move | 220 ms | selection | `Short landing sound of a game piece, soft bloop with a satisfying downward settle and tiny wooden tap, conclusive` |
 | ★ | `sfx_board_lap_complete` | Full board lap | 900 ms | `[30,40,30]` | `Short cheerful lap completion flourish, quick ascending four-note bell run with a soft cymbal shimmer, rewarding, under a second` |
@@ -100,9 +127,9 @@ Money sounds must be **generous**. This family is where the game says thank you.
 | ★ | `sfx_dice_gain` | Dice granted | 500 ms | `[20,30,20]` | `Short sound of dice being handed over, a few plastic dice clacking together landing with a bright confirming chime` |
 | ★ | `sfx_ticket_gain` | Minigame ticket gain | 350 ms | — | `Short paper ticket sound, quick tear and flutter with a small bright bell ping, arcade token feel` |
 | ★ | `sfx_shard_gain` | Shard collected | 450 ms | `[25]` | `Short crystal shard collection, bright glassy chime with a subtle crystalline ring-out, precious and clean` |
-| | `sfx_market_success` | `market_purchase_success` | 500 ms | `[20,40,20]` | ✅ **exists** — keep. `Cash register purchase confirmation, warm bell ding with a soft coin clink` |
+| ★ | `sfx_market_success` | `market_purchase_success` | 500 ms | `[20,40,20]` | 🔶 **placeholder — regenerate.** `Purchase confirmation, warm bell ding with a soft coin clink and a brief satisfied chime, generous and clean` |
 | ★ | `sfx_purchase_denied` | `market_insufficient_coins` | 350 ms | warning | `Short purchase denied sound, low muted double buzz with a small negative descending tone, gentle refusal, not harsh` |
-| | `sfx_shop_open` | `shop_open` | 400 ms | — | ✅ **exists** — keep. `Shop door opening with a small welcome bell` |
+| ★ | `sfx_shop_open` | `shop_open` | 400 ms | — | 🔶 **placeholder — regenerate.** `Shop door opening, soft wooden swing with a small bright welcome bell jingle, inviting and warm` |
 | ★ | `sfx_wallet_tick` | Balance counting up | 40 ms | — | `Extremely short currency counter tick, single tiny metallic blip, designed to be repeated rapidly while a number counts up` |
 
 ---
@@ -113,7 +140,7 @@ Money sounds must be **generous**. This family is where the game says thank you.
 |---|---|---|---|---|---|
 | ★ | `sfx_reward_bar_fill` | `reward_bar_fill` | 200 ms | — (throttled) | `Very short progress fill blip, soft rising synthetic swell with a small pitched tick, designed to repeat with rising pitch as a bar fills` |
 | ★ | `sfx_reward_bar_tick` | Segment crossed | 100 ms | selection | `Very short progress notch tick, crisp bright click with a tiny bell overtone` |
-| | `sfx_reward_bar_claim_burst` | `reward_bar_claim_burst` | 800 ms | `[20,30,20,30,20]` | ✅ **exists** — keep. `Reward claim burst, bright sparkle cascade with a warm chord hit` |
+| ★ | `sfx_reward_bar_claim_burst` | `reward_bar_claim_burst` | 800 ms | `[20,30,20,30,20]` | 🔶 **placeholder — regenerate, highest priority.** Currently serves 7 events. `Reward claim burst, bright sparkle cascade opening into a warm resolving chord with a soft coin shimmer, generous and celebratory` |
 | ★ | `sfx_reward_bar_cascade` | `reward_bar_cascade` | 2000 ms | `[15,20,15,20,15,20,15]` | `Cascading multi-reward payout, a long rolling series of bright chimes and coin tings tumbling one after another with rising excitement, two seconds` |
 | ★ | `sfx_sticker_place` | Sticker placed | 300 ms | selection | `Short sticker being pressed onto paper, soft peel and satisfying press with a small pop, tactile and clean` |
 | ★ | `sfx_sticker_complete` | `sticker_complete` | 1200 ms | `[30,40,30,40,30]` | `Collection set completed fanfare, ascending sparkle run into a warm triumphant chord with a soft cymbal shimmer, over a second` |
@@ -133,7 +160,7 @@ The emotional centre of the collection loop. These deserve the most generation a
 | ★ | `sfx_egg_stage_up` | Incubation stage up | 700 ms | `[20,30,20]` | `Short magical growth sound, warm rising shimmer with a soft heartbeat pulse and a gentle bell, something developing inside` |
 | ★ | `sfx_egg_ready` | `egg_ready` | 800 ms | `[25,35,25]` | `Short attention chime for a ready egg, three ascending warm bell notes with a soft magical shimmer, inviting and gentle` |
 | ★ | `sfx_egg_crack` | Shell cracking | 600 ms | `[20,40,20]` | `Egg shell cracking, sharp brittle crack with small shell fragments falling, close-mic'd and organic, tense` |
-| | `sfx_egg_open` | `egg_open` | 900 ms | `[20,40,20,40,20]` | ✅ **exists** — keep. `Egg hatching open with a magical reveal shimmer` |
+| ★ | `sfx_egg_open` | `egg_open` | 900 ms | `[20,40,20,40,20]` | 🔶 **placeholder — regenerate.** `Egg hatching open, final shell crack releasing into a warm magical reveal shimmer with a gentle rising chime, tender and wondrous` |
 | ★ | `sfx_creature_reveal_common` | Common reveal | 900 ms | `[25,35,25]` | `Short cute creature reveal, warm ascending three-note chime with a soft sparkle, friendly and pleasant, nothing grand` |
 | ★ | `sfx_creature_reveal_rare` | Rare reveal | 1500 ms | `[30,40,30,40,30]` | `Rare creature reveal, rising shimmering swell into a bright crystalline chord with sparkle cascade, exciting and special, a second and a half` |
 | ★ | `sfx_creature_reveal_legendary` | Legendary reveal | 2500 ms | `[50,30,50,30,50]` | `Legendary creature reveal, deep resonant hit into a long rising choral shimmer with brilliant crystalline sparkles and a triumphant golden chord, awe-inspiring, two and a half seconds` |
@@ -189,7 +216,7 @@ Used by standard boss stops and Shooter Blitz. **Boss Rhythm keeps its procedura
 | ★ | `sfx_boss_charge` | Boss winds up | 1200 ms | — | `Boss attack charge-up, low rising hum building in pitch and intensity with electrical crackle, telegraphing an incoming attack` |
 | ★ | `sfx_boss_phase_shift` | Phase change | 1500 ms | `[50,30,50]` | `Boss phase transition, deep resonant boom with a rising distorted swell and metallic groan, the fight escalating` |
 | ★ | `sfx_boss_defeat` | `boss_trial_resolve` | 2000 ms | `[50,30,50]` | `Boss defeat, heavy collapsing impact with metallic debris scattering and a descending distorted groan, then silence, two seconds` |
-| | `sfx_island_clear` | `boss_island_clear` | 1800 ms | `[30,40,30,40,30]` | ✅ **exists** — keep. `Island cleared victory fanfare` |
+| ★ | `sfx_island_clear` | `boss_island_clear` | 1800 ms | `[30,40,30,40,30]` | 🔶 **placeholder — regenerate.** `Island cleared victory fanfare, ascending bright chime run into a triumphant warm chord with cymbal shimmer and a distant wave swell, earned and conclusive` |
 | ★ | `sfx_boss_countdown_tick` | Pre-fight count-in | 150 ms | selection | `Short countdown tick, crisp electronic beep with a slight metallic edge, tense, designed to repeat three times before a start` |
 
 ---
@@ -289,24 +316,31 @@ The **text blip** is the one to get right — it's what makes reading feel like 
 
 | Family | Count | Tier 1 (★) |
 |---|---|---|
-| 1. UI & Navigation | 12 | 4 |
-| 2. Board & Movement | 14 | 11 |
-| 3. Economy & Currency | 11 | 8 |
-| 4. Reward Bar & Collectibles | 9 | 8 |
-| 5. Eggs & Creatures | 11 | 9 |
+| 1. UI & Navigation | 12 | **12** |
+| 2. Board & Movement | 14 | 13 |
+| 3. Economy & Currency | 11 | 10 |
+| 4. Reward Bar & Collectibles | 9 | 9 |
+| 5. Eggs & Creatures | 11 | 10 |
 | 6. Vault Rush | 8 | 8 |
 | 7. Build & Workshop | 8 | 5 |
-| 8. Boss & Combat | 10 | 9 |
+| 8. Boss & Combat | 10 | 10 |
 | 9. Mini-games generic | 8 | 7 |
 | 10. Mini-games specific | 17 | 17 |
 | 11. Habits & App Core | 13 | 7 |
 | 12. Story & Narrative | 8 | 5 |
 | 13. Daily Treats & Seasonal | 4 | 3 |
-| **Total** | **133** | **101** |
+| **Total** | **133** | **116** |
 
-Of which **7 already exist** and are kept. **126 to generate**, ~101 of them in Tier 1.
+**All 133 need generating.** The 7 files that exist today are placeholders being regenerated, not assets being kept — so there is no "already done" column. 116 of the 133 are Tier 1 (Phase 1).
 
 Estimated bundled size at 128 kbps mono with these durations: **~1.05 MB**. Budget in `check:audio-assets` is 1.5 MB — comfortable headroom.
+
+### Definition of done for the SFX layer
+
+1. `PLACEHOLDER_SOUND_ASSET_PATHS` in `islandRunAudio.ts` is **empty**.
+2. No two `IslandRunSoundEvent`s share an asset path.
+3. `audioUtils.ts` no longer synthesises player-audible sounds (`bossRhythmAudio.ts` excepted — it stays procedural by design).
+4. `npm run check:audio-assets` reports **0 placeholders** and passes the size budget.
 
 ---
 

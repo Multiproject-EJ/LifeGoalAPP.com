@@ -17,7 +17,7 @@
 | # | Question | Decision |
 |---|---|---|
 | 1 | How is main-game music organised? | **GTA-style radio stations.** 7 stations, one per island zone + a Focus station + a virtual Favorites station. The player can switch stations freely; the game *suggests* the zone station but never forces it. |
-| 2 | Music or SFX first? | **SFX first.** They fire 50–200× per session vs. music's "set and forget". SFX is where the game feel lives. Music Phase can run in parallel because it needs no code (the playlist engine already exists). |
+| 2 | Music or SFX first? | **SFX first, decisively.** The music in the repo is already good (approved Suno Pro originals — keep it). **Every sound effect is a placeholder**, and they fire 50–200× per session vs. music's "set and forget". SFX is both the weakest link and where the game feel lives. |
 | 3 | Stream or bundle music? | **Stream music, bundle SFX.** Music lives on a CDN (Supabase Storage public bucket), `preload="none"`, progressive streaming. SFX ships in the app bundle and is service-worker precached (~1 MB for all ~120 of them). |
 | 4 | Favorites offline? | **Yes — explicit opt-in download** into a Cache API bucket (`lifegoal-audio-v1`), LRU-capped at 150 MB, plus one small always-local "cold start" bed so the board is never silent offline. |
 | 5 | Do event mini-games get their own music? | **Yes, one signature loop each** — the mini-game is the only place in the app where music is doing narrative work (tension, tempo, payoff). This is where music budget goes after the stations. |
@@ -37,7 +37,18 @@ Music sets the *mood* of a session. Sound effects set the *quality* of every sin
 
 Every one of those reuses is a small moment where the game feels cheaper than it looks. There is no engineering work needed to fix most of them — the event plumbing, throttling, haptics pairing and diagnostics are already built and tested (`islandRunAudio.test.ts`). **They are waiting on files.** That makes the SFX manifest the single highest-leverage audio deliverable.
 
-### 1.1 Two bugs to fix before anything else
+### 1.1 Music is fine; sound effects are the problem
+
+Worth stating plainly, because it changes where effort goes:
+
+- **Music: approved, keep it.** The five real tracks are Suno Pro originals that have been listened to and accepted. Everything this plan adds is *additional* music, never a replacement. Do not regenerate them.
+- **Sound effects: none are approved.** All 7 shipped SFX files and all 9 procedural oscillator sounds in `audioUtils.ts` are placeholders, with the dice roll, tile land and button clicks specifically called out as poor. That is 116 Tier-1 sounds to produce, not the ~45 an earlier draft of this plan assumed.
+
+An earlier revision recommended leaving the procedural UI sounds alone on the grounds that they cost nothing and have zero latency. **That was wrong** — cheap-sounding taps on the most-fired control in the app is exactly where a designed asset earns its bytes. All UI sounds are now Tier 1.
+
+Placeholder status is tracked in code (`PLACEHOLDER_SOUND_ASSET_PATHS` in `islandRunAudio.ts`, plus a file banner in `audioUtils.ts`) so it can't quietly become permanent.
+
+### 1.2 Two bugs to fix before anything else
 
 Found while surveying — both are one-line fixes but they invalidate any music QA done before them:
 
@@ -371,11 +382,14 @@ Phases 1 and 2 are independent and can run in parallel — one is code-led, the 
 - Add `scripts/validate-audio-assets.mjs` + `check:audio-assets` in CI.
 - **Exit:** board music plays all three playlist tracks on a normal island; CI fails on a stub file.
 
-### Phase 1 — SFX engine + Tier-1 sounds (2–3 days code, content in parallel)
+### Phase 1 — SFX engine + Tier-1 sounds (2–3 days code, content is the long pole)
 - `audioBus.ts`, `sfxPlayer.ts` (AudioBuffer + variation), `audioManifest.ts`, `audioPreferences.ts`.
 - `islandRunAudio.ts` becomes an adapter — no call-site changes.
-- Generate + ship **Tier 1** SFX (~45 sounds, marked ★ in `02_SFX_ASSET_MANIFEST.md`): every currently-shared event gets its own file.
-- **Exit:** no SFX shares an asset with a different event; SFX bundle ≤ 700 KB; dev panel auditions all of them.
+- Generate + ship **Tier 1** SFX (116 sounds, marked ★ in `02_SFX_ASSET_MANIFEST.md`). This covers both problems at once: every currently-shared event gets its own file, **and** all 7 existing placeholder files plus the 9 procedural UI sounds are replaced with real recorded assets.
+- Migrate `audioUtils.ts` call sites (`MobileFooterNav`, `DailyHabitTracker`, `TaskTower`, `VisionQuest`, `App`) off oscillator synthesis onto `sfxPlayer`.
+- **Exit:** `PLACEHOLDER_SOUND_ASSET_PATHS` is empty; no SFX shares an asset with a different event; no player-audible oscillator sounds remain outside `bossRhythmAudio.ts`; SFX bundle ≤ 1.5 MB; dev panel auditions all of them.
+
+**Production order within Phase 1**, by how often the player hears it: UI taps → dice roll → tile land / token hop → coins and reward bar → everything else. The first three account for roughly 40% of all sound a player experiences.
 
 ### Phase 2 — Radio system (3–4 days code, content in parallel)
 - `musicDirector.ts`, `stations.ts`, `RadioPanel.tsx`, Now-Playing HUD.

@@ -16,7 +16,9 @@ This is the "you are here" document. Everything below was verified by reading th
 | Broken files (2-byte stubs) | **2** | one is in the live board playlist |
 | Orphaned files (no code reference) | **1** | `Egg_hatched.mp3` |
 | Typed SFX events | **31** | mapped onto **7 files** |
-| SFX events with a unique asset | **7** | the other 24 borrow |
+| SFX events with a unique asset | **7** | the other 24 borrow — and all 7 sources are placeholders |
+| Approved (non-placeholder) SFX | **0** | every SFX file and procedural sound is a placeholder |
+| Approved music tracks | **5** | Suno Pro originals — keep, do not regenerate |
 | SFX events declared but never fired | **1** | `market_stop_complete` |
 | Music track IDs | **6** | one points at a broken file |
 | Places music is wired | **1** | `IslandRunBoardPrototype.tsx` only |
@@ -24,7 +26,10 @@ This is the "you are here" document. Everything below was verified by reading th
 | Audio test suites | **2** | wired into `npm run test:island-run` |
 | Audio asset validator | **0** | none exists |
 
-**The headline:** the *engineering* is in decent shape — typed events, throttling, haptics pairing, diagnostics, graceful degradation, and real tests. The *content* is nearly absent. 174 call sites are firing into 7 sound files.
+**The headline:** the *engineering* is in decent shape — typed events, throttling, haptics pairing, diagnostics, graceful degradation, and real tests. The *content* splits sharply in two:
+
+- **Music — ✅ good.** The five real tracks are approved Suno Pro originals. Keep them. The only music problems are two empty stub files and one orphan.
+- **Sound effects — 🔶 all placeholder.** Every one of the 7 shipped SFX files and all 9 procedural UI sounds is a placeholder of unacceptable quality. The dice roll, tile land and button clicks are the worst offenders. 174 call sites are firing into those 7 bad files.
 
 ---
 
@@ -34,28 +39,30 @@ This is the "you are here" document. Everything below was verified by reading th
 
 | File | Size | Referenced by | Status |
 |---|---|---|---|
-| `Island dreamy relaxing night islands.mp3` | 3.49 MB | `islandRunMusic.ts` → `island-board-ambient` | ✅ real, in use |
-| `Lantern Tide.mp3` | 3.53 MB | `islandRunMusic.ts` → `market-lounge` | ✅ real, in use |
-| `luxury-reward-loop-v1.mp3` | 1.45 MB | `islandRunMusic.ts` → `luxury-reward` | ✅ real, in use |
-| `event-jackpot-loop-v1.mp3` | 1.28 MB | `islandRunMusic.ts` → `event-jackpot` | ✅ real, in use |
-| `new-island-celebration-loop-v1.mp3` | 926 KB | `islandRunMusic.ts` → `new-island-celebration` | ✅ real, in use |
-| `Egg_hatched.mp3` | 289 KB | **nothing** | ⚠️ **orphaned** |
+| `Island dreamy relaxing night islands.mp3` | 3.49 MB | `islandRunMusic.ts` → `island-board-ambient` | ✅ **approved — keep** |
+| `Lantern Tide.mp3` | 3.53 MB | `islandRunMusic.ts` → `market-lounge` | ✅ **approved — keep** |
+| `luxury-reward-loop-v1.mp3` | 1.45 MB | `islandRunMusic.ts` → `luxury-reward` | ✅ **approved — keep** |
+| `event-jackpot-loop-v1.mp3` | 1.28 MB | `islandRunMusic.ts` → `event-jackpot` | ✅ **approved — keep** |
+| `new-island-celebration-loop-v1.mp3` | 926 KB | `islandRunMusic.ts` → `new-island-celebration` | ✅ **approved — keep** |
+| `Egg_hatched.mp3` | 289 KB | **nothing** | ✅ approved audio, ⚠️ **orphaned** — wire it up |
 | `boss-rhythm-duel-loop-v1.mp3` | **2 bytes** | `islandRunMusic.ts` → `boss-rhythm-duel` | 🔴 **stub, and live** |
 | `market-lounge-loop-v1.mp3` | **2 bytes** | nothing (ID points at Lantern Tide) | 🔴 stub, unreferenced |
 
 Note the naming inconsistency: three files use the `*-loop-v1.mp3` convention, three use human titles with spaces and capitals. URL-encoding a filename with spaces works but is a papercut every time it's referenced.
 
-### 2.2 `public/assets/audio/sfx/` — 7 files, 40 KB
+### 2.2 `public/assets/audio/sfx/` — 7 files, 40 KB — 🔶 **ALL PLACEHOLDER**
 
-| File | Size | Serves how many events |
-|---|---|---|
-| `sfx_island_clear.mp3` | 9.6 KB | 4 |
-| `sfx_egg_open.mp3` | 7.5 KB | 3 |
-| `sfx_reward_bar_claim_burst.mp3` | 6.9 KB | **7** |
-| `sfx_market_success.mp3` | 5.0 KB | 2 |
-| `sfx_dice_roll.mp3` | 4.4 KB | 3 |
-| `sfx_shop_open.mp3` | 4.2 KB | 4 |
-| `sfx_tile_land.mp3` | 2.9 KB | **8** |
+None of these are approved. All seven are stand-ins of unacceptable quality and are scheduled for regeneration (`02_SFX_ASSET_MANIFEST.md` §0). The 40 KB total is itself a tell — real recorded effects at these durations run 3–15 KB each *after* trimming, and these are carrying eight events apiece.
+
+| File | Size | Serves how many events | Status |
+|---|---|---|---|
+| `sfx_island_clear.mp3` | 9.6 KB | 4 | 🔶 placeholder |
+| `sfx_egg_open.mp3` | 7.5 KB | 3 | 🔶 placeholder |
+| `sfx_reward_bar_claim_burst.mp3` | 6.9 KB | **7** | 🔶 placeholder — worst offender |
+| `sfx_market_success.mp3` | 5.0 KB | 2 | 🔶 placeholder |
+| `sfx_dice_roll.mp3` | 4.4 KB | 3 | 🔶 placeholder — called out as poor |
+| `sfx_shop_open.mp3` | 4.2 KB | 4 | 🔶 placeholder |
+| `sfx_tile_land.mp3` | 2.9 KB | **8** | 🔶 placeholder — worst offender |
 
 ### 2.3 Elsewhere
 
@@ -81,6 +88,8 @@ Note the naming inconsistency: three files use the `*-loop-v1.mp3` convention, t
 - Missing files, decode failures and autoplay rejection are all silent no-ops
 
 **The gap is purely assets.** Swapping in real files is a change to one object literal.
+
+Placeholder state is now marked in code: `PLACEHOLDER_SOUND_ASSET_PATHS` lists every path still served by placeholder audio, exposed via `isPlaceholderSoundAsset()` / `getPlaceholderSoundEvents()` and surfaced in diagnostics as `placeholderEventCount` and `lastSoundWasPlaceholder`. **Remove a path from that set as its real asset lands; the set reaching empty means SFX content is done.**
 
 #### The event → asset map, as shipped
 
@@ -146,9 +155,9 @@ all other islands:          ['luxury-reward', 'event-jackpot', 'boss-rhythm-duel
 
 **Both playlists end in `boss-rhythm-duel`, which is the 2-byte stub.** See §5.
 
-### 3.3 `src/utils/audioUtils.ts` — procedural UI sounds
+### 3.3 `src/utils/audioUtils.ts` — procedural UI sounds — 🔶 **ALL PLACEHOLDER**
 
-135 lines of Web Audio oscillator synthesis. Zero assets, zero latency. Exposes `playTone`, `playChime`, `playCoinJingle`, `playSweep`, `playClick`, `playCelebrationCascade`, `playFooterClickSound`, `playLauncherOpenSound/CloseSound`.
+135 lines of Web Audio oscillator synthesis. Zero assets, zero latency — and they sound like beeps, because that is literally what they are. The button/tap sounds are among the most-fired sounds in the app and the first thing a new player hears. The whole file carries a placeholder banner and every UI sound is Tier 1 for replacement. Exposes `playTone`, `playChime`, `playCoinJingle`, `playSweep`, `playClick`, `playCelebrationCascade`, `playFooterClickSound`, `playLauncherOpenSound/CloseSound`.
 
 Gated by its own module-level `soundEffectsEnabled` flag — **separate from the Island Run `sfxEnabled` flag**. Two independent mute systems exist (see §5.4).
 
@@ -158,7 +167,7 @@ Used by 5 files: `MobileFooterNav` (7), `TaskTower` (7), `DailyHabitTracker` (6)
 
 309 lines. Synthesises kick/snare/hats/bass from the battle's beat grid, sample-accurate against `audioCtx.currentTime`, plus a full SFX palette (fire, hit, miss, hurt, shield, explosion, count-in ticks). Falls back to a silent `performance.now()` clock with pause accounting when Web Audio is blocked.
 
-**Do not replace this with generated audio.** Rhythm-game charts must stay locked to the audio clock; an MP3 would drift.
+**Do not replace this with generated audio, and do not treat it as a placeholder.** Rhythm-game charts must stay locked to the audio clock; an MP3 would drift. This is the one procedural system that is correct as-is.
 
 ### 3.5 Other independent audio systems
 
@@ -227,7 +236,13 @@ Nobody has heard the third playlist slot in production. **Fix in Phase 0.**
 
 ### 5.3 ⚠️ Orphaned asset
 
-`Egg_hatched.mp3` (289 KB) has no reference anywhere in `src/`, `public/` or `scripts/`. Either wire it to the hatch moment or delete it.
+`Egg_hatched.mp3` (289 KB) has no reference anywhere in `src/`, `public/` or `scripts/`. The audio itself is approved — **wire it to the hatch moment**, don't delete it.
+
+### 5.3b 🔶 Every sound effect in the app is a placeholder
+
+Distinct from the "24 events borrow a sound" problem, and worse: the 7 sounds they borrow are themselves unacceptable, as are the 9 procedural UI sounds. Fixing only the sharing would leave 31 events playing 31 *different* bad sounds.
+
+Both halves are covered by `02_SFX_ASSET_MANIFEST.md`; the existing 7 are now marked ★ Tier 1 alongside the missing ones.
 
 ### 5.4 ⚠️ Seven independent mute surfaces
 
@@ -237,9 +252,9 @@ Turning off "sound" in one place does not turn it off elsewhere. A player who mu
 
 `market_stop_complete` is declared, mapped and has a haptic pattern, but is never fired from any call site.
 
-### 5.6 ⚠️ No validator
+### 5.6 ⚠️ No validator, and no placeholder tracking until now
 
-Nothing checks that audio assets exist, are non-trivial, or are unique. The repo has validators for island art (`check:island-art-assets`), template kits and visual production briefs — audio has none. A 2-byte MP3 passed review, shipped, and broke music for months without a single failing check.
+Nothing checks that audio assets exist, are non-trivial, or are unique. The repo has validators for island art (`check:island-art-assets`), template kits and visual production briefs — audio has none. A 2-byte MP3 passed review, shipped, and broke music for months without a single failing check. Nor was there any way to see how much of the audio layer was still stand-in — hence the new `PLACEHOLDER_SOUND_ASSET_PATHS` marker and the placeholder count in `check:audio-assets`.
 
 ### 5.7 ⚠️ Music is wired in exactly one component
 
@@ -260,7 +275,7 @@ Mapping the audit onto `00_AUDIO_MASTER_PLAN.md`:
 | Plan phase | What the audit says |
 |---|---|
 | **Phase 0 — Unblock** | Confirmed necessary and urgent. Two stub files, one orphan, no validator. Half a day. |
-| **Phase 1 — SFX** | **Cheaper than estimated.** The service, throttling, haptics, diagnostics and tests all exist. 24 of 31 events need only a file. The AudioBuffer migration is an optimisation, not a prerequisite — real assets can land first. |
+| **Phase 1 — SFX** | **Bigger content-wise than first estimated, still cheap code-wise.** The service, throttling, haptics, diagnostics and tests all exist, so 24 of 31 events need only a file. But the 7 existing files and the 9 procedural UI sounds are *also* placeholders, so Phase 1 is a full SFX replacement (116 Tier-1 sounds), not a gap-fill. The AudioBuffer migration remains an optimisation, not a prerequisite. |
 | **Phase 2 — Radio** | Engine is ~60% there: crossfade, playlists, single-track guarantee, cancellation tokens and `preload="none"` all exist. Missing: station model, sticky player choice, playhead-preserving resume, Now Playing UI, CDN base URL. |
 | **Phase 3 — Surfaces** | Biggest content lift. 76 mini-game call sites resolve to shared files; story soundtrack is a finished feature with zero content. |
 | **Phase 4 — Offline** | Nothing exists. Fully greenfield. |
@@ -270,7 +285,9 @@ Mapping the audit onto `00_AUDIO_MASTER_PLAN.md`:
 
 1. **Phase 0** — replace both stubs, resolve the orphan, add `scripts/validate-audio-assets.mjs` + `npm run check:audio-assets` in CI.
 2. **Story soundtrack content** — 4 mood pads wired into island narrative manifests. Zero new code; flip `StoryPlayer`'s `audioEnabled` default. Highest ratio of felt improvement to effort in the repo.
-3. **SFX Tier 1 drop** — generate the ★ list from `02_SFX_ASSET_MANIFEST.md`, update `SOUND_ASSET_MAP`, delete the apology comments. No architectural change.
+3. **SFX Tier 1 drop** — generate the ★ list from `02_SFX_ASSET_MANIFEST.md` (116 sounds, including regenerating all 7 existing files), update `SOUND_ASSET_MAP`, empty out `PLACEHOLDER_SOUND_ASSET_PATHS` as assets land, delete the apology comments. No architectural change.
+
+   Suggested order within the drop, by how often the player hears it: **UI taps → dice roll → tile land/token hop → coins and reward bar → everything else.** The first three are ~40% of all sound the player experiences.
 
 ---
 

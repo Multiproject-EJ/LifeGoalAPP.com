@@ -8,6 +8,32 @@ Every music asset in the game: what it is, where it plays, and the exact prompt 
 
 ---
 
+## 0. ✅ Existing music is APPROVED — do not regenerate
+
+**The music already in the repo is good and stays.** These are Suno Pro originals that have been listened to and accepted:
+
+| File | Used as | Status |
+|---|---|---|
+| `Island dreamy relaxing night islands.mp3` | `island-board-ambient` | ✅ **approved — keep** |
+| `Lantern Tide.mp3` | `market-lounge` | ✅ **approved — keep** |
+| `luxury-reward-loop-v1.mp3` | `luxury-reward` | ✅ **approved — keep** |
+| `event-jackpot-loop-v1.mp3` | `event-jackpot` | ✅ **approved — keep** |
+| `new-island-celebration-loop-v1.mp3` | `new-island-celebration` | ✅ **approved — keep** |
+| `Egg_hatched.mp3` | *(orphaned — wire it up)* | ✅ approved, needs wiring |
+
+Do not replace, re-encode destructively, or "improve" these. Everything marked ⬜ in this document is **additional** music, not a replacement for what's there. If a filename is tidied to match the naming convention, keep the audio byte-identical and update the references — this is a rename, not a regeneration.
+
+Only two music files are problems, and both are because they are **empty**, not because they sound wrong:
+
+| File | Status |
+|---|---|
+| `boss-rhythm-duel-loop-v1.mp3` | 🔴 2-byte stub — needs real audio (Phase 0) |
+| `market-lounge-loop-v1.mp3` | 🔴 2-byte stub, unreferenced — delete or fill |
+
+> **The opposite is true of sound effects.** Every SFX in the app is a placeholder scheduled for replacement — see `02_SFX_ASSET_MANIFEST.md` §0. Music is in good shape; SFX is not.
+
+---
+
 ## Conventions
 
 **Naming**

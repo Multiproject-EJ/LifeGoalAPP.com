@@ -110,6 +110,10 @@ export interface IslandRunAudioDiagnostics {
   lastSoundPlaybackStatus: IslandRunSoundPlaybackStatus;
   playAttemptCount: number;
   playFailureCount: number;
+  /** Sound events still mapped to a placeholder recording. See PLACEHOLDER_SOUND_ASSET_PATHS. */
+  placeholderEventCount: number;
+  /** True while the most recent sound event played a placeholder recording. */
+  lastSoundWasPlaceholder: boolean;
 }
 
 // ─── Preference helpers ────────────────────────────────────────────────────────
@@ -237,6 +241,24 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
 
 // ─── Sound event map ─────────────────────────────────────────────────────────
 
+/**
+ * ⚠️ PLACEHOLDER ASSETS — EVERY FILE BELOW IS A PLACEHOLDER AND MUST BE REPLACED.
+ *
+ * All seven of these are stand-in sounds of unacceptable quality (the dice roll
+ * and tile land in particular). They are not "good enough for now" — they are
+ * the single biggest drag on how the game feels, and they are what 174 call
+ * sites across the board and four mini-games currently play.
+ *
+ * Do NOT treat the presence of a file here as "this event has a sound".
+ * Replacement assets, with generation prompts, are specified in:
+ *   docs/audio/02_SFX_ASSET_MANIFEST.md
+ *
+ * The music tracks under /assets/audio/music/ are NOT placeholders — those are
+ * approved originals and must not be regenerated or replaced.
+ *
+ * When a real asset lands, remove its path from PLACEHOLDER_SOUND_ASSET_PATHS.
+ * `npm run check:audio-assets` reports how many placeholders remain.
+ */
 const AVAILABLE_SOUND_ASSET_PATHS = [
   '/assets/audio/sfx/sfx_dice_roll.mp3',
   '/assets/audio/sfx/sfx_egg_open.mp3',
@@ -248,6 +270,24 @@ const AVAILABLE_SOUND_ASSET_PATHS = [
 ] as const;
 
 export type IslandRunSoundAssetPath = typeof AVAILABLE_SOUND_ASSET_PATHS[number];
+
+/**
+ * Paths still served by placeholder audio. Every currently shipped SFX file is
+ * listed here; the set shrinks to empty as real assets land.
+ */
+const PLACEHOLDER_SOUND_ASSET_PATHS = new Set<string>(AVAILABLE_SOUND_ASSET_PATHS);
+
+/** True while `assetPath` is still served by a placeholder recording. */
+export function isPlaceholderSoundAsset(assetPath: string): boolean {
+  return PLACEHOLDER_SOUND_ASSET_PATHS.has(assetPath);
+}
+
+/** Sound events whose mapped asset is still a placeholder. */
+export function getPlaceholderSoundEvents(): IslandRunSoundEvent[] {
+  return (Object.keys(SOUND_ASSET_MAP) as IslandRunSoundEvent[])
+    .filter((eventId) => isPlaceholderSoundAsset(SOUND_ASSET_MAP[eventId]))
+    .sort();
+}
 
 const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, IslandRunSoundAssetPath> = {
   roll: '/assets/audio/sfx/sfx_dice_roll.mp3',
@@ -399,6 +439,9 @@ export function getIslandRunAudioDiagnostics(): IslandRunAudioDiagnostics {
     lastSoundPlaybackStatus: lastIslandRunSoundPlaybackStatus,
     playAttemptCount: islandRunSfxPlayAttemptCount,
     playFailureCount: islandRunSfxPlayFailureCount,
+    placeholderEventCount: getPlaceholderSoundEvents().length,
+    lastSoundWasPlaceholder: lastIslandRunSoundAssetPath !== null
+      && isPlaceholderSoundAsset(lastIslandRunSoundAssetPath),
   };
 }
 

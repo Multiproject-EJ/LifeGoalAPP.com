@@ -1,6 +1,29 @@
 /**
  * Audio utilities for procedurally generated game sounds
  * Uses Web Audio API to create lightweight sound effects
+ *
+ * ⚠️ PLACEHOLDER SOUNDS — EVERY SOUND IN THIS FILE IS A PLACEHOLDER.
+ *
+ * These are raw oscillator beeps (sine/square/sawtooth tones). They cost zero
+ * bytes and have zero latency, which is why they were used to get the app
+ * moving — but they sound cheap, and the button/tap sounds in particular are
+ * the first thing a player hears. They must be replaced with real recorded
+ * assets, not kept because they are convenient.
+ *
+ * Replacement assets and generation prompts:
+ *   docs/audio/02_SFX_ASSET_MANIFEST.md  (§1 UI & Navigation)
+ *
+ * Affected: playTone, playChime, playCoinJingle, playSweep, playClick,
+ * playCelebrationCascade, playFooterClickSound, playLauncherOpenSound,
+ * playLauncherCloseSound — used by MobileFooterNav, DailyHabitTracker,
+ * TaskTower, VisionQuest and App.
+ *
+ * NOTE: the music tracks under /assets/audio/music/ are NOT placeholders.
+ * Those are approved originals — do not regenerate or replace them.
+ *
+ * NOTE: bossRhythmAudio.ts is also procedural, but is NOT a placeholder — a
+ * rhythm game must stay locked to the audio clock, so synthesis is correct
+ * there and must be kept.
  */
 
 let soundEffectsEnabled = true;

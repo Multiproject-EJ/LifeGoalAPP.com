@@ -13,15 +13,23 @@ The complete audio plan for HabitGame — music, ambience, sound effects, voice.
 
 ## Where things stand today
 
-15 audio files (8 music, 7 SFX), ~11 MB. **174 sound-effect call sites across 9 files resolve to just 7 audio files** — 24 of the 31 typed sound events borrow a sound from a different event. Music is wired in exactly one component. Two files are 2-byte stubs, one of which is live in the board playlist.
+15 audio files (8 music, 7 SFX), ~11 MB. The engineering is in good shape — typed events, throttling, haptics pairing, diagnostics, tests. The content splits sharply:
 
-The engineering is in good shape (typed events, throttling, haptics pairing, diagnostics, tests). The content is what's missing.
+**🎵 Music — approved, keep it.** The five real tracks are Suno Pro originals. Everything the plan adds is *additional* music, never a replacement. **Do not regenerate them.** The only music problems are two 2-byte stub files (one live in the board playlist) and one orphan.
+
+**🔶 Sound effects — every one is a placeholder.** All 7 shipped SFX files and all 9 procedural oscillator sounds in `audioUtils.ts` are unacceptable stand-ins; the dice roll, tile land and button clicks are the worst. On top of that, **174 call sites across 9 files resolve to just those 7 files** — 24 of 31 typed events borrow another event's sound. Both problems need fixing: unsharing them alone would just give you 31 different bad sounds.
+
+Placeholder state is tracked in code via `PLACEHOLDER_SOUND_ASSET_PATHS` (`islandRunAudio.ts`) and a file banner in `audioUtils.ts`. **SFX content is done when that set is empty.**
+
+Exception: `bossRhythmAudio.ts` is procedural *by design* — a rhythm game must stay locked to the audio clock. Not a placeholder; keep it.
 
 ## First three PRs
 
 1. **Phase 0** — replace the two stub MP3s, resolve the orphaned `Egg_hatched.mp3`, add `npm run check:audio-assets` to CI.
 2. **Story soundtrack** — `StorySoundtrackConfig` is fully built, validated and tested but **no narrative defines one**. Four mood pads and zero new code.
-3. **SFX Tier 1** — generate the ★ list, update `SOUND_ASSET_MAP`, delete the "until bespoke assets exist" comments.
+3. **SFX Tier 1** — generate the ★ list (116 sounds, including regenerating all 7 existing files and replacing the procedural UI beeps), update `SOUND_ASSET_MAP`, empty `PLACEHOLDER_SOUND_ASSET_PATHS`, delete the "until bespoke assets exist" comments.
+
+   Order by how often it's heard: **UI taps → dice roll → tile land / token hop → coins and reward bar → the rest.** The first three are ~40% of all sound a player experiences.
 
 ## Quick answers
 
