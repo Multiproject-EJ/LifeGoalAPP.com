@@ -21,6 +21,15 @@ import {
   resolveCompanionFeastResultTier,
   rollCompanionFeastDropTier,
   stepCompanionFeastPhysics,
+  advanceCompanionFeastFever,
+  COMPANION_FEAST_CHAIN_MULTIPLIERS,
+  COMPANION_FEAST_FEVER_CHARGE_TARGET,
+  COMPANION_FEAST_FEVER_DURATION_MS,
+  COMPANION_FEAST_FEVER_IDLE,
+  COMPANION_FEAST_GOLDEN_DROP_PERCENT,
+  resolveCompanionFeastChainMultiplier,
+  resolveCompanionFeastMergeAward,
+  rollCompanionFeastGoldenDrop,
   type CompanionFeastBody,
 } from '../companionFeastGame';
 import { assert, assertEqual, type TestCase } from './testHarness';
@@ -29,19 +38,22 @@ function settleBodies(bodies: CompanionFeastBody[], steps: number): {
   bodies: CompanionFeastBody[];
   totalMergeScore: number;
   mergeCount: number;
+  goldenConsumed: number;
 } {
   let current = bodies;
   let totalMergeScore = 0;
   let mergeCount = 0;
+  let goldenConsumed = 0;
   for (let i = 0; i < steps; i += 1) {
     const step = stepCompanionFeastPhysics(current, COMPANION_FEAST_DEFAULT_PHYSICS, 16);
     current = step.bodies;
     for (const merge of step.merges) {
       totalMergeScore += merge.score;
+      goldenConsumed += merge.goldenCount;
       mergeCount += 1;
     }
   }
-  return { bodies: current, totalMergeScore, mergeCount };
+  return { bodies: current, totalMergeScore, mergeCount, goldenConsumed };
 }
 
 export const companionFeastGameTests: TestCase[] = [
@@ -205,9 +217,10 @@ export const companionFeastGameTests: TestCase[] = [
     name: 'result tiers map score bands to escalating dice rewards',
     run: () => {
       assertEqual(resolveCompanionFeastResultTier(0).id, 'nibble', 'zero score is a Nibble');
-      assertEqual(resolveCompanionFeastResultTier(150).id, 'snack', 'mid score is a Hearty Snack');
-      assertEqual(resolveCompanionFeastResultTier(400).id, 'banquet', 'high score is a Banquet');
-      assertEqual(resolveCompanionFeastResultTier(1000).id, 'grand_feast', 'top score is a Grand Feast');
+      assertEqual(resolveCompanionFeastResultTier(220).id, 'snack', 'mid score is a Hearty Snack');
+      assertEqual(resolveCompanionFeastResultTier(600).id, 'banquet', 'high score is a Banquet');
+      assertEqual(resolveCompanionFeastResultTier(1200).id, 'grand_feast', 'top score is a Grand Feast');
+      assertEqual(resolveCompanionFeastResultTier(2500).id, 'legendary_feast', 'exceptional score is a Legendary Feast');
       assertEqual(resolveCompanionFeastResultTier(Number.NaN).id, 'nibble', 'invalid score falls back safely');
       assert(
         resolveCompanionFeastResultTier(1000).rewardDice > resolveCompanionFeastResultTier(0).rewardDice,
@@ -233,6 +246,175 @@ export const companionFeastGameTests: TestCase[] = [
         false,
         'invalid ticket counts should be blocked',
       );
+    },
+  },
+  {
+    name: 'an unchained, feverless, non-golden merge scores exactly the base value',
+    run: () => {
+      // This is the compatibility invariant: all uplift must come from
+      // skilled/lucky play, never from the baseline merge.
+      for (let tier = 0; tier <= COMPANION_FEAST_MAX_TIER; tier += 1) {
+        const award = resolveCompanionFeastMergeAward({
+          fromTier: tier,
+          chainCount: 1,
+          feverActive: false,
+          goldenCount: 0,
+          toTier: tier + 1,
+        });
+        assertEqual(
+          award.score,
+          resolveCompanionFeastMergeScore(tier),
+          `tier ${tier} baseline merge score is unchanged`,
+        );
+        assertEqual(award.multiplier, 1, `tier ${tier} baseline merge has no multiplier`);
+      }
+    },
+  },
+  {
+    name: 'chain multipliers escalate and clamp at the top of the ladder',
+    run: () => {
+      assertEqual(resolveCompanionFeastChainMultiplier(1), 1, 'a lone merge is unmultiplied');
+      assertEqual(resolveCompanionFeastChainMultiplier(0), 1, 'chain counts below 1 clamp up');
+      for (let i = 1; i < COMPANION_FEAST_CHAIN_MULTIPLIERS.length; i += 1) {
+        assert(
+          COMPANION_FEAST_CHAIN_MULTIPLIERS[i] > COMPANION_FEAST_CHAIN_MULTIPLIERS[i - 1],
+          'chain multipliers strictly increase',
+        );
+      }
+      const top = COMPANION_FEAST_CHAIN_MULTIPLIERS[COMPANION_FEAST_CHAIN_MULTIPLIERS.length - 1];
+      assertEqual(resolveCompanionFeastChainMultiplier(99), top, 'long chains clamp to the top multiplier');
+    },
+  },
+  {
+    name: 'chain and fever multiply together, and golden pays a bounded flat bonus',
+    run: () => {
+      const base = resolveCompanionFeastMergeScore(3);
+      const chained = resolveCompanionFeastMergeAward({
+        fromTier: 3, chainCount: 3, feverActive: false, goldenCount: 0, toTier: 4,
+      });
+      assertEqual(chained.score, Math.round(base * 1.5), 'a 3-chain applies the 1.5x rung');
+
+      const fevered = resolveCompanionFeastMergeAward({
+        fromTier: 3, chainCount: 3, feverActive: true, goldenCount: 0, toTier: 4,
+      });
+      assertEqual(fevered.score, Math.round(base * 3), 'fever doubles the chained score');
+
+      const golden = resolveCompanionFeastMergeAward({
+        fromTier: 3, chainCount: 1, feverActive: false, goldenCount: 2, toTier: 4,
+      });
+      assertEqual(golden.score, base * 3, 'two golden fruit add two flat base bonuses');
+      assert(golden.multiplier === 1, 'golden does not inflate the multiplier');
+
+      // Ceiling check: the very best case stays bounded and auditable.
+      const ceiling = resolveCompanionFeastMergeAward({
+        fromTier: 3, chainCount: 99, feverActive: true, goldenCount: 2, toTier: 4,
+      });
+      assertEqual(ceiling.score, Math.round(base * 6) + base * 2, 'best case is chain(3) x fever(2) plus golden');
+    },
+  },
+  {
+    name: 'fever charges from merges, decays while idle, and fires for a fixed window',
+    run: () => {
+      // Idle time bleeds charge back down.
+      const charged = advanceCompanionFeastFever({
+        state: COMPANION_FEAST_FEVER_IDLE, dtMs: 16, chargeAdded: 40,
+      });
+      assert(charged.state.charge > 0, 'merges add charge');
+      assert(!charged.justActivated, 'a partial charge does not fire fever');
+
+      // ~40 charge at 4/sec needs >10s of idle time to fully bleed off.
+      let decaying = charged.state;
+      for (let i = 0; i < 400; i += 1) {
+        decaying = advanceCompanionFeastFever({ state: decaying, dtMs: 32 }).state;
+      }
+      assertEqual(decaying.charge, 0, 'idle charge decays to zero and clamps');
+
+      // Crossing the target fires fever and consumes the meter.
+      const fired = advanceCompanionFeastFever({
+        state: COMPANION_FEAST_FEVER_IDLE,
+        dtMs: 16,
+        chargeAdded: COMPANION_FEAST_FEVER_CHARGE_TARGET,
+      });
+      assert(fired.justActivated, 'reaching the target activates fever');
+      assertEqual(fired.state.activeMsRemaining, COMPANION_FEAST_FEVER_DURATION_MS, 'fever runs its full window');
+      assertEqual(fired.state.charge, 0, 'activating consumes the meter');
+    },
+  },
+  {
+    name: 'fever counts down without decaying, and reports the frame it ends',
+    run: () => {
+      let state = advanceCompanionFeastFever({
+        state: COMPANION_FEAST_FEVER_IDLE,
+        dtMs: 16,
+        chargeAdded: COMPANION_FEAST_FEVER_CHARGE_TARGET,
+      }).state;
+
+      // Charge added mid-fever must not be banked (fever is already maxed).
+      const mid = advanceCompanionFeastFever({ state, dtMs: 16, chargeAdded: 50 });
+      assertEqual(mid.state.charge, 0, 'charge does not accumulate during fever');
+      assert(!mid.justEnded, 'fever is still running');
+
+      let guard = 0;
+      let ended = false;
+      state = mid.state;
+      while (guard < 2000 && !ended) {
+        const step = advanceCompanionFeastFever({ state, dtMs: 32 });
+        state = step.state;
+        ended = step.justEnded;
+        guard += 1;
+      }
+      assert(ended, 'fever eventually ends');
+      assertEqual(state.activeMsRemaining, 0, 'fever settles at zero');
+    },
+  },
+  {
+    name: 'golden drops are seeded, chainable, and roughly match their advertised rate',
+    run: () => {
+      const [first, firstNext] = rollCompanionFeastGoldenDrop(4242);
+      const [second, secondNext] = rollCompanionFeastGoldenDrop(4242);
+      assertEqual(first, second, 'same seed yields the same golden roll');
+      assertEqual(firstNext, secondNext, 'same seed yields the same next state');
+
+      let state = 987654;
+      let goldenCount = 0;
+      const samples = 4000;
+      for (let i = 0; i < samples; i += 1) {
+        const [golden, next] = rollCompanionFeastGoldenDrop(state);
+        state = next;
+        if (golden) goldenCount += 1;
+      }
+      const percent = (goldenCount / samples) * 100;
+      assert(
+        Math.abs(percent - COMPANION_FEAST_GOLDEN_DROP_PERCENT) < 3,
+        `golden rate ${percent.toFixed(1)}% should sit near ${COMPANION_FEAST_GOLDEN_DROP_PERCENT}%`,
+      );
+    },
+  },
+  {
+    name: 'merge events report how many golden fruit were consumed',
+    run: () => {
+      const floorY = COMPANION_FEAST_BOWL_HEIGHT - 20;
+      const result = settleBodies([
+        createCompanionFeastBody({ tier: 1, x: 172, y: floorY, golden: true }),
+        createCompanionFeastBody({ tier: 1, x: 188, y: floorY, golden: false }),
+      ], 40);
+      assertEqual(result.mergeCount, 1, 'the pair merges');
+      assertEqual(result.goldenConsumed, 1, 'exactly one golden fruit is reported');
+    },
+  },
+  {
+    name: 'a merged dish is never golden, so blessings cannot compound up the ladder',
+    run: () => {
+      const floorY = COMPANION_FEAST_BOWL_HEIGHT - 20;
+      let bodies: CompanionFeastBody[] = [
+        createCompanionFeastBody({ tier: 1, x: 172, y: floorY, golden: true }),
+        createCompanionFeastBody({ tier: 1, x: 188, y: floorY, golden: true }),
+      ];
+      for (let i = 0; i < 40; i += 1) {
+        bodies = stepCompanionFeastPhysics(bodies, COMPANION_FEAST_DEFAULT_PHYSICS, 16).bodies;
+      }
+      assertEqual(bodies.length, 1, 'the golden pair merged into one dish');
+      assertEqual(bodies[0].golden, false, 'the produced dish is ordinary');
     },
   },
 ];

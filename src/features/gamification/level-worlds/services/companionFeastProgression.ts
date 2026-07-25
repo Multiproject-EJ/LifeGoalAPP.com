@@ -200,7 +200,12 @@ export const COMPANION_FEAST_REWARD_BAR_MILESTONES: readonly CompanionFeastRewar
 export const COMPANION_FEAST_REWARD_BAR_TOTAL_POINTS =
   COMPANION_FEAST_REWARD_BAR_MILESTONES[COMPANION_FEAST_REWARD_BAR_MILESTONES.length - 1]?.pointsRequired ?? 0;
 
-export const COMPANION_FEAST_SCORE_PER_FEAST_POINT = 250;
+/**
+ * Cumulative score that banks one feast point. Scaled by
+ * `COMPANION_FEAST_MOMENTUM_SCORE_CALIBRATION` (250 → 375) so merge chains
+ * and Feast Fever do not silently accelerate the reward bar.
+ */
+export const COMPANION_FEAST_SCORE_PER_FEAST_POINT = 375;
 
 export function getCompanionFeastMilestone(milestoneId: string): CompanionFeastRewardBarMilestone | null {
   return COMPANION_FEAST_REWARD_BAR_MILESTONES.find((milestone) => milestone.id === milestoneId) ?? null;

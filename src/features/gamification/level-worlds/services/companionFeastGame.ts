@@ -99,6 +99,15 @@ export interface CompanionFeastBody {
   radius: number;
   /** Remaining spawn-grace window (danger-line exemption). */
   spawnGraceMsRemaining: number;
+  /**
+   * Blessed fruit. Rolled at drop time (see `rollCompanionFeastGoldenDrop`);
+   * merging one pays a bonus and floods the Feast Fever meter. Golden-ness is
+   * consumed by the merge — the produced dish is always ordinary — so the
+   * bonus can never compound up the ladder.
+   */
+  golden: boolean;
+  /** Timestamp-free age counter used by the renderer for spawn/merge pops. */
+  ageMs: number;
 }
 
 export interface CompanionFeastMergeEvent {
@@ -106,8 +115,10 @@ export interface CompanionFeastMergeEvent {
   fromTier: number;
   /** Resulting tier, or null when two max-tier dishes vanish in celebration. */
   toTier: number | null;
-  /** Score granted by this merge. */
+  /** Base score for this merge, before chain/fever/golden modifiers. */
   score: number;
+  /** How many of the two merged pieces were golden (0, 1 or 2). */
+  goldenCount: number;
   x: number;
   y: number;
 }
@@ -138,6 +149,7 @@ export function createCompanionFeastBody(options: {
   vx?: number;
   vy?: number;
   spawnGraceMsRemaining?: number;
+  golden?: boolean;
 }): CompanionFeastBody {
   const tierInfo = getCompanionFeastFoodTier(options.tier);
   return {
@@ -149,6 +161,8 @@ export function createCompanionFeastBody(options: {
     vy: options.vy ?? 0,
     radius: tierInfo.radius,
     spawnGraceMsRemaining: options.spawnGraceMsRemaining ?? COMPANION_FEAST_SPAWN_GRACE_MS,
+    golden: options.golden ?? false,
+    ageMs: 0,
   };
 }
 
@@ -182,6 +196,7 @@ export function stepCompanionFeastPhysics(
     x: b.x + b.vx * dt,
     y: b.y + (b.vy + config.gravity * dt) * dt,
     spawnGraceMsRemaining: Math.max(0, b.spawnGraceMsRemaining - dtMs),
+    ageMs: (b.ageMs ?? 0) + dtMs,
   }));
 
   // Wall + floor constraints.
@@ -230,6 +245,7 @@ export function stepCompanionFeastPhysics(
             fromTier: a.tier,
             toTier: nextTier > COMPANION_FEAST_MAX_TIER ? null : nextTier,
             score,
+            goldenCount: (a.golden ? 1 : 0) + (b.golden ? 1 : 0),
             x: midX,
             y: midY,
           });
@@ -365,11 +381,175 @@ export function rollCompanionFeastDropTier(state: number): [tier: number, nextSt
   return [Math.min(tier, COMPANION_FEAST_MAX_DROPPABLE_TIER), s | 0];
 }
 
+/**
+ * Chance (in percent) that a dropped fruit is blessed/golden. Deliberately
+ * low and unannounced: this is the variable-ratio surprise in the loop.
+ */
+export const COMPANION_FEAST_GOLDEN_DROP_PERCENT = 7;
+
+/** Seeded golden roll, chained like `rollCompanionFeastDropTier`. */
+export function rollCompanionFeastGoldenDrop(state: number): [golden: boolean, nextState: number] {
+  let s = Math.floor(state) || 1;
+  s ^= s << 13;
+  s ^= s >>> 17;
+  s ^= s << 5;
+  return [(s >>> 0) % 100 < COMPANION_FEAST_GOLDEN_DROP_PERCENT, s | 0];
+}
+
+// ---------------------------------------------------------------------------
+// Merge chains + Feast Fever
+// ---------------------------------------------------------------------------
+
+/**
+ * Merges landing within this window of each other extend the chain. Tuned so
+ * a cascade down a stacked bowl chains naturally, but two unrelated merges a
+ * couple of drops apart do not.
+ */
+export const COMPANION_FEAST_CHAIN_WINDOW_MS = 1500;
+
+/** Chain multipliers by chain length (index 0 == chain of 1, i.e. no chain). */
+export const COMPANION_FEAST_CHAIN_MULTIPLIERS: readonly number[] = Object.freeze([
+  1, 1.25, 1.5, 2, 2.5, 3,
+]);
+
+/** Multiplier for a chain of `chainCount` merges. Clamped to the ladder top. */
+export function resolveCompanionFeastChainMultiplier(chainCount: number): number {
+  const safe = Number.isFinite(chainCount) ? Math.max(1, Math.floor(chainCount)) : 1;
+  const index = Math.min(COMPANION_FEAST_CHAIN_MULTIPLIERS.length - 1, safe - 1);
+  return COMPANION_FEAST_CHAIN_MULTIPLIERS[index];
+}
+
+/** Charge needed to trigger Feast Fever. */
+export const COMPANION_FEAST_FEVER_CHARGE_TARGET = 100;
+/** How long Feast Fever lasts once triggered. */
+export const COMPANION_FEAST_FEVER_DURATION_MS = 7000;
+/** Score multiplier applied to every merge during Feast Fever. */
+export const COMPANION_FEAST_FEVER_SCORE_MULTIPLIER = 2;
+/** Charge bled off per second while no merges are landing. */
+export const COMPANION_FEAST_FEVER_DECAY_PER_SECOND = 4;
+/** Extra charge granted per golden fruit consumed in a merge. */
+export const COMPANION_FEAST_FEVER_GOLDEN_CHARGE = 30;
+
+/** Charge earned by a merge that produces `toTier` (bigger dish, bigger fill). */
+export function resolveCompanionFeastFeverCharge(toTier: number | null): number {
+  const tier = toTier === null ? COMPANION_FEAST_MAX_TIER : Math.max(0, Math.floor(toTier));
+  return 5 + tier * 2;
+}
+
+export interface CompanionFeastFeverState {
+  /** 0..COMPANION_FEAST_FEVER_CHARGE_TARGET. */
+  charge: number;
+  /** Milliseconds of Fever remaining; > 0 means Fever is active. */
+  activeMsRemaining: number;
+}
+
+export const COMPANION_FEAST_FEVER_IDLE: CompanionFeastFeverState = Object.freeze({
+  charge: 0,
+  activeMsRemaining: 0,
+});
+
+export interface CompanionFeastFeverStepResult {
+  state: CompanionFeastFeverState;
+  /** True on the frame Fever switches on. */
+  justActivated: boolean;
+  /** True on the frame Fever switches off. */
+  justEnded: boolean;
+}
+
+/**
+ * Advance the Feast Fever meter by one frame.
+ *
+ * While Fever is active the meter neither charges nor decays — it is simply
+ * counting down, so banked charge is never wasted mid-Fever. Outside Fever,
+ * `chargeAdded` accumulates and idle time bleeds the meter back down, which
+ * is what creates the "keep the tempo up" pull.
+ *
+ * Pure: returns a new state object.
+ */
+export function advanceCompanionFeastFever(options: {
+  state: CompanionFeastFeverState;
+  dtMs: number;
+  chargeAdded?: number;
+}): CompanionFeastFeverStepResult {
+  const dtMs = Math.max(0, Math.min(64, options.dtMs));
+  const previous = options.state;
+
+  if (previous.activeMsRemaining > 0) {
+    const activeMsRemaining = Math.max(0, previous.activeMsRemaining - dtMs);
+    return {
+      state: { charge: 0, activeMsRemaining },
+      justActivated: false,
+      justEnded: activeMsRemaining === 0,
+    };
+  }
+
+  // Decay applies to already-banked charge only. Bleeding the incoming grant
+  // too would mean a merge worth exactly the target could never fire.
+  const decay = (COMPANION_FEAST_FEVER_DECAY_PER_SECOND * dtMs) / 1000;
+  const added = Math.max(0, options.chargeAdded ?? 0);
+  const charge = Math.max(0, previous.charge - decay) + added;
+
+  if (charge >= COMPANION_FEAST_FEVER_CHARGE_TARGET) {
+    return {
+      state: { charge: 0, activeMsRemaining: COMPANION_FEAST_FEVER_DURATION_MS },
+      justActivated: true,
+      justEnded: false,
+    };
+  }
+
+  return {
+    state: { charge, activeMsRemaining: 0 },
+    justActivated: false,
+    justEnded: false,
+  };
+}
+
+export interface CompanionFeastMergeAward {
+  /** Final score after chain, Fever and golden modifiers. */
+  score: number;
+  /** Fever charge this merge contributes. */
+  feverCharge: number;
+  /** Multiplier actually applied, for the renderer's callout. */
+  multiplier: number;
+}
+
+/**
+ * Resolve what a single merge is worth.
+ *
+ * Invariant: an unchained merge outside Fever with no golden fruit scores
+ * exactly `resolveCompanionFeastMergeScore(fromTier)`, so the baseline
+ * economy is unchanged and all uplift comes from skilled/lucky play.
+ */
+export function resolveCompanionFeastMergeAward(options: {
+  fromTier: number;
+  chainCount: number;
+  feverActive: boolean;
+  goldenCount: number;
+  toTier: number | null;
+}): CompanionFeastMergeAward {
+  const base = resolveCompanionFeastMergeScore(options.fromTier);
+  const chain = resolveCompanionFeastChainMultiplier(options.chainCount);
+  const fever = options.feverActive ? COMPANION_FEAST_FEVER_SCORE_MULTIPLIER : 1;
+  const goldenCount = Math.max(0, Math.min(2, Math.floor(options.goldenCount)));
+  const multiplier = chain * fever;
+
+  // Golden pays a flat additive bonus rather than another multiplier, so the
+  // ceiling stays bounded at chain(3) x fever(2) = 6x plus a fixed top-up.
+  const goldenBonus = goldenCount * base;
+
+  return {
+    score: Math.round(base * multiplier) + goldenBonus,
+    feverCharge: resolveCompanionFeastFeverCharge(options.toTier)
+      + goldenCount * COMPANION_FEAST_FEVER_GOLDEN_CHARGE,
+    multiplier,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Result tiers + rewards (existing currencies only — no new currency)
 // ---------------------------------------------------------------------------
 
-export type CompanionFeastResultTierId = 'nibble' | 'snack' | 'banquet' | 'grand_feast';
+export type CompanionFeastResultTierId = 'nibble' | 'snack' | 'banquet' | 'grand_feast' | 'legendary_feast';
 
 export interface CompanionFeastResultTier {
   id: CompanionFeastResultTierId;
@@ -380,11 +560,26 @@ export interface CompanionFeastResultTier {
   rewardDice: number;
 }
 
+/**
+ * Calibration factor compensating for the score uplift introduced by merge
+ * chains, Feast Fever and golden fruit.
+ *
+ * A single unchained merge still scores exactly what it always did, but a
+ * played-well run now earns roughly half again as much. Result-tier
+ * thresholds and `COMPANION_FEAST_SCORE_PER_FEAST_POINT` are both scaled by
+ * this so dice payout and reward-bar pacing stay near their pre-momentum
+ * values instead of silently inflating. Re-tune this one constant if the
+ * multipliers above change.
+ */
+export const COMPANION_FEAST_MOMENTUM_SCORE_CALIBRATION = 1.5;
+
 export const COMPANION_FEAST_RESULT_TIERS: readonly CompanionFeastResultTier[] = Object.freeze([
   { id: 'nibble', label: 'Nibble', emoji: '🍽️', minScore: 0, rewardDice: 1 },
-  { id: 'snack', label: 'Hearty Snack', emoji: '🥣', minScore: 120, rewardDice: 2 },
-  { id: 'banquet', label: 'Banquet', emoji: '🍲', minScore: 320, rewardDice: 3 },
-  { id: 'grand_feast', label: 'Grand Feast', emoji: '✨', minScore: 700, rewardDice: 5 },
+  { id: 'snack', label: 'Hearty Snack', emoji: '🥣', minScore: 180, rewardDice: 2 },
+  { id: 'banquet', label: 'Banquet', emoji: '🍲', minScore: 480, rewardDice: 3 },
+  { id: 'grand_feast', label: 'Grand Feast', emoji: '✨', minScore: 1050, rewardDice: 5 },
+  // Culminating prize: reachable only with sustained chains or a Fever run.
+  { id: 'legendary_feast', label: 'Legendary Feast', emoji: '👑', minScore: 1900, rewardDice: 8 },
 ]);
 
 export function resolveCompanionFeastResultTier(score: number): CompanionFeastResultTier {
