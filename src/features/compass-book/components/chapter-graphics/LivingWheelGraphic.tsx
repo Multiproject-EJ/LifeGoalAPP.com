@@ -76,7 +76,14 @@ export function LivingWheelGraphic({ output, mode }: LivingWheelGraphicProps) {
 
   return (
     <div className={`compass-wheel compass-wheel--${mode}`}>
-      <svg viewBox="0 0 220 220" role="img" aria-label="Living Wheel" className="compass-wheel__svg">
+      {/* The viewBox is wider than the wheel so the side labels ("Connections")
+          have room to sit outside the rim instead of clipping at the edge. */}
+      <svg
+        viewBox="-46 -2 312 224"
+        role="img"
+        aria-label="Living Wheel"
+        className="compass-wheel__svg"
+      >
         <circle cx={cx} cy={cy} r={rOut + 2} className="compass-wheel__rim" />
         {output.areas.map((area, i) => {
           const a0 = i * step + gap / 2;

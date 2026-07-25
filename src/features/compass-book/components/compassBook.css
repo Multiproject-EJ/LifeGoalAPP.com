@@ -1480,3 +1480,315 @@
   gap: 6px;
   margin: 4px 0 6px;
 }
+
+/* ============================================================
+   The spread: one page + the fore-edge tab rail
+   ============================================================
+   The book is seven pages (the Reading + chapters I–VI) reachable in any order.
+   The rail is always mounted so turning pages never feels like navigating a
+   menu. Mobile keeps a single page — a true two-page spread does not survive a
+   390px viewport — so the rail sits on the fore edge and the page fills the rest. */
+
+.compass-book__spread {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.compass-book__page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.compass-book__tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 0 calc(env(safe-area-inset-bottom, 0px) + 14px) 0;
+  border-left: 1px solid var(--cbk-line);
+  background: linear-gradient(180deg, rgba(7, 11, 26, 0.4), rgba(7, 11, 26, 0.72));
+}
+
+.compass-book__tab {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  min-height: 46px;
+  padding: 0;
+  cursor: pointer;
+  color: var(--cbk-ink-soft);
+  font-family: var(--cbk-serif);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--cbk-line-strong);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  background: var(--cbk-card);
+  transition: transform 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+/* Chapter tab colours follow the fore-edge in the concept art. */
+.compass-book__tab--ch1 { background: rgba(214, 178, 112, 0.2); border-color: rgba(214, 178, 112, 0.42); }
+.compass-book__tab--ch2 { background: rgba(139, 92, 246, 0.2); border-color: rgba(139, 92, 246, 0.42); }
+.compass-book__tab--ch3 { background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.42); }
+.compass-book__tab--ch4 { background: rgba(20, 184, 166, 0.2); border-color: rgba(20, 184, 166, 0.42); }
+.compass-book__tab--ch5 { background: rgba(159, 78, 62, 0.24); border-color: rgba(159, 78, 62, 0.46); }
+.compass-book__tab--ch6 { background: rgba(79, 110, 214, 0.22); border-color: rgba(79, 110, 214, 0.44); }
+
+.compass-book__tab--reading {
+  min-height: 52px;
+  margin-bottom: 6px;
+  color: var(--cbk-gold);
+  font-size: 1rem;
+  border-color: var(--cbk-gold-soft);
+  background: linear-gradient(180deg, rgba(242, 193, 78, 0.26), rgba(242, 193, 78, 0.1));
+}
+
+/* Not sailed to yet: dimmed, but never disabled — looking is always allowed. */
+.compass-book__tab--ahead {
+  opacity: 0.42;
+}
+
+.compass-book__tab--active {
+  color: #fff;
+  transform: translateX(-3px);
+  box-shadow: -2px 0 0 0 var(--cbk-gold), 0 4px 14px rgba(0, 0, 0, 0.35);
+  opacity: 1;
+}
+
+.compass-book__tab:active {
+  transform: translateX(-1px) scale(0.97);
+}
+
+.compass-book__tab-seal {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  font-size: 0.5rem;
+  color: var(--cbk-gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compass-book__tab {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   The Reading — the standing page
+   ============================================================ */
+
+.compass-reading__hero {
+  padding: 22px 4px 16px;
+  text-align: center;
+}
+
+.compass-reading__rose {
+  display: block;
+  font-size: 1.5rem;
+  color: var(--cbk-gold);
+  text-shadow: 0 0 18px rgba(242, 193, 78, 0.55);
+}
+
+.compass-reading__title {
+  margin: 6px 0 0;
+  font-family: var(--cbk-serif);
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff;
+}
+
+.compass-reading__subtitle {
+  margin: 6px 0 0;
+  font-size: 0.86rem;
+  color: var(--cbk-ink-muted);
+}
+
+.compass-reading__meters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.compass-reading__meter {
+  display: grid;
+  gap: 2px;
+  padding: 11px 8px;
+  text-align: center;
+  border: 1px solid var(--cbk-line);
+  border-radius: 13px;
+  background: var(--cbk-card);
+}
+
+.compass-reading__meter-value {
+  font-family: var(--cbk-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--cbk-gold);
+}
+
+.compass-reading__meter-label {
+  font-size: 0.66rem;
+  line-height: 1.3;
+  color: var(--cbk-ink-muted);
+}
+
+.compass-reading__bar {
+  margin: 12px 0 4px;
+}
+
+.compass-reading__empty {
+  font-style: italic;
+}
+
+.compass-reading__rows {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compass-reading__row {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 13px 12px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  border: 1px solid var(--cbk-line);
+  border-radius: 15px;
+  background: var(--cbk-card);
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.compass-reading__row:active {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.compass-reading__row--sealed { border-color: rgba(52, 211, 153, 0.34); }
+.compass-reading__row--charting { border-color: var(--cbk-gold-faint); }
+.compass-reading__row--ahead { opacity: 0.62; }
+
+.compass-reading__row-numeral {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  font-family: var(--cbk-serif);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--cbk-gold);
+  border: 1px solid var(--cbk-gold-faint);
+  border-radius: 50%;
+  background: rgba(242, 193, 78, 0.08);
+}
+
+.compass-reading__row-body {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.compass-reading__row-label {
+  font-size: 0.63rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--cbk-ink-faint);
+}
+
+.compass-reading__row-headline {
+  font-family: var(--cbk-serif);
+  font-size: 0.98rem;
+  line-height: 1.35;
+  color: #fff;
+}
+
+.compass-reading__row-promise {
+  font-size: 0.82rem;
+  line-height: 1.35;
+  font-style: italic;
+  color: var(--cbk-ink-muted);
+}
+
+.compass-reading__row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 1px;
+}
+
+/* Reading-row status badges (distinct from the storage-level chapter status). */
+.compass-book__badge--ahead {
+  background: rgba(148, 163, 184, 0.14);
+  border-color: rgba(148, 163, 184, 0.25);
+  color: #cbd5e1;
+}
+.compass-book__badge--blank {
+  background: rgba(129, 140, 248, 0.16);
+  border-color: rgba(129, 140, 248, 0.4);
+  color: #c7d2fe;
+}
+.compass-book__badge--charting {
+  background: rgba(242, 193, 78, 0.14);
+  border-color: rgba(242, 193, 78, 0.42);
+  color: #ffe9b8;
+}
+.compass-book__badge--sealed {
+  background: rgba(52, 211, 153, 0.16);
+  border-color: rgba(52, 211, 153, 0.42);
+  color: #bbf7d0;
+}
+
+/* ============================================================
+   Chapter not reached yet
+   ============================================================ */
+
+.compass-book__chapter-numeral {
+  font-family: var(--cbk-serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--cbk-gold);
+}
+
+/* The plate waiting to be filled: visible, legible, clearly not yours yet. */
+.compass-book__graphic--ahead {
+  opacity: 0.4;
+  filter: saturate(0.5);
+  pointer-events: none;
+}
+
+.compass-book__ahead {
+  margin: 14px 0 4px;
+  padding: 15px;
+  text-align: center;
+  border: 1px dashed var(--cbk-gold-faint);
+  border-radius: 16px;
+  background: rgba(242, 193, 78, 0.05);
+}
+
+.compass-book__ahead-title {
+  margin: 0;
+  font-family: var(--cbk-serif);
+  font-size: 1.05rem;
+  color: var(--cbk-gold);
+}
+
+.compass-book__ahead-note {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--cbk-ink-muted);
+}

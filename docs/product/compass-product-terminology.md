@@ -10,6 +10,21 @@ Compass Book is the six-chapter field guide for durable self-understanding and l
 
 The mobile footer's former Shield slot now opens Compass Book. This makes the Book a first-class navigation destination while the Wellbeing Shield lives where its evidence is useful: Today, SuperHabits, Body & Health, Campaigns, and the Life Wheel.
 
+### The Reading
+
+**The Reading** is the Compass Book's seventh page — its standing page, and the page the book opens to. It is one compass reading of the player drawn from all six chapters at once: the statement each chapter produced, in the player's own words, plus a row for every chapter they have not reached yet showing what that chapter will eventually tell them.
+
+The Reading owns no storage. Every row is derived from the chapter states, so it can never disagree with a sealed chapter. Do not call it a dashboard in user-facing copy, and do not let it accumulate its own fields — anything durable belongs to a chapter.
+
+### Turning pages vs. writing in them
+
+The book is seven pages — the Reading plus chapters I–VI — reachable in any order from a persistent fore-edge tab rail. These two are deliberately separate rules:
+
+- **Turning to a page is always allowed.** A chapter the player has not sailed to yet is fully browsable: its core question, the output fields it will produce, its evolving graphic as an empty plate, and the island that opens it. Locked never means hidden — seeing the empty slot is what makes the player want to fill it.
+- **Writing in a page is island-gated.** Reaching Island N is what makes fragment N answerable, in the book or at the island's Wisdom stop. This is unchanged.
+
+There is no separate table-of-contents screen; the tab rail is the contents.
+
 ## Quest Pulse
 
 Quest Pulse is the existing live analytics experience formerly shown to users as Quest Compass. It synthesizes Life Wheel check-ins, goals, habits, current quest information, balance, momentum, trends, and attention signals.
