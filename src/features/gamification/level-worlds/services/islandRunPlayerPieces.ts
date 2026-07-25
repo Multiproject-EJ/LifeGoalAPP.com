@@ -40,6 +40,50 @@ export type PlayerPieceTier = 'starter' | 'earned' | 'premium';
 /** Entitlement discriminator used in `user_cosmetic_entitlements.cosmetic_type`. */
 export const PLAYER_PIECE_COSMETIC_TYPE = 'player_piece';
 
+/**
+ * The Journey Disc — the shared pedestal every relic stands on.
+ *
+ * This is a SECOND, independent axis from the relic itself: the relic is who
+ * you are, the disc is how far you have come. The same relic renders on a
+ * bronze, silver, or gold disc as the player's journey advances, so the disc
+ * is earned progression and is never purchased.
+ *
+ * Keeping one shared pedestal is also a rendering contract: the disc's contact
+ * face is the token anchor, so a single board calibration works for every
+ * relic and any relic added later.
+ */
+export type JourneyDiscTier = 'bronze' | 'silver' | 'gold';
+
+export const JOURNEY_DISC_TIERS: readonly JourneyDiscTier[] = ['bronze', 'silver', 'gold'];
+
+export const DEFAULT_JOURNEY_DISC_TIER: JourneyDiscTier = 'bronze';
+
+export interface JourneyDiscDefinition {
+  tier: JourneyDiscTier;
+  /** Player-facing tier name. */
+  name: string;
+  /** Level number shown in the picker (1-3). */
+  level: number;
+  /** One-line flavour. */
+  description: string;
+}
+
+export const JOURNEY_DISCS: readonly JourneyDiscDefinition[] = [
+  { tier: 'bronze', name: 'Bronze', level: 1, description: 'Humble beginnings. Worn by time and adventure.' },
+  { tier: 'silver', name: 'Silver', level: 2, description: 'Proven path. Stronger, brighter, more refined.' },
+  { tier: 'gold', name: 'Gold', level: 3, description: 'Legendary status. Majestic and unwavering.' },
+] as const;
+
+/** True when the value is a known disc tier. */
+export function isJourneyDiscTier(value: unknown): value is JourneyDiscTier {
+  return value === 'bronze' || value === 'silver' || value === 'gold';
+}
+
+/** Normalize any stored value into a safe, persistable disc tier. */
+export function normalizeJourneyDiscTier(tier: unknown): JourneyDiscTier {
+  return isJourneyDiscTier(tier) ? tier : DEFAULT_JOURNEY_DISC_TIER;
+}
+
 export type PlayerPieceId =
   | 'explorer_ship'
   | 'ancient_egg'
@@ -58,8 +102,8 @@ export interface PlayerPieceDefinition {
   name: string;
   /** One-line flavour shown under the name. */
   description: string;
-  /** Runtime art path; falls back to the CSS token when the asset is missing. */
-  artSrc: string;
+  /** Asset file stem; combined with the disc tier to build the art path. */
+  artSlug: string;
   /** Idle animation personality for this piece. */
   idleMotion: PlayerPieceIdleMotion;
   /** Accent colour used for glow/trail FX so each piece reads distinctly. */
@@ -79,7 +123,7 @@ export const PLAYER_PIECES: readonly PlayerPieceDefinition[] = [
     id: 'explorer_ship',
     name: 'Explorer Ship',
     description: 'Your flagship. The journey between the islands begins here.',
-    artSrc: `${ART_ROOT}/explorer-ship.webp`,
+    artSlug: 'explorer-ship',
     idleMotion: 'hover',
     accentColor: '#7dd8ff',
     tier: 'starter',
@@ -88,7 +132,7 @@ export const PLAYER_PIECES: readonly PlayerPieceDefinition[] = [
     id: 'ancient_egg',
     name: 'Ancient Egg',
     description: 'Potential waiting to wake. Tied to the hatchery and beginnings.',
-    artSrc: `${ART_ROOT}/ancient-egg.webp`,
+    artSlug: 'ancient-egg',
     idleMotion: 'pulse',
     accentColor: '#f6e3ae',
     tier: 'starter',
@@ -97,7 +141,7 @@ export const PLAYER_PIECES: readonly PlayerPieceDefinition[] = [
     id: 'living_compass',
     name: 'Living Compass',
     description: 'Turns gently toward what matters next.',
-    artSrc: `${ART_ROOT}/living-compass.webp`,
+    artSlug: 'living-compass',
     idleMotion: 'rotate',
     accentColor: '#e0b64f',
     tier: 'earned',
@@ -107,7 +151,7 @@ export const PLAYER_PIECES: readonly PlayerPieceDefinition[] = [
     id: 'keepers_lantern',
     name: "Keeper's Lantern",
     description: 'Warm light carried from Elow. Wisdom that travels with you.',
-    artSrc: `${ART_ROOT}/keepers-lantern.webp`,
+    artSlug: 'keepers-lantern',
     idleMotion: 'flicker',
     accentColor: '#ffb43a',
     tier: 'premium',
@@ -117,7 +161,7 @@ export const PLAYER_PIECES: readonly PlayerPieceDefinition[] = [
     id: 'quest_journal',
     name: 'The Quest Journal',
     description: 'Learning and reflection, bound in leather. Its pages stir.',
-    artSrc: `${ART_ROOT}/quest-journal.webp`,
+    artSlug: 'quest-journal',
     idleMotion: 'flutter',
     accentColor: '#b79ade',
     tier: 'earned',
@@ -127,7 +171,7 @@ export const PLAYER_PIECES: readonly PlayerPieceDefinition[] = [
     id: 'world_seed',
     name: 'World Seed',
     description: 'A carved seed with roots just beginning to reach.',
-    artSrc: `${ART_ROOT}/world-seed.webp`,
+    artSlug: 'world-seed',
     idleMotion: 'grow',
     accentColor: '#7db38f',
     tier: 'starter',
@@ -136,7 +180,7 @@ export const PLAYER_PIECES: readonly PlayerPieceDefinition[] = [
     id: 'ancient_key',
     name: 'Ancient Key',
     description: 'Ornate and patient. It opens what comes next.',
-    artSrc: `${ART_ROOT}/ancient-key.webp`,
+    artSlug: 'ancient-key',
     idleMotion: 'shimmer',
     accentColor: '#d9a94e',
     tier: 'earned',
@@ -146,7 +190,7 @@ export const PLAYER_PIECES: readonly PlayerPieceDefinition[] = [
     id: 'fallen_star',
     name: 'Fallen Star',
     description: 'A celestial fragment that leaves faint stardust as it moves.',
-    artSrc: `${ART_ROOT}/fallen-star.webp`,
+    artSlug: 'fallen-star',
     idleMotion: 'twinkle',
     accentColor: '#fff3b0',
     tier: 'premium',
@@ -156,7 +200,7 @@ export const PLAYER_PIECES: readonly PlayerPieceDefinition[] = [
     id: 'oris_shell',
     name: "Ori's Shell",
     description: 'A sacred pearlescent spiral from the first shore.',
-    artSrc: `${ART_ROOT}/oris-shell.webp`,
+    artSlug: 'oris-shell',
     idleMotion: 'sway',
     accentColor: '#8fd2da',
     tier: 'premium',
@@ -166,7 +210,7 @@ export const PLAYER_PIECES: readonly PlayerPieceDefinition[] = [
     id: 'guardian_idol',
     name: 'Guardian Idol',
     description: 'Carved island stone. Its rune eyes glow when it lands.',
-    artSrc: `${ART_ROOT}/guardian-idol.webp`,
+    artSlug: 'guardian-idol',
     idleMotion: 'settle',
     accentColor: '#a98fd4',
     tier: 'premium',
@@ -236,4 +280,20 @@ export function resolveOwnedPlayerPiece(
     return resolvePlayerPiece(normalized);
   }
   return resolvePlayerPiece(DEFAULT_PLAYER_PIECE_ID);
+}
+
+/**
+ * Runtime art path for a relic standing on a given Journey Disc tier.
+ * Assets are exported per relic x disc tier, e.g. `explorer-ship-gold.webp`.
+ */
+export function resolvePlayerPieceArtSrc(
+  piece: PlayerPieceDefinition,
+  discTier: JourneyDiscTier,
+): string {
+  return `${ART_ROOT}/${piece.artSlug}-${discTier}.webp`;
+}
+
+/** Art path for the bare Journey Disc, used for locked/undiscovered relics. */
+export function resolveJourneyDiscArtSrc(discTier: JourneyDiscTier): string {
+  return `${ART_ROOT}/journey-disc-${discTier}.webp`;
 }

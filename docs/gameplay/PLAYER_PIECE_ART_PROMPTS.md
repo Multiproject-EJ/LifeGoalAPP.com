@@ -12,23 +12,50 @@ same visual world as the islands, caretakers, and controller.
    target ~512x512 master, under ~60KB).
 4. File names must match `src/features/gamification/level-worlds/services/islandRunPlayerPieces.ts`.
 
-| Piece | File name |
-| --- | --- |
-| Explorer Ship | `explorer-ship.webp` |
-| Ancient Egg | `ancient-egg.webp` |
-| Living Compass | `living-compass.webp` |
-| Keeper's Lantern | `keepers-lantern.webp` |
-| The Quest Journal | `quest-journal.webp` |
-| World Seed | `world-seed.webp` |
-| Ancient Key | `ancient-key.webp` |
-| Fallen Star | `fallen-star.webp` |
-| Ori's Shell | `oris-shell.webp` |
-| Guardian Idol | `guardian-idol.webp` |
+Assets are exported per relic **x** Journey Disc tier, so each relic needs
+three files (bronze / silver / gold):
+
+`<relic-slug>-<tier>.webp` -> e.g. `explorer-ship-bronze.webp`, `explorer-ship-gold.webp`
+
+| Relic | Slug | Tier |
+| --- | --- | --- |
+| Explorer Ship | `explorer-ship` | starter |
+| Ancient Egg | `ancient-egg` | starter |
+| World Seed | `world-seed` | starter |
+| Living Compass | `living-compass` | earned |
+| The Quest Journal | `quest-journal` | earned |
+| Ancient Key | `ancient-key` | earned |
+| Keeper's Lantern | `keepers-lantern` | premium |
+| Fallen Star | `fallen-star` | premium |
+| Ori's Shell | `oris-shell` | premium |
+| Guardian Idol | `guardian-idol` | premium |
+
+Also export the bare pedestal for locked relics:
+`journey-disc-bronze.webp`, `journey-disc-silver.webp`, `journey-disc-gold.webp`
+
+That is 30 relic renders + 3 bare discs = **33 assets**.
+
+## The Journey Disc
+
+One shared pedestal, three levels. The disc is EARNED progression (never
+purchased) and is a separate axis from the relic itself: the relic is who you
+are, the disc is how far you have come.
+
+- Bronze (level 1) - humble beginnings, worn by time and adventure
+- Silver (level 2) - proven path, stronger, brighter, more refined
+- Gold (level 3) - legendary status, majestic and unwavering
+
+Disc geometry is a hard contract: identical diameter, height, and camera across
+all 33 assets. The disc's contact face is the board anchor point, so one
+calibration serves every relic - including any added later.
 
 ## Shared scaffold (prefix every prompt with this)
 
-> A single stylized 3D game piece for a premium mobile board game, rendered as a
-> collectible token. Orthographic three-quarter view from slightly above,
+> A single high-end collectible board game MINIATURE for a premium mobile game,
+> standing on an ornate circular pedestal (the Journey Disc). A manufacturable
+> physical object roughly 45mm tall on a 35mm disc - painted resin, metal, enamel
+> and brass. Reference quality: Monopoly GO, Disney Infinity, Amiibo, premium
+> chess sets. NOT Warhammer (too busy), not a flat mobile icon. Orthographic three-quarter view from slightly above,
 > matching a 47-degree board plane with north receding upward. Upper-left key
 > light with soft warm fill and a gentle contact shadow directly beneath the
 > object. Polished stylized 3D look — clean readable silhouette, soft rounded
