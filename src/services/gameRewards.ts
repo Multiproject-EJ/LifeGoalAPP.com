@@ -10,6 +10,9 @@ import {
   type LegacyHabitGameId,
 } from '../types/habitGames';
 
+/** Fired after a balance write so mounted balance readouts re-read storage. */
+export const CURRENCY_UPDATE_EVENT = 'gol-currency-update';
+
 const STORAGE_KEY_CURRENCIES = 'gol_game_currencies';
 const STORAGE_KEY_EVENTS = 'gol_game_events_log';
 const STORAGE_KEY_SESSIONS = 'gol_game_sessions_log';
@@ -26,7 +29,8 @@ export type GameSource =
   | 'wheel_of_wins'
   | 'dice_packs'
   | 'daily_treats'
-  | 'habit_insight';
+  | 'habit_insight'
+  | 'comeback_bonus';
 
 type LegacyGameSource = 'pomodoro_sprint';
 

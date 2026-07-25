@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "ignoreDeprecations": "6.0",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src",
+    "outDir": ".tmp-comeback-celebration-tests",
+    "noEmit": false
+  },
+  "include": [
+    "src/services/comebackCelebration.ts",
+    "src/services/__tests__/comebackCelebration.test.ts"
+  ]
+}

@@ -9,12 +9,11 @@ import {
   awardHearts,
   deductHearts,
   purchaseDicePack,
+  CURRENCY_UPDATE_EVENT,
   type GameCurrencyBalance,
   type GameSource,
 } from './gameRewards';
 import type { DicePackId } from '../constants/economy';
-
-const CURRENCY_UPDATE_EVENT = 'gol-currency-update';
 
 export function useGameCurrencies(userId: string) {
   const [balance, setBalance] = useState<GameCurrencyBalance>(() => loadCurrencyBalance(userId));

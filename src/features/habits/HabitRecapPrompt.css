@@ -714,12 +714,13 @@
 
 .yesterday-sundown-todo-modal__bulk {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
 }
 
 .yesterday-sundown-todo-modal__bulk-label {
-  flex: 0 0 auto;
+  flex: 0 0 100%;
   color: #64748b;
   font-size: 0.74rem;
   font-weight: 800;
@@ -730,7 +731,8 @@
 .yesterday-sundown-todo-modal__bulk-actions,
 .yesterday-sundown-todo-modal__confirm {
   display: flex;
-  flex: 1;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
   gap: 0.4rem;
 }
 
@@ -748,7 +750,7 @@
 }
 
 .yesterday-sundown-todo-modal__bulk-actions button {
-  flex: 1;
+  flex: 1 1 7.5rem;
 }
 
 .yesterday-sundown-todo-modal__bulk-actions button:active:not(:disabled),
@@ -757,7 +759,7 @@
 }
 
 .yesterday-sundown-todo-modal__bulk-actions .yesterday-sundown-todo-modal__bulk-delete {
-  flex: 0 0 auto;
+  flex: 1 1 7.5rem;
   border-color: rgba(239, 68, 68, 0.3);
   background: rgba(254, 242, 242, 0.95);
   color: #b91c1c;
