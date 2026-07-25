@@ -12,7 +12,14 @@ import {
   resolveSpaceExcavatorRewardUxState,
   SPACE_EXCAVATOR_BOARD_CLEAR_AUTO_ADVANCE_DELAY_MS,
 } from '../../level-worlds/services/spaceExcavatorRewardUx';
+import { MinigameFxOverlay, type MinigameFxHandle } from '../_shared/MinigameFxOverlay';
 import './spaceExcavator.css';
+
+/** Particle palettes per dig outcome — dust for rock, sparks for a find. */
+const DIG_DUST_PALETTE = ['#94a3b8', '#cbd5e1', '#64748b'];
+const HOT_PALETTE = ['#fb923c', '#fdba74', '#fed7aa'];
+const RELIC_PALETTE = ['#fde68a', '#fbbf24', '#fffbeb'];
+const BOMB_PALETTE = ['#f87171', '#fb923c', '#fde68a', '#e2e8f0'];
 
 type Tile = { dug: boolean; objectPiece: boolean; bonusBomb: boolean; hard: boolean; cracked: boolean; clueType: SpaceExcavatorClueResult['type'] };
 
@@ -169,6 +176,30 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   const bombFxTimeoutRef = useRef<number | null>(null);
   const advancingBoardKeyRef = useRef<string | null>(null);
   const justClearedBoardRef = useRef(false);
+  const fxRef = useRef<MinigameFxHandle | null>(null);
+  const boardRef = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * Spawn a burst centred on a tile. Tiles are real DOM buttons, so their
+   * position comes from the live layout rather than a computed grid.
+   */
+  const burstAtTile = useCallback((tileId: number, options: {
+    palette: readonly string[];
+    count?: number;
+    speed?: number;
+    radius?: number;
+    lifeMs?: number;
+  }) => {
+    const fx = fxRef.current;
+    const board = boardRef.current;
+    if (!fx || !board) return;
+    const tile = board.querySelector<HTMLElement>(`[data-tile-id="${tileId}"]`);
+    if (!tile) return;
+    const rect = tile.getBoundingClientRect();
+    const point = fx.toLocalPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    if (!point) return;
+    fx.burst({ x: point.x, y: point.y, ...options });
+  }, []);
 
   useEffect(() => {
     if (!config.getTicketsRemaining) return undefined;
@@ -285,6 +316,13 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           setBombClearedTileIds([]);
           bombFxTimeoutRef.current = null;
         }, 920);
+        // Debris at the blast centre, then a smaller puff per revealed tile.
+        burstAtTile(index, { palette: BOMB_PALETTE, count: 26, speed: 260, radius: 3.4, lifeMs: 760 });
+        for (const tileId of revealedTileIds.slice(0, 8)) {
+          if (tileId === index) continue;
+          burstAtTile(tileId, { palette: DIG_DUST_PALETTE, count: 6, speed: 110, radius: 2.4, lifeMs: 480 });
+        }
+        fxRef.current?.shake(7, 420);
         playIslandRunSound('boss_trial_resolve');
         triggerIslandRunHaptic('boss_trial_resolve');
       } else if (spend.revealedTileIds?.length === 0) {
@@ -295,6 +333,8 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           label: 'Hard Block Cracked',
           shortMessage: 'One more dig will fully open this tile.',
         });
+        burstAtTile(index, { palette: DIG_DUST_PALETTE, count: 14, speed: 170, radius: 2.8, lifeMs: 540 });
+        fxRef.current?.shake(2.5, 200);
         playIslandRunSound('stop_land');
         triggerIslandRunHaptic('stop_land');
       } else {
@@ -306,13 +346,19 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         });
         setLatestClue(clue);
         if (clue.type === 'relic_piece') {
+          // A find is the loudest moment in the loop — gold sparks + a kick.
+          burstAtTile(index, { palette: RELIC_PALETTE, count: 30, speed: 210, radius: 3.2, lifeMs: 820 });
+          fxRef.current?.shake(5, 340);
           playIslandRunSound('sticker_complete');
           triggerIslandRunHaptic('sticker_complete');
         } else if (clue.type === 'hot') {
+          burstAtTile(index, { palette: HOT_PALETTE, count: 12, speed: 140, radius: 2.6 });
           playIslandRunSound('reward_bar_claim_burst');
         } else if (clue.type === 'warm') {
+          burstAtTile(index, { palette: DIG_DUST_PALETTE, count: 9, speed: 120, radius: 2.4 });
           playIslandRunSound('reward_bar_fill');
         } else {
+          burstAtTile(index, { palette: DIG_DUST_PALETTE, count: 7, speed: 100, radius: 2.2, lifeMs: 460 });
           playIslandRunSound('stop_land');
         }
       }
@@ -342,6 +388,10 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     if (advance.ok && advance.progress) {
       setLatestClue(null);
       setLatestBombFeedback(null);
+      // Effects are tied to the old board's tile positions — drop them before
+      // the grid re-lays out, or debris hangs over the new site.
+      fxRef.current?.clear();
+      setLastDugTileId(null);
       syncProgress(advance.progress);
       return;
     }
@@ -411,9 +461,17 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
   useEffect(() => {
     if (!boardComplete || justClearedBoardRef.current) return;
     justClearedBoardRef.current = true;
+    // Fire a burst from each recovered relic tile so the whole find reads.
+    const relicTileIds = getProgressObjectTileIds(activeProgress);
+    relicTileIds.forEach((tileId, order) => {
+      window.setTimeout(() => {
+        burstAtTile(tileId, { palette: RELIC_PALETTE, count: 20, speed: 190, radius: 3, lifeMs: 900 });
+      }, order * 90);
+    });
+    fxRef.current?.shake(6, 500);
     playIslandRunSound('minigame_complete');
     triggerIslandRunHaptic('reward_bar_cascade');
-  }, [boardComplete]);
+  }, [activeProgress, boardComplete, burstAtTile]);
 
   useEffect(() => {
     if (!boardComplete) {
@@ -543,7 +601,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
       ) : null}
 
       <div className={`space-excavator__board-shell ${boardComplete ? 'space-excavator__board-shell--cleared' : ''}`}>
-        <div className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, minmax(40px, clamp(46px, ${size > 5 ? 13 : 15}vmin, 68px)))` }}>
+        <div ref={boardRef} className="space-excavator__board" style={{ gridTemplateColumns: `repeat(${size}, minmax(40px, clamp(46px, ${size > 5 ? 13 : 15}vmin, 68px)))` }}>
           {tiles.map((tile, i) => (
             <button
               key={i}
@@ -552,6 +610,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
               onClick={() => onDig(i)}
               disabled={finished || boardComplete || tile.dug}
               aria-label={getTileAriaLabel(tile, i)}
+              data-tile-id={i}
               data-last-dug={lastDugTileId === i ? 'true' : undefined}
               data-just-cracked={tile.cracked && !tile.dug && lastDugTileId === i ? 'true' : undefined}
               data-bomb-origin={bombCenterTileId === i ? 'true' : undefined}
@@ -575,6 +634,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
           ))}
         </div>
         {boardComplete ? <div className="space-excavator__board-clear-glow" aria-hidden="true" /> : null}
+        <MinigameFxOverlay ref={fxRef} shakeTargetRef={boardRef} />
       </div>
 
       <div className={`space-excavator__event-progress ${rewardUxState.rewardReady ? 'space-excavator__event-progress--ready' : ''}`} aria-label="Event progress">
