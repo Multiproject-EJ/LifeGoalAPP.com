@@ -30,6 +30,8 @@ import { PlayerAvatarPanel } from './features/avatar/PlayerAvatarPanel';
 import { WorkspaceSetupDialog } from './features/account/WorkspaceSetupDialog';
 import { AiCoach } from './features/ai-coach';
 import { TipOfDayModal } from './features/tip-of-day';
+import { WelcomeBackCelebrationModal } from './components/WelcomeBackCelebrationModal';
+import { startComebackCelebration, type ComebackCelebration } from './services/comebackCelebration';
 import { Journal, type JournalType } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
@@ -817,6 +819,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [showAiCoachModal, setShowAiCoachModal] = useState(false);
   const [aiCoachStarterQuestion, setAiCoachStarterQuestion] = useState<string | undefined>(undefined);
   const [showTipOfDay, setShowTipOfDay] = useState(false);
+  const [comebackCelebration, setComebackCelebration] = useState<ComebackCelebration | null>(null);
   const [journalLaunchRequest, setJournalLaunchRequest] = useState<{ type: JournalType; openComposer?: boolean; requestId: number } | null>(null);
   const [showDailySpinWheel, setShowDailySpinWheel] = useState(false);
   const [showQuickGainsMenu, setShowQuickGainsMenu] = useState(false);
@@ -975,11 +978,27 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const isDailyTreatAutoOpenDue = isDailyTreatAutoOpenDueForUser(supabaseSession?.user?.id);
   const shouldDeferDailyLifeUpgradeModal = true;
-  const shouldDeferYesterdayTodoCleanupModal = showCalendarPlaceholder || isDailyTreatAutoOpenDue || isDayChangeDailyTreatSequenceActive;
+  const isComebackCelebrationOpen = comebackCelebration !== null;
+  const shouldDeferYesterdayTodoCleanupModal = showCalendarPlaceholder
+    || isDailyTreatAutoOpenDue
+    || isDayChangeDailyTreatSequenceActive
+    || isComebackCelebrationOpen;
+
+  // Head of the open-app modal queue: a comeback is the rarest thing that can
+  // happen on launch, so it plays before treats and tip-of-day, which both wait
+  // on it below. Grants on evaluation and stamps the visit, so it fires once.
+  useEffect(() => {
+    const userId = supabaseSession?.user?.id;
+    if (typeof window === 'undefined' || !userId) return;
+
+    const celebration = startComebackCelebration(userId);
+    if (celebration) setComebackCelebration(celebration);
+  }, [supabaseSession?.user?.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!supabaseSession?.user?.id) return;
+    if (isComebackCelebrationOpen) return;
 
     const todayKey = getDailyTreatsAutoOpenDateKey();
     if (!isDailyTreatAutoOpenDue) return;
@@ -987,20 +1006,22 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsDayChangeDailyTreatSequenceActive(true);
     launchDailyTreatsMenu();
     window.localStorage.setItem(DAILY_TREATS_AUTO_OPEN_DATE_KEY, todayKey);
-  }, [isDailyTreatAutoOpenDue, launchDailyTreatsMenu, supabaseSession?.user?.id]);
+  }, [isComebackCelebrationOpen, isDailyTreatAutoOpenDue, launchDailyTreatsMenu, supabaseSession?.user?.id]);
 
-  // Once-a-day "Tip of the Day — AI Coach". Opens after the daily-treats sequence
-  // so the two never stack: only when treats aren't due and the day-change
-  // sequence isn't active. Gated to once per day via localStorage (mirrors treats).
+  // Once-a-day "Tip of the Day — AI Coach". Opens last in the launch queue so
+  // nothing stacks: only when no comeback celebration is up, treats aren't due,
+  // and the day-change sequence isn't active. Gated to once per day via
+  // localStorage (mirrors treats).
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!supabaseSession?.user?.id) return;
     if (isDailyTreatAutoOpenDue || isDayChangeDailyTreatSequenceActive) return;
+    if (isComebackCelebrationOpen) return;
     if (!isTipOfDayAutoOpenDueForUser(supabaseSession.user.id)) return;
 
     window.localStorage.setItem(TIP_OF_DAY_AUTO_OPEN_DATE_KEY, getDailyTreatsAutoOpenDateKey());
     setShowTipOfDay(true);
-  }, [isDailyTreatAutoOpenDue, isDayChangeDailyTreatSequenceActive, supabaseSession?.user?.id]);
+  }, [isComebackCelebrationOpen, isDailyTreatAutoOpenDue, isDayChangeDailyTreatSequenceActive, supabaseSession?.user?.id]);
 
   const launchHolidayCalendar = useCallback(() => {
     setHolidayPreviewKey(null);
@@ -5991,6 +6012,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
             setShowAiCoachModal(false);
             setAiCoachStarterQuestion(undefined);
           }}
+        />
+      )}
+      {comebackCelebration && (
+        <WelcomeBackCelebrationModal
+          celebration={comebackCelebration}
+          onClose={() => setComebackCelebration(null)}
         />
       )}
       {showTipOfDay && (
