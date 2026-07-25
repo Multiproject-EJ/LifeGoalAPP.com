@@ -1,5 +1,12 @@
 # AUDIO + HAPTICS + ASSETS + MINIGAME TEMPLATE
 
+> [!NOTE]
+> The full audio plan now lives in **`docs/audio/`** — see `docs/audio/00_AUDIO_MASTER_PLAN.md`
+> for the architecture, radio-station system and streaming strategy, and the two asset
+> manifests for the generation-ready music and SFX lists.
+>
+> The haptics map and asset-naming rules below remain valid and are extended there.
+
 ## Audio System
 Two channels:
 1) Ambient (loop, low volume)
