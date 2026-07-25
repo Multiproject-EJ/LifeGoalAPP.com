@@ -430,5 +430,13 @@ App bundle grows by under 3 MB. Typical session streams 3–8 MB of music.
 1. **Music-off default?** Recommend music **on**, ambience **on**, SFX **on** — but the entry audio-choice modal already exists and is the right place to let the player decide before the first note. No change needed, just confirming the defaults.
 2. **Does the radio persist outside Island Run?** Recommend **no** by default — Habits/Journal should be silent — but the Timer/Meditation surfaces opt into the Deep Work station. Confirm.
 3. **Vocals on any station track?** Recommend instrumental everywhere except 1–2 Shoreline FM hero tracks. Vocals significantly raise the "I've heard this 40 times" fatigue rate.
-4. **Licensing:** Suno/ElevenLabs commercial terms depend on plan tier. Confirm the account tier covers commercial distribution in an App Store product **before** Phase 2 generation, and record the tier + generation date alongside each asset in the manifest.
+4. ~~**Licensing:**~~ **Resolved 2026-07-25.** Both providers tie commercial rights to *when* an asset was generated, not to current subscription status:
+   - **Suno** — assets generated while on Pro/Premier keep commercial use rights permanently, including after cancellation. Assets generated on free have none.
+   - **ElevenLabs** — same model: content generated during a paid plan keeps a perpetual commercial licence after cancelling or downgrading.
+
+   **Consequence for planning:** rights survive, but *generation capacity* does not. Treat a paid month as a **generation sprint**, not a trickle. The full music manifest (~77 new assets × 4 takes ≈ 310 songs ≈ 155 generations) fits inside a single Suno Pro month with headroom. During that month: over-generate and bank the unused takes for Phase 4, generate spare/alternate material you might want later, and **download every file (lossless where offered) before the subscription lapses** — do not assume library access or full-quality download survives on the free tier.
+
+   Residual risks, accepted and noted rather than resolved: Suno grants a perpetual licence rather than authorship ("ownership" language was removed), generated music carries no copyright protection and no exclusivity, and neither provider's user indemnification against the ongoing AI-music litigation has been verified here. None are blockers for a game soundtrack; all should be re-checked against live terms before a major release.
+
+   Still required per asset: record tool + plan tier + generation date in the manifest (the generation checklists already ask for this).
 5. **Do we want per-island ambience or per-zone?** Plan assumes **per-zone** (6 beds). Per-island (120 beds) is not worth it.

@@ -2,11 +2,26 @@
 
 The complete audio plan for HabitGame — music, ambience, sound effects, voice.
 
+**This directory is the single source of truth for audio.** Start with the inventory to see where things stand, then the master plan for where they're going.
+
 | Doc | What it's for |
 |---|---|
-| [`00_AUDIO_MASTER_PLAN.md`](./00_AUDIO_MASTER_PLAN.md) | Architecture, radio-station system, surface→audio map, streaming vs. bundling decision, phasing. **Read this first.** |
+| [`03_CURRENT_AUDIO_INVENTORY.md`](./03_CURRENT_AUDIO_INVENTORY.md) | **You are here.** Audited as-built state: every file, every code path, every defect. Update this whenever you touch audio. |
+| [`00_AUDIO_MASTER_PLAN.md`](./00_AUDIO_MASTER_PLAN.md) | Architecture, radio-station system, surface→audio map, streaming vs. bundling decision, phasing. |
 | [`01_MUSIC_ASSET_MANIFEST.md`](./01_MUSIC_ASSET_MANIFEST.md) | Every music track: station, title, filename, length, BPM, and its Suno prompt. Generation-ready. |
 | [`02_SFX_ASSET_MANIFEST.md`](./02_SFX_ASSET_MANIFEST.md) | All 133 sound effects: ID, trigger event, duration, paired haptic, and its ElevenLabs prompt. Generation-ready. |
+
+## Where things stand today
+
+15 audio files (8 music, 7 SFX), ~11 MB. **174 sound-effect call sites across 9 files resolve to just 7 audio files** — 24 of the 31 typed sound events borrow a sound from a different event. Music is wired in exactly one component. Two files are 2-byte stubs, one of which is live in the board playlist.
+
+The engineering is in good shape (typed events, throttling, haptics pairing, diagnostics, tests). The content is what's missing.
+
+## First three PRs
+
+1. **Phase 0** — replace the two stub MP3s, resolve the orphaned `Egg_hatched.mp3`, add `npm run check:audio-assets` to CI.
+2. **Story soundtrack** — `StorySoundtrackConfig` is fully built, validated and tested but **no narrative defines one**. Four mood pads and zero new code.
+3. **SFX Tier 1** — generate the ★ list, update `SOUND_ASSET_MAP`, delete the "until bespoke assets exist" comments.
 
 ## Quick answers
 
