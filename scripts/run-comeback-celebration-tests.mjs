@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { compileWithProjectTsc } from './lib/project-tsc.mjs';
 import { createRequire } from 'node:module';
 import { rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -29,7 +29,7 @@ function installBrowserStubs() {
 }
 
 try {
-  execFileSync('tsc', ['-p', 'tsconfig.comeback-celebration-tests.json'], { stdio: 'inherit' });
+  compileWithProjectTsc('tsconfig.comeback-celebration-tests.json');
   writeFileSync(path.join(outDir, 'package.json'), JSON.stringify({ type: 'commonjs' }));
   installBrowserStubs();
   const require = createRequire(import.meta.url);

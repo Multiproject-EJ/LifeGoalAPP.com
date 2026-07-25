@@ -32,6 +32,7 @@ import { AiCoach } from './features/ai-coach';
 import { TipOfDayModal } from './features/tip-of-day';
 import { WelcomeBackCelebrationModal } from './components/WelcomeBackCelebrationModal';
 import { startComebackCelebration, type ComebackCelebration } from './services/comebackCelebration';
+import { readIslandRunGameStateRecord } from './features/gamification/level-worlds/services/islandRunGameStateStore';
 import { Journal, type JournalType } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
@@ -989,11 +990,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
   // on it below. Grants on evaluation and stamps the visit, so it fires once.
   useEffect(() => {
     const userId = supabaseSession?.user?.id;
-    if (typeof window === 'undefined' || !userId) return;
+    if (typeof window === 'undefined' || !userId || !supabaseSession) return;
 
-    const celebration = startComebackCelebration(userId);
+    // Read-only: the egg ledger is inspected to announce what finished
+    // incubating, never to resolve an egg. Collecting stays in the hatchery,
+    // where resolveReadyEggTerminalTransition is the only reward-bearing path.
+    const eggLedger = readIslandRunGameStateRecord(supabaseSession).perIslandEggs;
+    const celebration = startComebackCelebration(userId, undefined, eggLedger);
     if (celebration) setComebackCelebration(celebration);
-  }, [supabaseSession?.user?.id]);
+  }, [supabaseSession]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

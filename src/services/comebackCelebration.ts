@@ -29,10 +29,28 @@ export interface ComebackReward {
   gameTokens: number;
 }
 
+export type ComebackEggTier = 'common' | 'rare' | 'mythic';
+
+/**
+ * An egg that finished incubating while the user was away and is still waiting
+ * to be opened.
+ *
+ * Deliberately carries no creature: the hatchery picks `collectedCreatureId` at
+ * collect time and `resolveReadyEggTerminalTransition` is the only reward-bearing
+ * path, so no creature exists to name until the egg is actually opened there.
+ * This is an announcement, never a grant.
+ */
+export interface ComebackHatchedEgg {
+  ledgerKey: string;
+  tier: ComebackEggTier;
+  hatchAtMs: number;
+}
+
 export interface ComebackCelebration {
   daysAway: number;
   lastVisitDate: string;
   reward: ComebackReward;
+  hatchedEggs: ComebackHatchedEgg[];
 }
 
 interface ComebackVisitRecord {
@@ -89,6 +107,43 @@ export function computeComebackReward(daysAway: number): ComebackReward {
   };
 }
 
+/** The shape this module needs from an island-run egg ledger entry. */
+interface ReadableEggEntry {
+  tier: string;
+  hatchAtMs: number;
+  status: string;
+  location?: string;
+}
+
+/**
+ * Picks out eggs whose incubation finished during the absence and that are
+ * still unopened.
+ *
+ * The window starts at local midnight of the last visit: an egg that hatched
+ * before the user left is not news, and one already collected or sold is gone.
+ */
+export function findEggsHatchedDuringAbsence(
+  perIslandEggs: Record<string, ReadableEggEntry | undefined> | null | undefined,
+  lastVisitDateKey: string,
+  nowMs: number = Date.now(),
+): ComebackHatchedEgg[] {
+  if (!perIslandEggs) return [];
+
+  const windowStartMs = new Date(`${lastVisitDateKey}T00:00:00`).getTime();
+  if (Number.isNaN(windowStartMs)) return [];
+
+  return Object.entries(perIslandEggs)
+    .flatMap(([ledgerKey, entry]) => {
+      if (!entry) return [];
+      if (entry.status === 'collected' || entry.status === 'sold') return [];
+      if (!Number.isFinite(entry.hatchAtMs)) return [];
+      if (entry.hatchAtMs > nowMs || entry.hatchAtMs < windowStartMs) return [];
+      if (entry.tier !== 'common' && entry.tier !== 'rare' && entry.tier !== 'mythic') return [];
+      return [{ ledgerKey, tier: entry.tier as ComebackEggTier, hatchAtMs: entry.hatchAtMs }];
+    })
+    .sort((first, second) => first.hatchAtMs - second.hatchAtMs);
+}
+
 /**
  * Reports what a return today would earn without recording anything. Useful for
  * previews and tests; `startComebackCelebration` is what app start should call.
@@ -96,6 +151,7 @@ export function computeComebackReward(daysAway: number): ComebackReward {
 export function peekComebackCelebration(
   userId: string,
   todayDateKey = toComebackDateKey(),
+  perIslandEggs?: Record<string, ReadableEggEntry | undefined> | null,
 ): ComebackCelebration | null {
   if (!userId) return null;
   const record = readStore()[userId];
@@ -105,7 +161,12 @@ export function peekComebackCelebration(
   const daysAway = daysBetweenDateKeys(record.lastVisitDate, todayDateKey);
   if (daysAway < COMEBACK_MIN_DAYS_AWAY) return null;
 
-  return { daysAway, lastVisitDate: record.lastVisitDate, reward: computeComebackReward(daysAway) };
+  return {
+    daysAway,
+    lastVisitDate: record.lastVisitDate,
+    reward: computeComebackReward(daysAway),
+    hatchedEggs: findEggsHatchedDuringAbsence(perIslandEggs, record.lastVisitDate),
+  };
 }
 
 /** Records that the user was here today without granting anything. */
@@ -128,10 +189,11 @@ export function markComebackVisit(userId: string, todayDateKey = toComebackDateK
 export function startComebackCelebration(
   userId: string,
   todayDateKey = toComebackDateKey(),
+  perIslandEggs?: Record<string, ReadableEggEntry | undefined> | null,
 ): ComebackCelebration | null {
   if (!userId) return null;
 
-  const celebration = peekComebackCelebration(userId, todayDateKey);
+  const celebration = peekComebackCelebration(userId, todayDateKey, perIslandEggs);
   if (!celebration) {
     markComebackVisit(userId, todayDateKey);
     return null;

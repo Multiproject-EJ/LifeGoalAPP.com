@@ -117,6 +117,80 @@
   font-weight: 700;
 }
 
+.welcome-back-celebration__eggs {
+  margin-top: 1.15rem;
+  padding-top: 1.05rem;
+  border-top: 1px solid rgba(148, 197, 253, 0.22);
+}
+
+.welcome-back-celebration__eggs-title {
+  margin: 0 0 0.7rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.welcome-back-celebration__egg-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome-back-celebration__egg {
+  display: flex;
+  flex: 0 1 5.4rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.6rem 0.4rem;
+  border: 1px solid rgba(148, 197, 253, 0.24);
+  border-radius: 0.9rem;
+  background: rgba(30, 58, 138, 0.28);
+  animation: welcome-back-egg-bob 2.4s ease-in-out infinite;
+}
+
+.welcome-back-celebration__egg--rare {
+  border-color: rgba(125, 211, 252, 0.5);
+}
+
+.welcome-back-celebration__egg--mythic {
+  border-color: rgba(250, 204, 21, 0.55);
+  background: rgba(120, 53, 15, 0.34);
+}
+
+@keyframes welcome-back-egg-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.22rem); }
+}
+
+.welcome-back-celebration__egg:nth-child(2) { animation-delay: 0.18s; }
+.welcome-back-celebration__egg:nth-child(3) { animation-delay: 0.36s; }
+.welcome-back-celebration__egg:nth-child(4) { animation-delay: 0.54s; }
+
+.welcome-back-celebration__egg-art {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+}
+
+.welcome-back-celebration__egg-tier {
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 0.67rem;
+  font-weight: 750;
+  text-align: center;
+}
+
+.welcome-back-celebration__eggs-note {
+  margin: 0.7rem 0 0;
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .welcome-back-celebration__cta {
   width: 100%;
   min-height: 2.85rem;
@@ -136,7 +210,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .welcome-back-celebration__shell,
-  .welcome-back-celebration__reward {
+  .welcome-back-celebration__reward,
+  .welcome-back-celebration__egg {
     animation: none;
   }
 

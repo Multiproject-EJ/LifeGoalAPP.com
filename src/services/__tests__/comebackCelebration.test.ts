@@ -3,6 +3,7 @@ import {
   COMEBACK_MAX_GAME_TOKENS,
   computeComebackReward,
   daysBetweenDateKeys,
+  findEggsHatchedDuringAbsence,
   markComebackVisit,
   peekComebackCelebration,
   resetComebackVisits,
@@ -90,6 +91,66 @@ function testDateKeyFormat(): void {
   assertEqual(toComebackDateKey(new Date(2026, 0, 5)), '2026-01-05', 'pads month and day');
 }
 
+function atLocalTime(dateKey: string, hour = 12): number {
+  return new Date(`${dateKey}T${String(hour).padStart(2, '0')}:00:00`).getTime();
+}
+
+function testHatchedEggDetection(): void {
+  const lastVisit = '2026-07-20';
+  const now = atLocalTime('2026-07-25');
+
+  const ledger = {
+    '1': { tier: 'common', hatchAtMs: atLocalTime('2026-07-22'), status: 'ready' },
+    '2': { tier: 'mythic', hatchAtMs: atLocalTime('2026-07-21'), status: 'incubating' },
+    // Hatched before the absence began — not news on return.
+    '3': { tier: 'rare', hatchAtMs: atLocalTime('2026-07-02'), status: 'ready' },
+    // Already resolved in the hatchery — gone, not waiting.
+    '4': { tier: 'rare', hatchAtMs: atLocalTime('2026-07-23'), status: 'collected' },
+    '5': { tier: 'common', hatchAtMs: atLocalTime('2026-07-23'), status: 'sold' },
+    // Still incubating — hatches after the return.
+    '6': { tier: 'rare', hatchAtMs: atLocalTime('2026-07-28'), status: 'incubating' },
+  };
+
+  const hatched = findEggsHatchedDuringAbsence(ledger, lastVisit, now);
+  assertEqual(hatched.length, 2, 'only unopened eggs that hatched inside the absence window count');
+  assertEqual(hatched[0].ledgerKey, '2', 'results are ordered by hatch time, earliest first');
+  assertEqual(hatched[0].tier, 'mythic', 'carries the egg tier through for display');
+  assertEqual(hatched[1].ledgerKey, '1', 'the later hatch comes second');
+
+  assertEqual(findEggsHatchedDuringAbsence(null, lastVisit, now).length, 0, 'a missing ledger yields nothing');
+  assertEqual(findEggsHatchedDuringAbsence({}, lastVisit, now).length, 0, 'an empty ledger yields nothing');
+
+  const malformed = {
+    '1': undefined,
+    '2': { tier: 'legendary', hatchAtMs: atLocalTime('2026-07-22'), status: 'ready' },
+    '3': { tier: 'common', hatchAtMs: Number.NaN, status: 'ready' },
+  };
+  assertEqual(
+    findEggsHatchedDuringAbsence(malformed, lastVisit, now).length,
+    0,
+    'unknown tiers and unusable timestamps are skipped rather than rendered',
+  );
+}
+
+function testCelebrationCarriesHatchedEggs(): void {
+  resetComebackVisits(USER);
+  markComebackVisit(USER, '2026-07-20');
+
+  const ledger = {
+    '1': { tier: 'rare' as const, hatchAtMs: atLocalTime('2026-07-22'), status: 'ready' },
+  };
+  const celebration = startComebackCelebration(USER, '2026-07-25', ledger);
+  assert(celebration !== null, 'a five-day absence celebrates');
+  assertEqual(celebration.hatchedEggs.length, 1, 'the celebration reports the egg that hatched while away');
+  assertEqual(celebration.hatchedEggs[0].tier, 'rare', 'the egg tier survives onto the celebration');
+
+  resetComebackVisits(USER);
+  markComebackVisit(USER, '2026-07-20');
+  const withoutEggs = startComebackCelebration(USER, '2026-07-25');
+  assert(withoutEggs !== null, 'the celebration still fires with no egg ledger available');
+  assertEqual(withoutEggs.hatchedEggs.length, 0, 'no ledger means no egg announcement');
+}
+
 export function runAllComebackCelebrationTests(): void {
   testRewardCurve();
   testDayCounting();
@@ -97,4 +158,6 @@ export function runAllComebackCelebrationTests(): void {
   testShortAbsencesAreOrdinary();
   testGrantIsAppliedOnceAndCredited();
   testDateKeyFormat();
+  testHatchedEggDetection();
+  testCelebrationCarriesHatchedEggs();
 }
