@@ -347,6 +347,90 @@ export function resolveMinigameChainCount(options: {
 }
 
 // ---------------------------------------------------------------------------
+// Celebration queue
+// ---------------------------------------------------------------------------
+
+/**
+ * A single placement can legitimately trigger several rewards at once — a
+ * score milestone, a level-up and a gem, say. Showing them through one
+ * `setState` slot means each overwrites the last and the player only ever
+ * sees whichever fired last, silently losing the others.
+ *
+ * `monopoly-go-loop-observation-2026-07-23.md` calls for chained rewards to be
+ * *batched* rather than dropped or stacked into consecutive blocking dialogs.
+ * This queue plays them in sequence off a single timer.
+ */
+export type MinigameQueuedCelebration<T> = T & { queueId: number };
+
+export interface MinigameCelebrationQueue<T> {
+  /** Currently displayed item, or null when idle. */
+  active: MinigameQueuedCelebration<T> | null;
+  pending: readonly MinigameQueuedCelebration<T>[];
+  nextQueueId: number;
+  /**
+   * Items dropped because the backlog was full. Exposed so callers can still
+   * account for them (telemetry, a summary line) rather than losing them.
+   */
+  droppedCount: number;
+}
+
+/**
+ * Longest backlog kept. A burst of rewards should feel fast, not commit the
+ * player to a ten-second parade, so anything beyond this is dropped.
+ */
+export const MINIGAME_CELEBRATION_MAX_PENDING = 3;
+
+export function createMinigameCelebrationQueue<T>(): MinigameCelebrationQueue<T> {
+  return { active: null, pending: [], nextQueueId: 1, droppedCount: 0 };
+}
+
+/**
+ * Add a celebration. It displays immediately when nothing is active,
+ * otherwise it queues behind what is already showing.
+ *
+ * When the backlog is full the *oldest pending* item is dropped: the newest
+ * reward is the one the player just earned, so it is the one worth showing.
+ * The active item is never displaced mid-display.
+ */
+export function enqueueMinigameCelebration<T>(
+  queue: MinigameCelebrationQueue<T>,
+  item: T,
+  maxPending: number = MINIGAME_CELEBRATION_MAX_PENDING,
+): MinigameCelebrationQueue<T> {
+  const queued: MinigameQueuedCelebration<T> = { ...item, queueId: queue.nextQueueId };
+  const nextQueueId = queue.nextQueueId + 1;
+
+  if (queue.active === null) {
+    return { active: queued, pending: queue.pending, nextQueueId, droppedCount: queue.droppedCount };
+  }
+
+  const cap = Math.max(0, Math.floor(maxPending));
+  if (cap === 0) {
+    return { ...queue, nextQueueId, droppedCount: queue.droppedCount + 1 };
+  }
+
+  const appended = [...queue.pending, queued];
+  const overflow = Math.max(0, appended.length - cap);
+  return {
+    active: queue.active,
+    pending: appended.slice(overflow),
+    nextQueueId,
+    droppedCount: queue.droppedCount + overflow,
+  };
+}
+
+/** Retire the active celebration and promote the next pending one. */
+export function dismissActiveMinigameCelebration<T>(
+  queue: MinigameCelebrationQueue<T>,
+): MinigameCelebrationQueue<T> {
+  if (queue.pending.length === 0) {
+    return { ...queue, active: null, pending: [] };
+  }
+  const [next, ...rest] = queue.pending;
+  return { ...queue, active: next, pending: rest };
+}
+
+// ---------------------------------------------------------------------------
 // Easing / pop scaling
 // ---------------------------------------------------------------------------
 

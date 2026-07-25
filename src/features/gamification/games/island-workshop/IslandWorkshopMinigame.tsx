@@ -51,7 +51,21 @@ import {
   type IslandWorkshopSavedRunV1,
 } from '../../level-worlds/services/islandWorkshopGame';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
+import {
+  createMinigameCelebrationQueue,
+  dismissActiveMinigameCelebration,
+  enqueueMinigameCelebration,
+  stepMinigameNumberTween,
+  type MinigameCelebrationQueue,
+} from '../../level-worlds/services/minigameJuice';
+import { MinigameFxOverlay, type MinigameFxHandle } from '../_shared/MinigameFxOverlay';
 import './islandWorkshop.css';
+
+/** Particle palettes per reward kind. */
+const CLEAR_PALETTE = ['#7dd3fc', '#bae6fd', '#e0f2fe'];
+const GEM_PALETTE = ['#c4b5fd', '#a78bfa', '#f5f3ff'];
+const KEYSTONE_PALETTE = ['#fcd34d', '#f59e0b', '#fffbeb'];
+const LEVEL_UP_PALETTE = ['#fde68a', '#fbbf24', '#ffffff'];
 
 type GamePhase = 'entry' | 'playing' | 'construction' | 'results';
 
@@ -83,12 +97,13 @@ type ComboToast = { id: number; text: string };
 type MonoFlashFx = { cells: number[]; tint: number };
 
 type Celebration = {
-  id: number;
   /** Confetti burst is rendered for every kind; tint colours mono flashes. */
   kind: 'milestone' | 'mono-pair' | 'solid-release' | 'gem' | 'level-up' | 'results';
   title: string;
   subtitle?: string;
   tint?: number;
+  /** How long this card holds the screen before the next queued one shows. */
+  durationMs?: number;
 };
 
 /** Finger lift so the dragged shape stays visible above the thumb on touch. */
@@ -156,29 +171,92 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const [assistFxCells, setAssistFxCells] = useState<number[]>([]);
   const [monoFlashFx, setMonoFlashFx] = useState<MonoFlashFx[]>([]);
   const [comboToast, setComboToast] = useState<ComboToast | null>(null);
-  const [celebration, setCelebration] = useState<Celebration | null>(null);
+  const [celebrationQueue, setCelebrationQueue] = useState<MinigameCelebrationQueue<Celebration>>(
+    () => createMinigameCelebrationQueue<Celebration>(),
+  );
+  const [displayedScore, setDisplayedScore] = useState(0);
   const [stuckPromptOpen, setStuckPromptOpen] = useState(false);
 
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const fxRef = useRef<MinigameFxHandle | null>(null);
   const toastIdRef = useRef(1);
-  const celebrationIdRef = useRef(1);
   const fxTimerRef = useRef<number | null>(null);
   const assistFxTimerRef = useRef<number | null>(null);
   const monoFxTimerRef = useRef<number | null>(null);
-  const celebrationTimerRef = useRef<number | null>(null);
 
   useEffect(() => () => {
     if (fxTimerRef.current !== null) window.clearTimeout(fxTimerRef.current);
     if (assistFxTimerRef.current !== null) window.clearTimeout(assistFxTimerRef.current);
     if (monoFxTimerRef.current !== null) window.clearTimeout(monoFxTimerRef.current);
-    if (celebrationTimerRef.current !== null) window.clearTimeout(celebrationTimerRef.current);
   }, []);
 
-  const showCelebration = useCallback((next: Omit<Celebration, 'id'>, durationMs = CELEBRATION_MS) => {
-    setCelebration({ ...next, id: celebrationIdRef.current++ });
-    if (celebrationTimerRef.current !== null) window.clearTimeout(celebrationTimerRef.current);
-    celebrationTimerRef.current = window.setTimeout(() => setCelebration(null), durationMs);
+  /** Burst centred on a bench cell, positioned from the live grid layout. */
+  const burstAtCells = useCallback((cellIndexes: readonly number[], options: {
+    palette: readonly string[];
+    count?: number;
+    speed?: number;
+    radius?: number;
+  }) => {
+    const fx = fxRef.current;
+    const grid = gridRef.current;
+    if (!fx || !grid || cellIndexes.length === 0) return;
+    const rect = grid.getBoundingClientRect();
+    const cellPx = rect.width / ISLAND_WORKSHOP_GRID_SIZE;
+    // Cap the spawn sites so a full double-line clear doesn't flood the layer.
+    for (const index of cellIndexes.slice(0, 12)) {
+      const row = Math.floor(index / ISLAND_WORKSHOP_GRID_SIZE);
+      const col = index % ISLAND_WORKSHOP_GRID_SIZE;
+      const point = fx.toLocalPoint(
+        rect.left + (col + 0.5) * cellPx,
+        rect.top + (row + 0.5) * cellPx,
+      );
+      if (point) fx.burst({ x: point.x, y: point.y, ...options });
+    }
   }, []);
+
+  // Score rolls up rather than snapping.
+  useEffect(() => {
+    if (displayedScore === score) return undefined;
+    let raf = 0;
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dtMs = now - last;
+      last = now;
+      setDisplayedScore((current) => {
+        const next = stepMinigameNumberTween({
+          current,
+          target: score,
+          dtMs,
+          approachPerSecond: 10,
+          minUnitsPerSecond: 40,
+        });
+        if (next !== score) raf = requestAnimationFrame(tick);
+        return next;
+      });
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [score, displayedScore]);
+
+  /**
+   * Queue a celebration rather than replacing whatever is on screen. A single
+   * placement can award a milestone, a level-up and a gem at once; showing
+   * them through one slot meant only the last survived.
+   */
+  const showCelebration = useCallback((next: Celebration, durationMs = CELEBRATION_MS) => {
+    setCelebrationQueue((queue) => enqueueMinigameCelebration(queue, { ...next, durationMs }));
+  }, []);
+
+  const celebration = celebrationQueue.active;
+
+  // One timer, restarted per displayed card, draining the queue in order.
+  useEffect(() => {
+    if (!celebration) return undefined;
+    const timer = window.setTimeout(() => {
+      setCelebrationQueue((queue) => dismissActiveMinigameCelebration(queue));
+    }, celebration.durationMs ?? CELEBRATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [celebration]);
 
   const refreshTickets = useCallback(() => {
     setTicketsRemaining(config.getTicketsRemaining?.() ?? 0);
@@ -234,6 +312,11 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     setMonoFlashFx([]);
     setComboToast(null);
     setStuckPromptOpen(false);
+    // Effects and celebrations are per-run — a resumed run must not inherit
+    // debris or a queued card from the previous one.
+    setCelebrationQueue(createMinigameCelebrationQueue<Celebration>());
+    setDisplayedScore(run.score);
+    fxRef.current?.clear();
     setPhase('playing');
     playIslandRunSound('minigame_open');
   }, []);
@@ -431,6 +514,12 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
       setBenchLevel(levelUp);
       setLevelUpThisVisit(true);
       writeStorage(levelStorageKey, String(levelUp));
+      // Level-up is the biggest beat in the run — fire across the whole bench.
+      burstAtCells(
+        Array.from({ length: ISLAND_WORKSHOP_GRID_SIZE }, (_, i) => i * ISLAND_WORKSHOP_GRID_SIZE + i),
+        { palette: LEVEL_UP_PALETTE, count: 16, speed: 210, radius: 3.2 },
+      );
+      fxRef.current?.shake(8, 560);
       showCelebration({
         kind: 'level-up',
         title: `⭐ Bench Level ${levelUp} unlocked!`,
@@ -454,6 +543,19 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
 
       const monoTints = result.monochromeLines.map((line) => line.tint);
       const hasSameColourPair = monoTints.some((tint, i) => monoTints.indexOf(tint) !== i);
+
+      // Debris scales with what actually happened on the bench.
+      if (result.gemCellsUnleashed.length > 0) {
+        burstAtCells(result.gemCellsUnleashed, { palette: GEM_PALETTE, count: 22, speed: 190, radius: 3 });
+      }
+      if (result.solidCellsReleased.length > 0) {
+        burstAtCells(result.solidCellsReleased, { palette: KEYSTONE_PALETTE, count: 20, speed: 180, radius: 3 });
+      }
+      burstAtCells(result.clearedCellIndexes, { palette: CLEAR_PALETTE, count: 6, speed: 120, radius: 2.2 });
+      fxRef.current?.shake(
+        2 + result.linesCleared * 1.6 + (result.solidCellsReleased.length > 0 ? 3 : 0),
+        260 + result.linesCleared * 40,
+      );
 
       if (result.solidCellsReleased.length > 0) {
         showCelebration({
@@ -724,7 +826,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
           <header className="island-workshop__hud">
             <div className="island-workshop__hud-stat">
               <span className="island-workshop__hud-label">Score</span>
-              <span className="island-workshop__hud-value">{score}</span>
+              <span className="island-workshop__hud-value">{Math.round(displayedScore)}</span>
             </div>
             <div className="island-workshop__hud-stat">
               <span className="island-workshop__hud-label">Blocks left</span>
@@ -798,6 +900,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
                 {comboToast.text}
               </p>
             )}
+            <MinigameFxOverlay ref={fxRef} shakeTargetRef={gridRef} />
           </div>
 
           <div className="island-workshop__tray" aria-label="Shape tray">
@@ -957,7 +1060,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
 
       {celebration && (
         <div
-          key={celebration.id}
+          key={celebration.queueId}
           className={`island-workshop__celebration island-workshop__celebration--${celebration.kind}${celebration.tint ? ` island-workshop__celebration--tint${celebration.tint}` : ''}`}
           role="status"
           aria-live="polite"
