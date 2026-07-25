@@ -5,8 +5,12 @@
  * combo/chain escalation, and pop-scale easing bounds.
  */
 import {
+  createMinigameCelebrationQueue,
   createMinigameParticleBurst,
   createMinigameShake,
+  dismissActiveMinigameCelebration,
+  enqueueMinigameCelebration,
+  MINIGAME_CELEBRATION_MAX_PENDING,
   easeOutBack,
   easeOutCubic,
   MINIGAME_COMBO_TIERS,
@@ -220,6 +224,91 @@ export const minigameJuiceTests: TestCase[] = [
         1,
         'a clock that runs backwards restarts the chain rather than extending it',
       );
+    },
+  },
+  {
+    name: 'celebrations queue in sequence instead of overwriting each other',
+    run: () => {
+      // The Island Workshop bug: one placement can award a score milestone, a
+      // level-up and a gem at once. All three must be seen.
+      let queue = createMinigameCelebrationQueue<{ title: string }>();
+      assertEqual(queue.active, null, 'a fresh queue shows nothing');
+
+      queue = enqueueMinigameCelebration(queue, { title: 'milestone' });
+      assertEqual(queue.active?.title, 'milestone', 'the first celebration displays immediately');
+      assertEqual(queue.pending.length, 0, 'nothing is waiting yet');
+
+      queue = enqueueMinigameCelebration(queue, { title: 'level-up' });
+      queue = enqueueMinigameCelebration(queue, { title: 'gem' });
+      assertEqual(queue.active?.title, 'milestone', 'the active celebration is not displaced mid-display');
+      assertEqual(queue.pending.length, 2, 'later celebrations wait their turn');
+
+      queue = dismissActiveMinigameCelebration(queue);
+      assertEqual(queue.active?.title, 'level-up', 'dismissing promotes the next in order');
+      queue = dismissActiveMinigameCelebration(queue);
+      assertEqual(queue.active?.title, 'gem', 'the third celebration is still shown');
+      queue = dismissActiveMinigameCelebration(queue);
+      assertEqual(queue.active, null, 'the queue empties cleanly');
+      assertEqual(queue.droppedCount, 0, 'nothing was dropped in a normal chain');
+    },
+  },
+  {
+    name: 'celebration queue ids are unique and monotonic across the run',
+    run: () => {
+      let queue = createMinigameCelebrationQueue<{ title: string }>();
+      const ids: number[] = [];
+      for (let i = 0; i < 5; i += 1) {
+        queue = enqueueMinigameCelebration(queue, { title: `c${i}` });
+        const id = queue.active?.queueId;
+        if (i === 0 && id !== undefined) ids.push(id);
+      }
+      // Drain, collecting every id that surfaces.
+      while (queue.active !== null) {
+        const id = queue.active.queueId;
+        if (!ids.includes(id)) ids.push(id);
+        queue = dismissActiveMinigameCelebration(queue);
+      }
+      assertEqual(new Set(ids).size, ids.length, 'queue ids never repeat (React keys depend on this)');
+      for (let i = 1; i < ids.length; i += 1) {
+        assert(ids[i] > ids[i - 1], 'queue ids increase in display order');
+      }
+    },
+  },
+  {
+    name: 'a reward burst caps its backlog and drops the oldest waiting item',
+    run: () => {
+      let queue = createMinigameCelebrationQueue<{ title: string }>();
+      queue = enqueueMinigameCelebration(queue, { title: 'active' });
+      for (let i = 0; i < MINIGAME_CELEBRATION_MAX_PENDING + 2; i += 1) {
+        queue = enqueueMinigameCelebration(queue, { title: `pending-${i}` });
+      }
+      assertEqual(
+        queue.pending.length,
+        MINIGAME_CELEBRATION_MAX_PENDING,
+        'the backlog never grows past the cap',
+      );
+      assertEqual(queue.droppedCount, 2, 'overflow is counted rather than silently lost');
+      assertEqual(queue.active?.title, 'active', 'the displayed item survives the burst');
+      // The newest rewards are the ones kept.
+      assertEqual(
+        queue.pending[queue.pending.length - 1].title,
+        `pending-${MINIGAME_CELEBRATION_MAX_PENDING + 1}`,
+        'the most recent reward is retained',
+      );
+      assertEqual(queue.pending[0].title, 'pending-2', 'the oldest waiting reward is the one dropped');
+    },
+  },
+  {
+    name: 'a zero-length backlog still shows the first celebration and counts the rest',
+    run: () => {
+      let queue = createMinigameCelebrationQueue<{ title: string }>();
+      queue = enqueueMinigameCelebration(queue, { title: 'first' }, 0);
+      queue = enqueueMinigameCelebration(queue, { title: 'second' }, 0);
+      assertEqual(queue.active?.title, 'first', 'the active celebration still displays');
+      assertEqual(queue.pending.length, 0, 'nothing queues when the cap is zero');
+      assertEqual(queue.droppedCount, 1, 'the skipped celebration is counted');
+      queue = dismissActiveMinigameCelebration(queue);
+      assertEqual(queue.active, null, 'dismissing an empty-backlog queue idles cleanly');
     },
   },
   {
