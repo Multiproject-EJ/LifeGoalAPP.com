@@ -9,9 +9,9 @@ export type MicroTestBadgeState = {
 };
 
 /**
- * The Personality results screen now mounts MicroTestFlow via MicroTestPanel,
- * so the badge points at something the player can actually open. (Kept as a
- * single switch in case the entry point is ever temporarily removed.)
+ * The Identity hub lists every test and mounts MicroTestFlow via
+ * IdentityLibrary, so the badge points at something the player can actually
+ * open. (Kept as a single switch in case that entry point is ever removed.)
  */
 const MICRO_TEST_UI_WIRED = true;
 

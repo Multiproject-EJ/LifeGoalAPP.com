@@ -9,8 +9,7 @@
 import { ARCHETYPE_DECK } from './archetypeDeck';
 import { rankArchetypes, scoreArchetypes } from './archetypeScoring';
 import { buildHand } from './archetypeHandBuilder';
-import { isDimensionMeasured, type PersonalityScores } from '../personalityScoring';
-import type { DimensionKey } from '../personalityTestData';
+import { coerceStoredScores, type PersonalityScores } from '../personalityScoring';
 
 export type ShadowJourneyRecord = {
   id: string;
@@ -29,30 +28,8 @@ export type ShadowJourneyEntry = {
   changedFromPrevious: boolean;
 };
 
-function pick(source: Record<string, number> | null | undefined, key: string): number {
-  if (!isDimensionMeasured(key as DimensionKey)) return 50;
-  const value = source?.[key];
-  return typeof value === 'number' && Number.isFinite(value) ? value : 50;
-}
-
 function coerce(record: ShadowJourneyRecord): PersonalityScores {
-  return {
-    traits: {
-      openness: pick(record.traits, 'openness'),
-      conscientiousness: pick(record.traits, 'conscientiousness'),
-      extraversion: pick(record.traits, 'extraversion'),
-      agreeableness: pick(record.traits, 'agreeableness'),
-      emotional_stability: pick(record.traits, 'emotional_stability'),
-    },
-    axes: {
-      regulation_style: pick(record.axes, 'regulation_style'),
-      stress_response: pick(record.axes, 'stress_response'),
-      identity_sensitivity: pick(record.axes, 'identity_sensitivity'),
-      cognitive_entry: pick(record.axes, 'cognitive_entry'),
-      honesty_humility: pick(record.axes, 'honesty_humility'),
-      emotionality: pick(record.axes, 'emotionality'),
-    },
-  };
+  return coerceStoredScores(record.traits, record.axes);
 }
 
 /** Chronological (oldest → newest) shadow-card history across retakes. */

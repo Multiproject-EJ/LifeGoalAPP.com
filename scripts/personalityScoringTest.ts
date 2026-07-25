@@ -16,6 +16,10 @@ import {
   buildShadowJourney,
   distinctShadowCount,
 } from '../src/features/identity/archetypes/shadowJourney';
+import {
+  buildIdentityLibrary,
+  countActionableTests,
+} from '../src/features/identity/identityTestLibrary';
 
 function buildAnswers({ preferHigh }: { preferHigh: boolean }) {
   return PERSONALITY_QUESTION_BANK.reduce<Record<string, AnswerValue>>((acc, question) => {
@@ -190,5 +194,111 @@ const legacyShadow = buildShadowJourney([
   { ...leaderRecord, axes: { ...leaderRecord.axes, honesty_humility: 0, emotionality: 0 } },
 ])[0];
 assert.equal(legacyShadow.shadowId, solo[0].shadowId, 'legacy phantom-0 record yields same shadow');
+
+// ── Identity Library ────────────────────────────────────────────────────────
+
+const libraryState = {
+  level: 1,
+  currentStreakDays: 0,
+  daysSinceFoundationTest: 0,
+  completedMicroTests: [] as string[],
+  foundationTestTaken: false,
+};
+
+// No foundation yet: the foundation row is the actionable one, and no
+// micro-test is offered (nothing to sharpen).
+const freshLibrary = buildIdentityLibrary({
+  foundationTakenAt: null,
+  foundationQuestionCount: 28,
+  microResults: [],
+  playerState: libraryState,
+});
+const freshFoundation = freshLibrary.find((entry) => entry.kind === 'foundation');
+assert.ok(freshFoundation, 'foundation row always present');
+assert.equal(freshFoundation!.status, 'available');
+assert.equal(freshFoundation!.actionLabel, 'Take the test');
+assert.equal(countActionableTests(freshLibrary), 0, 'no micro-tests before a foundation hand');
+
+// After the foundation test, HEXACO becomes takeable and foundation flips to retake.
+const takenState = { ...libraryState, foundationTestTaken: true };
+const afterFoundation = buildIdentityLibrary({
+  foundationTakenAt: '2026-01-01T00:00:00Z',
+  foundationQuestionCount: 28,
+  microResults: [],
+  playerState: takenState,
+});
+assert.equal(afterFoundation.find((e) => e.kind === 'foundation')!.actionLabel, 'Retake');
+const hexacoRow = afterFoundation.find((entry) => entry.id === 'micro_hexaco_intro');
+assert.ok(hexacoRow, 'hexaco row present');
+assert.equal(hexacoRow!.status, 'available');
+assert.equal(hexacoRow!.statusLabel, 'New');
+assert.equal(countActionableTests(afterFoundation), 1);
+
+// An unsaved in-session hand (guest, or a result that has not synced) still
+// counts as "taken" so the hub does not tell the player to start over.
+const sessionOnly = buildIdentityLibrary({
+  foundationTakenAt: null,
+  foundationTaken: true,
+  foundationQuestionCount: 28,
+  microResults: [],
+  playerState: takenState,
+});
+const sessionFoundation = sessionOnly.find((entry) => entry.kind === 'foundation')!;
+assert.equal(sessionFoundation.status, 'completed');
+assert.equal(sessionFoundation.statusLabel, 'Taken this session');
+assert.equal(sessionFoundation.actionLabel, 'Retake');
+
+// Tests without a reachable UI read as "Coming soon" rather than quoting an
+// unlock condition the player could satisfy and still find nothing.
+const lockedRow = afterFoundation.find((entry) => entry.id === 'micro_confirm_dominant');
+assert.ok(lockedRow, 'non-self-serve test is still listed');
+assert.equal(lockedRow!.status, 'locked');
+assert.equal(lockedRow!.statusLabel, 'Coming soon');
+assert.equal(lockedRow!.actionLabel, null, 'locked rows are not actionable');
+
+// Once taken (and not yet due again) HEXACO reads as completed, not offered.
+const hexacoTaken: MicroTestResult = {
+  microTestId: 'micro_hexaco_intro',
+  takenAt: new Date('2026-01-02T00:00:00Z'),
+  dimensionScores: { honesty_humility: 70, emotionality: 40 },
+};
+const afterHexaco = buildIdentityLibrary({
+  foundationTakenAt: '2026-01-01T00:00:00Z',
+  foundationQuestionCount: 28,
+  microResults: [hexacoTaken],
+  playerState: { ...takenState, completedMicroTests: ['micro_hexaco_intro'] },
+});
+assert.equal(afterHexaco.find((e) => e.id === 'micro_hexaco_intro')!.status, 'completed');
+assert.equal(countActionableTests(afterHexaco), 0);
+
+// Regression: at 90 days the repeatable recheck trigger comes due, so the row
+// must be offered again. Previously the badge lit up here while the panel —
+// which filtered purely on completion — offered nothing.
+const afterNinetyDays = buildIdentityLibrary({
+  foundationTakenAt: '2026-01-01T00:00:00Z',
+  foundationQuestionCount: 28,
+  microResults: [hexacoTaken],
+  playerState: {
+    ...takenState,
+    completedMicroTests: ['micro_hexaco_intro'],
+    daysSinceFoundationTest: 90,
+  },
+});
+const recheckRow = afterNinetyDays.find((entry) => entry.id === 'micro_hexaco_intro');
+assert.equal(recheckRow!.status, 'available', 'recheck is offered again at 90 days');
+assert.equal(recheckRow!.statusLabel, 'Due again');
+assert.equal(recheckRow!.actionLabel, 'Retake');
+assert.equal(countActionableTests(afterNinetyDays), 1);
+
+// The library and the badge must always agree on what is takeable.
+assert.equal(
+  countActionableTests(afterNinetyDays),
+  evaluateAvailableMicroTests({
+    ...takenState,
+    completedMicroTests: ['micro_hexaco_intro'],
+    daysSinceFoundationTest: 90,
+  }).length,
+  'library actionable count matches badge trigger count',
+);
 
 console.log('Personality scoring checks passed.');

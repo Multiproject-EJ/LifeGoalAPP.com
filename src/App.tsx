@@ -4362,7 +4362,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       case 'identity':
         return (
           <div className="workspace-content">
-            <PersonalityTest />
+            <PersonalityTest level={currentLevel} currentStreakDays={streakMomentum} />
           </div>
         );
       case 'placeholder':

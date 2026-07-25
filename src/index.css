@@ -28045,6 +28045,117 @@ html.platform-ipad .workspace-shell__menu-edge {
   flex-wrap: wrap;
 }
 
+.identity-hub__library {
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 16px;
+  background: var(--card-background, #ffffff);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.identity-hub__library-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.identity-hub__library-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.identity-hub__library-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.06);
+}
+
+.identity-hub__library-row--available {
+  border-color: rgba(79, 70, 229, 0.45);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.identity-hub__library-row--locked {
+  opacity: 0.6;
+}
+
+.identity-hub__library-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.identity-hub__library-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.identity-hub__library-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+.identity-hub__library-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.4;
+}
+
+.identity-hub__library-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.identity-hub__library-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.22);
+  color: #475569;
+}
+
+.identity-hub__library-status--available {
+  background: rgba(79, 70, 229, 0.15);
+  color: #4338ca;
+}
+
+.identity-hub__library-status--completed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
+}
+
+.identity-hub__library-duration {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.identity-hub__cta--compact,
+.identity-hub__secondary--compact {
+  padding: 0.45rem 0.95rem;
+  font-size: 0.85rem;
+  align-self: center;
+  white-space: nowrap;
+}
+
 .identity-hub__collapsible {
   border: 1px solid var(--border-color, #e5e7eb);
   border-radius: 12px;
