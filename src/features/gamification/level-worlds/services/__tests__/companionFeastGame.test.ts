@@ -9,6 +9,7 @@ import {
   applyCompanionFeastNudge,
   canStartCompanionFeastRun,
   COMPANION_FEAST_BOWL_HEIGHT,
+  COMPANION_FEAST_BOWL_WIDTH,
   COMPANION_FEAST_DANGER_GRACE_MS,
   COMPANION_FEAST_DANGER_LINE_Y,
   COMPANION_FEAST_DEFAULT_PHYSICS,
@@ -400,6 +401,67 @@ export const companionFeastGameTests: TestCase[] = [
       ], 40);
       assertEqual(result.mergeCount, 1, 'the pair merges');
       assertEqual(result.goldenConsumed, 1, 'exactly one golden fruit is reported');
+    },
+  },
+  {
+    name: 'a long simulated run keeps every body finite and inside the bowl',
+    run: () => {
+      // The renderer feeds these straight into canvas coordinates, so a single
+      // NaN or escaped body would corrupt the whole frame.
+      let bodies: CompanionFeastBody[] = [];
+      let rng = 20260725;
+      let feverState = COMPANION_FEAST_FEVER_IDLE;
+      let totalScore = 0;
+
+      for (let frame = 0; frame < 1500; frame += 1) {
+        // Drop a fruit every ~10 frames to keep the bowl busy and merging.
+        if (frame % 10 === 0 && bodies.length < 40) {
+          const [tier, tierNext] = rollCompanionFeastDropTier(rng);
+          rng = tierNext;
+          const [golden, goldenNext] = rollCompanionFeastGoldenDrop(rng);
+          rng = goldenNext;
+          bodies = [...bodies, createCompanionFeastBody({
+            tier,
+            x: 40 + ((frame * 37) % (COMPANION_FEAST_BOWL_WIDTH - 80)),
+            y: 30,
+            golden,
+          })];
+        }
+
+        const step = stepCompanionFeastPhysics(bodies, COMPANION_FEAST_DEFAULT_PHYSICS, 16);
+        bodies = step.bodies;
+
+        let chargeAdded = 0;
+        for (const merge of step.merges) {
+          const award = resolveCompanionFeastMergeAward({
+            fromTier: merge.fromTier,
+            chainCount: 3,
+            feverActive: feverState.activeMsRemaining > 0,
+            goldenCount: merge.goldenCount,
+            toTier: merge.toTier,
+          });
+          totalScore += award.score;
+          chargeAdded += award.feverCharge;
+          assert(Number.isFinite(merge.x) && Number.isFinite(merge.y), 'merge coordinates stay finite');
+          assert(Number.isFinite(award.score), 'merge award stays finite');
+        }
+        feverState = advanceCompanionFeastFever({ state: feverState, dtMs: 16, chargeAdded }).state;
+
+        for (const body of bodies) {
+          assert(Number.isFinite(body.x), 'body x stays finite');
+          assert(Number.isFinite(body.y), 'body y stays finite');
+          assert(Number.isFinite(body.radius) && body.radius > 0, 'body radius stays positive and finite');
+          assert(Number.isFinite(body.ageMs) && body.ageMs >= 0, 'body age stays finite and non-negative');
+          assert(
+            body.x >= -body.radius && body.x <= COMPANION_FEAST_BOWL_WIDTH + body.radius,
+            'bodies never escape the bowl horizontally',
+          );
+          assert(body.y <= COMPANION_FEAST_BOWL_HEIGHT + body.radius, 'bodies never fall through the floor');
+        }
+      }
+
+      assert(totalScore > 0, 'a busy simulated run scores something');
+      assert(Number.isFinite(feverState.charge), 'fever charge stays finite across a long run');
     },
   },
   {

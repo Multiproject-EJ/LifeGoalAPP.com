@@ -38,24 +38,30 @@ export function prefersReducedMotion(): boolean {
 }
 
 /**
- * Reset, clear and scale a canvas so callers can draw in `logicalSize` units
- * regardless of the backing-store resolution. Mirrors the Fortune Engine's
- * `prepareFortuneCanvas`.
+ * Reset, clear and scale a canvas so callers can draw in logical units
+ * regardless of the backing-store resolution.
+ *
+ * Pass `logicalHeight` for non-square surfaces. Scaling both axes by
+ * `canvas.height / logicalWidth` (as a square-only version would) stretches
+ * every circle into an ellipse the moment the canvas is taller than it is
+ * wide — the bowl is 360x520, so this matters.
  *
  * Callers MUST `ctx.restore()` when done (this leaves one `save()` on the
  * stack), which `finishMinigameCanvas` does for you.
  */
 export function prepareMinigameCanvas(
   canvas: HTMLCanvasElement | null,
-  logicalSize: number,
+  logicalWidth: number,
+  logicalHeight?: number,
 ): CanvasRenderingContext2D | null {
-  if (!canvas || logicalSize <= 0) return null;
+  const height = logicalHeight ?? logicalWidth;
+  if (!canvas || logicalWidth <= 0 || height <= 0) return null;
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
-  ctx.scale(canvas.width / logicalSize, canvas.height / logicalSize);
+  ctx.scale(canvas.width / logicalWidth, canvas.height / height);
   return ctx;
 }
 
@@ -187,26 +193,30 @@ export function drawGlossyOrb(ctx: CanvasRenderingContext2D, options: GlossyOrbO
   ctx.fillStyle = body;
   ctx.fill();
 
-  // Bounce light along the lower-right limb.
+  // Bounce light along the lower-right limb. Stroked with a gradient that
+  // fades at both ends — a flat stroke leaves a hard crescent seam.
+  const rim = ctx.createLinearGradient(x - radius, y + radius, x + radius, y - radius * 0.2);
+  rim.addColorStop(0, 'rgba(255, 255, 255, 0)');
+  rim.addColorStop(0.5, 'rgba(255, 255, 255, 0.16)');
+  rim.addColorStop(1, 'rgba(255, 255, 255, 0)');
   ctx.beginPath();
-  ctx.arc(x, y, radius * 0.94, Math.PI * 0.12, Math.PI * 0.82);
-  ctx.lineWidth = Math.max(1, radius * 0.1);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+  ctx.arc(x, y, radius * 0.93, Math.PI * 0.1, Math.PI * 0.86);
+  ctx.lineWidth = Math.max(1, radius * 0.08);
+  ctx.strokeStyle = rim;
   ctx.stroke();
 
-  // Specular hotspot.
+  // Specular hotspot — a soft radial falloff rather than a hard blob.
+  const sx = x + MINIGAME_LIGHT_DIR.x * radius * 0.95;
+  const sy = y + MINIGAME_LIGHT_DIR.y * radius * 0.95;
+  const specRadius = radius * 0.34;
+  const spec = ctx.createRadialGradient(sx, sy, 0, sx, sy, specRadius);
+  spec.addColorStop(0, 'rgba(255, 255, 255, 0.52)');
+  spec.addColorStop(0.45, 'rgba(255, 255, 255, 0.2)');
+  spec.addColorStop(1, 'rgba(255, 255, 255, 0)');
   ctx.save();
   ctx.beginPath();
-  ctx.ellipse(
-    x + MINIGAME_LIGHT_DIR.x * radius * 0.92,
-    y + MINIGAME_LIGHT_DIR.y * radius * 0.92,
-    radius * 0.3,
-    radius * 0.2,
-    -Math.PI / 5,
-    0,
-    Math.PI * 2,
-  );
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.ellipse(sx, sy, specRadius, specRadius * 0.72, -Math.PI / 5, 0, Math.PI * 2);
+  ctx.fillStyle = spec;
   ctx.fill();
   ctx.restore();
 
