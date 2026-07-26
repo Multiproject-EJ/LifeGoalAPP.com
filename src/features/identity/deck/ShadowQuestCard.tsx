@@ -44,13 +44,13 @@ export function ShadowQuestCard({ hand, userId }: ShadowQuestCardProps) {
     <div
       style={{
         padding: '20px',
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        backgroundColor: 'var(--card-background, #ffffff)',
         borderRadius: '12px',
         border: `2px solid ${shadowCard.color}55`,
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', margin: 0 }}>
+        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary, #111827)', margin: 0 }}>
           🌒 Shadow Quest
         </h3>
         <span style={{ fontSize: '12px', fontWeight: 'bold', color: shadowCard.color }}>
@@ -61,10 +61,10 @@ export function ShadowQuestCard({ hand, userId }: ShadowQuestCardProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
         <span style={{ fontSize: '28px', opacity: inTheLight ? 1 : 0.7 }}>{shadowCard.icon}</span>
         <div>
-          <div style={{ fontSize: '15px', fontWeight: 'bold', color: '#fff' }}>
+          <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--text-primary, #111827)' }}>
             {shadowCard.name}
           </div>
-          <div style={{ fontSize: '12px', color: '#aaa' }}>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary, #6b7280)' }}>
             Your least-played card — an unplayed strategy, not a flaw.
           </div>
         </div>
@@ -80,12 +80,12 @@ export function ShadowQuestCard({ hand, userId }: ShadowQuestCardProps) {
               width: '10px',
               height: '10px',
               borderRadius: '50%',
-              backgroundColor: index < progress.level ? shadowCard.color : 'rgba(255, 255, 255, 0.15)',
+              backgroundColor: index < progress.level ? shadowCard.color : 'rgba(148, 163, 184, 0.30)',
               boxShadow: index < progress.level ? `0 0 8px ${shadowCard.color}` : 'none',
             }}
           />
         ))}
-        <span style={{ fontSize: '11px', color: '#888', marginLeft: '4px' }}>
+        <span style={{ fontSize: '11px', color: 'var(--text-secondary, #6b7280)', marginLeft: '4px' }}>
           {progress.completions} quest{progress.completions === 1 ? '' : 's'} completed
         </span>
       </div>
@@ -94,16 +94,16 @@ export function ShadowQuestCard({ hand, userId }: ShadowQuestCardProps) {
         <div
           style={{
             padding: '12px',
-            backgroundColor: 'rgba(255, 255, 255, 0.06)',
+            backgroundColor: 'rgba(148, 163, 184, 0.10)',
             borderRadius: '8px',
             borderLeft: `4px solid ${shadowCard.color}`,
             marginBottom: '12px',
           }}
         >
-          <div style={{ fontSize: '13px', color: '#eee', fontWeight: 'bold', marginBottom: '4px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--text-primary, #111827)', fontWeight: 'bold', marginBottom: '4px' }}>
             ✨ Your {shadowCard.name} has stepped into the light.
           </div>
-          <div style={{ fontSize: '13px', color: '#ccc' }}>
+          <div style={{ fontSize: '13px', color: 'var(--text-secondary, #6b7280)' }}>
             You've been playing this card for weeks. Retake the test when you're ready — your next
             hand may deal a new shadow to explore.
           </div>
@@ -112,19 +112,19 @@ export function ShadowQuestCard({ hand, userId }: ShadowQuestCardProps) {
         <div
           style={{
             padding: '12px',
-            backgroundColor: 'rgba(255, 255, 255, 0.06)',
+            backgroundColor: 'rgba(148, 163, 184, 0.10)',
             borderRadius: '8px',
             borderLeft: `4px solid ${shadowCard.color}`,
             marginBottom: '12px',
           }}
         >
-          <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
             This week's quest
           </div>
-          <div style={{ fontSize: '14px', color: '#fff', fontWeight: 'bold', marginBottom: '4px' }}>
+          <div style={{ fontSize: '14px', color: 'var(--text-primary, #111827)', fontWeight: 'bold', marginBottom: '4px' }}>
             {quest.title}
           </div>
-          <div style={{ fontSize: '13px', color: '#ccc', lineHeight: 1.5 }}>{quest.description}</div>
+          <div style={{ fontSize: '13px', color: 'var(--text-secondary, #6b7280)', lineHeight: 1.5 }}>{quest.description}</div>
         </div>
       )}
 
@@ -140,15 +140,16 @@ export function ShadowQuestCard({ hand, userId }: ShadowQuestCardProps) {
           cursor: userId ? 'pointer' : 'not-allowed',
           fontWeight: 'bold',
           fontSize: '14px',
-          color: questDone ? '#ccc' : '#fff',
-          backgroundColor: questDone ? 'rgba(255, 255, 255, 0.1)' : shadowCard.color,
+          // Filled state sits on the saturated suit colour, so it keeps white text.
+          color: questDone ? 'var(--text-secondary, #6b7280)' : '#ffffff',
+          backgroundColor: questDone ? 'rgba(148, 163, 184, 0.18)' : shadowCard.color,
           opacity: userId ? 1 : 0.5,
         }}
       >
         {questDone ? '✓ Completed this week — tap to undo' : 'Mark this week\'s quest complete'}
       </button>
       {!userId && (
-        <p style={{ fontSize: '12px', color: '#888', marginTop: '8px', marginBottom: 0 }}>
+        <p style={{ fontSize: '12px', color: 'var(--text-secondary, #6b7280)', marginTop: '8px', marginBottom: 0 }}>
           Sign in to track shadow quest progress.
         </p>
       )}

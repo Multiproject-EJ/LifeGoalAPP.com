@@ -21,21 +21,21 @@ export function DeckSummary({ hand, microTestCount = 0 }: DeckSummaryProps) {
     <div
       style={{
         padding: '20px',
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        backgroundColor: 'var(--card-background, #ffffff)',
         borderRadius: '12px',
         border: `2px solid ${suitColor}`,
       }}
     >
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', margin: 0 }}>
+        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary, #111827)', margin: 0 }}>
           🎴 Your Deck
         </h3>
         {microTestCount > 0 && (
           <div
             style={{
               backgroundColor: '#ef4444',
-              color: '#fff',
+              color: 'var(--text-primary, #111827)',
               fontSize: '12px',
               fontWeight: 'bold',
               padding: '4px 10px',
@@ -49,7 +49,7 @@ export function DeckSummary({ hand, microTestCount = 0 }: DeckSummaryProps) {
 
       {/* Dominant Suit */}
       <div style={{ marginBottom: '12px' }}>
-        <div style={{ fontSize: '13px', color: '#aaa', marginBottom: '4px' }}>
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary, #6b7280)', marginBottom: '4px' }}>
           Dominant Suit
         </div>
         <div style={{ fontSize: '16px', fontWeight: 'bold', color: suitColor }}>
@@ -59,7 +59,7 @@ export function DeckSummary({ hand, microTestCount = 0 }: DeckSummaryProps) {
 
       {/* Deck Strength */}
       <div style={{ marginBottom: '12px' }}>
-        <div style={{ fontSize: '13px', color: '#aaa', marginBottom: '4px' }}>
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary, #6b7280)', marginBottom: '4px' }}>
           Deck Strength
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -67,7 +67,7 @@ export function DeckSummary({ hand, microTestCount = 0 }: DeckSummaryProps) {
             style={{
               flex: 1,
               height: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              backgroundColor: 'rgba(148, 163, 184, 0.18)',
               borderRadius: '4px',
               overflow: 'hidden',
             }}
@@ -81,14 +81,14 @@ export function DeckSummary({ hand, microTestCount = 0 }: DeckSummaryProps) {
               }}
             />
           </div>
-          <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#fff', minWidth: '40px' }}>
+          <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary, #111827)', minWidth: '40px' }}>
             {summary.deckStrength}%
           </div>
         </div>
       </div>
 
       {/* Card Count */}
-      <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>
+      <div style={{ fontSize: '12px', color: 'var(--text-secondary, #6b7280)', marginBottom: '16px' }}>
         {summary.cardCount} cards in your hand
       </div>
 
@@ -101,7 +101,7 @@ export function DeckSummary({ hand, microTestCount = 0 }: DeckSummaryProps) {
           borderLeft: '4px solid #3b82f6',
         }}
       >
-        <div style={{ fontSize: '13px', color: '#ccc' }}>
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary, #6b7280)' }}>
           {microTestCount > 0 ? (
             <>
               <strong style={{ color: '#3b82f6' }}>Micro-tests available!</strong> Take a quick 60-second quiz to level up your cards.

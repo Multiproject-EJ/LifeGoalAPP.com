@@ -74,6 +74,38 @@ function assertAnswer(question: PersonalityQuestion, value: AnswerValue | undefi
   return value;
 }
 
+/** Neutral percentage for a dimension with no real data behind it. */
+export const NEUTRAL_PERCENT = 50;
+
+/**
+ * Rebuilds PersonalityScores from a stored record's loose trait/axis maps.
+ * Missing values fall back to neutral, and dimensions the foundation test never
+ * measured are pinned to neutral even when a value is stored — records written
+ * before the phantom-0% fix carry a bogus 0 for honesty_humility/emotionality
+ * that would otherwise skew any hand rebuilt from them.
+ */
+export function coerceStoredScores(
+  traits: Record<string, number> | null | undefined,
+  axes: Record<string, number> | null | undefined,
+): PersonalityScores {
+  const pick = (source: Record<string, number> | null | undefined, key: DimensionKey): number => {
+    if (!isDimensionMeasured(key)) return NEUTRAL_PERCENT;
+    const value = source?.[key];
+    return typeof value === 'number' && Number.isFinite(value) ? value : NEUTRAL_PERCENT;
+  };
+
+  return {
+    traits: TRAIT_KEYS.reduce((acc, key) => {
+      acc[key] = pick(traits, key);
+      return acc;
+    }, {} as ScoreRecord<TraitKey>),
+    axes: AXIS_KEYS.reduce((acc, key) => {
+      acc[key] = pick(axes, key);
+      return acc;
+    }, {} as ScoreRecord<AxisKey>),
+  };
+}
+
 export function scorePersonality(
   answers: Record<string, AnswerValue>,
 ): PersonalityScores {

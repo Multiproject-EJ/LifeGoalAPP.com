@@ -38,12 +38,12 @@ export function ShadowJourneyCard({ shadowCard, records }: ShadowJourneyCardProp
     <div
       style={{
         padding: '20px',
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        backgroundColor: 'var(--card-background, #ffffff)',
         borderRadius: '12px',
         border: `2px solid ${color}55`,
       }}
     >
-      <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', margin: '0 0 12px' }}>
+      <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary, #111827)', margin: '0 0 12px' }}>
         🧙 Consult your shadow
       </h3>
 
@@ -51,16 +51,16 @@ export function ShadowJourneyCard({ shadowCard, records }: ShadowJourneyCardProp
       <div
         style={{
           padding: '12px',
-          backgroundColor: 'rgba(255, 255, 255, 0.06)',
+          backgroundColor: 'rgba(148, 163, 184, 0.10)',
           borderRadius: '8px',
           borderLeft: `4px solid ${color}`,
           marginBottom: journey.length >= 2 ? '16px' : 0,
         }}
       >
-        <div style={{ fontSize: '14px', color: '#fff', fontWeight: 'bold', marginBottom: '6px' }}>
+        <div style={{ fontSize: '14px', color: 'var(--text-primary, #111827)', fontWeight: 'bold', marginBottom: '6px' }}>
           Stuck on something? Draw your {shadowCard.icon} {shadowCard.name}.
         </div>
-        <div style={{ fontSize: '13px', color: '#ccc', lineHeight: 1.5 }}>
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary, #6b7280)', lineHeight: 1.5 }}>
           Ask yourself: <em>“What would my {shadowCard.name} do here?”</em> Its instinct is to{' '}
           {lowerFirst(shadowCard.drive)}. {shadowCard.growthStrategy}.
         </div>
@@ -69,7 +69,7 @@ export function ShadowJourneyCard({ shadowCard, records }: ShadowJourneyCardProp
       {/* Journey timeline: only meaningful once there are at least two retakes. */}
       {journey.length >= 2 && (
         <>
-          <div style={{ fontSize: '13px', color: '#aaa', marginBottom: '10px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--text-secondary, #6b7280)', marginBottom: '10px' }}>
             {distinct === 1
               ? 'Your shadow has stayed consistent across your retakes:'
               : `Your shadow has moved through ${distinct} archetypes as you've grown:`}
@@ -82,7 +82,7 @@ export function ShadowJourneyCard({ shadowCard, records }: ShadowJourneyCardProp
               >
                 <span style={{ fontSize: '20px' }}>{entry.shadowIcon}</span>
                 <span style={{ flex: 1 }}>
-                  <span style={{ display: 'block', fontSize: '13px', color: '#fff', fontWeight: 600 }}>
+                  <span style={{ display: 'block', fontSize: '13px', color: 'var(--text-primary, #111827)', fontWeight: 600 }}>
                     {entry.shadowName}
                     {entry.changedFromPrevious && (
                       <span style={{ marginLeft: '8px', fontSize: '11px', color, fontWeight: 700 }}>
@@ -90,7 +90,7 @@ export function ShadowJourneyCard({ shadowCard, records }: ShadowJourneyCardProp
                       </span>
                     )}
                   </span>
-                  <span style={{ display: 'block', fontSize: '11px', color: '#888' }}>
+                  <span style={{ display: 'block', fontSize: '11px', color: 'var(--text-secondary, #6b7280)' }}>
                     {formatDate(entry.takenAt)}
                   </span>
                 </span>

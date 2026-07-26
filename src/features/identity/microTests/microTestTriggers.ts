@@ -27,10 +27,11 @@ export type MicroTestTrigger = {
 };
 
 /**
- * Micro-tests that currently have a reachable UI surface (the Personality
- * results-screen MicroTestPanel). Both the panel and the notification badge
- * key off this set, so the badge never advertises a test the player can't open.
- * Add a test's id here once a surface renders its flow.
+ * Micro-tests that currently have a reachable UI surface (the Identity hub's
+ * test library). The library and the notification badge both resolve
+ * availability through evaluateAvailableMicroTests, so the badge never
+ * advertises a test the player can't open. Add a test's id here once its flow
+ * is reachable and its questions are valid for whoever can be offered it.
  */
 export const SELF_SERVE_MICRO_TEST_IDS: ReadonlySet<string> = new Set(['micro_hexaco_intro']);
 

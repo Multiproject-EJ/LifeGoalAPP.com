@@ -17,7 +17,12 @@ import {
   getQuizPosition,
   isSectionStart,
 } from './personalityTestSections';
-import { PersonalityScores, isDimensionMeasured, scorePersonality } from './personalityScoring';
+import {
+  PersonalityScores,
+  coerceStoredScores,
+  isDimensionMeasured,
+  scorePersonality,
+} from './personalityScoring';
 import {
   buildTopTraitList,
   buildTopTraitSummary,
@@ -51,10 +56,12 @@ import { DeckSummary } from './deck/DeckSummary';
 import { PlayerDeck } from './deck/PlayerDeck';
 import { ShadowQuestCard } from './deck/ShadowQuestCard';
 import { ShadowJourneyCard } from './deck/ShadowJourneyCard';
-import { MicroTestPanel } from './deck/MicroTestPanel';
 import { CollapsibleSection } from './CollapsibleSection';
+import { IdentityLibrary } from './IdentityLibrary';
+import { buildIdentityLibrary, countActionableTests } from './identityTestLibrary';
 import type { MicroTestResult } from './microTests/microTestScoring';
-import { loadMicroTestResults } from './microTests/microTestStore';
+import type { PlayerState } from './microTests/microTestTriggers';
+import { getCompletedMicroTestIds, loadMicroTestResults } from './microTests/microTestStore';
 import { mergeMicroTestScores } from './microTests/microTestApply';
 import { PlayersHandRevealCeremony, PlayersHandSparkPreview } from '../players_hand/spark-preview';
 import {
@@ -63,7 +70,7 @@ import {
 } from '../players_hand/playersHandFeatureFlags';
 import './deck/deck.css';
 
-type TestStep = 'intro' | 'quiz' | 'results';
+type TestStep = 'hub' | 'quiz' | 'results';
 
 type AnswerOption = {
   value: AnswerValue;
@@ -535,6 +542,14 @@ const buildRecommendations = (scores: PersonalityScores): Recommendation[] => {
   return Array.from(unique.values()).slice(0, 3);
 };
 
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+const daysSince = (isoDate: string): number => {
+  const taken = new Date(isoDate).getTime();
+  if (Number.isNaN(taken)) return 0;
+  return Math.max(0, Math.floor((Date.now() - taken) / MS_PER_DAY));
+};
+
 const formatHistoryDate = (value: string): string => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -543,9 +558,19 @@ const formatHistoryDate = (value: string): string => {
   return HISTORY_DATE_FORMATTER.format(date);
 };
 
-export default function PersonalityTest() {
+export type PersonalityTestProps = {
+  /** Gamification level, used to evaluate micro-test unlock conditions. */
+  level?: number;
+  /** Current habit streak in days, used to evaluate micro-test unlock conditions. */
+  currentStreakDays?: number;
+};
+
+export default function PersonalityTest({
+  level = 1,
+  currentStreakDays = 0,
+}: PersonalityTestProps = {}) {
   const { session } = useSupabaseAuth();
-  const [step, setStep] = useState<TestStep>('intro');
+  const [step, setStep] = useState<TestStep>('hub');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showSectionIntro, setShowSectionIntro] = useState(true);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
@@ -577,13 +602,18 @@ export default function PersonalityTest() {
   const quizPosition = getQuizPosition(currentIndex);
   const answeredCount = Object.keys(answers).length;
 
-  const foundationScores = useMemo<PersonalityScores | null>(() => {
-    if (step !== 'results') {
-      return null;
-    }
+  // Scores for the answers currently in memory. Guarded on completeness because
+  // scorePersonality throws on a missing answer — that also makes viewing an
+  // older record whose answers no longer cover the question bank degrade to
+  // "no scores" instead of throwing mid-render.
+  const sessionScores = useMemo<PersonalityScores | null>(() => {
+    const complete = ORDERED_QUIZ_QUESTIONS.every(
+      (question) => answers[question.id] !== undefined,
+    );
+    return complete ? scorePersonality(answers) : null;
+  }, [answers]);
 
-    return scorePersonality(answers);
-  }, [answers, step]);
+  const foundationScores = step === 'results' ? sessionScores : null;
 
   // Completed micro-tests for this user, loaded offline-first. Folded into the
   // displayed scores so HEXACO reveals the two deeper axes and evolves the hand.
@@ -624,6 +654,48 @@ export default function PersonalityTest() {
     () => (traitCards.length > 0 ? buildHandSummary(traitCards) : null),
     [traitCards],
   );
+
+  // ── Hub state ─────────────────────────────────────────────────────────────
+  // The hub shows the player's current card without re-running the quiz, so it
+  // rebuilds the hand from the stored record (plus any micro-test evidence).
+  // Prefer the saved record; fall back to the in-memory session so a player
+  // whose result has not persisted (guest, or offline before sync) still comes
+  // back to their hand instead of an empty "take the test" screen.
+  const hubHand = useMemo<ArchetypeHand | null>(() => {
+    const base = latestRecord
+      ? coerceStoredScores(latestRecord.traits, latestRecord.axes)
+      : sessionScores;
+    if (!base) return null;
+    const hubScores = mergeMicroTestScores(base, microResults).scores;
+    return buildHand(rankArchetypes(scoreArchetypes(hubScores, ARCHETYPE_DECK)));
+  }, [latestRecord, sessionScores, microResults]);
+
+  const hasFoundation = Boolean(latestRecord || sessionScores);
+
+  const playerState = useMemo<PlayerState>(
+    () => ({
+      level,
+      currentStreakDays,
+      daysSinceFoundationTest: latestRecord ? daysSince(latestRecord.taken_at) : 0,
+      completedMicroTests: getCompletedMicroTestIds(microResults),
+      foundationTestTaken: hasFoundation,
+    }),
+    [level, currentStreakDays, latestRecord, microResults, hasFoundation],
+  );
+
+  const libraryEntries = useMemo(
+    () =>
+      buildIdentityLibrary({
+        foundationTakenAt: latestRecord?.taken_at ?? null,
+        foundationTaken: hasFoundation,
+        foundationQuestionCount: ORDERED_QUIZ_QUESTIONS.length,
+        microResults,
+        playerState,
+      }),
+    [latestRecord, hasFoundation, microResults, playerState],
+  );
+
+  const actionableTestCount = countActionableTests(libraryEntries);
 
   const recommendations = useMemo(
     () => {
@@ -712,7 +784,7 @@ export default function PersonalityTest() {
   const handleBack = () => {
     if (showSectionIntro) {
       if (quizPosition.sectionIndex === 0) {
-        setStep('intro');
+        setStep('hub');
         return;
       }
       setShowSectionIntro(false);
@@ -1076,7 +1148,37 @@ export default function PersonalityTest() {
         </div>
       )}
 
-      {step === 'intro' && (
+      {step === 'hub' && hubHand && (
+        <>
+          <div className="identity-hub__section">
+            <DeckSummary hand={hubHand} microTestCount={actionableTestCount} />
+          </div>
+          <div className="identity-hub__section">
+            <IdentityLibrary
+              userId={activeUserId}
+              entries={libraryEntries}
+              foundationScores={
+                latestRecord
+                  ? coerceStoredScores(latestRecord.traits, latestRecord.axes)
+                  : sessionScores
+              }
+              microResults={microResults}
+              onResultsChange={setMicroResults}
+              onTakeFoundation={handleStart}
+            />
+          </div>
+          <div className="identity-hub__section">
+            <ShadowQuestCard hand={hubHand} userId={activeUserId} />
+          </div>
+          <div className="identity-hub__actions">
+            <button className="identity-hub__cta" type="button" onClick={handleViewLatest}>
+              View full results
+            </button>
+          </div>
+        </>
+      )}
+
+      {step === 'hub' && !hubHand && (
         <div className="identity-hub__card">
           <h3 className="identity-hub__card-title">Meet your playstyle</h3>
           <p className="identity-hub__card-text">
@@ -1265,17 +1367,6 @@ export default function PersonalityTest() {
               <div className="identity-hub__section">
                 <DeckSummary hand={archetypeHand} microTestCount={0} />
               </div>
-              {foundationScores && (
-                <div className="identity-hub__section">
-                  <MicroTestPanel
-                    userId={activeUserId}
-                    foundationScores={foundationScores}
-                    results={microResults}
-                    dominantName={archetypeHand.dominant.card.name}
-                    onResultsChange={setMicroResults}
-                  />
-                </div>
-              )}
               <div className="identity-hub__section">
                 <ShadowQuestCard hand={archetypeHand} userId={activeUserId} />
               </div>
@@ -1470,6 +1561,9 @@ export default function PersonalityTest() {
             )}
           </CollapsibleSection>
           <div className="identity-hub__actions">
+            <button className="identity-hub__secondary" type="button" onClick={() => setStep('hub')}>
+              ← Back to Identity
+            </button>
             <button className="identity-hub__secondary" type="button" onClick={handleRetake}>
               Retake
             </button>
