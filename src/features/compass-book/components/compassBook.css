@@ -1,3 +1,30 @@
+/* The book's own type, bundled with the feature (OFL 1.1 — see assets/fonts).
+   Cinzel is the lapidary display face for titles and numerals; EB Garamond is
+   the text face for the book's voice and the player's written lines. */
+@font-face {
+  font-family: 'Cinzel';
+  src: url('../assets/fonts/Cinzel-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'EB Garamond';
+  src: url('../assets/fonts/EBGaramond-400.woff2') format('woff2');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'EB Garamond';
+  src: url('../assets/fonts/EBGaramond-400i.woff2') format('woff2');
+  font-weight: 400 800;
+  font-style: italic;
+  font-display: swap;
+}
+
 /* Compass Book — Player Menu full-screen shell (PR 2, visual pass v2).
    Mobile-first, safe-area aware. Scoped under the `compass-book` namespace so it
    never couples to Island Run or the mobile-menu overlay styles.
@@ -23,7 +50,8 @@
   --cbk-line-strong: rgba(70, 50, 16, 0.3);
   --cbk-well: rgba(70, 50, 16, 0.06);
   --cbk-card: rgba(255, 252, 240, 0.42);
-  --cbk-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
+  --cbk-serif: 'EB Garamond', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --cbk-display: 'Cinzel', 'Iowan Old Style', Palatino, Georgia, serif;
 
   position: fixed;
   inset: 0;
@@ -385,8 +413,9 @@
 }
 
 .compass-book__chapter-title {
-  font-family: var(--cbk-serif);
-  font-size: 1.55rem;
+  font-family: var(--cbk-display);
+  font-size: 1.34rem;
+  line-height: 1.25;
   font-weight: 700;
   letter-spacing: 0.01em;
   margin: 0 0 6px;
@@ -395,8 +424,10 @@
 .compass-book__chapter-question {
   margin: 0 0 12px;
   color: var(--cbk-ink-soft);
-  line-height: 1.45;
-  font-size: 0.94rem;
+  font-family: var(--cbk-serif);
+  font-style: italic;
+  line-height: 1.4;
+  font-size: 1.06rem;
 }
 
 .compass-book__chips {
@@ -569,8 +600,9 @@
 }
 
 .compass-book__activity-heading {
-  font-family: var(--cbk-serif);
-  font-size: 1.4rem;
+  font-family: var(--cbk-display);
+  font-size: 1.18rem;
+  line-height: 1.3;
   font-weight: 700;
   letter-spacing: 0.01em;
   margin: 6px 0 10px;
@@ -616,9 +648,10 @@
 
 .compass-book__block-prompt {
   margin: 0 0 12px;
-  font-size: 0.98rem;
+  font-family: var(--cbk-serif);
+  font-size: 1.12rem;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .compass-book__block-help {
@@ -1440,7 +1473,7 @@
   padding: 0;
   cursor: pointer;
   color: #ecd9ab;
-  font-family: var(--cbk-serif);
+  font-family: var(--cbk-display);
   font-size: 0.86rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -1524,8 +1557,8 @@
 
 .compass-reading__title {
   margin: 6px 0 0;
-  font-family: var(--cbk-serif);
-  font-size: 1.9rem;
+  font-family: var(--cbk-display);
+  font-size: 1.72rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   color: #26375a;
@@ -1533,7 +1566,9 @@
 
 .compass-reading__subtitle {
   margin: 6px 0 0;
-  font-size: 0.86rem;
+  font-family: var(--cbk-serif);
+  font-style: italic;
+  font-size: 1rem;
   color: var(--cbk-ink-muted);
 }
 
@@ -1555,7 +1590,7 @@
 }
 
 .compass-reading__meter-value {
-  font-family: var(--cbk-serif);
+  font-family: var(--cbk-display);
   font-size: 1.35rem;
   font-weight: 700;
   color: var(--cbk-gold);
@@ -1608,7 +1643,7 @@
   place-items: center;
   width: 34px;
   height: 34px;
-  font-family: var(--cbk-serif);
+  font-family: var(--cbk-display);
   font-size: 0.92rem;
   font-weight: 700;
   color: var(--cbk-gold);
@@ -1633,13 +1668,15 @@
 
 .compass-reading__row-headline {
   font-family: var(--cbk-serif);
-  font-size: 0.98rem;
-  line-height: 1.35;
+  font-style: italic;
+  font-size: 1.08rem;
+  line-height: 1.32;
   color: #26375a;
 }
 
 .compass-reading__row-promise {
-  font-size: 0.82rem;
+  font-family: var(--cbk-serif);
+  font-size: 0.95rem;
   line-height: 1.35;
   font-style: italic;
   color: var(--cbk-ink-muted);
@@ -1686,8 +1723,8 @@
   height: 30px;
   padding: 0 6px;
   margin-right: 2px;
-  font-family: var(--cbk-serif);
-  font-size: 1.05rem;
+  font-family: var(--cbk-display);
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--cbk-gold);
   background: rgba(255, 252, 240, 0.55);
@@ -1771,6 +1808,7 @@
   text-align: center;
   color: #f2c14e;
   background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='l'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.07'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23l)'/%3E%3C/svg%3E"),
     radial-gradient(120% 90% at 30% 15%, #1c2a56 0%, #101838 55%, #0a1026 100%);
   border-right: 2px solid rgba(242, 193, 78, 0.4);
   box-shadow:
@@ -1815,8 +1853,8 @@
 }
 
 .compass-book__cover-name {
-  font-family: var(--cbk-serif);
-  font-size: 2.5rem;
+  font-family: var(--cbk-display);
+  font-size: 2.05rem;
   font-weight: 700;
   line-height: 1.04;
   letter-spacing: 0.01em;
@@ -1831,10 +1869,7 @@
 }
 
 .compass-book__cover-rose {
-  margin-top: 6px;
-  font-size: 2.6rem;
-  opacity: 0.5;
-  text-shadow: 0 0 30px rgba(242, 193, 78, 0.5);
+  margin-top: 10px;
 }
 
 @keyframes cbk-cover-open {
@@ -2034,7 +2069,8 @@
 .compass-reading__waiting {
   margin: 4px 0 0;
   padding: 12px 14px;
-  font-size: 0.86rem;
+  font-family: var(--cbk-serif);
+  font-size: 1rem;
   line-height: 1.5;
   text-align: center;
   color: var(--cbk-ink-soft);
@@ -2077,4 +2113,87 @@
   -webkit-line-clamp: 2;
   line-clamp: 2;
   overflow: hidden;
+}
+
+
+/* ============================================================
+   The compass rose (CompassRose.tsx)
+   ============================================================
+   Two materials: gold ink pressed into parchment, or bright foil on leather.
+   The dark/light halves of each point are what make it read as engraved. */
+
+.compass-rose {
+  display: block;
+}
+
+.compass-rose--ink {
+  --rose-dark: #7c5a10;
+  --rose-light: #d2a028;
+  --rose-line: rgba(122, 88, 18, 0.75);
+  --rose-letter: #6b5636;
+}
+
+.compass-rose--gilt {
+  --rose-dark: #a87718;
+  --rose-light: #ffdf8e;
+  --rose-line: rgba(242, 193, 78, 0.8);
+  --rose-letter: #f2c14e;
+  filter: drop-shadow(0 0 14px rgba(242, 193, 78, 0.35));
+}
+
+.compass-rose__ring {
+  fill: none;
+  stroke: var(--rose-line);
+  stroke-width: 1.4;
+}
+
+.compass-rose__ring--thin {
+  stroke-width: 0.6;
+  opacity: 0.7;
+}
+
+.compass-rose__tick {
+  stroke: var(--rose-line);
+  stroke-width: 0.6;
+  opacity: 0.7;
+}
+
+.compass-rose__tick--major {
+  stroke-width: 1.2;
+  opacity: 1;
+}
+
+.compass-rose__half--dark {
+  fill: var(--rose-dark);
+}
+
+.compass-rose__half--light {
+  fill: var(--rose-light);
+}
+
+.compass-rose__hub {
+  fill: var(--rose-light);
+  stroke: var(--rose-dark);
+  stroke-width: 1.2;
+}
+
+.compass-rose__pin {
+  fill: var(--rose-dark);
+}
+
+.compass-rose__letter {
+  fill: var(--rose-letter);
+  font-family: var(--cbk-display, serif);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* The Reading's rose keeps the breathe; the cover's stays still and glows. */
+.compass-reading__rose {
+  display: flex;
+  justify-content: center;
+}
+
+.compass-book__cover-rose .compass-rose {
+  margin: 0 auto;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { CompassRose } from './CompassRose';
 
 /** How long the cover takes to swing open. Must match `cbk-cover-open` in CSS. */
 export const COVER_OPEN_MS = 900;
@@ -51,7 +52,7 @@ export function CompassBookCoverPlate({ onOpened }: CompassBookCoverPlateProps) 
           Your legend.
         </span>
         <span className="compass-book__cover-rose" aria-hidden="true">
-          ✵
+          <CompassRose tone="gilt" size={132} />
         </span>
       </div>
     </div>

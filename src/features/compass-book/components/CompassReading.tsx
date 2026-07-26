@@ -6,6 +6,7 @@ import type {
 } from '../types';
 import { summarizeCompassReading, type CompassReadingRow } from '../logic/reading';
 import { CompassLiveQuests } from './CompassLiveQuests';
+import { CompassRose } from './CompassRose';
 
 const STATUS_LABEL: Record<CompassReadingRow['status'], string> = {
   ahead: 'Not reached',
@@ -61,7 +62,7 @@ export function CompassReading({
     <div className="compass-book__scroll">
       <section className="compass-reading__hero" aria-label="The Reading">
         <span className="compass-reading__rose" aria-hidden="true">
-          ✦
+          <CompassRose tone="ink" size={124} />
         </span>
         <h1 className="compass-reading__title">The Reading</h1>
         <p className="compass-reading__subtitle">
