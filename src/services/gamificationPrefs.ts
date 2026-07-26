@@ -4,6 +4,11 @@
 import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
 import type { GamificationProfile } from '../types/gamification';
 import { DEMO_ENABLED_KEY } from '../types/gamification';
+import { DEMO_USER_ID } from './demoData';
+
+function canUseCloudGamificationPreferences(userId: string): boolean {
+  return userId !== DEMO_USER_ID && canUseSupabaseData();
+}
 
 /**
  * Fetch whether gamification is enabled for the user
@@ -14,7 +19,7 @@ export async function fetchGamificationEnabled(userId: string): Promise<{
 }> {
   try {
     // Demo mode: use localStorage
-    if (!canUseSupabaseData()) {
+    if (!canUseCloudGamificationPreferences(userId)) {
       const enabled = localStorage.getItem(DEMO_ENABLED_KEY);
       // Default to true if not set, otherwise parse the stored value
       const isEnabled = enabled === null ? true : JSON.parse(enabled);
@@ -63,7 +68,7 @@ export async function updateGamificationEnabled(
 }> {
   try {
     // Demo mode: use localStorage
-    if (!canUseSupabaseData()) {
+    if (!canUseCloudGamificationPreferences(userId)) {
       localStorage.setItem(DEMO_ENABLED_KEY, JSON.stringify(enabled));
       return { data: enabled, error: null };
     }
@@ -107,7 +112,7 @@ export async function fetchGamificationProfile(userId: string): Promise<{
 }> {
   try {
     // Demo mode: use localStorage
-    if (!canUseSupabaseData()) {
+    if (!canUseCloudGamificationPreferences(userId)) {
       const profileJson = localStorage.getItem('lifegoal_demo_gamification_profile');
       if (!profileJson) {
         // Return default profile

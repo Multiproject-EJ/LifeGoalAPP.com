@@ -4,6 +4,7 @@ import type { PowerUp, UserPowerUp, PurchaseResult, ActiveBoost } from '../types
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import { awardXP } from './gamification';
 import { recordTelemetryEvent } from './telemetry';
+import { DEMO_USER_ID } from './demoData';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -11,6 +12,10 @@ type ServiceResponse<T> = {
 };
 
 const DEMO_POWERUPS_KEY = 'demo_user_powerups';
+
+function canUseCloudPowerUpData(userId: string): boolean {
+  return userId !== DEMO_USER_ID && canUseSupabaseData();
+}
 
 /**
  * Fetch all available power-ups from catalog
@@ -184,7 +189,7 @@ export async function fetchPowerUpsCatalog(): Promise<ServiceResponse<PowerUp[]>
  * Fetch user's purchased power-ups
  */
 export async function fetchUserPowerUps(userId: string): Promise<ServiceResponse<UserPowerUp[]>> {
-  if (!canUseSupabaseData()) {
+  if (!canUseCloudPowerUpData(userId)) {
     try {
       const stored = localStorage.getItem(`${DEMO_POWERUPS_KEY}_${userId}`);
       const powerups = stored ? JSON.parse(stored) : [];
@@ -326,7 +331,7 @@ export async function purchasePowerUp(
     : null;
 
   // Create user power-up record
-  if (!canUseSupabaseData()) {
+  if (!canUseCloudPowerUpData(userId)) {
     const userPowerUp: UserPowerUp = {
       id: `demo-${Date.now()}`,
       userId,
@@ -462,7 +467,7 @@ async function applyInstantEffect(userId: string, powerUp: PowerUp, profile: any
       return `Awarded ${powerUp.effectValue} XP`;
 
     case 'extra_life':
-      if (!canUseSupabaseData()) {
+      if (!canUseCloudPowerUpData(userId)) {
         saveDemoProfile({
           ...profile,
           lives: Math.min(profile.lives + powerUp.effectValue, profile.max_lives),
@@ -479,7 +484,7 @@ async function applyInstantEffect(userId: string, powerUp: PowerUp, profile: any
 
     case 'spin_token':
       // Add spin token
-      if (!canUseSupabaseData()) {
+      if (!canUseCloudPowerUpData(userId)) {
         // Demo mode - skip
       } else {
         // Get current spin state
@@ -515,7 +520,7 @@ async function applyInstantEffect(userId: string, powerUp: PowerUp, profile: any
       if (randomReward.type === 'xp') {
         await awardXP(userId, randomReward.value, 'daily_login', undefined, 'Mystery Chest');
       } else if (randomReward.type === 'gold') {
-        if (!canUseSupabaseData()) {
+        if (!canUseCloudPowerUpData(userId)) {
           saveDemoProfile({ ...profile, total_points: profile.total_points + randomReward.value });
         } else {
           await supabase
@@ -524,7 +529,7 @@ async function applyInstantEffect(userId: string, powerUp: PowerUp, profile: any
             .eq('user_id', userId);
         }
       } else if (randomReward.type === 'freeze') {
-        if (!canUseSupabaseData()) {
+        if (!canUseCloudPowerUpData(userId)) {
           saveDemoProfile({
             ...profile,
             streak_freezes: profile.streak_freezes + randomReward.value,
@@ -542,7 +547,7 @@ async function applyInstantEffect(userId: string, powerUp: PowerUp, profile: any
       return `Mystery Chest: ${randomReward.label}!`;
 
     case 'streak_freeze':
-      if (!canUseSupabaseData()) {
+      if (!canUseCloudPowerUpData(userId)) {
         const capacity = profile.freeze_bank_capacity || 3;
         saveDemoProfile({
           ...profile,
@@ -585,7 +590,7 @@ async function applyInstantEffect(userId: string, powerUp: PowerUp, profile: any
  * Activate a purchased power-up (for non-instant items)
  */
 export async function activatePowerUp(userPowerUpId: string, userId: string): Promise<ServiceResponse<boolean>> {
-  if (!canUseSupabaseData()) {
+  if (!canUseCloudPowerUpData(userId)) {
     // Demo mode - mark as active in localStorage
     const stored = localStorage.getItem(`${DEMO_POWERUPS_KEY}_${userId}`);
     if (stored) {
@@ -687,7 +692,7 @@ export async function applyPermanentUpgrade(
 ): Promise<ServiceResponse<boolean>> {
   const supabase = getSupabaseClient();
 
-  if (!canUseSupabaseData()) {
+  if (!canUseCloudPowerUpData(userId)) {
     // Demo mode
     const { data: profile, error: profileError } = await fetchGamificationProfile(userId);
     if (profileError || !profile) {
@@ -740,7 +745,7 @@ export async function applyPermanentUpgrade(
  * Deactivate expired power-up
  */
 async function deactivatePowerUp(userPowerUpId: string, userId: string): Promise<void> {
-  if (!canUseSupabaseData()) return;
+  if (!canUseCloudPowerUpData(userId)) return;
 
   const supabase = getSupabaseClient();
 
