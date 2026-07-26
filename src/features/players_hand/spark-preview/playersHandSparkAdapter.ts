@@ -1,11 +1,19 @@
 import type { ArchetypeHand, HandCard, HandRole } from '../../identity/archetypes/archetypeHandBuilder';
-import { ARCHETYPE_DECK } from '../../identity/archetypes/archetypeDeck';
+import { ARCHETYPE_DECK, SUIT_GLYPHS } from '../../identity/archetypes/archetypeDeck';
 import { getArchetypeActivationCopy } from '../../identity/archetypes/archetypeActivationCopy';
 import type { SparkPreviewCard, SparkPreviewRarity } from './playersHandSparkTypes';
 
 function toCards(hand: ArchetypeHand): HandCard[] {
   return [hand.dominant, hand.secondary, ...hand.supports, hand.shadow];
 }
+
+/** Dominant is the ace of the hand; the shadow gets a moon — unplayed, not lesser. */
+const ROLE_RANKS: Record<HandRole, string> = {
+  dominant: 'A',
+  secondary: 'K',
+  support: 'J',
+  shadow: '\u263E',
+};
 
 function deriveRarity(role: HandRole, level: number): SparkPreviewRarity {
   if (role === 'dominant' || level >= 4) return 'legendary';
@@ -21,6 +29,8 @@ export function adaptArchetypeHandToSparkPreview(hand: ArchetypeHand): SparkPrev
     title: entry.card.name,
     description: entry.card.drive,
     icon: entry.card.icon,
+    suitGlyph: SUIT_GLYPHS[entry.card.suit],
+    rank: ROLE_RANKS[entry.role],
     color: entry.card.color,
     level: entry.level,
     role: entry.role,
@@ -45,6 +55,8 @@ export function buildDevOnlyFallbackSparkPreviewCards(): SparkPreviewCard[] {
     title: entry.card.name,
     description: entry.card.drive,
     icon: entry.card.icon,
+    suitGlyph: SUIT_GLYPHS[entry.card.suit],
+    rank: ROLE_RANKS[entry.role],
     color: entry.card.color,
     level: entry.level,
     role: entry.role,

@@ -16,6 +16,7 @@ import {
 } from './personalityTestDataV2';
 import { scoreScenarioAnswers, describePlaystyle } from './personalityScoringV2';
 import { CURRENT_FOUNDATION_VERSION, readStoredFoundation } from './foundationScoring';
+import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import {
   PersonalityScores,
   coerceStoredScores,
@@ -56,6 +57,7 @@ import { PlayerDeck } from './deck/PlayerDeck';
 import { ShadowQuestCard } from './deck/ShadowQuestCard';
 import { ShadowJourneyCard } from './deck/ShadowJourneyCard';
 import { CollapsibleSection } from './CollapsibleSection';
+import { PlaystyleSigil } from './PlaystyleSigil';
 import { IdentityLibrary } from './IdentityLibrary';
 import { buildIdentityLibrary, countActionableTests } from './identityTestLibrary';
 import type { MicroTestResult } from './microTests/microTestScoring';
@@ -588,6 +590,20 @@ export default function PersonalityTest({
   const quizPosition = getScenarioPosition(currentIndex);
   const answeredCount = Object.keys(answers).length;
 
+  // Answered questions within the current axis — drives the charging suit icon.
+  const axisAnsweredCount = ORDERED_SCENARIO_QUESTIONS.filter(
+    (question) => question.axis === quizPosition.axis.key && answers[question.id],
+  ).length;
+  const axisCharge = quizPosition.axisSize > 0 ? axisAnsweredCount / quizPosition.axisSize : 0;
+
+  // #3 Live axis needle: where this axis currently sits, from the answers given
+  // so far. Undefined until the first answer, so the needle doesn't imply a
+  // reading the player hasn't produced yet.
+  const liveAxisScore = useMemo(() => {
+    if (axisAnsweredCount === 0) return null;
+    return scoreScenarioAnswers(answers).axisScores[quizPosition.axis.key];
+  }, [answers, axisAnsweredCount, quizPosition.axis.key]);
+
   // The in-memory session read. Every question is skippable, so this is valid
   // from the first answer onward — it simply reports which dimensions and axes
   // have real data behind them (`measured`) rather than demanding completeness.
@@ -659,6 +675,26 @@ export default function PersonalityTest({
       };
     });
   }, [sessionRead, storedReadForHero]);
+
+  // Sigil inputs: this session's axes if present, else the stored v2 record's.
+  // The previous v2 record (if any) becomes the ghost outline.
+  const sigilData = useMemo(() => {
+    const axisScores = sessionRead?.axisScores ?? storedReadForHero?.axisScores;
+    const measuredAxes = sessionRead?.measuredAxes ?? storedReadForHero?.measuredAxes;
+    if (!axisScores || !measuredAxes) return null;
+
+    // Compare against the most recent *other* v2 record so a retake shows movement.
+    const previous = history
+      .slice(sessionRead ? 0 : 1)
+      .map((record) => readStoredFoundation(record))
+      .find((read) => read?.axisScores && read.axisScores !== axisScores);
+
+    return {
+      axisScores,
+      measuredAxes,
+      previousAxisScores: previous?.axisScores ?? null,
+    };
+  }, [sessionRead, storedReadForHero, history]);
 
   const handSummary = useMemo(
     () => (traitCards.length > 0 ? buildHandSummary(traitCards) : null),
@@ -766,10 +802,19 @@ export default function PersonalityTest({
       return;
     }
 
+    const wasAnswered = Boolean(answers[currentQuestion.id]);
     setAnswers((prev) => ({
       ...prev,
       [currentQuestion.id]: optionId,
     }));
+
+    // A light tap on every pick, and a firmer one when this pick completes an
+    // axis. triggerCompletionHaptic already honours the user's haptic setting,
+    // reduced-motion, and rate limits, and no-ops on web.
+    const completesAxis = !wasAnswered && axisAnsweredCount + 1 === quizPosition.axisSize;
+    triggerCompletionHaptic(completesAxis ? 'medium' : 'light', {
+      channel: completesAxis ? 'gamification' : 'action',
+    });
   };
 
   const advance = () => {
@@ -1273,13 +1318,31 @@ export default function PersonalityTest({
       )}
 
       {step === 'quiz' && !showSectionIntro && currentQuestion && (
-        <div className="identity-hub__card">
+        <div
+          // Keyed on the question so each one re-runs the deal-in animation.
+          key={currentQuestion.id}
+          className="identity-hub__card identity-hub__card--dealt identity-hub__quiz-card"
+          style={
+            {
+              '--suit-color': quizPosition.axis.color,
+              '--axis-charge': `${Math.round(axisCharge * 100)}%`,
+            } as CSSProperties
+          }
+        >
           <div className="identity-hub__progress-row">
             <span
               className="identity-hub__progress-suit"
               style={{ '--suit-color': quizPosition.axis.color } as CSSProperties}
             >
-              {quizPosition.axis.icon} {quizPosition.axis.highLabel} ↔ {quizPosition.axis.lowLabel} ·{' '}
+              <span
+                className={`identity-hub__charge${
+                  axisCharge >= 1 ? ' identity-hub__charge--full' : ''
+                }`}
+                aria-hidden="true"
+              >
+                <span className="identity-hub__charge-icon">{quizPosition.axis.icon}</span>
+              </span>
+              {quizPosition.axis.highLabel} ↔ {quizPosition.axis.lowLabel} ·{' '}
               {quizPosition.questionInAxis}/{quizPosition.axisSize}
             </span>
             <span className="identity-hub__progress">
@@ -1294,6 +1357,29 @@ export default function PersonalityTest({
                 backgroundColor: quizPosition.axis.color,
               }}
             />
+          </div>
+          <div
+            className="identity-hub__needle"
+            role="img"
+            aria-label={
+              liveAxisScore === null
+                ? `${quizPosition.axis.highLabel} to ${quizPosition.axis.lowLabel}: no reading yet`
+                : `${quizPosition.axis.highLabel} to ${quizPosition.axis.lowLabel}: leaning ${
+                    liveAxisScore >= 50 ? quizPosition.axis.highLabel : quizPosition.axis.lowLabel
+                  }`
+            }
+          >
+            <span className="identity-hub__needle-end">{quizPosition.axis.lowLabel}</span>
+            <span className="identity-hub__needle-track">
+              <span className="identity-hub__needle-tick" aria-hidden="true" />
+              {liveAxisScore !== null && (
+                <span
+                  className="identity-hub__needle-marker"
+                  style={{ left: `${liveAxisScore}%` }}
+                />
+              )}
+            </span>
+            <span className="identity-hub__needle-end">{quizPosition.axis.highLabel}</span>
           </div>
           <h3 className="identity-hub__card-title">{currentQuestion.text}</h3>
           <p className="identity-hub__card-text identity-hub__card-text--compact">
@@ -1346,6 +1432,15 @@ export default function PersonalityTest({
             <p className="identity-hub__results-kicker">Your playstyle</p>
             {playstyleRead.length > 0 ? (
               <>
+                {sigilData && (
+                  <div className="identity-hub__sigil-wrap">
+                    <PlaystyleSigil
+                      axisScores={sigilData.axisScores}
+                      measuredAxes={sigilData.measuredAxes}
+                      previousAxisScores={sigilData.previousAxisScores}
+                    />
+                  </div>
+                )}
                 <ul className="identity-hub__playstyle">
                   {playstyleRead.map((entry) => (
                     <li

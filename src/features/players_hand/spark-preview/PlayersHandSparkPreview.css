@@ -179,3 +179,54 @@
   padding: 8px 10px;
   font-weight: 700;
 }
+
+/* ── Playing-card anatomy on the SPARK card front ─────────────────────────
+   Corner pips (rank + suit glyph, mirrored) and a suit watermark, so the
+   hand reads as cards rather than as tiles. */
+
+.players-hand-spark-preview__card-face--front {
+  position: relative;
+  overflow: hidden;
+}
+
+.pcard-pip {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  font-weight: 700;
+  color: currentColor;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.pcard-pip--tl {
+  top: 6px;
+  left: 7px;
+}
+
+.pcard-pip--br {
+  bottom: 6px;
+  right: 7px;
+  transform: rotate(180deg);
+}
+
+.pcard-pip__rank {
+  font-size: 0.72rem;
+}
+
+.pcard-pip__glyph {
+  font-size: 0.6rem;
+}
+
+.pcard-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 4.5rem;
+  line-height: 1;
+  opacity: 0.08;
+  pointer-events: none;
+}

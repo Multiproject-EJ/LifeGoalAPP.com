@@ -64,6 +64,17 @@ export const SUIT_COLORS: Record<SuitKey, string> = {
 };
 
 /**
+ * Playing-card glyph per suit. Power/Heart/Mind/Spirit map onto the four
+ * classic suits so the cards read as cards — corner pips, watermark, and all.
+ */
+export const SUIT_GLYPHS: Record<SuitKey, string> = {
+  power: '♠',
+  heart: '♥',
+  mind: '♦',
+  spirit: '♣',
+};
+
+/**
  * Suit labels with semantic meaning
  */
 export const SUIT_LABELS: Record<SuitKey, string> = {

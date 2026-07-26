@@ -9,6 +9,9 @@ export interface SparkPreviewCard {
   title: string;
   description: string;
   icon: string;
+  /** Playing-card anatomy: suit glyph and corner rank. */
+  suitGlyph?: string;
+  rank?: string;
   color: string;
   level: number;
   role: HandRole;

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { HandCard } from '../archetypes/archetypeHandBuilder';
+import { SUIT_GLYPHS, SUIT_LABELS } from '../archetypes/archetypeDeck';
 import { getArchetypeCopy, getRoleMessage } from '../archetypes/archetypeCopy';
 
 type ArchetypeCardProps = {
@@ -8,84 +9,87 @@ type ArchetypeCardProps = {
   compact?: boolean;
 };
 
+/**
+ * Card "rank" per role. Dominant is the ace of your hand; the shadow gets a
+ * moon rather than a low number — it is unplayed, not worth less.
+ */
+const ROLE_RANKS: Record<HandCard['role'], string> = {
+  dominant: 'A',
+  secondary: 'K',
+  support: 'J',
+  shadow: '☾',
+};
+
 const ROLE_LABELS: Record<HandCard['role'], string> = {
-  dominant: 'DOM.',
-  secondary: 'SEC.',
-  support: 'SUP.',
-  shadow: 'SHDW',
+  dominant: 'Dominant',
+  secondary: 'Secondary',
+  support: 'Support',
+  shadow: 'Shadow',
 };
 
 /**
- * Individual archetype card component.
- * Shows icon, name, level stars, suit color, and role label.
+ * A single archetype card with real playing-card anatomy: corner pips (rank +
+ * suit glyph, mirrored bottom-right), a suit watermark, a portrait window, and
+ * a name banner. Previously this was a rounded box with an emoji, which read as
+ * UI rather than as a card.
  */
 export function ArchetypeCard({ handCard, onClick, compact = false }: ArchetypeCardProps) {
   const { card, role, level } = handCard;
   const copy = getArchetypeCopy(handCard);
+  const glyph = SUIT_GLYPHS[card.suit];
+  const rank = ROLE_RANKS[role];
 
-  const stars = '★'.repeat(Math.max(0, Math.min(5, level))) + '☆'.repeat(Math.max(0, 5 - Math.min(5, level)));
+  const Wrapper = onClick ? 'button' : 'div';
 
   return (
-    <div
-      className={`archetype-card ${compact ? 'compact' : ''} ${onClick ? 'clickable' : ''}`}
-      style={{
-        border: `2px solid ${card.color}`,
-        borderRadius: '12px',
-        padding: compact ? '12px' : '16px',
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        cursor: onClick ? 'pointer' : 'default',
-        transition: 'all 0.2s ease',
-      }}
+    <Wrapper
+      type={onClick ? 'button' : undefined}
+      className={[
+        'pcard',
+        `pcard--${role}`,
+        compact ? 'pcard--compact' : '',
+        onClick ? 'pcard--clickable' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      style={{ ['--card-color' as string]: card.color }}
       onClick={onClick}
+      aria-label={`${card.name}, ${ROLE_LABELS[role]} card, ${SUIT_LABELS[card.suit]}`}
     >
-      {/* Header: Icon and Role Label */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-        <div style={{ fontSize: compact ? '24px' : '32px' }}>
-          {card.icon}
-        </div>
-        <div
-          style={{
-            fontSize: '10px',
-            fontWeight: 'bold',
-            color: card.color,
-            padding: '2px 6px',
-            border: `1px solid ${card.color}`,
-            borderRadius: '4px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-          }}
-        >
-          {ROLE_LABELS[role]}
-        </div>
-      </div>
+      <span className="pcard__pip pcard__pip--tl" aria-hidden="true">
+        <span className="pcard__rank">{rank}</span>
+        <span className="pcard__glyph">{glyph}</span>
+      </span>
 
-      {/* Card Name */}
-      <div style={{ marginBottom: '8px' }}>
-        <div style={{ fontSize: compact ? '14px' : '16px', fontWeight: 'bold', color: '#fff' }}>
-          {card.name}
-        </div>
-        <div style={{ fontSize: '12px', color: '#aaa', marginTop: '2px' }}>
-          {card.suit.charAt(0).toUpperCase() + card.suit.slice(1)} Suit
-        </div>
-      </div>
+      <span className="pcard__watermark" aria-hidden="true">
+        {glyph}
+      </span>
 
-      {/* Level Stars */}
-      <div style={{ fontSize: '14px', color: card.color, marginBottom: compact ? '0' : '12px' }}>
-        {stars} <span style={{ fontSize: '11px', color: '#888', marginLeft: '4px' }}>Lv {level}</span>
-      </div>
+      <span className="pcard__portrait" aria-hidden="true">
+        {card.icon}
+      </span>
 
-      {/* Details (only in non-compact mode) */}
-      {!compact && (
-        <div style={{ marginTop: '12px', fontSize: '13px', color: '#ccc', lineHeight: '1.5' }}>
-          <div style={{ marginBottom: '8px', fontStyle: 'italic' }}>
-            "{card.drive}"
-          </div>
-          <div style={{ fontSize: '12px', color: '#999' }}>
-            {copy.powerLine}
-          </div>
-        </div>
-      )}
-    </div>
+      <span className="pcard__banner">
+        <span className="pcard__name">{card.name}</span>
+        {!compact && <span className="pcard__drive">{card.drive}</span>}
+      </span>
+
+      <span className="pcard__level" aria-hidden="true">
+        {Array.from({ length: 5 }, (_, index) => (
+          <span
+            key={index}
+            className={`pcard__level-pip${index < level ? ' pcard__level-pip--on' : ''}`}
+          />
+        ))}
+      </span>
+
+      <span className="pcard__pip pcard__pip--br" aria-hidden="true">
+        <span className="pcard__rank">{rank}</span>
+        <span className="pcard__glyph">{glyph}</span>
+      </span>
+
+      {!compact && <span className="pcard__power">{copy.powerLine}</span>}
+    </Wrapper>
   );
 }
 
