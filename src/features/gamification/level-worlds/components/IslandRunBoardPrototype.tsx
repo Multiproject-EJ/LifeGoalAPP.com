@@ -53,7 +53,6 @@ import {
 import { StatDriftNumbers } from './StatDriftNumbers';
 import { OutOfDiceRegenStatus } from './OutOfDiceRegenStatus';
 import { LoadingReadinessScreen } from '../../../../components/LoadingReadinessScreen';
-import { ShopItemCostLine } from './ShopItemCostLine';
 import {
   getIslandBoardThemeForIslandNumber,
   type IslandBoardTheme,
@@ -473,15 +472,17 @@ import {
   shouldAutoAdvanceIslandOnTimerExpiry,
 } from '../services/islandRunTimerProgression';
 import { createDicePackCheckoutSession } from '../../../../services/billing';
-import { type DicePackSkuId } from '../../../../services/dicePackPurchases';
 import {
-  hasSeenDicePackShop,
+  DICE_COMMERCE_MODE,
+  type DicePackSkuId,
+} from '../../../../services/dicePackPurchases';
+import {
   hasVisitedLandingPageTreat,
-  markDicePackShopSeen,
   markLandingPageTreatVisited,
 } from '../../../../services/landingPageTreat';
 import { createCreaturePackCheckoutSession } from '../../../../services/creaturePackPurchases';
 import { DicePackOfferGrid } from './DicePackOfferGrid';
+import { IslandRunSupplyDock } from './IslandRunSupplyDock';
 import {
   initiateMinigameTicketCheckout,
   resolveMinigameTicketSku,
@@ -2215,7 +2216,6 @@ export function IslandRunBoardPrototype({
   }, [showEggReadyBanner, activeEgg?.setAtMs]);
 
   const [showShopPanel, setShowShopPanel] = useState(false);
-  const [hasSeenDicePackOffers, setHasSeenDicePackOffers] = useState(() => hasSeenDicePackShop());
   const [hasVisitedWebTreat, setHasVisitedWebTreat] = useState(() => hasVisitedLandingPageTreat());
   const [showMarketPanel, setShowMarketPanel] = useState(false);
   const [showBuildPanel, setShowBuildPanel] = useState(false);
@@ -10148,8 +10148,6 @@ export function IslandRunBoardPrototype({
   };
 
   const openShopPanel = () => {
-    markDicePackShopSeen();
-    setHasSeenDicePackOffers(true);
     setShowShopPanel(true);
     setShowMarketPanel(false);
     setShowBuildPanel(false);
@@ -10191,7 +10189,11 @@ export function IslandRunBoardPrototype({
     packId: DicePackSkuId = 'dice_500',
   ) => {
     if (isDemoSession(session)) {
-      setDiceCheckoutError('Test checkout needs a signed-in test account. No live purchase is available.');
+      setDiceCheckoutError(
+        DICE_COMMERCE_MODE === 'live'
+          ? 'Checkout needs a signed-in account. Guest play remains free.'
+          : 'Test checkout needs a signed-in test account. No live purchase is available.',
+      );
       return;
     }
 
@@ -10205,7 +10207,7 @@ export function IslandRunBoardPrototype({
         entry_point: entryPoint,
         island_number: islandNumber,
         pack_id: packId,
-        commerce_mode: 'test',
+        commerce_mode: DICE_COMMERCE_MODE,
       },
     });
 
@@ -10221,7 +10223,7 @@ export function IslandRunBoardPrototype({
           entry_point: entryPoint,
           island_number: islandNumber,
           pack_id: packId,
-          commerce_mode: 'test',
+          commerce_mode: DICE_COMMERCE_MODE,
         },
       });
       return;
@@ -11253,9 +11255,6 @@ export function IslandRunBoardPrototype({
             onClick={openShopPanel}
           >
             🛍️ Market
-            {!hasSeenDicePackOffers ? (
-              <span className="island-run-commerce-dot" aria-label="New dice packs available" />
-            ) : null}
           </button>
           {unclaimedCreatureCount > 0 && (
             <button
@@ -12266,9 +12265,6 @@ export function IslandRunBoardPrototype({
                     />
                   </svg>
                   <span className="island-run-prototype__footer-handle-btn-label">🛍️ Market</span>
-                  {!hasSeenDicePackOffers ? (
-                    <span className="island-run-commerce-dot island-run-commerce-dot--footer" aria-label="New dice packs available" />
-                  ) : null}
                 </button>
                 <button
                   type="button"
@@ -12396,7 +12392,10 @@ export function IslandRunBoardPrototype({
 
 
       {showGamifiedJournalCard && (
-        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
+        <div
+          className="island-run-overlay-root island-stop-modal-backdrop island-run-supply-dock-backdrop"
+          role="presentation"
+        >
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--caretaker-clue" role="dialog" aria-modal="true" aria-label="Caretaker wheel clue">
             <IslandRunGamifiedJournalCard
               session={session}
@@ -14223,143 +14222,38 @@ export function IslandRunBoardPrototype({
       {/* M14: unified shop panel (merged shop + market) */}
       {showShopPanel && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
-          <section className="island-run-shop-panel island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Shop">
-            <h3 className="island-stop-modal__title">🛍️ Market</h3>
-            <p className="island-stop-modal__copy"><strong>💰 {runtimeState.essence} money</strong> · Island {islandNumber}</p>
-
-            <div className="island-hatchery-card">
-              <p><strong>Dice Packs</strong></p>
-              <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>
-                Optional test-mode refills. Free regeneration and reward routes remain visible first.
-              </p>
-              <DicePackOfferGrid
-                loadingPackId={startingDicePackId}
-                onSelect={(packId) => void handleStartDiceCheckout('market_panel', packId)}
-              />
-            </div>
-
-            <div className="island-hatchery-card island-run-web-treat-offer">
-              <span className="island-run-web-treat-offer__icon" aria-hidden="true">🎁</span>
-              <div>
-                <p>
-                  <strong>Daily Web Treat</strong>
-                  {!hasVisitedWebTreat ? <span className="island-run-inline-new-dot" aria-label="New free treat" /> : null}
-                </p>
-                <p style={{ fontSize: '0.85rem', opacity: 0.72 }}>
-                  Visit the HabitGame landing treat page and bring back 50 demo dice. No payment or contact details.
-                </p>
-                <button
-                  type="button"
-                  className="island-stop-modal__btn island-stop-modal__btn--action"
-                  onClick={() => {
-                    markLandingPageTreatVisited();
-                    setHasVisitedWebTreat(true);
-                    window.location.assign('/daily-treat.html?source=island-run');
-                  }}
-                >
-                  {hasVisitedWebTreat ? 'Visit web treat again' : 'Visit & claim 50 demo dice'}
-                </button>
-              </div>
-            </div>
-
-            <div className="island-hatchery-card island-run-creature-pack-offer">
-              <p><strong>Creature Pack — 5 cards</strong></p>
-              <p style={{ fontSize: '0.85rem', opacity: 0.72 }}>Cards only: no dice or essence. Weighted common/rare slots with at least 2 new-to-you creatures when enough unowned creatures remain.</p>
-              <details className="island-run-creature-pack-offer__details">
-                <summary>Odds & duplicate policy</summary>
-                <ul>
-                  <li>Slot 1: Common 100%</li>
-                  <li>Slot 2: Common 95% · Rare 5%</li>
-                  <li>Slot 3: Common 90% · Rare 10%</li>
-                  <li>Slot 4: Common 85% · Rare 15%</li>
-                  <li>Slot 5: Common 80% · Rare 20%</li>
-                  <li>Guarantee: at least 2 new-to-you creatures when available; duplicate cards increase that creature’s copy count.</li>
-                  <li>No mythic cards in this pack version.</li>
-                </ul>
-              </details>
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                onClick={() => void handleStartCreaturePackCheckout()}
-                disabled={isStartingCreaturePackCheckout || !isCreaturePackStripeCheckoutEnabled}
-              >
-                {isStartingCreaturePackCheckout ? 'Starting checkout…' : isCreaturePackStripeCheckoutEnabled ? 'Buy Creature Pack (Stripe)' : 'Creature Pack checkout under review'}
-              </button>
-              {!isCreaturePackStripeCheckoutEnabled ? <p className="island-run-creature-pack-offer__fine-print">Paid random packs are gated until odds, refund, and purchase-policy review is complete.</p> : null}
-              {creaturePackCheckoutError ? <p className="island-run-prototype__error">{creaturePackCheckoutError}</p> : null}
-            </div>
-
-            <div className="island-hatchery-card">
-              <p><strong>Creature Pack — 5 cards</strong></p>
-              <p style={{ fontSize: '0.85rem', opacity: 0.72 }}>Same resolver as the dev pack: weighted common/rare odds with at least 2 new-to-you creatures when available.</p>
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                onClick={() => void handleStartCreaturePackCheckout()}
-                disabled={isStartingCreaturePackCheckout}
-              >
-                {isStartingCreaturePackCheckout ? 'Starting checkout…' : 'Buy Creature Pack (Stripe)'}
-              </button>
-              {creaturePackCheckoutError ? <p className="island-run-prototype__error">{creaturePackCheckoutError}</p> : null}
-            </div>
-
-            <div className="island-hatchery-card">
-              <p><strong>Tier 1 — Always available</strong></p>
-              <div className="island-hatchery-card__actions">
-                {marketOwnedBundles.dice_bundle ? (
-                  <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action" disabled aria-label="Dice Bundle already owned">
-                    🎲 Dice Bundle — Owned ✅
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action"
-                    disabled={runtimeState.essence < MARKET_DICE_BUNDLE_COST}
-                    onClick={() => handleMarketPrototypePurchase('dice_bundle')}
-                  >
-                    🎲 Dice Bundle —{' '}
-                    <ShopItemCostLine
-                      cost={MARKET_DICE_BUNDLE_COST}
-                      balance={runtimeState.essence}
-                      currencyIcon="💰"
-                      currencyName="money"
-                    />{' '}
-                    → +{MARKET_DICE_BUNDLE_REWARD} 🎲
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="island-hatchery-card">
-              <p><strong>Tier 2 — Post-boss unlock</strong></p>
-              {completedStops.includes('boss') ? (
-                <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>👑 Tier 2 bundles: bigger dice packs + essence boosters available soon.</p>
-              ) : (
-                <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>👑 Defeat the boss to unlock</p>
-              )}
-            </div>
-
-            <div className="island-hatchery-card">
-              <p><strong>Creature Trade</strong></p>
-              <p style={{ fontSize: '0.85rem', opacity: 0.65 }}>Hatched eggs are now resolved directly in the Hatchery: collect the creature for your manifest or sell it there immediately for rewards.</p>
-            </div>
-
-            {marketPurchaseFeedback && <p className="island-run-prototype__landing island-run-prototype__landing--info">{marketPurchaseFeedback}</p>}
-
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => {
-                  setShowShopPanel(false);
-                  setMarketPurchaseFeedback(null);
-                  void recordTelemetryEvent({ userId: session.user.id, eventType: 'island_run_ui_interaction', metadata: { stage: 'shop_close', island_number: islandNumber } });
-                }}
-              >
-                ✕ Close
-              </button>
-            </div>
-          </section>
+          <IslandRunSupplyDock
+            islandNumber={islandNumber}
+            essence={runtimeState.essence}
+            dicePool={runtimeState.dicePool}
+            hasVisitedWebTreat={hasVisitedWebTreat}
+            loadingDicePackId={startingDicePackId}
+            isStartingCreaturePackCheckout={isStartingCreaturePackCheckout}
+            isCreaturePackStripeCheckoutEnabled={isCreaturePackStripeCheckoutEnabled}
+            creaturePackCheckoutError={creaturePackCheckoutError}
+            marketPurchaseFeedback={marketPurchaseFeedback}
+            marketOwnedDiceBundle={marketOwnedBundles.dice_bundle}
+            marketDiceBundleCost={MARKET_DICE_BUNDLE_COST}
+            marketDiceBundleReward={MARKET_DICE_BUNDLE_REWARD}
+            bossCompleted={completedStops.includes('boss')}
+            onVisitWebTreat={() => {
+              markLandingPageTreatVisited();
+              setHasVisitedWebTreat(true);
+              window.location.assign('/daily-treat.html?source=island-run');
+            }}
+            onSelectDicePack={(packId) => void handleStartDiceCheckout('market_panel', packId)}
+            onStartCreaturePackCheckout={() => void handleStartCreaturePackCheckout()}
+            onBuyEarnedDiceBundle={() => handleMarketPrototypePurchase('dice_bundle')}
+            onClose={() => {
+              setShowShopPanel(false);
+              setMarketPurchaseFeedback(null);
+              void recordTelemetryEvent({
+                userId: session.user.id,
+                eventType: 'island_run_ui_interaction',
+                metadata: { stage: 'shop_close', island_number: islandNumber },
+              });
+            }}
+          />
         </div>
       )}
 

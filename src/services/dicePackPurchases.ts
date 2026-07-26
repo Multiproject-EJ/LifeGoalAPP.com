@@ -13,43 +13,52 @@ export type DicePackCatalogEntry = {
   badge?: 'Starter' | 'Popular' | 'Best value';
 };
 
+export type DiceCommerceMode = 'test' | 'live';
+
+/**
+ * Browser-safe presentation mode. This never selects Stripe credentials or
+ * prices—the Edge Function remains authoritative and fail-closed.
+ */
+export const DICE_COMMERCE_MODE: DiceCommerceMode =
+  import.meta.env.VITE_DICE_COMMERCE_MODE === 'live' ? 'live' : 'test';
+
 /**
  * Paid dice catalog shared by the board, account screen and checkout service.
  * Stripe remains the price authority so currency/local pricing never drifts in
- * the client. All checkout UI is explicitly marked as test mode until launch.
+ * the client. Checkout language follows the fail-closed presentation mode.
  */
 export const DICE_PACK_CATALOG: readonly DicePackCatalogEntry[] = [
   {
     id: 'dice_250',
     rolls: 250,
     title: 'Pocket Boost',
-    description: 'A short top-up when you are close to a reward.',
+    description: 'For the next reward.',
     badge: 'Starter',
   },
   {
     id: 'dice_500',
     rolls: 500,
     title: 'Route Refill',
-    description: 'The existing balanced refill pack.',
+    description: 'A balanced refill.',
   },
   {
     id: 'dice_1200',
     rolls: 1_200,
     title: 'Momentum Pack',
-    description: 'Enough runway for a focused high-multiplier session.',
+    description: 'Build event momentum.',
     badge: 'Popular',
   },
   {
     id: 'dice_3000',
     rolls: 3_000,
     title: 'Rush Reserve',
-    description: 'Built for a longer event push and milestone chase.',
+    description: 'For a longer event push.',
   },
   {
     id: 'dice_7500',
     rolls: 7_500,
     title: 'Expedition Vault',
-    description: 'The largest reserve, with the strongest dice-per-price value.',
+    description: 'The largest reserve.',
     badge: 'Best value',
   },
 ] as const;

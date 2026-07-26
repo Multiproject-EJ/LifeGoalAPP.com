@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEventHandler, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import {
   hasCachedAuthSession,
   isCloudUnavailableForAuthGate,
@@ -176,6 +177,18 @@ export function HabitGameAuthCard({
     };
   }, [guestStep]);
 
+  useEffect(() => {
+    if (guestStep === 'closed') return undefined;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      setGuestError(null);
+      setGuestStep((current) => current === 'customize' ? 'timeline' : 'closed');
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [guestStep]);
+
   const handleSailToLumaIsle = async () => {
     setGuestSubmitting(true);
     setGuestError(null);
@@ -191,29 +204,97 @@ export function HabitGameAuthCard({
 
   const guestModal = guestStep === 'closed' ? null : (
     <div className="guest-free-play-modal" role="dialog" aria-modal="true" aria-labelledby="guest-free-play-title">
-      <div className="guest-free-play-modal__backdrop" />
-      <section className="guest-free-play-modal__panel">
+      <div className="guest-free-play-modal__backdrop" aria-hidden="true" />
+      <section className={`guest-free-play-modal__panel guest-free-play-modal__panel--${guestStep}`}>
+        <div className="guest-free-play-modal__topline">
+          {guestStep === 'customize' ? (
+            <button
+              type="button"
+              className="guest-free-play-modal__back"
+              onClick={() => {
+                setGuestError(null);
+                setGuestStep('timeline');
+              }}
+            >
+              ← Back
+            </button>
+          ) : <span />}
+          <span className="guest-free-play-modal__step">
+            {guestStep === 'timeline' ? '1 of 2' : '2 of 2'}
+          </span>
+          <button
+            type="button"
+            className="guest-free-play-modal__close"
+            onClick={() => setGuestStep('closed')}
+            aria-label="Close guest play setup"
+          >
+            ×
+          </button>
+        </div>
         {guestStep === 'timeline' ? (
           <>
-            <h2 id="guest-free-play-title">Play free first. Save when you’re ready.</h2>
-            <p>You can explore Luma Isle as a guest, earn rewards, and try the first Island Run loop. When you save your game with a free account, we’ll keep your progress — no payment today.</p>
-            <ul>
-              <li>Play as a guest.</li>
-              <li>Earn starter rewards.</li>
-              <li>Save your game for free.</li>
-            </ul>
+            <div className="guest-free-play-modal__scene">
+              <img
+                src="/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp"
+                alt=""
+                aria-hidden="true"
+              />
+              <span>First Light Shore</span>
+            </div>
+            <div className="guest-free-play-modal__copy">
+              <h2 id="guest-free-play-title">Play free first. Save when you&apos;re ready.</h2>
+              <p>Explore Luma Isle as a guest. Your first rewards are free, and you can save the run to an account later.</p>
+            </div>
+            <div className="guest-free-play-modal__route" aria-label="Guest journey">
+              <span><b>1</b> Enter as guest</span>
+              <span><b>2</b> Play Island Run</span>
+              <span><b>3</b> Save free later</span>
+            </div>
             {guestError ? <p className="guest-free-play-modal__error" role="alert">{guestError}</p> : null}
             <div className="guest-free-play-modal__actions">
-              <button type="button" className="auth-card__primary" onClick={() => setGuestStep('customize')}>Continue</button>
+              <button type="button" className="auth-card__primary" onClick={() => setGuestStep('customize')}>Choose my captain</button>
               <button type="button" className="guest-free-play-modal__secondary" onClick={() => { setGuestStep('closed'); onTabChange('signup'); }}>Create free account now</button>
             </div>
           </>
         ) : (
           <>
-            <h2 id="guest-free-play-title">Name your captain</h2>
-            <p>Miri is watching for a new light on First Light Shore. What should the island call you?</p>
-            <label className="supabase-auth__field"><span>Captain name</span><input value={captainName} onChange={(event) => setCaptainName(event.target.value)} placeholder="Captain Nova" /></label>
-            <label className="supabase-auth__field"><span>Ship name</span><input value={shipName} onChange={(event) => setShipName(event.target.value)} placeholder="The Luma Skiff" /></label>
+            <div className="guest-free-play-modal__scene guest-free-play-modal__scene--captain">
+              <img
+                src="/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp"
+                alt=""
+                aria-hidden="true"
+              />
+              <span>Miri is waiting</span>
+            </div>
+            <div className="guest-free-play-modal__copy">
+              <span className="guest-free-play-modal__eyebrow">Your first island story</span>
+              <h2 id="guest-free-play-title">Name your captain</h2>
+              <p>Give First Light Shore a name to remember. You can change both names later.</p>
+            </div>
+            <div className="guest-free-play-modal__fields">
+              <label className="supabase-auth__field">
+                <span>Captain name</span>
+                <input
+                  value={captainName}
+                  onChange={(event) => setCaptainName(event.target.value)}
+                  placeholder="Captain Nova"
+                  autoComplete="nickname"
+                />
+              </label>
+              <label className="supabase-auth__field">
+                <span>Ship name</span>
+                <input
+                  value={shipName}
+                  onChange={(event) => setShipName(event.target.value)}
+                  placeholder="The Luma Skiff"
+                />
+              </label>
+            </div>
+            <p className="guest-free-play-modal__nameplate" aria-live="polite">
+              <span>{captainName.trim() || 'Captain Nova'}</span>
+              <small>aboard {shipName.trim() || 'The Luma Skiff'}</small>
+            </p>
+            {guestError ? <p className="guest-free-play-modal__error" role="alert">{guestError}</p> : null}
             <div className="guest-free-play-modal__actions">
               <button type="button" className="auth-card__primary" onClick={handleSailToLumaIsle} disabled={guestSubmitting}>{guestSubmitting ? 'Opening Island Run…' : 'Sail to Luma Isle'}</button>
               <button type="button" className="guest-free-play-modal__secondary" onClick={handleSailToLumaIsle} disabled={guestSubmitting}>Skip for now</button>
@@ -223,6 +304,9 @@ export function HabitGameAuthCard({
       </section>
     </div>
   );
+  const guestModalPortal = guestModal && typeof document !== 'undefined'
+    ? createPortal(guestModal, document.body)
+    : null;
 
   const showAuthConnectionNotice = shouldShowAuthConnectionNotice({
     initializationStatus,
@@ -480,7 +564,7 @@ export function HabitGameAuthCard({
 
         {statusElements}
       </div>
-      {guestModal}
+      {guestModalPortal}
       {showServiceStatus ? <ServiceStatusModal onClose={() => setShowServiceStatus(false)} /> : null}
     </div>
   );
