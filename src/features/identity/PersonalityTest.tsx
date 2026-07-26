@@ -16,6 +16,7 @@ import {
 } from './personalityTestDataV2';
 import { scoreScenarioAnswers, describePlaystyle } from './personalityScoringV2';
 import { CURRENT_FOUNDATION_VERSION, readStoredFoundation } from './foundationScoring';
+import { triggerCompletionHaptic } from '../../utils/completionHaptics';
 import {
   PersonalityScores,
   coerceStoredScores,
@@ -588,6 +589,12 @@ export default function PersonalityTest({
   const quizPosition = getScenarioPosition(currentIndex);
   const answeredCount = Object.keys(answers).length;
 
+  // Answered questions within the current axis — drives the charging suit icon.
+  const axisAnsweredCount = ORDERED_SCENARIO_QUESTIONS.filter(
+    (question) => question.axis === quizPosition.axis.key && answers[question.id],
+  ).length;
+  const axisCharge = quizPosition.axisSize > 0 ? axisAnsweredCount / quizPosition.axisSize : 0;
+
   // The in-memory session read. Every question is skippable, so this is valid
   // from the first answer onward — it simply reports which dimensions and axes
   // have real data behind them (`measured`) rather than demanding completeness.
@@ -766,10 +773,19 @@ export default function PersonalityTest({
       return;
     }
 
+    const wasAnswered = Boolean(answers[currentQuestion.id]);
     setAnswers((prev) => ({
       ...prev,
       [currentQuestion.id]: optionId,
     }));
+
+    // A light tap on every pick, and a firmer one when this pick completes an
+    // axis. triggerCompletionHaptic already honours the user's haptic setting,
+    // reduced-motion, and rate limits, and no-ops on web.
+    const completesAxis = !wasAnswered && axisAnsweredCount + 1 === quizPosition.axisSize;
+    triggerCompletionHaptic(completesAxis ? 'medium' : 'light', {
+      channel: completesAxis ? 'gamification' : 'action',
+    });
   };
 
   const advance = () => {
@@ -1273,13 +1289,31 @@ export default function PersonalityTest({
       )}
 
       {step === 'quiz' && !showSectionIntro && currentQuestion && (
-        <div className="identity-hub__card">
+        <div
+          // Keyed on the question so each one re-runs the deal-in animation.
+          key={currentQuestion.id}
+          className="identity-hub__card identity-hub__card--dealt identity-hub__quiz-card"
+          style={
+            {
+              '--suit-color': quizPosition.axis.color,
+              '--axis-charge': `${Math.round(axisCharge * 100)}%`,
+            } as CSSProperties
+          }
+        >
           <div className="identity-hub__progress-row">
             <span
               className="identity-hub__progress-suit"
               style={{ '--suit-color': quizPosition.axis.color } as CSSProperties}
             >
-              {quizPosition.axis.icon} {quizPosition.axis.highLabel} ↔ {quizPosition.axis.lowLabel} ·{' '}
+              <span
+                className={`identity-hub__charge${
+                  axisCharge >= 1 ? ' identity-hub__charge--full' : ''
+                }`}
+                aria-hidden="true"
+              >
+                <span className="identity-hub__charge-icon">{quizPosition.axis.icon}</span>
+              </span>
+              {quizPosition.axis.highLabel} ↔ {quizPosition.axis.lowLabel} ·{' '}
               {quizPosition.questionInAxis}/{quizPosition.axisSize}
             </span>
             <span className="identity-hub__progress">

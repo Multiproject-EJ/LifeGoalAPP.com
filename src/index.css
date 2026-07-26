@@ -28045,6 +28045,101 @@ html.platform-ipad .workspace-shell__menu-edge {
   flex-wrap: wrap;
 }
 
+/* ── Quiz: deal-in, axis wash, charging suit icon ────────────────────────── */
+
+/* #1 Deal the card: each question slides up from the deck edge and settles. */
+@keyframes identity-hub-deal {
+  from {
+    opacity: 0;
+    transform: translateY(26px) rotate(-2.2deg) scale(0.97);
+  }
+  60% {
+    transform: translateY(-3px) rotate(0.4deg) scale(1.005);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0) scale(1);
+  }
+}
+
+.identity-hub__card--dealt {
+  animation: identity-hub-deal 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+/* #7 Atmosphere: a wash of the current axis colour behind the question. */
+.identity-hub__quiz-card {
+  position: relative;
+  overflow: hidden;
+  border-top: 3px solid var(--suit-color, #4f46e5);
+}
+
+.identity-hub__quiz-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      120% 70% at 50% -10%,
+      color-mix(in srgb, var(--suit-color, #4f46e5) 16%, transparent),
+      transparent 70%
+    );
+}
+
+.identity-hub__quiz-card > * {
+  position: relative;
+}
+
+/* #4 The suit icon charges as its questions get answered. */
+.identity-hub__charge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  margin-right: 0.15rem;
+  border-radius: 50%;
+  background:
+    conic-gradient(
+      var(--suit-color, #4f46e5) var(--axis-charge, 0%),
+      color-mix(in srgb, var(--suit-color, #4f46e5) 18%, transparent) 0
+    );
+  transition: background 320ms ease;
+}
+
+.identity-hub__charge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: var(--card-background, #ffffff);
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+@keyframes identity-hub-charge-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--suit-color, #4f46e5) 55%, transparent); }
+  70% { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.identity-hub__charge--full {
+  animation: identity-hub-charge-pulse 700ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .identity-hub__card--dealt,
+  .identity-hub__charge--full {
+    animation: none;
+  }
+  .identity-hub__charge {
+    transition: none;
+  }
+}
+
 .identity-hub__option--scenario {
   align-items: flex-start;
   padding: 0.85rem 1rem;
