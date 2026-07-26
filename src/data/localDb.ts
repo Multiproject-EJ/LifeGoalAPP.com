@@ -30,7 +30,12 @@ interface LifeGoalAppDB extends DBSchema {
       taken_at: string;
       traits: Record<string, number>;
       axes: Record<string, number>;
-      answers: Record<string, number>;
+      /**
+       * v1 stores questionId -> Likert 1-5 (number).
+       * v2 stores questionId -> chosen option id (string); skipped questions
+       * are simply absent. `version` says which to expect.
+       */
+      answers: Record<string, number | string>;
       version: string;
       archetype_hand?: any; // Serialized ArchetypeHand (optional for backwards compatibility)
       _dirty?: boolean;

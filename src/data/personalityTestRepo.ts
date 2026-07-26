@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { AnswerValue } from '../features/identity/personalityTestData';
 import type { PersonalityScores } from '../features/identity/personalityScoring';
 import type { ArchetypeHand } from '../features/identity/archetypes/archetypeHandBuilder';
 import {
@@ -15,7 +14,8 @@ export type PersonalityTestRecord = PersonalityTestValue;
 
 export async function queuePersonalityTestResult(params: {
   userId: string;
-  answers: Record<string, AnswerValue>;
+  /** v1: questionId -> 1-5. v2: questionId -> option id. */
+  answers: Record<string, number | string>;
   scores: PersonalityScores;
   archetypeHand?: ArchetypeHand; // Optional archetype hand
   version?: string;

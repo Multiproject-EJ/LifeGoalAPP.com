@@ -20,6 +20,16 @@ import {
   buildIdentityLibrary,
   countActionableTests,
 } from '../src/features/identity/identityTestLibrary';
+import {
+  GAME_AXES,
+  ORDERED_SCENARIO_QUESTIONS,
+  SCENARIO_QUESTION_BANK,
+  getScenarioPosition,
+  isAxisStart,
+} from '../src/features/identity/personalityTestDataV2';
+import { scoreScenarioAnswers } from '../src/features/identity/personalityScoringV2';
+import { readStoredFoundation } from '../src/features/identity/foundationScoring';
+import { ARCHETYPE_DECK } from '../src/features/identity/archetypes/archetypeDeck';
 
 function buildAnswers({ preferHigh }: { preferHigh: boolean }) {
   return PERSONALITY_QUESTION_BANK.reduce<Record<string, AnswerValue>>((acc, question) => {
@@ -300,5 +310,134 @@ assert.equal(
   }).length,
   'library actionable count matches badge trigger count',
 );
+
+// ── Foundation v2: scenario bank ────────────────────────────────────────────
+
+assert.equal(SCENARIO_QUESTION_BANK.length, 20, 'v2 bank has 20 questions');
+assert.equal(new Set(SCENARIO_QUESTION_BANK.map((q) => q.id)).size, 20, 'question ids unique');
+assert.equal(ORDERED_SCENARIO_QUESTIONS.length, 20, 'quiz order covers the bank');
+
+// Four questions per axis, four options per question.
+for (const axis of GAME_AXES) {
+  const forAxis = SCENARIO_QUESTION_BANK.filter((q) => q.axis === axis.key);
+  assert.equal(forAxis.length, 4, `${axis.key} has 4 questions`);
+}
+for (const question of SCENARIO_QUESTION_BANK) {
+  assert.equal(question.options.length, 4, `${question.id} has 4 options`);
+  assert.equal(
+    new Set(question.options.map((o) => o.id)).size,
+    4,
+    `${question.id} option ids unique`,
+  );
+  for (const option of question.options) {
+    // The revision-1 bug: an option that scored a game axis but no trait.
+    assert.ok(
+      Object.keys(option.traitLoads).length > 0,
+      `${question.id}:${option.id} must carry at least one trait load`,
+    );
+    for (const load of Object.values(option.traitLoads)) {
+      assert.ok(load >= 1 && load <= 5, `${question.id}:${option.id} load in range`);
+    }
+    assert.ok(option.axisLoad >= 1 && option.axisLoad <= 5, 'axis load in range');
+  }
+}
+
+// Every dimension the archetype deck weights must be measurable by the bank,
+// or those cards would score off a permanently neutral placeholder.
+const bankDimensions = new Set(
+  SCENARIO_QUESTION_BANK.flatMap((q) => q.options.flatMap((o) => Object.keys(o.traitLoads))),
+);
+const deckDimensions = new Set(ARCHETYPE_DECK.flatMap((card) => Object.keys(card.traitWeights)));
+for (const dim of deckDimensions) {
+  // honesty_humility / emotionality stay HEXACO micro-test territory by design.
+  if (dim === 'honesty_humility' || dim === 'emotionality') continue;
+  assert.ok(bankDimensions.has(dim), `deck dimension ${dim} is covered by the v2 bank`);
+}
+
+// Position helper agrees with the axis layout at every index.
+let v2Index = 0;
+for (const [axisIndex, axis] of GAME_AXES.entries()) {
+  const forAxis = SCENARIO_QUESTION_BANK.filter((q) => q.axis === axis.key);
+  for (let i = 0; i < forAxis.length; i += 1) {
+    const pos = getScenarioPosition(v2Index);
+    assert.equal(pos.axisIndex, axisIndex);
+    assert.equal(pos.questionInAxis, i + 1);
+    assert.equal(isAxisStart(v2Index), i === 0);
+    v2Index += 1;
+  }
+}
+
+// ── Foundation v2: scoring ──────────────────────────────────────────────────
+
+const allFirst: Record<string, string> = {};
+SCENARIO_QUESTION_BANK.forEach((q) => { allFirst[q.id] = q.options[0].id; });
+const firstRead = scoreScenarioAnswers(allFirst);
+assert.equal(firstRead.answeredCount, 20);
+assert.equal(firstRead.skippedCount, 0);
+assert.equal(firstRead.measuredAxes.size, 5, 'all five axes measured');
+
+// Picking every "A" on the Planner axis (axisLoad 5) pins that axis at 100.
+assert.equal(firstRead.axisScores.planner, 100, 'planner maxed by all-A answers');
+
+// Skipping is first-class: an axis with every question skipped is reported
+// unmeasured and left neutral, never scored as 0 (the phantom-0% bug's new form).
+const skipPlanner: Record<string, string> = { ...allFirst };
+SCENARIO_QUESTION_BANK.filter((q) => q.axis === 'planner').forEach((q) => { delete skipPlanner[q.id]; });
+const skipRead = scoreScenarioAnswers(skipPlanner);
+assert.equal(skipRead.measuredAxes.has('planner'), false, 'fully skipped axis is unmeasured');
+assert.equal(skipRead.axisScores.planner, 50, 'fully skipped axis sits at neutral, not 0');
+assert.equal(skipRead.skippedCount, 4);
+
+// A dimension only carried by skipped questions is likewise unmeasured.
+const onlyCoop: Record<string, string> = {};
+SCENARIO_QUESTION_BANK.filter((q) => q.axis === 'coop').forEach((q) => { onlyCoop[q.id] = q.options[0].id; });
+const coopRead = scoreScenarioAnswers(onlyCoop);
+assert.equal(coopRead.measured.has('regulation_style'), false, 'untouched dimension unmeasured');
+assert.equal(coopRead.scores.axes.regulation_style, 50, 'untouched dimension neutral');
+assert.ok(coopRead.measured.has('extraversion'), 'answered dimension is measured');
+
+// No answers at all → nothing measured, everything neutral.
+const emptyRead = scoreScenarioAnswers({});
+assert.equal(emptyRead.answeredCount, 0);
+assert.equal(emptyRead.measured.size, 0);
+assert.equal(emptyRead.scores.traits.openness, 50);
+
+// Unknown option ids are ignored rather than throwing.
+assert.equal(scoreScenarioAnswers({ [SCENARIO_QUESTION_BANK[0].id]: 'nope' }).answeredCount, 0);
+
+// ── Version dispatch ────────────────────────────────────────────────────────
+
+// A v1 record keeps reading from its stored aggregate — its Likert answers must
+// never be run through the v2 bank.
+const v1Record = {
+  version: 'v1',
+  traits: { openness: 80, conscientiousness: 20, extraversion: 60, agreeableness: 55, emotional_stability: 45 },
+  axes: { regulation_style: 30, stress_response: 40, identity_sensitivity: 70, cognitive_entry: 50 },
+  answers: { big5_openness_01: 5, big5_openness_02: 1 },
+};
+const v1Read = readStoredFoundation(v1Record);
+assert.equal(v1Read?.version, 'v1');
+assert.equal(v1Read?.scores.traits.openness, 80, 'v1 reads its stored trait values');
+assert.equal(v1Read?.axisScores, null, 'v1 has no game axes');
+
+// A v2 record is rescored from its own option ids.
+const v2Record = {
+  version: 'v2',
+  traits: {},
+  axes: {},
+  answers: allFirst,
+};
+const v2Read = readStoredFoundation(v2Record);
+assert.equal(v2Read?.version, 'v2');
+assert.equal(v2Read?.axisScores?.planner, 100, 'v2 rescored from answers');
+assert.ok((v2Read?.measured.size ?? 0) > 0, 'v2 reports measured dimensions');
+
+// A v2 record with unreadable answers falls back to its stored aggregate
+// rather than showing a hand built from neutral 50s.
+const v2Broken = readStoredFoundation({ version: 'v2', traits: { openness: 77 }, axes: {}, answers: {} });
+assert.equal(v2Broken?.scores.traits.openness, 77, 'v2 falls back to stored aggregate');
+assert.equal(v2Broken?.axisScores, null);
+
+assert.equal(readStoredFoundation(null), null);
 
 console.log('Personality scoring checks passed.');
