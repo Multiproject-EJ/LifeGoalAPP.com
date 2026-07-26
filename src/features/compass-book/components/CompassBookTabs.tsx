@@ -71,6 +71,9 @@ export function CompassBookTabs({
                 ✦
               </span>
             ) : null}
+            {/* The ribbon marks the page you are on, the way a real bookmark
+                hangs out of the chapter you left off in. */}
+            {active ? <span className="compass-book__tab-ribbon" aria-hidden="true" /> : null}
           </button>
         );
       })}

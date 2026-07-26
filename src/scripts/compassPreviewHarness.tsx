@@ -6,13 +6,17 @@
 import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { CompassBookScreen } from '../features/compass-book/components/CompassBookScreen';
+import { DEMO_ISLAND_NUMBER } from '../features/compass-book/content/demoBook';
 import { QuickAddSheet } from '../components/QuickAddSheet';
 import { GoalPillarMeter } from '../features/goals/GoalPillarMeter';
 import { computeGoalPillars } from '../features/goals/goalPillars';
 import '../index.css';
 
 function Harness() {
-  const [view, setView] = useState<string>(new URLSearchParams(window.location.search).get('view') ?? 'book');
+  const params = new URLSearchParams(window.location.search);
+  const [view, setView] = useState<string>(params.get('view') ?? 'book');
+  // `?demo=1` opens the book pre-filled with sample answers.
+  const demo = params.get('demo') === '1';
 
   const pillars = computeGoalPillars({
     goal: {
@@ -41,7 +45,13 @@ function Harness() {
         ))}
       </div>
       {view === 'book' ? (
-        <CompassBookScreen currentIslandNumber={87} session={null} onClose={() => {}} />
+        <CompassBookScreen
+          currentIslandNumber={demo ? DEMO_ISLAND_NUMBER : 87}
+          session={null}
+          allowDemo
+          initialDemo={demo}
+          onClose={() => {}}
+        />
       ) : null}
       {view === 'quickadd' ? (
         <QuickAddSheet

@@ -4800,6 +4800,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               <CompassBookScreen
                 currentIslandNumber={overlayIslandNumber}
                 session={supabaseSession}
+                allowDemo={isAdmin === true}
                 onClose={() => setIsCompassBookOpen(false)}
               />
             ) : null}

@@ -75,6 +75,16 @@ import {
   isChapterPage,
   summarizeCompassReading,
 } from '../logic/reading';
+import { DEMO_ISLAND_NUMBER, buildDemoChapterStates, demoValueForBlock } from '../content/demoBook';
+import {
+  TURN_MAX_MS,
+  TURN_MIN_MS,
+  pageIndex,
+  turnClassName,
+  turnDirection,
+  turnDistance,
+  turnDurationMs,
+} from '../logic/pageTurn';
 import type {
   CompassAnswerRecord,
   CompassAnswerValue,
@@ -990,6 +1000,7 @@ function testReading(): void {
   );
   assert(untouched.fragmentsTotal === 120, 'the book totals 120 fragments');
   assert(untouched.fragmentsWritten === 0, 'nothing written yet');
+  assert(untouched.fragmentsOpen === 0, 'nothing unlocked at island 0');
   assert(untouched.writtenRows.length === 0, 'no written rows yet');
   assert(untouched.openCount === 0, 'nothing answerable at island 0');
   assert(untouched.focusChapterId === null, 'no focus when nothing is open');
@@ -1032,9 +1043,12 @@ function testReading(): void {
     getChapterState: (chapterId) => (chapterId === 'living_wheel' ? stateWithStatement : null),
   });
   assert(reached.openCount === 2, 'island 25 opens chapters I and II');
+  assert(reached.fragmentsOpen === 25, 'island 25 → 25 fragments answerable (20 + 5)');
+  assert(reached.rows[0].unlockedCount === 20 && reached.rows[1].unlockedCount === 5,
+    'per-row unlocked counts follow island position');
   assert(reached.rows[0].status === 'charting', 'answered chapter reads as charting');
   assert(reached.rows[2].status === 'ahead', 'chapter III is still ahead at island 25');
-  assert(reached.focusChapterId === 'inner_compass', 'focus is the furthest open chapter');
+  assert(reached.focusChapterId === 'living_wheel', 'focus is the first unfinished open chapter');
   assert(reached.writtenRows.length === 1, 'one chapter carries a written line');
   assert(reached.rows[0].headline === 'Steady on health, easing off work.', 'row shows the line');
 
@@ -1055,6 +1069,148 @@ function testReading(): void {
   );
 }
 
+function testPageTurn(): void {
+  // Page order: the Reading, then the six chapters.
+  assert(pageIndex('reading') === 0, 'the Reading is page 0');
+  assert(pageIndex('living_wheel') === 1, 'chapter I is page 1');
+  assert(pageIndex('personal_playbook') === 6, 'chapter VI is page 6');
+
+  // Opening the book is not a turn — the cover owns that moment.
+  assert(turnDirection(null, 'reading') === 'none', 'first render does not turn');
+  assert(turnDirection(null, 'quest_forge') === 'none', 'deep link does not turn');
+
+  // Direction follows page order, not which page is "more important".
+  assert(turnDirection('reading', 'living_wheel') === 'forward', 'Reading → I turns forward');
+  assert(turnDirection('living_wheel', 'personal_playbook') === 'forward', 'I → VI turns forward');
+  assert(turnDirection('personal_playbook', 'reading') === 'back', 'VI → Reading turns back');
+  assert(turnDirection('inner_compass', 'living_wheel') === 'back', 'II → I turns back');
+  assert(turnDirection('ikigai_map', 'ikigai_map') === 'none', 'same page does not turn');
+
+  assert(turnClassName('forward') === 'compass-book__page--turn-forward', 'forward class');
+  assert(turnClassName('back') === 'compass-book__page--turn-back', 'back class');
+  assert(turnClassName('none') === null, 'no class when there is no turn');
+
+  // Distance drives duration, clamped so navigation never feels slow.
+  assert(turnDistance(null, 'living_wheel') === 0, 'no distance without an origin');
+  assert(turnDistance('reading', 'living_wheel') === 1, 'adjacent pages are one apart');
+  assert(turnDistance('living_wheel', 'personal_playbook') === 5, 'I → VI crosses five sheets');
+  assert(turnDistance('personal_playbook', 'living_wheel') === 5, 'distance is unsigned');
+
+  assert(turnDurationMs(0) === 0, 'no turn takes no time');
+  assert(turnDurationMs(1) === TURN_MIN_MS, 'a single-page turn uses the base duration');
+  assert(
+    turnDurationMs(5) > TURN_MIN_MS && turnDurationMs(5) <= TURN_MAX_MS,
+    'a longer jump takes longer, within the cap',
+  );
+  assert(turnDurationMs(99) === TURN_MAX_MS, 'duration is capped');
+}
+
+function testDemoBook(): void {
+  const states = buildDemoChapterStates();
+
+  // Default shape: five chapters written, three sealed, chapter VI untouched so
+  // the "not reached yet" treatment is still visible in the demo.
+  assert(Object.keys(states).length === 5, 'demo writes five chapters by default');
+  assert(states.personal_playbook === undefined, 'chapter VI stays unwritten');
+
+  const sealed = Object.values(states).filter((s) => s && s.confirmedOutput != null);
+  assert(sealed.length === 4, 'demo seals four chapters');
+  assert(states.quest_forge?.confirmedOutput != null, 'the Quest Forge is sealed');
+  assert(states.ikigai_map?.confirmedOutput == null, 'a half-written chapter remains');
+
+  // Every generated answer must point at a question that really exists, or the
+  // projectors silently produce nothing. This is the guard that keeps demo data
+  // honest when the curriculum changes.
+  for (const chapterId of COMPASS_BOOK_CHAPTER_IDS) {
+    const state = states[chapterId];
+    if (!state) continue;
+    const activities = getChapterActivities(chapterId);
+    const known = new Map(activities.map((a) => [a.id, new Set(a.blocks.map((b) => b.questionId))]));
+    for (const answer of state.answers) {
+      const blocks = known.get(answer.activityId);
+      assert(!!blocks, `demo answer targets a real activity: ${answer.activityId}`);
+      assert(
+        blocks!.has(answer.questionId),
+        `demo answer targets a real question: ${answer.activityId}/${answer.questionId}`,
+      );
+      assert(isAnswerValuePresent(answer.value), `demo answer carries a value: ${answer.questionId}`);
+    }
+    assert(state.contentVersion === 'v1', 'demo state uses the current curriculum version');
+  }
+
+  // Choice answers must reference real option ids, not invented ones.
+  for (const chapter of COMPASS_BOOK_CHAPTERS) {
+    for (const activity of chapter.activities) {
+      for (const block of activity.blocks) {
+        const value = demoValueForBlock(block);
+        if (!value) continue;
+        const optionIds = new Set((block.options ?? []).map((o) => o.id));
+        if (value.kind === 'choice' || value.kind === 'emotion') {
+          assert(optionIds.has(value.optionId), `demo picks a real option: ${block.questionId}`);
+        }
+        if (value.kind === 'multi_choice' || value.kind === 'ranking') {
+          const ids = value.kind === 'multi_choice' ? value.optionIds : value.orderedOptionIds;
+          assert(ids.length > 0, `demo multi/ranking is non-empty: ${block.questionId}`);
+          assert(
+            ids.every((id) => optionIds.has(id)),
+            `demo multi/ranking uses real options: ${block.questionId}`,
+          );
+        }
+        if (value.kind === 'scale') {
+          const min = block.min ?? 0;
+          const max = block.max ?? 10;
+          assert(
+            value.value >= min && value.value <= max,
+            `demo scale is in range: ${block.questionId}`,
+          );
+        }
+        if (value.kind === 'text') {
+          assert(value.text.trim().length > 0, `demo text is non-empty: ${block.questionId}`);
+        }
+      }
+    }
+  }
+
+  // The demo must actually make the book say something — a filled book whose
+  // Reading is still blank would defeat the entire purpose.
+  const summary = summarizeCompassReading({
+    getProgress: (chapterId) =>
+      computeChapterProgress(chapterId, states[chapterId] ?? null, {
+        currentIslandNumber: DEMO_ISLAND_NUMBER,
+      }),
+    getChapterState: (chapterId) => states[chapterId] ?? null,
+  });
+  assert(summary.fragmentsWritten > 40, 'demo fills a substantial part of the book');
+  assert(summary.sealedCount === 4, 'demo reading reports four sealed chapters');
+  assert(summary.writtenRows.length >= 4, 'demo produces real headlines to show');
+  assert(
+    summary.rows[0].headline ===
+      'This is a season of rebuilding my health so everything else stops leaking.',
+    'the curated wheel statement reaches the Reading',
+  );
+  assert(
+    summary.rows.some((row) => row.status === 'ahead'),
+    'demo still shows an unreached chapter',
+  );
+
+  // The Quest Forge goal bridge should have something to propose.
+  const forge = states.quest_forge;
+  assert(!!forge, 'demo writes the Quest Forge');
+  const proposal = buildGoalProposalFromQuestForge(projectQuestForge(forge!.answers));
+  assert(proposal?.title === 'Run a 10k without stopping', 'demo drives the goal bridge');
+  // The bridge card is the demo's showcase — it must not render near-empty.
+  assert(!!proposal?.whyItMatters, 'goal proposal carries the Calling');
+  assert(!!proposal?.firstMilestone, 'goal proposal carries the first milestone');
+  assert(!!proposal?.successEvidence, 'goal proposal carries success evidence');
+  assert(!!proposal?.protectedBoundary, 'goal proposal carries the Protected Flame');
+
+  // Determinism: two builds must be identical, so reviews are reproducible.
+  assert(
+    JSON.stringify(buildDemoChapterStates()) === JSON.stringify(states),
+    'demo data is deterministic',
+  );
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -1072,4 +1228,6 @@ export function runAllCompassBookTests(): void {
   testIslandFragment();
   testShadowBridge();
   testReading();
+  testPageTurn();
+  testDemoBook();
 }

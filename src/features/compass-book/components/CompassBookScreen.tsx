@@ -1,13 +1,26 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import './compassBook.css';
 import type { CompassBookChapterId } from '../types';
 import { isChapterPage, type CompassBookPageId } from '../logic/reading';
+import {
+  turnClassName,
+  turnDirection,
+  turnDistance,
+  turnDurationMs,
+} from '../logic/pageTurn';
 import { useCompassBook } from '../hooks/useCompassBook';
 import { CompassBookTabs } from './CompassBookTabs';
+import { CompassBookCoverPlate } from './CompassBookCoverPlate';
 import { CompassReading } from './CompassReading';
 import { CompassChapterScreen } from './CompassChapterScreen';
 import { CompassGuidedFlow } from './CompassGuidedFlow';
+
+/** True when the player has asked the OS for less motion. */
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 export type CompassBookScreenProps = {
   /** Current Island Run island (read-only); drives which fragments are answerable. */
@@ -17,6 +30,14 @@ export type CompassBookScreenProps = {
   /** Optional deep-link: open straight into a chapter (and a fragment). */
   initialChapterId?: CompassBookChapterId;
   initialActivityId?: string;
+  /**
+   * Show the admin/dev demo toggle. Demo mode swaps in a fully written
+   * in-memory book so the feature can be evaluated without answering 120
+   * fragments. It never reads or writes real data — see `useCompassBook`.
+   */
+  allowDemo?: boolean;
+  /** Start already in demo mode (used by the dev preview harness). */
+  initialDemo?: boolean;
   onClose: () => void;
 };
 
@@ -40,6 +61,8 @@ export function CompassBookScreen({
   session,
   initialChapterId,
   initialActivityId,
+  allowDemo = false,
+  initialDemo = false,
   onClose,
 }: CompassBookScreenProps) {
   const [view, setView] = useState<CompassBookView>(() => {
@@ -49,13 +72,40 @@ export function CompassBookScreen({
     if (initialChapterId) return { kind: 'page', pageId: initialChapterId };
     return { kind: 'page', pageId: 'reading' };
   });
-  const book = useCompassBook(session);
+  const [demo, setDemo] = useState(allowDemo && initialDemo);
+  const book = useCompassBook(session, { demo });
   const userId = session?.user?.id ?? 'local';
 
-  const openPage = useCallback(
-    (pageId: CompassBookPageId) => setView({ kind: 'page', pageId }),
-    [],
+  // The cover only swings when the book is actually being opened. A deep link
+  // straight to a fragment skips it — the player asked to write, not to browse.
+  const [coverOpen, setCoverOpen] = useState(
+    () => !initialActivityId && !prefersReducedMotion(),
   );
+
+  // Page-turn state. `turnKey` restarts the CSS animation on every turn, even
+  // when the direction repeats.
+  const [turn, setTurn] = useState<{ className: string | null; ms: number; key: number }>({
+    className: null,
+    ms: 0,
+    key: 0,
+  });
+  const turnSeqRef = useRef(0);
+
+  const openPage = useCallback((pageId: CompassBookPageId) => {
+    setView((current) => {
+      const from = current.kind === 'page' ? current.pageId : current.chapterId;
+      const direction = turnDirection(from, pageId);
+      if (direction !== 'none' && !prefersReducedMotion()) {
+        turnSeqRef.current += 1;
+        setTurn({
+          className: turnClassName(direction),
+          ms: turnDurationMs(turnDistance(from, pageId)),
+          key: turnSeqRef.current,
+        });
+      }
+      return { kind: 'page', pageId };
+    });
+  }, []);
   const startFlow = useCallback(
     (chapterId: CompassBookChapterId, startActivityId?: string) =>
       setView({ kind: 'flow', chapterId, startActivityId }),
@@ -86,8 +136,19 @@ export function CompassBookScreen({
     <div className="compass-book" role="dialog" aria-modal="true" aria-label="Compass Book">
       <div className="compass-book__backdrop" aria-hidden="true" onClick={onClose} />
       <div className="compass-book__sheet">
+        {coverOpen ? <CompassBookCoverPlate onOpened={() => setCoverOpen(false)} /> : null}
         <div className="compass-book__spread">
-          <div className="compass-book__page">
+          <div
+            key={turn.key}
+            className={`compass-book__page ${turn.className ?? ''}`}
+            style={turn.ms ? ({ '--cbk-turn-ms': `${turn.ms}ms` } as CSSProperties) : undefined}
+            // Animation events bubble: a child finishing its own animation must
+            // not cut the page turn short, so only the page's own end counts.
+            onAnimationEnd={(event) => {
+              if (event.target !== event.currentTarget) return;
+              setTurn((t) => ({ ...t, className: null, ms: 0 }));
+            }}
+          >
             {view.kind === 'page' && view.pageId === 'reading' ? (
               <>
                 <header className="compass-book__topbar">
@@ -95,6 +156,19 @@ export function CompassBookScreen({
                     <span aria-hidden="true">🧭</span> Compass Book
                   </span>
                   <span className="compass-book__topbar-spacer" />
+                  {allowDemo ? (
+                    <button
+                      type="button"
+                      className={`compass-book__demo-toggle ${
+                        demo ? 'compass-book__demo-toggle--on' : ''
+                      }`}
+                      onClick={() => setDemo((on) => !on)}
+                      aria-pressed={demo}
+                      title="Admin preview: fill the book with sample answers. Nothing is saved."
+                    >
+                      {demo ? 'Demo on' : 'Demo'}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     className="compass-book__close"
@@ -104,6 +178,11 @@ export function CompassBookScreen({
                     ✕
                   </button>
                 </header>
+                {demo ? (
+                  <p className="compass-book__demo-banner" role="status">
+                    Demo data — sample answers for preview. Nothing here is saved to your account.
+                  </p>
+                ) : null}
                 <CompassReading
                   currentIslandNumber={currentIslandNumber}
                   getProgress={book.getProgress}
