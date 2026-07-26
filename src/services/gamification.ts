@@ -16,6 +16,11 @@ import type {
 import { XP_REWARDS, DEMO_PROFILE_KEY, DEMO_TRANSACTIONS_KEY, DEMO_ACHIEVEMENTS_KEY } from '../types/gamification';
 import { recordTelemetryEvent } from './telemetry';
 import { awardLevelUpTreeMilestones, awardStreakTreeMilestone } from './impactTrees';
+import { DEMO_USER_ID } from './demoData';
+
+function canUseCloudGamificationData(userId: string): boolean {
+  return userId !== DEMO_USER_ID && canUseSupabaseData();
+}
 
 // =====================================================
 // LEVEL CALCULATION FUNCTIONS
@@ -38,7 +43,7 @@ export async function fetchXPTransactions(
   limit = 6
 ): Promise<{ data: XPTransaction[]; error: string | null }> {
   try {
-    if (!canUseSupabaseData()) {
+    if (!canUseCloudGamificationData(userId)) {
       const transactions = JSON.parse(localStorage.getItem(DEMO_TRANSACTIONS_KEY) || '[]')
         .filter((transaction: XPTransaction) => transaction.user_id === userId)
         .sort((a: XPTransaction, b: XPTransaction) =>
@@ -126,7 +131,7 @@ export async function awardXP(
     }
 
     // Demo mode
-    if (!canUseSupabaseData()) {
+    if (!canUseCloudGamificationData(userId)) {
       const result = await awardXPDemo(userId, finalXPAmount, sourceType, sourceId, description);
       if (result.success) {
         void recordTelemetryEvent({
@@ -329,7 +334,7 @@ async function awardXPDemo(
 export async function updateStreak(userId: string): Promise<UpdateStreakResult> {
   try {
     // Demo mode
-    if (!canUseSupabaseData()) {
+    if (!canUseCloudGamificationData(userId)) {
       return await updateStreakDemo(userId);
     }
 
@@ -501,7 +506,7 @@ async function updateStreakDemo(userId: string): Promise<UpdateStreakResult> {
  */
 export async function checkAchievements(userId: string): Promise<Achievement[]> {
   // For demo mode, return empty array (simplified)
-  if (!canUseSupabaseData()) {
+  if (!canUseCloudGamificationData(userId)) {
     return [];
   }
 
@@ -526,12 +531,13 @@ export async function checkAchievements(userId: string): Promise<Achievement[]> 
       .eq('user_id', userId)
       .single() as { data: GamificationProfile | null };
 
-    // Fetch habit count
-    const { count: habitsCount } = await supabase
-      .from('habits_v2')
+    // Count completed habit actions, not habit definitions. `habits_v2` has no
+    // `completed` column; completion state lives in `habit_logs_v2.done`.
+    const { count: habitCompletionsCount } = await supabase
+      .from('habit_logs_v2')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('completed', true);
+      .eq('done', true);
 
     // Fetch goals count
     const { count: goalsCount } = await supabase
@@ -554,8 +560,8 @@ export async function checkAchievements(userId: string): Promise<Achievement[]> 
           break;
           
         case 'habits_completed':
-          progress = habitsCount || 0;
-          qualified = (habitsCount || 0) >= achievement.requirement_value;
+          progress = habitCompletionsCount || 0;
+          qualified = (habitCompletionsCount || 0) >= achievement.requirement_value;
           break;
           
         case 'goals_achieved':
@@ -722,7 +728,7 @@ export async function fetchAchievementsWithProgress(userId: string): Promise<{
   error: Error | null;
 }> {
   try {
-    if (!canUseSupabaseData()) {
+    if (!canUseCloudGamificationData(userId)) {
       // Demo mode: return empty array for now
       return { data: [], error: null };
     }
@@ -789,7 +795,7 @@ export async function resetXP(
   userId: string,
 ): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   try {
-    if (!canUseSupabaseData()) {
+    if (!canUseCloudGamificationData(userId)) {
       // Demo mode — patch the localStorage profile in place.
       const profileJson = localStorage.getItem(DEMO_PROFILE_KEY);
       const profile = profileJson ? JSON.parse(profileJson) : {};
