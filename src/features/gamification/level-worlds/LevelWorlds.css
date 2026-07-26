@@ -15239,6 +15239,13 @@
   gap: 0.4rem;
 }
 
+.island-run-dice-pack__art {
+  width: 100%;
+  height: 4.8rem;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 7px rgb(22 34 49 / 18%));
+}
+
 .island-run-dice-pack__badge {
   padding: 0.14rem 0.42rem;
   border-radius: 999px;
