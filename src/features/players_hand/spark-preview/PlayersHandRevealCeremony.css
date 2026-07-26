@@ -2,9 +2,9 @@
 .players-hand-reveal__title { margin:0; font-size:1.1rem; text-align:center; }
 .players-hand-reveal__subtitle { margin:8px 0 14px; opacity:.82; text-align:center; font-size:.9rem; }
 .players-hand-reveal__row { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; min-height:120px; }
-.players-hand-reveal__card { position:relative; overflow:hidden; color:var(--card-color); width:100px; height:118px; border-radius:12px; border:1px solid var(--card-color); background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.03)); box-shadow:0 10px 22px rgba(0,0,0,.42),0 0 14px color-mix(in srgb, var(--card-color) 55%, transparent); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; animation:revealIn .35s ease forwards; }
+.players-hand-reveal__card { position:relative; overflow:hidden; width:100px; height:118px; border-radius:12px; border:1px solid var(--card-color); background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.03)); box-shadow:0 10px 22px rgba(0,0,0,.42),0 0 14px color-mix(in srgb, var(--card-color) 55%, transparent); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; animation:revealIn .35s ease forwards; }
 .players-hand-reveal__icon { font-size:1.4rem; }
-.players-hand-reveal__name { margin-top:8px; font-size:.72rem; text-align:center; padding:0 6px; }
+.players-hand-reveal__name { margin-top:8px; font-size:.72rem; text-align:center; padding:0 6px; color:#f1f5f9; font-weight:600; }
 .players-hand-reveal__actions { margin-top:14px; display:flex; gap:8px; justify-content:center; }
 .players-hand-reveal__btn { border:1px solid rgba(255,255,255,.28); border-radius:999px; padding:8px 12px; color:#fff; background:rgba(126,92,255,.45); }
 .players-hand-reveal__btn--ghost { background:transparent; }
@@ -14,4 +14,83 @@
 /* Playing-card anatomy on the reveal cards (pip/watermark styles are shared
    with the SPARK preview). */
 .players-hand-reveal__card .pcard-pip { color: var(--card-color); }
-.players-hand-reveal__card .pcard-watermark { opacity: 0.12; font-size: 3.4rem; }
+.players-hand-reveal__card .pcard-watermark { opacity: 0.12; font-size: 3.4rem; color: var(--card-color); }
+
+/* ── Crescendo deal + the face-down shadow ────────────────────────────────── */
+
+/* The dominant card lands last and sits a touch larger — it is the climax. */
+.players-hand-reveal__card--dominant {
+  transform: scale(1.06) !important;
+  box-shadow: 0 14px 30px rgba(0,0,0,.5), 0 0 22px color-mix(in srgb, var(--card-color) 75%, transparent);
+}
+
+.players-hand-reveal__shadow-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* The shadow arrives face down and waits to be turned. */
+.players-hand-reveal__card--shadow {
+  cursor: pointer;
+  padding: 0;
+  animation: revealIn .35s ease forwards;
+}
+
+.players-hand-reveal__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 11px;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.05) 0px,
+      rgba(255, 255, 255, 0.05) 4px,
+      rgba(255, 255, 255, 0.11) 4px,
+      rgba(255, 255, 255, 0.11) 8px
+    );
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.players-hand-reveal__back-mark {
+  font-size: 1.6rem;
+  opacity: 0.75;
+  color: #e2e8f0;
+}
+
+/* Keep revealIn — it is what animates opacity 0 -> 1 and holds it via
+   `forwards`. Replacing it outright left the flipped card invisible. */
+.players-hand-reveal__card--shadow.is-flipped {
+  animation: revealIn .35s ease forwards, shadowTurn .4s ease;
+}
+
+@keyframes shadowTurn {
+  from { transform: rotateY(90deg); }
+  to { transform: rotateY(0deg); }
+}
+
+/* Reduced motion skips both animations, so pin the card visible. */
+@media (prefers-reduced-motion: reduce) {
+  .players-hand-reveal__card--shadow { opacity: 1; }
+}
+
+.players-hand-reveal__shadow-note {
+  margin: 0;
+  max-width: 260px;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: rgba(226, 232, 240, 0.85);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .players-hand-reveal__card--shadow,
+  .players-hand-reveal__card--shadow.is-flipped {
+    animation: none;
+  }
+}

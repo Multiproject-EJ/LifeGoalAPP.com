@@ -40441,3 +40441,18 @@ body.habit-wizard-open .mobile-footer-nav {
   color: #991b1b;
   font-weight: 700;
 }
+
+/* Share the playstyle hero as an image (#14). */
+.identity-hub__share {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: -0.25rem;
+}
+
+.identity-hub__share-note {
+  font-size: 0.78rem;
+  color: var(--text-secondary, #6b7280);
+  text-align: center;
+}

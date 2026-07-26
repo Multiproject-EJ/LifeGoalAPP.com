@@ -17,6 +17,7 @@ import {
 import { scoreScenarioAnswers, describePlaystyle } from './personalityScoringV2';
 import { CURRENT_FOUNDATION_VERSION, readStoredFoundation } from './foundationScoring';
 import { triggerCompletionHaptic } from '../../utils/completionHaptics';
+import { shareOrDownloadImage } from '../../utils/imageGenerator';
 import {
   PersonalityScores,
   coerceStoredScores,
@@ -575,6 +576,8 @@ export default function PersonalityTest({
   const [queuePending, setQueuePending] = useState(0);
   const [queueFailed, setQueueFailed] = useState(0);
   const [showSparkReveal, setShowSparkReveal] = useState(true);
+  const shareCardRef = useRef<HTMLDivElement | null>(null);
+  const [shareState, setShareState] = useState<'idle' | 'working' | 'done' | 'error'>('idle');
 
   const activeSession = useMemo(() => {
     if (session) {
@@ -869,6 +872,24 @@ export default function PersonalityTest({
     }
 
     setCurrentIndex((prev) => prev - 1);
+  };
+
+  const handleShareHand = async () => {
+    const node = shareCardRef.current;
+    if (!node) return;
+    setShareState('working');
+    try {
+      await shareOrDownloadImage(node, 'my-playstyle.png', {
+        title: 'My playstyle',
+        text: playstyleRead.length > 0
+          ? `I play ${playstyleRead.map((entry) => entry.label).join(' · ')}.`
+          : 'My LifeGoal playstyle.',
+      });
+      setShareState('done');
+    } catch {
+      // Sharing is an enhancement; a failure must not disturb the results view.
+      setShareState('error');
+    }
   };
 
   const handleRetake = () => {
@@ -1428,7 +1449,7 @@ export default function PersonalityTest({
           <p className="identity-hub__card-text identity-hub__card-text--compact">
             Your playstyle read, and what to focus on next.
           </p>
-          <div className="identity-hub__results-hero">
+          <div className="identity-hub__results-hero" ref={shareCardRef}>
             <p className="identity-hub__results-kicker">Your playstyle</p>
             {playstyleRead.length > 0 ? (
               <>
@@ -1474,6 +1495,23 @@ export default function PersonalityTest({
               </p>
             )}
           </div>
+          {playstyleRead.length > 0 && (
+            <div className="identity-hub__share">
+              <button
+                type="button"
+                className="identity-hub__secondary identity-hub__secondary--compact"
+                onClick={handleShareHand}
+                disabled={shareState === 'working'}
+              >
+                {shareState === 'working' ? 'Preparing…' : '📤 Share your hand'}
+              </button>
+              {shareState === 'error' && (
+                <span className="identity-hub__share-note">
+                  Could not create the image. Try again, or screenshot instead.
+                </span>
+              )}
+            </div>
+          )}
           <CollapsibleSection title="Score breakdown" meta="Big Five + axes">
             <div className="identity-hub__results">
               <div className="identity-hub__results-section">
