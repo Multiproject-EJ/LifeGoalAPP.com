@@ -30,6 +30,14 @@ export type CompassBookScreenProps = {
   /** Optional deep-link: open straight into a chapter (and a fragment). */
   initialChapterId?: CompassBookChapterId;
   initialActivityId?: string;
+  /**
+   * Show the admin/dev demo toggle. Demo mode swaps in a fully written
+   * in-memory book so the feature can be evaluated without answering 120
+   * fragments. It never reads or writes real data — see `useCompassBook`.
+   */
+  allowDemo?: boolean;
+  /** Start already in demo mode (used by the dev preview harness). */
+  initialDemo?: boolean;
   onClose: () => void;
 };
 
@@ -53,6 +61,8 @@ export function CompassBookScreen({
   session,
   initialChapterId,
   initialActivityId,
+  allowDemo = false,
+  initialDemo = false,
   onClose,
 }: CompassBookScreenProps) {
   const [view, setView] = useState<CompassBookView>(() => {
@@ -62,7 +72,8 @@ export function CompassBookScreen({
     if (initialChapterId) return { kind: 'page', pageId: initialChapterId };
     return { kind: 'page', pageId: 'reading' };
   });
-  const book = useCompassBook(session);
+  const [demo, setDemo] = useState(allowDemo && initialDemo);
+  const book = useCompassBook(session, { demo });
   const userId = session?.user?.id ?? 'local';
 
   // The cover only swings when the book is actually being opened. A deep link
@@ -145,6 +156,19 @@ export function CompassBookScreen({
                     <span aria-hidden="true">🧭</span> Compass Book
                   </span>
                   <span className="compass-book__topbar-spacer" />
+                  {allowDemo ? (
+                    <button
+                      type="button"
+                      className={`compass-book__demo-toggle ${
+                        demo ? 'compass-book__demo-toggle--on' : ''
+                      }`}
+                      onClick={() => setDemo((on) => !on)}
+                      aria-pressed={demo}
+                      title="Admin preview: fill the book with sample answers. Nothing is saved."
+                    >
+                      {demo ? 'Demo on' : 'Demo'}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     className="compass-book__close"
@@ -154,6 +178,11 @@ export function CompassBookScreen({
                     ✕
                   </button>
                 </header>
+                {demo ? (
+                  <p className="compass-book__demo-banner" role="status">
+                    Demo data — sample answers for preview. Nothing here is saved to your account.
+                  </p>
+                ) : null}
                 <CompassReading
                   currentIslandNumber={currentIslandNumber}
                   getProgress={book.getProgress}

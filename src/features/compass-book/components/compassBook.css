@@ -1022,28 +1022,48 @@
   grid-template-columns: 1fr 1fr;
 }
 
+/* Icon in column 1, label stacked over value in column 2.
+   These tiles hold a single word in the Living Wheel ("Home") but a full
+   sentence in the Quest Forge ("Sunday mornings stay unscheduled…"). The old
+   row layout pushed the value right with margin-left:auto, so long text was
+   squeezed into a sliver, wrapped one word per line, and overflowed the tile.
+   Stacking removes the horizontal competition entirely. */
 .compass-wheel__mechanic {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 2px 7px;
+  padding: 7px 10px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 0.78rem;
+  /* The graphic container centres its contents for the SVG; sentences in these
+     tiles need to read as text, not as a centred caption. */
+  text-align: left;
+}
+
+.compass-wheel__mechanic > [aria-hidden] {
+  grid-row: 1 / span 2;
+  align-self: center;
 }
 
 .compass-wheel__mechanic-label {
+  grid-column: 2;
   color: #93a4d8;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 0.66rem;
+  line-height: 1.25;
 }
 
 .compass-wheel__mechanic-area {
-  margin-left: auto;
+  grid-column: 2;
+  min-width: 0;
   font-weight: 700;
+  line-height: 1.3;
   color: #eef2ff;
+  overflow-wrap: anywhere;
 }
 
 .compass-wheel__next {
@@ -1988,4 +2008,41 @@
   .compass-book__cover-plate {
     display: none;
   }
+}
+
+/* ============================================================
+   Admin demo preview
+   ============================================================
+   Only rendered when the host passes `allowDemo` (admins, and the dev preview
+   harness). Deliberately looks like a tool, not part of the book. */
+
+.compass-book__demo-toggle {
+  margin-right: 8px;
+  padding: 5px 11px;
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--cbk-ink-muted);
+  border: 1px dashed var(--cbk-line-strong);
+  border-radius: 999px;
+  background: transparent;
+}
+
+.compass-book__demo-toggle--on {
+  color: #0b1020;
+  border-style: solid;
+  border-color: var(--cbk-gold);
+  background: var(--cbk-gold);
+}
+
+.compass-book__demo-banner {
+  margin: 0;
+  padding: 8px 16px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #ffe9b8;
+  background: rgba(242, 193, 78, 0.12);
+  border-bottom: 1px solid var(--cbk-gold-faint);
 }

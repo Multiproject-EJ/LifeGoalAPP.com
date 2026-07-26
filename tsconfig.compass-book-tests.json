@@ -21,6 +21,7 @@
     "src/features/compass-book/content/chapter5QuestForge.ts",
     "src/features/compass-book/content/chapter6PersonalPlaybook.ts",
     "src/features/compass-book/content/compassBookCurriculum.ts",
+    "src/features/compass-book/content/demoBook.ts",
     "src/features/compass-book/logic/unlock.ts",
     "src/features/compass-book/logic/progress.ts",
     "src/features/compass-book/logic/reading.ts",

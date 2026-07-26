@@ -20,6 +20,7 @@ import {
   type CompassChapterState,
 } from '../types';
 import { getChapterActivities } from '../content/compassBookCurriculum';
+import { buildDemoChapterStates } from '../content/demoBook';
 import { computeChapterProgress, isActivityComplete } from '../logic/progress';
 import { getChapterConfirmedOutput } from '../logic/projectors';
 import {
@@ -58,15 +59,41 @@ export type UseCompassBook = {
   sealChapter: (chapterId: CompassBookChapterId) => Promise<void>;
 };
 
-export function useCompassBook(session: Session | null): UseCompassBook {
+export type UseCompassBookOptions = {
+  /**
+   * Admin/dev preview: work from a fully written in-memory book instead of the
+   * player's own. Demo state is NEVER persisted — no Supabase read or write, no
+   * localStorage — so it cannot touch or overwrite real data.
+   */
+  demo?: boolean;
+};
+
+export function useCompassBook(
+  session: Session | null,
+  options: UseCompassBookOptions = {},
+): UseCompassBook {
+  const demo = options.demo === true;
   const userId = session?.user?.id ?? 'local';
-  const [states, setStates] = useState<ChapterStates>(() => loadLocalChapterStates(userId));
+  const [states, setStates] = useState<ChapterStates>(() =>
+    demo ? buildDemoChapterStates() : loadLocalChapterStates(userId),
+  );
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const bookIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+
+    // Demo mode short-circuits every I/O path in this hook.
+    if (demo) {
+      bookIdRef.current = null;
+      setStates(buildDemoChapterStates());
+      setReady(true);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     // Seed immediately from the local cache so the UI is never blank.
     setStates(loadLocalChapterStates(userId));
     setReady(false);
@@ -88,7 +115,7 @@ export function useCompassBook(session: Session | null): UseCompassBook {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, demo]);
 
   const getChapterState = useCallback(
     (chapterId: CompassBookChapterId) => states[chapterId] ?? null,
@@ -104,6 +131,9 @@ export function useCompassBook(session: Session | null): UseCompassBook {
   const persist = useCallback(
     async (next: CompassChapterState) => {
       setStates((prev) => ({ ...prev, [next.chapterId]: next }));
+      // Demo edits stay in memory for the session and are thrown away on close.
+      // This is the guard that keeps a preview from writing over real answers.
+      if (demo) return;
       saveLocalChapterState(userId, next);
       const bookId = bookIdRef.current;
       if (bookId) {
@@ -115,7 +145,7 @@ export function useCompassBook(session: Session | null): UseCompassBook {
         }
       }
     },
-    [userId],
+    [userId, demo],
   );
 
   const saveActivityAnswers = useCallback(
