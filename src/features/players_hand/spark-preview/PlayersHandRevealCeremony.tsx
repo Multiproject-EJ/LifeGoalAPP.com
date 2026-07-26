@@ -39,6 +39,21 @@ export function PlayersHandRevealCeremony({ hand, onComplete }: PlayersHandRevea
               animationDelay: `${index * 80}ms`,
             } as CSSProperties}
           >
+            {card.suitGlyph ? (
+              <>
+                <span className="pcard-pip pcard-pip--tl" aria-hidden="true">
+                  <span className="pcard-pip__rank">{card.rank}</span>
+                  <span className="pcard-pip__glyph">{card.suitGlyph}</span>
+                </span>
+                <span className="pcard-pip pcard-pip--br" aria-hidden="true">
+                  <span className="pcard-pip__rank">{card.rank}</span>
+                  <span className="pcard-pip__glyph">{card.suitGlyph}</span>
+                </span>
+                <span className="pcard-watermark" aria-hidden="true">
+                  {card.suitGlyph}
+                </span>
+              </>
+            ) : null}
             <span className="players-hand-reveal__icon">{card.icon}</span>
             <span className="players-hand-reveal__name">{card.title}</span>
           </div>

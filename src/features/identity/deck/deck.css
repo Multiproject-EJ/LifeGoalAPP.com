@@ -398,3 +398,157 @@
     width: 100%;
   }
 }
+
+/* ── Real card anatomy ────────────────────────────────────────────────────
+   Corner pips, suit watermark, portrait window and name banner, so the
+   archetypes read as playing cards rather than as UI boxes. */
+
+.pcard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  aspect-ratio: 5 / 7;
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--card-color, #4f46e5) 45%, transparent);
+  background:
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--card-color, #4f46e5) 14%, var(--card-background, #ffffff)) 0%,
+      var(--card-background, #ffffff) 55%
+    );
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  text-align: center;
+  font: inherit;
+  color: var(--text-primary, #111827);
+}
+
+.pcard--clickable {
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.pcard--clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.18);
+}
+
+/* The shadow card is deliberately cooler and quieter — unplayed, not lesser. */
+.pcard--shadow {
+  border-style: dashed;
+  filter: saturate(0.85);
+}
+
+.pcard__pip {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  color: var(--card-color, #4f46e5);
+  font-weight: 700;
+}
+
+.pcard__pip--tl {
+  top: 0.4rem;
+  left: 0.5rem;
+}
+
+.pcard__pip--br {
+  bottom: 0.4rem;
+  right: 0.5rem;
+  transform: rotate(180deg);
+}
+
+.pcard__rank {
+  font-size: 0.85rem;
+}
+
+.pcard__glyph {
+  font-size: 0.7rem;
+}
+
+.pcard__watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 5.5rem;
+  line-height: 1;
+  color: var(--card-color, #4f46e5);
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+.pcard__portrait {
+  margin-top: 1.35rem;
+  font-size: 2.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 3px 6px color-mix(in srgb, var(--card-color, #4f46e5) 35%, transparent));
+}
+
+.pcard--compact .pcard__portrait {
+  margin-top: 1.15rem;
+  font-size: 1.7rem;
+}
+
+.pcard__banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.5rem;
+  padding: 0.2rem 0.4rem;
+  border-top: 1px solid color-mix(in srgb, var(--card-color, #4f46e5) 30%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--card-color, #4f46e5) 30%, transparent);
+}
+
+.pcard__name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.pcard--compact .pcard__name {
+  font-size: 0.75rem;
+}
+
+.pcard__drive {
+  font-size: 0.62rem;
+  line-height: 1.25;
+  color: var(--text-secondary, #6b7280);
+}
+
+.pcard__level {
+  display: flex;
+  gap: 3px;
+  margin-top: 0.4rem;
+}
+
+.pcard__level-pip {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--card-color, #4f46e5) 22%, transparent);
+}
+
+.pcard__level-pip--on {
+  background: var(--card-color, #4f46e5);
+  box-shadow: 0 0 5px var(--card-color, #4f46e5);
+}
+
+.pcard__power {
+  margin-top: 0.35rem;
+  padding: 0 0.2rem;
+  font-size: 0.6rem;
+  line-height: 1.3;
+  color: var(--text-secondary, #6b7280);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pcard--clickable {
+    transition: none;
+  }
+}

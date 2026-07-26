@@ -338,6 +338,21 @@ export function PlayersHandSparkPreview({
                       }${prefersReducedMotion ? ' reduced-motion' : ''}`}
                     >
                       <div className="players-hand-spark-preview__card-face players-hand-spark-preview__card-face--front">
+                        {card.suitGlyph ? (
+                          <>
+                            <span className="pcard-pip pcard-pip--tl" aria-hidden="true">
+                              <span className="pcard-pip__rank">{card.rank}</span>
+                              <span className="pcard-pip__glyph">{card.suitGlyph}</span>
+                            </span>
+                            <span className="pcard-pip pcard-pip--br" aria-hidden="true">
+                              <span className="pcard-pip__rank">{card.rank}</span>
+                              <span className="pcard-pip__glyph">{card.suitGlyph}</span>
+                            </span>
+                            <span className="pcard-watermark" aria-hidden="true">
+                              {card.suitGlyph}
+                            </span>
+                          </>
+                        ) : null}
                         <span className="players-hand-spark-preview__meta">
                           <span className="players-hand-spark-preview__badge">{card.role}</span>
                           <span className="players-hand-spark-preview__badge">Lv {card.level}</span>
