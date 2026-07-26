@@ -8,15 +8,14 @@ import React, {
 } from 'react';
 
 import {
-  AnswerValue,
-  PersonalityQuestion,
-} from './personalityTestData';
-import {
-  QUIZ_SECTIONS,
-  ORDERED_QUIZ_QUESTIONS,
-  getQuizPosition,
-  isSectionStart,
-} from './personalityTestSections';
+  GAME_AXES,
+  ORDERED_SCENARIO_QUESTIONS,
+  getScenarioPosition,
+  isAxisStart,
+  type ScenarioQuestion,
+} from './personalityTestDataV2';
+import { scoreScenarioAnswers, describePlaystyle } from './personalityScoringV2';
+import { CURRENT_FOUNDATION_VERSION, readStoredFoundation } from './foundationScoring';
 import {
   PersonalityScores,
   coerceStoredScores,
@@ -71,19 +70,6 @@ import {
 import './deck/deck.css';
 
 type TestStep = 'hub' | 'quiz' | 'results';
-
-type AnswerOption = {
-  value: AnswerValue;
-  label: string;
-};
-
-const ANSWER_OPTIONS: AnswerOption[] = [
-  { value: 1, label: 'Strongly disagree' },
-  { value: 2, label: 'Disagree' },
-  { value: 3, label: 'Neutral' },
-  { value: 4, label: 'Agree' },
-  { value: 5, label: 'Strongly agree' },
-];
 
 const REFRESH_MESSAGE_SHORT_TIMEOUT = 3000;
 const REFRESH_MESSAGE_LONG_TIMEOUT = 4000;
@@ -573,7 +559,7 @@ export default function PersonalityTest({
   const [step, setStep] = useState<TestStep>('hub');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showSectionIntro, setShowSectionIntro] = useState(true);
-  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const savedResultRef = useRef<string | null>(null);
   const refreshMessageTimeoutRef = useRef<number | null>(null);
   const [supabaseRecommendations, setSupabaseRecommendations] = useState<Recommendation[]>([]);
@@ -597,22 +583,20 @@ export default function PersonalityTest({
 
   const activeUserId = isValidUuid(activeSession?.user?.id) ? activeSession.user.id : null;
 
-  const currentQuestion: PersonalityQuestion | undefined =
-    ORDERED_QUIZ_QUESTIONS[currentIndex];
-  const quizPosition = getQuizPosition(currentIndex);
+  const currentQuestion: ScenarioQuestion | undefined =
+    ORDERED_SCENARIO_QUESTIONS[currentIndex];
+  const quizPosition = getScenarioPosition(currentIndex);
   const answeredCount = Object.keys(answers).length;
 
-  // Scores for the answers currently in memory. Guarded on completeness because
-  // scorePersonality throws on a missing answer — that also makes viewing an
-  // older record whose answers no longer cover the question bank degrade to
-  // "no scores" instead of throwing mid-render.
-  const sessionScores = useMemo<PersonalityScores | null>(() => {
-    const complete = ORDERED_QUIZ_QUESTIONS.every(
-      (question) => answers[question.id] !== undefined,
-    );
-    return complete ? scorePersonality(answers) : null;
+  // The in-memory session read. Every question is skippable, so this is valid
+  // from the first answer onward — it simply reports which dimensions and axes
+  // have real data behind them (`measured`) rather than demanding completeness.
+  const sessionRead = useMemo(() => {
+    if (Object.keys(answers).length === 0) return null;
+    return scoreScenarioAnswers(answers);
   }, [answers]);
 
+  const sessionScores = sessionRead?.scores ?? null;
   const foundationScores = step === 'results' ? sessionScores : null;
 
   // Completed micro-tests for this user, loaded offline-first. Folded into the
@@ -623,8 +607,11 @@ export default function PersonalityTest({
   }, [activeUserId, step]);
 
   const merged = useMemo(
-    () => (foundationScores ? mergeMicroTestScores(foundationScores, microResults) : null),
-    [foundationScores, microResults],
+    () =>
+      foundationScores
+        ? mergeMicroTestScores(foundationScores, microResults, new Date(), sessionRead?.measured)
+        : null,
+    [foundationScores, microResults, sessionRead],
   );
   const scores = merged?.scores ?? foundationScores;
   const measuredDimensions = merged?.measured ?? null;
@@ -650,6 +637,29 @@ export default function PersonalityTest({
     [scores],
   );
   const latestRecord = history[0] ?? null;
+  const storedReadForHero = useMemo(() => readStoredFoundation(latestRecord), [latestRecord]);
+
+  // The five-axis playstyle read shown as the results hero. Prefers this
+  // session's answers; falls back to a stored v2 record. Axes where every
+  // question was skipped are simply left out rather than shown as a coin-flip.
+  const playstyleRead = useMemo(() => {
+    const axisScores = sessionRead?.axisScores ?? storedReadForHero?.axisScores;
+    const measuredAxes = sessionRead?.measuredAxes ?? storedReadForHero?.measuredAxes;
+    if (!axisScores || !measuredAxes) return [];
+    return GAME_AXES.filter((axis) => measuredAxes.has(axis.key)).map((axis) => {
+      const score = axisScores[axis.key];
+      const leansHigh = score >= 50;
+      return {
+        key: axis.key,
+        icon: axis.icon,
+        color: axis.color,
+        score,
+        label: leansHigh ? axis.highLabel : axis.lowLabel,
+        opposite: leansHigh ? axis.lowLabel : axis.highLabel,
+      };
+    });
+  }, [sessionRead, storedReadForHero]);
+
   const handSummary = useMemo(
     () => (traitCards.length > 0 ? buildHandSummary(traitCards) : null),
     [traitCards],
@@ -661,14 +671,17 @@ export default function PersonalityTest({
   // Prefer the saved record; fall back to the in-memory session so a player
   // whose result has not persisted (guest, or offline before sync) still comes
   // back to their hand instead of an empty "take the test" screen.
+  // Read through the version dispatcher so a v1 record keeps using its stored
+  // aggregate while a v2 record is rescored from its own answers.
+  const storedRead = storedReadForHero;
+
   const hubHand = useMemo<ArchetypeHand | null>(() => {
-    const base = latestRecord
-      ? coerceStoredScores(latestRecord.traits, latestRecord.axes)
-      : sessionScores;
+    const base = storedRead?.scores ?? sessionScores;
     if (!base) return null;
-    const hubScores = mergeMicroTestScores(base, microResults).scores;
+    const baseMeasured = storedRead?.measured ?? sessionRead?.measured;
+    const hubScores = mergeMicroTestScores(base, microResults, new Date(), baseMeasured).scores;
     return buildHand(rankArchetypes(scoreArchetypes(hubScores, ARCHETYPE_DECK)));
-  }, [latestRecord, sessionScores, microResults]);
+  }, [storedRead, sessionScores, sessionRead, microResults]);
 
   const hasFoundation = Boolean(latestRecord || sessionScores);
 
@@ -688,7 +701,7 @@ export default function PersonalityTest({
       buildIdentityLibrary({
         foundationTakenAt: latestRecord?.taken_at ?? null,
         foundationTaken: hasFoundation,
-        foundationQuestionCount: ORDERED_QUIZ_QUESTIONS.length,
+        foundationQuestionCount: ORDERED_SCENARIO_QUESTIONS.length,
         microResults,
         playerState,
       }),
@@ -748,42 +761,55 @@ export default function PersonalityTest({
     savedResultRef.current = null;
   };
 
-  const handleSelect = (value: AnswerValue) => {
+  const handleSelect = (optionId: string) => {
     if (!currentQuestion) {
       return;
     }
 
     setAnswers((prev) => ({
       ...prev,
-      [currentQuestion.id]: value,
+      [currentQuestion.id]: optionId,
     }));
   };
 
-  const handleNext = () => {
-    if (!currentQuestion) {
-      return;
-    }
-
-    if (!answers[currentQuestion.id]) {
-      return;
-    }
-
-    if (currentIndex >= ORDERED_QUIZ_QUESTIONS.length - 1) {
+  const advance = () => {
+    if (currentIndex >= ORDERED_SCENARIO_QUESTIONS.length - 1) {
       setStep('results');
       return;
     }
 
     const nextIndex = currentIndex + 1;
     setCurrentIndex(nextIndex);
-    // Pause on a suit-intro screen whenever we cross into a new section.
-    if (isSectionStart(nextIndex)) {
+    // Pause on an axis-intro screen whenever we cross into a new axis.
+    if (isAxisStart(nextIndex)) {
       setShowSectionIntro(true);
     }
   };
 
+  const handleNext = () => {
+    if (!currentQuestion || !answers[currentQuestion.id]) {
+      return;
+    }
+    advance();
+  };
+
+  /** Leave the question unanswered and move on. Skipped questions score nothing. */
+  const handleSkip = () => {
+    if (!currentQuestion) {
+      return;
+    }
+    setAnswers((prev) => {
+      if (!(currentQuestion.id in prev)) return prev;
+      const next = { ...prev };
+      delete next[currentQuestion.id];
+      return next;
+    });
+    advance();
+  };
+
   const handleBack = () => {
     if (showSectionIntro) {
-      if (quizPosition.sectionIndex === 0) {
+      if (quizPosition.axisIndex === 0) {
         setStep('hub');
         return;
       }
@@ -792,7 +818,7 @@ export default function PersonalityTest({
       return;
     }
 
-    if (isSectionStart(currentIndex)) {
+    if (isAxisStart(currentIndex)) {
       setShowSectionIntro(true);
       return;
     }
@@ -814,13 +840,14 @@ export default function PersonalityTest({
       return;
     }
 
-    const restoredAnswers = Object.fromEntries(
-      Object.entries(latestRecord.answers ?? {}).map(([key, value]) => [
-        key,
-        Math.max(1, Math.min(5, Number(value))) as AnswerValue,
-      ]),
-    );
-    setAnswers(restoredAnswers);
+    // Only v2 answers (option ids) can be replayed through the v2 bank. A v1
+    // record's Likert numbers are meaningless here, so we show its results from
+    // the stored aggregate instead of trying to re-score them.
+    const restored: Record<string, string> = {};
+    for (const [questionId, value] of Object.entries(latestRecord.answers ?? {})) {
+      if (typeof value === 'string') restored[questionId] = value;
+    }
+    setAnswers(restored);
     savedResultRef.current = latestRecord.id;
     setStep('results');
   };
@@ -908,7 +935,7 @@ export default function PersonalityTest({
       answers,
       scores: foundationScores,
       archetypeHand: foundationHand,
-      version: 'v1',
+      version: CURRENT_FOUNDATION_VERSION,
     })
       .then((record) => {
         savedResultRef.current = record.id;
@@ -1098,9 +1125,9 @@ export default function PersonalityTest({
     <section className="identity-hub">
       <div className="identity-hub__header">
         <div>
-          <h2 className="identity-hub__title">🪪 Personality Test</h2>
+          <h2 className="identity-hub__title">🪪 Your Identity</h2>
           <p className="identity-hub__subtitle">
-            Get a quick snapshot of how you think, feel, and show up each day.
+            Your card, your playstyle, and the check-ins that sharpen them.
           </p>
         </div>
         <button
@@ -1191,8 +1218,8 @@ export default function PersonalityTest({
             <li>Use your trait cards to personalize the rest of LifeGoal.</li>
           </ul>
           <div className="identity-hub__intro-meta">
-            <span className="identity-hub__chip">⏱️ 4 minutes</span>
-            <span className="identity-hub__chip">🧠 {ORDERED_QUIZ_QUESTIONS.length} questions</span>
+            <span className="identity-hub__chip">⏱️ 3 minutes</span>
+            <span className="identity-hub__chip">🧠 {ORDERED_SCENARIO_QUESTIONS.length} questions</span>
             <span className="identity-hub__chip">🔒 Private</span>
           </div>
           <div className="identity-hub__actions">
@@ -1215,21 +1242,19 @@ export default function PersonalityTest({
       {step === 'quiz' && showSectionIntro && (
         <div
           className="identity-hub__card identity-hub__section-intro"
-          style={{ '--suit-color': quizPosition.section.color } as CSSProperties}
+          style={{ '--suit-color': quizPosition.axis.color } as CSSProperties}
         >
           <span className="identity-hub__section-intro-kicker">
-            Suit {quizPosition.sectionIndex + 1} of {QUIZ_SECTIONS.length}
+            Round {quizPosition.axisIndex + 1} of {GAME_AXES.length}
           </span>
           <span className="identity-hub__section-intro-icon" aria-hidden="true">
-            {quizPosition.section.icon}
+            {quizPosition.axis.icon}
           </span>
-          <h3 className="identity-hub__card-title">
-            The {quizPosition.section.title} questions
-          </h3>
-          <p className="identity-hub__card-text">{quizPosition.section.blurb}</p>
+          <h3 className="identity-hub__card-title">{quizPosition.axis.sectionTitle}</h3>
+          <p className="identity-hub__card-text">{quizPosition.axis.blurb}</p>
           <div className="identity-hub__intro-meta">
             <span className="identity-hub__chip identity-hub__chip--subtle">
-              {quizPosition.sectionSize} quick prompts
+              {quizPosition.axisSize} quick prompts
             </span>
           </div>
           <div className="identity-hub__actions">
@@ -1252,41 +1277,40 @@ export default function PersonalityTest({
           <div className="identity-hub__progress-row">
             <span
               className="identity-hub__progress-suit"
-              style={{ '--suit-color': quizPosition.section.color } as CSSProperties}
+              style={{ '--suit-color': quizPosition.axis.color } as CSSProperties}
             >
-              {quizPosition.section.icon} {quizPosition.section.title} ·{' '}
-              {quizPosition.questionInSection}/{quizPosition.sectionSize}
+              {quizPosition.axis.icon} {quizPosition.axis.highLabel} ↔ {quizPosition.axis.lowLabel} ·{' '}
+              {quizPosition.questionInAxis}/{quizPosition.axisSize}
             </span>
             <span className="identity-hub__progress">
-              {currentIndex + 1} / {ORDERED_QUIZ_QUESTIONS.length}
+              {currentIndex + 1} / {ORDERED_SCENARIO_QUESTIONS.length}
             </span>
           </div>
           <div className="identity-hub__progress-track" aria-hidden="true">
             <div
               className="identity-hub__progress-fill"
               style={{
-                width: `${Math.round((answeredCount / ORDERED_QUIZ_QUESTIONS.length) * 100)}%`,
-                backgroundColor: quizPosition.section.color,
+                width: `${Math.round(((currentIndex + 1) / ORDERED_SCENARIO_QUESTIONS.length) * 100)}%`,
+                backgroundColor: quizPosition.axis.color,
               }}
             />
           </div>
           <h3 className="identity-hub__card-title">{currentQuestion.text}</h3>
           <p className="identity-hub__card-text identity-hub__card-text--compact">
-            Pick the response that feels most like you right now.
+            Pick whichever is closest to what you'd actually do. There's no right answer here.
           </p>
           <div className="identity-hub__options">
-            {ANSWER_OPTIONS.map((option) => (
+            {currentQuestion.options.map((option) => (
               <button
-                key={option.value}
-                className={`identity-hub__option${
-                  answers[currentQuestion.id] === option.value
+                key={option.id}
+                className={`identity-hub__option identity-hub__option--scenario${
+                  answers[currentQuestion.id] === option.id
                     ? ' identity-hub__option--selected'
                     : ''
                 }`}
                 type="button"
-                onClick={() => handleSelect(option.value)}
+                onClick={() => handleSelect(option.id)}
               >
-                <span className="identity-hub__option-value">{option.value}</span>
                 <span className="identity-hub__option-label">{option.label}</span>
               </button>
             ))}
@@ -1301,38 +1325,59 @@ export default function PersonalityTest({
               onClick={handleNext}
               disabled={!answers[currentQuestion.id]}
             >
-              {currentIndex === ORDERED_QUIZ_QUESTIONS.length - 1
+              {currentIndex === ORDERED_SCENARIO_QUESTIONS.length - 1
                 ? 'View results'
                 : 'Continue'}
             </button>
           </div>
+          <button type="button" className="identity-hub__skip" onClick={handleSkip}>
+            None of these fit — skip this one
+          </button>
         </div>
       )}
 
       {step === 'results' && scores && (
         <div className="identity-hub__card">
-          <h3 className="identity-hub__card-title">Your snapshot results</h3>
+          <h3 className="identity-hub__card-title">How you play</h3>
           <p className="identity-hub__card-text identity-hub__card-text--compact">
-            A quick snapshot of your traits and what to focus on next.
+            Your playstyle read, and what to focus on next.
           </p>
           <div className="identity-hub__results-hero">
-            <p className="identity-hub__results-kicker">Top traits</p>
-            <div className="identity-hub__chip-row">
-              {topTraits.length > 0 ? (
-                topTraits.map((trait) => (
-                  <span key={trait} className="identity-hub__chip identity-hub__chip--subtle">
-                    {trait}
-                  </span>
-                ))
-              ) : (
-                <span className="identity-hub__chip identity-hub__chip--subtle">Trait snapshot</span>
-              )}
-            </div>
-            <p className="identity-hub__results-summary">
-              {topTraits.length > 0
-                ? `Your strongest signals lean ${topTraits.join(' and ')} today.`
-                : 'Your strongest signals feel balanced today.'}
-            </p>
+            <p className="identity-hub__results-kicker">Your playstyle</p>
+            {playstyleRead.length > 0 ? (
+              <>
+                <ul className="identity-hub__playstyle">
+                  {playstyleRead.map((entry) => (
+                    <li
+                      key={entry.key}
+                      className="identity-hub__playstyle-row"
+                      style={{ '--suit-color': entry.color } as CSSProperties}
+                    >
+                      <span className="identity-hub__playstyle-icon" aria-hidden="true">
+                        {entry.icon}
+                      </span>
+                      <span className="identity-hub__playstyle-label">{entry.label}</span>
+                      <span className="identity-hub__playstyle-scale" aria-hidden="true">
+                        <span
+                          className="identity-hub__playstyle-marker"
+                          style={{ left: `${entry.score}%` }}
+                        />
+                      </span>
+                      <span className="identity-hub__playstyle-opposite">{entry.opposite}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="identity-hub__results-summary">
+                  {`You play ${playstyleRead.map((entry) => entry.label).join(' · ')}.`}
+                </p>
+              </>
+            ) : (
+              <p className="identity-hub__results-summary">
+                {topTraits.length > 0
+                  ? `Your strongest signals lean ${topTraits.join(' and ')} today.`
+                  : 'Your strongest signals feel balanced today.'}
+              </p>
+            )}
           </div>
           <CollapsibleSection title="Score breakdown" meta="Big Five + axes">
             <div className="identity-hub__results">

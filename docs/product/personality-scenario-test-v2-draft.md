@@ -1,6 +1,7 @@
 # Foundation Test v2 — 20 Scenario Questions (content draft)
 
-_Status: **draft for review, revision 2**. No code changes. Nothing here is wired up yet._
+_Status: **shipped**. Implemented in `personalityTestDataV2.ts` / `personalityScoringV2.ts`.
+This document remains the content source of truth — change copy here and in the bank together._
 
 ## What this is
 
@@ -38,13 +39,18 @@ An axis only earns its place if the app *does something different* because of it
 | Axis | Reads as | Drives | Trait substrate |
 |---|---|---|---|
 | **Planner ↔ Improviser** | How you set things up | Scheduling, quest setup, reminder style | `regulation_style`, conscientiousness |
-| **Bounce-back ↔ Spiral** | What a miss does to you | Streak-break recovery flow, tone after a miss | `stress_response`, emotional_stability |
+| **Bounce-back ↔ Slow-burn** | What a miss does to you | Streak-break recovery flow, tone after a miss | `stress_response`, emotional_stability |
 | **Solo ↔ Co-op** | Who's in the room | Accountability, sharing, social prompts | extraversion, agreeableness |
 | **Explorer ↔ Consolidator** | Variety vs. routine | Whether to suggest new habits or reinforce | openness, `cognitive_entry` |
 | **Sprinter ↔ Marathoner** | The pace you keep | Goal sizing, streak targets, intensity of asks | conscientiousness, `stress_response` |
 
-**Bounce-back ↔ Spiral is the one nothing currently measures**, and it's arguably the most
+**Bounce-back ↔ Slow-burn is the one nothing currently measures**, and it's arguably the most
 important axis in a habit app.
+
+> **Naming change made during implementation:** the low pole was "Spiral" in review. That word is
+> fine in a design doc but this label is displayed on the player's own card, and "you are a
+> Spiral" contradicts the rule that no answer is the wrong one — the same principle behind "an
+> unplayed strategy, not a flaw". Shipped as **Slow-burn**: same axis, same scoring, no verdict.
 
 ### Changes from revision 1
 
@@ -114,7 +120,7 @@ Every question also offers *Skip this one* (scores nothing).
 - C — It's in my head, and mostly that's fine. · PLAN 2 · `regulation_style 2` `conscientiousness 2`
 - D — I make beautiful lists and never look at them again. · PLAN 2 · `regulation_style 2` `conscientiousness 2` `openness 4`
 
-### 🔥 Bounce-back ↔ Spiral — "What a miss does to you"
+### 🔥 Bounce-back ↔ Slow-burn — "What a miss does to you"
 
 **5. Twelve days into a streak. You miss one. Next morning?**
 - A — Straight back on it. A day is a day. · BOUNCE 5 · `stress_response 5` `emotional_stability 5`

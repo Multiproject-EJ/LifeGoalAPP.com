@@ -91,8 +91,14 @@ export function mergeMicroTestScores(
   foundation: PersonalityScores,
   results: MicroTestResult[],
   now: Date = new Date(),
+  /**
+   * Dimensions the foundation record itself measured. v2 allows skipping, so a
+   * record can measure fewer dimensions than the bank theoretically covers;
+   * defaults to the static v1 set.
+   */
+  baseMeasured: ReadonlySet<string> = FOUNDATION_MEASURED_DIMENSIONS,
 ): MergedScores {
-  const measured = new Set<string>(FOUNDATION_MEASURED_DIMENSIONS);
+  const measured = new Set<string>(baseMeasured);
   const traits: PersonalityScores['traits'] = { ...foundation.traits };
   const axes: PersonalityScores['axes'] = { ...foundation.axes };
   const hexaco: Partial<Record<string, number>> = { ...(foundation.hexaco ?? {}) };
@@ -106,7 +112,7 @@ export function mergeMicroTestScores(
       traits[dim] = blendScores(foundation.traits[dim], results, dim, now);
       measured.add(dim);
     } else if (isAxisKey(dim)) {
-      if (FOUNDATION_MEASURED_DIMENSIONS.has(dim)) {
+      if (baseMeasured.has(dim)) {
         axes[dim] = blendScores(foundation.axes[dim], results, dim, now);
       } else {
         const mean = decayWeightedMean(results, dim, now);
