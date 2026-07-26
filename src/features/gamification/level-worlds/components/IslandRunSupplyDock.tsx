@@ -297,8 +297,8 @@ export function IslandRunSupplyDock({
               <article className="island-run-supply-dock__department-hero island-run-supply-dock__department-hero--supplies">
                 <div>
                   <span className="island-run-supply-dock__eyebrow">Journey supplies</span>
-                  <h4>Use what you earn first.</h4>
-                  <p>Your money bundle is placed before optional paid dice refills.</p>
+                  <h4>Pack for the next stretch.</h4>
+                  <p>Claim the earned bundle first. Refills are here only when you want one.</p>
                 </div>
                 <img src={`${MARKET_ART_ROOT}/dice-pouch-card.webp`} alt="Luma dice pouch with ivory dice" />
               </article>
@@ -342,7 +342,7 @@ export function IslandRunSupplyDock({
                   </div>
                   <span>{isLiveCommerce ? 'Secure checkout' : 'Test mode'}</span>
                 </div>
-                <p>Free regeneration and reward routes remain available. Prices appear before confirmation.</p>
+                <p>Choose only if you want to keep rolling now. Free regeneration and reward routes remain available.</p>
                 <DicePackOfferGrid
                   loadingPackId={loadingDicePackId}
                   onSelect={onSelectDicePack}

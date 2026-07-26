@@ -31,13 +31,21 @@ export function DicePackOfferGrid({
         <button
           key={pack.id}
           type="button"
-          className={`island-run-dice-pack${pack.badge ? ' island-run-dice-pack--featured' : ''}`}
+          className={[
+            'island-run-dice-pack',
+            pack.badge ? 'island-run-dice-pack--featured' : '',
+            pack.id === 'dice_7500' ? 'island-run-dice-pack--vault' : '',
+          ].filter(Boolean).join(' ')}
           onClick={() => onSelect(pack.id)}
           disabled={disabled || loadingPackId !== null}
         >
           <img
             className="island-run-dice-pack__art"
-            src="/assets/market/supply-dock/dice-pouch-card.webp"
+            src={
+              pack.id === 'dice_7500'
+                ? '/assets/market/supply-dock/expedition-vault-v2.webp'
+                : '/assets/market/supply-dock/dice-pouch-card.webp'
+            }
             alt=""
           />
           <span className="island-run-dice-pack__topline">
@@ -50,8 +58,8 @@ export function DicePackOfferGrid({
             {loadingPackId === pack.id
               ? `Opening ${isLive ? 'secure' : 'test'} checkout…`
               : isLive
-                ? 'View price'
-                : 'View test price'}
+                ? 'See secure price →'
+                : 'Open test checkout →'}
           </span>
         </button>
       ))}
