@@ -40456,3 +40456,187 @@ body.habit-wizard-open .mobile-footer-nav {
   color: var(--text-secondary, #6b7280);
   text-align: center;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Identity is a DARK surface.
+
+   The deck, the reveal ceremony and the SPARK overlay were all built dark —
+   deep navy with a purple glow. The hub around them was light, which made the
+   card world look like it had been pasted into a settings page. Rather than
+   lightening the cards (which is what an earlier pass did, and it was the wrong
+   direction) the whole personality section now goes dark to match them.
+
+   Most of the section already reads its colours from these custom properties,
+   so re-pointing them here flips the majority; the rules below cover the few
+   places that still carried hard-coded light values.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.identity-hub {
+  --card-background: #141830;
+  --text-primary: #f1f5f9;
+  --text-secondary: #a5b0c5;
+  --border-color: rgba(255, 255, 255, 0.14);
+
+  position: relative;
+  padding: 1rem;
+  border-radius: 20px;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 50% -10%, rgba(126, 92, 255, 0.28), transparent 60%),
+    linear-gradient(170deg, #141a33 0%, #0b0d1d 62%);
+}
+
+.identity-hub__title,
+.identity-hub__results-title,
+.identity-hub__trait-title,
+.identity-hub__hand-headline,
+.identity-hub__recommendations-label,
+.identity-hub__history-date {
+  color: var(--text-primary);
+}
+
+.identity-hub__subtitle,
+.identity-hub__intro-list,
+.identity-hub__narrative-text,
+.identity-hub__hand-list,
+.identity-hub__recommendations-text,
+.identity-hub__history-summary,
+.identity-hub__trait-block p,
+.identity-hub__hand-next {
+  color: var(--text-secondary);
+}
+
+/* Panels and cards sit slightly above the section background. */
+.identity-hub__card,
+.identity-hub__library,
+.identity-hub__collapsible,
+.identity-hub__settings-menu {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: var(--border-color);
+  box-shadow: 0 10px 26px rgba(3, 5, 15, 0.45);
+}
+
+.identity-hub__results-hero {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.identity-hub__trait-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-color);
+}
+
+.identity-hub__history-item,
+.identity-hub__library-row {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border-color);
+}
+
+.identity-hub__library-row--available {
+  background: rgba(126, 92, 255, 0.16);
+  border-color: rgba(150, 129, 255, 0.5);
+}
+
+.identity-hub__recommendations-item {
+  background: rgba(126, 92, 255, 0.12);
+  border-color: rgba(150, 129, 255, 0.28);
+}
+
+/* Answer options: translucent on dark, and the selected one glows. */
+.identity-hub__option {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.identity-hub__option:hover {
+  border-color: rgba(150, 129, 255, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 16px rgba(126, 92, 255, 0.22);
+}
+
+.identity-hub__option--selected {
+  border-color: rgba(167, 139, 250, 0.9);
+  background: rgba(126, 92, 255, 0.24);
+  box-shadow: 0 6px 18px rgba(126, 92, 255, 0.35);
+}
+
+.identity-hub__option-value {
+  background: rgba(255, 255, 255, 0.12);
+  color: #c7d2fe;
+}
+
+/* Secondary buttons and chips need light-on-dark treatment. */
+.identity-hub__secondary {
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #c7d2fe;
+}
+
+.identity-hub__secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.identity-hub__chip {
+  background: rgba(126, 92, 255, 0.22);
+  color: #ddd6fe;
+}
+
+.identity-hub__chip--subtle {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.identity-hub__library-status {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+}
+
+.identity-hub__library-status--available {
+  background: rgba(126, 92, 255, 0.3);
+  color: #ddd6fe;
+}
+
+.identity-hub__library-status--completed {
+  background: rgba(16, 185, 129, 0.22);
+  color: #6ee7b7;
+}
+
+.identity-hub__collapsible-toggle {
+  color: var(--text-primary);
+}
+
+.identity-hub__collapsible-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.identity-hub__settings-toggle {
+  color: var(--text-secondary);
+}
+
+/* Quiz surfaces on dark. */
+.identity-hub__charge-icon {
+  background: #141830;
+}
+
+.identity-hub__needle-marker,
+.identity-hub__playstyle-marker {
+  border-color: #141830;
+}
+
+.identity-hub__progress-track,
+.identity-hub__needle-track {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.identity-hub__sigil-ring,
+.identity-hub__sigil-spoke {
+  stroke: rgba(255, 255, 255, 0.16);
+}
+
+.identity-hub__sigil-ghost {
+  stroke: rgba(226, 232, 240, 0.55);
+}
+
+.identity-hub__trait-band {
+  color: var(--text-primary);
+}
