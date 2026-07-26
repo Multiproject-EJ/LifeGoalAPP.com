@@ -1000,6 +1000,7 @@ function testReading(): void {
   );
   assert(untouched.fragmentsTotal === 120, 'the book totals 120 fragments');
   assert(untouched.fragmentsWritten === 0, 'nothing written yet');
+  assert(untouched.fragmentsOpen === 0, 'nothing unlocked at island 0');
   assert(untouched.writtenRows.length === 0, 'no written rows yet');
   assert(untouched.openCount === 0, 'nothing answerable at island 0');
   assert(untouched.focusChapterId === null, 'no focus when nothing is open');
@@ -1042,9 +1043,12 @@ function testReading(): void {
     getChapterState: (chapterId) => (chapterId === 'living_wheel' ? stateWithStatement : null),
   });
   assert(reached.openCount === 2, 'island 25 opens chapters I and II');
+  assert(reached.fragmentsOpen === 25, 'island 25 → 25 fragments answerable (20 + 5)');
+  assert(reached.rows[0].unlockedCount === 20 && reached.rows[1].unlockedCount === 5,
+    'per-row unlocked counts follow island position');
   assert(reached.rows[0].status === 'charting', 'answered chapter reads as charting');
   assert(reached.rows[2].status === 'ahead', 'chapter III is still ahead at island 25');
-  assert(reached.focusChapterId === 'inner_compass', 'focus is the furthest open chapter');
+  assert(reached.focusChapterId === 'living_wheel', 'focus is the first unfinished open chapter');
   assert(reached.writtenRows.length === 1, 'one chapter carries a written line');
   assert(reached.rows[0].headline === 'Steady on health, easing off work.', 'row shows the line');
 

@@ -2046,3 +2046,57 @@
   background: rgba(242, 193, 78, 0.12);
   border-bottom: 1px solid var(--cbk-gold-faint);
 }
+
+/* ============================================================
+   The Reading — empty-state and focus treatment
+   ============================================================ */
+
+/* Replaces the three-cell meter grid when nothing is written yet: leading a
+   page with "0 · 0" tells the player the book captured none of their play. */
+.compass-reading__waiting {
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--cbk-ink-soft);
+  border: 1px solid var(--cbk-line);
+  border-radius: 13px;
+  background: var(--cbk-card);
+}
+
+.compass-reading__waiting strong {
+  color: var(--cbk-gold);
+  font-weight: 800;
+}
+
+.compass-reading__cta {
+  margin-top: 12px;
+}
+
+/* The one row the CTA points at. */
+.compass-reading__row--focus {
+  border-color: var(--cbk-gold-soft);
+  background: rgba(242, 193, 78, 0.07);
+}
+
+.compass-book__badge--focus {
+  background: rgba(242, 193, 78, 0.2);
+  border-color: var(--cbk-gold-soft);
+  color: #ffe9b8;
+}
+
+/* Tighter rows: at ~150px per row only 2.5 chapters fit above the fold and
+   Chapter VI never appears without scrolling. Clamp the promise — it is an
+   invitation, not documentation; the full question lives on the chapter page. */
+.compass-reading__row {
+  padding: 10px 12px;
+}
+
+.compass-reading__row-promise {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}

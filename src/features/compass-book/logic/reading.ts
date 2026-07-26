@@ -112,6 +112,8 @@ export type CompassReadingRow = {
   promise: string;
   status: CompassReadingStatus;
   completedCount: number;
+  /** Fragments the player could answer right now (reached in the game). */
+  unlockedCount: number;
   totalCount: number;
   /** 0..1 */
   completionRate: number;
@@ -145,6 +147,7 @@ export function buildCompassReading(input: CompassReadingInput): CompassReadingR
       promise: chapter.coreQuestion,
       status: readingStatus(progress),
       completedCount: progress.completedCount,
+      unlockedCount: progress.unlockedCount,
       totalCount: progress.totalCount,
       completionRate: progress.completionRate,
       unlockIsland: chapter.islandRange[0],
@@ -159,6 +162,8 @@ export type CompassReadingSummary = {
   openCount: number;
   /** Fragments answered across the whole book (0..120). */
   fragmentsWritten: number;
+  /** Fragments reached in the game and answerable right now (0..120). */
+  fragmentsOpen: number;
   fragmentsTotal: number;
   /** The chapter to nudge toward: the furthest one still open to answer. */
   focusChapterId: CompassBookChapterId | null;
@@ -170,16 +175,19 @@ export function summarizeCompassReading(input: CompassReadingInput): CompassRead
   const rows = buildCompassReading(input);
   const open = rows.filter((row) => row.status !== 'ahead');
 
-  // Focus = the last chapter that is open and not yet sealed. Falls back to the
-  // last open chapter so a fully sealed book still points somewhere real.
+  // Focus = the FIRST open chapter not yet sealed — a book is read from the
+  // front, so a fresh player at island 87 is pointed at Chapter I, not Chapter
+  // V just because their boat got that far. Falls back to the last open
+  // chapter so a fully sealed book still points somewhere real.
   const unsealedOpen = open.filter((row) => row.status !== 'sealed');
-  const focus = unsealedOpen[unsealedOpen.length - 1] ?? open[open.length - 1] ?? null;
+  const focus = unsealedOpen[0] ?? open[open.length - 1] ?? null;
 
   return {
     rows,
     sealedCount: rows.filter((row) => row.status === 'sealed').length,
     openCount: open.length,
     fragmentsWritten: rows.reduce((sum, row) => sum + row.completedCount, 0),
+    fragmentsOpen: rows.reduce((sum, row) => sum + row.unlockedCount, 0),
     fragmentsTotal: rows.reduce((sum, row) => sum + row.totalCount, 0),
     focusChapterId: focus?.chapterId ?? null,
     writtenRows: rows.filter((row) => row.headline !== null),
