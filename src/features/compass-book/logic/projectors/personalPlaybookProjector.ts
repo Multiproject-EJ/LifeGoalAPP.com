@@ -7,6 +7,9 @@ import type { Json } from '../../../../lib/database.types';
 import type { CompassAnswerRecord, CompassAnswerValue } from '../../types';
 
 export type PersonalPlaybookOutput = {
+  passion: string | null;
+  purpose: string | null;
+  northStar: string | null;
   startEngineId: string | null;
   firstStep: string | null;
   cueId: string | null;
@@ -55,6 +58,9 @@ export function projectPersonalPlaybook(
 ): PersonalPlaybookOutput {
   const map = valueMap(answers);
   return {
+    passion: textOf(map, 'passion'),
+    purpose: textOf(map, 'purpose'),
+    northStar: textOf(map, 'north_star'),
     startEngineId: optionOf(map, 'start_style'),
     firstStep: textOf(map, 'first_step'),
     cueId: optionOf(map, 'start_cue'),

@@ -42,11 +42,11 @@ export function chapterNumeral(order: number): string {
  */
 const HEADLINE_LABEL: Record<CompassBookChapterId, string> = {
   living_wheel: 'Your wheel',
-  inner_compass: 'Your true north',
+  inner_compass: 'Your inner bearings',
   living_horizon: 'Your horizon',
   ikigai_map: 'Your trial',
   quest_forge: 'Your calling',
-  personal_playbook: 'Your operating principle',
+  personal_playbook: 'Your North Star',
 };
 
 /** The one line each chapter offers the Reading, or null when unwritten. */
@@ -74,7 +74,8 @@ export function chapterHeadline(
         return out.primaryQuestTitle ?? out.callingText;
       }
       case 'personal_playbook':
-        return projectPersonalPlaybook(answers).operatingPrinciple;
+        return projectPersonalPlaybook(answers).northStar
+          ?? projectPersonalPlaybook(answers).operatingPrinciple;
       default:
         return null;
     }

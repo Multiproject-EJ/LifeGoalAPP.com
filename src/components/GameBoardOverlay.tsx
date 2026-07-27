@@ -77,6 +77,8 @@ type GameBoardOverlayProps = {
   onCreatureCollectionClick?: () => void;
   onGarageClick?: () => void;
   onCompassClick?: () => void;
+  /** Opens the Compass Book North Star. Direction only; never mutates journey progress. */
+  onNorthStarClick?: () => void;
   profilePlaystyleIcon?: string;
   profileAvatarUrl?: string;
   profilePlaystyleLabel?: string;
@@ -189,6 +191,7 @@ export function GameBoardOverlay({
   onCreatureCollectionClick,
   onGarageClick,
   onCompassClick,
+  onNorthStarClick,
   essenceBalance = 0,
   rewardBarProgress = 0,
   rewardBarThreshold = 10,
@@ -306,10 +309,23 @@ export function GameBoardOverlay({
         <div className="game-board-overlay__middle game-board-overlay__middle--minimal">
           <section className="game-board-overlay__quest-progress" aria-labelledby="game-board-overlay-title">
             <header className="game-board-overlay__header game-board-overlay__header--rank-extension">
-              <p className="game-board-overlay__eyebrow">Two tracks · one climb</p>
+              <p className="game-board-overlay__eyebrow">Two tracks · one direction</p>
               <h2 id="game-board-overlay-title" className="game-board-overlay__title game-board-overlay__title--sr-only">
                 {dualTrackViewModel.title}
               </h2>
+              <button
+                type="button"
+                className="game-board-overlay__north-star"
+                onClick={onNorthStarClick}
+                disabled={!onNorthStarClick}
+                aria-label="Open my North Star in the Compass Book"
+              >
+                <span className="game-board-overlay__north-star-compass" aria-hidden="true" />
+                <span className="game-board-overlay__north-star-copy">
+                  <strong>North Star</strong>
+                  <small>Open Compass</small>
+                </span>
+              </button>
               <div className="game-board-overlay__rank-extension-hero">
                 <img
                   src={rankExtensionBadge.src}

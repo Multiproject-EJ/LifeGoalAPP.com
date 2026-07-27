@@ -8394,6 +8394,48 @@ html.platform-ipad .workspace-shell__menu-edge {
   box-sizing: border-box;
 }
 
+/* Struggling habits keep the normal Today-card silhouette. A low-energy edge
+   glow is enough to signal support is available without turning drift into a
+   punishment or a destructive state. */
+.habit-checklist__item--health-at_risk {
+  border-color: rgba(139, 92, 246, 0.2);
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.08),
+    -3px 0 12px rgba(139, 92, 246, 0.11),
+    3px 0 12px rgba(245, 158, 11, 0.08);
+}
+
+.habit-checklist__item--health-stalled {
+  border-color: rgba(124, 58, 237, 0.24);
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.1),
+    0 0 18px rgba(124, 58, 237, 0.11);
+}
+
+.habit-checklist__item--health-at_risk::after,
+.habit-checklist__item--health-stalled::after {
+  position: absolute;
+  inset: -1px;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  content: '';
+}
+
+.habit-checklist__item--health-at_risk::after {
+  background: linear-gradient(100deg, rgba(139, 92, 246, 0.035), transparent 42%, rgba(245, 158, 11, 0.025));
+}
+
+.habit-checklist__item--health-stalled::after {
+  background: linear-gradient(100deg, rgba(124, 58, 237, 0.055), transparent 52%, rgba(71, 85, 105, 0.035));
+}
+
+.habit-checklist__item--health-at_risk > *,
+.habit-checklist__item--health-stalled > * {
+  position: relative;
+  z-index: 1;
+}
+
 /* Habit cards use long-hold interactions, so suppress native selection/callouts.
    Todos intentionally remain selectable so their text can still be copied. */
 .habit-checklist__item:not(.habit-checklist__item--todo) {
@@ -9487,6 +9529,239 @@ html.platform-ipad .workspace-shell__menu-edge {
 }
 
 /* ── Struggling-habit coach (inside the expanded card) ───────────────── */
+
+.habit-recovery-deck {
+  position: relative;
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 0.62rem;
+  padding: 0.78rem 0 0.72rem;
+  overflow: hidden;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(139, 92, 246, 0.13), transparent 32%),
+    linear-gradient(145deg, #101837, #111b3f 58%, #0c1532);
+  box-shadow: 0 12px 30px rgba(30, 41, 89, 0.18);
+  color: #eef2ff;
+}
+
+.habit-recovery-deck--stalled {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.habit-recovery-deck__header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding-inline: 0.8rem;
+}
+
+.habit-recovery-deck__header > span:nth-child(2) {
+  display: grid;
+  gap: 0.08rem;
+}
+
+.habit-recovery-deck__header strong {
+  color: #ffffff;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+}
+
+.habit-recovery-deck__header small {
+  color: rgba(199, 210, 254, 0.72);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.habit-recovery-deck__eyebrow {
+  color: #f4d781;
+  font-size: 0.59rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.habit-recovery-deck__crystal {
+  width: 1.85rem;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(196, 181, 253, 0.48);
+  border-radius: 0.55rem;
+  color: #c4b5fd;
+  background: radial-gradient(circle at 35% 25%, #ede9fe, #8b5cf6 42%, #312e81 82%);
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.42);
+  transform: rotate(45deg);
+}
+
+.habit-recovery-deck__crystal::first-letter {
+  transform: rotate(-45deg);
+}
+
+.habit-recovery-deck__intro {
+  margin: 0;
+  padding-inline: 0.8rem;
+  color: rgba(224, 231, 255, 0.78);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.habit-recovery-deck__rail {
+  display: flex;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.1rem max(0.8rem, calc((100% - 15.5rem) / 2)) 0.45rem;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-padding-inline: 0.8rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+}
+
+.habit-recovery-deck__rail::-webkit-scrollbar {
+  display: none;
+}
+
+.habit-recovery-card {
+  --recovery-accent: #a78bfa;
+  position: relative;
+  flex: 0 0 min(15.5rem, calc(100vw - 4.4rem));
+  min-height: 12.6rem;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.7rem;
+  padding: 0.85rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--recovery-accent) 55%, transparent);
+  border-radius: 0.95rem;
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--recovery-accent) 18%, transparent), transparent 40%),
+    linear-gradient(155deg, rgba(31, 42, 88, 0.98), rgba(12, 21, 54, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 10px 24px rgba(2, 6, 23, 0.34),
+    0 0 16px color-mix(in srgb, var(--recovery-accent) 12%, transparent);
+  scroll-snap-align: center;
+}
+
+.habit-recovery-card::before,
+.habit-recovery-card::after {
+  position: absolute;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-color: color-mix(in srgb, var(--recovery-accent) 64%, transparent);
+  pointer-events: none;
+  content: '';
+}
+
+.habit-recovery-card::before {
+  top: 0.3rem;
+  left: 0.3rem;
+  border-top: 1px solid;
+  border-left: 1px solid;
+  border-radius: 0.5rem 0 0;
+}
+
+.habit-recovery-card::after {
+  right: 0.3rem;
+  bottom: 0.3rem;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+  border-radius: 0 0 0.5rem;
+}
+
+.habit-recovery-card--blue {
+  --recovery-accent: #60a5fa;
+}
+
+.habit-recovery-card--gold {
+  --recovery-accent: #f2c14e;
+}
+
+.habit-recovery-card__icon {
+  width: 2.65rem;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  border: 1px solid color-mix(in srgb, var(--recovery-accent) 66%, transparent);
+  border-radius: 50%;
+  color: #ffffff;
+  background: radial-gradient(circle at 35% 28%, #ffffff, var(--recovery-accent) 26%, #172554 82%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--recovery-accent) 40%, transparent);
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.habit-recovery-card__copy {
+  display: grid;
+  align-content: start;
+  gap: 0.42rem;
+  text-align: center;
+}
+
+.habit-recovery-card__copy strong {
+  color: #ffffff;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.86rem;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.habit-recovery-card__copy span {
+  color: rgba(224, 231, 255, 0.8);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.habit-recovery-card button {
+  position: relative;
+  z-index: 2;
+  min-height: 2.4rem;
+  border: 1px solid color-mix(in srgb, var(--recovery-accent) 68%, white 12%);
+  border-radius: 999px;
+  color: #ffffff;
+  background: color-mix(in srgb, var(--recovery-accent) 24%, #111936);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.habit-recovery-card button:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.78);
+  outline-offset: 2px;
+}
+
+.habit-recovery-card button:disabled {
+  cursor: default;
+  opacity: 0.48;
+}
+
+.habit-recovery-deck__swipe-hint {
+  display: flex;
+  justify-content: center;
+  gap: 0.28rem;
+}
+
+.habit-recovery-deck__swipe-hint span {
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 999px;
+  background: rgba(196, 181, 253, 0.4);
+}
+
+.habit-recovery-deck__swipe-hint span:first-child {
+  width: 1rem;
+  background: #c4b5fd;
+}
+
 .habit-checklist__coach {
   border: 1px solid rgba(245, 158, 11, 0.35);
   background: linear-gradient(180deg, rgba(254, 243, 199, 0.55), rgba(255, 255, 255, 0.65));

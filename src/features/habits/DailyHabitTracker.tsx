@@ -110,6 +110,7 @@ import {
 } from './habitRhythm';
 import { HabitImprovementAnalysisModal } from './HabitImprovementAnalysisModal';
 import { HabitChainAnalysisModal } from './HabitChainAnalysisModal';
+import { HabitRecoveryDeck } from './HabitRecoveryDeck';
 import { SuperHabitRosterModal } from './SuperHabitRosterModal';
 import { canLaunchSuperHabit, resolveSuperHabitForTitle, type SuperHabitId } from './superHabits';
 import { WellbeingShieldCard } from './WellbeingShieldCard';
@@ -591,6 +592,7 @@ type DailyHabitTrackerProps = {
   onOpenStarterQuest?: (initialDomainKey?: LifeWheelCategoryKey) => void;
   onNavigateToTimer?: (context: { sourceType: string; sourceId: string; sourceName: string }) => void;
   onOpenAiCoach?: (starterQuestion?: string) => void;
+  onOpenCompassBook?: () => void;
   archetypeHand?: ArchetypeHand | null;
   onNavigateToContracts?: () => void;
   onNavigateToRoutines?: () => void;
@@ -1214,6 +1216,7 @@ export function DailyHabitTracker({
   onOpenStarterQuest,
   onNavigateToTimer,
   onOpenAiCoach,
+  onOpenCompassBook,
   archetypeHand,
   onNavigateToContracts,
   onNavigateToRoutines,
@@ -8854,6 +8857,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 } ${isJustCompleted ? `habit-item--just-completed ${feedbackClassName}` : ''} ${
                   isOfferHabit ? 'habit-checklist__item--offer' : ''
                 } ${isQuestHabit ? 'habit-checklist__item--quest' : ''} ${isExpanded ? 'habit-checklist__item--expanded' : ''} ${
+                  habitHealthState !== 'active' ? `habit-checklist__item--health-${habitHealthState}` : ''
+                } ${
                   linkedQuestTags.length > 0 ? 'habit-checklist__item--linked-quest' : ''
                 } ${
                   dailyLifeUpgradeHighlightedHabitId === habit.id ? 'habit-card--daily-life-upgrade-target' : ''
@@ -9364,6 +9369,30 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         </div>
                       </div>
                     </section>
+                  ) : null}
+                  {!isPrivateCompactView && habitHealthState !== 'active' ? (
+                    <HabitRecoveryDeck
+                      habitId={habit.id}
+                      habitName={habit.name}
+                      healthState={habitHealthState}
+                      canDownsize={Boolean(suggestedDownshiftStage ?? downshiftTier)}
+                      disabled={isSaving || isUpdatingAutoProgress || lifecycleActionHabitIds.has(habit.id)}
+                      onRecommit={() => {
+                        setExpandedHabitSections((current) => ({ ...current, [habit.id]: 'todayVersion' }));
+                        scrollHabitSectionIntoReadingPosition(habit.id, 'todayVersion');
+                      }}
+                      onDownsize={() => {
+                        const targetTier = suggestedDownshiftStage ?? downshiftTier;
+                        if (targetTier) {
+                          void handleAutoProgressShift(habit, targetTier, 'downshift');
+                        }
+                      }}
+                      onRenovateLoop={() => setAnalysisHabitId(habit.id)}
+                      onChooseSubstitute={() => setAnalysisHabitId(habit.id)}
+                      onReconnectNorthStar={onOpenCompassBook}
+                      onPause={() => void handleTodayLifecycleAction(habit, 'pause')}
+                      onRelease={() => void handleTodayLifecycleAction(habit, 'deactivate')}
+                    />
                   ) : null}
                   {coachCard ? (
                     <section

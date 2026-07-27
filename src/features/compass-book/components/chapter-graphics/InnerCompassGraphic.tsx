@@ -13,14 +13,14 @@ function labelOf(id: string | null): string {
 
 /**
  * App-rendered Inner Compass — the Chapter 2 one-page graphic. A four-direction
- * rose: North = True North (value), East = Life Spark (energy), South = essential
+ * rose: North = Inner Bearing (value), East = Life Spark (energy), South = essential
  * need, West = Shadow Pull. Built entirely from structured output.
  */
 export function InnerCompassGraphic({ output, mode }: InnerCompassGraphicProps) {
   const cx = 110;
   const cy = 110;
   const arms: { dir: string; label: string; value: string; color: string }[] = [
-    { dir: 'N', label: 'True North', value: labelOf(output.trueNorthValueId), color: '#a5b4fc' },
+    { dir: 'N', label: 'Inner Bearing', value: labelOf(output.trueNorthValueId), color: '#a5b4fc' },
     { dir: 'E', label: 'Life Spark', value: labelOf(output.lifeSparkId), color: '#fcd34d' },
     { dir: 'S', label: 'Need', value: labelOf(output.essentialNeedId), color: '#6ee7b7' },
     { dir: 'W', label: 'Shadow Pull', value: labelOf(output.shadowPullId), color: '#fb923c' },

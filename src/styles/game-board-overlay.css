@@ -159,6 +159,66 @@
   text-shadow: 0 1px 6px rgba(8, 47, 73, 0.82);
 }
 
+.game-board-overlay__north-star {
+  position: relative;
+  z-index: 4;
+  min-width: 8.8rem;
+  min-height: 2.45rem;
+  display: inline-grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.15rem 0 -0.2rem;
+  padding: 0.22rem 0.72rem 0.22rem 0.3rem;
+  border: 1px solid rgba(250, 204, 21, 0.52);
+  border-radius: 999px;
+  color: #fef3c7;
+  background:
+    radial-gradient(circle at 22% 40%, rgba(250, 204, 21, 0.2), transparent 35%),
+    rgba(7, 21, 44, 0.76);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 18px rgba(250, 204, 21, 0.18);
+  cursor: pointer;
+}
+
+.game-board-overlay__north-star:disabled {
+  cursor: default;
+}
+
+.game-board-overlay__north-star:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+
+.game-board-overlay__north-star-compass {
+  width: 1.9rem;
+  aspect-ratio: 1;
+  display: block;
+  border-radius: 50%;
+  background: url('/assets/icons/compass-gold-256.webp') center / contain no-repeat;
+  filter: drop-shadow(0 0 7px rgba(250, 204, 21, 0.48));
+}
+
+.game-board-overlay__north-star-copy {
+  display: grid;
+  justify-items: start;
+  line-height: 1;
+}
+
+.game-board-overlay__north-star-copy strong {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.game-board-overlay__north-star-copy small {
+  margin-top: 0.16rem;
+  color: #bef264;
+  font-size: 0.56rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .game-board-overlay__title {
   width: fit-content;
   max-width: min(94vw, 470px);
@@ -360,6 +420,24 @@
   grid-template-columns: minmax(0, 1fr) clamp(1.35rem, 5.5vw, 2rem) minmax(0, 1fr);
   align-items: stretch;
   gap: clamp(0.22rem, 1.2vw, 0.44rem);
+}
+
+/* The two movement tracks remain separate, but their upper rails visibly point
+   toward the North Star above them. This is decorative only: Combined Journey
+   Level remains the sole progression score. */
+.game-board-overlay__dual-track-stage::before {
+  position: absolute;
+  z-index: 0;
+  top: -0.72rem;
+  left: 8%;
+  width: 84%;
+  height: 1.2rem;
+  background:
+    linear-gradient(16deg, transparent 48%, rgba(250, 204, 21, 0.48) 49.5%, rgba(250, 204, 21, 0.48) 50.5%, transparent 52%) left top / 50% 100% no-repeat,
+    linear-gradient(-16deg, transparent 48%, rgba(250, 204, 21, 0.48) 49.5%, rgba(250, 204, 21, 0.48) 50.5%, transparent 52%) right top / 50% 100% no-repeat;
+  filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.32));
+  pointer-events: none;
+  content: '';
 }
 
 /* Celebratory "+N islands" chip shown during a catch-up climb. */

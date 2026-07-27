@@ -2,7 +2,7 @@
  * Chapter 6 — The Personal Playbook (Islands 101–120).
  *
  * Core question: How do I personally begin, continue, adapt, recover, and stay
- * oriented? Pure content. Seven systems (Start Engine, Momentum Loop, Minimum
+ * oriented toward my North Star? Pure content. Seven systems (Start Engine, Momentum Loop, Minimum
  * Mode, Warning Lights, Environment Rules, Recovery Route, Weekly Compass Check)
  * plus a concrete habit design that powers a (player-approved) habit proposal —
  * it never creates a habit itself.
@@ -210,12 +210,15 @@ const SEEDS: ActivitySeed[] = [
     blocks: [single('protected_area', 'Which life area must this habit never harm?', LIFE_AREA_OPTIONS)] },
   { order: 19, title: 'Weekly Compass Check', shortTitle: 'Weekly', required: true,
     blocks: [single('weekly_check', 'What is the key question for your weekly review?', WEEKLY_OPTIONS)] },
-  { order: 20, title: 'Complete the Playbook', shortTitle: 'Confirm', required: true,
-    description: 'Confirm your operating principle and seal the book.',
+  { order: 20, title: 'Seal My North Star', shortTitle: 'North Star', required: true,
+    description: 'Bring Passion and Purpose together, confirm your operating principle, and seal the book.',
     blocks: [
+      shortText('passion', 'Passion — what brings you alive?', 'e.g. Creating, learning, mentoring and solving meaningful problems.', true),
+      shortText('purpose', 'Purpose — what does your energy serve?', 'e.g. Helping people feel capable and build a better future.', true),
+      shortText('north_star', 'Your North Star — how do Passion and Purpose meet?', 'e.g. I use what brings me alive to serve what matters.', true),
       shortText('operating_principle', 'Your operating principle — one line on how you keep moving.', 'e.g. Start tiny, protect sleep, return the next morning.', true),
-      { questionId: 'playbook_review', type: 'review', prompt: 'Review your Start Engine, Minimum Mode, Warning Lights and Recovery Route.', required: false },
-      { questionId: 'playbook_confirm', type: 'confirmation', prompt: 'This is how I personally keep moving. Complete the Playbook.', required: true },
+      { questionId: 'playbook_review', type: 'review', prompt: 'Review your North Star, Start Engine, Minimum Mode, Warning Lights and Recovery Route.', required: false },
+      { questionId: 'playbook_confirm', type: 'confirmation', prompt: 'This is my direction and how I personally keep moving. Seal my North Star.', required: true },
     ] },
 ];
 
@@ -239,9 +242,12 @@ export const chapter6PersonalPlaybook: CompassBookChapterDefinition = {
   id: CHAPTER_ID,
   order: 6,
   title: 'The Personal Playbook',
-  coreQuestion: 'How do I personally begin, continue, adapt, recover, and stay oriented?',
-  visualMetaphor: 'A magical-mechanical operating system / personal control panel.',
+  coreQuestion: 'How do I personally begin, continue, adapt, recover, and stay oriented toward my North Star?',
+  visualMetaphor: 'Passion and Purpose flowing through a gilt compass into one North Star.',
   outputFields: [
+    'Passion',
+    'Purpose',
+    'North Star',
     'Start Engine',
     'Momentum Loop',
     'Minimum Mode',

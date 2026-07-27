@@ -4099,6 +4099,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setAiCoachStarterQuestion(starterQuestion ?? undefined);
                 setShowAiCoachModal(true);
               }}
+              onOpenCompassBook={() => setIsCompassBookOpen(true)}
               pendingOfferToOpen={pendingTodayOfferOpen}
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
               activeHolidaySeason={activeHolidaySeason}
@@ -4796,14 +4797,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 onOpenJournal={openQuestCompassJournal}
               />
             ) : null}
-            {isCompassBookOpen ? (
-              <CompassBookScreen
-                currentIslandNumber={overlayIslandNumber}
-                session={supabaseSession}
-                allowDemo={isAdmin === true}
-                onClose={() => setIsCompassBookOpen(false)}
-              />
-            ) : null}
             {isFeedbackSupportSubmenuOpen ? (
               <div className="mobile-menu-overlay__hold-modal" role="dialog" aria-modal="true" aria-label="Feedback and support menu">
                 <button
@@ -5036,6 +5029,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
         </div>
       </div>
     ) : null;
+
+  const compassBookOverlay = isCompassBookOpen ? (
+    <CompassBookScreen
+      currentIslandNumber={overlayIslandNumber}
+      session={supabaseSession}
+      allowDemo={isAdmin === true}
+      onClose={() => setIsCompassBookOpen(false)}
+    />
+  ) : null;
 
   const mobileGamificationOverlay =
     isMobileExperience && showMobileGamification ? (
@@ -5521,6 +5523,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setAiCoachStarterQuestion(starterQuestion ?? undefined);
                 setShowAiCoachModal(true);
               }}
+              onOpenCompassBook={() => setIsCompassBookOpen(true)}
               forceCompactView={!isGameModeActive}
               preferredCompactView={!isGameModeActive ? true : workspaceProfile?.private_compact_view_enabled ?? false}
               onPreferredCompactViewChange={handlePreferredCompactViewChange}
@@ -5583,6 +5586,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         )}
         {starterQuestSheet}
         {mobileMenuOverlay}
+        {compassBookOverlay}
         {launcherPlayersHandOverlay}
         {mobileGamificationOverlay}
         {levelWorldsEntryModal}
@@ -5607,6 +5611,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
           onGarageClick={() => handleMobileNavSelect('actions')}
           onCompassClick={openFullMobileMenuFromGameOverlay}
+          onNorthStarClick={() => {
+            setShowGameBoardOverlay(false);
+            setIsCompassBookOpen(true);
+          }}
           profilePlaystyleIcon={playstyleIcon ?? undefined}
           profileAvatarUrl={profileAvatarUrl}
           profilePlaystyleLabel={playstyleLabel ?? undefined}
@@ -5909,6 +5917,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       ) : null}
 
       {mobileMenuOverlay}
+      {compassBookOverlay}
       {launcherPlayersHandOverlay}
       {mobileGamificationOverlay}
       {levelWorldsEntryModal}
@@ -5951,6 +5960,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
         onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
         onGarageClick={() => handleMobileNavSelect('actions')}
         onCompassClick={openFullMobileMenuFromGameOverlay}
+        onNorthStarClick={() => {
+          setShowGameBoardOverlay(false);
+          setIsCompassBookOpen(true);
+        }}
         profilePlaystyleIcon={playstyleIcon ?? undefined}
         profileAvatarUrl={profileAvatarUrl}
         profilePlaystyleLabel={playstyleLabel ?? undefined}
