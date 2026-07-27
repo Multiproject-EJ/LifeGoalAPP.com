@@ -15,13 +15,94 @@
 | Product | Code | Edge fn | Webhook | Stripe prices | Flag | Ready? |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|
 | Pro subscription (monthly/yearly) | ✅ | ✅ | ✅ | ✅ | — | ✅ LIVE |
-| Dice pack (500 rolls) | ✅ | ✅ | ✅ | ✅ | — | ✅ LIVE |
+| Dice refills (5 SKUs) | ✅ | ✅ | ✅ | ⚠️ dashboard audit pending | ✅ test/live selector | TEST-READY |
 | Customer portal | ✅ | ✅ | — | — | — | ✅ LIVE |
 | Creature pack (5 cards) | ✅ | ✅ | ✅ | ❌ empty | ❌ gated | **TODO** |
 | Egg packs (small/med/large) | ✅ | ✅ | ✅ | ❌ missing | — | **TODO** |
 | Minigame tickets (5 SKUs) | ✅ | ✅ | ✅ | ❌ empty | — | **TODO** |
 | Creature themes (10 SKUs) | ✅ | ✅ | ✅ | ❌ empty | — | **TODO** |
 | Card packs | ❌ | ❌ | ❌ | ❌ | — | NOT STARTED |
+
+---
+
+## 0 · Dice refills — 5 SKUs
+
+The Supply Dock now exposes a restrained five-pack refill shelf. Checkout stays in
+Stripe test mode by default. Live mode uses a separate secret key and a separate
+set of Price IDs, so a test Price can never be selected after the launch switch.
+
+| SKU | Label | Rolls |
+|---|---|---:|
+| `dice_250` | Pocket Boost | 250 |
+| `dice_500` | Route Refill | 500 |
+| `dice_1200` | Momentum Pack | 1,200 |
+| `dice_3000` | Rush Reserve | 3,000 |
+| `dice_7500` | Expedition Vault | 7,500 |
+
+### Test-mode secrets
+
+```bash
+supabase secrets set \
+  STRIPE_COMMERCE_MODE=test \
+  STRIPE_DICE_TEST_SECRET_KEY=sk_test_xxx \
+  STRIPE_TEST_PRICE_DICE_PACK_250=price_xxx \
+  STRIPE_TEST_PRICE_DICE_PACK_500=price_xxx \
+  STRIPE_TEST_PRICE_DICE_PACK_1200=price_xxx \
+  STRIPE_TEST_PRICE_DICE_PACK_3000=price_xxx \
+  STRIPE_TEST_PRICE_DICE_PACK_7500=price_xxx
+```
+
+The verified sandbox Price IDs are also pinned in
+`supabase/functions/_shared/dice-commerce.ts`, so test checkout works immediately
+after the function deploy. `STRIPE_TEST_PRICE_DICE_PACK_*` can override those
+defaults. The older `STRIPE_SECRET_KEY` remains a test-key fallback while existing
+environments are migrated. Live mode never reads the sandbox defaults or legacy
+variables.
+
+### One-time live setup
+
+Create and verify the five live Stripe Products/Prices, then store them separately:
+
+```bash
+supabase secrets set \
+  STRIPE_DICE_LIVE_SECRET_KEY=sk_live_xxx \
+  STRIPE_LIVE_PRICE_DICE_PACK_250=price_xxx \
+  STRIPE_LIVE_PRICE_DICE_PACK_500=price_xxx \
+  STRIPE_LIVE_PRICE_DICE_PACK_1200=price_xxx \
+  STRIPE_LIVE_PRICE_DICE_PACK_3000=price_xxx \
+  STRIPE_LIVE_PRICE_DICE_PACK_7500=price_xxx
+```
+
+Do not enable live mode until prices, currency, tax treatment, refunds, and the
+live `stripe-webhook` endpoint have been verified end to end. When those checks
+pass, the launch switch is:
+
+```bash
+supabase secrets set STRIPE_COMMERCE_MODE=live
+```
+
+Set `VITE_DICE_COMMERCE_MODE=live` in the production app environment in the same
+release so the Supply Dock changes from test wording to secure live-checkout
+wording. This browser-safe value never chooses a Stripe key or Price; the Edge
+Function remains authoritative.
+
+Rollback is the inverse:
+
+```bash
+supabase secrets set STRIPE_COMMERCE_MODE=test
+```
+
+and `VITE_DICE_COMMERCE_MODE=test` for the storefront build.
+
+### Relevant files
+
+| File | Purpose |
+|---|---|
+| `supabase/functions/_shared/dice-commerce.ts` | Fail-closed test/live key and Price selector |
+| `supabase/functions/create-checkout-session-payment/index.ts` | Authenticated hosted Checkout Session |
+| `supabase/functions/stripe-webhook/index.ts` → `applyDicePackCredit()` | Idempotent fulfillment |
+| `src/services/dicePackPurchases.ts` | Five-pack client catalog |
+| `scripts/check-dice-commerce-switch.mjs` | Selector regression checks |
 
 ---
 

@@ -27,6 +27,7 @@
     "test:service-resilience": "node scripts/run-service-resilience-tests.mjs",
     "test:gamification-data-routing": "node scripts/check-gamification-data-routing.mjs",
     "test:telemetry-security-migration": "node scripts/check-telemetry-security-migration.mjs",
+    "test:dice-commerce-switch": "node scripts/check-dice-commerce-switch.mjs",
     "test:celebration-fireworks": "node scripts/check-celebration-fireworks.mjs",
     "test:creature-pack-opening-animation": "node scripts/check-creature-pack-opening-animation.mjs",
     "test:gift-box-opening-animation": "node scripts/check-gift-box-opening-animation.mjs",

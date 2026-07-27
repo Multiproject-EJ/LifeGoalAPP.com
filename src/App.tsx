@@ -3799,13 +3799,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
       shipName: payload.shipName || undefined,
     });
     setAuthError(null);
+    setLevelWorldsEntryPanel('default');
+    setShowLevelWorldsFromEntry(true);
     if (!supabaseSession) {
       setPendingGuestIslandRunEntry(true);
       setLocalGuestSession(createDemoSession());
       return;
     }
-    setLevelWorldsEntryPanel('default');
-    setShowLevelWorldsFromEntry(true);
   }, [supabaseSession]);
 
   const handleOpenSaveAccountSignup = useCallback(() => {

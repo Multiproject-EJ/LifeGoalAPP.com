@@ -1,25 +1,17 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import Stripe from 'npm:stripe@14.25.0';
+import {
+  DICE_PACKS,
+  isDicePackSkuId,
+  resolveDiceCommerceConfig,
+  type DicePackSkuId,
+} from '../_shared/dice-commerce.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-type DicePackSkuId = 'dice_250' | 'dice_500' | 'dice_1200' | 'dice_3000' | 'dice_7500';
-
-const DICE_PACKS: Record<DicePackSkuId, { rolls: number; priceEnv: string }> = {
-  dice_250: { rolls: 250, priceEnv: 'STRIPE_PRICE_DICE_PACK_250' },
-  dice_500: { rolls: 500, priceEnv: 'STRIPE_PRICE_DICE_PACK_500' },
-  dice_1200: { rolls: 1_200, priceEnv: 'STRIPE_PRICE_DICE_PACK_1200' },
-  dice_3000: { rolls: 3_000, priceEnv: 'STRIPE_PRICE_DICE_PACK_3000' },
-  dice_7500: { rolls: 7_500, priceEnv: 'STRIPE_PRICE_DICE_PACK_7500' },
-};
-
-function isDicePackSkuId(value: unknown): value is DicePackSkuId {
-  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(DICE_PACKS, value);
-}
 
 function getRequiredEnv(name: string): string {
   const value = Deno.env.get(name);
@@ -68,26 +60,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const stripeSecretKey = getRequiredEnv('STRIPE_SECRET_KEY');
-    const commerceMode = Deno.env.get('STRIPE_COMMERCE_MODE') ?? 'test';
-    if (commerceMode !== 'test' || !stripeSecretKey.startsWith('sk_test_')) {
-      return new Response(JSON.stringify({
-        error: 'Dice checkout is locked to Stripe test mode until launch.',
-      }), {
-        status: 503,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     const body = await req.json().catch(() => ({})) as { pack_id?: unknown };
     const packId: DicePackSkuId = isDicePackSkuId(body.pack_id) ? body.pack_id : 'dice_500';
     const pack = DICE_PACKS[packId];
+    const commerce = resolveDiceCommerceConfig(
+      new Proxy<Record<string, string | undefined>>({}, {
+        get: (_target, property) => typeof property === 'string' ? Deno.env.get(property) : undefined,
+      }),
+      packId,
+    );
 
-    const stripe = new Stripe(stripeSecretKey, {
+    const stripe = new Stripe(commerce.secretKey, {
       apiVersion: '2024-06-20',
     });
 
-    const priceId = getRequiredEnv(pack.priceEnv);
     const successUrl = getRequiredEnv('STRIPE_CHECKOUT_SUCCESS_URL');
     const cancelUrl = getRequiredEnv('STRIPE_CHECKOUT_CANCEL_URL');
 
@@ -96,12 +82,12 @@ Deno.serve(async (req) => {
       product_type: 'dice_pack',
       sku_id: packId,
       rolls: String(pack.rolls),
-      commerce_mode: 'test',
+      commerce_mode: commerce.mode,
     };
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: commerce.priceId, quantity: 1 }],
       success_url: successUrl,
       cancel_url: cancelUrl,
       client_reference_id: user.id,
@@ -117,7 +103,7 @@ Deno.serve(async (req) => {
       url: session.url,
       pack_id: packId,
       rolls: pack.rolls,
-      mode: 'test',
+      mode: commerce.mode,
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
