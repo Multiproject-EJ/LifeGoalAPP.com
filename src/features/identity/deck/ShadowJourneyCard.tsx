@@ -35,14 +35,7 @@ export function ShadowJourneyCard({ shadowCard, records }: ShadowJourneyCardProp
   const color = shadowCard.color;
 
   return (
-    <div
-      style={{
-        padding: '20px',
-        backgroundColor: 'var(--card-background, #ffffff)',
-        borderRadius: '12px',
-        border: `2px solid ${color}55`,
-      }}
-    >
+    <div className="identity-panel" style={{ ['--accent' as string]: color }}>
       <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary, #111827)', margin: '0 0 12px' }}>
         🧙 Consult your shadow
       </h3>

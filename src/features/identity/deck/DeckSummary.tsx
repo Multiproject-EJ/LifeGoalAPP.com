@@ -18,14 +18,7 @@ export function DeckSummary({ hand, microTestCount = 0 }: DeckSummaryProps) {
   const suitLabel = SUIT_LABELS[summary.dominantSuit];
 
   return (
-    <div
-      style={{
-        padding: '20px',
-        backgroundColor: 'var(--card-background, #ffffff)',
-        borderRadius: '12px',
-        border: `2px solid ${suitColor}`,
-      }}
-    >
+    <div className="identity-panel" style={{ ['--accent' as string]: suitColor }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary, #111827)', margin: 0 }}>
