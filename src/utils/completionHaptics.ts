@@ -61,6 +61,15 @@ const HAPTIC_PATTERNS: Record<CompletionHapticProfile, number[]> = {
   strong: [42, 24, 42, 24, 72],
 };
 
+// Gesture thresholds should feel like one physical detent rather than a
+// celebration pattern. These are only used as a web fallback; native builds
+// receive the corresponding Capacitor impact style below.
+const IMPACT_HAPTIC_PATTERNS: Record<CompletionHapticProfile, number[]> = {
+  light: [18],
+  medium: [30],
+  strong: [48],
+};
+
 const DEFAULT_MIN_INTERVAL_MS = 1100;
 const GLOBAL_WINDOW_MS = 60_000;
 const GLOBAL_MAX_TRIGGERS_PER_WINDOW = 6;
@@ -73,28 +82,40 @@ const NATIVE_IMPACT_STYLES: Record<CompletionHapticProfile, ImpactStyle> = {
   strong: ImpactStyle.Heavy,
 };
 
-function canTriggerHaptic(channel: HapticChannel, minIntervalMs: number): boolean {
+function canTriggerHaptic(
+  channel: HapticChannel,
+  minIntervalMs: number,
+  countsTowardGlobalLimit: boolean,
+): boolean {
   const now = Date.now();
   const lastTriggeredAt = lastHapticAtByChannel[channel] ?? 0;
   if (now - lastTriggeredAt < minIntervalMs) {
     return false;
   }
 
-  const windowStart = now - GLOBAL_WINDOW_MS;
-  while (globalHapticHistory.length > 0 && globalHapticHistory[0] < windowStart) {
-    globalHapticHistory.shift();
-  }
+  if (countsTowardGlobalLimit) {
+    const windowStart = now - GLOBAL_WINDOW_MS;
+    while (globalHapticHistory.length > 0 && globalHapticHistory[0] < windowStart) {
+      globalHapticHistory.shift();
+    }
 
-  if (globalHapticHistory.length >= GLOBAL_MAX_TRIGGERS_PER_WINDOW) {
-    return false;
+    if (globalHapticHistory.length >= GLOBAL_MAX_TRIGGERS_PER_WINDOW) {
+      return false;
+    }
+
+    globalHapticHistory.push(now);
   }
 
   lastHapticAtByChannel[channel] = now;
-  globalHapticHistory.push(now);
   return true;
 }
 
-export function triggerCompletionHaptic(profile: CompletionHapticProfile, options: CompletionHapticOptions = {}): void {
+function triggerHaptic(
+  profile: CompletionHapticProfile,
+  options: CompletionHapticOptions,
+  countsTowardGlobalLimit: boolean,
+  patterns: Record<CompletionHapticProfile, number[]>,
+): void {
   if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       return;
@@ -109,7 +130,7 @@ export function triggerCompletionHaptic(profile: CompletionHapticProfile, option
   const channel = options.channel ?? 'action';
   const minIntervalMs = options.minIntervalMs ?? DEFAULT_MIN_INTERVAL_MS;
 
-  if (!canTriggerHaptic(channel, minIntervalMs)) {
+  if (!canTriggerHaptic(channel, minIntervalMs, countsTowardGlobalLimit)) {
     return;
   }
 
@@ -123,6 +144,19 @@ export function triggerCompletionHaptic(profile: CompletionHapticProfile, option
   }
 
   if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
-    navigator.vibrate(HAPTIC_PATTERNS[effectiveProfile]);
+    navigator.vibrate(patterns[effectiveProfile]);
   }
+}
+
+export function triggerCompletionHaptic(profile: CompletionHapticProfile, options: CompletionHapticOptions = {}): void {
+  triggerHaptic(profile, options, true, HAPTIC_PATTERNS);
+}
+
+/**
+ * Emit one tactile impact for a direct-manipulation boundary such as a drag
+ * threshold. It still respects reduced-motion and the user's haptic mode, but
+ * it is not consumed by the low-frequency completion/celebration budget.
+ */
+export function triggerImpactHaptic(profile: CompletionHapticProfile, options: CompletionHapticOptions = {}): void {
+  triggerHaptic(profile, options, false, IMPACT_HAPTIC_PATTERNS);
 }

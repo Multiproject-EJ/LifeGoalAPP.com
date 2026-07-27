@@ -179,7 +179,7 @@ import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandR
 import { refreshIslandRunStateFromLocal } from '../gamification/level-worlds/services/islandRunStateStore';
 import { getPromiseVariant, isPromiseActionableToday } from '../gamification/promisePresentation';
 import { DEFAULT_GOAL_STATUS } from '../goals/goalStatus';
-import { triggerCompletionHaptic } from '../../utils/completionHaptics';
+import { triggerCompletionHaptic, triggerImpactHaptic } from '../../utils/completionHaptics';
 import {
   getHabitFeedbackClassName,
   getHabitFeedbackType,
@@ -612,6 +612,17 @@ type HabitCompletionState = {
 
 type HabitSwipeDirection = 'left' | 'right';
 type HabitSwipeAction = 'complete' | 'undo-complete' | 'skip' | 'undo-skip';
+
+function triggerHabitSwipeThresholdHaptic(
+  previousDirection: HabitSwipeDirection | null,
+  nextDirection: HabitSwipeDirection | null,
+): void {
+  // One clear “donk” when the card first becomes releasable. Crossing back
+  // below the threshold is silent; crossing it again re-arms the gesture.
+  if (previousDirection === null && nextDirection !== null) {
+    triggerImpactHaptic('strong', { channel: 'habit', minIntervalMs: 120 });
+  }
+}
 
 /**
  * Monthly completion state for a single habit across all days in the selected month.
@@ -8950,7 +8961,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       const armedDirection =
                         Math.abs(clamped) >= HABIT_SWIPE_ARM_THRESHOLD_PX && nextAction ? direction : null;
                       if (gesture.armedDirection !== armedDirection) {
-                        triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 120 });
+                        triggerHabitSwipeThresholdHaptic(gesture.armedDirection, armedDirection);
                         gesture.armedDirection = armedDirection;
                       }
                       setSwipeArmedByHabitId((current) => ({ ...current, [habit.id]: armedDirection }));
@@ -8980,7 +8991,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       if (!nextAction) {
                         return;
                       }
-                      triggerCompletionHaptic('medium', { channel: 'habit', minIntervalMs: 120 });
                       triggerSwipeAction(habit, nextAction);
                     }}
                     onPointerCancel={() => {
@@ -9038,7 +9048,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       const armedDirection =
                         Math.abs(clamped) >= HABIT_SWIPE_ARM_THRESHOLD_PX && nextAction ? direction : null;
                       if (gesture.armedDirection !== armedDirection) {
-                        triggerCompletionHaptic('light', { channel: 'navigation', minIntervalMs: 120 });
+                        triggerHabitSwipeThresholdHaptic(gesture.armedDirection, armedDirection);
                         gesture.armedDirection = armedDirection;
                       }
                       setSwipeArmedByHabitId((current) => ({ ...current, [habit.id]: armedDirection }));
@@ -9071,7 +9081,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       if (!nextAction) {
                         return;
                       }
-                      triggerCompletionHaptic('medium', { channel: 'habit', minIntervalMs: 120 });
                       triggerSwipeAction(habit, nextAction);
                     }}
                     onTouchCancel={() => {
