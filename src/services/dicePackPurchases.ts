@@ -20,7 +20,7 @@ export type DiceCommerceMode = 'test' | 'live';
  * prices—the Edge Function remains authoritative and fail-closed.
  */
 export const DICE_COMMERCE_MODE: DiceCommerceMode =
-  import.meta.env.VITE_DICE_COMMERCE_MODE === 'live' ? 'live' : 'test';
+  import.meta.env?.VITE_DICE_COMMERCE_MODE === 'live' ? 'live' : 'test';
 
 /**
  * Paid dice catalog shared by the board, account screen and checkout service.
