@@ -4802,11 +4802,12 @@
   border: 1px solid rgba(255,255,255,0.6);
 }
 
-/* Z-band depth tiers — use CSS 'scale' individual property so squash/stretch
-   from inline transform (animateHops) composes correctly without conflict. */
-.island-token--zband-back  { scale: 0.82; filter: brightness(0.7) saturate(0.7); }
-.island-token--zband-mid   { scale: 0.92; }
-.island-token--zband-front { scale: 1.10; filter: brightness(1.1) saturate(1.1); }
+/* Z-band depth tiers scale only the ship artwork. Scaling the positioned token
+   root also scales its translate3d(x, y), which projects the route away from
+   the tile anchors (especially on the front half of the board). */
+.island-token--zband-back  { --token-depth-scale: 0.82; filter: brightness(0.7) saturate(0.7); }
+.island-token--zband-mid   { --token-depth-scale: 0.92; }
+.island-token--zband-front { --token-depth-scale: 1.10; filter: brightness(1.1) saturate(1.1); }
 
 @keyframes island-active-stop-pulse {
   0%,
