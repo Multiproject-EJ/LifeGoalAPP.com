@@ -5611,10 +5611,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
           onGarageClick={() => handleMobileNavSelect('actions')}
           onCompassClick={openFullMobileMenuFromGameOverlay}
-          onNorthStarClick={() => {
-            setShowGameBoardOverlay(false);
-            setIsCompassBookOpen(true);
-          }}
           profilePlaystyleIcon={playstyleIcon ?? undefined}
           profileAvatarUrl={profileAvatarUrl}
           profilePlaystyleLabel={playstyleLabel ?? undefined}
@@ -5960,10 +5956,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
         onCreatureCollectionClick={() => handleMobileNavSelect('breathing-space')}
         onGarageClick={() => handleMobileNavSelect('actions')}
         onCompassClick={openFullMobileMenuFromGameOverlay}
-        onNorthStarClick={() => {
-          setShowGameBoardOverlay(false);
-          setIsCompassBookOpen(true);
-        }}
         profilePlaystyleIcon={playstyleIcon ?? undefined}
         profileAvatarUrl={profileAvatarUrl}
         profilePlaystyleLabel={playstyleLabel ?? undefined}

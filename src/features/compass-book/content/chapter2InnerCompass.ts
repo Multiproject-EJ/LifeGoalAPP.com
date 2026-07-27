@@ -240,7 +240,7 @@ const SEEDS: ActivitySeed[] = [
         placeholder: 'e.g. Create freely, protect rest, return to honesty.',
         maxLength: 200,
       },
-      { questionId: 'compass_review', type: 'review', prompt: 'Review your Inner Bearing, Life Spark, Shadow Pull and Guardian Boundary.', required: false },
+      { questionId: 'compass_review', type: 'review', prompt: 'Review True North, Life Spark, Shadow Pull and your Guardian Boundary.', required: false },
       { questionId: 'compass_confirm', type: 'confirmation', prompt: 'This reflects what guides me. Set the Inner Compass.', required: true },
     ] },
 ];
@@ -269,7 +269,7 @@ export const chapter2InnerCompass: CompassBookChapterDefinition = {
     'What truly guides me, what gives me life, what do I need, and what pulls me off course?',
   visualMetaphor:
     'A four-direction compass: North = values, East = energy, South = needs, West = drift.',
-  outputFields: ['Inner Bearing', 'Life Spark', 'Shadow Pull', 'Guardian Boundary', 'Compass statement'],
+  outputFields: ['True North', 'Life Spark', 'Shadow Pull', 'Guardian Boundary', 'Compass statement'],
   islandRange: [21, 40],
   activities: SEEDS.map(buildActivity),
 };

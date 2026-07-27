@@ -683,9 +683,6 @@ function testPersonalPlaybookAndHabitBridge(): void {
     makeAnswer('personal_playbook.a16', 'env_detail', { kind: 'text', text: 'Open the doc the night before' }),
     choice('personal_playbook.a17', 'recovery_route', 'reduce'),
     choice('personal_playbook.a18', 'protected_area', 'health_fitness'),
-    makeAnswer('personal_playbook.a20', 'passion', { kind: 'text', text: 'Creating and mentoring' }),
-    makeAnswer('personal_playbook.a20', 'purpose', { kind: 'text', text: 'Helping people feel capable' }),
-    makeAnswer('personal_playbook.a20', 'north_star', { kind: 'text', text: 'Use creativity to help people grow' }),
     makeAnswer('personal_playbook.a20', 'operating_principle', { kind: 'text', text: 'Start tiny, protect sleep' }),
   ];
 
@@ -693,9 +690,6 @@ function testPersonalPlaybookAndHabitBridge(): void {
   assert(out.startEngineId === 'ritual', 'start engine mapped');
   assert(out.habitNormal === 'Write for 30 minutes', 'habit normal version mapped');
   assert(out.protectedAreaId === 'health_fitness', 'protected area = canonical key');
-  assert(out.passion === 'Creating and mentoring', 'passion mapped');
-  assert(out.purpose === 'Helping people feel capable', 'purpose mapped');
-  assert(out.northStar === 'Use creativity to help people grow', 'North Star mapped');
 
   // Habit proposal builder is PURE — proposes only, never creates.
   const proposal = buildHabitProposalFromPlaybook(out);
