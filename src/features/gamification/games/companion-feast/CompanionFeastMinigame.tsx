@@ -54,6 +54,11 @@ import {
   type MinigameShakeState,
 } from '../../level-worlds/services/minigameJuice';
 import {
+  buildMinigameHudReward,
+  buildMinigameHudTickets,
+  MINIGAME_OPEN_REWARD_LABEL,
+} from '../../level-worlds/services/minigameHudContract';
+import {
   drawGlossyOrb,
   drawMinigameParticles,
   drawScorePop,
@@ -64,6 +69,7 @@ import {
   withAlpha,
   withGlow,
 } from '../_shared/minigameCanvasKit';
+import { MinigameHudStrip } from '../_shared/MinigameHudStrip';
 import {
   buildCompanionFeastRewardBarViewModel,
   COMPANION_FEAST_DROP_TICKET_COST,
@@ -579,6 +585,21 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
   const activeGoalTierInfo = getCompanionFeastFoodTier(activeLevel.goalTier);
   const rewardBar = useMemo(() => buildCompanionFeastRewardBarViewModel(progress), [progress]);
 
+  // Persistent play-phase HUD (shared contract: tickets upper-right, next
+  // exact prize always visible while dropping fruit).
+  const hud = useMemo(() => ({
+    tickets: buildMinigameHudTickets({ count: ticketsRemaining }),
+    reward: buildMinigameHudReward({
+      points: rewardBar.feastPoints,
+      milestones: rewardBar.nodes.map((node) => ({
+        pointsRequired: node.milestone.pointsRequired,
+        rewardLabel: node.milestone.rewardLabel,
+        claimed: node.state === 'claimed',
+      })),
+      remainingUnit: 'levels',
+    }),
+  }), [rewardBar, ticketsRemaining]);
+
   return (
     <section className="companion-feast" aria-label="Companion Feast mini-game">
       {phase === 'entry' && (
@@ -632,6 +653,7 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
 
       {phase === 'playing' && (
         <div className="companion-feast__play-area">
+          <MinigameHudStrip hud={hud} />
           <header className="companion-feast__hud">
             <div className="companion-feast__hud-stat">
               <span className="companion-feast__hud-label">Score</span>
@@ -647,10 +669,6 @@ export default function CompanionFeastMinigame({ onComplete, launchConfig }: Isl
                 {campaignComplete ? 'Encore' : `Lv ${activeLevel.levelNumber}`}
               </span>
               <span className="companion-feast__hud-next">{campaignComplete ? '👑' : activeGoalTierInfo.emoji}</span>
-            </div>
-            <div className="companion-feast__hud-stat" aria-label={`Tickets remaining: ${ticketsRemaining}`}>
-              <span className="companion-feast__hud-label">Tickets</span>
-              <span className="companion-feast__hud-value">{ticketsRemaining} 🎟️</span>
             </div>
             <div className="companion-feast__hud-stat companion-feast__hud-stat--next" aria-label={`Next food: ${nextTierInfo.name}${nextGoldenRef.current ? ', blessed' : ''}`}>
               <span className="companion-feast__hud-label">Next</span>
@@ -827,7 +845,7 @@ function RewardBar({
                 className="companion-feast__btn companion-feast__btn--claim"
                 onClick={() => onClaim(node.milestone.id)}
               >
-                Claim
+                {MINIGAME_OPEN_REWARD_LABEL}
               </button>
             ) : (
               <span className="companion-feast__reward-node-state">

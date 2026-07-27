@@ -1,0 +1,136 @@
+/* Shared persistent HUD strip for the event mini-games.
+   Contract: reward progress spans, tickets pinned upper-right. */
+
+.minigame-hud {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.minigame-hud__reward {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  position: relative;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(8, 18, 34, 0.72);
+  text-align: left;
+}
+
+.minigame-hud__reward--button {
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.minigame-hud__reward--openable {
+  border-color: rgba(255, 215, 106, 0.75);
+  box-shadow: 0 0 12px rgba(255, 215, 106, 0.25);
+}
+
+/* Keep the "N pts to go" line clear of the openable badge in the corner. */
+.minigame-hud__reward--openable .minigame-hud__reward-top {
+  padding-right: 16px;
+}
+
+.minigame-hud__reward-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.minigame-hud__reward-next {
+  font-size: 0.72rem;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.minigame-hud__reward-next strong {
+  color: #ffe17b;
+  font-weight: 800;
+}
+
+.minigame-hud__reward-remaining {
+  flex: 0 0 auto;
+  font-size: 0.66rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.minigame-hud__reward-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(3, 10, 22, 0.85);
+  overflow: hidden;
+}
+
+.minigame-hud__reward-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #38bdf8, #ffe17b);
+  transition: width 240ms ease;
+}
+
+.minigame-hud__reward-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #1c1206;
+  font-size: 0.68rem;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.5);
+}
+
+/* Tickets: pinned upper-right by flex order, always the last child. */
+.minigame-hud__tickets {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 12px;
+  border: 1px solid rgba(94, 234, 212, 0.35);
+  background: rgba(8, 18, 34, 0.72);
+  color: #e7f0ff;
+  font-size: 0.86rem;
+}
+
+.minigame-hud__tickets strong {
+  font-weight: 800;
+}
+
+.minigame-hud__tickets--low {
+  border-color: rgba(248, 113, 113, 0.65);
+  animation: minigame-hud-low-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes minigame-hud-low-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(248, 113, 113, 0); }
+  50% { box-shadow: 0 0 12px rgba(248, 113, 113, 0.45); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .minigame-hud__tickets--low {
+    animation: none;
+  }
+  .minigame-hud__reward-fill {
+    transition: none;
+  }
+}

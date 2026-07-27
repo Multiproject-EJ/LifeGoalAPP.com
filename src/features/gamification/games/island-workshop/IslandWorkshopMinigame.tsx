@@ -52,12 +52,17 @@ import {
 } from '../../level-worlds/services/islandWorkshopGame';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
 import {
+  buildMinigameHudReward,
+  buildMinigameHudTickets,
+} from '../../level-worlds/services/minigameHudContract';
+import {
   createMinigameCelebrationQueue,
   dismissActiveMinigameCelebration,
   enqueueMinigameCelebration,
   stepMinigameNumberTween,
   type MinigameCelebrationQueue,
 } from '../../level-worlds/services/minigameJuice';
+import { MinigameHudStrip } from '../_shared/MinigameHudStrip';
 import { MinigameFxOverlay, type MinigameFxHandle } from '../_shared/MinigameFxOverlay';
 import './islandWorkshop.css';
 
@@ -823,14 +828,24 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
 
       {phase === 'playing' && (
         <div className="island-workshop__play-area">
+          <MinigameHudStrip
+            hud={{
+              tickets: buildMinigameHudTickets({ count: ticketsRemaining, icon: '🧱', noun: 'blocks' }),
+              reward: buildMinigameHudReward({
+                points: score,
+                milestones: runMilestones.map((reward) => ({
+                  pointsRequired: reward.score,
+                  rewardLabel: `${reward.emoji} ${reward.label}`,
+                  // Score milestones auto-award on crossing, so passed == done.
+                  claimed: score >= reward.score,
+                })),
+              }),
+            }}
+          />
           <header className="island-workshop__hud">
             <div className="island-workshop__hud-stat">
               <span className="island-workshop__hud-label">Score</span>
               <span className="island-workshop__hud-value">{Math.round(displayedScore)}</span>
-            </div>
-            <div className="island-workshop__hud-stat">
-              <span className="island-workshop__hud-label">Blocks left</span>
-              <span className="island-workshop__hud-value">🧱 {ticketsRemaining}</span>
             </div>
             <div className={`island-workshop__hud-stat${streak >= 1 ? ' island-workshop__hud-stat--hot' : ''}`}>
               <span className="island-workshop__hud-label">Streak</span>

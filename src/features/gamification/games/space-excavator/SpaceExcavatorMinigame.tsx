@@ -12,7 +12,13 @@ import {
   resolveSpaceExcavatorRewardUxState,
   SPACE_EXCAVATOR_BOARD_CLEAR_AUTO_ADVANCE_DELAY_MS,
 } from '../../level-worlds/services/spaceExcavatorRewardUx';
+import {
+  buildMinigameHudReward,
+  buildMinigameHudTickets,
+  MINIGAME_OPEN_REWARD_LABEL,
+} from '../../level-worlds/services/minigameHudContract';
 import { MinigameFxOverlay, type MinigameFxHandle } from '../_shared/MinigameFxOverlay';
+import { MinigameHudStrip } from '../_shared/MinigameHudStrip';
 import './spaceExcavator.css';
 
 /** Particle palettes per dig outcome — dust for rock, sparks for a find. */
@@ -489,6 +495,20 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
 
   return (
     <section className={`space-excavator space-excavator--${depth.theme}`} aria-label="Space Excavator">
+      <MinigameHudStrip
+        hud={{
+          tickets: buildMinigameHudTickets({ count: ticketsRemaining }),
+          reward: buildMinigameHudReward({
+            points: rewardUxState.boardsCleared,
+            milestones: SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.map((milestone) => ({
+              pointsRequired: milestone.pointsRequired,
+              rewardLabel: milestone.rewardLabel,
+              claimed: claimedMilestoneIds.includes(milestone.id),
+            })),
+            remainingUnit: 'boards',
+          }),
+        }}
+      />
       <div className="space-excavator__hud">
         <span className="space-excavator__hud-chip">
           <small>Island</small>
@@ -497,10 +517,6 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         <span className="space-excavator__hud-chip">
           <small>Site</small>
           <strong>{boardLabel}</strong>
-        </span>
-        <span className={`space-excavator__hud-chip space-excavator__hud-chip--accent ${ticketsRemaining > 0 && ticketsRemaining <= 3 ? 'space-excavator__hud-chip--low' : ''}`}>
-          <small>Tickets</small>
-          <strong>🎟️ {ticketsRemaining}</strong>
         </span>
         <span className="space-excavator__hud-chip">
           <small>Pieces</small>
@@ -780,7 +796,7 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
                   onClick={() => onClaimMilestone(activeClaimModalMilestone.id)}
                   disabled={claimModalPhase === 'claiming'}
                 >
-                  {claimModalPhase === 'claiming' ? 'Claiming…' : claimModalPhase === 'failed' ? 'Try Again' : 'Claim Reward'}
+                  {claimModalPhase === 'claiming' ? 'Opening…' : claimModalPhase === 'failed' ? 'Try Again' : MINIGAME_OPEN_REWARD_LABEL}
                 </button>
               )}
               {claimModalPhase === 'failed' ? (
