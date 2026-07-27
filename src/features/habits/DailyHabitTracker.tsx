@@ -196,6 +196,7 @@ import {
 } from '../../services/commitmentContracts';
 import './HabitAlertConfig.css';
 import './HabitRecapPrompt.css';
+import './TodoCleanupReset.css';
 import { HabitPauseDialog } from './HabitPauseDialog';
 import { HabitInsightCaptureSheet } from './HabitInsightCaptureSheet';
 import { recordHabitInsight, awardInsightCaptureDice } from '../../services/habitInsights';
@@ -1059,7 +1060,7 @@ const dailyCatchUpLaunchKey = (userId: string) =>
 const todoCleanupDisplayCountsKey = (userId: string) =>
   `lifegoal.todo-cleanup-display-counts:${userId}`;
 
-type TodoCleanupAction = 'tomorrow' | 'schedule' | 'finish' | 'delete';
+type TodoCleanupAction = 'tomorrow' | 'schedule' | 'finish' | 'tower' | 'delete';
 type TodoCleanupPendingAction = { action: TodoCleanupAction; scheduledDateISO?: string };
 const TODO_CLEANUP_MAX_PROMPTS = 40;
 const TODO_CLEANUP_TASK_TOWER_TAG = '_todo';
@@ -1079,6 +1080,10 @@ const TODO_CLEANUP_HELP_TOPICS = {
   tomorrow: {
     label: 'Tomorrow',
     text: "Moves the task off today and onto tomorrow's list.",
+  },
+  tower: {
+    label: 'Task Tower',
+    text: 'Sends the task into Task Tower so it can become part of the game queue.',
   },
   delete: {
     label: 'Delete',
@@ -12975,9 +12980,20 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     if (entries.length === 0) return false;
     setYesterdaySundownTodoSaving(true);
     setYesterdaySundownTodoStatus(null);
-    const actionResults = await Promise.all(entries.map(([todoId, pendingAction]) => {
+    const actionResults = await Promise.all(entries.map(async ([todoId, pendingAction]) => {
       if (pendingAction.action === 'delete') return deleteTodayTodo(todoId);
       if (pendingAction.action === 'finish') return updateTodayTodo(todoId, { completed: true });
+      if (pendingAction.action === 'tower') {
+        const todo = yesterdaySundownTodos.find((candidate) => candidate.id === todoId);
+        if (!todo) return { data: null, error: new Error('Todo not found while moving it to Task Tower.') };
+        const { error: insertError } = await insertAction(session.user.id, {
+          title: todo.title,
+          category: 'nice_to_do',
+          notes: [TODO_CLEANUP_TASK_TOWER_TAG, todo.notes].filter(Boolean).join('\n'),
+        });
+        if (insertError) return { data: null, error: insertError };
+        return deleteTodayTodo(todoId);
+      }
       const nextDateISO = pendingAction.action === 'tomorrow'
         ? formatISODate(addDays(parseISODate(today), 1))
         : pendingAction.scheduledDateISO ?? today;
@@ -12995,7 +13011,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     await loadTodayTodos(activeDate);
     setYesterdaySundownTodoSaving(false);
     return true;
-  }, [activeDate, loadTodayTodos, today, yesterdayISO]);
+  }, [activeDate, loadTodayTodos, session.user.id, today, yesterdayISO, yesterdaySundownTodos]);
 
   const recordUnresolvedTodoCleanupDisplays = useCallback((handledTodoIds: Set<string>) => {
     const nextCounts = { ...todoCleanupDisplayCounts };
@@ -13111,15 +13127,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       <div className="yesterday-sundown-todo-modal__backdrop" onClick={() => void closeYesterdaySundownTodoModal()} role="presentation" />
       <div className={`yesterday-sundown-todo-modal__dialog${todoCleanupHelpMode ? ' yesterday-sundown-todo-modal__dialog--help' : ''}`}>
         <header className="yesterday-sundown-todo-modal__header">
-          <span className="yesterday-sundown-todo-modal__sun" aria-hidden="true">🌅</span>
-          <div className="yesterday-sundown-todo-modal__heading">
-            <h3 id="yesterday-sundown-todo-title">Task rollover</h3>
-            <p className="yesterday-sundown-todo-modal__subtitle">
-              {yesterdaySundownTodos.length > 0
-                ? `These unfinished ${formatDateLabel(yesterdayISO)} tasks have been added to today's tasks. Here's your chance to check some off, move them to tomorrow (${formatDateLabel(todoCleanupTomorrowISO)}), or delete them.`
-                : `Nothing left over from ${formatDateLabel(yesterdayISO)}.`}
-            </p>
-          </div>
           <button
             type="button"
             className={`yesterday-sundown-todo-modal__help-toggle${todoCleanupHelpMode ? ' yesterday-sundown-todo-modal__help-toggle--on' : ''}`}
@@ -13142,19 +13149,35 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           >
             ×
           </button>
+          <div className="yesterday-sundown-todo-modal__heading">
+            <span className="yesterday-sundown-todo-modal__kicker">Daily</span>
+            <h3 id="yesterday-sundown-todo-title">
+              <span>Todo</span>
+              <span>Reset</span>
+            </h3>
+            <p className="yesterday-sundown-todo-modal__subtitle">
+              Sort every remaining task into its next home.
+            </p>
+            <span className="yesterday-sundown-todo-modal__date">
+              {formatDateLabel(yesterdayISO)} → today
+            </span>
+          </div>
         </header>
 
         {yesterdaySundownTodos.length > 0 ? (
           <div className="yesterday-sundown-todo-modal__progress" aria-hidden="true">
+            <span className="yesterday-sundown-todo-modal__progress-icon">☑</span>
             <div className="yesterday-sundown-todo-modal__progress-track">
               <div
                 className="yesterday-sundown-todo-modal__progress-fill"
                 style={{ width: `${Math.round((assignedTodoCleanupCount / yesterdaySundownTodos.length) * 100)}%` }}
               />
+              <span className={`yesterday-sundown-todo-modal__progress-count${allTodoCleanupItemsAssigned ? ' yesterday-sundown-todo-modal__progress-count--done' : ''}`}>
+                <strong>{assignedTodoCleanupCount} / {yesterdaySundownTodos.length}</strong>
+                <span>{allTodoCleanupItemsAssigned ? 'All sorted!' : 'Sorted'}</span>
+              </span>
             </div>
-            <span className={`yesterday-sundown-todo-modal__progress-count${allTodoCleanupItemsAssigned ? ' yesterday-sundown-todo-modal__progress-count--done' : ''}`}>
-              {allTodoCleanupItemsAssigned ? '🎉 All sorted!' : `${assignedTodoCleanupCount}/${yesterdaySundownTodos.length} sorted`}
-            </span>
+            <span className="yesterday-sundown-todo-modal__progress-sparkle">✦</span>
           </div>
         ) : null}
 
@@ -13172,6 +13195,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               {renderTodoCleanupHelpNote('pickDay')}
               {renderTodoCleanupHelpNote('finish')}
               {renderTodoCleanupHelpNote('tomorrow')}
+              {renderTodoCleanupHelpNote('tower')}
               {renderTodoCleanupHelpNote('delete')}
               {renderTodoCleanupHelpNote('undo')}
             </div>
@@ -13193,6 +13217,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       ? `📅 ${formatDateLabel(pendingAction.scheduledDateISO ?? today)}`
                       : pendingAction?.action === 'finish'
                         ? '✅ Done'
+                        : pendingAction?.action === 'tower'
+                          ? '🏰 Task Tower'
                         : pendingAction?.action === 'delete'
                           ? '🗑️ Delete'
                           : null;
@@ -13226,6 +13252,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         <div className="yesterday-sundown-todo-modal__quick-actions">
                           <button type="button" className="yesterday-sundown-todo-modal__chip yesterday-sundown-todo-modal__chip--finish" onClick={() => stageTodoCleanupAction(todo.id, { action: 'finish' })} disabled={yesterdaySundownTodoSaving} aria-label={`Mark ${todo.title} finished`}>✅</button>
                           <button type="button" className="yesterday-sundown-todo-modal__chip yesterday-sundown-todo-modal__chip--tomorrow" onClick={() => stageTodoCleanupAction(todo.id, { action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving} aria-label={`Move ${todo.title} to tomorrow`}>☀️</button>
+                          <button type="button" className="yesterday-sundown-todo-modal__chip yesterday-sundown-todo-modal__chip--tower" onClick={() => stageTodoCleanupAction(todo.id, { action: 'tower' })} disabled={yesterdaySundownTodoSaving} aria-label={`Send ${todo.title} to Task Tower`}>
+                            <img src="/assets/todo-cleanup/task-tower-icon.webp" alt="" aria-hidden="true" />
+                          </button>
                           <button type="button" className="yesterday-sundown-todo-modal__chip yesterday-sundown-todo-modal__chip--delete" onClick={() => stageTodoCleanupAction(todo.id, { action: 'delete' })} disabled={yesterdaySundownTodoSaving} aria-label={`Delete ${todo.title}`}>🗑️</button>
                         </div>
                       )}
@@ -13264,23 +13293,29 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           </div>
           {yesterdaySundownTodos.length > 0 && !allTodoCleanupItemsAssigned ? (
             <div className="yesterday-sundown-todo-modal__bulk" aria-label="Bulk todo cleanup actions">
-              <span className="yesterday-sundown-todo-modal__bulk-label">Bulk apply:</span>
+              <span className="yesterday-sundown-todo-modal__bulk-label">Bulk action:</span>
               {todoCleanupBulkAction ? (
                 <div className="yesterday-sundown-todo-modal__confirm" role="alert">
                   <button type="button" className="yesterday-sundown-todo-modal__confirm-yes" onClick={handleConfirmBulkTodoCleanup}>
                     {todoCleanupBulkAction.action === 'finish'
                       ? '✅ Mark all done?'
-                      : todoCleanupBulkAction.action === 'delete'
-                        ? '🗑️ Delete all?'
-                        : '☀️ Move all to tomorrow?'}
+                      : todoCleanupBulkAction.action === 'tower'
+                        ? '🏰 Send all to Task Tower?'
+                        : todoCleanupBulkAction.action === 'delete'
+                          ? '🗑️ Delete all?'
+                          : '☀️ Move all to tomorrow?'}
                   </button>
                   <button type="button" className="yesterday-sundown-todo-modal__confirm-no" onClick={() => setTodoCleanupBulkAction(null)} aria-label="Cancel bulk choice">✕</button>
                 </div>
               ) : (
                 <div className="yesterday-sundown-todo-modal__bulk-actions">
-                  <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'finish' })} disabled={yesterdaySundownTodoSaving}>✅ All done</button>
-                  <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving}>☀️ Move all to tomorrow</button>
-                  <button type="button" className="yesterday-sundown-todo-modal__bulk-delete" onClick={() => setTodoCleanupBulkAction({ action: 'delete' })} disabled={yesterdaySundownTodoSaving}>🗑️ Delete all</button>
+                  <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'finish' })} disabled={yesterdaySundownTodoSaving}>✅ Done</button>
+                  <button type="button" onClick={() => setTodoCleanupBulkAction({ action: 'tomorrow' })} disabled={yesterdaySundownTodoSaving}>☀️ Tomorrow</button>
+                  <button type="button" className="yesterday-sundown-todo-modal__bulk-tower" onClick={() => setTodoCleanupBulkAction({ action: 'tower' })} disabled={yesterdaySundownTodoSaving}>
+                    <img src="/assets/todo-cleanup/task-tower-icon.webp" alt="" aria-hidden="true" />
+                    Task Tower
+                  </button>
+                  <button type="button" className="yesterday-sundown-todo-modal__bulk-delete" onClick={() => setTodoCleanupBulkAction({ action: 'delete' })} disabled={yesterdaySundownTodoSaving}>🗑️</button>
                 </div>
               )}
             </div>

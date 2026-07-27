@@ -29,4 +29,21 @@ assert(
   'full Today view must keep rendering the yesterday todo cleanup portal',
 );
 
+assert(
+  source.includes("type TodoCleanupAction = 'tomorrow' | 'schedule' | 'finish' | 'tower' | 'delete';"),
+  'todo cleanup must expose Task Tower as a first-class staged action',
+);
+assert(
+  source.includes("pendingAction.action === 'tower'"),
+  'applying a Task Tower cleanup choice must create a Task Tower action',
+);
+assert(
+  source.includes("stageTodoCleanupAction(todo.id, { action: 'tower' })"),
+  'each cleanup row must offer a Task Tower action',
+);
+assert(
+  source.includes("setTodoCleanupBulkAction({ action: 'tower' })"),
+  'bulk cleanup must offer Task Tower',
+);
+
 console.log('yesterday-todo-cleanup-modal-portal: all assertions passed');
