@@ -128,6 +128,66 @@ type DualTrackColumnProps = {
   cards: DualTrackMilestoneCard[];
 };
 
+type ControllerHandleActionProps = {
+  side: 'left' | 'right';
+  slot: 'creatures' | 'offers';
+  icon: string;
+  label: string;
+  onClick?: () => void;
+};
+
+function ControllerHandleAction({
+  side,
+  slot,
+  icon,
+  label,
+  onClick,
+}: ControllerHandleActionProps) {
+  const slotStyle = side === 'left'
+    ? ISLAND_RUN_CONTROLLER_SLOT_MAP.leftLower
+    : ISLAND_RUN_CONTROLLER_SLOT_MAP.rightLower;
+  const gradientId = `game-board-overlay-handle-${side}`;
+
+  return (
+    <button
+      type="button"
+      className={`game-board-overlay__controller-nav-btn game-board-overlay__controller-nav-btn--slot-${slot}`}
+      style={getIslandRunControllerSlotStyle(slotStyle)}
+      onClick={onClick}
+      disabled={!onClick}
+      aria-label={label}
+    >
+      <svg
+        className={`game-board-overlay__controller-handle-shape${
+          side === 'left' ? ' game-board-overlay__controller-handle-shape--left' : ''
+        }`}
+        viewBox="0 0 100 170"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#dceff7" stopOpacity="0.52" />
+            <stop offset="0.52" stopColor="#77a9c1" stopOpacity="0.28" />
+            <stop offset="1" stopColor="#153e59" stopOpacity="0.38" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M18 2C43-2 68 1 80 14C91 29 94 57 97 84C101 116 99 146 88 163C82 173 74 173 66 165C55 152 48 130 39 108C31 87 23 66 15 49C8 35 1 22 3 13C5 7 10 4 18 2Z"
+          fill={`url(#${gradientId})`}
+          stroke="rgba(205, 239, 252, 0.72)"
+          strokeWidth="1.4"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <span className="game-board-overlay__controller-handle-content">
+        <span className="game-board-overlay__controller-handle-icon" aria-hidden="true">{icon}</span>
+        <span className="game-board-overlay__controller-handle-text">{label}</span>
+      </span>
+    </button>
+  );
+}
+
 function DualTrackColumn({ title, subtitle, tone, cards }: DualTrackColumnProps) {
   const headingId = `game-board-overlay-track-${tone}`;
   return (
@@ -444,24 +504,20 @@ export function GameBoardOverlay({
             >
               ✅ Today
             </button>
-            <button
-              type="button"
-              className="game-board-overlay__controller-nav-btn game-board-overlay__controller-nav-btn--slot-creatures"
-              style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.leftLower)}
+            <ControllerHandleAction
+              side="left"
+              slot="creatures"
+              icon="🛡️"
+              label="Shield"
               onClick={onCreatureCollectionClick}
-              disabled={!onCreatureCollectionClick}
-            >
-              🛡️ Shield
-            </button>
-            <button
-              type="button"
-              className="game-board-overlay__controller-nav-btn game-board-overlay__controller-nav-btn--slot-offers"
-              style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.rightLower)}
+            />
+            <ControllerHandleAction
+              side="right"
+              slot="offers"
+              icon="🏆"
+              label="Score"
               onClick={onSpinWinClick}
-              disabled={!onSpinWinClick}
-            >
-              🏆 Score
-            </button>
+            />
             <button
               type="button"
               className="game-board-overlay__controller-nav-btn game-board-overlay__controller-nav-btn--slot-garage"
