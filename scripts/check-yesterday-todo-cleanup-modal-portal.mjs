@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs';
 
 const source = readFileSync('src/features/habits/DailyHabitTracker.tsx', 'utf8');
+const appSource = readFileSync('src/App.tsx', 'utf8');
+const todoCleanupCss = readFileSync('src/features/habits/TodoCleanupReset.css', 'utf8');
+const appCss = readFileSync('src/index.css', 'utf8');
 
 function assert(condition, message) {
   if (!condition) {
@@ -44,6 +47,40 @@ assert(
 assert(
   source.includes("setTodoCleanupBulkAction({ action: 'tower' })"),
   'bulk cleanup must offer Task Tower',
+);
+assert(
+  source.includes('/assets/todo-cleanup/daily-todo-reset-title-v3.webp'),
+  'todo cleanup must use the wide image title lockup',
+);
+assert(
+  source.includes('id="yesterday-sundown-todo-help"'),
+  'the help button must reveal an independent information panel',
+);
+assert(
+  !source.includes('yesterday-sundown-todo-modal__dialog--help'),
+  'help mode must not replace or disable the cleanup controls',
+);
+assert(
+  todoCleanupCss.includes('.yesterday-sundown-todo-modal__help-panel'),
+  'the independent help panel must be styled',
+);
+assert(
+  appSource.includes('const [showMobileHome, setShowMobileHome] = useState(isMobileExperience);'),
+  'mobile users, including admins, must start on the modern Today home',
+);
+assert(
+  appSource.includes("setActiveWorkspaceNav('planning');\n    if (isMobileExperience) {\n      setShowMobileHome(true);"),
+  'the manual cleanup launcher must keep mobile admins on the modern Today home',
+);
+assert(
+  appCss.includes('.mobile-habit-home .habit-checklist__item--expanded')
+    && appCss.includes('overflow-y: auto;')
+    && appCss.includes('touch-action: pan-y;'),
+  'the entire expanded mobile habit card must accept vertical scrolling',
+);
+assert(
+  source.includes("target?.closest<HTMLElement>('.habit-checklist__item--expanded')"),
+  'expanded-habit focus scrolling must use the whole card as its scroll container',
 );
 
 console.log('yesterday-todo-cleanup-modal-portal: all assertions passed');

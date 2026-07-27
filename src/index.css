@@ -40104,7 +40104,13 @@ body.habit-wizard-open .mobile-footer-nav {
 .mobile-habit-home .habit-checklist__item--expanded {
   position: relative;
   z-index: 2;
-  overflow: visible;
+  max-height: min(72svh, calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 7rem));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-block: 0.55rem 0.7rem;
+  touch-action: pan-y;
   /* !important guarantees the open card can never inherit or be overridden into
      a blur by any surrounding focus rule or browser-specific cascade quirk. */
   filter: none !important;
@@ -40148,7 +40154,8 @@ body.habit-wizard-open .mobile-footer-nav {
 }
 
 .mobile-habit-home .habit-checklist__item--expanded .habit-checklist__details-panel--open {
-  max-height: min(64svh, calc(100svh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 11rem));
+  max-height: none;
+  overflow: visible;
   padding-top: 0.55rem;
   padding-bottom: 0.7rem;
   scroll-padding-block: 0.55rem 0.7rem;

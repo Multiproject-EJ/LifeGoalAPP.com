@@ -1108,6 +1108,16 @@ const TODO_CLEANUP_HELP_TOPICS = {
 } as const;
 
 type TodoCleanupHelpTopicId = keyof typeof TODO_CLEANUP_HELP_TOPICS;
+const TODO_CLEANUP_HELP_TOPIC_ORDER: readonly TodoCleanupHelpTopicId[] = [
+  'finish',
+  'tomorrow',
+  'tower',
+  'delete',
+  'pickDay',
+  'undo',
+  'bulk',
+  'apply',
+];
 const dreamJournalLaunchKey = (userId: string) =>
   `lifegoal.dream-journal-launch:${userId}`;
 const todaysWinsLaunchKey = (userId: string) =>
@@ -1274,7 +1284,6 @@ export function DailyHabitTracker({
   const [todoCleanupDisplayCounts, setTodoCleanupDisplayCounts] = useState<Record<string, number>>({});
   const [todoCleanupBulkAction, setTodoCleanupBulkAction] = useState<TodoCleanupPendingAction | null>(null);
   const [todoCleanupHelpMode, setTodoCleanupHelpMode] = useState(false);
-  const [todoCleanupHelpFocus, setTodoCleanupHelpFocus] = useState<TodoCleanupHelpTopicId | null>(null);
   const yesterdaySundownTodoPromptOpenedThisSessionRef = useRef(false);
 
   useEffect(() => {
@@ -7146,12 +7155,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
         const target = habitDetailSectionRefs.current[`${habitId}:${section}`];
-        const panel = target?.closest<HTMLElement>('.habit-checklist__details-panel');
-        if (target && panel) {
-          const targetTopWithinPanel =
-            target.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop;
-          panel.scrollTo({
-            top: Math.max(0, targetTopWithinPanel - 10),
+        const scrollContainer =
+          target?.closest<HTMLElement>('.habit-checklist__item--expanded')
+          ?? target?.closest<HTMLElement>('.habit-checklist__details-panel');
+        if (target && scrollContainer) {
+          const targetTopWithinContainer =
+            target.getBoundingClientRect().top
+            - scrollContainer.getBoundingClientRect().top
+            + scrollContainer.scrollTop;
+          scrollContainer.scrollTo({
+            top: Math.max(0, targetTopWithinContainer - 10),
             behavior: 'smooth',
           });
           target.querySelector<HTMLButtonElement>('.habit-checklist__detail-block-toggle')?.focus({ preventScroll: true });
@@ -13161,7 +13174,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       setTodoCleanupPendingActions({});
       setTodoCleanupBulkAction(null);
       setTodoCleanupHelpMode(false);
-      setTodoCleanupHelpFocus(null);
     }
   }, [applyTodoCleanupActions, recordUnresolvedTodoCleanupDisplays, todoCleanupPendingActions]);
 
@@ -13195,7 +13207,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setTodoCleanupPendingActions({});
     setTodoCleanupBulkAction(null);
     setTodoCleanupHelpMode(false);
-    setTodoCleanupHelpFocus(null);
   }, [applyTodoCleanupActions, recordUnresolvedTodoCleanupDisplays, todoCleanupPendingActions]);
 
   const handleConfirmBulkTodoCleanup = useCallback(() => {
@@ -13225,41 +13236,29 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const allTodoCleanupItemsAssigned = yesterdaySundownTodos.length > 0 && assignedTodoCleanupCount >= yesterdaySundownTodos.length;
   const todoCleanupTomorrowISO = formatISODate(addDays(parseISODate(today), 1));
 
-  // Guided mode annotates one control at a time. The chips are the only live
-  // targets while it is on — the controls underneath are inert, so tapping an
-  // explanation can never fire the action it describes.
-  const renderTodoCleanupHelpNote = (topicId: TodoCleanupHelpTopicId) => {
-    if (!todoCleanupHelpMode) return null;
+  const renderTodoCleanupHelpItem = (topicId: TodoCleanupHelpTopicId) => {
     const topic = TODO_CLEANUP_HELP_TOPICS[topicId];
-    const isOpen = todoCleanupHelpFocus === topicId;
     return (
-      <button
-        type="button"
-        className={`yesterday-sundown-todo-modal__help-note${isOpen ? ' yesterday-sundown-todo-modal__help-note--open' : ''}`}
-        onClick={() => setTodoCleanupHelpFocus(isOpen ? null : topicId)}
-        aria-expanded={isOpen}
-      >
-        <span className="yesterday-sundown-todo-modal__help-note-label">{topic.label}</span>
-        {isOpen ? <span className="yesterday-sundown-todo-modal__help-note-text">{topic.text}</span> : null}
-      </button>
+      <div className="yesterday-sundown-todo-modal__help-item" key={topicId}>
+        <strong>{topic.label}</strong>
+        <span>{topic.text}</span>
+      </div>
     );
   };
 
   const yesterdaySundownTodoModalContent = showYesterdaySundownTodoModal ? (
     <div className="yesterday-sundown-todo-modal" role="dialog" aria-modal="true" aria-labelledby="yesterday-sundown-todo-title">
       <div className="yesterday-sundown-todo-modal__backdrop" onClick={() => void closeYesterdaySundownTodoModal()} role="presentation" />
-      <div className={`yesterday-sundown-todo-modal__dialog${todoCleanupHelpMode ? ' yesterday-sundown-todo-modal__dialog--help' : ''}`}>
+      <div className="yesterday-sundown-todo-modal__dialog">
         <header className="yesterday-sundown-todo-modal__header">
           <button
             type="button"
             className={`yesterday-sundown-todo-modal__help-toggle${todoCleanupHelpMode ? ' yesterday-sundown-todo-modal__help-toggle--on' : ''}`}
-            onClick={() => {
-              setTodoCleanupHelpFocus(null);
-              setTodoCleanupHelpMode((current) => !current);
-            }}
+            onClick={() => setTodoCleanupHelpMode((current) => !current)}
             aria-pressed={todoCleanupHelpMode}
-            aria-label={todoCleanupHelpMode ? 'Turn off button explanations' : 'Explain these buttons'}
-            title={todoCleanupHelpMode ? 'Turn off button explanations' : 'Explain these buttons'}
+            aria-controls="yesterday-sundown-todo-help"
+            aria-label={todoCleanupHelpMode ? 'Close action information' : 'Explain the cleanup actions'}
+            title={todoCleanupHelpMode ? 'Close action information' : 'Explain the cleanup actions'}
           >
             ?
           </button>
@@ -13273,10 +13272,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             ×
           </button>
           <div className="yesterday-sundown-todo-modal__heading">
-            <span className="yesterday-sundown-todo-modal__kicker">Daily</span>
-            <h3 id="yesterday-sundown-todo-title">
-              <span>Todo</span>
-              <span>Reset</span>
+            <h3 id="yesterday-sundown-todo-title" className="yesterday-sundown-todo-modal__title-lockup">
+              <img src="/assets/todo-cleanup/daily-todo-reset-title-v3.webp" alt="" aria-hidden="true" />
+              <span className="sr-only">Daily Todo Reset</span>
             </h3>
             <p className="yesterday-sundown-todo-modal__subtitle">
               Sort every remaining task into its next home.
@@ -13304,6 +13302,28 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           </div>
         ) : null}
 
+        {todoCleanupHelpMode ? (
+          <section
+            id="yesterday-sundown-todo-help"
+            className="yesterday-sundown-todo-modal__help-panel"
+            aria-label="Todo cleanup action information"
+          >
+            <div className="yesterday-sundown-todo-modal__help-panel-header">
+              <strong>What each action does</strong>
+              <button
+                type="button"
+                onClick={() => setTodoCleanupHelpMode(false)}
+                aria-label="Close action information"
+              >
+                ×
+              </button>
+            </div>
+            <div className="yesterday-sundown-todo-modal__help-grid">
+              {TODO_CLEANUP_HELP_TOPIC_ORDER.map(renderTodoCleanupHelpItem)}
+            </div>
+          </section>
+        ) : null}
+
         <div className="yesterday-sundown-todo-modal__body">
           {todoCleanupMovedToTaskTowerTitles.length > 0 ? (
             <div className="yesterday-sundown-todo-modal__status" role="note">
@@ -13311,17 +13331,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             </div>
           ) : null}
           {yesterdaySundownTodos.length > 0 ? (
-            <>
-            {/* Sits above the list rather than inside it: the dimmed rows use opacity,
-                which a child can never climb back out of. */}
-            <div className="yesterday-sundown-todo-modal__help-cluster yesterday-sundown-todo-modal__help-cluster--row">
-              {renderTodoCleanupHelpNote('pickDay')}
-              {renderTodoCleanupHelpNote('finish')}
-              {renderTodoCleanupHelpNote('tomorrow')}
-              {renderTodoCleanupHelpNote('tower')}
-              {renderTodoCleanupHelpNote('delete')}
-              {renderTodoCleanupHelpNote('undo')}
-            </div>
             <ul className="yesterday-sundown-todo-modal__list">
               {yesterdaySundownTodos.map((todo, todoIndex) => {
                 const isExpanded = Boolean(expandedYesterdaySundownTodoById[todo.id]);
@@ -13402,7 +13411,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 );
               })}
             </ul>
-            </>
           ) : (
             <div className="yesterday-sundown-todo-modal__empty">✨ All clear — yesterday can stay yesterday.</div>
           )}
@@ -13410,10 +13418,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         </div>
 
         <footer className="yesterday-sundown-todo-modal__footer">
-          <div className="yesterday-sundown-todo-modal__help-cluster yesterday-sundown-todo-modal__help-cluster--footer">
-            {renderTodoCleanupHelpNote('bulk')}
-            {renderTodoCleanupHelpNote('apply')}
-          </div>
           {yesterdaySundownTodos.length > 0 && !allTodoCleanupItemsAssigned ? (
             <div className="yesterday-sundown-todo-modal__bulk" aria-label="Bulk todo cleanup actions">
               <span className="yesterday-sundown-todo-modal__bulk-label">Bulk action:</span>
