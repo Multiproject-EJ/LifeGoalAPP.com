@@ -1345,6 +1345,7 @@ export function DailyHabitTracker({
   const [today, setToday] = useState(() => formatISODate(new Date()));
   const todayRef = useRef(today);
   const [activeDate, setActiveDate] = useState(() => formatISODate(new Date()));
+  const activeDateRef = useRef(activeDate);
 
   useEffect(() => {
     setDismissedReviewHabitIds(new Set());
@@ -1367,6 +1368,10 @@ export function DailyHabitTracker({
   useEffect(() => {
     todayRef.current = today;
   }, [today]);
+
+  useEffect(() => {
+    activeDateRef.current = activeDate;
+  }, [activeDate]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -1617,6 +1622,12 @@ export function DailyHabitTracker({
   }, [activeDate, editingTodayTodo, handleCloseTodayTodoModal, loadTodayTodos, session.user.id, todayTodoDate, todayTodoEstimatedMinutes, todayTodoIsFocus, todayTodoNotes, todayTodoTitle, todayTodos]);
 
   const handleToggleTodayTodo = useCallback(async (todo: TodayTodo) => {
+    if (activeDate > today) {
+      setTodayTodoStatus(`Planned for ${formatDateLabel(activeDate)} — completion unlocks on that day.`);
+      triggerImpactHaptic('light', { channel: 'navigation', minIntervalMs: 250 });
+      return;
+    }
+
     const isMarkingComplete = !todo.completed;
     const { error } = await updateTodayTodo(todo.id, { completed: isMarkingComplete });
     if (!error) {
@@ -1629,7 +1640,7 @@ export function DailyHabitTracker({
       }
       void loadTodayTodos(activeDate);
     }
-  }, [activeDate, loadTodayTodos]);
+  }, [activeDate, loadTodayTodos, today]);
 
   const handleRescheduleTodayTodo = useCallback(async (todo: TodayTodo, nextDateISO: string) => {
     setTodayTodoActionPendingById((current) => ({ ...current, [todo.id]: true }));
@@ -1725,6 +1736,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   });
   const [todayWinsSummaryReady, setTodayWinsSummaryReady] = useState(false);
   const isViewingToday = activeDate === today;
+  const isViewingFuture = activeDate > today;
   const grantDailySpinHabitBonusOncePerDay = useCallback(async () => {
     if (!session?.user?.id) return;
     const todayKey = formatISODate(new Date());
@@ -2035,6 +2047,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, []);
   const [showDreamJournalReminderModal, setShowDreamJournalReminderModal] = useState(false);
   const habitCardRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const [futurePlanningGateActive, setFuturePlanningGateActive] = useState(false);
+  const hasEnteredFuturePlanningRef = useRef(false);
+  const futurePlanningGateTimeoutRef = useRef<number | null>(null);
   const expandedHabitId = useMemo(
     () => Object.keys(expandedHabits).find((habitId) => expandedHabits[habitId]) ?? null,
     [expandedHabits],
@@ -2092,6 +2107,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       }
       if (dailyLifeUpgradeHighlightTimeoutRef.current !== null) {
         window.clearTimeout(dailyLifeUpgradeHighlightTimeoutRef.current);
+      }
+      if (futurePlanningGateTimeoutRef.current !== null) {
+        window.clearTimeout(futurePlanningGateTimeoutRef.current);
       }
     };
   }, []);
@@ -4275,13 +4293,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     if (!pendingOfferToOpen) return;
 
     if (!isViewingToday) {
-      setActiveDate(today);
       return;
     }
 
     handleTimeBoundOfferClick(pendingOfferToOpen);
     onPendingOfferHandled?.();
-  }, [handleTimeBoundOfferClick, isViewingToday, onPendingOfferHandled, pendingOfferToOpen, today]);
+  }, [handleTimeBoundOfferClick, isViewingToday, onPendingOfferHandled, pendingOfferToOpen]);
 
 
   const offerTeaserModal = null;
@@ -5348,9 +5365,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
     const currentDate = new Date();
     const todayISO = formatISODate(currentDate);
-    const trackingDateISO = activeDate > todayISO
-      ? todayISO
-      : activeDate;
+    const trackingDateISO = activeDate;
     // Use selected month/year instead of current month for monthly grid
     const monthStartDate = new Date(selectedYear, selectedMonth, 1);
     const monthEndDate = new Date(selectedYear, selectedMonth + 1, 0);
@@ -5358,9 +5373,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     const monthEndISO = formatISODate(monthEndDate);
     const monthDayList = generateDateRange(monthStartDate, monthEndDate);
     setToday(todayISO);
-    if (trackingDateISO !== activeDate) {
-      setActiveDate(trackingDateISO);
-    }
     setMonthDays(monthDayList);
 
     // TODO: Backend optimization - Consider adding Supabase query optimization for monthly aggregation:
@@ -5809,7 +5821,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     };
   }, [refreshHabits]);
 
+  const rejectFutureHabitCheckIn = useCallback((dateISO: string) => {
+    if (dateISO <= todayRef.current) return false;
+
+    setErrorMessage(
+      `Future planning is open for ${formatDateLabel(dateISO)}. Habit check-ins unlock on that day.`,
+    );
+    triggerImpactHaptic('light', { channel: 'navigation', minIntervalMs: 250 });
+    return true;
+  }, []);
+
   const toggleHabitForDate = async (habit: HabitWithGoal, dateISO: string) => {
+    if (rejectFutureHabitCheckIn(dateISO)) return;
+
     if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Supabase credentials are not configured yet.');
       return;
@@ -6022,6 +6046,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   };
 
   const handleDoneIshCompletion = async (habit: HabitWithGoal, originElement?: HTMLElement | null) => {
+    if (rejectFutureHabitCheckIn(activeDate)) return;
+
     if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Supabase credentials are not configured yet.');
       return;
@@ -6157,6 +6183,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     stage: AutoProgressTier,
     originElement?: HTMLElement | null,
   ) => {
+    if (rejectFutureHabitCheckIn(activeDate)) return;
+
     if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Supabase credentials are not configured yet.');
       return;
@@ -6308,17 +6336,46 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     await toggleHabitForDate(habit, activeDate);
   };
 
+  const navigateToDate = useCallback((nextISO: string) => {
+    const currentDateISO = activeDateRef.current;
+    const wasViewingFuture = currentDateISO > today;
+    const willViewFuture = nextISO > today;
+
+    if (wasViewingFuture !== willViewFuture) {
+      const isFirstFutureEntry = willViewFuture && !hasEnteredFuturePlanningRef.current;
+      triggerImpactHaptic(isFirstFutureEntry ? 'medium' : 'light', {
+        channel: 'navigation',
+        minIntervalMs: 120,
+      });
+
+      if (willViewFuture) {
+        hasEnteredFuturePlanningRef.current = true;
+        setFuturePlanningGateActive(true);
+        if (futurePlanningGateTimeoutRef.current !== null) {
+          window.clearTimeout(futurePlanningGateTimeoutRef.current);
+        }
+        futurePlanningGateTimeoutRef.current = window.setTimeout(() => {
+          setFuturePlanningGateActive(false);
+          futurePlanningGateTimeoutRef.current = null;
+        }, 2200);
+      } else {
+        setFuturePlanningGateActive(false);
+      }
+    }
+
+    setExpandedHabits({});
+    setExpandedTodayTodoById({});
+    activeDateRef.current = nextISO;
+    setActiveDate(nextISO);
+  }, [today]);
+
   const changeActiveDateBy = useCallback(
     (offsetDays: number) => {
-      setActiveDate((current) => {
-        const baseDate = parseISODate(current);
-        const safeDate = Number.isNaN(baseDate.getTime()) ? new Date() : baseDate;
-        const nextDate = addDays(safeDate, offsetDays);
-        const nextISO = formatISODate(nextDate);
-        return nextISO > today ? today : nextISO;
-      });
+      const baseDate = parseISODate(activeDateRef.current);
+      const safeDate = Number.isNaN(baseDate.getTime()) ? new Date() : baseDate;
+      navigateToDate(formatISODate(addDays(safeDate, offsetDays)));
     },
-    [today],
+    [navigateToDate],
   );
 
   const handleDateInputChange = useCallback(
@@ -6326,13 +6383,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       if (!value) return;
       const parsed = parseISODate(value);
       if (Number.isNaN(parsed.getTime())) return;
-      const normalized = formatISODate(parsed);
-      setActiveDate(normalized > today ? today : normalized);
+      navigateToDate(formatISODate(parsed));
     },
-    [today],
+    [navigateToDate],
   );
 
-  const resetToToday = useCallback(() => setActiveDate(today), [today]);
+  const resetToToday = useCallback(() => navigateToDate(today), [navigateToDate, today]);
 
   const loadActiveContracts = useCallback(async () => {
     if (!isContractsFeatureOpen) {
@@ -6520,6 +6576,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
    * This function is specifically for monthly view interactions with habits_v2.
    */
   const toggleMonthlyHabitForDate = async (habitId: string, habitName: string, dateISO: string) => {
+    if (rejectFutureHabitCheckIn(dateISO)) return;
+
     if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Supabase credentials are not configured yet.');
       return;
@@ -7535,9 +7593,33 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }, 2200);
   };
 
+  const renderFuturePlanningBanner = () => {
+    if (!isViewingFuture) return null;
+
+    return (
+      <aside
+        className={`habit-future-planning-banner${
+          futurePlanningGateActive ? ' habit-future-planning-banner--gate' : ''
+        }`}
+        aria-label="Future planning mode"
+        role="status"
+      >
+        <span className="habit-future-planning-banner__compass" aria-hidden="true">◇</span>
+        <span className="habit-future-planning-banner__copy">
+          <strong>Future · Planning</strong>
+          <span>
+            Set up todos for {formatDateLabel(activeDate)}. Habit check-ins unlock on this day.
+          </span>
+        </span>
+        <button type="button" onClick={resetToToday}>
+          Today
+        </button>
+      </aside>
+    );
+  };
+
   const renderDayNavigation = (variant: 'compact' | 'full', showDetails = true, showNavigationControls = true) => {
     const displayLabel = formatDateLabel(activeDate);
-    const canGoForward = activeDate < today;
     const isViewingToday = activeDate === today;
     const isCompactVariant = variant === 'compact';
     const navClasses = ['habit-day-nav', `habit-day-nav--${variant}`];
@@ -7601,7 +7683,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         className="habit-day-nav__picker-input--icon-only"
                         type="date"
                         value={activeDate}
-                        max={today}
                         onChange={(event) => handleDateInputChange(event.target.value)}
                       />
                     </span>
@@ -7633,7 +7714,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       <input
                         type="date"
                         value={activeDate}
-                        max={today}
                         onChange={(event) => handleDateInputChange(event.target.value)}
                       />
                     </span>
@@ -7655,7 +7735,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             type="button"
             className="habit-day-nav__button habit-day-nav__button--next"
             onClick={() => changeActiveDateBy(1)}
-            disabled={!canGoForward}
             aria-label="Next day"
           >
             {isCompactVariant ? '→' : 'Next day →'}
@@ -7673,6 +7752,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   };
 
   const handleUndoHabitSkip = async (habit: HabitWithGoal) => {
+    if (rejectFutureHabitCheckIn(activeDate)) return;
+
     if (!isConfigured && !isDemoExperience) {
       setErrorMessage('Supabase credentials are not configured yet.');
       return;
@@ -7754,6 +7835,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       createJournalEntry?: boolean;
     },
   ) => {
+    if (rejectFutureHabitCheckIn(activeDate)) return;
+
     if (!isConfigured && !isDemoExperience) {
       setSkipError('Connect Supabase to log skip reasons.');
       return;
@@ -7848,6 +7931,8 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   };
 
   const handleLogHabitMissed = async (habit: HabitWithGoal) => {
+    if (rejectFutureHabitCheckIn(activeDate)) return;
+
     if (!isConfigured && !isDemoExperience) {
       setSkipError('Connect Supabase to log missed habits.');
       return;
@@ -8483,7 +8568,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const todoSwipeProgress = Math.min(1, Math.abs(todoSwipeOffset) / HABIT_SWIPE_MAX_PX);
             const rightTodoSwipeProgress = todoSwipeOffset > 0 ? todoSwipeProgress : 0;
             const leftTodoSwipeProgress = todoSwipeOffset < 0 ? todoSwipeProgress : 0;
-            const todoSwipeAction: TodoSwipeAction | null = getTodoSwipeAction(isExpanded);
+            const todoSwipeAction: TodoSwipeAction | null = isViewingFuture
+              ? null
+              : getTodoSwipeAction(isExpanded);
             const todoSwipeArmedDirection = swipeArmedByTodoId[todo.id] ?? null;
             const todoDisplayTitle = isPrivateCompactView ? `Private todo ${todoIndex + 1}` : todo.title;
             const showCollapsedCoachPill = !isExpanded && !isPrivateCompactView && Boolean(onOpenAiCoach) && shouldShowStaleTodoCoachPill(todo, staleTodoCoachClockMs);
@@ -8500,7 +8587,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               <li
                 key={todo.id}
                 ref={(el) => { todoItemElRefs.current[todo.id] = el; }}
-                className={`habit-checklist__item habit-checklist__item--todo ${isJustCompletedTodo ? 'habit-checklist__item--todo-completing' : ''} ${isDraggingTodo ? 'habit-checklist__item--todo-dragging' : ''}`.trim()}
+                className={`habit-checklist__item habit-checklist__item--todo ${isViewingFuture ? 'habit-checklist__item--todo-future' : ''} ${isJustCompletedTodo ? 'habit-checklist__item--todo-completing' : ''} ${isDraggingTodo ? 'habit-checklist__item--todo-dragging' : ''}`.trim()}
                 style={{
                   transform: isDraggingTodo
                     ? `translateY(${dragTranslateY}px) scale(1.03)`
@@ -8622,7 +8709,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         }
                       }}
                     >
-                      {isExpanded ? (
+                      {isExpanded && !isViewingFuture ? (
                         <button
                           type="button"
                           className="habit-checklist__todo-check"
@@ -8646,7 +8733,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                               <span className="habit-checklist__todo-time-badge">⏱ {todo.estimated_minutes}m</span>
                             ) : null}
                             <span className="habit-checklist__todo-badge">Todo</span>
-                            {onNavigateToTimer && !isPrivateCompactView ? (
+                            {onNavigateToTimer && !isPrivateCompactView && !isViewingFuture ? (
                               <button
                                 type="button"
                                 className="habit-checklist__todo-start-now"
@@ -8676,12 +8763,16 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           <>
                             {isPrivateCompactView ? <p className="habit-checklist__todo-note-placeholder">Notes hidden in compact private view.</p> : todo.notes ? <p className="habit-checklist__note habit-checklist__todo-note">{todo.notes}</p> : <p className="habit-checklist__todo-note-placeholder">No notes yet — add context when you need it.</p>}
                             <div className="habit-checklist__todo-actions" onClick={(event) => event.stopPropagation()}>
-                              <span className="habit-checklist__todo-actions-label">Quick actions</span>
-                              <button type="button" className="habit-checklist__todo-action-btn" onClick={() => void handleToggleTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Complete</button>
+                              <span className="habit-checklist__todo-actions-label">
+                                {isViewingFuture ? 'Planning actions' : 'Quick actions'}
+                              </span>
+                              {!isViewingFuture ? (
+                                <button type="button" className="habit-checklist__todo-action-btn" onClick={() => void handleToggleTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Complete</button>
+                              ) : null}
                               <button type="button" className="habit-checklist__todo-action-btn" onClick={() => handleRescheduleTodayTodoTomorrow(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Tomorrow</button>
                               {!isPrivateCompactView ? <button type="button" className="habit-checklist__todo-action-btn" onClick={() => handleOpenEditTodayTodo(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Edit / reschedule</button> : null}
-                              {!isPrivateCompactView ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--habit" onClick={() => void handleConvertTodayTodoToHabit(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Convert to habit</button> : null}
-                              {onNavigateToTimer && !isPrivateCompactView ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--focus" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
+                              {!isPrivateCompactView && !isViewingFuture ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--habit" onClick={() => void handleConvertTodayTodoToHabit(todo)} disabled={Boolean(todayTodoActionPendingById[todo.id])}>Convert to habit</button> : null}
+                              {onNavigateToTimer && !isPrivateCompactView && !isViewingFuture ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--focus" onClick={() => onNavigateToTimer({ sourceType: 'today_todo', sourceId: todo.id, sourceName: todo.title })}>Start 25m focus</button> : null}
                               {onOpenAiCoach && !isPrivateCompactView ? <button type="button" className="habit-checklist__todo-action-btn habit-checklist__todo-action-btn--coach" onClick={() => onOpenAiCoach(buildTodayTodoCoachPrompt(todo))}>Help me figure out next step</button> : null}
                             </div>
                           </>
@@ -8698,7 +8789,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           {!todayTodoLoadError && activeTodos.length === 0 && showEmptyTodosMessage ? (
             <li className="habit-checklist__empty">No todos for this date yet.</li>
           ) : null}
-          {showCompletedHabits && completedTodos.length > 0 ? (
+          {showCompletedHabits && !isViewingFuture && completedTodos.length > 0 ? (
             <li className="habit-checklist__item habit-checklist__item--todo habit-checklist__item--completed">
               <div className="habit-checklist__main habit-checklist__main--todo">
                 <div className="habit-checklist__todo-header">
@@ -8775,6 +8866,32 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             const isSaving = Boolean(saving[habit.id]);
             const insight = habitInsights[habit.id];
             const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, activeDate);
+            if (isViewingFuture) {
+              const futureHabitDisplayName = isPrivateCompactView
+                ? `Private habit ${habitIndex + 1}`
+                : habit.name;
+              return (
+                <li
+                  key={habit.id}
+                  ref={(node) => {
+                    habitCardRefs.current[habit.id] = node;
+                  }}
+                  className="habit-checklist__item habit-checklist__item--future-preview"
+                  aria-label={`${futureHabitDisplayName}. ${
+                    scheduledToday ? 'Scheduled' : 'Rest day'
+                  }. Check-in unlocks on ${formatDateLabel(activeDate)}.`}
+                >
+                  <div className="habit-checklist__future-lock" aria-hidden="true">◇</div>
+                  <div className="habit-checklist__future-preview-copy">
+                    <span className="habit-checklist__name">{futureHabitDisplayName}</span>
+                    <span className="habit-checklist__future-preview-note">
+                      {scheduledToday ? 'Scheduled habit' : 'Rest day'} · Check-in unlocks on this day
+                    </span>
+                  </div>
+                  <span className="habit-checklist__future-preview-badge">Preview</span>
+                </li>
+              );
+            }
             const lastCompletedOn = insight?.lastCompletedOn ?? (isCompleted ? activeDate : null);
             const lastCompletedText = formatLastCompleted(lastCompletedOn, activeDate);
             const domainMeta = extractLifeWheelDomain(habit.schedule);
@@ -10090,7 +10207,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     const progressIcon =
       progressStage === 'celebrate' ? '⭐' : progressStage === 'strong' ? '✦' : null;
     const isViewingToday = activeDate === today;
-    const canGoForward = activeDate < today;
     const actionsBadgeAria = `${completedActionsCount} actions completed ${
       isViewingToday ? 'today' : 'for this day'
     }`;
@@ -11011,7 +11127,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           <span className="habit-checklist-card__nav-pill habit-checklist-card__nav-pill--current">
                             Today
                           </span>
-                        ) : (
+                        ) : !isViewingFuture ? (
                           <button
                             type="button"
                             className="habit-checklist-card__nav-pill"
@@ -11019,7 +11135,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           >
                             JUMP TO TODAY
                           </button>
-                        )}
+                        ) : null}
                         <label
                           className="habit-checklist-card__nav-pill habit-checklist-card__nav-pill--calendar"
                           aria-label="Select a date to track"
@@ -11031,7 +11147,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                             className="habit-checklist-card__nav-pill-input"
                             type="date"
                             value={activeDate}
-                            max={today}
                             onChange={(event) => handleDateInputChange(event.target.value)}
                           />
                         </label>
@@ -11067,7 +11182,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                       type="button"
                       className="habit-day-nav__button habit-day-nav__button--next"
                       onClick={() => changeActiveDateBy(1)}
-                      disabled={!canGoForward}
                       aria-label="Next day"
                     >
                       →
@@ -11083,6 +11197,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               Object.values(expandedHabits).some(Boolean) ? 'habit-checklist-card__board-body--habit-focus' : ''
             }`}
           >
+            {renderFuturePlanningBanner()}
             {renderDayNavigation('compact', true, isCompactView)}
             <QuestCalendarDashboardModal
               open={isAdminOrCreator && questCalendarDashboardOpen}
@@ -11349,10 +11464,18 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   className="habit-edit-modal-content"
                   role="dialog"
                   aria-modal="true"
-                  aria-label={editingTodayTodo ? 'Edit today todo' : 'Add today todo'}
+                  aria-label={
+                    editingTodayTodo
+                      ? 'Edit todo'
+                      : isViewingFuture
+                        ? 'Add future todo'
+                        : 'Add today todo'
+                  }
                   onClick={(event) => event.stopPropagation()}
                 >
-                  <h3>{editingTodayTodo ? 'Edit todo' : 'Add today todo'}</h3>
+                  <h3>
+                    {editingTodayTodo ? 'Edit todo' : isViewingFuture ? 'Add future todo' : 'Add today todo'}
+                  </h3>
                   <p className="habit-edit-modal-subcopy">
                     {editingTodayTodo
                       ? 'Update the title, details, or move this task forward to another day.'
@@ -13583,6 +13706,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       ) : (
         <>
           {renderDayNavigation('full')}
+          {renderFuturePlanningBanner()}
           <ul className="habit-tracker__list">
             {sortedHabits.map((habit) => {
               const state = completions[habit.id];
@@ -13590,6 +13714,32 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               const isSaving = Boolean(saving[habit.id]);
               const insight = habitInsights[habit.id];
               const scheduledToday = insight?.scheduledToday ?? isHabitScheduledOnDate(habit, activeDate);
+              if (isViewingFuture) {
+                return (
+                  <li key={habit.id} className="habit-card habit-card--future-preview">
+                    <div className="habit-card__content">
+                      <div className="habit-card__details">
+                        <h3>{habit.name}</h3>
+                        <p className="habit-card__meta-line">
+                          <span className="habit-card__goal">
+                            Goal: <span>{habit.goal?.title ?? 'Unassigned goal'}</span>
+                          </span>
+                          <span className="habit-card__meta-divider">•</span>
+                          <span className="habit-card__meta">
+                            {scheduledToday ? 'Scheduled habit' : 'Rest day'}
+                          </span>
+                        </p>
+                      </div>
+                      <span className="habit-card__future-lock" aria-label="Future habit preview">
+                        ◇ Preview
+                      </span>
+                    </div>
+                    <p className="habit-card__status">
+                      Habit check-in unlocks on {formatDateLabel(activeDate)}.
+                    </p>
+                  </li>
+                );
+              }
               const currentStreak = insight?.currentStreak ?? (isCompleted ? 1 : 0);
               const longestStreak = insight?.longestStreak ?? Math.max(currentStreak, 0);
               const lastCompletedOn = insight?.lastCompletedOn ?? (isCompleted ? activeDate : null);
