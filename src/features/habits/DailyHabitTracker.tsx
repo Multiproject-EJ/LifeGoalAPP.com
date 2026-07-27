@@ -2030,6 +2030,36 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, []);
   const [showDreamJournalReminderModal, setShowDreamJournalReminderModal] = useState(false);
   const habitCardRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const expandedHabitId = useMemo(
+    () => Object.keys(expandedHabits).find((habitId) => expandedHabits[habitId]) ?? null,
+    [expandedHabits],
+  );
+
+  useEffect(() => {
+    if (!expandedHabitId || typeof document === 'undefined') {
+      return undefined;
+    }
+
+    const handleOutsidePointerDown = (event: PointerEvent) => {
+      const expandedHabitCard = habitCardRefs.current[expandedHabitId];
+      const pointerTarget = event.target;
+      if (
+        !expandedHabitCard
+        || !(pointerTarget instanceof Node)
+        || expandedHabitCard.contains(pointerTarget)
+      ) {
+        return;
+      }
+
+      setExpandedHabits({});
+    };
+
+    document.addEventListener('pointerdown', handleOutsidePointerDown, true);
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsidePointerDown, true);
+    };
+  }, [expandedHabitId]);
+
   const dailyLifeUpgradeHighlightTimeoutRef = useRef<number | null>(null);
   // --- Today pull-to-refresh gesture state ---
   const [compactPullDistance, setCompactPullDistance] = useState(0);
