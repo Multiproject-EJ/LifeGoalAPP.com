@@ -1444,7 +1444,7 @@ export default function PersonalityTest({
       )}
 
       {step === 'results' && scores && (
-        <div className="identity-hub__card">
+        <div className="identity-hub__card identity-hub__card--results">
           <h3 className="identity-hub__card-title">How you play</h3>
           <p className="identity-hub__card-text identity-hub__card-text--compact">
             Your playstyle read, and what to focus on next.

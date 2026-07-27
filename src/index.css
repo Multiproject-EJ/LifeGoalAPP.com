@@ -40896,3 +40896,335 @@ body.habit-wizard-open .mobile-footer-nav {
 .identity-hub__trait-band {
   color: var(--text-primary);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Identity — visual system
+
+   The dark pass gave the section the right palette but not a look: every panel
+   was the same flat rgba(255,255,255,.045) rectangle, stacked, with no depth,
+   no light and no entrance. This adds the four things that separate "styled"
+   from "designed":
+
+     1. Ambient depth   — drifting aurora, grain, vignette
+     2. Real surfaces   — top-lit gradients, a 1px specular top edge, layered shadow
+     3. Choreography    — content arrives in sequence instead of all at once
+     4. Type hierarchy  — a display voice and a small-caps eyebrow voice
+
+   Everything animated here is transform/opacity only, and all of it stops
+   under prefers-reduced-motion.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.identity-hub {
+  isolation: isolate;
+}
+
+/* ── 1. Ambient depth ──────────────────────────────────────────────────── */
+
+/* Two aurora blobs that drift slowly behind everything. */
+.identity-hub::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 26% at 22% 12%, rgba(126, 92, 255, 0.26), transparent 70%),
+    radial-gradient(34% 24% at 82% 30%, rgba(56, 189, 248, 0.13), transparent 72%),
+    radial-gradient(46% 30% at 50% 96%, rgba(236, 72, 153, 0.10), transparent 74%);
+  filter: blur(6px);
+  animation: identity-aurora 24s ease-in-out infinite alternate;
+}
+
+@keyframes identity-aurora {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(2%, -1.5%, 0) scale(1.06); }
+  100% { transform: translate3d(-1.5%, 1.5%, 0) scale(1.02); }
+}
+
+/* Fine grain + vignette. This is the single cheapest thing that stops a dark
+   UI looking like flat CSS. */
+.identity-hub::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.32;
+  background-image:
+    radial-gradient(120% 80% at 50% 40%, transparent 52%, rgba(2, 4, 12, 0.62) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: cover, 140px 140px;
+  mix-blend-mode: overlay;
+}
+
+/* ── 2. Real surfaces ──────────────────────────────────────────────────── */
+
+/* Top-lit gradient + a 1px specular edge + a contact shadow under a broad
+   ambient one. The specular edge is what makes a panel read as an object. */
+.identity-hub__card,
+.identity-hub__library,
+.identity-hub__collapsible,
+.identity-hub__settings-menu {
+  background:
+    linear-gradient(
+      168deg,
+      rgba(255, 255, 255, 0.085) 0%,
+      rgba(255, 255, 255, 0.035) 38%,
+      rgba(255, 255, 255, 0.02) 100%
+    );
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 1px 2px rgba(2, 4, 12, 0.5),
+    0 18px 40px rgba(2, 4, 12, 0.45);
+  backdrop-filter: blur(10px) saturate(1.15);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15);
+}
+
+/* Recessed, not raised. Glass nested inside glass compounds into a flat wash;
+   sinking the hero instead gives the section real depth hierarchy. */
+.identity-hub__results-hero,
+.identity-hub__trait-card {
+  background:
+    linear-gradient(168deg, rgba(6, 9, 22, 0.55) 0%, rgba(6, 9, 22, 0.78) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 10px 26px rgba(2, 4, 12, 0.55);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.identity-hub__results-hero {
+  border-radius: 18px;
+  padding: 1.1rem 0.9rem 1rem;
+  overflow: hidden;
+  position: relative;
+}
+
+/* A slow specular sweep across the hero — the "this is the hero" signal. */
+.identity-hub__results-hero::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -30%;
+  width: 45%;
+  height: 220%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.11) 45%,
+    rgba(255, 255, 255, 0.02) 60%,
+    transparent
+  );
+  transform: rotate(8deg);
+  animation: identity-sheen 7.5s ease-in-out 1.2s infinite;
+}
+
+@keyframes identity-sheen {
+  0%   { transform: translateX(0) rotate(8deg); opacity: 0; }
+  12%  { opacity: 1; }
+  55%  { transform: translateX(320%) rotate(8deg); opacity: 0; }
+  100% { transform: translateX(320%) rotate(8deg); opacity: 0; }
+}
+
+/* Rows read as inlaid rather than stacked. */
+.identity-hub__library-row,
+.identity-hub__history-item,
+.identity-hub__recommendations-item {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 1px 3px rgba(2, 4, 12, 0.35);
+}
+
+/* ── 3. Choreography ───────────────────────────────────────────────────── */
+
+@keyframes identity-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.identity-hub__card--results > * {
+  animation: identity-rise 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.identity-hub__card--results > *:nth-child(1)  { animation-delay: 40ms; }
+.identity-hub__card--results > *:nth-child(2)  { animation-delay: 90ms; }
+.identity-hub__card--results > *:nth-child(3)  { animation-delay: 150ms; }
+.identity-hub__card--results > *:nth-child(4)  { animation-delay: 220ms; }
+.identity-hub__card--results > *:nth-child(5)  { animation-delay: 290ms; }
+.identity-hub__card--results > *:nth-child(6)  { animation-delay: 350ms; }
+.identity-hub__card--results > *:nth-child(7)  { animation-delay: 400ms; }
+.identity-hub__card--results > *:nth-child(n + 8) { animation-delay: 450ms; }
+
+/* The playstyle axis rows sweep in one after another. */
+.identity-hub__playstyle-row {
+  animation: identity-rise 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.identity-hub__playstyle-row:nth-child(1) { animation-delay: 420ms; }
+.identity-hub__playstyle-row:nth-child(2) { animation-delay: 500ms; }
+.identity-hub__playstyle-row:nth-child(3) { animation-delay: 580ms; }
+.identity-hub__playstyle-row:nth-child(4) { animation-delay: 660ms; }
+.identity-hub__playstyle-row:nth-child(5) { animation-delay: 740ms; }
+
+/* Markers travel out from the centre-line rather than appearing in place. */
+@keyframes identity-marker-settle {
+  from { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.identity-hub__playstyle-marker {
+  animation: identity-marker-settle 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 820ms;
+  box-shadow: 0 0 10px var(--suit-color, #4f46e5);
+}
+
+/* Answer options cascade as the question is dealt. */
+.identity-hub__option--scenario {
+  animation: identity-rise 340ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.identity-hub__option--scenario:nth-child(1) { animation-delay: 120ms; }
+.identity-hub__option--scenario:nth-child(2) { animation-delay: 175ms; }
+.identity-hub__option--scenario:nth-child(3) { animation-delay: 230ms; }
+.identity-hub__option--scenario:nth-child(4) { animation-delay: 285ms; }
+
+/* ── 4. Type hierarchy ─────────────────────────────────────────────────── */
+
+.identity-hub__title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.identity-hub__card--results .identity-hub__card-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  background: linear-gradient(120deg, #ffffff 20%, #c4b5fd 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.identity-hub__results-kicker,
+.identity-hub__section-intro-kicker {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(196, 181, 253, 0.85);
+}
+
+.identity-hub__quiz-card .identity-hub__card-title {
+  font-size: 1.28rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.28;
+}
+
+.identity-hub__results-summary {
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+/* ── 5. Micro-interactions ─────────────────────────────────────────────── */
+
+.identity-hub__option {
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease,
+    transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.identity-hub__option:active {
+  transform: scale(0.985);
+}
+
+.identity-hub__option--selected {
+  transform: translateX(2px);
+}
+
+.identity-hub__cta,
+.identity-hub__secondary {
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.identity-hub__cta:active,
+.identity-hub__secondary:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.identity-hub__cta {
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+/* The charge ring glows as it fills. */
+.identity-hub__charge {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 12px color-mix(in srgb, var(--suit-color, #4f46e5) calc(var(--axis-charge, 0%) * 0.5), transparent);
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .identity-hub::before,
+  .identity-hub__results-hero::after,
+  .identity-hub__card--results > *,
+  .identity-hub__playstyle-row,
+  .identity-hub__playstyle-marker,
+  .identity-hub__option--scenario {
+    animation: none;
+  }
+  .identity-hub__playstyle-marker {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+  .identity-hub__option:active,
+  .identity-hub__cta:active,
+  .identity-hub__secondary:active {
+    transform: none;
+  }
+}
+
+/* Deck panels (Your Deck / Shadow Quest / Consult your shadow) share the
+   section's surface language: raised glass with the suit colour as a GLOW
+   rather than a hard 2px outline, which read as a different design system. */
+.identity-panel {
+  position: relative;
+  padding: 20px;
+  border-radius: 16px;
+  background:
+    linear-gradient(168deg, rgba(255, 255, 255, 0.075) 0%, rgba(255, 255, 255, 0.025) 45%),
+    rgba(10, 14, 32, 0.5);
+  border: 1px solid color-mix(in srgb, var(--accent, #7e5cff) 38%, rgba(255, 255, 255, 0.12));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 1px 2px rgba(2, 4, 12, 0.5),
+    0 16px 34px rgba(2, 4, 12, 0.42),
+    0 0 28px -10px color-mix(in srgb, var(--accent, #7e5cff) 65%, transparent);
+  backdrop-filter: blur(10px) saturate(1.15);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15);
+}
+
+/* A thin accent rail along the top edge ties the panel to its suit. */
+.identity-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent, #7e5cff) 85%, transparent),
+    transparent
+  );
+}
