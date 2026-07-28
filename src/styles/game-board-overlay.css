@@ -1148,9 +1148,14 @@
 }
 
 .game-board-overlay__controller-compass-btn {
+  --overlay-compass-resting-scale: 0.95;
+  --overlay-compass-intro-scale: 1.78;
   position: absolute;
   right: clamp(2.35rem, 9.3vw, 4.2rem);
-  top: clamp(-2.55rem, -5.2vw, -1.05rem);
+  /* Keep the whole compass above the controller at both its intro and resting
+     sizes. The bottom edge remains clear of the controller shell while the
+     compass shrinks in place. */
+  top: clamp(-6.2rem, -17vw, -4.15rem);
   width: clamp(2.45rem, 11vw, 4.25rem);
   aspect-ratio: 1;
   border: 0;
@@ -1165,8 +1170,9 @@
   opacity: 0;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transform: translate3d(18px, 82px, 0) rotate(-22deg) scale(0.44);
+  transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--overlay-compass-resting-scale));
   transform-origin: center bottom;
+  will-change: transform, filter;
   z-index: 5;
 }
 
@@ -1188,37 +1194,43 @@
 }
 
 .game-board-overlay--open .game-board-overlay__controller-compass-btn {
-  animation: game-board-overlay-compass-launch-bounce 1.18s cubic-bezier(0.18, 1, 0.24, 1) 0.2s both;
+  animation: game-board-overlay-compass-intro-shrink 3.72s cubic-bezier(0.18, 1.08, 0.26, 1) both;
 }
 
-@keyframes game-board-overlay-compass-launch-bounce {
-  0% {
-    opacity: 0;
-    filter: blur(1.4px) drop-shadow(0 16px 16px rgba(3, 16, 30, 0.34));
-    transform: translate3d(18px, 82px, 0) rotate(-22deg) scale(0.44);
-  }
-  24% {
+@keyframes game-board-overlay-compass-intro-shrink {
+  0%,
+  76% {
     opacity: 1;
-    filter: drop-shadow(0 18px 20px rgba(146, 64, 14, 0.24)) brightness(1.1);
-    transform: translate3d(2px, -20px, 0) rotate(12deg) scale(1.04);
+    filter: drop-shadow(0 14px 20px rgba(146, 64, 14, 0.26));
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--overlay-compass-intro-scale));
   }
-  43% {
-    filter: drop-shadow(0 0 22px rgba(251, 191, 36, 0.56)) brightness(1.16);
-    transform: translate3d(0, 10px, 0) rotate(-8deg) scale(0.88);
+  82% {
+    opacity: 1;
+    filter: drop-shadow(0 0 22px rgba(251, 191, 36, 0.58)) brightness(1.12);
+    transform: translate3d(0, -3px, 0) rotate(-2deg) scale(calc(var(--overlay-compass-intro-scale) + 0.04));
   }
-  60% {
-    transform: translate3d(0, -9px, 0) rotate(5deg) scale(0.98);
+  91% {
+    transform: translate3d(0, 0, 0) rotate(2.6deg) scale(var(--overlay-compass-resting-scale));
   }
-  75% {
-    transform: translate3d(0, 4px, 0) rotate(-3deg) scale(0.94);
+  95% {
+    transform: translate3d(0, 0, 0) rotate(-2.2deg) scale(var(--overlay-compass-resting-scale));
   }
-  88% {
-    transform: translate3d(0, -3px, 0) rotate(1.4deg) scale(0.965);
+  98% {
+    transform: translate3d(0, 0, 0) rotate(1.1deg) scale(var(--overlay-compass-resting-scale));
   }
   100% {
     opacity: 1;
     filter: none;
-    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.95);
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--overlay-compass-resting-scale));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-board-overlay--open .game-board-overlay__controller-compass-btn {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(var(--overlay-compass-resting-scale));
   }
 }
 
