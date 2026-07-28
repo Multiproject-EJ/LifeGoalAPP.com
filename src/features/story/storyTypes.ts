@@ -54,6 +54,7 @@ export interface StoryEpisodeManifest {
   id: string;
   title: string;
   autoLaunch?: boolean;
+  presentation?: 'standard' | 'portrait-microfilm';
   panels: StoryPanel[];
   reward?: {
     coins?: number;

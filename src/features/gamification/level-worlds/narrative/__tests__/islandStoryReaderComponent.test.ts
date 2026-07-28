@@ -95,4 +95,11 @@ export const islandStoryReaderComponentTests: TestCase[] = [
     assert(!globalPrologueManifest.includes('"reward"'), 'Global prologue must not contain a gameplay reward');
     assert(!globalPrologueManifest.includes('"coins"'), 'Retired coins must not appear in the global prologue manifest');
   } },
+  { name: 'portrait micro-film manifests receive phone-native Story Mode framing', run: () => {
+    assertIncludes(readerSource, "manifest.presentation === 'portrait-microfilm'", 'Reader must recognize portrait micro-film manifests');
+    assertIncludes(readerCss, '.island-story-theme--portrait-microfilm .story-player__media', 'Portrait micro-films need dedicated media framing');
+    assertIncludes(readerCss, 'height: 100%', 'Portrait media should fill the available phone stage');
+    assertIncludes(readerCss, 'object-fit: cover', 'Purpose-authored portrait media should fill without letterboxing');
+    assertIncludes(readerCss, '@media (max-width: 520px) and (orientation: portrait)', 'Phone portrait layout needs an explicit media query');
+  } },
 ];

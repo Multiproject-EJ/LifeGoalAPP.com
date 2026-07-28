@@ -147,13 +147,16 @@ export function IslandStoryReader({
     caption: completionMessage,
   };
   const panels: StoryPanel[] = [...manifest.panels, completionScene];
+  const storyClassName = manifest.presentation === 'portrait-microfilm'
+    ? 'island-story-theme island-story-theme--portrait-microfilm'
+    : 'island-story-theme';
 
   return (
     <StoryPlayer
       isOpen={isOpen}
       panels={panels}
       title={manifest.title}
-      className="island-story-theme"
+      className={storyClassName}
       soundtrack={manifest.soundtrack}
       completionLabel={completionCtaLabel}
       completionDisabled={rewardClaimed}

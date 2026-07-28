@@ -1,11 +1,14 @@
 {
   "id": "championship-120-worlds",
   "title": "The 120 Worlds Championship",
+  "presentation": "portrait-microfilm",
   "panels": [
     {
       "id": "opening-ceremony",
       "type": "image",
-      "src": "/assets/story/championships/120-worlds/opening-ceremony.webp",
+      "src": "/assets/story/championships/120-worlds/opening-ceremony-portrait.webp",
+      "width": 941,
+      "height": 1672,
       "caption": "One hundred and twenty arrivals become one impossible creature made from music and light."
     },
     {

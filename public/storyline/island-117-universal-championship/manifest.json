@@ -1,11 +1,14 @@
 {
   "id": "island-117-universal-championship",
   "title": "Astral Plains — The Universal Championship",
+  "presentation": "portrait-microfilm",
   "panels": [
     {
       "id": "opening-ceremony",
       "type": "image",
-      "src": "/assets/story/championships/universal-117/opening-ceremony.webp",
+      "src": "/assets/story/championships/universal-117/opening-ceremony-portrait.webp",
+      "width": 941,
+      "height": 1672,
       "caption": "Every Arena opens. One hundred and twenty skies turn into a single flower above Astral Plains."
     },
     {
