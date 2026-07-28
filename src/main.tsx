@@ -299,6 +299,7 @@ function Root() {
   if (
     !isPhoneEntryClient &&
     !isDevPhonePreview &&
+    initialRoute !== 'world' &&
     initialRoute !== 'privacy' &&
     initialRoute !== 'terms' &&
     initialRoute !== 'support'
