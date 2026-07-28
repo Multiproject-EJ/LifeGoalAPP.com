@@ -26,6 +26,7 @@ import { CaseSubmissionModal } from '../cases/CaseSubmissionModal';
 import { MyCasesPanel } from '../cases/MyCasesPanel';
 import { AdminInboxPanel } from '../admin/AdminInboxPanel';
 import { AdminTelemetryPanel } from '../admin/AdminTelemetryPanel';
+import { AdminAlertsPanel } from '../admin/AdminAlertsPanel';
 import { FutureFeatureVotingPanel } from './FutureFeatureVotingPanel';
 import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config/featureAvailability';
 import { resolveFeatureAccess } from '../../services/featureAccess';
@@ -1351,6 +1352,8 @@ export function MyAccountPanel({
               <h3 id="admin-tools-inbox">Admin inbox / support ops</h3>
               <AdminInboxPanel session={session} />
             </section>
+
+            <AdminAlertsPanel session={session} />
 
             <section className="account-panel__card" aria-labelledby="admin-tools-telemetry">
               <p className="account-panel__eyebrow">Admin telemetry</p>
