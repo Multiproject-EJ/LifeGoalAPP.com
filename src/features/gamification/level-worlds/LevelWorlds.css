@@ -2070,10 +2070,18 @@
 
 .island-run-board__board-plane-camera-stage {
   z-index: 1;
+  /* Decorative raster art is strictly behind the interactive route. Flatten
+     this stage so a child art z-index cannot escape its parent plane in
+     WebKit's 3D compositor and paint over the tiles. */
+  transform-style: flat;
 }
 
 .island-run-board__art-camera-stage {
   z-index: 2;
+  /* World art uses its own camera transform, but its children are still a
+     single decorative 2D plane. Keeping that plane flat makes the sibling
+     gameplay stage's z-index authoritative on iOS Safari/Capacitor. */
+  transform-style: flat;
 }
 
 .island-run-board__camera-stage {
@@ -9502,7 +9510,6 @@
 .island-run-board__stage-wrapper .island-run-board__board-plane-camera-stage,
 .island-run-board__stage-wrapper .island-run-board__camera-stage {
   transform-origin: center center;
-  transform-style: preserve-3d;
   will-change: transform;
   backface-visibility: hidden;
   transition: none; /* camera springs/gesture state drive transforms directly */
@@ -9510,15 +9517,18 @@
 
 .island-run-board__stage-wrapper .island-run-board__art-camera-stage {
   contain: layout style;
+  transform-style: flat;
 }
 
 .island-run-board__stage-wrapper .island-run-board__board-plane-camera-stage {
   contain: layout style;
   pointer-events: none;
+  transform-style: flat;
 }
 
 .island-run-board__stage-wrapper .island-run-board__camera-stage {
   contain: layout style paint;
+  transform-style: preserve-3d;
 }
 
 .island-run-board__stage-wrapper--minimal-art .island-tile__shine,

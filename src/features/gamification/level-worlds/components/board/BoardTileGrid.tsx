@@ -55,9 +55,9 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
     return { anchor, index: entry.index, position: toScreen(anchor) };
   }, [anchors, tileMap, toScreen]);
 
-  // Traffic-light tile turns green only once the green lights are lit (i.e. the
-  // charge has reached the green zone of the meter); below that it stays neutral.
-  const trafficLightGreenOn = trafficLightCharge >= Math.max(1, trafficLightChargeTarget - 1);
+  // The meter has exactly one green state: fully charged. Keeping the penultimate
+  // light yellow makes the rare bonus read as a single, deliberate unlock.
+  const trafficLightGreenOn = trafficLightCharge >= Math.max(1, trafficLightChargeTarget);
 
   // Pre-compute upcoming indices (next 1-3 tiles after token)
   const upcomingSet = useMemo(() => {
@@ -105,7 +105,7 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
               {Array.from({ length: trafficLightChargeTarget }, (_, index) => {
                 const lightNumber = index + 1;
                 const isLit = lightNumber <= trafficLightCharge;
-                const greenLightStart = Math.max(1, trafficLightChargeTarget - 1);
+                const greenLightStart = Math.max(1, trafficLightChargeTarget);
                 const phase = lightNumber >= greenLightStart ? 'green' : lightNumber >= Math.ceil(trafficLightChargeTarget / 2) ? 'yellow' : 'red';
                 return <span key={lightNumber} className={`island-tile-traffic-light-sign__pip island-tile-traffic-light-sign__pip--${phase} ${isLit ? 'island-tile-traffic-light-sign__pip--lit' : ''}`.trim()} />;
               })}
