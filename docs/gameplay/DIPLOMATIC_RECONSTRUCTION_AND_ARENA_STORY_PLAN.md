@@ -296,6 +296,12 @@ The block-placement game is shipboard navigation technology:
 - Arena score: diplomatic performance;
 - League contribution: shared route energy.
 
+Runtime status (2026-07-28): the first playable exhibition slice now implements
+the 8×8 matrix, route fragments, stable corridors, Mission Beacon, Arena
+preference pacing, active-event ticket lifecycle, canonical resume state, and
+reward-bar completion handoff. The Drift interpretation remains deliberately
+absent from early-game copy and visuals.
+
 Visual reference:
 
 - `docs/design/story-concepts/momentum-matrix-arena-concept-2026-07-28.png`

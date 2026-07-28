@@ -24,6 +24,16 @@ import {
   resolveFortuneEngineClaimedMilestoneIds,
 } from './fortuneEngineProgression';
 import { normalizeGrantIds } from './islandRunGrantIdUtils';
+import {
+  MOMENTUM_MATRIX_CELL_COUNT,
+  getMomentumMatrixShape,
+  type MomentumMatrixCell,
+  type MomentumMatrixMissionDirection,
+  type MomentumMatrixProgressEntry,
+  type MomentumMatrixRouteKind,
+  type MomentumMatrixSavedRun,
+  type MomentumMatrixTrayPiece,
+} from './momentumMatrixGame';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
 
@@ -424,6 +434,8 @@ export interface IslandRunGameStateRecord {
   spaceExcavatorProgressByEvent: Record<string, SpaceExcavatorProgressEntry>;
   companionFeastProgressByEvent: Record<string, CompanionFeastProgressEntry>;
   fortuneEngineProgressByEvent: Record<string, FortuneEngineProgressEntry>;
+  /** Resumable Momentum Matrix exhibition progress, keyed by active timed-event runtime id. */
+  momentumMatrixProgressByEvent: Record<string, MomentumMatrixProgressEntry>;
 }
 
 const ISLAND_RUN_RUNTIME_STATE_TABLE = 'island_run_runtime_state';
@@ -966,6 +978,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     spaceExcavatorProgressByEvent: {},
     companionFeastProgressByEvent: {},
     fortuneEngineProgressByEvent: {},
+    momentumMatrixProgressByEvent: {},
   };
 }
 
@@ -1608,6 +1621,10 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       value.fortuneEngineProgressByEvent,
       fallback.fortuneEngineProgressByEvent,
     ),
+    momentumMatrixProgressByEvent: sanitizeMomentumMatrixProgressByEvent(
+      value.momentumMatrixProgressByEvent,
+      fallback.momentumMatrixProgressByEvent,
+    ),
   };
 }
 
@@ -1928,6 +1945,119 @@ function mergeCompanionFeastProgressByEvent(
       claimedMilestoneIds: resolveCompanionFeastClaimedMilestoneIds({
         claimedMilestoneIds: [...remoteProgress.claimedMilestoneIds, ...localProgress.claimedMilestoneIds],
       }),
+    };
+  });
+  return merged;
+}
+
+const MOMENTUM_MATRIX_ROUTE_KINDS: readonly MomentumMatrixRouteKind[] = ['focus', 'growth', 'care', 'beacon'];
+const MOMENTUM_MATRIX_MISSION_DIRECTIONS: readonly MomentumMatrixMissionDirection[] = ['focus', 'energy', 'reset'];
+
+function sanitizeMomentumMatrixCount(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+}
+
+function sanitizeMomentumMatrixRun(value: unknown): MomentumMatrixSavedRun | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  if (typeof raw.runId !== 'string' || !raw.runId.trim()) return null;
+  if (!Array.isArray(raw.board) || raw.board.length !== MOMENTUM_MATRIX_CELL_COUNT) return null;
+  if (!Array.isArray(raw.tray) || raw.tray.length !== 3) return null;
+  const board: MomentumMatrixCell[] = raw.board.map((cell) =>
+    cell === null || (typeof cell === 'string' && (MOMENTUM_MATRIX_ROUTE_KINDS as readonly string[]).includes(cell))
+      ? cell as MomentumMatrixCell
+      : null);
+  const tray: Array<MomentumMatrixTrayPiece | null> = raw.tray.map((piece) => {
+    if (piece === null) return null;
+    if (!piece || typeof piece !== 'object' || Array.isArray(piece)) return null;
+    const candidate = piece as Record<string, unknown>;
+    if (
+      typeof candidate.pieceId !== 'string'
+      || typeof candidate.shapeId !== 'string'
+      || !getMomentumMatrixShape(candidate.shapeId)
+      || typeof candidate.routeKind !== 'string'
+      || !(MOMENTUM_MATRIX_ROUTE_KINDS as readonly string[]).includes(candidate.routeKind)
+    ) {
+      return null;
+    }
+    return {
+      pieceId: candidate.pieceId,
+      shapeId: candidate.shapeId,
+      routeKind: candidate.routeKind as MomentumMatrixRouteKind,
+    };
+  });
+  const missionDirection = typeof raw.missionDirection === 'string'
+    && (MOMENTUM_MATRIX_MISSION_DIRECTIONS as readonly string[]).includes(raw.missionDirection)
+    ? raw.missionDirection as MomentumMatrixMissionDirection
+    : 'focus';
+  const beaconIndex = Math.min(
+    MOMENTUM_MATRIX_CELL_COUNT - 1,
+    sanitizeMomentumMatrixCount(raw.beaconIndex),
+  );
+  return {
+    version: 1,
+    runId: raw.runId,
+    board,
+    tray,
+    rngState: Math.max(1, sanitizeMomentumMatrixCount(raw.rngState)),
+    score: sanitizeMomentumMatrixCount(raw.score),
+    combo: sanitizeMomentumMatrixCount(raw.combo),
+    bestCombo: sanitizeMomentumMatrixCount(raw.bestCombo),
+    corridorsStabilized: sanitizeMomentumMatrixCount(raw.corridorsStabilized),
+    beaconsAligned: sanitizeMomentumMatrixCount(raw.beaconsAligned),
+    beaconIndex,
+    missionDirection,
+    status: raw.status === 'game_over' ? 'game_over' : 'active',
+    startedAtMs: sanitizeMomentumMatrixCount(raw.startedAtMs),
+    updatedAtMs: sanitizeMomentumMatrixCount(raw.updatedAtMs),
+  };
+}
+
+function sanitizeMomentumMatrixProgressByEvent(
+  value: unknown,
+  fallback: Record<string, MomentumMatrixProgressEntry>,
+): Record<string, MomentumMatrixProgressEntry> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...fallback };
+  const out: Record<string, MomentumMatrixProgressEntry> = {};
+  for (const [eventId, rawValue] of Object.entries(value as Record<string, unknown>)) {
+    if (!eventId.trim() || !rawValue || typeof rawValue !== 'object' || Array.isArray(rawValue)) continue;
+    const raw = rawValue as Record<string, unknown>;
+    out[eventId] = {
+      activeRun: sanitizeMomentumMatrixRun(raw.activeRun),
+      bestScore: sanitizeMomentumMatrixCount(raw.bestScore),
+      totalScore: sanitizeMomentumMatrixCount(raw.totalScore),
+      corridorsStabilized: sanitizeMomentumMatrixCount(raw.corridorsStabilized),
+      beaconsAligned: sanitizeMomentumMatrixCount(raw.beaconsAligned),
+      runsStarted: sanitizeMomentumMatrixCount(raw.runsStarted),
+      runsCompleted: sanitizeMomentumMatrixCount(raw.runsCompleted),
+      updatedAtMs: sanitizeMomentumMatrixCount(raw.updatedAtMs),
+    };
+  }
+  return out;
+}
+
+function mergeMomentumMatrixProgressByEvent(
+  remote: Record<string, MomentumMatrixProgressEntry>,
+  local: Record<string, MomentumMatrixProgressEntry>,
+): Record<string, MomentumMatrixProgressEntry> {
+  const keys = new Set([...Object.keys(remote), ...Object.keys(local)]);
+  const merged: Record<string, MomentumMatrixProgressEntry> = {};
+  keys.forEach((eventId) => {
+    const remoteProgress = remote[eventId];
+    const localProgress = local[eventId];
+    if (!remoteProgress || !localProgress) {
+      merged[eventId] = localProgress ?? remoteProgress;
+      return;
+    }
+    const latest = localProgress.updatedAtMs >= remoteProgress.updatedAtMs ? localProgress : remoteProgress;
+    merged[eventId] = {
+      ...latest,
+      bestScore: Math.max(remoteProgress.bestScore, localProgress.bestScore),
+      totalScore: Math.max(remoteProgress.totalScore, localProgress.totalScore),
+      corridorsStabilized: Math.max(remoteProgress.corridorsStabilized, localProgress.corridorsStabilized),
+      beaconsAligned: Math.max(remoteProgress.beaconsAligned, localProgress.beaconsAligned),
+      runsStarted: Math.max(remoteProgress.runsStarted, localProgress.runsStarted),
+      runsCompleted: Math.max(remoteProgress.runsCompleted, localProgress.runsCompleted),
     };
   });
   return merged;
@@ -2285,6 +2415,8 @@ export function mergeRecordForConflict(options: {
       localCompanionFeastProgress: local.companionFeastProgressByEvent,
       remoteSpaceExcavatorProgress: remote.spaceExcavatorProgressByEvent,
       localSpaceExcavatorProgress: local.spaceExcavatorProgressByEvent,
+      remoteMomentumMatrixProgress: remote.momentumMatrixProgressByEvent,
+      localMomentumMatrixProgress: local.momentumMatrixProgressByEvent,
     }),
     arenaFirstTicketBoostClaimedByEvent: {
       ...remote.arenaFirstTicketBoostClaimedByEvent,
@@ -2306,6 +2438,10 @@ export function mergeRecordForConflict(options: {
       remote.fortuneEngineProgressByEvent,
       local.fortuneEngineProgressByEvent,
     ),
+    momentumMatrixProgressByEvent: mergeMomentumMatrixProgressByEvent(
+      remote.momentumMatrixProgressByEvent,
+      local.momentumMatrixProgressByEvent,
+    ),
   };
 }
 
@@ -2316,6 +2452,8 @@ function mergeMinigameTicketsByEvent(options: {
   localCompanionFeastProgress?: Record<string, CompanionFeastProgressEntry>;
   remoteSpaceExcavatorProgress?: Record<string, SpaceExcavatorProgressEntry>;
   localSpaceExcavatorProgress?: Record<string, SpaceExcavatorProgressEntry>;
+  remoteMomentumMatrixProgress?: Record<string, MomentumMatrixProgressEntry>;
+  localMomentumMatrixProgress?: Record<string, MomentumMatrixProgressEntry>;
 }): Record<string, number> {
   const { remote, local } = options;
   const keys = new Set([...Object.keys(remote), ...Object.keys(local)]);
@@ -2329,8 +2467,14 @@ function mergeMinigameTicketsByEvent(options: {
       + (options.remoteSpaceExcavatorProgress?.[key]?.completedBoardCount ?? 0);
     const localDigs = (options.localSpaceExcavatorProgress?.[key]?.dugTileIds.length ?? 0)
       + (options.localSpaceExcavatorProgress?.[key]?.completedBoardCount ?? 0);
-    const localSpentMoreActions = localFeastDrops > remoteFeastDrops || localDigs > remoteDigs;
-    const remoteSpentMoreActions = remoteFeastDrops > localFeastDrops || remoteDigs > localDigs;
+    const remoteMatrixRuns = options.remoteMomentumMatrixProgress?.[key]?.runsStarted ?? 0;
+    const localMatrixRuns = options.localMomentumMatrixProgress?.[key]?.runsStarted ?? 0;
+    const localSpentMoreActions = localFeastDrops > remoteFeastDrops
+      || localDigs > remoteDigs
+      || localMatrixRuns > remoteMatrixRuns;
+    const remoteSpentMoreActions = remoteFeastDrops > localFeastDrops
+      || remoteDigs > localDigs
+      || remoteMatrixRuns > localMatrixRuns;
     const count = localSpentMoreActions && !remoteSpentMoreActions
       ? localCount
       : remoteSpentMoreActions && !localSpentMoreActions
@@ -2420,6 +2564,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     space_excavator_progress_by_event: record.spaceExcavatorProgressByEvent,
     companion_feast_progress_by_event: record.companionFeastProgressByEvent,
     fortune_engine_progress_by_event: record.fortuneEngineProgressByEvent,
+    momentum_matrix_progress_by_event: record.momentumMatrixProgressByEvent,
     last_writer_device_session_id: deviceSessionId,
     updated_at: new Date().toISOString(),
   };
@@ -2484,7 +2629,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,market_owned_bundles_by_island,creature_collection,active_companion_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event,momentum_matrix_progress_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -2621,6 +2766,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             fortuneEngineProgressByEvent: sanitizeFortuneEngineProgressByEvent(
               (legacyData as Record<string, unknown>).fortune_engine_progress_by_event,
               fallback.fortuneEngineProgressByEvent,
+            ),
+            momentumMatrixProgressByEvent: sanitizeMomentumMatrixProgressByEvent(
+              (legacyData as Record<string, unknown>).momentum_matrix_progress_by_event,
+              fallback.momentumMatrixProgressByEvent,
             ),
           },
           fallback,
@@ -2797,6 +2946,10 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       fortuneEngineProgressByEvent: sanitizeFortuneEngineProgressByEvent(
         (data as Record<string, unknown>).fortune_engine_progress_by_event,
         fallback.fortuneEngineProgressByEvent,
+      ),
+      momentumMatrixProgressByEvent: sanitizeMomentumMatrixProgressByEvent(
+        (data as Record<string, unknown>).momentum_matrix_progress_by_event,
+        fallback.momentumMatrixProgressByEvent,
       ),
     },
     fallback,

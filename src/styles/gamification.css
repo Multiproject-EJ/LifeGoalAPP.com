@@ -3805,6 +3805,75 @@
   font-size: 0.86rem;
 }
 
+.arena-preferences__catalog {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0.85rem 0 0.7rem;
+}
+
+.arena-preferences__catalog-card {
+  display: grid;
+  min-width: 0;
+  min-height: 6.2rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.25rem;
+  overflow: hidden;
+  padding: 0.4rem 0.25rem;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 14px;
+  color: #1e293b;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(30, 41, 59, 0.07);
+}
+
+.arena-preferences__catalog-card > span {
+  font-size: 1.65rem;
+}
+
+.arena-preferences__catalog-card img {
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 11px;
+  object-fit: cover;
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.2);
+}
+
+.arena-preferences__catalog-card strong {
+  overflow: hidden;
+  width: 100%;
+  font-size: 0.62rem;
+  line-height: 1.08;
+  text-align: center;
+  text-overflow: ellipsis;
+}
+
+.arena-preferences__catalog-card small {
+  color: #64748b;
+  font-size: 0.55rem;
+  font-weight: 800;
+}
+
+.arena-preferences__catalog-card--feature {
+  border-color: rgba(245, 158, 11, 0.42);
+  background: linear-gradient(145deg, #fffdf5, #eef2ff);
+}
+
+.arena-preferences__catalog-card:disabled {
+  opacity: 0.5;
+  filter: saturate(0.45);
+}
+
+.arena-preferences__rank-label {
+  margin: 0.2rem 0 0;
+  color: #334155;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .arena-preferences__list {
   display: grid;
   gap: 0.55rem;
@@ -3891,6 +3960,31 @@
   .score-tab__league-stars i,
   .arena-session-shell--flash .arena-session-pacing {
     animation: none !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .arena-preferences__sheet {
+    padding-inline: 0.75rem;
+  }
+
+  .arena-preferences__catalog {
+    gap: 0.35rem;
+  }
+
+  .arena-preferences__catalog-card {
+    min-height: 5.7rem;
+  }
+
+  .arena-preferences__row {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    gap: 0.4rem;
+    padding: 0.55rem;
+  }
+
+  .arena-preferences__toggle {
+    grid-column: 3 / -1;
+    justify-self: end;
   }
 }
 

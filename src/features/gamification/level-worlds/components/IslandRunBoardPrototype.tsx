@@ -230,6 +230,8 @@ import {
   applyFortuneEngineFinaleResult,
   claimFortuneEngineMilestoneReward,
   initFortuneEngineProgressForEvent,
+  startMomentumMatrixRun,
+  applyMomentumMatrixPlacement,
   SPACE_EXCAVATOR_TOTAL_BOARDS,
   ISLAND_RUN_MAX_ISLAND,
   travelToNextIsland,
@@ -358,6 +360,7 @@ import {
   getArenaSessionSeconds,
   loadArenaMinigamePreferences,
   resolveArenaSessionPace,
+  type ArenaGameId,
   type ArenaMinigamePreferences,
 } from '../services/islandRunArenaPreferences';
 import { ShooterControllerAdapter } from './ShooterControllerAdapter';
@@ -8581,6 +8584,101 @@ export function IslandRunBoardPrototype({
     playIslandRunSound('minigame_open');
   };
 
+  const handleLaunchMomentumMatrix = () => {
+    if (
+      !effectiveActiveTimedEvent
+      || !isCanonicalEventId(effectiveActiveTimedEvent.eventType)
+    ) {
+      setLandingText('Momentum Matrix needs an active Arena event to carry its route energy.');
+      return;
+    }
+    if (!canOpenIslandRunOverlayWhileRollingState({
+      isRolling,
+      isAnimatingRoll: isAnimatingRollRef.current,
+      isRollSyncPending: isRollSyncPendingRef.current,
+    })) {
+      stopAutoRoll();
+      setLandingText('Momentum Matrix will be ready when this roll lands.');
+      return;
+    }
+    const arenaPace = resolveArenaSessionPace(arenaPreferences, 'momentum_matrix');
+    if (!arenaPace) {
+      setLandingText('Momentum Matrix is paused in your Arena rotation.');
+      setShowArenaPreferences(true);
+      return;
+    }
+    const recordEventId = effectiveActiveTimedEvent.eventId;
+    const existingProgress = runtimeStateRef.current.momentumMatrixProgressByEvent?.[recordEventId] ?? null;
+    const hasResumableRun = existingProgress?.activeRun?.status === 'active';
+    if (!hasResumableRun && activeEventTickets < 1) {
+      setLandingText('Earn one event ticket on the reward bar to chart a new course.');
+      return;
+    }
+
+    registerAllMinigameManifests();
+    setActiveLaunchedMinigameId('momentum_matrix');
+    setActiveLaunchedMinigameSource('timed_event');
+    setActiveLaunchedMinigameConfig({
+      source: 'timed_event',
+      mode: 'momentum_matrix',
+      activeEventId: recordEventId,
+      initialProgress: existingProgress,
+      getTicketsRemaining: () => Math.max(
+        0,
+        Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[recordEventId] ?? 0),
+      ),
+      requestStartRun: (missionDirection: 'focus' | 'energy' | 'reset') => {
+        const result = startMomentumMatrixRun({
+          session,
+          client,
+          eventId: recordEventId,
+          missionDirection,
+          triggerSource: 'momentum_matrix_start',
+        });
+        return {
+          ok: result.ok,
+          resumed: result.resumed,
+          ticketsRemaining: result.ticketsRemaining,
+          progress: result.progress,
+          failureReason: result.failureReason,
+        };
+      },
+      requestPlacement: (trayIndex: number, row: number, column: number) => {
+        const result = applyMomentumMatrixPlacement({
+          session,
+          client,
+          eventId: recordEventId,
+          trayIndex,
+          row,
+          column,
+          triggerSource: 'momentum_matrix_place',
+        });
+        return {
+          ok: result.ok,
+          ticketsRemaining: result.ticketsRemaining,
+          progress: result.progress,
+          placement: result.placement,
+          failureReason: result.failureReason,
+        };
+      },
+      arenaSessionPace: arenaPace,
+      arenaSessionSeconds: getArenaSessionSeconds(arenaPace),
+    });
+    playIslandRunSound('minigame_open');
+  };
+
+  const handleLaunchArenaGame = (gameId: ArenaGameId) => {
+    if (gameId === 'momentum_matrix') {
+      handleLaunchMomentumMatrix();
+      return;
+    }
+    if (effectiveActiveTimedEvent?.eventType === gameId) {
+      handleLaunchTimedEventMinigame();
+      return;
+    }
+    setLandingText('That diplomatic game returns in a future Arena rotation.');
+  };
+
   useEffect(() => {
     if (!isTimedEventLaunchQueued) return;
     if (activeLaunchedMinigameId) {
@@ -15673,6 +15771,12 @@ export function IslandRunBoardPrototype({
         session={session}
         onClose={() => setShowArenaPreferences(false)}
         onSaved={setArenaPreferences}
+        activeEventId={
+          effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType)
+            ? effectiveActiveTimedEvent.eventType
+            : null
+        }
+        onLaunchGame={handleLaunchArenaGame}
       />
 
       <IslandRunWinCelebrationModal

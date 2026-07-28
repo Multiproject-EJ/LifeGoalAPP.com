@@ -146,6 +146,7 @@ export function buildFreshIslandRunRecord(
     spaceExcavatorProgressByEvent: {},
     companionFeastProgressByEvent: {},
     fortuneEngineProgressByEvent: {},
+    momentumMatrixProgressByEvent: {},
   };
 }
 

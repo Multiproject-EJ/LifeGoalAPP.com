@@ -22,13 +22,13 @@ export const islandRunArenaPreferencesTests: TestCase[] = [
         rankedEventIds: ['lucky_spin', 'lucky_spin', 'unknown'],
         disabledEventIds: ['lucky_spin', 'space_excavator'],
       });
-      assert(result.rankedEventIds.length === 4, 'expected all four canonical games');
-      assert(new Set(result.rankedEventIds).size === 4, 'expected no duplicate games');
+      assert(result.rankedEventIds.length === 5, 'expected the four rotation games plus Momentum Matrix');
+      assert(new Set(result.rankedEventIds).size === 5, 'expected no duplicate games');
       assert(result.disabledEventIds.length === 1, 'expected the 25% disabled cap');
     },
   },
   {
-    name: 'only one of four games can be disabled',
+    name: 'only one of five games can be disabled at the 25% cap',
     run: () => {
       assert(getArenaDisabledLimit() === 1, 'expected one disabled slot');
       const first = toggleArenaEvent(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'lucky_spin');
@@ -39,11 +39,11 @@ export const islandRunArenaPreferencesTests: TestCase[] = [
     },
   },
   {
-    name: 'ranking produces full, fast, fast, and flash pacing',
+    name: 'ranking produces full, middle-fast, and flash pacing',
     run: () => {
       const rows = getArenaPreferenceRows(DEFAULT_ARENA_MINIGAME_PREFERENCES);
-      assert(rows.map((row) => row.pace).join(',') === 'full,fast,fast,flash', 'unexpected pace tiers');
-      assert(resolveArenaSessionPace(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'companion_feast') === 'flash', 'last game should flash');
+      assert(rows.map((row) => row.pace).join(',') === 'full,fast,fast,fast,flash', 'unexpected pace tiers');
+      assert(resolveArenaSessionPace(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'momentum_matrix') === 'flash', 'last game should flash');
     },
   },
   {

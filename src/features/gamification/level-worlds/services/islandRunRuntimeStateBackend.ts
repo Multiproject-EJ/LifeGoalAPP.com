@@ -664,6 +664,7 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
       spaceExcavatorProgressByEvent: current.spaceExcavatorProgressByEvent,
       companionFeastProgressByEvent: current.companionFeastProgressByEvent,
       fortuneEngineProgressByEvent: current.fortuneEngineProgressByEvent,
+      momentumMatrixProgressByEvent: current.momentumMatrixProgressByEvent,
     };
 
     const gameStatePersistResult = await writeIslandRunGameStateRecord({

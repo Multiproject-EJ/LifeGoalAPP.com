@@ -10,6 +10,7 @@ import {
   moveArenaEvent,
   saveArenaMinigamePreferences,
   toggleArenaEvent,
+  type ArenaGameId,
   type ArenaMinigamePreferences,
 } from '../services/islandRunArenaPreferences';
 import type { EventId } from '../services/islandRunEventEngine';
@@ -19,6 +20,8 @@ interface IslandRunArenaPreferencesModalProps {
   session: Session;
   onClose: () => void;
   onSaved: (preferences: ArenaMinigamePreferences) => void;
+  activeEventId: EventId | null;
+  onLaunchGame: (gameId: ArenaGameId) => void;
 }
 
 export function IslandRunArenaPreferencesModal({
@@ -26,6 +29,8 @@ export function IslandRunArenaPreferencesModal({
   session,
   onClose,
   onSaved,
+  activeEventId,
+  onLaunchGame,
 }: IslandRunArenaPreferencesModalProps) {
   const [preferences, setPreferences] = useState<ArenaMinigamePreferences>(
     DEFAULT_ARENA_MINIGAME_PREFERENCES,
@@ -60,12 +65,12 @@ export function IslandRunArenaPreferencesModal({
 
   if (!open || typeof document === 'undefined') return null;
 
-  const move = (eventId: EventId, direction: -1 | 1) => {
+  const move = (eventId: ArenaGameId, direction: -1 | 1) => {
     setMessage(null);
     setPreferences((current) => moveArenaEvent(current, eventId, direction));
   };
 
-  const toggle = (eventId: EventId) => {
+  const toggle = (eventId: ArenaGameId) => {
     setPreferences((current) => {
       const result = toggleArenaEvent(current, eventId);
       setMessage(result.reason);
@@ -94,9 +99,34 @@ export function IslandRunArenaPreferencesModal({
         <h2 id="arena-preferences-title">Shape your Arena rotation</h2>
         <p className="arena-preferences__intro">
           Put favourites first for full missions. Middle games become quick fights; your lowest active game becomes a
-          15-second flash. You can pause {getArenaDisabledLimit()} game (25%).
+          15-second flash. You can pause {getArenaDisabledLimit()} of {rows.length} games (25%).
         </p>
 
+        <div className="arena-preferences__catalog" aria-label="Arena game catalog">
+          {rows.map((row) => {
+            const isLiveRotation = row.eventId === activeEventId;
+            const canLaunch = !row.disabled && (row.eventId === 'momentum_matrix' || isLiveRotation);
+            return (
+              <button
+                type="button"
+                className={`arena-preferences__catalog-card${row.eventId === 'momentum_matrix' ? ' arena-preferences__catalog-card--feature' : ''}`}
+                key={`catalog:${row.eventId}`}
+                onClick={() => {
+                  onClose();
+                  onLaunchGame(row.eventId);
+                }}
+                disabled={!canLaunch}
+                aria-label={`${row.displayName}. ${row.disabled ? 'Paused' : row.eventId === 'momentum_matrix' ? 'Exhibition available' : isLiveRotation ? 'Live now' : 'Upcoming rotation'}`}
+              >
+                {row.artSrc ? <img src={row.artSrc} alt="" /> : <span aria-hidden="true">{row.icon}</span>}
+                <strong>{row.displayName}</strong>
+                <small>{row.disabled ? 'Paused' : row.eventId === 'momentum_matrix' ? 'Exhibition' : isLiveRotation ? 'Live now' : 'Upcoming'}</small>
+              </button>
+            );
+          })}
+        </div>
+
+        <p className="arena-preferences__rank-label">Rank session length</p>
         <ol className="arena-preferences__list">
           {rows.map((row, index) => (
             <li className={`arena-preferences__row${row.disabled ? ' arena-preferences__row--disabled' : ''}`} key={row.eventId}>

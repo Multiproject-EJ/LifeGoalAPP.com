@@ -186,6 +186,15 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
       );
       assertEqual(
         resolveEventMinigameCompletionId({
+          launchSource: 'timed_event',
+          minigameId: 'momentum_matrix',
+          completed: true,
+        }),
+        'momentum_matrix',
+        'timed_event completion should accept the Momentum Matrix exhibition',
+      );
+      assertEqual(
+        resolveEventMinigameCompletionId({
           launchSource: 'mystery_stop',
           minigameId: 'task_tower',
           completed: true,

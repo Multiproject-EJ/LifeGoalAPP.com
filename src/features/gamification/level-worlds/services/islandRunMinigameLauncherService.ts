@@ -247,6 +247,7 @@ export function resolveEventMinigameCompletionId(options: {
   if (options.minigameId === 'lucky_spin') return 'lucky_spin';
   if (options.minigameId === 'space_excavator') return 'space_excavator';
   if (options.minigameId === 'companion_feast') return 'companion_feast';
+  if (options.minigameId === 'momentum_matrix') return 'momentum_matrix';
   return null;
 }
 

@@ -142,9 +142,37 @@ import {
   applyTrafficLightPass,
   type TrafficLightCoinFlipReward,
 } from './islandRunTrafficLightTile';
+import {
+  MOMENTUM_MATRIX_RUN_TICKET_COST,
+  createEmptyMomentumMatrixProgress,
+  createMomentumMatrixRun,
+  placeMomentumMatrixPiece,
+  settleMomentumMatrixRun,
+  type MomentumMatrixMissionDirection,
+  type MomentumMatrixPlacementResult,
+  type MomentumMatrixProgressEntry,
+} from './momentumMatrixGame';
 
 
 export type SpaceExcavatorDigFailureReason = 'missing_progress' | 'insufficient_tickets' | 'board_complete' | 'invalid_tile' | 'already_dug';
+
+export interface StartMomentumMatrixRunResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  resumed: boolean;
+  ticketsRemaining: number;
+  progress: MomentumMatrixProgressEntry;
+  failureReason?: 'missing_event' | 'insufficient_tickets';
+}
+
+export interface ApplyMomentumMatrixPlacementActionResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  ticketsRemaining: number;
+  progress: MomentumMatrixProgressEntry | null;
+  placement: MomentumMatrixPlacementResult | null;
+  failureReason?: 'missing_event' | 'missing_run' | MomentumMatrixPlacementResult['failureReason'];
+}
 
 export type ApplyFirstSessionTutorialStateFailureReason = 'invalid_transition';
 
@@ -353,6 +381,182 @@ function applySpaceExcavatorBoardClearProgress(progress: SpaceExcavatorProgressE
       eventProgressPoints,
       claimedMilestoneIds: progress.claimedMilestoneIds,
     }),
+  };
+}
+
+function getMomentumMatrixSeed(input: string): number {
+  let hash = 2166136261;
+  for (const character of input) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+export function startMomentumMatrixRun(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  missionDirection: MomentumMatrixMissionDirection;
+  nowMs?: number;
+  triggerSource?: string;
+}): StartMomentumMatrixRunResult {
+  const { session, client, missionDirection, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const eventId = options.eventId.trim();
+  const nowMs = Math.max(0, Math.floor(options.nowMs ?? Date.now()));
+  const existing = eventId
+    ? current.momentumMatrixProgressByEvent?.[eventId] ?? createEmptyMomentumMatrixProgress(nowMs)
+    : createEmptyMomentumMatrixProgress(nowMs);
+  const ticketsAvailable = eventId
+    ? Math.max(0, Math.floor(current.minigameTicketsByEvent?.[eventId] ?? 0))
+    : 0;
+  if (!eventId) {
+    return {
+      record: current,
+      ok: false,
+      resumed: false,
+      ticketsRemaining: ticketsAvailable,
+      progress: existing,
+      failureReason: 'missing_event',
+    };
+  }
+  if (existing.activeRun?.status === 'active') {
+    return {
+      record: current,
+      ok: true,
+      resumed: true,
+      ticketsRemaining: ticketsAvailable,
+      progress: existing,
+    };
+  }
+  if (ticketsAvailable < MOMENTUM_MATRIX_RUN_TICKET_COST) {
+    return {
+      record: current,
+      ok: false,
+      resumed: false,
+      ticketsRemaining: ticketsAvailable,
+      progress: existing,
+      failureReason: 'insufficient_tickets',
+    };
+  }
+  const runNumber = existing.runsStarted + 1;
+  const runId = `${eventId}:matrix:${runNumber}:${nowMs}`;
+  const activeRun = createMomentumMatrixRun({
+    seed: getMomentumMatrixSeed(runId),
+    runId,
+    missionDirection,
+    nowMs,
+  });
+  const progress: MomentumMatrixProgressEntry = {
+    ...existing,
+    activeRun,
+    runsStarted: runNumber,
+    updatedAtMs: nowMs,
+  };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    minigameTicketsByEvent: {
+      ...current.minigameTicketsByEvent,
+      [eventId]: ticketsAvailable - MOMENTUM_MATRIX_RUN_TICKET_COST,
+    },
+    momentumMatrixProgressByEvent: {
+      ...current.momentumMatrixProgressByEvent,
+      [eventId]: progress,
+    },
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'start_momentum_matrix_run',
+  });
+  return {
+    record: next,
+    ok: true,
+    resumed: false,
+    ticketsRemaining: ticketsAvailable - MOMENTUM_MATRIX_RUN_TICKET_COST,
+    progress,
+  };
+}
+
+export function applyMomentumMatrixPlacement(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  trayIndex: number;
+  row: number;
+  column: number;
+  nowMs?: number;
+  triggerSource?: string;
+}): ApplyMomentumMatrixPlacementActionResult {
+  const { session, client, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const eventId = options.eventId.trim();
+  const ticketsRemaining = eventId
+    ? Math.max(0, Math.floor(current.minigameTicketsByEvent?.[eventId] ?? 0))
+    : 0;
+  if (!eventId) {
+    return {
+      record: current,
+      ok: false,
+      ticketsRemaining,
+      progress: null,
+      placement: null,
+      failureReason: 'missing_event',
+    };
+  }
+  const progress = current.momentumMatrixProgressByEvent?.[eventId] ?? null;
+  if (!progress?.activeRun) {
+    return {
+      record: current,
+      ok: false,
+      ticketsRemaining,
+      progress,
+      placement: null,
+      failureReason: 'missing_run',
+    };
+  }
+  const nowMs = Math.max(0, Math.floor(options.nowMs ?? Date.now()));
+  const placement = placeMomentumMatrixPiece({
+    run: progress.activeRun,
+    trayIndex: options.trayIndex,
+    row: options.row,
+    column: options.column,
+    nowMs,
+  });
+  if (!placement.ok) {
+    return {
+      record: current,
+      ok: false,
+      ticketsRemaining,
+      progress,
+      placement,
+      failureReason: placement.failureReason,
+    };
+  }
+  const nextProgress = settleMomentumMatrixRun(progress, placement.run, nowMs);
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    momentumMatrixProgressByEvent: {
+      ...current.momentumMatrixProgressByEvent,
+      [eventId]: nextProgress,
+    },
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? 'apply_momentum_matrix_placement',
+  });
+  return {
+    record: next,
+    ok: true,
+    ticketsRemaining,
+    progress: nextProgress,
+    placement,
   };
 }
 

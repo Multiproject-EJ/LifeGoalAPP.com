@@ -7,10 +7,16 @@ import {
 } from './islandRunEventEngine';
 
 export type ArenaSessionPace = 'flash' | 'fast' | 'full';
+export type ArenaGameId = EventId | 'momentum_matrix';
+
+export const ARENA_GAME_IDS: readonly ArenaGameId[] = [
+  ...EVENT_IDS,
+  'momentum_matrix',
+] as const;
 
 export interface ArenaMinigamePreferences {
-  rankedEventIds: EventId[];
-  disabledEventIds: EventId[];
+  rankedEventIds: ArenaGameId[];
+  disabledEventIds: ArenaGameId[];
 }
 
 export interface ArenaPreferenceRow {
@@ -21,7 +27,7 @@ export interface ArenaPreferenceRow {
 
 export const ARENA_DISABLED_FRACTION = 0.25;
 export const DEFAULT_ARENA_MINIGAME_PREFERENCES: ArenaMinigamePreferences = {
-  rankedEventIds: [...EVENT_IDS],
+  rankedEventIds: [...ARENA_GAME_IDS],
   disabledEventIds: [],
 };
 
@@ -34,27 +40,27 @@ function getArenaPreferencesClient() {
   return getSupabaseClient() as any;
 }
 
-function isEventId(value: unknown): value is EventId {
-  return typeof value === 'string' && (EVENT_IDS as readonly string[]).includes(value);
+function isArenaGameId(value: unknown): value is ArenaGameId {
+  return typeof value === 'string' && (ARENA_GAME_IDS as readonly string[]).includes(value);
 }
 
-export function getArenaDisabledLimit(totalGames = EVENT_IDS.length): number {
+export function getArenaDisabledLimit(totalGames = ARENA_GAME_IDS.length): number {
   return Math.max(0, Math.floor(Math.max(0, totalGames) * ARENA_DISABLED_FRACTION));
 }
 
 export function normalizeArenaPreferences(value: unknown): ArenaMinigamePreferences {
   const input = value && typeof value === 'object' ? value as Partial<ArenaMinigamePreferences> : {};
   const rankedEventIds = Array.isArray(input.rankedEventIds)
-    ? input.rankedEventIds.filter(isEventId)
+    ? input.rankedEventIds.filter(isArenaGameId)
     : [];
   const uniqueRanked = Array.from(new Set(rankedEventIds));
-  EVENT_IDS.forEach((eventId) => {
+  ARENA_GAME_IDS.forEach((eventId) => {
     if (!uniqueRanked.includes(eventId)) uniqueRanked.push(eventId);
   });
 
-  const disabledLimit = getArenaDisabledLimit(EVENT_IDS.length);
+  const disabledLimit = getArenaDisabledLimit(ARENA_GAME_IDS.length);
   const disabledEventIds = Array.isArray(input.disabledEventIds)
-    ? Array.from(new Set(input.disabledEventIds.filter(isEventId))).slice(0, disabledLimit)
+    ? Array.from(new Set(input.disabledEventIds.filter(isArenaGameId))).slice(0, disabledLimit)
     : [];
 
   return {
@@ -65,7 +71,7 @@ export function normalizeArenaPreferences(value: unknown): ArenaMinigamePreferen
 
 export function moveArenaEvent(
   preferences: ArenaMinigamePreferences,
-  eventId: EventId,
+  eventId: ArenaGameId,
   direction: -1 | 1,
 ): ArenaMinigamePreferences {
   const normalized = normalizeArenaPreferences(preferences);
@@ -82,7 +88,7 @@ export function moveArenaEvent(
 
 export function toggleArenaEvent(
   preferences: ArenaMinigamePreferences,
-  eventId: EventId,
+  eventId: ArenaGameId,
 ): { preferences: ArenaMinigamePreferences; changed: boolean; reason: string | null } {
   const normalized = normalizeArenaPreferences(preferences);
   const isDisabled = normalized.disabledEventIds.includes(eventId);
@@ -96,11 +102,11 @@ export function toggleArenaEvent(
       reason: null,
     };
   }
-  if (normalized.disabledEventIds.length >= getArenaDisabledLimit(EVENT_IDS.length)) {
+  if (normalized.disabledEventIds.length >= getArenaDisabledLimit(ARENA_GAME_IDS.length)) {
     return {
       preferences: normalized,
       changed: false,
-      reason: 'You can pause one of the four Arena games (25%). Turn another game back on first.',
+      reason: `You can pause ${getArenaDisabledLimit()} of the ${ARENA_GAME_IDS.length} Arena games (25%). Turn another game back on first.`,
     };
   }
   return {
@@ -115,14 +121,14 @@ export function toggleArenaEvent(
 
 export function resolveArenaSessionPace(
   preferences: ArenaMinigamePreferences,
-  eventId: EventId,
+  eventId: ArenaGameId,
 ): ArenaSessionPace | null {
   const normalized = normalizeArenaPreferences(preferences);
   if (normalized.disabledEventIds.includes(eventId)) return null;
   const enabled = normalized.rankedEventIds.filter((id) => !normalized.disabledEventIds.includes(id));
   const index = enabled.indexOf(eventId);
   if (index < 0) return 'fast';
-  const edgeSize = Math.max(1, Math.ceil(enabled.length * 0.25));
+  const edgeSize = Math.max(1, Math.floor(enabled.length * 0.25));
   if (index < edgeSize) return 'full';
   if (index >= enabled.length - edgeSize) return 'flash';
   return 'fast';
@@ -141,7 +147,18 @@ export function getArenaPreferenceRows(preferences: ArenaMinigamePreferences) {
     rank: index + 1,
     disabled: normalized.disabledEventIds.includes(eventId),
     pace: resolveArenaSessionPace(normalized, eventId),
-    ...getEventDisplayMeta(eventId),
+    ...(eventId === 'momentum_matrix'
+      ? {
+          icon: '✦',
+          displayName: 'Momentum Matrix',
+          artSrc: '/assets/event-games/momentum-matrix/momentum-matrix-hero.webp',
+          catalogKind: 'exhibition' as const,
+        }
+      : {
+          ...getEventDisplayMeta(eventId),
+          artSrc: null,
+          catalogKind: 'rotation' as const,
+        }),
   }));
 }
 

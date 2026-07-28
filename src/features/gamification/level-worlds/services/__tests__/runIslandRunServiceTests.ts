@@ -11,6 +11,8 @@ import { fortuneEngineProgressionTests } from './fortuneEngineProgression.test';
 import { fortuneEngineEconomyModelTests } from './fortuneEngineEconomyModel.test';
 import { fortuneEngineStateActionsTests } from './fortuneEngineStateActions.test';
 import { islandWorkshopGameTests } from './islandWorkshopGame.test';
+import { momentumMatrixGameTests } from './momentumMatrixGame.test';
+import { momentumMatrixStateActionsTests } from './momentumMatrixStateActions.test';
 import { creatureImageManifestTests } from './creatureImageManifest.test';
 import { creatureCardCatalogTests } from './creatureCardCatalog.test';
 import { creatureCardAssetManifestTests } from './creatureCardAssetManifest.test';
@@ -178,6 +180,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'fortuneEngineEconomyModel', tests: fortuneEngineEconomyModelTests },
   { label: 'fortuneEngineStateActions', tests: fortuneEngineStateActionsTests },
   { label: 'islandWorkshopGame', tests: islandWorkshopGameTests },
+  { label: 'momentumMatrixGame', tests: momentumMatrixGameTests },
+  { label: 'momentumMatrixStateActions', tests: momentumMatrixStateActionsTests },
   { label: 'creatureImageManifest', tests: creatureImageManifestTests },
   { label: 'creatureCardCatalog', tests: creatureCardCatalogTests },
   { label: 'creatureCardAssetManifest', tests: creatureCardAssetManifestTests },

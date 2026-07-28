@@ -445,6 +445,12 @@ Fractional positions mean the encounter placement works on any `tileCount` witho
 - On expiry, the next event in the rotation starts automatically.
 - Each event has its own micro/currency required to play the associated minigame.
 
+Arena exhibition games may be offered as alternate playable surfaces during the
+currently active event. They do not create another event clock, ticket wallet,
+reward bar, or simultaneous active event. An exhibition spends/resumes against
+the active event's record-level ticket bucket and routes successful completion
+back through the active event reward contract.
+
 ### Timed event rotation
 
 | Event | Duration | Icon | Description |

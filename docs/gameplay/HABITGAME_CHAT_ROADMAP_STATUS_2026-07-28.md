@@ -139,9 +139,15 @@ actually wired into the application.
 
 ### Momentum Matrix / Block Blast-inspired habit game
 
-- A visual concept exists.
-- No production grid logic, habit-powered pieces, scoring, tickets, Supabase
-  progress, reward contract, or Arena integration exists yet.
+- The visual concept is now a production vertical slice: original 8×8 route
+  logic, deterministic fragments, corridor clears, Mission Beacon scoring,
+  natural game-over, and mobile tap controls are implemented.
+- One active-event ticket starts a course; exact mid-run state resumes free.
+- Canonical Island Run/Supabase progress, event reward-bar completion,
+  preference pacing, Arena catalog placement, optimized hero art, animations,
+  and focused tests are implemented.
+- Direct completed-habit-to-fragment modifiers and long-term reward-claim
+  ladders remain a later balancing slice.
 - The final game must remain an original mechanic and visual treatment rather
   than copying third-party branding, assets, sounds, or UI.
 
@@ -176,7 +182,7 @@ actually wired into the application.
 
 ## Recommended delivery order
 
-1. Momentum Matrix as the first new preference-aware event game.
-2. Minigame modal expansion and the next four-game production batch.
+1. Momentum Matrix production slice and mobile balance iteration.
+2. Complete the second catalog row with the next three-game production batch.
 3. Creation Halls/Bot Bay runtime shell and mascot equipment.
 4. 120-island story-map reconciliation and later Drift reveal.
