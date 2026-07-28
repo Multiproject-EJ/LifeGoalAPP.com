@@ -122,6 +122,44 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
     },
   },
   {
+    name: 'decorative island art stays below the interactive tile route on WebKit',
+    run: () => {
+      const css = readSource('src/features/gamification/level-worlds/LevelWorlds.css');
+      const artStageCss = css.slice(
+        css.indexOf('.island-run-board__art-camera-stage {'),
+        css.indexOf('.island-run-board__camera-stage {'),
+      );
+      assert(artStageCss.includes('z-index: 2;'), 'world art must remain below the gameplay camera stage');
+      assert(
+        artStageCss.includes('transform-style: flat;'),
+        'world art must flatten child z-indices so iOS WebKit cannot composite scenery over tiles',
+      );
+      assert(
+        css.includes('.island-run-board__camera-stage {\n  position: absolute;')
+        && css.includes('z-index: 3;'),
+        'the interactive tile route must keep the higher sibling stacking plane',
+      );
+    },
+  },
+  {
+    name: 'traffic-light meter reserves green for its single fully charged state',
+    run: () => {
+      const tileGrid = readSource('src/features/gamification/level-worlds/components/board/BoardTileGrid.tsx');
+      assert(
+        tileGrid.includes('trafficLightCharge >= Math.max(1, trafficLightChargeTarget);'),
+        'the traffic-light tile must not turn green on the penultimate charge',
+      );
+      assert(
+        tileGrid.includes('const greenLightStart = Math.max(1, trafficLightChargeTarget);'),
+        'only the final meter pip may be green',
+      );
+      assert(
+        !tileGrid.includes('trafficLightChargeTarget - 1'),
+        'no second green traffic-light state may remain',
+      );
+    },
+  },
+  {
     name: 'discovery fog never blurs the moving gameplay camera stage',
     run: () => {
       const prototype = readSource('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx');
