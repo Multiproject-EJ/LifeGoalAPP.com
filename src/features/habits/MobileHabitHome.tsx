@@ -40,6 +40,7 @@ type MobileHabitHomeProps = {
   onOpenFeaturePreview?: (featureId: FeatureAvailabilityId, label: string) => void;
   deferDailyLifeUpgradeModal?: boolean;
   deferYesterdayTodoCleanupModal?: boolean;
+  dayOneFocusMode?: boolean;
 };
 
 export function MobileHabitHome({
@@ -75,6 +76,7 @@ export function MobileHabitHome({
   onOpenFeaturePreview,
   deferDailyLifeUpgradeModal = false,
   deferYesterdayTodoCleanupModal = false,
+  dayOneFocusMode = false,
 }: MobileHabitHomeProps) {
   void onHideStandaloneHabitsChange;
   return (
@@ -113,6 +115,7 @@ export function MobileHabitHome({
         onOpenFeaturePreview={onOpenFeaturePreview}
         deferDailyLifeUpgradeModal={deferDailyLifeUpgradeModal}
         deferYesterdayTodoCleanupModal={deferYesterdayTodoCleanupModal}
+        dayOneFocusMode={dayOneFocusMode}
       />
     </div>
   );

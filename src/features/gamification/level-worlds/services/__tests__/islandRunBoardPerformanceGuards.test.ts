@@ -61,7 +61,7 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
         'an initial null pending sequence must not suppress the first snap to the active tile',
       );
       assert(
-        stage.includes('}, [tokenIndex, anchors, pendingHopSequence, toScreen]);'),
+        stage.includes('}, [tokenIndex, anchors, movementSpeedFactor, pendingHopSequence, toScreen]);'),
         'token position must resync when responsive board-to-screen geometry changes',
       );
       assert(

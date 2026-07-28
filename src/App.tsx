@@ -14,6 +14,7 @@ import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
+import { readJourneyDay } from './features/onboarding/journeyAccess';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { GoalWorkspace, LifeGoalsSection, MyQuestHub } from './features/goals';
 import { BodyHaircutWidget, DailyHabitTracker, HabitsModule, MobileHabitHome, StarterHabitPicker } from './features/habits';
@@ -236,6 +237,7 @@ type MobileMenuNavItem = {
   summary: string;
   modalKey?: 'feedback' | 'support'; // present = opens a modal instead of navigating
   badgeLabel?: string;
+  emerging?: boolean;
 };
 
 type LauncherSubmenuAction = {
@@ -647,6 +649,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
     signInWithGoogle,
     signOut,
   } = useSupabaseAuth();
+  const journeyDay = readJourneyDay(supabaseSession?.user.user_metadata);
+  const isJourneyDayOne = journeyDay === 1;
   const { theme } = useTheme();
   const [localGuestSession, setLocalGuestSession] = useState<Session | null>(null);
 
@@ -998,6 +1002,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   useEffect(() => {
     const userId = supabaseSession?.user?.id;
     if (typeof window === 'undefined' || !userId || !supabaseSession) return;
+    if (isJourneyDayOne) return;
 
     // Read-only: the egg ledger is inspected to announce what finished
     // incubating, never to resolve an egg. Collecting stays in the hatchery,
@@ -1005,11 +1010,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
     const eggLedger = readIslandRunGameStateRecord(supabaseSession).perIslandEggs;
     const celebration = startComebackCelebration(userId, undefined, eggLedger);
     if (celebration) setComebackCelebration(celebration);
-  }, [supabaseSession]);
+  }, [isJourneyDayOne, supabaseSession]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!supabaseSession?.user?.id) return;
+    if (isJourneyDayOne) return;
     if (isComebackCelebrationOpen) return;
 
     const todayKey = getDailyTreatsAutoOpenDateKey();
@@ -1018,7 +1024,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsDayChangeDailyTreatSequenceActive(true);
     launchDailyTreatsMenu();
     window.localStorage.setItem(DAILY_TREATS_AUTO_OPEN_DATE_KEY, todayKey);
-  }, [isComebackCelebrationOpen, isDailyTreatAutoOpenDue, launchDailyTreatsMenu, supabaseSession?.user?.id]);
+  }, [isComebackCelebrationOpen, isDailyTreatAutoOpenDue, isJourneyDayOne, launchDailyTreatsMenu, supabaseSession?.user?.id]);
 
   // Once-a-day "Tip of the Day — AI Coach". Opens last in the launch queue so
   // nothing stacks: only when no comeback celebration is up, treats aren't due,
@@ -1027,13 +1033,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!supabaseSession?.user?.id) return;
+    if (isJourneyDayOne) return;
     if (isDailyTreatAutoOpenDue || isDayChangeDailyTreatSequenceActive) return;
     if (isComebackCelebrationOpen) return;
     if (!isTipOfDayAutoOpenDueForUser(supabaseSession.user.id)) return;
 
     window.localStorage.setItem(TIP_OF_DAY_AUTO_OPEN_DATE_KEY, getDailyTreatsAutoOpenDateKey());
     setShowTipOfDay(true);
-  }, [isComebackCelebrationOpen, isDailyTreatAutoOpenDue, isDayChangeDailyTreatSequenceActive, supabaseSession?.user?.id]);
+  }, [isComebackCelebrationOpen, isDailyTreatAutoOpenDue, isDayChangeDailyTreatSequenceActive, isJourneyDayOne, supabaseSession?.user?.id]);
 
   const launchHolidayCalendar = useCallback(() => {
     setHolidayPreviewKey(null);
@@ -1542,6 +1549,34 @@ export default function App({ forceAuthOnMount }: AppProps) {
       .map((id) => mobileMenuNavItems.find((item) => item.id === id))
       .filter((item): item is MobileMenuNavItem => Boolean(item))
       .map((item) => {
+        if (isJourneyDayOne && item.id !== 'planning') {
+          const emerging = {
+            'breathing-space': {
+              label: 'Quiet',
+              icon: '◇',
+              ariaLabel: 'A quiet shield rune. It has not answered yet.',
+            },
+            score: {
+              label: 'Cache',
+              icon: '◈',
+              ariaLabel: 'A sealed reward ledger. It will open after your first journey milestone.',
+            },
+            actions: {
+              label: 'Route',
+              icon: '✦',
+              ariaLabel: 'A dormant route marker. Keep restoring First Light Shore.',
+            },
+          }[item.id];
+          if (emerging) {
+            return {
+              ...item,
+              ...emerging,
+              emerging: true,
+              summary: emerging.ariaLabel,
+            };
+          }
+        }
+
         if (item.id === 'planning' && isAdmin === true && activeWorkspaceNav === 'planning' && !showMobileHome) {
           return {
             ...item,
@@ -1576,7 +1611,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
         return item;
       });
-  }, [activeWorkspaceNav, isAdmin, mobileMenuNavItems, showMobileHome, timerLauncherSeconds, timerLauncherState]);
+  }, [activeWorkspaceNav, isAdmin, isJourneyDayOne, mobileMenuNavItems, showMobileHome, timerLauncherSeconds, timerLauncherState]);
   const mobileFooterPointsBadges: Partial<Record<MobileMenuNavItem['id'], string>> = {};
 
   const triggerMobileMenuFlash = () => {
@@ -2532,6 +2567,34 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   }, [supabaseSession]);
 
+  const completeFirstRunStartFlow = useCallback(() => {
+    setFirstRunStep(null);
+    if (supabaseSession?.user.id && typeof window !== 'undefined') {
+      window.localStorage.setItem(`habitgame:journey-day:${supabaseSession.user.id}`, '1');
+    }
+    const supabaseClient = client ?? getSupabaseClient();
+    void supabaseClient.auth
+      .updateUser({
+        data: {
+          start_flow_complete: true,
+          journey_version: 1,
+          journey_day: 1,
+        },
+      })
+      .catch((error) => {
+        console.error('Failed to persist start_flow_complete:', error);
+      });
+  }, [client, supabaseSession?.user.id]);
+
+  const launchFirstIslandMission = useCallback(() => {
+    completeFirstRunStartFlow();
+    setShowMobileGamification(false);
+    setShowGameBoardOverlay(false);
+    setReopenGameBoardOverlayOnLevelWorldsClose(false);
+    setLevelWorldsEntryPanel('default');
+    setShowLevelWorldsFromEntry(true);
+  }, [completeFirstRunStartFlow]);
+
   const handleCompleteFounderWelcome = useCallback(() => {
     // Land the player on Today, then guide them to the glowing Game button.
     setActiveWorkspaceNav('planning');
@@ -2539,17 +2602,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
     if (isMobileExperience) {
       setFirstRunStep('spotlight-game');
     } else {
-      // Desktop has no footer Game button — go straight to the PLAY overlay.
-      setFirstRunStep('spotlight-play');
-      setShowGameBoardOverlay(true);
+      // Desktop has no footer Game button — enter the first island directly.
+      launchFirstIslandMission();
     }
-  }, [isMobileExperience]);
+  }, [isMobileExperience, launchFirstIslandMission]);
 
   const handleFirstRunGameTap = useCallback(() => {
-    setShowMobileGamification(false);
-    setShowGameBoardOverlay(true);
-    setFirstRunStep('spotlight-play');
-  }, []);
+    launchFirstIslandMission();
+  }, [launchFirstIslandMission]);
 
   const handleLaunchFirstRunOnboardingFromAdmin = useCallback(() => {
     if (isAdmin !== true) return;
@@ -2601,6 +2661,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
           : `Day ${day} could not be saved: ${metadataError.message}`,
       };
     }
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(`habitgame:journey-day:${supabaseSession.user.id}`, String(day));
+    }
 
     setShowGameBoardOverlay(false);
     setShowMobileGamification(false);
@@ -2627,16 +2690,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
         : `Day ${day} is active. Existing progress was preserved and the app reopened at Today.`,
     };
   }, [client, isAdmin, supabaseSession]);
-
-  const completeFirstRunStartFlow = useCallback(() => {
-    setFirstRunStep(null);
-    const supabaseClient = client ?? getSupabaseClient();
-    void supabaseClient.auth
-      .updateUser({ data: { start_flow_complete: true } })
-      .catch((error) => {
-        console.error('Failed to persist start_flow_complete:', error);
-      });
-  }, [client]);
 
   const scheduleDesktopMenuAutoHide = useCallback(() => {
     if (isMobileExperience || !isDesktopMenuOpen || isDesktopMenuPinned) return;
@@ -3047,6 +3100,14 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
 
     if (navId === 'game' && isMobileExperience) {
+      if (isJourneyDayOne) {
+        setShowMobileGamification(false);
+        setShowGameBoardOverlay(false);
+        setReopenGameBoardOverlayOnLevelWorldsClose(false);
+        setLevelWorldsEntryPanel('default');
+        setShowLevelWorldsFromEntry(true);
+        return;
+      }
       setShowGameBoardOverlay(true);
       return;
     }
@@ -3494,6 +3555,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsEnergyMenuOpen(false);
     setIsMobileFooterCollapsed(false);
     setIsMobileFooterSnapActive(false);
+
+    if (isJourneyDayOne) {
+      setShowMobileGamification(false);
+      setShowGameBoardOverlay(false);
+      setReopenGameBoardOverlayOnLevelWorldsClose(false);
+      setLevelWorldsEntryPanel('default');
+      setShowLevelWorldsFromEntry(true);
+      return;
+    }
 
     if (!isMobileMenuImageActive) {
       setShowGameBoardOverlay(false);
@@ -4151,6 +4221,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             ) : null}
             <DailyHabitTracker
               session={activeSession}
+              dayOneFocusMode={isJourneyDayOne}
               showPointsBadges={shouldShowPointsBadges}
               onVisionRewardOpenChange={setIsVisionRewardOpen}
               profileStrengthSnapshot={profileStrengthSnapshot}
@@ -4587,6 +4658,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     <div><dt>Onboarding</dt><dd>{accountOnboardingStatus}</dd></div>
                   </dl>
                   <div className="mobile-menu-overlay__profile-dialog-actions">
+                    {!isJourneyDayOne ? (
                     <button
                       type="button"
                       className="mobile-menu-overlay__quick-action-btn"
@@ -4596,6 +4668,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                       <span className="mobile-menu-overlay__quick-action-icon">🪪</span>
                       <span className="mobile-menu-overlay__quick-action-label">Player's Hand</span>
                     </button>
+                    ) : null}
                     <button
                       type="button"
                       className="mobile-menu-overlay__quick-action-btn"
@@ -4624,6 +4697,24 @@ export default function App({ forceAuthOnMount }: AppProps) {
             ) : null}
             <div className="mobile-menu-overlay__dashboard" aria-label="Game Mode dashboard menu">
               <div className="mobile-menu-overlay__hero-row">
+                {isJourneyDayOne ? (
+                  <button
+                    type="button"
+                    className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--compass-placeholder mobile-menu-overlay__hero-card--journey-sealed"
+                    aria-label="The Compass is sealed. Its first page will wake later in the journey."
+                    aria-disabled="true"
+                  >
+                    <span className="mobile-menu-overlay__compass-placeholder-copy">
+                      <span className="mobile-menu-overlay__compass-placeholder-title">Sealed Compass</span>
+                      <span className="mobile-menu-overlay__compass-placeholder-subtitle">A page is sleeping beneath the glass.</span>
+                    </span>
+                    <span className="mobile-menu-overlay__compass-placeholder-book" aria-hidden="true">
+                      <span className="mobile-menu-overlay__compass-placeholder-page">✦</span>
+                      <span className="mobile-menu-overlay__compass-placeholder-rose">◇</span>
+                    </span>
+                  </button>
+                ) : (
+                  <>
                 {isAdmin === true ? (
                   <button
                     type="button"
@@ -4703,8 +4794,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
                     </span>
                   ) : null}
                 </button>
+                  </>
+                )}
               </div>
 
+              {!isJourneyDayOne ? (
+                <>
               <button
                 type="button"
                 className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--compass-placeholder"
@@ -4750,6 +4845,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   </span>
                 </button>
               </div>
+                </>
+              ) : null}
 
               <div className="mobile-menu-overlay__quick-grid mobile-menu-overlay__quick-grid--bottom">
                 <button
@@ -5434,6 +5531,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
           dailySpinAvailable={spinAvailable}
           dailySpinCount={spinsAvailable}
+          isPro={menuMembershipTier === 'pro'}
         />
       </RecoverableErrorBoundary>
     </div>
@@ -5584,6 +5682,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           <div className="workspace-shell">
             <MobileHabitHome
               session={activeSession}
+              dayOneFocusMode={isJourneyDayOne}
               showPointsBadges={shouldShowPointsBadges}
               onVisionRewardOpenChange={setIsVisionRewardOpen}
               profileStrengthSnapshot={profileStrengthSnapshot}

@@ -7,6 +7,7 @@ import {
   preloadCreaturePackOpeningAnimation,
 } from '../../../../components/CreaturePackOpeningAnimation';
 import type { ClaimFullWelcomePackResult } from '../services/islandRunWelcomePackFullClaimAction';
+import type { ClaimWelcomePackRewardBundleResult } from '../services/islandRunWelcomePackRewardBundleAction';
 import { buildWelcomePackStarterCacheBody } from '../services/islandRunWelcomePackCopy';
 
 import { lockPageScroll } from '../../../../utils/scrollLock';
@@ -17,11 +18,14 @@ export interface WelcomePackModalProps {
   claimPending?: boolean;
   claimError?: string | null;
   claimResult?: ClaimFullWelcomePackResult | null;
+  bundleOnlyClaimResult?: ClaimWelcomePackRewardBundleResult | null;
+  deferCreaturePack?: boolean;
   isDevPreview?: boolean;
   displayName?: string | null;
 }
 
 type Phase = 'economy' | 'cards-intro' | 'pack-opening' | 'card-reveal';
+type WelcomePackPhase = Phase | 'deferred';
 
 export function WelcomePackModal({
   open,
@@ -30,10 +34,12 @@ export function WelcomePackModal({
   claimPending = false,
   claimError = null,
   claimResult = null,
+  bundleOnlyClaimResult = null,
+  deferCreaturePack = false,
   isDevPreview = false,
   displayName = null,
 }: WelcomePackModalProps): React.JSX.Element | null {
-  const [phase, setPhase] = React.useState<Phase>('economy');
+  const [phase, setPhase] = React.useState<WelcomePackPhase>('economy');
   const [collectAnimating, setCollectAnimating] = React.useState(false);
   const [revealIndex, setRevealIndex] = React.useState(0);
 
@@ -51,16 +57,17 @@ export function WelcomePackModal({
   }, [open]);
 
   React.useEffect(() => {
-    if (open) preloadCreaturePackOpeningAnimation();
-  }, [open]);
+    if (open && !deferCreaturePack) preloadCreaturePackOpeningAnimation();
+  }, [deferCreaturePack, open]);
 
   if (!open) return null;
 
   const resolvedCards = claimResult?.cards.revealPayload?.cards ?? [];
   const starterCacheBody = buildWelcomePackStarterCacheBody({ displayName });
-  const isAlreadyClaimed =
-    claimResult?.cards.status === 'already_claimed' &&
-    claimResult?.bundle.status === 'already_claimed';
+  const isAlreadyClaimed = deferCreaturePack
+    ? bundleOnlyClaimResult?.status === 'already_claimed'
+    : claimResult?.cards.status === 'already_claimed'
+      && claimResult?.bundle.status === 'already_claimed';
 
   const handleCollectEconomy = async () => {
     if (claimPending || collectAnimating) return;
@@ -70,7 +77,7 @@ export function WelcomePackModal({
     }
     await new Promise<void>((resolve) => setTimeout(resolve, 700));
     setCollectAnimating(false);
-    setPhase('cards-intro');
+    setPhase(deferCreaturePack ? 'deferred' : 'cards-intro');
   };
 
   const handleAdvanceCard = () => {
@@ -110,7 +117,9 @@ export function WelcomePackModal({
           ) : null}
 
           {isAlreadyClaimed ? (
-            <p className="wpm-already-claimed" role="status">Already claimed — opening card reveal.</p>
+            <p className="wpm-already-claimed" role="status">
+              {deferCreaturePack ? 'Starter supplies already secured.' : 'Already claimed — opening card reveal.'}
+            </p>
           ) : null}
 
           <button
@@ -122,7 +131,29 @@ export function WelcomePackModal({
             {collectAnimating ? (
               <span className="wpm-collect-btn__spinner" aria-hidden="true" />
             ) : null}
-            {collectAnimating ? 'Collecting…' : isAlreadyClaimed ? 'View Cards' : 'Collect Starter Cache'}
+            {collectAnimating
+              ? 'Collecting…'
+              : isAlreadyClaimed
+                ? deferCreaturePack ? 'Continue' : 'View Cards'
+                : 'Collect Starter Cache'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'deferred') {
+    return (
+      <div className="island-run-overlay-root wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title-deferred">
+        <div className="wpm-shell wpm-shell--cards-intro wpm-shell--enter">
+          <p className="wpm-eyebrow">Supplies secured</p>
+          <h2 id="wpm-title-deferred" className="wpm-title">The creature signal remains sealed</h2>
+          <div className="wpm-big-card-icon" aria-hidden="true">🥚</div>
+          <p className="wpm-body">
+            Your resources are ready. The creature pack will answer from Island 2.
+          </p>
+          <button type="button" className="wpm-collect-btn" onClick={onClose}>
+            Begin the mission
           </button>
         </div>
       </div>

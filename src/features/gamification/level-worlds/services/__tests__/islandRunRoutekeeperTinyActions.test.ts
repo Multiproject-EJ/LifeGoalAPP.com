@@ -1,7 +1,11 @@
 import {
+  buildRoutekeeperBreathingHabitPayload,
   buildRoutekeeperSuggestedHabit,
   getRoutekeeperTinyActionForSignal,
   hasSuitableRoutekeeperHabit,
+  isRoutekeeperBreathingHabit,
+  ROUTEKEEPER_BREATH_HABIT_MARKER,
+  ROUTEKEEPER_BREATH_HABIT_TITLE,
   ROUTEKEEPER_BODY_COPY,
   ROUTEKEEPER_FIRST_QUESTION,
   ROUTEKEEPER_SIGNAL_CHOICES,
@@ -30,6 +34,23 @@ export const islandRunRoutekeeperTinyActionsTests: TestCase[] = [
       }
       assertEqual(ROUTEKEEPER_SUCCESS_TITLE, 'Routekeeper Steps relit.', 'Expected success title');
       assertEqual(ROUTEKEEPER_SUCCESS_BODY, 'One steady action is enough for today.', 'Expected success body');
+    },
+  },
+  {
+    name: 'Day 1 breathing ritual is a seven-day Today habit with a stable marker',
+    run: async () => {
+      const payload = buildRoutekeeperBreathingHabitPayload(new Date('2026-07-28T09:00:00.000Z'));
+      assertEqual(payload.title, ROUTEKEEPER_BREATH_HABIT_TITLE, 'Expected stable Day 1 title');
+      assertEqual(payload.duration_value, 7, 'Expected seven-day duration');
+      assertEqual(payload.duration_unit, 'days', 'Expected day duration unit');
+      assertEqual(payload.on_duration_end, 'pause', 'Expected ritual to pause rather than disappear');
+      assertEqual(payload.schedule.mode, 'daily', 'Expected ritual every day');
+      assert(payload.habit_environment.includes(ROUTEKEEPER_BREATH_HABIT_MARKER), 'Expected stable Day 1 marker');
+      assert(isRoutekeeperBreathingHabit(payload), 'Expected V2 payload to be recognized');
+      assert(
+        isRoutekeeperBreathingHabit({ name: ROUTEKEEPER_BREATH_HABIT_TITLE, habit_environment: null }),
+        'Expected legacy Today adapter shape to be recognized',
+      );
     },
   },
   {

@@ -214,6 +214,7 @@ import {
   applyTokenHopRewards,
   applyTechCollectionState,
   applyIslandRunTechnologyBuild,
+  applyStoryFastModeUnlock,
   applyTimedEventTicketSpend,
   claimArenaFirstTicketBoost,
   applySpaceExcavatorDig,
@@ -235,6 +236,7 @@ import {
   setActiveCompanionId as commitActiveCompanionId,
   clearActiveCompanionId as commitClearActiveCompanionId,
 } from '../services/islandRunStateActions';
+import { resolveStoryFastModeState } from '../services/islandRunStoryFastMode';
 import {
   EGG_MANIA_MAX_EGGS_PER_ISLAND,
   areAllEggSlotsTerminalForIsland,
@@ -274,6 +276,10 @@ import {
   claimFullWelcomePack,
   type ClaimFullWelcomePackResult,
 } from '../services/islandRunWelcomePackFullClaimAction';
+import {
+  claimWelcomePackRewardBundle,
+  type ClaimWelcomePackRewardBundleResult,
+} from '../services/islandRunWelcomePackRewardBundleAction';
 import {
   earnCreatureTreatsForUser,
   fetchCreatureTreatInventory,
@@ -987,7 +993,6 @@ const REWARDBAR_TIMERS_AUTO_HIDE_DELAY_MS = 10_000;
 const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
 const MULTIPLIER_MAX_JUMP_DURATION_MS = 540;
 const AUTO_ROLL_HOLD_DELAY_MS = 1400;
-const AUTO_ROLL_INTERVAL_MS = 2300;
 // While a modal/overlay owns attention, auto-roll pauses instead of firing the
 // next roll. We poll this often to resume promptly once every modal is closed.
 const AUTO_ROLL_PAUSE_POLL_MS = 300;
@@ -1551,6 +1556,7 @@ interface IslandRunBoardPrototypeProps {
   onOpenDailySpinWheel?: () => void;
   dailySpinAvailable?: boolean;
   dailySpinCount?: number;
+  isPro?: boolean;
 }
 
 export function IslandRunBoardPrototype({
@@ -1563,6 +1569,7 @@ export function IslandRunBoardPrototype({
   onOpenDailySpinWheel,
   dailySpinAvailable = false,
   dailySpinCount = 0,
+  isPro = false,
 }: IslandRunBoardPrototypeProps) {
   const { client } = useSupabaseAuth();
   // Player-level chip: pull levelInfo from the gamification hook so the top-bar
@@ -2247,6 +2254,7 @@ export function IslandRunBoardPrototype({
   const [showWelcomePackModal, setShowWelcomePackModal] = useState(false);
   const [welcomePackDismissedThisSession, setWelcomePackDismissedThisSession] = useState(false);
   const [welcomePackClaimResult, setWelcomePackClaimResult] = useState<ClaimFullWelcomePackResult | null>(null);
+  const [welcomePackBundleOnlyResult, setWelcomePackBundleOnlyResult] = useState<ClaimWelcomePackRewardBundleResult | null>(null);
   const [welcomePackClaimError, setWelcomePackClaimError] = useState<string | null>(null);
   const [welcomePackClaimPending, setWelcomePackClaimPending] = useState(false);
   const welcomePackClaimInFlightRef = useRef(false);
@@ -2263,11 +2271,13 @@ export function IslandRunBoardPrototype({
   });
   const [isFirstCreaturePackClaiming, setIsFirstCreaturePackClaiming] = useState(false);
   const firstCreaturePackClaimInFlightRef = useRef(false);
-  const showFirstCreaturePackModal = isIslandRunFirstCreaturePackModalActive(firstSessionTutorialState)
-    || firstCreaturePackFlow.phase === 'opening'
-    || firstCreaturePackFlow.phase === 'revealed'
-    || firstCreaturePackFlow.phase === 'already_claimed'
-    || firstCreaturePackFlow.phase === 'error';
+  const showFirstCreaturePackModal = islandNumber >= 2 && (
+    isIslandRunFirstCreaturePackModalActive(firstSessionTutorialState)
+      || firstCreaturePackFlow.phase === 'opening'
+      || firstCreaturePackFlow.phase === 'revealed'
+      || firstCreaturePackFlow.phase === 'already_claimed'
+      || firstCreaturePackFlow.phase === 'error'
+  );
 
   useEffect(() => {
     const targetState = getIslandRunBuildPromptInitialTransitionTarget(firstSessionTutorialState);
@@ -2548,7 +2558,32 @@ export function IslandRunBoardPrototype({
   const companionBonusAppliedVisitKeyRef = useRef<string | null>(null);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
+  const journeyVersion = Number(session.user.user_metadata?.journey_version ?? 0);
+  const developerJourneyDay = Number(session.user.user_metadata?.developer_journey_day ?? 0);
+  const isArcadeStoryJourney = journeyVersion >= 1 || developerJourneyDay >= 1;
+  const storyFastModeState = useMemo(
+    () => resolveStoryFastModeState({
+      isStoryJourney: isArcadeStoryJourney,
+      isPro,
+      dicePool,
+      record: runtimeState,
+    }),
+    [dicePool, isArcadeStoryJourney, isPro, runtimeState],
+  );
+
+  useEffect(() => {
+    if (!storyFastModeState.shouldPersistUnlock) return;
+    const next = applyStoryFastModeUnlock({ session, client });
+    setRuntimeState(next);
+    runtimeStateRef.current = next;
+    setLandingText('⚡ Fast Mode unlocked! Travel accelerates, but every island still gets its arrival moment.');
+  }, [client, session, storyFastModeState.shouldPersistUnlock]);
   const welcomePackEligibility = useMemo(() => getWelcomePackEligibility(runtimeState), [runtimeState]);
+  const deferWelcomePackCreatureCards = islandNumber < 2;
+  const welcomePackAutoShowEligibility =
+    deferWelcomePackCreatureCards && runtimeState.welcomePackRewardBundleClaimed
+      ? 'already_claimed'
+      : welcomePackEligibility;
   const welcomePackGuestDisplayName = useMemo(() => readIslandRunGuestFunnelState().displayName ?? null, []);
   const isHigherPriorityWelcomePackSurfaceVisible = Boolean(
     showFirstCreaturePackModal ||
@@ -2611,7 +2646,7 @@ export function IslandRunBoardPrototype({
     if (!hasHydratedRuntimeState) return;
 
     const shouldShow = shouldAutoShowWelcomePackModal({
-      eligibility: welcomePackEligibility,
+      eligibility: welcomePackAutoShowEligibility,
       hasBeenDismissedThisSession: welcomePackDismissedThisSession,
       isWelcomePackModalVisible: showWelcomePackModal,
       isHigherPriorityOnboardingModalVisible: isHigherPriorityWelcomePackSurfaceVisible,
@@ -2619,13 +2654,14 @@ export function IslandRunBoardPrototype({
     if (!shouldShow) return;
     setWelcomePackClaimError(null);
     setWelcomePackClaimResult(null);
+    setWelcomePackBundleOnlyResult(null);
     setShowWelcomePackModal(true);
   }, [
     hasHydratedRuntimeState,
     isHigherPriorityWelcomePackSurfaceVisible,
     showWelcomePackModal,
     welcomePackDismissedThisSession,
-    welcomePackEligibility,
+    welcomePackAutoShowEligibility,
   ]);
 
   const island120StartupDiagnosticSessionStartMsRef = useRef<number | null>(null);
@@ -5538,7 +5574,12 @@ export function IslandRunBoardPrototype({
   ]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !hasHydratedRuntimeState || isIslandVisualPreview) {
+    if (
+      typeof window === 'undefined'
+      || !hasHydratedRuntimeState
+      || isIslandVisualPreview
+      || isArcadeStoryJourney
+    ) {
       return;
     }
 
@@ -5546,7 +5587,7 @@ export function IslandRunBoardPrototype({
     if (!hasSeenStory) {
       setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
     }
-  }, [hasHydratedRuntimeState, isIslandVisualPreview, runtimeState.storyPrologueSeen, storySeenStorageKey]);
+  }, [hasHydratedRuntimeState, isArcadeStoryJourney, isIslandVisualPreview, runtimeState.storyPrologueSeen, storySeenStorageKey]);
 
   useEffect(() => {
     if (!shouldAutoAdvanceIslandOnTimerExpiry({
@@ -6419,9 +6460,14 @@ export function IslandRunBoardPrototype({
         });
       }
 
-    // Show the roll total briefly over the dice area
+      // Show the roll total briefly over the dice area
       setDiceRollTotalOverlay(`Rolled ${nextRoll}!`);
-      await new Promise<void>((resolve) => { setTimeout(resolve, DICE_ROLL_OVERLAY_DURATION_MS); });
+      await new Promise<void>((resolve) => {
+        setTimeout(
+          resolve,
+          Math.max(420, DICE_ROLL_OVERLAY_DURATION_MS / storyFastModeState.movementSpeedFactor),
+        );
+      });
       setDiceRollTotalOverlay(null);
       setIsRolling(false);
 
@@ -6695,7 +6741,7 @@ export function IslandRunBoardPrototype({
           break;
         }
         await new Promise<void>((resolve) => {
-          window.setTimeout(resolve, AUTO_ROLL_INTERVAL_MS);
+          window.setTimeout(resolve, storyFastModeState.autoRollIntervalMs);
         });
       }
     };
@@ -6703,7 +6749,7 @@ export function IslandRunBoardPrototype({
     return () => {
       cancelled = true;
     };
-  }, [isAutoRolling]);
+  }, [isAutoRolling, storyFastModeState.autoRollIntervalMs]);
 
   const handleRollButtonClick = useCallback(() => {
     if (suppressNextRollClickRef.current) {
@@ -9885,6 +9931,7 @@ export function IslandRunBoardPrototype({
     setWelcomePackDismissedThisSession(false);
     setWelcomePackClaimError(null);
     setWelcomePackClaimResult(null);
+    setWelcomePackBundleOnlyResult(null);
     setShowDebugPanel(false);
     setShowWelcomePackModal(true);
     const message = isDevModeEnabled
@@ -9900,19 +9947,33 @@ export function IslandRunBoardPrototype({
     setWelcomePackClaimPending(true);
     setWelcomePackClaimError(null);
     try {
-      const result = await claimFullWelcomePack({
-        session,
-        client,
-        triggerSource: 'welcome_pack_modal_claim_full',
-      });
-      setWelcomePackClaimResult(result);
+      const result = deferWelcomePackCreatureCards
+        ? await claimWelcomePackRewardBundle({
+            session,
+            client,
+            triggerSource: 'welcome_pack_modal_day_one_resources',
+          })
+        : await claimFullWelcomePack({
+            session,
+            client,
+            triggerSource: 'welcome_pack_modal_claim_full',
+          });
+      if (deferWelcomePackCreatureCards) {
+        setWelcomePackBundleOnlyResult(result as ClaimWelcomePackRewardBundleResult);
+      } else {
+        setWelcomePackClaimResult(result as ClaimFullWelcomePackResult);
+      }
       refreshIslandRunStateFromLocal(session);
       const refreshedRecord = getIslandRunStateSnapshot(session);
       setRuntimeState(refreshedRecord);
       runtimeStateRef.current = refreshedRecord;
-      const message = result.status === 'already_claimed'
-        ? '✨ DEV Welcome Pack: already claimed in canonical state.'
-        : `✨ DEV Welcome Pack ${result.status}: ${result.cards.revealPayload?.cards.length ?? 0} cards, +${result.bundle.granted.dice} dice, +${result.bundle.granted.essence} money, +${result.bundle.granted.eventTickets} tickets.`;
+      const message = deferWelcomePackCreatureCards
+        ? result.status === 'already_claimed'
+          ? '✨ Day 1 starter resources were already claimed.'
+          : `✨ Day 1 starter cache: +${(result as ClaimWelcomePackRewardBundleResult).granted.dice} dice, +${(result as ClaimWelcomePackRewardBundleResult).granted.essence} money. Creature cards wait on Island 2.`
+        : result.status === 'already_claimed'
+          ? '✨ DEV Welcome Pack: already claimed in canonical state.'
+          : `✨ DEV Welcome Pack ${result.status}: ${(result as ClaimFullWelcomePackResult).cards.revealPayload?.cards.length ?? 0} cards, +${(result as ClaimFullWelcomePackResult).bundle.granted.dice} dice, +${(result as ClaimFullWelcomePackResult).bundle.granted.essence} money, +${(result as ClaimFullWelcomePackResult).bundle.granted.eventTickets} tickets.`;
       setLandingText(message);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to claim Welcome Pack right now.';
@@ -9922,7 +9983,7 @@ export function IslandRunBoardPrototype({
       welcomePackClaimInFlightRef.current = false;
       setWelcomePackClaimPending(false);
     }
-  }, [client, isDevModeEnabled, session]);
+  }, [client, deferWelcomePackCreatureCards, isDevModeEnabled, session]);
 
   const handleDevResetWelcomePackFlags = useCallback(async () => {
     if (!isDevModeEnabled) return 'Welcome Pack reset is only available in Island Run dev mode.';
@@ -10949,7 +11010,7 @@ export function IslandRunBoardPrototype({
     userId: session.user.id,
     currentIslandNumber: runtimeState.currentIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
-    hasHydratedRuntimeState: hasHydratedRuntimeState && !isIslandVisualPreview,
+    hasHydratedRuntimeState: hasHydratedRuntimeState && !isIslandVisualPreview && !isArcadeStoryJourney,
     isGlobalPrologueActive: activeStoryEpisode?.kind === 'global_prologue',
     isGlobalPrologueSeen: isGlobalPrologueSeenForNarrative,
     isNarrativeSurfaceBlocked,
@@ -11033,9 +11094,31 @@ export function IslandRunBoardPrototype({
     () => resolveIslandRunConcordHubEntryState(runtimeState),
     [runtimeState],
   );
+  const concordEntryButtonState = useMemo(() => {
+    if (!isArcadeStoryJourney || concordHubEntryState.isConcordActive) {
+      return concordHubEntryState;
+    }
+    if (isPro) {
+      return {
+        ...concordHubEntryState,
+        label: 'Chronicles',
+        ariaLabel: 'Open optional Pro chronicles',
+      };
+    }
+    return {
+      ...concordHubEntryState,
+      label: 'Signal',
+      icon: '◌',
+      ariaLabel: 'A dormant island signal. Restore The Concord to activate its channels.',
+    };
+  }, [concordHubEntryState, isArcadeStoryJourney, isPro]);
   const openGlobalStoryReader = useCallback(() => {
+    if (isArcadeStoryJourney && !isPro) {
+      setLandingText('The island signal is dormant. Keep restoring The Concord to activate its channels.');
+      return;
+    }
     setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
-  }, []);
+  }, [isArcadeStoryJourney, isPro]);
   const handleConcordEntryClick = useCallback(() => {
     if (concordHubEntryState.primaryAction === 'open-concord-hub') {
       setShowConcordHubModal(true);
@@ -11278,10 +11361,10 @@ export function IslandRunBoardPrototype({
           <button
             type="button"
             className="island-run-prototype__shop-btn"
-            aria-label={concordHubEntryState.ariaLabel}
+            aria-label={concordEntryButtonState.ariaLabel}
             onClick={handleConcordEntryClick}
           >
-            {concordHubEntryState.icon} {concordHubEntryState.label}
+            {concordEntryButtonState.icon} {concordEntryButtonState.label}
           </button>
           </div>
           {isDevModeEnabled && (
@@ -11944,6 +12027,14 @@ export function IslandRunBoardPrototype({
               {effectiveMultiplier > 1 && (
                 <span className="island-run-board__rewardbar-multiplier-badge">×{effectiveMultiplier}</span>
               )}
+              {storyFastModeState.active && (
+                <span
+                  className="island-run-board__story-fast-mode-badge"
+                  title="Fast Mode accelerates rolls and travel while preserving every island arrival."
+                >
+                  ⚡ Fast
+                </span>
+              )}
               {spaceExcavatorRewardBarHint && (
                 <span
                   className={`island-run-board__rewardbar-ticket-hint${showSpaceExcavatorRewardBarHint ? '' : ' island-run-board__rewardbar-ticket-hint--hidden'}`}
@@ -12064,6 +12155,7 @@ export function IslandRunBoardPrototype({
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
           isInteractionPaused={doesModalOwnAttention}
+          movementSpeedFactor={storyFastModeState.movementSpeedFactor}
           boardTiltXDeg={boardTiltXDeg}
           boardRotateZDeg={boardRotateZDeg}
           tileMap={landmarkDoorTileMap}
@@ -12202,9 +12294,9 @@ export function IslandRunBoardPrototype({
                   style={getIslandRunControllerSlotStyle(ISLAND_RUN_CONTROLLER_SLOT_MAP.leftUpper)}
                   onClick={handleConcordEntryClick}
                   disabled={isBuildTutorialGameplayBlocked}
-                  aria-label={concordHubEntryState.ariaLabel}
+                  aria-label={concordEntryButtonState.ariaLabel}
                 >
-                  {concordHubEntryState.icon} {concordHubEntryState.label}
+                  {concordEntryButtonState.icon} {concordEntryButtonState.label}
                 </button>
                 <button
                   type="button"
@@ -15399,7 +15491,11 @@ export function IslandRunBoardPrototype({
           open={showWelcomePackModal}
           onClose={() => {
             setShowWelcomePackModal(false);
-            if (!welcomePackClaimResult || welcomePackClaimResult.status === 'already_claimed') {
+            if (
+              deferWelcomePackCreatureCards
+              || !welcomePackClaimResult
+              || welcomePackClaimResult.status === 'already_claimed'
+            ) {
               setWelcomePackDismissedThisSession(true);
             }
           }}
@@ -15407,6 +15503,8 @@ export function IslandRunBoardPrototype({
           claimPending={welcomePackClaimPending}
           claimError={welcomePackClaimError}
           claimResult={welcomePackClaimResult}
+          bundleOnlyClaimResult={welcomePackBundleOnlyResult}
+          deferCreaturePack={deferWelcomePackCreatureCards}
           isDevPreview={isDevModeEnabled}
           displayName={welcomePackGuestDisplayName}
         />
@@ -15593,17 +15691,19 @@ export function IslandRunBoardPrototype({
                   <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">🧙</span>
                   <span>Caretaker Channel</span>
                 </button>
-                <button
-                  type="button"
-                  className="island-concord-hub-modal__channel"
-                  onClick={() => {
-                    setShowConcordHubModal(false);
-                    openGlobalStoryReader();
-                  }}
-                >
-                  <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">📖</span>
-                  <span>Story Channel</span>
-                </button>
+                {!isArcadeStoryJourney || isPro ? (
+                  <button
+                    type="button"
+                    className="island-concord-hub-modal__channel"
+                    onClick={() => {
+                      setShowConcordHubModal(false);
+                      openGlobalStoryReader();
+                    }}
+                  >
+                    <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">📖</span>
+                    <span>{isArcadeStoryJourney ? 'Pro Chronicles' : 'Story Channel'}</span>
+                  </button>
+                ) : null}
               </div>
             </div>
             <button type="button" className="island-concord-hub-modal__return" onClick={() => setShowConcordHubModal(false)}>Return to island</button>
