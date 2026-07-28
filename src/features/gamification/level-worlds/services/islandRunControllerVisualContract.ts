@@ -29,10 +29,13 @@ export const ISLAND_RUN_CONTROLLER_SLOT_MAP: Record<IslandRunControllerSlotId, I
   // wedges stay in the shoulders and clear both the roll core and the lower
   // handle-slice controls at every responsive shell size.
   leftUpper: { x: 15.5, y: 18.5, rotate: -3.5, scale: 0.96, depth: 'raised' },
-  leftLower: { x: 13.5, y: 63.5, rotate: -7, scale: 0.92, depth: 'raised' },
+  // APPROVED VISUAL CHECKPOINT (2026-07-27): Creatures is locked to this
+  // placement. Keep its x/y/rotation/scale unless the placement is explicitly
+  // reopened; rightLower mirrors this geometry across the controller centre.
+  leftLower: { x: 11.5, y: 57.5, rotate: 4, scale: 0.92, depth: 'raised' },
   centerCore: { x: 50, y: 22, rotate: 0, scale: 1, depth: 'inset' },
   centerBadge: { x: 50, y: -4, rotate: 0, scale: 0.9, depth: 'surface' },
-  rightLower: { x: 86.5, y: 63.5, rotate: 7, scale: 0.92, depth: 'raised' },
+  rightLower: { x: 88.5, y: 57.5, rotate: -4, scale: 0.92, depth: 'raised' },
   rightUpper: { x: 84.5, y: 18.5, rotate: 3.5, scale: 0.96, depth: 'raised' },
 };
 

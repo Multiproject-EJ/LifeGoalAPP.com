@@ -103,6 +103,7 @@ import { landingPageTreatTests } from './landingPageTreat.test';
 import { dicePackPurchasesTests } from './dicePackPurchases.test';
 import { todayRewardsParityTests } from './todayRewardsParity.test';
 import { dualTrackOverlayAdapterTests } from './dualTrackOverlayAdapter.test';
+import { islandRunControllerVisualContractTests } from './islandRunControllerVisualContract.test';
 import { combinedJourneyLevelTests } from './combinedJourneyLevel.test';
 import { combinedJourneyRewardLadderTests } from './combinedJourneyRewardLadder.test';
 import { combinedJourneyRewardClaimActionTests } from './combinedJourneyRewardClaimAction.test';
@@ -282,6 +283,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'dicePackPurchases', tests: dicePackPurchasesTests },
   { label: 'todayRewardsParity', tests: todayRewardsParityTests },
   { label: 'dualTrackOverlayAdapter', tests: dualTrackOverlayAdapterTests },
+  { label: 'islandRunControllerVisualContract', tests: islandRunControllerVisualContractTests },
   { label: 'combinedJourneyLevel', tests: combinedJourneyLevelTests },
   { label: 'combinedJourneyRewardLadder', tests: combinedJourneyRewardLadderTests },
   { label: 'combinedJourneyRewardClaimAction', tests: combinedJourneyRewardClaimActionTests },
