@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { getMinigame } from '../services/islandRunMinigameRegistry';
 import type {
   IslandRunControllerInputProvider,
@@ -78,6 +78,45 @@ export function IslandRunMinigameLauncher({
   onComplete,
 }: IslandRunMinigameLauncherProps) {
   const entry = getMinigame(minigameId);
+  const sessionSeconds = typeof launchConfig?.arenaSessionSeconds === 'number'
+    ? Math.max(1, Math.floor(launchConfig.arenaSessionSeconds))
+    : null;
+  const sessionPace = launchConfig?.arenaSessionPace === 'flash'
+    || launchConfig?.arenaSessionPace === 'fast'
+    || launchConfig?.arenaSessionPace === 'full'
+    ? launchConfig.arenaSessionPace
+    : null;
+  const [secondsRemaining, setSecondsRemaining] = useState(sessionSeconds);
+  const completedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
+  useEffect(() => {
+    completedRef.current = false;
+    setSecondsRemaining(sessionSeconds);
+  }, [minigameId, sessionSeconds]);
+
+  useEffect(() => {
+    if (sessionSeconds === null) return undefined;
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => {
+      const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+      const next = Math.max(0, sessionSeconds - elapsedSeconds);
+      setSecondsRemaining(next);
+      if (next === 0 && !completedRef.current) {
+        completedRef.current = true;
+        window.clearInterval(timer);
+        onCompleteRef.current({ completed: false });
+      }
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [minigameId, sessionSeconds]);
+
+  const completeOnce = (result: IslandRunMinigameResult) => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    onCompleteRef.current(result);
+  };
 
   if (!entry) {
     // Safe fallback: unknown minigame stays in-board and offers explicit close.
@@ -86,36 +125,44 @@ export function IslandRunMinigameLauncher({
         title="🎮 Minigame Unavailable"
         body={`Minigame "${minigameId}" is missing. This safe placeholder keeps you inside Island Run.`}
         ctaLabel="Close and return to board"
-        onClose={() => onComplete({ completed: false })}
+        onClose={() => completeOnce({ completed: false })}
       />
     );
   }
 
   const Component = entry.component;
   return (
-    <LauncherErrorBoundary
+    <div className={`arena-session-shell${sessionPace ? ` arena-session-shell--${sessionPace}` : ''}`}>
+      {sessionPace ? (
+        <div className="arena-session-pacing" role="status" aria-live="polite">
+          <span>{sessionPace === 'full' ? 'Full mission' : sessionPace === 'fast' ? 'Quick fight' : 'Flash fight'}</span>
+          <strong>{secondsRemaining === null ? 'Open play' : `${secondsRemaining}s`}</strong>
+        </div>
+      ) : null}
+      <LauncherErrorBoundary
       minigameId={minigameId}
-      onClose={() => onComplete({ completed: false })}
+      onClose={() => completeOnce({ completed: false })}
       key={minigameId}
-    >
-      <Suspense
-        fallback={(
-          <LauncherFallback
-            title="⏳ Loading minigame..."
-            body={`Preparing "${minigameId}". If this takes too long, close and return to the board.`}
-            ctaLabel="Close and return to board"
-            onClose={() => onComplete({ completed: false })}
-          />
-        )}
       >
-        <Component
-          islandNumber={islandNumber}
-          ticketBudget={ticketBudget}
-          controllerInput={controllerInput}
-          launchConfig={launchConfig}
-          onComplete={onComplete}
-        />
-      </Suspense>
-    </LauncherErrorBoundary>
+        <Suspense
+          fallback={(
+            <LauncherFallback
+              title="⏳ Loading minigame..."
+              body={`Preparing "${minigameId}". If this takes too long, close and return to the board.`}
+              ctaLabel="Close and return to board"
+              onClose={() => completeOnce({ completed: false })}
+            />
+          )}
+        >
+          <Component
+            islandNumber={islandNumber}
+            ticketBudget={ticketBudget}
+            controllerInput={controllerInput}
+            launchConfig={launchConfig}
+            onComplete={completeOnce}
+          />
+        </Suspense>
+      </LauncherErrorBoundary>
+    </div>
   );
 }

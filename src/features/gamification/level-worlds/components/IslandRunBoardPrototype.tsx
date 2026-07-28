@@ -352,6 +352,14 @@ import {
   type EncounterReward,
 } from '../services/encounterService';
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
+import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
+import {
+  DEFAULT_ARENA_MINIGAME_PREFERENCES,
+  getArenaSessionSeconds,
+  loadArenaMinigamePreferences,
+  resolveArenaSessionPace,
+  type ArenaMinigamePreferences,
+} from '../services/islandRunArenaPreferences';
 import { ShooterControllerAdapter } from './ShooterControllerAdapter';
 import { IslandStoryReader } from './IslandStoryReader';
 import { IslandChampionshipBanner } from './IslandChampionshipBanner';
@@ -2166,6 +2174,8 @@ export function IslandRunBoardPrototype({
   const [activeLaunchedMinigameId, setActiveLaunchedMinigameId] = useState<string | null>(null);
   const [activeLaunchedMinigameSource, setActiveLaunchedMinigameSource] = useState<MinigameLaunchSource | null>(null);
   const [activeLaunchedMinigameConfig, setActiveLaunchedMinigameConfig] = useState<Record<string, unknown> | undefined>(undefined);
+  const [arenaPreferences, setArenaPreferences] = useState<ArenaMinigamePreferences>(DEFAULT_ARENA_MINIGAME_PREFERENCES);
+  const [showArenaPreferences, setShowArenaPreferences] = useState(false);
   const shooterControllerBridge = useMemo(() => createShooterControllerBridge(), []);
   const isShooterControllerActive = activeLaunchedMinigameId === 'shooter_blitz';
   const shooterControllerInput = shooterControllerBridge.controllerInput;
@@ -2178,6 +2188,16 @@ export function IslandRunBoardPrototype({
       shooterControllerBridge.reset();
     }
   }, [isShooterControllerActive, shooterControllerBridge]);
+
+  useEffect(() => {
+    let active = true;
+    void loadArenaMinigamePreferences(session).then((result) => {
+      if (active) setArenaPreferences(result.preferences);
+    });
+    return () => {
+      active = false;
+    };
+  }, [session]);
 
   useEffect(() => {
     if (!isShooterControllerActive) return;
@@ -8405,6 +8425,12 @@ export function IslandRunBoardPrototype({
       playIslandRunSound('minigame_open');
       return;
     }
+    const arenaPace = resolveArenaSessionPace(arenaPreferences, effectiveActiveTimedEvent.eventType);
+    if (!arenaPace) {
+      setLandingText('This Arena game is paused in your rotation. Tune the Arena to turn it back on.');
+      setShowArenaPreferences(true);
+      return;
+    }
 
     const baseContext = {
       kind: 'timed_event' as const,
@@ -8452,9 +8478,7 @@ export function IslandRunBoardPrototype({
         return;
       }
     }
-    setActiveLaunchedMinigameId(descriptor.minigameId);
-    setActiveLaunchedMinigameSource('timed_event');
-    setActiveLaunchedMinigameConfig(
+    const eventSpecificLaunchConfig =
       effectiveActiveTimedEvent.eventType === 'space_excavator'
         ? {
             ...descriptor.config,
@@ -8545,8 +8569,14 @@ export function IslandRunBoardPrototype({
               return { ok: grant.applied > 0, ticketsRemaining: Math.max(0, Math.floor(grant.record.minigameTicketsByEvent?.[effectiveActiveTimedEvent.eventId] ?? 0)) };
             },
           }
-        : descriptor.config,
-    );
+        : descriptor.config;
+    setActiveLaunchedMinigameId(descriptor.minigameId);
+    setActiveLaunchedMinigameSource('timed_event');
+    setActiveLaunchedMinigameConfig({
+      ...eventSpecificLaunchConfig,
+      arenaSessionPace: arenaPace,
+      arenaSessionSeconds: getArenaSessionSeconds(arenaPace),
+    });
     setIsTimedEventLaunchQueued(false);
     playIslandRunSound('minigame_open');
   };
@@ -13044,6 +13074,13 @@ export function IslandRunBoardPrototype({
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+                    onClick={() => setShowArenaPreferences(true)}
+                  >
+                    Tune Arena
+                  </button>
+                  <button
+                    type="button"
+                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
                     onClick={handleComeBackLaterForActiveStop}
                   >
                     Later
@@ -15630,6 +15667,13 @@ export function IslandRunBoardPrototype({
           />
         </div>
       )}
+
+      <IslandRunArenaPreferencesModal
+        open={showArenaPreferences}
+        session={session}
+        onClose={() => setShowArenaPreferences(false)}
+        onSaved={setArenaPreferences}
+      />
 
       <IslandRunWinCelebrationModal
         open={showWinCelebrationModal}

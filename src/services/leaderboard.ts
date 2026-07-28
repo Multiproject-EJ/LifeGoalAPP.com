@@ -15,9 +15,7 @@ export interface LeaderboardEntry {
   userId: string;
   playerName: string;
   archetype: string;
-  /** Displayed as the player's level — the Combined Journey Level. */
   level: number;
-  /** The canonical leaderboard score — Combined Journey XP. */
   combinedWealth: number;
 }
 
@@ -27,10 +25,15 @@ export interface LeaderboardSnapshot {
   viewerEntries: LeaderboardEntry[];
 }
 
-interface ProfileLeaderboardRow {
-  user_id: string;
+export interface AdventureLeagueMembership {
+  joined: boolean;
+  joinedAt: string | null;
+}
+
+interface AdventureLeagueRow extends GamificationProfileLeaderboardRow {
   display_name: string | null;
-  personality_profile_type: string | null;
+  archetype: string | null;
+  joined_at?: string | null;
 }
 
 interface FetchLeaderboardSnapshotOptions {
@@ -39,38 +42,134 @@ interface FetchLeaderboardSnapshotOptions {
   contextRadius?: number;
 }
 
-const LEADERBOARD_COLUMNS = 'user_id,combined_journey_level,combined_journey_xp';
+interface JoinAdventureLeagueOptions {
+  viewerUserId: string;
+  displayName: string;
+  archetype: string;
+  level: number;
+  combinedJourneyXp: number;
+}
 
-function toLeaderboardEntry(
-  row: GamificationProfileLeaderboardRow,
-  rank: number,
-  profileByUserId: Map<string, ProfileLeaderboardRow>,
-): LeaderboardEntry {
-  const profile = profileByUserId.get(row.user_id);
+const LEAGUE_TABLE = 'adventure_league_entries';
+const LEAGUE_COLUMNS = 'user_id,display_name,archetype,combined_journey_level,combined_journey_xp,joined_at';
+const emptySnapshot: LeaderboardSnapshot = { topEntries: [], viewerRank: null, viewerEntries: [] };
+
+function getAdventureLeagueClient() {
+  // The migration ships in this change; generated database.types will learn
+  // the table after the remote schema is applied.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return getSupabaseClient() as any;
+}
+
+function cleanPublicLabel(value: string, fallback: string, maxLength: number): string {
+  const normalized = value.replace(/\s+/g, ' ').trim().slice(0, maxLength);
+  return normalized || fallback;
+}
+
+function toLeaderboardEntry(row: AdventureLeagueRow, rank: number): LeaderboardEntry {
   const { level, score } = toLeaderboardScore(row);
-
   return {
     rank,
     userId: row.user_id,
-    playerName: profile?.display_name?.trim() || 'Player',
-    archetype: profile?.personality_profile_type?.trim() || 'Unknown',
+    playerName: cleanPublicLabel(row.display_name ?? '', 'Explorer', 60),
+    archetype: cleanPublicLabel(row.archetype ?? '', 'Uncharted', 40),
     level,
     combinedWealth: score,
   };
 }
 
-async function fetchProfileMap(userIds: string[]): Promise<Map<string, ProfileLeaderboardRow>> {
-  if (userIds.length === 0) return new Map();
+function cloudUnavailableMessage(): string | null {
+  if (!canUseSupabaseData()) return 'Adventure League requires an active Supabase session.';
+  const availability = getFeatureAvailability('multiplayer', getServiceHealthManager().getSnapshot());
+  return availability.status === 'available' ? null : availability.reason;
+}
 
-  const supabase = getSupabaseClient();
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('user_id,display_name,personality_profile_type')
-    .in('user_id', userIds);
+export async function fetchAdventureLeagueMembership(
+  viewerUserId: string,
+): Promise<{ data: AdventureLeagueMembership; error: string | null }> {
+  const unavailable = cloudUnavailableMessage();
+  if (unavailable) return { data: { joined: false, joinedAt: null }, error: unavailable };
 
-  if (error) throw error;
+  const result = await guardedCloudCall('database', async () => {
+    const { data, error } = await getAdventureLeagueClient()
+      .from(LEAGUE_TABLE)
+      .select('joined_at')
+      .eq('user_id', viewerUserId)
+      .maybeSingle();
+    if (error) throw error;
+    return {
+      joined: Boolean(data),
+      joinedAt: typeof data?.joined_at === 'string' ? data.joined_at : null,
+    };
+  });
+  return result.ok
+    ? { data: result.data, error: null }
+    : { data: { joined: false, joinedAt: null }, error: result.error.explanation };
+}
 
-  return new Map(((data as ProfileLeaderboardRow[]) ?? []).map((row) => [row.user_id, row]));
+export async function joinAdventureLeague({
+  viewerUserId,
+  displayName,
+  archetype,
+  level,
+  combinedJourneyXp,
+}: JoinAdventureLeagueOptions): Promise<{ data: AdventureLeagueMembership; error: string | null }> {
+  const unavailable = cloudUnavailableMessage();
+  if (unavailable) return { data: { joined: false, joinedAt: null }, error: unavailable };
+
+  const now = new Date().toISOString();
+  const result = await guardedCloudCall('database', async () => {
+    const { data, error } = await getAdventureLeagueClient()
+      .from(LEAGUE_TABLE)
+      .upsert({
+        user_id: viewerUserId,
+        display_name: cleanPublicLabel(displayName, 'Explorer', 60),
+        archetype: cleanPublicLabel(archetype, 'Uncharted', 40),
+        combined_journey_level: Math.max(1, Math.floor(level)),
+        combined_journey_xp: Math.max(0, Math.floor(combinedJourneyXp)),
+        updated_at: now,
+      }, { onConflict: 'user_id' })
+      .select('joined_at')
+      .single();
+    if (error) throw error;
+    return {
+      joined: true,
+      joinedAt: typeof data?.joined_at === 'string' ? data.joined_at : now,
+    };
+  });
+  return result.ok
+    ? { data: result.data, error: null }
+    : { data: { joined: false, joinedAt: null }, error: result.error.explanation };
+}
+
+export async function leaveAdventureLeague(
+  viewerUserId: string,
+): Promise<{ left: boolean; error: string | null }> {
+  const unavailable = cloudUnavailableMessage();
+  if (unavailable) return { left: false, error: unavailable };
+
+  const result = await guardedCloudCall('database', async () => {
+    const { error } = await getAdventureLeagueClient()
+      .from(LEAGUE_TABLE)
+      .delete()
+      .eq('user_id', viewerUserId);
+    if (error) throw error;
+    return true;
+  });
+  return result.ok
+    ? { left: true, error: null }
+    : { left: false, error: result.error.explanation };
+}
+
+export async function refreshAdventureLeagueEntry(
+  options: JoinAdventureLeagueOptions,
+): Promise<{ refreshed: boolean; error: string | null }> {
+  const membership = await fetchAdventureLeagueMembership(options.viewerUserId);
+  if (membership.error || !membership.data.joined) {
+    return { refreshed: false, error: membership.error };
+  }
+  const joined = await joinAdventureLeague(options);
+  return { refreshed: joined.data.joined, error: joined.error };
 }
 
 export async function fetchLeaderboardSnapshot({
@@ -78,87 +177,62 @@ export async function fetchLeaderboardSnapshot({
   topLimit = 50,
   contextRadius = 10,
 }: FetchLeaderboardSnapshotOptions): Promise<{ data: LeaderboardSnapshot; error: string | null }> {
-  const emptySnapshot: LeaderboardSnapshot = { topEntries: [], viewerRank: null, viewerEntries: [] };
-
-  if (!canUseSupabaseData()) {
-    return { data: emptySnapshot, error: 'Leaderboard requires an active Supabase session.' };
-  }
-
-  const availability = getFeatureAvailability('multiplayer', getServiceHealthManager().getSnapshot());
-  if (availability.status !== 'available') {
-    return { data: emptySnapshot, error: availability.reason };
-  }
+  const unavailable = cloudUnavailableMessage();
+  if (unavailable) return { data: emptySnapshot, error: unavailable };
 
   const result = await guardedCloudCall('database', async () => {
     const safeTopLimit = Math.max(1, Math.min(topLimit, 100));
     const safeRadius = Math.max(1, Math.min(contextRadius, 20));
-    const supabase = getSupabaseClient();
-
+    const supabase = getAdventureLeagueClient();
     const orderedBaseQuery = () =>
       supabase
-        .from('gamification_profiles')
-        .select(LEADERBOARD_COLUMNS)
-        .eq('gamification_enabled', true)
+        .from(LEAGUE_TABLE)
+        .select(LEAGUE_COLUMNS)
         .order('combined_journey_xp', { ascending: false })
         .order('combined_journey_level', { ascending: false })
         .order('user_id', { ascending: true });
 
     const { data: topRowsRaw, error: topRowsError } = await orderedBaseQuery().range(0, safeTopLimit - 1);
     if (topRowsError) throw topRowsError;
-    const topRows = (topRowsRaw as GamificationProfileLeaderboardRow[]) ?? [];
+    const topRows = (topRowsRaw as AdventureLeagueRow[]) ?? [];
 
     const { data: viewerRowRaw, error: viewerRowError } = await supabase
-      .from('gamification_profiles')
-      .select(LEADERBOARD_COLUMNS)
+      .from(LEAGUE_TABLE)
+      .select(LEAGUE_COLUMNS)
       .eq('user_id', viewerUserId)
-      .eq('gamification_enabled', true)
       .maybeSingle();
     if (viewerRowError) throw viewerRowError;
-
     if (!viewerRowRaw) {
-      const profileMap = await fetchProfileMap(topRows.map((row) => row.user_id));
       return {
-        topEntries: topRows.map((row, index) => toLeaderboardEntry(row, index + 1, profileMap)),
+        topEntries: topRows.map((row, index) => toLeaderboardEntry(row, index + 1)),
         viewerRank: null,
         viewerEntries: [],
       } satisfies LeaderboardSnapshot;
     }
 
-    const viewerRow = viewerRowRaw as GamificationProfileLeaderboardRow;
-    const viewerScore = toLeaderboardScore(viewerRow);
-    const rankAheadFilter = buildRankAheadFilter(viewerScore, viewerUserId);
-
+    const viewerRow = viewerRowRaw as AdventureLeagueRow;
+    const rankAheadFilter = buildRankAheadFilter(toLeaderboardScore(viewerRow), viewerUserId);
     const { count: aheadCount, error: aheadCountError } = await supabase
-      .from('gamification_profiles')
+      .from(LEAGUE_TABLE)
       .select('user_id', { count: 'exact', head: true })
-      .eq('gamification_enabled', true)
       .or(rankAheadFilter);
-
     if (aheadCountError) throw aheadCountError;
 
     const viewerRank = (aheadCount ?? 0) + 1;
     const startRank = Math.max(1, viewerRank - safeRadius);
     const endRank = viewerRank + safeRadius;
-
     const { data: viewerRowsRaw, error: viewerRowsError } = await orderedBaseQuery().range(startRank - 1, endRank - 1);
     if (viewerRowsError) throw viewerRowsError;
-
-    const viewerRows = (viewerRowsRaw as GamificationProfileLeaderboardRow[]) ?? [];
-    const allUserIds = Array.from(new Set([...topRows, ...viewerRows].map((row) => row.user_id)));
-    const profileMap = await fetchProfileMap(allUserIds);
+    const viewerRows = (viewerRowsRaw as AdventureLeagueRow[]) ?? [];
 
     return {
-      topEntries: topRows.map((row, index) => toLeaderboardEntry(row, index + 1, profileMap)),
+      topEntries: topRows.map((row, index) => toLeaderboardEntry(row, index + 1)),
       viewerRank,
-      viewerEntries: viewerRows.map((row, index) =>
-        toLeaderboardEntry(row, startRank + index, profileMap),
-      ),
+      viewerEntries: viewerRows.map((row, index) => toLeaderboardEntry(row, startRank + index)),
     } satisfies LeaderboardSnapshot;
   });
 
-  if (!result.ok) {
-    // Translated explanation only — raw provider text never reaches the UI.
-    return { data: emptySnapshot, error: result.error.explanation };
-  }
-  return { data: result.data, error: null };
+  return result.ok
+    ? { data: result.data, error: null }
+    : { data: emptySnapshot, error: result.error.explanation };
 }

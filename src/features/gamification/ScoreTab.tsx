@@ -41,7 +41,15 @@ import { recordTelemetryEvent } from '../../services/telemetry';
 import { getEvolutionStateLabel } from '../../lib/rewardEvolution';
 import { analyzeRewardPacing, canShowPrompt, markPromptShown } from '../../lib/rewardPacing';
 import { evaluateRewardRisk } from '../../lib/rewardValidation';
-import { fetchLeaderboardSnapshot, type LeaderboardEntry } from '../../services/leaderboard';
+import {
+  fetchAdventureLeagueMembership,
+  fetchLeaderboardSnapshot,
+  joinAdventureLeague,
+  leaveAdventureLeague,
+  refreshAdventureLeagueEntry,
+  type AdventureLeagueMembership,
+  type LeaderboardEntry,
+} from '../../services/leaderboard';
 import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from '../../hooks/useFutureFeatureCardStates';
 import { RewardEvolutionModal } from './RewardEvolutionModal';
 import { PowerUpsStore } from '../power-ups/PowerUpsStore';
@@ -179,6 +187,11 @@ export function ScoreTab({
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   const [leaderboardArchetypeFilter, setLeaderboardArchetypeFilter] = useState<string>('all');
+  const [leagueMembership, setLeagueMembership] = useState<AdventureLeagueMembership>({ joined: false, joinedAt: null });
+  const [leagueMembershipLoading, setLeagueMembershipLoading] = useState(false);
+  const [leagueMutationPending, setLeagueMutationPending] = useState(false);
+  const [leagueCelebration, setLeagueCelebration] = useState<'seeking' | 'found' | null>(null);
+  const shouldCelebrateLeagueJoinRef = useRef(false);
   const [garageShipTab, setGarageShipTab] = useState<'companions' | 'upgrades' | 'cosmetics'>('companions');
   const [collectionsView, setCollectionsView] = useState<'hub' | 'creatureSanctuary'>('hub');
   const [perfectCompanionOps, setPerfectCompanionOps] = useState<PerfectCompanionRuntimeConfig>(() =>
@@ -186,6 +199,22 @@ export function ScoreTab({
   );
 
   const [isAdminOrCreator, setIsAdminOrCreator] = useState<boolean | null>(null);
+
+  const leaguePublicIdentity = useMemo(() => {
+    const metadata = session?.user?.user_metadata ?? {};
+    const displayName = [metadata.display_name, metadata.full_name, metadata.name]
+      .find((value) => typeof value === 'string' && value.trim().length > 0);
+    const fallbackName = session?.user?.email?.split('@')[0] || 'Explorer';
+    const archetype = typeof metadata.personality_profile_type === 'string'
+      ? metadata.personality_profile_type
+      : typeof metadata.archetype === 'string'
+        ? metadata.archetype
+        : 'Uncharted';
+    return {
+      displayName: typeof displayName === 'string' ? displayName : fallbackName,
+      archetype,
+    };
+  }, [session?.user?.email, session?.user?.user_metadata]);
 
   const [previewFeature, setPreviewFeature] = useState<{
     id: FeatureAvailabilityId;
@@ -424,34 +453,107 @@ export function ScoreTab({
     };
   }, [enabled, userId, activeTab, zenTokens]);
 
+  const loadAdventureLeague = useCallback(async () => {
+    if (!enabled || activeTab !== 'leaderboard' || !userId) return;
+    setLeagueMembershipLoading(true);
+    setLeaderboardError(null);
+    const membershipResult = await fetchAdventureLeagueMembership(userId);
+    setLeagueMembership(membershipResult.data);
+    setLeagueMembershipLoading(false);
+    if (membershipResult.error || !membershipResult.data.joined) {
+      setLeaderboardTopEntries([]);
+      setLeaderboardViewerEntries([]);
+      setLeaderboardViewerRank(null);
+      setLeaderboardError(membershipResult.error);
+      return;
+    }
+
+    setLeaderboardLoading(true);
+    await refreshAdventureLeagueEntry({
+      viewerUserId: userId,
+      displayName: leaguePublicIdentity.displayName,
+      archetype: leaguePublicIdentity.archetype,
+      level: profile?.combined_journey_level ?? levelInfo?.currentLevel ?? 1,
+      combinedJourneyXp: profile?.combined_journey_xp ?? profile?.total_xp ?? 0,
+    });
+    const { data, error } = await fetchLeaderboardSnapshot({
+      viewerUserId: userId,
+      topLimit: 50,
+      contextRadius: 10,
+    });
+    setLeaderboardTopEntries(data.topEntries);
+    setLeaderboardViewerEntries(data.viewerEntries);
+    setLeaderboardViewerRank(data.viewerRank);
+    setLeaderboardError(error);
+    setLeaderboardLoading(false);
+    if (shouldCelebrateLeagueJoinRef.current && data.viewerRank) {
+      shouldCelebrateLeagueJoinRef.current = false;
+      setLeagueCelebration('found');
+      window.setTimeout(() => setLeagueCelebration(null), 2800);
+    }
+  }, [
+    activeTab,
+    enabled,
+    leaguePublicIdentity.archetype,
+    leaguePublicIdentity.displayName,
+    levelInfo?.currentLevel,
+    profile?.combined_journey_level,
+    profile?.combined_journey_xp,
+    profile?.total_xp,
+    userId,
+  ]);
+
   useEffect(() => {
-    let isMounted = true;
+    void loadAdventureLeague();
+  }, [loadAdventureLeague]);
 
-    const loadLeaderboard = async () => {
-      if (!enabled || activeTab !== 'leaderboard') {
-        return;
-      }
+  const handleJoinAdventureLeague = useCallback(async () => {
+    if (!userId) return;
+    setLeagueMutationPending(true);
+    setLeaderboardError(null);
+    setLeagueCelebration('seeking');
+    const result = await joinAdventureLeague({
+      viewerUserId: userId,
+      displayName: leaguePublicIdentity.displayName,
+      archetype: leaguePublicIdentity.archetype,
+      level: profile?.combined_journey_level ?? levelInfo?.currentLevel ?? 1,
+      combinedJourneyXp: profile?.combined_journey_xp ?? profile?.total_xp ?? 0,
+    });
+    setLeagueMutationPending(false);
+    if (result.error || !result.data.joined) {
+      setLeagueCelebration(null);
+      setLeaderboardError(result.error ?? 'Adventure League could not be joined.');
+      return;
+    }
+    shouldCelebrateLeagueJoinRef.current = true;
+    setLeagueMembership(result.data);
+    await loadAdventureLeague();
+  }, [
+    leaguePublicIdentity.archetype,
+    leaguePublicIdentity.displayName,
+    levelInfo?.currentLevel,
+    loadAdventureLeague,
+    profile?.combined_journey_level,
+    profile?.combined_journey_xp,
+    profile?.total_xp,
+    userId,
+  ]);
 
-      setLeaderboardLoading(true);
-      const { data, error } = await fetchLeaderboardSnapshot({
-        viewerUserId: userId,
-        topLimit: 50,
-        contextRadius: 10,
-      });
-      if (!isMounted) return;
-      setLeaderboardTopEntries(data.topEntries);
-      setLeaderboardViewerEntries(data.viewerEntries);
-      setLeaderboardViewerRank(data.viewerRank);
-      setLeaderboardError(error);
-      setLeaderboardLoading(false);
-    };
-
-    void loadLeaderboard();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activeTab, enabled, userId]);
+  const handleLeaveAdventureLeague = useCallback(async () => {
+    if (!userId) return;
+    setLeagueMutationPending(true);
+    const result = await leaveAdventureLeague(userId);
+    setLeagueMutationPending(false);
+    if (!result.left) {
+      setLeaderboardError(result.error ?? 'Adventure League could not be turned off.');
+      return;
+    }
+    setLeagueMembership({ joined: false, joinedAt: null });
+    setLeaderboardTopEntries([]);
+    setLeaderboardViewerEntries([]);
+    setLeaderboardViewerRank(null);
+    setLeaderboardError(null);
+  }, [userId]);
 
   const sourceChips = useMemo(() => {
     const tally = transactions.reduce<Record<string, { label: string; count: number; xp: number }>>(
@@ -875,85 +977,126 @@ export function ScoreTab({
       {!loading && enabled && activeTab === 'leaderboard' && (
         <div className="score-tab__content">
           <div className="score-tab__bank-intro">
-            <h2 className="score-tab__headline">Player Leaderboard</h2>
+            <h2 className="score-tab__headline">{leagueMembership.joined ? 'Adventure League' : 'Leaderboard'}</h2>
             <p className="score-tab__subtitle">
-              Ranked by combined wealth (gold + XP). We only load Top 50 plus your own position window (10 above and 10 below).
+              {leagueMembership.joined
+                ? 'Your personal Combined Journey XP becomes your League score. This is asynchronous multiplayer: everyone advances through their own habits.'
+                : 'Private by default. Join when you want your chosen name, archetype, level, and Combined Journey XP to appear publicly to signed-in players.'}
             </p>
           </div>
 
-          <div className="score-tab__leaderboard-filters" role="tablist" aria-label="Leaderboard archetypes">
-            <button
-              type="button"
-              className={`score-tab__leaderboard-filter${leaderboardArchetypeFilter === 'all' ? ' score-tab__leaderboard-filter--active' : ''}`}
-              onClick={() => setLeaderboardArchetypeFilter('all')}
-            >
-              All archetypes
-            </button>
-            {leaderboardArchetypes.map((archetype) => (
+          {leagueMembershipLoading ? <p className="score-tab__status">Checking League status…</p> : null}
+
+          {!leagueMembershipLoading && !leagueMembership.joined ? (
+            <section className="score-tab__league-invite">
+              <div className="score-tab__league-orbit" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span></div>
+              <p className="score-tab__league-eyebrow">A transmission from the 120 Worlds</p>
+              <h3>Join the Adventure League?</h3>
+              <p>Find your place among other rebuilding crews and earn the permanent <strong>Founding Explorer crest</strong>.</p>
+              <ul>
+                <li>Opt in now; leave whenever you want.</li>
+                <li>Only your League identity and score are shared.</li>
+                <li>No live multiplayer or chat is required.</li>
+              </ul>
               <button
-                key={archetype}
                 type="button"
-                className={`score-tab__leaderboard-filter${leaderboardArchetypeFilter === archetype ? ' score-tab__leaderboard-filter--active' : ''}`}
-                onClick={() => setLeaderboardArchetypeFilter(archetype)}
+                className="score-tab__league-join"
+                onClick={handleJoinAdventureLeague}
+                disabled={leagueMutationPending}
               >
-                {archetype}
+                {leagueMutationPending ? 'Opening the League…' : 'Join Adventure League · Claim crest'}
               </button>
-            ))}
-          </div>
+              {leaderboardError ? <p className="score-tab__status">{leaderboardError}</p> : null}
+            </section>
+          ) : null}
 
-          {leaderboardLoading && <p className="score-tab__status">Loading leaderboard…</p>}
-          {!leaderboardLoading && leaderboardError && (
-            <p className="score-tab__status">{leaderboardError}</p>
-          )}
-          {!leaderboardLoading && !leaderboardError && filteredTopLeaderboardEntries.length === 0 && (
-            <p className="score-tab__status">No leaderboard entries yet. Complete activities to join the rankings.</p>
-          )}
-
-          {!leaderboardLoading && !leaderboardError && filteredTopLeaderboardEntries.length > 0 && (
+          {leagueMembership.joined ? (
             <>
-              <section className="score-tab__leaderboard-section">
-                <h3 className="score-tab__leaderboard-section-title">Top 50</h3>
-                <div className="score-tab__leaderboard-list" aria-live="polite">
-                  {filteredTopLeaderboardEntries.map((entry) => (
-                    <article key={`top-${entry.userId}`} className="score-tab__leaderboard-row">
-                      <p className="score-tab__leaderboard-rank">#{entry.rank}</p>
-                      <div className="score-tab__leaderboard-main">
-                        <p className="score-tab__leaderboard-name">{entry.playerName}</p>
-                        <p className="score-tab__leaderboard-meta">{entry.archetype} • Level {entry.level}</p>
-                      </div>
-                      <p className="score-tab__leaderboard-wealth">{formatter.format(entry.combinedWealth)}</p>
-                    </article>
-                  ))}
-                </div>
-              </section>
+              <div className="score-tab__league-toolbar">
+                <span className="score-tab__league-crest" title="Founding Explorer crest">✦ Founding Explorer</span>
+                <button type="button" onClick={handleLeaveAdventureLeague} disabled={leagueMutationPending}>
+                  {leagueMutationPending ? 'Updating…' : 'Leave League'}
+                </button>
+              </div>
 
-              {leaderboardViewerRank && (
-                <section className="score-tab__leaderboard-section">
-                  <h3 className="score-tab__leaderboard-section-title">Your placement</h3>
-                  <p className="score-tab__meta">You are currently ranked #{formatter.format(leaderboardViewerRank)}.</p>
-                  {filteredViewerLeaderboardEntries.length > 0 ? (
+              <div className="score-tab__leaderboard-filters" role="tablist" aria-label="Adventure League archetypes">
+                <button
+                  type="button"
+                  className={`score-tab__leaderboard-filter${leaderboardArchetypeFilter === 'all' ? ' score-tab__leaderboard-filter--active' : ''}`}
+                  onClick={() => setLeaderboardArchetypeFilter('all')}
+                >
+                  All archetypes
+                </button>
+                {leaderboardArchetypes.map((archetype) => (
+                  <button
+                    key={archetype}
+                    type="button"
+                    className={`score-tab__leaderboard-filter${leaderboardArchetypeFilter === archetype ? ' score-tab__leaderboard-filter--active' : ''}`}
+                    onClick={() => setLeaderboardArchetypeFilter(archetype)}
+                  >
+                    {archetype}
+                  </button>
+                ))}
+              </div>
+
+              {leaderboardLoading && <p className="score-tab__status">Finding your place in the League…</p>}
+              {!leaderboardLoading && leaderboardError && <p className="score-tab__status">{leaderboardError}</p>}
+              {!leaderboardLoading && !leaderboardError && filteredTopLeaderboardEntries.length === 0 && (
+                <p className="score-tab__status">You are the first explorer here. Your place is ready.</p>
+              )}
+
+              {!leaderboardLoading && !leaderboardError && filteredTopLeaderboardEntries.length > 0 && (
+                <>
+                  <section className="score-tab__leaderboard-section">
+                    <h3 className="score-tab__leaderboard-section-title">Top 50 crews</h3>
                     <div className="score-tab__leaderboard-list" aria-live="polite">
-                      {filteredViewerLeaderboardEntries.map((entry) => (
-                        <article
-                          key={`viewer-${entry.userId}-${entry.rank}`}
-                          className={`score-tab__leaderboard-row${entry.userId === userId ? ' score-tab__leaderboard-row--viewer' : ''}`}
-                        >
+                      {filteredTopLeaderboardEntries.map((entry) => (
+                        <article key={`top-${entry.userId}`} className={`score-tab__leaderboard-row${entry.userId === userId ? ' score-tab__leaderboard-row--viewer' : ''}`}>
                           <p className="score-tab__leaderboard-rank">#{entry.rank}</p>
                           <div className="score-tab__leaderboard-main">
                             <p className="score-tab__leaderboard-name">{entry.playerName}</p>
                             <p className="score-tab__leaderboard-meta">{entry.archetype} • Level {entry.level}</p>
                           </div>
-                          <p className="score-tab__leaderboard-wealth">{formatter.format(entry.combinedWealth)}</p>
+                          <p className="score-tab__leaderboard-wealth">{formatter.format(entry.combinedWealth)} XP</p>
                         </article>
                       ))}
                     </div>
-                  ) : (
-                    <p className="score-tab__status">No nearby players for this archetype filter.</p>
-                  )}
-                </section>
+                  </section>
+
+                  {leaderboardViewerRank ? (
+                    <section className="score-tab__leaderboard-section">
+                      <h3 className="score-tab__leaderboard-section-title">Your neighbourhood</h3>
+                      <p className="score-tab__meta">Your crew has snapped into place at #{formatter.format(leaderboardViewerRank)}.</p>
+                      <div className="score-tab__leaderboard-list" aria-live="polite">
+                        {filteredViewerLeaderboardEntries.map((entry) => (
+                          <article
+                            key={`viewer-${entry.userId}-${entry.rank}`}
+                            className={`score-tab__leaderboard-row${entry.userId === userId ? ' score-tab__leaderboard-row--viewer score-tab__leaderboard-row--snap' : ''}`}
+                          >
+                            <p className="score-tab__leaderboard-rank">#{entry.rank}</p>
+                            <div className="score-tab__leaderboard-main">
+                              <p className="score-tab__leaderboard-name">{entry.playerName}</p>
+                              <p className="score-tab__leaderboard-meta">{entry.archetype} • Level {entry.level}</p>
+                            </div>
+                            <p className="score-tab__leaderboard-wealth">{formatter.format(entry.combinedWealth)} XP</p>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
+                </>
               )}
             </>
-          )}
+          ) : null}
+
+          {leagueCelebration ? (
+            <div className={`score-tab__league-celebration score-tab__league-celebration--${leagueCelebration}`} role="status" aria-live="assertive">
+              <div className="score-tab__league-stars" aria-hidden="true"><i /><i /><i /><i /><i /><i /></div>
+              <p>{leagueCelebration === 'seeking' ? 'Scanning the 120 Worlds…' : 'Position found'}</p>
+              <strong>{leagueCelebration === 'found' && leaderboardViewerRank ? `#${formatter.format(leaderboardViewerRank)}` : '⌁'}</strong>
+              <span>{leagueCelebration === 'found' ? 'Well done, Founding Explorer!' : 'Finding your crew signal'}</span>
+            </div>
+          ) : null}
         </div>
       )}
 

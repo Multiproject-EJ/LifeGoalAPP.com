@@ -2,7 +2,7 @@
 
 **Audit date:** 2026-07-28
 
-**Audited through:** `f61786e1`
+**Audited through:** Arena preferences + Adventure League implementation branch
 
 This document records the difference between ideas discussed in the product
 conversation, work represented by story/design artifacts, and behavior that is
@@ -57,11 +57,37 @@ actually wired into the application.
 - Additional registered game surfaces exist for Shooter Blitz, Boss Rhythm, and
   Vision Quest.
 
-### Existing leaderboard foundation
+### Arena preference and pacing system
 
-- A Supabase-backed Player Leaderboard exists.
-- It loads the Top 50 plus a window around the current player.
-- Ranking uses canonical Combined Journey XP/level ordering.
+- Players can rank all four canonical Arena games.
+- At most one of the four games can be paused, enforcing the 25% cap in the UI,
+  normalization layer, and Supabase constraint.
+- The favourite active game is a full mission, middle games are 45-second quick
+  fights, and the lowest active game is a 15-second flash fight.
+- Preferences save locally for immediate/offline use and sync privately through
+  Supabase.
+
+### Adventure League
+
+- The former leaderboard is now an explicit, private-by-default League opt-in.
+- Only a player-selected public identity, archetype, level, and Combined Journey
+  XP are placed in the public League row; private profile fields are not exposed.
+- The destination remains named **Leaderboard** until the player joins, then
+  becomes **Adventure League**.
+- Joining grants the cosmetic Founding Explorer crest and plays scan, zoom,
+  snap, glow, confetti, and “Well done” beats with reduced-motion support.
+- Players can leave at any time, which deletes their public League row.
+- Top 50 and the current player’s nearby rank window use canonical Combined
+  Journey XP/level ordering.
+- Joined League scores refresh when canonical Combined Journey progress is
+  persisted, as well as when the League opens.
+
+### Mobile image release gate
+
+- Newly added or modified runtime raster images must be WebP/AVIF and no larger
+  than 550 KB.
+- Championship micro-film images are always enforced by the automated check.
+- The current six championship frames are 391–473 KB each.
 
 ## Partial
 
@@ -119,28 +145,6 @@ actually wired into the application.
 - The final game must remain an original mechanic and visual treatment rather
   than copying third-party branding, assets, sounds, or UI.
 
-### Arena game preference system
-
-- Build the player ranking/tuning screen.
-- Allow no more than 25% of games to be disabled.
-- Persist preference ranks and disabled games.
-- Implement the duration contract:
-  least-liked enabled games appear as flashes, middle-ranked games as fast
-  fights, and favourites as full runs.
-- Normalize scores so short versions do not create unfair leaderboard results.
-
-### Adventure League
-
-- Add a separate public-leaderboard consent setting. General gamification being
-  enabled is not sufficient public opt-in.
-- Present the opt-in as “Join the Adventure League,” with a transparent reward
-  that never hides the privacy choice.
-- Rename the destination to “Leaderboard” when League mode is disabled.
-- Build the rank-finding sequence: zoom through rows, locate the player, snap
-  into place, glow, and finish with a small “Well done” celebration.
-- Decide whether event score, Combined Journey score, or separate seasonal score
-  drives the League.
-
 ### Event-game library and modal
 
 - Recover and lock the exact proposed game list; the current repository has no
@@ -172,9 +176,7 @@ actually wired into the application.
 
 ## Recommended delivery order
 
-1. Arena preference ranking and 25% disable cap.
-2. Adventure League consent, naming, and rank-snap celebration.
-3. Momentum Matrix as the first new preference-aware event game.
-4. Minigame modal expansion and the next four-game production batch.
-5. Creation Halls/Bot Bay runtime shell and mascot equipment.
-6. 120-island story-map reconciliation and later Drift reveal.
+1. Momentum Matrix as the first new preference-aware event game.
+2. Minigame modal expansion and the next four-game production batch.
+3. Creation Halls/Bot Bay runtime shell and mascot equipment.
+4. 120-island story-map reconciliation and later Drift reveal.

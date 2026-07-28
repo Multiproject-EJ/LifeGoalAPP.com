@@ -49,6 +49,28 @@ export async function persistCombinedJourneyProgress(
       .eq('user_id', userId);
 
     if (error) throw error;
+
+    // League membership is represented by row existence. Updating an absent
+    // row is a safe no-op, while joined players keep their asynchronous score
+    // current whenever the canonical Combined Journey snapshot is refreshed.
+    // The migration ships with this feature; generated database types will
+    // include the table after the next schema-codegen pass.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const leagueClient = client as any;
+    try {
+      await leagueClient
+        .from('adventure_league_entries')
+        .update({
+          combined_journey_level: summary.level,
+          combined_journey_xp: summary.xp,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+    } catch {
+      // League mirroring is best-effort and must never invalidate the
+      // successfully persisted canonical gamification profile snapshot.
+    }
+
     return { persisted: true, level: summary.level, xp: summary.xp, error: null };
   } catch (error) {
     return {
