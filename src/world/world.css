@@ -3852,6 +3852,21 @@
   filter: blur(12px);
 }
 
+.world-home__showcase::after {
+  content: '✦';
+  position: absolute;
+  z-index: 7;
+  top: 23%;
+  left: 24%;
+  color: #ffe27f;
+  font-size: 18px;
+  text-shadow:
+    0 0 10px rgba(255, 225, 126, 0.95),
+    0 0 28px rgba(72, 205, 255, 0.78);
+  pointer-events: none;
+  animation: world-home-showcase-spark 6.4s ease-in-out infinite;
+}
+
 .world-home__showcase-orbit {
   position: absolute;
   z-index: -1;
@@ -3900,6 +3915,9 @@
 }
 
 .world-home__phone {
+  --phone-y: 0px;
+  --phone-rotate: 0deg;
+  --phone-scale: 1;
   position: absolute;
   bottom: 82px;
   left: 50%;
@@ -3914,8 +3932,14 @@
     0 34px 64px rgba(0, 7, 25, 0.58),
     0 0 0 2px rgba(12, 40, 77, 0.72),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transform:
+    translateX(-50%)
+    translateY(var(--phone-y))
+    rotate(var(--phone-rotate))
+    scale(var(--phone-scale));
   transform-origin: 50% 100%;
   transition: transform 260ms ease, filter 260ms ease;
+  animation: world-home-phone-float 6s ease-in-out infinite;
 }
 
 .world-home__phone::before {
@@ -3961,14 +3985,32 @@
   font-size: 12px;
 }
 
+.world-home__phone figcaption small {
+  color: #78ddff;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+}
+
 .world-home__phone figcaption span {
   color: #afc8e5;
   font-size: 9px;
 }
 
 .world-home__phone--today {
+  z-index: 3;
+  left: 18%;
+  --phone-rotate: -8deg;
+  --phone-scale: 0.88;
+  filter: brightness(0.88) saturate(1.05);
+  animation-delay: -1.3s;
+}
+
+.world-home__phone--island {
   z-index: 5;
+  left: 50%;
   width: min(42%, 270px);
+  --phone-y: -8px;
   border-color: rgba(233, 248, 255, 0.92);
   box-shadow:
     0 38px 72px rgba(0, 7, 25, 0.62),
@@ -3976,34 +4018,29 @@
     0 0 42px rgba(77, 210, 255, 0.32),
     0 0 76px rgba(255, 213, 98, 0.13),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  transform: translateX(-50%) translateY(-8px);
-}
-
-.world-home__phone--island {
-  z-index: 3;
-  left: 18%;
-  transform: translateX(-50%) rotate(-8deg) scale(0.88);
-  filter: brightness(0.88) saturate(1.05);
 }
 
 .world-home__phone--momentum {
   z-index: 4;
   left: 82%;
-  transform: translateX(-50%) rotate(8deg) scale(0.9);
+  --phone-rotate: 8deg;
+  --phone-scale: 0.9;
   filter: brightness(0.9) saturate(1.08);
+  animation-delay: -2.8s;
 }
 
 .world-home__phone:hover {
   z-index: 7;
   filter: brightness(1.04) saturate(1.08);
+  animation: none;
 }
 
 .world-home__phone--today:hover {
-  transform: translateX(-50%) translateY(-18px) scale(1.02);
+  transform: translateX(-50%) translateY(-12px) rotate(-4deg) scale(0.94);
 }
 
 .world-home__phone--island:hover {
-  transform: translateX(-50%) translateY(-12px) rotate(-4deg) scale(0.94);
+  transform: translateX(-50%) translateY(-18px) scale(1.02);
 }
 
 .world-home__phone--momentum:hover {
@@ -4042,6 +4079,37 @@
   font-size: 15px;
   font-style: normal;
   filter: drop-shadow(0 0 8px rgba(255, 216, 103, 0.7));
+}
+
+@keyframes world-home-phone-float {
+  0%, 100% {
+    transform:
+      translateX(-50%)
+      translateY(var(--phone-y))
+      rotate(var(--phone-rotate))
+      scale(var(--phone-scale));
+  }
+  50% {
+    transform:
+      translateX(-50%)
+      translateY(calc(var(--phone-y) - 8px))
+      rotate(var(--phone-rotate))
+      scale(var(--phone-scale));
+  }
+}
+
+@keyframes world-home-showcase-spark {
+  0%, 100% {
+    opacity: 0.45;
+    transform: translate3d(0, 0, 0) scale(0.8) rotate(0deg);
+  }
+  48% {
+    opacity: 1;
+    transform: translate3d(310px, -46px, 0) scale(1.18) rotate(160deg);
+  }
+  52% {
+    opacity: 0.82;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -4098,6 +4166,10 @@
   }
 
   .world-home--sales-split .world-home__phone--today {
+    width: min(33%, 200px);
+  }
+
+  .world-home--sales-split .world-home__phone--island {
     width: min(35%, 214px);
   }
 
@@ -4259,19 +4331,24 @@
   }
 
   .world-home__phone--today {
-    width: 48%;
+    left: 19%;
+    width: 40%;
+    --phone-rotate: -7deg;
+    --phone-scale: 0.9;
   }
 
   .world-home__phone--island {
-    left: 19%;
-    width: 40%;
-    transform: translateX(-50%) rotate(-7deg) scale(0.9);
+    left: 50%;
+    width: 48%;
+    --phone-rotate: 0deg;
+    --phone-scale: 1;
   }
 
   .world-home__phone--momentum {
     left: 81%;
     width: 40%;
-    transform: translateX(-50%) rotate(7deg) scale(0.92);
+    --phone-rotate: 7deg;
+    --phone-scale: 0.92;
   }
 
   .world-home__phone figcaption {
@@ -4298,5 +4375,10 @@
 @media (prefers-reduced-motion: reduce) {
   .world-home__phone {
     transition: none;
+    animation: none;
+  }
+
+  .world-home__showcase::after {
+    animation: none;
   }
 }

@@ -254,16 +254,24 @@ export function WorldHome({
                   width="390"
                   height="844"
                 />
-                <figcaption><strong>Live your day</strong><span>Small actions earn real momentum</span></figcaption>
+                <figcaption>
+                  <small>01 · DO</small>
+                  <strong>Live your day</strong>
+                  <span>Small actions earn real momentum</span>
+                </figcaption>
               </figure>
               <figure className="world-home__phone world-home__phone--island">
                 <img
                   src="/landing-page-assets/showcase/island-run.webp"
-                  alt="HabitGame Island Run board with landmarks and dice progression"
+                  alt="HabitGame Island 1 Hatchery building screen with levels and unlockable parts"
                   width="390"
                   height="844"
                 />
-                <figcaption><strong>Play your progress</strong><span>Every step moves the adventure</span></figcaption>
+                <figcaption>
+                  <small>02 · BUILD</small>
+                  <strong>Grow your island</strong>
+                  <span>Rewards become visible world progress</span>
+                </figcaption>
               </figure>
               <figure className="world-home__phone world-home__phone--momentum">
                 <img
@@ -272,10 +280,14 @@ export function WorldHome({
                   width="390"
                   height="844"
                 />
-                <figcaption><strong>Return gently</strong><span>A new reward waits tomorrow</span></figcaption>
+                <figcaption>
+                  <small>03 · RETURN</small>
+                  <strong>Keep momentum</strong>
+                  <span>A new reward waits tomorrow</span>
+                </figcaption>
               </figure>
               <div className="world-home__showcase-loop" aria-hidden="true">
-                <span>REAL LIFE</span><i>✦</i><span>GAME PROGRESS</span>
+                <span>DO</span><i>→</i><span>EARN</span><i>→</i><span>BUILD</span><i>→</i><span>RETURN</span>
               </div>
             </div>
           </section>
