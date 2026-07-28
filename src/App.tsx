@@ -676,7 +676,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [isDesktopUiResearchPreviewEnabled, setIsDesktopUiResearchPreviewEnabled] = useState(false);
   const isDesktopExperience = !isMobileViewport && isDesktopUiResearchPreviewEnabled;
   const isMobileExperience = !isDesktopExperience;
-  const [showMobileHome, setShowMobileHome] = useState(false);
+  const [showMobileHome, setShowMobileHome] = useState(isMobileExperience);
   const [actionsLauncherResetSignal, setActionsLauncherResetSignal] = useState(0);
   const [actionsTabView, setActionsTabView] = useState<'launcher' | 'tasks'>(isMobileExperience ? 'launcher' : 'tasks');
   const [workspaceProfile, setWorkspaceProfile] = useState<WorkspaceProfileRow | null>(null);
@@ -2445,10 +2445,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [isMobileExperience]);
 
   useEffect(() => {
-    if (!isMobileExperience || isAdmin !== false) return;
+    if (!isMobileExperience) return;
     if (activeWorkspaceNav !== 'planning' || showMobileHome) return;
     setShowMobileHome(true);
-  }, [activeWorkspaceNav, isAdmin, isMobileExperience, showMobileHome]);
+  }, [activeWorkspaceNav, isMobileExperience, showMobileHome]);
 
   useEffect(() => {
     if (!authMessage) {
@@ -3855,6 +3855,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const handleLaunchYesterdayTodoCleanup = (options?: { force?: boolean }) => {
     setActiveWorkspaceNav('planning');
+    if (isMobileExperience) {
+      setShowMobileHome(true);
+    }
     window.setTimeout(() => {
       window.dispatchEvent(new CustomEvent('lifegoal:launch-yesterday-todo-cleanup', {
         detail: { force: options?.force === true },
@@ -4099,6 +4102,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setAiCoachStarterQuestion(starterQuestion ?? undefined);
                 setShowAiCoachModal(true);
               }}
+              onOpenCompassBook={() => setIsCompassBookOpen(true)}
               pendingOfferToOpen={pendingTodayOfferOpen}
               onPendingOfferHandled={() => setPendingTodayOfferOpen(null)}
               activeHolidaySeason={activeHolidaySeason}
@@ -4796,14 +4800,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 onOpenJournal={openQuestCompassJournal}
               />
             ) : null}
-            {isCompassBookOpen ? (
-              <CompassBookScreen
-                currentIslandNumber={overlayIslandNumber}
-                session={supabaseSession}
-                allowDemo={isAdmin === true}
-                onClose={() => setIsCompassBookOpen(false)}
-              />
-            ) : null}
             {isFeedbackSupportSubmenuOpen ? (
               <div className="mobile-menu-overlay__hold-modal" role="dialog" aria-modal="true" aria-label="Feedback and support menu">
                 <button
@@ -5036,6 +5032,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
         </div>
       </div>
     ) : null;
+
+  const compassBookOverlay = isCompassBookOpen ? (
+    <CompassBookScreen
+      currentIslandNumber={overlayIslandNumber}
+      session={supabaseSession}
+      allowDemo={isAdmin === true}
+      onClose={() => setIsCompassBookOpen(false)}
+    />
+  ) : null;
 
   const mobileGamificationOverlay =
     isMobileExperience && showMobileGamification ? (
@@ -5521,6 +5526,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 setAiCoachStarterQuestion(starterQuestion ?? undefined);
                 setShowAiCoachModal(true);
               }}
+              onOpenCompassBook={() => setIsCompassBookOpen(true)}
               forceCompactView={!isGameModeActive}
               preferredCompactView={!isGameModeActive ? true : workspaceProfile?.private_compact_view_enabled ?? false}
               onPreferredCompactViewChange={handlePreferredCompactViewChange}
@@ -5583,6 +5589,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         )}
         {starterQuestSheet}
         {mobileMenuOverlay}
+        {compassBookOverlay}
         {launcherPlayersHandOverlay}
         {mobileGamificationOverlay}
         {levelWorldsEntryModal}
@@ -5909,6 +5916,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       ) : null}
 
       {mobileMenuOverlay}
+      {compassBookOverlay}
       {launcherPlayersHandOverlay}
       {mobileGamificationOverlay}
       {levelWorldsEntryModal}

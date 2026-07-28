@@ -18,6 +18,7 @@ type MobileHabitHomeProps = {
   onOpenHolidayCalendar?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
   onOpenAiCoach?: (starterQuestion?: string) => void;
+  onOpenCompassBook?: () => void;
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
   onPreferredCompactViewChange?: (isCompactView: boolean) => void;
@@ -52,6 +53,7 @@ export function MobileHabitHome({
   onOpenHolidayCalendar,
   onOpenIslandRunStop,
   onOpenAiCoach,
+  onOpenCompassBook,
   forceCompactView = false,
   preferredCompactView,
   onPreferredCompactViewChange,
@@ -89,6 +91,7 @@ export function MobileHabitHome({
         onOpenHolidayCalendar={onOpenHolidayCalendar}
         onOpenIslandRunStop={onOpenIslandRunStop}
         onOpenAiCoach={onOpenAiCoach}
+        onOpenCompassBook={onOpenCompassBook}
         forceCompactView={forceCompactView}
         preferredCompactView={preferredCompactView}
         onPreferredCompactViewChange={onPreferredCompactViewChange}

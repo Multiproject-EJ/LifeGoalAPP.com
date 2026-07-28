@@ -18,9 +18,21 @@ export type DiceCommerceMode = 'test' | 'live';
 /**
  * Browser-safe presentation mode. This never selects Stripe credentials or
  * prices—the Edge Function remains authoritative and fail-closed.
+ *
+ * Read inside a try/catch: Vite substitutes the exact expression
+ * `import.meta.env.VITE_DICE_COMMERCE_MODE` at build time, but the Island Run
+ * test harness compiles this module with plain tsc and runs it under Node,
+ * where `import.meta.env` is undefined and the property read throws.
  */
-export const DICE_COMMERCE_MODE: DiceCommerceMode =
-  import.meta.env?.VITE_DICE_COMMERCE_MODE === 'live' ? 'live' : 'test';
+function readDiceCommerceMode(): DiceCommerceMode {
+  try {
+    return import.meta.env.VITE_DICE_COMMERCE_MODE === 'live' ? 'live' : 'test';
+  } catch {
+    return 'test';
+  }
+}
+
+export const DICE_COMMERCE_MODE: DiceCommerceMode = readDiceCommerceMode();
 
 /**
  * Paid dice catalog shared by the board, account screen and checkout service.

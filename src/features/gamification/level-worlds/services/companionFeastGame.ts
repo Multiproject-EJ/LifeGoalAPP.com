@@ -565,21 +565,38 @@ export interface CompanionFeastResultTier {
  * chains, Feast Fever and golden fruit.
  *
  * A single unchained merge still scores exactly what it always did, but a
- * played-well run now earns roughly half again as much. Result-tier
- * thresholds and `COMPANION_FEAST_SCORE_PER_FEAST_POINT` are both scaled by
- * this so dice payout and reward-bar pacing stay near their pre-momentum
- * values instead of silently inflating. Re-tune this one constant if the
- * multipliers above change.
+ * real run compounds. This factor scales the result-tier thresholds and
+ * `COMPANION_FEAST_SCORE_PER_FEAST_POINT` so dice payout and reward-bar
+ * pacing stay near their pre-momentum values instead of silently inflating.
+ *
+ * **This number is measured, not guessed.** Simulating runs through the real
+ * physics and award pipeline gives an uplift that depends on how fast the
+ * player drops:
+ *
+ * | drop cadence                     | uplift |
+ * |----------------------------------|--------|
+ * | ~1.2s (casual)                   | ~2.5x  |
+ * | ~640ms (brisk)                   | ~3.4x  |
+ * | ~420ms (spam, cooldown-limited)  | ~4.3x  |
+ *
+ * Calibrating to the *casual* end is deliberate: it keeps an unhurried player
+ * at roughly pre-momentum parity, and lets faster, chain-aware play earn the
+ * difference. That uplift is the skill reward the mechanics exist to give —
+ * the thing we must not do is hand it out to everyone by default.
+ *
+ * `companionFeastGame.test.ts` pins the simulated uplift band, so changing
+ * the chain/Fever/golden numbers above will fail the suite until this is
+ * re-measured.
  */
-export const COMPANION_FEAST_MOMENTUM_SCORE_CALIBRATION = 1.5;
+export const COMPANION_FEAST_MOMENTUM_SCORE_CALIBRATION = 2.6;
 
 export const COMPANION_FEAST_RESULT_TIERS: readonly CompanionFeastResultTier[] = Object.freeze([
   { id: 'nibble', label: 'Nibble', emoji: '🍽️', minScore: 0, rewardDice: 1 },
-  { id: 'snack', label: 'Hearty Snack', emoji: '🥣', minScore: 180, rewardDice: 2 },
-  { id: 'banquet', label: 'Banquet', emoji: '🍲', minScore: 480, rewardDice: 3 },
-  { id: 'grand_feast', label: 'Grand Feast', emoji: '✨', minScore: 1050, rewardDice: 5 },
+  { id: 'snack', label: 'Hearty Snack', emoji: '🥣', minScore: 320, rewardDice: 2 },
+  { id: 'banquet', label: 'Banquet', emoji: '🍲', minScore: 830, rewardDice: 3 },
+  { id: 'grand_feast', label: 'Grand Feast', emoji: '✨', minScore: 1820, rewardDice: 5 },
   // Culminating prize: reachable only with sustained chains or a Fever run.
-  { id: 'legendary_feast', label: 'Legendary Feast', emoji: '👑', minScore: 1900, rewardDice: 8 },
+  { id: 'legendary_feast', label: 'Legendary Feast', emoji: '👑', minScore: 3300, rewardDice: 8 },
 ]);
 
 export function resolveCompanionFeastResultTier(score: number): CompanionFeastResultTier {
