@@ -7,6 +7,7 @@ import { WorldHero } from './WorldHero.tsx';
 import { JourneyPreview } from './JourneyPreview.tsx';
 import { SocialProof } from './SocialProof.tsx';
 import { useWorldAnalytics } from './useWorldAnalytics.ts';
+import { joinPublicLaunchWaitlist } from '../services/publicLaunchWaitlist.ts';
 
 interface WorldHomeProps {
   onContinue: () => void;
@@ -39,6 +40,9 @@ export function WorldHome({
 }: WorldHomeProps) {
   const installState = useInstallState(beforeInstallPromptEvent);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [waitlistMessage, setWaitlistMessage] = useState('');
   const { trackEvent } = useWorldAnalytics();
 
   const handleInstallClick = () => {
@@ -66,8 +70,33 @@ export function WorldHome({
   };
 
   const handleLogin = () => {
-    trackEvent('login_click');
+    trackEvent('developer_login_click');
     onLogin();
+  };
+
+  const handleWaitlistSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (waitlistStatus === 'loading') return;
+
+    setWaitlistStatus('loading');
+    setWaitlistMessage('');
+    trackEvent('waitlist_submit');
+
+    const result = await joinPublicLaunchWaitlist(waitlistEmail);
+    if (result.ok) {
+      setWaitlistStatus('success');
+      setWaitlistMessage(
+        result.alreadyJoined
+          ? 'You are already on the list — your place is safe.'
+          : 'Your place is saved. We will meet you at the gates.',
+      );
+      trackEvent('waitlist_success');
+      return;
+    }
+
+    setWaitlistStatus('error');
+    setWaitlistMessage(result.error ?? 'We could not save your spot. Please try again.');
+    trackEvent('waitlist_error');
   };
 
   const showInstallButton =
@@ -84,71 +113,182 @@ export function WorldHome({
   }, [showInstallButton, trackEvent]);
 
   return (
-    <div className="world-home">
+    <div className="world-home world-home--sales-split">
       <WorldHero>
         <div className="world-home__shell">
           <section className="world-home__hero-panel" aria-labelledby="world-home-title">
-            <div className="world-home__brand">
-              <img
-                className="world-home__logo"
-                src="/icons/logo_landingpage.webp"
-                alt="HabitGame logo"
-                width="359"
-                height="490"
-                loading="eager"
-                decoding="async"
-              />
-              <p className="world-home__kicker">Cozy life adventure</p>
-              <h1 className="world-home__app-name" id="world-home-title">HabitGame</h1>
-              <p className="world-home__tagline">The self-improvement RPG</p>
-              <p className="world-home__hero-copy">
-                A cozy game that gently keeps your goals, habits, and wellbeing present while you play.
-              </p>
-            </div>
+            <div className="world-home__message-column">
+              <div className="world-home__brand">
+                <img
+                  className="world-home__logo"
+                  src="/icons/logo_landingpage.webp"
+                  alt="HabitGame logo"
+                  width="359"
+                  height="490"
+                  loading="eager"
+                  decoding="async"
+                />
+                <p className="world-home__kicker">The cozy RPG powered by your real life</p>
+                <h1 className="world-home__app-name" id="world-home-title">HabitGame</h1>
+                <p className="world-home__tagline">Turn everyday progress into an adventure.</p>
+                <p className="world-home__hero-copy">
+                  Care for your habits, explore enchanted islands, and watch the life you are building
+                  become the world you play.
+                </p>
+                <div className="world-home__theme-pills" aria-label="Included visual themes">
+                  <span className="world-home__theme-pill world-home__theme-pill--light">
+                    <span aria-hidden="true">☀</span> First Light
+                  </span>
+                  <span className="world-home__theme-pill world-home__theme-pill--dark">
+                    <span aria-hidden="true">☾</span> Midnight Blue
+                  </span>
+                </div>
+                <a className="world-home__mobile-waitlist-jump" href="#world-home-waitlist">
+                  Join early access <span aria-hidden="true">↓</span>
+                </a>
+              </div>
 
-            <div className="world-home__cta-card">
-              <p className="world-home__cta-heading">Level up your life.</p>
-              <p className="world-home__cta-copy">
-                Play, reflect, earn rewards, and let small real-life actions supercharge your adventure.
-              </p>
-              <div className="world-home__cta-group">
+              <div className="world-home__cta-card" id="world-home-waitlist">
+                <p className="world-home__cta-eyebrow">Early access</p>
+                <p className="world-home__cta-heading">Begin your next chapter.</p>
+                <p className="world-home__cta-copy">
+                  Join the waitlist for founder updates and the first invitation into the full HabitGame world.
+                </p>
+
+                {waitlistStatus === 'success' ? (
+                  <div className="world-home__waitlist-success" role="status">
+                    <span aria-hidden="true">✦</span>
+                    <strong>You are on the quest list.</strong>
+                    <p>{waitlistMessage}</p>
+                  </div>
+                ) : (
+                  <form
+                    className="world-home__waitlist-form"
+                    onSubmit={handleWaitlistSubmit}
+                  >
+                    <label className="world-home__waitlist-label" htmlFor="world-home-waitlist-email">
+                      Email address
+                    </label>
+                    <div className="world-home__waitlist-row">
+                      <input
+                        id="world-home-waitlist-email"
+                        className="world-home__waitlist-input"
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder="you@example.com"
+                        value={waitlistEmail}
+                        onChange={(event) => {
+                          setWaitlistEmail(event.target.value);
+                          if (waitlistStatus === 'error') {
+                            setWaitlistStatus('idle');
+                            setWaitlistMessage('');
+                          }
+                        }}
+                        required
+                        maxLength={320}
+                      />
+                      <button
+                        className="world-home__btn world-home__btn--primary world-home__btn--waitlist"
+                        type="submit"
+                        disabled={waitlistStatus === 'loading'}
+                        aria-busy={waitlistStatus === 'loading'}
+                      >
+                        {waitlistStatus === 'loading' ? 'Saving your place…' : 'Join the waitlist'}
+                      </button>
+                    </div>
+                    {waitlistStatus === 'error' && (
+                      <p className="world-home__waitlist-error" role="alert">{waitlistMessage}</p>
+                    )}
+                  </form>
+                )}
+
+                <div className="world-home__cta-group world-home__cta-group--secondary">
+                  <button
+                    className="world-home__btn world-home__btn--secondary"
+                    onClick={handleContinue}
+                    type="button"
+                  >
+                    Explore the free demo
+                  </button>
+                </div>
+
+                {showInstallButton && (
+                  <div className="world-home__install-section">
+                    <button
+                      className="world-home__btn world-home__btn--install"
+                      onClick={handleInstallClick}
+                      type="button"
+                    >
+                      📱 Install App
+                    </button>
+                  </div>
+                )}
+
+                {installState.platform === 'installed' && (
+                  <p className="world-home__installed-indicator" aria-live="polite">
+                    ✓ Installed
+                  </p>
+                )}
+
+                <p className="world-home__cta-supporting">
+                  No spam · Founder updates · Early access
+                </p>
                 <button
-                  className="world-home__btn world-home__btn--primary"
-                  onClick={handleContinue}
-                  type="button"
-                >
-                  Start Your Game
-                </button>
-                <button
-                  className="world-home__btn world-home__btn--secondary"
+                  className="world-home__developer-login"
                   onClick={handleLogin}
                   type="button"
                 >
-                  Log in
+                  Developer login <span aria-hidden="true">→</span>
                 </button>
               </div>
+            </div>
 
-              {showInstallButton && (
-                <div className="world-home__install-section">
-                  <button
-                    className="world-home__btn world-home__btn--install"
-                    onClick={handleInstallClick}
-                    type="button"
-                  >
-                    📱 Install App
-                  </button>
-                </div>
-              )}
-
-              {installState.platform === 'installed' && (
-                <p className="world-home__installed-indicator" aria-live="polite">
-                  ✓ Installed
-                </p>
-              )}
-
-              <p className="world-home__cta-supporting">
-                Free to begin · Mobile-first · Easy to start
-              </p>
+            <div className="world-home__showcase" aria-label="HabitGame gameplay preview">
+              <div className="world-home__showcase-orbit" aria-hidden="true" />
+              <p className="world-home__showcase-kicker">Your life becomes the game</p>
+              <figure className="world-home__phone world-home__phone--today">
+                <img
+                  src="/landing-page-assets/showcase/today.webp"
+                  alt="HabitGame Today screen with habits, rewards, and daily activities"
+                  width="390"
+                  height="844"
+                />
+                <figcaption>
+                  <small>01 · DO</small>
+                  <strong>Live your day</strong>
+                  <span>Small actions earn real momentum</span>
+                </figcaption>
+              </figure>
+              <figure className="world-home__phone world-home__phone--island">
+                <img
+                  src="/landing-page-assets/showcase/island-run.webp"
+                  alt="HabitGame Island 1 Hatchery building screen with levels and unlockable parts"
+                  width="390"
+                  height="844"
+                />
+                <figcaption>
+                  <small>02 · BUILD</small>
+                  <strong>Grow your island</strong>
+                  <span>Rewards become visible world progress</span>
+                </figcaption>
+              </figure>
+              <figure className="world-home__phone world-home__phone--momentum">
+                <img
+                  src="/landing-page-assets/showcase/daily-momentum.webp"
+                  alt="HabitGame Daily Momentum seven-day reward journey"
+                  width="390"
+                  height="844"
+                />
+                <figcaption>
+                  <small>03 · RETURN</small>
+                  <strong>Keep momentum</strong>
+                  <span>A new reward waits tomorrow</span>
+                </figcaption>
+              </figure>
+              <div className="world-home__showcase-loop" aria-hidden="true">
+                <span>DO</span><i>→</i><span>EARN</span><i>→</i><span>BUILD</span><i>→</i><span>RETURN</span>
+              </div>
             </div>
           </section>
 
