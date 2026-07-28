@@ -71,6 +71,8 @@ import { islandRunLuckyRollBoardConfigTests } from './islandRunLuckyRollBoardCon
 import { islandRunProgressResetTests } from './islandRunProgressReset.test';
 import { developerDayLoopTests } from './developerDayLoop.test';
 import { islandRunStoryFastModeTests } from './islandRunStoryFastMode.test';
+import { dailySpinRewardPolicyTests } from './dailySpinRewardPolicy.test';
+import { islandRunDailySpinRewardActionTests } from './islandRunDailySpinRewardAction.test';
 import { islandRunStateStoreTests } from './islandRunStateStore.test';
 import { islandRunWelcomePackEligibilityTests } from './islandRunWelcomePackEligibility.test';
 import { islandRunWelcomePackClaimActionTests } from './islandRunWelcomePackClaimAction.test';
@@ -158,6 +160,8 @@ import type { TestCase } from './testHarness';
 const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'developerDayLoop', tests: developerDayLoopTests },
   { label: 'islandRunStoryFastMode', tests: islandRunStoryFastModeTests },
+  { label: 'dailySpinRewardPolicy', tests: dailySpinRewardPolicyTests },
+  { label: 'islandRunDailySpinRewardAction', tests: islandRunDailySpinRewardActionTests },
   { label: 'islandCameraLockedKit', tests: islandCameraLockedKitTests },
   { label: 'creatureCatalog', tests: creatureCatalogTests },
   { label: 'creatureCollectionService', tests: creatureCollectionServiceTests },

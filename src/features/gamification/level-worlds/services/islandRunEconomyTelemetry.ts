@@ -10,6 +10,7 @@ export const ISLAND_RUN_ECONOMY_SOURCES = {
   fortuneEngineFinaleDice: 'fortune_engine_finale_dice',
   passiveRegenDice: 'passive_regen_dice',
   dailyTreatDice: 'daily_treat_dice',
+  dailySpinDice: 'daily_spin_dice',
   welcomePackDice: 'welcome_pack_dice',
   firstSessionTutorialDice: 'first_session_tutorial_dice',
   firstRunStarterDice: 'first_run_starter_dice',
