@@ -239,7 +239,6 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
     totalBoards,
   }), [activeProgress?.boardIndex, activeProgress?.completedBoardCount, claimedMilestoneIds, eventProgressPoints, progressStatus, totalBoards]);
   const firstClaimableMilestone = rewardUxState.activeClaimableMilestone;
-  const nextMilestoneDotId = rewardUxState.milestoneDots.find((dot) => !dot.achieved)?.id ?? null;
   const activeClaimModalMilestone = useMemo(
     () => SPACE_EXCAVATOR_CAMPAIGN_MILESTONES.find((milestone) => milestone.id === activeClaimModalMilestoneId) ?? null,
     [activeClaimModalMilestoneId],

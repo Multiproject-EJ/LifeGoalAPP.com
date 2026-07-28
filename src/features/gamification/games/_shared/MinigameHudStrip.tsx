@@ -56,7 +56,13 @@ export function MinigameHudStrip({ hud, onOpenRewards }: {
   );
 
   return (
-    <div className="minigame-hud" role="status" aria-label={`${summary}. ${tickets.count} ${tickets.noun} left.`}>
+    /*
+     * Deliberately NOT role="status". This strip updates on every drop, dig
+     * and merge; as a live region it would make a screen reader narrate the
+     * ticket count and points-to-go continuously over the whole run. It is a
+     * persistent readout the player queries, not an announcement.
+     */
+    <div className="minigame-hud" role="group" aria-label={`${summary}. ${tickets.count} ${tickets.noun} left.`}>
       {onOpenRewards ? (
         <button
           type="button"

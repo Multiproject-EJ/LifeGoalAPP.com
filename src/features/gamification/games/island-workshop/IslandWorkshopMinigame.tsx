@@ -30,7 +30,6 @@ import {
   ISLAND_WORKSHOP_GEM_REWARD_DICE,
   ISLAND_WORKSHOP_GRID_SIZE,
   ISLAND_WORKSHOP_BLOCK_TICKET_COST,
-  ISLAND_WORKSHOP_MAX_LEVEL,
   ISLAND_WORKSHOP_MONO_PAIR_BONUS_BLOCKS,
   ISLAND_WORKSHOP_SOLID_RELEASE_BLOCKS,
   isIslandWorkshopGemCell,
@@ -718,8 +717,6 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const resultTier = useMemo(() => resolveIslandWorkshopResultTier(lastRunScore, lastRunLevel), [lastRunLevel, lastRunScore]);
   const canPlayAgain = canStartIslandWorkshopRun({ ticketsRemaining });
   const runMilestones = getIslandWorkshopScoreRewardMilestones(runLevel);
-  const nextScoreReward = runMilestones.find((reward) => score < reward.score) ?? null;
-  const scoreRewardMax = runMilestones[runMilestones.length - 1]?.score ?? 1;
 
   const dragShape = drag ? getIslandWorkshopShape(drag.shapeId) : null;
   const gridRect = gridRef.current?.getBoundingClientRect() ?? null;
@@ -850,6 +847,12 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
             <div className={`island-workshop__hud-stat${streak >= 1 ? ' island-workshop__hud-stat--hot' : ''}`}>
               <span className="island-workshop__hud-label">Streak</span>
               <span className="island-workshop__hud-value">{streak > 0 ? `🔥 ${streak}` : '—'}</span>
+            </div>
+            {/* Bench level lived on the old rewards bar; keep it visible now
+                that the shared strip owns reward progress. */}
+            <div className="island-workshop__hud-stat">
+              <span className="island-workshop__hud-label">Bench</span>
+              <span className="island-workshop__hud-value">Lv {runLevel}</span>
             </div>
           </header>
 
