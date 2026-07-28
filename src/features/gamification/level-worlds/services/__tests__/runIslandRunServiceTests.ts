@@ -4,6 +4,7 @@ import { creatureTreatInventoryServiceTests } from './creatureTreatInventoryServ
 import { creatureFitEngineTests } from './creatureFitEngine.test';
 import { companionRegenModifierTests } from './companionRegenModifier.test';
 import { companionFeastGameTests } from './companionFeastGame.test';
+import { minigameHudContractTests } from './minigameHudContract.test';
 import { minigameJuiceTests } from './minigameJuice.test';
 import { fortuneEngineGameTests } from './fortuneEngineGame.test';
 import { fortuneEngineProgressionTests } from './fortuneEngineProgression.test';
@@ -160,6 +161,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'companionRegenModifier', tests: companionRegenModifierTests },
   { label: 'companionFeastGame', tests: companionFeastGameTests },
   { label: 'minigameJuice', tests: minigameJuiceTests },
+  { label: 'minigameHudContract', tests: minigameHudContractTests },
   { label: 'fortuneEngineGame', tests: fortuneEngineGameTests },
   { label: 'fortuneEngineProgression', tests: fortuneEngineProgressionTests },
   { label: 'fortuneEngineEconomyModel', tests: fortuneEngineEconomyModelTests },

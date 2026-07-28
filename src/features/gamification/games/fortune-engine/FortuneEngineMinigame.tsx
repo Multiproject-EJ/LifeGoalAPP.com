@@ -69,6 +69,11 @@ import {
 } from '../../level-worlds/services/fortuneEngineProgression';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
 import {
+  buildMinigameHudReward,
+  buildMinigameHudTickets,
+} from '../../level-worlds/services/minigameHudContract';
+import { MinigameHudStrip } from '../_shared/MinigameHudStrip';
+import {
   createMinigameParticleBurst,
   createMinigameShake,
   MINIGAME_SHAKE_NONE,
@@ -312,6 +317,20 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
   const finaleDone = progress?.finaleCompleted === true;
   const fragmentIds = useMemo(() => new Set(resolveFortuneCoreFragmentIds(progress?.fragmentIds ?? [])), [progress]);
   const trackViewModel = useMemo(() => buildFortuneEngineTrackViewModel(progress), [progress]);
+
+  // Persistent play-phase HUD (shared contract: tickets upper-right, next
+  // exact prize always visible mid-run).
+  const hud = useMemo(() => ({
+    tickets: buildMinigameHudTickets({ count: ticketsRemaining }),
+    reward: buildMinigameHudReward({
+      points: trackViewModel.eventPoints,
+      milestones: trackViewModel.nodes.map((node) => ({
+        pointsRequired: node.milestone.pointsRequired,
+        rewardLabel: node.milestone.rewardLabel,
+        claimed: node.state === 'claimed',
+      })),
+    }),
+  }), [ticketsRemaining, trackViewModel]);
   const eventRemainingMs = Math.max(0, (config.eventExpiresAtMs ?? 0) - nowMs);
   const eventUnstable = config.eventExpiresAtMs !== undefined && eventRemainingMs > 0 && eventRemainingMs < 24 * 60 * 60 * 1000;
 
@@ -941,6 +960,7 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
 
       {(phase === 'spin' || phase === 'ring' || phase === 'finale') && (
         <div className="fortune-engine__play-area">
+          <MinigameHudStrip hud={hud} />
           <header className="fortune-engine__hud">
             {phase === 'finale' ? (
               <>
@@ -977,9 +997,6 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
             <p className="fortune-engine__golden-banner" role="status">
               Golden play · core piece guaranteed{runMultiplierBonus > 0 ? ` · +${runMultiplierBonus}×` : ''}
             </p>
-          )}
-          {phase !== 'finale' && (
-            <RunPrizeProgress track={trackViewModel} pendingPoints={phase === 'spin' ? 0 : bankedPoints} />
           )}
           {phase === 'ring' && (
             <div className={`fortune-engine__challenge-card fortune-engine__challenge-card--${challengeModeId}`} role="status">
