@@ -48,7 +48,7 @@ export const BoardToken = memo(forwardRef<BoardTokenHandle, BoardTokenProps>(fun
     root.classList.toggle('island-token--landing', state.isLanding);
     shadow.style.transform = `translateX(-50%) translateY(${state.elevation.toFixed(1)}px) scale(${frameShadowScale.toFixed(3)})`;
     shadow.style.opacity = frameShadowOpacity.toFixed(3);
-    ship.style.transform = `scaleX(${state.scaleX.toFixed(3)}) scaleY(${state.scaleY.toFixed(3)})`;
+    ship.style.transform = `scale(var(--token-depth-scale, 1)) scaleX(${state.scaleX.toFixed(3)}) scaleY(${state.scaleY.toFixed(3)})`;
   }, []);
 
   useImperativeHandle(ref, () => ({ applyFrame }), [applyFrame]);
@@ -80,7 +80,7 @@ export const BoardToken = memo(forwardRef<BoardTokenHandle, BoardTokenProps>(fun
         ref={shipRef}
         className="island-token__ship"
         aria-hidden="true"
-        style={{ transform: `scaleX(${scaleX.toFixed(3)}) scaleY(${scaleY.toFixed(3)})` }}
+        style={{ transform: `scale(var(--token-depth-scale, 1)) scaleX(${scaleX.toFixed(3)}) scaleY(${scaleY.toFixed(3)})` }}
       >
         <div className="island-token__ship-body"/>
         <div className="island-token__ship-fin island-token__ship-fin--left"/>

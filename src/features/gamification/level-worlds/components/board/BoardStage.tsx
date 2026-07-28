@@ -27,14 +27,6 @@ import {
 const PHONE_OVERVIEW_VERTICAL_BIAS_RATIO = 0.055;
 const BOARD_TILT_X_DEG = 47;
 const BOARD_ROTATE_Z_DEG = 0;
-/**
- * Spark36 ring tiles raise their top face along the board Z axis
- * (`.island-run-board--spark36 .island-tile__face { translateZ(--tile-thickness) }`,
- * 24px). The token layer must ride on that same face plane, otherwise the ship
- * sits at the tiles' base (Z=0) and reads as floating off the track. Keep this
- * in sync with `--tile-thickness` for the spark36 board.
- */
-const SPARK36_TILE_THICKNESS_PX = 24;
 /** How long (ms) the pre-roll anticipation push-in holds before travel begins. */
 const PRE_ROLL_HOLD_MS = 150;
 const DICE_SCREEN_MARGIN_X = 58;
@@ -520,7 +512,10 @@ export function BoardStage(props: BoardStageProps) {
     // tokenIndex prop may still point at the pre-roll tile. Never let the
     // single-step fallback consume that stale value or the piece visibly hops
     // back to its starting tile before moving forward again.
-    if (pendingHopSequence === lastHopSequenceRef.current) return;
+    if (
+      pendingHopSequence !== null
+      && pendingHopSequence === lastHopSequenceRef.current
+    ) return;
 
     // --- Single-step fallback (used for snap / non-roll index changes) ---
     if (hopSequenceActiveRef.current) return; // ignore while sequence is playing
@@ -539,7 +534,7 @@ export function BoardStage(props: BoardStageProps) {
       tokenAnim.snapTo(anchor);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenIndex, anchors, pendingHopSequence]);
+  }, [tokenIndex, anchors, pendingHopSequence, toScreen]);
 
   // Particle burst state
   const [burstPos, setBurstPos] = useState<{ x: number; y: number } | null>(null);
@@ -744,16 +739,10 @@ export function BoardStage(props: BoardStageProps) {
           toScreen={toScreen}
         />
 
-        {/* Token — lifted onto the raised tile-face plane on the spark36 ring so
-            the ship sits on the tiles instead of at their base (Z=0). */}
-        <div
-          className="island-run-board__tiles"
-          style={{
-            pointerEvents: 'none',
-            transformStyle: 'preserve-3d',
-            transform: `translateZ(${isSpark36 ? SPARK36_TILE_THICKNESS_PX : 0}px)`,
-          }}
-        >
+        {/* Token shares the tile-anchor plane. Giving the whole token route a
+            separate translateZ changes its projected x/y under camera zoom and
+            perspective, so the ship no longer lands on the rendered tiles. */}
+        <div className="island-run-board__tiles" style={{ pointerEvents: 'none' }}>
           <BoardToken
             ref={boardTokenRef}
             animState={tokenAnim.animState}

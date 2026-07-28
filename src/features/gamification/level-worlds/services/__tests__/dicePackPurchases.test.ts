@@ -1,4 +1,5 @@
 import {
+  DICE_COMMERCE_MODE,
   DICE_PACK_CATALOG,
   isDicePackSkuId,
   resolveDicePackCatalogEntry,
@@ -6,6 +7,16 @@ import {
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 export const dicePackPurchasesTests: TestCase[] = [
+  {
+    name: 'dice commerce mode fails closed outside the Vite browser runtime',
+    run: () => {
+      assertEqual(
+        DICE_COMMERCE_MODE,
+        'test',
+        'Missing Vite environment metadata must never enable live dice commerce',
+      );
+    },
+  },
   {
     name: 'paid dice catalog preserves the existing 500 pack and adds distinct larger packs',
     run: () => {

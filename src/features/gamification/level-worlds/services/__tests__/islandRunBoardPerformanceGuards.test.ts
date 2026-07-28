@@ -50,6 +50,33 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
     },
   },
   {
+    name: 'player token stays on the rendered tile route from first paint through landing',
+    run: () => {
+      const stage = readSource('src/features/gamification/level-worlds/components/board/BoardStage.tsx');
+      const token = readSource('src/features/gamification/level-worlds/components/board/BoardToken.tsx');
+      const css = readSource('src/features/gamification/level-worlds/LevelWorlds.css');
+      assert(
+        stage.includes('pendingHopSequence !== null')
+        && stage.includes('pendingHopSequence === lastHopSequenceRef.current'),
+        'an initial null pending sequence must not suppress the first snap to the active tile',
+      );
+      assert(
+        stage.includes('}, [tokenIndex, anchors, pendingHopSequence, toScreen]);'),
+        'token position must resync when responsive board-to-screen geometry changes',
+      );
+      assert(
+        !stage.includes('SPARK36_TILE_THICKNESS_PX')
+        && !stage.includes('transform: `translateZ(${isSpark36'),
+        'the token route must share the tile-anchor plane instead of receiving a separate perspective projection',
+      );
+      assert(
+        !css.includes('.island-token--zband-back  { scale:')
+        && token.includes('scale(var(--token-depth-scale, 1)) scaleX('),
+        'depth styling must scale the ship artwork without scaling the positioned token root',
+      );
+    },
+  },
+  {
     name: 'traffic-light coin assets are decoded before the compositor flip',
     run: () => {
       const prototype = readSource('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx');
