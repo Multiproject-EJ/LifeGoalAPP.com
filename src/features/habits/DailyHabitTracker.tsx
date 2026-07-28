@@ -13260,7 +13260,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             aria-label={todoCleanupHelpMode ? 'Close action information' : 'Explain the cleanup actions'}
             title={todoCleanupHelpMode ? 'Close action information' : 'Explain the cleanup actions'}
           >
-            ?
+            •••
           </button>
           <button
             type="button"
@@ -13272,10 +13272,24 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             ×
           </button>
           <div className="yesterday-sundown-todo-modal__heading">
-            <h3 id="yesterday-sundown-todo-title" className="yesterday-sundown-todo-modal__title-lockup">
-              <img src="/assets/todo-cleanup/daily-todo-reset-title-v3.webp" alt="" aria-hidden="true" />
-              <span className="sr-only">Daily Todo Reset</span>
-            </h3>
+            <div className="yesterday-sundown-todo-modal__hero-art">
+              <img
+                className="yesterday-sundown-todo-modal__hero-prop yesterday-sundown-todo-modal__hero-prop--clipboard"
+                src="/assets/todo-cleanup/todo-reset-clipboard.webp"
+                alt=""
+                aria-hidden="true"
+              />
+              <h3 id="yesterday-sundown-todo-title" className="yesterday-sundown-todo-modal__title-lockup">
+                <img src="/assets/todo-cleanup/daily-todo-reset-title-v4.webp" alt="" aria-hidden="true" />
+                <span className="sr-only">Daily Todo Reset</span>
+              </h3>
+              <img
+                className="yesterday-sundown-todo-modal__hero-prop yesterday-sundown-todo-modal__hero-prop--tower"
+                src="/assets/todo-cleanup/todo-reset-tower.webp"
+                alt=""
+                aria-hidden="true"
+              />
+            </div>
             <p className="yesterday-sundown-todo-modal__subtitle">
               Sort every remaining task into its next home.
             </p>
@@ -13355,7 +13369,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           ? '🗑️ Delete'
                           : null;
                 return (
-                  <li key={todo.id} className={itemClassName} style={{ '--stagger-index': todoIndex } as CSSProperties}>
+                  <li key={todo.id} className={itemClassName} style={{ '--stagger-delay': `${660 + (todoIndex * 45)}ms` } as CSSProperties}>
                     <div className="yesterday-sundown-todo-modal__row">
                       <button
                         type="button"
@@ -13442,7 +13456,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     <img src="/assets/todo-cleanup/task-tower-icon.webp" alt="" aria-hidden="true" />
                     Task Tower
                   </button>
-                  <button type="button" className="yesterday-sundown-todo-modal__bulk-delete" onClick={() => setTodoCleanupBulkAction({ action: 'delete' })} disabled={yesterdaySundownTodoSaving}>🗑️</button>
                 </div>
               )}
             </div>
@@ -13458,7 +13471,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 : assignedTodoCleanupCount > 0
                   ? `Apply ${assignedTodoCleanupCount} & close`
                   : yesterdaySundownTodos.length > 0
-                    ? 'Close — the rest stay on today'
+                    ? 'Later'
                     : 'Close'}
             </button>
           )}

@@ -49,7 +49,7 @@ assert(
   'bulk cleanup must offer Task Tower',
 );
 assert(
-  source.includes('/assets/todo-cleanup/daily-todo-reset-title-v3.webp'),
+  source.includes('/assets/todo-cleanup/daily-todo-reset-title-v4.webp'),
   'todo cleanup must use the wide image title lockup',
 );
 assert(
