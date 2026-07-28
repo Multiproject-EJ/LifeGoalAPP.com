@@ -41,6 +41,24 @@ export const todayRewardsParityTests: TestCase[] = [
     },
   },
   {
+    name: 'Daily Spin awards use the authenticated canonical Island Run wallet path',
+    run: async () => {
+      const service = await readSource('src/services/dailySpin.ts');
+      const modal = await readSource('src/features/spin-wheel/NewDailySpinWheel.tsx');
+      assert(
+        service.includes('grantDailySpinIslandRunRewards({')
+          && service.includes('session,')
+          && !service.includes("rpc('island_run_add_currency'"),
+        'Daily Spin currency must use the canonical action rather than the missing legacy RPC/fallback path.',
+      );
+      assert(
+        modal.includes('executeSpin(session.user.id, {')
+          && modal.includes('session,'),
+        'Daily Spin UI must provide the authenticated session needed to credit the correct Island Run wallet.',
+      );
+    },
+  },
+  {
     name: 'habit bonus spin in Today surfaces uses server idempotency helper',
     run: async () => {
       const dailyTracker = await readSource('src/features/habits/DailyHabitTracker.tsx');

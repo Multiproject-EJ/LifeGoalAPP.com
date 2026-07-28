@@ -1,5 +1,5 @@
 import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
-import type { PostgrestError } from '@supabase/supabase-js';
+import type { PostgrestError, Session } from '@supabase/supabase-js';
 import type { DailySpinState, SpinAward, SpinResult, SpinPrize } from '../types/gamification';
 import { SPIN_PRIZES } from '../types/gamification';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
@@ -7,6 +7,8 @@ import { recordTelemetryEvent } from './telemetry';
 import { fetchHolidayPreferences } from './holidayPreferences';
 import { isIslandRunFeatureEnabled } from '../config/islandRunFeatureFlags';
 import { clampSpinsForStrictDailyLimit, STRICT_DAILY_SPIN_LIMIT } from './dailySpinLimit';
+import { resolveDailySpinAwards } from './dailySpinRewardPolicy';
+import { grantDailySpinIslandRunRewards } from '../features/gamification/level-worlds/services/islandRunDailySpinRewardAction';
 
 export { clampSpinsForStrictDailyLimit, STRICT_DAILY_SPIN_LIMIT };
 
@@ -559,8 +561,12 @@ async function spendDailySpinEssence(userId: string, amount: number): Promise<Se
 
 export async function executeSpin(
   userId: string,
-  options: { rewardMultiplier?: SpinRewardMultiplier; essenceCost?: number } = {},
+  options: { session: Session; rewardMultiplier?: SpinRewardMultiplier; essenceCost?: number },
 ): Promise<ServiceResponse<SpinResult>> {
+  if (options.session.user.id !== userId) {
+    return { data: null, error: new Error('Spin session does not match the active player') };
+  }
+
   const { data: spinState, error: stateError } = await getDailySpinState(userId);
 
   if (stateError || !spinState) {
@@ -594,7 +600,7 @@ export async function executeSpin(
   const prize = getRandomPrizeFromPool(prizePool);
 
   // Award prize
-  const awardedRewards = await awardPrize(userId, prize, rewardMultiplier);
+  const awardedRewards = await awardPrize(options.session, prize, rewardMultiplier);
 
   // Update spin state
   const newSpinsAvailable = spinState.spinsAvailable - 1;
@@ -670,30 +676,36 @@ export async function executeSpin(
 /**
  * Award prize to user — supports multiple currencies aligned with the island-run economy.
  *
- * - essence → island_run.essence (via gamification_profiles for now)
+ * - essence → island_run.essence
  * - shards → island_run.shards
  * - dice → island_run.dice_pool
  * - game_tokens → gamification_profiles.total_points (gold equivalent; not event tickets)
  * - treasure_chest → multi-currency bundle (essence + shards + dice)
- * - mystery → 1.5× random single-currency award
+ * - mystery → random single-currency award
  * - gold (legacy) → gamification_profiles.total_points
  */
-async function awardPrize(userId: string, prize: SpinPrize, rewardMultiplier = 1): Promise<SpinAward[]> {
+async function awardPrize(session: Session, prize: SpinPrize, rewardMultiplier = 1): Promise<SpinAward[]> {
+  const userId = session.user.id;
   const supabase = getSupabaseClient();
 
   const addToProfile = async (field: string, amount: number) => {
-    const { data: profile } = await fetchGamificationProfile(userId);
-    if (!profile) return;
+    const { data: profile, error: profileError } = await fetchGamificationProfile(userId);
+    if (profileError || !profile) {
+      throw profileError ?? new Error('Gamification profile not found');
+    }
     const current = (profile as unknown as Record<string, number>)[field] ?? 0;
     const next = current + amount;
 
     if (!canUseSupabaseData()) {
       saveDemoProfile({ [field]: next, updated_at: new Date().toISOString() });
     } else {
-      await supabase
+      const { error: updateError } = await supabase
         .from('gamification_profiles')
         .update({ [field]: next })
         .eq('user_id', userId);
+      if (updateError) {
+        throw updateError;
+      }
     }
 
     void recordTelemetryEvent({
@@ -711,106 +723,52 @@ async function awardPrize(userId: string, prize: SpinPrize, rewardMultiplier = 1
     });
   };
 
-  const addToIslandRun = async (field: string, amount: number) => {
-    if (!canUseSupabaseData()) {
-      // Demo mode – no island_run table; fall back to profile points
-      await addToProfile('total_points', amount);
-      return;
-    }
+  const awardedRewards = resolveDailySpinAwards(prize, rewardMultiplier);
+  const islandDeltas = awardedRewards.reduce(
+    (totals, award) => {
+      if (award.currency === 'dice') totals.dice += award.amount;
+      if (award.currency === 'essence') totals.essence += award.amount;
+      if (award.currency === 'shards') totals.shards += award.amount;
+      return totals;
+    },
+    { dice: 0, essence: 0, shards: 0 },
+  );
 
-    const { error: rpcError } = await supabase.rpc('island_run_add_currency' as any, {
-      p_user_id: userId,
-      p_field: field,
-      p_amount: amount,
+  for (const award of awardedRewards) {
+    if (award.currency === 'gold') {
+      await addToProfile('total_points', award.amount);
+    } else if (award.currency === 'game_tokens') {
+      // Game tokens are stored as gold-equivalent for now (not timed-event tickets).
+      await addToProfile('total_points', award.amount * 10);
+    }
+  }
+
+  if (islandDeltas.dice > 0 || islandDeltas.essence > 0 || islandDeltas.shards > 0) {
+    const grantResult = await grantDailySpinIslandRunRewards({
+      session,
+      client: canUseSupabaseData() ? supabase : null,
+      deltas: islandDeltas,
+      triggerSource: `daily_spin:${prize.type}`,
     });
-
-    if (rpcError) {
-      // If the RPC doesn't exist yet, fall back to profile points (properly incremented)
-      console.warn(`island_run_add_currency RPC failed (${field}), falling back to profile:`, rpcError.message);
-      await addToProfile('total_points', amount);
+    if (!grantResult.ok) {
+      throw new Error(`Could not save Daily Spin reward: ${grantResult.errorMessage}`);
     }
+  }
 
+  for (const award of awardedRewards) {
+    if (award.currency === 'gold' || award.currency === 'game_tokens') continue;
     void recordTelemetryEvent({
       userId,
       eventType: 'economy_earn',
       metadata: {
-        currency: field,
-        amount,
+        currency: award.currency,
+        amount: award.amount,
         sourceType: 'daily_spin',
         sourceId: prize.label,
         rewardType: prize.type,
         rewardMultiplier,
       },
     });
-  };
-
-  const scaledValue = Math.max(0, Math.floor(prize.value * rewardMultiplier));
-  const awardedRewards: SpinAward[] = [];
-
-  switch (prize.type) {
-    case 'gold':
-      await addToProfile('total_points', scaledValue);
-      awardedRewards.push({ currency: 'gold', amount: scaledValue, label: 'Gold', icon: '🪙' });
-      break;
-
-    case 'essence':
-      await addToIslandRun('essence', scaledValue);
-      awardedRewards.push({ currency: 'essence', amount: scaledValue, label: 'Money', icon: '💰' });
-      break;
-
-    case 'shards':
-      await addToIslandRun('shards', scaledValue);
-      awardedRewards.push({ currency: 'shards', amount: scaledValue, label: 'Essence', icon: '🟣' });
-      break;
-
-    case 'dice':
-      await addToIslandRun('dice_pool', scaledValue);
-      awardedRewards.push({ currency: 'dice', amount: scaledValue, label: 'Dice', icon: '🎲' });
-      break;
-
-    case 'game_tokens':
-      // Game tokens are stored as gold-equivalent for now (not timed-event tickets).
-      await addToProfile('total_points', scaledValue * 10);
-      awardedRewards.push({ currency: 'game_tokens', amount: scaledValue, label: 'Game Tokens', icon: '🎟️' });
-      break;
-
-    case 'treasure_chest':
-      // Multi-currency bundle: 20 essence + 3 shards + 10 dice
-      await addToIslandRun('essence', 20 * rewardMultiplier);
-      await addToIslandRun('shards', 3 * rewardMultiplier);
-      await addToIslandRun('dice_pool', 10 * rewardMultiplier);
-      awardedRewards.push(
-        { currency: 'essence', amount: 20 * rewardMultiplier, label: 'Money', icon: '💰' },
-        { currency: 'shards', amount: 3 * rewardMultiplier, label: 'Essence', icon: '🟣' },
-        { currency: 'dice', amount: 10 * rewardMultiplier, label: 'Dice', icon: '🎲' },
-      );
-      break;
-
-    case 'mystery': {
-      // 1.5× random single-currency award
-      const mysteryOptions: Array<{
-        field: string;
-        amount: number;
-        table: 'profile' | 'island';
-        reward: Omit<SpinAward, 'amount'>;
-      }> = [
-        { field: 'essence', amount: 40 * rewardMultiplier, table: 'island', reward: { currency: 'essence', label: 'Money', icon: '💰' } },
-        { field: 'shards', amount: 5 * rewardMultiplier, table: 'island', reward: { currency: 'shards', label: 'Essence', icon: '🟣' } },
-        { field: 'dice_pool', amount: 18 * rewardMultiplier, table: 'island', reward: { currency: 'dice', label: 'Dice', icon: '🎲' } },
-        { field: 'total_points', amount: 50 * rewardMultiplier, table: 'profile', reward: { currency: 'gold', label: 'Gold', icon: '🪙' } },
-      ];
-      const pick = mysteryOptions[Math.floor(Math.random() * mysteryOptions.length)];
-      if (pick.table === 'profile') {
-        await addToProfile(pick.field, pick.amount);
-      } else {
-        await addToIslandRun(pick.field, pick.amount);
-      }
-      awardedRewards.push({ ...pick.reward, amount: pick.amount });
-      break;
-    }
-
-    default:
-      console.warn(`Unknown prize type: ${prize.type}`);
   }
 
   return awardedRewards;

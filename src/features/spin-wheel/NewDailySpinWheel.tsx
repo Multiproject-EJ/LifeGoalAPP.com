@@ -370,6 +370,7 @@ export function NewDailySpinWheel({ session, onClose }: NewDailySpinWheelProps) 
       setCharging(false);
       setSpinning(true);
       const { data, error: spinError } = await executeSpin(session.user.id, {
+        session,
         rewardMultiplier: multiplierOption.multiplier,
         essenceCost: multiplierOption.essenceCost,
       });
