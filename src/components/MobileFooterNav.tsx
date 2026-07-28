@@ -21,6 +21,7 @@ type MobileFooterNavItem = {
   icon: ReactNode;
   ariaLabel?: string;
   badgeLabel?: string;
+  emerging?: boolean;
 };
 
 type MobileFooterStatus = {
@@ -631,9 +632,9 @@ export function MobileFooterNav({
 
             const isActive = item.id === activeId;
             const pointsBadgeValue = showPointsBadges ? pointsBadges[item.id] : undefined;
-            const isEnergyItem = item.id === 'breathing-space' && Boolean(onEnergySelect);
+            const isEnergyItem = item.id === 'breathing-space' && Boolean(onEnergySelect) && !item.emerging;
             return (
-              <li key={item.id} className={`mobile-footer-nav__item mobile-footer-nav__item--${item.id}${getStandardFooterIconExpansionClass(item.id)}`}>
+              <li key={item.id} className={`mobile-footer-nav__item mobile-footer-nav__item--${item.id}${item.emerging ? ' mobile-footer-nav__item--emerging' : ''}${getStandardFooterIconExpansionClass(item.id)}`}>
                 {isEnergyItem ? (
                   <div
                     className={`mobile-footer-nav__energy-menu${
@@ -677,6 +678,9 @@ export function MobileFooterNav({
                     playFooterClickSound(getFooterClickSoundKind(item.id, isEnergyItem));
                     revealControllerUI();
                     triggerStandardFooterIconExpansion(item.id);
+                    if (item.emerging) {
+                      return;
+                    }
                     if (isEnergyItem) {
                       onEnergyToggle?.();
                       return;
@@ -684,6 +688,8 @@ export function MobileFooterNav({
                     onSelect(item.id);
                   }}
                   aria-label={item.ariaLabel ?? item.label}
+                  aria-disabled={item.emerging || undefined}
+                  title={item.emerging ? item.ariaLabel ?? item.label : undefined}
                   aria-pressed={isActive}
                 >
                   <span aria-hidden="true" className="mobile-footer-nav__icon">

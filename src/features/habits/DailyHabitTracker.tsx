@@ -71,6 +71,10 @@ import {
   updateHabitFullV2,
   type HabitV2Row,
 } from '../../services/habitsV2';
+import {
+  awardRoutekeeperBreathLotusOnce,
+  isRoutekeeperBreathingHabit,
+} from '../gamification/level-worlds/services/islandRunRoutekeeperTinyActions';
 import { autoResumeDueHabits } from '../../services/habitLifecycleAutoResume';
 import { cancelHabitNotifications } from '../../services/habitAlertNotifications';
 import {
@@ -603,6 +607,7 @@ type DailyHabitTrackerProps = {
   onOpenFeaturePreview?: (featureId: FeatureAvailabilityId, label: string) => void;
   deferDailyLifeUpgradeModal?: boolean;
   deferYesterdayTodoCleanupModal?: boolean;
+  dayOneFocusMode?: boolean;
 };
 
 type HabitCompletionState = {
@@ -1241,6 +1246,7 @@ export function DailyHabitTracker({
   onOpenFeaturePreview,
   deferDailyLifeUpgradeModal = false,
   deferYesterdayTodoCleanupModal = false,
+  dayOneFocusMode = false,
 }: DailyHabitTrackerProps) {
   const { isConfigured } = useSupabaseAuth();
   const sparkHandEnabled = isPlayersHandSparkResultEnabled();
@@ -5922,6 +5928,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           return nextLogs;
         });
 
+        if (isToday && isRoutekeeperBreathingHabit(habit)) {
+          const lotusResult = await awardRoutekeeperBreathLotusOnce({
+            userId: session.user.id,
+            habitId: habit.id,
+            dateISO,
+          });
+          if (!lotusResult.ok) {
+            setErrorMessage('Your breath was saved, but the Lotus Flower reward will need another try.');
+          }
+        }
+
         // 🎮 Award XP for completing today's habits
         if (isActiveDay) {
           playHabitCompleteSfx();
@@ -8360,7 +8377,9 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     const nonReviewHabits = (isTimeLimitedOfferActive ? timeLimitedOrderedHabits : rhythmOrderedHabits).filter(
       (habit) => (habitHealthByHabitId[habit.id] ?? 'active') !== 'in_review',
     );
-    const baseHabits = nonReviewHabits;
+    const baseHabits = dayOneFocusMode
+      ? nonReviewHabits.filter(isRoutekeeperBreathingHabit)
+      : nonReviewHabits;
     const isArchivedFromActiveList = (habitId: string) => {
       const completion = completions[habitId];
       return Boolean(completion?.completed) || completion?.progressState === 'skipped';
@@ -8370,18 +8389,18 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     const visibleHabits = showCompletedHabits
       ? [...activeHabits, ...completedHabits]
       : activeHabits;
-    const activeTodos = todayTodos.filter((todo) => !todo.completed);
-    const completedTodos = todayTodos.filter((todo) => todo.completed);
+    const activeTodos = dayOneFocusMode ? [] : todayTodos.filter((todo) => !todo.completed);
+    const completedTodos = dayOneFocusMode ? [] : todayTodos.filter((todo) => todo.completed);
 
     return (
       <div className="habit-checklist__group">
-        {!hideTimeBoundOffers && isViewingToday ? (
+        {!dayOneFocusMode && !hideTimeBoundOffers && isViewingToday ? (
           <TimeBoundOfferRow
             offers={timeBoundOffers}
             onOfferClick={handleTimeBoundOfferClick}
           />
         ) : null}
-        {isHabitReviewPromptActive && focusedReviewHabit ? (() => {
+        {!dayOneFocusMode && isHabitReviewPromptActive && focusedReviewHabit ? (() => {
           const habit = focusedReviewHabit;
           const isActionInFlight = reviewActionHabitIds.has(habit.id);
           const isAiDraftLoading = reviewAiLoadingHabitIds.has(habit.id);
@@ -8481,7 +8500,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           );
         })() : null}
         <div className="habit-checklist-card__title">
-          <div className="habit-checklist-card__title-actions">
+          {!dayOneFocusMode ? <div className="habit-checklist-card__title-actions">
             {shouldShowTimeLimitedOfferToggle ? (
               <button
                 type="button"
@@ -8558,9 +8577,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 </div>
               ) : null}
             </div>
-          </div>
+          </div> : (
+            <div className="habit-checklist-card__day-one-heading">
+              <span>First Light Shore</span>
+              <small>One real action wakes the island.</small>
+            </div>
+          )}
         </div>
-        {shouldShowTimeLimitedOfferToggle && isTimeLimitedOfferDetailsOpen ? (
+        {!dayOneFocusMode && shouldShowTimeLimitedOfferToggle && isTimeLimitedOfferDetailsOpen ? (
           <div className="habit-checklist-card__offer-details">
             <p className="habit-checklist-card__offer-eyebrow">{timeLimitedOfferCopy.eyebrow}</p>
             <p className="habit-checklist-card__offer-line">{timeLimitedOfferCopy.nextUp}</p>
@@ -8569,6 +8593,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         ) : null}
         {visibleHabits.length === 0 && completedHabits.length > 0 ? (
           <p className="habit-checklist__empty">All habits checked off for today.</p>
+        ) : null}
+        {dayOneFocusMode && visibleHabits.length === 0 && completedHabits.length === 0 ? (
+          <div className="habit-checklist__day-one-empty" role="status">
+            <span aria-hidden="true">✦</span>
+            <p>Your first island mission will place a tiny ritual here.</p>
+          </div>
         ) : null}
         <ul
           className={`habit-checklist ${Object.values(expandedHabits).some(Boolean) ? 'habit-checklist--has-expanded-habit' : ''}`}
@@ -9327,6 +9357,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           {habitDisplayName}
                         </span>
                         <div className="habit-checklist__badges">
+                          {isRoutekeeperBreathingHabit(habit) ? (
+                            <span
+                              className="habit-checklist__lotus-reward-badge"
+                              aria-label="Awards one Lotus Flower when completed today"
+                            >
+                              🪷 +1
+                            </span>
+                          ) : null}
                           {(isCompleted || state?.progressState === 'skipped' || state?.progressState === 'missed') && state?.progressState && (
                             <span
                               className={`progress-state-badge ${getProgressStateColorClass(state.progressState)}`}
@@ -10275,6 +10313,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       compactPullDistance > 0 ? ' habit-checklist-card--pulling' : ''
     }${isPullArmed ? ' habit-checklist-card--pull-armed' : ''}${
       selectedAmbiance ? ' habit-checklist-card--ambiance' : ''
+    }${dayOneFocusMode ? ' habit-checklist-card--day-one-focus' : ''
     }`;
     const checklistCardStyle = canUseCompactPullRefresh
       ? ({ '--habit-compact-pull-offset': `${compactPullDistance}px` } as CSSProperties)
@@ -11082,7 +11121,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         {intentionsModal}
         {todayWinsModal}
         <div className="habit-checklist-card__board">
-          {!isCompactView ? (
+          {!isCompactView && !dayOneFocusMode ? (
             todayWinsTier !== 'zero_star' ? (
               <button
                 type="button"
@@ -11112,7 +11151,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 </p>
               </div>
             </div>
-            {!isCompactView ? (
+            {!isCompactView && !dayOneFocusMode ? (
               <div className="habit-checklist-card__head-actions">
                 {showIntentionsOnlyRow ? (
                   <div className="habit-checklist-card__nav-row habit-checklist-card__nav-row--intentions-only">
@@ -11210,10 +11249,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               Object.values(expandedHabits).some(Boolean) ? 'habit-checklist-card__board-body--habit-focus' : ''
             }`}
           >
-            {renderFuturePlanningBanner()}
-            {renderDayNavigation('compact', true, isCompactView)}
+            {!dayOneFocusMode ? renderFuturePlanningBanner() : null}
+            {!dayOneFocusMode ? renderDayNavigation('compact', true, isCompactView) : null}
             <QuestCalendarDashboardModal
-              open={isAdminOrCreator && questCalendarDashboardOpen}
+              open={!dayOneFocusMode && isAdminOrCreator && questCalendarDashboardOpen}
               referenceDate={activeDate}
               goals={goals.map((goal) => ({
                 id: goal.id,
@@ -11240,7 +11279,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               }}
             />
             <QuestManagerModal
-              open={isAdminOrCreator && questManagerOpen}
+              open={!dayOneFocusMode && isAdminOrCreator && questManagerOpen}
               userId={session.user.id}
               goals={goals.map((goal) => ({
                 id: goal.id,
@@ -11255,7 +11294,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 void refreshHabits();
               }}
             />
-            {campaign ? (
+            {!dayOneFocusMode && campaign ? (
               <button
                 type="button"
                 className="campaign-card"
@@ -11272,7 +11311,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                 </span>
               </button>
             ) : null}
-            {habits.length === 0 ? (
+            {!dayOneFocusMode && habits.length === 0 ? (
               <div className="habit-checklist-card__empty">
                 <p>No habits scheduled for this day.</p>
                 <p>Add a ritual to any goal and it will show up here for quick check-ins.</p>

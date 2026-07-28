@@ -26,14 +26,19 @@ import {
 } from '../services/islandRunAdaptiveAreas';
 import { getLifeWheelAreaMeta } from '../../../life-wheel/lifeWheelTaxonomy';
 import { fetchCheckinsForUser } from '../../../../services/checkins';
-import { listHabitsV2 } from '../../../../services/habitsV2';
+import { listHabitsV2, type HabitV2Row } from '../../../../services/habitsV2';
 import { useGamification } from '../../../../hooks/useGamification';
 import { XP_REWARDS } from '../../../../types/gamification';
 import { recordGameLifeIntake } from '../../../../services/gameLifeIntake';
 import { recordCompassContribution } from '../../../../services/compassState';
 import {
+  awardRoutekeeperBreathLotusOnce,
+  completeRoutekeeperBreathingHabit,
+  createRoutekeeperBreathingHabit,
   createAndCompleteRoutekeeperTinyAction,
   hasSuitableRoutekeeperHabit,
+  ROUTEKEEPER_BREATH_HABIT_TITLE,
+  ROUTEKEEPER_BREATH_LOTUS_REWARD,
   ROUTEKEEPER_SUCCESS_BODY,
   ROUTEKEEPER_SUCCESS_TITLE,
   ROUTEKEEPER_BODY_COPY,
@@ -43,6 +48,7 @@ import {
   type RoutekeeperTinyAction,
 } from '../services/islandRunRoutekeeperTinyActions';
 import { getIslandContentPlan, orderAreasForIsland } from '../services/islandContentManifest';
+import { DayOneBreathingRitual } from './DayOneBreathingRitual';
 
 /** Dispatched when the player needs to record a check-in before adding a habit. */
 export const ISLAND_RUN_LAUNCH_CHECKINS_EVENT = 'lifegoal:launch-checkins';
@@ -52,11 +58,24 @@ interface IslandRunLifePromptCardProps {
   islandNumber?: number;
   onComplete: (message: string) => void;
   onComeBackLater?: () => void;
+  forceDayOnePreview?: boolean;
 }
 
 const HABIT_SIZES: readonly IslandRunHabitSize[] = ['Tiny', 'Normal', 'Stretch'];
+const DAY_ONE_PACE_OPTIONS = [
+  { id: 'gentle', label: 'Gentle', body: 'One tiny win' },
+  { id: 'steady', label: 'Steady', body: 'A small daily challenge' },
+  { id: 'bold', label: 'Bold', body: 'Push me a little' },
+] as const;
+type DayOnePace = typeof DAY_ONE_PACE_OPTIONS[number]['id'];
 
-export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onComeBackLater }: IslandRunLifePromptCardProps) {
+export function IslandRunLifePromptCard({
+  session,
+  islandNumber,
+  onComplete,
+  onComeBackLater,
+  forceDayOnePreview = false,
+}: IslandRunLifePromptCardProps) {
   const [area, setArea] = useState<IslandRunLifeWheelArea | null>(null);
   const [selectedHabit, setSelectedHabit] = useState<SuggestedHabit | null>(null);
   const [feedbackEnergy, setFeedbackEnergy] = useState<HabitFeedbackEnergy | null>(null);
@@ -70,6 +89,9 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
   const [routekeeperSignalId, setRoutekeeperSignalId] = useState<RoutekeeperSignalId>('body');
   const [routekeeperMode, setRoutekeeperMode] = useState(false);
   const [routekeeperRewardLine, setRoutekeeperRewardLine] = useState<string | null>(null);
+  const [routekeeperBreathStage, setRoutekeeperBreathStage] = useState<'intro' | 'adding' | 'added' | 'breathing'>('intro');
+  const [routekeeperBreathHabit, setRoutekeeperBreathHabit] = useState<HabitV2Row | null>(null);
+  const [dayOnePace, setDayOnePace] = useState<DayOnePace>('gentle');
 
   // Adaptive context: latest check-in + active-habit coverage drive which life
   // areas we offer. Until this loads we gate the area picker.
@@ -79,12 +101,27 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
   const [readiness, setReadiness] = useState<AreaReadiness[]>([]);
 
   const { earnXP, recordActivity } = useGamification(session);
+  const localJourneyDay = typeof window !== 'undefined'
+    ? Number(window.localStorage.getItem(`habitgame:journey-day:${session.user.id}`) ?? 0)
+    : 0;
+  const journeyDay = Number(
+    session.user.user_metadata?.developer_journey_day
+      ?? session.user.user_metadata?.journey_day
+      ?? localJourneyDay,
+  );
+  const isDayOneStoryMode = forceDayOnePreview || ((islandNumber ?? 1) === 1 && journeyDay === 1);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadContext() {
       setContextStatus('loading');
+      if (forceDayOnePreview) {
+        setHasSuitableHabit(false);
+        setRoutekeeperMode(true);
+        setContextStatus('ready');
+        return;
+      }
       try {
         const [checkinResult, habitsResult] = await Promise.all([
           fetchCheckinsForUser(session.user.id, 1),
@@ -97,7 +134,9 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
         const supportedAreas = deriveSupportedAreas(habits);
         const suitableHabit = hasSuitableRoutekeeperHabit(habits);
         setHasSuitableHabit(suitableHabit);
-        setRoutekeeperMode(!suitableHabit && (islandNumber ?? 1) === 1);
+        setRoutekeeperMode(
+          (islandNumber ?? 1) === 1 && (isDayOneStoryMode || !suitableHabit),
+        );
 
         if (!latestCheckin) {
           setHasCheckin(false);
@@ -125,7 +164,7 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
     return () => {
       cancelled = true;
     };
-  }, [session.user.id, islandNumber]);
+  }, [session.user.id, islandNumber, isDayOneStoryMode, forceDayOnePreview]);
 
   const islandPlan = useMemo(() => getIslandContentPlan(islandNumber ?? 1), [islandNumber]);
 
@@ -231,6 +270,114 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
     onComplete(successMessage);
   };
 
+  const handleStartDayOneBreathingRitual = async () => {
+    setRoutekeeperBreathStage('adding');
+    setError(null);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(`habitgame:journey-pace:${session.user.id}`, dayOnePace);
+    }
+    const result = await createRoutekeeperBreathingHabit(session.user.id);
+    if (!result.ok || !result.habit) {
+      setError(`Could not add the breathing habit right now (${result.message}).`);
+      setRoutekeeperBreathStage('intro');
+      return;
+    }
+
+    setRoutekeeperBreathHabit(result.habit);
+    setRoutekeeperBreathStage('added');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('habitgame:habits-created', {
+        detail: { habitId: result.habit.id, source: 'day-one-breath' },
+      }));
+    }
+
+    void recordGameLifeIntake({
+      userId: session.user.id,
+      promptContext: 'habit_landmark',
+      islandNumber: islandNumber ?? 1,
+      intakeStage: islandPlan.intakeStage,
+      lifeWheelArea: 'Mind',
+      state: 'accepted',
+      linkedHabitId: result.habit.id,
+      payload: {
+        outcome: result.wasAlreadyPresent
+          ? 'day_one_breath_habit_reused'
+          : 'day_one_breath_habit_created',
+        duration_days: 7,
+        journey_pace: dayOnePace,
+        lotus_per_completion: ROUTEKEEPER_BREATH_LOTUS_REWARD,
+      },
+    });
+
+    window.setTimeout(() => setRoutekeeperBreathStage('breathing'), 1150);
+  };
+
+  const handleCompleteDayOneBreathingRitual = async () => {
+    if (!routekeeperBreathHabit) {
+      return { ok: false, message: 'The breathing habit is not ready yet.' };
+    }
+
+    const completion = await completeRoutekeeperBreathingHabit(
+      routekeeperBreathHabit,
+      session.user.id,
+    );
+    if (completion.error || !completion.data?.completed) {
+      return {
+        ok: false,
+        message: completion.error?.message ?? 'The breath was completed, but Today could not be updated.',
+      };
+    }
+
+    let rewardLine = 'Today already remembered this breath.';
+    if (!completion.data.wasAlreadyCompleted) {
+      const lotusResult = await awardRoutekeeperBreathLotusOnce({
+        userId: session.user.id,
+        habitId: routekeeperBreathHabit.id,
+      });
+      if (!lotusResult.ok) {
+        return {
+          ok: false,
+          message: `The habit was completed, but the Lotus Flower could not be awarded (${lotusResult.error?.message ?? 'unknown error'}).`,
+        };
+      }
+      rewardLine = `🪷 +${ROUTEKEEPER_BREATH_LOTUS_REWARD} Lotus Flower`;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('gamificationProfileUpdated', {
+          detail: { userId: session.user.id },
+        }));
+      }
+    }
+
+    void recordCompassContribution({
+      userId: session.user.id,
+      islandNumber: islandNumber ?? 1,
+      kind: 'habit',
+      text: ROUTEKEEPER_BREATH_HABIT_TITLE,
+      linkedHabitId: routekeeperBreathHabit.id,
+    });
+    const xpResult = completion.data.wasAlreadyCompleted
+      ? null
+      : await earnXP?.(
+        XP_REWARDS.HABIT_COMPLETE,
+        'habit_complete',
+        routekeeperBreathHabit.id,
+        'Day 1 breathing ritual',
+      );
+    if (!completion.data.wasAlreadyCompleted) {
+      await recordActivity?.();
+    }
+    setRoutekeeperRewardLine(
+      xpResult?.success ? `${rewardLine} · +${XP_REWARDS.HABIT_COMPLETE} XP` : rewardLine,
+    );
+
+    return {
+      ok: true,
+      rewardLine: xpResult?.success
+        ? `${rewardLine} · +${XP_REWARDS.HABIT_COMPLETE} XP`
+        : rewardLine,
+    };
+  };
+
   const handleCreateHabit = async () => {
     if (!selectedHabit || !selectedSize || !timing) return;
     setIsSubmitting(true);
@@ -283,11 +430,86 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
 
   return (
     <div className="island-hatchery-card">
-      <p className="island-stop-modal__copy"><strong>✅ Habit Landmark</strong></p>
-      <p className="island-stop-modal__copy">A small action can change an island.</p>
+      {!isDayOneStoryMode ? (
+        <>
+          <p className="island-stop-modal__copy"><strong>✅ Habit Landmark</strong></p>
+          <p className="island-stop-modal__copy">A small action can change an island.</p>
+        </>
+      ) : null}
 
       {!area && contextStatus === 'loading' ? (
         <p className="island-stop-modal__copy">Reading your latest check-in…</p>
+      ) : routekeeperMode && isDayOneStoryMode ? (
+        <>
+          {routekeeperBreathStage === 'intro' || routekeeperBreathStage === 'adding' ? (
+            <div className="day-one-routekeeper-intro">
+              <p className="island-stop-modal__eyebrow">Island mission · First Light Shore</p>
+              <h3 className="island-stop-modal__title">Help wake the island</h3>
+              <p className="island-stop-modal__copy">
+                The Routekeeper Steps are dark. Your daily ritual is one five-second breath;
+                we&apos;ll take three together now to restore their first light.
+              </p>
+              <fieldset className="day-one-routekeeper-intro__pace">
+                <legend>Choose your pace</legend>
+                <div className="day-one-routekeeper-intro__pace-options">
+                  {DAY_ONE_PACE_OPTIONS.map((pace) => (
+                    <button
+                      key={pace.id}
+                      type="button"
+                      className={dayOnePace === pace.id ? 'is-selected' : ''}
+                      aria-pressed={dayOnePace === pace.id}
+                      onClick={() => setDayOnePace(pace.id)}
+                    >
+                      <strong>{pace.label}</strong>
+                      <small>{pace.body}</small>
+                    </button>
+                  ))}
+                </div>
+                <small>All three begin with the same tiny win. You can change your pace later.</small>
+              </fieldset>
+              <div className="day-one-routekeeper-intro__habit">
+                <span className="day-one-routekeeper-intro__habit-icon" aria-hidden="true">🌬️</span>
+                <span>
+                  <strong>{ROUTEKEEPER_BREATH_HABIT_TITLE}</strong>
+                  <small>Once a day for 7 days · 🪷 +1 Lotus</small>
+                </span>
+              </div>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => void handleStartDayOneBreathingRitual()}
+                disabled={routekeeperBreathStage === 'adding'}
+              >
+                {routekeeperBreathStage === 'adding' ? 'Adding to Today…' : 'Add to Today & breathe now'}
+              </button>
+            </div>
+          ) : null}
+
+          {routekeeperBreathStage === 'added' ? (
+            <div className="day-one-habit-added" role="status">
+              <p className="day-one-habit-added__eyebrow">Added to Today</p>
+              <div className="day-one-habit-added__card">
+                <span aria-hidden="true">🌬️</span>
+                <strong>{ROUTEKEEPER_BREATH_HABIT_TITLE}</strong>
+                <span className="day-one-habit-added__reward">🪷 +1</span>
+              </div>
+              <p>7-day ritual anchored</p>
+            </div>
+          ) : null}
+
+          {routekeeperBreathStage === 'breathing' ? (
+            <DayOneBreathingRitual
+              onRitualComplete={handleCompleteDayOneBreathingRitual}
+              onContinue={() => {
+                const message = routekeeperRewardLine
+                  ? `${ROUTEKEEPER_SUCCESS_TITLE} ${routekeeperRewardLine}`
+                  : `${ROUTEKEEPER_SUCCESS_TITLE} ${ROUTEKEEPER_SUCCESS_BODY}`;
+                onComplete(message);
+              }}
+            />
+          ) : null}
+          {error ? <p className="island-stop-modal__error" role="alert">{error}</p> : null}
+        </>
       ) : routekeeperMode && !hasSuitableHabit ? (
         <>
           <p className="island-stop-modal__copy"><strong>Routekeeper Steps</strong></p>
@@ -472,11 +694,13 @@ export function IslandRunLifePromptCard({ session, islandNumber, onComplete, onC
       {error ? <p className="journal__status journal__status--error" style={{ marginTop: 10 }}>{error}</p> : null}
       {doneMessage ? <p style={{ marginTop: 10 }}>{doneMessage}</p> : null}
 
-      <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-        <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={handleComeBackLater}>
-          Come back later
-        </button>
-      </div>
+      {!isDayOneStoryMode ? (
+        <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
+          <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary" onClick={handleComeBackLater}>
+            Come back later
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

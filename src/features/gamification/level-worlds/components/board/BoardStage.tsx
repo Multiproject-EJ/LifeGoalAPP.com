@@ -74,6 +74,8 @@ export interface BoardStageProps {
   isMinimalBoardArt?: boolean;
   /** Pause non-essential board motion while a modal owns the user's attention. */
   isInteractionPaused?: boolean;
+  /** Speeds token travel while preserving every hop and island transition. */
+  movementSpeedFactor?: number;
   /** Optional tilt overrides for quick camera framing tuning */
   boardTiltXDeg?: number;
   boardRotateZDeg?: number;
@@ -158,6 +160,7 @@ export function BoardStage(props: BoardStageProps) {
     showDebug,
     isMinimalBoardArt = false,
     isInteractionPaused = false,
+    movementSpeedFactor = 1,
     boardTiltXDeg = BOARD_TILT_X_DEG,
     boardRotateZDeg = BOARD_ROTATE_Z_DEG,
     tileMap,
@@ -463,7 +466,7 @@ export function BoardStage(props: BoardStageProps) {
       camera.goPreRoll(tokenX, tokenY, preRollPreset);
 
       // Compute variable hop durations: fast middle hops, slow final hops
-      const hopDurations = computeHopDurations(pendingHopSequence.length);
+      const hopDurations = computeHopDurations(pendingHopSequence.length, movementSpeedFactor);
 
       // Start the hop animation after the anticipation hold
       preRollTimeoutRef.current = window.setTimeout(() => {
@@ -498,7 +501,7 @@ export function BoardStage(props: BoardStageProps) {
             onHopSequenceComplete?.();
           }
         });
-      }, PRE_ROLL_HOLD_MS);
+      }, PRE_ROLL_HOLD_MS / Math.max(1, movementSpeedFactor));
       return () => {
         if (preRollTimeoutRef.current !== null) {
           window.clearTimeout(preRollTimeoutRef.current);
@@ -534,7 +537,7 @@ export function BoardStage(props: BoardStageProps) {
       tokenAnim.snapTo(anchor);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenIndex, anchors, pendingHopSequence, toScreen]);
+  }, [tokenIndex, anchors, movementSpeedFactor, pendingHopSequence, toScreen]);
 
   // Particle burst state
   const [burstPos, setBurstPos] = useState<{ x: number; y: number } | null>(null);

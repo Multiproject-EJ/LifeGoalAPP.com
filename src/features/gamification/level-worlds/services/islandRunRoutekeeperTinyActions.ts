@@ -1,4 +1,10 @@
-import { recordHabitCompletion, type HabitV2Row } from '../../../../services/habitsV2';
+import {
+  createHabitV2,
+  listHabitsV2,
+  recordHabitCompletion,
+  type HabitV2Row,
+} from '../../../../services/habitsV2';
+import { awardZenTokens } from '../../../../services/zenGarden';
 import type { SuggestedHabit } from '../../../habits/suggestedHabitLibrary';
 import {
   createIslandRunHabitFromLifePrompt,
@@ -30,6 +36,132 @@ export function getRoutekeeperTinyActionForSignal(signalId: RoutekeeperSignalId)
 
 export const ROUTEKEEPER_SUCCESS_TITLE = 'Routekeeper Steps relit.';
 export const ROUTEKEEPER_SUCCESS_BODY = 'One steady action is enough for today.';
+export const ROUTEKEEPER_BREATH_HABIT_TITLE = 'Take one 5-second breath';
+export const ROUTEKEEPER_BREATH_HABIT_MARKER = 'habitgame:day-one-breath-v1';
+export const ROUTEKEEPER_BREATH_LOTUS_REWARD = 1;
+
+export function isRoutekeeperBreathingHabit(
+  habit: {
+    title?: string | null;
+    name?: string | null;
+    habit_environment?: string | null;
+  },
+): boolean {
+  return (habit.title ?? habit.name) === ROUTEKEEPER_BREATH_HABIT_TITLE
+    || Boolean(habit.habit_environment?.includes(ROUTEKEEPER_BREATH_HABIT_MARKER));
+}
+
+export function buildRoutekeeperBreathingHabitPayload(now = new Date()) {
+  const startAt = now.toISOString();
+  const endAt = new Date(now);
+  endAt.setDate(endAt.getDate() + 7);
+
+  return {
+    title: ROUTEKEEPER_BREATH_HABIT_TITLE,
+    emoji: '🌬️',
+    type: 'boolean' as const,
+    allow_skip: true,
+    schedule: { mode: 'daily' as const },
+    target_num: 1,
+    target_unit: 'breath',
+    habit_intent: 'build',
+    duration_mode: 'fixed_window',
+    duration_value: 7,
+    duration_unit: 'days',
+    duration_start_at: startAt,
+    duration_end_at: endAt.toISOString(),
+    on_duration_end: 'pause',
+    habit_environment: [
+      ROUTEKEEPER_BREATH_HABIT_MARKER,
+      'Created inside Island Run at the Routekeeper Steps',
+      'Seven-day starter ritual',
+      `Reward: ${ROUTEKEEPER_BREATH_LOTUS_REWARD} Lotus Flower per daily completion`,
+    ].join(' · '),
+  };
+}
+
+export async function createRoutekeeperBreathingHabit(
+  userId: string,
+  now = new Date(),
+): Promise<{ ok: boolean; habit: HabitV2Row | null; wasAlreadyPresent: boolean; message: string }> {
+  const existingResult = await listHabitsV2({ includeInactive: true });
+  const existing = existingResult.data?.find(
+    (habit) => habit.user_id === userId && isRoutekeeperBreathingHabit(habit),
+  );
+  if (existing) {
+    return {
+      ok: true,
+      habit: existing,
+      wasAlreadyPresent: true,
+      message: 'Your seven-day breathing habit is already on Today.',
+    };
+  }
+
+  const created = await createHabitV2(buildRoutekeeperBreathingHabitPayload(now), userId);
+  if (created.error || !created.data) {
+    return {
+      ok: false,
+      habit: null,
+      wasAlreadyPresent: false,
+      message: created.error?.message ?? 'Could not add the breathing habit right now.',
+    };
+  }
+
+  return {
+    ok: true,
+    habit: created.data,
+    wasAlreadyPresent: false,
+    message: 'Seven-day breathing habit added to Today.',
+  };
+}
+
+export async function completeRoutekeeperBreathingHabit(
+  habit: Pick<HabitV2Row, 'id'>,
+  userId: string,
+) {
+  return recordHabitCompletion(habit.id, userId);
+}
+
+export async function awardRoutekeeperBreathLotusOnce(input: {
+  userId: string;
+  habitId: string;
+  dateISO?: string;
+}) {
+  const dateISO = input.dateISO ?? new Date().toISOString().slice(0, 10);
+  const rewardKey = `habitgame:day-one-breath-lotus:${input.userId}:${input.habitId}:${dateISO}`;
+  if (typeof window !== 'undefined' && window.localStorage.getItem(rewardKey) === 'awarded') {
+    return { ok: true, alreadyAwarded: true, balance: null, error: null };
+  }
+
+  const result = await awardZenTokens(
+    input.userId,
+    ROUTEKEEPER_BREATH_LOTUS_REWARD,
+    'day_one_breath_habit',
+    `${input.habitId}:${dateISO}`,
+    'Completed the Routekeeper five-second breathing ritual',
+  );
+  if (result.error || !result.data) {
+    return {
+      ok: false,
+      alreadyAwarded: false,
+      balance: null,
+      error: result.error ?? new Error('Lotus Flower reward could not be saved.'),
+    };
+  }
+
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(rewardKey, 'awarded');
+    window.dispatchEvent(new CustomEvent('gamificationProfileUpdated', {
+      detail: { userId: input.userId },
+    }));
+  }
+  return {
+    ok: true,
+    alreadyAwarded: false,
+    balance: result.data.balance,
+    error: null,
+  };
+}
 
 const ROUTEKEEPER_TINY_ACTION_META: Record<RoutekeeperTinyAction, Pick<SuggestedHabit, 'lifeWheelArea' | 'goalIntentTags' | 'emoji' | 'defaultTiming'>> = {
   'Drink one glass of water.': { lifeWheelArea: 'Health', goalIntentTags: ['hydration', 'energy'], emoji: '💧', defaultTiming: 'anytime' },

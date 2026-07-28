@@ -1324,6 +1324,35 @@ export function applyIslandRunTechnologyBuild(options: {
   return { ok: true, changed: true, reason: 'built', record: next };
 }
 
+export function applyStoryFastModeUnlock(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  nowMs?: number;
+}): IslandRunGameStateRecord {
+  const current = getIslandRunStateSnapshot(options.session);
+  if (current.technologyUnlocksById?.['story-fast-mode']?.active) {
+    return current;
+  }
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    technologyUnlocksById: {
+      ...current.technologyUnlocksById,
+      'story-fast-mode': {
+        builtAtMs: Math.max(1, Math.floor(options.nowMs ?? Date.now())),
+        active: true,
+      },
+    },
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session: options.session,
+    client: options.client,
+    record: next,
+    triggerSource: 'story_fast_mode_earned',
+  });
+  return next;
+}
+
 /**
  * Persists the per-island "tech build" pickup grid (collected slot indices and
  * the line indices that have already paid a completion reward) through the

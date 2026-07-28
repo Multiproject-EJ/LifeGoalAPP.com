@@ -255,7 +255,7 @@ export interface SpaceExcavatorProgressEntry {
   updatedAtMs: number;
 }
 
-export type IslandRunTechnologyId = 'the-concord';
+export type IslandRunTechnologyId = 'the-concord' | 'story-fast-mode';
 
 export interface IslandRunTechnologyUnlock {
   builtAtMs: number;
@@ -500,6 +500,14 @@ function sanitizeTechnologyUnlocksById(
         active: (concord as Record<string, unknown>).active !== false,
       };
     }
+    const storyFastMode = (value as Record<string, unknown>)['story-fast-mode'];
+    if (storyFastMode && typeof storyFastMode === 'object' && !Array.isArray(storyFastMode)) {
+      const builtAtMs = (storyFastMode as Record<string, unknown>).builtAtMs;
+      out['story-fast-mode'] = {
+        builtAtMs: typeof builtAtMs === 'number' && Number.isFinite(builtAtMs) && builtAtMs > 0 ? Math.floor(builtAtMs) : 1,
+        active: (storyFastMode as Record<string, unknown>).active !== false,
+      };
+    }
   }
   // Compatibility policy: old users with a complete Island 1 grid, or users whose
   // canonical progression already proves they are established beyond Island 1,
@@ -514,11 +522,29 @@ function mergeTechnologyUnlocksById(
   remote: IslandRunTechnologyUnlocksById | undefined | null,
   local: IslandRunTechnologyUnlocksById | undefined | null,
 ): IslandRunTechnologyUnlocksById {
+  const out: IslandRunTechnologyUnlocksById = {};
   const remoteConcord = remote?.['the-concord'];
   const localConcord = local?.['the-concord'];
-  if (!remoteConcord && !localConcord) return {};
-  const builtAtMs = Math.min(remoteConcord?.builtAtMs ?? Number.POSITIVE_INFINITY, localConcord?.builtAtMs ?? Number.POSITIVE_INFINITY);
-  return { 'the-concord': { builtAtMs: Number.isFinite(builtAtMs) ? builtAtMs : 1, active: Boolean(remoteConcord?.active ?? localConcord?.active ?? true) } };
+  if (remoteConcord || localConcord) {
+    const builtAtMs = Math.min(remoteConcord?.builtAtMs ?? Number.POSITIVE_INFINITY, localConcord?.builtAtMs ?? Number.POSITIVE_INFINITY);
+    out['the-concord'] = {
+      builtAtMs: Number.isFinite(builtAtMs) ? builtAtMs : 1,
+      active: Boolean(remoteConcord?.active ?? localConcord?.active ?? true),
+    };
+  }
+  const remoteStoryFastMode = remote?.['story-fast-mode'];
+  const localStoryFastMode = local?.['story-fast-mode'];
+  if (remoteStoryFastMode || localStoryFastMode) {
+    const builtAtMs = Math.min(
+      remoteStoryFastMode?.builtAtMs ?? Number.POSITIVE_INFINITY,
+      localStoryFastMode?.builtAtMs ?? Number.POSITIVE_INFINITY,
+    );
+    out['story-fast-mode'] = {
+      builtAtMs: Number.isFinite(builtAtMs) ? builtAtMs : 1,
+      active: Boolean(remoteStoryFastMode?.active ?? localStoryFastMode?.active ?? true),
+    };
+  }
+  return out;
 }
 
 /** Union-merge two per-island integer-index ledgers (used in remote/local reconcile). */

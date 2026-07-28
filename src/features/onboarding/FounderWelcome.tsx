@@ -7,91 +7,17 @@ export type FounderWelcomeSlide = {
   cta: string;
 };
 
-// First-start founder sequence copy. The top label, sequence title, and
-// "— EJ" signature are constant chrome shown on every panel.
+// Day 1 states the permanent gameplay premise, then hands control to the
+// player. It deliberately makes no promise of an authored story cadence.
 const FOUNDER_SLIDES: FounderWelcomeSlide[] = [
-  { id: 'panel-0', title: 'So…', body: ['Ask yourself:'], cta: 'Continue' },
   {
-    id: 'panel-1',
-    title: 'What are you naturally good at?',
+    id: 'chapter-one',
+    title: 'Your real actions can free these islands.',
     body: [
-      'What do you care about?',
-      'And what would you genuinely like to do in a world of endless possibilities?',
+      'Restore their light. Build what was lost. Win the arena.',
+      'First Light Shore needs one tiny action.',
     ],
-    cta: 'Next',
-  },
-  {
-    id: 'panel-2',
-    title: 'Understanding yourself is valuable.',
-    body: ['Turning that insight into meaningful goals is even better.'],
-    cta: 'Next',
-  },
-  {
-    id: 'panel-3',
-    title: 'But setting goals is rarely the hardest part.',
-    body: ['The real challenge is staying connected to them when life gets busy.'],
-    cta: 'Next',
-  },
-  {
-    id: 'panel-4',
-    title: 'Missed days should not become symbols of failure.',
-    body: ['This app helps you return without guilt, pressure, or judgement.'],
-    cta: 'Next',
-  },
-  {
-    id: 'panel-5',
-    title: 'When something has been ignored for too long, it can reappear inside the game in a creative, low-resistance way.',
-    body: ['Not as punishment.', 'As another path back.'],
-    cta: 'Next',
-  },
-  {
-    id: 'panel-6',
-    title: 'Progress does not have to mean a perfect streak.',
-    body: ['What matters is how often you showed up over time—and whether you kept moving forward.'],
-    cta: 'Next',
-  },
-  {
-    id: 'panel-7',
-    title: 'Then we pair it with a game designed to bring you back.',
-    body: [
-      'What will the next island be like?',
-      'Which creature will hatch next?',
-      'Will it be the perfect companion for you?',
-    ],
-    cta: 'Next',
-  },
-  {
-    id: 'panel-8',
-    title: 'Rare rewards.',
-    body: ['Short, engaging stories.', 'New surprises.', 'What will happen next?'],
-    cta: 'Next',
-  },
-  {
-    id: 'panel-9',
-    title: 'Choose the themes you enjoy.',
-    body: [
-      'Shape how your journey feels.',
-      'Connect your real-life progress to a world that grows with you.',
-    ],
-    cta: 'Next',
-  },
-  {
-    id: 'panel-10',
-    title: 'You can also suggest ideas and vote on what should be built next.',
-    body: [
-      'Support the features you believe in, receive special perks, and help keep the app growing.',
-    ],
-    cta: 'Next',
-  },
-  {
-    id: 'final',
-    title: 'A game that helps you notice your progress.',
-    body: [
-      'A game that makes returning feel rewarding.',
-      'A game that brings you back.',
-      'Click Play.',
-    ],
-    cta: 'Play',
+    cta: 'Help the first island',
   },
 ];
 
@@ -242,7 +168,7 @@ export function FounderWelcome({ onComplete, founderName = 'EJ' }: FounderWelcom
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const timer = window.setTimeout(() => setIntroComplete(true), 2600);
+    const timer = window.setTimeout(() => setIntroComplete(true), 1200);
     return () => {
       window.clearTimeout(timer);
       document.body.style.overflow = previousOverflow;

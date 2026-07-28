@@ -9104,6 +9104,20 @@ html.platform-ipad .workspace-shell__menu-edge {
   flex-shrink: 0;
 }
 
+.habit-checklist__lotus-reward-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15em 0.55em;
+  border: 1px solid rgba(168, 85, 247, 0.34);
+  border-radius: 999px;
+  color: #6b21a8;
+  background: linear-gradient(135deg, rgba(250, 232, 255, 0.96), rgba(233, 213, 255, 0.84));
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.12);
+  font-size: 0.7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .habit-checklist__goal-badge,
 .habit-checklist__linked-quest-badge,
 .habit-checklist__linked-quest-more {
@@ -19966,6 +19980,17 @@ html.platform-ipad .workspace-shell__menu-edge {
   border-color: rgba(234, 179, 8, 0.45);
 }
 
+:is(
+  [data-theme='dark-glass'],
+  [data-theme='midnight-purple'],
+  [data-theme='flow-night'],
+  [data-theme='bio-night']
+) .mobile-habit-home .habit-checklist__lotus-reward-badge {
+  color: #f5d0fe;
+  border-color: rgba(216, 180, 254, 0.38);
+  background: linear-gradient(135deg, rgba(88, 28, 135, 0.7), rgba(76, 29, 149, 0.62));
+}
+
 
 [data-theme='flow-night'] .mobile-habit-home .habit-checklist__item {
   --habit-card-surface: rgba(15, 23, 42, 0.78);
@@ -20575,6 +20600,94 @@ html.platform-ipad .workspace-shell__menu-edge {
   align-items: flex-end;
   text-align: right;
   padding-right: 0;
+}
+
+.mobile-footer-nav__item--emerging .mobile-footer-nav__button,
+.mobile-footer-nav__surface--image .mobile-footer-nav__item--emerging .mobile-footer-nav__button {
+  justify-content: center;
+  align-items: center;
+  padding-inline: 0.22rem;
+  color: rgba(186, 230, 253, 0.72);
+  text-align: center;
+  cursor: default;
+  opacity: 0.72;
+}
+
+.mobile-footer-nav__item--emerging .mobile-footer-nav__icon {
+  filter: drop-shadow(0 0 8px rgba(125, 211, 252, 0.48));
+  animation: mobile-footer-emerging-rune 3.8s ease-in-out infinite;
+}
+
+.mobile-footer-nav__item--emerging .mobile-footer-nav__label {
+  color: rgba(186, 230, 253, 0.68);
+  font-size: 0.62rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+@keyframes mobile-footer-emerging-rune {
+  0%, 100% { opacity: 0.48; transform: scale(0.9); }
+  50% { opacity: 0.92; transform: scale(1.03); }
+}
+
+.habit-checklist-card--day-one-focus .habit-checklist-card__board {
+  min-height: min(58vh, 520px);
+}
+
+.habit-checklist-card--day-one-focus .habit-checklist-card__board-head {
+  justify-content: center;
+}
+
+.habit-checklist-card--day-one-focus .habit-checklist-card__date-wrap {
+  text-align: center;
+}
+
+.habit-checklist-card__day-one-heading {
+  display: grid;
+  gap: 0.24rem;
+  width: 100%;
+  padding: 0.35rem 0 0.65rem;
+  text-align: center;
+}
+
+.habit-checklist-card__day-one-heading > span {
+  color: #f5dfa1;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.04rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.habit-checklist-card__day-one-heading > small {
+  color: rgba(244, 239, 219, 0.72);
+  font-size: 0.78rem;
+}
+
+.habit-checklist__day-one-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.7rem;
+  margin: 1.25rem 0.75rem;
+  padding: 2.4rem 1.25rem;
+  border: 1px solid rgba(228, 198, 116, 0.19);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(222, 181, 83, 0.14), transparent 45%),
+    rgba(13, 18, 28, 0.46);
+  color: rgba(247, 241, 218, 0.72);
+  text-align: center;
+}
+
+.habit-checklist__day-one-empty > span {
+  color: #eed486;
+  font-size: 1.8rem;
+  filter: drop-shadow(0 0 12px rgba(238, 212, 134, 0.65));
+}
+
+.habit-checklist__day-one-empty > p {
+  max-width: 17rem;
+  margin: 0;
+  line-height: 1.45;
 }
 
 .mobile-footer-nav__button:hover,
@@ -40054,6 +40167,36 @@ body.habit-wizard-open .mobile-footer-nav {
   background: radial-gradient(circle, rgba(255, 247, 237, 0.95), rgba(251, 191, 36, 0.16));
   border: 2px solid rgba(180, 83, 9, 0.42);
   box-shadow: 0 0 20px rgba(245, 158, 11, 0.34);
+}
+
+.mobile-menu-overlay__hero-card--journey-sealed {
+  width: 100%;
+  min-height: 170px;
+  cursor: default;
+  filter: saturate(0.58);
+  background:
+    radial-gradient(circle at 78% 44%, rgba(125, 211, 252, 0.2), transparent 25%),
+    linear-gradient(145deg, #06111f 0%, #122033 54%, #080f19 100%);
+}
+
+.mobile-menu-overlay__hero-card--journey-sealed::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 36%, rgba(186, 230, 253, 0.08) 49%, transparent 62%);
+  animation: journey-sealed-compass-glint 4.8s ease-in-out infinite;
+}
+
+.mobile-menu-overlay__hero-card--journey-sealed .mobile-menu-overlay__compass-placeholder-book {
+  filter: grayscale(0.5) brightness(0.7);
+  box-shadow: 0 18px 28px rgba(0, 0, 0, 0.42), 0 0 28px rgba(125, 211, 252, 0.12);
+}
+
+@keyframes journey-sealed-compass-glint {
+  0%, 68%, 100% { opacity: 0; transform: translateX(-30%); }
+  78% { opacity: 1; }
+  92% { opacity: 0; transform: translateX(30%); }
 }
 
 @media (max-width: 520px) {

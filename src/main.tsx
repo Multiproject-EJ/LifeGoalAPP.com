@@ -49,6 +49,7 @@ const QUEST_VISUAL_SYSTEM_PREVIEW_PATH = '/dev/quest-journey-visual-system';
 const ISLAND_ART_PREVIEW_PATH = '/dev/island-art-preview';
 const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit';
 const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
+const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
 
 function QuestVisualSystemPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
@@ -115,6 +116,22 @@ function Island001StoryPreviewRoute() {
   return Preview ? <Preview /> : null;
 }
 
+function DayOneMissionPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/onboarding/DayOneMissionPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
 
 function RootCrashFallback() {
   return (
@@ -172,6 +189,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === ISLAND_001_STORY_PREVIEW_PATH;
+  const isDayOneMissionPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === DAY_ONE_MISSION_PREVIEW_PATH;
 
   const initialRoute = useMemo(() => resolveRoute(), []);
   const isPhoneEntryClient = useMemo(() => isCurrentClientPhone(), []);
@@ -211,6 +232,10 @@ function Root() {
 
   if (isIsland001StoryPreviewRoute) {
     return <Island001StoryPreviewRoute />;
+  }
+
+  if (isDayOneMissionPreviewRoute) {
+    return <DayOneMissionPreviewRoute />;
   }
 
   if (isIslandArtPreviewRoute) {

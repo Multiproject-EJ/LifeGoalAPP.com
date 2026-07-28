@@ -18,6 +18,7 @@ interface LevelWorldsHubProps {
   onOpenDailySpinWheel?: () => void;
   dailySpinAvailable?: boolean;
   dailySpinCount?: number;
+  isPro?: boolean;
 }
 
 export function LevelWorldsHub({
@@ -30,6 +31,7 @@ export function LevelWorldsHub({
   onOpenDailySpinWheel,
   dailySpinAvailable = false,
   dailySpinCount = 0,
+  isPro = false,
 }: LevelWorldsHubProps) {
   const userId = session.user.id;
 
@@ -58,6 +60,7 @@ export function LevelWorldsHub({
         onOpenDailySpinWheel={onOpenDailySpinWheel}
         dailySpinAvailable={dailySpinAvailable}
         dailySpinCount={dailySpinCount}
+        isPro={isPro}
       />
     </div>
   );

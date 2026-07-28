@@ -220,12 +220,13 @@ export function computeDirectionalLead(
  *
  * @param hopCount Total number of hops in the sequence
  */
-export function computeHopDurations(hopCount: number): number[] {
+export function computeHopDurations(hopCount: number, speedFactor = 1): number[] {
   if (hopCount <= 0) return [];
+  const safeSpeedFactor = Math.max(1, Math.min(2, speedFactor));
 
   // Compressed total duration (Monopoly GO parity)
   const effective = Math.pow(hopCount, 0.9);
-  const totalMs = Math.max(750, Math.min(2450, 180 + effective * 220));
+  const totalMs = Math.max(480, Math.min(2450, (180 + effective * 220) / safeSpeedFactor));
 
   const finalCount = Math.min(2, hopCount);
   const cruiseCount = hopCount - finalCount;
