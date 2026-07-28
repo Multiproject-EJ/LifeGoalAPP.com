@@ -1,0 +1,26 @@
+{
+  "id": "attack-then-rebuild",
+  "title": "Disable, Then Restore",
+  "panels": [
+    {
+      "id": "military-brief",
+      "type": "text",
+      "text": "Military liaison orders arrive: disable the automated defense before the builders enter."
+    },
+    {
+      "id": "arena-shaped-operation",
+      "type": "text",
+      "text": "The operation follows Arena rules at first—clear targets, evacuated ground, and a visible stop condition."
+    },
+    {
+      "id": "rebuild",
+      "type": "text",
+      "text": "When the defense falls silent, the same crew that attacked it begins rebuilding the island around it."
+    },
+    {
+      "id": "missing-context",
+      "type": "text",
+      "text": "Later records suggest the briefing was accurate, but incomplete."
+    }
+  ]
+}

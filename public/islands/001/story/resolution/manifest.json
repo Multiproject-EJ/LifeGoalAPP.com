@@ -1,11 +1,6 @@
 {
   "id": "island-001-resolution",
   "title": "The Warning Answers",
-  "soundtrack": {
-    "src": "/assets/audio/music/Lantern%20Tide.mp3",
-    "loop": true,
-    "volume": 0.28
-  },
   "panels": [
     {
       "id": "five-lights-answer",
@@ -42,7 +37,7 @@
       "type": "image",
       "src": "/islands/001/story/resolution/005-hatchery-answers.webp",
       "alt": "The Hatchery opening to the stars as the waiting egg glows softly",
-      "caption": "For the first time since the Drift, the Hatchery sees the stars."
+      "caption": "For the first time in generations, the Hatchery sees the stars."
     },
     {
       "id": "shaped-interruption",
@@ -50,6 +45,11 @@
       "src": "/islands/001/story/resolution/006-shaped-interruption.webp",
       "alt": "Elder Sava studying an unfamiliar deliberately marked fragment of dark crystal",
       "caption": "Sava: “This mark is not Lumin craft. Someone shaped the interruption.”"
+    },
+    {
+      "id": "accord-record",
+      "type": "text",
+      "text": "Your PA records the restoration in the 120-Island Accord. Luma answers by opening its Arena and the route onward."
     },
     {
       "id": "route-opens",

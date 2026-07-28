@@ -1,5 +1,9 @@
 # Music Asset Wiring Status (Island Run)
 
+> Historical snapshot from before the 2026-07-28 audio update. The live runtime now
+> starts with low-volume island ambience and uses the former luxury-reward track for
+> the Dormant Door “find three equals” event.
+
 ## 1. Current music asset wiring status
 
 At runtime, only one Island Run music track is wired into live behavior: the market lounge loop used during shop/market panel playback.

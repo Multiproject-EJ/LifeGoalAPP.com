@@ -123,17 +123,17 @@ export const islandRunMusicTests: TestCase[] = [
     },
   },
   {
-    name: 'getIslandRunBoardMusicPlaylist only includes dreamy ambient on dreamt islands',
+    name: 'getIslandRunBoardMusicPlaylist uses quiet island ambience on every island',
     run: () => {
       assertDeepEqual(
         getIslandRunBoardMusicPlaylist(1),
-        ['luxury-reward', 'event-jackpot', 'boss-rhythm-duel'],
-        'non-dreamt islands should start with non-dreamy music',
+        ['island-board-ambient'],
+        'Island 1 should use environmental ambience',
       );
       assertDeepEqual(
         getIslandRunBoardMusicPlaylist(10),
-        ['island-board-ambient', 'luxury-reward', 'boss-rhythm-duel'],
-        'dreamt islands should start with dreamy ambient music',
+        ['island-board-ambient'],
+        'special islands should retain environmental ambience',
       );
     },
   },
@@ -146,6 +146,7 @@ export const islandRunMusicTests: TestCase[] = [
           effectiveIslandNumber: 1,
           showShopPanel: true,
           showIslandClearCelebration: true,
+          isDormantDoorMiniGameOpen: true,
         }),
         { kind: 'none' },
         'disabled music should resolve to none',
@@ -156,6 +157,7 @@ export const islandRunMusicTests: TestCase[] = [
           effectiveIslandNumber: 1,
           showShopPanel: true,
           showIslandClearCelebration: true,
+          isDormantDoorMiniGameOpen: true,
         }),
         { kind: 'track', trackId: 'new-island-celebration' },
         'celebration music should win over shop music',
@@ -166,6 +168,7 @@ export const islandRunMusicTests: TestCase[] = [
           effectiveIslandNumber: 1,
           showShopPanel: true,
           showIslandClearCelebration: false,
+          isDormantDoorMiniGameOpen: true,
         }),
         { kind: 'track', trackId: 'market-lounge' },
         'shop music should win over board music',
@@ -173,13 +176,39 @@ export const islandRunMusicTests: TestCase[] = [
       assertDeepEqual(
         resolveIslandRunMusicContext({
           musicEnabled: true,
+          effectiveIslandNumber: 1,
+          showShopPanel: false,
+          showIslandClearCelebration: false,
+          isDormantDoorMiniGameOpen: true,
+        }),
+        { kind: 'track', trackId: 'dormant-door-match' },
+        'three-equals game should receive the former board-opening track',
+      );
+      assertDeepEqual(
+        resolveIslandRunMusicContext({
+          musicEnabled: true,
           effectiveIslandNumber: 10,
           showShopPanel: false,
           showIslandClearCelebration: false,
+          isDormantDoorMiniGameOpen: false,
         }),
-        { kind: 'playlist', trackIds: ['island-board-ambient', 'luxury-reward', 'boss-rhythm-duel'] },
+        { kind: 'playlist', trackIds: ['island-board-ambient'] },
         'normal board state should resolve to the board playlist',
       );
+    },
+  },
+  {
+    name: 'Dormant Door match music uses the reassigned former board-opening asset',
+    run: async () => {
+      const mockAudio = installMockMusicAudio();
+      try {
+        resetMockMusicAudio();
+        playIslandRunMusic('dormant-door-match', { fadeMs: 0 });
+        await Promise.resolve();
+        assertEqual(MockMusicAudioElement.created[0].src, '/assets/audio/music/luxury-reward-loop-v1.mp3', 'Expected reassigned matching-game track');
+      } finally {
+        mockAudio.restore();
+      }
     },
   },
   {
@@ -224,7 +253,7 @@ export const islandRunMusicTests: TestCase[] = [
       try {
         resetMockMusicAudio();
 
-        playIslandRunMusicPlaylist(['luxury-reward', 'event-jackpot'], { fadeMs: 0 });
+        playIslandRunMusicPlaylist(['island-board-ambient', 'event-jackpot'], { fadeMs: 0 });
         await Promise.resolve();
         const firstTrack = MockMusicAudioElement.created[0];
 
@@ -249,7 +278,7 @@ export const islandRunMusicTests: TestCase[] = [
       try {
         resetMockMusicAudio();
 
-        applyIslandRunMusicContext({ kind: 'playlist', trackIds: ['luxury-reward', 'event-jackpot'] }, { fadeMs: 100 });
+        applyIslandRunMusicContext({ kind: 'playlist', trackIds: ['island-board-ambient'] }, { fadeMs: 100 });
         await Promise.resolve();
         const boardTrack = MockMusicAudioElement.created[0];
         mockAudio.setNow(10_100);

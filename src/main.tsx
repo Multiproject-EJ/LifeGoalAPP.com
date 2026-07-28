@@ -50,6 +50,23 @@ const ISLAND_ART_PREVIEW_PATH = '/dev/island-art-preview';
 const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit';
 const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
 const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
+const CHAMPIONSHIP_PREVIEW_PATH = '/dev/championship-preview';
+
+function IslandChampionshipPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/level-worlds/components/IslandChampionshipPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
 
 function QuestVisualSystemPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
@@ -193,6 +210,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === DAY_ONE_MISSION_PREVIEW_PATH;
+  const isChampionshipPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === CHAMPIONSHIP_PREVIEW_PATH;
 
   const initialRoute = useMemo(() => resolveRoute(), []);
   const isPhoneEntryClient = useMemo(() => isCurrentClientPhone(), []);
@@ -236,6 +257,10 @@ function Root() {
 
   if (isDayOneMissionPreviewRoute) {
     return <DayOneMissionPreviewRoute />;
+  }
+
+  if (isChampionshipPreviewRoute) {
+    return <IslandChampionshipPreviewRoute />;
   }
 
   if (isIslandArtPreviewRoute) {

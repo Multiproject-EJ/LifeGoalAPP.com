@@ -1,0 +1,57 @@
+.island-championship-preview {
+  min-height: 100dvh;
+  padding: clamp(1rem, 4vw, 2.5rem);
+  color: #f5f8ff;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(83, 94, 190, 0.34), transparent 42%),
+    linear-gradient(145deg, #070b18, #111a34 60%, #080d1d);
+}
+
+.island-championship-preview__header {
+  width: min(100%, 1020px);
+  margin: 0 auto 1.2rem;
+}
+
+.island-championship-preview__header p {
+  margin: 0 0 0.25rem;
+  color: #a6c8ff;
+  font-size: 0.74rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.island-championship-preview__header h1 {
+  margin: 0 0 1rem;
+  color: #fff;
+  font-size: clamp(1.6rem, 6vw, 3rem);
+  letter-spacing: -0.04em;
+}
+
+.island-championship-preview__header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.island-championship-preview__header button {
+  min-height: 42px;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgba(191, 213, 255, 0.34);
+  border-radius: 999px;
+  color: #dce9ff;
+  background: rgba(255, 255, 255, 0.08);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.island-championship-preview__header button[aria-pressed='true'] {
+  color: #10142b;
+  background: #eef6ff;
+}
+
+.island-championship-preview__stage {
+  width: min(100%, 1020px);
+  margin: 0 auto;
+}

@@ -1,0 +1,37 @@
+{
+  "id": "championship-120-worlds",
+  "title": "The 120 Worlds Championship",
+  "panels": [
+    {
+      "id": "opening-ceremony",
+      "type": "image",
+      "src": "/assets/story/championships/120-worlds/opening-ceremony.webp",
+      "caption": "One hundred and twenty arrivals become one impossible creature made from music and light."
+    },
+    {
+      "id": "host-reveal",
+      "type": "text",
+      "text": "One island has been chosen to host. Banners from all 120 worlds unfold above its Arena."
+    },
+    {
+      "id": "diplomatic-games",
+      "type": "text",
+      "text": "Every delegation offers a game that expresses something its culture values: timing, patience, courage, invention, or cooperation."
+    },
+    {
+      "id": "player-card",
+      "type": "text",
+      "text": "Your Arena ranking shapes the programme: flashes for the games you like least, fast fights in the middle, and full runs for favourites."
+    },
+    {
+      "id": "network-seed",
+      "type": "text",
+      "text": "For the first time, all 120 Arena signals are routed through one championship network."
+    },
+    {
+      "id": "the-sky-whale",
+      "type": "text",
+      "text": "No delegation planned the sky-whale. It appears only when every world adds its note—and vanishes the moment anyone tries to claim it."
+    }
+  ]
+}

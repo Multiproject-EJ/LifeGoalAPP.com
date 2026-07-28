@@ -18,7 +18,7 @@ import {
 } from './islandNarrativeReactionDispatch';
 
 export type ActiveIslandStoryEpisode = {
-  kind: 'global_prologue' | 'island_arrival' | 'island_resolution' | 'island_travel_arrival';
+  kind: 'global_prologue' | 'island_arrival' | 'island_resolution' | 'island_travel_arrival' | 'championship';
   manifestPath: string;
 } | null;
 
@@ -42,7 +42,7 @@ export type IslandNarrativeControllerBeatId = OpeningBeatId | AmbientBeatId | Bo
 
 export type ActiveIslandNarrativeToast = {
   beatId: AmbientBeatId;
-  speakerName: 'Miri';
+  speakerName: 'Your PA';
   text: string;
   supportingLabel: string;
   durationMs: number;
@@ -166,8 +166,8 @@ export function didHatcheryReachLevelOne(previousBuildLevel: number | null | und
 
 function getToastForBeat(beatId: AmbientBeatId): ActiveIslandNarrativeToast {
   const beat = getIsland001Beat(beatId);
-  if (beatId === 'I001-B24' && beat?.surface === 'toast' && beat.text === 'The island noticed.') {
-    return { beatId, speakerName: 'Miri', text: beat.text, supportingLabel: 'Hatchery restored to Level 1', durationMs: HATCHERY_LEVEL_1_TOAST_DURATION_MS };
+  if (beatId === 'I001-B24' && beat?.surface === 'toast' && beat.speakerId === 'pa' && beat.text) {
+    return { beatId, speakerName: 'Your PA', text: beat.text, supportingLabel: 'Diplomatic return channel connected', durationMs: HATCHERY_LEVEL_1_TOAST_DURATION_MS };
   }
   return null;
 }

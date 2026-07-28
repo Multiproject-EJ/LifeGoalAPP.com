@@ -3,6 +3,10 @@
 Date: 2026-05-21  
 Scope: Investigation-only (no gameplay/audio behavior changes)
 
+> Historical snapshot. The 2026-07-28 implementation added board ambience and
+> reassigned the former opening/luxury track to the Dormant Door matching event.
+> See `docs/gameplay/ISLAND_AUDIO_DIRECTION_2026-07-28.md` for the current direction.
+
 ## PASS / FAIL Summary
 
 | Goal | Result | Notes |

@@ -131,6 +131,7 @@ import { island003to005NarrativeTests } from '../../narrative/__tests__/island00
 import { islandNarrativeDialogueComponentTests } from '../../narrative/__tests__/islandNarrativeDialogueComponent.test';
 import { islandStoryReaderComponentTests } from '../../narrative/__tests__/islandStoryReaderComponent.test';
 import { islandNarrativeOpeningFlowTests } from '../../narrative/__tests__/islandNarrativeOpeningFlow.test';
+import { islandChampionshipPresentationTests } from '../../narrative/__tests__/islandChampionshipPresentation.test';
 import { islandNarrativeSeenStateTests } from '../../narrative/__tests__/islandNarrativeSeenState.test';
 import { islandNarrativeReactionDispatchTests } from '../../narrative/__tests__/islandNarrativeReactionDispatch.test';
 import { islandNarrativeRegistryTests } from '../../narrative/__tests__/islandNarrativeRegistry.test';
@@ -206,6 +207,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandNarrativeDialogueComponent', tests: islandNarrativeDialogueComponentTests },
   { label: 'islandStoryReaderComponent', tests: islandStoryReaderComponentTests },
   { label: 'islandNarrativeOpeningFlow', tests: islandNarrativeOpeningFlowTests },
+  { label: 'islandChampionshipPresentation', tests: islandChampionshipPresentationTests },
   { label: 'islandNarrativeSeenState', tests: islandNarrativeSeenStateTests },
   { label: 'islandNarrativeReactionDispatch', tests: islandNarrativeReactionDispatchTests },
   { label: 'islandNarrativeRegistry', tests: islandNarrativeRegistryTests },

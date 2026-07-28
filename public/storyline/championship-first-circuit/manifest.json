@@ -1,0 +1,32 @@
+{
+  "id": "championship-first-circuit",
+  "title": "The First Circuit Championship",
+  "panels": [
+    {
+      "id": "opening-ceremony",
+      "type": "image",
+      "src": "/assets/story/championships/first-circuit/opening-ceremony.webp",
+      "caption": "The builders release their ribbons. The sky answers with constellations no one rehearsed."
+    },
+    {
+      "id": "invitation",
+      "type": "text",
+      "text": "The first diplomatic circuit ends with an invitation: return not as a repair crew, but as an Arena team."
+    },
+    {
+      "id": "host-arena",
+      "type": "text",
+      "text": "One host island transforms its Arena into a shared festival of the games encountered so far."
+    },
+    {
+      "id": "first-bracket",
+      "type": "text",
+      "text": "For the first time, personal scores form an official bracket between island delegations."
+    },
+    {
+      "id": "ceremony-promise",
+      "type": "text",
+      "text": "This is not a reward for finishing the circuit. It is the circuit welcoming you back."
+    }
+  ]
+}

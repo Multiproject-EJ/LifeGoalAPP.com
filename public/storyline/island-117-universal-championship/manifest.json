@@ -1,0 +1,37 @@
+{
+  "id": "island-117-universal-championship",
+  "title": "Astral Plains — The Universal Championship",
+  "panels": [
+    {
+      "id": "opening-ceremony",
+      "type": "image",
+      "src": "/assets/story/championships/universal-117/opening-ceremony.webp",
+      "caption": "Every Arena opens. One hundred and twenty skies turn into a single flower above Astral Plains."
+    },
+    {
+      "id": "all-arenas-open",
+      "type": "text",
+      "text": "Across all 120 islands, every Arena opens at the same moment."
+    },
+    {
+      "id": "universal-final",
+      "type": "text",
+      "text": "The final score crosses worlds. One celebration becomes 120 celebrations, synchronized into a single field of light."
+    },
+    {
+      "id": "navigation-measurement",
+      "type": "text",
+      "text": "The Arena network gives Navigation its first complete measurement of the expedition's route."
+    },
+    {
+      "id": "spiral",
+      "type": "text",
+      "text": "The route resolves into a spiral. The destination has not moved."
+    },
+    {
+      "id": "reveal",
+      "type": "text",
+      "text": "The stars did not move. We did."
+    }
+  ]
+}

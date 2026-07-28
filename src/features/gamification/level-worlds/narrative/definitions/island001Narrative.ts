@@ -36,6 +36,11 @@ export const island001NarrativeDefinition = {
       role: 'Black Crystal Dragon and guardian of Luma Isle.',
       portraitSrc: '/islands/001/story/portraits/noctyra.webp',
     },
+    {
+      id: 'pa',
+      displayName: 'Your PA',
+      role: 'Personal assistant, diplomatic liaison, and Creation Halls guide.',
+    },
   ],
   beats: [
     {
@@ -49,7 +54,7 @@ export const island001NarrativeDefinition = {
     {
       id: 'I001-B03',
       trigger: { kind: 'arrival_closed', islandNumber: 1 },
-      speakerId: 'miri',
+      speakerId: 'pa',
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
@@ -67,11 +72,11 @@ export const island001NarrativeDefinition = {
     {
       id: 'I001-B24',
       trigger: { kind: 'landmark_level_completed', islandNumber: 1, stopId: 'hatchery', level: 1 },
-      speakerId: 'miri',
+      speakerId: 'pa',
       surface: 'toast',
       priority: 'ambient',
       repeatPolicy: 'once',
-      text: 'The island noticed.',
+      text: 'You asked why Luma sends supplies back. The Reconstruction Accord keeps every mission reciprocal.',
     },
     {
       id: 'I001-B26',

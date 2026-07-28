@@ -1,0 +1,26 @@
+{
+  "id": "creation-halls-tour",
+  "title": "The Creation Halls",
+  "panels": [
+    {
+      "id": "hall-reveal",
+      "type": "text",
+      "text": "The doors open onto a hall of fabrication rings, living blueprints, and builder robots waiting for their next idea."
+    },
+    {
+      "id": "pa-work-helmet",
+      "type": "text",
+      "text": "Your PA lowers a transparent glassworker visor. In the Creation Halls, even an idea is treated like material."
+    },
+    {
+      "id": "chief-builder",
+      "type": "text",
+      "text": "The Chief Builder is a different robot entirely: a specialist leader with a distinct face, tools, parts, and working style."
+    },
+    {
+      "id": "request-anything",
+      "type": "text",
+      "text": "Request an item, a game, a room, a visual, or a plan. The Hall will begin with a safe prototype."
+    }
+  ]
+}

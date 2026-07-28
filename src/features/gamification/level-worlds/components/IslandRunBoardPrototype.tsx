@@ -354,9 +354,12 @@ import {
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { ShooterControllerAdapter } from './ShooterControllerAdapter';
 import { IslandStoryReader } from './IslandStoryReader';
+import { IslandChampionshipBanner } from './IslandChampionshipBanner';
 import { IslandNarrativeDialogue } from '../narrative/components/IslandNarrativeDialogue';
 import { IslandNarrativeToast } from '../narrative/components/IslandNarrativeToast';
 import { useIslandNarrativeOpeningFlow, type ActiveIslandStoryEpisode } from '../narrative/useIslandNarrativeOpeningFlow';
+import { isDiplomaticRewardChannelVisible } from '../narrative/islandDiplomaticPresentation';
+import { getIslandChampionshipPresentation } from '../narrative/islandChampionshipPresentation';
 import { useLandmarkWhispers } from '../narrative/useLandmarkWhispers';
 import { createWisdomKeeperAiCoachGenerator } from '../narrative/wisdomKeeperAi';
 import type { IslandNarrativeSeenState } from '../narrative/islandNarrativeSeenState';
@@ -2416,6 +2419,10 @@ export function IslandRunBoardPrototype({
   const [activeStoryEpisode, setActiveStoryEpisode] = useState<ActiveIslandStoryEpisode>(null);
   const showStoryReader = activeStoryEpisode !== null;
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
+  const championshipPresentation = useMemo(
+    () => getIslandChampionshipPresentation(islandNumber),
+    [islandNumber],
+  );
 
   // A "blocking" surface is any full-attention modal/panel that renders above the
   // board. When one opens we dismiss the top-bar (☰) menu so it is not left hanging
@@ -3414,7 +3421,8 @@ export function IslandRunBoardPrototype({
     effectiveIslandNumber,
     showShopPanel,
     showIslandClearCelebration,
-  }), [effectiveIslandNumber, hasConfirmedEntryAudioChoice, musicEnabled, showIslandClearCelebration, showShopPanel]);
+    isDormantDoorMiniGameOpen: Boolean(dormantDoorMiniGame),
+  }), [dormantDoorMiniGame, effectiveIslandNumber, hasConfirmedEntryAudioChoice, musicEnabled, showIslandClearCelebration, showShopPanel]);
 
   useEffect(() => {
     applyIslandRunMusicContext(islandRunMusicContext);
@@ -5815,6 +5823,11 @@ export function IslandRunBoardPrototype({
     islandRunContractV2Enabled: ISLAND_RUN_CONTRACT_V2_ENABLED,
     runtimeState,
     nowMs,
+  });
+  const diplomaticRewardChannelVisible = isDiplomaticRewardChannelVisible({
+    currentIslandNumber: runtimeState.currentIslandNumber,
+    cycleIndex: runtimeState.cycleIndex,
+    hatcheryBuildLevel: runtimeState.stopBuildStateByIndex[0]?.buildLevel,
   });
   const devTimedEventOverrideEventId = useMemo(() => {
     if (!devTimedEventOverrideType || typeof window === 'undefined') return null;
@@ -11066,6 +11079,10 @@ export function IslandRunBoardPrototype({
       window.requestAnimationFrame(() => boardCameraRef.current?.goDefault());
       return;
     }
+    if (activeStoryEpisode?.kind === 'championship') {
+      setActiveStoryEpisode(null);
+      return;
+    }
 
     setActiveStoryEpisode(null);
     try {
@@ -11119,6 +11136,13 @@ export function IslandRunBoardPrototype({
     }
     setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
   }, [isArcadeStoryJourney, isPro]);
+  const openCurrentChampionshipCeremony = useCallback(() => {
+    if (!championshipPresentation) return;
+    setActiveStoryEpisode({
+      kind: 'championship',
+      manifestPath: championshipPresentation.manifestPath,
+    });
+  }, [championshipPresentation]);
   const handleConcordEntryClick = useCallback(() => {
     if (concordHubEntryState.primaryAction === 'open-concord-hub') {
       setShowConcordHubModal(true);
@@ -11430,7 +11454,7 @@ export function IslandRunBoardPrototype({
             − {driftNotice} 💰 money drift
           </p>
         )}
-        {ISLAND_RUN_CONTRACT_V2_ENABLED && effectiveActiveTimedEvent ? (
+        {diplomaticRewardChannelVisible && ISLAND_RUN_CONTRACT_V2_ENABLED && effectiveActiveTimedEvent ? (
           <div className="island-run-prototype__shard-pill" aria-label="Contract-v2 timed event reward bar">
             <div className="island-run-prototype__shard-pill-fill" style={{ width: `${rewardBarPercent}%` }} />
             <span className="island-run-prototype__shard-pill-content">
@@ -11461,7 +11485,7 @@ export function IslandRunBoardPrototype({
           </span>
         )}
         {/* M17C: shards wallet HUD chip — only shown when player has at least 1 shard */}
-        {shards > 0 && (
+        {shards > 0 && diplomaticRewardChannelVisible && (
           <button
             type="button"
             className="island-run-prototype__stat-chip island-run-prototype__stat-chip--shards island-run-prototype__stat-chip--wallet"
@@ -11905,7 +11929,8 @@ export function IslandRunBoardPrototype({
           )}
         </div>
 
-        <div className="island-run-board__rewardbar-cluster">
+        {diplomaticRewardChannelVisible ? (
+          <div className="island-run-board__rewardbar-cluster">
           <div className="island-run-board__rewardbar-hatchery-tray">
             {hatcheryPendingEggs.length > 0 && (
               <button
@@ -12109,7 +12134,8 @@ export function IslandRunBoardPrototype({
               );
             })}
           </div>
-        </div>
+          </div>
+        ) : null}
 
         {shouldShowFinishIslandCta && (
           <button
@@ -12122,7 +12148,7 @@ export function IslandRunBoardPrototype({
           </button>
         )}
 
-        {shouldShowBestNextActionChip && bestNextAction && (
+        {shouldShowBestNextActionChip && bestNextAction && (diplomaticRewardChannelVisible || bestNextAction.action !== 'claim_reward_bar') && (
           <button
             type="button"
             className="island-run-prototype__best-next-action-chip island-run-prototype__best-next-action-chip--below-rewardbar"
@@ -12971,6 +12997,12 @@ export function IslandRunBoardPrototype({
             {/* ── Stop 3: Event Arena (timed-event mini-game launcher) ── */}
             {activeStopId === 'mystery' && openedStopIsPlayable && (
               <div className="island-hatchery-card island-event-arena-card">
+                {championshipPresentation ? (
+                  <IslandChampionshipBanner
+                    championship={championshipPresentation}
+                    onOpenCeremony={openCurrentChampionshipCeremony}
+                  />
+                ) : null}
                 <div className="island-event-arena-card__burst" aria-hidden="true">
                   <span>🎟️</span>
                   <span>🎪</span>
@@ -12978,8 +13010,8 @@ export function IslandRunBoardPrototype({
                 </div>
                 {arenaBoostStatus === 'claimed' ? (
                   <>
-                    <p className="island-stop-modal__copy">🎪 <strong>Arena boost unlocked</strong></p>
-                    <p>The Event Arena is open. Here are 3 extra event tickets for your first challenge.</p>
+                    <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena opened</strong></p>
+                    <p>The host invites every visiting crew to participate. Accepting one challenge is part of the Reconstruction Accord.</p>
                     <div className="island-event-arena-card__ticket-row" aria-live="polite">
                       <span>Reward</span>
                       <strong>+3 Event Tickets</strong>
@@ -12987,13 +13019,13 @@ export function IslandRunBoardPrototype({
                   </>
                 ) : arenaBoostStatus === 'no_active_event' ? (
                   <>
-                    <p className="island-stop-modal__copy">🎪 <strong>Event Arena</strong></p>
+                    <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena</strong></p>
                     <p>No event is active right now. The Arena will light up when the next event begins.</p>
                   </>
                 ) : (
                   <>
-                    <p className="island-stop-modal__copy">🎪 <strong>Event Arena</strong></p>
-                    <p>Spend your current event tickets here, keep progress saved, and return to the island when you are done.</p>
+                    <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena</strong></p>
+                    <p>Join the host's current game as a gesture of respect. Your progress is saved when you return to reconstruction.</p>
                   </>
                 )}
                 <div className="island-event-arena-card__ticket-row" aria-live="polite">
@@ -15716,9 +15748,9 @@ export function IslandRunBoardPrototype({
         isOpen={showStoryReader}
         onClose={handleCloseStoryReader}
         onRewardClaim={activeStoryEpisode?.kind === 'global_prologue' ? sanctuaryHandlers.storyRewardClaim : undefined}
-        completionTitle={activeStoryEpisode?.kind === 'island_arrival' ? 'Luma Isle awaits' : activeStoryEpisode?.kind === 'island_resolution' ? 'The route is open' : activeStoryEpisode?.kind === 'island_travel_arrival' ? `${getIslandDisplayName(islandNumber)} awaits` : undefined}
-        completionText={activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' || activeStoryEpisode?.kind === 'island_travel_arrival' ? 'Return to the island' : undefined}
-        completionButtonLabel={activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' || activeStoryEpisode?.kind === 'island_travel_arrival' ? 'Start zoomed out' : undefined}
+        completionTitle={activeStoryEpisode?.kind === 'island_arrival' ? 'Luma Isle awaits' : activeStoryEpisode?.kind === 'island_resolution' ? 'The route is open' : activeStoryEpisode?.kind === 'island_travel_arrival' ? `${getIslandDisplayName(islandNumber)} awaits` : activeStoryEpisode?.kind === 'championship' ? `${championshipPresentation?.title ?? 'The championship'} begins` : undefined}
+        completionText={activeStoryEpisode?.kind === 'championship' ? 'The opening ceremony is complete. The Arena is waiting.' : activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' || activeStoryEpisode?.kind === 'island_travel_arrival' ? 'Return to the island' : undefined}
+        completionButtonLabel={activeStoryEpisode?.kind === 'championship' ? 'Enter the Arena' : activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' || activeStoryEpisode?.kind === 'island_travel_arrival' ? 'Start zoomed out' : undefined}
       />
 
       {islandNarrativeOpeningFlow.activeDialogue ? (

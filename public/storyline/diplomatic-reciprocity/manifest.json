@@ -1,0 +1,21 @@
+{
+  "id": "diplomatic-reciprocity",
+  "title": "A Reciprocal Mission",
+  "panels": [
+    {
+      "id": "the-question",
+      "type": "text",
+      "text": "You ask why an island we came to help is sending supplies back to the ship."
+    },
+    {
+      "id": "accord-answer",
+      "type": "text",
+      "text": "The Reconstruction Accord is reciprocal. Hosts share surplus energy, game tickets, and keepsakes so visiting crews can continue the circuit."
+    },
+    {
+      "id": "channel-visible",
+      "type": "text",
+      "text": "Your PA opens the return channel. From now on, the exchange is visible as it grows."
+    }
+  ]
+}

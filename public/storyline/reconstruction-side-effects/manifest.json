@@ -1,0 +1,21 @@
+{
+  "id": "reconstruction-side-effects",
+  "title": "What the Builders Uncovered",
+  "panels": [
+    {
+      "id": "successful-build",
+      "type": "text",
+      "text": "The new system works exactly as ordered. Power, water, and light return."
+    },
+    {
+      "id": "older-ruin",
+      "type": "text",
+      "text": "Beyond the finished structure, an older ruin has cracked under the redirected load."
+    },
+    {
+      "id": "chief-builder-pause",
+      "type": "text",
+      "text": "The Chief Builder pauses the celebration. A successful instruction, it says, is not always a complete instruction."
+    }
+  ]
+}

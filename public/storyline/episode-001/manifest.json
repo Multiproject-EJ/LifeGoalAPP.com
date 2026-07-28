@@ -1,65 +1,47 @@
 {
   "id": "episode-001",
-  "title": "Before the Lights Went Quiet",
+  "title": "Welcome Aboard",
   "autoLaunch": true,
-  "soundtrack": {
-    "src": "/assets/audio/music/Lantern%20Tide.mp3",
-    "loop": true,
-    "volume": 0.3
-  },
   "panels": [
     {
-      "id": "connected-islands",
-      "type": "image",
-      "src": "/storyline/episode-001/001-connected-islands.webp",
-      "alt": "Five distinct islands joined across the sea by warm luminous routes",
-      "caption": "Long ago, the islands were connected."
+      "id": "ordinary-life",
+      "type": "text",
+      "text": "“Yeah… it’s not that bad, really.”"
     },
     {
-      "id": "shared-world",
-      "type": "image",
-      "src": "/storyline/episode-001/002-shared-world.webp",
-      "alt": "People, creatures, and a gentle guardian sharing knowledge at a luminous island harbor",
-      "caption": "People, creatures, and guardians shared what each island knew."
+      "id": "young-player-reveal",
+      "type": "text",
+      "text": "The voice belongs to a young boy leaning against the glass of a spaceship observation deck, speaking as if this were an ordinary morning."
     },
     {
-      "id": "great-drift",
-      "type": "video",
-      "src": "/storyline/episode-001/003-great-drift.mp4",
-      "poster": "/storyline/episode-001/003-great-drift-poster.webp",
-      "mutedAutoplay": true,
-      "loop": false,
-      "caption": "Then came the Great Drift."
+      "id": "future-baseline",
+      "type": "text",
+      "text": "Cancer belongs mostly to history lessons. Ageing has slowed to a patient crawl. No living person remembers the last war, 247 years ago."
     },
     {
-      "id": "separated-islands",
-      "type": "image",
-      "src": "/storyline/episode-001/004-separated-islands.webp",
-      "alt": "Intact islands isolated by mist and dark, unfinished sea routes",
-      "caption": "Routes vanished. Meaning went quiet."
+      "id": "observation-deck",
+      "type": "text",
+      "text": "Below the deck, the Creation Halls feel like an unlimited universe in the basement: tools, rooms, objects, games, and ideas waiting to be made."
     },
     {
-      "id": "compass-expedition",
-      "type": "image",
-      "src": "/storyline/episode-001/005-compass-expedition.webp",
-      "alt": "Captain Ivo following a faint route in the Compass Book aboard a small expedition vessel",
-      "caption": "Now, the Compass Expedition follows the lost signals."
+      "id": "creation-halls",
+      "type": "text",
+      "text": "The Creation Halls can turn a useful idea into a safe prototype: an item, a room, a visual, a plan, or even a game."
     },
     {
-      "id": "luma-approach",
-      "type": "image",
-      "src": "/storyline/episode-001/006-luma-approach.webp",
-      "alt": "The expedition approaching Luma Isle at dawn beneath strangely covered lanterns",
-      "caption": "The first signal leads to Luma Isle."
+      "id": "builder-family",
+      "type": "text",
+      "text": "Your PA floats beside you. Hundreds of related builder robots work throughout the ship, each with a different face, speciality, and identity."
     },
     {
-      "id": "noctyra-eye",
-      "type": "video",
-      "src": "/storyline/episode-001/007-noctyra-eye.mp4",
-      "poster": "/storyline/episode-001/007-noctyra-eye-poster.webp",
-      "mutedAutoplay": true,
-      "loop": true,
-      "caption": "Something there is still protecting the light."
+      "id": "mission",
+      "type": "text",
+      "text": "The job is almost Santa-like: travel from world to world, fix what people ask you to fix, join their games, and leave something wonderful behind."
+    },
+    {
+      "id": "first-course",
+      "type": "text",
+      "text": "First destination: Luma Isle. The ship is ready when you are."
     }
   ]
 }

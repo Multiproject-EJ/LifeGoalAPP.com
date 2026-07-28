@@ -8,6 +8,11 @@
   },
   "panels": [
     {
+      "id": "diplomatic-brief",
+      "type": "text",
+      "text": "Diplomatic assignment 001: help Luma Isle restore five landmarks with the ship’s specialist builder teams—and accept the host’s Arena invitation."
+    },
+    {
       "id": "covered-lights",
       "type": "image",
       "src": "/islands/001/story/arrival/001-covered-lights.webp",
@@ -41,7 +46,7 @@
       "id": "start-small",
       "type": "image",
       "src": "/islands/001/story/arrival/005-start-small.webp",
-      "alt": "Miri inviting the expedition toward one small newly lit Hatchery lantern",
+      "alt": "Miri inviting the expedition and its builder robots toward one small newly lit Hatchery lantern",
       "caption": "Miri: “Start small. Help us wake one gentle place.”"
     }
   ]

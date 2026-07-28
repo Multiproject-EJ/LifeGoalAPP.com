@@ -36,7 +36,7 @@ Repo: `Multiproject-EJ/LifeGoalAPP.com`
 
 | Rank | File | Size | Type | Likely feature ownership |
 |---|---|---:|---|---|
-| 1 | `public/assets/audio/music/luxury-reward-loop-v1.mp3` | 1,454,550 B (1.39 MB) | mp3 | Island Run luxury reward music (`islandRunMusic.ts`) |
+| 1 | `public/assets/audio/music/luxury-reward-loop-v1.mp3` | 1,454,550 B (1.39 MB) | mp3 | Dormant Door matching-event music (`islandRunMusic.ts`) |
 | 2 | `public/assets/islands/backgrounds/level-bg-06.webp` | 1,086,398 B (1.04 MB) | webp | Island Run background (dynamic `getIslandBackgroundImageSrc`) |
 | 3 | `public/assets/islands/backgrounds/level-bg-05.webp` | 1,055,346 B (1.01 MB) | webp | Island Run background |
 | 4 | `public/assets/islands/backgrounds/level-bg-07.webp` | 1,048,184 B (1.00 MB) | webp | Island Run background |
