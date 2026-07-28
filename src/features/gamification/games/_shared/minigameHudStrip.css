@@ -1,136 +1,151 @@
-/* Shared persistent HUD strip for the event mini-games.
-   Contract: reward progress spans, tickets pinned upper-right. */
+/**
+ * Shared persistent HUD strip for the event mini-games.
+ *
+ * Hard constraint: ONE row. The strip sits above every game's board on a
+ * 390px phone, so anything that wraps steals play space.
+ */
 
 .minigame-hud {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 8px;
   width: 100%;
+  min-width: 0;
 }
 
 .minigame-hud__reward {
+  position: relative;
   flex: 1 1 auto;
   min-width: 0;
-  display: grid;
-  gap: 4px;
-  align-content: center;
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 6px 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(8, 18, 34, 0.72);
-  text-align: left;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  background: rgba(8, 20, 38, 0.78);
 }
 
 .minigame-hud__reward--button {
   cursor: pointer;
   font: inherit;
   color: inherit;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  text-align: left;
 }
 
 .minigame-hud__reward--openable {
-  border-color: rgba(255, 215, 106, 0.75);
-  box-shadow: 0 0 12px rgba(255, 215, 106, 0.25);
+  border-color: rgba(255, 215, 106, 0.8);
+  box-shadow: 0 0 12px rgba(255, 215, 106, 0.28);
 }
 
-/* Keep the "N pts to go" line clear of the openable badge in the corner. */
-.minigame-hud__reward--openable .minigame-hud__reward-top {
-  padding-right: 16px;
-}
-
-.minigame-hud__reward-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-
-.minigame-hud__reward-next {
-  font-size: 0.72rem;
-  color: #cbd5e1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.minigame-hud__reward-next strong {
-  color: #ffe17b;
-  font-weight: 800;
-}
-
-.minigame-hud__reward-remaining {
+/* Current score — the "how am I doing" half of the row. */
+.minigame-hud__points {
   flex: 0 0 auto;
-  font-size: 0.66rem;
-  color: #94a3b8;
-  white-space: nowrap;
+  min-width: 26px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #e7f0ff;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
-.minigame-hud__reward-track {
-  height: 6px;
+/* Track — the "what do I get next" half. */
+.minigame-hud__track {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 8px;
   border-radius: 999px;
   background: rgba(3, 10, 22, 0.85);
-  overflow: hidden;
+  overflow: visible;
 }
 
-.minigame-hud__reward-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #38bdf8, #ffe17b);
-  transition: width 240ms ease;
-}
-
-.minigame-hud__reward-badge {
+.minigame-hud__fill {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #38bdf8, #c98a2c 65%, #ffe17b);
+  transition: width 200ms ease;
+}
+
+.minigame-hud__node {
+  position: absolute;
+  top: 50%;
+  translate: -50% -50%;
+  width: 17px;
+  height: 17px;
   display: grid;
   place-items: center;
-  border-radius: 999px;
-  background: #f59e0b;
-  color: #1c1206;
-  font-size: 0.68rem;
-  font-weight: 800;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.5);
+  border-radius: 50%;
+  font-size: 9px;
+  line-height: 1;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: #0b1c33;
+  /* Nodes are the incentive; they must never be clipped by the track. */
+  z-index: 1;
 }
 
-/* Tickets: pinned upper-right by flex order, always the last child. */
+.minigame-hud__node--claimed {
+  border-color: rgba(52, 211, 153, 0.85);
+  background: #052e26;
+  opacity: 0.75;
+}
+
+.minigame-hud__node--openable {
+  border-color: #ffe17b;
+  background: #3a2708;
+  box-shadow: 0 0 9px rgba(255, 225, 123, 0.75);
+}
+
+.minigame-hud__node--next {
+  border-color: rgba(255, 225, 123, 0.9);
+  background: #10233d;
+  scale: 1.12;
+}
+
+.minigame-hud__badge {
+  flex: 0 0 auto;
+  /* The 100% node is centred on the track's right edge, so it needs clearance. */
+  margin-left: 5px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: #2b1a02;
+  background: #ffb020;
+}
+
+/* Tickets — always this corner, in every game. */
 .minigame-hud__tickets {
   flex: 0 0 auto;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 11px;
-  border-radius: 12px;
-  border: 1px solid rgba(94, 234, 212, 0.35);
-  background: rgba(8, 18, 34, 0.72);
-  color: #e7f0ff;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.45);
+  background: rgba(8, 20, 38, 0.85);
   font-size: 0.86rem;
-}
-
-.minigame-hud__tickets strong {
-  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #e7f0ff;
 }
 
 .minigame-hud__tickets--low {
-  border-color: rgba(248, 113, 113, 0.65);
-  animation: minigame-hud-low-pulse 1.6s ease-in-out infinite;
+  border-color: rgba(248, 113, 113, 0.9);
+  color: #fecaca;
+  animation: minigame-hud-low 1.5s ease-in-out infinite;
 }
 
-@keyframes minigame-hud-low-pulse {
+@keyframes minigame-hud-low {
   0%, 100% { box-shadow: 0 0 0 rgba(248, 113, 113, 0); }
-  50% { box-shadow: 0 0 12px rgba(248, 113, 113, 0.45); }
+  50% { box-shadow: 0 0 12px rgba(248, 113, 113, 0.6); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .minigame-hud__tickets--low {
-    animation: none;
-  }
-  .minigame-hud__reward-fill {
-    transition: none;
-  }
+  .minigame-hud__tickets--low { animation: none; }
+  .minigame-hud__fill { transition: none; }
 }

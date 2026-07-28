@@ -854,30 +854,6 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
           </header>
 
 
-          <div className="island-workshop__score-rewards" aria-label="Score reward bar">
-            <div className="island-workshop__score-rewards-top">
-              <span>
-                Rewards
-                <span className={`island-workshop__level-chip${runLevel >= ISLAND_WORKSHOP_MAX_LEVEL ? ' island-workshop__level-chip--max' : ''}`}>
-                  Lv {runLevel}
-                </span>
-              </span>
-              <strong>{nextScoreReward ? `Next: ${nextScoreReward.score}` : 'All unlocked'}</strong>
-            </div>
-            <div className="island-workshop__score-track">
-              <div className="island-workshop__score-fill" style={{ width: `${Math.min(100, (score / scoreRewardMax) * 100)}%` }} />
-              {runMilestones.map((reward) => (
-                <span
-                  key={reward.id}
-                  className={`island-workshop__score-node${score >= reward.score ? ' island-workshop__score-node--claimed' : ''}`}
-                  style={{ left: `${Math.min(100, (reward.score / scoreRewardMax) * 100)}%` }}
-                  title={`${reward.label} at ${reward.score} score`}
-                >
-                  {reward.emoji}
-                </span>
-              ))}
-            </div>
-          </div>
 
           <div className="island-workshop__bench-wrap">
             <div

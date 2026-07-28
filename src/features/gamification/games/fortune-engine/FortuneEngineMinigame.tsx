@@ -998,9 +998,6 @@ export default function FortuneEngineMinigame({ onComplete, launchConfig }: Isla
               Golden play · core piece guaranteed{runMultiplierBonus > 0 ? ` · +${runMultiplierBonus}×` : ''}
             </p>
           )}
-          {phase !== 'finale' && (
-            <RunPrizeProgress track={trackViewModel} pendingPoints={phase === 'spin' ? 0 : bankedPoints} />
-          )}
           {phase === 'ring' && (
             <div className={`fortune-engine__challenge-card fortune-engine__challenge-card--${challengeModeId}`} role="status">
               <div>

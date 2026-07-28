@@ -9,6 +9,7 @@ import {
   buildMinigameHudTickets,
   MINIGAME_HUD_LOW_TICKETS,
   MINIGAME_OPEN_REWARD_LABEL,
+  resolveMinigameRewardIcon,
 } from '../minigameHudContract';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
@@ -19,6 +20,98 @@ const LADDER = [
 ];
 
 export const minigameHudContractTests: TestCase[] = [
+  {
+    name: 'reward nodes carry position, glyph and state for the single-row track',
+    run: () => {
+      const reward = buildMinigameHudReward({
+        points: 5,
+        milestones: [
+          { pointsRequired: 2, rewardLabel: '+3 Dice', claimed: true },
+          { pointsRequired: 4, rewardLabel: '+40 Essence', claimed: false },
+          { pointsRequired: 8, rewardLabel: '+1 Shard', claimed: false },
+          { pointsRequired: 10, rewardLabel: '+20 Dice', claimed: false },
+        ],
+      });
+      assertEqual(reward.nodes.length, 4, 'every milestone becomes a node');
+      assertEqual(reward.nodes[0].state, 'claimed', 'already-opened milestones read as claimed');
+      assertEqual(reward.nodes[1].state, 'openable', 'a passed unclaimed milestone is openable');
+      assertEqual(reward.nodes[2].state, 'next', 'the first unreached milestone is the next one');
+      assertEqual(reward.nodes[3].state, 'upcoming', 'later milestones stay upcoming');
+
+      // Nodes are evenly spaced so uneven ladders stay legible on a phone.
+      assertEqual(reward.nodes[0].positionPercent, 25, 'nodes are spaced evenly, not by threshold');
+      assertEqual(reward.nodes[3].positionPercent, 100, 'the final milestone sits at the end of the track');
+      for (let i = 1; i < reward.nodes.length; i += 1) {
+        assert(
+          reward.nodes[i].positionPercent > reward.nodes[i - 1].positionPercent,
+          'node positions increase monotonically',
+        );
+      }
+      assertEqual(reward.pointsLabel, '5', 'current score is exposed for the head of the row');
+    },
+  },
+  {
+    name: 'a cheap-to-expensive ladder does not bunch its early nodes together',
+    run: () => {
+      // The Fortune Engine shape: opens at 50, ends at 2000. Proportional
+      // spacing would crush the first four nodes into the leftmost 10%.
+      const reward = buildMinigameHudReward({
+        points: 0,
+        milestones: [50, 120, 260, 500, 2000].map((p) => ({
+          pointsRequired: p, rewardLabel: `${p} Dice`, claimed: false,
+        })),
+      });
+      const gaps = reward.nodes.slice(1).map((n, i) => n.positionPercent - reward.nodes[i].positionPercent);
+      for (const gap of gaps) {
+        assert(gap > 15, `every node keeps a legible gap (got ${gap})`);
+      }
+    },
+  },
+  {
+    name: 'fill interpolates within the current segment, matching the node spacing',
+    run: () => {
+      const ladder = [
+        { pointsRequired: 10, rewardLabel: '+3 Dice', claimed: false },
+        { pointsRequired: 20, rewardLabel: '+5 Dice', claimed: false },
+        { pointsRequired: 30, rewardLabel: '+9 Dice', claimed: false },
+        { pointsRequired: 40, rewardLabel: '+20 Dice', claimed: false },
+      ];
+      assertEqual(buildMinigameHudReward({ points: 0, milestones: ladder }).fillRatio, 0, 'no points means empty');
+      // Halfway to the first node = half of the first quarter-segment.
+      assertEqual(buildMinigameHudReward({ points: 5, milestones: ladder }).fillRatio, 0.125, 'fill interpolates inside a segment');
+      assertEqual(buildMinigameHudReward({ points: 10, milestones: ladder }).fillRatio, 0.25, 'reaching a node fills exactly to it');
+      assertEqual(buildMinigameHudReward({ points: 40, milestones: ladder }).fillRatio, 1, 'the last node fills the track');
+      assertEqual(buildMinigameHudReward({ points: 999, milestones: ladder }).fillRatio, 1, 'overshooting clamps to full');
+    },
+  },
+  {
+    name: 'node glyphs are derived from the reward currency but can be overridden',
+    run: () => {
+      assertEqual(resolveMinigameRewardIcon('+20 Dice'), '🎲', 'dice rewards get the dice glyph');
+      assertEqual(resolveMinigameRewardIcon('+40 Essence'), '🟣', 'essence rewards get the essence glyph');
+      assertEqual(resolveMinigameRewardIcon('+2 Shards'), '💎', 'shard rewards get the shard glyph');
+      assertEqual(resolveMinigameRewardIcon('a mystery box'), '🎁', 'unknown rewards fall back to a prize glyph');
+      // Mixed labels resolve to the rarest currency named, so the glyph shows
+      // the headline prize: shards beat dice, dice beat essence.
+      assertEqual(resolveMinigameRewardIcon('+8 Dice +60 Essence'), '🎲', 'dice outrank essence in mixed labels');
+      assertEqual(resolveMinigameRewardIcon('+20 Dice +4 Shards +200 Essence'), '💎', 'shards outrank everything');
+
+      const reward = buildMinigameHudReward({
+        points: 0,
+        milestones: [{ pointsRequired: 1, rewardLabel: '+3 Dice', claimed: false, icon: '🗼' }],
+      });
+      assertEqual(reward.nodes[0].icon, '🗼', 'an explicit game-supplied glyph wins');
+    },
+  },
+  {
+    name: 'an empty ladder produces no nodes and a zero score label',
+    run: () => {
+      const reward = buildMinigameHudReward({ points: 0, milestones: [] });
+      assertEqual(reward.nodes.length, 0, 'no milestones means no nodes');
+      assertEqual(reward.pointsLabel, '0', 'score label still renders');
+      assertEqual(reward.fillRatio, 0, 'fill stays empty');
+    },
+  },
   {
     name: 'claim surfaces share the canonical Open reward label',
     run: () => {
@@ -56,7 +149,12 @@ export const minigameHudContractTests: TestCase[] = [
       assertEqual(reward.nextRewardLabel, '+40 Dice', 'the next unclaimed milestone is the one shown');
       assertEqual(reward.remainingLabel, '7 pts to go', 'remaining counts toward that milestone');
       assertEqual(reward.openableCount, 1, 'the passed milestone is openable');
-      assert(reward.fillRatio > 0.31 && reward.fillRatio < 0.33, 'fill is points over the ladder total');
+      // Fill is segment-based (see the even-spacing rationale in the contract),
+      // so 8 points sits partway through the segment after the passed node.
+      assert(
+        reward.fillRatio > 0 && reward.fillRatio < 1,
+        `fill sits inside the track while a milestone remains (got ${reward.fillRatio})`,
+      );
     },
   },
   {

@@ -653,30 +653,6 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
         <MinigameFxOverlay ref={fxRef} shakeTargetRef={boardRef} />
       </div>
 
-      <div className={`space-excavator__event-progress ${rewardUxState.rewardReady ? 'space-excavator__event-progress--ready' : ''}`} aria-label="Event progress">
-        <div className="space-excavator__event-progress-header">
-          <strong>Event Progress</strong>
-          <span>{rewardUxState.boardsCleared} / {rewardUxState.totalBoards}</span>
-        </div>
-        <div className="space-excavator__event-progress-bar" aria-hidden="true">
-          <span style={{ width: `${rewardUxState.progressPercent}%` }} />
-        </div>
-        <div className="space-excavator__event-progress-footer">
-          <div className="space-excavator__milestone-dots" aria-label="Event milestone status">
-            {rewardUxState.milestoneDots.map((dot) => (
-              <span
-                key={dot.id}
-                className={`space-excavator__milestone-dot ${dot.claimed ? 'space-excavator__milestone-dot--claimed' : dot.claimable ? 'space-excavator__milestone-dot--ready' : dot.achieved ? 'space-excavator__milestone-dot--achieved' : ''} ${dot.id === nextMilestoneDotId ? 'space-excavator__milestone-dot--next' : ''}`}
-                title={`${dot.label} board${dot.label === '1' ? '' : 's'}`}
-              />
-            ))}
-          </div>
-          <span className="space-excavator__next-reward">{rewardUxState.nextRewardLabel}</span>
-          {rewardUxState.rewardReady && (
-            <span className="space-excavator__reward-ready" role="status" aria-live="polite">Reward ready</span>
-          )}
-        </div>
-      </div>
 
       {showOutOfTickets && (
         <div
@@ -829,11 +805,6 @@ export function SpaceExcavatorMinigame({ onComplete, islandNumber, launchConfig 
             <span aria-hidden="true">🏝️</span> Return to Island
           </button>
         </div>
-        <p className={`space-excavator__footer-ticket-count ${ticketsRemaining > 0 && ticketsRemaining <= 3 ? 'space-excavator__footer-ticket-count--low' : ''}`} aria-live="polite">
-        <span aria-hidden="true">🎟️</span>
-        <span>Event Tickets: </span>
-        <strong>{ticketsRemaining}</strong>
-        </p>
       </div>
     </section>
   );

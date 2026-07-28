@@ -2,10 +2,15 @@
  * MinigameHudStrip.tsx — the persistent top strip every event mini-game
  * renders during its play phase.
  *
- * Layout contract (see `services/minigameHudContract.ts`): reward progress
- * and the next exact prize span the strip; the ticket count is pinned to the
- * upper-right. Same order, same corner, in all four games, so the player's
- * eyes never have to re-learn a surface.
+ * Layout contract (see `services/minigameHudContract.ts`): ONE row, always at
+ * the top — current score at the head, the reward track carrying its
+ * milestone nodes across the middle, tickets pinned upper-right.
+ *
+ * The node-bearing track is Island Workshop's pattern generalised: showing
+ * the upcoming prizes *on* the bar is what makes the incentive legible at a
+ * glance, where a bare fill just says "some progress happened". Keeping it to
+ * a single row is what lets it sit above every game without stealing board
+ * space on a 390px phone.
  */
 import type { MinigameHudViewModel } from '../../level-worlds/services/minigameHudContract';
 import './minigameHudStrip.css';
@@ -16,31 +21,42 @@ export function MinigameHudStrip({ hud, onOpenRewards }: {
   onOpenRewards?: () => void;
 }) {
   const { tickets, reward } = hud;
-  const rewardBody = (
-    <>
-      <div className="minigame-hud__reward-top">
-        <span className="minigame-hud__reward-next">
-          {reward.nextRewardLabel !== null ? (
-            <>Next: <strong>{reward.nextRewardLabel}</strong></>
-          ) : (
-            'All rewards earned'
-          )}
+
+  const summary = reward.nextRewardLabel !== null
+    ? `Next reward: ${reward.nextRewardLabel}${reward.remainingLabel ? `, ${reward.remainingLabel}` : ''}`
+    : 'All rewards earned';
+
+  const track = (
+    <span className="minigame-hud__track" role="presentation">
+      <span
+        className="minigame-hud__fill"
+        style={{ width: `${Math.round(reward.fillRatio * 100)}%` }}
+      />
+      {reward.nodes.map((node) => (
+        <span
+          key={node.id}
+          className={`minigame-hud__node minigame-hud__node--${node.state}`}
+          style={{ left: `${node.positionPercent}%` }}
+          title={node.label}
+        >
+          <span aria-hidden="true">{node.icon}</span>
         </span>
-        {reward.remainingLabel !== null && (
-          <span className="minigame-hud__reward-remaining">{reward.remainingLabel}</span>
-        )}
-      </div>
-      <div className="minigame-hud__reward-track" role="presentation">
-        <div
-          className="minigame-hud__reward-fill"
-          style={{ width: `${Math.round(reward.fillRatio * 100)}%` }}
-        />
-      </div>
+      ))}
+    </span>
+  );
+
+  const body = (
+    <>
+      <span className="minigame-hud__points" aria-hidden="true">{reward.pointsLabel}</span>
+      {track}
+      {reward.openableCount > 0 && (
+        <span className="minigame-hud__badge" aria-hidden="true">{reward.openableCount}</span>
+      )}
     </>
   );
 
   return (
-    <div className="minigame-hud" role="status" aria-label="Event progress and tickets">
+    <div className="minigame-hud" role="status" aria-label={`${summary}. ${tickets.count} ${tickets.noun} left.`}>
       {onOpenRewards ? (
         <button
           type="button"
@@ -48,21 +64,18 @@ export function MinigameHudStrip({ hud, onOpenRewards }: {
           onClick={onOpenRewards}
           aria-label={reward.openableCount > 0
             ? `${reward.openableCount} reward${reward.openableCount === 1 ? '' : 's'} ready to open`
-            : 'View reward progress'}
+            : summary}
         >
-          {rewardBody}
-          {reward.openableCount > 0 && (
-            <span className="minigame-hud__reward-badge" aria-hidden="true">{reward.openableCount}</span>
-          )}
+          {body}
         </button>
       ) : (
-        <div className="minigame-hud__reward">{rewardBody}</div>
+        <div className="minigame-hud__reward">{body}</div>
       )}
       <span
         className={`minigame-hud__tickets${tickets.low ? ' minigame-hud__tickets--low' : ''}`}
-        aria-label={`${tickets.count} ${tickets.noun} remaining`}
+        aria-hidden="true"
       >
-        <span aria-hidden="true">{tickets.icon}</span>
+        <span>{tickets.icon}</span>
         <strong>{tickets.count}</strong>
       </span>
     </div>

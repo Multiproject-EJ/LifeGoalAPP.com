@@ -32,6 +32,19 @@ export interface MinigameHudTickets {
   low: boolean;
 }
 
+export type MinigameHudNodeState = 'claimed' | 'openable' | 'next' | 'upcoming';
+
+export interface MinigameHudRewardNode {
+  id: string;
+  /** 0..100 position along the track, so nodes can be absolutely placed. */
+  positionPercent: number;
+  /** Glyph shown on the node itself. */
+  icon: string;
+  /** Full reward text, for the node's title/aria. */
+  label: string;
+  state: MinigameHudNodeState;
+}
+
 export interface MinigameHudReward {
   /** 0..1 fill of the progress track. */
   fillRatio: number;
@@ -41,6 +54,27 @@ export interface MinigameHudReward {
   remainingLabel: string | null;
   /** Number of milestones ready to open right now. */
   openableCount: number;
+  /**
+   * Milestone markers sitting on the track. This is the Island Workshop
+   * pattern generalised: showing the upcoming prizes *on* the bar is what
+   * makes the incentive legible at a glance, rather than a bare fill.
+   */
+  nodes: MinigameHudRewardNode[];
+  /** Current points, rendered at the head of the row. */
+  pointsLabel: string;
+}
+
+/**
+ * Pick a glyph for a reward when the game does not supply one, keyed off the
+ * currency named in its label. Falls back to a generic prize icon.
+ */
+export function resolveMinigameRewardIcon(label: string): string {
+  const text = label.toLowerCase();
+  if (text.includes('shard')) return '💎';
+  if (text.includes('dice')) return '🎲';
+  if (text.includes('essence')) return '🟣';
+  if (text.includes('ticket')) return '🎟️';
+  return '🎁';
 }
 
 export interface MinigameHudViewModel {
@@ -76,13 +110,14 @@ export function buildMinigameHudReward(options: {
     pointsRequired: number;
     rewardLabel: string;
     claimed: boolean;
+    /** Optional glyph; derived from the label when omitted. */
+    icon?: string;
   }>;
   /** Unit rendered after remaining counts, e.g. "pts". Omit to hide. */
   remainingUnit?: string | null;
 }): MinigameHudReward {
   const points = Number.isFinite(options.points) ? Math.max(0, options.points) : 0;
   const ordered = [...options.milestones].sort((a, b) => a.pointsRequired - b.pointsRequired);
-  const totalPoints = ordered.length > 0 ? ordered[ordered.length - 1].pointsRequired : 0;
 
   let openableCount = 0;
   let next: { pointsRequired: number; rewardLabel: string } | null = null;
@@ -95,12 +130,54 @@ export function buildMinigameHudReward(options: {
     }
   }
 
+  /*
+   * Nodes are spaced EVENLY rather than proportionally to their thresholds.
+   *
+   * Proportional spacing looks correct in a spreadsheet and fails on a phone:
+   * ladders that start cheap and end expensive (Fortune Engine opens at 50 and
+   * runs to 2000) bunch their first several nodes into the leftmost few pixels,
+   * where they overlap each other and the score. Even spacing guarantees every
+   * upcoming prize stays legible, and the fill interpolates *within* the
+   * current segment so progress toward the next reward still reads truthfully.
+   */
+  const count = ordered.length;
+  const nodes: MinigameHudRewardNode[] = ordered.map((milestone, index) => {
+    let state: MinigameHudNodeState;
+    if (milestone.claimed) state = 'claimed';
+    else if (points >= milestone.pointsRequired) state = 'openable';
+    else if (next !== null && milestone.pointsRequired === next.pointsRequired) state = 'next';
+    else state = 'upcoming';
+    return {
+      id: `${index}:${milestone.pointsRequired}`,
+      positionPercent: ((index + 1) / count) * 100,
+      icon: milestone.icon ?? resolveMinigameRewardIcon(milestone.rewardLabel),
+      label: milestone.rewardLabel,
+      state,
+    };
+  });
+
+  // Fill in the same evenly-spaced space the nodes live in.
+  let fillRatio = 0;
+  if (count > 0) {
+    const reachedIndex = ordered.findIndex((m) => points < m.pointsRequired);
+    if (reachedIndex === -1) {
+      fillRatio = 1;
+    } else {
+      const previousThreshold = reachedIndex === 0 ? 0 : ordered[reachedIndex - 1].pointsRequired;
+      const span = ordered[reachedIndex].pointsRequired - previousThreshold;
+      const within = span > 0 ? Math.max(0, Math.min(1, (points - previousThreshold) / span)) : 0;
+      fillRatio = (reachedIndex + within) / count;
+    }
+  }
+
   const remaining = next ? Math.max(0, next.pointsRequired - points) : 0;
   const unit = options.remainingUnit === undefined ? 'pts' : options.remainingUnit;
   return {
-    fillRatio: totalPoints > 0 ? Math.min(1, points / totalPoints) : 0,
+    fillRatio,
     nextRewardLabel: next?.rewardLabel ?? null,
     remainingLabel: next && unit !== null ? `${remaining} ${unit} to go` : null,
     openableCount,
+    nodes,
+    pointsLabel: String(Math.round(points)),
   };
 }
