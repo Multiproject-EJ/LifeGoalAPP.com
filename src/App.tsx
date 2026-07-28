@@ -33,6 +33,13 @@ import { TipOfDayModal } from './features/tip-of-day';
 import { WelcomeBackCelebrationModal } from './components/WelcomeBackCelebrationModal';
 import { startComebackCelebration, type ComebackCelebration } from './services/comebackCelebration';
 import { readIslandRunGameStateRecord } from './features/gamification/level-worlds/services/islandRunGameStateStore';
+import { resetIslandRunProgress } from './features/gamification/level-worlds/services/islandRunProgressReset';
+import {
+  buildDeveloperDayLoopMetadataPatch,
+  normalizeDeveloperDayLoopDay,
+  resolveDeveloperDayLoopScenario,
+  type DeveloperDayLoopLaunchResult,
+} from './features/gamification/level-worlds/services/developerDayLoop';
 import { Journal, type JournalType } from './features/journal';
 import { BreathingSpace } from './features/meditation';
 import { AchievementsPage } from './features/achievements/AchievementsPage';
@@ -2554,6 +2561,73 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setFirstRunStep('welcome');
   }, [isAdmin]);
 
+  const handleRunDeveloperDayLoop = useCallback(async (dayValue: number): Promise<DeveloperDayLoopLaunchResult> => {
+    const day = normalizeDeveloperDayLoopDay(dayValue);
+    const scenario = resolveDeveloperDayLoopScenario(day);
+
+    if (isAdmin !== true || !supabaseSession) {
+      return {
+        ok: false,
+        day,
+        message: 'The Day Loop controller is only available to an authenticated admin.',
+      };
+    }
+
+    const supabaseClient = client ?? getSupabaseClient();
+
+    if (scenario.resetIslandRunProgress) {
+      const resetResult = await resetIslandRunProgress({
+        session: supabaseSession,
+        client: supabaseClient,
+      });
+      if (!resetResult.ok) {
+        return {
+          ok: false,
+          day,
+          message: `Day 1 reset failed: ${resetResult.errorMessage}`,
+        };
+      }
+    }
+
+    const { error: metadataError } = await supabaseClient.auth.updateUser({
+      data: buildDeveloperDayLoopMetadataPatch(day),
+    });
+    if (metadataError) {
+      return {
+        ok: false,
+        day,
+        message: scenario.resetIslandRunProgress
+          ? `Island Run was reset, but the Day ${day} marker could not be saved: ${metadataError.message}`
+          : `Day ${day} could not be saved: ${metadataError.message}`,
+      };
+    }
+
+    setShowGameBoardOverlay(false);
+    setShowMobileGamification(false);
+    setShowLevelWorldsFromEntry(false);
+    setIsMobileMenuOpen(false);
+    setShouldShowSettingsMenuReturn(false);
+    setShowMobileHome(true);
+    setActiveWorkspaceNav('planning');
+    setFirstRunStep(scenario.entryPoint === 'founder_welcome' ? 'welcome' : null);
+
+    if (scenario.resetIslandRunProgress && typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('gamificationProfileUpdated', {
+          detail: { userId: supabaseSession.user.id },
+        }),
+      );
+    }
+
+    return {
+      ok: true,
+      day,
+      message: scenario.resetIslandRunProgress
+        ? 'Day 1 is ready. Island Run and XP were reset; habits, todos, journals, and the device date were preserved.'
+        : `Day ${day} is active. Existing progress was preserved and the app reopened at Today.`,
+    };
+  }, [client, isAdmin, supabaseSession]);
+
   const completeFirstRunStartFlow = useCallback(() => {
     setFirstRunStep(null);
     const supabaseClient = client ?? getSupabaseClient();
@@ -4009,6 +4083,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             onLaunchLeapProgress={handleLaunchLeapProgress}
             onLaunchDayZeroOnboarding={handleLaunchDayZeroOnboarding}
             onLaunchFirstRunOnboarding={isAdmin === true ? handleLaunchFirstRunOnboardingFromAdmin : undefined}
+            onRunDeveloperDayLoop={isAdmin === true ? handleRunDeveloperDayLoop : undefined}
             profile={workspaceProfile}
             stats={workspaceStats}
             profileLoading={workspaceProfileLoading}

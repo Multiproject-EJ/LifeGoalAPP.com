@@ -2298,6 +2298,93 @@ html.platform-ipad .workspace-shell__menu-edge {
   margin-top: 1rem;
 }
 
+.developer-day-loop {
+  border-color: rgba(139, 92, 246, 0.45);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(124, 58, 237, 0.13), transparent 42%),
+    rgba(255, 255, 255, 0.97);
+}
+
+[data-theme='dark-glass'] .developer-day-loop {
+  border-color: rgba(167, 139, 250, 0.42);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(124, 58, 237, 0.24), transparent 42%),
+    rgba(15, 23, 42, 0.76);
+}
+
+.developer-day-loop__field {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 1rem;
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.developer-day-loop__field select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(139, 92, 246, 0.42);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+[data-theme='dark-glass'] .developer-day-loop__field select {
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+}
+
+.developer-day-loop__scenario {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.85rem;
+  border-radius: 16px;
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  background: rgba(139, 92, 246, 0.08);
+  padding: 0.85rem 0.95rem;
+  color: var(--color-text-primary);
+}
+
+.developer-day-loop__scenario span,
+.developer-day-loop__note,
+.developer-day-loop__confirm p {
+  color: var(--color-text-secondary, #64748b);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.developer-day-loop__confirm {
+  margin-top: 1rem;
+  border: 1px solid rgba(220, 38, 38, 0.42);
+  border-radius: 16px;
+  background: rgba(220, 38, 38, 0.08);
+  padding: 0.9rem;
+  color: var(--color-text-primary);
+}
+
+.developer-day-loop__confirm p,
+.developer-day-loop__note {
+  margin: 0.45rem 0 0;
+}
+
+.developer-day-loop__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.developer-day-loop__actions .btn {
+  flex: 1 1 180px;
+}
+
 .account-panel__maintenance-actions {
   margin-top: 1rem;
   border-top: 1px solid rgba(148, 163, 184, 0.28);

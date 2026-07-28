@@ -47,6 +47,12 @@ import {
 import { fetchOwnedThemeIds, initiateThemeCheckout } from '../../services/themePurchases';
 import { runAccountLifecycleAction, type AccountLifecycleAction } from '../../services/accountLifecycle';
 import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
+import {
+  DEVELOPER_DAY_LOOP_MAX_DAY,
+  readDeveloperDayLoopDay,
+  resolveDeveloperDayLoopScenario,
+  type DeveloperDayLoopLaunchResult,
+} from '../gamification/level-worlds/services/developerDayLoop';
 
 type MyAccountPanelProps = {
   session: Session;
@@ -57,6 +63,7 @@ type MyAccountPanelProps = {
   onLaunchLeapProgress?: (options?: { reset?: boolean }) => void;
   onLaunchDayZeroOnboarding?: (options?: { reset?: boolean }) => void;
   onLaunchFirstRunOnboarding?: () => void;
+  onRunDeveloperDayLoop?: (day: number) => Promise<DeveloperDayLoopLaunchResult>;
   profile: WorkspaceProfileRow | null;
   stats: WorkspaceStats | null;
   profileLoading: boolean;
@@ -95,6 +102,7 @@ export function MyAccountPanel({
   onLaunchLeapProgress,
   onLaunchDayZeroOnboarding,
   onLaunchFirstRunOnboarding,
+  onRunDeveloperDayLoop,
   profile,
   stats,
   profileLoading,
@@ -153,6 +161,15 @@ export function MyAccountPanel({
   const [themeCheckoutError, setThemeCheckoutError] = useState<string | null>(null);
   const [accountLifecycleAction, setAccountLifecycleAction] = useState<AccountLifecycleAction | null>(null);
   const [accountLifecycleStatus, setAccountLifecycleStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [developerDayLoopDay, setDeveloperDayLoopDay] = useState(() => (
+    readDeveloperDayLoopDay(session.user.user_metadata)
+  ));
+  const [developerDayLoopPending, setDeveloperDayLoopPending] = useState(false);
+  const [developerDayLoopConfirmOpen, setDeveloperDayLoopConfirmOpen] = useState(false);
+  const [developerDayLoopStatus, setDeveloperDayLoopStatus] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
   const { state: islandRunState, hydrate: hydrateIslandRunState } = useIslandRunState(session, null);
   
   const user = session.user;
@@ -298,6 +315,36 @@ export function MyAccountPanel({
   }, [isAdmin]);
 
   const showAdminTools = isAdmin === true;
+
+  useEffect(() => {
+    setDeveloperDayLoopDay(readDeveloperDayLoopDay(session.user.user_metadata));
+  }, [session.user.user_metadata]);
+
+  const developerDayLoopScenario = resolveDeveloperDayLoopScenario(developerDayLoopDay);
+
+  const runDeveloperDayLoop = async () => {
+    if (!onRunDeveloperDayLoop || developerDayLoopPending) return;
+    setDeveloperDayLoopPending(true);
+    setDeveloperDayLoopStatus(null);
+    try {
+      const result = await onRunDeveloperDayLoop(developerDayLoopDay);
+      setDeveloperDayLoopStatus({
+        type: result.ok ? 'success' : 'error',
+        text: result.message,
+      });
+      if (result.ok) {
+        setDeveloperDayLoopConfirmOpen(false);
+        setFolder1Open(false);
+      }
+    } catch (error) {
+      setDeveloperDayLoopStatus({
+        type: 'error',
+        text: `The Day Loop could not start: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    } finally {
+      setDeveloperDayLoopPending(false);
+    }
+  };
 
   useEffect(() => {
     if (isDemoExperience) {
@@ -1129,7 +1176,105 @@ export function MyAccountPanel({
                 </dl>
               ) : null}
             </section>
-            {onLaunchFirstRunOnboarding ? (
+            {onRunDeveloperDayLoop ? (
+              <section className="account-panel__card developer-day-loop" aria-labelledby="advanced-developer-day-loop">
+                <p className="account-panel__eyebrow">Admin-only development</p>
+                <h3 id="advanced-developer-day-loop">Day Loop controller</h3>
+                <p className="account-panel__hint">
+                  Rehearse the player journey one day at a time without changing the phone date. Day 1 is a clean replay; later days keep the progress you actually earned.
+                </p>
+                <label className="developer-day-loop__field">
+                  <span>Journey day</span>
+                  <select
+                    value={developerDayLoopDay}
+                    onChange={(event) => {
+                      setDeveloperDayLoopDay(Number(event.target.value));
+                      setDeveloperDayLoopConfirmOpen(false);
+                      setDeveloperDayLoopStatus(null);
+                    }}
+                    disabled={developerDayLoopPending}
+                  >
+                    {Array.from({ length: DEVELOPER_DAY_LOOP_MAX_DAY }, (_, index) => index + 1).map((day) => (
+                      <option key={day} value={day}>Day {day}</option>
+                    ))}
+                  </select>
+                </label>
+                <div className="developer-day-loop__scenario">
+                  <strong>{developerDayLoopScenario.title}</strong>
+                  <span>{developerDayLoopScenario.description}</span>
+                </div>
+
+                {developerDayLoopScenario.resetIslandRunProgress && developerDayLoopConfirmOpen ? (
+                  <div className="developer-day-loop__confirm" role="alert">
+                    <strong>Reset and replay Day 1?</strong>
+                    <p>
+                      Island Run, creatures, eggs, rewards, XP, and level will return to their fresh-start state.
+                      Habits, todos, journals, achievements, identity, and the real date stay untouched.
+                    </p>
+                    <div className="account-panel__actions-row developer-day-loop__actions">
+                      <button
+                        type="button"
+                        className="btn btn--danger"
+                        onClick={() => void runDeveloperDayLoop()}
+                        disabled={developerDayLoopPending}
+                      >
+                        {developerDayLoopPending ? 'Preparing Day 1…' : 'Yes, reset & start Day 1'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--secondary"
+                        onClick={() => setDeveloperDayLoopConfirmOpen(false)}
+                        disabled={developerDayLoopPending}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="account-panel__actions-row developer-day-loop__actions">
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => {
+                        if (developerDayLoopScenario.resetIslandRunProgress) {
+                          setDeveloperDayLoopConfirmOpen(true);
+                          return;
+                        }
+                        void runDeveloperDayLoop();
+                      }}
+                      disabled={developerDayLoopPending}
+                    >
+                      {developerDayLoopPending
+                        ? `Preparing Day ${developerDayLoopDay}…`
+                        : developerDayLoopScenario.resetIslandRunProgress
+                          ? 'Reset & start Day 1'
+                          : `Set Day ${developerDayLoopDay} & open Today`}
+                    </button>
+                    {onLaunchFirstRunOnboarding ? (
+                      <button
+                        type="button"
+                        className="btn btn--secondary"
+                        onClick={() => {
+                          setFolder1Open(false);
+                          onLaunchFirstRunOnboarding();
+                        }}
+                        disabled={developerDayLoopPending}
+                      >
+                        Preview intro without reset
+                      </button>
+                    ) : null}
+                  </div>
+                )}
+                {developerDayLoopStatus ? (
+                  <p className={`account-panel__message account-panel__message--${developerDayLoopStatus.type}`}>
+                    {developerDayLoopStatus.text}
+                  </p>
+                ) : null}
+                <p className="developer-day-loop__note">
+                  Day 2–30 are non-destructive journey markers. They reopen Today and preserve the state created by your previous testing.
+                </p>
+              </section>
+            ) : onLaunchFirstRunOnboarding ? (
               <section className="account-panel__card" aria-labelledby="advanced-first-run-onboarding-launcher">
                 <p className="account-panel__eyebrow">Admin-only development</p>
                 <h3 id="advanced-first-run-onboarding-launcher">First-start onboarding</h3>
