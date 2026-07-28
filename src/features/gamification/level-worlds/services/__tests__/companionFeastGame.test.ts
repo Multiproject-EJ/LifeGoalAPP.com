@@ -16,6 +16,7 @@ import {
   COMPANION_FEAST_FOOD_TIERS,
   COMPANION_FEAST_MAX_DROPPABLE_TIER,
   COMPANION_FEAST_MAX_TIER,
+  COMPANION_FEAST_RESULT_TIERS,
   createCompanionFeastBody,
   getCompanionFeastFoodTier,
   resolveCompanionFeastMergeScore,
@@ -24,15 +25,18 @@ import {
   stepCompanionFeastPhysics,
   advanceCompanionFeastFever,
   COMPANION_FEAST_CHAIN_MULTIPLIERS,
+  COMPANION_FEAST_CHAIN_WINDOW_MS,
   COMPANION_FEAST_FEVER_CHARGE_TARGET,
   COMPANION_FEAST_FEVER_DURATION_MS,
   COMPANION_FEAST_FEVER_IDLE,
   COMPANION_FEAST_GOLDEN_DROP_PERCENT,
+  COMPANION_FEAST_MOMENTUM_SCORE_CALIBRATION,
   resolveCompanionFeastChainMultiplier,
   resolveCompanionFeastMergeAward,
   rollCompanionFeastGoldenDrop,
   type CompanionFeastBody,
 } from '../companionFeastGame';
+import { resolveMinigameChainCount } from '../minigameJuice';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
 function settleBodies(bodies: CompanionFeastBody[], steps: number): {
@@ -218,10 +222,24 @@ export const companionFeastGameTests: TestCase[] = [
     name: 'result tiers map score bands to escalating dice rewards',
     run: () => {
       assertEqual(resolveCompanionFeastResultTier(0).id, 'nibble', 'zero score is a Nibble');
-      assertEqual(resolveCompanionFeastResultTier(220).id, 'snack', 'mid score is a Hearty Snack');
-      assertEqual(resolveCompanionFeastResultTier(600).id, 'banquet', 'high score is a Banquet');
-      assertEqual(resolveCompanionFeastResultTier(1200).id, 'grand_feast', 'top score is a Grand Feast');
-      assertEqual(resolveCompanionFeastResultTier(2500).id, 'legendary_feast', 'exceptional score is a Legendary Feast');
+      // Derived from the table so re-calibrating thresholds cannot stale this.
+      for (const tier of COMPANION_FEAST_RESULT_TIERS) {
+        assertEqual(
+          resolveCompanionFeastResultTier(tier.minScore).id,
+          tier.id,
+          `${tier.id} starts exactly at its own threshold`,
+        );
+        if (tier.minScore > 0) {
+          const below = resolveCompanionFeastResultTier(tier.minScore - 1);
+          assert(below.minScore < tier.minScore, `one point below ${tier.id} falls to a lower tier`);
+        }
+      }
+      for (let i = 1; i < COMPANION_FEAST_RESULT_TIERS.length; i += 1) {
+        assert(
+          COMPANION_FEAST_RESULT_TIERS[i].rewardDice > COMPANION_FEAST_RESULT_TIERS[i - 1].rewardDice,
+          'each tier pays strictly more dice than the one below',
+        );
+      }
       assertEqual(resolveCompanionFeastResultTier(Number.NaN).id, 'nibble', 'invalid score falls back safely');
       assert(
         resolveCompanionFeastResultTier(1000).rewardDice > resolveCompanionFeastResultTier(0).rewardDice,
@@ -462,6 +480,106 @@ export const companionFeastGameTests: TestCase[] = [
 
       assert(totalScore > 0, 'a busy simulated run scores something');
       assert(Number.isFinite(feverState.charge), 'fever charge stays finite across a long run');
+    },
+  },
+  {
+    name: 'the momentum calibration matches the uplift a simulated run actually produces',
+    run: () => {
+      /*
+       * The calibration constant divides the reward economy, so a wrong value
+       * silently inflates or starves it. Rather than trust a guess, simulate
+       * runs through the real physics + award pipeline and compare the score
+       * a player actually banks against the same merges scored without any
+       * chain/Fever/golden bonus.
+       *
+       * DROP_COOLDOWN_MS is 420ms, so ~26 frames at 16ms is the fastest legal
+       * tap; this uses a relaxed cadence representing unhurried play, which is
+       * the end the calibration deliberately targets.
+       */
+      const simulate = (seed: number, dropEveryFrames: number) => {
+        let bodies: CompanionFeastBody[] = [];
+        let rng = seed | 0;
+        let fever = COMPANION_FEAST_FEVER_IDLE;
+        let chain = 0;
+        let lastMergeAt = -Infinity;
+        let base = 0;
+        let actual = 0;
+        let dropped = 0;
+        for (let frame = 0; frame < 9000 && dropped < 60; frame += 1) {
+          const nowMs = frame * 16;
+          if (frame % dropEveryFrames === 0) {
+            const [tier, n1] = rollCompanionFeastDropTier(rng);
+            rng = n1;
+            const [golden, n2] = rollCompanionFeastGoldenDrop(rng);
+            rng = n2;
+            bodies = [...bodies, createCompanionFeastBody({
+              tier,
+              golden,
+              y: 30,
+              x: 40 + ((frame * 53) % (COMPANION_FEAST_BOWL_WIDTH - 80)),
+            })];
+            dropped += 1;
+          }
+          const step = stepCompanionFeastPhysics(bodies, COMPANION_FEAST_DEFAULT_PHYSICS, 16);
+          bodies = step.bodies;
+          let charge = 0;
+          for (const merge of step.merges) {
+            chain = resolveMinigameChainCount({
+              previousCount: chain,
+              lastActionAtMs: lastMergeAt,
+              nowMs,
+              windowMs: COMPANION_FEAST_CHAIN_WINDOW_MS,
+            });
+            lastMergeAt = nowMs;
+            const award = resolveCompanionFeastMergeAward({
+              fromTier: merge.fromTier,
+              chainCount: chain,
+              feverActive: fever.activeMsRemaining > 0,
+              goldenCount: merge.goldenCount,
+              toTier: merge.toTier,
+            });
+            base += resolveCompanionFeastMergeScore(merge.fromTier);
+            actual += award.score;
+            charge += award.feverCharge;
+          }
+          if (chain > 0 && nowMs - lastMergeAt > COMPANION_FEAST_CHAIN_WINDOW_MS) chain = 0;
+          fever = advanceCompanionFeastFever({ state: fever, dtMs: 16, chargeAdded: charge }).state;
+        }
+        return { base, actual };
+      };
+
+      let totalBase = 0;
+      let totalActual = 0;
+      for (let seed = 1; seed <= 8; seed += 1) {
+        const { base, actual } = simulate(seed * 7919, 75);
+        totalBase += base;
+        totalActual += actual;
+      }
+      assert(totalBase > 0, 'the simulation actually produced merges');
+      const uplift = totalActual / totalBase;
+
+      // Casual play measured ~2.5x; the calibration targets that end.
+      assert(
+        uplift > 1.8 && uplift < 3.6,
+        `unhurried play uplift should sit near the calibration (got ${uplift.toFixed(2)})`,
+      );
+      assert(
+        Math.abs(uplift - COMPANION_FEAST_MOMENTUM_SCORE_CALIBRATION) < 1.1,
+        `calibration ${COMPANION_FEAST_MOMENTUM_SCORE_CALIBRATION} should track measured uplift ${uplift.toFixed(2)}`,
+      );
+
+      // Faster play must earn strictly more — that is the skill reward.
+      let fastBase = 0;
+      let fastActual = 0;
+      for (let seed = 1; seed <= 8; seed += 1) {
+        const { base, actual } = simulate(seed * 7919, 27);
+        fastBase += base;
+        fastActual += actual;
+      }
+      assert(
+        fastActual / fastBase > uplift,
+        'chain-aware, faster play out-earns unhurried play',
+      );
     },
   },
   {

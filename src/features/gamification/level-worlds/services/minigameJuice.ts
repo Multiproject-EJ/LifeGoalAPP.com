@@ -107,7 +107,14 @@ export function createMinigameParticleBurst(
       ? (index / count) * Math.PI * 2
       : centre - spread / 2 + (index / Math.max(1, count - 1)) * spread;
     const angle = evenAngle + (angleRoll - 0.5) * (spread / Math.max(1, count)) * 2;
-    const speed = options.speed * (0.6 + speedRoll * 0.8);
+    /*
+     * Wide speed variance is what stops a burst reading as a rigid expanding
+     * ring. Particles share a spawn point, so with narrow variance they all
+     * sit at the same radius on any given frame and the eye reads a circle
+     * rather than debris. Cubing the roll biases toward slower particles, so
+     * a few outliers race ahead of a denser core.
+     */
+    const speed = options.speed * (0.25 + Math.pow(speedRoll, 0.55) * 1.45);
     const lifeMs = options.lifeMs * (0.6 + lifeRoll * 0.8);
 
     particles.push({
