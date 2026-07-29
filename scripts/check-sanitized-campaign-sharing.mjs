@@ -9,6 +9,10 @@ const databaseTest = readFileSync(
   'utf8',
 ).toLowerCase();
 const generatedTypes = readFileSync('src/lib/database.types.ts', 'utf8');
+const securityInvokerMigration = readFileSync(
+  'supabase/migrations/20260726040810_enforce_security_invoker_on_public_views.sql',
+  'utf8',
+).toLowerCase();
 
 const functions = [
   {
@@ -96,6 +100,16 @@ assert.match(
   migration,
   /limit least\(greatest\(coalesce\(p_limit, 50\), 1\), 100\)/,
   'Public activity reads must remain bounded to 1-100 rows.',
+);
+assert.match(
+  securityInvokerMigration,
+  /if to_regprocedure\('public\.set_current_timestamp_updated_at\(\)'\) is not null then[\s\S]*alter function public\.set_current_timestamp_updated_at\(\)/,
+  'Clean database replays must tolerate the production-only legacy timestamp function being absent.',
+);
+assert.match(
+  securityInvokerMigration,
+  /if to_regprocedure\('public\.island_run_reset_progress\(text,bigint,jsonb,text\)'\) is not null then[\s\S]*revoke execute on function public\.island_run_reset_progress\(text, bigint, jsonb, text\) from anon/,
+  'Clean database replays must tolerate the production-only Island Run reset routine being absent.',
 );
 
 console.log('sanitized-campaign-sharing: all assertions passed');
