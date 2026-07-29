@@ -1,4 +1,5 @@
 export type Theme =
+  | 'first-light-kingdom'
   | 'bright-sky'
   | 'dark-glass'
   | 'ocean-breeze'

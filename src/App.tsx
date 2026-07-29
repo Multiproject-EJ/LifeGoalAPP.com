@@ -291,6 +291,7 @@ type BillingReturnBanner = {
 type FooterIconGroup = 'light' | 'dark' | 'golden' | 'blue';
 
 const FOOTER_THEME_GROUP: Partial<Record<string, FooterIconGroup>> = {
+  'first-light-kingdom': 'light',
   'bio-day':            'light',
   'flow-day':           'light',
   'bright-sky':         'light',

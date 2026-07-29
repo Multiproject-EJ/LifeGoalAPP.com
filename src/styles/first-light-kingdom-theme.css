@@ -1,0 +1,226 @@
+/*
+ * First Light Kingdom
+ * HabitGame's launch-default light theme.
+ *
+ * Keep all launch artwork scoped to this theme so existing themes remain
+ * unchanged. Dynamic copy, dates, timers, badges, and progress values stay as
+ * live HTML; raster assets only provide atmosphere and illustrative artwork.
+ */
+
+[data-theme='first-light-kingdom'] {
+  --color-primary: #123e70;
+  --color-primary-light: #6cc9f2;
+  --color-primary-dark: #061f45;
+
+  --color-accent-purple: #6d4ec4;
+  --color-accent-pink: #e6a8c9;
+  --color-accent-blue: #36aee8;
+
+  --color-bg-main: #f7f2e9;
+  --color-bg-secondary: #fffdf8;
+  --color-bg-tertiary: #edf7fc;
+  --color-bg-body: linear-gradient(180deg, #dff3ff 0%, #f8f4ec 62%, #f7f2e9 100%);
+  --color-bg-overlay: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(249, 246, 238, 0.92));
+
+  --color-workspace-bg: linear-gradient(180deg, #dff3ff 0%, #f8f4ec 64%, #f7f2e9 100%);
+  --color-workspace-overlay: radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.78), transparent 48%);
+
+  --color-text-primary: #071f45;
+  --color-text-secondary: #173a61;
+  --color-text-tertiary: #365578;
+  --color-text-muted: #5a7089;
+  --color-text-light: rgba(7, 31, 69, 0.68);
+
+  --color-border-primary: rgba(184, 130, 36, 0.34);
+  --color-border-secondary: rgba(202, 155, 65, 0.46);
+  --color-border-light: rgba(255, 255, 255, 0.66);
+  --color-border-glow: rgba(80, 189, 239, 0.34);
+
+  --color-surface-primary: rgba(255, 253, 248, 0.96);
+  --color-surface-secondary: rgba(248, 244, 235, 0.92);
+  --color-surface-glass: rgba(255, 255, 255, 0.74);
+  --color-surface-glass-light: rgba(255, 255, 255, 0.9);
+
+  --color-sidebar-bg: rgba(255, 253, 248, 0.86);
+  --color-sidebar-border: rgba(192, 139, 42, 0.28);
+  --color-sidebar-text: #071f45;
+  --color-sidebar-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(222, 242, 252, 0.62));
+
+  --sidebar-bg: rgba(255, 253, 248, 0.9);
+  --sidebar-border: rgba(192, 139, 42, 0.28);
+  --accent: #d5a43c;
+
+  --shadow-sm: 0 8px 24px rgba(16, 48, 84, 0.1);
+  --shadow-md: 0 16px 38px rgba(16, 48, 84, 0.14);
+  --shadow-lg: 0 26px 64px rgba(16, 48, 84, 0.18);
+  --shadow-glow: 0 0 30px rgba(93, 198, 239, 0.28);
+
+  --theme-color: #dff3ff;
+}
+
+@media (max-width: 768px) {
+  [data-theme='first-light-kingdom'] .mobile-habit-home {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(248, 244, 236, 0) 0,
+        rgba(248, 244, 236, 0.04) 30rem,
+        rgba(250, 247, 240, 0.88) 46rem,
+        #f7f2e9 62rem
+      ),
+      url('/assets/themes/first-light-kingdom/today/today-sky-background.webp') center top / 100% auto no-repeat,
+      #f7f2e9;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card {
+    padding: 0;
+    gap: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__board {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__board-head {
+    min-height: 150px;
+    padding: 1.5rem 1.15rem 0.8rem;
+    border-radius: 0;
+    background:
+      radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.66), transparent 42%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.3));
+    color: #071f45;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__date-text,
+  [data-theme='first-light-kingdom'] .habit-checklist-card__date-year {
+    color: #071f45;
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.95),
+      0 2px 10px rgba(74, 126, 165, 0.2);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__date-text {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.25rem;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__board-body {
+    padding-top: 0.35rem;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.2) 0,
+      rgba(255, 252, 246, 0.76) 21rem,
+      rgba(248, 244, 235, 0.96) 34rem
+    );
+  }
+}
+
+[data-theme='first-light-kingdom'] .time-bound-offers__label {
+  color: #071f45;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(0.68rem, 2.9vw, 0.78rem);
+  font-weight: 700;
+  line-height: 1.08;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+[data-theme='first-light-kingdom'] .time-bound-offers__badge {
+  color: #fff8df;
+  background: linear-gradient(180deg, #123f70, #061f45);
+  border: 1px solid rgba(224, 179, 81, 0.86);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    0 4px 10px rgba(8, 30, 62, 0.3);
+}
+
+[data-theme='first-light-kingdom'] :is(
+  .time-bound-offers__item[data-offer-id='island_run'],
+  .time-bound-offers__item[data-offer-id='vision_star'],
+  .time-bound-offers__item[data-offer-id='daily_treats'],
+  .time-bound-offers__item[data-offer-id^='egg_hatch'],
+  .time-bound-offers__item[data-offer-id='todays_offer'],
+  .time-bound-offers__item[data-offer-id='zen_tree_water']
+) .time-bound-offers__circle {
+  border: 0;
+  background: transparent;
+  box-shadow:
+    0 12px 24px rgba(18, 61, 104, 0.2),
+    0 0 18px rgba(255, 255, 255, 0.72);
+}
+
+[data-theme='first-light-kingdom'] :is(
+  .time-bound-offers__item[data-offer-id='island_run'],
+  .time-bound-offers__item[data-offer-id='vision_star'],
+  .time-bound-offers__item[data-offer-id='daily_treats'],
+  .time-bound-offers__item[data-offer-id^='egg_hatch'],
+  .time-bound-offers__item[data-offer-id='todays_offer'],
+  .time-bound-offers__item[data-offer-id='zen_tree_water']
+) .time-bound-offers__icon {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  font-size: 0;
+  filter: saturate(1.03) contrast(1.02);
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-id='island_run']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/offer-island.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-id='vision_star']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/offer-vision-star.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-id='daily_treats']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/offer-daily-treats.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-id^='egg_hatch']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/offer-egg-hatching.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-id='todays_offer']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/offer-todays-offer.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-id='zen_tree_water']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/offer-zen-tree.webp');
+}
+
+[data-theme='first-light-kingdom'] .time-bound-offers__notification {
+  top: 0.08rem;
+  right: 0.08rem;
+  border: 2px solid #fff8e8;
+  background: linear-gradient(145deg, #ff6158, #d80f1e);
+  box-shadow:
+    0 0 0 2px rgba(211, 144, 39, 0.44),
+    0 3px 7px rgba(64, 20, 25, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='first-light-kingdom'] .time-bound-offers__circle {
+    animation: none;
+  }
+}

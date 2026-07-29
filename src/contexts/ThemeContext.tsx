@@ -24,7 +24,7 @@ export {
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
-export const DEFAULT_LIGHT_THEME: Theme = 'bio-day';
+export const DEFAULT_LIGHT_THEME: Theme = 'first-light-kingdom';
 export const DEFAULT_DARK_THEME: Theme = 'flow-night';
 
 const DEFAULT_FREE_THEME_IDS = new Set<Theme>([DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME]);
@@ -82,6 +82,15 @@ const FLOW_VARIANT_WINDOWS: Array<{ variant: FlowVariant; startHour: number }> =
 
 // Light themes
 export const LIGHT_THEMES: ThemeMetadata[] = [
+  {
+    id: 'first-light-kingdom',
+    name: 'First Light Kingdom',
+    icon: '🏰',
+    description: 'HabitGame’s launch theme with bright sky kingdoms, navy type, and warm gold details',
+    metaColor: '#dff3ff',
+    category: 'light',
+    unlockRule: { type: 'free' },
+  },
   {
     id: 'bright-sky',
     name: 'Bright Sky',

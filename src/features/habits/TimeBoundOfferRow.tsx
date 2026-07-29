@@ -112,6 +112,7 @@ export function TimeBoundOfferRow({ offers, onOfferClick, daysAgo = 0 }: TimeBou
             key={`${offer.id}-${offer.label}`}
             type="button"
             className={`time-bound-offers__item ${itemStateClass}`.trim()}
+            data-offer-id={offer.id}
             onClick={() => !isDone && !isPlaceholder && onOfferClick(offer.id as TimeBoundOfferId | EggHatchOfferId)}
             disabled={isDone || isPlaceholder}
             aria-label={`${offer.label} ${isPlaceholder ? 'placeholder' : isDone ? 'done' : badgeLabel}`}
