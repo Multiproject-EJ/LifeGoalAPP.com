@@ -120,6 +120,43 @@
       rgba(248, 244, 235, 0.96) 34rem
     );
   }
+
+  /*
+   * Habits are the softer, more tactile card family in First Light Kingdom.
+   * Todos intentionally keep the shared 18px silhouette so the two content
+   * types remain distinguishable even though neither is completely square.
+   */
+  [data-theme='first-light-kingdom']
+    .mobile-habit-home
+    .habit-checklist__item:not(.habit-checklist__item--todo) {
+    --first-light-habit-card-radius: clamp(1.875rem, 9vw, 2.25rem);
+    --habit-card-surface:
+      linear-gradient(145deg, rgba(255, 254, 250, 0.99), rgba(252, 247, 237, 0.97));
+    border: 1px solid rgba(196, 151, 67, 0.34);
+    border-radius: var(--first-light-habit-card-radius);
+    background: var(--habit-card-surface);
+    box-shadow:
+      0 8px 18px rgba(18, 61, 104, 0.09),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+  }
+
+  [data-theme='first-light-kingdom']
+    .mobile-habit-home
+    .habit-checklist__item:not(.habit-checklist__item--todo)
+    .habit-checklist__swipe-frame,
+  [data-theme='first-light-kingdom']
+    .mobile-habit-home
+    .habit-checklist__item:not(.habit-checklist__item--todo)
+    .habit-checklist__swipe-row {
+    border-radius: calc(var(--first-light-habit-card-radius) - 0.5rem);
+  }
+
+  [data-theme='first-light-kingdom']
+    .mobile-habit-home
+    .habit-checklist__item:not(.habit-checklist__item--todo)
+    .habit-checklist__row {
+    border-radius: calc(var(--first-light-habit-card-radius) - 0.75rem);
+  }
 }
 
 [data-theme='first-light-kingdom'] .time-bound-offers__label {
