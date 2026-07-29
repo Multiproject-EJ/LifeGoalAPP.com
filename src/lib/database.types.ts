@@ -2009,6 +2009,9 @@ export interface Database {
           initials: string | null;
           show_initials_in_menu: boolean | null;
           private_compact_view_enabled: boolean | null;
+          theme_mode: string | null;
+          light_theme: string | null;
+          dark_theme: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -2025,6 +2028,9 @@ export interface Database {
           initials?: string | null;
           show_initials_in_menu?: boolean | null;
           private_compact_view_enabled?: boolean | null;
+          theme_mode?: string | null;
+          light_theme?: string | null;
+          dark_theme?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -2041,6 +2047,9 @@ export interface Database {
           initials?: string | null;
           show_initials_in_menu?: boolean | null;
           private_compact_view_enabled?: boolean | null;
+          theme_mode?: string | null;
+          light_theme?: string | null;
+          dark_theme?: string | null;
           created_at?: string;
           updated_at?: string;
         };

@@ -99,7 +99,12 @@ import { RecoverableErrorBoundary } from './components/RecoverableErrorBoundary'
 import { PointsBadge } from './components/PointsBadge';
 import { OfflineSyncDevPanel } from './components/OfflineSyncDevPanel';
 import { useMediaQuery, WORKSPACE_MOBILE_MEDIA_QUERY } from './hooks/useMediaQuery';
-import { useTheme } from './contexts/ThemeContext';
+import {
+  AVAILABLE_THEMES,
+  useTheme,
+  type Theme,
+  type ThemeMode,
+} from './contexts/ThemeContext';
 import { useGamification } from './hooks/useGamification';
 import { updateGamificationEnabled } from './services/gamificationPrefs';
 import { NewDailySpinWheel } from './features/spin-wheel/NewDailySpinWheel';
@@ -648,6 +653,17 @@ interface AppProps {
   forceAuthOnMount?: boolean;
 }
 
+const isStoredThemeMode = (value: string | null | undefined): value is ThemeMode =>
+  value === 'light' || value === 'dark' || value === 'system';
+
+const isStoredThemeForCategory = (
+  value: string | null | undefined,
+  category: 'light' | 'dark',
+): value is Theme =>
+  Boolean(value && AVAILABLE_THEMES.some((themeOption) => (
+    themeOption.id === value && themeOption.category === category
+  )));
+
 export default function App({ forceAuthOnMount }: AppProps) {
   const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const {
@@ -666,7 +682,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
   } = useSupabaseAuth();
   const journeyDay = readJourneyDay(supabaseSession?.user.user_metadata);
   const isJourneyDayOne = journeyDay === 1;
-  const { theme } = useTheme();
+  const {
+    theme,
+    themeMode,
+    lightTheme,
+    darkTheme,
+    setThemeMode,
+    setLightTheme,
+    setDarkTheme,
+  } = useTheme();
   const [localGuestSession, setLocalGuestSession] = useState<Session | null>(null);
 
   useEffect(() => scheduleRapidFireworksPreload(), []);
@@ -706,6 +730,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [actionsLauncherResetSignal, setActionsLauncherResetSignal] = useState(0);
   const [actionsTabView, setActionsTabView] = useState<'launcher' | 'tasks'>(isMobileExperience ? 'launcher' : 'tasks');
   const [workspaceProfile, setWorkspaceProfile] = useState<WorkspaceProfileRow | null>(null);
+  const [workspaceProfileLoadedUserId, setWorkspaceProfileLoadedUserId] = useState<string | null>(null);
+  const [themePreferencesHydratedUserId, setThemePreferencesHydratedUserId] = useState<string | null>(null);
+  const persistedThemePreferencesRef = useRef<{ userId: string; signature: string } | null>(null);
   const [workspaceStats, setWorkspaceStats] = useState<WorkspaceStats | null>(null);
   const [workspaceProfileLoading, setWorkspaceProfileLoading] = useState(false);
   const [showWorkspaceSetup, setShowWorkspaceSetup] = useState(false);
@@ -2421,6 +2448,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   useEffect(() => {
     if (!supabaseSession || !isConfigured) {
       setWorkspaceProfile(null);
+      setWorkspaceProfileLoadedUserId(null);
+      setThemePreferencesHydratedUserId(null);
+      persistedThemePreferencesRef.current = null;
       setWorkspaceStats(null);
       setWorkspaceProfileLoading(false);
       setShowWorkspaceSetup(false);
@@ -2429,6 +2459,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
 
     let isMounted = true;
+    setWorkspaceProfile(null);
+    setWorkspaceProfileLoadedUserId(null);
+    setThemePreferencesHydratedUserId(null);
+    persistedThemePreferencesRef.current = null;
     setWorkspaceProfileLoading(true);
 
     // Note: Workspace setup dialog is not auto-opened here.
@@ -2440,6 +2474,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       })
       .finally(() => {
         if (isMounted) {
+          setWorkspaceProfileLoadedUserId(supabaseSession.user.id);
           setWorkspaceProfileLoading(false);
         }
       });
@@ -2453,6 +2488,100 @@ export default function App({ forceAuthOnMount }: AppProps) {
       isMounted = false;
     };
   }, [supabaseSession, isConfigured, workspaceSetupDismissed]);
+
+  useEffect(() => {
+    const userId = supabaseSession?.user?.id;
+    if (
+      !userId ||
+      workspaceProfileLoadedUserId !== userId ||
+      themePreferencesHydratedUserId === userId
+    ) {
+      return;
+    }
+
+    const storedMode = isStoredThemeMode(workspaceProfile?.theme_mode)
+      ? workspaceProfile.theme_mode
+      : null;
+    const storedLightTheme = isStoredThemeForCategory(workspaceProfile?.light_theme, 'light')
+      ? workspaceProfile.light_theme
+      : null;
+    const storedDarkTheme = isStoredThemeForCategory(workspaceProfile?.dark_theme, 'dark')
+      ? workspaceProfile.dark_theme
+      : null;
+
+    const nextThemeMode = storedMode ?? themeMode;
+    const nextLightTheme = storedLightTheme ?? lightTheme;
+    const nextDarkTheme = storedDarkTheme ?? darkTheme;
+    const nextSignature = `${nextThemeMode}:${nextLightTheme}:${nextDarkTheme}`;
+    const hasCompleteCloudPreference = Boolean(storedMode && storedLightTheme && storedDarkTheme);
+
+    if (nextThemeMode !== themeMode) setThemeMode(nextThemeMode);
+    if (nextLightTheme !== lightTheme) setLightTheme(nextLightTheme);
+    if (nextDarkTheme !== darkTheme) setDarkTheme(nextDarkTheme);
+
+    persistedThemePreferencesRef.current = hasCompleteCloudPreference
+      ? { userId, signature: nextSignature }
+      : null;
+    setThemePreferencesHydratedUserId(userId);
+  }, [
+    darkTheme,
+    lightTheme,
+    setDarkTheme,
+    setLightTheme,
+    setThemeMode,
+    supabaseSession?.user?.id,
+    themeMode,
+    themePreferencesHydratedUserId,
+    workspaceProfile,
+    workspaceProfileLoadedUserId,
+  ]);
+
+  useEffect(() => {
+    const userId = supabaseSession?.user?.id;
+    if (!userId || themePreferencesHydratedUserId !== userId) {
+      return;
+    }
+
+    const signature = `${themeMode}:${lightTheme}:${darkTheme}`;
+    if (
+      persistedThemePreferencesRef.current?.userId === userId &&
+      persistedThemePreferencesRef.current.signature === signature
+    ) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void upsertWorkspaceProfile({
+        user_id: userId,
+        theme_mode: themeMode,
+        light_theme: lightTheme,
+        dark_theme: darkTheme,
+        updated_at: new Date().toISOString(),
+      }).then(({ data, error }) => {
+        if (error) {
+          console.warn('Failed to sync theme preferences to the account.', error);
+          return;
+        }
+
+        persistedThemePreferencesRef.current = { userId, signature };
+        if (data) {
+          setWorkspaceProfile((current) => (
+            current?.user_id === userId ? data : current
+          ));
+        }
+      });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [
+    darkTheme,
+    lightTheme,
+    supabaseSession?.user?.id,
+    themeMode,
+    themePreferencesHydratedUserId,
+  ]);
 
   useEffect(() => {
     if (!supabaseSession?.user?.id) {
