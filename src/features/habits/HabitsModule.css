@@ -554,35 +554,44 @@
 }
 
 .habit-day-nav__todays-offer-modal {
-  width: 95vw;
-  height: 95vh;
+  width: min(95vw, 460px);
+  height: auto;
   max-width: 95vw;
-  max-height: 95vh;
-  border-radius: 18px;
-  border: none;
-  background-color: #0f172a;
-  background-image: url("/assets/today'soffer/TodaysOffer1.webp");
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: 100% auto;
+  max-height: 95dvh;
+  border-radius: 24px;
+  border: 1px solid rgba(112, 189, 255, 0.54);
+  background:
+    radial-gradient(circle at 50% 8%, rgba(64, 169, 255, 0.44), transparent 34%),
+    linear-gradient(165deg, #0c3f78 0%, #071d43 50%, #050f25 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  box-shadow:
+    0 28px 70px rgba(0, 4, 18, 0.66),
+    0 0 42px rgba(37, 151, 255, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .habit-day-nav__todays-offer-modal::before {
-  display: none;
+  display: block;
+  inset: 8px;
+  border: 1px solid rgba(148, 214, 255, 0.18);
+  border-radius: 18px;
 }
 
 .habit-day-nav__todays-offer-close {
   top: 1rem;
   right: 1rem;
   z-index: 3;
-  background: #dc2626;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid rgba(255, 164, 164, 0.72);
+  background: linear-gradient(145deg, #f04444, #a50f22);
   color: #fff;
   font-size: 1.25rem;
   font-weight: 700;
+  box-shadow: 0 8px 20px rgba(95, 6, 18, 0.4);
 }
 
 .habit-day-nav__todays-offer-buy {
@@ -649,11 +658,12 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: 95dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1.25rem;
+  padding: 1.1rem 1rem max(1rem, env(safe-area-inset-bottom));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
@@ -661,7 +671,167 @@
 
 .habit-day-nav__todays-offer-modal--scrollable .habit-day-nav__todays-offer-body {
   flex-direction: column;
-  gap: 2.25rem;
+  justify-content: flex-start;
+  gap: 0.8rem;
+}
+
+.habit-day-nav__todays-offer-kicker {
+  margin: 0.25rem 0 0;
+  color: #9bdcff;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 0 14px rgba(87, 191, 255, 0.58);
+}
+
+.habit-day-nav__todays-offer-art-wrap {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 342px);
+  max-height: min(58dvh, 510px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: 19px;
+  background: #050914;
+  box-shadow:
+    0 18px 38px rgba(0, 4, 18, 0.46),
+    0 0 24px rgba(53, 163, 255, 0.22);
+  animation: todays-offer-art-float 4.8s ease-in-out infinite;
+}
+
+.habit-day-nav__todays-offer-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: min(58dvh, 510px);
+  object-fit: contain;
+}
+
+.habit-day-nav__todays-offer-light-sweep {
+  position: absolute;
+  inset: -35% auto -35% -55%;
+  z-index: 2;
+  width: 32%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+  filter: blur(1px);
+  pointer-events: none;
+  transform: rotate(12deg);
+  animation: todays-offer-light-sweep 5.2s ease-in-out infinite 0.8s;
+}
+
+.habit-day-nav__todays-offer-sparkles {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.habit-day-nav__todays-offer-sparkles span {
+  position: absolute;
+  color: rgba(179, 229, 255, 0.86);
+  text-shadow: 0 0 14px rgba(80, 190, 255, 0.82);
+  animation: todays-offer-sparkle 2.6s ease-in-out infinite;
+}
+
+.habit-day-nav__todays-offer-sparkles span:nth-child(1) { top: 7%; left: 9%; }
+.habit-day-nav__todays-offer-sparkles span:nth-child(2) { top: 18%; right: 8%; animation-delay: -0.8s; }
+.habit-day-nav__todays-offer-sparkles span:nth-child(3) { top: 62%; left: 6%; animation-delay: -1.5s; }
+.habit-day-nav__todays-offer-sparkles span:nth-child(4) { top: 73%; right: 7%; animation-delay: -2s; }
+
+.habit-day-nav__todays-offer-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.habit-day-nav__todays-offer-action {
+  min-width: 0;
+  min-height: 4.8rem;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  place-items: center;
+  gap: 0.12rem;
+  padding: 0.52rem 0.28rem;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 16px;
+  color: #fff;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 8px 18px rgba(0, 5, 20, 0.34);
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.habit-day-nav__todays-offer-action:hover:not(:disabled),
+.habit-day-nav__todays-offer-action:focus-visible:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+}
+
+.habit-day-nav__todays-offer-action:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+  opacity: 0.6;
+}
+
+.habit-day-nav__todays-offer-action > span {
+  font-size: 1.28rem;
+}
+
+.habit-day-nav__todays-offer-action strong {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 0.75rem;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.habit-day-nav__todays-offer-action small {
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.56rem;
+  line-height: 1.1;
+}
+
+.habit-day-nav__todays-offer-action--spin {
+  background: linear-gradient(145deg, #f04949, #9f0c23);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 8px 18px rgba(137, 8, 26, 0.38),
+    0 0 14px rgba(239, 68, 68, 0.2);
+}
+
+.habit-day-nav__todays-offer-action--deal {
+  border-color: rgba(255, 226, 131, 0.76);
+  background: linear-gradient(145deg, #d9a82c, #8d5808);
+}
+
+.habit-day-nav__todays-offer-action--island {
+  background: linear-gradient(145deg, #1f8cd0, #095092);
+}
+
+@keyframes todays-offer-art-float {
+  0%,
+  100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.006); }
+}
+
+@keyframes todays-offer-light-sweep {
+  0%,
+  18% { left: -55%; opacity: 0; }
+  40% { opacity: 1; }
+  66%,
+  100% { left: 125%; opacity: 0; }
+}
+
+@keyframes todays-offer-sparkle {
+  0%,
+  100% { opacity: 0.28; transform: scale(0.72); }
+  50% { opacity: 1; transform: scale(1.18); }
 }
 
 .habit-day-nav__todays-offer-spin {
@@ -707,6 +877,15 @@
   }
   50% {
     transform: scale(1.015);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-day-nav__todays-offer-art-wrap,
+  .habit-day-nav__todays-offer-light-sweep,
+  .habit-day-nav__todays-offer-sparkles span,
+  .habit-day-nav__todays-offer-spin-button--ready {
+    animation: none;
   }
 }
 

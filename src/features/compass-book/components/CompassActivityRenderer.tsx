@@ -1,5 +1,23 @@
 import type { ReactNode } from 'react';
 import type { CompassAnswerValue, CompassBlockDefinition } from '../types';
+import { CompassLifeWheelPicker } from './CompassLifeWheelPicker';
+
+const LIFE_WHEEL_AREA_IDS = new Set([
+  'health_fitness',
+  'spirituality_community',
+  'career_development',
+  'finance_wealth',
+  'love_relations',
+  'family_friends',
+  'living_spaces',
+  'fun_creativity',
+]);
+
+function isLifeWheelAreaChoice(block: CompassBlockDefinition): boolean {
+  if (block.type !== 'single_choice') return false;
+  const optionIds = new Set((block.options ?? []).map((option) => option.id));
+  return Array.from(LIFE_WHEEL_AREA_IDS).every((id) => optionIds.has(id));
+}
 
 export type CompassActivityRendererProps = {
   blocks: readonly CompassBlockDefinition[];
@@ -49,6 +67,15 @@ function BlockInput({
       const selected =
         value && (value.kind === 'choice' || value.kind === 'emotion') ? value.optionId : null;
       const kind = block.type === 'emotion_choice' ? 'emotion' : 'choice';
+      if (isLifeWheelAreaChoice(block)) {
+        return (
+          <CompassLifeWheelPicker
+            options={block.options ?? []}
+            selectedId={selected}
+            onSelect={(optionId) => onChange(block.questionId, { kind: 'choice', optionId })}
+          />
+        );
+      }
       return (
         <div className="compass-book__options">
           {(block.options ?? []).map((option) => (

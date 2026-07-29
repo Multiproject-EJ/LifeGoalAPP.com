@@ -1,8 +1,11 @@
 import type { SpinAward, SpinPrize } from '../types/gamification';
 
 export const DAILY_SPIN_DICE_REWARD_AMOUNTS = {
-  standard: 50,
-  rare: 125,
+  minimum: 25,
+  standard: 100,
+  rare: 250,
+  ultraRare: 500,
+  islandThreeJackpot: 2000,
   treasureChest: 100,
   legendaryMystery: 250,
 } as const;
@@ -24,7 +27,9 @@ export function resolveDailySpinAwards(
   rewardMultiplier = 1,
   random: RandomSource = Math.random,
 ): SpinAward[] {
-  const multiplier = normalizeMultiplier(rewardMultiplier);
+  const multiplier = prize.details?.ignoreMultiplier === true
+    ? 1
+    : normalizeMultiplier(rewardMultiplier);
   const scaledValue = Math.max(0, Math.floor(prize.value * multiplier));
 
   switch (prize.type) {

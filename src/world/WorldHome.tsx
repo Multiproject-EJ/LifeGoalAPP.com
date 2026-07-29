@@ -33,6 +33,33 @@ const HERO_FEATURES = [
   },
 ];
 
+const COMPASS_GAME_LOOP = [
+  {
+    number: '01',
+    icon: '🧭',
+    title: 'Notice what matters',
+    desc: 'Answer short, useful questions in your Compass Book — never a giant form all at once.',
+  },
+  {
+    number: '02',
+    icon: '✦',
+    title: 'Play the answer',
+    desc: 'Spin, match, choose, and explore. Game moments turn reflection into something you want to finish.',
+  },
+  {
+    number: '03',
+    icon: '✓',
+    title: 'Do it in real life',
+    desc: 'Bring your actual Today habits into Island Run and let a small action move the world forward.',
+  },
+  {
+    number: '04',
+    icon: '🏰',
+    title: 'Grow your world',
+    desc: 'Your choices personalise the journey, unlock rewards, and make the next prompt more relevant.',
+  },
+] as const;
+
 export function WorldHome({
   onContinue,
   onLogin,
@@ -302,6 +329,43 @@ export function WorldHome({
             ))}
           </div>
 
+          <section
+            className="world-home__compass-loop"
+            id="compass-game-loop"
+            aria-labelledby="world-home-compass-loop-title"
+          >
+            <div className="world-home__compass-loop-heading">
+              <p>THE COMPASS BOOK · BUILT INTO THE GAME</p>
+              <h2 id="world-home-compass-loop-title">
+                A personal field guide you&apos;ll actually want to complete.
+              </h2>
+              <span>
+                HabitGame gathers the right clues through gentle questions and playful stops, then blends
+                them with the habits already in your day. Personalise, play, win, and grow.
+              </span>
+            </div>
+
+            <div className="world-home__compass-loop-steps" role="list">
+              {COMPASS_GAME_LOOP.map((step) => (
+                <article className="world-home__compass-loop-step" role="listitem" key={step.number}>
+                  <small>{step.number}</small>
+                  <span aria-hidden="true">{step.icon}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.desc}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="world-home__compass-loop-promise">
+              <span aria-hidden="true">🌿</span>
+              <p>
+                <strong>Positive and low-pressure by design.</strong>
+                No perfect streaks, no punishment loops, and no need to optimise every part of your life.
+                Optional extras are for fans and faster players — the useful core stays welcoming.
+              </p>
+            </div>
+          </section>
+
           <JourneyPreview />
           <section className="world-home__restart-card" aria-labelledby="world-home-restart-title">
             <p className="world-home__restart-eyebrow" aria-hidden="true">GENTLE BY DESIGN</p>
@@ -324,6 +388,12 @@ export function WorldHome({
               <a href="/privacy" className="world-home__footer-link">Privacy</a>
               <a href="/terms" className="world-home__footer-link">Terms</a>
               <a href="/support" className="world-home__footer-link">Support</a>
+              <a
+                href="mailto:hello@lifegoalapp.com?subject=HabitGame%20investment%20or%20partnership"
+                className="world-home__footer-link world-home__footer-link--partners"
+              >
+                Investors &amp; partnerships
+              </a>
             </nav>
           </footer>
         </div>

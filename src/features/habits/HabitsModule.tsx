@@ -117,6 +117,7 @@ const SUGGESTIONS_ENABLED = import.meta.env.VITE_ENABLE_HABIT_SUGGESTIONS === '1
 
 type HabitsModuleProps = {
   session: Session;
+  createHabitRequest?: number;
   onNavigateToTimer?: (context?: TimerLaunchContext) => void;
 };
 
@@ -157,7 +158,7 @@ function getHabitEnvironmentReviewPrompt(habit: HabitV2Row): { title: string; de
   };
 }
 
-export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) {
+export function HabitsModule({ session, createHabitRequest = 0, onNavigateToTimer }: HabitsModuleProps) {
   const isMobileLayout = useMediaQuery('(max-width: 768px)');
   const [mobileHabitPanel, setMobileHabitPanel] = useState<'menu' | 'create' | 'manage' | 'coach'>('menu');
   const [showDevNotes, setShowDevNotes] = useState(false);
@@ -184,6 +185,13 @@ export function HabitsModule({ session, onNavigateToTimer }: HabitsModuleProps) 
   const [pendingHabitDraft, setPendingHabitDraft] = useState<HabitWizardDraft | null>(null);
   const [wizardInitialDraft, setWizardInitialDraft] = useState<HabitWizardDraft | undefined>(undefined);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (createHabitRequest <= 0) return;
+    setMobileHabitPanel('create');
+    setWizardInitialDraft(undefined);
+    setShowWizard(true);
+  }, [createHabitRequest]);
   
   // Templates state
   const [templates, setTemplates] = useState<HabitTemplate[]>([]);

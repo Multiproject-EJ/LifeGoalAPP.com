@@ -41,7 +41,13 @@ export function CompassChapterGraphic({ chapterId, answers, mode }: CompassChapt
     return <QuestForgeGraphic output={projectQuestForge(answers)} mode={mode} />;
   }
   if (chapterId === 'personal_playbook') {
-    return <PersonalPlaybookGraphic output={projectPersonalPlaybook(answers)} mode={mode} />;
+    return (
+      <PersonalPlaybookGraphic
+        output={projectPersonalPlaybook(answers)}
+        answers={answers}
+        mode={mode}
+      />
+    );
   }
   return (
     <div className={`compass-wheel compass-wheel--${mode} compass-wheel--placeholder`}>

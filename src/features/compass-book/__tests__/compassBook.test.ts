@@ -37,6 +37,7 @@ import { projectQuestForge } from '../logic/projectors/questForgeProjector';
 import { buildGoalProposalFromQuestForge, describeGoalProposal } from '../logic/goalBridge';
 import { projectPersonalPlaybook } from '../logic/projectors/personalPlaybookProjector';
 import { buildHabitProposalFromPlaybook, describeHabitIntent } from '../logic/habitBridge';
+import { calculatePersonalPlaybookMission } from '../logic/personalPlaybookMission';
 import { getChapterConfirmedOutput } from '../logic/projectors';
 import {
   applyHelpToValue,
@@ -434,6 +435,12 @@ function testLivingWheelProjector(): void {
     projectLivingWheel(withCandidate).engineAreaId === 'career_development',
     'explicit candidate engine wins over derivation',
   );
+  assert(
+    projectLivingWheel([
+      choice('living_wheel.a17', 'candidate_engine', 'no_match'),
+    ]).engineAreaId === null,
+    'no clear match is a valid answer but never becomes a fake life-area id',
+  );
 
   // Empty answers → graceful nulls.
   const empty = projectLivingWheel([]);
@@ -722,6 +729,36 @@ function testPersonalPlaybookAndHabitBridge(): void {
     buildHabitProposalFromPlaybook(pickedOut)!.existingHabitId === 'habit-77',
     'picked habit → proposal updates the existing habit',
   );
+
+  const missionStart = Date.parse('2026-07-01T09:00:00.000Z');
+  const timedAnswer = (
+    activityId: string,
+    answeredAt: string,
+  ): CompassAnswerRecord => ({
+    ...makeAnswer(activityId, 'mission_test', { kind: 'text', text: 'ready' }),
+    answeredAt,
+    updatedAt: answeredAt,
+  });
+  const launchInTime = calculatePersonalPlaybookMission({
+    systemReady: [true, true, true, true, true, true, true],
+    answers: [
+      timedAnswer('personal_playbook.a01', new Date(missionStart).toISOString()),
+      timedAnswer('personal_playbook.a20', new Date(missionStart + 6 * 24 * 60 * 60 * 1000).toISOString()),
+    ],
+    nowMs: missionStart + 6 * 24 * 60 * 60 * 1000,
+  });
+  assert(launchInTime.launched, 'seven ready systems inside seven days launch the rocket');
+
+  const launchTooLate = calculatePersonalPlaybookMission({
+    systemReady: [true, true, true, true, true, true, true],
+    answers: [
+      timedAnswer('personal_playbook.a01', new Date(missionStart).toISOString()),
+      timedAnswer('personal_playbook.a20', new Date(missionStart + 8 * 24 * 60 * 60 * 1000).toISOString()),
+    ],
+    nowMs: missionStart + 8 * 24 * 60 * 60 * 1000,
+  });
+  assert(!launchTooLate.launched, 'finishing after the seven-day window does not fake a launch');
+  assert(launchTooLate.readyCount === 7, 'missing the launch window never deletes completed systems');
 }
 
 function testCompassAiCore(): void {

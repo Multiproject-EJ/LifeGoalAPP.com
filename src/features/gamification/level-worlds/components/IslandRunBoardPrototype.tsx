@@ -13214,7 +13214,7 @@ export function IslandRunBoardPrototype({
 
             {/* ── Stop 4: Wisdom Tree ── */}
             {activeStopId === 'wisdom' && openedStopIsPlayable && (
-              <div className="island-hatchery-card">
+              <div className="wisdom-stop-stack">
                 <WisdomTreeCardEncounter
                   card={wisdomTreeCard}
                   islandNumber={islandNumber}

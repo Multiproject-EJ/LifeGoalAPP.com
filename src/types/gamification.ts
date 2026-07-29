@@ -427,16 +427,16 @@ export interface SpinResult {
 
 // Prize configuration — multi-currency pool aligned with island-run economy
 export const SPIN_PRIZES: SpinPrize[] = [
-  { type: 'essence',        value: 10,  label: '10 Money',        icon: '💰', wheelSize: 'medium', wheelWeight: 4 },
-  { type: 'essence',        value: 25,  label: '25 Money',        icon: '💰', wheelSize: 'medium', wheelWeight: 3 },
-  { type: 'essence',        value: 50,  label: '50 Money',        icon: '💰', wheelSize: 'large',  wheelWeight: 2 },
-  { type: 'shards',         value: 2,   label: '2 Essence',       icon: '🟣', wheelSize: 'medium', wheelWeight: 3 },
-  { type: 'shards',         value: 5,   label: '5 Essence',       icon: '🟣', wheelSize: 'large',  wheelWeight: 2 },
-  { type: 'dice',           value: 50,  label: '50 Dice',         icon: '🎲', wheelSize: 'medium', wheelWeight: 3 },
-  { type: 'dice',           value: 125, label: '125 Dice',        icon: '🎲', wheelSize: 'large',  wheelWeight: 2, details: { rarity: 'rare' } },
-  { type: 'game_tokens',    value: 2,   label: '2 Game Tokens',   icon: '🎟️', wheelSize: 'medium', wheelWeight: 3 },
-  { type: 'treasure_chest', value: 1,   label: 'Treasure Chest',  icon: '🧰', wheelSize: 'small',  wheelWeight: 2, details: { rarity: 'rare' } },
-  { type: 'mystery',        value: 1,   label: 'Mystery Box',     icon: '🎁', wheelSize: 'small',  wheelWeight: 1, details: { rarity: 'legendary' } },
+  { type: 'dice',           value: 25,  label: '25 Dice',         icon: '🎲', wheelSize: 'medium', wheelWeight: 7 },
+  { type: 'dice',           value: 50,  label: '50 Dice',         icon: '🎲', wheelSize: 'medium', wheelWeight: 6 },
+  { type: 'dice',           value: 75,  label: '75 Dice',         icon: '🎲', wheelSize: 'medium', wheelWeight: 5 },
+  { type: 'dice',           value: 100, label: '100 Dice',        icon: '🎲', wheelSize: 'large',  wheelWeight: 4 },
+  { type: 'dice',           value: 250, label: '250 Dice',        icon: '🎲', wheelSize: 'large',  wheelWeight: 0.8, details: { rarity: 'rare' } },
+  { type: 'dice',           value: 500, label: '500 Dice',        icon: '🎲', wheelSize: 'small',  wheelWeight: 0.08, details: { rarity: 'legendary' } },
+  { type: 'essence',        value: 25,  label: '25 Money',        icon: '💰', wheelSize: 'medium', wheelWeight: 4 },
+  { type: 'shards',         value: 5,   label: '5 Essence',       icon: '🟣', wheelSize: 'medium', wheelWeight: 3 },
+  { type: 'treasure_chest', value: 1,   label: 'Treasure Chest',  icon: '🧰', wheelSize: 'small',  wheelWeight: 1.2, details: { rarity: 'rare' } },
+  { type: 'mystery',        value: 1,   label: 'Mystery Box',     icon: '🎁', wheelSize: 'small',  wheelWeight: 0.5, details: { rarity: 'legendary' } },
 ];
 
 // =====================================================

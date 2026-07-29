@@ -16,6 +16,7 @@ type MobileHabitHomeProps = {
   personalitySummary?: string | null;
   onOpenDailyTreat?: () => void;
   onOpenHolidayCalendar?: () => void;
+  onOpenDailySpinWheel?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
   onOpenAiCoach?: (starterQuestion?: string) => void;
   onOpenCompassBook?: () => void;
@@ -52,6 +53,7 @@ export function MobileHabitHome({
   personalitySummary,
   onOpenDailyTreat,
   onOpenHolidayCalendar,
+  onOpenDailySpinWheel,
   onOpenIslandRunStop,
   onOpenAiCoach,
   onOpenCompassBook,
@@ -91,6 +93,7 @@ export function MobileHabitHome({
         personalitySummary={personalitySummary}
         onOpenDailyTreat={onOpenDailyTreat}
         onOpenHolidayCalendar={onOpenHolidayCalendar}
+        onOpenDailySpinWheel={onOpenDailySpinWheel}
         onOpenIslandRunStop={onOpenIslandRunStop}
         onOpenAiCoach={onOpenAiCoach}
         onOpenCompassBook={onOpenCompassBook}

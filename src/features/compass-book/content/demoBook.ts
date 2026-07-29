@@ -117,7 +117,9 @@ export function demoValueForBlock(block: CompassBlockDefinition): CompassAnswerV
       if (curated && options.some((option) => option.id === curated)) {
         return { kind: 'choice', optionId: curated };
       }
-      return { kind: 'choice', optionId: options[seed % options.length].id };
+      const positiveOptions = options.filter((option) => option.id !== 'no_match');
+      const demoOptions = positiveOptions.length > 0 ? positiveOptions : options;
+      return { kind: 'choice', optionId: demoOptions[seed % demoOptions.length].id };
     }
 
     case 'emotion_choice':

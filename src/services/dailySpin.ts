@@ -9,6 +9,12 @@ import { isIslandRunFeatureEnabled } from '../config/islandRunFeatureFlags';
 import { clampSpinsForStrictDailyLimit, STRICT_DAILY_SPIN_LIMIT } from './dailySpinLimit';
 import { resolveDailySpinAwards } from './dailySpinRewardPolicy';
 import { grantDailySpinIslandRunRewards } from '../features/gamification/level-worlds/services/islandRunDailySpinRewardAction';
+import { getIslandRunStateSnapshot } from '../features/gamification/level-worlds/services/islandRunStateStore';
+import {
+  buildDailySpinPrizePool,
+  isIslandThreeJackpotPrize,
+  selectDailySpinPrize,
+} from './dailySpinPrizePool';
 
 export { clampSpinsForStrictDailyLimit, STRICT_DAILY_SPIN_LIMIT };
 
@@ -115,20 +121,46 @@ function buildChristmasPrizes(basePrizes: SpinPrize[]): SpinPrize[] {
   return updatedPrizes;
 }
 
-export async function getSpinPrizesForUser(userId: string): Promise<SpinPrize[]> {
+function historyIncludesIslandThreeJackpot(history: any[]): boolean {
+  return history.some((entry) => {
+    const details = entry?.prizeDetails ?? entry?.prize_details;
+    const prizeType = entry?.prizeType ?? entry?.prize_type;
+    const prizeValue = entry?.prizeValue ?? entry?.prize_value;
+    return details?.island3Jackpot === true
+      || (prizeType === 'dice' && prizeValue === 2000);
+  });
+}
+
+export async function getSpinPrizesForUser(
+  userId: string,
+  session?: Session,
+): Promise<SpinPrize[]> {
   const isDecember = new Date().getMonth() === 11;
-  if (!isDecember || !canUseSupabaseData()) {
-    return SPIN_PRIZES;
+  let basePrizes: SpinPrize[] = SPIN_PRIZES;
+
+  if (isDecember && canUseSupabaseData()) {
+    const { data: holidayPreferences } = await fetchHolidayPreferences(userId);
+    const christmasEnabled = Boolean(holidayPreferences?.holidays?.christmas);
+    if (christmasEnabled) {
+      basePrizes = buildChristmasPrizes(SPIN_PRIZES);
+    }
   }
 
-  const { data: holidayPreferences } = await fetchHolidayPreferences(userId);
-  const christmasEnabled = Boolean(holidayPreferences?.holidays?.christmas);
+  if (!session || session.user.id !== userId) return basePrizes;
 
-  if (!christmasEnabled) {
-    return SPIN_PRIZES;
-  }
+  const currentIslandNumber = getIslandRunStateSnapshot(session).currentIslandNumber;
+  if (currentIslandNumber !== 3) return basePrizes;
 
-  return buildChristmasPrizes(SPIN_PRIZES);
+  const historyResult = await getSpinHistory(userId, 100);
+  const islandThreeJackpotClaimed = historyResult.error
+    ? true
+    : historyIncludesIslandThreeJackpot(historyResult.data ?? []);
+
+  return buildDailySpinPrizePool({
+    basePrizes,
+    currentIslandNumber,
+    islandThreeJackpotClaimed,
+  });
 }
 
 /**
@@ -316,39 +348,7 @@ export async function getSpinHistory(userId: string, limit: number = 10): Promis
  * Implements the prize selection algorithm from the spec
  */
 export function getRandomPrize(): SpinPrize {
-  if (SPIN_PRIZES.length === 0) {
-    return { type: 'gold', value: 0, label: '0 Gold', icon: '🪙' };
-  }
-
-  const totalWeight = SPIN_PRIZES.reduce((sum, prize) => sum + (prize.wheelWeight ?? 1), 0);
-  let roll = Math.random() * totalWeight;
-
-  for (const prize of SPIN_PRIZES) {
-    roll -= prize.wheelWeight ?? 1;
-    if (roll <= 0) {
-      return prize;
-    }
-  }
-
-  return SPIN_PRIZES[0];
-}
-
-function getRandomPrizeFromPool(prizes: SpinPrize[]): SpinPrize {
-  if (prizes.length === 0) {
-    return { type: 'gold', value: 0, label: '0 Gold', icon: '🪙' };
-  }
-
-  const totalWeight = prizes.reduce((sum, prize) => sum + (prize.wheelWeight ?? 1), 0);
-  let roll = Math.random() * totalWeight;
-
-  for (const prize of prizes) {
-    roll -= prize.wheelWeight ?? 1;
-    if (roll <= 0) {
-      return prize;
-    }
-  }
-
-  return prizes[0];
+  return selectDailySpinPrize(SPIN_PRIZES);
 }
 
 /**
@@ -580,8 +580,10 @@ export async function executeSpin(
 
   const today = new Date().toISOString().split('T')[0];
 
-  const rewardMultiplier = options.rewardMultiplier ?? 1;
-  const essenceCost = options.essenceCost ?? 0;
+  const prizePool = await getSpinPrizesForUser(userId, options.session);
+  const guaranteedJackpot = prizePool.find(isIslandThreeJackpotPrize) ?? null;
+  const rewardMultiplier = guaranteedJackpot ? 1 : options.rewardMultiplier ?? 1;
+  const essenceCost = guaranteedJackpot ? 0 : options.essenceCost ?? 0;
   const multiplierOption = SPIN_REWARD_MULTIPLIER_OPTIONS.find(
     (entry) => entry.multiplier === rewardMultiplier && entry.essenceCost === essenceCost,
   );
@@ -595,9 +597,9 @@ export async function executeSpin(
     return { data: null, error: spendResult.error };
   }
 
-  // Select prize using new weighted algorithm
-  const prizePool = await getSpinPrizesForUser(userId);
-  const prize = getRandomPrizeFromPool(prizePool);
+  // Island 3's first wheel visit is a one-time guaranteed acceleration
+  // moment. Everywhere else uses the normal weighted pool.
+  const prize = selectDailySpinPrize(prizePool);
 
   // Award prize
   const awardedRewards = await awardPrize(options.session, prize, rewardMultiplier);
@@ -688,7 +690,7 @@ async function awardPrize(session: Session, prize: SpinPrize, rewardMultiplier =
   const userId = session.user.id;
   const supabase = getSupabaseClient();
 
-  const addToProfile = async (field: string, amount: number) => {
+  const addToProfile = async (field: 'total_points', amount: number) => {
     const { data: profile, error: profileError } = await fetchGamificationProfile(userId);
     if (profileError || !profile) {
       throw profileError ?? new Error('Gamification profile not found');

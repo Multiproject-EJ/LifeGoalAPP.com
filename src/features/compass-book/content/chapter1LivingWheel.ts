@@ -66,7 +66,13 @@ const MOMENTUM_OPTIONS: readonly CompassBlockOption[] = [
 ];
 
 function areaChoice(questionId: string, prompt: string): CompassBlockDefinition {
-  return { questionId, type: 'single_choice', prompt, required: true, options: [...LIFE_AREA_OPTIONS] };
+  return {
+    questionId,
+    type: 'single_choice',
+    prompt,
+    required: true,
+    options: [...LIFE_AREA_OPTIONS, { id: 'no_match', label: 'No clear match' }],
+  };
 }
 
 /** One 0–10 scale block per supplied life area (questionId = `${prefix}.${areaId}`). */

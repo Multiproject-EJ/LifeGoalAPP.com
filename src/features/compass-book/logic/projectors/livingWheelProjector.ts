@@ -56,7 +56,8 @@ function scaleOf(map: Map<string, CompassAnswerValue>, questionId: string): numb
 
 function optionOf(map: Map<string, CompassAnswerValue>, questionId: string): string | null {
   const v = map.get(questionId);
-  return v && (v.kind === 'choice' || v.kind === 'emotion') ? v.optionId : null;
+  if (!v || (v.kind !== 'choice' && v.kind !== 'emotion')) return null;
+  return v.optionId === 'no_match' ? null : v.optionId;
 }
 
 function textOf(map: Map<string, CompassAnswerValue>, questionId: string): string | null {

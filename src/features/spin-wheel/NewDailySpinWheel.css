@@ -601,6 +601,69 @@
   padding-right: 0.2rem;
 }
 
+.new-daily-spin-modal__jackpot-banner {
+  position: relative;
+  z-index: 9;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+  width: min(88vw, 350px);
+  margin: -0.15rem auto 0.65rem;
+  padding: 0.58rem 0.8rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 228, 121, 0.72);
+  border-radius: 16px;
+  color: #fff9d5;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.28), transparent 24%),
+    linear-gradient(115deg, rgba(64, 38, 145, 0.96), rgba(20, 99, 184, 0.98) 54%, rgba(85, 43, 154, 0.96));
+  box-shadow:
+    0 0 0 2px rgba(92, 215, 255, 0.12),
+    0 0 22px rgba(67, 203, 255, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  text-align: left;
+}
+
+.new-daily-spin-modal__jackpot-banner::after {
+  content: "";
+  position: absolute;
+  inset: -50% -25%;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.28) 48%, transparent 58%);
+  animation: dsw-jackpotSweep 2.4s ease-in-out infinite;
+}
+
+.new-daily-spin-modal__jackpot-banner > span {
+  font-size: 1.25rem;
+  filter: drop-shadow(0 0 8px rgba(255, 224, 92, 0.78));
+}
+
+.new-daily-spin-modal__jackpot-banner strong,
+.new-daily-spin-modal__jackpot-banner small {
+  display: block;
+}
+
+.new-daily-spin-modal__jackpot-banner strong {
+  font-size: 0.82rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.new-daily-spin-modal__jackpot-banner small {
+  margin-top: 0.12rem;
+  color: rgba(232, 249, 255, 0.9);
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+@keyframes dsw-jackpotSweep {
+  0%, 22% { transform: translateX(-50%) rotate(6deg); opacity: 0; }
+  35% { opacity: 1; }
+  65%, 100% { transform: translateX(55%) rotate(6deg); opacity: 0; }
+}
+
 .new-daily-spin-modal__multiplier-orb,
 .new-daily-spin-modal__multiplier-info-button {
   display: grid;
@@ -933,6 +996,7 @@
 @media (prefers-reduced-motion: reduce) {
   .new-daily-spin-modal__multiplier-info-overlay,
   .new-daily-spin-modal__multiplier-info-card,
+  .new-daily-spin-modal__jackpot-banner::after,
   .new-daily-spin-modal__result-overlay {
     animation: none;
   }

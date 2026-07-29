@@ -213,6 +213,7 @@ import { isAdminUser } from './services/adminRoles';
 import { loadGoalsOfflineFirst } from './data/goalsRepo';
 import { listHabitsV2 } from './services/habitsV2';
 import type { DualTrackRealLifeInput } from './features/gamification/level-worlds/services/dualTrackOverlayAdapter';
+import { ISLAND_RUN_LAUNCH_NEW_HABIT_EVENT } from './features/gamification/level-worlds/services/islandRunHabitLandmarkEvents';
 import './styles/workspace.css';
 import './styles/settings-folders.css';
 import './styles/gamification.css';
@@ -728,6 +729,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const isMobileExperience = !isDesktopExperience;
   const [showMobileHome, setShowMobileHome] = useState(isMobileExperience);
   const [actionsLauncherResetSignal, setActionsLauncherResetSignal] = useState(0);
+  const [habitCreationLaunchSignal, setHabitCreationLaunchSignal] = useState(0);
   const [actionsTabView, setActionsTabView] = useState<'launcher' | 'tasks'>(isMobileExperience ? 'launcher' : 'tasks');
   const [workspaceProfile, setWorkspaceProfile] = useState<WorkspaceProfileRow | null>(null);
   const [workspaceProfileLoadedUserId, setWorkspaceProfileLoadedUserId] = useState<string | null>(null);
@@ -3332,6 +3334,18 @@ export default function App({ forceAuthOnMount }: AppProps) {
     return () => window.removeEventListener('lifegoal:launch-checkins', handler);
   }, []);
 
+  const launchNewHabitRef = useRef<() => void>(() => {});
+  launchNewHabitRef.current = () => {
+    closeGameBoardOverlayIfOpen();
+    setHabitCreationLaunchSignal((current) => current + 1);
+    handleMobileNavSelect('habits');
+  };
+  useEffect(() => {
+    const handler = () => launchNewHabitRef.current();
+    window.addEventListener(ISLAND_RUN_LAUNCH_NEW_HABIT_EVENT, handler);
+    return () => window.removeEventListener(ISLAND_RUN_LAUNCH_NEW_HABIT_EVENT, handler);
+  }, []);
+
   const openFeedbackSupportFromMobileMenu = (mode: 'feedback' | 'support') => {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
@@ -4386,6 +4400,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               archetypeHand={archetypeHand}
               onOpenDailyTreat={launchDailyTreatsMenu}
               onOpenHolidayCalendar={launchHolidayCalendar}
+              onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
               onOpenIslandRunStop={(stopId) => {
                 setIslandRunOpenStopParam(stopId);
                 setShowMobileHome(false);
@@ -4424,6 +4439,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
             />
             <HabitsModule
               session={activeSession}
+              createHabitRequest={habitCreationLaunchSignal}
               onNavigateToTimer={(context) => {
                 if (context) {
                   setTimerLaunchContext(context);
@@ -4558,6 +4574,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           <div className="workspace-content">
             <HabitsModule
               session={activeSession}
+              createHabitRequest={habitCreationLaunchSignal}
               onNavigateToTimer={(context) => {
                 if (context) {
                   setTimerLaunchContext(context);
@@ -5846,6 +5863,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
               personalitySummary={personalitySummary}
               onOpenDailyTreat={launchDailyTreatsMenu}
               onOpenHolidayCalendar={launchHolidayCalendar}
+              onOpenDailySpinWheel={() => setShowDailySpinWheel(true)}
               onOpenIslandRunStop={(stopId) => {
                 setIslandRunOpenStopParam(stopId);
                 setReopenGameBoardOverlayOnLevelWorldsClose(false);

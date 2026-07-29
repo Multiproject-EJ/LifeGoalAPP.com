@@ -34,4 +34,17 @@ export const islandRunControllerVisualContractTests: TestCase[] = [
       assert(overlayCss.includes(anchoredTop), 'Two Tracks lower handles must match the approved anchored bottom edge');
     },
   },
+  {
+    name: 'Market keeps absolute slot positioning instead of escaping the controller shell',
+    run: () => {
+      const islandCss = readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+      const staleOverride =
+        /\.island-run-prototype__shop-btn,\s*\.island-run-prototype__footer-nav-btn--slot-market\s*\{\s*position:\s*relative/;
+
+      assert(
+        !staleOverride.test(islandCss),
+        'Market must not be changed to position: relative by the commerce-dot rule',
+      );
+    },
+  },
 ];

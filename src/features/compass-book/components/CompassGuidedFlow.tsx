@@ -18,6 +18,7 @@ import { loadCompassShadowBridge } from '../services/compassShadowBridge';
 import type { CompassShadowBridgeData } from '../logic/shadowBridge';
 import { EMPTY_COMPASS_PLAYER_DATA, type CompassPlayerData } from '../logic/playerOptions';
 import type { CompassAnswerEntry } from '../hooks/useCompassBook';
+import { PersonalPlaybookFlightMoment } from './PersonalPlaybookFlightMoment';
 
 /** Merge saved chapter answers with the in-progress draft so the seal-step
  * graphic previews live edits (the projector reads questionId → value). */
@@ -213,6 +214,14 @@ export function CompassGuidedFlow({
         <h2 className="compass-book__activity-heading">{activity.title}</h2>
         {activity.description ? (
           <p className="compass-book__card-question">{activity.description}</p>
+        ) : null}
+
+        {chapterId === 'personal_playbook' ? (
+          <PersonalPlaybookFlightMoment
+            key={activity.id}
+            activity={activity}
+            values={draft}
+          />
         ) : null}
 
         {isSealActivity ? (

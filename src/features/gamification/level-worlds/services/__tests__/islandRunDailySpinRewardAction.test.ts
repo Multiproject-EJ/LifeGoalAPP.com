@@ -72,6 +72,32 @@ export const islandRunDailySpinRewardActionTests: TestCase[] = [
     },
   },
   {
+    name: 'Island 3 jackpot credits all 2000 dice to the same playable wallet',
+    run: async () => {
+      resetHarness();
+      await seedWallet();
+      const session = makeSession();
+
+      const result = await grantDailySpinIslandRunRewards({
+        session,
+        client: null,
+        deltas: { dice: 2000, essence: 0, shards: 0 },
+        triggerSource: 'daily_spin:island_3_jackpot',
+      });
+
+      assertEqual(result.ok, true, 'jackpot reward commit should succeed');
+      assertEqual(
+        getIslandRunStateSnapshot(session).dicePool,
+        2030,
+        'the Island Run board should immediately see all jackpot dice',
+      );
+
+      __resetIslandRunStateStoreForTests();
+      const hydrated = await hydrateIslandRunState({ session, client: null });
+      assertEqual(hydrated.record.dicePool, 2030, 'jackpot dice should survive an app reload');
+    },
+  },
+  {
     name: 'Daily Spin treasure bundle commits dice, essence, and shards atomically',
     run: async () => {
       resetHarness();

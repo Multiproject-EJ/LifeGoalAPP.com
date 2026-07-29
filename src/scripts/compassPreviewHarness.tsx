@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { CompassBookScreen } from '../features/compass-book/components/CompassBookScreen';
 import { DEMO_ISLAND_NUMBER } from '../features/compass-book/content/demoBook';
+import type { CompassBookChapterId } from '../features/compass-book/types';
 import { QuickAddSheet } from '../components/QuickAddSheet';
 import { GoalPillarMeter } from '../features/goals/GoalPillarMeter';
 import { computeGoalPillars } from '../features/goals/goalPillars';
@@ -17,6 +18,16 @@ function Harness() {
   const [view, setView] = useState<string>(params.get('view') ?? 'book');
   // `?demo=1` opens the book pre-filled with sample answers.
   const demo = params.get('demo') === '1';
+  // `?activity=living_wheel.a01` deep-links into a fragment for interaction QA.
+  const activity = params.get('activity') ?? undefined;
+  // `?chapter=personal_playbook` opens a specific one-page chapter graphic.
+  const chapter = (params.get('chapter') ?? undefined) as CompassBookChapterId | undefined;
+  const islandOverride = Number(params.get('island'));
+  const previewIsland = Number.isFinite(islandOverride) && islandOverride > 0
+    ? islandOverride
+    : demo
+      ? DEMO_ISLAND_NUMBER
+      : 87;
 
   const pillars = computeGoalPillars({
     goal: {
@@ -46,8 +57,10 @@ function Harness() {
       </div>
       {view === 'book' ? (
         <CompassBookScreen
-          currentIslandNumber={demo ? DEMO_ISLAND_NUMBER : 87}
+          currentIslandNumber={previewIsland}
           session={null}
+          initialChapterId={chapter ?? (activity ? 'living_wheel' : undefined)}
+          initialActivityId={activity}
           allowDemo
           initialDemo={demo}
           onClose={() => {}}

@@ -157,6 +157,7 @@ import { islandRunCardDrawCadenceTests } from './islandRunCardDrawCadence.test';
 import { islandRunGuestFunnelStateTests } from './islandRunGuestFunnelState.test';
 import { islandRunGuestClaimServiceTests } from './islandRunGuestClaimService.test';
 import { islandRunRoutekeeperTinyActionsTests } from './islandRunRoutekeeperTinyActions.test';
+import { islandRunHabitLandmarkActionTests } from './islandRunHabitLandmarkAction.test';
 import { islandRunFirstPlayerModalSchedulerTests } from './islandRunFirstPlayerModalScheduler.test';
 import { islandCameraLockedKitTests } from './islandCameraLockedKit.test';
 import type { TestCase } from './testHarness';
@@ -241,6 +242,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunStopTickets', tests: islandRunStopTicketsTests },
   { label: 'islandRunLifeIntakeService', tests: islandRunLifeIntakeServiceTests },
   { label: 'islandRunHabitSuggestionEngine', tests: islandRunHabitSuggestionEngineTests },
+  { label: 'islandRunHabitLandmarkAction', tests: islandRunHabitLandmarkActionTests },
   { label: 'islandRunAdaptiveAreas', tests: islandRunAdaptiveAreasTests },
   { label: 'islandContentManifest', tests: islandContentManifestTests },
   { label: 'compassCurriculum', tests: compassCurriculumTests },

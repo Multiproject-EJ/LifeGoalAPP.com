@@ -53,6 +53,10 @@ const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
 const CHAMPIONSHIP_PREVIEW_PATH = '/dev/championship-preview';
 const MOMENTUM_MATRIX_PREVIEW_PATH = '/dev/momentum-matrix-preview';
 const HOLIDAY_MODAL_PREVIEW_PATH = '/dev/holiday-modal-preview';
+const HABIT_LANDMARK_PREVIEW_PATH = '/dev/habit-landmark-preview';
+const WISDOM_STOP_PREVIEW_PATH = '/dev/wisdom-stop-preview';
+const FEATURE_UNLOCK_PREVIEW_PATH = '/dev/feature-unlock-preview';
+const TODAYS_OFFER_PREVIEW_PATH = '/dev/todays-offer-preview';
 
 function IslandChampionshipPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
@@ -92,6 +96,70 @@ function HolidayModalPreviewRoute() {
   useEffect(() => {
     let isMounted = true;
     import('./dev/HolidayModalPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
+function HabitLandmarkPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./dev/HabitLandmarkPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
+function WisdomStopPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./dev/WisdomStopPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
+function FeatureUnlockPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./dev/FeatureUnlockPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
+function TodaysOfferPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./dev/TodaysOfferPreview').then((module) => {
       if (isMounted) setPreview(() => module.default);
     });
     return () => {
@@ -256,6 +324,22 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === HOLIDAY_MODAL_PREVIEW_PATH;
+  const isHabitLandmarkPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === HABIT_LANDMARK_PREVIEW_PATH;
+  const isWisdomStopPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === WISDOM_STOP_PREVIEW_PATH;
+  const isFeatureUnlockPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === FEATURE_UNLOCK_PREVIEW_PATH;
+  const isTodaysOfferPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === TODAYS_OFFER_PREVIEW_PATH;
 
   const initialRoute = useMemo(() => resolveRoute(), []);
   const isPhoneEntryClient = useMemo(() => isCurrentClientPhone(), []);
@@ -313,6 +397,38 @@ function Root() {
     return (
       <ThemeProvider>
         <HolidayModalPreviewRoute />
+      </ThemeProvider>
+    );
+  }
+
+  if (isHabitLandmarkPreviewRoute) {
+    return (
+      <ThemeProvider>
+        <HabitLandmarkPreviewRoute />
+      </ThemeProvider>
+    );
+  }
+
+  if (isWisdomStopPreviewRoute) {
+    return (
+      <ThemeProvider>
+        <WisdomStopPreviewRoute />
+      </ThemeProvider>
+    );
+  }
+
+  if (isFeatureUnlockPreviewRoute) {
+    return (
+      <ThemeProvider>
+        <FeatureUnlockPreviewRoute />
+      </ThemeProvider>
+    );
+  }
+
+  if (isTodaysOfferPreviewRoute) {
+    return (
+      <ThemeProvider>
+        <TodaysOfferPreviewRoute />
       </ThemeProvider>
     );
   }

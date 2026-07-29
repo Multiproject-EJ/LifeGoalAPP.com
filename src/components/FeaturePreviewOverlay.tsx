@@ -33,11 +33,23 @@ const USEFULNESS_TO_VOTE_STATE: Record<FeatureFeedbackUsefulness, FeatureVoteSta
   not_for_me: 'not_for_me',
 };
 
+const FEATURE_ICON_BY_CATEGORY: Record<string, string> = {
+  workspace: '🗺️',
+  lifeTools: '🧭',
+  today: '✨',
+  actions: '🏰',
+  mind: '🌙',
+  body: '🌿',
+  scoreHub: '🏆',
+};
+
+const DEFAULT_PREVIEW_BODY = 'HabitGame grows around what helps players stay motivated in real life. Vote if this is a feature you’d love to see next.';
+
 export function FeaturePreviewOverlay({
   featureId,
   label,
   variant = 'preview',
-  body = 'HabitGame grows around what helps players stay motivated in real life. Vote if this is a feature you’d love to see next.',
+  body = DEFAULT_PREVIEW_BODY,
   notImplementedBody = 'Admin access is enabled for this feature, but the implementation is not available yet.',
   backLabel = 'Back',
   statusLabelOverride = DEMO_FEATURE_LABEL,
@@ -54,6 +66,12 @@ export function FeaturePreviewOverlay({
   const isNotImplemented = variant === 'notImplemented';
   const statusLabel = isNotImplemented ? 'Not implemented yet' : statusLabelOverride;
   const featureAvailability = getFeatureAvailability(featureId);
+  const featureIcon = FEATURE_ICON_BY_CATEGORY[featureAvailability.category ?? ''] ?? '🔮';
+  const featurePitch = isNotImplemented
+    ? notImplementedBody
+    : body !== DEFAULT_PREVIEW_BODY
+      ? body
+      : featureAvailability.shortPitch ?? body;
   const previewScreenshots = featureAvailability.previewScreenshots ?? [];
   const [activeScreenshot, setActiveScreenshot] = useState<number | null>(null);
 
@@ -113,18 +131,53 @@ export function FeaturePreviewOverlay({
         onClick={onClose}
       />
       <div className="feature-preview-overlay__panel">
-        <div className="feature-preview-overlay__icon" aria-hidden="true">✨</div>
-        <div className="feature-preview-overlay__badge-row">
-          <span
-            className="feature-status-badge feature-status-badge--preview"
-            aria-label={`Feature status: ${statusLabel}`}
-          >
-            {statusLabel}
-          </span>
+        <div className="feature-preview-overlay__spark-field" aria-hidden="true">
+          <span>✦</span><span>✧</span><span>✦</span><span>·</span><span>✧</span>
         </div>
-        <h2 className="feature-preview-overlay__title">{label}</h2>
-        <p className="feature-preview-overlay__body">
-          {isNotImplemented ? notImplementedBody : body}
+        <div className="feature-preview-overlay__unlock-emblem" aria-hidden="true">
+          <span className="feature-preview-overlay__unlock-ring" />
+          <span className="feature-preview-overlay__unlock-icon">{featureIcon}</span>
+          <span className="feature-preview-overlay__unlock-lock">🔒</span>
+        </div>
+        <div className="feature-preview-overlay__hero-copy">
+          <p className="feature-preview-overlay__eyebrow">Play to unlock</p>
+          <div className="feature-preview-overlay__badge-row">
+            <span
+              className="feature-status-badge feature-status-badge--preview"
+              aria-label={`Feature status: ${statusLabel}`}
+            >
+              {statusLabel}
+            </span>
+          </div>
+          <h2 className="feature-preview-overlay__title">{label}</h2>
+          <p className="feature-preview-overlay__body">
+            {featurePitch}
+          </p>
+        </div>
+
+        {!isNotImplemented ? (
+          <div className="feature-preview-overlay__unlock-path" aria-label="Feature unlock path">
+            <div className="feature-preview-overlay__unlock-step is-complete">
+              <span aria-hidden="true">✓</span>
+              <small>Discovered</small>
+            </div>
+            <span className="feature-preview-overlay__unlock-line is-complete" aria-hidden="true" />
+            <div className="feature-preview-overlay__unlock-step is-current">
+              <span aria-hidden="true">▶</span>
+              <small>Keep playing</small>
+            </div>
+            <span className="feature-preview-overlay__unlock-line" aria-hidden="true" />
+            <div className="feature-preview-overlay__unlock-step">
+              <span aria-hidden="true">🔒</span>
+              <small>Unlock</small>
+            </div>
+          </div>
+        ) : null}
+
+        <p className="feature-preview-overlay__unlock-note">
+          {isNotImplemented
+            ? notImplementedBody
+            : 'Continue your island journey. When this release path is ready, your play will lead you back here.'}
         </p>
         {previewScreenshots.length > 0 ? (
           <div className="feature-preview-overlay__screenshots" aria-label="Feature preview screenshots">
@@ -163,7 +216,7 @@ export function FeaturePreviewOverlay({
           className="feature-preview-overlay__back-btn"
           onClick={onClose}
         >
-          {backLabel}
+          <span aria-hidden="true">←</span> {backLabel}
         </button>
       </div>
       {activeScreenshot !== null ? (

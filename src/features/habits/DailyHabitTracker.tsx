@@ -345,6 +345,37 @@ function getTodayUtcDateKey(): string {
   return new Date().toISOString().split('T')[0];
 }
 
+const TODAYS_OFFER_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const TODAYS_OFFER_VARIANTS = [
+  {
+    artSrc: "/assets/today'soffer/TodaysOffer1.webp",
+    alt: 'Five-star deal: 500 dice rolls in a glowing prize cabinet',
+    accent: 'gold',
+  },
+  {
+    artSrc: "/assets/today'soffer/IMG_9988.webp",
+    alt: 'Five-star deal: 500 dice rolls on a purple spotlight stage',
+    accent: 'violet',
+  },
+  {
+    artSrc: "/assets/today'soffer/IMG_9989.webp",
+    alt: 'Five-star deal: 500 dice rolls on a red theatre stage',
+    accent: 'crimson',
+  },
+  {
+    artSrc: "/assets/today'soffer/IMG_9990.webp",
+    alt: 'Five-star deal: 500 dice rolls on a blue spotlight stage',
+    accent: 'blue',
+  },
+] as const;
+
+function getTodaysOfferWeekIndex(dateKey: string): number {
+  const date = new Date(`${dateKey}T12:00:00Z`);
+  const daysSinceMonday = (date.getUTCDay() + 6) % 7;
+  const mondayUtcMs = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) - daysSinceMonday * 86400000;
+  return Math.abs(Math.floor(mondayUtcMs / TODAYS_OFFER_WEEK_MS)) % TODAYS_OFFER_VARIANTS.length;
+}
+
 function isCanonicalEventId(value: string | null | undefined): value is EventId {
   return Boolean(value) && EVENT_IDS.includes(value as EventId);
 }
@@ -580,6 +611,7 @@ type DailyHabitTrackerProps = {
   personalitySummary?: string | null;
   onOpenDailyTreat?: () => void;
   onOpenHolidayCalendar?: () => void;
+  onOpenDailySpinWheel?: () => void;
   onOpenIslandRunStop?: (stopId: 'boss' | 'hatchery' | 'dynamic') => void;
   forceCompactView?: boolean;
   preferredCompactView?: boolean;
@@ -1219,6 +1251,7 @@ export function DailyHabitTracker({
   personalitySummary,
   onOpenDailyTreat,
   onOpenHolidayCalendar,
+  onOpenDailySpinWheel,
   onOpenIslandRunStop,
   forceCompactView = false,
   preferredCompactView,
@@ -1358,6 +1391,10 @@ export function DailyHabitTracker({
   const [monthlySaving, setMonthlySaving] = useState<Record<string, boolean>>({});
   const [autoProgressHabitIds, setAutoProgressHabitIds] = useState<Set<string>>(new Set());
   const [today, setToday] = useState(() => formatISODate(new Date()));
+  const todaysOfferVariant = useMemo(
+    () => TODAYS_OFFER_VARIANTS[getTodaysOfferWeekIndex(today)],
+    [today],
+  );
   const todayRef = useRef(today);
   const [activeDate, setActiveDate] = useState(() => formatISODate(new Date()));
   const activeDateRef = useRef(activeDate);
@@ -4330,7 +4367,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       onClick={closeTodaysOfferModal}
     >
       <div
-        className="habit-day-nav__vision-modal habit-day-nav__todays-offer-modal"
+        className={`habit-day-nav__vision-modal habit-day-nav__todays-offer-modal habit-day-nav__todays-offer-modal--scrollable habit-day-nav__todays-offer-modal--${todaysOfferVariant.accent}`}
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -4342,16 +4379,58 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
           ×
         </button>
         <div className="habit-day-nav__todays-offer-body">
-          <button
-            type="button"
-            className="habit-day-nav__todays-offer-buy"
-            disabled={todaysOfferCheckoutPending}
-            onClick={() => {
-              void startTodaysOfferCheckout();
-            }}
-          >
-            {todaysOfferCheckoutPending ? 'Opening…' : 'Buy'}
-          </button>
+          <div className="habit-day-nav__todays-offer-sparkles" aria-hidden="true">
+            <span>✦</span><span>✧</span><span>✦</span><span>·</span>
+          </div>
+          <p className="habit-day-nav__todays-offer-kicker">Fresh weekly showcase</p>
+          <div className="habit-day-nav__todays-offer-art-wrap">
+            <span className="habit-day-nav__todays-offer-light-sweep" aria-hidden="true" />
+            <img
+              className="habit-day-nav__todays-offer-art"
+              src={todaysOfferVariant.artSrc}
+              alt={todaysOfferVariant.alt}
+            />
+          </div>
+          <div className="habit-day-nav__todays-offer-actions" aria-label="Today's offer actions">
+            <button
+              type="button"
+              className="habit-day-nav__todays-offer-action habit-day-nav__todays-offer-action--spin"
+              onClick={() => {
+                closeTodaysOfferModal();
+                onOpenDailySpinWheel?.();
+              }}
+              disabled={!onOpenDailySpinWheel}
+            >
+              <span aria-hidden="true">🎡</span>
+              <strong>Spin Wheel</strong>
+              <small>Use today’s spin</small>
+            </button>
+            <button
+              type="button"
+              className="habit-day-nav__todays-offer-action habit-day-nav__todays-offer-action--deal"
+              disabled={todaysOfferCheckoutPending}
+              onClick={() => {
+                void startTodaysOfferCheckout();
+              }}
+            >
+              <span aria-hidden="true">⭐</span>
+              <strong>{todaysOfferCheckoutPending ? 'Opening…' : 'Get Deal'}</strong>
+              <small>500 dice rolls</small>
+            </button>
+            <button
+              type="button"
+              className="habit-day-nav__todays-offer-action habit-day-nav__todays-offer-action--island"
+              onClick={() => {
+                closeTodaysOfferModal();
+                onOpenIslandRunStop?.('dynamic');
+              }}
+              disabled={!onOpenIslandRunStop}
+            >
+              <span aria-hidden="true">🏝️</span>
+              <strong>Island Run</strong>
+              <small>Keep playing</small>
+            </button>
+          </div>
           {todaysOfferModalError ? (
             <p className="habit-day-nav__bonus-error" role="status" aria-live="polite">
               {todaysOfferModalError}

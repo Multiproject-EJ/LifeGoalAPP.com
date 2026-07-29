@@ -26,7 +26,7 @@ import {
 } from '../services/islandRunAdaptiveAreas';
 import { getLifeWheelAreaMeta } from '../../../life-wheel/lifeWheelTaxonomy';
 import { fetchCheckinsForUser } from '../../../../services/checkins';
-import { listHabitsV2, type HabitV2Row } from '../../../../services/habitsV2';
+import type { HabitV2Row } from '../../../../services/habitsV2';
 import { useGamification } from '../../../../hooks/useGamification';
 import { XP_REWARDS } from '../../../../types/gamification';
 import { recordGameLifeIntake } from '../../../../services/gameLifeIntake';
@@ -49,9 +49,15 @@ import {
 } from '../services/islandRunRoutekeeperTinyActions';
 import { getIslandContentPlan, orderAreasForIsland } from '../services/islandContentManifest';
 import { DayOneBreathingRitual } from './DayOneBreathingRitual';
-
-/** Dispatched when the player needs to record a check-in before adding a habit. */
-export const ISLAND_RUN_LAUNCH_CHECKINS_EVENT = 'lifegoal:launch-checkins';
+import {
+  completeHabitLandmarkChoice,
+  loadHabitLandmarkContext,
+  type HabitLandmarkChoice,
+} from '../services/islandRunHabitLandmarkAction';
+import {
+  ISLAND_RUN_LAUNCH_CHECKINS_EVENT,
+  ISLAND_RUN_LAUNCH_NEW_HABIT_EVENT,
+} from '../services/islandRunHabitLandmarkEvents';
 
 interface IslandRunLifePromptCardProps {
   session: Session;
@@ -59,6 +65,7 @@ interface IslandRunLifePromptCardProps {
   onComplete: (message: string) => void;
   onComeBackLater?: () => void;
   forceDayOnePreview?: boolean;
+  previewHabitChoices?: HabitLandmarkChoice[];
 }
 
 const HABIT_SIZES: readonly IslandRunHabitSize[] = ['Tiny', 'Normal', 'Stretch'];
@@ -68,6 +75,7 @@ const DAY_ONE_PACE_OPTIONS = [
   { id: 'bold', label: 'Bold', body: 'Push me a little' },
 ] as const;
 type DayOnePace = typeof DAY_ONE_PACE_OPTIONS[number]['id'];
+type HabitLandmarkPath = 'choose' | 'clue' | 'habit';
 
 export function IslandRunLifePromptCard({
   session,
@@ -75,6 +83,7 @@ export function IslandRunLifePromptCard({
   onComplete,
   onComeBackLater,
   forceDayOnePreview = false,
+  previewHabitChoices,
 }: IslandRunLifePromptCardProps) {
   const [area, setArea] = useState<IslandRunLifeWheelArea | null>(null);
   const [selectedHabit, setSelectedHabit] = useState<SuggestedHabit | null>(null);
@@ -92,6 +101,12 @@ export function IslandRunLifePromptCard({
   const [routekeeperBreathStage, setRoutekeeperBreathStage] = useState<'intro' | 'adding' | 'added' | 'breathing'>('intro');
   const [routekeeperBreathHabit, setRoutekeeperBreathHabit] = useState<HabitV2Row | null>(null);
   const [dayOnePace, setDayOnePace] = useState<DayOnePace>('gentle');
+  const [landmarkPath, setLandmarkPath] = useState<HabitLandmarkPath>('choose');
+  const [habitChoices, setHabitChoices] = useState<HabitLandmarkChoice[]>([]);
+  const [selectedExistingHabitId, setSelectedExistingHabitId] = useState<string | null>(null);
+  const [habitSearch, setHabitSearch] = useState('');
+  const [activeHabitCount, setActiveHabitCount] = useState(0);
+  const [todayHabitCount, setTodayHabitCount] = useState(0);
 
   // Adaptive context: latest check-in + active-habit coverage drive which life
   // areas we offer. Until this loads we gate the area picker.
@@ -116,6 +131,17 @@ export function IslandRunLifePromptCard({
 
     async function loadContext() {
       setContextStatus('loading');
+      if (previewHabitChoices) {
+        setHabitChoices(previewHabitChoices);
+        setActiveHabitCount(previewHabitChoices.length);
+        setTodayHabitCount(previewHabitChoices.length);
+        setHasCheckin(true);
+        setHasSuitableHabit(previewHabitChoices.length > 0);
+        setRoutekeeperMode(false);
+        setReadiness([]);
+        setContextStatus('ready');
+        return;
+      }
       if (forceDayOnePreview) {
         setHasSuitableHabit(false);
         setRoutekeeperMode(true);
@@ -123,14 +149,17 @@ export function IslandRunLifePromptCard({
         return;
       }
       try {
-        const [checkinResult, habitsResult] = await Promise.all([
+        const [checkinResult, habitContextResult] = await Promise.all([
           fetchCheckinsForUser(session.user.id, 1),
-          listHabitsV2(),
+          loadHabitLandmarkContext(session.user.id),
         ]);
         if (cancelled) return;
 
         const latestCheckin = checkinResult.data?.[0] ?? null;
-        const habits = habitsResult.data ?? [];
+        const habits = habitContextResult.data?.habits ?? [];
+        setHabitChoices(habitContextResult.data?.choices ?? []);
+        setActiveHabitCount(habitContextResult.data?.activeHabitCount ?? 0);
+        setTodayHabitCount(habitContextResult.data?.todayHabitCount ?? 0);
         const supportedAreas = deriveSupportedAreas(habits);
         const suitableHabit = hasSuitableRoutekeeperHabit(habits);
         setHasSuitableHabit(suitableHabit);
@@ -164,9 +193,27 @@ export function IslandRunLifePromptCard({
     return () => {
       cancelled = true;
     };
-  }, [session.user.id, islandNumber, isDayOneStoryMode, forceDayOnePreview]);
+  }, [
+    session.user.id,
+    islandNumber,
+    isDayOneStoryMode,
+    forceDayOnePreview,
+    previewHabitChoices,
+  ]);
 
   const islandPlan = useMemo(() => getIslandContentPlan(islandNumber ?? 1), [islandNumber]);
+  const filteredHabitChoices = useMemo(() => {
+    const query = habitSearch.trim().toLocaleLowerCase();
+    if (!query) return habitChoices;
+    return habitChoices.filter((habit) => (
+      habit.title.toLocaleLowerCase().includes(query)
+      || habit.domain_key?.toLocaleLowerCase().includes(query)
+    ));
+  }, [habitChoices, habitSearch]);
+  const selectedExistingHabit = useMemo(
+    () => habitChoices.find((habit) => habit.id === selectedExistingHabitId) ?? null,
+    [habitChoices, selectedExistingHabitId],
+  );
 
   const offerableAreas = useMemo(() => {
     // No check-in data (e.g. load error): fall back to all areas so the player
@@ -186,6 +233,10 @@ export function IslandRunLifePromptCard({
 
   const handleLaunchCheckin = () => {
     window.dispatchEvent(new CustomEvent(ISLAND_RUN_LAUNCH_CHECKINS_EVENT));
+  };
+
+  const handleLaunchNewHabit = () => {
+    window.dispatchEvent(new CustomEvent(ISLAND_RUN_LAUNCH_NEW_HABIT_EVENT));
   };
 
   const suggestedHabits = useMemo(() => {
@@ -428,17 +479,257 @@ export function IslandRunLifePromptCard({
     onComplete(successMessage);
   };
 
+  const handleCompleteExistingHabit = async () => {
+    if (!selectedExistingHabit) return;
+    setIsSubmitting(true);
+    setError(null);
+
+    const result = await completeHabitLandmarkChoice({
+      userId: session.user.id,
+      habitId: selectedExistingHabit.id,
+      islandNumber: islandNumber ?? 1,
+      intakeStage: islandPlan.intakeStage,
+    });
+
+    if (!result.ok) {
+      setError(result.message);
+      if (result.code === 'already_completed' || result.code === 'not_eligible') {
+        setHabitChoices((current) => current.filter((habit) => habit.id !== selectedExistingHabit.id));
+        setSelectedExistingHabitId(null);
+      }
+      setIsSubmitting(false);
+      return;
+    }
+
+    const xpAmount = new Date().getHours() < 9
+      ? XP_REWARDS.HABIT_COMPLETE_EARLY
+      : XP_REWARDS.HABIT_COMPLETE;
+    const xpResult = await earnXP?.(
+      xpAmount,
+      'habit_complete',
+      result.habit.id,
+      'Completed from Island Run Habit Landmark',
+    );
+    await recordActivity?.();
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('habitgame:habits-created', {
+        detail: { habitId: result.habit.id, source: 'habit-landmark-completion' },
+      }));
+    }
+
+    const rewardLine = xpResult?.success ? ` · +${xpAmount} XP` : '';
+    const successMessage = `✅ ${result.habit.title} complete${rewardLine}`;
+    setDoneMessage(successMessage);
+    setIsSubmitting(false);
+    onComplete(successMessage);
+  };
+
   return (
-    <div className="island-hatchery-card">
+    <div className={`island-hatchery-card${!isDayOneStoryMode ? ' habit-landmark-shell' : ''}`}>
       {!isDayOneStoryMode ? (
-        <>
-          <p className="island-stop-modal__copy"><strong>✅ Habit Landmark</strong></p>
-          <p className="island-stop-modal__copy">A small action can change an island.</p>
-        </>
+        <header className="habit-landmark-shell__hero">
+          <div className="habit-landmark-shell__sigil" aria-hidden="true">
+            <span>✓</span>
+          </div>
+          <div>
+            <p className="habit-landmark-shell__eyebrow">Island {islandNumber ?? 1} · Habit Stop</p>
+            <h2>Make one real-life move</h2>
+            <p>Choose something useful and small enough for right now.</p>
+          </div>
+          <span className="habit-landmark-shell__spark" aria-hidden="true">✦</span>
+        </header>
       ) : null}
 
-      {!area && contextStatus === 'loading' ? (
+      {!isDayOneStoryMode && landmarkPath !== 'choose' && contextStatus !== 'loading' ? (
+        <button
+          type="button"
+          className="habit-landmark-choice__back"
+          onClick={() => {
+            setLandmarkPath('choose');
+            setArea(null);
+            setSelectedHabit(null);
+            setSelectedSize(null);
+            setTiming(null);
+            setFeedbackEnergy(null);
+            setFeedbackTime(null);
+            setFeedbackStyle(null);
+            setError(null);
+          }}
+          disabled={isSubmitting}
+        >
+          ← Choose another route
+        </button>
+      ) : null}
+
+      {contextStatus === 'loading' ? (
         <p className="island-stop-modal__copy">Reading your latest check-in…</p>
+      ) : !isDayOneStoryMode && landmarkPath === 'choose' ? (
+        <section className="habit-landmark-choice" aria-labelledby="habit-landmark-choice-title">
+          <p className="habit-landmark-choice__eyebrow">Choose your route</p>
+          <h3 id="habit-landmark-choice-title">How do you want to move the island?</h3>
+          <p className="habit-landmark-choice__intro">
+            Both count. Pick the route that feels lighter today.
+          </p>
+          <div className="habit-landmark-choice__grid">
+            <button
+              type="button"
+              className="habit-landmark-choice__card habit-landmark-choice__card--clue"
+              onClick={() => setLandmarkPath('clue')}
+            >
+              <span className="habit-landmark-choice__icon" aria-hidden="true">🧭</span>
+              <span>
+                <strong>Shape a tiny quest</strong>
+                <small>Give the island one clue and get a small, personalised action.</small>
+              </span>
+              <span className="habit-landmark-choice__arrow" aria-hidden="true">→</span>
+            </button>
+            <button
+              type="button"
+              className="habit-landmark-choice__card habit-landmark-choice__card--habit"
+              onClick={() => setLandmarkPath('habit')}
+            >
+              <span className="habit-landmark-choice__icon" aria-hidden="true">✅</span>
+              <span>
+                <strong>Do a Today habit</strong>
+                <small>
+                  {habitChoices.length > 0
+                    ? `Choose an unfinished Today habit · ${habitChoices.length} available`
+                    : 'See the habits currently scheduled on Today.'}
+                </small>
+              </span>
+              <span className="habit-landmark-choice__arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+        </section>
+      ) : !isDayOneStoryMode && landmarkPath === 'habit' ? (
+        <section className="habit-landmark-picker" aria-labelledby="habit-landmark-picker-title">
+          <div className="habit-landmark-picker__header">
+            <div>
+              <p className="habit-landmark-choice__eyebrow">Real-life move</p>
+              <h3 id="habit-landmark-picker-title">Choose a habit you’ll do now</h3>
+            </div>
+            <span className="habit-landmark-picker__count">{habitChoices.length} ready</span>
+          </div>
+          <p className="habit-landmark-choice__intro">
+            Finish it in real life, then confirm it here. Only unfinished habits from Today are shown.
+          </p>
+
+          {habitChoices.length > 5 ? (
+            <label className="habit-landmark-picker__search">
+              <span className="sr-only">Search habits</span>
+              <input
+                type="search"
+                value={habitSearch}
+                onChange={(event) => setHabitSearch(event.target.value)}
+                placeholder="Search your habits…"
+              />
+            </label>
+          ) : null}
+
+          {habitChoices.length === 0 ? (
+            <div className="habit-landmark-picker__empty" role="status">
+              <span aria-hidden="true">{todayHabitCount > 0 ? '🌟' : '🌱'}</span>
+              <strong>
+                {todayHabitCount > 0
+                  ? 'All Today habits are complete'
+                  : activeHabitCount > 0
+                    ? 'No habits are scheduled on Today'
+                    : 'No active habits yet'}
+              </strong>
+              <p>
+                {todayHabitCount > 0
+                  ? 'That is already a win. Shape a tiny quest to move this landmark forward.'
+                  : activeHabitCount > 0
+                    ? 'Shape a tiny quest, or add a habit that belongs in today’s plan.'
+                    : 'Shape a tiny quest, or plant a small habit for Today.'}
+              </p>
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                onClick={() => setLandmarkPath('clue')}
+              >
+                Shape a tiny quest instead
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="habit-landmark-picker__list" role="radiogroup" aria-label="Choose a habit">
+                {filteredHabitChoices.map((habit) => {
+                  const isSelected = selectedExistingHabitId === habit.id;
+                  const target = habit.target_num && habit.target_unit
+                    ? `${habit.target_num} ${habit.target_unit}`
+                    : habit.type === 'boolean'
+                      ? 'One clear check-in'
+                      : 'Mark today complete';
+                  return (
+                    <button
+                      key={habit.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      className={`habit-landmark-picker__habit${isSelected ? ' is-selected' : ''}`}
+                      onClick={() => setSelectedExistingHabitId(habit.id)}
+                      disabled={isSubmitting}
+                    >
+                      <span className="habit-landmark-picker__emoji" aria-hidden="true">{habit.emoji ?? '✨'}</span>
+                      <span className="habit-landmark-picker__habit-copy">
+                        <strong>{habit.title}</strong>
+                        <small>{target}</small>
+                      </span>
+                      <span className="habit-landmark-picker__check" aria-hidden="true">{isSelected ? '✓' : ''}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {filteredHabitChoices.length === 0 ? (
+                <p className="habit-landmark-picker__no-results">No habits match that search.</p>
+              ) : null}
+              <button
+                type="button"
+                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary habit-landmark-picker__complete"
+                onClick={() => void handleCompleteExistingHabit()}
+                disabled={!selectedExistingHabit || isSubmitting}
+              >
+                {isSubmitting
+                  ? 'Completing…'
+                  : selectedExistingHabit
+                    ? `I did “${selectedExistingHabit.title}”`
+                    : 'Choose a habit first'}
+              </button>
+            </>
+          )}
+
+          {activeHabitCount < 10 ? (
+            <button
+              type="button"
+              className="habit-landmark-picker__add"
+              onClick={handleLaunchNewHabit}
+              disabled={isSubmitting}
+            >
+              <span aria-hidden="true">＋</span>
+              <span>
+                <strong>Add a new habit</strong>
+                <small>{activeHabitCount} active habits · quick add available</small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </button>
+          ) : null}
+
+          <button
+            type="button"
+            className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
+            onClick={() => {
+              setLandmarkPath('choose');
+              setSelectedExistingHabitId(null);
+              setHabitSearch('');
+              setError(null);
+            }}
+            disabled={isSubmitting}
+          >
+            Back to both paths
+          </button>
+        </section>
       ) : routekeeperMode && isDayOneStoryMode ? (
         <>
           {routekeeperBreathStage === 'intro' || routekeeperBreathStage === 'adding' ? (

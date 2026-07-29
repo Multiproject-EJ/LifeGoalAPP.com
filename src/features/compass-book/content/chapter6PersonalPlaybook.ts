@@ -145,6 +145,14 @@ function stageForOrder(order: number): CompassChapterStageIndex {
   return 5;
 }
 
+const FLIGHT_STAGE_STORIES: Record<CompassChapterStageIndex, string> = {
+  1: 'Mission briefing — study the journeys that flew and the ones that fell back to Earth.',
+  2: 'Ignition deck — wire the start engine and the momentum thruster.',
+  3: 'Reserve power — define what counts and keep a tiny engine for difficult days.',
+  4: 'Flight controls — calibrate warning radar and shape the environment around the mission.',
+  5: 'Navigation — plot recovery, protect what matters, and prepare to break orbit.',
+};
+
 type ActivitySeed = {
   order: number;
   title: string;
@@ -220,15 +228,18 @@ const SEEDS: ActivitySeed[] = [
 ];
 
 function buildActivity(seed: ActivitySeed): CompassBookActivityDefinition {
+  const stage = stageForOrder(seed.order);
   return {
     id: `${CHAPTER_ID}.a${String(seed.order).padStart(2, '0')}`,
     chapterId: CHAPTER_ID,
     islandNumber: START_ISLAND + seed.order - 1,
     order: seed.order,
-    stage: stageForOrder(seed.order),
+    stage,
     title: seed.title,
     shortTitle: seed.shortTitle,
-    description: seed.description,
+    description: seed.description
+      ? `${FLIGHT_STAGE_STORIES[stage]} ${seed.description}`
+      : FLIGHT_STAGE_STORIES[stage],
     required: seed.required,
     authored: true,
     blocks: seed.blocks,
@@ -239,17 +250,18 @@ export const chapter6PersonalPlaybook: CompassBookChapterDefinition = {
   id: CHAPTER_ID,
   order: 6,
   title: 'The Personal Playbook',
-  coreQuestion: 'How do I personally begin, continue, adapt, recover, and stay oriented?',
-  visualMetaphor: 'A magical-mechanical operating system / personal control panel.',
+  subtitle: 'Mission: Break Orbit',
+  coreQuestion: 'Can I bring my seven flight systems online and build enough momentum to leave orbit?',
+  visualMetaphor: 'A magical rocket cockpit assembled over a seven-day launch window.',
   outputFields: [
     'Start Engine',
-    'Momentum Loop',
-    'Minimum Mode',
-    'Warning Lights',
-    'Environment Rules',
+    'Momentum Thruster',
+    'Minimum Power',
+    'Warning Radar',
+    'Environment Shield',
     'Recovery Route',
-    'Weekly Compass Check',
-    'Operating principle',
+    'Weekly Navigation',
+    'Flight principle',
   ],
   islandRange: [101, 120],
   activities: SEEDS.map(buildActivity),
