@@ -262,11 +262,13 @@ type BillingReturnBanner = {
 // --- Footer nav icon system ---
 //
 // Icon resolution order (first file that actually loads wins):
-//   1. holiday + app-theme  e.g. halloween/themes/dark/planning.webp
-//   2. holiday only         e.g. halloween/planning.webp
-//   3. app-theme only       e.g. themes/dark/planning.webp
-//   4. default              e.g. default/planning.webp
-//   5. hardcoded emoji/SVG fallback
+//   1. holiday + exact app-theme  e.g. halloween/themes/first-light-kingdom/planning.webp
+//   2. holiday + theme group      e.g. halloween/themes/light/planning.webp
+//   3. holiday only               e.g. halloween/planning.webp
+//   4. exact app-theme            e.g. themes/first-light-kingdom/planning.webp
+//   5. theme group                e.g. themes/light/planning.webp
+//   6. default                    e.g. default/planning.webp
+//   7. hardcoded emoji/SVG fallback
 //
 // Fallback is per-file and happens at RUNTIME: footerIconCandidates() builds the
 // ordered URL list above and <FooterNavImg> requests each in turn, advancing on
@@ -317,6 +319,13 @@ const FOOTER_THEME_GROUP: Partial<Record<string, FooterIconGroup>> = {
 };
 
 const FOOTER_ICON_BASE = '/icons/footer';
+const FOOTER_EXACT_THEME_ICON_KEYS = new Set(['first-light-kingdom']);
+const FIRST_LIGHT_GAME_ICON_FILES = [
+  'game-crystal-island.webp',
+  'game-royal-gift.webp',
+  'game-golden-key.webp',
+  'game-treasure-chest.webp',
+] as const;
 
 type FooterTabId = 'planning' | 'breathing-space' | 'score' | 'actions';
 
@@ -336,12 +345,17 @@ const FOOTER_TAB_FILES: Record<FooterTabId, string> = {
 function footerIconCandidates(
   tabId: FooterTabId,
   holidayKey: string | null | undefined,
+  exactThemeKey: string | undefined,
   themeGroup: FooterIconGroup | undefined,
 ): string[] {
   const file = FOOTER_TAB_FILES[tabId];
   const bases: string[] = [];
+  if (holidayKey && exactThemeKey) {
+    bases.push(`${FOOTER_ICON_BASE}/${holidayKey}/themes/${exactThemeKey}`);
+  }
   if (holidayKey && themeGroup) bases.push(`${FOOTER_ICON_BASE}/${holidayKey}/themes/${themeGroup}`);
   if (holidayKey) bases.push(`${FOOTER_ICON_BASE}/${holidayKey}`);
+  if (exactThemeKey) bases.push(`${FOOTER_ICON_BASE}/themes/${exactThemeKey}`);
   if (themeGroup) bases.push(`${FOOTER_ICON_BASE}/themes/${themeGroup}`);
   bases.push(`${FOOTER_ICON_BASE}/default`);
   return bases.map((base) => `${base}/${file}`);
@@ -1436,10 +1450,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
     };
 
     const holidayKey = activeHolidaySeason?.meta.holiday_key ?? null;
+    const exactThemeKey = FOOTER_EXACT_THEME_ICON_KEYS.has(theme) ? theme : undefined;
     const themeGroup = FOOTER_THEME_GROUP[theme];
 
     const getIcon = (tabId: FooterTabId, fallback: ReactNode): ReactNode => {
-      const srcs = footerIconCandidates(tabId, holidayKey, themeGroup);
+      const srcs = footerIconCandidates(tabId, holidayKey, exactThemeKey, themeGroup);
       return <FooterNavImg key={srcs.join('|')} srcs={srcs} fallback={fallback} />;
     };
 
@@ -1636,6 +1651,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
     [],
   );
 
+  const firstLightGameIcon = useMemo<ReactNode | undefined>(() => {
+    if (theme !== 'first-light-kingdom') {
+      return undefined;
+    }
+
+    const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    const file = FIRST_LIGHT_GAME_ICON_FILES[dayIndex % FIRST_LIGHT_GAME_ICON_FILES.length];
+    const src = `${FOOTER_ICON_BASE}/themes/first-light-kingdom/${file}`;
+    return <FooterNavImg key={src} srcs={[src]} fallback="🎮" />;
+  }, [theme]);
+
   const mobileFooterStatus = useMemo(() => {
     const levelNumber = levelInfo?.currentLevel ?? 1;
     const progressPercent = Math.round(levelInfo?.progressPercentage ?? 0);
@@ -1650,10 +1676,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
         progressPercent > 0
           ? `${overlayIslandDisplayName} • ${progressPercent}% to L${levelNumber + 1}`
           : `${overlayIslandDisplayName} • ${xpProgressLabel}`,
-      icon: '🎮',
+      icon: firstLightGameIcon ?? '🎮',
       progress: progressPercent,
     } as const;
-  }, [levelInfo, overlayIslandDisplayName, overlayIslandNumber]);
+  }, [firstLightGameIcon, levelInfo, overlayIslandDisplayName, overlayIslandNumber]);
 
   const isGameNearNextLevel = Math.round(levelInfo?.progressPercentage ?? 0) >= 95;
   const mobileActiveNavId = showMobileHome ? 'planning' : activeWorkspaceNav;
@@ -5727,6 +5753,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
           <MobileFooterNav
             items={mobileFooterNavItems}
             status={mobileFooterStatus}
+            compactGameIcon={firstLightGameIcon}
             activeId={null}
             onSelect={firstRunStep === 'spotlight-game' ? () => {} : handleMobileNavSelect}
             onStatusClick={
@@ -6054,6 +6081,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         <MobileFooterNav
           items={mobileFooterNavItems}
           status={mobileFooterStatus}
+          compactGameIcon={firstLightGameIcon}
           activeId={mobileActiveNavId}
           onSelect={firstRunStep === 'spotlight-game' ? () => {} : handleMobileNavSelect}
           onStatusClick={

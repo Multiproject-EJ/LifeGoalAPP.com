@@ -49,6 +49,7 @@ type MobileFooterNavProps = {
   isCollapsed?: boolean;
   isSnapActive?: boolean;
   status?: MobileFooterStatus;
+  compactGameIcon?: ReactNode;
   onStatusClick?: () => void;
   onStatusHoldToggle?: () => void;
   spotlightStatus?: boolean;
@@ -89,6 +90,7 @@ export function MobileFooterNav({
   isCollapsed = false,
   isSnapActive = false,
   status,
+  compactGameIcon: themedCompactGameIcon,
   onStatusClick,
   onStatusHoldToggle,
   spotlightStatus = false,
@@ -140,7 +142,7 @@ export function MobileFooterNav({
     goldBreakdown ? goldBreakdown.goldRemainder.toLocaleString() : null;
   const shouldShowDiamondCounter = Boolean(isDiodeActive && goldBreakdown);
   const isCompactGameStatus = isDiodeOff;
-  const compactGameIcon = isDiodeOff ? getDailyGameIcon() : null;
+  const compactGameIcon = isDiodeOff ? themedCompactGameIcon ?? getDailyGameIcon() : null;
   const visualFooterIconIds = listItems.map((item) => (isNavItem(item) ? item.id : 'status'));
 
   const getStandardFooterIconExpansionClass = (iconId: string) => {
