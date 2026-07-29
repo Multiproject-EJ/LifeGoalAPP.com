@@ -3838,6 +3838,32 @@ export interface Database {
         };
         Returns: Database['public']['Tables']['campaign_live_events']['Row'][];
       };
+      get_public_shared_campaign: {
+        Args: {
+          p_share_slug: string;
+        };
+        Returns: {
+          title: string;
+          description: string | null;
+          campaign_type: string;
+          status: string;
+          visibility: string;
+          starts_on: string | null;
+          ends_on: string | null;
+          life_wheel_category: string | null;
+          published_at: string | null;
+        }[];
+      };
+      get_public_shared_campaign_live_events: {
+        Args: {
+          p_share_slug: string;
+          p_limit?: number;
+        };
+        Returns: {
+          event_type: string;
+          created_at: string;
+        }[];
+      };
       claim_daily_spin_habit_bonus: {
         Args: {
           p_claim_date?: string;
