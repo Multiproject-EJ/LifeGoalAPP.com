@@ -64,9 +64,11 @@
       linear-gradient(
         180deg,
         rgba(248, 244, 236, 0) 0,
-        rgba(248, 244, 236, 0.04) 30rem,
-        rgba(250, 247, 240, 0.88) 46rem,
-        #f7f2e9 62rem
+        rgba(248, 244, 236, 0) 14rem,
+        rgba(248, 244, 236, 0.06) 18rem,
+        rgba(250, 247, 240, 0.38) 22rem,
+        rgba(250, 247, 240, 0.86) 26rem,
+        #f7f2e9 32rem
       ),
       url('/assets/themes/first-light-kingdom/today/today-sky-background.webp') center top / 100% auto no-repeat,
       #f7f2e9;
@@ -79,6 +81,8 @@
     border-radius: 0;
     background: transparent;
     box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   [data-theme='first-light-kingdom'] .habit-checklist-card__board {
@@ -86,6 +90,16 @@
     border-radius: 0;
     background: transparent;
     box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  [data-theme='first-light-kingdom'] .mobile-habit-home .habit-tracker--compact {
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   [data-theme='first-light-kingdom'] .habit-checklist-card__board-head {
@@ -93,8 +107,18 @@
     padding: 1.5rem 1.15rem 0.8rem;
     border-radius: 0;
     background:
-      radial-gradient(circle at 50% 24%, rgba(255, 255, 255, 0.66), transparent 42%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.3));
+      radial-gradient(
+        ellipse at 50% 22%,
+        rgba(255, 255, 255, 0.32) 0,
+        rgba(255, 255, 255, 0.14) 34%,
+        transparent 68%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.02) 0,
+        rgba(255, 255, 255, 0.06) 62%,
+        rgba(255, 255, 255, 0.14) 100%
+      );
     color: #071f45;
   }
 
@@ -115,9 +139,11 @@
     padding-top: 0.35rem;
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.2) 0,
-      rgba(255, 252, 246, 0.76) 21rem,
-      rgba(248, 244, 235, 0.96) 34rem
+      rgba(255, 255, 255, 0.18) 0,
+      rgba(255, 255, 255, 0.48) 4rem,
+      rgba(255, 254, 250, 0.82) 8rem,
+      rgba(255, 252, 246, 0.96) 12rem,
+      rgba(248, 244, 235, 0.99) 18rem
     );
   }
 
