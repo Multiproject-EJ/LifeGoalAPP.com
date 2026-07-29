@@ -111,7 +111,7 @@ export function MobileThemeSelector({
       </div>
 
       <p className="mobile-theme-selector__hint">
-        Bio Day and Midnight Blue are included by default. Creature themes are one-time real-money Stripe purchases; special gift themes unlock through milestones and birthday gifts.
+        First Light Kingdom and Midnight Blue are the launch defaults. Bio Day remains included; creature themes are one-time real-money Stripe purchases, while special gift themes unlock through milestones and birthday gifts.
       </p>
 
       {/* Theme Grid */}

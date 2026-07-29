@@ -1,6 +1,7 @@
 import './index.css';
 import './themes.css';
 import './styles/first-light-theme.css';
+import './styles/first-light-kingdom-theme.css';
 import './styles/workspace.css';
 import './styles/life-wheel-redesign.css';
 import { initViewportWatchdog } from './utils/viewportWatchdog';

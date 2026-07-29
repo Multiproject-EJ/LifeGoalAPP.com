@@ -3069,6 +3069,7 @@
   .world-home__hero-panel,
   .world-home__features,
   .journey-preview,
+  .world-home__restart-card,
   .social-proof,
   .world-home__footer {
     grid-column: 1 / -1;
