@@ -52,6 +52,7 @@ const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
 const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
 const CHAMPIONSHIP_PREVIEW_PATH = '/dev/championship-preview';
 const MOMENTUM_MATRIX_PREVIEW_PATH = '/dev/momentum-matrix-preview';
+const HOLIDAY_MODAL_PREVIEW_PATH = '/dev/holiday-modal-preview';
 
 function IslandChampionshipPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
@@ -75,6 +76,22 @@ function MomentumMatrixPreviewRoute() {
   useEffect(() => {
     let isMounted = true;
     import('./features/gamification/games/momentum-matrix/MomentumMatrixPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
+function HolidayModalPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./dev/HolidayModalPreview').then((module) => {
       if (isMounted) setPreview(() => module.default);
     });
     return () => {
@@ -235,6 +252,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === MOMENTUM_MATRIX_PREVIEW_PATH;
+  const isHolidayModalPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === HOLIDAY_MODAL_PREVIEW_PATH;
 
   const initialRoute = useMemo(() => resolveRoute(), []);
   const isPhoneEntryClient = useMemo(() => isCurrentClientPhone(), []);
@@ -286,6 +307,14 @@ function Root() {
 
   if (isMomentumMatrixPreviewRoute) {
     return <MomentumMatrixPreviewRoute />;
+  }
+
+  if (isHolidayModalPreviewRoute) {
+    return (
+      <ThemeProvider>
+        <HolidayModalPreviewRoute />
+      </ThemeProvider>
+    );
   }
 
   if (isIslandArtPreviewRoute) {

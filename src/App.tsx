@@ -2101,7 +2101,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
       if (mode === 'intro') {
         setHolidayPreviewKey(previewHoliday.meta.holiday_key);
-        setIsHolidaySeasonDialogPreview(false);
+        setIsHolidaySeasonDialogPreview(true);
         setShowHolidaySeasonDialog(true);
         return;
       }

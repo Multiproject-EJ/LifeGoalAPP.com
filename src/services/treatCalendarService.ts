@@ -462,10 +462,11 @@ const ADVENT_META: AdventMeta[] = [
   {
     // Hanukkah: 8 doors, Night 1 → Night 8 — exactly right for 8 nights
     // Lunar calendar — production seasons should seed the exact date per year.
+    // Demo approximation: Dec 15 → Dec 22 (8 inclusive calendar days).
     theme_name: 'Hanukkah Countdown',
     displayName: 'Hanukkah',
     holiday_key: 'hanukkah',
-    countdownStart: { month: 11, day: 14 },
+    countdownStart: { month: 11, day: 15 },
     holidayDate: { month: 11, day: 22 },
     emojis: ['🕎', '✡️', '🕯️', '💙', '⭐', '🎁', '🪙', '🥞', '🌟', '✨'],
   },

@@ -653,14 +653,18 @@ export const CountdownCalendarModal = ({
   const themeAssets = holidayKey ? getHolidayThemeAssets(holidayKey) : null;
   const calendarBackgroundUrl = isPersonalQuest
     ? '/icons/DAILY%20TREAT/dailymomentumnight.webp'
-    : (themeAssets?.calendarBackgroundUrl ?? null);
+    : null;
   // Which text tone keeps copy readable over the calendar art. The Personal
   // Quest night background is very dark → all-light text; holiday art declares
   // its own tone. Without a background image the default light dialog keeps
   // dark text.
-  const textTone: 'light' | 'dark' = calendarBackgroundUrl
-    ? (isPersonalQuest ? 'light' : (themeAssets?.calendarTextTone ?? 'light'))
-    : 'dark';
+  const textTone: 'light' | 'dark' = isPersonalQuest || themeAssets ? 'light' : 'dark';
+  const holidayModalStyle = !isPersonalQuest && themeAssets
+    ? {
+        '--holiday-primary': themeAssets.accentColor,
+        '--holiday-secondary': themeAssets.secondaryColor,
+      } as CSSProperties
+    : undefined;
 
   // Calculate total doors and today's index
   const totalDoors = seasonData
@@ -710,10 +714,13 @@ export const CountdownCalendarModal = ({
 
   return (
     <div
-      className={`daily-treats-calendar daily-treats-calendar--holiday-${themeMod} daily-treats-calendar--text-${textTone}`}
+      className={`daily-treats-calendar daily-treats-calendar--holiday-${themeMod} daily-treats-calendar--text-${textTone}${
+        !isPersonalQuest ? ' daily-treats-calendar--seasonal' : ''
+      }`}
       role="dialog"
       aria-modal="true"
       aria-label={`${themeName} calendar`}
+      style={holidayModalStyle}
     >
       <div className="daily-treats-calendar__backdrop" onClick={onClose} role="presentation" />
       {pendingGiftReward && (
@@ -771,27 +778,39 @@ export const CountdownCalendarModal = ({
               {doorError}
             </div>
           )}
-          <p className="daily-treats-calendar__eyebrow">
-            {isPersonalQuest ? 'Personal Quest' : (activeAdvent ? `${activeAdvent.meta.displayName} Calendar` : 'Treat Calendar')}
-          </p>
           {isPersonalQuest ? (
-            <img
-              src="/icons/DAILY%20TREAT/dailymomentum_title.webp"
-              alt="Daily Momentum"
-              className="daily-treats-calendar__title-image"
-            />
+            <>
+              <p className="daily-treats-calendar__eyebrow">Personal Quest</p>
+              <img
+                src="/icons/DAILY%20TREAT/dailymomentum_title.webp"
+                alt="Daily Momentum"
+                className="daily-treats-calendar__title-image"
+              />
+              <p className="daily-treats-calendar__countdown">{countdownLabel}</p>
+            </>
           ) : (
-            <h3 className="daily-treats-calendar__title">
-              {themeEmojis[0]} {themeName}
-            </h3>
-          )}
-          <p className="daily-treats-calendar__countdown">{countdownLabel}</p>
-          {!isPersonalQuest && (
-            <p className="daily-treats-calendar__subtitle">
-              {todayFreeOpened
-                ? "Today's treat already revealed!"
-                : "Open today's door to reveal your treat."}
-            </p>
+            <div className="daily-treats-calendar__holiday-header">
+              {themeAssets ? (
+                <img
+                  src={themeAssets.medallionUrl}
+                  alt=""
+                  className="daily-treats-calendar__holiday-emblem"
+                  aria-hidden="true"
+                />
+              ) : null}
+              <div className="daily-treats-calendar__holiday-copy">
+                <p className="daily-treats-calendar__eyebrow">
+                  {activeAdvent ? `${activeAdvent.meta.displayName} Calendar` : 'Treat Calendar'}
+                </p>
+                <h3 className="daily-treats-calendar__title">{themeName}</h3>
+                <p className="daily-treats-calendar__countdown">{countdownLabel}</p>
+                <p className="daily-treats-calendar__subtitle">
+                  {todayFreeOpened
+                    ? "Today's treat already revealed!"
+                    : "Open today's door to reveal your treat."}
+                </p>
+              </div>
+            </div>
           )}
 
           {showPersonalQuestStreak && personalQuestStreak ? (
