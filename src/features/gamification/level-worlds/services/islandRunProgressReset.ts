@@ -51,6 +51,7 @@ export function buildFreshIslandRunRecord(
   return {
     runtimeVersion: 0,
     firstRunClaimed: false,
+    selectedPlayerPieceId: null,
     firstSessionTutorialState: ISLAND_RUN_FIRST_SESSION_TUTORIAL_INITIAL_STATE,
     dailyHeartsClaimedDayKey: null,
     onboardingDisplayNameLoopCompleted: current.onboardingDisplayNameLoopCompleted,
