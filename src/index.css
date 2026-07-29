@@ -38706,7 +38706,7 @@ body.habit-wizard-open .mobile-footer-nav {
 }
 
 .loading-readiness__card {
-  width: min(92vw, 27rem);
+  width: min(92vw, 29rem);
   padding: clamp(1.4rem, 4vw, 2.25rem);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 28px;
@@ -38714,6 +38714,32 @@ body.habit-wizard-open .mobile-footer-nav {
   box-shadow: 0 32px 90px rgba(0, 0, 0, 0.48);
   text-align: center;
   backdrop-filter: blur(22px);
+}
+
+.loading-readiness__brand {
+  width: min(100%, 23rem);
+  margin: -1.4rem auto 0.5rem;
+}
+
+.loading-readiness__brand .compass-crest-brand__crest {
+  width: clamp(5.7rem, 21vw, 7.4rem);
+  margin-bottom: -0.8rem;
+  filter:
+    drop-shadow(0 0 1.1rem rgba(91, 174, 255, 0.26))
+    drop-shadow(0 0.7rem 1rem rgba(0, 0, 0, 0.46));
+}
+
+.loading-readiness__brand .compass-crest-brand__rank-value {
+  font-size: clamp(1.7rem, 6.4vw, 2.35rem);
+}
+
+.loading-readiness__brand .compass-crest-brand__wordmark {
+  font-size: clamp(2.7rem, 11.5vw, 4.65rem);
+  line-height: 0.94;
+}
+
+.loading-readiness__brand .compass-crest-brand__rule {
+  margin-top: 0.1rem;
 }
 
 .loading-readiness__orb {

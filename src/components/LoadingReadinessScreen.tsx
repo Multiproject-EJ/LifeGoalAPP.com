@@ -1,3 +1,5 @@
+import { CompassCrestBrand } from './CompassCrestBrand';
+
 export type LoadingReadinessStepStatus = 'pending' | 'active' | 'complete' | 'warning';
 
 export interface LoadingReadinessStep {
@@ -44,10 +46,11 @@ export function LoadingReadinessScreen({
       aria-label={`${title}: ${safeProgress}% ready`}
     >
       <div className="loading-readiness__card">
-        <div className="loading-readiness__orb" aria-hidden="true">
-          <span />
-        </div>
-        <p className="loading-readiness__eyebrow">HabitGame</p>
+        <CompassCrestBrand
+          className="loading-readiness__brand"
+          surface="dark"
+          animated
+        />
         <h1 className="loading-readiness__title">{title}</h1>
         <p className="loading-readiness__subtitle">{subtitle}</p>
 

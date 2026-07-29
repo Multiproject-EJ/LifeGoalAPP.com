@@ -3766,17 +3766,40 @@
   max-width: 610px;
   margin: 0;
   padding: 28px;
+  border: 0;
   border-radius: 34px;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(235, 249, 255, 0.58)),
-    rgba(255, 255, 255, 0.45);
+    radial-gradient(ellipse at 48% 18%, rgba(255, 255, 255, 0.7), rgba(237, 249, 255, 0.2) 48%, transparent 76%);
   box-shadow:
-    0 24px 64px rgba(28, 86, 145, 0.17),
-    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+    0 24px 64px rgba(28, 86, 145, 0.08);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .world-home--sales-split .world-home__logo {
   width: clamp(72px, 8vw, 104px);
+}
+
+.world-home--sales-split .world-home__crest-brand {
+  width: min(100%, 34rem);
+  margin: -4px auto 2px;
+}
+
+.world-home--sales-split .world-home__crest-brand .compass-crest-brand__crest {
+  width: clamp(7.2rem, 11vw, 9.6rem);
+}
+
+.world-home--sales-split .world-home__crest-brand .compass-crest-brand__wordmark {
+  font-size: clamp(2rem, 3vw, 2.3rem);
+  letter-spacing: -0.07em;
+}
+
+.world-home--sales-split .world-home__crest-brand .compass-crest-brand__shield {
+  width: clamp(3.4rem, 5.2vw, 3.85rem);
+}
+
+.world-home--sales-split .world-home__crest-brand .compass-crest-brand__rank-plaque {
+  font-size: clamp(0.62rem, 1.15vw, 0.74rem);
 }
 
 .world-home--sales-split .world-home__kicker {

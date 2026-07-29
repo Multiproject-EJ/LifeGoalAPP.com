@@ -8,6 +8,7 @@ import { JourneyPreview } from './JourneyPreview.tsx';
 import { SocialProof } from './SocialProof.tsx';
 import { useWorldAnalytics } from './useWorldAnalytics.ts';
 import { joinPublicLaunchWaitlist } from '../services/publicLaunchWaitlist.ts';
+import { CompassCrestBrand } from '../components/CompassCrestBrand.tsx';
 
 interface WorldHomeProps {
   onContinue: () => void;
@@ -146,17 +147,15 @@ export function WorldHome({
           <section className="world-home__hero-panel" aria-labelledby="world-home-title">
             <div className="world-home__message-column">
               <div className="world-home__brand">
-                <img
-                  className="world-home__logo"
-                  src="/icons/logo_landingpage.webp"
-                  alt="HabitGame logo"
-                  width="359"
-                  height="490"
-                  loading="eager"
-                  decoding="async"
+                <CompassCrestBrand
+                  className="world-home__crest-brand"
+                  headingId="world-home-title"
+                  rank={0}
+                  asHeading
+                  animated
+                  variant="shield"
                 />
                 <p className="world-home__kicker">The cozy RPG powered by your real life</p>
-                <h1 className="world-home__app-name" id="world-home-title">HabitGame</h1>
                 <p className="world-home__tagline">Turn everyday progress into an adventure.</p>
                 <p className="world-home__hero-copy">
                   Care for your habits, explore enchanted islands, and watch the life you are building
