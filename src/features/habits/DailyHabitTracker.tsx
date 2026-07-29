@@ -4013,8 +4013,11 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         isCollected: hasOpenedHolidayCalendarToday,
         isVisible: Boolean(activeHolidaySeason),
         isActionable: !hasOpenedHolidayCalendarToday,
-        sortPriority: 4,
-        slotRole: 'filler',
+        visualKey: activeHolidaySeason?.meta.holiday_key
+          ? `holiday-${activeHolidaySeason.meta.holiday_key}`
+          : undefined,
+        sortPriority: 3,
+        slotRole: 'core',
       },
       {
         id: 'todays_offer',
@@ -4025,7 +4028,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
         isCollected: false,
         isVisible: true,
         isActionable: true,
-        sortPriority: 3,
+        sortPriority: 4,
         slotRole: 'core',
       },
       ...visibleEggSlotsOnActiveIsland.map(({ key, slotIndex, entry }, eggIndex): TimeBoundOfferItem => {
@@ -8391,6 +8394,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       : activeHabits;
     const activeTodos = dayOneFocusMode ? [] : todayTodos.filter((todo) => !todo.completed);
     const completedTodos = dayOneFocusMode ? [] : todayTodos.filter((todo) => todo.completed);
+    const activeCampaignDay = campaign ? getCampaignDay(campaign) : null;
+    const activeCampaignProgress = campaign && activeCampaignDay !== null
+      ? Math.min(100, Math.max(0, Math.round((activeCampaignDay / campaign.duration_days) * 100)))
+      : 0;
 
     return (
       <div className="habit-checklist__group">
@@ -8523,7 +8530,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             {onOpenStarterQuest ? (
               <button
                 type="button"
-                className="habit-checklist-card__starter-launcher"
+                className="habit-checklist-card__starter-launcher habit-checklist-card__quest-launcher"
                 onClick={() => onOpenStarterQuest()}
                 aria-label="Open Starter Quest picker"
               >
@@ -8535,8 +8542,28 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               className={`habit-checklist-card__campaign-launcher${campaign ? ' habit-checklist-card__campaign-launcher--active' : ''}`}
               onClick={handleOpenCampaignModal}
               aria-label={campaign ? `Open active campaign ${campaign.name}` : 'Start a Campaign'}
+              style={campaign
+                ? { '--campaign-progress': `${activeCampaignProgress}%` } as CSSProperties
+                : undefined}
             >
-              {campaign ? `⚑ ${getCampaignDay(campaign)}/${campaign.duration_days}` : '⚑ Campaign'}
+              <span className="habit-checklist-card__campaign-icon" aria-hidden="true">⚑</span>
+              {campaign ? (
+                <>
+                  <span className="habit-checklist-card__campaign-copy">
+                    <strong>Campaign</strong>
+                    <small>
+                      Day {activeCampaignDay}
+                      {' · '}
+                      {getCampaignDaysLeft(campaign)} left
+                    </small>
+                  </span>
+                  <span className="habit-checklist-card__campaign-progress" aria-hidden="true">
+                    <span />
+                  </span>
+                </>
+              ) : (
+                <span className="habit-checklist-card__campaign-label">Campaign</span>
+              )}
             </button>
             <div className="habit-checklist-card__display-launcher">
               <button
@@ -11298,6 +11325,12 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
               <button
                 type="button"
                 className="campaign-card"
+                style={{
+                  '--campaign-progress': `${Math.min(
+                    100,
+                    Math.max(0, Math.round((getCampaignDay(campaign) / campaign.duration_days) * 100)),
+                  )}%`,
+                } as CSSProperties}
                 onClick={handleOpenCampaignModal}
                 aria-label={`Open active campaign ${campaign.name}, day ${getCampaignDay(campaign)} of ${campaign.duration_days}`}
                 aria-haspopup="dialog"
@@ -11308,6 +11341,13 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     <span className="campaign-card__title">{campaign.name}</span>
                   </span>
                   <span className="campaign-card__day">Day {getCampaignDay(campaign)}/{campaign.duration_days}</span>
+                </span>
+                <span className="campaign-card__progress" aria-hidden="true">
+                  <span />
+                </span>
+                <span className="campaign-card__hint">
+                  Continue the chapter
+                  <span aria-hidden="true">›</span>
                 </span>
               </button>
             ) : null}

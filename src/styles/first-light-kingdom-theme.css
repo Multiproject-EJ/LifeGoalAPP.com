@@ -135,6 +135,124 @@
     font-size: 1.25rem;
   }
 
+  [data-theme='first-light-kingdom'] .habit-checklist-card__date-year,
+  [data-theme='first-light-kingdom'] .habit-checklist-card__date-text {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    overflow: visible;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__date-year::before,
+  [data-theme='first-light-kingdom'] .habit-checklist-card__date-year::after {
+    content: '◆';
+    color: #ca9633;
+    font-size: 0.34rem;
+    text-shadow: 0 0 7px rgba(255, 236, 157, 0.9);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__date-text::before,
+  [data-theme='first-light-kingdom'] .habit-checklist-card__date-text::after {
+    content: '✦';
+    color: #c99734;
+    font-size: 0.72rem;
+    line-height: 1;
+    text-shadow:
+      0 0 5px rgba(255, 255, 255, 0.95),
+      0 0 10px rgba(240, 188, 78, 0.45);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-day-nav__button {
+    width: 2.6rem;
+    height: 2.6rem;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid rgba(190, 137, 42, 0.7);
+    border-radius: 50%;
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(249, 242, 228, 0.96));
+    color: #082a55;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.15rem;
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 255, 255, 0.78),
+      0 5px 13px rgba(22, 58, 94, 0.14),
+      0 0 0 1px rgba(255, 237, 186, 0.42);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-day-nav__button:not(:disabled):hover,
+  [data-theme='first-light-kingdom'] .habit-day-nav__button:not(:disabled):focus-visible {
+    border-color: rgba(206, 151, 49, 0.94);
+    background: linear-gradient(145deg, #ffffff, #fff4d8);
+    color: #061f45;
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 255, 255, 0.9),
+      0 7px 17px rgba(22, 58, 94, 0.18),
+      0 0 12px rgba(240, 190, 82, 0.22);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__nav-pill--calendar {
+    width: 3.8rem;
+    min-height: 2.55rem;
+    justify-content: center;
+    padding: 0.22rem 0.5rem;
+    border: 1px solid rgba(190, 137, 42, 0.72);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(249, 242, 228, 0.96));
+    box-shadow:
+      inset 0 0 0 2px rgba(255, 255, 255, 0.72),
+      0 5px 13px rgba(22, 58, 94, 0.12);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__nav-pill--calendar:hover,
+  [data-theme='first-light-kingdom'] .habit-checklist-card__nav-pill--calendar:focus-within {
+    border-color: rgba(206, 151, 49, 0.96);
+    background: linear-gradient(145deg, #ffffff, #fff4d8);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__nav-pill--calendar
+    .habit-checklist-card__nav-pill-icon {
+    position: relative;
+    width: 1.55rem;
+    height: 1.55rem;
+    display: inline-grid;
+    place-items: end center;
+    padding-bottom: 0.12rem;
+    overflow: visible;
+    border: 1px solid #b8812d;
+    border-radius: 0.28rem;
+    background:
+      linear-gradient(180deg, #cf473a 0 0.34rem, #fffaf0 0.34rem 100%);
+    color: transparent;
+    font-size: 0;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.68),
+      0 2px 4px rgba(43, 53, 71, 0.16);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__nav-pill--calendar
+    .habit-checklist-card__nav-pill-icon::before {
+    content: '17';
+    color: #172b46;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 0.64rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__nav-pill--calendar
+    .habit-checklist-card__nav-pill-icon::after {
+    content: '';
+    position: absolute;
+    top: -0.13rem;
+    left: 0.34rem;
+    width: 0.68rem;
+    height: 0.25rem;
+    border-left: 2px solid #967029;
+    border-right: 2px solid #967029;
+  }
+
   [data-theme='first-light-kingdom'] .habit-checklist-card__board-body {
     padding-top: 0.35rem;
     background: linear-gradient(
@@ -147,15 +265,317 @@
     );
   }
 
+  [data-theme='first-light-kingdom'] .campaign-card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    margin: 0.1rem 0 0.72rem;
+    padding: 0.78rem 0.86rem 0.66rem;
+    border: 1px solid rgba(225, 179, 81, 0.95);
+    border-radius: 1.3rem;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(103, 196, 255, 0.38), transparent 44%),
+      linear-gradient(135deg, #124c80 0%, #082e5f 54%, #061f45 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 0 0 2px rgba(255, 242, 198, 0.08),
+      0 10px 22px rgba(5, 31, 68, 0.22),
+      0 0 17px rgba(106, 193, 247, 0.16);
+  }
+
+  [data-theme='first-light-kingdom'] .campaign-card::before {
+    content: '✦';
+    position: absolute;
+    z-index: -1;
+    right: 3.6rem;
+    top: 50%;
+    translate: 0 -50%;
+    color: rgba(255, 231, 151, 0.2);
+    font-size: 3.8rem;
+    line-height: 1;
+    text-shadow:
+      -2.3rem -0.8rem 0 rgba(142, 214, 255, 0.11),
+      2.6rem 1.1rem 0 rgba(255, 224, 132, 0.1);
+  }
+
+  [data-theme='first-light-kingdom'] .campaign-card:hover,
+  [data-theme='first-light-kingdom'] .campaign-card:focus-visible {
+    border-color: rgba(244, 207, 119, 1);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.34),
+      inset 0 0 0 2px rgba(255, 242, 198, 0.1),
+      0 13px 27px rgba(5, 31, 68, 0.26),
+      0 0 22px rgba(106, 193, 247, 0.22);
+  }
+
+  [data-theme='first-light-kingdom'] .campaign-card__head {
+    align-items: center;
+  }
+
+  [data-theme='first-light-kingdom'] .campaign-card__copy {
+    gap: 0.08rem;
+  }
+
+  [data-theme='first-light-kingdom'] .campaign-card__eyebrow {
+    color: #8ed8ff;
+    font-size: 0.59rem;
+    letter-spacing: 0.16em;
+    text-shadow: 0 0 9px rgba(106, 193, 247, 0.34);
+  }
+
+  [data-theme='first-light-kingdom'] .campaign-card__title {
+    color: #fff7df;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.04rem;
+    line-height: 1.15;
+    text-shadow: 0 2px 8px rgba(0, 12, 35, 0.42);
+  }
+
+  [data-theme='first-light-kingdom'] .campaign-card__day {
+    border: 1px solid rgba(230, 187, 94, 0.58);
+    background: linear-gradient(145deg, rgba(255, 251, 233, 0.96), rgba(239, 215, 163, 0.9));
+    color: #17365e;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.82),
+      0 3px 8px rgba(0, 18, 48, 0.22);
+  }
+
+  [data-theme='first-light-kingdom'] .campaign-card__progress {
+    height: 0.31rem;
+    margin-top: 0.56rem;
+    border: 1px solid rgba(255, 242, 203, 0.13);
+    background: rgba(1, 20, 48, 0.55);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.34);
+  }
+
+  [data-theme='first-light-kingdom'] .campaign-card__progress > span {
+    background: linear-gradient(90deg, #e2a938, #fff0a2 72%, #ffffff);
+    box-shadow: 0 0 8px rgba(255, 224, 126, 0.8);
+  }
+
+  [data-theme='first-light-kingdom'] .campaign-card__hint {
+    color: rgba(222, 240, 255, 0.78);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.035em;
+    margin-top: 0.31rem;
+  }
+
+  [data-theme='first-light-kingdom'] .campaign-card__hint > span {
+    color: #f3cb6c;
+    font-size: 1.08rem;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__title-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.08fr) minmax(0, 1.16fr) 2.08rem;
+    gap: 0.28rem;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__offer-toggle {
+    grid-column: 1 / -1;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__todo-launcher {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__quest-launcher {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__campaign-launcher {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__display-launcher {
+    grid-column: 4;
+    grid-row: 1;
+    width: 100%;
+    margin-left: 0;
+    display: grid;
+    align-items: stretch;
+  }
+
+  [data-theme='first-light-kingdom'] :is(
+    .habit-checklist-card__starter-launcher,
+    .habit-checklist-card__campaign-launcher,
+    .habit-checklist-card__display-launcher-button
+  ) {
+    min-height: 1.9rem;
+    min-width: 0;
+    padding-inline: 0.44rem;
+    border: 1px solid rgba(190, 137, 42, 0.68);
+    border-radius: 999px;
+    color: #09264e;
+    background:
+      linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(249, 242, 228, 0.96));
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.86),
+      0 3px 9px rgba(22, 58, 94, 0.1);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__todo-launcher {
+    color: #fff5d6;
+    border-color: rgba(219, 170, 72, 0.94);
+    background: linear-gradient(180deg, #164b7d, #072b56 58%, #061e40);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+      0 4px 10px rgba(7, 31, 69, 0.18);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__campaign-launcher {
+    min-width: 0;
+    padding: 0.22rem 0.4rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 0.28rem;
+    row-gap: 0.14rem;
+    text-align: left;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.9), transparent 42%),
+      linear-gradient(135deg, #fffaf0, #faedc9);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__campaign-launcher--active {
+    color: #fff5d6;
+    border-color: rgba(225, 179, 81, 0.94);
+    background:
+      radial-gradient(circle at 18% 0%, rgba(88, 173, 230, 0.34), transparent 44%),
+      linear-gradient(135deg, #0c3f73, #082b58 60%, #061d3e);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      0 4px 11px rgba(7, 31, 69, 0.2),
+      0 0 12px rgba(238, 190, 83, 0.16);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__campaign-icon {
+    grid-row: 1 / 3;
+    display: inline-grid;
+    place-items: center;
+    width: 1.06rem;
+    height: 1.06rem;
+    border: 1px solid rgba(193, 140, 43, 0.54);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.62);
+    color: #b47818;
+    font-size: 0.59rem;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__campaign-launcher--active
+    .habit-checklist-card__campaign-icon {
+    border-color: rgba(239, 197, 105, 0.68);
+    background: rgba(255, 245, 214, 0.12);
+    color: #f3c75f;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__campaign-label {
+    justify-self: start;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__campaign-copy {
+    min-width: 0;
+    display: grid;
+    line-height: 1.05;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__campaign-copy strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.68rem;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__campaign-copy small {
+    display: none;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__campaign-progress {
+    display: none;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__campaign-progress > span {
+    display: block;
+    width: var(--campaign-progress, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #f2bf52, #fff0a7);
+    box-shadow: 0 0 7px rgba(255, 220, 113, 0.72);
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__display-launcher-button {
+    width: 100%;
+    height: 100%;
+    min-width: 2.08rem;
+    padding: 0;
+    border-radius: 0.78rem;
+    color: #0b315d;
+    font-size: 0;
+  }
+
+  [data-theme='first-light-kingdom'] .habit-checklist-card__display-launcher-button::before {
+    content: '✦';
+    font-size: 0.88rem;
+    text-shadow: 0 0 9px rgba(61, 153, 216, 0.38);
+  }
+
+  [data-theme='first-light-kingdom']
+    .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image) {
+    border: 1px solid rgba(195, 148, 62, 0.46);
+    border-radius: 1.55rem;
+    background:
+      linear-gradient(145deg, rgba(255, 254, 250, 0.98), rgba(246, 239, 225, 0.97));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.92),
+      0 12px 30px rgba(13, 43, 75, 0.17);
+    padding: 0.38rem 0.34rem 0.46rem;
+  }
+
+  [data-theme='first-light-kingdom']
+    .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+    .mobile-footer-nav__list {
+    gap: 0;
+  }
+
+  [data-theme='first-light-kingdom']
+    .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+    .mobile-footer-nav__item {
+    position: relative;
+  }
+
+  [data-theme='first-light-kingdom']
+    .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+    .mobile-footer-nav__item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 16%;
+    right: 0;
+    width: 1px;
+    height: 68%;
+    background: linear-gradient(180deg, transparent, rgba(193, 145, 52, 0.42), transparent);
+  }
+
   [data-theme='first-light-kingdom']
     .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
     .mobile-footer-nav__icon,
   [data-theme='first-light-kingdom']
     .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
     .mobile-footer-nav__status-icon {
-    width: 2.1rem;
-    height: 2.1rem;
-    flex: 0 0 2.1rem;
+    width: 2.62rem;
+    height: 2.62rem;
+    flex: 0 0 2.62rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -170,6 +590,48 @@
     height: 100%;
     display: block;
     object-fit: contain;
+  }
+
+  [data-theme='first-light-kingdom']
+    .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+    :is(.mobile-footer-nav__button, .mobile-footer-nav__status-card) {
+    min-height: 4.55rem;
+    gap: 0.08rem;
+    padding: 0.28rem 0.14rem;
+    border-radius: 1.05rem;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  [data-theme='first-light-kingdom']
+    .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+    .mobile-footer-nav__button--active {
+    color: #fff4cf;
+    border-color: rgba(224, 177, 78, 0.82);
+    background:
+      radial-gradient(circle at 50% 8%, rgba(45, 136, 198, 0.3), transparent 46%),
+      linear-gradient(180deg, #114778, #062950 72%, #051d3d);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 5px 12px rgba(7, 31, 69, 0.19);
+  }
+
+  [data-theme='first-light-kingdom']
+    .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+    :is(.mobile-footer-nav__label, .mobile-footer-nav__status-label) {
+    color: #102d52;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.035em;
+  }
+
+  [data-theme='first-light-kingdom']
+    .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+    .mobile-footer-nav__button--active
+    .mobile-footer-nav__label {
+    color: #fff0bd;
   }
 
   /*
@@ -232,9 +694,12 @@
   .time-bound-offers__item[data-offer-id='island_run'],
   .time-bound-offers__item[data-offer-id='vision_star'],
   .time-bound-offers__item[data-offer-id='daily_treats'],
+  .time-bound-offers__item[data-offer-id='holiday_calendar'],
   .time-bound-offers__item[data-offer-id^='egg_hatch'],
   .time-bound-offers__item[data-offer-id='todays_offer'],
-  .time-bound-offers__item[data-offer-id='zen_tree_water']
+  .time-bound-offers__item[data-offer-id='zen_tree_water'],
+  .time-bound-offers__item[data-offer-id='feed_creatures'],
+  .time-bound-offers__item[data-offer-id^='placeholder_']
 ) .time-bound-offers__circle {
   border: 0;
   background: transparent;
@@ -247,9 +712,12 @@
   .time-bound-offers__item[data-offer-id='island_run'],
   .time-bound-offers__item[data-offer-id='vision_star'],
   .time-bound-offers__item[data-offer-id='daily_treats'],
+  .time-bound-offers__item[data-offer-id='holiday_calendar'],
   .time-bound-offers__item[data-offer-id^='egg_hatch'],
   .time-bound-offers__item[data-offer-id='todays_offer'],
-  .time-bound-offers__item[data-offer-id='zen_tree_water']
+  .time-bound-offers__item[data-offer-id='zen_tree_water'],
+  .time-bound-offers__item[data-offer-id='feed_creatures'],
+  .time-bound-offers__item[data-offer-id^='placeholder_']
 ) .time-bound-offers__icon {
   width: 100%;
   height: 100%;
@@ -295,6 +763,73 @@
   .time-bound-offers__item[data-offer-id='zen_tree_water']
   .time-bound-offers__icon {
   background-image: url('/assets/themes/first-light-kingdom/today/offer-zen-tree.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-id='feed_creatures']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/offer-feed-pet.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-id^='placeholder_']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/offer-waiting.webp');
+  filter: saturate(0.84) contrast(0.98);
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-visual='holiday-new_year']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/holiday-circles/holiday-new-year.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-visual='holiday-valentines_day']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/holiday-circles/holiday-valentines-day.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-visual='holiday-st_patricks_day']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/holiday-circles/holiday-st-patricks-day.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-visual='holiday-easter']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/holiday-circles/holiday-easter.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-visual='holiday-eid_mubarak']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/holiday-circles/holiday-eid-mubarak.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-visual='holiday-halloween']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/holiday-circles/holiday-halloween.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-visual='holiday-thanksgiving']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/holiday-circles/holiday-thanksgiving.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-visual='holiday-hanukkah']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/holiday-circles/holiday-hanukkah.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .time-bound-offers__item[data-offer-visual='holiday-christmas']
+  .time-bound-offers__icon {
+  background-image: url('/assets/themes/first-light-kingdom/today/holiday-circles/holiday-christmas.webp');
 }
 
 [data-theme='first-light-kingdom'] .time-bound-offers__notification {

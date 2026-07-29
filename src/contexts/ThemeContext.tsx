@@ -403,6 +403,17 @@ const persistValue = (key: string, value: string) => {
   }
 };
 
+const readDevelopmentThemePreview = (): Theme | null => {
+  if (!import.meta.env.DEV || typeof window === 'undefined') {
+    return null;
+  }
+
+  const requestedTheme = new URLSearchParams(window.location.search).get('themePreview') as Theme | null;
+  return requestedTheme && AVAILABLE_THEMES.some((theme) => theme.id === requestedTheme)
+    ? requestedTheme
+    : null;
+};
+
 /**
  * Detect the user's system color scheme preference.
  * Uses the prefers-color-scheme media query to determine if the user
@@ -434,6 +445,7 @@ const getFlowVariantForHour = (hour: number): FlowVariant => {
 };
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
+  const previewTheme = readDevelopmentThemePreview();
   const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
     const stored = readStoredValue<ThemeMode>(THEME_MODE_STORAGE_KEY);
     return stored || 'system';
@@ -475,7 +487,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     themeMode === 'system' ? systemPreference : themeMode;
 
   // Get the active theme based on effective category
-  const theme: Theme = effectiveCategory === 'dark' ? darkTheme : lightTheme;
+  const theme: Theme = previewTheme ?? (effectiveCategory === 'dark' ? darkTheme : lightTheme);
 
   useEffect(() => {
     // Apply theme to document
@@ -485,7 +497,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     document.documentElement.style.colorScheme = colorScheme;
     
     // Persist settings
-    persistValue(THEME_STORAGE_KEY, theme);
+    if (!previewTheme) {
+      persistValue(THEME_STORAGE_KEY, theme);
+    }
     persistValue(THEME_MODE_STORAGE_KEY, themeMode);
     persistValue(LIGHT_THEME_STORAGE_KEY, lightTheme);
     persistValue(DARK_THEME_STORAGE_KEY, darkTheme);
@@ -508,7 +522,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       document.body.style.backgroundColor = resolvedBackground;
       document.body.style.colorScheme = colorScheme;
     }
-  }, [theme, themeMode, lightTheme, darkTheme]);
+  }, [theme, themeMode, lightTheme, darkTheme, previewTheme]);
 
   useEffect(() => {
     if (typeof document === 'undefined') {

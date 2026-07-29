@@ -40723,6 +40723,35 @@ body.habit-wizard-open .mobile-footer-nav {
 .campaign-card__eyebrow { color: #92400e; font-size: 0.68rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
 .campaign-card__title { color: #422006; font-size: 1rem; font-weight: 900; overflow-wrap: anywhere; }
 .campaign-card__day { background: rgba(146, 64, 14, 0.1); border-radius: 999px; color: #78350f; flex: 0 0 auto; font-size: 0.72rem; font-weight: 800; padding: 0.25rem 0.5rem; white-space: nowrap; }
+.campaign-card__progress {
+  background: rgba(146, 64, 14, 0.12);
+  border-radius: 999px;
+  display: block;
+  height: 0.28rem;
+  margin-top: 0.68rem;
+  overflow: hidden;
+  width: 100%;
+}
+.campaign-card__progress > span {
+  background: linear-gradient(90deg, #d97706, #fbbf24);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  width: var(--campaign-progress, 0%);
+}
+.campaign-card__hint {
+  align-items: center;
+  color: #92400e;
+  display: flex;
+  font-size: 0.65rem;
+  font-weight: 800;
+  justify-content: space-between;
+  margin-top: 0.38rem;
+}
+.campaign-card__hint > span {
+  font-size: 1rem;
+  line-height: 0.75;
+}
 
 .habit-checklist__campaign-badge {
   align-items: center;

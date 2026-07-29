@@ -26,6 +26,7 @@ export type TimeBoundOfferItem = {
   isActionable?: boolean;
   isPlaceholder?: boolean;
   visualVariant?: 'bonus' | 'vision-star';
+  visualKey?: string;
   sortPriority?: number;
   slotRole?: 'core' | 'filler';
 };
@@ -113,6 +114,7 @@ export function TimeBoundOfferRow({ offers, onOfferClick, daysAgo = 0 }: TimeBou
             type="button"
             className={`time-bound-offers__item ${itemStateClass}`.trim()}
             data-offer-id={offer.id}
+            data-offer-visual={offer.visualKey}
             onClick={() => !isDone && !isPlaceholder && onOfferClick(offer.id as TimeBoundOfferId | EggHatchOfferId)}
             disabled={isDone || isPlaceholder}
             aria-label={`${offer.label} ${isPlaceholder ? 'placeholder' : isDone ? 'done' : badgeLabel}`}
