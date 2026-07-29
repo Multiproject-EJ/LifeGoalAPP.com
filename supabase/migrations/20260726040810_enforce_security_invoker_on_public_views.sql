@@ -63,8 +63,14 @@ alter function public.apply_permanent_upgrade(uuid, text, integer)
   security invoker;
 alter function public.update_case_threads_updated_at()
   set search_path = pg_catalog, public;
-alter function public.set_current_timestamp_updated_at()
-  set search_path = pg_catalog, public;
+do $$
+begin
+  if to_regprocedure('public.set_current_timestamp_updated_at()') is not null then
+    alter function public.set_current_timestamp_updated_at()
+      set search_path = pg_catalog, public;
+  end if;
+end
+$$;
 alter function public.set_journal_updated_at()
   set search_path = pg_catalog, public;
 alter function public.set_user_reminder_prefs_updated_at()
@@ -119,7 +125,13 @@ revoke execute on function public.get_year_in_review_stats(integer) from anon;
 revoke execute on function public.island_run_claim_active_session(text, boolean, text, jsonb, integer) from anon;
 revoke execute on function public.island_run_heartbeat_session(text, integer) from anon;
 revoke execute on function public.island_run_release_active_session(text) from anon;
-revoke execute on function public.island_run_reset_progress(text, bigint, jsonb, text) from anon;
+do $$
+begin
+  if to_regprocedure('public.island_run_reset_progress(text,bigint,jsonb,text)') is not null then
+    revoke execute on function public.island_run_reset_progress(text, bigint, jsonb, text) from anon;
+  end if;
+end
+$$;
 revoke execute on function public.island_run_validate_session_owner(text) from anon;
 
 -- Match the admin condition on both sides of UPDATE. The former WITH CHECK
