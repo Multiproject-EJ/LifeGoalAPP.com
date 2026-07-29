@@ -11872,7 +11872,7 @@ export function IslandRunBoardPrototype({
         <div className="island-run-board__background-layer" aria-hidden="true">
           {shouldShowLegacyIslandBackground && (
             <img
-              key={islandBackgroundSrc}
+              key={`legacy-island-background-${islandBackgroundSrc}`}
               className="island-run-board__bg"
               src={islandBackgroundSrc}
               alt=""
@@ -11881,7 +11881,7 @@ export function IslandRunBoardPrototype({
           )}
           {islandArtAmbientBackgroundSrc && !isBackgroundHidden && (
             <img
-              key={islandArtAmbientBackgroundSrc}
+              key={`island-art-ambient-${islandArtAmbientBackgroundSrc}`}
               className="island-run-board__bg island-run-board__bg--v2-ambient"
               src={islandArtAmbientBackgroundSrc}
               alt=""

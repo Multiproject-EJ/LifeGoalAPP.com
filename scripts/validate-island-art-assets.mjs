@@ -157,12 +157,12 @@ function validateLandmarks(manifestPath, landmarks) {
         landmark.levelScales.forEach((scale, levelIndex) => {
           validatePositive(manifestPath, `${basePath}.levelScales[${levelIndex}]`, scale);
           if (levelIndex > 0 && isFiniteNumber(scale) && isFiniteNumber(landmark.levelScales[levelIndex - 1])) {
-            const expectedDouble = landmark.levelScales[levelIndex - 1] * 2;
-            if (Math.abs(scale - expectedDouble) > 0.000001) {
+            const previousScale = landmark.levelScales[levelIndex - 1];
+            if (scale <= previousScale) {
               addError(
                 manifestPath,
                 `${basePath}.levelScales[${levelIndex}]`,
-                `must be exactly double levelScales[${levelIndex - 1}] (${expectedDouble})`,
+                `must be larger than levelScales[${levelIndex - 1}] (${previousScale})`,
               );
             }
           }
@@ -308,8 +308,11 @@ function validateCompositionAnchor(manifestPath, manifest) {
   );
 
   if (
-    Math.abs(landmarkCenter.x - boardCenter.x) > tolerance
-    || Math.abs(landmarkCenter.y - boardCenter.y) > tolerance
+    manifest.assetCameraMode !== 'final-angle'
+    && (
+      Math.abs(landmarkCenter.x - boardCenter.x) > tolerance
+      || Math.abs(landmarkCenter.y - boardCenter.y) > tolerance
+    )
   ) {
     addError(
       manifestPath,

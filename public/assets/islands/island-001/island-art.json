@@ -15,76 +15,70 @@
     "width": 1000,
     "height": 1000
   },
+  "assetCameraMode": "final-angle",
   "scene": {
-    "boardCircle": "board/board-circle-inner.webp",
-    "ambientBackground": "background/ambient-background-v4.webp",
-    "boardOuterCircle": "board-outer/board-outer-foundation.webp"
+    "boardCircle": "board/board-plate.webp",
+    "ambientBackground": "background/ambient-background.webp"
   },
-  "boardOuterCircleImageScale": 1.36,
-  "boardPlateImageVerticalScale": 1.123,
-  "boardOuterCircleImageVerticalScale": 1.138,
+  "boardPlateImageScale": 1.4,
   "landmarks": [
     {
       "stopIndex": 0,
       "anchorId": "hatchery",
-      "levelZero": "scenery/plots/hatchery-l0.webp",
       "x": 340,
       "y": 340,
       "width": 472,
       "height": 472,
-      "levelScales": [0.275, 0.55, 1.1],
+      "levelScales": [0.5, 0.75, 0.95],
       "levels": [
-        "landmarks/hatchery/hatchery-l1-v2.webp",
-        "landmarks/hatchery/hatchery-l2-v2.webp",
-        "landmarks/hatchery/hatchery-l3-v3.webp"
+        "landmarks/hatchery/hatchery-l1.webp",
+        "landmarks/hatchery/hatchery-l2.webp",
+        "landmarks/hatchery/hatchery-l3.webp"
       ],
       "zBand": "mid"
     },
     {
       "stopIndex": 1,
       "anchorId": "habit",
-      "levelZero": "scenery/plots/habit-l0.webp",
       "x": 1060,
       "y": 340,
       "width": 472,
       "height": 472,
-      "levelScales": [0.275, 0.55, 1.1],
+      "levelScales": [0.5, 0.75, 0.95],
       "levels": [
         "landmarks/habit/habit-l1.webp",
         "landmarks/habit/habit-l2.webp",
-        "landmarks/habit/habit-l3-v3.webp"
+        "landmarks/habit/habit-l3.webp"
       ],
       "zBand": "mid"
     },
     {
       "stopIndex": 2,
       "anchorId": "mystery",
-      "levelZero": "scenery/plots/mystery-l0.webp",
       "x": 1060,
-      "y": 1260,
+      "y": 1040,
       "width": 472,
       "height": 472,
-      "levelScales": [0.275, 0.55, 1.1],
+      "levelScales": [0.5, 0.75, 0.95],
       "levels": [
         "landmarks/mystery/mystery-l1.webp",
         "landmarks/mystery/mystery-l2.webp",
-        "landmarks/mystery/mystery-l3-v3.webp"
+        "landmarks/mystery/mystery-l3.webp"
       ],
       "zBand": "front"
     },
     {
       "stopIndex": 3,
       "anchorId": "wisdom",
-      "levelZero": "scenery/plots/wisdom-l0.webp",
       "x": 340,
-      "y": 1260,
+      "y": 1040,
       "width": 472,
       "height": 472,
-      "levelScales": [0.275, 0.55, 1.1],
+      "levelScales": [0.5, 0.75, 0.95],
       "levels": [
         "landmarks/wisdom/wisdom-l1.webp",
         "landmarks/wisdom/wisdom-l2.webp",
-        "landmarks/wisdom/wisdom-l3-v3.webp"
+        "landmarks/wisdom/wisdom-l3.webp"
       ],
       "zBand": "front"
     }
@@ -92,28 +86,28 @@
   "boss": {
     "id": "boss-01",
     "x": 700,
-    "y": 800,
-    "width": 320,
-    "height": 320,
+    "y": 960,
+    "width": 230,
+    "height": 230,
     "zBand": "mid",
     "defaultState": "idle",
     "images": {
-      "idle": "bosses/noctyra-idle.webp",
-      "defeated": "bosses/noctyra-defeated.webp"
+      "idle": "bosses/aureon-idle.webp",
+      "defeated": "bosses/aureon-defeated.webp"
     }
   },
   "scenery": [
     {
       "id": "battle-center",
-      "src": "scenery/moon-arena-final-camera-v2.webp",
+      "src": "scenery/first-light-sun-court.webp",
       "x": 700,
       "y": 800,
       "width": 520,
-      "height": 347,
+      "height": 390,
       "assetCameraMode": "final-angle",
       "imageScale": 1,
       "upwardOffsetRatio": 0,
-      "zBand": "front"
+      "zBand": "back"
     }
   ]
 }

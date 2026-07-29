@@ -88,18 +88,18 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
     },
   },
   {
-    name: 'Island 1 buildings preserve the camera-kit doubling ladder',
+    name: 'Island 1 buildings preserve the fixed-plot growth ladder',
     run: () => {
       const manifest = JSON.parse(readSource('public/assets/islands/island-001/island-art.json')) as {
         landmarks?: Array<{ levelScales?: number[] }>;
       };
       assert(
         manifest.landmarks?.every((landmark) => (
-          landmark.levelScales?.[0] === 0.275
-          && landmark.levelScales?.[1] === 0.55
-          && landmark.levelScales?.[2] === 1.1
+          landmark.levelScales?.[0] === 0.5
+          && landmark.levelScales?.[1] === 0.75
+          && landmark.levelScales?.[2] === 0.95
         )) ?? false,
-        'Island 1 buildings must double from L1 to L2 and again from L2 to L3 while preserving the approved L3 maximum',
+        'Island 1 buildings must grow from the same fixed plot: L1 leaves breathing room, L2 fills most of it, and L3 reaches the full approved footprint',
       );
     },
   },
@@ -112,7 +112,7 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
       const manifest = JSON.parse(readSource('public/assets/islands/island-001/island-art.json')) as {
         scenery?: Array<{ assetCameraMode?: string; src?: string; x?: number; y?: number }>;
       };
-      const arena = manifest.scenery?.find((entry) => entry.src?.includes('moon-arena-final-camera'));
+      const arena = manifest.scenery?.find((entry) => entry.src?.includes('first-light-sun-court'));
       assert(stage.includes('renderMode="world-final"'), 'BoardStage must provide an untransformed final-camera world root');
       assert(stage.includes('renderMode="world-legacy"'), 'BoardStage must keep a compatibility root for unconverted world assets');
       assert(artLayers.includes('shouldRenderWorldAsset(scenery.assetCameraMode)'), 'Scenery must route by its own camera contract');
