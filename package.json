@@ -28,6 +28,7 @@
     "test:gamification-data-routing": "node scripts/check-gamification-data-routing.mjs",
     "test:telemetry-security-migration": "node scripts/check-telemetry-security-migration.mjs",
     "test:security-definer-client-access": "node scripts/check-security-definer-client-access.mjs",
+    "test:sanitized-campaign-sharing": "node scripts/check-sanitized-campaign-sharing.mjs",
     "check:admin-alerts-foundation": "node scripts/check-admin-alerts-foundation.mjs",
     "test:habit-swipe-threshold-haptic": "node scripts/check-habit-swipe-threshold-haptic.mjs",
     "test:dice-commerce-switch": "node scripts/check-dice-commerce-switch.mjs",
