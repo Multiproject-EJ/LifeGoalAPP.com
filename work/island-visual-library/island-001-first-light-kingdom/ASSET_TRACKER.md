@@ -98,6 +98,11 @@ The two lower landmarks use a perspective-corrected scene Y anchor of 1040.
 This was measured on the real Island Run renderer; retaining the old
 mathematically mirrored Y anchor placed their bases on the cliff face.
 
+The four X anchors were also aligned to the optical centers measured directly
+from the camera-locked board plate: Hatchery 359, Crown Tree 1029, Event Arena
+1090, and Wisdom 304. This removes the small outward/inward drift that remained
+visible at 390 × 844 without changing the approved asset sizes.
+
 ## Assets 17–18 — center court and Luma guide
 
 The first center-court draft included a tall dark gate that read as a fifth

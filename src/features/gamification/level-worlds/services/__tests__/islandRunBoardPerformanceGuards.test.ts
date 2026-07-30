@@ -91,7 +91,7 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
     name: 'Island 1 buildings preserve the fixed-plot growth ladder',
     run: () => {
       const manifest = JSON.parse(readSource('public/assets/islands/island-001/island-art.json')) as {
-        landmarks?: Array<{ anchorId?: string; levelScales?: number[] }>;
+        landmarks?: Array<{ anchorId?: string; levelScales?: number[]; x?: number; y?: number }>;
       };
       const hatchery = manifest.landmarks?.find((landmark) => landmark.anchorId === 'hatchery');
       const habit = manifest.landmarks?.find((landmark) => landmark.anchorId === 'habit');
@@ -110,6 +110,20 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
         && habit.levelScales?.[1] === 0.72
         && habit.levelScales?.[2] === 0.86,
         'The Crown Tree must preserve more canopy clearance than the architectural landmarks',
+      );
+      assert(
+        hatchery?.x === 359
+        && habit?.x === 1029
+        && mystery?.x === 1090
+        && wisdom?.x === 304,
+        'Island 1 landmarks must stay optically centered on the four camera-locked foundations',
+      );
+      assert(
+        hatchery?.y === 340
+        && habit?.y === 340
+        && mystery?.y === 1040
+        && wisdom?.y === 1040,
+        'Island 1 landmark bases must retain their perspective-corrected vertical anchors',
       );
     },
   },

@@ -25,7 +25,7 @@
     {
       "stopIndex": 0,
       "anchorId": "hatchery",
-      "x": 340,
+      "x": 359,
       "y": 340,
       "width": 472,
       "height": 472,
@@ -40,7 +40,7 @@
     {
       "stopIndex": 1,
       "anchorId": "habit",
-      "x": 1060,
+      "x": 1029,
       "y": 340,
       "width": 472,
       "height": 472,
@@ -55,7 +55,7 @@
     {
       "stopIndex": 2,
       "anchorId": "mystery",
-      "x": 1060,
+      "x": 1090,
       "y": 1040,
       "width": 472,
       "height": 472,
@@ -70,7 +70,7 @@
     {
       "stopIndex": 3,
       "anchorId": "wisdom",
-      "x": 340,
+      "x": 304,
       "y": 1040,
       "width": 472,
       "height": 472,
