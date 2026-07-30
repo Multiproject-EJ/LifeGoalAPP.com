@@ -4,6 +4,7 @@ import { ShopItemCostLine } from './ShopItemCostLine';
 
 export interface LandmarkTicketModalProps {
   mode?: 'standard' | 'early';
+  landmarkId: string;
   landmarkTitle: string;
   landmarkDescription?: string;
   landmarkIcon: string;
@@ -25,6 +26,7 @@ function cleanLandmarkTitle(title: string): string {
 
 export function LandmarkTicketModal({
   mode = 'standard',
+  landmarkId,
   landmarkTitle,
   landmarkDescription,
   landmarkIcon,
@@ -45,6 +47,12 @@ export function LandmarkTicketModal({
   const displayTitle = cleanLandmarkTitle(landmarkTitle) || 'Landmark';
   const isEarlyOffer = mode === 'early';
   const titleId = `landmark-ticket-${isEarlyOffer ? 'early' : 'standard'}-title`;
+  const emblemSrc = {
+    habit: '/assets/island-run/tickets/habit-pass-emblem.webp',
+    mystery: '/assets/island-run/tickets/event-arena-pass-emblem.webp',
+    wisdom: '/assets/island-run/tickets/wisdom-pass-emblem.webp',
+    boss: '/assets/island-run/tickets/boss-pass-emblem.webp',
+  }[landmarkId];
 
   useEffect(() => () => {
     if (purchaseTimerRef.current !== null) {
@@ -110,7 +118,15 @@ export function LandmarkTicketModal({
               Island {String(islandNumber).padStart(2, '0')} · Passage {String(stopNumber).padStart(2, '0')}
             </span>
             <span className="landmark-ticket-modal__landmark-icon" aria-hidden="true">
-              {landmarkIcon}
+              {emblemSrc ? (
+                <img
+                  className="landmark-ticket-modal__landmark-emblem"
+                  src={emblemSrc}
+                  alt=""
+                  width={192}
+                  height={192}
+                />
+              ) : landmarkIcon}
             </span>
             <strong className="landmark-ticket-modal__landmark-name">{displayTitle}</strong>
             <span className="landmark-ticket-modal__admit-copy">

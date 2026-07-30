@@ -12962,6 +12962,7 @@ export function IslandRunBoardPrototype({
         ) {
           return createPortal((
             <LandmarkTicketModal
+              landmarkId={activeStop.stopId}
               landmarkTitle={activeStop.title}
               landmarkDescription={activeStop.description}
               landmarkIcon={getStopIcon(activeStop)}
@@ -16318,6 +16319,7 @@ export function IslandRunBoardPrototype({
         return (
           <LandmarkTicketModal
             mode="early"
+            landmarkId={promptedStop?.stopId ?? prepayTicketPromptStopId}
             landmarkTitle={promptedStop?.title ?? prepayTicketPromptStopId}
             landmarkDescription={promptedStop?.description}
             landmarkIcon={promptedStop ? getStopIcon(promptedStop) : '✦'}
@@ -16347,6 +16349,7 @@ export function IslandRunBoardPrototype({
         const shortfall = Math.max(0, cost - wallet);
         return (
           <LandmarkTicketModal
+            landmarkId={promptedStop?.stopId ?? ticketPromptStopId}
             landmarkTitle={promptedStop?.title ?? ticketPromptStopId}
             landmarkDescription={promptedStop?.description}
             landmarkIcon={promptedStop ? getStopIcon(promptedStop) : '✦'}
