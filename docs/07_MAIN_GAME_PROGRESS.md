@@ -3532,3 +3532,31 @@ Testing:
 - `git diff --check`
 Next: reproduce and close the Island 1 Wisdom/Event Arena, traffic-light, and
 three-tap box issues described in `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.
+
+---
+
+Date: 2026-07-30
+Slice: Island 1 reported-issue verification
+Summary:
+- Confirmed the earlier `17b44832` slice already closed the reported Event
+  Arena, Wisdom, traffic-light, and three-tap box paths.
+- Event Arena has a no-live-event orientation fallback and successful canonical
+  event games resolve the landmark. Wisdom completion now has explicit outcome
+  copy and advances the frontier.
+- Traffic-light charge persists an explicit empty island entry after its eighth
+  pass, so overlay persistence clears the prior charge and the next pass starts
+  at 1/8 instead of reopening the reward.
+- The selected traffic-light box now requires three taps, with three visible
+  impact/progress states, before its reward action runs.
+- Fresh 390×844 browser QA confirmed the 36-tile ring is visible and follows
+  the Island 1 circular court. The approved lower controls remain locked; the
+  mirrored upper controls sit on the white controller shoulder plates.
+Evidence:
+- `tmp/island1-loop-audit-2026-07-30/island1-current-mobile.png`
+Testing:
+- Reviewed the canonical completion and traffic-light services plus focused
+  tests already committed in `17b44832`.
+- Mobile board browser QA completed with no console errors in the preceding
+  First Light surface pass.
+Next: implement the canonical ambient/audio-state model described in
+`docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.

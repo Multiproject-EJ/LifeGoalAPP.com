@@ -111,18 +111,19 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** Resume the remaining player-reported Island 1 reliability list:
-verify Wisdom and Event Arena completion outcomes, reproduce the traffic-light
-reward-repeat issue, and confirm the box's three-tap animation state.
-**Files to inspect first:** canonical Island Run action services and tests,
-`src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`,
-traffic-light/box services, and the Island 1 stop plan.
-**Acceptance criteria:** Wisdom and Event Arena have a clear successful outcome;
-one completed traffic-light charge yields one green-light throw and cannot be
-reclaimed repeatedly; the three-tap box has three visible impact states and one
-reward resolution; all gameplay writes remain in canonical actions/services.
-**How to test:** use a fresh Island 1 state, complete each affected interaction,
-reload after each reward, and verify no duplicate grants or blocked stop.
+**Objective:** Define and implement the canonical Island Run audio-state model:
+an always-authored ambient bed, intentional quiet/music states, adaptive music
+cues, and independent roll/movement/reward effects.
+**Files to inspect first:** `docs/05_MAIN_GAME_AUDIO_HAPTICS_ASSETS_MINIGAME_TEMPLATE.md`,
+the Island Run audio service, persisted `musicEnabled`/`sfxEnabled` state, the
+First Light sound console, and Today ambiance controls.
+**Acceptance criteria:** the game never feels accidentally dead; ambience,
+adaptive music, and game effects have explicit independent semantics; user
+preferences persist; reduced-motion and mute/accessibility expectations remain
+respected; React does not become a second audio-state authority.
+**How to test:** enter Island Run with each preference combination, roll and
+claim a reward, background/foreground the app, reload, and verify no duplicate
+loops or surprise playback.
 
 ---
 
