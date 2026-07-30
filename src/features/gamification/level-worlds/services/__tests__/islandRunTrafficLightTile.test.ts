@@ -22,6 +22,23 @@ export const islandRunTrafficLightTileTests: TestCase[] = [
       assertEqual(unlock.chargeAfter, TRAFFIC_LIGHT_CHARGE_TARGET, 'Expected displayed unlock charge to be 8');
       assertEqual(unlock.unlocked, true, 'Expected unlock at 8');
       assertEqual(getTrafficLightCharge(unlock.bonusTileChargeByIsland, 2), 0, 'Expected ledger reset after unlock');
+      assertEqual(
+        Object.prototype.hasOwnProperty.call(unlock.bonusTileChargeByIsland, '2'),
+        true,
+        'Expected an explicit island entry so overlay persistence clears the previous charge',
+      );
+      assertEqual(
+        Object.keys(unlock.bonusTileChargeByIsland['2'] ?? {}).length,
+        0,
+        'Expected the explicit island entry to be empty after the one-shot unlock',
+      );
+
+      const nextCycle = applyTrafficLightPass({
+        bonusTileChargeByIsland: unlock.bonusTileChargeByIsland,
+        islandNumber: 2,
+      });
+      assertEqual(nextCycle.chargeAfter, 1, 'Expected the next cycle to restart at the first light');
+      assertEqual(nextCycle.unlocked, false, 'Expected no repeat reward immediately after the reset');
     },
   },
   {

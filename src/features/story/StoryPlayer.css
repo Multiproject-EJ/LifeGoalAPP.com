@@ -13,7 +13,9 @@
 
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  /* StoryPlayer portals to <body>; keep it above every immersive game shell
+     once its scheduler grants attention. */
+  z-index: 2147483000;
   display: flex;
   flex-direction: column;
   background: var(--story-surface);

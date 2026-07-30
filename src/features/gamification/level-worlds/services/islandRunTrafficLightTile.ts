@@ -87,8 +87,11 @@ export function applyTrafficLightPass(input: {
   if (chargeAfter >= TRAFFIC_LIGHT_CHARGE_TARGET) {
     const innerNext = { ...currentIsland };
     delete innerNext[TRAFFIC_LIGHT_TILE_INDEX];
-    if (Object.keys(innerNext).length > 0) next[islandKey] = innerNext;
-    else delete next[islandKey];
+    // Runtime persistence overlay-merges this nested ledger. Keep an explicit
+    // empty island entry so the persisted charge is cleared after the one
+    // unlock/coin-flip, instead of silently retaining 7/8 and unlocking on
+    // every subsequent pass.
+    next[islandKey] = innerNext;
     return { bonusTileChargeByIsland: next, chargeAfter: TRAFFIC_LIGHT_CHARGE_TARGET, unlocked: true };
   }
 

@@ -28,7 +28,7 @@ export const ISLAND_RUN_CONTROLLER_SLOT_MAP: Record<IslandRunControllerSlotId, I
   // Side actions are mirrored around the controller's centre line. Upper
   // wedges stay in the shoulders and clear both the roll core and the lower
   // handle-slice controls at every responsive shell size.
-  leftUpper: { x: 15.5, y: 18.5, rotate: -3.5, scale: 0.96, depth: 'raised' },
+  leftUpper: { x: 17.5, y: 18.5, rotate: -2.5, scale: 0.94, depth: 'raised' },
   // APPROVED VISUAL CHECKPOINT (2026-07-27): Creatures is locked to this
   // placement. Keep its x/y/rotation/scale unless the placement is explicitly
   // reopened; rightLower mirrors this geometry across the controller centre.
@@ -36,7 +36,7 @@ export const ISLAND_RUN_CONTROLLER_SLOT_MAP: Record<IslandRunControllerSlotId, I
   centerCore: { x: 50, y: 22, rotate: 0, scale: 1, depth: 'inset' },
   centerBadge: { x: 50, y: -4, rotate: 0, scale: 0.9, depth: 'surface' },
   rightLower: { x: 88.5, y: 57.5, rotate: -4, scale: 0.92, depth: 'raised' },
-  rightUpper: { x: 84.5, y: 18.5, rotate: 3.5, scale: 0.96, depth: 'raised' },
+  rightUpper: { x: 82.5, y: 18.5, rotate: 2.5, scale: 0.94, depth: 'raised' },
 };
 
 export function getIslandRunControllerSlotStyle(slot: IslandRunControllerSlot): CSSProperties {

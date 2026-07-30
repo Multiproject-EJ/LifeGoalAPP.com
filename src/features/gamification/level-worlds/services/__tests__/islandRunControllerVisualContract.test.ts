@@ -5,6 +5,18 @@ import { assert, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunControllerVisualContractTests: TestCase[] = [
   {
+    name: 'upper controller buttons stay mirrored on the white shoulder plates',
+    run: () => {
+      const left = ISLAND_RUN_CONTROLLER_SLOT_MAP.leftUpper;
+      const right = ISLAND_RUN_CONTROLLER_SLOT_MAP.rightUpper;
+      assertEqual(left.x, 17.5, 'Upper-left control must stay over its shoulder plate');
+      assertEqual(right.x, 100 - left.x, 'Upper controls must remain horizontally mirrored');
+      assertEqual(right.y, left.y, 'Upper controls must remain vertically aligned');
+      assertEqual(right.rotate, -left.rotate, 'Upper control angles must remain mirrored');
+      assertEqual(right.scale, left.scale, 'Upper controls must use the same restrained scale');
+    },
+  },
+  {
     name: 'approved lower controller buttons keep their locked mirrored geometry',
     run: () => {
       const left = ISLAND_RUN_CONTROLLER_SLOT_MAP.leftLower;

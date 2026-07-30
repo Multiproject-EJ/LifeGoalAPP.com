@@ -390,6 +390,7 @@ import {
   resolveEventMinigameCompletionId,
   resolveSpaceExcavatorEventMinigame,
   type MinigameLaunchSource,
+  shouldResolveEventArenaStopOnMinigameComplete,
   shouldResolveMysteryStopOnMinigameComplete,
 } from '../services/islandRunMinigameLauncherService';
 import {
@@ -1862,7 +1863,12 @@ export function IslandRunBoardPrototype({
     return counts;
   }, [dormantDoorSelectedFigures]);
   const dormantDoorBestMatchCount = Math.max(dormantDoorPrizeCounts.small, dormantDoorPrizeCounts.medium, dormantDoorPrizeCounts.large);
-  const [trafficLightCoinFlip, setTrafficLightCoinFlip] = useState<{ seed: number; reward: TrafficLightCoinFlipReward | null; phase: 'ready' | 'flipping' | 'revealed' | 'opened' } | null>(null);
+  const [trafficLightCoinFlip, setTrafficLightCoinFlip] = useState<{
+    seed: number;
+    reward: TrafficLightCoinFlipReward | null;
+    phase: 'ready' | 'flipping' | 'revealed' | 'opened';
+    boxTapCount: number;
+  } | null>(null);
   const [trafficLightRewardConfettiActive, setTrafficLightRewardConfettiActive] = useState(false);
   const [showTrafficLightCoinHint, setShowTrafficLightCoinHint] = useState(false);
   useEffect(() => {
@@ -2045,7 +2051,9 @@ export function IslandRunBoardPrototype({
     };
   } | null>(null);
   const [firstRunStep, setFirstRunStep] = useState<'celebration' | 'ship-name' | 'mission' | 'launch'>('celebration');
-  const [firstRunShipName, setFirstRunShipName] = useState('Starling');
+  const [firstRunShipName, setFirstRunShipName] = useState(
+    () => readIslandRunGuestFunnelState().shipName?.trim() || 'Starling',
+  );
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const isOnboardingCelebrationVisible = showFirstRunCelebration || showHatcheryL1Celebration;
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
@@ -5224,6 +5232,8 @@ export function IslandRunBoardPrototype({
     setTrafficLightCoinFlip((current) => current?.reward === reward ? { ...current, phase: 'opened' } : current);
     setTrafficLightRewardConfettiActive(false);
     setShowTrafficLightCoinHint(false);
+    playIslandRunSound('reward_bar_claim_burst');
+    triggerIslandRunHaptic('reward_claim');
 
     window.setTimeout(() => {
       setTrafficLightRewardConfettiActive(true);
@@ -5235,6 +5245,27 @@ export function IslandRunBoardPrototype({
       setShowTrafficLightCoinHint(false);
     }, TRAFFIC_LIGHT_REWARD_AUTO_CLOSE_MS);
   }, [client, session, trafficLightCoinFlip]);
+
+  const handleTapTrafficLightReward = useCallback(() => {
+    if (!trafficLightCoinFlip?.reward || trafficLightCoinFlip.phase !== 'revealed') return;
+    const nextTapCount = Math.min(3, trafficLightCoinFlip.boxTapCount + 1);
+    if (nextTapCount < 3) {
+      playIslandRunSound('token_move');
+      triggerIslandRunHaptic('roll');
+      setTrafficLightCoinFlip((current) => (
+        current?.reward === trafficLightCoinFlip.reward && current.phase === 'revealed'
+          ? { ...current, boxTapCount: nextTapCount }
+          : current
+      ));
+      return;
+    }
+    setTrafficLightCoinFlip((current) => (
+      current?.reward === trafficLightCoinFlip.reward && current.phase === 'revealed'
+        ? { ...current, boxTapCount: 3 }
+        : current
+    ));
+    handleOpenTrafficLightReward();
+  }, [handleOpenTrafficLightReward, trafficLightCoinFlip]);
 
   const dismissLandmarkCoachmark = useCallback(() => {
     setShowLandmarkCoachmark(false);
@@ -5612,6 +5643,8 @@ export function IslandRunBoardPrototype({
       || !hasHydratedRuntimeState
       || isIslandVisualPreview
       || isArcadeStoryJourney
+      || !hasDismissedEntryAudioModal
+      || showEntryAudioModal
     ) {
       return;
     }
@@ -5620,7 +5653,15 @@ export function IslandRunBoardPrototype({
     if (!hasSeenStory) {
       setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
     }
-  }, [hasHydratedRuntimeState, isArcadeStoryJourney, isIslandVisualPreview, runtimeState.storyPrologueSeen, storySeenStorageKey]);
+  }, [
+    hasDismissedEntryAudioModal,
+    hasHydratedRuntimeState,
+    isArcadeStoryJourney,
+    isIslandVisualPreview,
+    runtimeState.storyPrologueSeen,
+    showEntryAudioModal,
+    storySeenStorageKey,
+  ]);
 
   useEffect(() => {
     if (!shouldAutoAdvanceIslandOnTimerExpiry({
@@ -6623,6 +6664,7 @@ export function IslandRunBoardPrototype({
               seed: (effectiveIslandNumber * 1009) + (rollIndexRef.current * 131) + currentIndex,
               reward: null,
               phase: 'ready',
+              boxTapCount: 0,
             });
             setLandingText('🚦 Traffic light complete! Flip the coin for a mystery reward.');
           } else {
@@ -9336,7 +9378,7 @@ export function IslandRunBoardPrototype({
   // follow-up PR).  The function body preserves the canonical hold loop strings
   // that islandRunBoardEssenceParity.test.ts source-guards check.
 
-  const handleCompleteActiveStop = () => {
+  const handleCompleteActiveStop = (successMessage?: string) => {
     if (!activeStopId) return;
     const activeStopIndex = islandStopPlan.findIndex((stop) => stop.stopId === activeStopId);
     const requiresTicketPayment = doesStopRequireTicketPayment(activeStopId);
@@ -9449,7 +9491,7 @@ export function IslandRunBoardPrototype({
 
       updateCompletedStopsWithSync((current) => ensureStopCompleted(current, activeStopId), { triggerSource: 'stop_objective_complete' });
       setMysteryStopReward(null);
-      setLandingText(`${activeStopId.toUpperCase()} stop objective done! Open 🔨 Build to fund this island's buildings.`);
+      setLandingText(successMessage ?? `${activeStopId.toUpperCase()} stop objective done! Open 🔨 Build to fund this island's buildings.`);
       setActiveStopId(null);
       return;
     }
@@ -9510,7 +9552,7 @@ export function IslandRunBoardPrototype({
     }
     updateCompletedStopsWithSync((current) => ensureStopCompleted(current, activeStopId), { triggerSource: 'stop_objective_complete' });
     setMysteryStopReward(null);
-    setLandingText(`${activeStopId.toUpperCase()} stop completed.`);
+    setLandingText(successMessage ?? `${activeStopId.toUpperCase()} stop completed.`);
     setActiveStopId(null);
   };
 
@@ -10309,7 +10351,13 @@ export function IslandRunBoardPrototype({
       setRuntimeState(record);
       setDicePool(record.dicePool);
       setLandingText(`Starter claim complete: +${starterEssenceBonus} 💰 money, +${starterDiceBonus} dice.`);
-      setFirstRunStep('ship-name');
+      const guestShipName = readIslandRunGuestFunnelState().shipName?.trim();
+      if (guestShipName) {
+        setFirstRunShipName(guestShipName);
+        setFirstRunStep('mission');
+      } else {
+        setFirstRunStep('ship-name');
+      }
       void recordTelemetryEvent({
         userId: session.user.id,
         eventType: 'onboarding_step',
@@ -11056,6 +11104,7 @@ export function IslandRunBoardPrototype({
       showBuildPanel ||
       showClaimModal ||
       showEggReadyBanner ||
+      !hasDismissedEntryAudioModal ||
       showEntryAudioModal ||
       techCollectionModal ||
       techCompletionCelebration ||
@@ -11097,6 +11146,7 @@ export function IslandRunBoardPrototype({
       showBuildPanel ||
       showClaimModal ||
       showEggReadyBanner ||
+      !hasDismissedEntryAudioModal ||
       showEntryAudioModal ||
       techCollectionModal ||
       techCompletionCelebration ||
@@ -11412,7 +11462,7 @@ export function IslandRunBoardPrototype({
               alt=""
               aria-hidden="true"
             />
-            <h2 id="island-run-entry-audio-title" className="island-run-entry-audio__title">Music / Sound</h2>
+            <h2 id="island-run-entry-audio-title" className="island-run-entry-audio__title">Ambience / Sound</h2>
             <button
               type="button"
               className="island-run-entry-audio__close"
@@ -11420,7 +11470,7 @@ export function IslandRunBoardPrototype({
                 setHasDismissedEntryAudioModal(true);
                 setShowEntryAudioModal(false);
               }}
-              aria-label="Close Music / Sound modal"
+              aria-label="Close Ambience / Sound modal"
             />
             <div className="island-run-entry-audio__toggles" role="group" aria-label="Island Run audio settings">
               <button
@@ -11428,7 +11478,7 @@ export function IslandRunBoardPrototype({
                 className={`island-run-entry-audio__pill island-run-entry-audio__pill--music${musicEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
                 aria-pressed={musicEnabled}
                 onClick={() => setMusicEnabled((current) => !current)}
-                aria-label={`Music ${musicEnabled ? 'on' : 'off'}`}
+                aria-label={`Ambience and music ${musicEnabled ? 'on' : 'off'}`}
               >
                 <span className="island-run-entry-audio__pill-knob" />
               </button>
@@ -11969,7 +12019,7 @@ export function IslandRunBoardPrototype({
                 }}
               >
                 <span>{musicEnabled ? '✓' : '○'}</span>
-                <span>Music</span>
+                <span>Ambience</span>
                 <span aria-hidden="true">🎵</span>
               </button>
               <button
@@ -12311,6 +12361,7 @@ export function IslandRunBoardPrototype({
           bossCreatureArtState={bossCreatureArtState}
           spark36RingGradient={spark36RingSegmentsGradient}
           isSpark36={isSpark36BoardProfile}
+          tileVisualScale={effectiveIslandNumber === 1 ? 1.16 : 1}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
           isInteractionPaused={doesModalOwnAttention}
@@ -13157,7 +13208,7 @@ export function IslandRunBoardPrototype({
                 ) : arenaBoostStatus === 'no_active_event' ? (
                   <>
                     <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena</strong></p>
-                    <p>No event is active right now. The Arena will light up when the next event begins.</p>
+                    <p>No live event is active right now. Complete the short Arena orientation so real-time scheduling never blocks your island.</p>
                   </>
                 ) : (
                   <>
@@ -13173,10 +13224,19 @@ export function IslandRunBoardPrototype({
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                    onClick={handleLaunchTimedEventMinigame}
-                    disabled={!effectiveActiveTimedEvent || activeEventTickets <= 0}
+                    onClick={arenaBoostStatus === 'no_active_event'
+                      ? () => {
+                          setArenaSoftSaveValueMomentReached(true);
+                          handleCompleteActiveStop('🎪 Arena orientation complete! Wisdom landmark unlocked.');
+                        }
+                      : handleLaunchTimedEventMinigame}
+                    disabled={arenaBoostStatus !== 'no_active_event' && (!effectiveActiveTimedEvent || activeEventTickets <= 0)}
                   >
-                    {activeEventTickets > 0 ? 'Play event minigame' : '🎟️ Earn event tickets on the reward bar'}
+                    {arenaBoostStatus === 'no_active_event'
+                      ? 'Complete Arena orientation'
+                      : activeEventTickets > 0
+                        ? 'Play event minigame'
+                        : '🎟️ Earn event tickets on the reward bar'}
                   </button>
                   <button
                     type="button"
@@ -13194,7 +13254,7 @@ export function IslandRunBoardPrototype({
                   </button>
                 </div>
                 <p className="island-stop-modal__fineprint">
-                  The old Mystery check-in, breathing, action, and vision prompts now appear as board Daily Clue Cards.
+                  Outcome: finish one Arena challenge to resolve this landmark and unlock Wisdom. Live games also add event-bar progress.
                 </p>
               </div>
             )}
@@ -13206,8 +13266,7 @@ export function IslandRunBoardPrototype({
                   session={session}
                   islandNumber={islandNumber}
                   onComplete={(message) => {
-                    setLandingText(message);
-                    handleCompleteActiveStop();
+                    handleCompleteActiveStop(`✅ Habit landmark complete. ${message}`);
                   }}
                   onComeBackLater={handleComeBackLaterForActiveStop}
                 />
@@ -13235,8 +13294,7 @@ export function IslandRunBoardPrototype({
                       kind: 'wisdom',
                       text: message,
                     });
-                    setLandingText(message);
-                    handleCompleteActiveStop();
+                    handleCompleteActiveStop(`🌳 Wisdom landmark complete — next landmark unlocked. ${message}`);
                   }}
                 />
                 {/* Optional: answer this island's Compass fragment here. Never
@@ -13270,8 +13328,7 @@ export function IslandRunBoardPrototype({
                         playIslandRunSound('utility_stop_complete');
                         triggerIslandRunHaptic('utility_stop_complete');
                         void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'wisdom_essence_bonus', island_number: islandNumber, cost_diamonds: WISDOM_ESSENCE_BONUS_COST_DIAMONDS, essence_gained: WISDOM_ESSENCE_BONUS_AMOUNT } });
-                        setLandingText(`Wisdom bonus! -${WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎, +${WISDOM_ESSENCE_BONUS_AMOUNT} 💰`);
-                        handleCompleteActiveStop();
+                        handleCompleteActiveStop(`🌳 Wisdom complete! -${WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎, +${WISDOM_ESSENCE_BONUS_AMOUNT} 💰. Next landmark unlocked.`);
                       }}
                     >
                       💰 Money Bonus — {WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎 → +{WISDOM_ESSENCE_BONUS_AMOUNT} Money
@@ -13512,8 +13569,7 @@ export function IslandRunBoardPrototype({
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
                     onClick={() => {
-                      setLandingText(`${activeStop.title} completed from your filled Compass session.`);
-                      handleCompleteActiveStop();
+                      handleCompleteActiveStop(`${activeStop.title} completed from your filled Compass session. Next landmark unlocked.`);
                     }}
                   >
                     Use filled Compass box & Complete Landmark
@@ -13529,7 +13585,7 @@ export function IslandRunBoardPrototype({
               && activeStop.stopId !== 'mystery'
               && activeStop.stopId !== 'wisdom'
               && openedStopIsPlayable ? (
-                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={handleCompleteActiveStop}>
+                <button type="button" className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary" onClick={() => handleCompleteActiveStop()}>
                   Complete Stop
                 </button>
               ) : null}
@@ -13537,7 +13593,7 @@ export function IslandRunBoardPrototype({
                 <button
                   type="button"
                   className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                  onClick={handleCompleteActiveStop}
+                  onClick={() => handleCompleteActiveStop()}
                   disabled={!bossTrialResolved || bossTrialPhase === 'in_progress'}
                 >
                   {isCurrentIslandFullyCleared ? '✅ Boss Stop Complete' : '🔒 Full Rewards Locked — Finish Landmark Upgrades'}
@@ -13770,10 +13826,12 @@ export function IslandRunBoardPrototype({
             {(trafficLightCoinFlip.phase === 'revealed' || trafficLightCoinFlip.phase === 'opened') && trafficLightCoinFlip.reward && (
               <button
                 type="button"
-                className="island-traffic-light__winner-spotlight"
-                onClick={handleOpenTrafficLightReward}
+                className={`island-traffic-light__winner-spotlight island-traffic-light__winner-spotlight--tap-${trafficLightCoinFlip.boxTapCount}`}
+                onClick={handleTapTrafficLightReward}
                 disabled={trafficLightCoinFlip.phase === 'opened'}
-                aria-label={`Open ${trafficLightCoinFlip.reward.label}`}
+                aria-label={trafficLightCoinFlip.phase === 'revealed'
+                  ? `Tap ${trafficLightCoinFlip.reward.label}, ${trafficLightCoinFlip.boxTapCount} of 3 taps`
+                  : `${trafficLightCoinFlip.reward.label} opened`}
               >
                 <img
                   className="island-traffic-light__winner-image"
@@ -13783,7 +13841,16 @@ export function IslandRunBoardPrototype({
                   decoding="async"
                 />
                 {trafficLightCoinFlip.phase === 'revealed' && (
-                  <span className="island-traffic-light__winner-tap-hint">Tap to open</span>
+                  <span className="island-traffic-light__winner-tap-hint">
+                    {trafficLightCoinFlip.boxTapCount === 0
+                      ? 'Tap 3 times to crack it'
+                      : `${3 - trafficLightCoinFlip.boxTapCount} tap${3 - trafficLightCoinFlip.boxTapCount === 1 ? '' : 's'} left`}
+                    <span aria-hidden="true">
+                      {[0, 1, 2].map((tapIndex) => (
+                        <i key={tapIndex} className={tapIndex < trafficLightCoinFlip.boxTapCount ? 'is-complete' : ''}>•</i>
+                      ))}
+                    </span>
+                  </span>
                 )}
               </button>
             )}
@@ -15749,6 +15816,17 @@ export function IslandRunBoardPrototype({
                 }
               }
               if (
+                activeStopId === 'mystery'
+                && activeLaunchedMinigameId
+                && shouldResolveEventArenaStopOnMinigameComplete({
+                  launchSource: activeLaunchedMinigameSource,
+                  minigameId: activeLaunchedMinigameId,
+                  completed: result.completed,
+                })
+              ) {
+                setArenaSoftSaveValueMomentReached(true);
+                handleCompleteActiveStop('🎪 Arena challenge complete! Wisdom landmark unlocked and event-bar progress added.');
+              } else if (
                 activeLaunchedMinigameId &&
                 shouldResolveMysteryStopOnMinigameComplete({
                   launchSource: activeLaunchedMinigameSource ?? 'shop_button',
@@ -15756,8 +15834,7 @@ export function IslandRunBoardPrototype({
                   completed: result.completed,
                 })
               ) {
-                setLandingText('🔮 Vision Quest complete! Mystery stop resolved.');
-                handleCompleteActiveStop();
+                handleCompleteActiveStop('🔮 Vision Quest complete! Mystery stop resolved.');
               } else if (result.completed && result.reward) {
                 const { dice: rewardDice = 0, spinTokens: rewardSpinTokens = 0, diamonds: rewardDiamonds = 0 } = result.reward;
                 const wonRewards: WinRewardItem[] = [];

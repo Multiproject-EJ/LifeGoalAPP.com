@@ -10,6 +10,7 @@ import {
   resolveSpaceExcavatorEventMinigame,
   resolveCompanionFeastEventMinigame,
   resolveTimedEventLaunchTicketDelta,
+  shouldResolveEventArenaStopOnMinigameComplete,
   type EventMinigameLaunchDescriptor,
 } from '../islandRunMinigameLauncherService';
 import { resolveChainedRewardBarClaims } from '../islandRunContractV2RewardBar';
@@ -219,6 +220,38 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         }),
         null,
         'non-event minigames should never route into event completion progress',
+      );
+    },
+  },
+  {
+    name: 'successful canonical timed-event games can resolve the Event Arena landmark',
+    run: () => {
+      assertEqual(
+        shouldResolveEventArenaStopOnMinigameComplete({
+          launchSource: 'timed_event',
+          minigameId: 'lucky_spin',
+          completed: true,
+        }),
+        true,
+        'a completed canonical timed-event game should resolve the Event Arena',
+      );
+      assertEqual(
+        shouldResolveEventArenaStopOnMinigameComplete({
+          launchSource: 'timed_event',
+          minigameId: 'lucky_spin',
+          completed: false,
+        }),
+        false,
+        'an abandoned timed-event game must not resolve the Event Arena',
+      );
+      assertEqual(
+        shouldResolveEventArenaStopOnMinigameComplete({
+          launchSource: 'shop_button',
+          minigameId: 'lucky_spin',
+          completed: true,
+        }),
+        false,
+        'the same game launched outside the Arena stop must not resolve it',
       );
     },
   },

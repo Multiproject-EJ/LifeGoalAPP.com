@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEventHandler, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FormEventHandler, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import {
   hasCachedAuthSession,
@@ -9,6 +9,8 @@ import {
 } from '../features/auth/authInitialization';
 import { useServiceHealth } from '../hooks/useServiceHealth';
 import { getServiceHealthManager } from '../services/service-health';
+import { validatePublicIdentityLabel } from '../services/publicIdentity';
+import { buildIslandRunOnboardingNameSuggestions } from '../features/gamification/level-worlds/services/islandRunOnboardingNames';
 import { ServiceStatusModal } from './service-status';
 
 export type HabitGameAuthTab = 'login' | 'signup';
@@ -161,8 +163,14 @@ export function HabitGameAuthCard({
 }: HabitGameAuthCardProps) {
 
   const [guestStep, setGuestStep] = useState<'closed' | 'timeline' | 'customize'>('closed');
-  const [captainName, setCaptainName] = useState('');
-  const [shipName, setShipName] = useState('');
+  const [nameSuggestionSeed, setNameSuggestionSeed] = useState(0);
+  const nameSuggestions = useMemo(
+    () => buildIslandRunOnboardingNameSuggestions(nameSuggestionSeed),
+    [nameSuggestionSeed],
+  );
+  const [captainName, setCaptainName] = useState('Captain Nova');
+  const [shipName, setShipName] = useState('The Dawn Compass');
+  const [nameEntryMode, setNameEntryMode] = useState<'suggestions' | 'custom'>('suggestions');
   const [guestSubmitting, setGuestSubmitting] = useState(false);
   const [guestError, setGuestError] = useState<string | null>(null);
   const [showServiceStatus, setShowServiceStatus] = useState(false);
@@ -190,6 +198,12 @@ export function HabitGameAuthCard({
   }, [guestStep]);
 
   const handleSailToLumaIsle = async () => {
+    const captainError = validatePublicIdentityLabel(captainName, { label: 'Captain name', maxLength: 32 });
+    const shipError = validatePublicIdentityLabel(shipName, { label: 'Ship name', maxLength: 40 });
+    if (captainError || shipError) {
+      setGuestError(captainError ?? shipError);
+      return;
+    }
     setGuestSubmitting(true);
     setGuestError(null);
     try {
@@ -252,7 +266,21 @@ export function HabitGameAuthCard({
             </div>
             {guestError ? <p className="guest-free-play-modal__error" role="alert">{guestError}</p> : null}
             <div className="guest-free-play-modal__actions">
-              <button type="button" className="auth-card__primary" onClick={() => setGuestStep('customize')}>Choose my captain</button>
+              <button
+                type="button"
+                className="auth-card__primary"
+                onClick={() => {
+                  const firstSuggestion = nameSuggestions[0];
+                  if (firstSuggestion) {
+                    setCaptainName(firstSuggestion.captainName);
+                    setShipName(firstSuggestion.shipName);
+                  }
+                  setNameEntryMode('suggestions');
+                  setGuestStep('customize');
+                }}
+              >
+                Choose my captain
+              </button>
               <button type="button" className="guest-free-play-modal__secondary" onClick={() => { setGuestStep('closed'); onTabChange('signup'); }}>Create free account now</button>
             </div>
           </>
@@ -268,28 +296,79 @@ export function HabitGameAuthCard({
             </div>
             <div className="guest-free-play-modal__copy">
               <span className="guest-free-play-modal__eyebrow">Your first island story</span>
-              <h2 id="guest-free-play-title">Name your captain</h2>
-              <p>Give First Light Shore a name to remember. You can change both names later.</p>
+              <h2 id="guest-free-play-title">Choose your captain &amp; ship</h2>
+              <p>One tap is enough. Pick a pair or write your own — both can be changed later.</p>
             </div>
-            <div className="guest-free-play-modal__fields">
-              <label className="supabase-auth__field">
-                <span>Captain name</span>
-                <input
-                  value={captainName}
-                  onChange={(event) => setCaptainName(event.target.value)}
-                  placeholder="Captain Nova"
-                  autoComplete="nickname"
-                />
-              </label>
-              <label className="supabase-auth__field">
-                <span>Ship name</span>
-                <input
-                  value={shipName}
-                  onChange={(event) => setShipName(event.target.value)}
-                  placeholder="The Luma Skiff"
-                />
-              </label>
-            </div>
+            {nameEntryMode === 'suggestions' ? (
+              <>
+                <div className="guest-free-play-modal__name-options" aria-label="Suggested captain and ship names">
+                  {nameSuggestions.map((suggestion) => {
+                    const isSelected = suggestion.captainName === captainName && suggestion.shipName === shipName;
+                    return (
+                      <button
+                        key={suggestion.id}
+                        type="button"
+                        className={`guest-free-play-modal__name-option${isSelected ? ' guest-free-play-modal__name-option--selected' : ''}`}
+                        aria-pressed={isSelected}
+                        onClick={() => {
+                          setGuestError(null);
+                          setCaptainName(suggestion.captainName);
+                          setShipName(suggestion.shipName);
+                        }}
+                      >
+                        <span aria-hidden="true">{isSelected ? '✓' : '✦'}</span>
+                        <span>
+                          <strong>{suggestion.captainName}</strong>
+                          <small>{suggestion.shipName}</small>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="guest-free-play-modal__name-tools">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextSeed = nameSuggestionSeed + 1;
+                      const nextSuggestions = buildIslandRunOnboardingNameSuggestions(nextSeed);
+                      setNameSuggestionSeed(nextSeed);
+                      setCaptainName(nextSuggestions[0]?.captainName ?? captainName);
+                      setShipName(nextSuggestions[0]?.shipName ?? shipName);
+                    }}
+                  >
+                    ↻ New suggestions
+                  </button>
+                  <button type="button" onClick={() => setNameEntryMode('custom')}>✎ Write my own</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="guest-free-play-modal__fields">
+                  <label className="supabase-auth__field">
+                    <span>Captain name</span>
+                    <input
+                      value={captainName}
+                      onChange={(event) => setCaptainName(event.target.value)}
+                      placeholder="Captain Nova"
+                      autoComplete="nickname"
+                      maxLength={32}
+                    />
+                  </label>
+                  <label className="supabase-auth__field">
+                    <span>Ship name</span>
+                    <input
+                      value={shipName}
+                      onChange={(event) => setShipName(event.target.value)}
+                      placeholder="The Luma Skiff"
+                      maxLength={40}
+                    />
+                  </label>
+                </div>
+                <div className="guest-free-play-modal__name-tools">
+                  <button type="button" onClick={() => setNameEntryMode('suggestions')}>← Use suggestions</button>
+                </div>
+              </>
+            )}
             <p className="guest-free-play-modal__nameplate" aria-live="polite">
               <span>{captainName.trim() || 'Captain Nova'}</span>
               <small>aboard {shipName.trim() || 'The Luma Skiff'}</small>
@@ -297,7 +376,6 @@ export function HabitGameAuthCard({
             {guestError ? <p className="guest-free-play-modal__error" role="alert">{guestError}</p> : null}
             <div className="guest-free-play-modal__actions">
               <button type="button" className="auth-card__primary" onClick={handleSailToLumaIsle} disabled={guestSubmitting}>{guestSubmitting ? 'Opening Island Run…' : 'Sail to Luma Isle'}</button>
-              <button type="button" className="guest-free-play-modal__secondary" onClick={handleSailToLumaIsle} disabled={guestSubmitting}>Skip for now</button>
             </div>
           </>
         )}

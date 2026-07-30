@@ -252,6 +252,20 @@ export function resolveEventMinigameCompletionId(options: {
 }
 
 /**
+ * Landmark 3 is the Event Arena. A successful canonical timed-event game
+ * resolves that landmark when the game was launched from its open modal.
+ * The caller remains responsible for confirming that the active landmark is
+ * `mystery`; this helper only validates the minigame result/source pair.
+ */
+export function shouldResolveEventArenaStopOnMinigameComplete(options: {
+  launchSource: MinigameLaunchSource | null | undefined;
+  minigameId: string | null | undefined;
+  completed: boolean;
+}): boolean {
+  return resolveEventMinigameCompletionId(options) !== null;
+}
+
+/**
  * Island Workshop (the `feeding_frenzy` rotation slot's player-facing surface)
  * routes to the dedicated block-placement puzzle. Event tickets are material
  * blocks: the surface opens without spending, and each successful placement

@@ -1290,7 +1290,14 @@ export function DailyHabitTracker({
   const [todayTodos, setTodayTodos] = useState<TodayTodo[]>([]);
   const [todayTodoModalOpen, setTodayTodoModalOpen] = useState(false);
   const [ambianceModalOpen, setAmbianceModalOpen] = useState(false);
-  const [selectedAmbiance, setSelectedAmbiance] = useState<'starlight' | null>(null);
+  const [selectedAmbiance, setSelectedAmbiance] = useState<'starlight' | null>(() => {
+    if (typeof window === 'undefined') return 'starlight';
+    try {
+      return window.localStorage.getItem('habitgame_today_ambiance_v1') === 'off' ? null : 'starlight';
+    } catch {
+      return 'starlight';
+    }
+  });
   const [campaign, setCampaign] = useState<Campaign | null>(() => readStoredCampaign(session.user.id));
   const [campaignModalOpen, setCampaignModalOpen] = useState(false);
   const [campaignPanelIndex, setCampaignPanelIndex] = useState(0);
@@ -1987,10 +1994,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   }, [activeTodosCount, activeDate]);
 
   const isPrivateCompactView = isCompactView;
-  const [isCompactToggleLabelVisible, setIsCompactToggleLabelVisible] = useState(false);
-  const compactToggleLabelTimeoutRef = useRef<number | null>(null);
-  const [isAmbianceToggleLabelVisible, setIsAmbianceToggleLabelVisible] = useState(false);
-  const ambianceToggleLabelTimeoutRef = useRef<number | null>(null);
   const [isDisplayLauncherOpen, setIsDisplayLauncherOpen] = useState(false);
   const reviewAutoArchivingHabitIdsRef = useRef<Set<string>>(new Set());
   const [isIdentitySignalsOpen, setIsIdentitySignalsOpen] = useState(false);
@@ -2613,9 +2616,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
 
   useEffect(() => {
     return () => {
-      if (compactToggleLabelTimeoutRef.current) {
-        window.clearTimeout(compactToggleLabelTimeoutRef.current);
-      }
       if (trackingMetaFadeTimeoutRef.current) {
         window.clearTimeout(trackingMetaFadeTimeoutRef.current);
       }
@@ -7664,31 +7664,26 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     }
   };
 
-  const revealAmbianceToggleLabel = () => {
-    setIsAmbianceToggleLabelVisible(true);
-    if (ambianceToggleLabelTimeoutRef.current) {
-      window.clearTimeout(ambianceToggleLabelTimeoutRef.current);
-    }
-    ambianceToggleLabelTimeoutRef.current = window.setTimeout(() => {
-      setIsAmbianceToggleLabelVisible(false);
-    }, 2200);
-  };
-
   const handleAmbianceToggle = () => {
     setSelectedAmbiance((current) => (current === 'starlight' ? null : 'starlight'));
-    revealAmbianceToggleLabel();
   };
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    document.documentElement.classList.toggle('today-ambiance-active', selectedAmbiance === 'starlight');
+    try {
+      window.localStorage.setItem('habitgame_today_ambiance_v1', selectedAmbiance === 'starlight' ? 'on' : 'off');
+    } catch {
+      // Local preference remains available in-memory when storage is blocked.
+    }
+    return () => {
+      document.documentElement.classList.remove('today-ambiance-active');
+    };
+  }, [selectedAmbiance]);
 
   const handleCompactToggle = () => {
     if (forceCompactView) {
       setIsCompactView(true);
-      setIsCompactToggleLabelVisible(true);
-      if (compactToggleLabelTimeoutRef.current) {
-        window.clearTimeout(compactToggleLabelTimeoutRef.current);
-      }
-      compactToggleLabelTimeoutRef.current = window.setTimeout(() => {
-        setIsCompactToggleLabelVisible(false);
-      }, 2200);
       return;
     }
     setIsCompactView((previous) => {
@@ -7696,13 +7691,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       onPreferredCompactViewChange?.(next);
       return next;
     });
-    setIsCompactToggleLabelVisible(true);
-    if (compactToggleLabelTimeoutRef.current) {
-      window.clearTimeout(compactToggleLabelTimeoutRef.current);
-    }
-    compactToggleLabelTimeoutRef.current = window.setTimeout(() => {
-      setIsCompactToggleLabelVisible(false);
-    }, 2200);
   };
 
   const renderFuturePlanningBanner = () => {
@@ -8660,7 +8648,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                     type="button"
                     className={`habit-checklist-card__glass-toggle habit-checklist-card__ambiance-toggle ${
                       selectedAmbiance ? 'habit-checklist-card__glass-toggle--active habit-checklist-card__ambiance-toggle--active' : ''
-                    } ${!isAmbianceToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
+                    }`}
                     onClick={handleAmbianceToggle}
                     aria-pressed={Boolean(selectedAmbiance)}
                     aria-label={selectedAmbiance ? 'Turn ambiance off' : 'Turn ambiance on'}
@@ -8671,7 +8659,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                   </button>
                   <button
                     type="button"
-                    className={`habit-checklist-card__glass-toggle ${isCompactView ? 'habit-checklist-card__glass-toggle--active' : ''} ${!isCompactToggleLabelVisible ? 'habit-checklist-card__glass-toggle--label-hidden' : ''}`}
+                    className={`habit-checklist-card__glass-toggle ${isCompactView ? 'habit-checklist-card__glass-toggle--active' : ''}`}
                     onClick={handleCompactToggle}
                     aria-pressed={isCompactView}
                     aria-label={isCompactView ? 'Switch to detailed view' : 'Switch to private view'}
@@ -11231,7 +11219,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
             todayWinsTier !== 'zero_star' ? (
               <button
                 type="button"
-                className={`habit-checklist-card__today-wins-stars habit-checklist-card__today-wins-stars--${todayWinsStarCount}`}
+                className={`habit-checklist-card__today-wins-stars habit-checklist-card__today-wins-stars--${todayWinsStarCount}${selectedAmbiance ? ' habit-checklist-card__today-wins-stars--ambiance-glow' : ''}`}
                 onClick={() => setIsTodayWinsOpen(true)}
                 aria-label={`Open Today's Wins: ${todayWinsStarsLabel}`}
               >

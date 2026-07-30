@@ -9,6 +9,7 @@ import {
   toLeaderboardScore,
   type GamificationProfileLeaderboardRow,
 } from './leaderboardScore';
+import { cleanPublicIdentityLabel } from './publicIdentity';
 
 export interface LeaderboardEntry {
   rank: number;
@@ -62,8 +63,7 @@ function getAdventureLeagueClient() {
 }
 
 function cleanPublicLabel(value: string, fallback: string, maxLength: number): string {
-  const normalized = value.replace(/\s+/g, ' ').trim().slice(0, maxLength);
-  return normalized || fallback;
+  return cleanPublicIdentityLabel(value, fallback, maxLength);
 }
 
 function toLeaderboardEntry(row: AdventureLeagueRow, rank: number): LeaderboardEntry {

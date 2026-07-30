@@ -85,6 +85,9 @@ export const islandStoryReaderComponentTests: TestCase[] = [
     assertIncludes(storyPlayerSource, "lockPageScroll(['body', 'documentElement'])", 'StoryPlayer must lock page scrolling while open');
     assertIncludes(readerSource, 'createPortal(shell, document.body)', 'StoryReader loading and error states must also render at the top-level body portal');
   } },
+  { name: 'entry audio choice owns first-run attention before story presentation', run: () => {
+    assertIncludes(boardSource, '!hasDismissedEntryAudioModal ||', 'Narrative scheduling must remain blocked until the entry audio choice is dismissed');
+  } },
   { name: 'StoryPlayer uses posters for reduced motion and keeps media failure navigable', run: () => {
     assertIncludes(storyPlayerSource, "matchMedia('(prefers-reduced-motion: reduce)')", 'StoryPlayer must observe reduced-motion preference');
     assertIncludes(storyPlayerSource, 'prefersReducedMotion && panel.poster', 'Reduced-motion video panels must render their poster');

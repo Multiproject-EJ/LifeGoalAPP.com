@@ -32,7 +32,7 @@
 .island-story-reader-shell {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: 2147483000;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -105,17 +105,6 @@
   overflow: hidden;
   background: #050817;
   box-shadow: 0 0 70px rgba(49, 87, 173, 0.2);
-}
-
-.island-story-theme--portrait-microfilm .story-player__scene::after {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  content: '';
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.08) 45%, rgba(2, 5, 16, 0.88) 100%),
-    radial-gradient(circle at center, transparent 54%, rgba(0, 0, 0, 0.28));
 }
 
 .island-story-theme--portrait-microfilm .story-player__media {

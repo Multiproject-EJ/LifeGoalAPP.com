@@ -69,6 +69,10 @@ export function WisdomTreeCardEncounter({
         </div>
         <p className="wisdom-tree-card__category">{card.category}</p>
       </header>
+      <p className="wisdom-tree-card__outcome">
+        {matchConfirmed ? 'Step 2 of 2' : 'Step 1 of 2'}
+        <span>Complete both choices to unlock the next landmark.</span>
+      </p>
 
       {!matchConfirmed ? (
         <>
@@ -147,9 +151,12 @@ export function WisdomTreeCardEncounter({
                 className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary wisdom-tree-card__complete"
                 onClick={handleComplete}
               >
-                Carry this wisdom onward
+                Unlock Wisdom landmark
                 <span aria-hidden="true">→</span>
               </button>
+              <small className="wisdom-tree-card__completion-note">
+                Adds this reflection to your Compass and unlocks the next landmark.
+              </small>
             </div>
           ) : (
             <p className="wisdom-tree-card__hint">Pick the line that feels most useful right now.</p>

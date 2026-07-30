@@ -6,9 +6,36 @@ import {
   patchIslandRunGuestFunnelState,
   readIslandRunGuestFunnelState,
 } from '../islandRunGuestFunnelState';
+import { buildIslandRunOnboardingNameSuggestions } from '../islandRunOnboardingNames';
+import {
+  cleanPublicIdentityLabel,
+  containsBlockedPublicIdentityLanguage,
+} from '../../../../../services/publicIdentity';
 import { assert, assertEqual, createMemoryStorage, type TestCase } from './testHarness';
 
 export const islandRunGuestFunnelStateTests: TestCase[] = [
+  {
+    name: 'offers four deterministic safe captain and ship pairs without network AI',
+    run: () => {
+      const first = buildIslandRunOnboardingNameSuggestions(7);
+      const again = buildIslandRunOnboardingNameSuggestions(7);
+      assertEqual(first.length, 4, 'Expected four one-tap name choices');
+      assertEqual(JSON.stringify(first), JSON.stringify(again), 'Expected deterministic on-device suggestions');
+      assert(
+        first.every((pair) => pair.captainName.startsWith('Captain ') && pair.shipName.startsWith('The ')),
+        'Expected every suggestion to be a complete captain/ship pair',
+      );
+    },
+  },
+  {
+    name: 'public identity labels apply the same safe fallback policy to winner tables',
+    run: () => {
+      assertEqual(containsBlockedPublicIdentityLanguage('Friendly Nova'), false, 'Expected ordinary name to pass');
+      assertEqual(containsBlockedPublicIdentityLanguage('f-u-c-k'), true, 'Expected separated profanity to be detected');
+      assertEqual(cleanPublicIdentityLabel('  Captain Nova  ', 'Explorer', 60), 'Captain Nova', 'Expected clean public label');
+      assertEqual(cleanPublicIdentityLabel('f-u-c-k', 'Explorer', 60), 'Explorer', 'Expected unsafe public label to use fallback');
+    },
+  },
   {
     name: 'creates versioned UI-only guest funnel state',
     run: () => {

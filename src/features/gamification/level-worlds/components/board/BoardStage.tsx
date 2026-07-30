@@ -68,6 +68,8 @@ export interface BoardStageProps {
   spark36RingGradient: string;
   /** Whether this is a spark36 board */
   isSpark36: boolean;
+  /** Presentation-only tile enlargement; anchor topology remains unchanged. */
+  tileVisualScale?: number;
   /** Show debug overlay */
   showDebug: boolean;
   /** Disable decorative board art for production art integration */
@@ -157,6 +159,7 @@ export function BoardStage(props: BoardStageProps) {
     bossCreatureArtState,
     spark36RingGradient,
     isSpark36,
+    tileVisualScale = 1,
     showDebug,
     isMinimalBoardArt = false,
     isInteractionPaused = false,
@@ -738,7 +741,7 @@ export function BoardStage(props: BoardStageProps) {
           isSpark36={isSpark36}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
-          uniformScale={uniformScale}
+          uniformScale={uniformScale * tileVisualScale}
           toScreen={toScreen}
         />
 

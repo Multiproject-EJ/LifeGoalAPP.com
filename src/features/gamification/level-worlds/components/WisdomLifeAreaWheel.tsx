@@ -110,7 +110,9 @@ export function WisdomLifeAreaWheel({
   const handleKeyDown = (event: KeyboardEvent<SVGPathElement>, index: number) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      setPreviewArea(LIFE_WHEEL_AREA_TAXONOMY[index]?.area ?? null);
+      const area = LIFE_WHEEL_AREA_TAXONOMY[index]?.area ?? null;
+      setPreviewArea(area);
+      if (area) onSelect(area);
       return;
     }
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
@@ -128,7 +130,7 @@ export function WisdomLifeAreaWheel({
   return (
     <div className="wisdom-life-wheel">
       <p className="wisdom-life-wheel__instruction">
-        Drag around the wheel. Let the words — not perfection — guide the match.
+        Tap any wedge to continue, or drag around the wheel and confirm below.
       </p>
       <div className={`wisdom-life-wheel__stage${isDragging ? ' is-dragging' : ''}`}>
         <div className="wisdom-life-wheel__orbit" aria-hidden="true" />
@@ -165,7 +167,10 @@ export function WisdomLifeAreaWheel({
                   aria-label={`${meta.shortLabel}: ${visual.keywords}`}
                   aria-checked={isCommitted}
                   tabIndex={0}
-                  onClick={() => setPreviewArea(meta.area)}
+                  onClick={() => {
+                    setPreviewArea(meta.area);
+                    onSelect(meta.area);
+                  }}
                   onKeyDown={(event) => handleKeyDown(event, index)}
                 />
                 <text
