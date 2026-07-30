@@ -91,15 +91,25 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
     name: 'Island 1 buildings preserve the fixed-plot growth ladder',
     run: () => {
       const manifest = JSON.parse(readSource('public/assets/islands/island-001/island-art.json')) as {
-        landmarks?: Array<{ levelScales?: number[] }>;
+        landmarks?: Array<{ anchorId?: string; levelScales?: number[] }>;
       };
+      const hatchery = manifest.landmarks?.find((landmark) => landmark.anchorId === 'hatchery');
+      const habit = manifest.landmarks?.find((landmark) => landmark.anchorId === 'habit');
+      const mystery = manifest.landmarks?.find((landmark) => landmark.anchorId === 'mystery');
+      const wisdom = manifest.landmarks?.find((landmark) => landmark.anchorId === 'wisdom');
       assert(
-        manifest.landmarks?.every((landmark) => (
-          landmark.levelScales?.[0] === 0.5
+        [hatchery, mystery, wisdom].every((landmark) => (
+          landmark?.levelScales?.[0] === 0.5
           && landmark.levelScales?.[1] === 0.75
           && landmark.levelScales?.[2] === 0.95
-        )) ?? false,
-        'Island 1 buildings must grow from the same fixed plot: L1 leaves breathing room, L2 fills most of it, and L3 reaches the full approved footprint',
+        )),
+        'Architectural Island 1 landmarks must grow from readable L1 footprints to full L3 plots',
+      );
+      assert(
+        habit?.levelScales?.[0] === 0.5
+        && habit.levelScales?.[1] === 0.72
+        && habit.levelScales?.[2] === 0.86,
+        'The Crown Tree must preserve more canopy clearance than the architectural landmarks',
       );
     },
   },

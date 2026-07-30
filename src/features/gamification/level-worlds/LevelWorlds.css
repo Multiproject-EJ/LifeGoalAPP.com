@@ -1013,6 +1013,16 @@
   background-image: url('../../../assets/Dark_controller.webp');
 }
 
+.island-run-prototype[data-island-number="1"] .island-run-prototype__footer-controller-shell {
+  width: min(92%, 515px);
+}
+
+.island-run-prototype[data-island-number="1"] .island-run-prototype__footer-controller-shell::before {
+  background-image: url('../../../assets/Controller_lightblue.webp');
+  filter: brightness(1.08) saturate(0.86);
+  opacity: 0.94;
+}
+
 
 .island-run-prototype__footer-nav-btn--slot-story,
 .island-run-prototype__footer-nav-btn--slot-creatures,
@@ -2333,6 +2343,10 @@
   animation-name: island-art-boss-breathe-tidelock;
 }
 
+.island-art-layers[data-island-number="1"] .island-art-layers__boss {
+  animation-name: island-art-boss-breathe-first-light;
+}
+
 .island-art-layers__scenery {
   transform-origin: 50% 100%;
   animation: island-art-scenery-pulse 7.2s ease-in-out infinite;
@@ -2386,6 +2400,25 @@
 @keyframes island-art-boss-breathe {
   0%, 100% { transform: translate(-50%, -50%) translateY(0) scale(1); filter: brightness(1) saturate(1); }
   50% { transform: translate(-50%, -50%) translateY(-0.8%) scale(1.018); filter: brightness(1.045) saturate(1.04); }
+}
+
+@keyframes island-art-boss-breathe-first-light {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateY(0) scale(1);
+    filter:
+      brightness(1.08)
+      saturate(1.08)
+      drop-shadow(0 7px 7px rgba(14, 43, 84, 0.42))
+      drop-shadow(0 0 9px rgba(86, 177, 255, 0.38));
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-0.8%) scale(1.018);
+    filter:
+      brightness(1.14)
+      saturate(1.12)
+      drop-shadow(0 9px 8px rgba(14, 43, 84, 0.38))
+      drop-shadow(0 0 14px rgba(255, 218, 126, 0.46));
+  }
 }
 
 @keyframes island-art-boss-breathe-tidelock {
@@ -4187,6 +4220,59 @@
 
 .island-orbit-stop--scene-3 .island-orbit-stop__label {
   border-color: rgba(220, 207, 255, 0.72);
+}
+
+.island-run-board[data-island-number="1"] .island-orbit-stop__label {
+  min-width: 62px;
+  padding: 0.14rem 0.38rem;
+  border-color: rgba(206, 164, 74, 0.88);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 252, 0.96), rgba(242, 232, 206, 0.94));
+  color: #102f59;
+  font-weight: 850;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 4px 9px rgba(13, 43, 78, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+.island-run-board[data-island-number="1"] .island-orbit-stop__status-pill {
+  min-width: 38px;
+  min-height: 18px;
+  padding: 2px 6px;
+  border-color: rgba(204, 159, 66, 0.88);
+  background:
+    linear-gradient(180deg, rgba(255, 253, 244, 0.97), rgba(233, 219, 181, 0.96));
+  color: #14345e;
+  box-shadow:
+    0 4px 8px rgba(13, 43, 78, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+}
+
+.island-run-board[data-island-number="1"] .island-orbit-stop__status-pill--completed,
+.island-run-board[data-island-number="1"] .island-orbit-stop__status-pill--accessible {
+  border-color: rgba(73, 160, 111, 0.82);
+  background: linear-gradient(180deg, rgba(237, 255, 242, 0.98), rgba(178, 226, 194, 0.96));
+  color: #174d32;
+}
+
+.island-run-board[data-island-number="1"] .island-orbit-stop__status-pill--active {
+  border-color: rgba(60, 146, 216, 0.86);
+  background: linear-gradient(180deg, rgba(241, 251, 255, 0.98), rgba(176, 219, 246, 0.96));
+  color: #123f70;
+}
+
+.island-run-board[data-island-number="1"] .island-orbit-stop__status-pill--locked,
+.island-run-board[data-island-number="1"] .island-orbit-stop__status-pill--ticket_required {
+  border-color: rgba(183, 144, 69, 0.78);
+  background: linear-gradient(180deg, rgba(250, 246, 233, 0.97), rgba(220, 207, 170, 0.95));
+  color: #5b4721;
+}
+
+.island-run-board[data-island-number="1"] .island-orbit-stop__ticket-cost {
+  color: #614918;
+  border-left-color: rgba(123, 92, 28, 0.34);
 }
 
 .island-orbit-stop--scene-2 .island-orbit-stop__icon {

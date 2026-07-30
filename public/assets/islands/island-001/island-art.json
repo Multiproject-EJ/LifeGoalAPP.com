@@ -44,7 +44,7 @@
       "y": 340,
       "width": 472,
       "height": 472,
-      "levelScales": [0.5, 0.75, 0.95],
+      "levelScales": [0.5, 0.72, 0.86],
       "levels": [
         "landmarks/habit/habit-l1.webp",
         "landmarks/habit/habit-l2.webp",

@@ -23,7 +23,8 @@ preserved under the Island 006 runtime folder.
 | 14 | `landmarks/wisdom/wisdom-l3.webp` | Complete, wired, phone-QA | 1024 × 1024 transparent WebP, 186 KB |
 | 15 | `bosses/aureon-idle.webp` | Complete, wired, phone-QA | 1024 × 1024 transparent WebP, 155 KB |
 | 16 | `bosses/aureon-defeated.webp` | Complete, wired | 1024 × 1024 transparent WebP, 131 KB; calm/restored state |
-| 17 | `scenery/first-light-sun-court.webp` | Complete, wired, phone-QA | 1024 × 768 transparent WebP, 105 KB |
+| 17 | `scenery/first-light-sun-court.webp` | Complete, wired, phone-QA | 1024 × 768 transparent WebP, 83 KB; low compass dais, no tower silhouette |
+| 18 | `/assets/island_caretakers/001/first-light-caretaker.webp` | Complete, wired, phone-QA | 768 × 768 transparent WebP, 86 KB; non-humanoid Luma compass spirit |
 
 ## Asset 1 prompt
 
@@ -90,8 +91,25 @@ the image scale changes:
 - **L1 — 0.50:** readable on a 390 × 844 viewport while leaving clear plot space.
 - **L2 — 0.75:** visibly operational and fills most of the plot.
 - **L3 — 0.95:** majestic, reaches the plot boundary, and stays clear of the
-  neighbouring route and HUD.
+  neighbouring route and HUD. The wider Crown Tree uses **0.86** at L3 so its
+  canopy keeps the same visual breathing room as the architectural landmarks.
 
 The two lower landmarks use a perspective-corrected scene Y anchor of 1040.
 This was measured on the real Island Run renderer; retaining the old
 mathematically mirrored Y anchor placed their bases on the cliff face.
+
+## Assets 17–18 — center court and Luma guide
+
+The first center-court draft included a tall dark gate that read as a fifth
+building between the two rear landmarks at phone scale. It was replaced with a
+low ivory, sapphire, and gold compass dais. The live boss remains the only
+dominant object in the arena.
+
+The old caretaker's oversized navy wizard hat created the same false-building
+silhouette. A humanoid replacement draft was rejected as too youthful and
+character-led. The selected Luma treatment is instead a compact, non-humanoid
+floating compass spirit with a square silhouette and no face. It preserves the
+existing caretaker interaction while reading as a magical affordance at
+390 × 844. Both assets were generated against the approved First Light world
+reference on uniform magenta, converted locally to alpha, and compressed to
+transparent WebP.

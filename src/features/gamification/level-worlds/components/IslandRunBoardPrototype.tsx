@@ -11392,7 +11392,10 @@ export function IslandRunBoardPrototype({
   }
 
   return (
-    <section className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}`}>
+    <section
+      className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}`}
+      data-island-number={islandNumber}
+    >
       {showEntryAudioModal && (
         <div className="island-run-entry-audio" role="presentation">
           <div
@@ -12319,7 +12322,9 @@ export function IslandRunBoardPrototype({
           completedEncounterIndices={completedEncounterIndices}
           visibleTechnologyFragments={visibleTechnologyFragments}
           tokenIndex={tokenIndex}
-          caretakerArtSrc={caretakerInhabitant?.premiumArtSrc ?? caretakerInhabitant?.retroSpriteSrc ?? '/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp'}
+          caretakerArtSrc={caretakerInhabitant?.premiumArtSrc ?? caretakerInhabitant?.retroSpriteSrc ?? (islandNumber === 1
+            ? '/assets/island_caretakers/001/first-light-caretaker.webp'
+            : '/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp')}
           caretakerLabel={caretakerInhabitant?.displayName ?? 'Island caretaker'}
           caretakerBubbleText={caretakerBoardBubbleText}
           caretakerTileIndex={shouldShowCaretakerTalkAction ? ISLAND_CARETAKER_TILE_INDEX : null}
@@ -12647,7 +12652,9 @@ export function IslandRunBoardPrototype({
               session={session}
               islandNumber={islandNumber}
               drawIndex={cardDrawIndex}
-              caretakerArtSrc={caretakerInhabitant?.premiumArtSrc ?? caretakerInhabitant?.retroSpriteSrc ?? '/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp'}
+              caretakerArtSrc={caretakerInhabitant?.premiumArtSrc ?? caretakerInhabitant?.retroSpriteSrc ?? (islandNumber === 1
+                ? '/assets/island_caretakers/001/first-light-caretaker.webp'
+                : '/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp')}
               caretakerName={caretakerInhabitant?.displayName ?? 'Caretaker'}
               onClose={() => setShowGamifiedJournalCard(false)}
               onSaved={(message) => {
