@@ -66,16 +66,16 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     name: 'pickup modal has dialog semantics with an announced title',
     run: () => {
       ['role="dialog"', 'aria-modal="true"', 'aria-labelledby={titleId}'].forEach((n) => includes(modalSource, n));
-      includes(modalSource, 'CONCORD FRAGMENT {result.collectedCount} OF {TECH_COLLECTION_CELL_COUNT}');
+      includes(modalSource, 'CONCORD FRAGMENT {result.collectedCount} / {TECH_COLLECTION_CELL_COUNT}');
       includes(modalSource, 'THE CONCORD');
     },
   },
   {
     name: 'pickup modal renders compact progress and auto-dismisses via its own timer',
     run: () => {
-      includes(modalSource, '/ {TECH_COLLECTION_CELL_COUNT} Concord fragments recovered');
+      includes(modalSource, '{gridCollectedCount} / {TECH_COLLECTION_CELL_COUNT}');
       includes(modalSource, 'window.setTimeout(() => dismissRef.current()');
-      includes(modalSource, 'Tap to dismiss');
+      includes(modalSource, 'island-tech-fragment__collected-stamp');
     },
   },
   {
@@ -155,11 +155,11 @@ export const islandTechCollectionComponentTests: TestCase[] = [
 
   // ── Board integration ──────────────────────────────────────────────────────
   {
-    name: 'board renders the shared grid and full completion celebration without the separate pickup modal',
+    name: 'board renders the shared grid, animated pickup, and full completion celebration',
     run: () => {
       includes(boardSource, '<IslandTechGrid');
       includes(boardSource, '<IslandTechCompletionCelebration');
-      notIncludes(boardSource, '<IslandTechCollectionModal');
+      includes(boardSource, '<IslandTechCollectionModal');
       notIncludes(boardSource, 'island-tech-collection-grid__cell');
     },
   },
@@ -181,7 +181,7 @@ export const islandTechCollectionComponentTests: TestCase[] = [
       includes(boardSource, 'collectedCount: resolution.nextCollectedCount');
       includes(boardSource, 'setShowConcordHubModal(true);');
       includes(boardSource, 'newSlotIndex={techCollectionModal?.slotIndex ?? null}');
-      notIncludes(boardSource, '<IslandTechCollectionModal');
+      includes(boardSource, '<IslandTechCollectionModal');
     },
   },
   {

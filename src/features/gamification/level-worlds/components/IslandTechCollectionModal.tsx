@@ -75,8 +75,8 @@ const AUTO_ROLL_CLOSE_MS = 4000;
  * still dismisses sooner.
  */
 const MANUAL_CLOSE_MS = 5200;
-/** How long the fragment lingers before settling into the grid while auto-rolling. */
-const AUTO_ROLL_FRAGMENT_MS = 1700;
+/** Allows the centre reveal and physical COLLECTED stamp to read before flight. */
+const AUTO_ROLL_FRAGMENT_MS = 2100;
 /** Safety cap: force the grid to land even if `transitionend` never fires. */
 const FLIGHT_FALLBACK_MS = 700;
 
@@ -237,9 +237,8 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
       aria-labelledby={titleId}
       onClick={(event) => event.stopPropagation()}
     >
-      <p className="island-tech-fragment__eyebrow">The Concord is awakening</p>
       <h2 id={titleId} className="island-tech-fragment__title">
-        CONCORD FRAGMENT {result.collectedCount} OF {TECH_COLLECTION_CELL_COUNT}
+        CONCORD FRAGMENT {result.collectedCount} / {TECH_COLLECTION_CELL_COUNT}
       </h2>
 
       <button
@@ -270,8 +269,8 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
             </span>
           ) : null}
         </span>
-        <span className="island-tech-fragment__badge" aria-hidden="true">
-          {fragmentEmoji}
+        <span className="island-tech-fragment__collected-stamp" aria-hidden="true">
+          COLLECTED
         </span>
         {/* Hidden probe: fall back to the emoji if the artwork 404s. */}
         <img
@@ -283,10 +282,6 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
         />
       </button>
 
-      <p className="island-tech-fragment__name">{fragmentLabel}</p>
-      <p className="island-tech-fragment__hint" aria-hidden="true">
-        Tap to restore The Concord
-      </p>
     </section>
   );
 
@@ -309,7 +304,6 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
       aria-labelledby={titleId}
       onClick={(event) => event.stopPropagation()}
     >
-      <p className="island-tech-modal__eyebrow">Restoration progress</p>
       <h2 id={titleId} className="island-tech-modal__title">
         THE CONCORD
       </h2>
@@ -324,7 +318,7 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
       />
 
       <p className="island-tech-modal__progress" role="status">
-        {gridCollectedCount} / {TECH_COLLECTION_CELL_COUNT} Concord fragments recovered
+        {gridCollectedCount} / {TECH_COLLECTION_CELL_COUNT}
       </p>
 
       {lineReward && !inFlight ? (
@@ -334,9 +328,6 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
         </p>
       ) : null}
 
-      <p className="island-tech-modal__hint" aria-hidden="true">
-        Tap to dismiss
-      </p>
     </section>
   );
 

@@ -34,7 +34,7 @@ import {
 import { BoardStage, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
-import type { TechCollectionModalResult } from './IslandTechCollectionModal';
+import { IslandTechCollectionModal, type TechCollectionModalResult } from './IslandTechCollectionModal';
 import {
   IslandTechCompletionCelebration,
   type TechCompletionCelebrationResult,
@@ -16006,7 +16006,16 @@ export function IslandRunBoardPrototype({
         </div>
       ) : null}
 
-      {showConcordHubModal && typeof document !== 'undefined'
+      {techCollectionModal ? (
+        <IslandTechCollectionModal
+          result={techCollectionModal}
+          islandNumber={1}
+          isAutoRolling={isAutoRolling}
+          onDismiss={closeConcordHub}
+        />
+      ) : null}
+
+      {showConcordHubModal && !techCollectionModal && typeof document !== 'undefined'
         ? createPortal(
           concordHubEntryState.isConcordActive ? (
             <div className="island-run-overlay-root island-stop-modal-backdrop island-concord-hub-backdrop" role="presentation">

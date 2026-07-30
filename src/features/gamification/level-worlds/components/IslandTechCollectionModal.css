@@ -28,7 +28,8 @@
    over the live board: the backdrop is almost fully transparent (the board
    stays visible behind it) and only the neon grid / fragment carry weight. */
 .island-tech-modal-backdrop {
-  z-index: 180;
+  /* Island Run is hosted inside the mobile-exit shell at z-index 9999. */
+  z-index: 12000;
   background: radial-gradient(circle at 50% 38%, rgba(34, 211, 238, 0.1), transparent 36%),
     rgba(4, 8, 18, 0.12);
   animation: island-tech-backdrop-in 0.18s ease both;
@@ -71,8 +72,9 @@
 }
 
 .island-tech-fragment__title {
-  margin: 0 0 18px;
-  font-size: 1.28rem;
+  margin: 0 0 14px;
+  font-family: 'Cinzel', 'Iowan Old Style', Palatino, Georgia, serif;
+  font-size: clamp(1rem, 4.6vw, 1.28rem);
   font-weight: 900;
   letter-spacing: 0.06em;
   color: #f4faff;
@@ -89,7 +91,9 @@
   cursor: pointer;
   display: grid;
   place-items: center;
-  animation: island-tech-fragment-float 3.4s ease-in-out infinite;
+  animation:
+    island-tech-fragment-chuck 0.82s cubic-bezier(0.16, 0.86, 0.24, 1.08) both,
+    island-tech-fragment-float 3.4s 0.82s ease-in-out infinite;
 }
 
 .island-tech-fragment__stage:focus-visible {
@@ -142,21 +146,31 @@
   filter: drop-shadow(0 0 18px rgba(56, 189, 248, 0.8));
 }
 
-/* Small emblem so the fragment stays recognisable even over the artwork. */
-.island-tech-fragment__badge {
+/* A physical ink stamp lands after the fragment has arrived centre-stage. */
+.island-tech-fragment__collected-stamp {
   position: absolute;
-  z-index: 2;
-  right: -6px;
-  bottom: -6px;
-  width: 2.4em;
-  height: 2.4em;
-  font-size: 1.15rem;
+  z-index: 3;
+  left: 50%;
+  bottom: 9%;
   display: grid;
   place-items: center;
-  border-radius: 999px;
-  background: linear-gradient(160deg, rgba(13, 24, 46, 0.96), rgba(8, 16, 34, 0.96));
-  border: 1px solid rgba(125, 211, 252, 0.6);
-  box-shadow: 0 6px 18px rgba(2, 6, 16, 0.6);
+  min-width: 56%;
+  padding: 0.38rem 0.72rem 0.3rem;
+  border: 4px double rgba(255, 241, 178, 0.96);
+  border-radius: 8px;
+  color: #fff1b2;
+  background: rgba(102, 20, 30, 0.8);
+  box-shadow:
+    0 5px 12px rgba(2, 6, 16, 0.48),
+    inset 0 0 0 2px rgba(119, 25, 35, 0.6);
+  font-size: clamp(0.78rem, 4.2vw, 1.08rem);
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  transform: translateX(-50%) rotate(-9deg);
+  opacity: 0;
+  animation: island-tech-fragment-stamp-slap 0.5s 0.78s cubic-bezier(0.18, 0.9, 0.22, 1.25) both;
 }
 
 .island-tech-fragment__probe {
@@ -228,11 +242,10 @@
 .island-tech-modal {
   width: min(92vw, 380px);
   box-sizing: border-box;
-  padding: 18px 18px 14px;
-  border-radius: 22px;
-  border: 1px solid rgba(125, 211, 252, 0.55);
-  background: linear-gradient(160deg, rgba(13, 24, 46, 0.22), rgba(8, 16, 34, 0.26));
-  box-shadow: 0 22px 60px rgba(4, 8, 18, 0.35), inset 0 0 30px rgba(14, 165, 233, 0.14);
+  padding: 10px 12px 8px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
   color: #eaf4ff;
   text-align: center;
   animation: island-tech-modal-pop 0.42s cubic-bezier(0.18, 0.9, 0.24, 1.1) both;
@@ -249,8 +262,9 @@
 }
 
 .island-tech-modal__title {
-  margin: 0 0 6px;
-  font-size: 1.32rem;
+  margin: 0 0 10px;
+  font-family: 'Cinzel', 'Iowan Old Style', Palatino, Georgia, serif;
+  font-size: clamp(1.35rem, 6vw, 1.9rem);
   font-weight: 900;
   letter-spacing: 0.06em;
   color: #f4faff;
@@ -260,10 +274,12 @@
 }
 
 .island-tech-modal__progress {
-  margin: 12px 0 0;
-  font-size: 0.92rem;
+  margin: 14px 0 0;
+  color: #fff0a6;
+  font-size: clamp(1.7rem, 7vw, 2.3rem);
   font-weight: 800;
-  color: #d7ecff;
+  letter-spacing: 0.08em;
+  line-height: 0.9;
   text-shadow: 0 1px 3px rgba(2, 6, 16, 0.9);
 }
 
@@ -578,6 +594,42 @@
   100% { opacity: 1; transform: scale(1); }
 }
 
+@keyframes island-tech-fragment-chuck {
+  0% {
+    opacity: 0;
+    transform: translate3d(36vw, 25vh, 0) rotate(620deg) scale(0.12);
+    filter: brightness(1.8) blur(2px);
+  }
+  68% {
+    opacity: 1;
+    transform: translate3d(-2vw, -1vh, 0) rotate(-14deg) scale(1.08);
+    filter: brightness(1.2) blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0) scale(1);
+    filter: brightness(1) blur(0);
+  }
+}
+
+@keyframes island-tech-fragment-stamp-slap {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) rotate(-9deg) scale(2.7);
+    filter: blur(2px);
+  }
+  58% {
+    opacity: 1;
+    transform: translateX(-50%) rotate(-9deg) scale(0.82);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) rotate(-9deg) scale(1);
+    filter: blur(0);
+  }
+}
+
 @keyframes island-tech-fragment-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
@@ -626,6 +678,7 @@
   .island-tech-grid__stamp,
   .island-tech-fragment,
   .island-tech-fragment__stage,
+  .island-tech-fragment__collected-stamp,
   .island-tech-fragment__halo,
   .island-tech-fragment__art {
     animation: none !important;
@@ -638,6 +691,7 @@
 
 [data-reduced-motion='true'] .island-tech-fragment,
 [data-reduced-motion='true'] .island-tech-fragment__stage,
+[data-reduced-motion='true'] .island-tech-fragment__collected-stamp,
 [data-reduced-motion='true'] .island-tech-fragment__halo,
 [data-reduced-motion='true'] .island-tech-fragment__art {
   animation: none !important;
