@@ -390,7 +390,9 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
         );
       })}
 
-      {shouldRenderWorldAsset() && discoveryFogEnabled && manifest.landmarks.map((landmark) => (
+      {shouldRenderWorldAsset() && discoveryFogEnabled && manifest.landmarks
+        .filter((landmark) => landmark.stopIndex < 2)
+        .map((landmark) => (
         <div
           key={`${landmark.stopIndex}-discovery-mist`}
           className="island-art-layers__discovery-mist"
@@ -432,24 +434,6 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
             zIndex: BOSS_LANDMARK_Z_INDEX,
           })}
           onError={() => hideSource(bossSrc)}
-        />
-      ) : null}
-      {shouldRenderWorldAsset() && discoveryFogEnabled && manifest.boss ? (
-        <div
-          className="island-art-layers__discovery-mist island-art-layers__discovery-mist--boss"
-          data-landmark-index="4"
-          data-discovery-state={getDiscoveryState(4)}
-          style={makeArtLayerStyle({
-            manifest,
-            x: manifest.boss.x,
-            y: manifest.boss.y - (artSpaceHeight * BOSS_LANDMARK_UPWARD_OFFSET_RATIO),
-            width: manifest.boss.width * BOSS_LANDMARK_SIZE_SCALE * 1.15,
-            height: manifest.boss.height * BOSS_LANDMARK_SIZE_SCALE,
-            uniformScale,
-            toScreen,
-            sceneLayout,
-            zIndex: BOSS_LANDMARK_Z_INDEX + 1,
-          })}
         />
       ) : null}
     </div>

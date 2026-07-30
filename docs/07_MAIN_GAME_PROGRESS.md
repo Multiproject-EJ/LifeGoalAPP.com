@@ -3451,3 +3451,51 @@ Testing:
 - Clicking backdrop closes home panel
 - Mobile: min-height 44px touch targets; modal fits within 90dvh
 Milestones closed: M9 ✅
+
+---
+
+Date: 2026-07-30
+Slice: First Light mission-console polish + simulated Crew Relay concept
+Summary:
+- Rebuilt the Starter Cache and sealed-creature onboarding screens from generic
+  purple cards into First Light mission-console surfaces using real app gift,
+  dice, and egg artwork.
+- Replaced the baked Music / Sound picture with a live, accessible sound setup
+  screen: branded scenery, two explicit toggles, recommended default, and one
+  direct entry CTA.
+- Kept discovery mist only on the first two landmark positions; lower
+  landmarks and the boss no longer receive the generic cloud treatment.
+- Added an explicitly labelled, deterministic `Crew Relay · Simulation`
+  preview to timed-event minigames. Canonical event actions remain the only
+  ticket-spend authority; successful existing action callbacks only advance
+  the local visual preview.
+- Replaced the top-bar money emoji for Essence with the real Essence orb and
+  added the real Shard orb.
+- Added durable HabitGame Marketing Studio and Secret Crew / Compass Computer
+  direction, including the 120-creature short-video series, production
+  authority boundaries, first-person recruit story, secrecy rhythm, and
+  two-state transmission results.
+Files changed:
+- `src/features/gamification/level-worlds/components/WelcomePackModal.tsx`
+- `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`
+- `src/features/gamification/level-worlds/components/IslandRunMinigameLauncher.tsx`
+- `src/features/gamification/level-worlds/components/EventCrewRelayPreview.tsx`
+- `src/features/gamification/level-worlds/components/board/IslandArtLayers.tsx`
+- `src/features/gamification/level-worlds/services/islandRunCrewRelaySimulation.ts`
+- `src/features/gamification/level-worlds/services/__tests__/islandRunCrewRelaySimulation.test.ts`
+- `src/features/gamification/level-worlds/LevelWorlds.css`
+- `src/styles/gamification.css`
+- `docs/agents/HABITGAME_MARKETING_STUDIO_AGENT.md`
+- `docs/design/SECRET_CREW_COMPUTER_STORY_DIRECTION.md`
+- `docs/01_MAIN_GAME_AGENT_PROTOCOL.md`
+Testing:
+- 390×844 browser QA passed for sound, Starter Cache, and sealed-signal screens.
+- Production Vite build passed.
+- Island Run architecture guard passed with 0 violations.
+- Island art render wiring and asset validation passed.
+- Focused Crew Relay TypeScript compile and two behavior tests passed.
+- The full Island Run service runner remains blocked before execution by
+  pre-existing type errors in `src/services/checkins.ts` and
+  `src/services/zenGarden.ts`.
+Next: close the onboarding identity/public-age policy slice described in
+`docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.

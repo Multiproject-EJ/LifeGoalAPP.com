@@ -55,6 +55,16 @@ Agent must always:
 - `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md` — always keep “Next Slice” current
 - Optional: `docs/NEXT.md` if you prefer, but the Master Index has a Next section already
 
+## Product-level specialist charters
+
+- HabitGame marketing work starts with
+  `docs/agents/HABITGAME_MARKETING_STUDIO_AGENT.md`.
+- Secret-recruit, Compass Computer, and branching-transmission story work starts
+  with `docs/design/SECRET_CREW_COMPUTER_STORY_DIRECTION.md`.
+- These product charters must not be added to or governed by the external
+  stock-market `EJ-Jarvis.md`; that document has a separate investing-only
+  authority boundary.
+
 ---
 
 ## 07_MAIN_GAME_PROGRESS.md entry format

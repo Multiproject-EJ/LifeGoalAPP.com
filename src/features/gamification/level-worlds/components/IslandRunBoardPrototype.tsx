@@ -11458,11 +11458,20 @@ export function IslandRunBoardPrototype({
           >
             <img
               className="island-run-entry-audio__background"
-              src="/assets/sound-modals/Open-game/IMG_soundmodalbg.webp"
+              src="/assets/themes/first-light-kingdom/today/today-sky-background.webp"
               alt=""
               aria-hidden="true"
             />
-            <h2 id="island-run-entry-audio-title" className="island-run-entry-audio__title">Ambience / Sound</h2>
+            <div className="island-run-entry-audio__glow" aria-hidden="true" />
+            <img
+              className="island-run-entry-audio__crest"
+              src="/assets/brand/habitgame-compass-crest-rankless.webp"
+              alt=""
+              aria-hidden="true"
+            />
+            <p className="island-run-entry-audio__eyebrow">Before we set sail</p>
+            <h2 id="island-run-entry-audio-title" className="island-run-entry-audio__title">How should the island sound?</h2>
+            <p className="island-run-entry-audio__intro">Keep the world alive, or travel quietly. You can change this anytime.</p>
             <button
               type="button"
               className="island-run-entry-audio__close"
@@ -11471,26 +11480,44 @@ export function IslandRunBoardPrototype({
                 setShowEntryAudioModal(false);
               }}
               aria-label="Close Ambience / Sound modal"
-            />
+            >
+              <span aria-hidden="true">×</span>
+            </button>
             <div className="island-run-entry-audio__toggles" role="group" aria-label="Island Run audio settings">
-              <button
-                type="button"
-                className={`island-run-entry-audio__pill island-run-entry-audio__pill--music${musicEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
-                aria-pressed={musicEnabled}
-                onClick={() => setMusicEnabled((current) => !current)}
-                aria-label={`Ambience and music ${musicEnabled ? 'on' : 'off'}`}
-              >
-                <span className="island-run-entry-audio__pill-knob" />
-              </button>
-              <button
-                type="button"
-                className={`island-run-entry-audio__pill island-run-entry-audio__pill--sounds${sfxEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
-                aria-pressed={sfxEnabled}
-                onClick={() => { const next = !sfxEnabled; setSfxEnabled(next); }}
-                aria-label={`Sounds ${sfxEnabled ? 'on' : 'off'}`}
-              >
-                <span className="island-run-entry-audio__pill-knob" />
-              </button>
+              <div className="island-run-entry-audio__row">
+                <span className="island-run-entry-audio__row-icon" aria-hidden="true">♫</span>
+                <span className="island-run-entry-audio__row-copy">
+                  <strong>Island ambience</strong>
+                  <small>Ocean, wind and adaptive music</small>
+                </span>
+                <button
+                  type="button"
+                  className={`island-run-entry-audio__pill${musicEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
+                  aria-pressed={musicEnabled}
+                  onClick={() => setMusicEnabled((current) => !current)}
+                  aria-label={`Ambience and music ${musicEnabled ? 'on' : 'off'}`}
+                >
+                  <span className="island-run-entry-audio__pill-state">{musicEnabled ? 'On' : 'Off'}</span>
+                  <span className="island-run-entry-audio__pill-knob" />
+                </button>
+              </div>
+              <div className="island-run-entry-audio__row">
+                <span className="island-run-entry-audio__row-icon island-run-entry-audio__row-icon--sfx" aria-hidden="true">✦</span>
+                <span className="island-run-entry-audio__row-copy">
+                  <strong>Game sounds</strong>
+                  <small>Dice, discoveries and rewards</small>
+                </span>
+                <button
+                  type="button"
+                  className={`island-run-entry-audio__pill${sfxEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
+                  aria-pressed={sfxEnabled}
+                  onClick={() => { const next = !sfxEnabled; setSfxEnabled(next); }}
+                  aria-label={`Sounds ${sfxEnabled ? 'on' : 'off'}`}
+                >
+                  <span className="island-run-entry-audio__pill-state">{sfxEnabled ? 'On' : 'Off'}</span>
+                  <span className="island-run-entry-audio__pill-knob" />
+                </button>
+              </div>
             </div>
             <button
               type="button"
@@ -11501,13 +11528,12 @@ export function IslandRunBoardPrototype({
               }}
               aria-label="Play Game"
             >
-              <img
-                className="island-run-entry-audio__start-image"
-                src="/assets/sound-modals/Open-game/IMG_soundmodalplay.webp"
-                alt=""
-                aria-hidden="true"
-              />
+              <span>Enter First Light Shore</span>
+              <span className="island-run-entry-audio__start-compass" aria-hidden="true">✦</span>
             </button>
+            <p className="island-run-entry-audio__hint">
+              Recommended: ambience on
+            </p>
           </div>
         </div>
       )}
@@ -11963,10 +11989,22 @@ export function IslandRunBoardPrototype({
               )}
             </button>
             <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
-              💰 <strong>{formatFullWalletValue(runtimeState.essence)}</strong>
+              <img
+                className="island-run-board__topbar-currency-icon"
+                src="/assets/spin-wheel/daily-momentum/prizes/prize-essence-orb-transparent.png"
+                alt=""
+                aria-hidden="true"
+              />
+              <strong>{formatFullWalletValue(runtimeState.essence)}</strong>
             </div>
             <div className="island-run-board__topbar-chip island-run-board__topbar-chip--shards" aria-label="Shard wallet">
-              ✨ {formatFullWalletValue(shards)}
+              <img
+                className="island-run-board__topbar-currency-icon"
+                src="/assets/spin-wheel/daily-momentum/prizes/prize-shards-orb-transparent.png"
+                alt=""
+                aria-hidden="true"
+              />
+              {formatFullWalletValue(shards)}
             </div>
             <button
               type="button"

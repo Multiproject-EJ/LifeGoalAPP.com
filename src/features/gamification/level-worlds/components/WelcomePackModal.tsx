@@ -93,22 +93,41 @@ export function WelcomePackModal({
       <div className="island-run-overlay-root wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title">
         <div className={`wpm-shell wpm-shell--economy${collectAnimating ? ' wpm-shell--pulse' : ''}`}>
           <p className="wpm-eyebrow">
-            {isDevPreview ? '✦ Dev Preview' : 'Compass Expedition'}
+            {isDevPreview ? '✦ Dev Preview' : 'Welcome aboard'}
           </p>
-          <h2 id="wpm-title" className="wpm-title">Compass Expedition Starter Cache</h2>
+          <h2 id="wpm-title" className="wpm-title">Your expedition cache</h2>
 
           <p className="wpm-body">{starterCacheBody}</p>
 
+          <div className="wpm-cache-hero" aria-hidden="true">
+            <span className="wpm-cache-hero__orbit wpm-cache-hero__orbit--one" />
+            <span className="wpm-cache-hero__orbit wpm-cache-hero__orbit--two" />
+            <img
+              className="wpm-cache-hero__art"
+              src="/assets/market/supply-dock/free-supplies.webp"
+              alt=""
+            />
+          </div>
+
           <div className="wpm-economy-tiles">
             <div className="wpm-economy-tile">
-              <span className="wpm-economy-tile__icon">🎲</span>
-              <strong className="wpm-economy-tile__value">150</strong>
-              <span className="wpm-economy-tile__label">Dice</span>
+              <img
+                className="wpm-economy-tile__asset"
+                src="/assets/icons/ingamedice.webp"
+                alt=""
+                aria-hidden="true"
+              />
+              <span>
+                <strong className="wpm-economy-tile__value">150</strong>
+                <span className="wpm-economy-tile__label">Dice</span>
+              </span>
             </div>
             <div className="wpm-economy-tile">
-              <span className="wpm-economy-tile__icon">💰</span>
-              <strong className="wpm-economy-tile__value">2000</strong>
-              <span className="wpm-economy-tile__label">Money</span>
+              <span className="wpm-economy-tile__coin" aria-hidden="true">✦</span>
+              <span>
+                <strong className="wpm-economy-tile__value">2,000</strong>
+                <span className="wpm-economy-tile__label">Island coins</span>
+              </span>
             </div>
           </div>
 
@@ -132,11 +151,12 @@ export function WelcomePackModal({
               <span className="wpm-collect-btn__spinner" aria-hidden="true" />
             ) : null}
             {collectAnimating
-              ? 'Collecting…'
+              ? 'Securing supplies…'
               : isAlreadyClaimed
                 ? deferCreaturePack ? 'Continue' : 'View Cards'
-                : 'Collect Starter Cache'}
+                : 'Secure my supplies'}
           </button>
+          <p className="wpm-footnote">One-time welcome gift · no purchase</p>
         </div>
       </div>
     );
@@ -145,15 +165,29 @@ export function WelcomePackModal({
   if (phase === 'deferred') {
     return (
       <div className="island-run-overlay-root wpm-overlay" role="dialog" aria-modal="true" aria-labelledby="wpm-title-deferred">
-        <div className="wpm-shell wpm-shell--cards-intro wpm-shell--enter">
-          <p className="wpm-eyebrow">Supplies secured</p>
-          <h2 id="wpm-title-deferred" className="wpm-title">The creature signal remains sealed</h2>
-          <div className="wpm-big-card-icon" aria-hidden="true">🥚</div>
-          <p className="wpm-body">
-            Your resources are ready. The creature pack will answer from Island 2.
-          </p>
+        <div className="wpm-shell wpm-shell--signal wpm-shell--enter">
+          <p className="wpm-eyebrow">Unknown signal detected</p>
+          <h2 id="wpm-title-deferred" className="wpm-title">Something is waiting inside</h2>
+          <div className="wpm-signal-vault" aria-hidden="true">
+            <span className="wpm-signal-vault__ring wpm-signal-vault__ring--outer" />
+            <span className="wpm-signal-vault__ring wpm-signal-vault__ring--inner" />
+            <img
+              className="wpm-signal-vault__egg"
+              src="/assets/themes/first-light-kingdom/today/offer-egg-hatching.webp"
+              alt=""
+            />
+            <span className="wpm-signal-vault__scan" />
+          </div>
+          <div className="wpm-signal-status" role="status">
+            <span className="wpm-signal-status__light" aria-hidden="true" />
+            <span>
+              <strong>Creature link sealed</strong>
+              <small>Signal strengthens after Island 1</small>
+            </span>
+          </div>
+          <p className="wpm-body">Your supplies are aboard. For now, take the helm and follow the compass.</p>
           <button type="button" className="wpm-collect-btn" onClick={onClose}>
-            Begin the mission
+            Enter First Light Shore
           </button>
         </div>
       </div>

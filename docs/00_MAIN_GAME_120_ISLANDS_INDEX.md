@@ -111,10 +111,19 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** M18 — Integration + QA pass: end-to-end island run integration testing, cross-milestone regression verification, telemetry audit, and performance profiling. Verify M1–M17 + M9-COMPLETE all work together in a production build; identify and fix any integration regressions.
-**Files to touch:** `src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`, telemetry services, any regressions found.
-**Acceptance criteria:** All M1–M17 + M9-COMPLETE acceptance criteria pass; no TypeScript errors; `npm run build` passes; telemetry events fire correctly in production.
-**How to test:** Open Island Run as a logged-in user; exercise all stops (hatchery, encounter, utility, boss, minigame, shop); travel between islands; open Home Island panel; verify all rewards, sounds, and telemetry fire correctly.
+**Objective:** Onboarding identity + public-age policy close-out. Keep the
+current on-device four-pair captain/ship picker and public-name moderation,
+document the app-level age-rating decision, then verify every public winner
+table applies the same safety policy for free and Pro players.
+**Files to touch:** `src/services/publicIdentity.ts`, onboarding/public-table
+consumers, policy docs, and focused tests only where gaps are found.
+**Acceptance criteria:** no network or native-AI dependency in first-run naming;
+custom names are optional; free/Pro/Collab do not bypass public-surface safety;
+private adult content is not inferred from subscription tier; all public table
+consumers clean or validate labels at a shared boundary.
+**How to test:** complete guest onboarding with suggestions and custom input;
+try blocked/separated/leet wording; inspect each public winner/leaderboard
+surface; verify private display remains separate from public rendering.
 
 ---
 
