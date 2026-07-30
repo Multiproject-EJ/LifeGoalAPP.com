@@ -66,13 +66,14 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     name: 'pickup modal has dialog semantics with an announced title',
     run: () => {
       ['role="dialog"', 'aria-modal="true"', 'aria-labelledby={titleId}'].forEach((n) => includes(modalSource, n));
-      includes(modalSource, 'TECH DISCOVERED');
+      includes(modalSource, 'CONCORD FRAGMENT {result.collectedCount} OF {TECH_COLLECTION_CELL_COUNT}');
+      includes(modalSource, 'THE CONCORD');
     },
   },
   {
     name: 'pickup modal renders compact progress and auto-dismisses via its own timer',
     run: () => {
-      includes(modalSource, '/ {TECH_COLLECTION_CELL_COUNT} components recovered');
+      includes(modalSource, '/ {TECH_COLLECTION_CELL_COUNT} Concord fragments recovered');
       includes(modalSource, 'window.setTimeout(() => dismissRef.current()');
       includes(modalSource, 'Tap to dismiss');
     },
@@ -169,6 +170,25 @@ export const islandTechCollectionComponentTests: TestCase[] = [
       includes(boardSource, 'if (!buildResult.changed) return true;');
       includes(boardSource, 'setTechCompletionCelebration({');
       includes(boardSource, 'fullBoardRewardDice: resolution.fullBoardRewardDice');
+    },
+  },
+  {
+    name: 'ordinary fragment landings automatically open the floating pickup reveal',
+    run: () => {
+      includes(boardSource, '// Ordinary pickup: fast modal that auto-dismisses');
+      includes(boardSource, 'setTechCollectionModal({');
+      includes(boardSource, 'collectedCount: resolution.nextCollectedCount');
+      includes(boardSource, '<IslandTechCollectionModal');
+    },
+  },
+  {
+    name: 'incomplete Concord progress floats over the board without the device console',
+    run: () => {
+      includes(boardSource, 'island-concord-collection-backdrop');
+      includes(boardSource, 'island-concord-collection-float');
+      includes(boardSource, 'Tap to close.');
+      includes(boardSource, "event.key === 'Enter' || event.key === ' ' || event.key === 'Escape'");
+      notIncludes(boardSource, 'Concord_off.webp');
     },
   },
   {

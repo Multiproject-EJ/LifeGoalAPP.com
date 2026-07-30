@@ -42,6 +42,7 @@ import {
   IslandTechCompletionCelebration,
   type TechCompletionCelebrationResult,
 } from './IslandTechCompletionCelebration';
+import { IslandTechGrid } from './IslandTechGrid';
 import {
   TECH_COLLECTION_CELL_COUNT,
   resolveTechCollection,
@@ -11127,6 +11128,7 @@ export function IslandRunBoardPrototype({
       showStoryReader ||
       isIslandInhabitantFlowOpen ||
       showCreatureChannelModal ||
+      showConcordHubModal ||
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
@@ -11291,24 +11293,7 @@ export function IslandRunBoardPrototype({
     () => resolveIslandRunConcordHubEntryState(runtimeState),
     [runtimeState],
   );
-  const concordEntryButtonState = useMemo(() => {
-    if (!isArcadeStoryJourney || concordHubEntryState.isConcordActive) {
-      return concordHubEntryState;
-    }
-    if (isPro) {
-      return {
-        ...concordHubEntryState,
-        label: 'Chronicles',
-        ariaLabel: 'Open optional Pro chronicles',
-      };
-    }
-    return {
-      ...concordHubEntryState,
-      label: 'Signal',
-      icon: '◌',
-      ariaLabel: 'A dormant island signal. Restore The Concord to activate its channels.',
-    };
-  }, [concordHubEntryState, isArcadeStoryJourney, isPro]);
+  const concordEntryButtonState = concordHubEntryState;
   const openGlobalStoryReader = useCallback(() => {
     if (isArcadeStoryJourney && !isPro) {
       setLandingText('The island signal is dormant. Keep restoring The Concord to activate its channels.');
@@ -11324,12 +11309,13 @@ export function IslandRunBoardPrototype({
     });
   }, [championshipPresentation]);
   const handleConcordEntryClick = useCallback(() => {
-    if (concordHubEntryState.primaryAction === 'open-concord-hub') {
-      setShowConcordHubModal(true);
-      return;
-    }
-    openGlobalStoryReader();
-  }, [concordHubEntryState.primaryAction, openGlobalStoryReader]);
+    setShowConcordHubModal(true);
+  }, []);
+
+  useEffect(() => {
+    if (!showConcordHubModal || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [showConcordHubModal]);
   const resolvedCaretakerBackgroundArtSrc = islandArtAmbientBackgroundSrc || islandBackgroundSrc;
   const openCaretakerFlow = useCallback((source: 'caretaker_tile_land' | 'caretaker_board_tap' | 'dev_hud') => {
     if (!shouldShowCaretakerTalkAction) return;
@@ -15985,57 +15971,98 @@ export function IslandRunBoardPrototype({
         </div>
       ) : null}
 
-      {showConcordHubModal ? (
-        <div className="island-run-overlay-root island-stop-modal-backdrop island-concord-hub-backdrop" role="presentation">
-          <section className="island-concord-hub-modal" role="dialog" aria-modal="true" aria-label="The Concord hub">
-            <img className="island-concord-hub-modal__device" src="/tech/Concord_on.webp" alt="The restored Concord device with three communication channels" />
-            <div className="island-concord-hub-modal__screen">
-              <p className="island-concord-hub-modal__eyebrow">The Concord</p>
-              <h3 className="island-concord-hub-modal__title">Channel select</h3>
-              <p className="island-concord-hub-modal__copy">Meaning channels online · {concordHubEntryState.requiredFragmentCount}/{concordHubEntryState.requiredFragmentCount} fragments restored</p>
-              <div className="island-concord-hub-modal__channels" aria-label="The Concord channels">
-                <button
-                  type="button"
-                  className="island-concord-hub-modal__channel"
-                  onClick={() => {
-                    setShowConcordHubModal(false);
-                    setShowCreatureChannelModal(true);
-                  }}
-                >
-                  <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">🐾</span>
-                  <span>Creature Channel</span>
-                </button>
-                <button
-                  type="button"
-                  className="island-concord-hub-modal__channel"
-                  onClick={() => {
-                    setShowConcordHubModal(false);
-                    openCaretakerFlow('dev_hud');
-                  }}
-                  disabled={!shouldShowCaretakerTalkAction}
-                >
-                  <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">🧙</span>
-                  <span>Caretaker Channel</span>
-                </button>
-                {!isArcadeStoryJourney || isPro ? (
-                  <button
-                    type="button"
-                    className="island-concord-hub-modal__channel"
-                    onClick={() => {
-                      setShowConcordHubModal(false);
-                      openGlobalStoryReader();
-                    }}
-                  >
-                    <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">📖</span>
-                    <span>{isArcadeStoryJourney ? 'Pro Chronicles' : 'Story Channel'}</span>
-                  </button>
-                ) : null}
-              </div>
+      {showConcordHubModal && typeof document !== 'undefined'
+        ? createPortal(
+          concordHubEntryState.isConcordActive ? (
+            <div className="island-run-overlay-root island-stop-modal-backdrop island-concord-hub-backdrop" role="presentation">
+              <section className="island-concord-hub-modal" role="dialog" aria-modal="true" aria-label="The Concord hub">
+                <img
+                  className="island-concord-hub-modal__device"
+                  src="/tech/Concord_on.webp"
+                  alt="The restored Concord device with three communication channels"
+                />
+                <div className="island-concord-hub-modal__screen">
+                  <p className="island-concord-hub-modal__eyebrow">The Concord</p>
+                  <h3 className="island-concord-hub-modal__title">Channel select</h3>
+                  <p className="island-concord-hub-modal__copy">Meaning channels online · {concordHubEntryState.requiredFragmentCount}/{concordHubEntryState.requiredFragmentCount} fragments restored</p>
+                  <div className="island-concord-hub-modal__channels" aria-label="The Concord channels">
+                    <button
+                      type="button"
+                      className="island-concord-hub-modal__channel"
+                      onClick={() => {
+                        setShowConcordHubModal(false);
+                        setShowCreatureChannelModal(true);
+                      }}
+                    >
+                      <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">🐾</span>
+                      <span>Creature Channel</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="island-concord-hub-modal__channel"
+                      onClick={() => {
+                        setShowConcordHubModal(false);
+                        openCaretakerFlow('dev_hud');
+                      }}
+                      disabled={!shouldShowCaretakerTalkAction}
+                    >
+                      <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">🧙</span>
+                      <span>Caretaker Channel</span>
+                    </button>
+                    {!isArcadeStoryJourney || isPro ? (
+                      <button
+                        type="button"
+                        className="island-concord-hub-modal__channel"
+                        onClick={() => {
+                          setShowConcordHubModal(false);
+                          openGlobalStoryReader();
+                        }}
+                      >
+                        <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">📖</span>
+                        <span>{isArcadeStoryJourney ? 'Pro Chronicles' : 'Story Channel'}</span>
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+                <button type="button" className="island-concord-hub-modal__return" onClick={() => setShowConcordHubModal(false)}>Return to island</button>
+              </section>
             </div>
-            <button type="button" className="island-concord-hub-modal__return" onClick={() => setShowConcordHubModal(false)}>Return to island</button>
-          </section>
-        </div>
-      ) : null}
+          ) : (
+            <div
+              className="island-run-overlay-root island-stop-modal-backdrop island-concord-collection-backdrop"
+              role="presentation"
+              onClick={() => setShowConcordHubModal(false)}
+            >
+              <section
+                className="island-concord-collection-float"
+                role="dialog"
+                aria-modal="true"
+                aria-label={`The Concord fragment collection. ${concordHubEntryState.collectedFragmentCount} of ${concordHubEntryState.requiredFragmentCount}. Tap to close.`}
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape') {
+                    event.preventDefault();
+                    setShowConcordHubModal(false);
+                  }
+                }}
+              >
+                <h3 className="island-concord-collection-float__title">The Concord</h3>
+                <div className="island-concord-collection-float__grid">
+                  <IslandTechGrid
+                    collectedSlots={runtimeState.techCollectionByIsland?.['1'] ?? []}
+                    islandNumber={1}
+                    reducedMotion={true}
+                  />
+                </div>
+                <p className="island-concord-collection-float__progress" role="status">
+                  {concordHubEntryState.collectedFragmentCount} / {concordHubEntryState.requiredFragmentCount}
+                </p>
+              </section>
+            </div>
+          ),
+          document.body,
+        )
+        : null}
 
       <IslandStoryReader
         manifestPath={activeStoryEpisode?.manifestPath ?? '/storyline/episode-001/manifest.json'}

@@ -62,7 +62,9 @@ export function IslandTechGrid(props: IslandTechGridProps) {
       data-fully-restored={fullyRestored ? 'true' : 'false'}
       data-asset-failed={assetFailed ? 'true' : 'false'}
       role="img"
-      aria-label={`Technology grid, ${collected.size} of ${TECH_COLLECTION_CELL_COUNT} components recovered`}
+      aria-label={islandNumber === 1
+        ? `The Concord restoration grid, ${collected.size} of ${TECH_COLLECTION_CELL_COUNT} fragments recovered`
+        : `Technology grid, ${collected.size} of ${TECH_COLLECTION_CELL_COUNT} components recovered`}
     >
       {/* Single hidden probe image: drives the graceful fallback if the asset 404s. */}
       {!assetFailed ? (

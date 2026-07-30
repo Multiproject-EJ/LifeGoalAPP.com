@@ -1,7 +1,7 @@
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
 import { getIslandTechnologyAccess, resolveIslandTechnologyBuildEligibility } from './islandRunTechnologyUnlocks';
 
-export type IslandRunConcordHubPrimaryAction = 'open-story-reader' | 'open-concord-hub';
+export type IslandRunConcordHubPrimaryAction = 'open-concord-progress' | 'open-concord-hub';
 
 export interface IslandRunConcordHubEntryState {
   label: string;
@@ -40,12 +40,10 @@ export function resolveIslandRunConcordHubEntryState(
   }
 
   return {
-    label: 'Story',
-    icon: '📖',
-    ariaLabel: collectedFragmentCount > 0
-      ? `Open story reader. The Concord is restoring: ${collectedFragmentCount} of ${REQUIRED_CONCORD_FRAGMENT_COUNT} fragments collected.`
-      : 'Open story reader',
-    primaryAction: 'open-story-reader',
+    label: `Concord ${collectedFragmentCount}/${REQUIRED_CONCORD_FRAGMENT_COUNT}`,
+    icon: '◈',
+    ariaLabel: `Open The Concord restoration grid. ${collectedFragmentCount} of ${REQUIRED_CONCORD_FRAGMENT_COUNT} fragments recovered.`,
+    primaryAction: 'open-concord-progress',
     isConcordActive: false,
     collectedFragmentCount,
     requiredFragmentCount: REQUIRED_CONCORD_FRAGMENT_COUNT,

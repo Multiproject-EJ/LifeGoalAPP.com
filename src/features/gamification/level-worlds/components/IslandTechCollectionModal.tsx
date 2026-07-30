@@ -237,16 +237,16 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
       aria-labelledby={titleId}
       onClick={(event) => event.stopPropagation()}
     >
-      <p className="island-tech-fragment__eyebrow">Ancient component found</p>
+      <p className="island-tech-fragment__eyebrow">The Concord is awakening</p>
       <h2 id={titleId} className="island-tech-fragment__title">
-        TECH FRAGMENT RECOVERED
+        CONCORD FRAGMENT {result.collectedCount} OF {TECH_COLLECTION_CELL_COUNT}
       </h2>
 
       <button
         type="button"
         className="island-tech-fragment__stage"
         onClick={advance}
-        aria-label={`${fragmentLabel} recovered. Tap to place it in the grid.`}
+        aria-label={`${fragmentLabel} recovered. Concord fragment ${result.collectedCount} of ${TECH_COLLECTION_CELL_COUNT}. Tap to restore it.`}
       >
         <span className="island-tech-fragment__halo" aria-hidden="true" />
         <span
@@ -285,7 +285,7 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
 
       <p className="island-tech-fragment__name">{fragmentLabel}</p>
       <p className="island-tech-fragment__hint" aria-hidden="true">
-        Tap to add it to the grid
+        Tap to restore The Concord
       </p>
     </section>
   );
@@ -309,9 +309,9 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
       aria-labelledby={titleId}
       onClick={(event) => event.stopPropagation()}
     >
-      <p className="island-tech-modal__eyebrow">Ancient component found</p>
+      <p className="island-tech-modal__eyebrow">Restoration progress</p>
       <h2 id={titleId} className="island-tech-modal__title">
-        TECH DISCOVERED
+        THE CONCORD
       </h2>
 
       <IslandTechGrid
@@ -324,7 +324,7 @@ export function IslandTechCollectionModal(props: IslandTechCollectionModalProps)
       />
 
       <p className="island-tech-modal__progress" role="status">
-        {gridCollectedCount} / {TECH_COLLECTION_CELL_COUNT} components recovered
+        {gridCollectedCount} / {TECH_COLLECTION_CELL_COUNT} Concord fragments recovered
       </p>
 
       {lineReward && !inFlight ? (
