@@ -160,6 +160,7 @@ import { islandRunRoutekeeperTinyActionsTests } from './islandRunRoutekeeperTiny
 import { islandRunHabitLandmarkActionTests } from './islandRunHabitLandmarkAction.test';
 import { islandRunFirstPlayerModalSchedulerTests } from './islandRunFirstPlayerModalScheduler.test';
 import { islandCameraLockedKitTests } from './islandCameraLockedKit.test';
+import { feedPetCompanionPresentationTests } from '../../../../habits/feedPetCompanionPresentation.test';
 import type { TestCase } from './testHarness';
 
 const suites: Array<{ label: string; tests: TestCase[] }> = [
@@ -326,6 +327,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunGuestClaimService', tests: islandRunGuestClaimServiceTests },
   { label: 'islandRunRoutekeeperTinyActions', tests: islandRunRoutekeeperTinyActionsTests },
   { label: 'islandRunFirstPlayerModalScheduler', tests: islandRunFirstPlayerModalSchedulerTests },
+  { label: 'feedPetCompanionPresentation', tests: feedPetCompanionPresentationTests },
 ];
 
 async function main() {
