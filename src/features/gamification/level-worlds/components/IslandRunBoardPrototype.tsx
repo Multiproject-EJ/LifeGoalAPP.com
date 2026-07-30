@@ -1534,11 +1534,13 @@ const SPARK60_TILE_COLOR: Record<IslandTileMapEntry['tileType'], string> = {
 // celebration presentation live in their own components. The board only wires
 // landings → canonical actions → presentation state.
 
-const DORMANT_DOOR_FIGURE_ICONS: Record<DormantDoorFigure, string> = {
-  small: '🟣',
-  medium: '💎',
-  large: '👑',
+const DORMANT_DOOR_FIGURE_ASSETS: Record<DormantDoorFigure, string> = {
+  small: '/assets/vault-rush/amethyst.webp',
+  medium: '/assets/vault-rush/diamond.webp',
+  large: '/assets/vault-rush/crown.webp',
 };
+
+const DORMANT_DOOR_CRACKED_LOCK_ASSET = '/assets/vault-rush/cracked-lock.webp';
 
 const DORMANT_DOOR_TIER_FIGURE: Record<DormantDoorRewardTier, DormantDoorFigure> = {
   small: 'small',
@@ -13584,8 +13586,11 @@ export function IslandRunBoardPrototype({
           >
             {dormantDoorReward && <ConfettiBurst active variant="standard" />}
             <header className="island-vault-rush__header">
-              <span className="island-vault-rush__eyebrow">🗝️ Secret found behind a dormant door</span>
-              <h3 className="island-stop-modal__title island-vault-rush__title">Vault Rush</h3>
+              <span className="island-vault-rush__eyebrow">Secret found behind a dormant door</span>
+              <h3 className="island-stop-modal__title island-vault-rush__title" aria-label="Vault Rush">
+                <span>Vault</span>
+                <span>Rush</span>
+              </h3>
               <p className="island-vault-rush__intro">
                 {dormantDoorReward
                   ? 'The lock gives way — your prize is waiting inside.'
@@ -13603,7 +13608,9 @@ export function IslandRunBoardPrototype({
                     key={level.tier}
                     className={`island-vault-rush__prize island-vault-rush__prize--${level.tier} ${isWinningPrize ? 'island-vault-rush__prize--winner' : ''} ${isResolvedNonWinningPrize ? 'island-vault-rush__prize--muted' : ''}`.trim()}
                   >
-                    <span className="island-vault-rush__prize-icon" aria-hidden="true">{DORMANT_DOOR_FIGURE_ICONS[prizeFigure]}</span>
+                    <span className="island-vault-rush__prize-icon" aria-hidden="true">
+                      <img src={DORMANT_DOOR_FIGURE_ASSETS[prizeFigure]} alt="" loading="eager" decoding="async" />
+                    </span>
                     <span className="island-vault-rush__prize-name">{DORMANT_DOOR_TIER_NAMES[level.tier]}</span>
                     <strong className="island-vault-rush__prize-value">+{level.essence} 💰</strong>
                     <span className="island-vault-rush__prize-dots" aria-label={`${foundCount} of 3 ${DORMANT_DOOR_TIER_NAMES[level.tier]} found`}>
@@ -13641,7 +13648,11 @@ export function IslandRunBoardPrototype({
                   >
                     <span className="island-vault-rush__door-arch" aria-hidden="true">
                       {isSelected
-                        ? <span className="island-vault-rush__door-prize">{DORMANT_DOOR_FIGURE_ICONS[door.figure]}</span>
+                        ? (
+                          <span className="island-vault-rush__door-prize">
+                            <img src={DORMANT_DOOR_FIGURE_ASSETS[door.figure]} alt="" loading="eager" decoding="async" />
+                          </span>
+                        )
                         : <span className="island-vault-rush__door-num">{index + 1}</span>}
                     </span>
                   </button>
@@ -13650,9 +13661,22 @@ export function IslandRunBoardPrototype({
             </div>
             {dormantDoorReward ? (
               <div className="island-vault-rush__result" role="status">
-                <span className="island-vault-rush__result-title">💥 Vault cracked!</span>
-                <span className="island-vault-rush__result-copy">
-                  3× {DORMANT_DOOR_FIGURE_ICONS[DORMANT_DOOR_TIER_FIGURE[dormantDoorReward.tier]]} {DORMANT_DOOR_TIER_NAMES[dormantDoorReward.tier]} — worth <strong>+{dormantDoorReward.essence} 💰</strong>
+                <span className="island-vault-rush__result-art" aria-hidden="true">
+                  <img src={DORMANT_DOOR_CRACKED_LOCK_ASSET} alt="" loading="eager" decoding="async" />
+                </span>
+                <span className="island-vault-rush__result-text">
+                  <span className="island-vault-rush__result-title">Vault cracked!</span>
+                  <span className="island-vault-rush__result-copy">
+                    <span className="island-vault-rush__result-prize" aria-hidden="true">
+                      <img
+                        src={DORMANT_DOOR_FIGURE_ASSETS[DORMANT_DOOR_TIER_FIGURE[dormantDoorReward.tier]]}
+                        alt=""
+                        loading="eager"
+                        decoding="async"
+                      />
+                    </span>
+                    3× {DORMANT_DOOR_TIER_NAMES[dormantDoorReward.tier]} · <strong>+{dormantDoorReward.essence} 💰</strong>
+                  </span>
                 </span>
               </div>
             ) : (

@@ -12888,6 +12888,449 @@
   }
 }
 
+/* ── Vault Rush production-art overhaul ─────────────────────────────────
+   Presentation-only. The existing dormant-door resolver, selections, reward
+   ladder and claim path remain the gameplay authority. */
+
+.island-stop-modal--dormant-door.island-vault-rush {
+  isolation: isolate;
+  width: min(378px, calc(100vw - 12px));
+  max-width: none;
+  max-height: calc(100dvh - 12px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  gap: 0.42rem;
+  padding: 1rem 1.35rem 1.15rem;
+  border: 0;
+  border-radius: 38px;
+  color: #fff8df;
+  background-color: #090806;
+  background-image:
+    linear-gradient(180deg, rgba(9, 8, 6, 0.08), rgba(9, 8, 6, 0.2)),
+    url('/assets/vault-rush/vault-panel.webp');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.78),
+    0 0 56px rgba(234, 169, 48, 0.2);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(226, 164, 55, 0.5) transparent;
+}
+
+.island-stop-modal--dormant-door.island-vault-rush::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0.7rem 0.75rem;
+  border: 1px solid rgba(255, 221, 139, 0.18);
+  border-radius: 29px;
+  box-shadow:
+    inset 0 0 34px rgba(0, 0, 0, 0.62),
+    inset 0 1px 0 rgba(255, 237, 187, 0.18);
+  pointer-events: none;
+}
+
+.island-vault-rush__header {
+  gap: 0.16rem;
+  padding: 0 0.3rem;
+}
+
+.island-vault-rush__eyebrow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  min-height: 1rem;
+  font-size: 0.51rem;
+  letter-spacing: 0.18em;
+  color: rgba(255, 230, 164, 0.86);
+}
+
+.island-vault-rush__eyebrow::before {
+  content: '';
+  width: 0.72rem;
+  height: 0.72rem;
+  border: 2px solid #dda83e;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 43%, #050403 0 18%, transparent 20%),
+    linear-gradient(90deg, transparent 43%, #050403 44% 56%, transparent 57%),
+    linear-gradient(145deg, #fff2b8, #bc7620 70%);
+  box-shadow: 0 0 9px rgba(248, 194, 73, 0.48);
+}
+
+.island-stop-modal h3.island-vault-rush__title {
+  display: grid;
+  justify-items: center;
+  margin: -0.05rem 0 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(3.25rem, 16vw, 4.1rem);
+  font-weight: 950;
+  line-height: 0.76;
+  letter-spacing: 0.035em;
+  background: linear-gradient(180deg, #fff3bd 0%, #f6c454 33%, #ad6518 68%, #f4bd45 100%);
+  background-size: 100% 220%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(0 2px 0 rgba(82, 41, 2, 0.92))
+    drop-shadow(0 5px 7px rgba(0, 0, 0, 0.72));
+}
+
+.island-stop-modal h3.island-vault-rush__title span:last-child {
+  margin-top: 0.13em;
+}
+
+.island-vault-rush p.island-vault-rush__intro {
+  max-width: 18rem;
+  margin: 0.24rem auto 0;
+  color: rgba(255, 246, 222, 0.84);
+  font-size: 0.77rem;
+  line-height: 1.28;
+  text-align: center;
+}
+
+.island-vault-rush__prizes {
+  gap: 0.4rem;
+  margin: 0.22rem 0 0.08rem;
+}
+
+.island-vault-rush__prize {
+  min-height: 104px;
+  gap: 0.04rem;
+  padding: 0.35rem 0.2rem 0.32rem;
+  overflow: hidden;
+  border: 1px solid rgba(226, 169, 64, 0.64);
+  border-radius: 19px;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(157, 80, 231, 0.2), transparent 44%),
+    linear-gradient(150deg, rgba(40, 36, 31, 0.98), rgba(8, 8, 7, 0.99));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 241, 190, 0.18),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.38),
+    0 7px 14px rgba(0, 0, 0, 0.34);
+}
+
+.island-vault-rush__prize--medium {
+  border-color: rgba(126, 213, 255, 0.62);
+  background:
+    radial-gradient(circle at 50% 24%, rgba(82, 188, 246, 0.22), transparent 44%),
+    linear-gradient(150deg, rgba(29, 39, 43, 0.98), rgba(7, 10, 12, 0.99));
+}
+
+.island-vault-rush__prize--jackpot {
+  border-color: rgba(247, 195, 74, 0.74);
+  background:
+    radial-gradient(circle at 50% 24%, rgba(247, 181, 46, 0.22), transparent 45%),
+    linear-gradient(150deg, rgba(45, 37, 20, 0.98), rgba(10, 8, 5, 0.99));
+}
+
+.island-vault-rush__prize-icon {
+  width: 46px;
+  height: 46px;
+  margin: -0.05rem 0 -0.06rem;
+  border-radius: 50%;
+  overflow: hidden;
+  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.62));
+}
+
+.island-vault-rush__prize-icon img,
+.island-vault-rush__door-prize img,
+.island-vault-rush__result-art img,
+.island-vault-rush__result-prize img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.island-vault-rush__prize-name {
+  min-height: 1.5em;
+  font-size: 0.63rem;
+  line-height: 1.05;
+  letter-spacing: 0.055em;
+}
+
+.island-vault-rush__prize-value {
+  color: #fff3c5;
+  font-size: 0.84rem;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.72);
+}
+
+.island-vault-rush__prize-dots {
+  gap: 0.2rem;
+  margin-top: 0.08rem;
+}
+
+.island-vault-rush__prize-dot {
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(229, 177, 71, 0.5);
+  background: rgba(5, 5, 4, 0.86);
+}
+
+.island-vault-rush__prize-dot--lit {
+  border-color: #ffe6a4;
+  background: #f4b53e;
+}
+
+.island-vault-rush__grid {
+  gap: 0.38rem;
+  margin: 0.28rem 0 0.12rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(225, 169, 64, 0.46);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(205, 146, 42, 0.08), transparent 58%),
+    rgba(4, 4, 3, 0.78);
+  box-shadow:
+    inset 0 0 18px rgba(0, 0, 0, 0.76),
+    0 1px 0 rgba(255, 226, 154, 0.1);
+}
+
+.island-stop-modal .island-vault-rush__door {
+  min-height: 69px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(230, 177, 74, 0.62);
+  border-radius: 17px;
+  background:
+    radial-gradient(circle at 8px 8px, #e4b856 0 1px, #5b3a12 1.5px 2.5px, transparent 3px),
+    radial-gradient(circle at calc(100% - 8px) 8px, #e4b856 0 1px, #5b3a12 1.5px 2.5px, transparent 3px),
+    radial-gradient(circle at 8px calc(100% - 8px), #e4b856 0 1px, #5b3a12 1.5px 2.5px, transparent 3px),
+    radial-gradient(circle at calc(100% - 8px) calc(100% - 8px), #e4b856 0 1px, #5b3a12 1.5px 2.5px, transparent 3px),
+    radial-gradient(circle at 50% 30%, rgba(255, 216, 128, 0.09), transparent 37%),
+    linear-gradient(145deg, #343027, #12110f 58%, #050504);
+  color: #f8d886;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 241, 198, 0.17),
+    inset 0 -12px 18px rgba(0, 0, 0, 0.55),
+    0 6px 12px rgba(0, 0, 0, 0.36);
+}
+
+.island-vault-rush__door-arch {
+  inset: 8%;
+  border: 1px solid rgba(237, 188, 88, 0.66);
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(232, 181, 73, 0.1) 0 35%, transparent 36%),
+    radial-gradient(circle at 50% 48%, transparent 0 47%, rgba(225, 171, 63, 0.52) 48% 50%, transparent 51%),
+    linear-gradient(145deg, #2f2b24, #0d0d0b);
+  box-shadow:
+    inset 0 0 0 2px rgba(4, 4, 3, 0.58),
+    inset 0 1px 0 rgba(255, 238, 188, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.55),
+    0 4px 9px rgba(0, 0, 0, 0.42);
+}
+
+.island-vault-rush__door-arch::after {
+  right: 10%;
+  top: 68%;
+  width: 5px;
+  height: 8px;
+  border-radius: 50% 50% 3px 3px;
+  background: #0b0905;
+  border: 1px solid rgba(242, 191, 82, 0.88);
+  box-shadow: 0 0 5px rgba(240, 179, 55, 0.42);
+}
+
+.island-vault-rush__door-num {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.32rem;
+  color: #f3cf78;
+  text-shadow: 0 2px 0 #3e2104, 0 0 9px rgba(237, 174, 54, 0.24);
+}
+
+.island-vault-rush__door-prize {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+}
+
+.island-vault-rush__door--tier-small,
+.island-vault-rush__door--tier-medium,
+.island-vault-rush__door--tier-large {
+  background: linear-gradient(145deg, #302a20, #090806 70%);
+}
+
+.island-vault-rush__door--tier-small .island-vault-rush__door-arch,
+.island-vault-rush__door--tier-medium .island-vault-rush__door-arch,
+.island-vault-rush__door--tier-large .island-vault-rush__door-arch {
+  border-color: rgba(255, 222, 145, 0.82);
+  background: rgba(4, 4, 3, 0.9);
+}
+
+.island-vault-rush__door--winner {
+  border-color: #fff0a9;
+  box-shadow:
+    0 0 0 2px rgba(255, 229, 133, 0.35),
+    0 0 24px rgba(245, 185, 55, 0.78),
+    0 12px 24px rgba(0, 0, 0, 0.55);
+}
+
+.island-vault-rush__prize--muted {
+  opacity: 0.48;
+}
+
+.island-vault-rush__status {
+  gap: 0.34rem;
+}
+
+.island-vault-rush__status-chip {
+  padding: 0.3rem 0.58rem;
+  border-color: rgba(229, 176, 71, 0.44);
+  background: rgba(7, 7, 6, 0.82);
+  color: rgba(255, 242, 210, 0.94);
+  font-size: 0.67rem;
+  letter-spacing: 0.025em;
+}
+
+.island-vault-rush__result {
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 94px;
+  padding: 0.38rem 0.62rem 0.38rem 0.34rem;
+  border: 1px solid rgba(255, 221, 135, 0.86);
+  border-radius: 21px;
+  background:
+    radial-gradient(circle at 18% 50%, rgba(255, 193, 54, 0.22), transparent 35%),
+    linear-gradient(145deg, rgba(48, 38, 23, 0.98), rgba(9, 8, 6, 0.98));
+  box-shadow:
+    0 0 24px rgba(239, 177, 51, 0.32),
+    inset 0 1px 0 rgba(255, 238, 188, 0.24);
+  text-align: left;
+}
+
+.island-vault-rush__result-art {
+  width: 82px;
+  height: 82px;
+  overflow: hidden;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 10px rgba(255, 184, 42, 0.48));
+}
+
+.island-vault-rush__result-text {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.island-vault-rush__result-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.045em;
+  color: #fff0b6;
+}
+
+.island-vault-rush__result-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.18rem;
+  font-size: 0.76rem;
+}
+
+.island-vault-rush__result-prize {
+  width: 24px;
+  height: 24px;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.island-vault-rush .island-stop-modal__actions {
+  justify-content: center;
+  gap: 0.46rem;
+  margin-top: 0.08rem;
+  padding-top: 0.38rem;
+  border-top-color: rgba(230, 176, 69, 0.25);
+}
+
+.island-vault-rush .island-stop-modal__btn {
+  min-height: 44px;
+  border-radius: 14px;
+  border-color: rgba(229, 177, 73, 0.54);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.island-vault-rush .island-stop-modal__btn--secondary {
+  background: linear-gradient(145deg, rgba(48, 45, 38, 0.98), rgba(12, 12, 10, 0.98));
+  color: rgba(255, 239, 203, 0.9);
+}
+
+.island-vault-rush__claim.island-stop-modal__btn--primary {
+  min-width: 150px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent 42%),
+    linear-gradient(180deg, #ffd86d, #e7a52d 58%, #aa6217);
+  border-color: #fff0b2;
+  color: #261300;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.54),
+    0 7px 18px rgba(229, 159, 35, 0.28);
+}
+
+@media (max-width: 380px) {
+  .island-stop-modal--dormant-door.island-vault-rush {
+    width: calc(100vw - 8px);
+    padding-inline: 1.1rem;
+  }
+
+  .island-stop-modal h3.island-vault-rush__title {
+    font-size: clamp(3rem, 16vw, 3.7rem);
+  }
+
+  .island-vault-rush__prize {
+    min-height: 98px;
+    border-radius: 17px;
+  }
+
+  .island-stop-modal .island-vault-rush__door {
+    min-height: 64px;
+  }
+}
+
+@media (max-height: 740px) {
+  .island-stop-modal--dormant-door.island-vault-rush {
+    gap: 0.28rem;
+    padding-block: 0.72rem 0.78rem;
+  }
+
+  .island-stop-modal h3.island-vault-rush__title {
+    font-size: 2.8rem;
+  }
+
+  .island-vault-rush p.island-vault-rush__intro {
+    display: none;
+  }
+
+  .island-vault-rush__prize {
+    min-height: 88px;
+  }
+
+  .island-vault-rush__prize-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .island-stop-modal .island-vault-rush__door {
+    min-height: 58px;
+  }
+
+  .island-vault-rush__result {
+    min-height: 80px;
+  }
+
+  .island-vault-rush__result-art {
+    width: 68px;
+    height: 68px;
+  }
+}
+
 /* The traffic-light tile stays a neutral carved slab while only the
    red/yellow lights are active. Once the green lights come on it gains a
    RESTRAINED green highlight — brightened trim + soft aura — never a
