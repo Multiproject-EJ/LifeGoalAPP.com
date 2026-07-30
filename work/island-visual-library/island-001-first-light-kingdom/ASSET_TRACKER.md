@@ -8,7 +8,7 @@ preserved under the Island 006 runtime folder.
 | # | Runtime asset | State | Notes |
 | --- | --- | --- | --- |
 | 1 | `background/ambient-background.webp` | Complete, wired, phone-QA | 1400 × 1600 opaque WebP, 179 KB |
-| 2 | `board/board-plate.webp` | Complete, wired, phone-QA | 1400 × 1400 transparent WebP, 283 KB |
+| 2 | `board/board-plate.webp` | Complete, wired, phone-QA | 1400 × 1400 transparent WebP, 278 KB; organic transparent lower cliff edge |
 | 3 | `landmarks/hatchery/hatchery-l1.webp` | Complete, wired, phone-QA | 1024 × 1024 transparent WebP, 75 KB |
 | 4 | `landmarks/hatchery/hatchery-l2.webp` | Complete, wired, phone-QA | 1024 × 1024 transparent WebP, 132 KB |
 | 5 | `landmarks/hatchery/hatchery-l3.webp` | Complete, wired, phone-QA | 1024 × 1024 transparent WebP, 191 KB |
@@ -62,6 +62,15 @@ The first draft was rejected because it included a decorative segmented ring
 beneath the live route. In version 2 that ring was replaced with quiet,
 continuous pale lawn and ivory gravel. The four equal satellite foundations
 and central arena foundation remain empty for separate runtime assets.
+
+The original lower cliff touched the 1400 px canvas boundary across more than
+one thousand pixels, which rendered as a straight horizontal cut on phones.
+An ImageGen outpaint was used to establish the intended tapered floating-island
+silhouette, but was not selected because it altered the camera-locked
+foundations. The production v4 instead preserves every original pixel above the
+lower cliff and applies an irregular, feathered alpha termination only to the
+bottom edge. It retains the exact board geometry while leaving transparent air
+beneath the final rock and waterfall tips.
 
 The optimized board plate and the full final-angle landmark set were switched
 into the manifest atomically after mobile QA. The runtime crop is 1400 × 1400,
