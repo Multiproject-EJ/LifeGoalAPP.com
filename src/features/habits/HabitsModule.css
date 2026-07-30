@@ -889,6 +889,239 @@
   }
 }
 
+.habit-day-nav__vision-modal-backdrop:has(.habit-day-nav__feed-creatures-modal) {
+  align-items: center;
+  padding: max(0.75rem, env(safe-area-inset-top)) 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.habit-day-nav__feed-creatures-modal {
+  --feed-pet-accent: #86efac;
+  --feed-pet-glow: rgba(74, 222, 128, 0.38);
+  width: min(94vw, 430px);
+  max-height: calc(100dvh - 1.5rem);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--feed-pet-accent) 58%, white);
+  background:
+    radial-gradient(circle at 50% 23%, var(--feed-pet-glow), transparent 32%),
+    radial-gradient(circle at 15% 8%, rgba(255, 255, 255, 0.13), transparent 25%),
+    linear-gradient(155deg, #173b36 0%, #102943 52%, #11162d 100%);
+  color: #f8fafc;
+  box-shadow:
+    0 28px 70px rgba(2, 8, 23, 0.58),
+    0 0 38px var(--feed-pet-glow),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+  padding: 0;
+}
+
+.habit-day-nav__feed-creatures-modal--rare {
+  --feed-pet-accent: #93c5fd;
+  --feed-pet-glow: rgba(96, 165, 250, 0.42);
+}
+
+.habit-day-nav__feed-creatures-modal--mythic {
+  --feed-pet-accent: #e9d5ff;
+  --feed-pet-glow: rgba(192, 132, 252, 0.48);
+}
+
+.habit-day-nav__feed-creatures-modal::before {
+  inset: 8px;
+  border: 1px solid color-mix(in srgb, var(--feed-pet-accent) 34%, transparent);
+  border-radius: 20px;
+}
+
+.habit-day-nav__feed-creatures-modal .habit-day-nav__vision-modal-close {
+  z-index: 5;
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.habit-day-nav__feed-creatures-body {
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0.65rem;
+  max-height: calc(100dvh - 1.5rem);
+  padding: 1.5rem 1.2rem max(1.25rem, env(safe-area-inset-bottom));
+}
+
+.habit-day-nav__feed-creatures-kicker {
+  margin: 0.15rem 0 0;
+  color: var(--feed-pet-accent);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.habit-day-nav__feed-creatures-stage {
+  position: relative;
+  isolation: isolate;
+  width: min(66vw, 230px);
+  height: min(39dvh, 225px);
+  min-height: 160px;
+  display: grid;
+  place-items: center;
+  margin: -0.15rem 0 -0.25rem;
+}
+
+.habit-day-nav__feed-creatures-stage::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 17%;
+  right: 17%;
+  bottom: 6%;
+  height: 13%;
+  border-radius: 50%;
+  background: rgba(2, 6, 23, 0.52);
+  filter: blur(9px);
+  animation: feed-pet-shadow-breathe 4.4s ease-in-out infinite;
+}
+
+.habit-day-nav__feed-creatures-aura {
+  position: absolute;
+  z-index: -2;
+  inset: 12%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--feed-pet-accent) 42%, transparent), transparent 66%);
+  filter: blur(4px);
+  animation: feed-pet-aura-breathe 3.8s ease-in-out infinite;
+}
+
+.habit-day-nav__feed-creatures-art {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 18px rgba(2, 6, 23, 0.42));
+  transform-origin: 50% 82%;
+  animation: feed-pet-companion-idle 4.4s cubic-bezier(0.42, 0, 0.38, 1) infinite;
+}
+
+.habit-day-nav__feed-creatures-fallback {
+  display: none;
+  position: relative;
+  z-index: 1;
+  width: 8rem;
+  height: 8rem;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 4rem;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.habit-day-nav__feed-creatures-stage--empty {
+  width: 9rem;
+  min-height: 9rem;
+  height: 9rem;
+  margin: 0.35rem 0 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(134, 239, 172, 0.17), transparent 70%);
+}
+
+.habit-day-nav__feed-creatures-empty-icon {
+  font-size: 4.3rem;
+  animation: feed-pet-companion-idle 4.4s cubic-bezier(0.42, 0, 0.38, 1) infinite;
+}
+
+.habit-day-nav__feed-creatures-title {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.45rem, 6vw, 1.9rem);
+  font-weight: 900;
+  line-height: 1.05;
+  text-shadow: 0 0 18px var(--feed-pet-glow);
+}
+
+.habit-day-nav__feed-creatures-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.38rem;
+}
+
+.habit-day-nav__feed-creatures-meta span {
+  padding: 0.3rem 0.62rem;
+  border: 1px solid color-mix(in srgb, var(--feed-pet-accent) 36%, transparent);
+  border-radius: 999px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.48);
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.habit-day-nav__feed-creatures-subtitle {
+  max-width: 33ch;
+  margin: 0.1rem auto 0;
+  color: rgba(241, 245, 249, 0.82);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.habit-day-nav__feed-creatures-feed-button {
+  position: static;
+  left: auto;
+  bottom: auto;
+  min-width: min(100%, 220px);
+  margin-top: 0.2rem;
+  padding: 0.82rem 1.35rem;
+  transform: none;
+  color: #07151c;
+  background: linear-gradient(135deg, var(--feed-pet-accent), #fef3c7);
+  box-shadow:
+    0 12px 24px rgba(2, 8, 23, 0.34),
+    0 0 24px var(--feed-pet-glow);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.habit-day-nav__feed-creatures-feed-button:disabled {
+  cursor: default;
+  opacity: 0.68;
+}
+
+@keyframes feed-pet-companion-idle {
+  0%,
+  100% { transform: translate3d(-1px, 1px, 0) rotate(-0.7deg) scale(0.99, 1.01); }
+  32% { transform: translate3d(2px, -5px, 0) rotate(0.6deg) scale(1.015, 0.995); }
+  68% { transform: translate3d(-2px, -2px, 0) rotate(-0.25deg) scale(1.002, 1.012); }
+}
+
+@keyframes feed-pet-aura-breathe {
+  0%,
+  100% { opacity: 0.48; transform: scale(0.92); }
+  50% { opacity: 0.9; transform: scale(1.05); }
+}
+
+@keyframes feed-pet-shadow-breathe {
+  0%,
+  100% { opacity: 0.62; transform: scaleX(0.92); }
+  50% { opacity: 0.4; transform: scaleX(1.04); }
+}
+
+@media (max-height: 620px) {
+  .habit-day-nav__feed-creatures-stage {
+    height: 150px;
+    min-height: 140px;
+  }
+
+  .habit-day-nav__feed-creatures-body {
+    gap: 0.42rem;
+    padding-top: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .habit-day-nav__feed-creatures-stage::after,
+  .habit-day-nav__feed-creatures-aura,
+  .habit-day-nav__feed-creatures-art,
+  .habit-day-nav__feed-creatures-empty-icon {
+    animation: none;
+  }
+}
+
 .habit-day-nav__todays-offer-spin-icon {
   font-size: 1.4rem;
 }

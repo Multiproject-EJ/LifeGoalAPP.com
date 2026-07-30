@@ -177,6 +177,8 @@ import {
   buildDailyOfferClaimStorageKey,
   runDailyOfferClaim,
 } from './dailyOfferClaim';
+import { FeedPetModal } from './FeedPetModal';
+import { resolveFeedPetCompanionPresentation } from './feedPetCompanionPresentation';
 import { EVENT_IDS, type EventId } from '../gamification/level-worlds/services/islandRunEventEngine';
 import { generateIslandStopPlan } from '../gamification/level-worlds/services/islandRunStops';
 import { getUnresolvedEggSlotsForIsland } from '../gamification/level-worlds/services/islandRunEggMania';
@@ -3867,8 +3869,19 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     ? 'Vision star claimed today.'
     : '';
   const { state: islandRunState } = useIslandRunState(session, null);
+  const feedPetCompanion = useMemo(
+    () => resolveFeedPetCompanionPresentation(islandRunState),
+    [islandRunState.activeCompanionId, islandRunState.creatureCollection],
+  );
   const [eggReadinessNowMs, setEggReadinessNowMs] = useState(() => Date.now());
   const [islandOfferNowMs, setIslandOfferNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (typeof document === 'undefined' || !isFeedCreaturesModalOpen) {
+      return undefined;
+    }
+    return lockPageScroll(['body', 'documentElement']);
+  }, [isFeedCreaturesModalOpen]);
 
   useEffect(() => {
     const runtimeStorageKey = `island_run_runtime_state_${session.user.id}`;
@@ -4484,45 +4497,14 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   ) : null;
 
   const feedCreaturesModal = isFeedCreaturesModalOpen ? (
-    <div
-      className="habit-day-nav__vision-modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Feed Pet"
-      onClick={() => setIsFeedCreaturesModalOpen(false)}
-    >
-      <div
-        className="habit-day-nav__vision-modal habit-day-nav__feed-creatures-modal"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          type="button"
-          className="habit-day-nav__vision-modal-close"
-          onClick={() => setIsFeedCreaturesModalOpen(false)}
-          aria-label="Close feed pet"
-        >
-          ×
-        </button>
-        <div className="habit-day-nav__todays-offer-body">
-          <p className="habit-day-nav__todays-offer-icon" aria-hidden="true">🐾</p>
-          <p className="habit-day-nav__todays-offer-title">Feed Pet</p>
-          <p className="habit-day-nav__todays-offer-subtitle">Keep your sanctuary thriving. +15 🎲 dice reward.</p>
-          <button
-            type="button"
-            className="habit-day-nav__todays-offer-buy"
-            disabled={isFeedCreaturesClaiming || hasClaimedFeedCreaturesToday}
-            onClick={handleClaimFeedCreatures}
-          >
-            {isFeedCreaturesClaiming ? 'Feeding…' : hasClaimedFeedCreaturesToday ? '✓ Fed today' : 'Feed Now'}
-          </button>
-          {feedCreaturesClaimError ? (
-            <p className="habit-day-nav__bonus-error" role="status" aria-live="polite">
-              {feedCreaturesClaimError}
-            </p>
-          ) : null}
-        </div>
-      </div>
-    </div>
+    <FeedPetModal
+      companion={feedPetCompanion}
+      isClaiming={isFeedCreaturesClaiming}
+      hasClaimedToday={hasClaimedFeedCreaturesToday}
+      errorMessage={feedCreaturesClaimError}
+      onClose={() => setIsFeedCreaturesModalOpen(false)}
+      onFeed={() => void handleClaimFeedCreatures()}
+    />
   ) : null;
 
   const eggHatchMovieModal = isEggHatchMovieOpen ? (
