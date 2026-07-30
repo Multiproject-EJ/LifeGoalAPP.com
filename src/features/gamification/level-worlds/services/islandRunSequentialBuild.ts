@@ -26,8 +26,8 @@ export type IslandRunSequentialBuildView = {
   activeTarget: IslandRunSequentialBuildTarget | null;
   nextTarget: IslandRunSequentialBuildTarget | null;
   completedSequenceSteps: number;
-  completedRounds: number;
-  currentRound: IslandRunSequentialBuildTargetLevel | null;
+  completedLandmarks: number;
+  currentTargetLevel: IslandRunSequentialBuildTargetLevel | null;
   spentEssence: number;
   requiredEssence: number;
   progressRatio: number;
@@ -50,14 +50,16 @@ const STOP_IDS: readonly IslandRunSequentialBuildStopId[] = ['hatchery', 'habit'
  * Sequential build order is derived from existing per-stop build state only.
  * This module persists no active target, performs no gameplay writes, and never
  * redistributes uneven/parallel legacy progress; later landmarks that are ahead
- * remain untouched until the canonical sequence reaches them.
+ * remain untouched until the canonical sequence reaches them. The canonical
+ * order is landmark-first: finish one landmark through L3 before moving to the
+ * next plot, keeping one calm visual focus and one handover moment at a time.
  */
 export function resolveIslandRunSequentialBuildTarget(
   stopBuildStateByIndex: ReadonlyArray<IslandRunContractV2BuildState | null | undefined>,
 ): IslandRunSequentialBuildTarget | null {
   const states = normalizeSequentialBuildStates(stopBuildStateByIndex);
-  for (let targetLevel = 1; targetLevel <= MAX_BUILD_LEVEL; targetLevel += 1) {
-    for (let stopIndex = 0; stopIndex < CANONICAL_STOP_COUNT; stopIndex += 1) {
+  for (let stopIndex = 0; stopIndex < CANONICAL_STOP_COUNT; stopIndex += 1) {
+    for (let targetLevel = 1; targetLevel <= MAX_BUILD_LEVEL; targetLevel += 1) {
       if (states[stopIndex].buildLevel < targetLevel) {
         return makeSequentialBuildTarget(stopIndex, targetLevel as IslandRunSequentialBuildTargetLevel);
       }
@@ -71,7 +73,7 @@ export function deriveIslandRunSequentialBuildView(
 ): IslandRunSequentialBuildView {
   const states = normalizeSequentialBuildStates(stopBuildStateByIndex);
   const activeTarget = resolveIslandRunSequentialBuildTarget(states);
-  const completedRounds = countCompletedSequentialBuildRounds(states);
+  const completedLandmarks = countCompletedSequentialBuildLandmarks(states);
 
   if (!activeTarget) {
     return {
@@ -79,8 +81,8 @@ export function deriveIslandRunSequentialBuildView(
       activeTarget: null,
       nextTarget: null,
       completedSequenceSteps: TOTAL_SEQUENCE_STEPS,
-      completedRounds,
-      currentRound: null,
+      completedLandmarks,
+      currentTargetLevel: null,
       spentEssence: 0,
       requiredEssence: 0,
       progressRatio: 1,
@@ -102,8 +104,8 @@ export function deriveIslandRunSequentialBuildView(
     activeTarget,
     nextTarget: getNextSequentialBuildTarget(activeTarget),
     completedSequenceSteps: activeTarget.sequencePosition - 1,
-    completedRounds,
-    currentRound: activeTarget.targetLevel,
+    completedLandmarks,
+    currentTargetLevel: activeTarget.targetLevel,
     spentEssence,
     requiredEssence,
     progressRatio: requiredEssence > 0 ? Math.min(1, spentEssence / requiredEssence) : 0,
@@ -172,8 +174,8 @@ export function canBuildIslandRunSequentialTarget(
 function getNextSequentialBuildTarget(target: IslandRunSequentialBuildTarget): IslandRunSequentialBuildTarget | null {
   if (target.sequencePosition >= TOTAL_SEQUENCE_STEPS) return null;
   const zeroBasedPosition = target.sequencePosition;
-  const nextLevel = Math.floor(zeroBasedPosition / CANONICAL_STOP_COUNT) + 1;
-  const nextStopIndex = zeroBasedPosition % CANONICAL_STOP_COUNT;
+  const nextStopIndex = Math.floor(zeroBasedPosition / MAX_BUILD_LEVEL);
+  const nextLevel = (zeroBasedPosition % MAX_BUILD_LEVEL) + 1;
   return makeSequentialBuildTarget(nextStopIndex, nextLevel as IslandRunSequentialBuildTargetLevel);
 }
 
@@ -182,19 +184,13 @@ function makeSequentialBuildTarget(stopIndex: number, targetLevel: IslandRunSequ
     stopIndex,
     stopId: STOP_IDS[stopIndex],
     targetLevel,
-    sequencePosition: ((targetLevel - 1) * CANONICAL_STOP_COUNT) + stopIndex + 1,
+    sequencePosition: (stopIndex * MAX_BUILD_LEVEL) + targetLevel,
     totalSequenceSteps: TOTAL_SEQUENCE_STEPS,
   };
 }
 
-function countCompletedSequentialBuildRounds(states: readonly IslandRunContractV2BuildState[]): number {
-  let completedRounds = 0;
-  for (let targetLevel = 1; targetLevel <= MAX_BUILD_LEVEL; targetLevel += 1) {
-    if (states.every((state) => state.buildLevel >= targetLevel)) {
-      completedRounds += 1;
-    }
-  }
-  return completedRounds;
+function countCompletedSequentialBuildLandmarks(states: readonly IslandRunContractV2BuildState[]): number {
+  return states.filter((state) => state.buildLevel >= MAX_BUILD_LEVEL).length;
 }
 
 function normalizeSequentialBuildStates(

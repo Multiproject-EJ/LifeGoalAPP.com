@@ -42,13 +42,13 @@ export const islandRunSequentialBuildTests: TestCase[] = [
         stopIndex: 0, stopId: 'hatchery', targetLevel: 1, sequencePosition: 1,
       });
       expectTarget(resolveIslandRunSequentialBuildTarget(states([1, 0, 0, 0, 0])), {
-        stopIndex: 1, stopId: 'habit', targetLevel: 1, sequencePosition: 2,
+        stopIndex: 0, stopId: 'hatchery', targetLevel: 2, sequencePosition: 2,
       });
-      expectTarget(resolveIslandRunSequentialBuildTarget(states([1, 1, 1, 1, 1])), {
-        stopIndex: 0, stopId: 'hatchery', targetLevel: 2, sequencePosition: 6,
+      expectTarget(resolveIslandRunSequentialBuildTarget(states([3, 0, 0, 0, 0])), {
+        stopIndex: 1, stopId: 'habit', targetLevel: 1, sequencePosition: 4,
       });
-      expectTarget(resolveIslandRunSequentialBuildTarget(states([2, 2, 2, 2, 2])), {
-        stopIndex: 0, stopId: 'hatchery', targetLevel: 3, sequencePosition: 11,
+      expectTarget(resolveIslandRunSequentialBuildTarget(states([3, 3, 0, 0, 0])), {
+        stopIndex: 2, stopId: 'mystery', targetLevel: 1, sequencePosition: 7,
       });
       expectTarget(resolveIslandRunSequentialBuildTarget(states([3, 3, 3, 3, 2])), {
         stopIndex: 4, stopId: 'boss', targetLevel: 3, sequencePosition: 15,
@@ -60,19 +60,20 @@ export const islandRunSequentialBuildTests: TestCase[] = [
     name: 'sequential target preserves uneven legacy states and finds earliest missing step',
     run: () => {
       expectTarget(resolveIslandRunSequentialBuildTarget(states([2, 0, 1, 0, 0])), {
-        stopIndex: 1, stopId: 'habit', targetLevel: 1, sequencePosition: 2,
+        stopIndex: 0, stopId: 'hatchery', targetLevel: 3, sequencePosition: 3,
       });
       expectTarget(resolveIslandRunSequentialBuildTarget(states([1, 2, 1, 1, 1])), {
-        stopIndex: 0, stopId: 'hatchery', targetLevel: 2, sequencePosition: 6,
+        stopIndex: 0, stopId: 'hatchery', targetLevel: 2, sequencePosition: 2,
       });
       expectTarget(resolveIslandRunSequentialBuildTarget(states([3, 3, 2, 3, 3])), {
-        stopIndex: 2, stopId: 'mystery', targetLevel: 3, sequencePosition: 13,
+        stopIndex: 2, stopId: 'mystery', targetLevel: 3, sequencePosition: 9,
       });
 
       const view = deriveIslandRunSequentialBuildView(states([0, 2, 0, 0, 0], { spent: { 1: 77 } }));
       expectTarget(view.activeTarget, { stopIndex: 0, stopId: 'hatchery', targetLevel: 1, sequencePosition: 1 });
       assertEqual(view.spentEssence, 0, 'Expected active view to use only active target progress');
-      assertEqual(view.nextTarget?.stopId, 'habit', 'Expected next target to derive from canonical order');
+      assertEqual(view.nextTarget?.stopId, 'hatchery', 'Expected all levels of one landmark before the next plot');
+      assertEqual(view.nextTarget?.targetLevel, 2, 'Expected Hatchery L2 immediately after Hatchery L1');
     },
   },
   {
@@ -107,27 +108,25 @@ export const islandRunSequentialBuildTests: TestCase[] = [
     },
   },
   {
-    name: 'view derives positions, rounds, completion, and active parts',
+    name: 'view derives landmark-first positions, completed landmarks, and active parts',
     run: () => {
-      for (let targetLevel = 1; targetLevel <= 3; targetLevel += 1) {
-        for (let stopIndex = 0; stopIndex < 5; stopIndex += 1) {
-          const levels = Array.from({ length: 5 }, (_, idx) => {
-            if (idx < stopIndex) return targetLevel;
-            if (idx === stopIndex) return targetLevel - 1;
-            return Math.max(0, targetLevel - 1);
-          });
+      for (let stopIndex = 0; stopIndex < 5; stopIndex += 1) {
+        for (let targetLevel = 1; targetLevel <= 3; targetLevel += 1) {
+          const levels = Array.from({ length: 5 }, (_, idx) => (
+            idx < stopIndex ? 3 : idx === stopIndex ? targetLevel - 1 : 0
+          ));
           const view = deriveIslandRunSequentialBuildView(states(levels));
           if (!view.activeTarget) throw new Error('Expected active target for incomplete sampled state');
-          assertEqual(view.activeTarget.sequencePosition, ((targetLevel - 1) * 5) + stopIndex + 1, 'Expected position formula for all targets');
-          assertEqual(view.currentRound, targetLevel as 1 | 2 | 3, 'Expected current round to match target level');
+          assertEqual(view.activeTarget.sequencePosition, (stopIndex * 3) + targetLevel, 'Expected landmark-first position formula');
+          assertEqual(view.currentTargetLevel, targetLevel as 1 | 2 | 3, 'Expected current target level');
         }
       }
 
-      assertEqual(deriveIslandRunSequentialBuildView(states([1, 1, 1, 1, 1])).completedRounds, 1, 'Expected one completed round');
-      assertEqual(deriveIslandRunSequentialBuildView(states([2, 2, 2, 2, 2])).completedRounds, 2, 'Expected two completed rounds');
+      assertEqual(deriveIslandRunSequentialBuildView(states([3, 0, 0, 0, 0])).completedLandmarks, 1, 'Expected one completed landmark');
+      assertEqual(deriveIslandRunSequentialBuildView(states([3, 3, 0, 0, 0])).completedLandmarks, 2, 'Expected two completed landmarks');
       const complete = deriveIslandRunSequentialBuildView(states([3, 3, 3, 3, 3]));
       assertEqual(complete.isFullyBuilt, true, 'Expected complete island to be fully built');
-      assertEqual(complete.completedRounds, 3, 'Expected fully complete island to have three completed rounds');
+      assertEqual(complete.completedLandmarks, 5, 'Expected fully complete island to have five completed landmarks');
       assertEqual(complete.completedSequenceSteps, 15, 'Expected fully complete island to have 15 completed sequence steps');
       assertEqual(complete.activeTarget, null, 'Expected fully complete island to have no active target');
       assertEqual(complete.nextTarget, null, 'Expected fully complete island to have no next target');

@@ -1,5 +1,6 @@
 import { memo, useEffect, useState, type CSSProperties } from 'react';
 import {
+  clampIslandArtBuildLevel,
   getIslandArtBoardOuterCircleImageSrc,
   getIslandArtBoardPlateImageSrc,
   getIslandArtBossImageSrc,
@@ -336,6 +337,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
 
       {shouldRenderWorldAsset() && manifest.landmarks.map((landmark) => {
         const buildLevel = landmarkBuildLevels[landmark.stopIndex] ?? 0;
+        const clampedBuildLevel = clampIslandArtBuildLevel(buildLevel);
         const src = getIslandArtLandmarkImageSrc(landmark, buildLevel);
         const clampedScaleIndex = Math.max(0, Math.min(2, Math.floor(buildLevel) - 1));
         const buildLevelScale = landmark.levelScales?.[clampedScaleIndex] ?? 1;
@@ -366,6 +368,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
               compact
               className={`island-art-layers__image island-art-layers__landmark island-art-layers__landmark--generated island-art-layers__landmark--${landmark.zBand ?? 'mid'}`}
               data-landmark-index={landmark.stopIndex}
+              data-build-level={clampedBuildLevel}
               data-discovery-state={getDiscoveryState(landmark.stopIndex)}
               style={style}
             />
@@ -379,6 +382,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
             alt=""
             draggable={false}
             data-landmark-index={landmark.stopIndex}
+            data-build-level={clampedBuildLevel}
             data-discovery-state={getDiscoveryState(landmark.stopIndex)}
             style={style}
             onError={() => hideSource(src)}

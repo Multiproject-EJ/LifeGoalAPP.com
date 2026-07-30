@@ -88,7 +88,7 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
     },
   },
   {
-    name: 'Island 1 buildings preserve the fixed-plot growth ladder',
+    name: 'Island 1 construction states preserve the full fixed plot at every level',
     run: () => {
       const manifest = JSON.parse(readSource('public/assets/islands/island-001/island-art.json')) as {
         landmarks?: Array<{ anchorId?: string; levelScales?: number[]; x?: number; y?: number }>;
@@ -99,17 +99,17 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
       const wisdom = manifest.landmarks?.find((landmark) => landmark.anchorId === 'wisdom');
       assert(
         [hatchery, mystery, wisdom].every((landmark) => (
-          landmark?.levelScales?.[0] === 0.5
-          && landmark.levelScales?.[1] === 0.75
+          landmark?.levelScales?.[0] === 0.93
+          && landmark.levelScales?.[1] === 0.94
           && landmark.levelScales?.[2] === 0.95
         )),
-        'Architectural Island 1 landmarks must grow from readable L1 footprints to full L3 plots',
+        'Architectural Island 1 landmarks must use their complete plot from L1 through L3',
       );
       assert(
-        habit?.levelScales?.[0] === 0.5
-        && habit.levelScales?.[1] === 0.72
+        habit?.levelScales?.[0] === 0.84
+        && habit.levelScales?.[1] === 0.85
         && habit.levelScales?.[2] === 0.86,
-        'The Crown Tree must preserve more canopy clearance than the architectural landmarks',
+        'The Crown Tree must keep one full-footprint scale with safe canopy clearance at every level',
       );
       assert(
         hatchery?.x === 359

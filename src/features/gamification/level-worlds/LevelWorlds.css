@@ -2272,6 +2272,13 @@
 .island-art-layers__landmark[data-landmark-index="2"] { animation-delay: -2.3s; }
 .island-art-layers__landmark[data-landmark-index="3"] { animation-delay: -3.45s; }
 
+/* A completed First Light landmark is the prestige payoff. The selector is
+   level-driven so future continuous build animation can reserve this treatment
+   for the exact 1.0 checkpoint without baking glow into every raster frame. */
+.island-art-layers[data-island-number="1"] .island-art-layers__landmark[data-build-level="3"] {
+  animation-name: island-art-landmark-prestige;
+}
+
 /* Discovery styling is deliberately limited to the small landmark rasters.
    Locked structures stop their decorative idle loop, saving that animation
    budget until the player can actually interact with them. */
@@ -2376,6 +2383,25 @@
 @keyframes island-art-landmark-idle {
   0%, 100% { transform: translate(-50%, -50%) translateY(0) scale(1); filter: brightness(1); }
   50% { transform: translate(-50%, -50%) translateY(-1.2%) scale(1.006); filter: brightness(1.035); }
+}
+
+@keyframes island-art-landmark-prestige {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateY(0) scale(1);
+    filter:
+      brightness(1.035)
+      saturate(1.04)
+      drop-shadow(0 6px 7px rgba(15, 54, 96, 0.28))
+      drop-shadow(0 0 6px rgba(255, 220, 128, 0.16));
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(-1.2%) scale(1.008);
+    filter:
+      brightness(1.095)
+      saturate(1.08)
+      drop-shadow(0 8px 9px rgba(15, 54, 96, 0.24))
+      drop-shadow(0 0 11px rgba(255, 220, 128, 0.32));
+  }
 }
 
 @keyframes island-art-landmark-idle-tidelock {
