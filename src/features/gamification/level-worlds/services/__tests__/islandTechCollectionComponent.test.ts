@@ -180,8 +180,9 @@ export const islandTechCollectionComponentTests: TestCase[] = [
       includes(boardSource, 'setTechCollectionModal({');
       includes(boardSource, 'collectedCount: resolution.nextCollectedCount');
       includes(boardSource, 'setShowConcordHubModal(true);');
-      includes(boardSource, 'newSlotIndex={techCollectionModal?.slotIndex ?? null}');
       includes(boardSource, '<IslandTechCollectionModal');
+      includes(boardSource, 'result={techCollectionModal}');
+      includes(boardSource, 'showConcordHubModal && !techCollectionModal');
     },
   },
   {

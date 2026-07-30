@@ -16079,7 +16079,7 @@ export function IslandRunBoardPrototype({
                 className="island-concord-collection-float"
                 role="dialog"
                 aria-modal="true"
-                aria-label={`The Concord fragment collection. ${techCollectionModal?.collectedCount ?? concordHubEntryState.collectedFragmentCount} of ${concordHubEntryState.requiredFragmentCount}. Tap to close.`}
+                aria-label={`The Concord fragment collection. ${concordHubEntryState.collectedFragmentCount} of ${concordHubEntryState.requiredFragmentCount}. Tap to close.`}
                 tabIndex={0}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape') {
@@ -16091,15 +16091,15 @@ export function IslandRunBoardPrototype({
                 <h3 className="island-concord-collection-float__title">The Concord</h3>
                 <div className="island-concord-collection-float__grid">
                   <IslandTechGrid
-                    collectedSlots={techCollectionModal?.collectedSlots ?? runtimeState.techCollectionByIsland?.['1'] ?? []}
-                    newSlotIndex={techCollectionModal?.slotIndex ?? null}
-                    completedLines={techCollectionModal?.newlyCompletedLines ?? []}
+                    collectedSlots={runtimeState.techCollectionByIsland?.['1'] ?? []}
+                    newSlotIndex={null}
+                    completedLines={[]}
                     islandNumber={1}
-                    reducedMotion={!techCollectionModal}
+                    reducedMotion
                   />
                 </div>
                 <p className="island-concord-collection-float__progress" role="status">
-                  {techCollectionModal?.collectedCount ?? concordHubEntryState.collectedFragmentCount} / {concordHubEntryState.requiredFragmentCount}
+                  {concordHubEntryState.collectedFragmentCount} / {concordHubEntryState.requiredFragmentCount}
                 </p>
               </section>
             </div>
