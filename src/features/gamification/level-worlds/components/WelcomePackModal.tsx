@@ -8,7 +8,7 @@ import {
 } from '../../../../components/CreaturePackOpeningAnimation';
 import type { ClaimFullWelcomePackResult } from '../services/islandRunWelcomePackFullClaimAction';
 import type { ClaimWelcomePackRewardBundleResult } from '../services/islandRunWelcomePackRewardBundleAction';
-import { buildWelcomePackStarterCacheBody } from '../services/islandRunWelcomePackCopy';
+import { buildWelcomePackGiftBody } from '../services/islandRunWelcomePackCopy';
 
 import { lockPageScroll } from '../../../../utils/scrollLock';
 export interface WelcomePackModalProps {
@@ -63,7 +63,7 @@ export function WelcomePackModal({
   if (!open) return null;
 
   const resolvedCards = claimResult?.cards.revealPayload?.cards ?? [];
-  const starterCacheBody = buildWelcomePackStarterCacheBody({ displayName });
+  const welcomeGiftBody = buildWelcomePackGiftBody({ displayName });
   const isAlreadyClaimed = deferCreaturePack
     ? bundleOnlyClaimResult?.status === 'already_claimed'
     : claimResult?.cards.status === 'already_claimed'
@@ -95,9 +95,9 @@ export function WelcomePackModal({
           <p className="wpm-eyebrow">
             {isDevPreview ? '✦ Dev Preview' : 'Welcome aboard'}
           </p>
-          <h2 id="wpm-title" className="wpm-title">Your expedition cache</h2>
+          <h2 id="wpm-title" className="wpm-title">Your welcome gift</h2>
 
-          <p className="wpm-body">{starterCacheBody}</p>
+          <p className="wpm-body">{welcomeGiftBody}</p>
 
           <div className="wpm-cache-hero" aria-hidden="true">
             <span className="wpm-cache-hero__orbit wpm-cache-hero__orbit--one" />
@@ -137,7 +137,7 @@ export function WelcomePackModal({
 
           {isAlreadyClaimed ? (
             <p className="wpm-already-claimed" role="status">
-              {deferCreaturePack ? 'Starter supplies already secured.' : 'Already claimed — opening card reveal.'}
+              {deferCreaturePack ? 'Welcome gift already collected.' : 'Gift collected — opening card reveal.'}
             </p>
           ) : null}
 
@@ -151,10 +151,10 @@ export function WelcomePackModal({
               <span className="wpm-collect-btn__spinner" aria-hidden="true" />
             ) : null}
             {collectAnimating
-              ? 'Securing supplies…'
+              ? 'Opening gift…'
               : isAlreadyClaimed
                 ? deferCreaturePack ? 'Continue' : 'View Cards'
-                : 'Secure my supplies'}
+                : 'Open my gift'}
           </button>
           <p className="wpm-footnote">One-time welcome gift · no purchase</p>
         </div>
@@ -185,7 +185,7 @@ export function WelcomePackModal({
               <small>Signal strengthens after Island 1</small>
             </span>
           </div>
-          <p className="wpm-body">Your supplies are aboard. For now, take the helm and follow the compass.</p>
+          <p className="wpm-body">Your gift is aboard. For now, take the helm and follow the compass.</p>
           <button type="button" className="wpm-collect-btn" onClick={onClose}>
             Enter First Light Shore
           </button>
