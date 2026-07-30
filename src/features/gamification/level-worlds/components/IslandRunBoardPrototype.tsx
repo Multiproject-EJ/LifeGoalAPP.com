@@ -12173,8 +12173,7 @@ export function IslandRunBoardPrototype({
           )}
         </div>
 
-        {diplomaticRewardChannelVisible ? (
-          <div className="island-run-board__rewardbar-cluster">
+        <div className="island-run-board__rewardbar-cluster">
           <div className="island-run-board__rewardbar-hatchery-tray">
             {hatcheryPendingEggs.length > 0 && (
               <button
@@ -12378,8 +12377,7 @@ export function IslandRunBoardPrototype({
               );
             })}
           </div>
-          </div>
-        ) : null}
+        </div>
 
         {shouldShowFinishIslandCta && (
           <button
@@ -12392,7 +12390,7 @@ export function IslandRunBoardPrototype({
           </button>
         )}
 
-        {shouldShowBestNextActionChip && bestNextAction && (diplomaticRewardChannelVisible || bestNextAction.action !== 'claim_reward_bar') && (
+        {shouldShowBestNextActionChip && bestNextAction && (
           <button
             type="button"
             className="island-run-prototype__best-next-action-chip island-run-prototype__best-next-action-chip--below-rewardbar"
