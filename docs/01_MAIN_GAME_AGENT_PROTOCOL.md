@@ -61,6 +61,8 @@ Agent must always:
   `docs/agents/HABITGAME_MARKETING_STUDIO_AGENT.md`.
 - Secret-recruit, Compass Computer, and branching-transmission story work starts
   with `docs/design/SECRET_CREW_COMPUTER_STORY_DIRECTION.md`.
+- Public naming, winner-table labels, and age-audience decisions start with
+  `docs/policies/PUBLIC_IDENTITY_AND_AGE_POLICY.md`.
 - These product charters must not be added to or governed by the external
   stock-market `EJ-Jarvis.md`; that document has a separate investing-only
   authority boundary.

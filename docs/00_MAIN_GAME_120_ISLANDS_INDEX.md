@@ -111,19 +111,18 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** Onboarding identity + public-age policy close-out. Keep the
-current on-device four-pair captain/ship picker and public-name moderation,
-document the app-level age-rating decision, then verify every public winner
-table applies the same safety policy for free and Pro players.
-**Files to touch:** `src/services/publicIdentity.ts`, onboarding/public-table
-consumers, policy docs, and focused tests only where gaps are found.
-**Acceptance criteria:** no network or native-AI dependency in first-run naming;
-custom names are optional; free/Pro/Collab do not bypass public-surface safety;
-private adult content is not inferred from subscription tier; all public table
-consumers clean or validate labels at a shared boundary.
-**How to test:** complete guest onboarding with suggestions and custom input;
-try blocked/separated/leet wording; inspect each public winner/leaderboard
-surface; verify private display remains separate from public rendering.
+**Objective:** Resume the remaining player-reported Island 1 reliability list:
+verify Wisdom and Event Arena completion outcomes, reproduce the traffic-light
+reward-repeat issue, and confirm the box's three-tap animation state.
+**Files to inspect first:** canonical Island Run action services and tests,
+`src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx`,
+traffic-light/box services, and the Island 1 stop plan.
+**Acceptance criteria:** Wisdom and Event Arena have a clear successful outcome;
+one completed traffic-light charge yields one green-light throw and cannot be
+reclaimed repeatedly; the three-tap box has three visible impact states and one
+reward resolution; all gameplay writes remain in canonical actions/services.
+**How to test:** use a fresh Island 1 state, complete each affected interaction,
+reload after each reward, and verify no duplicate grants or blocked stop.
 
 ---
 

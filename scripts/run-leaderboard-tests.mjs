@@ -13,7 +13,11 @@ try {
   const { runAllLeaderboardTests } = require(
     path.join(outDir, 'services/__tests__/leaderboardScore.test.js'),
   );
+  const { runAllPublicIdentityTests } = require(
+    path.join(outDir, 'services/__tests__/publicIdentity.test.js'),
+  );
   runAllLeaderboardTests();
+  runAllPublicIdentityTests();
   console.log('leaderboard-tests: all assertions passed');
 } finally {
   rmSync(outDir, { recursive: true, force: true });

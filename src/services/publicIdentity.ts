@@ -24,6 +24,7 @@ const BLOCKED_PUBLIC_TOKENS = new Set([
 function normalizeForModeration(value: string): string[] {
   const deLeeted = value
     .normalize('NFKD')
+    .replace(/\p{M}+/gu, '')
     .toLowerCase()
     .replace(/[@4]/g, 'a')
     .replace(/[3]/g, 'e')
@@ -32,10 +33,14 @@ function normalizeForModeration(value: string): string[] {
     .replace(/[$5]/g, 's')
     .replace(/[7]/g, 't');
   const tokens = deLeeted.split(/[^a-z]+/).filter(Boolean);
+  const compactChunks = deLeeted
+    .split(/\s+/)
+    .map((chunk) => chunk.replace(/[^a-z]/g, ''))
+    .filter(Boolean);
   if (tokens.length > 1 && tokens.every((token) => token.length === 1)) {
     tokens.push(tokens.join(''));
   }
-  return tokens;
+  return [...new Set([...tokens, ...compactChunks])];
 }
 
 export function containsBlockedPublicIdentityLanguage(value: string): boolean {

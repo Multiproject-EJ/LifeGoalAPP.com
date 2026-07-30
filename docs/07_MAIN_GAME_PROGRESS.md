@@ -3499,3 +3499,36 @@ Testing:
   `src/services/zenGarden.ts`.
 Next: close the onboarding identity/public-age policy slice described in
 `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.
+
+---
+
+Date: 2026-07-30
+Slice: Onboarding identity + public-age policy close-out
+Summary:
+- Kept first-run naming fully on-device: four deterministic captain/ship pairs,
+  local reroll, and optional custom input. No network or native AI is required.
+- Confirmed Adventure League is the current cross-user winner/leaderboard
+  surface. Its service already cleans both writes and reads through
+  `cleanPublicIdentityLabel`; React receives safe `LeaderboardEntry` labels.
+- Hardened the shared public-name boundary for combining marks and punctuation
+  inserted inside blocked words while preserving ordinary names.
+- Added focused ordinary, blocked, separated, punctuation-obfuscated,
+  leetspeak, accented, and length-boundary tests to `npm run test:leaderboard`.
+- Locked one public-surface policy for Free, Pro, and Collab. Paid status is not
+  age assurance and never relaxes public-name safety.
+- Documented a 13+ intended launch audience, not child-directed and not an
+  adult-content product, subject to the live Apple/Google questionnaires and
+  any higher regional result.
+Files changed:
+- `src/services/publicIdentity.ts`
+- `src/services/__tests__/publicIdentity.test.ts`
+- `scripts/run-leaderboard-tests.mjs`
+- `tsconfig.leaderboard-tests.json`
+- `docs/policies/PUBLIC_IDENTITY_AND_AGE_POLICY.md`
+- `docs/01_MAIN_GAME_AGENT_PROTOCOL.md`
+Testing:
+- `npm run test:leaderboard`
+- Production Vite build
+- `git diff --check`
+Next: reproduce and close the Island 1 Wisdom/Event Arena, traffic-light, and
+three-tap box issues described in `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.

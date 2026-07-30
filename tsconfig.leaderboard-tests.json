@@ -13,6 +13,8 @@
   },
   "include": [
     "src/services/leaderboardScore.ts",
-    "src/services/__tests__/leaderboardScore.test.ts"
+    "src/services/publicIdentity.ts",
+    "src/services/__tests__/leaderboardScore.test.ts",
+    "src/services/__tests__/publicIdentity.test.ts"
   ]
 }
