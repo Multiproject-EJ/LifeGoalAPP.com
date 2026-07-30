@@ -1,7 +1,7 @@
 import type { IslandRunGameStateRecord } from './islandRunGameStateStore';
 import { getIslandTechnologyAccess, resolveIslandTechnologyBuildEligibility } from './islandRunTechnologyUnlocks';
 
-export type IslandRunConcordHubPrimaryAction = 'open-concord-progress' | 'open-concord-hub';
+export type IslandRunConcordHubPrimaryAction = 'open-story' | 'open-concord-progress' | 'open-concord-hub';
 
 export interface IslandRunConcordHubEntryState {
   label: string;
@@ -22,10 +22,23 @@ const REQUIRED_CONCORD_FRAGMENT_COUNT = 9;
  */
 export function resolveIslandRunConcordHubEntryState(
   record: Pick<IslandRunGameStateRecord, 'techCollectionByIsland' | 'technologyUnlocksById'>,
+  options: { hasUnreadStory?: boolean } = {},
 ): IslandRunConcordHubEntryState {
   const concordAccess = getIslandTechnologyAccess(record, 'the-concord');
   const eligibility = resolveIslandTechnologyBuildEligibility(record, 'the-concord');
   const collectedFragmentCount = REQUIRED_CONCORD_FRAGMENT_COUNT - eligibility.missingSlots.length;
+
+  if (options.hasUnreadStory) {
+    return {
+      label: 'Story',
+      icon: '📖',
+      ariaLabel: 'Open the story that needs your attention',
+      primaryAction: 'open-story',
+      isConcordActive: concordAccess.active,
+      collectedFragmentCount,
+      requiredFragmentCount: REQUIRED_CONCORD_FRAGMENT_COUNT,
+    };
+  }
 
   if (concordAccess.active) {
     return {

@@ -155,10 +155,11 @@ export const islandTechCollectionComponentTests: TestCase[] = [
 
   // ── Board integration ──────────────────────────────────────────────────────
   {
-    name: 'board renders the new components and removes the legacy inline modal',
+    name: 'board renders the shared grid and full completion celebration without the separate pickup modal',
     run: () => {
-      includes(boardSource, '<IslandTechCollectionModal');
+      includes(boardSource, '<IslandTechGrid');
       includes(boardSource, '<IslandTechCompletionCelebration');
+      notIncludes(boardSource, '<IslandTechCollectionModal');
       notIncludes(boardSource, 'island-tech-collection-grid__cell');
     },
   },
@@ -173,12 +174,14 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     },
   },
   {
-    name: 'ordinary fragment landings automatically open the floating pickup reveal',
+    name: 'ordinary fragment landings automatically open the shared Concord grid',
     run: () => {
-      includes(boardSource, '// Ordinary pickup: fast modal that auto-dismisses');
+      includes(boardSource, '// Ordinary pickup: open the same Concord grid the controller uses.');
       includes(boardSource, 'setTechCollectionModal({');
       includes(boardSource, 'collectedCount: resolution.nextCollectedCount');
-      includes(boardSource, '<IslandTechCollectionModal');
+      includes(boardSource, 'setShowConcordHubModal(true);');
+      includes(boardSource, 'newSlotIndex={techCollectionModal?.slotIndex ?? null}');
+      notIncludes(boardSource, '<IslandTechCollectionModal');
     },
   },
   {
@@ -188,6 +191,7 @@ export const islandTechCollectionComponentTests: TestCase[] = [
       includes(boardSource, 'island-concord-collection-float');
       includes(boardSource, 'Tap to close.');
       includes(boardSource, "event.key === 'Enter' || event.key === ' ' || event.key === 'Escape'");
+      includes(boardSource, '<span>Story Mode</span>');
       notIncludes(boardSource, 'Concord_off.webp');
     },
   },

@@ -8,6 +8,16 @@ function baseRecord() {
 
 export const islandRunConcordHubEntryTests: TestCase[] = [
   {
+    name: 'unread story temporarily takes the shared controller slot',
+    run: () => {
+      const state = resolveIslandRunConcordHubEntryState(baseRecord(), { hasUnreadStory: true });
+      assertEqual(state.label, 'Story', 'unread story receives the controller label');
+      assertEqual(state.icon, '📖', 'unread story receives the story icon');
+      assertEqual(state.primaryAction, 'open-story', 'unread story opens Story Mode directly');
+      assertEqual(state.isConcordActive, false, 'story attention does not alter Concord activation');
+    },
+  },
+  {
     name: 'entry exposes Concord progress before the technology is built',
     run: () => {
       const state = resolveIslandRunConcordHubEntryState(baseRecord());

@@ -34,10 +34,7 @@ import {
 import { BoardStage, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
-import {
-  IslandTechCollectionModal,
-  type TechCollectionModalResult,
-} from './IslandTechCollectionModal';
+import type { TechCollectionModalResult } from './IslandTechCollectionModal';
 import {
   IslandTechCompletionCelebration,
   type TechCompletionCelebrationResult,
@@ -6911,7 +6908,7 @@ export function IslandRunBoardPrototype({
     // Persist the picked-up grid through the canonical store path so it survives
     // reloads and syncs across devices (rewarded lines never double-pay). Reuses
     // the existing tech_collection ledgers — no migration required.
-    applyTechCollectionState({
+    const collectionRecord = applyTechCollectionState({
       session,
       client,
       islandNumber,
@@ -6919,6 +6916,8 @@ export function IslandRunBoardPrototype({
       rewardedLines: resolution.nextRewardedLines,
       triggerSource: 'tech_collection_pickup',
     });
+    setRuntimeState(collectionRecord);
+    runtimeStateRef.current = collectionRecord;
 
     if (resolution.isFullBoardNewlyCompleted) {
       const buildResult = applyIslandRunTechnologyBuild({
@@ -6940,7 +6939,10 @@ export function IslandRunBoardPrototype({
       return true;
     }
 
-    // Ordinary pickup: fast modal that auto-dismisses (the modal owns its timer).
+    // Ordinary pickup: open the same Concord grid the controller uses. Keeping
+    // the immutable pickup result as presentation state guarantees the newly
+    // recovered cell is visible immediately, even before the canonical store
+    // subscription has delivered its next snapshot.
     setTechCollectionModal({
       slotIndex: resolution.slotIndex,
       tileType: tileType === 'currency' || tileType === 'chest' || tileType === 'card' ? tileType : 'micro',
@@ -6949,6 +6951,7 @@ export function IslandRunBoardPrototype({
       newlyCompletedLines: resolution.newlyCompletedLines,
       lineRewardDice: resolution.lineRewardDice,
     });
+    setShowConcordHubModal(true);
     return true;
   }, [client, islandNumber, playIslandRunSound, session, triggerIslandRunHaptic]);
 
@@ -9809,7 +9812,7 @@ export function IslandRunBoardPrototype({
     setLandingText('🧪 DEV MODE: Concord fragments reset — land on a fragment tile to see the pickup modal.');
   }, [client, islandNumber, isDevModeEnabled, session]);
 
-  // Pure UI preview: opens the 3×3 Concord pickup modal on demand without any
+  // Pure UI preview: opens the shared 3×3 Concord grid on demand without any
   // gameplay writes, so the celebration can be reviewed without hunting for an
   // exact landing. Reveals the lowest not-yet-collected slot on top of whatever
   // is already collected.
@@ -9833,7 +9836,8 @@ export function IslandRunBoardPrototype({
       newlyCompletedLines: [],
       lineRewardDice: 0,
     });
-    setLandingText(`🧪 DEV MODE: previewing Concord pickup modal (fragment ${slotIndex + 1}).`);
+    setShowConcordHubModal(true);
+    setLandingText(`🧪 DEV MODE: previewing the Concord grid (fragment ${slotIndex + 1}).`);
   }, [isDevModeEnabled]);
 
   // Pure UI preview for the rare caretaker clue encounter. This deliberately
@@ -11290,17 +11294,15 @@ export function IslandRunBoardPrototype({
     [runtimeState],
   );
   const concordHubEntryState = useMemo(
-    () => resolveIslandRunConcordHubEntryState(runtimeState),
-    [runtimeState],
+    () => resolveIslandRunConcordHubEntryState(runtimeState, {
+      hasUnreadStory: !isGlobalPrologueSeenForNarrative,
+    }),
+    [isGlobalPrologueSeenForNarrative, runtimeState],
   );
   const concordEntryButtonState = concordHubEntryState;
   const openGlobalStoryReader = useCallback(() => {
-    if (isArcadeStoryJourney && !isPro) {
-      setLandingText('The island signal is dormant. Keep restoring The Concord to activate its channels.');
-      return;
-    }
     setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
-  }, [isArcadeStoryJourney, isPro]);
+  }, []);
   const openCurrentChampionshipCeremony = useCallback(() => {
     if (!championshipPresentation) return;
     setActiveStoryEpisode({
@@ -11309,7 +11311,16 @@ export function IslandRunBoardPrototype({
     });
   }, [championshipPresentation]);
   const handleConcordEntryClick = useCallback(() => {
+    if (concordEntryButtonState.primaryAction === 'open-story') {
+      openGlobalStoryReader();
+      return;
+    }
+    setTechCollectionModal(null);
     setShowConcordHubModal(true);
+  }, [concordEntryButtonState.primaryAction, openGlobalStoryReader]);
+  const closeConcordHub = useCallback(() => {
+    setShowConcordHubModal(false);
+    setTechCollectionModal(null);
   }, []);
 
   useEffect(() => {
@@ -12032,23 +12043,37 @@ export function IslandRunBoardPrototype({
 
           {showAudioMenu && (
             <div id="island-run-audio-menu" className="island-run-board__audio-menu-panel" role="menu" aria-label="Audio options">
+              <div className="island-run-board__audio-menu-header" role="presentation">
+                <span className="island-run-board__audio-menu-crest" aria-hidden="true">✦</span>
+                <span className="island-run-board__audio-menu-heading">
+                  <small>Sound of Luma</small>
+                  <strong>Island soundscape</strong>
+                  <span>Set the world around you.</span>
+                </span>
+              </div>
               <button
                 ref={audioMenuFirstItemRef}
                 type="button"
-                className="island-run-board__topbar-menu-item"
+                className={`island-run-board__sound-option${musicEnabled ? ' island-run-board__sound-option--on' : ''}`}
                 role="menuitemcheckbox"
                 aria-checked={musicEnabled}
                 onClick={() => {
                   setMusicEnabled((prev) => !prev);
                 }}
               >
-                <span>{musicEnabled ? '✓' : '○'}</span>
-                <span>Ambience</span>
-                <span aria-hidden="true">🎵</span>
+                <span className="island-run-board__sound-option-icon island-run-board__sound-option-icon--ambience" aria-hidden="true">≋</span>
+                <span className="island-run-board__sound-option-copy">
+                  <strong>World ambience</strong>
+                  <small>Sea, wind and island music</small>
+                </span>
+                <span className="island-run-board__sound-switch" aria-hidden="true">
+                  <span>{musicEnabled ? 'On' : 'Off'}</span>
+                  <i />
+                </span>
               </button>
               <button
                 type="button"
-                className="island-run-board__topbar-menu-item"
+                className={`island-run-board__sound-option${sfxEnabled ? ' island-run-board__sound-option--on' : ''}`}
                 role="menuitemcheckbox"
                 aria-checked={sfxEnabled}
                 onClick={() => {
@@ -12056,10 +12081,17 @@ export function IslandRunBoardPrototype({
                   setSfxEnabled(next);
                 }}
               >
-                <span>{sfxEnabled ? '✓' : '○'}</span>
-                <span>SFX</span>
-                <span aria-hidden="true">🔔</span>
+                <span className="island-run-board__sound-option-icon island-run-board__sound-option-icon--sfx" aria-hidden="true">✦</span>
+                <span className="island-run-board__sound-option-copy">
+                  <strong>Game sounds</strong>
+                  <small>Dice, discoveries and rewards</small>
+                </span>
+                <span className="island-run-board__sound-switch" aria-hidden="true">
+                  <span>{sfxEnabled ? 'On' : 'Off'}</span>
+                  <i />
+                </span>
               </button>
+              <p className="island-run-board__audio-menu-hint" role="presentation">Change this anytime from the compass bar.</p>
             </div>
           )}
 
@@ -12699,17 +12731,6 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-
-      {/* Fast 3×3 tech pickup modal (auto-dismissing). Full-grid completion is
-          handled by the celebration below, which never auto-dismisses. */}
-      {techCollectionModal && !techCompletionCelebration ? (
-        <IslandTechCollectionModal
-          result={techCollectionModal}
-          islandNumber={islandNumber}
-          isAutoRolling={isAutoRolling}
-          onDismiss={() => setTechCollectionModal(null)}
-        />
-      ) : null}
 
       {techCompletionCelebration ? (
         <IslandTechCompletionCelebration
@@ -15990,7 +16011,7 @@ export function IslandRunBoardPrototype({
                       type="button"
                       className="island-concord-hub-modal__channel"
                       onClick={() => {
-                        setShowConcordHubModal(false);
+                        closeConcordHub();
                         setShowCreatureChannelModal(true);
                       }}
                     >
@@ -16001,7 +16022,7 @@ export function IslandRunBoardPrototype({
                       type="button"
                       className="island-concord-hub-modal__channel"
                       onClick={() => {
-                        setShowConcordHubModal(false);
+                        closeConcordHub();
                         openCaretakerFlow('dev_hud');
                       }}
                       disabled={!shouldShowCaretakerTalkAction}
@@ -16009,53 +16030,53 @@ export function IslandRunBoardPrototype({
                       <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">🧙</span>
                       <span>Caretaker Channel</span>
                     </button>
-                    {!isArcadeStoryJourney || isPro ? (
-                      <button
-                        type="button"
-                        className="island-concord-hub-modal__channel"
-                        onClick={() => {
-                          setShowConcordHubModal(false);
-                          openGlobalStoryReader();
-                        }}
-                      >
-                        <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">📖</span>
-                        <span>{isArcadeStoryJourney ? 'Pro Chronicles' : 'Story Channel'}</span>
-                      </button>
-                    ) : null}
+                    <button
+                      type="button"
+                      className="island-concord-hub-modal__channel"
+                      onClick={() => {
+                        closeConcordHub();
+                        openGlobalStoryReader();
+                      }}
+                    >
+                      <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">📖</span>
+                      <span>Story Mode</span>
+                    </button>
                   </div>
                 </div>
-                <button type="button" className="island-concord-hub-modal__return" onClick={() => setShowConcordHubModal(false)}>Return to island</button>
+                <button type="button" className="island-concord-hub-modal__return" onClick={closeConcordHub}>Return to island</button>
               </section>
             </div>
           ) : (
             <div
               className="island-run-overlay-root island-stop-modal-backdrop island-concord-collection-backdrop"
               role="presentation"
-              onClick={() => setShowConcordHubModal(false)}
+              onClick={closeConcordHub}
             >
               <section
                 className="island-concord-collection-float"
                 role="dialog"
                 aria-modal="true"
-                aria-label={`The Concord fragment collection. ${concordHubEntryState.collectedFragmentCount} of ${concordHubEntryState.requiredFragmentCount}. Tap to close.`}
+                aria-label={`The Concord fragment collection. ${techCollectionModal?.collectedCount ?? concordHubEntryState.collectedFragmentCount} of ${concordHubEntryState.requiredFragmentCount}. Tap to close.`}
                 tabIndex={0}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape') {
                     event.preventDefault();
-                    setShowConcordHubModal(false);
+                    closeConcordHub();
                   }
                 }}
               >
                 <h3 className="island-concord-collection-float__title">The Concord</h3>
                 <div className="island-concord-collection-float__grid">
                   <IslandTechGrid
-                    collectedSlots={runtimeState.techCollectionByIsland?.['1'] ?? []}
+                    collectedSlots={techCollectionModal?.collectedSlots ?? runtimeState.techCollectionByIsland?.['1'] ?? []}
+                    newSlotIndex={techCollectionModal?.slotIndex ?? null}
+                    completedLines={techCollectionModal?.newlyCompletedLines ?? []}
                     islandNumber={1}
-                    reducedMotion={true}
+                    reducedMotion={!techCollectionModal}
                   />
                 </div>
                 <p className="island-concord-collection-float__progress" role="status">
-                  {concordHubEntryState.collectedFragmentCount} / {concordHubEntryState.requiredFragmentCount}
+                  {techCollectionModal?.collectedCount ?? concordHubEntryState.collectedFragmentCount} / {concordHubEntryState.requiredFragmentCount}
                 </p>
               </section>
             </div>

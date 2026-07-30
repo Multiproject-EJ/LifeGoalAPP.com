@@ -3825,15 +3825,241 @@
 }
 
 .island-run-board__audio-menu-panel {
-  right: 44px;
-  min-width: 132px;
+  right: 10px;
+  top: 52px;
+  width: min(272px, calc(100vw - 20px));
+  min-width: 0;
+  gap: 8px;
+  padding: 10px;
+  overflow: hidden;
+  border-color: rgba(255, 224, 151, 0.56);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(81, 187, 222, 0.24), transparent 38%),
+    linear-gradient(155deg, rgba(9, 37, 63, 0.98), rgba(4, 22, 41, 0.98));
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 0 3px rgba(2, 14, 28, 0.42);
+  animation: island-run-audio-panel-enter 180ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 
-.island-run-board__audio-menu-panel .island-run-board__topbar-menu-item {
+.island-run-board__audio-menu-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 18%;
+  right: 18%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 229, 165, 0.9), transparent);
+  box-shadow: 0 0 10px rgba(255, 220, 136, 0.46);
+}
+
+.island-run-board__audio-menu-header {
   display: grid;
-  grid-template-columns: 1rem 1fr auto;
+  grid-template-columns: 44px minmax(0, 1fr);
   align-items: center;
-  gap: 0.4rem;
+  gap: 9px;
+  min-width: 0;
+  padding: 4px 5px 7px;
+  border-bottom: 1px solid rgba(164, 218, 237, 0.16);
+}
+
+.island-run-board__audio-menu-crest {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(255, 224, 151, 0.68);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 231, 169, 0.26) 0 16%, transparent 17%),
+    conic-gradient(from 45deg, rgba(91, 210, 238, 0.3), rgba(18, 72, 116, 0.84), rgba(255, 219, 137, 0.3), rgba(18, 72, 116, 0.84), rgba(91, 210, 238, 0.3));
+  color: #ffe09a;
+  font: 800 1.18rem/1 Georgia, serif;
+  box-shadow:
+    0 0 18px rgba(66, 184, 226, 0.2),
+    inset 0 0 0 3px rgba(3, 24, 46, 0.72);
+}
+
+.island-run-board__audio-menu-heading {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.island-run-board__audio-menu-heading small {
+  color: #e9c978;
+  font-size: 0.53rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.island-run-board__audio-menu-heading strong {
+  color: #fff9e9;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.88rem;
+  letter-spacing: 0.015em;
+  line-height: 1.2;
+}
+
+.island-run-board__audio-menu-heading > span {
+  color: rgba(202, 229, 239, 0.64);
+  font-size: 0.61rem;
+  line-height: 1.25;
+}
+
+.island-run-board__sound-option {
+  display: grid;
+  grid-template-columns: 35px minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 58px;
+  padding: 7px 8px;
+  border: 1px solid rgba(143, 203, 226, 0.18);
+  border-radius: 15px;
+  background: linear-gradient(135deg, rgba(29, 63, 82, 0.72), rgba(9, 32, 53, 0.8));
+  color: #eefaff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.island-run-board__sound-option:hover,
+.island-run-board__sound-option:focus-visible {
+  border-color: rgba(160, 227, 247, 0.5);
+  background: linear-gradient(135deg, rgba(37, 83, 105, 0.86), rgba(12, 42, 68, 0.9));
+}
+
+.island-run-board__sound-option:focus-visible {
+  outline: 2px solid rgba(151, 239, 255, 0.88);
+  outline-offset: 2px;
+}
+
+.island-run-board__sound-option:active {
+  transform: scale(0.985);
+}
+
+.island-run-board__sound-option--on {
+  border-color: rgba(225, 205, 132, 0.42);
+  background:
+    radial-gradient(circle at 4% 0%, rgba(86, 206, 234, 0.18), transparent 40%),
+    linear-gradient(135deg, rgba(27, 79, 103, 0.9), rgba(8, 42, 67, 0.92));
+}
+
+.island-run-board__sound-option-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(145, 222, 245, 0.44);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, rgba(102, 215, 242, 0.9), rgba(20, 74, 117, 0.92) 68%);
+  color: #f7ffff;
+  font: 900 1.05rem/1 Georgia, serif;
+  box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.28);
+}
+
+.island-run-board__sound-option-icon--ambience {
+  padding-bottom: 4px;
+  font-size: 1.45rem;
+}
+
+.island-run-board__sound-option-icon--sfx {
+  border-color: rgba(229, 207, 135, 0.48);
+  background: radial-gradient(circle at 35% 28%, rgba(255, 221, 126, 0.94), rgba(105, 74, 25, 0.94) 68%);
+  color: #fff7dc;
+}
+
+.island-run-board__sound-option-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.island-run-board__sound-option-copy strong {
+  color: #f9f7eb;
+  font-size: 0.73rem;
+  line-height: 1.15;
+}
+
+.island-run-board__sound-option-copy small {
+  color: rgba(202, 226, 237, 0.64);
+  font-size: 0.56rem;
+  line-height: 1.25;
+}
+
+.island-run-board__sound-switch {
+  position: relative;
+  width: 50px;
+  height: 27px;
+  border: 1px solid rgba(190, 212, 221, 0.28);
+  border-radius: 999px;
+  background: rgba(33, 48, 60, 0.94);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.32);
+  transition: background 170ms ease, border-color 170ms ease;
+}
+
+.island-run-board__sound-switch > span {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  color: rgba(226, 237, 241, 0.64);
+  font-size: 0.49rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transform: translateY(-50%);
+}
+
+.island-run-board__sound-switch i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fffdf5, #dce6e8);
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.34);
+  transition: transform 190ms ease;
+}
+
+.island-run-board__sound-option--on .island-run-board__sound-switch {
+  border-color: rgba(255, 222, 137, 0.62);
+  background: linear-gradient(135deg, #127ca1, #2eb6bc);
+}
+
+.island-run-board__sound-option--on .island-run-board__sound-switch > span {
+  right: auto;
+  left: 7px;
+  color: #f7ffed;
+}
+
+.island-run-board__sound-option--on .island-run-board__sound-switch i {
+  transform: translateX(23px);
+}
+
+.island-run-board__audio-menu-hint {
+  margin: -1px 0 0;
+  color: rgba(187, 216, 228, 0.53);
+  font-size: 0.52rem;
+  letter-spacing: 0.025em;
+  line-height: 1.2;
+  text-align: center;
+}
+
+@keyframes island-run-audio-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .island-run-entry-audio {
