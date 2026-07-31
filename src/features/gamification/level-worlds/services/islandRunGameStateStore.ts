@@ -2341,6 +2341,17 @@ export function mergeRecordForConflict(options: {
   bonusIslandKeys.forEach((islandKey) => {
     const remoteInner = remote.bonusTileChargeByIsland?.[islandKey] ?? {};
     const localInner = local.bonusTileChargeByIsland?.[islandKey] ?? {};
+    const remoteIsExplicitReset = Object.prototype.hasOwnProperty.call(remote.bonusTileChargeByIsland ?? {}, islandKey)
+      && Object.keys(remoteInner).length === 0;
+    const localIsExplicitReset = Object.prototype.hasOwnProperty.call(local.bonusTileChargeByIsland ?? {}, islandKey)
+      && Object.keys(localInner).length === 0;
+    if (remoteIsExplicitReset || localIsExplicitReset) {
+      // Empty inner maps are deliberate reset tombstones (traffic-light
+      // release or island travel), not missing data. A reset must beat a stale
+      // positive charge or the green reward reopens on every later pass.
+      mergedBonusTileChargeByIsland[islandKey] = {};
+      return;
+    }
     const innerKeys = new Set<string>([
       ...Object.keys(remoteInner),
       ...Object.keys(localInner),

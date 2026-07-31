@@ -42,6 +42,33 @@ function makeEgg(overrides: Partial<PerIslandEggEntry> = {}): PerIslandEggEntry 
 
 export const islandRunEggConflictMergeTests: TestCase[] = [
   {
+    name: 'full record merge keeps bonus-tile reset tombstones over stale traffic-light charge',
+    run: () => {
+      const staleRemote = makeRecord({
+        runtimeVersion: 7,
+        bonusTileChargeByIsland: { '1': { 19: 7 } },
+      });
+      const releasedLocal = makeRecord({
+        runtimeVersion: 7,
+        bonusTileChargeByIsland: { '1': {} },
+      });
+      const merged = mergeRecordForConflict({ remote: staleRemote, local: releasedLocal });
+      assertEqual(Object.prototype.hasOwnProperty.call(merged.bonusTileChargeByIsland, '1'), true, 'Reset tombstone should survive conflict merge');
+      assertEqual(Object.keys(merged.bonusTileChargeByIsland['1'] ?? {}).length, 0, 'Stale 7/8 charge must not be resurrected');
+
+      const releasedRemote = makeRecord({
+        runtimeVersion: 8,
+        bonusTileChargeByIsland: { '1': {} },
+      });
+      const staleLocal = makeRecord({
+        runtimeVersion: 7,
+        bonusTileChargeByIsland: { '1': { 19: 7 } },
+      });
+      const reverseMerged = mergeRecordForConflict({ remote: releasedRemote, local: staleLocal });
+      assertEqual(Object.keys(reverseMerged.bonusTileChargeByIsland['1'] ?? {}).length, 0, 'Remote reset must also beat stale local charge');
+    },
+  },
+  {
     name: 'per-island entry: newer placement wins the slot regardless of side',
     run: () => {
       const older = makeEgg({ setAtMs: 1_000, status: 'ready' });

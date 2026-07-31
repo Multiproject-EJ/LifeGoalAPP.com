@@ -4444,7 +4444,11 @@ export async function applyStopBuildSpend(options: ApplyStopBuildSpendOptions): 
     stopStatesByIndex,
     runtimeVersion: current.runtimeVersion + 1,
   };
-  await commitIslandRunState({
+  // The store publishes synchronously, so return after the canonical client
+  // state is visible and let the writer finish/queue Supabase persistence.
+  // Waiting here keeps the UI's build-tap lock held for the whole network
+  // round-trip and makes building appear frozen on a slow iOS connection.
+  void commitIslandRunState({
     session,
     client,
     record: next,
@@ -4536,7 +4540,10 @@ export async function applyStopBuildSpendBatch(
       : current.firstSessionTutorialState,
     runtimeVersion: current.runtimeVersion + 1,
   };
-  await commitIslandRunState({
+  // `commitIslandRunState` publishes before its first await. Do not keep the
+  // build interaction locked while Supabase persistence completes; the
+  // writer's single-flight queue safely serializes subsequent snapshots.
+  void commitIslandRunState({
     session,
     client,
     record: next,

@@ -12,12 +12,18 @@ const stopPlan = [
   { stopId: 'boss', title: 'Boss' },
 ] as const;
 
-function vm(states: IslandRunContractV2BuildState[], essenceAvailable = 999, islandArtManifest: IslandArtManifest | null = null) {
+function vm(
+  states: IslandRunContractV2BuildState[],
+  essenceAvailable = 999,
+  islandArtManifest: IslandArtManifest | null = null,
+  discountRate = 0,
+) {
   return deriveBuildModalV2ViewModel({
     stopBuildStateByIndex: states,
     islandStopPlan: stopPlan,
     essenceAvailable,
     islandArtManifest,
+    discountRate,
   });
 }
 
@@ -34,9 +40,9 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
     name: 'focused view model resolves sequential active landmark states',
     run: () => {
       assertEqual(vm([build(0), build(0), build(0), build(0), build(0)]).activeLandmark?.title, 'Hatchery', 'Fresh island should focus Hatchery');
-      assertEqual(vm([build(1), build(0), build(0), build(0), build(0)]).activeLandmark?.title, 'Habit', 'Hatchery L1 complete should focus Habit');
-      assertEqual(vm([build(1), build(1), build(1), build(1), build(1)]).activeLandmark?.targetLevel, 2, 'All L1 complete should focus L2 round');
-      assertEqual(vm([build(2), build(3), build(0), build(3), build(3)]).activeLandmark?.stopIndex, 2, 'Uneven state should pick earliest missing target');
+      assertEqual(vm([build(1), build(0), build(0), build(0), build(0)]).activeLandmark?.targetLevel, 2, 'Hatchery L1 complete should focus Hatchery L2');
+      assertEqual(vm([build(1), build(1), build(1), build(1), build(1)]).activeLandmark?.targetLevel, 2, 'All L1 complete should focus the first missing L2');
+      assertEqual(vm([build(3), build(3), build(0), build(3), build(3)]).activeLandmark?.stopIndex, 2, 'Uneven state should pick earliest missing landmark target');
       assertEqual(vm([build(3), build(3), build(3), build(3), build(3)]).sequentialBuildView.isFullyBuilt, true, 'Fully built state should be complete');
     },
   },
@@ -58,6 +64,18 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
     run: () => {
       const view = vm([build(0, Number.NaN, Number.NaN), build(0), build(0), build(0), build(0)]);
       assertEqual(view.parts[0].status, 'active', 'Invalid progress should normalize to Part 1 active');
+    },
+  },
+  {
+    name: 'Build Rush uses the discounted wallet cost for labels and affordability',
+    run: () => {
+      const discounted = vm([build(1, 0, 120), build(1), build(1), build(1), build(1)], 18, null, 0.25);
+      assertEqual(discounted.activeLandmark?.nextTapCost, 24, 'Nominal tap should still fund 24 progress');
+      assertEqual(discounted.activeLandmark?.nextTapEssenceCost, 18, '25% Build Rush should deduct 18 Money');
+      assertEqual(discounted.activeLandmark?.canAffordNextTap, true, '18 Money should afford the discounted tap');
+
+      const short = vm([build(1, 0, 120), build(1), build(1), build(1), build(1)], 17, null, 0.25);
+      assertEqual(short.activeLandmark?.canAffordNextTap, false, '17 Money should not afford an 18 Money discounted tap');
     },
   },
   {

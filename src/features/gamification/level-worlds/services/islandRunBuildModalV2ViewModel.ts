@@ -37,7 +37,10 @@ export type BuildModalV2ActiveLandmarkViewModel = {
   activePart: IslandRunSequentialBuildPartNumber | null;
   completedParts: number;
   progressRatio: number;
+  /** Nominal build progress contributed by the next tap. */
   nextTapCost: number;
+  /** Actual wallet deduction after the active Build Rush discount. */
+  nextTapEssenceCost: number;
   canAffordNextTap: boolean;
   imageSrc?: string;
   imageAlt: string;
@@ -59,6 +62,7 @@ export function deriveBuildModalV2ViewModel(options: {
   islandStopPlan: ReadonlyArray<Pick<IslandStopPlanEntry, 'stopId' | 'title'>>;
   essenceAvailable: number;
   islandArtManifest: IslandArtManifest | null;
+  discountRate?: number;
 }): BuildModalV2ViewModel {
   const sequentialBuildView = deriveIslandRunSequentialBuildView(options.stopBuildStateByIndex);
   const levelRail = deriveLevelRail(sequentialBuildView.activeTarget?.targetLevel ?? MAX_BUILD_LEVEL);
@@ -89,6 +93,12 @@ export function deriveBuildModalV2ViewModel(options: {
   const nextTapCost = sequentialBuildView.requiredEssence > 0
     ? Math.min(resolveBuildSpendStepForTier(sequentialBuildView.requiredEssence), remainingToLevel)
     : 0;
+  const normalizedDiscountRate = Number.isFinite(options.discountRate)
+    ? Math.min(0.95, Math.max(0, options.discountRate ?? 0))
+    : 0;
+  const nextTapEssenceCost = nextTapCost > 0
+    ? Math.max(1, Math.ceil(nextTapCost * (1 - normalizedDiscountRate)))
+    : 0;
 
   return {
     sequentialBuildView,
@@ -106,7 +116,8 @@ export function deriveBuildModalV2ViewModel(options: {
       completedParts: sequentialBuildView.completedParts,
       progressRatio: sequentialBuildView.progressRatio,
       nextTapCost,
-      canAffordNextTap: options.essenceAvailable >= nextTapCost && nextTapCost > 0,
+      nextTapEssenceCost,
+      canAffordNextTap: options.essenceAvailable >= nextTapEssenceCost && nextTapEssenceCost > 0,
       ...art,
     },
     parts: sequentialBuildView.parts.map((part) => ({

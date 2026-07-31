@@ -185,4 +185,12 @@ export const islandRunBonusTileTests: TestCase[] = [
       assertEqual(clean['4']?.[-1], undefined, 'Negative tile idx dropped');
     },
   },
+  {
+    name: 'sanitizeBonusTileChargeByIsland preserves explicit reset tombstones',
+    run: () => {
+      const clean = sanitizeBonusTileChargeByIsland({ '2': {} });
+      assertEqual(Object.prototype.hasOwnProperty.call(clean, '2'), true, 'Explicit empty island entry should survive hydration');
+      assertEqual(Object.keys(clean['2'] ?? {}).length, 0, 'Reset tombstone should remain empty');
+    },
+  },
 ];

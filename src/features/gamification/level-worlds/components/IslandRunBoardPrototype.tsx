@@ -4738,7 +4738,7 @@ export function IslandRunBoardPrototype({
     }),
     [allLandmarkDoorsRouteToBoss, expandedActiveLandmarkDoorStopId, tileMap],
   );
-  const trafficLightCharge = getTrafficLightCharge(runtimeState.bonusTileChargeByIsland, islandNumber);
+  const trafficLightCharge = getTrafficLightCharge(__storeState.bonusTileChargeByIsland, islandNumber);
   // Show the optimistic mid-hop charge while a roll is animating so the lights
   // change the moment the token passes the traffic tile, not when it lands.
   const displayedTrafficLightCharge = trafficLightVisualCharge !== null
@@ -5189,6 +5189,7 @@ export function IslandRunBoardPrototype({
     setTrafficLightCoinFlip(null);
     setTrafficLightRewardConfettiActive(false);
     setShowTrafficLightCoinHint(false);
+    setTrafficLightVisualCharge(null);
   }, []);
 
   const handleFlipTrafficLightCoin = useCallback(() => {
@@ -5238,6 +5239,7 @@ export function IslandRunBoardPrototype({
     setTrafficLightCoinFlip((current) => current?.reward === reward ? { ...current, phase: 'opened' } : current);
     setTrafficLightRewardConfettiActive(false);
     setShowTrafficLightCoinHint(false);
+    setTrafficLightVisualCharge(null);
     playIslandRunSound('reward_bar_claim_burst');
     triggerIslandRunHaptic('reward_claim');
 
@@ -5767,19 +5769,19 @@ export function IslandRunBoardPrototype({
   // ── BuildModalV2 adapter model ───────────────────────────────────────────
   // Derives the focused single-landmark view from PR 1 sequential helpers.
   // All gameplay reads happen here; BuildModalV2 remains presentational.
+  const activeBuildDiscountRate = buildDiscountExpiresAtMs && buildDiscountExpiresAtMs > Date.now() ? BUILD_DISCOUNT_RATE : 0;
   const buildModalV2ViewModel = useMemo(() => deriveBuildModalV2ViewModel({
-    stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
+    stopBuildStateByIndex: __storeState.stopBuildStateByIndex,
     islandStopPlan,
-    essenceAvailable: runtimeState.essence,
+    essenceAvailable: __storeState.essence,
     islandArtManifest,
-  }), [islandArtManifest, islandStopPlan, runtimeState.essence, runtimeState.stopBuildStateByIndex]);
+    discountRate: activeBuildDiscountRate,
+  }), [__storeState.essence, __storeState.stopBuildStateByIndex, activeBuildDiscountRate, islandArtManifest, islandStopPlan]);
 
   // Footer 🔨 Build attention dot: lights up when at least one not-fully-built
   // landmark has a next build step the player can pay for right now with their
   // current essence wallet. Mirrors the orbit "affordable" cue so the player
   // knows to open Build without having to peek inside the modal first.
-  const activeBuildDiscountRate = buildDiscountExpiresAtMs && buildDiscountExpiresAtMs > Date.now() ? BUILD_DISCOUNT_RATE : 0;
-
   const hasAffordableBuildStep = useMemo(
     () => Boolean(buildModalV2ViewModel.activeLandmark?.canAffordNextTap),
     [buildModalV2ViewModel],
@@ -14714,7 +14716,7 @@ export function IslandRunBoardPrototype({
         <BuildModalV2
           isOpen={showBuildPanel}
           islandNumber={islandNumber}
-          essenceAvailable={runtimeState.essence}
+          essenceAvailable={__storeState.essence}
           onClose={() => setShowBuildPanel(false)}
           viewModel={buildModalV2ViewModel}
           isBuildHoldActive={isBuildHoldActive}

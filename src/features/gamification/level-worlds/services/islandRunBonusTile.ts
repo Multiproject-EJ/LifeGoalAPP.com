@@ -223,7 +223,11 @@ export function sanitizeBonusTileChargeByIsland(
       const normalized = clampBonusCharge(chargeRaw);
       if (normalized > 0) innerCopy[Math.floor(idx)] = normalized;
     }
-    if (Object.keys(innerCopy).length > 0) nextMap[islandKey] = innerCopy;
+    // Preserve explicit-empty island entries as reset tombstones. Without the
+    // tombstone, conflict recovery cannot distinguish "this cycle was
+    // consumed/reset" from "this client never had a value", and a stale 7/8
+    // charge can be resurrected after the traffic-light reward is released.
+    nextMap[islandKey] = innerCopy;
   }
   return nextMap;
 }

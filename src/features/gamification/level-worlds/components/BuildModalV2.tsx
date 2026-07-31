@@ -67,7 +67,7 @@ function BuildModalV2PartButton({
   targetLevel,
   activeStopIndex,
   disabledByWalletOrTutorial,
-  nextTapCost,
+  nextTapEssenceCost,
   onBuildActivePart,
 }: {
   part: BuildModalV2PartViewModel;
@@ -75,7 +75,7 @@ function BuildModalV2PartButton({
   targetLevel: number;
   activeStopIndex: number;
   disabledByWalletOrTutorial: boolean;
-  nextTapCost: number;
+  nextTapEssenceCost: number;
   onBuildActivePart: (stopIndex: number) => void;
 }) {
   const isActive = part.status === 'active';
@@ -84,13 +84,13 @@ function BuildModalV2PartButton({
     ? 'Done'
     : part.status === 'locked'
       ? 'Locked'
-      : `${nextTapCost} Money`;
+      : `${nextTapEssenceCost} Money`;
   const titleLabel = isActive ? `Build part ${part.partNumber}` : `Part ${part.partNumber}`;
   const ariaLabel = part.status === 'complete'
     ? `${activeTitle} Level ${targetLevel}, Part ${part.partNumber} complete`
     : part.status === 'locked'
       ? `${activeTitle} Level ${targetLevel}, Part ${part.partNumber} locked`
-      : `Build ${activeTitle} Level ${targetLevel}, Part ${part.partNumber}. ${part.remainingEssence} Money left in this part. Next tap spends ${nextTapCost} Money.`;
+      : `Build ${activeTitle} Level ${targetLevel}, Part ${part.partNumber}. ${part.remainingEssence} Money left in this part. Next tap spends ${nextTapEssenceCost} Money.`;
 
   return (
     <button
@@ -208,8 +208,8 @@ export function BuildModalV2({
                 </div>
                 <p className="bm2-hero__cost">
                   {active.canAffordNextTap
-                    ? `Build Part ${activePart} for ${discountPercent > 0 ? Math.ceil(active.nextTapCost * (1 - discountRate)) : active.nextTapCost} Money${discountPercent > 0 ? ` (${discountPercent}% off)` : ''}`
-                    : `Need ${Math.max(0, Math.ceil(active.nextTapCost * (1 - discountRate)) - essenceAvailable)} more Money for the next tap`}
+                    ? `Build Part ${activePart} for ${active.nextTapEssenceCost} Money${discountPercent > 0 ? ` (${discountPercent}% off)` : ''}`
+                    : `Need ${Math.max(0, active.nextTapEssenceCost - essenceAvailable)} more Money for the next tap`}
                 </p>
               </div>
               <div className="bm2-artwork bm2-artwork--hero">
@@ -228,7 +228,7 @@ export function BuildModalV2({
                   targetLevel={active.targetLevel}
                   activeStopIndex={active.stopIndex}
                   disabledByWalletOrTutorial={!canBuildActive}
-                  nextTapCost={active.nextTapCost}
+                  nextTapEssenceCost={active.nextTapEssenceCost}
                   onBuildActivePart={onBuildActivePart}
                 />
               ))}
