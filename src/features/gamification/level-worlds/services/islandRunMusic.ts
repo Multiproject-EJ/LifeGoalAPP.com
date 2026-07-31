@@ -22,6 +22,7 @@ export interface ResolveIslandRunMusicContextOptions {
   showShopPanel: boolean;
   showIslandClearCelebration: boolean;
   isDormantDoorMiniGameOpen?: boolean;
+  isStoryReaderOpen?: boolean;
 }
 
 export interface IslandRunMusicTransitionOptions {
@@ -51,9 +52,16 @@ export function resolveIslandRunMusicContext(options: ResolveIslandRunMusicConte
     showShopPanel,
     showIslandClearCelebration,
     isDormantDoorMiniGameOpen = false,
+    isStoryReaderOpen = false,
   } = options;
 
   if (!musicEnabled) return { kind: 'none' };
+
+  // StoryPlayer owns the active episode/scene soundtrack. Yield this channel so
+  // no panel, celebration, or minigame cue competes with the narrative.
+  if (isStoryReaderOpen) {
+    return { kind: 'none' };
+  }
 
   if (showIslandClearCelebration) {
     return { kind: 'track', trackId: 'new-island-celebration' };

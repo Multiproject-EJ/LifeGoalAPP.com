@@ -1,7 +1,40 @@
+export type StoryMusicMood =
+  | 'calm'
+  | 'wonder'
+  | 'mystery'
+  | 'tension'
+  | 'resolve'
+  | 'triumph';
+
+export interface StoryMusicRightsMetadata {
+  composition: {
+    workTitle: string;
+    composer: string;
+    basis: 'public-domain-confirmed' | 'licensed';
+    evidenceReference: string;
+  };
+  recording: {
+    basis: 'owned-master' | 'commissioned-master' | 'licensed-master';
+    evidenceReference: string;
+  };
+  territories?: string[];
+  expiresOn?: string;
+}
+
 export interface StorySoundtrackConfig {
   src: string;
   loop?: boolean;
   volume?: number;
+  /** Stable catalog identity used by narrative and audio tooling. */
+  cueId?: string;
+  mood?: StoryMusicMood;
+  /**
+   * Recognizable classical works must use `classic-repertoire` and carry
+   * complete rights metadata. The composition and the particular recording are
+   * separate rights checks.
+   */
+  sourceKind?: 'original' | 'classic-repertoire' | 'licensed-library';
+  rights?: StoryMusicRightsMetadata;
 }
 
 /** Direction a scene travels toward as the story advances to the next scene. */

@@ -20,6 +20,8 @@ interface IslandStoryReaderProps {
   completionTitle?: string;
   completionText?: string;
   completionButtonLabel?: string;
+  musicEnabled?: boolean;
+  onMusicEnabledChange?: (enabled: boolean) => void;
 }
 
 /**
@@ -36,6 +38,8 @@ export function IslandStoryReader({
   completionTitle = 'Episode complete',
   completionText = 'Ready for the next episode.',
   completionButtonLabel = 'Done',
+  musicEnabled,
+  onMusicEnabledChange,
 }: IslandStoryReaderProps) {
   const [manifest, setManifest] = useState<StoryEpisodeManifest | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -158,6 +162,8 @@ export function IslandStoryReader({
       title={manifest.title}
       className={storyClassName}
       soundtrack={manifest.soundtrack}
+      audioEnabled={musicEnabled}
+      onAudioEnabledChange={onMusicEnabledChange}
       completionLabel={completionCtaLabel}
       completionDisabled={rewardClaimed}
       closeLabel="Skip story"

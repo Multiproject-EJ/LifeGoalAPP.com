@@ -7,6 +7,7 @@ import {
   type StoryPanel,
   type StorySoundtrackConfig,
 } from './storyTypes';
+import { resolvePlayableStorySoundtrack } from './storySoundtrackPolicy';
 import './StoryPlayer.css';
 
 interface StoryPlayerProps {
@@ -21,6 +22,9 @@ interface StoryPlayerProps {
   completionDisabled?: boolean;
   /** Fallback soundtrack when a scene doesn't declare its own. */
   soundtrack?: StorySoundtrackConfig;
+  /** Optional canonical owner for story audio, such as Island Run's music preference. */
+  audioEnabled?: boolean;
+  onAudioEnabledChange?: (enabled: boolean) => void;
   /** Travel direction used when a scene doesn't specify its own `advance`. */
   defaultAdvance?: StoryDirection;
   /** Extra class on the root, used by consumers to theme via CSS variables. */
@@ -77,13 +81,15 @@ export function StoryPlayer({
   completionLabel = 'Finish',
   completionDisabled = false,
   soundtrack,
+  audioEnabled: controlledAudioEnabled,
+  onAudioEnabledChange,
   defaultAdvance = 'right',
   className,
   closeLabel = 'Close',
 }: StoryPlayerProps) {
   const [index, setIndex] = useState(0);
   const [travelDir, setTravelDir] = useState<StoryDirection>(defaultAdvance);
-  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [localAudioEnabled, setLocalAudioEnabled] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [mediaFailed, setMediaFailed] = useState(false);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
@@ -134,8 +140,10 @@ export function StoryPlayer({
   const panel = panels[safeIndex];
   const isLast = safeIndex >= total - 1;
   const nextDir: StoryDirection = panel?.advance ?? defaultAdvance;
-  const hasAudio = panels.some((scene) => scene.soundtrack?.src) || Boolean(soundtrack?.src);
-  const activeSoundtrack = panel?.soundtrack ?? soundtrack ?? null;
+  const audioEnabled = controlledAudioEnabled ?? localAudioEnabled;
+  const hasAudio = panels.some((scene) => Boolean(resolvePlayableStorySoundtrack(scene.soundtrack)))
+    || Boolean(resolvePlayableStorySoundtrack(soundtrack));
+  const activeSoundtrack = resolvePlayableStorySoundtrack(panel?.soundtrack ?? soundtrack);
   const activePanelMediaKey = panel
     ? (panel.type === 'text' ? panel.text : panel.src)
     : '';
@@ -266,6 +274,14 @@ export function StoryPlayer({
 
   // A scene entering after travelling `travelDir` slides in from the opposite side.
   const enterFrom = OPPOSITE_DIRECTION[travelDir];
+  const toggleAudio = () => {
+    const nextEnabled = !audioEnabled;
+    if (onAudioEnabledChange) {
+      onAudioEnabledChange(nextEnabled);
+      return;
+    }
+    setLocalAudioEnabled(nextEnabled);
+  };
 
   const player = (
     <div
@@ -286,7 +302,7 @@ export function StoryPlayer({
             <button
               type="button"
               className="story-player__icon-btn"
-              onClick={() => setAudioEnabled((value) => !value)}
+              onClick={toggleAudio}
               aria-label={audioEnabled ? 'Mute story audio' : 'Enable story audio'}
               aria-pressed={audioEnabled}
             >

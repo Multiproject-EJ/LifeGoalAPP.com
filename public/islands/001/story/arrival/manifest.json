@@ -3,6 +3,9 @@
   "title": "The Light Under Glass",
   "soundtrack": {
     "src": "/assets/audio/music/Island%20dreamy%20relaxing%20night%20islands.mp3",
+    "cueId": "island-001-arrival-dreamy-night-v1",
+    "mood": "calm",
+    "sourceKind": "original",
     "loop": true,
     "volume": 0.26
   },

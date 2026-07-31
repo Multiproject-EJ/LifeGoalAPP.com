@@ -260,6 +260,14 @@ One signature loop each. Tempo matched to the actual pace of play — generate, 
 
 Under dialogue, so: no melody that competes with reading, no rhythmic hook that fights the typewriter reveal, no dynamic surprises.
 
+The story system also supports carefully selected classic repertoire for major
+narrative moments. These cues live under
+`/assets/audio/music/story/classic/`, use an owned/commissioned/licensed master,
+and must include composition and recording evidence in the story manifest.
+Do not treat “the composition is old” as clearance for a modern recording.
+Specific works are added to this manifest only after rights review; until then,
+use the original mood pads below.
+
 | Mood | File | Len | Status | Used for |
 |---|---|---|---|---|
 | Calm | `mus_story_calm_v1` | 90 s | ⬜ | Openings, island arrivals |

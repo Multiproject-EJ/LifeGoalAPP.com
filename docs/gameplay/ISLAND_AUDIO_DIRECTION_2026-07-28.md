@@ -72,12 +72,47 @@ silence so dice, tiles, inhabitants, and construction remain readable.
 
 - Board ambience ducks slightly during dialogue.
 - Board ambience pauses for focused minigame music.
+- The story reader is a first-class focused music owner. While it is open,
+  board ambience and other focused Island Run music pause; the active episode
+  or scene soundtrack owns the music channel.
+- Story music follows the canonical player music preference. Its in-reader
+  speaker control updates that same preference rather than creating a separate
+  hidden toggle.
 - SFX remains independently controllable.
 - Reward and line-clear sounds must not be mastered so loudly that they break the
   environmental mood.
 - Reduced-motion does not disable audio, but a future reduced-intensity audio
   option may reduce transient peaks.
 - Music remains opt-in through the existing entry audio choice.
+
+## Story music and classic repertoire
+
+Recognizable classic compositions can give important story beats an immediate
+emotional vocabulary. Use them selectively for authored moments—not as the
+default board loop—and let the arrangement serve dialogue rather than compete
+with it.
+
+Every classic cue must be entered in the story soundtrack catalog with:
+
+- a stable cue ID, story mood, composer, and work title;
+- proof that the composition is either confirmed public domain in every launch
+  territory or separately licensed;
+- proof that the exact recording/master is owned, commissioned, or licensed;
+- territory and expiry data where a licence is limited.
+
+A public-domain composition does **not** make an arbitrary commercial recording
+free to use. Runtime therefore blocks a story soundtrack marked
+`classic-repertoire` unless both composition and recording evidence are
+present. Candidate pieces must remain in planning until the rights record and
+the game-ready master are complete.
+
+Arrangement rules:
+
+- instrumental by default; no modern samples or borrowed commercial masters;
+- preserve the recognizable motif, but simplify density under dialogue;
+- use short fades or scene-aware crossfades and avoid abrupt restarts;
+- reserve the most familiar themes for meaningful reveals, reversals, reunions,
+  and chapter resolutions so recognition retains its power.
 
 ## Dormant Door / three-equals game
 

@@ -158,6 +158,18 @@ export const islandRunMusicTests: TestCase[] = [
           showShopPanel: true,
           showIslandClearCelebration: true,
           isDormantDoorMiniGameOpen: true,
+          isStoryReaderOpen: true,
+        }),
+        { kind: 'none' },
+        'story reader should own the focused music channel while it is open',
+      );
+      assertDeepEqual(
+        resolveIslandRunMusicContext({
+          musicEnabled: true,
+          effectiveIslandNumber: 1,
+          showShopPanel: true,
+          showIslandClearCelebration: true,
+          isDormantDoorMiniGameOpen: true,
         }),
         { kind: 'track', trackId: 'new-island-celebration' },
         'celebration music should win over shop music',

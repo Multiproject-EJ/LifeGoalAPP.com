@@ -3464,9 +3464,9 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     applyIslandRunAmbienceState({
       enabled: ambienceEnabled && hasConfirmedEntryAudioChoice,
-      suspended: !isDocumentVisible,
+      suspended: !isDocumentVisible || showStoryReader,
     });
-  }, [ambienceEnabled, hasConfirmedEntryAudioChoice, isDocumentVisible]);
+  }, [ambienceEnabled, hasConfirmedEntryAudioChoice, isDocumentVisible, showStoryReader]);
 
   const islandRunMusicContext = useMemo(() => resolveIslandRunMusicContext({
     musicEnabled: musicEnabled && hasConfirmedEntryAudioChoice && isDocumentVisible,
@@ -3474,7 +3474,8 @@ export function IslandRunBoardPrototype({
     showShopPanel,
     showIslandClearCelebration,
     isDormantDoorMiniGameOpen: Boolean(dormantDoorMiniGame),
-  }), [dormantDoorMiniGame, effectiveIslandNumber, hasConfirmedEntryAudioChoice, isDocumentVisible, musicEnabled, showIslandClearCelebration, showShopPanel]);
+    isStoryReaderOpen: showStoryReader,
+  }), [dormantDoorMiniGame, effectiveIslandNumber, hasConfirmedEntryAudioChoice, isDocumentVisible, musicEnabled, showIslandClearCelebration, showShopPanel, showStoryReader]);
 
   useEffect(() => {
     applyIslandRunMusicContext(islandRunMusicContext);
@@ -16154,6 +16155,8 @@ export function IslandRunBoardPrototype({
         completionTitle={activeStoryEpisode?.kind === 'island_arrival' ? 'Luma Isle awaits' : activeStoryEpisode?.kind === 'island_resolution' ? 'The route is open' : activeStoryEpisode?.kind === 'island_travel_arrival' ? `${getIslandDisplayName(islandNumber)} awaits` : activeStoryEpisode?.kind === 'championship' ? `${championshipPresentation?.title ?? 'The championship'} begins` : undefined}
         completionText={activeStoryEpisode?.kind === 'championship' ? 'The opening ceremony is complete. The Arena is waiting.' : activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' || activeStoryEpisode?.kind === 'island_travel_arrival' ? 'Return to the island' : undefined}
         completionButtonLabel={activeStoryEpisode?.kind === 'championship' ? 'Enter the Arena' : activeStoryEpisode?.kind === 'island_arrival' || activeStoryEpisode?.kind === 'island_resolution' || activeStoryEpisode?.kind === 'island_travel_arrival' ? 'Start zoomed out' : undefined}
+        musicEnabled={musicEnabled}
+        onMusicEnabledChange={(enabled) => updateAudioPreferences({ musicEnabled: enabled })}
       />
 
       {islandNarrativeOpeningFlow.activeDialogue ? (
