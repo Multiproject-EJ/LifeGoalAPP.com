@@ -1643,6 +1643,7 @@ export function IslandRunBoardPrototype({
       showQaHooks: params.get('islandRunQa') === '1',
       isMinimalBoardArt: params.get('minimalBoardArt') === '1',
       isIslandVisualPreview: import.meta.env.DEV && params.get('islandVisualPreview') === '1',
+      showConcordCompletionPreview: import.meta.env.DEV && params.get('concordCompletionPreview') === '1',
       islandVisualIslandNumber: Math.round(readNumericParam(params, 'islandVisualIsland', 1, 1, 120)),
       islandVisualLandmark,
       islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
@@ -1655,6 +1656,7 @@ export function IslandRunBoardPrototype({
     showQaHooks,
     isMinimalBoardArt,
     isIslandVisualPreview,
+    showConcordCompletionPreview,
     islandVisualIslandNumber,
     islandVisualLandmark,
     islandVisualBuildLevel,
@@ -1952,8 +1954,15 @@ export function IslandRunBoardPrototype({
     // Close any open tech surface when switching islands (the modal owns its own
     // auto-dismiss timer, so there is nothing else to clean up here).
     setTechCollectionModal(null);
-    setTechCompletionCelebration(null);
-  }, [islandNumber]);
+    setTechCompletionCelebration(showConcordCompletionPreview
+      ? {
+          collectedSlots: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+          finalLineRewardDice: 10,
+          fullBoardRewardDice: 100,
+          totalRewardDice: 110,
+        }
+      : null);
+  }, [islandNumber, showConcordCompletionPreview]);
 
   useEffect(() => {
     const prev = prevIslandNumberForFlashRef.current;
@@ -1999,7 +2008,7 @@ export function IslandRunBoardPrototype({
   const [rewardedTechCollectionLines, setRewardedTechCollectionLines] = useState<Set<number>>(() => new Set());
   const rewardedTechCollectionLinesRef = useRef<Set<number>>(new Set());
   // Fast pickup modal (auto-dismissing) vs. full-grid celebration (deliberate
-  // Continue). Only one is ever open at a time; the celebration outranks the
+  // activation). Only one is ever open at a time; the celebration outranks the
   // transient pickup modal.
   const [techCollectionModal, setTechCollectionModal] = useState<TechCollectionModalResult | null>(null);
   const [techCompletionCelebration, setTechCompletionCelebration] = useState<TechCompletionCelebrationResult | null>(null);
@@ -12803,7 +12812,11 @@ export function IslandRunBoardPrototype({
       {techCompletionCelebration ? (
         <IslandTechCompletionCelebration
           result={techCompletionCelebration}
-          onContinue={() => setTechCompletionCelebration(null)}
+          onDismiss={() => setTechCompletionCelebration(null)}
+          onOpenConcord={() => {
+            setTechCompletionCelebration(null);
+            setShowConcordHubModal(true);
+          }}
         />
       ) : null}
 
@@ -16080,7 +16093,7 @@ export function IslandRunBoardPrototype({
 
       {showConcordHubModal && !techCollectionModal && typeof document !== 'undefined'
         ? createPortal(
-          concordHubEntryState.isConcordActive ? (
+          concordHubEntryState.isConcordActive || showConcordCompletionPreview ? (
             <div className="island-run-overlay-root island-stop-modal-backdrop island-concord-hub-backdrop" role="presentation">
               <section className="island-concord-hub-modal" role="dialog" aria-modal="true" aria-label="The Concord hub">
                 <img

@@ -106,26 +106,27 @@ export const islandTechCollectionComponentTests: TestCase[] = [
 
   // ── Full-grid completion celebration ───────────────────────────────────────
   {
-    name: 'celebration uses the named Concord built title and ability copy',
+    name: 'celebration turns the completed grid into the active Concord and names its purpose',
     run: () => {
-      includes(celebrationSource, 'THE CONCORD BUILT');
-      includes(celebrationSource, 'UNIVERSAL COMMUNICATION UNLOCKED');
-      includes(celebrationSource, 'The Concord can translate inhabitants, creatures, gestures, and emotional signals.');
+      includes(celebrationSource, 'THE CONCORD AWAKENS');
+      includes(celebrationSource, '/tech/Concord_on.webp');
+      includes(celebrationSource, 'THREE CHANNELS ONLINE');
+      ['Creatures', 'Caretakers', 'Story'].forEach((channel) => includes(celebrationSource, channel));
     },
   },
   {
-    name: 'celebration requires a deliberate continue and does NOT auto-dismiss',
+    name: 'celebration requires a deliberate activation and opens the useful Concord surface',
     run: () => {
-      includes(celebrationSource, 'Continue');
-      includes(celebrationSource, 'onClick={() => onContinue()}');
-      // No transient auto-dismiss timer that would close the celebration for the player.
+      includes(celebrationSource, 'Open The Concord');
+      includes(celebrationSource, 'onClick={() => onOpenConcord()}');
+      includes(boardSource, 'setShowConcordHubModal(true);');
       notIncludes(celebrationSource, 'setTimeout');
     },
   },
   {
-    name: 'celebration shows the reward breakdown and matches granted totals',
+    name: 'celebration keeps the already-granted reward visible without overwhelming the unlock',
     run: () => {
-      ['Final line reward', 'Full grid reward', 'Total', 'fullBoardRewardDice', 'totalRewardDice'].forEach((n) =>
+      ['final line + full grid', 'full grid reward', 'totalRewardDice'].forEach((n) =>
         includes(celebrationSource, n),
       );
     },
@@ -138,6 +139,7 @@ export const islandTechCollectionComponentTests: TestCase[] = [
       );
       includes(celebrationSource, 'continueRef.current?.focus()');
       includes(celebrationSource, 'ConfettiBurst');
+      includes(celebrationSource, 'lockPageScroll()');
     },
   },
 
@@ -217,9 +219,12 @@ export const islandTechCollectionComponentTests: TestCase[] = [
   {
     name: 'board lets Concord fragments collect before special tile routing can steal the landing',
     run: () => {
-      includes(boardSource, "if (maybeCollectTechItem(landedTile?.tileType ?? 'micro', currentIndex))");
+      includes(boardSource, 'const concordPickup = rollResult.concordFragmentPickup;');
+      includes(boardSource, 'if (maybeCollectTechItem(');
+      includes(boardSource, 'concordPickup?.reason,');
       includes(boardSource, "} else if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId)");
-      includes(boardSource, 'const maybeCollectTechItem = useCallback((tileType: string, landingTileIndex: number): boolean');
+      includes(boardSource, 'const maybeCollectTechItem = useCallback((');
+      includes(boardSource, "pickupReason: ConcordFragmentPickupReason = 'natural_landing'");
       includes(boardSource, 'if (resolution.isDuplicate) return false;');
     },
   },

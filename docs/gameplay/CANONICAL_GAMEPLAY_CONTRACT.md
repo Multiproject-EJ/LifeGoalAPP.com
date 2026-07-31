@@ -435,6 +435,9 @@ Fractional positions mean the encounter placement works on any `tileCount` witho
 - A minimum-progress schedule keeps a fresh run on track at rolls `10, 16, 22, 28, 34, 40, 45, 50, 55`; ordinary lucky landings can put the player ahead, but all nine fragments are guaranteed by eligible roll 55.
 - Existing partial Island 1 saves are initialized at the checkpoint matching their collected count and one roll before the soft-assist window. Their prior play is respected even though historical roll count was not previously persisted.
 - Fragment pickup, line rewards, full-grid reward, and Concord construction remain routed through the canonical collection/action services; React only presents the returned pickup reason and animation.
+- The ninth fragment is a capability unlock, not only a collection reward: the completion sequence assembles and activates **The Concord**, then offers immediate entry to its channel console.
+- The active Concord is the island communication hub. It provides the **Creature Channel**, **Caretaker Channel**, and **Story Mode**; channel-specific eligibility (for example, an owned active companion) remains authoritative in the corresponding communication access service.
+- The Concord remains available from the controller after activation, while unread mandatory story may temporarily take priority on the same controller affordance. Island 1 cannot be cleared until the canonical Concord technology unlock is active.
 
 ## 5C) Reward amplification and session dynamics
 
