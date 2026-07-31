@@ -123,22 +123,22 @@ export const islandRunMusicTests: TestCase[] = [
     },
   },
   {
-    name: 'getIslandRunBoardMusicPlaylist uses quiet island ambience on every island',
+    name: 'getIslandRunBoardMusicPlaylist keeps normal board music intentionally quiet',
     run: () => {
       assertDeepEqual(
         getIslandRunBoardMusicPlaylist(1),
-        ['island-board-ambient'],
-        'Island 1 should use environmental ambience',
+        [],
+        'Island 1 should leave the adaptive music channel quiet',
       );
       assertDeepEqual(
         getIslandRunBoardMusicPlaylist(10),
-        ['island-board-ambient'],
-        'special islands should retain environmental ambience',
+        [],
+        'special islands should leave the adaptive music channel quiet until a cue',
       );
     },
   },
   {
-    name: 'resolveIslandRunMusicContext prioritizes celebration, then shop, then board playlist',
+    name: 'resolveIslandRunMusicContext prioritizes contextual cues and keeps normal board quiet',
     run: () => {
       assertDeepEqual(
         resolveIslandRunMusicContext({
@@ -192,8 +192,8 @@ export const islandRunMusicTests: TestCase[] = [
           showIslandClearCelebration: false,
           isDormantDoorMiniGameOpen: false,
         }),
-        { kind: 'playlist', trackIds: ['island-board-ambient'] },
-        'normal board state should resolve to the board playlist',
+        { kind: 'none' },
+        'normal board state should leave music quiet while ambience continues independently',
       );
     },
   },
@@ -253,7 +253,7 @@ export const islandRunMusicTests: TestCase[] = [
       try {
         resetMockMusicAudio();
 
-        playIslandRunMusicPlaylist(['island-board-ambient', 'event-jackpot'], { fadeMs: 0 });
+        playIslandRunMusicPlaylist(['market-lounge', 'event-jackpot'], { fadeMs: 0 });
         await Promise.resolve();
         const firstTrack = MockMusicAudioElement.created[0];
 
@@ -272,15 +272,15 @@ export const islandRunMusicTests: TestCase[] = [
     },
   },
   {
-    name: 'applyIslandRunMusicContext stops board music before starting panel music contexts',
+    name: 'applyIslandRunMusicContext stops one contextual cue before starting another',
     run: async () => {
       const mockAudio = installMockMusicAudio();
       try {
         resetMockMusicAudio();
 
-        applyIslandRunMusicContext({ kind: 'playlist', trackIds: ['island-board-ambient'] }, { fadeMs: 100 });
+        applyIslandRunMusicContext({ kind: 'track', trackId: 'dormant-door-match' }, { fadeMs: 100 });
         await Promise.resolve();
-        const boardTrack = MockMusicAudioElement.created[0];
+        const previousTrack = MockMusicAudioElement.created[0];
         mockAudio.setNow(10_100);
         mockAudio.runIntervals();
 
@@ -288,13 +288,13 @@ export const islandRunMusicTests: TestCase[] = [
         await Promise.resolve();
         const panelTrack = MockMusicAudioElement.created[1];
 
-        assertEqual(boardTrack.paused, true, 'outgoing board music should stop before panel music starts');
+        assertEqual(previousTrack.paused, true, 'outgoing contextual music should stop before panel music starts');
         assertEqual(panelTrack.src, '/assets/audio/music/Lantern Tide.mp3', 'expected panel music to start');
         assertEqual(panelTrack.volume, 0, 'incoming panel music should begin at zero volume');
 
         mockAudio.setNow(10_200);
         mockAudio.runIntervals();
-        assertEqual(boardTrack.paused, true, 'outgoing board music should stop after fade-out');
+        assertEqual(previousTrack.paused, true, 'outgoing contextual music should remain stopped');
         assertEqual(panelTrack.volume, 0.28, 'incoming panel music should finish fading in');
       } finally {
         mockAudio.restore();

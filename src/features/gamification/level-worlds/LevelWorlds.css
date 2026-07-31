@@ -3968,6 +3968,12 @@
   font-size: 1.45rem;
 }
 
+.island-run-board__sound-option-icon--music {
+  border-color: rgba(187, 160, 238, 0.56);
+  background: radial-gradient(circle at 35% 28%, rgba(182, 142, 242, 0.96), rgba(66, 43, 124, 0.96) 68%);
+  color: #fbf4ff;
+}
+
 .island-run-board__sound-option-icon--sfx {
   border-color: rgba(229, 207, 135, 0.48);
   background: radial-gradient(circle at 35% 28%, rgba(255, 221, 126, 0.94), rgba(105, 74, 25, 0.94) 68%);
@@ -4236,6 +4242,14 @@
   background: radial-gradient(circle at 35% 27%, #9ad765, #347533 69%);
   box-shadow:
     0 0 18px rgba(134, 212, 74, 0.2),
+    inset 0 1px 5px rgba(255, 255, 255, 0.3);
+}
+
+.island-run-entry-audio__row-icon--music {
+  border-color: rgba(198, 170, 245, 0.62);
+  background: radial-gradient(circle at 35% 27%, #c19af7, #54368f 69%);
+  box-shadow:
+    0 0 18px rgba(154, 107, 230, 0.22),
     inset 0 1px 5px rgba(255, 255, 255, 0.3);
 }
 

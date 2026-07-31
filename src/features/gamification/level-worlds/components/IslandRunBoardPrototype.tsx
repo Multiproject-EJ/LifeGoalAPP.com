@@ -340,6 +340,14 @@ import {
   setIslandRunAudioEnabled,
 } from '../services/islandRunAudio';
 import {
+  applyIslandRunAmbienceState,
+  stopIslandRunAmbience,
+} from '../services/islandRunAmbience';
+import {
+  resolveIslandRunAudioPreferences,
+  type IslandRunAudioPreferences,
+} from '../services/islandRunAudioPreferences';
+import {
   applyIslandRunMusicContext,
   resolveIslandRunMusicContext,
   stopIslandRunMusic,
@@ -1723,6 +1731,11 @@ export function IslandRunBoardPrototype({
   const { state: __storeState } = useIslandRunState(session, client);
   const dicePool = __storeState.dicePool;
   const tokenIndex = __storeState.tokenIndex;
+  const {
+    ambienceEnabled,
+    musicEnabled,
+    sfxEnabled,
+  } = resolveIslandRunAudioPreferences(__storeState);
   const firstSessionTutorialState = __storeState.firstSessionTutorialState;
   const isBuildTutorialPromptActive = isIslandRunBuildPromptOverlayActive(firstSessionTutorialState);
   const isBuildModalHatcheryGuidanceActive = isIslandRunHatcheryBuildGuidanceActive(firstSessionTutorialState);
@@ -2056,10 +2069,11 @@ export function IslandRunBoardPrototype({
   const [isPersistingFirstRunCompletion, setIsPersistingFirstRunCompletion] = useState(false);
   const isOnboardingCelebrationVisible = showFirstRunCelebration || showHatcheryL1Celebration;
   const [hasHydratedRuntimeState, setHasHydratedRuntimeState] = useState(false);
-  const [musicEnabled, setMusicEnabled] = useState(true);
-  const [sfxEnabled, setSfxEnabled] = useState(true);
   const [showEntryAudioModal, setShowEntryAudioModal] = useState(false);
   const [hasDismissedEntryAudioModal, setHasDismissedEntryAudioModal] = useState(false);
+  const [isDocumentVisible, setIsDocumentVisible] = useState(
+    () => typeof document === 'undefined' || document.visibilityState !== 'hidden',
+  );
   // M4-COMPLETE: cycleIndex tracks full laps through 120 islands (island 120 → 1 increments this)
   const [cycleIndex, setCycleIndex] = useState<number>(0);
   // Effective island number for all cost/earn scaling: (cycleIndex × 120 + islandNumber).
@@ -2585,15 +2599,6 @@ export function IslandRunBoardPrototype({
   // the write amplification loop where persist effects see stale local state
   // vs runtimeState after hydration and emit redundant writes.
   const hasCompletedInitialHydrationSyncRef = useRef(false);
-  // Audio preferences (music/sfx) are mirrored from runtimeState into React
-  // toggle state exactly once, on first hydration. Re-mirroring on every
-  // runtimeState change made the entry-modal Music/Sounds toggles flicker
-  // on/off — and thrashed the music context (restarting tracks) — as the
-  // runtimeState passed through the local snapshot, the table result (where the
-  // split music/sfx columns may be null for legacy rows), and persist
-  // write-backs. After first hydration the React state is the source of truth
-  // and the persist effect keeps the store in sync.
-  const hasHydratedAudioPreferencesRef = useRef(false);
   const companionBonusAppliedVisitKeyRef = useRef<string | null>(null);
   const isOnboardingComplete = Boolean(session.user.user_metadata?.onboarding_complete);
   const isFirstRunClaimed = runtimeState.firstRunClaimed;
@@ -3195,14 +3200,6 @@ export function IslandRunBoardPrototype({
     }
     // M4-COMPLETE: Restore cycleIndex from runtime state
     setCycleIndex(runtimeState.cycleIndex ?? 0);
-    // Hydrate audio preferences only once — see hasHydratedAudioPreferencesRef.
-    // Re-applying these on every sync run is what caused the toggle flicker and
-    // music-track fighting reported on game open.
-    if (!hasHydratedAudioPreferencesRef.current) {
-      hasHydratedAudioPreferencesRef.current = true;
-      setMusicEnabled(runtimeState.musicEnabled ?? runtimeState.audioEnabled ?? true);
-      setSfxEnabled(runtimeState.sfxEnabled ?? runtimeState.audioEnabled ?? true);
-    }
     setActiveCompanionId(runtimeState.activeCompanionId ?? null);
     setCreatureTreatInventory(runtimeState.creatureTreatInventory ?? fetchCreatureTreatInventory(session.user.id));
 
@@ -3210,7 +3207,7 @@ export function IslandRunBoardPrototype({
     // This prevents the write amplification loop by ensuring local state (essence,
     // dice, etc.) has been synced from runtimeState before persist effects compare them.
     hasCompletedInitialHydrationSyncRef.current = true;
-  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.audioEnabled, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id, updateMarketOwnedBundles]);
+  }, [hasHydratedRuntimeState, runtimeState.activeCompanionId, runtimeState.activeEggHatchDurationMs, runtimeState.activeEggIsDormant, runtimeState.activeEggSetAtMs, runtimeState.activeEggTier, runtimeState.bossTrialResolvedIslandNumber, runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.perIslandEggs, runtimeState.islandStartedAtMs, runtimeState.islandExpiresAtMs, runtimeState.islandShards, runtimeState.tokenIndex, runtimeState.spinTokens, runtimeState.dicePool, runtimeState.shardTierIndex, runtimeState.shardClaimCount, runtimeState.shields, runtimeState.shards, runtimeState.diamonds, runtimeState.creatureTreatInventory, runtimeState.marketOwnedBundlesByIsland, session.user.id, updateMarketOwnedBundles]);
 
   // M16D: Snap fill bar to 0 immediately on island travel reset (no slide-back animation)
   useEffect(() => {
@@ -3438,23 +3435,46 @@ export function IslandRunBoardPrototype({
 
   const hasConfirmedEntryAudioChoice = hasDismissedEntryAudioModal && !showEntryAudioModal;
 
+  const updateAudioPreferences = useCallback((
+    patch: Partial<IslandRunAudioPreferences>,
+  ) => {
+    const currentPreferences = resolveIslandRunAudioPreferences(
+      getIslandRunStateSnapshot(session),
+    );
+    applyAudioPreferencesMarker({
+      session,
+      client,
+      ...currentPreferences,
+      ...patch,
+      triggerSource: 'island_run_audio_preference_control',
+    });
+  }, [client, session]);
+
   useEffect(() => {
     return () => {
       setIslandRunAudioEnabled(false);
+      stopIslandRunAmbience();
     };
   }, []);
 
   useEffect(() => {
-    setIslandRunAudioEnabled(sfxEnabled && hasConfirmedEntryAudioChoice);
-  }, [hasConfirmedEntryAudioChoice, sfxEnabled]);
+    setIslandRunAudioEnabled(sfxEnabled && hasConfirmedEntryAudioChoice && isDocumentVisible);
+  }, [hasConfirmedEntryAudioChoice, isDocumentVisible, sfxEnabled]);
+
+  useEffect(() => {
+    applyIslandRunAmbienceState({
+      enabled: ambienceEnabled && hasConfirmedEntryAudioChoice,
+      suspended: !isDocumentVisible,
+    });
+  }, [ambienceEnabled, hasConfirmedEntryAudioChoice, isDocumentVisible]);
 
   const islandRunMusicContext = useMemo(() => resolveIslandRunMusicContext({
-    musicEnabled: musicEnabled && hasConfirmedEntryAudioChoice,
+    musicEnabled: musicEnabled && hasConfirmedEntryAudioChoice && isDocumentVisible,
     effectiveIslandNumber,
     showShopPanel,
     showIslandClearCelebration,
     isDormantDoorMiniGameOpen: Boolean(dormantDoorMiniGame),
-  }), [dormantDoorMiniGame, effectiveIslandNumber, hasConfirmedEntryAudioChoice, musicEnabled, showIslandClearCelebration, showShopPanel]);
+  }), [dormantDoorMiniGame, effectiveIslandNumber, hasConfirmedEntryAudioChoice, isDocumentVisible, musicEnabled, showIslandClearCelebration, showShopPanel]);
 
   useEffect(() => {
     applyIslandRunMusicContext(islandRunMusicContext);
@@ -3983,6 +4003,7 @@ export function IslandRunBoardPrototype({
     };
 
     const onVisibilityChange = () => {
+      setIsDocumentVisible(document.visibilityState === 'visible');
       if (document.visibilityState === 'visible') {
         applyPassiveDiceRegen('visibility');
         void reconcileRuntimeState('visibility');
@@ -4099,20 +4120,6 @@ export function IslandRunBoardPrototype({
     });
     setRuntimeState(next);
   }, [client, hasHydratedRuntimeState, isDisplayNameLoopCompleted, runtimeState.onboardingDisplayNameLoopCompleted, session]);
-
-  useEffect(() => {
-    if (!hasHydratedRuntimeState) return;
-    if (!hasCompletedInitialHydrationSyncRef.current) return;
-    if (runtimeState.musicEnabled === musicEnabled && runtimeState.sfxEnabled === sfxEnabled) return;
-    const next = applyAudioPreferencesMarker({
-      session,
-      client,
-      musicEnabled,
-      sfxEnabled,
-      triggerSource: 'sync_audio_preferences_marker_effect',
-    });
-    setRuntimeState(next);
-  }, [client, hasHydratedRuntimeState, musicEnabled, runtimeState.musicEnabled, runtimeState.sfxEnabled, session, sfxEnabled]);
 
   useEffect(() => {
     const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -5693,12 +5700,14 @@ export function IslandRunBoardPrototype({
   }, [islandNumber, isIslandTimerPendingStart, showTravelOverlay, timeLeftSec]);
 
   const timerDisplay = isIslandTimerPendingStart ? 'Ready' : formatIslandCountdown(timeLeftSec);
-  const audioMenuIcon = musicEnabled || sfxEnabled
-    ? musicEnabled && sfxEnabled
+  const audioMenuIcon = ambienceEnabled || musicEnabled || sfxEnabled
+    ? ambienceEnabled && musicEnabled && sfxEnabled
       ? '🔊'
       : musicEnabled
         ? '🎵'
-        : '🔔'
+        : ambienceEnabled
+          ? '≋'
+          : '🔔'
     : '🔇';
   const step1Stop = islandStopPlan[0] ?? null;
   // Rolling is always free — no stop-gate. step1Complete kept as `true` for
@@ -11487,17 +11496,34 @@ export function IslandRunBoardPrototype({
             </button>
             <div className="island-run-entry-audio__toggles" role="group" aria-label="Island Run audio settings">
               <div className="island-run-entry-audio__row">
-                <span className="island-run-entry-audio__row-icon" aria-hidden="true">♫</span>
+                <span className="island-run-entry-audio__row-icon" aria-hidden="true">≋</span>
                 <span className="island-run-entry-audio__row-copy">
-                  <strong>Island ambience</strong>
-                  <small>Ocean, wind and adaptive music</small>
+                  <strong>World ambience</strong>
+                  <small>Ocean, wind and a living island bed</small>
+                </span>
+                <button
+                  type="button"
+                  className={`island-run-entry-audio__pill${ambienceEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
+                  aria-pressed={ambienceEnabled}
+                  onClick={() => updateAudioPreferences({ ambienceEnabled: !ambienceEnabled })}
+                  aria-label={`World ambience ${ambienceEnabled ? 'on' : 'off'}`}
+                >
+                  <span className="island-run-entry-audio__pill-state">{ambienceEnabled ? 'On' : 'Off'}</span>
+                  <span className="island-run-entry-audio__pill-knob" />
+                </button>
+              </div>
+              <div className="island-run-entry-audio__row">
+                <span className="island-run-entry-audio__row-icon island-run-entry-audio__row-icon--music" aria-hidden="true">♫</span>
+                <span className="island-run-entry-audio__row-copy">
+                  <strong>Adaptive music</strong>
+                  <small>Celebrations, shops and special moments</small>
                 </span>
                 <button
                   type="button"
                   className={`island-run-entry-audio__pill${musicEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
                   aria-pressed={musicEnabled}
-                  onClick={() => setMusicEnabled((current) => !current)}
-                  aria-label={`Ambience and music ${musicEnabled ? 'on' : 'off'}`}
+                  onClick={() => updateAudioPreferences({ musicEnabled: !musicEnabled })}
+                  aria-label={`Adaptive music ${musicEnabled ? 'on' : 'off'}`}
                 >
                   <span className="island-run-entry-audio__pill-state">{musicEnabled ? 'On' : 'Off'}</span>
                   <span className="island-run-entry-audio__pill-knob" />
@@ -11513,7 +11539,7 @@ export function IslandRunBoardPrototype({
                   type="button"
                   className={`island-run-entry-audio__pill${sfxEnabled ? ' island-run-entry-audio__pill--on' : ''}`}
                   aria-pressed={sfxEnabled}
-                  onClick={() => { const next = !sfxEnabled; setSfxEnabled(next); }}
+                  onClick={() => updateAudioPreferences({ sfxEnabled: !sfxEnabled })}
                   aria-label={`Sounds ${sfxEnabled ? 'on' : 'off'}`}
                 >
                   <span className="island-run-entry-audio__pill-state">{sfxEnabled ? 'On' : 'Off'}</span>
@@ -12059,17 +12085,32 @@ export function IslandRunBoardPrototype({
               <button
                 ref={audioMenuFirstItemRef}
                 type="button"
-                className={`island-run-board__sound-option${musicEnabled ? ' island-run-board__sound-option--on' : ''}`}
+                className={`island-run-board__sound-option${ambienceEnabled ? ' island-run-board__sound-option--on' : ''}`}
                 role="menuitemcheckbox"
-                aria-checked={musicEnabled}
-                onClick={() => {
-                  setMusicEnabled((prev) => !prev);
-                }}
+                aria-checked={ambienceEnabled}
+                onClick={() => updateAudioPreferences({ ambienceEnabled: !ambienceEnabled })}
               >
                 <span className="island-run-board__sound-option-icon island-run-board__sound-option-icon--ambience" aria-hidden="true">≋</span>
                 <span className="island-run-board__sound-option-copy">
                   <strong>World ambience</strong>
-                  <small>Sea, wind and island music</small>
+                  <small>Sea, wind and a living island bed</small>
+                </span>
+                <span className="island-run-board__sound-switch" aria-hidden="true">
+                  <span>{ambienceEnabled ? 'On' : 'Off'}</span>
+                  <i />
+                </span>
+              </button>
+              <button
+                type="button"
+                className={`island-run-board__sound-option${musicEnabled ? ' island-run-board__sound-option--on' : ''}`}
+                role="menuitemcheckbox"
+                aria-checked={musicEnabled}
+                onClick={() => updateAudioPreferences({ musicEnabled: !musicEnabled })}
+              >
+                <span className="island-run-board__sound-option-icon island-run-board__sound-option-icon--music" aria-hidden="true">♫</span>
+                <span className="island-run-board__sound-option-copy">
+                  <strong>Adaptive music</strong>
+                  <small>Celebrations and special moments</small>
                 </span>
                 <span className="island-run-board__sound-switch" aria-hidden="true">
                   <span>{musicEnabled ? 'On' : 'Off'}</span>
@@ -12081,10 +12122,7 @@ export function IslandRunBoardPrototype({
                 className={`island-run-board__sound-option${sfxEnabled ? ' island-run-board__sound-option--on' : ''}`}
                 role="menuitemcheckbox"
                 aria-checked={sfxEnabled}
-                onClick={() => {
-                  const next = !sfxEnabled;
-                  setSfxEnabled(next);
-                }}
+                onClick={() => updateAudioPreferences({ sfxEnabled: !sfxEnabled })}
               >
                 <span className="island-run-board__sound-option-icon island-run-board__sound-option-icon--sfx" aria-hidden="true">✦</span>
                 <span className="island-run-board__sound-option-copy">

@@ -524,7 +524,7 @@ export function IslandRunDebugPanel({
       rows: [
         { label: 'First run claimed', value: fmtBool(rs.firstRunClaimed) },
         { label: 'Story prologue seen', value: fmtBool(rs.storyPrologueSeen) },
-        { label: 'Audio enabled', value: fmtBool(rs.audioEnabled) },
+        { label: 'World ambience', value: fmtBool(rs.audioEnabled) },
         { label: 'SFX service enabled', value: fmtBool(audioDiagnostics.sfxEnabled) },
         { label: 'Last SFX event', value: audioDiagnostics.lastSoundEventId ?? '—' },
         { label: 'Last SFX status', value: audioDiagnostics.lastSoundPlaybackStatus },

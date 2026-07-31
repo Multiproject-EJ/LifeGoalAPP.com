@@ -2529,6 +2529,7 @@ export interface ApplyAudioEnabledMarkerOptions {
 export interface ApplyAudioPreferencesMarkerOptions {
   session: Session;
   client: SupabaseClient | null;
+  ambienceEnabled: boolean;
   musicEnabled: boolean;
   sfxEnabled: boolean;
   triggerSource?: string;
@@ -3478,16 +3479,29 @@ export function applyAudioEnabledMarker(options: ApplyAudioEnabledMarkerOptions)
 }
 
 export function applyAudioPreferencesMarker(options: ApplyAudioPreferencesMarkerOptions): IslandRunGameStateRecord {
-  const { session, client, musicEnabled, sfxEnabled, triggerSource } = options;
+  const {
+    session,
+    client,
+    ambienceEnabled,
+    musicEnabled,
+    sfxEnabled,
+    triggerSource,
+  } = options;
   const current = getIslandRunStateSnapshot(session);
-  if (current.musicEnabled === musicEnabled && current.sfxEnabled === sfxEnabled) {
+  if (
+    current.audioEnabled === ambienceEnabled
+    && current.musicEnabled === musicEnabled
+    && current.sfxEnabled === sfxEnabled
+  ) {
     return current;
   }
   const next: IslandRunGameStateRecord = {
     ...current,
+    // Compatibility bridge: the existing audio_enabled column persists the
+    // independently controlled world-ambience channel.
+    audioEnabled: ambienceEnabled,
     musicEnabled,
     sfxEnabled,
-    audioEnabled: musicEnabled || sfxEnabled,
     runtimeVersion: current.runtimeVersion + 1,
   };
   void commitIslandRunState({

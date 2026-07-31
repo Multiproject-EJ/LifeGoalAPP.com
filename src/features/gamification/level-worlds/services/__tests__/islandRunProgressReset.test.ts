@@ -38,7 +38,7 @@ export const islandRunProgressResetTests: TestCase[] = [
         onboardingDisplayNameLoopCompleted: true,
       });
 
-      assertEqual(withAudioOff.audioEnabled, true, 'Expected audioEnabled = true when music remains on');
+      assertEqual(withAudioOff.audioEnabled, true, 'Expected world ambience preference to remain enabled');
       assertEqual(withAudioOff.musicEnabled, true, 'Expected musicEnabled = true');
       assertEqual(withAudioOff.sfxEnabled, false, 'Expected sfxEnabled = false');
       assertEqual(withAudioOff.onboardingDisplayNameLoopCompleted, true, 'Expected onboarding completed = true');

@@ -3560,3 +3560,33 @@ Testing:
   First Light surface pass.
 Next: implement the canonical ambient/audio-state model described in
 `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.
+
+---
+
+Date: 2026-07-31
+Slice: Canonical Island Run audio-state model
+Summary:
+- Split Island Run into three independent player controls: world ambience,
+  adaptive music, and gameplay effects.
+- Added a dedicated single-owner ambience engine using the approved First
+  Light world bed. It pauses without losing position in the background,
+  resumes on foreground, resets when muted, and cannot duplicate its loop.
+- Made normal board music intentionally quiet while retaining adaptive cues for
+  celebrations, the market, and Dormant Door.
+- Removed React preference mirrors and their write-back effect. The entry
+  modal and compass sound console now read the canonical store and dispatch the
+  canonical audio-preference action directly.
+- Preserved backend compatibility without a migration: the existing
+  `audioEnabled` field now persists the world-ambience preference.
+- Expanded both audio controls to three clear rows with distinct visual
+  treatments and plain-language descriptions.
+Testing:
+- Targeted ambience/music suites: 9 tests passed.
+- Production Vite build passed.
+- Island Run architecture guard passed with 0 violations.
+- 390×844 guest-flow browser QA passed for both three-channel controls; a
+  live toggle check confirmed ambience on / music off / SFX on independently.
+- Full Island Run runner remains blocked before execution by the same
+  pre-existing `checkins.ts` and `zenGarden.ts` type errors.
+Next: Audio Phase 0 asset validation, stub cleanup, and approved egg-hatch
+sound wiring described in `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.

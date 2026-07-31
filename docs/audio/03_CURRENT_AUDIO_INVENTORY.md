@@ -1,6 +1,6 @@
 # HabitGame — Current Audio Inventory (as-built)
 
-**Status:** Factual audit of what is in the repo **today**. Audited 2026-07-25 against commit `7f77ea6`.
+**Status:** Factual audit of what is in the repo **today**. Updated 2026-07-31.
 **Parent:** `docs/audio/00_AUDIO_MASTER_PLAN.md`
 
 This is the "you are here" document. Everything below was verified by reading the repo, not from memory. When you change the audio layer, **update this file in the same PR** — it is the baseline the plan measures progress against.
@@ -13,17 +13,18 @@ This is the "you are here" document. Everything below was verified by reading th
 |---|---|---|
 | Audio files in repo | **15** | 8 "music", 7 SFX |
 | Total on disk | **~11 MB** | all committed to git |
-| Broken files (2-byte stubs) | **2** | one is in the live board playlist |
+| Broken files (2-byte stubs) | **2** | neither is in a live board context |
 | Orphaned files (no code reference) | **1** | `Egg_hatched.mp3` |
 | Typed SFX events | **31** | mapped onto **7 files** |
 | SFX events with a unique asset | **7** | the other 24 borrow — and all 7 sources are placeholders |
 | Approved (non-placeholder) SFX | **0** | every SFX file and procedural sound is a placeholder |
 | Approved music tracks | **5** | Suno Pro originals — keep, do not regenerate |
 | SFX events declared but never fired | **1** | `market_stop_complete` |
-| Music track IDs | **6** | one points at a broken file |
+| Music track IDs | **5** | one dormant ID points at a broken file |
+| Ambience beds | **1** | dedicated single-loop engine, independent of music |
 | Places music is wired | **1** | `IslandRunBoardPrototype.tsx` only |
 | SFX call sites | **174** | across 9 files |
-| Audio test suites | **2** | wired into `npm run test:island-run` |
+| Audio test suites | **3** | ambience, music, and SFX suites are wired into `npm run test:island-run` |
 | Audio asset validator | **0** | none exists |
 
 **The headline:** the *engineering* is in decent shape — typed events, throttling, haptics pairing, diagnostics, graceful degradation, and real tests. The *content* splits sharply in two:
@@ -39,13 +40,13 @@ This is the "you are here" document. Everything below was verified by reading th
 
 | File | Size | Referenced by | Status |
 |---|---|---|---|
-| `Island dreamy relaxing night islands.mp3` | 3.49 MB | `islandRunMusic.ts` → `island-board-ambient` | ✅ **approved — keep** |
+| `Island dreamy relaxing night islands.mp3` | 3.49 MB | `islandRunAmbience.ts` → continuous world bed | ✅ **approved — keep** |
 | `Lantern Tide.mp3` | 3.53 MB | `islandRunMusic.ts` → `market-lounge` | ✅ **approved — keep** |
 | `luxury-reward-loop-v1.mp3` | 1.45 MB | `islandRunMusic.ts` → `luxury-reward` | ✅ **approved — keep** |
 | `event-jackpot-loop-v1.mp3` | 1.28 MB | `islandRunMusic.ts` → `event-jackpot` | ✅ **approved — keep** |
 | `new-island-celebration-loop-v1.mp3` | 926 KB | `islandRunMusic.ts` → `new-island-celebration` | ✅ **approved — keep** |
 | `Egg_hatched.mp3` | 289 KB | **nothing** | ✅ approved audio, ⚠️ **orphaned** — wire it up |
-| `boss-rhythm-duel-loop-v1.mp3` | **2 bytes** | `islandRunMusic.ts` → `boss-rhythm-duel` | 🔴 **stub, and live** |
+| `boss-rhythm-duel-loop-v1.mp3` | **2 bytes** | dormant `islandRunMusic.ts` mapping → `boss-rhythm-duel` | 🔴 **stub, not currently selected** |
 | `market-lounge-loop-v1.mp3` | **2 bytes** | nothing (ID points at Lantern Tide) | 🔴 stub, unreferenced |
 
 Note the naming inconsistency: three files use the `*-loop-v1.mp3` convention, three use human titles with spaces and capitals. URL-encoding a filename with spaces works but is a papercut every time it's referenced.
@@ -131,11 +132,11 @@ Placeholder state is now marked in code: `PLACEHOLDER_SOUND_ASSET_PATHS` lists e
 
 **7 unique / 24 borrowed.** Note `market_insufficient_coins` — a *failure* — plays the same sound as opening the shop. And `minigame_complete` plays the same sound as `coin_reveal`, `sticker_complete` and `multiplier_max`.
 
-### 3.2 `src/features/gamification/level-worlds/services/islandRunMusic.ts` — the music engine
+### 3.2 `src/features/gamification/level-worlds/services/islandRunMusic.ts` — adaptive music
 
-371 lines. Already does most of what the radio system needs:
+The adaptive channel now has explicit intentional-quiet semantics:
 
-- 6 track IDs, crossfade in/out with configurable `fadeMs` (default 650 ms)
+- 5 track IDs, crossfade in/out with configurable `fadeMs` (default 650 ms)
 - **Playlist support** with sequential advance via `onended`
 - Token-based cancellation so overlapping context switches don't fight
 - `resolveIslandRunMusicContext()` — a pure function mapping game state → music context, unit tested
@@ -146,16 +147,22 @@ Current context resolution:
 ```
 showIslandClearCelebration  → track  'new-island-celebration'
 showShopPanel               → track  'market-lounge'
-otherwise                   → playlist (see below)
+isDormantDoorMiniGameOpen    → track  'dormant-door-match'
+otherwise                   → none (intentional quiet over the ambient bed)
 ```
 
-Board playlists:
-```
-dreamt island (every 10th): ['island-board-ambient', 'luxury-reward', 'boss-rhythm-duel']
-all other islands:          ['luxury-reward', 'event-jackpot', 'boss-rhythm-duel']
-```
+### 3.2a `islandRunAmbience.ts` + `islandRunAudioPreferences.ts`
 
-**Both playlists end in `boss-rhythm-duel`, which is the 2-byte stub.** See §5.
+- One approved world-bed loop, owned separately from adaptive music.
+- Reapplying active state is idempotent; it cannot create a duplicate loop.
+- Backgrounding pauses without resetting the playhead; foregrounding resumes.
+- Turning ambience off pauses and resets it.
+- Ambience, music, and SFX are read directly from the canonical store.
+- UI controls dispatch `applyAudioPreferencesMarker`; React no longer mirrors
+  preferences and writes them back from an effect.
+- The existing persisted `audioEnabled` field stores the ambience preference as
+  a compatibility bridge, while `musicEnabled` and `sfxEnabled` remain
+  independent. No database migration is required.
 
 ### 3.3 `src/utils/audioUtils.ts` — procedural UI sounds — 🔶 **ALL PLACEHOLDER**
 
@@ -185,7 +192,7 @@ Used by 5 files: `MobileFooterNav` (7), `TaskTower` (7), `DailyHabitTracker` (6)
 |---|---|---|
 | `musicEnabled` | Island Run runtime state, persisted to backend | Island Run only |
 | `sfxEnabled` | Island Run runtime state, persisted to backend | Island Run only |
-| `audioEnabled` | legacy field, still read as fallback | migration remnant |
+| `audioEnabled` | Island Run runtime state, persisted to backend | compatibility field for world ambience |
 | `hasConfirmedEntryAudioChoice` | derived from the entry modal | gates *all* Island Run audio |
 | `soundEffectsEnabled` | module-level in `audioUtils.ts` | app-wide procedural sounds |
 | `lifegoal.soundEffects.enabled` | localStorage, via `soundPreferences.ts` | app-wide, synced to `profiles.sound_effects_enabled` |
@@ -198,9 +205,15 @@ Used by 5 files: `MobileFooterNav` (7), `TaskTower` (7), `DailyHabitTracker` (6)
 
 ### 3.7 Tests
 
-`src/features/gamification/level-worlds/services/__tests__/islandRunAudio.test.ts` and `islandRunMusic.test.ts`, both registered in `runIslandRunServiceTests.ts` and run by **`npm run test:island-run`**.
+`islandRunAudio.test.ts`, `islandRunAmbience.test.ts`, and
+`islandRunMusic.test.ts` are registered in `runIslandRunServiceTests.ts` and run
+by **`npm run test:island-run`**.
 
-They cover throttling, the disabled gate, diagnostics, asset-failure memoisation, context resolution and playlist advance. They assert against **asset paths**, not audio content — so they will keep passing with a 2-byte file. `islandRunMusic.test.ts:196` hardcodes `/assets/audio/music/Lantern Tide.mp3`, so renaming that file requires a test update.
+They cover throttling, independent channel resolution, the disabled gate,
+diagnostics, asset-failure memoisation, single-loop ambience ownership,
+playhead-preserving lifecycle suspension, contextual music resolution, and
+playlist advance. They assert against **asset paths**, not audio content — so
+they will keep passing with a 2-byte file.
 
 ---
 
@@ -226,11 +239,13 @@ Most-fired events: `market_purchase_success` (10), `reward_bar_fill` (9), `minig
 
 ## 5. Defects and gaps found
 
-### 5.1 🔴 Board music stops after two tracks on every normal island
+### 5.1 ✅ Normal-board dead-air failure removed
 
-`boss-rhythm-duel-loop-v1.mp3` is 2 bytes and is the **third and final entry of both board playlists**. `audio.play()` rejects, the `.catch()` clears `ownedIslandRunMusicTrackId`, and because `onended` never fires the playlist never advances or wraps. Music dies silently and never returns until a context change.
-
-Nobody has heard the third playlist slot in production. **Fix in Phase 0.**
+The normal board no longer runs a fragile music playlist. It always has the
+independent approved world bed when ambience is enabled, while the adaptive
+music channel is intentionally quiet until a celebration, shop, or Dormant
+Door cue. The 2-byte boss stub is no longer reachable from the live board
+resolver, but should still be removed or replaced in Phase 0.
 
 ### 5.2 🔴 Second stub file
 
@@ -254,9 +269,13 @@ Turning off "sound" in one place does not turn it off elsewhere. A player who mu
 
 `market_stop_complete` is declared, mapped and has a haptic pattern, but is never fired from any call site.
 
-### 5.6 ⚠️ No validator, and no placeholder tracking until now
+### 5.6 ⚠️ No validator
 
-Nothing checks that audio assets exist, are non-trivial, or are unique. The repo has validators for island art (`check:island-art-assets`), template kits and visual production briefs — audio has none. A 2-byte MP3 passed review, shipped, and broke music for months without a single failing check. Nor was there any way to see how much of the audio layer was still stand-in — hence the new `PLACEHOLDER_SOUND_ASSET_PATHS` marker and the placeholder count in `check:audio-assets`.
+Nothing checks that audio assets exist, are non-trivial, or are unique. The repo
+has validators for island art (`check:island-art-assets`), template kits and
+visual production briefs — audio has none. A 2-byte MP3 passed review without a
+failing check. `PLACEHOLDER_SOUND_ASSET_PATHS` now makes stand-ins visible in
+runtime diagnostics, but there is still no `check:audio-assets` script.
 
 ### 5.7 ⚠️ Music is wired in exactly one component
 
@@ -276,7 +295,7 @@ Mapping the audit onto `00_AUDIO_MASTER_PLAN.md`:
 
 | Plan phase | What the audit says |
 |---|---|
-| **Phase 0 — Unblock** | Confirmed necessary and urgent. Two stub files, one orphan, no validator. Half a day. |
+| **Phase 0 — Unblock** | Still necessary: two dormant stub files, one orphan, no validator. The live normal-board failure is already removed. |
 | **Phase 1 — SFX** | **Bigger content-wise than first estimated, still cheap code-wise.** The service, throttling, haptics, diagnostics and tests all exist, so 24 of 31 events need only a file. But the 7 existing files and the 9 procedural UI sounds are *also* placeholders, so Phase 1 is a full SFX replacement (116 Tier-1 sounds), not a gap-fill. The AudioBuffer migration remains an optimisation, not a prerequisite. |
 | **Phase 2 — Radio** | Engine is ~60% there: crossfade, playlists, single-track guarantee, cancellation tokens and `preload="none"` all exist. Missing: station model, sticky player choice, playhead-preserving resume, Now Playing UI, CDN base URL. |
 | **Phase 3 — Surfaces** | Biggest content lift. 76 mini-game call sites resolve to shared files; story soundtrack is a finished feature with zero content. |

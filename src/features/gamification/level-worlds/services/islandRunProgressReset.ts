@@ -16,7 +16,7 @@
  * - XP → 0, Level → 1 (gamification_profiles / demo localStorage)
  *
  * **What is preserved (user preferences):**
- * - audioEnabled, musicEnabled, sfxEnabled (player's audio preferences)
+ * - audioEnabled (world ambience), musicEnabled, sfxEnabled
  * - onboardingDisplayNameLoopCompleted (display name already set)
  *
  * **What is NOT touched (separate systems):**
@@ -59,6 +59,7 @@ export function buildFreshIslandRunRecord(
     welcomePackRewardBundleClaimed: false,
     storyPrologueSeen: false,
     narrativeSeenState: createEmptyIslandNarrativeSeenState(),
+    // audioEnabled is the persisted compatibility field for world ambience.
     audioEnabled: current.audioEnabled,
     musicEnabled: current.musicEnabled ?? current.audioEnabled,
     sfxEnabled: current.sfxEnabled ?? current.audioEnabled,

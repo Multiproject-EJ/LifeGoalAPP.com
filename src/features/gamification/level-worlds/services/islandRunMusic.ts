@@ -1,9 +1,7 @@
 const ISLAND_RUN_MUSIC_VOLUME = 0.28;
-const ISLAND_RUN_AMBIENT_VOLUME = 0.18;
 const ISLAND_RUN_MUSIC_FADE_MS = 650;
 
 const ISLAND_RUN_MUSIC_TRACKS = {
-  'island-board-ambient': '/assets/audio/music/Island dreamy relaxing night islands.mp3',
   'dormant-door-match': '/assets/audio/music/luxury-reward-loop-v1.mp3',
   'market-lounge': '/assets/audio/music/Lantern Tide.mp3',
   'new-island-celebration': '/assets/audio/music/new-island-celebration-loop-v1.mp3',
@@ -41,7 +39,9 @@ export function isIslandRunDreamtIsland(islandNumber: number): boolean {
 
 export function getIslandRunBoardMusicPlaylist(islandNumber: number): IslandRunMusicTrackId[] {
   void islandNumber;
-  return ['island-board-ambient'];
+  // The normal board intentionally leaves the music channel quiet. Its
+  // continuous environmental bed is owned independently by islandRunAmbience.
+  return [];
 }
 
 export function resolveIslandRunMusicContext(options: ResolveIslandRunMusicContextOptions): IslandRunMusicContext {
@@ -67,7 +67,8 @@ export function resolveIslandRunMusicContext(options: ResolveIslandRunMusicConte
     return { kind: 'track', trackId: 'dormant-door-match' };
   }
 
-  return { kind: 'playlist', trackIds: getIslandRunBoardMusicPlaylist(effectiveIslandNumber) };
+  void effectiveIslandNumber;
+  return { kind: 'none' };
 }
 
 const islandRunMusicAudioByTrack = new Map<IslandRunMusicTrackId, HTMLAudioElement>();
@@ -78,9 +79,8 @@ let islandRunMusicPlayAttemptId = 0;
 let ownedIslandRunMusicPlaylistToken = 0;
 
 function getIslandRunMusicTargetVolume(trackId: IslandRunMusicTrackId): number {
-  return trackId === 'island-board-ambient'
-    ? ISLAND_RUN_AMBIENT_VOLUME
-    : ISLAND_RUN_MUSIC_VOLUME;
+  void trackId;
+  return ISLAND_RUN_MUSIC_VOLUME;
 }
 
 function getIslandRunMusicAudio(trackId: IslandRunMusicTrackId): HTMLAudioElement | null {

@@ -3335,7 +3335,7 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   {
-    name: 'applyAudioPreferencesMarker persists split music and SFX preferences',
+    name: 'applyAudioPreferencesMarker persists ambience, music, and SFX independently',
     run: () => {
       resetAll();
       const session = makeSession();
@@ -3344,17 +3344,19 @@ export const islandRunStateActionsTests: TestCase[] = [
       const result = applyAudioPreferencesMarker({
         session,
         client: null,
+        ambienceEnabled: false,
         musicEnabled: true,
         sfxEnabled: false,
         triggerSource: 'test_audio_preferences_marker',
       });
 
+      assertEqual(result.audioEnabled, false, 'ambience preference should update independently');
       assertEqual(result.musicEnabled, true, 'music preference should remain enabled');
       assertEqual(result.sfxEnabled, false, 'SFX preference should update independently');
-      assertEqual(result.audioEnabled, true, 'legacy aggregate should stay enabled if either channel is enabled');
       assertEqual(result.runtimeVersion, 9, 'runtimeVersion should bump once');
 
       const stored = readIslandRunGameStateRecord(session);
+      assertEqual(stored.audioEnabled, false, 'stored ambience preference should survive reload');
       assertEqual(stored.musicEnabled, true, 'stored music preference should survive reload');
       assertEqual(stored.sfxEnabled, false, 'stored SFX preference should survive reload');
     },

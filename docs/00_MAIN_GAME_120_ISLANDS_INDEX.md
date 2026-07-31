@@ -111,19 +111,17 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** Define and implement the canonical Island Run audio-state model:
-an always-authored ambient bed, intentional quiet/music states, adaptive music
-cues, and independent roll/movement/reward effects.
-**Files to inspect first:** `docs/05_MAIN_GAME_AUDIO_HAPTICS_ASSETS_MINIGAME_TEMPLATE.md`,
-the Island Run audio service, persisted `musicEnabled`/`sfxEnabled` state, the
-First Light sound console, and Today ambiance controls.
-**Acceptance criteria:** the game never feels accidentally dead; ambience,
-adaptive music, and game effects have explicit independent semantics; user
-preferences persist; reduced-motion and mute/accessibility expectations remain
-respected; React does not become a second audio-state authority.
-**How to test:** enter Island Run with each preference combination, roll and
-claim a reward, background/foreground the app, reload, and verify no duplicate
-loops or surprise playback.
+**Objective:** Audio Phase 0 safety: add an asset validator, remove or replace
+the two 2-byte music stubs, and wire the approved orphaned egg-hatch sound to
+the canonical hatch reveal.
+**Files to inspect first:** `docs/audio/03_CURRENT_AUDIO_INVENTORY.md`,
+`docs/audio/02_SFX_ASSET_MANIFEST.md`, `islandRunAudio.ts`,
+`islandRunMusic.ts`, and the canonical egg-reveal action/presentation path.
+**Acceptance criteria:** CI rejects empty/stub audio, no mapped asset is below
+the minimum validity threshold, the approved hatch sound fires exactly once
+per reveal, and no UI component becomes a gameplay authority.
+**How to test:** run the audio validator, targeted Island Run audio tests,
+production build, and one mobile hatch-reveal QA pass.
 
 ---
 
