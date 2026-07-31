@@ -3590,3 +3590,50 @@ Testing:
   pre-existing `checkins.ts` and `zenGarden.ts` type errors.
 Next: Audio Phase 0 asset validation, stub cleanup, and approved egg-hatch
 sound wiring described in `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.
+
+---
+
+Date: 2026-07-31
+Slice: Audio Phase 0 asset safety and hatch reveal
+Summary:
+- Added one canonical JSON manifest for Island Run ambience, adaptive music,
+  SFX mappings, approval state, and placeholder state.
+- Added `npm run check:audio-assets` and made GitHub Pages deployment run it
+  before the build. It rejects missing, undeclared, tiny, and invalidly mapped
+  audio, and enforces the bundled SFX byte budget.
+- Removed both 2-byte MP3 stubs and the dormant music mapping that referenced
+  one of them.
+- Wired the approved `Egg_hatched.mp3` sting to the successful canonical
+  creature-hatch reveal with a stable once-per-reveal presentation guard.
+- Added focused coverage for the approved mapping and duplicate-play guard.
+Testing:
+- Audio asset validator passed: 13 files, 31 SFX events, 7 placeholders.
+- Island Run architecture guard passed with 0 violations.
+- Production Vite bundle passed.
+- Focused Island Run audio suite passed: 7 tests.
+- Full repository TypeScript build remains blocked by pre-existing Supabase
+  generated-type errors outside this slice; no audio-file errors were emitted.
+- The Island Run runner could not start from this worktree because it expects a
+  local `node_modules/.bin/tsc`; the equivalent repo TypeScript check is subject
+  to the same pre-existing errors.
+Next: Audio Phase 1 Tier 1 production SFX drop described in
+`docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.
+
+---
+
+Date: 2026-07-31
+Slice: Landmark-first Build Step 2 regression fix
+Summary:
+- Reproduced the Island 1 Build modal stall after completing Hatchery L1.
+- Confirmed the modal selected Hatchery L2 while the canonical spend guard
+  still enforced the obsolete level-first order and silently rejected it.
+- Moved the shared maximum build-level constant out of the spend service so
+  the action guard can safely call the same landmark-first target resolver as
+  the modal and view model.
+- Updated regression coverage: Hatchery L2 is immediately fundable after L1;
+  Habit remains locked until Hatchery reaches L3; preserved legacy progress is
+  still left untouched until its landmark becomes active.
+Testing:
+- Contract V2 essence/build suite passed: 21 tests.
+- Sequential-build suite passed: 7 tests.
+Next: release the Build Step 2 fix and Audio Phase 0 safety work to `main`.

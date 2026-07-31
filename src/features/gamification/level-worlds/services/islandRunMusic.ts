@@ -1,13 +1,9 @@
+import audioAssetManifest from './islandRunAudioAssets.json';
+
 const ISLAND_RUN_MUSIC_VOLUME = 0.28;
 const ISLAND_RUN_MUSIC_FADE_MS = 650;
 
-const ISLAND_RUN_MUSIC_TRACKS = {
-  'dormant-door-match': '/assets/audio/music/luxury-reward-loop-v1.mp3',
-  'market-lounge': '/assets/audio/music/Lantern Tide.mp3',
-  'new-island-celebration': '/assets/audio/music/new-island-celebration-loop-v1.mp3',
-  'event-jackpot': '/assets/audio/music/event-jackpot-loop-v1.mp3',
-  'boss-rhythm-duel': '/assets/audio/music/boss-rhythm-duel-loop-v1.mp3',
-} as const;
+const ISLAND_RUN_MUSIC_TRACKS = audioAssetManifest.islandRun.musicTracks;
 
 export type IslandRunMusicTrackId = keyof typeof ISLAND_RUN_MUSIC_TRACKS;
 

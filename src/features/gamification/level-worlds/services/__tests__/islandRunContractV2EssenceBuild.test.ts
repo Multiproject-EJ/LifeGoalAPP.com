@@ -209,17 +209,19 @@ export const islandRunContractV2EssenceBuildTests: TestCase[] = [
       assertEqual(spend(4).essence, 1000, 'Blocked Boss spend deducts zero');
 
       const afterHatcheryL1 = BASE_BUILD_STATES.map((s, i) => i === 0 ? { ...s, buildLevel: 1, spentEssence: 0 } : s);
-      assertEqual(spend(1, afterHatcheryL1).spent, 10, 'Habit spend allowed after Hatchery L1');
+      assertEqual(spend(0, afterHatcheryL1).spent, 10, 'Hatchery L2 spend allowed immediately after Hatchery L1');
+      assertEqual(spend(1, afterHatcheryL1).failureReason, 'not_active_sequential_target', 'Habit remains locked until Hatchery L3');
 
       const allLevel1 = BASE_BUILD_STATES.map((s) => ({ ...s, buildLevel: 1, spentEssence: 0 }));
       assertEqual(spend(0, allLevel1).spent, 10, 'Hatchery L2 spend allowed after all Level 1');
 
       const uneven = BASE_BUILD_STATES.map((s, i) => ({ ...s, buildLevel: [2, 0, 1, 0, 0][i], spentEssence: i === 2 ? 7 : 0 }));
-      assertEqual(spend(1, uneven).spent, 10, '[2,0,1,0,0] Habit allowed');
+      assertEqual(spend(0, uneven).spent, 10, '[2,0,1,0,0] Hatchery L3 remains active');
+      assertEqual(spend(1, uneven).failureReason, 'not_active_sequential_target', 'Habit remains inactive while Hatchery is unfinished');
       assertEqual(spend(2, uneven).failureReason, 'not_active_sequential_target', 'Inactive partial/completed later stop blocked');
       assertEqual(spend(2, uneven).stopBuildStateByIndex[2].spentEssence, 7, 'Inactive partial progress preserved');
 
-      const partialReached = BASE_BUILD_STATES.map((s, i) => ({ ...s, buildLevel: [1, 1, 0, 0, 0][i], spentEssence: i === 2 ? 7 : 0 }));
+      const partialReached = BASE_BUILD_STATES.map((s, i) => ({ ...s, buildLevel: [3, 3, 0, 0, 0][i], spentEssence: i === 2 ? 7 : 0 }));
       const partialResult = spend(2, partialReached);
       assertEqual(partialResult.spent, 10, 'Preserved partial progress is used when target is reached');
       assertEqual(partialResult.stopBuildStateByIndex[2].spentEssence, 17, 'Spend continues from preserved partial amount');

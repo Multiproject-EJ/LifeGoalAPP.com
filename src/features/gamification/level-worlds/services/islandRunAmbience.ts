@@ -1,4 +1,6 @@
-const ISLAND_RUN_AMBIENCE_SRC = '/assets/audio/music/Island dreamy relaxing night islands.mp3';
+import audioAssetManifest from './islandRunAudioAssets.json';
+
+const ISLAND_RUN_AMBIENCE_SRC = audioAssetManifest.islandRun.ambiencePath;
 const ISLAND_RUN_AMBIENCE_VOLUME = 0.18;
 
 export interface IslandRunAmbienceState {

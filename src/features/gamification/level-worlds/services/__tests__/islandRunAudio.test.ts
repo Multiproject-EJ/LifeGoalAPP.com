@@ -1,7 +1,10 @@
 import {
   getAvailableIslandRunSoundAssetPaths,
   getIslandRunAudioDiagnostics,
+  getIslandRunSoundAssetPath,
   getIslandRunSoundAssetManifest,
+  isPlaceholderSoundAsset,
+  playIslandRunHatchRevealSound,
   playIslandRunSound,
   resetIslandRunAudioDiagnosticsForTests,
   setIslandRunAudioEnabled,
@@ -119,6 +122,34 @@ export const islandRunAudioTests: TestCase[] = [
       assert(entries.length > 0, 'expected non-empty SFX manifest');
       for (const [eventId, assetPath] of entries) {
         assert(availablePaths.has(assetPath), `${eventId} should map to an available SFX asset`);
+      }
+    },
+  },
+  {
+    name: 'egg open uses the approved hatch sting instead of a placeholder',
+    run: () => {
+      const assetPath = getIslandRunSoundAssetPath('egg_open');
+      assertEqual(assetPath, '/assets/audio/music/Egg_hatched.mp3', 'expected the approved hatch sting');
+      assert(!isPlaceholderSoundAsset(assetPath), 'the hatch sting should not be reported as a placeholder');
+    },
+  },
+  {
+    name: 'canonical hatch reveal sound plays once per stable reveal identity',
+    run: () => {
+      const restoreAudio = installMockAudio();
+      const mockNow = installMockNow(5_000);
+      try {
+        resetMockAudio();
+
+        assert(playIslandRunHatchRevealSound('user-1:island-1:slot-0:100'), 'first reveal should play');
+        assert(!playIslandRunHatchRevealSound('user-1:island-1:slot-0:100'), 'duplicate reveal should not play');
+        mockNow.setNow(5_100);
+        assert(playIslandRunHatchRevealSound('user-1:island-1:slot-0:200'), 'a distinct reveal should play');
+
+        assertEqual(MockAudioElement.created.length, 2, 'expected one audio request per distinct reveal');
+      } finally {
+        mockNow.restore();
+        restoreAudio();
       }
     },
   },

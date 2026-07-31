@@ -1,3 +1,6 @@
+import { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
+import { resolveIslandRunSequentialBuildTarget } from './islandRunSequentialBuild';
+
 export type IslandRunContractV2StopState = {
   objectiveComplete: boolean;
   buildComplete: boolean;
@@ -21,7 +24,7 @@ export type IslandRunContractV2BuildSpendFailureReason =
  * Maximum build level per stop (number of cost tiers = number of building levels).
  * A stop's build is fully complete when buildLevel === MAX_BUILD_LEVEL.
  */
-export const MAX_BUILD_LEVEL = 3; // L1, L2, L3 (matches STOP_UPGRADE_BASE_COSTS.length)
+export { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
 
 /**
  * Compute the effective island number for scaling purposes.
@@ -393,17 +396,15 @@ function getContractBuildSequentialLockReason(
   requestedStopIndex: number,
   stopBuildStateByIndex: ReadonlyArray<IslandRunContractV2BuildState | null | undefined>,
 ): 'not_active_target' | 'already_fully_built' | 'all_builds_complete' | null {
-  for (let targetLevel = 1; targetLevel <= MAX_BUILD_LEVEL; targetLevel += 1) {
-    for (let stopIndex = 0; stopIndex < 5; stopIndex += 1) {
-      const buildLevel = Math.min(MAX_BUILD_LEVEL, Math.max(0, Math.floor(stopBuildStateByIndex[stopIndex]?.buildLevel ?? 0)));
-      if (buildLevel < targetLevel) {
-        if (requestedStopIndex === stopIndex) return null;
-        const requestedLevel = Math.min(MAX_BUILD_LEVEL, Math.max(0, Math.floor(stopBuildStateByIndex[requestedStopIndex]?.buildLevel ?? 0)));
-        return requestedLevel >= MAX_BUILD_LEVEL ? 'already_fully_built' : 'not_active_target';
-      }
-    }
-  }
-  return 'all_builds_complete';
+  const activeTarget = resolveIslandRunSequentialBuildTarget(stopBuildStateByIndex);
+  if (!activeTarget) return 'all_builds_complete';
+  if (requestedStopIndex === activeTarget.stopIndex) return null;
+
+  const requestedLevel = Math.min(
+    MAX_BUILD_LEVEL,
+    Math.max(0, Math.floor(stopBuildStateByIndex[requestedStopIndex]?.buildLevel ?? 0)),
+  );
+  return requestedLevel >= MAX_BUILD_LEVEL ? 'already_fully_built' : 'not_active_target';
 }
 
 export function spendIslandRunContractV2EssenceOnStopBuild(options: {

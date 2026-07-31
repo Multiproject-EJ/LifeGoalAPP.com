@@ -1,0 +1,70 @@
+{
+  "minimumAssetBytes": 1024,
+  "maxBundledSfxBytes": 1572864,
+  "assets": [
+    { "id": "amb_island_dreamy_night_v1", "path": "/assets/audio/music/Island dreamy relaxing night islands.mp3", "kind": "ambience", "status": "approved", "legacyFilename": true },
+    { "id": "mus_ctx_market_lounge_v1", "path": "/assets/audio/music/Lantern Tide.mp3", "kind": "music", "status": "approved", "legacyFilename": true },
+    { "id": "mus_mg_dormant_door_v1", "path": "/assets/audio/music/luxury-reward-loop-v1.mp3", "kind": "music", "status": "approved", "legacyFilename": true },
+    { "id": "mus_ctx_event_jackpot_v1", "path": "/assets/audio/music/event-jackpot-loop-v1.mp3", "kind": "music", "status": "approved", "legacyFilename": true },
+    { "id": "mus_ctx_island_clear_v1", "path": "/assets/audio/music/new-island-celebration-loop-v1.mp3", "kind": "music", "status": "approved", "legacyFilename": true },
+    { "id": "sting_egg_hatched_v1", "path": "/assets/audio/music/Egg_hatched.mp3", "kind": "stinger", "status": "approved", "legacyFilename": true },
+    { "id": "sfx_dice_roll_placeholder", "path": "/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3", "kind": "sfx", "status": "placeholder", "legacyFilename": true },
+    { "id": "sfx_egg_open_placeholder", "path": "/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3", "kind": "sfx", "status": "placeholder", "legacyFilename": true },
+    { "id": "sfx_island_clear_placeholder", "path": "/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3", "kind": "sfx", "status": "placeholder", "legacyFilename": true },
+    { "id": "sfx_market_success_placeholder", "path": "/assets/audio/sfx/sfx_market_success.PLACEHOLDER.mp3", "kind": "sfx", "status": "placeholder", "legacyFilename": true },
+    { "id": "sfx_reward_bar_claim_burst_placeholder", "path": "/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3", "kind": "sfx", "status": "placeholder", "legacyFilename": true },
+    { "id": "sfx_shop_open_placeholder", "path": "/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3", "kind": "sfx", "status": "placeholder", "legacyFilename": true },
+    { "id": "sfx_tile_land_placeholder", "path": "/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3", "kind": "sfx", "status": "placeholder", "legacyFilename": true }
+  ],
+  "islandRun": {
+    "ambiencePath": "/assets/audio/music/Island dreamy relaxing night islands.mp3",
+    "musicTracks": {
+      "dormant-door-match": "/assets/audio/music/luxury-reward-loop-v1.mp3",
+      "market-lounge": "/assets/audio/music/Lantern Tide.mp3",
+      "new-island-celebration": "/assets/audio/music/new-island-celebration-loop-v1.mp3",
+      "event-jackpot": "/assets/audio/music/event-jackpot-loop-v1.mp3"
+    },
+    "sfxEvents": {
+      "roll": "/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3",
+      "token_move": "/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3",
+      "stop_land": "/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3",
+      "build_upgrade": "/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3",
+      "island_travel": "/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3",
+      "multiplier_cycle": "/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3",
+      "multiplier_max": "/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3",
+      "egg_set": "/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3",
+      "egg_ready": "/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3",
+      "egg_open": "/assets/audio/music/Egg_hatched.mp3",
+      "market_purchase_attempt": "/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3",
+      "market_purchase_success": "/assets/audio/sfx/sfx_market_success.PLACEHOLDER.mp3",
+      "market_insufficient_coins": "/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3",
+      "boss_trial_start": "/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3",
+      "boss_trial_resolve": "/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3",
+      "boss_island_clear": "/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3",
+      "encounter_trigger": "/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3",
+      "encounter_resolve": "/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3",
+      "market_stop_complete": "/assets/audio/sfx/sfx_market_success.PLACEHOLDER.mp3",
+      "island_travel_complete": "/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3",
+      "shop_open": "/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3",
+      "utility_stop_complete": "/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3",
+      "reward_bar_fill": "/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3",
+      "reward_bar_claim_burst": "/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3",
+      "reward_bar_cascade": "/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3",
+      "minigame_open": "/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3",
+      "minigame_complete": "/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3",
+      "sticker_complete": "/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3",
+      "coin_flip": "/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3",
+      "coin_reveal": "/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3",
+      "tech_item_poof": "/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3"
+    },
+    "placeholderPaths": [
+      "/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3",
+      "/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3",
+      "/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3",
+      "/assets/audio/sfx/sfx_market_success.PLACEHOLDER.mp3",
+      "/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3",
+      "/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3",
+      "/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3"
+    ]
+  }
+}

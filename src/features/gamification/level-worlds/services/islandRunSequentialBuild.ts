@@ -1,5 +1,5 @@
 import type { IslandRunContractV2BuildState } from './islandRunContractV2EssenceBuild';
-import { MAX_BUILD_LEVEL } from './islandRunContractV2EssenceBuild';
+import { MAX_BUILD_LEVEL } from './islandRunBuildConstants';
 
 export type IslandRunSequentialBuildStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
 export type IslandRunSequentialBuildTargetLevel = 1 | 2 | 3;

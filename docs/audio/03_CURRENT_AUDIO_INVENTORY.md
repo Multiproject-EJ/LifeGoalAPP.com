@@ -11,32 +11,32 @@ This is the "you are here" document. Everything below was verified by reading th
 
 | | Count | Notes |
 |---|---|---|
-| Audio files in repo | **15** | 8 "music", 7 SFX |
+| Audio files in repo | **13** | 6 music/ambience/stingers, 7 SFX |
 | Total on disk | **~11 MB** | all committed to git |
-| Broken files (2-byte stubs) | **2** | neither is in a live board context |
-| Orphaned files (no code reference) | **1** | `Egg_hatched.mp3` |
+| Broken files (2-byte stubs) | **0** | validator rejects anything below 1 KB |
+| Orphaned files (no code reference) | **0** | every file is declared in the canonical manifest |
 | Typed SFX events | **31** | mapped onto **7 files** |
-| SFX events with a unique asset | **7** | the other 24 borrow — and all 7 sources are placeholders |
-| Approved (non-placeholder) SFX | **0** | every SFX file and procedural sound is a placeholder |
+| Sound-event source assets | **8** | 7 placeholder SFX plus the approved hatch stinger |
+| Approved (non-placeholder) sound events | **1** | `egg_open` uses the approved hatch stinger |
 | Approved music tracks | **5** | Suno Pro originals — keep, do not regenerate |
 | SFX events declared but never fired | **1** | `market_stop_complete` |
-| Music track IDs | **5** | one dormant ID points at a broken file |
+| Music track IDs | **4** | every mapped track is valid |
 | Ambience beds | **1** | dedicated single-loop engine, independent of music |
 | Places music is wired | **1** | `IslandRunBoardPrototype.tsx` only |
 | SFX call sites | **174** | across 9 files |
 | Audio test suites | **3** | ambience, music, and SFX suites are wired into `npm run test:island-run` |
-| Audio asset validator | **0** | none exists |
+| Audio asset validator | **1** | `npm run check:audio-assets`, enforced in deploy CI |
 
 **The headline:** the *engineering* is in decent shape — typed events, throttling, haptics pairing, diagnostics, graceful degradation, and real tests. The *content* splits sharply in two:
 
-- **Music — ✅ good.** The five real tracks are approved Suno Pro originals. Keep them. The only music problems are two empty stub files and one orphan.
+- **Music — ✅ good.** The approved Suno Pro originals stay. The two empty stubs are removed, and the approved hatch stinger is now wired.
 - **Sound effects — 🔶 all placeholder.** Every one of the 7 shipped SFX files and all 9 procedural UI sounds is a placeholder of unacceptable quality. The dice roll, tile land and button clicks are the worst offenders. 174 call sites are firing into those 7 bad files.
 
 ---
 
 ## 2. Files on disk
 
-### 2.1 `public/assets/audio/music/` — 8 files, ~10.9 MB
+### 2.1 `public/assets/audio/music/` — 6 files, ~10.9 MB
 
 | File | Size | Referenced by | Status |
 |---|---|---|---|
@@ -45,9 +45,7 @@ This is the "you are here" document. Everything below was verified by reading th
 | `luxury-reward-loop-v1.mp3` | 1.45 MB | `islandRunMusic.ts` → `luxury-reward` | ✅ **approved — keep** |
 | `event-jackpot-loop-v1.mp3` | 1.28 MB | `islandRunMusic.ts` → `event-jackpot` | ✅ **approved — keep** |
 | `new-island-celebration-loop-v1.mp3` | 926 KB | `islandRunMusic.ts` → `new-island-celebration` | ✅ **approved — keep** |
-| `Egg_hatched.mp3` | 289 KB | **nothing** | ✅ approved audio, ⚠️ **orphaned** — wire it up |
-| `boss-rhythm-duel-loop-v1.mp3` | **2 bytes** | dormant `islandRunMusic.ts` mapping → `boss-rhythm-duel` | 🔴 **stub, not currently selected** |
-| `market-lounge-loop-v1.mp3` | **2 bytes** | nothing (ID points at Lantern Tide) | 🔴 stub, unreferenced |
+| `Egg_hatched.mp3` | 289 KB | canonical creature hatch reveal → `egg_open` | ✅ **approved — keep** |
 
 Note the naming inconsistency: three files use the `*-loop-v1.mp3` convention, three use human titles with spaces and capitals. URL-encoding a filename with spaces works but is a papercut every time it's referenced.
 
@@ -109,7 +107,7 @@ Placeholder state is now marked in code: `PLACEHOLDER_SOUND_ASSET_PATHS` lists e
 | `encounter_trigger` | `sfx_tile_land.PLACEHOLDER.mp3` | ❌ |
 | `encounter_resolve` | `sfx_tile_land.PLACEHOLDER.mp3` | ❌ |
 | `utility_stop_complete` | `sfx_tile_land.PLACEHOLDER.mp3` | ❌ |
-| `egg_open` | `sfx_egg_open.PLACEHOLDER.mp3` | ✅ |
+| `egg_open` | `Egg_hatched.mp3` | ✅ approved |
 | `egg_set` | `sfx_egg_open.PLACEHOLDER.mp3` | ❌ |
 | `egg_ready` | `sfx_egg_open.PLACEHOLDER.mp3` | ❌ |
 | `market_purchase_success` | `sfx_market_success.PLACEHOLDER.mp3` | ✅ |
@@ -239,21 +237,19 @@ Most-fired events: `market_purchase_success` (10), `reward_bar_fill` (9), `minig
 
 ## 5. Defects and gaps found
 
-### 5.1 ✅ Normal-board dead-air failure removed
+### 5.1 ✅ Stub and dead-air failure removed
 
 The normal board no longer runs a fragile music playlist. It always has the
 independent approved world bed when ambience is enabled, while the adaptive
 music channel is intentionally quiet until a celebration, shop, or Dormant
-Door cue. The 2-byte boss stub is no longer reachable from the live board
-resolver, but should still be removed or replaced in Phase 0.
+Door cue. Both 2-byte stubs are deleted, the dormant boss mapping is removed,
+and CI rejects tiny or missing audio before a deploy can ship.
 
-### 5.2 🔴 Second stub file
+### 5.2 ✅ Orphaned hatch asset resolved
 
-`market-lounge-loop-v1.mp3` is also 2 bytes. Currently harmless — the `market-lounge` ID points at `Lantern Tide.mp3` — but it is a trap for anyone who "corrects" the mapping to match the ID name.
-
-### 5.3 ⚠️ Orphaned asset
-
-`Egg_hatched.mp3` (289 KB) has no reference anywhere in `src/`, `public/` or `scripts/`. The audio itself is approved — **wire it to the hatch moment**, don't delete it.
+`Egg_hatched.mp3` now plays from the canonical successful egg transition. A
+stable reveal-identity guard prevents double taps or rerenders from replaying
+the sting for the same creature reveal.
 
 ### 5.3b 🔶 Every sound effect in the app is a placeholder
 
@@ -269,13 +265,11 @@ Turning off "sound" in one place does not turn it off elsewhere. A player who mu
 
 `market_stop_complete` is declared, mapped and has a haptic pattern, but is never fired from any call site.
 
-### 5.6 ⚠️ No validator
+### 5.6 ✅ Audio asset validator enforced
 
-Nothing checks that audio assets exist, are non-trivial, or are unique. The repo
-has validators for island art (`check:island-art-assets`), template kits and
-visual production briefs — audio has none. A 2-byte MP3 passed review without a
-failing check. `PLACEHOLDER_SOUND_ASSET_PATHS` now makes stand-ins visible in
-runtime diagnostics, but there is still no `check:audio-assets` script.
+`npm run check:audio-assets` checks manifest/disk parity, missing and tiny
+files, placeholder declarations, mapped paths, naming, duplicate event sharing,
+and the bundled SFX byte budget. GitHub Pages deploy runs it before the build.
 
 ### 5.7 ⚠️ Music is wired in exactly one component
 
@@ -295,7 +289,7 @@ Mapping the audit onto `00_AUDIO_MASTER_PLAN.md`:
 
 | Plan phase | What the audit says |
 |---|---|
-| **Phase 0 — Unblock** | Still necessary: two dormant stub files, one orphan, no validator. The live normal-board failure is already removed. |
+| **Phase 0 — Unblock** | ✅ Complete: stubs removed, orphan resolved, canonical manifest and CI validator shipped. |
 | **Phase 1 — SFX** | **Bigger content-wise than first estimated, still cheap code-wise.** The service, throttling, haptics, diagnostics and tests all exist, so 24 of 31 events need only a file. But the 7 existing files and the 9 procedural UI sounds are *also* placeholders, so Phase 1 is a full SFX replacement (116 Tier-1 sounds), not a gap-fill. The AudioBuffer migration remains an optimisation, not a prerequisite. |
 | **Phase 2 — Radio** | Engine is ~60% there: crossfade, playlists, single-track guarantee, cancellation tokens and `preload="none"` all exist. Missing: station model, sticky player choice, playhead-preserving resume, Now Playing UI, CDN base URL. |
 | **Phase 3 — Surfaces** | Biggest content lift. 76 mini-game call sites resolve to shared files; story soundtrack is a finished feature with zero content. |
@@ -304,9 +298,9 @@ Mapping the audit onto `00_AUDIO_MASTER_PLAN.md`:
 
 ### Recommended first three PRs
 
-1. **Phase 0** — replace both stubs, resolve the orphan, add `scripts/validate-audio-assets.mjs` + `npm run check:audio-assets` in CI.
-2. **Story soundtrack content** — 4 mood pads wired into island narrative manifests. Zero new code; flip `StoryPlayer`'s `audioEnabled` default. Highest ratio of felt improvement to effort in the repo.
-3. **SFX Tier 1 drop** — generate the ★ list from `02_SFX_ASSET_MANIFEST.md` (116 sounds, including regenerating all 7 existing files), update `SOUND_ASSET_MAP`, empty out `PLACEHOLDER_SOUND_ASSET_PATHS` as assets land, delete the apology comments. No architectural change.
+1. **SFX Tier 1 drop** — generate the ★ list from `02_SFX_ASSET_MANIFEST.md` (116 sounds, including regenerating all 7 existing files), update the canonical manifest, retire placeholder paths as assets land, and delete the apology comments. No architectural change.
+2. **Story soundtrack content** — 4 mood pads wired into island narrative manifests. The architecture and validation already exist.
+3. **Radio/station foundation** — add the station model, sticky choice, and playhead-preserving resume without changing the approved tracks.
 
    Suggested order within the drop, by how often the player hears it: **UI taps → dice roll → tile land/token hop → coins and reward bar → everything else.** The first three are ~40% of all sound the player experiences.
 
@@ -322,4 +316,5 @@ Update this document in the same PR whenever you:
 - introduce a new audio system anywhere in the app
 - add or move a mute/volume preference
 
-The `check:audio-assets` script proposed in the master plan (§8) mechanises most of §2 and §5 — once it exists, this file only needs prose updates.
+The `check:audio-assets` script mechanises most of §2 and §5; this file still
+needs prose updates when behavior or player-facing content changes.

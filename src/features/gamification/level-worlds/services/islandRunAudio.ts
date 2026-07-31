@@ -20,6 +20,7 @@
  */
 
 import { getHapticMode } from '../../../../utils/completionHaptics';
+import audioAssetManifest from './islandRunAudioAssets.json';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -147,6 +148,8 @@ let lastIslandRunSoundAssetPath: string | null = null;
 let lastIslandRunSoundPlaybackStatus: IslandRunSoundPlaybackStatus = 'idle';
 let islandRunSfxPlayAttemptCount = 0;
 let islandRunSfxPlayFailureCount = 0;
+const playedIslandRunHatchRevealIds = new Set<string>();
+const MAX_REMEMBERED_HATCH_REVEAL_IDS = 64;
 
 function recordIslandRunSoundDiagnostics(
   eventId: IslandRunSoundEvent,
@@ -256,26 +259,20 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
  * The music tracks under /assets/audio/music/ are NOT placeholders — those are
  * approved originals and must not be regenerated or replaced.
  *
- * When a real asset lands, remove its path from PLACEHOLDER_SOUND_ASSET_PATHS.
+ * When a real asset lands, retire its path in islandRunAudioAssets.json.
  * `npm run check:audio-assets` reports how many placeholders remain.
  */
-const AVAILABLE_SOUND_ASSET_PATHS = [
-  '/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3',
-  '/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3',
-  '/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3',
-  '/assets/audio/sfx/sfx_market_success.PLACEHOLDER.mp3',
-  '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
-  '/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3',
-  '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
-] as const;
+const AVAILABLE_SOUND_ASSET_PATHS = audioAssetManifest.assets
+  .filter((asset) => asset.kind === 'sfx' || asset.kind === 'stinger')
+  .map((asset) => asset.path);
 
-export type IslandRunSoundAssetPath = typeof AVAILABLE_SOUND_ASSET_PATHS[number];
+export type IslandRunSoundAssetPath = string;
 
 /**
- * Paths still served by placeholder audio. Every currently shipped SFX file is
- * listed here; the set shrinks to empty as real assets land.
+ * Paths still served by placeholder audio. The set shrinks to empty as
+ * production recordings replace the temporary cues.
  */
-const PLACEHOLDER_SOUND_ASSET_PATHS = new Set<string>(AVAILABLE_SOUND_ASSET_PATHS);
+const PLACEHOLDER_SOUND_ASSET_PATHS = new Set<string>(audioAssetManifest.islandRun.placeholderPaths);
 
 /** True while `assetPath` is still served by a placeholder recording. */
 export function isPlaceholderSoundAsset(assetPath: string): boolean {
@@ -289,48 +286,7 @@ export function getPlaceholderSoundEvents(): IslandRunSoundEvent[] {
     .sort();
 }
 
-const SOUND_ASSET_MAP: Record<IslandRunSoundEvent, IslandRunSoundAssetPath> = {
-  roll: '/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3',
-  token_move: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
-  stop_land: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
-  build_upgrade: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
-  island_travel: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
-  // Multiplier button events: cycle uses the tile-land dunk; reaching max uses the reward burst as a short pling.
-  multiplier_cycle: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
-  multiplier_max: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
-  // Hatchery events share the available egg-open chime until bespoke set/ready assets exist.
-  egg_set: '/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3',
-  egg_ready: '/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3',
-  egg_open: '/assets/audio/sfx/sfx_egg_open.PLACEHOLDER.mp3',
-  // Market/shop events share available success/open cues until attempt/fail variants exist.
-  market_purchase_attempt: '/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3',
-  market_purchase_success: '/assets/audio/sfx/sfx_market_success.PLACEHOLDER.mp3',
-  market_insufficient_coins: '/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3',
-  // Boss/encounter events use available milestone/tile cues until bespoke combat cues exist.
-  boss_trial_start: '/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3',
-  boss_trial_resolve: '/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3',
-  boss_island_clear: '/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3',
-  encounter_trigger: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
-  encounter_resolve: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
-  // Stop completion + travel completion.
-  market_stop_complete: '/assets/audio/sfx/sfx_market_success.PLACEHOLDER.mp3',
-  island_travel_complete: '/assets/audio/sfx/sfx_island_clear.PLACEHOLDER.mp3',
-  shop_open: '/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3',
-  utility_stop_complete: '/assets/audio/sfx/sfx_tile_land.PLACEHOLDER.mp3',
-  // Reward bar/sticker events.
-  reward_bar_fill: '/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3',
-  reward_bar_claim_burst: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
-  reward_bar_cascade: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
-  // Minigame events use the available shop-open cue as a lightweight modal-open placeholder.
-  minigame_open: '/assets/audio/sfx/sfx_shop_open.PLACEHOLDER.mp3',
-  minigame_complete: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
-  sticker_complete: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
-  // Coin flip reuses the dice-roll whoosh while spinning, then the reward burst on reveal,
-  // until bespoke coin-flip/coin-ting assets exist.
-  coin_flip: '/assets/audio/sfx/sfx_dice_roll.PLACEHOLDER.mp3',
-  coin_reveal: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
-  tech_item_poof: '/assets/audio/sfx/sfx_reward_bar_claim_burst.PLACEHOLDER.mp3',
-};
+const SOUND_ASSET_MAP = audioAssetManifest.islandRun.sfxEvents satisfies Record<IslandRunSoundEvent, IslandRunSoundAssetPath>;
 
 export function getIslandRunSoundAssetPath(eventId: IslandRunSoundEvent): IslandRunSoundAssetPath {
   return SOUND_ASSET_MAP[eventId];
@@ -383,6 +339,26 @@ export function playIslandRunSound(eventId: IslandRunSoundEvent): void {
     recordIslandRunSoundDiagnostics(eventId, 'play_failed');
     // Browser autoplay policy, missing files, and decode failures are non-fatal.
   });
+}
+
+/**
+ * Plays the creature-hatch sting once for a stable reveal identity.
+ *
+ * The canonical egg transition already prevents duplicate rewards; this
+ * presentation guard separately prevents rerenders or impatient double taps
+ * from replaying the hatch sting for the same resolved egg.
+ */
+export function playIslandRunHatchRevealSound(revealId: string): boolean {
+  const normalizedRevealId = revealId.trim();
+  if (!normalizedRevealId || playedIslandRunHatchRevealIds.has(normalizedRevealId)) return false;
+
+  if (playedIslandRunHatchRevealIds.size >= MAX_REMEMBERED_HATCH_REVEAL_IDS) {
+    const oldestRevealId = playedIslandRunHatchRevealIds.values().next().value;
+    if (typeof oldestRevealId === 'string') playedIslandRunHatchRevealIds.delete(oldestRevealId);
+  }
+  playedIslandRunHatchRevealIds.add(normalizedRevealId);
+  playIslandRunSound('egg_open');
+  return true;
 }
 
 /**
@@ -448,6 +424,7 @@ export function getIslandRunAudioDiagnostics(): IslandRunAudioDiagnostics {
 export function resetIslandRunAudioDiagnosticsForTests(): void {
   islandRunSfxAudioByEvent.clear();
   failedIslandRunSfxAssetPaths.clear();
+  playedIslandRunHatchRevealIds.clear();
   for (const eventId of Object.keys(lastSfxFiredAtByEvent) as IslandRunSoundEvent[]) {
     delete lastSfxFiredAtByEvent[eventId];
   }

@@ -46,16 +46,16 @@ Worth stating plainly, because it changes where effort goes:
 
 An earlier revision recommended leaving the procedural UI sounds alone on the grounds that they cost nothing and have zero latency. **That was wrong** — cheap-sounding taps on the most-fired control in the app is exactly where a designed asset earns its bytes. All UI sounds are now Tier 1.
 
-Placeholder status is tracked in code (`PLACEHOLDER_SOUND_ASSET_PATHS` in `islandRunAudio.ts`, plus a file banner in `audioUtils.ts`) so it can't quietly become permanent.
+Placeholder status is tracked in the canonical `islandRunAudioAssets.json`
+manifest, surfaced by `islandRunAudio.ts`, and enforced by
+`npm run check:audio-assets`, so it cannot quietly become permanent.
 
-### 1.2 Two bugs to fix before anything else
+### 1.2 ✅ Phase 0 safety defects resolved
 
-Found while surveying — both are one-line fixes but they invalidate any music QA done before them:
-
-1. **`public/assets/audio/music/boss-rhythm-duel-loop-v1.mp3` is a 2-byte stub.** It is the third entry of `getIslandRunBoardMusicPlaylist()` for *every* non-dreamt island (islands 1–9, 11–19, …). Its `play()` rejects, the rejection path clears `ownedIslandRunMusicTrackId`, and `onended` never fires — so **board music silently stops after two tracks on every normal island**. Nobody has heard track 3 in production.
-2. **`public/assets/audio/music/market-lounge-loop-v1.mp3` is also a 2-byte stub.** Currently harmless (the `market-lounge` ID points at `Lantern Tide.mp3`), but it is a landmine for whoever "fixes" the mapping to match the ID.
-
-Fix in Phase 0 by shipping real files *and* adding the validator that would have caught it (§8).
+The two 2-byte stub files discovered during the original survey are deleted,
+the dormant boss mapping is removed, and the approved hatch stinger is wired to
+the canonical reveal. Deploy CI now rejects missing, undeclared, or undersized
+audio files, so this class of failure cannot silently return.
 
 ---
 

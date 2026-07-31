@@ -111,17 +111,17 @@ Quality direction:
 ---
 
 # Next Slice (must always be filled)
-**Objective:** Audio Phase 0 safety: add an asset validator, remove or replace
-the two 2-byte music stubs, and wire the approved orphaned egg-hatch sound to
-the canonical hatch reveal.
-**Files to inspect first:** `docs/audio/03_CURRENT_AUDIO_INVENTORY.md`,
-`docs/audio/02_SFX_ASSET_MANIFEST.md`, `islandRunAudio.ts`,
-`islandRunMusic.ts`, and the canonical egg-reveal action/presentation path.
-**Acceptance criteria:** CI rejects empty/stub audio, no mapped asset is below
-the minimum validity threshold, the approved hatch sound fires exactly once
-per reveal, and no UI component becomes a gameplay authority.
-**How to test:** run the audio validator, targeted Island Run audio tests,
-production build, and one mobile hatch-reveal QA pass.
+**Objective:** Audio Phase 1, Tier 1 production drop: replace the highest-touch
+placeholder cues, beginning with UI taps, dice roll, tile land/token hop, coins,
+and reward-bar feedback.
+**Files to inspect first:** `docs/audio/02_SFX_ASSET_MANIFEST.md`,
+`docs/audio/03_CURRENT_AUDIO_INVENTORY.md`, `islandRunAudioAssets.json`,
+`islandRunAudio.ts`, and `audioUtils.ts`.
+**Acceptance criteria:** each replaced event has a distinct approved asset,
+the canonical manifest and placeholder list remain honest, the bundled SFX
+budget stays below its cap, and audio preferences/throttling remain intact.
+**How to test:** run `npm run check:audio-assets`, targeted Island Run audio
+tests, production build, and mobile QA for roll, move, reward, and button cues.
 
 ---
 

@@ -334,6 +334,7 @@ import { logGameSession } from '../../../../services/gameRewards';
 import { awardGold } from '../../daily-treats/luckyRollTileEffects';
 import { awardLuckyRollRuns } from '../../../../services/luckyRollAccess';
 import {
+  playIslandRunHatchRevealSound,
   playIslandRunSound,
   playTokenMoveSound,
   triggerIslandRunHaptic,
@@ -8017,7 +8018,9 @@ export function IslandRunBoardPrototype({
       collectedAtMs: nowTs,
     }));
     setHatchReveal({ creatureId: creature.id, creatureName: creature.name, rarity: creature.tier });
-    playIslandRunSound('egg_open');
+    playIslandRunHatchRevealSound(
+      `${session.user.id}:${islandNumber}:${selectedLedgerKey}:${resolvedEgg.setAtMs}`,
+    );
     triggerIslandRunHaptic('egg_open');
     const isFirstCreatureCollected = collectedCreatures.length === 0;
     setLandingText(`Collected ${creature.name}! It has been added to your ship's creature manifest.`);
