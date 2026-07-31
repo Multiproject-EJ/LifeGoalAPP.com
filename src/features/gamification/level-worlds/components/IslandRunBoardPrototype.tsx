@@ -63,6 +63,7 @@ import { getIslandArtAmbientBackgroundSrc, loadIslandArtManifest, type IslandArt
 import { getIslandCommunicationAccess } from '../services/islandCommunicationAccess';
 import { getIslandTechnologyAccess, resolveIslandTechnologyBuildEligibility } from '../services/islandRunTechnologyUnlocks';
 import { resolveIslandRunConcordHubEntryState } from '../services/islandRunConcordHubEntry';
+import type { ConcordFragmentPickupReason } from '../services/islandRunConcordRollProtection';
 import { getCreatureChannelLine } from '../services/islandCreatureChannel';
 import { getIslandDisplayName } from '../services/islandNames';
 import { applyLandmarkDoorTiles, generateTileMap, getIslandRarity, resolveAllLandmarkDoorsRouteToBoss, resolveExpandedLandmarkDoorStopIdForStatuses, type IslandLandmarkDoorStopId, type IslandTileMapEntry } from '../services/islandBoardTileMap';
@@ -6473,6 +6474,8 @@ export function IslandRunBoardPrototype({
       dieTwo: rollResult.dieTwo ?? null,
       newTokenIndex: rollResult.newTokenIndex ?? null,
       hopCount: Array.isArray(rollResult.hopSequence) ? rollResult.hopSequence.length : null,
+      concordPickupReason: rollResult.concordFragmentPickup?.reason ?? null,
+      concordPickupSlot: rollResult.concordFragmentPickup?.fragmentSlot ?? null,
       runtimeVersion: runtimeStateRef.current.runtimeVersion,
       tokenIndex: runtimeStateRef.current.tokenIndex,
     });
@@ -6523,6 +6526,8 @@ export function IslandRunBoardPrototype({
         roll_total: rollResult.total,
         dice_multiplier: effectiveMultiplier,
         dice_cost: rollResult.diceCost ?? effectiveDiceCost,
+        concord_pickup_reason: rollResult.concordFragmentPickup?.reason ?? null,
+        concord_pickup_slot: rollResult.concordFragmentPickup?.fragmentSlot ?? null,
       },
     });
     if (isIsland120StartupDiagnosticActive) {
@@ -6703,7 +6708,14 @@ export function IslandRunBoardPrototype({
     // Encounter tiles open their challenge modal; every other tile funnels through
     // resolveTileLanding for essence / feed / hazard outcomes.
         const landedTile = landmarkDoorTileMap[currentIndex];
-        if (maybeCollectTechItem(landedTile?.tileType ?? 'micro', currentIndex)) {
+        const concordPickup = rollResult.concordFragmentPickup;
+        const concordPickupTileIndex = concordPickup?.tileIndex ?? currentIndex;
+        const concordPickupTile = landmarkDoorTileMap[concordPickupTileIndex];
+        if (maybeCollectTechItem(
+          concordPickupTile?.tileType ?? landedTile?.tileType ?? 'micro',
+          concordPickupTileIndex,
+          concordPickup?.reason,
+        )) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
         } else if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId) {
@@ -6878,7 +6890,11 @@ export function IslandRunBoardPrototype({
     [collectedTechTileIndices, islandNumber],
   );
 
-  const maybeCollectTechItem = useCallback((tileType: string, landingTileIndex: number): boolean => {
+  const maybeCollectTechItem = useCallback((
+    tileType: string,
+    landingTileIndex: number,
+    pickupReason: ConcordFragmentPickupReason = 'natural_landing',
+  ): boolean => {
     const placement = getIslandTechnologyFragmentPlacement(islandNumber, landingTileIndex);
     if (!placement) return false;
 
@@ -6969,6 +6985,11 @@ export function IslandRunBoardPrototype({
       newlyCompletedLines: resolution.newlyCompletedLines,
       lineRewardDice: resolution.lineRewardDice,
     });
+    if (pickupReason === 'resonance_crossing') {
+      setLandingText('Concord resonance! A fragment answered as you passed.');
+    } else if (pickupReason === 'signal_lock' || pickupReason === 'completion_schedule') {
+      setLandingText('Concord signal locked — fragment recovered.');
+    }
     setShowConcordHubModal(true);
     return true;
   }, [client, islandNumber, playIslandRunSound, session, triggerIslandRunHaptic]);

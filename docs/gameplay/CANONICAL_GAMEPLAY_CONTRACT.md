@@ -426,6 +426,16 @@ Invariants:
 
 Fractional positions mean the encounter placement works on any `tileCount` without hard-coded indices.
 
+## 5G) Island 1 Concord fragment pacing
+
+- The nine Concord fragments retain their fixed visible placements and are collected naturally by exact landing whenever possible.
+- Island 1 persists `concordRollProtectionState` as part of the canonical gameplay record so pacing survives reloads and device sync.
+- After 7 consecutive eligible rolls without a new fragment, crossing an uncollected fragment may recover it through a visible **Concord resonance** assist. Dice movement and the rolled result are never altered.
+- After 10 consecutive eligible rolls without a new fragment, the nearest forward uncollected fragment is recovered through a visible **signal lock** assist.
+- A minimum-progress schedule keeps a fresh run on track at rolls `10, 16, 22, 28, 34, 40, 45, 50, 55`; ordinary lucky landings can put the player ahead, but all nine fragments are guaranteed by eligible roll 55.
+- Existing partial Island 1 saves are initialized at the checkpoint matching their collected count and one roll before the soft-assist window. Their prior play is respected even though historical roll count was not previously persisted.
+- Fragment pickup, line rewards, full-grid reward, and Concord construction remain routed through the canonical collection/action services; React only presents the returned pickup reason and animation.
+
 ## 5C) Reward amplification and session dynamics
 
 - Reward intensity may increase during active play sessions (“hot state”).

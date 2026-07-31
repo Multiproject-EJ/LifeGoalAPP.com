@@ -94,6 +94,7 @@ export function buildFreshIslandRunRecord(
     stopTicketsPaidByIsland: {},
     bonusTileChargeByIsland: {},
     techCollectionByIsland: {},
+    concordRollProtectionState: { rollsTaken: 0, rollsSinceFragment: 0 },
     techCollectionRewardedLinesByIsland: {},
     technologyUnlocksById: {},
     marketOwnedBundlesByIsland: {},

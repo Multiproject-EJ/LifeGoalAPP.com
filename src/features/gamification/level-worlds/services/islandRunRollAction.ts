@@ -78,6 +78,10 @@ import {
   recordIslandRunDiceOutflow,
   recordIslandRunMultiplierUsed,
 } from './islandRunEconomyTelemetry';
+import {
+  resolveConcordRollProtection,
+  type ConcordFragmentPickup,
+} from './islandRunConcordRollProtection';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
 
@@ -184,6 +188,12 @@ export interface IslandRunRollActionResult {
   newRuntimeVersion?: number;
   /** Landing kind in canonical movement loop (tile traversal). */
   landingKind?: 'tile';
+  /**
+   * Optional Island 1 Concord pickup selected by canonical roll pacing. The
+   * renderer presents it through the existing collection animation/action;
+   * dice movement is never changed to manufacture the outcome.
+   */
+  concordFragmentPickup?: ConcordFragmentPickup | null;
 }
 
 // ── per-user async mutex (defence-in-depth against concurrent rolls) ──────────
@@ -276,6 +286,14 @@ async function performRollAction(options: {
   // 6. Canonical contract: movement is tile-based and stops are external progression
   //    structures. Rolling should not force stop progression from tile indices.
   const landingKind: 'tile' = 'tile';
+  const concordProtection = resolveConcordRollProtection({
+    islandNumber: state.currentIslandNumber,
+    tileCount: boardProfile.tileCount,
+    landingTileIndex: newTokenIndex,
+    hopSequence,
+    collectedSlots: state.techCollectionByIsland[String(state.currentIslandNumber)] ?? [],
+    state: state.concordRollProtectionState,
+  });
 
   // 7. Persist the roll state patch via the same write path used by
   //    IslandRunBoardPrototype (writeIslandRunGameStateRecord).
@@ -326,6 +344,7 @@ async function performRollAction(options: {
     firstSessionTutorialState: tutorialRollTotal === null
       ? lowDiceTutorialTarget ?? state.firstSessionTutorialState
       : 'first_roll_consumed',
+    concordRollProtectionState: concordProtection.state,
   };
 
   // Await the write inside the mutex. Local-storage persistence is synchronous;
@@ -352,5 +371,6 @@ async function performRollAction(options: {
     newDicePool,
     newRuntimeVersion,
     landingKind,
+    concordFragmentPickup: concordProtection.pickup,
   };
 }

@@ -34,6 +34,12 @@ import {
   type MomentumMatrixSavedRun,
   type MomentumMatrixTrayPiece,
 } from './momentumMatrixGame';
+import {
+  mergeConcordRollProtectionState,
+  resolveInitialConcordRollProtectionState,
+  sanitizeConcordRollProtectionState,
+  type ConcordRollProtectionState,
+} from './islandRunConcordRollProtection';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
 
@@ -345,6 +351,8 @@ export interface IslandRunGameStateRecord {
    * `maybeCollectTechItem` in the board prototype for the accumulator semantics.
    */
   techCollectionByIsland: Record<string, number[]>;
+  /** Persisted Island 1 Concord pacing counters; owned by the roll action. */
+  concordRollProtectionState: ConcordRollProtectionState;
   /**
    * Per-island ledger of tech-grid line indices (0–7, see
    * `TECH_COLLECTION_LINES`) that have already paid out a completion reward,
@@ -933,6 +941,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     stopTicketsPaidByIsland: {},
     bonusTileChargeByIsland: {},
     techCollectionByIsland: {},
+    concordRollProtectionState: { rollsTaken: 0, rollsSinceFragment: 0 },
     techCollectionRewardedLinesByIsland: {},
     technologyUnlocksById: {},
     marketOwnedBundlesByIsland: {},
@@ -1195,6 +1204,15 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
   const stopBuildStateByIndex = Array.isArray(value.stopBuildStateByIndex)
     ? Array.from({ length: CONTRACT_V2_STOP_COUNT }, (_, index) => toStopBuildStateEntry(value.stopBuildStateByIndex?.[index]))
     : fallback.stopBuildStateByIndex;
+  const techCollectionByIsland =
+    value.techCollectionByIsland !== null && typeof value.techCollectionByIsland === 'object' && !Array.isArray(value.techCollectionByIsland)
+      ? sanitizeIslandIndexLedger(value.techCollectionByIsland as Record<string, number[]>, TECH_COLLECTION_GRID_CELL_COUNT)
+      : fallback.techCollectionByIsland;
+  const rawConcordRollProtectionState = value.concordRollProtectionState
+    ?? (value as Record<string, unknown>).concord_roll_protection_state;
+  const concordRollProtectionState = rawConcordRollProtectionState === undefined
+    ? resolveInitialConcordRollProtectionState(techCollectionByIsland['1'] ?? [])
+    : sanitizeConcordRollProtectionState(rawConcordRollProtectionState);
   return {
     runtimeVersion:
       typeof value.runtimeVersion === 'number' && Number.isFinite(value.runtimeVersion)
@@ -1363,10 +1381,8 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       value.bonusTileChargeByIsland !== null && typeof value.bonusTileChargeByIsland === 'object' && !Array.isArray(value.bonusTileChargeByIsland)
         ? sanitizeBonusTileChargeByIsland(value.bonusTileChargeByIsland as BonusTileChargeByIsland)
         : fallback.bonusTileChargeByIsland,
-    techCollectionByIsland:
-      value.techCollectionByIsland !== null && typeof value.techCollectionByIsland === 'object' && !Array.isArray(value.techCollectionByIsland)
-        ? sanitizeIslandIndexLedger(value.techCollectionByIsland as Record<string, number[]>, TECH_COLLECTION_GRID_CELL_COUNT)
-        : fallback.techCollectionByIsland,
+    techCollectionByIsland,
+    concordRollProtectionState,
     techCollectionRewardedLinesByIsland:
       value.techCollectionRewardedLinesByIsland !== null && typeof value.techCollectionRewardedLinesByIsland === 'object' && !Array.isArray(value.techCollectionRewardedLinesByIsland)
         ? sanitizeIslandIndexLedger(value.techCollectionRewardedLinesByIsland as Record<string, number[]>, TECH_COLLECTION_LINE_COUNT)
@@ -2405,6 +2421,10 @@ export function mergeRecordForConflict(options: {
     stopTicketsPaidByIsland: mergedStopTicketsPaidByIsland,
     bonusTileChargeByIsland: mergedBonusTileChargeByIsland,
     techCollectionByIsland: mergeIslandIndexLedgerByUnion(remote.techCollectionByIsland, local.techCollectionByIsland),
+    concordRollProtectionState: mergeConcordRollProtectionState(
+      remote.concordRollProtectionState,
+      local.concordRollProtectionState,
+    ),
     techCollectionRewardedLinesByIsland: mergeIslandIndexLedgerByUnion(
       remote.techCollectionRewardedLinesByIsland,
       local.techCollectionRewardedLinesByIsland,
@@ -2545,6 +2565,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     stop_tickets_paid_by_island: record.stopTicketsPaidByIsland,
     bonus_tile_charge_by_island: record.bonusTileChargeByIsland,
     tech_collection_by_island: record.techCollectionByIsland,
+    concord_roll_protection_state: record.concordRollProtectionState,
     tech_collection_rewarded_lines_by_island: record.techCollectionRewardedLinesByIsland,
     technology_unlocks_by_id: record.technologyUnlocksById,
     market_owned_bundles_by_island: record.marketOwnedBundlesByIsland,
@@ -2648,7 +2669,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,market_owned_bundles_by_island,creature_collection,active_companion_id,selected_player_piece_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event,momentum_matrix_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,concord_roll_protection_state,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,market_owned_bundles_by_island,creature_collection,active_companion_id,selected_player_piece_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event,momentum_matrix_progress_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -2720,6 +2741,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
               ((legacyData as Record<string, unknown>).tech_collection_by_island as Record<string, number[]> | undefined) ?? {},
               TECH_COLLECTION_GRID_CELL_COUNT,
             ),
+            concordRollProtectionState: (legacyData as Record<string, unknown>).concord_roll_protection_state as ConcordRollProtectionState | undefined,
             techCollectionRewardedLinesByIsland: sanitizeIslandIndexLedger(
               ((legacyData as Record<string, unknown>).tech_collection_rewarded_lines_by_island as Record<string, number[]> | undefined) ?? {},
               TECH_COLLECTION_LINE_COUNT,
@@ -2901,6 +2923,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
         ((data as Record<string, unknown>).tech_collection_by_island as Record<string, number[]> | undefined) ?? {},
         TECH_COLLECTION_GRID_CELL_COUNT,
       ),
+      concordRollProtectionState: (data as Record<string, unknown>).concord_roll_protection_state as ConcordRollProtectionState | undefined,
       techCollectionRewardedLinesByIsland: sanitizeIslandIndexLedger(
         ((data as Record<string, unknown>).tech_collection_rewarded_lines_by_island as Record<string, number[]> | undefined) ?? {},
         TECH_COLLECTION_LINE_COUNT,

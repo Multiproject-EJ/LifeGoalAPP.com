@@ -367,6 +367,9 @@ const gameStateStorageBackend: IslandRunRuntimeStateBackend = {
         patch.techCollectionByIsland !== null && typeof patch.techCollectionByIsland === 'object' && !Array.isArray(patch.techCollectionByIsland)
           ? { ...current.techCollectionByIsland, ...patch.techCollectionByIsland }
           : current.techCollectionByIsland,
+      // Canonical roll pacing is mutated only by islandRunRollAction. Legacy
+      // compatibility patches must preserve it without becoming another writer.
+      concordRollProtectionState: current.concordRollProtectionState,
       techCollectionRewardedLinesByIsland:
         patch.techCollectionRewardedLinesByIsland !== null && typeof patch.techCollectionRewardedLinesByIsland === 'object' && !Array.isArray(patch.techCollectionRewardedLinesByIsland)
           ? { ...current.techCollectionRewardedLinesByIsland, ...patch.techCollectionRewardedLinesByIsland }

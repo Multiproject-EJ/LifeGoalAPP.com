@@ -418,4 +418,31 @@ export const islandRunRollActionTests: TestCase[] = [
       );
     },
   },
+  {
+    name: 'Island 1 roll persists Concord pacing and returns a resonance pickup',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 2,
+        dicePool: 30,
+        tokenIndex: 0,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'complete',
+        techCollectionByIsland: { '1': [0] },
+        concordRollProtectionState: { rollsTaken: 20, rollsSinceFragment: 6 },
+      });
+
+      const result = await withMockedRandom([0.5, 0.5], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+
+      assertEqual(result.total, 8, 'mocked roll should move from tile 0 to tile 8');
+      assertEqual(result.concordFragmentPickup?.tileIndex, 6, 'crossed remaining fragment should resonate');
+      assertEqual(result.concordFragmentPickup?.reason, 'resonance_crossing', 'renderer receives visible assist reason');
+      const persisted = readIslandRunGameStateRecord(makeSession());
+      assertEqual(persisted.concordRollProtectionState.rollsTaken, 21, 'eligible roll count persists canonically');
+      assertEqual(persisted.concordRollProtectionState.rollsSinceFragment, 0, 'selected pickup resets miss streak');
+    },
+  },
 ];

@@ -1,9 +1,7 @@
 /**
  * Persistence coverage for the 3×3 tech-collection ledgers.
  *
- * Verifies the feature reuses the EXISTING canonical ledgers
- * (`techCollectionByIsland` / `techCollectionRewardedLinesByIsland`, persisted
- * by migration 0264) — no new SQL column is required:
+ * Verifies the collection ledgers and the canonical roll-protection tracker:
  *   - the canonical action normalizes + commits collected slots and rewarded lines,
  *   - the ledgers survive a localStorage serialize → read round-trip (sanitize),
  *   - a fresh-run reset clears both ledgers.
@@ -86,6 +84,7 @@ export const islandRunTechCollectionPersistenceTests: TestCase[] = [
       assertDeepEqual(reread.techCollectionByIsland['1'], [0, 1, 2, 8], 'island 1 collected slots persisted');
       assertDeepEqual(reread.techCollectionByIsland['2'], [5], 'island 2 collected slots persisted');
       assertDeepEqual(reread.techCollectionRewardedLinesByIsland['1'], [0, 6], 'rewarded lines persisted');
+      assertDeepEqual(reread.concordRollProtectionState, { rollsTaken: 0, rollsSinceFragment: 0 }, 'new tracker persists');
     },
   },
   {
@@ -122,6 +121,27 @@ export const islandRunTechCollectionPersistenceTests: TestCase[] = [
       const snapshot = getIslandRunStateSnapshot(session);
       assertDeepEqual(snapshot.techCollectionByIsland, {}, 'collected ledger reset to empty');
       assertDeepEqual(snapshot.techCollectionRewardedLinesByIsland, {}, 'rewarded ledger reset to empty');
+      assertDeepEqual(snapshot.concordRollProtectionState, { rollsTaken: 0, rollsSinceFragment: 0 }, 'roll protection resets');
+    },
+  },
+  {
+    name: 'legacy partial Island 1 save is seeded into protection instead of restarted',
+    run: () => {
+      resetIslandRunRuntimeCommitCoordinatorForTests();
+      __resetIslandRunStateStoreForTests();
+      const storage = createMemoryStorage({
+        [`island_run_runtime_state_${USER_ID}`]: JSON.stringify({
+          currentIslandNumber: 1,
+          techCollectionByIsland: { '1': [0, 2, 4, 6] },
+        }),
+      });
+      installWindowWithStorage(storage);
+      const reread = readIslandRunGameStateRecord(makeSession());
+      assertDeepEqual(
+        reread.concordRollProtectionState,
+        { rollsTaken: 28, rollsSinceFragment: 6 },
+        'four-piece pre-tracker save resumes near its fifth-fragment checkpoint',
+      );
     },
   },
 ];
