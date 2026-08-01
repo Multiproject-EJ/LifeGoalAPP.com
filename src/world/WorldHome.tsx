@@ -5,6 +5,8 @@ import { WorldHero } from './WorldHero.tsx';
 import { AwakeningExperience } from './AwakeningExperience.tsx';
 import { WorldGuides } from './WorldGuides.tsx';
 import { WorldHowItWorksModal } from './WorldHowItWorksModal.tsx';
+import { IOSInstallGuide } from './IOSInstallGuide.tsx';
+import { useInstallState } from './useInstallState.ts';
 import { useWorldAnalytics } from './useWorldAnalytics.ts';
 import { joinPublicLaunchWaitlist } from '../services/publicLaunchWaitlist.ts';
 import { CompassCrestBrand } from '../components/CompassCrestBrand.tsx';
@@ -42,13 +44,28 @@ const COMPASS_GAME_LOOP = [
   },
 ] as const;
 
-export function WorldHome(_props: WorldHomeProps) {
+export function WorldHome({ beforeInstallPromptEvent }: WorldHomeProps) {
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [waitlistMessage, setWaitlistMessage] = useState('');
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const installState = useInstallState(beforeInstallPromptEvent ?? null);
   const { trackEvent } = useWorldAnalytics();
+
+  const handleWebAppInstall = async () => {
+    trackEvent('install_click');
+
+    if (installState.platform === 'installed') return;
+
+    if (installState.promptInstall) {
+      await installState.promptInstall();
+      return;
+    }
+
+    setShowInstallGuide(true);
+  };
 
   const handleWaitlistSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -85,17 +102,49 @@ export function WorldHome(_props: WorldHomeProps) {
                 <CompassCrestBrand
                   className="world-home__crest-brand"
                   headingId="world-home-title"
-                  rank={0}
                   asHeading
                   animated
                   variant="shield"
                 />
+                <div className="world-home__availability" aria-label="HabitGame availability">
+                  <span className="world-home__store-badge world-home__store-badge--soon">
+                    <i className="world-home__store-icon world-home__store-icon--apple" aria-hidden="true">●</i>
+                    <span><small>Coming soon to the</small><strong>App Store</strong></span>
+                  </span>
+                  <span className="world-home__store-badge world-home__store-badge--soon">
+                    <i className="world-home__store-icon world-home__store-icon--play" aria-hidden="true" />
+                    <span><small>Coming soon on</small><strong>Google Play</strong></span>
+                  </span>
+                  <button
+                    className="world-home__store-badge world-home__store-badge--web"
+                    type="button"
+                    onClick={handleWebAppInstall}
+                    disabled={installState.platform === 'installed'}
+                  >
+                    <i className="world-home__store-icon world-home__store-icon--web" aria-hidden="true">◇</i>
+                    <span>
+                      <small>{installState.platform === 'installed' ? 'Installed as a' : 'Add to Home Screen'}</small>
+                      <strong>Web App</strong>
+                    </span>
+                  </button>
+                </div>
                 <p className="world-home__kicker">The cozy RPG powered by your real life</p>
                 <p className="world-home__tagline">Turn real progress into a world that grows.</p>
                 <p className="world-home__hero-copy">
                   Care for your habits, explore enchanted islands, and watch the life you are building
                   become the world you play.
                 </p>
+                <div className="world-home__story-promise" aria-label="HabitGame story mode preview">
+                  <span className="world-home__story-promise-mark" aria-hidden="true">✦</span>
+                  <div>
+                    <small>DISCOVER THE GAME UNIVERSE</small>
+                    <strong>Unlock the mystery. Earn rewards as you discover.</strong>
+                    <p>
+                      Play the adventure your way. <b>HabitGame Crew</b> is planned to unlock the
+                      full story mode for players who want to go deeper.
+                    </p>
+                  </div>
+                </div>
                 <div className="world-home__theme-pills" aria-label="Included visual themes">
                   <span className="world-home__theme-pill world-home__theme-pill--light">
                     <span aria-hidden="true">☀</span> First Light
@@ -391,6 +440,12 @@ export function WorldHome(_props: WorldHomeProps) {
       </WorldHero>
 
       <WorldHowItWorksModal open={showHowItWorks} onClose={() => setShowHowItWorks(false)} />
+      {showInstallGuide ? (
+        <IOSInstallGuide
+          platform={installState.platform}
+          onDismiss={() => setShowInstallGuide(false)}
+        />
+      ) : null}
     </div>
   );
 }
