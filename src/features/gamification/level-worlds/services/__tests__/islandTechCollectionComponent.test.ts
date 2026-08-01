@@ -109,9 +109,12 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     name: 'celebration turns the completed grid into the active Concord and names its purpose',
     run: () => {
       includes(celebrationSource, 'THE CONCORD AWAKENS');
-      includes(celebrationSource, '/tech/Concord_on.webp');
-      includes(celebrationSource, 'THREE CHANNELS ONLINE');
-      ['Creatures', 'Caretakers', 'Story'].forEach((channel) => includes(celebrationSource, channel));
+      includes(celebrationSource, '/tech/Concord_v4_front.webp');
+      includes(celebrationSource, '/tech/Concord_v4_front_spin.webp');
+      includes(celebrationSource, '/tech/Concord_v4_back_spin.webp');
+      includes(celebrationSource, 'island-tech-celebration__phone-rotor');
+      includes(celebrationSource, 'CREATURE AI + ISLAND LANGUAGES ONLINE');
+      ['Creature calls', 'Live translation', 'Story signal'].forEach((channel) => includes(celebrationSource, channel));
     },
   },
   {
@@ -194,7 +197,7 @@ export const islandTechCollectionComponentTests: TestCase[] = [
       includes(boardSource, 'island-concord-collection-float');
       includes(boardSource, 'Tap to close.');
       includes(boardSource, "event.key === 'Enter' || event.key === ' ' || event.key === 'Escape'");
-      includes(boardSource, '<span>Story Mode</span>');
+      notIncludes(boardSource, 'island-concord-collection-float__copy');
       notIncludes(boardSource, 'Concord_off.webp');
     },
   },

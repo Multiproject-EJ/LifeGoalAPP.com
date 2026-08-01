@@ -2,12 +2,13 @@ import type { IslandNarrativeDefinition } from './islandNarrativeTypes';
 
 const PRIORITIES = new Set(['major', 'short', 'ambient']);
 const REPEAT_POLICIES = new Set(['once', 'repeatable']);
-const SURFACES = new Set(['story_reader', 'dialogue_sheet', 'toast']);
+const SURFACES = new Set(['story_reader', 'dialogue_sheet', 'toast', 'expedition_phone']);
 const STOP_IDS = new Set(['hatchery', 'habit', 'mystery', 'wisdom', 'boss']);
 const TRIGGER_KINDS = new Set([
   'island_entered', 'arrival_closed', 'stop_opened', 'stop_completed',
   'landmark_level_completed', 'landmarks_restored_majority',
   'boss_challenge_started', 'boss_midpoint',
+  'technology_fragment_collected',
   'boss_eligible', 'boss_resolved', 'island_clear_travel_ready',
 ]);
 const PROHIBITED_FIELDS = new Set([
@@ -62,6 +63,12 @@ export function validateIslandNarrativeDefinition(definition: unknown): IslandNa
       if (!REPEAT_POLICIES.has(String(beat.repeatPolicy))) errors.push(`${beatId || `beats[${index}]`} has unsupported repeatPolicy: ${String(beat.repeatPolicy)}`);
       if (beat.surface === 'story_reader' && (typeof beat.episodePath !== 'string' || !beat.episodePath.trim())) errors.push(`${beatId} story_reader beat requires episodePath`);
       if ((beat.surface === 'dialogue_sheet' || beat.surface === 'toast') && (typeof beat.text !== 'string' || !beat.text.trim())) errors.push(`${beatId} ${String(beat.surface)} beat requires text`);
+      if (beat.surface === 'expedition_phone') {
+        if (typeof beat.headline !== 'string' || !beat.headline.trim()) errors.push(`${beatId} expedition_phone beat requires headline`);
+        if (typeof beat.text !== 'string' || !beat.text.trim()) errors.push(`${beatId} expedition_phone beat requires text`);
+        if (typeof beat.objectiveText !== 'string' || !beat.objectiveText.trim()) errors.push(`${beatId} expedition_phone beat requires objectiveText`);
+        if (typeof beat.displayCtaText !== 'string' || !beat.displayCtaText.trim()) errors.push(`${beatId} expedition_phone beat requires displayCtaText`);
+      }
       if ('displayCtaText' in beat && typeof beat.displayCtaText !== 'string') errors.push(`${beatId} displayCtaText must be a display-only string`);
       validateTrigger(beatId || `beats[${index}]`, beat.trigger, Number(def.islandNumber), errors);
     }
@@ -75,6 +82,10 @@ function validateTrigger(label: string, trigger: unknown, islandNumber: number, 
   if (trigger.islandNumber !== islandNumber) errors.push(`${label}.trigger.islandNumber must match definition islandNumber`);
   if ('stopId' in trigger && !STOP_IDS.has(String(trigger.stopId))) errors.push(`${label}.trigger.stopId must be canonical`);
   if ('level' in trigger && ![1, 2, 3].includes(Number(trigger.level))) errors.push(`${label}.trigger.level must be 1, 2, or 3`);
+  if (trigger.kind === 'technology_fragment_collected') {
+    if (typeof trigger.technologyId !== 'string' || !trigger.technologyId.trim()) errors.push(`${label}.trigger.technologyId must be a non-empty string`);
+    if (!Number.isInteger(trigger.collectedCount) || Number(trigger.collectedCount) <= 0) errors.push(`${label}.trigger.collectedCount must be a positive integer`);
+  }
 }
 
 function rejectProhibitedFields(value: unknown, path: string, errors: string[]): void {

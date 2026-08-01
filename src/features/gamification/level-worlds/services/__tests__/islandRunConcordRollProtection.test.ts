@@ -56,6 +56,21 @@ export const islandRunConcordRollProtectionTests: TestCase[] = [
     },
   },
   {
+    name: 'fresh Island 1 run receives its first fragment by roll three',
+    run: () => {
+      const result = resolveConcordRollProtection({
+        islandNumber: 1,
+        tileCount: 36,
+        landingTileIndex: 4,
+        hopSequence: [],
+        collectedSlots: [],
+        state: { rollsTaken: 2, rollsSinceFragment: 2 },
+      });
+      assertEqual(result.pickup?.reason, 'completion_schedule', 'Roll-three checkpoint should visibly recover a fragment');
+      assertEqual(result.state.rollsTaken, 3, 'Checkpoint uses canonical eligible-roll count');
+    },
+  },
+  {
     name: 'minimum-progress schedule guarantees all nine fragments by roll 55',
     run: () => {
       let state = { rollsTaken: 0, rollsSinceFragment: 0 };

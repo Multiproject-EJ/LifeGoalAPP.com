@@ -13,7 +13,7 @@ export const CONCORD_COMPLETION_ROLL_CAP = 55;
  * in when they fall behind it.
  */
 export const CONCORD_COLLECTION_ROLL_SCHEDULE = Object.freeze([
-  { roll: 10, minimumCollected: 1 },
+  { roll: 3, minimumCollected: 1 },
   { roll: 16, minimumCollected: 2 },
   { roll: 22, minimumCollected: 3 },
   { roll: 28, minimumCollected: 4 },

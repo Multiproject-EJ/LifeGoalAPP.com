@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { assert, assertEqual, type TestCase } from '../../services/__tests__/testHarness';
 import {
   type IslandNarrativeReactionSnapshot,
+  buildExpeditionPhoneTransmission,
   buildReactionDialogue,
   buildReactionToast,
   diffIslandNarrativeReactionTriggers,
@@ -14,9 +15,11 @@ import type { IslandNarrativeTrigger } from '../islandNarrativeTypes';
 const hookPath = 'src/features/gamification/level-worlds/narrative/useIslandNarrativeOpeningFlow.ts';
 const boardPath = 'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx';
 const dispatchPath = 'src/features/gamification/level-worlds/narrative/islandNarrativeReactionDispatch.ts';
+const expeditionPhonePath = 'src/features/gamification/level-worlds/narrative/components/ExpeditionPhoneTransmission.tsx';
 const hookSource = readFileSync(hookPath, 'utf8');
 const boardSource = readFileSync(boardPath, 'utf8');
 const dispatchSource = readFileSync(dispatchPath, 'utf8');
+const expeditionPhoneSource = readFileSync(expeditionPhonePath, 'utf8');
 
 function assertIncludes(source: string, expected: string, message: string) {
   assert(source.includes(expected), message);
@@ -30,6 +33,7 @@ function snapshot(overrides: Partial<IslandNarrativeReactionSnapshot> = {}): Isl
     bossChallengeActive: false,
     bossChallengeMidpoint: false,
     bossEligible: false,
+    technologyFragmentCount: 0,
     ...overrides,
   };
 }
@@ -41,6 +45,21 @@ function kinds(triggers: IslandNarrativeTrigger[]): string[] {
 const definition = getIslandNarrativeDefinition(1) ?? null;
 
 export const islandNarrativeReactionDispatchTests: TestCase[] = [
+  {
+    name: 'first diplomatic-technology fragment emits one canonical trigger',
+    run: () => {
+      const triggers = diffIslandNarrativeReactionTriggers(
+        snapshot({ technologyFragmentCount: 0 }),
+        snapshot({ technologyFragmentCount: 1 }),
+        1,
+      );
+      const fragmentTrigger = triggers.find((trigger) => trigger.kind === 'technology_fragment_collected');
+      assert(!!fragmentTrigger, 'first fragment trigger emitted');
+      assertEqual((fragmentTrigger as { technologyId: string }).technologyId, 'the-concord', 'Island 1 uses the Concord technology id');
+      assertEqual((fragmentTrigger as { collectedCount: number }).collectedCount, 1, 'first fragment count retained');
+      assertEqual(resolveReactionBeat(fragmentTrigger!, 1, definition)?.id, 'I001-B31', 'first fragment resolves to the Central Command beat');
+    },
+  },
   {
     name: 'hydration baseline (prev null) emits nothing',
     run: () => assertEqual(diffIslandNarrativeReactionTriggers(null, snapshot({ activeStopId: 'habit' }), 1).length, 0, 'Baseline must not replay'),
@@ -132,6 +151,16 @@ export const islandNarrativeReactionDispatchTests: TestCase[] = [
       assertEqual(toast.speakerName, 'Miri', 'B05 toast speaker resolves to Miri');
       assert(toast.text.length > 0, 'B05 toast has copy');
       assertEqual(buildReactionToast(b09, definition), null, 'A dialogue beat does not build a toast');
+      const b31 = resolveReactionBeat({
+        kind: 'technology_fragment_collected',
+        islandNumber: 1,
+        technologyId: 'the-concord',
+        collectedCount: 1,
+      }, 1, definition)!;
+      const transmission = buildExpeditionPhoneTransmission(b31, definition)!;
+      assertEqual(transmission.sourceLabel, 'Central Command', 'Phone transmission resolves its command source');
+      assertEqual(transmission.headline, 'DIPLOMATIC EFFORT', 'Phone transmission keeps its mission heading');
+      assertEqual(transmission.ctaLabel, 'Activate island', 'Phone transmission keeps its acknowledgement label');
     },
   },
   {
@@ -142,6 +171,18 @@ export const islandNarrativeReactionDispatchTests: TestCase[] = [
       ['islandRunStateActions', 'persistIslandRunRuntimeStatePatch', 'commitIslandRunState', "from 'react'", 'localStorage'].forEach((needle) =>
         assert(!dispatchSource.includes(needle), `dispatch must not include ${needle}`),
       );
+    },
+  },
+  {
+    name: 'Expedition Phone uses the approved clamshell-unflip-then-expand presentation assets',
+    run: () => {
+      assertIncludes(expeditionPhoneSource, 'const UNFOLD_DURATION_MS = 2450', 'Phone keeps the authored fast-unflip/extension/snap-zoom timing');
+      assertIncludes(expeditionPhoneSource, '/tech/ExpeditionPhone_v19_folded.webp', 'Phone uses the compact folded clamshell state');
+      assertIncludes(expeditionPhoneSource, '/tech/ExpeditionPhone_v21_opening.webp', 'Phone uses the optimized fast-unflip-height-extension-then-snap-zoom animation');
+      assertIncludes(expeditionPhoneSource, '/tech/ExpeditionPhone_v11_open_front.webp', 'Phone hands off to the readable open shell');
+      assertIncludes(expeditionPhoneSource, '<h2>Incoming message</h2>', 'Automatic delivery waits at the Bip incoming-message prompt');
+      assertIncludes(expeditionPhoneSource, '>\n            Read\n          </button>', 'Read is the explicit automatic-flow opening action');
+      assert(!expeditionPhoneSource.includes('persistIslandRunRuntimeStatePatch'), 'Phone presentation must not write gameplay state');
     },
   },
   {
@@ -161,6 +202,8 @@ export const islandNarrativeReactionDispatchTests: TestCase[] = [
       assertIncludes(boardSource, "bossChallengeActive: bossTrialPhase === 'in_progress'", 'Board feeds boss-trial-active');
       assertIncludes(boardSource, 'islandNarrativeOpeningFlow.activeReactionDialogue', 'Board renders reaction dialogue');
       assertIncludes(boardSource, 'islandNarrativeOpeningFlow.activeReactionToast', 'Board renders reaction toast');
+      assertIncludes(boardSource, 'technologyFragmentCount: narrativeTechnologyFragmentCount', 'Board feeds the hydrated canonical fragment count');
+      assertIncludes(boardSource, 'islandNarrativeOpeningFlow.activeExpeditionTransmission', 'Board renders the Expedition Phone transmission');
     },
   },
   {

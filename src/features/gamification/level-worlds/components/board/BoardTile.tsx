@@ -173,6 +173,8 @@ export interface BoardTileProps {
   showDebug: boolean;
   isMinimalBoardArt: boolean;
   technologyFragment?: VisibleTechnologyFragment;
+  /** Presentation-only dormant state; gameplay authority remains in roll action. */
+  isDormant?: boolean;
   /** Uniform board scale (canonical 1000px → screen px). Used to size tiles to
    *  match the ring geometry regardless of viewport dimensions. */
   uniformScale: number;
@@ -197,6 +199,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     showDebug,
     isMinimalBoardArt,
     technologyFragment,
+    isDormant = false,
     uniformScale,
   } = props;
 
@@ -234,10 +237,11 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         isTokenCurrent ? 'island-tile--token-current' : '',
         isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
-        !isMinimalBoardArt ? 'island-tile--alive' : '',
+        !isMinimalBoardArt && !isDormant ? 'island-tile--alive' : '',
         technologyFragment ? 'island-tile--technology-fragment' : '',
+        isDormant ? 'island-tile--dormant' : '',
       ].filter(Boolean).join(' ')}
-      aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}` : undefined}
+      aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}` : isDormant ? `Tile ${index + 1}. Dormant` : undefined}
       style={{
         left: position.x,
         top: position.y,
@@ -261,7 +265,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         {!isMinimalBoardArt && <span className="island-tile__shine" aria-hidden="true" />}
 
         <span className="island-tile__value">
-          {iconContent}
+          {isDormant ? null : iconContent}
         </span>
 
         {/* Tile number badge */}

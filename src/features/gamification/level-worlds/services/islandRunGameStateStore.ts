@@ -154,7 +154,9 @@ export function getIslandRunLuckyRollSessionKey(cycleIndex: number, targetIsland
 
 export const ISLAND_RUN_FIRST_SESSION_TUTORIAL_STATES = [
   'not_started',
+  'awaiting_first_orders',
   'awaiting_first_roll',
+  'first_fragment_collected',
   'first_roll_consumed',
   'first_essence_reward_claimed',
   'build_prompt_visible',

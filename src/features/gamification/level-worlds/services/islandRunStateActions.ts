@@ -1598,10 +1598,20 @@ export function applyTechCollectionState(options: {
   if (nextRewardedLines.length > 0) nextRewardedLedger[islandKey] = nextRewardedLines;
   else delete nextRewardedLedger[islandKey];
 
+  const isFirstIslandTutorialFragment = islandNumber === 1
+    && current.currentIslandNumber === 1
+    && current.cycleIndex === 0
+    && current.firstSessionTutorialState === 'awaiting_first_roll'
+    && (current.techCollectionByIsland[islandKey]?.length ?? 0) === 0
+    && nextCollected.length > 0;
+
   const next: IslandRunGameStateRecord = {
     ...current,
     techCollectionByIsland: nextCollectedLedger,
     techCollectionRewardedLinesByIsland: nextRewardedLedger,
+    firstSessionTutorialState: isFirstIslandTutorialFragment
+      ? 'first_fragment_collected'
+      : current.firstSessionTutorialState,
     runtimeVersion: current.runtimeVersion + 1,
   };
   void commitIslandRunState({
@@ -2550,6 +2560,15 @@ export interface ApplyNarrativeSeenStateMarkerOptions {
   triggerSource?: string;
 }
 
+export interface ApplyIslandOneExpeditionOrderAcknowledgementOptions {
+  session: Session;
+  client: SupabaseClient | null;
+  beatId: 'I001-B00' | 'I001-B31';
+  /** Full local seen ledger, including the order being acknowledged. */
+  narrativeSeenState: IslandNarrativeSeenState;
+  triggerSource?: string;
+}
+
 export interface ApplyCompanionBonusLastVisitKeyMarkerOptions {
   session: Session;
   client: SupabaseClient | null;
@@ -2952,7 +2971,7 @@ export function applyFirstRunClaimed(options: {
     ...current,
     firstRunClaimed: true,
     firstSessionTutorialState: shouldArmFirstSessionTutorialRoll
-      ? 'awaiting_first_roll'
+      ? 'awaiting_first_orders'
       : current.firstSessionTutorialState,
     runtimeVersion: current.runtimeVersion + 1,
   };
@@ -2961,6 +2980,48 @@ export function applyFirstRunClaimed(options: {
     client,
     record: next,
     triggerSource: triggerSource ?? 'apply_first_run_claimed',
+  });
+  return next;
+}
+
+/**
+ * Atomically records an Island 1 Central Command order and advances the
+ * canonical first-session tutorial gate attached to that order. This keeps
+ * the narrative ledger and gameplay activation state from racing as two
+ * independent commits.
+ */
+export function applyIslandOneExpeditionOrderAcknowledgement(
+  options: ApplyIslandOneExpeditionOrderAcknowledgementOptions,
+): IslandRunGameStateRecord {
+  const { session, client, beatId, narrativeSeenState, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const mergedSeenState = mergeIslandNarrativeSeenState(current.narrativeSeenState, narrativeSeenState);
+  const nextTutorialState: IslandRunFirstSessionTutorialState = beatId === 'I001-B00'
+    && current.firstSessionTutorialState === 'awaiting_first_orders'
+    ? 'awaiting_first_roll'
+    : beatId === 'I001-B31'
+      && current.firstSessionTutorialState === 'first_fragment_collected'
+      ? 'first_roll_consumed'
+      : current.firstSessionTutorialState;
+
+  if (
+    nextTutorialState === current.firstSessionTutorialState
+    && isIslandNarrativeSeenStateEqual(current.narrativeSeenState, mergedSeenState)
+  ) {
+    return current;
+  }
+
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    narrativeSeenState: mergedSeenState,
+    firstSessionTutorialState: nextTutorialState,
+    runtimeVersion: current.runtimeVersion + 1,
+  };
+  void commitIslandRunState({
+    session,
+    client,
+    record: next,
+    triggerSource: triggerSource ?? `acknowledge_${beatId.toLowerCase()}`,
   });
   return next;
 }

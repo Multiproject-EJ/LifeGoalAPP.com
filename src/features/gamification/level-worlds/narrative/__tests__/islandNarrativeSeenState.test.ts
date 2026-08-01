@@ -68,7 +68,7 @@ export const islandNarrativeSeenStateTests: TestCase[] = [
     name: 'hook accepts the canonical ledger and mirrors seen beats outward',
     run: () => {
       assertIncludes(hookSource, 'persistedNarrativeSeenState', 'Hook should accept the canonical seen-ledger input');
-      assertIncludes(hookSource, 'onPersistNarrativeSeen?.(next)', 'markSeen should mirror to the canonical record');
+      assertIncludes(hookSource, 'onPersistNarrativeSeen?.(next, beatId)', 'markSeen should mirror the ledger and acknowledged beat to the canonical record');
       assertIncludes(hookSource, 'mergeIslandNarrativeSeenState(seenStateRef.current, persistedNarrativeSeenState)', 'Hook should union the canonical ledger into local');
     },
   },

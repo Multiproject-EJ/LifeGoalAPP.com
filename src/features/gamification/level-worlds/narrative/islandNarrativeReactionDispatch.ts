@@ -37,6 +37,7 @@ export const STOP_ID_BY_INDEX: readonly IslandNarrativeStopId[] = [
 
 /** Beats owned by the legacy opening-flow controller; never reaction-handled. */
 export const REACTION_EXCLUDED_BEAT_IDS: ReadonlySet<string> = new Set([
+  'I001-B00',
   'I001-B02',
   'I001-B03',
   'I001-B04',
@@ -56,6 +57,8 @@ export interface IslandNarrativeReactionSnapshot {
   bossChallengeMidpoint: boolean;
   /** True once the boss is challengeable (all builds done) — the finale-setup moment. */
   bossEligible: boolean;
+  /** Canonical collected-fragment count for the island's diplomatic technology. */
+  technologyFragmentCount: number;
 }
 
 function isStopId(value: string | null | undefined): value is IslandNarrativeStopId {
@@ -77,6 +80,17 @@ export function diffIslandNarrativeReactionTriggers(
 ): IslandNarrativeTrigger[] {
   if (!prev) return [];
   const triggers: IslandNarrativeTrigger[] = [];
+
+  const previousFragmentCount = Math.max(0, Math.floor(prev.technologyFragmentCount));
+  const nextFragmentCount = Math.max(0, Math.floor(next.technologyFragmentCount));
+  for (let collectedCount = previousFragmentCount + 1; collectedCount <= nextFragmentCount; collectedCount += 1) {
+    triggers.push({
+      kind: 'technology_fragment_collected',
+      islandNumber,
+      technologyId: islandNumber === 1 ? 'the-concord' : `island-${islandNumber}-technology`,
+      collectedCount,
+    });
+  }
 
   // stop_opened — active stop changed to a (different) canonical stop.
   if (next.activeStopId !== prev.activeStopId && isStopId(next.activeStopId)) {
@@ -143,6 +157,12 @@ function triggersMatch(a: IslandNarrativeTrigger, b: IslandNarrativeTrigger): bo
   if ('threshold' in a || 'threshold' in b) {
     if (ax.threshold !== bx.threshold) return false;
   }
+  if ('technologyId' in a || 'technologyId' in b) {
+    if (ax.technologyId !== bx.technologyId) return false;
+  }
+  if ('collectedCount' in a || 'collectedCount' in b) {
+    if (ax.collectedCount !== bx.collectedCount) return false;
+  }
   return true;
 }
 
@@ -200,6 +220,16 @@ export interface ReactionToastPayload {
   durationMs: number;
 }
 
+export interface ExpeditionPhoneTransmissionPayload {
+  beatId: string;
+  sourceLabel: string;
+  headline: string;
+  text: string;
+  secondaryText?: string;
+  objectiveText: string;
+  ctaLabel: string;
+}
+
 const REACTION_TOAST_DURATION_MS = 3600;
 
 export function buildReactionDialogue(
@@ -230,6 +260,28 @@ export function buildReactionToast(
     speakerName: speakerDisplayName(beat.speakerId, definition),
     text: beat.text,
     durationMs: REACTION_TOAST_DURATION_MS,
+  };
+}
+
+export function buildExpeditionPhoneTransmission(
+  beat: IslandNarrativeBeat,
+  definition: IslandNarrativeDefinition | null,
+): ExpeditionPhoneTransmissionPayload | null {
+  if (
+    beat.surface !== 'expedition_phone'
+    || !beat.headline
+    || !beat.text
+    || !beat.objectiveText
+    || !beat.displayCtaText
+  ) return null;
+  return {
+    beatId: beat.id,
+    sourceLabel: speakerDisplayName(beat.speakerId, definition),
+    headline: beat.headline,
+    text: beat.text,
+    secondaryText: beat.secondaryText,
+    objectiveText: beat.objectiveText,
+    ctaLabel: beat.displayCtaText,
   };
 }
 

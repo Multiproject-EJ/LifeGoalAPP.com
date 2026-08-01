@@ -61,7 +61,9 @@ export interface IslandRunBestNextActionInput {
  * null/undefined, or unknown legacy strings) are intentionally not suppressive.
  */
 const ACTIVE_FIRST_SESSION_TUTORIAL_STATES = new Set<string>([
+  'awaiting_first_orders',
   'awaiting_first_roll',
+  'first_fragment_collected',
   'first_roll_consumed',
   'first_essence_reward_claimed',
   'build_prompt_visible',

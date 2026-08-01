@@ -118,26 +118,34 @@ export function IslandTechCompletionCelebration(props: IslandTechCompletionCeleb
               imageSrc={imageSrc}
             />
           </div>
-          <img
-            className="island-tech-celebration__device"
-            src="/tech/Concord_on.webp"
-            alt="The restored Concord communication console glowing with power"
-          />
-          <div className="island-tech-celebration__signal-core" aria-hidden="true">
-            <span className="island-tech-celebration__signal-orbit island-tech-celebration__signal-orbit--outer" />
-            <span className="island-tech-celebration__signal-orbit island-tech-celebration__signal-orbit--inner" />
-            <span className="island-tech-celebration__signal-mark">✦</span>
-            <span className="island-tech-celebration__signal-label">ONLINE</span>
+          <div className="island-tech-celebration__phone-arrival">
+            <div className="island-tech-celebration__phone-rotor" aria-hidden="true">
+              <img
+                className="island-tech-celebration__phone-face island-tech-celebration__phone-face--front"
+                src="/tech/Concord_v4_front_spin.webp"
+                alt=""
+              />
+              <img
+                className="island-tech-celebration__phone-face island-tech-celebration__phone-face--back"
+                src="/tech/Concord_v4_back_spin.webp"
+                alt=""
+              />
+            </div>
+            <img
+              className="island-tech-celebration__device"
+              src="/tech/Concord_v4_front.webp"
+              alt="The restored Concord creature communication phone glowing with power"
+            />
           </div>
           <div className="island-tech-celebration__activation-flash" aria-hidden="true" />
         </div>
 
         <div className="island-tech-celebration__ability" aria-label="Universal communication unlocked">
-          <strong>THREE CHANNELS ONLINE</strong>
+          <strong>CREATURE AI + ISLAND LANGUAGES ONLINE</strong>
           <div className="island-tech-celebration__channels" aria-label="Unlocked Concord channels">
-            <span><b aria-hidden="true">🐾</b> Creatures</span>
-            <span><b aria-hidden="true">✦</b> Caretakers</span>
-            <span><b aria-hidden="true">📖</b> Story</span>
+            <span><b aria-hidden="true">🐾</b> Creature calls</span>
+            <span><b aria-hidden="true">◈</b> Live translation</span>
+            <span><b aria-hidden="true">📖</b> Story signal</span>
           </div>
         </div>
 

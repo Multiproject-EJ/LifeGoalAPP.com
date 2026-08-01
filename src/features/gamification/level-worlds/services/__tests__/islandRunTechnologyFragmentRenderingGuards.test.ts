@@ -16,7 +16,7 @@ export const islandRunTechnologyFragmentRenderingGuardTests: TestCase[] = [
     name: 'BoardTile exposes fragment availability while the grid renders the decorative overlay',
     run: () => {
       assertIncludes(boardTile, 'technologyFragment?: VisibleTechnologyFragment', 'BoardTile must receive full fragment identity');
-      assertIncludes(boardTile, 'aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}` : undefined}', 'tile exposes accessible fragment availability');
+      assertIncludes(boardTile, 'aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}`', 'tile exposes accessible fragment availability');
       assertIncludes(boardTileGrid, 'data-fragment-slot={fragment.fragmentSlot}', 'fragment slot must be rendered for deterministic styling/tests');
       assertIncludes(boardTileGrid, "tokenIndex === fragment.tileIndex", 'fragment must detect when the token lands on its tile');
       assertIncludes(boardTileGrid, 'island-run-board__technology-fragment--landed', 'landed fragment receives a pickup emphasis state');

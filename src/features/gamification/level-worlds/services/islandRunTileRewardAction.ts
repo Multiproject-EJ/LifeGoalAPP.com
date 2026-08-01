@@ -44,6 +44,7 @@ import { recordEventProgress } from './islandRunEventEngine';
 import { readIslandRunGameStateRecord } from './islandRunGameStateStore';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { persistIslandRunRuntimeStatePatch } from './islandRunRuntimeState';
+import { isIslandRunFragmentOnlyBoardPhase } from './islandRunFirstSessionTutorialUi';
 
 const TUTORIAL_HATCHERY_STOP_INDEX = 0;
 const TUTORIAL_HATCHERY_PRE_UPGRADE_LEVEL = 0;
@@ -166,6 +167,21 @@ async function performTileRewardAction(
 
   // 1. Hydrate under the mutex — observes the prior queued action's commit.
   const state = readIslandRunGameStateRecord(session);
+  if (
+    state.currentIslandNumber === 1
+    && state.cycleIndex === 0
+    && isIslandRunFragmentOnlyBoardPhase(state.firstSessionTutorialState)
+  ) {
+    return {
+      status: 'no_op',
+      actualEssenceDelta: 0,
+      essence: state.essence,
+      essenceLifetimeEarned: state.essenceLifetimeEarned,
+      essenceLifetimeSpent: state.essenceLifetimeSpent,
+      rewardBarSlice: null,
+      rewardBarFull: false,
+    };
+  }
   const tutorialEssenceOverride = resolveTutorialEssenceOverride(state, options.essenceDelta);
   const essenceDelta = tutorialEssenceOverride.essenceDelta;
   const effectiveRewardBarProgress = tutorialEssenceOverride.shouldSuppressRewardBarProgress

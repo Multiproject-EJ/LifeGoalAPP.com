@@ -41,8 +41,25 @@ export const island001NarrativeDefinition = {
       displayName: 'Your PA',
       role: 'Personal assistant, diplomatic liaison, and Creation Halls guide.',
     },
+    {
+      id: 'central-command',
+      displayName: 'Central Command',
+      role: 'Compass Expedition mission authority.',
+    },
   ],
   beats: [
+    {
+      id: 'I001-B00',
+      trigger: { kind: 'arrival_closed', islandNumber: 1 },
+      speakerId: 'central-command',
+      surface: 'expedition_phone',
+      priority: 'major',
+      repeatPolicy: 'once',
+      headline: 'FIRST FIELD ORDER',
+      text: 'Roll the dice. Collect the fragments.',
+      objectiveText: 'Recover the first Concord fragment',
+      displayCtaText: 'Begin mission',
+    },
     {
       id: 'I001-B02',
       trigger: { kind: 'island_entered', islandNumber: 1 },
@@ -105,6 +122,24 @@ export const island001NarrativeDefinition = {
       repeatPolicy: 'once',
       text: 'The route is open because we opened it together.',
       displayCtaText: 'Follow the restored route',
+    },
+    {
+      id: 'I001-B31',
+      trigger: {
+        kind: 'technology_fragment_collected',
+        islandNumber: 1,
+        technologyId: 'the-concord',
+        collectedCount: 1,
+      },
+      speakerId: 'central-command',
+      surface: 'expedition_phone',
+      priority: 'short',
+      repeatPolicy: 'once',
+      headline: 'DIPLOMATIC EFFORT',
+      text: 'Begin the diplomatic effort. Earn, build, and play.',
+      secondaryText: 'The island network is online. Recover the remaining Concord fragments as you explore.',
+      objectiveText: 'Recover all 9 Concord fragments',
+      displayCtaText: 'Activate island',
     },
 
     // ----------------------------------------------------------------------

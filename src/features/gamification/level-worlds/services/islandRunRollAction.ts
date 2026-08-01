@@ -72,7 +72,10 @@ import {
   __resetIslandRunActionMutexesForTests,
   withIslandRunActionLock,
 } from './islandRunActionMutex';
-import { getIslandRunFirstCreaturePackLowDiceTriggerTarget } from './islandRunFirstSessionTutorialUi';
+import {
+  getIslandRunFirstCreaturePackLowDiceTriggerTarget,
+  isIslandRunFragmentOnlyBoardPhase,
+} from './islandRunFirstSessionTutorialUi';
 import {
   ISLAND_RUN_ECONOMY_SINKS,
   recordIslandRunDiceOutflow,
@@ -82,6 +85,7 @@ import {
   resolveConcordRollProtection,
   type ConcordFragmentPickup,
 } from './islandRunConcordRollProtection';
+import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragmentPlacements';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
 
@@ -132,6 +136,18 @@ function resolveFirstSessionTutorialRollTotal(options: {
   }
 
   const boardProfile = resolveIslandBoardProfile(options.boardProfileId ?? 'spark36_ring');
+  const reachableFragment = listIslandTechnologyFragmentPlacements(1)
+    .map((placement) => ({
+      placement,
+      distance: (placement.tileIndex - options.tokenIndex + boardProfile.tileCount) % boardProfile.tileCount,
+    }))
+    .filter(({ distance }) => distance >= ROLL_MIN * 2 && distance <= ROLL_MAX * 2)
+    .sort((a, b) => a.distance - b.distance)[0];
+  if (reachableFragment) return reachableFragment.distance;
+
+  // A future topology may put every fragment outside the immediate 2–12
+  // movement window. Fall back to the former positive-essence tutorial roll;
+  // the Concord roll-protection schedule still guarantees a fragment by roll 3.
   const islandOneTheme = getIslandBoardThemeForIslandNumber(1);
   const tileMap = generateTileMap(1, getIslandRarity(1), islandOneTheme.tileThemeId, 0, { profileId: boardProfile.id });
   for (let total = ROLL_MIN * 2; total <= ROLL_MAX * 2; total += 1) {
@@ -153,6 +169,7 @@ function resolveFirstSessionTutorialRollTotal(options: {
 /** Discriminant for the roll action outcome. */
 export type IslandRunRollActionStatus =
   | 'ok'
+  | 'tutorial_order_required'
   | 'insufficient_dice';
 
 export interface IslandRunRollActionResult {
@@ -194,6 +211,12 @@ export interface IslandRunRollActionResult {
    * dice movement is never changed to manufacture the outcome.
    */
   concordFragmentPickup?: ConcordFragmentPickup | null;
+  /**
+   * Canonical tutorial routing flag. False while Island 1 is intentionally in
+   * its fragment-only introduction, so the renderer presents movement and a
+   * possible fragment pickup but does not dispatch ordinary/special tile play.
+   */
+  ordinaryTileGameplayActive?: boolean;
 }
 
 // ── per-user async mutex (defence-in-depth against concurrent rolls) ──────────
@@ -251,6 +274,17 @@ async function performRollAction(options: {
 
   // 1. Read current state from the canonical PWA localStorage store.
   const state = readIslandRunGameStateRecord(session);
+
+  if (
+    state.currentIslandNumber === 1
+    && state.cycleIndex === 0
+    && (
+      state.firstSessionTutorialState === 'awaiting_first_orders'
+      || state.firstSessionTutorialState === 'first_fragment_collected'
+    )
+  ) {
+    return { status: 'tutorial_order_required' };
+  }
 
   // 2. Guard: player needs at least diceCost dice in the pool.
   if (state.dicePool < diceCost) {
@@ -330,6 +364,14 @@ async function performRollAction(options: {
       })
     : null;
   const newRuntimeVersion = state.runtimeVersion + 1;
+  const ordinaryTileGameplayActive = !(
+    state.currentIslandNumber === 1
+    && state.cycleIndex === 0
+    && isIslandRunFragmentOnlyBoardPhase(state.firstSessionTutorialState)
+  );
+  const nextFirstSessionTutorialState = tutorialRollTotal === null
+    ? lowDiceTutorialTarget ?? state.firstSessionTutorialState
+    : state.firstSessionTutorialState;
   const nextState = {
     ...state,
     runtimeVersion: newRuntimeVersion,
@@ -341,9 +383,7 @@ async function performRollAction(options: {
           lastRegenAtMs: shouldResetRegenAnchorAfterSpend ? nowMs : state.diceRegenState.lastRegenAtMs,
         }
       : null,
-    firstSessionTutorialState: tutorialRollTotal === null
-      ? lowDiceTutorialTarget ?? state.firstSessionTutorialState
-      : 'first_roll_consumed',
+    firstSessionTutorialState: nextFirstSessionTutorialState,
     concordRollProtectionState: concordProtection.state,
   };
 
@@ -372,5 +412,6 @@ async function performRollAction(options: {
     newRuntimeVersion,
     landingKind,
     concordFragmentPickup: concordProtection.pickup,
+    ordinaryTileGameplayActive,
   };
 }

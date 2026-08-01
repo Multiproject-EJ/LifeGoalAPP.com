@@ -45,6 +45,28 @@ function seedState(overrides: Partial<IslandRunGameStateRecord>): void {
 
 export const islandRunTileRewardActionTests: TestCase[] = [
   {
+    name: 'fragment-only introduction suppresses ordinary tile rewards',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'awaiting_first_roll',
+        essence: 0,
+        rewardBarProgress: 0,
+      });
+      const result = await executeIslandRunTileRewardAction({
+        session: makeSession(),
+        client: null,
+        islandRunContractV2Enabled: true,
+        essenceDelta: 20,
+        rewardBarProgress: { source: { kind: 'tile', tileType: 'currency' }, multiplier: 1 },
+      });
+      assertEqual(result.status, 'no_op', 'Dormant ordinary tile should not dispatch a reward');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).essence, 0, 'Dormant tile cannot grant essence');
+    },
+  },
+  {
     name: 'tutorial first roll reward: replaces landed essence with Hatchery L1 cost and advances tutorial state',
     run: async () => {
       resetEnvironment();

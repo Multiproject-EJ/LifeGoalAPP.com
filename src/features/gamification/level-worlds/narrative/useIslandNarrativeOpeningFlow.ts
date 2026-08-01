@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getIslandNarrativeDefinition } from './islandNarrativeRegistry';
 import type { IslandNarrativeBeat } from './islandNarrativeTypes';
+import type { IslandRunFirstSessionTutorialState } from '../services/islandRunGameStateStore';
 import {
   type IslandNarrativeSeenState,
   mergeIslandNarrativeSeenState,
 } from './islandNarrativeSeenState';
 import {
   type IslandNarrativeReactionSnapshot,
+  type ExpeditionPhoneTransmissionPayload,
   type ReactionDialoguePayload,
   type ReactionToastPayload,
+  buildExpeditionPhoneTransmission,
   buildReactionDialogue,
   buildReactionToast,
   diffIslandNarrativeReactionTriggers,
@@ -34,11 +37,12 @@ export type ActiveIslandNarrativeDialogue = {
 } | null;
 
 type OpeningBeatId = 'I001-B02' | 'I001-B03' | 'I001-B04';
+type FirstOrdersBeatId = 'I001-B00';
 type AmbientBeatId = 'I001-B24';
 type BossEligibleBeatId = 'I001-B26';
 type BossResolutionBeatId = 'I001-B29';
 type TravelReadyClosingBeatId = 'I001-B30';
-export type IslandNarrativeControllerBeatId = OpeningBeatId | AmbientBeatId | BossEligibleBeatId | BossResolutionBeatId | TravelReadyClosingBeatId;
+export type IslandNarrativeControllerBeatId = FirstOrdersBeatId | OpeningBeatId | AmbientBeatId | BossEligibleBeatId | BossResolutionBeatId | TravelReadyClosingBeatId;
 
 export type ActiveIslandNarrativeToast = {
   beatId: AmbientBeatId;
@@ -57,6 +61,7 @@ export type IslandNarrativeOpeningFlowInput = {
   hasHydratedRuntimeState: boolean;
   isGlobalPrologueActive: boolean;
   isGlobalPrologueSeen: boolean;
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState;
   isNarrativeSurfaceBlocked: boolean;
   canDisplayTravelReadyClosingOverClaimedCelebration: boolean;
   activeStopId: string | null;
@@ -73,6 +78,8 @@ export type IslandNarrativeOpeningFlowInput = {
   bossChallengeActive?: boolean;
   /** True once the in-progress boss trial reaches its halfway score (midpoint reveal). */
   bossChallengeMidpoint?: boolean;
+  /** Canonical count of diplomatic-technology fragments collected on this island. */
+  technologyFragmentCount?: number;
   canChallengeCurrentBoss: boolean;
   isCurrentIslandBossDefeated: boolean;
   bossTrialResolvedIslandNumber: number | null | undefined;
@@ -90,7 +97,7 @@ export type IslandNarrativeOpeningFlowInput = {
    * this to the canonical seen-state action so story memory follows the player
    * across devices. The hook itself stays free of gameplay/persistence imports.
    */
-  onPersistNarrativeSeen?: (next: IslandNarrativeSeenState) => void;
+  onPersistNarrativeSeen?: (next: IslandNarrativeSeenState, beatId: string) => void;
 };
 
 export const ISLAND_001_NARRATIVE_SEEN_BEATS = {
@@ -107,7 +114,7 @@ const ISLAND_001_ARRIVAL_EPISODE_ID = 'island_1_arrival';
 const ISLAND_001_ARRIVAL_MANIFEST_PATH = '/islands/001/story/arrival/manifest.json';
 const ISLAND_001_RESOLUTION_EPISODE_ID = 'island_1_resolution';
 const ISLAND_001_RESOLUTION_MANIFEST_PATH = '/islands/001/story/resolution/manifest.json';
-const QUEUE_PRIORITY: Record<IslandNarrativeControllerBeatId, number> = { 'I001-B02': 0, 'I001-B03': 1, 'I001-B04': 2, 'I001-B26': 3, 'I001-B29': 3, 'I001-B30': 4, 'I001-B24': 5 };
+const QUEUE_PRIORITY: Record<IslandNarrativeControllerBeatId, number> = { 'I001-B02': 0, 'I001-B00': 1, 'I001-B03': 2, 'I001-B04': 3, 'I001-B26': 4, 'I001-B29': 4, 'I001-B30': 5, 'I001-B24': 6 };
 const HATCHERY_LEVEL_1_TOAST_DURATION_MS = 3600;
 
 export function getIslandNarrativeSeenStorageKey(userId?: string | null): string {
@@ -229,6 +236,7 @@ export function useIslandNarrativeOpeningFlow({
   hasHydratedRuntimeState,
   isGlobalPrologueActive,
   isGlobalPrologueSeen,
+  firstSessionTutorialState,
   isNarrativeSurfaceBlocked,
   canDisplayTravelReadyClosingOverClaimedCelebration,
   activeStopId,
@@ -237,6 +245,7 @@ export function useIslandNarrativeOpeningFlow({
   completedStopIds,
   bossChallengeActive,
   bossChallengeMidpoint,
+  technologyFragmentCount,
   canChallengeCurrentBoss,
   isCurrentIslandBossDefeated,
   bossTrialResolvedIslandNumber,
@@ -254,6 +263,7 @@ export function useIslandNarrativeOpeningFlow({
   const [reactionQueue, setReactionQueue] = useState<string[]>([]);
   const [activeReactionDialogue, setActiveReactionDialogue] = useState<ReactionDialoguePayload | null>(null);
   const [activeReactionToast, setActiveReactionToast] = useState<ReactionToastPayload | null>(null);
+  const [activeExpeditionTransmission, setActiveExpeditionTransmission] = useState<ExpeditionPhoneTransmissionPayload | null>(null);
   const previousReactionSnapshotRef = useRef<IslandNarrativeReactionSnapshot | null>(null);
   const previousBossChallengeActiveRef = useRef<boolean | null>(null);
   const sessionDisplayedRef = useRef<Set<string>>(new Set());
@@ -273,6 +283,7 @@ export function useIslandNarrativeOpeningFlow({
     setReactionQueue([]);
     setActiveReactionDialogue(null);
     setActiveReactionToast(null);
+    setActiveExpeditionTransmission(null);
     previousReactionSnapshotRef.current = null;
     previousBossChallengeActiveRef.current = null;
     previousHatcheryBuildLevelRef.current = null;
@@ -299,6 +310,7 @@ export function useIslandNarrativeOpeningFlow({
     setReactionQueue([]);
     setActiveReactionDialogue(null);
     setActiveReactionToast(null);
+    setActiveExpeditionTransmission(null);
     previousReactionSnapshotRef.current = null;
   }, [reactionEligible]);
 
@@ -327,7 +339,7 @@ export function useIslandNarrativeOpeningFlow({
     writeSeenState(storageKey, next);
     // Mirror to the canonical record so story memory follows the player across
     // devices. Local write above keeps the offline-immediate guarantee.
-    onPersistNarrativeSeen?.(next);
+    onPersistNarrativeSeen?.(next, beatId);
   }, [storageKey, onPersistNarrativeSeen]);
 
   const enqueueBeat = useCallback((beatId: IslandNarrativeControllerBeatId) => {
@@ -356,10 +368,14 @@ export function useIslandNarrativeOpeningFlow({
       enqueueBeat('I001-B02');
       return;
     }
+    if (firstSessionTutorialState === 'awaiting_first_orders' && !isSeen('I001-B00')) {
+      enqueueBeat('I001-B00');
+      return;
+    }
     if (!isSeen('I001-B03')) {
       enqueueBeat('I001-B03');
     }
-  }, [enqueueBeat, isEligible, isGlobalPrologueActive, isGlobalPrologueSeen, isSeen]);
+  }, [enqueueBeat, firstSessionTutorialState, isEligible, isGlobalPrologueActive, isGlobalPrologueSeen, isSeen]);
 
   useEffect(() => {
     const previous = previousActiveStopIdRef.current;
@@ -453,7 +469,7 @@ export function useIslandNarrativeOpeningFlow({
   }, [activeStoryEpisode]);
 
   useEffect(() => {
-    if (!isEligible || activeStoryEpisode || activeDialogue || activeToast || isGlobalPrologueActive || storyReaderClosingRef.current) return;
+    if (!isEligible || activeStoryEpisode || activeDialogue || activeToast || activeExpeditionTransmission || isGlobalPrologueActive || storyReaderClosingRef.current) return;
     const nextBeatId = queue[0];
     if (!nextBeatId) return;
     if (isNarrativeSurfaceBlockingBeat(nextBeatId, isNarrativeSurfaceBlocked, canDisplayTravelReadyClosingOverClaimedCelebration)) return;
@@ -496,6 +512,19 @@ export function useIslandNarrativeOpeningFlow({
       return;
     }
 
+    if (nextBeatId === 'I001-B00') {
+      const beat = getIsland001Beat(nextBeatId);
+      const transmission = beat ? buildExpeditionPhoneTransmission(beat, getIslandNarrativeDefinition(1) ?? null) : null;
+      if (!transmission || firstSessionTutorialState !== 'awaiting_first_orders') {
+        setQueue((current) => current.slice(1));
+        return;
+      }
+      sessionDisplayedRef.current.add(nextBeatId);
+      setQueue((current) => current.slice(1));
+      setActiveExpeditionTransmission(transmission);
+      return;
+    }
+
     if (nextBeatId !== 'I001-B26' && nextBeatId !== 'I001-B30' && !isOpeningBeatId(nextBeatId)) {
       setQueue((current) => current.slice(1));
       return;
@@ -521,7 +550,7 @@ export function useIslandNarrativeOpeningFlow({
     sessionDisplayedRef.current.add(nextBeatId);
     setQueue((current) => current.slice(1));
     setActiveDialogue(dialogue);
-  }, [activeDialogue, activeStoryEpisode, activeToast, canChallengeCurrentBoss, canDisplayTravelReadyClosingOverClaimedCelebration, currentIslandNumber, cycleIndex, isCurrentIslandBossDefeated, isEligible, isGlobalPrologueActive, isIslandClearTravelReady, isNarrativeSurfaceBlocked, isSeen, queue, setActiveStoryEpisode, bossTrialResolvedIslandNumber]);
+  }, [activeDialogue, activeExpeditionTransmission, activeStoryEpisode, activeToast, canChallengeCurrentBoss, canDisplayTravelReadyClosingOverClaimedCelebration, currentIslandNumber, cycleIndex, firstSessionTutorialState, isCurrentIslandBossDefeated, isEligible, isGlobalPrologueActive, isIslandClearTravelReady, isNarrativeSurfaceBlocked, isSeen, queue, setActiveStoryEpisode, bossTrialResolvedIslandNumber]);
 
   // --- Reaction layer (data-driven; stop/landmark/majority/boss-start beats) ---
   // Stable string keys keep the watcher from running on unrelated re-renders.
@@ -545,6 +574,7 @@ export function useIslandNarrativeOpeningFlow({
       bossChallengeActive: Boolean(bossChallengeActive),
       bossChallengeMidpoint: Boolean(bossChallengeMidpoint),
       bossEligible: Boolean(canChallengeCurrentBoss) && !isCurrentIslandBossDefeated,
+      technologyFragmentCount: Math.max(0, Math.floor(technologyFragmentCount ?? 0)),
     };
     const previous = previousReactionSnapshotRef.current;
     previousReactionSnapshotRef.current = nextSnapshot;
@@ -568,7 +598,7 @@ export function useIslandNarrativeOpeningFlow({
       return merged.sort((a, b) => reactionBeatRank(a) - reactionBeatRank(b));
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeStopId, bossChallengeActive, bossChallengeMidpoint, canChallengeCurrentBoss, isCurrentIslandBossDefeated, completedStopsKey, landmarkLevelsKey, currentIslandNumber, hasHydratedRuntimeState, reactionEligible, isSeen, reactionBeatRank]);
+  }, [activeStopId, bossChallengeActive, bossChallengeMidpoint, canChallengeCurrentBoss, isCurrentIslandBossDefeated, technologyFragmentCount, completedStopsKey, landmarkLevelsKey, currentIslandNumber, hasHydratedRuntimeState, reactionEligible, isSeen, reactionBeatRank]);
 
   // Boss-framing reactions (B27 start / B28 midpoint) are moment-specific. If the
   // trial ends before they surface, drop them so they never appear post-fight.
@@ -589,7 +619,7 @@ export function useIslandNarrativeOpeningFlow({
     // Story reader, legacy surfaces, and the legacy queue always take priority.
     if (activeStoryEpisode || isGlobalPrologueActive) return;
     if (activeDialogue || activeToast || queue.length > 0) return;
-    if (activeReactionDialogue || activeReactionToast) return;
+    if (activeReactionDialogue || activeReactionToast || activeExpeditionTransmission) return;
     const nextId = reactionQueue[0];
     if (!nextId) return;
     if (isSeen(nextId)) {
@@ -630,16 +660,29 @@ export function useIslandNarrativeOpeningFlow({
       setActiveReactionToast(toast);
       return;
     }
+    if (beat.surface === 'expedition_phone') {
+      const transmission = buildExpeditionPhoneTransmission(beat, definition);
+      if (!transmission) {
+        setReactionQueue((current) => current.slice(1));
+        return;
+      }
+      sessionDisplayedRef.current.add(nextId);
+      setReactionQueue((current) => current.slice(1));
+      setActiveExpeditionTransmission(transmission);
+      return;
+    }
     // Unsupported surface for a reaction (e.g. story_reader) — drop safely.
     setReactionQueue((current) => current.slice(1));
-  }, [activeDialogue, activeReactionDialogue, activeReactionToast, activeStoryEpisode, activeToast, bossChallengeActive, currentIslandNumber, reactionEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, reactionQueue]);
+  }, [activeDialogue, activeExpeditionTransmission, activeReactionDialogue, activeReactionToast, activeStoryEpisode, activeToast, bossChallengeActive, currentIslandNumber, reactionEligible, isGlobalPrologueActive, isNarrativeSurfaceBlocked, isSeen, queue, reactionQueue]);
 
   const handleStoryEpisodeClosed = useCallback((episode: Exclude<ActiveIslandStoryEpisode, null>) => {
     if (episode.kind === 'island_arrival') {
       markSeen('I001-B02');
       storyReaderClosingRef.current = true;
       setActiveStoryEpisode(null);
-      if (!isSeen('I001-B03')) {
+      if (firstSessionTutorialState === 'awaiting_first_orders' && !isSeen('I001-B00')) {
+        enqueueBeat('I001-B00');
+      } else if (!isSeen('I001-B03')) {
         enqueueBeat('I001-B03');
       }
       return;
@@ -649,7 +692,7 @@ export function useIslandNarrativeOpeningFlow({
       storyReaderClosingRef.current = true;
       setActiveStoryEpisode(null);
     }
-  }, [enqueueBeat, isSeen, markSeen, setActiveStoryEpisode]);
+  }, [enqueueBeat, firstSessionTutorialState, isSeen, markSeen, setActiveStoryEpisode]);
 
   const handleDialogueContinue = useCallback(() => {
     if (!activeDialogue) return;
@@ -677,11 +720,18 @@ export function useIslandNarrativeOpeningFlow({
     setActiveReactionToast(null);
   }, [activeReactionToast, markSeen]);
 
+  const handleExpeditionTransmissionAcknowledge = useCallback(() => {
+    if (!activeExpeditionTransmission) return;
+    markSeen(activeExpeditionTransmission.beatId);
+    setActiveExpeditionTransmission(null);
+  }, [activeExpeditionTransmission, markSeen]);
+
   return {
     activeDialogue,
     activeToast,
     activeReactionDialogue,
     activeReactionToast,
+    activeExpeditionTransmission,
     queuedBeatIds: queue,
     reactionQueuedBeatIds: reactionQueue,
     handleStoryEpisodeClosed,
@@ -690,5 +740,6 @@ export function useIslandNarrativeOpeningFlow({
     handleToastDismiss,
     handleReactionDialogueContinue,
     handleReactionToastDismiss,
+    handleExpeditionTransmissionAcknowledge,
   };
 }

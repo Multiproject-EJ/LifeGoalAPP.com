@@ -84,6 +84,8 @@ export interface BoardStageProps {
 
   /** Tile state data */
   tileMap: Record<number, IslandTileMapEntry>;
+  /** False during the Island 1 fragment-only reveal; fragment tiles remain lit. */
+  ordinaryTilesActive?: boolean;
   /** Traffic-light bonus progress rendered on the traffic-light tile itself. */
   trafficLightCharge?: number;
   trafficLightChargeTarget?: number;
@@ -167,6 +169,7 @@ export function BoardStage(props: BoardStageProps) {
     boardTiltXDeg = BOARD_TILT_X_DEG,
     boardRotateZDeg = BOARD_ROTATE_Z_DEG,
     tileMap,
+    ordinaryTilesActive = true,
     trafficLightCharge = 0,
     trafficLightChargeTarget = 8,
     stopMap,
@@ -733,6 +736,7 @@ export function BoardStage(props: BoardStageProps) {
           boardHeight={boardSize.height}
           stopMap={stopMap}
           tileMap={tileMap}
+          ordinaryTilesActive={ordinaryTilesActive}
           trafficLightCharge={trafficLightCharge}
           trafficLightChargeTarget={trafficLightChargeTarget}
           completedEncounterIndices={completedEncounterIndices}

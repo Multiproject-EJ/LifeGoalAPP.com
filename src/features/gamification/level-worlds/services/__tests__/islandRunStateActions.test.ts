@@ -54,6 +54,7 @@ import {
   applyEggPlacementBatch,
   applyFirstCreaturePackLowDiceTrigger,
   applyFirstRunClaimed,
+  applyIslandOneExpeditionOrderAcknowledgement,
   applyFirstSessionTutorialState,
   applyFirstRunStarterRewards,
   applyIslandShardsSet,
@@ -64,6 +65,7 @@ import {
   applyQaProgressionSnapshot,
   applyShardClaimProgressMarker,
   applyStoryPrologueSeenMarker,
+  applyTechCollectionState,
   applyWalletDiamondsDelta,
   applyWalletDiamondsSet,
   applyStopBuildSpend,
@@ -694,6 +696,15 @@ export const islandRunStateActionsTests: TestCase[] = [
         firstSessionTutorialState: 'not_started',
       });
 
+      const firstOrder = applyFirstSessionTutorialState({
+        session,
+        client: null,
+        targetState: 'awaiting_first_orders',
+      });
+
+      assertEqual(firstOrder.ok, true, 'first-order transition should succeed');
+      assertEqual(firstOrder.changed, true, 'first-order transition should change state');
+
       const advanced = applyFirstSessionTutorialState({
         session,
         client: null,
@@ -703,7 +714,7 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(advanced.ok, true, 'valid tutorial transition should succeed');
       assertEqual(advanced.changed, true, 'valid tutorial transition should change state');
       assertEqual(advanced.record.firstSessionTutorialState, 'awaiting_first_roll', 'state should advance');
-      assertEqual(advanced.record.runtimeVersion, 3, 'state change should increment runtimeVersion');
+      assertEqual(advanced.record.runtimeVersion, 4, 'each state change should increment runtimeVersion');
 
       const repeated = applyFirstSessionTutorialState({
         session,
@@ -713,7 +724,7 @@ export const islandRunStateActionsTests: TestCase[] = [
 
       assertEqual(repeated.ok, true, 'repeated same-state transition should be ok');
       assertEqual(repeated.changed, false, 'repeated same-state transition should be idempotent');
-      assertEqual(repeated.record.runtimeVersion, 3, 'idempotent transition should not increment runtimeVersion');
+      assertEqual(repeated.record.runtimeVersion, 4, 'idempotent transition should not increment runtimeVersion');
     },
   },
 
@@ -3129,10 +3140,76 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.firstRunClaimed, true, 'firstRunClaimed should be true');
       assertEqual(
         result.firstSessionTutorialState,
-        'awaiting_first_roll',
-        'brand-new Island 1 onboarding should arm the first-roll tutorial gate',
+        'awaiting_first_orders',
+        'brand-new Island 1 onboarding should wait for the first Central Command order',
       );
       assertEqual(result.runtimeVersion, 6, 'runtimeVersion should bump once');
+    },
+  },
+
+  {
+    name: 'Island 1 expedition acknowledgements atomically advance orders and seen state',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 2,
+        firstSessionTutorialState: 'awaiting_first_orders',
+        narrativeSeenState: { beats: {}, episodes: {} },
+      });
+
+      const firstOrder = applyIslandOneExpeditionOrderAcknowledgement({
+        session,
+        client: null,
+        beatId: 'I001-B00',
+        narrativeSeenState: { beats: { 'I001-B00': 100 }, episodes: {} },
+      });
+      assertEqual(firstOrder.firstSessionTutorialState, 'awaiting_first_roll', 'Reading the first order arms rolling');
+      assertEqual(firstOrder.narrativeSeenState.beats['I001-B00'], 100, 'First order is marked seen in the same record');
+
+      seedState({
+        ...firstOrder,
+        firstSessionTutorialState: 'first_fragment_collected',
+      });
+      const diplomaticOrder = applyIslandOneExpeditionOrderAcknowledgement({
+        session,
+        client: null,
+        beatId: 'I001-B31',
+        narrativeSeenState: { beats: { 'I001-B00': 100, 'I001-B31': 200 }, episodes: {} },
+      });
+      assertEqual(diplomaticOrder.firstSessionTutorialState, 'first_roll_consumed', 'Reading the follow-up activates ordinary tile play');
+      assertEqual(diplomaticOrder.narrativeSeenState.beats['I001-B31'], 200, 'Follow-up order is marked seen atomically');
+    },
+  },
+
+  {
+    name: 'first Island 1 Concord pickup atomically parks the tutorial for the follow-up order',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 4,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'awaiting_first_roll',
+        techCollectionByIsland: {},
+      });
+
+      const collected = applyTechCollectionState({
+        session,
+        client: null,
+        islandNumber: 1,
+        collectedSlots: [0],
+        rewardedLines: [],
+      });
+
+      assertEqual(collected.techCollectionByIsland['1']?.[0], 0, 'First fragment should persist in the same record');
+      assertEqual(
+        collected.firstSessionTutorialState,
+        'first_fragment_collected',
+        'First fragment collection should atomically arm the diplomatic follow-up order',
+      );
+      assertEqual(collected.runtimeVersion, 5, 'Collection and tutorial transition should share one version bump');
     },
   },
 

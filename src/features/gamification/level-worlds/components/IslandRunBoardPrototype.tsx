@@ -140,6 +140,7 @@ import {
   isIslandRunHatcheryL1CelebrationActive,
   isIslandRunBuildPromptOverlayActive,
   formatIslandRunFirstCreaturePackBonusCopy,
+  isIslandRunFragmentOnlyBoardPhase,
   resolveIslandRunFirstCreaturePackOpenAttempt,
   resolveIslandRunBuildPromptClickTransitionTargets,
   resolveIslandRunBuildModalTutorialRowState,
@@ -214,6 +215,7 @@ import {
   applyTokenHopRewards,
   applyTechCollectionState,
   applyIslandRunTechnologyBuild,
+  applyIslandOneExpeditionOrderAcknowledgement,
   applyStoryFastModeUnlock,
   applyTimedEventTicketSpend,
   claimArenaFirstTicketBoost,
@@ -377,7 +379,10 @@ import { IslandStoryReader } from './IslandStoryReader';
 import { IslandChampionshipBanner } from './IslandChampionshipBanner';
 import { IslandNarrativeDialogue } from '../narrative/components/IslandNarrativeDialogue';
 import { IslandNarrativeToast } from '../narrative/components/IslandNarrativeToast';
+import { ExpeditionPhoneTransmission } from '../narrative/components/ExpeditionPhoneTransmission';
 import { useIslandNarrativeOpeningFlow, type ActiveIslandStoryEpisode } from '../narrative/useIslandNarrativeOpeningFlow';
+import { buildExpeditionPhoneTransmission } from '../narrative/islandNarrativeReactionDispatch';
+import { getIslandNarrativeDefinition } from '../narrative/islandNarrativeRegistry';
 import { isDiplomaticRewardChannelVisible } from '../narrative/islandDiplomaticPresentation';
 import { getIslandChampionshipPresentation } from '../narrative/islandChampionshipPresentation';
 import { useLandmarkWhispers } from '../narrative/useLandmarkWhispers';
@@ -1644,6 +1649,7 @@ export function IslandRunBoardPrototype({
       isMinimalBoardArt: params.get('minimalBoardArt') === '1',
       isIslandVisualPreview: import.meta.env.DEV && params.get('islandVisualPreview') === '1',
       showConcordCompletionPreview: import.meta.env.DEV && params.get('concordCompletionPreview') === '1',
+      showExpeditionPhonePreview: import.meta.env.DEV && params.get('expeditionPhonePreview') === '1',
       islandVisualIslandNumber: Math.round(readNumericParam(params, 'islandVisualIsland', 1, 1, 120)),
       islandVisualLandmark,
       islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
@@ -1657,6 +1663,7 @@ export function IslandRunBoardPrototype({
     isMinimalBoardArt,
     isIslandVisualPreview,
     showConcordCompletionPreview,
+    showExpeditionPhonePreview,
     islandVisualIslandNumber,
     islandVisualLandmark,
     islandVisualBuildLevel,
@@ -5861,7 +5868,20 @@ export function IslandRunBoardPrototype({
     : rollButtonMode === 'roll'
       ? 'Roll'
       : 'Need dice';
-  const rollBlockedReason = isOnboardingCelebrationVisible
+  const isExpeditionOrderPending = islandNumber === 1
+    && runtimeState.cycleIndex === 0
+    && (
+      runtimeState.firstSessionTutorialState === 'awaiting_first_orders'
+      || runtimeState.firstSessionTutorialState === 'first_fragment_collected'
+    );
+  const ordinaryBoardTilesActive = !(
+    islandNumber === 1
+    && runtimeState.cycleIndex === 0
+    && isIslandRunFragmentOnlyBoardPhase(runtimeState.firstSessionTutorialState)
+  );
+  const rollBlockedReason = isExpeditionOrderPending
+    ? 'tutorial_order_required'
+    : isOnboardingCelebrationVisible
     ? 'onboarding_celebration'
     : isRolling
       ? 'already_rolling'
@@ -5870,14 +5890,16 @@ export function IslandRunBoardPrototype({
         : isEnergyDepletedForRoll
           ? 'insufficient_dice'
           : null;
-  const rollDisabledReason = isOnboardingCelebrationVisible
+  const rollDisabledReason = isExpeditionOrderPending
+    ? 'tutorial_order_required'
+    : isOnboardingCelebrationVisible
     ? 'onboarding_celebration'
     : isRolling
       ? 'already_rolling'
       : showTravelOverlay
         ? 'travel_overlay'
         : null;
-  const canRoll = !isOnboardingCelebrationVisible && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
+  const canRoll = !isExpeditionOrderPending && !isOnboardingCelebrationVisible && !isRolling && !showTravelOverlay && dicePool >= effectiveDiceCost;
   const canHoldForAutoRoll = canRoll && !isIslandTimerPendingStart;
   const rollButtonInteractionClass = isAutoRolling
     ? 'island-run-prototype__roll-btn--auto-active'
@@ -5888,6 +5910,8 @@ export function IslandRunBoardPrototype({
    * button is disabled. Keys mirror the internal `rollDisabledReason` codes. */
   const rollDisabledMessage = (() => {
     switch (rollDisabledReason) {
+      case 'tutorial_order_required':
+        return 'Read the incoming Central Command order before the first roll.';
       case 'onboarding_celebration':
         return 'Roll is paused while the onboarding celebration is showing.';
       case 'already_rolling':
@@ -6381,6 +6405,10 @@ export function IslandRunBoardPrototype({
       rollBlockedReason,
       rollDisabledReason,
     };
+    if (isExpeditionOrderPending) {
+      setLandingText('Bip! Read the incoming Central Command message first.');
+      return false;
+    }
     if (isIsland120StartupDiagnosticActive) {
       logIslandRunEntryDebug('island120_roll_interaction', {
         userId: session.user.id,
@@ -6519,6 +6547,8 @@ export function IslandRunBoardPrototype({
       setIsRolling(false);
       if (rollResult.status === 'insufficient_dice') {
         openOutOfDicePurchasePrompt('roll_attempt');
+      } else if (rollResult.status === 'tutorial_order_required') {
+        setLandingText('Bip! Read the incoming Central Command message first.');
       } else {
         setLandingText(`Need ${effectiveDiceCost} dice to roll at ×${effectiveMultiplier}.`);
       }
@@ -6676,7 +6706,9 @@ export function IslandRunBoardPrototype({
     // cleared by `onHopSequenceComplete`.
         setPendingHopSequence(null);
 
-        const trafficLightPassed = Boolean(rollResult.hopSequence?.includes(TRAFFIC_LIGHT_TILE_INDEX));
+        const ordinaryTileGameplayActive = rollResult.ordinaryTileGameplayActive !== false;
+        const trafficLightPassed = ordinaryTileGameplayActive
+          && Boolean(rollResult.hopSequence?.includes(TRAFFIC_LIGHT_TILE_INDEX));
         let trafficLightUnlocked = false;
         let trafficLightChargeAfter = trafficLightCharge;
         if (trafficLightPassed) {
@@ -6704,7 +6736,8 @@ export function IslandRunBoardPrototype({
 
         // Caretaker chat opens only when the player LANDS on the caretaker's
         // home tile (the caretaker sprite is anchored there on the board).
-        const didLandOnCaretakerTile = currentIndex === ISLAND_CARETAKER_TILE_INDEX
+        const didLandOnCaretakerTile = ordinaryTileGameplayActive
+          && currentIndex === ISLAND_CARETAKER_TILE_INDEX
           && hasIslandCaretakerConcordContent(runtimeStateRef.current.currentIslandNumber);
         if (didLandOnCaretakerTile) {
           setShowEncounterModal(false);
@@ -6727,6 +6760,10 @@ export function IslandRunBoardPrototype({
         )) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
+        } else if (!ordinaryTileGameplayActive) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          setLandingText('The island network is dormant. Follow the Concord fragment signal.');
         } else if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -11244,16 +11281,33 @@ export function IslandRunBoardPrototype({
   }
 
   const handlePersistNarrativeSeen = useCallback(
-    (next: IslandNarrativeSeenState) => {
-      applyNarrativeSeenStateMarker({
-        session,
-        client,
-        narrativeSeenState: next,
-        triggerSource: 'island_narrative_beat_seen',
-      });
+    (next: IslandNarrativeSeenState, beatId: string) => {
+      const nextRecord = beatId === 'I001-B00' || beatId === 'I001-B31'
+        ? applyIslandOneExpeditionOrderAcknowledgement({
+            session,
+            client,
+            beatId,
+            narrativeSeenState: next,
+            triggerSource: 'island_expedition_order_acknowledged',
+          })
+        : applyNarrativeSeenStateMarker({
+            session,
+            client,
+            narrativeSeenState: next,
+            triggerSource: 'island_narrative_beat_seen',
+          });
+      setRuntimeState(nextRecord);
+      runtimeStateRef.current = nextRecord;
     },
     [session, client],
   );
+
+  // Feed narrative reactions from the hydrated canonical record rather than
+  // the UI's animated collection set. This prevents an existing save from
+  // looking like a fresh 0 -> 1 pickup while the board finishes hydrating.
+  const narrativeTechnologyFragmentCount = new Set(
+    runtimeState.techCollectionByIsland?.[String(runtimeState.currentIslandNumber)] ?? [],
+  ).size;
 
   const islandNarrativeOpeningFlow = useIslandNarrativeOpeningFlow({
     userId: session.user.id,
@@ -11262,6 +11316,7 @@ export function IslandRunBoardPrototype({
     hasHydratedRuntimeState: hasHydratedRuntimeState && !isIslandVisualPreview && !isArcadeStoryJourney,
     isGlobalPrologueActive: activeStoryEpisode?.kind === 'global_prologue',
     isGlobalPrologueSeen: isGlobalPrologueSeenForNarrative,
+    firstSessionTutorialState: runtimeState.firstSessionTutorialState,
     isNarrativeSurfaceBlocked,
     canDisplayTravelReadyClosingOverClaimedCelebration,
     activeStopId,
@@ -11273,6 +11328,7 @@ export function IslandRunBoardPrototype({
       bossTrialPhase === 'in_progress' &&
       getBossTrialConfig(islandNumber).scoreTarget > 0 &&
       bossTrialScore * 2 >= getBossTrialConfig(islandNumber).scoreTarget,
+    technologyFragmentCount: narrativeTechnologyFragmentCount,
     canChallengeCurrentBoss,
     isCurrentIslandBossDefeated,
     bossTrialResolvedIslandNumber: runtimeState.bossTrialResolvedIslandNumber,
@@ -11283,6 +11339,15 @@ export function IslandRunBoardPrototype({
     onPersistNarrativeSeen: handlePersistNarrativeSeen,
   });
 
+  const expeditionPhonePreviewTransmission = useMemo(() => {
+    if (!showExpeditionPhonePreview) return null;
+    const definition = getIslandNarrativeDefinition(1) ?? null;
+    const beat = definition?.beats.find((entry) => entry.id === 'I001-B31') ?? null;
+    return beat ? buildExpeditionPhoneTransmission(beat, definition) : null;
+  }, [showExpeditionPhonePreview]);
+  const activeExpeditionTransmission = islandNarrativeOpeningFlow.activeExpeditionTransmission
+    ?? expeditionPhonePreviewTransmission;
+
   const landmarkWhispers = useLandmarkWhispers({
     activeStopId,
     hasHydratedRuntimeState,
@@ -11292,6 +11357,7 @@ export function IslandRunBoardPrototype({
       islandNarrativeOpeningFlow.activeToast ||
       islandNarrativeOpeningFlow.activeReactionDialogue ||
       islandNarrativeOpeningFlow.activeReactionToast ||
+      activeExpeditionTransmission ||
       islandNarrativeOpeningFlow.queuedBeatIds.length > 0 ||
       islandNarrativeOpeningFlow.reactionQueuedBeatIds.length > 0
     ),
@@ -12502,6 +12568,7 @@ export function IslandRunBoardPrototype({
           boardTiltXDeg={boardTiltXDeg}
           boardRotateZDeg={boardRotateZDeg}
           tileMap={landmarkDoorTileMap}
+          ordinaryTilesActive={ordinaryBoardTilesActive}
           trafficLightCharge={displayedTrafficLightCharge}
           trafficLightChargeTarget={TRAFFIC_LIGHT_CHARGE_TARGET}
           stopMap={stopMap}
@@ -12544,7 +12611,7 @@ export function IslandRunBoardPrototype({
             // Light the traffic-light tile the instant the token passes over it
             // (mid-roll), rather than waiting for the landing/commit. Functional
             // update handles the rare big-roll case of passing it twice.
-            if (tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
+            if (ordinaryBoardTilesActive && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
               setTrafficLightVisualCharge((prev) => {
                 const base = prev ?? trafficLightCharge;
                 return Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, base + 1);
@@ -16096,51 +16163,53 @@ export function IslandRunBoardPrototype({
           concordHubEntryState.isConcordActive || showConcordCompletionPreview ? (
             <div className="island-run-overlay-root island-stop-modal-backdrop island-concord-hub-backdrop" role="presentation">
               <section className="island-concord-hub-modal" role="dialog" aria-modal="true" aria-label="The Concord hub">
-                <img
-                  className="island-concord-hub-modal__device"
-                  src="/tech/Concord_on.webp"
-                  alt="The restored Concord device with three communication channels"
-                />
-                <div className="island-concord-hub-modal__screen">
+                <header className="island-concord-hub-modal__header">
                   <p className="island-concord-hub-modal__eyebrow">The Concord</p>
-                  <h3 className="island-concord-hub-modal__title">Channel select</h3>
-                  <p className="island-concord-hub-modal__copy">Meaning channels online · {concordHubEntryState.requiredFragmentCount}/{concordHubEntryState.requiredFragmentCount} fragments restored</p>
-                  <div className="island-concord-hub-modal__channels" aria-label="The Concord channels">
-                    <button
-                      type="button"
-                      className="island-concord-hub-modal__channel"
-                      onClick={() => {
-                        closeConcordHub();
-                        setShowCreatureChannelModal(true);
-                      }}
-                    >
-                      <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">🐾</span>
-                      <span>Creature Channel</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="island-concord-hub-modal__channel"
-                      onClick={() => {
-                        closeConcordHub();
-                        openCaretakerFlow('dev_hud');
-                      }}
-                      disabled={!shouldShowCaretakerTalkAction}
-                    >
-                      <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">🧙</span>
-                      <span>Caretaker Channel</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="island-concord-hub-modal__channel"
-                      onClick={() => {
-                        closeConcordHub();
-                        openGlobalStoryReader();
-                      }}
-                    >
-                      <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">📖</span>
-                      <span>Story Mode</span>
-                    </button>
-                  </div>
+                  <h3 className="island-concord-hub-modal__title">Creature link ready</h3>
+                  <p className="island-concord-hub-modal__copy">AI translation follows every island's native language.</p>
+                </header>
+                <div className="island-concord-hub-modal__instrument">
+                  <img
+                    className="island-concord-hub-modal__device"
+                    src="/tech/Concord_v4_front.webp"
+                    alt="The restored Concord phone showing an active creature translation call"
+                  />
+                </div>
+                <div className="island-concord-hub-modal__channels" aria-label="The Concord channels">
+                      <button
+                        type="button"
+                        className="island-concord-hub-modal__channel"
+                        onClick={() => {
+                          closeConcordHub();
+                          setShowCreatureChannelModal(true);
+                        }}
+                      >
+                        <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">🐾</span>
+                        <span>Creatures</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="island-concord-hub-modal__channel"
+                        onClick={() => {
+                          closeConcordHub();
+                          openCaretakerFlow('dev_hud');
+                        }}
+                        disabled={!shouldShowCaretakerTalkAction}
+                      >
+                        <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">✦</span>
+                        <span>Caretaker</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="island-concord-hub-modal__channel"
+                        onClick={() => {
+                          closeConcordHub();
+                          openGlobalStoryReader();
+                        }}
+                      >
+                        <span className="island-concord-hub-modal__channel-icon" aria-hidden="true">📖</span>
+                        <span>Story</span>
+                      </button>
                 </div>
                 <button type="button" className="island-concord-hub-modal__return" onClick={closeConcordHub}>Return to island</button>
               </section>
@@ -16247,6 +16316,27 @@ export function IslandRunBoardPrototype({
           text={islandNarrativeOpeningFlow.activeReactionToast.text}
           durationMs={islandNarrativeOpeningFlow.activeReactionToast.durationMs}
           onDismiss={islandNarrativeOpeningFlow.handleReactionToastDismiss}
+        />
+      ) : null}
+
+      {activeExpeditionTransmission ? (
+        <ExpeditionPhoneTransmission
+          isOpen={true}
+          sourceLabel={activeExpeditionTransmission.sourceLabel}
+          headline={activeExpeditionTransmission.headline}
+          text={activeExpeditionTransmission.text}
+          secondaryText={activeExpeditionTransmission.secondaryText}
+          objectiveText={activeExpeditionTransmission.objectiveText}
+          progressCurrent={narrativeTechnologyFragmentCount}
+          progressTotal={9}
+          ctaLabel={activeExpeditionTransmission.ctaLabel}
+          onDeviceOpen={() => {
+            playIslandRunSound('tech_item_poof');
+            triggerIslandRunHaptic('stop_land');
+          }}
+          onAcknowledge={showExpeditionPhonePreview
+            ? () => undefined
+            : islandNarrativeOpeningFlow.handleExpeditionTransmissionAcknowledge}
         />
       ) : null}
 

@@ -6,6 +6,19 @@ export const ISLAND_RUN_TUTORIAL_HATCHERY_STOP_INDEX = 0;
 export const ISLAND_RUN_FIRST_CREATURE_PACK_LOW_DICE_THRESHOLD = 5;
 export const ISLAND_RUN_FIRST_CREATURE_PACK_BONUS_DICE = 100;
 
+/**
+ * Island 1 begins as a focused fragment-recovery tutorial. Ordinary board
+ * rewards and special-tile interactions stay dormant until the player reads
+ * Central Command's follow-up after recovering the first Concord fragment.
+ */
+export function isIslandRunFragmentOnlyBoardPhase(
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState,
+): boolean {
+  return firstSessionTutorialState === 'awaiting_first_orders'
+    || firstSessionTutorialState === 'awaiting_first_roll'
+    || firstSessionTutorialState === 'first_fragment_collected';
+}
+
 export function isIslandRunBuildPromptOverlayActive(
   firstSessionTutorialState: IslandRunFirstSessionTutorialState,
 ): boolean {

@@ -16,7 +16,7 @@ export type IslandRunCoachmarkCopy = {
 
 export const ISLAND_RUN_FIRST_ROLL_COACHMARK_COPY: IslandRunCoachmarkCopy = {
   title: '🎲 Roll the dice',
-  body: 'Tap Roll to move along the island and land on your first reward.',
+  body: 'Follow the lit signal and recover your first Concord fragment.',
 };
 
 export const ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY: IslandRunCoachmarkCopy = {
@@ -26,7 +26,8 @@ export const ISLAND_RUN_KEEP_ROLLING_COACHMARK_COPY: IslandRunCoachmarkCopy = {
 
 /**
  * The very first action a new player must take. Shown until they roll, which
- * advances the tutorial out of `awaiting_first_roll`.
+ * advances the tutorial out of `awaiting_first_roll` and into the first
+ * fragment transmission.
  */
 export function isIslandRunFirstRollCoachmarkActive(
   firstSessionTutorialState: IslandRunFirstSessionTutorialState,

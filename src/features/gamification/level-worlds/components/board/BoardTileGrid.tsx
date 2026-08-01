@@ -10,6 +10,7 @@ export interface BoardTileGridProps {
   boardHeight: number;
   stopMap: Map<number, string>;
   tileMap: Record<number, IslandTileMapEntry>;
+  ordinaryTilesActive?: boolean;
   trafficLightCharge?: number;
   trafficLightChargeTarget?: number;
   completedEncounterIndices: Set<number>;
@@ -33,6 +34,7 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
     anchors,
     stopMap,
     tileMap,
+    ordinaryTilesActive = true,
     trafficLightCharge = 0,
     trafficLightChargeTarget = 8,
     completedEncounterIndices,
@@ -78,7 +80,7 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
 
   return (
     <div className="island-run-board__tiles">
-      {trafficLightTile && (
+      {ordinaryTilesActive && trafficLightTile && (
         <div
           className="island-tile-traffic-light-sign"
           role="status"
@@ -121,6 +123,7 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
         const isEncounter = tileType === 'encounter';
         const isEncounterCompleted = isEncounter && completedEncounterIndices.has(index);
         const technologyFragment = visibleTechnologyFragmentsByTile.get(index);
+        const isDormant = !ordinaryTilesActive && !technologyFragment;
 
         return (
           <BoardTile
@@ -143,6 +146,7 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
             showDebug={showDebug}
             isMinimalBoardArt={isMinimalBoardArt}
             technologyFragment={technologyFragment}
+            isDormant={isDormant}
             uniformScale={uniformScale}
           />
         );

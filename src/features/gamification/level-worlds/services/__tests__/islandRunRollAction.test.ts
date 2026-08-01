@@ -8,8 +8,6 @@ import {
   writeIslandRunGameStateRecord,
   type IslandRunGameStateRecord,
 } from '../islandRunGameStateStore';
-import { generateTileMap, getIslandRarity } from '../islandBoardTileMap';
-import { resolveIslandRunContractV2EssenceEarnForTile } from '../islandRunContractV2EssenceBuild';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const USER_ID = 'roll-action-test-user';
@@ -246,7 +244,7 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
-    name: 'first-session tutorial roll: awaiting first roll lands deterministically on positive Island 1 essence tile',
+    name: 'first-session tutorial roll: awaiting first roll lands deterministically on a visible Concord fragment',
     run: async () => {
       resetEnvironment();
       seedState({
@@ -263,30 +261,24 @@ export const islandRunRollActionTests: TestCase[] = [
       );
 
       assertEqual(result.status, 'ok', 'Tutorial roll should succeed');
-      assertEqual(result.total, 2, 'Token index 2 should target first reachable positive essence tile at +2');
+      assertEqual(result.total, 4, 'Token index 2 should target the visible fragment at tile 6');
       assertEqual(result.dieOne, 1, 'Deterministic total still returns a normal die face');
-      assertEqual(result.dieTwo, 1, 'Deterministic total still returns a normal die face');
-      assertEqual(result.newTokenIndex, 4, 'Roll lands on generated Island 1 tile index 4');
-      assertEqual(result.hopSequence?.length, 2, 'Movement still uses normal hop pipeline');
-
-      const tileMap = generateTileMap(1, getIslandRarity(1), 'forest', 0);
-      const landedTile = tileMap[result.newTokenIndex!];
-      assert(landedTile !== undefined, 'Landing tile should exist in generated map');
-      assert(
-        resolveIslandRunContractV2EssenceEarnForTile(landedTile.tileType, { islandNumber: 1, seed: 1 }) > 0,
-        'Landing tile should award positive essence',
-      );
+      assertEqual(result.dieTwo, 3, 'Deterministic total still returns a normal die face');
+      assertEqual(result.newTokenIndex, 6, 'Roll lands on the fixed Island 1 fragment tile');
+      assertEqual(result.hopSequence?.length, 4, 'Movement still uses normal hop pipeline');
+      assertEqual(result.concordFragmentPickup?.fragmentSlot, 1, 'The first visible Concord fragment is selected');
+      assertEqual(result.ordinaryTileGameplayActive, false, 'Ordinary tile play stays dormant until the follow-up order');
 
       const persisted = readIslandRunGameStateRecord(makeSession());
       assertEqual(
         persisted.firstSessionTutorialState,
-        'first_roll_consumed',
-        'Deterministic tutorial roll should advance tutorial state',
+        'awaiting_first_roll',
+        'The roll stays recoverable until the fragment collection action commits the pickup',
       );
     },
   },
   {
-    name: 'first-session tutorial roll: consumed state cannot replay deterministic override',
+    name: 'first-session tutorial roll: first-fragment state waits for the follow-up order',
     run: async () => {
       resetEnvironment();
       seedState({
@@ -300,20 +292,37 @@ export const islandRunRollActionTests: TestCase[] = [
 
       const first = await executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 });
       assertEqual(first.status, 'ok', 'Initial tutorial roll should succeed');
-      assertEqual(first.total, 2, 'Initial tutorial roll uses deterministic total');
+      assertEqual(first.total, 4, 'Initial tutorial roll targets the fragment');
+
+      seedState({ firstSessionTutorialState: 'first_fragment_collected' });
 
       const second = await withMockedRandom([0, 0], () =>
         executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
       );
-      assertEqual(second.status, 'ok', 'Follow-up roll should succeed');
-      assertEqual(second.total, 2, 'Consumed tutorial state should use normal random dice');
+      assertEqual(second.status, 'tutorial_order_required', 'Follow-up roll waits for Central Command');
+      assertEqual(second.total, undefined, 'Blocked follow-up does not roll dice');
 
       const persisted = readIslandRunGameStateRecord(makeSession());
       assertEqual(
         persisted.firstSessionTutorialState,
-        'first_roll_consumed',
-        'Follow-up roll should not regress or replay tutorial state',
+        'first_fragment_collected',
+        'Follow-up roll should wait for the diplomatic-order acknowledgement',
       );
+    },
+  },
+  {
+    name: 'first-session tutorial roll: incoming first order blocks canonical roll execution',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        dicePool: 30,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'awaiting_first_orders',
+      });
+      const result = await executeIslandRunRollAction({ session: makeSession(), client: null });
+      assertEqual(result.status, 'tutorial_order_required', 'Roll must wait for the explicit Read action');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).dicePool, 30, 'Blocked roll spends no dice');
     },
   },
   {

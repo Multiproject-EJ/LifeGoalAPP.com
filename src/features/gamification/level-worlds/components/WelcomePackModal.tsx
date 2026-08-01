@@ -131,6 +131,21 @@ export function WelcomePackModal({
             </div>
           </div>
 
+          <div className="wpm-expedition-phone">
+            <div className="wpm-expedition-phone__device">
+              <img
+                src="/tech/ExpeditionPhone_v19_folded.webp"
+                alt="Protected jewel-box Expedition Phone from Central Command"
+              />
+              <span className="wpm-expedition-phone__hologram" aria-hidden="true">✦</span>
+            </div>
+            <span>
+              <small>Command equipment included</small>
+              <strong>Expedition Phone</strong>
+              <em>New mission orders will arrive here.</em>
+            </span>
+          </div>
+
           {claimError ? (
             <p className="wpm-error" role="alert">{claimError}</p>
           ) : null}
