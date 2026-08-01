@@ -73,9 +73,11 @@ export function CompassCrestBrand({
             decoding="async"
           />
           {wordmark}
-          <span className="compass-crest-brand__rank-plaque">
-            Rank {rank ?? 0}
-          </span>
+          {typeof rank === 'number' ? (
+            <span className="compass-crest-brand__rank-plaque">
+              Rank {rank}
+            </span>
+          ) : null}
         </div>
       ) : (
         <>
