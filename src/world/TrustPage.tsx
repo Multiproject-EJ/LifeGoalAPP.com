@@ -7,8 +7,8 @@ interface TrustPageProps {
   page: TrustPageSlug;
 }
 
-const LAST_UPDATED = '13 July 2026';
-const CONTACT_EMAIL = 'hello@lifegoalapp.com';
+const LAST_UPDATED = '1 August 2026';
+const CONTACT_EMAIL = 'hello@habitgame.app';
 
 function PrivacyContent() {
   return (
@@ -21,6 +21,11 @@ function PrivacyContent() {
 
       <h2 className="trust-page__section-heading">What we collect</h2>
       <ul className="trust-page__list">
+        <li>
+          <strong>Launch waitlist data</strong> — your email address if you choose to join the
+          waitlist, used only for launch updates and early-access invitations. You can unsubscribe
+          or ask us to delete it at any time.
+        </li>
         <li>
           <strong>Account data</strong> — email address and password hash, managed securely by
           Supabase Auth. We never see your raw password.

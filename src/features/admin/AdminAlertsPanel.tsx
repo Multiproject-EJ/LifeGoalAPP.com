@@ -22,7 +22,7 @@ export function AdminAlertsPanel({ session }: { session: Session }) {
   return <section className="account-panel__card" aria-labelledby="admin-alerts">
     <p className="account-panel__eyebrow">Admin operations</p>
     <h3 id="admin-alerts">Alerts{unread ? ` (${unread} unread)` : ''}</h3>
-    <p className="account-panel__hint">New accounts, purchases, subscription changes, support messages, and daily telemetry reports. Email delivery activates only after its secrets are configured.</p>
+    <p className="account-panel__hint">Waitlist joins and new account registrations appear here for active admins.</p>
     <button type="button" className="btn" onClick={() => void load()}>Refresh alerts</button>
     {error ? <p className="account-panel__hint">{error}</p> : null}
     <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
