@@ -2,7 +2,7 @@ import { getSupabaseClient } from '../lib/supabaseClient';
 
 export type AdminAlert = {
   id: string;
-  alert_type: 'user_signup' | 'purchase_completed' | 'subscription_changed' | 'support_message' | 'telemetry_report_ready';
+  alert_type: 'user_signup' | 'waitlist_joined' | 'purchase_completed' | 'subscription_changed' | 'support_message' | 'telemetry_report_ready';
   severity: 'info' | 'warning' | 'critical';
   title: string;
   summary: string;
