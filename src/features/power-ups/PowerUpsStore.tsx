@@ -8,6 +8,7 @@ import { PowerUpPurchaseModal } from './PowerUpPurchaseModal';
 import { ActivePowerUps } from './ActivePowerUps';
 import './PowerUpsStore.css';
 import { splitGoldBalance } from '../../constants/economy';
+import { DEMO_USER_ID } from '../../services/demoData';
 
 interface PowerUpsStoreProps {
   session: Session | null;
@@ -24,7 +25,7 @@ export function PowerUpsStore({ session }: PowerUpsStoreProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const userId = session?.user?.id || 'demo_user';
+  const userId = session?.user?.id || DEMO_USER_ID;
   const goldBreakdown = splitGoldBalance(currentGold);
   const goldValueLabel =
     goldBreakdown.diamonds > 0

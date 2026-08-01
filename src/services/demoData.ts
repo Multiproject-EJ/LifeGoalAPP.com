@@ -46,8 +46,17 @@ export type JournalEntryInsert = Database['public']['Tables']['journal_entries']
 export type JournalEntryUpdate = Database['public']['Tables']['journal_entries']['Update'];
 
 export const DEMO_USER_ID = 'demo-user-0001';
+export const LEGACY_DEMO_USER_ID = 'demo_user';
 export const DEMO_USER_EMAIL = 'demo@lifegoalapp.com';
 export const DEMO_USER_NAME = 'Demo Creator';
+
+export function isDemoUserId(userId: string | null | undefined): boolean {
+  return userId === DEMO_USER_ID || userId === LEGACY_DEMO_USER_ID;
+}
+
+export function normalizeDemoUserId(userId: string): string {
+  return isDemoUserId(userId) ? DEMO_USER_ID : userId;
+}
 
 const DEFAULT_HABIT_ENVIRONMENT = 'In my workspace, with my laptop and a clear mind. No distractions, no interruptions.';
 

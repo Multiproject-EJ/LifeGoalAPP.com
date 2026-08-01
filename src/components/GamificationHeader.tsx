@@ -8,6 +8,7 @@ import { NotificationBadge } from './NotificationBadge';
 import { useDailySpinStatus } from '../hooks/useDailySpinStatus';
 import { getActivePowerUps } from '../services/powerUps';
 import { splitGoldBalance } from '../constants/economy';
+import { DEMO_USER_ID } from '../services/demoData';
 
 interface GamificationHeaderProps {
   profile: GamificationProfile;
@@ -25,7 +26,7 @@ export function GamificationHeader({ profile, levelInfo, session, onLevelClick }
     diamonds > 0 ? `💎 ${diamonds.toLocaleString()} · 🪙 ${goldRemainder.toLocaleString()}` : goldRemainder.toLocaleString();
 
   useEffect(() => {
-    const userId = session?.user?.id || 'demo_user';
+    const userId = session?.user?.id || DEMO_USER_ID;
     const loadActivePowerUps = async () => {
       const { data } = await getActivePowerUps(userId);
       if (data) {

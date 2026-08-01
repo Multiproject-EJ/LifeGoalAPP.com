@@ -1,7 +1,7 @@
 // Core gamification service for XP, levels, achievements, and streaks
 // Supports both demo mode (localStorage) and Supabase mode
 
-import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
+import { canUseSupabaseDataForUser, getSupabaseClient } from '../lib/supabaseClient';
 import { convertXpToGold } from '../constants/economy';
 import type {
   GamificationProfile,
@@ -16,10 +16,9 @@ import type {
 import { XP_REWARDS, DEMO_PROFILE_KEY, DEMO_TRANSACTIONS_KEY, DEMO_ACHIEVEMENTS_KEY } from '../types/gamification';
 import { recordTelemetryEvent } from './telemetry';
 import { awardLevelUpTreeMilestones, awardStreakTreeMilestone } from './impactTrees';
-import { DEMO_USER_ID } from './demoData';
 
 function canUseCloudGamificationData(userId: string): boolean {
-  return userId !== DEMO_USER_ID && canUseSupabaseData();
+  return canUseSupabaseDataForUser(userId);
 }
 
 // =====================================================

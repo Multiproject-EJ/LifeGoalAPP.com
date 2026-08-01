@@ -23,14 +23,14 @@ export function useProjects(session: Session | null) {
   const loadProjects = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await fetchProjects();
+    const { data, error: fetchError } = await fetchProjects(userId);
     if (fetchError) {
       setError(fetchError.message);
     } else {
       setProjects(data ?? []);
     }
     setLoading(false);
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     loadProjects();
@@ -46,23 +46,23 @@ export function useProjects(session: Session | null) {
   }, [userId, loadProjects, earnXP]);
 
   const updateProject = useCallback(async (id: string, input: UpdateProjectInput) => {
-    const { data, error } = await updateProjectService(id, input);
+    const { data, error } = await updateProjectService(id, input, userId);
     if (!error && data) {
       await loadProjects();
     }
     return { data, error };
-  }, [loadProjects]);
+  }, [loadProjects, userId]);
 
   const deleteProject = useCallback(async (id: string) => {
-    const { data, error } = await deleteProjectService(id);
+    const { data, error } = await deleteProjectService(id, userId);
     if (!error) {
       await loadProjects();
     }
     return { data, error };
-  }, [loadProjects]);
+  }, [loadProjects, userId]);
 
   const completeProject = useCallback(async (id: string) => {
-    const { data, error } = await completeProjectService(id);
+    const { data, error } = await completeProjectService(id, userId);
     if (!error && data) {
       await loadProjects();
       earnXP(ACTIONS_XP_REWARDS.COMPLETE_PROJECT, 'project_completed', id);
@@ -76,7 +76,7 @@ export function useProjects(session: Session | null) {
       }
     }
     return { data, error };
-  }, [loadProjects, earnXP]);
+  }, [loadProjects, earnXP, userId]);
 
   return {
     projects,

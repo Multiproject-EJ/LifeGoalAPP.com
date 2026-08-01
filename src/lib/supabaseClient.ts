@@ -6,6 +6,8 @@ import type { Database } from './database.types';
 let cachedClient: SupabaseClient<Database> | null = null;
 let activeSession: Session | null = null;
 const DEFAULT_AUTH_CALLBACK_PATH = '/auth/callback.html';
+const SUPABASE_AUTH_USER_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type EnvRecord = Record<string, string | undefined>;
 
@@ -50,6 +52,23 @@ export function hasActiveSupabaseSession(): boolean {
 
 export function canUseSupabaseData(): boolean {
   return hasSupabaseCredentials() && hasActiveSupabaseSession();
+}
+
+export function isSupabaseAuthUserId(userId: string | null | undefined): userId is string {
+  return typeof userId === 'string' && SUPABASE_AUTH_USER_ID_PATTERN.test(userId);
+}
+
+/**
+ * Use this guard whenever a query writes or filters by a caller-provided user ID.
+ * Besides requiring a configured, authenticated client, it rejects synthetic demo
+ * IDs and prevents a preview/session mismatch from querying as another user.
+ */
+export function canUseSupabaseDataForUser(userId: string | null | undefined): userId is string {
+  return (
+    canUseSupabaseData()
+    && isSupabaseAuthUserId(userId)
+    && activeSession?.user?.id === userId
+  );
 }
 
 export async function canUseSupabaseDataAsync(): Promise<boolean> {

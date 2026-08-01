@@ -6,12 +6,21 @@ export type PublicLaunchWaitlistResult = {
   error?: string;
 };
 
+export type PublicLaunchWaitlistSource = 'world_home' | 'island_3_gate';
+export type PublicLaunchWaitlistChannel = 'email' | 'push';
+
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
 export async function joinPublicLaunchWaitlist(
   email: string,
+  options: {
+    source?: PublicLaunchWaitlistSource;
+    channel?: PublicLaunchWaitlistChannel;
+  } = {},
 ): Promise<PublicLaunchWaitlistResult> {
   const normalizedEmail = normalizeEmail(email);
+  const source = options.source ?? 'world_home';
+  const channel = options.channel ?? 'email';
 
   if (!normalizedEmail) {
     return { ok: false, error: 'Enter your email to join the waitlist.' };
@@ -25,15 +34,13 @@ export async function joinPublicLaunchWaitlist(
   }
 
   try {
-    // The generated database types update after this migration is applied.
-    // Keep the public write isolated here until the next schema type refresh.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = getSupabaseClient() as any;
+    const supabase = getSupabaseClient();
     const { error } = await supabase
       .from('public_launch_waitlist')
       .insert({
         email: normalizedEmail,
-        source: 'world_home',
+        source,
+        channel,
         landing_variant: 'split_light_dark',
       });
 
@@ -44,6 +51,13 @@ export async function joinPublicLaunchWaitlist(
     // Rejoining should feel idempotent and must not reveal stored waitlist data.
     if (error.code === '23505') {
       return { ok: true, alreadyJoined: true };
+    }
+
+    if (error.code === 'WAITLIST_RATE_LIMIT') {
+      return {
+        ok: false,
+        error: 'Too many attempts from this connection. Please try again in ten minutes.',
+      };
     }
 
     throw error;

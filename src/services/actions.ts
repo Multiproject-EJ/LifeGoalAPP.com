@@ -2,13 +2,26 @@
 // Reference: ACTIONS_FEATURE_DEV_PLAN.md
 
 import type { PostgrestError } from '@supabase/supabase-js';
-import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import {
+  canUseSupabaseData,
+  canUseSupabaseDataForUser,
+  getSupabaseClient,
+} from '../lib/supabaseClient';
 import type {
   Action,
   ActionCategory,
   CreateActionInput,
   UpdateActionInput,
 } from '../types/actions';
+import {
+  addDemoAction,
+  DEMO_USER_ID,
+  getDemoActions,
+  isDemoUserId,
+  normalizeDemoUserId,
+  removeDemoAction,
+  updateDemoAction,
+} from './demoData';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -25,6 +38,14 @@ function authRequiredError(): PostgrestError {
   };
 }
 
+function canUseCloudActionData(userId?: string): boolean {
+  return userId ? canUseSupabaseDataForUser(userId) : canUseSupabaseData();
+}
+
+function demoActionsFor(userId: string): Action[] {
+  return getDemoActions(normalizeDemoUserId(userId));
+}
+
 // =====================================================
 // ACTIONS CRUD OPERATIONS
 // =====================================================
@@ -32,8 +53,11 @@ function authRequiredError(): PostgrestError {
 /**
  * Fetch all actions for the current user
  */
-export async function fetchActions(): Promise<ServiceResponse<Action[]>> {
-  if (!canUseSupabaseData()) {
+export async function fetchActions(userId?: string): Promise<ServiceResponse<Action[]>> {
+  if (userId && isDemoUserId(userId)) {
+    return { data: demoActionsFor(userId), error: null };
+  }
+  if (!canUseCloudActionData(userId)) {
     return { data: [], error: null };
   }
 
@@ -50,9 +74,13 @@ export async function fetchActions(): Promise<ServiceResponse<Action[]>> {
  * Fetch actions by category
  */
 export async function fetchActionsByCategory(
-  category: ActionCategory
+  category: ActionCategory,
+  userId?: string,
 ): Promise<ServiceResponse<Action[]>> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    return { data: demoActionsFor(userId).filter((action) => action.category === category), error: null };
+  }
+  if (!canUseCloudActionData(userId)) {
     return { data: [], error: null };
   }
 
@@ -69,8 +97,11 @@ export async function fetchActionsByCategory(
 /**
  * Fetch uncompleted actions only
  */
-export async function fetchActiveActions(): Promise<ServiceResponse<Action[]>> {
-  if (!canUseSupabaseData()) {
+export async function fetchActiveActions(userId?: string): Promise<ServiceResponse<Action[]>> {
+  if (userId && isDemoUserId(userId)) {
+    return { data: demoActionsFor(userId).filter((action) => !action.completed), error: null };
+  }
+  if (!canUseCloudActionData(userId)) {
     return { data: [], error: null };
   }
 
@@ -88,12 +119,23 @@ export async function fetchActiveActions(): Promise<ServiceResponse<Action[]>> {
  * Fetch completed actions for a specific date (local day boundaries).
  */
 export async function fetchCompletedActionsForDate(
-  dateISO: string
+  dateISO: string,
+  userId?: string,
 ): Promise<ServiceResponse<Action[]>> {
   const startOfDay = new Date(`${dateISO}T00:00:00`);
   const endOfDay = new Date(`${dateISO}T23:59:59.999`);
 
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    return {
+      data: demoActionsFor(userId).filter((action) => {
+        if (!action.completed || action.migrated_to_project_id || !action.completed_at) return false;
+        const completedAt = new Date(action.completed_at);
+        return completedAt >= startOfDay && completedAt <= endOfDay;
+      }),
+      error: null,
+    };
+  }
+  if (!canUseCloudActionData(userId)) {
     return { data: [], error: null };
   }
 
@@ -116,7 +158,10 @@ export async function insertAction(
   userId: string,
   input: CreateActionInput
 ): Promise<ServiceResponse<Action>> {
-  if (!canUseSupabaseData()) {
+  if (isDemoUserId(userId)) {
+    return { data: addDemoAction(DEMO_USER_ID, input), error: null };
+  }
+  if (!canUseSupabaseDataForUser(userId)) {
     return { data: null, error: authRequiredError() };
   }
 
@@ -146,9 +191,13 @@ export async function insertAction(
  */
 export async function updateAction(
   id: string,
-  input: UpdateActionInput
+  input: UpdateActionInput,
+  userId?: string,
 ): Promise<ServiceResponse<Action>> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    return { data: updateDemoAction(id, input), error: null };
+  }
+  if (!canUseCloudActionData(userId)) {
     return { data: null, error: authRequiredError() };
   }
 
@@ -175,9 +224,13 @@ export async function updateAction(
  * Fetch actions by project assignment
  */
 export async function fetchActionsByProjectId(
-  projectId: string
+  projectId: string,
+  userId?: string,
 ): Promise<ServiceResponse<Action[]>> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    return { data: demoActionsFor(userId).filter((action) => action.project_id === projectId), error: null };
+  }
+  if (!canUseCloudActionData(userId)) {
     return { data: [], error: null };
   }
 
@@ -196,9 +249,13 @@ export async function fetchActionsByProjectId(
  */
 export async function completeAction(
   id: string,
-  xpAwarded: number = 0
+  xpAwarded: number = 0,
+  userId?: string,
 ): Promise<ServiceResponse<Action>> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    return { data: updateDemoAction(id, { completed: true, xp_awarded: xpAwarded }), error: null };
+  }
+  if (!canUseCloudActionData(userId)) {
     return { data: null, error: authRequiredError() };
   }
 
@@ -219,8 +276,11 @@ export async function completeAction(
 /**
  * Delete an action
  */
-export async function deleteAction(id: string): Promise<ServiceResponse<Action>> {
-  if (!canUseSupabaseData()) {
+export async function deleteAction(id: string, userId?: string): Promise<ServiceResponse<Action>> {
+  if (userId && isDemoUserId(userId)) {
+    return { data: removeDemoAction(id), error: null };
+  }
+  if (!canUseCloudActionData(userId)) {
     return { data: null, error: authRequiredError() };
   }
 
@@ -237,9 +297,14 @@ export async function deleteAction(id: string): Promise<ServiceResponse<Action>>
  * Reorder actions within a category
  */
 export async function reorderActions(
-  actions: Array<{ id: string; order_index: number }>
+  actions: Array<{ id: string; order_index: number }>,
+  userId?: string,
 ): Promise<{ success: boolean; error: PostgrestError | null }> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    for (const action of actions) updateDemoAction(action.id, { order_index: action.order_index });
+    return { success: true, error: null };
+  }
+  if (!canUseCloudActionData(userId)) {
     return { success: false, error: authRequiredError() };
   }
 

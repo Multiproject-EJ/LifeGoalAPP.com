@@ -23,8 +23,8 @@ for (const [serviceName, source, helperName] of [
 ]) {
   assert.match(
     source,
-    new RegExp(`function ${helperName}\\(userId: string\\): boolean \\{[\\s\\S]{0,160}userId !== DEMO_USER_ID`),
-    `${serviceName} must keep the synthetic demo ID out of Supabase UUID columns.`,
+    new RegExp(`function ${helperName}\\(userId: string\\): boolean \\{[\\s\\S]{0,160}canUseSupabaseDataForUser\\(userId\\)`),
+    `${serviceName} must require the requested UUID to match the active Supabase user.`,
   );
 }
 

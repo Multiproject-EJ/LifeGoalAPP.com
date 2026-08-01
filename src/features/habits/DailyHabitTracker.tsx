@@ -3053,7 +3053,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     setCompletedActionsReady(false);
 
     const loadCompletedActions = async () => {
-      const { data, error } = await fetchCompletedActionsForDate(activeDate);
+      const { data, error } = await fetchCompletedActionsForDate(activeDate, session.user.id);
       if (!isActive) return;
       if (error) {
         setCompletedActionsCount(0);
@@ -3069,7 +3069,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     return () => {
       isActive = false;
     };
-  }, [activeDate]);
+  }, [activeDate, session.user.id]);
 
   useEffect(() => {
     let isActive = true;

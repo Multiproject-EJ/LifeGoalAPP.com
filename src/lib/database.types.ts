@@ -3356,6 +3356,36 @@ export interface Database {
         };
         Relationships: [];
       };
+      public_launch_waitlist: {
+        Row: {
+          id: number;
+          email: string;
+          email_normalized: string;
+          source: string;
+          channel: string;
+          landing_variant: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: never;
+          email: string;
+          email_normalized?: never;
+          source?: string;
+          channel?: string;
+          landing_variant?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: never;
+          email?: string;
+          email_normalized?: never;
+          source?: string;
+          channel?: string;
+          landing_variant?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       projects: {
         Row: {
           id: string;

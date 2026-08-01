@@ -1,7 +1,7 @@
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { Json } from '../lib/database.types';
 import type { Database } from '../lib/database.types';
-import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { canUseSupabaseDataForUser, getSupabaseClient } from '../lib/supabaseClient';
 import { guardedCloudCall, BoundedLog, type AppError } from './service-health';
 import {
   addDemoTelemetryEvent,
@@ -187,7 +187,7 @@ function writeBalanceShiftState(userId: string, state: BalanceShiftState) {
 }
 
 export async function fetchTelemetryPreference(userId: string): Promise<TelemetryPreferenceResponse> {
-  if (!canUseSupabaseData()) {
+  if (!canUseSupabaseDataForUser(userId)) {
     const demoPreference = getDemoTelemetryPreference(userId);
     return { data: demoPreference, error: null };
   }
@@ -213,7 +213,7 @@ export async function upsertTelemetryPreference(
   userId: string,
   telemetryEnabled: boolean,
 ): Promise<TelemetryPreferenceResponse> {
-  if (!canUseSupabaseData()) {
+  if (!canUseSupabaseDataForUser(userId)) {
     const data = updateDemoTelemetryPreference({
       user_id: userId,
       telemetry_enabled: telemetryEnabled,
@@ -276,7 +276,7 @@ export async function recordTelemetryEvent(options: {
     return { data: null, error: null };
   }
 
-  if (!canUseSupabaseData()) {
+  if (!canUseSupabaseDataForUser(options.userId)) {
     const data = addDemoTelemetryEvent({
       user_id: options.userId,
       event_type: options.eventType,
@@ -361,7 +361,7 @@ export async function listTelemetryEvents(options: {
   eventTypes?: TelemetryEventType[];
   limit?: number;
 }): Promise<TelemetryEventRow[]> {
-  if (!canUseSupabaseData()) {
+  if (!canUseSupabaseDataForUser(options.userId)) {
     const events = getDemoTelemetryEvents(options.userId);
     return events
       .filter((event) => (options.eventTypes ? options.eventTypes.includes(event.event_type as TelemetryEventType) : true))

@@ -61,7 +61,7 @@ export async function migrateActionToProject(action: Action): Promise<MigrationR
     const { error: updateError } = await updateAction(action.id, {
       completed: true,
       migrated_to_project_id: project.id,
-    });
+    }, action.user_id);
 
     if (updateError) {
       // Project was created but action update failed

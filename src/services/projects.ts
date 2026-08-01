@@ -2,7 +2,11 @@
 // Reference: ACTIONS_FEATURE_DEV_PLAN.md
 
 import type { PostgrestError } from '@supabase/supabase-js';
-import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import {
+  canUseSupabaseData,
+  canUseSupabaseDataForUser,
+  getSupabaseClient,
+} from '../lib/supabaseClient';
 import type {
   Project,
   ProjectStatus,
@@ -13,6 +17,19 @@ import type {
   CreateProjectTaskInput,
   UpdateProjectTaskInput,
 } from '../types/actions';
+import {
+  addDemoProject,
+  addDemoProjectTask,
+  DEMO_USER_ID,
+  getDemoProjects,
+  getDemoProjectTasks,
+  isDemoUserId,
+  normalizeDemoUserId,
+  removeDemoProject,
+  removeDemoProjectTask,
+  updateDemoProject,
+  updateDemoProjectTask,
+} from './demoData';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -29,6 +46,18 @@ function authRequiredError(): PostgrestError {
   };
 }
 
+function canUseCloudProjectData(userId?: string): boolean {
+  return userId ? canUseSupabaseDataForUser(userId) : canUseSupabaseData();
+}
+
+function demoProjectsFor(userId: string): Project[] {
+  return getDemoProjects(normalizeDemoUserId(userId));
+}
+
+function demoProjectTasksFor(userId: string): ProjectTask[] {
+  return getDemoProjectTasks(normalizeDemoUserId(userId));
+}
+
 // =====================================================
 // PROJECTS CRUD OPERATIONS
 // =====================================================
@@ -36,8 +65,11 @@ function authRequiredError(): PostgrestError {
 /**
  * Fetch all projects for the current user
  */
-export async function fetchProjects(): Promise<ServiceResponse<Project[]>> {
-  if (!canUseSupabaseData()) {
+export async function fetchProjects(userId?: string): Promise<ServiceResponse<Project[]>> {
+  if (userId && isDemoUserId(userId)) {
+    return { data: demoProjectsFor(userId), error: null };
+  }
+  if (!canUseCloudProjectData(userId)) {
     return { data: [], error: null };
   }
 
@@ -54,9 +86,13 @@ export async function fetchProjects(): Promise<ServiceResponse<Project[]>> {
  * Fetch projects by status
  */
 export async function fetchProjectsByStatus(
-  status: ProjectStatus
+  status: ProjectStatus,
+  userId?: string,
 ): Promise<ServiceResponse<Project[]>> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    return { data: demoProjectsFor(userId).filter((project) => project.status === status), error: null };
+  }
+  if (!canUseCloudProjectData(userId)) {
     return { data: [], error: null };
   }
 
@@ -73,8 +109,14 @@ export async function fetchProjectsByStatus(
 /**
  * Fetch active projects (not archived or completed)
  */
-export async function fetchActiveProjects(): Promise<ServiceResponse<Project[]>> {
-  if (!canUseSupabaseData()) {
+export async function fetchActiveProjects(userId?: string): Promise<ServiceResponse<Project[]>> {
+  if (userId && isDemoUserId(userId)) {
+    return {
+      data: demoProjectsFor(userId).filter((project) => !['archived', 'completed'].includes(project.status)),
+      error: null,
+    };
+  }
+  if (!canUseCloudProjectData(userId)) {
     return { data: [], error: null };
   }
 
@@ -91,8 +133,11 @@ export async function fetchActiveProjects(): Promise<ServiceResponse<Project[]>>
 /**
  * Fetch a single project by ID
  */
-export async function fetchProject(id: string): Promise<ServiceResponse<Project>> {
-  if (!canUseSupabaseData()) {
+export async function fetchProject(id: string, userId?: string): Promise<ServiceResponse<Project>> {
+  if (userId && isDemoUserId(userId)) {
+    return { data: demoProjectsFor(userId).find((project) => project.id === id) ?? null, error: null };
+  }
+  if (!canUseCloudProjectData(userId)) {
     return { data: null, error: null };
   }
 
@@ -112,7 +157,10 @@ export async function insertProject(
   userId: string,
   input: CreateProjectInput
 ): Promise<ServiceResponse<Project>> {
-  if (!canUseSupabaseData()) {
+  if (isDemoUserId(userId)) {
+    return { data: addDemoProject(DEMO_USER_ID, input), error: null };
+  }
+  if (!canUseSupabaseDataForUser(userId)) {
     return { data: null, error: authRequiredError() };
   }
 
@@ -140,9 +188,13 @@ export async function insertProject(
  */
 export async function updateProject(
   id: string,
-  input: UpdateProjectInput
+  input: UpdateProjectInput,
+  userId?: string,
 ): Promise<ServiceResponse<Project>> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    return { data: updateDemoProject(id, input), error: null };
+  }
+  if (!canUseCloudProjectData(userId)) {
     return { data: null, error: authRequiredError() };
   }
 
@@ -168,22 +220,25 @@ export async function updateProject(
 /**
  * Complete a project
  */
-export async function completeProject(id: string): Promise<ServiceResponse<Project>> {
-  return updateProject(id, { status: 'completed' });
+export async function completeProject(id: string, userId?: string): Promise<ServiceResponse<Project>> {
+  return updateProject(id, { status: 'completed' }, userId);
 }
 
 /**
  * Archive a project
  */
-export async function archiveProject(id: string): Promise<ServiceResponse<Project>> {
-  return updateProject(id, { status: 'archived' });
+export async function archiveProject(id: string, userId?: string): Promise<ServiceResponse<Project>> {
+  return updateProject(id, { status: 'archived' }, userId);
 }
 
 /**
  * Delete a project
  */
-export async function deleteProject(id: string): Promise<ServiceResponse<Project>> {
-  if (!canUseSupabaseData()) {
+export async function deleteProject(id: string, userId?: string): Promise<ServiceResponse<Project>> {
+  if (userId && isDemoUserId(userId)) {
+    return { data: removeDemoProject(id), error: null };
+  }
+  if (!canUseCloudProjectData(userId)) {
     return { data: null, error: authRequiredError() };
   }
 
@@ -204,9 +259,13 @@ export async function deleteProject(id: string): Promise<ServiceResponse<Project
  * Fetch all tasks for a project
  */
 export async function fetchProjectTasks(
-  projectId: string
+  projectId: string,
+  userId?: string,
 ): Promise<ServiceResponse<ProjectTask[]>> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    return { data: demoProjectTasksFor(userId).filter((task) => task.project_id === projectId), error: null };
+  }
+  if (!canUseCloudProjectData(userId)) {
     return { data: [], error: null };
   }
 
@@ -225,9 +284,16 @@ export async function fetchProjectTasks(
  */
 export async function fetchProjectTasksByStatus(
   projectId: string,
-  status: TaskStatus
+  status: TaskStatus,
+  userId?: string,
 ): Promise<ServiceResponse<ProjectTask[]>> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    return {
+      data: demoProjectTasksFor(userId).filter((task) => task.project_id === projectId && task.status === status),
+      error: null,
+    };
+  }
+  if (!canUseCloudProjectData(userId)) {
     return { data: [], error: null };
   }
 
@@ -261,7 +327,10 @@ export async function insertProjectTask(
     };
   }
 
-  if (!canUseSupabaseData()) {
+  if (isDemoUserId(userId)) {
+    return { data: addDemoProjectTask(DEMO_USER_ID, input), error: null };
+  }
+  if (!canUseSupabaseDataForUser(userId)) {
     return { data: null, error: authRequiredError() };
   }
 
@@ -290,9 +359,13 @@ export async function insertProjectTask(
  */
 export async function updateProjectTask(
   id: string,
-  input: UpdateProjectTaskInput
+  input: UpdateProjectTaskInput,
+  userId?: string,
 ): Promise<ServiceResponse<ProjectTask>> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    return { data: updateDemoProjectTask(id, input), error: null };
+  }
+  if (!canUseCloudProjectData(userId)) {
     return { data: null, error: authRequiredError() };
   }
 
@@ -321,18 +394,23 @@ export async function updateProjectTask(
  * Complete a project task
  */
 export async function completeProjectTask(
-  id: string
+  id: string,
+  userId?: string,
 ): Promise<ServiceResponse<ProjectTask>> {
-  return updateProjectTask(id, { completed: true, status: 'done' });
+  return updateProjectTask(id, { completed: true, status: 'done' }, userId);
 }
 
 /**
  * Delete a project task
  */
 export async function deleteProjectTask(
-  id: string
+  id: string,
+  userId?: string,
 ): Promise<ServiceResponse<ProjectTask>> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    return { data: removeDemoProjectTask(id), error: null };
+  }
+  if (!canUseCloudProjectData(userId)) {
     return { data: null, error: authRequiredError() };
   }
 
@@ -349,9 +427,14 @@ export async function deleteProjectTask(
  * Reorder project tasks
  */
 export async function reorderProjectTasks(
-  tasks: Array<{ id: string; order_index: number }>
+  tasks: Array<{ id: string; order_index: number }>,
+  userId?: string,
 ): Promise<{ success: boolean; error: PostgrestError | null }> {
-  if (!canUseSupabaseData()) {
+  if (userId && isDemoUserId(userId)) {
+    for (const task of tasks) updateDemoProjectTask(task.id, { order_index: task.order_index });
+    return { success: true, error: null };
+  }
+  if (!canUseCloudProjectData(userId)) {
     return { success: false, error: authRequiredError() };
   }
 

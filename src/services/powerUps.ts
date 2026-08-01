@@ -1,10 +1,9 @@
-import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { canUseSupabaseData, canUseSupabaseDataForUser, getSupabaseClient } from '../lib/supabaseClient';
 import type { PostgrestError } from '@supabase/supabase-js';
 import type { PowerUp, UserPowerUp, PurchaseResult, ActiveBoost } from '../types/gamification';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import { awardXP } from './gamification';
 import { recordTelemetryEvent } from './telemetry';
-import { DEMO_USER_ID } from './demoData';
 
 type ServiceResponse<T> = {
   data: T | null;
@@ -14,7 +13,7 @@ type ServiceResponse<T> = {
 const DEMO_POWERUPS_KEY = 'demo_user_powerups';
 
 function canUseCloudPowerUpData(userId: string): boolean {
-  return userId !== DEMO_USER_ID && canUseSupabaseData();
+  return canUseSupabaseDataForUser(userId);
 }
 
 /**

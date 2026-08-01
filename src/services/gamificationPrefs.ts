@@ -1,13 +1,12 @@
 // Service for managing gamification preferences (toggle enabled/disabled)
 // Supports both demo mode (localStorage) and Supabase mode
 
-import { getSupabaseClient, canUseSupabaseData } from '../lib/supabaseClient';
+import { canUseSupabaseDataForUser, getSupabaseClient } from '../lib/supabaseClient';
 import type { GamificationProfile } from '../types/gamification';
 import { DEMO_ENABLED_KEY } from '../types/gamification';
-import { DEMO_USER_ID } from './demoData';
 
 function canUseCloudGamificationPreferences(userId: string): boolean {
-  return userId !== DEMO_USER_ID && canUseSupabaseData();
+  return canUseSupabaseDataForUser(userId);
 }
 
 /**

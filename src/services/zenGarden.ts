@@ -1,4 +1,4 @@
-import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { canUseSupabaseDataForUser, getSupabaseClient } from '../lib/supabaseClient';
 import { fetchGamificationProfile, saveDemoProfile } from './gamificationPrefs';
 import type { ZenTokenTransaction } from '../types/gamification';
 import { recordTelemetryEvent } from './telemetry';
@@ -95,7 +95,7 @@ export async function awardZenTokens(
     const currentBalance = profile.zen_tokens ?? 0;
     const nextBalance = currentBalance + amount;
 
-    if (!canUseSupabaseData()) {
+    if (!canUseSupabaseDataForUser(userId)) {
       saveDemoProfile({ zen_tokens: nextBalance, updated_at: new Date().toISOString() });
     } else {
       const supabase = getSupabaseClient();
@@ -143,7 +143,7 @@ export async function fetchZenGardenInventory(userId: string): Promise<{
   error: Error | null;
 }> {
   try {
-    if (canUseSupabaseData()) {
+    if (canUseSupabaseDataForUser(userId)) {
       const inventory = await fetchSupabaseInventory(userId);
       return { data: inventory, error: null };
     }
@@ -178,7 +178,7 @@ export async function grantEarnedZenItem(
   itemName: string
 ): Promise<{ data: { inventory: string[] } | null; error: Error | null }> {
   try {
-    if (canUseSupabaseData()) {
+    if (canUseSupabaseDataForUser(userId)) {
       const supabase = getSupabaseClient();
       const { error } = await (supabase as any)
         .from('zen_garden_inventory')
@@ -259,7 +259,7 @@ export async function purchaseZenGardenItem(
     }
 
     const nextBalance = currentBalance - cost;
-    if (!canUseSupabaseData()) {
+    if (!canUseSupabaseDataForUser(userId)) {
       saveDemoProfile({ zen_tokens: nextBalance, updated_at: new Date().toISOString() });
     } else {
       const supabase = getSupabaseClient();
@@ -271,7 +271,7 @@ export async function purchaseZenGardenItem(
     }
 
     let nextInventory: string[];
-    if (canUseSupabaseData()) {
+    if (canUseSupabaseDataForUser(userId)) {
       const supabase = getSupabaseClient();
       const { error: inventoryError } = await (supabase as any)
         .from('zen_garden_inventory')

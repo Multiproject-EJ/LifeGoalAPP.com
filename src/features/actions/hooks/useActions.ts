@@ -21,7 +21,7 @@ export function useActions(session: Session | null) {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: fetchError } = await fetchActiveActions();
+      const { data, error: fetchError } = await fetchActiveActions(userId);
       if (fetchError) {
         setError(fetchError.message);
       } else {
@@ -32,7 +32,7 @@ export function useActions(session: Session | null) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     loadActions();
@@ -54,7 +54,7 @@ export function useActions(session: Session | null) {
 
   const updateAction = useCallback(async (id: string, input: UpdateActionInput): Promise<void> => {
     try {
-      const { data, error: updateError } = await updateActionService(id, input);
+      const { data, error: updateError } = await updateActionService(id, input, userId);
       if (updateError) {
         throw new Error(updateError.message);
       }
@@ -64,11 +64,11 @@ export function useActions(session: Session | null) {
     } catch (err) {
       throw err;
     }
-  }, []);
+  }, [userId]);
 
   const deleteAction = useCallback(async (id: string): Promise<void> => {
     try {
-      const { error: deleteError } = await deleteActionService(id);
+      const { error: deleteError } = await deleteActionService(id, userId);
       if (deleteError) {
         throw new Error(deleteError.message);
       }
@@ -76,11 +76,11 @@ export function useActions(session: Session | null) {
     } catch (err) {
       throw err;
     }
-  }, []);
+  }, [userId]);
 
   const completeAction = useCallback(async (id: string, xpAwarded: number = 0): Promise<Action | null> => {
     try {
-      const { data, error: completeError } = await completeActionService(id, xpAwarded);
+      const { data, error: completeError } = await completeActionService(id, xpAwarded, userId);
       if (completeError) {
         throw new Error(completeError.message);
       }
@@ -92,7 +92,7 @@ export function useActions(session: Session | null) {
     } catch (err) {
       throw err;
     }
-  }, []);
+  }, [userId]);
 
   const reorderActionsByCategory = useCallback(async (category: ActionCategory, orderedIds: string[]): Promise<void> => {
     const idsInOrder = orderedIds.filter(Boolean);
@@ -105,7 +105,7 @@ export function useActions(session: Session | null) {
       order_index: index,
     }));
 
-    const { success, error: reorderError } = await reorderActionsService(updates);
+    const { success, error: reorderError } = await reorderActionsService(updates, userId);
     if (!success) {
       throw new Error(reorderError?.message ?? 'Failed to reorder actions');
     }
@@ -120,7 +120,7 @@ export function useActions(session: Session | null) {
         return typeof newOrder === 'number' ? { ...action, order_index: newOrder } : action;
       })
     );
-  }, []);
+  }, [userId]);
 
   return {
     actions,

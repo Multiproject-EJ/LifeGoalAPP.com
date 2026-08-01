@@ -1,5 +1,5 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { canUseSupabaseData, canUseSupabaseDataForUser, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database, Json } from '../lib/database.types';
 import { guardedCloudCall } from './service-health';
 import { getMutationQueue, getSyncEngine } from './offline-queue';
@@ -203,7 +203,7 @@ export async function getHabitCompletionsByMonth(
     const { startDate, endDate } = getMonthBoundaries(year, month);
     
     // Check if we should use demo data or real Supabase data
-    if (!canUseSupabaseData()) {
+    if (!canUseSupabaseDataForUser(userId)) {
       return getHabitCompletionsByMonthDemo(userId, year, month, startDate, endDate);
     }
     
@@ -449,7 +449,7 @@ export async function toggleHabitCompletionForDate(
   date: string,
 ): Promise<ServiceResponse<HabitCompletionRow>> {
   // Check if we should use demo data or real Supabase data
-  if (!canUseSupabaseData()) {
+  if (!canUseSupabaseDataForUser(userId)) {
     return toggleHabitCompletionForDateDemo(userId, habitId, date);
   }
 
@@ -564,7 +564,7 @@ export async function getMonthlyCompletionGrid(
   try {
     const { startDate, endDate } = getMonthBoundaries(year, month);
     
-    if (!canUseSupabaseData()) {
+    if (!canUseSupabaseDataForUser(userId)) {
       return getMonthlyCompletionGridDemo(userId, year, month, startDate, endDate);
     }
     
@@ -643,13 +643,13 @@ export async function migrateLegacyHabitCompletionQueue(userId: string): Promise
 
 /** Manual sync kick; the shared engine also auto-resyncs on reconnect. */
 export async function syncQueuedHabitCompletions(userId: string): Promise<void> {
-  if (!canUseSupabaseData()) return;
+  if (!canUseSupabaseDataForUser(userId)) return;
   await migrateLegacyHabitCompletionQueue(userId);
   await getSyncEngine().syncNow();
 }
 
-export async function getHabitCompletionQueueStatus(_userId: string): Promise<HabitCompletionQueueStatus> {
-  if (!canUseSupabaseData()) return { pending: 0, failed: 0 };
+export async function getHabitCompletionQueueStatus(userId: string): Promise<HabitCompletionQueueStatus> {
+  if (!canUseSupabaseDataForUser(userId)) return { pending: 0, failed: 0 };
   const mutations = await getMutationQueue().list();
   let pending = 0;
   let failed = 0;

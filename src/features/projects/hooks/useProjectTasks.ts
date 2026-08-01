@@ -28,8 +28,8 @@ export function useProjectTasks(session: Session | null, projectId: string) {
     setError(null);
 
     const [{ data: taskData, error: taskError }, { data: actionData, error: actionError }] = await Promise.all([
-      fetchProjectTasks(projectId),
-      fetchActionsByProjectId(projectId),
+      fetchProjectTasks(projectId, userId),
+      fetchActionsByProjectId(projectId, userId),
     ]);
 
     if (taskError || actionError) {
@@ -44,7 +44,7 @@ export function useProjectTasks(session: Session | null, projectId: string) {
       setTasks([...projectTasks, ...actionTasks]);
     }
     setLoading(false);
-  }, [projectId]);
+  }, [projectId, userId]);
 
   useEffect(() => {
     loadTasks();
@@ -74,54 +74,54 @@ export function useProjectTasks(session: Session | null, projectId: string) {
         return { data: null, error: null };
       }
 
-      const { data, error } = await updateAction(id, actionUpdate);
+      const { data, error } = await updateAction(id, actionUpdate, userId);
       if (!error && data) {
         await loadTasks();
       }
       return { data, error };
     }
 
-    const { data, error } = await updateProjectTaskService(id, input);
+    const { data, error } = await updateProjectTaskService(id, input, userId);
     if (!error && data) {
       await loadTasks();
     }
     return { data, error };
-  }, [loadTasks, tasks]);
+  }, [loadTasks, tasks, userId]);
 
   const deleteTask = useCallback(async (id: string) => {
     const targetTask = tasks.find((task) => task.id === id);
     if (targetTask?.source === 'action') {
-      const { data, error } = await deleteAction(id);
+      const { data, error } = await deleteAction(id, userId);
       if (!error) {
         await loadTasks();
       }
       return { data, error };
     }
 
-    const { data, error } = await deleteProjectTask(id);
+    const { data, error } = await deleteProjectTask(id, userId);
     if (!error) {
       await loadTasks();
     }
     return { data, error };
-  }, [loadTasks, tasks]);
+  }, [loadTasks, tasks, userId]);
 
   const completeTask = useCallback(async (id: string) => {
     const targetTask = tasks.find((task) => task.id === id);
     if (targetTask?.source === 'action') {
-      const { data, error } = await completeAction(id, 0);
+      const { data, error } = await completeAction(id, 0, userId);
       if (!error && data) {
         await loadTasks();
       }
       return { data, error };
     }
 
-    const { data, error } = await completeProjectTask(id);
+    const { data, error } = await completeProjectTask(id, userId);
     if (!error && data) {
       await loadTasks();
       earnXP(ACTIONS_XP_REWARDS.COMPLETE_PROJECT_TASK, 'project_task_completed', id);
     }
     return { data, error };
-  }, [loadTasks, earnXP, tasks]);
+  }, [loadTasks, earnXP, tasks, userId]);
 
   return {
     tasks,

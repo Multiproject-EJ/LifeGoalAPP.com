@@ -7,6 +7,7 @@ import type { ZenTokenTransaction } from '../../types/gamification';
 import { fetchZenGardenInventory, fetchZenTokenTransactions, purchaseZenGardenItem } from '../../services/zenGarden';
 import { ZEN_GARDEN_EARNED_ITEMS } from '../../constants/zenGarden';
 import { useTheme } from '../../contexts/ThemeContext';
+import { DEMO_USER_ID } from '../../services/demoData';
 import { resolveWisdomTreeProgress } from './treeGrowth';
 import zenShopBg from '../../assets/Zen_shopV2.webp';
 import toZenGardenImg from '../../assets/tozengarden.webp';
@@ -126,7 +127,7 @@ export function ZenGarden({ session, onBack }: ZenGardenProps) {
   const [showGardenPlot, setShowGardenPlot] = useState(false);
   const [showTreeDetails, setShowTreeDetails] = useState(false);
 
-  const userId = session?.user?.id ?? 'demo_user';
+  const userId = session?.user?.id ?? DEMO_USER_ID;
   const { effectiveCategory } = useTheme();
   const gardenPlotImage = effectiveCategory === 'dark' ? zenGardenPlotDark : zenGardenPlotLight;
 

@@ -1,4 +1,6 @@
-import { canUseSupabaseData, getSupabaseClient } from '../lib/supabaseClient';
+import { canUseSupabaseDataForUser, getSupabaseClient } from '../lib/supabaseClient';
+import { isDemoUserId } from './demoData';
+import { joinPublicLaunchWaitlist } from './publicLaunchWaitlist';
 
 export type WaitlistChannel = 'email' | 'push';
 
@@ -11,8 +13,8 @@ export async function recordDemoWaitlistSignup({
   email: string;
   channel: WaitlistChannel;
 }): Promise<{ ok: boolean; error?: string }> {
-  if (!canUseSupabaseData()) {
-    return { ok: false, error: 'Supabase not available.' };
+  if (isDemoUserId(userId) || !canUseSupabaseDataForUser(userId)) {
+    return joinPublicLaunchWaitlist(email, { source: 'island_3_gate', channel });
   }
 
   try {
