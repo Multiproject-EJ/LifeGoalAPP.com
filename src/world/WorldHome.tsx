@@ -18,27 +18,27 @@ interface WorldHomeProps {
 const COMPASS_GAME_LOOP = [
   {
     number: '01',
-    icon: '🧭',
-    title: 'Notice what matters',
-    desc: 'Answer short, useful questions in your Compass Book — never a giant form all at once.',
+    icon: '↻',
+    title: 'Play for the joy of it',
+    desc: 'Roll, explore, collect, and return because the game itself feels good.',
   },
   {
     number: '02',
-    icon: '✦',
-    title: 'Play the answer',
-    desc: 'Spin, match, choose, and explore. Game moments turn reflection into something you want to finish.',
+    icon: '⚡',
+    title: 'Catch a little energy',
+    desc: 'Instead of losing every turn inside the loop, HabitGame diverts a tiny spark toward something useful.',
   },
   {
     number: '03',
-    icon: '✓',
-    title: 'Do it in real life',
-    desc: 'Bring your actual Today habits into Island Run and let a small action move the world forward.',
+    icon: '💧',
+    title: 'Fill the book slowly',
+    desc: 'Small questions arrive one drop at a time, gradually making your Compass Book more personal and valuable.',
   },
   {
     number: '04',
-    icon: '🏰',
-    title: 'Grow your world',
-    desc: 'Your choices personalise the journey, unlock rewards, and make the next prompt more relevant.',
+    icon: '✦',
+    title: 'Choose how far it goes',
+    desc: 'Stay game-first with simple starter actions, or connect real-life habits when that feels useful. Both paths count.',
   },
 ] as const;
 
@@ -47,6 +47,7 @@ export function WorldHome(_props: WorldHomeProps) {
   const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [waitlistMessage, setWaitlistMessage] = useState('');
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const { trackEvent } = useWorldAnalytics();
 
   const handleWaitlistSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -264,52 +265,109 @@ export function WorldHome(_props: WorldHomeProps) {
             </div>
           </section>
 
-          <AwakeningExperience />
-
-          <section
-            className="world-home__compass-loop"
-            id="compass-game-loop"
-            aria-label="The Compass Book game loop"
-            data-awaken
-          >
-            <div className="world-home__compass-loop-heading">
-              <p>THE COMPASS BOOK · BUILT INTO THE GAME</p>
-              <span>
-                HabitGame gathers the right clues through gentle questions and playful stops, then blends
-                them with the habits already in your day. Personalise, play, win, and grow.
-              </span>
-            </div>
-
-            <div className="world-home__compass-loop-steps" role="list">
-              {COMPASS_GAME_LOOP.map((step) => (
-                <article className="world-home__compass-loop-step" role="listitem" key={step.number}>
-                  <small>{step.number}</small>
-                  <span aria-hidden="true">{step.icon}</span>
-                  <h3>{step.title}</h3>
-                  <p>{step.desc}</p>
-                </article>
-              ))}
-            </div>
-
-            <div className="world-home__compass-loop-promise">
-              <span aria-hidden="true">🌿</span>
-              <p>
-                <strong>Positive and low-pressure by design.</strong>
-                No perfect streaks, no punishment loops, and no need to optimise every part of your life.
-                Optional extras are for fans and faster players — the useful core stays welcoming.
-              </p>
-            </div>
-          </section>
-
-          <section className="world-home__how-invite" data-awaken aria-label="Learn how HabitGame works">
-            <span className="world-home__how-invite-orb" aria-hidden="true">✦</span>
-            <div>
-              <p>CURIOUS ABOUT THE PHILOSOPHY?</p>
-              <h2>See the kinder game loop.</h2>
-            </div>
-            <button type="button" onClick={() => setShowHowItWorks(true)}>
-              How does it work? <span aria-hidden="true">→</span>
+          <section className="world-home__more" aria-label="More HabitGame previews">
+            <button
+              className="world-home__more-toggle"
+              type="button"
+              aria-expanded={showMore}
+              aria-controls="world-home-more-content"
+              onClick={() => setShowMore((current) => !current)}
+            >
+              More <span aria-hidden="true">{showMore ? '−' : '+'}</span>
             </button>
+
+            {showMore && (
+              <div className="world-home__more-content" id="world-home-more-content">
+                <p className="world-home__more-label">EXPLORATIONS IN PROGRESS</p>
+
+                <AwakeningExperience />
+
+                <section
+                  className="world-home__compass-loop"
+                  id="compass-game-loop"
+                  aria-labelledby="world-home-compass-loop-title"
+                  data-awaken
+                >
+                  <div className="world-home__compass-loop-heading">
+                    <p>THE COMPASS BOOK · BORROWING THE GAME LOOP</p>
+                    <h2 id="world-home-compass-loop-title">Let the fun power something useful.</h2>
+                    <span>
+                      Most game loops keep you running in circles. HabitGame redirects a small part of that
+                      momentum — spark by spark, drop by drop — into a Compass Book that becomes more useful
+                      while the game stays joyful.
+                    </span>
+                  </div>
+
+                  <div
+                    className="world-home__compass-energy"
+                    aria-label="Play turns small sparks into pages that fill gradually"
+                    role="img"
+                  >
+                    <div className="world-home__energy-wheel" aria-hidden="true">
+                      <span className="world-home__energy-runner">●</span>
+                      <small>PLAY</small>
+                    </div>
+                    <div className="world-home__energy-flow" aria-hidden="true">
+                      <i />
+                      <i />
+                      <i />
+                      <span>⚡</span>
+                    </div>
+                    <div className="world-home__energy-book" aria-hidden="true">
+                      <span className="world-home__energy-book-page world-home__energy-book-page--left" />
+                      <span className="world-home__energy-book-page world-home__energy-book-page--right" />
+                      <b>🧭</b>
+                      <small>FILLS OVER TIME</small>
+                    </div>
+                  </div>
+
+                  <div className="world-home__compass-loop-steps" role="list">
+                    {COMPASS_GAME_LOOP.map((step) => (
+                      <article className="world-home__compass-loop-step" role="listitem" key={step.number}>
+                        <small>{step.number}</small>
+                        <span aria-hidden="true">{step.icon}</span>
+                        <h3>{step.title}</h3>
+                        <p>{step.desc}</p>
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className="world-home__compass-paths">
+                    <div>
+                      <small>GAME-FIRST PATH</small>
+                      <strong>Starter actions, not fake habits.</strong>
+                      <p>Play one round. Open the Compass Book. Claim a daily gift. Begin without life tracking.</p>
+                    </div>
+                    <span aria-hidden="true">OR</span>
+                    <div>
+                      <small>LIFE-LINKED PATH</small>
+                      <strong>Add real habits when you choose.</strong>
+                      <p>Connect one useful action and let progress in life give the island an extra boost.</p>
+                    </div>
+                  </div>
+
+                  <div className="world-home__compass-loop-promise">
+                    <span aria-hidden="true">🌿</span>
+                    <p>
+                      <strong>Positive and low-pressure by design.</strong>
+                      No perfect streaks, no punishment loops, and no requirement to track your life.
+                      Play can stand on its own; reflection and real-world actions add value only when you want them.
+                    </p>
+                  </div>
+                </section>
+
+                <section className="world-home__how-invite" data-awaken aria-label="Learn how HabitGame works">
+                  <span className="world-home__how-invite-orb" aria-hidden="true">✦</span>
+                  <div>
+                    <p>CURIOUS ABOUT THE PHILOSOPHY?</p>
+                    <h2>See the kinder game loop.</h2>
+                  </div>
+                  <button type="button" onClick={() => setShowHowItWorks(true)}>
+                    How does it work? <span aria-hidden="true">→</span>
+                  </button>
+                </section>
+              </div>
+            )}
           </section>
 
           <footer className="world-home__footer">

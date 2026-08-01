@@ -482,6 +482,403 @@
   }
 }
 
+/* The lower landing-page experiments stay intentionally quiet until invited.
+   This keeps the launch story focused while preserving an honest preview of
+   work that is still being shaped. */
+.world-home__more {
+  display: grid;
+  grid-column: 1 / -1;
+  justify-items: center;
+  width: 100%;
+  margin: clamp(18px, 3vw, 32px) 0 0;
+}
+
+.world-home__more-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 7px 13px 7px 15px;
+  border: 1px solid rgba(61, 107, 142, 0.24);
+  border-radius: 999px;
+  background: rgba(245, 249, 251, 0.72);
+  color: rgba(25, 61, 88, 0.72);
+  font: 800 0.72rem/1 var(--font-body, system-ui, sans-serif);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 5px 15px rgba(26, 62, 91, 0.07);
+  cursor: pointer;
+  transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.world-home__more-toggle span {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(29, 96, 143, 0.09);
+  font-size: 0.92rem;
+}
+
+.world-home__more-toggle:hover {
+  border-color: rgba(45, 122, 175, 0.44);
+  background: rgba(250, 253, 255, 0.96);
+  color: #174f78;
+  transform: translateY(-1px);
+}
+
+.world-home__more-toggle:focus-visible {
+  outline: 3px solid rgba(40, 148, 207, 0.32);
+  outline-offset: 3px;
+}
+
+.world-home__more-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  margin-top: 18px;
+  animation: world-more-reveal 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.world-home__more-label {
+  justify-self: center;
+  margin: 0 0 -8px;
+  color: rgba(41, 86, 119, 0.52);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+@keyframes world-more-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Compass energy metaphor: the familiar circular game loop does not disappear;
+   a small part of its momentum is carried into a book that fills over time. */
+.world-home__compass-energy {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.8fr) minmax(120px, 1fr) minmax(190px, 1.15fr);
+  align-items: center;
+  gap: clamp(14px, 3vw, 34px);
+  min-height: 230px;
+  padding: clamp(18px, 3vw, 30px);
+  border: 1px solid rgba(124, 218, 255, 0.2);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 16% 50%, rgba(72, 195, 249, 0.16), transparent 28%),
+    radial-gradient(circle at 86% 50%, rgba(255, 213, 102, 0.13), transparent 28%),
+    rgba(2, 24, 55, 0.58);
+}
+
+.world-home__energy-wheel {
+  position: relative;
+  display: grid;
+  width: clamp(130px, 17vw, 190px);
+  aspect-ratio: 1;
+  place-items: center;
+  justify-self: center;
+  border: 8px solid rgba(122, 218, 255, 0.26);
+  border-top-color: rgba(255, 216, 112, 0.82);
+  border-right-color: rgba(82, 194, 246, 0.68);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 34px rgba(77, 193, 249, 0.12),
+    0 0 34px rgba(60, 178, 237, 0.14);
+  animation: world-energy-wheel 8s linear infinite;
+}
+
+.world-home__energy-wheel::before,
+.world-home__energy-wheel::after {
+  position: absolute;
+  inset: 16%;
+  border: 1px dashed rgba(153, 225, 255, 0.3);
+  border-radius: 50%;
+  content: '';
+}
+
+.world-home__energy-wheel::after {
+  inset: 44%;
+  border: 0;
+  background: rgba(255, 220, 124, 0.9);
+  box-shadow: 0 0 22px rgba(255, 214, 95, 0.68);
+}
+
+.world-home__energy-wheel small {
+  position: absolute;
+  bottom: 21%;
+  color: rgba(216, 241, 252, 0.68);
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  animation: world-energy-counterspin 8s linear infinite;
+}
+
+.world-home__energy-runner {
+  position: absolute;
+  top: 11%;
+  left: 46%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  color: #fff2af;
+  font-size: 12px;
+  line-height: 1;
+  text-shadow: 0 0 12px rgba(255, 216, 98, 0.92);
+}
+
+.world-home__energy-runner::before,
+.world-home__energy-runner::after {
+  position: absolute;
+  top: 11px;
+  left: 5px;
+  width: 2px;
+  height: 28px;
+  border-radius: 2px;
+  background: #fff2af;
+  box-shadow: 0 0 9px rgba(255, 216, 98, 0.72);
+  content: '';
+  transform: rotate(24deg);
+  transform-origin: top;
+}
+
+.world-home__energy-runner::after {
+  height: 23px;
+  transform: rotate(-52deg);
+}
+
+.world-home__energy-flow {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+  min-width: 120px;
+  height: 80px;
+}
+
+.world-home__energy-flow::before {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(75, 202, 255, 0.2), rgba(255, 216, 99, 0.9));
+  box-shadow: 0 0 14px rgba(94, 205, 255, 0.38);
+  content: '';
+}
+
+.world-home__energy-flow i {
+  z-index: 1;
+  width: 11px;
+  height: 11px;
+  justify-self: center;
+  border-radius: 50% 50% 58% 42%;
+  background: #b9ecff;
+  box-shadow: 0 0 15px rgba(107, 213, 255, 0.86);
+  animation: world-energy-drop 2.6s ease-in-out infinite;
+}
+
+.world-home__energy-flow i:nth-child(2) {
+  animation-delay: 0.75s;
+}
+
+.world-home__energy-flow i:nth-child(3) {
+  animation-delay: 1.5s;
+}
+
+.world-home__energy-flow > span {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  color: #ffe080;
+  font-size: 1.35rem;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 95, 0.72));
+}
+
+.world-home__energy-book {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: clamp(190px, 24vw, 280px);
+  aspect-ratio: 1.5;
+  justify-self: center;
+  perspective: 700px;
+  filter: drop-shadow(0 24px 24px rgba(0, 0, 0, 0.22));
+}
+
+.world-home__energy-book-page {
+  border: 1px solid rgba(255, 221, 134, 0.72);
+  background:
+    repeating-linear-gradient(180deg, transparent 0 19px, rgba(45, 109, 135, 0.13) 19px 20px),
+    linear-gradient(145deg, #fff7db, #d9f1ec);
+}
+
+.world-home__energy-book-page--left {
+  border-radius: 14px 3px 3px 14px;
+  transform: rotateY(7deg);
+  transform-origin: right;
+}
+
+.world-home__energy-book-page--right {
+  border-radius: 3px 14px 14px 3px;
+  transform: rotateY(-7deg);
+  transform-origin: left;
+}
+
+.world-home__energy-book b {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(183, 132, 38, 0.5);
+  border-radius: 50%;
+  background: rgba(255, 248, 214, 0.88);
+  font-size: 1.8rem;
+  box-shadow: 0 0 24px rgba(255, 213, 86, 0.42);
+  transform: translate(-50%, -55%);
+}
+
+.world-home__energy-book small {
+  position: absolute;
+  right: 0;
+  bottom: 13%;
+  left: 0;
+  color: rgba(26, 74, 90, 0.62);
+  font-size: 0.55rem;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+  text-align: center;
+}
+
+.world-home__compass-paths {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 14px;
+}
+
+.world-home__compass-paths > div {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 18px 20px;
+  border: 1px solid rgba(142, 220, 255, 0.2);
+  border-radius: 20px;
+  background: rgba(12, 55, 91, 0.58);
+}
+
+.world-home__compass-paths > span {
+  align-self: center;
+  color: rgba(180, 221, 239, 0.48);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.world-home__compass-paths small,
+.world-home__compass-paths strong,
+.world-home__compass-paths p {
+  margin: 0;
+}
+
+.world-home__compass-paths small {
+  color: #75d7ff;
+  font-size: 0.59rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+}
+
+.world-home__compass-paths strong {
+  color: #f7fcff;
+  font-size: 0.94rem;
+}
+
+.world-home__compass-paths p {
+  color: rgba(204, 231, 244, 0.72);
+  font-size: 0.76rem;
+  line-height: 1.48;
+}
+
+@keyframes world-energy-wheel {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes world-energy-counterspin {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes world-energy-drop {
+  0%, 24% { opacity: 0.16; transform: translateX(-24px) scale(0.65); }
+  55% { opacity: 1; }
+  86%, 100% { opacity: 0.22; transform: translateX(24px) scale(1.08); }
+}
+
+@media (max-width: 720px) {
+  .world-home__compass-energy {
+    grid-template-columns: minmax(100px, 0.8fr) minmax(70px, 0.55fr) minmax(140px, 1fr);
+    gap: 8px;
+    min-height: 180px;
+    padding: 16px 10px;
+  }
+
+  .world-home__energy-wheel {
+    width: clamp(96px, 28vw, 145px);
+    border-width: 6px;
+  }
+
+  .world-home__energy-book {
+    width: clamp(140px, 36vw, 210px);
+  }
+
+  .world-home__compass-paths {
+    grid-template-columns: 1fr;
+  }
+
+  .world-home__compass-paths > span {
+    justify-self: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .world-home__compass-energy {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .world-home__energy-flow {
+    width: 70%;
+    min-width: 0;
+    height: 44px;
+    justify-self: center;
+  }
+
+  .world-home__energy-wheel {
+    width: 124px;
+  }
+
+  .world-home__energy-book {
+    width: 190px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-home__more-content,
+  .world-home__energy-wheel,
+  .world-home__energy-wheel small,
+  .world-home__energy-flow i {
+    animation: none;
+  }
+}
+
 /* Keep the character campaign legible after the legacy light-theme heading rules. */
 .world-home--sales-split .world-home__guides {
   scroll-margin-top: 24px;
