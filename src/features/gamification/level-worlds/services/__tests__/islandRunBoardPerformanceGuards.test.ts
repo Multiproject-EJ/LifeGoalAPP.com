@@ -80,11 +80,39 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
     name: 'traffic-light coin assets are decoded before the compositor flip',
     run: () => {
       const prototype = readSource('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx');
+      const rewardExperience = readSource('src/features/gamification/level-worlds/components/TrafficLightRewardExperience.tsx');
+      const rewardCss = readSource('src/features/gamification/level-worlds/components/TrafficLightRewardExperience.css');
       const css = readSource('src/features/gamification/level-worlds/LevelWorlds.css');
       assert(prototype.includes('TRAFFIC_LIGHT_ANIMATION_IMAGE_SRCS.map'), 'traffic-light art must be prefetched before the modal opens');
       assert(prototype.includes("image.decoding = 'async'"), 'traffic-light art must decode asynchronously before use');
       assert(css.includes('.island-coin--flipping .island-coin__face'), 'coin flip must have a Safari-safe face rendering profile');
       assert(css.includes('filter: none;'), 'rotating coin faces must not re-rasterize drop-shadow filters each frame');
+      assert(
+        rewardExperience.includes('TRAFFIC_LIGHT_REWARD_IMAGE_SRCS')
+        && rewardExperience.includes('box-lid.webp'),
+        'the three-tap reward box must preload its transparent base and single detachable lid',
+      );
+      assert(
+        rewardCss.includes('@keyframes traffic-reward-box-overload')
+        && rewardCss.includes('transform: scale(1.105, 1.125);'),
+        'tap two must finish visibly larger instead of shrinking during its charge',
+      );
+      assert(
+        rewardExperience.includes("items.slice(0, 10)")
+        && rewardCss.includes('left: 50%;')
+        && rewardCss.includes('left: var(--reward-left);')
+        && rewardCss.includes('width: min(100%, 24rem);')
+        && rewardCss.includes('justify-self: center;')
+        && rewardCss.includes('margin: -7.2rem auto 0;')
+        && rewardCss.includes('border: 0;'),
+        'one through ten frameless rewards must launch from the open box centre into centered adaptive rows',
+      );
+      assert(
+        rewardExperience.includes("normalizedTapCount === 0 ? 'Tap here' : 'Tap again'")
+        && !prototype.includes('<p className="island-coin-reward__eyebrow">')
+        && !prototype.includes('<p className="island-coin-reward__hint">'),
+        'the live opened-box modal must keep only the on-box tap prompt and frameless reward amounts',
+      );
     },
   },
   {
