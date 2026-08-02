@@ -9,7 +9,15 @@
  * combinedJourneyLevel.ts).
  */
 
-import { rankForLevel, nextRankForLevel, type RankDefinition } from './rankModel';
+import {
+  getRankById,
+  isRankServiceEligible,
+  nextRankForLevel,
+  rankForLevel,
+  rankForLevelAndService,
+  serviceEligibilityDate,
+  type RankDefinition,
+} from './rankModel';
 
 export interface RankProgressView {
   /** Rank currently held. */
@@ -24,19 +32,44 @@ export interface RankProgressView {
   xpRemaining: number;
   /** Fill toward the next rank, 0..100 (100 at max rank). */
   percent: number;
+  /** True when XP is sufficient but registered service time is still required. */
+  serviceLocked: boolean;
+  /** Required registered service years for the next rank, when applicable. */
+  serviceRequirementYears: number | null;
+  /** ISO date when the service requirement becomes eligible, if an account exists. */
+  serviceEligibleAt: string | null;
 }
 
 export function buildRankProgressView(params: {
   level: number;
   xp: number;
   cumulativeXpForLevel: (level: number) => number;
+  /** Undefined preserves the level-only legacy calculation; null means local guest/no registered service. */
+  accountCreatedAt?: string | null;
+  nowMs?: number;
 }): RankProgressView {
   const { level, xp, cumulativeXpForLevel } = params;
-  const current = rankForLevel(level);
-  const next = nextRankForLevel(level);
+  const serviceAware = Object.prototype.hasOwnProperty.call(params, 'accountCreatedAt');
+  const nowMs = params.nowMs ?? Date.now();
+  const current = serviceAware
+    ? rankForLevelAndService(level, params.accountCreatedAt, nowMs)
+    : rankForLevel(level);
+  const next = serviceAware
+    ? getRankById(current.id + 1) ?? null
+    : nextRankForLevel(level);
 
   if (!next) {
-    return { current, next: null, xpIntoRank: 0, xpForRank: 1, xpRemaining: 0, percent: 100 };
+    return {
+      current,
+      next: null,
+      xpIntoRank: 0,
+      xpForRank: 1,
+      xpRemaining: 0,
+      percent: 100,
+      serviceLocked: false,
+      serviceRequirementYears: null,
+      serviceEligibleAt: null,
+    };
   }
 
   const bandStartXp = cumulativeXpForLevel(current.minLevel);
@@ -45,6 +78,18 @@ export function buildRankProgressView(params: {
   const xpIntoRank = Math.min(xpForRank, Math.max(0, Math.round(xp - bandStartXp)));
   const xpRemaining = Math.max(0, Math.round(bandEndXp - xp));
   const percent = Math.min(100, Math.max(0, Math.round((xpIntoRank / xpForRank) * 100)));
+  const serviceLocked = serviceAware
+    && !isRankServiceEligible(next, params.accountCreatedAt, nowMs);
 
-  return { current, next, xpIntoRank, xpForRank, xpRemaining, percent };
+  return {
+    current,
+    next,
+    xpIntoRank,
+    xpForRank,
+    xpRemaining,
+    percent,
+    serviceLocked,
+    serviceRequirementYears: next.minServiceYears ?? null,
+    serviceEligibleAt: serviceEligibilityDate(next, params.accountCreatedAt),
+  };
 }

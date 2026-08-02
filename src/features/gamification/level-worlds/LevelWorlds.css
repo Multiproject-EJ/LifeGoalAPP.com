@@ -19416,7 +19416,9 @@
 .island-soft-save-modal {
   position: fixed;
   inset: 0;
-  z-index: 9800;
+  /* Must sit above the top-level Island Run shell (9999) and its gesture
+     surface; otherwise the modal is visible but the board steals its taps. */
+  z-index: 10010;
   display: grid;
   place-items: center;
   padding: 1.25rem;
@@ -19425,6 +19427,8 @@
 .island-soft-save-modal__backdrop {
   position: fixed;
   inset: 0;
+  border: 0;
+  padding: 0;
   background: rgba(9, 16, 34, 0.64);
   backdrop-filter: blur(10px);
 }

@@ -564,7 +564,9 @@ body {
   align-items: center;
   justify-content: center;
   padding: clamp(1rem, 4vw, 2.5rem);
-  z-index: 40;
+  /* Authentication can be opened from fullscreen Island Run. Keep it above
+     the board shell and narrative layers so signup remains actionable. */
+  z-index: 2147483200;
 }
 
 .auth-overlay__backdrop {

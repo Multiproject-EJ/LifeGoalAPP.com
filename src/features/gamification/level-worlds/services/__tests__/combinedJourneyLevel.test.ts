@@ -59,6 +59,14 @@ export const combinedJourneyLevelTests: TestCase[] = [
     },
   },
   {
+    name: 'completing Island 001 earns the first fast promotion to Crewmate',
+    run: () => {
+      const summary = deriveCombinedJourneyLevel({ islandsCompleted: 1 });
+      assertEqual(summary.gameXp, 150, 'Expected the first completed island to award 150 game XP');
+      assertEqual(summary.level, 2, 'Expected Island 001 completion to reach level 2');
+    },
+  },
+  {
     name: 'habit consistency is capped so habit count cannot dominate',
     run: () => {
       const capped = deriveCombinedJourneyLevel({ habitConsistencyScore: HABIT_CONSISTENCY_CAP });

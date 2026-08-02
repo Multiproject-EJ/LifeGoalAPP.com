@@ -51,6 +51,9 @@ export type CombinedJourneyLevelSummary = {
 // XP weights — launch-reviewed values (R8 balance pass).
 export const JOURNEY_XP_WEIGHTS = {
   perCompletedIsland: 100,
+  // A one-time first-voyage boost reaches level 2 exactly without making every
+  // later island 50% more valuable and accidentally flattening the long curve.
+  firstIslandCompletionBonus: 50,
   perCurrentIslandPercent: 1, // up to 100 within the current island
   perCompletedGoal: 60,
   perConsistentHabit: 15,
@@ -115,6 +118,7 @@ export function deriveCombinedJourneyLevel(
 
   const gameXp =
     islandsCompleted * JOURNEY_XP_WEIGHTS.perCompletedIsland +
+    (islandsCompleted >= 1 ? JOURNEY_XP_WEIGHTS.firstIslandCompletionBonus : 0) +
     currentIslandProgress * JOURNEY_XP_WEIGHTS.perCurrentIslandPercent;
   const lifeXp =
     completedGoals * JOURNEY_XP_WEIGHTS.perCompletedGoal +

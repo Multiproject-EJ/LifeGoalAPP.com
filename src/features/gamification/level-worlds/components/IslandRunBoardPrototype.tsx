@@ -110,6 +110,7 @@ import {
 import { useSupabaseAuth } from '../../../auth/SupabaseAuthProvider';
 import { useGamification } from '../../../../hooks/useGamification';
 import { isDemoSession } from '../../../../services/demoSession';
+import type { IslandRunGuestClaimSource } from '../services/islandRunGuestClaimService';
 import {
   hydrateIslandRunRuntimeStateWithSource,
   readIslandRunRuntimeState,
@@ -1594,7 +1595,7 @@ interface IslandRunBoardPrototypeProps {
   onExitBoard?: () => void;
   showTopBackButton?: boolean;
   isAdmin?: boolean;
-  onOpenSaveAccountSignup?: () => void;
+  onOpenSaveAccountSignup?: (source?: IslandRunGuestClaimSource) => void;
   onOpenDailySpinWheel?: () => void;
   dailySpinAvailable?: boolean;
   dailySpinCount?: number;
@@ -2718,9 +2719,10 @@ export function IslandRunBoardPrototype({
     const next = patchIslandRunGuestFunnelState({
       hasSeenSoftSavePromptAfterArena: true,
       claimStatus: 'claim_pending',
+      claimSource: 'arena',
     });
     setGuestFunnelState(next);
-    onOpenSaveAccountSignup?.();
+    onOpenSaveAccountSignup?.('arena');
   }, [onOpenSaveAccountSignup]);
 
   useEffect(() => {
@@ -9363,6 +9365,20 @@ export function IslandRunBoardPrototype({
     if (isAnimatingRollRef.current) {
       setLandingText('Please wait for the current roll animation to finish before traveling.');
       return;
+    }
+
+    if (stats.islandNumber === 1 && isDemoSession(session)) {
+      const currentGuestState = readIslandRunGuestFunnelState();
+      if (currentGuestState.claimStatus !== 'claimed') {
+        const nextGuestState = patchIslandRunGuestFunnelState({
+          hasSeenStrongSavePromptBeforeTravel: true,
+          claimStatus: 'claim_pending',
+          claimSource: 'island_1_completion',
+        });
+        setGuestFunnelState(nextGuestState);
+        onOpenSaveAccountSignup?.('island_1_completion');
+        return;
+      }
     }
 
     if (stats.islandNumber === 3 && !isAdmin) {

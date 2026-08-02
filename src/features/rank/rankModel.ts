@@ -44,6 +44,8 @@ export interface RankDefinition {
   insignia: RankInsignia;
   /** Star count for star-insignia ranks (Fleet Captain 2, Sky Marshal 3). */
   stars?: number;
+  /** Minimum registered service years for prestige command ranks. */
+  minServiceYears?: 1 | 2 | 3;
   /** Concise in-world description for the rank journey / hero card. */
   description: string;
 }
@@ -66,7 +68,7 @@ export const RANKS: readonly RankDefinition[] = [
     id: 2,
     key: 'crewmate',
     title: 'Crewmate',
-    minLevel: 3,
+    minLevel: 2,
     tier: 'bronze',
     insignia: 'stripes',
     description: 'A trusted hand, pulling their weight with the crew.',
@@ -75,7 +77,7 @@ export const RANKS: readonly RankDefinition[] = [
     id: 3,
     key: 'pathfinder',
     title: 'Pathfinder',
-    minLevel: 6,
+    minLevel: 4,
     tier: 'bronze',
     insignia: 'stripes',
     description: 'Scouting the route ahead and finding the way forward.',
@@ -84,7 +86,7 @@ export const RANKS: readonly RankDefinition[] = [
     id: 4,
     key: 'navigator',
     title: 'Navigator',
-    minLevel: 10,
+    minLevel: 7,
     tier: 'bronze',
     insignia: 'stripes',
     description: 'Charting the course and keeping the expedition on heading.',
@@ -93,7 +95,7 @@ export const RANKS: readonly RankDefinition[] = [
     id: 5,
     key: 'flight-operator',
     title: 'Flight Operator',
-    minLevel: 15,
+    minLevel: 11,
     tier: 'bronze',
     insignia: 'stripes',
     description: 'Running the controls and keeping the crew in motion.',
@@ -102,7 +104,7 @@ export const RANKS: readonly RankDefinition[] = [
     id: 6,
     key: 'senior-operator',
     title: 'Senior Operator',
-    minLevel: 21,
+    minLevel: 16,
     tier: 'bronze',
     insignia: 'stripes',
     description: 'A seasoned operator the crew leans on under pressure.',
@@ -111,7 +113,7 @@ export const RANKS: readonly RankDefinition[] = [
     id: 7,
     key: 'lieutenant',
     title: 'Lieutenant',
-    minLevel: 28,
+    minLevel: 23,
     tier: 'command',
     insignia: 'stripes',
     description: 'Earning command stripes and leading from the front.',
@@ -120,7 +122,7 @@ export const RANKS: readonly RankDefinition[] = [
     id: 8,
     key: 'commander',
     title: 'Commander',
-    minLevel: 36,
+    minLevel: 32,
     tier: 'command',
     insignia: 'stripes',
     description: 'Trusted with command of the expedition.',
@@ -129,7 +131,7 @@ export const RANKS: readonly RankDefinition[] = [
     id: 9,
     key: 'wing-commander',
     title: 'Wing Commander',
-    minLevel: 45,
+    minLevel: 43,
     tier: 'command',
     insignia: 'stripes',
     description: 'Commanding the wing across long, demanding journeys.',
@@ -138,7 +140,8 @@ export const RANKS: readonly RankDefinition[] = [
     id: 10,
     key: 'captain',
     title: 'Captain',
-    minLevel: 55,
+    minLevel: 57,
+    minServiceYears: 1,
     tier: 'command',
     insignia: 'stripes',
     description: 'The captain — the standard the crew measures itself by.',
@@ -147,20 +150,22 @@ export const RANKS: readonly RankDefinition[] = [
     id: 11,
     key: 'fleet-captain',
     title: 'Fleet Captain',
-    minLevel: 70,
+    minLevel: 74,
     tier: 'command',
     insignia: 'stars',
     stars: 2,
+    minServiceYears: 2,
     description: 'Two stars. Command of the fleet, earned over the long haul.',
   },
   {
     id: 12,
     key: 'sky-marshal',
     title: 'Sky Marshal',
-    minLevel: 90,
+    minLevel: 94,
     tier: 'command',
     insignia: 'stars',
     stars: 3,
+    minServiceYears: 3,
     description: 'Three stars. The highest rank of the expedition.',
   },
 ] as const;
@@ -195,6 +200,53 @@ export function rankForLevel(level: number): RankDefinition {
     }
   }
   return held;
+}
+
+const SERVICE_YEAR_MS = 365.2425 * 24 * 60 * 60 * 1000;
+
+export function registeredServiceYears(
+  accountCreatedAt: string | null | undefined,
+  nowMs = Date.now(),
+): number {
+  if (!accountCreatedAt) return 0;
+  const createdAtMs = Date.parse(accountCreatedAt);
+  if (!Number.isFinite(createdAtMs) || !Number.isFinite(nowMs) || nowMs <= createdAtMs) return 0;
+  return Math.max(0, Math.floor((nowMs - createdAtMs) / SERVICE_YEAR_MS));
+}
+
+export function isRankServiceEligible(
+  rank: RankDefinition,
+  accountCreatedAt: string | null | undefined,
+  nowMs = Date.now(),
+): boolean {
+  if (!rank.minServiceYears) return true;
+  return registeredServiceYears(accountCreatedAt, nowMs) >= rank.minServiceYears;
+}
+
+/**
+ * Rank derived from both earned progression and registered service. Ranks 1–9
+ * remain activity-only; Captain, Fleet Captain, and Sky Marshal require one,
+ * two, and three years respectively in addition to their level thresholds.
+ */
+export function rankForLevelAndService(
+  level: number,
+  accountCreatedAt: string | null | undefined,
+  nowMs = Date.now(),
+): RankDefinition {
+  const earnedByLevel = rankForLevel(level);
+  let held = MIN_RANK;
+  for (const rank of RANKS) {
+    if (rank.id > earnedByLevel.id || !isRankServiceEligible(rank, accountCreatedAt, nowMs)) break;
+    held = rank;
+  }
+  return held;
+}
+
+export function serviceEligibilityDate(rank: RankDefinition, accountCreatedAt: string | null | undefined): string | null {
+  if (!rank.minServiceYears || !accountCreatedAt) return null;
+  const createdAtMs = Date.parse(accountCreatedAt);
+  if (!Number.isFinite(createdAtMs)) return null;
+  return new Date(createdAtMs + rank.minServiceYears * SERVICE_YEAR_MS).toISOString();
 }
 
 /** True when the given rank is the top of the ladder. */

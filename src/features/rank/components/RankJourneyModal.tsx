@@ -22,9 +22,14 @@ export interface RankJourneyModalProps {
 
 function rankLevelRangeLabel(rank: RankDefinition): string {
   const next = getRankById(rank.id + 1);
-  if (!next) return `Level ${rank.minLevel}+`;
-  if (next.minLevel - 1 <= rank.minLevel) return `Level ${rank.minLevel}`;
-  return `Levels ${rank.minLevel}–${next.minLevel - 1}`;
+  const levelLabel = !next
+    ? `Level ${rank.minLevel}+`
+    : next.minLevel - 1 <= rank.minLevel
+      ? `Level ${rank.minLevel}`
+      : `Levels ${rank.minLevel}–${next.minLevel - 1}`;
+  return rank.minServiceYears
+    ? `${levelLabel} · ${rank.minServiceYears} year${rank.minServiceYears === 1 ? '' : 's'} registered service`
+    : levelLabel;
 }
 
 export function RankJourneyModal({ level, progress, onClose }: RankJourneyModalProps) {
@@ -32,8 +37,15 @@ export function RankJourneyModal({ level, progress, onClose }: RankJourneyModalP
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const selected = selectedId ? getRankById(selectedId) : null;
 
+  const serviceDateLabel = progress.serviceEligibleAt
+    ? new Date(progress.serviceEligibleAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+    : null;
   const heroLine = progress.next
-    ? `${progress.xpRemaining.toLocaleString()} XP to ${progress.next.title}`
+    ? progress.serviceLocked && progress.xpRemaining === 0
+      ? serviceDateLabel
+        ? `Progress ready · registered service unlocks ${progress.next.title} in ${serviceDateLabel}`
+        : `Progress ready · register an account to begin service toward ${progress.next.title}`
+      : `${progress.xpRemaining.toLocaleString()} XP to ${progress.next.title}`
     : 'Highest rank reached';
 
   return (
@@ -59,7 +71,7 @@ export function RankJourneyModal({ level, progress, onClose }: RankJourneyModalP
 
         <ul className="rank-journey__grid" aria-label="All ranks">
           {RANKS.map((rank) => {
-            const locked = rank.minLevel > level;
+            const locked = rank.id > current.id;
             const isCurrent = rank.id === current.id;
             const isSelected = rank.id === selectedId;
             return (
@@ -91,7 +103,9 @@ export function RankJourneyModal({ level, progress, onClose }: RankJourneyModalP
           <div className="rank-journey__nextrank-bar-wrap">
             <span className="rank-journey__nextrank-xp">
               {progress.next
-                ? `${progress.xpIntoRank.toLocaleString()} / ${progress.xpForRank.toLocaleString()} XP`
+                ? progress.serviceLocked && progress.xpRemaining === 0
+                  ? `${progress.serviceRequirementYears ?? ''} year service gate`
+                  : `${progress.xpIntoRank.toLocaleString()} / ${progress.xpForRank.toLocaleString()} XP`
                 : 'Max rank reached'}
             </span>
             <span className="rank-journey__nextrank-bar" aria-hidden="true">
@@ -117,7 +131,7 @@ export function RankJourneyModal({ level, progress, onClose }: RankJourneyModalP
                 ×
               </button>
               <div className="rank-journey__detail-badge-wrap">
-                <RankBadge rank={selected} size={208} locked={selected.minLevel > level} />
+                <RankBadge rank={selected} size={208} locked={selected.id > current.id} />
               </div>
               <div className="rank-journey__detail-head">
                 <h3 className="rank-journey__detail-title">{selected.title}</h3>

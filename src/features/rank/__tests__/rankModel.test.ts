@@ -9,6 +9,9 @@ import {
   MAX_RANK,
   getRankById,
   rankForLevel,
+  rankForLevelAndService,
+  registeredServiceYears,
+  serviceEligibilityDate,
   nextRankForLevel,
   isMaxRank,
   progressToNextRank,
@@ -104,9 +107,9 @@ const tests: Array<{ name: string; run: () => void }> = [
   {
     name: 'rankForLevel maps boundaries to the correct rank',
     run: () => {
-      // Just below Crewmate (minLevel 3) stays Deckhand; at 3 it promotes.
-      assertEqual(rankForLevel(2).key, 'deckhand', 'Expected level 2 to be Deckhand');
-      assertEqual(rankForLevel(3).key, 'crewmate', 'Expected level 3 to be Crewmate');
+      // Island 001 reaches level 2, so the first promotion happens quickly.
+      assertEqual(rankForLevel(1).key, 'deckhand', 'Expected level 1 to be Deckhand');
+      assertEqual(rankForLevel(2).key, 'crewmate', 'Expected level 2 to be Crewmate');
       // Each threshold boundary lands exactly on its rank.
       for (const rank of RANKS) {
         assertEqual(
@@ -125,7 +128,7 @@ const tests: Array<{ name: string; run: () => void }> = [
   {
     name: 'very high levels saturate at the maximum rank',
     run: () => {
-      assertEqual(rankForLevel(90).id, MAX_RANK.id, 'Expected level 90 to be Sky Marshal');
+      assertEqual(rankForLevel(94).id, MAX_RANK.id, 'Expected level 94 to be Sky Marshal');
       assertEqual(rankForLevel(10_000).id, MAX_RANK.id, 'Expected huge level to saturate at max');
       assert(isMaxRank(rankForLevel(10_000)), 'Expected huge level to be the max rank');
     },
@@ -134,14 +137,14 @@ const tests: Array<{ name: string; run: () => void }> = [
     name: 'nextRankForLevel returns the following rank, or null at the top',
     run: () => {
       assertEqual(nextRankForLevel(1)?.key, 'crewmate', 'Expected next after Deckhand to be Crewmate');
-      assertEqual(nextRankForLevel(55)?.key, 'fleet-captain', 'Expected next after Captain to be Fleet Captain');
-      assertEqual(nextRankForLevel(90), null, 'Expected no next rank past Sky Marshal');
+      assertEqual(nextRankForLevel(57)?.key, 'fleet-captain', 'Expected next after Captain to be Fleet Captain');
+      assertEqual(nextRankForLevel(94), null, 'Expected no next rank past Sky Marshal');
     },
   },
   {
     name: 'progressToNextRank reports a full bar at max rank',
     run: () => {
-      const progress = progressToNextRank(90);
+      const progress = progressToNextRank(94);
       assertEqual(progress.current.id, MAX_RANK.id, 'Expected current to be the max rank');
       assertEqual(progress.next, null, 'Expected no next rank');
       assertEqual(progress.percent, 100, 'Expected a full bar at max rank');
@@ -151,25 +154,19 @@ const tests: Array<{ name: string; run: () => void }> = [
   {
     name: 'progressToNextRank computes band fill and remaining levels',
     run: () => {
-      // Deckhand band spans levels 1..3 (span 2). At level 2 → 1 level into band.
-      const atTwo = progressToNextRank(2);
-      assertEqual(atTwo.current.key, 'deckhand', 'Expected current rank Deckhand');
-      assertEqual(atTwo.next?.key, 'crewmate', 'Expected next rank Crewmate');
-      assertEqual(atTwo.percent, 50, 'Expected 50% through the Deckhand band at level 2');
-      assertEqual(atTwo.levelsRemaining, 1, 'Expected 1 level remaining to Crewmate');
-
-      // At the band start the bar is empty.
+      // The first rank band is deliberately short: level 1 to level 2.
       assertEqual(progressToNextRank(1).percent, 0, 'Expected 0% at the band start');
+      assertEqual(progressToNextRank(1).levelsRemaining, 1, 'Expected one level to the first promotion');
     },
   },
   {
     name: 'levelProgressFraction smooths the bar between whole levels',
     run: () => {
-      // Deckhand band span 2. Level 1 + 0.5 fraction → 0.5/2 = 25%.
+      // Deckhand band span 1. Level 1 + 0.5 fraction → 50%.
       const smooth = progressToNextRank(1, 0.5);
-      assertEqual(smooth.percent, 25, 'Expected fractional progress to smooth the bar');
+      assertEqual(smooth.percent, 50, 'Expected fractional progress to smooth the bar');
       // Out-of-range fractions are clamped.
-      assertEqual(progressToNextRank(1, 5).percent, 50, 'Expected fraction > 1 to clamp to 1');
+      assertEqual(progressToNextRank(1, 5).percent, 100, 'Expected fraction > 1 to clamp to 1');
       assertEqual(progressToNextRank(1, -5).percent, 0, 'Expected fraction < 0 to clamp to 0');
     },
   },
@@ -197,25 +194,53 @@ const tests: Array<{ name: string; run: () => void }> = [
   {
     name: 'buildRankProgressView reports XP toward the next rank',
     run: () => {
-      // Deckhand band: levels 1..2 (Crewmate starts at 3). With the linear curve,
-      // band start xp = 0, band end xp = (3-1)*100 = 200. At xp 100 → 50%.
-      const view = buildRankProgressView({ level: 2, xp: 100, cumulativeXpForLevel: linearCurve });
+      // Deckhand band: level 1 to 2. At 50 XP the first quick promotion is 50% ready.
+      const view = buildRankProgressView({ level: 1, xp: 50, cumulativeXpForLevel: linearCurve });
       assertEqual(view.current.key, 'deckhand', 'Expected current rank Deckhand');
       assertEqual(view.next?.key, 'crewmate', 'Expected next rank Crewmate');
-      assertEqual(view.xpForRank, 200, 'Expected the Deckhand band to span 200 xp');
-      assertEqual(view.xpIntoRank, 100, 'Expected 100 xp into the band');
+      assertEqual(view.xpForRank, 100, 'Expected the Deckhand band to span 100 xp');
+      assertEqual(view.xpIntoRank, 50, 'Expected 50 xp into the band');
       assertEqual(view.percent, 50, 'Expected 50% toward Crewmate');
-      assertEqual(view.xpRemaining, 100, 'Expected 100 xp remaining');
+      assertEqual(view.xpRemaining, 50, 'Expected 50 xp remaining');
     },
   },
   {
     name: 'buildRankProgressView saturates a full bar at the max rank',
     run: () => {
-      const view = buildRankProgressView({ level: 90, xp: 99999, cumulativeXpForLevel: linearCurve });
+      const view = buildRankProgressView({ level: 94, xp: 99999, cumulativeXpForLevel: linearCurve });
       assertEqual(view.current.key, 'sky-marshal', 'Expected current rank Sky Marshal');
       assertEqual(view.next, null, 'Expected no next rank');
       assertEqual(view.percent, 100, 'Expected a full bar at the max rank');
       assertEqual(view.xpRemaining, 0, 'Expected no xp remaining at the max rank');
+    },
+  },
+  {
+    name: 'last three ranks require one, two, and three years of registered service',
+    run: () => {
+      const now = Date.parse('2026-08-02T00:00:00.000Z');
+      assertEqual(rankForLevelAndService(94, null, now).key, 'wing-commander', 'Expected an unregistered guest to stop below prestige ranks');
+      assertEqual(rankForLevelAndService(94, '2025-07-01T00:00:00.000Z', now).key, 'captain', 'Expected one-year service to unlock Captain');
+      assertEqual(rankForLevelAndService(94, '2024-07-01T00:00:00.000Z', now).key, 'fleet-captain', 'Expected two-year service to unlock Fleet Captain');
+      assertEqual(rankForLevelAndService(94, '2023-07-01T00:00:00.000Z', now).key, 'sky-marshal', 'Expected three-year service to unlock Sky Marshal');
+      assertEqual(registeredServiceYears('2023-07-01T00:00:00.000Z', now), 3, 'Expected whole registered years');
+      assert(serviceEligibilityDate(RANKS[9], '2025-07-01T00:00:00.000Z') !== null, 'Expected a server-account eligibility date');
+    },
+  },
+  {
+    name: 'rank progress exposes a service gate after the XP requirement is met',
+    run: () => {
+      const view = buildRankProgressView({
+        level: 94,
+        xp: linearCurve(94),
+        cumulativeXpForLevel: linearCurve,
+        accountCreatedAt: '2026-08-02T00:00:00.000Z',
+        nowMs: Date.parse('2026-08-02T00:00:00.000Z'),
+      });
+      assertEqual(view.current.key, 'wing-commander', 'Expected service tenure to cap the earned rank');
+      assertEqual(view.next?.key, 'captain', 'Expected Captain to remain the next rank');
+      assertEqual(view.xpRemaining, 0, 'Expected the XP requirement to already be met');
+      assertEqual(view.serviceLocked, true, 'Expected the one-year service gate to remain locked');
+      assertEqual(view.serviceRequirementYears, 1, 'Expected the Captain one-year gate');
     },
   },
   {
