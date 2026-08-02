@@ -21,6 +21,7 @@ import {
 
 export function useGamification(session: Session | null) {
   const instanceId = useRef(`gamification-${Math.random().toString(36).slice(2)}`);
+  const notificationSubscriptionId = useRef(0);
   const [enabled, setEnabled] = useState<boolean>(true);
   const [profile, setProfile] = useState<GamificationProfile | null>(null);
   const [levelInfo, setLevelInfo] = useState<LevelInfo | null>(null);
@@ -104,10 +105,21 @@ export function useGamification(session: Session | null) {
     }
 
     const supabase = getSupabaseClient();
+    notificationSubscriptionId.current += 1;
+    const channelName = [
+      'gamification_notifications',
+      userId,
+      instanceId.current,
+      notificationSubscriptionId.current,
+    ].join(':');
 
     // Subscribe to notifications
     const notificationChannel = supabase
-      .channel('gamification_notifications')
+      // Realtime JS 2.110+ reuses an existing channel with the same topic.
+      // A unique topic prevents React Strict Mode's setup-cleanup-setup cycle
+      // from trying to add callbacks to the first channel while its async
+      // removal is still in flight.
+      .channel(channelName)
       .on(
         'postgres_changes',
         {

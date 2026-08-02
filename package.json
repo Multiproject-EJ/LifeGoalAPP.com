@@ -74,6 +74,7 @@
   },
   "dependencies": {
     "@capacitor/app": "8.1.0",
+    "@capacitor/browser": "8.0.2",
     "@capacitor/core": "8.4.1",
     "@capacitor/dialog": "8.0.1",
     "@capacitor/haptics": "8.0.2",

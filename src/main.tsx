@@ -527,6 +527,15 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <SafeErrorBoundary
       fallback={<RootCrashFallback />}
       onError={(error, info) => {
+        // Keep native debug builds observable from Xcode. The in-app debugger
+        // remains the user-facing source, while this avoids losing the actual
+        // React error when the boundary replaces the tree in Capacitor.
+        const errorDetails = error instanceof Error
+          ? `${error.name}: ${error.message}\n${error.stack ?? ''}`
+          : String(error);
+        console.error(
+          `React root render failed.\n${errorDetails}\nComponent stack:\n${info.componentStack}`,
+        );
         window.__LifeGoalAppDebugger?.error('React root render failed.', {
           message: error.message,
           stack: error.stack,
