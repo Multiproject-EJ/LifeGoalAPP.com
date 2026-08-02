@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CelebrationFireworks, type FireworksVariant } from './CelebrationFireworks';
 import { GiftBoxOpeningAnimation } from './GiftBoxOpeningAnimation';
+import {
+  AdaptiveRewardBurst,
+  TrafficLightRewardBox,
+  type TrafficLightRewardBoxPhase,
+  type TrafficLightRewardPresentationItem,
+} from '../features/gamification/level-worlds/components/TrafficLightRewardExperience';
 import './AnimationLab.css';
 
 type AnimationAsset = {
@@ -116,6 +122,19 @@ const BACKGROUNDS: Array<{ id: StageBackground; label: string }> = [
   { id: 'green', label: 'Green' },
 ];
 
+const TRAFFIC_REWARD_PREVIEW_ITEMS: TrafficLightRewardPresentationItem[] = [
+  { id: 'dice', icon: '🎲', imageSrc: '/assets/traffic_light/reward-box/reward-dice.webp', amount: 500, label: 'Dice' },
+  { id: 'money', icon: '💰', amount: 70, label: 'Money' },
+  { id: 'puzzle', icon: '🧩', amount: 2, label: 'Puzzle pieces', rare: true },
+  { id: 'tickets', icon: '🎫', imageSrc: '/assets/traffic_light/reward-box/reward-tickets.webp', amount: 5, label: 'Event tickets' },
+  { id: 'event', icon: '⚡', amount: 3, label: 'Event bar' },
+  { id: 'essence', icon: '🟣', amount: 12, label: 'Essence' },
+  { id: 'shield', icon: '🛡️', amount: 2, label: 'Shields' },
+  { id: 'diamonds', icon: '💎', amount: 4, label: 'Diamonds', rare: true },
+  { id: 'spin', icon: '🎡', amount: 3, label: 'Spins' },
+  { id: 'egg', icon: '🥚', amount: 1, label: 'Egg', rare: true },
+];
+
 const getFireworksVariant = (id: AnimationAsset['id']): FireworksVariant | null => {
   if (id === 'fireworksRapid') return 'rapid';
   if (id === 'fireworksHero') return 'hero';
@@ -131,6 +150,11 @@ export function AnimationLab() {
   const [playing, setPlaying] = useState<Record<string, boolean>>({});
   const [productionPreview, setProductionPreview] = useState<FireworksVariant | null>(null);
   const [giftPreviewKey, setGiftPreviewKey] = useState(0);
+  const [trafficRewardPreviewOpen, setTrafficRewardPreviewOpen] = useState(false);
+  const [trafficRewardTapCount, setTrafficRewardTapCount] = useState(0);
+  const [trafficRewardPhase, setTrafficRewardPhase] = useState<TrafficLightRewardBoxPhase>('revealed');
+  const [trafficRewardCount, setTrafficRewardCount] = useState(5);
+  const trafficRewardTimerRef = useRef<number | null>(null);
   const [backgrounds, setBackgrounds] = useState<Record<string, StageBackground>>({
     fireworksCapstone: 'dark',
     fireworksHero: 'dark',
@@ -154,6 +178,9 @@ export function AnimationLab() {
     if (params.get('giftPreview') === '1') {
       setGiftPreviewKey(1);
     }
+    if (params.get('trafficRewardPreview') === '1') {
+      setTrafficRewardPreviewOpen(true);
+    }
 
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const updateMotionPreference = () => setReducedMotion(motionQuery.matches);
@@ -174,6 +201,29 @@ export function AnimationLab() {
       window.removeEventListener('keydown', handleShortcut);
     };
   }, []);
+
+  useEffect(() => () => {
+    if (trafficRewardTimerRef.current !== null) window.clearTimeout(trafficRewardTimerRef.current);
+  }, []);
+
+  const resetTrafficRewardPreview = () => {
+    if (trafficRewardTimerRef.current !== null) window.clearTimeout(trafficRewardTimerRef.current);
+    trafficRewardTimerRef.current = null;
+    setTrafficRewardTapCount(0);
+    setTrafficRewardPhase('revealed');
+  };
+
+  const handleTrafficRewardPreviewTap = () => {
+    if (trafficRewardPhase !== 'revealed') return;
+    const nextTapCount = Math.min(3, trafficRewardTapCount + 1);
+    setTrafficRewardTapCount(nextTapCount);
+    if (nextTapCount < 3) return;
+    setTrafficRewardPhase('opening');
+    trafficRewardTimerRef.current = window.setTimeout(() => {
+      setTrafficRewardPhase('opened');
+      trafficRewardTimerRef.current = null;
+    }, 560);
+  };
 
   useEffect(() => {
     if (!open) return undefined;
@@ -266,6 +316,7 @@ export function AnimationLab() {
         <div className="animation-lab-modal__toolbar" aria-label="Animation controls">
           <button type="button" onClick={() => setAllPlayback(true)}>Play all</button>
           <button type="button" onClick={() => setAllPlayback(false)}>Pause all</button>
+          <button type="button" onClick={() => { resetTrafficRewardPreview(); setTrafficRewardPreviewOpen(true); }}>Traffic reward preview</button>
           <span>Assets load only when this hidden lab opens.</span>
         </div>
 
@@ -400,6 +451,66 @@ export function AnimationLab() {
     </div>
   ) : null;
 
+  const trafficRewardPreview = trafficRewardPreviewOpen ? (
+    <div
+      className="animation-lab-app-preview traffic-reward-preview"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Traffic light three-tap reward preview"
+      onClick={() => setTrafficRewardPreviewOpen(false)}
+    >
+      <div className="traffic-reward-preview__workspace" onClick={(event) => event.stopPropagation()}>
+        <section className={`traffic-reward-preview__phone island-traffic-light--${trafficRewardPhase}`}>
+          <button
+            type="button"
+            className="traffic-reward-preview__close"
+            onClick={() => setTrafficRewardPreviewOpen(false)}
+            aria-label="Close traffic reward preview"
+          >
+            ×
+          </button>
+          <TrafficLightRewardBox
+            tapCount={trafficRewardTapCount}
+            phase={trafficRewardPhase}
+            onTap={handleTrafficRewardPreviewTap}
+            label="Mystery Box"
+          />
+          {trafficRewardPhase === 'opened' && (
+            <div className="island-coin-reward" role="status">
+              <AdaptiveRewardBurst items={TRAFFIC_REWARD_PREVIEW_ITEMS.slice(0, trafficRewardCount)} />
+            </div>
+          )}
+        </section>
+        <aside className="traffic-reward-preview__controls" aria-label="Developer preview controls">
+          <strong>Developer controls</strong>
+          <button type="button" onClick={resetTrafficRewardPreview}>Restart 3 taps</button>
+          <label>
+            Reward count: <strong>{trafficRewardCount}</strong>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={trafficRewardCount}
+              onChange={(event) => setTrafficRewardCount(Number(event.target.value))}
+            />
+          </label>
+          <div className="traffic-reward-preview__count-presets" aria-label="Reward-count presets">
+            {[1, 2, 5, 10].map((count) => (
+              <button
+                key={count}
+                type="button"
+                aria-pressed={trafficRewardCount === count}
+                onClick={() => setTrafficRewardCount(count)}
+              >
+                {count} reward{count === 1 ? '' : 's'}
+              </button>
+            ))}
+          </div>
+        </aside>
+      </div>
+    </div>
+  ) : null;
+
   if (typeof document === 'undefined') return null;
-  return createPortal(<>{launcher}{modal}{appLayerPreview}{giftLayerPreview}</>, document.body);
+  return createPortal(<>{launcher}{modal}{appLayerPreview}{giftLayerPreview}{trafficRewardPreview}</>, document.body);
 }

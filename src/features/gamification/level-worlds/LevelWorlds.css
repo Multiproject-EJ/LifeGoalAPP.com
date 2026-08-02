@@ -14689,8 +14689,11 @@
 
 .island-stop-modal--traffic-light {
   max-width: min(430px, calc(100vw - 28px));
+  max-height: min(820px, calc(100dvh - 24px));
   text-align: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border-color: rgba(125, 216, 255, 0.66);
   background:
     radial-gradient(circle at 50% 12%, rgba(74, 222, 128, 0.22), transparent 28%),
@@ -14760,6 +14763,7 @@
 
 .island-traffic-light__title {
   position: relative;
+  z-index: 6;
   /* justify-self centers the pill itself within the modal's grid column —
      more robust than relying on `margin: auto` alone, which some WebKit
      versions fail to apply correctly to a `width: fit-content` grid item. */
@@ -14783,6 +14787,8 @@
 }
 
 .island-traffic-light__intro {
+  position: relative;
+  z-index: 6;
   margin: 0.35rem auto 0;
   max-width: 21rem;
   color: rgba(220, 242, 255, 0.94);
@@ -14796,15 +14802,38 @@
    the signal art/title/intro so the winner reads as the clear focal point
    instead of competing with full-brightness chrome above it. */
 .island-traffic-light--revealed .island-traffic-light__hero,
-.island-traffic-light--revealed .island-traffic-light__title,
-.island-traffic-light--revealed .island-traffic-light__intro {
-  opacity: 0.5;
-  filter: saturate(0.55) brightness(0.75);
+.island-traffic-light--opening .island-traffic-light__hero,
+.island-traffic-light--opened .island-traffic-light__hero {
+  display: none;
 }
 
-.island-traffic-light--revealed .island-traffic-light__hero {
-  min-height: 96px;
-  transform: scale(0.82);
+.island-traffic-light--revealed .island-traffic-light__title,
+.island-traffic-light--opening .island-traffic-light__title,
+.island-traffic-light--opened .island-traffic-light__title {
+  display: none;
+}
+
+.island-traffic-light--revealed .island-traffic-light__intro,
+.island-traffic-light--opening .island-traffic-light__intro,
+.island-traffic-light--opened .island-traffic-light__intro {
+  display: none;
+}
+
+/* The box and each adaptive reward row share the modal's exact centerline.
+   Keep this explicit so a short final row (or an iOS scrollbar) cannot make
+   the opening sequence appear optically pulled toward either edge. */
+.island-traffic-light--revealed,
+.island-traffic-light--opening,
+.island-traffic-light--opened {
+  justify-items: center;
+}
+
+.island-traffic-light--revealed > .traffic-reward-box,
+.island-traffic-light--opening > .traffic-reward-box,
+.island-traffic-light--opened > .traffic-reward-box,
+.island-traffic-light--opened > .island-coin-reward {
+  width: 100%;
+  justify-self: center;
 }
 
 /* ── Coin stage (spotlight backdrop + sparkle burst) ─────────────────────────── */
@@ -15238,7 +15267,10 @@
 
 /* ── Reward hero (zoomed-in win presentation) ────────────────────────────────── */
 .island-coin-reward {
-  margin: 0.45rem 0 0.2rem;
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  margin: 0;
   animation: island-coin-reward-in 0.4s ease-out both;
 }
 

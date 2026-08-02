@@ -537,6 +537,12 @@ import {
   grantDevDemoEggRewardPack,
 } from '../services/islandRunAdminDevPackGrantAction';
 import { IslandRunDebugPanel, type IslandRunDebugLocalState } from './IslandRunDebugPanel';
+import {
+  AdaptiveRewardBurst,
+  TrafficLightRewardBox,
+  TRAFFIC_LIGHT_REWARD_IMAGE_SRCS,
+  type TrafficLightRewardPresentationItem,
+} from './TrafficLightRewardExperience';
 import { IslandRunLuckyRollDevOverlay } from './lucky-roll/IslandRunLuckyRollDevOverlay';
 import { resolveNextCheapestIndex } from '../services/islandRunShopAffordability';
 import {
@@ -605,6 +611,9 @@ const BUILD_HOLD_INITIAL_DELAY_MS = 400;
 // the `.island-coin--flipping` keyframe duration in LevelWorlds.css.
 const TRAFFIC_LIGHT_COIN_FLIP_DURATION_MS = 2600;
 const TRAFFIC_LIGHT_REWARD_AUTO_CLOSE_MS = 3600;
+const TRAFFIC_LIGHT_REWARD_TAP_ONE_MS = 260;
+const TRAFFIC_LIGHT_REWARD_TAP_TWO_MS = 560;
+const TRAFFIC_LIGHT_REWARD_OPEN_MS = 560;
 const TRAFFIC_LIGHT_COIN_IDLE_HINT_DELAY_MS = 3_000;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_VISIBLE_MS = 5_000;
 const SPACE_EXCAVATOR_EVENT_ICON_SRC = '/assets/icons/Eventgame_excavator.webp';
@@ -619,6 +628,7 @@ const TRAFFIC_LIGHT_ANIMATION_IMAGE_SRCS = [
   TRAFFIC_LIGHT_GIFT_IMAGE_SRC,
   TRAFFIC_LIGHT_BOX_COIN_IMAGE_SRC,
   TRAFFIC_LIGHT_GIFT_COIN_IMAGE_SRC,
+  ...TRAFFIC_LIGHT_REWARD_IMAGE_SRCS,
 ] as const;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Reward bar can award Space Excavator tickets';
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV = 'Reward bar can award Space Excavator tickets (DEV override tickets)';
@@ -1892,11 +1902,13 @@ export function IslandRunBoardPrototype({
   const [trafficLightCoinFlip, setTrafficLightCoinFlip] = useState<{
     seed: number;
     reward: TrafficLightCoinFlipReward | null;
-    phase: 'ready' | 'flipping' | 'revealed' | 'opened';
+    phase: 'ready' | 'flipping' | 'revealed' | 'opening' | 'opened';
     boxTapCount: number;
   } | null>(null);
   const [trafficLightRewardConfettiActive, setTrafficLightRewardConfettiActive] = useState(false);
   const [showTrafficLightCoinHint, setShowTrafficLightCoinHint] = useState(false);
+  const trafficLightRewardTapLockedRef = useRef(false);
+  const trafficLightRewardAnimationTimerRef = useRef<number | null>(null);
   useEffect(() => {
     if (typeof Image === 'undefined') return undefined;
     const images = TRAFFIC_LIGHT_ANIMATION_IMAGE_SRCS.map((src) => {
@@ -1912,6 +1924,11 @@ export function IslandRunBoardPrototype({
         image.onerror = null;
       }
     };
+  }, []);
+  useEffect(() => () => {
+    if (trafficLightRewardAnimationTimerRef.current !== null) {
+      window.clearTimeout(trafficLightRewardAnimationTimerRef.current);
+    }
   }, []);
   /**
    * Optimistic traffic-light charge shown the instant the token HOPS OVER the
@@ -5255,6 +5272,11 @@ export function IslandRunBoardPrototype({
   }, [trafficLightCoinFlip?.phase, trafficLightCoinFlip?.seed]);
 
   const handleCloseTrafficLightCoinFlip = useCallback(() => {
+    if (trafficLightRewardAnimationTimerRef.current !== null) {
+      window.clearTimeout(trafficLightRewardAnimationTimerRef.current);
+      trafficLightRewardAnimationTimerRef.current = null;
+    }
+    trafficLightRewardTapLockedRef.current = false;
     setTrafficLightCoinFlip(null);
     setTrafficLightRewardConfettiActive(false);
     setShowTrafficLightCoinHint(false);
@@ -5314,7 +5336,7 @@ export function IslandRunBoardPrototype({
 
     window.setTimeout(() => {
       setTrafficLightRewardConfettiActive(true);
-    }, 1050);
+    }, 180);
 
     window.setTimeout(() => {
       setTrafficLightCoinFlip((current) => current?.reward === reward && current.phase === 'opened' ? null : current);
@@ -5324,8 +5346,18 @@ export function IslandRunBoardPrototype({
   }, [client, session, trafficLightCoinFlip]);
 
   const handleTapTrafficLightReward = useCallback(() => {
-    if (!trafficLightCoinFlip?.reward || trafficLightCoinFlip.phase !== 'revealed') return;
+    if (
+      !trafficLightCoinFlip?.reward
+      || trafficLightCoinFlip.phase !== 'revealed'
+      || trafficLightRewardTapLockedRef.current
+    ) return;
+
+    const prefersReducedMotion = typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const nextTapCount = Math.min(3, trafficLightCoinFlip.boxTapCount + 1);
+    trafficLightRewardTapLockedRef.current = true;
+
     if (nextTapCount < 3) {
       playIslandRunSound('token_move');
       triggerIslandRunHaptic('roll');
@@ -5334,14 +5366,30 @@ export function IslandRunBoardPrototype({
           ? { ...current, boxTapCount: nextTapCount }
           : current
       ));
+      const lockDurationMs = prefersReducedMotion
+        ? 0
+        : nextTapCount === 1
+          ? TRAFFIC_LIGHT_REWARD_TAP_ONE_MS
+          : TRAFFIC_LIGHT_REWARD_TAP_TWO_MS;
+      trafficLightRewardAnimationTimerRef.current = window.setTimeout(() => {
+        trafficLightRewardTapLockedRef.current = false;
+        trafficLightRewardAnimationTimerRef.current = null;
+      }, lockDurationMs);
       return;
     }
+
+    playIslandRunSound('coin_reveal');
+    triggerIslandRunHaptic('coin_reveal');
     setTrafficLightCoinFlip((current) => (
       current?.reward === trafficLightCoinFlip.reward && current.phase === 'revealed'
-        ? { ...current, boxTapCount: 3 }
+        ? { ...current, boxTapCount: 3, phase: 'opening' }
         : current
     ));
-    handleOpenTrafficLightReward();
+    trafficLightRewardAnimationTimerRef.current = window.setTimeout(() => {
+      trafficLightRewardTapLockedRef.current = false;
+      trafficLightRewardAnimationTimerRef.current = null;
+      handleOpenTrafficLightReward();
+    }, prefersReducedMotion ? 0 : TRAFFIC_LIGHT_REWARD_OPEN_MS);
   }, [handleOpenTrafficLightReward, trafficLightCoinFlip]);
 
   const dismissLandmarkCoachmark = useCallback(() => {
@@ -6109,6 +6157,43 @@ export function IslandRunBoardPrototype({
     ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)
     : 0;
   const activeEventMeta = effectiveActiveTimedEvent ? getEventDisplayMeta(effectiveActiveTimedEvent.eventType) : null;
+  const trafficLightRewardItems = useMemo<TrafficLightRewardPresentationItem[]>(() => {
+    const reward = trafficLightCoinFlip?.reward;
+    if (!reward) return [];
+
+    const items: TrafficLightRewardPresentationItem[] = [
+      {
+        id: 'dice',
+        icon: '🎲',
+        imageSrc: '/assets/traffic_light/reward-box/reward-dice.webp',
+        amount: reward.dice,
+        label: 'Dice',
+      },
+      { id: 'money', icon: '💰', amount: reward.essence, label: 'Money' },
+    ];
+    if (reward.stickerFragments > 0) {
+      items.push({ id: 'fragments', icon: '🧩', amount: reward.stickerFragments, label: 'Puzzle pieces', rare: true });
+    }
+    if (reward.minigameTickets > 0) {
+      items.push({
+        id: 'tickets',
+        icon: '🎫',
+        imageSrc: '/assets/traffic_light/reward-box/reward-tickets.webp',
+        amount: reward.minigameTickets,
+        label: 'Event tickets',
+      });
+    }
+    if (reward.rewardBarProgress > 0) {
+      items.push({
+        id: 'event-progress',
+        icon: activeEventMeta?.icon ?? '⚡',
+        amount: reward.rewardBarProgress,
+        label: 'Event bar',
+        title: `Adds progress toward the ${activeEventMeta?.displayName ?? 'active event'} reward bar.`,
+      });
+    }
+    return items;
+  }, [activeEventMeta?.displayName, activeEventMeta?.icon, trafficLightCoinFlip?.reward]);
   const activeEventIcon = effectiveActiveTimedEvent?.eventType === 'space_excavator' ? SPACE_EXCAVATOR_EVENT_ICON_SRC : activeEventMeta?.icon ?? '';
   const renderEventIcon = (className: string) => activeEventIcon.startsWith('/')
     ? <img className={`${className} ${className}--image`} src={activeEventIcon} alt="" aria-hidden="true" loading="lazy" />
@@ -14075,7 +14160,7 @@ export function IslandRunBoardPrototype({
       {trafficLightCoinFlip && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--traffic-light island-traffic-light--${trafficLightCoinFlip.phase}`} role="dialog" aria-modal="true" aria-label="Traffic light bonus coin flip">
-            {trafficLightCoinFlip.phase !== 'flipping' && (
+            {trafficLightCoinFlip.phase !== 'flipping' && trafficLightCoinFlip.phase !== 'opening' && (
               <button type="button" className="island-traffic-light__close" onClick={handleCloseTrafficLightCoinFlip} aria-label="Close traffic light bonus">×</button>
             )}
             {trafficLightRewardConfettiActive && <ConfettiBurst active variant="standard" />}
@@ -14088,6 +14173,8 @@ export function IslandRunBoardPrototype({
                 ? 'Flipping…'
                 : trafficLightCoinFlip.phase === 'opened'
                   ? 'Rewards unlocked!'
+                  : trafficLightCoinFlip.phase === 'opening'
+                    ? 'It can’t hold much longer…'
                   : trafficLightCoinFlip.phase === 'revealed'
                     ? 'Your mystery box is ready.'
                     : 'All 8 lights are green. Flip the coin to reveal your mystery box.'}
@@ -14135,75 +14222,18 @@ export function IslandRunBoardPrototype({
               </div>
             )}
 
-            {(trafficLightCoinFlip.phase === 'revealed' || trafficLightCoinFlip.phase === 'opened') && trafficLightCoinFlip.reward && (
-              <button
-                type="button"
-                className={`island-traffic-light__winner-spotlight island-traffic-light__winner-spotlight--tap-${trafficLightCoinFlip.boxTapCount}`}
-                onClick={handleTapTrafficLightReward}
-                disabled={trafficLightCoinFlip.phase === 'opened'}
-                aria-label={trafficLightCoinFlip.phase === 'revealed'
-                  ? `Tap ${trafficLightCoinFlip.reward.label}, ${trafficLightCoinFlip.boxTapCount} of 3 taps`
-                  : `${trafficLightCoinFlip.reward.label} opened`}
-              >
-                <img
-                  className="island-traffic-light__winner-image"
-                  src={trafficLightCoinFlip.reward.boxId === 'box_1' ? TRAFFIC_LIGHT_BOX_IMAGE_SRC : TRAFFIC_LIGHT_GIFT_IMAGE_SRC}
-                  alt=""
-                  loading="eager"
-                  decoding="async"
-                />
-                {trafficLightCoinFlip.phase === 'revealed' && (
-                  <span className="island-traffic-light__winner-tap-hint">
-                    {trafficLightCoinFlip.boxTapCount === 0
-                      ? 'Tap 3 times to crack it'
-                      : `${3 - trafficLightCoinFlip.boxTapCount} tap${3 - trafficLightCoinFlip.boxTapCount === 1 ? '' : 's'} left`}
-                    <span aria-hidden="true">
-                      {[0, 1, 2].map((tapIndex) => (
-                        <i key={tapIndex} className={tapIndex < trafficLightCoinFlip.boxTapCount ? 'is-complete' : ''}>•</i>
-                      ))}
-                    </span>
-                  </span>
-                )}
-              </button>
+            {(trafficLightCoinFlip.phase === 'revealed' || trafficLightCoinFlip.phase === 'opening' || trafficLightCoinFlip.phase === 'opened') && trafficLightCoinFlip.reward && (
+              <TrafficLightRewardBox
+                tapCount={trafficLightCoinFlip.boxTapCount}
+                phase={trafficLightCoinFlip.phase}
+                onTap={handleTapTrafficLightReward}
+                label={trafficLightCoinFlip.reward.label}
+              />
             )}
 
             {trafficLightCoinFlip.phase === 'opened' && trafficLightCoinFlip.reward && (
               <div className="island-coin-reward" role="status">
-                <p className="island-coin-reward__eyebrow">
-                  {trafficLightCoinFlip.reward.side === 'heads' ? 'Heads — Box 1' : 'Tails — Box 2'}
-                </p>
-                <div className="island-coin-reward__chips">
-                  <span className="island-coin-reward__chip" style={{ animationDelay: '0ms' }}>
-                    <b>+{trafficLightCoinFlip.reward.dice}</b> 🎲
-                  </span>
-                  <span className="island-coin-reward__chip" style={{ animationDelay: '320ms' }}>
-                    <b>+{trafficLightCoinFlip.reward.essence}</b> 💰
-                  </span>
-                  {trafficLightCoinFlip.reward.stickerFragments > 0 && (
-                    <span className="island-coin-reward__chip island-coin-reward__chip--rare" style={{ animationDelay: '640ms' }}>
-                      <b>+{trafficLightCoinFlip.reward.stickerFragments}</b> 🧩
-                    </span>
-                  )}
-                  {trafficLightCoinFlip.reward.minigameTickets > 0 && (
-                    <span className="island-coin-reward__chip" style={{ animationDelay: '960ms' }}>
-                      <b>+{trafficLightCoinFlip.reward.minigameTickets}</b> 🎫
-                    </span>
-                  )}
-                  {trafficLightCoinFlip.reward.rewardBarProgress > 0 && (
-                    <span
-                      className="island-coin-reward__chip"
-                      style={{ animationDelay: '1280ms' }}
-                      title={`Adds progress toward the ${activeEventMeta?.displayName ?? 'active event'} reward bar — fill it to claim dice, money, tickets, and puzzle pieces.`}
-                    >
-                      <b>+{trafficLightCoinFlip.reward.rewardBarProgress}</b> ⚡ {activeEventMeta?.icon ?? ''} event bar
-                    </span>
-                  )}
-                </div>
-                {trafficLightCoinFlip.reward.rewardBarProgress > 0 && (
-                  <p className="island-coin-reward__hint">
-                    ⚡ fills the {activeEventMeta?.displayName ?? 'timed event'} reward bar — claim it on the event banner for extra dice, money, tickets, and puzzle pieces.
-                  </p>
-                )}
+                <AdaptiveRewardBurst items={trafficLightRewardItems} />
               </div>
             )}
           </section>
