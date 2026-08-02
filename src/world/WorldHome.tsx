@@ -328,73 +328,6 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
             </div>
           </section>
 
-          <section
-            className="world-home__field-notes"
-            id="world-home-field-notes"
-            aria-labelledby="world-home-field-notes-title"
-          >
-            <header className="world-home__field-notes-heading">
-              <div>
-                <p><span aria-hidden="true">✦</span> FROM THE WORLD · FIELD NOTES</p>
-                <h2 id="world-home-field-notes-title">Stories, guides and signals from the islands.</h2>
-              </div>
-              <span className="world-home__field-notes-status">First dispatches · coming soon</span>
-            </header>
-
-            <div className="world-home__field-notes-grid">
-              <article className="world-home__field-note world-home__field-note--featured">
-                <div className="world-home__field-note-art">
-                  <img
-                    src="/landing-page-assets/showcase/island-run.webp"
-                    alt="HabitGame Island Run board floating among clouds"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <span>FIRST VOYAGE</span>
-                </div>
-                <div className="world-home__field-note-copy">
-                  <p>BEGINNER'S GUIDE · 6 MIN</p>
-                  <h3>Your first voyage: how Island Run begins.</h3>
-                  <span>
-                    Follow the compass, spend your first dice and discover how small choices bring
-                    a quiet island to life.
-                  </span>
-                  <strong>Guide arriving before launch <i aria-hidden="true">→</i></strong>
-                </div>
-              </article>
-
-              <div className="world-home__field-note-stack">
-                <article className="world-home__field-note world-home__field-note--compact">
-                  <img
-                    src="/landing-page-assets/characters/builder-robot-family-preview-v1.jpg"
-                    alt="HabitGame builder robots gathered together"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div>
-                    <p>WORLD NOTES · 4 MIN</p>
-                    <h3>Meet the builders behind the compass.</h3>
-                    <span>Characters, clues and the hands quietly shaping your island.</span>
-                  </div>
-                </article>
-
-                <article className="world-home__field-note world-home__field-note--compact">
-                  <img
-                    src="/landing-page-assets/showcase/daily-momentum.webp"
-                    alt="HabitGame Daily Momentum reward journey"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div>
-                    <p>DESIGN NOTE · 3 MIN</p>
-                    <h3>Why tomorrow should feel inviting.</h3>
-                    <span>A gentler look at rewards, returns and beginning again.</span>
-                  </div>
-                </article>
-              </div>
-            </div>
-          </section>
-
           <section className="world-home__more" aria-label="More HabitGame previews">
             <button
               className="world-home__more-toggle"
@@ -409,6 +342,75 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
             {showMore && (
               <div className="world-home__more-content" id="world-home-more-content">
                 <p className="world-home__more-label">EXPLORATIONS IN PROGRESS</p>
+
+                <section
+                  className="world-home__field-notes"
+                  id="world-home-field-notes"
+                  aria-labelledby="world-home-field-notes-title"
+                >
+                  <header className="world-home__field-notes-heading">
+                    <div>
+                      <p><span aria-hidden="true">✦</span> FROM THE WORLD · FIELD NOTES</p>
+                      <h2 id="world-home-field-notes-title">Stories, guides and signals from the islands.</h2>
+                    </div>
+                    <span className="world-home__field-notes-status">
+                      Guides · world notes · art development · coming soon
+                    </span>
+                  </header>
+
+                  <div className="world-home__field-notes-grid">
+                    <article className="world-home__field-note world-home__field-note--featured">
+                      <div className="world-home__field-note-art">
+                        <img
+                          src="/landing-page-assets/showcase/island-run.webp"
+                          alt="HabitGame Island Run board floating among clouds"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <span>FIRST VOYAGE</span>
+                      </div>
+                      <div className="world-home__field-note-copy">
+                        <p>BEGINNER'S GUIDE · 6 MIN</p>
+                        <h3>Your first voyage: how Island Run begins.</h3>
+                        <span>
+                          Follow the compass, spend your first dice and discover how small choices bring
+                          a quiet island to life.
+                        </span>
+                        <strong>Guide arriving before launch <i aria-hidden="true">→</i></strong>
+                      </div>
+                    </article>
+
+                    <div className="world-home__field-note-stack">
+                      <article className="world-home__field-note world-home__field-note--compact">
+                        <img
+                          src="/landing-page-assets/characters/builder-robot-family-preview-v1.jpg"
+                          alt="HabitGame builder robots gathered together"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <div>
+                          <p>ART &amp; WORLD NOTES · 4 MIN</p>
+                          <h3>Meet the builders behind the compass.</h3>
+                          <span>Characters, clues and the hands quietly shaping your island.</span>
+                        </div>
+                      </article>
+
+                      <article className="world-home__field-note world-home__field-note--compact">
+                        <img
+                          src="/landing-page-assets/showcase/daily-momentum.webp"
+                          alt="HabitGame Daily Momentum reward journey"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <div>
+                          <p>DESIGN NOTE · 3 MIN</p>
+                          <h3>Why tomorrow should feel inviting.</h3>
+                          <span>A gentler look at rewards, returns and beginning again.</span>
+                        </div>
+                      </article>
+                    </div>
+                  </div>
+                </section>
 
                 <AwakeningExperience />
 
