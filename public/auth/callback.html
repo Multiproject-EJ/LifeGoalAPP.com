@@ -4,7 +4,14 @@
 <script type="module">
   import { supabase } from "/assets/supaClient.js";
 
-  // Wait for Supabase session (Google login completes here)
+  // PKCE returns a short-lived code. Exchange it on the same origin where the
+  // verifier was created, then continue with the normal persisted session.
+  const callbackParams = new URLSearchParams(window.location.search);
+  const callbackCode = callbackParams.get('code');
+  if (callbackCode) {
+    await supabase.auth.exchangeCodeForSession(callbackCode);
+  }
+
   const { data } = await supabase.auth.getSession();
 
   const SPA_ENTRY_PATH = "/";

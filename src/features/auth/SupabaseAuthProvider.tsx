@@ -1,5 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session, SignInWithPasswordCredentials, SignUpWithPasswordCredentials } from '@supabase/supabase-js';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import {
   getSupabaseClient,
   getSupabaseRedirectUrl,
@@ -9,6 +12,7 @@ import {
 import { AUTH_INITIALIZATION_TIMEOUT_MS, type AuthInitializationStatus } from './authInitialization';
 import { getServiceHealthManager } from '../../services/service-health/serviceHealthManager';
 import { classifyProviderError } from '../../services/service-health/errorTranslation';
+import { NATIVE_AUTH_CALLBACK_URL, readNativeOAuthResponse } from './nativeOAuth';
 
 type AuthContextValue = {
   session: Session | null;
@@ -69,6 +73,7 @@ function ensureSupabaseAuthError(error: unknown): Error {
 }
 
 export function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
+  const handledNativeOAuthUrls = useRef(new Set<string>());
   const mode = 'supabase' as const;
 
   const [session, setSession] = useState<Session | null>(null);
@@ -165,6 +170,59 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     };
   }, [initializationRetryKey, mode, supabase]);
 
+  useEffect(() => {
+    if (!supabase || !Capacitor.isNativePlatform()) return;
+
+    let isMounted = true;
+    let listener: PluginListenerHandle | null = null;
+
+    const completeNativeOAuth = async (url: string) => {
+      const response = readNativeOAuthResponse(url);
+      if (!response) return;
+      if (handledNativeOAuthUrls.current.has(url)) return;
+      handledNativeOAuthUrls.current.add(url);
+
+      // The OAuth page is presented by Capacitor Browser on iOS. Close it as
+      // soon as the custom-scheme callback returns control to HabitGame.
+      await Browser.close().catch(() => undefined);
+
+      const { error } = response.type === 'pkce'
+        ? await supabase.auth.exchangeCodeForSession(response.code)
+        : await supabase.auth.setSession({
+            access_token: response.accessToken,
+            refresh_token: response.refreshToken,
+          });
+
+      if (error) {
+        if (isMounted) setInitializationError(ensureSupabaseAuthError(error));
+        return;
+      }
+
+      getServiceHealthManager().reportSuccess('auth');
+    };
+
+    void CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+      void completeNativeOAuth(url);
+    }).then((handle) => {
+      if (!isMounted) {
+        void handle.remove();
+        return;
+      }
+      listener = handle;
+    });
+
+    // Covers a cold launch where iOS delivered the callback before React had
+    // time to subscribe to appUrlOpen.
+    void CapacitorApp.getLaunchUrl().then((launch) => {
+      if (isMounted && launch?.url) void completeNativeOAuth(launch.url);
+    });
+
+    return () => {
+      isMounted = false;
+      if (listener) void listener.remove();
+    };
+  }, [supabase]);
+
   const signInWithPassword = useCallback(async (credentials: SignInWithPasswordCredentials) => {
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
@@ -223,7 +281,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     if (!supabase) {
       throw supabaseError ?? new Error('Supabase credentials are not configured.');
     }
-    const baseRedirectTo = getSupabaseRedirectUrl() ?? 'https://habitgame.app/auth/callback.html';
+    const isNative = Capacitor.isNativePlatform();
+    const baseRedirectTo = isNative
+      ? NATIVE_AUTH_CALLBACK_URL
+      : getSupabaseRedirectUrl() ?? 'https://habitgame.app/auth/callback.html';
     let redirectTo = baseRedirectTo;
     if (typeof window !== 'undefined' && window.location.pathname.startsWith('/conflict/join')) {
       try {
@@ -236,11 +297,18 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         redirectTo = baseRedirectTo;
       }
     }
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo },
+      options: {
+        redirectTo,
+        skipBrowserRedirect: isNative,
+      },
     });
     if (error) throw ensureSupabaseAuthError(error);
+    if (isNative) {
+      if (!data.url) throw new Error('Google sign-in did not return an authorization URL.');
+      await Browser.open({ url: data.url });
+    }
   }, [mode, supabase, supabaseError]);
 
   const sendPasswordReset = useCallback(
