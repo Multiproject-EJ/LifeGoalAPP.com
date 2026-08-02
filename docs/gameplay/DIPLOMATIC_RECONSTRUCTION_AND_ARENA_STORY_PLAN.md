@@ -198,6 +198,34 @@ New games receive enough normal exposure to be judged before the system shortens
 them. Competitive submissions compare equivalent full-run modes; flash duration
 must never create an unfair leaderboard advantage.
 
+## Competition hierarchy across 120 islands
+
+**Approved product direction — 2026-08-02.**
+
+The three championship super-levels remain the story Majors, but they sit inside
+a recurring competition calendar so the Arena promise does not disappear for
+dozens of islands at a time:
+
+| Layer | Cadence | Purpose |
+| --- | --- | --- |
+| Arena encounter | Most islands | Learn a host culture's game tradition and contribute a personal score |
+| League round | Every 2–3 islands, when authored | Build anticipation, standings and rivalries without interrupting island progression |
+| Host / Circuit Cup | Islands 10, 20, 40, 50, 60, 70, 80, 90, 100 and 110 | A four-stage competition peak: qualifying, quarterfinal, semifinal and final |
+| Championship Major | Islands 30 and 72 | Large diplomatic events with formal inter-island brackets and ceremonies |
+| Universal Championship | Island 117 | All 120 Arenas synchronize for the story's final competitive peak and route reveal |
+
+The Cups at Islands 10 and 20 are friendly host invitationals, not formal
+Alliance brackets. This preserves Island 30 as the first official inter-island
+circuit championship. Island 70 doubles as the final Worlds qualifier before
+the Island 72 Major. Island 120 receives no Cup because Final Horizon is the
+true story capstone and cycle wrap.
+
+Losing a Cup ends that Cup run and records a placement, but never blocks Island
+Run story progression. Scores, brackets, rewards and persistent tournament
+records must be introduced through canonical action services in a later gameplay
+slice. The first implementation is presentation-only: an opening modal, event
+art, bracket preview and existing Arena entry path.
+
 ## Championship super-levels
 
 There are three proposed championship super-levels. The first two placements are

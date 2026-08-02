@@ -1,0 +1,360 @@
+.championship-opening {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482500;
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-items: center;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: max(0.7rem, env(safe-area-inset-top)) max(0.7rem, env(safe-area-inset-right)) max(0.7rem, env(safe-area-inset-bottom)) max(0.7rem, env(safe-area-inset-left));
+  background: #030716;
+}
+
+.championship-opening__backdrop {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(111, 156, 255, 0.3), transparent 44%),
+    linear-gradient(150deg, rgba(2, 5, 17, 0.98), rgba(9, 15, 38, 0.98));
+  backdrop-filter: blur(18px);
+}
+
+.championship-opening__card {
+  --championship-accent: #8de8ff;
+  --championship-accent-2: #ffe6a1;
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 590px);
+  min-height: min(900px, calc(100dvh - 1.4rem));
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: clamp(22px, 6vw, 36px);
+  outline: none;
+  color: #f8fbff;
+  background: #070d20;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.68), inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+  animation: championship-opening-arrive 650ms cubic-bezier(0.2, 0.85, 0.2, 1) both;
+}
+
+.championship-opening--lagoon .championship-opening__card { --championship-accent: #7df5ec; --championship-accent-2: #ffd69d; }
+.championship-opening--golden .championship-opening__card { --championship-accent: #ffd66b; --championship-accent-2: #86e6ee; }
+.championship-opening--sunrise .championship-opening__card { --championship-accent: #ffcf7c; --championship-accent-2: #a2ddff; }
+.championship-opening--lotus .championship-opening__card { --championship-accent: #ff9fc7; --championship-accent-2: #a6f4c5; }
+.championship-opening--ember .championship-opening__card { --championship-accent: #ff9a5a; --championship-accent-2: #d6a2ff; }
+.championship-opening--storm .championship-opening__card { --championship-accent: #92ceff; --championship-accent-2: #d4b5ff; }
+.championship-opening--polar .championship-opening__card { --championship-accent: #a7f1ff; --championship-accent-2: #d7b6ff; }
+.championship-opening--worlds .championship-opening__card { --championship-accent: #8fcfff; --championship-accent-2: #ffbded; }
+.championship-opening--enchanted .championship-opening__card { --championship-accent: #cfb2ff; --championship-accent-2: #ffe2a3; }
+.championship-opening--heroes .championship-opening__card { --championship-accent: #ffe0a0; --championship-accent-2: #b7edca; }
+.championship-opening--data .championship-opening__card { --championship-accent: #5eeaff; --championship-accent-2: #ff72ee; }
+.championship-opening--synapse .championship-opening__card { --championship-accent: #9cf4ed; --championship-accent-2: #d498ff; }
+.championship-opening--universal .championship-opening__card { --championship-accent: #ddc3ff; --championship-accent-2: #fff0a8; }
+
+.championship-opening__art,
+.championship-opening__art-shade,
+.championship-opening__glow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.championship-opening__art {
+  z-index: -4;
+  object-fit: cover;
+  object-position: center;
+  animation: championship-opening-art 18s ease-in-out infinite alternate;
+}
+
+.championship-opening__art-shade {
+  z-index: -3;
+  background:
+    linear-gradient(180deg, rgba(2, 6, 18, 0.2) 0%, rgba(2, 6, 18, 0.03) 28%, rgba(2, 6, 18, 0.57) 55%, rgba(2, 6, 18, 0.96) 78%, #050916 100%),
+    linear-gradient(90deg, rgba(2, 5, 15, 0.3), transparent 44%, rgba(2, 5, 15, 0.18));
+}
+
+.championship-opening__glow {
+  z-index: -2;
+  background: radial-gradient(circle at 50% 58%, color-mix(in srgb, var(--championship-accent) 34%, transparent), transparent 38%);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  animation: championship-opening-glow 3.8s ease-in-out infinite;
+}
+
+.championship-opening__stars span {
+  position: absolute;
+  z-index: 1;
+  color: var(--championship-accent-2);
+  text-shadow: 0 0 16px currentColor;
+  animation: championship-opening-star 2.8s ease-in-out infinite;
+}
+
+.championship-opening__stars span:nth-child(1) { top: 14%; left: 8%; }
+.championship-opening__stars span:nth-child(2) { top: 26%; right: 8%; animation-delay: -1s; }
+.championship-opening__stars span:nth-child(3) { top: 42%; left: 13%; animation-delay: -2s; }
+
+.championship-opening__close {
+  position: absolute;
+  z-index: 3;
+  top: max(0.8rem, env(safe-area-inset-top));
+  right: 0.8rem;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(4, 9, 26, 0.66);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34);
+  font: inherit;
+  font-size: 1.65rem;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+
+.championship-opening__content {
+  display: flex;
+  min-height: inherit;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(13.5rem, 45vh, 25rem) clamp(1.1rem, 5vw, 2rem) clamp(1.1rem, 4vw, 1.8rem);
+  text-align: left;
+}
+
+.championship-opening__event-line,
+.championship-opening__host {
+  margin: 0;
+  color: rgba(239, 248, 255, 0.92);
+  font-size: 0.69rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+}
+
+.championship-opening__event-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.38rem;
+  color: var(--championship-accent);
+}
+
+.championship-opening__live-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--championship-accent-2);
+  box-shadow: 0 0 15px var(--championship-accent-2);
+}
+
+.championship-opening__host {
+  margin-top: 0.5rem;
+  letter-spacing: 0.08em;
+}
+
+.championship-opening h2 {
+  max-width: 12ch;
+  margin: 0.42rem 0 0;
+  color: #fff;
+  font-size: clamp(2rem, 9vw, 3.5rem);
+  font-weight: 950;
+  letter-spacing: -0.055em;
+  line-height: 0.92;
+  text-wrap: balance;
+  text-shadow: 0 4px 25px rgba(0, 0, 0, 0.85);
+}
+
+.championship-opening__tagline {
+  max-width: 35ch;
+  margin: 0.68rem 0 0;
+  color: var(--championship-accent-2);
+  font-size: clamp(0.94rem, 3.8vw, 1.18rem);
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.championship-opening__summary {
+  max-width: 48ch;
+  margin: 0.6rem 0 0;
+  color: rgba(235, 244, 255, 0.88);
+  font-size: clamp(0.82rem, 3.1vw, 0.98rem);
+  line-height: 1.43;
+}
+
+.championship-opening__stages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.35rem;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.championship-opening__stages li {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.32rem;
+  color: rgba(221, 232, 246, 0.7);
+  font-size: clamp(0.58rem, 2.3vw, 0.72rem);
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.championship-opening__stages li:not(:last-child)::after {
+  position: absolute;
+  top: 0.72rem;
+  left: calc(50% + 0.85rem);
+  width: calc(100% - 1.35rem);
+  height: 1px;
+  content: '';
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.1));
+}
+
+.championship-opening__stage-marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 999px;
+  background: rgba(5, 10, 27, 0.76);
+  font-size: 0.68rem;
+}
+
+.championship-opening__stage--active {
+  color: #fff !important;
+}
+
+.championship-opening__stage--active .championship-opening__stage-marker {
+  border-color: var(--championship-accent-2);
+  color: #07101e;
+  background: linear-gradient(135deg, var(--championship-accent-2), var(--championship-accent));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--championship-accent) 60%, transparent);
+}
+
+.championship-opening__discipline-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  color: rgba(232, 242, 255, 0.82);
+  background: rgba(6, 12, 29, 0.56);
+  font-size: clamp(0.7rem, 2.7vw, 0.82rem);
+  line-height: 1.35;
+  backdrop-filter: blur(10px);
+}
+
+.championship-opening__discipline-note > span:first-child {
+  color: var(--championship-accent-2);
+}
+
+.championship-opening__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.championship-opening__primary,
+.championship-opening__secondary {
+  min-height: 48px;
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.championship-opening__primary {
+  display: inline-flex;
+  flex: 1 1 210px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  color: #07101e !important;
+  background: linear-gradient(135deg, var(--championship-accent-2), var(--championship-accent));
+  box-shadow: 0 9px 30px rgba(0, 0, 0, 0.36), 0 0 26px color-mix(in srgb, var(--championship-accent) 38%, transparent);
+}
+
+.championship-opening__secondary {
+  flex: 1 1 180px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  color: #fff;
+  background: rgba(7, 13, 31, 0.75);
+}
+
+.championship-opening button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+@keyframes championship-opening-arrive {
+  from { opacity: 0; transform: translateY(22px) scale(0.975); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes championship-opening-art {
+  from { transform: scale(1.01) translate3d(0, 0, 0); }
+  to { transform: scale(1.055) translate3d(0, -0.7%, 0); }
+}
+
+@keyframes championship-opening-glow {
+  0%, 100% { opacity: 0.46; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes championship-opening-star {
+  0%, 100% { opacity: 0.45; transform: translateY(0) scale(0.9); }
+  50% { opacity: 1; transform: translateY(-7px) scale(1.12); }
+}
+
+@media (max-height: 720px) {
+  .championship-opening__card {
+    min-height: calc(100dvh - 1.4rem);
+  }
+
+  .championship-opening__content {
+    padding-top: 10rem;
+  }
+
+  .championship-opening__summary,
+  .championship-opening__discipline-note {
+    font-size: 0.72rem;
+  }
+}
+
+@media (min-width: 760px) {
+  .championship-opening {
+    padding: 1.4rem;
+  }
+
+  .championship-opening__card {
+    min-height: min(900px, calc(100dvh - 2.8rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .championship-opening__card,
+  .championship-opening__art,
+  .championship-opening__glow,
+  .championship-opening__stars span {
+    animation: none !important;
+  }
+}

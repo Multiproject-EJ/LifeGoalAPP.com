@@ -378,6 +378,7 @@ import {
 import { ShooterControllerAdapter } from './ShooterControllerAdapter';
 import { IslandStoryReader } from './IslandStoryReader';
 import { IslandChampionshipBanner } from './IslandChampionshipBanner';
+import { IslandChampionshipOpeningModal } from './IslandChampionshipOpeningModal';
 import { IslandNarrativeDialogue } from '../narrative/components/IslandNarrativeDialogue';
 import { IslandNarrativeToast } from '../narrative/components/IslandNarrativeToast';
 import { ExpeditionPhoneTransmission } from '../narrative/components/ExpeditionPhoneTransmission';
@@ -386,7 +387,10 @@ import { useIslandNarrativeOpeningFlow, type ActiveIslandStoryEpisode } from '..
 import { buildExpeditionPhoneTransmission, buildReactionDialogue } from '../narrative/islandNarrativeReactionDispatch';
 import { getIslandNarrativeDefinition } from '../narrative/islandNarrativeRegistry';
 import { isDiplomaticRewardChannelVisible } from '../narrative/islandDiplomaticPresentation';
-import { getIslandChampionshipPresentation } from '../narrative/islandChampionshipPresentation';
+import {
+  getChampionshipOpeningSeenStorageKey,
+  getIslandChampionshipPresentation,
+} from '../narrative/islandChampionshipPresentation';
 import { useLandmarkWhispers } from '../narrative/useLandmarkWhispers';
 import { createWisdomKeeperAiCoachGenerator } from '../narrative/wisdomKeeperAi';
 import type { IslandNarrativeSeenState } from '../narrative/islandNarrativeSeenState';
@@ -2504,12 +2508,24 @@ export function IslandRunBoardPrototype({
   const [perfectCompanionOnboardingCreatureName, setPerfectCompanionOnboardingCreatureName] = useState<string | null>(null);
 
   const [activeStoryEpisode, setActiveStoryEpisode] = useState<ActiveIslandStoryEpisode>(null);
+  const [showChampionshipOpeningModal, setShowChampionshipOpeningModal] = useState(false);
   const showStoryReader = activeStoryEpisode !== null;
   const storySeenStorageKey = `island_run_story_seen_prologue_${session.user.id}`;
   const championshipPresentation = useMemo(
     () => getIslandChampionshipPresentation(islandNumber),
     [islandNumber],
   );
+  const championshipOpeningStorageKey = useMemo(
+    () => championshipPresentation
+      ? getChampionshipOpeningSeenStorageKey(
+        session.user.id,
+        cycleIndex,
+        championshipPresentation.championshipId,
+      )
+      : null,
+    [championshipPresentation, cycleIndex, session.user.id],
+  );
+  const championshipAutoOpenKeyRef = useRef<string | null>(null);
 
   // A "blocking" surface is any full-attention modal/panel that renders above the
   // board. When one opens we dismiss the top-bar (☰) menu so it is not left hanging
@@ -2525,6 +2541,7 @@ export function IslandRunBoardPrototype({
     Boolean(activePlaceholder) ||
     showStickerAlbumDialog ||
     showSanctuaryPanel ||
+    showChampionshipOpeningModal ||
     showStoryReader ||
     isIslandInhabitantFlowOpen ||
     showCreatureChannelModal ||
@@ -2646,6 +2663,44 @@ export function IslandRunBoardPrototype({
   const journeyVersion = Number(session.user.user_metadata?.journey_version ?? 0);
   const developerJourneyDay = Number(session.user.user_metadata?.developer_journey_day ?? 0);
   const isArcadeStoryJourney = journeyVersion >= 1 || developerJourneyDay >= 1;
+  useEffect(() => {
+    if (!championshipPresentation || !championshipOpeningStorageKey) {
+      championshipAutoOpenKeyRef.current = null;
+      setShowChampionshipOpeningModal(false);
+      return undefined;
+    }
+    if (
+      !hasHydratedRuntimeState ||
+      isIslandVisualPreview ||
+      anyBlockingModalOpen ||
+      Boolean(activeStopId) ||
+      championshipAutoOpenKeyRef.current === championshipOpeningStorageKey
+    ) {
+      return undefined;
+    }
+
+    try {
+      if (window.localStorage.getItem(championshipOpeningStorageKey) === '1') {
+        championshipAutoOpenKeyRef.current = championshipOpeningStorageKey;
+        return undefined;
+      }
+    } catch {
+      // The opening remains available in-session if local presentation memory is unavailable.
+    }
+
+    const openTimer = window.setTimeout(() => {
+      championshipAutoOpenKeyRef.current = championshipOpeningStorageKey;
+      setShowChampionshipOpeningModal(true);
+    }, 450);
+    return () => window.clearTimeout(openTimer);
+  }, [
+    activeStopId,
+    anyBlockingModalOpen,
+    championshipOpeningStorageKey,
+    championshipPresentation,
+    hasHydratedRuntimeState,
+    isIslandVisualPreview,
+  ]);
   const storyFastModeState = useMemo(
     () => resolveStoryFastModeState({
       isStoryJourney: isArcadeStoryJourney,
@@ -11632,11 +11687,25 @@ export function IslandRunBoardPrototype({
   }, []);
   const openCurrentChampionshipCeremony = useCallback(() => {
     if (!championshipPresentation) return;
+    setShowChampionshipOpeningModal(true);
+  }, [championshipPresentation]);
+  const closeCurrentChampionshipOpening = useCallback(() => {
+    setShowChampionshipOpeningModal(false);
+    if (!championshipOpeningStorageKey) return;
+    try {
+      window.localStorage.setItem(championshipOpeningStorageKey, '1');
+    } catch {
+      // Presentation-only memory is best effort; gameplay is unaffected.
+    }
+  }, [championshipOpeningStorageKey]);
+  const openCurrentChampionshipStory = useCallback(() => {
+    if (!championshipPresentation?.manifestPath) return;
+    closeCurrentChampionshipOpening();
     setActiveStoryEpisode({
       kind: 'championship',
       manifestPath: championshipPresentation.manifestPath,
     });
-  }, [championshipPresentation]);
+  }, [championshipPresentation, closeCurrentChampionshipOpening]);
   const handleConcordEntryClick = useCallback(() => {
     if (concordEntryButtonState.primaryAction === 'open-story') {
       openGlobalStoryReader();
@@ -16446,6 +16515,13 @@ export function IslandRunBoardPrototype({
           document.body,
         )
         : null}
+
+      <IslandChampionshipOpeningModal
+        championship={championshipPresentation}
+        isOpen={showChampionshipOpeningModal}
+        onClose={closeCurrentChampionshipOpening}
+        onOpenStory={championshipPresentation?.manifestPath ? openCurrentChampionshipStory : undefined}
+      />
 
       <IslandStoryReader
         manifestPath={activeStoryEpisode?.manifestPath ?? '/storyline/episode-001/manifest.json'}
