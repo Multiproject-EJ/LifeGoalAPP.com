@@ -13,6 +13,10 @@ export interface IslandRunGuestFunnelStateV1 {
   displayName?: string;
   shipName?: string;
   shipStyleId?: string;
+  entryAudioChoiceCompleted?: boolean;
+  entryAmbienceEnabled?: boolean;
+  entryMusicEnabled?: boolean;
+  entrySfxEnabled?: boolean;
   hasSeenGuestTimeline: boolean;
   hasSeenFirstProgressRecapAfterArena: boolean;
   hasSeenSoftSavePromptAfterArena: boolean;

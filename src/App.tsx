@@ -4220,7 +4220,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
         isConfigured={isConfigured}
         password={password}
         submitting={submitting}
-        themeToggle={<ThemeToggle className="auth-gate__theme-toggle" />}
         onAuthInitializationRetry={handleAuthInitializationRetry}
         onAuthSubmit={handleAuthSubmit}
         onEmailChange={setEmail}
