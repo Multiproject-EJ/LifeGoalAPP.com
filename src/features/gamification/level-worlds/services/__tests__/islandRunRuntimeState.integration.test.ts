@@ -1440,9 +1440,9 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       // Mirrors `performIslandTravel`'s bonus-tile clear: patch with an empty
       // inner map for the old island. Without the explicit-empty preservation
       // in the backend's overlay merge, the entry would silently stay at 3/7.
-      // On read-back, the sanitizer prunes the empty shell — which is
-      // semantically equivalent to absent (no charges on island 1), so the
-      // "cleared" outcome the caller wants is observed regardless.
+      // The empty inner map remains as a reset tombstone. Conflict recovery
+      // needs that distinction so an older remote charge cannot be merged
+      // back into the island after travel or reward release.
       const result = await persistIslandRunRuntimeStatePatch({
         session: makeSession(),
         client: null,
@@ -1456,8 +1456,9 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
 
       const state = readIslandRunRuntimeState(makeSession());
       assertDeepEqual(state.bonusTileChargeByIsland, {
+        '1': {},
         '2': { 0: 2 },
-      }, 'Expected island 1 charges to be cleared (pruned by sanitizer on read) and island 2 untouched');
+      }, 'Expected island 1 charges to be cleared with a reset tombstone and island 2 untouched');
     },
   },
   {
@@ -1476,7 +1477,8 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       const state = readIslandRunRuntimeState(makeSession());
       assertDeepEqual(state.bonusTileChargeByIsland, {
         '1': { 5: 3, 12: 8 },
-      }, 'Expected sanitizer to clamp, drop negatives/non-finite, drop non-object islands, and prune islands that end up empty');
+        '3': {},
+      }, 'Expected sanitizer to clamp, drop invalid entries and preserve object-shaped empty reset tombstones');
     },
   },
 ];

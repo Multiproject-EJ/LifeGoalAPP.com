@@ -85,10 +85,11 @@ export const islandStoryReaderComponentTests: TestCase[] = [
     assertIncludes(storyPlayerSource, "lockPageScroll(['body', 'documentElement'])", 'StoryPlayer must lock page scrolling while open');
     assertIncludes(readerSource, 'createPortal(shell, document.body)', 'StoryReader loading and error states must also render at the top-level body portal');
   } },
-  { name: 'equivalent reconstructed panel arrays do not reset story progress', run: () => {
-    assertIncludes(storyPlayerSource, 'const panelsIdentity = resolvePanelsIdentity(panels);', 'StoryPlayer must derive a semantic identity from panel content');
-    assertIncludes(storyPlayerSource, '[isOpen, panelsIdentity, defaultAdvance]', 'StoryPlayer reset must depend on semantic content, not array identity');
-    assert(!storyPlayerSource.includes('[isOpen, panels, defaultAdvance]'), 'A reconstructed panels array must not send the reader back to page one');
+  { name: 'parent story-data changes do not reset progress while the player remains open', run: () => {
+    assertIncludes(storyPlayerSource, 'Reset only on a closed → open transition.', 'StoryPlayer must document its open-transition reset contract');
+    assertIncludes(storyPlayerSource, '}, [isOpen]);', 'StoryPlayer reset must depend only on whether the player is open');
+    assert(!storyPlayerSource.includes('[isOpen, panels,'), 'A reconstructed panels array must not send the reader back to page one');
+    assert(!storyPlayerSource.includes('[isOpen, panelsIdentity,'), 'A semantic content update must not interrupt a story already in progress');
   } },
   { name: 'entry audio choice owns first-run attention before story presentation', run: () => {
     assertIncludes(boardSource, '!hasDismissedEntryAudioModal ||', 'Narrative scheduling must remain blocked until the entry audio choice is dismissed');
