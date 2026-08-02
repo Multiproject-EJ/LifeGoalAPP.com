@@ -42,27 +42,6 @@ const ARROW_GLYPH: Record<StoryDirection, string> = {
   down: '⌄',
 };
 
-function resolvePanelsIdentity(panels: StoryPanel[]): string {
-  return JSON.stringify(panels.map((panel) => ({
-    id: panel.id ?? null,
-    type: panel.type,
-    content: panel.type === 'text' ? panel.text : panel.src,
-    caption: panel.caption ?? null,
-    advance: panel.advance ?? null,
-    soundtrack: panel.soundtrack ?? null,
-    ...(panel.type === 'image'
-      ? { alt: panel.alt ?? null, width: panel.width ?? null, height: panel.height ?? null }
-      : {}),
-    ...(panel.type === 'video'
-      ? {
-          poster: panel.poster ?? null,
-          mutedAutoplay: panel.mutedAutoplay ?? null,
-          loop: panel.loop ?? null,
-        }
-      : {}),
-  })));
-}
-
 /**
  * Shared, content-agnostic story player. Discrete scenes advanced by a Next
  * button, directional swipe (any of 4 directions), or keyboard. A hovering
@@ -96,16 +75,16 @@ export function StoryPlayer({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
-  const panelsIdentity = resolvePanelsIdentity(panels);
-
-  // Consumers may reconstruct an equivalent panels array on any parent render.
-  // Reset only when the player opens or the actual story content changes.
+  // Reset only on a closed → open transition. Parent state can change while a
+  // story is playing; those renders must never send the reader back to page 1.
   useEffect(() => {
     if (isOpen) {
       setIndex(0);
       setTravelDir(defaultAdvance);
     }
-  }, [isOpen, panelsIdentity, defaultAdvance]);
+    // `defaultAdvance` applies on the next open, not in the middle of a story.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen || typeof document === 'undefined') return undefined;

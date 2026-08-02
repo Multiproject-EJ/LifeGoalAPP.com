@@ -41680,6 +41680,166 @@ body.habit-wizard-open .mobile-footer-nav {
   height: 9.1rem;
 }
 
++.guest-free-play-modal__audio-scene {
+  position: relative;
+  min-height: 8.35rem;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(224, 185, 98, 0.68);
+  border-radius: 21px;
+  background:
+    radial-gradient(circle at 50% 54%, rgba(64, 180, 255, 0.32), transparent 28%),
+    radial-gradient(circle at 16% 22%, rgba(245, 207, 112, 0.13), transparent 18%),
+    linear-gradient(155deg, #09264a 0%, #07172d 55%, #030b19 100%);
+}
+
+.guest-free-play-modal__audio-scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 40%, rgba(3, 17, 37, 0.74)),
+    repeating-linear-gradient(90deg, transparent 0 1.45rem, rgba(150, 220, 255, 0.035) 1.5rem 1.56rem);
+  pointer-events: none;
+}
+
+.guest-free-play-modal__audio-scene img {
+  position: relative;
+  z-index: 2;
+  width: 5.25rem;
+  height: 5.25rem;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 0.65rem 1.2rem rgba(0, 0, 0, 0.48));
+}
+
+.guest-free-play-modal__audio-orbit {
+  position: absolute;
+  z-index: 1;
+  border: 1px solid rgba(115, 210, 255, 0.36);
+  border-radius: 50%;
+  box-shadow: 0 0 1.2rem rgba(62, 175, 255, 0.18);
+}
+
+.guest-free-play-modal__audio-orbit--outer {
+  width: 10rem;
+  height: 4.15rem;
+  transform: rotate(-9deg);
+}
+
+.guest-free-play-modal__audio-orbit--inner {
+  width: 7.15rem;
+  height: 2.8rem;
+  transform: rotate(12deg);
+  border-color: rgba(244, 205, 111, 0.38);
+}
+
+.guest-free-play-modal__audio-scene > span {
+  position: absolute;
+  z-index: 1;
+  left: 0.9rem;
+  bottom: 0.78rem;
+  color: #fff5cf;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.guest-free-play-modal__audio-options {
+  display: grid;
+  gap: 0.48rem;
+  padding-inline: 0.25rem;
+}
+
+.guest-free-play-modal__audio-option {
+  min-height: 3.65rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.65rem;
+  padding: 0.58rem 0.7rem;
+  border: 1px solid rgba(31, 71, 108, 0.2);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.68);
+  color: #526478;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.guest-free-play-modal__audio-option > span:first-child {
+  width: 2.35rem;
+  height: 2.35rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #d8dee7;
+  color: #496078;
+  font-size: 1.1rem;
+}
+
+.guest-free-play-modal__audio-option-copy {
+  min-width: 0;
+  display: grid !important;
+  align-content: center;
+  gap: 0.08rem;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.guest-free-play-modal__audio-option strong {
+  color: #173b5f;
+  font-size: 0.88rem;
+}
+
+.guest-free-play-modal__audio-option small {
+  overflow: hidden;
+  font-size: 0.61rem;
+  font-weight: 720;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.guest-free-play-modal__audio-option i {
+  min-width: 2.75rem;
+  padding: 0.33rem 0.48rem;
+  border: 1px solid rgba(23, 59, 95, 0.18);
+  border-radius: 999px;
+  color: #566a7f;
+  font-size: 0.63rem;
+  font-style: normal;
+  font-weight: 950;
+  text-align: center;
+}
+
+.guest-free-play-modal__audio-option--on {
+  border-color: #d4a641;
+  background: linear-gradient(145deg, #173f69, #0c2d50);
+  color: #e9d59e;
+  box-shadow: 0 8px 18px rgba(5, 33, 63, 0.22);
+}
+
+.guest-free-play-modal__audio-option--on > span:first-child {
+  background: linear-gradient(145deg, #f8d87e, #b77b1c);
+  color: #0e3a66;
+}
+
+.guest-free-play-modal__audio-option--on strong {
+  color: #fff6d7;
+}
+
+.guest-free-play-modal__audio-option--on i {
+  border-color: rgba(245, 211, 125, 0.56);
+  background: rgba(246, 211, 123, 0.12);
+  color: #ffe6a4;
+}
+
 .guest-free-play-modal__copy {
   display: grid;
   gap: 0.38rem;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEventHandler, type ReactNode } from 'react';
+import { useEffect, useState, type FormEventHandler, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import {
   hasCachedAuthSession,
@@ -9,19 +9,18 @@ import {
 } from '../features/auth/authInitialization';
 import { useServiceHealth } from '../hooks/useServiceHealth';
 import { getServiceHealthManager } from '../services/service-health';
-import { validatePublicIdentityLabel } from '../services/publicIdentity';
-import { buildIslandRunOnboardingNameSuggestions } from '../features/gamification/level-worlds/services/islandRunOnboardingNames';
+import { patchIslandRunGuestFunnelState } from '../features/gamification/level-worlds/services/islandRunGuestFunnelState';
 import { ServiceStatusModal } from './service-status';
+import { CompassCrestBrand } from './CompassCrestBrand';
 
 export type HabitGameAuthTab = 'login' | 'signup';
 
 type HabitGameLandingLayoutProps = {
   authCard: ReactNode;
-  themeToggle: ReactNode;
   variant?: 'auth' | 'download';
 };
 
-export function HabitGameLandingLayout({ authCard, themeToggle, variant = 'auth' }: HabitGameLandingLayoutProps) {
+export function HabitGameLandingLayout({ authCard, variant = 'auth' }: HabitGameLandingLayoutProps) {
   const { snapshot } = useServiceHealth();
 
   useEffect(() => {
@@ -60,15 +59,15 @@ export function HabitGameLandingLayout({ authCard, themeToggle, variant = 'auth'
   return (
     <div className="app app--auth-gate" data-brand-theme="first-light">
       <header className="auth-gate__masthead">
-        <div className="auth-gate__theme-control">{themeToggle}</div>
         <div className="auth-gate__brand-lockup">
-          <img
-            className="auth-gate__brand-compass"
-            src="/assets/icons/compass-gold-256.webp"
-            alt=""
-          />
           <a className="auth-gate__brand" href="/" aria-label="HabitGame home">
-            HabitGame
+            <CompassCrestBrand
+              className="auth-gate__canonical-brand"
+              surface="light"
+              animated
+              curved
+              asHeading
+            />
           </a>
         </div>
         {syncStatus ? (
@@ -113,7 +112,7 @@ type HabitGameAuthCardProps = {
 };
 
 const authTabs: { id: HabitGameAuthTab; label: string }[] = [
-  { id: 'login', label: 'Log in' },
+  { id: 'login', label: 'Sign in' },
   { id: 'signup', label: 'Sign up' },
 ];
 
@@ -162,15 +161,10 @@ export function HabitGameAuthCard({
   onPlayFree,
 }: HabitGameAuthCardProps) {
 
-  const [guestStep, setGuestStep] = useState<'closed' | 'timeline' | 'customize'>('closed');
-  const [nameSuggestionSeed, setNameSuggestionSeed] = useState(0);
-  const nameSuggestions = useMemo(
-    () => buildIslandRunOnboardingNameSuggestions(nameSuggestionSeed),
-    [nameSuggestionSeed],
-  );
-  const [captainName, setCaptainName] = useState('Captain Nova');
-  const [shipName, setShipName] = useState('The Dawn Compass');
-  const [nameEntryMode, setNameEntryMode] = useState<'suggestions' | 'custom'>('suggestions');
+  const [guestStep, setGuestStep] = useState<'closed' | 'audio' | 'timeline'>('closed');
+  const [guestAmbienceEnabled, setGuestAmbienceEnabled] = useState(true);
+  const [guestMusicEnabled, setGuestMusicEnabled] = useState(true);
+  const [guestSfxEnabled, setGuestSfxEnabled] = useState(true);
   const [guestSubmitting, setGuestSubmitting] = useState(false);
   const [guestError, setGuestError] = useState<string | null>(null);
   const [showServiceStatus, setShowServiceStatus] = useState(false);
@@ -191,23 +185,23 @@ export function HabitGameAuthCard({
       if (event.key !== 'Escape') return;
       event.preventDefault();
       setGuestError(null);
-      setGuestStep((current) => current === 'customize' ? 'timeline' : 'closed');
+      setGuestStep((current) => current === 'timeline' ? 'audio' : 'closed');
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [guestStep]);
 
-  const handleSailToLumaIsle = async () => {
-    const captainError = validatePublicIdentityLabel(captainName, { label: 'Captain name', maxLength: 32 });
-    const shipError = validatePublicIdentityLabel(shipName, { label: 'Ship name', maxLength: 40 });
-    if (captainError || shipError) {
-      setGuestError(captainError ?? shipError);
-      return;
-    }
+  const handleChooseCaptain = async () => {
     setGuestSubmitting(true);
     setGuestError(null);
     try {
-      await onPlayFree({ displayName: captainName.trim(), shipName: shipName.trim() });
+      patchIslandRunGuestFunnelState({
+        entryAudioChoiceCompleted: true,
+        entryAmbienceEnabled: guestAmbienceEnabled,
+        entryMusicEnabled: guestMusicEnabled,
+        entrySfxEnabled: guestSfxEnabled,
+      });
+      await onPlayFree({ displayName: '', shipName: '' });
       setGuestStep('closed');
     } catch (error) {
       setGuestError(error instanceof Error ? error.message : 'Unable to open Island Run right now. Please try again.');
@@ -221,20 +215,20 @@ export function HabitGameAuthCard({
       <div className="guest-free-play-modal__backdrop" aria-hidden="true" />
       <section className={`guest-free-play-modal__panel guest-free-play-modal__panel--${guestStep}`}>
         <div className="guest-free-play-modal__topline">
-          {guestStep === 'customize' ? (
+          {guestStep === 'timeline' ? (
             <button
               type="button"
               className="guest-free-play-modal__back"
               onClick={() => {
                 setGuestError(null);
-                setGuestStep('timeline');
+                setGuestStep('audio');
               }}
             >
               ← Back
             </button>
           ) : <span />}
           <span className="guest-free-play-modal__step">
-            {guestStep === 'timeline' ? '1 of 2' : '2 of 2'}
+            {guestStep === 'audio' ? '1 of 2' : '2 of 2'}
           </span>
           <button
             type="button"
@@ -245,7 +239,74 @@ export function HabitGameAuthCard({
             ×
           </button>
         </div>
-        {guestStep === 'timeline' ? (
+        {guestStep === 'audio' ? (
+          <>
+            <div className="guest-free-play-modal__audio-scene" aria-hidden="true">
+              <div className="guest-free-play-modal__audio-orbit guest-free-play-modal__audio-orbit--outer" />
+              <div className="guest-free-play-modal__audio-orbit guest-free-play-modal__audio-orbit--inner" />
+              <img src="/assets/brand/habitgame-compass-crest-rankless.webp" alt="" />
+              <span>Sound Check</span>
+            </div>
+            <div className="guest-free-play-modal__copy">
+              <span className="guest-free-play-modal__eyebrow">Before you step aboard</span>
+              <h2 id="guest-free-play-title">Set your soundscape</h2>
+              <p>Use the same three channels as Island Run. You can change them again at any time.</p>
+            </div>
+            <div className="guest-free-play-modal__audio-options" role="group" aria-label="Audio settings">
+              <button
+                type="button"
+                className={`guest-free-play-modal__audio-option guest-free-play-modal__audio-option--ambience${guestAmbienceEnabled ? ' guest-free-play-modal__audio-option--on' : ''}`}
+                aria-pressed={guestAmbienceEnabled}
+                onClick={() => setGuestAmbienceEnabled((current) => !current)}
+              >
+                <span aria-hidden="true">≈</span>
+                <span className="guest-free-play-modal__audio-option-copy">
+                  <strong>Ambience</strong>
+                  <small>Island wind, water, and the life around you</small>
+                </span>
+                <i aria-hidden="true">{guestAmbienceEnabled ? 'On' : 'Off'}</i>
+              </button>
+              <button
+                type="button"
+                className={`guest-free-play-modal__audio-option guest-free-play-modal__audio-option--music${guestMusicEnabled ? ' guest-free-play-modal__audio-option--on' : ''}`}
+                aria-pressed={guestMusicEnabled}
+                onClick={() => setGuestMusicEnabled((current) => !current)}
+              >
+                <span aria-hidden="true">♫</span>
+                <span className="guest-free-play-modal__audio-option-copy">
+                  <strong>Music</strong>
+                  <small>Score, ceremonies, and dramatic cues</small>
+                </span>
+                <i aria-hidden="true">{guestMusicEnabled ? 'On' : 'Off'}</i>
+              </button>
+              <button
+                type="button"
+                className={`guest-free-play-modal__audio-option guest-free-play-modal__audio-option--player${guestSfxEnabled ? ' guest-free-play-modal__audio-option--on' : ''}`}
+                aria-pressed={guestSfxEnabled}
+                onClick={() => setGuestSfxEnabled((current) => !current)}
+              >
+                <span aria-hidden="true">✦</span>
+                <span className="guest-free-play-modal__audio-option-copy">
+                  <strong>Player Sounds</strong>
+                  <small>Dice, rewards, controls, and feedback</small>
+                </span>
+                <i aria-hidden="true">{guestSfxEnabled ? 'On' : 'Off'}</i>
+              </button>
+            </div>
+            {guestError ? <p className="guest-free-play-modal__error" role="alert">{guestError}</p> : null}
+            <div className="guest-free-play-modal__actions">
+              <button type="button" className="auth-card__primary" onClick={() => {
+                patchIslandRunGuestFunnelState({
+                  entryAudioChoiceCompleted: true,
+                  entryAmbienceEnabled: guestAmbienceEnabled,
+                  entryMusicEnabled: guestMusicEnabled,
+                  entrySfxEnabled: guestSfxEnabled,
+                });
+                setGuestStep('timeline');
+              }}>Continue</button>
+            </div>
+          </>
+        ) : (
           <>
             <div className="guest-free-play-modal__scene">
               <img
@@ -256,126 +317,19 @@ export function HabitGameAuthCard({
               <span>First Light Shore</span>
             </div>
             <div className="guest-free-play-modal__copy">
-              <h2 id="guest-free-play-title">Play free first. Save when you&apos;re ready.</h2>
-              <p>Explore Luma Isle as a guest. Your first rewards are free, and you can save the run to an account later.</p>
+              <span className="guest-free-play-modal__eyebrow">Guest voyage</span>
+              <h2 id="guest-free-play-title">Play first. Save when you&apos;re ready.</h2>
+              <p>Your welcome issue and first rewards come next. Captain and ship names can wait until you have earned your next rank.</p>
             </div>
-            <div className="guest-free-play-modal__route" aria-label="Guest journey">
-              <span><b>1</b> Enter as guest</span>
-              <span><b>2</b> Play Island Run</span>
+            <div className="guest-free-play-modal__route" aria-label="First voyage sequence">
+              <span><b>1</b> Receive your issue</span>
+              <span><b>2</b> Sail to Luma</span>
               <span><b>3</b> Save free later</span>
             </div>
             {guestError ? <p className="guest-free-play-modal__error" role="alert">{guestError}</p> : null}
             <div className="guest-free-play-modal__actions">
-              <button
-                type="button"
-                className="auth-card__primary"
-                onClick={() => {
-                  const firstSuggestion = nameSuggestions[0];
-                  if (firstSuggestion) {
-                    setCaptainName(firstSuggestion.captainName);
-                    setShipName(firstSuggestion.shipName);
-                  }
-                  setNameEntryMode('suggestions');
-                  setGuestStep('customize');
-                }}
-              >
-                Choose my captain
-              </button>
+              <button type="button" className="auth-card__primary" onClick={handleChooseCaptain} disabled={guestSubmitting}>{guestSubmitting ? 'Preparing your issue…' : 'Choose my captain'}</button>
               <button type="button" className="guest-free-play-modal__secondary" onClick={() => { setGuestStep('closed'); onTabChange('signup'); }}>Create free account now</button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="guest-free-play-modal__scene guest-free-play-modal__scene--captain">
-              <img
-                src="/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp"
-                alt=""
-                aria-hidden="true"
-              />
-              <span>Miri is waiting</span>
-            </div>
-            <div className="guest-free-play-modal__copy">
-              <span className="guest-free-play-modal__eyebrow">Your first island story</span>
-              <h2 id="guest-free-play-title">Choose your captain &amp; ship</h2>
-              <p>One tap is enough. Pick a pair or write your own — both can be changed later.</p>
-            </div>
-            {nameEntryMode === 'suggestions' ? (
-              <>
-                <div className="guest-free-play-modal__name-options" aria-label="Suggested captain and ship names">
-                  {nameSuggestions.map((suggestion) => {
-                    const isSelected = suggestion.captainName === captainName && suggestion.shipName === shipName;
-                    return (
-                      <button
-                        key={suggestion.id}
-                        type="button"
-                        className={`guest-free-play-modal__name-option${isSelected ? ' guest-free-play-modal__name-option--selected' : ''}`}
-                        aria-pressed={isSelected}
-                        onClick={() => {
-                          setGuestError(null);
-                          setCaptainName(suggestion.captainName);
-                          setShipName(suggestion.shipName);
-                        }}
-                      >
-                        <span aria-hidden="true">{isSelected ? '✓' : '✦'}</span>
-                        <span>
-                          <strong>{suggestion.captainName}</strong>
-                          <small>{suggestion.shipName}</small>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="guest-free-play-modal__name-tools">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nextSeed = nameSuggestionSeed + 1;
-                      const nextSuggestions = buildIslandRunOnboardingNameSuggestions(nextSeed);
-                      setNameSuggestionSeed(nextSeed);
-                      setCaptainName(nextSuggestions[0]?.captainName ?? captainName);
-                      setShipName(nextSuggestions[0]?.shipName ?? shipName);
-                    }}
-                  >
-                    ↻ New suggestions
-                  </button>
-                  <button type="button" onClick={() => setNameEntryMode('custom')}>✎ Write my own</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="guest-free-play-modal__fields">
-                  <label className="supabase-auth__field">
-                    <span>Captain name</span>
-                    <input
-                      value={captainName}
-                      onChange={(event) => setCaptainName(event.target.value)}
-                      placeholder="Captain Nova"
-                      autoComplete="nickname"
-                      maxLength={32}
-                    />
-                  </label>
-                  <label className="supabase-auth__field">
-                    <span>Ship name</span>
-                    <input
-                      value={shipName}
-                      onChange={(event) => setShipName(event.target.value)}
-                      placeholder="The Luma Skiff"
-                      maxLength={40}
-                    />
-                  </label>
-                </div>
-                <div className="guest-free-play-modal__name-tools">
-                  <button type="button" onClick={() => setNameEntryMode('suggestions')}>← Use suggestions</button>
-                </div>
-              </>
-            )}
-            <p className="guest-free-play-modal__nameplate" aria-live="polite">
-              <span>{captainName.trim() || 'Captain Nova'}</span>
-              <small>aboard {shipName.trim() || 'The Luma Skiff'}</small>
-            </p>
-            {guestError ? <p className="guest-free-play-modal__error" role="alert">{guestError}</p> : null}
-            <div className="guest-free-play-modal__actions">
-              <button type="button" className="auth-card__primary" onClick={handleSailToLumaIsle} disabled={guestSubmitting}>{guestSubmitting ? 'Opening Island Run…' : 'Sail to Luma Isle'}</button>
             </div>
           </>
         )}
@@ -429,7 +383,7 @@ export function HabitGameAuthCard({
           <button type="button" className="auth-card__retry" onClick={handleTryAgain}>
             Try again
           </button>
-          <button type="button" className="auth-card__retry" onClick={() => setGuestStep('timeline')}>
+          <button type="button" className="auth-card__retry" onClick={() => setGuestStep('audio')}>
             Play demo
           </button>
           <button type="button" className="auth-card__retry" onClick={() => setShowServiceStatus(true)}>
@@ -490,7 +444,7 @@ export function HabitGameAuthCard({
 
         <div className="supabase-auth__actions">
           <button type="submit" className="supabase-auth__action auth-card__primary" disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Log in'}
+            {submitting ? 'Signing in…' : 'Sign in'}
           </button>
         </div>
       </form>
@@ -621,7 +575,7 @@ export function HabitGameAuthCard({
 
         {activeAuthTab === 'login' && outageBranch === 'none' ? (
           <div className="auth-card__guest-entry">
-            <button type="button" className="auth-card__guest-button" onClick={() => setGuestStep('timeline')}>
+            <button type="button" className="auth-card__guest-button" onClick={() => setGuestStep('audio')}>
               <span aria-hidden="true">✦</span>
               <span>
                 <strong>Play as guest</strong>
@@ -648,14 +602,11 @@ export function HabitGameAuthCard({
   );
 }
 
-type HabitGameLandingShellProps = HabitGameAuthCardProps & {
-  themeToggle: ReactNode;
-};
+type HabitGameLandingShellProps = HabitGameAuthCardProps;
 
-export function HabitGameLandingShell({ themeToggle, ...authCardProps }: HabitGameLandingShellProps) {
+export function HabitGameLandingShell(authCardProps: HabitGameLandingShellProps) {
   return (
     <HabitGameLandingLayout
-      themeToggle={themeToggle}
       authCard={<HabitGameAuthCard {...authCardProps} />}
     />
   );
@@ -754,5 +705,5 @@ export function HabitGameMobileDownloadGate() {
     </section>
   );
 
-  return <HabitGameLandingLayout variant="download" themeToggle={null} authCard={downloadCard} />;
+  return <HabitGameLandingLayout variant="download" authCard={downloadCard} />;
 }

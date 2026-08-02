@@ -40,8 +40,10 @@
     },
     {
       "id": "first-course",
-      "type": "text",
-      "text": "First destination: Luma Isle. The ship is ready when you are."
+      "type": "image",
+      "src": "/storyline/episode-001/006-luma-approach.webp",
+      "alt": "The expedition vessel making its sunrise approach to Luma Isle",
+      "caption": "First destination: Luma Isle. The island is waiting below."
     }
   ]
 }

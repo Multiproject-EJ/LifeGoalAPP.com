@@ -83,18 +83,22 @@ export const islandRunGuestFunnelStateTests: TestCase[] = [
   },
 
   {
-    name: 'stores free-play timeline completion and lightweight name ship customization',
+    name: 'stores free-play timeline completion and UI-only entry audio choices',
     run: () => {
       const storage = createMemoryStorage();
       const next = patchIslandRunGuestFunnelState({
         entrySource: 'landing_cta',
         hasSeenGuestTimeline: true,
-        displayName: 'Captain Ivo Jr.',
-        shipName: 'First Light Skiff',
+        entryAudioChoiceCompleted: true,
+        entryAmbienceEnabled: true,
+        entryMusicEnabled: false,
+        entrySfxEnabled: true,
       }, { storage, now: 900 });
       assertEqual(next.hasSeenGuestTimeline, true, 'Expected timeline completion to persist');
-      assertEqual(next.displayName, 'Captain Ivo Jr.', 'Expected captain name to persist');
-      assertEqual(next.shipName, 'First Light Skiff', 'Expected ship name to persist');
+      assertEqual(next.entryAudioChoiceCompleted, true, 'Expected audio choice gate to persist');
+      assertEqual(next.entryAmbienceEnabled, true, 'Expected ambience preference to persist');
+      assertEqual(next.entryMusicEnabled, false, 'Expected music preference to persist');
+      assertEqual(next.entrySfxEnabled, true, 'Expected player sound preference to persist');
       assertEqual(next.entrySource, 'landing_cta', 'Expected landing CTA source to persist');
     },
   },

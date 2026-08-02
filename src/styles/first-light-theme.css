@@ -136,6 +136,28 @@ html.auth-gate-active body {
   background: linear-gradient(90deg, transparent, var(--hg-first-light-gold), transparent) center / 100% 1px no-repeat;
 }
 
++.auth-gate__canonical-brand {
+  --crest-brand-ink: #fff5d2;
+  --crest-brand-highlight: #ffffff;
+  --crest-brand-gold: #efc86e;
+  --crest-brand-shadow: rgba(0, 0, 0, 0.64);
+  width: 100%;
+}
+
+.auth-gate__canonical-brand .compass-crest-brand__crest {
+  width: clamp(5.4rem, 21vw, 7.4rem);
+  margin-bottom: clamp(-1rem, -2.4vw, -0.7rem);
+}
+
+.auth-gate__canonical-brand .compass-crest-brand__wordmark {
+  font-size: clamp(2.85rem, 12vw, 4.8rem);
+}
+
+.auth-gate__canonical-brand .compass-crest-brand__rule {
+  width: min(78%, 19rem);
+  margin-top: 0.05rem;
+}
+
 .auth-gate__brand:focus-visible {
   outline: 3px solid var(--hg-first-light-focus);
   outline-offset: 0.5rem;

@@ -11,7 +11,7 @@ import {
 } from './islandRunEconomyTelemetry';
 
 export const WELCOME_PACK_BUNDLE_DICE = 150;
-export const WELCOME_PACK_BUNDLE_ESSENCE = 2000;
+export const WELCOME_PACK_BUNDLE_ESSENCE = 600;
 export const WELCOME_PACK_BUNDLE_EVENT_TICKETS = 20;
 
 export interface ClaimWelcomePackRewardBundleResult {

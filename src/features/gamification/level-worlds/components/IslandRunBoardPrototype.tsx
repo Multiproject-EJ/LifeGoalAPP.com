@@ -2323,6 +2323,8 @@ export function IslandRunBoardPrototype({
   }>(null);
   const [showWelcomePackModal, setShowWelcomePackModal] = useState(false);
   const [welcomePackDismissedThisSession, setWelcomePackDismissedThisSession] = useState(false);
+  const [showFirstVoyageDepartureModal, setShowFirstVoyageDepartureModal] = useState(false);
+  const [hasConfirmedFirstVoyageDeparture, setHasConfirmedFirstVoyageDeparture] = useState(false);
   const [welcomePackClaimResult, setWelcomePackClaimResult] = useState<ClaimFullWelcomePackResult | null>(null);
   const [welcomePackBundleOnlyResult, setWelcomePackBundleOnlyResult] = useState<ClaimWelcomePackRewardBundleResult | null>(null);
   const [welcomePackClaimError, setWelcomePackClaimError] = useState<string | null>(null);
@@ -2659,7 +2661,8 @@ export function IslandRunBoardPrototype({
       showEncounterModal ||
       showClaimModal ||
       showRewardDetailsModal ||
-      showHatcheryCompassModal
+      showHatcheryCompassModal ||
+      showFirstVoyageDepartureModal
   );
 
   const isAnonymousGuestSession = Boolean((session.user as { is_anonymous?: boolean }).is_anonymous);
@@ -2709,6 +2712,7 @@ export function IslandRunBoardPrototype({
     // hydration snapshot and then immediately hide it once hydrated state lands,
     // which causes a startup flicker ("Soon" / "⚡ 2000" gift tiles flashing).
     if (!hasHydratedRuntimeState) return;
+    if (!hasDismissedEntryAudioModal || showEntryAudioModal) return;
 
     const shouldShow = shouldAutoShowWelcomePackModal({
       eligibility: welcomePackAutoShowEligibility,
@@ -2723,8 +2727,10 @@ export function IslandRunBoardPrototype({
     setShowWelcomePackModal(true);
   }, [
     hasHydratedRuntimeState,
+    hasDismissedEntryAudioModal,
     isHigherPriorityWelcomePackSurfaceVisible,
     showWelcomePackModal,
+    showEntryAudioModal,
     welcomePackDismissedThisSession,
     welcomePackAutoShowEligibility,
   ]);
@@ -3426,9 +3432,45 @@ export function IslandRunBoardPrototype({
       setShowEntryAudioModal(false);
       return;
     }
+    const isReturningPlayer = isOnboardingComplete
+      || runtimeState.storyPrologueSeen
+      || runtimeState.welcomePackRewardBundleClaimed;
+    if (isReturningPlayer) {
+      setHasDismissedEntryAudioModal(true);
+      setShowEntryAudioModal(false);
+      return;
+    }
+    if (isAnonymousGuestSession && guestFunnelState.entryAudioChoiceCompleted) {
+      const currentPreferences = resolveIslandRunAudioPreferences(getIslandRunStateSnapshot(session));
+      applyAudioPreferencesMarker({
+        session,
+        client,
+        ...currentPreferences,
+        ambienceEnabled: guestFunnelState.entryAmbienceEnabled ?? true,
+        musicEnabled: guestFunnelState.entryMusicEnabled ?? true,
+        sfxEnabled: guestFunnelState.entrySfxEnabled ?? true,
+        triggerSource: 'landing_guest_audio_choice',
+      });
+      setHasDismissedEntryAudioModal(true);
+      setShowEntryAudioModal(false);
+      return;
+    }
     setHasDismissedEntryAudioModal(false);
     setShowEntryAudioModal(true);
-  }, [hasHydratedRuntimeState, isIslandVisualPreview]);
+  }, [
+    client,
+    guestFunnelState.entryAmbienceEnabled,
+    guestFunnelState.entryAudioChoiceCompleted,
+    guestFunnelState.entryMusicEnabled,
+    guestFunnelState.entrySfxEnabled,
+    hasHydratedRuntimeState,
+    isAnonymousGuestSession,
+    isIslandVisualPreview,
+    isOnboardingComplete,
+    runtimeState.storyPrologueSeen,
+    runtimeState.welcomePackRewardBundleClaimed,
+    session,
+  ]);
 
   // Compatibility hydration: accounts that finished the full Island 1 grid
   // BEFORE the Concord-built ledger existed have all nine slots collected but
@@ -4117,6 +4159,11 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     if (!hasHydratedRuntimeState || isOnboardingComplete || isIslandVisualPreview) return;
 
+    if (isAnonymousGuestSession && deferWelcomePackCreatureCards) {
+      setShowFirstRunCelebration(false);
+      return;
+    }
+
     if (!isFirstRunClaimed) {
       setShowFirstRunCelebration(true);
       setFirstRunStep('celebration');
@@ -4126,7 +4173,7 @@ export function IslandRunBoardPrototype({
         metadata: { stage: 'island_run_first_run_started', island: islandNumber },
       });
     }
-  }, [hasHydratedRuntimeState, isFirstRunClaimed, isIslandVisualPreview, isOnboardingComplete, islandNumber, session.user.id]);
+  }, [deferWelcomePackCreatureCards, hasHydratedRuntimeState, isAnonymousGuestSession, isFirstRunClaimed, isIslandVisualPreview, isOnboardingComplete, islandNumber, session.user.id]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) return;
@@ -5672,6 +5719,21 @@ export function IslandRunBoardPrototype({
   ]);
 
   useEffect(() => {
+    if (!showFirstVoyageDepartureModal || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [showFirstVoyageDepartureModal]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !hasHydratedRuntimeState) return;
+    const hasSeenStory = runtimeState.storyPrologueSeen
+      || window.localStorage.getItem(storySeenStorageKey) === 'true';
+    if (hasSeenStory || isArcadeStoryJourney) return;
+    void fetch('/storyline/episode-001/manifest.json').catch(() => undefined);
+    const lumaApproach = new Image();
+    lumaApproach.src = '/storyline/episode-001/006-luma-approach.webp';
+  }, [hasHydratedRuntimeState, isArcadeStoryJourney, runtimeState.storyPrologueSeen, storySeenStorageKey]);
+
+  useEffect(() => {
     if (
       typeof window === 'undefined'
       || !hasHydratedRuntimeState
@@ -5679,6 +5741,37 @@ export function IslandRunBoardPrototype({
       || isArcadeStoryJourney
       || !hasDismissedEntryAudioModal
       || showEntryAudioModal
+      || showWelcomePackModal
+      || welcomePackAutoShowEligibility !== 'already_claimed'
+      || hasConfirmedFirstVoyageDeparture
+    ) {
+      return;
+    }
+    const hasSeenStory = runtimeState.storyPrologueSeen
+      || window.localStorage.getItem(storySeenStorageKey) === 'true';
+    if (!hasSeenStory) setShowFirstVoyageDepartureModal(true);
+  }, [
+    hasConfirmedFirstVoyageDeparture,
+    hasDismissedEntryAudioModal,
+    hasHydratedRuntimeState,
+    isArcadeStoryJourney,
+    isIslandVisualPreview,
+    runtimeState.storyPrologueSeen,
+    showEntryAudioModal,
+    showWelcomePackModal,
+    storySeenStorageKey,
+    welcomePackAutoShowEligibility,
+  ]);
+
+  useEffect(() => {
+    if (
+      typeof window === 'undefined'
+      || !hasHydratedRuntimeState
+      || isIslandVisualPreview
+      || isArcadeStoryJourney
+      || showWelcomePackModal
+      || showFirstVoyageDepartureModal
+      || !hasConfirmedFirstVoyageDeparture
     ) {
       return;
     }
@@ -5688,12 +5781,13 @@ export function IslandRunBoardPrototype({
       setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
     }
   }, [
-    hasDismissedEntryAudioModal,
     hasHydratedRuntimeState,
+    hasConfirmedFirstVoyageDeparture,
     isArcadeStoryJourney,
     isIslandVisualPreview,
     runtimeState.storyPrologueSeen,
-    showEntryAudioModal,
+    showFirstVoyageDepartureModal,
+    showWelcomePackModal,
     storySeenStorageKey,
   ]);
 
@@ -10222,7 +10316,7 @@ export function IslandRunBoardPrototype({
   }, [isDevModeEnabled]);
 
   const handleClaimWelcomePack = useCallback(async () => {
-    if (welcomePackClaimInFlightRef.current) return;
+    if (welcomePackClaimInFlightRef.current) return false;
     welcomePackClaimInFlightRef.current = true;
     setWelcomePackClaimPending(true);
     setWelcomePackClaimError(null);
@@ -10255,10 +10349,12 @@ export function IslandRunBoardPrototype({
           ? '✨ DEV Welcome Pack: already claimed in canonical state.'
           : `✨ DEV Welcome Pack ${result.status}: ${(result as ClaimFullWelcomePackResult).cards.revealPayload?.cards.length ?? 0} cards, +${(result as ClaimFullWelcomePackResult).bundle.granted.dice} dice, +${(result as ClaimFullWelcomePackResult).bundle.granted.essence} money, +${(result as ClaimFullWelcomePackResult).bundle.granted.eventTickets} tickets.`;
       setLandingText(message);
+      return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to claim Welcome Pack right now.';
       setWelcomePackClaimError(message);
       setLandingText(`⚠️ DEV Welcome Pack claim failed: ${message}`);
+      return false;
     } finally {
       welcomePackClaimInFlightRef.current = false;
       setWelcomePackClaimPending(false);
@@ -15963,6 +16059,44 @@ export function IslandRunBoardPrototype({
               </button>
             </div>
           </div>
+        </div>,
+        document.body,
+      ) : null}
+
+      {showFirstVoyageDepartureModal ? createPortal(
+        <div className="first-voyage-departure" role="dialog" aria-modal="true" aria-labelledby="first-voyage-departure-title">
+          <div className="first-voyage-departure__backdrop" aria-hidden="true" />
+          <section className="first-voyage-departure__card">
+            <img
+              className="first-voyage-departure__art"
+              src="/storyline/episode-001/006-luma-approach.webp"
+              alt="The expedition vessel approaching the illuminated islands of Luma at sunrise"
+            />
+            <div className="first-voyage-departure__shade" aria-hidden="true" />
+            <div className="first-voyage-departure__content">
+              <p className="first-voyage-departure__eyebrow">Your first voyage</p>
+              <h2 id="first-voyage-departure-title">Luma Isle is on the horizon</h2>
+              <p>Your issue is secured and the island is ready below deck. The opening story begins during the final approach.</p>
+              <div className="first-voyage-departure__ready" role="status">
+                <span aria-hidden="true" />
+                Island Run ready
+              </div>
+              <button
+                type="button"
+                className="first-voyage-departure__sail"
+                onClick={() => {
+                  setHasConfirmedFirstVoyageDeparture(true);
+                  setShowFirstVoyageDepartureModal(false);
+                  setActiveStoryEpisode({ kind: 'global_prologue', manifestPath: '/storyline/episode-001/manifest.json' });
+                  playIslandRunSound('island_travel');
+                  triggerIslandRunHaptic('island_travel');
+                }}
+              >
+                Sail to Luma Isle
+              </button>
+              <small>The loaded island will be waiting when the story ends.</small>
+            </div>
+          </section>
         </div>,
         document.body,
       ) : null}

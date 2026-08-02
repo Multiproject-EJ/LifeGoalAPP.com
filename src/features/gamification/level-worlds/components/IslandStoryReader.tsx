@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { StoryPlayer } from '../../../story/StoryPlayer';
@@ -91,10 +91,6 @@ export function IslandStoryReader({
     return lockPageScroll(['body', 'documentElement']);
   }, [isOpen]);
 
-  if (!isOpen) {
-    return null;
-  }
-
   const rewardCoins = manifest?.reward?.coins ?? 0;
   const completionMessage = rewardCoins > 0 ? `Reward: +${rewardCoins} coins` : completionText;
   const completionCtaLabel = rewardClaimed
@@ -102,6 +98,18 @@ export function IslandStoryReader({
     : rewardCoins > 0
       ? `Claim +${rewardCoins} coins`
       : completionButtonLabel;
+  const panels = useMemo<StoryPanel[]>(() => {
+    if (!manifest) return [];
+    return [
+      ...manifest.panels,
+      {
+        id: '__story-completion__',
+        type: 'text',
+        text: completionTitle,
+        caption: completionMessage,
+      },
+    ];
+  }, [completionMessage, completionTitle, manifest]);
 
   const handleCompletion = () => {
     if (rewardClaimed) return;
@@ -112,6 +120,10 @@ export function IslandStoryReader({
     }
     onClose();
   };
+
+  if (!isOpen) {
+    return null;
+  }
 
   if (isLoading || error || !manifest) {
     const shell = (
@@ -142,15 +154,6 @@ export function IslandStoryReader({
     return createPortal(shell, document.body);
   }
 
-  // Append a final scene carrying the completion copy so the CTA (reward claim
-  // or "done") lands on it, preserving the reader's end-card semantics.
-  const completionScene: StoryPanel = {
-    id: '__story-completion__',
-    type: 'text',
-    text: completionTitle,
-    caption: completionMessage,
-  };
-  const panels: StoryPanel[] = [...manifest.panels, completionScene];
   const storyClassName = manifest.presentation === 'portrait-microfilm'
     ? 'island-story-theme island-story-theme--portrait-microfilm'
     : 'island-story-theme';
