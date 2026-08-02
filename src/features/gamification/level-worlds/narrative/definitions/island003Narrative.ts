@@ -1,4 +1,5 @@
 import type { IslandNarrativeDefinition } from '../islandNarrativeTypes';
+import { defineNarrativeTrack } from '../islandNarrativeTrack';
 
 /**
  * Island 3 — "Coconut Cove", home of The Covefolk.
@@ -21,7 +22,7 @@ export const island003NarrativeDefinition = {
     { id: 'tamba', displayName: 'Tamba the Grovekeeper', role: 'Giant canopy guardian curled in fear.' },
     { id: 'ivo', displayName: 'Captain Ivo', role: 'Compass Expedition voice.' },
   ],
-  beats: [
+  beats: defineNarrativeTrack('island_mission', [
     { id: 'I003-B01', trigger: { kind: 'stop_opened', islandNumber: 3, stopId: 'hatchery' }, speakerId: 'nuru', surface: 'dialogue_sheet', priority: 'short', repeatPolicy: 'once', text: 'The Sprout Nursery has gone still — help me wake one seedling.' },
     { id: 'I003-B02', trigger: { kind: 'stop_completed', islandNumber: 3, stopId: 'hatchery' }, speakerId: 'pip', surface: 'toast', priority: 'short', repeatPolicy: 'once', text: 'A sprout uncurls. The nursery remembers.' },
     { id: 'I003-B03', trigger: { kind: 'landmark_level_completed', islandNumber: 3, stopId: 'hatchery', level: 1 }, speakerId: 'nuru', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: 'Green creeps back into the nursery.' },
@@ -50,5 +51,5 @@ export const island003NarrativeDefinition = {
     { id: 'I003-B22', trigger: { kind: 'boss_challenge_started', islandNumber: 3 }, speakerId: 'pip', surface: 'toast', priority: 'short', repeatPolicy: 'once', text: 'Show him the grove still gives — do not take.' },
     { id: 'I003-B23', trigger: { kind: 'boss_midpoint', islandNumber: 3 }, speakerId: 'tamba', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: '...so little left... I held it all...' },
     { id: 'I003-B24', trigger: { kind: 'boss_eligible', islandNumber: 3 }, speakerId: 'liko', surface: 'dialogue_sheet', priority: 'major', repeatPolicy: 'once', text: 'The grove is full again. The canopy will listen now.', secondaryText: 'Show him it gives — do not take.' },
-  ],
+  ]),
 } satisfies IslandNarrativeDefinition;

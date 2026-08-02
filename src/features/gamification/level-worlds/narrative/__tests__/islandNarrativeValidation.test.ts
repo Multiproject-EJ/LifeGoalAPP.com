@@ -34,6 +34,8 @@ export const islandNarrativeValidationTests: TestCase[] = [
   { name: 'Expedition Phone beat without objective copy fails validation', run: () => expectInvalid((definition) => { const beat = definition.beats.find((entry: any) => entry.id === 'I001-B31'); delete beat.objectiveText; }, 'requires objectiveText') },
   { name: 'Expedition Phone beat without acknowledgement copy fails validation', run: () => expectInvalid((definition) => { const beat = definition.beats.find((entry: any) => entry.id === 'I001-B31'); delete beat.displayCtaText; }, 'requires displayCtaText') },
   { name: 'unsupported priority fails validation', run: () => expectInvalid((definition) => { definition.beats[0].priority = 'urgent'; }, 'unsupported priority') },
+  { name: 'missing narrative track fails validation', run: () => expectInvalid((definition) => { delete definition.beats[0].track; }, 'unsupported track') },
+  { name: 'unsupported narrative track fails validation', run: () => expectInvalid((definition) => { definition.beats[0].track = 'premium_cutscene'; }, 'unsupported track') },
   { name: 'unsupported surface fails validation', run: () => expectInvalid((definition) => { definition.beats[0].surface = 'banner'; }, 'unsupported surface') },
   { name: 'unsupported repeat policy fails validation', run: () => expectInvalid((definition) => { definition.beats[0].repeatPolicy = 'daily'; }, 'unsupported repeatPolicy') },
   { name: 'trigger island mismatch fails validation', run: () => expectInvalid((definition) => { definition.beats[0].trigger.islandNumber = 2; }, 'must match definition islandNumber') },

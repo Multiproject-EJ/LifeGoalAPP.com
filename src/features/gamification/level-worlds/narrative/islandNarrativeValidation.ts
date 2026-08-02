@@ -3,6 +3,7 @@ import type { IslandNarrativeDefinition } from './islandNarrativeTypes';
 const PRIORITIES = new Set(['major', 'short', 'ambient']);
 const REPEAT_POLICIES = new Set(['once', 'repeatable']);
 const SURFACES = new Set(['story_reader', 'dialogue_sheet', 'toast', 'expedition_phone']);
+const TRACKS = new Set(['island_mission', 'full_story']);
 const STOP_IDS = new Set(['hatchery', 'habit', 'mystery', 'wisdom', 'boss']);
 const TRIGGER_KINDS = new Set([
   'island_entered', 'arrival_closed', 'stop_opened', 'stop_completed',
@@ -58,6 +59,7 @@ export function validateIslandNarrativeDefinition(definition: unknown): IslandNa
         if (!new RegExp(`^${prefix}-B\\d{2}$`).test(beatId)) errors.push(`Island ${def.islandNumber} beat id must match ${prefix}-B##: ${beatId}`);
       }
       if (typeof beat.speakerId === 'string' && !characterIds.has(beat.speakerId)) errors.push(`${beatId || `beats[${index}]`} references unknown speakerId: ${beat.speakerId}`);
+      if (!TRACKS.has(String(beat.track))) errors.push(`${beatId || `beats[${index}]`} has unsupported track: ${String(beat.track)}`);
       if (!PRIORITIES.has(String(beat.priority))) errors.push(`${beatId || `beats[${index}]`} has unsupported priority: ${String(beat.priority)}`);
       if (!SURFACES.has(String(beat.surface))) errors.push(`${beatId || `beats[${index}]`} has unsupported surface: ${String(beat.surface)}`);
       if (!REPEAT_POLICIES.has(String(beat.repeatPolicy))) errors.push(`${beatId || `beats[${index}]`} has unsupported repeatPolicy: ${String(beat.repeatPolicy)}`);

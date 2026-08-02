@@ -19,6 +19,7 @@ import {
   reactionBeatPriorityRank,
   resolveReactionBeat,
 } from './islandNarrativeReactionDispatch';
+import { getNarrativeBeatForPlayback } from './islandNarrativeTrack';
 
 export type ActiveIslandStoryEpisode = {
   kind: 'global_prologue' | 'island_arrival' | 'island_resolution' | 'island_travel_arrival' | 'championship';
@@ -162,7 +163,11 @@ function isOpeningBeatId(beatId: string): beatId is OpeningBeatId {
 }
 
 function getIsland001Beat(beatId: IslandNarrativeControllerBeatId): IslandNarrativeBeat | null {
-  return getIslandNarrativeDefinition(1)?.beats.find((beat) => beat.id === beatId) ?? null;
+  return getNarrativeBeatForPlayback(
+    getIslandNarrativeDefinition(1),
+    beatId,
+    { context: 'game_loop', isPro: false },
+  );
 }
 
 function getOpeningBeat(beatId: OpeningBeatId): IslandNarrativeBeat | null {
@@ -561,7 +566,11 @@ export function useIslandNarrativeOpeningFlow({
   const landmarkLevelsKey = (landmarkBuildLevels ?? []).join(',');
 
   const reactionBeatRank = useCallback((beatId: string): number => {
-    const beat = getIslandNarrativeDefinition(currentIslandNumber)?.beats.find((entry) => entry.id === beatId);
+    const beat = getNarrativeBeatForPlayback(
+      getIslandNarrativeDefinition(currentIslandNumber),
+      beatId,
+      { context: 'game_loop', isPro: false },
+    );
     return beat ? reactionBeatPriorityRank(beat) : 99;
   }, [currentIslandNumber]);
 
@@ -571,7 +580,11 @@ export function useIslandNarrativeOpeningFlow({
   // hydration. The shared seen ledger makes this a one-time catch-up only.
   useEffect(() => {
     if (!reactionEligible || !isConcordActive || isSeen('I001-B32')) return;
-    const beat = getIslandNarrativeDefinition(currentIslandNumber)?.beats.find((entry) => entry.id === 'I001-B32');
+    const beat = getNarrativeBeatForPlayback(
+      getIslandNarrativeDefinition(currentIslandNumber),
+      'I001-B32',
+      { context: 'game_loop', isPro: false },
+    );
     if (!beat) return;
     setReactionQueue((current) => {
       if (current.includes(beat.id)) return current;
@@ -644,7 +657,11 @@ export function useIslandNarrativeOpeningFlow({
       return;
     }
     const definition = getIslandNarrativeDefinition(currentIslandNumber) ?? null;
-    const beat = definition?.beats.find((entry) => entry.id === nextId) ?? null;
+    const beat = getNarrativeBeatForPlayback(
+      definition,
+      nextId,
+      { context: 'game_loop', isPro: false },
+    );
     if (!beat) {
       setReactionQueue((current) => current.slice(1));
       return;

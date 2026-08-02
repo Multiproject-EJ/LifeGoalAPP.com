@@ -427,6 +427,13 @@ legible without a tutorial.
 
 ## 14) The story layer — how narrative wraps the new-player loop
 
+Product vocabulary: the included narrative wrapper is **Island Mission**
+(`island_mission`, Track 1). It explains the loop, gives immediate commands,
+and supplies brief story moments for every player. The optional long-form Pro
+experience is **Full Story Mode** (`full_story`, Track 2). Full Story Mode can
+expand the same world and milestones, but it is a separate playback context and
+never becomes a gameplay, reward, or island-completion requirement.
+
 The loop above is the **mechanical** spine. Wrapped around it is a **narrative
 layer** that a new player experiences as story beats, characters, and a reason
 to care. The critical architectural rule (from the storytelling audit and the

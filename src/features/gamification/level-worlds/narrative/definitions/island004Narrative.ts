@@ -1,4 +1,5 @@
 import type { IslandNarrativeDefinition } from '../islandNarrativeTypes';
+import { defineNarrativeTrack } from '../islandNarrativeTrack';
 
 /**
  * Island 4 — "Driftwood Isle", home of The Driftfolk.
@@ -21,7 +22,7 @@ export const island004NarrativeDefinition = {
     { id: 'garran', displayName: 'Garran the Driftwarden', role: 'Great shore-guardian frozen mid-build.' },
     { id: 'ivo', displayName: 'Captain Ivo', role: 'Compass Expedition voice.' },
   ],
-  beats: [
+  beats: defineNarrativeTrack('island_mission', [
     { id: 'I004-B01', trigger: { kind: 'stop_opened', islandNumber: 4, stopId: 'hatchery' }, speakerId: 'bodie', surface: 'dialogue_sheet', priority: 'short', repeatPolicy: 'once', text: 'The Nesting Hollow has gone cold — help me line one nest again.' },
     { id: 'I004-B02', trigger: { kind: 'stop_completed', islandNumber: 4, stopId: 'hatchery' }, speakerId: 'wren', surface: 'toast', priority: 'short', repeatPolicy: 'once', text: 'A nest holds. The hollow remembers warmth.' },
     { id: 'I004-B03', trigger: { kind: 'landmark_level_completed', islandNumber: 4, stopId: 'hatchery', level: 1 }, speakerId: 'bodie', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: 'Driftwood settles back into the hollow.' },
@@ -50,5 +51,5 @@ export const island004NarrativeDefinition = {
     { id: 'I004-B22', trigger: { kind: 'boss_challenge_started', islandNumber: 4 }, speakerId: 'wren', surface: 'toast', priority: 'short', repeatPolicy: 'once', text: 'Help him build again — do not break what is left.' },
     { id: 'I004-B23', trigger: { kind: 'boss_midpoint', islandNumber: 4 }, speakerId: 'garran', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: '...all of it... washed away... why rebuild...' },
     { id: 'I004-B24', trigger: { kind: 'boss_eligible', islandNumber: 4 }, speakerId: 'fenn', surface: 'dialogue_sheet', priority: 'major', repeatPolicy: 'once', text: 'The isle stands rebuilt. The warden will see us now.', secondaryText: 'Build beside him — do not break through.' },
-  ],
+  ]),
 } satisfies IslandNarrativeDefinition;

@@ -1,4 +1,5 @@
 import type { IslandNarrativeDefinition } from '../islandNarrativeTypes';
+import { defineNarrativeTrack } from '../islandNarrativeTrack';
 
 export const island001NarrativeDefinition = {
   version: 1,
@@ -53,7 +54,7 @@ export const island001NarrativeDefinition = {
       portraitSrc: '/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp',
     },
   ],
-  beats: [
+  beats: defineNarrativeTrack('island_mission', [
     {
       id: 'I001-B00',
       trigger: { kind: 'arrival_closed', islandNumber: 1 },
@@ -380,5 +381,5 @@ export const island001NarrativeDefinition = {
       repeatPolicy: 'once',
       text: 'Too much noise. Protect the small lights.',
     },
-  ],
+  ]),
 } satisfies IslandNarrativeDefinition;

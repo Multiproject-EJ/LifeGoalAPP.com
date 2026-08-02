@@ -1,4 +1,5 @@
 import type { IslandNarrativeDefinition } from '../islandNarrativeTypes';
+import { defineNarrativeTrack } from '../islandNarrativeTrack';
 
 /**
  * Island 2 — "Pebble Bay", home of The Tidefolk.
@@ -24,7 +25,7 @@ export const island002NarrativeDefinition: IslandNarrativeDefinition = {
     { id: 'last-word', displayName: 'The Last Word', role: 'Communal prophecy board imprisoning a self-fulfilling intelligence.' },
     { id: 'ivo', displayName: 'Captain Ivo', role: 'Compass Expedition voice.' },
   ],
-  beats: [
+  beats: defineNarrativeTrack('island_mission', [
     {
       id: 'I002-B01',
       trigger: { kind: 'stop_opened', islandNumber: 2, stopId: 'hatchery' },
@@ -244,5 +245,5 @@ export const island002NarrativeDefinition: IslandNarrativeDefinition = {
       text: 'At the final bell, I remove my finger. Then we break its certainty.',
       secondaryText: 'If the board moves alone, Pebble Bay sees the prisoner inside it.',
     },
-  ],
+  ]),
 };

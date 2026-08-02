@@ -2,6 +2,11 @@ export type IslandNarrativePriority = 'major' | 'short' | 'ambient';
 export type IslandNarrativeRepeatPolicy = 'once' | 'repeatable';
 export type IslandNarrativeSurface = 'story_reader' | 'dialogue_sheet' | 'toast' | 'expedition_phone';
 export type IslandNarrativeStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
+/**
+ * `island_mission` is the free narrative wrapper around canonical gameplay.
+ * `full_story` is optional Pro Story Mode content and never drives progression.
+ */
+export type IslandNarrativeTrack = 'island_mission' | 'full_story';
 
 export type IslandNarrativeTrigger =
   | { kind: 'island_entered'; islandNumber: number }
@@ -26,6 +31,7 @@ export interface IslandNarrativeCharacter {
 
 export interface IslandNarrativeBeat {
   id: string;
+  track: IslandNarrativeTrack;
   trigger: IslandNarrativeTrigger;
   speakerId?: string;
   text?: string;
@@ -40,6 +46,9 @@ export interface IslandNarrativeBeat {
   episodePath?: string;
   displayCtaText?: string;
 }
+
+/** Authoring shape before a definition-level track helper stamps the track. */
+export type IslandNarrativeBeatDraft = Omit<IslandNarrativeBeat, 'track'>;
 
 export interface IslandNarrativeDefinition {
   version: 1;

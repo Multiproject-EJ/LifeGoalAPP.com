@@ -16,6 +16,19 @@ This document defines how dialogue, story reactions, and Central Command orders 
 
 Narrative definitions are display-only. They must never award currency, complete landmarks, move the token, alter probabilities, or invoke gameplay callbacks.
 
+## Two narrative tracks
+
+Use these names consistently in product discussion, content briefs, code, and QA:
+
+| Internal track | Player-facing name | Access | Responsibility |
+| --- | --- | --- | --- |
+| `island_mission` | **Island Mission** | Included for everyone | The narrative wrapper around the main game loop: explain new mechanics, state the island mission, give short “do this next” commands, and deliver occasional brief dialogue or cinematic moments. |
+| `full_story` | **Full Story Mode** | Pro | The complete long-form island story: extended scenes, deeper character arcs, mysteries, optional choices, and archive/replay material. |
+
+The two tracks observe canonical gameplay; neither owns it. Island Mission always runs in the ordinary board context for both Free and Pro players. Full Story Mode runs only inside the separate Pro story context and must never be injected into rolls, landmarks, rewards, boss eligibility, island clear, or travel. A Pro player therefore receives the same clear game-loop guidance without duplicate long-form scenes appearing over play.
+
+Every narrative beat must declare its track. Current shipped beats for Islands 1–5 are explicitly `island_mission`, including the short arrival/resolution StoryReader moments and the Concord first-contact call. Future `full_story` beats require separate approved content and Pro Story Mode playback wiring. Full Story Mode may unlock as canonical milestones are observed, but it must never become a condition for gameplay progress or rewards.
+
 ## Presentation surfaces
 
 | Surface | Intended use |

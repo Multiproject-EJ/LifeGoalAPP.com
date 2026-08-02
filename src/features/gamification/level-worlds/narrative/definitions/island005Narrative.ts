@@ -1,4 +1,5 @@
 import type { IslandNarrativeDefinition } from '../islandNarrativeTypes';
+import { defineNarrativeTrack } from '../islandNarrativeTrack';
 
 /**
  * Island 5 — "Crown of Tides", home of The Reefborn. (Special / milestone
@@ -23,7 +24,7 @@ export const island005NarrativeDefinition = {
     { id: 'thalassa', displayName: 'Thalassa the Tide Sovereign', role: 'Great crowned guardian caught relaying a borrowed song.' },
     { id: 'ivo', displayName: 'Captain Ivo', role: 'Compass Expedition voice.' },
   ],
-  beats: [
+  beats: defineNarrativeTrack('island_mission', [
     { id: 'I005-B01', trigger: { kind: 'stop_opened', islandNumber: 5, stopId: 'hatchery' }, speakerId: 'sprat', surface: 'dialogue_sheet', priority: 'short', repeatPolicy: 'once', text: 'The Coral Cradle has gone dark — help me light one polyp again.' },
     { id: 'I005-B02', trigger: { kind: 'stop_completed', islandNumber: 5, stopId: 'hatchery' }, speakerId: 'reev', surface: 'toast', priority: 'short', repeatPolicy: 'once', text: 'A polyp glows. The cradle remembers the song.' },
     { id: 'I005-B03', trigger: { kind: 'landmark_level_completed', islandNumber: 5, stopId: 'hatchery', level: 1 }, speakerId: 'sprat', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: 'Color seeps back into the coral.' },
@@ -52,5 +53,5 @@ export const island005NarrativeDefinition = {
     { id: 'I005-B22', trigger: { kind: 'boss_challenge_started', islandNumber: 5 }, speakerId: 'reev', surface: 'toast', priority: 'short', repeatPolicy: 'once', text: 'Help her find her own song — do not silence the Crown.' },
     { id: 'I005-B23', trigger: { kind: 'boss_midpoint', islandNumber: 5 }, speakerId: 'thalassa', surface: 'toast', priority: 'ambient', repeatPolicy: 'once', text: '...not my voice... it sings through me...' },
     { id: 'I005-B24', trigger: { kind: 'boss_eligible', islandNumber: 5 }, speakerId: 'cael', surface: 'dialogue_sheet', priority: 'major', repeatPolicy: 'once', text: 'The reef sings in time again. The Crown will answer now.', secondaryText: 'Free her voice — do not silence the song.' },
-  ],
+  ]),
 } satisfies IslandNarrativeDefinition;

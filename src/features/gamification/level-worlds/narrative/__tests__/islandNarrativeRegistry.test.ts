@@ -12,6 +12,11 @@ import {
   resolveReactionBeat,
 } from '../islandNarrativeReactionDispatch';
 import { validateIslandNarrativeDefinition } from '../islandNarrativeValidation';
+import {
+  ISLAND_NARRATIVE_TRACK_COPY,
+  getNarrativeBeatForPlayback,
+  listNarrativeBeatsForPlayback,
+} from '../islandNarrativeTrack';
 
 const hookPath = 'src/features/gamification/level-worlds/narrative/useIslandNarrativeOpeningFlow.ts';
 const hookSource = readFileSync(hookPath, 'utf8');
@@ -36,6 +41,39 @@ export const islandNarrativeRegistryTests: TestCase[] = [
     }),
   },
   {
+    name: 'all currently shipped gameplay beats are explicitly on the included Island Mission track',
+    run: () => getAllIslandNarrativeDefinitions().forEach((definition) => {
+      definition.beats.forEach((beat) => assertEqual(
+        beat.track,
+        'island_mission',
+        `${beat.id} must remain available in the free main loop`,
+      ));
+    }),
+  },
+  {
+    name: 'track vocabulary has stable player-facing names',
+    run: () => {
+      assertEqual(ISLAND_NARRATIVE_TRACK_COPY.island_mission.playerFacingName, 'Island Mission', 'Track 1 name');
+      assertEqual(ISLAND_NARRATIVE_TRACK_COPY.full_story.playerFacingName, 'Full Story Mode', 'Track 2 name');
+      assertEqual(ISLAND_NARRATIVE_TRACK_COPY.full_story.accessLabel, 'Pro', 'Track 2 access label');
+    },
+  },
+  {
+    name: 'game loop and Pro Story Mode remain separate playback contexts',
+    run: () => {
+      const source = getIslandNarrativeDefinition(1)!;
+      const coreBeat = source.beats[0];
+      const fullStoryBeat = { ...source.beats[1], id: 'I001-B99', track: 'full_story' as const };
+      const mixed = { ...source, beats: [coreBeat, fullStoryBeat] };
+
+      assertEqual(listNarrativeBeatsForPlayback(mixed, { context: 'game_loop', isPro: false }).map((beat) => beat.id).join(','), coreBeat.id, 'Free loop gets Track 1');
+      assertEqual(listNarrativeBeatsForPlayback(mixed, { context: 'game_loop', isPro: true }).map((beat) => beat.id).join(','), coreBeat.id, 'Pro loop still gets Track 1, not duplicate full story');
+      assertEqual(listNarrativeBeatsForPlayback(mixed, { context: 'story_mode', isPro: false }).length, 0, 'Free cannot play Track 2');
+      assertEqual(listNarrativeBeatsForPlayback(mixed, { context: 'story_mode', isPro: true }).map((beat) => beat.id).join(','), fullStoryBeat.id, 'Pro Story Mode gets Track 2');
+      assertEqual(getNarrativeBeatForPlayback(mixed, fullStoryBeat.id, { context: 'game_loop', isPro: true }), null, 'Track 2 never leaks into the game loop');
+    },
+  },
+  {
     name: 'islandHasReactionBeats is content-driven (true for islands with reaction beats)',
     run: () => {
       assert(islandHasReactionBeats(1), 'Island 1 has reaction beats');
@@ -46,6 +84,11 @@ export const islandNarrativeRegistryTests: TestCase[] = [
         beats: getIslandNarrativeDefinition(1)!.beats.filter((beat) => REACTION_EXCLUDED_BEAT_IDS.has(beat.id)),
       };
       assert(!islandHasReactionBeats(1, legacyOnly), 'Legacy-only definition has no reaction beats');
+      const fullStoryOnly = {
+        ...getIslandNarrativeDefinition(1)!,
+        beats: [{ ...getIslandNarrativeDefinition(1)!.beats.find((beat) => beat.id === 'I001-B09')!, track: 'full_story' as const }],
+      };
+      assert(!islandHasReactionBeats(1, fullStoryOnly), 'Full Story Mode beats never count as game-loop reactions');
     },
   },
   {

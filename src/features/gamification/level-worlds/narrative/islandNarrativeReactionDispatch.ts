@@ -24,6 +24,7 @@ import type {
   IslandNarrativeStopId,
   IslandNarrativeTrigger,
 } from './islandNarrativeTypes';
+import { canPlayNarrativeTrack } from './islandNarrativeTrack';
 import type { IslandNarrativeDialogueTone } from './components/IslandNarrativeDialogue';
 
 /** Canonical stop order — index aligns with `stopBuildStateByIndex`. */
@@ -179,7 +180,11 @@ export function resolveReactionBeat(
   if (!definition) return null;
   return (
     definition.beats.find(
-      (beat) => !REACTION_EXCLUDED_BEAT_IDS.has(beat.id) && triggersMatch(beat.trigger, trigger),
+      (beat) => (
+        !REACTION_EXCLUDED_BEAT_IDS.has(beat.id)
+        && canPlayNarrativeTrack({ track: beat.track, context: 'game_loop', isPro: false })
+        && triggersMatch(beat.trigger, trigger)
+      ),
     ) ?? null
   );
 }
@@ -300,7 +305,10 @@ export function islandHasReactionBeats(
   definition: IslandNarrativeDefinition | null = getIslandNarrativeDefinition(islandNumber) ?? null,
 ): boolean {
   if (!definition) return false;
-  return definition.beats.some((beat) => !REACTION_EXCLUDED_BEAT_IDS.has(beat.id));
+  return definition.beats.some((beat) => (
+    !REACTION_EXCLUDED_BEAT_IDS.has(beat.id)
+    && canPlayNarrativeTrack({ track: beat.track, context: 'game_loop', isPro: false })
+  ));
 }
 
 /** Priority rank for reaction queue ordering (lower shows first). */
