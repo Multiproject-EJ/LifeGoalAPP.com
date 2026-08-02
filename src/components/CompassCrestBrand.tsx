@@ -9,6 +9,7 @@ interface CompassCrestBrandProps {
   animated?: boolean;
   curved?: boolean;
   variant?: 'compass' | 'shield';
+  showShield?: boolean;
 }
 
 export function CompassCrestBrand({
@@ -20,6 +21,7 @@ export function CompassCrestBrand({
   animated = false,
   curved = false,
   variant = 'compass',
+  showShield = true,
 }: CompassCrestBrandProps) {
   const classes = [
     'compass-crest-brand',
@@ -63,15 +65,17 @@ export function CompassCrestBrand({
   return (
     <div className={classes}>
       {variant === 'shield' ? (
-        <div className="compass-crest-brand__shield-lockup">
-          <img
-            className="compass-crest-brand__shield"
-            src="/assets/brand/habitgame-shield-compass.webp"
-            alt=""
-            width="640"
-            height="640"
-            decoding="async"
-          />
+        <div className={`compass-crest-brand__shield-lockup${showShield ? '' : ' compass-crest-brand__shield-lockup--wordmark-only'}`}>
+          {showShield ? (
+            <img
+              className="compass-crest-brand__shield"
+              src="/assets/brand/habitgame-shield-compass.webp"
+              alt=""
+              width="640"
+              height="640"
+              decoding="async"
+            />
+          ) : null}
           {wordmark}
           {typeof rank === 'number' ? (
             <span className="compass-crest-brand__rank-plaque">

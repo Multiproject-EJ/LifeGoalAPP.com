@@ -72,6 +72,10 @@
   gap: clamp(0.35rem, 1vw, 0.62rem);
 }
 
+.compass-crest-brand__shield-lockup--wordmark-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .compass-crest-brand__shield {
   display: block;
   width: clamp(4.2rem, 12vw, 6.3rem);

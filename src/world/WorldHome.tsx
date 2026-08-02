@@ -44,7 +44,7 @@ const COMPASS_GAME_LOOP = [
   },
 ] as const;
 
-export function WorldHome({ beforeInstallPromptEvent }: WorldHomeProps) {
+export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps) {
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [waitlistMessage, setWaitlistMessage] = useState('');
@@ -105,54 +105,31 @@ export function WorldHome({ beforeInstallPromptEvent }: WorldHomeProps) {
                   asHeading
                   animated
                   variant="shield"
+                  showShield={false}
                 />
                 <div className="world-home__availability" aria-label="HabitGame availability">
-                  <span className="world-home__store-badge world-home__store-badge--soon">
+                  <span className="world-home__platform-mark" aria-label="App Store coming soon">
                     <i className="world-home__store-icon world-home__store-icon--apple" aria-hidden="true">●</i>
-                    <span><small>Coming soon to the</small><strong>App Store</strong></span>
+                    <span><strong>App Store</strong><small>Coming soon</small></span>
                   </span>
-                  <span className="world-home__store-badge world-home__store-badge--soon">
+                  <span className="world-home__platform-mark" aria-label="Google Play coming soon">
                     <i className="world-home__store-icon world-home__store-icon--play" aria-hidden="true" />
-                    <span><small>Coming soon on</small><strong>Google Play</strong></span>
+                    <span><strong>Google Play</strong><small>Coming soon</small></span>
                   </span>
                   <button
-                    className="world-home__store-badge world-home__store-badge--web"
+                    className="world-home__web-app-link"
                     type="button"
                     onClick={handleWebAppInstall}
                     disabled={installState.platform === 'installed'}
                   >
                     <i className="world-home__store-icon world-home__store-icon--web" aria-hidden="true">◇</i>
                     <span>
-                      <small>{installState.platform === 'installed' ? 'Installed as a' : 'Add to Home Screen'}</small>
-                      <strong>Web App</strong>
+                      <strong>{installState.platform === 'installed' ? 'Web App installed' : 'Install Web App'}</strong>
+                      <small>{installState.platform === 'installed' ? 'Ready to play' : 'Add to Home Screen'}</small>
                     </span>
                   </button>
                 </div>
                 <p className="world-home__kicker">The cozy RPG powered by your real life</p>
-                <p className="world-home__tagline">Turn real progress into a world that grows.</p>
-                <p className="world-home__hero-copy">
-                  Care for your habits, explore enchanted islands, and watch the life you are building
-                  become the world you play.
-                </p>
-                <div className="world-home__story-promise" aria-label="HabitGame story mode preview">
-                  <span className="world-home__story-promise-mark" aria-hidden="true">✦</span>
-                  <div>
-                    <small>DISCOVER THE GAME UNIVERSE</small>
-                    <strong>Unlock the mystery. Earn rewards as you discover.</strong>
-                    <p>
-                      Play the adventure your way. <b>HabitGame Crew</b> is planned to unlock the
-                      full story mode for players who want to go deeper.
-                    </p>
-                  </div>
-                </div>
-                <div className="world-home__theme-pills" aria-label="Included visual themes">
-                  <span className="world-home__theme-pill world-home__theme-pill--light">
-                    <span aria-hidden="true">☀</span> First Light
-                  </span>
-                  <span className="world-home__theme-pill world-home__theme-pill--dark">
-                    <span aria-hidden="true">☾</span> Midnight Blue
-                  </span>
-                </div>
                 <a className="world-home__mobile-waitlist-jump" href="#world-home-waitlist">
                   Join early access <span aria-hidden="true">↓</span>
                 </a>
@@ -314,6 +291,73 @@ export function WorldHome({ beforeInstallPromptEvent }: WorldHomeProps) {
             </div>
           </section>
 
+          <section
+            className="world-home__field-notes"
+            id="world-home-field-notes"
+            aria-labelledby="world-home-field-notes-title"
+          >
+            <header className="world-home__field-notes-heading">
+              <div>
+                <p><span aria-hidden="true">✦</span> FROM THE WORLD · FIELD NOTES</p>
+                <h2 id="world-home-field-notes-title">Stories, guides and signals from the islands.</h2>
+              </div>
+              <span className="world-home__field-notes-status">First dispatches · coming soon</span>
+            </header>
+
+            <div className="world-home__field-notes-grid">
+              <article className="world-home__field-note world-home__field-note--featured">
+                <div className="world-home__field-note-art">
+                  <img
+                    src="/landing-page-assets/showcase/island-run.webp"
+                    alt="HabitGame Island Run board floating among clouds"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span>FIRST VOYAGE</span>
+                </div>
+                <div className="world-home__field-note-copy">
+                  <p>BEGINNER'S GUIDE · 6 MIN</p>
+                  <h3>Your first voyage: how Island Run begins.</h3>
+                  <span>
+                    Follow the compass, spend your first dice and discover how small choices bring
+                    a quiet island to life.
+                  </span>
+                  <strong>Guide arriving before launch <i aria-hidden="true">→</i></strong>
+                </div>
+              </article>
+
+              <div className="world-home__field-note-stack">
+                <article className="world-home__field-note world-home__field-note--compact">
+                  <img
+                    src="/landing-page-assets/characters/builder-robot-family-preview-v1.jpg"
+                    alt="HabitGame builder robots gathered together"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div>
+                    <p>WORLD NOTES · 4 MIN</p>
+                    <h3>Meet the builders behind the compass.</h3>
+                    <span>Characters, clues and the hands quietly shaping your island.</span>
+                  </div>
+                </article>
+
+                <article className="world-home__field-note world-home__field-note--compact">
+                  <img
+                    src="/landing-page-assets/showcase/daily-momentum.webp"
+                    alt="HabitGame Daily Momentum reward journey"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div>
+                    <p>DESIGN NOTE · 3 MIN</p>
+                    <h3>Why tomorrow should feel inviting.</h3>
+                    <span>A gentler look at rewards, returns and beginning again.</span>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </section>
+
           <section className="world-home__more" aria-label="More HabitGame previews">
             <button
               className="world-home__more-toggle"
@@ -420,6 +464,15 @@ export function WorldHome({ beforeInstallPromptEvent }: WorldHomeProps) {
           </section>
 
           <footer className="world-home__footer">
+            <img
+              className="world-home__footer-shield"
+              src="/assets/brand/habitgame-shield-compass.webp"
+              alt=""
+              width="640"
+              height="640"
+              loading="lazy"
+              decoding="async"
+            />
             <p className="world-home__copyright">
               HabitGame &copy; {new Date().getFullYear()}
               <span className="world-home__version" aria-hidden="true"> · v1.0</span>
@@ -434,6 +487,13 @@ export function WorldHome({ beforeInstallPromptEvent }: WorldHomeProps) {
               >
                 Investors &amp; partnerships
               </a>
+              <button
+                className="world-home__footer-link world-home__footer-login"
+                type="button"
+                onClick={onLogin}
+              >
+                Developer login
+              </button>
             </nav>
           </footer>
         </div>
