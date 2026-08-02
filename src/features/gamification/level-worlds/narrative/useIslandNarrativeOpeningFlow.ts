@@ -80,6 +80,8 @@ export type IslandNarrativeOpeningFlowInput = {
   bossChallengeMidpoint?: boolean;
   /** Canonical count of diplomatic-technology fragments collected on this island. */
   technologyFragmentCount?: number;
+  /** Canonical technology capability, used to recover an unseen first-contact beat after reload. */
+  isConcordActive?: boolean;
   canChallengeCurrentBoss: boolean;
   isCurrentIslandBossDefeated: boolean;
   bossTrialResolvedIslandNumber: number | null | undefined;
@@ -246,6 +248,7 @@ export function useIslandNarrativeOpeningFlow({
   bossChallengeActive,
   bossChallengeMidpoint,
   technologyFragmentCount,
+  isConcordActive,
   canChallengeCurrentBoss,
   isCurrentIslandBossDefeated,
   bossTrialResolvedIslandNumber,
@@ -561,6 +564,20 @@ export function useIslandNarrativeOpeningFlow({
     const beat = getIslandNarrativeDefinition(currentIslandNumber)?.beats.find((entry) => entry.id === beatId);
     return beat ? reactionBeatPriorityRank(beat) : 99;
   }, [currentIslandNumber]);
+
+  // The ninth-fragment reaction normally enters through the live 8 -> 9 diff.
+  // If the app closes between the canonical technology build and the call
+  // screen, recover that unseen first contact from the active capability on
+  // hydration. The shared seen ledger makes this a one-time catch-up only.
+  useEffect(() => {
+    if (!reactionEligible || !isConcordActive || isSeen('I001-B32')) return;
+    const beat = getIslandNarrativeDefinition(currentIslandNumber)?.beats.find((entry) => entry.id === 'I001-B32');
+    if (!beat) return;
+    setReactionQueue((current) => {
+      if (current.includes(beat.id)) return current;
+      return [...current, beat.id].sort((a, b) => reactionBeatRank(a) - reactionBeatRank(b));
+    });
+  }, [currentIslandNumber, isConcordActive, isSeen, reactionBeatRank, reactionEligible]);
 
   useEffect(() => {
     if (!hasHydratedRuntimeState) {

@@ -6,6 +6,7 @@ const base = 'src/features/gamification/level-worlds/components';
 const gridSource = readFileSync(`${base}/IslandTechGrid.tsx`, 'utf8');
 const modalSource = readFileSync(`${base}/IslandTechCollectionModal.tsx`, 'utf8');
 const celebrationSource = readFileSync(`${base}/IslandTechCompletionCelebration.tsx`, 'utf8');
+const firstContactSource = readFileSync('src/features/gamification/level-worlds/narrative/components/ConcordFirstContactTransmission.tsx', 'utf8');
 const cssSource = readFileSync(`${base}/IslandTechCollectionModal.css`, 'utf8');
 const boardSource = readFileSync(`${base}/IslandRunBoardPrototype.tsx`, 'utf8');
 
@@ -118,12 +119,21 @@ export const islandTechCollectionComponentTests: TestCase[] = [
     },
   },
   {
-    name: 'celebration requires a deliberate activation and opens the useful Concord surface',
+    name: 'celebration requires deliberate activation and answers the first Concord signal',
     run: () => {
-      includes(celebrationSource, 'Open The Concord');
+      includes(celebrationSource, 'Answer the first signal');
       includes(celebrationSource, 'onClick={() => onOpenConcord()}');
-      includes(boardSource, 'setShowConcordHubModal(true);');
+      includes(boardSource, '<ConcordFirstContactTransmission');
       notIncludes(celebrationSource, 'setTimeout');
+    },
+  },
+  {
+    name: 'first contact gives the restored Concord an immediate narrative use',
+    run: () => {
+      ['LIVE TRANSLATION', 'CARETAKER CHANNEL', 'SHARED PURPOSE'].forEach((copy) => includes(firstContactSource, copy));
+      includes(firstContactSource, 'onAcknowledge');
+      includes(boardSource, "beatId !== 'I001-B32'");
+      includes(boardSource, 'setShowConcordHubModal(true);');
     },
   },
   {
@@ -150,7 +160,7 @@ export const islandTechCollectionComponentTests: TestCase[] = [
   {
     name: 'presentation components perform no gameplay writes',
     run: () => {
-      [gridSource, modalSource, celebrationSource].forEach((source) => {
+      [gridSource, modalSource, celebrationSource, firstContactSource].forEach((source) => {
         ['setRuntimeState', 'applyTechCollectionState', 'applyTokenHopRewards', 'persistIslandRunRuntimeStatePatch'].forEach(
           (forbidden) => notIncludes(source, forbidden),
         );

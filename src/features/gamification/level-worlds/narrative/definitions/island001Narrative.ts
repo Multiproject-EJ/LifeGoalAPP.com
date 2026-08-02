@@ -46,6 +46,12 @@ export const island001NarrativeDefinition = {
       displayName: 'Central Command',
       role: 'Compass Expedition mission authority.',
     },
+    {
+      id: 'luma-caretaker',
+      displayName: 'Caretaker',
+      role: 'Keeper of the Gentle Paths and the first voice translated by The Concord.',
+      portraitSrc: '/assets/island_caretakers/001/IMG_caretaker_3d_blue.webp',
+    },
   ],
   beats: [
     {
@@ -140,6 +146,24 @@ export const island001NarrativeDefinition = {
       secondaryText: 'The island network is online. Recover the remaining Concord fragments as you explore.',
       objectiveText: 'Recover all 9 Concord fragments',
       displayCtaText: 'Activate island',
+    },
+    {
+      id: 'I001-B32',
+      trigger: {
+        kind: 'technology_fragment_collected',
+        islandNumber: 1,
+        technologyId: 'the-concord',
+        collectedCount: 9,
+      },
+      speakerId: 'luma-caretaker',
+      surface: 'dialogue_sheet',
+      priority: 'major',
+      repeatPolicy: 'once',
+      headline: 'FIRST CONTACT',
+      text: 'At last — you can hear me.',
+      secondaryText: 'Luma Isle is not abandoned. Its five lights are sleeping, and our guardian is trapped inside an old warning. Help me wake them.',
+      objectiveText: 'Restore the five lights of Luma Isle',
+      displayCtaText: 'We’ll wake them together',
     },
 
     // ----------------------------------------------------------------------

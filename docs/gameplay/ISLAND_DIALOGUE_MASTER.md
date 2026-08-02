@@ -51,8 +51,11 @@ Narrative definitions are display-only. They must never award currency, complete
 | --- | --- | --- | --- |
 | `I001-B00` | Fresh Island 1 entry after the arrival story | `expedition_phone` | “Roll the dice. Collect the fragments.” Acknowledgement canonically arms the first roll. |
 | `I001-B31` | First `the-concord` fragment collected (`0 → 1`) | `expedition_phone` | “Begin the diplomatic effort. Earn, build, and play.” Acknowledgement activates the ordinary island tile network. |
+| `I001-B32` | The Concord is canonically active after fragment `9/9` | `dialogue_sheet` rendered as the Concord call screen | The Luma Caretaker becomes the first fully translated island voice and gives the five-light restoration purpose. |
 
 Both transmissions are marked seen only when acknowledged. Their Island 1 tutorial transitions are committed atomically with the canonical seen ledger, preventing a reload or device sync from separating “message read” from “board activated.” The first-fragment transmission waits until the fragment-collection presentation has closed.
+
+The first-contact call waits behind the assembly payoff, then opens before the reusable three-channel hub. If the app closes after The Concord activates but before the call is acknowledged, the active technology capability plus the shared seen ledger recovers `I001-B32` on the next hydration. It never grants rewards or alters gameplay progression.
 
 ## Adding future islands
 

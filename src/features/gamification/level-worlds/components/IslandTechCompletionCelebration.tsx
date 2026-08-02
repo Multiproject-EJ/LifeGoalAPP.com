@@ -32,9 +32,9 @@ export interface TechCompletionCelebrationResult {
 
 export interface IslandTechCompletionCelebrationProps {
   result: TechCompletionCelebrationResult;
-  /** Primary payoff: dismiss the celebration and open the live Concord hub. */
+  /** Primary payoff: dismiss the celebration so the pending first call can connect. */
   onOpenConcord: () => void;
-  /** Keyboard escape hatch — returns focus to the board without opening it. */
+  /** Keyboard escape hatch — dismisses assembly; any queued narrative can continue. */
   onDismiss: () => void;
   imageSrc?: string;
 }
@@ -160,7 +160,7 @@ export function IslandTechCompletionCelebration(props: IslandTechCompletionCeleb
             className="island-tech-celebration__continue"
             onClick={() => onOpenConcord()}
           >
-            <span>Open The Concord</span>
+            <span>Answer the first signal</span>
             <span aria-hidden="true">›</span>
           </button>
         </div>

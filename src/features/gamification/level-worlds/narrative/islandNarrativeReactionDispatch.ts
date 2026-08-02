@@ -204,8 +204,10 @@ function toneForSpeaker(speakerId: string | undefined): IslandNarrativeDialogueT
 export interface ReactionDialoguePayload {
   beatId: string;
   speakerName: string;
+  headline?: string;
   text: string;
   secondaryText?: string;
+  objectiveText?: string;
   continueLabel: string;
   tone: IslandNarrativeDialogueTone;
   portraitSrc?: string;
@@ -241,8 +243,10 @@ export function buildReactionDialogue(
   return {
     beatId: beat.id,
     speakerName: speakerDisplayName(beat.speakerId, definition),
+    headline: beat.headline,
     text: beat.text,
     secondaryText: beat.secondaryText,
+    objectiveText: beat.objectiveText,
     continueLabel: beat.displayCtaText ?? 'Continue',
     tone: toneForSpeaker(beat.speakerId),
     portraitSrc: character?.portraitSrc,

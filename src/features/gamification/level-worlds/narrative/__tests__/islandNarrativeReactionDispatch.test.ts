@@ -16,10 +16,12 @@ const hookPath = 'src/features/gamification/level-worlds/narrative/useIslandNarr
 const boardPath = 'src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx';
 const dispatchPath = 'src/features/gamification/level-worlds/narrative/islandNarrativeReactionDispatch.ts';
 const expeditionPhonePath = 'src/features/gamification/level-worlds/narrative/components/ExpeditionPhoneTransmission.tsx';
+const concordFirstContactPath = 'src/features/gamification/level-worlds/narrative/components/ConcordFirstContactTransmission.tsx';
 const hookSource = readFileSync(hookPath, 'utf8');
 const boardSource = readFileSync(boardPath, 'utf8');
 const dispatchSource = readFileSync(dispatchPath, 'utf8');
 const expeditionPhoneSource = readFileSync(expeditionPhonePath, 'utf8');
+const concordFirstContactSource = readFileSync(concordFirstContactPath, 'utf8');
 
 function assertIncludes(source: string, expected: string, message: string) {
   assert(source.includes(expected), message);
@@ -58,6 +60,23 @@ export const islandNarrativeReactionDispatchTests: TestCase[] = [
       assertEqual((fragmentTrigger as { technologyId: string }).technologyId, 'the-concord', 'Island 1 uses the Concord technology id');
       assertEqual((fragmentTrigger as { collectedCount: number }).collectedCount, 1, 'first fragment count retained');
       assertEqual(resolveReactionBeat(fragmentTrigger!, 1, definition)?.id, 'I001-B31', 'first fragment resolves to the Central Command beat');
+    },
+  },
+  {
+    name: 'ninth Concord fragment resolves the authored first-contact call',
+    run: () => {
+      const triggers = diffIslandNarrativeReactionTriggers(
+        snapshot({ technologyFragmentCount: 8 }),
+        snapshot({ technologyFragmentCount: 9 }),
+        1,
+      );
+      const fragmentTrigger = triggers.find((trigger) => trigger.kind === 'technology_fragment_collected');
+      const beat = fragmentTrigger ? resolveReactionBeat(fragmentTrigger, 1, definition) : null;
+      assertEqual(beat?.id, 'I001-B32', 'ninth fragment resolves to first contact');
+      const dialogue = beat ? buildReactionDialogue(beat, definition) : null;
+      assertEqual(dialogue?.speakerName, 'Caretaker', 'first translated voice is the Caretaker');
+      assertEqual(dialogue?.headline, 'FIRST CONTACT', 'call owns its display heading');
+      assertEqual(dialogue?.objectiveText, 'Restore the five lights of Luma Isle', 'call explains the new purpose');
     },
   },
   {
@@ -204,6 +223,16 @@ export const islandNarrativeReactionDispatchTests: TestCase[] = [
       assertIncludes(boardSource, 'islandNarrativeOpeningFlow.activeReactionToast', 'Board renders reaction toast');
       assertIncludes(boardSource, 'technologyFragmentCount: narrativeTechnologyFragmentCount', 'Board feeds the hydrated canonical fragment count');
       assertIncludes(boardSource, 'islandNarrativeOpeningFlow.activeExpeditionTransmission', 'Board renders the Expedition Phone transmission');
+    },
+  },
+  {
+    name: 'active unseen Concord recovers first contact and uses the dedicated call screen',
+    run: () => {
+      assertIncludes(hookSource, "!isConcordActive || isSeen('I001-B32')", 'Hydration recovery is capability- and seen-ledger-gated');
+      assertIncludes(boardSource, "activeReactionDialogue?.beatId === 'I001-B32'", 'Board recognizes the first-contact reaction');
+      assertIncludes(boardSource, '<ConcordFirstContactTransmission', 'Board renders the dedicated call screen');
+      assertIncludes(concordFirstContactSource, 'LIVE TRANSLATION', 'Call screen clearly communicates translated contact');
+      assertIncludes(concordFirstContactSource, 'lockPageScroll', 'Call screen follows the modal viewport contract');
     },
   },
   {

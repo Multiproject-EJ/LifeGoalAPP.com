@@ -380,8 +380,9 @@ import { IslandChampionshipBanner } from './IslandChampionshipBanner';
 import { IslandNarrativeDialogue } from '../narrative/components/IslandNarrativeDialogue';
 import { IslandNarrativeToast } from '../narrative/components/IslandNarrativeToast';
 import { ExpeditionPhoneTransmission } from '../narrative/components/ExpeditionPhoneTransmission';
+import { ConcordFirstContactTransmission } from '../narrative/components/ConcordFirstContactTransmission';
 import { useIslandNarrativeOpeningFlow, type ActiveIslandStoryEpisode } from '../narrative/useIslandNarrativeOpeningFlow';
-import { buildExpeditionPhoneTransmission } from '../narrative/islandNarrativeReactionDispatch';
+import { buildExpeditionPhoneTransmission, buildReactionDialogue } from '../narrative/islandNarrativeReactionDispatch';
 import { getIslandNarrativeDefinition } from '../narrative/islandNarrativeRegistry';
 import { isDiplomaticRewardChannelVisible } from '../narrative/islandDiplomaticPresentation';
 import { getIslandChampionshipPresentation } from '../narrative/islandChampionshipPresentation';
@@ -1649,6 +1650,7 @@ export function IslandRunBoardPrototype({
       isMinimalBoardArt: params.get('minimalBoardArt') === '1',
       isIslandVisualPreview: import.meta.env.DEV && params.get('islandVisualPreview') === '1',
       showConcordCompletionPreview: import.meta.env.DEV && params.get('concordCompletionPreview') === '1',
+      showConcordFirstContactPreview: import.meta.env.DEV && params.get('concordFirstContactPreview') === '1',
       showExpeditionPhonePreview: import.meta.env.DEV && params.get('expeditionPhonePreview') === '1',
       islandVisualIslandNumber: Math.round(readNumericParam(params, 'islandVisualIsland', 1, 1, 120)),
       islandVisualLandmark,
@@ -1663,6 +1665,7 @@ export function IslandRunBoardPrototype({
     isMinimalBoardArt,
     isIslandVisualPreview,
     showConcordCompletionPreview,
+    showConcordFirstContactPreview,
     showExpeditionPhonePreview,
     islandVisualIslandNumber,
     islandVisualLandmark,
@@ -11329,6 +11332,7 @@ export function IslandRunBoardPrototype({
       getBossTrialConfig(islandNumber).scoreTarget > 0 &&
       bossTrialScore * 2 >= getBossTrialConfig(islandNumber).scoreTarget,
     technologyFragmentCount: narrativeTechnologyFragmentCount,
+    isConcordActive: Boolean(runtimeState.technologyUnlocksById?.['the-concord']?.active),
     canChallengeCurrentBoss,
     isCurrentIslandBossDefeated,
     bossTrialResolvedIslandNumber: runtimeState.bossTrialResolvedIslandNumber,
@@ -11347,6 +11351,15 @@ export function IslandRunBoardPrototype({
   }, [showExpeditionPhonePreview]);
   const activeExpeditionTransmission = islandNarrativeOpeningFlow.activeExpeditionTransmission
     ?? expeditionPhonePreviewTransmission;
+  const concordFirstContactPreviewDialogue = useMemo(() => {
+    if (!showConcordFirstContactPreview) return null;
+    const definition = getIslandNarrativeDefinition(1) ?? null;
+    const beat = definition?.beats.find((entry) => entry.id === 'I001-B32') ?? null;
+    return beat ? buildReactionDialogue(beat, definition) : null;
+  }, [showConcordFirstContactPreview]);
+  const activeConcordFirstContact = islandNarrativeOpeningFlow.activeReactionDialogue?.beatId === 'I001-B32'
+    ? islandNarrativeOpeningFlow.activeReactionDialogue
+    : concordFirstContactPreviewDialogue;
 
   const landmarkWhispers = useLandmarkWhispers({
     activeStopId,
@@ -11357,6 +11370,7 @@ export function IslandRunBoardPrototype({
       islandNarrativeOpeningFlow.activeToast ||
       islandNarrativeOpeningFlow.activeReactionDialogue ||
       islandNarrativeOpeningFlow.activeReactionToast ||
+      activeConcordFirstContact ||
       activeExpeditionTransmission ||
       islandNarrativeOpeningFlow.queuedBeatIds.length > 0 ||
       islandNarrativeOpeningFlow.reactionQueuedBeatIds.length > 0
@@ -12882,7 +12896,7 @@ export function IslandRunBoardPrototype({
           onDismiss={() => setTechCompletionCelebration(null)}
           onOpenConcord={() => {
             setTechCompletionCelebration(null);
-            setShowConcordHubModal(true);
+            setShowConcordHubModal(false);
           }}
         />
       ) : null}
@@ -16294,7 +16308,7 @@ export function IslandRunBoardPrototype({
 
       {/* Data-driven reaction beats (stop/landmark/majority/boss-start). Render
           one at a time and only when no legacy narrative surface is active. */}
-      {islandNarrativeOpeningFlow.activeReactionDialogue ? (
+      {islandNarrativeOpeningFlow.activeReactionDialogue && islandNarrativeOpeningFlow.activeReactionDialogue.beatId !== 'I001-B32' ? (
         <IslandNarrativeDialogue
           isOpen={true}
           speakerName={islandNarrativeOpeningFlow.activeReactionDialogue.speakerName}
@@ -16306,6 +16320,29 @@ export function IslandRunBoardPrototype({
           continueLabel={islandNarrativeOpeningFlow.activeReactionDialogue.continueLabel}
           onContinue={islandNarrativeOpeningFlow.handleReactionDialogueContinue}
           onClose={islandNarrativeOpeningFlow.handleReactionDialogueContinue}
+        />
+      ) : null}
+
+      {activeConcordFirstContact ? (
+        <ConcordFirstContactTransmission
+          isOpen={true}
+          speakerName={activeConcordFirstContact.speakerName}
+          headline={activeConcordFirstContact.headline}
+          portraitSrc={activeConcordFirstContact.portraitSrc}
+          text={activeConcordFirstContact.text}
+          secondaryText={activeConcordFirstContact.secondaryText}
+          objectiveText={activeConcordFirstContact.objectiveText}
+          ctaLabel={activeConcordFirstContact.continueLabel}
+          onSignalLock={() => {
+            playIslandRunSound('tech_item_poof');
+            triggerIslandRunHaptic('stop_land');
+          }}
+          onAcknowledge={showConcordFirstContactPreview
+            ? () => undefined
+            : () => {
+                islandNarrativeOpeningFlow.handleReactionDialogueContinue();
+                setShowConcordHubModal(true);
+              }}
         />
       ) : null}
 
