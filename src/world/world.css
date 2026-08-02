@@ -4701,8 +4701,105 @@
   box-shadow: 0 8px 20px rgba(5, 28, 68, 0.24), inset 0 1px 0 rgba(151, 225, 255, 0.2);
 }
 
-.world-home__mobile-waitlist-jump {
-  display: none;
+.world-home__entry-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  margin-top: 3px;
+}
+
+.world-home__game-login {
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  padding: 7px 13px 7px 8px;
+  border: 1px solid rgba(240, 200, 103, 0.5);
+  border-radius: 16px;
+  cursor: pointer;
+  color: #f8fcff;
+  text-align: left;
+  font: inherit;
+  background:
+    radial-gradient(circle at 12% 20%, rgba(76, 192, 255, 0.24), transparent 32%),
+    linear-gradient(150deg, #173f79, #071a3c 78%);
+  box-shadow:
+    0 12px 27px rgba(8, 35, 75, 0.24),
+    inset 0 1px 0 rgba(193, 233, 255, 0.24);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.world-home__game-login:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 218, 124, 0.78);
+  box-shadow:
+    0 15px 31px rgba(8, 35, 75, 0.3),
+    inset 0 1px 0 rgba(215, 241, 255, 0.3);
+}
+
+.world-home__game-login:focus-visible,
+.world-home__waitlist-jump:focus-visible {
+  outline: 3px solid rgba(70, 184, 244, 0.35);
+  outline-offset: 3px;
+}
+
+.world-home__game-login-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 224, 137, 0.42);
+  border-radius: 11px;
+  color: #ffe398;
+  background: rgba(255, 235, 174, 0.08);
+}
+
+.world-home__game-login > span:nth-child(2) {
+  display: grid;
+  gap: 2px;
+}
+
+.world-home__game-login strong {
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.world-home__game-login small {
+  color: #b9d7e8;
+  font-size: 0.56rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.world-home__game-login > i {
+  color: #f2d078;
+  font-size: 1rem;
+  font-style: normal;
+}
+
+.world-home__waitlist-jump {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  color: #245f96;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.world-home__waitlist-jump:hover {
+  color: #123f70;
+  background: rgba(255, 255, 255, 0.38);
 }
 
 .world-home--sales-split .world-home__cta-card {
@@ -5635,21 +5732,20 @@
     border-radius: 28px;
   }
 
-  .world-home__mobile-waitlist-jump {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: 42px;
-    margin-top: 2px;
-    padding: 8px 16px;
+  .world-home__entry-actions {
+    align-items: stretch;
+    flex-direction: column;
+    max-width: 260px;
+  }
+
+  .world-home__game-login {
+    width: 100%;
+  }
+
+  .world-home__waitlist-jump {
+    align-self: center;
     color: #f7fbff;
-    font-size: 12px;
-    font-weight: 850;
-    letter-spacing: 0.04em;
-    text-decoration: none;
     border: 1px solid rgba(104, 207, 255, 0.35);
-    border-radius: 999px;
     background: linear-gradient(180deg, #1d559a, #0a2857);
     box-shadow:
       0 10px 24px rgba(8, 39, 84, 0.22),

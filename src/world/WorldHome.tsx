@@ -44,6 +44,8 @@ const COMPASS_GAME_LOOP = [
   },
 ] as const;
 
+const PUBLIC_GAME_LOGIN_ENABLED = import.meta.env.VITE_PUBLIC_GAME_LOGIN_ENABLED === 'true';
+
 export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps) {
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -92,6 +94,25 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
     trackEvent('waitlist_error');
   };
 
+  const handlePublicGameLogin = () => {
+    trackEvent('login_click');
+
+    if (PUBLIC_GAME_LOGIN_ENABLED) {
+      onLogin();
+      return;
+    }
+
+    document.getElementById('world-home-waitlist')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  };
+
+  const handleDeveloperLogin = () => {
+    trackEvent('developer_login_click');
+    onLogin();
+  };
+
   return (
     <div className="world-home world-home--sales-split">
       <WorldHero>
@@ -130,9 +151,25 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
                   </button>
                 </div>
                 <p className="world-home__kicker">The cozy RPG powered by your real life</p>
-                <a className="world-home__mobile-waitlist-jump" href="#world-home-waitlist">
-                  Join early access <span aria-hidden="true">↓</span>
-                </a>
+                <div className="world-home__entry-actions">
+                  <button
+                    className="world-home__game-login"
+                    type="button"
+                    onClick={handlePublicGameLogin}
+                  >
+                    <span className="world-home__game-login-mark" aria-hidden="true">✦</span>
+                    <span>
+                      <strong>Game login</strong>
+                      <small>
+                        {PUBLIC_GAME_LOGIN_ENABLED ? 'Continue your journey' : 'Opens at launch · join the waitlist'}
+                      </small>
+                    </span>
+                    <i aria-hidden="true">→</i>
+                  </button>
+                  <a className="world-home__waitlist-jump" href="#world-home-waitlist">
+                    Join early access <span aria-hidden="true">↓</span>
+                  </a>
+                </div>
               </div>
 
             </div>
@@ -490,7 +527,7 @@ export function WorldHome({ beforeInstallPromptEvent, onLogin }: WorldHomeProps)
               <button
                 className="world-home__footer-link world-home__footer-login"
                 type="button"
-                onClick={onLogin}
+                onClick={handleDeveloperLogin}
               >
                 Developer login
               </button>
