@@ -124,7 +124,11 @@ import {
   logIslandRunEntryDebug,
 } from './features/gamification/level-worlds/services/islandRunEntryDebug';
 import { patchIslandRunGuestFunnelState, readIslandRunGuestFunnelState } from './features/gamification/level-worlds/services/islandRunGuestFunnelState';
-import { claimAnonymousIslandRunGuestInPlace } from './features/gamification/level-worlds/services/islandRunGuestClaimService';
+import {
+  claimLocalIslandRunGuestProgress,
+  ISLAND_RUN_REGISTRY_BONUS_USCT,
+  type IslandRunGuestClaimSource,
+} from './features/gamification/level-worlds/services/islandRunGuestClaimService';
 import { SPIN_PRIZES } from './types/gamification';
 import { splitGoldBalance } from './constants/economy';
 import { awardDailyTreatDice } from './services/dailyTreats';
@@ -693,6 +697,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setDarkTheme,
   } = useTheme();
   const [localGuestSession, setLocalGuestSession] = useState<Session | null>(null);
+  const guestClaimInFlightUserIdRef = useRef<string | null>(null);
 
   useEffect(() => scheduleRapidFireworksPreload(), []);
 
@@ -704,6 +709,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [authMessageVisible, setAuthMessageVisible] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showGuestExitSavePrompt, setShowGuestExitSavePrompt] = useState(false);
   const [activeAuthTab, setActiveAuthTab] = useState<AuthTab>('login');
   const [isAuthGateOnline, setIsAuthGateOnline] = useState(() => (
     typeof navigator === 'undefined' ? true : navigator.onLine
@@ -1204,6 +1210,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
     level: menuJourneySummary.level,
     xp: menuJourneySummary.xp,
     cumulativeXpForLevel,
+    accountCreatedAt: supabaseSession?.user.created_at ?? null,
   });
   const [isRankJourneyOpen, setIsRankJourneyOpen] = useState(false);
 
@@ -1229,14 +1236,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
   // Rank promotion: surfaced at the safe moment the player opens their menu.
   // Acknowledgement is persisted (v1: localStorage) so each promotion shows once.
   const [acknowledgedRankId, setAcknowledgedRankId] = useState<number>(MIN_RANK.id);
+  const rankIdentityUserId = supabaseSession?.user?.id ?? localGuestSession?.user?.id ?? null;
   useEffect(() => {
-    setAcknowledgedRankId(loadAcknowledgedRankId(supabaseSession?.user?.id ?? null));
-  }, [supabaseSession?.user?.id, isMobileMenuOpen]);
+    setAcknowledgedRankId(loadAcknowledgedRankId(rankIdentityUserId));
+  }, [rankIdentityUserId, isMobileMenuOpen]);
   const menuCurrentRankId = menuRankProgress.current.id;
   const pendingPromotion = computePendingPromotion(acknowledgedRankId, menuCurrentRankId);
   const acknowledgePromotion = () => {
     if (!pendingPromotion) return;
-    saveAcknowledgedRankId(supabaseSession?.user?.id ?? null, pendingPromotion.toRankId);
+    saveAcknowledgedRankId(rankIdentityUserId, pendingPromotion.toRankId);
     setAcknowledgedRankId(pendingPromotion.toRankId);
   };
   // Rank node shown on the Game Progress dual-track spine (opens the rank
@@ -1880,6 +1888,47 @@ export default function App({ forceAuthOnMount }: AppProps) {
   useEffect(() => {
     if (supabaseSession) setLocalGuestSession(null);
   }, [supabaseSession]);
+
+  useEffect(() => {
+    if (!supabaseSession || !client) return;
+    const guestState = readIslandRunGuestFunnelState();
+    if (!['claim_pending', 'claiming', 'claim_failed'].includes(guestState.claimStatus)) return;
+    if (guestClaimInFlightUserIdRef.current === supabaseSession.user.id) return;
+
+    guestClaimInFlightUserIdRef.current = supabaseSession.user.id;
+    void claimLocalIslandRunGuestProgress({ session: supabaseSession, client })
+      .then((result) => {
+        if (result.status === 'claimed' || result.status === 'already_claimed') {
+          const latestGuestState = readIslandRunGuestFunnelState();
+          setAuthError(null);
+          setAuthMessage(
+            result.status === 'claimed'
+              ? `Expedition secured. Your local run is verified in your free account, and ${result.registryBonusUsct} USCT has been added as a Registry Bonus.`
+              : 'Expedition secured. Your local run is already verified in this account.',
+          );
+          setShowAuthPanel(false);
+          setLevelWorldsEntryPanel('default');
+          setShowLevelWorldsFromEntry(true);
+          if (latestGuestState.claimSource === 'island_1_completion') {
+            setAuthMessage((current) => `${current ?? 'Expedition secured.'} Your Crewmate promotion is ready when you continue to Island 002.`);
+          }
+          return;
+        }
+        if (result.status === 'conflict') {
+          setAuthError('This account already has different Island Run progress. Nothing was overwritten, and the guest run is still safe on this device.');
+          setShowAuthPanel(true);
+        }
+      })
+      .catch((error) => {
+        setAuthError(error instanceof Error
+          ? `We couldn’t verify the cloud save yet: ${error.message} Your guest run is still safe on this device.`
+          : 'We couldn’t verify the cloud save yet. Your guest run is still safe on this device.');
+        setShowAuthPanel(true);
+      })
+      .finally(() => {
+        guestClaimInFlightUserIdRef.current = null;
+      });
+  }, [client, supabaseSession]);
 
   useEffect(() => {
     if (!activeSession?.user?.id) return;
@@ -2933,20 +2982,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
           },
         });
 
-        if (pendingGuestClaim && supabaseSession) {
-          const claimResult = await claimAnonymousIslandRunGuestInPlace({ session: supabaseSession });
-          if (claimResult.status === 'claimed') {
-            setAuthMessage(claimResult.savedDisplayName || claimResult.savedShipName
-              ? `Your game is saved. Your guest run is now saved to your free account. Captain ${readIslandRunGuestFunnelState().displayName ?? formFullName} and ${readIslandRunGuestFunnelState().shipName ?? 'your ship'} are ready for the next route.`
-              : 'Your game is saved. Your guest run is now saved to your free account.');
-            setShowAuthPanel(false);
-            setLevelWorldsEntryPanel('default');
-            setShowLevelWorldsFromEntry(true);
-            return;
-          }
-        }
-
-        setAuthMessage('Check your email to confirm your account, then sign in to continue.');
+        setAuthMessage(pendingGuestClaim
+          ? 'Check your email to confirm your free account. Your run remains safe on this device and will be transferred automatically after confirmation.'
+          : 'Check your email to confirm your account, then sign in to continue.');
       }
     } catch (error) {
       if (readIslandRunGuestFunnelState().claimStatus === 'claim_failed') {
@@ -4122,13 +4160,15 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   }, [supabaseSession]);
 
-  const handleOpenSaveAccountSignup = useCallback(() => {
+  const handleOpenSaveAccountSignup = useCallback((source: IslandRunGuestClaimSource = 'arena') => {
     setActiveAuthTab('signup');
     setAuthMode('signup');
     setAuthError(null);
-    const guestState = readIslandRunGuestFunnelState();
+    const guestState = patchIslandRunGuestFunnelState({ claimSource: source });
     if (guestState.displayName) setFullName(guestState.displayName);
-    setAuthMessage('Create a free account to save this guest run. No payment required.');
+    setAuthMessage(source === 'island_1_completion'
+      ? `First voyage complete. Create a free account to register your Crewmate promotion, secure the expedition, customise your insignia, and receive ${ISLAND_RUN_REGISTRY_BONUS_USCT} USCT.`
+      : `Create a free account to secure this guest run and receive a ${ISLAND_RUN_REGISTRY_BONUS_USCT} USCT Registry Bonus. No payment required.`);
     setShowAuthPanel(true);
   }, []);
 
@@ -5662,13 +5702,36 @@ export default function App({ forceAuthOnMount }: AppProps) {
     }
   };
 
-  const handleCloseLevelWorldsEntry = () => {
+  const performCloseLevelWorldsEntry = () => {
     setShowLevelWorldsFromEntry(false);
     setLevelWorldsEntryPanel('default');
     if (reopenGameBoardOverlayOnLevelWorldsClose) {
       setShowGameBoardOverlay(true);
       setReopenGameBoardOverlayOnLevelWorldsClose(false);
     }
+  };
+
+  const handleCloseLevelWorldsEntry = () => {
+    const guestState = readIslandRunGuestFunnelState();
+    if (isDemoSession(activeSession) && guestState.claimStatus !== 'claimed') {
+      setShowGuestExitSavePrompt(true);
+      return;
+    }
+    performCloseLevelWorldsEntry();
+  };
+
+  const handleSaveGuestRunBeforeExit = () => {
+    patchIslandRunGuestFunnelState({
+      claimStatus: 'claim_pending',
+      claimSource: 'exit',
+    });
+    setShowGuestExitSavePrompt(false);
+    handleOpenSaveAccountSignup('exit');
+  };
+
+  const handleLeaveGuestRunOnDevice = () => {
+    setShowGuestExitSavePrompt(false);
+    performCloseLevelWorldsEntry();
   };
 
   const shouldShowLevelWorldsMobileExitOverlay = Boolean(
@@ -5719,6 +5782,36 @@ export default function App({ forceAuthOnMount }: AppProps) {
       >
         ← Back
       </button>
+    </div>
+  ) : null;
+
+  const guestExitSaveModal = showGuestExitSavePrompt && isDemoSession(activeSession) ? (
+    <div className="island-soft-save-modal" role="dialog" aria-modal="true" aria-labelledby="island-exit-save-title">
+      <button
+        type="button"
+        className="island-soft-save-modal__backdrop"
+        aria-label="Keep playing"
+        onClick={() => setShowGuestExitSavePrompt(false)}
+      />
+      <div className="island-soft-save-modal__dialog">
+        <p className="island-soft-save-modal__eyebrow">Expedition record</p>
+        <h2 id="island-exit-save-title">Save your progress?</h2>
+        <p>
+          Your run is currently stored only on this device. Create a free account to secure your captain,
+          ship, rewards, and Island Run progress.
+        </p>
+        <p className="island-soft-save-modal__fineprint">
+          Register now and receive {ISLAND_RUN_REGISTRY_BONUS_USCT} USCT. No payment required.
+        </p>
+        <div className="island-soft-save-modal__actions">
+          <button type="button" className="island-stop-modal__btn island-stop-modal__btn--primary" onClick={handleSaveGuestRunBeforeExit}>
+            Save for free + {ISLAND_RUN_REGISTRY_BONUS_USCT} USCT
+          </button>
+          <button type="button" className="island-stop-modal__btn island-stop-modal__btn--secondary" onClick={handleLeaveGuestRunOnDevice}>
+            Leave — keep it on this device
+          </button>
+        </div>
+      </div>
     </div>
   ) : null;
 
@@ -5841,6 +5934,26 @@ export default function App({ forceAuthOnMount }: AppProps) {
     </>
   );
 
+  const canDismissOverlay = isAuthOverlayVisible && !shouldForceAuthOverlay;
+  const authOverlay = isAuthOverlayVisible ? (
+    <div className="auth-overlay" role="dialog" aria-modal="true" aria-label="Authenticate with HabitGame">
+      <div
+        className="auth-overlay__backdrop"
+        onClick={() => (canDismissOverlay ? setShowAuthPanel(false) : null)}
+        role="presentation"
+      />
+      <div className="auth-overlay__dialog">
+        {canDismissOverlay ? (
+          <button type="button" className="auth-overlay__close" onClick={() => setShowAuthPanel(false)}>
+            <span aria-hidden="true">×</span>
+            <span className="sr-only">Close sign-in dialog</span>
+          </button>
+        ) : null}
+        {habitGameAuthCard}
+      </div>
+    </div>
+  ) : null;
+
   if (isMobileExperience && showMobileHome) {
     const mobileHomeAppClassName = `app app--workspace app--mobile-frame app--mobile-home-frame${
       isAnyModalVisible ? ' app--auth-overlay' : ''
@@ -5942,6 +6055,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
         {mobileGamificationOverlay}
         {levelWorldsEntryModal}
         {levelWorldsMobileExitOverlay}
+        {guestExitSaveModal}
+        {authOverlay}
         {appPreviewOverlay}
         {firstRunOverlay}
         <GameBoardOverlay
@@ -6029,8 +6144,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const workspaceShellClassName = `workspace-shell ${
     isAnyModalVisible ? 'workspace-shell--blurred' : ''
   }${!isMobileExperience && !isDesktopMenuOpen ? ' workspace-shell--menu-collapsed' : ''}`;
-
-  const canDismissOverlay = isAuthOverlayVisible && !shouldForceAuthOverlay;
 
   return (
     <div className={appClassName}>
@@ -6270,6 +6383,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       {mobileGamificationOverlay}
       {levelWorldsEntryModal}
       {levelWorldsMobileExitOverlay}
+      {guestExitSaveModal}
       {appPreviewOverlay}
       {firstRunOverlay}
       <HolidaySeasonDialog
@@ -6332,24 +6446,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         {...rankSpineProps}
       />
 
-      {isAuthOverlayVisible ? (
-        <div className="auth-overlay" role="dialog" aria-modal="true" aria-label="Authenticate with HabitGame">
-          <div
-            className="auth-overlay__backdrop"
-            onClick={() => (canDismissOverlay ? setShowAuthPanel(false) : null)}
-            role="presentation"
-          />
-          <div className="auth-overlay__dialog">
-            {canDismissOverlay ? (
-              <button type="button" className="auth-overlay__close" onClick={() => setShowAuthPanel(false)}>
-                <span aria-hidden="true">×</span>
-                <span className="sr-only">Close sign-in dialog</span>
-              </button>
-            ) : null}
-            {habitGameAuthCard}
-          </div>
-        </div>
-      ) : null}
+      {authOverlay}
       {shouldShowWorkspaceSetup ? (
         <WorkspaceSetupDialog
           isOpen={shouldShowWorkspaceSetup}

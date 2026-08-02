@@ -3,6 +3,7 @@ export const ISLAND_RUN_GUEST_FUNNEL_STORAGE_KEY = 'islandRunGuestFunnelState.v1
 
 export type IslandRunGuestFunnelEntrySource = 'unknown' | 'landing_cta' | 'debug' | 'direct_island_run';
 export type IslandRunGuestFunnelClaimStatus = 'guest' | 'claim_pending' | 'claiming' | 'claimed' | 'claim_failed';
+export type IslandRunGuestFunnelClaimSource = 'arena' | 'exit' | 'island_1_completion';
 
 export interface IslandRunGuestFunnelStateV1 {
   version: 1;
@@ -23,6 +24,7 @@ export interface IslandRunGuestFunnelStateV1 {
   hasSeenStrongSavePromptBeforeTravel: boolean;
   savePromptDismissals: number;
   claimStatus: IslandRunGuestFunnelClaimStatus;
+  claimSource?: IslandRunGuestFunnelClaimSource;
   claimedUserId?: string;
 }
 

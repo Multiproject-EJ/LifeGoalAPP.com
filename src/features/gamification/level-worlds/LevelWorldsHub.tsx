@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { IslandRunBoardPrototype } from './components/IslandRunBoardPrototype';
 import { logIslandRunEntryDebug } from './services/islandRunEntryDebug';
+import type { IslandRunGuestClaimSource } from './services/islandRunGuestClaimService';
 
 import './LevelWorlds.css';
 
@@ -14,7 +15,7 @@ interface LevelWorldsHubProps {
   initialPanel?: 'default' | 'sanctuary';
   showTopBackButton?: boolean;
   isAdmin?: boolean;
-  onOpenSaveAccountSignup?: () => void;
+  onOpenSaveAccountSignup?: (source?: IslandRunGuestClaimSource) => void;
   onOpenDailySpinWheel?: () => void;
   dailySpinAvailable?: boolean;
   dailySpinCount?: number;

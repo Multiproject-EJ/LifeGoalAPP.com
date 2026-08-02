@@ -28,7 +28,6 @@ type AuthContextValue = {
   signUpWithPassword: (credentials: SignUpWithPasswordCredentials) => Promise<void>;
   signInWithOtp: (email: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signInAnonymously: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -236,22 +235,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       if (!supabase) {
         throw supabaseError ?? new Error('Supabase credentials are not configured.');
       }
-      const currentSession = (await supabase.auth.getSession()).data.session;
-      const isAnonymousUser = (currentSession?.user as { is_anonymous?: boolean } | undefined)?.is_anonymous === true;
-
-      if (isAnonymousUser) {
-        // Supabase anonymous users are upgraded in place with updateUser; this
-        // preserves session.user.id, keeping Island Run runtime rows attached.
-        const { error } = await supabase.auth.updateUser({
-          email: 'email' in credentials ? credentials.email : undefined,
-          phone: 'phone' in credentials ? credentials.phone : undefined,
-          password: credentials.password,
-          data: credentials.options?.data,
-        });
-        if (error) throw ensureSupabaseAuthError(error);
-        return;
-      }
-
       const { error } = await supabase.auth.signUp(credentials);
       if (error) throw ensureSupabaseAuthError(error);
     },
@@ -268,14 +251,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     },
     [mode, supabase, supabaseError],
   );
-
-  const signInAnonymously = useCallback(async () => {
-    if (!supabase) {
-      throw supabaseError ?? new Error('Supabase credentials are not configured.');
-    }
-    const { error } = await supabase.auth.signInAnonymously();
-    if (error) throw ensureSupabaseAuthError(error);
-  }, [mode, supabase, supabaseError]);
 
   const signInWithGoogle = useCallback(async () => {
     if (!supabase) {
@@ -345,7 +320,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       signUpWithPassword,
       signInWithOtp,
       signInWithGoogle,
-      signInAnonymously,
       sendPasswordReset,
       signOut,
     }),
@@ -361,7 +335,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       signUpWithPassword,
       signInWithOtp,
       signInWithGoogle,
-      signInAnonymously,
       sendPasswordReset,
       signOut,
     ],
