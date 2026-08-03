@@ -4588,7 +4588,7 @@ export const islandRunStateActionsTests: TestCase[] = [
         essence: 500,
         essenceLifetimeSpent: 0,
         stopBuildStateByIndex: [
-          { requiredEssence: 20, spentEssence: 0, buildLevel: 1 },
+          { requiredEssence: 20, spentEssence: 20, buildLevel: 3 },
           { requiredEssence: 20, spentEssence: 0, buildLevel: 0 },
           { requiredEssence: 20, spentEssence: 7, buildLevel: 0 },
           { requiredEssence: 20, spentEssence: 0, buildLevel: 0 },
