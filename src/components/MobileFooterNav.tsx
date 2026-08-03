@@ -61,6 +61,11 @@ type MobileFooterNavProps = {
 
 const isNavItem = (item: FooterListItem): item is MobileFooterNavItem => 'id' in item;
 const DAILY_GAME_ICONS = ['💎', '🔑', '🗝️', '🎁', '🔓'];
+const MENU_LAUNCHER_FACE_INTERVAL_MS = 60_000;
+
+const getMenuLauncherFace = (timestamp = Date.now()): 'compass' | 'coach' =>
+  Math.floor(timestamp / MENU_LAUNCHER_FACE_INTERVAL_MS) % 2 === 0 ? 'compass' : 'coach';
+
 const getFooterClickSoundKind = (
   itemId: string,
   isEnergyItem: boolean,
@@ -105,6 +110,9 @@ export function MobileFooterNav({
   const [areControlsFaded, setAreControlsFaded] = useState(false);
   const [isDiamondFaded, setIsDiamondFaded] = useState(false);
   const [isMenuLaunchAnimating, setIsMenuLaunchAnimating] = useState(false);
+  const [menuLauncherFace, setMenuLauncherFace] = useState<'compass' | 'coach'>(() =>
+    getMenuLauncherFace(),
+  );
   const [expandedFooterIconId, setExpandedFooterIconId] = useState<string | null>(null);
   const [displayPointsBalance, setDisplayPointsBalance] = useState<number | null>(
     typeof pointsBalance === 'number' ? Math.max(0, Math.floor(pointsBalance)) : null,
@@ -321,6 +329,24 @@ export function MobileFooterNav({
       }
       if (expandedFooterIconTimeoutRef.current !== null) {
         window.clearTimeout(expandedFooterIconTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const syncLauncherFace = () => setMenuLauncherFace(getMenuLauncherFace());
+    const firstFlipDelay = MENU_LAUNCHER_FACE_INTERVAL_MS - (Date.now() % MENU_LAUNCHER_FACE_INTERVAL_MS);
+    let intervalId: number | null = null;
+
+    const timeoutId = window.setTimeout(() => {
+      syncLauncherFace();
+      intervalId = window.setInterval(syncLauncherFace, MENU_LAUNCHER_FACE_INTERVAL_MS);
+    }, firstFlipDelay);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
       }
     };
   }, []);
@@ -546,6 +572,18 @@ export function MobileFooterNav({
                 onOpenMenu();
               }}
             >
+              <span
+                aria-hidden="true"
+                className={`mobile-footer-nav__menu-face-rotator${
+                  menuLauncherFace === 'coach' ? ' mobile-footer-nav__menu-face-rotator--coach' : ''
+                }`}
+                data-launcher-face={menuLauncherFace}
+              >
+                <span className="mobile-footer-nav__menu-face mobile-footer-nav__menu-face--compass" />
+                <span className="mobile-footer-nav__menu-face mobile-footer-nav__menu-face--coach">
+                  <img src="/icons/ai_coach/aicoach_small.webp" alt="" decoding="async" />
+                </span>
+              </span>
               <span aria-hidden="true" className="mobile-footer-nav__menu-icon">
                 {isDiodeActive ? '✦' : '•'}
               </span>

@@ -21482,7 +21482,6 @@ body:has(.arena-session-shell--workshop) .level-worlds-mobile-exit-overlay {
   overflow: hidden;
   border-color: rgba(217, 119, 6, 0.22);
   background:
-    url('/assets/icons/compass-gold-256.webp') center / 96% 96% no-repeat,
     radial-gradient(circle at 42% 28%, rgba(255, 255, 255, 0.92), rgba(254, 243, 199, 0.62) 38%, rgba(251, 191, 36, 0.28) 68%, rgba(180, 83, 9, 0.22) 100%);
   box-shadow:
     0 10px 24px rgba(146, 64, 14, 0.18),
@@ -21491,6 +21490,57 @@ body:has(.arena-session-shell--workshop) .level-worlds-mobile-exit-overlay {
     mobile-footer-nav-compass-intro-shrink 3.72s cubic-bezier(0.18, 1.08, 0.26, 1) both,
     mobile-footer-nav-compass-pulse-spin 180s linear 4.2s infinite;
   will-change: transform, filter;
+}
+
+.mobile-footer-nav__menu-face-rotator {
+  display: none;
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-face-rotator {
+  position: absolute;
+  inset: 2%;
+  z-index: 1;
+  display: block;
+  border-radius: inherit;
+  transform-style: preserve-3d;
+  transform: rotateY(0deg);
+  transition: transform 900ms cubic-bezier(0.2, 0.82, 0.25, 1);
+  will-change: transform;
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-face-rotator--coach {
+  transform: rotateY(180deg);
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: inherit;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-face--compass {
+  background: url('/assets/icons/compass-gold-256.webp') center / 98% 98% no-repeat;
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-face--coach {
+  transform: rotateY(180deg);
+  background:
+    radial-gradient(circle at 50% 38%, rgba(238, 250, 255, 0.98), rgba(124, 210, 255, 0.72) 46%, rgba(19, 86, 150, 0.34) 76%, rgba(6, 39, 80, 0.3));
+}
+
+.mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-face--coach img {
+  width: 94%;
+  height: 94%;
+  display: block;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 5px 8px rgba(7, 44, 92, 0.3))
+    drop-shadow(0 0 8px rgba(115, 220, 255, 0.42));
 }
 
 .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button::before,
@@ -21937,6 +21987,10 @@ body:has(.arena-session-shell--workshop) .level-worlds-mobile-exit-overlay {
 
   .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-button {
     transform: translateY(var(--compass-translate-y)) scale(var(--compass-resting-scale));
+  }
+
+  .mobile-footer-nav__surface--diode-off .mobile-footer-nav__menu-face-rotator {
+    transition: none;
   }
 }
 
