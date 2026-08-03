@@ -643,6 +643,16 @@ export const islandRunRuntimeStateIntegrationTests: TestCase[] = [
       releaseNext();
       await firstWrite;
       await parkedWrite;
+      const localBeforeResume = readIslandRunGameStateRecord(session);
+      assertEqual(
+        localBeforeResume.dicePool,
+        baseline.dicePool + 2,
+        'Completed older write must not roll localStorage back before the parked snapshot resumes',
+      );
+      assert(
+        window.localStorage.getItem(`island_run_runtime_state_${USER_ID}_pending_write`) !== null,
+        'Parked snapshot must remain crash-recoverable until its own commit succeeds',
+      );
       await new Promise((resolve) => setTimeout(resolve, 0));
       releaseNext();
       await new Promise((resolve) => setTimeout(resolve, 0));

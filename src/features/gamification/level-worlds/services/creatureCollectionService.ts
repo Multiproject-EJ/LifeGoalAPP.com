@@ -21,6 +21,8 @@ export interface CreatureCollectionEntry {
   claimedBondMilestones: number[];
   formLevel?: number;
   claimedFormRewards?: number[];
+  /** Canonical grant audit markers retained while legacy migration remains active. */
+  grantIds?: string[];
 }
 
 export const CREATURE_BOND_XP_PER_LEVEL = 3;
@@ -72,7 +74,13 @@ function normalizeCollectionEntry(value: Partial<CreatureCollectionEntry>): Crea
           .map((milestone) => Math.min(3, Math.max(1, Math.floor(milestone)))),
       )).sort((a, b) => a - b)
     : [];
-  return { creatureId: value.creatureId, copies, firstCollectedAtMs, lastCollectedAtMs, lastCollectedIslandNumber, bondXp, bondLevel, lastFedAtMs, claimedBondMilestones, formLevel, claimedFormRewards };
+  const grantIds = Array.isArray(value.grantIds)
+    ? Array.from(new Set(value.grantIds
+      .filter((grantId): grantId is string => typeof grantId === 'string' && grantId.trim().length > 0)
+      .map((grantId) => grantId.trim())))
+        .sort((a, b) => a.localeCompare(b))
+    : [];
+  return { creatureId: value.creatureId, copies, firstCollectedAtMs, lastCollectedAtMs, lastCollectedIslandNumber, bondXp, bondLevel, lastFedAtMs, claimedBondMilestones, formLevel, claimedFormRewards, ...(grantIds.length > 0 ? { grantIds } : {}) };
 }
 
 export function fetchCreatureCollection(userId: string): CreatureCollectionEntry[] {

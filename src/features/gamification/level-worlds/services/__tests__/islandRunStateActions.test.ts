@@ -101,6 +101,10 @@ import { isIslandRunFullyClearedV2, resolveIslandRunContractV2Stops } from '../i
 import { getEggSlotLedgerKey } from '../islandRunEggMania';
 import { buildInitialDiceRegenState } from '../islandRunDiceRegeneration';
 import { resolveEffectiveRegenIntervalMs } from '../companionRegenModifier';
+import {
+  areCreatureRuntimeCollectionsEqual,
+  mergeCreatureRuntimeCollections,
+} from '../islandRunCreatureCollectionLedger';
 import { SPACE_EXCAVATOR_CAMPAIGN_MILESTONES } from '../spaceExcavatorCampaignProgress';
 import {
   __resetIslandRunFeatureFlagsForTests,
@@ -540,37 +544,68 @@ export const islandRunStateActionsTests: TestCase[] = [
   // ── applyRollResult ──────────────────────────────────────────────────────
 
   {
-    name: 'applyRollResult syncs store mirror from localStorage (no duplicate remote write)',
+    name: 'applyRollResult keeps canonical roll state when localStorage is stale',
     run: async () => {
       resetAll();
       const session = makeSession();
       seedState({ runtimeVersion: 5, dicePool: 30, tokenIndex: 0 });
 
-      // Simulate what the roll service does: write directly to localStorage.
+      // Simulate the canonical publish performed by the roll service.
       const postRollRecord = {
         ...readIslandRunGameStateRecord(session),
         dicePool: 29,
         tokenIndex: 7,
         runtimeVersion: 6,
       };
-      void writeIslandRunGameStateRecord({ session, client: null, record: postRollRecord });
+      resetIslandRunStateSnapshot(session, postRollRecord);
 
-      // The store mirror still holds the pre-roll snapshot.
-      const preSync = getIslandRunStateSnapshot(session);
-      assertEqual(preSync.dicePool, 30, 'store mirror should still be pre-roll before sync');
-      assertEqual(preSync.tokenIndex, 0, 'store tokenIndex should still be pre-roll');
+      // Reproduce an older in-flight background write landing in localStorage.
+      void writeIslandRunGameStateRecord({
+        session,
+        client: null,
+        record: { ...postRollRecord, dicePool: 30, tokenIndex: 0 },
+      });
 
-      // applyRollResult refreshes the mirror from localStorage.
       const result = applyRollResult({ session });
 
       assertEqual(result.dicePool, 29, 'returned record should have post-roll dicePool');
       assertEqual(result.tokenIndex, 7, 'returned record should have post-roll tokenIndex');
       assertEqual(result.runtimeVersion, 6, 'runtimeVersion should be post-roll');
 
-      // Store mirror should now match.
+      // The store mirror must remain on the roll result.
       const postSync = getIslandRunStateSnapshot(session);
       assertEqual(postSync.dicePool, 29, 'store mirror should reflect post-roll dicePool');
       assertEqual(postSync.tokenIndex, 7, 'store mirror should reflect post-roll tokenIndex');
+    },
+  },
+
+  {
+    name: 'creature migration merge preserves canonical grant ids and treats empty optional arrays as equal',
+    run: () => {
+      const canonical = [{
+        creatureId: 'brave-sprout',
+        copies: 1,
+        firstCollectedAtMs: 100,
+        lastCollectedAtMs: 200,
+        lastCollectedIslandNumber: 2,
+        bondXp: 3,
+        bondLevel: 2,
+        lastFedAtMs: null,
+        claimedBondMilestones: [],
+        grantIds: ['welcome-pack-1'],
+      }];
+      const legacy = [{
+        ...canonical[0],
+        grantIds: undefined,
+        claimedFormRewards: [],
+      }];
+      const merged = mergeCreatureRuntimeCollections(canonical, legacy);
+      assertDeepEqual(merged[0]?.grantIds, ['welcome-pack-1'], 'canonical grant audit marker must survive migration');
+      assertEqual(
+        areCreatureRuntimeCollectionsEqual(canonical, [{ ...canonical[0], claimedFormRewards: [], grantIds: ['welcome-pack-1'] }]),
+        true,
+        'missing and empty optional arrays should not trigger collection writes',
+      );
     },
   },
 
@@ -1764,27 +1799,26 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   {
-    name: 'applyRollResult notifies store subscribers on sync',
+    name: 'applyRollResult does not republish or notify subscribers',
     run: async () => {
       resetAll();
       const session = makeSession();
       seedState({ runtimeVersion: 5, dicePool: 30, tokenIndex: 0 });
 
       let notifications = 0;
-      const unsub = subscribeIslandRunState(session, () => { notifications += 1; });
-
-      // Simulate roll write to localStorage.
+      // Simulate the roll service's canonical publish before subscribing.
       const postRollRecord = {
         ...readIslandRunGameStateRecord(session),
         dicePool: 28,
         tokenIndex: 3,
         runtimeVersion: 6,
       };
-      void writeIslandRunGameStateRecord({ session, client: null, record: postRollRecord });
+      resetIslandRunStateSnapshot(session, postRollRecord);
+      const unsub = subscribeIslandRunState(session, () => { notifications += 1; });
 
-      // applyRollResult should publish, triggering the subscriber.
+      // Animation completion is read-only and must not publish stale state.
       applyRollResult({ session });
-      assertEqual(notifications, 1, 'subscriber should be notified exactly once');
+      assertEqual(notifications, 0, 'subscriber should not be notified by a read-only handoff');
 
       unsub();
     },
@@ -3522,14 +3556,14 @@ export const islandRunStateActionsTests: TestCase[] = [
       const session = makeSession();
       seedState({ runtimeVersion: 5, dicePool: 30, tokenIndex: 0 });
 
-      // Simulate roll service's commit.
+      // Simulate roll service's canonical commit.
       const postRoll = {
         ...readIslandRunGameStateRecord(session),
         dicePool: 29,
         tokenIndex: 4,
         runtimeVersion: 6,
       };
-      void writeIslandRunGameStateRecord({ session, client: null, record: postRoll });
+      resetIslandRunStateSnapshot(session, postRoll);
 
       // applyRollResult should NOT bump runtimeVersion again.
       const result = applyRollResult({ session });
@@ -5472,14 +5506,14 @@ export const islandRunStateActionsTests: TestCase[] = [
         activeStopType: 'mystery',
       });
 
-      // Roll service commit simulation: direct record write first, then mirror sync.
+      // Roll service commit simulation: publish the exact result canonically.
       const postRoll = {
         ...readIslandRunGameStateRecord(session),
         dicePool: 17,
         tokenIndex: 4,
         runtimeVersion: 41,
       };
-      void writeIslandRunGameStateRecord({ session, client: null, record: postRoll });
+      resetIslandRunStateSnapshot(session, postRoll);
       const syncedRoll = applyRollResult({ session });
       assertEqual(syncedRoll.runtimeVersion, 41, 'roll sync should preserve roll-owned runtimeVersion');
       assertEqual(syncedRoll.dicePool, 17, 'roll sync should expose updated dicePool');

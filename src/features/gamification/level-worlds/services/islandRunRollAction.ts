@@ -22,8 +22,7 @@
  *     never in the renderer**.
  *  3. Moves the token via canonical topology rules (resolveWrappedTokenIndex).
  *  4. Resolves landing type for board-tile movement.
- *  5. Persists the state patch via the existing PWA write path
- *     (writeIslandRunGameStateRecord — the same authority used by IslandRunBoardPrototype).
+ *  5. Publishes and persists the state through the canonical Island Run store.
  *
  * Authority contract:
  *  - Only the PWA may call this function.
@@ -42,11 +41,10 @@
  *    defence-in-depth on top of the renderer's busy flag — without it, two
  *    writes from the same user on the same `runtimeVersion` could race and
  *    the Supabase row could drift from the client's truth.
- *  - **Synchronous persist.** The remote write is awaited inside the mutex before
- *    the service returns. `writeIslandRunGameStateRecord` already updates
- *    localStorage synchronously at the top of its body, so the client remains
- *    authoritative even if the remote write later fails; awaiting only serialises
- *    the remote queue so two rolls can't land at Supabase in the wrong order.
+ *  - **Synchronous publish.** The canonical store mirror and localStorage are
+ *    updated before the remote write is awaited inside the mutex. This keeps
+ *    later actions on the exact roll result even when a background write is
+ *    already in flight.
  *
  * Intentionally NOT in scope for this service (handled elsewhere or future slices):
  *  - Tile reward application (essence, reward-bar progress, hazard deduction,
@@ -59,11 +57,8 @@
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
-import {
-  readIslandRunGameStateRecord,
-  type IslandRunFirstSessionTutorialState,
-  writeIslandRunGameStateRecord,
-} from './islandRunGameStateStore';
+import type { IslandRunFirstSessionTutorialState } from './islandRunGameStateStore';
+import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStateStore';
 import { resolveWrappedTokenIndex } from './islandBoardTopology';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 import { getIslandBoardThemeForIslandNumber } from './islandBoardThemes';
@@ -283,8 +278,10 @@ async function performRollAction(options: {
   const multiplier = Math.max(1, Math.floor(options.diceMultiplier ?? 1));
   const diceCost = DICE_PER_ROLL * multiplier;
 
-  // 1. Read current state from the canonical PWA localStorage store.
-  const state = readIslandRunGameStateRecord(session);
+  // 1. Read the canonical in-memory snapshot. It is published before remote
+  //    persistence, so overlapping background commits cannot make a later roll
+  //    start from stale localStorage.
+  const state = getIslandRunStateSnapshot(session);
 
   if (
     state.currentIslandNumber === 1
@@ -340,8 +337,7 @@ async function performRollAction(options: {
     state: state.concordRollProtectionState,
   });
 
-  // 7. Persist the roll state patch via the same write path used by
-  //    IslandRunBoardPrototype (writeIslandRunGameStateRecord).
+  // 7. Publish + persist the roll through the canonical store.
   //    Dice deduction uses the full multiplied cost (DICE_PER_ROLL × multiplier).
   //    `writeIslandRunGameStateRecord` updates localStorage synchronously at the
   //    top of its body, so the client remains authoritative even if the remote
@@ -405,15 +401,20 @@ async function performRollAction(options: {
     bonusTileChargeByIsland: trafficLightPass?.bonusTileChargeByIsland ?? state.bonusTileChargeByIsland,
   };
 
-  // Await the write inside the mutex. Local-storage persistence is synchronous;
-  // awaiting only serialises the remote queue so two rolls can never land at
-  // Supabase in the wrong order (the earlier call's mutex tail resolves only
-  // after its remote round-trip completes).
+  // Publish immediately, then await persistence inside the action mutex.
   try {
-    await writeIslandRunGameStateRecord({ session, client, record: nextState });
+    const persistResult = await commitIslandRunState({
+      session,
+      client,
+      record: nextState,
+      triggerSource: 'roll_action',
+    });
+    if (!persistResult.ok) {
+      throw new Error(persistResult.errorMessage);
+    }
   } catch (err) {
-    // Local storage already reflects the new state (see note above). Log and
-    // let the next hydration reconcile the remote row.
+    // The canonical mirror and local storage already reflect the new state.
+    // Let the pending-write queue / next hydration reconcile the remote row.
     // eslint-disable-next-line no-console
     console.warn('[IslandRun] Roll persist failed (local storage authoritative, remote will reconcile on next hydration):', err);
   }
