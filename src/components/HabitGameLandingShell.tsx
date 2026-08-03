@@ -191,7 +191,7 @@ export function HabitGameAuthCard({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [guestStep]);
 
-  const handleChooseCaptain = async () => {
+  const handleBeginVoyage = async () => {
     setGuestSubmitting(true);
     setGuestError(null);
     try {
@@ -328,7 +328,7 @@ export function HabitGameAuthCard({
             </div>
             {guestError ? <p className="guest-free-play-modal__error" role="alert">{guestError}</p> : null}
             <div className="guest-free-play-modal__actions">
-              <button type="button" className="auth-card__primary" onClick={handleChooseCaptain} disabled={guestSubmitting}>{guestSubmitting ? 'Preparing your issue…' : 'Choose my captain'}</button>
+              <button type="button" className="auth-card__primary" onClick={handleBeginVoyage} disabled={guestSubmitting}>{guestSubmitting ? 'Preparing your issue…' : 'Begin my voyage'}</button>
               <button type="button" className="guest-free-play-modal__secondary" onClick={() => { setGuestStep('closed'); onTabChange('signup'); }}>Create free account now</button>
             </div>
           </>
@@ -550,7 +550,7 @@ export function HabitGameAuthCard({
         <p>{authTabCopy[activeAuthTab].subtitle}</p>
       </header>
 
-      <div className="auth-card__tabs" role="tablist" aria-label="Choose how to access LifeGoal">
+      <div className="auth-card__tabs" role="tablist" aria-label="Choose how to access HabitGame">
         {authTabs.map((tab) => {
           const isActive = activeAuthTab === tab.id;
           return (

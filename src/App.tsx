@@ -4151,6 +4151,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       shipName: payload.shipName || undefined,
     });
     setAuthError(null);
+    setShowAuthPanel(false);
     setLevelWorldsEntryPanel('default');
     setShowLevelWorldsFromEntry(true);
     if (!supabaseSession) {
