@@ -526,6 +526,13 @@ export function BoardStage(props: BoardStageProps) {
       && pendingHopSequence === lastHopSequenceRef.current
     ) return;
 
+    // The roll action publishes its authoritative final tokenIndex before the
+    // dice animation finishes. Until the parent supplies the matching full hop
+    // sequence, keep the pawn at its rendered start position. Consuming that
+    // early final index here would animate straight to the landing tile during
+    // the dice tumble, then make the real sequence appear to jump backward.
+    if (isRolling && pendingHopSequence === null) return;
+
     // --- Single-step fallback (used for snap / non-roll index changes) ---
     if (hopSequenceActiveRef.current) return; // ignore while sequence is playing
 
@@ -543,7 +550,7 @@ export function BoardStage(props: BoardStageProps) {
       tokenAnim.snapTo(anchor);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenIndex, anchors, movementSpeedFactor, pendingHopSequence, toScreen]);
+  }, [tokenIndex, anchors, movementSpeedFactor, pendingHopSequence, isRolling, toScreen]);
 
   // Particle burst state
   const [burstPos, setBurstPos] = useState<{ x: number; y: number } | null>(null);

@@ -61,8 +61,12 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
         'an initial null pending sequence must not suppress the first snap to the active tile',
       );
       assert(
-        stage.includes('}, [tokenIndex, anchors, movementSpeedFactor, pendingHopSequence, toScreen]);'),
+        stage.includes('}, [tokenIndex, anchors, movementSpeedFactor, pendingHopSequence, isRolling, toScreen]);'),
         'token position must resync when responsive board-to-screen geometry changes',
+      );
+      assert(
+        stage.includes('if (isRolling && pendingHopSequence === null) return;'),
+        'the canonical final token index must not move the pawn before the roll hop sequence begins',
       );
       assert(
         !stage.includes('SPARK36_TILE_THICKNESS_PX')
