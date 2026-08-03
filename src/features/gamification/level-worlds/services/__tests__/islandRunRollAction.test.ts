@@ -8,6 +8,11 @@ import {
   writeIslandRunGameStateRecord,
   type IslandRunGameStateRecord,
 } from '../islandRunGameStateStore';
+import {
+  __resetIslandRunStateStoreForTests,
+  getIslandRunStateSnapshot,
+  resetIslandRunStateSnapshot,
+} from '../islandRunStateStore';
 import { getTrafficLightCharge, TRAFFIC_LIGHT_TILE_INDEX } from '../islandRunTrafficLightTile';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
@@ -29,18 +34,21 @@ function makeSession() {
 function resetEnvironment(): void {
   resetIslandRunRuntimeCommitCoordinatorForTests();
   __resetIslandRunRollActionMutexesForTests();
+  __resetIslandRunStateStoreForTests();
   installWindowWithStorage(createMemoryStorage());
 }
 
 function seedState(overrides: Partial<IslandRunGameStateRecord>): void {
   const session = makeSession();
   const base = readIslandRunGameStateRecord(session);
+  const next = { ...base, ...overrides };
   // Persist synchronously via the store helper (local-only path since client=null).
   void writeIslandRunGameStateRecord({
     session,
     client: null,
-    record: { ...base, ...overrides },
+    record: next,
   });
+  resetIslandRunStateSnapshot(session, next);
 }
 
 async function withMockedRandom<T>(values: number[], run: () => Promise<T>): Promise<T> {
@@ -83,6 +91,40 @@ export const islandRunRollActionTests: TestCase[] = [
       assertEqual(persisted.dicePool, 29, 'Persisted pool mirrors service result');
       assertEqual(persisted.runtimeVersion, 6, 'Persisted runtimeVersion mirrors service result');
       assertEqual(persisted.tokenIndex, result.newTokenIndex!, 'Persisted token index mirrors service result');
+    },
+  },
+  {
+    name: 'roll starts from canonical snapshot when localStorage is overwritten by a stale background writer',
+    run: async () => {
+      resetEnvironment();
+      const session = makeSession();
+      seedState({ runtimeVersion: 5, dicePool: 30, tokenIndex: 5 });
+
+      const canonicalPostRoll = {
+        ...readIslandRunGameStateRecord(session),
+        runtimeVersion: 6,
+        dicePool: 29,
+        tokenIndex: 9,
+      };
+      resetIslandRunStateSnapshot(session, canonicalPostRoll);
+
+      // Reproduce the production race: an older in-flight background snapshot
+      // finishes after the first roll and replaces only localStorage.
+      void writeIslandRunGameStateRecord({
+        session,
+        client: null,
+        record: { ...canonicalPostRoll, dicePool: 30, tokenIndex: 5 },
+        triggerSource: 'test_stale_background_collection_write',
+      });
+
+      const secondRoll = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session, client: null, diceMultiplier: 1 }),
+      );
+
+      assertEqual(secondRoll.status, 'ok', 'second roll should succeed');
+      assertEqual(secondRoll.newDicePool, 28, 'second roll must deduct from the canonical 29 dice');
+      assertEqual(secondRoll.newTokenIndex, 11, 'second roll must start from canonical tile 9');
+      assertEqual(getIslandRunStateSnapshot(session).tokenIndex, 11, 'roll result is published canonically');
     },
   },
   {

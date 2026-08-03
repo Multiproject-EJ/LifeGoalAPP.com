@@ -279,6 +279,10 @@ import {
   type CreatureCollectionEntry,
 } from '../services/creatureCollectionService';
 import {
+  areCreatureRuntimeCollectionsEqual,
+  mergeCreatureRuntimeCollections,
+} from '../services/islandRunCreatureCollectionLedger';
+import {
   claimFirstSessionCreaturePackReward,
   type FirstSessionCreaturePackCardReveal,
 } from '../services/islandRunFirstSessionCreaturePackAction';
@@ -1460,39 +1464,6 @@ function resolveMysteryStopReward(): MysteryStopReward {
 
 function areStringArraysEqual(left: string[], right: string[]) {
   return left.length === right.length && left.every((value, index) => value === right[index]);
-}
-
-function mergeCreatureCollections(
-  primary: CreatureCollectionEntry[],
-  fallback: CreatureCollectionEntry[],
-): CreatureCollectionEntry[] {
-  const byId = new Map<string, CreatureCollectionEntry>();
-  [...fallback, ...primary].forEach((entry) => {
-    const existing = byId.get(entry.creatureId);
-    if (!existing) {
-      byId.set(entry.creatureId, entry);
-      return;
-    }
-    byId.set(entry.creatureId, {
-      ...existing,
-      copies: Math.max(existing.copies, entry.copies),
-      firstCollectedAtMs: Math.min(existing.firstCollectedAtMs, entry.firstCollectedAtMs),
-      lastCollectedAtMs: Math.max(existing.lastCollectedAtMs, entry.lastCollectedAtMs),
-      lastCollectedIslandNumber:
-        existing.lastCollectedAtMs >= entry.lastCollectedAtMs
-          ? existing.lastCollectedIslandNumber
-          : entry.lastCollectedIslandNumber,
-      bondXp: Math.max(existing.bondXp, entry.bondXp),
-      bondLevel: Math.max(existing.bondLevel, entry.bondLevel),
-      lastFedAtMs: Math.max(existing.lastFedAtMs ?? 0, entry.lastFedAtMs ?? 0) || null,
-      claimedBondMilestones: Array.from(new Set([
-        ...existing.claimedBondMilestones,
-        ...entry.claimedBondMilestones,
-      ])).sort((a, b) => a - b),
-    });
-  });
-
-  return Array.from(byId.values()).sort((a, b) => b.lastCollectedAtMs - a.lastCollectedAtMs);
 }
 
 function preloadThemeAssets(theme: IslandBoardTheme) {
@@ -3693,7 +3664,7 @@ export function IslandRunBoardPrototype({
       ? runtimeState.creatureCollection
       : [];
     if (runtimeCollection.length > 0) {
-      setCreatureCollection(mergeCreatureCollections(runtimeCollection, collection));
+      setCreatureCollection(mergeCreatureRuntimeCollections(runtimeCollection, collection));
       return;
     }
     setCreatureCollection(collection);
@@ -4548,7 +4519,7 @@ export function IslandRunBoardPrototype({
     // to local state. This prevents the write amplification loop.
     if (!hasCompletedInitialHydrationSyncRef.current) return;
     const runtimeCollection = runtimeState.creatureCollection ?? [];
-    if (JSON.stringify(runtimeCollection) === JSON.stringify(creatureCollection)) return;
+    if (areCreatureRuntimeCollectionsEqual(runtimeCollection, creatureCollection)) return;
     const nextRecord = applyCreatureCollection({
       session,
       client,

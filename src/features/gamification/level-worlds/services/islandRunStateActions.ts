@@ -59,7 +59,6 @@ import {
 import {
   commitIslandRunState,
   getIslandRunStateSnapshot,
-  refreshIslandRunStateFromLocal,
 } from './islandRunStateStore';
 import { resolveIslandTechnologyBuildEligibility } from './islandRunTechnologyUnlocks';
 import { isIslandRunFeatureEnabled } from '../../../../config/islandRunFeatureFlags';
@@ -93,7 +92,10 @@ import { resolveCompanionRegenModifier } from './companionRegenModifier';
 import { resolveIslandRunPreIslandLuckyRollGate } from './islandRunPreIslandLuckyRollGate';
 import { getEggSlotLedgerKey } from './islandRunEggMania';
 import { getCreatureById } from './creatureCatalog';
-import { addCreatureToRuntimeCollection } from './islandRunCreatureCollectionLedger';
+import {
+  addCreatureToRuntimeCollection,
+  areCreatureRuntimeCollectionsEqual,
+} from './islandRunCreatureCollectionLedger';
 import {
   getIslandRunFirstCreaturePackLowDiceTriggerTarget,
   shouldAdvanceFirstSessionTutorialAfterHatcheryBuild,
@@ -1249,16 +1251,16 @@ export function applyFortuneEngineFinaleResult(options: {
 // ── applyRollResult ──────────────────────────────────────────────────────────
 
 /**
- * Syncs the store mirror with the roll service's authoritative
- * localStorage write. Call this once after the roll + hop animation
+ * Returns the canonical store snapshot after the roll + hop animation
  * sequence completes.
  *
- * Returns the refreshed record so the renderer can forward it to
+ * Returns the current record so the renderer can forward it to
  * `setRuntimeState` (the legacy in-memory mirror that other effects still
  * depend on during the Stage-C migration).
  *
- * **No remote write** — the roll service's `writeIslandRunGameStateRecord`
- * already committed to Supabase.
+ * **No refresh and no remote write** — the roll service publishes through
+ * `commitIslandRunState` before returning. Re-reading localStorage here could
+ * roll the UI back if an older in-flight writer finished during animation.
  */
 export function applyRollResult(options: {
   session: Session;
@@ -1271,7 +1273,6 @@ export function applyRollResult(options: {
     dicePool: before.dicePool,
     spinTokens: before.spinTokens,
   });
-  refreshIslandRunStateFromLocal(options.session);
   const after = getIslandRunStateSnapshot(options.session);
   logIslandRunEntryDebug('applyRollResult_after', {
     userId: options.session.user.id,
@@ -3186,7 +3187,7 @@ export function applyCreatureTreatInventory(options: ApplyCreatureTreatInventory
 export function applyCreatureCollection(options: ApplyCreatureCollectionOptions): IslandRunGameStateRecord {
   const { session, client, creatureCollection, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
-  if (JSON.stringify(current.creatureCollection ?? []) === JSON.stringify(creatureCollection ?? [])) {
+  if (areCreatureRuntimeCollectionsEqual(current.creatureCollection ?? [], creatureCollection ?? [])) {
     return current;
   }
   const next: IslandRunGameStateRecord = {

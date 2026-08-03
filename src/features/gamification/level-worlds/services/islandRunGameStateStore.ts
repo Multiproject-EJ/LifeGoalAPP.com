@@ -3396,13 +3396,26 @@ export async function writeIslandRunGameStateRecord(options: {
     }
 
     setRemoteBackoffUntil(session.user.id, null);
-    clearPendingWrite();
+    const hasNewerParkedRecord = Boolean(
+      coordinator.parkedRecord
+      && coordinator.parkedActionId
+      && coordinator.parkedActionId !== clientActionId
+    );
+    // A parked snapshot is the newest attempted full record. Keep its recovery
+    // queue entry until that snapshot itself commits; otherwise a tab close in
+    // the short resume window can lose the newer gameplay state.
+    if (!hasNewerParkedRecord) {
+      clearPendingWrite();
+    }
 
     if (typeof window !== 'undefined') {
       try {
+        const currentLocal = readIslandRunGameStateRecord(session);
+        const localGameplayIsNewer = hasNewerParkedRecord
+          && !areIslandRunGameStateRecordsGameplayEqual(currentLocal, persistedRecord);
         const persisted = {
-          ...persistedRecord,
-          runtimeVersion: writeResult.nextVersion,
+          ...(localGameplayIsNewer ? currentLocal : persistedRecord),
+          runtimeVersion: Math.max(currentLocal.runtimeVersion, writeResult.nextVersion),
         };
         window.localStorage.setItem(getStorageKey(session.user.id), JSON.stringify(persisted));
       } catch {
@@ -3425,7 +3438,7 @@ export async function writeIslandRunGameStateRecord(options: {
       runtimeVersion: writeResult.nextVersion,
     });
 
-    if (coordinator.parkedRecord && coordinator.parkedActionId && coordinator.parkedActionId !== clientActionId) {
+    if (hasNewerParkedRecord && coordinator.parkedRecord && coordinator.parkedActionId) {
       const resumedRecord = coordinator.parkedRecord;
       const resumedActionId = coordinator.parkedActionId;
       const resumedReason = coordinator.parkedReason;
