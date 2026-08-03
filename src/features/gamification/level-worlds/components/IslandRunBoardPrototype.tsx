@@ -98,6 +98,12 @@ import {
 } from '../services/islandRunStopTickets';
 import { resolveIslandRunStopTapOutcome } from '../services/islandRunStopTapRouting';
 import { isIslandFullyCleared } from '../services/islandRunProgression';
+import { shouldGateIslandOneGuestTravel } from '../services/islandRunGuestTravelGate';
+import {
+  shouldRenderActiveStopModal,
+  shouldRenderFirstRunCelebration,
+  shouldRenderPerfectCompanionHint,
+} from '../services/islandRunModalVisibility';
 import { recordTelemetryEvent } from '../../../../services/telemetry';
 import { fetchOwnedThemeIds, initiateThemeCheckout } from '../../../../services/themePurchases';
 import { AVAILABLE_THEMES, resolveThemeAccess, type Theme, type ThemeAccessResult, type ThemeMetadata } from '../../../../contexts/ThemeContext';
@@ -9427,18 +9433,21 @@ export function IslandRunBoardPrototype({
       return;
     }
 
-    if (stats.islandNumber === 1 && isDemoSession(session)) {
-      const currentGuestState = readIslandRunGuestFunnelState();
-      if (currentGuestState.claimStatus !== 'claimed') {
-        const nextGuestState = patchIslandRunGuestFunnelState({
-          hasSeenStrongSavePromptBeforeTravel: true,
-          claimStatus: 'claim_pending',
-          claimSource: 'island_1_completion',
-        });
-        setGuestFunnelState(nextGuestState);
-        onOpenSaveAccountSignup?.('island_1_completion');
-        return;
-      }
+    const currentGuestState = readIslandRunGuestFunnelState();
+    if (shouldGateIslandOneGuestTravel({
+      islandNumber: stats.islandNumber,
+      isDemoSession: isDemoSession(session),
+      isDevModeEnabled,
+      guestProgressClaimed: currentGuestState.claimStatus === 'claimed',
+    })) {
+      const nextGuestState = patchIslandRunGuestFunnelState({
+        hasSeenStrongSavePromptBeforeTravel: true,
+        claimStatus: 'claim_pending',
+        claimSource: 'island_1_completion',
+      });
+      setGuestFunnelState(nextGuestState);
+      onOpenSaveAccountSignup?.('island_1_completion');
+      return;
     }
 
     if (stats.islandNumber === 3 && !isAdmin) {
@@ -13209,7 +13218,10 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-      {showFirstRunCelebration && (
+      {shouldRenderFirstRunCelebration({
+        requested: showFirstRunCelebration,
+        storyReaderOpen: showStoryReader,
+      }) && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--onboarding" role="dialog" aria-modal="true" aria-label="First run celebration">
             {firstRunStep === 'celebration' ? (
@@ -13380,7 +13392,11 @@ export function IslandRunBoardPrototype({
         />
       )}
 
-      {activeStop && (() => {
+      {shouldRenderActiveStopModal({
+        hasActiveStop: Boolean(activeStop),
+        storyReaderOpen: showStoryReader,
+        firstRunCelebrationOpen: showFirstRunCelebration,
+      }) && activeStop && (() => {
         const openedStopIndex = islandStopPlan.findIndex((s) => s.stopId === activeStop.stopId);
         const openedStopState = stopStateMap.get(activeStop.stopId) ?? 'active';
         const openedStopIsLocked = openedStopState === 'locked';
@@ -15104,7 +15120,11 @@ export function IslandRunBoardPrototype({
         </div>
       )}
 
-      {showPerfectCompanionOnboardingHint && (
+      {shouldRenderPerfectCompanionHint({
+        requested: showPerfectCompanionOnboardingHint,
+        hatchRevealOpen: Boolean(hatchReveal),
+        creatureCardOpen: Boolean(hatchedCreatureCardId),
+      }) && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section
             className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy island-stop-modal--onboarding"

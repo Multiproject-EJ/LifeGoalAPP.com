@@ -158,6 +158,8 @@ import { islandRunReflectionCurriculumTests } from './islandRunReflectionCurricu
 import { islandRunClueCardCurriculumTests } from './islandRunClueCardCurriculum.test';
 import { islandRunCardDrawCadenceTests } from './islandRunCardDrawCadence.test';
 import { islandRunGuestFunnelStateTests } from './islandRunGuestFunnelState.test';
+import { islandRunGuestTravelGateTests } from './islandRunGuestTravelGate.test';
+import { islandRunModalVisibilityTests } from './islandRunModalVisibility.test';
 import { islandRunGuestClaimServiceTests } from './islandRunGuestClaimService.test';
 import { islandRunRoutekeeperTinyActionsTests } from './islandRunRoutekeeperTinyActions.test';
 import { islandRunHabitLandmarkActionTests } from './islandRunHabitLandmarkAction.test';
@@ -329,6 +331,8 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunClueCardCurriculum', tests: islandRunClueCardCurriculumTests },
   { label: 'islandRunCardDrawCadence', tests: islandRunCardDrawCadenceTests },
   { label: 'islandRunGuestFunnelState', tests: islandRunGuestFunnelStateTests },
+  { label: 'islandRunGuestTravelGate', tests: islandRunGuestTravelGateTests },
+  { label: 'islandRunModalVisibility', tests: islandRunModalVisibilityTests },
   { label: 'islandRunArenaPreferences', tests: islandRunArenaPreferencesTests },
   { label: 'islandRunGuestClaimService', tests: islandRunGuestClaimServiceTests },
   { label: 'islandRunRoutekeeperTinyActions', tests: islandRunRoutekeeperTinyActionsTests },

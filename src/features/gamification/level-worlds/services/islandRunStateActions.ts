@@ -2924,11 +2924,17 @@ export function applyQaProgressionSnapshot(options: ApplyQaProgressionSnapshotOp
 export function applyFirstRunStarterRewards(options: ApplyFirstRunStarterRewardsOptions): IslandRunGameStateRecord {
   const { session, client, essenceBonus, diceBonus, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
+  // `firstRunClaimed` is the durable idempotency receipt for this one-time
+  // grant. Write it in the same canonical commit as the currency so leaving
+  // midway through the remaining presentation steps can never make the
+  // starter rewards claimable again on re-entry.
+  if (current.firstRunClaimed) return current;
   const parsedEssenceBonus = Number.isFinite(essenceBonus) ? Math.max(0, Math.trunc(essenceBonus)) : 0;
   const parsedDiceBonus = Number.isFinite(diceBonus) ? Math.max(0, Math.trunc(diceBonus)) : 0;
   if (parsedEssenceBonus < 1 && parsedDiceBonus < 1) return current;
   const next: IslandRunGameStateRecord = {
     ...current,
+    firstRunClaimed: true,
     essence: current.essence + parsedEssenceBonus,
     essenceLifetimeEarned: current.essenceLifetimeEarned + parsedEssenceBonus,
     dicePool: current.dicePool + parsedDiceBonus,

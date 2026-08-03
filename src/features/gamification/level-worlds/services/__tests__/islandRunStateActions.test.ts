@@ -3495,7 +3495,21 @@ export const islandRunStateActionsTests: TestCase[] = [
       assertEqual(result.essence, 350, 'essence should include starter bonus');
       assertEqual(result.essenceLifetimeEarned, 1250, 'lifetime earned should include starter bonus');
       assertEqual(result.dicePool, 28, 'dicePool should include starter bonus');
+      assertEqual(result.firstRunClaimed, true, 'starter reward receipt should be committed atomically');
       assertEqual(result.runtimeVersion, 12, 'runtimeVersion should bump once');
+
+      const repeated = applyFirstRunStarterRewards({
+        session,
+        client: null,
+        essenceBonus: 250,
+        diceBonus: 16,
+        triggerSource: 'test_first_run_rewards_repeat',
+      });
+
+      assertEqual(repeated.essence, 350, 'repeat claim should not add essence');
+      assertEqual(repeated.essenceLifetimeEarned, 1250, 'repeat claim should not add lifetime earnings');
+      assertEqual(repeated.dicePool, 28, 'repeat claim should not add dice');
+      assertEqual(repeated.runtimeVersion, 12, 'repeat claim should not create another commit');
     },
   },
 
