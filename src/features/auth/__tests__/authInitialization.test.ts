@@ -2,6 +2,7 @@ import {
   hasCachedAuthSession,
   isCloudUnavailableForAuthGate,
   resolveAuthGateOutageBranch,
+  shouldDismissAuthOverlay,
   shouldShowAuthConnectionNotice,
   type AuthInitializationStatus,
 } from '../authInitialization';
@@ -39,6 +40,27 @@ export function runAllAuthInitializationTests(): void {
     shouldShowAuthConnectionNotice({ initializationStatus: 'ready', isConfigured: true, isOnline: true }),
     false,
     'ready and online should not show the connection notice',
+  );
+
+  assertEqual(
+    shouldDismissAuthOverlay({ isOverlayOpen: true, authenticatedUserId: 'google-user-123' }),
+    true,
+    'a confirmed OAuth session should dismiss an open login overlay',
+  );
+  assertEqual(
+    shouldDismissAuthOverlay({ isOverlayOpen: true, authenticatedUserId: null }),
+    false,
+    'a failed or cancelled OAuth callback without a session should keep the login overlay open',
+  );
+  assertEqual(
+    shouldDismissAuthOverlay({ isOverlayOpen: false, authenticatedUserId: 'restored-user-123' }),
+    false,
+    'a restored session should not trigger redundant dismissal when the overlay is already closed',
+  );
+  assertEqual(
+    shouldDismissAuthOverlay({ isOverlayOpen: true, authenticatedUserId: '   ' }),
+    false,
+    'an empty user id should not be treated as a confirmed session',
   );
 
   runStartupOutageBranchTests();

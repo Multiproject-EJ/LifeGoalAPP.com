@@ -20,9 +20,7 @@ import {
   buildIslandWorkshopRunStorageKey,
   canStartIslandWorkshopRun,
   createEmptyIslandWorkshopBoard,
-  findIslandWorkshopCompletedLines,
   getIslandWorkshopCellTint,
-  getIslandWorkshopPlacementCells,
   getIslandWorkshopScoreRewardMilestones,
   getIslandWorkshopShape,
   ISLAND_WORKSHOP_CONSTRUCTION_REWARD,
@@ -38,6 +36,7 @@ import {
   parseIslandWorkshopLevel,
   parseIslandWorkshopSavedRun,
   placeIslandWorkshopShape,
+  resolveIslandWorkshopPlacementPreview,
   resolveIslandWorkshopConstructionStage,
   resolveIslandWorkshopClaimableScoreRewards,
   resolveIslandWorkshopLevelUp,
@@ -46,6 +45,7 @@ import {
   rollIslandWorkshopShapeSet,
   seedIslandWorkshopLevelTwoBoard,
   serializeIslandWorkshopRun,
+  type IslandWorkshopPlacementPreview,
   type IslandWorkshopSavedRunV1,
 } from '../../level-worlds/services/islandWorkshopGame';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
@@ -87,13 +87,7 @@ type DragState = {
   pointerY: number;
 };
 
-type HoverPlacement = {
-  row: number;
-  col: number;
-  valid: boolean;
-  cells: number[];
-  wouldClearCells: number[];
-};
+type HoverPlacement = IslandWorkshopPlacementPreview;
 
 type ComboToast = { id: number; text: string };
 
@@ -170,6 +164,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
 
   const [drag, setDrag] = useState<DragState | null>(null);
   const [hover, setHover] = useState<HoverPlacement | null>(null);
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [clearFxCells, setClearFxCells] = useState<number[]>([]);
   const [assistFxCells, setAssistFxCells] = useState<number[]>([]);
   const [monoFlashFx, setMonoFlashFx] = useState<MonoFlashFx[]>([]);
@@ -186,6 +181,8 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const fxTimerRef = useRef<number | null>(null);
   const assistFxTimerRef = useRef<number | null>(null);
   const monoFxTimerRef = useRef<number | null>(null);
+  const pointerStartRef = useRef<{ slotIndex: number; x: number; y: number } | null>(null);
+  const suppressTrayClickRef = useRef<number | null>(null);
 
   useEffect(() => () => {
     if (fxTimerRef.current !== null) window.clearTimeout(fxTimerRef.current);
@@ -310,6 +307,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     setRunLevel(run.runLevel);
     setDrag(null);
     setHover(null);
+    setSelectedSlotIndex(null);
     setClearFxCells([]);
     setAssistFxCells([]);
     setMonoFlashFx([]);
@@ -390,6 +388,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     setStuckPromptOpen(false);
     setDrag(null);
     setHover(null);
+    setSelectedSlotIndex(null);
     refreshTickets();
 
     if (applied.justCompleted) {
@@ -441,7 +440,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     setStuckPromptOpen(true);
   }, [endRun]);
 
-  const handleDrop = useCallback((slotIndex: number, shapeId: string, placement: HoverPlacement) => {
+  const handleDrop = useCallback((slotIndex: number, shapeId: string, placement: HoverPlacement): boolean => {
     const result = placeIslandWorkshopShape({
       board,
       shapeId,
@@ -449,13 +448,13 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
       col: placement.col,
       streakBefore: streak,
     });
-    if (!result) return;
+    if (!result) return false;
 
     const spend = config.requestBlockTicketSpend?.();
     if (!spend?.ok) {
       refreshTickets();
       showComboToast('Need more material blocks');
-      return;
+      return false;
     }
     setTicketsRemaining(spend.ticketsRemaining);
 
@@ -599,6 +598,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     }
 
     afterBoardChange(result.board, nextTray, assistUsed, nextScore, nextMaterials);
+    return true;
   }, [afterBoardChange, assistUsed, benchLevel, board, config, levelStorageKey, materialsCollected, refreshTickets, rngState, runLevel, score, setsCompleted, showCelebration, showComboToast, streak, tray]);
 
   const handleCreatureAssist = useCallback(() => {
@@ -640,31 +640,96 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     const col = Math.round((anchorX - rect.left) / cellPx);
     const row = Math.round((anchorY - rect.top) / cellPx);
     if (row < -1 || col < -1 || row > ISLAND_WORKSHOP_GRID_SIZE || col > ISLAND_WORKSHOP_GRID_SIZE) return null;
-    const cells = getIslandWorkshopPlacementCells(shape, row, col);
-    if (!cells) return null;
-    const valid = cells.every((index) => board[index] === 0);
-    let wouldClearCells: number[] = [];
-    if (valid) {
-      const preview = [...board];
-      for (const index of cells) preview[index] = 1;
-      const { rows, cols } = findIslandWorkshopCompletedLines(preview);
-      const wouldClear = new Set<number>();
-      for (const r of rows) {
-        for (let c = 0; c < ISLAND_WORKSHOP_GRID_SIZE; c += 1) wouldClear.add(r * ISLAND_WORKSHOP_GRID_SIZE + c);
-      }
-      for (const c of cols) {
-        for (let r = 0; r < ISLAND_WORKSHOP_GRID_SIZE; r += 1) wouldClear.add(r * ISLAND_WORKSHOP_GRID_SIZE + c);
-      }
-      wouldClearCells = Array.from(wouldClear);
-    }
-    return { row, col, valid, cells, wouldClearCells };
+    return resolveIslandWorkshopPlacementPreview({ board, shapeId, row, col });
   }, [board]);
+
+  const focusFirstValidTapCell = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      gridRef.current
+        ?.querySelector<HTMLButtonElement>('[data-workshop-placement-valid="true"]')
+        ?.focus();
+    });
+  }, []);
+
+  const handleTrayTap = useCallback((slotIndex: number) => {
+    const shapeId = tray[slotIndex];
+    if (!shapeId || phase !== 'playing' || stuckPromptOpen) return;
+    const shouldDeselect = selectedSlotIndex === slotIndex;
+    setSelectedSlotIndex(shouldDeselect ? null : slotIndex);
+    setHover(null);
+    if (!shouldDeselect) focusFirstValidTapCell();
+  }, [focusFirstValidTapCell, phase, selectedSlotIndex, stuckPromptOpen, tray]);
+
+  const handleGridCellActivate = useCallback((cellIndex: number) => {
+    if (selectedSlotIndex === null) return;
+    const shapeId = tray[selectedSlotIndex];
+    if (!shapeId) {
+      setSelectedSlotIndex(null);
+      setHover(null);
+      return;
+    }
+    const row = Math.floor(cellIndex / ISLAND_WORKSHOP_GRID_SIZE);
+    const col = cellIndex % ISLAND_WORKSHOP_GRID_SIZE;
+    const placement = resolveIslandWorkshopPlacementPreview({ board, shapeId, row, col });
+    if (!placement.valid) {
+      setHover(placement);
+      showComboToast('That piece does not fit there');
+      triggerIslandRunHaptic('roll');
+      return;
+    }
+    if (handleDrop(selectedSlotIndex, shapeId, placement)) {
+      setSelectedSlotIndex(null);
+      setHover(null);
+    }
+  }, [board, handleDrop, selectedSlotIndex, showComboToast, tray]);
+
+  const handleGridCellKeyDown = useCallback((event: React.KeyboardEvent<HTMLButtonElement>, cellIndex: number) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleGridCellActivate(cellIndex);
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      const slotIndex = selectedSlotIndex;
+      setSelectedSlotIndex(null);
+      setHover(null);
+      if (slotIndex !== null) {
+        window.requestAnimationFrame(() => {
+          document.querySelector<HTMLButtonElement>(`[data-workshop-tray-slot="${slotIndex}"]`)?.focus();
+        });
+      }
+      return;
+    }
+    const movementByKey: Record<string, [number, number]> = {
+      ArrowUp: [-1, 0],
+      ArrowDown: [1, 0],
+      ArrowLeft: [0, -1],
+      ArrowRight: [0, 1],
+    };
+    const movement = movementByKey[event.key];
+    if (!movement) return;
+    event.preventDefault();
+    const row = Math.floor(cellIndex / ISLAND_WORKSHOP_GRID_SIZE);
+    const col = cellIndex % ISLAND_WORKSHOP_GRID_SIZE;
+    const nextRow = Math.max(0, Math.min(ISLAND_WORKSHOP_GRID_SIZE - 1, row + movement[0]));
+    const nextCol = Math.max(0, Math.min(ISLAND_WORKSHOP_GRID_SIZE - 1, col + movement[1]));
+    const nextIndex = nextRow * ISLAND_WORKSHOP_GRID_SIZE + nextCol;
+    gridRef.current
+      ?.querySelector<HTMLButtonElement>(`[data-workshop-cell-index="${nextIndex}"]`)
+      ?.focus();
+  }, [handleGridCellActivate, selectedSlotIndex]);
 
   const handleTrayPointerDown = useCallback((event: React.PointerEvent<HTMLButtonElement>, slotIndex: number) => {
     const shapeId = tray[slotIndex];
     if (!shapeId || phase !== 'playing' || stuckPromptOpen) return;
     event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
+    pointerStartRef.current = { slotIndex, x: event.clientX, y: event.clientY };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Tap placement remains available when pointer capture is unsupported.
+    }
     setDrag({ slotIndex, shapeId, pointerX: event.clientX, pointerY: event.clientY });
     setHover(computeHover(shapeId, event.clientX, event.clientY));
   }, [computeHover, phase, stuckPromptOpen, tray]);
@@ -680,15 +745,33 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
     if (!drag || drag.slotIndex !== slotIndex) return;
     event.preventDefault();
     const placement = computeHover(drag.shapeId, event.clientX, event.clientY);
+    const start = pointerStartRef.current;
+    const moved = !start
+      || start.slotIndex !== slotIndex
+      || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8;
     if (placement?.valid) {
-      handleDrop(drag.slotIndex, drag.shapeId, placement);
+      if (handleDrop(drag.slotIndex, drag.shapeId, placement)) {
+        setSelectedSlotIndex(null);
+      }
+      suppressTrayClickRef.current = slotIndex;
+      window.setTimeout(() => {
+        if (suppressTrayClickRef.current === slotIndex) suppressTrayClickRef.current = null;
+      }, 0);
+    } else if (!moved) {
+      handleTrayTap(slotIndex);
+      suppressTrayClickRef.current = slotIndex;
+      window.setTimeout(() => {
+        if (suppressTrayClickRef.current === slotIndex) suppressTrayClickRef.current = null;
+      }, 0);
     }
+    pointerStartRef.current = null;
     setDrag(null);
     setHover(null);
-  }, [computeHover, drag, handleDrop]);
+  }, [computeHover, drag, handleDrop, handleTrayTap]);
 
   const handleTrayPointerCancel = useCallback((_event: React.PointerEvent<HTMLButtonElement>, slotIndex: number) => {
     if (!drag || drag.slotIndex !== slotIndex) return;
+    pointerStartRef.current = null;
     setDrag(null);
     setHover(null);
   }, [drag]);
@@ -718,6 +801,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const runMilestones = getIslandWorkshopScoreRewardMilestones(runLevel);
 
   const dragShape = drag ? getIslandWorkshopShape(drag.shapeId) : null;
+  const selectedShapeId = selectedSlotIndex === null ? null : tray[selectedSlotIndex];
   const gridRect = gridRef.current?.getBoundingClientRect() ?? null;
   const ghostCellPx = gridRect ? gridRect.width / ISLAND_WORKSHOP_GRID_SIZE : 34;
 
@@ -772,7 +856,7 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
             <i aria-hidden="true">→</i>
             <span><b aria-hidden="true">🗼</b><strong>Build</strong><small>the Beacon</small></span>
           </div>
-          <p className="island-workshop__placement-note">One ticket places one block. Combos and Creature Assist appear while you play.</p>
+          <p className="island-workshop__placement-note">Each placement uses one block. Drag a piece—or tap it, then tap the bench.</p>
           {benchLevel >= 2 && (
             <p className="island-workshop__level-note">Level 2 adds 🔒 Keystones and 💎 gems worth +{ISLAND_WORKSHOP_GEM_REWARD_DICE} dice.</p>
           )}
@@ -848,7 +932,11 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
             </div>
           </header>
 
-
+          <p className={`island-workshop__tap-instruction${selectedShapeId ? ' island-workshop__tap-instruction--active' : ''}`} role="status">
+            {selectedShapeId
+              ? `✓ ${getIslandWorkshopShape(selectedShapeId).name} selected · tap a square to place · Esc cancels`
+              : 'Drag a piece — or tap a piece, then tap the bench.'}
+          </p>
 
           <div className="island-workshop__bench-wrap">
             <div
@@ -875,10 +963,43 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
                   classes.push('island-workshop__cell--clearing');
                 }
                 if (assistFxSet.has(index)) classes.push('island-workshop__cell--assist');
+                const row = Math.floor(index / ISLAND_WORKSHOP_GRID_SIZE);
+                const col = index % ISLAND_WORKSHOP_GRID_SIZE;
+                const tapPlacement = selectedShapeId
+                  ? resolveIslandWorkshopPlacementPreview({ board, shapeId: selectedShapeId, row, col })
+                  : null;
+                if (tapPlacement?.valid) classes.push('island-workshop__cell--tap-target');
                 const cellLabel = cell > 0
                   ? (isSolid ? 'keystone block' : isGem ? 'gem block' : 'filled')
                   : 'empty';
-                return <div key={index} className={classes.join(' ')} role="gridcell" aria-label={cellLabel} />;
+                const selectedShapeName = selectedShapeId ? getIslandWorkshopShape(selectedShapeId).name : null;
+                const accessibleCellLabel = selectedShapeName
+                  ? `Row ${row + 1}, column ${col + 1}. ${tapPlacement?.valid ? `Place ${selectedShapeName} here` : `${selectedShapeName} does not fit here`}.`
+                  : `Row ${row + 1}, column ${col + 1}, ${cellLabel}`;
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    className={classes.join(' ')}
+                    role="gridcell"
+                    aria-label={accessibleCellLabel}
+                    data-workshop-cell-index={index}
+                    data-workshop-placement-valid={tapPlacement?.valid ? 'true' : 'false'}
+                    tabIndex={-1}
+                    onClick={() => handleGridCellActivate(index)}
+                    onKeyDown={(event) => handleGridCellKeyDown(event, index)}
+                    onFocus={() => {
+                      if (tapPlacement) setHover(tapPlacement);
+                    }}
+                    onBlur={() => setHover(null)}
+                    onPointerEnter={() => {
+                      if (tapPlacement) setHover(tapPlacement);
+                    }}
+                    onPointerLeave={() => {
+                      if (!drag) setHover(null);
+                    }}
+                  />
+                );
               })}
             </div>
             {comboToast && (
@@ -894,15 +1015,36 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
               <button
                 key={slotIndex}
                 type="button"
-                className={`island-workshop__tray-slot${!shapeId ? ' island-workshop__tray-slot--empty' : ''}${drag?.slotIndex === slotIndex ? ' island-workshop__tray-slot--dragging' : ''}`}
+                className={`island-workshop__tray-slot${!shapeId ? ' island-workshop__tray-slot--empty' : ''}${drag?.slotIndex === slotIndex ? ' island-workshop__tray-slot--dragging' : ''}${selectedSlotIndex === slotIndex ? ' island-workshop__tray-slot--selected' : ''}`}
                 disabled={!shapeId}
-                aria-label={shapeId ? `Drag ${getIslandWorkshopShape(shapeId).name} onto the bench` : 'Placed'}
+                aria-label={shapeId ? `Select ${getIslandWorkshopShape(shapeId).name} for tap placement, or drag it onto the bench` : 'Placed'}
+                aria-pressed={shapeId ? selectedSlotIndex === slotIndex : undefined}
+                data-workshop-tray-slot={slotIndex}
                 onPointerDown={(event) => handleTrayPointerDown(event, slotIndex)}
                 onPointerMove={(event) => handleTrayPointerMove(event, slotIndex)}
                 onPointerUp={(event) => handleTrayPointerEnd(event, slotIndex)}
                 onPointerCancel={(event) => handleTrayPointerCancel(event, slotIndex)}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return;
+                  event.preventDefault();
+                  handleTrayTap(slotIndex);
+                }}
+                onClick={() => {
+                  if (suppressTrayClickRef.current === slotIndex) {
+                    suppressTrayClickRef.current = null;
+                    return;
+                  }
+                  handleTrayTap(slotIndex);
+                }}
               >
-                {shapeId ? renderShapePreview(shapeId, 13) : <span className="island-workshop__tray-check">✓</span>}
+                {shapeId ? (
+                  <>
+                    {renderShapePreview(shapeId, 13)}
+                    <span className="island-workshop__tray-action">
+                      {selectedSlotIndex === slotIndex ? 'Selected' : 'Tap to select'}
+                    </span>
+                  </>
+                ) : <span className="island-workshop__tray-check">✓</span>}
               </button>
             ))}
           </div>

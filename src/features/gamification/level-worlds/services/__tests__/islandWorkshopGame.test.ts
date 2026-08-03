@@ -46,6 +46,7 @@ import {
   resolveIslandWorkshopLevelUp,
   resolveIslandWorkshopMaterialsEarned,
   resolveIslandWorkshopMonoLineBonusBlocks,
+  resolveIslandWorkshopPlacementPreview,
   resolveIslandWorkshopResultTier,
   resolveIslandWorkshopRunConstructionGain,
   resolveIslandWorkshopStreakMultiplier,
@@ -140,6 +141,57 @@ export const islandWorkshopGameTests: TestCase[] = [
         canPlaceIslandWorkshopShape(occupied, getIslandWorkshopShape('spark'), 0, 1),
         true,
         'adjacent empty cell accepts placement',
+      );
+    },
+  },
+  {
+    name: 'tap and keyboard placement previews use the same validated grid anchors',
+    run: () => {
+      const board = createEmptyIslandWorkshopBoard();
+      const valid = resolveIslandWorkshopPlacementPreview({
+        board,
+        shapeId: 'square_2',
+        row: 1,
+        col: 1,
+      });
+      assertEqual(valid.valid, true, 'an open 2x2 anchor should be available');
+      assertDeepEqual(valid.cells, [9, 10, 17, 18], 'preview should expose the occupied cells');
+
+      const outOfBounds = resolveIslandWorkshopPlacementPreview({
+        board,
+        shapeId: 'line5_h',
+        row: 0,
+        col: 4,
+      });
+      assertEqual(outOfBounds.valid, false, 'edge anchors that overflow should be unavailable');
+      assertDeepEqual(outOfBounds.cells, [], 'out-of-bounds previews should not highlight phantom cells');
+
+      const occupied = [...board];
+      occupied[9] = 1;
+      const overlapping = resolveIslandWorkshopPlacementPreview({
+        board: occupied,
+        shapeId: 'square_2',
+        row: 1,
+        col: 1,
+      });
+      assertEqual(overlapping.valid, false, 'occupied cells should reject alternate input placement');
+      assertDeepEqual(overlapping.cells, [9, 10, 17, 18], 'overlap preview should identify the conflicting footprint');
+    },
+  },
+  {
+    name: 'placement preview identifies a line that the selected shape would clear',
+    run: () => {
+      const preview = resolveIslandWorkshopPlacementPreview({
+        board: boardWithRowGaps(3, [6, 7]),
+        shapeId: 'duo_h',
+        row: 3,
+        col: 6,
+      });
+      assertEqual(preview.valid, true, 'gap-filling tap placement should be valid');
+      assertDeepEqual(
+        preview.wouldClearCells,
+        Array.from({ length: ISLAND_WORKSHOP_GRID_SIZE }, (_, col) => 3 * ISLAND_WORKSHOP_GRID_SIZE + col),
+        'the full row should be highlighted before placement',
       );
     },
   },
