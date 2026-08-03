@@ -378,6 +378,7 @@ import {
   getArenaSessionSeconds,
   loadArenaMinigamePreferences,
   resolveArenaSessionPace,
+  shouldExposeArenaTimedEvent,
   type ArenaGameId,
   type ArenaMinigamePreferences,
 } from '../services/islandRunArenaPreferences';
@@ -6169,11 +6170,15 @@ export function IslandRunBoardPrototype({
   }, [devTimedEventOverrideType]);
   const effectiveActiveTimedEvent = useMemo(() => {
     // The four rotating event games (Island Workshop, Lucky Spin, Space
-    // Excavator, Companion Feast) are demo-only: surface them to admins/creators
-    // exclusively. Non-admins never see the event banner, ticket chip, quick
-    // launch, or minigame launcher. The underlying reward-bar/event rotation on
-    // the runtime record is untouched, so core progression keeps working.
-    if (!isAdmin) return null;
+    // Excavator, Companion Feast) are preview-only: surface them to admins and
+    // to an explicitly unlocked local QA session. Production non-admins never
+    // see the event banner, ticket chip, quick launch, or minigame launcher.
+    // The underlying reward-bar/event rotation remains untouched.
+    if (!shouldExposeArenaTimedEvent({
+      isAdmin,
+      isDevModeEnabled,
+      isLocalDevelopment: import.meta.env.DEV,
+    })) return null;
     if (!isDevModeEnabled || !devTimedEventOverrideType || !devTimedEventOverrideEventId) return activeTimedEvent;
     const now = Date.now();
     return {
@@ -12939,7 +12944,7 @@ export function IslandRunBoardPrototype({
         {showLandmarkCoachmark ? (
           <aside className="island-run-landmark-coachmark" role="note" aria-live="polite">
             <p>
-              🧭 Landmarks unlock in order; some require a money ticket before entry.
+              🧭 Landmarks unlock in order. Some need a money ticket.
             </p>
             <div className="island-run-landmark-coachmark__actions">
               <button
@@ -13463,8 +13468,8 @@ export function IslandRunBoardPrototype({
                 </div>
               ) : null}
             </div>
-            {activeStopId !== 'hatchery' ? <p>{activeStop.description}</p> : null}
-            {activeStopId !== 'hatchery' ? <p><strong>Status:</strong> {openedStopState}</p> : null}
+            {activeStopId !== 'hatchery' && activeStopId !== 'mystery' ? <p>{activeStop.description}</p> : null}
+            {activeStopId !== 'hatchery' && activeStopId !== 'mystery' ? <p><strong>Status:</strong> {openedStopState}</p> : null}
             {activeStopId === requiredDoorStopId && isDoorLandmarkCompletionRequired ? (
               <p className="island-stop-modal__locked-notice" role="status">
                 <span aria-hidden="true">🚪</span>{' '}
@@ -13718,10 +13723,11 @@ export function IslandRunBoardPrototype({
                     onOpenCeremony={openCurrentChampionshipCeremony}
                   />
                 ) : null}
-                <div className="island-event-arena-card__burst" aria-hidden="true">
-                  <span>🎟️</span>
+                <div className="island-event-arena-card__visual" aria-hidden="true">
+                  <img src="/assets/island-run/tickets/event-arena-pass-emblem.webp" alt="" />
                   <span>🎪</span>
-                  <span>✨</span>
+                  <i>→</i>
+                  <span>🔓</span>
                 </div>
                 {arenaBoostStatus === 'claimed' ? (
                   <>
@@ -13735,12 +13741,12 @@ export function IslandRunBoardPrototype({
                 ) : arenaBoostStatus === 'no_active_event' ? (
                   <>
                     <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena</strong></p>
-                    <p>No live event is active right now. Complete the short Arena orientation so real-time scheduling never blocks your island.</p>
+                    <p>No live event now. Finish the quick orientation to unlock Wisdom.</p>
                   </>
                 ) : (
                   <>
                     <p className="island-stop-modal__copy">🎪 <strong>Diplomatic Arena</strong></p>
-                    <p>Join the host's current game as a gesture of respect. Your progress is saved when you return to reconstruction.</p>
+                    <p>Spend one ticket. Your island build waits for you.</p>
                   </>
                 )}
                 <div className="island-event-arena-card__ticket-row" aria-live="polite">
@@ -13760,7 +13766,7 @@ export function IslandRunBoardPrototype({
                     disabled={arenaBoostStatus !== 'no_active_event' && (!effectiveActiveTimedEvent || activeEventTickets <= 0)}
                   >
                     {arenaBoostStatus === 'no_active_event'
-                      ? 'Complete Arena orientation'
+                      ? 'Finish orientation'
                       : activeEventTickets > 0
                         ? 'Play event minigame'
                         : '🎟️ Earn event tickets on the reward bar'}
@@ -13770,7 +13776,7 @@ export function IslandRunBoardPrototype({
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
                     onClick={() => setShowArenaPreferences(true)}
                   >
-                    Tune Arena
+                    Arena settings
                   </button>
                   <button
                     type="button"
@@ -13780,9 +13786,11 @@ export function IslandRunBoardPrototype({
                     Later
                   </button>
                 </div>
-                <p className="island-stop-modal__fineprint">
-                  Outcome: finish one Arena challenge to resolve this landmark and unlock Wisdom. Live games also add event-bar progress.
-                </p>
+                <div className="island-event-arena-card__outcome" aria-label="Finish one Arena challenge to unlock Wisdom. Live games also add event-bar progress.">
+                  <span><b aria-hidden="true">🎪</b> Finish</span>
+                  <i aria-hidden="true">→</i>
+                  <span><b aria-hidden="true">🔓</b> Wisdom</span>
+                </div>
               </div>
             )}
 
@@ -15011,17 +15019,15 @@ export function IslandRunBoardPrototype({
                   </span>
                 </button>
               ))}
-              {Array.from({ length: activeWalletEmptySlotCount }, (_, index) => (
+              {activeWalletEmptySlotCount > 0 ? (
                 <article
-                  key={`empty-${index}`}
                   className="island-run-wallet-store-card island-run-wallet-store-card--empty"
-                  aria-label="Empty wallet offer slot"
+                  aria-label={`${activeWalletEmptySlotCount} more wallet options will unlock later`}
                 >
                   <span className="island-run-wallet-store-card__icon" aria-hidden="true">＋</span>
-                  <strong>More offers soon</strong>
-                  <span>Keep progressing to unlock more buys.</span>
+                  <strong>More options unlock as you progress</strong>
                 </article>
-              ))}
+              ) : null}
             </div>
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               <button
@@ -15105,7 +15111,7 @@ export function IslandRunBoardPrototype({
               {buildLevelCompletion.isFullyBuilt ? '🏰' : '✨'}
             </span>
             <p className="bm2-level-complete__eyebrow">
-              {buildLevelCompletion.isFullyBuilt ? 'Landmark restored' : `Level ${buildLevelCompletion.level} built`}
+              {buildLevelCompletion.isFullyBuilt ? 'Full restoration' : 'Build complete'}
             </p>
             <h2>{buildLevelCompletion.heading}</h2>
             <p>{buildLevelCompletion.body}</p>
@@ -15114,7 +15120,7 @@ export function IslandRunBoardPrototype({
               className="bm2-level-complete__continue"
               onClick={() => setBuildLevelCompletion(null)}
             >
-              {buildLevelCompletion.isFullyBuilt ? 'See the restored landmark' : 'Build the next level'}
+              {buildLevelCompletion.isFullyBuilt ? 'Back to island' : `Build Level ${buildLevelCompletion.level + 1}`}
             </button>
           </section>
         </div>

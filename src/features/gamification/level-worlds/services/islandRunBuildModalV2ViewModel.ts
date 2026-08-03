@@ -79,11 +79,11 @@ export function resolveBuildLevelCompletionPresentation(options: {
     title: options.title,
     level: nextBuildLevel,
     heading: isFullyBuilt
-      ? `${options.title} fully restored!`
-      : `${options.title} Level ${nextBuildLevel} complete!`,
+      ? `${options.title} restored`
+      : `${options.title} · Level ${nextBuildLevel}`,
     body: isFullyBuilt
-      ? 'Every construction stage is complete. This landmark is shining at full strength.'
-      : `The landmark has grown. Level ${nextBuildLevel + 1} is now ready to build.`,
+      ? 'Ready at full strength.'
+      : `Level ${nextBuildLevel + 1} is ready.`,
     isFullyBuilt,
   };
 }

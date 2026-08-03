@@ -5,6 +5,7 @@ import {
   moveArenaEvent,
   normalizeArenaPreferences,
   resolveArenaSessionPace,
+  shouldExposeArenaTimedEvent,
   toggleArenaEvent,
 } from '../islandRunArenaPreferences';
 
@@ -15,6 +16,15 @@ function assert(condition: unknown, message: string): asserts condition {
 }
 
 export const islandRunArenaPreferencesTests: TestCase[] = [
+  {
+    name: 'timed event games stay admin-only except in an explicitly unlocked local QA session',
+    run: () => {
+      assert(shouldExposeArenaTimedEvent({ isAdmin: true, isDevModeEnabled: false, isLocalDevelopment: false }), 'admins should see Arena events');
+      assert(shouldExposeArenaTimedEvent({ isAdmin: false, isDevModeEnabled: true, isLocalDevelopment: true }), 'local dev mode should expose Arena events for QA');
+      assert(!shouldExposeArenaTimedEvent({ isAdmin: false, isDevModeEnabled: true, isLocalDevelopment: false }), 'production guests must not gain Arena event access from dev-mode state');
+      assert(!shouldExposeArenaTimedEvent({ isAdmin: false, isDevModeEnabled: false, isLocalDevelopment: true }), 'local guests must explicitly unlock dev mode');
+    },
+  },
   {
     name: 'normalization restores each canonical game exactly once',
     run: () => {

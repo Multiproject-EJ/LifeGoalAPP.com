@@ -31,7 +31,6 @@ import {
   ISLAND_WORKSHOP_GRID_SIZE,
   ISLAND_WORKSHOP_BLOCK_TICKET_COST,
   ISLAND_WORKSHOP_MONO_PAIR_BONUS_BLOCKS,
-  ISLAND_WORKSHOP_SOLID_RELEASE_BLOCKS,
   isIslandWorkshopGemCell,
   isIslandWorkshopRunStuck,
   isIslandWorkshopSolidCell,
@@ -764,26 +763,19 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
             <p className="island-workshop__level-banner">⭐ Bench Level {benchLevel} — keystones &amp; hidden gems in play!</p>
           )}
           <p className="island-workshop__copy">
-            The workshop creatures are building the Tidelight Beacon! Fit block
-            shapes onto the crafting bench — full rows and columns craft into
-            magical materials.
+            Help the workshop creatures finish the Tidelight Beacon.
           </p>
-          <ul className="island-workshop__rules">
-            <li>🧱 Each ticket is one block placement — 9 tickets means 9 blocks to place, not 9 runs.</li>
-            <li>🧱 Drag each shape onto the 8×8 bench — place all three to get a new set.</li>
-            <li>✨ Complete a row or column to clear it and earn materials.</li>
-            <li>🌈 A full line of one single colour super-flashes and adds +1 bonus block to your pool — two pure lines of the same colour rain confetti and add +4!</li>
-            <li>🔥 Multi-line clears and back-to-back clears pay combo bonuses.</li>
-            <li>🐚 Creature Assist sweeps a crowded pocket clear, once per run.</li>
-            <li>🗼 Score and materials build the Beacon for a grand reward.</li>
-            <li>⭐ Fill the reward bar to promote the bench to the next level.</li>
-            {benchLevel >= 2 && (
-              <>
-                <li>🔒 Keystone blocks stay put when a mixed line clears — only a full line of their own colour releases them, adding +{ISLAND_WORKSHOP_SOLID_RELEASE_BLOCKS} blocks to your pool.</li>
-                <li>💎 Gem blocks hide a treasure — clear their line to unleash +{ISLAND_WORKSHOP_GEM_REWARD_DICE} dice each.</li>
-              </>
-            )}
-          </ul>
+          <div className="island-workshop__how" aria-label="Place a block, clear a line, and build the Beacon">
+            <span><b aria-hidden="true">🧩</b><strong>Place</strong><small>1 block</small></span>
+            <i aria-hidden="true">→</i>
+            <span><b aria-hidden="true">✨</b><strong>Clear</strong><small>row or column</small></span>
+            <i aria-hidden="true">→</i>
+            <span><b aria-hidden="true">🗼</b><strong>Build</strong><small>the Beacon</small></span>
+          </div>
+          <p className="island-workshop__placement-note">One ticket places one block. Combos and Creature Assist appear while you play.</p>
+          {benchLevel >= 2 && (
+            <p className="island-workshop__level-note">Level 2 adds 🔒 Keystones and 💎 gems worth +{ISLAND_WORKSHOP_GEM_REWARD_DICE} dice.</p>
+          )}
           <div className="island-workshop__construction-strip" aria-label="Beacon construction progress">
             <span className="island-workshop__construction-emoji">{constructionStage.emoji}</span>
             <div className="island-workshop__construction-meta">

@@ -59,17 +59,56 @@
   color: #c4d7ee;
 }
 
-.island-workshop__rules {
-  margin: 0 0 14px;
-  padding: 12px 14px;
-  list-style: none;
-  text-align: left;
-  font-size: 13.5px;
-  line-height: 1.65;
-  color: #d7e6f7;
+.island-workshop__how {
+  align-items: center;
   background: rgba(6, 16, 32, 0.6);
   border: 1px solid rgba(90, 167, 232, 0.18);
   border-radius: 14px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  margin: 0 0 8px;
+  padding: 12px 10px;
+}
+
+.island-workshop__how > span {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.island-workshop__how b {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.island-workshop__how strong {
+  color: #fdf4da;
+  font-size: 12.5px;
+}
+
+.island-workshop__how small {
+  color: #9fc0dd;
+  font-size: 10px;
+}
+
+.island-workshop__how i {
+  color: rgba(127, 231, 214, 0.62);
+  font-style: normal;
+  font-weight: 900;
+}
+
+.island-workshop__placement-note,
+.island-workshop__level-note {
+  color: #b8cee5;
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0 0 10px;
+}
+
+.island-workshop__level-note {
+  color: #f4dd9c;
 }
 
 .island-workshop__ticket-note {

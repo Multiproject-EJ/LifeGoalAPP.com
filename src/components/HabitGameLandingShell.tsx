@@ -249,8 +249,8 @@ export function HabitGameAuthCard({
             </div>
             <div className="guest-free-play-modal__copy">
               <span className="guest-free-play-modal__eyebrow">Before you step aboard</span>
-              <h2 id="guest-free-play-title">Set your soundscape</h2>
-              <p>Use the same three channels as Island Run. You can change them again at any time.</p>
+              <h2 id="guest-free-play-title">Choose your sound</h2>
+              <p>Change this anytime.</p>
             </div>
             <div className="guest-free-play-modal__audio-options" role="group" aria-label="Audio settings">
               <button
@@ -262,7 +262,7 @@ export function HabitGameAuthCard({
                 <span aria-hidden="true">≈</span>
                 <span className="guest-free-play-modal__audio-option-copy">
                   <strong>Ambience</strong>
-                  <small>Island wind, water, and the life around you</small>
+                  <small>Wind &amp; water</small>
                 </span>
                 <i aria-hidden="true">{guestAmbienceEnabled ? 'On' : 'Off'}</i>
               </button>
@@ -275,7 +275,7 @@ export function HabitGameAuthCard({
                 <span aria-hidden="true">♫</span>
                 <span className="guest-free-play-modal__audio-option-copy">
                   <strong>Music</strong>
-                  <small>Score, ceremonies, and dramatic cues</small>
+                  <small>Story &amp; ceremonies</small>
                 </span>
                 <i aria-hidden="true">{guestMusicEnabled ? 'On' : 'Off'}</i>
               </button>
@@ -288,7 +288,7 @@ export function HabitGameAuthCard({
                 <span aria-hidden="true">✦</span>
                 <span className="guest-free-play-modal__audio-option-copy">
                   <strong>Player Sounds</strong>
-                  <small>Dice, rewards, controls, and feedback</small>
+                  <small>Dice &amp; rewards</small>
                 </span>
                 <i aria-hidden="true">{guestSfxEnabled ? 'On' : 'Off'}</i>
               </button>
@@ -318,11 +318,11 @@ export function HabitGameAuthCard({
             </div>
             <div className="guest-free-play-modal__copy">
               <span className="guest-free-play-modal__eyebrow">Guest voyage</span>
-              <h2 id="guest-free-play-title">Play first. Save when you&apos;re ready.</h2>
-              <p>Your welcome issue and first rewards come next. Captain and ship names can wait until you have earned your next rank.</p>
+              <h2 id="guest-free-play-title">Play now. Save later.</h2>
+              <p>Names can wait until your next rank.</p>
             </div>
             <div className="guest-free-play-modal__route" aria-label="First voyage sequence">
-              <span><b>1</b> Receive your issue</span>
+              <span><b>1</b> Welcome pack</span>
               <span><b>2</b> Sail to Luma</span>
               <span><b>3</b> Save free later</span>
             </div>

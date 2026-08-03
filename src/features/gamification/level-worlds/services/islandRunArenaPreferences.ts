@@ -31,6 +31,14 @@ export const DEFAULT_ARENA_MINIGAME_PREFERENCES: ArenaMinigamePreferences = {
   disabledEventIds: [],
 };
 
+export function shouldExposeArenaTimedEvent(options: {
+  isAdmin: boolean;
+  isDevModeEnabled: boolean;
+  isLocalDevelopment: boolean;
+}): boolean {
+  return options.isAdmin || (options.isLocalDevelopment && options.isDevModeEnabled);
+}
+
 const LOCAL_STORAGE_PREFIX = 'lifegoal.arena-minigame-preferences.v1';
 
 function getArenaPreferencesClient() {

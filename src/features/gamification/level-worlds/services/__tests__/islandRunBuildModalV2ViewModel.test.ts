@@ -45,10 +45,11 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
     run: () => {
       assertEqual(resolveBuildLevelCompletionPresentation({ title: 'Hatchery', previousBuildLevel: 0, nextBuildLevel: 0 }), null, 'Partial funding should not celebrate a level');
       const upgraded = resolveBuildLevelCompletionPresentation({ title: 'Hatchery', previousBuildLevel: 0, nextBuildLevel: 1 });
-      assertEqual(upgraded?.heading, 'Hatchery Level 1 complete!', 'Level completion should name the completed level');
+      assertEqual(upgraded?.heading, 'Hatchery · Level 1', 'Level completion should name the completed level concisely');
+      assertEqual(upgraded?.body, 'Level 2 is ready.', 'Level completion should make the next action obvious');
       assertEqual(upgraded?.isFullyBuilt, false, 'Level 1 should not be reported as fully built');
       const restored = resolveBuildLevelCompletionPresentation({ title: 'Hatchery', previousBuildLevel: 2, nextBuildLevel: 3 });
-      assertEqual(restored?.heading, 'Hatchery fully restored!', 'Final level should use the full restoration message');
+      assertEqual(restored?.heading, 'Hatchery restored', 'Final level should use the full restoration message');
       assertEqual(restored?.isFullyBuilt, true, 'Level 3 should be reported as fully built');
     },
   },

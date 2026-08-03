@@ -83,9 +83,9 @@ function BuildModalV2PartButton({
   const metaLabel = part.status === 'complete'
     ? 'Done'
     : part.status === 'locked'
-      ? 'Locked'
+      ? ''
       : `${nextTapEssenceCost} Money`;
-  const titleLabel = isActive ? `Build part ${part.partNumber}` : `Part ${part.partNumber}`;
+  const titleLabel = isActive ? `Build ${part.partNumber}` : `${part.partNumber}`;
   const ariaLabel = part.status === 'complete'
     ? `${activeTitle} Level ${targetLevel}, Part ${part.partNumber} complete`
     : part.status === 'locked'
@@ -146,7 +146,7 @@ export function BuildModalV2({
   if (!isOpen) return null;
 
   const statusLine = active
-    ? `Part ${activePart} of 5 · ${active.spentEssence}/${active.requiredEssence} Money funded`
+    ? `${active.spentEssence}/${active.requiredEssence} Money funded`
     : '15 of 15 complete';
 
   if (isDiscountIntroVisible) {
@@ -194,7 +194,7 @@ export function BuildModalV2({
               <div className="bm2-hero__copy">
                 <p className="bm2-hero__eyebrow">Step {active.sequencePosition} of {active.totalSequenceSteps}</p>
                 <h3 className="bm2-hero__title">{active.title}</h3>
-                <p className="bm2-hero__subtitle">Building Level {active.targetLevel}</p>
+                <p className="bm2-hero__subtitle">Level {active.targetLevel} · Part {activePart}/5</p>
                 <p className="bm2-hero__status">{statusLine}</p>
                 <div
                   className="bm2-progress"
@@ -208,7 +208,7 @@ export function BuildModalV2({
                 </div>
                 <p className="bm2-hero__cost">
                   {active.canAffordNextTap
-                    ? `Build Part ${activePart} for ${active.nextTapEssenceCost} Money${discountPercent > 0 ? ` (${discountPercent}% off)` : ''}`
+                    ? `Next part · ${active.nextTapEssenceCost} Money${discountPercent > 0 ? ` · ${discountPercent}% off` : ''}`
                     : `Need ${Math.max(0, active.nextTapEssenceCost - essenceAvailable)} more Money for the next tap`}
                 </p>
               </div>
