@@ -1222,40 +1222,37 @@ async function provisionPersonalQuestSeason(
   userId: string,
   week: PersonalQuestWeekDefinition,
 ): Promise<CalendarSeason | null> {
-  const { data: inserted, error: insertError } = await supabase
-    .from('daily_calendar_seasons')
-    .insert({
-      theme_name: week.themeName,
-      starts_on: week.startsOn,
-      ends_on: week.endsOn,
-      status: 'active',
-      holiday_key: null,
-      season_type: 'personal_quest',
-      user_id_owner: userId,
-    })
-    .select('*')
-    .single();
+  // The RPC performs INSERT .. ON CONFLICT against the partial weekly index.
+  // That keeps the expected two-device race out of Postgres error telemetry.
+  const { data: ensured, error: ensureError } = await supabase.rpc(
+    'ensure_personal_quest_season',
+    {
+      p_theme_name: week.themeName,
+      p_starts_on: week.startsOn,
+      p_ends_on: week.endsOn,
+    },
+  );
 
-  let season = inserted as unknown as CalendarSeason | null;
-  if (insertError || !season) {
-    // Unique-index race with another device, or insert not permitted —
-    // re-select whatever exists.
+  let season = ensured as unknown as CalendarSeason | null;
+  if (ensureError || !season) {
     season = await fetchPersonalQuestSeasonRow(userId, week.startsOn);
     if (!season) return null;
-  } else {
-    // Seed the 14 hatch definitions (7 free + 7 bonus). Ignore conflicts:
-    // the (season_id, day_index, door_type) unique constraint dedupes any
-    // concurrent seeding from another device.
-    const { error: hatchInsertError } = await supabase
-      .from('daily_calendar_hatches')
-      .insert(week.hatchDefs.map((def) => ({
-        ...def,
-        reward_payload: def.reward_payload as Json,
-        season_id: season!.id,
-      })));
-    if (hatchInsertError) {
-      console.warn('Failed to seed personal quest hatches:', hatchInsertError);
-    }
+  }
+
+  // Every concurrent caller may safely seed. The complete unique constraint
+  // on (season_id, day_index, door_type) supports ignoreDuplicates directly.
+  const { error: hatchInsertError } = await supabase
+    .from('daily_calendar_hatches')
+    .upsert(week.hatchDefs.map((def) => ({
+      ...def,
+      reward_payload: def.reward_payload as Json,
+      season_id: season!.id,
+    })), {
+      onConflict: 'season_id,day_index,door_type',
+      ignoreDuplicates: true,
+    });
+  if (hatchInsertError) {
+    console.warn('Failed to seed personal quest hatches:', hatchInsertError);
   }
   return season;
 }
