@@ -295,61 +295,228 @@
 /* ── Score reward bar ────────────────────────────────────────────────────── */
 
 .island-workshop__score-rewards {
-  padding: 9px 12px 12px;
-  background: rgba(10, 24, 44, 0.82);
-  border: 1px solid rgba(243, 209, 107, 0.22);
-  border-radius: 14px;
+  padding: 8px;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(243, 209, 107, 0.16), transparent 52%),
+    rgba(7, 20, 40, 0.94);
+  border: 1px solid rgba(243, 209, 107, 0.34);
+  border-radius: 17px;
+  box-shadow: 0 10px 24px rgba(2, 8, 20, 0.32), inset 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .island-workshop__score-rewards-top {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 8px;
-  color: #c4d7ee;
-  font-size: 12px;
-  letter-spacing: 0.06em;
+  margin: 0 2px 7px;
+  color: #9ebad3;
+  font-size: 10px;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
 }
 
 .island-workshop__score-rewards-top strong {
-  color: #fdf4da;
+  color: #f7dc8a;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.island-workshop__blocks-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid rgba(126, 164, 198, 0.22);
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: rgba(15, 38, 65, 0.88);
+  color: #d9e9f8;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.island-workshop__reward-window {
+  display: grid;
+  grid-template-columns: minmax(0, 1.38fr) minmax(0, 1fr);
+  gap: 7px;
+  animation: island-workshop-reward-window-shift 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.island-workshop__reward-card {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.island-workshop__reward-card--current {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 7px;
+  min-height: 78px;
+  padding: 8px 8px 7px;
+  border: 1px solid rgba(243, 209, 107, 0.56);
+  background: linear-gradient(145deg, rgba(68, 56, 35, 0.88), rgba(17, 39, 62, 0.96));
+  box-shadow: inset 0 0 18px rgba(243, 209, 107, 0.08);
+}
+
+.island-workshop__reward-card--current .island-workshop__reward-emoji {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 11px;
+  background: rgba(250, 221, 139, 0.13);
+  font-size: 27px;
+  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.36));
+}
+
+.island-workshop__reward-copy {
+  min-width: 0;
+}
+
+.island-workshop__reward-kicker,
+.island-workshop__reward-order {
+  display: block;
+  color: #7fe7d6;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.island-workshop__reward-copy strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 2px;
+  color: #fff4cf;
+  font-size: 12px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-workshop__reward-copy small {
+  display: block;
+  overflow: hidden;
+  margin-top: 3px;
+  color: #c0d5e8;
+  font-size: 8.5px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-workshop__reward-target {
+  color: #f7dc8a;
+  font-size: 11px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.island-workshop__reward-progress {
+  grid-column: 1 / -1;
+  height: 7px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(1, 8, 20, 0.64);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.island-workshop__reward-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #45dcc7, #f3d16b);
+  box-shadow: 0 0 12px rgba(243, 209, 107, 0.48);
+  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.island-workshop__reward-remaining {
+  position: absolute;
+  right: 8px;
+  bottom: 17px;
+  color: #90aec9;
+  font-size: 7.5px;
   font-weight: 800;
 }
 
-.island-workshop__score-track {
-  position: relative;
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.09);
-}
-
-.island-workshop__score-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #9d7bea, #f3d16b);
-  transition: width 300ms ease;
-}
-
-.island-workshop__score-node {
-  position: absolute;
-  top: 50%;
-  width: 24px;
-  height: 24px;
+.island-workshop__upcoming-prizes {
   display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background: #10243e;
-  border: 1px solid rgba(243, 209, 107, 0.5);
-  box-shadow: 0 4px 12px rgba(2, 8, 20, 0.5);
-  transform: translate(-50%, -50%);
-  font-size: 13px;
-  filter: grayscale(0.55);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
 }
 
-.island-workshop__score-node--claimed {
-  background: linear-gradient(180deg, #f7dc8a, #e8b64c);
-  filter: none;
+.island-workshop__reward-card--next {
+  display: flex;
+  min-height: 78px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 3px;
+  border: 1px solid rgba(126, 164, 198, 0.22);
+  background: rgba(13, 34, 59, 0.88);
+  text-align: center;
+}
+
+.island-workshop__reward-card--next .island-workshop__reward-emoji {
+  margin: 2px 0;
+  font-size: 21px;
+  line-height: 1;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+}
+
+.island-workshop__reward-card--next strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #e3edf7;
+  font-size: 8.5px;
+  line-height: 1.05;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.island-workshop__reward-card--next small {
+  overflow: hidden;
+  width: 100%;
+  margin: 2px 0;
+  color: #88a8c4;
+  font-size: 7px;
+  font-weight: 700;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.island-workshop__reward-card--next .island-workshop__reward-target {
+  font-size: 9px;
+}
+
+.island-workshop__reward-complete {
+  display: grid;
+  min-height: 78px;
+  place-items: center;
+  align-content: center;
+  border: 1px solid rgba(243, 209, 107, 0.48);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(61, 52, 32, 0.88), rgba(13, 44, 59, 0.94));
+  text-align: center;
+}
+
+.island-workshop__reward-complete > span { font-size: 27px; }
+.island-workshop__reward-complete > strong { color: #fff4cf; font-size: 13px; }
+.island-workshop__reward-complete > small { color: #9ebad3; font-size: 9px; }
+
+@keyframes island-workshop-reward-window-shift {
+  0% { opacity: 0.3; transform: translateX(12px) scale(0.985); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
 }
 
 /* ── Bench grid ──────────────────────────────────────────────────────────── */
@@ -839,4 +1006,64 @@
   .island-workshop__tray-slot { min-height: 72px; }
   .island-workshop__hud-value { font-size: 16px; }
   .island-workshop__tap-instruction { min-height: 24px; padding-block: 4px; font-size: 10.5px; }
+}
+
+/* Compact the Workshop itself on small portrait phones. */
+@media (max-width: 500px) {
+  .arena-session-shell--workshop .island-workshop {
+    padding: 8px 10px;
+  }
+
+  .arena-session-shell--workshop .island-workshop__play-area {
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .arena-session-shell--workshop .island-workshop__reward-card--current,
+  .arena-session-shell--workshop .island-workshop__reward-card--next,
+  .arena-session-shell--workshop .island-workshop__reward-complete {
+    min-height: 86px;
+  }
+
+  .arena-session-shell--workshop .island-workshop__hud-stat {
+    padding-block: 7px;
+  }
+
+  .arena-session-shell--workshop .island-workshop__hud-label {
+    font-size: 10px;
+  }
+
+  .arena-session-shell--workshop .island-workshop__hud-value {
+    font-size: 17px;
+  }
+
+  .arena-session-shell--workshop .island-workshop__tap-instruction {
+    min-height: 26px;
+    padding-block: 4px;
+    font-size: 10.5px;
+  }
+
+  .arena-session-shell--workshop .island-workshop__grid {
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .arena-session-shell--workshop .island-workshop__tray-slot {
+    min-height: 78px;
+    padding-block: 7px;
+  }
+
+  .arena-session-shell--workshop .island-workshop__controls .island-workshop__btn {
+    min-height: 48px;
+    padding-block: 10px;
+    font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-workshop__reward-window,
+  .island-workshop__reward-progress > span {
+    animation: none;
+    transition: none;
+  }
 }
