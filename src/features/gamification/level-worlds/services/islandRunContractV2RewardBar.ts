@@ -174,6 +174,17 @@ const REWARD_ROTATION: readonly RewardBarRewardKind[] = [
   'sticker_fragments',
 ];
 
+export const FIRST_PUZZLE_COLLECTION_ISLAND = 2;
+
+/**
+ * Island 001 is the Concord onboarding island, so puzzle collection stays
+ * completely out of its reward loop. The Sticker Album begins on Island 002.
+ */
+export function isPuzzleCollectionAvailableForIsland(islandNumber: number): boolean {
+  if (!Number.isFinite(islandNumber)) return true;
+  return Math.floor(islandNumber) >= FIRST_PUZZLE_COLLECTION_ISLAND;
+}
+
 /** Icon for the upcoming reward displayed on the bar endcap. */
 export const REWARD_KIND_ICON: Readonly<Record<RewardBarRewardKind, string>> = {
   dice: '🎲',
@@ -182,8 +193,11 @@ export const REWARD_KIND_ICON: Readonly<Record<RewardBarRewardKind, string>> = {
   sticker_fragments: '🧩',
 };
 
-export function resolveNextRewardKind(claimCount: number): RewardBarRewardKind {
-  return REWARD_ROTATION[Math.max(0, Math.floor(claimCount)) % REWARD_ROTATION.length]!;
+export function resolveNextRewardKind(claimCount: number, islandNumber = FIRST_PUZZLE_COLLECTION_ISLAND): RewardBarRewardKind {
+  const rotatedKind = REWARD_ROTATION[Math.max(0, Math.floor(claimCount)) % REWARD_ROTATION.length]!;
+  return rotatedKind === 'sticker_fragments' && !isPuzzleCollectionAvailableForIsland(islandNumber)
+    ? 'essence'
+    : rotatedKind;
 }
 
 // ── Multiplier support (Monopoly GO-style dice-pool gating) ──────────────────
@@ -545,9 +559,10 @@ function resolveProgressivePayout(options: {
   tier: number;
   claimNumber: number;
   template: TimedEventTemplate;
+  islandNumber?: number;
 }): RewardBarClaimPayout {
-  const { tier, claimNumber, template } = options;
-  const rewardKind = resolveNextRewardKind(claimNumber - 1);
+  const { tier, claimNumber, template, islandNumber } = options;
+  const rewardKind = resolveNextRewardKind(claimNumber - 1, islandNumber);
 
   // Base amounts that scale with tier (progressive rewards get bigger)
   const diceBase = 5 + tier * 3;           // 5, 8, 11, 14, 17, 20, ...
@@ -600,16 +615,18 @@ function resolveProgressivePayout(options: {
 
 export function resolveRewardBarClaimPayoutPreview(options: {
   state: Pick<IslandRunRewardBarRuntimeSlice, 'activeTimedEvent' | 'rewardBarEscalationTier' | 'rewardBarClaimCountInEvent'>;
+  islandNumber?: number;
 }): RewardBarClaimPayout {
   const nextClaimNumber = Math.max(0, Math.floor(options.state.rewardBarClaimCountInEvent)) + 1;
   const tier = Math.max(0, Math.floor(options.state.rewardBarEscalationTier));
   const template = getTemplateForEvent(options.state.activeTimedEvent);
-  return resolveProgressivePayout({ tier, claimNumber: nextClaimNumber, template });
+  return resolveProgressivePayout({ tier, claimNumber: nextClaimNumber, template, islandNumber: options.islandNumber });
 }
 
 export function claimIslandRunContractV2RewardBar(options: {
   state: IslandRunRewardBarRuntimeSlice;
   nowMs: number;
+  islandNumber?: number;
 }): { state: IslandRunRewardBarRuntimeSlice; payout: RewardBarClaimPayout | null } {
   const ensured = ensureIslandRunContractV2ActiveTimedEvent({ state: options.state, nowMs: options.nowMs }).state;
   if (!canClaimIslandRunContractV2RewardBar(ensured) || !ensured.activeTimedEvent) {
@@ -621,7 +638,7 @@ export function claimIslandRunContractV2RewardBar(options: {
   const template = getTemplateForEvent(ensured.activeTimedEvent);
   const currentThreshold = resolveEscalatingThreshold(tier);
 
-  const payout = resolveProgressivePayout({ tier, claimNumber: nextClaimNumber, template });
+  const payout = resolveProgressivePayout({ tier, claimNumber: nextClaimNumber, template, islandNumber: options.islandNumber });
 
   // Carry over excess progress beyond threshold (supports multi-fill chains)
   const overflowProgress = Math.max(0, Math.floor(ensured.rewardBarProgress) - currentThreshold);
@@ -680,6 +697,7 @@ export function resolveChainedRewardBarClaims(options: {
   state: IslandRunRewardBarRuntimeSlice;
   nowMs: number;
   maxChain?: number;
+  islandNumber?: number;
 }): { state: IslandRunRewardBarRuntimeSlice; payouts: RewardBarClaimPayout[] } {
   const maxChain = Math.max(1, Math.min(options.maxChain ?? 5, 10));
   let current = options.state;
@@ -687,7 +705,11 @@ export function resolveChainedRewardBarClaims(options: {
 
   for (let i = 0; i < maxChain; i++) {
     if (!canClaimIslandRunContractV2RewardBar(current)) break;
-    const result = claimIslandRunContractV2RewardBar({ state: current, nowMs: options.nowMs });
+    const result = claimIslandRunContractV2RewardBar({
+      state: current,
+      nowMs: options.nowMs,
+      islandNumber: options.islandNumber,
+    });
     if (!result.payout) break;
     payouts.push(result.payout);
     current = result.state;

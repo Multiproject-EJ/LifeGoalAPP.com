@@ -1,6 +1,9 @@
 import type { BonusTileChargeByIsland } from './islandRunBonusTile';
 import { getBonusTileCharge } from './islandRunBonusTile';
-import { STICKER_FRAGMENTS_PER_STICKER } from './islandRunContractV2RewardBar';
+import {
+  isPuzzleCollectionAvailableForIsland,
+  STICKER_FRAGMENTS_PER_STICKER,
+} from './islandRunContractV2RewardBar';
 
 // Bottom-centre tile of the ring. On the 36-tile ring index 19 sits at ~6
 // o'clock (was index 21 on the 40-tile ring). Chosen to avoid colliding with
@@ -102,6 +105,7 @@ export function applyTrafficLightPass(input: {
 export function resolveTrafficLightCoinFlipReward(input: {
   seed: number;
   stickerFragments: number;
+  islandNumber?: number;
 }): TrafficLightCoinFlipReward {
   const side: TrafficLightCoinSide = seededRandom(input.seed) < 0.5 ? 'heads' : 'tails';
 
@@ -113,7 +117,9 @@ export function resolveTrafficLightCoinFlipReward(input: {
     0,
     Math.min(STICKER_FRAGMENTS_PER_STICKER, STICKER_FRAGMENTS_PER_STICKER - Math.max(0, Math.floor(input.stickerFragments))),
   );
-  const grantsPuzzlePieces = missingFragments > 0 && seededRandom(input.seed + 7919) < 0.35;
+  const grantsPuzzlePieces = isPuzzleCollectionAvailableForIsland(input.islandNumber ?? 2)
+    && missingFragments > 0
+    && seededRandom(input.seed + 7919) < 0.35;
 
   const minigameTickets = MIN_MINIGAME_TICKETS
     + Math.floor(seededRandom(input.seed + 104729) * (MAX_MINIGAME_TICKETS - MIN_MINIGAME_TICKETS + 1));
