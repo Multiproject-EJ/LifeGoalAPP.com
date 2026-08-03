@@ -14,6 +14,7 @@ import bioDayChartIcon from './assets/theme-icons/bio-day-chart.svg';
 import bioDayCheckIcon from './assets/theme-icons/bio-day-check.svg';
 import type { Session } from '@supabase/supabase-js';
 import { useSupabaseAuth } from './features/auth/SupabaseAuthProvider';
+import { shouldDismissAuthOverlay } from './features/auth/authInitialization';
 import { readJourneyDay } from './features/onboarding/journeyAccess';
 import { createDemoSession, isDemoSession } from './services/demoSession';
 import { GoalWorkspace, LifeGoalsSection, MyQuestHub } from './features/goals';
@@ -1879,6 +1880,21 @@ export default function App({ forceAuthOnMount }: AppProps) {
     // Only run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!shouldDismissAuthOverlay({
+      isOverlayOpen: showAuthPanel,
+      authenticatedUserId: supabaseSession?.user?.id,
+    })) return;
+
+    // Native Google sign-in completes outside React in Capacitor Browser. The
+    // provider publishes the verified Supabase session after the callback is
+    // exchanged; use that canonical signal to dismiss the stale login layer.
+    setShowAuthPanel(false);
+    setSubmitting(false);
+    setAuthError(null);
+    setAuthMessage(null);
+  }, [showAuthPanel, supabaseSession?.user?.id]);
 
   const activeSession = useMemo(
     () => (supabaseSession ?? localGuestSession) as Session,

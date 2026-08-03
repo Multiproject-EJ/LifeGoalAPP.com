@@ -4,6 +4,19 @@ export const AUTH_INITIALIZATION_TIMEOUT_MS = 8000;
 
 export type AuthInitializationStatus = 'loading' | 'ready' | 'timeout' | 'error';
 
+/**
+ * A Supabase session is the source of truth for completing authentication.
+ * Closing the overlay from this signal keeps native OAuth callbacks, restored
+ * sessions, and password sign-in aligned while failed/cancelled OAuth attempts
+ * leave the sign-in UI available.
+ */
+export function shouldDismissAuthOverlay(options: {
+  isOverlayOpen: boolean;
+  authenticatedUserId?: string | null;
+}): boolean {
+  return options.isOverlayOpen && Boolean(options.authenticatedUserId?.trim());
+}
+
 export function shouldShowAuthConnectionNotice({
   initializationStatus,
   isConfigured,
