@@ -91,7 +91,7 @@ export const island001NarrativeDefinition = {
       surface: 'dialogue_sheet',
       priority: 'short',
       repeatPolicy: 'once',
-      text: 'The Hatchery is quiet, not gone. Help me wake one cradle.',
+      text: 'The first cradle is listening. Stay close while the Hatchery wakes.',
     },
     {
       id: 'I001-B24',
