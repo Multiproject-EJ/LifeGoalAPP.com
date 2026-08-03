@@ -15382,7 +15382,8 @@
   position: fixed;
   color: var(--island-game-text-primary);
   inset: 0;
-  z-index: 9870;
+  /* Portal modals must clear the top-level Island Run shell (z-index 9999). */
+  z-index: 20030;
   display: grid;
   place-items: center;
   background:
@@ -15398,7 +15399,7 @@
 }
 
 /* ── Shell ── */
-+.first-voyage-departure {
+.first-voyage-departure {
   position: fixed;
   inset: 0;
   z-index: 20040;
@@ -15804,7 +15805,7 @@
   line-height: 1.25;
 }
 
-+/* ── Welcome expedition issue scene ── */
+/* ── Welcome expedition issue scene ── */
 .wpm-visually-hidden {
   position: absolute;
   width: 1px;
