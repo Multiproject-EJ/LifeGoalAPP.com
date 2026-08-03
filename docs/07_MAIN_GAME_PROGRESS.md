@@ -3500,6 +3500,13 @@ Testing:
 Next: close the onboarding identity/public-age policy slice described in
 `docs/00_MAIN_GAME_120_ISLANDS_INDEX.md`.
 
+Status update — 2026-08-03:
+- The simulated Crew Relay was removed in full by explicit product direction.
+- It is not part of the HabitGame story or Island Workshop experience and must
+  not be reintroduced without a new explicit request.
+- Its preview component, simulation service, tests, launcher callback wrappers,
+  and visual styles were deleted.
+
 ---
 
 Date: 2026-07-30

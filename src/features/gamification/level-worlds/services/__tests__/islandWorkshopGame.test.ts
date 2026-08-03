@@ -47,6 +47,7 @@ import {
   resolveIslandWorkshopMaterialsEarned,
   resolveIslandWorkshopMonoLineBonusBlocks,
   resolveIslandWorkshopPlacementPreview,
+  resolveIslandWorkshopRewardTrack,
   resolveIslandWorkshopResultTier,
   resolveIslandWorkshopRunConstructionGain,
   resolveIslandWorkshopStreakMultiplier,
@@ -388,6 +389,40 @@ export const islandWorkshopGameTests: TestCase[] = [
         [],
         'already-reached milestones are not claimed again',
       );
+      assertDeepEqual(
+        resolveIslandWorkshopClaimableScoreRewards({ previousScore: 260, nextScore: 260 }).map((reward) => reward.id),
+        [],
+        'repeating the same score cannot grant a reward twice',
+      );
+    },
+  },
+  {
+    name: 'Workshop reward track keeps the current prize prominent and reveals the next two',
+    run: () => {
+      const opening = resolveIslandWorkshopRewardTrack({ score: 0 });
+      assertEqual(opening.current?.id, 'supply_box', 'the first prize is active at the start');
+      assertDeepEqual(
+        opening.upcoming.map((reward) => reward.id),
+        ['dice_cache', 'mystery_crate'],
+        'the next two prizes are visible at the start',
+      );
+      assertEqual(opening.segmentProgress, 0, 'the opening segment starts empty');
+
+      const shifted = resolveIslandWorkshopRewardTrack({ score: 175 });
+      assertEqual(shifted.current?.id, 'dice_cache', 'the active prize advances after the first award');
+      assertDeepEqual(
+        shifted.upcoming.map((reward) => reward.id),
+        ['mystery_crate', 'grand_toolkit'],
+        'the revealed prizes advance with the active prize',
+      );
+      assertEqual(shifted.segmentStartScore, 100, 'progress starts at the previously secured threshold');
+      assertEqual(shifted.segmentProgress, 0.5, '175 is halfway from 100 to 250');
+      assertEqual(shifted.pointsRemaining, 75, 'remaining points target the active prize');
+
+      const complete = resolveIslandWorkshopRewardTrack({ score: 900, level: 2 });
+      assertEqual(complete.completed, true, 'the level-2 track completes at its final threshold');
+      assertEqual(complete.current, null, 'no unearned prize remains after completion');
+      assertDeepEqual(complete.upcoming, [], 'completed tracks have no future prizes');
     },
   },
   {

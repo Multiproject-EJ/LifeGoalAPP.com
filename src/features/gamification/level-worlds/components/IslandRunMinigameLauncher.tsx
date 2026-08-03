@@ -1,6 +1,5 @@
-import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { getMinigame } from '../services/islandRunMinigameRegistry';
-import { EventCrewRelayPreview } from './EventCrewRelayPreview';
 import type {
   IslandRunControllerInputProvider,
   IslandRunMinigameResult,
@@ -88,7 +87,6 @@ export function IslandRunMinigameLauncher({
     ? launchConfig.arenaSessionPace
     : null;
   const [secondsRemaining, setSecondsRemaining] = useState(sessionSeconds);
-  const [crewContributionActions, setCrewContributionActions] = useState(0);
   const completedRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
@@ -96,7 +94,6 @@ export function IslandRunMinigameLauncher({
   useEffect(() => {
     completedRef.current = false;
     setSecondsRemaining(sessionSeconds);
-    setCrewContributionActions(0);
   }, [minigameId, sessionSeconds]);
 
   useEffect(() => {
@@ -121,37 +118,6 @@ export function IslandRunMinigameLauncher({
     onCompleteRef.current(result);
   };
 
-  const activeEventId = typeof launchConfig?.activeEventId === 'string'
-    ? launchConfig.activeEventId
-    : null;
-  const crewAwareLaunchConfig = useMemo(() => {
-    if (!activeEventId || !launchConfig) return launchConfig;
-    const nextConfig: Record<string, unknown> = { ...launchConfig };
-    const contributionActions = [
-      'requestLaunchSpend',
-      'requestDigSpend',
-      'requestDropSpend',
-      'requestBlockTicketSpend',
-    ] as const;
-    for (const actionName of contributionActions) {
-      const original = launchConfig[actionName];
-      if (typeof original !== 'function') continue;
-      nextConfig[actionName] = (...args: unknown[]) => {
-        const result = (original as (...innerArgs: unknown[]) => unknown)(...args);
-        if (
-          result
-          && typeof result === 'object'
-          && 'ok' in result
-          && (result as { ok?: unknown }).ok === true
-        ) {
-          setCrewContributionActions((current) => current + 1);
-        }
-        return result;
-      };
-    }
-    return nextConfig;
-  }, [activeEventId, launchConfig]);
-
   if (!entry) {
     // Safe fallback: unknown minigame stays in-board and offers explicit close.
     return (
@@ -165,45 +131,41 @@ export function IslandRunMinigameLauncher({
   }
 
   const Component = entry.component;
+  const isWorkshop = minigameId === 'island_workshop';
   return (
-    <div className={`arena-session-shell${sessionPace ? ` arena-session-shell--${sessionPace}` : ''}`}>
+    <div className={`arena-session-shell${sessionPace ? ` arena-session-shell--${sessionPace}` : ''}${isWorkshop ? ' arena-session-shell--workshop' : ''}`}>
       {sessionPace ? (
         <div className="arena-session-pacing" role="status" aria-live="polite">
           <span>{sessionPace === 'full' ? 'Full mission' : sessionPace === 'fast' ? 'Quick fight' : 'Flash fight'}</span>
           <strong>{secondsRemaining === null ? 'Open play' : `${secondsRemaining}s`}</strong>
         </div>
       ) : null}
-      {activeEventId ? (
-        <EventCrewRelayPreview
-          activeEventId={activeEventId}
-          islandNumber={islandNumber}
-          playerActions={crewContributionActions}
-        />
-      ) : null}
-      <LauncherErrorBoundary
-      minigameId={minigameId}
-      onClose={() => completeOnce({ completed: false })}
-      key={minigameId}
-      >
-        <Suspense
-          fallback={(
-            <LauncherFallback
-              title="⏳ Loading minigame..."
-              body={`Preparing "${minigameId}". If this takes too long, close and return to the board.`}
-              ctaLabel="Close and return to board"
-              onClose={() => completeOnce({ completed: false })}
-            />
-          )}
+      <div className="arena-session-shell__game">
+        <LauncherErrorBoundary
+          minigameId={minigameId}
+          onClose={() => completeOnce({ completed: false })}
+          key={minigameId}
         >
-          <Component
-            islandNumber={islandNumber}
-            ticketBudget={ticketBudget}
-            controllerInput={controllerInput}
-            launchConfig={crewAwareLaunchConfig}
-            onComplete={completeOnce}
-          />
-        </Suspense>
-      </LauncherErrorBoundary>
+          <Suspense
+            fallback={(
+              <LauncherFallback
+                title="⏳ Loading minigame..."
+                body={`Preparing "${minigameId}". If this takes too long, close and return to the board.`}
+                ctaLabel="Close and return to board"
+                onClose={() => completeOnce({ completed: false })}
+              />
+            )}
+          >
+            <Component
+              islandNumber={islandNumber}
+              ticketBudget={ticketBudget}
+              controllerInput={controllerInput}
+              launchConfig={launchConfig}
+              onComplete={completeOnce}
+            />
+          </Suspense>
+        </LauncherErrorBoundary>
+      </div>
     </div>
   );
 }

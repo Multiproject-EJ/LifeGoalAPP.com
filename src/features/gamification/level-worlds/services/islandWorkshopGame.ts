@@ -608,6 +608,61 @@ export function getIslandWorkshopScoreRewardMilestones(
     : ISLAND_WORKSHOP_SCORE_REWARD_MILESTONES;
 }
 
+export interface IslandWorkshopRewardTrackProjection {
+  /** The prize currently being filled. Null after the final prize is secured. */
+  current: IslandWorkshopScoreRewardMilestone | null;
+  /** At most the two prizes immediately following the current prize. */
+  upcoming: IslandWorkshopScoreRewardMilestone[];
+  /** Score threshold that began the current segment. */
+  segmentStartScore: number;
+  /** Progress through the current segment, clamped to 0..1. */
+  segmentProgress: number;
+  pointsRemaining: number;
+  completed: boolean;
+}
+
+/**
+ * Project the score milestones into the Workshop's compact reward-track UI.
+ * Awarding remains exclusively governed by
+ * `resolveIslandWorkshopClaimableScoreRewards`; this helper is read-only.
+ */
+export function resolveIslandWorkshopRewardTrack(options: {
+  score: number;
+  level?: number;
+  upcomingCount?: number;
+}): IslandWorkshopRewardTrackProjection {
+  const score = Math.max(0, Math.floor(options.score));
+  const milestones = getIslandWorkshopScoreRewardMilestones(options.level ?? 1);
+  const currentIndex = milestones.findIndex((milestone) => score < milestone.score);
+  const completed = currentIndex === -1;
+
+  if (completed) {
+    const finalScore = milestones[milestones.length - 1]?.score ?? 0;
+    return {
+      current: null,
+      upcoming: [],
+      segmentStartScore: finalScore,
+      segmentProgress: 1,
+      pointsRemaining: 0,
+      completed: true,
+    };
+  }
+
+  const current = milestones[currentIndex];
+  const segmentStartScore = currentIndex > 0 ? milestones[currentIndex - 1].score : 0;
+  const segmentSize = Math.max(1, current.score - segmentStartScore);
+  const upcomingCount = Math.max(0, Math.floor(options.upcomingCount ?? 2));
+
+  return {
+    current,
+    upcoming: milestones.slice(currentIndex + 1, currentIndex + 1 + upcomingCount),
+    segmentStartScore,
+    segmentProgress: Math.min(1, Math.max(0, (score - segmentStartScore) / segmentSize)),
+    pointsRemaining: Math.max(0, current.score - score),
+    completed: false,
+  };
+}
+
 export function resolveIslandWorkshopClaimableScoreRewards(options: {
   previousScore: number;
   nextScore: number;

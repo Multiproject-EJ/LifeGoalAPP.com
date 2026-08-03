@@ -21,7 +21,6 @@ import {
   canStartIslandWorkshopRun,
   createEmptyIslandWorkshopBoard,
   getIslandWorkshopCellTint,
-  getIslandWorkshopScoreRewardMilestones,
   getIslandWorkshopShape,
   ISLAND_WORKSHOP_CONSTRUCTION_REWARD,
   ISLAND_WORKSHOP_CONSTRUCTION_TARGET,
@@ -37,6 +36,7 @@ import {
   parseIslandWorkshopSavedRun,
   placeIslandWorkshopShape,
   resolveIslandWorkshopPlacementPreview,
+  resolveIslandWorkshopRewardTrack,
   resolveIslandWorkshopConstructionStage,
   resolveIslandWorkshopClaimableScoreRewards,
   resolveIslandWorkshopLevelUp,
@@ -47,12 +47,9 @@ import {
   serializeIslandWorkshopRun,
   type IslandWorkshopPlacementPreview,
   type IslandWorkshopSavedRunV1,
+  type IslandWorkshopScoreRewardMilestone,
 } from '../../level-worlds/services/islandWorkshopGame';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
-import {
-  buildMinigameHudReward,
-  buildMinigameHudTickets,
-} from '../../level-worlds/services/minigameHudContract';
 import {
   createMinigameCelebrationQueue,
   dismissActiveMinigameCelebration,
@@ -60,7 +57,6 @@ import {
   stepMinigameNumberTween,
   type MinigameCelebrationQueue,
 } from '../../level-worlds/services/minigameJuice';
-import { MinigameHudStrip } from '../_shared/MinigameHudStrip';
 import { MinigameFxOverlay, type MinigameFxHandle } from '../_shared/MinigameFxOverlay';
 import './islandWorkshop.css';
 
@@ -109,6 +105,15 @@ const CLEAR_FX_MS = 420;
 const MONO_FLASH_MS = 900;
 const CELEBRATION_MS = 2200;
 const CONFETTI_PIECES = 18;
+
+function formatWorkshopPrize(reward: IslandWorkshopScoreRewardMilestone): string {
+  const parts: string[] = [];
+  if (reward.rewardDice > 0) parts.push(`+${reward.rewardDice} dice`);
+  if (reward.mysteryBoxes > 0) {
+    parts.push(`${reward.mysteryBoxes} mystery box${reward.mysteryBoxes === 1 ? '' : 'es'}`);
+  }
+  return parts.join(' · ');
+}
 
 function readStorage(key: string): string | null {
   try {
@@ -798,7 +803,10 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
   const constructionRatio = Math.min(1, constructionProgress / ISLAND_WORKSHOP_CONSTRUCTION_TARGET);
   const resultTier = useMemo(() => resolveIslandWorkshopResultTier(lastRunScore, lastRunLevel), [lastRunLevel, lastRunScore]);
   const canPlayAgain = canStartIslandWorkshopRun({ ticketsRemaining });
-  const runMilestones = getIslandWorkshopScoreRewardMilestones(runLevel);
+  const rewardTrack = useMemo(
+    () => resolveIslandWorkshopRewardTrack({ score, level: runLevel }),
+    [runLevel, score],
+  );
 
   const dragShape = drag ? getIslandWorkshopShape(drag.shapeId) : null;
   const selectedShapeId = selectedSlotIndex === null ? null : tray[selectedSlotIndex];
@@ -901,20 +909,57 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
 
       {phase === 'playing' && (
         <div className="island-workshop__play-area">
-          <MinigameHudStrip
-            hud={{
-              tickets: buildMinigameHudTickets({ count: ticketsRemaining, icon: '🧱', noun: 'blocks' }),
-              reward: buildMinigameHudReward({
-                points: score,
-                milestones: runMilestones.map((reward) => ({
-                  pointsRequired: reward.score,
-                  rewardLabel: `${reward.emoji} ${reward.label}`,
-                  // Score milestones auto-award on crossing, so passed == done.
-                  claimed: score >= reward.score,
-                })),
-              }),
-            }}
-          />
+          <section className="island-workshop__score-rewards" aria-label="Workshop prizes">
+            <div className="island-workshop__score-rewards-top">
+              <strong>Workshop prizes</strong>
+              <span className="island-workshop__blocks-left" aria-label={`${ticketsRemaining} material blocks left`}>
+                <span aria-hidden="true">🧱</span> {ticketsRemaining} blocks
+              </span>
+            </div>
+            {rewardTrack.current ? (
+              <div className="island-workshop__reward-window" key={rewardTrack.current.id}>
+                <article className="island-workshop__reward-card island-workshop__reward-card--current">
+                  <span className="island-workshop__reward-emoji" aria-hidden="true">{rewardTrack.current.emoji}</span>
+                  <div className="island-workshop__reward-copy">
+                    <span className="island-workshop__reward-kicker">Current prize</span>
+                    <strong>{rewardTrack.current.label}</strong>
+                    <small>{formatWorkshopPrize(rewardTrack.current)}</small>
+                  </div>
+                  <span className="island-workshop__reward-target">{rewardTrack.current.score}</span>
+                  <div
+                    className="island-workshop__reward-progress"
+                    role="progressbar"
+                    aria-label={`Progress to ${rewardTrack.current.label}`}
+                    aria-valuemin={rewardTrack.segmentStartScore}
+                    aria-valuemax={rewardTrack.current.score}
+                    aria-valuenow={score}
+                  >
+                    <span style={{ width: `${rewardTrack.segmentProgress * 100}%` }} />
+                  </div>
+                  <span className="island-workshop__reward-remaining">
+                    {rewardTrack.pointsRemaining} pts to go
+                  </span>
+                </article>
+                <div className="island-workshop__upcoming-prizes" aria-label="Next prizes">
+                  {rewardTrack.upcoming.map((reward, index) => (
+                    <article className="island-workshop__reward-card island-workshop__reward-card--next" key={reward.id}>
+                      <span className="island-workshop__reward-order">Next{index > 0 ? ` +${index}` : ''}</span>
+                      <span className="island-workshop__reward-emoji" aria-hidden="true">{reward.emoji}</span>
+                      <strong>{reward.label}</strong>
+                      <small>{formatWorkshopPrize(reward)}</small>
+                      <span className="island-workshop__reward-target">{reward.score}</span>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="island-workshop__reward-complete" role="status">
+                <span aria-hidden="true">🌟</span>
+                <strong>All Workshop prizes secured</strong>
+                <small>Keep building for your run score and the Beacon.</small>
+              </div>
+            )}
+          </section>
           <header className="island-workshop__hud">
             <div className="island-workshop__hud-stat">
               <span className="island-workshop__hud-label">Score</span>
@@ -924,8 +969,6 @@ export default function IslandWorkshopMinigame({ onComplete, launchConfig }: Isl
               <span className="island-workshop__hud-label">Streak</span>
               <span className="island-workshop__hud-value">{streak > 0 ? `🔥 ${streak}` : '—'}</span>
             </div>
-            {/* Bench level lived on the old rewards bar; keep it visible now
-                that the shared strip owns reward progress. */}
             <div className="island-workshop__hud-stat">
               <span className="island-workshop__hud-label">Bench</span>
               <span className="island-workshop__hud-value">Lv {runLevel}</span>

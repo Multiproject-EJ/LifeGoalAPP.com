@@ -1167,6 +1167,12 @@ html.platform-ipad .workspace-shell__menu-edge {
   pointer-events: auto;
 }
 
+/* Workshop has its own Save & Return control. Hide the redundant global exit
+   so it cannot cover the playable controls. */
+body:has(.arena-session-shell--workshop) .level-worlds-mobile-exit-overlay {
+  display: none;
+}
+
 @media (max-width: 720px) {
   .app--mobile-frame {
     padding: 0;
