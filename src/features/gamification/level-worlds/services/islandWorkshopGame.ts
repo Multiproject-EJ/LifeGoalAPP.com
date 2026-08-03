@@ -211,6 +211,72 @@ export function canPlaceIslandWorkshopShape(
   return cells.every((index) => board[index] === 0);
 }
 
+export interface IslandWorkshopPlacementPreview {
+  row: number;
+  col: number;
+  valid: boolean;
+  cells: number[];
+  wouldClearCells: number[];
+}
+
+/**
+ * Resolve the visual/interaction preview for either a drag anchor or a tapped
+ * bench cell. Keeping this in the rules service ensures every input method
+ * validates the exact same placement before `placeIslandWorkshopShape` runs.
+ */
+export function resolveIslandWorkshopPlacementPreview(options: {
+  board: IslandWorkshopBoard;
+  shapeId: string;
+  row: number;
+  col: number;
+}): IslandWorkshopPlacementPreview {
+  const shape = getIslandWorkshopShape(options.shapeId);
+  const cells = getIslandWorkshopPlacementCells(shape, options.row, options.col);
+  if (!cells) {
+    return {
+      row: options.row,
+      col: options.col,
+      valid: false,
+      cells: [],
+      wouldClearCells: [],
+    };
+  }
+
+  const valid = cells.every((index) => options.board[index] === 0);
+  if (!valid) {
+    return {
+      row: options.row,
+      col: options.col,
+      valid: false,
+      cells,
+      wouldClearCells: [],
+    };
+  }
+
+  const preview = [...options.board];
+  for (const index of cells) preview[index] = shape.tint;
+  const { rows, cols } = findIslandWorkshopCompletedLines(preview);
+  const wouldClear = new Set<number>();
+  for (const row of rows) {
+    for (let col = 0; col < ISLAND_WORKSHOP_GRID_SIZE; col += 1) {
+      wouldClear.add(row * ISLAND_WORKSHOP_GRID_SIZE + col);
+    }
+  }
+  for (const col of cols) {
+    for (let row = 0; row < ISLAND_WORKSHOP_GRID_SIZE; row += 1) {
+      wouldClear.add(row * ISLAND_WORKSHOP_GRID_SIZE + col);
+    }
+  }
+
+  return {
+    row: options.row,
+    col: options.col,
+    valid: true,
+    cells,
+    wouldClearCells: Array.from(wouldClear),
+  };
+}
+
 export function hasAnyIslandWorkshopPlacement(
   board: IslandWorkshopBoard,
   shape: IslandWorkshopShapeDef,
