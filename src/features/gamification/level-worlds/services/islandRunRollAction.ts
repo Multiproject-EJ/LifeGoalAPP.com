@@ -50,7 +50,8 @@
  *
  * Intentionally NOT in scope for this service (handled elsewhere or future slices):
  *  - Tile reward application (essence, reward-bar progress, hazard deduction,
- *    bonus-tile charge, encounter payouts)
+ *    encounter payouts). The traffic-light pass counter is the exception: it
+ *    is traversal state, so it is committed atomically with the roll.
  *  - Encounter/event logic
  *  - Sound / haptic effects
  *  - Animation state
@@ -85,6 +86,11 @@ import {
   resolveConcordRollProtection,
   type ConcordFragmentPickup,
 } from './islandRunConcordRollProtection';
+import {
+  applyTrafficLightPass,
+  TRAFFIC_LIGHT_TILE_INDEX,
+  type TrafficLightPassResult,
+} from './islandRunTrafficLightTile';
 import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragmentPlacements';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
@@ -217,6 +223,11 @@ export interface IslandRunRollActionResult {
    * possible fragment pickup but does not dispatch ordinary/special tile play.
    */
   ordinaryTileGameplayActive?: boolean;
+  /**
+   * Authoritative traffic-light transition for this traversal. Kept inside
+   * the roll transaction so a later full-record write cannot lose the pass.
+   */
+  trafficLightPass?: TrafficLightPassResult | null;
 }
 
 // ── per-user async mutex (defence-in-depth against concurrent rolls) ──────────
@@ -372,6 +383,12 @@ async function performRollAction(options: {
   const nextFirstSessionTutorialState = tutorialRollTotal === null
     ? lowDiceTutorialTarget ?? state.firstSessionTutorialState
     : state.firstSessionTutorialState;
+  const trafficLightPass = ordinaryTileGameplayActive && hopSequence.includes(TRAFFIC_LIGHT_TILE_INDEX)
+    ? applyTrafficLightPass({
+        bonusTileChargeByIsland: state.bonusTileChargeByIsland,
+        islandNumber: state.currentIslandNumber,
+      })
+    : null;
   const nextState = {
     ...state,
     runtimeVersion: newRuntimeVersion,
@@ -385,6 +402,7 @@ async function performRollAction(options: {
       : null,
     firstSessionTutorialState: nextFirstSessionTutorialState,
     concordRollProtectionState: concordProtection.state,
+    bonusTileChargeByIsland: trafficLightPass?.bonusTileChargeByIsland ?? state.bonusTileChargeByIsland,
   };
 
   // Await the write inside the mutex. Local-storage persistence is synchronous;
@@ -413,5 +431,6 @@ async function performRollAction(options: {
     landingKind,
     concordFragmentPickup: concordProtection.pickup,
     ordinaryTileGameplayActive,
+    trafficLightPass,
   };
 }

@@ -99,7 +99,12 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
             <span className="island-tile-traffic-light-sign__head" aria-hidden="true">
               {Array.from({ length: Math.min(3, trafficLightChargeTarget) }, (_, index) => {
                 const phase = index === 0 ? 'red' : index === 1 ? 'yellow' : 'green';
-                const isLit = trafficLightCharge >= Math.min(index + 1, trafficLightChargeTarget);
+                const threshold = index === 0
+                  ? 1
+                  : index === 1
+                    ? Math.ceil(trafficLightChargeTarget / 2)
+                    : trafficLightChargeTarget;
+                const isLit = trafficLightCharge >= threshold;
                 return <span key={phase} className={`island-tile-traffic-light-sign__lamp island-tile-traffic-light-sign__lamp--${phase} ${isLit ? 'island-tile-traffic-light-sign__lamp--lit' : ''}`.trim()} />;
               })}
             </span>

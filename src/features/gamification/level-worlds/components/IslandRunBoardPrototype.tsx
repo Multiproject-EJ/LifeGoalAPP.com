@@ -217,7 +217,6 @@ import {
   applyRewardBarState,
   applyRollResult,
   applyTrafficLightCoinFlipReward,
-  applyTrafficLightTilePass,
   syncCompletedStopsForIsland,
   applyTokenHopRewards,
   applyTechCollectionState,
@@ -6962,21 +6961,13 @@ export function IslandRunBoardPrototype({
         setPendingHopSequence(null);
 
         const ordinaryTileGameplayActive = rollResult.ordinaryTileGameplayActive !== false;
-        const trafficLightPassed = ordinaryTileGameplayActive
-          && Boolean(rollResult.hopSequence?.includes(TRAFFIC_LIGHT_TILE_INDEX));
+        const trafficLightPass = rollResult.trafficLightPass ?? null;
         let trafficLightUnlocked = false;
         let trafficLightChargeAfter = trafficLightCharge;
-        if (trafficLightPassed) {
-          const trafficResult = applyTrafficLightTilePass({
-            session,
-            client,
-            islandNumber,
-            triggerSource: 'traffic_light_tile_pass',
-          });
-          setRuntimeState(trafficResult.record);
-          trafficLightUnlocked = trafficResult.unlocked;
-          trafficLightChargeAfter = trafficResult.chargeAfter;
-          if (trafficResult.unlocked) {
+        if (trafficLightPass) {
+          trafficLightUnlocked = trafficLightPass.unlocked;
+          trafficLightChargeAfter = trafficLightPass.chargeAfter;
+          if (trafficLightPass.unlocked) {
             setTrafficLightCoinFlip({
               seed: (effectiveIslandNumber * 1009) + (rollIndexRef.current * 131) + currentIndex,
               reward: null,
@@ -6985,7 +6976,7 @@ export function IslandRunBoardPrototype({
             });
             setLandingText('🚦 Traffic light complete! Flip the coin for a mystery reward.');
           } else {
-            setLandingText(`🚦 Traffic light ${trafficResult.chargeAfter}/${TRAFFIC_LIGHT_CHARGE_TARGET} lit.`);
+            setLandingText(`🚦 Traffic light ${trafficLightPass.chargeAfter}/${TRAFFIC_LIGHT_CHARGE_TARGET} lit.`);
           }
         }
 

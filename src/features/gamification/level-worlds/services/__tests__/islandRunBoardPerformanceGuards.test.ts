@@ -206,6 +206,14 @@ export const islandRunBoardPerformanceGuardTests: TestCase[] = [
         'only the final meter pip may be green',
       );
       assert(
+        tileGrid.includes(': trafficLightChargeTarget;'),
+        'the large green lamp must also wait for the full target',
+      );
+      assert(
+        tileGrid.includes('? Math.ceil(trafficLightChargeTarget / 2)'),
+        'the yellow lamp should represent the middle of the charge cycle',
+      );
+      assert(
         !tileGrid.includes('trafficLightChargeTarget - 1'),
         'no second green traffic-light state may remain',
       );
