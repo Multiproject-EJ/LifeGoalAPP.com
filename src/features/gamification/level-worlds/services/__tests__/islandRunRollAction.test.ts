@@ -8,6 +8,7 @@ import {
   writeIslandRunGameStateRecord,
   type IslandRunGameStateRecord,
 } from '../islandRunGameStateStore';
+import { getTrafficLightCharge, TRAFFIC_LIGHT_TILE_INDEX } from '../islandRunTrafficLightTile';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const USER_ID = 'roll-action-test-user';
@@ -116,6 +117,49 @@ export const islandRunRollActionTests: TestCase[] = [
       assertEqual(result.status, 'ok', 'Should succeed with 2500 dice at ×200');
       assertEqual(result.diceCost, 200, '×200 cost = 1 × 200 = 200');
       assertEqual(result.newDicePool, 2_300, 'Pool should be 2500 - 200 = 2300');
+    },
+  },
+  {
+    name: 'traffic-light traversal charges atomically, unlocks once at 8, then starts a fresh cycle',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 5,
+        dicePool: 30,
+        tokenIndex: TRAFFIC_LIGHT_TILE_INDEX - 1,
+        currentIslandNumber: 2,
+        bonusTileChargeByIsland: { '2': { [TRAFFIC_LIGHT_TILE_INDEX]: 6 } },
+      });
+
+      const passSeven = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+      assertEqual(passSeven.trafficLightPass?.chargeAfter, 7, 'First traversal advances 6 → 7');
+      assertEqual(passSeven.trafficLightPass?.unlocked, false, '7/8 must not unlock the reward');
+      assertEqual(
+        getTrafficLightCharge(readIslandRunGameStateRecord(makeSession()).bonusTileChargeByIsland, 2),
+        7,
+        '7/8 is persisted in the same record as the roll',
+      );
+
+      seedState({ tokenIndex: TRAFFIC_LIGHT_TILE_INDEX - 1 });
+      const unlock = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+      assertEqual(unlock.trafficLightPass?.chargeAfter, 8, 'Next traversal reaches the final green light');
+      assertEqual(unlock.trafficLightPass?.unlocked, true, 'Only 8/8 unlocks the modal');
+      assertEqual(
+        getTrafficLightCharge(readIslandRunGameStateRecord(makeSession()).bonusTileChargeByIsland, 2),
+        0,
+        'Unlock resets the persisted counter',
+      );
+
+      seedState({ tokenIndex: TRAFFIC_LIGHT_TILE_INDEX - 1 });
+      const freshCycle = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+      assertEqual(freshCycle.trafficLightPass?.chargeAfter, 1, 'The pass after a reward starts again at red 1/8');
+      assertEqual(freshCycle.trafficLightPass?.unlocked, false, 'Fresh cycle does not reopen the reward');
     },
   },
   {
