@@ -326,6 +326,7 @@ Each island has **5 buildings**, one per stop. Buildings are **completely decoup
   - **Minigame tokens** (entry currency for the active timed event)
   - **Sticker fragments** (long-term collectibles)
 - Payouts rotate deterministically in the order above; see `REWARD_ROTATION` in `islandRunContractV2RewardBar.ts`. Exact quantities scale with the escalation ladder (§5A).
+- **Puzzle collection begins on Island 002.** Island 001 does not show the Sticker Album launcher and cannot award sticker/puzzle fragments from the reward bar or traffic-light mystery boxes. When Island 001 reaches the fragment slot in the reward rotation, that payout is replaced by Essence.
 - Reward bar tuning (fill rates, threshold counts, payout rates) is implementation-configurable but must preserve the payout-kind set above.
 
 ---

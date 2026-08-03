@@ -409,6 +409,29 @@ export const islandRunContractV2RewardBarTests: TestCase[] = [
     },
   },
   {
+    name: 'Island 001 replaces puzzle-piece reward slots with essence',
+    run: () => {
+      assertEqual(resolveNextRewardKind(3, 1), 'essence', 'Expected Island 001 to stay puzzle-free');
+      assertEqual(resolveNextRewardKind(3, 2), 'sticker_fragments', 'Expected puzzle collection to begin on Island 002');
+
+      const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;
+      const islandOneClaim = claimIslandRunContractV2RewardBar({
+        state: {
+          ...withEvent,
+          rewardBarProgress: resolveEscalatingThreshold(3),
+          rewardBarThreshold: resolveEscalatingThreshold(3),
+          rewardBarClaimCountInEvent: 3,
+          rewardBarEscalationTier: 3,
+        },
+        nowMs: 2_000,
+        islandNumber: 1,
+      });
+
+      assertEqual(islandOneClaim.payout?.rewardKind, 'essence', 'Expected Island 001 claim payout to be essence');
+      assertEqual(islandOneClaim.payout?.stickerFragments, 0, 'Expected no puzzle pieces from Island 001 reward bar');
+    },
+  },
+  {
     name: 'v2 on: claim payout has rewardKind and progressive amounts',
     run: () => {
       const withEvent = ensureIslandRunContractV2ActiveTimedEvent({ state: makeBaseState(), nowMs: 1_000 }).state;

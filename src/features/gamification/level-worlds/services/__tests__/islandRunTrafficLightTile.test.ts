@@ -66,6 +66,15 @@ export const islandRunTrafficLightTileTests: TestCase[] = [
     },
   },
   {
+    name: 'Island 001 traffic-light rewards never grant puzzle pieces',
+    run: () => {
+      for (let seed = 0; seed < 200; seed++) {
+        const reward = resolveTrafficLightCoinFlipReward({ seed, stickerFragments: 0, islandNumber: 1 });
+        assertEqual(reward.stickerFragments, 0, `Expected Island 001 to remain puzzle-free at seed ${seed}`);
+      }
+    },
+  },
+  {
     name: 'coin flip reward grants two or more puzzle pieces (overflow) when exactly one is missing',
     run: () => {
       let sawGrant = false;

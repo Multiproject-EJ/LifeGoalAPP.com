@@ -87,6 +87,7 @@ export async function executeIslandRunClaimRewardAction(options: {
   const { state: nextRewardBarSlice, payout } = claimIslandRunContractV2RewardBar({
     state,
     nowMs,
+    islandNumber: state.currentIslandNumber,
   });
 
   if (!payout) {

@@ -482,6 +482,7 @@ import {
 import {
   BASE_DICE_PER_ROLL,
   claimIslandRunContractV2RewardBar,
+  isPuzzleCollectionAvailableForIsland,
   resolveChainedRewardBarClaims,
   resolveNextRewardKind,
   REWARD_KIND_ICON,
@@ -5329,6 +5330,7 @@ export function IslandRunBoardPrototype({
       const reward = resolveTrafficLightCoinFlipReward({
         seed: current.seed,
         stickerFragments: runtimeStateRef.current.stickerProgress.fragments,
+        islandNumber: runtimeStateRef.current.currentIslandNumber,
       });
 
       playIslandRunSound('coin_flip');
@@ -6124,6 +6126,7 @@ export function IslandRunBoardPrototype({
     runtimeState,
     nowMs,
   });
+  const isPuzzleCollectionAvailable = isPuzzleCollectionAvailableForIsland(islandNumber);
   const diplomaticRewardChannelVisible = isDiplomaticRewardChannelVisible({
     currentIslandNumber: runtimeState.currentIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
@@ -6524,6 +6527,7 @@ export function IslandRunBoardPrototype({
     const chainResult = resolveChainedRewardBarClaims({
       state: options.state,
       nowMs,
+      islandNumber,
     });
 
     if (chainResult.payouts.length === 0) {
@@ -6586,7 +6590,7 @@ export function IslandRunBoardPrototype({
       triggerIslandRunHaptic('sticker_complete');
     }
     return true;
-  }, [client, session]);
+  }, [client, islandNumber, session]);
 
   const handleContractV2RewardBarClaim = () => {
     runContractV2RewardBarClaimCascade({
@@ -12037,7 +12041,7 @@ export function IslandRunBoardPrototype({
           <span className={`island-run-prototype__stat-chip island-run-prototype__level-chip${islandLevelFlash ? ' island-run-prototype__level-chip--levelup' : ''}`}>Lvl <strong>{islandNumber}</strong></span>
           <span className="island-run-prototype__stat-chip island-run-prototype__stat-chip--timer">⏱ <strong>{timerDisplay}</strong></span>
           {/* PR6: Sticker "one away" nudge — tiny pulse when player is 1 fragment from completing a sticker. */}
-          {runtimeState.stickerProgress.fragments === 4 && (
+          {isPuzzleCollectionAvailable && runtimeState.stickerProgress.fragments === 4 && (
             <span
               className="island-run-prototype__sticker-nudge"
               aria-live="polite"
@@ -12612,14 +12616,16 @@ export function IslandRunBoardPrototype({
                 </span>
               </button>
             )}
-            <button
-              type="button"
-              className="island-run-board__sticker-album-btn"
-              aria-label="Sticker album"
-              onClick={() => setShowStickerAlbumDialog(true)}
-            >
-              🧩 {runtimeState.stickerProgress.fragments}/5
-            </button>
+            {isPuzzleCollectionAvailable ? (
+              <button
+                type="button"
+                className="island-run-board__sticker-album-btn"
+                aria-label="Sticker album"
+                onClick={() => setShowStickerAlbumDialog(true)}
+              >
+                🧩 {runtimeState.stickerProgress.fragments}/5
+              </button>
+            ) : null}
             {onOpenDailySpinWheel ? (
               <button
                 type="button"
@@ -14810,7 +14816,7 @@ export function IslandRunBoardPrototype({
       )}
 
       {/* ── Sticker album dialog ────────────────────────────────────────── */}
-      {showStickerAlbumDialog && (
+      {showStickerAlbumDialog && isPuzzleCollectionAvailable && (
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label="Sticker album">
             <h3 className="island-stop-modal__title">🧩 Sticker Album</h3>

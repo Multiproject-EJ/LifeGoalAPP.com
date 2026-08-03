@@ -22,7 +22,8 @@ export function formatIslandRunSpinTokenReward(params: {
 
 export function resolveIslandRunContractV2RewardHudState(params: {
   islandRunContractV2Enabled: boolean;
-  runtimeState: Pick<IslandRunRuntimeState, 'activeTimedEvent' | 'rewardBarProgress' | 'rewardBarThreshold' | 'rewardBarEscalationTier' | 'rewardBarClaimCountInEvent'>;
+  runtimeState: Pick<IslandRunRuntimeState, 'activeTimedEvent' | 'rewardBarProgress' | 'rewardBarThreshold' | 'rewardBarEscalationTier' | 'rewardBarClaimCountInEvent'>
+    & Partial<Pick<IslandRunRuntimeState, 'currentIslandNumber'>>;
   nowMs: number;
 }): {
   activeTimedEvent: IslandRunRuntimeState['activeTimedEvent'];
@@ -43,9 +44,12 @@ export function resolveIslandRunContractV2RewardHudState(params: {
     ? Math.max(0, activeTimedEvent.expiresAtMs - params.nowMs)
     : 0;
   const claimCount = Math.max(0, Math.floor(params.runtimeState.rewardBarClaimCountInEvent));
-  const nextRewardKind = resolveNextRewardKind(claimCount);
+  const nextRewardKind = resolveNextRewardKind(claimCount, params.runtimeState.currentIslandNumber);
   const nextRewardIcon = REWARD_KIND_ICON[nextRewardKind];
-  const nextRewardPayout = resolveRewardBarClaimPayoutPreview({ state: params.runtimeState });
+  const nextRewardPayout = resolveRewardBarClaimPayoutPreview({
+    state: params.runtimeState,
+    islandNumber: params.runtimeState.currentIslandNumber,
+  });
   const nextRewardAmount = (() => {
     switch (nextRewardPayout.rewardKind) {
       case 'dice':
