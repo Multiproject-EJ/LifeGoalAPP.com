@@ -561,7 +561,11 @@ import {
 } from '../services/islandRunShooterControllerBridge';
 import { emitShooterControllerLifecycleTelemetry } from '../services/islandRunShooterControllerTelemetry';
 import { BuildModalV2 } from './BuildModalV2';
-import { deriveBuildModalV2ViewModel } from '../services/islandRunBuildModalV2ViewModel';
+import {
+  deriveBuildModalV2ViewModel,
+  resolveBuildLevelCompletionPresentation,
+  type BuildLevelCompletionPresentation,
+} from '../services/islandRunBuildModalV2ViewModel';
 import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWinCelebrationModal';
 import DemoWaitlistModal from './DemoWaitlistModal';
 import '../../../../styles/demo-waitlist-modal.css';
@@ -2318,6 +2322,7 @@ export function IslandRunBoardPrototype({
   const [hasVisitedWebTreat, setHasVisitedWebTreat] = useState(() => hasVisitedLandingPageTreat());
   const [showMarketPanel, setShowMarketPanel] = useState(false);
   const [showBuildPanel, setShowBuildPanel] = useState(false);
+  const [buildLevelCompletion, setBuildLevelCompletion] = useState<BuildLevelCompletionPresentation | null>(null);
   const [buildDiscountExpiresAtMs, setBuildDiscountExpiresAtMs] = useState<number | null>(null);
   const [showRewardDetailsModal, setShowRewardDetailsModal] = useState(false);
   const [showEggManiaModal, setShowEggManiaModal] = useState(false);
@@ -9570,6 +9575,16 @@ export function IslandRunBoardPrototype({
       const stopEntry = islandStopPlan[stopIndex];
       const stopLabel = stopEntry?.title ?? stopEntry?.stopId ?? `Stop ${stopIndex + 1}`;
       const leveledUp = nextBuildState.buildLevel > currentBuildState.buildLevel;
+      triggerIslandRunHaptic(leveledUp ? 'build_level_complete' : 'build_part');
+
+      const completionPresentation = resolveBuildLevelCompletionPresentation({
+        title: stopLabel,
+        previousBuildLevel: currentBuildState.buildLevel,
+        nextBuildLevel: nextBuildState.buildLevel,
+      });
+      if (completionPresentation && nextRuntimeState.firstSessionTutorialState !== 'hatchery_l1_built') {
+        setBuildLevelCompletion(completionPresentation);
+      }
 
       if (leveledUp && nextBuildState.buildLevel >= MAX_BUILD_LEVEL) {
         setLandingText(`🏰 ${stopLabel} fully built! Level ${MAX_BUILD_LEVEL} complete.`);
@@ -11449,6 +11464,7 @@ export function IslandRunBoardPrototype({
       ticketPromptStopId ||
       lockedStopInfoStopId ||
       showBuildPanel ||
+      buildLevelCompletion ||
       showClaimModal ||
       showEggReadyBanner ||
       !hasDismissedEntryAudioModal ||
@@ -11492,6 +11508,7 @@ export function IslandRunBoardPrototype({
       ticketPromptStopId ||
       lockedStopInfoStopId ||
       showBuildPanel ||
+      buildLevelCompletion ||
       showClaimModal ||
       showEggReadyBanner ||
       !hasDismissedEntryAudioModal ||
@@ -15056,6 +15073,35 @@ export function IslandRunBoardPrototype({
           discountExpiresAtMs={buildDiscountExpiresAtMs}
           onBuildActivePart={handleBuildCardTap}
         />
+      )}
+
+      {buildLevelCompletion && (
+        <div className="island-run-overlay-root island-stop-modal-backdrop bm2-level-complete" role="presentation">
+          <section
+            className="bm2-level-complete__card"
+            role="dialog"
+            aria-modal="true"
+            aria-label={buildLevelCompletion.heading}
+            aria-live="assertive"
+          >
+            <div className="bm2-level-complete__glow" aria-hidden="true" />
+            <span className="bm2-level-complete__icon" aria-hidden="true">
+              {buildLevelCompletion.isFullyBuilt ? '🏰' : '✨'}
+            </span>
+            <p className="bm2-level-complete__eyebrow">
+              {buildLevelCompletion.isFullyBuilt ? 'Landmark restored' : `Level ${buildLevelCompletion.level} built`}
+            </p>
+            <h2>{buildLevelCompletion.heading}</h2>
+            <p>{buildLevelCompletion.body}</p>
+            <button
+              type="button"
+              className="bm2-level-complete__continue"
+              onClick={() => setBuildLevelCompletion(null)}
+            >
+              {buildLevelCompletion.isFullyBuilt ? 'See the restored landmark' : 'Build the next level'}
+            </button>
+          </section>
+        </div>
       )}
 
       {showPerfectCompanionOnboardingHint && (

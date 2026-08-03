@@ -1,4 +1,8 @@
-import { deriveBuildModalV2ViewModel, resolveBuildModalV2LandmarkArt } from '../islandRunBuildModalV2ViewModel';
+import {
+  deriveBuildModalV2ViewModel,
+  resolveBuildLevelCompletionPresentation,
+  resolveBuildModalV2LandmarkArt,
+} from '../islandRunBuildModalV2ViewModel';
 import { normalizeIslandArtManifest, type IslandArtManifest } from '../islandArtManifest';
 import type { IslandRunContractV2BuildState } from '../islandRunContractV2EssenceBuild';
 import { assert, assertEqual, type TestCase } from './testHarness';
@@ -36,6 +40,18 @@ const manifest = normalizeIslandArtManifest({
 }, 1)!;
 
 export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
+  {
+    name: 'level completion presentation only appears when a landmark advances',
+    run: () => {
+      assertEqual(resolveBuildLevelCompletionPresentation({ title: 'Hatchery', previousBuildLevel: 0, nextBuildLevel: 0 }), null, 'Partial funding should not celebrate a level');
+      const upgraded = resolveBuildLevelCompletionPresentation({ title: 'Hatchery', previousBuildLevel: 0, nextBuildLevel: 1 });
+      assertEqual(upgraded?.heading, 'Hatchery Level 1 complete!', 'Level completion should name the completed level');
+      assertEqual(upgraded?.isFullyBuilt, false, 'Level 1 should not be reported as fully built');
+      const restored = resolveBuildLevelCompletionPresentation({ title: 'Hatchery', previousBuildLevel: 2, nextBuildLevel: 3 });
+      assertEqual(restored?.heading, 'Hatchery fully restored!', 'Final level should use the full restoration message');
+      assertEqual(restored?.isFullyBuilt, true, 'Level 3 should be reported as fully built');
+    },
+  },
   {
     name: 'focused view model resolves sequential active landmark states',
     run: () => {

@@ -54,8 +54,39 @@ export type BuildModalV2ViewModel = {
   levelRail: [BuildModalV2LevelRailItemViewModel, BuildModalV2LevelRailItemViewModel, BuildModalV2LevelRailItemViewModel];
 };
 
+export type BuildLevelCompletionPresentation = {
+  title: string;
+  level: number;
+  heading: string;
+  body: string;
+  isFullyBuilt: boolean;
+};
+
 const STOP_ID_BY_INDEX: readonly IslandRunSequentialBuildStopId[] = ['hatchery', 'habit', 'mystery', 'wisdom', 'boss'];
 const BATTLE_CENTER_SCENERY_ID = 'battle-center';
+
+export function resolveBuildLevelCompletionPresentation(options: {
+  title: string;
+  previousBuildLevel: number;
+  nextBuildLevel: number;
+}): BuildLevelCompletionPresentation | null {
+  const previousBuildLevel = Math.max(0, Math.floor(options.previousBuildLevel));
+  const nextBuildLevel = Math.max(0, Math.floor(options.nextBuildLevel));
+  if (nextBuildLevel <= previousBuildLevel) return null;
+
+  const isFullyBuilt = nextBuildLevel >= MAX_BUILD_LEVEL;
+  return {
+    title: options.title,
+    level: nextBuildLevel,
+    heading: isFullyBuilt
+      ? `${options.title} fully restored!`
+      : `${options.title} Level ${nextBuildLevel} complete!`,
+    body: isFullyBuilt
+      ? 'Every construction stage is complete. This landmark is shining at full strength.'
+      : `The landmark has grown. Level ${nextBuildLevel + 1} is now ready to build.`,
+    isFullyBuilt,
+  };
+}
 
 export function deriveBuildModalV2ViewModel(options: {
   stopBuildStateByIndex: ReadonlyArray<IslandRunContractV2BuildState | null | undefined>;

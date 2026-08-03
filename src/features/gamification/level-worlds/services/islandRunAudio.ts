@@ -73,6 +73,8 @@ export type IslandRunHapticEvent =
   | 'stop_land'
   | 'island_travel'
   | 'reward_claim'
+  | 'build_part'
+  | 'build_level_complete'
   // M10B: hatchery + market haptics
   | 'egg_set'
   | 'egg_open'
@@ -221,6 +223,8 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
   stop_land: [20, 40, 20],
   island_travel: [30, 50, 30],
   reward_claim: [20, 30, 20, 30, 20],
+  build_part: [18],
+  build_level_complete: [24, 32, 24, 48, 42],
   // M10B
   egg_set: [25],
   egg_open: [20, 40, 20, 40, 20],
