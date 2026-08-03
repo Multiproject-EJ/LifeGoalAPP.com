@@ -235,6 +235,12 @@
     transform: translateX(-50%);
   }
 
+  [data-theme='first-light-kingdom']
+    .mobile-habit-home
+    .habit-checklist-card__head-actions {
+    border-top: 0;
+  }
+
   [data-theme='first-light-kingdom'] .habit-checklist-card__date-text,
   [data-theme='first-light-kingdom'] .habit-checklist-card__date-year {
     color: #071f45;
