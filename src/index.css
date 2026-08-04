@@ -20797,6 +20797,28 @@ body:has(.arena-session-shell--workshop) .level-worlds-mobile-exit-overlay {
   transform: none;
 }
 
+/* Standard (non-controller) footer: the selected tab icon reads ~10% larger so
+   the active destination is legible at a glance. Transform-only so the row
+   layout stays fixed while the icon grows. The controller skin keeps its own
+   tightly bounded icon sizing and is intentionally excluded. */
+.mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+  .mobile-footer-nav__icon {
+  transition: transform 0.2s ease;
+}
+
+.mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+  .mobile-footer-nav__button--active
+  .mobile-footer-nav__icon {
+  transform: scale(1.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+    .mobile-footer-nav__icon {
+    transition: none;
+  }
+}
+
 .mobile-footer-nav__shield-icon {
   width: 1.75rem;
   height: 1.75rem;
