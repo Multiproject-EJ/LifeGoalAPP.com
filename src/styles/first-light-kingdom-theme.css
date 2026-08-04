@@ -1034,6 +1034,7 @@
   z-index: 1;
   margin: 0 auto 0.62rem;
   width: min(100%, 46rem);
+  animation: first-light-actions-heading-arrive 420ms cubic-bezier(0.22, 1, 0.36, 1) 40ms backwards;
 }
 
 [data-theme='first-light-kingdom']
@@ -1072,6 +1073,52 @@
 
 [data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-actions {
   gap: clamp(0.48rem, 2.1vw, 0.68rem);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-row {
+  animation: first-light-actions-card-drop 620ms cubic-bezier(0.2, 0.82, 0.24, 1.12) backwards;
+  transform-origin: 50% 0;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-row:nth-child(1) {
+  animation-delay: 90ms;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-row:nth-child(2) {
+  animation-delay: 165ms;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-row:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+@keyframes first-light-actions-heading-arrive {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -0.7rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes first-light-actions-card-drop {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -1.75rem, 0) scale(0.985);
+  }
+  64% {
+    opacity: 1;
+    transform: translate3d(0, 0.22rem, 0) scale(1.003);
+  }
+  82% {
+    transform: translate3d(0, -0.07rem, 0) scale(0.999);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
 }
 
 [data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button {
@@ -1349,6 +1396,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  [data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__header--launcher,
+  [data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-row {
+    animation: none;
+  }
+
   [data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button {
     transition: none;
   }
@@ -1435,6 +1487,51 @@
   padding: 0.85rem 0.5rem;
   color: #0c2a52;
   isolation: isolate;
+  animation: first-light-score-card-arrive 560ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  transform-origin: 50% 58%;
+}
+
+[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(3) {
+  animation-name: first-light-score-hero-arrive;
+  animation-delay: 120ms;
+  animation-duration: 650ms;
+}
+
+[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(4) { animation-delay: 210ms; }
+[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(6) { animation-delay: 265ms; }
+[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(1) { animation-delay: 325ms; }
+[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(5) { animation-delay: 380ms; }
+[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(2) { animation-delay: 435ms; }
+[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(7) { animation-delay: 490ms; }
+
+@keyframes first-light-score-hero-arrive {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 1.75rem, 0) scale(0.965);
+  }
+  72% {
+    opacity: 1;
+    transform: translate3d(0, -0.12rem, 0) scale(1.004);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes first-light-score-card-arrive {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 1.15rem, 0) scale(0.982);
+  }
+  76% {
+    opacity: 1;
+    transform: translate3d(0, -0.08rem, 0) scale(1.002);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
 }
 
 [data-theme='first-light-kingdom'] .score-tab__hub-card:hover,
@@ -1574,6 +1671,12 @@
 [data-theme='first-light-kingdom'] .score-tab__hub-card.future-feature-card--seen:nth-child(6)::after,
 [data-theme='first-light-kingdom'] .score-tab__hub-card.future-feature-card--voted:nth-child(6)::after {
   content: 'Open';
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='first-light-kingdom'] .score-tab__hub-card {
+    animation: none;
+  }
 }
 
 /* Energy / Sanctuary */
