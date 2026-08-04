@@ -1365,10 +1365,19 @@
     url('/assets/themes/first-light-kingdom/today/today-sky-background.webp') center top / cover fixed;
 }
 
+[data-theme='first-light-kingdom'] .workspace-stage:has(.score-tab),
+[data-theme='first-light-kingdom'] .workspace-content:has(.score-tab) {
+  background:
+    radial-gradient(circle at 50% 7%, rgba(255, 252, 239, 0.92), transparent 31%),
+    radial-gradient(circle at 82% 8%, rgba(224, 181, 94, 0.22), transparent 27%),
+    linear-gradient(180deg, rgba(255, 248, 233, 0.5), rgba(255, 253, 247, 0.86)),
+    url('/assets/themes/first-light-kingdom/today/today-sky-background.webp') center top / cover fixed;
+}
+
 [data-theme='first-light-kingdom'] .score-tab {
   container-type: inline-size;
-  gap: 0.8rem;
-  padding: 0.3rem clamp(0.3rem, 2vw, 0.6rem) 7.5rem;
+  gap: 0.95rem;
+  padding: 0.3rem clamp(0.3rem, 2vw, 0.6rem) 5.25rem;
   color: #0d2445;
 }
 
@@ -1405,21 +1414,24 @@
 
 [data-theme='first-light-kingdom'] .score-tab__hub {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.72rem;
+  gap: 0.85rem 0.78rem;
 }
 
 [data-theme='first-light-kingdom'] .score-tab__hub-card {
   position: relative;
-  min-height: 12.25rem;
+  min-height: 16.4rem;
   overflow: hidden;
   justify-content: flex-start;
-  border: 1px solid rgba(183, 139, 59, 0.56);
-  border-radius: 24px;
-  background-color: rgba(255, 253, 246, 0.94);
-  background-position: center 34%;
+  border: 1.5px solid rgba(183, 139, 59, 0.62);
+  border-radius: 23px;
+  background-color: rgba(255, 253, 246, 0.98);
+  background-position: center calc(50% - 2.05rem);
   background-repeat: no-repeat;
-  background-size: 100% auto;
-  box-shadow: 0 10px 23px rgba(38, 57, 77, 0.13), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  background-size: auto calc(100% - 4.5rem);
+  box-shadow:
+    0 13px 28px rgba(38, 57, 77, 0.16),
+    0 2px 0 rgba(255, 255, 255, 0.96) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.72) inset;
   padding: 0.85rem 0.5rem;
   color: #0c2a52;
   isolation: isolate;
@@ -1434,11 +1446,11 @@
 
 [data-theme='first-light-kingdom'] .score-tab__hub-card:not(.score-tab__hub-card--full)::before {
   position: absolute;
-  left: 0.65rem;
-  bottom: 0.55rem;
-  z-index: 2;
+  left: 0.62rem;
+  bottom: 0.62rem;
+  z-index: 4;
   display: grid;
-  width: 2.15rem;
+  width: 2.35rem;
   aspect-ratio: 1;
   place-items: center;
   border: 1px solid rgba(133, 87, 24, 0.6);
@@ -1452,16 +1464,33 @@
 
 [data-theme='first-light-kingdom'] .score-tab__hub-card:not(.score-tab__hub-card--full)::after {
   position: absolute;
-  right: 0.62rem;
-  bottom: 0.8rem;
-  z-index: 2;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  display: grid;
+  min-height: 5.4rem;
+  padding: 2.55rem 0.6rem 0.72rem 3.3rem;
+  place-items: end center;
+  border: 0;
+  border-radius: 0 0 22px 22px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 253, 246, 0) 0%,
+      rgba(255, 253, 246, 0.62) 42%,
+      rgba(255, 253, 246, 0.94) 72%,
+      rgba(255, 253, 246, 1) 100%
+    );
+  box-shadow: none;
   color: #183658;
   content: 'Keep playing';
   font-family: 'EB Garamond', Georgia, serif;
-  font-size: 0.74rem;
+  font-size: clamp(0.64rem, 2.8cqw, 0.72rem);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 [data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(1) { order: 4; background-image: url('/assets/themes/first-light-kingdom/score/player-shop.webp'); }
@@ -1471,7 +1500,7 @@
 [data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(3) {
   order: 1;
   min-height: 0;
-  aspect-ratio: 1.91 / 1;
+  aspect-ratio: 1.72 / 1;
   border: 0;
   background-image: url('/assets/themes/first-light-kingdom/score/collections.webp');
   background-position: center;
@@ -1501,24 +1530,51 @@
   z-index: 3;
   display: grid;
   width: 100%;
-  min-height: 4rem;
-  padding: 0.45rem 0.55rem 0.55rem;
-  place-items: center;
-  border-bottom: 1px solid rgba(183, 139, 59, 0.18);
+  min-height: 4.9rem;
+  padding: 0.8rem 0.55rem 1.55rem;
+  place-items: start center;
+  border-bottom: 0;
   background:
-    linear-gradient(180deg, rgba(255, 254, 250, 1) 0%, rgba(255, 253, 246, 0.98) 70%, rgba(255, 253, 246, 0.9) 100%);
+    linear-gradient(
+      180deg,
+      rgba(255, 254, 250, 0.99) 0%,
+      rgba(255, 253, 246, 0.96) 42%,
+      rgba(253, 247, 231, 0.72) 72%,
+      rgba(253, 247, 231, 0) 100%
+    );
   color: #0c2a52;
   font-family: 'EB Garamond', Georgia, serif;
-  font-size: clamp(0.78rem, 4.6cqw, 1.18rem);
-  font-weight: 600;
-  letter-spacing: 0.015em;
+  font-size: clamp(0.92rem, 5cqw, 1.25rem);
+  font-weight: 650;
+  letter-spacing: 0.025em;
   line-height: 1;
   text-align: center;
   text-shadow: 0 1px 0 #fff;
+  text-transform: uppercase;
 }
 
 [data-theme='first-light-kingdom'] .score-tab__hub-card.future-feature-card--seen > *,
 [data-theme='first-light-kingdom'] .score-tab__hub-card.future-feature-card--voted > * { filter: none; opacity: 1; }
+
+[data-theme='first-light-kingdom'] .score-tab__hub-card.future-feature-card--seen:not(.score-tab__hub-card--full)::after,
+[data-theme='first-light-kingdom'] .score-tab__hub-card.future-feature-card--voted:not(.score-tab__hub-card--full)::after {
+  inset: auto 0 0;
+  border-radius: 0 0 22px 22px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 253, 246, 0) 0%,
+      rgba(255, 253, 246, 0.62) 42%,
+      rgba(255, 253, 246, 0.94) 72%,
+      rgba(255, 253, 246, 1) 100%
+    );
+  content: 'Keep playing';
+}
+
+[data-theme='first-light-kingdom'] .score-tab__hub-card.future-feature-card--seen:nth-child(6)::after,
+[data-theme='first-light-kingdom'] .score-tab__hub-card.future-feature-card--voted:nth-child(6)::after {
+  content: 'Open';
+}
 
 /* Energy / Sanctuary */
 [data-theme='first-light-kingdom'] .breathing-space--first-light-sanctuary {
