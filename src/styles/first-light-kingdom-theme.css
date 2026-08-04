@@ -1494,14 +1494,14 @@
 [data-theme='first-light-kingdom'] .score-tab__hub-card .feature-status-badge,
 [data-theme='first-light-kingdom'] .score-tab__hub-card .future-feature-card__saved-label { display: none; }
 
-[data-theme='first-light-kingdom'] .score-tab__hub-card .score-tab__hub-title {
+[data-theme='first-light-kingdom'] .score-tab__hub-card:not(.score-tab__hub-card--full) .score-tab__hub-title {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 3;
   display: grid;
   width: 100%;
-  min-height: 3rem;
+  min-height: 4rem;
   padding: 0.45rem 0.55rem 0.55rem;
   place-items: center;
   border-bottom: 1px solid rgba(183, 139, 59, 0.18);
