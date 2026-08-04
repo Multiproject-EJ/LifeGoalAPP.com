@@ -91,6 +91,15 @@ const SCORE_FUTURE_FEATURE_IDS: FeatureAvailabilityId[] = [
   'score.stickersGallery',
 ];
 
+const SCORE_FEATURE_UNLOCK_ISLAND: Partial<Record<FeatureAvailabilityId, number>> = {
+  'score.achievements': 3,
+  'score.leaderboard': 4,
+  'score.playerShop': 5,
+  'score.zenGarden': 6,
+  'score.garage': 8,
+  'score.bank': 10,
+};
+
 interface ScoreTabProps {
   session: Session | null;
   profile: GamificationProfile | null;
@@ -882,6 +891,7 @@ export function ScoreTab({
           <button
             type="button"
             className="score-tab__hub-card score-tab__hub-card--full"
+            aria-label="Collections, open"
             onClick={() => handleHubCardClick('score.collections', 'Collections', () => {
               handleTabChange('collections');
             })}
@@ -1866,7 +1876,8 @@ export function ScoreTab({
       )}
 
       {previewFeature ? (
-        <FeaturePreviewOverlay
+        <ScoreFeaturePreviewOverlay
+          session={session}
           featureId={previewFeature.id}
           label={previewFeature.label}
           variant={previewFeature.variant}
@@ -1875,6 +1886,93 @@ export function ScoreTab({
         />
       ) : null}
     </section>
+  );
+}
+
+function ScoreFeaturePreviewOverlay({
+  session,
+  featureId,
+  label,
+  variant,
+  notImplementedBody,
+  onClose,
+}: {
+  session: Session | null;
+  featureId: FeatureAvailabilityId;
+  label: string;
+  variant?: 'preview' | 'notImplemented';
+  notImplementedBody: string;
+  onClose: () => void;
+}) {
+  const unlockIsland = SCORE_FEATURE_UNLOCK_ISLAND[featureId];
+
+  if (!unlockIsland || variant === 'notImplemented') {
+    return (
+      <FeaturePreviewOverlay
+        featureId={featureId}
+        label={label}
+        variant={variant}
+        notImplementedBody={notImplementedBody}
+        onClose={onClose}
+      />
+    );
+  }
+
+  if (!session) {
+    return (
+      <FeaturePreviewOverlay
+        featureId={featureId}
+        label={label}
+        progressionUnlock={{
+          currentIsland: 1,
+          unlockIsland,
+          eyebrow: 'Legacy discovered',
+          body: 'Keep building your island to open this part of Legacy Hall.',
+        }}
+        onClose={onClose}
+      />
+    );
+  }
+
+  return (
+    <ScoreFeaturePreviewOverlayWithState
+      session={session}
+      featureId={featureId}
+      label={label}
+      unlockIsland={unlockIsland}
+      onClose={onClose}
+    />
+  );
+}
+
+function ScoreFeaturePreviewOverlayWithState({
+  session,
+  featureId,
+  label,
+  unlockIsland,
+  onClose,
+}: {
+  session: Session;
+  featureId: FeatureAvailabilityId;
+  label: string;
+  unlockIsland: number;
+  onClose: () => void;
+}) {
+  const { state } = useIslandRunState(session, null);
+  const isProgressionLocked = state.currentIslandNumber < unlockIsland;
+
+  return (
+    <FeaturePreviewOverlay
+      featureId={featureId}
+      label={label}
+      progressionUnlock={isProgressionLocked ? {
+        currentIsland: state.currentIslandNumber,
+        unlockIsland,
+        eyebrow: 'Legacy discovered',
+        body: 'Keep building your island to open this part of Legacy Hall.',
+      } : undefined}
+      onClose={onClose}
+    />
   );
 }
 

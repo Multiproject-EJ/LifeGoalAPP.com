@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { DEMO_FEATURE_LABEL, getFeatureAvailability, type FeatureAvailabilityId } from '../config/featureAvailability';
 import { upsertFeatureVote, type FeatureVoteState } from '../services/featureVotes';
 import { markFutureFeatureSeen, notifyFutureFeatureVoteSaved } from '../services/futureFeatureEngagement';
@@ -18,6 +19,12 @@ type FeaturePreviewOverlayProps = {
   statusLabelOverride?: string;
   voteLabel?: string;
   voteConfirmation?: string;
+  progressionUnlock?: {
+    currentIsland: number;
+    unlockIsland: number;
+    eyebrow?: string;
+    body?: string;
+  };
   onClose: () => void;
 };
 
@@ -55,6 +62,7 @@ export function FeaturePreviewOverlay({
   statusLabelOverride = DEMO_FEATURE_LABEL,
   voteLabel = 'Shape this feature',
   voteConfirmation = 'Thanks — your feedback helps shape the HabitGame roadmap.',
+  progressionUnlock,
   onClose,
 }: FeaturePreviewOverlayProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -74,6 +82,12 @@ export function FeaturePreviewOverlay({
       : featureAvailability.shortPitch ?? body;
   const previewScreenshots = featureAvailability.previewScreenshots ?? [];
   const [activeScreenshot, setActiveScreenshot] = useState<number | null>(null);
+  const isProgressionUnlock = Boolean(progressionUnlock);
+  const currentIsland = Math.max(1, Math.trunc(progressionUnlock?.currentIsland ?? 1));
+  const unlockIsland = Math.max(currentIsland, Math.trunc(progressionUnlock?.unlockIsland ?? currentIsland));
+  const unlockProgress = unlockIsland <= 1
+    ? 100
+    : Math.min(100, Math.max(0, ((currentIsland - 1) / (unlockIsland - 1)) * 100));
 
   useEffect(() => {
     markFutureFeatureSeen(featureId);
@@ -119,9 +133,9 @@ export function FeaturePreviewOverlay({
     notifyFutureFeatureVoteSaved(featureId);
   };
 
-  return (
+  const overlay = (
     <div
-      className="feature-preview-overlay"
+      className={`feature-preview-overlay${isProgressionUnlock ? ' feature-preview-overlay--progression' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-label={`${label} preview`}
@@ -131,6 +145,9 @@ export function FeaturePreviewOverlay({
         onClick={onClose}
       />
       <div className="feature-preview-overlay__panel">
+        {isProgressionUnlock ? (
+          <div className="feature-preview-overlay__progression-art" aria-hidden="true" />
+        ) : null}
         <div className="feature-preview-overlay__spark-field" aria-hidden="true">
           <span>✦</span><span>✧</span><span>✦</span><span>·</span><span>✧</span>
         </div>
@@ -140,22 +157,36 @@ export function FeaturePreviewOverlay({
           <span className="feature-preview-overlay__unlock-lock">🔒</span>
         </div>
         <div className="feature-preview-overlay__hero-copy">
-          <p className="feature-preview-overlay__eyebrow">Play to unlock</p>
-          <div className="feature-preview-overlay__badge-row">
-            <span
-              className="feature-status-badge feature-status-badge--preview"
-              aria-label={`Feature status: ${statusLabel}`}
-            >
-              {statusLabel}
-            </span>
-          </div>
+          <p className="feature-preview-overlay__eyebrow">
+            {progressionUnlock?.eyebrow ?? 'Play to unlock'}
+          </p>
+          {!isProgressionUnlock ? (
+            <div className="feature-preview-overlay__badge-row">
+              <span
+                className="feature-status-badge feature-status-badge--preview"
+                aria-label={`Feature status: ${statusLabel}`}
+              >
+                {statusLabel}
+              </span>
+            </div>
+          ) : null}
           <h2 className="feature-preview-overlay__title">{label}</h2>
           <p className="feature-preview-overlay__body">
-            {featurePitch}
+            {progressionUnlock?.body ?? featurePitch}
           </p>
         </div>
 
-        {!isNotImplemented ? (
+        {isProgressionUnlock ? (
+          <div className="feature-preview-overlay__island-progress" aria-label={`Island ${currentIsland} of ${unlockIsland}`}>
+            <div className="feature-preview-overlay__island-progress-labels">
+              <span>Island {currentIsland}</span>
+              <span>Island {unlockIsland}</span>
+            </div>
+            <div className="feature-preview-overlay__island-progress-track" aria-hidden="true">
+              <span style={{ width: `${unlockProgress}%` }} />
+            </div>
+          </div>
+        ) : !isNotImplemented ? (
           <div className="feature-preview-overlay__unlock-path" aria-label="Feature unlock path">
             <div className="feature-preview-overlay__unlock-step is-complete">
               <span aria-hidden="true">✓</span>
@@ -175,7 +206,9 @@ export function FeaturePreviewOverlay({
         ) : null}
 
         <p className="feature-preview-overlay__unlock-note">
-          {isNotImplemented
+          {isProgressionUnlock
+            ? `Keep building your island to awaken ${label}.`
+            : isNotImplemented
             ? notImplementedBody
             : 'Continue your island journey. When this release path is ready, your play will lead you back here.'}
         </p>
@@ -194,7 +227,15 @@ export function FeaturePreviewOverlay({
             ))}
           </div>
         ) : null}
-        {!isNotImplemented ? (
+        {isProgressionUnlock ? (
+          <button
+            type="button"
+            className="feature-preview-overlay__vote-btn"
+            onClick={onClose}
+          >
+            Keep playing
+          </button>
+        ) : !isNotImplemented ? (
           <>
             <button
               type="button"
@@ -337,4 +378,6 @@ export function FeaturePreviewOverlay({
       ) : null}
     </div>
   );
+
+  return createPortal(overlay, document.body);
 }

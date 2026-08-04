@@ -6,6 +6,19 @@ export type EnergyMobileCategory = 'mind' | 'body';
 export type EnergyBodyTab = Extract<EnergyMobileTab, 'yoga' | 'food' | 'exercise'>;
 export type GatedEnergyMobileTab = Extract<EnergyMobileTab, 'meditation' | 'conflict' | EnergyBodyTab>;
 
+export const ENERGY_SANCTUARY_UNLOCK_ISLAND = 3;
+
+export function isEnergySanctuaryUnlocked(
+  currentIslandNumber: number,
+  isAdminOrCreator = false,
+): boolean {
+  if (isAdminOrCreator) return true;
+  const normalizedIslandNumber = Number.isFinite(currentIslandNumber)
+    ? Math.max(1, Math.trunc(currentIslandNumber))
+    : 1;
+  return normalizedIslandNumber >= ENERGY_SANCTUARY_UNLOCK_ISLAND;
+}
+
 export const ENERGY_MOBILE_CATEGORY_TABS: Record<EnergyMobileCategory, EnergyMobileTab[]> = {
   mind: ['breathing', 'meditation', 'conflict'],
   body: ['yoga', 'food', 'exercise'],

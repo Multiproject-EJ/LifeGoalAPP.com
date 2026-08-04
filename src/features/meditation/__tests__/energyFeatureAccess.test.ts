@@ -1,8 +1,10 @@
 import {
+  ENERGY_SANCTUARY_UNLOCK_ISLAND,
   canRenderEnergyMobileTab,
   getEnergyMobileTabAccess,
   getEnergyMobileTabFeatureId,
   getEnergyMobileTabStatusLabel,
+  isEnergySanctuaryUnlocked,
   type EnergyMobileTab,
 } from '../energyFeatureAccess';
 
@@ -28,4 +30,12 @@ export function runAllEnergyFeatureAccessTests(): void {
     assertEqual(canRenderEnergyMobileTab(tab, true), true, `${tab} implementation should render for admins`);
     assertEqual(getEnergyMobileTabStatusLabel(tab, true), 'Demo Mode', `${tab} should show admin demo status`);
   }
+
+  assertEqual(ENERGY_SANCTUARY_UNLOCK_ISLAND, 3, 'The Energy Sanctuary should awaken on Island 3');
+  assertEqual(isEnergySanctuaryUnlocked(1), false, 'Energy should stay sealed on Island 1');
+  assertEqual(isEnergySanctuaryUnlocked(2), false, 'Energy should stay sealed on Island 2');
+  assertEqual(isEnergySanctuaryUnlocked(3), true, 'Energy should open on Island 3');
+  assertEqual(isEnergySanctuaryUnlocked(12), true, 'Energy should remain open after Island 3');
+  assertEqual(isEnergySanctuaryUnlocked(Number.NaN), false, 'Invalid island state should fail safely closed');
+  assertEqual(isEnergySanctuaryUnlocked(1, true), true, 'Admins should retain Energy preview access');
 }

@@ -22,7 +22,10 @@ import { getFeatureAvailability, type FeatureAvailabilityId } from '../../config
 import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from '../../hooks/useFutureFeatureCardStates';
 import { TrainingTab } from '../training';
 import { ConflictResolverEntry } from '../conflict-resolver/ConflictResolverEntry';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
 import {
+  ENERGY_SANCTUARY_UNLOCK_ISLAND,
   canRenderEnergyMobileTab,
   ENERGY_MOBILE_CATEGORY_TABS,
   GATED_ENERGY_MOBILE_TAB_FEATURE_IDS,
@@ -31,6 +34,7 @@ import {
   getEnergyMobileTabAccess,
   getEnergyMobileTabFeatureId,
   getEnergyMobileTabStatusLabel,
+  isEnergySanctuaryUnlocked,
   isGatedEnergyMobileTab,
   type EnergyMobileCategory,
   type EnergyMobileTab,
@@ -91,6 +95,24 @@ const ENERGY_FUTURE_FEATURE_IDS: FeatureAvailabilityId[] = [
   ...Object.values(GATED_ENERGY_MOBILE_TAB_FEATURE_IDS),
 ];
 
+const FIRST_LIGHT_ENERGY_TABS: EnergyMobileTab[] = [
+  'breathing',
+  'meditation',
+  'conflict',
+  'yoga',
+  'food',
+  'exercise',
+];
+
+const FIRST_LIGHT_ENERGY_CARD_IMAGE: Record<EnergyMobileTab, string> = {
+  breathing: '/assets/themes/first-light-kingdom/energy/calm-breath.webp',
+  meditation: '/assets/themes/first-light-kingdom/energy/meditation.webp',
+  conflict: '/assets/themes/first-light-kingdom/energy/conflict.webp',
+  yoga: '/assets/themes/first-light-kingdom/energy/flexibility.webp',
+  food: '/assets/themes/first-light-kingdom/energy/food.webp',
+  exercise: '/assets/themes/first-light-kingdom/energy/movement.webp',
+};
+
 export function BreathingSpace({
   session,
   initialMobileTab,
@@ -115,7 +137,11 @@ export function BreathingSpace({
   const [saving, setSaving] = useState(false);
   const [reminderOpen, setReminderOpen] = useState(false);
   const [reminderSet, setReminderSet] = useState(false);
-  const [previewFeature, setPreviewFeature] = useState<{ id: FeatureAvailabilityId; label: string } | null>(null);
+  const [previewFeature, setPreviewFeature] = useState<{
+    id: FeatureAvailabilityId;
+    label: string;
+    progression?: boolean;
+  } | null>(null);
   const reminderRef = useRef<HTMLDivElement>(null);
   const [activeMobileTab, setActiveMobileTab] = useState<EnergyMobileTab | null>(initialMobileTab ?? null);
   const [activeMobileCategory, setActiveMobileCategory] = useState<EnergyMobileCategory>(
@@ -124,6 +150,10 @@ export function BreathingSpace({
   const futureFeatureCardStates = useFutureFeatureCardStates(ENERGY_FUTURE_FEATURE_IDS, {
     loadVotes: Boolean(session.user.id),
   });
+  const { theme } = useTheme();
+  const { state: islandRunState } = useIslandRunState(session, null);
+  const currentIslandNumber = islandRunState.currentIslandNumber;
+  const isEnergySanctuaryOpen = isEnergySanctuaryUnlocked(currentIslandNumber, isAdminOrCreator);
 
   useEffect(() => {
     setActiveMobileTab(initialMobileTab ?? null);
@@ -160,6 +190,15 @@ export function BreathingSpace({
   const { earnXP, recordActivity, refreshProfile, levelUpEvent, dismissLevelUpEvent } = useGamification(session);
 
   const handleMobileTabChange = (tab: EnergyMobileTab) => {
+    if (!isEnergySanctuaryOpen) {
+      setPreviewFeature({
+        id: getEnergyMobileTabFeatureId(tab) ?? 'mind.breathingSpace',
+        label: MOBILE_TAB_OPTIONS[tab].label,
+        progression: true,
+      });
+      return;
+    }
+
     const tabAccess = getEnergyMobileTabAccess(tab, isAdminOrCreator);
     if (tabAccess !== 'open') {
       const nextCategory = getEnergyMobileCategoryForTab(tab);
@@ -422,13 +461,70 @@ export function BreathingSpace({
     ? getEnergyMobileTabAccess(activeMobileTab, isAdminOrCreator)
     : 'open';
   const isActiveMobileTabBlocked = activeMobileTabAccess !== 'open';
-  const activeMobileTabForRender = isActiveMobileTabBlocked ? null : activeMobileTab;
+  const activeMobileTabForRender = !isEnergySanctuaryOpen || isActiveMobileTabBlocked
+    ? null
+    : activeMobileTab;
   const isConflictFullscreen = activeMobileTabForRender === 'conflict';
   const canRenderMeditation = canRenderEnergyMobileTab('meditation', isAdminOrCreator);
   const canRenderConflict = canRenderEnergyMobileTab('conflict', isAdminOrCreator);
   const canRenderYoga = canRenderEnergyMobileTab('yoga', isAdminOrCreator);
   const canRenderFood = canRenderEnergyMobileTab('food', isAdminOrCreator);
   const canRenderExercise = canRenderEnergyMobileTab('exercise', isAdminOrCreator);
+
+  if (theme === 'first-light-kingdom' && !isEnergySanctuaryOpen) {
+    return (
+      <div className="breathing-space breathing-space--first-light-sanctuary" data-mobile-tab="none">
+        <section className="breathing-space__sanctuary-lock" aria-labelledby="energy-sanctuary-title">
+          <header className="breathing-space__sanctuary-heading">
+            <p>Energy</p>
+            <h1 id="energy-sanctuary-title">The Sanctuary</h1>
+          </header>
+          <img
+            className="breathing-space__sanctuary-gate"
+            src="/assets/themes/first-light-kingdom/energy/sanctuary-gate.webp"
+            alt="A sealed celestial sanctuary gate"
+          />
+          <div className="breathing-space__sanctuary-grid" aria-label="Energy pathways">
+            {FIRST_LIGHT_ENERGY_TABS.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className="breathing-space__sanctuary-card"
+                onClick={() => handleMobileTabChange(tab)}
+                aria-label={`${MOBILE_TAB_OPTIONS[tab].label}, unlocks at Island ${ENERGY_SANCTUARY_UNLOCK_ISLAND}`}
+              >
+                <img src={FIRST_LIGHT_ENERGY_CARD_IMAGE[tab]} alt="" aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="breathing-space__sanctuary-keep-playing"
+            onClick={() => setPreviewFeature({
+              id: 'energy.shell',
+              label: 'Energy Sanctuary',
+              progression: true,
+            })}
+          >
+            Keep playing
+          </button>
+        </section>
+        {previewFeature ? (
+          <FeaturePreviewOverlay
+            featureId={previewFeature.id}
+            label={previewFeature.label}
+            progressionUnlock={{
+              currentIsland: currentIslandNumber,
+              unlockIsland: ENERGY_SANCTUARY_UNLOCK_ISLAND,
+              eyebrow: 'Sanctuary discovered',
+              body: 'Keep building your island to awaken this sanctuary.',
+            }}
+            onClose={() => setPreviewFeature(null)}
+          />
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -904,6 +1000,12 @@ export function BreathingSpace({
         <FeaturePreviewOverlay
           featureId={previewFeature.id}
           label={previewFeature.label}
+          progressionUnlock={previewFeature.progression ? {
+            currentIsland: currentIslandNumber,
+            unlockIsland: ENERGY_SANCTUARY_UNLOCK_ISLAND,
+            eyebrow: 'Sanctuary discovered',
+            body: 'Keep building your island to awaken this sanctuary.',
+          } : undefined}
           onClose={() => setPreviewFeature(null)}
         />
       ) : null}
