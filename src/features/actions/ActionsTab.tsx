@@ -25,6 +25,7 @@ import { getFeatureAvailability } from '../../config/featureAvailability';
 import { resolveFeatureAccess } from '../../services/featureAccess';
 import { FeatureStatusBadge } from '../../components/FeatureStatusBadge';
 import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from '../../hooks/useFutureFeatureCardStates';
+import { useEntranceArtworkReady } from '../../hooks/useEntranceArtworkReady';
 import './ActionsTab.css';
 
 const projectsIcon = '/icons/Actions/actions_projects.webp';
@@ -37,6 +38,11 @@ const visionBoardIcon = '/icons/Actions/actions_visonboard.webp';
 // Constants
 const EXPIRING_SOON_THRESHOLD_HOURS = 24;
 const ACTIONS_FUTURE_FEATURE_IDS = ['actions.visionBoard'] as const;
+const ACTIONS_ENTRANCE_ARTWORK = [
+  '/assets/themes/first-light-kingdom/actions/vision-journal-card.webp',
+  '/assets/themes/first-light-kingdom/actions/vision-board-card.webp',
+  '/assets/themes/first-light-kingdom/actions/task-tower-card-v2.webp',
+] as const;
 
 // Helper function to check if MUST DO items should always show
 const shouldAlwaysShow = (action: Action): boolean => {
@@ -112,6 +118,10 @@ export function ActionsTab({
   const [activeView, setActiveView] = useState<'launcher' | 'tasks'>(isMobileView ? 'launcher' : 'tasks');
   const [showTaskTower, setShowTaskTower] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isLauncherEntranceReady = useEntranceArtworkReady(ACTIONS_ENTRANCE_ARTWORK, {
+    enabled: activeView === 'launcher',
+    maxWaitMs: 1400,
+  });
 
   // Watch for level-up events
   useEffect(() => {
@@ -476,7 +486,7 @@ export function ActionsTab({
 
   if (activeView === 'launcher') {
     return (
-      <div className="actions-tab actions-tab--launcher">
+      <div className={`actions-tab actions-tab--launcher${isLauncherEntranceReady ? ' actions-tab--motion-ready' : ''}`}>
         <header className="actions-tab__header actions-tab__header--launcher">
           <div className="actions-tab__header-content">
             <h2 className="actions-tab__title">ACTIONS</h2>

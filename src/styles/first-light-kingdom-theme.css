@@ -1034,7 +1034,22 @@
   z-index: 1;
   margin: 0 auto 0.62rem;
   width: min(100%, 46rem);
-  animation: first-light-actions-heading-arrive 420ms cubic-bezier(0.22, 1, 0.36, 1) 40ms backwards;
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher:not(.actions-tab--motion-ready)
+  .actions-tab__header--launcher,
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher:not(.actions-tab--motion-ready)
+  .actions-tab__launcher-row {
+  opacity: 0;
+  transform: translate3d(0, -0.85rem, 0);
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher.actions-tab--motion-ready
+  .actions-tab__header--launcher {
+  animation: first-light-actions-heading-arrive 500ms cubic-bezier(0.18, 0.82, 0.26, 1) 30ms backwards;
 }
 
 [data-theme='first-light-kingdom']
@@ -1076,20 +1091,26 @@
 }
 
 [data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-row {
-  animation: first-light-actions-card-drop 620ms cubic-bezier(0.2, 0.82, 0.24, 1.12) backwards;
+  backface-visibility: hidden;
   transform-origin: 50% 0;
 }
 
-[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-row:nth-child(1) {
-  animation-delay: 90ms;
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher.actions-tab--motion-ready
+  .actions-tab__launcher-row {
+  animation: first-light-actions-card-drop 740ms cubic-bezier(0.18, 0.82, 0.26, 1) backwards;
 }
 
-[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-row:nth-child(2) {
-  animation-delay: 165ms;
+[data-theme='first-light-kingdom'] .actions-tab--motion-ready .actions-tab__launcher-row:nth-child(1) {
+  animation-delay: 110ms;
 }
 
-[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-row:nth-child(3) {
+[data-theme='first-light-kingdom'] .actions-tab--motion-ready .actions-tab__launcher-row:nth-child(2) {
   animation-delay: 240ms;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--motion-ready .actions-tab__launcher-row:nth-child(3) {
+  animation-delay: 370ms;
 }
 
 @keyframes first-light-actions-heading-arrive {
@@ -1106,14 +1127,14 @@
 @keyframes first-light-actions-card-drop {
   0% {
     opacity: 0;
-    transform: translate3d(0, -1.75rem, 0) scale(0.985);
+    transform: translate3d(0, -1.3rem, 0) scale(0.988);
   }
-  64% {
+  70% {
     opacity: 1;
-    transform: translate3d(0, 0.22rem, 0) scale(1.003);
+    transform: translate3d(0, 0.12rem, 0) scale(1.0015);
   }
-  82% {
-    transform: translate3d(0, -0.07rem, 0) scale(0.999);
+  86% {
+    transform: translate3d(0, -0.035rem, 0) scale(0.9995);
   }
   100% {
     opacity: 1;
@@ -1399,6 +1420,8 @@
   [data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__header--launcher,
   [data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-row {
     animation: none;
+    opacity: 1;
+    transform: none;
   }
 
   [data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button {
@@ -1439,6 +1462,16 @@
   min-height: 6rem;
   place-items: center;
   text-align: center;
+}
+
+[data-theme='first-light-kingdom'] .score-tab:not(.score-tab--motion-ready) .score-tab__header,
+[data-theme='first-light-kingdom'] .score-tab:not(.score-tab--motion-ready) .score-tab__hub-card {
+  opacity: 0;
+  transform: translate3d(0, 0.7rem, 0);
+}
+
+[data-theme='first-light-kingdom'] .score-tab--motion-ready .score-tab__header {
+  animation: first-light-score-heading-arrive 540ms cubic-bezier(0.18, 0.82, 0.26, 1) 30ms backwards;
 }
 
 [data-theme='first-light-kingdom'] .score-tab__header::before {
@@ -1487,31 +1520,46 @@
   padding: 0.85rem 0.5rem;
   color: #0c2a52;
   isolation: isolate;
-  animation: first-light-score-card-arrive 560ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  backface-visibility: hidden;
   transform-origin: 50% 58%;
 }
 
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(3) {
-  animation-name: first-light-score-hero-arrive;
-  animation-delay: 120ms;
-  animation-duration: 650ms;
+[data-theme='first-light-kingdom'] .score-tab--motion-ready .score-tab__hub-card {
+  animation: first-light-score-card-arrive 680ms cubic-bezier(0.18, 0.82, 0.26, 1) backwards;
 }
 
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(4) { animation-delay: 210ms; }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(6) { animation-delay: 265ms; }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(1) { animation-delay: 325ms; }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(5) { animation-delay: 380ms; }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(2) { animation-delay: 435ms; }
-[data-theme='first-light-kingdom'] .score-tab__hub-card:nth-child(7) { animation-delay: 490ms; }
+[data-theme='first-light-kingdom'] .score-tab--motion-ready .score-tab__hub-card:nth-child(3) {
+  animation-name: first-light-score-hero-arrive;
+  animation-delay: 100ms;
+  animation-duration: 760ms;
+}
+
+[data-theme='first-light-kingdom'] .score-tab--motion-ready .score-tab__hub-card:nth-child(4) { animation-delay: 230ms; }
+[data-theme='first-light-kingdom'] .score-tab--motion-ready .score-tab__hub-card:nth-child(6) { animation-delay: 310ms; }
+[data-theme='first-light-kingdom'] .score-tab--motion-ready .score-tab__hub-card:nth-child(1) { animation-delay: 390ms; }
+[data-theme='first-light-kingdom'] .score-tab--motion-ready .score-tab__hub-card:nth-child(5) { animation-delay: 470ms; }
+[data-theme='first-light-kingdom'] .score-tab--motion-ready .score-tab__hub-card:nth-child(2) { animation-delay: 550ms; }
+[data-theme='first-light-kingdom'] .score-tab--motion-ready .score-tab__hub-card:nth-child(7) { animation-delay: 630ms; }
+
+@keyframes first-light-score-heading-arrive {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.5rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
 
 @keyframes first-light-score-hero-arrive {
   0% {
     opacity: 0;
-    transform: translate3d(0, 1.75rem, 0) scale(0.965);
+    transform: translate3d(0, 1.35rem, 0) scale(0.972);
   }
-  72% {
+  76% {
     opacity: 1;
-    transform: translate3d(0, -0.12rem, 0) scale(1.004);
+    transform: translate3d(0, -0.07rem, 0) scale(1.002);
   }
   100% {
     opacity: 1;
@@ -1522,11 +1570,11 @@
 @keyframes first-light-score-card-arrive {
   0% {
     opacity: 0;
-    transform: translate3d(0, 1.15rem, 0) scale(0.982);
+    transform: translate3d(0, 0.95rem, 0) scale(0.986);
   }
-  76% {
+  80% {
     opacity: 1;
-    transform: translate3d(0, -0.08rem, 0) scale(1.002);
+    transform: translate3d(0, -0.04rem, 0) scale(1.001);
   }
   100% {
     opacity: 1;
@@ -1674,8 +1722,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  [data-theme='first-light-kingdom'] .score-tab__header,
   [data-theme='first-light-kingdom'] .score-tab__hub-card {
     animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
 

@@ -51,6 +51,7 @@ import {
   type LeaderboardEntry,
 } from '../../services/leaderboard';
 import { getFutureFeatureCardClassName, useFutureFeatureCardStates } from '../../hooks/useFutureFeatureCardStates';
+import { useEntranceArtworkReady } from '../../hooks/useEntranceArtworkReady';
 import { RewardEvolutionModal } from './RewardEvolutionModal';
 import { PowerUpsStore } from '../power-ups/PowerUpsStore';
 import {
@@ -80,6 +81,16 @@ import scoreShop from '../../assets/Score_shop.webp';
 import scoreZenGarden from '../../assets/Score_zengarden.webp';
 
 const scoreLeaderboard = '/icons/Score_tab_leaderboard.webp';
+const SCORE_ENTRANCE_ARTWORK = [
+  '/assets/themes/first-light-kingdom/today/today-sky-background.webp',
+  '/assets/themes/first-light-kingdom/score/collections.webp',
+  '/assets/themes/first-light-kingdom/score/achievements.webp',
+  '/assets/themes/first-light-kingdom/score/adventure-league.webp',
+  '/assets/themes/first-light-kingdom/score/player-shop.webp',
+  '/assets/themes/first-light-kingdom/score/zen-garden.webp',
+  '/assets/themes/first-light-kingdom/score/garage.webp',
+  '/assets/themes/first-light-kingdom/score/bank.webp',
+] as const;
 
 const SCORE_FUTURE_FEATURE_IDS: FeatureAvailabilityId[] = [
   'score.playerShop',
@@ -150,6 +161,10 @@ export function ScoreTab({
     : 0;
   const goldRatioLabel = `1 gold per ${Math.round(1 / XP_TO_GOLD_RATIO)} XP`;
   const [activeTab, setActiveTab] = useState<'home' | 'bank' | 'shop' | 'zen' | 'garage' | 'leaderboard' | 'collections'>(initialActiveTab ?? 'home');
+  const isScoreEntranceReady = useEntranceArtworkReady(SCORE_ENTRANCE_ARTWORK, {
+    enabled: activeTab === 'home',
+    maxWaitMs: 1500,
+  });
   const [transactions, setTransactions] = useState<XPTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [transactionsError, setTransactionsError] = useState<string | null>(null);
@@ -847,7 +862,7 @@ export function ScoreTab({
   };
 
   return (
-    <section className="score-tab">
+    <section className={`score-tab${isScoreEntranceReady ? ' score-tab--motion-ready' : ''}`}>
       <header className="score-tab__header">
         <p className="score-tab__eyebrow">Score hub</p>
       </header>
