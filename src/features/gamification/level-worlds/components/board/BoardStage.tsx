@@ -8,13 +8,17 @@ import { useBoardCamera, type CameraState, type CameraVisualBounds } from './use
 import { useBoardGestures } from './useBoardGestures';
 import { useTokenAnimation, type TokenAnimState } from './useTokenAnimation';
 import { BoardPathCanvas } from './BoardPathCanvas';
+import { BoardGeometryFoundation } from './BoardGeometryFoundation';
 import { BoardTileGrid } from './BoardTileGrid';
 import { BoardToken, type BoardTokenHandle } from './BoardToken';
 import { BoardParticles } from './BoardParticles';
 import { BoardOrbitStops, type OrbitStopVisualData, type StopProgressState } from './BoardOrbitStops';
 import { BoardDice3D } from './BoardDice3D';
 import { IslandArtLayers, type IslandArtSceneLayout } from './IslandArtLayers';
-import type { IslandArtManifest } from '../../services/islandArtManifest';
+import {
+  getIslandArtAmbientBackgroundSrc,
+  type IslandArtManifest,
+} from '../../services/islandArtManifest';
 import type { BossCreatureArtState } from '../../services/islandRunBossEncounter';
 import type { IslandRunLandmarkDiscoveryState } from '../../services/islandRunDiscoveryFog';
 import {
@@ -559,6 +563,7 @@ export function BoardStage(props: BoardStageProps) {
   const ZBAND_COLORS: Record<string, string> = { back: '#50a5ff', mid: '#ffe066', front: '#ff4ff5' };
   const artCameraTransform = camera.cameraTransform;
   const cameraStageTransform = `${camera.cameraTransform} rotateX(${boardTiltXDeg}deg) rotateZ(${boardRotateZDeg}deg)`;
+  const cameraAmbientBackgroundSrc = getIslandArtAmbientBackgroundSrc(islandArtManifest);
   const cameraSnapshot = camera.cameraRef.current;
   const diceOverlayPosition = useMemo(() => {
     const tokenX = tokenAnim.animState.x || boardSize.width / 2;
@@ -665,6 +670,13 @@ export function BoardStage(props: BoardStageProps) {
         className="island-run-board__art-camera-stage"
         style={{ transform: artCameraTransform, willChange: 'transform' }}
       >
+        {camera.mode === 'stop_focus' && cameraAmbientBackgroundSrc ? (
+          <div
+            className="island-run-board__camera-ambient-fill"
+            style={{ backgroundImage: `url(${cameraAmbientBackgroundSrc})` }}
+            aria-hidden="true"
+          />
+        ) : null}
         <IslandArtLayers
           manifest={islandArtManifest}
           landmarkBuildLevels={landmarkBuildLevels}
@@ -723,6 +735,17 @@ export function BoardStage(props: BoardStageProps) {
             toScreen={toScreen}
           />
         ) : null}
+
+        {/* The route foundation shares the exact topology transform and anchor
+            geometry with the live tiles. Generated island art supplies terrain
+            and materials only, never a second approximate gameplay circle. */}
+        {isSpark36 && (
+          <BoardGeometryFoundation
+            anchors={anchors}
+            toScreen={toScreen}
+            material={islandArtManifest?.boardFoundation ?? null}
+          />
+        )}
 
         {/* Spark36 ring */}
         {isSpark36 && (

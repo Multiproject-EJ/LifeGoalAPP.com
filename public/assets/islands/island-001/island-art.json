@@ -16,6 +16,12 @@
     "height": 1000
   },
   "assetCameraMode": "final-angle",
+  "boardFoundation": {
+    "surfaceColor": "#f3e7c6",
+    "highlightColor": "#fff8df",
+    "edgeColor": "#c9a955",
+    "shadowColor": "#70582f66"
+  },
   "scene": {
     "boardCircle": "board/board-plate.webp",
     "ambientBackground": "background/ambient-background.webp"
@@ -25,11 +31,12 @@
     {
       "stopIndex": 0,
       "anchorId": "hatchery",
-      "levelZero": "landmarks/hatchery/hatchery-terrain.webp",
-      "x": 359,
-      "y": 340,
-      "width": 472,
-      "height": 472,
+      "levelZero": "landmarks/shared/landmark-plot.webp",
+      "levelZeroPlacement": { "x": 175, "y": 320, "width": 350, "height": 350 },
+      "x": 175,
+      "y": 210,
+      "width": 280,
+      "height": 280,
       "levelScales": [0.93, 0.94, 0.95],
       "levels": [
         "landmarks/hatchery/hatchery-l1.webp",
@@ -41,11 +48,12 @@
     {
       "stopIndex": 1,
       "anchorId": "habit",
-      "levelZero": "landmarks/habit/habit-terrain.webp",
-      "x": 1029,
-      "y": 340,
-      "width": 472,
-      "height": 472,
+      "levelZero": "landmarks/shared/landmark-plot.webp",
+      "levelZeroPlacement": { "x": 1225, "y": 320, "width": 350, "height": 350 },
+      "x": 1225,
+      "y": 210,
+      "width": 280,
+      "height": 280,
       "levelScales": [0.84, 0.85, 0.86],
       "levels": [
         "landmarks/habit/habit-l1.webp",
@@ -57,11 +65,12 @@
     {
       "stopIndex": 2,
       "anchorId": "mystery",
-      "levelZero": "landmarks/mystery/mystery-terrain.webp",
-      "x": 1090,
-      "y": 1040,
-      "width": 472,
-      "height": 472,
+      "levelZero": "landmarks/shared/landmark-plot.webp",
+      "levelZeroPlacement": { "x": 1225, "y": 1280, "width": 350, "height": 350 },
+      "x": 1225,
+      "y": 1170,
+      "width": 280,
+      "height": 280,
       "levelScales": [0.93, 0.94, 0.95],
       "levels": [
         "landmarks/mystery/mystery-l1.webp",
@@ -73,11 +82,12 @@
     {
       "stopIndex": 3,
       "anchorId": "wisdom",
-      "levelZero": "landmarks/wisdom/wisdom-terrain.webp",
-      "x": 304,
-      "y": 1040,
-      "width": 472,
-      "height": 472,
+      "levelZero": "landmarks/shared/landmark-plot.webp",
+      "levelZeroPlacement": { "x": 175, "y": 1280, "width": 350, "height": 350 },
+      "x": 175,
+      "y": 1170,
+      "width": 280,
+      "height": 280,
       "levelScales": [0.93, 0.94, 0.95],
       "levels": [
         "landmarks/wisdom/wisdom-l1.webp",
@@ -105,7 +115,7 @@
       "id": "battle-center",
       "src": "scenery/first-light-sun-court.webp",
       "x": 700,
-      "y": 800,
+      "y": 809.2,
       "width": 520,
       "height": 390,
       "assetCameraMode": "final-angle",

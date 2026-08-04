@@ -3644,3 +3644,33 @@ Testing:
 - Contract V2 essence/build suite passed: 21 tests.
 - Sequential-build suite passed: 7 tests.
 Next: release the Build Step 2 fix and Audio Phase 0 safety work to `main`.
+
+---
+
+Date: 2026-08-04
+Slice: Island 001 geometry pilot and 120-island production scaffold
+Summary:
+- Split Island 001 into a flexible organic central terrain plate and four
+  persistent fixed satellite plots.
+- Added one code-owned route foundation derived from the same live anchors as
+  the 36 tiles; island manifests now supply material colors rather than a
+  second approximate circle.
+- Enlarged the live tiles and moved all four landmark building placements
+  outside a validator-enforced route visibility gutter, using bottom-anchored
+  L1–L3 scaling.
+- Added manifest-driven landmark camera targets. Closing a landmark modal keeps
+  the camera focused; the next roll restores board-follow.
+- Gated the first reward channel behind acceptance of DIPLOMATIC EFFORT and
+  added the one-time four-spin reward-bar reveal plus blue tile wake-up pulse.
+- Added the canonical 120-island production guide, technical layout drawing,
+  per-island screenshot structure, all-L3 clearance gate, and production
+  geometry validation.
+Testing:
+- Island art validator passed for all 12 current manifests.
+- Island art render-wiring check passed.
+- Island Run architecture guard passed with 0 violations.
+- Production Vite build passed.
+- Full Island Run test runner remains blocked before execution by the same
+  pre-existing `checkins.ts` and `zenGarden.ts` type errors.
+Next: Continue the existing Audio Phase 1 Tier 1 production slice after this
+approved Island 001 visual-system release reaches `main`.

@@ -23,6 +23,12 @@ export interface IslandArtLandmarkManifest {
   anchorId?: string;
   /** Optional terrain/foundation art that remains beneath this landmark at every build level. */
   levelZero?: string;
+  /**
+   * Optional independent placement for the satellite plot beneath a landmark.
+   * Keeping this separate from the building box lets the plot be generous while
+   * every L1-L3 structure remains bottom-anchored and route-safe.
+   */
+  levelZeroPlacement?: IslandArtRect;
   x: number;
   y: number;
   width: number;
@@ -77,6 +83,18 @@ export interface IslandArtRect extends IslandArtSpace {
   y: number;
 }
 
+/**
+ * Material tokens for the code-owned route foundation. Geometry deliberately
+ * does not live in island manifests: every island shares the active board
+ * profile's exact centre/radius, while artwork supplies only surface identity.
+ */
+export interface IslandArtBoardFoundationManifest {
+  surfaceColor: string;
+  highlightColor: string;
+  edgeColor: string;
+  shadowColor: string;
+}
+
 export interface IslandArtManifest {
   version: 2;
   islandNumber: number;
@@ -111,6 +129,8 @@ export interface IslandArtManifest {
   boardPlateImageVerticalScale?: number;
   /** Source-perspective normalization for the outer board-circle image. */
   boardOuterCircleImageVerticalScale?: number;
+  /** Optional materials for the deterministic route foundation. */
+  boardFoundation?: IslandArtBoardFoundationManifest;
   scene?: IslandArtSceneManifest;
   landmarks: IslandArtLandmarkManifest[];
   scenery: IslandArtSceneryManifest[];
@@ -125,9 +145,16 @@ export type IslandArtManifestFetcher = (input: string) => Promise<{
 const VALID_Z_BANDS = new Set<ZBand>(['back', 'mid', 'front']);
 const VALID_BOSS_STATES = new Set<IslandArtBossState>(['idle', 'active', 'attack', 'defeated', 'reward']);
 const DEFAULT_COORDINATE_SPACE = { width: 1000, height: 1000 } as const;
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizeHexColor(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim();
+  return HEX_COLOR_PATTERN.test(normalized) ? normalized : null;
 }
 
 function optionalString(value: unknown): string | undefined {
@@ -258,6 +285,27 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
   const normalizedBoardOuterCircleImageScale = positiveFiniteNumber(raw.boardOuterCircleImageScale);
   const normalizedBoardPlateImageVerticalScale = positiveFiniteNumber(raw.boardPlateImageVerticalScale);
   const normalizedBoardOuterCircleImageVerticalScale = positiveFiniteNumber(raw.boardOuterCircleImageVerticalScale);
+  const rawBoardFoundation = isRecord(raw.boardFoundation) ? raw.boardFoundation : null;
+  const boardFoundation = rawBoardFoundation
+    ? {
+      surfaceColor: normalizeHexColor(rawBoardFoundation.surfaceColor),
+      highlightColor: normalizeHexColor(rawBoardFoundation.highlightColor),
+      edgeColor: normalizeHexColor(rawBoardFoundation.edgeColor),
+      shadowColor: normalizeHexColor(rawBoardFoundation.shadowColor),
+    }
+    : null;
+  const normalizedBoardFoundation = boardFoundation
+    && boardFoundation.surfaceColor
+    && boardFoundation.highlightColor
+    && boardFoundation.edgeColor
+    && boardFoundation.shadowColor
+    ? {
+      surfaceColor: boardFoundation.surfaceColor,
+      highlightColor: boardFoundation.highlightColor,
+      edgeColor: boardFoundation.edgeColor,
+      shadowColor: boardFoundation.shadowColor,
+    }
+    : null;
 
   const rawScene = isRecord(raw.scene) ? raw.scene : {};
   const scene: IslandArtSceneManifest = {};
@@ -288,10 +336,12 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
           .map((scale) => positiveFiniteNumber(scale))
           .filter((scale): scale is number => scale !== null)
         : [];
+      const levelZeroPlacement = normalizeOptionalArtRect(entry.levelZeroPlacement);
       return [{
         stopIndex: Math.max(0, Math.floor(finiteNumber(entry.stopIndex, 0))),
         anchorId: optionalString(entry.anchorId),
         levelZero: resolveIslandArtAssetPath(basePath, optionalString(entry.levelZero)),
+        ...(levelZeroPlacement ? { levelZeroPlacement } : {}),
         x: finiteNumber(entry.x, 500),
         y: finiteNumber(entry.y, 500),
         width: Math.max(1, finiteNumber(entry.width, 120)),
@@ -371,6 +421,7 @@ export function normalizeIslandArtManifest(raw: unknown, islandNumber: number): 
     ...(normalizedBoardOuterCircleImageScale !== null ? { boardOuterCircleImageScale: normalizedBoardOuterCircleImageScale } : {}),
     ...(normalizedBoardPlateImageVerticalScale !== null ? { boardPlateImageVerticalScale: normalizedBoardPlateImageVerticalScale } : {}),
     ...(normalizedBoardOuterCircleImageVerticalScale !== null ? { boardOuterCircleImageVerticalScale: normalizedBoardOuterCircleImageVerticalScale } : {}),
+    ...(normalizedBoardFoundation ? { boardFoundation: normalizedBoardFoundation } : {}),
     ...(Object.keys(scene).length > 0 ? { scene } : {}),
     landmarks,
     scenery,

@@ -311,6 +311,7 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
 
       {shouldRenderWorldAsset() && manifest.landmarks.map((landmark) => {
         if (!landmark.levelZero || hiddenSources.has(landmark.levelZero)) return null;
+        const placement = landmark.levelZeroPlacement ?? landmark;
         return (
           <img
             key={`${landmark.stopIndex}-level-zero-${landmark.levelZero}`}
@@ -321,10 +322,10 @@ export const IslandArtLayers = memo(function IslandArtLayers(props: IslandArtLay
             data-discovery-state={getDiscoveryState(landmark.stopIndex)}
             style={makeArtLayerStyle({
               manifest,
-              x: landmark.x,
-              y: landmark.y,
-              width: landmark.width,
-              height: landmark.height,
+              x: placement.x,
+              y: placement.y,
+              width: placement.width,
+              height: placement.height,
               uniformScale,
               toScreen,
               sceneLayout,

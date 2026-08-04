@@ -11,6 +11,8 @@ const VALID_BOSS_STATES = new Set(['idle', 'active', 'attack', 'defeated', 'rewa
 const VALID_ASSET_CAMERA_MODES = new Set(['legacy-camera', 'final-angle']);
 const IMAGE_EXTENSIONS = new Set(['.avif', '.gif', '.jpg', '.jpeg', '.png', '.svg', '.webp']);
 const ANIMATION_EXTENSIONS = new Set(['.json', '.lottie', '.mp4', '.webm']);
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i;
+const ROUTE_PROTECTED_RADIUS_RATIO = 0.43;
 
 const errors = [];
 const warnings = [];
@@ -142,6 +144,17 @@ function validateLandmarks(manifestPath, landmarks) {
     validatePositive(manifestPath, `${basePath}.width`, landmark.width);
     validatePositive(manifestPath, `${basePath}.height`, landmark.height);
     validateOptionalZBand(manifestPath, `${basePath}.zBand`, landmark.zBand);
+    validateAssetReference(manifestPath, `${basePath}.levelZero`, landmark.levelZero, { required: false, kind: 'image' });
+    if (landmark.levelZeroPlacement !== undefined) {
+      if (!isRecord(landmark.levelZeroPlacement)) {
+        addError(manifestPath, `${basePath}.levelZeroPlacement`, 'must be an object when present');
+      } else {
+        validateFinite(manifestPath, `${basePath}.levelZeroPlacement.x`, landmark.levelZeroPlacement.x);
+        validateFinite(manifestPath, `${basePath}.levelZeroPlacement.y`, landmark.levelZeroPlacement.y);
+        validatePositive(manifestPath, `${basePath}.levelZeroPlacement.width`, landmark.levelZeroPlacement.width);
+        validatePositive(manifestPath, `${basePath}.levelZeroPlacement.height`, landmark.levelZeroPlacement.height);
+      }
+    }
 
     if (!Array.isArray(landmark.levels)) {
       addError(manifestPath, `${basePath}.levels`, 'must be an array with 1 to 3 image paths');
@@ -173,6 +186,135 @@ function validateLandmarks(manifestPath, landmarks) {
       validateAssetReference(manifestPath, `${basePath}.levels[${levelIndex}]`, levelPath, { required: true, kind: 'image' });
     });
   });
+}
+
+function validateBoardFoundation(manifestPath, boardFoundation) {
+  if (boardFoundation === undefined) return;
+  if (!isRecord(boardFoundation)) {
+    addError(manifestPath, 'boardFoundation', 'must be an object when present');
+    return;
+  }
+  for (const key of ['surfaceColor', 'highlightColor', 'edgeColor', 'shadowColor']) {
+    const value = boardFoundation[key];
+    if (typeof value !== 'string' || !HEX_COLOR_PATTERN.test(value.trim())) {
+      addError(manifestPath, `boardFoundation.${key}`, 'must be a #RRGGBB or #RRGGBBAA color');
+    }
+  }
+}
+
+function rectangleDistanceFromPoint(rect, point) {
+  const dx = Math.max(Math.abs(point.x - rect.x) - (rect.width / 2), 0);
+  const dy = Math.max(Math.abs(point.y - rect.y) - (rect.height / 2), 0);
+  return Math.hypot(dx, dy);
+}
+
+function validateLandmarkRouteClearance(manifestPath, manifest) {
+  const { boardFoundation, playableBoardRect, landmarks } = manifest;
+  if (!isRecord(boardFoundation) || !isRecord(playableBoardRect) || !Array.isArray(landmarks)) return;
+  if (![playableBoardRect.x, playableBoardRect.y, playableBoardRect.width, playableBoardRect.height].every(isFiniteNumber)) return;
+
+  const boardCenter = {
+    x: playableBoardRect.x + (playableBoardRect.width / 2),
+    y: playableBoardRect.y + (playableBoardRect.height / 2),
+  };
+  const protectedRadius = Math.min(playableBoardRect.width, playableBoardRect.height)
+    * ROUTE_PROTECTED_RADIUS_RATIO;
+
+  landmarks.forEach((landmark, index) => {
+    if (!isRecord(landmark)) return;
+    const basePath = `landmarks[${index}]`;
+
+    if (isRecord(landmark.levelZeroPlacement)) {
+      const plot = landmark.levelZeroPlacement;
+      if ([plot.x, plot.y, plot.width, plot.height].every(isFiniteNumber)) {
+        const plotClearance = rectangleDistanceFromPoint(plot, boardCenter);
+        if (plotClearance < protectedRadius) {
+          addError(
+            manifestPath,
+            `${basePath}.levelZeroPlacement`,
+            `enters the protected tile-route radius (${plotClearance.toFixed(1)} < ${protectedRadius.toFixed(1)})`,
+          );
+        }
+      }
+    }
+
+    if (![landmark.x, landmark.y, landmark.width, landmark.height].every(isFiniteNumber)) return;
+    const imageScale = isFiniteNumber(landmark.imageScale) && landmark.imageScale > 0 ? landmark.imageScale : 1;
+    const levelScale = Array.isArray(landmark.levelScales)
+      ? Math.max(1, ...landmark.levelScales.filter((scale) => isFiniteNumber(scale) && scale > 0))
+      : 1;
+    const scale = imageScale * levelScale;
+    const scaledWidth = landmark.width * scale;
+    const scaledHeight = landmark.height * scale;
+    const buildingBottom = landmark.y + (landmark.height / 2);
+    const buildingRect = {
+      x: landmark.x,
+      y: buildingBottom - (scaledHeight / 2),
+      width: scaledWidth,
+      height: scaledHeight,
+    };
+    const buildingClearance = rectangleDistanceFromPoint(buildingRect, boardCenter);
+    if (buildingClearance < protectedRadius) {
+      addError(
+        manifestPath,
+        basePath,
+        `largest L3 placement enters the protected tile-route radius (${buildingClearance.toFixed(1)} < ${protectedRadius.toFixed(1)})`,
+      );
+    }
+  });
+}
+
+function validateProductionGeometry(manifestPath, manifest) {
+  const { boardFoundation, playableBoardRect, landmarks } = manifest;
+  // Legacy islands remain loadable while they are migrated. Declaring the
+  // code-owned foundation opts an island into the complete 120-island system.
+  if (!isRecord(boardFoundation) || !isRecord(playableBoardRect) || !Array.isArray(landmarks)) return;
+  if (![playableBoardRect.x, playableBoardRect.y, playableBoardRect.width, playableBoardRect.height].every(isFiniteNumber)) return;
+  if (landmarks.length !== 4) {
+    addError(manifestPath, 'landmarks', `production geometry requires exactly four landmark plots; received ${landmarks.length}`);
+    return;
+  }
+
+  const boardCenter = {
+    x: playableBoardRect.x + (playableBoardRect.width / 2),
+    y: playableBoardRect.y + (playableBoardRect.height / 2),
+  };
+  const quadrantKeys = new Set();
+  const plotPlacements = [];
+  landmarks.forEach((landmark, index) => {
+    if (!isRecord(landmark) || !isRecord(landmark.levelZeroPlacement)) {
+      addError(manifestPath, `landmarks[${index}].levelZeroPlacement`, 'is required by the 120-island production geometry');
+      return;
+    }
+    const plot = landmark.levelZeroPlacement;
+    if (![plot.x, plot.y, plot.width, plot.height].every(isFiniteNumber)) return;
+    plotPlacements.push(plot);
+    const horizontal = plot.x < boardCenter.x ? 'left' : plot.x > boardCenter.x ? 'right' : 'center';
+    const vertical = plot.y < boardCenter.y ? 'rear' : plot.y > boardCenter.y ? 'front' : 'center';
+    quadrantKeys.add(`${vertical}-${horizontal}`);
+  });
+
+  const expectedQuadrants = ['rear-left', 'rear-right', 'front-left', 'front-right'];
+  expectedQuadrants.forEach((quadrant) => {
+    if (!quadrantKeys.has(quadrant)) {
+      addError(manifestPath, 'landmarks', `production geometry is missing the fixed ${quadrant} plot`);
+    }
+  });
+
+  if (plotPlacements.length === 4) {
+    const centroid = plotPlacements.reduce(
+      (sum, plot) => ({ x: sum.x + (plot.x / 4), y: sum.y + (plot.y / 4) }),
+      { x: 0, y: 0 },
+    );
+    const tolerance = 1;
+    if (Math.abs(centroid.x - boardCenter.x) > tolerance || Math.abs(centroid.y - boardCenter.y) > tolerance) {
+      addError(
+        manifestPath,
+        'landmarks',
+        `four plot centers must balance around board center (${boardCenter.x}, ${boardCenter.y}); received (${centroid.x}, ${centroid.y})`,
+      );
+    }
+  }
 }
 
 function validateBoss(manifestPath, boss) {
@@ -372,10 +514,13 @@ function validateManifest(manifestPath) {
   }
 
   validateScene(manifestPath, parsed.scene);
+  validateBoardFoundation(manifestPath, parsed.boardFoundation);
   validateLandmarks(manifestPath, parsed.landmarks);
   validateBoss(manifestPath, parsed.boss);
   validateScenery(manifestPath, parsed.scenery);
   validateCompositionAnchor(manifestPath, parsed);
+  validateLandmarkRouteClearance(manifestPath, parsed);
+  validateProductionGeometry(manifestPath, parsed);
 }
 
 function findManifestPaths() {

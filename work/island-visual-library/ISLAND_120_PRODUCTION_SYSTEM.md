@@ -1,0 +1,155 @@
+# Island Run — 120-Island Production System
+
+Status: **canonical production reference**
+
+This is the starting point whenever an agent is asked to create, regenerate,
+place, or review an Island Run island. Island 001 is the pilot, but the system
+must remain reliable for all 120 islands.
+
+## The invariant and the freedom
+
+The island silhouette may be circular, square, asymmetric, split, crescent,
+rocky, mechanical, or otherwise story-specific. The art does **not** need to
+look like Island 001.
+
+The following geometry does not change:
+
+- one exact 36-tile route generated from the live tile anchors;
+- one central arena whose visual center is locked to the live route center;
+- four fixed landmark plot centers outside the protected route gutter;
+- one entrance direction and bottom anchor for each landmark;
+- one camera focus target per landmark;
+- enough clearance for all four largest L3 silhouettes at the same time.
+
+The route foundation is code-owned. The separate arena asset is optically
+centered on that same live anchor and validated in the phone composite. Never
+paint a second approximate route, tile circle, or arena ring into the terrain
+plate. Terrain supplies materials and visual integration; gameplay code
+supplies the playable circle.
+
+![Technical layout envelope](./technical/island-layout-envelope.svg)
+
+## Runtime layer stack
+
+Back to front:
+
+1. ambient background;
+2. organic central terrain/cliff plate;
+3. four persistent landmark terrain plots (`levelZero`);
+4. code-owned route foundation plus the center-locked arena asset;
+5. 36 live tiles, token, fragments, and traffic light;
+6. landmark L1–L3 cutouts, each bottom-anchored to its plot;
+7. boss, labels, fog, camera effects, and HUD.
+
+The central terrain and four satellite plots must be separate assets. This lets
+future islands vary their outer silhouette without distorting fixed gameplay
+anchors, and lets a plot remain visible before its building exists.
+
+## Canonical geometry envelope
+
+Island art uses a 1400 × 1600 scene with a 1000 × 1000 playable board rectangle
+at `(200, 300)`. The route is derived from the live anchors, not manually copied
+from these notes. Island 001's production manifest demonstrates the contract:
+
+| Element | Manifest source | Island 001 pilot |
+| --- | --- | --- |
+| central terrain | `scene.boardCircle` | 1400 × 1400 transparent plate |
+| route material | `boardFoundation` | ivory/gold material tokens |
+| rear-left plot | `levelZeroPlacement` | center `(175, 320)`, 350 × 350 |
+| rear-right plot | `levelZeroPlacement` | center `(1225, 320)`, 350 × 350 |
+| front-right plot | `levelZeroPlacement` | center `(1225, 1280)`, 350 × 350 |
+| front-left plot | `levelZeroPlacement` | center `(175, 1280)`, 350 × 350 |
+| protected route radius | validator contract | 43% of playable-board width |
+
+These are pilot measurements, not hand-placement suggestions. Copy the
+template manifest or use its generator; do not retype approximate positions.
+The validator checks both each plot rectangle and the largest scaled L3
+building rectangle against the protected route radius.
+
+## Landmark fit rule
+
+Every landmark family has one persistent plot and three additive build states.
+
+- The plot is large enough to read as a real island site at 390 × 844.
+- L1, L2, and L3 share the same optical center, entrance, camera, and bottom
+  anchor.
+- The building naturally fills its plot; unused space must read as an authored
+  courtyard, garden, work area, or habitat.
+- The front entrance points toward the central island/path.
+- The largest L3 silhouette is the validation case. If L3 is safe, earlier
+  levels must remain safe without drifting upward or sideways.
+- Tall buildings may not cross the protected visibility gutter even when their
+  transparent canvas technically does not touch a tile.
+
+The renderer sizes each level within the manifest placement and preserves the
+bottom anchor. Do not solve level growth by changing `x` or `y` per level.
+
+## Camera behavior
+
+Each orbit landmark control derives its camera target from the manifest plot
+center, then constrains that target to a phone-relative safe inset. This keeps
+the building in a rule-of-thirds close-up without exposing empty canvas beyond
+an edge plot. Front/lower plots receive an additional viewport-relative lift so
+their tallest buildings remain above the controller. A tap starts `stop_focus`,
+then opens the appropriate modal.
+Closing the modal leaves the camera focused on the landmark so the player can
+inspect it. The next roll returns the camera to board-follow mode automatically.
+
+This behavior is required for every landmark on every island. Labels may keep
+separate screen-safe positions; label placement is not a camera target.
+
+## Production packet per island
+
+Create this structure before approval:
+
+```text
+work/island-visual-library/island-NNN-slug/
+  BRIEF.md
+  ASSET_TRACKER.md
+  references/
+  masters/
+  technical/
+  qa/
+    390x844/
+      l0/
+      l1/
+      l2/
+      l3/
+      focus/
+    short-phone/
+    wide-phone/
+```
+
+The `390x844/l3/` folder must include one clean-art screenshot with all four L3
+buildings present simultaneously. The `focus/` folder must include one capture
+after tapping and then closing each landmark modal.
+
+## Required QA sequence
+
+1. Run `npm run check:island-art-assets`.
+2. Run `npm run check:island-art-render-wiring`.
+3. Run the Island Run architecture guard.
+4. Open the real 390 × 844 phone viewport.
+5. Capture L0 with discovery fog on.
+6. Capture L0 with clean-art mode on.
+7. Force all four landmarks to L3 in visual-preview mode; capture them together.
+8. Confirm the route and every tile remain completely readable.
+9. Tap every landmark, close its modal, and confirm the camera remains focused.
+10. Roll once and confirm the camera resumes board-follow behavior.
+11. Spot-check a short and wide phone plus reduced-motion mode.
+
+Approval fails if any landmark is hidden by fog during the only clearance
+inspection, if a route circle is baked into the art, if the plot/building looks
+pasted on, or if the result depends on Island 001's particular silhouette.
+
+## Scaling discipline
+
+Produce in reviewed batches, not 119 blind copies. Recommended gates:
+
+- Islands 001–005: prove distinct silhouettes and material languages.
+- Islands 006–012: prove the template survives a full biome batch.
+- Then batches of 12, with one contact-sheet review and validator report per
+  batch.
+
+Every island may look different. Every island must pass the same geometry,
+clearance, camera, and phone-QA contract.

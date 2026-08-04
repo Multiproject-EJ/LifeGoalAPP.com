@@ -126,7 +126,9 @@ tests, production build, and mobile QA for roll, move, reward, and button cues.
 ---
 
 # Notes / Decisions Locked
-- Board tile positions are fixed across all islands (art only changes); stops are outer POIs accessible via stop trigger tiles on the ring
+- Board tile positions are fixed across all islands (art only changes); stops are
+  outer POIs with four protected landmark plots. Artwork and QA agents must
+  begin with `work/island-visual-library/ISLAND_120_PRODUCTION_SYSTEM.md`.
 - Island art positioning policy: keep the canonical board tile circle fixed globally; place per-island landmarks, boss artwork, scenery, and scene composition through `public/assets/islands/island-00x/island-art.json` (see `docs/gameplay/ISLAND_RUN_ART_POSITIONING_CONTRACT.md`).
 - 60 tile anchors (production board standard)
 - Board visual style: **3D-hybrid** (2D art + pseudo-3D board layer + depth/occlusion masks)

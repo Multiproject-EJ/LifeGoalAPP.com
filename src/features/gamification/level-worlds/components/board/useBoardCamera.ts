@@ -302,12 +302,28 @@ export function useBoardCamera(options: UseBoardCameraOptions) {
   /** Smoothly animate to focus on a screen-space point (px). */
   const goFocusPoint = useCallback((screenX: number, screenY: number, zoom: number = FOCUS_ZOOM) => {
     const s = springsRef.current;
-    s.x.target = (boardWidth / 2) - screenX;
-    s.y.target = (boardHeight / 2) - screenY;
-    s.zoom.target = zoom;
+    const clampedZoom = clamp(zoom, minZoom, MAX_ZOOM);
+    const desiredPan = {
+      // CSS scales around the stage centre before applying the camera pan.
+      // Scale the centre-to-target delta too, otherwise edge targets drift
+      // farther out of frame as focus zoom increases.
+      x: ((boardWidth / 2) - screenX) * clampedZoom,
+      y: ((boardHeight / 2) - screenY) * clampedZoom,
+    };
+    const safePan = clampCameraPan(
+      desiredPan.x,
+      desiredPan.y,
+      clampedZoom,
+      boardWidth,
+      boardHeight,
+      visualBounds,
+    );
+    s.x.target = safePan.x;
+    s.y.target = safePan.y;
+    s.zoom.target = clampedZoom;
     setMode('stop_focus');
     ensureAnimating();
-  }, [boardWidth, boardHeight, ensureAnimating]);
+  }, [boardWidth, boardHeight, ensureAnimating, minZoom, visualBounds]);
 
   /**
    * Follow token during movement with directional lead offset.

@@ -1,19 +1,23 @@
+import type { IslandRunFirstSessionTutorialState } from '../services/islandRunGameStateStore';
+import { isIslandRunFragmentOnlyBoardPhase } from '../services/islandRunFirstSessionTutorialUi';
+
 export type DiplomaticRewardChannelVisibilityInput = {
   currentIslandNumber: number;
   cycleIndex: number;
-  hatcheryBuildLevel: number | null | undefined;
+  firstSessionTutorialState: IslandRunFirstSessionTutorialState;
 };
 
 /**
  * The reward system remains canonical and may accumulate progress while hidden.
- * This helper controls presentation only: a brand-new Island 1 expedition sees
- * the channel after its first visible act of reconstruction.
+ * Presentation wakes only after Central Command's DIPLOMATIC EFFORT order is
+ * accepted. That acknowledgement also activates ordinary tile functions, so
+ * the route and reward bar reveal as one atomic visual event.
  */
 export function isDiplomaticRewardChannelVisible({
   currentIslandNumber,
   cycleIndex,
-  hatcheryBuildLevel,
+  firstSessionTutorialState,
 }: DiplomaticRewardChannelVisibilityInput): boolean {
   if (currentIslandNumber !== 1 || cycleIndex !== 0) return true;
-  return typeof hatcheryBuildLevel === 'number' && hatcheryBuildLevel >= 1;
+  return !isIslandRunFragmentOnlyBoardPhase(firstSessionTutorialState);
 }
