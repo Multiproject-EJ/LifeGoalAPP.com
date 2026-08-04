@@ -63,6 +63,9 @@ Agent must always:
   with `docs/design/SECRET_CREW_COMPUTER_STORY_DIRECTION.md`.
 - Public naming, winner-table labels, and age-audience decisions start with
   `docs/policies/PUBLIC_IDENTITY_AND_AGE_POLICY.md`.
+- Island artwork, placement, camera focus, and the repeatable 120-island
+  production pipeline start with
+  `work/island-visual-library/ISLAND_120_PRODUCTION_SYSTEM.md`.
 - These product charters must not be added to or governed by the external
   stock-market `EJ-Jarvis.md`; that document has a separate investing-only
   authority boundary.

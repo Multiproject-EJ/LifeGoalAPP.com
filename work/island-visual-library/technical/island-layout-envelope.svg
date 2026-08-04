@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1600" role="img" aria-labelledby="title description">
+  <title id="title">Island Run fixed production geometry</title>
+  <description id="description">A flexible outer island silhouette surrounding an exact central tile route and four protected landmark plots.</description>
+  <defs>
+    <style>
+      .label { font: 700 30px system-ui, sans-serif; fill: #13213c; }
+      .small { font: 600 22px system-ui, sans-serif; fill: #314664; }
+      .leader { stroke: #314664; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#314664"/>
+    </marker>
+  </defs>
+  <rect width="1400" height="1600" fill="#f5f8ff"/>
+  <path d="M150 185 Q340 72 535 170 Q700 70 865 170 Q1065 70 1250 185 L1320 440 Q1380 800 1300 1160 L1230 1425 Q1030 1530 840 1430 Q700 1535 560 1430 Q360 1530 170 1425 L95 1160 Q20 800 90 440 Z" fill="#c5dca4" stroke="#6b8d56" stroke-width="14" stroke-dasharray="22 16"/>
+
+  <circle cx="175" cy="320" r="175" fill="#fff3c9" stroke="#bb8d29" stroke-width="12"/>
+  <circle cx="1225" cy="320" r="175" fill="#fff3c9" stroke="#bb8d29" stroke-width="12"/>
+  <circle cx="1225" cy="1280" r="175" fill="#fff3c9" stroke="#bb8d29" stroke-width="12"/>
+  <circle cx="175" cy="1280" r="175" fill="#fff3c9" stroke="#bb8d29" stroke-width="12"/>
+
+  <circle cx="700" cy="800" r="430" fill="#d9f3ff" fill-opacity=".5" stroke="#2f7ed8" stroke-width="8" stroke-dasharray="18 12"/>
+  <circle cx="700" cy="800" r="340" fill="none" stroke="#f4e4b6" stroke-width="116"/>
+  <circle cx="700" cy="800" r="340" fill="none" stroke="#c39b43" stroke-width="8"/>
+  <circle cx="700" cy="800" r="210" fill="#fff9e8" stroke="#c39b43" stroke-width="8"/>
+
+  <text x="700" y="790" text-anchor="middle" class="label">CENTER-LOCKED ARENA ART</text>
+  <text x="700" y="835" text-anchor="middle" class="small">exactly concentric with live route</text>
+  <text x="700" y="110" text-anchor="middle" class="label">FLEXIBLE ISLAND SILHOUETTE</text>
+  <text x="700" y="1485" text-anchor="middle" class="small">terrain may vary; protected geometry may not</text>
+
+  <text x="175" y="318" text-anchor="middle" class="label">PLOT 0</text>
+  <text x="175" y="354" text-anchor="middle" class="small">rear-left</text>
+  <text x="1225" y="318" text-anchor="middle" class="label">PLOT 1</text>
+  <text x="1225" y="354" text-anchor="middle" class="small">rear-right</text>
+  <text x="1225" y="1278" text-anchor="middle" class="label">PLOT 2</text>
+  <text x="1225" y="1314" text-anchor="middle" class="small">front-right</text>
+  <text x="175" y="1278" text-anchor="middle" class="label">PLOT 3</text>
+  <text x="175" y="1314" text-anchor="middle" class="small">front-left</text>
+
+  <path class="leader" d="M700 250 L700 350"/>
+  <text x="700" y="218" text-anchor="middle" class="small">L3 buildings remain outside the blue visibility gutter</text>
+</svg>

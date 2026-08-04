@@ -8,7 +8,8 @@ preserved under the Island 006 runtime folder.
 | # | Runtime asset | State | Notes |
 | --- | --- | --- | --- |
 | 1 | `background/ambient-background.webp` | Complete, wired, phone-QA | 1400 × 1600 opaque WebP, 179 KB |
-| 2 | `board/board-plate.webp` | Complete, wired, phone-QA | 1400 × 1400 transparent WebP, 278 KB; organic transparent lower cliff edge |
+| 2 | `board/board-plate.webp` | Complete, wired, phone-QA | 1400 × 1400 transparent WebP; detailed organic cliff/terrain only, with no baked route or landmark plots |
+| 2a | `landmarks/shared/landmark-plot.webp` | Complete, wired, phone-QA | 800 × 800 transparent WebP; persistent satellite terrain plot reused at four fixed anchors |
 | 3 | `landmarks/hatchery/hatchery-l1.webp` | Complete, wired, phone-QA | 1024 × 1024 transparent WebP, 75 KB |
 | 4 | `landmarks/hatchery/hatchery-l2.webp` | Complete, wired, phone-QA | 1024 × 1024 transparent WebP, 132 KB |
 | 5 | `landmarks/hatchery/hatchery-l3.webp` | Complete, wired, phone-QA | 1024 × 1024 transparent WebP, 191 KB |
@@ -58,10 +59,12 @@ The board plate used the camera-locked template as the immutable geometry
 reference and the selected world concept as its material reference. It was
 generated on a uniform magenta chroma key and converted locally to alpha.
 
-The first draft was rejected because it included a decorative segmented ring
-beneath the live route. In version 2 that ring was replaced with quiet,
-continuous pale lawn and ivory gravel. The four equal satellite foundations
-and central arena foundation remain empty for separate runtime assets.
+Earlier drafts were rejected because generated rings and platforms competed
+with the live route and produced small symmetry errors. The selected plate is
+terrain only. The exact route foundation and concentric arena are code-owned
+and derived from the live tile anchors. Four equal satellite plots are separate
+runtime assets, so their protected centers remain fixed even when the island
+silhouette changes.
 
 The original lower cliff touched the 1400 px canvas boundary across more than
 one thousand pixels, which rendered as a straight horizontal cut on phones.
@@ -94,23 +97,35 @@ transparent WebP.
 
 ## Fixed-plot phone QA
 
-The production manifest uses one fixed anchor and footprint per landmark. Only
-the image scale changes:
+The production manifest uses one fixed 350 × 350 terrain plot and one fixed
+bottom-anchored 280 × 280 building placement per landmark. Only the building
+image scale changes between levels:
 
-- **L1 — 0.50:** readable on a 390 × 844 viewport while leaving clear plot space.
-- **L2 — 0.75:** visibly operational and fills most of the plot.
-- **L3 — 0.95:** majestic, reaches the plot boundary, and stays clear of the
-  neighbouring route and HUD. The wider Crown Tree uses **0.86** at L3 so its
-  canopy keeps the same visual breathing room as the architectural landmarks.
+- **Hatchery L1–L3 — 0.93 / 0.94 / 0.95.**
+- **Habit L1–L3 — 0.84 / 0.85 / 0.86** for its wider canopy.
+- **Mystery L1–L3 — 0.93 / 0.94 / 0.95.**
+- **Wisdom L1–L3 — 0.93 / 0.94 / 0.95.**
 
-The two lower landmarks use a perspective-corrected scene Y anchor of 1040.
-This was measured on the real Island Run renderer; retaining the old
-mathematically mirrored Y anchor placed their bases on the cliff face.
+The fixed plot centers in 1400 × 1600 scene space are rear-left `(175, 320)`,
+rear-right `(1225, 320)`, front-right `(1225, 1280)`, and front-left
+`(175, 1280)`. Buildings use the same X centers and Y centers of `210` or
+`1170`, which preserves their base contact while keeping the largest L3
+silhouettes outside the central route's protected visibility gutter. The asset
+validator enforces this clearance for every future manifest.
 
-The four X anchors were also aligned to the optical centers measured directly
-from the camera-locked board plate: Hatchery 359, Crown Tree 1029, Event Arena
-1090, and Wisdom 304. This removes the small outward/inward drift that remained
-visible at 390 × 844 without changing the approved asset sizes.
+Saved 390 × 844 evidence:
+
+- `qa/390x844/l3/island-001-all-l3-clean.png` — all four L3 buildings together,
+  clean-art mode, no route collision.
+- `qa/390x844/focus/hatchery-after-close.png`
+- `qa/390x844/focus/habit-after-close.png`
+- `qa/390x844/focus/event-arena-after-close.png`
+- `qa/390x844/focus/wisdom-after-close.png`
+- `qa/390x844/focus/roll-resumes-board-follow.png`
+
+The focus camera uses the plot geometry, a horizontal safe inset, and an extra
+lift for front plots. A camera-bound ambient fill prevents finite transparent
+art canvases from exposing the app shell during a close-up.
 
 ## Assets 17–18 — center court and Luma guide
 

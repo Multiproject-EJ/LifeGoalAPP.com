@@ -1322,6 +1322,8 @@ type OrbitStopVisual = {
   label: string;
   x: number;
   y: number;
+  focusX?: number;
+  focusY?: number;
   state: StopProgressState | 'shop';
   icon: string;
   labelOffsetY: number;
@@ -1361,6 +1363,53 @@ function toScreen<T extends { x: number; y: number }>(anchor: T, width: number, 
     y: oy + anchor.y * scale,
   };
 }
+
+function islandArtPointToScreen(
+  manifest: IslandArtManifest,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) {
+  const scale = Math.min(width / CANONICAL_BOARD_SIZE.width, height / CANONICAL_BOARD_SIZE.height);
+  const ox = (width - CANONICAL_BOARD_SIZE.width * scale) / 2;
+  const oy = (height - CANONICAL_BOARD_SIZE.height * scale) / 2;
+  if (manifest.sceneSpace) {
+    const boardRect = manifest.playableBoardRect ?? {
+      x: 0,
+      y: 0,
+      width: CANONICAL_BOARD_SIZE.width,
+      height: CANONICAL_BOARD_SIZE.height,
+    };
+    return {
+      x: ox + (x - boardRect.x) * ((CANONICAL_BOARD_SIZE.width * scale) / boardRect.width),
+      y: oy + (y - boardRect.y) * ((CANONICAL_BOARD_SIZE.height * scale) / boardRect.height),
+    };
+  }
+  return toScreen({
+    x: (x / manifest.coordinateSpace.width) * CANONICAL_BOARD_SIZE.width,
+    y: (y / manifest.coordinateSpace.height) * CANONICAL_BOARD_SIZE.height,
+  }, width, height);
+}
+
+function insetLandmarkCameraFocus(
+  point: { x: number; y: number },
+  width: number,
+  height: number,
+) {
+  // Satellite plots deliberately sit outside the route. Centering an extreme
+  // edge coordinate at close zoom can expose the finite art canvas. Keep the
+  // landmark in a strong rule-of-thirds close-up while the ambient world still
+  // fills every phone viewport.
+  return {
+    x: Math.min(width * 0.78, Math.max(width * 0.22, point.x)),
+    y: point.y > height / 2
+      ? Math.min(height * 0.96, point.y + height * 0.12)
+      : Math.max(height * 0.18, point.y),
+  };
+}
+
+const LANDMARK_INSPECTION_ZOOM = 1.65;
 
 function readNumericParam(
   params: URLSearchParams,
@@ -1673,7 +1722,9 @@ export function IslandRunBoardPrototype({
   } = boardRenderTuning;
   const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
   const [isDiscoveryFogDisabled, setIsDiscoveryFogDisabled] = useState(readDevDiscoveryFogDisabled);
-  const isDiscoveryFogEnabled = !isDevModeEnabled || !isDiscoveryFogDisabled;
+  // Visual-preview mode is the production clearance surface: all requested
+  // L0-L3 assets must be inspectable without discovery fog concealing overlap.
+  const isDiscoveryFogEnabled = !isIslandVisualPreview && (!isDevModeEnabled || !isDiscoveryFogDisabled);
   const handleToggleDiscoveryFog = useCallback(() => {
     setIsDiscoveryFogDisabled((current) => {
       const next = !current;
@@ -2438,11 +2489,13 @@ export function IslandRunBoardPrototype({
   const [feedParticleActive, setFeedParticleActive] = useState(false);
   // B8: brief "snap" flash on the fill when the bar first becomes claimable.
   const [rewardBarSnapActive, setRewardBarSnapActive] = useState(false);
+  const [diplomaticActivationAnimating, setDiplomaticActivationAnimating] = useState(false);
   const [showWinCelebrationModal, setShowWinCelebrationModal] = useState(false);
   const [winCelebrationRewards, setWinCelebrationRewards] = useState<WinRewardItem[]>([]);
   const [winCelebrationSubtitle, setWinCelebrationSubtitle] = useState('You won');
   const [showDemoWaitlistModal, setShowDemoWaitlistModal] = useState(false);
   const rewardBarWasClaimableRef = useRef(false);
+  const diplomaticRewardChannelWasVisibleRef = useRef<boolean | null>(null);
 
   useEffect(() => {
     if (!showWinCelebrationModal) return;
@@ -5557,6 +5610,29 @@ export function IslandRunBoardPrototype({
         tangentDeg: 0,
         scale: 1,
       }, boardSize.width, boardSize.height);
+      const landmark = islandArtManifest?.landmarks.find((entry) => entry.stopIndex === index);
+      const landmarkFocusPlacement = landmark?.levelZeroPlacement ?? landmark;
+      const focusPosition = islandArtManifest && landmarkFocusPlacement
+        ? insetLandmarkCameraFocus(
+            islandArtPointToScreen(
+              islandArtManifest,
+              landmarkFocusPlacement.x,
+              landmarkFocusPlacement.y,
+              boardSize.width,
+              boardSize.height,
+            ),
+            boardSize.width,
+            boardSize.height,
+          )
+        : islandArtManifest && index === 4 && islandArtManifest.boss
+          ? islandArtPointToScreen(
+              islandArtManifest,
+              islandArtManifest.boss.x,
+              islandArtManifest.boss.y,
+              boardSize.width,
+              boardSize.height,
+            )
+          : position;
 
       const horizontalPadding = 44;
       const verticalPadding = 44;
@@ -5600,6 +5676,8 @@ export function IslandRunBoardPrototype({
         label,
         x: visualX,
         y: visualY,
+        focusX: focusPosition.x,
+        focusY: focusPosition.y,
         state,
         icon: getStopIcon(stop),
         labelOffsetY,
@@ -5668,6 +5746,7 @@ export function IslandRunBoardPrototype({
     boardSize.width,
     completedStops,
     islandStopPlan,
+    islandArtManifest,
     stopStateMap,
     ticketRequirementByStopId,
     ticketsPaidForCurrentIsland,
@@ -5680,7 +5759,11 @@ export function IslandRunBoardPrototype({
     if (cameraMode !== 'stop_focus' || !focusedStopId || !boardCameraRef.current) return;
     const visual = orbitStopVisuals.find((v) => v.id === focusedStopId);
     if (!visual) return;
-    boardCameraRef.current.goFocusPoint(visual.x, visual.y);
+    boardCameraRef.current.goFocusPoint(
+      visual.focusX ?? visual.x,
+      visual.focusY ?? visual.y,
+      LANDMARK_INSPECTION_ZOOM,
+    );
   }, [cameraMode, focusedStopId, orbitStopVisuals]);
 
   const eggStage = useMemo(() => getHatcheryEggStage(activeEgg, nowMs), [activeEgg, nowMs]);
@@ -6130,8 +6213,20 @@ export function IslandRunBoardPrototype({
   const diplomaticRewardChannelVisible = isDiplomaticRewardChannelVisible({
     currentIslandNumber: runtimeState.currentIslandNumber,
     cycleIndex: runtimeState.cycleIndex,
-    hatcheryBuildLevel: runtimeState.stopBuildStateByIndex[0]?.buildLevel,
+    firstSessionTutorialState: runtimeState.firstSessionTutorialState,
   });
+  useEffect(() => {
+    if (!hasHydratedRuntimeState) return undefined;
+    const wasVisible = diplomaticRewardChannelWasVisibleRef.current;
+    diplomaticRewardChannelWasVisibleRef.current = diplomaticRewardChannelVisible;
+    if (wasVisible !== false || !diplomaticRewardChannelVisible) return undefined;
+
+    setDiplomaticActivationAnimating(true);
+    playIslandRunSound('tech_item_poof');
+    triggerIslandRunHaptic('stop_land');
+    const timer = window.setTimeout(() => setDiplomaticActivationAnimating(false), 2800);
+    return () => window.clearTimeout(timer);
+  }, [diplomaticRewardChannelVisible, hasHydratedRuntimeState]);
   const devTimedEventOverrideEventId = useMemo(() => {
     if (!devTimedEventOverrideType || typeof window === 'undefined') return null;
     let nonce = window.sessionStorage.getItem(DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY);
@@ -12352,7 +12447,7 @@ export function IslandRunBoardPrototype({
 
       <div
         ref={boardRef}
-        className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${shouldUseNoBackgroundFallback ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark36BoardProfile ? 'island-run-board--spark36' : ''} ${doesModalOwnAttention ? 'island-run-board--attention-paused' : ''} ${isDiscoveryFogEnabled ? 'island-run-board--discovery-fog' : 'island-run-board--discovery-fog-disabled'}`}
+        className={`island-run-board island-run-board--framed island-run-board--focus island-run-board--${activeTheme.sceneClass} ${shouldUseNoBackgroundFallback ? 'island-run-board--no-bg' : ''} ${isHudCollapsed ? 'island-run-board--hud-collapsed' : ''} ${isSpark36BoardProfile ? 'island-run-board--spark36' : ''} ${doesModalOwnAttention ? 'island-run-board--attention-paused' : ''} ${diplomaticActivationAnimating ? 'island-run-board--diplomatic-activation' : ''} ${isDiscoveryFogEnabled ? 'island-run-board--discovery-fog' : 'island-run-board--discovery-fog-disabled'}`}
         data-island-number={islandNumber}
         data-discovery-fog={isDiscoveryFogEnabled ? 'enabled' : 'disabled'}
         style={discoveryFogStyle}
@@ -12590,7 +12685,8 @@ export function IslandRunBoardPrototype({
           )}
         </div>
 
-        <div className="island-run-board__rewardbar-cluster">
+        {diplomaticRewardChannelVisible ? (
+          <div className={`island-run-board__rewardbar-cluster${diplomaticActivationAnimating ? ' island-run-board__rewardbar-cluster--mission-reveal' : ''}`}>
           <div className="island-run-board__rewardbar-hatchery-tray">
             {hatcheryPendingEggs.length > 0 && (
               <button
@@ -12796,7 +12892,8 @@ export function IslandRunBoardPrototype({
               );
             })}
           </div>
-        </div>
+          </div>
+        ) : null}
 
         {shouldShowFinishIslandCta && (
           <button
@@ -12809,7 +12906,7 @@ export function IslandRunBoardPrototype({
           </button>
         )}
 
-        {shouldShowBestNextActionChip && bestNextAction && (
+        {diplomaticRewardChannelVisible && shouldShowBestNextActionChip && bestNextAction && (
           <button
             type="button"
             className="island-run-prototype__best-next-action-chip island-run-prototype__best-next-action-chip--below-rewardbar"
@@ -12839,7 +12936,7 @@ export function IslandRunBoardPrototype({
           bossCreatureArtState={bossCreatureArtState}
           spark36RingGradient={spark36RingSegmentsGradient}
           isSpark36={isSpark36BoardProfile}
-          tileVisualScale={effectiveIslandNumber === 1 ? 1.16 : 1}
+          tileVisualScale={effectiveIslandNumber === 1 ? 1.22 : 1}
           showDebug={showDebug}
           isMinimalBoardArt={isMinimalBoardArt}
           isInteractionPaused={doesModalOwnAttention}
@@ -13403,7 +13500,6 @@ export function IslandRunBoardPrototype({
               onPurchase={() => handlePayStopTicket(activeStop.stopId)}
               onExplore={() => {
                 setActiveStopId(null);
-                setCameraMode('board_follow');
                 setLandingText(`Find ${Math.max(0, openedStopTicketCost - runtimeState.essence)} more money, then return to ${activeStop.title}.`);
               }}
             />

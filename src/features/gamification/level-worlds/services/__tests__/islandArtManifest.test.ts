@@ -401,6 +401,62 @@ export const islandArtManifestTests: TestCase[] = [
     },
   },
   {
+    name: 'normalizes an independent level-zero satellite plot placement',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        landmarks: [{
+          ...sampleManifest.landmarks[0],
+          levelZero: 'landmarks/shared/landmark-plot.webp',
+          levelZeroPlacement: { x: 175, y: 320, width: 350, height: 350 },
+        }],
+      }, 1);
+      if (!manifest) throw new Error('Expected satellite-plot manifest to normalize');
+      assertDeepEqual(
+        manifest.landmarks[0]?.levelZeroPlacement,
+        { x: 175, y: 320, width: 350, height: 350 },
+        'Expected plot placement to remain independent from the building placement box',
+      );
+    },
+  },
+  {
+    name: 'normalizes complete route-foundation materials and rejects partial invalid colors',
+    run: () => {
+      const manifest = normalizeIslandArtManifest({
+        ...sampleManifest,
+        boardFoundation: {
+          surfaceColor: '#f3e7c6',
+          highlightColor: '#fff8df',
+          edgeColor: '#c9a955',
+          shadowColor: '#70582f66',
+        },
+      }, 1);
+      if (!manifest) throw new Error('Expected board-foundation manifest to normalize');
+      assertDeepEqual(
+        manifest.boardFoundation,
+        {
+          surfaceColor: '#f3e7c6',
+          highlightColor: '#fff8df',
+          edgeColor: '#c9a955',
+          shadowColor: '#70582f66',
+        },
+        'Expected all route material colors to survive normalization',
+      );
+
+      const invalid = normalizeIslandArtManifest({
+        ...sampleManifest,
+        boardFoundation: {
+          surfaceColor: '#f3e7c6',
+          highlightColor: 'cream',
+          edgeColor: '#c9a955',
+          shadowColor: '#70582f66',
+        },
+      }, 1);
+      if (!invalid) throw new Error('Expected invalid optional material data to preserve the manifest');
+      assertEqual(invalid.boardFoundation, undefined, 'Expected partial invalid material palettes to be omitted safely');
+    },
+  },
+  {
     name: 'placeholder landmark image filenames resolve to null for generated visuals',
     run: () => {
       const manifest = normalizeIslandArtManifest({

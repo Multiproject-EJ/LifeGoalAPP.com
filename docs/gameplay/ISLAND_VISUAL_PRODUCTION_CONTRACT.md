@@ -5,6 +5,10 @@ The reusable camera, footprint and phone-validation scaffold is defined in
 production must begin from that kit rather than inventing scene geometry per
 biome.
 
+The mass-production handoff, layer stack, fixed landmark envelope, screenshot
+folders, and all-L3 acceptance sequence are defined in
+[`ISLAND_120_PRODUCTION_SYSTEM.md`](../../work/island-visual-library/ISLAND_120_PRODUCTION_SYSTEM.md).
+
 Status: **Active pilot contract**
 Pilot scope: Islands 1–5
 Scale target: Islands 1–120
@@ -35,8 +39,13 @@ At first entry the camera must show the complete route in the clear phone play w
 Every island uses the same five production layers:
 
 1. **Ambient background** — full-container atmosphere. It may contain distant terrain, sky, sea, haze, and non-interactive depth, but no fake board or UI.
-2. **Board plate** — transparent, pre-rendered island terrain aligned beneath the canonical 36-tile ring. The tile corridor must remain visually quiet so the real tiles stay readable.
-3. **Landmark cutouts** — four external structures (`hatchery`, `habit`, `mystery`, `wisdom`), each with three build levels. These are visual-only and never become tile geometry.
+2. **Board plate** — transparent organic island terrain beneath the canonical
+   route. It may vary radically in silhouette, but must not contain a baked
+   route, tile circle, arena circle, or landmark platform.
+3. **Landmark plots and cutouts** — four persistent external terrain plots plus
+   four structures (`hatchery`, `habit`, `mystery`, `wisdom`), each with three
+   bottom-anchored build levels. Plots and structures are visual-only and never
+   become tile geometry.
 4. **Boss and arena** — boss cutouts have at least idle and defeated states; the arena is separate scenery so the boss can disappear or change state without removing the location.
 5. **Optional scenery** — waterfalls, bridges, reefs, lantern paths, vegetation, clouds, or other non-interactive composition pieces.
 
@@ -66,7 +75,18 @@ The approved Island 1 tropical waterfall image is a **composition reference**, n
 
 ## Ring readability rule
 
-The canonical circular route is centered at (500, 500) in playable-board space with radius 340. Its 36 runtime tiles form a **seamless connected circle of individual raised blocks**. Every block needs a readable top face, a fine joint at each neighbour, a visible darker side wall, and one shared perspective-correct depth and lighting model. There must be no open gaps between tiles and no solid decorative backing ring or separate raised plinth beneath them.
+The canonical circular route is derived directly from the live 36 tile anchors.
+Its foundation, tiles, and central arena share that exact center and transform.
+Generated art may supply the route material palette through the manifest, but
+must never supply a second approximate geometry. Its 36 runtime tiles form a
+**seamless connected circle of individual raised blocks**. Every block needs a
+readable top face, a fine joint at each neighbour, a visible darker side wall,
+and one shared perspective-correct depth and lighting model.
+
+Four landmark plots sit beyond a protected visibility gutter. Manifest
+validation checks both each plot rectangle and each largest scaled L3 building
+rectangle against that gutter. An island cannot be approved from an L0-only or
+fog-obscured screenshot.
 
 Every production asset must be generated directly in the circular board's
 finished camera angle. The board is the immutable camera reference: its center,
@@ -106,13 +126,11 @@ Each landmark uses three images with a clear additive build story:
 
 Levels must read as the same structure growing. Do not swap to a different building, camera, footprint, lighting direction, or color identity between levels.
 
-When the landmark is intended to grow dramatically without moving its terrain
-foundation, manifests may define `levelScales` for L1/L2/L3. The renderer
-bottom-anchors these sizes to the original placement box. Island 1 establishes
-the phone-validated ladder `[0.5, 0.78, 1.1]`. L1 must remain large enough to
-read beside the live landmark label at 390x844; smaller placements can render
-successfully while appearing absent to the player. Future islands may tune the
-ladder, but every level must be explicit and checked at 390x844.
+Every manifest may define a separate `levelZeroPlacement` for its persistent
+terrain plot and `levelScales` for L1/L2/L3. The renderer bottom-anchors building
+growth to the building placement box. Island-specific ladders are permitted,
+but every level must be explicit and checked at 390x844. The acceptance case is
+all four L3 buildings rendered simultaneously in clean-art mode.
 
 The MVP motion pass uses restrained runtime animation for ambient drift,
 landmark lift/glow, arena pulse, and boss breathing. Motion must not move hit
