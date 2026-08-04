@@ -24,6 +24,7 @@ type FeaturePreviewOverlayProps = {
     unlockIsland: number;
     eyebrow?: string;
     body?: string;
+    showIslandNumbers?: boolean;
   };
   onClose: () => void;
 };
@@ -83,6 +84,7 @@ export function FeaturePreviewOverlay({
   const previewScreenshots = featureAvailability.previewScreenshots ?? [];
   const [activeScreenshot, setActiveScreenshot] = useState<number | null>(null);
   const isProgressionUnlock = Boolean(progressionUnlock);
+  const showIslandNumbers = progressionUnlock?.showIslandNumbers !== false;
   const currentIsland = Math.max(1, Math.trunc(progressionUnlock?.currentIsland ?? 1));
   const unlockIsland = Math.max(currentIsland, Math.trunc(progressionUnlock?.unlockIsland ?? currentIsland));
   const unlockProgress = unlockIsland <= 1
@@ -177,10 +179,13 @@ export function FeaturePreviewOverlay({
         </div>
 
         {isProgressionUnlock ? (
-          <div className="feature-preview-overlay__island-progress" aria-label={`Island ${currentIsland} of ${unlockIsland}`}>
+          <div
+            className="feature-preview-overlay__island-progress"
+            aria-label={showIslandNumbers ? `Island ${currentIsland} of ${unlockIsland}` : `${label} journey progress`}
+          >
             <div className="feature-preview-overlay__island-progress-labels">
-              <span>Island {currentIsland}</span>
-              <span>Island {unlockIsland}</span>
+              <span>{showIslandNumbers ? `Island ${currentIsland}` : 'Journey begun'}</span>
+              <span>{showIslandNumbers ? `Island ${unlockIsland}` : 'Unlock later'}</span>
             </div>
             <div className="feature-preview-overlay__island-progress-track" aria-hidden="true">
               <span style={{ width: `${unlockProgress}%` }} />

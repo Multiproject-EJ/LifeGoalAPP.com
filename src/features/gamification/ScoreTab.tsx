@@ -1928,6 +1928,7 @@ function ScoreFeaturePreviewOverlay({
           unlockIsland,
           eyebrow: 'Legacy discovered',
           body: 'Keep building your island to open this part of Legacy Hall.',
+          showIslandNumbers: false,
         }}
         onClose={onClose}
       />
@@ -1970,6 +1971,7 @@ function ScoreFeaturePreviewOverlayWithState({
         unlockIsland,
         eyebrow: 'Legacy discovered',
         body: 'Keep building your island to open this part of Legacy Hall.',
+        showIslandNumbers: false,
       } : undefined}
       onClose={onClose}
     />
