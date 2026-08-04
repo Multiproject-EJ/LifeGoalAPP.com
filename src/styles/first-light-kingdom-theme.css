@@ -966,3 +966,390 @@
     animation: none;
   }
 }
+
+/* Actions launcher ------------------------------------------------------- */
+
+[data-theme='first-light-kingdom'] .workspace-stage:has(.actions-tab--launcher),
+[data-theme='first-light-kingdom'] .workspace-content:has(.actions-tab--launcher) {
+  background:
+    radial-gradient(ellipse at 14% 32%, rgba(255, 255, 255, 0.96), transparent 35%),
+    radial-gradient(ellipse at 88% 18%, rgba(225, 242, 250, 0.84), transparent 34%),
+    linear-gradient(180deg, #fffdf7 0%, #f8f5ec 42%, #edf6fa 100%);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher {
+  position: relative;
+  min-height: calc(100dvh - 6rem);
+  padding: clamp(0.7rem, 3vw, 1.25rem) clamp(0.85rem, 4vw, 1.5rem) 7.5rem;
+  background:
+    radial-gradient(circle at 89% 5%, rgba(200, 153, 56, 0.24) 0 1px, transparent 2px),
+    radial-gradient(ellipse at 12% 21%, rgba(255, 255, 255, 0.98), transparent 29%),
+    radial-gradient(ellipse at 86% 24%, rgba(213, 239, 250, 0.76), transparent 34%),
+    radial-gradient(ellipse at 50% 72%, rgba(255, 252, 243, 0.92), transparent 42%),
+    linear-gradient(180deg, #fffdf7 0%, #f8f5ed 44%, #eef6fa 100%);
+  color: #071f45;
+  isolation: isolate;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(108deg, transparent 0 17%, rgba(191, 143, 46, 0.14) 17.1% 17.25%, transparent 17.35%),
+    radial-gradient(circle at 82% 12%, transparent 0 4.1rem, rgba(191, 143, 46, 0.16) 4.15rem 4.22rem, transparent 4.27rem),
+    radial-gradient(circle at 82% 12%, transparent 0 6.2rem, rgba(191, 143, 46, 0.1) 6.25rem 6.32rem, transparent 6.37rem);
+  content: '';
+  pointer-events: none;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher::after {
+  position: absolute;
+  top: -0.2rem;
+  right: 0.55rem;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid rgba(181, 133, 43, 0.2);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(255, 251, 235, 0.88) 0 15%, transparent 17%),
+    radial-gradient(circle, transparent 0 43%, rgba(181, 133, 43, 0.12) 44% 46%, transparent 47%);
+  color: rgba(174, 125, 35, 0.74);
+  content: '✦';
+  font-family: Georgia, serif;
+  font-size: 1.65rem;
+  line-height: 1;
+  opacity: 0.82;
+  pointer-events: none;
+  box-shadow: 0 0 24px rgba(255, 236, 186, 0.3);
+  text-shadow: 0 0 16px rgba(255, 214, 112, 0.7);
+  transform: rotate(9deg);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__header--launcher {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto 0.62rem;
+  width: min(100%, 46rem);
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__header--launcher
+  .actions-tab__title {
+  color: #071f45;
+  font-size: clamp(0.86rem, 3.4vw, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__header--launcher
+  .actions-tab__demo-badge {
+  display: none;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-content .feature-status-badge {
+  border: 1px solid rgba(173, 126, 42, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.72);
+  color: rgba(7, 31, 69, 0.66);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-card {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto;
+  width: min(100%, 46rem);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-actions {
+  gap: clamp(0.48rem, 2.1vw, 0.68rem);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button {
+  min-height: 0;
+  aspect-ratio: 1.82 / 1;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: clamp(1rem, 4.5vw, 1.8rem);
+  border: 1px solid rgba(175, 127, 40, 0.34);
+  border-radius: clamp(1.15rem, 5vw, 1.55rem);
+  background-position: center;
+  background-size: cover;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.92) inset,
+    0 12px 28px rgba(18, 57, 94, 0.13);
+  color: #071f45;
+  transform: translateZ(0);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, filter 180ms ease;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button::before {
+  position: absolute;
+  inset: -35% -65%;
+  z-index: 0;
+  background: linear-gradient(112deg, transparent 41%, rgba(255, 245, 211, 0.34) 49%, transparent 57%);
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-28%);
+  transition: transform 420ms ease, opacity 180ms ease;
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__launcher-button--journal {
+  background-image:
+    linear-gradient(90deg, rgba(255, 253, 248, 0.94) 0%, rgba(255, 253, 248, 0.76) 30%, transparent 53%),
+    url('/assets/themes/first-light-kingdom/actions/vision-journal-card.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__launcher-button--vision-board {
+  background-image:
+    linear-gradient(90deg, rgba(255, 253, 248, 0.95) 0%, rgba(255, 253, 248, 0.78) 31%, transparent 54%),
+    url('/assets/themes/first-light-kingdom/actions/vision-board-card.webp');
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__launcher-button--task-tower {
+  background-color: #061a34;
+  background-image:
+    linear-gradient(90deg, rgba(4, 22, 48, 0.98) 0%, rgba(4, 22, 48, 0.82) 34%, transparent 58%),
+    url('/assets/themes/first-light-kingdom/actions/task-tower-card-v2.webp');
+  background-position: center, right center;
+  background-repeat: no-repeat;
+  background-size: cover, auto 100%;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button:hover,
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button:focus-visible {
+  border-color: rgba(200, 151, 55, 0.7);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.96) inset,
+    0 16px 34px rgba(18, 57, 94, 0.18),
+    0 0 0 3px rgba(222, 183, 92, 0.16);
+  filter: saturate(1.035) brightness(1.015);
+  transform: translateY(-2px);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button:hover::before,
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button:focus-visible::before,
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button:focus-within::before {
+  opacity: 1;
+  transform: translateX(32%);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button:active {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.92) inset,
+    0 7px 17px rgba(18, 57, 94, 0.16);
+  transform: scale(0.986);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-icon {
+  display: none;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-content {
+  align-self: stretch;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 0 0 38%;
+  width: 38%;
+  margin: 0;
+  gap: 0.38rem;
+  text-align: left;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-crest {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 0.78rem;
+  color: #b7822b;
+  font-family: Georgia, serif;
+  font-size: 1rem;
+  line-height: 1;
+  text-shadow: 0 0 10px rgba(245, 201, 100, 0.46);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-crest::before,
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-crest::after {
+  width: 0.66rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor);
+  content: '';
+  grid-area: 1 / 1;
+  transform: translateX(-1rem);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-crest::after {
+  background: linear-gradient(90deg, currentColor, transparent);
+  transform: translateX(1rem);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-crest--compass {
+  color: #5e87a7;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-crest--tower {
+  color: #f0cb75;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-arrow {
+  position: absolute;
+  right: 0.72rem;
+  bottom: 0.68rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 1.62rem;
+  height: 1.62rem;
+  border: 1px solid rgba(183, 133, 42, 0.36);
+  border-radius: 50%;
+  background: rgba(255, 253, 246, 0.72);
+  color: #8f641f;
+  font-family: Georgia, serif;
+  font-size: 1.25rem;
+  line-height: 1;
+  opacity: 0.7;
+  transform: translateX(0);
+  transition: opacity 180ms ease, transform 180ms ease, background 180ms ease;
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__launcher-button--task-tower
+  .actions-tab__launcher-arrow {
+  border-color: rgba(247, 214, 137, 0.34);
+  background: rgba(7, 31, 69, 0.66);
+  color: #ffe6a7;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button:hover .actions-tab__launcher-arrow,
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button:focus-within .actions-tab__launcher-arrow {
+  background: rgba(255, 250, 232, 0.94);
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__launcher-button
+  .actions-tab__launcher-label {
+  max-width: 7ch;
+  margin: 0;
+  color: #0a2d59;
+  font-family: 'EB Garamond', 'Baskerville', 'Times New Roman', serif;
+  font-size: clamp(1.75rem, 7.9vw, 3.1rem);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 0.9;
+  text-align: left;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__launcher-button--task-tower
+  .actions-tab__launcher-label {
+  color: #fff4d0;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.42);
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-tagline {
+  display: grid;
+  gap: 0.14rem;
+  color: #173a61;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: clamp(0.5rem, 2.25vw, 0.68rem);
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  line-height: 1.22;
+  text-transform: uppercase;
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__launcher-button--task-tower
+  .actions-tab__launcher-tagline {
+  color: rgba(255, 244, 208, 0.82);
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__launcher-content
+  .feature-status-badge {
+  margin-top: 0.05rem;
+  padding: 0.22rem 0.48rem;
+  border: 1px solid rgba(182, 130, 40, 0.42);
+  background: rgba(255, 250, 232, 0.88);
+  color: #6e4711;
+  font-size: 0.54rem;
+  letter-spacing: 0.11em;
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__launcher-button--task-tower
+  .feature-status-badge {
+  border-color: rgba(248, 216, 141, 0.4);
+  background: rgba(7, 31, 69, 0.72);
+  color: #fff4d0;
+}
+
+[data-theme='first-light-kingdom']
+  .actions-tab--launcher
+  .actions-tab__launcher-button--task-tower-expanded {
+  aspect-ratio: 1.82 / 1;
+  min-height: 0;
+  align-items: stretch;
+  padding: 0;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__task-tower-top-row {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  height: 100%;
+  padding: clamp(1rem, 4.5vw, 1.8rem);
+  color: inherit;
+}
+
+[data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__task-tower-quick-add {
+  display: none;
+}
+
+@media (max-width: 390px) {
+  [data-theme='first-light-kingdom'] .actions-tab--launcher {
+    width: calc(100% + 2.5rem);
+    max-width: none;
+    margin-left: -1.25rem;
+    padding-inline: 0.75rem;
+  }
+
+  [data-theme='first-light-kingdom']
+    .actions-tab--launcher
+    .actions-tab__launcher-button
+    .actions-tab__launcher-label {
+    font-size: clamp(1.85rem, 8.4vw, 2.2rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='first-light-kingdom'] .actions-tab--launcher .actions-tab__launcher-button {
+    transition: none;
+  }
+}

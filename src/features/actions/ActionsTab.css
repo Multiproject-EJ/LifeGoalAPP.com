@@ -1649,6 +1649,15 @@
   z-index: 1;
 }
 
+.actions-tab__launcher-tagline {
+  display: none;
+}
+
+.actions-tab__launcher-crest,
+.actions-tab__launcher-arrow {
+  display: none;
+}
+
 .actions-tab__launcher-content .feature-status-badge {
   border: 2px solid rgba(217, 119, 6, 0.42);
   background: rgba(255, 251, 235, 0.92);

@@ -502,7 +502,7 @@ export function ActionsTab({
               <div className="actions-tab__launcher-row actions-tab__launcher-row--single">
                 <button
                   type="button"
-                  className="actions-tab__launcher-button actions-tab__launcher-button--full-width"
+                  className="actions-tab__launcher-button actions-tab__launcher-button--full-width actions-tab__launcher-button--journal"
                   onClick={onNavigateToJournal}
                   aria-label="Open Vision Journal"
                 >
@@ -513,7 +513,17 @@ export function ActionsTab({
                       alt=""
                     />
                   </span>
-                  <span className="actions-tab__launcher-label">Vision Journal</span>
+                  <span className="actions-tab__launcher-content">
+                    <span className="actions-tab__launcher-crest" aria-hidden="true">✦</span>
+                    <span className="actions-tab__launcher-label">Vision Journal</span>
+                    <span className="actions-tab__launcher-tagline" aria-hidden="true">
+                      <span>Dream.</span>
+                      <span>Plan.</span>
+                      <span>Believe.</span>
+                      <span>Become.</span>
+                    </span>
+                  </span>
+                  <span className="actions-tab__launcher-arrow" aria-hidden="true">›</span>
                 </button>
               </div>
             )}
@@ -522,7 +532,7 @@ export function ActionsTab({
                 <button
                   type="button"
                   className={getActionsFutureFeatureCardClassName(
-                    'actions-tab__launcher-button actions-tab__launcher-button--full-width',
+                    'actions-tab__launcher-button actions-tab__launcher-button--full-width actions-tab__launcher-button--vision-board',
                     'actions.visionBoard',
                   )}
                   onClick={() => handleActionLauncherClick('actions.visionBoard', 'Vision Board', onNavigateToVisionBoard)}
@@ -536,9 +546,16 @@ export function ActionsTab({
                     />
                   </span>
                   <span className="actions-tab__launcher-content">
+                    <span className="actions-tab__launcher-crest actions-tab__launcher-crest--compass" aria-hidden="true">✧</span>
                     <span className="actions-tab__launcher-label">Vision Board</span>
+                    <span className="actions-tab__launcher-tagline" aria-hidden="true">
+                      <span>See it.</span>
+                      <span>Feel it.</span>
+                      <span>Live it.</span>
+                    </span>
                     <FeatureStatusBadge status={getFeatureAvailability('actions.visionBoard').status} />
                   </span>
+                  <span className="actions-tab__launcher-arrow" aria-hidden="true">›</span>
                 </button>
               </div>
             )}
@@ -560,9 +577,16 @@ export function ActionsTab({
                     />
                   </span>
                   <span className="actions-tab__launcher-content">
+                    <span className="actions-tab__launcher-crest actions-tab__launcher-crest--tower" aria-hidden="true">✦</span>
                     <span className="actions-tab__launcher-label">Task Tower</span>
+                    <span className="actions-tab__launcher-tagline" aria-hidden="true">
+                      <span>Organize.</span>
+                      <span>Prioritize.</span>
+                      <span>Achieve.</span>
+                    </span>
                     <FeatureStatusBadge status={getFeatureAvailability('actions.taskTower').status} />
                   </span>
+                  <span className="actions-tab__launcher-arrow" aria-hidden="true">›</span>
                 </button>
                 <div className="actions-tab__task-tower-quick-add" onClick={(e) => e.stopPropagation()}>
                   <QuickAddAction onAdd={handleAddAction} projects={projects} showTaskImage={false} />
