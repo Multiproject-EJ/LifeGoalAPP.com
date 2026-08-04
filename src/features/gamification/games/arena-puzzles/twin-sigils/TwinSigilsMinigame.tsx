@@ -3,7 +3,7 @@ import type { ArenaPerformance, IslandRunMinigameProps } from '../../../level-wo
 import {
   TWIN_SIGIL_PUZZLES,
   resolveArenaMastery,
-  selectPuzzleByIsland,
+  selectPuzzleForSession,
   validateTwinSigilBoard,
   type TwinSigilValue,
 } from '../../../level-worlds/services/arenaPuzzleGames';
@@ -14,7 +14,8 @@ import './twinSigils.css';
 type Phase = 'briefing' | 'playing' | 'results';
 
 export default function TwinSigilsMinigame({ islandNumber, launchConfig, onComplete }: IslandRunMinigameProps) {
-  const puzzle = useMemo(() => selectPuzzleByIsland(TWIN_SIGIL_PUZZLES, islandNumber), [islandNumber]);
+  const puzzleSeed = typeof launchConfig?.arenaPuzzleSeed === 'string' ? launchConfig.arenaPuzzleSeed : `${islandNumber}:sigils`;
+  const puzzle = useMemo(() => selectPuzzleForSession(TWIN_SIGIL_PUZZLES, islandNumber, puzzleSeed), [islandNumber, puzzleSeed]);
   const sessionSeconds = typeof launchConfig?.arenaSessionSeconds === 'number'
     ? Math.max(15, Math.floor(launchConfig.arenaSessionSeconds))
     : null;

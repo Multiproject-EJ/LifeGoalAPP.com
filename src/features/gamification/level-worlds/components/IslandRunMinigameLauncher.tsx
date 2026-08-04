@@ -135,7 +135,7 @@ export function IslandRunMinigameLauncher({
   const isWorkshop = minigameId === 'island_workshop';
   return (
     <div className={`arena-session-shell${sessionPace ? ` arena-session-shell--${sessionPace}` : ''}${isWorkshop ? ' arena-session-shell--workshop' : ''}`}>
-      {sessionPace ? (
+      {sessionPace && !gameManagesArenaTimer ? (
         <div className="arena-session-pacing" role="status" aria-live="polite">
           <span>{sessionPace === 'full' ? 'Full mission' : sessionPace === 'fast' ? 'Quick fight' : 'Flash fight'}</span>
           <strong>{secondsRemaining === null ? 'Open play' : `${secondsRemaining}s`}</strong>

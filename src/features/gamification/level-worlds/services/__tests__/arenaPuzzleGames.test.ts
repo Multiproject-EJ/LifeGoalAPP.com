@@ -66,10 +66,22 @@ export const arenaPuzzleGamesTests: TestCase[] = [
         puzzle.steps.forEach((step) => {
           assert(differsByOneLetter(previous, step.answer), `${puzzle.id}: ${previous} -> ${step.answer} must change one letter`);
           assert(step.options.includes(step.answer), `${puzzle.id}: options must include ${step.answer}`);
+          step.options.forEach((option) => {
+            assert(differsByOneLetter(previous, option), `${puzzle.id}: option ${option} must be a legal move from ${previous}`);
+          });
           previous = step.answer;
         });
         assertEqual(previous, puzzle.destination, `${puzzle.id}: final answer should reach destination`);
       });
+    },
+  },
+  {
+    name: 'puzzle catalog has enough launch variety to avoid immediate repeats',
+    run: () => {
+      assert(CONCORD_PUZZLES.length >= 6, 'Concord Categories should ship with at least six boards');
+      assert(LEXICON_PUZZLES.length >= 6, 'Lexicon Relay should ship with at least six ladders');
+      assert(SIGNAL_PATH_PUZZLES.length >= 12, 'Signal Path should ship with at least twelve routes');
+      assert(TWIN_SIGIL_PUZZLES.length >= 6, 'Twin Sigils should ship with at least six boards');
     },
   },
   {

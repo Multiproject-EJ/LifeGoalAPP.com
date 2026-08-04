@@ -5,7 +5,7 @@ import {
   deterministicShuffle,
   isConcordSelectionCorrect,
   resolveArenaMastery,
-  selectPuzzleByIsland,
+  selectPuzzleForSession,
 } from '../../../level-worlds/services/arenaPuzzleGames';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../../level-worlds/services/islandRunAudio';
 import { ArenaPuzzleFrame, ArenaPuzzleResult, useArenaPuzzleClock } from '../_shared/ArenaPuzzleFrame';
@@ -14,7 +14,8 @@ import './concordCategories.css';
 type Phase = 'briefing' | 'playing' | 'results';
 
 export default function ConcordCategoriesMinigame({ islandNumber, launchConfig, onComplete }: IslandRunMinigameProps) {
-  const puzzle = useMemo(() => selectPuzzleByIsland(CONCORD_PUZZLES, islandNumber), [islandNumber]);
+  const puzzleSeed = typeof launchConfig?.arenaPuzzleSeed === 'string' ? launchConfig.arenaPuzzleSeed : `${islandNumber}:concord`;
+  const puzzle = useMemo(() => selectPuzzleForSession(CONCORD_PUZZLES, islandNumber, puzzleSeed), [islandNumber, puzzleSeed]);
   const words = useMemo(() => deterministicShuffle(
     puzzle.categories.flatMap((category) => category.words),
     `${puzzle.id}:${islandNumber}`,
@@ -156,8 +157,8 @@ export default function ConcordCategoriesMinigame({ islandNumber, launchConfig, 
       message={message}
     >
       <section className="arena-puzzle__brief">
-        <strong>Restore three hidden channels</strong>
-        <span>Select four words that share one precise connection.</span>
+        <strong>Find four signals that belong together.</strong>
+        <span>Three correct links restore the Concord channel.</span>
       </section>
       <div className="concord-categories__solved" aria-label="Restored channels">
         {puzzle.categories.filter((category) => solvedIds.includes(category.id)).map((category) => (

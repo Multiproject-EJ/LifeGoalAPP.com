@@ -5,7 +5,7 @@ import {
   SIGNAL_PATH_PUZZLES,
   isSignalPathStepValid,
   resolveArenaMastery,
-  selectPuzzleByIsland,
+  selectPuzzleForSession,
 } from '../../../level-worlds/services/arenaPuzzleGames';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../../level-worlds/services/islandRunAudio';
 import { ArenaPuzzleFrame, ArenaPuzzleResult, useArenaPuzzleClock } from '../_shared/ArenaPuzzleFrame';
@@ -14,7 +14,8 @@ import './signalPath.css';
 type Phase = 'briefing' | 'playing' | 'results';
 
 export default function SignalPathMinigame({ islandNumber, launchConfig, onComplete }: IslandRunMinigameProps) {
-  const puzzle = useMemo(() => selectPuzzleByIsland(SIGNAL_PATH_PUZZLES, islandNumber), [islandNumber]);
+  const puzzleSeed = typeof launchConfig?.arenaPuzzleSeed === 'string' ? launchConfig.arenaPuzzleSeed : `${islandNumber}:signal`;
+  const puzzle = useMemo(() => selectPuzzleForSession(SIGNAL_PATH_PUZZLES, islandNumber, puzzleSeed), [islandNumber, puzzleSeed]);
   const sessionSeconds = typeof launchConfig?.arenaSessionSeconds === 'number'
     ? Math.max(15, Math.floor(launchConfig.arenaSessionSeconds))
     : null;

@@ -5,7 +5,7 @@ import {
   deterministicShuffle,
   differsByOneLetter,
   resolveArenaMastery,
-  selectPuzzleByIsland,
+  selectPuzzleForSession,
 } from '../../../level-worlds/services/arenaPuzzleGames';
 import { playIslandRunSound, triggerIslandRunHaptic } from '../../../level-worlds/services/islandRunAudio';
 import { ArenaPuzzleFrame, ArenaPuzzleResult, useArenaPuzzleClock } from '../_shared/ArenaPuzzleFrame';
@@ -14,7 +14,8 @@ import './lexiconRelay.css';
 type Phase = 'briefing' | 'playing' | 'results';
 
 export default function LexiconRelayMinigame({ islandNumber, launchConfig, onComplete }: IslandRunMinigameProps) {
-  const puzzle = useMemo(() => selectPuzzleByIsland(LEXICON_PUZZLES, islandNumber), [islandNumber]);
+  const puzzleSeed = typeof launchConfig?.arenaPuzzleSeed === 'string' ? launchConfig.arenaPuzzleSeed : `${islandNumber}:lexicon`;
+  const puzzle = useMemo(() => selectPuzzleForSession(LEXICON_PUZZLES, islandNumber, puzzleSeed), [islandNumber, puzzleSeed]);
   const sessionSeconds = typeof launchConfig?.arenaSessionSeconds === 'number'
     ? Math.max(15, Math.floor(launchConfig.arenaSessionSeconds))
     : null;

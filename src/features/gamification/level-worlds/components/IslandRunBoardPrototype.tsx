@@ -9171,6 +9171,7 @@ export function IslandRunBoardPrototype({
         arenaSessionPace: arenaPace,
         arenaSessionSeconds: getArenaSessionSeconds(arenaPace),
         arenaTimerManagedByGame: true,
+        arenaPuzzleSeed: `${effectiveActiveTimedEvent.eventId}:${gameId}:${Date.now()}`,
       });
       playIslandRunSound('minigame_open');
       triggerIslandRunHaptic('roll');
@@ -13866,10 +13867,12 @@ export function IslandRunBoardPrototype({
                     <p>Spend one ticket. Your island build waits for you.</p>
                   </>
                 )}
-                <div className="island-event-arena-card__ticket-row" aria-live="polite">
-                  <span>{activeEventMeta?.displayName ?? 'Timed event'}</span>
-                  <strong>{activeEventTickets} {timedEventTokenIcon}</strong>
-                </div>
+                {arenaBoostStatus === 'no_active_event' ? (
+                  <div className="island-event-arena-card__ticket-row" aria-live="polite">
+                    <span>Timed event</span>
+                    <strong>Orientation</strong>
+                  </div>
+                ) : null}
                 {arenaBoostStatus === 'no_active_event' ? (
                   <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
                     <button
@@ -13891,6 +13894,12 @@ export function IslandRunBoardPrototype({
                     activeEventRuntimeId={effectiveActiveTimedEvent.eventId}
                     preferences={arenaPreferences}
                     tickets={activeEventTickets}
+                    activeEventName={activeEventMeta?.displayName ?? 'Active event'}
+                    activeEventIcon={activeEventMeta?.icon ?? '✦'}
+                    rewardProgress={rewardBarProgress}
+                    rewardThreshold={rewardBarThreshold}
+                    nextRewardIcon={nextRewardIcon}
+                    nextRewardLabel={nextRewardKind.replace(/_/g, ' ')}
                     onLaunch={handleLaunchArenaGame}
                     onTune={() => setShowArenaPreferences(true)}
                   />

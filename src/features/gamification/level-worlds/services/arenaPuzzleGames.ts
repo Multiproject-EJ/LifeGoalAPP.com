@@ -39,6 +39,33 @@ export const CONCORD_PUZZLES: readonly ConcordPuzzle[] = [
       { id: 'shelter', title: 'A protected place', words: ['HARBOR', 'NEST', 'HAVEN', 'CABIN'], reveal: 'Places of shelter' },
     ],
   },
+  {
+    id: 'island-craft',
+    briefing: 'A storm scattered the workshop index. Reconnect weather, writing and tools.',
+    categories: [
+      { id: 'weather', title: 'Changes in the air', words: ['MIST', 'GALE', 'RAIN', 'FROST'], reveal: 'Weather conditions' },
+      { id: 'writing', title: 'Make words visible', words: ['INK', 'PAGE', 'QUILL', 'VERSE'], reveal: 'Writing and poetry' },
+      { id: 'tools', title: 'Shape and measure', words: ['CHISEL', 'LEVEL', 'SAW', 'DRILL'], reveal: 'Workshop tools' },
+    ],
+  },
+  {
+    id: 'quiet-strength',
+    briefing: 'The caretaker recorded courage, rest and light on one channel. Separate them.',
+    categories: [
+      { id: 'courage', title: 'Stand your ground', words: ['BRAVE', 'NERVE', 'GRIT', 'VALOR'], reveal: 'Forms of courage' },
+      { id: 'rest', title: 'Become still', words: ['PAUSE', 'SLEEP', 'CALM', 'STILL'], reveal: 'Rest and stillness' },
+      { id: 'light', title: 'Push back darkness', words: ['GLOW', 'SPARK', 'FLAME', 'RAY'], reveal: 'Sources and signs of light' },
+    ],
+  },
+  {
+    id: 'expedition-kit',
+    briefing: 'Sort the expedition manifest into journeys, containers and command notes.',
+    categories: [
+      { id: 'journeys', title: 'Move through the world', words: ['TRAIL', 'ROUTE', 'VOYAGE', 'TREK'], reveal: 'Ways to journey' },
+      { id: 'containers', title: 'Carry your supplies', words: ['CHEST', 'CRATE', 'FLASK', 'POUCH'], reveal: 'Supply containers' },
+      { id: 'orders', title: 'Know what comes next', words: ['ORDER', 'BRIEF', 'PLAN', 'GUIDE'], reveal: 'Mission directions' },
+    ],
+  },
 ];
 
 export interface LexiconStep {
@@ -74,11 +101,11 @@ export const LEXICON_PUZZLES: readonly LexiconPuzzle[] = [
     destination: 'TAIL',
     dispatch: 'Carry the message from head to tail without breaking the relay.',
     steps: [
-      { clue: 'To recover or make whole', answer: 'HEAL', options: ['HEAL', 'HEAR', 'HEAP', 'HELM'] },
-      { clue: 'A blue-green colour', answer: 'TEAL', options: ['TEAL', 'HEEL', 'REAL', 'TEAM'] },
-      { clue: 'To communicate in words', answer: 'TELL', options: ['TELL', 'TEAM', 'TOOL', 'TALL'] },
-      { clue: 'Having greater height', answer: 'TALL', options: ['TALL', 'TOLL', 'TALK', 'TILE'] },
-      { clue: 'The rear part of an animal', answer: 'TAIL', options: ['TAIL', 'TOIL', 'TALL', 'MAIL'] },
+      { clue: 'To recover or make whole', answer: 'HEAL', options: ['HEAL', 'HEAR', 'HEAP', 'HEED'] },
+      { clue: 'A blue-green colour', answer: 'TEAL', options: ['TEAL', 'HEEL', 'REAL', 'SEAL'] },
+      { clue: 'To communicate in words', answer: 'TELL', options: ['TELL', 'TEAM', 'TEAR', 'DEAL'] },
+      { clue: 'Having greater height', answer: 'TALL', options: ['TALL', 'TOLL', 'WELL', 'BELL'] },
+      { clue: 'The rear part of an animal', answer: 'TAIL', options: ['TAIL', 'FALL', 'WALL', 'TALK'] },
     ],
   },
   {
@@ -88,10 +115,52 @@ export const LEXICON_PUZZLES: readonly LexiconPuzzle[] = [
     dispatch: 'Turn a quiet thought into a signal the whole Arena can hear.',
     steps: [
       { clue: 'Caring and helpful', answer: 'KIND', options: ['KIND', 'MEND', 'MINE', 'WIND'] },
-      { clue: 'A royal ruler', answer: 'KING', options: ['KING', 'KIND', 'KISS', 'WING'] },
-      { clue: 'A circular band', answer: 'RING', options: ['RING', 'WING', 'RUNG', 'RINK'] },
-      { clue: 'Use your voice musically', answer: 'SING', options: ['SING', 'RANG', 'SINK', 'SIGN'] },
-      { clue: 'A piece of music with words', answer: 'SONG', options: ['SONG', 'SING', 'LONG', 'SUNG'] },
+      { clue: 'A royal ruler', answer: 'KING', options: ['KING', 'BIND', 'WIND', 'KINS'] },
+      { clue: 'A circular band', answer: 'RING', options: ['RING', 'WING', 'SING', 'DING'] },
+      { clue: 'Use your voice musically', answer: 'SING', options: ['SING', 'RANG', 'DING', 'WING'] },
+      { clue: 'A piece of music with words', answer: 'SONG', options: ['SONG', 'SUNG', 'SINK', 'WING'] },
+    ],
+  },
+  {
+    id: 'sand-to-road',
+    start: 'SAND',
+    destination: 'ROAD',
+    dispatch: 'Turn a handful of shore into a route across the island.',
+    steps: [
+      { clue: 'A group that plays music', answer: 'BAND', options: ['BAND', 'SEND', 'SANK', 'SANE'] },
+      { clue: 'To curve instead of staying straight', answer: 'BEND', options: ['BEND', 'BOND', 'BANE', 'BIND'] },
+      { clue: 'A small ornament with a hole', answer: 'BEAD', options: ['BEAD', 'BOND', 'BIND', 'BAND'] },
+      { clue: 'To understand written words', answer: 'READ', options: ['READ', 'HEAD', 'LEAD', 'DEAD'] },
+      { clue: 'A route made for travel', answer: 'ROAD', options: ['ROAD', 'HEAD', 'LEAD', 'DEAD'] },
+    ],
+  },
+  {
+    id: 'calm-to-bold',
+    start: 'CALM',
+    destination: 'BOLD',
+    dispatch: 'Carry a quiet signal forward until it becomes brave enough to be heard.',
+    steps: [
+      { clue: 'To speak to someone from a distance', answer: 'CALL', options: ['CALL', 'PALM', 'CALF', 'BALM'] },
+      { clue: 'A round object used in many games', answer: 'BALL', options: ['BALL', 'FALL', 'MALL', 'TALL'] },
+      { clue: 'A metal object that rings', answer: 'BELL', options: ['BELL', 'BILL', 'BAIL', 'BULL'] },
+      { clue: 'Something worn around the waist', answer: 'BELT', options: ['BELT', 'WELL', 'SELL', 'TELL'] },
+      { clue: 'A threaded metal fastener', answer: 'BOLT', options: ['BOLT', 'MELT', 'BENT', 'BEST'] },
+      { clue: 'Brave, confident or visually strong', answer: 'BOLD', options: ['BOLD', 'BOUT', 'BELT', 'BOOT'] },
+    ],
+  },
+  {
+    id: 'soft-to-hard',
+    start: 'SOFT',
+    destination: 'HARD',
+    dispatch: 'Strengthen a gentle signal one careful change at a time.',
+    steps: [
+      { clue: 'A room directly beneath a roof', answer: 'LOFT', options: ['LOFT', 'SOOT', 'SIFT', 'SORT'] },
+      { clue: 'Unable to find the way', answer: 'LOST', options: ['LOST', 'LIFT', 'LEFT', 'LOOT'] },
+      { clue: 'The price of something', answer: 'COST', options: ['COST', 'MOST', 'LEST', 'LIST'] },
+      { clue: 'The actors chosen for a performance', answer: 'CAST', options: ['CAST', 'COAT', 'LOST', 'HOST'] },
+      { clue: 'A small wheeled vehicle', answer: 'CART', options: ['CART', 'COST', 'MAST', 'FAST'] },
+      { clue: 'A piece of stiff paper', answer: 'CARD', options: ['CARD', 'CARE', 'CARS', 'PART'] },
+      { clue: 'Firm; the opposite of soft', answer: 'HARD', options: ['HARD', 'BARD', 'LARD', 'CARE'] },
     ],
   },
 ];
@@ -107,7 +176,7 @@ export interface SignalPathPuzzle {
 
 const indexAt = (row: number, column: number) => row * SIGNAL_PATH_GRID_SIZE + column;
 
-export const SIGNAL_PATH_PUZZLES: readonly SignalPathPuzzle[] = [
+const BASE_SIGNAL_PATH_PUZZLES: readonly SignalPathPuzzle[] = [
   {
     id: 'spiral',
     title: 'Spiral Channel',
@@ -146,6 +215,25 @@ export const SIGNAL_PATH_PUZZLES: readonly SignalPathPuzzle[] = [
   },
 ];
 
+type GridTransform = 'identity' | 'mirror-x' | 'mirror-y' | 'rotate-180';
+
+function transformGridIndex(index: number, size: number, transform: GridTransform): number {
+  const row = Math.floor(index / size);
+  const column = index % size;
+  if (transform === 'mirror-x') return (row * size) + (size - 1 - column);
+  if (transform === 'mirror-y') return ((size - 1 - row) * size) + column;
+  if (transform === 'rotate-180') return ((size - 1 - row) * size) + (size - 1 - column);
+  return index;
+}
+
+export const SIGNAL_PATH_PUZZLES: readonly SignalPathPuzzle[] = BASE_SIGNAL_PATH_PUZZLES.flatMap((puzzle) => (
+  (['identity', 'mirror-x', 'mirror-y', 'rotate-180'] as const).map((transform, variantIndex) => ({
+    ...puzzle,
+    id: `${puzzle.id}-${variantIndex + 1}`,
+    path: puzzle.path.map((index) => transformGridIndex(index, SIGNAL_PATH_GRID_SIZE, transform)),
+  }))
+));
+
 export type TwinSigilValue = 0 | 1;
 
 export interface TwinSigilPuzzle {
@@ -155,7 +243,7 @@ export interface TwinSigilPuzzle {
   givens: Readonly<Record<number, TwinSigilValue>>;
 }
 
-export const TWIN_SIGIL_PUZZLES: readonly TwinSigilPuzzle[] = [
+const BASE_TWIN_SIGIL_PUZZLE: TwinSigilPuzzle =
   {
     id: 'first-balance',
     size: 6,
@@ -175,12 +263,51 @@ export const TWIN_SIGIL_PUZZLES: readonly TwinSigilPuzzle[] = [
       26: 1, 28: 0,
       30: 1, 33: 1, 35: 0,
     },
-  },
+  };
+
+function buildTwinSigilVariant(
+  id: string,
+  transform: GridTransform,
+  invert: boolean,
+): TwinSigilPuzzle {
+  const size = BASE_TWIN_SIGIL_PUZZLE.size;
+  const solution = Array.from<TwinSigilValue>({ length: size ** 2 });
+  const givens: Record<number, TwinSigilValue> = {};
+  BASE_TWIN_SIGIL_PUZZLE.solution.forEach((value, index) => {
+    solution[transformGridIndex(index, size, transform)] = invert ? (value === 1 ? 0 : 1) : value;
+  });
+  Object.entries(BASE_TWIN_SIGIL_PUZZLE.givens).forEach(([rawIndex, value]) => {
+    const transformedIndex = transformGridIndex(Number(rawIndex), size, transform);
+    givens[transformedIndex] = invert ? (value === 1 ? 0 : 1) : value;
+  });
+  return { id, size, solution, givens };
+}
+
+export const TWIN_SIGIL_PUZZLES: readonly TwinSigilPuzzle[] = [
+  buildTwinSigilVariant('first-balance', 'identity', false),
+  buildTwinSigilVariant('moon-balance', 'identity', true),
+  buildTwinSigilVariant('east-mirror', 'mirror-x', false),
+  buildTwinSigilVariant('west-mirror', 'mirror-x', true),
+  buildTwinSigilVariant('sky-mirror', 'mirror-y', false),
+  buildTwinSigilVariant('turning-balance', 'rotate-180', true),
 ];
 
 export function selectPuzzleByIsland<T>(puzzles: readonly T[], islandNumber: number): T {
   const safeIsland = Math.max(1, Math.floor(islandNumber));
   return puzzles[(safeIsland - 1) % puzzles.length]!;
+}
+
+export function selectPuzzleForSession<T>(
+  puzzles: readonly T[],
+  islandNumber: number,
+  sessionSeed: string,
+): T {
+  const safeIsland = Math.max(1, Math.floor(islandNumber));
+  let hash = safeIsland;
+  for (let index = 0; index < sessionSeed.length; index += 1) {
+    hash = (Math.imul(hash, 33) + sessionSeed.charCodeAt(index)) >>> 0;
+  }
+  return puzzles[hash % puzzles.length]!;
 }
 
 export function deterministicShuffle<T>(items: readonly T[], seed: string): T[] {

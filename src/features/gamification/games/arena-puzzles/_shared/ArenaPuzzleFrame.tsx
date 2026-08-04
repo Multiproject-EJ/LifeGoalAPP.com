@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { ArenaPerformance } from '../../../level-worlds/services/islandRunMinigameTypes';
+import { EVENT_MINIGAME_REWARD_BAR_PROGRESS } from '../../../level-worlds/services/islandRunContractV2RewardBar';
 import './arenaPuzzleShared.css';
 
 export function useArenaPuzzleClock(options: {
@@ -66,6 +67,12 @@ export function ArenaPuzzleFrame(props: {
           <small>{props.remainingSeconds === null ? 'Open play' : `${props.remainingSeconds}s`}</small>
         </div>
       </header>
+      <div className="arena-puzzle__reward-link" aria-label={`Complete this game to add ${EVENT_MINIGAME_REWARD_BAR_PROGRESS} event progress`}>
+        <span aria-hidden="true">✦</span>
+        <strong>Complete</strong>
+        <i aria-hidden="true" />
+        <b>+{EVENT_MINIGAME_REWARD_BAR_PROGRESS} event progress</b>
+      </div>
       <div className="arena-puzzle__content">{props.children}</div>
       {props.message ? <p className="arena-puzzle__message" role="status">{props.message}</p> : null}
     </main>
@@ -98,7 +105,7 @@ export function ArenaPuzzleResult(props: {
       <span className="arena-puzzle-result__label">Arena mastery</span>
       <p className="arena-puzzle-result__summary">{props.summary}</p>
       <p className="arena-puzzle-result__detail">{props.detail}</p>
-      <button type="button" className="arena-puzzle__primary" onClick={props.onContinue}>Add to event progress</button>
+      <button type="button" className="arena-puzzle__primary" onClick={props.onContinue}>Add +{EVENT_MINIGAME_REWARD_BAR_PROGRESS} event progress</button>
     </main>
   );
 }

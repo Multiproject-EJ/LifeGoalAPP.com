@@ -54,7 +54,7 @@ export default function ArenaPuzzlePreview() {
 
   if (isChoicePreview) {
     return (
-      <main style={{ minHeight: '100dvh', boxSizing: 'border-box', padding: '80px 18px 24px', color: '#fff', background: 'radial-gradient(circle at 50% 10%, #244770, #081426 48%, #040a14)' }}>
+      <main style={{ minHeight: '100dvh', boxSizing: 'border-box', padding: '18px', color: '#fff', background: 'radial-gradient(circle at 50% 10%, #244770, #081426 48%, #040a14)' }}>
         <section style={{ maxWidth: 430, margin: '0 auto', padding: 16, border: '1px solid rgba(238,210,137,.22)', borderRadius: 24, background: 'rgba(7, 16, 31, .72)' }}>
           <IslandRunArenaChoice
             playerKey="arena-preview"
@@ -63,6 +63,12 @@ export default function ArenaPuzzlePreview() {
             activeEventRuntimeId="preview-event"
             preferences={DEFAULT_ARENA_MINIGAME_PREFERENCES}
             tickets={5}
+            activeEventName="Lucky Spin Circuit"
+            activeEventIcon="✦"
+            rewardProgress={140}
+            rewardThreshold={250}
+            nextRewardIcon="🎁"
+            nextRewardLabel="reward cache"
             onLaunch={(id) => {
               if (id in MANIFESTS) selectGame(id as PreviewGameId);
               else setResult({ completed: false });
