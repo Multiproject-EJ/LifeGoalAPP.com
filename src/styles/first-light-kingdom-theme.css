@@ -1495,15 +1495,25 @@
 [data-theme='first-light-kingdom'] .score-tab__hub-card .future-feature-card__saved-label { display: none; }
 
 [data-theme='first-light-kingdom'] .score-tab__hub-card .score-tab__hub-title {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  display: grid;
   width: 100%;
+  min-height: 3rem;
+  padding: 0.45rem 0.55rem 0.55rem;
+  place-items: center;
+  border-bottom: 1px solid rgba(183, 139, 59, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 254, 250, 1) 0%, rgba(255, 253, 246, 0.98) 70%, rgba(255, 253, 246, 0.9) 100%);
   color: #0c2a52;
   font-family: 'EB Garamond', Georgia, serif;
   font-size: clamp(0.78rem, 4.6cqw, 1.18rem);
   font-weight: 600;
   letter-spacing: 0.015em;
   line-height: 1;
+  text-align: center;
   text-shadow: 0 1px 0 #fff;
 }
 
