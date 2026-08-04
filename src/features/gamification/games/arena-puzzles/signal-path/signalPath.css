@@ -1,0 +1,21 @@
+.signal-path { --arena-accent: #76f0d0; --arena-accent-rgb: 118, 240, 208; touch-action: none; }
+.signal-path__preview { display: grid; grid-template-columns: repeat(11, auto); align-items: center; justify-content: center; gap: 4px; padding: 28px 10px; border: 1px solid rgba(118,240,208,.22); border-radius: 24px; background: rgba(6,17,29,.75); }
+.signal-path__preview span { display: grid; width: 35px; height: 35px; place-items: center; border: 1px solid #a6ffe8; border-radius: 50%; color: #09241d; background: #76f0d0; font-weight: 900; box-shadow: 0 0 18px rgba(118,240,208,.35); }
+.signal-path__preview i { width: clamp(4px, 2vw, 13px); height: 3px; border-radius: 4px; background: rgba(118,240,208,.45); }
+.signal-path__tips { display: grid; gap: 7px; padding: 13px 15px; border-radius: 18px; color: #b7c6d5; background: rgba(17,31,49,.72); font-size: 11px; }
+.signal-path__mission { grid-template-columns: 1fr auto; align-items: center; }
+.signal-path__mission span { color: #9ff4dd; font-size: 10px; font-weight: 800; }
+.signal-path__grid { display: grid; width: min(100%, 430px, calc(100dvh - 250px)); min-width: 280px; aspect-ratio: 1; margin: 0 auto; padding: 9px; grid-template-columns: repeat(5, 1fr); gap: 5px; border: 1px solid rgba(118,240,208,.28); border-radius: 25px; background: radial-gradient(circle at 50% 45%, rgba(118,240,208,.08), transparent 65%), rgba(4,11,23,.9); box-shadow: inset 0 0 30px rgba(118,240,208,.06), 0 20px 44px rgba(0,0,0,.28); touch-action: none; }
+.signal-path__grid button { position: relative; min-width: 0; min-height: 0; overflow: visible; border: 1px solid rgba(130,166,190,.2); border-radius: 13px; padding: 0; background: linear-gradient(145deg, rgba(26,45,62,.86), rgba(10,22,36,.96)); touch-action: none; }
+.signal-path__grid button.is-routed { border-color: rgba(118,240,208,.58); background: radial-gradient(circle, rgba(182,255,235,.44), rgba(61,191,158,.33) 45%, rgba(12,42,43,.9)); box-shadow: inset 0 0 12px rgba(118,240,208,.23), 0 0 9px rgba(118,240,208,.16); }
+.signal-path__grid button.is-routed::after { position: absolute; inset: 28%; border-radius: 50%; content: ""; background: #bdffed; box-shadow: 0 0 9px #76f0d0; }
+.signal-path__grid button.is-head::after { inset: 20%; animation: signal-head 850ms ease-in-out infinite; }
+.signal-path__grid button.is-beacon { border-radius: 50%; border-color: rgba(225,255,246,.68); }
+.signal-path__grid button strong { position: relative; z-index: 3; color: #eafff9; font-size: clamp(14px, 5vw, 23px); text-shadow: 0 0 11px rgba(118,240,208,.75); }
+.signal-path__grid button.is-routed strong { color: #08251d; text-shadow: none; }
+.signal-path__grid button.is-hinted { animation: signal-hint 900ms ease-in-out infinite; }
+.signal-path__grid button i { display: none; }
+.signal-path__actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+@keyframes signal-head { 50% { transform: scale(1.24); box-shadow: 0 0 18px #aaffea; } }
+@keyframes signal-hint { 50% { border-color: #fff; box-shadow: 0 0 24px rgba(118,240,208,.56); transform: scale(.94); } }
+@media (max-height: 720px) { .signal-path__grid { width: min(100%, calc(100dvh - 220px)); min-width: 255px; } }

@@ -1,0 +1,21 @@
+.arena-choice { display: grid; gap: 11px; margin-top: 12px; }
+.arena-choice__heading { display: flex; align-items: end; justify-content: space-between; gap: 10px; }
+.arena-choice__heading > div { display: grid; gap: 1px; }
+.arena-choice__heading span { color: #d2b468; font-size: 8px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+.arena-choice__heading h3 { margin: 0; color: #f8f1dd; font-family: Georgia, 'Times New Roman', serif; font-size: 19px; }
+.arena-choice__heading button { padding: 6px 10px; border: 1px solid rgba(238,210,137,.3); border-radius: 999px; color: #eadcae; background: rgba(236,205,126,.08); font-size: 9px; font-weight: 900; }
+.arena-choice__cards { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.arena-choice__card { --arena-choice-accent: #f2c66d; position: relative; display: grid; min-width: 0; min-height: 214px; align-content: start; justify-items: center; gap: 6px; overflow: hidden; padding: 15px 10px 12px; border: 1px solid color-mix(in srgb, var(--arena-choice-accent), transparent 58%); border-radius: 21px; color: #f5f3ec; background: linear-gradient(160deg, color-mix(in srgb, var(--arena-choice-accent), #101a2f 86%), #07101f 72%); box-shadow: inset 0 1px rgba(255,255,255,.08), 0 13px 28px rgba(0,0,0,.2); text-align: center; }
+.arena-choice__card:active:not(:disabled) { transform: translateY(2px) scale(.985); }
+.arena-choice__card:disabled { opacity: .5; }
+.arena-choice__glow { position: absolute; top: -54px; left: 50%; width: 135px; height: 135px; border-radius: 50%; background: color-mix(in srgb, var(--arena-choice-accent), transparent 78%); filter: blur(9px); transform: translateX(-50%); }
+.arena-choice__icon { position: relative; display: grid; width: 55px; height: 55px; place-items: center; border: 1px solid color-mix(in srgb, var(--arena-choice-accent), white 20%); border-radius: 18px; color: #fff8df; background: radial-gradient(circle at 35% 25%, color-mix(in srgb, var(--arena-choice-accent), white 18%), color-mix(in srgb, var(--arena-choice-accent), #0a1325 68%)); box-shadow: 0 0 20px color-mix(in srgb, var(--arena-choice-accent), transparent 68%), inset 0 1px rgba(255,255,255,.24); font-size: 23px; font-weight: 900; }
+.arena-choice__new { position: absolute; top: 8px; right: 8px; padding: 3px 6px; border-radius: 999px; color: #152238; background: #ffe8a4; font-size: 7px; letter-spacing: .09em; text-transform: uppercase; }
+.arena-choice__card small { position: relative; color: color-mix(in srgb, var(--arena-choice-accent), white 36%); font-size: 7px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+.arena-choice__card strong { position: relative; color: #fff8e8; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(14px, 4vw, 18px); line-height: 1.03; }
+.arena-choice__card p { position: relative; margin: 0; color: #abb7ca; font-size: 9px; line-height: 1.35; }
+.arena-choice__cost { position: relative; display: flex; width: 100%; align-items: center; justify-content: center; gap: 6px; margin-top: auto; padding-top: 7px; border-top: 1px solid rgba(255,255,255,.08); color: #f6dda0; font-size: 10px; font-weight: 900; }
+.arena-choice__cost i { color: #eff4fb; font-size: 9px; font-style: normal; }
+.arena-choice__or { position: absolute; z-index: 3; top: 50%; left: 50%; display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid rgba(238,213,151,.35); border-radius: 50%; color: #ddcc9e; background: #0a1323; font-family: Georgia, serif; font-size: 9px; transform: translate(-50%,-50%); }
+.arena-choice__note { margin: 0; color: #93a0b4; font-size: 9px; line-height: 1.35; text-align: center; }
+@media (max-width: 350px) { .arena-choice__card { min-height: 194px; padding-inline: 7px; } .arena-choice__icon { width: 47px; height: 47px; } }

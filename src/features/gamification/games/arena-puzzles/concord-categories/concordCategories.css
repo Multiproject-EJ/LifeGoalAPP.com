@@ -1,0 +1,21 @@
+.concord-categories { --arena-accent: #f3c969; --arena-accent-rgb: 243, 201, 105; }
+.concord-categories__briefing { text-align: center; }
+.concord-categories__demo { position: relative; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 22px; border: 1px solid rgba(243,201,105,.22); border-radius: 24px; background: rgba(7,15,30,.7); }
+.concord-categories__demo span { padding: 15px 5px; border: 1px solid rgba(255,255,255,.13); border-radius: 14px; color: #f7f1df; background: linear-gradient(145deg, #23304a, #10192c); font-size: 12px; font-weight: 900; text-align: center; }
+.concord-categories__demo i { position: absolute; top: 50%; left: 50%; display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; color: #fff3bd; background: #162138; box-shadow: 0 0 24px rgba(243,201,105,.35); transform: translate(-50%,-50%); }
+.concord-categories__rules { display: grid; margin: 0; gap: 7px; padding: 0 0 0 25px; color: #c1cbdb; font-size: 12px; }
+.concord-categories__rules strong { color: #fff2c4; }
+.concord-categories__solved { display: grid; gap: 7px; }
+.concord-categories__solved:empty { display: none; }
+.concord-categories__solved > div { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid rgba(243,201,105,.35); border-radius: 14px; background: linear-gradient(110deg, rgba(243,201,105,.22), rgba(25,37,60,.78)); animation: concord-channel-lock 480ms cubic-bezier(.2,1.25,.3,1) both; }
+.concord-categories__solved strong { color: #fff2c5; font-family: Georgia, serif; font-size: 15px; }
+.concord-categories__solved span { color: #b9c4d5; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.concord-categories__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.concord-categories__grid button { min-width: 0; min-height: 59px; padding: 5px; border: 1px solid rgba(172,190,222,.22); border-radius: 15px; color: #eaf0fa; background: linear-gradient(145deg, rgba(34,47,74,.94), rgba(13,23,41,.96)); box-shadow: inset 0 1px rgba(255,255,255,.07), 0 7px 16px rgba(0,0,0,.16); font-size: clamp(9px, 3vw, 12px); font-weight: 900; letter-spacing: .03em; }
+.concord-categories__grid button.is-selected { border-color: rgba(243,201,105,.85); color: #17223a; background: linear-gradient(180deg, #fff4c9, #e6bb59); box-shadow: 0 0 20px rgba(243,201,105,.28); transform: translateY(-3px); }
+.concord-categories__grid button.is-hinted:not(.is-selected) { animation: concord-hint 1.2s ease-in-out infinite; }
+.concord-categories__actions { display: grid; grid-template-columns: .72fr 1.28fr; gap: 9px; }
+.concord-categories__mistakes { color: #8f9db4; font-size: 10px; text-align: center; }
+@keyframes concord-channel-lock { from { opacity: 0; transform: scale(.86) translateY(8px); } }
+@keyframes concord-hint { 50% { border-color: rgba(243,201,105,.8); box-shadow: 0 0 18px rgba(243,201,105,.25); } }
+@media (max-height: 720px) { .concord-categories__grid button { min-height: 48px; } .arena-puzzle__content { margin-top: 10px; gap: 9px; } }

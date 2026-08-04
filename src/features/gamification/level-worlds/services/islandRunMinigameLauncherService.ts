@@ -248,6 +248,10 @@ export function resolveEventMinigameCompletionId(options: {
   if (options.minigameId === 'space_excavator') return 'space_excavator';
   if (options.minigameId === 'companion_feast') return 'companion_feast';
   if (options.minigameId === 'momentum_matrix') return 'momentum_matrix';
+  if (options.minigameId === 'concord_categories') return 'concord_categories';
+  if (options.minigameId === 'lexicon_relay') return 'lexicon_relay';
+  if (options.minigameId === 'signal_path') return 'signal_path';
+  if (options.minigameId === 'twin_sigils') return 'twin_sigils';
   return null;
 }
 

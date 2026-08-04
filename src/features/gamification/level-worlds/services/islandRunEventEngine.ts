@@ -342,7 +342,16 @@ export function emitEventTransitionTelemetry(payload: EventTransitionTelemetryPa
   });
 }
 
-export type EventMinigameId = 'island_workshop' | 'lucky_spin' | 'space_excavator' | 'companion_feast' | 'momentum_matrix';
+export type EventMinigameId =
+  | 'island_workshop'
+  | 'lucky_spin'
+  | 'space_excavator'
+  | 'companion_feast'
+  | 'momentum_matrix'
+  | 'concord_categories'
+  | 'lexicon_relay'
+  | 'signal_path'
+  | 'twin_sigils';
 
 export interface EventMinigameLaunchDescriptor {
   eventId: EventId;

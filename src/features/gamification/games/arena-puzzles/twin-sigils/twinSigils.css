@@ -1,0 +1,28 @@
+.twin-sigils { --arena-accent: #c1a6ff; --arena-accent-rgb: 193, 166, 255; }
+.twin-sigils__preview { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 27px; border: 1px solid rgba(193,166,255,.24); border-radius: 24px; background: rgba(8,14,30,.74); }
+.twin-sigils__preview span, .twin-sigils__preview i { display: grid; width: 52px; height: 52px; place-items: center; border-radius: 50%; font-size: 27px; font-style: normal; }
+.twin-sigils__preview span { color: #3d2a08; background: radial-gradient(circle at 38% 33%, #fff8d4, #f3c969 55%, #9e6c1b); box-shadow: 0 0 22px rgba(243,201,105,.42); }
+.twin-sigils__preview i { color: #e9e0ff; background: radial-gradient(circle at 38% 33%, #ac98ec, #493981 60%, #171c43); box-shadow: 0 0 22px rgba(193,166,255,.38); }
+.twin-sigils__rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.twin-sigils__rules > div { display: grid; min-width: 0; gap: 5px; padding: 12px 8px; border: 1px solid rgba(193,166,255,.18); border-radius: 15px; background: rgba(18,28,49,.72); text-align: center; }
+.twin-sigils__rules b { color: #eee8ff; font-family: Georgia, serif; font-size: 17px; }
+.twin-sigils__rules span { color: #9facc0; font-size: 9px; line-height: 1.35; }
+.twin-sigils__mission { display: flex; align-items: center; justify-content: space-between; }
+.twin-sigils__mission span { color: #b7a8dc; font-size: 10px; }
+.twin-sigils__grid-shell { width: min(100%, 430px, calc(100dvh - 280px)); min-width: 280px; aspect-ratio: 1; margin: 0 auto; padding: 9px; border: 1px solid rgba(193,166,255,.28); border-radius: 25px; background: radial-gradient(circle, rgba(193,166,255,.1), transparent 65%), rgba(5,10,23,.92); box-shadow: inset 0 0 30px rgba(193,166,255,.07), 0 20px 45px rgba(0,0,0,.3); }
+.twin-sigils__grid { display: grid; width: 100%; height: 100%; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.twin-sigils__grid button { display: grid; min-width: 0; min-height: 0; place-items: center; border: 1px solid rgba(159,174,208,.18); border-radius: 11px; padding: 0; color: #fff; background: linear-gradient(145deg, rgba(29,42,65,.86), rgba(10,18,34,.95)); box-shadow: inset 0 1px rgba(255,255,255,.05); }
+.twin-sigils__grid button span { display: grid; width: 70%; aspect-ratio: 1; place-items: center; border-radius: 50%; font-size: clamp(15px, 5vw, 25px); animation: twin-sigil-place 310ms cubic-bezier(.2,1.4,.3,1) both; }
+.twin-sigils__grid button.is-light span, .twin-sigils__legend i.is-light { color: #422b05; background: radial-gradient(circle at 38% 33%, #fff9db, #f2c76b 58%, #a87119); box-shadow: 0 0 11px rgba(243,201,105,.35); }
+.twin-sigils__grid button.is-shadow span, .twin-sigils__legend i.is-shadow { color: #f2edff; background: radial-gradient(circle at 38% 33%, #ad9beb, #4d3a87 60%, #1a2049); box-shadow: 0 0 11px rgba(193,166,255,.34); }
+.twin-sigils__grid button.is-given { border-color: rgba(255,255,255,.28); background: rgba(47,52,75,.9); }
+.twin-sigils__grid button.is-given span { filter: saturate(.75); }
+.twin-sigils__grid button.is-invalid { border-color: rgba(255,105,105,.56); box-shadow: inset 0 0 10px rgba(255,70,70,.12); }
+.twin-sigils__grid button.is-hinted { animation: twin-hint 1s ease-in-out 2; }
+.twin-sigils__legend { display: flex; justify-content: center; gap: 18px; color: #aeb9ca; font-size: 10px; }
+.twin-sigils__legend span { display: flex; align-items: center; gap: 5px; }
+.twin-sigils__legend i { display: grid; width: 21px; height: 21px; place-items: center; border-radius: 50%; font-size: 11px; font-style: normal; }
+.twin-sigils__actions { display: grid; grid-template-columns: .8fr 1.2fr; gap: 9px; }
+@keyframes twin-sigil-place { from { opacity: 0; transform: scale(.25) rotate(-30deg); } }
+@keyframes twin-hint { 50% { border-color: #fff; box-shadow: 0 0 24px rgba(193,166,255,.52); transform: scale(.94); } }
+@media (max-height: 720px) { .twin-sigils__grid-shell { width: min(100%, calc(100dvh - 235px)); min-width: 255px; } }

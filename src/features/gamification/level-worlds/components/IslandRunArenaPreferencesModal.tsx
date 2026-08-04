@@ -105,22 +105,23 @@ export function IslandRunArenaPreferencesModal({
         <div className="arena-preferences__catalog" aria-label="Arena game catalog">
           {rows.map((row) => {
             const isLiveRotation = row.eventId === activeEventId;
-            const canLaunch = !row.disabled && (row.eventId === 'momentum_matrix' || isLiveRotation);
+            const isExhibition = row.catalogKind === 'exhibition';
+            const canLaunch = !row.disabled && (isExhibition || isLiveRotation);
             return (
               <button
                 type="button"
-                className={`arena-preferences__catalog-card${row.eventId === 'momentum_matrix' ? ' arena-preferences__catalog-card--feature' : ''}`}
+                className={`arena-preferences__catalog-card${isExhibition ? ' arena-preferences__catalog-card--feature' : ''}`}
                 key={`catalog:${row.eventId}`}
                 onClick={() => {
                   onClose();
                   onLaunchGame(row.eventId);
                 }}
                 disabled={!canLaunch}
-                aria-label={`${row.displayName}. ${row.disabled ? 'Paused' : row.eventId === 'momentum_matrix' ? 'Exhibition available' : isLiveRotation ? 'Live now' : 'Upcoming rotation'}`}
+                aria-label={`${row.displayName}. ${row.disabled ? 'Paused' : isExhibition ? 'Exhibition available' : isLiveRotation ? 'Live now' : 'Upcoming rotation'}`}
               >
                 {row.artSrc ? <img src={row.artSrc} alt="" /> : <span aria-hidden="true">{row.icon}</span>}
                 <strong>{row.displayName}</strong>
-                <small>{row.disabled ? 'Paused' : row.eventId === 'momentum_matrix' ? 'Exhibition' : isLiveRotation ? 'Live now' : 'Upcoming'}</small>
+                <small>{row.disabled ? 'Paused' : isExhibition ? 'Exhibition' : isLiveRotation ? 'Live now' : 'Upcoming'}</small>
               </button>
             );
           })}

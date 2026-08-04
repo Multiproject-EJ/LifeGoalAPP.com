@@ -32,28 +32,30 @@ export const islandRunArenaPreferencesTests: TestCase[] = [
         rankedEventIds: ['lucky_spin', 'lucky_spin', 'unknown'],
         disabledEventIds: ['lucky_spin', 'space_excavator'],
       });
-      assert(result.rankedEventIds.length === 5, 'expected the four rotation games plus Momentum Matrix');
-      assert(new Set(result.rankedEventIds).size === 5, 'expected no duplicate games');
-      assert(result.disabledEventIds.length === 1, 'expected the 25% disabled cap');
+      assert(result.rankedEventIds.length === 9, 'expected four rotation games, Momentum Matrix, and four puzzle exhibitions');
+      assert(new Set(result.rankedEventIds).size === 9, 'expected no duplicate games');
+      assert(result.disabledEventIds.length === 2, 'expected the 25% disabled cap');
     },
   },
   {
-    name: 'only one of five games can be disabled at the 25% cap',
+    name: 'only two of nine games can be disabled at the 25% cap',
     run: () => {
-      assert(getArenaDisabledLimit() === 1, 'expected one disabled slot');
+      assert(getArenaDisabledLimit() === 2, 'expected two disabled slots');
       const first = toggleArenaEvent(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'lucky_spin');
       assert(first.changed, 'first pause should succeed');
       const second = toggleArenaEvent(first.preferences, 'feeding_frenzy');
-      assert(!second.changed, 'second pause should be refused');
-      assert(Boolean(second.reason), 'refusal should explain the cap');
+      assert(second.changed, 'second pause should succeed');
+      const third = toggleArenaEvent(second.preferences, 'signal_path');
+      assert(!third.changed, 'third pause should be refused');
+      assert(Boolean(third.reason), 'refusal should explain the cap');
     },
   },
   {
     name: 'ranking produces full, middle-fast, and flash pacing',
     run: () => {
       const rows = getArenaPreferenceRows(DEFAULT_ARENA_MINIGAME_PREFERENCES);
-      assert(rows.map((row) => row.pace).join(',') === 'full,fast,fast,fast,flash', 'unexpected pace tiers');
-      assert(resolveArenaSessionPace(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'momentum_matrix') === 'flash', 'last game should flash');
+      assert(rows.map((row) => row.pace).join(',') === 'full,full,fast,fast,fast,fast,fast,flash,flash', 'unexpected pace tiers');
+      assert(resolveArenaSessionPace(DEFAULT_ARENA_MINIGAME_PREFERENCES, 'twin_sigils') === 'flash', 'last game should flash');
     },
   },
   {

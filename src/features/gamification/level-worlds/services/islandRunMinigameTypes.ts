@@ -11,6 +11,16 @@ export interface IslandRunMinigameReward {
   xp?: number;
 }
 
+export interface ArenaPerformance {
+  gameId: string;
+  rawScore: number;
+  mastery: number;
+  stars: 1 | 2 | 3;
+  durationMs: number;
+  mistakes: number;
+  hintsUsed: number;
+}
+
 /**
  * The completion callback contract for all Island Run minigames.
  * Called when the player finishes or exits a minigame.
@@ -18,6 +28,8 @@ export interface IslandRunMinigameReward {
 export interface IslandRunMinigameResult {
   completed: boolean;       // true = player finished/won; false = abandoned/lost
   reward?: IslandRunMinigameReward;
+  /** Normalized cross-game Arena report. Rewards remain launcher-owned. */
+  arenaPerformance?: ArenaPerformance;
 }
 
 /**

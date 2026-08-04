@@ -1,18 +1,14 @@
 import type { Session } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../../../../lib/supabaseClient';
 import {
-  EVENT_IDS,
-  type EventId,
-  getEventDisplayMeta,
-} from './islandRunEventEngine';
+  ARENA_GAME_IDS,
+  getArenaGameDefinition,
+  isArenaGameId,
+  type ArenaGameId,
+} from './islandRunArenaCatalog';
 
 export type ArenaSessionPace = 'flash' | 'fast' | 'full';
-export type ArenaGameId = EventId | 'momentum_matrix';
-
-export const ARENA_GAME_IDS: readonly ArenaGameId[] = [
-  ...EVENT_IDS,
-  'momentum_matrix',
-] as const;
+export type { ArenaGameId } from './islandRunArenaCatalog';
 
 export interface ArenaMinigamePreferences {
   rankedEventIds: ArenaGameId[];
@@ -46,10 +42,6 @@ function getArenaPreferencesClient() {
   // the table after the remote schema is applied.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return getSupabaseClient() as any;
-}
-
-function isArenaGameId(value: unknown): value is ArenaGameId {
-  return typeof value === 'string' && (ARENA_GAME_IDS as readonly string[]).includes(value);
 }
 
 export function getArenaDisabledLimit(totalGames = ARENA_GAME_IDS.length): number {
@@ -150,24 +142,19 @@ export function getArenaSessionSeconds(pace: ArenaSessionPace): number | null {
 
 export function getArenaPreferenceRows(preferences: ArenaMinigamePreferences) {
   const normalized = normalizeArenaPreferences(preferences);
-  return normalized.rankedEventIds.map((eventId, index) => ({
-    eventId,
-    rank: index + 1,
-    disabled: normalized.disabledEventIds.includes(eventId),
-    pace: resolveArenaSessionPace(normalized, eventId),
-    ...(eventId === 'momentum_matrix'
-      ? {
-          icon: '✦',
-          displayName: 'Momentum Matrix',
-          artSrc: '/assets/event-games/momentum-matrix/momentum-matrix-hero.webp',
-          catalogKind: 'exhibition' as const,
-        }
-      : {
-          ...getEventDisplayMeta(eventId),
-          artSrc: null,
-          catalogKind: 'rotation' as const,
-        }),
-  }));
+  return normalized.rankedEventIds.map((eventId, index) => {
+    const game = getArenaGameDefinition(eventId);
+    return {
+      eventId,
+      rank: index + 1,
+      disabled: normalized.disabledEventIds.includes(eventId),
+      pace: resolveArenaSessionPace(normalized, eventId),
+      icon: game.icon,
+      displayName: game.displayName,
+      artSrc: game.artSrc,
+      catalogKind: game.availability === 'exhibition' ? 'exhibition' as const : 'rotation' as const,
+    };
+  });
 }
 
 function localStorageKey(userId: string): string {

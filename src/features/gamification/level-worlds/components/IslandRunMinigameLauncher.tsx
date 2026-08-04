@@ -78,7 +78,8 @@ export function IslandRunMinigameLauncher({
   onComplete,
 }: IslandRunMinigameLauncherProps) {
   const entry = getMinigame(minigameId);
-  const sessionSeconds = typeof launchConfig?.arenaSessionSeconds === 'number'
+  const gameManagesArenaTimer = launchConfig?.arenaTimerManagedByGame === true;
+  const sessionSeconds = !gameManagesArenaTimer && typeof launchConfig?.arenaSessionSeconds === 'number'
     ? Math.max(1, Math.floor(launchConfig.arenaSessionSeconds))
     : null;
   const sessionPace = launchConfig?.arenaSessionPace === 'flash'

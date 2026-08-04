@@ -13,6 +13,10 @@
  */
 
 import { bossRhythmManifest } from '../../games/boss-rhythm';
+import { concordCategoriesManifest } from '../../games/arena-puzzles/concord-categories';
+import { lexiconRelayManifest } from '../../games/arena-puzzles/lexicon-relay';
+import { signalPathManifest } from '../../games/arena-puzzles/signal-path';
+import { twinSigilsManifest } from '../../games/arena-puzzles/twin-sigils';
 import { companionFeastManifest } from '../../games/companion-feast';
 import { fortuneEngineManifest } from '../../games/fortune-engine';
 import { islandWorkshopManifest } from '../../games/island-workshop';
@@ -34,6 +38,10 @@ export const ALL_MINIGAME_MANIFESTS: readonly MinigameManifest[] = Object.freeze
   islandWorkshopManifest,
   fortuneEngineManifest,
   momentumMatrixManifest,
+  concordCategoriesManifest,
+  lexiconRelayManifest,
+  signalPathManifest,
+  twinSigilsManifest,
 ]);
 
 let registered = false;

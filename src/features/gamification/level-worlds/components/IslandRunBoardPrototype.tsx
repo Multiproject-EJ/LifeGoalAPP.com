@@ -376,6 +376,8 @@ import {
 } from '../services/encounterService';
 import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
+import { IslandRunArenaChoice } from './IslandRunArenaChoice';
+import { isArenaPuzzleGameId } from '../services/islandRunArenaCatalog';
 import {
   DEFAULT_ARENA_MINIGAME_PREFERENCES,
   getArenaSessionSeconds,
@@ -9123,6 +9125,57 @@ export function IslandRunBoardPrototype({
       handleLaunchMomentumMatrix();
       return;
     }
+    if (isArenaPuzzleGameId(gameId)) {
+      if (
+        !effectiveActiveTimedEvent
+        || !isCanonicalEventId(effectiveActiveTimedEvent.eventType)
+      ) {
+        setLandingText('The Arena needs an active event reward channel before this exhibition can begin.');
+        return;
+      }
+      if (!canOpenIslandRunOverlayWhileRollingState({
+        isRolling,
+        isAnimatingRoll: isAnimatingRollRef.current,
+        isRollSyncPending: isRollSyncPendingRef.current,
+      })) {
+        stopAutoRoll();
+        setLandingText('Arena choice saved. Finish this roll, then open the Arena again.');
+        return;
+      }
+      const arenaPace = resolveArenaSessionPace(arenaPreferences, gameId);
+      if (!arenaPace) {
+        setLandingText('This Arena game is paused in your rotation.');
+        setShowArenaPreferences(true);
+        return;
+      }
+      const spend = applyTimedEventTicketSpend({
+        session,
+        client,
+        eventId: effectiveActiveTimedEvent.eventId,
+        ticketsToSpend: 1,
+        triggerSource: `arena_exhibition_${gameId}`,
+      });
+      if (spend.spent < 1) {
+        setLandingText('Earn one event ticket on the reward bar to enter this challenge.');
+        playIslandRunSound('market_insufficient_coins');
+        return;
+      }
+      setRuntimeState(spend.record);
+      registerAllMinigameManifests();
+      setActiveLaunchedMinigameId(gameId);
+      setActiveLaunchedMinigameSource('timed_event');
+      setActiveLaunchedMinigameConfig({
+        source: 'timed_event',
+        mode: 'arena_exhibition',
+        activeEventId: effectiveActiveTimedEvent.eventId,
+        arenaSessionPace: arenaPace,
+        arenaSessionSeconds: getArenaSessionSeconds(arenaPace),
+        arenaTimerManagedByGame: true,
+      });
+      playIslandRunSound('minigame_open');
+      triggerIslandRunHaptic('roll');
+      return;
+    }
     if (effectiveActiveTimedEvent?.eventType === gameId) {
       handleLaunchTimedEventMinigame();
       return;
@@ -13817,31 +13870,32 @@ export function IslandRunBoardPrototype({
                   <span>{activeEventMeta?.displayName ?? 'Timed event'}</span>
                   <strong>{activeEventTickets} {timedEventTokenIcon}</strong>
                 </div>
+                {arenaBoostStatus === 'no_active_event' ? (
+                  <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
+                    <button
+                      type="button"
+                      className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
+                      onClick={() => {
+                        setArenaSoftSaveValueMomentReached(true);
+                        handleCompleteActiveStop('🎪 Arena orientation complete! Wisdom landmark unlocked.');
+                      }}
+                    >
+                      Finish orientation
+                    </button>
+                  </div>
+                ) : effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType) ? (
+                  <IslandRunArenaChoice
+                    playerKey={session.user.id}
+                    islandNumber={islandNumber}
+                    activeEventId={effectiveActiveTimedEvent.eventType}
+                    activeEventRuntimeId={effectiveActiveTimedEvent.eventId}
+                    preferences={arenaPreferences}
+                    tickets={activeEventTickets}
+                    onLaunch={handleLaunchArenaGame}
+                    onTune={() => setShowArenaPreferences(true)}
+                  />
+                ) : null}
                 <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary"
-                    onClick={arenaBoostStatus === 'no_active_event'
-                      ? () => {
-                          setArenaSoftSaveValueMomentReached(true);
-                          handleCompleteActiveStop('🎪 Arena orientation complete! Wisdom landmark unlocked.');
-                        }
-                      : handleLaunchTimedEventMinigame}
-                    disabled={arenaBoostStatus !== 'no_active_event' && (!effectiveActiveTimedEvent || activeEventTickets <= 0)}
-                  >
-                    {arenaBoostStatus === 'no_active_event'
-                      ? 'Finish orientation'
-                      : activeEventTickets > 0
-                        ? 'Play event minigame'
-                        : '🎟️ Earn event tickets on the reward bar'}
-                  </button>
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                    onClick={() => setShowArenaPreferences(true)}
-                  >
-                    Arena settings
-                  </button>
                   <button
                     type="button"
                     className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"

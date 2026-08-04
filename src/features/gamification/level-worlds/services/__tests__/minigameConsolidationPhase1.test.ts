@@ -76,6 +76,10 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
       assert(manifestIds.includes('space_excavator'), 'Space Excavator manifest should be registered');
       assert(manifestIds.includes('companion_feast'), 'Companion Feast manifest should be registered');
       assert(manifestIds.includes('momentum_matrix'), 'Momentum Matrix exhibition manifest should be registered');
+      assert(manifestIds.includes('concord_categories'), 'Concord Categories exhibition manifest should be registered');
+      assert(manifestIds.includes('lexicon_relay'), 'Lexicon Relay exhibition manifest should be registered');
+      assert(manifestIds.includes('signal_path'), 'Signal Path exhibition manifest should be registered');
+      assert(manifestIds.includes('twin_sigils'), 'Twin Sigils exhibition manifest should be registered');
     },
   },
   {
