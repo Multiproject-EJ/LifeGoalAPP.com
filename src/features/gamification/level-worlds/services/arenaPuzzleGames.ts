@@ -325,11 +325,29 @@ export function deterministicShuffle<T>(items: readonly T[], seed: string): T[] 
 }
 
 export function isConcordSelectionCorrect(puzzle: ConcordPuzzle, words: readonly string[]): ConcordCategory | null {
-  if (words.length !== 4) return null;
+  const evaluation = evaluateConcordSelection(puzzle, words);
+  return evaluation.kind === 'exact' ? evaluation.category : null;
+}
+
+export type ConcordSelectionEvaluation =
+  | { kind: 'exact'; category: ConcordCategory }
+  | { kind: 'one-away'; category: ConcordCategory }
+  | { kind: 'miss' };
+
+export function evaluateConcordSelection(
+  puzzle: ConcordPuzzle,
+  words: readonly string[],
+  excludedCategoryIds: readonly string[] = [],
+): ConcordSelectionEvaluation {
+  if (words.length !== 4 || new Set(words).size !== 4) return { kind: 'miss' };
   const selected = new Set(words);
-  return puzzle.categories.find((category) => (
-    category.words.length === selected.size && category.words.every((word) => selected.has(word))
-  )) ?? null;
+  const availableCategories = puzzle.categories.filter((category) => !excludedCategoryIds.includes(category.id));
+  const exact = availableCategories.find((category) => category.words.every((word) => selected.has(word)));
+  if (exact) return { kind: 'exact', category: exact };
+  const oneAway = availableCategories.find((category) => (
+    category.words.filter((word) => selected.has(word)).length === 3
+  ));
+  return oneAway ? { kind: 'one-away', category: oneAway } : { kind: 'miss' };
 }
 
 export function differsByOneLetter(left: string, right: string): boolean {
@@ -339,6 +357,24 @@ export function differsByOneLetter(left: string, right: string): boolean {
     if (left[index] !== right[index]) differences += 1;
   }
   return differences === 1;
+}
+
+export function resolveLexiconPuzzleForSession(
+  puzzle: LexiconPuzzle,
+  sessionSeconds: number | null,
+): LexiconPuzzle {
+  const maximumSteps = sessionSeconds !== null && sessionSeconds <= 20
+    ? 3
+    : sessionSeconds !== null && sessionSeconds <= 60
+      ? 4
+      : puzzle.steps.length;
+  if (puzzle.steps.length <= maximumSteps) return puzzle;
+  const firstStepIndex = puzzle.steps.length - maximumSteps;
+  return {
+    ...puzzle,
+    start: puzzle.steps[firstStepIndex - 1]?.answer ?? puzzle.start,
+    steps: puzzle.steps.slice(firstStepIndex),
+  };
 }
 
 export function isSignalPathStepValid(current: number, next: number, size = SIGNAL_PATH_GRID_SIZE): boolean {

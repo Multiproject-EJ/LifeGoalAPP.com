@@ -3,7 +3,7 @@ import type { ArenaPerformance, IslandRunMinigameProps } from '../../../level-wo
 import {
   CONCORD_PUZZLES,
   deterministicShuffle,
-  isConcordSelectionCorrect,
+  evaluateConcordSelection,
   resolveArenaMastery,
   selectPuzzleForSession,
 } from '../../../level-worlds/services/arenaPuzzleGames';
@@ -115,14 +115,19 @@ export default function ConcordCategoriesMinigame({ islandNumber, launchConfig, 
   };
 
   const submit = () => {
-    const category = isConcordSelectionCorrect(puzzle, selected);
-    if (!category || solvedIds.includes(category.id)) {
+    const evaluation = evaluateConcordSelection(puzzle, selected, solvedIds);
+    if (evaluation.kind !== 'exact') {
       setMistakes((value) => value + 1);
-      setMessage(selected.length < 4 ? 'Select exactly four signals.' : 'Close, but those four do not share one channel.');
+      setMessage(selected.length < 4
+        ? 'Select exactly four signals.'
+        : evaluation.kind === 'one-away'
+          ? 'One signal is crossed — three belong to the same channel.'
+          : 'Those signals belong to different channels.');
       triggerIslandRunHaptic('stop_land');
       playIslandRunSound('market_insufficient_coins');
       return;
     }
+    const { category } = evaluation;
     const nextSolved = [...solvedIds, category.id];
     setSolvedIds(nextSolved);
     setSelected([]);

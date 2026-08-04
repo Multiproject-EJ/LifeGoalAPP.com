@@ -5,9 +5,11 @@ import {
   SIGNAL_PATH_PUZZLES,
   TWIN_SIGIL_PUZZLES,
   differsByOneLetter,
+  evaluateConcordSelection,
   isConcordSelectionCorrect,
   isSignalPathStepValid,
   resolveArenaMastery,
+  resolveLexiconPuzzleForSession,
   validateTwinSigilBoard,
 } from '../arenaPuzzleGames';
 import {
@@ -59,6 +61,20 @@ export const arenaPuzzleGamesTests: TestCase[] = [
     },
   },
   {
+    name: 'Concord selection feedback distinguishes one-away guesses from misses',
+    run: () => {
+      const puzzle = CONCORD_PUZZLES[0]!;
+      const first = puzzle.categories[0]!;
+      const second = puzzle.categories[1]!;
+      const oneAway = evaluateConcordSelection(puzzle, [...first.words.slice(0, 3), second.words[0]!]);
+      assertEqual(oneAway.kind, 'one-away', 'three matching words should report one away');
+      const miss = evaluateConcordSelection(puzzle, [first.words[0]!, first.words[1]!, second.words[0]!, second.words[1]!]);
+      assertEqual(miss.kind, 'miss', 'a two-and-two split should be a normal miss');
+      const excluded = evaluateConcordSelection(puzzle, first.words, [first.id]);
+      assertEqual(excluded.kind, 'miss', 'solved categories should be excluded from later guesses');
+    },
+  },
+  {
     name: 'every Lexicon answer changes exactly one letter from the previous answer',
     run: () => {
       LEXICON_PUZZLES.forEach((puzzle) => {
@@ -72,6 +88,22 @@ export const arenaPuzzleGamesTests: TestCase[] = [
           previous = step.answer;
         });
         assertEqual(previous, puzzle.destination, `${puzzle.id}: final answer should reach destination`);
+      });
+    },
+  },
+  {
+    name: 'short Lexicon sessions use fair suffix ladders and still reach the destination',
+    run: () => {
+      LEXICON_PUZZLES.forEach((puzzle) => {
+        const flash = resolveLexiconPuzzleForSession(puzzle, 15);
+        assert(flash.steps.length <= 3, `${puzzle.id}: flash ladder should have at most three links`);
+        assertEqual(flash.destination, puzzle.destination, `${puzzle.id}: flash ladder should keep the destination`);
+        assert(differsByOneLetter(flash.start, flash.steps[0]!.answer), `${puzzle.id}: flash start must connect to first answer`);
+        assertEqual(flash.steps[flash.steps.length - 1]!.answer, flash.destination, `${puzzle.id}: flash ladder should finish at destination`);
+        const standard = resolveLexiconPuzzleForSession(puzzle, 45);
+        assert(standard.steps.length <= 4, `${puzzle.id}: standard ladder should have at most four links`);
+        const unlimited = resolveLexiconPuzzleForSession(puzzle, null);
+        assertEqual(unlimited.steps.length, puzzle.steps.length, `${puzzle.id}: untimed ladder should remain complete`);
       });
     },
   },

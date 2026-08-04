@@ -4,6 +4,7 @@ import {
   LEXICON_PUZZLES,
   deterministicShuffle,
   differsByOneLetter,
+  resolveLexiconPuzzleForSession,
   resolveArenaMastery,
   selectPuzzleForSession,
 } from '../../../level-worlds/services/arenaPuzzleGames';
@@ -15,15 +16,17 @@ type Phase = 'briefing' | 'playing' | 'results';
 
 export default function LexiconRelayMinigame({ islandNumber, launchConfig, onComplete }: IslandRunMinigameProps) {
   const puzzleSeed = typeof launchConfig?.arenaPuzzleSeed === 'string' ? launchConfig.arenaPuzzleSeed : `${islandNumber}:lexicon`;
-  const puzzle = useMemo(() => selectPuzzleForSession(LEXICON_PUZZLES, islandNumber, puzzleSeed), [islandNumber, puzzleSeed]);
   const sessionSeconds = typeof launchConfig?.arenaSessionSeconds === 'number'
     ? Math.max(15, Math.floor(launchConfig.arenaSessionSeconds))
     : null;
+  const basePuzzle = useMemo(() => selectPuzzleForSession(LEXICON_PUZZLES, islandNumber, puzzleSeed), [islandNumber, puzzleSeed]);
+  const puzzle = useMemo(() => resolveLexiconPuzzleForSession(basePuzzle, sessionSeconds), [basePuzzle, sessionSeconds]);
   const [phase, setPhase] = useState<Phase>('briefing');
   const [stepIndex, setStepIndex] = useState(0);
   const [chain, setChain] = useState<string[]>([puzzle.start]);
   const [mistakes, setMistakes] = useState(0);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [hintAnswer, setHintAnswer] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [performance, setPerformance] = useState<ArenaPerformance | null>(null);
@@ -39,7 +42,7 @@ export default function LexiconRelayMinigame({ islandNumber, launchConfig, onCom
       mistakes,
       hints: hintsUsed,
       elapsedSeconds,
-      parSeconds: 55,
+      parSeconds: sessionSeconds === null ? 55 : Math.min(55, sessionSeconds),
     });
     setPerformance({
       gameId: 'lexicon_relay',
@@ -109,16 +112,21 @@ export default function LexiconRelayMinigame({ islandNumber, launchConfig, onCom
     const validChange = differsByOneLetter(currentWord, word);
     if (word !== currentStep.answer || !validChange) {
       setMistakes((value) => value + 1);
+      setStreak(0);
       setMessage(validChange ? 'That word fits the relay, but not this clue.' : 'The relay can change exactly one letter.');
       playIslandRunSound('market_insufficient_coins');
       triggerIslandRunHaptic('stop_land');
       return;
     }
     const nextIndex = stepIndex + 1;
+    const nextStreak = streak + 1;
     setChain((current) => [...current, word]);
     setStepIndex(nextIndex);
+    setStreak(nextStreak);
     setHintAnswer(null);
-    setMessage(nextIndex === puzzle.steps.length ? 'Destination reached.' : 'Clean handoff. Read the next clue.');
+    setMessage(nextIndex === puzzle.steps.length
+      ? `Destination reached · ${nextStreak}-link streak.`
+      : `Clean handoff · ${nextStreak}-link streak.`);
     playIslandRunSound('token_move');
     triggerIslandRunHaptic('roll');
     if (nextIndex === puzzle.steps.length) {
@@ -151,9 +159,12 @@ export default function LexiconRelayMinigame({ islandNumber, launchConfig, onCom
         ))}
         {Array.from({ length: puzzle.steps.length - stepIndex }, (_, index) => <i key={`empty:${index}`}>····</i>)}
       </div>
+      <div className="lexicon-relay__charge" aria-label={`${stepIndex} of ${puzzle.steps.length} relay links charged`}>
+        {puzzle.steps.map((_, index) => <i key={index} className={index < stepIndex ? 'is-charged' : ''} />)}
+      </div>
       {currentStep ? (
         <section className="lexicon-relay__clue">
-          <span>Relay clue {stepIndex + 1}</span>
+          <span>Relay clue {stepIndex + 1} · {streak > 0 ? `${streak} clean` : 'build a streak'}</span>
           <strong>{currentStep.clue}</strong>
           <small>Change one letter in <b>{currentWord}</b></small>
         </section>

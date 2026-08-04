@@ -9,6 +9,9 @@
 .lexicon-relay__chain span { color: #d8effc; background: rgba(44,74,105,.62); }
 .lexicon-relay__chain span.is-current { color: #102036; background: linear-gradient(180deg, #e9f8ff, #9fddff); box-shadow: 0 0 17px rgba(159,221,255,.28); animation: lexicon-link-arrive 400ms cubic-bezier(.2,1.4,.3,1) both; }
 .lexicon-relay__chain i { color: #53637a; border: 1px dashed rgba(159,221,255,.12); }
+.lexicon-relay__charge { display: flex; gap: 5px; margin-top: -6px; padding: 0 6px; }
+.lexicon-relay__charge i { flex: 1 1 0; height: 4px; overflow: hidden; border-radius: 999px; background: rgba(159,221,255,.12); box-shadow: inset 0 1px rgba(255,255,255,.05); }
+.lexicon-relay__charge i.is-charged { background: linear-gradient(90deg, #72c9f4, #dff7ff); box-shadow: 0 0 10px rgba(159,221,255,.55); animation: lexicon-charge 320ms ease-out both; }
 .lexicon-relay__clue { display: grid; min-height: 112px; place-content: center; gap: 6px; padding: 18px; border: 1px solid rgba(159,221,255,.3); border-radius: 23px; text-align: center; background: radial-gradient(circle at 50% 0, rgba(159,221,255,.14), transparent 58%), rgba(10,20,38,.8); }
 .lexicon-relay__clue > span { color: #8fb8cf; font-size: 9px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
 .lexicon-relay__clue strong { color: #f4fbff; font-family: Georgia, serif; font-size: clamp(21px, 6vw, 29px); }
@@ -21,4 +24,5 @@
 .lexicon-relay__options button.is-hinted { animation: lexicon-hint 1s ease-in-out infinite; }
 .lexicon-relay__mistakes { color: #8392a8; font-size: 10px; text-align: center; }
 @keyframes lexicon-link-arrive { from { opacity: 0; transform: translateX(16px) scale(.7); } }
+@keyframes lexicon-charge { from { opacity: .25; transform: scaleX(.1); transform-origin: left; } }
 @keyframes lexicon-hint { 50% { border-color: #dff6ff; box-shadow: 0 0 24px rgba(159,221,255,.32); transform: translateY(-2px); } }
