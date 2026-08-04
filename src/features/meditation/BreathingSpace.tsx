@@ -24,6 +24,7 @@ import { TrainingTab } from '../training';
 import { ConflictResolverEntry } from '../conflict-resolver/ConflictResolverEntry';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useIslandRunState } from '../gamification/level-worlds/hooks/useIslandRunState';
+import { useEntranceArtworkReady } from '../../hooks/useEntranceArtworkReady';
 import {
   ENERGY_SANCTUARY_UNLOCK_ISLAND,
   canRenderEnergyMobileTab,
@@ -113,6 +114,20 @@ const FIRST_LIGHT_ENERGY_CARD_IMAGE: Record<EnergyMobileTab, string> = {
   exercise: '/assets/themes/first-light-kingdom/energy/movement.webp',
 };
 
+const FIRST_LIGHT_ENERGY_CARD_MARK: Record<EnergyMobileTab, string> = {
+  breathing: '✦',
+  meditation: '☾',
+  conflict: '⚖',
+  yoga: '∞',
+  food: '❧',
+  exercise: '↟',
+};
+
+const FIRST_LIGHT_SHIELD_ARTWORK = [
+  '/assets/themes/first-light-kingdom/energy/sanctuary-gate.webp',
+  ...FIRST_LIGHT_ENERGY_TABS.map((tab) => FIRST_LIGHT_ENERGY_CARD_IMAGE[tab]),
+] as const;
+
 export function BreathingSpace({
   session,
   initialMobileTab,
@@ -154,6 +169,9 @@ export function BreathingSpace({
   const { state: islandRunState } = useIslandRunState(session, null);
   const currentIslandNumber = islandRunState.currentIslandNumber;
   const isEnergySanctuaryOpen = isEnergySanctuaryUnlocked(currentIslandNumber, isAdminOrCreator);
+  const isFirstLightShieldReady = useEntranceArtworkReady(FIRST_LIGHT_SHIELD_ARTWORK, {
+    enabled: theme === 'first-light-kingdom',
+  });
 
   useEffect(() => {
     setActiveMobileTab(initialMobileTab ?? null);
@@ -473,10 +491,15 @@ export function BreathingSpace({
 
   if (theme === 'first-light-kingdom' && !isEnergySanctuaryOpen) {
     return (
-      <div className="breathing-space breathing-space--first-light-sanctuary" data-mobile-tab="none">
+      <div
+        className={`breathing-space breathing-space--first-light-sanctuary${
+          isFirstLightShieldReady ? ' breathing-space--motion-ready' : ''
+        }`}
+        data-mobile-tab="none"
+      >
         <section className="breathing-space__sanctuary-lock" aria-labelledby="energy-sanctuary-title">
           <header className="breathing-space__sanctuary-heading">
-            <p>Energy</p>
+            <p>Shield</p>
             <h1 id="energy-sanctuary-title">The Sanctuary</h1>
           </header>
           <img
@@ -526,13 +549,120 @@ export function BreathingSpace({
     );
   }
 
+  if (theme === 'first-light-kingdom' && !activeMobileTabForRender) {
+    return (
+      <div
+        className={`breathing-space breathing-space--first-light-sanctuary breathing-space--first-light-shield-hub${
+          isFirstLightShieldReady ? ' breathing-space--motion-ready' : ''
+        }`}
+        data-mobile-tab="none"
+        data-mobile-category={activeMobileCategory}
+      >
+        <section className="breathing-space__shield-hub" aria-labelledby="shield-sanctuary-title">
+          <header className="breathing-space__sanctuary-heading breathing-space__shield-heading">
+            <p>Shield</p>
+            <h1 id="shield-sanctuary-title">The Sanctuary</h1>
+            <span>Restore your mind. Strengthen your body.</span>
+          </header>
+
+          <div className="breathing-space__shield-category-tabs" role="tablist" aria-label="Shield pathways">
+            {(['mind', 'body'] as const).map((category) => (
+              <button
+                key={category}
+                type="button"
+                role="tab"
+                aria-selected={activeMobileCategory === category}
+                className={`breathing-space__shield-category-tab${
+                  activeMobileCategory === category ? ' breathing-space__shield-category-tab--active' : ''
+                }`}
+                onClick={() => handleEnergyReset(category)}
+              >
+                <span aria-hidden="true">{category === 'mind' ? '✦' : '❧'}</span>
+                {category === 'mind' ? 'Mind' : 'Body'}
+              </button>
+            ))}
+          </div>
+
+          <p className="breathing-space__shield-pathway-copy">
+            {activeMobileCategory === 'mind'
+              ? 'Find calm, clarity, and a steadier response.'
+              : 'Build energy through movement, nourishment, and recovery.'}
+          </p>
+
+          <div className="breathing-space__sanctuary-grid breathing-space__shield-grid" role="tabpanel">
+            {activeCategoryTabs.map((tab) => {
+              const statusLabel = getEnergyMobileTabStatusLabel(tab, isAdminOrCreator);
+              const featureId = getEnergyMobileTabFeatureId(tab);
+              const futureFeatureState = statusLabel && featureId ? futureFeatureCardStates[featureId] : undefined;
+              const isOpen = getEnergyMobileTabAccess(tab, isAdminOrCreator) === 'open';
+
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  className={getFutureFeatureCardClassName(
+                    `breathing-space__sanctuary-card breathing-space__shield-card${
+                      statusLabel ? ' breathing-space__shield-card--gated' : ''
+                    }`,
+                    futureFeatureState,
+                    { isDemo: Boolean(featureId && getFeatureAvailability(featureId).status === 'demo') },
+                  )}
+                  onClick={() => handleMobileTabChange(tab)}
+                >
+                  <img src={FIRST_LIGHT_ENERGY_CARD_IMAGE[tab]} alt="" aria-hidden="true" />
+                  <span
+                    className={`breathing-space__shield-card-medallion${
+                      isOpen ? ' breathing-space__shield-card-medallion--open' : ''
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {isOpen ? FIRST_LIGHT_ENERGY_CARD_MARK[tab] : '⌁'}
+                  </span>
+                  <span className="breathing-space__shield-card-state">
+                    {isOpen ? 'Enter' : (statusLabel ?? 'Keep playing')}
+                  </span>
+                  {futureFeatureState?.voted ? (
+                    <span className="breathing-space__shield-card-saved">Feedback sent</span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+        {previewFeature ? (
+          <FeaturePreviewOverlay
+            featureId={previewFeature.id}
+            label={previewFeature.label}
+            onClose={() => setPreviewFeature(null)}
+          />
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`breathing-space${isConflictFullscreen ? ' breathing-space--conflict-fullscreen' : ''} ${justCompletedSession ? `breathing-item--just-completed ${sessionFeedbackClassName}` : ""}`.trim()}
+      className={`breathing-space${
+        theme === 'first-light-kingdom' ? ' breathing-space--first-light-tool' : ''
+      }${isFirstLightShieldReady ? ' breathing-space--motion-ready' : ''}${
+        isConflictFullscreen ? ' breathing-space--conflict-fullscreen' : ''
+      } ${justCompletedSession ? `breathing-item--just-completed ${sessionFeedbackClassName}` : ""}`.trim()}
       data-mobile-tab={activeMobileTabForRender ?? 'none'}
       data-mobile-category={activeMobileCategory}
     >
-      {isConflictFullscreen ? (
+      {theme === 'first-light-kingdom' && activeMobileTabForRender && !isConflictFullscreen ? (
+        <header className="breathing-space__shield-tool-header">
+          <button
+            type="button"
+            className="breathing-space__shield-tool-back"
+            onClick={() => handleEnergyReset(activeMobileCategory)}
+          >
+            <span aria-hidden="true">‹</span> Sanctuary
+          </button>
+          <span>{activeMobileCategory === 'mind' ? 'Mind pathway' : 'Body pathway'}</span>
+          <h1>{MOBILE_TAB_OPTIONS[activeMobileTabForRender].label}</h1>
+        </header>
+      ) : isConflictFullscreen ? (
         <div className="breathing-space__conflict-header">
           <button
             type="button"
@@ -624,9 +754,9 @@ export function BreathingSpace({
       )}
 
       {/* Left Column: Progress, Quick Start & Reminder */}
-      <div className="breathing-space__left-column breathing-space__section breathing-space__section--breathing">
+      <div className="breathing-space__left-column">
         {/* Progress Snapshot */}
-        <div className="breathing-space__card breathing-space__progress">
+        <div className="breathing-space__card breathing-space__progress breathing-space__section breathing-space__section--breathing">
           <div className="breathing-space__progress-hero">
             <img
               className="breathing-space__progress-icon-image"
@@ -659,7 +789,7 @@ export function BreathingSpace({
         </div>
 
         {/* Quick Start Action */}
-        <div className="breathing-space__card breathing-space__quick-start">
+        <div className="breathing-space__card breathing-space__quick-start breathing-space__section breathing-space__section--breathing">
           <div className="breathing-space__quick-start-actions">
             <button
               className="btn btn--primary breathing-space__start-button"
@@ -720,7 +850,7 @@ export function BreathingSpace({
       {/* Right Column: Library */}
       <div className="breathing-space__right-column">
         {/* Meditation Library */}
-        {extraBreathingContentOpen && canRenderMeditation ? (
+        {(activeMobileTabForRender === 'meditation' || extraBreathingContentOpen) && canRenderMeditation ? (
           <div className="breathing-space__library breathing-space__section breathing-space__section--meditation">
             <div className="breathing-space__library-header">
               <h3 className="breathing-space__library-title">Guided Meditations</h3>

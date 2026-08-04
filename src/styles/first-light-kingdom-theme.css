@@ -1825,6 +1825,374 @@
   cursor: pointer;
 }
 
+/* Shield / Sanctuary unlocked hub */
+[data-theme='first-light-kingdom'] :is(
+  .breathing-space--first-light-sanctuary,
+  .breathing-space--first-light-tool
+) {
+  box-sizing: border-box;
+  width: 100%;
+  margin-inline: auto;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space--first-light-shield-hub {
+  max-width: 36rem;
+  padding: 0 0.35rem 7.5rem;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-hub {
+  container-type: inline-size;
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  color: #0c2a52;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-heading span {
+  margin-top: 0.42rem;
+  color: rgba(30, 58, 89, 0.76);
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: clamp(0.86rem, 3.8cqw, 1.05rem);
+  letter-spacing: 0.04em;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-category-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: min(100%, 28rem);
+  border: 1px solid rgba(181, 139, 64, 0.42);
+  border-radius: 999px;
+  background: rgba(255, 253, 247, 0.72);
+  padding: 0.28rem;
+  box-shadow: 0 8px 22px rgba(48, 69, 89, 0.1), inset 0 1px rgba(255, 255, 255, 0.82);
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-category-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  padding: 0.62rem 0.75rem;
+  color: #234566;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-category-tab:hover,
+[data-theme='first-light-kingdom'] .breathing-space__shield-category-tab:focus-visible {
+  transform: translateY(-1px);
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-category-tab--active {
+  background: linear-gradient(180deg, #fffdf5 0%, #f5e7c6 100%);
+  color: #15385e;
+  box-shadow: 0 4px 12px rgba(34, 57, 83, 0.13), inset 0 0 0 1px rgba(187, 139, 54, 0.46);
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-category-tab span {
+  color: #b17b27;
+  font-size: 1.05rem;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-pathway-copy {
+  min-height: 1.3em;
+  margin: -0.1rem 0 0.1rem;
+  color: rgba(30, 58, 89, 0.7);
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 0.92rem;
+  text-align: center;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-grid {
+  gap: 0.62rem;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-card {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-card:nth-child(3) {
+  grid-column: 1 / -1;
+  width: calc(50% - 0.31rem);
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-card::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 58%, rgba(255, 250, 238, 0.3));
+  content: '';
+  pointer-events: none;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-card-medallion {
+  position: absolute;
+  z-index: 2;
+  top: 42%;
+  left: 50%;
+  display: grid;
+  width: clamp(2.05rem, 12cqw, 2.8rem);
+  aspect-ratio: 1;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(177, 123, 39, 0.62);
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255, 250, 232, 0.96), rgba(221, 190, 126, 0.96));
+  box-shadow: 0 5px 13px rgba(73, 53, 27, 0.24), inset 0 0 0 3px rgba(255, 255, 255, 0.42);
+  color: #72501c;
+  font-size: clamp(1rem, 5cqw, 1.35rem);
+  line-height: 1;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-card-medallion--open {
+  border-color: rgba(47, 92, 126, 0.58);
+  background: radial-gradient(circle at 35% 30%, #fffdf1, #b9daf0 60%, #729abb 100%);
+  color: #123b62;
+  box-shadow: 0 0 18px rgba(103, 169, 214, 0.42), 0 5px 13px rgba(36, 62, 84, 0.2), inset 0 0 0 3px rgba(255, 255, 255, 0.56);
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-card-state,
+[data-theme='first-light-kingdom'] .breathing-space__shield-card-saved {
+  position: absolute;
+  z-index: 3;
+  top: 0.5rem;
+  right: 0.5rem;
+  border: 1px solid rgba(183, 139, 59, 0.52);
+  border-radius: 999px;
+  background: rgba(255, 253, 246, 0.9);
+  padding: 0.22rem 0.46rem;
+  color: #244767;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: clamp(0.56rem, 2.4cqw, 0.68rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 3px 9px rgba(37, 58, 77, 0.12);
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-card-saved {
+  top: auto;
+  right: 50%;
+  bottom: 0.42rem;
+  transform: translateX(50%);
+  white-space: nowrap;
+}
+
+/* First Light tool chamber */
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.8rem;
+  max-width: 36rem;
+  padding: 0 0.35rem 7.5rem;
+  color: #153653;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool .breathing-space__left-column,
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool .breathing-space__right-column {
+  display: contents;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool :is(
+  .breathing-space__section--breathing,
+  .breathing-space__section--meditation,
+  .breathing-space__section--conflict,
+  .breathing-space__section--yoga,
+  .breathing-space__section--food,
+  .breathing-space__section--exercise
+) {
+  display: none;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool[data-mobile-tab='breathing'] .breathing-space__section--breathing,
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool[data-mobile-tab='meditation'] .breathing-space__section--meditation,
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool[data-mobile-tab='conflict'] .breathing-space__section--conflict,
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool[data-mobile-tab='yoga'] .breathing-space__section--yoga,
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool[data-mobile-tab='food'] .breathing-space__section--food,
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool[data-mobile-tab='exercise'] .breathing-space__section--exercise {
+  display: var(--breathing-space-section-display, block);
+}
+
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool .breathing-space__shield-tool-header,
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool .breathing-space__conflict-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.18rem 0.75rem;
+  min-height: 6.3rem;
+  border: 1px solid rgba(183, 139, 59, 0.42);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(143, 198, 229, 0.28), transparent 38%),
+    linear-gradient(150deg, rgba(255, 254, 248, 0.96), rgba(239, 246, 249, 0.86));
+  padding: 0.75rem 1rem;
+  box-shadow: 0 10px 26px rgba(48, 69, 89, 0.12), inset 0 0 0 3px rgba(255, 255, 255, 0.48);
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-tool-back,
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool .breathing-space__conflict-back {
+  grid-row: 1 / span 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid rgba(178, 133, 53, 0.48);
+  border-radius: 999px;
+  background: rgba(255, 252, 242, 0.84);
+  padding: 0.5rem 0.72rem;
+  color: #153b61;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-tool-back span {
+  color: #a06f24;
+  font-size: 1.4rem;
+  line-height: 0.7;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-tool-header > span,
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool .breathing-space__conflict-eyebrow {
+  color: #a4772f;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space__shield-tool-header h1 {
+  margin: 0;
+  color: #102f52;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: clamp(1.45rem, 7cqw, 2rem);
+  font-weight: 500;
+  line-height: 1;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool :is(
+  .breathing-space__card,
+  .breathing-space__library,
+  .breathing-space__meditation-core,
+  .breathing-space__guided-controls,
+  .breathing-space__meditation-preview
+) {
+  border-color: rgba(183, 139, 59, 0.36);
+  background:
+    radial-gradient(circle at 92% 5%, rgba(190, 223, 239, 0.22), transparent 35%),
+    linear-gradient(155deg, rgba(255, 254, 249, 0.94), rgba(245, 249, 249, 0.86));
+  box-shadow: 0 10px 25px rgba(48, 69, 89, 0.1), inset 0 1px rgba(255, 255, 255, 0.8);
+}
+
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool :is(
+  .breathing-space__card-title,
+  .breathing-space__library-title,
+  .breathing-space__meditation-core-title
+) {
+  color: #12375b;
+  font-family: 'EB Garamond', Georgia, serif;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool :is(
+  .breathing-space__start-button,
+  .breathing-space__guided-start-button
+) {
+  border: 1px solid #bd9145;
+  background: linear-gradient(180deg, #173c68, #09284f);
+  color: #fff9e8;
+  box-shadow: 0 8px 18px rgba(9, 40, 79, 0.22), inset 0 0 0 2px rgba(240, 205, 128, 0.2);
+}
+
+/* Background paints first; artwork and cards enter after decode. */
+[data-theme='first-light-kingdom'] :is(
+  .breathing-space__sanctuary-heading,
+  .breathing-space__sanctuary-gate,
+  .breathing-space__shield-category-tabs,
+  .breathing-space__shield-pathway-copy,
+  .breathing-space__sanctuary-card,
+  .breathing-space__sanctuary-keep-playing,
+  .breathing-space__shield-tool-header,
+  .breathing-space--first-light-tool .breathing-space__conflict-header,
+  .breathing-space--first-light-tool .breathing-space__card,
+  .breathing-space--first-light-tool .breathing-space__library,
+  .breathing-space--first-light-tool .breathing-space__section--exercise
+) {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+}
+
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready :is(
+  .breathing-space__sanctuary-heading,
+  .breathing-space__sanctuary-gate,
+  .breathing-space__shield-category-tabs,
+  .breathing-space__shield-pathway-copy,
+  .breathing-space__sanctuary-card,
+  .breathing-space__sanctuary-keep-playing,
+  .breathing-space__shield-tool-header,
+  .breathing-space__conflict-header
+) {
+  animation: first-light-shield-enter 620ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__sanctuary-heading { animation-delay: 35ms; }
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__sanctuary-gate,
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__shield-category-tabs,
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__shield-tool-header,
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__conflict-header { animation-delay: 105ms; }
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__shield-pathway-copy { animation-delay: 165ms; }
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__sanctuary-card:nth-child(1) { animation-delay: 210ms; }
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__sanctuary-card:nth-child(2) { animation-delay: 275ms; }
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__sanctuary-card:nth-child(3) { animation-delay: 340ms; }
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__sanctuary-card:nth-child(4) { animation-delay: 405ms; }
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__sanctuary-card:nth-child(5) { animation-delay: 470ms; }
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__sanctuary-card:nth-child(6) { animation-delay: 535ms; }
+[data-theme='first-light-kingdom'] .breathing-space--motion-ready .breathing-space__sanctuary-keep-playing { animation-delay: 595ms; }
+[data-theme='first-light-kingdom'] .breathing-space--first-light-tool.breathing-space--motion-ready :is(
+  .breathing-space__card,
+  .breathing-space__library,
+  .breathing-space__section--exercise
+) {
+  animation: first-light-shield-enter 620ms 180ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+
+@keyframes first-light-shield-enter {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='first-light-kingdom'] :is(
+    .breathing-space__sanctuary-heading,
+    .breathing-space__sanctuary-gate,
+    .breathing-space__shield-category-tabs,
+    .breathing-space__shield-pathway-copy,
+    .breathing-space__sanctuary-card,
+    .breathing-space__sanctuary-keep-playing,
+    .breathing-space__shield-tool-header,
+    .breathing-space--first-light-tool .breathing-space__conflict-header,
+    .breathing-space--first-light-tool .breathing-space__card,
+    .breathing-space--first-light-tool .breathing-space__library,
+    .breathing-space--first-light-tool .breathing-space__section--exercise
+  ) {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* First Light progression modal */
 [data-theme='first-light-kingdom'] .feature-preview-overlay--progression .feature-preview-overlay__backdrop {
   background: rgba(2, 10, 23, 0.82);
