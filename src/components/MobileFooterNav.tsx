@@ -10,8 +10,6 @@ import {
 } from 'react';
 import { PointsBadge } from './PointsBadge';
 import { splitGoldBalance } from '../constants/economy';
-import mindIcon from '../assets/mind-icon.webp';
-import bodyIcon from '../assets/body-icon.webp';
 import { triggerCompletionHaptic } from '../utils/completionHaptics';
 import { playFooterClickSound, playLauncherOpenSound } from '../utils/audioUtils';
 
@@ -85,8 +83,6 @@ export function MobileFooterNav({
   activeId,
   onSelect,
   onOpenMenu,
-  isEnergyMenuOpen = false,
-  onEnergyToggle,
   onEnergySelect,
   isDiodeActive,
   pointsBadges = {},
@@ -534,8 +530,8 @@ export function MobileFooterNav({
       }${isSnapActive ? ' mobile-footer-nav--snap' : ''}${isDiodeActive ? ' mobile-footer-nav--diode-on' : ''}${
         areControlsFaded ? ' mobile-footer-nav--controls-faded' : ''
       }${isDiamondFaded ? ' mobile-footer-nav--diamond-faded' : ''}${
-        isEnergyMenuOpen && isDiodeActive ? ' mobile-footer-nav--energy-focus' : ''
-      }${spotlightStatus ? ' mobile-footer-nav--spotlight-status' : ''}`}
+        spotlightStatus ? ' mobile-footer-nav--spotlight-status' : ''
+      }`}
       aria-label="Primary navigation"
       onWheelCapture={blockBackgroundScroll}
       onTouchMoveCapture={blockBackgroundScroll}
@@ -675,40 +671,6 @@ export function MobileFooterNav({
             const isEnergyItem = item.id === 'breathing-space' && Boolean(onEnergySelect) && !item.emerging;
             return (
               <li key={item.id} className={`mobile-footer-nav__item mobile-footer-nav__item--${item.id}${item.emerging ? ' mobile-footer-nav__item--emerging' : ''}${getStandardFooterIconExpansionClass(item.id)}`}>
-                {isEnergyItem ? (
-                  <div
-                    className={`mobile-footer-nav__energy-menu${
-                      isEnergyMenuOpen ? ' mobile-footer-nav__energy-menu--open' : ''
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      className="mobile-footer-nav__energy-button"
-                      onClick={() => {
-                        playFooterClickSound('shield');
-                        revealControllerUI();
-                        onEnergySelect?.('mind');
-                      }}
-                      aria-label="Open mind shield tools"
-                    >
-                      <img src={mindIcon} alt="Mind icon" className="mobile-footer-nav__energy-icon" />
-                      <span className="mobile-footer-nav__energy-label">Mind</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="mobile-footer-nav__energy-button"
-                      onClick={() => {
-                        playFooterClickSound('shield');
-                        revealControllerUI();
-                        onEnergySelect?.('body');
-                      }}
-                      aria-label="Open body shield tools"
-                    >
-                      <img src={bodyIcon} alt="Body icon" className="mobile-footer-nav__energy-icon" />
-                      <span className="mobile-footer-nav__energy-label">Body</span>
-                    </button>
-                  </div>
-                ) : null}
                 <button
                   type="button"
                   className={`mobile-footer-nav__button ${
@@ -722,7 +684,7 @@ export function MobileFooterNav({
                       return;
                     }
                     if (isEnergyItem) {
-                      onEnergyToggle?.();
+                      onEnergySelect?.('mind');
                       return;
                     }
                     onSelect(item.id);
