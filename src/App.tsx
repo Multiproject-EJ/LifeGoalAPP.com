@@ -935,6 +935,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   // My Quest submenu, so quest entry points open the book directly on it.
   const [compassBookInitialPageId, setCompassBookInitialPageId] = useState<CompassBookPageId | null>(null);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
+  // A settings folder the account panel should open itself on, set by launchers
+  // that deep-link into one (e.g. Personalisation → Appearance / Theme).
+  const [pendingSettingsFolder, setPendingSettingsFolder] = useState<'appearance' | null>(null);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
     area: AreaKey;
     task: NextTask | null;
@@ -3467,6 +3470,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
    * The Quest Ledger (a page in the Compass Book) replaced the My Quest
    * submenu: every quest entry point opens the book directly on that page.
    */
+  /**
+   * Personalisation is the existing "Appearance / Theme" settings folder — it
+   * already owns theme entitlements and Stripe checkout, so the launcher opens
+   * that rather than standing up a second theme picker beside it.
+   */
+  const openPersonalisation = useCallback(() => {
+    setPendingSettingsFolder('appearance');
+    handleMobileNavSelect('account', { launchSource: 'mobile-menu' });
+  }, [handleMobileNavSelect]);
+
   const openQuestLedger = useCallback(() => {
     setIsMobileProfileDialogOpen(false);
     setIsEnergyMenuOpen(false);
@@ -3575,6 +3588,13 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const compassQuestLedgerEntries: CompassQuestLedgerEntry[] = useMemo(() => {
     const stampFor = (featureId?: FeatureAvailabilityId): CompassQuestLedgerEntry['stamp'] => {
       if (!featureId) return null;
+      // A vote already cast on a not-yet-open feature outranks its availability
+      // label — the old submenu showed this as a "Feedback sent" tick, and
+      // losing it would silently make the player's vote invisible.
+      const isFeatureOpen = isAppWorkspaceFeatureOpen(featureId);
+      if (!isFeatureOpen && appFutureFeatureCardStates[featureId]?.voted) {
+        return { label: 'Noted', kind: 'voted' };
+      }
       const availability = getFeatureAvailability(featureId);
       if (availability.status === 'live') return null;
       return {
@@ -3600,7 +3620,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       stamp: stampFor(featureId),
       onSelect: () => runQuestLedgerAction(run),
     }));
-  }, [handleMobileNavSelect, openCheckinsFromMyQuest, openContractsWorkspace, openQuestCompassFromMobileMenu, openRoutinesWorkspace, openStarterQuestSheetFromMyQuest, runQuestLedgerAction]);
+  }, [appFutureFeatureCardStates, handleMobileNavSelect, isAppWorkspaceFeatureOpen, openCheckinsFromMyQuest, openContractsWorkspace, openQuestCompassFromMobileMenu, openRoutinesWorkspace, openStarterQuestSheetFromMyQuest, runQuestLedgerAction]);
 
   const feedbackSupportSubmenuActions: LauncherSubmenuAction[] = useMemo(
     () => [
@@ -4386,6 +4406,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
             </button>
           ) : null}
           <MyAccountPanel
+            initialFolder={pendingSettingsFolder}
+            onInitialFolderOpened={() => setPendingSettingsFolder(null)}
             session={activeSession}
             isDemoExperience={isDemoExperience}
             isAuthenticated={isAuthenticated}
@@ -4963,8 +4985,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <button
                     type="button"
                     className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--quest mobile-menu-overlay__hero-card--quest-compact"
-                    onClick={openQuestLedger}
-                    aria-label="Open the Quest Ledger"
+                    onClick={openPersonalisation}
+                    aria-label="Open Personalisation"
                   >
                     <span className="mobile-menu-overlay__quest-art" aria-hidden="true">
                       <img src="/assets/players_menu/questimg.webp" alt="" loading="lazy" decoding="async" />
