@@ -4108,3 +4108,16 @@ body:has(.compass-book) .quick-add__tab-emoji {
 .compass-quest-ledger__hub .my-quest-hub__tools {
   display: none;
 }
+
+/* The Ledger's own motion follows the same rule as the rest of the book. */
+@media (prefers-reduced-motion: reduce) {
+  .compass-quest-ledger__entry,
+  .compass-quest-ledger__inscribe {
+    transition: none;
+  }
+
+  .compass-quest-ledger__entry:active,
+  .compass-quest-ledger__inscribe:active {
+    transform: none;
+  }
+}

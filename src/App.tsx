@@ -941,6 +941,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
   // than the hub so writing a habit never closes the book.
   const [isLedgerQuickAddOpen, setIsLedgerQuickAddOpen] = useState(false);
   const [ledgerQuickAddGoals, setLedgerQuickAddGoals] = useState<Array<{ id: string; title: string }>>([]);
+  const [ledgerInscribeCount, setLedgerInscribeCount] = useState(0);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
   // A settings surface the account panel should open itself on, set by launchers
   // that deep-link into one (e.g. Personalisation → the ✨ Personalize modal).
@@ -5418,11 +5419,16 @@ export default function App({ forceAuthOnMount }: AppProps) {
       session={supabaseSession}
       allowDemo={isAdmin === true}
       initialPageId={compassBookInitialPageId ?? undefined}
+      hasBlockingOverlay={isLedgerQuickAddOpen}
       questLedger={{
         entries: compassQuestLedgerEntries,
         onInscribe: activeSession ? openLedgerQuickAdd : undefined,
         hub: activeSession ? (
+          // Remounted after an inscribe so the summary below reflects the habit
+          // or goal just written; the hub reloads only from its own quick-add,
+          // which the Ledger no longer shows.
           <MyQuestHub
+            key={`ledger-hub-${ledgerInscribeCount}`}
             session={activeSession}
             onOpenStarterQuest={() => runQuestLedgerAction(() => openStarterQuestSheetFromMyQuest())}
             onOpenCheckins={() => runQuestLedgerAction(openCheckinsFromMyQuest)}
@@ -5447,6 +5453,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         initialMode="habit"
         goalOptions={ledgerQuickAddGoals}
         onCreated={() => {
+          setLedgerInscribeCount((count) => count + 1);
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent(HABITS_CREATED_EVENT));
           }
