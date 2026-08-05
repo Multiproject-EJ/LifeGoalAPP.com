@@ -14,7 +14,6 @@ import {
   recordGameLifeIntake,
   type GameLifeIntakeStage,
 } from '../../../../services/gameLifeIntake';
-import { recordCompassContribution } from '../../../../services/compassState';
 
 export type HabitLandmarkChoice = Pick<
   HabitV2Row,
@@ -216,13 +215,6 @@ export async function completeHabitLandmarkChoice(input: {
         habit_type: habit.type,
         domain_key: habit.domain_key,
       },
-    }),
-    recordCompassContribution({
-      userId: input.userId,
-      islandNumber: input.islandNumber,
-      kind: 'habit',
-      text: habit.title,
-      linkedHabitId: habit.id,
     }),
     claimDailySpinHabitBonusOncePerDay(input.userId, today),
   ]);

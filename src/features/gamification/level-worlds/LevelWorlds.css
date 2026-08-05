@@ -1986,6 +1986,72 @@
   animation: island-run-roll-hold-pulse 1.15s ease-in-out infinite;
 }
 
+/* ── Auto-roll hold charge bar ──────────────────────────────────────────────
+ * The hold used to be blind: the button pulsed amber for 1400ms with no way to
+ * tell how much longer to press. This fills across the button over exactly that
+ * window — the duration comes from AUTO_ROLL_HOLD_DELAY_MS via the inline
+ * --island-run-hold-ms custom property, so the bar cannot promise a different
+ * moment than the timeout actually fires.
+ *
+ * Fill and drain are one transition on two states rather than a keyframe
+ * animation, which is what makes an early release read correctly: the bar
+ * retreats from wherever it got to, instead of snapping or restarting. */
+/* Scoped to --cta, the only two buttons that carry a charge bar, so no other
+ * roll button's painting changes. Containment is required because the bar is
+ * scaled with transform: its own border-radius would scale into an ellipse
+ * rather than staying clipped to the button's pill/clip-path silhouette. */
+.island-run-prototype__roll-btn--cta {
+  position: relative;
+  overflow: hidden;
+}
+
+.island-run-prototype__roll-hold-charge {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: left center;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 236, 194, 0.16),
+    rgba(255, 213, 138, 0.42) 62%,
+    rgba(255, 247, 224, 0.72)
+  );
+  /* Release: retreat quickly so the button feels responsive to letting go. */
+  transition: transform 220ms ease-out, opacity 220ms ease-out;
+}
+
+.island-run-prototype__roll-btn--auto-pending .island-run-prototype__roll-hold-charge {
+  transform: scaleX(1);
+  /* Charge: linear, because the wait it represents is linear. */
+  transition: transform var(--island-run-hold-ms, 1400ms) linear;
+}
+
+/* Engaged — the green button state carries the message now, so the bar clears
+ * itself rather than sitting full behind it. */
+.island-run-prototype__roll-btn--auto-active .island-run-prototype__roll-hold-charge {
+  transform: scaleX(1);
+  opacity: 0;
+}
+
+/* Keep each button's own label above the fill. The HUD and footer buttons
+ * label themselves differently, so both wrappers are lifted. */
+.island-run-prototype__footer-roll-btn-content,
+.island-run-prototype__roll-btn-label {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The fill stays — it is timing information, not decoration — but the
+   * button stops bouncing underneath it. */
+  .island-run-prototype__roll-btn--auto-pending {
+    animation: none;
+  }
+}
+
 .island-run-prototype__roll-btn--auto-active {
   background: linear-gradient(180deg, rgba(103, 225, 126, 0.98), rgba(43, 171, 85, 0.96));
   border-color: rgba(205, 255, 211, 0.86);

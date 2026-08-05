@@ -430,6 +430,14 @@ type CampaignDraft = {
   durationDays: number;
   customDurationDays: string;
   victoryCondition: string;
+  /**
+   * The Goal this season of effort advances. A Campaign is time-boxed effort
+   * toward a Goal, not a synonym for one, so this is the link that makes
+   * Goal → Campaign → Quest a real chain rather than a documented intention.
+   * Empty string means "not linked yet" — still allowed, since plenty of
+   * campaigns start before the player has written the goal down.
+   */
+  goalId: string;
   keystoneHabitId: string;
   minimumMove: string;
   dangerWindow: string;
@@ -482,6 +490,7 @@ function createDefaultCampaignDraft(): CampaignDraft {
     durationDays: 21,
     customDurationDays: '',
     victoryCondition: '',
+    goalId: '',
     keystoneHabitId: '',
     minimumMove: '',
     dangerWindow: '',
@@ -1300,6 +1309,7 @@ export function DailyHabitTracker({
       return 'starlight';
     }
   });
+  const [goals, setGoals] = useState<Database['public']['Tables']['goals']['Row'][]>([]);
   const [campaign, setCampaign] = useState<Campaign | null>(() => readStoredCampaign(session.user.id));
   const [campaignModalOpen, setCampaignModalOpen] = useState(false);
   const [campaignPanelIndex, setCampaignPanelIndex] = useState(0);
@@ -1526,6 +1536,7 @@ export function DailyHabitTracker({
         durationDays: CAMPAIGN_DURATION_OPTIONS.includes(campaign.duration_days as typeof CAMPAIGN_DURATION_OPTIONS[number]) ? campaign.duration_days : 0,
         customDurationDays: CAMPAIGN_DURATION_OPTIONS.includes(campaign.duration_days as typeof CAMPAIGN_DURATION_OPTIONS[number]) ? '' : String(campaign.duration_days),
         victoryCondition: campaign.victory_condition,
+        goalId: campaign.goal_id ?? '',
         keystoneHabitId: campaign.keystone_habit_id ?? '',
         minimumMove: campaign.minimum_move ?? '',
         dangerWindow: campaign.danger_window ?? '',
@@ -1553,6 +1564,12 @@ export function DailyHabitTracker({
       setCampaignError('Add a victory condition so the campaign knows what winning means.');
       return;
     }
+    // Resolve against the live goal list: a goal deleted since the draft was
+    // opened must drop the link rather than send a dangling id, which the
+    // campaigns_insert_own / campaigns_update_own policies would reject.
+    const linkedGoal = campaignDraft.goalId
+      ? goals.find((goal) => goal.id === campaignDraft.goalId) ?? null
+      : null;
     const now = new Date();
     const startDate = formatISODate(now);
     const endDate = formatISODate(addDays(now, duration - 1));
@@ -1566,6 +1583,10 @@ export function DailyHabitTracker({
       end_date: campaign?.end_date ?? endDate,
       duration_days: duration,
       victory_condition: victory,
+      goal_id: linkedGoal?.id ?? null,
+      // The Life Wheel area follows the Goal rather than being asked twice, so
+      // a Campaign can never disagree with the Goal it serves.
+      life_wheel_category: linkedGoal?.life_wheel_category ?? null,
       keystone_habit_id: campaignDraft.keystoneHabitId || null,
       minimum_move: campaignDraft.minimumMove.trim() || null,
       danger_window: campaignDraft.dangerWindow.trim() || null,
@@ -1590,7 +1611,7 @@ export function DailyHabitTracker({
         }
       });
     }
-  }, [campaign, campaignDraft, session]);
+  }, [campaign, campaignDraft, goals, session]);
 
   const handleEndCampaign = useCallback(() => {
     const endingCampaign = campaign;
@@ -1837,7 +1858,6 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
   const [editGoalId, setEditGoalId] = useState<string>(GOAL_UNASSIGNED);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
-  const [goals, setGoals] = useState<Database['public']['Tables']['goals']['Row'][]>([]);
   const [calendarQuests, setCalendarQuests] = useState<Quest[]>([]);
   const [goalsLoading, setGoalsLoading] = useState(false);
   const [creatingGoal, setCreatingGoal] = useState(false);
@@ -11573,6 +11593,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           <label>Duration<div className="campaign-form__durations">{CAMPAIGN_DURATION_OPTIONS.map((days) => <button key={days} type="button" className={campaignDraft.durationDays === days ? 'is-active' : ''} onClick={() => setCampaignDraft((current) => ({ ...current, durationDays: days, customDurationDays: '' }))}>{days} days</button>)}<button type="button" className={campaignDraft.durationDays === 0 ? 'is-active' : ''} onClick={() => setCampaignDraft((current) => ({ ...current, durationDays: 0 }))}>Custom</button></div></label>
                           {campaignDraft.durationDays === 0 ? <label>Custom days<input type="number" min={1} max={365} value={campaignDraft.customDurationDays} onChange={(event) => setCampaignDraft((current) => ({ ...current, customDurationDays: event.target.value }))} /></label> : null}
                           <label>What would make this campaign a win?<textarea rows={3} value={campaignDraft.victoryCondition} onChange={(event) => setCampaignDraft((current) => ({ ...current, victoryCondition: event.target.value }))} placeholder="By the end, I want to complete 9 workouts, miss no more than 2 planned sessions, and feel stronger." /></label>
+                          <label>Which goal does this campaign serve?<select value={campaignDraft.goalId} onChange={(event) => setCampaignDraft((current) => ({ ...current, goalId: event.target.value }))}><option value="">Not linked to a goal yet</option>{goals.map((goal) => <option key={goal.id} value={goal.id}>{goal.title}</option>)}</select><span>A campaign is one season of effort toward a goal. Linking it lets quests, habits and this campaign share the same destination.</span>{!campaignDraft.goalId ? <em>Unlinked campaigns still work — the goal can be attached later.</em> : null}</label>
                         </section>
                         <section className="campaign-form__panel" aria-label="Keystone and risks">
                           <label>Choose one habit that makes this campaign real.<select value={campaignDraft.keystoneHabitId} onChange={(event) => setCampaignDraft((current) => ({ ...current, keystoneHabitId: event.target.value }))}><option value="">Continue without one</option>{habits.map((habit) => <option key={habit.id} value={habit.id}>{habit.name}</option>)}</select><span>A keystone habit is the one action that makes the whole campaign more likely to succeed.</span>{!campaignDraft.keystoneHabitId ? <em>Add a keystone habit to make this campaign easier to follow.</em> : null}</label>
@@ -11585,7 +11606,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                           <label>Recovery rule<span>What happens after a slip?</span><textarea rows={2} value={campaignDraft.recoveryRule} onChange={(event) => setCampaignDraft((current) => ({ ...current, recoveryRule: event.target.value }))} /></label>
                         </section>
                         <section className="campaign-form__panel" aria-label="Campaign review">
-                          <div className="campaign-form__review"><strong>{campaignDraft.name || 'Untitled campaign'}</strong><span>{campaignDraft.durationDays || campaignDraft.customDurationDays || 21} days · {CAMPAIGN_TYPES.find((typeOption) => typeOption.value === campaignDraft.type)?.label}</span><p>{campaignDraft.victoryCondition || 'Add a victory condition on panel 1.'}</p></div>
+                          <div className="campaign-form__review"><strong>{campaignDraft.name || 'Untitled campaign'}</strong><span>{campaignDraft.durationDays || campaignDraft.customDurationDays || 21} days · {CAMPAIGN_TYPES.find((typeOption) => typeOption.value === campaignDraft.type)?.label}{campaignDraft.goalId ? ` · toward ${goals.find((goal) => goal.id === campaignDraft.goalId)?.title ?? 'a goal'}` : ''}</span><p>{campaignDraft.victoryCondition || 'Add a victory condition on panel 1.'}</p></div>
                           <p className="campaign-form__review-note">Review your answers, then start. You can use Back to adjust any panel.</p>
                         </section>
                       </div>

@@ -2,7 +2,7 @@
 
 _Updated: 2026-07-19_
 
-This note separates the live product surfaces so Compass Book, Quest Pulse, Campaigns, and Quests do not drift into conflicting meanings.
+This note separates the live product surfaces so Compass Book, Wheel Pulse, Campaigns, and Quests do not drift into conflicting meanings.
 
 ## Compass Book
 
@@ -25,13 +25,19 @@ The book is seven pages — the Reading plus chapters I–VI — reachable in an
 
 There is no separate table-of-contents screen; the tab rail is the contents.
 
-## Quest Pulse
+## Wheel Pulse
 
-Quest Pulse is the existing live analytics experience formerly shown to users as Quest Compass. It synthesizes Life Wheel check-ins, goals, habits, current quest information, balance, momentum, trends, and attention signals.
+Wheel Pulse is the existing live analytics experience, shown to users as Quest Compass and then Quest Pulse before this rename. It reads Life Wheel check-ins and synthesizes them into six life forces, with goals, habits, current quest information, balance, momentum, trends, and attention signals layered on top.
+
+The name is deliberate: the reading is computed from Life Wheel check-ins and nothing else, and its refresh action is a check-in. "Quest" was retired from this surface because it collides with canonical Quests, the Quest Forge chapter, and the Quest Ledger — the same collision that retired "Compass" here earlier.
 
 ## Old Island Run Compass
 
-The old Island Run Compass is the legacy 11-phase Compass system used by Island Run. It is retained temporarily and is separate from Quest Pulse and the future Compass Book.
+The old Island Run Compass is the legacy 11-phase Compass system used by Island Run. **Its client write path was removed** — no surface writes `compass_state` any more, and the compass template is no longer readable in-app. The table is retained for a data-retention window so early direction text can still be exported or migrated into the Compass Book; `parseCompassState`/`fetchCompassState` in `src/services/compassState.ts` remain solely as that read path.
+
+Do not re-wire gameplay to `compass_state`. Island-fragment answering now lives in the Compass Book (`isIslandFragmentAnsweredForUser`).
+
+Two parts of the legacy curriculum have **no Compass Book equivalent** and are lost when the table is dropped: the Personality spoke (phases P2/P6/P9, 30 islands) and the Shield spoke (P8/P10, 20 islands). Decide where those land — see the gaps note — before dropping the table.
 
 ## My Quest
 
@@ -58,4 +64,4 @@ Quest Leaps remain a reserved short-experiment concept. Canonical Quests now cov
 
 ## Legacy internal code names
 
-Some internal names remain unchanged for compatibility, including `QuestCompassModal`, `openQuestCompassFromMobileMenu`, the `quest-compass` module path, CSS classes, and the My Quest submenu action id `quest-compass`. These names refer to Quest Pulse and must not be used as the namespace for Compass Book or canonical Quest persistence.
+Some internal names remain unchanged for compatibility, including `QuestCompassModal`, `openQuestCompassFromMobileMenu`, the `quest-compass` module path, CSS classes, and the My Quest submenu action id `quest-compass`. These names refer to Wheel Pulse and must not be used as the namespace for Compass Book or canonical Quest persistence.

@@ -130,11 +130,7 @@ import { IslandRunGamifiedJournalCard } from './IslandRunGamifiedJournalCard';
 import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
 import { CompactGameCompassPanel } from '../../../compass-book/components/CompactGameCompassPanel';
 import { CompassStopFragmentMount } from '../../../compass-book/components/CompassStopFragmentMount';
-import {
-  fetchCompassState,
-  isCompassSessionFilledForIsland,
-  recordCompassContribution,
-} from '../../../../services/compassState';
+import { isIslandFragmentAnsweredForUser } from '../../../compass-book/services/compassBookService';
 import { flushIslandRunPendingWrite, readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession';
 import { useIslandRunState } from '../hooks/useIslandRunState';
@@ -1993,10 +1989,8 @@ export function IslandRunBoardPrototype({
     }
 
     void (async () => {
-      const template = await fetchCompassState(session.user.id);
-      if (!cancelled) {
-        setIsActiveCompassSessionFilled(isCompassSessionFilledForIsland(template, islandNumber));
-      }
+      const answered = await isIslandFragmentAnsweredForUser(session.user.id, islandNumber);
+      if (!cancelled) setIsActiveCompassSessionFilled(answered);
     })();
 
     return () => {
@@ -7159,12 +7153,16 @@ export function IslandRunBoardPrototype({
     }
     autoRollHoldTriggeredRef.current = false;
     setIsAutoRollHoldPending(true);
+    // Felt confirmation that the hold registered. The charge bar starts filling
+    // on the same frame, so touch and sight agree.
+    triggerIslandRunHaptic('auto_roll_arm');
     autoRollHoldTimeoutRef.current = window.setTimeout(() => {
       autoRollHoldTimeoutRef.current = null;
       autoRollHoldTriggeredRef.current = true;
       suppressNextRollClickRef.current = true;
       autoRollLoopAbortRef.current = false;
       setIsAutoRolling(true);
+      triggerIslandRunHaptic('auto_roll_engage');
       setLandingText('Auto-roll engaged. Release to stop.');
     }, AUTO_ROLL_HOLD_DELAY_MS);
   }, [dicePool, effectiveDiceCost, isOnboardingCelebrationVisible, isRolling, showTravelOverlay]);
@@ -7189,6 +7187,17 @@ export function IslandRunBoardPrototype({
       onPointerCancel: endAutoRollHold,
     }
     : {};
+
+  /**
+   * Feeds the hold duration to the charge bar so the fill finishes on the same
+   * frame the auto-roll timeout fires. Keeping the JS constant as the single
+   * source of truth means the bar can never promise a different moment than the
+   * one the player actually gets.
+   */
+  const rollHoldChargeStyle = useMemo<CSSProperties>(
+    () => ({ '--island-run-hold-ms': `${AUTO_ROLL_HOLD_DELAY_MS}ms` } as CSSProperties),
+    [],
+  );
 
   useEffect(() => {
     if (!isAutoRolling) {
@@ -12112,9 +12121,13 @@ export function IslandRunBoardPrototype({
               disabled={Boolean(rollDisabledReason)}
               aria-disabled={Boolean(rollDisabledReason)}
               title={rollDisabledMessage ?? undefined}
+              style={rollHoldChargeStyle}
               {...rollHoldHandlers}
             >
-              {rollButtonLabel}
+              {canHoldForAutoRoll && (
+                <span className="island-run-prototype__roll-hold-charge" aria-hidden="true" />
+              )}
+              <span className="island-run-prototype__roll-btn-label">{rollButtonLabel}</span>
               {rollDisabledMessage && (
                 <span className="sr-only"> — {rollDisabledMessage}</span>
               )}
@@ -13241,8 +13254,12 @@ export function IslandRunBoardPrototype({
                     disabled={isBuildTutorialGameplayBlocked || (!isIslandTimerPendingStart && Boolean(rollDisabledReason))}
                     aria-disabled={isBuildTutorialGameplayBlocked || (!isIslandTimerPendingStart && Boolean(rollDisabledReason))}
                     title={!isIslandTimerPendingStart ? (rollDisabledMessage ?? undefined) : undefined}
+                    style={rollHoldChargeStyle}
                     {...rollHoldHandlers}
                   >
+                    {canHoldForAutoRoll && !isIslandTimerPendingStart && (
+                      <span className="island-run-prototype__roll-hold-charge" aria-hidden="true" />
+                    )}
                     <span className="island-run-prototype__footer-roll-btn-content">
                       <span className="island-run-prototype__footer-roll-btn-dice">🎲 {hasHydratedRuntimeState ? dicePool : '—'}{effectiveMultiplier > 1 ? ` ×${effectiveMultiplier}` : ''}</span>
                       <span>{isIslandTimerPendingStart ? 'Start Island' : rollButtonLabel}</span>
@@ -13949,13 +13966,6 @@ export function IslandRunBoardPrototype({
                   card={wisdomTreeCard}
                   islandNumber={islandNumber}
                   onComplete={(message) => {
-                    // Contribute this reflection to the current Compass spoke (best-effort).
-                    void recordCompassContribution({
-                      userId: session.user.id,
-                      islandNumber,
-                      kind: 'wisdom',
-                      text: message,
-                    });
                     handleCompleteActiveStop(`🌳 Wisdom landmark complete — next landmark unlocked. ${message}`);
                   }}
                 />
