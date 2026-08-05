@@ -4121,3 +4121,19 @@ body:has(.compass-book) .quick-add__tab-emoji {
     transform: none;
   }
 }
+
+/* Two app surfaces the earlier pass missed, both on the sheet's success screen:
+   the confirmation tick sat on a mint disc and "Add another" stayed stark
+   white, so the last thing you saw after writing an entry was not the book. */
+body:has(.compass-book) .quick-add__done-emoji {
+  border: 1px solid var(--cbk-gold-soft, rgba(154, 111, 22, 0.55));
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 252, 240, 0.9), transparent 58%),
+    radial-gradient(circle, rgba(154, 111, 22, 0.14), rgba(154, 111, 22, 0.06));
+  box-shadow: inset 0 0 0 3px rgba(255, 252, 240, 0.55);
+}
+
+body:has(.compass-book) .quick-add__secondary {
+  border: 1px solid rgba(70, 50, 16, 0.22);
+  background: rgba(255, 252, 240, 0.55);
+}
