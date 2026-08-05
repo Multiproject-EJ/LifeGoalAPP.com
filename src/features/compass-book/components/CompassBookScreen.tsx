@@ -122,6 +122,19 @@ export function CompassBookScreen({
       return { kind: 'page', pageId };
     });
   }, []);
+  // A host that asks for a page while the book is *already* open must still be
+  // obeyed — the mount-time initial state alone would silently ignore it (e.g.
+  // opening the Quest Ledger from a screen behind an open book).
+  const lastRequestedPageRef = useRef(initialPageId);
+  useEffect(() => {
+    if (!initialPageId || initialPageId === lastRequestedPageRef.current) {
+      lastRequestedPageRef.current = initialPageId;
+      return;
+    }
+    lastRequestedPageRef.current = initialPageId;
+    openPage(initialPageId);
+  }, [initialPageId, openPage]);
+
   const startFlow = useCallback(
     (chapterId: CompassBookChapterId, startActivityId?: string) =>
       setView({ kind: 'flow', chapterId, startActivityId }),

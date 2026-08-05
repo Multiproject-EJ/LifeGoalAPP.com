@@ -74,12 +74,9 @@ export function CompassQuestLedger({ entries, hub, onBack, onClose }: CompassQue
           </p>
         </section>
 
-        {hub ? <div className="compass-quest-ledger__hub">{hub}</div> : null}
-
-        <p className="compass-quest-ledger__rule" aria-hidden="true">
-          ✦ &nbsp;Instruments&nbsp; ✦
-        </p>
-
+        {/* Instruments lead. This page replaced a *menu*, so the menu is what
+            the player came for; the hub summary is context and sits beneath it.
+            (Ordered the other way the eight entries opened ~2.6 screens down.) */}
         <ul className="compass-quest-ledger__list">
           {entries.map((entry) => (
             <li key={entry.id}>
@@ -109,6 +106,15 @@ export function CompassQuestLedger({ entries, hub, onBack, onClose }: CompassQue
             </li>
           ))}
         </ul>
+
+        {hub ? (
+          <>
+            <p className="compass-quest-ledger__rule" aria-hidden="true">
+              ✦ &nbsp;Where you stand&nbsp; ✦
+            </p>
+            <div className="compass-quest-ledger__hub">{hub}</div>
+          </>
+        ) : null}
       </div>
     </>
   );
