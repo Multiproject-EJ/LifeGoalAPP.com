@@ -1996,7 +1996,11 @@
  * Fill and drain are one transition on two states rather than a keyframe
  * animation, which is what makes an early release read correctly: the bar
  * retreats from wherever it got to, instead of snapping or restarting. */
-.island-run-prototype__roll-btn {
+/* Scoped to --cta, the only two buttons that carry a charge bar, so no other
+ * roll button's painting changes. Containment is required because the bar is
+ * scaled with transform: its own border-radius would scale into an ellipse
+ * rather than staying clipped to the button's pill/clip-path silhouette. */
+.island-run-prototype__roll-btn--cta {
   position: relative;
   overflow: hidden;
 }
