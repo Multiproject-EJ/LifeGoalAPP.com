@@ -25,6 +25,12 @@ export type CompassQuestLedgerEntry = {
 export type CompassQuestLedgerProps = {
   entries: CompassQuestLedgerEntry[];
   /**
+   * Write a new habit or goal without leaving the book. Every other entry hands
+   * off to a workspace and closes the book; this one stays on the page, so it
+   * is presented as the page's own action rather than a ninth instrument.
+   */
+  onInscribe?: () => void;
+  /**
    * The restyled Quest Hub summary (pillars, radar, active quest line),
    * supplied by the host so the book stays decoupled from goal/habit services.
    */
@@ -39,7 +45,13 @@ export type CompassQuestLedgerProps = {
  * chapters it is never island-gated and stores nothing; it is a table of the
  * player's living tools, drawn in ink.
  */
-export function CompassQuestLedger({ entries, hub, onBack, onClose }: CompassQuestLedgerProps) {
+export function CompassQuestLedger({
+  entries,
+  onInscribe,
+  hub,
+  onBack,
+  onClose,
+}: CompassQuestLedgerProps) {
   return (
     <>
       <header className="compass-book__topbar">
@@ -73,6 +85,24 @@ export function CompassQuestLedger({ entries, hub, onBack, onClose }: CompassQue
             Every instrument of your journey, kept in one binding.
           </p>
         </section>
+
+        {onInscribe ? (
+          <button
+            type="button"
+            className="compass-quest-ledger__inscribe"
+            onClick={onInscribe}
+          >
+            <span className="compass-quest-ledger__inscribe-glyph" aria-hidden="true">
+              ✒
+            </span>
+            <span className="compass-quest-ledger__inscribe-copy">
+              <span className="compass-quest-ledger__inscribe-title">Inscribe a new entry</span>
+              <span className="compass-quest-ledger__inscribe-note">
+                A habit or a quest, written here on the page.
+              </span>
+            </span>
+          </button>
+        ) : null}
 
         {/* Instruments lead. This page replaced a *menu*, so the menu is what
             the player came for; the hub summary is context and sits beneath it.

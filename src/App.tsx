@@ -25,6 +25,9 @@ import { VisionBoard } from './features/vision-board';
 import type { LifeWheelCategoryKey } from './features/checkins/LifeWheelCheckins';
 import { LifeWheelCheckins } from './features/checkins';
 import { QuestCompassModal } from './features/quest-compass';
+import { QuickAddSheet } from './components/QuickAddSheet';
+import { fetchGoals } from './services/goals';
+import { normalizeGoalStatus } from './features/goals/goalStatus';
 import { CompassBookScreen } from './features/compass-book/components/CompassBookScreen';
 import type { CompassQuestLedgerEntry } from './features/compass-book/components/CompassQuestLedger';
 import type { CompassBookPageId } from './features/compass-book/logic/reading';
@@ -934,6 +937,10 @@ export default function App({ forceAuthOnMount }: AppProps) {
   // Which page the Compass Book opens on. The Quest Ledger page replaced the old
   // My Quest submenu, so quest entry points open the book directly on it.
   const [compassBookInitialPageId, setCompassBookInitialPageId] = useState<CompassBookPageId | null>(null);
+  // The Ledger's "Inscribe a new entry" sheet. It belongs to the book rather
+  // than the hub so writing a habit never closes the book.
+  const [isLedgerQuickAddOpen, setIsLedgerQuickAddOpen] = useState(false);
+  const [ledgerQuickAddGoals, setLedgerQuickAddGoals] = useState<Array<{ id: string; title: string }>>([]);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
   // A settings surface the account panel should open itself on, set by launchers
   // that deep-link into one (e.g. Personalisation → the ✨ Personalize modal).
@@ -3492,6 +3499,23 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsCompassBookOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
+  /**
+   * Open the Ledger's own quick-add. Unlike every other Ledger action this one
+   * leaves the book open — the sheet is dressed as parchment and lands on the
+   * page. Goals load on demand so the habit can still be tied to a quest.
+   */
+  const openLedgerQuickAdd = useCallback(() => {
+    setIsLedgerQuickAddOpen(true);
+    void fetchGoals().then(({ data }) => {
+      if (!data) return;
+      setLedgerQuickAddGoals(
+        data
+          .filter((goal) => normalizeGoalStatus(goal.status_tag) !== 'achieved')
+          .map((goal) => ({ id: goal.id, title: goal.title })),
+      );
+    });
+  }, []);
+
   /** Close the book, then run a ledger entry's real action. */
   const runQuestLedgerAction = useCallback((action: () => void) => {
     setIsCompassBookOpen(false);
@@ -5396,6 +5420,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       initialPageId={compassBookInitialPageId ?? undefined}
       questLedger={{
         entries: compassQuestLedgerEntries,
+        onInscribe: activeSession ? openLedgerQuickAdd : undefined,
         hub: activeSession ? (
           <MyQuestHub
             session={activeSession}
@@ -5408,9 +5433,27 @@ export default function App({ forceAuthOnMount }: AppProps) {
       onClose={() => {
         setIsCompassBookOpen(false);
         setCompassBookInitialPageId(null);
+        setIsLedgerQuickAddOpen(false);
       }}
     />
   ) : null;
+
+  // Rendered beside the book, never inside it: the sheet portals to <body>, and
+  // compassBook.css re-inks it while the book is on screen.
+  const compassBookQuickAdd =
+    isCompassBookOpen && isLedgerQuickAddOpen && activeSession ? (
+      <QuickAddSheet
+        session={activeSession}
+        initialMode="habit"
+        goalOptions={ledgerQuickAddGoals}
+        onCreated={() => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent(HABITS_CREATED_EVENT));
+          }
+        }}
+        onClose={() => setIsLedgerQuickAddOpen(false)}
+      />
+    ) : null;
 
   const mobileGamificationOverlay =
     isMobileExperience && showMobileGamification ? (
@@ -6037,6 +6080,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
         {starterQuestSheet}
         {mobileMenuOverlay}
         {compassBookOverlay}
+        {compassBookQuickAdd}
         {launcherPlayersHandOverlay}
         {mobileGamificationOverlay}
         {levelWorldsEntryModal}
@@ -6365,6 +6409,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
       {mobileMenuOverlay}
       {compassBookOverlay}
+      {compassBookQuickAdd}
       {launcherPlayersHandOverlay}
       {mobileGamificationOverlay}
       {levelWorldsEntryModal}
