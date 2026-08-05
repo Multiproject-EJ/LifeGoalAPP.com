@@ -3593,7 +3593,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       { id: 'routines', title: 'Routines', glyph: '⧉', note: 'Sequences polished into ceremony.', featureId: 'app.routines', run: openRoutinesWorkspace },
       { id: 'support', title: 'Goals', glyph: '◎', note: 'The quest lines you have sworn to.', run: () => handleMobileNavSelect('support') },
       { id: 'planning', title: 'Check-ins', glyph: '✓', note: 'Take a fresh reading of the wheel.', run: openCheckinsFromMyQuest },
-      { id: 'contracts', title: 'Contracts', glyph: '✎', note: 'Promises sealed in your own hand.', featureId: 'app.contracts', run: openContractsWorkspace },
+      { id: 'contracts', title: 'Contracts', glyph: '✎\uFE0E', note: 'Promises sealed in your own hand.', featureId: 'app.contracts', run: openContractsWorkspace },
     ];
     return raw.map(({ featureId, run, ...entry }) => ({
       ...entry,

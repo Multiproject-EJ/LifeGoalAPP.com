@@ -10,6 +10,8 @@ import { DEMO_ISLAND_NUMBER } from '../features/compass-book/content/demoBook';
 import type { CompassBookChapterId } from '../features/compass-book/types';
 import { QuickAddSheet } from '../components/QuickAddSheet';
 import { GoalPillarMeter } from '../features/goals/GoalPillarMeter';
+import { MyQuestHub } from '../features/goals/MyQuestHub';
+import { createDemoSession } from '../services/demoSession';
 import { computeGoalPillars } from '../features/goals/goalPillars';
 import '../index.css';
 
@@ -72,13 +74,23 @@ function Harness() {
               { id: 'routines', title: 'Routines', glyph: '⧉', note: 'Sequences polished into ceremony.', stamp: { label: 'Demo', kind: 'demo' }, onSelect: () => {} },
               { id: 'support', title: 'Goals', glyph: '◎', note: 'The quest lines you have sworn to.', onSelect: () => {} },
               { id: 'planning', title: 'Check-ins', glyph: '✓', note: 'Take a fresh reading of the wheel.', onSelect: () => {} },
-              { id: 'contracts', title: 'Contracts', glyph: '✎', note: 'Promises sealed in your own hand.', onSelect: () => {} },
+              { id: 'contracts', title: 'Contracts', glyph: '✎\uFE0E', note: 'Promises sealed in your own hand.', onSelect: () => {} },
             ],
-            hub: (
-              <div style={{ padding: '8px 0' }}>
-                <GoalPillarMeter pillars={pillars} size="full" />
-              </div>
-            ),
+            // `?hub=live` mounts the real MyQuestHub (demo session, fetches may
+            // land in empty states — fine for previewing the ledger reskin).
+            hub:
+              params.get('hub') === 'live' ? (
+                <MyQuestHub
+                  session={createDemoSession()}
+                  onOpenStarterQuest={() => {}}
+                  onOpenCheckins={() => {}}
+                  onOpenGoals={() => {}}
+                />
+              ) : (
+                <div style={{ padding: '8px 0' }}>
+                  <GoalPillarMeter pillars={pillars} size="full" />
+                </div>
+              ),
           }}
           allowDemo
           initialDemo={demo}
