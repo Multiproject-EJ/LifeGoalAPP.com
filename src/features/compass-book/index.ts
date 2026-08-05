@@ -31,3 +31,4 @@ export {
   isActivityComplete,
   isActivityStarted,
 } from './logic/progress';
+export type { CompassQuestLedgerEntry } from './components/CompassQuestLedger';

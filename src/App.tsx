@@ -26,6 +26,8 @@ import type { LifeWheelCategoryKey } from './features/checkins/LifeWheelCheckins
 import { LifeWheelCheckins } from './features/checkins';
 import { QuestCompassModal } from './features/quest-compass';
 import { CompassBookScreen } from './features/compass-book/components/CompassBookScreen';
+import type { CompassQuestLedgerEntry } from './features/compass-book/components/CompassQuestLedger';
+import type { CompassBookPageId } from './features/compass-book/logic/reading';
 import { NotificationPreferences } from './features/notifications';
 import { MyAccountPanel } from './features/account/MyAccountPanel';
 import { PlayerAvatarPanel } from './features/avatar/PlayerAvatarPanel';
@@ -922,7 +924,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [isProfileStrengthOpen, setIsProfileStrengthOpen] = useState(false);
   const [showMobileFeedbackModal, setShowMobileFeedbackModal] = useState(false);
   const [showMobileSupportModal, setShowMobileSupportModal] = useState(false);
-  const [isMyQuestSubmenuOpen, setIsMyQuestSubmenuOpen] = useState(false);
   const [isStarterQuestSheetOpen, setIsStarterQuestSheetOpen] = useState(false);
   const [isContractWizardOpen, setIsContractWizardOpen] = useState(false);
   const [starterQuestSheetOrigin, setStarterQuestSheetOrigin] = useState<'my-quest' | 'today' | null>(null);
@@ -930,6 +931,9 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const [checkinsEntryOrigin, setCheckinsEntryOrigin] = useState<'my-quest' | 'direct'>('direct');
   const [isQuestCompassModalOpen, setIsQuestCompassModalOpen] = useState(false);
   const [isCompassBookOpen, setIsCompassBookOpen] = useState(false);
+  // Which page the Compass Book opens on. The Quest Ledger page replaced the old
+  // My Quest submenu, so quest entry points open the book directly on it.
+  const [compassBookInitialPageId, setCompassBookInitialPageId] = useState<CompassBookPageId | null>(null);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
     area: AreaKey;
@@ -1725,7 +1729,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     isMobileExperience && (mobileActiveNavId === 'support' || mobileActiveNavId === 'rituals');
   const shouldLockFooterCollapsedForQuestFlow =
     isMobileExperience && (
-      isMyQuestSubmenuOpen ||
       isStarterQuestSheetOpen ||
       isContractWizardOpen ||
       mobileActiveNavId === 'contracts' ||
@@ -2439,7 +2442,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     if (isMobileMenuOpen) {
       setShowMobileFeedbackModal(false);
       setShowMobileSupportModal(false);
-      setIsMyQuestSubmenuOpen(false);
       setIsFeedbackSupportSubmenuOpen(false);
     }
   }, [isMobileMenuOpen]);
@@ -3289,7 +3291,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
-    setIsMyQuestSubmenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
     setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
@@ -3404,7 +3405,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
-    setIsMyQuestSubmenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
     setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
@@ -3421,7 +3421,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
-    setIsMyQuestSubmenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
     setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
@@ -3447,7 +3446,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
   const openFullMobileMenuFromGameOverlay = useCallback(() => {
     setIsMobileProfileDialogOpen(false);
     setIsEnergyMenuOpen(false);
-    setIsMyQuestSubmenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
     setIsStarterQuestSheetOpen(false);
     setShowGameBoardOverlay(false);
@@ -3459,25 +3457,38 @@ export default function App({ forceAuthOnMount }: AppProps) {
     setIsMobileProfileDialogOpen(false);
     setIsMobileMenuOpen(false);
     setIsEnergyMenuOpen(false);
-    setIsMyQuestSubmenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
     setIsStarterQuestSheetOpen(false);
     closeGameBoardOverlayIfOpen();
     setIsQuestCompassModalOpen(true);
   }, [closeGameBoardOverlayIfOpen]);
 
-  const openMyQuestMenuFromToday = useCallback(() => {
+  /**
+   * The Quest Ledger (a page in the Compass Book) replaced the My Quest
+   * submenu: every quest entry point opens the book directly on that page.
+   */
+  const openQuestLedger = useCallback(() => {
     setIsMobileProfileDialogOpen(false);
     setIsEnergyMenuOpen(false);
     setIsFeedbackSupportSubmenuOpen(false);
     setIsStarterQuestSheetOpen(false);
+    closeGameBoardOverlayIfOpen();
+    setCompassBookInitialPageId('quest_ledger');
+    setIsCompassBookOpen(true);
+  }, [closeGameBoardOverlayIfOpen]);
+
+  /** Close the book, then run a ledger entry's real action. */
+  const runQuestLedgerAction = useCallback((action: () => void) => {
+    setIsCompassBookOpen(false);
+    setCompassBookInitialPageId(null);
+    action();
+  }, []);
+
+  const openMyQuestMenuFromToday = useCallback(() => {
     setStarterQuestSheetOrigin(null);
     setStarterQuestInitialDomainKey(null);
-    closeGameBoardOverlayIfOpen();
-    setIsMobileMenuOpen(true);
-    setIsMyQuestSubmenuOpen(true);
-    handleMobileFooterExpand(true);
-  }, [closeGameBoardOverlayIfOpen, handleMobileFooterExpand]);
+    openQuestLedger();
+  }, [openQuestLedger]);
 
   const openStarterQuestSheetFromMyQuest = useCallback((initialDomainKey?: LifeWheelCategoryKey) => {
     setIsMobileProfileDialogOpen(false);
@@ -3494,13 +3505,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
   }, [handleMobileNavSelect]);
 
   const handleBackToMyQuestFromCheckins = useCallback(() => {
-    setIsMobileProfileDialogOpen(false);
-    setIsEnergyMenuOpen(false);
-    setIsFeedbackSupportSubmenuOpen(false);
-    setIsStarterQuestSheetOpen(false);
-    setIsMobileMenuOpen(true);
-    setIsMyQuestSubmenuOpen(true);
-  }, []);
+    openQuestLedger();
+  }, [openQuestLedger]);
 
   const openGoalsFromMyQuest = useCallback(() => {
     handleMobileNavSelect('support');
@@ -3508,26 +3514,17 @@ export default function App({ forceAuthOnMount }: AppProps) {
 
   const openHealthGoalsQuestMenuFromBody = useCallback(() => {
     if (isAdmin !== true) return;
-    setIsMobileProfileDialogOpen(false);
-    setIsEnergyMenuOpen(false);
-    setIsFeedbackSupportSubmenuOpen(false);
-    setIsStarterQuestSheetOpen(false);
-    closeGameBoardOverlayIfOpen();
-    setIsMobileMenuOpen(true);
-    setIsMyQuestSubmenuOpen(true);
-  }, [closeGameBoardOverlayIfOpen, isAdmin]);
+    openQuestLedger();
+  }, [isAdmin, openQuestLedger]);
 
   const closeStarterQuestSheet = useCallback(() => {
     setIsStarterQuestSheetOpen(false);
     if (starterQuestSheetOrigin === 'my-quest') {
-      setIsMobileMenuOpen(true);
-      setIsMyQuestSubmenuOpen(true);
-      setIsEnergyMenuOpen(false);
-      setIsFeedbackSupportSubmenuOpen(false);
+      openQuestLedger();
     }
     setStarterQuestSheetOrigin(null);
     setStarterQuestInitialDomainKey(null);
-  }, [starterQuestSheetOrigin]);
+  }, [openQuestLedger, starterQuestSheetOrigin]);
 
   const handleStarterQuestCreated = useCallback(() => {
     setIsStarterQuestSheetOpen(false);
@@ -3572,19 +3569,38 @@ export default function App({ forceAuthOnMount }: AppProps) {
     openGoalsFromMyQuest();
   }, [openGoalsFromMyQuest]);
 
-  const myQuestSubmenuActions: LauncherSubmenuAction[] = useMemo(
-    () => [
-      { id: 'quest-compass', label: 'Quest Pulse', icon: '💓', onSelect: openQuestCompassFromMobileMenu },
-      { id: 'starter-quest', label: 'Starter Quest', icon: '🧭', onSelect: openStarterQuestSheetFromMyQuest },
-      { id: 'body', label: 'Health Goals', icon: '💪', featureId: 'app.body', onSelect: () => handleMobileNavSelect('body') },
-      { id: 'habits', label: 'Habits', icon: '🔄', onSelect: () => handleMobileNavSelect('habits') },
-      { id: 'routines', label: 'Routines', icon: '🧩', featureId: 'app.routines', onSelect: openRoutinesWorkspace },
-      { id: 'support', label: 'Goals', icon: '🎯', onSelect: () => handleMobileNavSelect('support') },
-      { id: 'planning', label: 'Check-ins', icon: '✅', onSelect: openCheckinsFromMyQuest },
-      { id: 'contracts', label: 'Contracts', icon: '🤝', featureId: 'app.contracts', onSelect: openContractsWorkspace },
-    ],
-    [handleMobileNavSelect, openCheckinsFromMyQuest, openContractsWorkspace, openQuestCompassFromMobileMenu, openRoutinesWorkspace, openStarterQuestSheetFromMyQuest],
-  );
+  // The Quest Ledger page of the Compass Book — the old My Quest submenu,
+  // re-inked. Feature-availability badges become ledger stamps; selecting an
+  // entry closes the book and runs the same handler the submenu ran.
+  const compassQuestLedgerEntries: CompassQuestLedgerEntry[] = useMemo(() => {
+    const stampFor = (featureId?: FeatureAvailabilityId): CompassQuestLedgerEntry['stamp'] => {
+      if (!featureId) return null;
+      const availability = getFeatureAvailability(featureId);
+      if (availability.status === 'live') return null;
+      return {
+        label: availability.publicLabel || 'Soon',
+        kind: availability.status === 'demo' ? 'demo' : 'soon',
+      };
+    };
+    const raw: Array<Omit<CompassQuestLedgerEntry, 'stamp' | 'onSelect'> & {
+      featureId?: FeatureAvailabilityId;
+      run: () => void;
+    }> = [
+      { id: 'quest-compass', title: 'Quest Pulse', glyph: '⌁', note: 'A reading of your six life forces.', run: openQuestCompassFromMobileMenu },
+      { id: 'starter-quest', title: 'Starter Quest', glyph: '✧', note: 'Shape the first ritual of a new path.', run: () => openStarterQuestSheetFromMyQuest() },
+      { id: 'body', title: 'Health Goals', glyph: '✚', note: 'The vessel that carries every quest.', featureId: 'app.body', run: () => handleMobileNavSelect('body') },
+      { id: 'habits', title: 'Habits', glyph: '↻', note: 'The rituals that carry your days.', run: () => handleMobileNavSelect('habits') },
+      { id: 'routines', title: 'Routines', glyph: '⧉', note: 'Sequences polished into ceremony.', featureId: 'app.routines', run: openRoutinesWorkspace },
+      { id: 'support', title: 'Goals', glyph: '◎', note: 'The quest lines you have sworn to.', run: () => handleMobileNavSelect('support') },
+      { id: 'planning', title: 'Check-ins', glyph: '✓', note: 'Take a fresh reading of the wheel.', run: openCheckinsFromMyQuest },
+      { id: 'contracts', title: 'Contracts', glyph: '✎\uFE0E', note: 'Promises sealed in your own hand.', featureId: 'app.contracts', run: openContractsWorkspace },
+    ];
+    return raw.map(({ featureId, run, ...entry }) => ({
+      ...entry,
+      stamp: stampFor(featureId),
+      onSelect: () => runQuestLedgerAction(run),
+    }));
+  }, [handleMobileNavSelect, openCheckinsFromMyQuest, openContractsWorkspace, openQuestCompassFromMobileMenu, openRoutinesWorkspace, openStarterQuestSheetFromMyQuest, runQuestLedgerAction]);
 
   const feedbackSupportSubmenuActions: LauncherSubmenuAction[] = useMemo(
     () => [
@@ -4358,7 +4374,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
               onClick={() => {
                 setIsMobileProfileDialogOpen(false);
                 setIsEnergyMenuOpen(false);
-                setIsMyQuestSubmenuOpen(false);
                 setIsFeedbackSupportSubmenuOpen(false);
                 setIsStarterQuestSheetOpen(false);
                 setShouldShowSettingsMenuReturn(false);
@@ -4948,8 +4963,8 @@ export default function App({ forceAuthOnMount }: AppProps) {
                   <button
                     type="button"
                     className="mobile-menu-overlay__hero-card mobile-menu-overlay__hero-card--quest mobile-menu-overlay__hero-card--quest-compact"
-                    onClick={() => setIsMyQuestSubmenuOpen(true)}
-                    aria-label="Open My Quest"
+                    onClick={openQuestLedger}
+                    aria-label="Open the Quest Ledger"
                   >
                     <span className="mobile-menu-overlay__quest-art" aria-hidden="true">
                       <img src="/assets/players_menu/questimg.webp" alt="" loading="lazy" decoding="async" />
@@ -5105,91 +5120,6 @@ export default function App({ forceAuthOnMount }: AppProps) {
                 </button>
               </div>
             </div>
-            {isMyQuestSubmenuOpen ? (
-              <div
-                className="mobile-menu-overlay__hold-modal mobile-menu-overlay__hold-modal--my-quest"
-                role="dialog"
-                aria-modal="true"
-                aria-label="My Quest menu"
-              >
-                <button
-                  type="button"
-                  className="mobile-menu-overlay__hold-backdrop"
-                  aria-label="Close My Quest menu"
-                  onClick={() => setIsMyQuestSubmenuOpen(false)}
-                />
-                <div className="mobile-menu-overlay__hold-panel mobile-menu-overlay__submenu-sheet mobile-menu-overlay__submenu-sheet--my-quest">
-                  <div className="mobile-menu-overlay__hold-header">
-                    <div>
-                      <p className="mobile-menu-overlay__hold-eyebrow">Quest menu</p>
-                      <h3 className="mobile-menu-overlay__hold-title">My Quest</h3>
-                    </div>
-                    <button
-                      type="button"
-                      className="mobile-menu-overlay__hold-close"
-                      aria-label="Close My Quest menu"
-                      onClick={() => setIsMyQuestSubmenuOpen(false)}
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  {activeSession ? (
-                    <MyQuestHub
-                      session={activeSession}
-                      onOpenStarterQuest={openStarterQuestSheetFromMyQuest}
-                      onOpenCheckins={openCheckinsFromMyQuest}
-                      onOpenGoals={openGoalsFromMyQuest}
-                    />
-                  ) : null}
-                  <p className="mobile-menu-overlay__hold-eyebrow">More tools</p>
-                  <div className="mobile-menu-overlay__submenu mobile-menu-overlay__submenu--open">
-                    {myQuestSubmenuActions.map((action) => {
-                      const featureId = action.featureId;
-                      const availability = featureId ? getFeatureAvailability(featureId) : null;
-                      const isFeatureOpen = featureId ? isAppWorkspaceFeatureOpen(featureId) : true;
-                      const futureFeatureState = featureId && !isFeatureOpen
-                        ? appFutureFeatureCardStates[featureId]
-                        : undefined;
-                      const submenuButtonClassName = getFutureFeatureCardClassName(
-                        'mobile-menu-overlay__submenu-button',
-                        futureFeatureState,
-                        { isDemo: availability?.status === 'demo' },
-                      );
-                      const submenuButtonTitle = [
-                        action.label,
-                        availability?.status === 'demo' ? availability.publicLabel : '',
-                        futureFeatureState?.voted ? 'Feedback sent' : '',
-                      ].filter(Boolean).join(' • ');
-
-                      return (
-                        <button
-                          key={action.id}
-                          type="button"
-                          className={submenuButtonClassName}
-                          onClick={action.onSelect}
-                          title={submenuButtonTitle}
-                        >
-                          <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">
-                            {action.icon}
-                          </span>
-                          <span>{action.label}</span>
-                          {availability && availability.status !== 'live' ? (
-                            <FeatureStatusBadge
-                              status={availability.status}
-                              labelOverride={availability.publicLabel}
-                              className="mobile-menu-overlay__submenu-badge"
-                            />
-                          ) : null}
-                          {futureFeatureState?.voted ? (
-                            <span className="future-feature-card__saved-dot" aria-hidden="true">✓</span>
-                          ) : null}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            ) : null}
             {isQuestCompassModalOpen ? (
               <QuestCompassModal
                 session={supabaseSession}
@@ -5439,7 +5369,22 @@ export default function App({ forceAuthOnMount }: AppProps) {
       currentIslandNumber={overlayIslandNumber}
       session={supabaseSession}
       allowDemo={isAdmin === true}
-      onClose={() => setIsCompassBookOpen(false)}
+      initialPageId={compassBookInitialPageId ?? undefined}
+      questLedger={{
+        entries: compassQuestLedgerEntries,
+        hub: activeSession ? (
+          <MyQuestHub
+            session={activeSession}
+            onOpenStarterQuest={() => runQuestLedgerAction(() => openStarterQuestSheetFromMyQuest())}
+            onOpenCheckins={() => runQuestLedgerAction(openCheckinsFromMyQuest)}
+            onOpenGoals={() => runQuestLedgerAction(openGoalsFromMyQuest)}
+          />
+        ) : undefined,
+      }}
+      onClose={() => {
+        setIsCompassBookOpen(false);
+        setCompassBookInitialPageId(null);
+      }}
     />
   ) : null;
 

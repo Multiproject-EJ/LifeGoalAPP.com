@@ -3534,3 +3534,284 @@
 .compass-book__cover-rose .compass-rose {
   margin: 0 auto;
 }
+
+/* ============================================================
+   The Quest Ledger — the page after chapter VI
+   Holds what the My Quest menu held: the hub summary and the
+   eight instruments, drawn in the book's ink instead of glass.
+   ============================================================ */
+
+/* Ledger bookmark: bottom of the rail, set slightly apart — a different kind
+   of page than the chapters, so it gets a gap and its own sealing-wax green. */
+.compass-book__tab--ledger {
+  margin-top: 10px;
+  color: #cfe3c0;
+  background: rgba(74, 124, 62, 0.26);
+  border-color: rgba(122, 168, 96, 0.5);
+}
+
+.compass-book__tab--ledger.compass-book__tab--active {
+  color: #eef7e4;
+}
+
+/* An inked rule between the hub summary and the instruments list. */
+.compass-quest-ledger__rule {
+  margin: 18px 0 10px;
+  text-align: center;
+  color: var(--cbk-gold);
+  font-family: var(--cbk-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.compass-quest-ledger__list {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compass-quest-ledger__entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--cbk-ink);
+  border: 1px solid var(--cbk-line);
+  border-radius: 12px;
+  background: var(--cbk-card);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.compass-quest-ledger__entry:hover,
+.compass-quest-ledger__entry:focus-visible {
+  border-color: var(--cbk-gold-soft);
+  background: rgba(255, 252, 240, 0.62);
+  outline: none;
+}
+
+.compass-quest-ledger__entry:active {
+  transform: scale(0.985);
+}
+
+/* The glyph sits in a stamped-coin medallion, gold ink on parchment. */
+.compass-quest-ledger__medallion {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  color: var(--cbk-gold);
+  font-family: var(--cbk-display);
+  font-size: 1.05rem;
+  border: 1px solid var(--cbk-gold-soft);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 252, 240, 0.9), transparent 58%),
+    radial-gradient(circle, rgba(154, 111, 22, 0.12), rgba(154, 111, 22, 0.05));
+  box-shadow: inset 0 0 0 3px rgba(255, 252, 240, 0.55);
+}
+
+.compass-quest-ledger__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.compass-quest-ledger__title {
+  font-family: var(--cbk-serif);
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.compass-quest-ledger__note {
+  color: var(--cbk-ink-muted);
+  font-family: var(--cbk-serif);
+  font-style: italic;
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.compass-quest-ledger__chevron {
+  color: var(--cbk-ink-faint);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+/* Availability stamps: small tilted ink stamps, the book's version of the old
+   feature badges. */
+.compass-quest-ledger__stamp {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  transform: rotate(-3deg);
+  font-family: var(--cbk-display);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  opacity: 0.85;
+}
+
+.compass-quest-ledger__stamp--soon { color: #8a5a2a; }
+.compass-quest-ledger__stamp--demo { color: #56687a; }
+.compass-quest-ledger__stamp--voted { color: #4a7c3e; }
+
+/* ------------------------------------------------------------
+   Hub reskin. The Quest Journey visual system is driven entirely
+   by --quest-* variables, so the ledger re-inks it by remapping
+   those variables in this scope: frost glass becomes parchment,
+   space blue becomes ink, glow becomes gold leaf. Only a few
+   physical properties (blur, radius, shadows) need direct
+   overrides below the variable block.
+   ------------------------------------------------------------ */
+.compass-quest-ledger__hub {
+  --quest-surface-hero: linear-gradient(150deg, rgba(255, 252, 240, 0.85), rgba(241, 227, 191, 0.6));
+  --quest-surface-card: rgba(255, 252, 240, 0.45);
+  --quest-surface-card-strong: rgba(255, 252, 240, 0.6);
+  --quest-surface-card-subtle: rgba(255, 252, 240, 0.35);
+  --quest-surface-companion: linear-gradient(150deg, rgba(250, 243, 224, 0.8), rgba(238, 222, 184, 0.62));
+  --quest-surface-progress: linear-gradient(150deg, rgba(250, 243, 224, 0.8), rgba(238, 222, 184, 0.62));
+  --quest-border-subtle: var(--cbk-line);
+  --quest-border-glass: rgba(255, 252, 240, 0.7);
+  --quest-border-strong: var(--cbk-line-strong);
+  --quest-border-gold: var(--cbk-gold-soft);
+  --quest-border-companion: var(--cbk-gold-faint);
+  --quest-shadow-xs: 0 1px 3px rgba(70, 50, 16, 0.1);
+  --quest-shadow-sm: 0 2px 8px rgba(70, 50, 16, 0.1);
+  --quest-shadow-md: 0 4px 14px rgba(70, 50, 16, 0.12);
+  --quest-shadow-lg: 0 6px 20px rgba(70, 50, 16, 0.14);
+  --quest-shadow-inner-glass: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  --quest-glow-gold: 0 0 0 rgba(0, 0, 0, 0);
+  --quest-glow-blue: 0 0 0 rgba(0, 0, 0, 0);
+  --quest-glow-violet: 0 0 0 rgba(0, 0, 0, 0);
+  --quest-glow-success: 0 0 0 rgba(0, 0, 0, 0);
+  --quest-text-primary: var(--cbk-ink);
+  --quest-text-secondary: var(--cbk-ink-soft);
+  --quest-text-muted: var(--cbk-ink-muted);
+  --quest-text-soft: var(--cbk-ink-faint);
+  --quest-text-link: var(--cbk-gold);
+  --quest-text-gold: var(--cbk-gold);
+  --quest-gold-50: rgba(154, 111, 22, 0.08);
+  --quest-gold-100: rgba(154, 111, 22, 0.16);
+  --quest-gold-300: #c89a3f;
+  --quest-gold-500: var(--cbk-gold);
+  --quest-gold-700: #6d4e0f;
+  --quest-gradient-gold: linear-gradient(135deg, #c89a3f, #9a6f16);
+  --quest-blue-100: rgba(70, 50, 16, 0.1);
+  --quest-blue-300: #a58a52;
+  --quest-blue-500: var(--cbk-gold);
+  --quest-violet-100: rgba(70, 50, 16, 0.1);
+  --quest-violet-300: #a58a52;
+  --quest-violet-500: var(--cbk-ink-soft);
+  --quest-gradient-progress: linear-gradient(90deg, #c89a3f, #9a6f16);
+  --quest-gradient-progress-soft: linear-gradient(90deg, rgba(154, 111, 22, 0.2), rgba(154, 111, 22, 0.12));
+  --quest-success-bg: rgba(122, 168, 96, 0.16);
+  --quest-success-text: #4a6c33;
+  --quest-success-border: rgba(122, 168, 96, 0.4);
+  --quest-radius-sm: 8px;
+  --quest-radius-md: 10px;
+  --quest-radius-lg: 12px;
+  --quest-radius-xl: 14px;
+  --quest-radius-2xl: 16px;
+}
+
+/* Frost blur has no place on paper. */
+.compass-quest-ledger__hub .quest-hero-card,
+.compass-quest-ledger__hub .quest-glass-card,
+.compass-quest-ledger__hub .quest-companion-card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-width: 1px;
+}
+
+/* Book voice for the hub's card titles. */
+.compass-quest-ledger__hub .quest-hero-card__title,
+.compass-quest-ledger__hub .quest-glass-card__title,
+.compass-quest-ledger__hub .quest-companion-card__title,
+.compass-quest-ledger__hub .my-quest-hub__chapter-title {
+  font-family: var(--cbk-serif);
+  color: var(--cbk-ink);
+}
+
+.compass-quest-ledger__hub .quest-hero-card__eyebrow,
+.compass-quest-ledger__hub .quest-companion-card__source {
+  font-family: var(--cbk-display);
+  letter-spacing: 0.18em;
+  color: var(--cbk-gold);
+}
+
+/* The hub's own accent pieces (orbs, tool cards) follow the ink too. */
+.compass-quest-ledger__hub .my-quest-hub__tool-card {
+  color: var(--cbk-ink);
+  border: 1px solid var(--cbk-line);
+  border-radius: 12px;
+  background: var(--cbk-card);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.compass-quest-ledger__hub .my-quest-hub__tool-icon {
+  color: var(--cbk-gold);
+}
+
+/* The pillar meter re-inked: one gold ink for every pillar — on paper the
+   bars are quill strokes, not app gradients — and the emoji icons are hidden
+   in favor of the text labels beside them. */
+.compass-quest-ledger__hub .goal-pillar-meter__track {
+  background: var(--cbk-well);
+  border: 1px solid var(--cbk-line);
+}
+
+.compass-quest-ledger__hub .goal-pillar-meter__fill,
+.compass-quest-ledger__hub .goal-pillar-meter__pillar--insight .goal-pillar-meter__fill,
+.compass-quest-ledger__hub .goal-pillar-meter__pillar--momentum .goal-pillar-meter__fill,
+.compass-quest-ledger__hub .goal-pillar-meter__pillar--support .goal-pillar-meter__fill {
+  background: linear-gradient(90deg, #c89a3f, var(--cbk-gold));
+}
+
+.compass-quest-ledger__hub .goal-pillar-meter__pillar--low .goal-pillar-meter__fill {
+  background: linear-gradient(90deg, #b0763a, #8a5a2a);
+}
+
+.compass-quest-ledger__hub .goal-pillar-meter__icon {
+  filter: grayscale(1) sepia(0.5) saturate(0.6);
+  opacity: 0.75;
+}
+
+.compass-quest-ledger__hub .goal-pillar-meter__label,
+.compass-quest-ledger__hub .goal-pillar-meter__score {
+  color: var(--cbk-ink-soft);
+  font-family: var(--cbk-serif);
+}
+
+/* The hero's focus orb, redrawn as a compass-rose medallion: concentric gold
+   rings on parchment instead of the app's pastel halo. */
+.compass-quest-ledger__hub .my-quest-hub__hero-visual {
+  border: 1px solid var(--cbk-gold-soft);
+  background:
+    radial-gradient(circle, rgba(255, 252, 240, 0.95) 0 31%, rgba(154, 111, 22, 0.14) 32% 43%, rgba(255, 252, 240, 0.55) 44% 67%, rgba(154, 111, 22, 0.08) 68% 100%);
+  box-shadow: inset 0 0 0 4px rgba(255, 252, 240, 0.6);
+}
+
+.compass-quest-ledger__hub .my-quest-hub__orb {
+  color: var(--cbk-gold);
+  border-color: var(--cbk-gold-faint);
+  background: rgba(255, 252, 240, 0.85);
+  box-shadow: none;
+}
+
+.compass-quest-ledger__hub .my-quest-hub__hero-focus {
+  color: var(--cbk-ink);
+  font-family: var(--cbk-serif);
+}

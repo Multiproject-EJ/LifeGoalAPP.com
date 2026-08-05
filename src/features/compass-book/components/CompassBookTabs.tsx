@@ -7,10 +7,13 @@ export type CompassBookTabsProps = {
   currentIslandNumber: number;
   getProgress: (chapterId: CompassBookChapterId, currentIslandNumber: number) => CompassChapterProgress;
   onSelect: (pageId: CompassBookPageId) => void;
+  /** Show the Quest Ledger tab below the chapters (only when the host wires it). */
+  showQuestLedger?: boolean;
 };
 
 /**
- * The fore-edge tab rail: the Reading (✦) followed by chapters I–VI.
+ * The fore-edge tab rail: the Reading (✦) followed by chapters I–VI, and — when
+ * the host app provides it — the Quest Ledger (⚑) at the bottom of the rail.
  *
  * Every tab is always reachable — turning to a page the player has not reached
  * in the game is allowed and shows that chapter's preview. Reaching an island is
@@ -22,6 +25,7 @@ export function CompassBookTabs({
   currentIslandNumber,
   getProgress,
   onSelect,
+  showQuestLedger = false,
 }: CompassBookTabsProps) {
   return (
     <nav className="compass-book__tabs" aria-label="Compass Book pages">
@@ -77,6 +81,25 @@ export function CompassBookTabs({
           </button>
         );
       })}
+
+      {showQuestLedger ? (
+        <button
+          type="button"
+          className={`compass-book__tab compass-book__tab--ledger ${
+            activePageId === 'quest_ledger' ? 'compass-book__tab--active' : ''
+          }`}
+          onClick={() => onSelect('quest_ledger')}
+          aria-current={activePageId === 'quest_ledger' ? 'page' : undefined}
+          aria-label="Quest Ledger — your quests, habits, and tools"
+        >
+          <span className="compass-book__tab-mark" aria-hidden="true">
+            ⚑
+          </span>
+          {activePageId === 'quest_ledger' ? (
+            <span className="compass-book__tab-ribbon" aria-hidden="true" />
+          ) : null}
+        </button>
+      ) : null}
     </nav>
   );
 }
