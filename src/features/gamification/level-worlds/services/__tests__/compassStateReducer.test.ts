@@ -1,119 +1,125 @@
+/**
+ * Legacy Compass retention-read tests.
+ *
+ * The 11-phase Compass no longer has a write path — `applyContribution`,
+ * `recordCompassContribution`, `setCompassCenterStatement` and
+ * `isCompassSessionFilledForIsland` were removed with the last writers, so the
+ * reducer cases that used to live here have no subject any more.
+ *
+ * What still matters is that `parseCompassState` can read rows players already
+ * wrote, because that is the only path by which their direction text can be
+ * exported or migrated into the Compass Book before the table is dropped. These
+ * tests guard that parse, including defensive handling of malformed JSONB.
+ */
+
 import {
-  COMPASS_SPOKE_COMPLETE_THRESHOLD,
-  applyContribution,
-  isCompassSessionFilledForIsland,
   parseCompassState,
   type CompassTemplate,
 } from '../../../../../services/compassState';
-import { getCompassPhase } from '../compassCurriculum';
 import { assert, assertEqual, type TestCase } from './testHarness';
 
-function blankTemplate(): CompassTemplate {
-  return parseCompassState(null);
+type CompassStateRowLike = Parameters<typeof parseCompassState>[0];
+
+/** A row shaped like one a real player would have written mid-journey. */
+function populatedRow(): CompassStateRowLike {
+  return {
+    user_id: 'user-1',
+    template_version: 1,
+    current_phase: 'P3',
+    center_statement: 'Build useful things with people I trust',
+    directions: {
+      heart: 'I love building useful things',
+      craft: 'Systems thinking',
+      cause: 'Helping beginners start',
+      livelihood: 'Teaching and tools',
+    },
+    spokes: {
+      habits: {
+        version: 1,
+        status: 'in_progress',
+        entries: [
+          {
+            kind: 'habit',
+            text: 'Drink one glass of water',
+            islandNumber: 31,
+            phaseId: 'P3',
+            spoke: 'habits',
+            linkedHabitId: 'habit-1',
+            createdAt: '2026-01-01T00:00:00.000Z',
+          },
+        ],
+      },
+    },
+    completed_phases: ['P1', 'P2'],
+    updated_at: '2026-01-01T00:00:00.000Z',
+  } as unknown as CompassStateRowLike;
 }
 
 export const compassStateReducerTests: TestCase[] = [
   {
     name: 'parseCompassState(null) yields an empty template with all spokes',
     run: () => {
-      const template = blankTemplate();
+      const template: CompassTemplate = parseCompassState(null);
       assertEqual(template.templateVersion, 0, 'Version starts at 0');
+      assertEqual(template.centerStatement, null, 'No center statement');
       assertEqual(template.spokes.center.status, 'empty', 'Center spoke starts empty');
       assertEqual(template.spokes.shield.entries.length, 0, 'Shield starts with no entries');
+      assertEqual(template.completedPhases.length, 0, 'No completed phases');
     },
   },
   {
-    name: 'a habit contribution appends to the phase spoke and sets in_progress',
+    name: 'a retained row parses back into readable direction and spoke text',
     run: () => {
-      const next = applyContribution(blankTemplate(), {
-        phase: getCompassPhase(31), // Habits 1.0
-        kind: 'habit',
-        text: 'Drink one glass of water',
-        islandNumber: 31,
-        linkedHabitId: 'habit-1',
-      });
-      assertEqual(next.spokes.habits.entries.length, 1, 'Habits spoke has one entry');
-      assertEqual(next.spokes.habits.status, 'in_progress', 'Spoke is in progress');
-      assertEqual(next.spokes.habits.entries[0].linkedHabitId, 'habit-1', 'Entry keeps the linked habit id');
-      assertEqual(next.currentPhase, 'P3', 'Current phase updated');
+      const template = parseCompassState(populatedRow());
+      assertEqual(template.templateVersion, 1, 'Template version preserved');
+      assertEqual(template.currentPhase, 'P3', 'Current phase preserved');
+      assertEqual(
+        template.centerStatement,
+        'Build useful things with people I trust',
+        'True North text preserved',
+      );
+      assertEqual(template.directions.heart, 'I love building useful things', 'Heart direction preserved');
+      assertEqual(template.directions.livelihood, 'Teaching and tools', 'Livelihood direction preserved');
+      assertEqual(template.spokes.habits.entries.length, 1, 'Habit spoke entry preserved');
+      assertEqual(
+        template.spokes.habits.entries[0].text,
+        'Drink one glass of water',
+        'Entry text preserved for migration',
+      );
+      assertEqual(template.spokes.habits.entries[0].linkedHabitId, 'habit-1', 'Linked habit id preserved');
+      assertEqual(template.completedPhases.length, 2, 'Completed phases preserved');
     },
   },
   {
-    name: 'a spoke completes once it reaches the threshold',
+    name: 'spokes absent from a retained row read back as empty, not undefined',
     run: () => {
-      let template = blankTemplate();
-      for (let i = 0; i < COMPASS_SPOKE_COMPLETE_THRESHOLD; i += 1) {
-        template = applyContribution(template, {
-          phase: getCompassPhase(45), // Goals 1.0
-          kind: 'wisdom',
-          text: `goal reflection ${i}`,
-          islandNumber: 45,
-        });
+      const template = parseCompassState(populatedRow());
+      // Only `habits` was persisted; the rest must still be safe to read.
+      for (const key of ['center', 'personality', 'goals', 'shield'] as const) {
+        assertEqual(template.spokes[key].status, 'empty', `${key} spoke reads as empty`);
+        assertEqual(template.spokes[key].entries.length, 0, `${key} spoke has no entries`);
       }
-      assertEqual(template.spokes.goals.entries.length, COMPASS_SPOKE_COMPLETE_THRESHOLD, 'Reached threshold entries');
-      assertEqual(template.spokes.goals.status, 'complete', 'Goals spoke is complete');
     },
   },
   {
-    name: 'compass-phase contributions capture ikigai directions and fill the template',
+    name: 'malformed JSONB degrades to an empty template instead of throwing',
     run: () => {
-      let template = blankTemplate();
-      const islandsByDirection = { heart: 1, craft: 6, cause: 11, livelihood: 16 };
-      for (const [, island] of Object.entries(islandsByDirection)) {
-        template = applyContribution(template, {
-          phase: getCompassPhase(island),
-          direction: getCompassPhase(island).theme === 'compass'
-            ? (['heart', 'craft', 'cause', 'livelihood'] as const)[Math.floor((island - 1) / 5)]
-            : undefined,
-          kind: 'wisdom',
-          text: `direction answer ${island}`,
-          islandNumber: island,
-        });
-      }
-      assert(Boolean(template.directions.heart), 'Heart direction captured');
-      assert(Boolean(template.directions.livelihood), 'Livelihood direction captured');
-      assertEqual(template.templateVersion, 1, 'Template version bumps to 1 when all four directions are filled');
-    },
-  },
-  {
-    name: 'filled Compass sessions are detected for both direction and spoke phases',
-    run: () => {
-      const directionTemplate = applyContribution(blankTemplate(), {
-        phase: getCompassPhase(1),
-        direction: 'heart',
-        kind: 'wisdom',
-        text: 'I love building useful things',
-        islandNumber: 1,
-      });
-      assertEqual(isCompassSessionFilledForIsland(directionTemplate, 1), true, 'Filled direction counts as current Compass session');
-      assertEqual(isCompassSessionFilledForIsland(directionTemplate, 6), false, 'Other direction remains unfilled');
+      const row = {
+        user_id: 'user-1',
+        template_version: null,
+        current_phase: null,
+        center_statement: null,
+        directions: 'not-an-object',
+        spokes: ['not-an-object'],
+        completed_phases: null,
+        updated_at: '2026-01-01T00:00:00.000Z',
+      } as unknown as CompassStateRowLike;
 
-      const spokeTemplate = applyContribution(blankTemplate(), {
-        phase: getCompassPhase(31),
-        kind: 'habit',
-        text: 'Drink one glass of water',
-        islandNumber: 31,
-      });
-      assertEqual(isCompassSessionFilledForIsland(spokeTemplate, 31), true, 'Same-island spoke entry counts as current session');
-      assertEqual(isCompassSessionFilledForIsland(spokeTemplate, 32), false, 'Another island in the same spoke still needs its own session box');
-    },
-  },
-  {
-    name: 'spoke version tracks the highest phase version seen',
-    run: () => {
-      let template = applyContribution(blankTemplate(), {
-        phase: getCompassPhase(31), // Habits 1.0
-        kind: 'habit',
-        text: 'v1 habit',
-        islandNumber: 31,
-      });
-      template = applyContribution(template, {
-        phase: getCompassPhase(55), // Habits 2.0
-        kind: 'habit',
-        text: 'v2 habit',
-        islandNumber: 55,
-      });
-      assertEqual(template.spokes.habits.version, 2, 'Habits spoke version advanced to 2');
+      const template = parseCompassState(row);
+      assertEqual(template.templateVersion, 0, 'Missing version falls back to 0');
+      assertEqual(Object.keys(template.directions).length, 0, 'Malformed directions drop out');
+      assertEqual(template.spokes.habits.entries.length, 0, 'Malformed spokes read as empty');
+      assert(Array.isArray(template.completedPhases), 'Completed phases is always an array');
     },
   },
 ];

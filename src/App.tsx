@@ -3633,7 +3633,7 @@ export default function App({ forceAuthOnMount }: AppProps) {
       featureId?: FeatureAvailabilityId;
       run: () => void;
     }> = [
-      { id: 'quest-compass', title: 'Quest Pulse', glyph: '⌁', note: 'A reading of your six life forces.', run: openQuestCompassFromMobileMenu },
+      { id: 'quest-compass', title: 'Wheel Pulse', glyph: '⌁', note: 'A reading of your six life forces.', run: openQuestCompassFromMobileMenu },
       { id: 'starter-quest', title: 'Starter Quest', glyph: '✧', note: 'Shape the first ritual of a new path.', run: () => openStarterQuestSheetFromMyQuest() },
       { id: 'body', title: 'Health Goals', glyph: '✚', note: 'The vessel that carries every quest.', featureId: 'app.body', run: () => handleMobileNavSelect('body') },
       { id: 'habits', title: 'Habits', glyph: '↻', note: 'The rituals that carry your days.', run: () => handleMobileNavSelect('habits') },

@@ -26,6 +26,8 @@ import {
   serializeChapterState,
   upsertAnswer,
 } from './compassBookSerialization';
+import { getIslandFragment } from '../logic/islandFragment';
+import { loadLocalChapterStates } from './compassBookLocalStore';
 
 type BookRow = Database['public']['Tables']['compass_books']['Row'];
 type ChapterRow = Database['public']['Tables']['compass_chapter_states']['Row'];
@@ -138,6 +140,42 @@ export async function saveChapterState(
     devLog('save chapter state threw', error);
     return state;
   }
+}
+
+/**
+ * Has the player already written anything into this island's Compass fragment?
+ *
+ * Island Run uses this to offer "you already filled this island's Compass box,
+ * use that saved session to finish the landmark now" at Habit and Wisdom stops.
+ * It replaces the legacy `isCompassSessionFilledForIsland` check against
+ * `compass_state`, which is no longer written.
+ *
+ * Deliberately asks whether an answer *exists*, not whether the fragment is
+ * complete: this unlocks a landmark shortcut, so an island with no authored
+ * activity must return false rather than the "trivially complete" true that
+ * {@link isIslandFragmentComplete} returns for an empty block set.
+ *
+ * Best-effort — any failure reports false, which costs the player a shortcut
+ * but never blocks a stop, since the host stop completes through its own flow.
+ */
+export async function isIslandFragmentAnsweredForUser(
+  userId: string,
+  islandNumber: number,
+): Promise<boolean> {
+  const fragment = getIslandFragment(islandNumber);
+  if (!fragment) return false;
+
+  const hasAnswer = (state: CompassChapterState | undefined): boolean =>
+    state?.answers.some((answer) => answer.activityId === fragment.activityId) === true;
+
+  // The local mirror answers instantly and covers offline/demo play, where the
+  // fragment was saved without a Supabase round-trip.
+  if (hasAnswer(loadLocalChapterStates(userId)[fragment.chapterId])) return true;
+
+  const book = await fetchCompassBook(userId);
+  if (!book) return false;
+  const states = await fetchChapterStates(userId, book.id);
+  return hasAnswer(states[fragment.chapterId]);
 }
 
 /**

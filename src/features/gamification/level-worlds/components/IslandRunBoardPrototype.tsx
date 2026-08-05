@@ -130,11 +130,7 @@ import { IslandRunGamifiedJournalCard } from './IslandRunGamifiedJournalCard';
 import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
 import { CompactGameCompassPanel } from '../../../compass-book/components/CompactGameCompassPanel';
 import { CompassStopFragmentMount } from '../../../compass-book/components/CompassStopFragmentMount';
-import {
-  fetchCompassState,
-  isCompassSessionFilledForIsland,
-  recordCompassContribution,
-} from '../../../../services/compassState';
+import { isIslandFragmentAnsweredForUser } from '../../../compass-book/services/compassBookService';
 import { flushIslandRunPendingWrite, readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession';
 import { useIslandRunState } from '../hooks/useIslandRunState';
@@ -1993,10 +1989,8 @@ export function IslandRunBoardPrototype({
     }
 
     void (async () => {
-      const template = await fetchCompassState(session.user.id);
-      if (!cancelled) {
-        setIsActiveCompassSessionFilled(isCompassSessionFilledForIsland(template, islandNumber));
-      }
+      const answered = await isIslandFragmentAnsweredForUser(session.user.id, islandNumber);
+      if (!cancelled) setIsActiveCompassSessionFilled(answered);
     })();
 
     return () => {
@@ -13949,13 +13943,6 @@ export function IslandRunBoardPrototype({
                   card={wisdomTreeCard}
                   islandNumber={islandNumber}
                   onComplete={(message) => {
-                    // Contribute this reflection to the current Compass spoke (best-effort).
-                    void recordCompassContribution({
-                      userId: session.user.id,
-                      islandNumber,
-                      kind: 'wisdom',
-                      text: message,
-                    });
                     handleCompleteActiveStop(`🌳 Wisdom landmark complete — next landmark unlocked. ${message}`);
                   }}
                 />

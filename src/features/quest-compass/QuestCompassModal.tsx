@@ -33,7 +33,7 @@ type QuestCompassModalProps = {
   onOpenJournal: () => void;
 };
 
-// Legacy internal name retained for compatibility; user-facing product name is Quest Pulse.
+// Legacy internal name retained for compatibility; user-facing product name is Wheel Pulse.
 export function QuestCompassModal({
   session,
   onClose,
@@ -196,24 +196,24 @@ export function QuestCompassModal({
       className="mobile-menu-overlay__hold-modal"
       role="dialog"
       aria-modal="true"
-      aria-label="Quest Pulse"
+      aria-label="Wheel Pulse"
     >
       <button
         type="button"
         className="mobile-menu-overlay__hold-backdrop"
-        aria-label="Close Quest Pulse"
+        aria-label="Close Wheel Pulse"
         onClick={onClose}
       />
       <div className="mobile-menu-overlay__hold-panel mobile-menu-overlay__submenu-sheet quest-compass">
         <div className="mobile-menu-overlay__hold-header">
           <div>
-            <p className="mobile-menu-overlay__hold-eyebrow">Live quest signals</p>
-            <h3 className="mobile-menu-overlay__hold-title">Quest Pulse</h3>
+            <p className="mobile-menu-overlay__hold-eyebrow">Live wheel signals</p>
+            <h3 className="mobile-menu-overlay__hold-title">Wheel Pulse</h3>
           </div>
           <button
             type="button"
             className="mobile-menu-overlay__hold-close"
-            aria-label="Close Quest Pulse"
+            aria-label="Close Wheel Pulse"
             onClick={onClose}
           >
             ✕
@@ -234,7 +234,7 @@ export function QuestCompassModal({
           </p>
         ) : null}
 
-        <section className="quest-compass__overview" aria-label="Quest Pulse overview">
+        <section className="quest-compass__overview" aria-label="Wheel Pulse overview">
           <span className="quest-compass__north-mark" aria-hidden="true">N</span>
           <div className="quest-compass__orb" aria-hidden="true">
             <span className="quest-compass__orb-center">🧭</span>
@@ -256,7 +256,7 @@ export function QuestCompassModal({
                 ? viewModel.summary
                 : 'Refresh your pulse with a Life Wheel check-in.'}
             </strong>
-            <div className="quest-compass__realm-tags" aria-label="Quest Pulse cues">
+            <div className="quest-compass__realm-tags" aria-label="Wheel Pulse cues">
               <span className="quest-compass__realm-tag">Balance signal</span>
               <span className="quest-compass__realm-tag">Quest momentum</span>
             </div>
@@ -268,7 +268,7 @@ export function QuestCompassModal({
           </div>
         </section>
 
-        <div className="quest-compass__spotlight-grid" aria-label="Quest Pulse highlights">
+        <div className="quest-compass__spotlight-grid" aria-label="Wheel Pulse highlights">
           <CompassSpotlightCard
             label="Strongest force"
             force={strongestForce}
@@ -321,7 +321,7 @@ export function QuestCompassModal({
           <button
             type="button"
             className="mobile-menu-overlay__submenu-button"
-            aria-label="Ask AI Guide about your Quest Pulse"
+            aria-label="Ask AI Guide about your Wheel Pulse"
             onClick={onAskAiGuide}
           >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🧠</span>
@@ -330,7 +330,7 @@ export function QuestCompassModal({
           <button
             type="button"
             className="mobile-menu-overlay__submenu-button"
-            aria-label="Refresh your Quest Pulse with a check-in"
+            aria-label="Refresh your Wheel Pulse with a check-in"
             onClick={onRefreshAlignment}
           >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">📊</span>
@@ -339,7 +339,7 @@ export function QuestCompassModal({
           <button
             type="button"
             className="mobile-menu-overlay__submenu-button"
-            aria-label="Start the next quest from your Quest Pulse"
+            aria-label="Start the next quest from your Wheel Pulse"
             onClick={() => routeRecommendedAction(focusForceDetail)}
           >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🔁</span>
@@ -348,7 +348,7 @@ export function QuestCompassModal({
           <button
             type="button"
             className="mobile-menu-overlay__submenu-button"
-            aria-label="Open goals from your Quest Pulse"
+            aria-label="Open goals from your Wheel Pulse"
             onClick={onOpenGoals}
           >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">🎯</span>
@@ -357,7 +357,7 @@ export function QuestCompassModal({
           <button
             type="button"
             className="mobile-menu-overlay__submenu-button"
-            aria-label="Open journal from your Quest Pulse"
+            aria-label="Open journal from your Wheel Pulse"
             onClick={onOpenJournal}
           >
             <span className="mobile-menu-overlay__submenu-icon" aria-hidden="true">📝</span>
@@ -461,7 +461,7 @@ function ForceDetailSheet({
           </button>
         </div>
 
-        <div className="quest-compass-detail__reading" aria-label={`${force.name} Quest Pulse reading`}>
+        <div className="quest-compass-detail__reading" aria-label={`${force.name} Wheel Pulse reading`}>
           <div className={`quest-compass-detail__health quest-compass-detail__health--${force.healthStatus}`}>
             {force.healthLabel}
           </div>

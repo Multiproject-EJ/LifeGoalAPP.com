@@ -68,7 +68,7 @@ function Harness() {
           initialPageId={params.get('page') === 'quest_ledger' ? 'quest_ledger' : undefined}
           questLedger={{
             entries: [
-              { id: 'quest-compass', title: 'Quest Pulse', glyph: '⌁', note: 'A reading of your six life forces.', onSelect: () => {} },
+              { id: 'quest-compass', title: 'Wheel Pulse', glyph: '⌁', note: 'A reading of your six life forces.', onSelect: () => {} },
               { id: 'starter-quest', title: 'Starter Quest', glyph: '✧', note: 'Shape the first ritual of a new path.', onSelect: () => {} },
               { id: 'body', title: 'Health Goals', glyph: '✚', note: 'The vessel that carries every quest.', stamp: { label: 'Soon', kind: 'soon' }, onSelect: () => {} },
               { id: 'habits', title: 'Habits', glyph: '↻', note: 'The rituals that carry your days.', onSelect: () => {} },
