@@ -4001,3 +4001,37 @@ body:has(.compass-book) .quick-add__error {
 body:has(.compass-book) .quick-add__tab-emoji {
   display: none;
 }
+
+/* Body copy in the hub was still the app's sans while its headings had already
+   turned to serif — one voice per page, so the paragraphs, chips and buttons
+   follow the book too. */
+.compass-quest-ledger__hub .quest-glass-card__body,
+.compass-quest-ledger__hub .quest-glass-card__body p,
+.compass-quest-ledger__hub .quest-hero-card__summary,
+.compass-quest-ledger__hub .quest-companion-card__insight,
+.compass-quest-ledger__hub .quest-companion-card__reason,
+.compass-quest-ledger__hub .quest-primary-action,
+.compass-quest-ledger__hub .quest-secondary-action,
+.compass-quest-ledger__hub .quest-life-area-chip,
+.compass-quest-ledger__hub .my-quest-hub__muted,
+.compass-quest-ledger__hub .my-quest-hub__next-note,
+.compass-quest-ledger__hub .my-quest-hub__strength-hint,
+.compass-quest-ledger__hub .my-quest-hub__signal-row,
+.compass-quest-ledger__hub .my-quest-hub__habit-list,
+.compass-quest-ledger__hub .my-quest-hub__tool-title,
+.compass-quest-ledger__hub .my-quest-hub__tool-summary,
+.compass-quest-ledger__hub .my-quest-hub__hero-focus,
+.compass-quest-ledger__hub .my-quest-hub__chapter-eyebrow,
+.compass-quest-ledger__hub .my-quest-hub__status {
+  font-family: var(--cbk-serif);
+}
+
+/* The hub's own primary action is the book's gilt button. */
+.compass-quest-ledger__hub .quest-primary-action {
+  color: #241708;
+  font-family: var(--cbk-display);
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(154, 111, 22, 0.7);
+  background: linear-gradient(180deg, #f2c14e, #cf9a24 62%, #b5811a);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 12px rgba(70, 50, 16, 0.25);
+}
