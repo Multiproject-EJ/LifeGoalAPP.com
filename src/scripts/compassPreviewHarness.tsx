@@ -16,6 +16,7 @@ import { computeGoalPillars } from '../features/goals/goalPillars';
 import '../index.css';
 
 function Harness() {
+  const [inscribeOpen, setInscribeOpen] = useState(false);
   const params = new URLSearchParams(window.location.search);
   const [view, setView] = useState<string>(params.get('view') ?? 'book');
   // `?demo=1` opens the book pre-filled with sample answers.
@@ -76,6 +77,7 @@ function Harness() {
               { id: 'planning', title: 'Check-ins', glyph: '✓', note: 'Take a fresh reading of the wheel.', onSelect: () => {} },
               { id: 'contracts', title: 'Contracts', glyph: '✎\uFE0E', note: 'Promises sealed in your own hand.', onSelect: () => {} },
             ],
+            onInscribe: () => setInscribeOpen(true),
             // `?hub=live` mounts the real MyQuestHub (demo session, fetches may
             // land in empty states — fine for previewing the ledger reskin).
             hub:
@@ -95,6 +97,14 @@ function Harness() {
           allowDemo
           initialDemo={demo}
           onClose={() => {}}
+        />
+      ) : null}
+      {inscribeOpen ? (
+        <QuickAddSheet
+          session={createDemoSession()}
+          initialMode="habit"
+          goalOptions={[{ id: 'g1', title: 'Run a 10k' }]}
+          onClose={() => setInscribeOpen(false)}
         />
       ) : null}
       {view === 'quickadd' ? (

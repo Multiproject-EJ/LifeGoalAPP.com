@@ -40,6 +40,8 @@ export type CompassBookScreenProps = {
    */
   questLedger?: {
     entries: CompassQuestLedgerEntry[];
+    /** Write a habit or goal without leaving the book; omit to hide the action. */
+    onInscribe?: () => void;
     hub?: ReactNode;
   };
   /**
@@ -240,6 +242,7 @@ export function CompassBookScreen({
             {view.kind === 'page' && view.pageId === 'quest_ledger' && questLedger ? (
               <CompassQuestLedger
                 entries={questLedger.entries}
+                onInscribe={questLedger.onInscribe}
                 hub={questLedger.hub}
                 onBack={() => openPage('reading')}
                 onClose={onClose}
