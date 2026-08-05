@@ -935,9 +935,11 @@ export default function App({ forceAuthOnMount }: AppProps) {
   // My Quest submenu, so quest entry points open the book directly on it.
   const [compassBookInitialPageId, setCompassBookInitialPageId] = useState<CompassBookPageId | null>(null);
   const [isFeedbackSupportSubmenuOpen, setIsFeedbackSupportSubmenuOpen] = useState(false);
-  // A settings folder the account panel should open itself on, set by launchers
-  // that deep-link into one (e.g. Personalisation → Appearance / Theme).
-  const [pendingSettingsFolder, setPendingSettingsFolder] = useState<'appearance' | null>(null);
+  // A settings surface the account panel should open itself on, set by launchers
+  // that deep-link into one (e.g. Personalisation → the ✨ Personalize modal).
+  const [pendingSettingsFolder, setPendingSettingsFolder] = useState<
+    'personalization' | 'appearance' | null
+  >(null);
   const [activeProfileStrengthHold, setActiveProfileStrengthHold] = useState<{
     area: AreaKey;
     task: NextTask | null;
@@ -3471,12 +3473,12 @@ export default function App({ forceAuthOnMount }: AppProps) {
    * submenu: every quest entry point opens the book directly on that page.
    */
   /**
-   * Personalisation is the existing "Appearance / Theme" settings folder — it
-   * already owns theme entitlements and Stripe checkout, so the launcher opens
-   * that rather than standing up a second theme picker beside it.
+   * Personalisation already exists in settings as the ✨ Personalize modal
+   * (name, ship colour and logo, traits, theme mode), so the launcher opens
+   * that rather than standing up a second one beside it.
    */
   const openPersonalisation = useCallback(() => {
-    setPendingSettingsFolder('appearance');
+    setPendingSettingsFolder('personalization');
     handleMobileNavSelect('account', { launchSource: 'mobile-menu' });
   }, [handleMobileNavSelect]);
 
