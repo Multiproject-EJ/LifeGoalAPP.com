@@ -94,6 +94,7 @@ function Harness() {
                 </div>
               ),
           }}
+          hasBlockingOverlay={inscribeOpen}
           allowDemo
           initialDemo={demo}
           onClose={() => {}}

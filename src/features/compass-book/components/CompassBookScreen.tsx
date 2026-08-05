@@ -45,6 +45,13 @@ export type CompassBookScreenProps = {
     hub?: ReactNode;
   };
   /**
+   * True while something is stacked above the book (e.g. the Ledger's quick-add
+   * sheet). Both layers listen for Escape on `window`, so without this one press
+   * would dismiss the overlay *and* turn the book's page behind it. Escape
+   * belongs to the topmost layer.
+   */
+  hasBlockingOverlay?: boolean;
+  /**
    * Show the admin/dev demo toggle. Demo mode swaps in a fully written
    * in-memory book so the feature can be evaluated without answering 120
    * fragments. It never reads or writes real data — see `useCompassBook`.
@@ -77,6 +84,7 @@ export function CompassBookScreen({
   initialActivityId,
   initialPageId,
   questLedger,
+  hasBlockingOverlay = false,
   allowDemo = false,
   initialDemo = false,
   onClose,
@@ -144,6 +152,9 @@ export function CompassBookScreen({
   );
 
   useEffect(() => {
+    // Escape belongs to whatever is on top. While an overlay covers the book,
+    // that overlay dismisses itself and the page underneath must not move.
+    if (hasBlockingOverlay) return;
     function onKeyDown(event: KeyboardEvent) {
       if (event.key !== 'Escape') return;
       setView((current) => {
@@ -157,7 +168,7 @@ export function CompassBookScreen({
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  }, [hasBlockingOverlay, onClose]);
 
   // The rail highlights the chapter a flow belongs to, so answering a fragment
   // never looks like it left the book.
