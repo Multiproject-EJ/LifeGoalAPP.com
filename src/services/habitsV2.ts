@@ -340,7 +340,10 @@ export async function listHabitsV2(params?: { includeInactive?: boolean }): Prom
     const habits = getDemoHabitsForUser(DEMO_USER_ID)
       .filter((habit) => !habit.archived)
       .filter((habit) => includeInactive || isHabitLifecycleActive(habit))
-      .sort((left, right) => right.created_at.localeCompare(left.created_at));
+      // created_at is nullable on the row type, so coalesce before comparing.
+      // '' sorts below any ISO timestamp, which puts undated habits last under
+      // this descending order — matching the cloud path's created_at DESC.
+      .sort((left, right) => (right.created_at ?? '').localeCompare(left.created_at ?? ''));
     return { data: habits, error: null };
   }
 
