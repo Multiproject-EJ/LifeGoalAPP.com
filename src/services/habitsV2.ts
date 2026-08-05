@@ -1,5 +1,9 @@
 import type { PostgrestError } from '@supabase/supabase-js';
-import { getSupabaseClient } from '../lib/supabaseClient';
+import {
+  canUseSupabaseData,
+  canUseSupabaseDataForUser,
+  getSupabaseClient,
+} from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 import { guardedCloudCall } from './service-health';
 import { getMutationQueue, getSyncEngine } from './offline-queue';
@@ -327,8 +331,20 @@ function buildHabitEnvironmentPatch(input: {
  * Returns habits ordered by creation date (newest first).
  */
 export async function listHabitsV2(params?: { includeInactive?: boolean }): Promise<ServiceResponse<HabitV2Row[]>> {
-  const supabase = getSupabaseClient();
   const includeInactive = Boolean(params?.includeInactive);
+
+  // The signed-out Today screen is intentionally local-first. Calling the
+  // Data API here used to issue anonymous habits_v2 reads (which are correctly
+  // denied in production) on every guest load.
+  if (!canUseSupabaseData()) {
+    const habits = getDemoHabitsForUser(DEMO_USER_ID)
+      .filter((habit) => !habit.archived)
+      .filter((habit) => includeInactive || isHabitLifecycleActive(habit))
+      .sort((left, right) => right.created_at.localeCompare(left.created_at));
+    return { data: habits, error: null };
+  }
+
+  const supabase = getSupabaseClient();
 
   const result = await guardedCloudCall('database', async () => {
     let query = supabase
@@ -531,6 +547,12 @@ export async function logHabitCompletionV2(
 export async function listHabitStreaksV2(
   userId: string,
 ): Promise<ServiceResponse<HabitStreakRow[]>> {
+  // Streak rows are a server view for authenticated UUID users. Demo and
+  // mismatched-session callers keep using their local habit presentation.
+  if (!canUseSupabaseDataForUser(userId)) {
+    return { data: [], error: null };
+  }
+
   const supabase = getSupabaseClient();
 
   const result = await guardedCloudCall('database', async () => {
