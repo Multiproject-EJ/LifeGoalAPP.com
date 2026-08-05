@@ -84,12 +84,13 @@ type MyAccountPanelProps = {
     message: string;
   } | null;
   /**
-   * Open one settings folder as soon as the panel mounts, for launchers that
-   * deep-link into it (Personalisation opens "Appearance / Theme"). The panel
-   * clears it through `onInitialFolderOpened` so returning to settings later
-   * lands on the normal index.
+   * Open one settings surface as soon as the panel mounts, for launchers that
+   * deep-link into it — `personalization` is the ✨ Personalize modal (name,
+   * ship, traits, theme mode), `appearance` the Appearance / Theme folder. The
+   * panel clears it through `onInitialFolderOpened` so returning to settings
+   * later lands on the normal index.
    */
-  initialFolder?: 'appearance' | null;
+  initialFolder?: 'personalization' | 'appearance' | null;
   onInitialFolderOpened?: () => void;
 };
 
@@ -157,7 +158,9 @@ export function MyAccountPanel({
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [feedbackSupportFolderOpen, setFeedbackSupportFolderOpen] = useState(false);
-  const [personalizationModalOpen, setPersonalizationModalOpen] = useState(false);
+  const [personalizationModalOpen, setPersonalizationModalOpen] = useState(
+    initialFolder === 'personalization',
+  );
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [billingSnapshot, setBillingSnapshot] = useState<BillingSnapshot | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
@@ -168,8 +171,9 @@ export function MyAccountPanel({
   // A deep-link can also arrive while the panel is already mounted, so honour
   // it here too, then report back so the request is consumed once.
   useEffect(() => {
-    if (initialFolder !== 'appearance') return;
-    setAppearanceFolderOpen(true);
+    if (!initialFolder) return;
+    if (initialFolder === 'personalization') setPersonalizationModalOpen(true);
+    if (initialFolder === 'appearance') setAppearanceFolderOpen(true);
     onInitialFolderOpened?.();
   }, [initialFolder, onInitialFolderOpened]);
   const [activeFutureFeatureId, setActiveFutureFeatureId] = useState<FeatureAvailabilityId | null>(null);
