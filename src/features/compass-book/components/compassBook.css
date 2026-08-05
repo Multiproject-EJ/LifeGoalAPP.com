@@ -3815,3 +3815,189 @@
   color: var(--cbk-ink);
   font-family: var(--cbk-serif);
 }
+
+/* ============================================================
+   Quick Add, opened from inside the book
+   ============================================================
+   The quick-add sheet portals to <body>, so it cannot be reached
+   by a descendant selector — but the book is a full-screen fixed
+   layer, so `body:has(.compass-book)` is a reliable "we are inside
+   the book" signal (the codebase already uses :has() this way).
+   Creating a habit from the Quest Ledger should feel like laying a
+   fresh slip of paper on the page, not like the app's white sheet
+   sliding over the book. */
+
+body:has(.compass-book) .quick-add__backdrop {
+  /* A warm ink wash instead of the app's cold slate. */
+  background: rgba(28, 18, 6, 0.62);
+  backdrop-filter: blur(3px);
+}
+
+/* On phones the app sheet rises from the bottom edge; in the book it is a
+   slip of paper resting on the page, so it centres with a margin. */
+body:has(.compass-book) .quick-add {
+  align-items: center;
+  padding: 20px 16px;
+}
+
+body:has(.compass-book) .quick-add__sheet {
+  max-width: 440px;
+  padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  color: #33260f;
+  font-family: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
+  border: 1px solid rgba(154, 111, 22, 0.42);
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 248, 224, 0.9), transparent 60%),
+    linear-gradient(180deg, #f4e7c6 0%, #ecdcb4 60%, #e2cfa2 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 18px 44px rgba(20, 12, 4, 0.45);
+}
+
+body:has(.compass-book) .quick-add__grabber {
+  background: rgba(154, 111, 22, 0.35);
+}
+
+/* Goal / Habit become book tabs rather than pill toggles. */
+body:has(.compass-book) .quick-add__tabs {
+  background: rgba(70, 50, 16, 0.06);
+  border: 1px solid rgba(70, 50, 16, 0.16);
+  border-radius: 10px;
+}
+
+body:has(.compass-book) .quick-add__tab {
+  color: #6b5636;
+  font-family: 'Cinzel', 'Iowan Old Style', Palatino, Georgia, serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  background: transparent;
+  box-shadow: none;
+}
+
+body:has(.compass-book) .quick-add__tab--active {
+  color: #33260f;
+  background: rgba(255, 252, 240, 0.72);
+  border: 1px solid rgba(154, 111, 22, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+body:has(.compass-book) .quick-add__close {
+  color: #6b5636;
+  border: 1px solid rgba(70, 50, 16, 0.2);
+  background: rgba(255, 252, 240, 0.5);
+}
+
+/* Field labels are the book's small-caps rubric. */
+body:has(.compass-book) .quick-add__label {
+  color: #9a6f16;
+  font-family: 'Cinzel', 'Iowan Old Style', Palatino, Georgia, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+}
+
+/* The title box is a ruled line to write on, not an app input. */
+body:has(.compass-book) .quick-add__field input[type='text'] {
+  color: #33260f;
+  font-family: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
+  font-size: 1.05rem;
+  border: 1px solid rgba(70, 50, 16, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 252, 240, 0.55);
+  box-shadow: inset 0 1px 2px rgba(70, 50, 16, 0.08);
+}
+
+body:has(.compass-book) .quick-add__field input[type='text']:focus {
+  border-color: rgba(154, 111, 22, 0.6);
+  box-shadow: inset 0 1px 2px rgba(70, 50, 16, 0.08), 0 0 0 3px rgba(154, 111, 22, 0.14);
+}
+
+body:has(.compass-book) .quick-add__field input[type='text']::placeholder {
+  color: #a08a5e;
+  font-style: italic;
+}
+
+body:has(.compass-book) .quick-add__chip {
+  color: #4d3b1e;
+  font-family: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
+  border: 1px solid rgba(70, 50, 16, 0.2);
+  background: rgba(255, 252, 240, 0.5);
+}
+
+body:has(.compass-book) .quick-add__chip--active {
+  color: #33260f;
+  border-color: rgba(154, 111, 22, 0.62);
+  background: rgba(154, 111, 22, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+/* The habit icons stay as emoji — they are the player's real saved data and
+   appear that way everywhere else — but they sit in parchment wells. */
+body:has(.compass-book) .quick-add__chip--emoji {
+  background: rgba(255, 252, 240, 0.62);
+}
+
+/* Gilt, the same treatment the book gives its own primary button. */
+body:has(.compass-book) .quick-add__primary {
+  color: #241708;
+  font-family: 'Cinzel', 'Iowan Old Style', Palatino, Georgia, serif;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(154, 111, 22, 0.7);
+  background: linear-gradient(180deg, #f2c14e, #cf9a24 62%, #b5811a);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 12px rgba(70, 50, 16, 0.25);
+}
+
+body:has(.compass-book) .quick-add__secondary,
+body:has(.compass-book) .quick-add__hint {
+  color: #6b5636;
+  font-family: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
+}
+
+body:has(.compass-book) .quick-add__hint {
+  font-style: italic;
+}
+
+body:has(.compass-book) .quick-add__done-title {
+  color: #33260f;
+  font-family: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
+}
+
+body:has(.compass-book) .quick-add__done-sub {
+  color: #6b5636;
+  font-family: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
+  font-style: italic;
+}
+
+body:has(.compass-book) .quick-add__done-emoji {
+  color: #9a6f16;
+}
+
+body:has(.compass-book) .quick-add__error {
+  color: #8a3a1e;
+  font-family: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
+}
+
+/* ------------------------------------------------------------
+   Ledger hub trim: the hub's tool row repeated three instruments
+   that already appear below it (Starter Quest, Check-in, Goals),
+   so inside the book only "Quick add" survives — it is the one
+   action the instruments list does not offer.
+   ------------------------------------------------------------ */
+.compass-quest-ledger__hub .my-quest-hub__tool-card:not(.my-quest-hub__tool-card--add) {
+  display: none;
+}
+
+.compass-quest-ledger__hub .my-quest-hub__tools {
+  display: block;
+}
+
+.compass-quest-ledger__hub .my-quest-hub__tool-card--add {
+  width: 100%;
+}
+
+/* The tab emoji are pure decoration (the label already says Goal / Habit), so
+   inside the book they give way to the type. The habit ICON emoji stay —
+   those are the player's real saved data, shown that way everywhere else. */
+body:has(.compass-book) .quick-add__tab-emoji {
+  display: none;
+}
