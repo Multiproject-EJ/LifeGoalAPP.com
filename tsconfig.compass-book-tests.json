@@ -14,7 +14,6 @@
   "include": [
     "src/features/compass-book/types.ts",
     "src/features/compass-book/content/chapter1LivingWheel.ts",
-    "src/features/compass-book/content/reservedChapter.ts",
     "src/features/compass-book/content/chapter2InnerCompass.ts",
     "src/features/compass-book/content/chapter3LivingHorizon.ts",
     "src/features/compass-book/content/chapter4IkigaiMap.ts",
