@@ -83,6 +83,14 @@ type MyAccountPanelProps = {
     kind: 'processing' | 'success' | 'canceled';
     message: string;
   } | null;
+  /**
+   * Open one settings folder as soon as the panel mounts, for launchers that
+   * deep-link into it (Personalisation opens "Appearance / Theme"). The panel
+   * clears it through `onInitialFolderOpened` so returning to settings later
+   * lands on the normal index.
+   */
+  initialFolder?: 'appearance' | null;
+  onInitialFolderOpened?: () => void;
 };
 
 function formatDate(value?: string | null, options?: Intl.DateTimeFormatOptions) {
@@ -119,12 +127,14 @@ export function MyAccountPanel({
   isMobileMenuImageActive = true,
   onGameModePreferenceChange,
   billingReturnBanner = null,
+  initialFolder = null,
+  onInitialFolderOpened,
 }: MyAccountPanelProps) {
   const [folder1Open, setFolder1Open] = useState(false);
   const [folder2Open, setFolder2Open] = useState(false);
   const [holidayFolderOpen, setHolidayFolderOpen] = useState(false);
   const [remindersFolderOpen, setRemindersFolderOpen] = useState(false);
-  const [appearanceFolderOpen, setAppearanceFolderOpen] = useState(false);
+  const [appearanceFolderOpen, setAppearanceFolderOpen] = useState(initialFolder === 'appearance');
   const [soundFolderOpen, setSoundFolderOpen] = useState(false);
   const [hapticsFolderOpen, setHapticsFolderOpen] = useState(false);
   const [menuDisplayFolderOpen, setMenuDisplayFolderOpen] = useState(false);
@@ -154,6 +164,14 @@ export function MyAccountPanel({
   const [billingError, setBillingError] = useState<string | null>(null);
   const [billingActionLoading, setBillingActionLoading] = useState<'upgrade_monthly' | 'upgrade_yearly' | 'manage' | 'buy_rolls' | null>(null);
   const [rollsBudgetFolderOpen, setRollsBudgetFolderOpen] = useState(false);
+
+  // A deep-link can also arrive while the panel is already mounted, so honour
+  // it here too, then report back so the request is consumed once.
+  useEffect(() => {
+    if (initialFolder !== 'appearance') return;
+    setAppearanceFolderOpen(true);
+    onInitialFolderOpened?.();
+  }, [initialFolder, onInitialFolderOpened]);
   const [activeFutureFeatureId, setActiveFutureFeatureId] = useState<FeatureAvailabilityId | null>(null);
   const [ownedThemeIds, setOwnedThemeIds] = useState<Set<Theme>>(new Set());
   const [themeEntitlementsLoading, setThemeEntitlementsLoading] = useState(false);
