@@ -1009,13 +1009,19 @@ function testReading(): void {
   const emptyProgress = (chapterId: CompassBookChapterId) =>
     computeChapterProgress(chapterId, null, { currentIslandNumber: 0 });
 
-  // Page ids: the Reading leads, then the six chapters in canonical order.
+  // Page ids: the Reading leads, then the six chapters in canonical order,
+  // then the Quest Ledger closes the book.
   assert(COMPASS_BOOK_PAGE_IDS[0] === 'reading', 'the Reading is the first page');
   assert(
-    COMPASS_BOOK_PAGE_IDS.length === COMPASS_BOOK_CHAPTER_IDS.length + 1,
-    'seven pages: the Reading plus six chapters',
+    COMPASS_BOOK_PAGE_IDS.length === COMPASS_BOOK_CHAPTER_IDS.length + 2,
+    'eight pages: the Reading, six chapters, and the Quest Ledger',
+  );
+  assert(
+    COMPASS_BOOK_PAGE_IDS[COMPASS_BOOK_PAGE_IDS.length - 1] === 'quest_ledger',
+    'the Quest Ledger is the last page',
   );
   assert(!isChapterPage('reading'), 'the Reading is not a chapter page');
+  assert(!isChapterPage('quest_ledger'), 'the Quest Ledger is not a chapter page');
   assert(isChapterPage('living_wheel'), 'a chapter id is a chapter page');
 
   assert(chapterNumeral(1) === 'I', 'chapter 1 is I');
@@ -1111,6 +1117,10 @@ function testPageTurn(): void {
   assert(pageIndex('reading') === 0, 'the Reading is page 0');
   assert(pageIndex('living_wheel') === 1, 'chapter I is page 1');
   assert(pageIndex('personal_playbook') === 6, 'chapter VI is page 6');
+  assert(pageIndex('quest_ledger') === 7, 'the Quest Ledger is page 7');
+  assert(turnDirection('personal_playbook', 'quest_ledger') === 'forward', 'VI → Ledger turns forward');
+  assert(turnDirection('quest_ledger', 'reading') === 'back', 'Ledger → Reading turns back');
+  assert(turnDistance('reading', 'quest_ledger') === 7, 'Reading → Ledger crosses seven sheets');
 
   // Opening the book is not a turn — the cover owns that moment.
   assert(turnDirection(null, 'reading') === 'none', 'first render does not turn');
