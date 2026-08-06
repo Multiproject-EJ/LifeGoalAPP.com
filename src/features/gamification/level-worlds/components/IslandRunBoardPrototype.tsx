@@ -1974,6 +1974,14 @@ export function IslandRunBoardPrototype({
    * `trafficLightCharge` catches up when the roll resolves.
    */
   const [trafficLightVisualCharge, setTrafficLightVisualCharge] = useState<number | null>(null);
+  /**
+   * True from the moment the token hops OVER the traffic-light tile until the
+   * next dice throw. Drives the sign's enlarged "open" presentation so the
+   * charge that was just earned stays readable for the rest of the turn. The
+   * sign is `pointer-events: none` and the camera is never moved for it, so
+   * this is ambient emphasis only — it never holds up play.
+   */
+  const [trafficLightPassPulse, setTrafficLightPassPulse] = useState(false);
   const [islandNumber, setIslandNumber] = useState(1);
   // PR7: brief "level-up flash" class driver. Flips true when `islandNumber`
   // advances to a higher value (ignoring cycle wrap 120→1) and auto-resets
@@ -5309,6 +5317,7 @@ export function IslandRunBoardPrototype({
     setTrafficLightRewardConfettiActive(false);
     setShowTrafficLightCoinHint(false);
     setTrafficLightVisualCharge(null);
+    setTrafficLightPassPulse(false);
   }, [islandNumber]);
 
   const handleDormantDoorSelect = useCallback((doorIndex: number) => {
@@ -5370,6 +5379,7 @@ export function IslandRunBoardPrototype({
     setTrafficLightRewardConfettiActive(false);
     setShowTrafficLightCoinHint(false);
     setTrafficLightVisualCharge(null);
+    setTrafficLightPassPulse(false);
   }, []);
 
   const handleFlipTrafficLightCoin = useCallback(() => {
@@ -5421,6 +5431,7 @@ export function IslandRunBoardPrototype({
     setTrafficLightRewardConfettiActive(false);
     setShowTrafficLightCoinHint(false);
     setTrafficLightVisualCharge(null);
+    setTrafficLightPassPulse(false);
     playIslandRunSound('reward_bar_claim_burst');
     triggerIslandRunHaptic('reward_claim');
 
@@ -6952,8 +6963,10 @@ export function IslandRunBoardPrototype({
       try {
         isAnimatingRollRef.current = true;
         // Clear any prior optimistic traffic-light charge so this roll's
-        // mid-hop pass starts from the authoritative value.
+        // mid-hop pass starts from the authoritative value, and close the
+        // popped sign from the previous turn — "open until the next throw".
         setTrafficLightVisualCharge(null);
+        setTrafficLightPassPulse(false);
       // P0-3: once the roll service has committed tokenIndex/dice/runtimeVersion,
       // block all queued action-lock writers until this renderer applies the
       // post-hop sync (`applyRollResult`). This closes the stale-base window
@@ -13013,6 +13026,7 @@ export function IslandRunBoardPrototype({
           tileMap={landmarkDoorTileMap}
           ordinaryTilesActive={ordinaryBoardTilesActive}
           trafficLightCharge={displayedTrafficLightCharge}
+          trafficLightPassPulse={trafficLightPassPulse}
           trafficLightChargeTarget={TRAFFIC_LIGHT_CHARGE_TARGET}
           stopMap={stopMap}
           completedEncounterIndices={completedEncounterIndices}
@@ -13059,6 +13073,9 @@ export function IslandRunBoardPrototype({
                 const base = prev ?? trafficLightCharge;
                 return Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, base + 1);
               });
+              // Pop the sign open on the pass and leave it open for the rest of
+              // the turn; `handleRoll` closes it when the next dice is thrown.
+              setTrafficLightPassPulse(true);
             }
           }}
           onTokenLand={(tileIndex) => {
