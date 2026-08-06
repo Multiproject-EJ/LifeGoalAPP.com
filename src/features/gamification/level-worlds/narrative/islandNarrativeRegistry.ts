@@ -4,6 +4,7 @@ import { island002NarrativeDefinition } from './definitions/island002Narrative';
 import { island003NarrativeDefinition } from './definitions/island003Narrative';
 import { island004NarrativeDefinition } from './definitions/island004Narrative';
 import { island005NarrativeDefinition } from './definitions/island005Narrative';
+import { island092NarrativeDefinition } from './definitions/island092Narrative';
 
 const ISLAND_NARRATIVE_DEFINITIONS: Readonly<Record<number, IslandNarrativeDefinition>> = {
   1: island001NarrativeDefinition,
@@ -11,6 +12,7 @@ const ISLAND_NARRATIVE_DEFINITIONS: Readonly<Record<number, IslandNarrativeDefin
   3: island003NarrativeDefinition,
   4: island004NarrativeDefinition,
   5: island005NarrativeDefinition,
+  92: island092NarrativeDefinition,
 };
 
 export function getIslandNarrativeDefinition(islandNumber: number): IslandNarrativeDefinition | undefined {
