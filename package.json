@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:island-profiler": "vite build --mode island-profiler",
+    "serve:island-profiler": "vite preview --host 0.0.0.0 --port 4175 --strictPort",
     "ios:assets": "node scripts/sync-ios-assets.mjs",
     "cap:sync:ios": "npm run build && npm run ios:assets && cap sync ios",
     "cap:copy:ios": "npm run build && npm run ios:assets && cap copy ios",
@@ -90,6 +92,7 @@
     "openai": "^6.9.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "three": "^0.185.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
@@ -97,6 +100,7 @@
     "@types/canvas-confetti": "^1.9.0",
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.26",
+    "@types/three": "^0.185.4",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.4.5",

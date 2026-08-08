@@ -1,6 +1,13 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { LandmarkBuildVisual, normalizeLandmarkBuildVisualStopId } from './board/LandmarkBuildVisual';
 import type { BuildModalV2ViewModel, BuildModalV2PartViewModel } from '../services/islandRunBuildModalV2ViewModel';
+
+type BuildStopId = NonNullable<BuildModalV2ViewModel['activeLandmark']>['stopId'];
+
+const Island5LandmarkBuildPreview = lazy(async () => {
+  const module = await import('../dev/Island5ThreePilot');
+  return { default: module.Island5LandmarkBuildPreview };
+});
 
 export interface BuildModalV2Props {
   isOpen: boolean;
@@ -16,8 +23,34 @@ export interface BuildModalV2Props {
   onBuildActivePart: (stopIndex: number) => void;
 }
 
-function BuildModalV2ArtworkImage(props: { src?: string; alt: string; isPlaceholder: boolean; stopId?: string; buildLevel?: number; title?: string }) {
+function BuildModalV2ArtworkImage(props: {
+  islandNumber: number;
+  src?: string;
+  alt: string;
+  isPlaceholder: boolean;
+  stopId?: BuildStopId;
+  buildLevel?: number;
+  title?: string;
+}) {
   const [errored, setErrored] = useState(false);
+
+  if (
+    props.islandNumber === 5
+    && props.stopId
+    && props.title
+    && (props.buildLevel === 1 || props.buildLevel === 2 || props.buildLevel === 3)
+  ) {
+    return (
+      <Suspense fallback={<div className="bm2-cloud-build__three-loading" role="status">Preparing 3D landmark…</div>}>
+        <Island5LandmarkBuildPreview
+          stopId={props.stopId}
+          buildLevel={props.buildLevel}
+          title={props.title}
+        />
+      </Suspense>
+    );
+  }
+
   if (!props.src || props.isPlaceholder || errored) {
     return (
       <div className="bm2-artwork__placeholder">
@@ -213,7 +246,7 @@ export function BuildModalV2({
                 </p>
               </div>
               <div className="bm2-artwork bm2-artwork--hero">
-                <BuildModalV2ArtworkImage src={active.imageSrc} alt={active.imageAlt} isPlaceholder={active.imageIsPlaceholder} stopId={active.stopId} buildLevel={active.targetLevel} title={active.title} />
+                <BuildModalV2ArtworkImage islandNumber={islandNumber} src={active.imageSrc} alt={active.imageAlt} isPlaceholder={active.imageIsPlaceholder} stopId={active.stopId} buildLevel={active.targetLevel} title={active.title} />
               </div>
               <BuildModalV2LevelRail viewModel={viewModel} />
             </div>

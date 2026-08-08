@@ -17,7 +17,7 @@ import { lockPageScroll } from '../../../../utils/scrollLock';
  *
  * See: docs/gameplay/ISLAND_RUN_ARCHITECTURE_CONTRACT.md
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type SetStateAction } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type SetStateAction } from 'react';
 import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import {
@@ -583,6 +583,8 @@ import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWin
 import DemoWaitlistModal from './DemoWaitlistModal';
 import '../../../../styles/demo-waitlist-modal.css';
 
+const Island5ThreeScene = lazy(() => import('../dev/Island5ThreePilot'));
+
 const ROLL_MIN = 1;
 const ROLL_MAX = 6;
 const SPIN_MIN = 1;
@@ -596,6 +598,22 @@ const ISLAND_DURATION_SEC = 72 * 60 * 60;
 // Canonical contract is now enforced as source-of-truth runtime behavior.
 // Legacy pre-contract-v2 movement/energy rules are intentionally disabled.
 const ISLAND_RUN_CONTRACT_V2_ENABLED = true;
+type DevIslandJumpDigits = [number, number, number];
+type DevIslandJumpDigitIndex = 0 | 1 | 2;
+const DEV_ISLAND_JUMP_DIGIT_LABELS = ['hundreds', 'tens', 'ones'] as const;
+
+function islandNumberToDevJumpDigits(islandNumber: number): DevIslandJumpDigits {
+  const normalized = Math.min(ISLAND_RUN_MAX_ISLAND, Math.max(1, Math.trunc(islandNumber)));
+  return [Math.floor(normalized / 100), Math.floor((normalized % 100) / 10), normalized % 10];
+}
+
+function devJumpDigitsToIslandNumber(digits: DevIslandJumpDigits): number {
+  return (digits[0] * 100) + (digits[1] * 10) + digits[2];
+}
+
+function normalizeIsland5ThreeBuildLevel(value: number | undefined): 0 | 1 | 2 | 3 {
+  return Math.min(3, Math.max(0, Math.floor(value ?? 0))) as 0 | 1 | 2 | 3;
+}
 const DEBUG_TIMED_EVENT_OVERRIDE_KEY = 'islandRunDebugTimedEventOverride';
 const DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY = 'islandRunDebugTimedEventOverrideNonce';
 const DISCOVERY_FOG_DEV_STORAGE_KEY = 'islandRunDevDisableDiscoveryFog';
@@ -1704,6 +1722,8 @@ export function IslandRunBoardPrototype({
       islandVisualLandmark,
       islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
       islandVisualBossState,
+      isIsland5ThreePreviewRequested: import.meta.env.DEV && params.get('island3dPreview') === '1',
+      island5ThreePreviewLevel: Math.round(readNumericParam(params, 'island3dLevel', 3, 0, 3)) as 0 | 1 | 2 | 3,
       boardTiltXDeg: readNumericParam(params, 'boardTiltX', 47, 0, 80),
       boardRotateZDeg: readNumericParam(params, 'boardRotateZ', 0, -45, 45),
     };
@@ -1719,10 +1739,17 @@ export function IslandRunBoardPrototype({
     islandVisualLandmark,
     islandVisualBuildLevel,
     islandVisualBossState,
+    isIsland5ThreePreviewRequested,
+    island5ThreePreviewLevel,
     boardTiltXDeg,
     boardRotateZDeg,
   } = boardRenderTuning;
   const [isDevModeEnabled, setIsDevModeEnabled] = useState(() => isIslandRunDevModeEnabled());
+  const [isIsland5ThreeEnabled, setIsIsland5ThreeEnabled] = useState(
+    () => !isIslandVisualPreview || isIsland5ThreePreviewRequested,
+  );
+  const [devIslandJumpDigits, setDevIslandJumpDigits] = useState<DevIslandJumpDigits>([0, 0, 1]);
+  const [isDevIslandJumpPending, setIsDevIslandJumpPending] = useState(false);
   const [isDiscoveryFogDisabled, setIsDiscoveryFogDisabled] = useState(readDevDiscoveryFogDisabled);
   // Visual-preview mode is the production clearance surface: all requested
   // L0-L3 assets must be inspectable without discovery fog concealing overlap.
@@ -1979,6 +2006,11 @@ export function IslandRunBoardPrototype({
    */
   const [trafficLightVisualCharge, setTrafficLightVisualCharge] = useState<number | null>(null);
   const [islandNumber, setIslandNumber] = useState(1);
+  useEffect(() => {
+    if (showTopbarMenu && isDevModeEnabled) {
+      setDevIslandJumpDigits(islandNumberToDevJumpDigits(islandNumber));
+    }
+  }, [isDevModeEnabled, islandNumber, showTopbarMenu]);
   // PR7: brief "level-up flash" class driver. Flips true when `islandNumber`
   // advances to a higher value (ignoring cycle wrap 120→1) and auto-resets
   // after the animation runs. Driven by a useEffect+prev ref pattern below.
@@ -2044,6 +2076,8 @@ export function IslandRunBoardPrototype({
     return undefined;
   }, [islandNumber]);
   const islandArtPreviewNumber = isIslandVisualPreview ? islandVisualIslandNumber : islandNumber;
+  const canUseIsland5Three = islandArtPreviewNumber === 5;
+  const shouldRenderIsland5Three = canUseIsland5Three && isIsland5ThreeEnabled;
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandArtPreviewNumber), [islandArtPreviewNumber]);
   const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandArtPreviewNumber), [islandArtPreviewNumber]);
   const wisdomTreeCard = useMemo(() => getWisdomTreeCardForIsland(islandNumber), [islandNumber]);
@@ -9534,6 +9568,34 @@ export function IslandRunBoardPrototype({
     }
   };
 
+  const devIslandJumpTarget = devJumpDigitsToIslandNumber(devIslandJumpDigits);
+  const devIslandJumpLabel = devIslandJumpDigits.join('');
+  const isDevIslandJumpTargetValid = devIslandJumpTarget >= 1
+    && devIslandJumpTarget <= ISLAND_RUN_MAX_ISLAND;
+
+  const adjustDevIslandJumpDigit = (index: DevIslandJumpDigitIndex, delta: -1 | 1) => {
+    setDevIslandJumpDigits((current) => {
+      const next: DevIslandJumpDigits = [...current];
+      next[index] = (next[index] + delta + 10) % 10;
+      return next;
+    });
+  };
+
+  const handleDevJumpToIsland = async () => {
+    if (!isDevModeEnabled || !isDevIslandJumpTargetValid || isDevIslandJumpPending) return;
+    setIsDevIslandJumpPending(true);
+    try {
+      await performIslandTravel(devIslandJumpTarget, { startTimer: false });
+      setLandingText(`🧪 DEV jump complete: Island ${devIslandJumpLabel} loaded as a fresh visit.`);
+      setShowTopbarMenu(false);
+    } catch (error) {
+      console.error('[island-run] Dev island jump failed:', error);
+      setLandingText(`Could not jump to Island ${devIslandJumpLabel}. Please try again.`);
+    } finally {
+      setIsDevIslandJumpPending(false);
+    }
+  };
+
   /**
    * Island-clear celebration CTA handler. Gates island travel behind the
    * player tapping "Travel to next island" (or the cycle-capstone "Begin
@@ -11559,6 +11621,13 @@ export function IslandRunBoardPrototype({
       runtimeState.stopBuildStateByIndex,
     ],
   );
+  const island5ThreeBuildLevels = useMemo(() => ({
+    hatchery: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[0]),
+    habit: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[1]),
+    event: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[2]),
+    wisdom: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[3]),
+    boss: normalizeIsland5ThreeBuildLevel(islandArtLandmarkBuildLevels[4]),
+  }), [islandArtLandmarkBuildLevels]);
   const isCurrentIslandBossDefeated = bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber;
   const runtimeBossCreatureArtState = resolveBossCreatureArtState({
     stopBuildStateByIndex: runtimeState.stopBuildStateByIndex,
@@ -12715,6 +12784,64 @@ export function IslandRunBoardPrototype({
               >
                 {isBackgroundHidden ? 'Show background' : 'Hide background'}
               </button>
+              {isDevModeEnabled && islandArtPreviewNumber === 5 ? (
+                <button
+                  type="button"
+                  className="island-run-board__topbar-menu-item"
+                  role="menuitemcheckbox"
+                  aria-checked={isIsland5ThreeEnabled}
+                  onClick={() => {
+                    setIsIsland5ThreeEnabled((current) => !current);
+                    setShowTopbarMenu(false);
+                  }}
+                >
+                  <span>{isIsland5ThreeEnabled ? '✓' : '○'}</span>
+                  <span>{isIsland5ThreeEnabled ? 'Use 2D fallback' : 'Use 3D Island 5'}</span>
+                  <span aria-hidden="true">🏝️</span>
+                </button>
+              ) : null}
+              {isDevModeEnabled ? (
+                <section className="island-run-board__dev-island-jump" role="group" aria-label="Jump to island developer control">
+                  <div className="island-run-board__dev-island-jump-heading">
+                    <span>Jump to island</span>
+                    <output aria-live="polite">{devIslandJumpLabel}</output>
+                  </div>
+                  <div className="island-run-board__dev-island-jump-digits">
+                    {devIslandJumpDigits.map((digit, index) => {
+                      const digitIndex = index as DevIslandJumpDigitIndex;
+                      const digitLabel = DEV_ISLAND_JUMP_DIGIT_LABELS[digitIndex];
+                      return (
+                        <div key={digitLabel} className="island-run-board__dev-island-jump-digit">
+                          <button
+                            type="button"
+                            aria-label={`Increase ${digitLabel} digit`}
+                            onClick={() => adjustDevIslandJumpDigit(digitIndex, 1)}
+                            disabled={isDevIslandJumpPending}
+                          >▲</button>
+                          <span aria-label={`${digitLabel} digit ${digit}`}>{digit}</span>
+                          <button
+                            type="button"
+                            aria-label={`Decrease ${digitLabel} digit`}
+                            onClick={() => adjustDevIslandJumpDigit(digitIndex, -1)}
+                            disabled={isDevIslandJumpPending}
+                          >▼</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    className="island-run-board__dev-island-jump-submit"
+                    onClick={() => void handleDevJumpToIsland()}
+                    disabled={!isDevIslandJumpTargetValid || isDevIslandJumpPending}
+                  >
+                    {isDevIslandJumpPending ? 'Jumping…' : `Load Island ${devIslandJumpLabel}`}
+                  </button>
+                  <small className="island-run-board__dev-island-jump-hint">
+                    {isDevIslandJumpTargetValid ? 'Fresh visit · valid range 001–120' : 'Choose an island from 001 to 120'}
+                  </small>
+                </section>
+              ) : null}
               <button
                 type="button"
                 className="island-run-board__topbar-menu-item"
@@ -13060,6 +13187,35 @@ export function IslandRunBoardPrototype({
             diceRollCompleteResolverRef.current = null;
           }}
         />
+        {shouldRenderIsland5Three ? (
+          <div className="island-run-board__three-preview">
+            <Suspense
+              fallback={(
+                <div className="island-run-board__three-preview-loading" role="status">
+                  Loading Island 5 in 3D…
+                </div>
+              )}
+            >
+              <Island5ThreeScene
+                buildLevel={island5ThreePreviewLevel}
+                landmarkBuildLevels={isIslandVisualPreview ? undefined : island5ThreeBuildLevels}
+                presentation="embedded"
+                tokenIndex={tokenIndex}
+                pendingHopSequence={pendingHopSequence}
+                movementSpeedFactor={storyFastModeState.movementSpeedFactor}
+                onLandmarkClick={isIslandVisualPreview ? undefined : (landmarkId) => {
+                  handleStopOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId);
+                }}
+                onRendererUnavailable={() => setIsIsland5ThreeEnabled(false)}
+              />
+            </Suspense>
+            {isIslandVisualPreview ? (
+              <div className="island-run-board__three-preview-badge" aria-hidden="true">
+                DEV · 3D VISUAL PREVIEW
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         {showLandmarkCoachmark ? (
           <aside className="island-run-landmark-coachmark" role="note" aria-live="polite">
             <p>

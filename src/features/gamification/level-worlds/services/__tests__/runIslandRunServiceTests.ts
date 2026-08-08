@@ -166,6 +166,7 @@ import { islandRunRoutekeeperTinyActionsTests } from './islandRunRoutekeeperTiny
 import { islandRunHabitLandmarkActionTests } from './islandRunHabitLandmarkAction.test';
 import { islandRunFirstPlayerModalSchedulerTests } from './islandRunFirstPlayerModalScheduler.test';
 import { islandCameraLockedKitTests } from './islandCameraLockedKit.test';
+import { island5ThreePilotContractTests } from './island5ThreePilotContract.test';
 import { feedPetCompanionPresentationTests } from '../../../../habits/feedPetCompanionPresentation.test';
 import type { TestCase } from './testHarness';
 
@@ -175,6 +176,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'dailySpinRewardPolicy', tests: dailySpinRewardPolicyTests },
   { label: 'islandRunDailySpinRewardAction', tests: islandRunDailySpinRewardActionTests },
   { label: 'islandCameraLockedKit', tests: islandCameraLockedKitTests },
+  { label: 'island5ThreePilotContract', tests: island5ThreePilotContractTests },
   { label: 'creatureCatalog', tests: creatureCatalogTests },
   { label: 'creatureCollectionService', tests: creatureCollectionServiceTests },
   { label: 'creatureTreatInventoryService', tests: creatureTreatInventoryServiceTests },

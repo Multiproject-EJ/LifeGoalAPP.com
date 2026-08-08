@@ -48,6 +48,7 @@ const NON_APP_ROUTES = new Set(['world', 'lobby', 'privacy', 'terms', 'support']
 const QUEST_VISUAL_SYSTEM_PREVIEW_PATH = '/dev/quest-journey-visual-system';
 const ISLAND_ART_PREVIEW_PATH = '/dev/island-art-preview';
 const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit';
+const ISLAND_3D_PROFILER_BUILD_ENABLED = import.meta.env.VITE_ISLAND_3D_PROFILE_ENABLED === 'true';
 const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
 const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
 const CHAMPIONSHIP_PREVIEW_PATH = '/dev/championship-preview';
@@ -318,9 +319,11 @@ function Root() {
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === ISLAND_ART_PREVIEW_PATH;
   const isIslandTemplateKitRoute =
-    import.meta.env.DEV &&
-    typeof window !== 'undefined' &&
-    window.location.pathname.replace(/\/+$/, '') === ISLAND_TEMPLATE_KIT_PATH;
+    ISLAND_3D_PROFILER_BUILD_ENABLED || (
+      import.meta.env.DEV &&
+      typeof window !== 'undefined' &&
+      window.location.pathname.replace(/\/+$/, '') === ISLAND_TEMPLATE_KIT_PATH
+    );
   const isIsland001StoryPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -581,6 +584,6 @@ if (typeof window !== 'undefined') {
   });
 }
 
-if (import.meta.env.PROD) {
+if (import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED) {
   registerServiceWorker();
 }

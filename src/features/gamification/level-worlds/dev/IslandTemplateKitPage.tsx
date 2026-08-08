@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
 import { evaluateIslandKit, ISLAND_KIT_SCENE, ISLAND_KIT_VERSION } from './islandCameraLockedKit';
+import Island5ThreePilot from './Island5ThreePilot';
 import './IslandTemplateKitPage.css';
 
-type ViewMode = 'blueprint' | 'clay' | 'proof';
+type ViewMode = 'blueprint' | 'clay' | 'proof' | '3d';
 type BuildLevel = 0 | 1 | 2 | 3;
 
 const PROOF_SCENE_SRC = '/assets/islands/_template/proof/starfall-foundry-camera-locked-v2.webp';
@@ -11,9 +12,12 @@ const PROOF_SCENE_SRC = '/assets/islands/_template/proof/starfall-foundry-camera
 function readInitialPreviewState() {
   const params = new URLSearchParams(window.location.search);
   const requestedMode = params.get('mode');
-  const requestedLevel = Number(params.get('level'));
+  const requestedLevelParam = params.get('level');
+  const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
   return {
-    mode: requestedMode === 'clay' || requestedMode === 'proof' ? requestedMode : 'blueprint' as ViewMode,
+    mode: requestedMode === 'clay' || requestedMode === 'proof' || requestedMode === '3d'
+      ? requestedMode
+      : 'blueprint' as ViewMode,
     buildLevel: ([0, 1, 2, 3].includes(requestedLevel) ? requestedLevel : 3) as BuildLevel,
     overlays: params.get('guides') !== '0',
   };
@@ -145,7 +149,7 @@ export default function IslandTemplateKitPage() {
         <aside className="island-kit-controls" aria-label="Template controls">
           <div className="island-kit-control-group">
             <span>View</span>
-            {(['blueprint', 'clay', 'proof'] as ViewMode[]).map((option) => (
+            {(['blueprint', 'clay', 'proof', '3d'] as ViewMode[]).map((option) => (
               <button key={option} type="button" aria-pressed={mode === option} onClick={() => setMode(option)}>{option}</button>
             ))}
           </div>
@@ -169,9 +173,15 @@ export default function IslandTemplateKitPage() {
 
         <div className="island-kit-phone" data-testid="island-kit-phone">
           <div className="island-kit-phone__notch" />
-          <div className="island-kit-phone__hud"><span>ISLAND TEMPLATE</span><strong>BOARD LOCKED</strong></div>
-          <IslandScaffold mode={mode} buildLevel={buildLevel} overlays={overlays} />
-          <div className="island-kit-phone__controller"><span>Story</span><strong>Roll</strong><span>Build</span></div>
+          {mode === '3d' ? (
+            <Island5ThreePilot buildLevel={buildLevel} />
+          ) : (
+            <>
+              <div className="island-kit-phone__hud"><span>ISLAND TEMPLATE</span><strong>BOARD LOCKED</strong></div>
+              <IslandScaffold mode={mode} buildLevel={buildLevel} overlays={overlays} />
+              <div className="island-kit-phone__controller"><span>Story</span><strong>Roll</strong><span>Build</span></div>
+            </>
+          )}
         </div>
 
         <aside className="island-kit-checks" aria-label="Geometry checks">
