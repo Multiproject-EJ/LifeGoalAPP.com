@@ -54,19 +54,13 @@ interface Island5ThreePilotProps {
   isRolling?: boolean;
   landingTileType?: IslandTileType;
   movementSpeedFactor?: number;
+  cameraFocusPreset?: Island5CameraPresetId | null;
+  cameraFocusTransition?: 'standard' | 'quick';
   onHopSequenceComplete?: () => void;
   onTokenHop?: (tileIndex: number) => void;
   onTokenLand?: (tileIndex: number) => void;
   onLandmarkClick?: (landmarkId: Island5LandmarkDefinition['id']) => void;
   onRendererUnavailable?: () => void;
-}
-
-type Island5BuildPreviewStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
-
-interface Island5LandmarkBuildPreviewProps {
-  stopId: Island5BuildPreviewStopId;
-  buildLevel: 1 | 2 | 3;
-  title: string;
 }
 
 interface TokenMotionRequest {
@@ -76,6 +70,17 @@ interface TokenMotionRequest {
   sequence: readonly number[];
   durationsMs: readonly number[];
   landingImpact: ReturnType<typeof resolveIsland3DLandingImpact>;
+}
+
+interface ControlledCameraFocusRequest {
+  version: number;
+  preset: Island5CameraPresetId;
+  durationScale: number;
+}
+
+interface CameraPoseSnapshot {
+  position: readonly [number, number, number];
+  target: readonly [number, number, number];
 }
 
 interface ActiveTileImpact {
@@ -2607,140 +2612,6 @@ function disposeScene(scene: THREE.Scene) {
   textures.forEach((texture) => texture.dispose());
 }
 
-const ISLAND_5_BUILD_PREVIEW_LANDMARK_ID: Record<Island5BuildPreviewStopId, Island5LandmarkDefinition['id']> = {
-  hatchery: 'hatchery',
-  habit: 'habit',
-  mystery: 'event',
-  wisdom: 'wisdom',
-  boss: 'boss',
-};
-
-/**
- * Read-only reuse of the exact Island 5 landmark model inside BuildModalV2.
- * The surrounding modal remains the only click target and owns the canonical
- * build action; this canvas intentionally receives no gameplay callbacks.
- */
-export function Island5LandmarkBuildPreview({ stopId, buildLevel, title }: Island5LandmarkBuildPreviewProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
-
-    let renderer: THREE.WebGLRenderer | null = null;
-    let animationFrame = 0;
-    let resizeObserver: ResizeObserver | null = null;
-    let disposed = false;
-    const scene = new THREE.Scene();
-
-    try {
-      const deviceSignals = readDeviceSignals();
-      const quality = resolveIsland3DQuality('auto', deviceSignals);
-      const materials = createPilotMaterials(quality.id);
-      const landmarkId = ISLAND_5_BUILD_PREVIEW_LANDMARK_ID[stopId];
-      const definition = ISLAND_5_LANDMARKS.find((entry) => entry.id === landmarkId);
-      if (!definition) throw new Error(`Missing Island 5 landmark model for ${stopId}.`);
-
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        alpha: true,
-        antialias: quality.antialias,
-        powerPreference: quality.id === 'low' ? 'low-power' : 'high-performance',
-      });
-      renderer.setClearColor(0x000000, 0);
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.08;
-      renderer.shadowMap.enabled = quality.shadows;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.setPixelRatio(Math.min(getIsland3DRendererPixelRatio(quality, window.devicePixelRatio), 1.75));
-
-      const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 120);
-      const previewDefinition: Island5LandmarkDefinition = { ...definition, position: [0, 0, 0] };
-      const landmark = buildLandmark(previewDefinition, buildLevel, quality.id, materials);
-      landmark.rotation.y = -0.52;
-      scene.add(landmark);
-
-      const firstBounds = new THREE.Box3().setFromObject(landmark);
-      landmark.position.y -= firstBounds.min.y;
-      const bounds = new THREE.Box3().setFromObject(landmark);
-      const size = bounds.getSize(new THREE.Vector3());
-      const center = bounds.getCenter(new THREE.Vector3());
-      const radius = Math.max(size.x, size.y, size.z) * 0.56;
-      const halfFov = THREE.MathUtils.degToRad(camera.fov * 0.5);
-      const distance = Math.max(6, radius / Math.tan(halfFov) * (landmarkId === 'boss' ? 1.2 : 1.08));
-      const viewDirection = new THREE.Vector3(0.72, 0.42, 1).normalize();
-      camera.position.copy(center).addScaledVector(viewDirection, distance);
-      camera.lookAt(center.x, center.y * 0.88, center.z);
-
-      const platformRadius = Math.max(size.x, size.z) * 0.62;
-      const platform = new THREE.Mesh(
-        new THREE.CylinderGeometry(platformRadius, platformRadius * 1.12, 0.18, 48),
-        new THREE.MeshStandardMaterial({ color: 0xb7cfbd, roughness: 0.82, transparent: true, opacity: 0.82 }),
-      );
-      platform.position.y = -0.11;
-      platform.receiveShadow = true;
-      scene.add(platform);
-
-      const keyLight = new THREE.DirectionalLight(0xfff1d4, 3.35);
-      keyLight.position.set(-5, 10, 7);
-      keyLight.castShadow = quality.shadows;
-      const shadowSize = quality.id === 'high' ? 1024 : 512;
-      keyLight.shadow.mapSize.set(shadowSize, shadowSize);
-      const fillLight = new THREE.DirectionalLight(0x9fe9ff, 1.7);
-      fillLight.position.set(7, 5, -5);
-      const rimLight = new THREE.DirectionalLight(0xc6a7ff, 1.25);
-      rimLight.position.set(-7, 4, -7);
-      scene.add(new THREE.HemisphereLight(0xeafcff, 0x547165, 1.85), keyLight, fillLight, rimLight);
-
-      const renderSize = () => {
-        if (!renderer || disposed) return;
-        const width = Math.max(1, canvas.clientWidth);
-        const height = Math.max(1, canvas.clientHeight);
-        renderer.setSize(width, height, false);
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-      };
-      renderSize();
-      resizeObserver = new ResizeObserver(renderSize);
-      resizeObserver.observe(canvas);
-
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const startedAt = performance.now();
-      const renderFrame = (now: number) => {
-        if (!renderer || disposed) return;
-        if (!reducedMotion) landmark.rotation.y = -0.52 + ((now - startedAt) * 0.00012);
-        renderer.render(scene, camera);
-        if (!reducedMotion) animationFrame = window.requestAnimationFrame(renderFrame);
-      };
-      animationFrame = window.requestAnimationFrame(renderFrame);
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'The 3D landmark preview could not start.');
-    }
-
-    return () => {
-      disposed = true;
-      window.cancelAnimationFrame(animationFrame);
-      resizeObserver?.disconnect();
-      disposeScene(scene);
-      renderer?.dispose();
-      renderer?.forceContextLoss();
-    };
-  }, [buildLevel, stopId]);
-
-  if (error) {
-    return <div className="bm2-cloud-build__three-error" role="status">3D preview unavailable</div>;
-  }
-
-  return (
-    <div className="bm2-cloud-build__three-preview" role="img" aria-label={`${title} Building Level ${buildLevel} in 3D`}>
-      <canvas ref={canvasRef} aria-hidden="true" />
-      <span className="bm2-cloud-build__three-label" aria-hidden="true">LIVE 3D LANDMARK</span>
-    </div>
-  );
-}
-
 export default function Island5ThreePilot({
   buildLevel,
   landmarkBuildLevels,
@@ -2751,6 +2622,8 @@ export default function Island5ThreePilot({
   isRolling = false,
   landingTileType,
   movementSpeedFactor = 1,
+  cameraFocusPreset = null,
+  cameraFocusTransition = 'standard',
   onHopSequenceComplete,
   onTokenHop,
   onTokenLand,
@@ -2770,7 +2643,16 @@ export default function Island5ThreePilot({
   const [reportShareNotice, setReportShareNotice] = useState('');
   const [error, setError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const applyPresetRef = useRef<(id: Island5CameraPresetId) => void>(() => undefined);
+  const landmarkBuildLevelsRef = useRef(landmarkBuildLevels);
+  landmarkBuildLevelsRef.current = landmarkBuildLevels;
+  const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
+  const previousCameraFocusPresetRef = useRef<Island5CameraPresetId | null>(null);
+  const previousCameraFocusTransitionRef = useRef<'standard' | 'quick'>('standard');
+  const cameraFocusRequestVersionRef = useRef(0);
+  const controlledCameraFocusRequestRef = useRef<ControlledCameraFocusRequest | null>(null);
+  const applyControlledCameraFocusRef = useRef<(request: ControlledCameraFocusRequest) => void>(() => undefined);
+  const appliedControlledCameraFocusVersionRef = useRef(0);
+  const cameraPoseSnapshotRef = useRef<CameraPoseSnapshot | null>(null);
   const startTourRef = useRef<() => void>(() => undefined);
   const stopTourRef = useRef<() => void>(() => undefined);
   const startProfilerRef = useRef<() => void>(() => undefined);
@@ -2791,6 +2673,12 @@ export default function Island5ThreePilot({
     () => resolveIsland3DQuality(resolvedQualitySelection, deviceSignals),
     [deviceSignals, resolvedQualitySelection],
   );
+  const landmarkBuildLevelsKey = useMemo(
+    () => ISLAND_5_LANDMARKS
+      .map((landmark) => `${landmark.id}:${landmarkBuildLevels?.[landmark.id] ?? buildLevel}`)
+      .join('|'),
+    [buildLevel, landmarkBuildLevels],
+  );
 
   useEffect(() => {
     onLandmarkClickRef.current = onLandmarkClick;
@@ -2805,6 +2693,26 @@ export default function Island5ThreePilot({
     onTokenHopRef.current = onTokenHop;
     onTokenLandRef.current = onTokenLand;
   }, [onHopSequenceComplete, onTokenHop, onTokenLand]);
+
+  useEffect(() => {
+    const previousPreset = previousCameraFocusPresetRef.current;
+    const previousTransition = previousCameraFocusTransitionRef.current;
+    if (cameraFocusPreset === previousPreset && cameraFocusTransition === previousTransition) return;
+    previousCameraFocusPresetRef.current = cameraFocusPreset;
+    previousCameraFocusTransitionRef.current = cameraFocusTransition;
+    const nextPreset = cameraFocusPreset ?? (previousPreset ? 'overview' : null);
+    if (!nextPreset) return;
+    cameraFocusRequestVersionRef.current += 1;
+    const request: ControlledCameraFocusRequest = {
+      version: cameraFocusRequestVersionRef.current,
+      preset: nextPreset,
+      durationScale: cameraFocusPreset
+        ? cameraFocusTransition === 'quick' ? 0.48 : 0.82
+        : 0.72,
+    };
+    controlledCameraFocusRequestRef.current = request;
+    applyControlledCameraFocusRef.current(request);
+  }, [cameraFocusPreset, cameraFocusTransition]);
 
   useEffect(() => {
     tokenIndexRef.current = tokenIndex;
@@ -2889,9 +2797,10 @@ export default function Island5ThreePilot({
 
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 160);
     const overview = getIsland5CameraPreset('overview');
-    camera.position.set(...overview.position);
-    camera.lookAt(...overview.target);
-    setActivePreset('overview');
+    const restoredCameraPose = cameraPoseSnapshotRef.current;
+    camera.position.set(...(restoredCameraPose?.position ?? overview.position));
+    camera.lookAt(...(restoredCameraPose?.target ?? overview.target));
+    if (!restoredCameraPose) setActivePreset('overview');
 
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -2903,7 +2812,7 @@ export default function Island5ThreePilot({
     renderer.shadowMap.needsUpdate = qualityProfile.shadows;
 
     const controls = new OrbitControls(camera, canvas);
-    controls.target.set(...overview.target);
+    controls.target.set(...(restoredCameraPose?.target ?? overview.target));
     controls.enableDamping = !isReducedMotion;
     controls.dampingFactor = 0.075;
     controls.enablePan = false;
@@ -3013,7 +2922,7 @@ export default function Island5ThreePilot({
 
     const clickableLandmarks: THREE.Object3D[] = [];
     for (const landmark of ISLAND_5_LANDMARKS) {
-      const resolvedBuildLevel = landmarkBuildLevels?.[landmark.id] ?? buildLevel;
+      const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevel;
       const landmarkRoot = buildLandmark(landmark, resolvedBuildLevel, qualityProfile.id, materials);
       scene.add(landmarkRoot);
       clickableLandmarks.push(landmarkRoot);
@@ -3096,7 +3005,7 @@ export default function Island5ThreePilot({
       }
     };
 
-    const applyPreset = (id: Island5CameraPresetId) => {
+    const applyPreset = (id: Island5CameraPresetId, durationScale = 1) => {
       const preset = getIsland5CameraPreset(id);
       setActivePreset(id);
       if (isReducedMotion) {
@@ -3113,7 +3022,7 @@ export default function Island5ThreePilot({
       controlPosition.y += Math.min(5.5, Math.max(1.25, fromPosition.distanceTo(toPosition) * 0.12));
       transition = {
         startedAt: performance.now(),
-        durationMs: preset.durationMs,
+        durationMs: Math.max(220, preset.durationMs * durationScale),
         fromPosition,
         fromTarget: controls.target.clone(),
         controlPosition,
@@ -3122,6 +3031,15 @@ export default function Island5ThreePilot({
       };
     };
     applyPresetRef.current = applyPreset;
+    const applyControlledCameraFocus = (request: ControlledCameraFocusRequest) => {
+      if (request.version <= appliedControlledCameraFocusVersionRef.current) return;
+      appliedControlledCameraFocusVersionRef.current = request.version;
+      applyPreset(request.preset, request.durationScale);
+    };
+    applyControlledCameraFocusRef.current = applyControlledCameraFocus;
+    if (controlledCameraFocusRequestRef.current) {
+      applyControlledCameraFocus(controlledCameraFocusRequestRef.current);
+    }
 
     const stopTour = (returnToOverview = true) => {
       if (!activeTour) return;
@@ -3564,6 +3482,10 @@ export default function Island5ThreePilot({
       canvas.removeEventListener('pointerup', handlePointerUp);
       controls.removeEventListener('start', cancelTransition);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      cameraPoseSnapshotRef.current = {
+        position: [camera.position.x, camera.position.y, camera.position.z],
+        target: [controls.target.x, controls.target.y, controls.target.z],
+      };
       controls.dispose();
       timer.dispose();
       disposeScene(scene);
@@ -3571,11 +3493,12 @@ export default function Island5ThreePilot({
       tileMaterials.forEach((material) => material.dispose());
       renderer.dispose();
       applyPresetRef.current = () => undefined;
+      applyControlledCameraFocusRef.current = () => undefined;
       startTourRef.current = () => undefined;
       stopTourRef.current = () => undefined;
       startProfilerRef.current = () => undefined;
     };
-  }, [buildLevel, deviceSignals, isReducedMotion, landmarkBuildLevels, qualityProfile]);
+  }, [buildLevel, deviceSignals, isReducedMotion, landmarkBuildLevelsKey, qualityProfile]);
 
   return (
     <section

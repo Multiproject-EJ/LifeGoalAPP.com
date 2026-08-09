@@ -582,7 +582,7 @@ import {
 import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWinCelebrationModal';
 import DemoWaitlistModal from './DemoWaitlistModal';
 import '../../../../styles/demo-waitlist-modal.css';
-import type { Island3DQualitySelection } from '../dev/island5ThreePilotContract';
+import type { Island3DQualitySelection, Island5CameraPresetId } from '../dev/island5ThreePilotContract';
 
 const Island5ThreeScene = lazy(() => import('../dev/Island5ThreePilot'));
 
@@ -614,6 +614,12 @@ function devJumpDigitsToIslandNumber(digits: DevIslandJumpDigits): number {
 
 function normalizeIsland5ThreeBuildLevel(value: number | undefined): 0 | 1 | 2 | 3 {
   return Math.min(3, Math.max(0, Math.floor(value ?? 0))) as 0 | 1 | 2 | 3;
+}
+
+function resolveIsland5BuildCameraPreset(stopId: string | undefined): Island5CameraPresetId | null {
+  if (stopId === 'mystery') return 'event';
+  if (stopId === 'hatchery' || stopId === 'habit' || stopId === 'wisdom' || stopId === 'boss') return stopId;
+  return null;
 }
 const DEBUG_TIMED_EVENT_OVERRIDE_KEY = 'islandRunDebugTimedEventOverride';
 const DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY = 'islandRunDebugTimedEventOverrideNonce';
@@ -649,6 +655,7 @@ const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
 const BUILD_HOLD_INITIAL_DELAY_MS = 400;
+const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 2_400;
 // Duration of the traffic-light coin spin before the reward is revealed. Must match
 // the `.island-coin--flipping` keyframe duration in LevelWorlds.css.
 const TRAFFIC_LIGHT_COIN_FLIP_DURATION_MS = 2600;
@@ -2407,6 +2414,11 @@ export function IslandRunBoardPrototype({
   const [hasVisitedWebTreat, setHasVisitedWebTreat] = useState(() => hasVisitedLandingPageTreat());
   const [showMarketPanel, setShowMarketPanel] = useState(false);
   const [showBuildPanel, setShowBuildPanel] = useState(false);
+  const [buildCameraFocusRequest, setBuildCameraFocusRequest] = useState<{
+    preset: Island5CameraPresetId;
+    transition: 'standard' | 'quick';
+  } | null>(null);
+  const previousBuildCameraStopIdRef = useRef<string | null>(null);
   const [buildLevelCompletion, setBuildLevelCompletion] = useState<BuildLevelCompletionPresentation | null>(null);
   const [buildDiscountExpiresAtMs, setBuildDiscountExpiresAtMs] = useState<number | null>(null);
   const [showRewardDetailsModal, setShowRewardDetailsModal] = useState(false);
@@ -2486,6 +2498,14 @@ export function IslandRunBoardPrototype({
       });
     }
   }, [client, firstSessionTutorialState, session]);
+
+  useEffect(() => {
+    if (!buildLevelCompletion) return undefined;
+    const timeoutId = window.setTimeout(() => {
+      setBuildLevelCompletion(null);
+    }, BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [buildLevelCompletion]);
 
   // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
   const [diceMultiplier, setDiceMultiplier] = useState(1);
@@ -6121,6 +6141,35 @@ export function IslandRunBoardPrototype({
     islandArtManifest,
     discountRate: activeBuildDiscountRate,
   }), [__storeState.essence, __storeState.stopBuildStateByIndex, activeBuildDiscountRate, islandArtManifest, islandStopPlan]);
+
+  const activeBuildCameraStopId = showBuildPanel
+    ? buildModalV2ViewModel.activeLandmark?.stopId ?? null
+    : null;
+  useEffect(() => {
+    if (!showBuildPanel || !activeBuildCameraStopId) {
+      if (previousBuildCameraStopIdRef.current !== null) {
+        previousBuildCameraStopIdRef.current = null;
+        setBuildCameraFocusRequest(null);
+        setFocusedStopId(null);
+        setCameraMode('overview_manual');
+        window.requestAnimationFrame(() => boardCameraRef.current?.goOverview());
+      }
+      return;
+    }
+
+    const preset = resolveIsland5BuildCameraPreset(activeBuildCameraStopId);
+    if (!preset) return;
+    const previousStopId = previousBuildCameraStopIdRef.current;
+    if (previousStopId === activeBuildCameraStopId) return;
+
+    previousBuildCameraStopIdRef.current = activeBuildCameraStopId;
+    setBuildCameraFocusRequest({
+      preset,
+      transition: previousStopId === null ? 'standard' : 'quick',
+    });
+    setFocusedStopId(activeBuildCameraStopId);
+    setCameraMode('stop_focus');
+  }, [activeBuildCameraStopId, showBuildPanel]);
 
   // Footer 🔨 Build attention dot: lights up when at least one not-fully-built
   // landmark has a next build step the player can pay for right now with their
@@ -11682,7 +11731,6 @@ export function IslandRunBoardPrototype({
       ticketPromptStopId ||
       lockedStopInfoStopId ||
       showBuildPanel ||
-      buildLevelCompletion ||
       showClaimModal ||
       showEggReadyBanner ||
       !hasDismissedEntryAudioModal ||
@@ -11726,7 +11774,6 @@ export function IslandRunBoardPrototype({
       ticketPromptStopId ||
       lockedStopInfoStopId ||
       showBuildPanel ||
-      buildLevelCompletion ||
       showClaimModal ||
       showEggReadyBanner ||
       !hasDismissedEntryAudioModal ||
@@ -13247,6 +13294,8 @@ export function IslandRunBoardPrototype({
                 isRolling={isRolling}
                 landingTileType={landmarkDoorTileMap[tokenIndex]?.tileType}
                 movementSpeedFactor={storyFastModeState.movementSpeedFactor}
+                cameraFocusPreset={buildCameraFocusRequest?.preset ?? null}
+                cameraFocusTransition={buildCameraFocusRequest?.transition ?? 'standard'}
                 onHopSequenceComplete={handleHopSequencePresentationComplete}
                 onTokenHop={(tileIndex) => {
                   playTokenMoveSound();
@@ -15439,30 +15488,25 @@ export function IslandRunBoardPrototype({
       )}
 
       {buildLevelCompletion && (
-        <div className="island-run-overlay-root island-stop-modal-backdrop bm2-level-complete" role="presentation">
+        <div className="island-run-overlay-root bm2-level-complete" role="presentation">
           <section
             className="bm2-level-complete__card"
-            role="dialog"
-            aria-modal="true"
+            role="status"
             aria-label={buildLevelCompletion.heading}
-            aria-live="assertive"
+            aria-live="polite"
           >
             <div className="bm2-level-complete__glow" aria-hidden="true" />
             <span className="bm2-level-complete__icon" aria-hidden="true">
               {buildLevelCompletion.isFullyBuilt ? '🏰' : '✨'}
             </span>
-            <p className="bm2-level-complete__eyebrow">
-              {buildLevelCompletion.isFullyBuilt ? 'Full restoration' : 'Build complete'}
-            </p>
-            <h2>{buildLevelCompletion.heading}</h2>
-            <p>{buildLevelCompletion.body}</p>
-            <button
-              type="button"
-              className="bm2-level-complete__continue"
-              onClick={() => setBuildLevelCompletion(null)}
-            >
-              {buildLevelCompletion.isFullyBuilt ? 'Back to island' : `Build Level ${buildLevelCompletion.level + 1}`}
-            </button>
+            <span className="bm2-level-complete__copy">
+              <span className="bm2-level-complete__eyebrow">
+                {buildLevelCompletion.isFullyBuilt ? 'Full restoration' : 'Construction milestone'}
+              </span>
+              <strong>{buildLevelCompletion.heading}</strong>
+              <span>{buildLevelCompletion.body}</span>
+            </span>
+            <span className="bm2-level-complete__timer" aria-hidden="true" />
           </section>
         </div>
       )}

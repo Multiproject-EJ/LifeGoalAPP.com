@@ -108,4 +108,21 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       assert(!fallback.imageSrc && fallback.imageIsPlaceholder, 'Missing manifest should use placeholder fallback');
     },
   },
+  {
+    name: 'live-board Build presentation stays compact and level celebrations never block construction',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const modalSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/BuildModalV2.tsx', 'utf8');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const cssSource = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
+
+      assert(modalSource.includes('role="region"') && !modalSource.includes('aria-modal="true"'), 'Build should be a non-modal live-board construction region');
+      assert(!modalSource.includes('<img') && !modalSource.includes('<canvas'), 'Build overlay should leave all landmark rendering to the real board');
+      assert(boardSource.includes('BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 2_400'), 'level celebration should have a short bounded dwell');
+      assert(boardSource.includes('role="status"') && !boardSource.includes('bm2-level-complete__continue'), 'level celebration should announce itself without a blocking continue button');
+      assert(cssSource.includes('.bm2-build-mode') && cssSource.includes('pointer-events: none;'), 'transparent Build space should not become an invisible full-screen input blocker');
+      assert(cssSource.includes('.bm2-level-complete__timer'), 'auto-dismiss celebration should show its remaining dwell visually');
+    },
+  },
 ];

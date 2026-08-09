@@ -355,18 +355,20 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'reuses the exact Island 5 landmark models in the canonical Build modal without adding writes',
+    name: 'uses the live Island 5 board as the Build visual without creating a second renderer',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       const modalSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/BuildModalV2.tsx', 'utf8');
-      assert(pilotSource.includes('export function Island5LandmarkBuildPreview'), 'pilot should export a dedicated read-only landmark preview');
-      assert(pilotSource.includes("mystery: 'event'"), 'Build modal mystery stop should resolve to Concord Arena');
-      assert(pilotSource.includes('buildLandmark(previewDefinition, buildLevel, quality.id, materials)'), 'modal must reuse the exact authored landmark factory and requested level');
-      assert(modalSource.includes("lazy(async () =>"), 'Build modal should preserve lazy loading for the Three.js landmark chunk');
-      assert(modalSource.includes('props.islandNumber === 5'), '3D replacement should be scoped to Island 5 until other islands have authored models');
-      assert(modalSource.includes('stopId={props.stopId}') && modalSource.includes('buildLevel={props.buildLevel}'), 'modal should render its canonical active landmark and target level');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(!pilotSource.includes('Island5LandmarkBuildPreview'), 'Build mode must not create a duplicate Island 5 WebGL renderer');
+      assert(!modalSource.includes('BuildModalV2ArtworkImage'), 'Build overlay must not cover the real board with standalone landmark artwork');
+      assert(modalSource.includes('bm2-build-mode') && modalSource.includes('bm2-dock'), 'Build mode should be a transparent live-board overlay with a compact dock');
+      assert(boardSource.includes("if (stopId === 'mystery') return 'event'"), 'Build camera should resolve Mystery to the authored Concord Arena preset');
+      assert(boardSource.includes('cameraFocusPreset={buildCameraFocusRequest?.preset ?? null}'), 'the live 3D board must receive the active Build landmark focus');
+      assert(boardSource.includes("transition: previousStopId === null ? 'standard' : 'quick'"), 'landmark-to-landmark Build handoff should use the quick camera path');
+      assert(pilotSource.includes("cameraFocusTransition === 'quick' ? 0.48 : 0.82"), 'the actual 3D camera should shorten Build handoff timing without changing its preset geometry');
       assert(modalSource.includes('onBuildActivePart={onBuildActivePart}') && modalSource.includes('onBuildActivePart(activeStopIndex)'), 'the existing canonical build callback must remain the action owner');
       assert(!/persistIslandRunRuntimeStatePatch|commitIslandRunState/.test(modalSource), 'presentational modal must not add a gameplay persistence path');
     },
