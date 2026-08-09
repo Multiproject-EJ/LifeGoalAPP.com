@@ -1030,3 +1030,39 @@ that it can be reviewed and merged without carrying unrelated work.
 - Capacitor iOS sync: PASS. The Island 5 chunk SHA-256 is identical in `dist`
   and `ios/App/App/public`.
 - Xcode iOS Simulator Debug build with code signing disabled: `BUILD SUCCEEDED`.
+
+## M19 — physical iPhone build and launch gate
+
+### Mission and gate
+
+Prove that the clean-main Island 5 integration branch can be rebuilt, signed,
+installed and launched through the Capacitor iOS shell on Eivind's paired
+phone. Keep physical-device performance certification separate from desktop
+and Simulator evidence.
+
+### Build and signing evidence — 2026-08-09
+
+- Device discovery: paired and available `Eivind sin iPhone`, iPhone 16 Pro
+  (`iPhone17,1`), with Xcode destination `00008140-001414591062201C`.
+- The production web bundle was rebuilt and synchronized into Capacitor. The
+  generated `dist/index.html` and `ios/App/App/public/index.html` share SHA-256
+  `ebf2b23e07260a33f824e50a0318d1bf34afe7b21bebe1c2192b95e386922f7e`.
+- An explicit generic iPhoneOS Debug build completed successfully from commit
+  `260dbe19` using Capacitor 8.4.1 and the installed native plugins.
+- The output `App.app` contains an embedded provisioning profile, passes strict
+  `codesign` verification and resolves to bundle identifier
+  `com.lifegoalapp.habitgame`.
+
+### Installation and launch evidence
+
+- CoreDevice installed the signed app successfully and reported bundle ID
+  `com.lifegoalapp.habitgame` at its native application-container URL.
+- The first launch correctly required Eivind to trust the local development
+  profile. After trust was granted, `devicectl` launched the application
+  successfully through SpringBoard.
+- A post-launch physical-device process check found the arm64 executable
+  running from the installed `App.app` container. M19 is complete for native
+  build, signing, installation and launch.
+- Visual gameplay acceptance and a 30-second High-quality performance trace
+  remain user-observed device gates; successful launch alone does not certify
+  Island 5 composition or sustained phone performance.
