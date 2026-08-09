@@ -18,6 +18,8 @@ export interface Island3DQualityProfile {
   butterflyGroupCount: number;
   waterSparkleCount: number;
   shorelineDetail: number;
+  coastalStrataDetail: number;
+  shoreBreakLayerCount: number;
   oceanGridSegments: number;
   oceanWaveBandCount: number;
   oceanUpdateFps: number;
@@ -144,6 +146,8 @@ export const ISLAND_3D_QUALITY_PROFILES: Record<Island3DQuality, Island3DQuality
     butterflyGroupCount: 0,
     waterSparkleCount: 36,
     shorelineDetail: 24,
+    coastalStrataDetail: 24,
+    shoreBreakLayerCount: 1,
     oceanGridSegments: 12,
     oceanWaveBandCount: 2,
     oceanUpdateFps: 20,
@@ -163,6 +167,8 @@ export const ISLAND_3D_QUALITY_PROFILES: Record<Island3DQuality, Island3DQuality
     butterflyGroupCount: 1,
     waterSparkleCount: 92,
     shorelineDetail: 48,
+    coastalStrataDetail: 56,
+    shoreBreakLayerCount: 2,
     oceanGridSegments: 22,
     oceanWaveBandCount: 4,
     oceanUpdateFps: 30,
@@ -182,6 +188,8 @@ export const ISLAND_3D_QUALITY_PROFILES: Record<Island3DQuality, Island3DQuality
     butterflyGroupCount: 2,
     waterSparkleCount: 180,
     shorelineDetail: 72,
+    coastalStrataDetail: 96,
+    shoreBreakLayerCount: 3,
     oceanGridSegments: 34,
     oceanWaveBandCount: 6,
     oceanUpdateFps: 45,

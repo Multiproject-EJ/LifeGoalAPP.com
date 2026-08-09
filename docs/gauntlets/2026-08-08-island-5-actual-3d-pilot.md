@@ -1090,3 +1090,77 @@ keep the override outside canonical gameplay state.
 - The refreshed signed build installed successfully on `Eivind sin iPhone`.
   CoreDevice's automatic post-install launch tunnel timed out, so opening the
   already-installed app manually remains the final interaction for this build.
+- Eivind then confirmed that forced High runs smoothly in the iPhone Capacitor
+  app. The browser/PWA preview was somewhat less fluid; native iOS remains the
+  primary pilot gate while browser-tier tuning stays visible as follow-up work.
+
+## M21 — eroded shoreline and living surf
+
+### Mission and gate
+
+Replace the visibly simple cylindrical water edge with a readable stylized
+coast: irregular terrain silhouettes, layered reef-limestone strata, darker
+waterline undercuts, translucent shallows, persistent foam and waves that
+travel into the coast. Preserve the already-smooth High-quality iPhone result.
+
+### Non-negotiables
+
+- Board, tile, landmark, bridge, hit-target, camera and gameplay authority do
+  not move. All additions remain presentation-only under the existing living
+  ambience and terrain layers.
+- The coastline must read as the same ceremonial Crown of Tides island—not a
+  wild volcanic biome. Use pale reef limestone, mauve undercuts, aqua shallows
+  and restrained pearl foam.
+- Coastal rocks and breaker crests are batched/instanced. Do not add physics,
+  one React object per wave, per-frame React state, video water or a gameplay
+  collision system.
+- Reduced motion keeps a composed static coast and disables traveling breakers.
+
+### Quality and performance budgets
+
+- **Low:** 24-segment coastal strata, one breaker layer per coast, existing 20 Hz ocean
+  cadence, simplified eroded terrain segments.
+- **Medium:** 56-segment coastal strata, two breaker layers per coast, existing 30 Hz
+  cadence and fuller shallow-water shelves.
+- **High:** 96-segment coastal strata, three breaker layers per coast, existing 45 Hz
+  cadence and the complete layered cliff silhouette.
+- The pass may add at most four material-batched coastal draw-call families.
+  High must retain the current 50 FPS / 29 ms P95 certification target.
+
+### Acceptance evidence and stopping rules
+
+- High overview and at least one low shoreline camera frame show a materially
+  irregular coast, readable rock strata, water-depth transition and moving
+  breakers without obscuring tiles, bridges or landmarks.
+- Low and Medium preserve the same shoreline composition with reduced density;
+  reduced-motion remains stable.
+- Focused Island 5 contracts lock quality budgets, batching, eroded geometry,
+  moving coastal breakers and absence of gameplay writes. TypeScript,
+  production build, architecture guard and native sync must pass.
+- If High becomes visibly jittery on the iPhone, reduce rock density or breaker
+  cadence before reducing the approved building/garden quality.
+
+### Implementation evidence — 2026-08-09
+
+- Every terrain plate now uses deterministic multi-frequency erosion rather
+  than a perfect cylinder. One instanced coastal family adds two solid rock
+  terraces on Low and three on Medium/High, with overlapping depth so close
+  landmark cameras cannot expose empty seams.
+- One batched shallow-water family, one persistent pearl-foam family and one
+  dynamically instanced breaker family cover the main coast and all four
+  satellite coasts. High animates three breaker fronts per coast, Medium two
+  and Low one inside the existing reduced-motion-gated ambience loop.
+- High, Medium and Low were visually inspected at a 390 x 844 phone viewport.
+  High overview and Concord Arena close-up evidence is stored under
+  `outputs/island5-3d-gauntlet/actual-3d-pilot/m21-eroded-shoreline/`.
+- TypeScript and the production Vite build pass. The finished lazy Island 5
+  chunk is 672.10 kB raw / 176.74 kB gzip. Architecture guard, camera-template
+  validator and island-visual-production validator all pass.
+- All 15 Island 5 contracts pass inside the full suite. The complete Island Run
+  corpus remains at 1,684 pass / 3 unchanged Island 1 failures; no Island 5
+  contract fails.
+- The previously certified iPhone High build was smooth before this coastal
+  slice. The refreshed M21 bundle then synchronized into Capacitor, built and
+  signed successfully, installed on Eivind's paired iPhone and launched through
+  CoreDevice. User-observed sustained surf smoothness remains the final M21
+  certification gate.

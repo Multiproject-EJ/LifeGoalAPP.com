@@ -142,6 +142,38 @@ function createCylinder(
   return new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, radiusBottom, height, segments), material);
 }
 
+function createErodedCoastalCylinderGeometry(
+  radiusTop: number,
+  radiusBottom: number,
+  height: number,
+  segments: number,
+  seed: number,
+  erosionStrength: number,
+) {
+  const geometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, segments, 2, false);
+  const positions = geometry.getAttribute('position') as THREE.BufferAttribute;
+  const seedPhase = (seed % 4096) * 0.0017;
+  for (let index = 0; index < positions.count; index += 1) {
+    const x = positions.getX(index);
+    const y = positions.getY(index);
+    const z = positions.getZ(index);
+    const radius = Math.hypot(x, z);
+    if (radius < 0.0001) continue;
+    const angle = Math.atan2(z, x);
+    const heightRatio = THREE.MathUtils.clamp((y + height / 2) / Math.max(0.001, height), 0, 1);
+    const broadErosion = Math.sin(angle * 5 + seedPhase) * 0.62;
+    const fineErosion = Math.sin(angle * 11 - seedPhase * 1.7) * 0.26;
+    const shelfBreak = Math.cos(angle * 17 + seedPhase * 0.7) * 0.12;
+    const wallBias = 1 + (1 - heightRatio) * 0.42;
+    const scale = 1 + (broadErosion + fineErosion + shelfBreak) * erosionStrength * wallBias;
+    positions.setX(index, x * scale);
+    positions.setZ(index, z * scale);
+  }
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
 function createTerrainPlate(options: {
   radius: number;
   depth: number;
@@ -149,26 +181,37 @@ function createTerrainPlate(options: {
   topMaterial: THREE.Material;
   reefMaterial: THREE.Material;
   position: readonly [number, number, number];
+  seed?: number;
 }): THREE.Group {
   const group = new THREE.Group();
   group.position.set(...options.position);
 
-  const reef = createCylinder(
-    options.radius * 1.08,
-    options.radius * 1.18,
-    options.depth * 0.78,
-    options.segments,
+  const terrainSeed = options.seed ?? 0x15c0a57;
+
+  const reef = new THREE.Mesh(
+    createErodedCoastalCylinderGeometry(
+      options.radius * 1.08,
+      options.radius * 1.18,
+      options.depth * 0.78,
+      options.segments,
+      terrainSeed ^ 0x5a17,
+      0.042,
+    ),
     options.reefMaterial,
   );
   reef.position.y = -options.depth * 0.58;
   group.add(reef);
 
-  const land = createCylinder(
-    options.radius,
-    options.radius * 1.04,
-    options.depth,
-    options.segments,
-    options.topMaterial,
+  const land = new THREE.Mesh(
+    createErodedCoastalCylinderGeometry(
+      options.radius,
+      options.radius * 1.04,
+      options.depth,
+      options.segments,
+      terrainSeed,
+      0.024,
+    ),
+    [options.reefMaterial, options.topMaterial, options.reefMaterial],
   );
   land.position.y = -options.depth * 0.18;
   group.add(land);
@@ -1476,7 +1519,7 @@ function createCitadelPatternTexture(size: number, pattern: CitadelTexturePatter
 }
 
 interface PilotMaterials extends CrownCitadelMaterials {
-  reef: THREE.MeshStandardMaterial;
+  reef: THREE.MeshBasicMaterial;
   grass: THREE.MeshStandardMaterial;
   bridge: THREE.MeshStandardMaterial;
   coral: THREE.MeshStandardMaterial;
@@ -1494,7 +1537,7 @@ function createPilotMaterials(quality: Island3DQuality): PilotMaterials {
     limestone: new THREE.MeshStandardMaterial({ color: 0xe8dcbf, map: stoneMap, roughness: 0.72, metalness: 0.04 }),
     limestoneShade: new THREE.MeshStandardMaterial({ color: 0xb7a98e, map: stoneMap, roughness: 0.8, metalness: 0.02 }),
     limestoneBright: new THREE.MeshStandardMaterial({ color: 0xfff1cf, map: stoneMap, roughness: 0.6, metalness: 0.04 }),
-    reef: new THREE.MeshStandardMaterial({ color: 0x815b87, roughness: 0.82, metalness: 0.02 }),
+    reef: new THREE.MeshBasicMaterial({ color: 0xb9a6b3 }),
     grass: new THREE.MeshStandardMaterial({ color: 0x4e8f72, roughness: 0.88 }),
     bridge: new THREE.MeshStandardMaterial({ color: 0xd6c69e, roughness: 0.78 }),
     purpleRoof: new THREE.MeshStandardMaterial({ color: 0x6340b4, map: roofMap, roughness: 0.42, metalness: 0.12 }),
@@ -1828,58 +1871,204 @@ function addIsland5FormalParterres(
   return { fountainWaterMaterial };
 }
 
+interface Island5CoastDefinition {
+  center: readonly [number, number];
+  terrainRadius: number;
+  waterlineRadius: number;
+  seed: number;
+}
+
+function getIsland5CoastDefinitions(): Island5CoastDefinition[] {
+  return [
+    { center: [0, 0], terrainRadius: 6.25, waterlineRadius: 6.68, seed: 0x15c05a },
+    ...ISLAND_5_LANDMARKS
+      .filter((landmark) => landmark.id !== 'boss')
+      .map((landmark, index) => ({
+        center: [landmark.position[0], landmark.position[2]] as const,
+        terrainRadius: 2.58,
+        waterlineRadius: 2.8,
+        seed: 0x51a7 + index * 0x913,
+      })),
+  ];
+}
+
+function createIrregularCoastRibbonGeometry(widthRatio: number, segments: number, seed: number) {
+  const geometry = new THREE.BufferGeometry();
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  const phase = (seed % 2048) * 0.0031;
+  for (let index = 0; index <= segments; index += 1) {
+    const progress = index / segments;
+    const angle = progress * Math.PI * 2;
+    const irregularity = Math.sin(angle * 5 + phase) * 0.012
+      + Math.sin(angle * 11 - phase * 1.3) * 0.006;
+    const outerRadius = 1 + irregularity;
+    const localWidth = widthRatio * (0.88 + Math.sin(angle * 7 + phase) * 0.12);
+    const innerRadius = outerRadius - localWidth;
+    positions.push(
+      Math.cos(angle) * outerRadius, 0, Math.sin(angle) * outerRadius,
+      Math.cos(angle) * innerRadius, 0, Math.sin(angle) * innerRadius,
+    );
+    uvs.push(progress, 1, progress, 0);
+    if (index < segments) {
+      const outer = index * 2;
+      const inner = outer + 1;
+      const nextOuter = outer + 2;
+      const nextInner = outer + 3;
+      indices.push(outer, nextOuter, inner, inner, nextOuter, nextInner);
+    }
+  }
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
 function addIsland5Shoreline(root: THREE.Group, profile: Island3DQualityProfile) {
   const shallowMaterial = new THREE.MeshBasicMaterial({
-    color: 0x77e3df,
+    color: 0x66e0dc,
     transparent: true,
-    opacity: profile.id === 'low' ? 0.22 : 0.3,
+    opacity: profile.id === 'low' ? 0.22 : 0.32,
     depthWrite: false,
+    side: THREE.DoubleSide,
   });
   const foamMaterial = new THREE.MeshBasicMaterial({
     color: 0xeafffb,
     transparent: true,
-    opacity: 0.58,
+    opacity: 0.68,
     depthWrite: false,
+    side: THREE.DoubleSide,
   });
   const detail = Math.max(24, profile.shorelineDetail);
-  const shallowGeometry = new THREE.TorusGeometry(1, 0.027, 5, detail);
-  const foamGeometry = new THREE.TorusGeometry(1, 0.009, 4, detail);
-  const createRing = (radius: number, y: number, geometry: THREE.BufferGeometry, material: THREE.Material) => {
-    const ring = new THREE.Mesh(geometry, material);
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = y;
-    ring.scale.setScalar(radius);
-    ring.renderOrder = -2;
-    return ring;
-  };
-  root.add(
-    createRing(6.48, -0.48, shallowGeometry, shallowMaterial),
-    createRing(6.4, -0.39, foamGeometry, foamMaterial),
-  );
-
-  const satelliteShallow = new THREE.InstancedMesh(shallowGeometry, shallowMaterial, 4);
-  const satelliteFoam = new THREE.InstancedMesh(foamGeometry, foamMaterial, 4);
-  const dummy = new THREE.Object3D();
-  ISLAND_5_LANDMARKS.filter((landmark) => landmark.id !== 'boss').forEach((landmark, index) => {
-    dummy.position.set(landmark.position[0], -0.44, landmark.position[2]);
-    dummy.rotation.set(Math.PI / 2, 0, 0);
-    dummy.scale.setScalar(2.72);
-    dummy.updateMatrix();
-    satelliteShallow.setMatrixAt(index, dummy.matrix);
-    dummy.position.y = -0.34;
-    dummy.scale.setScalar(2.67);
-    dummy.updateMatrix();
-    satelliteFoam.setMatrixAt(index, dummy.matrix);
+  const coastDefinitions = getIsland5CoastDefinitions();
+  const shallowGeometry = createIrregularCoastRibbonGeometry(0.075, detail, 0x5a1105);
+  const foamGeometry = createIrregularCoastRibbonGeometry(0.028, detail, 0xf0a5);
+  const breakerGeometry = createIrregularCoastRibbonGeometry(0.016, detail, 0xb4ea6);
+  const shallows = new THREE.InstancedMesh(shallowGeometry, shallowMaterial, coastDefinitions.length);
+  shallows.name = 'ISLAND_5_COASTAL_SHALLOWS';
+  const foamEdge = new THREE.InstancedMesh(foamGeometry, foamMaterial, coastDefinitions.length);
+  foamEdge.name = 'ISLAND_5_PERSISTENT_FOAM_EDGE';
+  const breakerMaterial = new THREE.MeshBasicMaterial({
+    color: 0xf5ffff,
+    transparent: true,
+    opacity: profile.id === 'low' ? 0.32 : 0.48,
+    depthWrite: false,
+    side: THREE.DoubleSide,
   });
-  root.add(satelliteShallow, satelliteFoam);
-  return { foamMaterial, shallowMaterial };
+  const breakerCount = coastDefinitions.length * profile.shoreBreakLayerCount;
+  const shoreBreakers = new THREE.InstancedMesh(breakerGeometry, breakerMaterial, breakerCount);
+  shoreBreakers.name = 'ISLAND_5_INSTANCED_SHORE_BREAKERS';
+  shoreBreakers.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  shoreBreakers.frustumCulled = false;
+  const dummy = new THREE.Object3D();
+  coastDefinitions.forEach((coast, index) => {
+    dummy.position.set(coast.center[0], -0.535, coast.center[1]);
+    dummy.rotation.set(0, 0, 0);
+    dummy.scale.setScalar(coast.waterlineRadius + 0.42);
+    dummy.updateMatrix();
+    shallows.setMatrixAt(index, dummy.matrix);
+    dummy.position.y = -0.395;
+    dummy.scale.setScalar(coast.waterlineRadius + 0.08);
+    dummy.updateMatrix();
+    foamEdge.setMatrixAt(index, dummy.matrix);
+  });
+  shallows.renderOrder = -3;
+  foamEdge.renderOrder = -1;
+  shoreBreakers.renderOrder = -2;
+  root.add(shallows, foamEdge, shoreBreakers);
+
+  const animate = (elapsed: number) => {
+    let instanceIndex = 0;
+    coastDefinitions.forEach((coast, coastIndex) => {
+      for (let layer = 0; layer < profile.shoreBreakLayerCount; layer += 1) {
+        const phase = (elapsed * (0.16 + coastIndex * 0.008) + layer / profile.shoreBreakLayerCount + coast.seed * 0.00001) % 1;
+        const radius = coast.waterlineRadius + 0.1 + phase * (coastIndex === 0 ? 0.5 : 0.28);
+        dummy.position.set(
+          coast.center[0],
+          -0.455 + Math.sin(elapsed * 0.85 + coastIndex + layer) * 0.008,
+          coast.center[1],
+        );
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.setScalar(radius);
+        dummy.updateMatrix();
+        shoreBreakers.setMatrixAt(instanceIndex, dummy.matrix);
+        instanceIndex += 1;
+      }
+    });
+    shoreBreakers.instanceMatrix.needsUpdate = true;
+    breakerMaterial.opacity = (profile.id === 'low' ? 0.26 : 0.38) + Math.sin(elapsed * 0.72) * 0.09;
+    foamMaterial.opacity = 0.58 + Math.sin(elapsed * 0.72) * 0.1;
+    shallowMaterial.opacity = (profile.id === 'low' ? 0.2 : 0.29) + Math.sin(elapsed * 0.42) * 0.035;
+  };
+
+  animate(0);
+  return { foamMaterial, shallowMaterial, breakerMaterial, animate };
+}
+
+function addIsland5CoastalRockStrata(root: THREE.Group, profile: Island3DQualityProfile) {
+  const coastDefinitions = getIsland5CoastDefinitions();
+  const geometry = createErodedCoastalCylinderGeometry(
+    1,
+    1.015,
+    1,
+    Math.max(24, profile.coastalStrataDetail),
+    0xc0457a,
+    profile.id === 'low' ? 0.016 : 0.024,
+  );
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xb9a6b4,
+    side: THREE.DoubleSide,
+  });
+  const layersPerCoast = profile.id === 'low' ? 2 : 3;
+  const strata = new THREE.InstancedMesh(geometry, material, coastDefinitions.length * layersPerCoast);
+  strata.name = 'ISLAND_5_INSTANCED_COASTAL_ROCK_STRATA';
+  const dummy = new THREE.Object3D();
+  const layerColors = [
+    new THREE.Color(0xded4c4),
+    new THREE.Color(0xb9a6b4),
+    new THREE.Color(0x97889c),
+  ];
+  let instanceIndex = 0;
+  coastDefinitions.forEach((coast, coastIndex) => {
+    const layers = profile.id === 'low'
+      ? [
+          { radius: coast.terrainRadius * 1.035, y: -0.09, thickness: 0.24, colorIndex: 0 },
+          { radius: coast.waterlineRadius - 0.02, y: -0.37, thickness: 0.36, colorIndex: 2 },
+        ]
+      : [
+          { radius: coast.terrainRadius * 1.035, y: -0.055, thickness: 0.18, colorIndex: 0 },
+          { radius: coast.terrainRadius * 1.075, y: -0.21, thickness: 0.22, colorIndex: 1 },
+          { radius: coast.waterlineRadius - 0.01, y: -0.405, thickness: 0.26, colorIndex: 2 },
+        ];
+    layers.forEach((layer, layerIndex) => {
+      dummy.position.set(coast.center[0], layer.y, coast.center[1]);
+      dummy.rotation.set(0, (coast.seed % 1024) * 0.00012 + layerIndex * 0.025, 0);
+      dummy.scale.set(layer.radius, layer.thickness, layer.radius);
+      dummy.updateMatrix();
+      strata.setMatrixAt(instanceIndex, dummy.matrix);
+      strata.setColorAt(instanceIndex, layerColors[layer.colorIndex]);
+      instanceIndex += 1;
+    });
+    if (coastIndex === 0) strata.userData.mainCoastLayerCount = layers.length;
+  });
+  if (strata.instanceColor) strata.instanceColor.needsUpdate = true;
+  strata.castShadow = false;
+  strata.receiveShadow = true;
+  strata.renderOrder = -1;
+  root.add(strata);
+  return { strata, material };
 }
 
 function addIsland5ReefShelves(root: THREE.Group, profile: Island3DQualityProfile, materials: PilotMaterials) {
   const count = profile.ambientDetailCount;
   const geometry = new THREE.IcosahedronGeometry(0.32, profile.id === 'high' ? 1 : 0);
-  const material = materials.reefAccent.clone();
-  material.roughness = 0.7;
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x998792,
+    roughness: 0.92,
+    metalness: 0.01,
+  });
   const shelves = new THREE.InstancedMesh(geometry, material, count);
   const dummy = new THREE.Object3D();
   let seed = 0x51e1f00d;
@@ -2253,6 +2442,7 @@ function createIsland5LivingAmbience(
 
   const greenery = addIsland5Greenery(root, profile, materials);
   const parterres = addIsland5FormalParterres(root, profile, materials);
+  addIsland5CoastalRockStrata(root, profile);
   const shoreline = addIsland5Shoreline(root, profile);
   addIsland5ReefShelves(root, profile, materials);
   const waterSparkles = addIsland5WaterSparkles(root, profile);
@@ -2274,8 +2464,7 @@ function createIsland5LivingAmbience(
       waterSparkles.sparkles.rotation.y = elapsed * 0.018;
       waterSparkles.material.opacity = 0.48 + Math.sin(elapsed * 1.15) * 0.14;
       oceanMotion.animate(elapsed);
-      shoreline.foamMaterial.opacity = 0.48 + Math.sin(elapsed * 0.72) * 0.1;
-      shoreline.shallowMaterial.opacity = (profile.id === 'low' ? 0.2 : 0.27) + Math.sin(elapsed * 0.42) * 0.035;
+      shoreline.animate(elapsed);
       greenery.canopyMaterial.emissiveIntensity = 0.08 + Math.sin(elapsed * 0.54) * 0.025;
       greenery.lanternGlowMaterial.emissiveIntensity = 0.66 + Math.sin(elapsed * 1.6) * 0.12;
       parterres.fountainWaterMaterial.emissiveIntensity = 0.44 + Math.sin(elapsed * 1.25) * 0.1;
@@ -2723,10 +2912,11 @@ export default function Island5ThreePilot({
       topMaterial: materials.grass,
       reefMaterial: materials.reef,
       position: [0, 0, 0],
+      seed: 0x15c05a,
     });
     scene.add(island);
 
-    for (const landmark of ISLAND_5_LANDMARKS.filter((entry) => entry.id !== 'boss')) {
+    ISLAND_5_LANDMARKS.filter((entry) => entry.id !== 'boss').forEach((landmark, landmarkIndex) => {
       const satellite = createTerrainPlate({
         radius: 2.58,
         depth: 0.68,
@@ -2734,12 +2924,13 @@ export default function Island5ThreePilot({
         topMaterial: materials.grass,
         reefMaterial: materials.reef,
         position: landmark.position,
+        seed: 0x51a7 + landmarkIndex * 0x913,
       });
       scene.add(satellite);
       const bridgeStart: readonly [number, number, number] = [landmark.position[0] * 0.56, 0, landmark.position[2] * 0.56];
       const bridgeEnd: readonly [number, number, number] = [landmark.position[0] * 0.82, 0, landmark.position[2] * 0.82];
       scene.add(createBridge(bridgeStart, bridgeEnd, materials.bridge));
-    }
+    });
 
     const innerLagoon = new THREE.Mesh(new THREE.CircleGeometry(2.25, qualityProfile.terrainSegments), waterMaterial.clone());
     innerLagoon.rotation.x = -Math.PI / 2;

@@ -57,6 +57,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assertEqual(low.oceanGridSegments, 12, 'Low should keep a small deforming ocean grid');
       assertEqual(low.oceanWaveBandCount, 2, 'Low should keep only two batched wave bands');
       assertEqual(low.oceanUpdateFps, 20, 'Low ocean animation should be cadence-limited');
+      assertEqual(low.coastalStrataDetail, 24, 'Low should retain a readable but restrained rock edge');
+      assertEqual(low.shoreBreakLayerCount, 1, 'Low should keep one batched breaker layer per coast');
+      assertEqual(medium.coastalStrataDetail, 56, 'Medium should add a fuller layered cliff silhouette');
+      assertEqual(medium.shoreBreakLayerCount, 2, 'Medium should keep two breaker layers per coast');
+      assertEqual(high.coastalStrataDetail, 96, 'High should receive the complete coastal rock strata');
+      assertEqual(high.shoreBreakLayerCount, 3, 'High should receive three breaker layers per coast');
       assertEqual(low.distantShipCount, 0, 'Low should spend no geometry budget on distant ships');
       assertEqual(medium.distantShipCount, 2, 'Medium should retain a flagship and one escort');
       assertEqual(high.distantShipCount, 4, 'High should show a flagship, two escorts and a pirate brig');
@@ -69,6 +75,11 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       assert(pilotSource.includes('new THREE.PlaneGeometry(68, 68, qualityProfile.oceanGridSegments'), 'ocean must use the quality-scaled deforming grid');
       assert(pilotSource.includes("waveBands.name = 'ISLAND_5_OCEAN_WAVE_BANDS'"), 'traveling wave bands should remain one addressable instanced layer');
+      assert(pilotSource.includes('function createErodedCoastalCylinderGeometry'), 'terrain plates should use deterministic erosion instead of perfect cylinders');
+      assert(pilotSource.includes("strata.name = 'ISLAND_5_INSTANCED_COASTAL_ROCK_STRATA'"), 'layered coastal rocks should remain one instanced draw-call family');
+      assert(pilotSource.includes("shallows.name = 'ISLAND_5_COASTAL_SHALLOWS'"), 'coastal water should carry an independently art-directable shallow shelf');
+      assert(pilotSource.includes("shoreBreakers.name = 'ISLAND_5_INSTANCED_SHORE_BREAKERS'"), 'coast-aware breaker crests should remain one instanced animation family');
+      assert(pilotSource.includes('shoreline.animate(elapsed)'), 'coastal breakers should animate inside the existing reduced-motion-gated ambience loop');
       assert(pilotSource.includes('positions.needsUpdate = true'), 'ocean displacement must update the existing GPU buffer rather than recreate geometry');
       assert(pilotSource.includes('function createIsland5DistantFleet'), 'maritime life should remain an independently art-directable ambience system');
       assert(pilotSource.includes("armada.name = 'ISLAND_5_ROYAL_ARMADA'"), 'High and Medium need a separately addressable royal fleet');
