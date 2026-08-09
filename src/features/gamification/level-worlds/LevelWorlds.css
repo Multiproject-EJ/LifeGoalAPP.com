@@ -20399,6 +20399,45 @@
   background: linear-gradient(155deg, rgba(48, 39, 83, 0.96), rgba(16, 46, 69, 0.96));
 }
 
+.island-run-board__dev-three-quality {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.38rem 0.7rem;
+  min-width: 196px;
+  padding: 0.58rem;
+  border: 1px solid rgba(118, 211, 238, 0.55);
+  border-radius: 10px;
+  color: #eafaff;
+  background: linear-gradient(155deg, rgba(22, 62, 83, 0.96), rgba(33, 30, 72, 0.96));
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.island-run-board__dev-three-quality select {
+  min-height: 34px;
+  border: 1px solid rgba(166, 229, 247, 0.68);
+  border-radius: 8px;
+  padding: 0 0.5rem;
+  color: #f5fcff;
+  background: rgba(4, 20, 34, 0.86);
+  font: inherit;
+  text-transform: none;
+}
+
+.island-run-board__dev-three-quality small {
+  grid-column: 1 / -1;
+  color: rgba(218, 240, 250, 0.78);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.25;
+  text-align: center;
+  text-transform: none;
+}
+
 .island-run-board__dev-island-jump-heading {
   display: flex;
   align-items: center;

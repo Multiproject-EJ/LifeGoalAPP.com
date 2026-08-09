@@ -42,6 +42,7 @@ interface Island5ThreePilotProps {
   buildLevel: BuildLevel;
   landmarkBuildLevels?: Island5LandmarkBuildLevels;
   presentation?: 'workbench' | 'embedded';
+  qualityOverride?: Island3DQualitySelection;
   tokenIndex?: number;
   pendingHopSequence?: readonly number[] | null;
   movementSpeedFactor?: number;
@@ -2532,6 +2533,7 @@ export default function Island5ThreePilot({
   buildLevel,
   landmarkBuildLevels,
   presentation = 'workbench',
+  qualityOverride,
   tokenIndex = 0,
   pendingHopSequence = null,
   movementSpeedFactor = 1,
@@ -2564,9 +2566,10 @@ export default function Island5ThreePilot({
   const onLandmarkClickRef = useRef(onLandmarkClick);
   const onRendererUnavailableRef = useRef(onRendererUnavailable);
   const deviceSignals = useMemo(() => readDeviceSignals(), []);
+  const resolvedQualitySelection = qualityOverride ?? qualitySelection;
   const qualityProfile = useMemo(
-    () => resolveIsland3DQuality(qualitySelection, deviceSignals),
-    [deviceSignals, qualitySelection],
+    () => resolveIsland3DQuality(resolvedQualitySelection, deviceSignals),
+    [deviceSignals, resolvedQualitySelection],
   );
 
   useEffect(() => {

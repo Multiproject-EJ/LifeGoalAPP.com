@@ -1066,3 +1066,27 @@ and Simulator evidence.
 - Visual gameplay acceptance and a 30-second High-quality performance trace
   remain user-observed device gates; successful launch alone does not certify
   Island 5 composition or sustained phone performance.
+
+## M20 — live-shell phone quality override
+
+### Mission and gate
+
+Let development-device testing force Auto, Low, Medium or High quality inside
+the real Island Run shell. Keep production users on automatic adaptation and
+keep the override outside canonical gameplay state.
+
+### Implementation and device evidence — 2026-08-09
+
+- The Island Run developer menu now exposes a persistent `3D quality` selector
+  on Island 5. Its first-use development default is High so physical-device
+  smoothness can be judged against the full approved composition.
+- The live shell passes the selection to the embedded renderer only while dev
+  mode is enabled. Non-dev sessions still resolve `auto` from device signals.
+- The override is local presentation state only. It does not mutate, mirror or
+  persist any canonical Island Run gameplay field.
+- TypeScript, production Vite build, Capacitor iOS sync and the architecture
+  guard pass. All 15 focused Island 5 3D tests pass; the complete Island suite
+  remains at 1,684 pass / 3 unchanged Island 1 failures.
+- The refreshed signed build installed successfully on `Eivind sin iPhone`.
+  CoreDevice's automatic post-install launch tunnel timed out, so opening the
+  already-installed app manually remains the final interaction for this build.

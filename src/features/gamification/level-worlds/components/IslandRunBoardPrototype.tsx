@@ -582,6 +582,7 @@ import {
 import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWinCelebrationModal';
 import DemoWaitlistModal from './DemoWaitlistModal';
 import '../../../../styles/demo-waitlist-modal.css';
+import type { Island3DQualitySelection } from '../dev/island5ThreePilotContract';
 
 const Island5ThreeScene = lazy(() => import('../dev/Island5ThreePilot'));
 
@@ -617,6 +618,7 @@ function normalizeIsland5ThreeBuildLevel(value: number | undefined): 0 | 1 | 2 |
 const DEBUG_TIMED_EVENT_OVERRIDE_KEY = 'islandRunDebugTimedEventOverride';
 const DEBUG_TIMED_EVENT_OVERRIDE_NONCE_KEY = 'islandRunDebugTimedEventOverrideNonce';
 const DISCOVERY_FOG_DEV_STORAGE_KEY = 'islandRunDevDisableDiscoveryFog';
+const ISLAND_5_3D_DEV_QUALITY_KEY = 'islandRunDevIsland5ThreeQuality';
 // Only one board profile ships today. Historically this was query-param gated,
 // but every branch collapsed to the same result — so the helper was removed.
 const ACTIVE_BOARD_PROFILE = resolveIslandBoardProfile('spark36_ring');
@@ -1476,6 +1478,18 @@ function readDevDiscoveryFogDisabled(): boolean {
   }
 }
 
+function readDevIsland5ThreeQuality(): Island3DQualitySelection {
+  if (typeof window === 'undefined') return 'high';
+  try {
+    const stored = window.localStorage.getItem(ISLAND_5_3D_DEV_QUALITY_KEY);
+    return stored === 'auto' || stored === 'low' || stored === 'medium' || stored === 'high'
+      ? stored
+      : 'high';
+  } catch {
+    return 'high';
+  }
+}
+
 /**
  * Formats a long-form countdown (days / hours / minutes / seconds) for the
  * hatchery incubation timer. Shows the two most-significant units so the
@@ -1748,6 +1762,7 @@ export function IslandRunBoardPrototype({
   const [isIsland5ThreeEnabled, setIsIsland5ThreeEnabled] = useState(
     () => !isIslandVisualPreview || isIsland5ThreePreviewRequested,
   );
+  const [devIsland5ThreeQuality, setDevIsland5ThreeQuality] = useState<Island3DQualitySelection>(readDevIsland5ThreeQuality);
   const [devIslandJumpDigits, setDevIslandJumpDigits] = useState<DevIslandJumpDigits>([0, 0, 1]);
   const [isDevIslandJumpPending, setIsDevIslandJumpPending] = useState(false);
   const [isDiscoveryFogDisabled, setIsDiscoveryFogDisabled] = useState(readDevDiscoveryFogDisabled);
@@ -12800,6 +12815,29 @@ export function IslandRunBoardPrototype({
                   <span aria-hidden="true">🏝️</span>
                 </button>
               ) : null}
+              {isDevModeEnabled && islandArtPreviewNumber === 5 && isIsland5ThreeEnabled ? (
+                <label className="island-run-board__dev-three-quality">
+                  <span>3D quality</span>
+                  <select
+                    value={devIsland5ThreeQuality}
+                    onChange={(event) => {
+                      const nextQuality = event.target.value as Island3DQualitySelection;
+                      setDevIsland5ThreeQuality(nextQuality);
+                      try {
+                        window.localStorage.setItem(ISLAND_5_3D_DEV_QUALITY_KEY, nextQuality);
+                      } catch {
+                        // The presentation-only override still applies for this session.
+                      }
+                    }}
+                  >
+                    <option value="auto">Auto</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                  <small>Force High to judge phone smoothness.</small>
+                </label>
+              ) : null}
               {isDevModeEnabled ? (
                 <section className="island-run-board__dev-island-jump" role="group" aria-label="Jump to island developer control">
                   <div className="island-run-board__dev-island-jump-heading">
@@ -13200,6 +13238,7 @@ export function IslandRunBoardPrototype({
                 buildLevel={island5ThreePreviewLevel}
                 landmarkBuildLevels={isIslandVisualPreview ? undefined : island5ThreeBuildLevels}
                 presentation="embedded"
+                qualityOverride={isDevModeEnabled ? devIsland5ThreeQuality : undefined}
                 tokenIndex={tokenIndex}
                 pendingHopSequence={pendingHopSequence}
                 movementSpeedFactor={storyFastModeState.movementSpeedFactor}
