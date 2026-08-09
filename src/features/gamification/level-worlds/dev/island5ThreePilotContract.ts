@@ -131,7 +131,7 @@ export const ISLAND_3D_TOKEN_GROUND_OFFSET = 0.12;
 export const ISLAND_3D_TOKEN_HOP_ARC_HEIGHT = 0.72;
 export const ISLAND_3D_TOKEN_PRE_ROLL_HOLD_MS = 150;
 export const ISLAND_3D_TOKEN_FOLLOW_OFFSET: readonly [number, number, number] = [0, 8.4, 10.8];
-export const ISLAND_3D_SPECIAL_LANDING_SPLIT = 0.68;
+export const ISLAND_3D_SPECIAL_HOP_ARC_BOOST = 0.16;
 export const ISLAND_3D_TILE_IMPACT_DURATION_MS = 420;
 
 export type Island3DLandingImpact = 'standard' | 'special' | 'hazard';
@@ -165,9 +165,9 @@ export function getIsland3DTileImpactPose(
   const downward = Math.max(0, compression);
   const rebound = Math.max(0, -compression);
   return {
-    yOffset: -downward * 0.115 + rebound * 0.026,
-    scaleY: 1 - downward * 0.24 + rebound * 0.075,
-    scaleXZ: 1 + downward * 0.055 - rebound * 0.018,
+    yOffset: -downward * 0.045 + rebound * 0.012,
+    scaleY: 1 - downward * 0.14 + rebound * 0.04,
+    scaleXZ: 1 + downward * 0.035 - rebound * 0.012,
     compression,
   };
 }

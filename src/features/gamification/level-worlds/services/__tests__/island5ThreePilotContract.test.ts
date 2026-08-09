@@ -125,12 +125,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'stages weighted tile impacts and reserves the extra landing hop for special tiles',
+    name: 'keeps weighted landings grounded and gives the visible 3D renderer one completion clock',
     run: async () => {
       assertEqual(resolveIsland3DLandingImpact(undefined), 'standard', 'workbench and ordinary fallback landings stay restrained');
       assertEqual(resolveIsland3DLandingImpact('currency'), 'standard', 'currency tiles use the normal landing beat');
-      assertEqual(resolveIsland3DLandingImpact('chest'), 'special', 'chests receive the extra final hop');
-      assertEqual(resolveIsland3DLandingImpact('landmark_door'), 'special', 'landmark doors receive the extra final hop');
+      assertEqual(resolveIsland3DLandingImpact('chest'), 'special', 'chests receive the stronger final landing');
+      assertEqual(resolveIsland3DLandingImpact('landmark_door'), 'special', 'landmark doors receive the stronger final landing');
       assertEqual(resolveIsland3DLandingImpact('hazard'), 'hazard', 'hazards retain a distinct forceful response');
 
       const impactStart = getIsland3DTileImpactPose(0, 1);
@@ -148,9 +148,14 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       assert(pilotSource.includes('if (!isRolling && pendingHopSequence === null)'), '3D token must ignore the canonical early destination while the dice roll owns presentation');
       assert(pilotSource.includes('const tileMeshes = new Map'), 'tile response must reuse existing Three meshes instead of React gameplay mirrors');
-      assert(pilotSource.includes('ISLAND_3D_SPECIAL_LANDING_SPLIT'), 'special final tiles should receive the bounded two-stage landing choreography');
+      assert(pilotSource.includes('ISLAND_3D_SPECIAL_HOP_ARC_BOOST'), 'special tiles should strengthen one continuous grounded hop instead of starting a second hover hop');
+      assert(!pilotSource.includes('ISLAND_3D_SPECIAL_LANDING_SPLIT'), 'the unstable split landing clock must stay retired');
+      assert(pilotSource.includes('activeTokenSettle.position[1] + pose.yOffset'), 'the settled token must follow the responding tile surface without hovering above it');
+      assert(pilotSource.includes('onHopSequenceCompleteRef.current?.()'), 'the visible 3D renderer must signal its own true completion');
       assert(boardSource.includes('isRolling={isRolling}'), 'live shell must pass its existing presentation guard into the 3D renderer');
       assert(boardSource.includes('landingTileType={landmarkDoorTileMap[tokenIndex]?.tileType}'), 'special landing strength must derive from the canonical tile map');
+      assert(boardSource.includes('pendingHopSequence={shouldRenderIsland5Three ? null : pendingHopSequence}'), 'the hidden 2D board must not run a competing hop clock while 3D is visible');
+      assert(boardSource.includes('onHopSequenceComplete={handleHopSequencePresentationComplete}'), 'the visible 3D renderer must release the canonical presentation barrier');
     },
   },
   {

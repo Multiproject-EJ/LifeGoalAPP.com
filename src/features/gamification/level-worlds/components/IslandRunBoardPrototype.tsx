@@ -1903,6 +1903,11 @@ export function IslandRunBoardPrototype({
    * fires `onHopSequenceComplete`.
    */
   const isAnimatingRollRef = useRef(false);
+  const handleHopSequencePresentationComplete = useCallback(() => {
+    isAnimatingRollRef.current = false;
+    hopSequenceResolverRef.current?.();
+    hopSequenceResolverRef.current = null;
+  }, []);
   /**
    * True after a roll action successfully persists token/dice, and cleared only
    * after post-hop store/runtime sync settles. Guards non-roll writers (notably
@@ -13183,8 +13188,8 @@ export function IslandRunBoardPrototype({
           onStopClick={(stopId) => {
             handleStopOpenRequest(stopId);
           }}
-          pendingHopSequence={pendingHopSequence}
-          onHopSequenceComplete={() => {
+          pendingHopSequence={shouldRenderIsland5Three ? null : pendingHopSequence}
+          onHopSequenceComplete={shouldRenderIsland5Three ? undefined : () => {
             // Release the animation guard so reconcile/island-travel writers
             // can resume updating `tokenIndex`. NOTE: we deliberately do
             // NOT call `setPendingHopSequence(null)` here. Clearing the hop
@@ -13195,9 +13200,7 @@ export function IslandRunBoardPrototype({
             // pre-roll tile via the single-step fallback. `handleRoll`
             // now owns clearing the hop sequence after it has updated
             // the runtime state.
-            isAnimatingRollRef.current = false;
-            hopSequenceResolverRef.current?.();
-            hopSequenceResolverRef.current = null;
+            handleHopSequencePresentationComplete();
           }}
           onCameraReady={(controls) => { boardCameraRef.current = controls; }}
           onCameraGesture={() => setIsTopbarMenuPrimed(false)}
@@ -13244,6 +13247,20 @@ export function IslandRunBoardPrototype({
                 isRolling={isRolling}
                 landingTileType={landmarkDoorTileMap[tokenIndex]?.tileType}
                 movementSpeedFactor={storyFastModeState.movementSpeedFactor}
+                onHopSequenceComplete={handleHopSequencePresentationComplete}
+                onTokenHop={(tileIndex) => {
+                  playTokenMoveSound();
+                  if (ordinaryBoardTilesActive && tileIndex === TRAFFIC_LIGHT_TILE_INDEX) {
+                    setTrafficLightVisualCharge((prev) => {
+                      const base = prev ?? trafficLightCharge;
+                      return Math.min(TRAFFIC_LIGHT_CHARGE_TARGET, base + 1);
+                    });
+                  }
+                }}
+                onTokenLand={() => {
+                  playIslandRunSound('stop_land');
+                  triggerIslandRunHaptic('stop_land');
+                }}
                 onLandmarkClick={isIslandVisualPreview ? undefined : (landmarkId) => {
                   handleStopOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId);
                 }}

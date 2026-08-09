@@ -1232,3 +1232,59 @@ hop sequence, causing the 3D piece to teleport forward and then jump backward.
 - The production bundle was synchronized to Capacitor, signed successfully and
   installed on Eivind's paired iPhone. Automatic launch was deferred only
   because the physical phone was locked; the installed build is ready to open.
+
+## M23 — one visible movement clock regression recovery
+
+### Device report and root cause
+
+The M22 iPhone build visibly regressed: the pawn could jump backward, restart,
+or appear to hover while rewards and camera state advanced. Eivind's physical
+iPhone observation overrides the earlier desktop browser pass.
+
+The live shell kept the legacy `BoardStage` mounted below the actual-3D scene.
+Both renderers consumed the same hop sequence, but only the hidden 2D renderer
+resolved the parent's movement promise. The two independent timers could finish
+on different frames, allowing post-roll sync, reward overlays and camera reset
+to begin while the visible 3D pawn was still moving. M22 also split special
+landings into a second airborne hop and depressed the tile more than was
+appropriate at phone scale, producing a floating/disconnected finish.
+
+### Recovery contract
+
+- Exactly one visible renderer owns hop completion. When actual 3D is active,
+  `BoardStage` remains mounted as fallback infrastructure but receives no hop
+  sequence; the 3D renderer alone releases the existing presentation barrier.
+- The 3D renderer reports each traversed tile, final contact and true animation
+  completion back through presentation callbacks. Gameplay position and reward
+  authority remain in the canonical roll/action services.
+- Special landings use one continuous hop with a modest arc boost. The separate
+  in-place airborne bounce is retired. Final squash follows the responding tile
+  surface exactly so the pawn cannot hover above it.
+- Tile depression is reduced and always restores the authored mesh transform.
+- Exportable Island Run diagnostics record 3D request, start, per-tile and
+  completion events so any future device mismatch has a timestamped trace.
+
+### Acceptance evidence
+
+- Repeated 390×844 rolls show no destination flash, backward restart, floating
+  pause, competing camera reset or reward overlay before visible 3D completion.
+- Ordinary and special landings end grounded on the final tile; reduced-motion
+  still snaps once to the canonical destination.
+- Source contracts prove the hidden board is not consuming the hop sequence in
+  actual-3D mode and that 3D completion releases the existing parent promise.
+- TypeScript, focused/full Island Run tests, production build, architecture
+  guard and a refreshed physical iPhone install must pass. Final acceptance
+  requires Eivind to judge several rolls on the installed iPhone build.
+
+### Implementation evidence
+
+- A true 390×844 phone viewport completed repeated ordinary and special-tile
+  rolls with one forward sequence, one camera-follow pass and no early reward
+  overlay; the browser console reported no warnings or errors.
+- TypeScript and the production Vite build passed. The full Island Run suite
+  remained at its established baseline of 1,685 passing and the same three
+  unrelated Island 1 visual-contract failures.
+- Island Run architecture guards passed with zero violations, and both the
+  camera-locked template and island visual-production validators passed.
+- The refreshed Capacitor bundle built as a signed arm64 iOS app, installed on
+  Eivind's paired iPhone and launched successfully for physical-device review.
