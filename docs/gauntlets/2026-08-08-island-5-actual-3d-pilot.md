@@ -1164,3 +1164,71 @@ travel into the coast. Preserve the already-smooth High-quality iPhone result.
   signed successfully, installed on Eivind's paired iPhone and launched through
   CoreDevice. User-observed sustained surf smoothness remains the final M21
   certification gate.
+
+## M22 — weighted token movement and responsive tiles
+
+### Mission and observed failure
+
+Give the actual-3D token a polished board-game travel rhythm: anticipation,
+readable tile-by-tile hops, restrained response from every landed tile, and a
+stronger two-stage landing on special tiles. Remove the visible regression
+where the canonical final token index appears before presentation receives the
+hop sequence, causing the 3D piece to teleport forward and then jump backward.
+
+### Authority and non-negotiables
+
+- `islandRunRollAction` remains the only movement authority. The renderer
+  consumes its canonical hop sequence and final tile; it never derives or
+  writes a gameplay position.
+- The existing live-shell `isRolling` presentation guard prevents early
+  canonical destination updates from snapping the 3D piece while dice or hop
+  choreography owns the visible token.
+- Tile response changes only the existing Three mesh transform and returns it
+  exactly to its authored position and scale. Tile indices, anchors, hit
+  targets, rewards and topology never move.
+- Currency tiles use the normal landing. Chest, microgame, encounter, card,
+  landmark-door, traffic-light, build-discount and free-ticket tiles receive a
+  bounded extra final hop. Hazards use the same timing with a distinct forceful
+  response.
+- Reduced motion skips anticipation, secondary bounce, tile compression and
+  token settle, then snaps directly to the canonical destination.
+
+### Acceptance evidence and stopping rules
+
+- A live roll never renders the token at the final tile before the first hop.
+- Every traversed tile may depress/rebound briefly; the final tile response is
+  stronger without shifting neighboring tiles or the board route.
+- Special final tiles land once, rebound vertically in place, then land with a
+  stronger compression inside the existing final-hop duration. This may not
+  delay canonical reward or modal timing.
+- Pure tests lock landing classification and exact transform recovery. Source
+  guards lock the early-destination protection and canonical tile-map input.
+- TypeScript, focused Island 5 contracts, full Island Run suite, architecture
+  guard, production build and physical iPhone install must pass before M22 is
+  accepted.
+
+### Implementation evidence — 2026-08-09
+
+- The actual-3D live shell now receives canonical `isRolling` state and refuses
+  to apply an early final-index snap while dice presentation is active and the
+  hop sequence has not arrived. A real browser roll held the token at its
+  starting tile, then travelled forward once; the former forward-teleport and
+  backward restart did not recur.
+- Each visited tile now performs a short presentation-only compression and
+  rebound. The final tile receives a stronger response, while the token adds a
+  bounded squash-and-settle pose. Every transform returns exactly to its
+  authored position and scale.
+- Canonical tile metadata selects the finish: currency uses the standard
+  landing, hazards receive a forceful response, and all other special tile
+  families add a second vertical hop in place. The extra beat fits inside the
+  existing final-hop duration, so reward and modal timing are unchanged.
+- Reduced-motion mode bypasses secondary motion and snaps to the canonical
+  destination. No gameplay store, roll action, reward service, board topology
+  or hit target was changed.
+- TypeScript, production Vite build, template-kit validation, visual-production
+  validation and the Island Run architecture guard pass with zero new
+  violations. The full corpus is 1,685 pass / 3 unchanged Island 1 failures;
+  the new M22 contract passes.
+- The production bundle was synchronized to Capacitor, signed successfully and
+  installed on Eivind's paired iPhone. Automatic launch was deferred only
+  because the physical phone was locked; the installed build is ready to open.

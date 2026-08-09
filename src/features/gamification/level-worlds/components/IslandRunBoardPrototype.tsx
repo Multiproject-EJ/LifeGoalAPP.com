@@ -13241,6 +13241,8 @@ export function IslandRunBoardPrototype({
                 qualityOverride={isDevModeEnabled ? devIsland5ThreeQuality : undefined}
                 tokenIndex={tokenIndex}
                 pendingHopSequence={pendingHopSequence}
+                isRolling={isRolling}
+                landingTileType={landmarkDoorTileMap[tokenIndex]?.tileType}
                 movementSpeedFactor={storyFastModeState.movementSpeedFactor}
                 onLandmarkClick={isIslandVisualPreview ? undefined : (landmarkId) => {
                   handleStopOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId);

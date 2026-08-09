@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
+import type { IslandTileType } from '../services/islandBoardTileMap';
 import { computeHopDurations } from '../components/board/cameraDirector';
 import {
   compactStaticGeometry,
@@ -13,6 +14,7 @@ import {
   buildIsland5TileTransforms,
   CROWN_CITADEL_DETAIL_PROFILES,
   CROWN_CITADEL_LEVEL_SCALES,
+  getIsland3DTileImpactPose,
   getIsland3DRendererPixelRatio,
   getIsland3DTokenHopPosition,
   getIsland5CameraPreset,
@@ -20,10 +22,13 @@ import {
   ISLAND_CAMERA_TOUR_STEPS,
   ISLAND_3D_PROFILE_DURATION_MS,
   ISLAND_3D_TOKEN_FOLLOW_OFFSET,
+  ISLAND_3D_SPECIAL_LANDING_SPLIT,
+  ISLAND_3D_TILE_IMPACT_DURATION_MS,
   ISLAND_3D_TOKEN_PRE_ROLL_HOLD_MS,
   ISLAND_5_CAMERA_PRESETS,
   ISLAND_5_LANDMARKS,
   resolveIsland3DQuality,
+  resolveIsland3DLandingImpact,
   summarizeIsland3DPerformance,
   type Island3DDeviceSignals,
   type Island3DPerformanceSummary,
@@ -45,6 +50,8 @@ interface Island5ThreePilotProps {
   qualityOverride?: Island3DQualitySelection;
   tokenIndex?: number;
   pendingHopSequence?: readonly number[] | null;
+  isRolling?: boolean;
+  landingTileType?: IslandTileType;
   movementSpeedFactor?: number;
   onLandmarkClick?: (landmarkId: Island5LandmarkDefinition['id']) => void;
   onRendererUnavailable?: () => void;
@@ -64,6 +71,18 @@ interface TokenMotionRequest {
   holdMs: number;
   sequence: readonly number[];
   durationsMs: readonly number[];
+  landingImpact: ReturnType<typeof resolveIsland3DLandingImpact>;
+}
+
+interface ActiveTileImpact {
+  startedAt: number;
+  strength: number;
+}
+
+interface ActiveTokenSettle {
+  startedAt: number;
+  strength: number;
+  position: readonly [number, number, number];
 }
 
 interface PilotMetrics {
@@ -2725,6 +2744,8 @@ export default function Island5ThreePilot({
   qualityOverride,
   tokenIndex = 0,
   pendingHopSequence = null,
+  isRolling = false,
+  landingTileType,
   movementSpeedFactor = 1,
   onLandmarkClick,
   onRendererUnavailable,
@@ -2771,8 +2792,8 @@ export default function Island5ThreePilot({
 
   useEffect(() => {
     tokenIndexRef.current = tokenIndex;
-    if (pendingHopSequence === null) tokenSnapRequestRef.current = tokenIndex;
-  }, [pendingHopSequence, tokenIndex]);
+    if (!isRolling && pendingHopSequence === null) tokenSnapRequestRef.current = tokenIndex;
+  }, [isRolling, pendingHopSequence, tokenIndex]);
 
   useEffect(() => {
     if (!pendingHopSequence || pendingHopSequence.length === 0) {
@@ -2788,8 +2809,9 @@ export default function Island5ThreePilot({
       holdMs: ISLAND_3D_TOKEN_PRE_ROLL_HOLD_MS / Math.max(1, movementSpeedFactor),
       sequence: pendingHopSequence.slice(),
       durationsMs: computeHopDurations(pendingHopSequence.length, movementSpeedFactor),
+      landingImpact: resolveIsland3DLandingImpact(landingTileType),
     };
-  }, [movementSpeedFactor, pendingHopSequence]);
+  }, [landingTileType, movementSpeedFactor, pendingHopSequence]);
   const isReducedMotion = deviceSignals.prefersReducedMotion === true;
 
   const shareProfileReport = async () => {
@@ -2947,6 +2969,7 @@ export default function Island5ThreePilot({
       new THREE.MeshStandardMaterial({ color: 0x8c67cf, roughness: 0.56 }),
       new THREE.MeshStandardMaterial({ color: 0xf2c861, roughness: 0.42, metalness: 0.18 }),
     ];
+    const tileMeshes = new Map<number, { mesh: THREE.Mesh; baseY: number }>();
     for (const transform of tileTransforms) {
       const tileMaterial = transform.isKeyTile ? tileMaterials[2] : tileMaterials[transform.index % 2];
       const tile = new THREE.Mesh(tileGeometry, tileMaterial);
@@ -2955,6 +2978,7 @@ export default function Island5ThreePilot({
       tile.castShadow = qualityProfile.shadows;
       tile.receiveShadow = true;
       tile.userData.tileIndex = transform.index;
+      tileMeshes.set(transform.index, { mesh: tile, baseY: transform.position[1] });
       scene.add(tile);
     }
 
@@ -3018,7 +3042,37 @@ export default function Island5ThreePilot({
       request: TokenMotionRequest;
       startsAt: number;
       fromPosition: readonly [number, number, number];
+      lastTriggeredHopIndex: number;
+      specialFirstImpactTriggered: boolean;
+      finalImpactTriggered: boolean;
     } | null = null;
+    const activeTileImpacts = new Map<number, ActiveTileImpact>();
+    let activeTokenSettle: ActiveTokenSettle | null = null;
+
+    const triggerTileImpact = (tileIndex: number, strength: number, startedAt: number) => {
+      if (isReducedMotion) return;
+      const existing = activeTileImpacts.get(tileIndex);
+      activeTileImpacts.set(tileIndex, {
+        startedAt,
+        strength: Math.max(strength, existing?.strength ?? 0),
+      });
+    };
+
+    const triggerFinalSettle = (
+      tileIndex: number,
+      impact: TokenMotionRequest['landingImpact'],
+      startedAt: number,
+    ) => {
+      const strength = impact === 'special' ? 1.35 : impact === 'hazard' ? 1.2 : 0.9;
+      triggerTileImpact(tileIndex, strength, startedAt);
+      if (!isReducedMotion) {
+        activeTokenSettle = {
+          startedAt,
+          strength,
+          position: getIsland5TokenGroundPosition(tileTransforms, tileIndex),
+        };
+      }
+    };
 
     const applyPreset = (id: Island5CameraPresetId) => {
       const preset = getIsland5CameraPreset(id);
@@ -3183,24 +3237,75 @@ export default function Island5ThreePilot({
         playerPiece.compassLight.rotation.y += frameDeltaSeconds * 1.8;
       }
 
+      for (const [tileIndex, impact] of activeTileImpacts) {
+        const tileEntry = tileMeshes.get(tileIndex);
+        if (!tileEntry) {
+          activeTileImpacts.delete(tileIndex);
+          continue;
+        }
+        const elapsedImpactMs = now - impact.startedAt;
+        const pose = getIsland3DTileImpactPose(elapsedImpactMs, impact.strength);
+        tileEntry.mesh.position.y = tileEntry.baseY + pose.yOffset;
+        tileEntry.mesh.scale.set(pose.scaleXZ, pose.scaleY, pose.scaleXZ);
+        if (elapsedImpactMs >= ISLAND_3D_TILE_IMPACT_DURATION_MS) {
+          tileEntry.mesh.position.y = tileEntry.baseY;
+          tileEntry.mesh.scale.set(1, 1, 1);
+          activeTileImpacts.delete(tileIndex);
+        }
+      }
+
+      if (!activeTokenMotion && activeTokenSettle) {
+        const elapsedSettleMs = now - activeTokenSettle.startedAt;
+        const pose = getIsland3DTileImpactPose(elapsedSettleMs, activeTokenSettle.strength);
+        const compression = Math.max(0, pose.compression);
+        playerPiece.root.position.set(
+          activeTokenSettle.position[0],
+          activeTokenSettle.position[1] + pose.yOffset * 0.5,
+          activeTokenSettle.position[2],
+        );
+        playerPiece.root.scale.set(1 + compression * 0.085, 1 - compression * 0.19, 1 + compression * 0.085);
+        playerPiece.root.rotation.z = Math.sin(Math.min(1, elapsedSettleMs / ISLAND_3D_TILE_IMPACT_DURATION_MS) * Math.PI * 2)
+          * (1 - Math.min(1, elapsedSettleMs / ISLAND_3D_TILE_IMPACT_DURATION_MS))
+          * 0.035
+          * activeTokenSettle.strength;
+        playerPiece.shadow.scale.setScalar(1 + compression * 0.18);
+        playerPiece.shadowMaterial.opacity = 0.32 + compression * 0.08;
+        if (elapsedSettleMs >= ISLAND_3D_TILE_IMPACT_DURATION_MS) {
+          playerPiece.root.position.set(...activeTokenSettle.position);
+          playerPiece.root.scale.set(1, 1, 1);
+          playerPiece.root.rotation.z = 0;
+          playerPiece.shadow.scale.set(1, 1, 1);
+          playerPiece.shadowMaterial.opacity = 0.32;
+          activeTokenSettle = null;
+        }
+      }
+
       const pendingTokenMotion = tokenMotionRequestRef.current;
       if (pendingTokenMotion && pendingTokenMotion.id !== consumedTokenMotionRequestId) {
         consumedTokenMotionRequestId = pendingTokenMotion.id;
         transition = null;
         controls.enabled = false;
         setActivePreset('manual');
+        activeTokenSettle = null;
+        playerPiece.root.scale.set(1, 1, 1);
+        playerPiece.root.rotation.z = 0;
         activeTokenMotion = {
           request: pendingTokenMotion,
           startsAt: pendingTokenMotion.requestedAt + pendingTokenMotion.holdMs,
           fromPosition: [playerPiece.root.position.x, playerPiece.root.position.y, playerPiece.root.position.z],
+          lastTriggeredHopIndex: -1,
+          specialFirstImpactTriggered: false,
+          finalImpactTriggered: false,
         };
       }
 
       if (!activeTokenMotion && tokenSnapRequestRef.current !== appliedTokenSnapIndex) {
         appliedTokenSnapIndex = tokenSnapRequestRef.current;
+        activeTokenSettle = null;
         const snappedPosition = getIsland5TokenGroundPosition(tileTransforms, appliedTokenSnapIndex);
         playerPiece.root.position.set(...snappedPosition);
         playerPiece.root.scale.set(1, 1, 1);
+        playerPiece.root.rotation.z = 0;
         playerPiece.shadow.position.set(snappedPosition[0], snappedPosition[1] + 0.012, snappedPosition[2]);
         playerPiece.shadow.scale.set(1, 1, 1);
         playerPiece.shadowMaterial.opacity = 0.32;
@@ -3218,8 +3323,13 @@ export default function Island5ThreePilot({
           playerPiece.root.scale.set(1.06, 1 / anticipationScale, 1.06);
         } else if (motionElapsedMs >= totalMotionMs) {
           const finalPosition = getIsland5TokenGroundPosition(tileTransforms, finalTileIndex);
+          if (!activeTokenMotion.finalImpactTriggered) {
+            triggerFinalSettle(finalTileIndex, request.landingImpact, now);
+            activeTokenMotion.finalImpactTriggered = true;
+          }
           playerPiece.root.position.set(...finalPosition);
           playerPiece.root.scale.set(1, 1, 1);
+          playerPiece.root.rotation.z = 0;
           playerPiece.shadow.position.set(finalPosition[0], finalPosition[1] + 0.012, finalPosition[2]);
           playerPiece.shadow.scale.set(1, 1, 1);
           playerPiece.shadowMaterial.opacity = 0.32;
@@ -3239,22 +3349,69 @@ export default function Island5ThreePilot({
           }
           const hopDurationMs = request.durationsMs[hopIndex] ?? 1;
           const rawHopProgress = Math.max(0, Math.min(1, (motionElapsedMs - hopStartedAt) / hopDurationMs));
-          const easedHopProgress = 1 - Math.pow(1 - rawHopProgress, 3);
+          const easedHopProgress = 1 - Math.pow(1 - rawHopProgress, 2.35);
           const fromTilePosition = hopIndex === 0
             ? fromPosition
             : getIsland5TokenGroundPosition(tileTransforms, request.sequence[hopIndex - 1] ?? finalTileIndex);
+          const destinationTileIndex = request.sequence[hopIndex] ?? finalTileIndex;
           const destinationTilePosition = getIsland5TokenGroundPosition(
             tileTransforms,
-            request.sequence[hopIndex] ?? finalTileIndex,
+            destinationTileIndex,
           );
-          const tokenPosition = getIsland3DTokenHopPosition(
+          const isFinalHop = hopIndex === request.sequence.length - 1;
+          const usesExtraLandingHop = isFinalHop && request.landingImpact !== 'standard' && !isReducedMotion;
+          let tokenPosition = getIsland3DTokenHopPosition(
             fromTilePosition,
             destinationTilePosition,
             easedHopProgress,
           );
-          const groundX = fromTilePosition[0] + (destinationTilePosition[0] - fromTilePosition[0]) * easedHopProgress;
-          const groundZ = fromTilePosition[2] + (destinationTilePosition[2] - fromTilePosition[2]) * easedHopProgress;
-          const airborne = Math.sin(Math.PI * easedHopProgress);
+          let groundProgress = easedHopProgress;
+          let airborne = Math.sin(Math.PI * rawHopProgress);
+
+          if (usesExtraLandingHop) {
+            if (rawHopProgress < ISLAND_3D_SPECIAL_LANDING_SPLIT) {
+              const travelProgress = rawHopProgress / ISLAND_3D_SPECIAL_LANDING_SPLIT;
+              const easedTravel = 1 - Math.pow(1 - travelProgress, 2.35);
+              tokenPosition = getIsland3DTokenHopPosition(
+                fromTilePosition,
+                destinationTilePosition,
+                easedTravel,
+              );
+              groundProgress = easedTravel;
+              airborne = Math.sin(Math.PI * travelProgress);
+            } else {
+              const bounceProgress = (rawHopProgress - ISLAND_3D_SPECIAL_LANDING_SPLIT)
+                / (1 - ISLAND_3D_SPECIAL_LANDING_SPLIT);
+              const bounceHeight = request.landingImpact === 'hazard' ? 0.3 : 0.42;
+              tokenPosition = [
+                destinationTilePosition[0],
+                destinationTilePosition[1] + Math.sin(Math.PI * bounceProgress) * bounceHeight,
+                destinationTilePosition[2],
+              ];
+              groundProgress = 1;
+              airborne = Math.sin(Math.PI * bounceProgress) * 0.72;
+              playerPiece.root.rotation.z = Math.sin(Math.PI * bounceProgress)
+                * (request.landingImpact === 'hazard' ? -0.13 : 0.09);
+              if (!activeTokenMotion.specialFirstImpactTriggered) {
+                triggerTileImpact(destinationTileIndex, 0.72, now);
+                activeTokenMotion.specialFirstImpactTriggered = true;
+              }
+            }
+          } else {
+            playerPiece.root.rotation.z = 0;
+          }
+
+          if (!isFinalHop && rawHopProgress >= 0.9 && activeTokenMotion.lastTriggeredHopIndex < hopIndex) {
+            triggerTileImpact(destinationTileIndex, 0.42, now);
+            activeTokenMotion.lastTriggeredHopIndex = hopIndex;
+          }
+          if (isFinalHop && rawHopProgress >= 0.94 && !activeTokenMotion.finalImpactTriggered) {
+            triggerFinalSettle(destinationTileIndex, request.landingImpact, now);
+            activeTokenMotion.finalImpactTriggered = true;
+          }
+
+          const groundX = fromTilePosition[0] + (destinationTilePosition[0] - fromTilePosition[0]) * groundProgress;
+          const groundZ = fromTilePosition[2] + (destinationTilePosition[2] - fromTilePosition[2]) * groundProgress;
 
           playerPiece.root.position.set(...tokenPosition);
           playerPiece.root.rotation.y = Math.atan2(

@@ -6,16 +6,19 @@ import {
   CROWN_CITADEL_DETAIL_PROFILES,
   CROWN_CITADEL_LEVEL_SCALES,
   getIsland3DTokenHopPosition,
+  getIsland3DTileImpactPose,
   getIsland3DRendererPixelRatio,
   getIsland5TokenGroundPosition,
   ISLAND_3D_QUALITY_PROFILES,
   ISLAND_3D_PERFORMANCE_TARGETS,
   ISLAND_3D_PROFILE_DURATION_MS,
   ISLAND_3D_TOKEN_HOP_ARC_HEIGHT,
+  ISLAND_3D_TILE_IMPACT_DURATION_MS,
   ISLAND_CAMERA_TOUR_STEPS,
   ISLAND_5_CAMERA_PRESETS,
   ISLAND_5_LANDMARKS,
   resolveIsland3DQuality,
+  resolveIsland3DLandingImpact,
   summarizeIsland3DPerformance,
 } from '../../dev/island5ThreePilotContract';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
@@ -119,6 +122,35 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assertEqual(hopStart[0], tileZero[0], 'hop must begin on the canonical current tile');
       assertEqual(hopEnd[0], destination[0], 'hop must finish on the canonical destination tile');
       assert(hopMidpoint[1] >= tileZero[1] + ISLAND_3D_TOKEN_HOP_ARC_HEIGHT - 0.001, 'mid-hop piece should lift clearly above the route');
+    },
+  },
+  {
+    name: 'stages weighted tile impacts and reserves the extra landing hop for special tiles',
+    run: async () => {
+      assertEqual(resolveIsland3DLandingImpact(undefined), 'standard', 'workbench and ordinary fallback landings stay restrained');
+      assertEqual(resolveIsland3DLandingImpact('currency'), 'standard', 'currency tiles use the normal landing beat');
+      assertEqual(resolveIsland3DLandingImpact('chest'), 'special', 'chests receive the extra final hop');
+      assertEqual(resolveIsland3DLandingImpact('landmark_door'), 'special', 'landmark doors receive the extra final hop');
+      assertEqual(resolveIsland3DLandingImpact('hazard'), 'hazard', 'hazards retain a distinct forceful response');
+
+      const impactStart = getIsland3DTileImpactPose(0, 1);
+      const impactCompression = getIsland3DTileImpactPose(ISLAND_3D_TILE_IMPACT_DURATION_MS * 0.18, 1);
+      const impactEnd = getIsland3DTileImpactPose(ISLAND_3D_TILE_IMPACT_DURATION_MS, 1);
+      assertEqual(impactStart.yOffset, 0, 'tile response starts at its authored transform');
+      assert(impactCompression.yOffset < 0, 'impact briefly depresses the landed tile');
+      assert(impactCompression.scaleY < 1, 'impact compresses tile height rather than moving board topology');
+      assertEqual(impactEnd.yOffset, 0, 'tile response returns exactly to its authored transform');
+      assertEqual(impactEnd.scaleY, 1, 'tile response returns to canonical scale');
+
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(pilotSource.includes('if (!isRolling && pendingHopSequence === null)'), '3D token must ignore the canonical early destination while the dice roll owns presentation');
+      assert(pilotSource.includes('const tileMeshes = new Map'), 'tile response must reuse existing Three meshes instead of React gameplay mirrors');
+      assert(pilotSource.includes('ISLAND_3D_SPECIAL_LANDING_SPLIT'), 'special final tiles should receive the bounded two-stage landing choreography');
+      assert(boardSource.includes('isRolling={isRolling}'), 'live shell must pass its existing presentation guard into the 3D renderer');
+      assert(boardSource.includes('landingTileType={landmarkDoorTileMap[tokenIndex]?.tileType}'), 'special landing strength must derive from the canonical tile map');
     },
   },
   {

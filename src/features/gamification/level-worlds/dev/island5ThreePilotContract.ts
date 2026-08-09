@@ -1,4 +1,5 @@
 import type { TileAnchor } from '../services/islandBoardLayout';
+import type { IslandTileType } from '../services/islandBoardTileMap';
 import { ISLAND_KIT_SCENE } from './islandCameraLockedKit';
 
 export type Island3DQuality = 'low' | 'medium' | 'high';
@@ -130,6 +131,46 @@ export const ISLAND_3D_TOKEN_GROUND_OFFSET = 0.12;
 export const ISLAND_3D_TOKEN_HOP_ARC_HEIGHT = 0.72;
 export const ISLAND_3D_TOKEN_PRE_ROLL_HOLD_MS = 150;
 export const ISLAND_3D_TOKEN_FOLLOW_OFFSET: readonly [number, number, number] = [0, 8.4, 10.8];
+export const ISLAND_3D_SPECIAL_LANDING_SPLIT = 0.68;
+export const ISLAND_3D_TILE_IMPACT_DURATION_MS = 420;
+
+export type Island3DLandingImpact = 'standard' | 'special' | 'hazard';
+
+export interface Island3DTileImpactPose {
+  yOffset: number;
+  scaleY: number;
+  scaleXZ: number;
+  compression: number;
+}
+
+export function resolveIsland3DLandingImpact(tileType: IslandTileType | undefined): Island3DLandingImpact {
+  if (tileType === 'hazard') return 'hazard';
+  if (!tileType || tileType === 'currency') return 'standard';
+  return 'special';
+}
+
+export function getIsland3DTileImpactPose(
+  elapsedMs: number,
+  strength = 1,
+): Island3DTileImpactPose {
+  const progress = Math.max(0, Math.min(1, elapsedMs / ISLAND_3D_TILE_IMPACT_DURATION_MS));
+  if (progress >= 1) return { yOffset: 0, scaleY: 1, scaleXZ: 1, compression: 0 };
+  const safeStrength = Math.max(0, Math.min(1.5, strength));
+  const attackEnd = 0.18;
+  const response = progress < attackEnd
+    ? Math.sin((progress / attackEnd) * Math.PI / 2)
+    : Math.cos(((progress - attackEnd) / (1 - attackEnd)) * Math.PI * 3.25)
+      * Math.exp(-(progress - attackEnd) * 4.2);
+  const compression = Math.max(-0.35, Math.min(1, response)) * safeStrength;
+  const downward = Math.max(0, compression);
+  const rebound = Math.max(0, -compression);
+  return {
+    yOffset: -downward * 0.115 + rebound * 0.026,
+    scaleY: 1 - downward * 0.24 + rebound * 0.075,
+    scaleXZ: 1 + downward * 0.055 - rebound * 0.018,
+    compression,
+  };
+}
 
 export const ISLAND_3D_QUALITY_PROFILES: Record<Island3DQuality, Island3DQualityProfile> = {
   low: {
