@@ -3847,6 +3847,14 @@ export interface Database {
       };
     };
     Functions: {
+      ensure_personal_quest_season: {
+        Args: {
+          p_theme_name: string;
+          p_starts_on: string;
+          p_ends_on: string;
+        };
+        Returns: Database['public']['Tables']['daily_calendar_seasons']['Row'];
+      };
       save_quest_bundle: {
         Args: {
           p_quest: Json;

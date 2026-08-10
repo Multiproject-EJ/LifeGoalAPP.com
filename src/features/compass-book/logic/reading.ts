@@ -194,11 +194,18 @@ export function summarizeCompassReading(input: CompassReadingInput): CompassRead
   };
 }
 
-/** Every page the book can show, in tab-rail order. The Reading leads. */
-export const COMPASS_BOOK_PAGE_IDS = ['reading', ...COMPASS_BOOK_CHAPTER_IDS] as const;
+/**
+ * Every page the book can show, in tab-rail order. The Reading leads; the Quest
+ * Ledger closes the book after chapter VI. The Ledger is a page, never a
+ * chapter: it has no curriculum, no islands, and no stored answers, so it must
+ * stay out of COMPASS_BOOK_CHAPTER_IDS (those ids are persisted).
+ */
+export const COMPASS_BOOK_PAGE_IDS = ['reading', ...COMPASS_BOOK_CHAPTER_IDS, 'quest_ledger'] as const;
 
 export type CompassBookPageId = (typeof COMPASS_BOOK_PAGE_IDS)[number];
 
+const CHAPTER_PAGE_IDS: readonly string[] = COMPASS_BOOK_CHAPTER_IDS;
+
 export function isChapterPage(pageId: CompassBookPageId): pageId is CompassBookChapterId {
-  return pageId !== 'reading';
+  return CHAPTER_PAGE_IDS.includes(pageId);
 }

@@ -93,6 +93,10 @@ export type IslandRunHapticEvent =
   | 'sticker_complete'
   // Traffic light coin flip haptic
   | 'coin_reveal'
+  // Auto-roll hold: a faint tick when the hold arms, a firmer double when it
+  // engages, so the 1.4s charge is felt as well as seen.
+  | 'auto_roll_arm'
+  | 'auto_roll_engage'
   | 'tech_item_poof';
 
 export type IslandRunSoundPlaybackStatus =
@@ -244,6 +248,11 @@ const HAPTIC_PATTERNS: Record<IslandRunHapticEvent, number | number[]> = {
   // Traffic light coin reveal: a celebratory triple buzz on landing.
   coin_reveal: [25, 35, 25, 45, 30],
   tech_item_poof: [12, 18, 12],
+  // Deliberately asymmetric: arming is the lightest pulse in the whole map so
+  // it reads as "held, not yet committed"; engaging lands harder so the player
+  // can lift their eyes off the button once it fires.
+  auto_roll_arm: [10],
+  auto_roll_engage: [28, 36, 44],
 };
 
 // ─── Sound event map ─────────────────────────────────────────────────────────

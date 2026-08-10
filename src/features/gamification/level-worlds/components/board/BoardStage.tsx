@@ -93,6 +93,8 @@ export interface BoardStageProps {
   /** Traffic-light bonus progress rendered on the traffic-light tile itself. */
   trafficLightCharge?: number;
   trafficLightChargeTarget?: number;
+  /** True while the traffic-light sign is popped open after a pass (until the next roll). */
+  trafficLightPassPulse?: boolean;
   stopMap: Map<number, string>;
   completedEncounterIndices: Set<number>;
   visibleTechnologyFragments?: readonly VisibleTechnologyFragment[];
@@ -176,6 +178,7 @@ export function BoardStage(props: BoardStageProps) {
     ordinaryTilesActive = true,
     trafficLightCharge = 0,
     trafficLightChargeTarget = 8,
+    trafficLightPassPulse = false,
     stopMap,
     completedEncounterIndices,
     visibleTechnologyFragments,
@@ -769,6 +772,7 @@ export function BoardStage(props: BoardStageProps) {
           ordinaryTilesActive={ordinaryTilesActive}
           trafficLightCharge={trafficLightCharge}
           trafficLightChargeTarget={trafficLightChargeTarget}
+          trafficLightPassPulse={trafficLightPassPulse}
           completedEncounterIndices={completedEncounterIndices}
           visibleTechnologyFragments={visibleTechnologyFragments}
           tokenIndex={tokenIndex}

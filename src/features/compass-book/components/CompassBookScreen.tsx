@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import './compassBook.css';
 import type { CompassBookChapterId } from '../types';
 import { isChapterPage, type CompassBookPageId } from '../logic/reading';
+import { CompassQuestLedger, type CompassQuestLedgerEntry } from './CompassQuestLedger';
 import {
   turnClassName,
   turnDirection,
@@ -30,6 +31,26 @@ export type CompassBookScreenProps = {
   /** Optional deep-link: open straight into a chapter (and a fragment). */
   initialChapterId?: CompassBookChapterId;
   initialActivityId?: string;
+  /** Optional deep-link to any page, including the Quest Ledger. Wins over initialChapterId. */
+  initialPageId?: CompassBookPageId;
+  /**
+   * Wires the Quest Ledger page (the old My Quest menu, re-inked). When absent
+   * the ledger tab is hidden entirely — e.g. in previews that have no app
+   * handlers to hand it.
+   */
+  questLedger?: {
+    entries: CompassQuestLedgerEntry[];
+    /** Write a habit or goal without leaving the book; omit to hide the action. */
+    onInscribe?: () => void;
+    hub?: ReactNode;
+  };
+  /**
+   * True while something is stacked above the book (e.g. the Ledger's quick-add
+   * sheet). Both layers listen for Escape on `window`, so without this one press
+   * would dismiss the overlay *and* turn the book's page behind it. Escape
+   * belongs to the topmost layer.
+   */
+  hasBlockingOverlay?: boolean;
   /**
    * Show the admin/dev demo toggle. Demo mode swaps in a fully written
    * in-memory book so the feature can be evaluated without answering 120
@@ -61,6 +82,9 @@ export function CompassBookScreen({
   session,
   initialChapterId,
   initialActivityId,
+  initialPageId,
+  questLedger,
+  hasBlockingOverlay = false,
   allowDemo = false,
   initialDemo = false,
   onClose,
@@ -69,6 +93,7 @@ export function CompassBookScreen({
     if (initialChapterId && initialActivityId) {
       return { kind: 'flow', chapterId: initialChapterId, startActivityId: initialActivityId };
     }
+    if (initialPageId) return { kind: 'page', pageId: initialPageId };
     if (initialChapterId) return { kind: 'page', pageId: initialChapterId };
     return { kind: 'page', pageId: 'reading' };
   });
@@ -77,9 +102,10 @@ export function CompassBookScreen({
   const userId = session?.user?.id ?? 'local';
 
   // The cover only swings when the book is actually being opened. A deep link
-  // straight to a fragment skips it — the player asked to write, not to browse.
+  // straight to a fragment or a specific page skips it — the player asked for
+  // that destination, not to browse.
   const [coverOpen, setCoverOpen] = useState(
-    () => !initialActivityId && !prefersReducedMotion(),
+    () => !initialActivityId && !initialPageId && !prefersReducedMotion(),
   );
 
   // Page-turn state. `turnKey` restarts the CSS animation on every turn, even
@@ -106,6 +132,19 @@ export function CompassBookScreen({
       return { kind: 'page', pageId };
     });
   }, []);
+  // A host that asks for a page while the book is *already* open must still be
+  // obeyed — the mount-time initial state alone would silently ignore it (e.g.
+  // opening the Quest Ledger from a screen behind an open book).
+  const lastRequestedPageRef = useRef(initialPageId);
+  useEffect(() => {
+    if (!initialPageId || initialPageId === lastRequestedPageRef.current) {
+      lastRequestedPageRef.current = initialPageId;
+      return;
+    }
+    lastRequestedPageRef.current = initialPageId;
+    openPage(initialPageId);
+  }, [initialPageId, openPage]);
+
   const startFlow = useCallback(
     (chapterId: CompassBookChapterId, startActivityId?: string) =>
       setView({ kind: 'flow', chapterId, startActivityId }),
@@ -113,6 +152,9 @@ export function CompassBookScreen({
   );
 
   useEffect(() => {
+    // Escape belongs to whatever is on top. While an overlay covers the book,
+    // that overlay dismisses itself and the page underneath must not move.
+    if (hasBlockingOverlay) return;
     function onKeyDown(event: KeyboardEvent) {
       if (event.key !== 'Escape') return;
       setView((current) => {
@@ -126,7 +168,7 @@ export function CompassBookScreen({
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  }, [hasBlockingOverlay, onClose]);
 
   // The rail highlights the chapter a flow belongs to, so answering a fragment
   // never looks like it left the book.
@@ -208,6 +250,16 @@ export function CompassBookScreen({
               />
             ) : null}
 
+            {view.kind === 'page' && view.pageId === 'quest_ledger' && questLedger ? (
+              <CompassQuestLedger
+                entries={questLedger.entries}
+                onInscribe={questLedger.onInscribe}
+                hub={questLedger.hub}
+                onBack={() => openPage('reading')}
+                onClose={onClose}
+              />
+            ) : null}
+
             {view.kind === 'flow' ? (
               <CompassGuidedFlow
                 chapterId={view.chapterId}
@@ -227,6 +279,7 @@ export function CompassBookScreen({
             currentIslandNumber={currentIslandNumber}
             getProgress={book.getProgress}
             onSelect={openPage}
+            showQuestLedger={Boolean(questLedger)}
           />
         </div>
       </div>

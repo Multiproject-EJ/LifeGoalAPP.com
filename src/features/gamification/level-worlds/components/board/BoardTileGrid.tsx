@@ -13,6 +13,8 @@ export interface BoardTileGridProps {
   ordinaryTilesActive?: boolean;
   trafficLightCharge?: number;
   trafficLightChargeTarget?: number;
+  /** True while the sign is popped open after a pass (until the next roll). */
+  trafficLightPassPulse?: boolean;
   completedEncounterIndices: Set<number>;
   visibleTechnologyFragments?: readonly VisibleTechnologyFragment[];
   tokenIndex: number;
@@ -37,6 +39,7 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
     ordinaryTilesActive = true,
     trafficLightCharge = 0,
     trafficLightChargeTarget = 8,
+    trafficLightPassPulse = false,
     completedEncounterIndices,
     visibleTechnologyFragments = [],
     tokenIndex,
@@ -82,7 +85,7 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
     <div className="island-run-board__tiles">
       {ordinaryTilesActive && trafficLightTile && (
         <div
-          className="island-tile-traffic-light-sign"
+          className={`island-tile-traffic-light-sign${trafficLightPassPulse ? ' island-tile-traffic-light-sign--popped' : ''}`}
           role="status"
           aria-label={`Traffic light bonus ${trafficLightCharge} of ${trafficLightChargeTarget} lights`}
           style={{

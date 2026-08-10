@@ -20,9 +20,14 @@ const repoRoot = resolve(__dirname, '..');
 
 const servicePath = resolve(repoRoot, 'src/services/treatCalendarService.ts');
 const edgePath = resolve(repoRoot, 'supabase/functions/treat-calendar/index.ts');
+const atomicSeasonMigrationPath = resolve(
+  repoRoot,
+  'supabase/migrations/20260803173000_ensure_personal_quest_season_atomic.sql',
+);
 
 const service = readFileSync(servicePath, 'utf8');
 const edge = readFileSync(edgePath, 'utf8');
+const atomicSeasonMigration = readFileSync(atomicSeasonMigrationPath, 'utf8');
 
 function assert(condition, message) {
   if (!condition) {
@@ -62,6 +67,30 @@ requireOrder(
   'progress.last_opened_date === todayStr',
   'const nextSequentialDay =',
   'computePersonalQuestTodayIndex',
+);
+
+// --- Concurrent weekly provisioning ---------------------------------------
+assert(
+  service.includes(".rpc(\n    'ensure_personal_quest_season'"),
+  'Personal Quest provisioning must use the atomic weekly-season RPC.',
+);
+assert(
+  service.includes("onConflict: 'season_id,day_index,door_type'")
+    && service.includes('ignoreDuplicates: true'),
+  'Concurrent hatch seeding must resolve duplicate definitions without errors.',
+);
+assert(
+  /security invoker/i.test(atomicSeasonMigration)
+    && /set search_path = ''/i.test(atomicSeasonMigration),
+  'The atomic provisioning RPC must preserve RLS and use a fixed empty search path.',
+);
+assert(
+  /on conflict \(user_id_owner, starts_on\)[\s\S]{0,180}season_type = 'personal_quest'/i.test(atomicSeasonMigration),
+  'The RPC must target the existing partial unique index for one season per user/week.',
+);
+assert(
+  /revoke all on function public\.ensure_personal_quest_season\(text, date, date\)[\s\S]{0,100}from public, anon/i.test(atomicSeasonMigration),
+  'Anonymous callers must not execute Personal Quest provisioning.',
 );
 
 // --- Server (edge function) resolver ---------------------------------------

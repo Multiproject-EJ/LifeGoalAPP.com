@@ -169,7 +169,7 @@ export function QuickAddSheet({
               className={`quick-add__tab ${mode === 'goal' ? 'quick-add__tab--active' : ''}`}
               onClick={() => switchMode('goal')}
             >
-              🎯 Goal
+              <span className="quick-add__tab-emoji" aria-hidden="true">🎯</span> Goal
             </button>
             <button
               type="button"
@@ -178,7 +178,7 @@ export function QuickAddSheet({
               className={`quick-add__tab ${mode === 'habit' ? 'quick-add__tab--active' : ''}`}
               onClick={() => switchMode('habit')}
             >
-              🔄 Habit
+              <span className="quick-add__tab-emoji" aria-hidden="true">🔄</span> Habit
             </button>
           </div>
           <button

@@ -11,6 +11,7 @@ const demoWaitlist = read('src/services/demoWaitlist.ts');
 const publicWaitlist = read('src/services/publicLaunchWaitlist.ts');
 const zenGarden = read('src/services/zenGarden.ts');
 const habitMonthly = read('src/services/habitMonthlyQueries.ts');
+const habitsV2 = read('src/services/habitsV2.ts');
 const waitlistMigration = read('supabase/migrations/20260801204019_harden_public_launch_waitlist.sql');
 
 assert.match(
@@ -49,6 +50,17 @@ assert.match(
   habitMonthly,
   /getHabitCompletionsByMonth[\s\S]{0,700}!canUseSupabaseDataForUser\(userId\)/,
   'Monthly habit queries must keep demo IDs out of cloud filters.',
+);
+
+assert.match(
+  habitsV2,
+  /listHabitsV2[\s\S]{0,500}!canUseSupabaseData\(\)[\s\S]{0,420}getDemoHabitsForUser\(DEMO_USER_ID\)/,
+  'Signed-out habit-list reads must stay local instead of querying habits_v2 as anon.',
+);
+assert.match(
+  habitsV2,
+  /listHabitStreaksV2[\s\S]{0,360}!canUseSupabaseDataForUser\(userId\)/,
+  'Habit streak queries must reject demo IDs and mismatched Supabase sessions.',
 );
 
 assert.match(

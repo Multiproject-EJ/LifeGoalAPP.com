@@ -1986,6 +1986,72 @@
   animation: island-run-roll-hold-pulse 1.15s ease-in-out infinite;
 }
 
+/* ── Auto-roll hold charge bar ──────────────────────────────────────────────
+ * The hold used to be blind: the button pulsed amber for 1400ms with no way to
+ * tell how much longer to press. This fills across the button over exactly that
+ * window — the duration comes from AUTO_ROLL_HOLD_DELAY_MS via the inline
+ * --island-run-hold-ms custom property, so the bar cannot promise a different
+ * moment than the timeout actually fires.
+ *
+ * Fill and drain are one transition on two states rather than a keyframe
+ * animation, which is what makes an early release read correctly: the bar
+ * retreats from wherever it got to, instead of snapping or restarting. */
+/* Scoped to --cta, the only two buttons that carry a charge bar, so no other
+ * roll button's painting changes. Containment is required because the bar is
+ * scaled with transform: its own border-radius would scale into an ellipse
+ * rather than staying clipped to the button's pill/clip-path silhouette. */
+.island-run-prototype__roll-btn--cta {
+  position: relative;
+  overflow: hidden;
+}
+
+.island-run-prototype__roll-hold-charge {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: left center;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 236, 194, 0.16),
+    rgba(255, 213, 138, 0.42) 62%,
+    rgba(255, 247, 224, 0.72)
+  );
+  /* Release: retreat quickly so the button feels responsive to letting go. */
+  transition: transform 220ms ease-out, opacity 220ms ease-out;
+}
+
+.island-run-prototype__roll-btn--auto-pending .island-run-prototype__roll-hold-charge {
+  transform: scaleX(1);
+  /* Charge: linear, because the wait it represents is linear. */
+  transition: transform var(--island-run-hold-ms, 1400ms) linear;
+}
+
+/* Engaged — the green button state carries the message now, so the bar clears
+ * itself rather than sitting full behind it. */
+.island-run-prototype__roll-btn--auto-active .island-run-prototype__roll-hold-charge {
+  transform: scaleX(1);
+  opacity: 0;
+}
+
+/* Keep each button's own label above the fill. The HUD and footer buttons
+ * label themselves differently, so both wrappers are lifted. */
+.island-run-prototype__footer-roll-btn-content,
+.island-run-prototype__roll-btn-label {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The fill stays — it is timing information, not decoration — but the
+   * button stops bouncing underneath it. */
+  .island-run-prototype__roll-btn--auto-pending {
+    animation: none;
+  }
+}
+
 .island-run-prototype__roll-btn--auto-active {
   background: linear-gradient(180deg, rgba(103, 225, 126, 0.98), rgba(43, 171, 85, 0.96));
   border-color: rgba(205, 255, 211, 0.86);
@@ -14708,12 +14774,12 @@
 .island-tile-traffic-light-sign__panel {
   position: absolute;
   left: 50%;
-  top: -50px;
+  top: -58px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  min-width: 95px;
-  padding: 5px 7px;
+  gap: 5px;
+  min-width: 122px;
+  padding: 7px 10px;
   border-radius: 999px;
   border: 1.5px solid rgba(187, 247, 208, 0.72);
   background:
@@ -14724,8 +14790,10 @@
     0 8px 18px rgba(0, 0, 0, 0.32),
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -2px 6px rgba(0, 0, 0, 0.24);
-  transform: translateX(-50%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-2px);
-  transform-origin: center center;
+  transform: translateX(-50%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-2px) scale(1);
+  transform-origin: center bottom;
+  /* Eases back down when the pop is cleared on the next dice throw. */
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
 
 .island-tile-traffic-light-sign__panel::after {
@@ -14751,8 +14819,8 @@
 }
 
 .island-tile-traffic-light-sign__lamp {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.42);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
@@ -14760,13 +14828,13 @@
 
 .island-tile-traffic-light-sign__meter {
   display: grid;
-  grid-template-columns: repeat(4, 7px);
-  gap: 3px;
+  grid-template-columns: repeat(4, 9px);
+  gap: 4px;
 }
 
 .island-tile-traffic-light-sign__pip {
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.36);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
@@ -14791,12 +14859,53 @@
 }
 
 .island-tile-traffic-light-sign__count {
-  font-size: 0.68rem;
+  font-size: 0.84rem;
   font-weight: 950;
   letter-spacing: 0.03em;
   color: #ecfff3;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.82);
   white-space: nowrap;
+}
+
+/*
+ * Pass pop. The token hopping over the traffic-light tile pops the sign open
+ * and it STAYS open until the next dice throw (`trafficLightPassPulse` is
+ * cleared in `handleRoll`), so the charge just earned stays readable for the
+ * rest of the turn without stealing the turn: the sign is `pointer-events:
+ * none`, the camera never moves for it, and nothing waits on the animation.
+ * The overshoot is a single ~340ms keyframe; the resting scale comes from the
+ * class, so it holds rather than snapping back when the animation ends.
+ *
+ * The keyframes repeat the full transform (including the upright-rotation var)
+ * because an animated `transform` replaces the base declaration outright.
+ */
+@keyframes island-traffic-light-sign-pop {
+  0% {
+    transform: translateX(-50%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-2px) scale(1);
+  }
+  55% {
+    transform: translateX(-50%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-7px) scale(1.44);
+  }
+  100% {
+    transform: translateX(-50%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-5px) scale(1.3);
+  }
+}
+
+.island-tile-traffic-light-sign--popped .island-tile-traffic-light-sign__panel {
+  transform: translateX(-50%) rotate(var(--tile-upright-rotation-deg, 0deg)) translateY(-5px) scale(1.3);
+  border-color: rgba(220, 255, 232, 0.92);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.38),
+    0 0 18px rgba(74, 222, 128, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.24);
+  animation: island-traffic-light-sign-pop 340ms cubic-bezier(0.34, 1.56, 0.64, 1) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-tile-traffic-light-sign--popped .island-tile-traffic-light-sign__panel {
+    animation: none;
+  }
 }
 
 .island-stop-modal--traffic-light {

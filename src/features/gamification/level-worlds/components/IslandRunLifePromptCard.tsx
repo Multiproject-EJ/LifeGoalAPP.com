@@ -30,7 +30,6 @@ import type { HabitV2Row } from '../../../../services/habitsV2';
 import { useGamification } from '../../../../hooks/useGamification';
 import { XP_REWARDS } from '../../../../types/gamification';
 import { recordGameLifeIntake } from '../../../../services/gameLifeIntake';
-import { recordCompassContribution } from '../../../../services/compassState';
 import {
   awardRoutekeeperBreathLotusOnce,
   completeRoutekeeperBreathingHabit,
@@ -303,14 +302,6 @@ export function IslandRunLifePromptCard({
       },
     });
 
-    void recordCompassContribution({
-      userId: session.user.id,
-      islandNumber: islandNumber ?? 1,
-      kind: 'habit',
-      text: result.habit.title,
-      linkedHabitId: result.habit.id,
-    });
-
     const xpResult = await earnXP?.(XP_REWARDS.HABIT_COMPLETE, 'habit_complete', result.habit.id, 'Routekeeper tiny action');
     await recordActivity?.();
     const rewardLine = xpResult?.success ? `+${XP_REWARDS.HABIT_COMPLETE} XP` : null;
@@ -399,13 +390,6 @@ export function IslandRunLifePromptCard({
       }
     }
 
-    void recordCompassContribution({
-      userId: session.user.id,
-      islandNumber: islandNumber ?? 1,
-      kind: 'habit',
-      text: ROUTEKEEPER_BREATH_HABIT_TITLE,
-      linkedHabitId: routekeeperBreathHabit.id,
-    });
     const xpResult = completion.data.wasAlreadyCompleted
       ? null
       : await earnXP?.(
@@ -462,15 +446,6 @@ export function IslandRunLifePromptCard({
         timing,
         feedback: { energy: feedbackEnergy, time: feedbackTime, style: feedbackStyle },
       },
-    });
-
-    // Contribute this habit to the current Compass phase's spoke (best-effort).
-    void recordCompassContribution({
-      userId: session.user.id,
-      islandNumber: islandNumber ?? 1,
-      kind: 'habit',
-      text: result.habit?.title ?? selectedHabit.title,
-      linkedHabitId: result.habit?.id ?? null,
     });
 
     const successMessage = `✅ ${result.message}`;

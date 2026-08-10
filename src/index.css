@@ -20797,6 +20797,28 @@ body:has(.arena-session-shell--workshop) .level-worlds-mobile-exit-overlay {
   transform: none;
 }
 
+/* Standard (non-controller) footer: the selected tab icon reads ~16% larger so
+   the active destination is legible at a glance. Transform-only so the row
+   layout stays fixed while the icon grows. The controller skin keeps its own
+   tightly bounded icon sizing and is intentionally excluded. */
+.mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+  .mobile-footer-nav__icon {
+  transition: transform 0.2s ease;
+}
+
+.mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+  .mobile-footer-nav__button--active
+  .mobile-footer-nav__icon {
+  transform: scale(1.16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-footer-nav__surface:not(.mobile-footer-nav__surface--image)
+    .mobile-footer-nav__icon {
+    transition: none;
+  }
+}
+
 .mobile-footer-nav__shield-icon {
   width: 1.75rem;
   height: 1.75rem;
@@ -24490,12 +24512,6 @@ body:has(.arena-session-shell--workshop) .level-worlds-mobile-exit-overlay {
   padding: 1rem;
 }
 
-.mobile-menu-overlay__hold-modal--my-quest {
-  place-items: stretch;
-  padding: 0;
-  overflow: hidden;
-}
-
 .mobile-menu-overlay__hold-backdrop {
   position: absolute;
   inset: 0;
@@ -24518,20 +24534,6 @@ body:has(.arena-session-shell--workshop) .level-worlds-mobile-exit-overlay {
 .mobile-menu-overlay__submenu-sheet {
   max-height: min(78vh, 560px);
   overflow-y: auto;
-}
-
-.mobile-menu-overlay__submenu-sheet--my-quest {
-  width: 100%;
-  max-width: 100%;
-  min-height: 100vh;
-  max-height: 100dvh;
-  height: 100dvh;
-  border-radius: 0;
-  padding-top: calc(env(safe-area-inset-top, 0px) + 1rem);
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  box-shadow: none;
 }
 
 .mobile-menu-overlay__hold-header {

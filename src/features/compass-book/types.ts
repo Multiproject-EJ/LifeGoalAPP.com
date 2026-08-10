@@ -131,7 +131,11 @@ export type CompassBookActivityDefinition = {
   description?: string;
   /** Whether the activity must be completed for the chapter to be confirmable. */
   required: boolean;
-  /** True for fully authored activities; false for reserved slots (chapters 2–6 MVP). */
+  /**
+   * True for fully authored activities. All six chapters are now authored, so
+   * every shipped activity sets this true; the flag stays as the guard the
+   * chapter tests assert on, and for any future chapter drafted in stages.
+   */
   authored: boolean;
   blocks: CompassBlockDefinition[];
 };
