@@ -2647,6 +2647,43 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   {
+    name: 'applyCreatureCollection never removes canonical grant audit markers from a stale collection',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      const canonicalCollection = [{
+        creatureId: 'common-sproutling',
+        copies: 1,
+        firstCollectedAtMs: 100,
+        lastCollectedAtMs: 200,
+        lastCollectedIslandNumber: 1,
+        bondXp: 0,
+        bondLevel: 1,
+        lastFedAtMs: null,
+        claimedBondMilestones: [],
+        grantIds: ['welcome-pack-1'],
+      }];
+      seedState({
+        runtimeVersion: 20,
+        creatureCollection: canonicalCollection,
+      });
+
+      const result = applyCreatureCollection({
+        session,
+        client: null,
+        creatureCollection: canonicalCollection.map(({ grantIds: _grantIds, ...entry }) => entry),
+        triggerSource: 'test_stale_creature_collection_sync',
+      });
+
+      assertDeepEqual(
+        result.creatureCollection[0]?.grantIds,
+        ['welcome-pack-1'],
+        'a stale legacy snapshot must not remove the canonical grant marker',
+      );
+    },
+  },
+
+  {
     name: 'applyActiveCompanion commits active companion through the store path',
     run: () => {
       resetAll();
