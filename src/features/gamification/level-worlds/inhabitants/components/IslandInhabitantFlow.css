@@ -5,6 +5,11 @@
   color: #f7fbff;
 }
 .island-inhabitant-flow__backdrop { position: fixed; inset: 0; background: rgba(5, 12, 24, 0.78); }
+.island-inhabitant-flow[data-three-stage="true"] { pointer-events: none; }
+.island-inhabitant-flow[data-three-stage="true"] .island-inhabitant-flow__backdrop { background: linear-gradient(180deg, rgba(2, 10, 22, 0.04) 0 52%, rgba(2, 10, 22, 0.34) 74%, rgba(2, 10, 22, 0.62)); }
+.island-inhabitant-flow[data-three-stage="true"] .island-inhabitant-flow__dialog,
+.island-inhabitant-flow[data-three-stage="true"] button { pointer-events: auto; }
+.island-inhabitant-flow[data-three-stage="true"] .island-inhabitant-flow__layer { animation: none; transform: none; }
 .island-inhabitant-flow__viewport { position: fixed; inset: 0; display: grid; place-items: center; min-height: 100dvh; overflow: auto; overflow-x: hidden; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
 .island-inhabitant-flow__dialog { width: min(100%, 980px); max-height: min(100dvh, 760px); outline: none; }
 .island-inhabitant-flow__sr-title { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }

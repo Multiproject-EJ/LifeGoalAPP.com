@@ -33,6 +33,7 @@ export type IslandInhabitantFlowProps = {
   islandEmblemSrc?: string;
   initialLayer?: IslandInhabitantFlowLayer;
   communicationAllowed?: boolean;
+  threeStage?: boolean;
   onClose: (result: IslandInhabitantFlowResult) => void;
 };
 
@@ -45,7 +46,7 @@ function useStableId(prefix: string) {
 
 export function IslandInhabitantFlow({
   isOpen, inhabitant, topics, conversations, greeting, characterArtSrc, backgroundArtSrc,
-  playerSpriteSrc, sceneBackgroundSrc, islandName, islandStatusLabel, islandEmblemSrc, initialLayer, communicationAllowed = true, onClose,
+  playerSpriteSrc, sceneBackgroundSrc, islandName, islandStatusLabel, islandEmblemSrc, initialLayer, communicationAllowed = true, threeStage = false, onClose,
 }: IslandInhabitantFlowProps): React.JSX.Element | null {
   const titleId = useStableId('island-inhabitant-flow-title');
   const descriptionId = useStableId('island-inhabitant-flow-description');
@@ -111,14 +112,14 @@ export function IslandInhabitantFlow({
   const handleErrorClose = () => onClose({ inhabitantId: inhabitant.id, closeReason: 'missing_content', lastTopicId, conversationResult });
 
   const layerTitle = layer.kind === 'conversation' ? 'Conversation' : layer.kind === 'error' ? 'Conversation unavailable' : layer.kind === 'signal_incomplete' ? 'Signal incomplete' : `${inhabitant.displayName} topics`;
-  const body = <div className="island-run-overlay-root island-inhabitant-flow" data-flow-layer={layer.kind} data-reduced-motion-safe="true">
+  const body = <div className="island-run-overlay-root island-inhabitant-flow" data-flow-layer={layer.kind} data-three-stage={threeStage ? 'true' : undefined} data-reduced-motion-safe="true">
     <div className="island-inhabitant-flow__backdrop" aria-hidden="true" />
     <div className="island-inhabitant-flow__viewport">
       <div ref={dialogRef} className="island-inhabitant-flow__dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId} tabIndex={-1}>
         <h2 id={titleId} className="island-inhabitant-flow__sr-title">{layerTitle}</h2>
         <p id={descriptionId} className="island-inhabitant-flow__sr-title">Two-stage inhabitant communication flow.</p>
         <div className={`island-inhabitant-flow__layer island-inhabitant-flow__layer--${layer.kind}`}>
-          {layer.kind === 'encounter' ? <IslandInhabitantEncounter isOpen presentationMode="embedded" inhabitant={inhabitant} topics={topics} greeting={greeting} characterArtSrc={characterArtSrc ?? inhabitant.premiumArtSrc} backgroundArtSrc={backgroundArtSrc} islandName={islandName} islandStatusLabel={islandStatusLabel} islandEmblemSrc={islandEmblemSrc} discussedTopicIds={discussedTopicIds} onSelectTopic={handleSelectTopic} onClose={handleEncounterClose} /> : null}
+          {layer.kind === 'encounter' ? <IslandInhabitantEncounter isOpen presentationMode="embedded" threeStage={threeStage} inhabitant={inhabitant} topics={topics} greeting={greeting} characterArtSrc={characterArtSrc ?? inhabitant.premiumArtSrc} backgroundArtSrc={backgroundArtSrc} islandName={islandName} islandStatusLabel={islandStatusLabel} islandEmblemSrc={islandEmblemSrc} discussedTopicIds={discussedTopicIds} onSelectTopic={handleSelectTopic} onClose={handleEncounterClose} /> : null}
           {layer.kind === 'conversation' && selectedConversation ? <IslandRetroConversation isOpen presentationMode="embedded" conversation={selectedConversation} inhabitant={inhabitant} inhabitantSpriteSrc={inhabitant.retroSpriteSrc} playerSpriteSrc={playerSpriteSrc} sceneBackgroundSrc={sceneBackgroundSrc} onClose={handleConversationClose} onExit={() => setLayer({ kind: 'encounter' })} /> : null}
           {layer.kind === 'signal_incomplete' ? <section className="island-inhabitant-flow__partial" role="alert" aria-live="polite"><p className="island-inhabitant-flow__partial-eyebrow">SIGNAL INCOMPLETE</p><h3>{inhabitant.displayName} is trying to communicate.</h3><p className="island-inhabitant-flow__partial-distorted" aria-label="Fragments: luma, hatch, warning">“…luma… hatch… warning…”</p><p className="island-inhabitant-flow__partial-symbols" aria-label="Symbols: light, egg, dark moon">💡 → 🥚 → 🌑</p><p>They are trying to show you something. Gestures, symbols, and emotional intent come through, but the meaning will not fully translate yet.</p><p>Restore all nine Concord fragments to understand them.</p><div><button type="button" onClick={handleEncounterClose}>Keep searching</button></div></section> : null}
           {layer.kind === 'error' ? <section className="island-inhabitant-flow__error" role="alert" aria-live="assertive"><h3>Conversation unavailable</h3><p>{layer.message}</p><div><button type="button" onClick={() => setLayer({ kind: 'encounter' })}>Back to topics</button><button type="button" onClick={handleErrorClose}>Close</button></div></section> : null}

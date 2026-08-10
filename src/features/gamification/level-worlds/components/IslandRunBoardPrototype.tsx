@@ -1744,6 +1744,7 @@ export function IslandRunBoardPrototype({
       islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
       islandVisualBossState,
       isIsland5ThreePreviewRequested: import.meta.env.DEV && params.get('island3dPreview') === '1',
+      isCaretakerThreeEncounterPreviewRequested: import.meta.env.DEV && params.get('caretaker3dEncounterPreview') === '1',
       island5ThreePreviewLevel: Math.round(readNumericParam(params, 'island3dLevel', 3, 0, 3)) as 0 | 1 | 2 | 3,
       boardTiltXDeg: readNumericParam(params, 'boardTiltX', 47, 0, 80),
       boardRotateZDeg: readNumericParam(params, 'boardRotateZ', 0, -45, 45),
@@ -1761,6 +1762,7 @@ export function IslandRunBoardPrototype({
     islandVisualBuildLevel,
     islandVisualBossState,
     isIsland5ThreePreviewRequested,
+    isCaretakerThreeEncounterPreviewRequested,
     island5ThreePreviewLevel,
     boardTiltXDeg,
     boardRotateZDeg,
@@ -1799,6 +1801,11 @@ export function IslandRunBoardPrototype({
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
   const [isIslandInhabitantFlowOpen, setIsIslandInhabitantFlowOpen] = useState(false);
+  useEffect(() => {
+    if (isIslandVisualPreview && isCaretakerThreeEncounterPreviewRequested) {
+      setIsIslandInhabitantFlowOpen(true);
+    }
+  }, [isCaretakerThreeEncounterPreviewRequested, isIslandVisualPreview]);
   const [caretakerBoardBubbleText, setCaretakerBoardBubbleText] = useState<string | null>(null);
   const [showCreatureChannelModal, setShowCreatureChannelModal] = useState(false);
   // Auto-dismiss the Caretaker's on-board speech bubble so it never lingers over
@@ -11953,6 +11960,8 @@ export function IslandRunBoardPrototype({
     () => getIslandCommunicationAccess(runtimeState, 'inhabitant'),
     [runtimeState],
   );
+  const isCaretakerCommunicationAllowed = inhabitantCommunicationAccess.allowed
+    || (isIslandVisualPreview && isCaretakerThreeEncounterPreviewRequested);
   const creatureCommunicationAccess = useMemo(
     () => getIslandCommunicationAccess(runtimeState, 'creature'),
     [runtimeState],
@@ -12009,7 +12018,7 @@ export function IslandRunBoardPrototype({
   const openCaretakerFlow = useCallback((source: 'caretaker_tile_land' | 'caretaker_board_tap' | 'dev_hud') => {
     if (!shouldShowCaretakerTalkAction) return;
 
-    if (!inhabitantCommunicationAccess.allowed) {
+    if (!isCaretakerCommunicationAllowed) {
       const preConcordMessage = `${getPreConcordCaretakerUtterance()} The Caretaker gestures beside the board, but The Concord is not built yet.`;
       setCaretakerBoardBubbleText(preConcordMessage);
       setLandingText(preConcordMessage);
@@ -12025,7 +12034,7 @@ export function IslandRunBoardPrototype({
       : source === 'caretaker_board_tap'
         ? '🧙 The Caretaker waves you over. The Concord channel opens.'
         : '🧙 Dev: opening the Island Caretaker flow.');
-  }, [inhabitantCommunicationAccess.allowed, shouldShowCaretakerTalkAction]);
+  }, [isCaretakerCommunicationAllowed, shouldShowCaretakerTalkAction]);
   const handleCaretakerFlowClose = (result: IslandInhabitantFlowResult) => {
     setIsIslandInhabitantFlowOpen(false);
     setCaretakerBoardBubbleText(null);
@@ -13313,6 +13322,8 @@ export function IslandRunBoardPrototype({
                 onLandmarkClick={isIslandVisualPreview ? undefined : (landmarkId) => {
                   handleStopOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId);
                 }}
+                caretakerEncounterOpen={isIslandInhabitantFlowOpen}
+                onCaretakerClick={isIslandVisualPreview ? undefined : () => openCaretakerFlow('caretaker_board_tap')}
                 onRendererUnavailable={() => setIsIsland5ThreeEnabled(false)}
               />
             </Suspense>
@@ -16831,7 +16842,8 @@ export function IslandRunBoardPrototype({
           backgroundArtSrc={resolvedCaretakerBackgroundArtSrc}
           islandName={caretakerConcordContent?.islandName}
           islandStatusLabel={caretakerInhabitant.civilizationName}
-          communicationAllowed={inhabitantCommunicationAccess.allowed}
+          threeStage={shouldRenderIsland5Three}
+          communicationAllowed={isCaretakerCommunicationAllowed}
           onClose={handleCaretakerFlowClose}
         />
       ) : null}

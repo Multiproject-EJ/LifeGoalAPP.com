@@ -20,6 +20,7 @@ export type IslandInhabitantEncounterProps = {
   onClose: () => void;
   closeLabel?: string;
   presentationMode?: 'portal' | 'embedded';
+  threeStage?: boolean;
   discussedTopicIds?: string[];
 };
 
@@ -78,6 +79,7 @@ export function IslandInhabitantEncounter({
   onClose,
   closeLabel = 'Close inhabitant encounter',
   presentationMode = 'portal',
+  threeStage = false,
   discussedTopicIds = [],
 }: IslandInhabitantEncounterProps): React.JSX.Element | null {
   const titleId = useStableId('island-inhabitant-encounter-title');
@@ -106,15 +108,15 @@ export function IslandInhabitantEncounter({
 
   const eyebrow = inhabitant.civilizationName || islandName;
   const body = (
-    <div className="island-run-overlay-root island-inhabitant-encounter" data-biome={inhabitant.biome || 'unknown'} data-reduced-motion-safe="true">
-      <BackgroundArt src={backgroundArtSrc} />
+    <div className="island-run-overlay-root island-inhabitant-encounter" data-biome={inhabitant.biome || 'unknown'} data-three-stage={threeStage ? 'true' : undefined} data-reduced-motion-safe="true">
+      {!threeStage ? <BackgroundArt src={backgroundArtSrc} /> : null}
       <div className="island-inhabitant-encounter__veil" aria-hidden="true" />
       <div className="island-inhabitant-encounter__viewport">
         <div ref={dialogRef} className="island-inhabitant-encounter__surface" role={presentationMode === 'portal' ? 'dialog' : undefined} aria-modal={presentationMode === 'portal' ? 'true' : undefined} aria-labelledby={titleId} aria-describedby={descriptionId} tabIndex={-1} data-inhabitant-id={inhabitant.id}>
           <button type="button" className="island-inhabitant-encounter__close" aria-label={closeLabel} onClick={onClose}><span aria-hidden="true">×</span></button>
           <section className="island-inhabitant-encounter__stage" aria-label={`${inhabitant.displayName} encounter portrait`}>
             {islandStatusLabel ? <p className="island-inhabitant-encounter__status">{islandStatusLabel}</p> : null}
-            <CharacterArt src={characterArtSrc} name={inhabitant.displayName} />
+            {!threeStage ? <CharacterArt src={characterArtSrc} name={inhabitant.displayName} /> : <span className="island-inhabitant-encounter__three-stage-label" aria-hidden="true">LIVE 3D CARETAKER</span>}
           </section>
           <section className="island-inhabitant-encounter__panel">
             <div className="island-inhabitant-encounter__identity">

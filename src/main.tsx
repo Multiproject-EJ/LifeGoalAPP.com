@@ -48,6 +48,7 @@ const NON_APP_ROUTES = new Set(['world', 'lobby', 'privacy', 'terms', 'support']
 const QUEST_VISUAL_SYSTEM_PREVIEW_PATH = '/dev/quest-journey-visual-system';
 const ISLAND_ART_PREVIEW_PATH = '/dev/island-art-preview';
 const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit';
+const CARETAKER_CHARACTER_LAB_PATH = '/dev/caretaker-character-lab';
 const ISLAND_3D_PROFILER_BUILD_ENABLED = import.meta.env.VITE_ISLAND_3D_PROFILE_ENABLED === 'true';
 const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
 const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
@@ -235,6 +236,20 @@ function IslandTemplateKitRoute() {
   return TemplateKit ? <TemplateKit /> : null;
 }
 
+function CaretakerCharacterLabRoute() {
+  const [CharacterLab, setCharacterLab] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/level-worlds/dev/CaretakerCharacterLab').then((module) => {
+      if (isMounted) setCharacterLab(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return CharacterLab ? <CharacterLab /> : null;
+}
+
 function Island001StoryPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
 
@@ -324,6 +339,10 @@ function Root() {
       typeof window !== 'undefined' &&
       window.location.pathname.replace(/\/+$/, '') === ISLAND_TEMPLATE_KIT_PATH
     );
+  const isCaretakerCharacterLabRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === CARETAKER_CHARACTER_LAB_PATH;
   const isIsland001StoryPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -467,6 +486,10 @@ function Root() {
 
   if (isIslandTemplateKitRoute) {
     return <IslandTemplateKitRoute />;
+  }
+
+  if (isCaretakerCharacterLabRoute) {
+    return <CaretakerCharacterLabRoute />;
   }
 
   if (

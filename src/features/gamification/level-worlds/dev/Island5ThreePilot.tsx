@@ -40,6 +40,7 @@ import {
   type Island5CameraPresetId,
   type Island5LandmarkDefinition,
 } from './island5ThreePilotContract';
+import { createCaretakerMaster, type CaretakerModel } from './CaretakerThreeModel';
 
 export type BuildLevel = 0 | 1 | 2 | 3;
 export type Island5LandmarkBuildLevels = Partial<Record<Island5LandmarkDefinition['id'], BuildLevel>>;
@@ -60,6 +61,8 @@ interface Island5ThreePilotProps {
   onTokenHop?: (tileIndex: number) => void;
   onTokenLand?: (tileIndex: number) => void;
   onLandmarkClick?: (landmarkId: Island5LandmarkDefinition['id']) => void;
+  caretakerEncounterOpen?: boolean;
+  onCaretakerClick?: () => void;
   onRendererUnavailable?: () => void;
 }
 
@@ -120,6 +123,10 @@ interface PilotProfileReport extends Island3DPerformanceSummary {
 
 // Smootherstep gives camera motion zero velocity and acceleration at both ends.
 const CAMERA_EASE = (progress: number) => progress * progress * progress * (progress * (progress * 6 - 15) + 10);
+const CARETAKER_BOARD_HOME = new THREE.Vector3(-2.12, 0.36, -4.68);
+const CARETAKER_ENCOUNTER_HOME = new THREE.Vector3(0, 0.36, 5.25);
+const CARETAKER_BOARD_SCALE = 0.36;
+const CARETAKER_ENCOUNTER_SCALE = 0.52;
 
 function readDeviceSignals(): Island3DDeviceSignals {
   const navigatorWithMemory = navigator as Navigator & { deviceMemory?: number };
@@ -2628,6 +2635,8 @@ export default function Island5ThreePilot({
   onTokenHop,
   onTokenLand,
   onLandmarkClick,
+  caretakerEncounterOpen = false,
+  onCaretakerClick,
   onRendererUnavailable,
 }: Island5ThreePilotProps) {
   const isEmbedded = presentation === 'embedded';
@@ -2666,6 +2675,8 @@ export default function Island5ThreePilot({
   const onTokenHopRef = useRef(onTokenHop);
   const onTokenLandRef = useRef(onTokenLand);
   const onLandmarkClickRef = useRef(onLandmarkClick);
+  const caretakerEncounterOpenRef = useRef(caretakerEncounterOpen);
+  const onCaretakerClickRef = useRef(onCaretakerClick);
   const onRendererUnavailableRef = useRef(onRendererUnavailable);
   const deviceSignals = useMemo(() => readDeviceSignals(), []);
   const resolvedQualitySelection = qualityOverride ?? qualitySelection;
@@ -2683,6 +2694,14 @@ export default function Island5ThreePilot({
   useEffect(() => {
     onLandmarkClickRef.current = onLandmarkClick;
   }, [onLandmarkClick]);
+
+  useEffect(() => {
+    caretakerEncounterOpenRef.current = caretakerEncounterOpen;
+  }, [caretakerEncounterOpen]);
+
+  useEffect(() => {
+    onCaretakerClickRef.current = onCaretakerClick;
+  }, [onCaretakerClick]);
 
   useEffect(() => {
     onRendererUnavailableRef.current = onRendererUnavailable;
@@ -2920,6 +2939,65 @@ export default function Island5ThreePilot({
     playerPiece.shadow.position.set(startingTokenPosition[0], startingTokenPosition[1] + 0.012, startingTokenPosition[2]);
     scene.add(playerPiece.shadow, playerPiece.root);
 
+    const caretakerFootplateMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9fb7b7,
+      roughness: 0.82,
+      metalness: 0.04,
+    });
+    const caretakerFootplate = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.42, 0.46, 0.12, 12),
+      caretakerFootplateMaterial,
+    );
+    caretakerFootplate.name = 'ISLAND_5_CARETAKER_FOOTPLATE';
+    caretakerFootplate.position.copy(CARETAKER_BOARD_HOME).add(new THREE.Vector3(0, -0.06, 0));
+    caretakerFootplate.scale.z = 0.78;
+    caretakerFootplate.castShadow = qualityProfile.shadows;
+    caretakerFootplate.receiveShadow = true;
+    caretakerFootplate.userData.caretakerTarget = true;
+
+    const caretakerContactShadowMaterial = new THREE.MeshBasicMaterial({
+      color: 0x102b38,
+      transparent: true,
+      opacity: 0.32,
+      depthWrite: false,
+    });
+    const caretakerContactShadow = new THREE.Mesh(
+      new THREE.CircleGeometry(0.3, 12),
+      caretakerContactShadowMaterial,
+    );
+    caretakerContactShadow.name = 'ISLAND_5_CARETAKER_CONTACT_SHADOW';
+    caretakerContactShadow.rotation.x = -Math.PI / 2;
+    caretakerContactShadow.position.copy(CARETAKER_BOARD_HOME).add(new THREE.Vector3(0, 0.035, 0));
+    caretakerContactShadow.scale.y = 0.64;
+    caretakerContactShadow.userData.caretakerTarget = true;
+
+    // Visual scale and touch scale are intentionally decoupled. The Caretaker
+    // reads like a small topiary on the board while this transparent volume
+    // keeps the tap target forgiving on a phone.
+    const caretakerHitTarget = new THREE.Mesh(
+      new THREE.SphereGeometry(0.68, 8, 6),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }),
+    );
+    caretakerHitTarget.name = 'ISLAND_5_CARETAKER_HIT_TARGET';
+    caretakerHitTarget.position.copy(CARETAKER_BOARD_HOME).add(new THREE.Vector3(0, 0.72, 0));
+    caretakerHitTarget.userData.caretakerTarget = true;
+
+    const boardCaretaker = createCaretakerMaster({ quality: 'low' });
+    boardCaretaker.root.name = 'ISLAND_5_CARETAKER_BOARD_LOD';
+    boardCaretaker.root.position.copy(CARETAKER_BOARD_HOME);
+    boardCaretaker.root.scale.setScalar(CARETAKER_BOARD_SCALE);
+    boardCaretaker.root.rotation.y = 0;
+    boardCaretaker.root.traverse((child) => {
+      child.userData.caretakerTarget = true;
+    });
+    boardCaretaker.setAnimation('idle', 0, true);
+    boardCaretaker.setEmotion('calm');
+    scene.add(caretakerFootplate, caretakerContactShadow, caretakerHitTarget, boardCaretaker.root);
+    const clickableCaretaker: THREE.Object3D[] = [caretakerHitTarget, caretakerFootplate, caretakerContactShadow, boardCaretaker.root];
+    let encounterCaretaker: CaretakerModel | null = null;
+    let wasCaretakerEncounterOpen = false;
+    let caretakerEncounterStartedAt = 0;
+
     const clickableLandmarks: THREE.Object3D[] = [];
     for (const landmark of ISLAND_5_LANDMARKS) {
       const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevel;
@@ -3028,6 +3106,42 @@ export default function Island5ThreePilot({
         controlPosition,
         toPosition,
         toTarget: new THREE.Vector3(...preset.target),
+      };
+    };
+    const applyCaretakerFocus = (durationScale = 1) => {
+      setActivePreset('manual');
+      const fromPosition = camera.position.clone();
+      const toTarget = CARETAKER_BOARD_HOME.clone().add(new THREE.Vector3(0, 1.12, 0));
+      const toPosition = CARETAKER_BOARD_HOME.clone().add(new THREE.Vector3(2.35, 3.25, 4.1));
+      const controlPosition = fromPosition.clone().lerp(toPosition, 0.5);
+      controlPosition.y += 1.8;
+      transition = {
+        startedAt: performance.now(),
+        durationMs: Math.max(280, 720 * durationScale),
+        fromPosition,
+        fromTarget: controls.target.clone(),
+        controlPosition,
+        toPosition,
+        toTarget,
+      };
+    };
+    const applyCaretakerEncounterFocus = (durationScale = 1) => {
+      setActivePreset('manual');
+      const fromPosition = camera.position.clone();
+      // Aim below the character's centre so the hat, eyes and upper torso stay
+      // above the topic panel in a phone portrait viewport.
+      const toTarget = CARETAKER_ENCOUNTER_HOME.clone().add(new THREE.Vector3(0, 0.45, 0));
+      const toPosition = CARETAKER_ENCOUNTER_HOME.clone().add(new THREE.Vector3(2.65, 3.55, 6.35));
+      const controlPosition = fromPosition.clone().lerp(toPosition, 0.5);
+      controlPosition.y += 2.2;
+      transition = {
+        startedAt: performance.now(),
+        durationMs: Math.max(300, 780 * durationScale),
+        fromPosition,
+        fromTarget: controls.target.clone(),
+        controlPosition,
+        toPosition,
+        toTarget,
       };
     };
     applyPresetRef.current = applyPreset;
@@ -3141,6 +3255,12 @@ export default function Island5ThreePilot({
         -((event.clientY - rect.top) / rect.height) * 2 + 1,
       );
       raycaster.setFromCamera(pointer, camera);
+      const caretakerIntersection = raycaster.intersectObjects(clickableCaretaker, true)[0];
+      if (caretakerIntersection) {
+        applyCaretakerFocus(0.88);
+        onCaretakerClickRef.current?.();
+        return;
+      }
       const intersection = raycaster.intersectObjects(clickableLandmarks, true)[0];
       const landmarkId = intersection?.object.userData.landmarkId as Island5CameraPresetId | undefined;
       if (landmarkId) {
@@ -3175,6 +3295,64 @@ export default function Island5ThreePilot({
         materials.voiceGlow.emissiveIntensity = 0.96 + Math.sin(elapsed * 1.35) * 0.14;
         materials.pearlAccent.emissiveIntensity = 0.36 + Math.sin(elapsed * 1.08 + 0.7) * 0.1;
         playerPiece.compassLight.rotation.y += frameDeltaSeconds * 1.8;
+      }
+
+      const isCaretakerEncounterOpen = caretakerEncounterOpenRef.current;
+      if (isCaretakerEncounterOpen !== wasCaretakerEncounterOpen) {
+        wasCaretakerEncounterOpen = isCaretakerEncounterOpen;
+        if (isCaretakerEncounterOpen) {
+          caretakerEncounterStartedAt = elapsed;
+          boardCaretaker.root.visible = false;
+          if (!encounterCaretaker) {
+            encounterCaretaker = createCaretakerMaster({ quality: 'high' });
+            encounterCaretaker.root.name = 'ISLAND_5_CARETAKER_ENCOUNTER_LOD';
+            encounterCaretaker.root.position.copy(CARETAKER_ENCOUNTER_HOME);
+            encounterCaretaker.root.scale.setScalar(CARETAKER_ENCOUNTER_SCALE);
+            encounterCaretaker.root.rotation.y = 0;
+            encounterCaretaker.setEmotion('delighted');
+            encounterCaretaker.setAnimation('greet', elapsed, true);
+            scene.add(encounterCaretaker.root);
+            if (qualityProfile.shadows) renderer.shadowMap.needsUpdate = true;
+          }
+          controls.enabled = false;
+          applyCaretakerEncounterFocus(0.72);
+        } else {
+          if (encounterCaretaker) {
+            scene.remove(encounterCaretaker.root);
+            encounterCaretaker.dispose();
+            encounterCaretaker = null;
+          }
+          boardCaretaker.root.visible = true;
+          boardCaretaker.setEmotion('calm');
+          boardCaretaker.setAnimation('idle', elapsed, true);
+          controls.enabled = true;
+          applyPreset('overview', 0.72);
+        }
+      }
+
+      if (encounterCaretaker) {
+        const encounterElapsed = elapsed - caretakerEncounterStartedAt;
+        if (encounterElapsed > 2.25 && encounterCaretaker.animation === 'greet') {
+          encounterCaretaker.setAnimation('talk-gentle', elapsed);
+          encounterCaretaker.setEmotion('curious');
+        }
+        encounterCaretaker.update(elapsed, frameDeltaSeconds, isReducedMotion);
+      } else {
+        const wanderCycle = elapsed % 18;
+        const isWalking = !isReducedMotion && wanderCycle < 4.4;
+        const wanderProgress = Math.min(1, wanderCycle / 4.4);
+        const wanderAngle = wanderProgress * Math.PI * 2;
+        boardCaretaker.root.position.set(
+          CARETAKER_BOARD_HOME.x + Math.sin(wanderAngle) * 0.16,
+          CARETAKER_BOARD_HOME.y,
+          CARETAKER_BOARD_HOME.z + (1 - Math.cos(wanderAngle)) * 0.055,
+        );
+        const tangentX = Math.cos(wanderAngle) * 0.16;
+        const tangentZ = Math.sin(wanderAngle) * 0.055;
+        boardCaretaker.root.rotation.y = isWalking ? Math.atan2(tangentX, tangentZ) : 0;
+        if (isWalking && boardCaretaker.animation !== 'walk') boardCaretaker.setAnimation('walk', elapsed);
+        if (!isWalking && boardCaretaker.animation !== 'idle') boardCaretaker.setAnimation('idle', elapsed);
+        boardCaretaker.update(elapsed, frameDeltaSeconds, isReducedMotion);
       }
 
       for (const [tileIndex, impact] of activeTileImpacts) {
@@ -3488,6 +3666,13 @@ export default function Island5ThreePilot({
       };
       controls.dispose();
       timer.dispose();
+      if (encounterCaretaker) {
+        scene.remove(encounterCaretaker.root);
+        encounterCaretaker.dispose();
+        encounterCaretaker = null;
+      }
+      scene.remove(boardCaretaker.root);
+      boardCaretaker.dispose();
       disposeScene(scene);
       tileGeometry.dispose();
       tileMaterials.forEach((material) => material.dispose());
