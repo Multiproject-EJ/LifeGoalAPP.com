@@ -13,6 +13,9 @@ try {
   const { runAllTimeBoundOfferSortTests } = require(
     path.join(outDir, 'features/habits/__tests__/timeBoundOfferSort.test.js'),
   );
+  const { runAllTimeLimitedOfferTelemetryTests } = require(
+    path.join(outDir, 'features/habits/__tests__/timeLimitedOfferTelemetry.test.js'),
+  );
   const { runAllDailyOfferClaimTests } = require(
     path.join(outDir, 'features/habits/__tests__/dailyOfferClaim.test.js'),
   );
@@ -29,6 +32,7 @@ try {
     path.join(outDir, 'features/habits/__tests__/habitRhythm.test.js'),
   );
   runAllTimeBoundOfferSortTests();
+  runAllTimeLimitedOfferTelemetryTests();
   await runAllDailyOfferClaimTests();
   runAllWisdomTreeGrowthTests();
   runAllHabitCoachTests();
