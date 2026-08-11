@@ -2,7 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
-import type { IslandTileType } from '../services/islandBoardTileMap';
+import {
+  applyLandmarkDoorTiles,
+  generateTileMap,
+  getIslandRarity,
+  type IslandTileMapEntry,
+  type IslandTileType,
+} from '../services/islandBoardTileMap';
 import { logIslandRunEntryDebug } from '../services/islandRunEntryDebug';
 import { computeHopDurations } from '../components/board/cameraDirector';
 import {
@@ -89,6 +95,7 @@ import {
   ISLAND_6_MOONVEIL_LANDMARK_LABELS,
   ISLAND_6_MOONVEIL_WORLD_NAME,
 } from './Island6MoonveilThreeWorld';
+import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
 
 export type BuildLevel = 0 | 1 | 2 | 3;
 export type Island5LandmarkBuildLevels = Partial<Record<Island5LandmarkDefinition['id'], BuildLevel>>;
@@ -119,6 +126,8 @@ interface Island5ThreePilotProps {
   landmarkBuildLevels?: Island5LandmarkBuildLevels;
   presentation?: 'workbench' | 'embedded';
   qualityOverride?: Island3DQualitySelection;
+  /** Canonical presentation map. This never becomes a gameplay write path. */
+  tileMap?: readonly IslandTileMapEntry[];
   tokenIndex?: number;
   pendingHopSequence?: readonly number[] | null;
   isRolling?: boolean;
@@ -2801,6 +2810,7 @@ export default function Island5ThreePilot({
   landmarkBuildLevels,
   presentation = 'workbench',
   qualityOverride,
+  tileMap,
   tokenIndex = 0,
   pendingHopSequence = null,
   isRolling = false,
@@ -2888,6 +2898,18 @@ export default function Island5ThreePilot({
   const qualityProfile = useMemo(
     () => resolveIsland3DQuality(resolvedQualitySelection, deviceSignals),
     [deviceSignals, resolvedQualitySelection],
+  );
+  const resolvedTileMap = useMemo<readonly IslandTileMapEntry[]>(() => (
+    tileMap ?? applyLandmarkDoorTiles(
+      generateTileMap(islandNumber, getIslandRarity(islandNumber), `island-${islandNumber}`, 2),
+      { expandedActiveStopId: 'hatchery' },
+    )
+  ), [islandNumber, tileMap]);
+  const tileRewardMapKey = useMemo(
+    () => resolvedTileMap
+      .map((entry) => `${entry.index}:${entry.tileType}:${entry.doorStopId ?? ''}:${entry.isActiveDoorCluster ? 1 : 0}`)
+      .join('|'),
+    [resolvedTileMap],
   );
   const landmarkBuildLevelsKey = useMemo(
     () => ISLAND_5_LANDMARKS
@@ -3328,6 +3350,16 @@ export default function Island5ThreePilot({
       scene.add(tile);
     }
 
+    // Three-dimensional tile rewards are projections of the canonical tile
+    // map. They carry no click handlers, wallet logic, or persistence and are
+    // intentionally hidden beneath the player piece while its tile is occupied.
+    const tileRewardObjects = createIslandRunTileRewardThreeObjects({
+      tileMap: resolvedTileMap,
+      tileTransforms,
+      quality: qualityProfile.id,
+    });
+    scene.add(tileRewardObjects.root);
+
     const playerPiece = createIslandPlayerPiece(qualityProfile.id);
     const startingTokenPosition = getIsland5TokenGroundPosition(tileTransforms, tokenIndexRef.current);
     playerPiece.root.position.set(...startingTokenPosition);
@@ -3546,8 +3578,20 @@ export default function Island5ThreePilot({
         wisdom: { position: [-0.6, 7.7, -2.4], target: [-4.36, 1.52, 3.9] },
         event: { position: [-2.3, 7.7, 0.9], target: [4.36, 1.48, 3.9] },
       };
+      const moonveilFocusOverrides: Partial<Record<Island5CameraPresetId, {
+        position: readonly [number, number, number];
+        target: readonly [number, number, number];
+      }>> = {
+        boss: { position: [0, 8.4, 11.2], target: [0, 1.35, 0] },
+        hatchery: { position: [2.6, 8.1, -0.65], target: [-4.36, 1.46, -3.9] },
+        habit: { position: [-2.4, 8.1, -0.65], target: [4.36, 1.48, -3.9] },
+        wisdom: { position: [2.35, 8.1, 0.8], target: [-4.36, 1.52, 3.9] },
+        event: { position: [-2.55, 8.1, 0.8], target: [4.36, 1.5, 3.9] },
+      };
       const firstLightOverride = isFirstLightKingdom ? firstLightFocusOverrides[id] : undefined;
-      const preset = firstLightOverride ? { ...basePreset, ...firstLightOverride } : basePreset;
+      const moonveilOverride = isMoonveilNexus ? moonveilFocusOverrides[id] : undefined;
+      const authoredFocusOverride = firstLightOverride ?? moonveilOverride;
+      const preset = authoredFocusOverride ? { ...basePreset, ...authoredFocusOverride } : basePreset;
       setActivePreset(id);
       if (isReducedMotion) {
         camera.position.set(...preset.position);
@@ -3751,6 +3795,7 @@ export default function Island5ThreePilot({
       livingAmbience.updateView?.(camera.position);
       if (!isReducedMotion) {
         livingAmbience.animate(elapsed);
+        tileRewardObjects.animate(elapsed, tokenIndexRef.current);
         routeGlow.material instanceof THREE.MeshStandardMaterial
           && (routeGlow.material.emissiveIntensity = 0.48 + Math.sin(elapsed * 1.2) * 0.14);
         coralInstances.rotation.y = Math.sin(elapsed * 0.08) * 0.012;
@@ -3765,6 +3810,11 @@ export default function Island5ThreePilot({
         materials.voiceGlow.emissiveIntensity = 0.96 + Math.sin(elapsed * 1.35) * 0.14;
         materials.pearlAccent.emissiveIntensity = 0.36 + Math.sin(elapsed * 1.08 + 0.7) * 0.1;
         playerPiece.compassLight.rotation.y += frameDeltaSeconds * 1.8;
+      } else {
+        // Reduced motion freezes bob/spin at a deterministic pose while still
+        // reflecting canonical token occupancy so the landed-on reward does
+        // not clip through the player piece.
+        tileRewardObjects.animate(0, tokenIndexRef.current);
       }
 
       if (crownDrifter && crownDrifterPresentationRoot) {
@@ -4224,7 +4274,7 @@ export default function Island5ThreePilot({
       stopTourRef.current = () => undefined;
       startProfilerRef.current = () => undefined;
     };
-  }, [buildLevel, deviceSignals, islandNumber, isCelestialSkyKingdom, isFirstLightKingdom, isFrostmoonHaven, isMoonveilNexus, isReducedMotion, isSunshoreAtoll, landmarkBuildLevelsKey, qualityProfile, resolvedWorldSourceNumber]);
+  }, [buildLevel, deviceSignals, islandNumber, isCelestialSkyKingdom, isFirstLightKingdom, isFrostmoonHaven, isMoonveilNexus, isReducedMotion, isSunshoreAtoll, landmarkBuildLevelsKey, qualityProfile, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
 
   return (
     <section

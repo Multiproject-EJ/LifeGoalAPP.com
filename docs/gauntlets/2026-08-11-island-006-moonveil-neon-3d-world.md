@@ -117,4 +117,56 @@ The supplied image is a single final-angle concept. It is excellent for silhouet
 - Settled workbench proof reports 60 FPS in both tiers on the desktop test device. High renders approximately 139k triangles; Low approximately 64k and preserves the full semantic silhouette.
 - TypeScript and the Vite production build pass. The full Island Run suite reports 1723 passing and three known Island 001 migration-guard failures (`fixed plot`, `final-camera scenery`, and `landmark camera target`); none touches Island 006 routing or rendering.
 
-The next active work item is the queued Compass Book close-view/micro-detail pass.
+## User quality reset — 2026-08-11
+
+The first shipped checkpoint is **not visually approved**. Eivind rated the whole-island result approximately **2/10**. That verdict supersedes the earlier automated 0.86 estimate: the former review proved route integrity, component presence, and mobile execution, but substantially over-valued structural completeness and under-valued atmosphere, landmark finish, warm interior life, glow hierarchy, and reference density.
+
+### Observed failure
+
+- The four satellites merge visually into one dark plate instead of reading as an inhabited constellation of places.
+- Landmark silhouettes are present, but their façades, roofs, warm interiors, gold ornament, inhabited props, and material depth are too sparse.
+- The central route dominates as simple alternating blocks; the island lacks the reference's layered star paving, architectural retaining walls, parapets, stairs, gardens, and crystal micro-landmarks.
+- Cyan/violet energy exists, but reads as thin procedural lines instead of luminous waterfalls, fissures, halos, portal bloom, and atmospheric bounce.
+- The dotted galaxy communicates “debug particle spiral” rather than a painted, deep celestial sky.
+- Dark values crush the architecture. The reference relies on warm amber windows and gold lanterns to separate every building from the void.
+
+### Required rebuild delta
+
+1. Separate the central shelf and four satellite roots with readable void gaps and real bridge spans while preserving all canonical anchors.
+2. Add multi-tier retaining architecture, stairs, balustrades, star posts, rock strata, roots, gardens, and crystal clusters.
+3. Give every L3 landmark a readable warm inhabited core, framed windows/doors, richer roofline, gold trims, and function-specific props.
+4. Replace the dotted-only sky with a layered procedural nebula/galaxy backdrop plus parallax stars.
+5. Add halo geometry/sprites and stronger local warm lights without washing out the indigo stone.
+6. Add canonical tile-state-driven 3D reward affordances: Golden Event Ticket, Essence crystal, Universal Reward Token visual, treasure chest, encounter/card prop, build-rush hammer, hazard rift, traffic beacon, and active landmark-door sigil.
+7. Keep reward objects presentation-only. Their type/index must come from the canonical tile map and all landing rewards/modals remain owned by existing action services.
+
+### Revised acceptance
+
+- The 390×844 live frame must read as an inhabited magical night realm before labels are read.
+- Warm/cool separation must remain visible in both High and Low quality.
+- The five L3 landmarks must remain identifiable in a thumbnail and reveal additional meso/micro detail under focus.
+- Reward objects must clearly belong to their exact tile, avoid the token's travel corridor, and reduce motion correctly.
+- Previous “complete” language is historical checkpoint evidence only; the next visual review starts from the user-approved **0.20** baseline.
+
+The queued Compass Book surface pass remains next after this rebuilt Island 006 release clears phone, performance, and interaction evidence.
+
+## User-reset rebuild candidate — 2026-08-11
+
+This pass responds directly to the 2/10 review; it is a new release candidate, not a claim of user approval.
+
+- The central route shelf is now visually separated from four smaller floating landmark roots. Real bridge spans replace the previous merged dark plate.
+- High adds multi-tier retaining architecture, rock teeth, glowing root veins, balustrades, star paving, night gardens, crystal clusters, 22 energy falls across the main and satellite roots, closer varied sky shards, and a slow orbiting void skiff.
+- The sky now combines a painted procedural nebula texture, spiral galaxy, two parallax star fields, constellation geometry, motes, and deep-background shards.
+- L3 landmarks gained annexes, galleries, framed arched windows, warm crown lights, local amber point lights, banners, props, stronger portals, and authored focus cameras that show their intended inner façades.
+- Canonical tile-map presentation now includes a floating Golden Event Ticket, Essence crystal, Universal Reward Token visual, chest, hazard rift, encounter scroll, caretaker card, Build Rush hammer, traffic beacon, and active-door sigil. These objects are read-only projections; they own no click, wallet, persistence, or reward logic.
+- The Golden Event Ticket landing continues to grant only through `applyTimedEventTicketTileGrant`, then shows a compact 2.8-second non-blocking celebration. No additional economy or “Universal Token” wallet was introduced.
+- Reduced motion freezes reward bob/spin but still hides the occupied object beneath the canonical player piece.
+
+### Candidate evidence and verification
+
+- Workbench overview: `docs/gauntlets/evidence/island-006-moonveil-3d-world/03-user-reset-overview-workbench.png`
+- Phone crop: `docs/gauntlets/evidence/island-006-moonveil-3d-world/04-user-reset-overview-phone.png`
+- TypeScript project build: pass.
+- Vite production build: pass (existing large-chunk advisory only).
+- Island Run architecture guard: pass, zero violations and three existing allowlisted warnings.
+- Island Run suite: 1,724 pass; three existing Island 001 migration/source-contract failures remain (`landmark camera target`, `fixed plot`, `final-camera scenery`). The new tile-object mapping test passes.

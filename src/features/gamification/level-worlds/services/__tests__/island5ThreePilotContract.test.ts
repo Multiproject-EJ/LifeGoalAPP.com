@@ -32,9 +32,20 @@ import {
   ISLAND_1_CLOUD_MINIMUM_Y,
   ISLAND_1_OCEAN_SURFACE_Y,
 } from '../../dev/Island1ThreeWorld';
+import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'maps canonical board tiles to presentation-only 3D reward identities',
+    run: () => {
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'free_ticket', isActiveDoorCluster: false }), 'golden_event_ticket', 'ticket tiles need a readable golden ticket');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'currency', isActiveDoorCluster: false }), 'essence_crystal', 'currency tiles keep the canonical Essence identity');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false }), 'universal_reward_token', 'ordinary reward progress may use the Universal Reward Token visual language');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: true }), 'active_landmark_door', 'only the active door cluster gets a door sigil');
+      assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: false }), null, 'inactive doors must not imply a collectible reward');
+    },
+  },
   {
     name: 'gives First Light Kingdom quality-scaled springs, cascades, foam and fauna',
     run: async () => {

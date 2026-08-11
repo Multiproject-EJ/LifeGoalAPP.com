@@ -1988,6 +1988,16 @@ export function IslandRunBoardPrototype({
     isTravellingRef.current = false;
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
+  const [ticketTileCelebration, setTicketTileCelebration] = useState<{
+    amount: number;
+    eventId: string | null;
+    presentationId: number;
+  } | null>(null);
+  useEffect(() => {
+    if (!ticketTileCelebration) return undefined;
+    const timeout = window.setTimeout(() => setTicketTileCelebration(null), 2800);
+    return () => window.clearTimeout(timeout);
+  }, [ticketTileCelebration]);
   const [activeStopId, setActiveStopId] = useState<string | null>(null);
   const [arenaBoostStatus, setArenaBoostStatus] = useState<'idle' | 'claimed' | 'already_claimed' | 'no_active_event'>('idle');
   const [arenaSoftSaveValueMomentReached, setArenaSoftSaveValueMomentReached] = useState(false);
@@ -7398,6 +7408,7 @@ export function IslandRunBoardPrototype({
           const eventId = activeTimedEventId;
           if (!eventId) {
             setLandingText('🎟️ Free ticket tile found — no timed event is active yet.');
+            setTicketTileCelebration({ amount: 0, eventId: null, presentationId: Date.now() });
           } else {
             const currentTickets = Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[eventId] ?? 0));
             const maxGrant = currentTickets <= 0 ? 3 : currentTickets <= 2 ? 2 : 1;
@@ -7406,6 +7417,7 @@ export function IslandRunBoardPrototype({
             setRuntimeState(grantResult.record);
             runtimeStateRef.current = grantResult.record;
             setLandingText(`🎟️ Free ticket tile! +${grantResult.applied} event ticket${grantResult.applied === 1 ? '' : 's'}.`);
+            setTicketTileCelebration({ amount: grantResult.applied, eventId, presentationId: Date.now() });
           }
         } else if (landedTile?.tileType === 'encounter') {
           // M6-COMPLETE: check if this encounter tile was already completed this visit
@@ -13652,6 +13664,7 @@ export function IslandRunBoardPrototype({
                 landmarkBuildLevels={isIslandVisualPreview ? undefined : island5ThreeBuildLevels}
                 presentation="embedded"
                 qualityOverride={isDevModeEnabled ? devIsland5ThreeQuality : undefined}
+                tileMap={landmarkDoorTileMap}
                 tokenIndex={tokenIndex}
                 pendingHopSequence={pendingHopSequence}
                 isRolling={isRolling}
@@ -17582,6 +17595,30 @@ export function IslandRunBoardPrototype({
           </div>
         );
       })()}
+
+      {ticketTileCelebration && typeof document !== 'undefined' ? createPortal((
+        <aside
+          key={ticketTileCelebration.presentationId}
+          className="island-run-ticket-tile-celebration"
+          role="status"
+          aria-live="polite"
+          aria-label={ticketTileCelebration.amount > 0 ? 'Event tickets collected' : 'Golden ticket discovered'}
+        >
+          <span className="island-run-ticket-tile-celebration__halo" aria-hidden="true" />
+          <span className="island-run-ticket-tile-celebration__ticket" aria-hidden="true">
+            <span>✦</span>
+          </span>
+          <span className="island-run-ticket-tile-celebration__copy">
+            <small>Golden ticket tile</small>
+            <strong>
+              {ticketTileCelebration.amount > 0
+                ? `+${ticketTileCelebration.amount} event ticket${ticketTileCelebration.amount === 1 ? '' : 's'}`
+                : 'Ticket signal discovered'}
+            </strong>
+            <span>{ticketTileCelebration.eventId ? 'Added to the active event' : 'A timed event will activate it'}</span>
+          </span>
+        </aside>
+      ), document.body) : null}
 
       {prepayTicketPromptStopId && typeof document !== 'undefined' ? createPortal((() => {
         const promptedStop = islandStopPlan.find((stop) => stop.stopId === prepayTicketPromptStopId);
