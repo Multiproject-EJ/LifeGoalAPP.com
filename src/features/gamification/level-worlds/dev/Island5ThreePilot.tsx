@@ -3173,6 +3173,10 @@ export default function Island5ThreePilot({
       position: [0, 0, 0],
       seed: 0x15c05a,
     });
+    // Celestial Sky Kingdom owns a deeper, tapered procedural sky-root in its
+    // ambience layer. Hiding the generic coastal cylinder prevents the island
+    // from reading as a flat plate while preserving the canonical board above.
+    island.visible = !isCelestialSkyKingdom;
     scene.add(island);
 
     ISLAND_5_LANDMARKS.filter((entry) => entry.id !== 'boss').forEach((landmark, landmarkIndex) => {
@@ -3185,6 +3189,7 @@ export default function Island5ThreePilot({
         position: landmark.position,
         seed: 0x51a7 + landmarkIndex * 0x913,
       });
+      satellite.visible = !isCelestialSkyKingdom;
       scene.add(satellite);
       const bridgeStart: readonly [number, number, number] = [landmark.position[0] * 0.56, 0, landmark.position[2] * 0.56];
       const bridgeEnd: readonly [number, number, number] = [landmark.position[0] * 0.82, 0, landmark.position[2] * 0.82];

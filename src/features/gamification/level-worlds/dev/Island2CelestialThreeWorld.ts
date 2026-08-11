@@ -105,7 +105,7 @@ export function createIsland2CelestialMaterials(): Island2CelestialMaterials {
   return {
     ivory: new THREE.MeshStandardMaterial({ color: 0xf5f0dd, map: stoneMap, roughness: 0.64, metalness: 0 }),
     ivoryShade: new THREE.MeshStandardMaterial({ color: 0xc9d3d5, map: stoneMap, roughness: 0.78, metalness: 0 }),
-    cliff: new THREE.MeshStandardMaterial({ color: 0x66768b, map: cliffMap, roughness: 0.92, metalness: 0 }),
+    cliff: new THREE.MeshStandardMaterial({ color: 0x71849b, map: cliffMap, roughness: 0.92, metalness: 0, emissive: 0x1d2f45, emissiveIntensity: 0.28 }),
     grass: new THREE.MeshStandardMaterial({ color: 0x6fa45d, roughness: 0.9 }),
     grassLight: new THREE.MeshStandardMaterial({ color: 0x9acb72, roughness: 0.86 }),
     sapphire: new THREE.MeshPhysicalMaterial({ color: 0x255aa8, map: roofMap, roughness: 0.38, metalness: 0.08, clearcoat: 0.48, clearcoatRoughness: 0.22 }),
@@ -603,27 +603,59 @@ export function buildIsland2CelestialLandmark(
 }
 
 function addFloatingShelf(root: THREE.Group, x: number, z: number, radius: number, depth: number, materials: Island2CelestialMaterials, quality: Island3DQuality, seed: number) {
+  const shelf = new THREE.Group();
+  shelf.name = radius > 5 ? 'ISLAND_2_MAIN_SKY_ROOT' : 'ISLAND_2_LANDMARK_SKY_ROOT';
+  shelf.position.set(x, 0, z);
   const segments = segmentsFor(quality);
   const crown = cylinder(radius, radius * 1.03, 0.12, materials.grass, segments);
-  crown.position.set(x, 0.3, z);
+  crown.position.y = 0.3;
   crown.scale.z = 0.88;
   const rim = cylinder(radius * 1.02, radius * 1.08, 0.18, materials.ivoryShade, segments);
-  rim.position.set(x, 0.18, z);
+  rim.position.y = 0.18;
   rim.scale.z = 0.9;
   const underside = new THREE.Mesh(new THREE.ConeGeometry(radius * 1.07, depth, segments), materials.cliff);
-  underside.position.set(x, -depth / 2 + 0.08, z);
+  underside.position.y = -depth / 2 + 0.08;
   underside.rotation.x = Math.PI;
-  underside.scale.z = 0.9;
+  underside.scale.set(0.96 + Math.sin(seed * 2.7) * 0.025, 1, 0.88 + Math.cos(seed * 1.9) * 0.035);
   underside.rotation.y = seed * 0.17;
-  root.add(crown, rim, underside);
-  const shardCount = quality === 'high' ? 7 : quality === 'medium' ? 4 : 2;
+  shelf.add(crown, rim, underside);
+
+  // A ring of offset rock teeth breaks the mathematically perfect cone and
+  // makes the underside read as a geological root from oblique phone cameras.
+  const shardCount = quality === 'high' ? (radius > 5 ? 11 : 5) : quality === 'medium' ? (radius > 5 ? 8 : 4) : (radius > 5 ? 5 : 2);
   for (let index = 0; index < shardCount; index += 1) {
     const angle = index / shardCount * Math.PI * 2 + seed;
-    const shard = new THREE.Mesh(new THREE.ConeGeometry(radius * 0.12, depth * (0.28 + index % 3 * 0.06), 5), materials.cliff);
-    shard.position.set(x + Math.cos(angle) * radius * 0.72, -depth * 0.52, z + Math.sin(angle) * radius * 0.64);
+    const shardDepth = depth * (0.22 + index % 4 * 0.045);
+    const shard = new THREE.Mesh(new THREE.ConeGeometry(radius * (0.095 + index % 3 * 0.012), shardDepth, 5), index % 3 === 0 ? materials.ivoryShade : materials.cliff);
+    shard.position.set(Math.cos(angle) * radius * (0.58 + index % 2 * 0.1), -depth * (0.28 + index % 3 * 0.045), Math.sin(angle) * radius * (0.52 + index % 2 * 0.09));
     shard.rotation.x = Math.PI;
-    root.add(shard);
+    shard.rotation.z = Math.sin(seed + index * 1.3) * 0.11;
+    shelf.add(shard);
   }
+
+  if (radius > 5) {
+    const heart = new THREE.Mesh(new THREE.ConeGeometry(radius * 0.56, depth * 0.76, Math.max(10, Math.round(segments * 0.7))), materials.cliff);
+    heart.name = 'ISLAND_2_DEEP_ROOT_HEART';
+    heart.position.set(radius * 0.06, -depth * 0.72, -radius * 0.03);
+    heart.rotation.x = Math.PI;
+    heart.rotation.z = -0.05;
+    shelf.add(heart);
+
+    const strataCount = quality === 'high' ? 4 : quality === 'medium' ? 3 : 2;
+    for (let index = 0; index < strataCount; index += 1) {
+      const bandRadius = radius * (0.79 - index * 0.12);
+      const band = new THREE.Mesh(new THREE.TorusGeometry(bandRadius, 0.055 + index * 0.018, 5, segments), index % 2 ? materials.cliff : materials.ivoryShade);
+      band.name = 'ISLAND_2_ROOT_STRATA_BAND';
+      band.rotation.x = Math.PI / 2;
+      band.rotation.z = seed * 0.1 + index * 0.14;
+      band.position.y = -0.54 - index * 0.68;
+      band.scale.z = 0.89 - index * 0.025;
+      shelf.add(band);
+    }
+  }
+
+  root.add(shelf);
+  return shelf;
 }
 
 function createCloudCluster(quality: Island3DQuality, materials: Island2CelestialMaterials, seed: number, scale = 1) {
@@ -636,6 +668,207 @@ function createCloudCluster(quality: Island3DQuality, materials: Island2Celestia
     group.add(puff);
   }
   group.userData.phase = seed;
+  return group;
+}
+
+function addLivingSpringCascade(
+  root: THREE.Group,
+  materials: Island2CelestialMaterials,
+  quality: Island3DQuality,
+) {
+  const cascadeRoot = new THREE.Group();
+  cascadeRoot.name = 'ISLAND_2_LIVING_SPRING_CASCADE';
+  cascadeRoot.position.set(-0.2, 0, 5.12);
+  cascadeRoot.rotation.y = Math.PI;
+
+  const springPool = new THREE.Mesh(new THREE.CircleGeometry(0.68, segmentsFor(quality)), materials.water.clone());
+  springPool.name = 'ISLAND_2_SKY_SPRING_POOL';
+  springPool.rotation.x = -Math.PI / 2;
+  springPool.scale.set(1.35, 1, 0.68);
+  springPool.position.set(0, 0.465, 0.34);
+  cascadeRoot.add(springPool);
+
+  const poolRim = new THREE.Mesh(new THREE.TorusGeometry(0.69, 0.085, 6, segmentsFor(quality)), materials.ivoryShade);
+  poolRim.rotation.x = Math.PI / 2;
+  poolRim.scale.set(1.35, 1, 0.68);
+  poolRim.position.copy(springPool.position);
+  poolRim.position.y -= 0.018;
+  cascadeRoot.add(poolRim);
+
+  const runnel = new THREE.Mesh(new THREE.PlaneGeometry(0.56, 1.05, 1, quality === 'high' ? 5 : 2), materials.water.clone());
+  runnel.name = 'ISLAND_2_SPRING_RUNNEL';
+  runnel.rotation.x = -Math.PI / 2;
+  runnel.position.set(0, 0.476, -0.52);
+  cascadeRoot.add(runnel);
+
+  const ribbons: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshPhysicalMaterial>[] = [];
+  const ribbonCount = quality === 'high' ? 3 : quality === 'medium' ? 2 : 1;
+  for (let index = 0; index < ribbonCount; index += 1) {
+    const width = index === 0 ? 0.48 : 0.16;
+    const fallGeometry = new THREE.PlaneGeometry(width, 5.6 - index * 0.45, 1, quality === 'high' ? 8 : 3);
+    const fallPositions = fallGeometry.getAttribute('position') as THREE.BufferAttribute;
+    for (let vertexIndex = 0; vertexIndex < fallPositions.count; vertexIndex += 1) {
+      const localY = fallPositions.getY(vertexIndex);
+      const heightRatio = THREE.MathUtils.clamp(localY / (5.6 - index * 0.45) + 0.5, 0, 1);
+      const naturalWidth = 0.7 + heightRatio * 0.3;
+      fallPositions.setX(vertexIndex, fallPositions.getX(vertexIndex) * naturalWidth + Math.sin(localY * 2.4 + index) * 0.018);
+    }
+    fallPositions.needsUpdate = true;
+    fallGeometry.computeVertexNormals();
+    const fall = new THREE.Mesh(fallGeometry, materials.water.clone());
+    fall.name = index === 0 ? 'ISLAND_2_PRINCIPAL_SKY_WATERFALL' : 'ISLAND_2_PRINCIPAL_SKY_WATERFALL_VEIL';
+    fall.position.set((index - (ribbonCount - 1) / 2) * 0.23, -2.35 - index * 0.08, -1.02 - index * 0.012);
+    fall.userData.phase = 4.2 + index * 0.78;
+    cascadeRoot.add(fall);
+    ribbons.push(fall);
+  }
+
+  const foamCount = quality === 'high' ? 10 : quality === 'medium' ? 7 : 4;
+  for (let index = 0; index < foamCount; index += 1) {
+    const foam = new THREE.Mesh(new THREE.SphereGeometry(0.09 + index % 3 * 0.025, quality === 'low' ? 5 : 7, 4), materials.cloud);
+    foam.name = 'ISLAND_2_SPRING_FOAM';
+    foam.scale.set(1.45, 0.42, 0.7);
+    foam.position.set((index - foamCount / 2) * 0.14, 0.49 + Math.sin(index) * 0.025, -0.96 + Math.cos(index * 1.4) * 0.08);
+    cascadeRoot.add(foam);
+  }
+
+  const fernCount = quality === 'high' ? 12 : quality === 'medium' ? 8 : 4;
+  for (let index = 0; index < fernCount; index += 1) {
+    const side = index % 2 ? -1 : 1;
+    const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.1 + index % 3 * 0.018, 0.36 + index % 2 * 0.06, 5), index % 3 === 0 ? materials.grassLight : materials.grass);
+    leaf.name = 'ISLAND_2_SPRING_GREENERY';
+    leaf.position.set(side * (0.56 + index % 4 * 0.09), 0.63 + index % 2 * 0.03, -0.22 - Math.floor(index / 4) * 0.28);
+    leaf.rotation.z = side * (0.55 + index % 3 * 0.08);
+    leaf.rotation.y = index * 0.72;
+    cascadeRoot.add(leaf);
+  }
+
+  root.add(cascadeRoot);
+  return { root: cascadeRoot, springPool, runnel, ribbons };
+}
+
+function createCelestialAirship(materials: Island2CelestialMaterials, quality: Island3DQuality) {
+  const airship = new THREE.Group();
+  airship.name = 'ISLAND_2_CELESTIAL_AIRSHIP';
+
+  const envelope = new THREE.Mesh(new THREE.SphereGeometry(1, segmentsFor(quality), quality === 'low' ? 8 : 12), materials.ivory);
+  envelope.name = 'ISLAND_2_AIRSHIP_ENVELOPE';
+  envelope.scale.set(1.85, 0.72, 0.72);
+  envelope.position.y = 0.75;
+  airship.add(envelope);
+
+  const sapphireBand = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.055, 5, segmentsFor(quality)), materials.sapphire);
+  sapphireBand.rotation.y = Math.PI / 2;
+  sapphireBand.position.y = 0.75;
+  sapphireBand.scale.x = 0.96;
+  airship.add(sapphireBand);
+
+  const keel = box(1.32, 0.28, 0.42, materials.wood);
+  keel.name = 'ISLAND_2_AIRSHIP_GONDOLA';
+  keel.position.y = -0.18;
+  airship.add(keel);
+  const prow = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.58, 6), materials.gold);
+  prow.rotation.z = -Math.PI / 2;
+  prow.position.set(0.94, -0.13, 0);
+  airship.add(prow);
+
+  [-1, 1].forEach((side) => {
+    const strut = cylinder(0.025, 0.035, 0.75, materials.gold, 6);
+    strut.position.set(side * 0.48, 0.2, 0);
+    airship.add(strut);
+  });
+
+  const propellers: THREE.Group[] = [];
+  [-1, 1].forEach((side) => {
+    const propeller = new THREE.Group();
+    propeller.name = 'ISLAND_2_AIRSHIP_PROPELLER';
+    propeller.position.set(-0.42, -0.14, side * 0.38);
+    const hub = new THREE.Mesh(new THREE.SphereGeometry(0.07, 7, 5), materials.gold);
+    propeller.add(hub);
+    const bladeCount = quality === 'low' ? 2 : 4;
+    for (let index = 0; index < bladeCount; index += 1) {
+      const blade = box(0.055, 0.42, 0.025, materials.sapphireLight);
+      blade.position.y = 0.16;
+      blade.rotation.z = index / bladeCount * Math.PI * 2;
+      propeller.add(blade);
+    }
+    propeller.rotation.y = Math.PI / 2;
+    airship.add(propeller);
+    propellers.push(propeller);
+  });
+
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.65, 4), materials.sapphire);
+  tail.position.set(-1.62, 0.72, 0);
+  tail.rotation.z = Math.PI / 2;
+  tail.rotation.y = Math.PI / 4;
+  airship.add(tail);
+
+  if (quality !== 'low') {
+    const lanternCount = quality === 'high' ? 4 : 2;
+    for (let index = 0; index < lanternCount; index += 1) {
+      const lantern = new THREE.Mesh(new THREE.OctahedronGeometry(0.07), materials.warmGlow);
+      lantern.position.set(-0.48 + index * (0.96 / Math.max(1, lanternCount - 1)), -0.38, index % 2 ? -0.18 : 0.18);
+      airship.add(lantern);
+    }
+  }
+
+  airship.scale.setScalar(quality === 'high' ? 0.68 : quality === 'medium' ? 0.6 : 0.52);
+  return { root: airship, propellers };
+}
+
+function createDistantSkyIslet(
+  index: number,
+  quality: Island3DQuality,
+  materials: Island2CelestialMaterials,
+) {
+  const group = new THREE.Group();
+  group.name = `ISLAND_2_DISTANT_FLOATING_ISLET_${index + 1}`;
+  const archetype = index % 6;
+  const radius = [0.72, 1.05, 0.84, 1.22, 0.62, 0.94][archetype];
+  const depth = [1.42, 2.2, 1.74, 2.55, 1.18, 1.92][archetype];
+  const segmentCount = segmentsFor(quality);
+  const cap = cylinder(radius, radius * (1.02 + archetype * 0.006), 0.12, archetype === 2 ? materials.grassLight : materials.grass, segmentCount);
+  const rock = new THREE.Mesh(new THREE.ConeGeometry(radius * 1.04, depth, segmentCount), materials.cliff);
+  rock.rotation.x = Math.PI;
+  rock.rotation.z = (archetype - 2.5) * 0.025;
+  rock.position.y = -depth / 2 - 0.02;
+  group.add(cap, rock);
+
+  if (archetype === 0) {
+    addSpire(group, 0, 0, 0.05, 0.48, materials, quality, true);
+  } else if (archetype === 1) {
+    addConifer(group, -0.28, 0.08, 0.66, materials, quality);
+    addConifer(group, 0.32, -0.18, 0.52, materials, quality);
+    if (quality === 'high') addConifer(group, 0.05, 0.34, 0.46, materials, quality);
+  } else if (archetype === 2) {
+    const observatory = new THREE.Mesh(new THREE.SphereGeometry(0.34, segmentCount, 7, 0, Math.PI * 2, 0, Math.PI / 2), materials.sapphireLight);
+    observatory.position.y = 0.18;
+    const lens = new THREE.Mesh(new THREE.OctahedronGeometry(0.11), materials.cyanCrystal);
+    lens.position.set(0, 0.54, 0);
+    group.add(observatory, lens);
+  } else if (archetype === 3) {
+    const ruins = quality === 'low' ? 2 : 4;
+    for (let pillarIndex = 0; pillarIndex < ruins; pillarIndex += 1) {
+      const angle = pillarIndex / ruins * Math.PI * 2;
+      addColumn(group, Math.cos(angle) * 0.52, Math.sin(angle) * 0.52, 0.62 + pillarIndex % 2 * 0.2, materials, quality);
+    }
+  } else if (archetype === 4) {
+    const beacon = cylinder(0.18, 0.24, 0.66, materials.ivory, segmentCount);
+    beacon.position.y = 0.38;
+    const flame = new THREE.Mesh(new THREE.OctahedronGeometry(0.14), materials.warmGlow);
+    flame.position.y = 0.84;
+    group.add(beacon, flame);
+  } else {
+    const archLeft = box(0.13, 0.76, 0.15, materials.ivory);
+    const archRight = archLeft.clone();
+    archLeft.position.set(-0.32, 0.4, 0);
+    archRight.position.set(0.32, 0.4, 0);
+    const archTop = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.055, 5, 14, Math.PI), materials.gold);
+    archTop.position.y = 0.72;
+    archTop.rotation.z = Math.PI;
+    group.add(archLeft, archRight, archTop);
+  }
+
   return group;
 }
 
@@ -751,19 +984,34 @@ export function createIsland2CelestialLivingAmbience(
   const detail = detailFor(quality);
   ocean.visible = false;
 
-  addFloatingShelf(root, 0, 0, 6.12, 3.8, materials, quality, 0.3);
+  addFloatingShelf(root, 0, 0, 6.18, 6.65, materials, quality, 0.3);
   const satellites: Array<[number, number]> = [[-4.36, -3.9], [4.36, -3.9], [-4.36, 3.9], [4.36, 3.9]];
-  satellites.forEach(([x, z], index) => addFloatingShelf(root, x, z, 2.4, 2.7 + index % 2 * 0.35, materials, quality, index + 1.2));
+  const satelliteProfiles = [
+    { radius: 2.5, depth: 3.42 },
+    { radius: 2.32, depth: 2.92 },
+    { radius: 2.46, depth: 3.78 },
+    { radius: 2.27, depth: 3.18 },
+  ];
+  satellites.forEach(([x, z], index) => {
+    const satellite = satelliteProfiles[index];
+    addFloatingShelf(root, x, z, satellite.radius, satellite.depth, materials, quality, index + 1.2);
+  });
+
+  const springCascade = addLivingSpringCascade(root, materials, quality);
 
   const clouds: THREE.Group[] = [];
   const cloudCount = quality === 'high' ? 18 : quality === 'medium' ? 12 : 7;
   for (let index = 0; index < cloudCount; index += 1) {
     const angle = index / cloudCount * Math.PI * 2 + 0.18;
-    const radius = 7.3 + (index % 3) * 1.1;
+    const radius = 8.2 + (index % 3) * 1.35;
     const cloud = createCloudCluster(quality, materials, index * 1.17, 0.82 + index % 2 * 0.18);
     cloud.name = 'ISLAND_2_CLOUD_FLOOR_CLUSTER';
-    cloud.position.set(Math.cos(angle) * radius, -1.25 - (index % 3) * 0.22, Math.sin(angle) * radius);
+    cloud.position.set(Math.cos(angle) * radius, -3.15 - (index % 3) * 0.34, Math.sin(angle) * radius);
     cloud.userData.baseY = cloud.position.y;
+    cloud.userData.orbitRadius = radius;
+    cloud.userData.startAngle = angle;
+    cloud.userData.driftSpeed = 0.008 + index % 4 * 0.0015;
+    cloud.userData.isDistant = false;
     root.add(cloud);
     clouds.push(cloud);
   }
@@ -774,17 +1022,22 @@ export function createIsland2CelestialLivingAmbience(
     cloud.name = 'ISLAND_2_DISTANT_ELEVATED_CLOUD';
     cloud.position.set(Math.cos(angle) * (76 + index % 2 * 8), 14 + index % 3 * 4, Math.sin(angle) * (76 + index % 2 * 8));
     cloud.userData.baseY = cloud.position.y;
+    cloud.userData.orbitRadius = 76 + index % 2 * 8;
+    cloud.userData.startAngle = angle;
+    cloud.userData.driftSpeed = 0.0022 + index % 3 * 0.00045;
+    cloud.userData.isDistant = true;
     root.add(cloud);
     clouds.push(cloud);
   }
 
   const waterfalls: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshPhysicalMaterial>[] = [];
-  const waterfallCount = quality === 'high' ? 12 : quality === 'medium' ? 8 : 5;
+  waterfalls.push(...springCascade.ribbons);
+  const waterfallCount = quality === 'high' ? 8 : quality === 'medium' ? 5 : 3;
   for (let index = 0; index < waterfallCount; index += 1) {
-    const angle = index / waterfallCount * Math.PI * 2 + 0.09;
-    const ribbon = new THREE.Mesh(new THREE.PlaneGeometry(0.18 + index % 3 * 0.05, 2.8 + index % 2 * 0.6), materials.water);
+    const angle = index / waterfallCount * Math.PI * 2 + 0.36;
+    const ribbon = new THREE.Mesh(new THREE.PlaneGeometry(0.18 + index % 3 * 0.07, 3.2 + index % 3 * 0.62), materials.water.clone());
     ribbon.name = 'ISLAND_2_CLOUD_WATERFALL';
-    ribbon.position.set(Math.cos(angle) * 6.05, -1.05, Math.sin(angle) * 5.35);
+    ribbon.position.set(Math.cos(angle) * 6.08, -1.38 - index % 2 * 0.18, Math.sin(angle) * 5.4);
     ribbon.rotation.y = -angle + Math.PI / 2;
     ribbon.userData.phase = index * 0.53;
     root.add(ribbon);
@@ -861,21 +1114,22 @@ export function createIsland2CelestialLivingAmbience(
   const islets: THREE.Group[] = [];
   const isletCount = quality === 'high' ? 7 : quality === 'medium' ? 5 : 3;
   for (let index = 0; index < isletCount; index += 1) {
-    const angle = index / isletCount * Math.PI * 2 + 0.5;
-    const group = new THREE.Group();
-    group.name = 'ISLAND_2_DISTANT_FLOATING_ISLET';
-    group.position.set(Math.cos(angle) * (18 + index % 3 * 3), 3.2 + index % 3 * 1.4, Math.sin(angle) * (18 + index % 3 * 3));
+    const angle = index / isletCount * Math.PI * 2 + 0.42;
+    const group = createDistantSkyIslet(index, quality, materials);
+    const horizonRadius = 10.7 + index % 4 * 1.9;
+    group.position.set(Math.cos(angle) * horizonRadius, 2.8 + (index * 1.35) % 4.6, Math.sin(angle) * horizonRadius);
+    group.scale.setScalar(0.72 + index % 3 * 0.08);
     group.userData.baseY = group.position.y;
     group.userData.phase = index * 1.4;
-    const cap = cylinder(0.75, 0.82, 0.12, materials.grass, segmentsFor(quality));
-    const rock = new THREE.Mesh(new THREE.ConeGeometry(0.82, 1.35, segmentsFor(quality)), materials.cliff);
-    rock.rotation.x = Math.PI;
-    rock.position.y = -0.72;
-    group.add(cap, rock);
-    if (quality !== 'low') addSpire(group, 0, 0, 0.05, 0.52, materials, quality, index % 2 === 0);
+    group.userData.baseRotation = (index - 3) * 0.11;
+    group.rotation.y = group.userData.baseRotation;
     root.add(group);
     islets.push(group);
   }
+
+  const airshipRuntime = createCelestialAirship(materials, quality);
+  airshipRuntime.root.userData.phase = 1.1;
+  root.add(airshipRuntime.root);
 
   const birds: THREE.Group[] = [];
   const birdCount = quality === 'high' ? 8 : quality === 'medium' ? 5 : 2;
@@ -899,16 +1153,33 @@ export function createIsland2CelestialLivingAmbience(
     root,
     animate: (elapsed) => {
       clouds.forEach((cloud, index) => {
-        cloud.position.y = cloud.userData.baseY + Math.sin(elapsed * 0.11 + index) * 0.08;
-        cloud.rotation.y += (index % 2 ? -1 : 1) * 0.00018;
+        const driftAngle = cloud.userData.startAngle + elapsed * cloud.userData.driftSpeed;
+        const laneRadius = cloud.userData.orbitRadius + Math.sin(elapsed * 0.025 + index) * (cloud.userData.isDistant ? 1.8 : 0.24);
+        cloud.position.x = Math.cos(driftAngle) * laneRadius;
+        cloud.position.z = Math.sin(driftAngle) * laneRadius;
+        cloud.position.y = cloud.userData.baseY + Math.sin(elapsed * (cloud.userData.isDistant ? 0.045 : 0.075) + index) * (cloud.userData.isDistant ? 0.26 : 0.1);
+        cloud.rotation.y = -driftAngle * 0.18 + Math.sin(elapsed * 0.018 + index) * 0.04;
       });
       waterfalls.forEach((waterfall, index) => {
-        waterfall.material.opacity = 0.58 + Math.sin(elapsed * 1.7 + waterfall.userData.phase) * 0.1;
+        const isPrincipal = waterfall.name.includes('PRINCIPAL');
+        waterfall.material.opacity = (isPrincipal ? 0.38 : 0.54) + Math.sin(elapsed * 1.7 + waterfall.userData.phase) * (isPrincipal ? 0.055 : 0.08);
         waterfall.scale.x = 0.94 + Math.sin(elapsed * 1.2 + index) * 0.05;
       });
       islets.forEach((islet, index) => {
         islet.position.y = islet.userData.baseY + Math.sin(elapsed * 0.22 + islet.userData.phase) * 0.12;
-        islet.rotation.y = Math.sin(elapsed * 0.08 + index) * 0.025;
+        islet.rotation.y = islet.userData.baseRotation + Math.sin(elapsed * 0.08 + index) * 0.025;
+      });
+      const airshipTravel = (elapsed * 0.46 + airshipRuntime.root.userData.phase * 3.7) % 16;
+      airshipRuntime.root.position.set(
+        -8 + airshipTravel,
+        8.35 + Math.sin(elapsed * 0.18) * 0.18,
+        -7.5,
+      );
+      airshipRuntime.root.rotation.y = 0;
+      airshipRuntime.root.rotation.z = Math.sin(elapsed * 0.22) * 0.025;
+      airshipRuntime.propellers.forEach((propeller, index) => {
+        propeller.rotation.y = Math.PI / 2;
+        propeller.rotation.z = elapsed * (index % 2 ? -8.2 : 8.2);
       });
       birds.forEach((bird, index) => {
         const angle = elapsed * (0.08 + index * 0.006) + bird.userData.phase;
@@ -940,6 +1211,8 @@ export function createIsland2CelestialLivingAmbience(
         petalAttribute.setX(index, petalAttribute.getX(index) + Math.sin(elapsed * 0.5 + index) * 0.0007);
       }
       petalAttribute.needsUpdate = true;
+      springCascade.springPool.material.opacity = 0.62 + Math.sin(elapsed * 1.05) * 0.07;
+      springCascade.runnel.material.opacity = 0.6 + Math.sin(elapsed * 1.28 + 0.7) * 0.08;
     },
   };
 }
