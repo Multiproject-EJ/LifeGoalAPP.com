@@ -21306,3 +21306,263 @@
     animation: none;
   }
 }
+/* Island 005 creature arena — transparent controls over the live 3D board. */
+.creature-arena-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  color: #fff8df;
+  pointer-events: none;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Battle mode keeps the authored world visible while removing controls that
+   would compete with the dedicated arena command deck. */
+.island-run-prototype--arena-battle .island-run-board__topbar,
+.island-run-prototype--arena-battle .island-run-board__rewardbar-cluster,
+.island-run-prototype--arena-battle .island-run-prototype__best-next-action-chip,
+.island-run-prototype--arena-battle .island-run-landmark-coachmark,
+.island-run-prototype--arena-battle .island-run-prototype__camera-reset-floating,
+.island-run-prototype--arena-battle .island-run-prototype__compass-floating,
+.island-run-prototype--arena-battle .island-run-prototype__footer,
+.island-run-prototype--arena-battle .island-run-board__three-preview-badge,
+.island-run-prototype--arena-battle .island-run-build-tutorial-overlay,
+.island-run-prototype--arena-battle .island-run-coreloop-tutorial-overlay {
+  display: none !important;
+}
+
+.creature-arena-hud__vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(3, 12, 24, .92) 0%, rgba(3, 12, 24, .32) 18%, transparent 34%, transparent 60%, rgba(3, 10, 20, .9) 100%);
+}
+
+.creature-arena-hud__top,
+.creature-arena-hud__command-deck,
+.creature-arena-hud__result,
+.creature-arena-hud__message,
+.creature-arena-hud__leave {
+  pointer-events: auto;
+}
+
+.creature-arena-hud__top {
+  position: relative;
+  z-index: 2;
+  padding: max(calc(env(safe-area-inset-top) + 10px), 18px) 14px 0;
+}
+
+.creature-arena-hud__title {
+  display: grid;
+  justify-items: center;
+  text-shadow: 0 2px 12px #001426;
+}
+
+.creature-arena-hud__title span,
+.creature-arena-hud__result > span {
+  color: #9ee9ff;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .15em;
+}
+
+.creature-arena-hud__title strong {
+  margin-top: 3px;
+  color: #fff1a8;
+  font: 800 19px/1 Georgia, serif;
+  letter-spacing: .06em;
+}
+
+.creature-arena-hud__leave {
+  position: absolute;
+  top: max(calc(env(safe-area-inset-top) + 8px), 16px);
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 232, 167, .52);
+  border-radius: 50%;
+  background: rgba(4, 18, 36, .72);
+  color: #fff5d0;
+  font-size: 24px;
+}
+
+.creature-arena-hud__health-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 11px;
+}
+
+.creature-arena-hud__fighter-copy {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 10px;
+  text-shadow: 0 1px 5px #00131f;
+}
+
+.creature-arena-hud__fighter--opponent .creature-arena-hud__fighter-copy {
+  flex-direction: row-reverse;
+}
+
+.creature-arena-hud__health {
+  height: 12px;
+  padding: 2px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 231, 153, .72);
+  border-radius: 999px;
+  background: rgba(0, 12, 24, .76);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .35);
+}
+
+.creature-arena-hud__health span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5ee1ff, #6ef5b7);
+  transition: width .48s cubic-bezier(.22, 1, .36, 1);
+}
+
+.creature-arena-hud__fighter--opponent .creature-arena-hud__health span {
+  margin-left: auto;
+  background: linear-gradient(90deg, #ffb35d, #ff696f);
+}
+
+.creature-arena-hud__intent {
+  display: grid;
+  width: max-content;
+  max-width: 90%;
+  margin: 9px auto 0;
+  padding: 5px 14px;
+  border: 1px solid rgba(130, 226, 255, .42);
+  border-radius: 999px;
+  background: rgba(2, 22, 42, .74);
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.creature-arena-hud__intent span { color: #88dff4; font-size: 7px; font-weight: 900; letter-spacing: .13em; }
+.creature-arena-hud__intent strong { margin-top: 1px; font-size: 11px; }
+.creature-arena-hud__intent--danger { border-color: rgba(255, 117, 92, .85); background: rgba(72, 14, 13, .82); animation: creature-arena-danger-pulse .75s ease-in-out infinite alternate; }
+
+.creature-arena-hud__message {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: max(calc(env(safe-area-inset-bottom) + 144px), 152px);
+  max-width: min(82vw, 360px);
+  padding: 7px 15px;
+  border: 1px solid rgba(255, 235, 169, .44);
+  border-radius: 999px;
+  background: rgba(3, 17, 32, .74);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .28);
+  font: 700 12px/1.25 Georgia, serif;
+  text-align: center;
+  opacity: .88;
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+
+.creature-arena-hud__message--active { color: #fff0a3; transform: translateX(-50%) scale(1.03); }
+
+.creature-arena-hud__command-deck {
+  position: relative;
+  z-index: 2;
+  grid-row: 3;
+  align-self: end;
+  padding: 8px 10px max(calc(env(safe-area-inset-bottom) + 8px), 14px);
+  border-top: 1px solid rgba(255, 224, 132, .28);
+  background: linear-gradient(180deg, rgba(4, 18, 35, .78), rgba(2, 10, 22, .96));
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, .28);
+  backdrop-filter: blur(14px);
+}
+
+.creature-arena-hud__resources {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 7px;
+  color: #a9ddea;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+.creature-arena-hud__resources strong { color: #fff0a0; }
+
+.creature-arena-hud__commands {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.creature-arena-hud__commands button,
+.creature-arena-hud__shield-command,
+.creature-arena-hud__result button {
+  min-height: 58px;
+  border: 1px solid rgba(255, 226, 139, .48);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(22, 60, 89, .96), rgba(6, 24, 47, .98));
+  color: #fff7dd;
+  box-shadow: inset 0 1px rgba(255, 255, 255, .12), 0 5px 15px rgba(0, 0, 0, .25);
+}
+
+.creature-arena-hud__commands button > span,
+.creature-arena-hud__commands button > strong,
+.creature-arena-hud__commands button > small { display: block; }
+.creature-arena-hud__commands button > span { color: #8defff; font-size: 17px; }
+.creature-arena-hud__commands button > strong { margin-top: 1px; font-size: 11px; }
+.creature-arena-hud__commands button > small { margin-top: 2px; color: #a7cad7; font-size: 7px; }
+.creature-arena-hud__commands button:disabled,
+.creature-arena-hud__shield-command:disabled { opacity: .42; }
+.creature-arena-hud__command--power:not(:disabled) { border-color: #ffd670 !important; background: linear-gradient(180deg, rgba(102, 64, 157, .98), rgba(35, 19, 73, .98)) !important; }
+
+.creature-arena-hud__shield-command {
+  display: block;
+  width: 100%;
+  min-height: 34px;
+  margin-top: 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.creature-arena-hud__result {
+  position: relative;
+  z-index: 3;
+  align-self: end;
+  justify-self: center;
+  width: min(88vw, 390px);
+  margin-bottom: max(calc(env(safe-area-inset-bottom) + 14px), 22px);
+  padding: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 226, 130, .7);
+  border-radius: 26px;
+  background: rgba(3, 18, 35, .9);
+  box-shadow: 0 18px 70px rgba(0, 0, 0, .5), inset 0 1px rgba(255, 255, 255, .14);
+  text-align: center;
+  backdrop-filter: blur(18px);
+}
+
+.creature-arena-hud__result img { position: relative; width: 92px; height: 92px; object-fit: contain; filter: drop-shadow(0 0 20px rgba(147, 225, 255, .75)); }
+.creature-arena-hud__result h3 { margin: 5px 0; color: #fff0a4; font: 800 25px/1 Georgia, serif; }
+.creature-arena-hud__result p { margin: 7px 0 14px; color: #c4dfeb; font-size: 11px; }
+.creature-arena-hud__result button { width: 100%; min-height: 46px; border-radius: 999px; font-size: 13px; font-weight: 900; }
+.creature-arena-hud__egg-glow { position: absolute; top: -25px; left: 50%; width: 180px; height: 180px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(circle, rgba(119, 220, 255, .42), transparent 68%); animation: creature-arena-egg-glow 1.6s ease-in-out infinite alternate; }
+.creature-arena-hud__result--defeat { border-color: rgba(140, 198, 218, .52); }
+
+@keyframes creature-arena-danger-pulse { to { box-shadow: 0 0 22px rgba(255, 82, 61, .48); transform: scale(1.025); } }
+@keyframes creature-arena-egg-glow { to { opacity: .65; transform: translateX(-50%) scale(1.16); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .creature-arena-hud *,
+  .creature-arena-hud *::before,
+  .creature-arena-hud *::after { animation: none !important; transition-duration: .01ms !important; }
+}
+
+@media (min-width: 700px) {
+  .creature-arena-hud__top { width: min(720px, 92vw); margin-inline: auto; }
+  .creature-arena-hud__command-deck { width: min(560px, 86vw); margin: 0 auto max(calc(env(safe-area-inset-bottom) + 12px), 18px); border: 1px solid rgba(255, 224, 132, .28); border-radius: 24px; }
+}

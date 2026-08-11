@@ -79,6 +79,59 @@ export interface ResolveIslandRunArenaBattleTurnResult {
   events: readonly IslandRunArenaBattleEvent[];
 }
 
+/**
+ * Accepts only the serializable battle shape owned by the deterministic arena
+ * engine. Remote/local runtime hydration uses this instead of trusting JSONB
+ * values, so a malformed interrupted battle can never leak NaN health or an
+ * impossible command phase into the UI.
+ */
+export function sanitizeIslandRunArenaBattleState(value: unknown): IslandRunArenaBattleState | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const candidate = value as Record<string, unknown>;
+  if (candidate.version !== ISLAND_RUN_ARENA_BATTLE_VERSION) return null;
+  if (typeof candidate.islandNumber !== 'number' || !Number.isInteger(candidate.islandNumber)) return null;
+  if (!isIslandRunArenaIsland(candidate.islandNumber)) return null;
+  if (typeof candidate.opponentCreatureId !== 'string' || candidate.opponentCreatureId.trim().length === 0) return null;
+  if (typeof candidate.turnNumber !== 'number' || !Number.isInteger(candidate.turnNumber) || candidate.turnNumber < 1) return null;
+  if (candidate.phase !== 'awaiting_command' && candidate.phase !== 'victory' && candidate.phase !== 'defeat') return null;
+  if (
+    candidate.opponentIntent !== 'quick_attack'
+    && candidate.opponentIntent !== 'heavy_attack'
+    && candidate.opponentIntent !== 'guard'
+    && candidate.opponentIntent !== 'charge_power'
+    && candidate.opponentIntent !== 'release_power'
+  ) return null;
+  if (typeof candidate.rngState !== 'number' || !Number.isInteger(candidate.rngState)) return null;
+  if (!candidate.player || typeof candidate.player !== 'object' || Array.isArray(candidate.player)) return null;
+  if (!candidate.opponent || typeof candidate.opponent !== 'object' || Array.isArray(candidate.opponent)) return null;
+  const player = candidate.player as Record<string, unknown>;
+  const opponent = candidate.opponent as Record<string, unknown>;
+  const numericFields = [player.hp, player.maxHp, player.focus, player.shieldCharges, opponent.hp, opponent.maxHp];
+  if (numericFields.some((entry) => typeof entry !== 'number' || !Number.isFinite(entry))) return null;
+
+  const playerMaxHp = clampInteger(player.maxHp as number, 1, 10_000);
+  const opponentMaxHp = clampInteger(opponent.maxHp as number, 1, 10_000);
+  return {
+    version: ISLAND_RUN_ARENA_BATTLE_VERSION,
+    islandNumber: candidate.islandNumber,
+    opponentCreatureId: candidate.opponentCreatureId.trim(),
+    turnNumber: candidate.turnNumber,
+    phase: candidate.phase,
+    player: {
+      hp: clampInteger(player.hp as number, 0, playerMaxHp),
+      maxHp: playerMaxHp,
+      focus: clampInteger(player.focus as number, 0, ISLAND_RUN_ARENA_MAX_FOCUS),
+      shieldCharges: clampInteger(player.shieldCharges as number, 0, ISLAND_RUN_ARENA_MAX_SHIELDS),
+    },
+    opponent: {
+      hp: clampInteger(opponent.hp as number, 0, opponentMaxHp),
+      maxHp: opponentMaxHp,
+    },
+    opponentIntent: candidate.opponentIntent,
+    rngState: candidate.rngState >>> 0,
+  };
+}
+
 const clampInteger = (value: number, min: number, max: number): number => {
   if (!Number.isFinite(value)) return min;
   return Math.max(min, Math.min(max, Math.trunc(value)));

@@ -40,6 +40,10 @@ import {
   sanitizeConcordRollProtectionState,
   type ConcordRollProtectionState,
 } from './islandRunConcordRollProtection';
+import {
+  sanitizeIslandRunArenaBattleState,
+  type IslandRunArenaBattleState,
+} from './islandRunCreatureArenaBattle';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
 
@@ -62,10 +66,10 @@ export interface PerIslandEggEntry {
 /** Key = island number (as string), value = egg entry */
 export type PerIslandEggsLedger = Record<string, PerIslandEggEntry>;
 
-export type EggRewardInventorySource = 'treasure_path' | 'egg_pack';
+export type EggRewardInventorySource = 'treasure_path' | 'egg_pack' | 'creature_arena';
 export type EggRewardInventoryTier = 'common' | 'rare';
 export type EggRewardInventoryStatus = 'unopened' | 'opened';
-export type EggRewardInventoryResolverVersion = 'treasure_path_egg_v1' | 'egg_pack_v1';
+export type EggRewardInventoryResolverVersion = 'treasure_path_egg_v1' | 'egg_pack_v1' | 'creature_arena_locked_v1';
 export const EGG_REWARD_RARITY_ROLL_DENOMINATOR = 500 as const;
 export const EGG_REWARD_RARITY_THRESHOLD = 5 as const;
 
@@ -88,6 +92,8 @@ export interface EggRewardInventoryEntry {
   grantedAtMs: number;
   openedAtMs: number | null;
   openedCreatureId?: string;
+  /** Arena eggs bypass seeded generic pools and always open as this species. */
+  lockedCreatureId?: string;
 }
 
 export interface PerfectCompanionReason {
@@ -396,6 +402,8 @@ export interface IslandRunGameStateRecord {
     objectiveComplete: boolean;
     buildComplete: boolean;
     completedAtMs?: number;
+    /** Current-island arena encounter. Canonical gameplay state, not UI state. */
+    arenaBattle?: IslandRunArenaBattleState | null;
   };
   essence: number;
   essenceLifetimeEarned: number;
@@ -963,6 +971,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
       unlocked: false,
       objectiveComplete: false,
       buildComplete: false,
+      arenaBattle: null,
     },
     essence: 0,
     essenceLifetimeEarned: 0,
@@ -1098,9 +1107,13 @@ function toEggRewardInventoryEntry(value: unknown): EggRewardInventoryEntry | nu
   const sourceRunId = typeof candidate.sourceRunId === 'string' ? candidate.sourceRunId.trim() : '';
   const sourceRewardId = typeof candidate.sourceRewardId === 'string' ? candidate.sourceRewardId.trim() : '';
   if (!eggRewardId || !sourceSessionKey || !sourceRunId || !sourceRewardId) return null;
-  if (candidate.source !== 'treasure_path' && candidate.source !== 'egg_pack') return null;
+  if (candidate.source !== 'treasure_path' && candidate.source !== 'egg_pack' && candidate.source !== 'creature_arena') return null;
   if (candidate.eggTier !== 'common' && candidate.eggTier !== 'rare') return null;
-  if (candidate.resolverVersion !== 'treasure_path_egg_v1' && candidate.resolverVersion !== 'egg_pack_v1') return null;
+  if (
+    candidate.resolverVersion !== 'treasure_path_egg_v1'
+    && candidate.resolverVersion !== 'egg_pack_v1'
+    && candidate.resolverVersion !== 'creature_arena_locked_v1'
+  ) return null;
   if (candidate.status !== 'unopened' && candidate.status !== 'opened') return null;
   if (
     candidate.rarityRollDenominator !== EGG_REWARD_RARITY_ROLL_DENOMINATOR
@@ -1133,6 +1146,11 @@ function toEggRewardInventoryEntry(value: unknown): EggRewardInventoryEntry | nu
   const openedCreatureId = typeof candidate.openedCreatureId === 'string' && candidate.openedCreatureId.trim().length > 0
     ? candidate.openedCreatureId.trim()
     : undefined;
+  const lockedCreatureId = typeof candidate.lockedCreatureId === 'string' && candidate.lockedCreatureId.trim().length > 0
+    ? candidate.lockedCreatureId.trim()
+    : undefined;
+  if (candidate.source === 'creature_arena' && (!lockedCreatureId || candidate.resolverVersion !== 'creature_arena_locked_v1')) return null;
+  if (candidate.source !== 'creature_arena' && lockedCreatureId) return null;
 
   return {
     eggRewardId,
@@ -1153,6 +1171,7 @@ function toEggRewardInventoryEntry(value: unknown): EggRewardInventoryEntry | nu
     grantedAtMs: Math.max(0, Math.floor(candidate.grantedAtMs as number)),
     openedAtMs,
     ...(openedCreatureId ? { openedCreatureId } : {}),
+    ...(lockedCreatureId ? { lockedCreatureId } : {}),
   };
 }
 
@@ -1492,6 +1511,7 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
             ...(typeof value.bossState.completedAtMs === 'number' && Number.isFinite(value.bossState.completedAtMs)
               ? { completedAtMs: value.bossState.completedAtMs }
               : {}),
+            arenaBattle: sanitizeIslandRunArenaBattleState(value.bossState.arenaBattle),
           }
         : fallback.bossState,
     essence:

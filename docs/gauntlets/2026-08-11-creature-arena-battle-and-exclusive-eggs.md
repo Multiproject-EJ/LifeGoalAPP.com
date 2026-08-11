@@ -4,9 +4,12 @@
 
 Active implementation contract. The radial-tile top-face repair, Island 005
 actual-3D Crown Drifter pilot, arena presentation cadence, and M2 pure battle
-rules are implemented and verified locally. Canonical persistence, exclusive
-egg rewards, and the playable battle UI remain gated milestones and must not be
-represented as complete.
+rules are implemented and verified locally. On 2026-08-11 the playable Island
+005 vertical slice completed M3-M5 locally: canonical battle persistence, an
+idempotent species-locked Crown Drifter egg, transparent phone-safe battle
+controls over the live board, and charge/impact/result presentation using the
+existing approved 3D creature. Automated verification and captured 390x844
+phone evidence pass. M6 scaling and M7 real-device/release proof remain open.
 
 ## Implementation evidence — 2026-08-11
 
@@ -34,13 +37,31 @@ represented as complete.
 - The live-shell visual check confirms 005 = tropical arena, 004 = citadel, and
   002 = safe fallback. Two routing tests lock the separation and prevent a
   future scenery reassignment from moving creature rewards between islands.
-- Fifteen arena contract and battle-engine tests and two visual-routing tests
-  pass. The full Island Run suite is at 1,718 passing with the same three
+- The canonical arena action resumes an interrupted attempt, rejects duplicate
+  terminal callbacks, grants the standard Boss payout and banks exactly one
+  deterministic `creature_arena` egg with `lockedCreatureId = crown-drifter`.
+- Opening that egg resolves directly to Crown Drifter; it never rerolls through
+  the generic rare pool.
+- The live phone overlay exposes health, focus, remaining island-bound shields,
+  a full-turn power-attack warning, Quick/Power/Guard/Focus choices and a
+  species-egg result without replacing the actual-3D board.
+- The existing approved creature hierarchy supplies the charge, lunge, hit,
+  victory and defeat presentation cues without changing gated model geometry.
+- All arena contract, battle-engine, canonical-action and visual-routing tests
+  pass. The full Island Run suite is at 1,721 passing with the same three
   pre-existing Island 1 fixed-camera failures.
-- TypeScript and Island Run architecture guards pass with no new violations.
+- TypeScript, the production Vite bundle and Island Run architecture guards
+  pass with no new violations. The phone battle run produced no console errors
+  or warnings.
+- Captured local evidence:
+  - `docs/gauntlets/evidence/creature-arena/island-005-command-phone.png`
+  - `docs/gauntlets/evidence/creature-arena/island-005-power-charge-phone.png`
+  - `docs/gauntlets/evidence/creature-arena/island-005-victory-egg-phone.png`
 
-The next slice is the persistence half of M3: add a species-locked arena egg
-record and commit first-victory rewards idempotently through canonical actions.
+The completed local slice is M3-M5 for Island 005 only and ends with a
+genuinely playable battle, not a concept screen. Scaling the UI to Islands 010-120,
+applying a remote database migration, production deployment, and App Store or
+Capacitor release remain outside this local implementation slice.
 
 ## Mission
 

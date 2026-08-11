@@ -548,6 +548,13 @@ import {
 } from '../services/islandRunDiceRegeneration';
 import { openEggRewardInventoryEntry } from '../services/islandRunEggRewardInventoryAction';
 import {
+  resolveIslandRunCreatureArenaBattleAction,
+  startIslandRunCreatureArenaBattle,
+} from '../services/islandRunCreatureArenaBattleAction';
+import { getIslandRunArenaCreatureForIsland } from '../services/islandRunArenaCreatureRoster';
+import type { IslandRunArenaPlayerAction } from '../services/islandRunCreatureArenaBattle';
+import { CreatureArenaBattleOverlay } from './CreatureArenaBattleOverlay';
+import {
   grantDevDemoCreaturePack,
   grantDevDemoCreaturePackOpeningPrototype,
   grantDevDemoEggRewardPack,
@@ -581,6 +588,8 @@ import IslandRunWinCelebrationModal, { type WinRewardItem } from './IslandRunWin
 import DemoWaitlistModal from './DemoWaitlistModal';
 import '../../../../styles/demo-waitlist-modal.css';
 import type { Island3DQualitySelection, Island5CameraPresetId } from '../dev/island5ThreePilotContract';
+import type { IslandRunArenaBattlePresentation, IslandRunArenaBattleVisualCue } from '../dev/Island5ThreePilot';
+import { getIslandRunBossReward } from '../services/islandRunBossReward';
 
 const Island5ThreeScene = lazy(() => import('../dev/Island5ThreePilot'));
 
@@ -1287,14 +1296,7 @@ interface HatcheryCarouselEgg {
   isCurrentIsland: boolean;
 }
 
-function getBossReward(islandNumber: number): { dice: number; essence: number; spinTokens: number } {
-  const tier = Math.floor((islandNumber - 1) / 10);
-  return {
-    dice: 10 + tier * 2,
-    essence: 80 + tier * 25,
-    spinTokens: tier >= 2 ? 1 : 0,
-  };
-}
+const getBossReward = getIslandRunBossReward;
 
 type StopProgressState = 'pending' | 'active' | 'accessible' | 'postponed' | 'completed' | 'build_pending' | 'partial' | 'locked' | 'ticket_required';
 type IslandRunCameraMode = 'board_follow' | 'stop_focus' | 'overview_manual';
@@ -1753,6 +1755,7 @@ export function IslandRunBoardPrototype({
       islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
       islandVisualBossState,
       isIsland5ThreePreviewRequested: import.meta.env.DEV && params.get('island3dPreview') === '1',
+      isArenaBattlePreviewRequested: import.meta.env.DEV && params.get('arenaBattlePreview') === '1',
       isCaretakerThreeEncounterPreviewRequested: import.meta.env.DEV && params.get('caretaker3dEncounterPreview') === '1',
       island5ThreePreviewLevel: Math.round(readNumericParam(params, 'island3dLevel', 3, 0, 3)) as 0 | 1 | 2 | 3,
       boardTiltXDeg: readNumericParam(params, 'boardTiltX', 47, 0, 80),
@@ -1771,6 +1774,7 @@ export function IslandRunBoardPrototype({
     islandVisualBuildLevel,
     islandVisualBossState,
     isIsland5ThreePreviewRequested,
+    isArenaBattlePreviewRequested,
     isCaretakerThreeEncounterPreviewRequested,
     island5ThreePreviewLevel,
     boardTiltXDeg,
@@ -2187,6 +2191,26 @@ export function IslandRunBoardPrototype({
   const [bossTrialTimeLeft, setBossTrialTimeLeft] = useState<number>(0);
   const [bossTrialScore, setBossTrialScore] = useState<number>(0);
   const [bossAttemptCount, setBossAttemptCount] = useState<number>(0);
+  const [isArenaBattleOpen, setIsArenaBattleOpen] = useState(false);
+  const [isArenaBattleResolving, setIsArenaBattleResolving] = useState(false);
+  const [arenaBattleMessage, setArenaBattleMessage] = useState('Choose your opening move. Watch the Crown Drifter’s intent.');
+  const [arenaBattlePresentation, setArenaBattlePresentation] = useState<IslandRunArenaBattlePresentation>({
+    active: false,
+    cue: 'idle',
+    sequence: 0,
+  });
+  const arenaBattle = __storeState.bossState.arenaBattle?.islandNumber === islandNumber
+    ? __storeState.bossState.arenaBattle
+    : null;
+  const arenaRosterEntry = getIslandRunArenaCreatureForIsland(islandNumber);
+  const isPlayableCreatureArena = arenaRosterEntry?.implementationStatus === 'implemented';
+  const arenaRewardBanked = Boolean(arenaRosterEntry && __storeState.eggRewardInventory.some((entry) => (
+    entry.source === 'creature_arena'
+    && entry.targetIslandNumber === islandNumber
+    && entry.cycleIndex === __storeState.cycleIndex
+    && entry.lockedCreatureId === arenaRosterEntry.creatureId
+  )));
+  const arenaBattlePreviewPreparedRef = useRef(false);
   const [islandShards, setIslandShards] = useState<number>(0);
   const [shardTierIndex, setShardTierIndex] = useState<number>(0);
   const [shardClaimCount, setShardClaimCount] = useState<number>(0);
@@ -3649,6 +3673,52 @@ export function IslandRunBoardPrototype({
       setBossTrialScore(0);
     }
   }, [activeStopId, bossTrialResolved, bossTrialPhase]);
+
+  useEffect(() => {
+    if (!hasHydratedRuntimeState || !isPlayableCreatureArena || !arenaBattle) return;
+    if (arenaBattle.phase === 'awaiting_command' || arenaBattle.phase === 'defeat') {
+      setIsArenaBattleOpen(true);
+      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      setArenaBattlePresentation((current) => ({ ...current, active: true, cue: 'idle' }));
+    }
+  }, [arenaBattle, hasHydratedRuntimeState, isPlayableCreatureArena]);
+
+  useEffect(() => {
+    if (
+      !isArenaBattlePreviewRequested
+      || !hasHydratedRuntimeState
+      || islandNumber !== 5
+      || arenaBattlePreviewPreparedRef.current
+    ) return;
+    arenaBattlePreviewPreparedRef.current = true;
+    void (async () => {
+      const grant = applyDevGrantEssence({
+        session,
+        client,
+        amount: 10_000,
+        triggerSource: 'arena_battle_phone_preview',
+      });
+      setRuntimeState(grant.record);
+      runtimeStateRef.current = grant.record;
+      const built = await applyDevBuildAllToL3({
+        session,
+        client,
+        effectiveIslandNumber: 5,
+        triggerSource: 'arena_battle_phone_preview',
+      });
+      setRuntimeState(built.record);
+      runtimeStateRef.current = built.record;
+      const started = await startIslandRunCreatureArenaBattle({ session, client, islandNumber: 5 });
+      setRuntimeState(started.record);
+      runtimeStateRef.current = started.record;
+      if (started.battle) {
+        setIsArenaBattleOpen(true);
+        setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+        setArenaBattleMessage('Choose your opening move. Watch the Crown Drifter’s intent.');
+        setArenaBattlePresentation((current) => ({ active: true, cue: 'idle', sequence: current.sequence + 1 }));
+      }
+    })();
+  }, [client, hasHydratedRuntimeState, islandNumber, isArenaBattlePreviewRequested, session]);
 
   // M3-COMPLETE: Escape key closes active stop modal — except for behavior
   // landmarks (Habit/Wisdom) that have been opened but not completed. Those must
@@ -9036,13 +9106,134 @@ export function IslandRunBoardPrototype({
     return () => window.clearTimeout(timer);
   }, [bossTrialPhase, bossTrialTimeLeft, bossTrialScore, bossAttemptCount, islandNumber, session.user.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleStartBossTrial = () => {
+  const playArenaBattleCue = async (cue: IslandRunArenaBattleVisualCue, message: string, durationMs: number) => {
+    setArenaBattleMessage(message);
+    setArenaBattlePresentation((current) => ({
+      active: true,
+      cue,
+      sequence: current.sequence + 1,
+    }));
+    if (durationMs > 0) {
+      await new Promise<void>((resolve) => window.setTimeout(resolve, durationMs));
+    }
+  };
+
+  const handleArenaBattleAction = async (action: IslandRunArenaPlayerAction) => {
+    if (isArenaBattleResolving || !arenaBattle || arenaBattle.phase !== 'awaiting_command') return;
+    setIsArenaBattleResolving(true);
+    try {
+      const result = await resolveIslandRunCreatureArenaBattleAction({
+        session,
+        client,
+        islandNumber,
+        action,
+      });
+      if (result.status !== 'resolved') {
+        setArenaBattleMessage(result.rejection === 'insufficient_focus'
+          ? 'Build at least 2 focus before using Power.'
+          : result.rejection === 'no_shield_charges'
+            ? 'No arena shields remain. Guard is still available.'
+            : 'That command could not resolve.');
+        return;
+      }
+      setRuntimeState(result.record);
+      runtimeStateRef.current = result.record;
+
+      for (const event of result.events) {
+        if (event.type === 'player_attack') {
+          await playArenaBattleCue(
+            event.action === 'power_attack' ? 'player_power' : 'player_attack',
+            `${event.action === 'power_attack' ? 'Radiant Break' : 'Swift Spark'} hits for ${event.damage}.`,
+            event.action === 'power_attack' ? 760 : 520,
+          );
+        } else if (event.type === 'player_focus') {
+          await playArenaBattleCue('idle', `Focus rises to ${event.focusAfter}/3.`, 380);
+        } else if (event.type === 'player_guard') {
+          await playArenaBattleCue('player_guard', 'Guard set. Brace for impact.', 360);
+        } else if (event.type === 'player_shield') {
+          await playArenaBattleCue('player_shield', `Arena shield raised · ${event.shieldChargesAfter} remaining.`, 420);
+        } else if (event.type === 'opponent_charge') {
+          await playArenaBattleCue('opponent_charge', 'Crown Drifter gathers a storm. Defend on the next turn!', 900);
+        } else if (event.type === 'opponent_attack') {
+          await playArenaBattleCue(
+            'opponent_attack',
+            `${event.intent === 'release_power' ? 'Crownfall Surge' : 'Crown Drifter'} deals ${event.damage}${event.mitigation === 'none' ? '' : ` through ${event.mitigation}`}.`,
+            event.intent === 'release_power' ? 900 : 620,
+          );
+        } else if (event.type === 'opponent_guard') {
+          await playArenaBattleCue('idle', 'Crown Drifter seals its shell guard.', 420);
+        } else if (event.type === 'battle_victory') {
+          await playArenaBattleCue('victory', 'The arena accepts your victory. A species egg awakens!', 1050);
+          setBossTrialResolved(true);
+          setBossTrialPhase('success');
+          const reward = result.standardBossReward;
+          setBossRewardSummary(reward
+            ? `Arena victory: +${reward.dice} dice, +${reward.essence} money${reward.spinTokens ? `, +${reward.spinTokens} event ticket` : ''}, and a Crown Drifter egg.`
+            : 'Arena victory secured. The Crown Drifter egg is safe in your inventory.');
+          playIslandRunSound('boss_trial_resolve');
+          triggerIslandRunHaptic('boss_trial_resolve');
+        } else if (event.type === 'battle_defeat') {
+          await playArenaBattleCue('defeat', 'Your companion needs another approach.', 820);
+        }
+      }
+      if (result.battle?.phase === 'awaiting_command') {
+        setArenaBattlePresentation((current) => ({ ...current, cue: 'idle', sequence: current.sequence + 1 }));
+        setArenaBattleMessage(result.battle.opponentIntent === 'release_power'
+          ? 'POWER ATTACK INCOMING · Guard or spend an arena shield.'
+          : 'Choose the next command.');
+      }
+    } finally {
+      setIsArenaBattleResolving(false);
+    }
+  };
+
+  const handleArenaBattleRetry = async () => {
+    if (isArenaBattleResolving) return;
+    setIsArenaBattleResolving(true);
+    try {
+      const result = await startIslandRunCreatureArenaBattle({
+        session,
+        client,
+        islandNumber,
+        restartAfterDefeat: true,
+      });
+      setRuntimeState(result.record);
+      runtimeStateRef.current = result.record;
+      if (result.battle) {
+        setArenaBattleMessage('The arena resets. Three shields are restored for this attempt.');
+        setArenaBattlePresentation((current) => ({ active: true, cue: 'idle', sequence: current.sequence + 1 }));
+      }
+    } finally {
+      setIsArenaBattleResolving(false);
+    }
+  };
+
+  const handleStartBossTrial = async () => {
     const bossChallengeLockReason = getBossChallengeLockReason({
       stopBuildStateByIndex: runtimeStateRef.current.stopBuildStateByIndex,
       isBossDefeated: bossTrialResolved || runtimeStateRef.current.bossTrialResolvedIslandNumber === islandNumber,
     });
     if (bossChallengeLockReason) {
       setLandingText(bossChallengeLockReason);
+      return;
+    }
+
+    if (isPlayableCreatureArena) {
+      setActiveStopId(null);
+      setIsArenaBattleOpen(true);
+      setBuildCameraFocusRequest({ preset: 'boss', transition: 'quick' });
+      setArenaBattlePresentation((current) => ({ active: true, cue: 'idle', sequence: current.sequence + 1 }));
+      setArenaBattleMessage('Choose your opening move. Watch the Crown Drifter’s intent.');
+      const result = await startIslandRunCreatureArenaBattle({ session, client, islandNumber });
+      setRuntimeState(result.record);
+      runtimeStateRef.current = result.record;
+      if (result.status === 'locked' || result.status === 'unavailable') {
+        setIsArenaBattleOpen(false);
+        setBuildCameraFocusRequest(null);
+        setArenaBattlePresentation((current) => ({ ...current, active: false, sequence: current.sequence + 1 }));
+        setActiveStopId('boss');
+        setLandingText(result.lockReason ?? 'This creature arena is not available yet.');
+      }
       return;
     }
 
@@ -11888,7 +12079,8 @@ export function IslandRunBoardPrototype({
   }, [nowMs, playerLevelInfo?.currentLevel, runtimeState]);
   const isRewardBarClaiming = rewardBarBurstAnimating || rewardBarCascadePayouts.length > 0;
   const doesModalOwnAttention = Boolean(
-    activeStopId ||
+    isArenaBattleOpen ||
+      activeStopId ||
       activeLaunchedMinigameId ||
       activePlaceholder ||
       hatchReveal ||
@@ -11931,7 +12123,8 @@ export function IslandRunBoardPrototype({
       islandClearStats?.islandNumber === runtimeState.currentIslandNumber
   );
   const isNarrativeSurfaceBlockedByNonClearCelebration = Boolean(
-    activeStopId ||
+    isArenaBattleOpen ||
+      activeStopId ||
       activeLaunchedMinigameId ||
       activePlaceholder ||
       hatchReveal ||
@@ -12287,7 +12480,7 @@ export function IslandRunBoardPrototype({
 
   return (
     <section
-      className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}${showBuildPanel ? ' island-run-prototype--build-exclusive' : ''}`}
+      className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}${showBuildPanel ? ' island-run-prototype--build-exclusive' : ''}${isArenaBattleOpen ? ' island-run-prototype--arena-battle' : ''}`}
       data-island-number={islandNumber}
     >
       {showEntryAudioModal && (
@@ -13474,6 +13667,8 @@ export function IslandRunBoardPrototype({
                 cameraFocusPreset={buildCameraFocusRequest?.preset ?? null}
                 cameraFocusTransition={buildCameraFocusRequest?.transition ?? 'standard'}
                 cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}
+                interactionPaused={doesModalOwnAttention}
+                arenaBattlePresentation={arenaBattlePresentation}
                 onHopSequenceComplete={handleHopSequencePresentationComplete}
                 onTokenHop={(tileIndex) => {
                   playTokenMoveSound();
@@ -15670,6 +15865,32 @@ export function IslandRunBoardPrototype({
           onBuildActivePart={handleBuildCardTap}
         />
       )}
+
+      <CreatureArenaBattleOverlay
+        open={isArenaBattleOpen}
+        battle={arenaBattle}
+        creatureName={arenaRosterEntry?.name ?? 'Arena Creature'}
+        companionName={activeCompanion?.creature.name ?? 'Your Companion'}
+        isResolving={isArenaBattleResolving}
+        message={arenaBattleMessage}
+        rewardBanked={arenaRewardBanked}
+        onAction={(action) => void handleArenaBattleAction(action)}
+        onRetry={() => void handleArenaBattleRetry()}
+        onLeave={() => {
+          if (isArenaBattleResolving) return;
+          setIsArenaBattleOpen(false);
+          setBuildCameraFocusRequest(null);
+          setArenaBattlePresentation((current) => ({ ...current, active: false, cue: 'idle', sequence: current.sequence + 1 }));
+        }}
+        onContinue={() => {
+          setIsArenaBattleOpen(false);
+          setBuildCameraFocusRequest(null);
+          setArenaBattlePresentation((current) => ({ ...current, active: false, cue: 'idle', sequence: current.sequence + 1 }));
+          setBossTrialResolved(true);
+          setBossTrialPhase('success');
+          setActiveStopId('boss');
+        }}
+      />
 
       {buildLevelCompletion && (
         <div className="island-run-overlay-root bm2-level-complete" role="presentation">

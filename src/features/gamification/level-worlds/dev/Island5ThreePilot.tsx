@@ -86,6 +86,23 @@ import {
 export type BuildLevel = 0 | 1 | 2 | 3;
 export type Island5LandmarkBuildLevels = Partial<Record<Island5LandmarkDefinition['id'], BuildLevel>>;
 
+export type IslandRunArenaBattleVisualCue =
+  | 'idle'
+  | 'player_attack'
+  | 'player_power'
+  | 'player_guard'
+  | 'player_shield'
+  | 'opponent_charge'
+  | 'opponent_attack'
+  | 'victory'
+  | 'defeat';
+
+export interface IslandRunArenaBattlePresentation {
+  active: boolean;
+  cue: IslandRunArenaBattleVisualCue;
+  sequence: number;
+}
+
 interface Island5ThreePilotProps {
   /** Runtime identity: owns arena cadence, story, progression, and persistence. */
   islandNumber?: number;
@@ -110,6 +127,8 @@ interface Island5ThreePilotProps {
   onLandmarkClick?: (landmarkId: Island5LandmarkDefinition['id']) => void;
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
+  interactionPaused?: boolean;
+  arenaBattlePresentation?: IslandRunArenaBattlePresentation | null;
   onRendererUnavailable?: () => void;
 }
 
@@ -2772,6 +2791,8 @@ export default function Island5ThreePilot({
   onLandmarkClick,
   caretakerEncounterOpen = false,
   onCaretakerClick,
+  interactionPaused = false,
+  arenaBattlePresentation = null,
   onRendererUnavailable,
 }: Island5ThreePilotProps) {
   const resolvedWorldSourceNumber = worldSourceNumber
@@ -2829,6 +2850,11 @@ export default function Island5ThreePilot({
   const onLandmarkClickRef = useRef(onLandmarkClick);
   const caretakerEncounterOpenRef = useRef(caretakerEncounterOpen);
   const onCaretakerClickRef = useRef(onCaretakerClick);
+  const interactionPausedRef = useRef(interactionPaused);
+  const arenaBattlePresentationRef = useRef<{
+    value: IslandRunArenaBattlePresentation | null;
+    cueStartedAtMs: number;
+  }>({ value: arenaBattlePresentation, cueStartedAtMs: 0 });
   const onRendererUnavailableRef = useRef(onRendererUnavailable);
   const deviceSignals = useMemo(() => readDeviceSignals(), []);
   const resolvedQualitySelection = qualityOverride ?? qualitySelection;
@@ -2854,6 +2880,20 @@ export default function Island5ThreePilot({
   useEffect(() => {
     onCaretakerClickRef.current = onCaretakerClick;
   }, [onCaretakerClick]);
+
+  useEffect(() => {
+    interactionPausedRef.current = interactionPaused;
+  }, [interactionPaused]);
+
+  useEffect(() => {
+    const previous = arenaBattlePresentationRef.current.value;
+    arenaBattlePresentationRef.current = {
+      value: arenaBattlePresentation,
+      cueStartedAtMs: previous?.sequence === arenaBattlePresentation?.sequence
+        ? arenaBattlePresentationRef.current.cueStartedAtMs
+        : performance.now(),
+    };
+  }, [arenaBattlePresentation]);
 
   useEffect(() => {
     onRendererUnavailableRef.current = onRendererUnavailable;
@@ -3589,7 +3629,7 @@ export default function Island5ThreePilot({
       pointerDown.set(event.clientX, event.clientY);
     };
     const handlePointerUp = (event: PointerEvent) => {
-      if (activeTour || activeProfiler || activeTokenMotion) return;
+      if (interactionPausedRef.current || activeTour || activeProfiler || activeTokenMotion) return;
       if (pointerDown.distanceTo(new THREE.Vector2(event.clientX, event.clientY)) > 7) return;
       const rect = canvas.getBoundingClientRect();
       pointer.set(
@@ -3645,17 +3685,54 @@ export default function Island5ThreePilot({
       }
 
       if (crownDrifter && crownDrifterPresentationRoot) {
-        const creatureMotion = resolveIslandRunArenaCreatureMotion({
-          islandNumber,
-          bossBuildLevel,
-          elapsedSeconds: elapsed,
-          tokenPosition: [playerPiece.root.position.x, playerPiece.root.position.y, playerPiece.root.position.z],
-          reducedMotion: isReducedMotion,
-        });
+        const battlePresentation = arenaBattlePresentationRef.current.value;
+        const creatureMotion = battlePresentation?.active
+          ? {
+              mode: 'roaming' as const,
+              visible: true,
+              position: [0, 2.82, 0.28] as const,
+              yaw: Math.PI,
+              emergenceProgress: 1,
+            }
+          : resolveIslandRunArenaCreatureMotion({
+              islandNumber,
+              bossBuildLevel,
+              elapsedSeconds: elapsed,
+              tokenPosition: [playerPiece.root.position.x, playerPiece.root.position.y, playerPiece.root.position.z],
+              reducedMotion: isReducedMotion,
+            });
         crownDrifterPresentationRoot.visible = creatureMotion.visible;
         crownDrifterPresentationRoot.position.set(...creatureMotion.position);
         crownDrifterPresentationRoot.rotation.y = creatureMotion.yaw;
+        crownDrifterPresentationRoot.rotation.x = 0;
+        crownDrifterPresentationRoot.rotation.z = 0;
+        crownDrifterPresentationRoot.scale.setScalar(battlePresentation?.active ? 0.86 : CROWN_DRIFTER_BOARD_SCALE);
         crownDrifter.update(elapsed, frameDeltaSeconds, isReducedMotion, creatureMotion.emergenceProgress);
+        if (battlePresentation?.active && !isReducedMotion) {
+          const cueElapsed = Math.max(0, (now - arenaBattlePresentationRef.current.cueStartedAtMs) / 1000);
+          const cuePulse = Math.sin(Math.min(1, cueElapsed) * Math.PI);
+          if (battlePresentation.cue === 'opponent_charge') {
+            const chargePulse = 1 + Math.sin(cueElapsed * 12) * 0.055 + Math.min(0.12, cueElapsed * 0.08);
+            crownDrifterPresentationRoot.scale.multiplyScalar(chargePulse);
+            crownDrifter.leftWingPivot.rotation.z -= 0.28;
+            crownDrifter.rightWingPivot.rotation.z += 0.28;
+            routeGlow.material instanceof THREE.MeshStandardMaterial
+              && (routeGlow.material.emissiveIntensity = 1.05 + Math.sin(cueElapsed * 10) * 0.32);
+          } else if (battlePresentation.cue === 'opponent_attack') {
+            crownDrifterPresentationRoot.position.z -= cuePulse * 0.72;
+            crownDrifterPresentationRoot.rotation.x = -cuePulse * 0.14;
+          } else if (battlePresentation.cue === 'player_attack' || battlePresentation.cue === 'player_power') {
+            const powerScale = battlePresentation.cue === 'player_power' ? 0.22 : 0.1;
+            crownDrifterPresentationRoot.position.z += cuePulse * (battlePresentation.cue === 'player_power' ? 0.7 : 0.34);
+            crownDrifterPresentationRoot.rotation.z = Math.sin(cueElapsed * 34) * powerScale * (1 - Math.min(1, cueElapsed));
+          } else if (battlePresentation.cue === 'victory') {
+            crownDrifterPresentationRoot.position.y = 1.38 - Math.min(0.34, cueElapsed * 0.16);
+            crownDrifterPresentationRoot.rotation.z = Math.min(0.22, cueElapsed * 0.08);
+          } else if (battlePresentation.cue === 'defeat') {
+            crownDrifterPresentationRoot.position.y += Math.abs(Math.sin(cueElapsed * 3.8)) * 0.18;
+            crownDrifterPresentationRoot.scale.multiplyScalar(1 + Math.sin(cueElapsed * 4.2) * 0.04);
+          }
+        }
       }
 
       const isCaretakerEncounterOpen = caretakerEncounterOpenRef.current;

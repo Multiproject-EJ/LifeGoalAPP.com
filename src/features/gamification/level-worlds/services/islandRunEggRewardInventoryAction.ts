@@ -3,7 +3,7 @@ import {
   readIslandRunGameStateRecord,
   type IslandRunGameStateRecord,
 } from './islandRunGameStateStore';
-import { selectCreatureForEgg } from './creatureCatalog';
+import { canCreatureBeAcquiredFromSource, getCreatureById, selectCreatureForEgg } from './creatureCatalog';
 import { withIslandRunActionLock } from './islandRunActionMutex';
 import { addCreatureToRuntimeCollection } from './islandRunCreatureCollectionLedger';
 import { commitIslandRunState } from './islandRunStateStore';
@@ -57,7 +57,20 @@ export function openEggRewardInventoryEntry(
     }
 
     const openedAtMs = normalizeNowMs(options.nowMs);
-    const creature = selectCreatureForEgg({
+    const lockedCreature = inventoryEntry.source === 'creature_arena'
+      && inventoryEntry.resolverVersion === 'creature_arena_locked_v1'
+      && inventoryEntry.lockedCreatureId
+      ? getCreatureById(inventoryEntry.lockedCreatureId)
+      : null;
+    if (inventoryEntry.source === 'creature_arena' && (!lockedCreature || !canCreatureBeAcquiredFromSource(lockedCreature, 'arena'))) {
+      return {
+        status: 'not_found',
+        record: current,
+        eggRewardId: normalizedEggRewardId,
+        openedCreatureId: null,
+      };
+    }
+    const creature = lockedCreature ?? selectCreatureForEgg({
       eggTier: inventoryEntry.eggTier,
       seed: inventoryEntry.eggSeed,
       islandNumber: inventoryEntry.targetIslandNumber,
