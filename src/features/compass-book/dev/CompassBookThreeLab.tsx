@@ -15,6 +15,10 @@ type LiveMetrics = {
   triangles: number;
 };
 
+type CompassBookReviewWindow = Window & {
+  __compassBookSculptRuntime?: Record<string, unknown>;
+};
+
 const EMPTY_METRICS: LiveMetrics = { fps: 0, calls: 0, triangles: 0 };
 
 const SIGNALS = [
@@ -41,6 +45,72 @@ function readInitialReducedMotion() {
 
 function readPhoneProof() {
   return new URLSearchParams(window.location.search).get('phoneProof') === '1';
+}
+
+function readOrbit() {
+  const value = Number(new URLSearchParams(window.location.search).get('orbit') ?? 0);
+  return Number.isFinite(value) ? THREE.MathUtils.clamp(value, -1, 1) : 0;
+}
+
+function readMapStrippedReview() {
+  return new URLSearchParams(window.location.search).get('mapStripped') === '1';
+}
+
+function stripMaterialMapsForReview(root: THREE.Object3D) {
+  root.traverse((node) => {
+    if (!(node instanceof THREE.Mesh)) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    materials.forEach((material) => {
+      const mapped = material as THREE.MeshStandardMaterial;
+      mapped.map = null;
+      mapped.alphaMap = null;
+      mapped.aoMap = null;
+      mapped.bumpMap = null;
+      mapped.displacementMap = null;
+      mapped.emissiveMap = null;
+      mapped.lightMap = null;
+      mapped.metalnessMap = null;
+      mapped.normalMap = null;
+      mapped.roughnessMap = null;
+      mapped.needsUpdate = true;
+    });
+  });
+}
+
+function createRuntimePartManifest(root: THREE.Object3D) {
+  const runtime = root.userData.sculptRuntime as {
+    parts?: Record<string, THREE.Object3D>;
+    sockets?: Record<string, unknown>;
+    colliders?: Record<string, unknown>;
+    destructionGroups?: Record<string, unknown>;
+  } | undefined;
+  if (!runtime?.parts) return null;
+  const parts = Object.entries(runtime.parts).map(([name, object]) => {
+    let triangles = 0;
+    object.traverse((child) => {
+      if (!(child instanceof THREE.Mesh)) return;
+      triangles += child.geometry.index
+        ? child.geometry.index.count / 3
+        : (child.geometry.getAttribute('position')?.count ?? 0) / 3;
+    });
+    return { name, kind: 'part', module: object.name, triangles: Math.round(triangles) };
+  });
+  let unnamedMeshes = 0;
+  let integralMeshes = 0;
+  root.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    integralMeshes += 1;
+    if (!child.name) unnamedMeshes += 1;
+  });
+  return {
+    model: 'habitgame-compass-book-v2',
+    parts,
+    unnamedMeshes,
+    integralMeshes,
+    sockets: Object.keys(runtime.sockets ?? {}),
+    colliders: Object.keys(runtime.colliders ?? {}),
+    destructionGroups: Object.keys(runtime.destructionGroups ?? {}),
+  };
 }
 
 function createStarField(quality: CompassBookThreeQuality) {
@@ -100,7 +170,7 @@ function IlluminationCompass() {
 }
 
 function ReadingSpread({ phoneProof }: { phoneProof: boolean }) {
-  const [phonePage, setPhonePage] = useState<'signals' | 'summary'>('signals');
+  const [phonePage, setPhonePage] = useState<'overview' | 'signals' | 'summary'>('overview');
   return (
     <section
       className={`compass-book-three-lab__dom-spread compass-book-three-lab__dom-spread--${phonePage}`}
@@ -130,9 +200,9 @@ function ReadingSpread({ phoneProof }: { phoneProof: boolean }) {
           <button
             type="button"
             className="compass-book-three-lab__page-focus compass-book-three-lab__page-focus--back"
-            onClick={() => setPhonePage('signals')}
+            onClick={() => setPhonePage('overview')}
           >
-            <span aria-hidden="true">‹</span> Signals
+            <span aria-hidden="true">‹</span> Full spread
           </button>
         ) : null}
         <p className="compass-book-three-lab__kicker">Your current bearing</p>
@@ -165,6 +235,8 @@ function ReadingSpread({ phoneProof }: { phoneProof: boolean }) {
 
 export default function CompassBookThreeLab() {
   const phoneProof = useMemo(readPhoneProof, []);
+  const orbit = useMemo(readOrbit, []);
+  const mapStrippedReview = useMemo(readMapStrippedReview, []);
   const [pose, setPose] = useState<CompassBookThreePose>(readInitialPose);
   const [quality, setQuality] = useState<CompassBookThreeQuality>(readInitialQuality);
   const [reducedMotion, setReducedMotion] = useState(readInitialReducedMotion);
@@ -214,15 +286,19 @@ export default function CompassBookThreeLab() {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 80);
     const model = createCompassBookThreeModel(quality);
+    if (mapStrippedReview) stripMaterialMapsForReview(model.root);
     modelRef.current = model;
+    (window as CompassBookReviewWindow).__compassBookSculptRuntime = model.root.userData.sculptRuntime;
+    const partManifest = createRuntimePartManifest(model.root);
+    if (partManifest) canvas.dataset.partManifest = JSON.stringify(partManifest);
     scene.add(model.root);
 
     const stars = createStarField(quality);
     scene.add(stars);
 
-    const hemisphere = new THREE.HemisphereLight(0xd9ddff, 0x120b28, quality === 'high' ? 2.8 : 2.2);
+    const hemisphere = new THREE.HemisphereLight(0xd9ddff, 0x120b28, quality === 'high' ? 1.9 : 1.55);
     scene.add(hemisphere);
-    const key = new THREE.DirectionalLight(0xffe7aa, quality === 'high' ? 6.4 : 4.5);
+    const key = new THREE.DirectionalLight(0xffe7aa, quality === 'high' ? 5.8 : 4.2);
     key.position.set(-6, 12, 8);
     key.castShadow = quality === 'high';
     key.shadow.mapSize.set(quality === 'high' ? 1024 : 512, quality === 'high' ? 1024 : 512);
@@ -231,7 +307,7 @@ export default function CompassBookThreeLab() {
     key.shadow.camera.top = 6;
     key.shadow.camera.bottom = -6;
     scene.add(key);
-    const rim = new THREE.DirectionalLight(0x7957ff, quality === 'high' ? 3.6 : 2.4);
+    const rim = new THREE.DirectionalLight(0x7957ff, quality === 'high' ? 1.45 : 1.05);
     rim.position.set(7, 5, -8);
     scene.add(rim);
 
@@ -281,13 +357,17 @@ export default function CompassBookThreeLab() {
       model.animate(now / 1000, reducedMotionRef.current);
 
       const compact = width / height < 0.62;
-      const cameraDistance = THREE.MathUtils.lerp(compact ? 13.6 : 11.5, compact ? 15.4 : 16.8, openProgress);
+      const cameraDistance = THREE.MathUtils.lerp(compact ? 24 : 18.2, compact ? 46 : 18.8, openProgress);
       camera.position.set(
-        0,
-        cameraDistance * THREE.MathUtils.lerp(0.58, 0.64, openProgress),
-        cameraDistance * THREE.MathUtils.lerp(0.74, 0.68, openProgress),
+        THREE.MathUtils.lerp(compact ? 2 : 1.55, 0, openProgress) + orbit * (compact ? 3.2 : 3.8),
+        cameraDistance * THREE.MathUtils.lerp(0.72, 0.74, openProgress),
+        cameraDistance * THREE.MathUtils.lerp(0.58, 0.56, openProgress),
       );
-      camera.lookAt(0, 0.2, 0);
+      camera.lookAt(
+        (0.28 + orbit * 0.18) * (1 - openProgress),
+        THREE.MathUtils.lerp(0.18, compact ? -2.15 : 0.18, openProgress),
+        0.08,
+      );
       stars.rotation.y = reducedMotionRef.current ? 0 : now * 0.000012;
       renderer.render(scene, camera);
 
@@ -316,8 +396,10 @@ export default function CompassBookThreeLab() {
       (floor.material as THREE.Material).dispose();
       renderer.dispose();
       modelRef.current = null;
+      delete (window as CompassBookReviewWindow).__compassBookSculptRuntime;
+      delete canvas.dataset.partManifest;
     };
-  }, [quality]);
+  }, [mapStrippedReview, quality]);
 
   const modelMetrics = modelRef.current?.metrics;
 
@@ -354,9 +436,19 @@ export default function CompassBookThreeLab() {
           className="compass-book-three-lab__open-book"
           onClick={() => setPose('reading')}
         >
-          <span>Compass Book</span>
-          <strong>Open the Reading</strong>
-          <small>Tap to open</small>
+          <span className="compass-book-three-lab__cover-kicker">HabitGame</span>
+          <strong className="compass-book-three-lab__cover-title">
+            <b>Compass</b>
+            <b>Book</b>
+          </strong>
+          <span className="compass-book-three-lab__cover-label compass-book-three-lab__cover-label--know">Know</span>
+          <span className="compass-book-three-lab__cover-label compass-book-three-lab__cover-label--choose">Choose</span>
+          <span className="compass-book-three-lab__cover-label compass-book-three-lab__cover-label--act">Act</span>
+          <span className="compass-book-three-lab__cover-label compass-book-three-lab__cover-label--sustain">Sustain</span>
+          <span className="compass-book-three-lab__cover-open">
+            <b>Open the Reading</b>
+            <small>Tap the book to begin</small>
+          </span>
         </button>
       ) : (
         <>

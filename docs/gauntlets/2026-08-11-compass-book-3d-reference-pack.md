@@ -2,9 +2,11 @@
 
 ## Status
 
-Four-image final-look reference pack approved. The first hybrid-3D vertical
-slice is implemented and locally verified, awaiting Eivind's visual review.
-No production Compass Book UI has been replaced during this stage.
+Four-image final-look reference pack approved. Eivind rated the first
+hybrid-3D vertical slice at 4/10, so it was rejected as a finished visual and
+rebuilt through a second evidence-backed img2threejs pass. The v2 lab is
+locally verified; no production Compass Book UI has been replaced during this
+stage.
 
 ## Product truth to preserve
 
@@ -141,3 +143,59 @@ QA record:
 Next integration slice after visual approval: place this shell around the real
 `CompassBookScreen` Reading data read-only, then connect existing page
 navigation without moving persistence or answer authority into Three.js.
+
+## Rebuild checkpoint v2 — 2026-08-11
+
+The 4/10 pass failed mainly because it read as a thin decorated panel: the
+cover crop, flat compass, shallow binding, sparse surface response, and tightly
+cropped open spread did not carry the physical richness of the target. The v2
+rebuild changes the object rather than merely relighting it:
+
+- rounded independent front/back leather shells, a cylindrical ribbed spine,
+  eighteen High-quality page leaves, warm page-edge variation, and a real
+  opening hinge;
+- layered gold cover frames, four sculpted corner assemblies, cover studs,
+  a compass clasp, bookmark, title relief, and seven colored/lettered tabs;
+- a multi-layer compass with shadow disk, dial, three bezels, tick geometry,
+  four violet cardinal needles, four gold diagonal needles, smaller secondary
+  blades, finials, center bezel, violet cabochon, and glow ring;
+- independent procedural leather albedo, height/bump, and roughness response,
+  with separate paper, gilt, dark metal, violet enamel, and tab materials;
+- a full-spread phone composition first, followed by optional readable focus
+  on Signals or Summary, instead of opening directly onto a cropped half-book;
+- a darker illuminated Reading compass so the page reads as a jewel-set
+  instrument rather than a flat pastel infographic;
+- a map-stripped review route plus named runtime parts, six interaction
+  sockets, a book collider, and binding/pages/interaction destruction groups.
+
+Evidence is stored in
+`docs/gauntlets/evidence/compass-book-3d-lab-v2/`. The closed and open
+side-by-side sheets are `07-comparison-closed.jpg` and
+`08-comparison-reading.jpg`.
+
+Gauntlet record:
+
+- Eivind's starting assessment: **4/10**.
+- Current agent-vision estimate: **0.82 for the blockout/identity pass**. This
+  clears the 0.70 pass gate but is not represented as 10/10.
+- Strongest current areas: silhouette, physical book volume, compass identity,
+  tab rail, and navy/violet/gold palette.
+- Remaining mismatch: the target still has denser engraved filigree, sharper
+  micro-relief, richer jewel facets, and more convincing printed-page depth.
+- Tier-1 deterministic gate: pass; silhouette IoU 0.9943, aspect and scale
+  deltas 0.0, symmetry error 0.0081. Color diagnostics are advisory because
+  the screenshots are not isolated against a common background.
+- Multi-angle gate: no degenerate planar collapse in either orbit proof.
+- Assembly gate: 28 of 28 specified parts represented, zero errors, zero
+  unnamed meshes. Three inventory naming warnings remain for material aliases
+  (`cover-shell`, `paper`, and `gilded-metal`) and do not indicate missing
+  geometry.
+- Runtime phone proof: High 60 FPS / 543 calls / about 146.5k rendered
+  triangles; Low 60 FPS / 134 calls / about 13.1k rendered triangles in the
+  local browser proof. Device validation remains required before app
+  integration.
+
+The img2threejs state has advanced from blockout to structural-pass. The next
+quality pass should spend its budget on the binding relief, cover filigree,
+compass jewel facets, and page-to-cover physical alignment—not on adding more
+screen content.

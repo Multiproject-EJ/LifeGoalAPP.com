@@ -152,16 +152,16 @@ button {
   top: 50%;
   left: 50%;
   z-index: 8;
-  display: grid;
-  width: min(54vw, 245px);
-  min-height: min(64vh, 430px);
-  padding: 44px 22px;
+  width: min(76vw, 330px);
+  min-height: min(68vh, 510px);
+  padding: 0;
   border: 0;
   color: #efd692;
   text-align: center;
   cursor: pointer;
   background: transparent;
-  transform: translate(-50%, -51%);
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.22));
+  transform: translate(-50%, -50%) perspective(900px) rotateX(2deg) rotateZ(-0.4deg);
 }
 
 .compass-book-three-lab__open-book::before {
@@ -174,32 +174,92 @@ button {
   box-shadow: none;
 }
 
-.compass-book-three-lab__open-book span {
+.compass-book-three-lab__cover-kicker {
   position: absolute;
-  top: 20%;
+  top: 12%;
   right: 0;
   left: 0;
-  font: 700 clamp(0.72rem, 2.9vw, 1rem)/1.2 'Compass Cinzel', serif;
-  letter-spacing: 0.13em;
+  color: rgba(228, 188, 101, 0.72);
+  font: 700 clamp(0.48rem, 2vw, 0.7rem)/1.2 'Compass Cinzel', serif;
+  letter-spacing: 0.27em;
+  text-transform: uppercase;
+  opacity: 0;
+}
+
+.compass-book-three-lab__cover-title {
+  position: absolute;
+  top: 16%;
+  right: 7%;
+  left: 7%;
+  display: grid;
+  color: #e2b55b;
+  font: 700 clamp(1.5rem, 7vw, 2.75rem)/0.88 'Compass Cinzel', serif;
+  letter-spacing: 0.035em;
+  text-shadow: 0 1px 0 #5a3516, 0 2px 1px #2a1608, 0 5px 14px rgba(0, 0, 0, 0.58);
+  text-transform: uppercase;
+  opacity: 0;
+}
+
+.compass-book-three-lab__cover-title b {
+  font: inherit;
+}
+
+.compass-book-three-lab__cover-label {
+  position: absolute;
+  color: rgba(229, 183, 91, 0.9);
+  font: 700 clamp(0.48rem, 2vw, 0.7rem)/1 'Compass Cinzel', serif;
+  letter-spacing: 0.05em;
+  text-shadow: 0 1px 3px #120a06;
+  text-transform: uppercase;
+  opacity: 0;
+}
+
+.compass-book-three-lab__cover-label--know {
+  top: 39%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.compass-book-three-lab__cover-label--choose {
+  top: 54%;
+  right: 4%;
+}
+
+.compass-book-three-lab__cover-label--act {
+  top: 68%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.compass-book-three-lab__cover-label--sustain {
+  top: 54%;
+  left: 3%;
+}
+
+.compass-book-three-lab__cover-open {
+  position: absolute;
+  right: 10%;
+  bottom: 8%;
+  left: 10%;
+  display: grid;
+  gap: 4px;
+  padding: 9px 15px 8px;
+  border: 1px solid rgba(210, 155, 68, 0.58);
+  border-radius: 999px;
+  color: #f1cf85;
+  background: linear-gradient(180deg, rgba(38, 25, 61, 0.78), rgba(12, 10, 27, 0.84));
+  box-shadow: inset 0 0 0 1px rgba(255, 223, 145, 0.08), 0 7px 15px rgba(0, 0, 0, 0.28);
+}
+
+.compass-book-three-lab__cover-open b {
+  font: 700 clamp(0.62rem, 2.8vw, 0.88rem)/1 'Compass Cinzel', serif;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.compass-book-three-lab__open-book strong {
-  position: absolute;
-  top: 67%;
-  right: 4%;
-  left: 4%;
-  font: 700 clamp(1.45rem, 6vw, 2.35rem)/1.05 'Compass Cinzel', serif;
-  text-shadow: 0 2px 14px rgba(255, 207, 101, 0.2);
-}
-
-.compass-book-three-lab__open-book small {
-  position: absolute;
-  top: 80%;
-  right: 0;
-  left: 0;
-  color: rgba(231, 219, 255, 0.78);
-  font: italic 1rem/1.2 'Compass Garamond', serif;
+.compass-book-three-lab__cover-open small {
+  color: rgba(222, 205, 240, 0.74);
+  font: italic clamp(0.66rem, 2.8vw, 0.85rem)/1 'Compass Garamond', serif;
 }
 
 .compass-book-three-lab__dom-spread {
@@ -209,11 +269,17 @@ button {
   z-index: 7;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  box-sizing: border-box;
   width: min(80%, 770px);
   aspect-ratio: 0.84;
   max-height: 68vh;
+  padding: 8px 10px 11px;
+  border: 2px solid rgba(202, 147, 57, 0.9);
+  border-radius: 9px;
   opacity: 1;
-  filter: drop-shadow(0 22px 28px rgba(0, 0, 0, 0.28));
+  background: linear-gradient(180deg, #171329, #080914 88%);
+  box-shadow: inset 0 0 0 2px rgba(245, 206, 113, 0.12), inset 0 0 22px rgba(112, 65, 12, 0.26);
+  filter: drop-shadow(0 22px 28px rgba(0, 0, 0, 0.38));
   transform: translate(-50%, -45%) perspective(1100px) rotateX(24deg);
   transform-origin: center;
   animation: compass-book-three-lab-pages-in 650ms 520ms both;
@@ -228,18 +294,29 @@ button {
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread {
-  width: 152%;
-  max-height: 66%;
+  top: 43%;
+  width: 82%;
+  max-height: 64%;
   animation: none;
-  transition: transform 520ms cubic-bezier(0.22, 0.8, 0.2, 1);
+  transition: width 520ms cubic-bezier(0.22, 0.8, 0.2, 1), transform 520ms cubic-bezier(0.22, 0.8, 0.2, 1);
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--overview {
+  transform: translate(-50%, -46%) perspective(900px) rotateX(11deg);
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--overview .compass-book-three-lab__page-focus--back {
+  display: none;
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--signals {
-  transform: translate(-33%, -43%) perspective(900px) rotateX(14deg);
+  width: 152%;
+  transform: translate(-33%, -49%) perspective(900px) rotateX(14deg);
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--summary {
-  transform: translate(-67%, -43%) perspective(900px) rotateX(14deg);
+  width: 152%;
+  transform: translate(-67%, -49%) perspective(900px) rotateX(14deg);
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__paper--left {
@@ -251,11 +328,11 @@ button {
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__paper h1 {
-  font-size: 1.55rem;
+  font-size: clamp(0.92rem, 4vw, 1.25rem);
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__paper h2 {
-  font-size: 1.16rem;
+  font-size: clamp(0.68rem, 3vw, 0.96rem);
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__kicker {
@@ -263,39 +340,57 @@ button {
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__subtitle {
-  font-size: 0.82rem;
+  font-size: 0.66rem;
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__signal strong {
-  font-size: 0.61rem;
+  font-size: 0.48rem;
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__signal span {
-  font-size: 0.74rem;
+  font-size: 0.58rem;
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__kind-note {
-  font-size: 0.72rem;
+  font-size: 0.58rem;
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__meters strong {
-  font-size: 1.25rem;
+  font-size: 0.96rem;
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__meters span {
-  font-size: 0.62rem;
+  font-size: 0.5rem;
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__reading-copy span {
-  font-size: 0.64rem;
+  font-size: 0.52rem;
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__reading-copy p {
-  font-size: 0.88rem;
+  font-size: 0.7rem;
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__continue {
-  font-size: 0.76rem;
+  font-size: 0.62rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--signals .compass-book-three-lab__paper h1 {
+  font-size: 1.55rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--signals .compass-book-three-lab__subtitle,
+.compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--signals .compass-book-three-lab__signal span,
+.compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--signals .compass-book-three-lab__kind-note {
+  font-size: 0.74rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--summary .compass-book-three-lab__paper h2 {
+  font-size: 1.16rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--summary .compass-book-three-lab__reading-copy p {
+  font-size: 0.88rem;
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__close {
@@ -308,16 +403,16 @@ button {
 }
 
 .compass-book-three-lab--phone-proof .compass-book-three-lab__open-book {
-  width: min(54%, 214px);
-  min-height: min(56%, 420px);
+  width: min(78%, 310px);
+  min-height: min(68%, 520px);
 }
 
-.compass-book-three-lab--phone-proof .compass-book-three-lab__open-book span {
-  font-size: 0.72rem;
+.compass-book-three-lab--phone-proof .compass-book-three-lab__cover-kicker {
+  font-size: 0.55rem;
 }
 
-.compass-book-three-lab--phone-proof .compass-book-three-lab__open-book strong {
-  font-size: 1.45rem;
+.compass-book-three-lab--phone-proof .compass-book-three-lab__cover-title {
+  font-size: 2rem;
 }
 
 .compass-book-three-lab__paper {
@@ -325,26 +420,57 @@ button {
   box-sizing: border-box;
   min-width: 0;
   overflow: hidden;
-  border: 1px solid rgba(142, 102, 41, 0.45);
+  border: 1px solid rgba(126, 83, 31, 0.58);
   color: var(--ink);
   background:
-    linear-gradient(90deg, rgba(117, 78, 30, 0.11), transparent 12% 88%, rgba(117, 78, 30, 0.09)),
-    repeating-linear-gradient(0deg, transparent 0 10px, rgba(84, 50, 23, 0.018) 11px),
+    radial-gradient(ellipse at 45% 15%, rgba(255, 252, 226, 0.7), transparent 42%),
+    radial-gradient(ellipse at 80% 80%, rgba(156, 105, 44, 0.08), transparent 44%),
+    linear-gradient(90deg, rgba(92, 54, 20, 0.13), transparent 13% 86%, rgba(92, 54, 20, 0.1)),
+    repeating-linear-gradient(7deg, transparent 0 8px, rgba(84, 50, 23, 0.018) 9px),
     var(--paper);
-  box-shadow: inset 0 0 28px rgba(106, 71, 29, 0.2);
+  box-shadow: inset 0 0 34px rgba(95, 59, 23, 0.22);
   font-family: 'Compass Garamond', Georgia, serif;
+}
+
+.compass-book-three-lab__paper::before {
+  position: absolute;
+  inset: 8px;
+  z-index: 0;
+  border: 1px solid rgba(143, 92, 28, 0.42);
+  border-radius: 3px;
+  content: '';
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 249, 221, 0.3);
+}
+
+.compass-book-three-lab__paper::after {
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  z-index: 0;
+  color: #a66f25;
+  content: '✦';
+  font-size: 0.7rem;
+  line-height: 1;
+  text-shadow: 0 0 8px rgba(121, 56, 172, 0.26);
+  transform: translateX(-50%);
+}
+
+.compass-book-three-lab__paper > * {
+  position: relative;
+  z-index: 1;
 }
 
 .compass-book-three-lab__paper--left {
   padding: clamp(18px, 4.4vw, 46px) clamp(14px, 3vw, 34px) clamp(18px, 4vw, 40px) clamp(20px, 4.8vw, 52px);
   border-radius: 5px 1px 1px 7px;
-  box-shadow: inset -20px 0 30px rgba(98, 67, 29, 0.17), inset 0 0 28px rgba(106, 71, 29, 0.16);
+  box-shadow: inset -28px 0 34px rgba(67, 39, 14, 0.23), inset 0 0 28px rgba(106, 71, 29, 0.16), -7px 9px 0 rgba(136, 98, 48, 0.18);
 }
 
 .compass-book-three-lab__paper--right {
   padding: clamp(18px, 4.4vw, 46px) clamp(20px, 4.8vw, 52px) clamp(18px, 4vw, 40px) clamp(14px, 3vw, 34px);
   border-radius: 1px 5px 7px 1px;
-  box-shadow: inset 20px 0 30px rgba(98, 67, 29, 0.17), inset 0 0 28px rgba(106, 71, 29, 0.16);
+  box-shadow: inset 28px 0 34px rgba(67, 39, 14, 0.23), inset 0 0 28px rgba(106, 71, 29, 0.16), 7px 9px 0 rgba(136, 98, 48, 0.18);
 }
 
 .compass-book-three-lab__kicker,
@@ -390,24 +516,44 @@ button {
   width: min(82%, 260px);
   aspect-ratio: 1;
   margin: clamp(12px, 3.6vw, 34px) auto 10px;
-  border: 1px solid rgba(142, 95, 26, 0.42);
+  border: 3px solid rgba(190, 137, 47, 0.94);
   border-radius: 50%;
   background:
-    radial-gradient(circle, rgba(113, 69, 178, 0.23) 0 22%, transparent 23%),
-    repeating-radial-gradient(circle, transparent 0 18%, rgba(126, 85, 24, 0.18) 19% 19.7%, transparent 20% 29%);
-  box-shadow: inset 0 0 18px rgba(107, 67, 22, 0.18), 0 0 0 4px rgba(232, 184, 76, 0.11);
+    repeating-conic-gradient(from 0deg, rgba(232, 190, 92, 0.7) 0 0.65deg, transparent 0.9deg 11.25deg),
+    conic-gradient(from 22.5deg, rgba(140, 79, 206, 0.34), transparent 12.5%, rgba(223, 168, 64, 0.27) 25%, transparent 37.5%, rgba(140, 79, 206, 0.34) 50%, transparent 62.5%, rgba(223, 168, 64, 0.27) 75%, transparent 87.5%),
+    radial-gradient(circle, rgba(133, 72, 204, 0.48) 0 21%, transparent 22%),
+    repeating-radial-gradient(circle, rgba(15, 13, 39, 0.96) 0 16%, rgba(215, 169, 70, 0.72) 17% 18.5%, rgba(24, 19, 55, 0.96) 19% 29%, rgba(105, 60, 151, 0.42) 30% 31%, rgba(17, 15, 43, 0.96) 32% 45%);
+  box-shadow:
+    inset 0 0 24px rgba(173, 110, 30, 0.32),
+    inset 0 0 0 6px rgba(32, 20, 65, 0.66),
+    0 0 0 3px rgba(244, 203, 107, 0.34),
+    0 0 0 7px rgba(56, 31, 84, 0.22),
+    0 10px 18px rgba(48, 27, 16, 0.3);
+}
+
+.compass-book-three-lab__illumination::before {
+  position: absolute;
+  inset: 13%;
+  z-index: 1;
+  content: '';
+  background:
+    radial-gradient(circle at 50% 50%, #f3d384 0 7%, #8b4ec8 8% 12%, transparent 13%),
+    conic-gradient(from 0deg, #7a36bd, #f0c86e 11.25deg, #452069 22.5deg, #dcae54 33.75deg, #7a36bd 45deg, #f0c86e 56.25deg, #452069 67.5deg, #dcae54 78.75deg, #7a36bd 90deg, #f0c86e 101.25deg, #452069 112.5deg, #dcae54 123.75deg, #7a36bd 135deg, #f0c86e 146.25deg, #452069 157.5deg, #dcae54 168.75deg, #7a36bd 180deg, #f0c86e 191.25deg, #452069 202.5deg, #dcae54 213.75deg, #7a36bd 225deg, #f0c86e 236.25deg, #452069 247.5deg, #dcae54 258.75deg, #7a36bd 270deg, #f0c86e 281.25deg, #452069 292.5deg, #dcae54 303.75deg, #7a36bd 315deg, #f0c86e 326.25deg, #452069 337.5deg, #dcae54 348.75deg, #7a36bd 360deg);
+  clip-path: polygon(50% 0, 56% 35%, 69% 16%, 64% 39%, 85% 15%, 67% 43%, 100% 50%, 67% 57%, 85% 85%, 64% 61%, 69% 84%, 56% 65%, 50% 100%, 44% 65%, 31% 84%, 36% 61%, 15% 85%, 33% 57%, 0 50%, 33% 43%, 15% 15%, 36% 39%, 31% 16%, 44% 35%);
+  filter: drop-shadow(0 0 5px rgba(110, 54, 171, 0.45)) drop-shadow(0 2px 2px rgba(78, 44, 13, 0.32));
 }
 
 .compass-book-three-lab__signal-core {
   position: absolute;
-  inset: 33%;
+  inset: 40%;
+  z-index: 3;
   display: grid;
   place-items: center;
-  border: 1px solid #c29139;
+  border: 2px solid #efca74;
   border-radius: 50%;
   color: #6e35b5;
-  background: rgba(255, 246, 215, 0.7);
-  box-shadow: 0 0 18px rgba(111, 58, 178, 0.22);
+  background: radial-gradient(circle at 35% 28%, #fff1b4, #c99236 52%, #6d3b13 100%);
+  box-shadow: inset 0 0 0 3px rgba(76, 43, 104, 0.28), 0 0 22px rgba(159, 88, 230, 0.58), 0 6px 10px rgba(26, 13, 29, 0.5);
 }
 
 .compass-book-three-lab__signal-core span {
@@ -419,7 +565,7 @@ button {
   z-index: 2;
   display: grid;
   min-width: 48px;
-  color: #332749;
+  color: #f0d994;
   text-align: center;
   line-height: 1;
 }
@@ -430,13 +576,26 @@ button {
 
 .compass-book-three-lab__signal span {
   margin-top: 2px;
-  color: #7d4cb0;
+  color: #d8a9ff;
   font-size: clamp(0.58rem, 1.7vw, 0.82rem);
 }
 
 .compass-book-three-lab__signal small {
   display: none;
 }
+
+.compass-book-three-lab__signal::after {
+  margin-top: 3px;
+  color: #cc8cff;
+  font: 0.36rem/1 system-ui, sans-serif;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 4px rgba(113, 58, 168, 0.25);
+}
+
+.compass-book-three-lab__signal--know::after { content: '● ● ● ○ ○'; }
+.compass-book-three-lab__signal--choose::after { content: '● ● ● ● ○'; }
+.compass-book-three-lab__signal--act::after { content: '● ● ○ ○ ○'; }
+.compass-book-three-lab__signal--sustain::after { content: '● ○ ○ ○ ○'; }
 
 .compass-book-three-lab__signal--know { top: 5%; left: 50%; transform: translateX(-50%); }
 .compass-book-three-lab__signal--choose { top: 47%; right: 1%; transform: translateY(-50%); }
@@ -446,6 +605,7 @@ button {
 .compass-book-three-lab__signal-rings {
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
 }
 
