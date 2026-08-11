@@ -1,4 +1,4 @@
-export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5;
+export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface IslandRun3DWorldRoute {
   runtimeIslandNumber: number;
@@ -7,7 +7,7 @@ export interface IslandRun3DWorldRoute {
 }
 
 /**
- * Authored visual-world routing for the first-five-island pilot.
+ * Authored visual-world routing for the current procedural-island batch.
  *
  * Runtime island numbers continue to own story, progression, rewards, arena
  * cadence, and persistence. `worldSourceNumber` selects only the authored 3D
@@ -20,6 +20,7 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   { runtimeIslandNumber: 3, worldSourceNumber: 3, role: 'ordinary' },
   { runtimeIslandNumber: 4, worldSourceNumber: 4, role: 'ordinary' },
   { runtimeIslandNumber: 5, worldSourceNumber: 5, role: 'arena' },
+  { runtimeIslandNumber: 6, worldSourceNumber: 6, role: 'ordinary' },
 ];
 
 const ROUTES_BY_RUNTIME_ISLAND = new Map(

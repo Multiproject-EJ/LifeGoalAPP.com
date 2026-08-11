@@ -360,8 +360,8 @@ export default function CompassBookThreeLab() {
       const cameraDistance = THREE.MathUtils.lerp(compact ? 24 : 18.2, compact ? 46 : 18.8, openProgress);
       camera.position.set(
         THREE.MathUtils.lerp(compact ? 2 : 1.55, 0, openProgress) + orbit * (compact ? 3.2 : 3.8),
-        cameraDistance * THREE.MathUtils.lerp(0.72, 0.74, openProgress),
-        cameraDistance * THREE.MathUtils.lerp(0.58, 0.56, openProgress),
+        cameraDistance * THREE.MathUtils.lerp(compact ? 0.62 : 0.67, 0.74, openProgress),
+        cameraDistance * THREE.MathUtils.lerp(compact ? 0.68 : 0.64, 0.56, openProgress),
       );
       camera.lookAt(
         (0.28 + orbit * 0.18) * (1 - openProgress),

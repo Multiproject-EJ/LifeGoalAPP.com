@@ -539,13 +539,14 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const island2Source = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island2ThreeWorld.ts', 'utf8');
       const celestialSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island2CelestialThreeWorld.ts', 'utf8');
       const frostmoonSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island3FrostmoonThreeWorld.ts', 'utf8');
+      const moonveilSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island6MoonveilThreeWorld.ts', 'utf8');
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       const routingSource = fsMod.readFileSync('src/features/gamification/level-worlds/services/islandRun3DWorldRouting.ts', 'utf8');
       const mainSource = fsMod.readFileSync('src/main.tsx', 'utf8');
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5].includes(islandParam)'), 'the workbench should expose all five authored islands for repeatable landmark QA');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6].includes(islandParam)'), 'the workbench should expose all six authored islands for repeatable landmark QA');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
       assert(mainSource.includes('import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED'), 'internal profiler bundle must not register the production service worker');
@@ -568,6 +569,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(boardSource.includes('islandNumber={islandArtPreviewNumber}') && boardSource.includes('worldSourceNumber={island3DWorldNumber ?? 5}'), 'the shared renderer must keep gameplay identity separate from the selected authored world');
       assert(routingSource.includes('runtimeIslandNumber: 2, worldSourceNumber: 2') && routingSource.includes('runtimeIslandNumber: 3, worldSourceNumber: 3'), 'Islands 002 and 003 must route their dedicated Celestial and Frostmoon world packs');
       assert(routingSource.includes('runtimeIslandNumber: 4, worldSourceNumber: 4') && routingSource.includes('runtimeIslandNumber: 5, worldSourceNumber: 5'), 'the citadel and tropical arena worlds must retain stable Island 004/005 identities');
+      assert(routingSource.includes('runtimeIslandNumber: 6, worldSourceNumber: 6'), 'Island 006 must route its dedicated Moonveil Nexus world pack');
       assert(pilotSource.includes('color: 0x4d91c8') && pilotSource.includes('color: 0x72c9e8'), 'Island 1 must use its authored blue route and key-tile palette instead of inheriting Island 5 purple');
       assert(boardSource.includes('() => !isIslandVisualPreview || isIsland5ThreePreviewRequested'), 'normal Island 5 gameplay should default to 3D while QA previews remain explicit');
       assert(boardSource.includes('presentation="embedded"'), 'real UI shell must hide workbench-only profiler and camera panels');
@@ -575,6 +577,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('qualityOverride ?? qualitySelection'), 'dev override should take precedence without changing production auto selection');
       assert(pilotSource.includes('ISLAND_1_LANDMARK_LABELS[preset.id'), 'Island 001 workbench focus controls must use First Light landmark labels');
       assert(pilotSource.includes('ISLAND_2_CELESTIAL_LANDMARK_LABELS[preset.id') && pilotSource.includes('ISLAND_3_FROSTMOON_LANDMARK_LABELS[preset.id'), 'Islands 002 and 003 workbench focus controls must expose their authored landmark names');
+      assert(pilotSource.includes('ISLAND_6_MOONVEIL_LANDMARK_LABELS[preset.id'), 'Island 006 workbench focus controls must expose its authored Moonveil landmark names');
       assert(celestialSource.includes("boss: 'Solspire Palace'") && celestialSource.includes("hatchery: 'Cloudnest Conservatory'"), 'Island 002 must retain its palace and cloudnest identities');
       assert(celestialSource.includes('function createSolspirePalace') && celestialSource.includes('function createCloudnest') && celestialSource.includes('function createAstralGate'), 'Island 002 needs distinct procedural landmark families');
       assert(celestialSource.includes("cloud.name = 'ISLAND_2_CLOUD_FLOOR_CLUSTER'") && celestialSource.includes("ribbon.name = 'ISLAND_2_CLOUD_WATERFALL'"), 'Island 002 must carry cloud-floor depth and animated waterfalls');
@@ -585,6 +588,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(frostmoonSource.includes("boss: 'Aurora Keep'") && frostmoonSource.includes("hatchery: 'Snowfeather Roost'"), 'Island 003 must retain its alpine keep and snowy hatchery identities');
       assert(frostmoonSource.includes('function createAuroraKeep') && frostmoonSource.includes('function createSnowfeatherRoost') && frostmoonSource.includes('function createMoonwellObservatory'), 'Island 003 needs distinct procedural landmark families');
       assert(frostmoonSource.includes("snowPoints.name = 'ISLAND_3_FALLING_SNOW'") && frostmoonSource.includes("ribbon.name = 'ISLAND_3_AURORA_RIBBON'"), 'Island 003 must carry living snowfall and aurora ambience');
+      assert(moonveilSource.includes('boss: "Noctyra\'s Moon Gate"') && moonveilSource.includes("hatchery: 'Moon-Nest Conservatory'"), 'Island 006 must retain its Noctyra/Moon Gate and moon-nest identities');
+      assert(moonveilSource.includes('function createMoonGate') && moonveilSource.includes('function createMoonNest') && moonveilSource.includes('function createVioletRift'), 'Island 006 needs distinct procedural landmark families');
+      assert(moonveilSource.includes("root.name = 'ISLAND_6_MOONVEIL_LIVING_AMBIENCE'") && moonveilSource.includes("nebula.name = 'ISLAND_6_VIOLET_NEBULA'"), 'Island 006 must carry its dark-neon living void and spiral-nebula ambience');
+      assert(moonveilSource.includes('addEnergyFall') && moonveilSource.includes('createDistantShard'), 'Island 006 must retain animated energy falls and varied distant floating fragments');
       assert(pilotSource.includes('firstLightFocusOverrides') && pilotSource.includes('boss: { position:') && pilotSource.includes('event: { position:'), 'Island 001 must keep authored front-facing focus cameras for every landmark family');
       assert(island1Source.includes("boss: 'Aureon’s Sun Court'"), 'Island 001 center identity must remain aligned with its Aureon/Sun Court manifest');
       assert(island1Source.includes('function addScaffoldTower') && island1Source.includes('function addConstructionCrane'), 'Island 001 L1/L2 states must use authored construction geometry');

@@ -199,3 +199,34 @@ The img2threejs state has advanced from blockout to structural-pass. The next
 quality pass should spend its budget on the binding relief, cover filigree,
 compass jewel facets, and page-to-cover physical alignment—not on adding more
 screen content.
+
+## Structural and form checkpoint v3 — 2026-08-11
+
+Work resumed after the Island 006 Moonveil world cleared its production gates.
+The v3 pass addresses the exact physical-object gap left at v2:
+
+- the closed camera is lower and more oblique, exposing cover thickness, leaf
+  construction, the fore edge, tabs, and binding instead of flattening the
+  object into a decorated panel;
+- the spine now has longitudinal gilt seams and attached end-hinge plates;
+- the page block has individually offset fore-edge and tail-edge relief lines,
+  and both Reading pages have thin physical border assemblies aligned beneath
+  the accessible DOM pages;
+- the cover now has mirrored raised tube filigree, terminal jewels, and a
+  beaded inner rail in High quality;
+- the clasp and its receiver are now two separate physical/runtime parts;
+- rounded junction shields make the four corner guards read as connected
+  hardware; and
+- every violet compass blade has a raised luminous facet, supplemented by four
+  separate faceted cardinal stones.
+
+Evidence is stored in
+`docs/gauntlets/evidence/compass-book-3d-lab-v3/`. The formal img2threejs
+structural and form-refinement gates both pass at a conservative 0.85 visual
+score. The material pass then cleared at 0.86 after adding a dedicated aged
+gold albedo map, preserving its independent roughness map, warming the ivory
+paper family, and strengthening the violet enamel hierarchy. Its attributed
+five-family color proof has a maximum delta-E of 17.63. The result is
+materially stronger but is not represented as final: the approved goal still
+has denser hand-engraved linework, localized edge wear, and more complex
+gemstone cuts. The next unlocked gate is surface micro-detail.

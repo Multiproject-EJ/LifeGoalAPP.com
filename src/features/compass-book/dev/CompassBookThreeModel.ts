@@ -38,6 +38,7 @@ type MaterialTextures = {
   leatherRoughness: THREE.CanvasTexture;
   paperBump: THREE.CanvasTexture;
   paperRoughness: THREE.CanvasTexture;
+  giltColor: THREE.CanvasTexture;
   giltRoughness: THREE.CanvasTexture;
 };
 
@@ -58,7 +59,7 @@ function seededNoise(x: number, y: number, seed: number) {
 
 function createSurfaceTexture(
   size: number,
-  kind: 'leather-color' | 'leather-bump' | 'leather-roughness' | 'paper-bump' | 'paper-roughness' | 'gilt-roughness',
+  kind: 'leather-color' | 'leather-bump' | 'leather-roughness' | 'paper-bump' | 'paper-roughness' | 'gilt-color' | 'gilt-roughness',
 ) {
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -82,13 +83,20 @@ function createSurfaceTexture(
         green = 9 + fine * 8 + meso * 6 + macro * 3 + crease;
         blue = 22 + fine * 12 + meso * 10 + macro * 6 + crease;
       }
+      if (kind === 'gilt-color') {
+        const tarnish = meso > 0.72 ? -22 : 0;
+        const highlight = fibre > 0.82 ? 16 : 0;
+        red = 178 + fine * 35 + macro * 14 + tarnish + highlight;
+        green = 116 + fine * 28 + macro * 12 + tarnish * 0.72 + highlight;
+        blue = 40 + fine * 18 + macro * 8 + tarnish * 0.34 + highlight * 0.45;
+      }
       let value = red;
       if (kind === 'leather-bump') value = 105 + fine * 48 + meso * 22;
       if (kind === 'leather-roughness') value = 142 + fine * 38 + meso * 31;
       if (kind === 'paper-bump') value = 125 + fine * 16 + fibre * 13;
       if (kind === 'paper-roughness') value = 204 + fine * 25 + fibre * 9;
       if (kind === 'gilt-roughness') value = 60 + fine * 39 + meso * 31;
-      if (kind !== 'leather-color') {
+      if (kind !== 'leather-color' && kind !== 'gilt-color') {
         red = value;
         green = value;
         blue = value;
@@ -107,7 +115,7 @@ function createSurfaceTexture(
   texture.wrapT = THREE.RepeatWrapping;
   if (kind === 'leather-color') texture.repeat.set(2, 3);
   else texture.repeat.set(kind.startsWith('paper') ? 4 : 3, kind.startsWith('paper') ? 7 : 5);
-  texture.colorSpace = kind === 'leather-color' ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  texture.colorSpace = kind.endsWith('-color') ? THREE.SRGBColorSpace : THREE.NoColorSpace;
   texture.needsUpdate = true;
   return texture;
 }
@@ -120,6 +128,7 @@ function createTextures(quality: CompassBookThreeQuality): MaterialTextures {
     leatherRoughness: createSurfaceTexture(size, 'leather-roughness'),
     paperBump: createSurfaceTexture(size, 'paper-bump'),
     paperRoughness: createSurfaceTexture(size, 'paper-roughness'),
+    giltColor: createSurfaceTexture(size, 'gilt-color'),
     giltRoughness: createSurfaceTexture(size, 'gilt-roughness'),
   };
 }
@@ -266,8 +275,9 @@ function createMaterials(textures: MaterialTextures): BookMaterials {
       bumpScale: 0.035,
     }),
     gilt: new THREE.MeshPhysicalMaterial({
-      color: 0xd7aa53,
-      roughness: 0.31,
+      color: 0xffffff,
+      map: textures.giltColor,
+      roughness: 0.29,
       roughnessMap: textures.giltRoughness,
       metalness: 0.9,
       clearcoat: 0.5,
@@ -281,7 +291,7 @@ function createMaterials(textures: MaterialTextures): BookMaterials {
       metalness: 0.76,
     }),
     paper: new THREE.MeshStandardMaterial({
-      color: 0xdac38f,
+      color: 0xe4d2a6,
       roughness: 0.9,
       roughnessMap: textures.paperRoughness,
       bumpMap: textures.paperBump,
@@ -289,7 +299,7 @@ function createMaterials(textures: MaterialTextures): BookMaterials {
       metalness: 0,
     }),
     paperWarm: new THREE.MeshStandardMaterial({
-      color: 0xc8a96f,
+      color: 0xd6b981,
       roughness: 0.88,
       roughnessMap: textures.paperRoughness,
       bumpMap: textures.paperBump,
@@ -297,7 +307,7 @@ function createMaterials(textures: MaterialTextures): BookMaterials {
       metalness: 0,
     }),
     pageEdge: new THREE.MeshStandardMaterial({
-      color: 0xd0ad70,
+      color: 0xd9bb7e,
       emissive: 0x25170a,
       emissiveIntensity: 0.18,
       roughness: 0.78,
@@ -308,9 +318,9 @@ function createMaterials(textures: MaterialTextures): BookMaterials {
     }),
     ink: new THREE.MeshStandardMaterial({ color: 0x221b31, roughness: 0.82, metalness: 0 }),
     violet: new THREE.MeshPhysicalMaterial({
-      color: 0x6e2cc0,
-      emissive: 0x351064,
-      emissiveIntensity: 0.72,
+      color: 0x8241cf,
+      emissive: 0x431278,
+      emissiveIntensity: 0.82,
       roughness: 0.15,
       metalness: 0.24,
       clearcoat: 0.96,
@@ -392,6 +402,218 @@ function createFrame(
   return group;
 }
 
+function createOrnamentalStroke(
+  name: string,
+  points: Array<[number, number]>,
+  y: number,
+  radius: number,
+  material: THREE.Material,
+  quality: CompassBookThreeQuality,
+) {
+  const curve = new THREE.CatmullRomCurve3(
+    points.map(([x, z]) => new THREE.Vector3(x, y, z)),
+    false,
+    'centripetal',
+  );
+  const stroke = new THREE.Mesh(
+    new THREE.TubeGeometry(
+      curve,
+      quality === 'high' ? 28 : 10,
+      radius,
+      quality === 'high' ? 6 : 4,
+      false,
+    ),
+    material,
+  );
+  stroke.name = name;
+  stroke.castShadow = true;
+  return stroke;
+}
+
+function createCoverFiligree(
+  materials: BookMaterials,
+  quality: CompassBookThreeQuality,
+) {
+  const group = new THREE.Group();
+  group.name = 'COMPASS_BOOK_COVER_FILIGREE';
+  const sideSigns = [-1, 1];
+  const endSigns = [-1, 1];
+
+  sideSigns.forEach((xSign) => {
+    endSigns.forEach((zSign) => {
+      group.add(createOrnamentalStroke(
+        `COMPASS_BOOK_COVER_FILIGREE_OUTER_${xSign}_${zSign}`,
+        [
+          [xSign * 2.0, zSign * 2.83],
+          [xSign * 1.72, zSign * 2.72],
+          [xSign * 1.64, zSign * 2.43],
+          [xSign * 1.43, zSign * 2.27],
+          [xSign * 1.18, zSign * 2.34],
+        ],
+        0.355,
+        0.018,
+        materials.gilt,
+        quality,
+      ));
+      if (quality === 'high') {
+        group.add(createOrnamentalStroke(
+          `COMPASS_BOOK_COVER_FILIGREE_INNER_${xSign}_${zSign}`,
+          [
+            [xSign * 1.74, zSign * 2.5],
+            [xSign * 1.52, zSign * 2.42],
+            [xSign * 1.42, zSign * 2.16],
+            [xSign * 1.15, zSign * 2.03],
+            [xSign * 0.94, zSign * 2.14],
+          ],
+          0.352,
+          0.011,
+          materials.giltDark,
+          quality,
+        ));
+      }
+      const terminal = new THREE.Mesh(
+        new THREE.OctahedronGeometry(quality === 'high' ? 0.075 : 0.06, 0),
+        materials.gilt,
+      );
+      terminal.name = `COMPASS_BOOK_COVER_FILIGREE_TERMINAL_${xSign}_${zSign}`;
+      terminal.position.set(xSign * 1.17, 0.39, zSign * 2.34);
+      terminal.scale.set(0.7, 0.34, 1.1);
+      terminal.rotation.y = Math.PI / 4;
+      group.add(terminal);
+    });
+  });
+
+  if (quality === 'high') {
+    const beadGeometry = new THREE.SphereGeometry(0.028, 7, 5);
+    const beads = new THREE.InstancedMesh(beadGeometry, materials.giltDark, 28);
+    beads.name = 'COMPASS_BOOK_COVER_BEADED_INNER_RAIL';
+    const matrix = new THREE.Matrix4();
+    for (let index = 0; index < 28; index += 1) {
+      const side = index < 14 ? -1 : 1;
+      const slot = index % 14;
+      const z = -1.72 + slot * (3.44 / 13);
+      matrix.makeTranslation(side * 2.06, 0.355, z);
+      beads.setMatrixAt(index, matrix);
+    }
+    beads.instanceMatrix.needsUpdate = true;
+    group.add(beads);
+  }
+  group.position.x = COVER_CENTER_X;
+  return group;
+}
+
+function createSpineRelief(
+  materials: BookMaterials,
+  quality: CompassBookThreeQuality,
+) {
+  const group = new THREE.Group();
+  group.name = 'COMPASS_BOOK_SPINE_RELIEF';
+  const seamCount = quality === 'high' ? 3 : 1;
+  for (let index = 0; index < seamCount; index += 1) {
+    const x = -0.22 + index * (0.44 / Math.max(1, seamCount - 1));
+    const seam = roundedBox(
+      `COMPASS_BOOK_SPINE_GILT_SEAM_${index + 1}`,
+      0.026,
+      0.03,
+      COVER_DEPTH - 0.74,
+      0.012,
+      1,
+      index === 1 ? materials.gilt : materials.giltDark,
+    );
+    seam.position.set(x, 0.655 - Math.abs(x) * 0.22, 0);
+    group.add(seam);
+  }
+
+  [-2.72, 2.72].forEach((z, index) => {
+    const hinge = new THREE.Group();
+    hinge.name = `COMPASS_BOOK_HINGE_RELIEF_${index + 1}`;
+    const plate = roundedBox(
+      `COMPASS_BOOK_HINGE_PLATE_${index + 1}`,
+      0.64,
+      0.09,
+      0.5,
+      0.08,
+      quality === 'high' ? 3 : 1,
+      materials.giltDark,
+    );
+    plate.position.set(0.12, 0.64, z);
+    const pin = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.065, 0.065, 0.56, quality === 'high' ? 16 : 8),
+      materials.gilt,
+    );
+    pin.name = `COMPASS_BOOK_HINGE_PIN_${index + 1}`;
+    pin.rotation.x = Math.PI / 2;
+    pin.position.set(-0.25, 0.64, z);
+    hinge.add(plate, pin);
+    group.add(hinge);
+  });
+  return group;
+}
+
+function createPageEdgeRelief(
+  materials: BookMaterials,
+  quality: CompassBookThreeQuality,
+) {
+  const group = new THREE.Group();
+  group.name = 'COMPASS_BOOK_PAGE_EDGE_RELIEF';
+  const lineCount = quality === 'high' ? 12 : 5;
+  for (let index = 0; index < lineCount; index += 1) {
+    const ratio = index / Math.max(1, lineCount - 1);
+    const y = 0.105 + ratio * 0.49;
+    const foreEdge = roundedBox(
+      `COMPASS_BOOK_FORE_EDGE_LINE_${index + 1}`,
+      0.026,
+      0.012,
+      COVER_DEPTH - 0.58 - Math.sin(index * 1.4) * 0.035,
+      0.006,
+      1,
+      index % 3 === 0 ? materials.giltDark : materials.ink,
+    );
+    foreEdge.position.set(COVER_WIDTH - 0.075 + Math.sin(index * 0.8) * 0.008, y, 0);
+    group.add(foreEdge);
+
+    const tailEdge = roundedBox(
+      `COMPASS_BOOK_TAIL_EDGE_LINE_${index + 1}`,
+      COVER_WIDTH - 0.53 - Math.cos(index * 0.9) * 0.025,
+      0.011,
+      0.025,
+      0.005,
+      1,
+      index % 4 === 0 ? materials.giltDark : materials.ink,
+    );
+    tailEdge.position.set(COVER_CENTER_X, y, COVER_DEPTH / 2 - 0.12 + Math.cos(index * 0.7) * 0.007);
+    group.add(tailEdge);
+  }
+  return group;
+}
+
+function createClaspReceiver(
+  materials: BookMaterials,
+  quality: CompassBookThreeQuality,
+) {
+  const group = new THREE.Group();
+  group.name = 'COMPASS_BOOK_CLASP_RECEIVER';
+  const plate = roundedBox(
+    'COMPASS_BOOK_CLASP_RECEIVER_PLATE',
+    0.48,
+    0.16,
+    0.76,
+    0.1,
+    quality === 'high' ? 3 : 1,
+    materials.giltDark,
+  );
+  const socket = new THREE.Mesh(
+    new THREE.TorusGeometry(0.19, 0.048, quality === 'high' ? 8 : 5, quality === 'high' ? 24 : 12),
+    materials.gilt,
+  );
+  socket.name = 'COMPASS_BOOK_CLASP_RECEIVER_SOCKET';
+  socket.rotation.x = Math.PI / 2;
+  socket.position.y = 0.13;
+  group.add(plate, socket);
+  group.position.set(COVER_WIDTH + 0.14, 0.18, 0.45);
+  return group;
+}
+
 function createCornerPlate(
   name: string,
   xSign: number,
@@ -410,11 +632,21 @@ function createCornerPlate(
   vertical.position.z = -zSign * 0.28;
   const inset = roundedBox(`${name}_INSET`, 0.58, 0.12, 0.58, 0.08, segments, materials.giltDark);
   inset.rotation.y = Math.PI / 4;
+  const shield = roundedBox(
+    `${name}_SHIELD`,
+    quality === 'high' ? 0.42 : 0.36,
+    0.09,
+    quality === 'high' ? 0.42 : 0.36,
+    0.07,
+    segments,
+    materials.gilt,
+  );
+  shield.position.y = 0.075;
   const jewel = new THREE.Mesh(new THREE.OctahedronGeometry(0.105, 0), materials.gilt);
   jewel.name = `${name}_JEWEL`;
-  jewel.position.y = 0.095;
+  jewel.position.y = 0.16;
   jewel.scale.set(0.64, 0.4, 0.64);
-  group.add(horizontal, vertical, inset, jewel);
+  group.add(horizontal, vertical, inset, shield, jewel);
   group.position.set(xSign * (COVER_WIDTH / 2 - 0.32), 0.22, zSign * (COVER_DEPTH / 2 - 0.32));
   return group;
 }
@@ -516,6 +748,10 @@ function createCompassMechanism(
   const needleRoot = new THREE.Group();
   needleRoot.name = `${name}_NEEDLE_SYSTEM`;
   needleRoot.position.y = 0.3;
+  const violetFacetMaterial = materials.glow.clone();
+  violetFacetMaterial.name = `${name}_VIOLET_FACET_MATERIAL`;
+  violetFacetMaterial.color.set(0xd2a4ff);
+  violetFacetMaterial.opacity = 0.62;
   for (let index = 0; index < 8; index += 1) {
     const minorNeedle = createNeedleBlade(
       `${name}_MINOR_GOLD_NEEDLE_${index + 1}`,
@@ -564,6 +800,18 @@ function createCompassMechanism(
     violetNeedle.rotation.y = index * (Math.PI / 2);
     violetNeedle.position.y = 0.07;
     needleRoot.add(violetNeedle);
+
+    const violetFacet = createNeedleBlade(
+      `${name}_VIOLET_FACET_${index + 1}`,
+      0.91,
+      0.065,
+      0.024,
+      violetFacetMaterial,
+      quality,
+    );
+    violetFacet.rotation.y = index * (Math.PI / 2);
+    violetFacet.position.y = 0.145;
+    needleRoot.add(violetFacet);
   }
   root.add(needleRoot);
 
@@ -593,6 +841,18 @@ function createCompassMechanism(
   cabochonCore.scale.y = 0.48;
   cabochonCore.position.y = 0.57;
   root.add(cabochonCore);
+
+  const jewelFacetGeometry = new THREE.DodecahedronGeometry(0.11, quality === 'high' ? 1 : 0);
+  for (let index = 0; index < 4; index += 1) {
+    const angle = index * (Math.PI / 2);
+    const facet = new THREE.Mesh(jewelFacetGeometry, materials.violet);
+    facet.name = `${name}_CARDINAL_JEWEL_${index + 1}`;
+    facet.position.set(Math.sin(angle) * 0.64, 0.46, Math.cos(angle) * 0.64);
+    facet.scale.set(0.8, 0.42, 1.08);
+    facet.rotation.set(0, -angle + Math.PI / 4, 0);
+    facet.castShadow = true;
+    needleRoot.add(facet);
+  }
 
   const finials = new THREE.Group();
   finials.name = `${name}_CARDINAL_FINIALS`;
@@ -800,6 +1060,8 @@ export function createCompassBookThreeModel(
   const pageBlock = createPageBlock(materials, quality);
   pageBlock.position.x = COVER_CENTER_X;
   root.add(pageBlock);
+  const pageEdgeRelief = createPageEdgeRelief(materials, quality);
+  root.add(pageEdgeRelief);
 
   const topRightPage = roundedBox(
     'COMPASS_BOOK_RIGHT_READING_PAGE',
@@ -812,6 +1074,16 @@ export function createCompassBookThreeModel(
   );
   topRightPage.position.set(COVER_CENTER_X, 0.64, 0);
   root.add(topRightPage);
+  const rightPageBorder = createFrame(
+    'COMPASS_BOOK_RIGHT_READING_PAGE_BORDER',
+    COVER_WIDTH - 0.68,
+    COVER_DEPTH - 0.69,
+    0.69,
+    materials.giltDark,
+    quality,
+  );
+  rightPageBorder.position.x = COVER_CENTER_X;
+  root.add(rightPageBorder);
 
   const gutterShadow = roundedBox(
     'COMPASS_BOOK_GUTTER_SHADOW',
@@ -849,6 +1121,8 @@ export function createCompassBookThreeModel(
     spineRibs.add(rib);
   }
   root.add(spineRibs);
+  const spineRelief = createSpineRelief(materials, quality);
+  root.add(spineRelief);
 
   const spineMedallion = createCompassMechanism(materials, quality, 'COMPASS_BOOK_SPINE_MEDALLION', 0.23);
   spineMedallion.root.rotation.z = Math.PI / 2;
@@ -929,6 +1203,9 @@ export function createCompassBookThreeModel(
     createCornerPlate('COMPASS_BOOK_CORNER_SE', 1, 1, materials, quality),
   );
   frontPivot.children.slice(-4).forEach((corner) => { corner.position.x += COVER_CENTER_X; });
+
+  const coverFiligree = createCoverFiligree(materials, quality);
+  frontPivot.add(coverFiligree);
 
   const coverCompass = createCompassMechanism(materials, quality, 'COMPASS_BOOK_COVER_COMPASS', 0.86);
   coverCompass.root.position.set(COVER_CENTER_X, 0.37, 0.68);
@@ -1021,6 +1298,8 @@ export function createCompassBookThreeModel(
   clasp.add(claspCore);
   clasp.position.set(COVER_WIDTH + 0.14, 0.18, 0.45);
   frontPivot.add(clasp);
+  const claspReceiver = createClaspReceiver(materials, quality);
+  root.add(claspReceiver);
 
   const leftPage = roundedBox(
     'COMPASS_BOOK_LEFT_READING_PAGE',
@@ -1033,6 +1312,16 @@ export function createCompassBookThreeModel(
   );
   leftPage.position.set(COVER_CENTER_X, -0.39, 0);
   frontPivot.add(leftPage);
+  const leftPageBorder = createFrame(
+    'COMPASS_BOOK_LEFT_READING_PAGE_BORDER',
+    COVER_WIDTH - 0.68,
+    COVER_DEPTH - 0.69,
+    -0.39,
+    materials.giltDark,
+    quality,
+  );
+  leftPageBorder.position.x = COVER_CENTER_X;
+  frontPivot.add(leftPageBorder);
   const readingCompass = createCompassMechanism(materials, quality, 'COMPASS_BOOK_READING_COMPASS', 0.76);
   readingCompass.root.position.set(COVER_CENTER_X, -0.48, -0.25);
   frontPivot.add(readingCompass.root);
@@ -1081,7 +1370,7 @@ export function createCompassBookThreeModel(
     'chapter-tab-rail': tabs,
     'chapter-tabs': requireNode('COMPASS_BOOK_TAB_1'),
     'fore-edge-clasp': clasp,
-    'clasp-receiver': claspInset,
+    'clasp-receiver': claspReceiver,
     bookmark,
     'left-reading-page': leftPage,
     'reading-compass': readingCompass.root,
