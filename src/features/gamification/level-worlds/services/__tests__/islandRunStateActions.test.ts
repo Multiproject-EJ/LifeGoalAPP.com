@@ -2647,7 +2647,7 @@ export const islandRunStateActionsTests: TestCase[] = [
   },
 
   {
-    name: 'applyCreatureCollection never removes canonical grant audit markers from a stale collection',
+    name: 'applyCreatureCollection treats grantIds as an unordered audit set and skips semantic no-op commits',
     run: () => {
       resetAll();
       const session = makeSession();
@@ -2661,24 +2661,54 @@ export const islandRunStateActionsTests: TestCase[] = [
         bondLevel: 1,
         lastFedAtMs: null,
         claimedBondMilestones: [],
-        grantIds: ['welcome-pack-1'],
+        grantIds: ['grant-a', 'grant-b'],
       }];
       seedState({
         runtimeVersion: 20,
         creatureCollection: canonicalCollection,
       });
+      const persistedBefore = window.localStorage.getItem(`island_run_runtime_state_${session.user.id}`);
+      let notifications = 0;
+      const unsubscribe = subscribeIslandRunState(session, () => {
+        notifications += 1;
+      });
 
-      const result = applyCreatureCollection({
+      const reversed = applyCreatureCollection({
+        session,
+        client: null,
+        creatureCollection: [{
+          ...canonicalCollection[0],
+          grantIds: ['grant-b', 'grant-a', 'grant-b'],
+        }],
+        triggerSource: 'test_reordered_creature_collection_sync',
+      });
+      const stale = applyCreatureCollection({
         session,
         client: null,
         creatureCollection: canonicalCollection.map(({ grantIds: _grantIds, ...entry }) => entry),
         triggerSource: 'test_stale_creature_collection_sync',
       });
+      const originalOrder = applyCreatureCollection({
+        session,
+        client: null,
+        creatureCollection: canonicalCollection,
+        triggerSource: 'test_original_order_creature_collection_sync',
+      });
+      unsubscribe();
 
       assertDeepEqual(
-        result.creatureCollection[0]?.grantIds,
-        ['welcome-pack-1'],
+        stale.creatureCollection[0]?.grantIds,
+        ['grant-a', 'grant-b'],
         'a stale legacy snapshot must not remove the canonical grant marker',
+      );
+      assertEqual(reversed.runtimeVersion, 20, 'reordered and duplicate grantIds must be a semantic no-op');
+      assertEqual(stale.runtimeVersion, 20, 'missing grantIds in a stale snapshot must be a semantic no-op');
+      assertEqual(originalOrder.runtimeVersion, 20, 'A→B→A grant ordering must not bump runtimeVersion');
+      assertEqual(notifications, 0, 'semantic no-ops must not enter commitIslandRunState');
+      assertEqual(
+        window.localStorage.getItem(`island_run_runtime_state_${session.user.id}`),
+        persistedBefore,
+        'semantic no-ops must not rewrite persisted state',
       );
     },
   },

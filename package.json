@@ -35,6 +35,7 @@
     "check:admin-alerts-foundation": "node scripts/check-admin-alerts-foundation.mjs",
     "test:habit-swipe-threshold-haptic": "node scripts/check-habit-swipe-threshold-haptic.mjs",
     "test:dice-commerce-switch": "node scripts/check-dice-commerce-switch.mjs",
+    "test:minigame-ticket-commerce-readiness": "node scripts/check-minigame-ticket-commerce-readiness.mjs",
     "test:celebration-fireworks": "node scripts/check-celebration-fireworks.mjs",
     "test:creature-pack-opening-animation": "node scripts/check-creature-pack-opening-animation.mjs",
     "test:gift-box-opening-animation": "node scripts/check-gift-box-opening-animation.mjs",

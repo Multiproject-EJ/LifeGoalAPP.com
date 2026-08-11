@@ -82,6 +82,14 @@ export interface IslandRunFeatureFlags {
    */
   islandRunFirstPlayerFunnelScaffoldingEnabled: boolean;
 
+  /**
+   * Minigame ticket commerce readiness. This may be enabled only after the
+   * authenticated checkout function, webhook fulfillment RPC, Stripe test-mode
+   * products/prices, replay protection, and end-to-end verification are all live.
+   * The safe production default is OFF.
+   */
+  minigameTicketPurchasesReady: boolean;
+
 }
 
 const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
@@ -93,8 +101,9 @@ const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   todaysOfferSpinEntryEnabled: true,
   islandRunEarlyFeaturedCreaturePoolEnabled: false,
   islandRunPreIslandLuckyRollEnabled: false,
-  combinedJourneyRewardsEnabled: true,
+  combinedJourneyRewardsEnabled: false,
   islandRunFirstPlayerFunnelScaffoldingEnabled: false,
+  minigameTicketPurchasesReady: false,
 });
 
 let currentFlags: IslandRunFeatureFlags = { ...DEFAULT_FLAGS };
