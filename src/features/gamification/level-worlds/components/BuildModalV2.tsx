@@ -11,7 +11,18 @@ export interface BuildModalV2Props {
   isBuildModalHatcheryGuidanceActive: boolean;
   discountRate?: number;
   discountExpiresAtMs?: number | null;
+  levelReview?: BuildModalV2LevelReview | null;
+  onAdvanceLevelReview: () => void;
   onBuildActivePart: (stopIndex: number) => void;
+}
+
+export interface BuildModalV2LevelReview {
+  title: string;
+  level: number;
+  isFullyBuilt: boolean;
+  isAdvanceReady: boolean;
+  isAdvanceQueued: boolean;
+  hasNextBuild: boolean;
 }
 
 function BuildModalV2CompleteState({ viewModel }: { viewModel: BuildModalV2ViewModel }) {
@@ -39,6 +50,54 @@ function BuildModalV2LevelRail({ viewModel }: { viewModel: BuildModalV2ViewModel
           L{item.level}
         </span>
       ))}
+    </div>
+  );
+}
+
+function BuildModalV2LevelReviewState({
+  review,
+  onAdvance,
+}: {
+  review: BuildModalV2LevelReview;
+  onAdvance: () => void;
+}) {
+  const actionLabel = review.isAdvanceQueued
+    ? 'Next build queued'
+    : review.hasNextBuild
+      ? review.isAdvanceReady ? 'Continue building' : 'Queue next build'
+      : review.isAdvanceReady ? 'Finish review' : 'Queue finish';
+
+  return (
+    <div className="bm2-level-review" role="group" aria-label={`${review.title} level ${review.level} review`}>
+      <div className="bm2-level-review__copy" role="status" aria-live="polite">
+        <span className="bm2-level-review__eyebrow">Construction milestone</span>
+        <h3>{review.title} · Level {review.level} complete</h3>
+        <p>{review.isFullyBuilt
+          ? 'The island is fully restored. Take in the finished landmark.'
+          : 'Take in the finished level. The next build opens automatically.'}</p>
+        <div className="bm2-level-review__rail" aria-label={`${review.title} completed levels`}>
+          {([1, 2, 3] as const).map((level) => (
+            <span
+              key={level}
+              className={`bm2-level-review__level${level <= review.level ? ' bm2-level-review__level--complete' : ''}`}
+              aria-label={`Level ${level} ${level <= review.level ? 'complete' : 'not yet complete'}`}
+            >
+              L{level}
+            </span>
+          ))}
+        </div>
+      </div>
+      <button
+        type="button"
+        className={`bm2-level-review__advance${review.isAdvanceQueued ? ' bm2-level-review__advance--queued' : ''}${review.isAdvanceReady ? ' bm2-level-review__advance--ready' : ''}`}
+        aria-label={actionLabel}
+        onClick={onAdvance}
+      >
+        <span aria-hidden="true">{review.isAdvanceQueued ? '✓' : '🔨'}</span>
+        <strong>{actionLabel}</strong>
+        <small>{review.isAdvanceReady ? 'Continue now' : 'Available after 1 second'}</small>
+      </button>
+      <span className="bm2-level-review__timer" aria-hidden="true" />
     </div>
   );
 }
@@ -101,6 +160,8 @@ export function BuildModalV2({
   isBuildModalHatcheryGuidanceActive,
   discountRate = 0,
   discountExpiresAtMs = null,
+  levelReview = null,
+  onAdvanceLevelReview,
   onBuildActivePart,
 }: BuildModalV2Props) {
   const active = viewModel.activeLandmark;
@@ -120,13 +181,15 @@ export function BuildModalV2({
 
   return (
     <div className="island-run-overlay-root bm2-build-mode" role="presentation">
-      <section className="bm2-shell" role="region" aria-label={`Island ${islandNumber} construction mode`}>
+      <section className="bm2-shell" role="dialog" aria-modal="true" aria-label={`Island ${islandNumber} construction mode`}>
         <header className="bm2-header">
           <span className="bm2-header__crest" aria-hidden="true">⚒</span>
           <span className="bm2-header__copy">
             <span className="bm2-header__eyebrow">Island {islandNumber} restoration</span>
             <strong className="bm2-header__title">
-              {active ? `${active.title} · Level ${active.targetLevel}` : 'Construction complete'}
+              {levelReview
+                ? `${levelReview.title} · Level ${levelReview.level} complete`
+                : active ? `${active.title} · Level ${active.targetLevel}` : 'Construction complete'}
             </strong>
           </span>
           <span className="bm2-header__essence" aria-label={`${essenceAvailable} Money available`}><span aria-hidden="true">💰</span> {essenceAvailable}</span>
@@ -150,8 +213,10 @@ export function BuildModalV2({
           )}
         </div>
 
-        <div className={`bm2-dock ${isComplete ? 'bm2-dock--complete' : ''}`}>
-          {isComplete ? (
+        <div className={`bm2-dock ${isComplete && !levelReview ? 'bm2-dock--complete' : ''}${levelReview ? ' bm2-dock--level-review' : ''}`}>
+          {levelReview ? (
+            <BuildModalV2LevelReviewState review={levelReview} onAdvance={onAdvanceLevelReview} />
+          ) : isComplete ? (
             <BuildModalV2CompleteState viewModel={viewModel} />
           ) : (
             <>

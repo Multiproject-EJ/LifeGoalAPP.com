@@ -22,6 +22,8 @@ import {
   getIsland5TokenGroundPosition,
   ISLAND_CAMERA_TOUR_STEPS,
   ISLAND_3D_PROFILE_DURATION_MS,
+  ISLAND_3D_IDLE_OVERVIEW_DELAY_MS,
+  ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE,
   ISLAND_3D_TOKEN_FOLLOW_OFFSET,
   ISLAND_3D_SPECIAL_HOP_ARC_BOOST,
   ISLAND_3D_TILE_IMPACT_DURATION_MS,
@@ -29,6 +31,7 @@ import {
   ISLAND_5_CAMERA_PRESETS,
   ISLAND_5_LANDMARKS,
   resolveIsland3DQuality,
+  resolveIsland3DRadialTileGeometry,
   resolveIsland3DLandingImpact,
   summarizeIsland3DPerformance,
   type Island3DDeviceSignals,
@@ -41,11 +44,26 @@ import {
   type Island5LandmarkDefinition,
 } from './island5ThreePilotContract';
 import { createCaretakerMaster, type CaretakerModel } from './CaretakerThreeModel';
+import {
+  buildIsland1Landmark,
+  createIsland1LivingAmbience,
+  createIsland1WorldMaterials,
+  ISLAND_1_LANDMARK_LABELS,
+  ISLAND_1_WORLD_NAME,
+} from './Island1ThreeWorld';
+import {
+  buildIsland2Landmark,
+  createIsland2LivingAmbience,
+  createIsland2WorldMaterials,
+  ISLAND_2_LANDMARK_LABELS,
+  ISLAND_2_WORLD_NAME,
+} from './Island2ThreeWorld';
 
 export type BuildLevel = 0 | 1 | 2 | 3;
 export type Island5LandmarkBuildLevels = Partial<Record<Island5LandmarkDefinition['id'], BuildLevel>>;
 
 interface Island5ThreePilotProps {
+  islandNumber?: 1 | 2 | 5;
   buildLevel: BuildLevel;
   landmarkBuildLevels?: Island5LandmarkBuildLevels;
   presentation?: 'workbench' | 'embedded';
@@ -57,6 +75,8 @@ interface Island5ThreePilotProps {
   movementSpeedFactor?: number;
   cameraFocusPreset?: Island5CameraPresetId | null;
   cameraFocusTransition?: 'standard' | 'quick';
+  /** Monotonic presentation request used by the board magnifier. */
+  cameraOverviewRequestVersion?: number;
   onHopSequenceComplete?: () => void;
   onTokenHop?: (tileIndex: number) => void;
   onTokenLand?: (tileIndex: number) => void;
@@ -91,6 +111,42 @@ interface ActiveTileImpact {
   strength: number;
 }
 
+function createRadialTileGeometry(tileCount: number): THREE.BufferGeometry {
+  const spec = resolveIsland3DRadialTileGeometry(tileCount);
+  const halfHeight = spec.height / 2;
+  const outerZ = -spec.radialDepth / 2;
+  const innerZ = spec.radialDepth / 2;
+  const outerHalfWidth = spec.outerWidth / 2;
+  const innerHalfWidth = spec.innerWidth / 2;
+  const geometry = new THREE.BufferGeometry();
+
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute([
+    -outerHalfWidth, -halfHeight, outerZ,
+    outerHalfWidth, -halfHeight, outerZ,
+    innerHalfWidth, -halfHeight, innerZ,
+    -innerHalfWidth, -halfHeight, innerZ,
+    -outerHalfWidth, halfHeight, outerZ,
+    outerHalfWidth, halfHeight, outerZ,
+    innerHalfWidth, halfHeight, innerZ,
+    -innerHalfWidth, halfHeight, innerZ,
+  ], 3));
+  geometry.setIndex([
+    0, 2, 1, 0, 3, 2,
+    4, 5, 6, 4, 6, 7,
+    0, 1, 5, 0, 5, 4,
+    1, 2, 6, 1, 6, 5,
+    2, 3, 7, 2, 7, 6,
+    3, 0, 4, 3, 4, 7,
+  ]);
+  const facetedGeometry = geometry.toNonIndexed();
+  geometry.dispose();
+  facetedGeometry.computeVertexNormals();
+  facetedGeometry.computeBoundingBox();
+  facetedGeometry.computeBoundingSphere();
+  facetedGeometry.name = 'ISLAND_SHARED_RADIAL_TILE_TRAPEZOID';
+  return facetedGeometry;
+}
+
 interface ActiveTokenSettle {
   startedAt: number;
   strength: number;
@@ -109,7 +165,7 @@ type ProfilerStatus = 'idle' | 'running' | 'complete' | 'cancelled';
 type CameraTourStatus = 'idle' | 'running';
 
 interface PilotProfileReport extends Island3DPerformanceSummary {
-  profileSchema: 'island-5-m7-v1';
+  profileSchema: 'island-3d-m7-v1';
   deviceLabel: string;
   capturedAt: string;
   drawCalls: number;
@@ -1564,19 +1620,21 @@ interface PilotMaterials extends CrownCitadelMaterials {
   waterGlow: THREE.MeshStandardMaterial;
 }
 
-function createPilotMaterials(quality: Island3DQuality): PilotMaterials {
+function createPilotMaterials(quality: Island3DQuality, islandNumber: 1 | 2 | 5 = 5): PilotMaterials {
   const detail = CROWN_CITADEL_DETAIL_PROFILES[quality];
   const stoneMap = createCitadelPatternTexture(detail.textureSize, 'reef-stone');
   const roofMap = createCitadelPatternTexture(detail.textureSize, 'roof-tile');
+  const isFirstLightKingdom = islandNumber === 1;
+  const isSunshoreAtoll = islandNumber === 2;
   return {
-    limestone: new THREE.MeshStandardMaterial({ color: 0xe8dcbf, map: stoneMap, roughness: 0.72, metalness: 0.04 }),
-    limestoneShade: new THREE.MeshStandardMaterial({ color: 0xb7a98e, map: stoneMap, roughness: 0.8, metalness: 0.02 }),
-    limestoneBright: new THREE.MeshStandardMaterial({ color: 0xfff1cf, map: stoneMap, roughness: 0.6, metalness: 0.04 }),
-    reef: new THREE.MeshBasicMaterial({ color: 0xb9a6b3 }),
-    grass: new THREE.MeshStandardMaterial({ color: 0x4e8f72, roughness: 0.88 }),
-    bridge: new THREE.MeshStandardMaterial({ color: 0xd6c69e, roughness: 0.78 }),
-    purpleRoof: new THREE.MeshStandardMaterial({ color: 0x6340b4, map: roofMap, roughness: 0.42, metalness: 0.12 }),
-    purpleRoofBright: new THREE.MeshStandardMaterial({ color: 0x794ee0, map: roofMap, roughness: 0.32, metalness: 0.18 }),
+    limestone: new THREE.MeshStandardMaterial({ color: isFirstLightKingdom ? 0xf1e6d3 : isSunshoreAtoll ? 0xe7c67d : 0xe8dcbf, map: stoneMap, roughness: 0.72, metalness: 0.04 }),
+    limestoneShade: new THREE.MeshStandardMaterial({ color: isFirstLightKingdom ? 0xc5b59e : isSunshoreAtoll ? 0x8e7963 : 0xb7a98e, map: stoneMap, roughness: 0.8, metalness: 0.02 }),
+    limestoneBright: new THREE.MeshStandardMaterial({ color: isFirstLightKingdom ? 0xfff8e7 : isSunshoreAtoll ? 0xffe6a2 : 0xfff1cf, map: stoneMap, roughness: 0.6, metalness: 0.04 }),
+    reef: new THREE.MeshBasicMaterial({ color: isFirstLightKingdom ? 0xa9a7a8 : isSunshoreAtoll ? 0x81766d : 0xb9a6b3 }),
+    grass: new THREE.MeshStandardMaterial({ color: isFirstLightKingdom ? 0x779851 : isSunshoreAtoll ? 0x4d9b45 : 0x4e8f72, roughness: 0.88 }),
+    bridge: new THREE.MeshStandardMaterial({ color: isFirstLightKingdom ? 0xeee1c8 : isSunshoreAtoll ? 0xb26f32 : 0xd6c69e, roughness: 0.78 }),
+    purpleRoof: new THREE.MeshStandardMaterial({ color: isFirstLightKingdom ? 0x1d4385 : 0x6340b4, map: roofMap, roughness: 0.42, metalness: 0.12 }),
+    purpleRoofBright: new THREE.MeshStandardMaterial({ color: isFirstLightKingdom ? 0x2866b4 : 0x794ee0, map: roofMap, roughness: 0.32, metalness: 0.18 }),
     gold: new THREE.MeshStandardMaterial({ color: 0xf1c866, roughness: 0.32, metalness: 0.58, emissive: 0x3d2504, emissiveIntensity: 0.18 }),
     deepWindow: new THREE.MeshStandardMaterial({ color: 0x172849, roughness: 0.2, metalness: 0.15, emissive: 0x164e70, emissiveIntensity: 0.52 }),
     aquaGlass: new THREE.MeshPhysicalMaterial({ color: 0x8effe7, roughness: 0.12, metalness: 0.02, transparent: true, opacity: 0.82, transmission: 0.22, thickness: 0.35 }),
@@ -1678,6 +1736,7 @@ const ISLAND_5_SKY_DOME_SRC = '/assets/islands/island-005/background/sky-dome-v2
 interface Island5AmbienceRuntime {
   root: THREE.Group;
   animate: (elapsed: number) => void;
+  updateView?: (cameraPosition: THREE.Vector3) => void;
 }
 
 function createInstancedScenery(
@@ -2620,6 +2679,7 @@ function disposeScene(scene: THREE.Scene) {
 }
 
 export default function Island5ThreePilot({
+  islandNumber = 5,
   buildLevel,
   landmarkBuildLevels,
   presentation = 'workbench',
@@ -2631,6 +2691,7 @@ export default function Island5ThreePilot({
   movementSpeedFactor = 1,
   cameraFocusPreset = null,
   cameraFocusTransition = 'standard',
+  cameraOverviewRequestVersion = 0,
   onHopSequenceComplete,
   onTokenHop,
   onTokenLand,
@@ -2639,6 +2700,9 @@ export default function Island5ThreePilot({
   onCaretakerClick,
   onRendererUnavailable,
 }: Island5ThreePilotProps) {
+  const isFirstLightKingdom = islandNumber === 1;
+  const isSunshoreAtoll = islandNumber === 2;
+  const worldName = isFirstLightKingdom ? ISLAND_1_WORLD_NAME : isSunshoreAtoll ? ISLAND_2_WORLD_NAME : 'Crown of Tides';
   const isEmbedded = presentation === 'embedded';
   const [qualitySelection, setQualitySelection] = useState<Island3DQualitySelection>(readInitialQualitySelection);
   const [activePreset, setActivePreset] = useState<Island5CameraPresetId | 'manual'>('overview');
@@ -2657,6 +2721,7 @@ export default function Island5ThreePilot({
   const applyPresetRef = useRef<(id: Island5CameraPresetId, durationScale?: number) => void>(() => undefined);
   const previousCameraFocusPresetRef = useRef<Island5CameraPresetId | null>(null);
   const previousCameraFocusTransitionRef = useRef<'standard' | 'quick'>('standard');
+  const previousCameraOverviewRequestVersionRef = useRef(cameraOverviewRequestVersion);
   const cameraFocusRequestVersionRef = useRef(0);
   const controlledCameraFocusRequestRef = useRef<ControlledCameraFocusRequest | null>(null);
   const applyControlledCameraFocusRef = useRef<(request: ControlledCameraFocusRequest) => void>(() => undefined);
@@ -2734,6 +2799,22 @@ export default function Island5ThreePilot({
   }, [cameraFocusPreset, cameraFocusTransition]);
 
   useEffect(() => {
+    if (cameraOverviewRequestVersion === previousCameraOverviewRequestVersionRef.current) return;
+    previousCameraOverviewRequestVersionRef.current = cameraOverviewRequestVersion;
+    cameraFocusRequestVersionRef.current += 1;
+    const request: ControlledCameraFocusRequest = {
+      version: cameraFocusRequestVersionRef.current,
+      // The magnifier is an explicit escape hatch, so it uses the widest
+      // framing. The post-roll idle drift intentionally keeps the closer
+      // canonical overview and therefore never yanks repeated rolls away.
+      preset: 'survey',
+      durationScale: 0.82,
+    };
+    controlledCameraFocusRequestRef.current = request;
+    applyControlledCameraFocusRef.current(request);
+  }, [cameraOverviewRequestVersion]);
+
+  useEffect(() => {
     tokenIndexRef.current = tokenIndex;
     if (!isRolling && pendingHopSequence === null) tokenSnapRequestRef.current = tokenIndex;
   }, [isRolling, pendingHopSequence, tokenIndex]);
@@ -2754,20 +2835,21 @@ export default function Island5ThreePilot({
       durationsMs: computeHopDurations(pendingHopSequence.length, movementSpeedFactor),
       landingImpact: resolveIsland3DLandingImpact(landingTileType),
     };
-    logIslandRunEntryDebug('island5_3d_hop_requested', {
+    logIslandRunEntryDebug('island_3d_hop_requested', {
+      islandNumber,
       requestId: tokenMotionRequestIdRef.current,
       hopCount: pendingHopSequence.length,
       startTile: pendingHopSequence[0] ?? null,
       endTile: pendingHopSequence[pendingHopSequence.length - 1] ?? null,
       landingImpact: resolveIsland3DLandingImpact(landingTileType),
     });
-  }, [landingTileType, movementSpeedFactor, pendingHopSequence]);
+  }, [islandNumber, landingTileType, movementSpeedFactor, pendingHopSequence]);
   const isReducedMotion = deviceSignals.prefersReducedMotion === true;
 
   const shareProfileReport = async () => {
     if (!profileReport) return;
     const reportText = JSON.stringify(profileReport, null, 2);
-    const title = `Island 5 3D profile — ${profileReport.deviceLabel}`;
+    const title = `Island ${islandNumber} 3D profile — ${profileReport.deviceLabel}`;
     try {
       if (typeof navigator.share === 'function') {
         await navigator.share({ title, text: reportText });
@@ -2781,7 +2863,7 @@ export default function Island5ThreePilot({
       }
       const download = document.createElement('a');
       download.href = URL.createObjectURL(new Blob([reportText], { type: 'application/json' }));
-      download.download = `island-5-profile-${profileReport.capturedAt.replace(/[:.]/g, '-')}.json`;
+      download.download = `island-${islandNumber}-profile-${profileReport.capturedAt.replace(/[:.]/g, '-')}.json`;
       download.click();
       URL.revokeObjectURL(download.href);
       setReportShareNotice('Report downloaded.');
@@ -2804,17 +2886,19 @@ export default function Island5ThreePilot({
     try {
       renderer = new THREE.WebGLRenderer({ canvas, antialias: qualityProfile.antialias, alpha: false, powerPreference: qualityProfile.id === 'high' ? 'high-performance' : 'default' });
     } catch (caught) {
-      console.error('[island-5-3d-pilot] WebGL initialization failed:', caught);
+      console.error(`[island-${islandNumber}-3d-pilot] WebGL initialization failed:`, caught);
       setError('This device could not start the 3D renderer. The 2D camera kit is still available.');
       onRendererUnavailableRef.current?.();
       return undefined;
     }
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x91d7e8);
-    scene.fog = new THREE.FogExp2(0x8ecdda, 0.0048);
+    scene.background = new THREE.Color(isFirstLightKingdom ? 0x9bdff4 : isSunshoreAtoll ? 0x78d7ee : 0x91d7e8);
+    scene.fog = new THREE.FogExp2(isFirstLightKingdom ? 0xbdebf5 : isSunshoreAtoll ? 0x9fe9ef : 0x8ecdda, isFirstLightKingdom ? 0.0038 : isSunshoreAtoll ? 0.0035 : 0.0048);
 
-    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 160);
+    // Leave enough depth for the First Light horizon ring at every camera
+    // azimuth; foreground gameplay geometry remains inside the shadow budget.
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 210);
     const overview = getIsland5CameraPreset('overview');
     const restoredCameraPose = cameraPoseSnapshotRef.current;
     camera.position.set(...(restoredCameraPose?.position ?? overview.position));
@@ -2823,7 +2907,7 @@ export default function Island5ThreePilot({
 
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.06;
+    renderer.toneMappingExposure = isFirstLightKingdom ? 0.86 : isSunshoreAtoll ? 0.9 : 1.06;
     renderer.setPixelRatio(getIsland3DRendererPixelRatio(qualityProfile, window.devicePixelRatio));
     renderer.shadowMap.enabled = qualityProfile.shadows;
     renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -2844,9 +2928,9 @@ export default function Island5ThreePilot({
     controls.touches.ONE = THREE.TOUCH.ROTATE;
     controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
 
-    const hemisphere = new THREE.HemisphereLight(0xe6fbff, 0x28566a, 2.25);
+    const hemisphere = new THREE.HemisphereLight(0xeefcff, isFirstLightKingdom ? 0x70877f : isSunshoreAtoll ? 0x50754d : 0x28566a, isFirstLightKingdom ? 1.7 : isSunshoreAtoll ? 1.82 : 2.25);
     scene.add(hemisphere);
-    const sunlight = new THREE.DirectionalLight(0xfff1cb, 4.2);
+    const sunlight = new THREE.DirectionalLight(0xfff1cb, isFirstLightKingdom ? 3.15 : isSunshoreAtoll ? 3.25 : 4.2);
     sunlight.position.set(-9, 15, 10);
     sunlight.castShadow = qualityProfile.shadows;
     sunlight.shadow.mapSize.set(qualityProfile.shadowMapSize, qualityProfile.shadowMapSize);
@@ -2859,14 +2943,16 @@ export default function Island5ThreePilot({
     sunlight.shadow.bias = -0.0006;
     scene.add(sunlight);
 
-    const materials = createPilotMaterials(qualityProfile.id);
+    const materials = createPilotMaterials(qualityProfile.id, islandNumber);
+    const island1Materials = isFirstLightKingdom ? createIsland1WorldMaterials() : null;
+    const island2Materials = isSunshoreAtoll ? createIsland2WorldMaterials() : null;
     const waterMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0x2a98bb,
-      roughness: 0.18,
+      color: isFirstLightKingdom ? 0x52c7e8 : isSunshoreAtoll ? 0x18bad0 : 0x2a98bb,
+      roughness: isFirstLightKingdom || isSunshoreAtoll ? 0.12 : 0.18,
       metalness: 0.06,
       transparent: true,
-      opacity: 0.88,
-      clearcoat: 0.62,
+      opacity: isFirstLightKingdom || isSunshoreAtoll ? 0.82 : 0.88,
+      clearcoat: isFirstLightKingdom || isSunshoreAtoll ? 0.82 : 0.62,
       clearcoatRoughness: 0.25,
     });
     const water = new THREE.Mesh(
@@ -2911,15 +2997,31 @@ export default function Island5ThreePilot({
     innerLagoon.receiveShadow = true;
     scene.add(innerLagoon);
 
-    const livingAmbience = createIsland5LivingAmbience(scene, renderer, qualityProfile, materials, water);
+    const livingAmbience = isFirstLightKingdom && island1Materials
+      ? createIsland1LivingAmbience(scene, qualityProfile, island1Materials, water)
+      : isSunshoreAtoll && island2Materials
+        ? createIsland2LivingAmbience(scene, qualityProfile, island2Materials, water)
+        : createIsland5LivingAmbience(scene, renderer, qualityProfile, materials, water);
 
     const tileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
-    const tileGeometry = new THREE.BoxGeometry(0.62, 0.18, 0.92);
-    const tileMaterials = [
-      new THREE.MeshStandardMaterial({ color: 0xf3e4bd, roughness: 0.7 }),
-      new THREE.MeshStandardMaterial({ color: 0x8c67cf, roughness: 0.56 }),
-      new THREE.MeshStandardMaterial({ color: 0xf2c861, roughness: 0.42, metalness: 0.18 }),
-    ];
+    const tileGeometry = createRadialTileGeometry(tileTransforms.length);
+    const tileMaterials = isFirstLightKingdom
+      ? [
+          new THREE.MeshStandardMaterial({ color: 0xe5f3f7, roughness: 0.68 }),
+          new THREE.MeshStandardMaterial({ color: 0x4d91c8, roughness: 0.5, metalness: 0.08 }),
+          new THREE.MeshStandardMaterial({ color: 0x72c9e8, roughness: 0.38, metalness: 0.16, emissive: 0x174f80, emissiveIntensity: 0.14 }),
+        ]
+      : isSunshoreAtoll
+        ? [
+            new THREE.MeshStandardMaterial({ color: 0xf5dc9b, roughness: 0.76 }),
+            new THREE.MeshStandardMaterial({ color: 0x3aa9c7, roughness: 0.5, metalness: 0.07 }),
+            new THREE.MeshStandardMaterial({ color: 0xf2b840, roughness: 0.34, metalness: 0.32, emissive: 0x74400a, emissiveIntensity: 0.14 }),
+          ]
+      : [
+          new THREE.MeshStandardMaterial({ color: 0xf3e4bd, roughness: 0.7 }),
+          new THREE.MeshStandardMaterial({ color: 0x8c67cf, roughness: 0.56 }),
+          new THREE.MeshStandardMaterial({ color: 0xf2c861, roughness: 0.42, metalness: 0.18 }),
+        ];
     const tileMeshes = new Map<number, { mesh: THREE.Mesh; baseY: number }>();
     for (const transform of tileTransforms) {
       const tileMaterial = transform.isKeyTile ? tileMaterials[2] : tileMaterials[transform.index % 2];
@@ -3001,21 +3103,37 @@ export default function Island5ThreePilot({
     const clickableLandmarks: THREE.Object3D[] = [];
     for (const landmark of ISLAND_5_LANDMARKS) {
       const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevel;
-      const landmarkRoot = buildLandmark(landmark, resolvedBuildLevel, qualityProfile.id, materials);
+      const landmarkRoot = isFirstLightKingdom && island1Materials
+        ? buildIsland1Landmark(landmark, resolvedBuildLevel, qualityProfile.id, island1Materials)
+        : isSunshoreAtoll && island2Materials
+          ? buildIsland2Landmark(landmark, resolvedBuildLevel, qualityProfile.id, island2Materials)
+          : buildLandmark(landmark, resolvedBuildLevel, qualityProfile.id, materials);
       scene.add(landmarkRoot);
       clickableLandmarks.push(landmarkRoot);
     }
     const voicePrism = scene.getObjectByName('CROWN_CITADEL_VOICE_PRISM');
     const voiceLight = scene.getObjectByName('CROWN_CITADEL_VOICE_LIGHT');
 
-    const coralInstances = addAmbientReefDetails(scene, qualityProfile.ambientDetailCount, materials);
+    const coralInstances = isFirstLightKingdom || isSunshoreAtoll
+      ? new THREE.Group()
+      : addAmbientReefDetails(scene, qualityProfile.ambientDetailCount, materials);
     const routeGlow = new THREE.Mesh(
       new THREE.TorusGeometry(3.4, 0.055, 8, 96),
-      new THREE.MeshStandardMaterial({ color: 0xffdb8c, emissive: 0xa96f18, emissiveIntensity: 0.62, roughness: 0.38 }),
+      new THREE.MeshStandardMaterial({ color: isFirstLightKingdom ? 0x9be5ff : isSunshoreAtoll ? 0x77e8df : 0xffdb8c, emissive: isFirstLightKingdom ? 0x247bb2 : isSunshoreAtoll ? 0x11767a : 0xa96f18, emissiveIntensity: 0.62, roughness: 0.38 }),
     );
     routeGlow.rotation.x = Math.PI / 2;
     routeGlow.position.y = 0.25;
     scene.add(routeGlow);
+
+    // Deterministic Gauntlet evidence mode. The scene keeps its authored
+    // geometry and camera, but removes texture/material-map influence so the
+    // blockout can be judged on silhouette and structure alone.
+    const isMapStrippedEvidence = isSunshoreAtoll
+      && new URLSearchParams(window.location.search).get('island3dMapStripped') === '1';
+    const evidenceOverrideMaterial = isMapStrippedEvidence
+      ? new THREE.MeshBasicMaterial({ color: 0xb8c1bd, side: THREE.DoubleSide })
+      : null;
+    if (evidenceOverrideMaterial) scene.overrideMaterial = evidenceOverrideMaterial;
 
     const timer = new THREE.Timer();
     timer.connect(document);
@@ -3055,6 +3173,7 @@ export default function Island5ThreePilot({
       lastTriggeredHopIndex: number;
       finalImpactTriggered: boolean;
     } | null = null;
+    let idleOverviewAt: number | null = null;
     const activeTileImpacts = new Map<number, ActiveTileImpact>();
     let activeTokenSettle: ActiveTokenSettle | null = null;
 
@@ -3084,7 +3203,19 @@ export default function Island5ThreePilot({
     };
 
     const applyPreset = (id: Island5CameraPresetId, durationScale = 1) => {
-      const preset = getIsland5CameraPreset(id);
+      const basePreset = getIsland5CameraPreset(id);
+      const firstLightFocusOverrides: Partial<Record<Island5CameraPresetId, {
+        position: readonly [number, number, number];
+        target: readonly [number, number, number];
+      }>> = {
+        boss: { position: [0, 7.8, 9.8], target: [0, 0.82, 0] },
+        hatchery: { position: [2.3, 7.8, -0.9], target: [-4.36, 1.55, -3.9] },
+        habit: { position: [0.6, 7.7, 2.4], target: [4.36, 1.62, -3.9] },
+        wisdom: { position: [-0.6, 7.7, -2.4], target: [-4.36, 1.52, 3.9] },
+        event: { position: [-2.3, 7.7, 0.9], target: [4.36, 1.48, 3.9] },
+      };
+      const firstLightOverride = isFirstLightKingdom ? firstLightFocusOverrides[id] : undefined;
+      const preset = firstLightOverride ? { ...basePreset, ...firstLightOverride } : basePreset;
       setActivePreset(id);
       if (isReducedMotion) {
         camera.position.set(...preset.position);
@@ -3148,6 +3279,7 @@ export default function Island5ThreePilot({
     const applyControlledCameraFocus = (request: ControlledCameraFocusRequest) => {
       if (request.version <= appliedControlledCameraFocusVersionRef.current) return;
       appliedControlledCameraFocusVersionRef.current = request.version;
+      idleOverviewAt = null;
       applyPreset(request.preset, request.durationScale);
     };
     applyControlledCameraFocusRef.current = applyControlledCameraFocus;
@@ -3227,6 +3359,7 @@ export default function Island5ThreePilot({
 
     const cancelTransition = () => {
       transition = null;
+      idleOverviewAt = null;
       setActivePreset('manual');
     };
     controls.addEventListener('start', cancelTransition);
@@ -3257,6 +3390,7 @@ export default function Island5ThreePilot({
       raycaster.setFromCamera(pointer, camera);
       const caretakerIntersection = raycaster.intersectObjects(clickableCaretaker, true)[0];
       if (caretakerIntersection) {
+        idleOverviewAt = null;
         applyCaretakerFocus(0.88);
         onCaretakerClickRef.current?.();
         return;
@@ -3264,6 +3398,7 @@ export default function Island5ThreePilot({
       const intersection = raycaster.intersectObjects(clickableLandmarks, true)[0];
       const landmarkId = intersection?.object.userData.landmarkId as Island5CameraPresetId | undefined;
       if (landmarkId) {
+        idleOverviewAt = null;
         applyPreset(landmarkId);
         if (landmarkId === 'boss' || landmarkId === 'hatchery' || landmarkId === 'habit' || landmarkId === 'wisdom' || landmarkId === 'event') {
           onLandmarkClickRef.current?.(landmarkId);
@@ -3279,6 +3414,9 @@ export default function Island5ThreePilot({
       const elapsed = timer.getElapsed();
       const frameDeltaSeconds = Math.min(0.05, Math.max(0, (now - lastAnimationFrameAt) / 1000));
       lastAnimationFrameAt = now;
+      // View culling is accessibility-neutral scene hygiene, not decorative
+      // motion, so it must still run when reduced motion freezes ambience.
+      livingAmbience.updateView?.(camera.position);
       if (!isReducedMotion) {
         livingAmbience.animate(elapsed);
         routeGlow.material instanceof THREE.MeshStandardMaterial
@@ -3401,6 +3539,7 @@ export default function Island5ThreePilot({
       const pendingTokenMotion = tokenMotionRequestRef.current;
       if (pendingTokenMotion && pendingTokenMotion.id !== consumedTokenMotionRequestId) {
         consumedTokenMotionRequestId = pendingTokenMotion.id;
+        idleOverviewAt = null;
         transition = null;
         controls.enabled = false;
         setActivePreset('manual');
@@ -3461,7 +3600,10 @@ export default function Island5ThreePilot({
           appliedTokenSnapIndex = finalTileIndex;
           activeTokenMotion = null;
           controls.enabled = true;
-          applyPreset('overview');
+          // Keep the landed framing while the player is actively rolling.
+          // A later, cancellable idle drift restores the full island view;
+          // another roll or a manual gesture cancels it before any zoom-out.
+          idleOverviewAt = now + ISLAND_3D_IDLE_OVERVIEW_DELAY_MS;
           onTokenLandRef.current?.(finalTileIndex);
           logIslandRunEntryDebug('island5_3d_hop_complete', {
             requestId: request.id,
@@ -3562,6 +3704,17 @@ export default function Island5ThreePilot({
         camera.lookAt(controls.target);
         if (rawProgress >= 1) transition = null;
       }
+      if (
+        idleOverviewAt !== null
+        && now >= idleOverviewAt
+        && !activeTokenMotion
+        && !activeTour
+        && !activeProfiler
+        && !caretakerEncounterOpenRef.current
+      ) {
+        idleOverviewAt = null;
+        applyPreset('overview', ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE);
+      }
       controls.update();
       renderer.render(scene, camera);
 
@@ -3607,7 +3760,7 @@ export default function Island5ThreePilot({
           } | null;
           const report: PilotProfileReport = {
             ...summary,
-            profileSchema: 'island-5-m7-v1',
+            profileSchema: 'island-3d-m7-v1',
             deviceLabel: deviceLabelRef.current.trim() || `${deviceSignals.platform || 'Unknown device'} · ${deviceSignals.screenWidth || '?'}×${deviceSignals.screenHeight || '?'}`,
             capturedAt: new Date().toISOString(),
             drawCalls: renderer.info.render.calls,
@@ -3624,7 +3777,7 @@ export default function Island5ThreePilot({
           setProfileReport(report);
           setProfilerStatus('complete');
           setProfilerNotice(`${report.rating.toUpperCase()} against ${qualityProfile.id} quality target.`);
-          console.info('[island-5-3d-profile]', report);
+          console.info(`[island-${islandNumber}-3d-profile]`, report);
         }
       }
 
@@ -3674,6 +3827,7 @@ export default function Island5ThreePilot({
       scene.remove(boardCaretaker.root);
       boardCaretaker.dispose();
       disposeScene(scene);
+      evidenceOverrideMaterial?.dispose();
       tileGeometry.dispose();
       tileMaterials.forEach((material) => material.dispose());
       renderer.dispose();
@@ -3683,21 +3837,22 @@ export default function Island5ThreePilot({
       stopTourRef.current = () => undefined;
       startProfilerRef.current = () => undefined;
     };
-  }, [buildLevel, deviceSignals, isReducedMotion, landmarkBuildLevelsKey, qualityProfile]);
+  }, [buildLevel, deviceSignals, islandNumber, isFirstLightKingdom, isReducedMotion, landmarkBuildLevelsKey, qualityProfile]);
 
   return (
     <section
       className={`island-5-three-pilot${isEmbedded ? ' island-5-three-pilot--embedded' : ''}`}
       data-quality={qualityProfile.id}
-      aria-label={isEmbedded ? 'Interactive 3D Island 5' : 'Actual 3D Island 5 pilot'}
+      data-camera-preset={activePreset}
+      aria-label={isEmbedded ? `Interactive 3D Island ${islandNumber}` : `Actual 3D Island ${islandNumber} pilot`}
     >
-      <canvas key={qualityProfile.id} ref={canvasRef} className="island-5-three-pilot__canvas" aria-label="Interactive 3D Crown of Tides island" />
+      <canvas key={`${islandNumber}-${qualityProfile.id}`} ref={canvasRef} className="island-5-three-pilot__canvas" aria-label={`Interactive 3D ${worldName} island`} />
       {!isEmbedded ? (
         <>
           <div className="island-5-three-pilot__topline">
             <div>
               <span>ACTUAL 3D PILOT</span>
-              <strong>Crown of Tides · Island 005</strong>
+              <strong>{worldName} · Island {String(islandNumber).padStart(3, '0')}</strong>
             </div>
             <label>
               Quality
@@ -3779,7 +3934,15 @@ export default function Island5ThreePilot({
           onChange={(event) => event.target.value && applyPresetRef.current(event.target.value as Island5CameraPresetId)}
         >
           <option value="">Focus landmark…</option>
-          {ISLAND_5_CAMERA_PRESETS.slice(4).map((preset) => <option key={preset.id} value={preset.id}>{preset.label}</option>)}
+          {ISLAND_5_CAMERA_PRESETS.slice(4).map((preset) => (
+            <option key={preset.id} value={preset.id}>
+              {isFirstLightKingdom
+                ? ISLAND_1_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_1_LANDMARK_LABELS]
+                : isSunshoreAtoll
+                  ? ISLAND_2_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_2_LANDMARK_LABELS]
+                : preset.label}
+            </option>
+          ))}
         </select>
         <button
           className="island-5-three-pilot__tour-button"

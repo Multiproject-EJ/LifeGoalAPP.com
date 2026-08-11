@@ -569,7 +569,7 @@ import {
   createShooterControllerBridge,
 } from '../services/islandRunShooterControllerBridge';
 import { emitShooterControllerLifecycleTelemetry } from '../services/islandRunShooterControllerTelemetry';
-import { BuildModalV2 } from './BuildModalV2';
+import { BuildModalV2, type BuildModalV2LevelReview } from './BuildModalV2';
 import {
   deriveBuildModalV2ViewModel,
   resolveBuildLevelCompletionPresentation,
@@ -651,7 +651,18 @@ const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
 const BUILD_HOLD_INITIAL_DELAY_MS = 400;
-const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 2_400;
+const BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 1_000;
+const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 3_000;
+
+type ActiveBuildLevelReview = BuildLevelCompletionPresentation & {
+  reviewId: number;
+  stopIndex: number;
+  stopId: string;
+  minAdvanceAtMs: number;
+  autoAdvanceAtMs: number;
+  isAdvanceReady: boolean;
+  isAdvanceQueued: boolean;
+};
 // Duration of the traffic-light coin spin before the reward is revealed. Must match
 // the `.island-coin--flipping` keyframe duration in LevelWorlds.css.
 const TRAFFIC_LIGHT_COIN_FLIP_DURATION_MS = 2600;
@@ -1819,6 +1830,7 @@ export function IslandRunBoardPrototype({
   const [devLuckyRollTargetIsland, setDevLuckyRollTargetIsland] = useState<number | null>(null);
   const [devLuckyRollCollectMode, setDevLuckyRollCollectMode] = useState<'bank_only' | 'post_rare_collect_travel'>('bank_only');
   const [cameraMode, setCameraMode] = useState<IslandRunCameraMode>('overview_manual');
+  const [threeCameraOverviewRequestVersion, setThreeCameraOverviewRequestVersion] = useState(0);
   const [focusedStopId, setFocusedStopId] = useState<string | null>(null);
   /**
    * When set, we show the ticket-price prompt modal for this stop instead of
@@ -1926,18 +1938,20 @@ export function IslandRunBoardPrototype({
   const isRollSyncPendingRef = useRef(false);
 
   const resetCameraFromTopbarMenu = useCallback(() => {
-    if (isRolling || pendingHopSequence !== null || isAnimatingRollRef.current) {
-      setIsTopbarMenuPrimed(false);
-      setShowTopbarMenu(false);
-      return;
-    }
-
-    setCameraMode('board_follow');
+    // This is a presentation-only escape hatch. Keep it available even if a
+    // stale hop presentation flag is still settling; otherwise the visible
+    // magnifier can appear broken on the live 3D board.
+    setCameraMode('overview_manual');
     setFocusedStopId(null);
-    boardCameraRef.current?.goDefault();
+    setThreeCameraOverviewRequestVersion((current) => current + 1);
+    try {
+      boardCameraRef.current?.goDefault();
+    } catch (error) {
+      console.warn('[IslandRun] Legacy board camera reset failed; the 3D full-overview request still completed.', error);
+    }
     setShowTopbarMenu(false);
     setIsTopbarMenuPrimed(true);
-  }, [isRolling, pendingHopSequence]);
+  }, []);
 
   const handleTopbarMenuButtonClick = useCallback(() => {
     setShowTopbarMenu((current) => !current);
@@ -2112,7 +2126,16 @@ export function IslandRunBoardPrototype({
     return undefined;
   }, [islandNumber]);
   const islandArtPreviewNumber = isIslandVisualPreview ? islandVisualIslandNumber : islandNumber;
-  const canUseIsland5Three = islandArtPreviewNumber === 5;
+  // Islands 001 and 002 consume isolated visual world packs without
+  // duplicating movement, interaction, camera, or gameplay state.
+  const island3DWorldNumber: 1 | 2 | 5 | null = islandArtPreviewNumber === 1
+    ? 1
+    : islandArtPreviewNumber === 2
+      ? 2
+      : islandArtPreviewNumber === 5
+        ? 5
+        : null;
+  const canUseIsland5Three = island3DWorldNumber !== null;
   const shouldRenderIsland5Three = canUseIsland5Three && isIsland5ThreeEnabled;
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandArtPreviewNumber), [islandArtPreviewNumber]);
   const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandArtPreviewNumber), [islandArtPreviewNumber]);
@@ -2428,7 +2451,9 @@ export function IslandRunBoardPrototype({
     transition: 'standard' | 'quick';
   } | null>(null);
   const previousBuildCameraStopIdRef = useRef<string | null>(null);
-  const [buildLevelCompletion, setBuildLevelCompletion] = useState<BuildLevelCompletionPresentation | null>(null);
+  const [buildLevelCompletion, setBuildLevelCompletion] = useState<ActiveBuildLevelReview | null>(null);
+  const buildLevelCompletionRef = useRef<ActiveBuildLevelReview | null>(null);
+  const buildLevelReviewIdRef = useRef(0);
   const [buildDiscountExpiresAtMs, setBuildDiscountExpiresAtMs] = useState<number | null>(null);
   const [showRewardDetailsModal, setShowRewardDetailsModal] = useState(false);
   const [showEggManiaModal, setShowEggManiaModal] = useState(false);
@@ -2509,12 +2534,61 @@ export function IslandRunBoardPrototype({
   }, [client, firstSessionTutorialState, session]);
 
   useEffect(() => {
+    const boardElement = boardRef.current;
+    if (!showBuildPanel) {
+      boardElement?.removeAttribute('inert');
+      return undefined;
+    }
+    boardElement?.setAttribute('inert', '');
+    const unlockPageScroll = lockPageScroll(['body', 'documentElement']);
+    return () => {
+      boardElement?.removeAttribute('inert');
+      unlockPageScroll();
+    };
+  }, [showBuildPanel]);
+
+  const clearBuildLevelReview = useCallback((reviewId?: number) => {
+    const current = buildLevelCompletionRef.current;
+    if (reviewId !== undefined && current?.reviewId !== reviewId) return;
+    buildLevelCompletionRef.current = null;
+    setBuildLevelCompletion(null);
+  }, []);
+
+  const handleAdvanceBuildLevelReview = useCallback(() => {
+    const current = buildLevelCompletionRef.current;
+    if (!current) return;
+    if (Date.now() < current.minAdvanceAtMs) {
+      const queued = { ...current, isAdvanceQueued: true };
+      buildLevelCompletionRef.current = queued;
+      setBuildLevelCompletion(queued);
+      return;
+    }
+    clearBuildLevelReview(current.reviewId);
+  }, [clearBuildLevelReview]);
+
+  useEffect(() => {
     if (!buildLevelCompletion) return undefined;
-    const timeoutId = window.setTimeout(() => {
-      setBuildLevelCompletion(null);
-    }, BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS);
-    return () => window.clearTimeout(timeoutId);
-  }, [buildLevelCompletion]);
+    const reviewId = buildLevelCompletion.reviewId;
+    const markReadyTimeoutId = window.setTimeout(() => {
+      const current = buildLevelCompletionRef.current;
+      if (!current || current.reviewId !== reviewId) return;
+      if (current.isAdvanceQueued) {
+        clearBuildLevelReview(reviewId);
+        return;
+      }
+      if (current.isAdvanceReady) return;
+      const ready = { ...current, isAdvanceReady: true };
+      buildLevelCompletionRef.current = ready;
+      setBuildLevelCompletion(ready);
+    }, Math.max(0, buildLevelCompletion.minAdvanceAtMs - Date.now()));
+    const autoAdvanceTimeoutId = window.setTimeout(() => {
+      clearBuildLevelReview(reviewId);
+    }, Math.max(0, buildLevelCompletion.autoAdvanceAtMs - Date.now()));
+    return () => {
+      window.clearTimeout(markReadyTimeoutId);
+      window.clearTimeout(autoAdvanceTimeoutId);
+    };
+  }, [buildLevelCompletion, clearBuildLevelReview]);
 
   // ── Dice multiplier (dice-pool-gated, Monopoly GO style) ────────────────────
   const [diceMultiplier, setDiceMultiplier] = useState(1);
@@ -2960,14 +3034,16 @@ export function IslandRunBoardPrototype({
   useEffect(() => {
     resetBuildRepeatStreak();
     buildTapQueueRef.current = [];
-  }, [islandNumber, resetBuildRepeatStreak]);
+    clearBuildLevelReview();
+  }, [clearBuildLevelReview, islandNumber, resetBuildRepeatStreak]);
 
   useEffect(() => {
     if (!showBuildPanel) {
       resetBuildRepeatStreak();
       buildTapQueueRef.current = [];
+      clearBuildLevelReview();
     }
-  }, [resetBuildRepeatStreak, showBuildPanel]);
+  }, [clearBuildLevelReview, resetBuildRepeatStreak, showBuildPanel]);
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
   )
@@ -5906,23 +5982,23 @@ export function IslandRunBoardPrototype({
       // Only show banner if not already dismissed for this specific egg
       const bannerKey = activeEgg ? getEggReadyBannerKey(session.user.id, activeEgg.setAtMs) : null;
       const alreadyDismissed = bannerKey ? window.localStorage.getItem(bannerKey) === '1' : false;
-      if (!alreadyDismissed) {
+      if (!alreadyDismissed && !showBuildPanel) {
         setShowEggReadyBanner(true);
       }
     }
     prevEggStageRef.current = eggStage;
-  }, [eggStage, activeEgg, session.user.id]);
+  }, [eggStage, activeEgg, session.user.id, showBuildPanel]);
 
   // Show egg-ready banner on initial load if egg is already ready and banner not yet dismissed
   useEffect(() => {
     if (eggStage === 4 && hasHydratedRuntimeState && activeEgg) {
       const bannerKey = getEggReadyBannerKey(session.user.id, activeEgg.setAtMs);
       const alreadyDismissed = window.localStorage.getItem(bannerKey) === '1';
-      if (!alreadyDismissed) {
+      if (!alreadyDismissed && !showBuildPanel) {
         setShowEggReadyBanner(true);
       }
     }
-  }, [eggStage, hasHydratedRuntimeState, activeEgg, session.user.id]);
+  }, [eggStage, hasHydratedRuntimeState, activeEgg, session.user.id, showBuildPanel]);
 
   useEffect(() => {
     if (activeStopId !== 'hatchery') {
@@ -6154,11 +6230,24 @@ export function IslandRunBoardPrototype({
     discountRate: activeBuildDiscountRate,
   }), [__storeState.essence, __storeState.stopBuildStateByIndex, activeBuildDiscountRate, islandArtManifest, islandStopPlan]);
 
+  const buildModalLevelReview = useMemo<BuildModalV2LevelReview | null>(() => (
+    buildLevelCompletion
+      ? {
+          title: buildLevelCompletion.title,
+          level: buildLevelCompletion.level,
+          isFullyBuilt: buildLevelCompletion.isFullyBuilt,
+          isAdvanceReady: buildLevelCompletion.isAdvanceReady,
+          isAdvanceQueued: buildLevelCompletion.isAdvanceQueued,
+          hasNextBuild: Boolean(buildModalV2ViewModel.activeLandmark),
+        }
+      : null
+  ), [buildLevelCompletion, buildModalV2ViewModel.activeLandmark]);
+
   const activeBuildCameraStopId = showBuildPanel
-    ? buildModalV2ViewModel.activeLandmark?.stopId ?? null
+    ? buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId ?? null
     : null;
   useEffect(() => {
-    if (!showBuildPanel || !activeBuildCameraStopId) {
+    if (!showBuildPanel) {
       if (previousBuildCameraStopIdRef.current !== null) {
         previousBuildCameraStopIdRef.current = null;
         setBuildCameraFocusRequest(null);
@@ -6168,6 +6257,9 @@ export function IslandRunBoardPrototype({
       }
       return;
     }
+    // A completed final landmark has no next sequential target. While Build is
+    // still open, preserve the last close-up instead of zooming to overview.
+    if (!activeBuildCameraStopId) return;
 
     const preset = resolveIsland5BuildCameraPreset(activeBuildCameraStopId);
     if (!preset) return;
@@ -9871,8 +9963,24 @@ export function IslandRunBoardPrototype({
         previousBuildLevel: currentBuildState.buildLevel,
         nextBuildLevel: nextBuildState.buildLevel,
       });
-      if (completionPresentation && nextRuntimeState.firstSessionTutorialState !== 'hatchery_l1_built') {
-        setBuildLevelCompletion(completionPresentation);
+      if (completionPresentation) {
+        const startedAtMs = Date.now();
+        buildLevelReviewIdRef.current += 1;
+        const review: ActiveBuildLevelReview = {
+          ...completionPresentation,
+          reviewId: buildLevelReviewIdRef.current,
+          stopIndex,
+          stopId: stopEntry?.stopId ?? '',
+          minAdvanceAtMs: startedAtMs + BUILD_LEVEL_REVIEW_MIN_DWELL_MS,
+          autoAdvanceAtMs: startedAtMs + BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS,
+          isAdvanceReady: false,
+          isAdvanceQueued: false,
+        };
+        // Rapid taps made before the level boundary may fund only that level.
+        // The next landmark starts after the explicit review interaction.
+        buildTapQueueRef.current = [];
+        buildLevelCompletionRef.current = review;
+        setBuildLevelCompletion(review);
       }
 
       if (leveledUp && nextBuildState.buildLevel >= MAX_BUILD_LEVEL) {
@@ -9934,6 +10042,10 @@ export function IslandRunBoardPrototype({
   const processBuildTapQueue = useCallback(async (): Promise<void> => {
     try {
       while (buildTapQueueRef.current.length > 0) {
+        if (buildLevelCompletionRef.current) {
+          buildTapQueueRef.current = [];
+          break;
+        }
         const nextTap = buildTapQueueRef.current.shift();
         if (!nextTap) continue;
         await handleRepeatedBuildActivation(nextTap.stopIndex, nextTap.requestedAtMs);
@@ -9944,6 +10056,10 @@ export function IslandRunBoardPrototype({
   }, [handleRepeatedBuildActivation]);
 
   const handleBuildCardTap = useCallback((stopIndex: number): void => {
+    if (buildLevelCompletionRef.current) {
+      handleAdvanceBuildLevelReview();
+      return;
+    }
     buildTapQueueRef.current.push({
       stopIndex,
       requestedAtMs: Date.now(),
@@ -9952,7 +10068,7 @@ export function IslandRunBoardPrototype({
       isBuildTapQueueProcessingRef.current = true;
       void processBuildTapQueue();
     }
-  }, [processBuildTapQueue]);
+  }, [handleAdvanceBuildLevelReview, processBuildTapQueue]);
 
   // ── Legacy hold-to-build handler (retained for future hold-gesture PR) ────
   // Not wired to the v2 tray UI yet; hold interactions on a horizontal scroll
@@ -12151,7 +12267,7 @@ export function IslandRunBoardPrototype({
 
   return (
     <section
-      className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}`}
+      className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}${showBuildPanel ? ' island-run-prototype--build-exclusive' : ''}`}
       data-island-number={islandNumber}
     >
       {showEntryAudioModal && (
@@ -12886,7 +13002,7 @@ export function IslandRunBoardPrototype({
               >
                 {isBackgroundHidden ? 'Show background' : 'Hide background'}
               </button>
-              {isDevModeEnabled && islandArtPreviewNumber === 5 ? (
+              {isDevModeEnabled && island3DWorldNumber !== null ? (
                 <button
                   type="button"
                   className="island-run-board__topbar-menu-item"
@@ -12898,11 +13014,11 @@ export function IslandRunBoardPrototype({
                   }}
                 >
                   <span>{isIsland5ThreeEnabled ? '✓' : '○'}</span>
-                  <span>{isIsland5ThreeEnabled ? 'Use 2D fallback' : 'Use 3D Island 5'}</span>
+                  <span>{isIsland5ThreeEnabled ? 'Use 2D fallback' : `Use 3D Island ${island3DWorldNumber}`}</span>
                   <span aria-hidden="true">🏝️</span>
                 </button>
               ) : null}
-              {isDevModeEnabled && islandArtPreviewNumber === 5 && isIsland5ThreeEnabled ? (
+              {isDevModeEnabled && island3DWorldNumber !== null && isIsland5ThreeEnabled ? (
                 <label className="island-run-board__dev-three-quality">
                   <span>3D quality</span>
                   <select
@@ -13319,11 +13435,12 @@ export function IslandRunBoardPrototype({
             <Suspense
               fallback={(
                 <div className="island-run-board__three-preview-loading" role="status">
-                  Loading Island 5 in 3D…
+                  Loading Island {island3DWorldNumber} in 3D…
                 </div>
               )}
             >
               <Island5ThreeScene
+                islandNumber={island3DWorldNumber ?? 5}
                 buildLevel={island5ThreePreviewLevel}
                 landmarkBuildLevels={isIslandVisualPreview ? undefined : island5ThreeBuildLevels}
                 presentation="embedded"
@@ -13335,6 +13452,7 @@ export function IslandRunBoardPrototype({
                 movementSpeedFactor={storyFastModeState.movementSpeedFactor}
                 cameraFocusPreset={buildCameraFocusRequest?.preset ?? null}
                 cameraFocusTransition={buildCameraFocusRequest?.transition ?? 'standard'}
+                cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}
                 onHopSequenceComplete={handleHopSequencePresentationComplete}
                 onTokenHop={(tileIndex) => {
                   playTokenMoveSound();
@@ -13350,10 +13468,14 @@ export function IslandRunBoardPrototype({
                   triggerIslandRunHaptic('stop_land');
                 }}
                 onLandmarkClick={isIslandVisualPreview ? undefined : (landmarkId) => {
+                  if (showBuildPanel) return;
                   handleStopOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId);
                 }}
                 caretakerEncounterOpen={isIslandInhabitantFlowOpen}
-                onCaretakerClick={isIslandVisualPreview ? undefined : () => openCaretakerFlow('caretaker_board_tap')}
+                onCaretakerClick={isIslandVisualPreview ? undefined : () => {
+                  if (showBuildPanel) return;
+                  openCaretakerFlow('caretaker_board_tap');
+                }}
                 onRendererUnavailable={() => setIsIsland5ThreeEnabled(false)}
               />
             </Suspense>
@@ -13406,7 +13528,8 @@ export function IslandRunBoardPrototype({
       <button
         type="button"
         className="island-run-prototype__camera-reset-floating"
-        aria-label="Reset camera zoom"
+        aria-label="Zoom out to the full island overview"
+        title="Full island overview"
         onClick={resetCameraFromTopbarMenu}
       >
         🔎
@@ -15521,6 +15644,8 @@ export function IslandRunBoardPrototype({
           isBuildModalHatcheryGuidanceActive={isBuildModalHatcheryGuidanceActive}
           discountRate={activeBuildDiscountRate}
           discountExpiresAtMs={buildDiscountExpiresAtMs}
+          levelReview={buildModalLevelReview}
+          onAdvanceLevelReview={handleAdvanceBuildLevelReview}
           onBuildActivePart={handleBuildCardTap}
         />
       )}

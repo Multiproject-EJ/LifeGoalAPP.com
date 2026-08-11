@@ -12,18 +12,121 @@ import {
   ISLAND_3D_QUALITY_PROFILES,
   ISLAND_3D_PERFORMANCE_TARGETS,
   ISLAND_3D_PROFILE_DURATION_MS,
+  ISLAND_3D_IDLE_OVERVIEW_DELAY_MS,
+  ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE,
   ISLAND_3D_TOKEN_HOP_ARC_HEIGHT,
   ISLAND_3D_TILE_IMPACT_DURATION_MS,
   ISLAND_CAMERA_TOUR_STEPS,
   ISLAND_5_CAMERA_PRESETS,
   ISLAND_5_LANDMARKS,
   resolveIsland3DQuality,
+  resolveIsland3DRadialTileGeometry,
   resolveIsland3DLandingImpact,
   summarizeIsland3DPerformance,
 } from '../../dev/island5ThreePilotContract';
+import {
+  buildIsland1CloudLayout,
+  buildIsland1MountainLayout,
+  getIsland1AmbienceLifeBudget,
+  ISLAND_1_CLOUD_MINIMUM_Y,
+  ISLAND_1_OCEAN_SURFACE_Y,
+} from '../../dev/Island1ThreeWorld';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'gives First Light Kingdom quality-scaled springs, cascades, foam and fauna',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island1ThreeWorld.ts', 'utf8');
+      assert(worldSource.includes('const cascadeCount = lifeBudget.cascadeCount;'), 'First Light should source cascade density from the audited quality budget');
+      assert(worldSource.includes("springPools.name = 'ISLAND_1_CRYSTAL_SPRING_POOLS'"), 'each cascade needs a visible spring source on the island');
+      assert(worldSource.includes("plungeFoam.name = 'ISLAND_1_WATERFALL_PLUNGE_FOAM'"), 'waterfalls need animated contact foam at sea level');
+      assert(worldSource.includes("flowHighlights.name = 'ISLAND_1_CASCADE_FLOW_HIGHLIGHTS'"), 'water motion should read down the complete course, not as a static blue plane');
+      assert(worldSource.includes('const birdCount ='), 'First Light needs airborne fauna above the island');
+      assert(worldSource.includes('const butterflyCount ='), 'First Light gardens need close-range fauna');
+      assert(worldSource.includes('const fishCount ='), 'the inner lagoon needs visible aquatic life on capable phones');
+      assert(worldSource.includes("springRipples.name = 'ISLAND_1_SPRING_SOURCE_RIPPLES'"), 'spring sources need a readable medium-speed ripple rhythm');
+      assert(worldSource.includes("dawnMotes.name = 'ISLAND_1_DAWN_GARDEN_MOTES'"), 'capable phones need one draw-call atmospheric garden life');
+      assert(worldSource.includes('ISLAND_1_SHORELINE_WAVE_FRONT_'), 'the ocean edge needs broken moving wave fronts rather than one mechanical full ring');
+      assert(worldSource.includes('floatingIslets.forEach((islet)'), 'distant floating scenery should breathe on the existing ambience clock');
+      assert(worldSource.includes('animate: (elapsed) =>'), 'water and fauna should share the one ambience animation clock');
+    },
+  },
+  {
+    name: 'scales the First Light life rhythm without removing essential water motion on Low',
+    run: async () => {
+      const low = getIsland1AmbienceLifeBudget('low');
+      const medium = getIsland1AmbienceLifeBudget('medium');
+      const high = getIsland1AmbienceLifeBudget('high');
+      assertEqual(low.cascadeCount, 6, 'Low must retain the essential living-water identity');
+      assertEqual(low.shorelineWaveCount, 1, 'Low should retain one restrained shoreline wave front');
+      assertEqual(low.dawnMoteCount, 0, 'Low should remove optional micro-atmosphere');
+      assertEqual(low.skiffCount, 1, 'Low should retain one readable inhabited-world anchor');
+      assert(medium.cascadeCount > low.cascadeCount, 'Medium should add water detail');
+      assert(high.shorelineWaveCount > medium.shorelineWaveCount, 'High should receive richer broken shoreline motion');
+      assert(high.dawnMoteCount > medium.dawnMoteCount, 'High should receive the fuller dawn-mote field');
+      assert(high.skiffCount > medium.skiffCount, 'High should receive the fuller distant sun-skiff fleet');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const viewUpdateIndex = pilotSource.indexOf('livingAmbience.updateView?.(camera.position);');
+      const reducedMotionIndex = pilotSource.indexOf('if (!isReducedMotion) {', viewUpdateIndex);
+      const animateIndex = pilotSource.indexOf('livingAmbience.animate(elapsed);', reducedMotionIndex);
+      assert(viewUpdateIndex >= 0 && viewUpdateIndex < reducedMotionIndex, 'camera-side scenery culling must still run in reduced-motion mode');
+      assert(reducedMotionIndex >= 0 && reducedMotionIndex < animateIndex, 'decorative ambience must remain inside the reduced-motion guard');
+    },
+  },
+  {
+    name: 'keeps First Light clouds safely elevated around all 360 degrees and budgets a distant mountain horizon',
+    run: () => {
+      const lowClouds = buildIsland1CloudLayout('low');
+      const mediumClouds = buildIsland1CloudLayout('medium');
+      const highClouds = buildIsland1CloudLayout('high');
+      assertEqual(lowClouds.length, 4, 'Low should keep one cloud anchor in every broad viewing quadrant');
+      assertEqual(mediumClouds.length, 6, 'Medium should add a fuller sky ring');
+      assertEqual(highClouds.length, 8, 'High should receive the complete cloud ring');
+      highClouds.forEach((cloud) => {
+        assert(cloud.minimumY >= ISLAND_1_CLOUD_MINIMUM_Y, 'every cloud lower bound must stay above the audited sky clearance plane');
+        assert(cloud.minimumY > ISLAND_1_OCEAN_SURFACE_Y + 5.5, 'cloud geometry must remain physically separated from the ocean even during vertical drift');
+      });
+      const cloudQuadrants = new Set(lowClouds.map((cloud) => Math.floor(((cloud.angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) / (Math.PI / 2))));
+      assertEqual(cloudQuadrants.size, 4, 'even Low must cover the complete orbit instead of putting all clouds behind one camera');
+
+      const lowMountains = buildIsland1MountainLayout('low');
+      const mediumMountains = buildIsland1MountainLayout('medium');
+      const highMountains = buildIsland1MountainLayout('high');
+      assertEqual(lowMountains.length, 4, 'Low should preserve a readable distant archipelago with restrained geometry');
+      assertEqual(mediumMountains.length, 6, 'Medium should add horizon variety');
+      assertEqual(highMountains.length, 8, 'High should receive the full distant mountain archipelago');
+      highMountains.forEach((mountain) => {
+        assert(mountain.radius >= 20, 'mountains must remain far beyond the island foreground');
+        assert(mountain.radius < 30, 'mountains must remain safely inside the normal camera orbit');
+        assert(mountain.height >= 1.08, 'distant peaks must remain readable at phone scale');
+      });
+      assertDeepEqual(buildIsland1CloudLayout('high'), highClouds, 'cloud placement must remain deterministic across renders');
+      assertDeepEqual(buildIsland1MountainLayout('high'), highMountains, 'mountain placement must remain deterministic across renders');
+    },
+  },
+  {
+    name: 'lets repeated rolls keep their framing and restores overview only after idle',
+    run: async () => {
+      assert(ISLAND_3D_IDLE_OVERVIEW_DELAY_MS >= 3_000, 'overview drift should wait long enough for another roll to interrupt it');
+      assert(ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE >= 2.5, 'idle return should be substantially slower than a normal camera cut');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(pilotSource.includes('idleOverviewAt = now + ISLAND_3D_IDLE_OVERVIEW_DELAY_MS'), 'landing should schedule a delayed overview instead of snapping out immediately');
+      assert(pilotSource.includes('idleOverviewAt = null;\n        transition = null;'), 'a new roll must cancel any pending idle overview');
+      assert(pilotSource.includes("applyPreset('overview', ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE)"), 'idle framing should use the deliberately slow drift');
+      assert(boardSource.includes('cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}'), 'live board must connect its overview request to the 3D renderer');
+      assert(boardSource.includes('setThreeCameraOverviewRequestVersion((current) => current + 1)'), 'magnifier presses must remain repeatable even when already in overview mode');
+      assert(boardSource.includes('aria-label="Zoom out to the full island overview"'), 'magnifier needs an accurate accessible action label');
+      assert(pilotSource.includes("preset: 'survey',"), 'magnifier must select the widest full-island camera preset');
+    },
+  },
   {
     name: 'builds deterministic symmetrical chateau gardens outside the playable route',
     run: () => {
@@ -103,6 +206,30 @@ export const island5ThreePilotContractTests: TestCase[] = [
         assert(Number.isFinite(transform.position[0]) && Number.isFinite(transform.position[2]), `tile ${transform.id} position must be finite`);
         assert(Number.isFinite(transform.rotationYRad), `tile ${transform.id} rotation must be finite`);
       });
+    },
+  },
+  {
+    name: 'fits tapered 3D tile blocks inside their radial sectors without inner-ring overlap',
+    run: async () => {
+      const geometry = resolveIsland3DRadialTileGeometry(TILE_ANCHORS_36.length);
+      const halfSectorAngle = Math.PI / geometry.tileCount;
+      const availableInnerWidth = 2 * geometry.innerRadius * Math.tan(halfSectorAngle);
+      const availableOuterWidth = 2 * geometry.outerRadius * Math.tan(halfSectorAngle);
+      assert(geometry.innerWidth < geometry.outerWidth, 'the inner short edge must be narrower than the outer short edge');
+      assert(geometry.innerWidth < availableInnerWidth, 'the inner edge must leave a positive neighbour joint');
+      assert(geometry.outerWidth < availableOuterWidth, 'the outer edge must leave a positive neighbour joint');
+      assert(Math.abs((availableInnerWidth - geometry.innerWidth) - geometry.jointGap) < 0.000001, 'inner joint must match the shared clearance');
+      assert(Math.abs((availableOuterWidth - geometry.outerWidth) - geometry.jointGap) < 0.000001, 'outer joint must match the shared clearance');
+
+      const peakImpact = getIsland3DTileImpactPose(76, 1.5);
+      assert((geometry.innerWidth * peakImpact.scaleXZ) < availableInnerWidth, 'maximum landing squash must not recreate inner overlap');
+      assert((geometry.outerWidth * peakImpact.scaleXZ) < availableOuterWidth, 'maximum landing squash must not recreate outer overlap');
+
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      assert(pilotSource.includes("facetedGeometry.name = 'ISLAND_SHARED_RADIAL_TILE_TRAPEZOID'"), 'all three worlds must use the one shared tapered geometry');
+      assert(!pilotSource.includes('new THREE.BoxGeometry(0.62, 0.18, 0.92)'), 'the overlapping rectangular tile geometry must remain retired');
     },
   },
   {
@@ -374,17 +501,20 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'keeps the workbench internal while routing Island 5 actual 3D through the canonical live shell',
+    name: 'keeps the workbench internal while routing authored actual-3D worlds through the canonical live shell',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const pageSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandTemplateKitPage.tsx', 'utf8');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const island1Source = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island1ThreeWorld.ts', 'utf8');
+      const island2Source = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island2ThreeWorld.ts', 'utf8');
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       const mainSource = fsMod.readFileSync('src/main.tsx', 'utf8');
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
-      assert(pageSource.includes('<Island5ThreePilot buildLevel={buildLevel} />'), 'the internal workbench should retain its direct 3D mount');
+      assert(pageSource.includes('<Island5ThreePilot islandNumber={initialState.islandNumber} buildLevel={buildLevel} />'), 'the internal workbench should retain its direct 3D mount and support both authored islands');
+      assert(pageSource.includes('islandParam === 1 || islandParam === 2'), 'the workbench should expose Island 001 and Island 002 for repeatable landmark QA');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
       assert(mainSource.includes('import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED'), 'internal profiler bundle must not register the production service worker');
@@ -402,11 +532,31 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes("presentation = 'workbench'"), 'live-shell use must opt into the stripped embedded presentation explicitly');
       assert(boardSource.includes('const Island5ThreeScene = lazy'), 'live shell should not eagerly load the Three.js scene');
       assert(boardSource.includes("params.get('island3dPreview') === '1'"), 'internal QA should expose a deterministic Island 5 preview URL');
-      assert(boardSource.includes('const canUseIsland5Three = islandArtPreviewNumber === 5'), 'production 3D route must remain constrained to Island 5');
+      assert(boardSource.includes('const island3DWorldNumber: 1 | 2 | 5 | null = islandArtPreviewNumber === 1'), 'production 3D routing must explicitly admit the authored Island 1, Island 2 and Island 5 world packs');
+      assert(boardSource.includes(': islandArtPreviewNumber === 2'), 'Island 002 must route through its authored tropical world pack');
+      assert(boardSource.includes(': islandArtPreviewNumber === 5') && boardSource.includes(': null;'), 'all islands without an authored 3D world pack must retain the existing fallback');
+      assert(boardSource.includes('islandNumber={island3DWorldNumber ?? 5}'), 'the shared renderer must receive the selected authored world without creating a second gameplay shell');
+      assert(pilotSource.includes('color: 0x4d91c8') && pilotSource.includes('color: 0x72c9e8'), 'Island 1 must use its authored blue route and key-tile palette instead of inheriting Island 5 purple');
       assert(boardSource.includes('() => !isIslandVisualPreview || isIsland5ThreePreviewRequested'), 'normal Island 5 gameplay should default to 3D while QA previews remain explicit');
       assert(boardSource.includes('presentation="embedded"'), 'real UI shell must hide workbench-only profiler and camera panels');
       assert(pilotSource.includes('qualityOverride?: Island3DQualitySelection'), 'embedded renderer should accept a presentation-only dev quality override');
       assert(pilotSource.includes('qualityOverride ?? qualitySelection'), 'dev override should take precedence without changing production auto selection');
+      assert(pilotSource.includes('ISLAND_1_LANDMARK_LABELS[preset.id'), 'Island 001 workbench focus controls must use First Light landmark labels');
+      assert(pilotSource.includes('firstLightFocusOverrides') && pilotSource.includes('boss: { position:') && pilotSource.includes('event: { position:'), 'Island 001 must keep authored front-facing focus cameras for every landmark family');
+      assert(island1Source.includes("boss: 'Aureon’s Sun Court'"), 'Island 001 center identity must remain aligned with its Aureon/Sun Court manifest');
+      assert(island1Source.includes('function addScaffoldTower') && island1Source.includes('function addConstructionCrane'), 'Island 001 L1/L2 states must use authored construction geometry');
+      assert(island1Source.includes('function createRhythmTree') && island1Source.includes('function createStarArchive') && island1Source.includes('function createEchoObservatory'), 'each Island 001 outer family must keep its own authored procedural factory');
+      assert(island1Source.includes('function createSunCourt') && !island1Source.includes('function createMoonGate'), 'Island 001 center must remain the low First Light Sun Court instead of Island 006 Moon Gate contamination');
+      assert(island1Source.includes('const eggCount = level === 1 ? 0 : 4'), 'Lantern Hatchery must preserve the reference-locked skeletal L1 and operational L2/L3 egg stages');
+      assert(island1Source.includes('new THREE.ExtrudeGeometry(leftPageShape') && island1Source.includes('const canopyShape = new THREE.Shape()'), 'Archive book and Observatory canopy must remain authored volumetric identity geometry');
+      assert(island1Source.includes('celestial: new THREE.MeshPhysicalMaterial'), 'Echo Lens hero globe must retain its distinct layered celestial material');
+      assert(island1Source.includes('side: THREE.DoubleSide'), 'Island 001 banners and thin emblems must remain visible in rear-angle QA');
+      assert(!island1Source.includes('const levelScale = level === 1'), 'Island 001 progression must not regress to scale-only level changes');
+      assert(island2Source.includes("boss: 'Sunwheel Arena'") && island2Source.includes("hatchery: 'Egg Grotto Hatchery'"), 'Island 002 must retain its tropical landmark identity lock');
+      assert(island2Source.includes('function createEggGrotto') && island2Source.includes('function createHabitLodge') && island2Source.includes('function createStarArchive') && island2Source.includes('function createTideglassOracle') && island2Source.includes('function createSunwheelArena'), 'Island 002 must keep five distinct procedural landmark factories');
+      assert(island2Source.includes("wave.name = 'ISLAND_2_SHORE_WAVE'") && island2Source.includes("fall.name = 'ISLAND_2_WATERFALL'"), 'Island 002 must retain animated shoreline and waterfall systems');
+      assert(island2Source.includes("bird.name = 'ISLAND_2_BIRD'") && island2Source.includes("turtle.name = 'ISLAND_2_TURTLE'"), 'Island 002 must preserve quality-scaled tropical fauna');
+      assert(!island2Source.includes('const levelScale = level === 1'), 'Island 002 progression must not regress to scale-only level changes');
       assert(boardSource.includes('3D quality') && boardSource.includes('Force High to judge phone smoothness.'), 'the live dev menu should expose the phone quality selector');
       assert(boardSource.includes('qualityOverride={isDevModeEnabled ? devIsland5ThreeQuality : undefined}'), 'quality override must be dev-mode only');
       assert(boardSource.includes('tokenIndex={tokenIndex}'), 'embedded renderer must read the canonical token index already owned by the live board');
@@ -424,7 +574,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('ISLAND_3D_PROFILE_DURATION_MS'), 'pilot should run the canonical 30-second evidence window');
       assert(pilotSource.includes("document.addEventListener('visibilitychange'"), 'profiler should reject background-tab evidence');
       assert(pilotSource.includes('summarizeIsland3DPerformance'), 'profiler should use the pure tested summary contract');
-      assert(pilotSource.includes("profileSchema: 'island-5-m7-v1'"), 'physical-device evidence should carry a stable schema id');
+      assert(pilotSource.includes("profileSchema: 'island-3d-m7-v1'"), 'physical-device evidence should carry one stable schema id across authored island world packs');
       assert(pilotSource.includes('navigator.share'), 'completed phone evidence should be shareable without developer tools');
       assert(pilotSource.includes("gl.getExtension('WEBGL_debug_renderer_info')"), 'device evidence should record the available GPU renderer identity');
       assert(pilotSource.includes("window.matchMedia('(prefers-reduced-motion: reduce)')"), 'pilot should honor reduced motion');

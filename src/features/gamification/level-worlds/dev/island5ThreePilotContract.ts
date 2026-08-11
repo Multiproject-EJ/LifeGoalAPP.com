@@ -127,12 +127,34 @@ export interface Island5TileTransform {
   isKeyTile: boolean;
 }
 
+export interface Island3DRadialTileGeometrySpec {
+  tileCount: number;
+  centerRadius: number;
+  radialDepth: number;
+  height: number;
+  jointGap: number;
+  innerRadius: number;
+  outerRadius: number;
+  innerWidth: number;
+  outerWidth: number;
+}
+
+export const ISLAND_3D_ROUTE_RADIUS = 3.4;
+export const ISLAND_3D_TILE_RADIAL_DEPTH = 0.92;
+export const ISLAND_3D_TILE_HEIGHT = 0.18;
+/** Visible mortar/joint clearance between neighbouring radial blocks. */
+export const ISLAND_3D_TILE_JOINT_GAP = 0.018;
+
 export const ISLAND_3D_TOKEN_GROUND_OFFSET = 0.12;
 export const ISLAND_3D_TOKEN_HOP_ARC_HEIGHT = 0.72;
 export const ISLAND_3D_TOKEN_PRE_ROLL_HOLD_MS = 150;
 export const ISLAND_3D_TOKEN_FOLLOW_OFFSET: readonly [number, number, number] = [0, 8.4, 10.8];
 export const ISLAND_3D_SPECIAL_HOP_ARC_BOOST = 0.16;
 export const ISLAND_3D_TILE_IMPACT_DURATION_MS = 420;
+/** Wait for real inactivity before the camera starts returning to overview. */
+export const ISLAND_3D_IDLE_OVERVIEW_DELAY_MS = 3_600;
+/** Deliberately slower than authored focus changes, so it reads as a drift. */
+export const ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE = 2.8;
 
 export type Island3DLandingImpact = 'standard' | 'special' | 'hazard';
 
@@ -167,8 +189,45 @@ export function getIsland3DTileImpactPose(
   return {
     yOffset: -downward * 0.045 + rebound * 0.012,
     scaleY: 1 - downward * 0.14 + rebound * 0.04,
-    scaleXZ: 1 + downward * 0.035 - rebound * 0.012,
+    // Keep the satisfying landing compression without expanding a block far
+    // enough to intersect either neighbour in the fine radial joint.
+    scaleXZ: 1 + downward * 0.008 - rebound * 0.004,
     compression,
+  };
+}
+
+/**
+ * Returns a polar-sector tile footprint. A rectangular block cannot fit a
+ * circular route: its inner corners overlap before its outer corners meet.
+ * This shared trapezoid follows the two radial boundary rays instead.
+ */
+export function resolveIsland3DRadialTileGeometry(
+  tileCount: number,
+  centerRadius = ISLAND_3D_ROUTE_RADIUS,
+  radialDepth = ISLAND_3D_TILE_RADIAL_DEPTH,
+  height = ISLAND_3D_TILE_HEIGHT,
+  jointGap = ISLAND_3D_TILE_JOINT_GAP,
+): Island3DRadialTileGeometrySpec {
+  const safeTileCount = Math.max(3, Math.round(Number.isFinite(tileCount) ? tileCount : 36));
+  const safeCenterRadius = Math.max(0.1, Number.isFinite(centerRadius) ? centerRadius : ISLAND_3D_ROUTE_RADIUS);
+  const safeDepth = Math.max(0.05, Math.min(safeCenterRadius * 1.8, Number.isFinite(radialDepth) ? radialDepth : ISLAND_3D_TILE_RADIAL_DEPTH));
+  const safeHeight = Math.max(0.02, Number.isFinite(height) ? height : ISLAND_3D_TILE_HEIGHT);
+  const safeJointGap = Math.max(0, Number.isFinite(jointGap) ? jointGap : ISLAND_3D_TILE_JOINT_GAP);
+  const innerRadius = safeCenterRadius - safeDepth / 2;
+  const outerRadius = safeCenterRadius + safeDepth / 2;
+  const halfSectorAngle = Math.PI / safeTileCount;
+  const widthAtRadius = (radius: number) => Math.max(0.04, (2 * radius * Math.tan(halfSectorAngle)) - safeJointGap);
+
+  return {
+    tileCount: safeTileCount,
+    centerRadius: safeCenterRadius,
+    radialDepth: safeDepth,
+    height: safeHeight,
+    jointGap: safeJointGap,
+    innerRadius,
+    outerRadius,
+    innerWidth: widthAtRadius(innerRadius),
+    outerWidth: widthAtRadius(outerRadius),
   };
 }
 

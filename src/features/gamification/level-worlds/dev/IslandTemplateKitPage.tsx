@@ -14,11 +14,14 @@ function readInitialPreviewState() {
   const requestedMode = params.get('mode');
   const requestedLevelParam = params.get('level');
   const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
+  const islandParam = Number(params.get('island'));
+  const islandNumber = islandParam === 1 || islandParam === 2 ? islandParam : 5;
   return {
     mode: requestedMode === 'clay' || requestedMode === 'proof' || requestedMode === '3d'
       ? requestedMode
       : 'blueprint' as ViewMode,
     buildLevel: ([0, 1, 2, 3].includes(requestedLevel) ? requestedLevel : 3) as BuildLevel,
+    islandNumber: islandNumber as 1 | 2 | 5,
     overlays: params.get('guides') !== '0',
   };
 }
@@ -174,7 +177,7 @@ export default function IslandTemplateKitPage() {
         <div className="island-kit-phone" data-testid="island-kit-phone">
           <div className="island-kit-phone__notch" />
           {mode === '3d' ? (
-            <Island5ThreePilot buildLevel={buildLevel} />
+            <Island5ThreePilot islandNumber={initialState.islandNumber} buildLevel={buildLevel} />
           ) : (
             <>
               <div className="island-kit-phone__hud"><span>ISLAND TEMPLATE</span><strong>BOARD LOCKED</strong></div>

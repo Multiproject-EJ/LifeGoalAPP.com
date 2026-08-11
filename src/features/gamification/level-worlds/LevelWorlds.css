@@ -877,7 +877,7 @@
 .island-run-prototype__camera-reset-floating {
   position: absolute;
   right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px));
-  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px) + 44px);
   z-index: 18;
   width: 46px;
   height: 46px;
@@ -906,7 +906,7 @@
 .island-run-prototype__compass-floating {
   position: absolute;
   right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px));
-  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px) + 54px);
+  bottom: calc(clamp(12.75rem, 54vw, 22rem) + env(safe-area-inset-bottom, 0px) + 98px);
   z-index: 18;
   width: 46px;
   height: 46px;
@@ -20663,8 +20663,8 @@
 
 /* ──────────────────────────────────────────────────────────────────────────
    Live-board Build mode — the real island is the landmark preview.
-   Only the compact header and construction dock intercept input; the large
-   transparent middle keeps the focused board landmark visible.
+   The compact controls remain visible while the transparent middle absorbs
+   input, keeping the focused landmark view-only for the whole Build session.
    ────────────────────────────────────────────────────────────────────────── */
 .bm2-build-mode {
   position: fixed;
@@ -20673,7 +20673,8 @@
   width: 100vw;
   min-height: 100dvh;
   overflow: hidden;
-  pointer-events: none;
+  pointer-events: auto;
+  touch-action: none;
   background:
     linear-gradient(180deg, rgba(3, 12, 20, 0.1), transparent 28%, transparent 68%, rgba(3, 10, 18, 0.12)),
     radial-gradient(120% 80% at 50% 52%, transparent 54%, rgba(3, 10, 18, 0.12) 100%);
@@ -20967,6 +20968,141 @@
   width: auto;
 }
 
+.bm2-dock--level-review {
+  width: min(34rem, calc(100vw - 0.75rem));
+}
+
+.bm2-level-review {
+  position: relative;
+  min-height: 6.2rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(8.7rem, 0.42fr);
+  align-items: center;
+  gap: 0.72rem;
+  overflow: hidden;
+  padding: 0.72rem;
+}
+
+.bm2-level-review__copy {
+  min-width: 0;
+}
+
+.bm2-level-review__eyebrow {
+  color: #ffe09a;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.bm2-level-review__copy h3,
+.bm2-level-review__copy p {
+  margin: 0;
+}
+
+.bm2-level-review__copy h3 {
+  margin-top: 0.14rem;
+  color: #fffaf0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.93rem;
+}
+
+.bm2-level-review__copy p {
+  margin-top: 0.18rem;
+  color: rgba(226, 248, 252, 0.8);
+  font-size: 0.63rem;
+  font-weight: 700;
+}
+
+.bm2-level-review__rail {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.42rem;
+}
+
+.bm2-level-review__level {
+  min-width: 2.35rem;
+  padding: 0.25rem 0.42rem;
+  border: 1px solid rgba(190, 218, 227, 0.22);
+  border-radius: 999px;
+  background: rgba(3, 15, 25, 0.46);
+  color: rgba(211, 230, 236, 0.55);
+  font-size: 0.61rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.bm2-level-review__level--complete {
+  border-color: rgba(255, 225, 143, 0.66);
+  background: linear-gradient(180deg, rgba(255, 225, 143, 0.22), rgba(108, 74, 22, 0.32));
+  color: #fff0b7;
+}
+
+.bm2-level-review__advance {
+  min-height: 3.8rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 0.38rem;
+  padding: 0.48rem 0.56rem;
+  border: 1px solid rgba(255, 224, 144, 0.55);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(110, 80, 41, 0.92), rgba(61, 40, 22, 0.94));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 7px 18px rgba(0, 0, 0, 0.24);
+  color: #fff4cc;
+  cursor: pointer;
+  text-align: left;
+}
+
+.bm2-level-review__advance > span {
+  grid-row: 1 / -1;
+  font-size: 1.12rem;
+}
+
+.bm2-level-review__advance strong {
+  font-size: 0.69rem;
+  line-height: 1.08;
+}
+
+.bm2-level-review__advance small {
+  color: rgba(255, 239, 193, 0.72);
+  font-size: 0.52rem;
+  font-weight: 750;
+}
+
+.bm2-level-review__advance--queued {
+  border-color: rgba(134, 218, 255, 0.82);
+  background: linear-gradient(180deg, #327cb5, #174e82);
+  box-shadow: 0 0 0 3px rgba(71, 176, 244, 0.18), 0 8px 20px rgba(6, 45, 81, 0.36);
+  color: #f2fbff;
+}
+
+.bm2-level-review__advance--ready {
+  border-color: rgba(143, 243, 205, 0.72);
+  background: linear-gradient(180deg, #2e8b72, #155948);
+  color: #f1fff9;
+}
+
+.bm2-level-review__timer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #67e8f9, #ffe39d);
+  transform-origin: left;
+  animation: bm2-level-toast-timer 3s linear both;
+}
+
+/* Build mode owns the viewport. Any already-mounted secondary surface remains
+   queued in state but cannot appear or receive input before Build closes. */
+.island-run-prototype--build-exclusive > .island-run-overlay-root:not(.bm2-build-mode):not(.bm2-level-complete),
+.island-run-prototype--build-exclusive > .island-run-entry-audio {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 @keyframes bm2-live-header-arrive {
   from { opacity: 0; transform: translate(-50%, -10px) scale(0.96); }
   to { opacity: 1; transform: translate(-50%, 0) scale(1); }
@@ -21018,11 +21154,23 @@
   .bm2-dock .bm2-complete-state .bm2-level-rail {
     grid-column: 1 / -1;
   }
+  .bm2-level-review {
+    min-height: 5.8rem;
+    grid-template-columns: minmax(0, 1fr) 7.8rem;
+    gap: 0.48rem;
+    padding: 0.58rem;
+  }
+  .bm2-level-review__copy h3 { font-size: 0.78rem; }
+  .bm2-level-review__copy p { font-size: 0.56rem; }
+  .bm2-level-review__advance { min-height: 3.65rem; padding-inline: 0.44rem; }
+  .bm2-level-review__advance strong { font-size: 0.61rem; }
+  .bm2-level-review__advance small { font-size: 0.48rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .bm2-build-mode .bm2-header,
-  .bm2-dock {
+  .bm2-dock,
+  .bm2-level-review__timer {
     animation: none;
   }
 }
@@ -21062,7 +21210,7 @@
   color: #fffaf0;
   text-align: left;
   transform: translateX(-50%);
-  animation: bm2-level-toast-arrive 2.4s cubic-bezier(0.2, 1.1, 0.35, 1) both;
+  animation: bm2-level-toast-arrive 3s cubic-bezier(0.2, 1.1, 0.35, 1) both;
 }
 
 .bm2-level-complete .bm2-level-complete__glow {
@@ -21114,7 +21262,7 @@
   height: 3px;
   background: linear-gradient(90deg, #67e8f9, #ffe39d);
   transform-origin: left;
-  animation: bm2-level-toast-timer 2.4s linear both;
+  animation: bm2-level-toast-timer 3s linear both;
 }
 
 @keyframes bm2-level-toast-arrive {

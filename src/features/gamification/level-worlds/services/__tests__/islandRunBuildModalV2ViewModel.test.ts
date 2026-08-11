@@ -109,7 +109,7 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
     },
   },
   {
-    name: 'live-board Build presentation stays compact and level celebrations never block construction',
+    name: 'live-board Build owns input and completed levels honor queued one-to-three-second review timing',
     run: async () => {
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
@@ -117,12 +117,20 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       const cssSource = fsMod.readFileSync('src/features/gamification/level-worlds/LevelWorlds.css', 'utf8');
 
-      assert(modalSource.includes('role="region"') && !modalSource.includes('aria-modal="true"'), 'Build should be a non-modal live-board construction region');
+      assert(modalSource.includes('role="dialog"') && modalSource.includes('aria-modal="true"'), 'Build should expose its exclusive live-board session as an accessible modal dialog');
       assert(!modalSource.includes('<img') && !modalSource.includes('<canvas'), 'Build overlay should leave all landmark rendering to the real board');
-      assert(boardSource.includes('BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 2_400'), 'level celebration should have a short bounded dwell');
+      assert(boardSource.includes('BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 1_000'), 'completed levels should remain visible for at least one second');
+      assert(boardSource.includes('BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 3_000'), 'completed levels should auto-advance after a three-second review');
+      assert(boardSource.includes('isAdvanceQueued: true') && boardSource.includes('Date.now() < current.minAdvanceAtMs'), 'an early review tap should queue rather than skip the minimum dwell');
+      assert(!boardSource.includes("completionPresentation && nextRuntimeState.firstSessionTutorialState !== 'hatchery_l1_built'"), 'the first tutorial landmark must receive the same completed-level review as every later build');
+      assert(boardSource.includes('buildLevelCompletion?.stopId ?? buildModalV2ViewModel.activeLandmark?.stopId'), 'the camera should keep the just-completed landmark focused throughout review');
+      assert(boardSource.includes('if (!activeBuildCameraStopId) return;'), 'a fully built island should preserve its final close-up while Build remains open');
+      assert(boardSource.includes('if (showBuildPanel) return;'), 'live 3D landmark and caretaker input must be guarded while Build owns attention');
       assert(boardSource.includes('role="status"') && !boardSource.includes('bm2-level-complete__continue'), 'level celebration should announce itself without a blocking continue button');
-      assert(cssSource.includes('.bm2-build-mode') && cssSource.includes('pointer-events: none;'), 'transparent Build space should not become an invisible full-screen input blocker');
-      assert(cssSource.includes('.bm2-level-complete__timer'), 'auto-dismiss celebration should show its remaining dwell visually');
+      assert(cssSource.includes('.bm2-build-mode') && cssSource.includes('pointer-events: auto;'), 'transparent Build space should absorb board input for the exclusive session');
+      assert(cssSource.includes('.island-run-prototype--build-exclusive > .island-run-overlay-root:not(.bm2-build-mode):not(.bm2-level-complete)'), 'unrelated overlay surfaces should stay hidden until Build closes');
+      assert(cssSource.includes('.bm2-level-review__advance--queued') && cssSource.includes('#327cb5'), 'an early queued advance should have explicit blue feedback');
+      assert(cssSource.includes('.bm2-level-complete__timer') && cssSource.includes('animation: bm2-level-toast-timer 3s linear both'), 'auto-dismiss celebration should visualize the full three-second dwell');
     },
   },
 ];
