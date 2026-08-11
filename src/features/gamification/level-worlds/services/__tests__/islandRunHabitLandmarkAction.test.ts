@@ -1,5 +1,8 @@
 import type { HabitLogV2Row, HabitV2Row } from '../../../../../services/habitsV2';
-import { selectHabitLandmarkChoices } from '../islandRunHabitLandmarkAction';
+import {
+  selectCompletedHabitLandmarkChoices,
+  selectHabitLandmarkChoices,
+} from '../islandRunHabitLandmarkAction';
 import { assertDeepEqual, type TestCase } from './testHarness';
 
 function habit(
@@ -134,6 +137,24 @@ export const islandRunHabitLandmarkActionTests: TestCase[] = [
         choices.map((choice) => choice.id),
         ['keep'],
         'Skipped or partial logs must not count as a completed habit',
+      );
+    },
+  },
+  {
+    name: 'completed Today habits are exposed separately for no-duplicate-reward recognition',
+    run: () => {
+      const habits = [habit('done', 'Morning walk'), habit('open', 'Drink water')];
+      const logs = [completedLog('done')];
+
+      assertDeepEqual(
+        selectCompletedHabitLandmarkChoices(habits, logs, 'user-1').map((choice) => choice.id),
+        ['done'],
+        'Only a genuinely completed active Today habit should be recognized',
+      );
+      assertDeepEqual(
+        selectHabitLandmarkChoices(habits, logs, 'user-1').map((choice) => choice.id),
+        ['open'],
+        'Completed and unfinished Today habits must remain disjoint',
       );
     },
   },

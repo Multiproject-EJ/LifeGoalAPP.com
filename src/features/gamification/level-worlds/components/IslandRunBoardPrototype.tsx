@@ -90,7 +90,6 @@ import { resolveIslandBoardProfile } from '../services/islandBoardProfiles';
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../services/islandRunEconomy';
 import { generateIslandStopPlan, type IslandStopPlanEntry } from '../services/islandRunStops';
 import { decideCardDraw, initialCardDrawCadenceState } from '../services/islandRunCardDrawCadence';
-import { getWisdomTreeCardForIsland } from '../services/wisdomTreeCards';
 import {
   getStopTicketCost,
   getStopTicketPrepayCost,
@@ -129,9 +128,8 @@ import { ShardClaimModal } from './ShardClaimModal';
 import { LandmarkTicketModal } from './LandmarkTicketModal';
 import { IslandRunLifePromptCard } from './IslandRunLifePromptCard';
 import { IslandRunGamifiedJournalCard } from './IslandRunGamifiedJournalCard';
-import { WisdomTreeCardEncounter } from './WisdomTreeCardEncounter';
+import { WisdomCaretakerCompassEncounter } from './WisdomCaretakerCompassEncounter';
 import { CompactGameCompassPanel } from '../../../compass-book/components/CompactGameCompassPanel';
-import { CompassStopFragmentMount } from '../../../compass-book/components/CompassStopFragmentMount';
 import { isIslandFragmentAnsweredForUser } from '../../../compass-book/services/compassBookService';
 import { flushIslandRunPendingWrite, readIslandRunGameStateRecord, type IslandRunGameStateRecord, type PerIslandEggEntry } from '../services/islandRunGameStateStore';
 import { getIslandRunDeviceSessionId } from '../services/islandRunDeviceSession';
@@ -971,10 +969,6 @@ const MARKET_DICE_BUNDLE_REWARD = 6;
 const MARKET_HEART_BUNDLE_COST = 40;
 const HEART_BOOST_BUNDLE_COST = 80;
 
-// Utility stop constants retired (hearts/coins/timer all retired).
-// Kept only essence bonus for wisdom stop (diamonds → essence).
-const WISDOM_ESSENCE_BONUS_COST_DIAMONDS = 3;
-const WISDOM_ESSENCE_BONUS_AMOUNT = 15;
 const WALLET_STORE_GRID_SIZE = 9;
 
 type WalletStoreModalKind = 'essence' | 'shards';
@@ -2142,7 +2136,6 @@ export function IslandRunBoardPrototype({
   const shouldRenderIsland5Three = canUseIsland5Three && isIsland5ThreeEnabled;
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandArtPreviewNumber), [islandArtPreviewNumber]);
   const islandBackgroundSrc = useMemo(() => getIslandBackgroundImageSrc(islandArtPreviewNumber), [islandArtPreviewNumber]);
-  const wisdomTreeCard = useMemo(() => getWisdomTreeCardForIsland(islandNumber), [islandNumber]);
   const [isIslandBackgroundAvailable, setIsIslandBackgroundAvailable] = useState(true);
   const [isIslandArtAmbientBackgroundLoaded, setIsIslandArtAmbientBackgroundLoaded] = useState(false);
   const [islandArtManifest, setIslandArtManifest] = useState<IslandArtManifest | null>(null);
@@ -13687,7 +13680,7 @@ export function IslandRunBoardPrototype({
                   if (showBuildPanel) return;
                   handleStopOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId);
                 }}
-                caretakerEncounterOpen={isIslandInhabitantFlowOpen}
+                caretakerEncounterOpen={isIslandInhabitantFlowOpen || activeStopId === 'wisdom'}
                 onCaretakerClick={isIslandVisualPreview ? undefined : () => {
                   if (showBuildPanel) return;
                   openCaretakerFlow('caretaker_board_tap');
@@ -14182,6 +14175,8 @@ export function IslandRunBoardPrototype({
           openedStopNeedsTicket && openedStopIndex > 0
             ? getStopTicketCost({ effectiveIslandNumber, stopIndex: openedStopIndex })
             : null;
+        const isFocusedBehaviorEncounter = openedStopIsPlayable
+          && (activeStopId === 'habit' || activeStopId === 'wisdom');
         if (
           openedStopNeedsTicket
           && openedStopTicketCost
@@ -14207,9 +14202,9 @@ export function IslandRunBoardPrototype({
           ), document.body);
         }
         return (
-        <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy" role="dialog" aria-modal="true" aria-label={activeStop.title}>
-            <div className="island-stop-modal__header-row">
+        <div className={`island-run-overlay-root island-stop-modal-backdrop${isFocusedBehaviorEncounter ? ' island-stop-modal-backdrop--world-visible' : ''}`} role="presentation">
+          <section className={`island-stop-modal island-stop-modal--readable island-stop-modal--dense island-stop-modal--longcopy${isFocusedBehaviorEncounter ? ' island-stop-modal--behavior-focus' : ''}`} role="dialog" aria-modal="true" aria-label={activeStop.title}>
+            {!isFocusedBehaviorEncounter ? <div className="island-stop-modal__header-row">
               <h3 className="island-stop-modal__title">{activeStop.title}</h3>
               {activeStopId === 'hatchery' ? (
                 <button
@@ -14232,9 +14227,9 @@ export function IslandRunBoardPrototype({
                   </ul>
                 </div>
               ) : null}
-            </div>
-            {activeStopId !== 'hatchery' && activeStopId !== 'mystery' ? <p>{activeStop.description}</p> : null}
-            {activeStopId !== 'hatchery' && activeStopId !== 'mystery' ? <p><strong>Status:</strong> {openedStopState}</p> : null}
+            </div> : null}
+            {!isFocusedBehaviorEncounter && activeStopId !== 'hatchery' && activeStopId !== 'mystery' ? <p>{activeStop.description}</p> : null}
+            {!isFocusedBehaviorEncounter && activeStopId !== 'hatchery' && activeStopId !== 'mystery' ? <p><strong>Status:</strong> {openedStopState}</p> : null}
             {activeStopId === requiredDoorStopId && isDoorLandmarkCompletionRequired ? (
               <p className="island-stop-modal__locked-notice" role="status">
                 <span aria-hidden="true">🚪</span>{' '}
@@ -14261,7 +14256,7 @@ export function IslandRunBoardPrototype({
                 <span aria-hidden="true">✅</span> This stop is complete for this island. Well done!
               </div>
             ) : null}
-            {activeStop.isBehaviorStop ? <p><strong>Behavior stop:</strong> yes (habit/check-in/reflection)</p> : null}
+            {!isFocusedBehaviorEncounter && activeStop.isBehaviorStop ? <p><strong>Behavior stop:</strong> yes (habit/check-in/reflection)</p> : null}
 
             {activeStopId === 'hatchery' && (
               <>
@@ -14570,75 +14565,27 @@ export function IslandRunBoardPrototype({
 
             {/* ── Stop 2: Habit (deterministic no-AI intake MVP) ── */}
             {activeStopId === 'habit' && openedStopIsPlayable && (
-              <>
-                <IslandRunLifePromptCard
-                  session={session}
-                  islandNumber={islandNumber}
-                  onComplete={(message) => {
-                    handleCompleteActiveStop(`✅ Habit landmark complete. ${message}`);
-                  }}
-                  onComeBackLater={handleComeBackLaterForActiveStop}
-                />
-                {/* Optional: answer this island's overflow Compass inputs here.
-                    Never gates stop completion. */}
-                <CompassStopFragmentMount
-                  session={session}
-                  islandNumber={islandNumber}
-                  slot="habit_overflow"
-                />
-              </>
+              <IslandRunLifePromptCard
+                session={session}
+                islandNumber={islandNumber}
+                onComplete={(message) => {
+                  handleCompleteActiveStop(`✅ Habit landmark complete. ${message}`);
+                }}
+                onComeBackLater={handleComeBackLaterForActiveStop}
+              />
             )}
 
-            {/* ── Stop 4: Wisdom Tree ── */}
+            {/* ── Stop 4: caretaker-led canonical Compass activity ── */}
             {activeStopId === 'wisdom' && openedStopIsPlayable && (
-              <div className="wisdom-stop-stack">
-                <WisdomTreeCardEncounter
-                  card={wisdomTreeCard}
+              <div className="wisdom-stop-stack wisdom-stop-stack--caretaker">
+                <WisdomCaretakerCompassEncounter
+                  session={session}
                   islandNumber={islandNumber}
                   onComplete={(message) => {
                     handleCompleteActiveStop(`🌳 Wisdom landmark complete — next landmark unlocked. ${message}`);
                   }}
+                  onComeBackLater={handleComeBackLaterForActiveStop}
                 />
-                {/* Optional: answer this island's Compass fragment here. Never
-                    gates stop completion (the Wisdom card above does that). */}
-                <CompassStopFragmentMount
-                  session={session}
-                  islandNumber={islandNumber}
-                  slot="wisdom"
-                />
-                <div className="island-hatchery-card__actions" style={{ marginTop: '0.75rem' }}>
-                  <button
-                    type="button"
-                    className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                    onClick={handleComeBackLaterForActiveStop}
-                  >
-                    Come back later
-                  </button>
-                </div>
-                {ISLAND_RUN_CONTRACT_V2_ENABLED && diamonds >= WISDOM_ESSENCE_BONUS_COST_DIAMONDS ? (
-                  <div className="island-hatchery-card__actions" style={{ marginTop: '0.5rem' }}>
-                    <button
-                      type="button"
-                      className="island-stop-modal__btn island-stop-modal__btn--action"
-                      onClick={() => {
-                        setDiamonds((d) => d - WISDOM_ESSENCE_BONUS_COST_DIAMONDS);
-                        setRuntimeState((prev) => ({
-                          ...prev,
-                          essence: prev.essence + WISDOM_ESSENCE_BONUS_AMOUNT,
-                          essenceLifetimeEarned: prev.essenceLifetimeEarned + WISDOM_ESSENCE_BONUS_AMOUNT,
-                        }));
-                        playIslandRunSound('utility_stop_complete');
-                        triggerIslandRunHaptic('utility_stop_complete');
-                        void recordTelemetryEvent({ userId: session.user.id, eventType: 'economy_spend', metadata: { stage: 'wisdom_essence_bonus', island_number: islandNumber, cost_diamonds: WISDOM_ESSENCE_BONUS_COST_DIAMONDS, essence_gained: WISDOM_ESSENCE_BONUS_AMOUNT } });
-                        handleCompleteActiveStop(`🌳 Wisdom complete! -${WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎, +${WISDOM_ESSENCE_BONUS_AMOUNT} 💰. Next landmark unlocked.`);
-                      }}
-                    >
-                      💰 Money Bonus — {WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎 → +{WISDOM_ESSENCE_BONUS_AMOUNT} Money
-                    </button>
-                  </div>
-                ) : ISLAND_RUN_CONTRACT_V2_ENABLED ? (
-                  <p style={{ fontSize: '0.85rem', opacity: 0.65, marginTop: '0.5rem' }}>💰 Money Bonus — needs {WISDOM_ESSENCE_BONUS_COST_DIAMONDS} 💎 (have {diamonds})</p>
-                ) : null}
               </div>
             )}
 
@@ -14880,7 +14827,7 @@ export function IslandRunBoardPrototype({
               </div>
             ) : null}
 
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
+            {!isFocusedBehaviorEncounter ? <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
               {activeStop.stopId !== 'hatchery'
               && activeStop.stopId !== 'boss'
               && activeStop.stopId !== 'habit'
@@ -14916,7 +14863,7 @@ export function IslandRunBoardPrototype({
                   Close
                 </button>
               )}
-            </div>
+            </div> : null}
           </section>
         </div>
         );

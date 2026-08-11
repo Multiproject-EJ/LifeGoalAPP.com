@@ -3508,9 +3508,9 @@ export default function Island5ThreePilot({
     const applyCaretakerEncounterFocus = (durationScale = 1) => {
       setActivePreset('manual');
       const fromPosition = camera.position.clone();
-      // Aim below the character's centre so the hat, eyes and upper torso stay
+      // Aim close to the character's feet so the hat, eyes and upper torso stay
       // above the topic panel in a phone portrait viewport.
-      const toTarget = CARETAKER_ENCOUNTER_HOME.clone().add(new THREE.Vector3(0, 0.45, 0));
+      const toTarget = CARETAKER_ENCOUNTER_HOME.clone().add(new THREE.Vector3(0, -0.7, 0));
       const toPosition = CARETAKER_ENCOUNTER_HOME.clone().add(new THREE.Vector3(2.65, 3.55, 6.35));
       const controlPosition = fromPosition.clone().lerp(toPosition, 0.5);
       controlPosition.y += 2.2;
@@ -3746,6 +3746,8 @@ export default function Island5ThreePilot({
             encounterCaretaker.root.name = 'ISLAND_5_CARETAKER_ENCOUNTER_LOD';
             encounterCaretaker.root.position.copy(CARETAKER_ENCOUNTER_HOME);
             encounterCaretaker.root.scale.setScalar(CARETAKER_ENCOUNTER_SCALE);
+            // Keep the character-lab's canonical front orientation; the
+            // dedicated encounter camera now frames it above the phone card.
             encounterCaretaker.root.rotation.y = 0;
             encounterCaretaker.setEmotion('delighted');
             encounterCaretaker.setAnimation('greet', elapsed, true);

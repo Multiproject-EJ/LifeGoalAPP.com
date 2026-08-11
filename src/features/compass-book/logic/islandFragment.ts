@@ -4,8 +4,8 @@
  *
  * Each island maps to exactly one Compass activity. For in-game answering we
  * present only the activity's *answerable inputs* (review/confirmation blocks are
- * book-only sealing affordances), split into a small Wisdom-stop slice and a
- * Habit-stop "overflow" slice so no single stop gets heavy. Pure — no I/O, no
+ * book-only sealing affordances). Every input belongs to the Wisdom landmark;
+ * the Habit landmark is reserved for one real-world action. Pure — no I/O, no
  * React.
  */
 
@@ -19,8 +19,8 @@ import type {
 import { getActivityForIsland } from '../content/compassBookCurriculum';
 import { isAnswerValuePresent } from './progress';
 
-/** Keep each Wisdom stop quick; the Habit stop absorbs any overflow. */
-export const WISDOM_STOP_MAX_INPUTS = 2;
+/** Authoring quality gate: one island reflection should never exceed four compact inputs. */
+export const WISDOM_STOP_MAX_INPUTS = 4;
 
 /**
  * Block types the player actually answers (and the renderer can render). Excludes
@@ -47,13 +47,13 @@ export type IslandFragment = {
   description?: string;
   /** All answerable inputs for the island, in authored order. */
   inputs: CompassBlockDefinition[];
-  /** First ≤ {@link WISDOM_STOP_MAX_INPUTS} inputs — shown at the Wisdom stop. */
+  /** Every answerable input — shown together at the Wisdom stop. */
   wisdom: CompassBlockDefinition[];
-  /** Remaining inputs — shown at the Habit stop when present. */
+  /** Legacy compatibility field. Always empty: Habit never owns Compass inputs. */
   habitOverflow: CompassBlockDefinition[];
 };
 
-/** Split an activity's blocks into the answerable Wisdom / Habit-overflow slices. */
+/** Select the activity's answerable Wisdom inputs; Habit overflow is retired. */
 export function splitIslandInputs(activity: CompassBookActivityDefinition): {
   inputs: CompassBlockDefinition[];
   wisdom: CompassBlockDefinition[];
@@ -62,8 +62,8 @@ export function splitIslandInputs(activity: CompassBookActivityDefinition): {
   const inputs = activity.blocks.filter((block) => ANSWERABLE_BLOCK_TYPES.has(block.type));
   return {
     inputs,
-    wisdom: inputs.slice(0, WISDOM_STOP_MAX_INPUTS),
-    habitOverflow: inputs.slice(WISDOM_STOP_MAX_INPUTS),
+    wisdom: inputs,
+    habitOverflow: [],
   };
 }
 
@@ -85,7 +85,7 @@ export function getIslandFragment(islandNumber: number): IslandFragment | null {
   };
 }
 
-/** The blocks shown at a given stop slot. */
+/** The blocks shown at a given stop slot. Habit overflow remains empty. */
 export function fragmentSlotBlocks(
   fragment: IslandFragment,
   slot: IslandFragmentSlot,

@@ -26,6 +26,22 @@ export const ROUTEKEEPER_SIGNAL_CHOICES = [
 export type RoutekeeperSignalChoice = typeof ROUTEKEEPER_SIGNAL_CHOICES[number];
 export type RoutekeeperSignalId = RoutekeeperSignalChoice['id'];
 
+/**
+ * Keep the fallback Habit encounter to three visible actions while rotating
+ * the starting point across islands. The set is deterministic, so reopening a
+ * stop never reshuffles choices under the player.
+ */
+export function selectRoutekeeperSignalChoicesForIsland(
+  islandNumber: number,
+  limit = 3,
+): RoutekeeperSignalChoice[] {
+  const safeLimit = Math.max(0, Math.min(limit, ROUTEKEEPER_SIGNAL_CHOICES.length));
+  const start = Math.max(0, Math.floor(islandNumber - 1)) % ROUTEKEEPER_SIGNAL_CHOICES.length;
+  return Array.from({ length: safeLimit }, (_, offset) => (
+    ROUTEKEEPER_SIGNAL_CHOICES[(start + offset) % ROUTEKEEPER_SIGNAL_CHOICES.length]
+  ));
+}
+
 export const ROUTEKEEPER_TINY_ACTIONS = ROUTEKEEPER_SIGNAL_CHOICES.map((choice) => choice.action);
 
 export type RoutekeeperTinyAction = typeof ROUTEKEEPER_TINY_ACTIONS[number];

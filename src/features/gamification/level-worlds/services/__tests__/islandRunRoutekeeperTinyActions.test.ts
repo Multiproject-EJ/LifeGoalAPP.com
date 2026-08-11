@@ -4,6 +4,7 @@ import {
   getRoutekeeperTinyActionForSignal,
   hasSuitableRoutekeeperHabit,
   isRoutekeeperBreathingHabit,
+  selectRoutekeeperSignalChoicesForIsland,
   ROUTEKEEPER_BREATH_HABIT_MARKER,
   ROUTEKEEPER_BREATH_HABIT_TITLE,
   ROUTEKEEPER_BODY_COPY,
@@ -13,7 +14,7 @@ import {
   ROUTEKEEPER_SUCCESS_TITLE,
   ROUTEKEEPER_TINY_ACTIONS,
 } from '../islandRunRoutekeeperTinyActions';
-import { assert, assertEqual, type TestCase } from './testHarness';
+import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const islandRunRoutekeeperTinyActionsTests: TestCase[] = [
   {
@@ -34,6 +35,21 @@ export const islandRunRoutekeeperTinyActionsTests: TestCase[] = [
       }
       assertEqual(ROUTEKEEPER_SUCCESS_TITLE, 'Routekeeper Steps relit.', 'Expected success title');
       assertEqual(ROUTEKEEPER_SUCCESS_BODY, 'One steady action is enough for today.', 'Expected success body');
+    },
+  },
+  {
+    name: 'Habit fallback rotates a stable maximum of three real actions per island',
+    run: () => {
+      assertDeepEqual(
+        selectRoutekeeperSignalChoicesForIsland(1).map((choice) => choice.id),
+        ['body', 'energy', 'mind'],
+        'Island 1 should begin at the first authored action',
+      );
+      assertDeepEqual(
+        selectRoutekeeperSignalChoicesForIsland(6).map((choice) => choice.id),
+        ['connection', 'body', 'energy'],
+        'The three-choice window should wrap without reshuffling',
+      );
     },
   },
   {

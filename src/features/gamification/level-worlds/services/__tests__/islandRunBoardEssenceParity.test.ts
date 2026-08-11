@@ -123,7 +123,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
     },
   },
   {
-    name: 'encounter/boss/sanctuary/wisdom essence awards remain direct runtime-state increments (legacy parity)',
+    name: 'encounter/boss/sanctuary essence awards remain direct runtime-state increments (legacy parity)',
     run: async () => {
       const source = await readBoardSource();
 
@@ -146,9 +146,8 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       );
 
       assert(
-        source.includes('essence: prev.essence + WISDOM_ESSENCE_BONUS_AMOUNT') &&
-          source.includes('essenceLifetimeEarned: prev.essenceLifetimeEarned + WISDOM_ESSENCE_BONUS_AMOUNT'),
-        'Wisdom bonus should preserve direct runtime-state essence increment semantics.',
+        !source.includes('WISDOM_ESSENCE_BONUS_AMOUNT'),
+        'Wisdom must not be bypassed by a diamond-to-essence purchase inside the reflection encounter.',
       );
     },
   },
@@ -168,10 +167,7 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         !source.includes("awardContractV2Essence(rewardEssence, 'sanctuary_bond_reward_claim')"),
         'Sanctuary bond reward should not route via canonical helper in parity mode.',
       );
-      assert(
-        !source.includes("awardContractV2Essence(WISDOM_ESSENCE_BONUS_AMOUNT, 'wisdom_essence_bonus')"),
-        'Wisdom bonus should not route via canonical helper in parity mode.',
-      );
+      assert(!source.includes('wisdom_essence_bonus'), 'Retired Wisdom purchase path must stay removed.');
     },
   },
   {

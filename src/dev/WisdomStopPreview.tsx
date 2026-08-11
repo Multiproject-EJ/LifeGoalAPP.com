@@ -1,20 +1,45 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
+import type { Session } from '@supabase/supabase-js';
 
-import { WisdomTreeCardEncounter } from '../features/gamification/level-worlds/components/WisdomTreeCardEncounter';
-import { WISDOM_TREE_CARDS } from '../features/gamification/level-worlds/services/wisdomTreeCards';
+import { WisdomCaretakerCompassEncounter } from '../features/gamification/level-worlds/components/WisdomCaretakerCompassEncounter';
 import '../features/gamification/level-worlds/LevelWorlds.css';
+import '../features/gamification/level-worlds/dev/IslandTemplateKitPage.css';
+
+const IslandThreeScene = lazy(() => import('../features/gamification/level-worlds/dev/Island5ThreePilot'));
+
+const PREVIEW_SESSION = {
+  user: {
+    id: 'wisdom-caretaker-preview',
+    user_metadata: { journey_day: 4 },
+  },
+} as unknown as Session;
 
 export default function WisdomStopPreview() {
   const [message, setMessage] = useState<string | null>(null);
-  const card = WISDOM_TREE_CARDS.find((entry) => entry.id === 'hearth-soft-corner')
-    ?? WISDOM_TREE_CARDS[0];
-
-  if (!card) return null;
 
   return (
     <main className="wisdom-stop-preview">
+      <div className="wisdom-stop-preview__world" aria-hidden="true">
+        <Suspense fallback={<div className="wisdom-stop-preview__world-loading">Opening Island 001…</div>}>
+          <IslandThreeScene
+            islandNumber={1}
+            worldSourceNumber={1}
+            buildLevel={3}
+            presentation="embedded"
+            qualityOverride="high"
+            caretakerEncounterOpen
+            interactionPaused
+          />
+        </Suspense>
+      </div>
       <section className="island-stop-modal wisdom-stop-preview__modal">
-        <WisdomTreeCardEncounter card={card} islandNumber={12} onComplete={setMessage} />
+        <WisdomCaretakerCompassEncounter
+          session={PREVIEW_SESSION}
+          islandNumber={1}
+          previewMode
+          onComplete={setMessage}
+          onComeBackLater={() => setMessage('Come back later')}
+        />
         {message ? (
           <div className="wisdom-stop-preview__message" role="status">
             <span aria-hidden="true">✦</span>

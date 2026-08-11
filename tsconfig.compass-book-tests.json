@@ -35,6 +35,8 @@
     "src/features/compass-book/logic/questLeap.ts",
     "src/features/compass-book/logic/goalBridge.ts",
     "src/features/compass-book/logic/habitBridge.ts",
+    "src/features/compass-book/logic/compassIllumination.ts",
+    "src/features/compass-book/logic/wisdomCompassInsight.ts",
     "src/features/compass-book/logic/shadowBridge.ts",
     "src/features/identity/personalityTestData.ts",
     "src/features/identity/personalityScoring.ts",

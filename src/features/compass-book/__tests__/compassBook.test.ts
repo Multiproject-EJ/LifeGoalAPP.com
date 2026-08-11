@@ -78,6 +78,12 @@ import {
 } from '../logic/reading';
 import { DEMO_ISLAND_NUMBER, buildDemoChapterStates, demoValueForBlock } from '../content/demoBook';
 import {
+  buildCompassIllumination,
+  getCompassSignalIdForChapter,
+  scoreCompassIllumination,
+} from '../logic/compassIllumination';
+import { buildWisdomCompassInsight } from '../logic/wisdomCompassInsight';
+import {
   TURN_MAX_MS,
   TURN_MIN_MS,
   pageIndex,
@@ -811,20 +817,17 @@ function testCompassAiCore(): void {
 
 function testIslandFragment(): void {
   // Island 19 (living_wheel.a19): two required area taps + one optional free-text.
-  // Answerable inputs only (review/confirmation excluded); split Wisdom / overflow.
+  // All answerable inputs stay in Wisdom; Habit is reserved for real-world action.
   const f19 = getIslandFragment(19);
   assert(f19 !== null, 'island 19 has a fragment');
   assert(f19!.activityId === 'living_wheel.a19', 'fragment maps to the island activity');
   assert(f19!.inputs.length === 3, 'island 19 has three answerable inputs');
-  assert(f19!.wisdom.length === WISDOM_STOP_MAX_INPUTS, 'wisdom slice is capped at 2');
-  assert(f19!.wisdom.every((b) => b.questionId !== 'next_move'), 'optional free-text overflows to habit slice');
-  assert(
-    f19!.habitOverflow.length === 1 && f19!.habitOverflow[0].questionId === 'next_move',
-    'the third input is the habit overflow',
-  );
+  assert(f19!.wisdom.length === 3, 'all three compact inputs remain together in Wisdom');
+  assert(f19!.wisdom.length <= WISDOM_STOP_MAX_INPUTS, 'Wisdom stays within its four-input quality gate');
+  assert(f19!.wisdom.some((b) => b.questionId === 'next_move'), 'optional free-text remains in Wisdom');
+  assert(f19!.habitOverflow.length === 0, 'Habit never receives Compass overflow');
 
-  // Slice completeness: the Wisdom slice needs both required taps; the overflow
-  // slice (optional next_move) is trivially complete.
+  // Slice completeness: Wisdom needs both required taps; retired overflow is empty.
   assert(!isFragmentSlotComplete(f19!, 'wisdom', {}), 'empty wisdom slice is incomplete');
   assert(
     !isFragmentSlotComplete(f19!, 'wisdom', {
@@ -856,10 +859,11 @@ function testIslandFragment(): void {
   assert(getIslandFragment(999) === null, 'out-of-range island has no fragment');
   assert(isIslandFragmentComplete(999, {}), 'no fragment → trivially complete (never blocks a stop)');
 
-  // splitIslandInputs is a pure split over an activity's blocks.
+  // splitIslandInputs is a pure answerable-input selector.
   const a20 = getActivityDefinition('living_wheel.a20');
   const split = splitIslandInputs(a20!);
   assert(split.inputs.every((b) => b.type !== 'review' && b.type !== 'confirmation'), 'split excludes non-input blocks');
+  assert(split.habitOverflow.length === 0, 'split never routes reflection into Habit');
 }
 
 function testPlayerOptionPickers(): void {
@@ -1258,6 +1262,57 @@ function testDemoBook(): void {
   );
 }
 
+function testWisdomCompassUsefulness(): void {
+  assert(scoreCompassIllumination(0, 40) === 0, 'an untouched signal is open potential');
+  assert(scoreCompassIllumination(1, 40) === 1, 'the first answer creates a visible first clue');
+  assert(scoreCompassIllumination(20, 40) === 2, 'half-complete is taking shape');
+  assert(scoreCompassIllumination(30, 40) === 3, 'substantial progress is a clear path');
+  assert(scoreCompassIllumination(34, 40) === 4, '85% completion is a strong signal');
+
+  const signals = buildCompassIllumination({
+    living_wheel: { completed: 1, total: 20 },
+    inner_compass: { completed: 0, total: 20 },
+    living_horizon: { completed: 20, total: 20 },
+    ikigai_map: { completed: 20, total: 20 },
+    quest_forge: { completed: 10, total: 20 },
+    personal_playbook: { completed: 0, total: 20 },
+  });
+  assert(signals.length === 4, 'the player sees four kind Compass signals');
+  assert(signals.find((signal) => signal.id === 'know')?.score === 1, 'Know combines chapters I and II');
+  assert(signals.find((signal) => signal.id === 'choose')?.score === 4, 'Choose combines chapters III and IV');
+  assert(signals.find((signal) => signal.id === 'act')?.score === 2, 'Act reads Quest Forge');
+  assert(signals.find((signal) => signal.id === 'sustain')?.stateLabel === 'Open potential', 'zero is opportunity language');
+
+  let testedActivities = 0;
+  for (const chapter of COMPASS_BOOK_CHAPTERS) {
+    const signalId = getCompassSignalIdForChapter(chapter.id);
+    assert(['know', 'choose', 'act', 'sustain'].includes(signalId), `${chapter.id} maps to a signal`);
+    for (const activity of chapter.activities) {
+      const answerable = activity.blocks.filter((block) => !['review', 'confirmation'].includes(block.type));
+      assert(answerable.length > 0, `${activity.id} has at least one meaningful player input`);
+      assert(
+        answerable.length <= WISDOM_STOP_MAX_INPUTS,
+        `${activity.id} stays within the four-input Wisdom quality gate`,
+      );
+      const block = answerable[0];
+      const value = demoValueForBlock(block);
+      assert(!!value, `${activity.id} has a testable authored answer shape`);
+      const insight = buildWisdomCompassInsight({
+        chapterId: chapter.id,
+        blocks: answerable,
+        values: { [block.questionId]: value ?? undefined },
+        playerData: EMPTY_COMPASS_PLAYER_DATA,
+      });
+      assert(insight.interpretation.length > 30, `${activity.id} explains why its answer matters`);
+      assert(insight.bridge.length > 30, `${activity.id} connects to the wider Compass loop`);
+      assert(insight.nextStep.length > 35, `${activity.id} offers a concrete authored practical use`);
+      assert(insight.growthNote.length > 20, `${activity.id} preserves agency and kind framing`);
+      testedActivities += 1;
+    }
+  }
+  assert(testedActivities === 120, 'all 120 island reflections pass the usefulness gate');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -1277,4 +1332,5 @@ export function runAllCompassBookTests(): void {
   testReading();
   testPageTurn();
   testDemoBook();
+  testWisdomCompassUsefulness();
 }

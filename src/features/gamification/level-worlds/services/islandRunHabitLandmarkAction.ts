@@ -25,6 +25,7 @@ export type HabitLandmarkContextResult = {
   todayLogs: HabitLogV2Row[];
   weekLogs: HabitLogV2Row[];
   choices: HabitLandmarkChoice[];
+  completedTodayChoices: HabitLandmarkChoice[];
   activeHabitCount: number;
   todayHabitCount: number;
 };
@@ -33,7 +34,7 @@ export type CompleteHabitLandmarkResult =
   | {
       ok: true;
       habit: HabitLandmarkChoice;
-      wasAlreadyCompleted: false;
+      wasAlreadyCompleted: boolean;
     }
   | {
       ok: false;
@@ -73,6 +74,50 @@ export function selectHabitLandmarkChoices(
         weekLogs.filter((log) => log.habit_id === habit.id),
       )
       && !completedHabitIds.has(habit.id)
+    ))
+    .map((habit) => ({
+      id: habit.id,
+      title: habit.title.trim(),
+      emoji: habit.emoji,
+      type: habit.type,
+      target_num: habit.target_num,
+      target_unit: habit.target_unit,
+      domain_key: habit.domain_key,
+    }))
+    .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }));
+}
+
+/**
+ * Resolve active Today habits that the player has already completed.
+ *
+ * These may satisfy the landmark as recognition of a genuine action, but the
+ * UI must not award habit XP or call `recordHabitCompletion` again.
+ */
+export function selectCompletedHabitLandmarkChoices(
+  habits: ReadonlyArray<HabitV2Row>,
+  todayLogs: ReadonlyArray<Pick<HabitLogV2Row, 'habit_id' | 'done'>>,
+  userId: string,
+  weekLogs: ReadonlyArray<HabitLogV2Row> = [],
+  referenceDate: Date = new Date(),
+): HabitLandmarkChoice[] {
+  const completedHabitIds = new Set(
+    todayLogs
+      .filter((log) => log.done)
+      .map((log) => log.habit_id),
+  );
+
+  return habits
+    .filter((habit) => (
+      habit.user_id === userId
+      && !habit.archived
+      && isHabitLifecycleActive(habit)
+      && Boolean(habit.title?.trim())
+      && completedHabitIds.has(habit.id)
+      && isHabitScheduledToday(
+        habit,
+        referenceDate,
+        weekLogs.filter((log) => log.habit_id === habit.id),
+      )
     ))
     .map((habit) => ({
       id: habit.id,
@@ -142,10 +187,71 @@ export async function loadHabitLandmarkContext(
         weekLogs,
         referenceDate,
       ),
+      completedTodayChoices: selectCompletedHabitLandmarkChoices(
+        habitsResult.data,
+        logsResult.data,
+        userId,
+        weekLogs,
+        referenceDate,
+      ),
       activeHabitCount: activeHabits.length,
       todayHabitCount: todayHabits.length,
     },
     error: null,
+  };
+}
+
+/**
+ * Let a real action already completed Today satisfy this island's Habit stop.
+ * No habit completion, XP, challenge, or daily-spin reward is emitted here.
+ */
+export async function acknowledgeCompletedHabitLandmarkChoice(input: {
+  userId: string;
+  habitId: string;
+  islandNumber: number;
+  intakeStage: GameLifeIntakeStage;
+}): Promise<CompleteHabitLandmarkResult> {
+  const contextResult = await loadHabitLandmarkContext(input.userId);
+  if (!contextResult.data) {
+    return {
+      ok: false,
+      code: 'load_failed',
+      message: contextResult.error ?? 'Your habits could not be checked.',
+    };
+  }
+
+  const habit = contextResult.data.completedTodayChoices.find(
+    (choice) => choice.id === input.habitId,
+  );
+  if (!habit) {
+    return {
+      ok: false,
+      code: 'not_eligible',
+      message: 'That completed habit is no longer available for Today.',
+    };
+  }
+
+  void recordGameLifeIntake({
+    userId: input.userId,
+    promptContext: 'habit_landmark',
+    islandNumber: input.islandNumber,
+    intakeStage: input.intakeStage,
+    lifeWheelArea: habit.domain_key,
+    state: 'completed',
+    linkedHabitId: habit.id,
+    payload: {
+      outcome: 'existing_habit_already_completed_acknowledged',
+      habit_title: habit.title,
+      habit_type: habit.type,
+      domain_key: habit.domain_key,
+      duplicate_habit_rewards: false,
+    },
+  });
+
+  return {
+    ok: true,
+    habit,
+    wasAlreadyCompleted: true,
   };
 }
 
