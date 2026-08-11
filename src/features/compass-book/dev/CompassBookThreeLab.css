@@ -1,0 +1,710 @@
+@font-face {
+  font-family: 'Compass Cinzel';
+  src: url('../assets/fonts/Cinzel-700.woff2') format('woff2');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Compass Garamond';
+  src: url('../assets/fonts/EBGaramond-400.woff2') format('woff2');
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #060713;
+}
+
+button {
+  font: inherit;
+}
+
+.compass-book-three-lab {
+  --paper: #f2e3ba;
+  --paper-deep: #d5bd86;
+  --ink: #24203b;
+  --gilt: #e4b85d;
+  --violet: #8254da;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  min-height: 100dvh;
+  overflow: hidden;
+  color: #fff6da;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(95, 71, 175, 0.34), transparent 28%),
+    radial-gradient(circle at 50% 80%, rgba(42, 76, 121, 0.2), transparent 38%),
+    linear-gradient(180deg, #090c1c 0%, #050611 100%);
+}
+
+.compass-book-three-lab::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  opacity: 0.35;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(141, 111, 255, 0.7) 0 1px, transparent 1.6px);
+  background-position: 13px 17px, 71px 103px;
+  background-size: 127px 151px, 181px 213px;
+}
+
+.compass-book-three-lab__canvas,
+.compass-book-three-lab__atmosphere {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.compass-book-three-lab__canvas {
+  z-index: 0;
+  touch-action: none;
+}
+
+.compass-book-three-lab__atmosphere {
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.34), transparent 14% 86%, rgba(0, 0, 0, 0.34)),
+    linear-gradient(180deg, rgba(4, 6, 17, 0.2), transparent 25% 70%, rgba(4, 6, 17, 0.68));
+}
+
+.compass-book-three-lab__workbench {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 20;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(96vw, 920px);
+  padding: 10px 12px;
+  border: 1px solid rgba(230, 188, 96, 0.44);
+  border-radius: 18px;
+  background: rgba(5, 8, 23, 0.82);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(16px);
+  transform: translateX(-50%);
+}
+
+.compass-book-three-lab__workbench > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.compass-book-three-lab__workbench span {
+  color: rgba(230, 215, 255, 0.72);
+  font: 0.68rem/1.2 system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.compass-book-three-lab__workbench strong {
+  font: 700 0.88rem/1.2 'Compass Cinzel', serif;
+}
+
+.compass-book-three-lab__controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.compass-book-three-lab__controls button,
+.compass-book-three-lab__metrics {
+  border: 1px solid rgba(226, 184, 92, 0.36);
+  color: rgba(255, 248, 225, 0.88);
+  background: rgba(28, 29, 69, 0.72);
+}
+
+.compass-book-three-lab__controls button {
+  padding: 6px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.68rem;
+}
+
+.compass-book-three-lab__controls button[aria-pressed='true'] {
+  color: #211536;
+  background: linear-gradient(180deg, #ffe8aa, #d9a640);
+}
+
+.compass-book-three-lab__open-book {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 8;
+  display: grid;
+  width: min(54vw, 245px);
+  min-height: min(64vh, 430px);
+  padding: 44px 22px;
+  border: 0;
+  color: #efd692;
+  text-align: center;
+  cursor: pointer;
+  background: transparent;
+  transform: translate(-50%, -51%);
+}
+
+.compass-book-three-lab__open-book::before {
+  position: absolute;
+  inset: 7% 5%;
+  z-index: -1;
+  border: 0;
+  border-radius: 7px;
+  content: '';
+  box-shadow: none;
+}
+
+.compass-book-three-lab__open-book span {
+  position: absolute;
+  top: 20%;
+  right: 0;
+  left: 0;
+  font: 700 clamp(0.72rem, 2.9vw, 1rem)/1.2 'Compass Cinzel', serif;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.compass-book-three-lab__open-book strong {
+  position: absolute;
+  top: 67%;
+  right: 4%;
+  left: 4%;
+  font: 700 clamp(1.45rem, 6vw, 2.35rem)/1.05 'Compass Cinzel', serif;
+  text-shadow: 0 2px 14px rgba(255, 207, 101, 0.2);
+}
+
+.compass-book-three-lab__open-book small {
+  position: absolute;
+  top: 80%;
+  right: 0;
+  left: 0;
+  color: rgba(231, 219, 255, 0.78);
+  font: italic 1rem/1.2 'Compass Garamond', serif;
+}
+
+.compass-book-three-lab__dom-spread {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 7;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  width: min(80%, 770px);
+  aspect-ratio: 0.84;
+  max-height: 68vh;
+  opacity: 1;
+  filter: drop-shadow(0 22px 28px rgba(0, 0, 0, 0.28));
+  transform: translate(-50%, -45%) perspective(1100px) rotateX(24deg);
+  transform-origin: center;
+  animation: compass-book-three-lab-pages-in 650ms 520ms both;
+}
+
+.compass-book-three-lab--phone-proof {
+  width: min(100vw, 390px);
+  min-height: 0;
+  height: min(100dvh, 844px);
+  border-radius: 24px;
+  box-shadow: 0 0 0 1px rgba(229, 189, 102, 0.2), 0 28px 90px rgba(0, 0, 0, 0.72);
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread {
+  width: 152%;
+  max-height: 66%;
+  animation: none;
+  transition: transform 520ms cubic-bezier(0.22, 0.8, 0.2, 1);
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--signals {
+  transform: translate(-33%, -43%) perspective(900px) rotateX(14deg);
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__dom-spread--summary {
+  transform: translate(-67%, -43%) perspective(900px) rotateX(14deg);
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__paper--left {
+  padding: 18px 9px 18px 15px;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__paper--right {
+  padding: 18px 15px 18px 9px;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__paper h1 {
+  font-size: 1.55rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__paper h2 {
+  font-size: 1.16rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__kicker {
+  font-size: 0.62rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__subtitle {
+  font-size: 0.82rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__signal strong {
+  font-size: 0.61rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__signal span {
+  font-size: 0.74rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__kind-note {
+  font-size: 0.72rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__meters strong {
+  font-size: 1.25rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__meters span {
+  font-size: 0.62rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__reading-copy span {
+  font-size: 0.64rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__reading-copy p {
+  font-size: 0.88rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__continue {
+  font-size: 0.76rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__close {
+  width: 36px;
+  height: 36px;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__tabs {
+  right: 0;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__open-book {
+  width: min(54%, 214px);
+  min-height: min(56%, 420px);
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__open-book span {
+  font-size: 0.72rem;
+}
+
+.compass-book-three-lab--phone-proof .compass-book-three-lab__open-book strong {
+  font-size: 1.45rem;
+}
+
+.compass-book-three-lab__paper {
+  position: relative;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(142, 102, 41, 0.45);
+  color: var(--ink);
+  background:
+    linear-gradient(90deg, rgba(117, 78, 30, 0.11), transparent 12% 88%, rgba(117, 78, 30, 0.09)),
+    repeating-linear-gradient(0deg, transparent 0 10px, rgba(84, 50, 23, 0.018) 11px),
+    var(--paper);
+  box-shadow: inset 0 0 28px rgba(106, 71, 29, 0.2);
+  font-family: 'Compass Garamond', Georgia, serif;
+}
+
+.compass-book-three-lab__paper--left {
+  padding: clamp(18px, 4.4vw, 46px) clamp(14px, 3vw, 34px) clamp(18px, 4vw, 40px) clamp(20px, 4.8vw, 52px);
+  border-radius: 5px 1px 1px 7px;
+  box-shadow: inset -20px 0 30px rgba(98, 67, 29, 0.17), inset 0 0 28px rgba(106, 71, 29, 0.16);
+}
+
+.compass-book-three-lab__paper--right {
+  padding: clamp(18px, 4.4vw, 46px) clamp(20px, 4.8vw, 52px) clamp(18px, 4vw, 40px) clamp(14px, 3vw, 34px);
+  border-radius: 1px 5px 7px 1px;
+  box-shadow: inset 20px 0 30px rgba(98, 67, 29, 0.17), inset 0 0 28px rgba(106, 71, 29, 0.16);
+}
+
+.compass-book-three-lab__kicker,
+.compass-book-three-lab__subtitle,
+.compass-book-three-lab__kind-note {
+  margin: 0;
+  text-align: center;
+}
+
+.compass-book-three-lab__kicker {
+  color: #785220;
+  font: 700 clamp(0.48rem, 1.4vw, 0.68rem)/1.2 'Compass Cinzel', serif;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.compass-book-three-lab__paper h1,
+.compass-book-three-lab__paper h2 {
+  color: #272044;
+  font-family: 'Compass Cinzel', serif;
+  text-align: center;
+}
+
+.compass-book-three-lab__paper h1 {
+  margin: 6px 0 3px;
+  font-size: clamp(1.1rem, 4.3vw, 2.1rem);
+}
+
+.compass-book-three-lab__paper h2 {
+  margin: 8px auto 12px;
+  max-width: 23ch;
+  font-size: clamp(0.86rem, 2.8vw, 1.5rem);
+  line-height: 1.12;
+}
+
+.compass-book-three-lab__subtitle {
+  color: #6a5a55;
+  font-size: clamp(0.62rem, 1.8vw, 0.9rem);
+}
+
+.compass-book-three-lab__illumination {
+  position: relative;
+  width: min(82%, 260px);
+  aspect-ratio: 1;
+  margin: clamp(12px, 3.6vw, 34px) auto 10px;
+  border: 1px solid rgba(142, 95, 26, 0.42);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(113, 69, 178, 0.23) 0 22%, transparent 23%),
+    repeating-radial-gradient(circle, transparent 0 18%, rgba(126, 85, 24, 0.18) 19% 19.7%, transparent 20% 29%);
+  box-shadow: inset 0 0 18px rgba(107, 67, 22, 0.18), 0 0 0 4px rgba(232, 184, 76, 0.11);
+}
+
+.compass-book-three-lab__signal-core {
+  position: absolute;
+  inset: 33%;
+  display: grid;
+  place-items: center;
+  border: 1px solid #c29139;
+  border-radius: 50%;
+  color: #6e35b5;
+  background: rgba(255, 246, 215, 0.7);
+  box-shadow: 0 0 18px rgba(111, 58, 178, 0.22);
+}
+
+.compass-book-three-lab__signal-core span {
+  font-size: clamp(1rem, 4vw, 2rem);
+}
+
+.compass-book-three-lab__signal {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  min-width: 48px;
+  color: #332749;
+  text-align: center;
+  line-height: 1;
+}
+
+.compass-book-three-lab__signal strong {
+  font: 700 clamp(0.48rem, 1.5vw, 0.68rem)/1 'Compass Cinzel', serif;
+}
+
+.compass-book-three-lab__signal span {
+  margin-top: 2px;
+  color: #7d4cb0;
+  font-size: clamp(0.58rem, 1.7vw, 0.82rem);
+}
+
+.compass-book-three-lab__signal small {
+  display: none;
+}
+
+.compass-book-three-lab__signal--know { top: 5%; left: 50%; transform: translateX(-50%); }
+.compass-book-three-lab__signal--choose { top: 47%; right: 1%; transform: translateY(-50%); }
+.compass-book-three-lab__signal--act { bottom: 5%; left: 50%; transform: translateX(-50%); }
+.compass-book-three-lab__signal--sustain { top: 47%; left: 1%; transform: translateY(-50%); }
+
+.compass-book-three-lab__signal-rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.compass-book-three-lab__signal-rings i {
+  --signal-angle: 0deg;
+  --signal-score: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(11% + var(--signal-score) * 3.2%);
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #a76be0, #d0a348);
+  box-shadow: 0 0 7px rgba(126, 72, 190, 0.46);
+  transform: rotate(var(--signal-angle)) translateX(27%);
+  transform-origin: left center;
+}
+
+.compass-book-three-lab__kind-note {
+  color: #6f605c;
+  font-size: clamp(0.55rem, 1.7vw, 0.78rem);
+  font-style: italic;
+  line-height: 1.15;
+}
+
+.compass-book-three-lab__meters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.compass-book-three-lab__meters div {
+  display: grid;
+  place-items: center;
+  min-height: 54px;
+  padding: 4px;
+  border: 1px solid rgba(141, 92, 26, 0.28);
+  border-radius: 6px;
+  background: rgba(255, 248, 225, 0.4);
+  text-align: center;
+}
+
+.compass-book-three-lab__meters strong {
+  color: #72419e;
+  font: 700 clamp(0.92rem, 3.2vw, 1.55rem)/1 'Compass Cinzel', serif;
+}
+
+.compass-book-three-lab__meters span {
+  color: #594d4c;
+  font-size: clamp(0.46rem, 1.3vw, 0.66rem);
+  line-height: 1.05;
+}
+
+.compass-book-three-lab__reading-copy {
+  padding: 9px;
+  border-top: 1px solid rgba(139, 92, 25, 0.32);
+  border-bottom: 1px solid rgba(139, 92, 25, 0.32);
+  text-align: center;
+}
+
+.compass-book-three-lab__reading-copy span {
+  color: #7d5723;
+  font: 700 clamp(0.5rem, 1.5vw, 0.7rem)/1 'Compass Cinzel', serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.compass-book-three-lab__reading-copy p {
+  margin: 5px 0 0;
+  font-size: clamp(0.65rem, 1.9vw, 0.94rem);
+  line-height: 1.16;
+}
+
+.compass-book-three-lab__continue {
+  display: grid;
+  width: 94%;
+  margin: clamp(8px, 2.5vw, 20px) auto 0;
+  padding: 8px;
+  border: 1px solid #b98331;
+  border-radius: 8px;
+  color: #fff4ce;
+  background: linear-gradient(180deg, #6f3aac, #352061);
+  box-shadow: inset 0 0 0 2px rgba(241, 196, 94, 0.25), 0 5px 10px rgba(80, 41, 101, 0.18);
+  font: 700 clamp(0.58rem, 1.8vw, 0.86rem)/1.15 'Compass Cinzel', serif;
+  cursor: pointer;
+}
+
+.compass-book-three-lab__continue span {
+  margin-top: 3px;
+  color: rgba(255, 241, 215, 0.72);
+  font: 0.72em/1 'Compass Garamond', serif;
+}
+
+.compass-book-three-lab__tabs {
+  position: absolute;
+  top: 12%;
+  right: -21px;
+  display: grid;
+  gap: 4px;
+}
+
+.compass-book-three-lab__tabs button {
+  width: 25px;
+  height: 29px;
+  padding: 0;
+  border: 1px solid #c38c34;
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
+  color: #fff0bf;
+  background: linear-gradient(90deg, #322759, #6d4b9b);
+  font: 700 0.54rem/1 'Compass Cinzel', serif;
+  cursor: pointer;
+}
+
+.compass-book-three-lab__tabs button:nth-child(odd) {
+  background: linear-gradient(90deg, #173f72, #3469a8);
+}
+
+.compass-book-three-lab__close {
+  position: absolute;
+  top: 10px;
+  right: 13px;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(107, 73, 32, 0.5);
+  border-radius: 50%;
+  color: #44334e;
+  background: rgba(255, 246, 220, 0.66);
+  cursor: pointer;
+}
+
+.compass-book-three-lab__close--floating {
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  color: #f8e4ae;
+  background: rgba(23, 20, 53, 0.84);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(12px);
+}
+
+.compass-book-three-lab__page-focus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 90%;
+  margin: 12px auto 0;
+  padding: 8px;
+  border: 1px solid rgba(139, 91, 27, 0.4);
+  border-radius: 999px;
+  color: #4a315f;
+  background: rgba(255, 249, 228, 0.56);
+  font: 700 0.74rem/1 'Compass Cinzel', serif;
+  cursor: pointer;
+}
+
+.compass-book-three-lab__page-focus span {
+  color: #7e43b6;
+  font-size: 1.15rem;
+}
+
+.compass-book-three-lab__page-focus--back {
+  width: auto;
+  margin: 0 0 4px;
+  padding: 5px 9px;
+  justify-self: start;
+}
+
+.compass-book-three-lab__fallback {
+  position: fixed;
+  bottom: 54px;
+  z-index: 20;
+  width: min(86vw, 520px);
+  padding: 10px;
+  border: 1px solid rgba(255, 198, 111, 0.44);
+  border-radius: 10px;
+  background: rgba(20, 11, 40, 0.88);
+  text-align: center;
+}
+
+.compass-book-three-lab__metrics {
+  position: fixed;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  gap: 9px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+  font: 0.62rem/1 system-ui, sans-serif;
+  white-space: nowrap;
+}
+
+.compass-book-three-lab__metrics span:first-child {
+  color: #e9bd74;
+}
+
+.compass-book-three-lab__metrics span.is-ready {
+  color: #8be0b3;
+}
+
+@keyframes compass-book-three-lab-pages-in {
+  from { opacity: 0; transform: translate(-50%, -45%) perspective(1100px) rotateX(24deg) scale(0.94); }
+  to { opacity: 1; transform: translate(-50%, -45%) perspective(1100px) rotateX(24deg) scale(1); }
+}
+
+@media (max-width: 620px) {
+  .compass-book-three-lab__workbench {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .compass-book-three-lab__workbench > div:first-child {
+    display: none;
+  }
+
+  .compass-book-three-lab__controls {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .compass-book-three-lab__dom-spread {
+    width: 88vw;
+    max-height: 62vh;
+    transform: translate(-50%, -43%) perspective(900px) rotateX(19deg);
+  }
+
+  .compass-book-three-lab__paper--left {
+    padding-left: 15px;
+    padding-right: 9px;
+  }
+
+  .compass-book-three-lab__paper--right {
+    padding-left: 9px;
+    padding-right: 15px;
+  }
+
+  .compass-book-three-lab__close {
+    top: 5px;
+    right: 6px;
+    width: 23px;
+    height: 23px;
+  }
+
+  .compass-book-three-lab__metrics {
+    gap: 6px;
+    font-size: 0.55rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compass-book-three-lab__dom-spread {
+    animation: none;
+  }
+}

@@ -2,7 +2,8 @@
 
 ## Status
 
-Four-image final-look reference pack complete and awaiting visual approval.
+Four-image final-look reference pack approved. The first hybrid-3D vertical
+slice is implemented and locally verified, awaiting Eivind's visual review.
 No production Compass Book UI has been replaced during this stage.
 
 ## Product truth to preserve
@@ -93,7 +94,8 @@ The completed references are stored in
 ## Implementation slices after visual approval
 
 1. Build an isolated `CompassBookThreeLab` with the closed cover and Reading
-   spread only.
+   spread only. **Approved by Eivind and in active implementation on
+   2026-08-11.**
 2. Calibrate a phone camera and DOM page-plane layout against reference 02.
 3. Connect the existing `CompassBookScreen` view/page-turn state read-only.
 4. Add quality tiers, reduced motion, resize/orientation, and fallback.
@@ -106,3 +108,36 @@ The completed references are stored in
 - The 3D layer becomes a second source of Compass state.
 - A page turn can swallow input or block close/back navigation.
 - High sustains below 50 FPS or Low below 55 FPS on the iPhone proof.
+
+## Vertical-slice checkpoint — 2026-08-11
+
+Implemented an isolated `compass-book-3d-lab.html` with:
+
+- a procedural Three.js leather cover, spine, page block, gilded hardware,
+  raised cover compass, chapter tabs, and illuminated Reading compass;
+- a skippable closed-cover to open-spread transition;
+- real DOM Reading content, controls, headings, progress values, and page
+  navigation layered over the physical book;
+- a phone-specific readable focus: the book stays open while the camera/view
+  glides between the Signals page and Summary page instead of shrinking both
+  pages until the type becomes unreadable;
+- High/Low quality tiers, reduced-motion behavior, and a CSS/DOM-readable
+  fallback if WebGL fails.
+
+Evidence is stored in
+`docs/gauntlets/evidence/compass-book-3d-lab-v1/`.
+
+QA record:
+
+- 390x844 closed cover, Signals page, and Summary page proofs captured.
+- High: 60 FPS, 100 render calls, approximately 10.6k rendered triangles.
+- Low: 60 FPS, 40 render calls, approximately 2.3k rendered triangles.
+- Reduced motion removes page-entry animation and resolves directly to the
+  requested pose.
+- No console errors.
+- TypeScript, Compass Book tests, production Vite build, architecture guard,
+  and `git diff --check` are required before checkpoint commit.
+
+Next integration slice after visual approval: place this shell around the real
+`CompassBookScreen` Reading data read-only, then connect existing page
+navigation without moving persistence or answer authority into Three.js.
