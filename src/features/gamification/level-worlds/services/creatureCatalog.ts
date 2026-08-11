@@ -1,6 +1,8 @@
 import type { EggTier } from './eggService';
+import { isIslandRunArenaExclusiveCreatureId } from './islandRunArenaCreatureRoster';
 
 export type ShipZone = 'zen' | 'energy' | 'cosmic';
+export type CreatureAcquisitionSource = 'generic_egg' | 'creature_pack' | 'arena' | 'dev';
 
 export interface CreatureDefinition {
   id: string;
@@ -139,13 +141,33 @@ export function getCreatureById(creatureId: string): CreatureDefinition | null {
   return CREATURE_CATALOG.find((creature) => creature.id === creatureId) ?? null;
 }
 
+export function canCreatureBeAcquiredFromSource(
+  creature: Pick<CreatureDefinition, 'id'> | string,
+  source: CreatureAcquisitionSource,
+): boolean {
+  const creatureId = typeof creature === 'string' ? creature : creature.id;
+  if (source === 'dev') return true;
+  const isArenaExclusive = isIslandRunArenaExclusiveCreatureId(creatureId);
+  return source === 'arena' ? isArenaExclusive : !isArenaExclusive;
+}
+
+export function getCreatureAcquisitionPool(options: {
+  source: CreatureAcquisitionSource;
+  tier?: EggTier;
+}): CreatureDefinition[] {
+  return CREATURE_CATALOG.filter((creature) => (
+    (options.tier === undefined || creature.tier === options.tier)
+    && canCreatureBeAcquiredFromSource(creature, options.source)
+  ));
+}
+
 export function selectCreatureForEgg(options: {
   eggTier: EggTier;
   seed: number;
   islandNumber: number;
 }): CreatureDefinition {
   const { eggTier, seed, islandNumber } = options;
-  const pool = CREATURES_BY_TIER[eggTier];
+  const pool = CREATURES_BY_TIER[eggTier].filter((creature) => canCreatureBeAcquiredFromSource(creature, 'generic_egg'));
   const index = Math.abs((seed * 17) + (islandNumber * 31)) % pool.length;
   return pool[index] ?? pool[0];
 }
@@ -198,7 +220,11 @@ function getFeaturedCreaturePoolForIsland(options: { islandNumber: number; eggTi
   if (ids.length === 0) return [];
   return ids
     .map((id) => getCreatureById(id))
-    .filter((creature): creature is CreatureDefinition => Boolean(creature && creature.tier === eggTier));
+    .filter((creature): creature is CreatureDefinition => Boolean(
+      creature
+      && creature.tier === eggTier
+      && canCreatureBeAcquiredFromSource(creature, 'generic_egg'),
+    ));
 }
 
 /**

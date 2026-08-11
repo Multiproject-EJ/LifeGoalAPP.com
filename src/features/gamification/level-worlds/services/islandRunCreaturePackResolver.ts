@@ -1,5 +1,5 @@
 import {
-  CREATURE_CATALOG,
+  getCreatureAcquisitionPool,
   type CreatureDefinition,
 } from './creatureCatalog';
 import type {
@@ -59,7 +59,7 @@ function chooseTierForSlot(slotIndex: number, seed: string, slotWeights: Creatur
 }
 
 function getCreaturesForTier(tier: CreaturePackTier): CreatureDefinition[] {
-  return CREATURE_CATALOG.filter((creature) => creature.tier === tier);
+  return getCreatureAcquisitionPool({ source: 'creature_pack', tier });
 }
 
 function chooseCreatureForSlot(options: {
@@ -81,7 +81,7 @@ function chooseCreatureForSlot(options: {
     : uniqueTierPool.length > 0 ? uniqueTierPool : tierPool;
 
   if (requireUnownedFallback && (pool.length < 1 || pool.every((creature) => originallyOwnedCreatureIds.has(creature.id)))) {
-    const anyUnownedUniquePool = CREATURE_CATALOG.filter((creature) => (
+    const anyUnownedUniquePool = getCreatureAcquisitionPool({ source: 'creature_pack' }).filter((creature) => (
       !usedCreatureIds.has(creature.id)
       && !originallyOwnedCreatureIds.has(creature.id)
     ));
@@ -91,7 +91,7 @@ function chooseCreatureForSlot(options: {
   }
 
   const index = hashStringToUint32(`${seed}:creature:${slotIndex}:${tier}:${preferUnowned ? 'new' : 'any'}`) % Math.max(1, pool.length);
-  return pool[index] ?? CREATURE_CATALOG[0];
+  return pool[index] ?? getCreatureAcquisitionPool({ source: 'creature_pack' })[0];
 }
 
 function getCopies(collection: CreatureCollectionRuntimeEntry[], creatureId: string): number {
@@ -126,7 +126,8 @@ export function buildCreaturePackCards(options: {
   ].join(':');
   const usedCreatureIds = new Set<string>();
   const originallyOwnedCreatureIds = new Set(current.creatureCollection.filter((entry) => entry.copies > 0).map((entry) => entry.creatureId));
-  const availableUnownedCount = CREATURE_CATALOG.filter((creature) => !originallyOwnedCreatureIds.has(creature.id)).length;
+  const availableUnownedCount = getCreatureAcquisitionPool({ source: 'creature_pack' })
+    .filter((creature) => !originallyOwnedCreatureIds.has(creature.id)).length;
   const guaranteedNewTarget = Math.min(minNewCreatureCards, availableUnownedCount);
   let newCreatureCards = 0;
   let workingCollection = [...current.creatureCollection];

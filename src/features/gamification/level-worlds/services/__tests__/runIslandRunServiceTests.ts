@@ -166,7 +166,12 @@ import { islandRunRoutekeeperTinyActionsTests } from './islandRunRoutekeeperTiny
 import { islandRunHabitLandmarkActionTests } from './islandRunHabitLandmarkAction.test';
 import { islandRunFirstPlayerModalSchedulerTests } from './islandRunFirstPlayerModalScheduler.test';
 import { islandCameraLockedKitTests } from './islandCameraLockedKit.test';
+import { islandRun3DWorldRoutingTests } from './islandRun3DWorldRouting.test';
 import { island5ThreePilotContractTests } from './island5ThreePilotContract.test';
+import { islandRunArenaCreaturePresentationTests } from './islandRunArenaCreaturePresentation.test';
+import { islandRunArenaCreatureRosterTests } from './islandRunArenaCreatureRoster.test';
+import { islandRunCreatureArenaBattleTests } from './islandRunCreatureArenaBattle.test';
+import { islandRunBuildOpenFlowTests } from './islandRunBuildOpenFlow.test';
 import { caretakerThreeModelContractTests } from './caretakerThreeModelContract.test';
 import { feedPetCompanionPresentationTests } from '../../../../habits/feedPetCompanionPresentation.test';
 import type { TestCase } from './testHarness';
@@ -177,7 +182,12 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'dailySpinRewardPolicy', tests: dailySpinRewardPolicyTests },
   { label: 'islandRunDailySpinRewardAction', tests: islandRunDailySpinRewardActionTests },
   { label: 'islandCameraLockedKit', tests: islandCameraLockedKitTests },
+  { label: 'islandRun3DWorldRouting', tests: islandRun3DWorldRoutingTests },
   { label: 'island5ThreePilotContract', tests: island5ThreePilotContractTests },
+  { label: 'islandRunArenaCreaturePresentation', tests: islandRunArenaCreaturePresentationTests },
+  { label: 'islandRunArenaCreatureRoster', tests: islandRunArenaCreatureRosterTests },
+  { label: 'islandRunCreatureArenaBattle', tests: islandRunCreatureArenaBattleTests },
+  { label: 'islandRunBuildOpenFlow', tests: islandRunBuildOpenFlowTests },
   { label: 'caretakerThreeModelContract', tests: caretakerThreeModelContractTests },
   { label: 'creatureCatalog', tests: creatureCatalogTests },
   { label: 'creatureCollectionService', tests: creatureCollectionServiceTests },

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
+import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
 import { evaluateIslandKit, ISLAND_KIT_SCENE, ISLAND_KIT_VERSION } from './islandCameraLockedKit';
 import Island5ThreePilot from './Island5ThreePilot';
 import './IslandTemplateKitPage.css';
@@ -15,13 +16,15 @@ function readInitialPreviewState() {
   const requestedLevelParam = params.get('level');
   const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
   const islandParam = Number(params.get('island'));
-  const islandNumber = islandParam === 1 || islandParam === 2 ? islandParam : 5;
+  const islandNumber = [1, 2, 3, 4, 5].includes(islandParam) ? islandParam : 5;
+  const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
   return {
     mode: requestedMode === 'clay' || requestedMode === 'proof' || requestedMode === '3d'
       ? requestedMode
       : 'blueprint' as ViewMode,
     buildLevel: ([0, 1, 2, 3].includes(requestedLevel) ? requestedLevel : 3) as BuildLevel,
-    islandNumber: islandNumber as 1 | 2 | 5,
+    islandNumber,
+    worldSourceNumber,
     overlays: params.get('guides') !== '0',
   };
 }
@@ -177,7 +180,11 @@ export default function IslandTemplateKitPage() {
         <div className="island-kit-phone" data-testid="island-kit-phone">
           <div className="island-kit-phone__notch" />
           {mode === '3d' ? (
-            <Island5ThreePilot islandNumber={initialState.islandNumber} buildLevel={buildLevel} />
+            <Island5ThreePilot
+              islandNumber={initialState.islandNumber}
+              worldSourceNumber={initialState.worldSourceNumber}
+              buildLevel={buildLevel}
+            />
           ) : (
             <>
               <div className="island-kit-phone__hud"><span>ISLAND TEMPLATE</span><strong>BOARD LOCKED</strong></div>

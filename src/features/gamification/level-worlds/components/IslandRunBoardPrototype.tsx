@@ -31,6 +31,8 @@ import {
   ISLAND_RUN_CONTROLLER_SLOT_MAP,
   getIslandRunControllerSlotStyle,
 } from '../services/islandRunControllerVisualContract';
+import { resolveIslandRunBuildOpenDisposition } from '../services/islandRunBuildOpenFlow';
+import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
 import { BoardStage, type BoardStageCameraControls } from './board';
 import { ConfettiBurst } from './ConfettiBurst';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
@@ -2126,15 +2128,12 @@ export function IslandRunBoardPrototype({
     return undefined;
   }, [islandNumber]);
   const islandArtPreviewNumber = isIslandVisualPreview ? islandVisualIslandNumber : islandNumber;
-  // Islands 001 and 002 consume isolated visual world packs without
-  // duplicating movement, interaction, camera, or gameplay state.
-  const island3DWorldNumber: 1 | 2 | 5 | null = islandArtPreviewNumber === 1
-    ? 1
-    : islandArtPreviewNumber === 2
-      ? 2
-      : islandArtPreviewNumber === 5
-        ? 5
-        : null;
+  // Runtime identity and authored visual source are deliberately separate.
+  // Island 004 uses the former Crown Citadel world; Island 005 uses the open
+  // tropical Sunwheel Arena. Story, progression, rewards, and persistence
+  // continue to use `islandArtPreviewNumber`.
+  const island3DWorldRoute = resolveIslandRun3DWorldRoute(islandArtPreviewNumber);
+  const island3DWorldNumber = island3DWorldRoute?.worldSourceNumber ?? null;
   const canUseIsland5Three = island3DWorldNumber !== null;
   const shouldRenderIsland5Three = canUseIsland5Three && isIsland5ThreeEnabled;
   const activeTheme = useMemo(() => getIslandBoardThemeForIslandNumber(islandArtPreviewNumber), [islandArtPreviewNumber]);
@@ -2446,6 +2445,7 @@ export function IslandRunBoardPrototype({
   const [hasVisitedWebTreat, setHasVisitedWebTreat] = useState(() => hasVisitedLandingPageTreat());
   const [showMarketPanel, setShowMarketPanel] = useState(false);
   const [showBuildPanel, setShowBuildPanel] = useState(false);
+  const [isBuildOpenQueued, setIsBuildOpenQueued] = useState(false);
   const [buildCameraFocusRequest, setBuildCameraFocusRequest] = useState<{
     preset: Island5CameraPresetId;
     transition: 'standard' | 'quick';
@@ -2520,7 +2520,8 @@ export function IslandRunBoardPrototype({
     });
   }, [client, firstSessionTutorialState, session]);
 
-  const openBuildPanelFromFooter = useCallback(() => {
+  const openBuildPanelNow = useCallback(() => {
+    setIsBuildOpenQueued(false);
     setShowBuildPanel(true);
     const targetStates = resolveIslandRunBuildPromptClickTransitionTargets(firstSessionTutorialState);
     for (const targetState of targetStates) {
@@ -2532,6 +2533,25 @@ export function IslandRunBoardPrototype({
       });
     }
   }, [client, firstSessionTutorialState, session]);
+
+  const openBuildPanelFromFooter = useCallback(() => {
+    const disposition = resolveIslandRunBuildOpenDisposition({
+      isRolling,
+      hasPendingHopSequence: pendingHopSequence !== null,
+      isAnimatingHop: isAnimatingRollRef.current,
+    });
+    if (disposition === 'queue_until_landed') {
+      setIsBuildOpenQueued(true);
+      setLandingText('🔨 Build is ready — opening when your piece lands.');
+      return;
+    }
+    openBuildPanelNow();
+  }, [isRolling, openBuildPanelNow, pendingHopSequence]);
+
+  useEffect(() => {
+    if (!isBuildOpenQueued || isRolling || pendingHopSequence !== null || isAnimatingRollRef.current) return;
+    openBuildPanelNow();
+  }, [isBuildOpenQueued, isRolling, openBuildPanelNow, pendingHopSequence]);
 
   useEffect(() => {
     const boardElement = boardRef.current;
@@ -13014,7 +13034,7 @@ export function IslandRunBoardPrototype({
                   }}
                 >
                   <span>{isIsland5ThreeEnabled ? '✓' : '○'}</span>
-                  <span>{isIsland5ThreeEnabled ? 'Use 2D fallback' : `Use 3D Island ${island3DWorldNumber}`}</span>
+                  <span>{isIsland5ThreeEnabled ? 'Use 2D fallback' : `Use 3D Island ${islandArtPreviewNumber}`}</span>
                   <span aria-hidden="true">🏝️</span>
                 </button>
               ) : null}
@@ -13435,12 +13455,13 @@ export function IslandRunBoardPrototype({
             <Suspense
               fallback={(
                 <div className="island-run-board__three-preview-loading" role="status">
-                  Loading Island {island3DWorldNumber} in 3D…
+                  Loading Island {islandArtPreviewNumber} in 3D…
                 </div>
               )}
             >
               <Island5ThreeScene
-                islandNumber={island3DWorldNumber ?? 5}
+                islandNumber={islandArtPreviewNumber}
+                worldSourceNumber={island3DWorldNumber ?? 5}
                 buildLevel={island5ThreePreviewLevel}
                 landmarkBuildLevels={isIslandVisualPreview ? undefined : island5ThreeBuildLevels}
                 presentation="embedded"
