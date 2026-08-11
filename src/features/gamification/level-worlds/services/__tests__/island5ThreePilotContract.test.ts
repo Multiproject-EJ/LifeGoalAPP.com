@@ -1,6 +1,7 @@
 import { TILE_ANCHORS_36 } from '../islandBoardLayout';
 import {
   buildIsland5AmbienceLayout,
+  buildIsland3DRadialTileMeshData,
   buildIsland5TileTransforms,
   CROWN_CITADEL_DESIGN_LOCK,
   CROWN_CITADEL_DETAIL_PROFILES,
@@ -230,6 +231,33 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
       assert(pilotSource.includes("facetedGeometry.name = 'ISLAND_SHARED_RADIAL_TILE_TRAPEZOID'"), 'all three worlds must use the one shared tapered geometry');
       assert(!pilotSource.includes('new THREE.BoxGeometry(0.62, 0.18, 0.92)'), 'the overlapping rectangular tile geometry must remain retired');
+    },
+  },
+  {
+    name: 'keeps every radial tile face outward so the top surface remains visible',
+    run: () => {
+      const mesh = buildIsland3DRadialTileMeshData(TILE_ANCHORS_36.length);
+      const normalForTriangle = (offset: number): readonly [number, number, number] => {
+        const [ia, ib, ic] = mesh.indices.slice(offset, offset + 3);
+        const vertex = (index: number) => mesh.positions.slice(index * 3, index * 3 + 3);
+        const [ax, ay, az] = vertex(ia);
+        const [bx, by, bz] = vertex(ib);
+        const [cx, cy, cz] = vertex(ic);
+        const ab = [bx - ax, by - ay, bz - az];
+        const ac = [cx - ax, cy - ay, cz - az];
+        return [
+          (ab[1] * ac[2]) - (ab[2] * ac[1]),
+          (ab[2] * ac[0]) - (ab[0] * ac[2]),
+          (ab[0] * ac[1]) - (ab[1] * ac[0]),
+        ];
+      };
+
+      assert(normalForTriangle(0)[1] < 0, 'bottom face must point downward');
+      assert(normalForTriangle(6)[1] > 0, 'top face must point upward toward the game camera');
+      assert(normalForTriangle(12)[2] < 0, 'outer wall must point away from the ring');
+      assert(normalForTriangle(18)[0] > 0, 'right wall must point outward');
+      assert(normalForTriangle(24)[2] > 0, 'inner wall must point toward the ring centre');
+      assert(normalForTriangle(30)[0] < 0, 'left wall must point outward');
     },
   },
   {

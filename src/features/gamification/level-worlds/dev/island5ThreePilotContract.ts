@@ -139,6 +139,12 @@ export interface Island3DRadialTileGeometrySpec {
   outerWidth: number;
 }
 
+export interface Island3DRadialTileMeshData {
+  spec: Island3DRadialTileGeometrySpec;
+  positions: readonly number[];
+  indices: readonly number[];
+}
+
 export const ISLAND_3D_ROUTE_RADIUS = 3.4;
 export const ISLAND_3D_TILE_RADIAL_DEPTH = 0.92;
 export const ISLAND_3D_TILE_HEIGHT = 0.18;
@@ -228,6 +234,44 @@ export function resolveIsland3DRadialTileGeometry(
     outerRadius,
     innerWidth: widthAtRadius(innerRadius),
     outerWidth: widthAtRadius(outerRadius),
+  };
+}
+
+/**
+ * Builds one closed radial prism with every face wound toward the outside.
+ * Three.js culls back faces by default, so the winding is part of the visual
+ * contract: the top must face +Y and remain visible from the game camera.
+ */
+export function buildIsland3DRadialTileMeshData(tileCount: number): Island3DRadialTileMeshData {
+  const spec = resolveIsland3DRadialTileGeometry(tileCount);
+  const halfHeight = spec.height / 2;
+  const outerZ = -spec.radialDepth / 2;
+  const innerZ = spec.radialDepth / 2;
+  const outerHalfWidth = spec.outerWidth / 2;
+  const innerHalfWidth = spec.innerWidth / 2;
+
+  return {
+    spec,
+    positions: [
+      -outerHalfWidth, -halfHeight, outerZ,
+      outerHalfWidth, -halfHeight, outerZ,
+      innerHalfWidth, -halfHeight, innerZ,
+      -innerHalfWidth, -halfHeight, innerZ,
+      -outerHalfWidth, halfHeight, outerZ,
+      outerHalfWidth, halfHeight, outerZ,
+      innerHalfWidth, halfHeight, innerZ,
+      -innerHalfWidth, halfHeight, innerZ,
+    ],
+    indices: [
+      // bottom (-Y), top (+Y)
+      0, 1, 2, 0, 2, 3,
+      4, 6, 5, 4, 7, 6,
+      // outer (-Z), right (+X), inner (+Z), left (-X)
+      0, 4, 5, 0, 5, 1,
+      1, 5, 6, 1, 6, 2,
+      3, 2, 6, 3, 6, 7,
+      0, 3, 7, 0, 7, 4,
+    ],
   };
 }
 

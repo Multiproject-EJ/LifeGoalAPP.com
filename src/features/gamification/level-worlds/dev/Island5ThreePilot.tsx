@@ -12,6 +12,7 @@ import {
 } from './CrownCitadelThreeModel';
 import {
   buildIsland5AmbienceLayout,
+  buildIsland3DRadialTileMeshData,
   buildIsland5TileTransforms,
   CROWN_CITADEL_DETAIL_PROFILES,
   CROWN_CITADEL_LEVEL_SCALES,
@@ -112,32 +113,11 @@ interface ActiveTileImpact {
 }
 
 function createRadialTileGeometry(tileCount: number): THREE.BufferGeometry {
-  const spec = resolveIsland3DRadialTileGeometry(tileCount);
-  const halfHeight = spec.height / 2;
-  const outerZ = -spec.radialDepth / 2;
-  const innerZ = spec.radialDepth / 2;
-  const outerHalfWidth = spec.outerWidth / 2;
-  const innerHalfWidth = spec.innerWidth / 2;
+  const meshData = buildIsland3DRadialTileMeshData(tileCount);
   const geometry = new THREE.BufferGeometry();
 
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute([
-    -outerHalfWidth, -halfHeight, outerZ,
-    outerHalfWidth, -halfHeight, outerZ,
-    innerHalfWidth, -halfHeight, innerZ,
-    -innerHalfWidth, -halfHeight, innerZ,
-    -outerHalfWidth, halfHeight, outerZ,
-    outerHalfWidth, halfHeight, outerZ,
-    innerHalfWidth, halfHeight, innerZ,
-    -innerHalfWidth, halfHeight, innerZ,
-  ], 3));
-  geometry.setIndex([
-    0, 2, 1, 0, 3, 2,
-    4, 5, 6, 4, 6, 7,
-    0, 1, 5, 0, 5, 4,
-    1, 2, 6, 1, 6, 5,
-    2, 3, 7, 2, 7, 6,
-    3, 0, 4, 3, 4, 7,
-  ]);
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(meshData.positions, 3));
+  geometry.setIndex(meshData.indices);
   const facetedGeometry = geometry.toNonIndexed();
   geometry.dispose();
   facetedGeometry.computeVertexNormals();
