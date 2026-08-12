@@ -46,10 +46,97 @@ import {
   ISLAND_7_ROUTE_CLEARANCE_OUTER_RADIUS,
   registerIsland7RuntimePart,
 } from '../../dev/Island7UnderwaterThreeWorld';
+import {
+  buildIsland8EverblossomLandmark,
+  collectIsland8RuntimePartManifest,
+  createIsland8EverblossomMaterials,
+  isIsland8RouteCorridorClear,
+  ISLAND_8_FLOWER_BORDER_INNER_RADIUS,
+  ISLAND_8_FLOWER_BORDER_MAX_FOOTPRINT,
+  ISLAND_8_FLOWER_BORDER_OUTER_RADIUS,
+  ISLAND_8_ROUTE_CLEARANCE_INNER_RADIUS,
+  ISLAND_8_ROUTE_CLEARANCE_OUTER_RADIUS,
+  ISLAND_8_RUNTIME_PART_IDS,
+  registerIsland8RuntimePart,
+} from '../../dev/Island8EverblossomThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'keeps Island 008 botanical scenery outside the route and all five L3 silhouettes distinct',
+    run: async () => {
+      assert(isIsland8RouteCorridorClear(ISLAND_8_ROUTE_CLEARANCE_INNER_RADIUS - 0.2, 0, 0.16), 'inner citadel gardens may remain inside the route with clearance');
+      assert(!isIsland8RouteCorridorClear(3.4, 0, 0.01), 'Everblossom scenery may not enter the canonical tile centreline');
+      assert(isIsland8RouteCorridorClear(ISLAND_8_ROUTE_CLEARANCE_OUTER_RADIUS + 0.2, 0, 0.16), 'outer garden beds may begin beyond the route with clearance');
+      assert(
+        ISLAND_8_FLOWER_BORDER_INNER_RADIUS - ISLAND_8_FLOWER_BORDER_MAX_FOOTPRINT >= ISLAND_8_ROUTE_CLEARANCE_OUTER_RADIUS,
+        'the inner flower-border row must remain beyond the protected tile corridor',
+      );
+      assert(
+        isIsland8RouteCorridorClear(ISLAND_8_FLOWER_BORDER_OUTER_RADIUS, 0, ISLAND_8_FLOWER_BORDER_MAX_FOOTPRINT),
+        'the outer flower-border row must preserve route clearance at full petal footprint',
+      );
+      const materials = createIsland8EverblossomMaterials();
+      const roots = ISLAND_5_LANDMARKS.map((landmark) => buildIsland8EverblossomLandmark(landmark, 3, 'low', materials));
+      const silhouettes = roots.map((root) => {
+        const bounds = new THREE.Box3().setFromObject(root);
+        const size = bounds.getSize(new THREE.Vector3());
+        return `${size.x.toFixed(2)}:${size.y.toFixed(2)}:${size.z.toFixed(2)}`;
+      });
+      assertEqual(new Set(silhouettes).size, 5, 'all five Everblossom L3 landmarks need distinct bounding silhouettes');
+      const citadel = roots.find((root) => root.name.includes('BOSS'))!;
+      const citadelHeight = new THREE.Box3().setFromObject(citadel).getSize(new THREE.Vector3()).y;
+      const satelliteHeights = roots.filter((root) => root !== citadel).map((root) => new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3()).y);
+      assert(citadelHeight > Math.max(...satelliteHeights), 'Blossom Crown Citadel must remain the dominant vertical landmark');
+      roots.forEach((root) => root.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose();
+          const objectMaterials = Array.isArray(object.material) ? object.material : [object.material];
+          objectMaterials.forEach((material) => material.dispose());
+        }
+      }));
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island8EverblossomThreeWorld.ts', 'utf8');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      assert(worldSource.includes("root.name = 'ISLAND_8_BLOSSOM_CROWN_CITADEL'"), 'Island 008 needs its unique central citadel factory');
+      assert(worldSource.includes("outerCrown"), 'Citadel L3 needs a monumental open crown silhouette');
+      assert(worldSource.includes("root.name = 'ISLAND_8_SUNFLOWER_RHYTHM_PAVILION'"), 'Habit must remain an open sunflower pavilion');
+      assert(worldSource.includes("root.name = 'ISLAND_8_LEAFROOF_GARDEN_HALL'"), 'Mystery must retain a broad leafroof silhouette');
+      assert(worldSource.includes("root.name = 'ISLAND_8_ORCHID_CRYSTAL_ARCHIVE'"), 'Wisdom must retain a faceted orchid-crystal silhouette');
+      assert(worldSource.includes("butterflyRoot.name = 'ISLAND_8_BUTTERFLY_DEPTH_LAYERS'"), 'Everblossom needs quality-scaled butterfly depth layers');
+      assert(worldSource.includes("waterfallRoot.name = 'ISLAND_8_SPRING_WATERFALL_NETWORK'"), 'Everblossom needs visible spring and waterfall motion');
+      assert(worldSource.includes("border.name = 'ISLAND_8_TILE_RING_FLOWER_BORDER'"), 'Everblossom needs a deliberate flower border outside the tile ring');
+      assert(pilotSource.includes("isEverblossomKingdom || isAbyssalPearlKingdom") || pilotSource.includes("isAbyssalPearlKingdom || isEverblossomKingdom"), 'Island 008 must participate in shared renderer conditionals without a separate gameplay shell');
+      assert(pilotSource.includes("new URLSearchParams(window.location.search).get('island3dMapStripped') === '1'"), 'Island 008 must retain deterministic map-stripped evidence mode');
+    },
+  },
+  {
+    name: 'exports the Island 008 action-ready runtime hierarchy',
+    run: () => {
+      const root = new THREE.Group();
+      root.name = 'ISLAND_8_ACTION_READY_TEST_ROOT';
+      root.userData.sculptRuntime = {
+        clickable: true,
+        explodable: true,
+        parts: ISLAND_8_RUNTIME_PART_IDS.map((partId) => {
+          const pivot = new THREE.Object3D();
+          pivot.name = `ISLAND_8_${partId.toUpperCase()}_PIVOT`;
+          root.add(pivot);
+          return registerIsland8RuntimePart(partId, pivot, 'contract-test');
+        }),
+        sockets: { focus: 'ISLAND_8_TEST_FOCUS_SOCKET' },
+        colliders: [{ id: 'test-trigger', type: 'box', isTrigger: true }],
+        destructionGroups: [{ id: 'static-world', breakable: false }],
+      };
+      const manifest = collectIsland8RuntimePartManifest([root]);
+      assertEqual(new Set(manifest.parts.map((part) => part.name)).size, ISLAND_8_RUNTIME_PART_IDS.length, 'every Island 008 runtime part needs a stable selectable ID');
+      assert(root.userData.sculptRuntime.clickable && root.userData.sculptRuntime.explodable, 'Island 008 roots must expose click and exploded-review intent');
+      assert(root.userData.sculptRuntime.sockets.focus, 'Island 008 roots need a named focus socket');
+      assert(root.userData.sculptRuntime.colliders.length > 0, 'Island 008 roots need collider intent');
+    },
+  },
   {
     name: 'exports the Island 007 action-ready runtime hierarchy from built Three objects',
     run: () => {
@@ -656,7 +743,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7].includes(islandParam)'), 'the workbench should expose all seven authored islands for repeatable landmark QA');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8].includes(islandParam)'), 'the workbench should expose all eight authored islands for repeatable landmark QA');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
       assert(mainSource.includes('import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED'), 'internal profiler bundle must not register the production service worker');

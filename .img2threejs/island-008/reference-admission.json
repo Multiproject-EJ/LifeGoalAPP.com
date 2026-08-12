@@ -1,0 +1,16 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "semanticVerdict": "conditional-stylized-reconstruction",
+  "provenance": {
+    "viewpoint": "phone-overview",
+    "sourcePath": "docs/visual-references/island-008-flower-kingdom/island-008-flower-kingdom-goal-v1.png",
+    "width": 941,
+    "height": 1672,
+    "foregroundCoverage": 0.9413,
+    "largestComponentFraction": 1.0,
+    "pHash": 15690768416568006661,
+    "duplicateOfHash": null
+  },
+  "limitationsEvidence": ".img2threejs/island-008/image-analysis.md"
+}

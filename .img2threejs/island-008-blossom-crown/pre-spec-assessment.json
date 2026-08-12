@@ -1,0 +1,320 @@
+{
+  "targetName": "Blossom Crown Citadel",
+  "sourceImage": "docs/visual-references/island-008-flower-kingdom/island-008-flower-kingdom-goal-v1.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "botanical palace tower",
+      "primaryDomain": "object",
+      "formLanguage": ["architectural", "organic", "botanical-like", "sculptural"],
+      "structureKind": ["branching hierarchy", "repeated modules", "layered shell", "compound object"],
+      "motionPotential": ["static architecture", "subtle breathing flower crown", "swaying hero petals"],
+      "materialFamilies": ["ivory stone", "living root", "leaf", "petal", "glass-like", "antique gold"],
+      "notes": "Focused reconstruction of the central Blossom Crown Citadel from the admitted front-three-quarter scene and two existing Citadel detail zones."
+    },
+    "complexity": {
+      "tier": "ultra-complex",
+      "scores": {
+        "silhouetteComplexity": 3,
+        "componentCount": 3,
+        "hierarchyDepth": 3,
+        "repetitionDensity": 3,
+        "materialLayerCount": 3,
+        "localDetailDensity": 3,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 2
+      },
+      "estimatedCounts": {
+        "macroComponents": 5,
+        "mesoComponents": 18,
+        "microFeatureGroups": 12,
+        "materialLayers": 6,
+        "repetitionSystems": 7
+      },
+      "reasoning": [
+        "The silhouette is interrupted by three stepped tiers, asymmetric side pods, petal balconies and a crown wider than the upper tower.",
+        "Fidelity depends on repeated arched windows, gold tracery, petal arrays, vine buttresses, leaf clusters and crown stamens.",
+        "The visible facade mixes six distinct material families and dense local relief.",
+        "Rear construction is partially occluded and must repeat the visible facade grammar with explicitly lower confidence."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "ultra-complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Ultra-complex is required because the tower reads through nested architectural and botanical assemblies rather than a single primitive silhouette."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      "Rear facade and crown underside are hidden; infer them from the visible arched-window and petal systems at confidence 0.6.",
+      "Exact internal rooms are not visible and are outside scope; windows need depth and warm interiors only.",
+      "The goal camera differs from the locked HabitGame phone camera; preserve structure and palette rather than pixel projection."
+    ],
+    "detailInventory": {
+      "scanMethod": "grid-3x3",
+      "targetMinDetails": 16,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {"id":"crown-outer-petal-ridge","kind":"ridge","description":"Twelve broad coral lotus petals create an open crown wider than the upper tower.","region":{"x":0.3333,"y":0.08,"width":0.3333,"height":0.22,"units":"normalized"},"scale":"macro","affects":"open crown silhouette","mapsTo":{"type":"component.localFeatures","ref":"crown-outer-petal-array"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r0c1.png","confidence":0.99},
+        {"id":"crown-inner-petal-ridge","kind":"ridge","description":"A second paler upright petal row closes the crown cavity without forming a dome.","region":{"x":0.39,"y":0.11,"width":0.22,"height":0.16,"units":"normalized"},"scale":"meso","affects":"crown depth","mapsTo":{"type":"component.localFeatures","ref":"crown-inner-petal-array"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r0c1.png","confidence":0.96},
+        {"id":"crown-gold-stamens","kind":"ridge","description":"Antique-gold stamens rise visibly through the open lotus cavity.","region":{"x":0.46,"y":0.13,"width":0.08,"height":0.1,"units":"normalized"},"scale":"micro","affects":"crown botanical identity","mapsTo":{"type":"component.localFeatures","ref":"crown-stamen-cluster"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r0c1.png","confidence":0.91},
+        {"id":"upper-planted-ring","kind":"contour","description":"A dense green planted ring separates the upper conservatory from the lotus crown.","region":{"x":0.34,"y":0.27,"width":0.32,"height":0.07,"units":"normalized"},"scale":"meso","affects":"crown grounding","mapsTo":{"type":"component.localFeatures","ref":"upper-leaf-garland"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r0c1.png","confidence":0.97},
+        {"id":"upper-window-tracery","kind":"linework","description":"The upper emerald arched window carries branching antique-gold botanical tracery.","region":{"x":0.44,"y":0.32,"width":0.12,"height":0.1,"units":"normalized"},"scale":"meso","affects":"inhabited facade","mapsTo":{"type":"component.localFeatures","ref":"arched-window-tracery-array"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r0c1.png","confidence":0.97},
+        {"id":"tiered-ivory-cornices","kind":"bevel","description":"Each tier has a broad softened ivory cornice with a narrow antique-gold edge band.","region":{"x":0.34,"y":0.28,"width":0.32,"height":0.25,"units":"normalized"},"scale":"meso","affects":"tier separation","mapsTo":{"type":"component.localFeatures","ref":"tier-cornice-array"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r0c1.png","confidence":0.94},
+        {"id":"middle-lotus-balcony","kind":"ridge","description":"A coral lotus cup projects from the middle tower and supports a large emerald window.","region":{"x":0.36,"y":0.35,"width":0.28,"height":0.2,"units":"normalized"},"scale":"meso","affects":"flower architecture","mapsTo":{"type":"component.localFeatures","ref":"middle-lotus-balcony"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r1c1.png","confidence":0.99},
+        {"id":"lower-lotus-balcony","kind":"ridge","description":"A second lower lotus balcony wraps an arched window above the main doorway.","region":{"x":0.36,"y":0.45,"width":0.28,"height":0.18,"units":"normalized"},"scale":"meso","affects":"stacked bloom rhythm","mapsTo":{"type":"component.localFeatures","ref":"lower-lotus-balcony"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r1c1.png","confidence":0.98},
+        {"id":"side-flower-pods","kind":"contour","description":"Alternating side flower cups project from short rooted branches at staggered heights.","region":{"x":0.28,"y":0.3,"width":0.44,"height":0.35,"units":"normalized"},"scale":"meso","affects":"asymmetric silhouette","mapsTo":{"type":"component.localFeatures","ref":"side-flower-pod-array"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r1c1.png","confidence":0.9},
+        {"id":"vine-buttress-ridges","kind":"ridge","description":"Living vines rise from the plinth and branch around windows into higher cornices.","region":{"x":0.34,"y":0.28,"width":0.32,"height":0.38,"units":"normalized"},"scale":"meso","affects":"living tower continuity","mapsTo":{"type":"component.localFeatures","ref":"branching-vine-buttresses"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r1c1.png","confidence":0.92},
+        {"id":"main-pointed-door","kind":"hole","description":"The front entrance is a deep pointed arch with a dark emerald door and visible recess.","region":{"x":0.44,"y":0.56,"width":0.12,"height":0.12,"units":"normalized"},"scale":"meso","affects":"enterable boss landmark","mapsTo":{"type":"component.localFeatures","ref":"main-door-recess"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r1c1.png","confidence":0.99},
+        {"id":"door-ivory-frame","kind":"bevel","description":"A thick ivory pointed arch frame and paired columns project around the doorway.","region":{"x":0.41,"y":0.52,"width":0.18,"height":0.17,"units":"normalized"},"scale":"meso","affects":"facade depth","mapsTo":{"type":"component.localFeatures","ref":"door-arch-frame"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r1c1.png","confidence":0.98},
+        {"id":"window-gold-mullions","kind":"linework","description":"Emerald windows use radial gold mullions and pointed arch ribs rather than flat panes.","region":{"x":0.34,"y":0.33,"width":0.32,"height":0.3,"units":"normalized"},"scale":"micro","affects":"premium inhabited read","mapsTo":{"type":"component.localFeatures","ref":"gold-mullion-array"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r1c1.png","confidence":0.97},
+        {"id":"petal-edge-highlight","kind":"contour","description":"Coral petals carry pale ivory-pink edge rims that remain readable in sunlight.","region":{"x":0.34,"y":0.1,"width":0.32,"height":0.5,"units":"normalized"},"scale":"micro","affects":"petal separation","mapsTo":{"type":"material.localOverrides","ref":"petal-edge-response"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r0c1.png","confidence":0.93},
+        {"id":"petal-midveins","kind":"ridge","description":"Large crown and balcony petals show a central raised midrib.","region":{"x":0.34,"y":0.1,"width":0.32,"height":0.5,"units":"normalized"},"scale":"micro","affects":"botanical relief","mapsTo":{"type":"component.localFeatures","ref":"petal-midrib-array"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r0c1.png","confidence":0.9},
+        {"id":"ivory-stone-relief","kind":"stain","description":"Ivory stone has shallow relief and cavity-darkened seams beneath cornices and balconies.","region":{"x":0.34,"y":0.28,"width":0.32,"height":0.42,"units":"normalized"},"scale":"micro","affects":"stone depth","mapsTo":{"type":"material.localOverrides","ref":"ivory-cavity-response"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r1c1.png","confidence":0.88},
+        {"id":"balcony-leaf-clusters","kind":"contour","description":"Green leaf clusters fill gaps beneath balcony petals and around window frames.","region":{"x":0.31,"y":0.3,"width":0.38,"height":0.35,"units":"normalized"},"scale":"micro","affects":"botanical density","mapsTo":{"type":"component.localFeatures","ref":"balcony-leaf-cluster-array"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r1c1.png","confidence":0.91},
+        {"id":"garden-flower-clusters","kind":"contour","description":"Small orchid and meadow flower clusters punctuate the planted plinth and balcony rims.","region":{"x":0.34,"y":0.44,"width":0.32,"height":0.3,"units":"normalized"},"scale":"micro","affects":"flower-city density","mapsTo":{"type":"component.localFeatures","ref":"citadel-flower-cluster-array"},"evidenceRef":".img2threejs/island-008/detail-zones/zone-r1c1.png","confidence":0.86}
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "docs/visual-references/island-008-flower-kingdom/island-008-flower-kingdom-goal-v1.png"
+  },
+  "qualityContract": {
+    "qualityBar": "ultra-complex",
+    "definitionOfDone": [
+      "At phone overview scale the Citadel reads as the same asymmetric multi-tier flower-tree palace as the reference rather than a decorated cylinder.",
+      "L1 is a finished garden keep, L2 adds a clearly connected middle bloom tower and side pods, and L3 adds the planted upper conservatory plus monumental open crown without replacing earlier construction.",
+      "The real 36-tile route remains fully legible; no Citadel architecture or foliage enters the protected route corridor.",
+      "High quality remains below 180k scene triangles and preserves at least 50 FPS in representative profiling."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 5,
+        "mesoComponents": 18,
+        "microFeatureGroups": 12,
+        "materialLayers": 6,
+        "repetitionSystems": 7,
+      "reviewViewpoints": 5
+    },
+    "featureGroups": [
+      {
+        "id": "flower-tree-silhouette",
+        "name": "Asymmetric flower-tree silhouette",
+        "required": true,
+        "qualityCriteria": [
+          "Three stepped tiers, staggered side pods and a crown wider than the upper tower remain readable from overview and both orbit views."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "tower reads as a straight cylinder",
+          "crown reads as a small roof or closed dome"
+        ]
+      },
+      {
+        "id": "stacked-bloom-architecture",
+        "name": "Stacked bloom architecture",
+        "required": true,
+        "qualityCriteria": [
+          "Every lotus balcony cups an arched window and visibly overlaps a supporting tier.",
+          "L1, L2 and L3 remain additive stages of one building."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "flowers read as pasted props rather than architecture",
+          "L2 or L3 swaps to a different tower identity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Blossom Crown Citadel botanical architecture lotus petal balcony arched glass window vine buttress procedural Three.js instancing mobile performance architectural ornament",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.description-controlled-vocabulary-aat-facets",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.description_conventions[5]",
+        "score": 4.663400716505,
+        "snippets": [
+          "Standardized terminology (Getty Art & Architecture Thesaurus facets for materials, activities, physical attributes) replacing vague or inconsistent free-text terms. Thuật ngữ chuẩn hóa (các facet của Getty Art & Architecture Thesaurus cho vật ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.description_conventions[5]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.uv-strategy",
+        "file_path": "grimoire/glossary/3d_vocabulary.md",
+        "heading": "Geometry And Topology",
+        "key_path": null,
+        "score": 4.011652417667,
+        "snippets": [
+          "UV strategy can use generated procedural coordinates, cylindrical projection, triplanar-like mapping, or atlas-ready unwrapped regions."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/glossary/3d_vocabulary.md",
+            "heading": "Geometry And Topology",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/glossary/3d_vocabulary.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      },
+      {
+        "record_id": "core.shader-mapping-customshadermaterial-csm-weathering-hooks",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.rendering_shader_mapping[1]",
+        "score": 3.84412682908,
+        "snippets": [
+          "Extension library exposing csm_* output variables to inject procedural noise/masks into an otherwise-standard lit material, used for dynamic tarnish/patina effects. Thư viện mở rộng cung cấp các biến đầu ra csm_* để chèn nhiễu/mặt nạ thủ tục vào ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.rendering_shader_mapping[1]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  }
+}
