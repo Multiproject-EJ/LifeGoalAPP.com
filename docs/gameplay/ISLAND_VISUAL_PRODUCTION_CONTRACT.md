@@ -1,5 +1,10 @@
 # Island Visual Production Contract
 
+For a new interactive actual-3D world, begin with
+[`ISLAND_ACTUAL_3D_PRODUCTION_PLAYBOOK.md`](./ISLAND_ACTUAL_3D_PRODUCTION_PLAYBOOK.md).
+This contract remains the visual authority; the playbook supplies the reusable
+reference → img2threejs → implementation → Gauntlet → physical-phone sequence.
+
 The reusable camera, footprint and phone-validation scaffold is defined in
 [`ISLAND_CAMERA_LOCKED_KIT.md`](./ISLAND_CAMERA_LOCKED_KIT.md). New island
 production must begin from that kit rather than inventing scene geometry per
