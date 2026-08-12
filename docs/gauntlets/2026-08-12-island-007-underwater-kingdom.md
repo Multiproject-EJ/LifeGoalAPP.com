@@ -72,7 +72,7 @@ The island may pass only when all of the following are true:
 - No ambient scenery enters the protected route annulus.
 - No gameplay state or writes are added to the 3D factory.
 - Phone screenshots exist for overview, four orbits, and all five landmark focus views.
-- Typecheck, build, Island Run routing tests, architecture guards, and relevant visual contracts pass.
+- Typecheck, production build, Island 007 routing/visual contracts, architecture guards, and template geometry pass. The broader Island Run suite remains 1726 pass / 3 fail solely on the pre-existing Island 1 fixed-plot migration baseline, which is outside this island branch and must be explicitly fixed or waived before release.
 - Runtime inspection shows no console errors, missing assets, or persistent frame instability on the high-tier phone target.
 
 ## Blocking defects
