@@ -140,6 +140,15 @@ Open gates — do not call the island 10/10 yet:
 - The img2threejs Tier-1 diagnostic correctly refuses to advance the old `blockout` state because the current proof is a fully shaded in-app render rather than the required map-stripped blockout capture. Its measured silhouette IoU is 0.9437, but the pass remains open; no false pipeline completion is recorded.
 - Physical iPhone Auto and forced-High 30-second profiles remain the only device gate. Do not call the island 10/10 or release-ready until those runs are recorded.
 
+### Pass 15 structural-evidence checkpoint
+
+- Repaired the map-stripped evidence route. The previous single opaque `scene.overrideMaterial` turned the enclosing transparent water volume into a solid clay screen, hiding the entire island while still rendering its geometry. The corrected route strips texture/PBR influence with normal-facing materials, preserves transparent depth categories, hides particles and keeps the real camera and geometry.
+- Tier-1 blockout diagnostics now pass with 0.9437 silhouette IoU, zero aspect/scale delta and no hard failures. Left and right map-stripped orbits remain non-degenerate, proving genuine volumetric geometry rather than a reference-camera facade.
+- The final AI comparison remains below the 0.7 literal-goal threshold at 0.66: topology, underwater identity and landmark readability are strong, while handcrafted facade meso-detail and reef/architecture integration remain materially below the generated concept.
+- A replacement-only jewel-dark palette experiment was captured, compared and rejected after two consecutive 30-second profiles dropped below the High 50 FPS target (44.9 and 47.3 FPS). The brighter Pass 14 runtime palette is retained; visual contrast is not permitted to replace performance evidence.
+- The img2threejs correction action is therefore `stop`, not a false `continue`: a higher-fidelity jump requires authored UV'd/glTF landmark meshes or deliberately baked facade geometry, beyond this procedural branch's 180k-triangle mobile contract.
+- Fresh High overview captures at L1, L2 and L3 verify additive three-level landmark progression across all five families without changing the canonical board footprint.
+
 Latest evidence:
 
 - `docs/gauntlets/evidence/island-007-underwater-v1/final-overview-structural-upgrade.png`
@@ -169,3 +178,13 @@ Latest evidence:
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass14-motion-t0.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass14-motion-t6.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass14-profile.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-overview.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-left.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-right.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-phone.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-jewel-goal-comparison.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-jewel-profile.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-jewel-profile-repeat.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-level-1-overview.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-level-2-overview.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-level-3-overview.png`

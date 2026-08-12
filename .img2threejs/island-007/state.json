@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "active",
   "profile": "generic",
-  "currentStep": "tier1-diagnostics",
+  "currentStep": "await-pass-transition",
   "currentPass": "blockout",
   "checklist": [
     {
@@ -149,40 +149,54 @@
     {
       "id": "tier1-diagnostics",
       "scope": "pass",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-007/island-007-sculpt-spec.json",
+        "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-phone.png"
+      ],
       "reason": "",
       "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
     },
     {
       "id": "multi-angle-review",
       "scope": "pass",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-overview-phone.png",
+        "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-left-phone.png",
+        "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-right-phone.png"
+      ],
       "reason": "",
       "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
     },
     {
       "id": "pass-gate-check",
       "scope": "pass",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-007/island-007-sculpt-spec.json"
+      ],
       "reason": "",
       "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
     },
     {
       "id": "ai-review-recorded",
       "scope": "pass",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-jewel-goal-comparison.png",
+        ".img2threejs/island-007/island-007-sculpt-spec.json"
+      ],
       "reason": "",
       "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
     },
     {
       "id": "pipeline-sync",
       "scope": "pass",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-007/island-007-sculpt-spec.json"
+      ],
       "reason": "",
       "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
     },
@@ -371,7 +385,7 @@
       ]
     }
   ],
-  "reviewCursor": 2,
+  "reviewCursor": 3,
   "iterationAction": "refine-code",
   "stopReason": ""
 }

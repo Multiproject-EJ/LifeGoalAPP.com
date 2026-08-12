@@ -3724,10 +3724,40 @@ export default function Island5ThreePilot({
     // blockout can be judged on silhouette and structure alone.
     const isMapStrippedEvidence = (isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom)
       && new URLSearchParams(window.location.search).get('island3dMapStripped') === '1';
-    const evidenceOverrideMaterial = isMapStrippedEvidence
-      ? new THREE.MeshBasicMaterial({ color: 0xb8c1bd, side: THREE.DoubleSide })
-      : null;
-    if (evidenceOverrideMaterial) scene.overrideMaterial = evidenceOverrideMaterial;
+    const evidenceMaterials: THREE.Material[] = [];
+    if (isMapStrippedEvidence) {
+      // A single scene.overrideMaterial turns the enclosing transparent water
+      // volume opaque and hides every structure behind it. Preserve the
+      // authored depth/visibility categories while stripping maps, PBR and
+      // particles so the Gauntlet can judge real geometry rather than a blank
+      // clay screen.
+      scene.background = new THREE.Color(0x17242d);
+      scene.environment = null;
+      scene.traverse((object) => {
+        if (object instanceof THREE.Points) {
+          object.visible = false;
+          return;
+        }
+        if (!(object instanceof THREE.Mesh || object instanceof THREE.InstancedMesh || object instanceof THREE.LineSegments)) return;
+        const sourceMaterials = Array.isArray(object.material) ? object.material : [object.material];
+        const structuralMaterials = sourceMaterials.map((sourceMaterial) => {
+          const structuralMaterial = object instanceof THREE.LineSegments
+            ? new THREE.LineBasicMaterial({ color: 0x8ba0a8, transparent: true, opacity: 0.72 })
+            : new THREE.MeshNormalMaterial({
+                transparent: sourceMaterial.transparent,
+                opacity: sourceMaterial.transparent
+                  ? Math.min(0.16, Math.max(0.05, sourceMaterial.opacity * 0.18))
+                  : 1,
+                depthWrite: !sourceMaterial.transparent,
+                side: THREE.DoubleSide,
+              });
+          structuralMaterial.name = 'ISLAND_3D_MAP_STRIPPED_EVIDENCE_MATERIAL';
+          evidenceMaterials.push(structuralMaterial);
+          return structuralMaterial;
+        });
+        object.material = Array.isArray(object.material) ? structuralMaterials : structuralMaterials[0];
+      });
+    }
 
     const timer = new THREE.Timer();
     timer.connect(document);
@@ -4611,7 +4641,7 @@ export default function Island5ThreePilot({
       scene.remove(boardCaretaker.root);
       boardCaretaker.dispose();
       disposeScene(scene);
-      evidenceOverrideMaterial?.dispose();
+      evidenceMaterials.forEach((material) => material.dispose());
       tileGeometry.dispose();
       tileMaterials.forEach((material) => material.dispose());
       moonveilTileEdgeGeometry?.dispose();

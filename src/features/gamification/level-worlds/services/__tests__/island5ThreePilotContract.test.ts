@@ -71,6 +71,11 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(worldSource.includes('const focusView = cameraPosition.distanceTo(cameraTarget) < 13.5'), 'underwater landmark focus must cull distant transparent ambience by camera semantics');
       assert(worldSource.includes('const sideOrbitView = !focusView'), 'side-orbit cameras must cull only off-camera hero fauna before the geometry budget is sampled');
       assert(pilotSource.includes('livingAmbience.updateView?.(camera.position, controls.target);'), 'view culling must receive the active camera target without reading gameplay state');
+      assert(pilotSource.includes("new URLSearchParams(window.location.search).get('island3dMapStripped') === '1'"), 'the Gauntlet must expose a deterministic map-stripped evidence route');
+      assert(pilotSource.includes('if (object instanceof THREE.Points)'), 'map-stripped structural evidence must hide particles instead of flattening them into opaque clay');
+      assert(pilotSource.includes('new THREE.MeshNormalMaterial'), 'map-stripped evidence must expose form and facing without authored maps or PBR response');
+      assert(pilotSource.includes('opacity: sourceMaterial.transparent'), 'map-stripped evidence must preserve transparent envelope depth rather than occluding the island');
+      assert(!pilotSource.includes('scene.overrideMaterial = evidenceOverrideMaterial'), 'map-stripped evidence must not use one opaque scene override that blanks the water volume');
       assert(worldSource.includes('bubblePosition.set('), 'bubble animation must reuse scratch vectors instead of allocating per bubble per frame');
       assert(!worldSource.includes('shaft.position.x +='), 'light shafts must use absolute time-based motion without cumulative drift');
       assert(!worldSource.includes('fish.position.y +='), 'foreground fish must not accumulate frame-rate-dependent vertical drift');

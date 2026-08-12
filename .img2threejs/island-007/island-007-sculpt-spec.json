@@ -965,8 +965,9 @@
       "Quality contract has named all required macro feature groups before code generation.",
       "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
       "browser render screenshot from your agent's browser/screenshot tool",
-      "single side-by-side full reference/render comparison sheet",
-      "all critical semantic feature scores at or above their thresholds",
+      "side-by-side reference/render comparison sheet for AI vision review",
+      "AI vision score at or above the visual acceptance threshold",
+      "all critical semantic feature scores from the shared image pair at or above their thresholds",
       "self-correction review appended with action=continue before the next pass"
     ]
   },
@@ -7879,6 +7880,54 @@
       "cameraView": "portrait-phone overview plus five focus views and 360 orbit QC",
       "notes": "Actual live Three.js phone canvas compared directly with the approved concept; no claim of 10/10.",
       "aiVisionNotes": "Pass 12 is a coherent production island and substantially closer than pass 11, but it remains visibly less authored than the concept because surface density, architectural reef integration, and jewel PBR hierarchy are still shallower."
+    },
+    {
+      "timestamp": "2026-08-12T10:36:29.106409+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.66,
+      "aiVisionScore": 0.66,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.86,
+        "topology": 0.84,
+        "materials": 0.68,
+        "lighting": 0.69,
+        "mesoDetail": 0.55,
+        "reefIntegration": 0.58,
+        "phoneReadability": 0.82
+      },
+      "featureReviews": [
+        {
+          "id": "canonical-board",
+          "score": 0.9,
+          "critical": true,
+          "notes": "Circular route and five-lobe layout remain clear."
+        },
+        {
+          "id": "landmark-identity",
+          "score": 0.75,
+          "critical": true,
+          "notes": "Five families read distinctly, but palace and satellites are simpler than goal."
+        },
+        {
+          "id": "underwater-atmosphere",
+          "score": 0.78,
+          "critical": true,
+          "notes": "Surface rays, depth backdrop and cool-water framing read immediately."
+        },
+        {
+          "id": "architectural-richness",
+          "score": 0.55,
+          "critical": false,
+          "notes": "Goal carries much denser hand-authored facade and reef detail."
+        }
+      ],
+      "referenceScreenshot": "docs/visual-references/island-007-underwater/island-007-underwater-goal-v1.png",
+      "renderScreenshot": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-jewel-phone.png",
+      "comparisonImage": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-jewel-goal-comparison.png",
+      "cameraView": "phone overview plus left/right orbit",
+      "notes": "Stopped rather than falsely continuing: score is below the 0.7 visual threshold and the remaining gap requires a different authored asset pipeline, not another bounded procedural correction.",
+      "aiVisionNotes": "The current island is a coherent production-oriented procedural mobile interpretation, not a literal pixel match. The palette change improves deep-water separation and gold hierarchy, while the dominant remaining gap is handcrafted meso detail that cannot be responsibly added inside the 180k-triangle ceiling."
     }
   ],
   "reviewHistory": [
@@ -8054,6 +8103,88 @@
         "cameraView": "portrait-phone overview plus five focus views and 360 orbit QC",
         "notes": "Actual live Three.js phone canvas compared directly with the approved concept; no claim of 10/10.",
         "aiVisionNotes": "Pass 12 is a coherent production island and substantially closer than pass 11, but it remains visibly less authored than the concept because surface density, architectural reef integration, and jewel PBR hierarchy are still shallower."
+      }
+    },
+    {
+      "timestamp": "2026-08-12T10:36:29.106409+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.66,
+      "aiVisionScore": 0.66,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.86,
+        "topology": 0.84,
+        "materials": 0.68,
+        "lighting": 0.69,
+        "mesoDetail": 0.55,
+        "reefIntegration": 0.58,
+        "phoneReadability": 0.82
+      },
+      "featureReviews": [
+        {
+          "id": "canonical-board",
+          "score": 0.9,
+          "critical": true,
+          "notes": "Circular route and five-lobe layout remain clear."
+        },
+        {
+          "id": "landmark-identity",
+          "score": 0.75,
+          "critical": true,
+          "notes": "Five families read distinctly, but palace and satellites are simpler than goal."
+        },
+        {
+          "id": "underwater-atmosphere",
+          "score": 0.78,
+          "critical": true,
+          "notes": "Surface rays, depth backdrop and cool-water framing read immediately."
+        },
+        {
+          "id": "architectural-richness",
+          "score": 0.55,
+          "critical": false,
+          "notes": "Goal carries much denser hand-authored facade and reef detail."
+        }
+      ],
+      "action": "stop",
+      "summary": "Pass 15 closes the procedural blockout evidence loop: the map-stripped route now exposes real geometry, Tier-1 passes at 0.9437 silhouette IoU, and left/right orbits remain volumetric. The final shaded palette replacement deepens stone/terrain while preserving route and budget.",
+      "matched": [
+        "Canonical circular 36-tile topology",
+        "five distinct landmark silhouettes",
+        "complete volumetric root and satellite massing",
+        "underwater fauna and surface-ray composition",
+        "phone overview readability"
+      ],
+      "mismatches": [
+        "Generated target remains substantially denser in facade meso ornament",
+        "goal integrates reef growth more deeply into every plinth",
+        "live camera dev HUD partially obscures upper-right ambience",
+        "single concept cannot define hidden rear ornament exactly"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "Future fidelity jump requires replacing selected procedural landmark shells with authored UV'd/glTF meshes or deliberate baked facade geometry",
+        "do not add more high-tier primitives beyond the current triangle ceiling"
+      ],
+      "evidence": [
+        "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-jewel-phone.png",
+        "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-phone.png",
+        "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-left-phone.png",
+        "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-right-phone.png"
+      ],
+      "mapStrippedRender": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-phone.png",
+      "reviewViewpoints": [
+        "overview",
+        "orbit-left",
+        "orbit-right"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/visual-references/island-007-underwater/island-007-underwater-goal-v1.png",
+        "renderScreenshot": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-jewel-phone.png",
+        "comparisonImage": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-jewel-goal-comparison.png",
+        "cameraView": "phone overview plus left/right orbit",
+        "notes": "Stopped rather than falsely continuing: score is below the 0.7 visual threshold and the remaining gap requires a different authored asset pipeline, not another bounded procedural correction.",
+        "aiVisionNotes": "The current island is a coherent production-oriented procedural mobile interpretation, not a literal pixel match. The palette change improves deep-water separation and gold hierarchy, while the dominant remaining gap is handcrafted meso detail that cannot be responsibly added inside the 180k-triangle ceiling."
       }
     }
   ],
@@ -8441,6 +8572,134 @@
       ],
       "renderHash": "be99f140bc75f342",
       "passId": "blockout"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9437,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0033,
+        "colorDelta": {
+          "checked": 26,
+          "maxDeltaE": 70.82,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 26.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 26.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 70.82
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 63.25
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 25.46
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 25.46
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.47
+            },
+            {
+              "componentId": null,
+              "deltaE": 63.25
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 70.82
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "be99f140bc75f342",
+      "passId": "blockout",
+      "mapStrippedRender": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass15-map-stripped-phone.png"
     }
   ]
 }
