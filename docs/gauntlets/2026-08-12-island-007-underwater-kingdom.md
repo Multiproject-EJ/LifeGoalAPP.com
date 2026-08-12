@@ -124,6 +124,7 @@ Open gates — do not call the island 10/10 yet:
 - A complete current High desktop choreography records 54.7 FPS average, 33.3 ms p95, 9.8% slow frames, 163 maximum calls and 175k maximum triangles. Geometry is within the authored 175/180k ceiling; timing remains honestly `REVIEW` rather than `PASS`.
 - TypeScript, Island Run architecture guard and template geometry gate pass. Physical iPhone Auto and forced-High 30-second runs remain required.
 - Goal comparison still exposes a substantial authored-detail gap, especially in building meso ornament, reef integration and jewel-dark material contrast. Pass 13 is an improvement checkpoint, not a 10/10 claim.
+- A generated 73 KB ornament-atlas experiment was reviewed in the actual phone camera and deliberately rejected from runtime: without authored UV islands it collapsed the buildings into dark visual noise. The rejected asset is retained as evidence so a later mesh/UV pipeline does not repeat that dead end.
 
 Latest evidence:
 
@@ -147,3 +148,4 @@ Latest evidence:
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-right-orbit.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-motion-t0.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-motion-t6.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/rejected-palace-ornament-atlas-v1.webp`
