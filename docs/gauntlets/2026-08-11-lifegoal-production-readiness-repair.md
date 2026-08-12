@@ -2,7 +2,7 @@
 
 Date: 2026-08-11 (Europe/London)
 Automation: `lifegoal-production-readiness-repair`
-Base: `origin/main` at `71aded21db726ef89f1037e3d0bae6ad96fa8073`
+Base: `origin/main` at `1fd81f25d0f21e538c4a8cf54eca51565badae10`
 Branch: `codex/lifegoal-production-readiness-20260811`
 
 ## Outcome and authority boundary
@@ -28,7 +28,7 @@ The work was performed in an isolated worktree from a freshly fetched `origin/ma
 - `test:demo-cloud-routing`: pass, including both sentinel boundary assertions.
 - `test:minigame-ticket-commerce-readiness`: pass, including default OFF, UI/service fail-closed behavior, SKU/event compatibility, metadata, and RPC ACL checks.
 - `test:habit-offer-sort`: pass, including stable expiry-key deduplication.
-- `test:island-run`: **1726 pass, 3 fail**. The new grantId churn/no-save and ticket-gate cases pass. The remaining failures are pre-existing visual/manifest assertions in `islandNarrativeOpeningFlow` and `islandRunBoardPerformanceGuards` (fixed-plot construction and final-camera legacy squash); none of their implementation files are changed here.
+- `test:island-run`: **1727 pass, 3 fail**. The new grantId churn/no-save and ticket-gate cases pass. A clean `origin/main` comparison produced **1725 pass, 3 fail** with the same three visual/manifest failures in `islandNarrativeOpeningFlow` and `islandRunBoardPerformanceGuards` (fixed-plot construction and final-camera legacy squash); none of their implementation files are changed here.
 - `check:island-run-architecture-guards`: pass with 0 violations and the same 3 allowlisted legacy warnings.
 - Clean-install baseline `tsc -b --pretty false`: pass on the recorded main SHA. Post-edit retry: no diagnostics, manually stopped after 4.5 minutes; Vite and focused TypeScript-backed suites cover the edited paths.
 - `vite build`: pass, 1,282 modules transformed in 1m36s; existing chunk-size/dynamic-import warnings only.
@@ -49,3 +49,13 @@ After merge and a normal app release, users should see less redundant creature/o
 3. Run the prepared pgTAP files against an isolated local/staging database and re-run Security Advisor.
 4. Run the phone-sized guest Island Run roll/reward/return smoke in a browser-equipped environment and confirm network logs contain neither sentinel.
 5. Keep `minigameTicketPurchasesReady` and `combinedJourneyRewardsEnabled` OFF until their server-authoritative gates pass.
+
+## Island action-log scale investigation — 2026-08-12
+
+Read-only production aggregates confirmed that creature synchronization was write amplification rather than ordinary player progress. Of 1,887 retained action-log rows from one player/session, 902 changed `creature_collection`; 861 of those arrived less than one second after the preceding creature write. Two alternating state hashes accounted for 701 rows. This matches the stale local snapshot → canonical audit-marker restore loop fixed by the monotonic merge and unordered `grantIds` equality regression in this branch.
+
+The action log itself is healthy at current volume: about 3.5 MB, indexed by `created_at`, zero dead tuples after autovacuum, unique `(user_id, client_action_id)` idempotency protection, and 133,405 historical rows already removed. It must not be manually cleared because recent rows are the retry/idempotency ledger.
+
+The present retention schedule is not ready for multiple equally active players. It deletes at most 5,000 rows once daily, so at the observed pre-fix rate it can fall behind at roughly five such players. The safe follow-up is a separate, staged migration that keeps the 48-hour window but runs the existing 5,000-row bounded delete every five minutes via `cron.alter_job` or `cron.schedule`. That raises bounded cleanup capacity to 1.44 million rows/day without one large delete transaction. Alert when the oldest row exceeds 72 hours or cleanup repeatedly consumes the full 5,000-row batch. Evaluate time partitioning only after sustained volume approaches 500,000 rows/day or measured delete/vacuum pressure justifies the migration cost.
+
+Post-release success evidence: for 24 hours after the deployed bundle is active, creature-only A→B→A bursts remain zero, action-log statuses remain applied without duplicate client action IDs, and per-session write rate tracks meaningful gameplay actions instead of render cadence. No production retention schedule or player data is changed by this PR.
