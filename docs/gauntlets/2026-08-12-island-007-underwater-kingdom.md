@@ -149,4 +149,3 @@ Latest evidence:
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-right-orbit.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-motion-t0.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-motion-t6.png`
-- `docs/gauntlets/evidence/island-007-underwater-v1/rejected-palace-ornament-atlas-v1.webp`
