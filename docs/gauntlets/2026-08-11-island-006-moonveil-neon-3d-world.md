@@ -170,3 +170,106 @@ This pass responds directly to the 2/10 review; it is a new release candidate, n
 - Vite production build: pass (existing large-chunk advisory only).
 - Island Run architecture guard: pass, zero violations and three existing allowlisted warnings.
 - Island Run suite: 1,724 pass; three existing Island 001 migration/source-contract failures remain (`landmark camera target`, `fixed plot`, `final-camera scenery`). The new tile-object mapping test passes.
+
+## User-reset refinement pass — 5/10 baseline
+
+Eivind rated the preceding rebuilt candidate approximately **5/10**, not 10/10. This second reset is authoritative. The deterministic whole-frame diagnostic also proved unsuitable as a visual acceptance gate for this environment: both the painted reference and the live phone frame fill nearly the entire mask, producing a meaningless perfect silhouette score. The Gauntlet therefore records the actual image comparison at **0.74** and remains open for further refinement.
+
+### Changes retained in this pass
+
+- Replaced the stretched prototype sky with a purpose-generated portrait nebula background and compressed it to a 120 KB WebP.
+- Reframed the shared camera for a taller five-district constellation while preserving every canonical tile and landmark anchor.
+- Reduced the L3 Moon Gate footprint so the central 36-tile route remains the board's visual authority.
+- Rebuilt bridge presentation with broad indigo steps, gold stair noses, continuous rails, repeated posts, and endpoint lanterns.
+- Added satellite parapets, taller Moon Gate side shrines, gold finials, stronger warm windows, and clearer landmark silhouettes.
+- Added a camera-facing inhabited rear gallery to the lower archive so its shared overview no longer presents a blank dome shell.
+- Replaced flat/dark under-island cones with layered cliff terraces and larger faceted outcrops; High Survey and orbit views now reveal physical roots beneath all five shelves.
+- Increased Moonveil route contrast and added quality-scaled astral tile sigils without adding any click, reward, wallet, or persistence authority.
+- Kept the Golden Ticket prominent while reducing the scale of secondary tile rewards so they read as board affordances rather than toys.
+
+### Current evidence
+
+- Clean phone showcase: `docs/gauntlets/evidence/island-006-moonveil-3d-world/16-clean-overview-jagged-cliffs-phone.png`
+- Live in-app phone proof: `docs/gauntlets/evidence/island-006-moonveil-3d-world/19-inhabited-gallery-readable-route-phone.png`
+- Goal/current comparison: `docs/gauntlets/evidence/island-006-moonveil-3d-world/20-goal-vs-refined-phone.png`
+- Part coverage: 16 specified assemblies, 17 built entries, zero errors and zero warnings; the extra root entry is an allowed authoring group.
+- Multi-angle anti-flatness check: right and rear orbit frames remain non-degenerate.
+
+### Honest remaining gap
+
+- The reference still has denser inhabited micro-architecture, more small warm windows, and richer function-specific props.
+- Its central luminous tile circle reads more strongly than the canonical 36-tile route in the live phone frame.
+- The procedural roots now read as real cliffs, but remain cleaner and less organic than the painted terraces, vegetation, fissures, and ledges in the goal.
+- The img2threejs review is therefore **refine-code at 0.74**, below the 0.90 acceptance threshold. This is an intermediate candidate, not final user approval.
+
+### Verification after the 5/10 pass
+
+- Vite production build: pass (existing chunk-size and dynamic/static import advisories only).
+- Island Run architecture guard: pass, zero violations and three existing allowlisted warnings.
+- Island Run suite: 1,724 pass; the same three unrelated Island 001 migration/source-contract failures remain (`landmark camera target`, `fixed plot`, `final-camera scenery`).
+
+## Tile-corridor quality-control pass — 2026-08-12
+
+The final phone-frame audit found that Moonveil ambience had begun to compete
+with the real 36-tile route. The gameplay route and reward map were correct,
+but non-semantic scenery crossed the protected annulus: astral sigils, a gold
+shelf ring, a coplanar terrace, shrubs, crystals, lanterns, and the first bridge
+rail segments.
+
+### Correction
+
+- Removed the decorative astral sigils from playable tile tops; clean tile
+  geometry and its restrained outline remain.
+- Lowered the main shelf terrace below the physical blocks and removed the
+  main-shelf gold ring that read as false paving.
+- Moved foliage, crystals, and lanterns into the inner sanctuary garden.
+- Began bridge steps, posts, rails, and endpoint lanterns beyond the protected
+  outer radius.
+- Added one shared route-clearance predicate based on the canonical route
+  radius and radial tile depth, plus a contract test that rejects scenery on
+  the route centreline.
+- Retained the player piece and canonical read-only tile projections: Golden
+  Event Ticket, Essence crystal, Universal Reward Token visual, chest, hazard,
+  encounter/card, Build Rush, traffic beacon, and the active landmark door.
+
+### Evidence and verification
+
+- Before: `docs/gauntlets/evidence/island-006-moonveil-3d-world/24-tile-corridor-before-phone.png`
+- Clean phone proof: `docs/gauntlets/evidence/island-006-moonveil-3d-world/25-tile-corridor-clean-phone.png`
+- Production Vite build: pass (existing import/chunk advisories only).
+- Island Run architecture guard: pass, zero violations and three existing
+  allowlisted warnings.
+- Island Run suite: 1,725 pass; the same three unrelated Island 001
+  visual-manifest failures remain (`landmark camera target`, `fixed plot`,
+  `final-camera scenery`). The new Moonveil route-clearance test passes.
+
+## Celestial-life refinement candidate — 2026-08-11
+
+This pass answers the next explicit brief: remove the sea-going ship, make the distant world magical and alive, and keep the result readable in the real portrait game frame. It is technically complete but remains a candidate until Eivind reviews the new phone evidence; it is not being labelled “user-approved 10/10” by the implementation itself.
+
+### Changes
+
+- Replaced the sailing skiff with a real procedural celestial cruiser: faceted indigo hull, gold arrowhead nose, cyan canopy, swept fins, celestial navigation ring, antenna lights, three pulsing engines, and cyan/violet exhausts.
+- Moved the cruiser from a world-scale orbit into a gentle distant flight corridor composed for the portrait phone camera. It remains fully 3D and animated, but no longer spends most of its cycle behind the island or outside the frustum.
+- Added three quality-scaled parallax twinkle layers plus individually pulsing gold, cyan, and violet star flares around the visible sky.
+- Added three rare shooting-star routes and a slower signature comet. Their motion and timing are independent, infrequent, distant, and presentation-only.
+- Added eroded cliff ledges, moss shelves, crystal accents, extra lanterns, dome latitude bands, and an open L3 Constellation Court crown so landmark focus views retain function-specific form.
+- Landmark inspection presets now temporarily hide the board player/caretaker actors, preventing the canonical token from obstructing close architectural review. Manual, rolling, overview, and caretaker views restore them.
+- The portrait nebula remains a compressed 120 KB WebP; no uncompressed sky texture was introduced.
+
+### Evidence
+
+- High phone overview with the celestial cruiser and twinkle field: `docs/gauntlets/evidence/island-006-moonveil-3d-world/21-celestial-cruiser-twinkle-overview-phone.png`
+- Low-tier semantic-silhouette proof: `docs/gauntlets/evidence/island-006-moonveil-3d-world/22-low-quality-silhouette-phone.png`
+- Rare shooting-star frame: `docs/gauntlets/evidence/island-006-moonveil-3d-world/23-shooting-star-pass-phone.png`
+- Browser console review: zero warnings and zero errors in the live phone preview.
+- Instantaneous local-browser workbench proof: High approximately 370k triangles / 745 calls; Low approximately 135k triangles / 564 calls. This demonstrates material geometry reduction, not an iPhone performance certification.
+
+### Technical gates
+
+- TypeScript project check: pass.
+- Vite production build: pass (existing large-chunk and dynamic/static import advisories only).
+- Island Run architecture guard: pass, zero violations and three existing allowlisted warnings.
+- Island Run suite: 1,724 pass; the same three unrelated Island 001 source-contract failures remain (`landmark camera target`, `fixed plot`, `final-camera scenery`).
+- `img2threejs` part coverage: 16 specified assemblies, 17 built entries, zero errors and zero warnings; the extra root is an allowed authoring group.
+- `img2threejs` action readiness: pass for stable landmark/world pivots and the clickable/explodable celestial-cruiser hierarchy.
