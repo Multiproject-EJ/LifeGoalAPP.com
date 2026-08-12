@@ -1,0 +1,38 @@
+[
+  {
+    "id": "canonical-board-composition",
+    "score": 0.9,
+    "critical": true,
+    "notes": "The 36-tile ring, five landmark positions, central anchor and portrait framing agree with the target topology."
+  },
+  {
+    "id": "five-landmark-silhouette-identity",
+    "score": 0.72,
+    "critical": true,
+    "notes": "All five roles are distinguishable, but Archive and Sanctuary remain simplified and Palace tiering lacks the target's shell-rich silhouette."
+  },
+  {
+    "id": "architectural-surface-density",
+    "score": 0.48,
+    "critical": true,
+    "notes": "Large smooth cylinders and cones replace the target's layered arches, balconies, ribs, recesses and inhabited facade rhythm."
+  },
+  {
+    "id": "reef-integration-and-root-depth",
+    "score": 0.56,
+    "critical": true,
+    "notes": "Coral and root systems exist around 360 degrees, but appear as sparse perimeter props instead of terraces grown into the architecture."
+  },
+  {
+    "id": "underwater-life-and-motion",
+    "score": 0.82,
+    "critical": true,
+    "notes": "Fish, manta, whale, jellyfish, bubbles, submarine, motes, surface and rays establish an active underwater volume."
+  },
+  {
+    "id": "jewel-pbr-and-warm-cool-hierarchy",
+    "score": 0.58,
+    "critical": true,
+    "notes": "Turquoise, pearl, gold and amber are present, but fog and batching still flatten material response compared with the luminous target."
+  }
+]

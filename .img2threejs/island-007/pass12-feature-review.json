@@ -1,0 +1,38 @@
+[
+  {
+    "id": "canonical-board-composition",
+    "score": 0.92,
+    "critical": true,
+    "notes": "The phone comparison preserves the 36-tile ring, five landmark positions, central anchor, and portrait framing without route occlusion."
+  },
+  {
+    "id": "five-landmark-silhouette-identity",
+    "score": 0.79,
+    "critical": true,
+    "notes": "Hatchery, Portal, Palace, Sanctuary, and Archive now read as distinct authored roles; the Palace and Archive remain smoother than the painted target."
+  },
+  {
+    "id": "architectural-surface-density",
+    "score": 0.61,
+    "critical": true,
+    "notes": "Large ribs, domes, cornices, windows, buttresses, and interior forms improved, but the target still contains materially denser layered arches, recesses, balconies, and trim."
+  },
+  {
+    "id": "reef-integration-and-root-depth",
+    "score": 0.68,
+    "critical": true,
+    "notes": "The 360 reef and crag root are coherent and phone-readable, but coral still reads more as perimeter gardens than architecture-grown terraces."
+  },
+  {
+    "id": "underwater-life-and-motion",
+    "score": 0.86,
+    "critical": true,
+    "notes": "Animated fish, hero fish, manta, whale, jellyfish, bubbles, submarine, motes, surface, and light shafts provide a convincing living underwater volume."
+  },
+  {
+    "id": "jewel-pbr-and-warm-cool-hierarchy",
+    "score": 0.7,
+    "critical": true,
+    "notes": "Turquoise bodies, pearl roofs, gold trim, amber apertures, portal glow, and subtle shared relief are stronger, but the goal remains richer and more jewel-like."
+  }
+]

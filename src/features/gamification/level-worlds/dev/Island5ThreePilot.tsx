@@ -2917,6 +2917,7 @@ export default function Island5ThreePilot({
   const sustainedQualityMissesRef = useRef(0);
   const [activePreset, setActivePreset] = useState<Island5CameraPresetId | 'manual'>('overview');
   const [metrics, setMetrics] = useState<PilotMetrics>({ fps: 0, drawCalls: 0, triangles: 0, width: 0, height: 0 });
+  const [hasRenderedFrame, setHasRenderedFrame] = useState(false);
   const [tourStatus, setTourStatus] = useState<CameraTourStatus>('idle');
   const [profilerStatus, setProfilerStatus] = useState<ProfilerStatus>('idle');
   const [profilerProgress, setProfilerProgress] = useState(0);
@@ -3140,6 +3141,7 @@ export default function Island5ThreePilot({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return undefined;
+    setHasRenderedFrame(false);
     setError(null);
     setTourStatus('idle');
 
@@ -3191,7 +3193,7 @@ export default function Island5ThreePilot({
             : isMoonveilNexus
               ? 0.0022
               : isAbyssalPearlKingdom
-                ? 0.0058
+                ? 0.0026
               : 0.0048;
     scene.background = new THREE.Color(backgroundColor);
     if (isMoonveilNexus) {
@@ -3233,9 +3235,16 @@ export default function Island5ThreePilot({
             : isMoonveilNexus
               ? 0.96
               : isAbyssalPearlKingdom
-                ? 0.98
+                ? 1.08
               : 1.06;
-    renderer.setPixelRatio(getIsland3DRendererPixelRatio(qualityProfile, window.devicePixelRatio));
+    // The underwater scene carries multiple full-screen transparent water and
+    // light layers. A 1.4 DPR ceiling remains crisp at the phone viewport while
+    // reserving fill-rate for fauna, caustics and landmark motion.
+    renderer.setPixelRatio(getIsland3DRendererPixelRatio(
+      qualityProfile,
+      window.devicePixelRatio,
+      isAbyssalPearlKingdom ? 1.4 : Number.POSITIVE_INFINITY,
+    ));
     // The underwater kingdom uses diffuse water-column light, emissive window
     // contrast and caustic/contact accents instead of a second full shadow-map
     // render. That is both physically plausible underwater and preserves the
@@ -3347,54 +3356,61 @@ export default function Island5ThreePilot({
       clearcoatRoughness: 0.25,
     });
     const water = new THREE.Mesh(
-      new THREE.PlaneGeometry(68, 68, qualityProfile.oceanGridSegments, qualityProfile.oceanGridSegments),
+      new THREE.PlaneGeometry(
+        68,
+        68,
+        isAbyssalPearlKingdom ? 1 : qualityProfile.oceanGridSegments,
+        isAbyssalPearlKingdom ? 1 : qualityProfile.oceanGridSegments,
+      ),
       waterMaterial,
     );
     water.rotation.x = -Math.PI / 2;
     water.position.y = -0.62;
     water.receiveShadow = true;
-    scene.add(water);
+    if (!isAbyssalPearlKingdom) scene.add(water);
 
-    const island = createTerrainPlate({
-      radius: 6.25,
-      depth: 0.82,
-      segments: qualityProfile.terrainSegments,
-      topMaterial: materials.grass,
-      reefMaterial: materials.reef,
-      position: [0, 0, 0],
-      seed: 0x15c05a,
-    });
-    // Celestial Sky Kingdom owns a deeper, tapered procedural sky-root in its
-    // ambience layer. Hiding the generic coastal cylinder prevents the island
-    // from reading as a flat plate while preserving the canonical board above.
-    island.visible = !isCelestialSkyKingdom && !isMoonveilNexus && !isAbyssalPearlKingdom;
-    scene.add(island);
-
-    ISLAND_5_LANDMARKS.filter((entry) => entry.id !== 'boss').forEach((landmark, landmarkIndex) => {
-      const satellite = createTerrainPlate({
-        radius: 2.58,
-        depth: 0.68,
+    // Island 007 owns a dedicated seabed/root system. Do not construct and then
+    // hide the generic coastal plates, bridges and lagoon underneath it.
+    if (!isAbyssalPearlKingdom) {
+      const island = createTerrainPlate({
+        radius: 6.25,
+        depth: 0.82,
         segments: qualityProfile.terrainSegments,
         topMaterial: materials.grass,
         reefMaterial: materials.reef,
-        position: landmark.position,
-        seed: 0x51a7 + landmarkIndex * 0x913,
+        position: [0, 0, 0],
+        seed: 0x15c05a,
       });
-      satellite.visible = !isCelestialSkyKingdom && !isMoonveilNexus && !isAbyssalPearlKingdom;
-      scene.add(satellite);
-      const bridgeStart: readonly [number, number, number] = [landmark.position[0] * 0.56, 0, landmark.position[2] * 0.56];
-      const bridgeEnd: readonly [number, number, number] = [landmark.position[0] * 0.82, 0, landmark.position[2] * 0.82];
-      const sharedBridge = createBridge(bridgeStart, bridgeEnd, materials.bridge);
-      sharedBridge.visible = !isMoonveilNexus && !isAbyssalPearlKingdom;
-      scene.add(sharedBridge);
-    });
+      // Celestial Sky Kingdom and Moonveil own their deeper procedural roots.
+      island.visible = !isCelestialSkyKingdom && !isMoonveilNexus;
+      scene.add(island);
 
-    const innerLagoon = new THREE.Mesh(new THREE.CircleGeometry(2.25, qualityProfile.terrainSegments), waterMaterial.clone());
-    innerLagoon.rotation.x = -Math.PI / 2;
-    innerLagoon.position.y = 0.255;
-    innerLagoon.receiveShadow = true;
-    innerLagoon.visible = !isMoonveilNexus && !isAbyssalPearlKingdom;
-    scene.add(innerLagoon);
+      ISLAND_5_LANDMARKS.filter((entry) => entry.id !== 'boss').forEach((landmark, landmarkIndex) => {
+        const satellite = createTerrainPlate({
+          radius: 2.58,
+          depth: 0.68,
+          segments: qualityProfile.terrainSegments,
+          topMaterial: materials.grass,
+          reefMaterial: materials.reef,
+          position: landmark.position,
+          seed: 0x51a7 + landmarkIndex * 0x913,
+        });
+        satellite.visible = !isCelestialSkyKingdom && !isMoonveilNexus;
+        scene.add(satellite);
+        const bridgeStart: readonly [number, number, number] = [landmark.position[0] * 0.56, 0, landmark.position[2] * 0.56];
+        const bridgeEnd: readonly [number, number, number] = [landmark.position[0] * 0.82, 0, landmark.position[2] * 0.82];
+        const sharedBridge = createBridge(bridgeStart, bridgeEnd, materials.bridge);
+        sharedBridge.visible = !isMoonveilNexus;
+        scene.add(sharedBridge);
+      });
+
+      const innerLagoon = new THREE.Mesh(new THREE.CircleGeometry(2.25, qualityProfile.terrainSegments), waterMaterial.clone());
+      innerLagoon.rotation.x = -Math.PI / 2;
+      innerLagoon.position.y = 0.255;
+      innerLagoon.receiveShadow = true;
+      innerLagoon.visible = !isMoonveilNexus;
+      scene.add(innerLagoon);
+    }
 
     const livingAmbience = isFirstLightKingdom && island1Materials
       ? createIsland1LivingAmbience(scene, qualityProfile, island1Materials, water)
@@ -3716,6 +3732,7 @@ export default function Island5ThreePilot({
     const pointer = new THREE.Vector2();
     const pointerDown = new THREE.Vector2();
     let animationFrame = 0;
+    let firstFrameRendered = false;
     let transition: {
       startedAt: number;
       durationMs: number;
@@ -4448,6 +4465,10 @@ export default function Island5ThreePilot({
       }
       controls.update();
       renderer.render(scene, camera);
+      if (!firstFrameRendered && renderer.info.render.calls > 0) {
+        firstFrameRendered = true;
+        setHasRenderedFrame(true);
+      }
 
       if (activeTour && now >= activeTour.nextStepAt) {
         const nextStepIndex = activeTour.stepIndex + 1;
@@ -4588,6 +4609,13 @@ export default function Island5ThreePilot({
       aria-label={isEmbedded ? `Interactive 3D Island ${islandNumber}` : `Actual 3D Island ${islandNumber} pilot`}
     >
       <canvas key={`${islandNumber}-${resolvedWorldSourceNumber}-${qualityProfile.id}`} ref={canvasRef} className="island-5-three-pilot__canvas" aria-label={`Interactive 3D ${worldName} island`} />
+      {!hasRenderedFrame ? (
+        <div className="island-5-three-pilot__loading" role="status" aria-live="polite">
+          <span aria-hidden="true" />
+          <strong>Entering {worldName}</strong>
+          <small>Awakening the living world…</small>
+        </div>
+      ) : null}
       {!isEmbedded ? (
         <>
           <div className="island-5-three-pilot__topline">

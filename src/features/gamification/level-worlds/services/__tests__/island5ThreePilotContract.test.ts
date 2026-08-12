@@ -246,7 +246,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
-      assert(pilotSource.includes('new THREE.PlaneGeometry(68, 68, qualityProfile.oceanGridSegments'), 'ocean must use the quality-scaled deforming grid');
+      assert(pilotSource.includes('isAbyssalPearlKingdom ? 1 : qualityProfile.oceanGridSegments'), 'ordinary islands must retain the quality-scaled ocean grid while Island 007 skips the hidden grid cost');
       assert(pilotSource.includes("waveBands.name = 'ISLAND_5_OCEAN_WAVE_BANDS'"), 'traveling wave bands should remain one addressable instanced layer');
       assert(pilotSource.includes('function createErodedCoastalCylinderGeometry'), 'terrain plates should use deterministic erosion instead of perfect cylinders');
       assert(pilotSource.includes("strata.name = 'ISLAND_5_INSTANCED_COASTAL_ROCK_STRATA'"), 'layered coastal rocks should remain one instanced draw-call family');
@@ -487,6 +487,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assertEqual(getIsland3DRendererPixelRatio(ISLAND_3D_QUALITY_PROFILES.low, 3), 1, 'low DPR must cap at 1');
       assertEqual(getIsland3DRendererPixelRatio(ISLAND_3D_QUALITY_PROFILES.medium, 3), 1.5, 'medium DPR must cap at 1.5');
       assertEqual(getIsland3DRendererPixelRatio(ISLAND_3D_QUALITY_PROFILES.high, 3), 2, 'high DPR must cap at 2');
+      assertEqual(getIsland3DRendererPixelRatio(ISLAND_3D_QUALITY_PROFILES.high, 3, 1.4), 1.4, 'a world may reserve fill-rate with a stricter DPR cap');
     },
   },
   {

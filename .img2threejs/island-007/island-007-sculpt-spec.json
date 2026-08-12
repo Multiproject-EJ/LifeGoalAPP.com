@@ -958,14 +958,16 @@
     ],
     "currentPass": "blockout",
     "completedPasses": [],
-    "lastCompletedPass": null,
-    "blockedReason": null,
+    "lastCompletedPass": "",
+    "blockedReason": "",
     "nextRequiredEvidence": [
-      "blockout browser render screenshot from your agent's browser/screenshot tool",
-      "side-by-side reference/render comparison sheet",
-      "AI vision score >= 0.7 with layer scores and mismatch critique",
-      "critical semantic feature scores from the same image pair meeting their individual thresholds",
-      "reviewHistory entry for blockout with action=continue"
+      "Silhouette reads correctly without materials.",
+      "Quality contract has named all required macro feature groups before code generation.",
+      "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
+      "browser render screenshot from your agent's browser/screenshot tool",
+      "single side-by-side full reference/render comparison sheet",
+      "all critical semantic feature scores at or above their thresholds",
+      "self-correction review appended with action=continue before the next pass"
     ]
   },
   "lookDevTargets": {
@@ -7759,8 +7761,302 @@
       ]
     }
   ],
-  "visualEvidence": [],
-  "reviewHistory": [],
+  "visualEvidence": [
+    {
+      "timestamp": "2026-08-12T07:31:36.971124+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.64,
+      "aiVisionScore": 0.64,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "composition": 0.9,
+        "silhouette": 0.72,
+        "architecture": 0.48,
+        "reef": 0.56,
+        "motion": 0.82,
+        "materials": 0.58
+      },
+      "featureReviews": [
+        {
+          "id": "canonical-board-composition",
+          "score": 0.9,
+          "critical": true,
+          "notes": "The 36-tile ring, five landmark positions, central anchor and portrait framing agree with the target topology."
+        },
+        {
+          "id": "five-landmark-silhouette-identity",
+          "score": 0.72,
+          "critical": true,
+          "notes": "All five roles are distinguishable, but Archive and Sanctuary remain simplified and Palace tiering lacks the target's shell-rich silhouette."
+        },
+        {
+          "id": "architectural-surface-density",
+          "score": 0.48,
+          "critical": true,
+          "notes": "Large smooth cylinders and cones replace the target's layered arches, balconies, ribs, recesses and inhabited facade rhythm."
+        },
+        {
+          "id": "reef-integration-and-root-depth",
+          "score": 0.56,
+          "critical": true,
+          "notes": "Coral and root systems exist around 360 degrees, but appear as sparse perimeter props instead of terraces grown into the architecture."
+        },
+        {
+          "id": "underwater-life-and-motion",
+          "score": 0.82,
+          "critical": true,
+          "notes": "Fish, manta, whale, jellyfish, bubbles, submarine, motes, surface and rays establish an active underwater volume."
+        },
+        {
+          "id": "jewel-pbr-and-warm-cool-hierarchy",
+          "score": 0.58,
+          "critical": true,
+          "notes": "Turquoise, pearl, gold and amber are present, but fog and batching still flatten material response compared with the luminous target."
+        }
+      ],
+      "referenceScreenshot": "docs/visual-references/island-007-underwater/island-007-underwater-goal-v1.png",
+      "renderScreenshot": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass11-phone-canvas.png",
+      "comparisonImage": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass11-goal-comparison.png",
+      "cameraView": "portrait-phone overview",
+      "notes": "Crop taken from the actual live Three.js phone canvas; dev overlays remain outside the gameplay world but the profiler card overlaps the upper atmosphere in this lab route.",
+      "aiVisionNotes": "Current is coherent and playable but visibly less authored than the target: smooth cylinders/cones dominate; target uses layered shell arches, recesses, balconies and integrated reef terraces."
+    },
+    {
+      "timestamp": "2026-08-12T08:19:19.367707+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.76,
+      "aiVisionScore": 0.76,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "composition": 0.92,
+        "silhouette": 0.79,
+        "architecture": 0.61,
+        "reef": 0.68,
+        "motion": 0.86,
+        "materials": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "canonical-board-composition",
+          "score": 0.92,
+          "critical": true,
+          "notes": "The phone comparison preserves the 36-tile ring, five landmark positions, central anchor, and portrait framing without route occlusion."
+        },
+        {
+          "id": "five-landmark-silhouette-identity",
+          "score": 0.79,
+          "critical": true,
+          "notes": "Hatchery, Portal, Palace, Sanctuary, and Archive now read as distinct authored roles; the Palace and Archive remain smoother than the painted target."
+        },
+        {
+          "id": "architectural-surface-density",
+          "score": 0.61,
+          "critical": true,
+          "notes": "Large ribs, domes, cornices, windows, buttresses, and interior forms improved, but the target still contains materially denser layered arches, recesses, balconies, and trim."
+        },
+        {
+          "id": "reef-integration-and-root-depth",
+          "score": 0.68,
+          "critical": true,
+          "notes": "The 360 reef and crag root are coherent and phone-readable, but coral still reads more as perimeter gardens than architecture-grown terraces."
+        },
+        {
+          "id": "underwater-life-and-motion",
+          "score": 0.86,
+          "critical": true,
+          "notes": "Animated fish, hero fish, manta, whale, jellyfish, bubbles, submarine, motes, surface, and light shafts provide a convincing living underwater volume."
+        },
+        {
+          "id": "jewel-pbr-and-warm-cool-hierarchy",
+          "score": 0.7,
+          "critical": true,
+          "notes": "Turquoise bodies, pearl roofs, gold trim, amber apertures, portal glow, and subtle shared relief are stronger, but the goal remains richer and more jewel-like."
+        }
+      ],
+      "referenceScreenshot": "docs/visual-references/island-007-underwater/island-007-underwater-goal-v1.png",
+      "renderScreenshot": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass12-final-phone.png",
+      "comparisonImage": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass12-final-comparison.png",
+      "cameraView": "portrait-phone overview plus five focus views and 360 orbit QC",
+      "notes": "Actual live Three.js phone canvas compared directly with the approved concept; no claim of 10/10.",
+      "aiVisionNotes": "Pass 12 is a coherent production island and substantially closer than pass 11, but it remains visibly less authored than the concept because surface density, architectural reef integration, and jewel PBR hierarchy are still shallower."
+    }
+  ],
+  "reviewHistory": [
+    {
+      "timestamp": "2026-08-12T07:31:36.971124+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.64,
+      "aiVisionScore": 0.64,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "composition": 0.9,
+        "silhouette": 0.72,
+        "architecture": 0.48,
+        "reef": 0.56,
+        "motion": 0.82,
+        "materials": 0.58
+      },
+      "featureReviews": [
+        {
+          "id": "canonical-board-composition",
+          "score": 0.9,
+          "critical": true,
+          "notes": "The 36-tile ring, five landmark positions, central anchor and portrait framing agree with the target topology."
+        },
+        {
+          "id": "five-landmark-silhouette-identity",
+          "score": 0.72,
+          "critical": true,
+          "notes": "All five roles are distinguishable, but Archive and Sanctuary remain simplified and Palace tiering lacks the target's shell-rich silhouette."
+        },
+        {
+          "id": "architectural-surface-density",
+          "score": 0.48,
+          "critical": true,
+          "notes": "Large smooth cylinders and cones replace the target's layered arches, balconies, ribs, recesses and inhabited facade rhythm."
+        },
+        {
+          "id": "reef-integration-and-root-depth",
+          "score": 0.56,
+          "critical": true,
+          "notes": "Coral and root systems exist around 360 degrees, but appear as sparse perimeter props instead of terraces grown into the architecture."
+        },
+        {
+          "id": "underwater-life-and-motion",
+          "score": 0.82,
+          "critical": true,
+          "notes": "Fish, manta, whale, jellyfish, bubbles, submarine, motes, surface and rays establish an active underwater volume."
+        },
+        {
+          "id": "jewel-pbr-and-warm-cool-hierarchy",
+          "score": 0.58,
+          "critical": true,
+          "notes": "Turquoise, pearl, gold and amber are present, but fog and batching still flatten material response compared with the luminous target."
+        }
+      ],
+      "action": "refine-code",
+      "summary": "Pass 11 preserves the canonical board and all five landmark identities, but the true phone comparison remains materially below the concept in architectural surface density, reef integration and jewel PBR depth.",
+      "matched": [
+        "36-tile canonical topology",
+        "five distinct landmark roles",
+        "underwater fauna and motion",
+        "portrait composition"
+      ],
+      "mismatches": [
+        "large smooth architectural masses",
+        "Archive and Sanctuary simplification",
+        "sparse architecture-hugging reef",
+        "muted warm-cool hierarchy"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "add large continuous shell/arch/cornice forms",
+        "strengthen per-landmark facade recess and window rhythm",
+        "integrate reef terraces at plinth edges",
+        "reduce high-tier transparent overdraw and hidden startup geometry"
+      ],
+      "evidence": [],
+      "outOfSequence": true,
+      "visualEvidence": {
+        "referenceScreenshot": "docs/visual-references/island-007-underwater/island-007-underwater-goal-v1.png",
+        "renderScreenshot": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass11-phone-canvas.png",
+        "comparisonImage": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass11-goal-comparison.png",
+        "cameraView": "portrait-phone overview",
+        "notes": "Crop taken from the actual live Three.js phone canvas; dev overlays remain outside the gameplay world but the profiler card overlaps the upper atmosphere in this lab route.",
+        "aiVisionNotes": "Current is coherent and playable but visibly less authored than the target: smooth cylinders/cones dominate; target uses layered shell arches, recesses, balconies and integrated reef terraces."
+      }
+    },
+    {
+      "timestamp": "2026-08-12T08:19:19.367707+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.76,
+      "aiVisionScore": 0.76,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "composition": 0.92,
+        "silhouette": 0.79,
+        "architecture": 0.61,
+        "reef": 0.68,
+        "motion": 0.86,
+        "materials": 0.7
+      },
+      "featureReviews": [
+        {
+          "id": "canonical-board-composition",
+          "score": 0.92,
+          "critical": true,
+          "notes": "The phone comparison preserves the 36-tile ring, five landmark positions, central anchor, and portrait framing without route occlusion."
+        },
+        {
+          "id": "five-landmark-silhouette-identity",
+          "score": 0.79,
+          "critical": true,
+          "notes": "Hatchery, Portal, Palace, Sanctuary, and Archive now read as distinct authored roles; the Palace and Archive remain smoother than the painted target."
+        },
+        {
+          "id": "architectural-surface-density",
+          "score": 0.61,
+          "critical": true,
+          "notes": "Large ribs, domes, cornices, windows, buttresses, and interior forms improved, but the target still contains materially denser layered arches, recesses, balconies, and trim."
+        },
+        {
+          "id": "reef-integration-and-root-depth",
+          "score": 0.68,
+          "critical": true,
+          "notes": "The 360 reef and crag root are coherent and phone-readable, but coral still reads more as perimeter gardens than architecture-grown terraces."
+        },
+        {
+          "id": "underwater-life-and-motion",
+          "score": 0.86,
+          "critical": true,
+          "notes": "Animated fish, hero fish, manta, whale, jellyfish, bubbles, submarine, motes, surface, and light shafts provide a convincing living underwater volume."
+        },
+        {
+          "id": "jewel-pbr-and-warm-cool-hierarchy",
+          "score": 0.7,
+          "critical": true,
+          "notes": "Turquoise bodies, pearl roofs, gold trim, amber apertures, portal glow, and subtle shared relief are stronger, but the goal remains richer and more jewel-like."
+        }
+      ],
+      "action": "refine-code",
+      "summary": "Pass 12 materially improves landmark identity, palette, cold-start presentation, and high-tier performance while preserving the canonical world; the honest goal comparison still requires more architectural material richness and reef integration before the blockout gate can advance.",
+      "matched": [
+        "36-tile canonical topology",
+        "five distinct L3 landmarks",
+        "living underwater motion",
+        "360 scene coherence",
+        "162-call 172k-triangle budget compliance",
+        "49.7 FPS desktop average without jank spikes"
+      ],
+      "mismatches": [
+        "painted reference has denser arches balconies and trim",
+        "reef still reads as gardens instead of architectural growth",
+        "PBR depth remains flatter than jewel target",
+        "physical iPhone Auto and High profiles remain unavailable"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "add phone-readable meso ornament through batched geometry or relief",
+        "integrate limited reef shelves at plinth edges",
+        "strengthen selected upper warm apertures",
+        "capture physical iPhone profiles when device returns online"
+      ],
+      "evidence": [
+        "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass12-final-phone.png",
+        "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass12-final-comparison.png",
+        "desktop high profile 49.7 FPS average, 33.4ms p95, 35.4ms worst, 162 calls, 172k triangles"
+      ],
+      "outOfSequence": true,
+      "visualEvidence": {
+        "referenceScreenshot": "docs/visual-references/island-007-underwater/island-007-underwater-goal-v1.png",
+        "renderScreenshot": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass12-final-phone.png",
+        "comparisonImage": "docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass12-final-comparison.png",
+        "cameraView": "portrait-phone overview plus five focus views and 360 orbit QC",
+        "notes": "Actual live Three.js phone canvas compared directly with the approved concept; no claim of 10/10.",
+        "aiVisionNotes": "Pass 12 is a coherent production island and substantially closer than pass 11, but it remains visibly less authored than the concept because surface density, architectural reef integration, and jewel PBR hierarchy are still shallower."
+      }
+    }
+  ],
   "lodPlan": [
     {
       "tier": "near",

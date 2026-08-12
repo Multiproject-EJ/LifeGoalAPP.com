@@ -129,6 +129,40 @@ body:has(.island-kit-page) .animation-lab-launcher { display: none; }
 
 .island-5-three-pilot__canvas:active { cursor: grabbing; }
 
+.island-5-three-pilot__loading {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  color: #f2ffff;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(83, 226, 239, .22), transparent 36%),
+    linear-gradient(180deg, #07364d, #041d35 72%, #03152b);
+  text-align: center;
+  pointer-events: none;
+}
+
+.island-5-three-pilot__loading span {
+  width: 38px;
+  height: 38px;
+  border: 2px solid rgba(146, 247, 255, .26);
+  border-top-color: #a8fff5;
+  border-radius: 50%;
+  animation: island-three-world-loading 1.1s linear infinite;
+}
+
+.island-5-three-pilot__loading strong { font: 700 16px/1.15 Georgia, serif; }
+.island-5-three-pilot__loading small { color: rgba(222, 250, 255, .72); font-size: 9px; letter-spacing: .04em; }
+
+@keyframes island-three-world-loading { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .island-5-three-pilot__loading span { animation: none; }
+}
+
 .island-5-three-pilot__topline {
   position: absolute;
   z-index: 3;

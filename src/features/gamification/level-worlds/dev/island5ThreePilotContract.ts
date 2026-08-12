@@ -662,9 +662,13 @@ export function resolveIsland3DQuality(
   return ISLAND_3D_QUALITY_PROFILES.medium;
 }
 
-export function getIsland3DRendererPixelRatio(profile: Island3DQualityProfile, devicePixelRatio: number): number {
+export function getIsland3DRendererPixelRatio(
+  profile: Island3DQualityProfile,
+  devicePixelRatio: number,
+  worldPixelRatioCap = Number.POSITIVE_INFINITY,
+): number {
   const safeDeviceRatio = Number.isFinite(devicePixelRatio) ? Math.max(0.5, devicePixelRatio) : 1;
-  return Math.min(profile.maxPixelRatio, safeDeviceRatio);
+  return Math.min(profile.maxPixelRatio, safeDeviceRatio, worldPixelRatioCap);
 }
 
 export function buildIsland5TileTransforms(anchors: readonly TileAnchor[]): Island5TileTransform[] {

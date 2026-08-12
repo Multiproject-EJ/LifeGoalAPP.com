@@ -43,7 +43,7 @@ export interface Island7UnderwaterMaterials {
   nest: THREE.MeshStandardMaterial;
   book: THREE.MeshStandardMaterial;
   caustic: THREE.MeshBasicMaterial;
-  bubble: THREE.MeshPhysicalMaterial;
+  bubble: THREE.MeshBasicMaterial;
 }
 
 export interface Island7UnderwaterAmbienceRuntime {
@@ -52,10 +52,10 @@ export interface Island7UnderwaterAmbienceRuntime {
   updateView?: (cameraPosition: THREE.Vector3) => void;
 }
 
-// High deliberately stops at 17 radial segments. The difference from 18 is
+// High deliberately stops at 16 radial segments. The difference from 18 is
 // invisible at the phone camera, but multiplied through five landmarks it
 // provides the safety margin needed below Island 007's 180k peak contract.
-const segmentCount = (quality: Island3DQuality) => quality === 'high' ? 17 : quality === 'medium' ? 13 : 8;
+const segmentCount = (quality: Island3DQuality) => quality === 'high' ? 16 : quality === 'medium' ? 12 : 8;
 const detailScale = (quality: Island3DQuality) => quality === 'high' ? 1 : quality === 'medium' ? 0.62 : 0.34;
 
 export const ISLAND_7_ROUTE_CLEARANCE_INNER_RADIUS = ISLAND_3D_ROUTE_RADIUS - ISLAND_3D_TILE_RADIAL_DEPTH / 2 - 0.25;
@@ -125,11 +125,11 @@ export function createIsland7UnderwaterMaterials(): Island7UnderwaterMaterials {
   return {
     oceanStone: new THREE.MeshStandardMaterial({ color: 0x246f80, map: stoneMap, bumpMap: stoneRelief, bumpScale: 0.085, roughness: 0.74, metalness: 0.05 }),
     deepStone: new THREE.MeshStandardMaterial({ color: 0x103847, map: stoneMap, bumpMap: stoneRelief, bumpScale: 0.11, roughness: 0.88, metalness: 0.03, emissive: 0x032735, emissiveIntensity: 0.18 }),
-    sand: new THREE.MeshStandardMaterial({ color: 0x76bdb4, map: sandMap, bumpMap: sandRelief, bumpScale: 0.035, roughness: 0.82, emissive: 0x06323c, emissiveIntensity: 0.08 }),
+    sand: new THREE.MeshStandardMaterial({ color: 0x438f91, map: sandMap, bumpMap: sandRelief, bumpScale: 0.045, roughness: 0.82, emissive: 0x032b35, emissiveIntensity: 0.06 }),
     pearl: new THREE.MeshPhysicalMaterial({ color: 0xe6fbff, map: shellMap, bumpMap: shellRelief, bumpScale: 0.012, roughness: 0.13, clearcoat: 1, clearcoatRoughness: 0.08, iridescence: 0.82, iridescenceIOR: 1.28, iridescenceThicknessRange: [120, 410], emissive: 0x167e9a, emissiveIntensity: 0.3 }),
-    shell: new THREE.MeshPhysicalMaterial({ color: 0xd8eee8, map: shellMap, bumpMap: shellRelief, bumpScale: 0.018, roughness: 0.24, clearcoat: 0.82, clearcoatRoughness: 0.16, iridescence: 0.48, iridescenceIOR: 1.22, emissive: 0x084e5c, emissiveIntensity: 0.17 }),
-    turquoise: new THREE.MeshPhysicalMaterial({ color: 0x008da7, roughness: 0.18, metalness: 0.14, clearcoat: 0.88, clearcoatRoughness: 0.12, emissive: 0x045d76, emissiveIntensity: 0.52 }),
-    gold: new THREE.MeshStandardMaterial({ color: 0xffcf59, map: goldMap, bumpMap: goldRelief, bumpScale: 0.012, roughness: 0.2, metalness: 0.92, emissive: 0xa95808, emissiveIntensity: 0.48 }),
+    shell: new THREE.MeshPhysicalMaterial({ color: 0xc9eee9, map: shellMap, bumpMap: shellRelief, bumpScale: 0.024, roughness: 0.22, clearcoat: 0.84, clearcoatRoughness: 0.14, iridescence: 0.52, iridescenceIOR: 1.22, emissive: 0x064653, emissiveIntensity: 0.14 }),
+    turquoise: new THREE.MeshPhysicalMaterial({ color: 0x078ca5, roughness: 0.2, metalness: 0.16, clearcoat: 0.86, clearcoatRoughness: 0.13, emissive: 0x044f64, emissiveIntensity: 0.46 }),
+    gold: new THREE.MeshStandardMaterial({ color: 0xffd566, map: goldMap, bumpMap: goldRelief, bumpScale: 0.014, roughness: 0.19, metalness: 0.94, emissive: 0xb9680c, emissiveIntensity: 0.58 }),
     warmWindow: new THREE.MeshBasicMaterial({ color: 0xffb23e, transparent: true, opacity: 1, toneMapped: false, depthWrite: false }),
     coralPink: new THREE.MeshStandardMaterial({ color: 0xff78a9, roughness: 0.55, emissive: 0x6b1746, emissiveIntensity: 0.32 }),
     coralViolet: new THREE.MeshStandardMaterial({ color: 0xb96bea, roughness: 0.5, emissive: 0x56157e, emissiveIntensity: 0.34 }),
@@ -143,7 +143,7 @@ export function createIsland7UnderwaterMaterials(): Island7UnderwaterMaterials {
     nest: new THREE.MeshStandardMaterial({ color: 0x9b7652, roughness: 0.92 }),
     book: new THREE.MeshStandardMaterial({ color: 0x79514a, roughness: 0.68, emissive: 0x24120d, emissiveIntensity: 0.1 }),
     caustic: new THREE.MeshBasicMaterial({ color: 0xbaffff, transparent: true, opacity: 0.052, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false, toneMapped: false }),
-    bubble: new THREE.MeshPhysicalMaterial({ color: 0xcfffff, roughness: 0.03, transmission: 0, transparent: true, opacity: 0.32, clearcoat: 1, depthWrite: false }),
+    bubble: new THREE.MeshBasicMaterial({ color: 0xcfffff, transparent: true, opacity: 0.32, depthWrite: false }),
   };
 }
 
@@ -300,7 +300,7 @@ const ISLAND_7_ANIMATED_LANDMARK_PARTS = new Set([
  * few named parts that move at runtime. The outer root remains the canonical
  * interaction target, so this changes rendering cost without changing play.
  */
-function compactUnderwaterLandmark(root: THREE.Group, landmarkId: string) {
+function compactUnderwaterLandmark(root: THREE.Group, landmarkId: string, materials: Island7UnderwaterMaterials) {
   const animatedParts: THREE.Object3D[] = [];
   root.traverse((object) => {
     if (ISLAND_7_ANIMATED_LANDMARK_PARTS.has(object.name)) animatedParts.push(object);
@@ -320,7 +320,7 @@ function compactUnderwaterLandmark(root: THREE.Group, landmarkId: string) {
     if (geometry !== cloned) cloned.dispose();
     geometry.applyMatrix4(inverseRoot.clone().multiply(object.matrixWorld));
     for (const attributeName of Object.keys(geometry.attributes)) {
-      if (attributeName !== 'position' && attributeName !== 'normal') geometry.deleteAttribute(attributeName);
+      if (attributeName !== 'position' && attributeName !== 'normal' && attributeName !== 'uv') geometry.deleteAttribute(attributeName);
     }
     if (!geometry.getAttribute('normal')) geometry.computeVertexNormals();
     const color = 'color' in material && material.color instanceof THREE.Color
@@ -340,7 +340,7 @@ function compactUnderwaterLandmark(root: THREE.Group, landmarkId: string) {
       const upward = Math.max(0, normals.getY(vertex));
       const outward = Math.abs(normals.getZ(vertex)) * 0.035;
       const striation = Math.sin(height * 11.5 + positions.getX(vertex) * 2.2) * 0.035;
-      const lighting = THREE.MathUtils.clamp(0.69 + upward * 0.16 + outward + height * 0.045 + striation, 0.58, 1.08);
+      const lighting = THREE.MathUtils.clamp(0.76 + upward * 0.17 + outward + height * 0.045 + striation, 0.64, 1.13);
       shadedColor.copy(color).multiplyScalar(lighting);
       colors[vertex * 3] = shadedColor.r;
       colors[vertex * 3 + 1] = shadedColor.g;
@@ -359,10 +359,12 @@ function compactUnderwaterLandmark(root: THREE.Group, landmarkId: string) {
   if (opaqueGeometry) {
     const architectureMaterial = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      roughness: 0.3,
-      metalness: 0.24,
-      emissive: 0x02242f,
-      emissiveIntensity: 0.1,
+      bumpMap: materials.shell.bumpMap,
+      bumpScale: 0.009,
+      roughness: 0.27,
+      metalness: 0.28,
+      emissive: 0x012c38,
+      emissiveIntensity: 0.16,
     });
     const architecture = new THREE.Mesh(opaqueGeometry, architectureMaterial);
     architecture.name = `ISLAND7_${landmarkId.toUpperCase()}_ARCHITECTURE_BATCH`;
@@ -630,6 +632,17 @@ function createHabitSanctuary(level: 1 | 2 | 3, quality: Island3DQuality, materi
     const gardenPearl = new THREE.Mesh(new THREE.SphereGeometry(0.17, 12, 8), materials.pearl);
     gardenPearl.position.y = 1.72;
     gardenCore.add(gardenPearl);
+    for (let index = 0; index < 5; index += 1) {
+      const angle = index / 5 * Math.PI * 2 + 0.35;
+      const plate = new THREE.Mesh(
+        new THREE.SphereGeometry(0.23 + index % 2 * 0.04, 10, 6),
+        index % 2 ? materials.coralGold : materials.coralPink,
+      );
+      plate.scale.set(1.45, 0.3, 0.95);
+      plate.position.set(Math.cos(angle) * 0.35, 1.28 + index % 3 * 0.13, Math.sin(angle) * 0.32);
+      plate.rotation.y = -angle;
+      gardenCore.add(plate);
+    }
     compactJewelInterior(gardenCore, 'ISLAND_7_SANCTUARY_JEWEL_GARDEN_BATCH', 0x40124f);
     root.add(gardenCore);
   }
@@ -741,7 +754,7 @@ function createWisdomArchive(level: 1 | 2 | 3, quality: Island3DQuality, materia
   if (level === 3) {
     const archiveGlassMaterial = materials.crystal.clone();
     archiveGlassMaterial.color.setHex(0x2db7c8);
-    archiveGlassMaterial.opacity = 0.68;
+    archiveGlassMaterial.opacity = 0.48;
     archiveGlassMaterial.emissive.setHex(0x075267);
     archiveGlassMaterial.emissiveIntensity = 0.56;
     archiveGlassMaterial.side = THREE.DoubleSide;
@@ -755,7 +768,22 @@ function createWisdomArchive(level: 1 | 2 | 3, quality: Island3DQuality, materia
     glassDome.scale.y = 1.05;
     glassDome.position.y = 1.5;
     root.add(glassDome);
+    // A solid lower drum stops the dome reading as an unfinished wire cage at
+    // overview distance, while the transparent upper shell still reveals the
+    // warm library interior in focus views.
+    const domeDrum = cylinder(0.78, 0.83, 0.28, materials.turquoise, segmentCount(quality));
+    domeDrum.position.y = 1.39;
+    root.add(domeDrum);
+    for (let index = 0; index < 6; index += 1) {
+      const angle = index / 6 * Math.PI * 2;
+      addArchedWindow(root, Math.cos(angle) * 0.785, 1.47, Math.sin(angle) * 0.785, 0.56, materials, -angle + Math.PI / 2);
+      const galleryLight = box(0.22, 0.12, 0.045, materials.warmWindow);
+      galleryLight.position.set(Math.cos(angle) * 0.81, 1.24, Math.sin(angle) * 0.81);
+      galleryLight.rotation.y = -angle + Math.PI / 2;
+      root.add(galleryLight);
+    }
     addRing(root, 0.8, 0.045, 1.5, materials.gold, quality);
+    addRing(root, 0.77, 0.065, 1.28, materials.gold, quality);
     for (let index = 0; index < 8; index += 1) {
       const angle = index / 8 * Math.PI * 2;
       const ribCurve = new THREE.QuadraticBezierCurve3(
@@ -863,6 +891,13 @@ function createCompassPortal(level: 1 | 2 | 3, quality: Island3DQuality, materia
   const portalMaterial = materials.portal.clone();
   portalMaterial.color.set(0x704dff);
   portalMaterial.opacity = 0.84;
+  const portalBackplate = new THREE.Mesh(
+    new THREE.CircleGeometry(archRadius * 0.82, segmentCount(quality)),
+    new THREE.MeshBasicMaterial({ color: 0x071b55, transparent: true, opacity: 0.78, depthWrite: false }),
+  );
+  portalBackplate.position.set(0, 1.02 + level * 0.16, -0.018);
+  portalBackplate.scale.y = 1.28;
+  root.add(portalBackplate);
   const portal = new THREE.Mesh(new THREE.CircleGeometry(archRadius * 0.78, segmentCount(quality) * 2), portalMaterial);
   portal.name = 'ISLAND_7_PORTAL_SURFACE';
   portal.position.y = 1.02 + level * 0.16;
@@ -946,6 +981,18 @@ function createPearlPalace(level: 1 | 2 | 3, quality: Island3DQuality, materials
       const angle = index / 6 * Math.PI * 2;
       addArchedWindow(root, Math.cos(angle) * 0.43, 1.86, Math.sin(angle) * 0.43, 0.56, materials, -angle + Math.PI / 2);
     }
+    // Four large shell buttresses give the palace the vertical, regal mass of
+    // the goal image without relying on phone-invisible surface noise.
+    for (let index = 0; index < 4; index += 1) {
+      const angle = index / 4 * Math.PI * 2 + Math.PI / 4;
+      const pier = box(0.28, 1.12, 0.32, index % 2 ? materials.shell : materials.turquoise);
+      pier.position.set(Math.cos(angle) * 0.82, 1.0, Math.sin(angle) * 0.82);
+      pier.rotation.y = -angle;
+      root.add(pier);
+      const pierCrown = createOnionSpire(0.2, 0.52, materials, quality, materials.shell);
+      pierCrown.position.set(Math.cos(angle) * 0.82, 1.55, Math.sin(angle) * 0.82);
+      root.add(pierCrown);
+    }
   }
   const baseGoldBands = level === 3 ? 3 : 2;
   for (let band = 0; band < baseGoldBands; band += 1) {
@@ -998,7 +1045,7 @@ function createPearlPalace(level: 1 | 2 | 3, quality: Island3DQuality, materials
     root.add(transept, transeptRoof);
     for (const x of [-0.27, 0.27]) addArchedWindow(root, x, 0.92, 1.25, 0.92, materials, 0);
   }
-  const towerCount = level === 1 ? 2 : level === 2 ? 4 : 5;
+  const towerCount = level === 1 ? 2 : 4;
   for (let index = 0; index < towerCount; index += 1) {
     const angle = index / towerCount * Math.PI * 2 + Math.PI / 4;
     const radius = level === 1 ? 0.68 : 0.92 + level * 0.04;
@@ -1026,8 +1073,8 @@ function createPearlPalace(level: 1 | 2 | 3, quality: Island3DQuality, materials
     root.add(crown);
   }
   if (level === 3) {
-    for (let index = 0; index < 6; index += 1) {
-      const angle = index / 6 * Math.PI * 2;
+    for (let index = 0; index < 4; index += 1) {
+      const angle = index / 4 * Math.PI * 2;
       const buttress = box(0.15, 0.82, 0.18, materials.gold);
       buttress.position.set(Math.cos(angle) * 0.94, 0.76, Math.sin(angle) * 0.94);
       buttress.rotation.y = -angle;
@@ -1070,15 +1117,9 @@ export function buildIsland7UnderwaterLandmark(
             : createPearlPalace(resolved, quality, materials);
     if (definition.id !== 'boss') building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
     building.scale.setScalar(definition.id === 'boss' ? (resolved === 3 ? 1.34 : resolved === 2 ? 1.14 : 1) : (resolved === 3 ? 1.34 : resolved === 2 ? 1.16 : 1));
-    compactUnderwaterLandmark(building, definition.id);
+    compactUnderwaterLandmark(building, definition.id, materials);
     if (resolved === 3) addHeroFacade(building, definition.id, materials, quality);
     root.add(building);
-    if (quality === 'high' && definition.id === 'boss') {
-      const warmCore = new THREE.PointLight(0xffad51, 5.4, 5.2, 2);
-      warmCore.name = 'ISLAND_7_LANDMARK_WARM_CORE';
-      warmCore.position.set(0, 1.5, 0.3);
-      root.add(warmCore);
-    }
   }
   root.traverse((child) => { child.userData.landmarkId = definition.id; });
   // One hero shadow anchors the central palace. The four satellites keep
@@ -1121,7 +1162,9 @@ function createTerrainRelief(materials: Island7UnderwaterMaterials) {
   const root = new THREE.Group();
   root.name = 'ISLAND_7_TERRAIN_RELIEF';
   const shelfMaterial = materials.oceanStone.clone();
-  shelfMaterial.color.offsetHSL(0.012, -0.08, 0.1);
+  shelfMaterial.color.setHex(0x2c7180);
+  shelfMaterial.emissive.setHex(0x062e38);
+  shelfMaterial.emissiveIntensity = 0.1;
   const anchors: Array<[number, number, number, number]> = [
     [-1.75, -1.2, 1.05, 0.15], [1.6, -1.35, 0.88, 1.1],
     [-1.55, 1.42, 0.92, 2.05], [1.65, 1.25, 1.02, 2.85],
@@ -1690,8 +1733,8 @@ export function createIsland7UnderwaterLivingAmbience(
   root.add(submarineOrbit);
 
   const surface = new THREE.Mesh(
-    new THREE.PlaneGeometry(44, 44, quality === 'high' ? 20 : quality === 'medium' ? 14 : 8, quality === 'high' ? 20 : quality === 'medium' ? 14 : 8),
-    new THREE.MeshPhysicalMaterial({ color: 0x8ef8ff, roughness: 0.08, transparent: true, opacity: 0.22, transmission: 0, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false, forceSinglePass: true }),
+    new THREE.PlaneGeometry(44, 44, quality === 'high' ? 18 : quality === 'medium' ? 12 : 8, quality === 'high' ? 18 : quality === 'medium' ? 12 : 8),
+    new THREE.MeshBasicMaterial({ color: 0x8ef8ff, transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false, forceSinglePass: true }),
   );
   surface.name = 'ISLAND_7_WATER_SURFACE_CEILING';
   surface.rotation.x = Math.PI / 2;
@@ -1714,12 +1757,6 @@ export function createIsland7UnderwaterLivingAmbience(
   const motes = new THREE.Points(moteGeometry, new THREE.PointsMaterial({ color: 0xb9ffff, size: quality === 'low' ? 0.09 : 0.055, transparent: true, opacity: 0.42, depthWrite: false, blending: THREE.AdditiveBlending }));
   motes.name = 'ISLAND_7_WATER_MOTES';
   root.add(motes);
-
-  const cyanFill = new THREE.PointLight(0x43d9ef, quality === 'high' ? 9 : quality === 'medium' ? 5 : 2.5, 26, 2);
-  cyanFill.position.set(-8, 8, 8);
-  const pearlRim = new THREE.PointLight(0xa8fff1, quality === 'high' ? 10 : 5.5, 20, 2);
-  pearlRim.position.set(0, 7, -5);
-  root.add(cyanFill, pearlRim);
 
   compactStaticGeometry(staticScenery, 'ISLAND7_UNDERWATER_SCENERY');
   scene.add(root);
@@ -1753,7 +1790,7 @@ export function createIsland7UnderwaterLivingAmbience(
   const bubblePosition = new THREE.Vector3();
   const bubbleScale = new THREE.Vector3();
   let lastSurfaceUpdate = Number.NEGATIVE_INFINITY;
-  const surfaceUpdateInterval = quality === 'high' ? 1 / 30 : quality === 'medium' ? 1 / 22 : Number.POSITIVE_INFINITY;
+  const surfaceUpdateInterval = quality === 'high' ? 1 / 24 : quality === 'medium' ? 1 / 18 : Number.POSITIVE_INFINITY;
 
   return {
     root,
