@@ -127,6 +127,7 @@ Open gates — do not call the island 10/10 yet:
 - A generated 73 KB ornament-atlas experiment was reviewed in the actual phone camera and deliberately rejected from runtime: without authored UV islands it collapsed the buildings into dark visual noise. The rejected asset is retained as evidence so a later mesh/UV pipeline does not repeat that dead end.
 - A second controlled 45 KB facade-panel crop was tested only on the palace front and also rejected: even with bounded UVs, the flat insert did not integrate with the curved shell mass. Further image-projection experiments are closed; the remaining goal-fidelity gap requires authored UV'd/glTF landmark meshes or deliberate baked facade geometry.
 - The final Compass Current rings are preserved outside the static batch and counter-rotate at runtime, restoring visible current depth over the opaque anti-bleed backplate with only two existing draw calls. The post-change desktop run stays inside geometry limits at 165 calls / 176k triangles, but its timing run was noisy (44 FPS average, 34.3 ms p95) and remains `REVIEW`; device proof is still authoritative.
+- A final geometry-native palace pass adds a shallow pointed nave behind the existing doorway, pearl and flanking bays. Unlike the rejected texture/gold-frame experiments, it strengthens front-to-back mass without burying the hero cues or changing the footprint.
 
 Latest evidence:
 

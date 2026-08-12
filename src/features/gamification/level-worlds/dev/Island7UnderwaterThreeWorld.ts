@@ -481,6 +481,19 @@ function addHeroFacade(
     facade.add(door, arch, leftJamb, rightJamb);
   };
   if (landmarkId === 'boss') {
+    const naveShape = new THREE.Shape();
+    naveShape.moveTo(-0.48, -0.62);
+    naveShape.lineTo(0.48, -0.62);
+    naveShape.lineTo(0.48, 0.14);
+    naveShape.quadraticCurveTo(0.42, 0.5, 0, 0.72);
+    naveShape.quadraticCurveTo(-0.42, 0.5, -0.48, 0.14);
+    naveShape.closePath();
+    const nave = new THREE.Mesh(
+      new THREE.ExtrudeGeometry(naveShape, { depth: 0.08, bevelEnabled: true, bevelSegments: 1, bevelSize: 0.035, bevelThickness: 0.025 }),
+      materials.turquoise,
+    );
+    nave.position.set(0, 1.1, 1.03);
+    facade.add(nave);
     addDoor(0.5, 0.72, 0.76, 1.36);
     for (const x of [-0.48, 0.48]) addArchedWindow(facade, x, 1.42, 1.18, 1.42, materials, 0);
     const pearlArch = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.045, 6, segmentCount(quality), Math.PI), materials.gold);
