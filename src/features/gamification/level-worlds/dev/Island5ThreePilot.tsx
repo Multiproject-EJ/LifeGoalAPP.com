@@ -95,6 +95,13 @@ import {
   ISLAND_6_MOONVEIL_LANDMARK_LABELS,
   ISLAND_6_MOONVEIL_WORLD_NAME,
 } from './Island6MoonveilThreeWorld';
+import {
+  buildIsland7UnderwaterLandmark,
+  createIsland7UnderwaterLivingAmbience,
+  createIsland7UnderwaterMaterials,
+  ISLAND_7_UNDERWATER_LANDMARK_LABELS,
+  ISLAND_7_UNDERWATER_WORLD_NAME,
+} from './Island7UnderwaterThreeWorld';
 import { createIslandRunTileRewardThreeObjects } from './IslandRunTileRewardThreeObjects';
 
 export type BuildLevel = 0 | 1 | 2 | 3;
@@ -1671,6 +1678,7 @@ function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: Islan
   const isFrostmoonHaven = worldSourceNumber === 3;
   const isSunshoreAtoll = worldSourceNumber === 5;
   const isMoonveilNexus = worldSourceNumber === 6;
+  const isAbyssalPearlKingdom = worldSourceNumber === 7;
   const limestoneColor = isFirstLightKingdom
     ? 0xf1e6d3
     : isCelestialSkyKingdom
@@ -1681,6 +1689,8 @@ function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: Islan
           ? 0xe7c67d
           : isMoonveilNexus
             ? 0x242957
+            : isAbyssalPearlKingdom
+              ? 0xd8eee5
             : 0xe8dcbf;
   const limestoneShadeColor = isFirstLightKingdom
     ? 0xc5b59e
@@ -1692,6 +1702,8 @@ function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: Islan
           ? 0x8e7963
           : isMoonveilNexus
             ? 0x090b20
+            : isAbyssalPearlKingdom
+              ? 0x4d7c82
             : 0xb7a98e;
   const limestoneBrightColor = isFirstLightKingdom
     ? 0xfff8e7
@@ -1703,6 +1715,8 @@ function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: Islan
           ? 0xffe6a2
           : isMoonveilNexus
             ? 0x5961bc
+            : isAbyssalPearlKingdom
+              ? 0xf5fff3
             : 0xfff1cf;
   const reefColor = isFirstLightKingdom
     ? 0xa9a7a8
@@ -1714,6 +1728,8 @@ function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: Islan
           ? 0x81766d
           : isMoonveilNexus
             ? 0x08091b
+            : isAbyssalPearlKingdom
+              ? 0x164454
             : 0xb9a6b3;
   const grassColor = isFirstLightKingdom
     ? 0x779851
@@ -1725,6 +1741,8 @@ function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: Islan
           ? 0x4d9b45
           : isMoonveilNexus
             ? 0x17383b
+            : isAbyssalPearlKingdom
+              ? 0x27715e
             : 0x4e8f72;
   const bridgeColor = isFirstLightKingdom
     ? 0xeee1c8
@@ -1736,15 +1754,21 @@ function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: Islan
           ? 0xb26f32
           : isMoonveilNexus
             ? 0x302f66
+            : isAbyssalPearlKingdom
+              ? 0xd8d5b5
             : 0xd6c69e;
-  const roofColor = isMoonveilNexus
+  const roofColor = isAbyssalPearlKingdom
+    ? 0x159ba8
+    : isMoonveilNexus
     ? 0x202561
     : isFirstLightKingdom || isCelestialSkyKingdom
     ? 0x1d4385
     : isFrostmoonHaven
       ? 0x30488e
       : 0x6340b4;
-  const roofBrightColor = isMoonveilNexus
+  const roofBrightColor = isAbyssalPearlKingdom
+    ? 0x4ed9d2
+    : isMoonveilNexus
     ? 0x5047bd
     : isFirstLightKingdom || isCelestialSkyKingdom
     ? 0x2866b4
@@ -2789,7 +2813,7 @@ function disposeScene(scene: THREE.Scene) {
   if (scene.background instanceof THREE.Texture) textures.add(scene.background);
   if (scene.environment instanceof THREE.Texture) textures.add(scene.environment);
   scene.traverse((object) => {
-    if (!(object instanceof THREE.Mesh || object instanceof THREE.InstancedMesh || object instanceof THREE.Points)) return;
+    if (!(object instanceof THREE.Mesh || object instanceof THREE.InstancedMesh || object instanceof THREE.Points || object instanceof THREE.LineSegments)) return;
     object.geometry?.dispose();
     const objectMaterials = Array.isArray(object.material) ? object.material : [object.material];
     objectMaterials.forEach((material) => materials.add(material));
@@ -2837,6 +2861,7 @@ export default function Island5ThreePilot({
   const isFrostmoonHaven = resolvedWorldSourceNumber === 3;
   const isSunshoreAtoll = resolvedWorldSourceNumber === 5;
   const isMoonveilNexus = resolvedWorldSourceNumber === 6;
+  const isAbyssalPearlKingdom = resolvedWorldSourceNumber === 7;
   const worldName = isFirstLightKingdom
     ? ISLAND_1_WORLD_NAME
     : isCelestialSkyKingdom
@@ -2847,7 +2872,9 @@ export default function Island5ThreePilot({
           ? ISLAND_5_SUNSHORE_WORLD_NAME
           : isMoonveilNexus
             ? ISLAND_6_MOONVEIL_WORLD_NAME
-            : 'Crown of Tides';
+            : isAbyssalPearlKingdom
+              ? ISLAND_7_UNDERWATER_WORLD_NAME
+              : 'Crown of Tides';
   const isEmbedded = presentation === 'embedded';
   const [qualitySelection, setQualitySelection] = useState<Island3DQualitySelection>(readInitialQualitySelection);
   const [activePreset, setActivePreset] = useState<Island5CameraPresetId | 'manual'>('overview');
@@ -3079,6 +3106,8 @@ export default function Island5ThreePilot({
             ? 0x78d7ee
             : isMoonveilNexus
               ? 0x020316
+              : isAbyssalPearlKingdom
+                ? 0x06465e
               : 0x91d7e8;
     const fogColor = isFirstLightKingdom
       ? 0xbdebf5
@@ -3090,6 +3119,8 @@ export default function Island5ThreePilot({
             ? 0x9fe9ef
             : isMoonveilNexus
               ? 0x080a2d
+              : isAbyssalPearlKingdom
+                ? 0x07526b
               : 0x8ecdda;
     const fogDensity = isFirstLightKingdom
       ? 0.0038
@@ -3101,6 +3132,8 @@ export default function Island5ThreePilot({
             ? 0.0035
             : isMoonveilNexus
               ? 0.0022
+              : isAbyssalPearlKingdom
+                ? 0.0075
               : 0.0048;
     scene.background = new THREE.Color(backgroundColor);
     if (isMoonveilNexus) {
@@ -3109,13 +3142,19 @@ export default function Island5ThreePilot({
       moonveilSky.wrapS = THREE.ClampToEdgeWrapping;
       moonveilSky.wrapT = THREE.ClampToEdgeWrapping;
       scene.background = moonveilSky;
+    } else if (isAbyssalPearlKingdom) {
+      const abyssalCavern = new THREE.TextureLoader().load('/assets/islands/island-007/background/abyssal-cavern-backdrop-v1.webp');
+      abyssalCavern.colorSpace = THREE.SRGBColorSpace;
+      abyssalCavern.wrapS = THREE.ClampToEdgeWrapping;
+      abyssalCavern.wrapT = THREE.ClampToEdgeWrapping;
+      scene.background = abyssalCavern;
     }
     scene.fog = new THREE.FogExp2(fogColor, fogDensity);
 
     // Leave enough depth for the First Light horizon ring at every camera
     // azimuth; foreground gameplay geometry remains inside the shadow budget.
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 210);
-    camera.zoom = isMoonveilNexus ? 1.2 : 1;
+    camera.zoom = isMoonveilNexus ? 1.2 : isAbyssalPearlKingdom ? 1.12 : 1;
     camera.updateProjectionMatrix();
     const overview = getIsland5CameraPreset('overview');
     const restoredCameraPose = cameraPoseSnapshotRef.current;
@@ -3135,6 +3174,8 @@ export default function Island5ThreePilot({
             ? 0.9
             : isMoonveilNexus
               ? 0.96
+              : isAbyssalPearlKingdom
+                ? 1.08
               : 1.06;
     renderer.setPixelRatio(getIsland3DRendererPixelRatio(qualityProfile, window.devicePixelRatio));
     renderer.shadowMap.enabled = qualityProfile.shadows;
@@ -3166,6 +3207,8 @@ export default function Island5ThreePilot({
             ? 0x50754d
             : isMoonveilNexus
               ? 0x070312
+              : isAbyssalPearlKingdom
+                ? 0x032c3a
               : 0x28566a;
     const hemisphereIntensity = isFirstLightKingdom
       ? 1.7
@@ -3177,8 +3220,10 @@ export default function Island5ThreePilot({
             ? 1.82
             : isMoonveilNexus
               ? 1.24
+              : isAbyssalPearlKingdom
+                ? 1.82
               : 2.25;
-    const hemisphere = new THREE.HemisphereLight(isMoonveilNexus ? 0x7181ff : 0xeefcff, hemisphereGroundColor, hemisphereIntensity);
+    const hemisphere = new THREE.HemisphereLight(isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : 0xeefcff, hemisphereGroundColor, hemisphereIntensity);
     scene.add(hemisphere);
     const sunlightIntensity = isFirstLightKingdom
       ? 3.15
@@ -3190,9 +3235,11 @@ export default function Island5ThreePilot({
             ? 3.25
             : isMoonveilNexus
               ? 2.05
+              : isAbyssalPearlKingdom
+                ? 3.05
               : 4.2;
     const sunlight = new THREE.DirectionalLight(
-      isMoonveilNexus ? 0xa8b6ff : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
+      isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
       sunlightIntensity,
     );
     sunlight.position.set(-9, 15, 10);
@@ -3213,7 +3260,8 @@ export default function Island5ThreePilot({
     const island3FrostmoonMaterials = isFrostmoonHaven ? createIsland3FrostmoonMaterials() : null;
     const island5SunshoreMaterials = isSunshoreAtoll ? createIsland5SunshoreWorldMaterials() : null;
     const island6MoonveilMaterials = isMoonveilNexus ? createIsland6MoonveilMaterials() : null;
-    const hasBrightWater = isFirstLightKingdom || isCelestialSkyKingdom || isSunshoreAtoll;
+    const island7UnderwaterMaterials = isAbyssalPearlKingdom ? createIsland7UnderwaterMaterials() : null;
+    const hasBrightWater = isFirstLightKingdom || isCelestialSkyKingdom || isSunshoreAtoll || isAbyssalPearlKingdom;
     const waterMaterial = new THREE.MeshPhysicalMaterial({
       color: isFirstLightKingdom
         ? 0x52c7e8
@@ -3225,6 +3273,8 @@ export default function Island5ThreePilot({
               ? 0x18bad0
               : isMoonveilNexus
                 ? 0x08031d
+                : isAbyssalPearlKingdom
+                  ? 0x12627b
                 : 0x2a98bb,
       roughness: hasBrightWater ? 0.12 : isFrostmoonHaven ? 0.2 : 0.18,
       metalness: 0.06,
@@ -3254,7 +3304,7 @@ export default function Island5ThreePilot({
     // Celestial Sky Kingdom owns a deeper, tapered procedural sky-root in its
     // ambience layer. Hiding the generic coastal cylinder prevents the island
     // from reading as a flat plate while preserving the canonical board above.
-    island.visible = !isCelestialSkyKingdom && !isMoonveilNexus;
+    island.visible = !isCelestialSkyKingdom && !isMoonveilNexus && !isAbyssalPearlKingdom;
     scene.add(island);
 
     ISLAND_5_LANDMARKS.filter((entry) => entry.id !== 'boss').forEach((landmark, landmarkIndex) => {
@@ -3267,12 +3317,12 @@ export default function Island5ThreePilot({
         position: landmark.position,
         seed: 0x51a7 + landmarkIndex * 0x913,
       });
-      satellite.visible = !isCelestialSkyKingdom && !isMoonveilNexus;
+      satellite.visible = !isCelestialSkyKingdom && !isMoonveilNexus && !isAbyssalPearlKingdom;
       scene.add(satellite);
       const bridgeStart: readonly [number, number, number] = [landmark.position[0] * 0.56, 0, landmark.position[2] * 0.56];
       const bridgeEnd: readonly [number, number, number] = [landmark.position[0] * 0.82, 0, landmark.position[2] * 0.82];
       const sharedBridge = createBridge(bridgeStart, bridgeEnd, materials.bridge);
-      sharedBridge.visible = !isMoonveilNexus;
+      sharedBridge.visible = !isMoonveilNexus && !isAbyssalPearlKingdom;
       scene.add(sharedBridge);
     });
 
@@ -3280,7 +3330,7 @@ export default function Island5ThreePilot({
     innerLagoon.rotation.x = -Math.PI / 2;
     innerLagoon.position.y = 0.255;
     innerLagoon.receiveShadow = true;
-    innerLagoon.visible = !isMoonveilNexus;
+    innerLagoon.visible = !isMoonveilNexus && !isAbyssalPearlKingdom;
     scene.add(innerLagoon);
 
     const livingAmbience = isFirstLightKingdom && island1Materials
@@ -3293,6 +3343,8 @@ export default function Island5ThreePilot({
             ? createIsland5SunshoreLivingAmbience(scene, qualityProfile, island5SunshoreMaterials, water)
             : isMoonveilNexus && island6MoonveilMaterials
               ? createIsland6MoonveilLivingAmbience(scene, qualityProfile, island6MoonveilMaterials, water)
+            : isAbyssalPearlKingdom && island7UnderwaterMaterials
+              ? createIsland7UnderwaterLivingAmbience(scene, qualityProfile, island7UnderwaterMaterials, water)
             : createIsland5LivingAmbience(scene, renderer, qualityProfile, materials, water);
 
     const tileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
@@ -3327,6 +3379,12 @@ export default function Island5ThreePilot({
             new THREE.MeshStandardMaterial({ color: 0x523fa6, roughness: 0.35, metalness: 0.21, emissive: 0x612fd7, emissiveIntensity: 0.95 }),
             new THREE.MeshStandardMaterial({ color: 0x65e7ff, roughness: 0.2, metalness: 0.22, emissive: 0x3265ff, emissiveIntensity: 1.25 }),
           ]
+      : isAbyssalPearlKingdom
+        ? [
+            new THREE.MeshPhysicalMaterial({ color: 0x07549a, roughness: 0.31, metalness: 0.11, clearcoat: 0.62, emissive: 0x063667, emissiveIntensity: 0.3 }),
+            new THREE.MeshPhysicalMaterial({ color: 0x6fc9c7, roughness: 0.42, metalness: 0.04, clearcoat: 0.46, emissive: 0x104e5b, emissiveIntensity: 0.17 }),
+            new THREE.MeshStandardMaterial({ color: 0xe8bd5c, roughness: 0.28, metalness: 0.62, emissive: 0x74400a, emissiveIntensity: 0.22 }),
+          ]
       : [
           new THREE.MeshStandardMaterial({ color: 0xf3e4bd, roughness: 0.7 }),
           new THREE.MeshStandardMaterial({ color: 0x8c67cf, roughness: 0.56 }),
@@ -3337,6 +3395,13 @@ export default function Island5ThreePilot({
       ? [
           new THREE.LineBasicMaterial({ color: 0xb4a0ff, transparent: true, opacity: 0.88 }),
           new THREE.LineBasicMaterial({ color: 0xb4f5ff, transparent: true, opacity: 1 }),
+        ]
+      : [];
+    const abyssalTileEdgeGeometry = isAbyssalPearlKingdom ? new THREE.EdgesGeometry(tileGeometry, 28) : null;
+    const abyssalTileEdgeMaterials = isAbyssalPearlKingdom
+      ? [
+          new THREE.LineBasicMaterial({ color: 0xe2ba61, transparent: true, opacity: 0.48 }),
+          new THREE.LineBasicMaterial({ color: 0xffdf79, transparent: true, opacity: 0.78 }),
         ]
       : [];
     const tileMeshes = new Map<number, { mesh: THREE.Mesh; baseY: number }>();
@@ -3359,6 +3424,15 @@ export default function Island5ThreePilot({
       }
       tileMeshes.set(transform.index, { mesh: tile, baseY: transform.position[1] });
       scene.add(tile);
+      if (isAbyssalPearlKingdom) {
+        const tileEdge = new THREE.LineSegments(
+          abyssalTileEdgeGeometry!,
+          abyssalTileEdgeMaterials[transform.isKeyTile ? 1 : 0],
+        );
+        tileEdge.name = 'ISLAND_7_GILDED_TILE_EDGE';
+        tileEdge.position.y = 0.006;
+        tile.add(tileEdge);
+      }
     }
 
     // Three-dimensional tile rewards are projections of the canonical tile
@@ -3449,6 +3523,8 @@ export default function Island5ThreePilot({
               ? buildIsland5SunshoreLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island5SunshoreMaterials)
               : isMoonveilNexus && island6MoonveilMaterials
                 ? buildIsland6MoonveilLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island6MoonveilMaterials)
+              : isAbyssalPearlKingdom && island7UnderwaterMaterials
+                ? buildIsland7UnderwaterLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island7UnderwaterMaterials)
               : buildLandmark(landmark, resolvedBuildLevel, qualityProfile.id, materials);
       scene.add(landmarkRoot);
       clickableLandmarks.push(landmarkRoot);
@@ -3467,7 +3543,7 @@ export default function Island5ThreePilot({
     const voicePrism = scene.getObjectByName('CROWN_CITADEL_VOICE_PRISM');
     const voiceLight = scene.getObjectByName('CROWN_CITADEL_VOICE_LIGHT');
 
-    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus
+    const coralInstances = isFirstLightKingdom || isCelestialSkyKingdom || isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom
       ? new THREE.Group()
       : addAmbientReefDetails(scene, qualityProfile.ambientDetailCount, materials);
     const routeGlowColor = isFirstLightKingdom
@@ -3480,6 +3556,8 @@ export default function Island5ThreePilot({
             ? 0x77e8df
             : isMoonveilNexus
               ? 0x72ecff
+              : isAbyssalPearlKingdom
+                ? 0x9ffff4
               : 0xffdb8c;
     const routeGlowEmissive = isFirstLightKingdom
       ? 0x247bb2
@@ -3491,6 +3569,8 @@ export default function Island5ThreePilot({
             ? 0x11767a
             : isMoonveilNexus
               ? 0x3d2dff
+              : isAbyssalPearlKingdom
+                ? 0x0a7898
               : 0xa96f18;
     const routeGlow = new THREE.Mesh(
       new THREE.TorusGeometry(3.4, 0.055, 8, 96),
@@ -3503,7 +3583,7 @@ export default function Island5ThreePilot({
     // Deterministic Gauntlet evidence mode. The scene keeps its authored
     // geometry and camera, but removes texture/material-map influence so the
     // blockout can be judged on silhouette and structure alone.
-    const isMapStrippedEvidence = (isSunshoreAtoll || isMoonveilNexus)
+    const isMapStrippedEvidence = (isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom)
       && new URLSearchParams(window.location.search).get('island3dMapStripped') === '1';
     const evidenceOverrideMaterial = isMapStrippedEvidence
       ? new THREE.MeshBasicMaterial({ color: 0xb8c1bd, side: THREE.DoubleSide })
@@ -3622,9 +3702,24 @@ export default function Island5ThreePilot({
         wisdom: { position: [1.6, 9.6, -4.5], target: [-2.96, 1.42, 6.05] },
         event: { position: [-1.6, 9.6, -4.5], target: [2.96, 1.4, 6.05] },
       };
+      const underwaterFocusOverrides: Partial<Record<Island5CameraPresetId, {
+        position: readonly [number, number, number];
+        target: readonly [number, number, number];
+      }>> = {
+        overview: { position: [0, 18.5, 25], target: [0, 0.45, 0] },
+        survey: { position: [0, 29, 37], target: [0, 0.15, 0] },
+        'orbit-left': { position: [-23, 22, 27], target: [0, 0.25, 0] },
+        'orbit-right': { position: [23, 22, 27], target: [0, 0.25, 0] },
+        boss: { position: [0, 10.8, 15.6], target: [0, 1.5, 0] },
+        hatchery: { position: [-10.2, 8.6, -9.6], target: [-4.36, 1.18, -3.9] },
+        habit: { position: [10.2, 8.6, -9.6], target: [4.36, 1.2, -3.9] },
+        wisdom: { position: [-10.2, 8.5, 9.8], target: [-4.36, 1.15, 3.9] },
+        event: { position: [10.2, 8.5, 9.8], target: [4.36, 1.12, 3.9] },
+      };
       const firstLightOverride = isFirstLightKingdom ? firstLightFocusOverrides[id] : undefined;
       const moonveilOverride = isMoonveilNexus ? moonveilFocusOverrides[id] : undefined;
-      const authoredFocusOverride = firstLightOverride ?? moonveilOverride;
+      const underwaterOverride = isAbyssalPearlKingdom ? underwaterFocusOverrides[id] : undefined;
+      const authoredFocusOverride = firstLightOverride ?? moonveilOverride ?? underwaterOverride;
       const preset = authoredFocusOverride ? { ...basePreset, ...authoredFocusOverride } : basePreset;
       setBoardActorsVisibleForPreset(id);
       setActivePreset(id);
@@ -4313,7 +4408,7 @@ export default function Island5ThreePilot({
       stopTourRef.current = () => undefined;
       startProfilerRef.current = () => undefined;
     };
-  }, [buildLevel, deviceSignals, islandNumber, isCelestialSkyKingdom, isFirstLightKingdom, isFrostmoonHaven, isMoonveilNexus, isReducedMotion, isSunshoreAtoll, landmarkBuildLevelsKey, qualityProfile, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
+  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCelestialSkyKingdom, isFirstLightKingdom, isFrostmoonHaven, isMoonveilNexus, isReducedMotion, isSunshoreAtoll, landmarkBuildLevelsKey, qualityProfile, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
 
   return (
     <section
@@ -4422,7 +4517,9 @@ export default function Island5ThreePilot({
                       ? ISLAND_5_SUNSHORE_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_5_SUNSHORE_LANDMARK_LABELS]
                       : isMoonveilNexus
                         ? ISLAND_6_MOONVEIL_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_6_MOONVEIL_LANDMARK_LABELS]
-                      : preset.label}
+                        : isAbyssalPearlKingdom
+                          ? ISLAND_7_UNDERWATER_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_7_UNDERWATER_LANDMARK_LABELS]
+                          : preset.label}
             </option>
           ))}
         </select>

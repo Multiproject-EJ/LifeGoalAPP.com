@@ -37,10 +37,43 @@ import {
   ISLAND_6_ROUTE_CLEARANCE_INNER_RADIUS,
   ISLAND_6_ROUTE_CLEARANCE_OUTER_RADIUS,
 } from '../../dev/Island6MoonveilThreeWorld';
+import {
+  isIsland7RouteCorridorClear,
+  ISLAND_7_ROUTE_CLEARANCE_INNER_RADIUS,
+  ISLAND_7_ROUTE_CLEARANCE_OUTER_RADIUS,
+} from '../../dev/Island7UnderwaterThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'keeps Abyssal Pearl scenery outside the protected route and preserves adaptive living-water systems',
+    run: async () => {
+      assert(isIsland7RouteCorridorClear(ISLAND_7_ROUTE_CLEARANCE_INNER_RADIUS - 0.2, 0, 0.16), 'inner palace gardens may remain inside the route with clearance');
+      assert(!isIsland7RouteCorridorClear(3.4, 0, 0.01), 'underwater coral may not enter the canonical tile centreline');
+      assert(isIsland7RouteCorridorClear(ISLAND_7_ROUTE_CLEARANCE_OUTER_RADIUS + 0.2, 0, 0.16), 'outer reef gardens may begin beyond the route with clearance');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island7UnderwaterThreeWorld.ts', 'utf8');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      assert(worldSource.includes("root.name = 'ISLAND_7_FISH_SCHOOLS'"), 'Island 007 needs independently animated fish schools');
+      assert(worldSource.includes("root.name = 'ISLAND_7_BUBBLE_FIELD'"), 'Island 007 needs a quality-scaled bubble field');
+      assert(worldSource.includes("surface.name = 'ISLAND_7_WATER_SURFACE_CEILING'"), 'Island 007 needs a readable animated water-surface ceiling');
+      assert(worldSource.includes("submarineOrbit.name = 'ISLAND_7_SUBMARINE_ORBIT'"), 'Island 007 needs its distinctive fantasy submarine ambience');
+      assert(worldSource.includes("animatedKelp.name = 'ISLAND_7_ANIMATED_KELP_GARDEN'"), 'animated kelp must remain outside static geometry compaction');
+      assert(worldSource.includes("quality === 'high' ? 96 : quality === 'medium' ? 58 : 28"), 'bubble density must scale across all three device tiers');
+      assert(worldSource.includes('new THREE.InstancedMesh(geometry, materials.bubble, count)'), 'bubble ambience must stay one instanced draw-call family');
+      assert(worldSource.includes('const surfaceUpdateInterval'), 'water-surface deformation must be cadence-limited per quality tier');
+      assert(worldSource.includes('bubblePosition.set('), 'bubble animation must reuse scratch vectors instead of allocating per bubble per frame');
+      assert(!worldSource.includes('shaft.position.x +='), 'light shafts must use absolute time-based motion without cumulative drift');
+      assert(!worldSource.includes('fish.position.y +='), 'foreground fish must not accumulate frame-rate-dependent vertical drift');
+      assert(!worldSource.includes('jelly.rotation.y +='), 'jellyfish rotation must remain elapsed-time based across frame rates');
+      assert(pilotSource.includes("'/assets/islands/island-007/background/abyssal-cavern-backdrop-v1.webp'"), 'underwater depth backdrop must remain an optimized WebP asset');
+      assert(pilotSource.includes("tileEdge.name = 'ISLAND_7_GILDED_TILE_EDGE'"), 'the clean underwater route needs restrained, non-collectible gilded edging');
+      assert(pilotSource.includes('const abyssalTileEdgeGeometry = isAbyssalPearlKingdom ? new THREE.EdgesGeometry'), 'all 36 underwater tiles must share one edge geometry');
+      assert(pilotSource.includes('object instanceof THREE.LineSegments'), 'generic scene cleanup must dispose shared line geometry and materials');
+    },
+  },
   {
     name: 'keeps Moonveil scenery outside the protected 36-tile route corridor',
     run: async () => {
@@ -578,7 +611,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6].includes(islandParam)'), 'the workbench should expose all six authored islands for repeatable landmark QA');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7].includes(islandParam)'), 'the workbench should expose all seven authored islands for repeatable landmark QA');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
       assert(mainSource.includes('import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED'), 'internal profiler bundle must not register the production service worker');

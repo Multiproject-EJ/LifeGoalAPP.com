@@ -16,7 +16,7 @@ function readInitialPreviewState() {
   const requestedLevelParam = params.get('level');
   const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
   const islandParam = Number(params.get('island'));
-  const islandNumber = [1, 2, 3, 4, 5, 6].includes(islandParam) ? islandParam : 5;
+  const islandNumber = [1, 2, 3, 4, 5, 6, 7].includes(islandParam) ? islandParam : 5;
   const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
   return {
     mode: requestedMode === 'clay' || requestedMode === 'proof' || requestedMode === '3d'
