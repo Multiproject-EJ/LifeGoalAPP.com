@@ -49,7 +49,7 @@ export interface Island7UnderwaterMaterials {
 export interface Island7UnderwaterAmbienceRuntime {
   root: THREE.Group;
   animate: (elapsed: number) => void;
-  updateView?: (cameraPosition: THREE.Vector3) => void;
+  updateView?: (cameraPosition: THREE.Vector3, cameraTarget?: THREE.Vector3) => void;
 }
 
 // High deliberately stops at 16 radial segments. The difference from 18 is
@@ -1706,6 +1706,26 @@ export function createIsland7UnderwaterLivingAmbience(
     staticScenery.add(lobe);
   });
   addArchitecturalReefGardens(staticScenery, materials, quality);
+  // Two broad, asymmetric foreground shelves break the main root's uniform
+  // cylinder silhouette. They carry existing reef geometry outside the route
+  // and make the island read as a grown seabed formation in the phone camera.
+  const foregroundShelfSpecs: Array<[number, number, number, number]> = [
+    [-3.45, 7.02, 1.18, -0.28],
+    [3.72, 6.92, 0.98, 0.34],
+  ];
+  foregroundShelfSpecs.forEach(([x, z, scale, rotation], index) => {
+    if (!isIsland7RouteCorridorClear(x, z, scale * 0.76)) return;
+    const shelf = new THREE.Mesh(new THREE.DodecahedronGeometry(scale, 0), materials.deepStone);
+    shelf.scale.set(1.38, 0.34 + index * 0.06, 0.72);
+    shelf.position.set(x, -0.18 - index * 0.12, z);
+    shelf.rotation.set(0.08, rotation, index ? -0.06 : 0.09);
+    staticScenery.add(shelf);
+    const cap = cylinder(scale * 0.68, scale * 0.78, 0.12, materials.oceanStone, 10);
+    cap.position.set(x, 0.08 - index * 0.04, z - 0.08);
+    cap.scale.z = 0.72;
+    cap.rotation.y = rotation;
+    staticScenery.add(cap);
+  });
 
   const heroReefAnchors: Array<[number, number, number, number]> = [
     [-6.2, -4.8, 1.75, 0.2], [-4.9, -6.0, 1.55, 0.7], [6.15, -4.7, 1.8, 1.1], [4.8, -6.05, 1.55, 1.6],
@@ -2013,8 +2033,24 @@ export function createIsland7UnderwaterLivingAmbience(
         if (material instanceof THREE.MeshPhysicalMaterial) material.emissiveIntensity = 0.3 + Math.sin(elapsed * 0.82 + index) * 0.1;
       });
     },
-    updateView: (cameraPosition) => {
+    updateView: (cameraPosition, cameraTarget) => {
       whale.visible = cameraPosition.distanceTo(whale.position) < 85;
+      if (!cameraTarget) return;
+      // Landmark close-ups already hide the four non-selected buildings. Cull
+      // distant full-screen water ambience there too: it cannot contribute to
+      // a focus view, but transparent overdraw was still paid during the most
+      // demanding portion of the 30-second choreography.
+      const focusView = cameraPosition.distanceTo(cameraTarget) < 13.5;
+      const sideOrbitView = !focusView && Math.abs(cameraPosition.x - cameraTarget.x) > 15;
+      surface.visible = !focusView;
+      lightShafts.forEach((shaft) => { shaft.visible = !focusView; });
+      mantaOrbit.visible = !focusView && !sideOrbitView;
+      submarineOrbit.visible = !focusView && !sideOrbitView;
+      whale.visible = whale.visible && !sideOrbitView;
+      fishSchools.root.visible = !focusView && !sideOrbitView;
+      foregroundFish.visible = !focusView && !sideOrbitView;
+      heroFish.visible = !focusView && !sideOrbitView;
+      jellyfish.forEach((jelly) => { jelly.visible = !focusView && !sideOrbitView; });
     },
   };
 }

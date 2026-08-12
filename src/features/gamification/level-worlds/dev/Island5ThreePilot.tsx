@@ -254,6 +254,9 @@ interface PilotProfileReport extends Island3DPerformanceSummary {
   maxDrawCalls: number;
   maxTriangles: number;
   geometryBudgetPass: boolean;
+  measuredRefreshFps: number;
+  refreshNormalizedP95Ms: number;
+  refreshNormalizedTimingPass: boolean;
   rendererWidth: number;
   rendererHeight: number;
   gpuVendor?: string;
@@ -3965,10 +3968,11 @@ export default function Island5ThreePilot({
     stopTourRef.current = () => stopTour(true);
 
     const profilerChoreography: readonly { atMs: number; preset: Island5CameraPresetId }[] = [
-      { atMs: 5_000, preset: 'boss' },
-      { atMs: 11_000, preset: 'orbit-left' },
-      { atMs: 17_000, preset: 'hatchery' },
-      { atMs: 23_000, preset: 'overview' },
+      { atMs: 4_500, preset: 'boss' },
+      { atMs: 9_500, preset: 'orbit-left' },
+      { atMs: 14_500, preset: 'hatchery' },
+      { atMs: 19_500, preset: 'orbit-right' },
+      { atMs: 24_500, preset: 'overview' },
     ];
 
     const cancelProfiler = (notice: string) => {
@@ -4074,7 +4078,7 @@ export default function Island5ThreePilot({
       lastAnimationFrameAt = now;
       // View culling is accessibility-neutral scene hygiene, not decorative
       // motion, so it must still run when reduced motion freezes ambience.
-      livingAmbience.updateView?.(camera.position);
+      livingAmbience.updateView?.(camera.position, controls.target);
       if (!isReducedMotion) {
         livingAmbience.animate(elapsed);
         tileRewardObjects.animate(elapsed, tokenIndexRef.current);
@@ -4522,12 +4526,34 @@ export default function Island5ThreePilot({
             maxDrawCalls: activeProfiler.maxDrawCalls,
             maxTriangles: activeProfiler.maxTriangles,
             geometryBudgetPass: activeProfiler.maxDrawCalls <= 175 && activeProfiler.maxTriangles <= 180_000,
+            measuredRefreshFps: 0,
+            refreshNormalizedP95Ms: 0,
+            refreshNormalizedTimingPass: false,
             rendererWidth: Math.round(rendererSize.x * renderer.getPixelRatio()),
             rendererHeight: Math.round(rendererSize.y * renderer.getPixelRatio()),
             gpuVendor: String(gl.getParameter(debugRendererInfo?.UNMASKED_VENDOR_WEBGL ?? gl.VENDOR)),
             gpuRenderer: String(gl.getParameter(debugRendererInfo?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER)),
             deviceSignals,
           };
+          // A 60 Hz display has discrete 16.7/33.3 ms presentation bands. A
+          // scene that misses occasional vsyncs can therefore report ~33 ms
+          // p95 even when it satisfies the user-visible 50 FPS and slow-frame
+          // targets. Record that distinction instead of silently weakening
+          // the canonical continuous-frame target.
+          const fastestSampleCount = Math.max(1, Math.floor(activeProfiler.frameTimesMs.length * 0.2));
+          const fastestSamples = activeProfiler.frameTimesMs
+            .filter((sample) => Number.isFinite(sample) && sample > 0)
+            .slice()
+            .sort((left, right) => left - right)
+            .slice(0, fastestSampleCount);
+          const refreshFrameMs = fastestSamples.reduce((total, sample) => total + sample, 0) / fastestSamples.length;
+          report.measuredRefreshFps = Math.round(1000 / refreshFrameMs);
+          const refreshBucketMs = 1000 / Math.max(1, report.measuredRefreshFps);
+          const refreshBands = Math.max(1, Math.round(report.p95FrameMs / refreshBucketMs));
+          report.refreshNormalizedP95Ms = Math.round((report.p95FrameMs / refreshBands) * 10) / 10;
+          report.refreshNormalizedTimingPass = report.averageFps >= report.target.minAverageFps
+            && report.slowFramePercent <= report.target.maxSlowFramePercent
+            && report.refreshNormalizedP95Ms <= report.target.maxP95FrameMs;
           if (!report.geometryBudgetPass && report.rating === 'pass') report.rating = 'review';
           activeProfiler = null;
           controls.enabled = true;
@@ -4674,6 +4700,7 @@ export default function Island5ThreePilot({
           <dl>
             <div><dt>Average</dt><dd>{profileReport.averageFps} FPS</dd></div>
             <div><dt>P95 frame</dt><dd>{profileReport.p95FrameMs} ms</dd></div>
+            <div><dt>P95 / refresh</dt><dd>{profileReport.refreshNormalizedP95Ms} ms · {profileReport.refreshNormalizedTimingPass ? 'PASS' : 'REVIEW'}</dd></div>
             <div><dt>Worst</dt><dd>{profileReport.worstFrameMs} ms</dd></div>
             <div><dt>Slow</dt><dd>{profileReport.slowFramePercent}%</dd></div>
             <div><dt>Max calls</dt><dd>{profileReport.maxDrawCalls}</dd></div>

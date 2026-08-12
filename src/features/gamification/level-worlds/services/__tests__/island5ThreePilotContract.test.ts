@@ -68,6 +68,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(worldSource.includes('portalVortexRings.forEach'), 'portal current depth must animate without per-frame scene traversal');
       assert(worldSource.includes('isIsland7RouteCorridorClear(fanX, fanZ, scale * 0.34)'), 'architectural sea fans must independently clear the canonical route');
       assert(worldSource.includes('const surfaceUpdateInterval'), 'water-surface deformation must be cadence-limited per quality tier');
+      assert(worldSource.includes('const focusView = cameraPosition.distanceTo(cameraTarget) < 13.5'), 'underwater landmark focus must cull distant transparent ambience by camera semantics');
+      assert(worldSource.includes('const sideOrbitView = !focusView'), 'side-orbit cameras must cull only off-camera hero fauna before the geometry budget is sampled');
+      assert(pilotSource.includes('livingAmbience.updateView?.(camera.position, controls.target);'), 'view culling must receive the active camera target without reading gameplay state');
       assert(worldSource.includes('bubblePosition.set('), 'bubble animation must reuse scratch vectors instead of allocating per bubble per frame');
       assert(!worldSource.includes('shaft.position.x +='), 'light shafts must use absolute time-based motion without cumulative drift');
       assert(!worldSource.includes('fish.position.y +='), 'foreground fish must not accumulate frame-rate-dependent vertical drift');
@@ -142,7 +145,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
-      const viewUpdateIndex = pilotSource.indexOf('livingAmbience.updateView?.(camera.position);');
+      const viewUpdateIndex = pilotSource.indexOf('livingAmbience.updateView?.(camera.position, controls.target);');
       const reducedMotionIndex = pilotSource.indexOf('if (!isReducedMotion) {', viewUpdateIndex);
       const animateIndex = pilotSource.indexOf('livingAmbience.animate(elapsed);', reducedMotionIndex);
       assert(viewUpdateIndex >= 0 && viewUpdateIndex < reducedMotionIndex, 'camera-side scenery culling must still run in reduced-motion mode');
@@ -693,8 +696,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('progress * progress * progress'), 'cinematic transitions should use zero-velocity smootherstep endpoints');
       assert(pilotSource.includes('if (activeTour) return;'), 'device profiling and the cinematic tour must be mutually exclusive');
       assert(pilotSource.includes('ISLAND_3D_PROFILE_DURATION_MS'), 'pilot should run the canonical 30-second evidence window');
+      assert(pilotSource.includes("{ atMs: 19_500, preset: 'orbit-right' }"), 'the profile must sample the historically most expensive right orbit rather than reporting only overview maxima');
       assert(pilotSource.includes("document.addEventListener('visibilitychange'"), 'profiler should reject background-tab evidence');
       assert(pilotSource.includes('summarizeIsland3DPerformance'), 'profiler should use the pure tested summary contract');
+      assert(pilotSource.includes('refreshNormalizedP95Ms'), 'profiler should distinguish 60 Hz missed-vsync bands from continuous-frame timing without weakening the raw target');
       assert(pilotSource.includes("profileSchema: 'island-3d-m7-v1'"), 'physical-device evidence should carry one stable schema id across authored island world packs');
       assert(pilotSource.includes('navigator.share'), 'completed phone evidence should be shareable without developer tools');
       assert(pilotSource.includes("gl.getExtension('WEBGL_debug_renderer_info')"), 'device evidence should record the available GPU renderer identity');

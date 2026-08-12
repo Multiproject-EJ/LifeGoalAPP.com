@@ -8312,6 +8312,135 @@
       ],
       "renderHash": "0dc07ddcdc7b7b31",
       "passId": "blockout"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9437,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0033,
+        "colorDelta": {
+          "checked": 26,
+          "maxDeltaE": 70.82,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 10.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 26.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.52
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 26.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 70.82
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 63.25
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 25.46
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.69
+            },
+            {
+              "componentId": null,
+              "deltaE": 25.46
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.47
+            },
+            {
+              "componentId": null,
+              "deltaE": 63.25
+            },
+            {
+              "componentId": null,
+              "deltaE": 10.67
+            },
+            {
+              "componentId": null,
+              "deltaE": 70.82
+            },
+            {
+              "componentId": null,
+              "deltaE": 31.84
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "blockout requires --map-stripped-render evidence"
+      ],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "be99f140bc75f342",
+      "passId": "blockout"
     }
   ]
 }

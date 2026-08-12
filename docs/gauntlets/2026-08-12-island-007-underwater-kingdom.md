@@ -129,6 +129,17 @@ Open gates — do not call the island 10/10 yet:
 - The final Compass Current rings are preserved outside the static batch and counter-rotate at runtime, restoring visible current depth over the opaque anti-bleed backplate with only two existing draw calls. The post-change desktop run stays inside geometry limits at 165 calls / 176k triangles, but its timing run was noisy (44 FPS average, 34.3 ms p95) and remains `REVIEW`; device proof is still authoritative.
 - A final geometry-native palace pass adds a shallow pointed nave behind the existing doorway, pearl and flanking bays. Unlike the rejected texture/gold-frame experiments, it strengthens front-to-back mass without burying the hero cues or changing the footprint.
 
+### Pass 14 performance and 360 checkpoint
+
+- Added semantic camera culling without changing gameplay or board authority. Landmark close-ups now omit only the distant transparent water/fauna layers that cannot contribute to the selected facade, and side orbits omit off-camera hero fauna while retaining the water surface, reef, architecture and light shafts.
+- Expanded the canonical 30-second choreography to sample Overview, Pearl Throne, Left orbit, Hatchery, Right orbit, then Overview. Right orbit was previously the most expensive unmeasured view, so maxima now cover the full authored camera set rather than a favorable endpoint.
+- Added refresh-band evidence beside the unchanged raw frame target. The profiler still rates raw p95 honestly, but now records whether missed 60 Hz presentation bands normalize to an acceptable rendered-frame cost; this avoids relabeling a 32 ms raw p95 as a canonical pass.
+- Added two broad asymmetric foreground seabed shelves to break the uniform root silhouette without entering the protected route or adding expensive reef bouquets.
+- Final current High desktop-browser choreography: 55.9 FPS average, 32.5 ms raw p95, 16.3 ms refresh-normalized p95, 7.4% slow frames, 169 maximum calls and 170k maximum triangles. Geometry and refresh-normalized timing pass; the unchanged raw p95 keeps the overall result at `REVIEW` pending physical-device proof.
+- TypeScript, production build, Island 007 contracts, architecture guard and template geometry gate pass. The full Island Run suite remains 1726 pass / 3 fail on the same unrelated Island 1 migration baseline.
+- The img2threejs Tier-1 diagnostic correctly refuses to advance the old `blockout` state because the current proof is a fully shaded in-app render rather than the required map-stripped blockout capture. Its measured silhouette IoU is 0.9437, but the pass remains open; no false pipeline completion is recorded.
+- Physical iPhone Auto and forced-High 30-second profiles remain the only device gate. Do not call the island 10/10 or release-ready until those runs are recorded.
+
 Latest evidence:
 
 - `docs/gauntlets/evidence/island-007-underwater-v1/final-overview-structural-upgrade.png`
@@ -152,3 +163,9 @@ Latest evidence:
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-motion-t0.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-motion-t6.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/final-committed-overview-post-nave.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass14-overview.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass14-left-orbit.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass14-right-orbit.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass14-motion-t0.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass14-motion-t6.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass14-profile.png`

@@ -670,7 +670,6 @@ export function getIsland3DRendererPixelRatio(
   const safeDeviceRatio = Number.isFinite(devicePixelRatio) ? Math.max(0.5, devicePixelRatio) : 1;
   return Math.min(profile.maxPixelRatio, safeDeviceRatio, worldPixelRatioCap);
 }
-
 export function buildIsland5TileTransforms(anchors: readonly TileAnchor[]): Island5TileTransform[] {
   return anchors.map((anchor, index) => ({
     id: anchor.id,
