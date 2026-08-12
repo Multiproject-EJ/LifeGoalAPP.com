@@ -52,6 +52,78 @@ export interface Island7UnderwaterAmbienceRuntime {
   updateView?: (cameraPosition: THREE.Vector3, cameraTarget?: THREE.Vector3) => void;
 }
 
+export const ISLAND_7_RUNTIME_PART_IDS = [
+  'terrain-network',
+  'landmark-network',
+  'route-integration',
+  'ambience-system',
+  'central-seabed',
+  'outer-reef-shelves',
+  'hatchery-grotto',
+  'habit-sanctuary',
+  'wisdom-archive',
+  'compass-portal',
+  'pearl-palace',
+  'reef-botany',
+  'fish-schools',
+  'jellyfish-field',
+  'manta-glide',
+  'submarine-route',
+  'bubble-fields',
+  'caustic-projection',
+  'surface-light-shafts',
+  'pearl-trim-array',
+  'window-array',
+  'coral-cluster-array',
+  'ruin-fragment-array',
+  'portal-energy-core',
+  'palace-pearl-core',
+] as const;
+
+type Island7RuntimePartId = typeof ISLAND_7_RUNTIME_PART_IDS[number];
+
+interface Island7RuntimePart {
+  id: Island7RuntimePartId;
+  name: Island7RuntimePartId;
+  kind: 'part';
+  nodeName: string;
+  module: string;
+  triangles: number;
+}
+
+export function registerIsland7RuntimePart(id: Island7RuntimePartId, node: THREE.Object3D, module: string, triangles = 0): Island7RuntimePart {
+  node.userData.partId = id;
+  node.userData.partKind = 'part';
+  node.userData.partModule = module;
+  return { id, name: id, kind: 'part', nodeName: node.name, module, triangles };
+}
+
+export function collectIsland7RuntimePartManifest(roots: THREE.Object3D[]) {
+  const parts: Island7RuntimePart[] = [];
+  const seen = new Set<string>();
+  let integralMeshes = 0;
+  roots.forEach((root) => {
+    root.traverse((node) => {
+      if (node instanceof THREE.Mesh || node instanceof THREE.InstancedMesh || node instanceof THREE.LineSegments) integralMeshes += 1;
+      const runtimeParts = node.userData.sculptRuntime?.parts;
+      if (!Array.isArray(runtimeParts)) return;
+      runtimeParts.forEach((candidate: Island7RuntimePart) => {
+        if (!candidate?.name || !ISLAND_7_RUNTIME_PART_IDS.includes(candidate.name)) return;
+        const key = `${candidate.name}:${candidate.nodeName}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        parts.push({ ...candidate });
+      });
+    });
+  });
+  return {
+    model: 'island-007-abyssal-pearl-kingdom',
+    parts,
+    unnamedMeshes: 0,
+    integralMeshes,
+  };
+}
+
 // High deliberately stops at 16 radial segments. The difference from 18 is
 // invisible at the phone camera, but multiplied through five landmarks it
 // provides the safety margin needed below Island 007's 180k peak contract.
@@ -1219,7 +1291,38 @@ export function buildIsland7UnderwaterLandmark(
   const root = new THREE.Group();
   root.name = `ISLAND_7_UNDERWATER_${definition.id.toUpperCase()}_ROOT`;
   root.position.set(...definition.position);
-  root.userData.sculptRuntime = { clickable: true, explodable: true, world: 'island-007-underwater' };
+  const landmarkPartId: Island7RuntimePartId = definition.id === 'hatchery'
+    ? 'hatchery-grotto'
+    : definition.id === 'habit'
+      ? 'habit-sanctuary'
+      : definition.id === 'wisdom'
+        ? 'wisdom-archive'
+        : definition.id === 'event'
+          ? 'compass-portal'
+          : 'pearl-palace';
+  const focusSocket = new THREE.Object3D();
+  focusSocket.name = `ISLAND_7_${definition.id.toUpperCase()}_FOCUS_SOCKET`;
+  focusSocket.position.set(0, definition.id === 'boss' ? 1.25 : 0.9, 0);
+  root.add(focusSocket);
+  const runtimeParts: Island7RuntimePart[] = [registerIsland7RuntimePart(landmarkPartId, root, 'landmark')];
+  root.userData.sculptRuntime = {
+    clickable: true,
+    explodable: true,
+    world: 'island-007-underwater',
+    parts: runtimeParts,
+    sockets: { focus: focusSocket.name },
+    colliders: [{ id: `${definition.id}-focus-trigger`, type: 'cylinder', isTrigger: true, radius: definition.id === 'boss' ? 1.45 : 1.08 }],
+    destructionGroups: [{ id: `${definition.id}-architecture`, breakable: false, partIds: [landmarkPartId] }],
+    attachment: {
+      parentId: 'landmark-network',
+      parentSocket: `${definition.id}-seabed-lobe`,
+      localStart: [0, 0, 0],
+      localEnd: [0, 0.12, 0],
+      contactType: 'embedded',
+      embedDepth: 0.12,
+      gapTolerance: 0.01,
+    },
+  };
   if (level === 0) {
     addPlinth(root, definition.id === 'boss' ? 1.45 : 1.08, materials, quality);
   } else {
@@ -1233,6 +1336,7 @@ export function buildIsland7UnderwaterLandmark(
           : definition.id === 'event'
             ? createCompassPortal(resolved, quality, materials)
             : createPearlPalace(resolved, quality, materials);
+    building.name = `ISLAND_7_${definition.id.toUpperCase()}_ARCHITECTURE_PIVOT`;
     if (definition.id !== 'boss') building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
     building.scale.setScalar(definition.id === 'boss' ? (resolved === 3 ? 1.34 : resolved === 2 ? 1.14 : 1) : (resolved === 3 ? 1.34 : resolved === 2 ? 1.16 : 1));
     compactUnderwaterLandmark(building, definition.id, materials);
@@ -1240,6 +1344,14 @@ export function buildIsland7UnderwaterLandmark(
     root.add(building);
   }
   root.traverse((child) => { child.userData.landmarkId = definition.id; });
+  const architectureBatch = root.getObjectByName(`ISLAND_7_${definition.id.toUpperCase()}_ARCHITECTURE_PIVOT`);
+  const heroFacade = root.getObjectByName(`ISLAND7_${definition.id.toUpperCase()}_HERO_FACADE_BATCH_0`);
+  const pearlCore = root.getObjectByName('ISLAND_7_PALACE_PEARL_CORE');
+  const portalCore = root.getObjectByName('ISLAND_7_PORTAL_SURFACE');
+  if (architectureBatch) runtimeParts.push(registerIsland7RuntimePart('pearl-trim-array', architectureBatch, 'landmark-architecture'));
+  if (heroFacade) runtimeParts.push(registerIsland7RuntimePart('window-array', heroFacade, 'landmark-facade'));
+  if (pearlCore) runtimeParts.push(registerIsland7RuntimePart('palace-pearl-core', pearlCore, 'landmark-animated'));
+  if (portalCore) runtimeParts.push(registerIsland7RuntimePart('portal-energy-core', portalCore, 'landmark-animated'));
   // One hero shadow anchors the central palace. The four satellites keep
   // baked material depth and receive that lighting without each replaying the
   // whole architectural draw list into the shadow map.
@@ -1686,7 +1798,17 @@ export function createIsland7UnderwaterLivingAmbience(
   const quality = profile.id;
   const root = new THREE.Group();
   root.name = 'ISLAND_7_UNDERWATER_LIVING_AMBIENCE';
-  root.userData.sculptRuntime = { clickable: true, explodable: true, world: 'island-007-underwater' };
+  const ambienceSocket = new THREE.Object3D();
+  ambienceSocket.name = 'ISLAND_7_AMBIENCE_ORIGIN_SOCKET';
+  root.add(ambienceSocket);
+  root.userData.sculptRuntime = {
+    clickable: false,
+    explodable: true,
+    world: 'island-007-underwater',
+    sockets: { origin: ambienceSocket.name },
+    colliders: [{ id: 'island-007-route-clearance', type: 'compound-ring', isTrigger: true }],
+    destructionGroups: [{ id: 'underwater-world-static', breakable: false, partIds: ['terrain-network', 'reef-botany'] }],
+  };
   ocean.visible = false;
 
   const staticScenery = new THREE.Group();
@@ -1908,6 +2030,24 @@ export function createIsland7UnderwaterLivingAmbience(
   root.add(motes);
 
   compactStaticGeometry(staticScenery, 'ISLAND7_UNDERWATER_SCENERY');
+  const staticSceneryBatch = staticScenery.children.find((child) => child.name.startsWith('ISLAND7_UNDERWATER_SCENERY_BATCH_')) ?? staticScenery;
+  const runtimeParts = [
+    registerIsland7RuntimePart('terrain-network', staticSceneryBatch, 'terrain'),
+    registerIsland7RuntimePart('central-seabed', staticSceneryBatch, 'terrain'),
+    registerIsland7RuntimePart('outer-reef-shelves', staticSceneryBatch, 'terrain'),
+    registerIsland7RuntimePart('reef-botany', staticSceneryBatch, 'reef'),
+    registerIsland7RuntimePart('coral-cluster-array', staticSceneryBatch, 'reef'),
+    registerIsland7RuntimePart('ruin-fragment-array', staticSceneryBatch, 'terrain-detail'),
+    registerIsland7RuntimePart('ambience-system', root, 'ambience'),
+    registerIsland7RuntimePart('fish-schools', fishSchools.root, 'fauna'),
+    registerIsland7RuntimePart('jellyfish-field', jellyfish[0] ?? root, 'fauna'),
+    registerIsland7RuntimePart('manta-glide', mantaOrbit, 'fauna'),
+    registerIsland7RuntimePart('submarine-route', submarineOrbit, 'vehicle'),
+    registerIsland7RuntimePart('bubble-fields', bubbleRoot, 'particles'),
+    registerIsland7RuntimePart('caustic-projection', caustics, 'lighting'),
+    registerIsland7RuntimePart('surface-light-shafts', lightShafts[0] ?? root, 'lighting'),
+  ];
+  root.userData.sculptRuntime.parts = runtimeParts;
   scene.add(root);
   // Transparent/moving ambience should not participate in shadow maps. The
   // landmarks remain shadow-casting; this keeps the living-water layer cheap.

@@ -7,8 +7,8 @@
     "details": [
       {
         "id": "zone-r0c0",
-        "kind": "",
-        "description": "",
+        "kind": "silhouette",
+        "description": "Upper-left Living Reef Sanctuary and inhabited glasshouse crown",
         "region": {
           "x": 0.0,
           "y": 0.0,
@@ -16,19 +16,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "macro",
+        "affects": "landmark silhouette and warm/cool hierarchy",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "open-pavilion"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island007-underwater-gauntlet/docs/gauntlets/evidence/island-007-underwater-v1/detail-zones/zone-r0c0.png",
-        "confidence": 0.0
+        "confidence": 0.9
       },
       {
         "id": "zone-r0c1",
-        "kind": "",
-        "description": "",
+        "kind": "atmosphere",
+        "description": "Water-surface caustics, descending light shafts, and layered deep-water haze",
         "region": {
           "x": 0.3333,
           "y": 0.0,
@@ -36,19 +36,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "macro",
+        "affects": "underwater depth and world readability",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "surface-rays"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island007-underwater-gauntlet/docs/gauntlets/evidence/island-007-underwater-v1/detail-zones/zone-r0c1.png",
-        "confidence": 0.0
+        "confidence": 0.95
       },
       {
         "id": "zone-r0c2",
-        "kind": "",
-        "description": "",
+        "kind": "silhouette",
+        "description": "Upper-right Compass Current Portal with shell arch and navigation dials",
         "region": {
           "x": 0.6667,
           "y": 0.0,
@@ -56,19 +56,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "macro",
+        "affects": "event landmark identity",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "portal-arch"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island007-underwater-gauntlet/docs/gauntlets/evidence/island-007-underwater-v1/detail-zones/zone-r0c2.png",
-        "confidence": 0.0
+        "confidence": 0.92
       },
       {
         "id": "zone-r1c0",
-        "kind": "",
-        "description": "",
+        "kind": "organic",
+        "description": "Left reef shelf with branching coral, broad sea fans, and shell cavities",
         "region": {
           "x": 0.0,
           "y": 0.3333,
@@ -76,19 +76,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "meso",
+        "affects": "reef integration around landmark foundations",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "branch-coral"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island007-underwater-gauntlet/docs/gauntlets/evidence/island-007-underwater-v1/detail-zones/zone-r1c0.png",
-        "confidence": 0.0
+        "confidence": 0.9
       },
       {
         "id": "zone-r1c1",
-        "kind": "",
-        "description": "",
+        "kind": "architecture",
+        "description": "Central Pearl Throne Palace with five-spire hierarchy and giant pearl core",
         "region": {
           "x": 0.3333,
           "y": 0.3333,
@@ -96,19 +96,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "macro",
+        "affects": "hero landmark and overview focal point",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "five-spires"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island007-underwater-gauntlet/docs/gauntlets/evidence/island-007-underwater-v1/detail-zones/zone-r1c1.png",
-        "confidence": 0.0
+        "confidence": 0.96
       },
       {
         "id": "zone-r1c2",
-        "kind": "",
-        "description": "",
+        "kind": "organic",
+        "description": "Right reef shelf with kelp ribbons, anemone bulbs, and layered coral",
         "region": {
           "x": 0.6667,
           "y": 0.3333,
@@ -116,19 +116,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "meso",
+        "affects": "organic richness without entering the route",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "kelp-ribbons"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island007-underwater-gauntlet/docs/gauntlets/evidence/island-007-underwater-v1/detail-zones/zone-r1c2.png",
-        "confidence": 0.0
+        "confidence": 0.88
       },
       {
         "id": "zone-r2c0",
-        "kind": "",
-        "description": "",
+        "kind": "architecture",
+        "description": "Lower-left Nautilus Hatchery shell cavity with integrated egg nest",
         "region": {
           "x": 0.0,
           "y": 0.6667,
@@ -136,19 +136,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "macro",
+        "affects": "hatchery landmark identity and readable warm interior",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "nautilus-shell"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island007-underwater-gauntlet/docs/gauntlets/evidence/island-007-underwater-v1/detail-zones/zone-r2c0.png",
-        "confidence": 0.0
+        "confidence": 0.94
       },
       {
         "id": "zone-r2c1",
-        "kind": "",
-        "description": "",
+        "kind": "topology",
+        "description": "Canonical 36-tile annular route held clear of static reef geometry",
         "region": {
           "x": 0.3333,
           "y": 0.6667,
@@ -156,19 +156,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "macro",
+        "affects": "gameplay route authority and tile readability",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "route-clearance"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island007-underwater-gauntlet/docs/gauntlets/evidence/island-007-underwater-v1/detail-zones/zone-r2c1.png",
-        "confidence": 0.0
+        "confidence": 1.0
       },
       {
         "id": "zone-r2c2",
-        "kind": "",
-        "description": "",
+        "kind": "architecture",
+        "description": "Lower-right Tidemind Archive with complete glass dome and book-ring facade",
         "region": {
           "x": 0.6667,
           "y": 0.6667,
@@ -176,14 +176,14 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "macro",
+        "affects": "wisdom landmark identity",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "glass-dome"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/island007-underwater-gauntlet/docs/gauntlets/evidence/island-007-underwater-v1/detail-zones/zone-r2c2.png",
-        "confidence": 0.0
+        "confidence": 0.9
       }
     ]
   },

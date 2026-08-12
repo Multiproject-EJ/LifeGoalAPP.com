@@ -98,8 +98,10 @@ import {
 } from './Island6MoonveilThreeWorld';
 import {
   buildIsland7UnderwaterLandmark,
+  collectIsland7RuntimePartManifest,
   createIsland7UnderwaterLivingAmbience,
   createIsland7UnderwaterMaterials,
+  registerIsland7RuntimePart,
   ISLAND_7_UNDERWATER_LANDMARK_LABELS,
   ISLAND_7_UNDERWATER_WORLD_NAME,
 } from './Island7UnderwaterThreeWorld';
@@ -3505,6 +3507,12 @@ export default function Island5ThreePilot({
       ? abyssalTileCounts.map((count, materialIndex) => {
           const mesh = new THREE.InstancedMesh(tileGeometry, tileMaterials[materialIndex], count);
           mesh.name = `ISLAND_7_TILE_SURFACE_BATCH_${materialIndex + 1}`;
+          if (materialIndex === 0) {
+            mesh.userData.sculptRuntime = {
+              parts: [registerIsland7RuntimePart('route-integration', mesh, 'canonical-board-route')],
+              colliders: [{ id: 'island-007-board-route', type: 'compound-ring', isTrigger: true }],
+            };
+          }
           mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
           mesh.receiveShadow = true;
           scene.add(mesh);
@@ -3667,6 +3675,26 @@ export default function Island5ThreePilot({
       scene.add(landmarkRoot);
       clickableLandmarks.push(landmarkRoot);
       landmarkRootsById.set(landmark.id, landmarkRoot);
+    }
+    if (isAbyssalPearlKingdom) {
+      const landmarkNetwork = new THREE.Object3D();
+      landmarkNetwork.name = 'ISLAND_7_LANDMARK_NETWORK_RUNTIME_PROXY';
+      landmarkNetwork.visible = false;
+      landmarkNetwork.userData.sculptRuntime = {
+        parts: [registerIsland7RuntimePart('landmark-network', landmarkNetwork, 'landmark-network')],
+        sockets: Object.fromEntries(ISLAND_5_LANDMARKS.map((landmark) => [landmark.id, `ISLAND_7_${landmark.id.toUpperCase()}_FOCUS_SOCKET`])),
+        colliders: [{ id: 'island-007-landmark-network', type: 'compound', isTrigger: true }],
+        destructionGroups: [{ id: 'landmark-network', breakable: false, partIds: ISLAND_5_LANDMARKS.map((landmark) => landmark.id) }],
+      };
+      scene.add(landmarkNetwork);
+      const partManifest = collectIsland7RuntimePartManifest([
+        livingAmbience.root,
+        landmarkNetwork,
+        ...landmarkRootsById.values(),
+        ...abyssalTileMeshes,
+      ]);
+      canvas.dataset.island7RuntimePartManifest = JSON.stringify(partManifest);
+      canvas.dataset.island7RuntimePartCount = String(new Set(partManifest.parts.map((part) => part.name)).size);
     }
     const bossBuildLevel = landmarkBuildLevelsRef.current?.boss ?? buildLevel;
     const crownDrifter = isIslandRunArenaIsland(islandNumber) && bossBuildLevel >= 1

@@ -203,16 +203,25 @@
     {
       "id": "part-coverage",
       "scope": "final",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        ".img2threejs/island-007/parts.json",
+        ".img2threejs/island-007/part-coverage-report.json",
+        ".img2threejs/island-007/detail-inventory.json"
+      ],
       "reason": "",
       "command": "python3 forge/stage4_review/check_part_coverage.py --spec {spec} --manifest parts.json"
     },
     {
       "id": "action-ready",
       "scope": "final",
-      "status": "pending",
-      "evidence": [],
+      "status": "done",
+      "evidence": [
+        "src/features/gamification/level-worlds/dev/Island7UnderwaterThreeWorld.ts",
+        "src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx",
+        "src/features/gamification/level-worlds/services/__tests__/island5ThreePilotContract.test.ts",
+        ".img2threejs/island-007/parts.json"
+      ],
       "reason": "",
       "command": "Verify explodable/clickable hierarchy, pivots, sockets, and root.userData.sculptRuntime"
     }

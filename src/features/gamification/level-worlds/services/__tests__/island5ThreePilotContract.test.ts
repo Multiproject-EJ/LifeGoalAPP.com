@@ -1,4 +1,5 @@
 import { TILE_ANCHORS_36 } from '../islandBoardLayout';
+import * as THREE from 'three';
 import {
   buildIsland5AmbienceLayout,
   buildIsland3DRadialTileMeshData,
@@ -38,14 +39,44 @@ import {
   ISLAND_6_ROUTE_CLEARANCE_OUTER_RADIUS,
 } from '../../dev/Island6MoonveilThreeWorld';
 import {
+  collectIsland7RuntimePartManifest,
   isIsland7RouteCorridorClear,
+  ISLAND_7_RUNTIME_PART_IDS,
   ISLAND_7_ROUTE_CLEARANCE_INNER_RADIUS,
   ISLAND_7_ROUTE_CLEARANCE_OUTER_RADIUS,
+  registerIsland7RuntimePart,
 } from '../../dev/Island7UnderwaterThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'exports the Island 007 action-ready runtime hierarchy from built Three objects',
+    run: () => {
+      const root = new THREE.Group();
+      root.name = 'ISLAND_7_ACTION_READY_TEST_ROOT';
+      root.userData.sculptRuntime = {
+        clickable: true,
+        explodable: true,
+        parts: ISLAND_7_RUNTIME_PART_IDS.map((partId) => {
+          const pivot = new THREE.Object3D();
+          pivot.name = `ISLAND_7_${partId.toUpperCase()}_PIVOT`;
+          root.add(pivot);
+          return registerIsland7RuntimePart(partId, pivot, 'contract-test');
+        }),
+        sockets: { focus: 'ISLAND_7_TEST_FOCUS_SOCKET' },
+        colliders: [{ id: 'test-trigger', type: 'box', isTrigger: true }],
+        destructionGroups: [{ id: 'static-world', breakable: false }],
+      };
+      const manifest = collectIsland7RuntimePartManifest([root]);
+      assertEqual(new Set(manifest.parts.map((part) => part.name)).size, ISLAND_7_RUNTIME_PART_IDS.length, 'every specified runtime part needs a stable selectable ID');
+      assert(manifest.parts.every((part) => part.kind === 'part' && part.nodeName), 'runtime records must identify their backing pivot node');
+      assert(root.userData.sculptRuntime.clickable && root.userData.sculptRuntime.explodable, 'the hierarchy must expose click and exploded-review intent');
+      assert(root.userData.sculptRuntime.sockets.focus, 'action-ready roots need a named focus socket');
+      assert(root.userData.sculptRuntime.colliders.length > 0, 'action-ready roots need collider intent');
+      assert(root.userData.sculptRuntime.destructionGroups.length > 0, 'action-ready roots need explicit destruction grouping');
+    },
+  },
   {
     name: 'keeps Abyssal Pearl scenery outside the protected route and preserves adaptive living-water systems',
     run: async () => {

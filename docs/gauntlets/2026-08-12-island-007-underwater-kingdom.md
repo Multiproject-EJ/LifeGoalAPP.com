@@ -149,6 +149,15 @@ Open gates — do not call the island 10/10 yet:
 - The img2threejs correction action is therefore `stop`, not a false `continue`: a higher-fidelity jump requires authored UV'd/glTF landmark meshes or deliberately baked facade geometry, beyond this procedural branch's 180k-triangle mobile contract.
 - Fresh High overview captures at L1, L2 and L3 verify additive three-level landmark progression across all five families without changing the canonical board footprint.
 
+### Final action-readiness checkpoint
+
+- The actual L3 High browser scene now exports its runtime part tree from the live canvas. The manifest contains all 25 specified component families across 33 runtime records, including the five independent landmark pivots, route integration, reef/terrain systems, animated portal and palace cores, fish/jelly/manta/submarine systems, bubbles, caustics and surface shafts.
+- The img2threejs assembly gate passes: 25 specified, 33 built, 0 errors and 0 warnings. The 3×3 reference detail inventory is fully authored and every observed zone maps to a real spec feature.
+- Each landmark root exposes `root.userData.sculptRuntime` with stable part IDs, a named focus socket, click/explode intent, a primitive focus trigger, a non-breakable destruction group, and an embedded seabed attachment contract. The shared route and landmark network expose equivalent runtime metadata without adding gameplay writes.
+- The structural unit contract constructs all 25 runtime IDs and verifies selectable backing pivots, sockets, colliders and destruction metadata. The Island 007 contracts pass in the wider service run.
+- Final local validation: TypeScript and production Vite build pass; Island Run architecture guard passes with 0 violations and 3 allowlisted legacy warnings; Island Run service tests are 1727 pass / 3 fail on the same unrelated Island 1 migration baseline.
+- Physical iPhone Auto and forced-High 30-second profiles remain the only unavailable device evidence. The connected phone continues to report offline to Xcode, so release and literal 10/10 claims remain blocked.
+
 Latest evidence:
 
 - `docs/gauntlets/evidence/island-007-underwater-v1/final-overview-structural-upgrade.png`
