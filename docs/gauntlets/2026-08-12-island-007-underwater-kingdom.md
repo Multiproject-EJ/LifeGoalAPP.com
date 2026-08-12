@@ -111,9 +111,9 @@ Completed:
 
 Open gates — do not call the island 10/10 yet:
 
-- Independent landmark fidelity review reached 6.9/10 before the pass-9 archive roof and portal-current corrections. Hatchery and portal now clear macro readability; archive, palace and sanctuary still need authored material/detail depth before 10/10.
-- Independent ambience review reached 7.7/10. Organic reefs, broken caustics, vent bubbles, whale, hero fish and 360 composition are verified; architectural reef integration and distributed warm light remain the largest visual gaps.
-- The authored budget is 175 calls / 180k triangles / 50 FPS. The latest complete high-tier desktop-browser profile recorded 44.1 FPS average, 34.2 ms p95, 173k max triangles and 178 max calls, correctly rated REVIEW. A subsequent trim removed two surface-light shafts and one jelly draw family; it needs a fresh profile.
+- Pass 11 independent landmark fidelity review reached 7.3/10 before the final enclosed Archive dome and jewel-material pass. Hatchery and portal are structurally strong; palace, sanctuary and especially archive still remain below the generated target's sculpted density.
+- Pass 11 independent ambience review reached 8.1/10. Organic reefs, broken caustics, vent bubbles, whale, hero fish, motion and 360 composition are verified; architectural reef integration and distributed warm light remain the largest visual gaps.
+- The authored budget is 175 calls / 180k triangles / 50 FPS. The final pass-11 high-tier desktop-browser choreography records 41.3 FPS average, 34.3 ms p95, 172k max triangles and exactly 175 max calls, correctly rated REVIEW: geometry passes, timing does not.
 - Required physical-iPhone 30-second profiler runs at Auto and forced High are not yet recorded.
 - The procedural result preserves gameplay and animation but still cannot match the generated goal image's sculpted micro-detail without a materially different asset pipeline (authored/AI-generated meshes and baked textures).
 
@@ -129,3 +129,6 @@ Latest evidence:
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass9-motion-t6.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass9-left-orbit.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass9-right-orbit.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass11-overview.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass11-left-orbit.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass11-right-orbit.png`

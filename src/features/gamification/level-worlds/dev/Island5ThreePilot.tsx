@@ -3191,7 +3191,7 @@ export default function Island5ThreePilot({
             : isMoonveilNexus
               ? 0.0022
               : isAbyssalPearlKingdom
-                ? 0.0075
+                ? 0.0058
               : 0.0048;
     scene.background = new THREE.Color(backgroundColor);
     if (isMoonveilNexus) {
@@ -3233,7 +3233,7 @@ export default function Island5ThreePilot({
             : isMoonveilNexus
               ? 0.96
               : isAbyssalPearlKingdom
-                ? 0.86
+                ? 0.98
               : 1.06;
     renderer.setPixelRatio(getIsland3DRendererPixelRatio(qualityProfile, window.devicePixelRatio));
     // The underwater kingdom uses diffuse water-column light, emissive window
@@ -3284,7 +3284,7 @@ export default function Island5ThreePilot({
             : isMoonveilNexus
               ? 1.24
               : isAbyssalPearlKingdom
-                ? 1.08
+                ? 1.24
               : 2.25;
     const hemisphere = new THREE.HemisphereLight(isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : 0xeefcff, hemisphereGroundColor, hemisphereIntensity);
     scene.add(hemisphere);
@@ -3299,7 +3299,7 @@ export default function Island5ThreePilot({
             : isMoonveilNexus
               ? 2.05
               : isAbyssalPearlKingdom
-                ? 1.85
+                ? 2.15
               : 4.2;
     const sunlight = new THREE.DirectionalLight(
       isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
