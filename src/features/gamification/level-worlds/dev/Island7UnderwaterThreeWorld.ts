@@ -357,6 +357,8 @@ const ISLAND_7_ANIMATED_LANDMARK_PARTS = new Set([
   'ISLAND_7_BUBBLE_WHEEL',
   'ISLAND_7_ARCHIVE_ARMILLARY',
   'ISLAND_7_PORTAL_SURFACE',
+  'ISLAND_7_PORTAL_VORTEX_RING',
+  'ISLAND_7_PORTAL_INNER_VORTEX',
   'ISLAND_7_COMPASS_ROSE',
   'ISLAND_7_PALACE_PEARL_CORE',
   'ISLAND_7_SANCTUARY_INTERIOR_GARDEN',
@@ -485,8 +487,6 @@ function addHeroFacade(
     pearlArch.position.set(0, 1.68, 1.22);
     pearlArch.rotation.z = Math.PI;
     facade.add(pearlArch);
-    // The pearl arch, flanking bays and doorway provide the hero read. A full
-    // extruded gable was tested here, but it buried those cues at phone scale.
   } else if (landmarkId === 'hatchery') {
     addDoor(0.38, 0.48, 0.56, 0.9);
     for (const x of [-0.52, 0.52]) addArchedWindow(facade, x, 0.72, 0.73, 0.9, materials, 0);
@@ -1888,6 +1888,8 @@ export function createIsland7UnderwaterLivingAmbience(
   const wheels: THREE.Object3D[] = [];
   const compasses: THREE.Object3D[] = [];
   const portals: THREE.Mesh[] = [];
+  const portalVortexRings: THREE.Object3D[] = [];
+  const portalInnerVortices: THREE.Object3D[] = [];
   const palacePearls: THREE.Object3D[] = [];
   const armillaries: THREE.Object3D[] = [];
   const cacheAnimated = () => {
@@ -1897,6 +1899,8 @@ export function createIsland7UnderwaterLivingAmbience(
       if (object.name === 'ISLAND_7_BUBBLE_WHEEL') wheels.push(object);
       if (object.name === 'ISLAND_7_COMPASS_ROSE') compasses.push(object);
       if (object.name === 'ISLAND_7_PORTAL_SURFACE' && object instanceof THREE.Mesh) portals.push(object);
+      if (object.name === 'ISLAND_7_PORTAL_VORTEX_RING') portalVortexRings.push(object);
+      if (object.name === 'ISLAND_7_PORTAL_INNER_VORTEX') portalInnerVortices.push(object);
       if (object.name === 'ISLAND_7_PALACE_PEARL_CORE') palacePearls.push(object);
       if (object.name === 'ISLAND_7_ARCHIVE_ARMILLARY') armillaries.push(object);
     });
@@ -1982,6 +1986,12 @@ export function createIsland7UnderwaterLivingAmbience(
       portals.forEach((portal, index) => {
         const material = portal.material as THREE.MeshBasicMaterial;
         material.opacity = Number(portal.userData.baseOpacity ?? 0.64) * (0.82 + Math.sin(elapsed * 1.2 + index) * 0.18);
+      });
+      portalVortexRings.forEach((ring) => {
+        ring.rotation.z = 0.45 + elapsed * 0.14;
+      });
+      portalInnerVortices.forEach((ring) => {
+        ring.rotation.z = -0.82 - elapsed * 0.22;
       });
       palacePearls.forEach((pearl, index) => {
         const pulse = 1 + Math.sin(elapsed * 0.82 + index) * 0.05;

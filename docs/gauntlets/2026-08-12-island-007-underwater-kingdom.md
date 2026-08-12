@@ -125,6 +125,7 @@ Open gates — do not call the island 10/10 yet:
 - TypeScript, Island Run architecture guard and template geometry gate pass. Physical iPhone Auto and forced-High 30-second runs remain required.
 - Goal comparison still exposes a substantial authored-detail gap, especially in building meso ornament, reef integration and jewel-dark material contrast. Pass 13 is an improvement checkpoint, not a 10/10 claim.
 - A generated 73 KB ornament-atlas experiment was reviewed in the actual phone camera and deliberately rejected from runtime: without authored UV islands it collapsed the buildings into dark visual noise. The rejected asset is retained as evidence so a later mesh/UV pipeline does not repeat that dead end.
+- The final Compass Current rings are preserved outside the static batch and counter-rotate at runtime, restoring visible current depth over the opaque anti-bleed backplate with only two existing draw calls. The post-change desktop run stays inside geometry limits at 165 calls / 176k triangles, but its timing run was noisy (44 FPS average, 34.3 ms p95) and remains `REVIEW`; device proof is still authoritative.
 
 Latest evidence:
 
