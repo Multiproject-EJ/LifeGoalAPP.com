@@ -69,8 +69,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(!worldSource.includes('fish.position.y +='), 'foreground fish must not accumulate frame-rate-dependent vertical drift');
       assert(!worldSource.includes('jelly.rotation.y +='), 'jellyfish rotation must remain elapsed-time based across frame rates');
       assert(pilotSource.includes("'/assets/islands/island-007/background/abyssal-cavern-backdrop-v1.webp'"), 'underwater depth backdrop must remain an optimized WebP asset');
-      assert(pilotSource.includes("tileEdge.name = 'ISLAND_7_GILDED_TILE_EDGE'"), 'the clean underwater route needs restrained, non-collectible gilded edging');
-      assert(pilotSource.includes('const abyssalTileEdgeGeometry = isAbyssalPearlKingdom ? new THREE.EdgesGeometry'), 'all 36 underwater tiles must share one edge geometry');
+      assert(pilotSource.includes('ISLAND_7_TILE_BORDER_BATCH_'), 'the clean underwater route needs restrained, instanced gilded edging');
+      assert(pilotSource.includes('createTileBorderMeshGeometry(tileGeometry)'), 'all 36 underwater tiles must share one border geometry');
+      assert(pilotSource.includes('ISLAND_7_TILE_SURFACE_BATCH_'), 'underwater tile surfaces must remain batched while preserving landing impacts');
       assert(pilotSource.includes('object instanceof THREE.LineSegments'), 'generic scene cleanup must dispose shared line geometry and materials');
     },
   },
@@ -639,7 +640,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(boardSource.includes('() => !isIslandVisualPreview || isIsland5ThreePreviewRequested'), 'normal Island 5 gameplay should default to 3D while QA previews remain explicit');
       assert(boardSource.includes('presentation="embedded"'), 'real UI shell must hide workbench-only profiler and camera panels');
       assert(pilotSource.includes('qualityOverride?: Island3DQualitySelection'), 'embedded renderer should accept a presentation-only dev quality override');
-      assert(pilotSource.includes('qualityOverride ?? qualitySelection'), 'dev override should take precedence without changing production auto selection');
+      assert(pilotSource.includes('qualityOverride ?? productionQualitySelection'), 'dev override should take precedence without changing production auto selection');
       assert(pilotSource.includes('ISLAND_1_LANDMARK_LABELS[preset.id'), 'Island 001 workbench focus controls must use First Light landmark labels');
       assert(pilotSource.includes('ISLAND_2_CELESTIAL_LANDMARK_LABELS[preset.id') && pilotSource.includes('ISLAND_3_FROSTMOON_LANDMARK_LABELS[preset.id'), 'Islands 002 and 003 workbench focus controls must expose their authored landmark names');
       assert(pilotSource.includes('ISLAND_6_MOONVEIL_LANDMARK_LABELS[preset.id'), 'Island 006 workbench focus controls must expose its authored Moonveil landmark names');

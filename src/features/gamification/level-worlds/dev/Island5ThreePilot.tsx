@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
 import {
   applyLandmarkDoorTiles,
@@ -195,6 +196,38 @@ function createRadialTileGeometry(tileCount: number): THREE.BufferGeometry {
   return facetedGeometry;
 }
 
+function createTileBorderMeshGeometry(tileGeometry: THREE.BufferGeometry): THREE.BufferGeometry {
+  const edges = new THREE.EdgesGeometry(tileGeometry, 28);
+  const positions = edges.getAttribute('position');
+  const segments: THREE.BufferGeometry[] = [];
+  const up = new THREE.Vector3(0, 1, 0);
+  const start = new THREE.Vector3();
+  const end = new THREE.Vector3();
+  const midpoint = new THREE.Vector3();
+  const direction = new THREE.Vector3();
+  const matrix = new THREE.Matrix4();
+  const quaternion = new THREE.Quaternion();
+  for (let index = 0; index < positions.count; index += 2) {
+    start.fromBufferAttribute(positions, index);
+    end.fromBufferAttribute(positions, index + 1);
+    const length = start.distanceTo(end);
+    if (length <= 0.001) continue;
+    midpoint.copy(start).add(end).multiplyScalar(0.5);
+    direction.copy(end).sub(start).normalize();
+    quaternion.setFromUnitVectors(up, direction);
+    matrix.compose(midpoint, quaternion, new THREE.Vector3(1, 1, 1));
+    const segment = new THREE.CylinderGeometry(0.012, 0.012, length, 4, 1, false);
+    segment.applyMatrix4(matrix);
+    segments.push(segment);
+  }
+  edges.dispose();
+  const merged = mergeGeometries(segments, false);
+  segments.forEach((segment) => segment.dispose());
+  if (!merged) throw new Error('Unable to build shared tile border geometry.');
+  merged.name = 'ISLAND_7_SHARED_GILDED_TILE_BORDER';
+  return merged;
+}
+
 interface ActiveTokenSettle {
   startedAt: number;
   strength: number;
@@ -218,6 +251,9 @@ interface PilotProfileReport extends Island3DPerformanceSummary {
   capturedAt: string;
   drawCalls: number;
   triangles: number;
+  maxDrawCalls: number;
+  maxTriangles: number;
+  geometryBudgetPass: boolean;
   rendererWidth: number;
   rendererHeight: number;
   gpuVendor?: string;
@@ -2877,6 +2913,8 @@ export default function Island5ThreePilot({
               : 'Crown of Tides';
   const isEmbedded = presentation === 'embedded';
   const [qualitySelection, setQualitySelection] = useState<Island3DQualitySelection>(readInitialQualitySelection);
+  const [runtimeQualityCap, setRuntimeQualityCap] = useState<Island3DQuality | null>(null);
+  const sustainedQualityMissesRef = useRef(0);
   const [activePreset, setActivePreset] = useState<Island5CameraPresetId | 'manual'>('overview');
   const [metrics, setMetrics] = useState<PilotMetrics>({ fps: 0, drawCalls: 0, triangles: 0, width: 0, height: 0 });
   const [tourStatus, setTourStatus] = useState<CameraTourStatus>('idle');
@@ -2921,11 +2959,31 @@ export default function Island5ThreePilot({
   }>({ value: arenaBattlePresentation, cueStartedAtMs: 0 });
   const onRendererUnavailableRef = useRef(onRendererUnavailable);
   const deviceSignals = useMemo(() => readDeviceSignals(), []);
-  const resolvedQualitySelection = qualityOverride ?? qualitySelection;
+  const productionQualitySelection = qualitySelection === 'auto' && runtimeQualityCap
+    ? runtimeQualityCap
+    : qualitySelection;
+  const resolvedQualitySelection = qualityOverride ?? productionQualitySelection;
   const qualityProfile = useMemo(
     () => resolveIsland3DQuality(resolvedQualitySelection, deviceSignals),
     [deviceSignals, resolvedQualitySelection],
   );
+
+  useEffect(() => {
+    if (qualityOverride || qualitySelection !== 'auto' || profilerStatus === 'running' || metrics.fps <= 0) {
+      sustainedQualityMissesRef.current = 0;
+      return;
+    }
+    const missThreshold = qualityProfile.id === 'high' ? 44 : qualityProfile.id === 'medium' ? 32 : 24;
+    if (metrics.fps >= missThreshold) {
+      sustainedQualityMissesRef.current = 0;
+      return;
+    }
+    sustainedQualityMissesRef.current += 1;
+    if (sustainedQualityMissesRef.current < 8) return;
+    sustainedQualityMissesRef.current = 0;
+    if (qualityProfile.id === 'high') setRuntimeQualityCap('medium');
+    else if (qualityProfile.id === 'medium') setRuntimeQualityCap('low');
+  }, [metrics.fps, profilerStatus, qualityOverride, qualityProfile.id, qualitySelection]);
   const resolvedTileMap = useMemo<readonly IslandTileMapEntry[]>(() => (
     tileMap ?? applyLandmarkDoorTiles(
       generateTileMap(islandNumber, getIslandRarity(islandNumber), `island-${islandNumber}`, 2),
@@ -3175,13 +3233,18 @@ export default function Island5ThreePilot({
             : isMoonveilNexus
               ? 0.96
               : isAbyssalPearlKingdom
-                ? 1.08
+                ? 0.86
               : 1.06;
     renderer.setPixelRatio(getIsland3DRendererPixelRatio(qualityProfile, window.devicePixelRatio));
-    renderer.shadowMap.enabled = qualityProfile.shadows;
+    // The underwater kingdom uses diffuse water-column light, emissive window
+    // contrast and caustic/contact accents instead of a second full shadow-map
+    // render. That is both physically plausible underwater and preserves the
+    // geometry budget for readable architecture on mobile GPUs.
+    const sceneUsesRealtimeShadows = qualityProfile.shadows && !isAbyssalPearlKingdom;
+    renderer.shadowMap.enabled = sceneUsesRealtimeShadows;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.shadowMap.autoUpdate = false;
-    renderer.shadowMap.needsUpdate = qualityProfile.shadows;
+    renderer.shadowMap.needsUpdate = sceneUsesRealtimeShadows;
 
     const controls = new OrbitControls(camera, canvas);
     controls.target.set(...(restoredCameraPose?.target ?? overview.target));
@@ -3221,7 +3284,7 @@ export default function Island5ThreePilot({
             : isMoonveilNexus
               ? 1.24
               : isAbyssalPearlKingdom
-                ? 1.82
+                ? 1.08
               : 2.25;
     const hemisphere = new THREE.HemisphereLight(isMoonveilNexus ? 0x7181ff : isAbyssalPearlKingdom ? 0x78efff : 0xeefcff, hemisphereGroundColor, hemisphereIntensity);
     scene.add(hemisphere);
@@ -3236,14 +3299,14 @@ export default function Island5ThreePilot({
             : isMoonveilNexus
               ? 2.05
               : isAbyssalPearlKingdom
-                ? 3.05
+                ? 1.85
               : 4.2;
     const sunlight = new THREE.DirectionalLight(
       isMoonveilNexus ? 0xa8b6ff : isAbyssalPearlKingdom ? 0x9ff7ff : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
       sunlightIntensity,
     );
     sunlight.position.set(-9, 15, 10);
-    sunlight.castShadow = qualityProfile.shadows;
+    sunlight.castShadow = sceneUsesRealtimeShadows;
     sunlight.shadow.mapSize.set(qualityProfile.shadowMapSize, qualityProfile.shadowMapSize);
     sunlight.shadow.camera.left = -11;
     sunlight.shadow.camera.right = 11;
@@ -3397,20 +3460,58 @@ export default function Island5ThreePilot({
           new THREE.LineBasicMaterial({ color: 0xb4f5ff, transparent: true, opacity: 1 }),
         ]
       : [];
-    const abyssalTileEdgeGeometry = isAbyssalPearlKingdom ? new THREE.EdgesGeometry(tileGeometry, 28) : null;
+    const abyssalTileEdgeGeometry = isAbyssalPearlKingdom ? createTileBorderMeshGeometry(tileGeometry) : null;
     const abyssalTileEdgeMaterials = isAbyssalPearlKingdom
       ? [
-          new THREE.LineBasicMaterial({ color: 0xe2ba61, transparent: true, opacity: 0.48 }),
-          new THREE.LineBasicMaterial({ color: 0xffdf79, transparent: true, opacity: 0.78 }),
+          new THREE.MeshBasicMaterial({ color: 0xe2ba61, transparent: true, opacity: 0.58 }),
+          new THREE.MeshBasicMaterial({ color: 0xffdf79, transparent: true, opacity: 0.86 }),
         ]
       : [];
-    const tileMeshes = new Map<number, { mesh: THREE.Mesh; baseY: number }>();
+    type TileMeshEntry = {
+      mesh: THREE.Mesh | THREE.InstancedMesh;
+      baseY: number;
+      instanceId?: number;
+      edgeMesh?: THREE.InstancedMesh;
+      basePosition?: THREE.Vector3;
+      baseRotationY?: number;
+    };
+    const tileMeshes = new Map<number, TileMeshEntry>();
+    const abyssalTileCounts = [0, 0, 0];
+    if (isAbyssalPearlKingdom) {
+      tileTransforms.forEach((transform) => {
+        abyssalTileCounts[transform.isKeyTile ? 2 : transform.index % 2] += 1;
+      });
+    }
+    const abyssalTileMeshes = isAbyssalPearlKingdom
+      ? abyssalTileCounts.map((count, materialIndex) => {
+          const mesh = new THREE.InstancedMesh(tileGeometry, tileMaterials[materialIndex], count);
+          mesh.name = `ISLAND_7_TILE_SURFACE_BATCH_${materialIndex + 1}`;
+          mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+          mesh.receiveShadow = true;
+          scene.add(mesh);
+          return mesh;
+        })
+      : [];
+    const abyssalTileEdgeMeshes = isAbyssalPearlKingdom
+      ? abyssalTileCounts.map((count, materialIndex) => {
+          const edgeMaterial = abyssalTileEdgeMaterials[materialIndex === 2 ? 1 : 0];
+          const mesh = new THREE.InstancedMesh(abyssalTileEdgeGeometry!, edgeMaterial, count);
+          mesh.name = `ISLAND_7_TILE_BORDER_BATCH_${materialIndex + 1}`;
+          mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+          scene.add(mesh);
+          return mesh;
+        })
+      : [];
+    const abyssalTileInstanceCursor = [0, 0, 0];
+    const tileMatrixScratch = new THREE.Matrix4();
+    const tileQuaternionScratch = new THREE.Quaternion();
+    const tileScaleScratch = new THREE.Vector3(1, 1, 1);
     for (const transform of tileTransforms) {
       const tileMaterial = transform.isKeyTile ? tileMaterials[2] : tileMaterials[transform.index % 2];
       const tile = new THREE.Mesh(tileGeometry, tileMaterial);
       tile.position.set(...transform.position);
       tile.rotation.y = transform.rotationYRad;
-      tile.castShadow = qualityProfile.shadows;
+      tile.castShadow = sceneUsesRealtimeShadows;
       tile.receiveShadow = true;
       tile.userData.tileIndex = transform.index;
       if (moonveilTileEdgeGeometry) {
@@ -3422,16 +3523,32 @@ export default function Island5ThreePilot({
         outline.name = 'ISLAND_6_ASTRAL_TILE_EDGE';
         tile.add(outline);
       }
-      tileMeshes.set(transform.index, { mesh: tile, baseY: transform.position[1] });
-      scene.add(tile);
       if (isAbyssalPearlKingdom) {
-        const tileEdge = new THREE.LineSegments(
-          abyssalTileEdgeGeometry!,
-          abyssalTileEdgeMaterials[transform.isKeyTile ? 1 : 0],
+        const materialIndex = transform.isKeyTile ? 2 : transform.index % 2;
+        const instanceId = abyssalTileInstanceCursor[materialIndex];
+        abyssalTileInstanceCursor[materialIndex] += 1;
+        const batch = abyssalTileMeshes[materialIndex];
+        tileQuaternionScratch.setFromAxisAngle(new THREE.Vector3(0, 1, 0), transform.rotationYRad);
+        tileMatrixScratch.compose(
+          new THREE.Vector3(...transform.position),
+          tileQuaternionScratch,
+          tileScaleScratch,
         );
-        tileEdge.name = 'ISLAND_7_GILDED_TILE_EDGE';
-        tileEdge.position.y = 0.006;
-        tile.add(tileEdge);
+        batch.setMatrixAt(instanceId, tileMatrixScratch);
+        batch.instanceMatrix.needsUpdate = true;
+        abyssalTileEdgeMeshes[materialIndex].setMatrixAt(instanceId, tileMatrixScratch);
+        abyssalTileEdgeMeshes[materialIndex].instanceMatrix.needsUpdate = true;
+        tileMeshes.set(transform.index, {
+          mesh: batch,
+          baseY: transform.position[1],
+          instanceId,
+          edgeMesh: abyssalTileEdgeMeshes[materialIndex],
+          basePosition: new THREE.Vector3(...transform.position),
+          baseRotationY: transform.rotationYRad,
+        });
+      } else {
+        tileMeshes.set(transform.index, { mesh: tile, baseY: transform.position[1] });
+        scene.add(tile);
       }
     }
 
@@ -3442,6 +3559,7 @@ export default function Island5ThreePilot({
       tileMap: resolvedTileMap,
       tileTransforms,
       quality: qualityProfile.id,
+      compactCollectibles: isAbyssalPearlKingdom,
     });
     scene.add(tileRewardObjects.root);
 
@@ -3463,7 +3581,7 @@ export default function Island5ThreePilot({
     caretakerFootplate.name = 'ISLAND_5_CARETAKER_FOOTPLATE';
     caretakerFootplate.position.copy(CARETAKER_BOARD_HOME).add(new THREE.Vector3(0, -0.06, 0));
     caretakerFootplate.scale.z = 0.78;
-    caretakerFootplate.castShadow = qualityProfile.shadows;
+    caretakerFootplate.castShadow = sceneUsesRealtimeShadows;
     caretakerFootplate.receiveShadow = true;
     caretakerFootplate.userData.caretakerTarget = true;
 
@@ -3511,6 +3629,7 @@ export default function Island5ThreePilot({
     let caretakerEncounterStartedAt = 0;
 
     const clickableLandmarks: THREE.Object3D[] = [];
+    const landmarkRootsById = new Map<Island5LandmarkDefinition['id'], THREE.Object3D>();
     for (const landmark of ISLAND_5_LANDMARKS) {
       const resolvedBuildLevel = landmarkBuildLevelsRef.current?.[landmark.id] ?? buildLevel;
       const landmarkRoot = isFirstLightKingdom && island1Materials
@@ -3528,6 +3647,7 @@ export default function Island5ThreePilot({
               : buildLandmark(landmark, resolvedBuildLevel, qualityProfile.id, materials);
       scene.add(landmarkRoot);
       clickableLandmarks.push(landmarkRoot);
+      landmarkRootsById.set(landmark.id, landmarkRoot);
     }
     const bossBuildLevel = landmarkBuildLevelsRef.current?.boss ?? buildLevel;
     const crownDrifter = isIslandRunArenaIsland(islandNumber) && bossBuildLevel >= 1
@@ -3613,6 +3733,8 @@ export default function Island5ThreePilot({
       lastProgressAt: number;
       choreographyIndex: number;
       frameTimesMs: number[];
+      maxDrawCalls: number;
+      maxTriangles: number;
     } | null = null;
     let activeTour: {
       stepIndex: number;
@@ -3645,6 +3767,11 @@ export default function Island5ThreePilot({
       caretakerFootplate.visible = visible;
       caretakerContactShadow.visible = visible;
       caretakerHitTarget.visible = visible;
+      if (isAbyssalPearlKingdom) {
+        landmarkRootsById.forEach((landmarkRoot, landmarkId) => {
+          landmarkRoot.visible = !isLandmarkInspection || landmarkId === preset;
+        });
+      }
     };
 
     const triggerTileImpact = (tileIndex: number, strength: number, startedAt: number) => {
@@ -3711,10 +3838,13 @@ export default function Island5ThreePilot({
         'orbit-left': { position: [-23, 22, 27], target: [0, 0.25, 0] },
         'orbit-right': { position: [23, 22, 27], target: [0, 0.25, 0] },
         boss: { position: [0, 10.8, 15.6], target: [0, 1.5, 0] },
-        hatchery: { position: [-10.2, 8.6, -9.6], target: [-4.36, 1.18, -3.9] },
-        habit: { position: [10.2, 8.6, -9.6], target: [4.36, 1.2, -3.9] },
-        wisdom: { position: [-10.2, 8.5, 9.8], target: [-4.36, 1.15, 3.9] },
-        event: { position: [10.2, 8.5, 9.8], target: [4.36, 1.12, 3.9] },
+        // Satellite entrances face the central promenade. Focus approaches
+        // from inside the board so the authored facade—not the rear shell—is
+        // what fills the phone screen.
+        hatchery: { position: [2.5, 6.8, 2.5], target: [-4.36, 1.3, -3.9] },
+        habit: { position: [-2.5, 6.8, 2.5], target: [4.36, 1.34, -3.9] },
+        wisdom: { position: [2.5, 6.8, -2.5], target: [-4.36, 1.38, 3.9] },
+        event: { position: [-2.5, 6.8, -2.5], target: [4.36, 1.28, 3.9] },
       };
       const firstLightOverride = isFirstLightKingdom ? firstLightFocusOverrides[id] : undefined;
       const moonveilOverride = isMoonveilNexus ? moonveilFocusOverrides[id] : undefined;
@@ -3847,6 +3977,8 @@ export default function Island5ThreePilot({
         lastProgressAt: startedAt,
         choreographyIndex: 0,
         frameTimesMs: [],
+        maxDrawCalls: 0,
+        maxTriangles: 0,
       };
       controls.enabled = false;
       setProfileReport(null);
@@ -4018,7 +4150,7 @@ export default function Island5ThreePilot({
             encounterCaretaker.setEmotion('delighted');
             encounterCaretaker.setAnimation('greet', elapsed, true);
             scene.add(encounterCaretaker.root);
-            if (qualityProfile.shadows) renderer.shadowMap.needsUpdate = true;
+            if (sceneUsesRealtimeShadows) renderer.shadowMap.needsUpdate = true;
           }
           controls.enabled = false;
           applyCaretakerEncounterFocus(0.72);
@@ -4069,11 +4201,41 @@ export default function Island5ThreePilot({
         }
         const elapsedImpactMs = now - impact.startedAt;
         const pose = getIsland3DTileImpactPose(elapsedImpactMs, impact.strength);
-        tileEntry.mesh.position.y = tileEntry.baseY + pose.yOffset;
-        tileEntry.mesh.scale.set(pose.scaleXZ, pose.scaleY, pose.scaleXZ);
+        if (tileEntry.mesh instanceof THREE.InstancedMesh && tileEntry.instanceId !== undefined && tileEntry.basePosition) {
+          tileQuaternionScratch.setFromAxisAngle(new THREE.Vector3(0, 1, 0), tileEntry.baseRotationY ?? 0);
+          tileScaleScratch.set(pose.scaleXZ, pose.scaleY, pose.scaleXZ);
+          tileMatrixScratch.compose(
+            tileEntry.basePosition.clone().setY(tileEntry.baseY + pose.yOffset),
+            tileQuaternionScratch,
+            tileScaleScratch,
+          );
+          tileEntry.mesh.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);
+          tileEntry.mesh.instanceMatrix.needsUpdate = true;
+          const edgeBatch = tileEntry.edgeMesh;
+          if (edgeBatch) {
+            edgeBatch.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);
+            edgeBatch.instanceMatrix.needsUpdate = true;
+          }
+        } else {
+          tileEntry.mesh.position.y = tileEntry.baseY + pose.yOffset;
+          tileEntry.mesh.scale.set(pose.scaleXZ, pose.scaleY, pose.scaleXZ);
+        }
         if (elapsedImpactMs >= ISLAND_3D_TILE_IMPACT_DURATION_MS) {
-          tileEntry.mesh.position.y = tileEntry.baseY;
-          tileEntry.mesh.scale.set(1, 1, 1);
+          if (tileEntry.mesh instanceof THREE.InstancedMesh && tileEntry.instanceId !== undefined && tileEntry.basePosition) {
+            tileQuaternionScratch.setFromAxisAngle(new THREE.Vector3(0, 1, 0), tileEntry.baseRotationY ?? 0);
+            tileScaleScratch.set(1, 1, 1);
+            tileMatrixScratch.compose(tileEntry.basePosition, tileQuaternionScratch, tileScaleScratch);
+            tileEntry.mesh.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);
+            tileEntry.mesh.instanceMatrix.needsUpdate = true;
+            const edgeBatch = tileEntry.edgeMesh;
+            if (edgeBatch) {
+              edgeBatch.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);
+              edgeBatch.instanceMatrix.needsUpdate = true;
+            }
+          } else {
+            tileEntry.mesh.position.y = tileEntry.baseY;
+            tileEntry.mesh.scale.set(1, 1, 1);
+          }
           activeTileImpacts.delete(tileIndex);
         }
       }
@@ -4305,6 +4467,8 @@ export default function Island5ThreePilot({
       }
 
       if (activeProfiler) {
+        activeProfiler.maxDrawCalls = Math.max(activeProfiler.maxDrawCalls, renderer.info.render.calls);
+        activeProfiler.maxTriangles = Math.max(activeProfiler.maxTriangles, renderer.info.render.triangles);
         if (activeProfiler.lastFrameAt > 0) {
           activeProfiler.frameTimesMs.push(now - activeProfiler.lastFrameAt);
         }
@@ -4334,18 +4498,22 @@ export default function Island5ThreePilot({
             capturedAt: new Date().toISOString(),
             drawCalls: renderer.info.render.calls,
             triangles: renderer.info.render.triangles,
+            maxDrawCalls: activeProfiler.maxDrawCalls,
+            maxTriangles: activeProfiler.maxTriangles,
+            geometryBudgetPass: activeProfiler.maxDrawCalls <= 175 && activeProfiler.maxTriangles <= 180_000,
             rendererWidth: Math.round(rendererSize.x * renderer.getPixelRatio()),
             rendererHeight: Math.round(rendererSize.y * renderer.getPixelRatio()),
             gpuVendor: String(gl.getParameter(debugRendererInfo?.UNMASKED_VENDOR_WEBGL ?? gl.VENDOR)),
             gpuRenderer: String(gl.getParameter(debugRendererInfo?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER)),
             deviceSignals,
           };
+          if (!report.geometryBudgetPass && report.rating === 'pass') report.rating = 'review';
           activeProfiler = null;
           controls.enabled = true;
           setProfilerProgress(100);
           setProfileReport(report);
           setProfilerStatus('complete');
-          setProfilerNotice(`${report.rating.toUpperCase()} against ${qualityProfile.id} quality target.`);
+          setProfilerNotice(`${report.rating.toUpperCase()} against ${qualityProfile.id} timing and geometry targets.`);
           console.info(`[island-${islandNumber}-3d-profile]`, report);
         }
       }
@@ -4401,6 +4569,8 @@ export default function Island5ThreePilot({
       tileMaterials.forEach((material) => material.dispose());
       moonveilTileEdgeGeometry?.dispose();
       moonveilTileEdgeMaterials.forEach((material) => material.dispose());
+      abyssalTileEdgeGeometry?.dispose();
+      abyssalTileEdgeMaterials.forEach((material) => material.dispose());
       renderer.dispose();
       applyPresetRef.current = () => undefined;
       applyControlledCameraFocusRef.current = () => undefined;
@@ -4478,6 +4648,8 @@ export default function Island5ThreePilot({
             <div><dt>P95 frame</dt><dd>{profileReport.p95FrameMs} ms</dd></div>
             <div><dt>Worst</dt><dd>{profileReport.worstFrameMs} ms</dd></div>
             <div><dt>Slow</dt><dd>{profileReport.slowFramePercent}%</dd></div>
+            <div><dt>Max calls</dt><dd>{profileReport.maxDrawCalls}</dd></div>
+            <div><dt>Max tris</dt><dd>{Math.round(profileReport.maxTriangles / 1_000)}k</dd></div>
           </dl>
         ) : null}
         <div className="island-5-three-pilot__profiler-actions">
