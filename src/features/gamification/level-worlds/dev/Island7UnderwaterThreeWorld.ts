@@ -118,7 +118,6 @@ export function createIsland7UnderwaterMaterials(): Island7UnderwaterMaterials {
   const stoneRelief = createTexture(128, 'stone', true);
   const shellMap = createTexture(96, 'shell');
   const shellRelief = createTexture(96, 'shell', true);
-  const goldMap = createTexture(64, 'gold');
   const goldRelief = createTexture(64, 'gold', true);
   const sandMap = createTexture(96, 'sand');
   const sandRelief = createTexture(96, 'sand', true);
@@ -129,7 +128,11 @@ export function createIsland7UnderwaterMaterials(): Island7UnderwaterMaterials {
     pearl: new THREE.MeshPhysicalMaterial({ color: 0xe6fbff, map: shellMap, bumpMap: shellRelief, bumpScale: 0.012, roughness: 0.13, clearcoat: 1, clearcoatRoughness: 0.08, iridescence: 0.82, iridescenceIOR: 1.28, iridescenceThicknessRange: [120, 410], emissive: 0x167e9a, emissiveIntensity: 0.3 }),
     shell: new THREE.MeshPhysicalMaterial({ color: 0xc9eee9, map: shellMap, bumpMap: shellRelief, bumpScale: 0.024, roughness: 0.22, clearcoat: 0.84, clearcoatRoughness: 0.14, iridescence: 0.52, iridescenceIOR: 1.22, emissive: 0x064653, emissiveIntensity: 0.14 }),
     turquoise: new THREE.MeshPhysicalMaterial({ color: 0x078ca5, roughness: 0.2, metalness: 0.16, clearcoat: 0.86, clearcoatRoughness: 0.13, emissive: 0x044f64, emissiveIntensity: 0.46 }),
-    gold: new THREE.MeshStandardMaterial({ color: 0xffd566, map: goldMap, bumpMap: goldRelief, bumpScale: 0.014, roughness: 0.19, metalness: 0.94, emissive: 0xb9680c, emissiveIntensity: 0.58 }),
+    // Keep the trim luminous in an underwater scene without an HDRI. A highly
+    // metallic gold went almost black at focus angles because it had little
+    // environment to reflect; this still reads as metal but preserves the
+    // warm authored hierarchy on real phone cameras.
+    gold: new THREE.MeshStandardMaterial({ color: 0xe2b348, bumpMap: goldRelief, bumpScale: 0.014, roughness: 0.31, metalness: 0.42, emissive: 0x6f3107, emissiveIntensity: 0.28 }),
     warmWindow: new THREE.MeshBasicMaterial({ color: 0xffb23e, transparent: true, opacity: 1, toneMapped: false, depthWrite: false }),
     coralPink: new THREE.MeshStandardMaterial({ color: 0xff78a9, roughness: 0.55, emissive: 0x6b1746, emissiveIntensity: 0.32 }),
     coralViolet: new THREE.MeshStandardMaterial({ color: 0xb96bea, roughness: 0.5, emissive: 0x56157e, emissiveIntensity: 0.34 }),
@@ -171,6 +174,65 @@ function addPlinth(root: THREE.Group, radius: number, materials: Island7Underwat
   upper.position.y = y + 0.16;
   root.add(lower, upper);
   addRing(root, radius * 0.9, 0.025, y + 0.25, materials.gold, quality);
+}
+
+function addShellArcade(
+  root: THREE.Group,
+  radius: number,
+  y: number,
+  count: number,
+  materials: Island7UnderwaterMaterials,
+  quality: Island3DQuality,
+) {
+  for (let index = 0; index < count; index += 1) {
+    const angle = index / count * Math.PI * 2;
+    const arch = new THREE.Mesh(
+      new THREE.TorusGeometry(radius * 0.16, 0.028, 5, Math.max(8, segmentCount(quality)), Math.PI),
+      materials.gold,
+    );
+    arch.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+    arch.rotation.set(0, -angle + Math.PI / 2, Math.PI);
+    root.add(arch);
+    const recess = box(radius * 0.2, radius * 0.23, 0.035, index % 3 === 0 ? materials.warmWindow : materials.turquoise);
+    recess.position.set(Math.cos(angle) * radius * 1.01, y - radius * 0.11, Math.sin(angle) * radius * 1.01);
+    recess.rotation.y = -angle + Math.PI / 2;
+    root.add(recess);
+  }
+}
+
+function addPointedShellPanel(
+  root: THREE.Group,
+  angle: number,
+  radius: number,
+  y: number,
+  width: number,
+  height: number,
+  materials: Island7UnderwaterMaterials,
+) {
+  const makeShape = (scale: number) => {
+    const half = width * scale * 0.5;
+    const shape = new THREE.Shape();
+    shape.moveTo(-half, -height * scale * 0.5);
+    shape.lineTo(half, -height * scale * 0.5);
+    shape.lineTo(half * 0.92, height * scale * 0.08);
+    shape.quadraticCurveTo(half * 0.62, height * scale * 0.3, 0, height * scale * 0.5);
+    shape.quadraticCurveTo(-half * 0.62, height * scale * 0.3, -half * 0.92, height * scale * 0.08);
+    shape.closePath();
+    return shape;
+  };
+  const trim = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(makeShape(1), { depth: 0.06, bevelEnabled: true, bevelSegments: 1, bevelSize: 0.018, bevelThickness: 0.014 }),
+    materials.gold,
+  );
+  trim.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+  trim.rotation.y = -angle + Math.PI / 2;
+  const inset = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(makeShape(0.78), { depth: 0.035, bevelEnabled: true, bevelSegments: 1, bevelSize: 0.01, bevelThickness: 0.01 }),
+    materials.turquoise,
+  );
+  inset.position.set(0, -height * 0.04, 0.065);
+  trim.add(inset);
+  root.add(trim);
 }
 
 function addPearlFinial(root: THREE.Group, x: number, y: number, z: number, scale: number, materials: Island7UnderwaterMaterials, quality: Island3DQuality) {
@@ -249,16 +311,21 @@ function createOnionSpire(
     new THREE.Vector2(0.02, height),
   ];
   root.add(new THREE.Mesh(new THREE.LatheGeometry(points, segmentCount(quality)), material));
-  const ribCount = quality === 'high' ? 10 : quality === 'medium' ? 7 : 5;
+  const ribCount = quality === 'high' ? 6 : quality === 'medium' ? 5 : 4;
   for (let index = 0; index < ribCount; index += 1) {
     const angle = index / ribCount * Math.PI * 2;
-    const rib = new THREE.Mesh(
-      new THREE.TorusGeometry(radius * 0.56, radius * 0.026, 4, 12, Math.PI * 0.75),
+    const radial = (value: number, y: number) => new THREE.Vector3(Math.cos(angle) * value, y, Math.sin(angle) * value);
+    const ribCurve = new THREE.CatmullRomCurve3([
+      radial(radius * 0.64, height * 0.1),
+      radial(radius * 0.98, height * 0.34),
+      radial(radius * 0.72, height * 0.6),
+      radial(radius * 0.25, height * 0.86),
+      radial(0.02, height * 0.98),
+    ]);
+    root.add(new THREE.Mesh(
+      new THREE.TubeGeometry(ribCurve, 7, Math.max(0.012, radius * 0.026), 4, false),
       materials.gold,
-    );
-    rib.rotation.set(Math.PI / 2, angle, Math.PI * 0.13);
-    rib.position.y = height * 0.3;
-    root.add(rib);
+    ));
   }
   addRing(root, radius * 0.72, radius * 0.035, height * 0.1, materials.gold, quality);
   return root;
@@ -323,7 +390,9 @@ function compactUnderwaterLandmark(root: THREE.Group, landmarkId: string, materi
       if (attributeName !== 'position' && attributeName !== 'normal' && attributeName !== 'uv') geometry.deleteAttribute(attributeName);
     }
     if (!geometry.getAttribute('normal')) geometry.computeVertexNormals();
-    const color = 'color' in material && material.color instanceof THREE.Color
+      const color = material === materials.gold
+        ? new THREE.Color(0xe2b348)
+        : 'color' in material && material.color instanceof THREE.Color
       ? material.color
       : new THREE.Color(0xffffff);
     const positions = geometry.getAttribute('position');
@@ -411,17 +480,23 @@ function addHeroFacade(
   };
   if (landmarkId === 'boss') {
     addDoor(0.5, 0.72, 0.76, 1.36);
-    for (const x of [-0.52, 0.52]) addArchedWindow(facade, x, 1.46, 1.12, 1.2, materials, 0);
+    for (const x of [-0.48, 0.48]) addArchedWindow(facade, x, 1.42, 1.18, 1.42, materials, 0);
+    const pearlArch = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.045, 6, segmentCount(quality), Math.PI), materials.gold);
+    pearlArch.position.set(0, 1.68, 1.22);
+    pearlArch.rotation.z = Math.PI;
+    facade.add(pearlArch);
+    // The pearl arch, flanking bays and doorway provide the hero read. A full
+    // extruded gable was tested here, but it buried those cues at phone scale.
   } else if (landmarkId === 'hatchery') {
     addDoor(0.38, 0.48, 0.56, 0.9);
     for (const x of [-0.52, 0.52]) addArchedWindow(facade, x, 0.72, 0.73, 0.9, materials, 0);
   } else if (landmarkId === 'habit') {
     addDoor(0.42, 0.64, 0.72, 0.73);
-    for (const x of [-0.48, 0.48]) addArchedWindow(facade, x, 1.02, 0.64, 1.05, materials, 0);
+    for (const x of [-0.44, 0.44]) addArchedWindow(facade, x, 1.02, 0.7, 1.34, materials, 0);
   } else if (landmarkId === 'wisdom') {
     addDoor(0.46, 0.72, 0.72, 1.01);
-    for (const x of [-0.48, 0.48]) addArchedWindow(facade, x, 1.12, 0.89, 1.05, materials, 0);
-    for (const x of [-0.34, 0.34]) addArchedWindow(facade, x, 1.77, 0.66, 0.62, materials, 0);
+    for (const x of [-0.46, 0.46]) addArchedWindow(facade, x, 1.1, 0.95, 1.34, materials, 0);
+    for (const x of [-0.3, 0.3]) addArchedWindow(facade, x, 1.76, 0.72, 0.88, materials, 0);
   } else {
     for (const x of [-0.73, 0.73]) addArchedWindow(facade, x, 0.94, 0.22, 1.08, materials, 0);
   }
@@ -517,7 +592,11 @@ function createNautilusHatchery(level: 1 | 2 | 3, quality: Island3DQuality, mate
   shellChamber.scale.set(1, 1.08, 0.34);
   shellChamber.position.set(0, 0.83, -0.14);
   shellChamber.rotation.y = Math.PI / 2;
-  root.add(shellChamber);
+  // At L3 the expanded spiral already forms a complete shell mass; retaining
+  // the half-sphere chamber exposes its cut plane as a tall blade through the
+  // eggs. Lower levels keep it to provide enough body before all spiral bands
+  // have been constructed.
+  if (level < 3) root.add(shellChamber);
   const chamberGlow = new THREE.Mesh(
     new THREE.CircleGeometry(0.43 + level * 0.035, segmentCount(quality)),
     materials.warmWindow,
@@ -555,10 +634,19 @@ function createNautilusHatchery(level: 1 | 2 | 3, quality: Island3DQuality, mate
   }
   if (level === 3) {
     addRing(root, 0.95, 0.035, 0.34, materials.gold, quality);
-    const shellHalo = new THREE.Mesh(new THREE.TorusGeometry(0.66, 0.035, 6, 24, Math.PI * 1.72), materials.gold);
+    const shellHalo = new THREE.Mesh(new THREE.TorusGeometry(0.66, 0.035, 6, 24, Math.PI * 1.5), materials.gold);
     shellHalo.position.set(0, 0.8, -0.08);
-    shellHalo.rotation.set(0, Math.PI / 2, -0.68);
+    shellHalo.rotation.set(0, Math.PI / 2, -0.9);
     root.add(shellHalo);
+    // Keep the cavity open: the old full-height center blade bisected the nest
+    // and made the eggs look trapped behind a spear. Two short asymmetric shell
+    // lips preserve the nautilus layering without obstructing the focal read.
+    for (const side of [-1, 1]) {
+      const shellLip = box(0.1, 0.5, 0.11, materials.shell);
+      shellLip.position.set(side * 0.36, 0.58, 0.25);
+      shellLip.rotation.z = side * -0.2;
+      root.add(shellLip);
+    }
     for (let index = 0; index < 5; index += 1) addCrystal(root, -0.78 + index * 0.39, 0.46, -0.5 + Math.abs(index - 2) * 0.08, 0.08, index % 2 ? materials.violetCrystal : materials.crystal, index);
     for (let index = 0; index < 6; index += 1) {
       const angle = index / 6 * Math.PI * 2;
@@ -657,6 +745,7 @@ function createHabitSanctuary(level: 1 | 2 | 3, quality: Island3DQuality, materi
     root.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 8, 0.025, 5, false), materials.gold));
   }
   addRing(root, 0.69 + level * 0.04, 0.035, 1.27 + level * 0.13, materials.gold, quality);
+  if (level === 3) addShellArcade(root, 0.79, 1.02, 6, materials, quality);
   if (level === 3) {
     const crown = createOnionSpire(0.24, 0.66, materials, quality, materials.shell);
     crown.position.y = 1.98 + level * 0.12;
@@ -777,13 +866,18 @@ function createWisdomArchive(level: 1 | 2 | 3, quality: Island3DQuality, materia
     for (let index = 0; index < 6; index += 1) {
       const angle = index / 6 * Math.PI * 2;
       addArchedWindow(root, Math.cos(angle) * 0.785, 1.47, Math.sin(angle) * 0.785, 0.56, materials, -angle + Math.PI / 2);
-      const galleryLight = box(0.22, 0.12, 0.045, materials.warmWindow);
-      galleryLight.position.set(Math.cos(angle) * 0.81, 1.24, Math.sin(angle) * 0.81);
+      const galleryLight = box(0.22, 0.16, 0.045, materials.warmWindow);
+      galleryLight.position.set(Math.cos(angle) * 0.81, 1.3, Math.sin(angle) * 0.81);
       galleryLight.rotation.y = -angle + Math.PI / 2;
       root.add(galleryLight);
     }
     addRing(root, 0.8, 0.045, 1.5, materials.gold, quality);
     addRing(root, 0.77, 0.065, 1.28, materials.gold, quality);
+    addShellArcade(root, 0.91, 1.3, 6, materials, quality);
+    for (let index = 0; index < 4; index += 1) {
+      const angle = index / 4 * Math.PI * 2 + Math.PI / 4;
+      addPointedShellPanel(root, angle, 0.9, 0.93, 0.34, 0.94, materials);
+    }
     for (let index = 0; index < 8; index += 1) {
       const angle = index / 8 * Math.PI * 2;
       const ribCurve = new THREE.QuadraticBezierCurve3(
@@ -795,22 +889,28 @@ function createWisdomArchive(level: 1 | 2 | 3, quality: Island3DQuality, materia
     }
     const interior = new THREE.Group();
     interior.name = 'ISLAND_7_ARCHIVE_VISIBLE_INTERIOR';
-    const backWall = box(1.12, 0.74, 0.06, materials.book);
-    backWall.position.set(0, 1.42, -0.39);
+    const backWall = box(0.96, 0.82, 0.06, materials.book);
+    backWall.position.set(0, 1.45, -0.32);
     interior.add(backWall);
     for (let shelfIndex = 0; shelfIndex < 4; shelfIndex += 1) {
       const shelf = box(0.92, 0.035, 0.09, materials.gold);
-      shelf.position.set(0, 1.15 + shelfIndex * 0.18, -0.34);
+      shelf.position.set(0, 1.19 + shelfIndex * 0.18, -0.27);
       interior.add(shelf);
       for (let bookIndex = 0; bookIndex < 7; bookIndex += 1) {
         const book = box(0.075, 0.12 + bookIndex % 2 * 0.025, 0.06, bookIndex % 3 === 0 ? materials.coralViolet : bookIndex % 3 === 1 ? materials.coralGold : materials.book);
-        book.position.set(-0.36 + bookIndex * 0.12, 1.23 + shelfIndex * 0.18, -0.29);
+        book.position.set(-0.36 + bookIndex * 0.12, 1.27 + shelfIndex * 0.18, -0.22);
         interior.add(book);
       }
     }
     const readingPearl = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 7), materials.pearl);
     readingPearl.position.set(0, 1.42, 0.05);
     interior.add(readingPearl);
+    const armillary = new THREE.Group();
+    addRing(armillary, 0.24, 0.018, 0, materials.gold, quality, true);
+    const armillaryCross = addRing(armillary, 0.24, 0.018, 0, materials.gold, quality, true);
+    armillaryCross.rotation.y = Math.PI / 2;
+    armillary.position.set(0, 1.76, -0.02);
+    interior.add(armillary);
     const interiorGlow = new THREE.Mesh(new THREE.CircleGeometry(0.34, 14), materials.warmWindow);
     interiorGlow.position.set(0, 1.48, -0.29);
     interiorGlow.scale.set(1.4, 0.9, 1);
@@ -839,8 +939,8 @@ function createWisdomArchive(level: 1 | 2 | 3, quality: Island3DQuality, materia
   openBook.position.set(0, 0.55, 0.76);
   root.add(desk, openBook);
   if (level === 3) {
-    const readingGallery = box(1.24, 0.62, 0.46, materials.book);
-    readingGallery.position.set(0, 0.78, 0.76);
+    const readingGallery = box(1.08, 0.32, 0.3, materials.turquoise);
+    readingGallery.position.set(0, 0.79, 0.76);
     const galleryWindow = box(0.78, 0.4, 0.055, materials.warmWindow);
     galleryWindow.position.set(0, 0.82, 1.01);
     root.add(readingGallery, galleryWindow);
@@ -968,12 +1068,13 @@ function createPearlPalace(level: 1 | 2 | 3, quality: Island3DQuality, materials
     const lantern = cylinder(0.36, 0.46, 0.4, materials.shell, segmentCount(quality));
     lantern.position.y = 1.84;
     root.add(lowerGallery, upperGallery, lantern);
-    addRing(root, 0.88, 0.045, 1.22, materials.gold, quality);
-    addRing(root, 0.48, 0.038, 1.65, materials.gold, quality);
+    addRing(root, 1.12, 0.055, 1.22, materials.gold, quality);
+    addRing(root, 0.54, 0.038, 1.65, materials.gold, quality);
+    addShellArcade(root, 1.08, 1.28, 8, materials, quality);
     const galleryWindows = 8;
     for (let index = 0; index < galleryWindows; index += 1) {
       const angle = index / galleryWindows * Math.PI * 2;
-      addArchedWindow(root, Math.cos(angle) * 0.79, 1.43, Math.sin(angle) * 0.79, 0.78, materials, -angle + Math.PI / 2);
+      addArchedWindow(root, Math.cos(angle) * 0.87, 1.43, Math.sin(angle) * 0.87, 0.78, materials, -angle + Math.PI / 2);
     }
     // A small number of large glowing bays provides inhabited depth at the
     // board camera without multiplying architectural draw calls.
@@ -992,6 +1093,10 @@ function createPearlPalace(level: 1 | 2 | 3, quality: Island3DQuality, materials
       const pierCrown = createOnionSpire(0.2, 0.52, materials, quality, materials.shell);
       pierCrown.position.set(Math.cos(angle) * 0.82, 1.55, Math.sin(angle) * 0.82);
       root.add(pierCrown);
+    }
+    for (let index = 0; index < 6; index += 1) {
+      const angle = index / 6 * Math.PI * 2;
+      addPointedShellPanel(root, angle, 1.04, 0.84, 0.4, 1.04, materials);
     }
   }
   const baseGoldBands = level === 3 ? 3 : 2;
@@ -1162,9 +1267,9 @@ function createTerrainRelief(materials: Island7UnderwaterMaterials) {
   const root = new THREE.Group();
   root.name = 'ISLAND_7_TERRAIN_RELIEF';
   const shelfMaterial = materials.oceanStone.clone();
-  shelfMaterial.color.setHex(0x2c7180);
-  shelfMaterial.emissive.setHex(0x062e38);
-  shelfMaterial.emissiveIntensity = 0.1;
+  shelfMaterial.color.setHex(0x398b94);
+  shelfMaterial.emissive.setHex(0x0b4652);
+  shelfMaterial.emissiveIntensity = 0.17;
   const anchors: Array<[number, number, number, number]> = [
     [-1.75, -1.2, 1.05, 0.15], [1.6, -1.35, 0.88, 1.1],
     [-1.55, 1.42, 0.92, 2.05], [1.65, 1.25, 1.02, 2.85],
@@ -1178,6 +1283,14 @@ function createTerrainRelief(materials: Island7UnderwaterMaterials) {
     shelf.rotation.y = rotation;
     root.add(shelf);
     if (index < 4) {
+      const sandRim = new THREE.Mesh(new THREE.TorusGeometry(scale * 0.68, 0.035, 5, 12), materials.sand);
+      sandRim.position.set(x, 0.37, z);
+      sandRim.scale.set(1.5, 1, 0.78);
+      sandRim.rotation.x = Math.PI / 2;
+      sandRim.rotation.z = rotation;
+      root.add(sandRim);
+    }
+    if (index < 4) {
       const garden = new THREE.Mesh(new THREE.IcosahedronGeometry(scale * 0.42, 0), index % 2 ? materials.kelp : materials.kelpLight);
       garden.scale.set(1.35, 0.08, 0.82);
       garden.position.set(x * 1.03, 0.39, z * 1.03);
@@ -1190,16 +1303,19 @@ function createTerrainRelief(materials: Island7UnderwaterMaterials) {
 
 function addArchitecturalReefGardens(root: THREE.Group, materials: Island7UnderwaterMaterials, quality: Island3DQuality) {
   const anchors: Array<[number, number, number, number]> = [
-    [-2.35, -1.45, 0.42, 0.1], [2.35, -1.45, 0.44, 0.9],
-    [-2.25, 1.52, 0.4, 1.7], [2.25, 1.52, 0.43, 2.5],
-    [-4.75, -2.55, 0.5, 3.2], [4.75, -2.55, 0.48, 3.9],
-    [-4.7, 2.6, 0.48, 4.6], [4.7, 2.6, 0.5, 5.3],
+    [-2.35, -1.45, 0.68, 0.1], [2.35, -1.45, 0.72, 0.9],
+    [-2.25, 1.52, 0.66, 1.7], [2.25, 1.52, 0.7, 2.5],
+    [-4.75, -2.55, 0.78, 3.2], [4.75, -2.55, 0.74, 3.9],
+    [-4.7, 2.6, 0.76, 4.6], [4.7, 2.6, 0.78, 5.3],
   ];
   anchors.forEach(([x, z, scale, seed], index) => {
-    if (!isIsland7RouteCorridorClear(x, z, scale * 0.22)) return;
+    const fanX = x + (index % 2 ? -0.14 : 0.14);
+    const fanZ = z - 0.08;
+    if (!isIsland7RouteCorridorClear(x, z, scale * 0.22)
+      || !isIsland7RouteCorridorClear(fanX, fanZ, scale * 0.34)) return;
     const coral = addCoralCluster(root, x, 0.31, z, scale, seed, materials, quality);
-    coral.scale.y = 1.24;
-    if (index % 2 === 0) addSeaFan(root, x + 0.14, 0.32, z - 0.08, scale * 0.7, seed + 0.4, materials, quality);
+    coral.scale.y = 1.38;
+    addSeaFan(root, fanX, 0.32, fanZ, scale * 0.82, seed + 0.4, materials, quality);
   });
 }
 
@@ -1720,7 +1836,7 @@ export function createIsland7UnderwaterLivingAmbience(
 
   const whale = createWhaleSilhouette(materials, quality);
   whale.scale.setScalar(1.05);
-  whale.position.set(-15, 8.2, -28);
+  whale.position.set(-15, 6.9, -28);
   whale.rotation.y = 0.5;
   root.add(whale);
 
@@ -1840,7 +1956,9 @@ export function createIsland7UnderwaterLivingAmbience(
       mantaOrbit.rotation.y = elapsed * 0.035;
       manta.rotation.z = Math.sin(elapsed * 0.48) * 0.1;
       whale.position.x = -15 + ((elapsed * 0.24) % 34);
-      whale.position.y = 8.2 + Math.sin(elapsed * 0.09) * 0.45;
+    // Keep the whale below the phone notch/header lane so the slow silhouette
+    // is actually visible during gameplay rather than living behind chrome.
+    whale.position.y = 6.9 + Math.sin(elapsed * 0.09) * 0.4;
       submarineOrbit.rotation.y = -elapsed * 0.024;
       submarine.position.y = -0.9 + Math.sin(elapsed * 0.22) * 0.26;
       const propeller = submarine.userData.propeller as THREE.Object3D | undefined;

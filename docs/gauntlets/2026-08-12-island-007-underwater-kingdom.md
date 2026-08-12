@@ -1,6 +1,6 @@
 # Island 007 — Abyssal Pearl Kingdom Gauntlet
 
-Status: active — pass 9 complete; final art score and physical-device performance gates remain open
+Status: active — pass 13 complete; final art score and physical-device performance gates remain open
 Reference: `docs/visual-references/island-007-underwater/island-007-underwater-goal-v1.png`
 Runtime island: 007 (ordinary, non-arena)
 Primary viewport: 390×844 CSS pixels, portrait phone
@@ -117,6 +117,14 @@ Open gates — do not call the island 10/10 yet:
 - Required physical-iPhone 30-second profiler runs at Auto and forced High are not yet recorded.
 - The procedural result preserves gameplay and animation but still cannot match the generated goal image's sculpted micro-detail without a materially different asset pipeline (authored/AI-generated meshes and baked textures).
 
+### Pass 13 checkpoint
+
+- Rebuilt the shell-roof language with curved spline ribs, strengthened the palace/archive/sanctuary facade hierarchy, enlarged architecture-integrated reef gardens, and removed the Hatchery's obstructing L3 chamber blade.
+- Rejected an oversized palace gable during the self-critique loop because it buried the pearl and windows at phone scale; the committed direction keeps the clearer pearl-arch facade.
+- A complete current High desktop choreography records 54.7 FPS average, 33.3 ms p95, 9.8% slow frames, 163 maximum calls and 175k maximum triangles. Geometry is within the authored 175/180k ceiling; timing remains honestly `REVIEW` rather than `PASS`.
+- TypeScript, Island Run architecture guard and template geometry gate pass. Physical iPhone Auto and forced-High 30-second runs remain required.
+- Goal comparison still exposes a substantial authored-detail gap, especially in building meso ornament, reef integration and jewel-dark material contrast. Pass 13 is an improvement checkpoint, not a 10/10 claim.
+
 Latest evidence:
 
 - `docs/gauntlets/evidence/island-007-underwater-v1/final-overview-structural-upgrade.png`
@@ -132,3 +140,10 @@ Latest evidence:
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass11-overview.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass11-left-orbit.png`
 - `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass11-right-orbit.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-full.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-phone-canvas.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-goal-comparison.jpg`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-left-orbit.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-right-orbit.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-motion-t0.png`
+- `docs/gauntlets/evidence/island-007-underwater-v1/gauntlet-pass13-motion-t6.png`
