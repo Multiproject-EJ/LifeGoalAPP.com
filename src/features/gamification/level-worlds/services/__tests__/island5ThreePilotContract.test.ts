@@ -63,6 +63,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(worldSource.includes("animatedKelp.name = 'ISLAND_7_ANIMATED_KELP_GARDEN'"), 'animated kelp must remain outside static geometry compaction');
       assert(worldSource.includes("quality === 'high' ? 96 : quality === 'medium' ? 58 : 28"), 'bubble density must scale across all three device tiers');
       assert(worldSource.includes('new THREE.InstancedMesh(geometry, materials.bubble, count)'), 'bubble ambience must stay one instanced draw-call family');
+      assert(worldSource.includes("'ISLAND_7_PORTAL_VORTEX_RING'"), 'the Compass Current needs a preserved animated outer vortex');
+      assert(worldSource.includes("'ISLAND_7_PORTAL_INNER_VORTEX'"), 'the Compass Current needs a counter-rotating inner vortex');
+      assert(worldSource.includes('portalVortexRings.forEach'), 'portal current depth must animate without per-frame scene traversal');
+      assert(worldSource.includes('isIsland7RouteCorridorClear(fanX, fanZ, scale * 0.34)'), 'architectural sea fans must independently clear the canonical route');
       assert(worldSource.includes('const surfaceUpdateInterval'), 'water-surface deformation must be cadence-limited per quality tier');
       assert(worldSource.includes('bubblePosition.set('), 'bubble animation must reuse scratch vectors instead of allocating per bubble per frame');
       assert(!worldSource.includes('shaft.position.x +='), 'light shafts must use absolute time-based motion without cumulative drift');
