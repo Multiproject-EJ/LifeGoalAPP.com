@@ -32,10 +32,31 @@ import {
   ISLAND_1_CLOUD_MINIMUM_Y,
   ISLAND_1_OCEAN_SURFACE_Y,
 } from '../../dev/Island1ThreeWorld';
+import {
+  isIsland6RouteCorridorClear,
+  ISLAND_6_ROUTE_CLEARANCE_INNER_RADIUS,
+  ISLAND_6_ROUTE_CLEARANCE_OUTER_RADIUS,
+} from '../../dev/Island6MoonveilThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'keeps Moonveil scenery outside the protected 36-tile route corridor',
+    run: async () => {
+      assert(isIsland6RouteCorridorClear(ISLAND_6_ROUTE_CLEARANCE_INNER_RADIUS - 0.2, 0, 0.18), 'inner sanctuary scenery may remain inside the route with clearance');
+      assert(!isIsland6RouteCorridorClear(3.4, 0, 0.01), 'no scenery footprint may occupy the canonical route centreline');
+      assert(isIsland6RouteCorridorClear(ISLAND_6_ROUTE_CLEARANCE_OUTER_RADIUS + 0.2, 0, 0.18), 'bridge and exterior architecture may begin outside the route with clearance');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const moonveilSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island6MoonveilThreeWorld.ts', 'utf8');
+      assert(!pilotSource.includes('ISLAND_6_ASTRAL_TILE_SIGIL'), 'non-semantic astral sigils must not decorate playable tile tops');
+      assert(moonveilSource.includes('if (!isMainShelf) addRing'), 'architectural shelf trim must not cross the main playable route');
+      assert(moonveilSource.includes('terrace.position.y = isMainShelf ? 0.24 : 0.36'), 'main shelf terrace must remain below the real tile blocks');
+      assert(pilotSource.includes('createIslandRunTileRewardThreeObjects'), 'canonical tile-bound reward projections must remain available after scenery cleanup');
+    },
+  },
   {
     name: 'maps canonical board tiles to presentation-only 3D reward identities',
     run: () => {

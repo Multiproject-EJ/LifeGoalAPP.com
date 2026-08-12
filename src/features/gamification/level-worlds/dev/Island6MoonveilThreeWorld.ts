@@ -4,6 +4,10 @@ import type {
   Island3DQualityProfile,
   Island5LandmarkDefinition,
 } from './island5ThreePilotContract';
+import {
+  ISLAND_3D_ROUTE_RADIUS,
+  ISLAND_3D_TILE_RADIAL_DEPTH,
+} from './island5ThreePilotContract';
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
 
 export const ISLAND_6_MOONVEIL_WORLD_NAME = 'Moonveil Nexus';
@@ -47,6 +51,29 @@ export interface Island6MoonveilAmbienceRuntime {
 
 const segmentCount = (quality: Island3DQuality) => quality === 'high' ? 24 : quality === 'medium' ? 16 : 10;
 const detailScale = (quality: Island3DQuality) => quality === 'high' ? 1 : quality === 'medium' ? 0.62 : 0.34;
+
+/**
+ * The live route occupies a radial annulus. Moonveil scenery is authored on
+ * either side of this protected band so the 36 real tiles stay visually clean
+ * and their canonical reward projections remain the only objects above them.
+ */
+export const ISLAND_6_ROUTE_CLEARANCE_INNER_RADIUS = ISLAND_3D_ROUTE_RADIUS - ISLAND_3D_TILE_RADIAL_DEPTH / 2 - 0.25;
+export const ISLAND_6_ROUTE_CLEARANCE_OUTER_RADIUS = ISLAND_3D_ROUTE_RADIUS + ISLAND_3D_TILE_RADIAL_DEPTH / 2 + 0.25;
+
+export function isIsland6RouteCorridorClear(x: number, z: number, footprintRadius = 0): boolean {
+  const distance = Math.hypot(x, z);
+  const safeFootprint = Math.max(0, footprintRadius);
+  return distance + safeFootprint <= ISLAND_6_ROUTE_CLEARANCE_INNER_RADIUS
+    || distance - safeFootprint >= ISLAND_6_ROUTE_CLEARANCE_OUTER_RADIUS;
+}
+
+function resolveMoonveilDistrictPosition(position: readonly [number, number, number]): readonly [number, number, number] {
+  if (Math.abs(position[0]) < 0.01 && Math.abs(position[2]) < 0.01) return position;
+  // Phone composition is deliberately taller than the shared square template:
+  // Moonveil reads as a constellation of districts suspended along a vertical
+  // axis, while the canonical 36-tile route remains untouched at the centre.
+  return [position[0] * 0.68, position[1], position[2] * 1.55];
+}
 
 function box(width: number, height: number, depth: number, material: THREE.Material) {
   return new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
@@ -137,11 +164,11 @@ export function createIsland6MoonveilMaterials(): Island6MoonveilMaterials {
   const indigoRelief = createReliefTexture(96, 'indigo');
   const goldRelief = createReliefTexture(64, 'gold');
   return {
-    basalt: new THREE.MeshStandardMaterial({ color: 0x242858, map: basaltMap, bumpMap: basaltRelief, bumpScale: 0.055, roughness: 0.84, metalness: 0.03, emissive: 0x11113f, emissiveIntensity: 0.34 }),
-    basaltShade: new THREE.MeshStandardMaterial({ color: 0x101331, map: basaltMap, bumpMap: basaltRelief, bumpScale: 0.07, roughness: 0.92, metalness: 0.02, emissive: 0x170a3d, emissiveIntensity: 0.28 }),
-    indigo: new THREE.MeshPhysicalMaterial({ color: 0x343b82, map: indigoMap, bumpMap: indigoRelief, bumpScale: 0.026, roughness: 0.4, metalness: 0.12, clearcoat: 0.42, clearcoatRoughness: 0.26, emissive: 0x192167, emissiveIntensity: 0.4 }),
-    indigoLight: new THREE.MeshPhysicalMaterial({ color: 0x5562c5, map: indigoMap, bumpMap: indigoRelief, bumpScale: 0.018, roughness: 0.3, metalness: 0.16, clearcoat: 0.58, clearcoatRoughness: 0.18, emissive: 0x2935a4, emissiveIntensity: 0.54 }),
-    gold: new THREE.MeshStandardMaterial({ color: 0xf0bc5a, map: goldMap, bumpMap: goldRelief, bumpScale: 0.012, roughness: 0.26, metalness: 0.84, emissive: 0x8c4a0b, emissiveIntensity: 0.44 }),
+    basalt: new THREE.MeshStandardMaterial({ color: 0x3c437e, map: basaltMap, bumpMap: basaltRelief, bumpScale: 0.06, roughness: 0.8, metalness: 0.04, emissive: 0x20235f, emissiveIntensity: 0.58 }),
+    basaltShade: new THREE.MeshStandardMaterial({ color: 0x303766, map: basaltMap, bumpMap: basaltRelief, bumpScale: 0.075, roughness: 0.88, metalness: 0.03, emissive: 0x302069, emissiveIntensity: 0.72 }),
+    indigo: new THREE.MeshPhysicalMaterial({ color: 0x4652a9, map: indigoMap, bumpMap: indigoRelief, bumpScale: 0.026, roughness: 0.36, metalness: 0.14, clearcoat: 0.5, clearcoatRoughness: 0.22, emissive: 0x27358e, emissiveIntensity: 0.7 }),
+    indigoLight: new THREE.MeshPhysicalMaterial({ color: 0x6877df, map: indigoMap, bumpMap: indigoRelief, bumpScale: 0.018, roughness: 0.27, metalness: 0.18, clearcoat: 0.64, clearcoatRoughness: 0.16, emissive: 0x3448c2, emissiveIntensity: 0.82 }),
+    gold: new THREE.MeshStandardMaterial({ color: 0xf8c966, map: goldMap, bumpMap: goldRelief, bumpScale: 0.012, roughness: 0.22, metalness: 0.86, emissive: 0xa55b12, emissiveIntensity: 0.62 }),
     cyan: new THREE.MeshPhysicalMaterial({ color: 0x5be2ff, roughness: 0.06, metalness: 0.02, transparent: true, opacity: 0.86, transmission: 0.18, thickness: 0.35, clearcoat: 1, emissive: 0x168fd0, emissiveIntensity: 1.18, depthWrite: false, side: THREE.DoubleSide }),
     violet: new THREE.MeshPhysicalMaterial({ color: 0x8f5bff, roughness: 0.08, metalness: 0.03, transparent: true, opacity: 0.88, transmission: 0.16, thickness: 0.42, clearcoat: 1, emissive: 0x5a20cf, emissiveIntensity: 1.22, depthWrite: false, side: THREE.DoubleSide }),
     portal: new THREE.MeshBasicMaterial({ color: 0xc47bff, transparent: true, opacity: 0.92, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }),
@@ -151,9 +178,9 @@ export function createIsland6MoonveilMaterials(): Island6MoonveilMaterials {
     parchment: new THREE.MeshStandardMaterial({ color: 0xe8d5a8, roughness: 0.86, emissive: 0x4a2d13, emissiveIntensity: 0.14, side: THREE.DoubleSide }),
     egg: new THREE.MeshPhysicalMaterial({ color: 0xbdeeff, roughness: 0.14, clearcoat: 0.82, clearcoatRoughness: 0.12, emissive: 0x337bc2, emissiveIntensity: 0.44 }),
     nest: new THREE.MeshStandardMaterial({ color: 0x79553b, roughness: 0.9 }),
-    foliage: new THREE.MeshStandardMaterial({ color: 0x1a555b, roughness: 0.84, emissive: 0x0d333b, emissiveIntensity: 0.32 }),
-    foliageLight: new THREE.MeshStandardMaterial({ color: 0x357782, roughness: 0.78, emissive: 0x1a5367, emissiveIntensity: 0.4 }),
-    moss: new THREE.MeshStandardMaterial({ color: 0x194c43, roughness: 0.94, emissive: 0x0d302f, emissiveIntensity: 0.34 }),
+    foliage: new THREE.MeshStandardMaterial({ color: 0x247275, roughness: 0.82, emissive: 0x134c55, emissiveIntensity: 0.48 }),
+    foliageLight: new THREE.MeshStandardMaterial({ color: 0x4d9ba0, roughness: 0.74, emissive: 0x276f80, emissiveIntensity: 0.58 }),
+    moss: new THREE.MeshStandardMaterial({ color: 0x286557, roughness: 0.92, emissive: 0x174a45, emissiveIntensity: 0.48 }),
     nightFlower: new THREE.MeshPhysicalMaterial({ color: 0xbca1ff, roughness: 0.16, clearcoat: 0.72, emissive: 0x672ed4, emissiveIntensity: 1.25 }),
     voidMist: new THREE.MeshBasicMaterial({ color: 0x5928b8, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }),
   };
@@ -235,6 +262,18 @@ function addDome(root: THREE.Group, x: number, y: number, z: number, radius: num
     rib.rotation.set(0, index / ribCount * Math.PI, Math.PI / 2);
     root.add(rib);
   }
+  const latitudeCount = quality === 'high' ? 2 : quality === 'medium' ? 1 : 0;
+  for (let index = 0; index < latitudeCount; index += 1) {
+    const progress = index === 0 ? 0.34 : 0.62;
+    const latitudeRadius = radius * Math.sqrt(1 - progress * progress) * 0.92;
+    const latitude = new THREE.Mesh(
+      new THREE.TorusGeometry(latitudeRadius, radius * 0.018, 5, segments * 2),
+      index === 0 ? materials.gold : materials.indigoLight,
+    );
+    latitude.rotation.x = Math.PI / 2;
+    latitude.position.set(x, y + radius * progress * 0.8, z);
+    root.add(latitude);
+  }
 }
 
 function addWarmArchedWindow(
@@ -250,7 +289,7 @@ function addWarmArchedWindow(
   const windowRoot = new THREE.Group();
   windowRoot.position.set(x, y, z);
   windowRoot.rotation.y = rotationY;
-  windowRoot.scale.setScalar(1.32);
+  windowRoot.scale.setScalar(1.56);
   const pane = box(0.16 * scale, 0.28 * scale, 0.038 * scale, materials.warmGlass);
   const left = box(0.035 * scale, 0.31 * scale, 0.055 * scale, materials.gold);
   const right = left.clone();
@@ -337,6 +376,64 @@ function addCelestialBanner(
   root.add(bannerRoot);
 }
 
+function addMoonveilGrandEntrance(
+  root: THREE.Group,
+  materials: Island6MoonveilMaterials,
+  quality: Island3DQuality,
+) {
+  const segments = segmentCount(quality);
+  const facade = box(1.54, 0.92, 0.34, materials.indigo);
+  facade.position.set(0, 0.98, 0.64);
+  root.add(facade);
+  const doorway = box(0.48, 0.64, 0.055, materials.warmGlass);
+  doorway.position.set(0, 0.86, 0.825);
+  const doorFrame = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.055, 6, segments, Math.PI), materials.gold);
+  doorFrame.position.set(0, 1.17, 0.858);
+  const lintel = box(0.72, 0.08, 0.09, materials.gold);
+  lintel.position.set(0, 1.16, 0.855);
+  root.add(doorway, doorFrame, lintel);
+  [-1, 1].forEach((side) => {
+    const tower = cylinder(0.18, 0.23, 1.1, materials.indigoLight, segments);
+    tower.position.set(side * 0.76, 1.12, 0.65);
+    root.add(tower);
+    addDome(root, side * 0.76, 1.66, 0.65, 0.23, materials, quality, true);
+    addWarmArchedWindow(root, side * 0.76, 1.08, 0.84, 0, 0.68, materials, quality);
+    addStarFinial(root, side * 0.76, 2.02, 0.65, materials, 0.46);
+    const wing = box(0.58, 0.56, 0.28, materials.basalt);
+    wing.position.set(side * 1.04, 0.8, 0.48);
+    root.add(wing);
+    addWarmArchedWindow(root, side * 1.04, 0.82, 0.63, 0, 0.58, materials, quality);
+    addLantern(root, side * 0.43, 0.56, 1.03, materials, 0.76);
+  });
+  addCelestialBanner(root, -1.22, 0.55, 0.34, 0.06, materials, 0.72);
+  addCelestialBanner(root, 1.22, 0.55, 0.34, -0.06, materials, 0.72);
+}
+
+function addMoonveilRearGallery(
+  root: THREE.Group,
+  materials: Island6MoonveilMaterials,
+  quality: Island3DQuality,
+) {
+  // Bottom-half districts face the board, so the shared overview sees their
+  // rear elevations. Give that camera-facing side a real inhabited gallery
+  // instead of exposing a blank dome shell.
+  const gallery = box(1.72, 0.72, 0.28, materials.indigo);
+  gallery.position.set(0, 0.98, -1.02);
+  const cornice = box(1.86, 0.08, 0.34, materials.gold);
+  cornice.position.set(0, 1.37, -1.02);
+  root.add(gallery, cornice);
+  [-0.56, 0, 0.56].forEach((x, index) => {
+    addWarmArchedWindow(root, x, 0.99, -1.18, Math.PI, index === 1 ? 0.86 : 0.72, materials, quality);
+  });
+  [-0.82, 0.82].forEach((x) => {
+    const turret = cylinder(0.14, 0.18, 0.82, materials.indigoLight, segmentCount(quality));
+    turret.position.set(x, 1.06, -1.02);
+    root.add(turret);
+    addStarFinial(root, x, 1.58, -1.02, materials, 0.48);
+  });
+  addCrescent(root, 0, 1.65, -1.06, 0.2, materials, Math.PI);
+}
+
 function addWarmCrownLights(
   root: THREE.Group,
   radius: number,
@@ -350,7 +447,7 @@ function addWarmCrownLights(
     const angle = index / resolvedCount * Math.PI * 2 + Math.PI / resolvedCount;
     const post = cylinder(0.022, 0.03, 0.16, materials.gold, 6);
     post.position.set(Math.sin(angle) * radius, y, Math.cos(angle) * radius);
-    const flame = new THREE.Mesh(new THREE.OctahedronGeometry(0.052, 0), materials.warmGlass);
+    const flame = new THREE.Mesh(new THREE.OctahedronGeometry(0.068, 0), materials.warmGlass);
     flame.position.set(post.position.x, y + 0.12, post.position.z);
     flame.scale.set(0.8, 1.45, 0.8);
     root.add(post, flame);
@@ -518,10 +615,30 @@ function createConstellationCourt(level: 1 | 2 | 3, quality: Island3DQuality, ma
       group.add(post);
       addStarFinial(group, post.position.x, 1.72, post.position.z, materials, 0.62);
     }
-    const canopy = new THREE.Mesh(new THREE.ConeGeometry(1.18, 0.52, postCount, 1, true), materials.indigoLight);
-    canopy.position.y = 1.64;
-    canopy.scale.y = 0.58;
-    group.add(canopy);
+    if (level === 2) {
+      const canopy = new THREE.Mesh(
+        new THREE.ConeGeometry(1.18, 0.52, postCount, 1, true),
+        materials.indigoLight,
+      );
+      canopy.position.y = 1.64;
+      canopy.scale.y = 0.58;
+      group.add(canopy);
+    } else {
+      // L3 becomes an open-air celestial exercise court. The former full
+      // translucent cone read as a giant plain silo in landmark focus, hiding
+      // the training equipment and warm interior life.
+      addRing(group, 1.08, 0.055, 1.58, materials.gold, 42);
+      addRing(group, 0.78, 0.035, 1.86, materials.cyan, 34);
+      for (let index = 0; index < postCount; index += 1) {
+        const angle = index / postCount * Math.PI * 2 + Math.PI / postCount;
+        const crownBeam = box(0.045, 0.045, 0.72, index % 2 ? materials.gold : materials.indigoLight);
+        crownBeam.position.set(Math.sin(angle) * 0.72, 1.72, Math.cos(angle) * 0.72);
+        crownBeam.rotation.y = angle;
+        crownBeam.rotation.x = -0.34;
+        group.add(crownBeam);
+        addLantern(group, Math.sin(angle) * 1.0, 1.52, Math.cos(angle) * 1.0, materials, 0.45);
+      }
+    }
     const rearHall = box(0.92 + level * 0.12, 0.7 + level * 0.12, 0.46, materials.indigo);
     rearHall.position.set(0, 0.9, -0.82);
     group.add(rearHall);
@@ -773,6 +890,25 @@ function createMoonGate(level: 1 | 2 | 3, quality: Island3DQuality, materials: I
   group.add(floor);
   addRing(group, level === 3 ? 1.34 : level === 2 ? 1.18 : 1.02, 0.048, 0.54, materials.gold, 48);
   addStarPaving(group, level === 3 ? 1.14 : 0.92, 0.535, materials, quality, level === 3 ? 16 : 8);
+  if (level >= 2) {
+    // The portal belongs to an inhabited sanctuary, rather than hovering as
+    // an isolated ring. This warm rear mass remains visible around the portal
+    // from the overview and every authored landmark camera.
+    const sanctuary = box(level === 3 ? 1.92 : 1.48, level === 3 ? 1.34 : 1.04, 0.76, materials.indigo);
+    sanctuary.position.set(0, level === 3 ? 1.22 : 1.06, -0.96);
+    group.add(sanctuary);
+    addDome(group, 0, level === 3 ? 1.88 : 1.55, -0.96, level === 3 ? 0.86 : 0.68, materials, quality, true);
+    [-1, 1].forEach((side) => {
+      const towerX = side * (level === 3 ? 1.2 : 0.96);
+      const tower = cylinder(level === 3 ? 0.34 : 0.28, level === 3 ? 0.4 : 0.34, level === 3 ? 1.38 : 1.08, materials.indigo, segments);
+      tower.position.set(towerX, level === 3 ? 1.22 : 1.08, -0.9);
+      group.add(tower);
+      addDome(group, towerX, level === 3 ? 1.91 : 1.6, -0.9, level === 3 ? 0.4 : 0.33, materials, quality, true);
+      addWarmArchedWindow(group, towerX, level === 3 ? 1.14 : 1.02, -0.49, 0, level === 3 ? 0.88 : 0.7, materials, quality);
+      if (level === 3) addStarFinial(group, towerX, 2.45, -0.9, materials, 0.64);
+    });
+    [-0.6, 0, 0.6].forEach((x) => addWarmArchedWindow(group, x, level === 3 ? 1.22 : 1.08, -0.55, 0, level === 3 ? 0.76 : 0.62, materials, quality));
+  }
   const portalRadius = level === 1 ? 0.5 : level === 2 ? 0.76 : 1.02;
   const portalY = level === 1 ? 1.16 : level === 2 ? 1.42 : 1.66;
   const portal = new THREE.Mesh(new THREE.CircleGeometry(portalRadius * 0.82, segments * 2), materials.portal.clone());
@@ -817,11 +953,12 @@ function createMoonGate(level: 1 | 2 | 3, quality: Island3DQuality, materials: I
     }
     addBalustrade(group, 1.58, 0.5, materials, quality, Math.PI);
     [-1, 1].forEach((side) => {
-      const shrine = cylinder(0.29, 0.34, 0.62, materials.indigo, segments);
-      shrine.position.set(side * 1.22, 0.84, 0.62);
+      const shrine = cylinder(0.31, 0.37, 0.84, materials.indigo, segments);
+      shrine.position.set(side * 1.24, 0.95, 0.62);
       group.add(shrine);
-      addDome(group, side * 1.22, 1.14, 0.62, 0.35, materials, quality, true);
-      addWarmArchedWindow(group, side * 1.22, 0.88, 0.96, 0, 0.7, materials, quality);
+      addDome(group, side * 1.24, 1.37, 0.62, 0.38, materials, quality, true);
+      addWarmArchedWindow(group, side * 1.24, 0.99, 1.0, 0, 0.82, materials, quality);
+      addStarFinial(group, side * 1.24, 1.86, 0.62, materials, 0.55);
     });
     addCelestialBanner(group, -1.56, 0.5, -0.72, 0.12, materials, 0.9);
     addCelestialBanner(group, 1.56, 0.5, -0.72, -0.12, materials, 0.9);
@@ -844,7 +981,7 @@ function createSoftGlowSprite(color: number, opacity: number, scale: number) {
     context.fillStyle = gradient;
     context.fillRect(0, 0, 128, 128);
   }
-  const texture = new THREE.CanvasTexture(canvas);
+  const texture: THREE.Texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
     map: texture,
@@ -907,23 +1044,35 @@ function createMoonveilNebulaBackdrop(quality: Island3DQuality): THREE.Sprite {
     context.fill();
   }
 
-  const texture = new THREE.CanvasTexture(canvas);
+  const texture: THREE.Texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.needsUpdate = true;
+  new THREE.TextureLoader().load(
+    '/assets/islands/island-006/background/moonveil-nebula-sky-portrait-v2.webp',
+    (loadedTexture) => {
+      loadedTexture.colorSpace = THREE.SRGBColorSpace;
+      loadedTexture.wrapS = THREE.ClampToEdgeWrapping;
+      loadedTexture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.copy(loadedTexture);
+      texture.needsUpdate = true;
+      loadedTexture.dispose();
+    },
+  );
   const material = new THREE.SpriteMaterial({
     map: texture,
     color: 0xffffff,
     transparent: true,
-    opacity: quality === 'low' ? 0.72 : 0.88,
-    blending: THREE.AdditiveBlending,
+    opacity: quality === 'low' ? 0.82 : 0.98,
+    blending: THREE.NormalBlending,
     depthWrite: false,
     depthTest: false,
     fog: false,
+    toneMapped: false,
   });
   const sprite = new THREE.Sprite(material);
   sprite.name = 'ISLAND_6_PAINTED_NEBULA_BACKDROP';
-  sprite.position.set(8.5, 6.4, -26);
-  sprite.scale.set(34, 25, 1);
+  sprite.position.set(6.4, 7.4, -29);
+  sprite.scale.set(42, 31, 1);
   sprite.renderOrder = -20;
   return sprite;
 }
@@ -936,7 +1085,8 @@ export function buildIsland6MoonveilLandmark(
 ) {
   const root = new THREE.Group();
   root.name = `ISLAND_6_MOONVEIL_${definition.id.toUpperCase()}_ROOT`;
-  root.position.set(...definition.position);
+  const districtPosition = resolveMoonveilDistrictPosition(definition.position);
+  root.position.set(...districtPosition);
   root.userData.sculptRuntime = { clickable: true, explodable: true, world: 'island-006-moonveil' };
   if (level === 0) {
     addPlinth(root, definition.id === 'boss' ? 1.75 : 1.34, materials, quality, 0.12);
@@ -951,11 +1101,20 @@ export function buildIsland6MoonveilLandmark(
           : definition.id === 'event'
             ? createVioletRift(resolved, quality, materials)
             : createMoonGate(resolved, quality, materials);
-    if (definition.id !== 'boss') building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
+    if (definition.id !== 'boss') building.rotation.y = Math.atan2(-districtPosition[0], -districtPosition[2]);
     const scale = definition.id === 'boss'
-      ? resolved === 3 ? 1.18 : resolved === 2 ? 1.08 : 1
-      : resolved === 3 ? 1.12 : resolved === 2 ? 1.03 : 0.95;
+      // Moonveil's visual goal is an open, readable astral board. The gate
+      // remains the tallest landmark, but it must not swallow the 36-tile
+      // route the way a conventional centre castle can.
+      ? resolved === 3 ? 1.04 : resolved === 2 ? 1.02 : 0.94
+      : resolved === 3 ? 1.38 : resolved === 2 ? 1.14 : 0.98;
     building.scale.setScalar(scale);
+    if ((definition.id === 'hatchery' || definition.id === 'wisdom') && resolved === 3) {
+      addMoonveilGrandEntrance(building, materials, quality);
+    }
+    if (definition.id === 'wisdom' && districtPosition[2] > 0 && resolved === 3) {
+      addMoonveilRearGallery(building, materials, quality);
+    }
     root.add(building);
     const warmCore = new THREE.PointLight(
       0xff9a3d,
@@ -1021,17 +1180,130 @@ function createFloatingShelf(
   const rim = cylinder(radius * 1.02, radius * 1.08, 0.22, materials.indigo, segments);
   rim.position.y = 0.06;
   rim.scale.z = crown.scale.z;
-  const root = new THREE.Mesh(new THREE.ConeGeometry(radius * 1.04, depth, segments), materials.basaltShade);
+  const root = new THREE.Mesh(new THREE.ConeGeometry(radius * 1.04, depth, segments), materials.basalt);
   root.position.y = -depth / 2 + 0.02;
   root.rotation.x = Math.PI;
   root.rotation.z = Math.sin(seed * 1.8) * 0.05;
   root.scale.set(0.98 + Math.cos(seed) * 0.02, 1, crown.scale.z * 0.97);
   group.add(crown, rim, root);
+  // Layer faceted rock terraces over the long root. They make the underside
+  // read as a massive inhabited cliff from phone distance instead of a thin
+  // cone wrapped in glowing rings.
+  const tierCount = isMainShelf
+    ? quality === 'high' ? 5 : quality === 'medium' ? 4 : 3
+    : quality === 'high' ? 4 : quality === 'medium' ? 3 : 2;
+  for (let index = 0; index < tierCount; index += 1) {
+    const progress = (index + 0.38) / tierCount;
+    const tierRadiusTop = radius * THREE.MathUtils.lerp(0.88, 0.25, progress);
+    const tierRadiusBottom = tierRadiusTop * THREE.MathUtils.lerp(0.9, 0.66, progress);
+    const tierHeight = depth * (isMainShelf ? 0.19 : 0.21);
+    const tier = cylinder(
+      tierRadiusTop,
+      tierRadiusBottom,
+      tierHeight,
+      index % 3 === 1 ? materials.indigo : index % 2 === 0 ? materials.basalt : materials.basaltShade,
+      Math.max(8, Math.round(segments * 0.75)),
+    );
+    tier.position.y = -0.42 - index * depth * (isMainShelf ? 0.16 : 0.18);
+    tier.rotation.y = seed * 0.28 + index * 0.31;
+    tier.scale.z = crown.scale.z * (0.98 - index * 0.025);
+    group.add(tier);
+  }
+  const outcropCount = quality === 'high'
+    ? isMainShelf ? 20 : 12
+    : quality === 'medium'
+      ? isMainShelf ? 13 : 8
+      : isMainShelf ? 8 : 5;
+  for (let index = 0; index < outcropCount; index += 1) {
+    const progress = 0.14 + ((index * 7) % outcropCount) / outcropCount * 0.7;
+    const angle = seed * 1.7 + index / outcropCount * Math.PI * 2;
+    const radial = radius * (0.9 - progress * 0.62);
+    const size = radius * (0.14 + (index % 4) * 0.02);
+    const outcrop = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(size, 0),
+      index % 4 === 0 ? materials.indigoLight : index % 2 === 0 ? materials.basalt : materials.basaltShade,
+    );
+    outcrop.position.set(
+      Math.cos(angle) * radial,
+      -0.35 - progress * depth * 0.9,
+      Math.sin(angle) * radial * crown.scale.z,
+    );
+    outcrop.rotation.set(index * 0.19, angle, seed + index * 0.37);
+    outcrop.scale.set(1.28 + index % 3 * 0.18, 1.95 + index % 4 * 0.24, 1.02 + index % 2 * 0.24);
+    group.add(outcrop);
+  }
+  // Offset ledges interrupt the procedural cone silhouette and give the roots
+  // the inhabited, eroded cliff rhythm of the painted target. Their moss,
+  // crystals and tiny lanterns remain sparse so the tile route stays dominant.
+  const ledgeCount = quality === 'high'
+    ? isMainShelf ? 13 : 7
+    : quality === 'medium'
+      ? isMainShelf ? 8 : 5
+      : isMainShelf ? 4 : 3;
+  for (let index = 0; index < ledgeCount; index += 1) {
+    const progress = 0.16 + ((index * 5) % ledgeCount) / Math.max(1, ledgeCount) * 0.58;
+    const angle = seed * 0.91 + index / ledgeCount * Math.PI * 2 + (index % 2) * 0.19;
+    const radial = radius * (0.88 - progress * 0.48);
+    const ledgeWidth = radius * (isMainShelf ? 0.17 : 0.22) * (0.82 + index % 3 * 0.13);
+    const ledge = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(ledgeWidth, 0),
+      index % 3 === 0 ? materials.indigo : materials.basalt,
+    );
+    ledge.position.set(
+      Math.cos(angle) * radial,
+      -0.34 - progress * depth * 0.82,
+      Math.sin(angle) * radial * crown.scale.z,
+    );
+    ledge.rotation.set(0.08 + index * 0.03, -angle, index % 2 ? 0.12 : -0.09);
+    ledge.scale.set(1.55, 0.34, 1.08);
+    group.add(ledge);
+    if (quality !== 'low' || index % 2 === 0) {
+      const mossPad = cylinder(ledgeWidth * 0.62, ledgeWidth * 0.7, 0.035, materials.moss, 8);
+      mossPad.position.copy(ledge.position);
+      mossPad.position.y += ledgeWidth * 0.31;
+      mossPad.scale.z = 0.68;
+      mossPad.rotation.y = -angle;
+      group.add(mossPad);
+      if (index % 2 === 0) {
+        addCrystal(
+          group,
+          mossPad.position.x,
+          mossPad.position.y + 0.11,
+          mossPad.position.z,
+          Math.max(0.045, ledgeWidth * 0.19),
+          index % 4 === 0 ? materials.cyan : materials.violet,
+          angle,
+        );
+      } else if (quality === 'high') {
+        addLantern(group, mossPad.position.x, mossPad.position.y + 0.04, mossPad.position.z, materials, 0.34);
+      }
+    }
+  }
   const terrace = cylinder(radius * 0.91, radius * 0.96, 0.14, materials.indigo, segments);
-  terrace.position.y = 0.36;
+  // Keep the main terrace below the physical route blocks. Its previous top
+  // face was coplanar with the tiles and read as false paving/flicker.
+  terrace.position.y = isMainShelf ? 0.24 : 0.36;
   terrace.scale.z = crown.scale.z;
   group.add(terrace);
-  addRing(group, radius * 0.86, isMainShelf ? 0.055 : 0.042, 0.45, materials.gold, segments * 2);
+  // Satellite trim is architectural. The same ring on the main shelf crossed
+  // directly over the canonical route, so the board intentionally has none.
+  if (!isMainShelf) addRing(group, radius * 0.86, 0.042, 0.45, materials.gold, segments * 2);
+  if (!isMainShelf) {
+    const parapetCount = quality === 'high' ? 14 : quality === 'medium' ? 10 : 7;
+    for (let index = 0; index < parapetCount; index += 1) {
+      const angle = index / parapetCount * Math.PI * 2 + seed * 0.12;
+      const alternatesOpening = index % 4 === 1;
+      if (alternatesOpening) continue;
+      const parapet = box(0.22, index % 3 === 0 ? 0.34 : 0.25, 0.12, index % 3 === 0 ? materials.gold : materials.basalt);
+      parapet.position.set(
+        Math.cos(angle) * radius * 0.82,
+        0.57 + (index % 3 === 0 ? 0.04 : 0),
+        Math.sin(angle) * radius * crown.scale.z * 0.82,
+      );
+      parapet.rotation.y = -angle;
+      group.add(parapet);
+    }
+  }
   const buttressCount = quality === 'high' ? (isMainShelf ? 24 : 12) : quality === 'medium' ? (isMainShelf ? 16 : 8) : (isMainShelf ? 10 : 6);
   for (let index = 0; index < buttressCount; index += 1) {
     const angle = index / buttressCount * Math.PI * 2 + seed * 0.21;
@@ -1041,7 +1313,7 @@ function createFloatingShelf(
     buttress.rotation.z = Math.sin(angle) * 0.06;
     group.add(buttress);
   }
-  const toothCount = quality === 'high' ? (isMainShelf ? 19 : 9) : quality === 'medium' ? (isMainShelf ? 13 : 6) : (isMainShelf ? 8 : 4);
+  const toothCount = quality === 'high' ? (isMainShelf ? 24 : 13) : quality === 'medium' ? (isMainShelf ? 16 : 9) : (isMainShelf ? 10 : 6);
   for (let index = 0; index < toothCount; index += 1) {
     const angle = index / toothCount * Math.PI * 2 + seed;
     const tooth = new THREE.Mesh(new THREE.ConeGeometry(radius * (0.08 + index % 3 * 0.012), depth * (0.22 + index % 4 * 0.045), 5), index % 3 === 0 ? materials.indigo : materials.basaltShade);
@@ -1050,9 +1322,9 @@ function createFloatingShelf(
     tooth.rotation.z = Math.sin(seed + index * 1.2) * 0.12;
     group.add(tooth);
   }
-  const bandCount = quality === 'high' ? 4 : quality === 'medium' ? 3 : 2;
+  const bandCount = quality === 'high' ? 2 : 1;
   for (let index = 0; index < bandCount; index += 1) {
-    const band = new THREE.Mesh(new THREE.TorusGeometry(radius * (0.84 - index * 0.12), 0.035 + index * 0.008, 5, segments), index % 2 ? materials.violet : materials.indigoLight);
+    const band = new THREE.Mesh(new THREE.TorusGeometry(radius * (0.82 - index * 0.22), 0.027 + index * 0.006, 5, segments), index % 2 ? materials.violet : materials.indigoLight);
     band.rotation.x = Math.PI / 2;
     band.position.y = -0.5 - index * depth * 0.16;
     band.scale.z = crown.scale.z * (0.96 - index * 0.035);
@@ -1100,6 +1372,224 @@ function createStarField(quality: Island3DQuality, radius: number, count: number
   return points;
 }
 
+function createMoonveilTwinkleLayers(quality: Island3DQuality) {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_6_DISTANT_TWINKLE_LAYERS';
+  const definitions = [
+    { radius: 17.5, count: 185, color: 0xffe5a4, size: 0.072, seed: 2.1, opacity: 0.62, rate: 0.72, phase: 0.2 },
+    { radius: 21.5, count: 235, color: 0xa9ccff, size: 0.055, seed: 5.7, opacity: 0.5, rate: 0.46, phase: 2.4 },
+    { radius: 25, count: 150, color: 0xc693ff, size: 0.085, seed: 8.9, opacity: 0.44, rate: 0.31, phase: 4.3 },
+  ];
+  definitions.forEach((definition, index) => {
+    const layer = createStarField(
+      quality,
+      definition.radius,
+      definition.count,
+      definition.color,
+      quality === 'low' ? definition.size * 1.35 : definition.size,
+      definition.seed,
+    );
+    layer.name = `ISLAND_6_DISTANT_TWINKLE_LAYER_${index + 1}`;
+    layer.position.y = index * 1.2 - 1.4;
+    layer.rotation.set(0.05 * index, 0.3 * index, -0.035 * index);
+    const material = layer.material as THREE.PointsMaterial;
+    material.opacity = definition.opacity;
+    layer.userData.baseOpacity = definition.opacity;
+    layer.userData.twinkleRate = definition.rate;
+    layer.userData.twinklePhase = definition.phase;
+    root.add(layer);
+  });
+  return root;
+}
+
+function createMoonveilStreakTexture(headColor: string, tailColor: string, comet = false) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = comet ? 160 : 96;
+  const context = canvas.getContext('2d');
+  if (!context) return new THREE.CanvasTexture(canvas);
+  const centreY = canvas.height / 2;
+  const gradient = context.createLinearGradient(16, centreY, 478, centreY);
+  gradient.addColorStop(0, 'rgba(80, 54, 255, 0)');
+  gradient.addColorStop(comet ? 0.34 : 0.52, tailColor);
+  gradient.addColorStop(0.92, headColor);
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+  context.lineCap = 'round';
+  context.strokeStyle = gradient;
+  context.lineWidth = comet ? 24 : 11;
+  context.shadowBlur = comet ? 30 : 18;
+  context.shadowColor = headColor;
+  context.beginPath();
+  context.moveTo(22, centreY + (comet ? 20 : 8));
+  context.quadraticCurveTo(260, centreY + (comet ? 10 : 4), 466, centreY);
+  context.stroke();
+  const halo = context.createRadialGradient(456, centreY, 1, 456, centreY, comet ? 46 : 22);
+  halo.addColorStop(0, 'rgba(255,255,255,1)');
+  halo.addColorStop(0.18, headColor);
+  halo.addColorStop(0.56, comet ? 'rgba(170,112,255,.48)' : 'rgba(120,210,255,.32)');
+  halo.addColorStop(1, 'rgba(80,54,255,0)');
+  context.fillStyle = halo;
+  context.beginPath();
+  context.arc(456, centreY, comet ? 46 : 22, 0, Math.PI * 2);
+  context.fill();
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createMoonveilStarflareTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 96;
+  canvas.height = 96;
+  const context = canvas.getContext('2d');
+  if (!context) return new THREE.CanvasTexture(canvas);
+  const halo = context.createRadialGradient(48, 48, 0, 48, 48, 46);
+  halo.addColorStop(0, 'rgba(255,255,255,1)');
+  halo.addColorStop(0.1, 'rgba(255,238,184,.92)');
+  halo.addColorStop(0.34, 'rgba(165,190,255,.3)');
+  halo.addColorStop(1, 'rgba(90,55,255,0)');
+  context.fillStyle = halo;
+  context.fillRect(0, 0, 96, 96);
+  context.globalCompositeOperation = 'screen';
+  const ray = context.createLinearGradient(0, 48, 96, 48);
+  ray.addColorStop(0, 'rgba(255,255,255,0)');
+  ray.addColorStop(0.44, 'rgba(255,236,170,.12)');
+  ray.addColorStop(0.5, 'rgba(255,255,255,.95)');
+  ray.addColorStop(0.56, 'rgba(255,236,170,.12)');
+  ray.addColorStop(1, 'rgba(255,255,255,0)');
+  context.strokeStyle = ray;
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(3, 48);
+  context.lineTo(93, 48);
+  context.stroke();
+  context.save();
+  context.translate(48, 48);
+  context.rotate(Math.PI / 2);
+  context.translate(-48, -48);
+  context.strokeStyle = ray;
+  context.lineWidth = 1.4;
+  context.beginPath();
+  context.moveTo(10, 48);
+  context.lineTo(86, 48);
+  context.stroke();
+  context.restore();
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createMoonveilStarflares(quality: Island3DQuality) {
+  const group = new THREE.Group();
+  group.name = 'ISLAND_6_DISTANT_STARFLARES';
+  const count = quality === 'high' ? 18 : quality === 'medium' ? 11 : 6;
+  const texture = createMoonveilStarflareTexture();
+  for (let index = 0; index < count; index += 1) {
+    const color = index % 5 === 0 ? 0xffdc87 : index % 3 === 0 ? 0xc09aff : 0xbcecff;
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      color,
+      transparent: true,
+      opacity: 0.2,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      depthTest: true,
+      fog: false,
+      toneMapped: false,
+    });
+    const star = new THREE.Sprite(material);
+    star.name = `ISLAND_6_DISTANT_STARFLARE_${index + 1}`;
+    const u = ((index * 0.61803398875 + 0.17) % 1);
+    const v = ((index * 0.41421356237 + 0.09) % 1);
+    const baseScale = 0.16 + (index % 5) * 0.055;
+    star.position.set(
+      THREE.MathUtils.lerp(-5.2, 5.2, u),
+      // Bias the authored flares toward the open portrait sky. Smaller point
+      // stars still wrap the full scene, while these readable twinkles avoid
+      // disappearing behind the central island silhouette.
+      THREE.MathUtils.lerp(-3.6, 3.8, v),
+      -10.5 - index % 4 * 1.65,
+    );
+    star.scale.set(baseScale, baseScale, 1);
+    star.userData.baseScale = baseScale;
+    star.userData.phase = index * 1.73;
+    star.userData.rate = 0.42 + index % 4 * 0.17;
+    group.add(star);
+  }
+  return group;
+}
+
+type MoonveilSkyStreak = {
+  sprite: THREE.Sprite;
+  period: number;
+  duration: number;
+  delay: number;
+  from: THREE.Vector3;
+  to: THREE.Vector3;
+  arc: number;
+};
+
+function createMoonveilFarSkyEvents(quality: Island3DQuality) {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_6_FAR_SKY_EVENTS';
+  const shootingStars: MoonveilSkyStreak[] = [];
+  const shootingStarCount = quality === 'high' ? 3 : quality === 'medium' ? 2 : 1;
+  const shootingTexture = createMoonveilStreakTexture('rgba(220,246,255,1)', 'rgba(92,141,255,.04)');
+  const definitions = [
+    { period: 17.5, duration: 1.45, delay: 2.2, from: [-4.8, 3.35, -10], to: [4.7, 1.05, -10], arc: 0.62, rotation: -0.18 },
+    { period: 23, duration: 1.8, delay: 10.4, from: [4.7, 4.1, -12], to: [-4.5, 1.35, -12], arc: 0.78, rotation: Math.PI + 0.16 },
+    { period: 31, duration: 2.05, delay: 19.1, from: [-4.3, 4.6, -14], to: [4.8, 1.9, -14], arc: 0.92, rotation: -0.2 },
+  ] as const;
+  definitions.slice(0, shootingStarCount).forEach((definition, index) => {
+    const material = new THREE.SpriteMaterial({
+      map: shootingTexture,
+      color: index === 1 ? 0xd4b7ff : 0xffffff,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      depthTest: true,
+      fog: false,
+      toneMapped: false,
+    });
+    const sprite = new THREE.Sprite(material);
+    sprite.name = `ISLAND_6_SHOOTING_STAR_${index + 1}`;
+    sprite.scale.set(quality === 'low' ? 2.4 : 3.1 + index * 0.3, quality === 'low' ? 0.46 : 0.56, 1);
+    sprite.material.rotation = definition.rotation;
+    sprite.visible = false;
+    root.add(sprite);
+    shootingStars.push({
+      sprite,
+      period: definition.period,
+      duration: definition.duration,
+      delay: definition.delay,
+      from: new THREE.Vector3(...definition.from),
+      to: new THREE.Vector3(...definition.to),
+      arc: definition.arc,
+    });
+  });
+
+  const cometMaterial = new THREE.SpriteMaterial({
+    map: createMoonveilStreakTexture('rgba(255,247,205,1)', 'rgba(139,72,255,.05)', true),
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: true,
+    fog: false,
+    toneMapped: false,
+    rotation: -0.11,
+  });
+  const comet = new THREE.Sprite(cometMaterial);
+  comet.name = 'ISLAND_6_SIGNATURE_COMET';
+  comet.scale.set(quality === 'low' ? 3.0 : 3.65, quality === 'low' ? 0.62 : 0.74, 1);
+  comet.position.set(-5.2, 7.4, -11);
+  comet.visible = false;
+  root.add(comet);
+  return { root, shootingStars, comet };
+}
+
 function createSpiralGalaxy(quality: Island3DQuality) {
   const group = new THREE.Group();
   group.name = 'ISLAND_6_SPIRAL_GALAXY';
@@ -1129,9 +1619,9 @@ function createSpiralGalaxy(quality: Island3DQuality) {
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
   const points = new THREE.Points(geometry, new THREE.PointsMaterial({
-    size: quality === 'low' ? 0.28 : 0.17,
+    size: quality === 'low' ? 0.22 : 0.12,
     transparent: true,
-    opacity: 0.52,
+    opacity: 0.08,
     vertexColors: true,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
@@ -1155,7 +1645,7 @@ function createSpiralGalaxy(quality: Island3DQuality) {
     color: 0x7137e8,
     size: quality === 'low' ? 0.34 : 0.28,
     transparent: true,
-    opacity: 0.2,
+    opacity: 0.035,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     sizeAttenuation: true,
@@ -1171,7 +1661,7 @@ function createSpiralGalaxy(quality: Island3DQuality) {
   // that camera rather than solved with an Island-006-only camera offset.
   group.position.set(6.8, -2.4, -12.5);
   group.rotation.z = -0.28;
-  group.scale.setScalar(1.42);
+  group.scale.setScalar(1.18);
   return group;
 }
 
@@ -1223,7 +1713,7 @@ function addEnergyFall(
     new THREE.Vector3(x + Math.cos(tangent) * width * 0.32, -length + 0.08, z + Math.sin(tangent) * width * 0.32),
   ]);
   const ribbon = new THREE.Mesh(
-    new THREE.TubeGeometry(curve, quality === 'high' ? 18 : quality === 'medium' ? 12 : 7, width * 0.16, quality === 'high' ? 6 : 4, false),
+      new THREE.TubeGeometry(curve, quality === 'high' ? 18 : quality === 'medium' ? 12 : 7, width * 0.42, quality === 'high' ? 7 : 5, false),
     material,
   );
   ribbon.name = 'ISLAND_6_ENERGY_FALL';
@@ -1261,50 +1751,159 @@ function createDistantShard(index: number, quality: Island3DQuality, materials: 
   return group;
 }
 
-function createMoonveilVoidSkiff(quality: Island3DQuality, materials: Island6MoonveilMaterials) {
+function createMoonveilCelestialCruiser(quality: Island3DQuality, materials: Island6MoonveilMaterials) {
   const orbit = new THREE.Group();
-  orbit.name = 'ISLAND_6_VOID_SKIFF_ORBIT';
-  const skiff = new THREE.Group();
-  skiff.name = 'ISLAND_6_VOID_SKIFF';
-  skiff.position.set(8.7, 7.5, -1);
-  skiff.rotation.y = -Math.PI / 2;
-  skiff.scale.setScalar(1.35);
-  const hull = new THREE.Mesh(new THREE.ConeGeometry(0.48, 1.7, quality === 'low' ? 6 : 10), materials.indigo);
-  hull.rotation.z = Math.PI / 2;
-  hull.scale.set(0.56, 1, 0.72);
-  const deck = box(1.24, 0.12, 0.56, materials.gold);
-  deck.position.y = 0.15;
-  const cabin = box(0.42, 0.34, 0.42, materials.basalt);
-  cabin.position.set(-0.24, 0.35, 0);
-  const cabinWindow = box(0.22, 0.16, 0.025, materials.warmGlass);
-  cabinWindow.position.set(-0.24, 0.38, 0.225);
-  const mast = cylinder(0.035, 0.045, 1.42, materials.gold, 7);
-  mast.position.set(0.16, 0.92, 0);
-  const sail = box(0.78, 0.92, 0.022, materials.indigoLight);
-  sail.position.set(0.5, 1.02, 0);
-  sail.rotation.z = -0.12;
-  const sailCrest = new THREE.Mesh(new THREE.OctahedronGeometry(0.14, 0), materials.amber);
-  sailCrest.position.set(0.5, 1.05, 0.03);
-  sailCrest.scale.set(1, 1.4, 0.24);
-  const prow = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.045, 6, 20, Math.PI * 1.35), materials.gold);
-  prow.position.set(0.8, 0.24, 0);
-  prow.rotation.set(Math.PI / 2, 0, -0.38);
-  skiff.add(hull, deck, cabin, cabinWindow, mast, sail, sailCrest, prow);
-  [-0.42, 0.42].forEach((z) => addLantern(skiff, -0.02, 0.27, z, materials, 0.62));
-  orbit.add(skiff);
+  orbit.name = 'ISLAND_6_CELESTIAL_CRUISER_ORBIT';
+  // Anchor a distant flight corridor inside the shared portrait overview.
+  // Moving this anchor gently keeps the craft visible without making it orbit
+  // behind the island or leave the narrow phone frustum for most of its cycle.
+  orbit.position.set(0.65, 2.35, -11.6);
+  orbit.userData.basePosition = orbit.position.clone();
+  const cruiser = new THREE.Group();
+  cruiser.name = 'ISLAND_6_CELESTIAL_CRUISER';
+  // Faceted wings, a luminous cockpit, triple exhausts and a celestial nav
+  // ring create an unambiguous spacecraft silhouette at phone scale.
+  cruiser.position.set(0, 0, 0);
+  cruiser.rotation.set(-0.08, -0.2, 0.04);
+  cruiser.scale.setScalar(quality === 'low' ? 1.02 : 1.36);
+
+  const hull = new THREE.Mesh(
+    new THREE.SphereGeometry(0.62, quality === 'low' ? 12 : 20, quality === 'low' ? 8 : 12),
+    materials.indigo,
+  );
+  hull.name = 'ISLAND_6_CRUISER_HULL';
+  hull.scale.set(1.72, 0.48, 0.56);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.92, quality === 'low' ? 8 : 14), materials.gold);
+  nose.name = 'ISLAND_6_CRUISER_NOSE';
+  nose.position.x = 1.34;
+  nose.rotation.z = -Math.PI / 2;
+  nose.scale.set(0.72, 1, 0.92);
+  const cockpit = new THREE.Mesh(
+    new THREE.SphereGeometry(0.36, quality === 'low' ? 12 : 20, quality === 'low' ? 7 : 10),
+    materials.cyan,
+  );
+  cockpit.name = 'ISLAND_6_CRUISER_COCKPIT';
+  cockpit.position.set(0.35, 0.3, 0);
+  cockpit.scale.set(1.12, 0.52, 0.76);
+  const cockpitFrame = new THREE.Mesh(new THREE.TorusGeometry(0.31, 0.035, 6, 24, Math.PI), materials.gold);
+  cockpitFrame.position.set(0.35, 0.31, 0);
+  cockpitFrame.rotation.set(Math.PI / 2, 0, -Math.PI / 2);
+  const hullBandA = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.035, 6, 20), materials.gold);
+  hullBandA.name = 'ISLAND_6_CRUISER_HULL_BAND';
+  hullBandA.position.x = -0.28;
+  hullBandA.rotation.y = Math.PI / 2;
+  hullBandA.scale.set(1, 0.74, 1);
+  const hullBandB = hullBandA.clone();
+  hullBandB.position.x = 0.34;
+  const keel = box(1.28, 0.09, 0.16, materials.gold);
+  keel.name = 'ISLAND_6_CRUISER_GOLD_KEEL';
+  keel.position.set(-0.06, -0.31, 0);
+  const keelCrystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.1, 0), materials.violet);
+  keelCrystal.name = 'ISLAND_6_CRUISER_KEEL_CRYSTAL';
+  keelCrystal.position.set(0.32, -0.38, 0);
+  keelCrystal.scale.set(1.35, 0.72, 0.72);
+
+  const portholeCount = quality === 'low' ? 2 : 4;
+  for (let index = 0; index < portholeCount; index += 1) {
+    const portholeX = -0.55 + index * (1.08 / Math.max(1, portholeCount - 1));
+    [-1, 1].forEach((side) => {
+      const frame = cylinder(0.07, 0.07, 0.035, materials.gold, 9);
+      frame.name = 'ISLAND_6_CRUISER_PORTHOLE_FRAME';
+      frame.position.set(portholeX, 0.03, side * 0.345);
+      frame.rotation.x = Math.PI / 2;
+      const glass = new THREE.Mesh(new THREE.CircleGeometry(0.045, 10), index % 2 ? materials.cyan : materials.warmGlass);
+      glass.name = 'ISLAND_6_CRUISER_PORTHOLE';
+      glass.position.set(portholeX, 0.03, side * 0.367);
+      if (side < 0) glass.rotation.y = Math.PI;
+      cruiser.add(frame, glass);
+    });
+  }
+
+  const wingGeometry = new THREE.ConeGeometry(0.58, 1.52, 3);
+  [-1, 1].forEach((side) => {
+    const wing = new THREE.Mesh(wingGeometry, side > 0 ? materials.indigoLight : materials.indigo);
+    wing.name = `ISLAND_6_CRUISER_WING_${side > 0 ? 'STARBOARD' : 'PORT'}`;
+    wing.position.set(-0.12, -0.04, side * 0.72);
+    wing.rotation.set(0, side * Math.PI / 2, -Math.PI / 2);
+    wing.scale.set(0.58, 1, 0.16);
+    cruiser.add(wing);
+    const wingTrim = box(0.84, 0.055, 0.06, materials.gold);
+    wingTrim.name = 'ISLAND_6_CRUISER_WING_TRIM';
+    wingTrim.position.set(-0.18, 0.02, side * 0.91);
+    wingTrim.rotation.y = side * -0.38;
+    cruiser.add(wingTrim);
+    const wingTipBeacon = new THREE.Mesh(new THREE.OctahedronGeometry(0.085, 0), side > 0 ? materials.cyan : materials.violet);
+    wingTipBeacon.name = 'ISLAND_6_CRUISER_WINGTIP_BEACON';
+    wingTipBeacon.position.set(-0.22, 0.015, side * 1.08);
+    wingTipBeacon.scale.set(0.75, 1.45, 0.75);
+    cruiser.add(wingTipBeacon);
+  });
+
+  const engineCount = quality === 'low' ? 2 : 3;
+  for (let index = 0; index < engineCount; index += 1) {
+    const z = engineCount === 2 ? (index === 0 ? -0.42 : 0.42) : (index - 1) * 0.42;
+    const engine = new THREE.Group();
+    engine.name = 'ISLAND_6_CRUISER_ENGINE';
+    engine.position.set(-1.0, -0.02, z);
+    engine.userData.phase = index * 1.7;
+    const casing = cylinder(0.16, 0.2, 0.48, materials.gold, quality === 'low' ? 8 : 12);
+    casing.rotation.z = Math.PI / 2;
+    const core = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 7), index === 1 ? materials.violet : materials.cyan);
+    core.position.x = -0.25;
+    core.name = 'ISLAND_6_CRUISER_ENGINE_CORE';
+    const exhaust = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.86, 10), index === 1 ? materials.violet : materials.cyan);
+    exhaust.position.x = -0.72;
+    exhaust.rotation.z = Math.PI / 2;
+    exhaust.scale.y = 1.25;
+    exhaust.name = 'ISLAND_6_CRUISER_EXHAUST';
+    exhaust.userData.explodeWithParent = true;
+    engine.add(casing, core, exhaust);
+    cruiser.add(engine);
+  }
+
+  const dorsalRing = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.045, 6, 28), materials.gold);
+  dorsalRing.name = 'ISLAND_6_CRUISER_NAV_RING';
+  dorsalRing.position.set(-0.28, 0.58, 0);
+  dorsalRing.rotation.y = Math.PI / 2;
+  const navCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.12, 0), materials.violet);
+  navCore.name = 'ISLAND_6_CRUISER_NAV_CORE';
+  navCore.position.copy(dorsalRing.position);
+  const tailFin = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.72, 3), materials.indigoLight);
+  tailFin.name = 'ISLAND_6_CRUISER_TAIL_FIN';
+  tailFin.position.set(-0.82, 0.5, 0);
+  tailFin.rotation.z = Math.PI;
+  tailFin.scale.z = 0.26;
+  const antenna = cylinder(0.025, 0.035, 0.48, materials.gold, 7);
+  antenna.position.set(0.08, 0.73, 0);
+  const antennaLight = new THREE.Mesh(new THREE.OctahedronGeometry(0.065, 0), materials.amber);
+  antennaLight.position.set(0.08, 0.99, 0);
+  [-1, 1].forEach((side) => {
+    const navLight = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 5), side > 0 ? materials.cyan : materials.violet);
+    navLight.position.set(0.12, 0.05, side * 1.0);
+    cruiser.add(navLight);
+  });
+  const cruiserHalo = createSoftGlowSprite(0x5fdfff, quality === 'low' ? 0.15 : 0.22, quality === 'low' ? 1.9 : 2.6);
+  cruiserHalo.name = 'ISLAND_6_CRUISER_AURA';
+  cruiserHalo.position.set(-0.18, 0.04, 0.05);
+  cruiser.add(cruiserHalo);
+  cruiser.add(hull, nose, cockpit, cockpitFrame, hullBandA, hullBandB, keel, keelCrystal, dorsalRing, navCore, tailFin, antenna, antennaLight);
+  cruiser.userData.sculptRuntime = { clickable: true, explodable: true, world: 'island-006-moonveil', role: 'ambient-spacecraft' };
+  orbit.add(cruiser);
   return orbit;
 }
 
 function addNightFoliage(root: THREE.Group, materials: Island6MoonveilMaterials, quality: Island3DQuality) {
-  const count = Math.round(54 * detailScale(quality));
+  const count = Math.round(38 * detailScale(quality));
   for (let index = 0; index < count; index += 1) {
     const angle = index / count * Math.PI * 2 + 0.17;
     const protectedAngles = [-2.41, -0.73, 2.41, 0.73];
     if (protectedAngles.some((entry) => Math.abs(Math.atan2(Math.sin(angle - entry), Math.cos(angle - entry))) < 0.24)) continue;
-    const radius = 3.05 + (index % 5) * 0.19;
+    // This is a sanctuary garden inside the route, never route dressing.
+    const radius = 2.02 + (index % 5) * 0.09;
     const shrub = new THREE.Mesh(new THREE.IcosahedronGeometry(0.14 + index % 3 * 0.025, quality === 'high' ? 1 : 0), index % 4 === 0 ? materials.foliageLight : materials.foliage);
     shrub.position.set(Math.cos(angle) * radius, 0.54 + index % 2 * 0.03, Math.sin(angle) * radius * 0.92);
     shrub.scale.set(1.3, 0.72, 1.02);
+    if (!isIsland6RouteCorridorClear(shrub.position.x, shrub.position.z, 0.24)) continue;
     root.add(shrub);
   }
 }
@@ -1352,6 +1951,56 @@ function addSatelliteMoonGarden(
       angle,
     );
   }
+  const lanternCount = quality === 'high' ? 8 : quality === 'medium' ? 5 : 3;
+  for (let index = 0; index < lanternCount; index += 1) {
+    const angle = seed * 0.43 + index / lanternCount * Math.PI * 2;
+    const distance = radius * 0.78;
+    addLantern(
+      root,
+      x + Math.cos(angle) * distance,
+      0.53,
+      z + Math.sin(angle) * distance * 0.9,
+      materials,
+      quality === 'high' ? 0.62 : 0.5,
+    );
+  }
+  const treeCount = quality === 'high' ? 4 : quality === 'medium' ? 3 : 2;
+  for (let index = 0; index < treeCount; index += 1) {
+    const angle = seed * 0.82 + index / treeCount * Math.PI * 2 + 0.34;
+    const distance = radius * (0.56 + index % 2 * 0.13);
+    const treeX = x + Math.cos(angle) * distance;
+    const treeZ = z + Math.sin(angle) * distance * 0.9;
+    const treeHeight = 0.5 + index % 3 * 0.08;
+    const trunk = cylinder(0.035, 0.055, treeHeight, materials.wood, 7);
+    trunk.position.set(treeX, 0.52 + treeHeight / 2, treeZ);
+    root.add(trunk);
+    for (let crownIndex = 0; crownIndex < 3; crownIndex += 1) {
+      const crown = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.17 - crownIndex * 0.018, quality === 'high' ? 1 : 0),
+        crownIndex === 1 ? materials.foliageLight : materials.foliage,
+      );
+      crown.position.set(
+        treeX + (crownIndex - 1) * 0.13,
+        0.85 + treeHeight * 0.66 + crownIndex % 2 * 0.08,
+        treeZ + Math.sin(angle + crownIndex) * 0.08,
+      );
+      crown.scale.set(1.3, 0.9, 1.05);
+      root.add(crown);
+    }
+    addStarFinial(root, treeX, 1.25 + treeHeight * 0.45, treeZ, materials, 0.27);
+  }
+  const districtPylonCount = quality === 'high' ? 6 : quality === 'medium' ? 4 : 3;
+  for (let index = 0; index < districtPylonCount; index += 1) {
+    const angle = seed * 1.13 + index / districtPylonCount * Math.PI * 2;
+    const distance = radius * 0.9;
+    const pylonX = x + Math.cos(angle) * distance;
+    const pylonZ = z + Math.sin(angle) * distance * 0.9;
+    const shaft = box(0.12, 0.58, 0.12, index % 2 ? materials.basalt : materials.indigo);
+    shaft.position.set(pylonX, 0.82, pylonZ);
+    shaft.rotation.y = -angle;
+    root.add(shaft);
+    addStarFinial(root, pylonX, 1.22, pylonZ, materials, 0.38);
+  }
 }
 
 function addAstralBridge(
@@ -1364,29 +2013,42 @@ function addAstralBridge(
   const angle = Math.atan2(targetX, targetZ);
   const tangentX = Math.cos(angle);
   const tangentZ = -Math.sin(angle);
-  const stepCount = quality === 'low' ? 4 : 6;
+  const targetRadius = Math.hypot(targetX, targetZ);
+  // The first step meets the shelf edge, while posts and rails begin beyond
+  // the outer route clearance instead of projecting over a playable tile.
+  const bridgeStartRadius = ISLAND_6_ROUTE_CLEARANCE_OUTER_RADIUS + 0.23;
+  const bridgeEndRadius = Math.max(bridgeStartRadius + 0.75, targetRadius - 0.72);
+  const stepCount = quality === 'low' ? 5 : quality === 'medium' ? 7 : 9;
   for (let index = 0; index < stepCount; index += 1) {
     const progress = index / Math.max(1, stepCount - 1);
-    const radius = THREE.MathUtils.lerp(3.95, 5.05, progress);
-    const step = box(1.08 - progress * 0.12, 0.11, 0.34, index % 2 ? materials.indigo : materials.basalt);
+    const radius = THREE.MathUtils.lerp(bridgeStartRadius, bridgeEndRadius, progress);
+    const stepWidth = 1.22 - progress * 0.1;
+    const step = box(stepWidth, 0.13, 0.36, index % 2 ? materials.indigoLight : materials.indigo);
     step.position.set(Math.sin(angle) * radius, 0.5 + progress * 0.035, Math.cos(angle) * radius);
     step.rotation.y = angle;
     root.add(step);
-    if (index === 0 || index === stepCount - 1) {
+    const goldStepEdge = box(stepWidth * 0.94, 0.035, 0.04, materials.gold);
+    goldStepEdge.position.copy(step.position);
+    goldStepEdge.position.x += Math.sin(angle) * 0.18;
+    goldStepEdge.position.z += Math.cos(angle) * 0.18;
+    goldStepEdge.position.y += 0.085;
+    goldStepEdge.rotation.y = angle;
+    root.add(goldStepEdge);
+    if (index === 0 || index === stepCount - 1 || (quality === 'high' && index % 2 === 0)) {
       [-1, 1].forEach((side) => {
-        const x = step.position.x + tangentX * side * 0.54;
-        const z = step.position.z + tangentZ * side * 0.54;
+        const x = step.position.x + tangentX * side * stepWidth * 0.49;
+        const z = step.position.z + tangentZ * side * stepWidth * 0.49;
         const railPost = cylinder(0.045, 0.055, 0.44, materials.gold, 7);
         railPost.position.set(x, 0.76, z);
         root.add(railPost);
-        addLantern(root, x, 0.96, z, materials, 0.48);
+        if (index === 0 || index === stepCount - 1) addLantern(root, x, 0.96, z, materials, 0.5);
       });
     }
   }
-  const railLength = 1.24;
+  const railLength = bridgeEndRadius - bridgeStartRadius + 0.42;
   [-1, 1].forEach((side) => {
     const rail = box(0.055, 0.055, railLength, materials.gold);
-    const radius = 4.5;
+    const radius = (bridgeStartRadius + bridgeEndRadius) / 2;
     rail.position.set(
       Math.sin(angle) * radius + tangentX * side * 0.54,
       0.93,
@@ -1414,10 +2076,10 @@ export function createIsland6MoonveilLivingAmbience(
   root.add(staticScenery);
   staticScenery.add(createFloatingShelf(0, 0, 4.18, 6.9, 0.37, materials, quality));
   const satellites: Array<[number, number, number, number, number]> = [
-    [-4.36, -3.9, 1.92, 3.65, 1.1],
-    [4.36, -3.9, 1.82, 3.08, 2.3],
-    [-4.36, 3.9, 1.98, 4.05, 3.4],
-    [4.36, 3.9, 1.78, 3.42, 4.6],
+    [-2.96, -6.05, 2.15, 4.35, 1.1],
+    [2.96, -6.05, 2.05, 3.78, 2.3],
+    [-2.96, 6.05, 2.2, 4.75, 3.4],
+    [2.96, 6.05, 2.05, 4.12, 4.6],
   ];
   satellites.forEach(([x, z, radius, depth, seed]) => {
     staticScenery.add(createFloatingShelf(x, z, radius, depth, seed, materials, quality));
@@ -1432,21 +2094,28 @@ export function createIsland6MoonveilLivingAmbience(
     root.add(warmHalo);
   });
 
-  const edgeCrystalCount = Math.round(52 * detailScale(quality));
-  for (let index = 0; index < edgeCrystalCount; index += 1) {
-    const angle = index / edgeCrystalCount * Math.PI * 2 + 0.11;
+  const sanctuaryCrystalCount = Math.round(22 * detailScale(quality));
+  for (let index = 0; index < sanctuaryCrystalCount; index += 1) {
+    const angle = index / sanctuaryCrystalCount * Math.PI * 2 + 0.11;
     const bridgeAngles = [-2.41, -0.73, 2.41, 0.73];
     if (bridgeAngles.some((entry) => Math.abs(Math.atan2(Math.sin(angle - entry), Math.cos(angle - entry))) < 0.18)) continue;
-    const radius = 3.88 + (index % 3) * 0.1;
-    addCrystal(staticScenery, Math.cos(angle) * radius, 0.48 + index % 3 * 0.035, Math.sin(angle) * radius * 0.9, 0.08 + index % 4 * 0.018, index % 3 === 0 ? materials.cyan : materials.violet, angle);
+    const radius = 2.22 + (index % 3) * 0.08;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius * 0.9;
+    const size = 0.07 + index % 3 * 0.012;
+    if (!isIsland6RouteCorridorClear(x, z, size * 1.4)) continue;
+    addCrystal(staticScenery, x, 0.48 + index % 3 * 0.035, z, size, index % 3 === 0 ? materials.cyan : materials.violet, angle);
   }
   addNightFoliage(staticScenery, materials, quality);
-  const boardLanternCount = quality === 'high' ? 18 : quality === 'medium' ? 12 : 8;
-  for (let index = 0; index < boardLanternCount; index += 1) {
-    const angle = index / boardLanternCount * Math.PI * 2;
+  const sanctuaryLanternCount = quality === 'high' ? 10 : quality === 'medium' ? 7 : 4;
+  for (let index = 0; index < sanctuaryLanternCount; index += 1) {
+    const angle = index / sanctuaryLanternCount * Math.PI * 2;
     const bridgeAngles = [-2.41, -0.73, 2.41, 0.73];
     if (bridgeAngles.some((entry) => Math.abs(Math.atan2(Math.sin(angle - entry), Math.cos(angle - entry))) < 0.16)) continue;
-    addLantern(staticScenery, Math.cos(angle) * 3.78, 0.38, Math.sin(angle) * 3.48, materials, 0.62);
+    const x = Math.cos(angle) * 2.5;
+    const z = Math.sin(angle) * 2.34;
+    if (!isIsland6RouteCorridorClear(x, z, 0.12)) continue;
+    addLantern(staticScenery, x, 0.38, z, materials, 0.58);
   }
 
   const energyFalls: THREE.Mesh<THREE.BufferGeometry, THREE.MeshPhysicalMaterial>[] = [];
@@ -1476,14 +2145,8 @@ export function createIsland6MoonveilLivingAmbience(
     }
   });
 
-  const starNear = createStarField(quality, 48, 460, 0x7fdfff, quality === 'low' ? 0.18 : 0.13, 1.7);
-  const starFar = createStarField(quality, 78, 680, 0x9b7dff, quality === 'low' ? 0.24 : 0.17, 4.1);
-  const spiralGalaxy = createSpiralGalaxy(quality);
   const constellation = createMoonveilConstellation(quality, materials);
-  const paintedNebula = createMoonveilNebulaBackdrop(quality);
-  starNear.name = 'ISLAND_6_STAR_FIELD_NEAR';
-  starFar.name = 'ISLAND_6_STAR_FIELD_FAR';
-  root.add(paintedNebula, starNear, starFar, spiralGalaxy, constellation);
+  root.add(constellation);
 
   const nebula = new THREE.Group();
   nebula.name = 'ISLAND_6_VIOLET_NEBULA';
@@ -1500,7 +2163,6 @@ export function createIsland6MoonveilLivingAmbience(
   nebulaGeometry.setAttribute('position', new THREE.BufferAttribute(nebulaPositions, 3));
   const nebulaPoints = new THREE.Points(nebulaGeometry, new THREE.PointsMaterial({ color: 0x8e4cff, size: quality === 'low' ? 0.72 : 0.48, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
   nebula.add(nebulaPoints);
-  root.add(nebula);
 
   const shards: THREE.Group[] = [];
   const shardCount = quality === 'high' ? 12 : quality === 'medium' ? 8 : 5;
@@ -1522,8 +2184,16 @@ export function createIsland6MoonveilLivingAmbience(
   motes.position.y = -3;
   root.add(motes);
 
-  const voidSkiffOrbit = createMoonveilVoidSkiff(quality, materials);
-  root.add(voidSkiffOrbit);
+  const distantTwinkles = createMoonveilTwinkleLayers(quality);
+  root.add(distantTwinkles);
+  const starflares = createMoonveilStarflares(quality);
+  root.add(starflares);
+  const farSkyEvents = createMoonveilFarSkyEvents(quality);
+  root.add(farSkyEvents.root);
+
+  const celestialCruiserOrbit = createMoonveilCelestialCruiser(quality, materials);
+  root.add(celestialCruiserOrbit);
+  const celestialCruiser = celestialCruiserOrbit.getObjectByName('ISLAND_6_CELESTIAL_CRUISER');
 
   const moonLight = new THREE.PointLight(0x6b7dff, quality === 'high' ? 18 : quality === 'medium' ? 12 : 7, 34, 2);
   moonLight.position.set(-7, 10, 7);
@@ -1531,7 +2201,9 @@ export function createIsland6MoonveilLivingAmbience(
   violetRim.position.set(8, 4, -7);
   const cyanRim = new THREE.PointLight(0x31dfff, quality === 'high' ? 10 : 6, 20, 2);
   cyanRim.position.set(-7, 2, -5);
-  root.add(moonLight, violetRim, cyanRim);
+  const cliffUnderlight = new THREE.PointLight(0x6653ff, quality === 'high' ? 14 : quality === 'medium' ? 9 : 5, 26, 2);
+  cliffUnderlight.position.set(0, -3.2, 4.5);
+  root.add(moonLight, violetRim, cyanRim, cliffUnderlight);
 
   // Merge the hundreds of immobile terrace, bridge, garden and cliff meshes
   // into material batches. Animated falls, galaxies, lights and landmark
@@ -1545,6 +2217,7 @@ export function createIsland6MoonveilLivingAmbience(
   const spinners: THREE.Object3D[] = [];
   const orbitingMoons: THREE.Object3D[] = [];
   const portalSurfaces: THREE.Mesh[] = [];
+  const cruiserEngines: THREE.Object3D[] = [];
 
   const cacheAnimatedDetails = () => {
     if (animatedDetailsCached) return;
@@ -1553,6 +2226,7 @@ export function createIsland6MoonveilLivingAmbience(
       if (object.name === 'ISLAND_6_SPINNER') spinners.push(object);
       if (object.name === 'ISLAND_6_ORBITING_MOONS') orbitingMoons.push(object);
       if (object.name === 'ISLAND_6_PORTAL_SURFACE' && object instanceof THREE.Mesh) portalSurfaces.push(object);
+      if (object.name === 'ISLAND_6_CRUISER_ENGINE') cruiserEngines.push(object);
     });
   };
 
@@ -1560,12 +2234,56 @@ export function createIsland6MoonveilLivingAmbience(
     root,
     animate: (elapsed) => {
       cacheAnimatedDetails();
-      starNear.rotation.y = elapsed * 0.0018;
-      starFar.rotation.y = -elapsed * 0.0007;
-      spiralGalaxy.rotation.z = -0.28 + elapsed * 0.0024;
-      paintedNebula.material.rotation = elapsed * 0.0012;
       nebula.rotation.y = Math.sin(elapsed * 0.025) * 0.035;
       motes.rotation.y = elapsed * 0.018;
+      distantTwinkles.children.forEach((layer, index) => {
+        if (!(layer instanceof THREE.Points) || !(layer.material instanceof THREE.PointsMaterial)) return;
+        const baseOpacity = Number(layer.userData.baseOpacity ?? 0.5);
+        const rate = Number(layer.userData.twinkleRate ?? 0.5);
+        const phase = Number(layer.userData.twinklePhase ?? index);
+        const primaryPulse = Math.sin(elapsed * rate + phase);
+        const sparklePulse = Math.sin(elapsed * (rate * 3.7) + phase * 1.9);
+        layer.material.opacity = baseOpacity * (0.74 + primaryPulse * 0.18 + sparklePulse * 0.08);
+        layer.rotation.y += (index % 2 ? -1 : 1) * (0.000045 + index * 0.000012);
+      });
+      starflares.children.forEach((star, index) => {
+        if (!(star instanceof THREE.Sprite) || !(star.material instanceof THREE.SpriteMaterial)) return;
+        const phase = Number(star.userData.phase ?? index);
+        const rate = Number(star.userData.rate ?? 0.5);
+        const baseScale = Number(star.userData.baseScale ?? 0.2);
+        const normalized = (Math.sin(elapsed * rate + phase) + 1) * 0.5;
+        const sparkle = normalized ** 5;
+        star.material.opacity = 0.09 + sparkle * 0.78;
+        const scale = baseScale * (0.82 + sparkle * 0.5);
+        star.scale.set(scale, scale, 1);
+      });
+      farSkyEvents.shootingStars.forEach((streak) => {
+        const localTime = ((elapsed - streak.delay) % streak.period + streak.period) % streak.period;
+        const active = elapsed >= streak.delay && localTime < streak.duration;
+        streak.sprite.visible = active;
+        if (!active) return;
+        const progress = THREE.MathUtils.clamp(localTime / streak.duration, 0, 1);
+        const eased = progress * progress * (3 - 2 * progress);
+        streak.sprite.position.lerpVectors(streak.from, streak.to, eased);
+        streak.sprite.position.y += Math.sin(progress * Math.PI) * streak.arc;
+        streak.sprite.material.opacity = Math.sin(progress * Math.PI) * 0.9;
+      });
+      const cometPeriod = 39;
+      const cometDuration = 10.5;
+      const cometDelay = 5.5;
+      const cometTime = ((elapsed - cometDelay) % cometPeriod + cometPeriod) % cometPeriod;
+      const cometActive = elapsed >= cometDelay && cometTime < cometDuration;
+      farSkyEvents.comet.visible = cometActive;
+      if (cometActive) {
+        const progress = THREE.MathUtils.clamp(cometTime / cometDuration, 0, 1);
+        const eased = progress * progress * (3 - 2 * progress);
+        farSkyEvents.comet.position.set(
+          THREE.MathUtils.lerp(-5.2, -0.9, eased),
+          THREE.MathUtils.lerp(7.4, 5.2, eased) + Math.sin(progress * Math.PI) * 0.42,
+          -11,
+        );
+        farSkyEvents.comet.material.opacity = Math.min(1, Math.sin(progress * Math.PI) * 1.7) * 0.88;
+      }
       energyFalls.forEach((fall, index) => {
         const material = fall.material;
         material.opacity = Number(fall.userData.baseOpacity) * (0.82 + Math.sin(elapsed * 1.1 + Number(fall.userData.phase)) * 0.16);
@@ -1575,7 +2293,23 @@ export function createIsland6MoonveilLivingAmbience(
         shard.position.y = Number(shard.userData.baseY) + Math.sin(elapsed * (0.1 + index % 3 * 0.016) + Number(shard.userData.phase)) * 0.22;
         shard.rotation.y += index % 2 ? 0.00042 : -0.00031;
       });
-      voidSkiffOrbit.rotation.y = elapsed * 0.035;
+      const cruiserBasePosition = celestialCruiserOrbit.userData.basePosition as THREE.Vector3 | undefined;
+      if (cruiserBasePosition) {
+        celestialCruiserOrbit.position.set(
+          cruiserBasePosition.x + Math.sin(elapsed * 0.075) * 0.7,
+          cruiserBasePosition.y + Math.sin(elapsed * 0.27) * 0.18,
+          cruiserBasePosition.z + Math.cos(elapsed * 0.075) * 0.38,
+        );
+      }
+      celestialCruiserOrbit.rotation.y = Math.sin(elapsed * 0.09) * 0.16;
+      celestialCruiserOrbit.rotation.z = Math.sin(elapsed * 0.16) * 0.022;
+      if (celestialCruiser) {
+        celestialCruiser.rotation.x = -0.08 + Math.sin(elapsed * 0.21) * 0.035;
+      }
+      cruiserEngines.forEach((engine, index) => {
+        const pulse = 0.9 + Math.sin(elapsed * 4.2 + Number(engine.userData.phase ?? index)) * 0.14;
+        engine.scale.set(1, pulse, pulse);
+      });
       spinners.forEach((object) => { object.rotation.z = elapsed * 0.18; });
       orbitingMoons.forEach((object) => { object.rotation.z = elapsed * 0.22; });
       portalSurfaces.forEach((object) => {
@@ -1585,7 +2319,6 @@ export function createIsland6MoonveilLivingAmbience(
       violetRim.intensity = (quality === 'high' ? 13 : 8) + Math.sin(elapsed * 0.61 + 1.2) * 0.8;
     },
     updateView: (cameraPosition) => {
-      paintedNebula.lookAt(cameraPosition);
       constellation.lookAt(cameraPosition);
     },
   };

@@ -3089,7 +3089,7 @@ export default function Island5ThreePilot({
           : isSunshoreAtoll
             ? 0x9fe9ef
             : isMoonveilNexus
-              ? 0x080523
+              ? 0x080a2d
               : 0x8ecdda;
     const fogDensity = isFirstLightKingdom
       ? 0.0038
@@ -3103,11 +3103,20 @@ export default function Island5ThreePilot({
               ? 0.0022
               : 0.0048;
     scene.background = new THREE.Color(backgroundColor);
+    if (isMoonveilNexus) {
+      const moonveilSky = new THREE.TextureLoader().load('/assets/islands/island-006/background/moonveil-nebula-sky-portrait-v2.webp');
+      moonveilSky.colorSpace = THREE.SRGBColorSpace;
+      moonveilSky.wrapS = THREE.ClampToEdgeWrapping;
+      moonveilSky.wrapT = THREE.ClampToEdgeWrapping;
+      scene.background = moonveilSky;
+    }
     scene.fog = new THREE.FogExp2(fogColor, fogDensity);
 
     // Leave enough depth for the First Light horizon ring at every camera
     // azimuth; foreground gameplay geometry remains inside the shadow budget.
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 210);
+    camera.zoom = isMoonveilNexus ? 1.2 : 1;
+    camera.updateProjectionMatrix();
     const overview = getIsland5CameraPreset('overview');
     const restoredCameraPose = cameraPoseSnapshotRef.current;
     camera.position.set(...(restoredCameraPose?.position ?? overview.position));
@@ -3167,7 +3176,7 @@ export default function Island5ThreePilot({
           : isSunshoreAtoll
             ? 1.82
             : isMoonveilNexus
-              ? 0.82
+              ? 1.24
               : 2.25;
     const hemisphere = new THREE.HemisphereLight(isMoonveilNexus ? 0x7181ff : 0xeefcff, hemisphereGroundColor, hemisphereIntensity);
     scene.add(hemisphere);
@@ -3180,7 +3189,7 @@ export default function Island5ThreePilot({
           : isSunshoreAtoll
             ? 3.25
             : isMoonveilNexus
-              ? 1.5
+              ? 2.05
               : 4.2;
     const sunlight = new THREE.DirectionalLight(
       isMoonveilNexus ? 0xa8b6ff : isFrostmoonHaven ? 0xffe5c4 : 0xfff1cb,
@@ -3262,7 +3271,9 @@ export default function Island5ThreePilot({
       scene.add(satellite);
       const bridgeStart: readonly [number, number, number] = [landmark.position[0] * 0.56, 0, landmark.position[2] * 0.56];
       const bridgeEnd: readonly [number, number, number] = [landmark.position[0] * 0.82, 0, landmark.position[2] * 0.82];
-      scene.add(createBridge(bridgeStart, bridgeEnd, materials.bridge));
+      const sharedBridge = createBridge(bridgeStart, bridgeEnd, materials.bridge);
+      sharedBridge.visible = !isMoonveilNexus;
+      scene.add(sharedBridge);
     });
 
     const innerLagoon = new THREE.Mesh(new THREE.CircleGeometry(2.25, qualityProfile.terrainSegments), waterMaterial.clone());
@@ -3312,9 +3323,9 @@ export default function Island5ThreePilot({
           ]
       : isMoonveilNexus
         ? [
-            new THREE.MeshStandardMaterial({ color: 0x11142f, roughness: 0.5, metalness: 0.14, emissive: 0x0c1848, emissiveIntensity: 0.24 }),
-            new THREE.MeshStandardMaterial({ color: 0x1b2054, roughness: 0.42, metalness: 0.18, emissive: 0x18297a, emissiveIntensity: 0.34 }),
-            new THREE.MeshStandardMaterial({ color: 0x4bcdf2, roughness: 0.25, metalness: 0.24, emissive: 0x284cff, emissiveIntensity: 0.86 }),
+            new THREE.MeshStandardMaterial({ color: 0x3547a8, roughness: 0.42, metalness: 0.17, emissive: 0x244bd4, emissiveIntensity: 0.9 }),
+            new THREE.MeshStandardMaterial({ color: 0x523fa6, roughness: 0.35, metalness: 0.21, emissive: 0x612fd7, emissiveIntensity: 0.95 }),
+            new THREE.MeshStandardMaterial({ color: 0x65e7ff, roughness: 0.2, metalness: 0.22, emissive: 0x3265ff, emissiveIntensity: 1.25 }),
           ]
       : [
           new THREE.MeshStandardMaterial({ color: 0xf3e4bd, roughness: 0.7 }),
@@ -3324,8 +3335,8 @@ export default function Island5ThreePilot({
     const moonveilTileEdgeGeometry = isMoonveilNexus ? new THREE.EdgesGeometry(tileGeometry, 24) : null;
     const moonveilTileEdgeMaterials = isMoonveilNexus
       ? [
-          new THREE.LineBasicMaterial({ color: 0x696dff, transparent: true, opacity: 0.72 }),
-          new THREE.LineBasicMaterial({ color: 0x76e8ff, transparent: true, opacity: 0.9 }),
+          new THREE.LineBasicMaterial({ color: 0xb4a0ff, transparent: true, opacity: 0.88 }),
+          new THREE.LineBasicMaterial({ color: 0xb4f5ff, transparent: true, opacity: 1 }),
         ]
       : [];
     const tileMeshes = new Map<number, { mesh: THREE.Mesh; baseY: number }>();
@@ -3541,6 +3552,21 @@ export default function Island5ThreePilot({
     const activeTileImpacts = new Map<number, ActiveTileImpact>();
     let activeTokenSettle: ActiveTokenSettle | null = null;
 
+    const setBoardActorsVisibleForPreset = (preset: Island5CameraPresetId | 'manual') => {
+      const isLandmarkInspection = preset === 'boss'
+        || preset === 'hatchery'
+        || preset === 'habit'
+        || preset === 'wisdom'
+        || preset === 'event';
+      const visible = !isLandmarkInspection;
+      playerPiece.root.visible = visible;
+      playerPiece.shadow.visible = visible;
+      boardCaretaker.root.visible = visible;
+      caretakerFootplate.visible = visible;
+      caretakerContactShadow.visible = visible;
+      caretakerHitTarget.visible = visible;
+    };
+
     const triggerTileImpact = (tileIndex: number, strength: number, startedAt: number) => {
       if (isReducedMotion) return;
       const existing = activeTileImpacts.get(tileIndex);
@@ -3582,16 +3608,25 @@ export default function Island5ThreePilot({
         position: readonly [number, number, number];
         target: readonly [number, number, number];
       }>> = {
+        overview: { position: [0, 13, 22], target: [0, -4.1, 0] },
+        survey: { position: [0, 31, 35], target: [0, -1.4, 0] },
+        'orbit-left': { position: [-21, 23, 26], target: [0, -1.05, 0] },
+        'orbit-right': { position: [21, 23, 26], target: [0, -1.05, 0] },
         boss: { position: [0, 8.4, 11.2], target: [0, 1.35, 0] },
-        hatchery: { position: [2.6, 8.1, -0.65], target: [-4.36, 1.46, -3.9] },
-        habit: { position: [-2.4, 8.1, -0.65], target: [4.36, 1.48, -3.9] },
-        wisdom: { position: [2.35, 8.1, 0.8], target: [-4.36, 1.52, 3.9] },
-        event: { position: [-2.55, 8.1, 0.8], target: [4.36, 1.5, 3.9] },
+        // Keep the whole L3 roofline, entrance, bridge and cliff root in the
+        // phone view. The target values are Moonveil's resolved tall-layout
+        // anchors; the camera positions are intentionally pulled back from
+        // the earlier extreme close-up framing.
+        hatchery: { position: [1.6, 9.8, 5.2], target: [-2.96, 1.38, -6.05] },
+        habit: { position: [-1.6, 9.8, 5.2], target: [2.96, 1.4, -6.05] },
+        wisdom: { position: [1.6, 9.6, -4.5], target: [-2.96, 1.42, 6.05] },
+        event: { position: [-1.6, 9.6, -4.5], target: [2.96, 1.4, 6.05] },
       };
       const firstLightOverride = isFirstLightKingdom ? firstLightFocusOverrides[id] : undefined;
       const moonveilOverride = isMoonveilNexus ? moonveilFocusOverrides[id] : undefined;
       const authoredFocusOverride = firstLightOverride ?? moonveilOverride;
       const preset = authoredFocusOverride ? { ...basePreset, ...authoredFocusOverride } : basePreset;
+      setBoardActorsVisibleForPreset(id);
       setActivePreset(id);
       if (isReducedMotion) {
         camera.position.set(...preset.position);
@@ -3616,6 +3651,7 @@ export default function Island5ThreePilot({
       };
     };
     const applyCaretakerFocus = (durationScale = 1) => {
+      setBoardActorsVisibleForPreset('manual');
       setActivePreset('manual');
       const fromPosition = camera.position.clone();
       const toTarget = CARETAKER_BOARD_HOME.clone().add(new THREE.Vector3(0, 1.12, 0));
@@ -3633,6 +3669,7 @@ export default function Island5ThreePilot({
       };
     };
     const applyCaretakerEncounterFocus = (durationScale = 1) => {
+      setBoardActorsVisibleForPreset('manual');
       setActivePreset('manual');
       const fromPosition = camera.position.clone();
       // Aim close to the character's feet so the hat, eyes and upper torso stay
@@ -3736,6 +3773,7 @@ export default function Island5ThreePilot({
     const cancelTransition = () => {
       transition = null;
       idleOverviewAt = null;
+      setBoardActorsVisibleForPreset('manual');
       setActivePreset('manual');
     };
     controls.addEventListener('start', cancelTransition);
@@ -3977,6 +4015,7 @@ export default function Island5ThreePilot({
         idleOverviewAt = null;
         transition = null;
         controls.enabled = false;
+        setBoardActorsVisibleForPreset('manual');
         setActivePreset('manual');
         activeTokenSettle = null;
         playerPiece.root.scale.set(1, 1, 1);

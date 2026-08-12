@@ -350,10 +350,14 @@ export function createIslandRunTileRewardThreeObjects(options: {
     const baseScale = tileEntry.tileType === 'free_ticket'
       ? 1.42
       : tileEntry.tileType === 'landmark_door'
-        ? 1.08
+        ? 0.86
         : tileEntry.tileType === 'traffic_light'
-          ? 0.92
-          : 0.82;
+          ? 0.76
+          : tileEntry.tileType === 'currency'
+            ? 0.72
+            : tileEntry.tileType === 'micro'
+              ? 0.6
+              : 0.7;
     visual.position.set(transform.position[0], baseY, transform.position[2]);
     visual.rotation.y = -transform.rotationYRad;
     visual.scale.setScalar(baseScale);
