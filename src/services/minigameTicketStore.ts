@@ -1,4 +1,5 @@
 import type { EventId } from '../features/gamification/level-worlds/services/islandRunEventEngine';
+import { isIslandRunFeatureEnabled } from '../config/islandRunFeatureFlags';
 import { createGuardedCheckoutSession } from './guardedCheckout';
 
 export type MinigameTicketSkuId =
@@ -38,6 +39,12 @@ export function resolveMinigameTicketSku(eventId: EventId | null | undefined): M
 export async function initiateMinigameTicketCheckout(
   options: MinigameTicketCheckoutOptions,
 ): Promise<MinigameTicketCheckoutResult> {
+  if (!isIslandRunFeatureEnabled('minigameTicketPurchasesReady')) {
+    return {
+      url: null,
+      error: new Error('Minigame ticket purchases are not available yet.'),
+    };
+  }
   return createGuardedCheckoutSession({
     feature: 'purchases',
     functionName: 'create-checkout-session-minigame-ticket',

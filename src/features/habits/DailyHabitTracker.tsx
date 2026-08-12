@@ -19,6 +19,7 @@ import { useGamification } from '../../hooks/useGamification';
 import { XP_REWARDS } from '../../types/gamification';
 import { recordChallengeActivity } from '../../services/challenges';
 import { recordTelemetryEvent } from '../../services/telemetry';
+import { buildTimeLimitedOfferExpiryDedupeKey } from './timeLimitedOfferTelemetry';
 import type { ActiveAdventMetaResult } from '../../services/treatCalendarService';
 import { XP_TO_GOLD_RATIO, convertXpToGold } from '../../constants/economy';
 import { PointsBadge } from '../../components/PointsBadge';
@@ -3025,7 +3026,10 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
       return;
     }
 
-    const expiryTelemetryKey = `${date}:${windowEnd}:${offeredHabitIds.join(',')}`;
+    const expiryTelemetryKey = buildTimeLimitedOfferExpiryDedupeKey({
+      offerDate: date,
+      windowEnd,
+    });
     if (lastTimeLimitedOfferExpiryTelemetryKeyRef.current === expiryTelemetryKey) {
       return;
     }
@@ -3037,6 +3041,7 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     void recordTelemetryEvent({
       userId: session.user.id,
       eventType: 'habit_time_limited_offer_expired',
+      dedupeKey: expiryTelemetryKey,
       metadata: {
         offerDate: date,
         windowStart,

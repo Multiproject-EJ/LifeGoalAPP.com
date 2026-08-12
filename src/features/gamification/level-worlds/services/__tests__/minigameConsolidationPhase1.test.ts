@@ -41,11 +41,22 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
           todaysOfferSpinEntryEnabled: true,
           islandRunEarlyFeaturedCreaturePoolEnabled: false,
           islandRunPreIslandLuckyRollEnabled: false,
-          combinedJourneyRewardsEnabled: true,
+          combinedJourneyRewardsEnabled: false,
           islandRunFirstPlayerFunnelScaffoldingEnabled: false,
+          minigameTicketPurchasesReady: false,
         },
         'Default feature flags should reflect released phases without enabling unfinished surfaces',
       );
+    },
+  },
+  {
+    name: 'minigame ticket purchases stay off until the full production chain is explicitly ready',
+    run: () => {
+      __resetIslandRunFeatureFlagsForTests();
+      assertEqual(isIslandRunFeatureEnabled('minigameTicketPurchasesReady'), false, 'safe default off');
+      __setIslandRunFeatureFlagsForTests({ minigameTicketPurchasesReady: true });
+      assertEqual(isIslandRunFeatureEnabled('minigameTicketPurchasesReady'), true, 'explicit readiness override');
+      __resetIslandRunFeatureFlagsForTests();
     },
   },
   {

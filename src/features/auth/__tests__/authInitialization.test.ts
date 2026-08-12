@@ -1,4 +1,5 @@
 import {
+  getFriendlySupabaseAuthErrorMessage,
   hasCachedAuthSession,
   isCloudUnavailableForAuthGate,
   resolveAuthGateOutageBranch,
@@ -145,4 +146,22 @@ function runStartupOutageBranchTests(): void {
     'unrelated storage keys are not a cached session',
   );
   assertEqual(hasCachedAuthSession(null), false, 'missing storage means no cached session');
+
+  const friendlyWeakPasswordMessage =
+    'For your security, choose a stronger password you have not used elsewhere. Try a longer passphrase with a mix of words, numbers, and symbols.';
+  assertEqual(
+    getFriendlySupabaseAuthErrorMessage({ name: 'WeakPasswordError', message: 'provider detail' }),
+    friendlyWeakPasswordMessage,
+    'Supabase WeakPasswordError should become friendly, actionable UX copy',
+  );
+  assertEqual(
+    getFriendlySupabaseAuthErrorMessage({ code: 'weak_password', message: 'provider detail' }),
+    friendlyWeakPasswordMessage,
+    'weak_password code should map even when the provider class name is unavailable',
+  );
+  assertEqual(
+    getFriendlySupabaseAuthErrorMessage({ name: 'AuthApiError', message: 'Invalid login credentials' }),
+    null,
+    'unrelated auth errors keep their existing mapping path',
+  );
 }
