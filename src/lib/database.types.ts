@@ -1215,6 +1215,8 @@ export interface Database {
           order_index: number;
           estimated_minutes: number | null;
           is_focus: boolean;
+          source_habit_id: string | null;
+          source_habit_snapshot: Json | null;
           created_at: string;
           updated_at: string;
         };
@@ -1229,6 +1231,8 @@ export interface Database {
           order_index?: number;
           estimated_minutes?: number | null;
           is_focus?: boolean;
+          source_habit_id?: string | null;
+          source_habit_snapshot?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1243,6 +1247,8 @@ export interface Database {
           order_index?: number;
           estimated_minutes?: number | null;
           is_focus?: boolean;
+          source_habit_id?: string | null;
+          source_habit_snapshot?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -3847,6 +3853,20 @@ export interface Database {
       };
     };
     Functions: {
+      convert_habit_to_today_todo: {
+        Args: {
+          p_habit_id: string;
+          p_todo_date: string;
+          p_order_index?: number;
+        };
+        Returns: Database['public']['Tables']['today_todos']['Row'];
+      };
+      convert_today_todo_to_habit: {
+        Args: {
+          p_todo_id: string;
+        };
+        Returns: Database['public']['Tables']['habits_v2']['Row'];
+      };
       ensure_personal_quest_season: {
         Args: {
           p_theme_name: string;
