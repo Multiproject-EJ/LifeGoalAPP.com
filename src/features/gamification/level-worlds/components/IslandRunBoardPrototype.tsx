@@ -228,6 +228,9 @@ import {
   applyIslandOneExpeditionOrderAcknowledgement,
   applyStoryFastModeUnlock,
   applyTimedEventTicketSpend,
+  startJourneyDiscArenaRound,
+  bankJourneyDiscArenaRound,
+  claimJourneyDiscArenaMilestone,
   claimArenaFirstTicketBoost,
   applySpaceExcavatorDig,
   advanceSpaceExcavatorBoard,
@@ -382,6 +385,8 @@ import { IslandRunMinigameLauncher } from './IslandRunMinigameLauncher';
 import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal';
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { isArenaPuzzleGameId } from '../services/islandRunArenaCatalog';
+import { isJourneyDiscArenaIsland } from '../services/journeyDiscArmory';
+import { resolveJourneyDiscCenterLandmarkPresentation } from '../services/journeyDiscArenaIslandIntegration';
 import {
   DEFAULT_ARENA_MINIGAME_PREFERENCES,
   getArenaSessionSeconds,
@@ -1767,6 +1772,8 @@ export function IslandRunBoardPrototype({
         : 'operating',
       isIsland5ThreePreviewRequested: import.meta.env.DEV && params.get('island3dPreview') === '1',
       isArenaBattlePreviewRequested: import.meta.env.DEV && params.get('arenaBattlePreview') === '1',
+      journeyDiscArenaCenterPreview: import.meta.env.DEV && params.get('journeyDiscArenaCenterPreview') === '1',
+      journeyDiscArenaInvitationPreview: import.meta.env.DEV && params.get('journeyDiscArenaInvitationPreview') === '1',
       isCaretakerThreeEncounterPreviewRequested: import.meta.env.DEV && params.get('caretaker3dEncounterPreview') === '1',
       island5ThreePreviewLevel: Math.round(readNumericParam(params, 'island3dLevel', 3, 0, 3)) as 0 | 1 | 2 | 3,
       boardTiltXDeg: readNumericParam(params, 'boardTiltX', 47, 0, 80),
@@ -1787,6 +1794,8 @@ export function IslandRunBoardPrototype({
     frostwellMissionState,
     isIsland5ThreePreviewRequested,
     isArenaBattlePreviewRequested,
+    journeyDiscArenaCenterPreview,
+    journeyDiscArenaInvitationPreview,
     isCaretakerThreeEncounterPreviewRequested,
     island5ThreePreviewLevel,
     boardTiltXDeg,
@@ -2431,6 +2440,9 @@ export function IslandRunBoardPrototype({
   const [activeLaunchedMinigameConfig, setActiveLaunchedMinigameConfig] = useState<Record<string, unknown> | undefined>(undefined);
   const [arenaPreferences, setArenaPreferences] = useState<ArenaMinigamePreferences>(DEFAULT_ARENA_MINIGAME_PREFERENCES);
   const [showArenaPreferences, setShowArenaPreferences] = useState(false);
+  const [showJourneyDiscConcourseInvitation, setShowJourneyDiscConcourseInvitation] = useState(
+    () => isIslandVisualPreview && journeyDiscArenaInvitationPreview,
+  );
   const shooterControllerBridge = useMemo(() => createShooterControllerBridge(), []);
   const isShooterControllerActive = activeLaunchedMinigameId === 'shooter_blitz';
   const shooterControllerInput = shooterControllerBridge.controllerInput;
@@ -3035,7 +3047,7 @@ export function IslandRunBoardPrototype({
     hasStoryReaderMajorNarrative: showStoryReader,
     needsFirstSessionTutorialHatcheryGuidance: showFirstCreaturePackModal || showHatcheryL1Celebration || isBuildTutorialPromptActive,
     hasRewardClaimOrWelcomePackReveal: showWelcomePackModal || showClaimModal || showRewardDetailsModal || showWinCelebrationModal,
-    hasActiveStopOrLandmarkModal: Boolean(activeStopId || activePlaceholder || dormantDoorMiniGame || trafficLightCoinFlip || techCollectionModal || techCompletionCelebration || showEncounterModal || showGamifiedJournalCard || showHatcheryCompassModal),
+    hasActiveStopOrLandmarkModal: Boolean(activeStopId || activePlaceholder || dormantDoorMiniGame || trafficLightCoinFlip || techCollectionModal || techCompletionCelebration || showEncounterModal || showGamifiedJournalCard || showHatcheryCompassModal || showJourneyDiscConcourseInvitation),
   });
   const showFirstProgressRecapAfterArena = firstPlayerModalDecision.promptId === 'first_progress_recap_after_arena';
   const showSoftSavePromptAfterArena = firstPlayerModalDecision.promptId === 'soft_save_prompt_after_arena';
@@ -6070,8 +6082,7 @@ export function IslandRunBoardPrototype({
     const visual = orbitStopVisuals.find((v) => v.id === focusedStopId);
     if (!visual) return;
     boardCameraRef.current.goFocusPoint(
-      visual.focusX ?? visual.x,
-      visual.focusY ?? visual.y,
+      visual.focusX ?? visual.x, visual.focusY ?? visual.y,
       LANDMARK_INSPECTION_ZOOM,
     );
   }, [cameraMode, focusedStopId, orbitStopVisuals]);
@@ -6589,7 +6600,9 @@ export function IslandRunBoardPrototype({
     // to an explicitly unlocked local QA session. Production non-admins never
     // see the event banner, ticket chip, quick launch, or minigame launcher.
     // The underlying reward-bar/event rotation remains untouched.
-    if (!shouldExposeArenaTimedEvent({
+    const journeyDiscChapterExhibitionCanExposeEvent = isIslandRunFeatureEnabled('journeyDiscArenaEnabled')
+      && isJourneyDiscArenaIsland(islandNumber);
+    if (!journeyDiscChapterExhibitionCanExposeEvent && !shouldExposeArenaTimedEvent({
       isAdmin,
       isDevModeEnabled,
       isLocalDevelopment: import.meta.env.DEV,
@@ -6603,7 +6616,7 @@ export function IslandRunBoardPrototype({
       expiresAtMs: now + (24 * 60 * 60 * 1000),
       version: 1,
     };
-  }, [activeTimedEvent, devTimedEventOverrideEventId, devTimedEventOverrideType, isAdmin, isDevModeEnabled]);
+  }, [activeTimedEvent, devTimedEventOverrideEventId, devTimedEventOverrideType, isAdmin, isDevModeEnabled, islandNumber]);
   const timedEventRemainingLabel = effectiveActiveTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
@@ -6645,6 +6658,51 @@ export function IslandRunBoardPrototype({
     ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)
     : 0;
   const activeEventMeta = effectiveActiveTimedEvent ? getEventDisplayMeta(effectiveActiveTimedEvent.eventType) : null;
+  const journeyDiscCenterLandmark = useMemo(() => (
+    resolveJourneyDiscCenterLandmarkPresentation({
+      featureEnabled: isIslandRunFeatureEnabled('journeyDiscArenaEnabled'),
+      islandNumber,
+      hasActiveTimedEvent: Boolean(effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType)),
+      eventTickets: activeEventTickets,
+      bossStopStatus,
+      bossTrialActive: bossTrialPhase === 'in_progress',
+      bossDefeated: bossTrialResolved || runtimeState.bossTrialResolvedIslandNumber === islandNumber,
+    })
+  ), [activeEventTickets, bossStopStatus, bossTrialPhase, bossTrialResolved, effectiveActiveTimedEvent, islandNumber, runtimeState.bossTrialResolvedIslandNumber]);
+  const journeyDiscCenterActive = journeyDiscCenterLandmark.owner === 'journey_disc_arena'
+    || (isIslandVisualPreview && journeyDiscArenaCenterPreview);
+  const handleLandmarkOpenRequest = useCallback((stopId: string) => {
+    if (stopId !== 'boss' || !journeyDiscCenterActive) {
+      handleStopOpenRequest(stopId);
+      return;
+    }
+    if (!canOpenIslandRunOverlayWhileRollingState({
+      isRolling,
+      isAnimatingRoll: isAnimatingRollRef.current,
+      isRollSyncPending: isRollSyncPendingRef.current,
+    })) {
+      setLandingText('Journey Disc Arena is ready. Finish this roll, then tap the transformed Moon Gate.');
+      return;
+    }
+    setActiveStopId(null);
+    setLockedStopInfoStopId(null);
+    setTicketPromptStopId(null);
+    setPrepayTicketPromptStopId(null);
+    setShowJourneyDiscConcourseInvitation(true);
+    setIsTopbarMenuPrimed(false);
+    setFocusedStopId('boss');
+    setCameraMode('stop_focus');
+    playIslandRunSound('minigame_open');
+    triggerIslandRunHaptic('stop_land');
+  }, [handleStopOpenRequest, isRolling, journeyDiscCenterActive]);
+  useEffect(() => {
+    if (!showJourneyDiscConcourseInvitation || journeyDiscCenterActive) return;
+    setShowJourneyDiscConcourseInvitation(false);
+  }, [journeyDiscCenterActive, showJourneyDiscConcourseInvitation]);
+  useEffect(() => {
+    if (!showJourneyDiscConcourseInvitation || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [showJourneyDiscConcourseInvitation]);
   const trafficLightRewardItems = useMemo<TrafficLightRewardPresentationItem[]>(() => {
     const reward = trafficLightCoinFlip?.reward;
     if (!reward) return [];
@@ -9728,6 +9786,74 @@ export function IslandRunBoardPrototype({
       triggerIslandRunHaptic('roll');
       return;
     }
+    if (gameId === 'journey_disc_arena') {
+      if (!isIslandRunFeatureEnabled('journeyDiscArenaEnabled')) {
+        setLandingText('Journey Disc Arena is still being tuned for mobile.');
+        return;
+      }
+      if (!isJourneyDiscArenaIsland(runtimeStateRef.current.currentIslandNumber ?? islandNumber)) {
+        setLandingText('Journey Disc Arena returns after each five-island chapter: Islands 6, 11, 16 and onward.');
+        return;
+      }
+      if (!effectiveActiveTimedEvent || !isCanonicalEventId(effectiveActiveTimedEvent.eventType)) {
+        setLandingText('Journey Disc Arena needs an active event reward channel.');
+        return;
+      }
+      if (!canOpenIslandRunOverlayWhileRollingState({
+        isRolling,
+        isAnimatingRoll: isAnimatingRollRef.current,
+        isRollSyncPending: isRollSyncPendingRef.current,
+      })) {
+        stopAutoRoll();
+        setLandingText('Journey Disc Arena will be ready when this roll lands.');
+        return;
+      }
+      if (activeEventTickets < 1) {
+        setLandingText('Earn event tickets on the Island Run reward bar. Each ticket becomes one weapon disc.');
+        playIslandRunSound('market_insufficient_coins');
+        return;
+      }
+      const arenaPace = resolveArenaSessionPace(arenaPreferences, gameId);
+      if (!arenaPace) {
+        setLandingText('Journey Disc Arena is paused in your Arena rotation.');
+        setShowArenaPreferences(true);
+        return;
+      }
+      const recordEventId = effectiveActiveTimedEvent.eventId;
+      registerAllMinigameManifests();
+      setActiveLaunchedMinigameId('journey_disc_arena');
+      setActiveLaunchedMinigameSource('timed_event');
+      setActiveLaunchedMinigameConfig({
+        source: 'timed_event',
+        mode: 'journey_disc_arena',
+        activeEventId: recordEventId,
+        initialTickets: activeEventTickets,
+        initialProgress: runtimeStateRef.current.journeyDiscArenaProgressByEvent?.[recordEventId] ?? null,
+        initialArmory: runtimeStateRef.current.journeyDiscArmory,
+        islandConcourseIntegration: true,
+        integratedIslandNumber: runtimeStateRef.current.currentIslandNumber ?? islandNumber,
+        requestStartRound: (deployedDiscs: number) => {
+          const result = startJourneyDiscArenaRound({ session, client, eventId: recordEventId, deployedDiscs, triggerSource: 'journey_disc_arena_start' });
+          if (result.ok) setRuntimeState(result.record);
+          return { ok: result.ok, roundId: result.roundId, ticketsRemaining: result.ticketsRemaining, progress: result.progress, failureReason: result.failureReason };
+        },
+        requestBankRound: (payload: { roundId: string; score: number; won: boolean; deployedDiscs: number; guardianTier?: 0 | 1 | 2 | 3 }) => {
+          const result = bankJourneyDiscArenaRound({ session, client, eventId: recordEventId, ...payload, triggerSource: 'journey_disc_arena_bank' });
+          if (result.ok) setRuntimeState(result.record);
+          return { ok: result.ok, progress: result.progress, armory: result.record.journeyDiscArmory };
+        },
+        requestClaimMilestone: (milestoneId: string) => {
+          const result = claimJourneyDiscArenaMilestone({ session, client, eventId: recordEventId, milestoneId, triggerSource: 'journey_disc_arena_claim' });
+          if (result.ok) setRuntimeState(result.record);
+          return { ok: result.ok, progress: result.progress, rewardLabel: result.rewardLabel, ticketsRemaining: result.ticketsRemaining, armory: result.armory };
+        },
+        arenaSessionPace: arenaPace,
+        arenaTimerManagedByGame: true,
+      });
+      playIslandRunSound('minigame_open');
+      triggerIslandRunHaptic('roll');
+      return;
+    }
     if (effectiveActiveTimedEvent?.eventType === gameId) {
       handleLaunchTimedEventMinigame();
       return;
@@ -12234,6 +12360,7 @@ export function IslandRunBoardPrototype({
       showCreatureChannelModal ||
       showConcordHubModal ||
       showFrostwellMission ||
+      showJourneyDiscConcourseInvitation ||
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
@@ -13777,7 +13904,7 @@ export function IslandRunBoardPrototype({
           activeStopId={activeStopId}
           getOrbitStopDisplayIcon={getOrbitStopDisplayIcon}
           onStopClick={(stopId) => {
-            handleStopOpenRequest(stopId);
+            handleLandmarkOpenRequest(stopId);
           }}
           pendingHopSequence={shouldRenderIsland5Three ? null : pendingHopSequence}
           onHopSequenceComplete={shouldRenderIsland5Three ? undefined : () => {
@@ -13848,6 +13975,7 @@ export function IslandRunBoardPrototype({
                 cameraFocusTransition={buildCameraFocusRequest?.transition ?? 'standard'}
                 cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}
                 interactionPaused={doesModalOwnAttention}
+                journeyDiscArenaCenterActive={journeyDiscCenterActive}
                 arenaBattlePresentation={arenaBattlePresentation}
                 onHopSequenceComplete={handleHopSequencePresentationComplete}
                 onTokenHop={(tileIndex) => {
@@ -13865,7 +13993,7 @@ export function IslandRunBoardPrototype({
                 }}
                 onLandmarkClick={isIslandVisualPreview ? undefined : (landmarkId) => {
                   if (showBuildPanel) return;
-                  handleStopOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId);
+                  handleLandmarkOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId);
                 }}
                 signatureMissionPresentation={{
                   metersDrilled: isIslandVisualPreview && islandArtPreviewNumber === 3
@@ -13911,6 +14039,18 @@ export function IslandRunBoardPrototype({
                       ? `Fund ${frostwellTechCost.toLocaleString()}`
                       : `${frostwellProgress.metersDrilled}/${FROSTWELL_DEPTH_METERS}m · ${frostwellAvailableSpins} spin${frostwellAvailableSpins === 1 ? '' : 's'}`}
                 </span>
+              </button>
+            ) : null}
+            {journeyDiscCenterActive ? (
+              <button
+                type="button"
+                className="island-run-board__journey-disc-beacon"
+                onClick={() => handleLandmarkOpenRequest('boss')}
+                aria-label={`Open Journey Disc Arena. ${activeEventTickets} event ticket${activeEventTickets === 1 ? '' : 's'} available.`}
+              >
+                <span aria-hidden="true">◉</span>
+                <strong>Journey Disc</strong>
+                <small>{activeEventTickets}</small>
               </button>
             ) : null}
           </div>
@@ -17330,6 +17470,63 @@ export function IslandRunBoardPrototype({
           />
         </div>
       )}
+
+      {showJourneyDiscConcourseInvitation && typeof document !== 'undefined' ? createPortal((
+        <div
+          className="journey-disc-concourse-invitation__backdrop"
+          role="presentation"
+          onClick={() => setShowJourneyDiscConcourseInvitation(false)}
+        >
+          <div className="journey-disc-concourse-invitation__crowd" aria-hidden="true">
+            <span>✦</span><span>●</span><span>✦</span><span>●</span><span>✦</span>
+          </div>
+          <section
+            className="journey-disc-concourse-invitation"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="journey-disc-concourse-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="journey-disc-concourse-invitation__close"
+              aria-label="Close Journey Disc invitation"
+              onClick={() => setShowJourneyDiscConcourseInvitation(false)}
+            >
+              ×
+            </button>
+            <div className="journey-disc-concourse-invitation__disc" aria-hidden="true">
+              <i /><i /><b>◉</b>
+            </div>
+            <p className="journey-disc-concourse-invitation__eyebrow">Chapter exhibition · Moon Gate transformed</p>
+            <h2 id="journey-disc-concourse-title">Journey Disc Arena</h2>
+            <p className="journey-disc-concourse-invitation__lede">
+              Deploy 1–4 weapon discs. Your rank, weapons and Guardian clearance travel to the next exhibition island.
+            </p>
+            <div className="journey-disc-concourse-invitation__stats" aria-label="Arena entry status">
+              <span><small>Weapon discs</small><strong>{activeEventTickets} ◉</strong></span>
+              <span><small>Armory rank</small><strong>Rank {runtimeState.journeyDiscArmory.rank}</strong></span>
+              <span><small>{activeEventMeta?.displayName ?? 'Event'} closes</small><strong>{timedEventRemainingLabel}</strong></span>
+            </div>
+            <button
+              type="button"
+              className="journey-disc-concourse-invitation__enter"
+              disabled={!journeyDiscCenterLandmark.canEnter}
+              onClick={() => {
+                setShowJourneyDiscConcourseInvitation(false);
+                handleLaunchArenaGame('journey_disc_arena');
+              }}
+            >
+              {journeyDiscCenterLandmark.canEnter
+                ? 'Enter arena · choose 1–4 discs'
+                : 'Earn 1 event ticket to deploy a disc'}
+            </button>
+            <p className="journey-disc-concourse-invitation__boss-rule">
+              <span aria-hidden="true">☾</span> The Moon Gate returns when the mandatory island finale unlocks.
+            </p>
+          </section>
+        </div>
+      ), document.body) : null}
 
       <IslandRunArenaPreferencesModal
         open={showArenaPreferences}

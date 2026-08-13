@@ -54,6 +54,7 @@ const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
 const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
 const CHAMPIONSHIP_PREVIEW_PATH = '/dev/championship-preview';
 const MOMENTUM_MATRIX_PREVIEW_PATH = '/dev/momentum-matrix-preview';
+const JOURNEY_DISC_ARENA_PREVIEW_PATH = '/dev/journey-disc-arena';
 const ARENA_PUZZLE_PREVIEW_PATH = '/dev/arena-puzzle-preview';
 const HOLIDAY_MODAL_PREVIEW_PATH = '/dev/holiday-modal-preview';
 const HABIT_LANDMARK_PREVIEW_PATH = '/dev/habit-landmark-preview';
@@ -83,6 +84,22 @@ function MomentumMatrixPreviewRoute() {
   useEffect(() => {
     let isMounted = true;
     import('./features/gamification/games/momentum-matrix/MomentumMatrixPreview').then((module) => {
+      if (isMounted) setPreview(() => module.default);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return Preview ? <Preview /> : null;
+}
+
+function JourneyDiscArenaPreviewRoute() {
+  const [Preview, setPreview] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/games/journey-disc-arena/JourneyDiscArenaPreview').then((module) => {
       if (isMounted) setPreview(() => module.default);
     });
     return () => {
@@ -359,6 +376,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === MOMENTUM_MATRIX_PREVIEW_PATH;
+  const isJourneyDiscArenaPreviewRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === JOURNEY_DISC_ARENA_PREVIEW_PATH;
   const isArenaPuzzlePreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -434,6 +455,10 @@ function Root() {
 
   if (isMomentumMatrixPreviewRoute) {
     return <MomentumMatrixPreviewRoute />;
+  }
+
+  if (isJourneyDiscArenaPreviewRoute) {
+    return <JourneyDiscArenaPreviewRoute />;
   }
 
   if (isArenaPuzzlePreviewRoute) {

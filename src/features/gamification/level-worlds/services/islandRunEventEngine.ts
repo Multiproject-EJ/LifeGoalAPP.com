@@ -348,6 +348,7 @@ export type EventMinigameId =
   | 'space_excavator'
   | 'companion_feast'
   | 'momentum_matrix'
+  | 'journey_disc_arena'
   | 'concord_categories'
   | 'lexicon_relay'
   | 'signal_path'

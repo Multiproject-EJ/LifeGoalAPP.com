@@ -465,6 +465,23 @@ reward bar, or simultaneous active event. An exhibition spends/resumes against
 the active event's record-level ticket bucket and routes successful completion
 back through the active event reward contract.
 
+An exhibition may present a game-specific nested milestone track when that
+track is stored under the current active event runtime id in the canonical
+record. Such a track is not a second global reward bar: it cannot own another
+clock or wallet, and every claim must route through canonical action services
+into the existing Island Run wallets.
+
+Journey Disc Arena reward-track points and claims are event-scoped. Its fighter
+rank, weapon levels, and highest Guardian clearance are a permanent owner-scoped
+armory profile carried between eligible exhibition islands.
+
+The chapter-opening exhibition is eligible on Islands 6, 11, 16 and onward.
+While a canonical timed event is live and the Boss stop remains locked, its
+landmark presentation may temporarily transform the ordinary island's centre
+into Journey Disc Arena. It must yield the centre as soon as the mandatory Boss
+stop becomes available; the exhibition never completes, unlocks, or replaces a
+canonical stop and never creates a second ticket or reward write path.
+
 ### Timed event rotation
 
 | Event | Duration | Icon | Description |

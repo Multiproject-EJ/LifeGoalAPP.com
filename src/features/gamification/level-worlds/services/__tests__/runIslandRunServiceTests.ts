@@ -172,6 +172,11 @@ import { island5ThreePilotContractTests } from './island5ThreePilotContract.test
 import { islandRunArenaCreaturePresentationTests } from './islandRunArenaCreaturePresentation.test';
 import { islandRunArenaCreatureRosterTests } from './islandRunArenaCreatureRoster.test';
 import { islandRunCreatureArenaBattleTests } from './islandRunCreatureArenaBattle.test';
+import { journeyDiscArenaGameTests } from './journeyDiscArenaGame.test';
+import { journeyDiscArenaProgressionTests } from './journeyDiscArenaProgression.test';
+import { journeyDiscArenaStateActionsTests } from './journeyDiscArenaStateActions.test';
+import { journeyDiscArmoryTests } from './journeyDiscArmory.test';
+import { journeyDiscArenaIslandIntegrationTests } from './journeyDiscArenaIslandIntegration.test';
 import { islandRunCreatureArenaBattleActionTests } from './islandRunCreatureArenaBattleAction.test';
 import { islandRunBuildOpenFlowTests } from './islandRunBuildOpenFlow.test';
 import { caretakerThreeModelContractTests } from './caretakerThreeModelContract.test';
@@ -189,6 +194,11 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandRunArenaCreaturePresentation', tests: islandRunArenaCreaturePresentationTests },
   { label: 'islandRunArenaCreatureRoster', tests: islandRunArenaCreatureRosterTests },
   { label: 'islandRunCreatureArenaBattle', tests: islandRunCreatureArenaBattleTests },
+  { label: 'journeyDiscArenaGame', tests: journeyDiscArenaGameTests },
+  { label: 'journeyDiscArenaProgression', tests: journeyDiscArenaProgressionTests },
+  { label: 'journeyDiscArenaStateActions', tests: journeyDiscArenaStateActionsTests },
+  { label: 'journeyDiscArmory', tests: journeyDiscArmoryTests },
+  { label: 'journeyDiscArenaIslandIntegration', tests: journeyDiscArenaIslandIntegrationTests },
   { label: 'islandRunCreatureArenaBattleAction', tests: islandRunCreatureArenaBattleActionTests },
   { label: 'islandRunBuildOpenFlow', tests: islandRunBuildOpenFlowTests },
   { label: 'caretakerThreeModelContract', tests: caretakerThreeModelContractTests },
