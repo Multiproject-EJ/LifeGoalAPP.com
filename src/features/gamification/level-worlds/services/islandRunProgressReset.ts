@@ -97,6 +97,7 @@ export function buildFreshIslandRunRecord(
     concordRollProtectionState: { rollsTaken: 0, rollsSinceFragment: 0 },
     techCollectionRewardedLinesByIsland: {},
     technologyUnlocksById: {},
+    signatureMissionProgressByIsland: {},
     marketOwnedBundlesByIsland: {},
     creatureCollection: [],
     activeCompanionId: null,

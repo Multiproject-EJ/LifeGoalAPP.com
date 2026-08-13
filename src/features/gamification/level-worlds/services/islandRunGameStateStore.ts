@@ -44,6 +44,11 @@ import {
   sanitizeIslandRunArenaBattleState,
   type IslandRunArenaBattleState,
 } from './islandRunCreatureArenaBattle';
+import {
+  mergeIslandRunSignatureMissionProgress,
+  sanitizeIslandRunSignatureMissionProgress,
+  type IslandRunSignatureMissionProgressByIsland,
+} from './islandRunSignatureMissions';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
 
@@ -369,6 +374,8 @@ export interface IslandRunGameStateRecord {
   techCollectionRewardedLinesByIsland: Record<string, number[]>;
   /** Global durable expedition-technology unlocks; independent of current island travel. */
   technologyUnlocksById: IslandRunTechnologyUnlocksById;
+  /** Cycle-scoped, canonical ordinary-island signature mission progress. */
+  signatureMissionProgressByIsland: IslandRunSignatureMissionProgressByIsland;
   marketOwnedBundlesByIsland: Record<string, {
     dice_bundle: boolean;
     heart_bundle: boolean;
@@ -954,6 +961,7 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     concordRollProtectionState: { rollsTaken: 0, rollsSinceFragment: 0 },
     techCollectionRewardedLinesByIsland: {},
     technologyUnlocksById: {},
+    signatureMissionProgressByIsland: {},
     marketOwnedBundlesByIsland: {},
     creatureCollection: [],
     activeCompanionId: null,
@@ -1412,6 +1420,10 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       (value.technologyUnlocksById ?? (value as Record<string, unknown>).technology_unlocks_by_id) as unknown,
       fallback.technologyUnlocksById,
       value,
+    ),
+    signatureMissionProgressByIsland: sanitizeIslandRunSignatureMissionProgress(
+      value.signatureMissionProgressByIsland
+        ?? (value as Record<string, unknown>).signature_mission_progress_by_island,
     ),
     marketOwnedBundlesByIsland:
       value.marketOwnedBundlesByIsland !== null && typeof value.marketOwnedBundlesByIsland === 'object' && !Array.isArray(value.marketOwnedBundlesByIsland)
@@ -2452,6 +2464,10 @@ export function mergeRecordForConflict(options: {
       local.techCollectionRewardedLinesByIsland,
     ),
     technologyUnlocksById: mergeTechnologyUnlocksById(remote.technologyUnlocksById, local.technologyUnlocksById),
+    signatureMissionProgressByIsland: mergeIslandRunSignatureMissionProgress(
+      remote.signatureMissionProgressByIsland,
+      local.signatureMissionProgressByIsland,
+    ),
     marketOwnedBundlesByIsland: mergedMarketOwnedBundlesByIsland,
     creatureCollection: mergeCreatureCollection(remote.creatureCollection, local.creatureCollection),
     perfectCompanionIds: local.perfectCompanionIds.length > 0 ? local.perfectCompanionIds : remote.perfectCompanionIds,
@@ -2590,6 +2606,7 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     concord_roll_protection_state: record.concordRollProtectionState,
     tech_collection_rewarded_lines_by_island: record.techCollectionRewardedLinesByIsland,
     technology_unlocks_by_id: record.technologyUnlocksById,
+    signature_mission_progress_by_island: record.signatureMissionProgressByIsland,
     market_owned_bundles_by_island: record.marketOwnedBundlesByIsland,
     creature_collection: record.creatureCollection,
     active_companion_id: record.activeCompanionId,
@@ -2691,7 +2708,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,concord_roll_protection_state,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,market_owned_bundles_by_island,creature_collection,active_companion_id,selected_player_piece_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event,momentum_matrix_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,concord_roll_protection_state,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,signature_mission_progress_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,selected_player_piece_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event,momentum_matrix_progress_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -2776,6 +2793,9 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
                 currentIslandNumber: legacyData.current_island_number,
                 completedStopsByIsland: legacyData.completed_stops_by_island,
               },
+            ),
+            signatureMissionProgressByIsland: sanitizeIslandRunSignatureMissionProgress(
+              (legacyData as Record<string, unknown>).signature_mission_progress_by_island,
             ),
             marketOwnedBundlesByIsland: legacyData.market_owned_bundles_by_island ?? {},
             creatureCollection: legacyData.creature_collection ?? [],
@@ -2958,6 +2978,9 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
           currentIslandNumber: data.current_island_number,
           completedStopsByIsland: data.completed_stops_by_island,
         },
+      ),
+      signatureMissionProgressByIsland: sanitizeIslandRunSignatureMissionProgress(
+        (data as Record<string, unknown>).signature_mission_progress_by_island,
       ),
       marketOwnedBundlesByIsland: data.market_owned_bundles_by_island ?? {},
       creatureCollection: data.creature_collection ?? [],

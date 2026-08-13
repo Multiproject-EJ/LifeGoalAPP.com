@@ -51,6 +51,7 @@ import {
   type Island5AmbiencePoint,
   type Island5CameraPresetId,
   type Island5LandmarkDefinition,
+  type Island5LandmarkId,
 } from './island5ThreePilotContract';
 import { createCaretakerMaster, type CaretakerModel } from './CaretakerThreeModel';
 import { createCrownDrifterModel } from './CrownDrifterThreeModel';
@@ -90,6 +91,7 @@ import {
   ISLAND_3_FROSTMOON_LANDMARK_LABELS,
   ISLAND_3_FROSTMOON_WORLD_NAME,
 } from './Island3FrostmoonThreeWorld';
+import type { FrostwellIceworksPresentation } from './FrostwellIceworksThreeModel';
 import {
   buildIsland6MoonveilLandmark,
   createIsland6MoonveilLivingAmbience,
@@ -170,6 +172,8 @@ interface Island5ThreePilotProps {
   onTokenHop?: (tileIndex: number) => void;
   onTokenLand?: (tileIndex: number) => void;
   onLandmarkClick?: (landmarkId: Island5LandmarkDefinition['id']) => void;
+  signatureMissionPresentation?: FrostwellIceworksPresentation;
+  onSignatureMissionClick?: () => void;
   caretakerEncounterOpen?: boolean;
   onCaretakerClick?: () => void;
   interactionPaused?: boolean;
@@ -1987,6 +1991,7 @@ interface Island5AmbienceRuntime {
   root: THREE.Group;
   animate: (elapsed: number) => void;
   updateView?: (cameraPosition: THREE.Vector3) => void;
+  updateSignatureMission?: (presentation: FrostwellIceworksPresentation) => void;
 }
 
 function createInstancedScenery(
@@ -2948,6 +2953,8 @@ export default function Island5ThreePilot({
   onTokenHop,
   onTokenLand,
   onLandmarkClick,
+  signatureMissionPresentation = { metersDrilled: 0, built: false, constructionSequence: 0 },
+  onSignatureMissionClick,
   caretakerEncounterOpen = false,
   onCaretakerClick,
   interactionPaused = false,
@@ -3022,6 +3029,9 @@ export default function Island5ThreePilot({
   const onTokenHopRef = useRef(onTokenHop);
   const onTokenLandRef = useRef(onTokenLand);
   const onLandmarkClickRef = useRef(onLandmarkClick);
+  const signatureMissionPresentationRef = useRef(signatureMissionPresentation);
+  signatureMissionPresentationRef.current = signatureMissionPresentation;
+  const onSignatureMissionClickRef = useRef(onSignatureMissionClick);
   const caretakerEncounterOpenRef = useRef(caretakerEncounterOpen);
   const onCaretakerClickRef = useRef(onCaretakerClick);
   const interactionPausedRef = useRef(interactionPaused);
@@ -3064,7 +3074,7 @@ export default function Island5ThreePilot({
   ), [islandNumber, tileMap]);
   const tileRewardMapKey = useMemo(
     () => resolvedTileMap
-      .map((entry) => `${entry.index}:${entry.tileType}:${entry.doorStopId ?? ''}:${entry.isActiveDoorCluster ? 1 : 0}`)
+      .map((entry) => `${entry.index}:${entry.tileType}:${entry.doorStopId ?? ''}:${entry.isActiveDoorCluster ? 1 : 0}:${entry.signatureMissionKind ?? ''}`)
       .join('|'),
     [resolvedTileMap],
   );
@@ -3078,6 +3088,10 @@ export default function Island5ThreePilot({
   useEffect(() => {
     onLandmarkClickRef.current = onLandmarkClick;
   }, [onLandmarkClick]);
+
+  useEffect(() => {
+    onSignatureMissionClickRef.current = onSignatureMissionClick;
+  }, [onSignatureMissionClick]);
 
   useEffect(() => {
     caretakerEncounterOpenRef.current = caretakerEncounterOpen;
@@ -3515,7 +3529,7 @@ export default function Island5ThreePilot({
       scene.add(innerLagoon);
     }
 
-    const livingAmbience = isFirstLightKingdom && island1Materials
+    const livingAmbience: Island5AmbienceRuntime = isFirstLightKingdom && island1Materials
       ? createIsland1LivingAmbience(scene, qualityProfile, island1Materials, water)
       : isCelestialSkyKingdom && island2CelestialMaterials
         ? createIsland2CelestialLivingAmbience(scene, qualityProfile, island2CelestialMaterials, water)
@@ -3532,6 +3546,14 @@ export default function Island5ThreePilot({
             : isHeartshaftCrucible && island9HeartshaftMaterials
               ? createIsland9HeartshaftLivingAmbience(scene, qualityProfile, island9HeartshaftMaterials, water)
             : createIsland5LivingAmbience(scene, renderer, qualityProfile, materials, water);
+    if (isFrostmoonHaven) {
+      livingAmbience.updateSignatureMission?.(signatureMissionPresentationRef.current);
+    }
+    const clickableSignatureMissions = isFrostmoonHaven
+      ? [livingAmbience.root.getObjectByName('ISLAND_3_FROSTWELL_ICEWORKS_OFFSHORE_ROOT')].filter(
+          (candidate): candidate is THREE.Object3D => Boolean(candidate),
+        )
+      : [];
 
     const tileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
     const tileGeometry = createRadialTileGeometry(tileTransforms.length);
@@ -3943,7 +3965,7 @@ export default function Island5ThreePilot({
     // Deterministic Gauntlet evidence mode. The scene keeps its authored
     // geometry and camera, but removes texture/material-map influence so the
     // blockout can be judged on silhouette and structure alone.
-    const isMapStrippedEvidence = (isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible)
+    const isMapStrippedEvidence = (isFrostmoonHaven || isSunshoreAtoll || isMoonveilNexus || isAbyssalPearlKingdom || isEverblossomKingdom || isHeartshaftCrucible)
       && new URLSearchParams(window.location.search).get('island3dMapStripped') === '1';
     const evidenceMaterials: THREE.Material[] = [];
     if (isMapStrippedEvidence) {
@@ -4040,7 +4062,8 @@ export default function Island5ThreePilot({
         || preset === 'hatchery'
         || preset === 'habit'
         || preset === 'wisdom'
-        || preset === 'event';
+        || preset === 'event'
+        || preset === 'frostwell';
       const visible = !isLandmarkInspection;
       playerPiece.root.visible = visible;
       playerPiece.shadow.visible = visible;
@@ -4159,12 +4182,21 @@ export default function Island5ThreePilot({
         wisdom: { position: [-1.3, 6.75, 1.25], target: [-4.36, 1.26, 3.9] },
         event: { position: [1.3, 6.85, 1.25], target: [4.36, 1.3, 3.9] },
       };
+      const frostmoonFocusOverrides: Partial<Record<Island5CameraPresetId, {
+        position: readonly [number, number, number];
+        target: readonly [number, number, number];
+      }>> = {
+        frostwell: canvas.clientWidth / Math.max(1, canvas.clientHeight) < 0.75
+          ? { position: [0, 8.6, 14.5], target: [0, 0.5, -9.4] }
+          : { position: [0, 5.4, 2.8], target: [0, 0.82, -9.4] },
+      };
       const firstLightOverride = isFirstLightKingdom ? firstLightFocusOverrides[id] : undefined;
       const moonveilOverride = isMoonveilNexus ? moonveilFocusOverrides[id] : undefined;
       const underwaterOverride = isAbyssalPearlKingdom ? underwaterFocusOverrides[id] : undefined;
       const everblossomOverride = isEverblossomKingdom ? everblossomFocusOverrides[id] : undefined;
       const heartshaftOverride = isHeartshaftCrucible ? heartshaftFocusOverrides[id] : undefined;
-      const authoredFocusOverride = firstLightOverride ?? moonveilOverride ?? underwaterOverride ?? everblossomOverride ?? heartshaftOverride;
+      const frostmoonOverride = isFrostmoonHaven ? frostmoonFocusOverrides[id] : undefined;
+      const authoredFocusOverride = frostmoonOverride ?? firstLightOverride ?? moonveilOverride ?? underwaterOverride ?? everblossomOverride ?? heartshaftOverride;
       const preset = authoredFocusOverride ? { ...basePreset, ...authoredFocusOverride } : basePreset;
       setBoardActorsVisibleForPreset(id);
       setActivePreset(id);
@@ -4352,6 +4384,13 @@ export default function Island5ThreePilot({
         onCaretakerClickRef.current?.();
         return;
       }
+      const signatureMissionIntersection = raycaster.intersectObjects(clickableSignatureMissions, true)[0];
+      if (signatureMissionIntersection) {
+        idleOverviewAt = null;
+        if (isFrostmoonHaven) applyPreset('frostwell', 0.9);
+        onSignatureMissionClickRef.current?.();
+        return;
+      }
       const intersections = raycaster.intersectObjects(clickableLandmarks, true);
       const landmarkId = intersections
         .map((candidate) => resolveLandmarkIdFromIntersection(candidate.object))
@@ -4377,6 +4416,9 @@ export default function Island5ThreePilot({
       // motion, so it must still run when reduced motion freezes ambience.
       livingAmbience.updateView?.(camera.position, controls.target);
       if (!isReducedMotion) {
+        if (isFrostmoonHaven) {
+          livingAmbience.updateSignatureMission?.(signatureMissionPresentationRef.current);
+        }
         livingAmbience.animate(elapsed);
         tileRewardObjects.animate(elapsed, tokenIndexRef.current);
         routeGlow.material instanceof THREE.MeshStandardMaterial
@@ -4772,8 +4814,10 @@ export default function Island5ThreePilot({
           || activeInspectionPreset === 'habit'
           || activeInspectionPreset === 'wisdom'
           || activeInspectionPreset === 'event';
-        const focusRoot = focusedOuterLandmark ? landmarkRootsById.get(activeInspectionPreset) : undefined;
-        const shouldFadeBoss = Boolean(focusRoot) && shouldFadeCentralLandmarkForCamera({
+        const focusRoot = focusedOuterLandmark
+          ? landmarkRootsById.get(activeInspectionPreset as Island5LandmarkId)
+          : undefined;
+        const shouldFadeBoss = activeInspectionPreset === 'frostwell' || (Boolean(focusRoot) && shouldFadeCentralLandmarkForCamera({
           cameraPosition: [camera.position.x, camera.position.y, camera.position.z],
           focusPosition: [focusRoot!.position.x, focusRoot!.position.y + 1.2, focusRoot!.position.z],
           centralPosition: bossOcclusionBounds && bossOcclusionCenter
@@ -4783,7 +4827,7 @@ export default function Island5ThreePilot({
             ? Math.max(bossOcclusionSize.x, bossOcclusionSize.z) * 0.46
             : undefined,
           centralOcclusionHeight: bossOcclusionSize?.y,
-        });
+        }));
         if (shouldFadeBoss !== isBossOcclusionFadeApplied) {
           isBossOcclusionFadeApplied = shouldFadeBoss;
           canvas.dataset.centralLandmarkOcclusion = shouldFadeBoss ? 'faded' : 'opaque';

@@ -5,6 +5,10 @@ import type {
   Island5LandmarkDefinition,
 } from './island5ThreePilotContract';
 import { compactStaticGeometry } from './CrownCitadelThreeModel';
+import {
+  createFrostwellIceworks,
+  type FrostwellIceworksPresentation,
+} from './FrostwellIceworksThreeModel';
 
 export const ISLAND_3_FROSTMOON_WORLD_NAME = 'Frostmoon Haven';
 type BuildLevel = 0 | 1 | 2 | 3;
@@ -43,6 +47,7 @@ export interface Island3FrostmoonAmbienceRuntime {
   root: THREE.Group;
   animate: (elapsed: number) => void;
   updateView?: (cameraPosition: THREE.Vector3) => void;
+  updateSignatureMission?: (presentation: FrostwellIceworksPresentation) => void;
 }
 
 const segmentsFor = (quality: Island3DQuality) => quality === 'high' ? 22 : quality === 'medium' ? 15 : 9;
@@ -745,6 +750,9 @@ export function createIsland3FrostmoonLivingAmbience(
   oceanMaterial.roughness = 0.2;
   oceanMaterial.opacity = 0.88;
 
+  const frostwellIceworks = createFrostwellIceworks(quality, materials);
+  root.add(frostwellIceworks.root);
+
   addSnowShelf(root, 0, 0, 6.1, materials, quality, 0.2);
   const satellites: Array<[number, number]> = [[-4.36, -3.9], [4.36, -3.9], [-4.36, 3.9], [4.36, 3.9]];
   satellites.forEach(([x, z], index) => addSnowShelf(root, x, z, 2.42, materials, quality, index + 0.8));
@@ -896,7 +904,9 @@ export function createIsland3FrostmoonLivingAmbience(
   scene.add(root);
   return {
     root,
+    updateSignatureMission: frostwellIceworks.setPresentation,
     animate: (elapsed) => {
+      frostwellIceworks.animate(elapsed);
       const positions = snowGeometry.getAttribute('position') as THREE.BufferAttribute;
       for (let index = 0; index < snowCount; index += 1) {
         let y = positions.getY(index) - (0.006 + index % 5 * 0.0008);

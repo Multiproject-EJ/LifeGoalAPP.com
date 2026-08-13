@@ -21849,6 +21849,159 @@
   pointer-events: none;
 }
 
+.island-run-board__signature-mission-pill {
+  position: absolute;
+  left: 12px;
+  top: 92px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 146px;
+  padding: 7px 9px;
+  border: 1px solid rgba(133, 229, 245, 0.72);
+  border-radius: 12px;
+  color: #eefcff;
+  background: linear-gradient(145deg, rgba(17, 50, 75, 0.9), rgba(35, 76, 111, 0.88));
+  box-shadow: 0 6px 18px rgba(4, 25, 46, 0.26), inset 0 0 14px rgba(96, 219, 244, 0.12);
+  font: 700 0.58rem/1.16 ui-sans-serif, system-ui, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.island-run-board__signature-mission-pill > span:first-child { font-size: 1.18rem; }
+.island-run-board__signature-mission-pill > span:last-child { display: grid; gap: 2px; }
+.island-run-board__signature-mission-pill strong { color: #fff6c7; font-size: 0.67rem; }
+
+.frostwell-mission-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: grid;
+  align-items: end;
+  padding: max(18px, env(safe-area-inset-top)) 16px max(10px, env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, transparent 0 28%, rgba(3, 14, 29, .08) 38%, rgba(3, 14, 29, .74) 68%, rgba(3, 14, 29, .9));
+  pointer-events: auto;
+}
+
+.frostwell-mission-modal {
+  position: relative;
+  width: min(96vw, 620px);
+  max-height: min(68dvh, 720px);
+  overflow: auto;
+  padding: 17px 20px 18px;
+  border: 1px solid rgba(145, 227, 245, 0.68);
+  border-radius: 22px;
+  color: #eafaff;
+  background: radial-gradient(circle at 82% 10%, rgba(118, 102, 222, 0.22), transparent 34%), linear-gradient(160deg, rgba(23, 63, 95, .97), rgba(11, 34, 60, .98) 62%, rgba(8, 25, 45, .99));
+  box-shadow: 0 24px 70px rgba(0, 10, 24, 0.56), inset 0 0 30px rgba(109, 223, 247, 0.08);
+}
+
+.frostwell-mission-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(208, 245, 255, 0.32);
+  border-radius: 50%;
+  color: #ecfbff;
+  background: rgba(8, 31, 54, 0.74);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.frostwell-mission-modal__eyebrow {
+  margin: 0 42px 5px 0;
+  color: #8ee8f4;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.frostwell-mission-modal__header { display: grid; gap: 2px; margin-bottom: 10px; }
+.frostwell-mission-modal h2 { margin: 0; color: #fff5c9; font-size: 1.48rem; }
+.frostwell-mission-modal__lede { margin: 3px 42px 0 0; color: #cbe5ef; font-size: 0.78rem; line-height: 1.35; }
+.frostwell-mission-modal__machine { display: grid; gap: 10px; overflow: hidden; border-radius: 16px; }
+.frostwell-mission-modal__shaft { position: relative; min-height: 135px; overflow: hidden; border: 1px solid rgba(126, 216, 237, 0.3); border-radius: 16px; background: linear-gradient(90deg, rgba(202, 241, 250, 0.16), rgba(28, 69, 99, 0.42) 35%, rgba(10, 31, 56, 0.84)); box-shadow: inset 0 0 24px rgba(104, 207, 235, 0.12); }
+.frostwell-mission-modal__ice-cap { position: absolute; z-index: 3; inset: 0 0 auto; height: 34px; border-bottom: 2px solid rgba(148, 239, 255, 0.78); background: linear-gradient(165deg, #dff9ff, #7ec9df 52%, #497da4); box-shadow: 0 4px 12px rgba(90, 214, 246, 0.34); }
+.frostwell-mission-modal__ice-cap span { position: absolute; left: 50%; bottom: -8px; width: 30px; height: 15px; transform: translateX(-50%); border-radius: 50%; background: #112d4b; box-shadow: inset 0 2px 4px #020b16, 0 0 0 3px #7abdd2; }
+.frostwell-mission-modal__bore { position: absolute; inset: 34px 0 0; background: repeating-linear-gradient(0deg, transparent 0 34px, rgba(135, 202, 222, 0.08) 35px 36px), linear-gradient(90deg, rgba(119, 173, 193, 0.16), transparent 35%); }
+.frostwell-mission-modal__drill-string { position: absolute; z-index: 2; top: 0; left: calc(50% - 3px); width: 6px; border-radius: 0 0 3px 3px; background: linear-gradient(90deg, #47586b, #e4c47b 50%, #435060); box-shadow: 0 0 5px rgba(255, 218, 124, 0.35); transition: height 650ms cubic-bezier(.2,.85,.28,1); }
+.frostwell-mission-modal__auger { position: absolute; z-index: 3; left: calc(50% - 12px); width: 24px; color: #ffd56e; filter: drop-shadow(0 0 5px rgba(255, 194, 75, 0.9)); text-align: center; transition: top 650ms cubic-bezier(.2,.85,.28,1); }
+.frostwell-mission-modal__shaft--drilling .frostwell-mission-modal__auger { animation: frostwell-auger-drill 120ms linear infinite; }
+.frostwell-mission-modal__shaft--drilling .frostwell-mission-modal__chips { opacity: 1; animation: frostwell-ice-chips 460ms ease-out infinite; }
+.frostwell-mission-modal__chips { position: absolute; z-index: 2; top: 42%; left: 50%; opacity: 0; color: #b7f2ff; letter-spacing: 12px; transform: translateX(-42%); }
+.frostwell-mission-modal__waterline { position: absolute; inset: auto 0 0; height: 27px; padding-top: 7px; color: #b2f9ff; background: linear-gradient(rgba(13, 147, 193, 0.45), rgba(11, 84, 157, 0.82)); font: 750 0.55rem/1 ui-sans-serif, system-ui; letter-spacing: .07em; text-align: center; text-transform: uppercase; }
+.frostwell-mission-modal__depth-readout { position: absolute; z-index: 5; left: 9px; bottom: 34px; display: grid; padding: 6px 8px; border: 1px solid rgba(145, 229, 248, .3); border-radius: 9px; background: rgba(4, 21, 38, .76); }
+.frostwell-mission-modal__depth-readout strong { color: #fff1ac; font-size: 1rem; }
+.frostwell-mission-modal__depth-readout span { color: #97c4d4; font-size: .58rem; }
+.frostwell-mission-modal__wheel-panel { position: relative; height: 220px; overflow: hidden; border: 1px solid rgba(242, 205, 112, .3); border-radius: 16px; background: radial-gradient(circle at 50% 108%, rgba(227, 180, 70, .22), transparent 57%), rgba(3, 18, 33, .48); }
+.frostwell-mission-modal__wheel-pointer { position: absolute; z-index: 6; top: 1px; left: 50%; color: #fff2a8; transform: translateX(-50%); filter: drop-shadow(0 2px 2px #06101d); font-size: 1.35rem; }
+.frostwell-mission-modal__wheel { position: absolute; left: 50%; bottom: -108px; width: 230px; height: 230px; margin-left: -115px; border: 7px solid #e4bb58; border-radius: 50%; background: conic-gradient(#3fc1d7 0 12.5%, #5a78ca 0 25%, #805abe 0 37.5%, #d05d92 0 50%, #e48757 0 62.5%, #d8aa42 0 75%, #4da980 0 87.5%, #3b8eb5 0); box-shadow: 0 5px 24px rgba(0,0,0,.48), inset 0 0 0 4px rgba(255,255,255,.18); transition: transform 1.35s cubic-bezier(.12,.72,.12,1); }
+.frostwell-mission-modal__wheel::after { content: ''; position: absolute; inset: 76px; border: 3px solid #f6d777; border-radius: 50%; background: #17354e; }
+.frostwell-mission-modal__wheel span { position: absolute; z-index: 2; top: 50%; left: calc(50% - 12px); width: 24px; color: #fff; font: 950 .72rem/1 ui-sans-serif, system-ui; text-align: center; text-shadow: 0 1px 3px #142033; }
+.frostwell-mission-modal__wheel-hub { position: absolute; z-index: 5; left: 50%; bottom: 31px; width: 68px; height: 68px; display: grid; place-content: center; gap: 2px; border: 2px solid #fff0a3; border-radius: 50%; color: #10263b; background: radial-gradient(circle at 42% 30%, #fff7bd, #e1b148 65%, #aa7229); box-shadow: 0 3px 8px rgba(0,0,0,.42), inset 0 2px 4px rgba(255,255,255,.55); transform: translateX(-50%); font: 950 .75rem/1 ui-sans-serif, system-ui; cursor: pointer; }
+.frostwell-mission-modal__wheel-hub small { font-size: .46rem; }
+.frostwell-mission-modal__wheel-hub:disabled { filter: saturate(.45); cursor: default; }
+.frostwell-mission-modal__wheel-panel > em { position: absolute; z-index: 7; top: 32px; left: 50%; min-width: 110px; padding: 5px 8px; border-radius: 999px; color: #ffe589; background: rgba(7, 28, 48, .82); transform: translateX(-50%); font: 900 .72rem/1 ui-sans-serif, system-ui; font-style: normal; text-align: center; }
+.frostwell-mission-modal__spin { width: 100%; min-height: 37px; border: 1px solid #f1d276; border-radius: 10px; color: #10263b; background: linear-gradient(#fff2a9, #d9ab4a); box-shadow: 0 4px 12px rgba(0,0,0,.28); font: 900 .62rem/1 ui-sans-serif, system-ui; cursor: pointer; }
+.frostwell-mission-modal__spin:disabled { opacity: .48; cursor: default; }
+.frostwell-mission-modal__depth { display: grid; gap: 7px; padding: 13px; border: 1px solid rgba(126, 216, 237, 0.26); border-radius: 14px; background: rgba(2, 19, 36, 0.42); }
+.frostwell-mission-modal__depth-labels { display: flex; justify-content: space-between; color: #dffaff; font-size: 0.8rem; }
+.frostwell-mission-modal__depth-labels span { color: #8fb9ca; }
+.frostwell-mission-modal__depth-track { height: 12px; overflow: hidden; border-radius: 999px; background: rgba(1, 9, 19, 0.72); box-shadow: inset 0 1px 5px rgba(0, 0, 0, 0.42); }
+.frostwell-mission-modal__depth-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #62d8ef, #836fe5 72%, #ffd16d); box-shadow: 0 0 12px rgba(101, 218, 242, 0.7); transition: width 420ms ease; }
+.frostwell-mission-modal__depth small { color: #92becd; font-size: 0.7rem; }
+.frostwell-mission-modal__status { display: grid; gap: 4px; margin-top: 13px; padding: 12px 13px; border-left: 3px solid #6ccfe4; border-radius: 8px 13px 13px 8px; color: #cae4ee; background: rgba(60, 130, 158, 0.14); font-size: 0.78rem; line-height: 1.4; }
+.frostwell-mission-modal__status strong { color: #effcff; font-size: 0.86rem; }
+.frostwell-mission-modal__status--ready { border-left-color: #ffd16d; background: rgba(192, 132, 37, 0.14); }
+.frostwell-mission-modal__status--online { border-left-color: #69ecbd; background: rgba(44, 151, 119, 0.14); }
+.frostwell-mission-modal__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; margin-top: 17px; }
+
+.island-tile--frostwell-drill .island-tile__face { border-color: #81e9f6; background: radial-gradient(circle, #dffbff 0 12%, #3c9abb 25%, #233b77 70%); box-shadow: inset 0 0 12px rgba(190, 250, 255, .72), 0 0 11px rgba(68, 218, 244, .75); }
+.island-tile--frostwell-drill .island-tile__value { color: #fff1ac; filter: drop-shadow(0 2px 2px #08223c); }
+
+@keyframes frostwell-auger-drill { to { transform: rotateY(360deg) translateY(2px); } }
+@keyframes frostwell-ice-chips { from { transform: translate(-42%, 0) scale(.5); } to { transform: translate(-42%, 24px) scale(1.3); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .frostwell-mission-modal__wheel { transition-duration: 180ms; }
+  .frostwell-mission-modal__shaft--drilling .frostwell-mission-modal__auger,
+  .frostwell-mission-modal__shaft--drilling .frostwell-mission-modal__chips { animation: none; }
+}
+
+@media (max-width: 520px) {
+  .frostwell-mission-modal__backdrop {
+    padding-inline: max(7px, env(safe-area-inset-left)) max(7px, env(safe-area-inset-right));
+  }
+
+  .frostwell-mission-modal {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 500px;
+    height: 56dvh;
+    max-height: 56dvh;
+    padding: 14px 12px 12px;
+    border-radius: 19px;
+  }
+
+  .frostwell-mission-modal h2 { font-size: 1.28rem; }
+  .frostwell-mission-modal__lede { font-size: 0.82rem; }
+  .frostwell-mission-modal__machine { grid-template-columns: 1fr; }
+  .frostwell-mission-modal__shaft { min-height: 82px; }
+  .frostwell-mission-modal__wheel-panel { height: 146px; }
+  .frostwell-mission-modal__wheel { bottom: -122px; width: 220px; height: 220px; margin-left: -110px; }
+  .frostwell-mission-modal__wheel::after { inset: 73px; }
+  .frostwell-mission-modal__wheel-hub { bottom: 16px; width: 64px; height: 64px; }
+  .frostwell-mission-modal__wheel span { transform-origin: 12px 0; }
+  .frostwell-mission-modal__status { margin-top: 8px; padding: 8px 10px; }
+  .frostwell-mission-modal__status span { display: none; }
+  .frostwell-mission-modal__actions { display: grid; grid-template-columns: 1fr; margin-top: 8px; }
+  .frostwell-mission-modal__actions .island-stop-modal__btn { width: 100%; min-width: 0; }
+}
+
 .island-run-board__dev-island-jump {
   display: grid;
   gap: 0.45rem;

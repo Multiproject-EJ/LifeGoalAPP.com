@@ -158,6 +158,7 @@ export interface BoardTileProps {
   tileType: IslandTileMapEntry['tileType'] | undefined;
   doorStopId?: IslandTileMapEntry['doorStopId'];
   isActiveDoorCluster?: boolean;
+  signatureMissionKind?: IslandTileMapEntry['signatureMissionKind'];
   isEncounter: boolean;
   isEncounterCompleted: boolean;
   isTokenCurrent: boolean;
@@ -189,6 +190,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     tileType,
     doorStopId,
     isActiveDoorCluster = false,
+    signatureMissionKind,
     isEncounter,
     isEncounterCompleted,
     isTokenCurrent,
@@ -212,6 +214,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     iconContent = COMPLETED_CHECK_ICON;
   } else if (isEncounter) {
     iconContent = TILE_SVG_ICONS.encounter;
+  } else if (signatureMissionKind === 'frostwell_drill') {
+    iconContent = '⛏';
   } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
     iconContent = BOSS_CROWN_ICON;
   } else if (tileType === 'landmark_door') {
@@ -234,6 +238,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         isTrafficLightGreen ? 'island-tile--traffic_light-green' : '',
         doorStopClass,
         isActiveDoorCluster ? 'island-tile--active-door-cluster' : '',
+        signatureMissionKind === 'frostwell_drill' ? 'island-tile--frostwell-drill' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
         isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
@@ -241,7 +246,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         technologyFragment ? 'island-tile--technology-fragment' : '',
         isDormant ? 'island-tile--dormant' : '',
       ].filter(Boolean).join(' ')}
-      aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}` : isDormant ? `Tile ${index + 1}. Dormant` : undefined}
+      aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}` : signatureMissionKind === 'frostwell_drill' ? `Tile ${index + 1}. Frostwell drill spin` : isDormant ? `Tile ${index + 1}. Dormant` : undefined}
       style={{
         left: position.x,
         top: position.y,

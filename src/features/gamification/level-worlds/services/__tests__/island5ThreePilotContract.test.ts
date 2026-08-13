@@ -14,6 +14,7 @@ import {
   ISLAND_3D_QUALITY_PROFILES,
   ISLAND_3D_PERFORMANCE_TARGETS,
   ISLAND_3D_PROFILE_DURATION_MS,
+  ISLAND_3D_ROUTE_RADIUS,
   ISLAND_3D_IDLE_OVERVIEW_DELAY_MS,
   ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE,
   ISLAND_3D_TOKEN_HOP_ARC_HEIGHT,
@@ -34,6 +35,12 @@ import {
   ISLAND_1_CLOUD_MINIMUM_Y,
   ISLAND_1_OCEAN_SURFACE_Y,
 } from '../../dev/Island1ThreeWorld';
+import { createIsland3FrostmoonMaterials } from '../../dev/Island3FrostmoonThreeWorld';
+import {
+  createFrostwellIceworks,
+  FROSTWELL_OFFSHORE_POSITION,
+  FROSTWELL_PLATFORM_RADIUS,
+} from '../../dev/FrostwellIceworksThreeModel';
 import {
   isIsland6RouteCorridorClear,
   ISLAND_6_ROUTE_CLEARANCE_INNER_RADIUS,
@@ -113,6 +120,45 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(boardSource.includes('faces={rollingDiceFaces}') && boardSource.includes('onRollComplete={() =>'), 'the 3D dice must reuse the canonical result and completion clock');
       assert(!boardSource.includes('showEggReadyBanner') && boardSource.includes('Open hatchery.'), 'egg readiness should stay in persistent Hatchery access instead of reopening an automatic modal');
       assert(boardSource.includes("requestActiveStopTransition(null, 'hatchery_landmark_door_non_blocking')"), 'landing on the Hatchery door must not repeatedly open the full remote-egg modal');
+    },
+  },
+  {
+    name: 'keeps Frostwell Iceworks north in the ocean, route-clear, clickable, and state-driven',
+    run: async () => {
+      assertEqual(FROSTWELL_OFFSHORE_POSITION.x, 0, 'the Iceworks should stay centred on the north sightline');
+      assert(FROSTWELL_OFFSHORE_POSITION.z < 0, 'the Iceworks must remain north of Frostmoon');
+      assert(
+        Math.abs(FROSTWELL_OFFSHORE_POSITION.z) - FROSTWELL_PLATFORM_RADIUS > ISLAND_3D_ROUTE_RADIUS + 1,
+        'the detached ice platform must remain safely beyond the canonical tile route',
+      );
+      const materials = createIsland3FrostmoonMaterials();
+      const runtime = createFrostwellIceworks('low', materials);
+      assert(runtime.root.userData.sculptRuntime.clickable, 'the Iceworks runtime must remain explicitly clickable');
+      assertEqual(runtime.hitTarget.userData.signatureMissionId, 'frostwell-iceworks', 'the forgiving hit target must route to the Frostwell mission');
+      const operating = runtime.root.getObjectByName('FROSTWELL_OPERATING_FISHERY_AND_RESERVOIR');
+      assert(Boolean(operating) && !operating!.visible, 'the fishery machinery must remain hidden while drilling');
+      runtime.setPresentation({ metersDrilled: 500, built: true, constructionSequence: 1 });
+      assert(Boolean(operating?.visible), 'funding must reveal the operating fishery and freshwater reservoir');
+      runtime.animate(123.4);
+      assert(runtime.root.getObjectByName('FROSTWELL_BORE_OPENING') !== undefined, 'the 50m bore needs a readable physical opening');
+      assert(runtime.root.getObjectByName('FROSTWELL_CATCH_SORTING_BIN') !== undefined, 'the completed mission needs a visible fish output');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(pilotSource.includes('clickableSignatureMissions') && pilotSource.includes('onSignatureMissionClickRef.current?.()'), 'Iceworks ray hits must open the signature mission UI');
+      assert(pilotSource.includes("applyPreset('frostwell', 0.9)") && pilotSource.includes("activeInspectionPreset === 'frostwell'"), 'Frostwell needs its own camera and central-landmark fade');
+      assert(boardSource.includes('isIslandVisualPreview && islandArtPreviewNumber !== 3'), 'Island 003 visual QA must retain the real 3D hit-to-modal path');
+      assert(boardSource.includes('Deliberately keep the special Frostwell inspection camera active'), 'closing the tray must leave the rig available for unobstructed 3D inspection');
+      assert(boardSource.includes('frostwell-mission-modal__wheel-hub') && boardSource.includes('spinFrostwellDrillWheel'), 'the lower half-wheel hub must route through canonical wheel authority');
+      assert(boardSource.includes("params.get('frostwellMissionState')") && boardSource.includes("frostwellMissionState === 'constructing'"), 'development proof mode must cover the construction POOF without creating gameplay state');
+      runtime.root.traverse((object) => {
+        if (object instanceof THREE.Mesh) object.geometry.dispose();
+      });
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
     },
   },
   {
@@ -638,11 +684,11 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'defines reusable overview, orbit, survey and five landmark camera presets',
+    name: 'defines reusable overview, orbit, survey, five landmarks, and the Frostwell inspection preset',
     run: () => {
-      assertEqual(ISLAND_5_CAMERA_PRESETS.length, 9, 'camera rig should expose nine reusable presets');
-      assertEqual(new Set(ISLAND_5_CAMERA_PRESETS.map((preset) => preset.id)).size, 9, 'camera preset ids must be unique');
-      ['overview', 'survey', 'orbit-left', 'orbit-right', 'boss', 'hatchery', 'habit', 'wisdom', 'event'].forEach((id) => {
+      assertEqual(ISLAND_5_CAMERA_PRESETS.length, 10, 'camera rig should expose ten reusable presets');
+      assertEqual(new Set(ISLAND_5_CAMERA_PRESETS.map((preset) => preset.id)).size, 10, 'camera preset ids must be unique');
+      ['overview', 'survey', 'orbit-left', 'orbit-right', 'frostwell', 'boss', 'hatchery', 'habit', 'wisdom', 'event'].forEach((id) => {
         assert(ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === id), `missing camera preset ${id}`);
       });
       ISLAND_5_CAMERA_PRESETS.forEach((preset) => {

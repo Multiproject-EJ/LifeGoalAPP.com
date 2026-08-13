@@ -17,7 +17,8 @@ second competing mission.
 
 - The canonical five-stop sequence and 36-tile board remain unchanged.
 - Mission progress is driven by canonical gameplay events, never React-local
-  mirrors or landmark/tile indices.
+  mirrors. A mission may reserve canonical, tested tile indices when landing
+  on those tiles is the explicitly authored event.
 - A roll-based mission counts accepted canonical roll completions, not visual
   frames, taps, or approximate board laps.
 - Mission visuals may react to progress but never become gameplay authority.
@@ -58,7 +59,7 @@ restoration mission.
 | --- | --- | --- |
 | 001 — First Light Kingdom | **Assemble the Concord** | Nine recovered components activate a universal communication instrument; existing Concord authority remains canonical. |
 | 002 — Celestial Sky Kingdom | **The Great Re-Docking** | Four landmark islands begin detached but tethered by luminous cables. Each group of five completed rolls winches one platform inward; rolls 5/10/15/20 trigger a clamp-lock animation. |
-| 003 — Frostmoon Haven | **Relight the Aurora Furnace** | Six heat relays around the route charge from ordinary play. Each threshold warms windows, thaws one frozen channel, restarts chimneys, and finally sends an aurora ribbon into Aurora Keep. |
+| 003 — Frostmoon Haven | **Frostwell Iceworks** | Three drill tiles grant pressure-wheel spins that drive an offshore auger 15–75 metres toward a 500-metre freshwater basin. After breakthrough, one substantial technology payment constructs a fishery and freshwater depot in a snow-and-spark burst; fish buckets and cyan water pipes then operate continuously. |
 | 004 — Crown Citadel / repaired citadel world | **Raise the Broken Causeway** | Recovered masonry and bridge spans rise from the water in three large sections, reconnecting the four outer plots to the central citadel without moving gameplay tiles. |
 | 005 — Sunshore Arena | **Arena guardian battle** | Existing every-fifth boss/creature event; no second signature mission. |
 | 006 — Moonveil Nexus | **Rephase the Moon Mirrors** | Five giant mirrors rotate into alignment one at a time, forming a visible beam chain that stabilizes the central moon core. |

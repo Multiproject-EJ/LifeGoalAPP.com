@@ -58,11 +58,13 @@ export type IslandRunTileRewardObjectKind =
   | 'caretaker_card'
   | 'build_rush_hammer'
   | 'traffic_beacon'
+  | 'frostwell_drill'
   | 'active_landmark_door';
 
 export function resolveIslandRunTileRewardObjectKind(
-  entry: Pick<IslandTileMapEntry, 'tileType' | 'isActiveDoorCluster'>,
+  entry: Pick<IslandTileMapEntry, 'tileType' | 'isActiveDoorCluster' | 'signatureMissionKind'>,
 ): IslandRunTileRewardObjectKind | null {
+  if (entry.signatureMissionKind === 'frostwell_drill') return 'frostwell_drill';
   if (entry.tileType === 'free_ticket') return 'golden_event_ticket';
   if (entry.tileType === 'currency') return 'essence_crystal';
   if (entry.tileType === 'micro') return 'universal_reward_token';
@@ -347,8 +349,26 @@ function createLandmarkDoorSigil(materials: RewardMaterials, quality: Island3DQu
   return root;
 }
 
+function createFrostwellDrillMarker(materials: RewardMaterials, quality: Island3DQuality) {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_RUN_TILE_OBJECT_FROSTWELL_DRILL';
+  const segments = qualitySegments(quality);
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 6, segments), materials.cyan);
+  halo.rotation.x = Math.PI / 2;
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.34, 7), materials.gold);
+  shaft.position.y = 0.04;
+  const bit = new THREE.Mesh(new THREE.ConeGeometry(0.105, 0.24, 8), materials.gold);
+  bit.position.y = -0.22;
+  bit.rotation.z = Math.PI;
+  const cross = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.045, 0.045), materials.midnight);
+  cross.position.y = 0.18;
+  root.add(halo, shaft, bit, cross);
+  return root;
+}
+
 function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMaterials, quality: Island3DQuality) {
   const kind = resolveIslandRunTileRewardObjectKind(entry);
+  if (kind === 'frostwell_drill') return createFrostwellDrillMarker(materials, quality);
   if (kind === 'golden_event_ticket') return createTicket(materials, quality);
   if (kind === 'essence_crystal') return createEssenceCrystal(materials, quality);
   if (kind === 'universal_reward_token') return createUniversalRewardToken(materials, quality);
@@ -406,7 +426,9 @@ export function createIslandRunTileRewardThreeObjects(options: {
       compactStaticGeometry(visual, `ISLAND_RUN_TILE_REWARD_${tileEntry.index}`);
     }
     const baseY = transform.position[1] + (tileEntry.tileType === 'hazard' ? 0.26 : 0.46);
-    const baseScale = tileEntry.tileType === 'free_ticket'
+    const baseScale = tileEntry.signatureMissionKind === 'frostwell_drill'
+      ? 1.08
+      : tileEntry.tileType === 'free_ticket'
       ? 1.42
       : tileEntry.tileType === 'landmark_door'
         ? 0.86

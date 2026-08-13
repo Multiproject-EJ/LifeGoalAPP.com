@@ -448,6 +448,14 @@ import {
   shouldAutoOpenIslandStopOnLoad,
 } from '../services/islandRunStopCompletion';
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
+import { fundFrostwellIceworks, spinFrostwellDrillWheel } from '../services/islandRunSignatureMissionAction';
+import {
+  FROSTWELL_DEPTH_METERS,
+  FROSTWELL_SPIN_METERS,
+  getFrostwellAvailableSpins,
+  getFrostwellIceworksTechCost,
+  resolveFrostwellIceworksProgress,
+} from '../services/islandRunSignatureMissions';
 import { executeIslandRunTileRewardAction } from '../services/islandRunTileRewardAction';
 import {
   advanceIslandRunLuckyRoll,
@@ -1727,6 +1735,7 @@ export function IslandRunBoardPrototype({
     const params = new URLSearchParams(window.location.search);
     const requestedVisualLandmark = params.get('islandVisualLandmark');
     const requestedVisualBossState = params.get('islandVisualBossState');
+    const requestedFrostwellMissionState = params.get('frostwellMissionState');
     const islandVisualLandmark = requestedVisualLandmark === 'hatchery'
       || requestedVisualLandmark === 'habit'
       || requestedVisualLandmark === 'mystery'
@@ -1750,6 +1759,12 @@ export function IslandRunBoardPrototype({
       islandVisualLandmark,
       islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
       islandVisualBossState,
+      frostwellMissionState: requestedFrostwellMissionState === 'drilling'
+        || requestedFrostwellMissionState === 'ready'
+        || requestedFrostwellMissionState === 'constructing'
+        || requestedFrostwellMissionState === 'operating'
+        ? requestedFrostwellMissionState
+        : 'operating',
       isIsland5ThreePreviewRequested: import.meta.env.DEV && params.get('island3dPreview') === '1',
       isArenaBattlePreviewRequested: import.meta.env.DEV && params.get('arenaBattlePreview') === '1',
       isCaretakerThreeEncounterPreviewRequested: import.meta.env.DEV && params.get('caretaker3dEncounterPreview') === '1',
@@ -1769,6 +1784,7 @@ export function IslandRunBoardPrototype({
     islandVisualLandmark,
     islandVisualBuildLevel,
     islandVisualBossState,
+    frostwellMissionState,
     isIsland5ThreePreviewRequested,
     isArenaBattlePreviewRequested,
     isCaretakerThreeEncounterPreviewRequested,
@@ -1846,6 +1862,12 @@ export function IslandRunBoardPrototype({
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem(`island_run_landmark_coachmark_seen_${session.user.id}`) !== '1';
   });
+  const [showFrostwellMission, setShowFrostwellMission] = useState(false);
+  const [isFundingFrostwell, setIsFundingFrostwell] = useState(false);
+  const [isSpinningFrostwell, setIsSpinningFrostwell] = useState(false);
+  const [frostwellWheelRotation, setFrostwellWheelRotation] = useState(0);
+  const [frostwellLastSpinMeters, setFrostwellLastSpinMeters] = useState<number | null>(null);
+  const [frostwellConstructionSequence, setFrostwellConstructionSequence] = useState(0);
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
@@ -2481,6 +2503,17 @@ export function IslandRunBoardPrototype({
     preset: Island5CameraPresetId;
     transition: 'standard' | 'quick';
   } | null>(null);
+  const openFrostwellMission = useCallback(() => {
+    setBuildCameraFocusRequest({ preset: 'frostwell', transition: 'quick' });
+    setShowFrostwellMission(true);
+  }, []);
+  const closeFrostwellMission = useCallback(() => {
+    setShowFrostwellMission(false);
+    // Deliberately keep the special Frostwell inspection camera active. The
+    // modal is the minigame tray; closing it is how the player gets an
+    // unobstructed 3D look at the rig. The board magnifier remains the explicit
+    // route back to overview.
+  }, []);
   const previousBuildCameraStopIdRef = useRef<string | null>(null);
   const [buildLevelCompletion, setBuildLevelCompletion] = useState<ActiveBuildLevelReview | null>(null);
   const buildLevelCompletionRef = useRef<ActiveBuildLevelReview | null>(null);
@@ -2792,6 +2825,7 @@ export function IslandRunBoardPrototype({
     isIslandInhabitantFlowOpen ||
     showCreatureChannelModal ||
     showConcordHubModal ||
+    showFrostwellMission ||
     Boolean(dormantDoorMiniGame) ||
     Boolean(trafficLightCoinFlip) ||
     Boolean(techCollectionModal) ||
@@ -2861,6 +2895,23 @@ export function IslandRunBoardPrototype({
     () => resolvePendingTreasurePathResume({ record: runtimeState }),
     [runtimeState],
   );
+  const frostwellProgress = useMemo(() => resolveFrostwellIceworksProgress({
+    ledger: runtimeState.signatureMissionProgressByIsland,
+    cycleIndex: runtimeState.cycleIndex,
+    islandNumber: 3,
+  }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  const frostwellTechCost = getFrostwellIceworksTechCost(runtimeState.cycleIndex);
+  const frostwellBuilt = frostwellProgress.builtAtMs !== null;
+  const frostwellPreviewActive = isIslandVisualPreview && islandVisualIslandNumber === 3;
+  const frostwellPresentationMeters = frostwellPreviewActive
+    ? frostwellMissionState === 'drilling' ? 235 : FROSTWELL_DEPTH_METERS
+    : frostwellProgress.metersDrilled;
+  const frostwellPresentationBuilt = frostwellPreviewActive
+    ? frostwellMissionState === 'operating' || frostwellMissionState === 'constructing'
+    : frostwellBuilt;
+  const frostwellAvailableSpins = frostwellPreviewActive && frostwellMissionState === 'drilling'
+    ? 1
+    : getFrostwellAvailableSpins(frostwellProgress);
   const pendingTreasurePathResumeCtaLabel = pendingTreasurePathResume?.status === 'active'
     ? 'Continue Treasure Path'
     : 'Collect Treasure';
@@ -7379,6 +7430,11 @@ export function IslandRunBoardPrototype({
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setLandingText('The island network is dormant. Follow the Concord fragment signal.');
+        } else if (rollResult.frostwellSpinGranted) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          setLandingText('⛏ Drill tile! One Frostwell wheel spin is ready.');
+          openFrostwellMission();
         } else if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -12173,9 +12229,68 @@ export function IslandRunBoardPrototype({
       isIslandInhabitantFlowOpen ||
       showCreatureChannelModal ||
       showConcordHubModal ||
+      showFrostwellMission ||
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
+  useEffect(() => {
+    if (!showFrostwellMission || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [showFrostwellMission]);
+
+  const handleSpinFrostwell = useCallback(async () => {
+    if (isSpinningFrostwell) return;
+    setIsSpinningFrostwell(true);
+    setFrostwellLastSpinMeters(null);
+    try {
+      const result = await spinFrostwellDrillWheel({ session, client });
+      if (result.status !== 'ok') {
+        if (result.status === 'no_spins') setLandingText('Land on one of the three blue drill tiles to earn a Frostwell spin.');
+        return;
+      }
+      const segmentIndex = Math.max(0, FROSTWELL_SPIN_METERS.indexOf(result.wheelMeters as typeof FROSTWELL_SPIN_METERS[number]));
+      const segmentAngle = segmentIndex * (360 / FROSTWELL_SPIN_METERS.length) + (180 / FROSTWELL_SPIN_METERS.length);
+      setFrostwellWheelRotation((rotation) => {
+        const currentAngle = ((rotation % 360) + 360) % 360;
+        const correction = ((360 - segmentAngle - currentAngle) + 360) % 360;
+        return rotation + 1_800 + correction;
+      });
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 1_350));
+      refreshIslandRunStateFromLocal(session);
+      const fresh = getIslandRunStateSnapshot(session);
+      runtimeStateRef.current = fresh;
+      setRuntimeStateWithTrace('spin_frostwell_drill_wheel', fresh);
+      setFrostwellLastSpinMeters(result.meters);
+      setLandingText(`⛏ Frostwell auger drilled ${result.meters}m deeper${result.metersAfter >= FROSTWELL_DEPTH_METERS ? ' — breakthrough!' : '.'}`);
+      playIslandRunSound(result.metersAfter >= FROSTWELL_DEPTH_METERS ? 'reward_bar_claim_burst' : 'stop_land');
+      triggerIslandRunHaptic(result.metersAfter >= FROSTWELL_DEPTH_METERS ? 'reward_claim' : 'stop_land');
+    } finally {
+      setIsSpinningFrostwell(false);
+    }
+  }, [client, isSpinningFrostwell, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
+
+  const handleFundFrostwell = useCallback(async () => {
+    if (isFundingFrostwell) return;
+    setIsFundingFrostwell(true);
+    try {
+      const result = await fundFrostwellIceworks({ session, client });
+      if (result.status === 'ok') {
+        refreshIslandRunStateFromLocal(session);
+        const fresh = getIslandRunStateSnapshot(session);
+        runtimeStateRef.current = fresh;
+        setRuntimeStateWithTrace('fund_frostwell_iceworks', fresh);
+        setFrostwellConstructionSequence((value) => value + 1);
+        setLandingText('💨 Frostwell Iceworks online! Fresh water and fish are flowing from beneath the frozen ocean.');
+        playIslandRunSound('reward_bar_claim_burst');
+        triggerIslandRunHaptic('reward_claim');
+        window.setTimeout(() => setShowFrostwellMission(false), 1050);
+      } else if (result.status === 'insufficient_essence') {
+        setLandingText(`The Frostwell needs ${result.cost.toLocaleString()} Essence to install its fishery and reservoir.`);
+      }
+    } finally {
+      setIsFundingFrostwell(false);
+    }
+  }, [client, isFundingFrostwell, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
   const isIslandClearTravelReady = Boolean(
     showIslandClearCelebration &&
       isIslandClearRewardClaimed &&
@@ -13748,6 +13863,21 @@ export function IslandRunBoardPrototype({
                   if (showBuildPanel) return;
                   handleStopOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId);
                 }}
+                signatureMissionPresentation={{
+                  metersDrilled: isIslandVisualPreview && islandArtPreviewNumber === 3
+                    ? frostwellPresentationMeters
+                    : frostwellProgress.metersDrilled,
+                  built: isIslandVisualPreview && islandArtPreviewNumber === 3
+                    ? frostwellPresentationBuilt
+                    : frostwellBuilt,
+                  constructionSequence: isIslandVisualPreview && islandArtPreviewNumber === 3 && frostwellMissionState === 'constructing'
+                    ? 1
+                    : frostwellConstructionSequence,
+                  constructionPreviewLoop: isIslandVisualPreview && islandArtPreviewNumber === 3 && frostwellMissionState === 'constructing',
+                }}
+                onSignatureMissionClick={isIslandVisualPreview && islandArtPreviewNumber !== 3
+                  ? undefined
+                  : openFrostwellMission}
                 caretakerEncounterOpen={isIslandInhabitantFlowOpen || activeStopId === 'wisdom'}
                 onCaretakerClick={isIslandVisualPreview ? undefined : () => {
                   if (showBuildPanel) return;
@@ -13760,6 +13890,24 @@ export function IslandRunBoardPrototype({
               <div className="island-run-board__three-preview-badge" aria-hidden="true">
                 DEV · 3D VISUAL PREVIEW
               </div>
+            ) : null}
+            {!isIslandVisualPreview && islandArtPreviewNumber === 3 ? (
+              <button
+                type="button"
+                className="island-run-board__signature-mission-pill"
+                onClick={openFrostwellMission}
+                aria-label="Open Frostwell Iceworks mission"
+              >
+                <span aria-hidden="true">{frostwellBuilt ? '🐟' : '🧊'}</span>
+                <span>
+                  <strong>Frostwell</strong>
+                  {frostwellBuilt
+                    ? 'Waterworks online'
+                    : frostwellProgress.metersDrilled >= FROSTWELL_DEPTH_METERS
+                      ? `Fund ${frostwellTechCost.toLocaleString()}`
+                      : `${frostwellProgress.metersDrilled}/${FROSTWELL_DEPTH_METERS}m · ${frostwellAvailableSpins} spin${frostwellAvailableSpins === 1 ? '' : 's'}`}
+                </span>
+              </button>
             ) : null}
           </div>
         ) : null}
@@ -17700,6 +17848,119 @@ export function IslandRunBoardPrototype({
           />
         );
       })(), document.body) : null}
+
+      {showFrostwellMission && typeof document !== 'undefined' ? createPortal((
+        <div
+          className="frostwell-mission-modal__backdrop"
+          role="presentation"
+          onClick={closeFrostwellMission}
+        >
+          <section
+            className="frostwell-mission-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="frostwell-mission-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="frostwell-mission-modal__close"
+              onClick={closeFrostwellMission}
+              aria-label="Close Frostwell Iceworks mission"
+            >
+              ×
+            </button>
+            <header className="frostwell-mission-modal__header">
+              <p className="frostwell-mission-modal__eyebrow">Island 003 signature mission</p>
+              <h2 id="frostwell-mission-title">🧊 Frostwell Iceworks</h2>
+              <p className="frostwell-mission-modal__lede">
+                Land on a blue drill tile, then spin to bore toward fresh water.
+              </p>
+            </header>
+            <div className="frostwell-mission-modal__machine">
+              <div
+                className={`frostwell-mission-modal__shaft${isSpinningFrostwell ? ' frostwell-mission-modal__shaft--drilling' : ''}`}
+                aria-label={`${frostwellPresentationMeters} of ${FROSTWELL_DEPTH_METERS} metres drilled`}
+              >
+                <div className="frostwell-mission-modal__ice-cap"><span /></div>
+                <div className="frostwell-mission-modal__bore">
+                  <span className="frostwell-mission-modal__drill-string" style={{ height: `${12 + (frostwellPresentationMeters / FROSTWELL_DEPTH_METERS) * 72}%` }} />
+                  <span className="frostwell-mission-modal__auger" style={{ top: `${8 + (frostwellPresentationMeters / FROSTWELL_DEPTH_METERS) * 72}%` }}>▼</span>
+                  <span className="frostwell-mission-modal__chips" aria-hidden="true">✦ · ✦</span>
+                  <span className="frostwell-mission-modal__waterline">fresh water · 500m</span>
+                </div>
+                <div className="frostwell-mission-modal__depth-readout">
+                  <strong>{frostwellPresentationMeters}m</strong>
+                  <span>of {FROSTWELL_DEPTH_METERS}m</span>
+                </div>
+              </div>
+              <div className="frostwell-mission-modal__wheel-panel">
+                <span className="frostwell-mission-modal__wheel-pointer" aria-hidden="true">▼</span>
+                <div
+                  className={`frostwell-mission-modal__wheel${isSpinningFrostwell ? ' frostwell-mission-modal__wheel--spinning' : ''}`}
+                  style={{ transform: `rotate(${frostwellWheelRotation}deg)` }}
+                  aria-label="Drilling distance wheel"
+                >
+                  {FROSTWELL_SPIN_METERS.map((meters, index) => (
+                    <span key={meters} style={{ transform: `rotate(${index * 45 + 22.5}deg) translateY(-73px) rotate(-${index * 45 + 22.5}deg)` }}>{meters}</span>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="frostwell-mission-modal__wheel-hub"
+                  disabled={isSpinningFrostwell || frostwellAvailableSpins < 1 || frostwellPresentationBuilt || frostwellPresentationMeters >= FROSTWELL_DEPTH_METERS}
+                  onClick={() => void handleSpinFrostwell()}
+                  aria-label={frostwellAvailableSpins > 0 ? 'Spin the Frostwell drill wheel' : 'No Frostwell spins ready'}
+                >
+                  {isSpinningFrostwell ? 'DRILLING' : frostwellAvailableSpins > 0 ? 'SPIN' : 'LOCKED'}
+                  <small>{frostwellAvailableSpins} ready</small>
+                </button>
+                {frostwellLastSpinMeters !== null ? <em>+{frostwellLastSpinMeters}m drilled!</em> : null}
+              </div>
+            </div>
+            <div className="frostwell-mission-modal__depth-track"><span style={{ width: `${Math.min(100, frostwellPresentationMeters / FROSTWELL_DEPTH_METERS * 100)}%` }} /></div>
+            {frostwellPresentationBuilt ? (
+              <div className="frostwell-mission-modal__status frostwell-mission-modal__status--online">
+                <strong>🐟 Iceworks online</strong>
+                <span>Nets now return with fish while fresh water flows through the insulated pipes into the reservoir.</span>
+              </div>
+            ) : frostwellPresentationMeters < FROSTWELL_DEPTH_METERS ? (
+              <div className="frostwell-mission-modal__status">
+                <strong>Drilling in progress</strong>
+                <span>The three ⛏ tiles each grant one wheel spin. Every spin drives the animated offshore auger 15–75 metres deeper.</span>
+              </div>
+            ) : (
+              <div className="frostwell-mission-modal__status frostwell-mission-modal__status--ready">
+                <strong>Breakthrough! Technology installation ready</strong>
+                <span>The bore has reached water. Fund the fishery, reservoir, conveyor nets and pipeworks.</span>
+              </div>
+            )}
+            <div className="frostwell-mission-modal__actions">
+              <button
+                type="button"
+                className="island-stop-modal__btn"
+                onClick={closeFrostwellMission}
+              >
+                {frostwellPresentationBuilt ? 'Return to island' : 'Keep exploring'}
+              </button>
+              {!frostwellPresentationBuilt && frostwellPresentationMeters >= FROSTWELL_DEPTH_METERS ? (
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action"
+                  disabled={isFundingFrostwell || runtimeState.essence < frostwellTechCost}
+                  onClick={() => void handleFundFrostwell()}
+                >
+                  {isFundingFrostwell
+                    ? 'Building Iceworks…'
+                    : runtimeState.essence < frostwellTechCost
+                      ? `Need ${(frostwellTechCost - runtimeState.essence).toLocaleString()} more Essence`
+                      : `Build for ${frostwellTechCost.toLocaleString()} Essence`}
+                </button>
+              ) : null}
+            </div>
+          </section>
+        </div>
+      ), document.body) : null}
 
       {pairedThemeOfferModal && typeof document !== 'undefined' ? createPortal((
         <div
