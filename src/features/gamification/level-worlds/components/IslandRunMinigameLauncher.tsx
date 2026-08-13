@@ -133,8 +133,9 @@ export function IslandRunMinigameLauncher({
 
   const Component = entry.component;
   const isWorkshop = minigameId === 'island_workshop';
+  const isIslandConcourse = minigameId === 'journey_disc_arena';
   return (
-    <div className={`arena-session-shell${sessionPace ? ` arena-session-shell--${sessionPace}` : ''}${isWorkshop ? ' arena-session-shell--workshop' : ''}`}>
+    <div className={`arena-session-shell${sessionPace ? ` arena-session-shell--${sessionPace}` : ''}${isWorkshop ? ' arena-session-shell--workshop' : ''}${isIslandConcourse ? ' arena-session-shell--island-concourse' : ''}`}>
       {sessionPace && !gameManagesArenaTimer ? (
         <div className="arena-session-pacing" role="status" aria-live="polite">
           <span>{sessionPace === 'full' ? 'Full mission' : sessionPace === 'fast' ? 'Quick fight' : 'Flash fight'}</span>

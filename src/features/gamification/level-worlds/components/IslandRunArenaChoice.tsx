@@ -53,6 +53,9 @@ function ArenaChoiceMiniature({ game }: { game: ArenaGameDefinition }) {
   if (game.id === 'momentum_matrix') {
     return <span className="arena-choice__miniature arena-choice__miniature--matrix" aria-hidden="true"><i>⌜</i><i>━</i><i>┛</i><i>┃</i><i>✦</i><i>┃</i></span>;
   }
+  if (game.id === 'journey_disc_arena') {
+    return <span className="arena-choice__miniature arena-choice__miniature--disc-arena" aria-hidden="true"><i>◉</i><b>⚡</b><i>◉</i><i>◉</i></span>;
+  }
   return <span className="arena-choice__miniature arena-choice__miniature--workshop" aria-hidden="true"><i /><i /><i /><b>✦</b></span>;
 }
 
@@ -68,7 +71,7 @@ function ArenaChoiceCard(props: {
       style={{ '--arena-choice-accent': props.game.accent } as CSSProperties}
       onClick={props.onChoose}
       disabled={props.tickets < 1}
-      aria-label={`Play ${props.game.displayName}. ${props.game.familyLabel}. Costs one event ticket.`}
+      aria-label={`Play ${props.game.displayName}. ${props.game.familyLabel}. ${props.game.id === 'journey_disc_arena' ? 'Choose one to four event-ticket weapon discs.' : 'Costs one event ticket.'}`}
     >
       <span className="arena-choice__glow" aria-hidden="true" />
       <span className="arena-choice__icon" aria-hidden="true">{props.game.icon}</span>
@@ -77,7 +80,7 @@ function ArenaChoiceCard(props: {
       <strong>{props.game.displayName}</strong>
       <ArenaChoiceMiniature game={props.game} />
       <p>{props.game.description}</p>
-      <span className="arena-choice__cost"><i>Play</i> · 1 🎟️</span>
+      <span className="arena-choice__cost"><i>Play</i> · {props.game.id === 'journey_disc_arena' ? '1–4 ◉' : '1 🎟️'}</span>
     </button>
   );
 }
@@ -85,6 +88,7 @@ function ArenaChoiceCard(props: {
 export function IslandRunArenaChoice(props: IslandRunArenaChoiceProps) {
   const [recent, setRecent] = useState(() => loadRecentArenaGameIds(props.playerKey));
   const pair = useMemo(() => selectArenaGamePair({
+    islandNumber: props.islandNumber,
     activeEventId: props.activeEventId,
     rankedGameIds: props.preferences.rankedEventIds,
     disabledGameIds: props.preferences.disabledEventIds,

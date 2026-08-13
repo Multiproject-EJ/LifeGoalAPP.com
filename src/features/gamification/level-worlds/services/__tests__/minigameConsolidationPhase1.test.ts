@@ -44,8 +44,9 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
           combinedJourneyRewardsEnabled: false,
           islandRunFirstPlayerFunnelScaffoldingEnabled: false,
           minigameTicketPurchasesReady: false,
+          journeyDiscArenaEnabled: true,
         },
-        'Default feature flags should reflect released phases without enabling unfinished surfaces',
+        'Default feature flags should reflect released phases and the enabled Journey Disc exhibition',
       );
     },
   },
@@ -91,6 +92,7 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
       assert(manifestIds.includes('lexicon_relay'), 'Lexicon Relay exhibition manifest should be registered');
       assert(manifestIds.includes('signal_path'), 'Signal Path exhibition manifest should be registered');
       assert(manifestIds.includes('twin_sigils'), 'Twin Sigils exhibition manifest should be registered');
+      assert(manifestIds.includes('journey_disc_arena'), 'Journey Disc Arena exhibition manifest should be registered');
     },
   },
   {
@@ -152,6 +154,14 @@ export const minigameConsolidationPhase1Tests: TestCase[] = [
       assert(
         selectColumns.includes('minigame_tickets_by_event'),
         'Hydration select-list should include minigame_tickets_by_event',
+      );
+      assert(
+        selectColumns.includes('journey_disc_arena_progress_by_event'),
+        'Hydration select-list should include Journey Disc event progress',
+      );
+      assert(
+        selectColumns.includes('journey_disc_armory'),
+        'Hydration select-list should include the permanent Journey Disc armory',
       );
     },
   },

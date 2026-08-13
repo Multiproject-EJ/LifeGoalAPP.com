@@ -90,6 +90,13 @@ export interface IslandRunFeatureFlags {
    */
   minigameTicketPurchasesReady: boolean;
 
+  /**
+   * Journey Disc Arena event exhibition. While off, the game cannot be
+   * selected by production event routing. Its development preview remains
+   * available on the explicit DEV-only route for design and performance QA.
+   */
+  journeyDiscArenaEnabled: boolean;
+
 }
 
 const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
@@ -104,6 +111,7 @@ const DEFAULT_FLAGS: Readonly<IslandRunFeatureFlags> = Object.freeze({
   combinedJourneyRewardsEnabled: false,
   islandRunFirstPlayerFunnelScaffoldingEnabled: false,
   minigameTicketPurchasesReady: false,
+  journeyDiscArenaEnabled: true,
 });
 
 let currentFlags: IslandRunFeatureFlags = { ...DEFAULT_FLAGS };

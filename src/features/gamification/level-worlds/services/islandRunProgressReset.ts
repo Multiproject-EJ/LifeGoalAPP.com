@@ -150,6 +150,8 @@ export function buildFreshIslandRunRecord(
     spaceExcavatorProgressByEvent: {},
     companionFeastProgressByEvent: {},
     fortuneEngineProgressByEvent: {},
+    journeyDiscArenaProgressByEvent: {},
+    journeyDiscArmory: { version: 1, weaponLevels: { ram_fin: 1, aegis_ring: 0, pulse_vane: 0 }, highestGuardianTierDefeated: 0, updatedAtMs: Date.now() },
     momentumMatrixProgressByEvent: {},
   };
 }

@@ -3719,6 +3719,11 @@
   height: 100%;
 }
 
+.arena-session-shell--island-concourse,
+.arena-session-shell--island-concourse .arena-session-shell__game {
+  background: transparent;
+}
+
 .arena-session-shell__game {
   position: relative;
   width: 100%;

@@ -967,6 +967,57 @@ function createMoonGate(level: 1 | 2 | 3, quality: Island3DQuality, materials: I
   return group;
 }
 
+function addJourneyDiscArenaTransformation(
+  root: THREE.Group,
+  quality: Island3DQuality,
+  materials: Island6MoonveilMaterials,
+) {
+  const segments = segmentCount(quality);
+  const arena = new THREE.Group();
+  arena.name = 'ISLAND_6_JOURNEY_DISC_ARENA_TRANSFORMATION';
+  arena.userData.sculptRuntime = { presentationOnly: true, eventLandmark: 'journey-disc-arena' };
+
+  const deck = cylinder(2.18, 2.3, 0.16, materials.indigoLight, segments);
+  deck.name = 'ISLAND_6_JOURNEY_DISC_ARENA_DECK';
+  deck.position.y = 0.6;
+  arena.add(deck);
+
+  const outerRail = addRing(arena, 2.02, 0.085, 0.71, materials.cyan, segments * 2);
+  outerRail.name = 'ISLAND_6_JOURNEY_DISC_ARENA_RAIL';
+  const innerRail = addRing(arena, 1.48, 0.048, 0.72, materials.violet, segments * 2);
+  innerRail.name = 'ISLAND_6_JOURNEY_DISC_ARENA_RAIL';
+
+  const spinner = new THREE.Group();
+  spinner.name = 'ISLAND_6_JOURNEY_DISC_ARENA_SPINNER';
+  const weaponColors = [materials.cyan, materials.violet, materials.amber, materials.warmGlass] as const;
+  for (let index = 0; index < 4; index += 1) {
+    const angle = index / 4 * Math.PI * 2;
+    const disc = cylinder(0.27, 0.31, 0.1, weaponColors[index], quality === 'low' ? 12 : 18);
+    disc.name = `ISLAND_6_JOURNEY_DISC_WEAPON_${index + 1}`;
+    disc.position.set(Math.cos(angle) * 1.18, 0.82, Math.sin(angle) * 1.18);
+    const energy = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.035, 5, segments), index % 2 ? materials.violet : materials.cyan);
+    energy.rotation.x = Math.PI / 2;
+    energy.position.copy(disc.position);
+    spinner.add(disc, energy);
+  }
+  arena.add(spinner);
+
+  for (let index = 0; index < 8; index += 1) {
+    const angle = index / 8 * Math.PI * 2;
+    const pylon = cylinder(0.065, 0.11, 0.72, index % 2 ? materials.gold : materials.indigoLight, 8);
+    pylon.position.set(Math.cos(angle) * 2.08, 0.93, Math.sin(angle) * 2.08);
+    const beacon = new THREE.Mesh(new THREE.OctahedronGeometry(0.1, 0), index % 2 ? materials.amber : materials.cyan);
+    beacon.position.set(pylon.position.x, 1.34, pylon.position.z);
+    arena.add(pylon, beacon);
+  }
+
+  const arenaLight = new THREE.PointLight(0x26f7ff, quality === 'high' ? 9 : quality === 'medium' ? 6 : 3.5, 7.5, 2);
+  arenaLight.name = 'ISLAND_6_JOURNEY_DISC_ARENA_LIGHT';
+  arenaLight.position.set(0, 1.25, 0);
+  arena.add(arenaLight);
+  root.add(arena);
+}
+
 function createSoftGlowSprite(color: number, opacity: number, scale: number) {
   const canvas = document.createElement('canvas');
   canvas.width = 128;
@@ -1082,6 +1133,7 @@ export function buildIsland6MoonveilLandmark(
   level: BuildLevel,
   quality: Island3DQuality,
   materials: Island6MoonveilMaterials,
+  journeyDiscArenaActive = false,
 ) {
   const root = new THREE.Group();
   root.name = `ISLAND_6_MOONVEIL_${definition.id.toUpperCase()}_ROOT`;
@@ -1090,6 +1142,10 @@ export function buildIsland6MoonveilLandmark(
   root.userData.sculptRuntime = { clickable: true, explodable: true, world: 'island-006-moonveil' };
   if (level === 0) {
     addPlinth(root, definition.id === 'boss' ? 1.75 : 1.34, materials, quality, 0.12);
+    if (definition.id === 'boss' && journeyDiscArenaActive) {
+      addJourneyDiscArenaTransformation(root, quality, materials);
+      root.userData.centerLandmarkPresentation = 'journey_disc_arena';
+    }
   } else {
     const resolved = level as 1 | 2 | 3;
     const building = definition.id === 'hatchery'
@@ -1116,6 +1172,10 @@ export function buildIsland6MoonveilLandmark(
       addMoonveilRearGallery(building, materials, quality);
     }
     root.add(building);
+    if (definition.id === 'boss' && journeyDiscArenaActive) {
+      addJourneyDiscArenaTransformation(root, quality, materials);
+      root.userData.centerLandmarkPresentation = 'journey_disc_arena';
+    }
     const warmCore = new THREE.PointLight(
       0xff9a3d,
       quality === 'high' ? 3.4 + resolved * 2.35 : quality === 'medium' ? 2.2 + resolved * 1.5 : 1.15 + resolved * 0.82,
@@ -2215,6 +2275,7 @@ export function createIsland6MoonveilLivingAmbience(
 
   let animatedDetailsCached = false;
   const spinners: THREE.Object3D[] = [];
+  const journeyDiscArenaSpinners: THREE.Object3D[] = [];
   const orbitingMoons: THREE.Object3D[] = [];
   const portalSurfaces: THREE.Mesh[] = [];
   const cruiserEngines: THREE.Object3D[] = [];
@@ -2224,6 +2285,7 @@ export function createIsland6MoonveilLivingAmbience(
     animatedDetailsCached = true;
     scene.traverse((object) => {
       if (object.name === 'ISLAND_6_SPINNER') spinners.push(object);
+      if (object.name === 'ISLAND_6_JOURNEY_DISC_ARENA_SPINNER') journeyDiscArenaSpinners.push(object);
       if (object.name === 'ISLAND_6_ORBITING_MOONS') orbitingMoons.push(object);
       if (object.name === 'ISLAND_6_PORTAL_SURFACE' && object instanceof THREE.Mesh) portalSurfaces.push(object);
       if (object.name === 'ISLAND_6_CRUISER_ENGINE') cruiserEngines.push(object);
@@ -2311,6 +2373,7 @@ export function createIsland6MoonveilLivingAmbience(
         engine.scale.set(1, pulse, pulse);
       });
       spinners.forEach((object) => { object.rotation.z = elapsed * 0.18; });
+      journeyDiscArenaSpinners.forEach((object) => { object.rotation.y = elapsed * 0.92; });
       orbitingMoons.forEach((object) => { object.rotation.z = elapsed * 0.22; });
       portalSurfaces.forEach((object) => {
         object.scale.setScalar(0.985 + Math.sin(elapsed * 1.35 + object.position.x) * 0.022);

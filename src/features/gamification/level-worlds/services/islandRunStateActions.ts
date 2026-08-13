@@ -44,6 +44,7 @@ import type {
   CompanionFeastProgressEntry,
   CreatureCollectionRuntimeEntry,
   FortuneEngineProgressEntry,
+  JourneyDiscArenaProgressEntry,
   IslandRunGameStateRecord,
   IslandRunFirstSessionTutorialState,
   IslandRunLuckyRollSession,
@@ -132,6 +133,12 @@ import {
   resolveFortuneEngineClaimedMilestoneIds,
   resolveNextGoldenLaunchStreak,
 } from './fortuneEngineProgression';
+import {
+  applyJourneyDiscArenaRoundToProgress,
+  createJourneyDiscArenaProgress,
+  getJourneyDiscArenaMilestone,
+  resolveJourneyDiscArenaClaimedMilestoneIds,
+} from './journeyDiscArenaProgression';
 import {
   ISLAND_RUN_ECONOMY_COUNTERS,
   ISLAND_RUN_ECONOMY_SINKS,
@@ -1311,6 +1318,34 @@ export interface ApplyTimedEventTicketSpendResult {
   spent: number;
 }
 
+export interface StartJourneyDiscArenaRoundResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  roundId: string | null;
+  deployedDiscs: number;
+  ticketsRemaining: number;
+  progress: JourneyDiscArenaProgressEntry | null;
+  failureReason?: 'missing_event' | 'invalid_disc_count' | 'insufficient_tickets';
+}
+
+export interface BankJourneyDiscArenaRoundResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  applied: boolean;
+  progress: JourneyDiscArenaProgressEntry | null;
+  failureReason?: 'missing_event' | 'invalid_round';
+}
+
+export interface ClaimJourneyDiscArenaMilestoneResult {
+  record: IslandRunGameStateRecord;
+  ok: boolean;
+  progress: JourneyDiscArenaProgressEntry | null;
+  rewardLabel: string | null;
+  ticketsRemaining: number;
+  armory: IslandRunGameStateRecord['journeyDiscArmory'];
+  failureReason?: 'missing_event' | 'unknown_milestone' | 'not_achieved' | 'already_claimed';
+}
+
 export const ARENA_FIRST_TICKET_BOOST_AMOUNT = 3;
 
 export interface ClaimArenaFirstTicketBoostOptions {
@@ -1799,6 +1834,131 @@ export function applyTimedEventTicketSpend(
     triggerSource: triggerSource ?? 'apply_timed_event_ticket_spend',
   });
   return { record: next, spent: requested };
+}
+
+/** Spend one active-event ticket per deployed weapon disc and open a round. */
+export function startJourneyDiscArenaRound(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  deployedDiscs: number;
+  nowMs?: number;
+  triggerSource?: string;
+}): StartJourneyDiscArenaRoundResult {
+  const { session, client, triggerSource } = options;
+  const current = getIslandRunStateSnapshot(session);
+  const eventId = options.eventId.trim();
+  const deployedDiscs = Math.floor(options.deployedDiscs);
+  if (!eventId) return { record: current, ok: false, roundId: null, deployedDiscs: 0, ticketsRemaining: 0, progress: null, failureReason: 'missing_event' };
+  const available = Math.max(0, Math.floor(current.minigameTicketsByEvent[eventId] ?? 0));
+  const currentProgress = current.journeyDiscArenaProgressByEvent[eventId] ?? createJourneyDiscArenaProgress(options.nowMs);
+  if (deployedDiscs < 1 || deployedDiscs > 4) return { record: current, ok: false, roundId: null, deployedDiscs: 0, ticketsRemaining: available, progress: currentProgress, failureReason: 'invalid_disc_count' };
+  if (available < deployedDiscs) return { record: current, ok: false, roundId: null, deployedDiscs: 0, ticketsRemaining: available, progress: currentProgress, failureReason: 'insufficient_tickets' };
+  const nowMs = Math.max(0, Math.floor(options.nowMs ?? Date.now()));
+  const roundId = `disc:${current.runtimeVersion + 1}:${nowMs}:${deployedDiscs}`;
+  const progress: JourneyDiscArenaProgressEntry = {
+    ...currentProgress,
+    roundsStarted: currentProgress.roundsStarted + 1,
+    totalDiscsDeployed: currentProgress.totalDiscsDeployed + deployedDiscs,
+    updatedAtMs: nowMs,
+  };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    minigameTicketsByEvent: { ...current.minigameTicketsByEvent, [eventId]: available - deployedDiscs },
+    journeyDiscArenaProgressByEvent: { ...current.journeyDiscArenaProgressByEvent, [eventId]: progress },
+  };
+  recordIslandRunEconomyCounter({ counter: ISLAND_RUN_ECONOMY_COUNTERS.eventTicketsSpent, amount: deployedDiscs, sessionId: session.user.id, metadata: { eventId, gameId: 'journey_disc_arena' } });
+  void commitIslandRunState({ session, client, record: next, triggerSource: triggerSource ?? 'journey_disc_arena_start_round' });
+  return { record: next, ok: true, roundId, deployedDiscs, ticketsRemaining: available - deployedDiscs, progress };
+}
+
+/** Bank one deterministic terminal score; round ids make retries idempotent. */
+export function bankJourneyDiscArenaRound(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  roundId: string;
+  score: number;
+  won: boolean;
+  deployedDiscs: number;
+  guardianTier?: 0 | 1 | 2 | 3;
+  nowMs?: number;
+  triggerSource?: string;
+}): BankJourneyDiscArenaRoundResult {
+  const current = getIslandRunStateSnapshot(options.session);
+  const eventId = options.eventId.trim();
+  if (!eventId) return { record: current, ok: false, applied: false, progress: null, failureReason: 'missing_event' };
+  const currentProgress = current.journeyDiscArenaProgressByEvent[eventId] ?? createJourneyDiscArenaProgress(options.nowMs);
+  const result = applyJourneyDiscArenaRoundToProgress({ progress: currentProgress, roundId: options.roundId, score: options.score, won: options.won, deployedDiscs: options.deployedDiscs, nowMs: options.nowMs });
+  if (!result.applied) return { record: current, ok: false, applied: false, progress: currentProgress, failureReason: 'invalid_round' };
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    journeyDiscArenaProgressByEvent: { ...current.journeyDiscArenaProgressByEvent, [eventId]: result.progress },
+    journeyDiscArmory: options.won && (options.guardianTier ?? 0) > current.journeyDiscArmory.highestGuardianTierDefeated
+      ? {
+          ...current.journeyDiscArmory,
+          highestGuardianTierDefeated: options.guardianTier!,
+          updatedAtMs: Math.max(0, Math.floor(options.nowMs ?? Date.now())),
+        }
+      : current.journeyDiscArmory,
+  };
+  void commitIslandRunState({ session: options.session, client: options.client, record: next, triggerSource: options.triggerSource ?? 'journey_disc_arena_bank_round' });
+  return { record: next, ok: true, applied: true, progress: result.progress };
+}
+
+export function claimJourneyDiscArenaMilestone(options: {
+  session: Session;
+  client: SupabaseClient | null;
+  eventId: string;
+  milestoneId: string;
+  triggerSource?: string;
+}): ClaimJourneyDiscArenaMilestoneResult {
+  const current = getIslandRunStateSnapshot(options.session);
+  const eventId = options.eventId.trim();
+  const available = Math.max(0, Math.floor(current.minigameTicketsByEvent[eventId] ?? 0));
+  const progress = eventId ? current.journeyDiscArenaProgressByEvent[eventId] ?? null : null;
+  if (!eventId || !progress) return { record: current, ok: false, progress, rewardLabel: null, ticketsRemaining: available, armory: current.journeyDiscArmory, failureReason: 'missing_event' };
+  const milestone = getJourneyDiscArenaMilestone(options.milestoneId);
+  if (!milestone) return { record: current, ok: false, progress, rewardLabel: null, ticketsRemaining: available, armory: current.journeyDiscArmory, failureReason: 'unknown_milestone' };
+  if (progress.claimedMilestoneIds.includes(milestone.id)) return { record: current, ok: false, progress, rewardLabel: null, ticketsRemaining: available, armory: current.journeyDiscArmory, failureReason: 'already_claimed' };
+  if (progress.eventPoints < milestone.points) return { record: current, ok: false, progress, rewardLabel: null, ticketsRemaining: available, armory: current.journeyDiscArmory, failureReason: 'not_achieved' };
+  const reward = milestone.reward;
+  const nextProgress: JourneyDiscArenaProgressEntry = {
+    ...progress,
+    rank: Math.max(progress.rank, reward.rank ?? 1) as 1 | 2 | 3,
+    claimedMilestoneIds: resolveJourneyDiscArenaClaimedMilestoneIds({ claimedMilestoneIds: [...progress.claimedMilestoneIds, milestone.id] }),
+    updatedAtMs: Date.now(),
+  };
+  const nextTickets = available + (reward.eventTickets ?? 0);
+  const armoryUpgrade = reward.armoryUpgrade;
+  const journeyDiscArmory = armoryUpgrade
+    ? {
+        ...current.journeyDiscArmory,
+        weaponLevels: {
+          ...current.journeyDiscArmory.weaponLevels,
+          [armoryUpgrade]: Math.min(5, current.journeyDiscArmory.weaponLevels[armoryUpgrade] + 1),
+        },
+        updatedAtMs: Date.now(),
+      }
+    : current.journeyDiscArmory;
+  const rankedJourneyDiscArmory = reward.rank && reward.rank > journeyDiscArmory.rank
+    ? { ...journeyDiscArmory, rank: reward.rank, updatedAtMs: Date.now() }
+    : journeyDiscArmory;
+  const next: IslandRunGameStateRecord = {
+    ...current,
+    runtimeVersion: current.runtimeVersion + 1,
+    dicePool: current.dicePool + (reward.dice ?? 0),
+    essence: current.essence + (reward.essence ?? 0),
+    essenceLifetimeEarned: current.essenceLifetimeEarned + (reward.essence ?? 0),
+    diamonds: current.diamonds + (reward.diamonds ?? 0),
+    minigameTicketsByEvent: { ...current.minigameTicketsByEvent, [eventId]: nextTickets },
+    journeyDiscArenaProgressByEvent: { ...current.journeyDiscArenaProgressByEvent, [eventId]: nextProgress },
+    journeyDiscArmory: rankedJourneyDiscArmory,
+  };
+  void commitIslandRunState({ session: options.session, client: options.client, record: next, triggerSource: options.triggerSource ?? 'journey_disc_arena_claim_milestone' });
+  return { record: next, ok: true, progress: nextProgress, rewardLabel: milestone.label, ticketsRemaining: nextTickets, armory: rankedJourneyDiscArmory };
 }
 
 /**
