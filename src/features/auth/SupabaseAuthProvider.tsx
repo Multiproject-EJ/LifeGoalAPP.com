@@ -9,7 +9,11 @@ import {
   setSupabaseSession,
   type TypedSupabaseClient,
 } from '../../lib/supabaseClient';
-import { AUTH_INITIALIZATION_TIMEOUT_MS, type AuthInitializationStatus } from './authInitialization';
+import {
+  AUTH_INITIALIZATION_TIMEOUT_MS,
+  getFriendlySupabaseAuthErrorMessage,
+  type AuthInitializationStatus,
+} from './authInitialization';
 import { getServiceHealthManager } from '../../services/service-health/serviceHealthManager';
 import { classifyProviderError } from '../../services/service-health/errorTranslation';
 import { NATIVE_AUTH_CALLBACK_URL, readNativeOAuthResponse } from './nativeOAuth';
@@ -34,9 +38,11 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-type SupabaseLikeError = Error & { status?: number };
+type SupabaseLikeError = Error & { status?: number; code?: string };
 
 function mapSupabaseAuthError(error: SupabaseLikeError): Error {
+  const friendlyMessage = getFriendlySupabaseAuthErrorMessage(error);
+  if (friendlyMessage) return new Error(friendlyMessage);
   const normalizedMessage = error.message ?? '';
   const lowerMessage = normalizedMessage.toLowerCase();
   const status = typeof error.status === 'number' ? error.status : null;

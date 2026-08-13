@@ -11612,6 +11612,10 @@ export function IslandRunBoardPrototype({
   }, [isCreaturePackStripeCheckoutEnabled, islandNumber, session]);
 
   const handleStartMinigameTicketCheckout = useCallback(async (entryPoint: 'active_event_panel') => {
+    if (!isIslandRunFeatureEnabled('minigameTicketPurchasesReady')) {
+      setMinigameTicketCheckoutError('Minigame ticket purchases are not available yet.');
+      return;
+    }
     if (isDemoSession(session)) {
       setMinigameTicketCheckoutError('Checkout is unavailable in demo mode.');
       return;
@@ -15676,7 +15680,9 @@ export function IslandRunBoardPrototype({
             </div>
 
             <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              {activeTimedEvent && isCanonicalEventId(activeTimedEvent.eventType) && (
+              {isIslandRunFeatureEnabled('minigameTicketPurchasesReady')
+                && activeTimedEvent
+                && isCanonicalEventId(activeTimedEvent.eventType) && (
                 <button
                   type="button"
                   className="island-stop-modal__btn island-stop-modal__btn--action"

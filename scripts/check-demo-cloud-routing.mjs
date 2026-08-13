@@ -12,6 +12,7 @@ const publicWaitlist = read('src/services/publicLaunchWaitlist.ts');
 const zenGarden = read('src/services/zenGarden.ts');
 const habitMonthly = read('src/services/habitMonthlyQueries.ts');
 const habitsV2 = read('src/services/habitsV2.ts');
+const goalsRepo = read('src/data/goalsRepo.ts');
 const waitlistMigration = read('supabase/migrations/20260801204019_harden_public_launch_waitlist.sql');
 
 assert.match(
@@ -35,6 +36,24 @@ assert.doesNotMatch(
   telemetry,
   /\bcanUseSupabaseData\(\)/,
   'Telemetry must never send a synthetic or mismatched user ID to UUID columns.',
+);
+
+for (const syntheticUserId of ['demo-user-0001', 'wisdom-caretaker-preview']) {
+  assert.doesNotMatch(
+    syntheticUserId,
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    `${syntheticUserId} must remain outside the Supabase Auth UUID contract.`,
+  );
+}
+assert.match(
+  goalsRepo,
+  /refreshGoalsFromSupabase\(userId: string\)[\s\S]{0,160}!canUseSupabaseDataForUser\(userId\)[\s\S]{0,100}getSupabaseClient\(\)/,
+  'Offline-first goal refresh must reject demo, preview, and mismatched users before acquiring the cloud client.',
+);
+assert.match(
+  goalsRepo,
+  /syncGoalsWithSupabase\(userId: string\)[\s\S]{0,160}!canUseSupabaseDataForUser\(userId\)[\s\S]{0,100}getSupabaseClient\(\)/,
+  'Goal synchronization must stay local unless the requested UUID matches the active Supabase session.',
 );
 
 for (const [serviceName, source, localInsert] of [

@@ -4,6 +4,22 @@ export const AUTH_INITIALIZATION_TIMEOUT_MS = 8000;
 
 export type AuthInitializationStatus = 'loading' | 'ready' | 'timeout' | 'error';
 
+export type SupabaseAuthErrorLike = {
+  name?: string;
+  code?: string;
+  message?: string;
+};
+
+export function getFriendlySupabaseAuthErrorMessage(error: SupabaseAuthErrorLike): string | null {
+  const name = error.name?.toLowerCase() ?? '';
+  const code = error.code?.toLowerCase() ?? '';
+  const message = error.message?.toLowerCase() ?? '';
+  if (name === 'weakpassworderror' || code === 'weak_password' || message.includes('weak password')) {
+    return 'For your security, choose a stronger password you have not used elsewhere. Try a longer passphrase with a mix of words, numbers, and symbols.';
+  }
+  return null;
+}
+
 /**
  * A Supabase session is the source of truth for completing authentication.
  * Closing the overlay from this signal keeps native OAuth callbacks, restored

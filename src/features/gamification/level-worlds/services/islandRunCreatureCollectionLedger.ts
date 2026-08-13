@@ -72,7 +72,9 @@ export function mergeCreatureRuntimeCollections(
       bondLevel: Math.max(existing.bondLevel, entry.bondLevel),
       lastFedAtMs: Math.max(existing.lastFedAtMs ?? 0, entry.lastFedAtMs ?? 0) || null,
       claimedBondMilestones: mergeNumberArray(existing.claimedBondMilestones, entry.claimedBondMilestones),
-      formLevel: Math.max(existing.formLevel ?? 1, entry.formLevel ?? 1),
+      ...(typeof existing.formLevel === 'number' || typeof entry.formLevel === 'number'
+        ? { formLevel: Math.max(existing.formLevel ?? 1, entry.formLevel ?? 1) }
+        : {}),
       ...(claimedFormRewards ? { claimedFormRewards } : {}),
       ...(grantIds ? { grantIds } : {}),
     }));

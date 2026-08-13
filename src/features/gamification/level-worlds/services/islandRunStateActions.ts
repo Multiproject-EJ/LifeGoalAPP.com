@@ -95,6 +95,7 @@ import { getCreatureById } from './creatureCatalog';
 import {
   addCreatureToRuntimeCollection,
   areCreatureRuntimeCollectionsEqual,
+  mergeCreatureRuntimeCollections,
 } from './islandRunCreatureCollectionLedger';
 import {
   getIslandRunFirstCreaturePackLowDiceTriggerTarget,
@@ -3187,12 +3188,19 @@ export function applyCreatureTreatInventory(options: ApplyCreatureTreatInventory
 export function applyCreatureCollection(options: ApplyCreatureCollectionOptions): IslandRunGameStateRecord {
   const { session, client, creatureCollection, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
-  if (areCreatureRuntimeCollectionsEqual(current.creatureCollection ?? [], creatureCollection ?? [])) {
+  const mergedCreatureCollection = mergeCreatureRuntimeCollections(
+    current.creatureCollection ?? [],
+    creatureCollection ?? [],
+  );
+  if (areCreatureRuntimeCollectionsEqual(current.creatureCollection ?? [], mergedCreatureCollection)) {
     return current;
   }
   const next: IslandRunGameStateRecord = {
     ...current,
-    creatureCollection,
+    // Legacy/local collection snapshots can lag the canonical record. Merge
+    // monotonically so audit markers such as grantIds are never removed by a
+    // stale renderer sync and then re-added on the following hydration.
+    creatureCollection: mergedCreatureCollection,
     runtimeVersion: current.runtimeVersion + 1,
   };
   void commitIslandRunState({

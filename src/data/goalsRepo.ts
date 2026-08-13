@@ -6,7 +6,7 @@ import {
   hardDeleteGoalLocally,
   getDirtyGoals,
 } from './localDb';
-import { getSupabaseClient } from '../lib/supabaseClient';
+import { canUseSupabaseDataForUser, getSupabaseClient } from '../lib/supabaseClient';
 import type { Database } from '../lib/database.types';
 
 type GoalRow = Database['public']['Tables']['goals']['Row'];
@@ -45,6 +45,7 @@ export async function loadGoalsOfflineFirst(
 }
 
 async function refreshGoalsFromSupabase(userId: string): Promise<void> {
+  if (!canUseSupabaseDataForUser(userId)) return;
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('goals')
@@ -135,6 +136,7 @@ export async function deleteGoalOfflineFirst(id: string): Promise<void> {
  * - an in-app "Sync now" hook when connectivity returns.
  */
 export async function syncGoalsWithSupabase(userId: string): Promise<void> {
+  if (!canUseSupabaseDataForUser(userId)) return;
   const supabase = getSupabaseClient();
   const dirty = await getDirtyGoals();
 

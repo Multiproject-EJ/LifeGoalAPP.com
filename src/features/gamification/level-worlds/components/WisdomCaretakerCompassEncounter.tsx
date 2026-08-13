@@ -115,6 +115,11 @@ export function WisdomCaretakerCompassEncounter({
   }, [book.ready, book.getChapterState, dirty, fragment]);
 
   useEffect(() => {
+    if (previewMode) {
+      setPlayerData(EMPTY_COMPASS_PLAYER_DATA);
+      setShadowBridge(null);
+      return undefined;
+    }
     let cancelled = false;
     void Promise.all([
       loadCompassPlayerData(session.user.id),
