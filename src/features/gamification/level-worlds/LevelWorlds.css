@@ -1986,10 +1986,19 @@
   animation: island-run-roll-hold-pulse 1.15s ease-in-out infinite;
 }
 
+.island-run-prototype__roll-btn--hard-ready {
+  background: linear-gradient(180deg, rgba(91, 210, 241, 0.98), rgba(40, 128, 190, 0.96));
+  border-color: rgba(213, 249, 255, 0.94);
+  box-shadow:
+    0 0 0 1px rgba(232, 253, 255, 0.64) inset,
+    0 0 20px rgba(66, 207, 255, 0.54),
+    0 10px 24px rgba(2, 38, 77, 0.34);
+}
+
 /* ── Auto-roll hold charge bar ──────────────────────────────────────────────
  * The hold used to be blind: the button pulsed amber for 1400ms with no way to
  * tell how much longer to press. This fills across the button over exactly that
- * window — the duration comes from AUTO_ROLL_HOLD_DELAY_MS via the inline
+ * window — the duration comes from ISLAND_RUN_AUTO_ROLL_HOLD_MS via the inline
  * --island-run-hold-ms custom property, so the bar cannot promise a different
  * moment than the timeout actually fires.
  *
@@ -2021,6 +2030,18 @@
   );
   /* Release: retreat quickly so the button feels responsive to letting go. */
   transition: transform 220ms ease-out, opacity 220ms ease-out;
+}
+
+.island-run-prototype__roll-hold-charge::after {
+  content: '';
+  position: absolute;
+  top: 16%;
+  bottom: 16%;
+  left: var(--island-run-hard-throw-threshold, 25.714%);
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(236, 253, 255, 0.9);
+  box-shadow: 0 0 7px rgba(102, 225, 255, 0.9);
 }
 
 .island-run-prototype__roll-btn--auto-pending .island-run-prototype__roll-hold-charge {
@@ -13077,6 +13098,330 @@
 .board-dice-3d__dot--mid-right    { grid-row: 2; grid-column: 3; align-self: center; justify-self: end; }
 .board-dice-3d__dot--bottom-left  { grid-row: 3; grid-column: 1; align-self: end; justify-self: start; }
 .board-dice-3d__dot--bottom-right { grid-row: 3; grid-column: 3; align-self: end; justify-self: end; }
+
+/* Authored-3D dice launcher. BoardStage's dice remain the fallback for the
+   legacy raster board; this viewport layer is the one visible above WebGL.
+   It is presentation-only and cannot intercept controller/HUD/landmark taps. */
+.island-run-dice-launch-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 31;
+  overflow: hidden;
+  pointer-events: none;
+  perspective: 680px;
+  isolation: isolate;
+}
+
+.island-run-dice-launch-overlay .board-dice-3d {
+  position: absolute;
+  inset: 0;
+  display: block;
+  opacity: 1;
+  transform: none;
+  perspective: 680px;
+}
+
+.island-run-dice-launch-overlay .board-dice-3d__die-wrapper {
+  position: absolute;
+  top: 88%;
+  left: 50%;
+  width: 42px;
+  height: 42px;
+  margin: -21px 0 0 -21px;
+  filter:
+    drop-shadow(0 9px 8px rgba(3, 10, 21, 0.46))
+    drop-shadow(0 0 10px rgba(255, 210, 91, 0.5));
+  will-change: top, left, transform, filter;
+  animation-delay: 0ms !important;
+}
+
+.island-run-dice-launch-overlay .board-dice-3d__die-wrapper:first-child {
+  animation: island-run-die-launch-left 1.6s cubic-bezier(0.2, 0.72, 0.25, 1) both;
+}
+
+.island-run-dice-launch-overlay .board-dice-3d__die-wrapper:last-child {
+  animation: island-run-die-launch-right 1.6s cubic-bezier(0.18, 0.78, 0.18, 1) both;
+}
+
+.island-run-dice-launch-overlay[data-throw-strength='hard'] .board-dice-3d__die-wrapper:first-child {
+  animation-name: island-run-die-launch-left-hard;
+}
+
+.island-run-dice-launch-overlay[data-throw-strength='hard'] .board-dice-3d__die-wrapper:last-child {
+  animation-name: island-run-die-launch-right-hard;
+}
+
+.island-run-dice-launch-overlay[data-throw-strength='hard'] .board-dice-3d__face {
+  border-color: rgba(117, 224, 255, 0.86);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -4px 8px rgba(44, 121, 177, 0.2),
+    0 0 15px rgba(82, 222, 255, 0.64),
+    0 3px 8px rgba(0, 0, 0, 0.32);
+}
+
+.island-run-dice-launch-overlay .board-dice-3d__die {
+  width: 42px;
+  height: 42px;
+}
+
+.island-run-dice-launch-overlay .board-dice-3d__face {
+  width: 42px;
+  height: 42px;
+  border-radius: 9px;
+  padding: 5px;
+  border: 2px solid rgba(199, 148, 45, 0.58);
+  background:
+    radial-gradient(circle at 28% 20%, rgba(255, 255, 255, 0.96), transparent 34%),
+    linear-gradient(145deg, #fffef2 0%, #f7e5ad 68%, #dbb85c 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.86),
+    inset 0 -4px 8px rgba(151, 100, 19, 0.16),
+    0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+.island-run-dice-launch-overlay .board-dice-3d__face--1 { transform: translateZ(21px); }
+.island-run-dice-launch-overlay .board-dice-3d__face--6 { transform: rotateY(180deg) translateZ(21px); }
+.island-run-dice-launch-overlay .board-dice-3d__face--2 { transform: rotateY(90deg) translateZ(21px); }
+.island-run-dice-launch-overlay .board-dice-3d__face--5 { transform: rotateY(-90deg) translateZ(21px); }
+.island-run-dice-launch-overlay .board-dice-3d__face--3 { transform: rotateX(90deg) translateZ(21px); }
+.island-run-dice-launch-overlay .board-dice-3d__face--4 { transform: rotateX(-90deg) translateZ(21px); }
+
+.island-run-dice-launch-overlay__muzzle,
+.island-run-dice-launch-overlay__impact,
+.island-run-dice-launch-overlay__trail {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.island-run-dice-launch-overlay__muzzle {
+  left: 50%;
+  top: 87%;
+  width: 92px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 247, 174, 0.94) 0 12%, rgba(91, 231, 255, 0.78) 28%, rgba(58, 140, 255, 0.14) 56%, transparent 72%);
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%) scale(0.25);
+  animation: island-run-dice-muzzle-flash 1.6s ease-out both;
+}
+
+.island-run-dice-launch-overlay__trail {
+  left: 50%;
+  top: 87%;
+  width: 4px;
+  height: 66%;
+  border-radius: 999px;
+  transform-origin: 50% 100%;
+  opacity: 0;
+  background: linear-gradient(180deg, transparent, rgba(255, 226, 115, 0.2) 44%, rgba(106, 222, 255, 0.86));
+  box-shadow: 0 0 10px rgba(85, 217, 255, 0.66);
+  animation: island-run-dice-trail 1.6s ease-out both;
+}
+
+.island-run-dice-launch-overlay__trail--left {
+  transform: translateX(-26px) rotate(14deg);
+}
+
+.island-run-dice-launch-overlay__trail--right {
+  transform: translateX(26px) rotate(-16deg);
+  animation-delay: 45ms;
+}
+
+.island-run-dice-launch-overlay__impact {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  opacity: 0;
+  background:
+    repeating-conic-gradient(from 5deg, rgba(255, 239, 143, 0) 0deg 8deg, rgba(255, 239, 143, 0.92) 9deg 11deg, rgba(255, 239, 143, 0) 12deg 26deg),
+    radial-gradient(circle, #fffbd2 0 7%, rgba(255, 194, 57, 0.82) 10%, rgba(76, 217, 255, 0.2) 37%, transparent 65%);
+  mix-blend-mode: screen;
+}
+
+.island-run-dice-launch-overlay__impact--reward {
+  left: 30%;
+  top: 16%;
+  animation: island-run-dice-impact-reward 1.6s ease-out both;
+}
+
+.island-run-dice-launch-overlay__impact--topbar {
+  left: 71%;
+  top: 8%;
+  animation: island-run-dice-impact-topbar 1.6s ease-out both;
+}
+
+.island-run-dice-launch-overlay[data-throw-strength='hard'] .island-run-dice-launch-overlay__muzzle {
+  filter: brightness(1.45) saturate(1.35);
+}
+
+.island-run-dice-launch-overlay[data-throw-strength='hard'] .island-run-dice-launch-overlay__trail {
+  width: 6px;
+  box-shadow: 0 0 16px rgba(85, 217, 255, 0.92);
+}
+
+.island-run-dice-launch-overlay[data-throw-strength='hard'] .island-run-dice-launch-overlay__impact--reward {
+  animation-name: island-run-dice-impact-reward-hard;
+}
+
+.island-run-dice-launch-overlay[data-throw-strength='hard'] .island-run-dice-launch-overlay__impact--topbar {
+  animation-name: island-run-dice-impact-topbar-hard;
+}
+
+.island-run-prototype[data-dice-launching='true'] .island-run-board__rewardbar-cluster {
+  animation: island-run-dice-rewardbar-hit 1.6s ease-out both;
+  transform-origin: 50% 50%;
+}
+
+.island-run-prototype[data-dice-launching='true'] .island-run-board__topbar {
+  animation: island-run-dice-topbar-hit 1.6s ease-out both;
+  transform-origin: 74% 50%;
+}
+
+.island-run-prototype[data-dice-throw-strength='hard'] .island-run-board__rewardbar-cluster {
+  animation-name: island-run-dice-rewardbar-hit-hard;
+}
+
+.island-run-prototype[data-dice-throw-strength='hard'] .island-run-board__topbar {
+  animation-name: island-run-dice-topbar-hit-hard;
+}
+
+@keyframes island-run-die-launch-left {
+  0% { top: 89%; left: 49%; transform: scale(0.42) rotateZ(0deg); filter: brightness(1.8) blur(1px); }
+  7% { top: 76%; left: 46%; transform: scale(0.78) rotateZ(-55deg); filter: brightness(1.5) blur(0); }
+  25% { top: 19%; left: 31%; transform: scale(1.18) rotateZ(-220deg); }
+  28% { top: 15.5%; left: 29.5%; transform: scale(1.32, 0.78) rotateZ(-252deg); filter: brightness(1.75); }
+  34% { top: 24%; left: 35%; transform: scale(0.95, 1.08) rotateZ(-320deg); }
+  63% { top: 43%; left: 46%; transform: scale(1.02) rotateZ(-590deg); }
+  80% { top: 52%; left: 44%; transform: scale(1.04, 0.9) rotateZ(-720deg); }
+  89% { top: 47%; left: 44%; transform: scale(0.98, 1.03) rotateZ(-748deg); }
+  100% { top: 52%; left: 44%; transform: scale(1) rotateZ(-720deg); filter: drop-shadow(0 8px 7px rgba(3, 10, 21, 0.44)); }
+}
+
+@keyframes island-run-die-launch-right {
+  0% { top: 89%; left: 51%; transform: scale(0.36) rotateZ(0deg); filter: brightness(1.9) blur(1.2px); }
+  9% { top: 75%; left: 55%; transform: scale(0.82) rotateZ(65deg); filter: brightness(1.55) blur(0); }
+  31% { top: 13%; left: 68%; transform: scale(1.24) rotateZ(270deg); }
+  35% { top: 7.5%; left: 72%; transform: scale(1.48, 0.7) rotateZ(315deg); filter: brightness(2); }
+  42% { top: 19%; left: 65%; transform: scale(0.92, 1.18) rotateZ(390deg); }
+  65% { top: 42%; left: 57%; transform: scale(1.08) rotateZ(650deg); }
+  81% { top: 53%; left: 56%; transform: scale(1.08, 0.88) rotateZ(775deg); }
+  90% { top: 48%; left: 56%; transform: scale(0.96, 1.06) rotateZ(812deg); }
+  100% { top: 53%; left: 56%; transform: scale(1.04) rotateZ(810deg); filter: drop-shadow(0 9px 8px rgba(3, 10, 21, 0.48)); }
+}
+
+@keyframes island-run-die-launch-left-hard {
+  0% { top: 90%; left: 49%; transform: scale(0.3) rotateZ(0deg); filter: brightness(2.2) blur(1.4px); }
+  5% { top: 71%; left: 45%; transform: scale(0.88) rotateZ(-92deg); filter: brightness(1.65) blur(0); }
+  21% { top: 17%; left: 27%; transform: scale(1.28) rotateZ(-310deg); }
+  24% { top: 13.5%; left: 28%; transform: scale(1.52, 0.66) rotateZ(-356deg); filter: brightness(2.2); }
+  31% { top: 24%; left: 36%; transform: scale(0.86, 1.2) rotateZ(-450deg); }
+  61% { top: 45%; left: 63%; transform: scale(1.08) rotateZ(-820deg); }
+  79% { top: 59%; left: 66%; transform: scale(1.15, 0.82) rotateZ(-980deg); }
+  89% { top: 52%; left: 65%; transform: scale(0.94, 1.1) rotateZ(-1025deg); }
+  100% { top: 59%; left: 65%; transform: scale(1.06) rotateZ(-990deg); filter: drop-shadow(0 10px 9px rgba(3, 10, 21, 0.52)); }
+}
+
+@keyframes island-run-die-launch-right-hard {
+  0% { top: 90%; left: 51%; transform: scale(0.28) rotateZ(0deg); filter: brightness(2.3) blur(1.5px); }
+  6% { top: 69%; left: 56%; transform: scale(0.92) rotateZ(110deg); filter: brightness(1.7) blur(0); }
+  26% { top: 12%; left: 70%; transform: scale(1.34) rotateZ(370deg); }
+  29.5% { top: 6%; left: 73%; transform: scale(1.7, 0.58) rotateZ(425deg); filter: brightness(2.45); }
+  37% { top: 19%; left: 64%; transform: scale(0.82, 1.28) rotateZ(530deg); }
+  62% { top: 42%; left: 80%; transform: scale(1.14) rotateZ(885deg); }
+  79% { top: 57%; left: 76%; transform: scale(1.18, 0.8) rotateZ(1055deg); }
+  89% { top: 49%; left: 75%; transform: scale(0.92, 1.12) rotateZ(1105deg); }
+  100% { top: 57%; left: 75%; transform: scale(1.1) rotateZ(1080deg); filter: drop-shadow(0 11px 10px rgba(3, 10, 21, 0.56)); }
+}
+
+@keyframes island-run-dice-muzzle-flash {
+  0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  3% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+  11% { opacity: 0; transform: translate(-50%, -50%) scale(2.1); }
+}
+
+@keyframes island-run-dice-trail {
+  0%, 3%, 32%, 100% { opacity: 0; }
+  7% { opacity: 0.88; }
+  25% { opacity: 0.16; }
+}
+
+@keyframes island-run-dice-impact-reward {
+  0%, 24%, 36%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.18) rotate(0deg); }
+  28% { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(16deg); }
+  33% { opacity: 0; transform: translate(-50%, -50%) scale(1.75) rotate(35deg); }
+}
+
+@keyframes island-run-dice-impact-topbar {
+  0%, 31%, 44%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.18) rotate(0deg); }
+  35% { opacity: 1; transform: translate(-50%, -50%) scale(1.4) rotate(-18deg); }
+  41% { opacity: 0; transform: translate(-50%, -50%) scale(2.15) rotate(-42deg); }
+}
+
+@keyframes island-run-dice-impact-reward-hard {
+  0%, 20%, 33%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.12) rotate(0deg); }
+  24% { opacity: 1; transform: translate(-50%, -50%) scale(1.55) rotate(22deg); }
+  30% { opacity: 0; transform: translate(-50%, -50%) scale(2.3) rotate(52deg); }
+}
+
+@keyframes island-run-dice-impact-topbar-hard {
+  0%, 26%, 40%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.12) rotate(0deg); }
+  29.5% { opacity: 1; transform: translate(-50%, -50%) scale(1.9) rotate(-24deg); }
+  37% { opacity: 0; transform: translate(-50%, -50%) scale(2.8) rotate(-58deg); }
+}
+
+@keyframes island-run-dice-rewardbar-hit {
+  0%, 24%, 34%, 100% { transform: translateX(-50%) translate(0, 0) rotate(0deg); }
+  27% { transform: translateX(-50%) translate(5px, -2px) rotate(1.7deg); }
+  29% { transform: translateX(-50%) translate(-4px, 3px) rotate(-1.3deg); }
+  32% { transform: translateX(-50%) translate(2px, -1px) rotate(0.6deg); }
+}
+
+@keyframes island-run-dice-topbar-hit {
+  0%, 31%, 46%, 100% { transform: translate(0, 0) rotate(0deg); }
+  35% { transform: translate(-7px, 4px) rotate(-1.8deg); }
+  37% { transform: translate(6px, -3px) rotate(1.5deg); }
+  40% { transform: translate(-4px, 2px) rotate(-0.9deg); }
+  43% { transform: translate(2px, -1px) rotate(0.4deg); }
+}
+
+@keyframes island-run-dice-rewardbar-hit-hard {
+  0%, 20%, 34%, 100% { transform: translateX(-50%) translate(0, 0) rotate(0deg); }
+  24% { transform: translateX(-50%) translate(9px, -5px) rotate(2.8deg) scale(0.97); }
+  27% { transform: translateX(-50%) translate(-7px, 5px) rotate(-2.1deg); }
+  31% { transform: translateX(-50%) translate(3px, -2px) rotate(0.8deg); }
+}
+
+@keyframes island-run-dice-topbar-hit-hard {
+  0%, 26%, 43%, 100% { transform: translate(0, 0) rotate(0deg); }
+  29.5% { transform: translate(-11px, 6px) rotate(-2.8deg) scale(0.98); }
+  32% { transform: translate(9px, -5px) rotate(2.2deg); }
+  35% { transform: translate(-6px, 3px) rotate(-1.4deg); }
+  39% { transform: translate(3px, -2px) rotate(0.6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-dice-launch-overlay .board-dice-3d__die-wrapper,
+  .island-run-dice-launch-overlay .board-dice-3d__die,
+  .island-run-dice-launch-overlay__muzzle,
+  .island-run-dice-launch-overlay__impact,
+  .island-run-dice-launch-overlay__trail,
+  .island-run-prototype[data-dice-launching='true'] .island-run-board__rewardbar-cluster,
+  .island-run-prototype[data-dice-launching='true'] .island-run-board__topbar {
+    animation: none !important;
+  }
+
+  .island-run-dice-launch-overlay .board-dice-3d__die-wrapper:first-child {
+    top: 52%;
+    left: 44%;
+  }
+
+  .island-run-dice-launch-overlay .board-dice-3d__die-wrapper:last-child {
+    top: 53%;
+    left: 56%;
+  }
+}
 
 /* ─────────────────────────────────────────────────
    Build Panel — 5-building modal

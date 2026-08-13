@@ -1,4 +1,5 @@
 import { lockPageScroll } from '../../../../utils/scrollLock';
+import { triggerImpactHaptic } from '../../../../utils/completionHaptics';
 /**
  * ISLAND RUN ARCHITECTURE WARNING
  *
@@ -33,7 +34,14 @@ import {
 } from '../services/islandRunControllerVisualContract';
 import { resolveIslandRunBuildOpenDisposition } from '../services/islandRunBuildOpenFlow';
 import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
+import {
+  ISLAND_RUN_AUTO_ROLL_HOLD_MS,
+  ISLAND_RUN_HARD_THROW_HOLD_MS,
+  resolveIslandRunDiceHoldIntent,
+  type IslandRunDiceThrowStrength,
+} from '../services/islandRunDiceThrowPresentation';
 import { BoardStage, type BoardStageCameraControls } from './board';
+import { IslandRunDiceLaunchOverlay } from './board/IslandRunDiceLaunchOverlay';
 import { ConfettiBurst } from './ConfettiBurst';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import { IslandTechCollectionModal, type TechCollectionModalResult } from './IslandTechCollectionModal';
@@ -720,11 +728,6 @@ function buildHydrationSourceOrder(baseSource: 'local_storage' | 'in_memory', hy
   return [baseSource, hydrationSource];
 }
 
-/** localStorage key for tracking egg-ready banner dismissal per egg instance. */
-function getEggReadyBannerKey(userId: string, eggSetAtMs: number): string {
-  return `lifegoal:egg_ready_banner_shown:${userId}:${eggSetAtMs}`;
-}
-
 function isIsland120StartupDiagnosticTarget(islandNumber: number) {
   return islandNumber === ISLAND_RUN_120_STARTUP_DIAGNOSTIC_ISLAND;
 }
@@ -1093,7 +1096,6 @@ const REWARDBAR_TIMERS_AUTO_HIDE_THRESHOLD_MS = 60 * 60 * 1000;
 const REWARDBAR_TIMERS_AUTO_HIDE_DELAY_MS = 10_000;
 const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
 const MULTIPLIER_MAX_JUMP_DURATION_MS = 540;
-const AUTO_ROLL_HOLD_DELAY_MS = 1400;
 // While a modal/overlay owns attention, auto-roll pauses instead of firing the
 // next roll. We poll this often to resume promptly once every modal is closed.
 const AUTO_ROLL_PAUSE_POLL_MS = 300;
@@ -1898,8 +1900,10 @@ export function IslandRunBoardPrototype({
   const [rollValue, setRollValue] = useState<number | null>(null);
   const [rollingDiceFaces, setRollingDiceFaces] = useState<[number, number]>([1, 1]);
   const [isRolling, setIsRolling] = useState(false);
+  const [diceThrowStrength, setDiceThrowStrength] = useState<IslandRunDiceThrowStrength>('normal');
   const [isAutoRolling, setIsAutoRolling] = useState(false);
   const [isAutoRollHoldPending, setIsAutoRollHoldPending] = useState(false);
+  const [isHardThrowHoldReady, setIsHardThrowHoldReady] = useState(false);
   const [isTimedEventLaunchQueued, setIsTimedEventLaunchQueued] = useState(false);
   const [showSpaceExcavatorRewardBarHint, setShowSpaceExcavatorRewardBarHint] = useState(true);
   /** Shown briefly over the dice after the roll animation finishes (e.g. "Rolled 8!") */
@@ -1957,6 +1961,8 @@ export function IslandRunBoardPrototype({
     setShowTopbarMenu((current) => !current);
   }, []);
   const autoRollHoldTimeoutRef = useRef<number | null>(null);
+  const hardThrowHoldTimeoutRef = useRef<number | null>(null);
+  const rollHoldStartedAtRef = useRef<number | null>(null);
   const autoRollLoopAbortRef = useRef(false);
   const autoRollHoldTriggeredRef = useRef(false);
   // Mirrors `doesModalOwnAttention` so the async auto-roll loop can read the
@@ -1984,6 +1990,10 @@ export function IslandRunBoardPrototype({
     if (autoRollHoldTimeoutRef.current !== null) {
       window.clearTimeout(autoRollHoldTimeoutRef.current);
       autoRollHoldTimeoutRef.current = null;
+    }
+    if (hardThrowHoldTimeoutRef.current !== null) {
+      window.clearTimeout(hardThrowHoldTimeoutRef.current);
+      hardThrowHoldTimeoutRef.current = null;
     }
     isTravellingRef.current = false;
   }, []);
@@ -2459,14 +2469,8 @@ export function IslandRunBoardPrototype({
   // B3-3: market interaction gate
   const [marketInteracted, setMarketInteracted] = useState(false);
 
-  // Egg-ready in-app banner: shown when egg transitions to stage 4 or on app open with ready egg
-  const [showEggReadyBanner, setShowEggReadyBanner] = useState(false);
-  const [hasEggReadyAnimationPlayedOnce, setHasEggReadyAnimationPlayedOnce] = useState(false);
-
-  // M14: persistent shop panel state
-  useEffect(() => {
-    setHasEggReadyAnimationPlayedOnce(false);
-  }, [showEggReadyBanner, activeEgg?.setAtMs]);
+  // Egg readiness is surfaced persistently by the Hatchery quick-access tray.
+  // It must not repeatedly interrupt board play with an automatic modal.
 
   const [showShopPanel, setShowShopPanel] = useState(false);
   const [hasVisitedWebTreat, setHasVisitedWebTreat] = useState(() => hasVisitedLandingPageTreat());
@@ -2811,18 +2815,6 @@ export function IslandRunBoardPrototype({
       setShowTopbarMenu(false);
     }
   }, [anyBlockingModalOpen]);
-
-  useEffect(() => {
-    if (!showTopbarMenu || !showEggReadyBanner) return;
-    if (activeEgg) {
-      try {
-        window.localStorage.setItem(getEggReadyBannerKey(session.user.id, activeEgg.setAtMs), '1');
-      } catch {
-        // ignore localStorage failures
-      }
-    }
-    setShowEggReadyBanner(false);
-  }, [activeEgg, session.user.id, showEggReadyBanner, showTopbarMenu]);
 
   // B3-4: utility stop state
   const [utilityInteracted, setUtilityInteracted] = useState(false);
@@ -5375,6 +5367,16 @@ export function IslandRunBoardPrototype({
       setDormantDoorMiniGame(null);
       setDormantDoorSelectedIndices([]);
       setDormantDoorReward(null);
+      if (doorStopId === 'hatchery') {
+        // Hatchery readiness already has a persistent reward-bar tray. Landing
+        // here may focus the landmark, but must not repeatedly interrupt the
+        // roll loop with the full modal (especially for an egg on another
+        // island). A deliberate 3D landmark/tray tap still opens it normally.
+        setRequiredDoorStopId(null);
+        requestActiveStopTransition(null, 'hatchery_landmark_door_non_blocking');
+        setLandingText('🥚 Hatchery reached. Tap the landmark or egg tray when you want to open it.');
+        return;
+      }
       setRequiredDoorStopId(doorStopId);
       setLandingText(`🚪 Landmark door opened ${doorStopId.toUpperCase()}. Complete it before rolling again.`);
       requestActiveStopTransition(doorStopId, 'landmark_door_landing');
@@ -6025,6 +6027,12 @@ export function IslandRunBoardPrototype({
 
   const eggStage = useMemo(() => getHatcheryEggStage(activeEgg, nowMs), [activeEgg, nowMs]);
 
+  const threeCameraFocusPreset = useMemo<Island5CameraPresetId | null>(() => {
+    if (buildCameraFocusRequest) return buildCameraFocusRequest.preset;
+    if (cameraMode !== 'stop_focus' || !focusedStopId) return null;
+    return resolveIsland5BuildCameraPreset(focusedStopId);
+  }, [buildCameraFocusRequest, cameraMode, focusedStopId]);
+
   const eggRemainingMs = activeEgg && Number.isFinite(activeEgg.hatchAtMs)
     ? Math.max(0, activeEgg.hatchAtMs - nowMs)
     : 0;
@@ -6067,31 +6075,15 @@ export function IslandRunBoardPrototype({
     timeLeftSec,
   ]);
 
-  // M10B: play egg_ready sound when egg transitions to stage 4 (ready-to-open)
+  // M10B: preserve the one-time sound cue, while the persistent Hatchery tray
+  // carries the ready state without an interrupting modal.
   const prevEggStageRef = useRef(0);
   useEffect(() => {
     if (eggStage === 4 && prevEggStageRef.current < 4) {
       playIslandRunSound('egg_ready');
-      // Only show banner if not already dismissed for this specific egg
-      const bannerKey = activeEgg ? getEggReadyBannerKey(session.user.id, activeEgg.setAtMs) : null;
-      const alreadyDismissed = bannerKey ? window.localStorage.getItem(bannerKey) === '1' : false;
-      if (!alreadyDismissed && !showBuildPanel) {
-        setShowEggReadyBanner(true);
-      }
     }
     prevEggStageRef.current = eggStage;
-  }, [eggStage, activeEgg, session.user.id, showBuildPanel]);
-
-  // Show egg-ready banner on initial load if egg is already ready and banner not yet dismissed
-  useEffect(() => {
-    if (eggStage === 4 && hasHydratedRuntimeState && activeEgg) {
-      const bannerKey = getEggReadyBannerKey(session.user.id, activeEgg.setAtMs);
-      const alreadyDismissed = window.localStorage.getItem(bannerKey) === '1';
-      if (!alreadyDismissed && !showBuildPanel) {
-        setShowEggReadyBanner(true);
-      }
-    }
-  }, [eggStage, hasHydratedRuntimeState, activeEgg, session.user.id, showBuildPanel]);
+  }, [eggStage]);
 
   useEffect(() => {
     if (activeStopId !== 'hatchery') {
@@ -6474,6 +6466,8 @@ export function IslandRunBoardPrototype({
   const canHoldForAutoRoll = canRoll && !isIslandTimerPendingStart;
   const rollButtonInteractionClass = isAutoRolling
     ? 'island-run-prototype__roll-btn--auto-active'
+    : isHardThrowHoldReady
+      ? 'island-run-prototype__roll-btn--auto-pending island-run-prototype__roll-btn--hard-ready'
     : isAutoRollHoldPending
       ? 'island-run-prototype__roll-btn--auto-pending'
       : '';
@@ -7008,7 +7002,7 @@ export function IslandRunBoardPrototype({
     });
   };
 
-  const handleRoll = async (): Promise<boolean> => {
+  const handleRoll = async (throwStrength: IslandRunDiceThrowStrength = 'normal'): Promise<boolean> => {
     logIslandRunEntryDebug('roll_click_start', {
       userId: session.user.id,
       tokenIndex: runtimeStateRef.current.tokenIndex,
@@ -7108,6 +7102,7 @@ export function IslandRunBoardPrototype({
       return false;
     }
 
+    setDiceThrowStrength(throwStrength);
     setIsRolling(true);
     setCameraMode('board_follow');
     requestActiveStopTransition(null, 'roll_start_close_stop');
@@ -7448,9 +7443,15 @@ export function IslandRunBoardPrototype({
     autoRollLoopAbortRef.current = true;
     setIsAutoRolling(false);
     setIsAutoRollHoldPending(false);
+    setIsHardThrowHoldReady(false);
+    rollHoldStartedAtRef.current = null;
     if (autoRollHoldTimeoutRef.current !== null) {
       window.clearTimeout(autoRollHoldTimeoutRef.current);
       autoRollHoldTimeoutRef.current = null;
+    }
+    if (hardThrowHoldTimeoutRef.current !== null) {
+      window.clearTimeout(hardThrowHoldTimeoutRef.current);
+      hardThrowHoldTimeoutRef.current = null;
     }
   }, []);
 
@@ -7461,28 +7462,78 @@ export function IslandRunBoardPrototype({
     if (autoRollHoldTimeoutRef.current !== null) {
       window.clearTimeout(autoRollHoldTimeoutRef.current);
     }
+    if (hardThrowHoldTimeoutRef.current !== null) {
+      window.clearTimeout(hardThrowHoldTimeoutRef.current);
+    }
     autoRollHoldTriggeredRef.current = false;
+    rollHoldStartedAtRef.current = performance.now();
     setIsAutoRollHoldPending(true);
+    setIsHardThrowHoldReady(false);
     // Felt confirmation that the hold registered. The charge bar starts filling
     // on the same frame, so touch and sight agree.
     triggerIslandRunHaptic('auto_roll_arm');
+    hardThrowHoldTimeoutRef.current = window.setTimeout(() => {
+      hardThrowHoldTimeoutRef.current = null;
+      if (autoRollHoldTriggeredRef.current) return;
+      setIsHardThrowHoldReady(true);
+      setLandingText('Hard throw ready — release now, or keep holding for auto-roll.');
+      triggerImpactHaptic('light', { channel: 'gamification', minIntervalMs: 90 });
+    }, ISLAND_RUN_HARD_THROW_HOLD_MS);
     autoRollHoldTimeoutRef.current = window.setTimeout(() => {
       autoRollHoldTimeoutRef.current = null;
       autoRollHoldTriggeredRef.current = true;
       suppressNextRollClickRef.current = true;
       autoRollLoopAbortRef.current = false;
+      setIsHardThrowHoldReady(false);
       setIsAutoRolling(true);
       triggerIslandRunHaptic('auto_roll_engage');
       setLandingText('Auto-roll engaged. Release to stop.');
-    }, AUTO_ROLL_HOLD_DELAY_MS);
+    }, ISLAND_RUN_AUTO_ROLL_HOLD_MS);
   }, [dicePool, effectiveDiceCost, isOnboardingCelebrationVisible, isRolling, showTravelOverlay]);
 
   const endAutoRollHold = useCallback(() => {
+    const heldForMs = rollHoldStartedAtRef.current === null
+      ? 0
+      : performance.now() - rollHoldStartedAtRef.current;
+    const intent = resolveIslandRunDiceHoldIntent({
+      heldForMs,
+      autoRollActivated: autoRollHoldTriggeredRef.current,
+    });
+    rollHoldStartedAtRef.current = null;
     if (autoRollHoldTimeoutRef.current !== null) {
       window.clearTimeout(autoRollHoldTimeoutRef.current);
       autoRollHoldTimeoutRef.current = null;
     }
+    if (hardThrowHoldTimeoutRef.current !== null) {
+      window.clearTimeout(hardThrowHoldTimeoutRef.current);
+      hardThrowHoldTimeoutRef.current = null;
+    }
     setIsAutoRollHoldPending(false);
+    setIsHardThrowHoldReady(false);
+    if (intent === 'auto') {
+      autoRollHoldTriggeredRef.current = false;
+      stopAutoRoll();
+      return;
+    }
+    if (intent === 'hard') {
+      suppressNextRollClickRef.current = true;
+      setLandingText('Hard throw charged!');
+      void handleRoll('hard');
+    }
+  }, [handleRoll, stopAutoRoll]);
+
+  const cancelAutoRollHold = useCallback(() => {
+    rollHoldStartedAtRef.current = null;
+    if (autoRollHoldTimeoutRef.current !== null) {
+      window.clearTimeout(autoRollHoldTimeoutRef.current);
+      autoRollHoldTimeoutRef.current = null;
+    }
+    if (hardThrowHoldTimeoutRef.current !== null) {
+      window.clearTimeout(hardThrowHoldTimeoutRef.current);
+      hardThrowHoldTimeoutRef.current = null;
+    }
+    setIsAutoRollHoldPending(false);
+    setIsHardThrowHoldReady(false);
     if (autoRollHoldTriggeredRef.current) {
       autoRollHoldTriggeredRef.current = false;
       stopAutoRoll();
@@ -7493,8 +7544,8 @@ export function IslandRunBoardPrototype({
     ? {
       onPointerDown: beginAutoRollHold,
       onPointerUp: endAutoRollHold,
-      onPointerLeave: endAutoRollHold,
-      onPointerCancel: endAutoRollHold,
+      onPointerLeave: cancelAutoRollHold,
+      onPointerCancel: cancelAutoRollHold,
     }
     : {};
 
@@ -7505,7 +7556,11 @@ export function IslandRunBoardPrototype({
    * one the player actually gets.
    */
   const rollHoldChargeStyle = useMemo<CSSProperties>(
-    () => ({ '--island-run-hold-ms': `${AUTO_ROLL_HOLD_DELAY_MS}ms` } as CSSProperties),
+    () => ({
+      '--island-run-hard-throw-hold-ms': `${ISLAND_RUN_HARD_THROW_HOLD_MS}ms`,
+      '--island-run-hard-throw-threshold': `${(ISLAND_RUN_HARD_THROW_HOLD_MS / ISLAND_RUN_AUTO_ROLL_HOLD_MS) * 100}%`,
+      '--island-run-hold-ms': `${ISLAND_RUN_AUTO_ROLL_HOLD_MS}ms`,
+    } as CSSProperties),
     [],
   );
 
@@ -12094,7 +12149,6 @@ export function IslandRunBoardPrototype({
       lockedStopInfoStopId ||
       showBuildPanel ||
       showClaimModal ||
-      showEggReadyBanner ||
       !hasDismissedEntryAudioModal ||
       showEntryAudioModal ||
       techCollectionModal ||
@@ -12138,7 +12192,6 @@ export function IslandRunBoardPrototype({
       lockedStopInfoStopId ||
       showBuildPanel ||
       showClaimModal ||
-      showEggReadyBanner ||
       !hasDismissedEntryAudioModal ||
       showEntryAudioModal ||
       techCollectionModal ||
@@ -12487,6 +12540,8 @@ export function IslandRunBoardPrototype({
     <section
       className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}${showBuildPanel ? ' island-run-prototype--build-exclusive' : ''}${isArenaBattleOpen ? ' island-run-prototype--arena-battle' : ''}`}
       data-island-number={islandNumber}
+      data-dice-launching={shouldRenderIsland5Three && isRolling ? 'true' : undefined}
+      data-dice-throw-strength={shouldRenderIsland5Three && isRolling ? diceThrowStrength : undefined}
     >
       {showEntryAudioModal && (
         <div className="island-run-entry-audio" role="presentation">
@@ -13640,9 +13695,9 @@ export function IslandRunBoardPrototype({
             playIslandRunSound('stop_land');
             triggerIslandRunHaptic('stop_land');
           }}
-          isRolling={isRolling}
+          isRolling={shouldRenderIsland5Three ? false : isRolling}
           diceFaces={rollingDiceFaces}
-          onDiceRollComplete={() => {
+          onDiceRollComplete={shouldRenderIsland5Three ? undefined : () => {
             diceRollCompleteAlreadyFiredRef.current = true;
             diceRollCompleteResolverRef.current?.();
             diceRollCompleteResolverRef.current = null;
@@ -13670,7 +13725,7 @@ export function IslandRunBoardPrototype({
                 isRolling={isRolling}
                 landingTileType={landmarkDoorTileMap[tokenIndex]?.tileType}
                 movementSpeedFactor={storyFastModeState.movementSpeedFactor}
-                cameraFocusPreset={buildCameraFocusRequest?.preset ?? null}
+                cameraFocusPreset={threeCameraFocusPreset}
                 cameraFocusTransition={buildCameraFocusRequest?.transition ?? 'standard'}
                 cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}
                 interactionPaused={doesModalOwnAttention}
@@ -13739,6 +13794,25 @@ export function IslandRunBoardPrototype({
           </aside>
         ) : null}
       </div>
+
+      {shouldRenderIsland5Three ? (
+        <IslandRunDiceLaunchOverlay
+          faces={rollingDiceFaces}
+          isRolling={isRolling}
+          throwStrength={diceThrowStrength}
+          onTopBarImpact={() => {
+            triggerImpactHaptic(diceThrowStrength === 'hard' ? 'strong' : 'medium', {
+              channel: 'gamification',
+              minIntervalMs: 90,
+            });
+          }}
+          onRollComplete={() => {
+            diceRollCompleteAlreadyFiredRef.current = true;
+            diceRollCompleteResolverRef.current?.();
+            diceRollCompleteResolverRef.current = null;
+          }}
+        />
+      ) : null}
 
       {/* Dice roll total overlay — shown briefly after dice settle */}
       {diceRollTotalOverlay && (
@@ -15479,64 +15553,6 @@ export function IslandRunBoardPrototype({
                 onClick={() => setShowRewardDetailsModal(false)}
               >
                 Close
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {/* ── Egg-ready in-app banner ──────────────────────────────────────── */}
-      {showEggReadyBanner && (
-        <div className="island-run-overlay-root island-stop-modal-backdrop island-egg-ready-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-egg-ready-modal" role="dialog" aria-modal="true" aria-label="Egg ready">
-            <h3 className="island-stop-modal__title island-egg-ready-modal__title">🌟🥚 Egg Ready to Open!</h3>
-            {activeEgg ? (
-              <div className={`island-egg-ready-modal__animation-frame${hasEggReadyAnimationPlayedOnce ? ' island-egg-ready-modal__animation-frame--tinted' : ''}`}>
-                <video
-                  className="island-hatchery-card__stage-art island-egg-ready-modal__animation"
-                  src="/assets/creatures/egg-hatch/egg-hatch-alpha-v1.mp4"
-                  poster={getEggStageArtSrc(activeEgg.tier, 4)}
-                  autoPlay
-                  muted
-                  playsInline
-                  preload="auto"
-                  onEnded={(event) => {
-                    setHasEggReadyAnimationPlayedOnce(true);
-                    event.currentTarget.loop = true;
-                    void event.currentTarget.play();
-                  }}
-                  aria-label={`${activeEgg.tier} egg hatching animation`}
-                />
-              </div>
-            ) : null}
-            <p className="island-stop-modal__copy">
-              Your egg has finished incubating and is ready to open. Head to the Hatchery stop to collect your creature or sell for rewards!
-            </p>
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              <button
-                type="button"
-                className={`island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary${hasEggReadyAnimationPlayedOnce ? ' island-egg-ready-modal__primary-btn--ready' : ''}`}
-                onClick={() => {
-                  if (activeEgg) {
-                    try { window.localStorage.setItem(getEggReadyBannerKey(session.user.id, activeEgg.setAtMs), '1'); } catch { /* ignore */ }
-                  }
-                  setShowEggReadyBanner(false);
-                  requestActiveStopTransition('hatchery', 'egg_ready_banner');
-                }}
-              >
-                Go to Hatchery
-              </button>
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => {
-                  if (activeEgg) {
-                    try { window.localStorage.setItem(getEggReadyBannerKey(session.user.id, activeEgg.setAtMs), '1'); } catch { /* ignore */ }
-                  }
-                  setShowEggReadyBanner(false);
-                }}
-              >
-                Later
               </button>
             </div>
           </section>

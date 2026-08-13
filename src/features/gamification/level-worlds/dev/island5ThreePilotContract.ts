@@ -162,6 +162,40 @@ export const ISLAND_3D_IDLE_OVERVIEW_DELAY_MS = 3_600;
 /** Deliberately slower than authored focus changes, so it reads as a drift. */
 export const ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE = 2.8;
 
+export function shouldFadeCentralLandmarkForCamera(input: {
+  cameraPosition: readonly [number, number, number];
+  focusPosition: readonly [number, number, number];
+  centralPosition?: readonly [number, number, number];
+  centralOcclusionRadius?: number;
+  centralOcclusionHeight?: number;
+}): boolean {
+  const central = input.centralPosition ?? [0, 0, 0];
+  const radius = Math.max(0.1, input.centralOcclusionRadius ?? 1.75);
+  const height = Math.max(0.1, input.centralOcclusionHeight ?? 5.6);
+  const segmentXZ = [
+    input.focusPosition[0] - input.cameraPosition[0],
+    input.focusPosition[2] - input.cameraPosition[2],
+  ] as const;
+  const segmentLengthSquared = segmentXZ[0] ** 2 + segmentXZ[1] ** 2;
+  if (segmentLengthSquared <= 0.0001) return false;
+  const fromCameraToCentralXZ = [
+    central[0] - input.cameraPosition[0],
+    central[2] - input.cameraPosition[2],
+  ] as const;
+  const projection = (
+    fromCameraToCentralXZ[0] * segmentXZ[0]
+    + fromCameraToCentralXZ[1] * segmentXZ[1]
+  ) / segmentLengthSquared;
+  if (projection <= 0.05 || projection >= 0.95) return false;
+  const closestX = input.cameraPosition[0] + segmentXZ[0] * projection;
+  const closestZ = input.cameraPosition[2] + segmentXZ[1] * projection;
+  const closestY = input.cameraPosition[1]
+    + (input.focusPosition[1] - input.cameraPosition[1]) * projection;
+  const crossesFootprint = Math.hypot(central[0] - closestX, central[2] - closestZ) <= radius;
+  const crossesHeight = closestY >= central[1] - 0.25 && closestY <= central[1] + height;
+  return crossesFootprint && crossesHeight;
+}
+
 export type Island3DLandingImpact = 'standard' | 'special' | 'hazard';
 
 export interface Island3DTileImpactPose {

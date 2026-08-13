@@ -25,6 +25,7 @@ import {
   resolveIsland3DRadialTileGeometry,
   resolveIsland3DLandingImpact,
   summarizeIsland3DPerformance,
+  shouldFadeCentralLandmarkForCamera,
 } from '../../dev/island5ThreePilotContract';
 import {
   buildIsland1CloudLayout,
@@ -70,9 +71,50 @@ import {
   registerIsland9RuntimePart,
 } from '../../dev/Island9HeartshaftThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
+import {
+  ISLAND_RUN_AUTO_ROLL_HOLD_MS,
+  ISLAND_RUN_HARD_THROW_HOLD_MS,
+  resolveIslandRunDiceHoldIntent,
+} from '../islandRunDiceThrowPresentation';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'separates tap, hard-throw release, and auto-roll hold thresholds',
+    run: () => {
+      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_HARD_THROW_HOLD_MS - 1, autoRollActivated: false }), 'normal', 'a tap or short hold remains a normal throw');
+      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_HARD_THROW_HOLD_MS, autoRollActivated: false }), 'hard', 'the first detent charges one hard throw');
+      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_AUTO_ROLL_HOLD_MS - 1, autoRollActivated: false }), 'hard', 'releasing before auto-roll remains one hard throw');
+      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_AUTO_ROLL_HOLD_MS, autoRollActivated: false }), 'auto', 'the long hold belongs to auto-roll');
+      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: 0, autoRollActivated: true }), 'auto', 'an activated auto-roll cannot degrade into a release throw');
+    },
+  },
+  {
+    name: 'fades the central landmark only when it blocks an outer-landmark inspection ray',
+    run: () => {
+      assert(shouldFadeCentralLandmarkForCamera({ cameraPosition: [0, 6, 2], focusPosition: [0, 1, -5] }), 'a camera looking through the centre must fade the boss');
+      assert(!shouldFadeCentralLandmarkForCamera({ cameraPosition: [0, 9, 2], focusPosition: [0, 8, -5] }), 'a ray passing above the central landmark must remain opaque');
+      assert(!shouldFadeCentralLandmarkForCamera({ cameraPosition: [-4, 6, -2], focusPosition: [-5, 1, -5] }), 'a clear same-side view must leave the boss opaque');
+    },
+  },
+  {
+    name: 'wires all 3D islands to stable landmark hit targets and the canonical dice launcher callback',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const diceSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/board/IslandRunDiceLaunchOverlay.tsx', 'utf8');
+      assert(pilotSource.includes('createLandmarkHitTarget(landmark)'), 'every landmark needs a stable forgiving 3D tap proxy');
+      assert(pilotSource.includes('resolveLandmarkIdFromIntersection'), 'landmark routing must survive merged or nested meshes');
+      assert(pilotSource.includes('makeLandmarkMaterialsIndependent(landmarkRoot)'), 'central transparency may not fade materials shared with other landmarks');
+      assert(diceSource.includes('pointer input') && diceSource.includes('<BoardDice3D'), 'the visible dice must be a pointer-transparent layer above WebGL');
+      assert(diceSource.includes('onTopBarImpactRef.current?.()') && boardSource.includes("triggerImpactHaptic(diceThrowStrength === 'hard' ? 'strong' : 'medium'"), 'the top-bar collision frame needs a native-capable haptic impact');
+      assert(boardSource.includes('faces={rollingDiceFaces}') && boardSource.includes('onRollComplete={() =>'), 'the 3D dice must reuse the canonical result and completion clock');
+      assert(!boardSource.includes('showEggReadyBanner') && boardSource.includes('Open hatchery.'), 'egg readiness should stay in persistent Hatchery access instead of reopening an automatic modal');
+      assert(boardSource.includes("requestActiveStopTransition(null, 'hatchery_landmark_door_non_blocking')"), 'landing on the Hatchery door must not repeatedly open the full remote-egg modal');
+    },
+  },
   {
     name: 'keeps Island 009 volcanic scenery outside the route and gives every L1 L2 L3 landmark a distinct additive silhouette',
     run: async () => {
@@ -788,7 +830,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(!modalSource.includes('BuildModalV2ArtworkImage'), 'Build overlay must not cover the real board with standalone landmark artwork');
       assert(modalSource.includes('bm2-build-mode') && modalSource.includes('bm2-dock'), 'Build mode should be a transparent live-board overlay with a compact dock');
       assert(boardSource.includes("if (stopId === 'mystery') return 'event'"), 'Build camera should resolve Mystery to the authored Concord Arena preset');
-      assert(boardSource.includes('cameraFocusPreset={buildCameraFocusRequest?.preset ?? null}'), 'the live 3D board must receive the active Build landmark focus');
+      assert(boardSource.includes('cameraFocusPreset={threeCameraFocusPreset}'), 'the live 3D board must receive Build and ordinary landmark focus requests');
       assert(boardSource.includes("transition: previousStopId === null ? 'standard' : 'quick'"), 'landmark-to-landmark Build handoff should use the quick camera path');
       assert(pilotSource.includes("cameraFocusTransition === 'quick' ? 0.48 : 0.82"), 'the actual 3D camera should shorten Build handoff timing without changing its preset geometry');
       assert(modalSource.includes('onBuildActivePart={onBuildActivePart}') && modalSource.includes('onBuildActivePart(activeStopIndex)'), 'the existing canonical build callback must remain the action owner');

@@ -42,6 +42,7 @@ import {
   resolveIsland3DRadialTileGeometry,
   resolveIsland3DLandingImpact,
   summarizeIsland3DPerformance,
+  shouldFadeCentralLandmarkForCamera,
   type Island3DDeviceSignals,
   type Island3DPerformanceSummary,
   type Island3DQuality,
@@ -322,12 +323,53 @@ function setLandmarkId(object: THREE.Object3D, id: Island5LandmarkDefinition['id
   });
 }
 
+function createLandmarkHitTarget(definition: Island5LandmarkDefinition) {
+  const radius = definition.id === 'boss' ? 1.72 : 1.32;
+  const height = definition.id === 'boss' ? 4.8 : 3.5;
+  const geometry = new THREE.CylinderGeometry(radius, radius * 1.08, height, 12);
+  const material = new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    colorWrite: false,
+  });
+  const target = new THREE.Mesh(geometry, material);
+  target.name = `ISLAND_SHARED_${definition.id.toUpperCase()}_HIT_TARGET`;
+  target.position.set(definition.position[0], definition.position[1] + height / 2, definition.position[2]);
+  target.userData.landmarkId = definition.id;
+  target.userData.landmarkHitTarget = true;
+  target.renderOrder = -100;
+  return target;
+}
+
+function resolveLandmarkIdFromIntersection(object: THREE.Object3D | undefined): Island5CameraPresetId | null {
+  let current = object;
+  while (current) {
+    const landmarkId = current.userData.landmarkId as Island5CameraPresetId | undefined;
+    if (landmarkId) return landmarkId;
+    current = current.parent ?? undefined;
+  }
+  return null;
+}
+
 function addShadowFlags(object: THREE.Object3D, castShadow: boolean) {
   object.traverse((child) => {
     if (child instanceof THREE.Mesh) {
       child.castShadow = castShadow;
       child.receiveShadow = true;
     }
+  });
+}
+
+/** The central landmark fades independently during an occluded focus shot.
+ * Island builders intentionally share material palettes, so clone only this
+ * root's materials before changing presentation opacity. */
+function makeLandmarkMaterialsIndependent(object: THREE.Object3D) {
+  object.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    child.material = Array.isArray(child.material)
+      ? child.material.map((material) => material.clone())
+      : child.material.clone();
   });
 }
 
@@ -3748,9 +3790,13 @@ export default function Island5ThreePilot({
               : isHeartshaftCrucible && island9HeartshaftMaterials
                 ? buildIsland9HeartshaftLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island9HeartshaftMaterials)
               : buildLandmark(landmark, resolvedBuildLevel, qualityProfile.id, materials);
+      if (landmark.id === 'boss') makeLandmarkMaterialsIndependent(landmarkRoot);
       scene.add(landmarkRoot);
       clickableLandmarks.push(landmarkRoot);
       landmarkRootsById.set(landmark.id, landmarkRoot);
+      const hitTarget = createLandmarkHitTarget(landmark);
+      scene.add(hitTarget);
+      clickableLandmarks.push(hitTarget);
     }
     if (isAbyssalPearlKingdom) {
       const landmarkNetwork = new THREE.Object3D();
@@ -3936,6 +3982,13 @@ export default function Island5ThreePilot({
 
     const timer = new THREE.Timer();
     timer.connect(document);
+    const bossRootForOcclusion = landmarkRootsById.get('boss');
+    const bossOcclusionBounds = bossRootForOcclusion
+      ? new THREE.Box3().setFromObject(bossRootForOcclusion)
+      : null;
+    const bossOcclusionCenter = bossOcclusionBounds?.getCenter(new THREE.Vector3()) ?? null;
+    const bossOcclusionSize = bossOcclusionBounds?.getSize(new THREE.Vector3()) ?? null;
+    canvas.dataset.centralLandmarkOcclusion = 'opaque';
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     const pointerDown = new THREE.Vector2();
@@ -3976,10 +4029,13 @@ export default function Island5ThreePilot({
       finalImpactTriggered: boolean;
     } | null = null;
     let idleOverviewAt: number | null = null;
+    let activeInspectionPreset: Island5CameraPresetId | 'manual' = 'overview';
+    let isBossOcclusionFadeApplied = false;
     const activeTileImpacts = new Map<number, ActiveTileImpact>();
     let activeTokenSettle: ActiveTokenSettle | null = null;
 
     const setBoardActorsVisibleForPreset = (preset: Island5CameraPresetId | 'manual') => {
+      activeInspectionPreset = preset;
       const isLandmarkInspection = preset === 'boss'
         || preset === 'hatchery'
         || preset === 'habit'
@@ -4296,8 +4352,10 @@ export default function Island5ThreePilot({
         onCaretakerClickRef.current?.();
         return;
       }
-      const intersection = raycaster.intersectObjects(clickableLandmarks, true)[0];
-      const landmarkId = intersection?.object.userData.landmarkId as Island5CameraPresetId | undefined;
+      const intersections = raycaster.intersectObjects(clickableLandmarks, true);
+      const landmarkId = intersections
+        .map((candidate) => resolveLandmarkIdFromIntersection(candidate.object))
+        .find((candidate): candidate is Island5CameraPresetId => candidate !== null);
       if (landmarkId) {
         idleOverviewAt = null;
         applyPreset(landmarkId);
@@ -4707,6 +4765,48 @@ export default function Island5ThreePilot({
         applyPreset('overview', ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE);
       }
       controls.update();
+
+      const bossRoot = bossRootForOcclusion;
+      if (bossRoot) {
+        const focusedOuterLandmark = activeInspectionPreset === 'hatchery'
+          || activeInspectionPreset === 'habit'
+          || activeInspectionPreset === 'wisdom'
+          || activeInspectionPreset === 'event';
+        const focusRoot = focusedOuterLandmark ? landmarkRootsById.get(activeInspectionPreset) : undefined;
+        const shouldFadeBoss = Boolean(focusRoot) && shouldFadeCentralLandmarkForCamera({
+          cameraPosition: [camera.position.x, camera.position.y, camera.position.z],
+          focusPosition: [focusRoot!.position.x, focusRoot!.position.y + 1.2, focusRoot!.position.z],
+          centralPosition: bossOcclusionBounds && bossOcclusionCenter
+            ? [bossOcclusionCenter.x, bossOcclusionBounds.min.y, bossOcclusionCenter.z]
+            : undefined,
+          centralOcclusionRadius: bossOcclusionSize
+            ? Math.max(bossOcclusionSize.x, bossOcclusionSize.z) * 0.46
+            : undefined,
+          centralOcclusionHeight: bossOcclusionSize?.y,
+        });
+        if (shouldFadeBoss !== isBossOcclusionFadeApplied) {
+          isBossOcclusionFadeApplied = shouldFadeBoss;
+          canvas.dataset.centralLandmarkOcclusion = shouldFadeBoss ? 'faded' : 'opaque';
+          const targetOpacity = shouldFadeBoss ? 0.16 : 1;
+          bossRoot.traverse((object) => {
+            if (!(object instanceof THREE.Mesh)) return;
+            const objectMaterials = Array.isArray(object.material) ? object.material : [object.material];
+            objectMaterials.forEach((material) => {
+              if (!material.userData.islandOriginalOpacityCaptured) {
+                material.userData.islandOriginalOpacityCaptured = true;
+                material.userData.islandOriginalOpacity = material.opacity;
+                material.userData.islandOriginalTransparent = material.transparent;
+                material.userData.islandOriginalDepthWrite = material.depthWrite;
+              }
+              const originalOpacity = Number(material.userData.islandOriginalOpacity ?? 1);
+              material.opacity = originalOpacity * targetOpacity;
+              material.transparent = shouldFadeBoss || Boolean(material.userData.islandOriginalTransparent);
+              material.depthWrite = shouldFadeBoss ? false : Boolean(material.userData.islandOriginalDepthWrite);
+              material.needsUpdate = true;
+            });
+          });
+        }
+      }
       renderer.render(scene, camera);
       if (!firstFrameRendered && renderer.info.render.calls > 0) {
         firstFrameRendered = true;
