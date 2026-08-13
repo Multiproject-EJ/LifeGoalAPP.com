@@ -1,6 +1,6 @@
 # Journey Disc Arena — Island 006 integration Gauntlet
 
-Date: 2026-08-14  
+Date: 2026-08-14
 Branch: `codex/journey-disc-arena`
 
 ## Product decision

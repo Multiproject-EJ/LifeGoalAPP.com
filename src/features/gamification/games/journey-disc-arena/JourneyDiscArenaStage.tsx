@@ -25,4 +25,3 @@ export default function JourneyDiscArenaStage({ snapshot }: { snapshot: JourneyD
 
   return <canvas ref={canvasRef} className="journey-disc-arena__canvas" aria-label="3D Journey Disc battle arena" />;
 }
-

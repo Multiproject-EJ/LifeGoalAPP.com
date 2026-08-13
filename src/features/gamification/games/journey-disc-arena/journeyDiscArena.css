@@ -158,7 +158,7 @@ body:has(.journey-disc-arena[data-island-concourse="true"]) {
 .journey-disc-arena__team-health i b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #35bdce, var(--cyan)); box-shadow: 0 0 12px var(--cyan); transition: width .18s ease-out; }
 .journey-disc-arena__team-health [data-team="rival"] i b { margin-left: auto; background: linear-gradient(90deg, var(--pink), #ff879f); box-shadow: 0 0 12px var(--pink); }
 
-.journey-disc-arena__impact-callout { 
+.journey-disc-arena__impact-callout {
   position: absolute;
   z-index: 7;
   top: 28%;
