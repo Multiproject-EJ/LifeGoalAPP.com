@@ -967,7 +967,8 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(boardSource.includes('tokenIndex={tokenIndex}'), 'embedded renderer must read the canonical token index already owned by the live board');
       assert(boardSource.includes('pendingHopSequence={pendingHopSequence}'), 'embedded renderer must consume the canonical roll hop sequence without deriving movement');
       assert(boardSource.includes('landmarkBuildLevels={isIslandVisualPreview ? undefined : island5ThreeBuildLevels}'), 'production landmarks must read their individual canonical build levels');
-      assert(boardSource.includes("handleStopOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId)"), '3D landmark taps must reuse the canonical stop-opening dispatcher');
+      assert(boardSource.includes("handleLandmarkOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId)"), '3D landmark taps must reuse the shared landmark-opening dispatcher');
+      assert(boardSource.includes('handleStopOpenRequest(stopId);'), 'the shared landmark dispatcher must delegate ordinary stops to the canonical stop-opening path');
       assert(boardSource.includes('onRendererUnavailable={() => setIsIsland5ThreeEnabled(false)}'), 'WebGL failure must reveal the mounted 2D fallback');
       assert(boardSource.indexOf('<BoardStage') < boardSource.indexOf('shouldRenderIsland5Three ?'), 'canonical BoardStage must remain mounted beneath the production visual layer');
       assert(pilotSource.includes('landmarkBuildLevels?.[landmark.id] ?? buildLevel'), 'renderer must resolve each landmark level without inventing gameplay state');

@@ -6082,8 +6082,7 @@ export function IslandRunBoardPrototype({
     const visual = orbitStopVisuals.find((v) => v.id === focusedStopId);
     if (!visual) return;
     boardCameraRef.current.goFocusPoint(
-      visual.focusX ?? visual.x,
-      visual.focusY ?? visual.y,
+      visual.focusX ?? visual.x, visual.focusY ?? visual.y,
       LANDMARK_INSPECTION_ZOOM,
     );
   }, [cameraMode, focusedStopId, orbitStopVisuals]);
