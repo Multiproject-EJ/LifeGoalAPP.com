@@ -1990,7 +1990,7 @@ const ISLAND_5_SKY_DOME_SRC = '/assets/islands/island-005/background/sky-dome-v2
 interface Island5AmbienceRuntime {
   root: THREE.Group;
   animate: (elapsed: number) => void;
-  updateView?: (cameraPosition: THREE.Vector3) => void;
+  updateView?: (cameraPosition: THREE.Vector3, cameraTarget?: THREE.Vector3) => void;
   updateSignatureMission?: (presentation: FrostwellIceworksPresentation) => void;
 }
 
