@@ -1,0 +1,312 @@
+{
+  "targetName": "Island 008 Everblossom Kingdom",
+  "sourceImage": "docs/visual-references/island-008-flower-kingdom/island-008-flower-kingdom-goal-v1.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "interactive botanical architectural island environment",
+      "primaryDomain": "object",
+      "formLanguage": ["architectural", "botanical-like", "organic", "sculptural"],
+      "structureKind": ["compound object", "branching hierarchy", "repeated modules", "layered shell"],
+      "motionPotential": ["articulated", "whole-object transform", "effect-emitter", "ambient particle systems"],
+      "materialFamilies": ["stone", "root and bark", "leaf", "flower petal", "metal", "glass-like crystal", "water"],
+      "notes": "Conditionally admitted for a stylized scene reconstruction. The locked HabitGame camera and real spark36_ring remain authoritative; unseen rear and underside regions are procedural approximations."
+    },
+    "complexity": {
+      "tier": "ultra-complex",
+      "scores": {
+        "silhouetteComplexity": 3,
+        "componentCount": 3,
+        "hierarchyDepth": 3,
+        "repetitionDensity": 3,
+        "materialLayerCount": 3,
+        "localDetailDensity": 3,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 3
+      },
+      "estimatedCounts": {
+        "macroComponents": 5,
+        "mesoComponents": 14,
+        "microFeatureGroups": 12,
+        "materialLayers": 10,
+        "repetitionSystems": 10
+      },
+      "reasoning": [
+        "Five silhouette-distinct L1-L3 landmarks, a connected root-and-stone terrain hierarchy, dense radial petal/flower/window systems, transparent botanical glass, springs, butterflies and three mobile quality tiers require an ultra-complex scene hierarchy."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "ultra-complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "The reference depends on deep architectural hierarchy, organic attachments, dense repeated botanical systems, multi-view volume, action-ready landmark roots and quality-scaled mobile ambience."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      "Rear facades and the island underside are hidden; author coherent low-detail continuation and validate self-consistency in orbit views.",
+      "The exact glass thickness and internal circulation are not observable; use gold frame structure and restrained transparent shells at phone scale.",
+      "The reference route segment count is rejected; the shared spark36_ring is the only tile geometry authority.",
+      "Small botanical species are ambiguous; preserve observed palette, scale, density and architecture integration rather than claiming exact anatomy."
+    ],
+    "detailInventory": {
+      "scanMethod": "grid-3x3 plus semantic systems",
+      "targetMinDetails": 16,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {"id":"d01","kind":"contour","description":"turquoise valley and distant green cliff depth","mapsTo":{"type":"component.localFeatures","ref":"valley-horizon"},"confidence":0.92},
+        {"id":"d02","kind":"ridge","description":"tulip glasshouse gold rib cage","mapsTo":{"type":"component.localFeatures","ref":"glasshouse-ribs"},"confidence":0.96},
+        {"id":"d03","kind":"ridge","description":"sunflower radial petal crown","mapsTo":{"type":"component.localFeatures","ref":"sunflower-petal-ring"},"confidence":0.97},
+        {"id":"d04","kind":"contour","description":"broad leaf roof with central and secondary veins","mapsTo":{"type":"component.localFeatures","ref":"leafroof-veins"},"confidence":0.98},
+        {"id":"d05","kind":"gloss","description":"faceted orchid crystal conservatory","mapsTo":{"type":"material.localOverrides","ref":"orchid-glass-highlight"},"confidence":0.93},
+        {"id":"d06","kind":"bevel","description":"ivory route blocks with gold-green fine joints","mapsTo":{"type":"component.localFeatures","ref":"canonical-route-clearance"},"confidence":1.0},
+        {"id":"d07","kind":"ridge","description":"stacked lotus balcony rings on central citadel","mapsTo":{"type":"component.localFeatures","ref":"citadel-petal-balconies"},"confidence":0.98},
+        {"id":"d08","kind":"linework","description":"pointed green glass windows with antique-gold tracery","mapsTo":{"type":"component.localFeatures","ref":"arched-window-tracery"},"confidence":0.95},
+        {"id":"d09","kind":"ridge","description":"living root arches supporting satellite terraces","mapsTo":{"type":"component.localFeatures","ref":"root-arch-network"},"confidence":0.91},
+        {"id":"d10","kind":"gloss","description":"small springs and waterfall ribbons terminating in foam","mapsTo":{"type":"material.localOverrides","ref":"waterfall-specular"},"confidence":0.9},
+        {"id":"d11","kind":"contour","description":"layered butterfly silhouettes at three depths","mapsTo":{"type":"component.localFeatures","ref":"butterfly-depth-layers"},"confidence":0.92},
+        {"id":"d12","kind":"contour","description":"asymmetric planted ledges outside the route","mapsTo":{"type":"component.localFeatures","ref":"route-clear-garden-beds"},"confidence":0.95},
+        {"id":"d13","kind":"bevel","description":"five readable pointed entrances and stairs","mapsTo":{"type":"component.localFeatures","ref":"five-entrance-system"},"confidence":0.97},
+        {"id":"d14","kind":"stain","description":"cavity-darkened root and stone terrace undersides","mapsTo":{"type":"material.localOverrides","ref":"terrain-cavity-darkening"},"confidence":0.9},
+        {"id":"d15","kind":"gloss","description":"restrained antique-gold trim highlights","mapsTo":{"type":"material.localOverrides","ref":"gold-crest-response"},"confidence":0.94},
+        {"id":"d16","kind":"contour","description":"monumental open lotus crown at the citadel apex","mapsTo":{"type":"component.localFeatures","ref":"citadel-open-crown"},"confidence":0.99}
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "docs/visual-references/island-008-flower-kingdom/island-008-flower-kingdom-goal-v1.png"
+  },
+  "qualityContract": {
+    "qualityBar": "ultra-complex",
+    "definitionOfDone": [
+      "A phone-readable Flower Kingdom presents the real unobstructed 36-tile ring, five unmistakably different botanical architecture families with coherent L1-L3 growth, a vertically dominant Blossom Crown Citadel, connected root terraces and quality-scaled living ambience while remaining inside the Island 007 High performance ceiling."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 5,
+      "mesoComponents": 14,
+      "microFeatureGroups": 12,
+      "materialLayers": 8,
+      "repetitionSystems": 8,
+      "reviewViewpoints": 8
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Island 008 Everblossom Kingdom procedural botanical architecture flower petals mobile Three.js glass material transparency fill rate instancing mobile performance organic root terrain curve sweep attachment",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-opacity-alpha",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[8]",
+        "score": 9.3333024642,
+        "snippets": [
+          "Controls material transparency and blend mode; in CS2 workflows the alpha channel of Base Color is repurposed as a non-transparency data channel. Kiểm soát độ trong suốt và chế độ blend của vật liệu; trong quy trình CS2, kênh alpha của Base ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[8]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.description-controlled-vocabulary-aat-facets",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.description_conventions[5]",
+        "score": 6.640249309822,
+        "snippets": [
+          "Standardized terminology (Getty Art & Architecture Thesaurus facets for materials, activities, physical attributes) replacing vague or inconsistent free-text terms. Thuật ngữ chuẩn hóa (các facet của Getty Art & Architecture Thesaurus cho vật ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.description_conventions[5]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.runtime-hierarchy",
+        "file_path": "grimoire/readiness/action_rigging.md",
+        "heading": "Hierarchy Pattern",
+        "key_path": null,
+        "score": 6.467363058713,
+        "snippets": [
+          "An action-ready model uses a root, component pivot groups, visual meshes, sockets, collider metadata or proxies, and destruction-group metadata."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/readiness/action_rigging.md",
+            "heading": "Hierarchy Pattern",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/readiness/action_rigging.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      }
+    ]
+  }
+}

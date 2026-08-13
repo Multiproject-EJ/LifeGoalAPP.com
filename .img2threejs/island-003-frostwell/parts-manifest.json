@@ -1,0 +1,29 @@
+{
+  "model": "frostwell-iceworks",
+  "parts": [
+    { "name": "root", "kind": "part", "module": "FrostwellIceworksThreeModel", "triangles": 0 },
+    { "name": "sea-ice-platform", "kind": "part", "module": "platform", "triangles": 180 },
+    { "name": "platform-cracks", "kind": "part", "module": "platform", "triangles": 320 },
+    { "name": "drill-rig", "kind": "part", "module": "drill", "triangles": 850 },
+    { "name": "drill-pivot", "kind": "part", "module": "drill", "triangles": 220 },
+    { "name": "winch-pivot", "kind": "part", "module": "drill", "triangles": 240 },
+    { "name": "bore-opening", "kind": "part", "module": "drill", "triangles": 260 },
+    { "name": "progress-light-ring", "kind": "part", "module": "drill", "triangles": 240 },
+    { "name": "fishery-building", "kind": "part", "module": "fishery", "triangles": 160 },
+    { "name": "fishery-roof", "kind": "part", "module": "fishery", "triangles": 12 },
+    { "name": "freshwater-reservoir", "kind": "part", "module": "reservoir", "triangles": 180 },
+    { "name": "reservoir-water-column", "kind": "part", "module": "reservoir", "triangles": 144 },
+    { "name": "tank-band-array", "kind": "part", "module": "reservoir", "triangles": 480 },
+    { "name": "net-conveyor", "kind": "part", "module": "fishery", "triangles": 190 },
+    { "name": "carrier-array", "kind": "part", "module": "fishery", "triangles": 720 },
+    { "name": "catch-sorting-bin", "kind": "part", "module": "fishery", "triangles": 360 },
+    { "name": "water-pipe-network", "kind": "part", "module": "reservoir", "triangles": 480 },
+    { "name": "water-flow-system", "kind": "part", "module": "reservoir", "triangles": 360 },
+    { "name": "service-umbilical", "kind": "part", "module": "platform", "triangles": 460 },
+    { "name": "construction-burst", "kind": "part", "module": "effects", "triangles": 0 },
+    { "name": "snow-burst-particles", "kind": "part", "module": "effects", "triangles": 1100 },
+    { "name": "warm-practical-system", "kind": "part", "module": "fishery", "triangles": 12 }
+  ],
+  "unnamedMeshes": 0,
+  "integralMeshes": 0
+}

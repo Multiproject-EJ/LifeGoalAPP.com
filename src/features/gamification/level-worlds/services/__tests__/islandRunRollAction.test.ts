@@ -14,6 +14,7 @@ import {
   resetIslandRunStateSnapshot,
 } from '../islandRunStateStore';
 import { getTrafficLightCharge, TRAFFIC_LIGHT_TILE_INDEX } from '../islandRunTrafficLightTile';
+import { FROSTWELL_DRILL_TILE_INDICES, resolveFrostwellIceworksProgress } from '../islandRunSignatureMissions';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const USER_ID = 'roll-action-test-user';
@@ -125,6 +126,29 @@ export const islandRunRollActionTests: TestCase[] = [
       assertEqual(secondRoll.newDicePool, 28, 'second roll must deduct from the canonical 29 dice');
       assertEqual(secondRoll.newTokenIndex, 11, 'second roll must start from canonical tile 9');
       assertEqual(getIslandRunStateSnapshot(session).tokenIndex, 11, 'roll result is published canonically');
+    },
+  },
+  {
+    name: 'Island 003 landing on a drill tile grants one Frostwell spin even with a high multiplier',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, dicePool: 30, tokenIndex: FROSTWELL_DRILL_TILE_INDICES[0] - 2, currentIslandNumber: 3, cycleIndex: 0 });
+      const result = await withMockedRandom([0, 0], () => executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 5 }));
+      assertEqual(result.status, 'ok', 'roll succeeds');
+      assertEqual(result.frostwellSpinGranted, true, 'mission landing is surfaced to presentation');
+      const state = readIslandRunGameStateRecord(makeSession());
+      assertEqual(resolveFrostwellIceworksProgress({ ledger: state.signatureMissionProgressByIsland, islandNumber: 3, cycleIndex: 0 }).spinsEarned, 1, 'landing grants exactly one spin');
+    },
+  },
+  {
+    name: 'Island 003 ordinary landing does not passively advance Frostwell',
+    run: async () => {
+      resetEnvironment();
+      seedState({ runtimeVersion: 0, dicePool: 30, tokenIndex: 0, currentIslandNumber: 3, cycleIndex: 0 });
+      const result = await withMockedRandom([0, 0], () => executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }));
+      assertEqual(result.frostwellSpinGranted, false, 'ordinary landing grants nothing');
+      const state = readIslandRunGameStateRecord(makeSession());
+      assertEqual(resolveFrostwellIceworksProgress({ ledger: state.signatureMissionProgressByIsland, islandNumber: 3, cycleIndex: 0 }).spinsEarned, 0, 'mission remains unchanged');
     },
   },
   {

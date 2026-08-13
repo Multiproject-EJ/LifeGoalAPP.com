@@ -1,0 +1,261 @@
+{
+  "sourceImage": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-frostwell/evidence/island-003-frostmoon-baseline.png",
+  "zonesDir": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/.img2threejs/island-003-frostwell/detail-zones",
+  "detailInventory": {
+    "scanMethod": "component-zones",
+    "targetMinDetails": 10,
+    "details": [
+      {
+        "id": "north-ocean-placement",
+        "kind": "contour",
+        "description": "Detached north-ocean sea-ice platform centred behind Frostmoon",
+        "region": {
+          "x": 0.28,
+          "y": 0,
+          "width": 0.44,
+          "height": 0.36,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette-and-identity",
+        "mapsTo": {
+          "type": "component",
+          "ref": "sea-ice-platform"
+        },
+        "evidenceRef": ".img2threejs/island-003-frostwell/evidence/island-003-frostmoon-baseline.png",
+        "confidence": 0.94,
+        "realization": "Named procedural geometry or explicit animation/material-state system.",
+        "evidenceRefs": [
+          "frostmoon-baseline-overview",
+          "user-approved-functional-brief"
+        ]
+      },
+      {
+        "id": "drill-tower-silhouette",
+        "kind": "linework",
+        "description": "Tall four-leg A-frame drill tower with open centre",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette-and-identity",
+        "mapsTo": {
+          "type": "component",
+          "ref": "drill-rig"
+        },
+        "evidenceRef": "docs/gauntlets/2026-08-13-island-003-frostwell-iceworks.md",
+        "confidence": 0.9,
+        "realization": "Named procedural geometry or explicit animation/material-state system.",
+        "evidenceRefs": [
+          "frostmoon-baseline-overview",
+          "user-approved-functional-brief"
+        ]
+      },
+      {
+        "id": "twenty-progress-lamps",
+        "kind": "gloss",
+        "description": "Twenty radial drill progress lamps around the bore deck",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "units": "normalized"
+        },
+        "scale": "micro",
+        "affects": "hierarchy-and-motion-read",
+        "mapsTo": {
+          "type": "component",
+          "ref": "progress-light-ring"
+        },
+        "evidenceRef": "docs/gauntlets/2026-08-13-island-003-frostwell-iceworks.md",
+        "confidence": 0.9,
+        "realization": "Named procedural geometry or explicit animation/material-state system.",
+        "evidenceRefs": [
+          "frostmoon-baseline-overview",
+          "user-approved-functional-brief"
+        ]
+      },
+      {
+        "id": "segmented-auger",
+        "kind": "ridge",
+        "description": "Rotating shaft and copper conical ice auger",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "units": "normalized"
+        },
+        "scale": "meso",
+        "affects": "hierarchy-and-motion-read",
+        "mapsTo": {
+          "type": "component",
+          "ref": "drill-pivot"
+        },
+        "evidenceRef": "docs/gauntlets/2026-08-13-island-003-frostwell-iceworks.md",
+        "confidence": 0.9,
+        "realization": "Named procedural geometry or explicit animation/material-state system.",
+        "evidenceRefs": [
+          "frostmoon-baseline-overview",
+          "user-approved-functional-brief"
+        ]
+      },
+      {
+        "id": "fishery-shed",
+        "kind": "contour",
+        "description": "Low indigo-roof fishery with warm window",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette-and-identity",
+        "mapsTo": {
+          "type": "component",
+          "ref": "fishery-building"
+        },
+        "evidenceRef": "docs/gauntlets/2026-08-13-island-003-frostwell-iceworks.md",
+        "confidence": 0.9,
+        "realization": "Named procedural geometry or explicit animation/material-state system.",
+        "evidenceRefs": [
+          "frostmoon-baseline-overview",
+          "user-approved-functional-brief"
+        ]
+      },
+      {
+        "id": "freshwater-tank",
+        "kind": "contour",
+        "description": "Tall cylindrical reservoir with copper bands and visible water",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "units": "normalized"
+        },
+        "scale": "macro",
+        "affects": "silhouette-and-identity",
+        "mapsTo": {
+          "type": "component",
+          "ref": "freshwater-reservoir"
+        },
+        "evidenceRef": "docs/gauntlets/2026-08-13-island-003-frostwell-iceworks.md",
+        "confidence": 0.9,
+        "realization": "Named procedural geometry or explicit animation/material-state system.",
+        "evidenceRefs": [
+          "frostmoon-baseline-overview",
+          "user-approved-functional-brief"
+        ]
+      },
+      {
+        "id": "net-conveyor",
+        "kind": "linework",
+        "description": "Looping carrier system with alternating empty and fish-filled buckets",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "units": "normalized"
+        },
+        "scale": "meso",
+        "affects": "hierarchy-and-motion-read",
+        "mapsTo": {
+          "type": "component",
+          "ref": "net-conveyor"
+        },
+        "evidenceRef": "docs/gauntlets/2026-08-13-island-003-frostwell-iceworks.md",
+        "confidence": 0.9,
+        "realization": "Named procedural geometry or explicit animation/material-state system.",
+        "evidenceRefs": [
+          "frostmoon-baseline-overview",
+          "user-approved-functional-brief"
+        ]
+      },
+      {
+        "id": "water-flow-slugs",
+        "kind": "gloss",
+        "description": "Moving cyan water slugs travelling into the reservoir",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "units": "normalized"
+        },
+        "scale": "micro",
+        "affects": "hierarchy-and-motion-read",
+        "mapsTo": {
+          "type": "component",
+          "ref": "water-flow-system"
+        },
+        "evidenceRef": "docs/gauntlets/2026-08-13-island-003-frostwell-iceworks.md",
+        "confidence": 0.9,
+        "realization": "Named procedural geometry or explicit animation/material-state system.",
+        "evidenceRefs": [
+          "frostmoon-baseline-overview",
+          "user-approved-functional-brief"
+        ]
+      },
+      {
+        "id": "pier-umbilical",
+        "kind": "linework",
+        "description": "Narrow south-pointing timber pier and insulated pipe connection",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "units": "normalized"
+        },
+        "scale": "meso",
+        "affects": "hierarchy-and-motion-read",
+        "mapsTo": {
+          "type": "component",
+          "ref": "service-umbilical"
+        },
+        "evidenceRef": "docs/gauntlets/2026-08-13-island-003-frostwell-iceworks.md",
+        "confidence": 0.9,
+        "realization": "Named procedural geometry or explicit animation/material-state system.",
+        "evidenceRefs": [
+          "frostmoon-baseline-overview",
+          "user-approved-functional-brief"
+        ]
+      },
+      {
+        "id": "construction-poof",
+        "kind": "gloss",
+        "description": "Radial snow-steam poof that reveals operating equipment",
+        "region": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1,
+          "units": "normalized"
+        },
+        "scale": "micro",
+        "affects": "hierarchy-and-motion-read",
+        "mapsTo": {
+          "type": "component",
+          "ref": "construction-burst"
+        },
+        "evidenceRef": "docs/gauntlets/2026-08-13-island-003-frostwell-iceworks.md",
+        "confidence": 0.9,
+        "realization": "Named procedural geometry or explicit animation/material-state system.",
+        "evidenceRefs": [
+          "frostmoon-baseline-overview",
+          "user-approved-functional-brief"
+        ]
+      }
+    ]
+  },
+  "authoringInstruction": "Open each zone crop under zonesDir and replace every detail stub's kind, description, scale, affects, mapsTo, and confidence with what is actually observed. Add more detail entries per zone if a single zone contains multiple distinct marks; do not leave stubs unfilled or unlinked (mapsTo must reference a real component.localFeatures or material.localOverrides entry)."
+}

@@ -34,9 +34,9 @@ export const islandInhabitantBoardIntegrationTests: TestCase[] = [
     notIncludes('Caretaker is unavailable while another island activity is open.');
     includes('setIsIslandInhabitantFlowOpen(true)');
   } },
-  { name: 'board keeps existing egg-ready topbar cleanup separate from caretaker activation', run: () => {
-    includes('if (!showTopbarMenu || !showEggReadyBanner) return;');
-    includes('setShowEggReadyBanner(false);');
+  { name: 'board keeps Hatchery readiness non-blocking and separate from caretaker activation', run: () => {
+    notIncludes('showEggReadyBanner');
+    includes('Open hatchery.');
   } },
   { name: 'board opens and closes IslandInhabitantFlow presentation-only', run: () => {
     includes('<IslandInhabitantFlow');

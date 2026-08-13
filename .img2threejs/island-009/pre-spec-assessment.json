@@ -1,0 +1,537 @@
+{
+  "targetName": "Island 009 Heartshaft Crucible",
+  "sourceImage": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/docs/visual-references/island-009-heartshaft-crucible/island-009-heartshaft-crucible-goal-v1.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "procedural volcanic industrial island environment",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "circular caldera",
+        "Gothic foundry",
+        "radial machinery",
+        "asymmetric crane arms",
+        "layered basalt"
+      ],
+      "structureKind": [
+        "landlocked terrain network",
+        "deep open shaft",
+        "five landmark roots",
+        "canonical route integration"
+      ],
+      "motionPotential": [
+        "gantry slew",
+        "chain sway",
+        "ignition pulse",
+        "fuse charge",
+        "incubator rotation",
+        "press indexing",
+        "piston cycling"
+      ],
+      "materialFamilies": [
+        "black basalt",
+        "blackened steel",
+        "antique copper",
+        "molten emissive",
+        "violet crystal",
+        "teal heat glass"
+      ],
+      "notes": "Whole-environment concept reconstructed as a locked-camera procedural world; route topology and fixed plots come from HabitGame contracts, not the illustration."
+    },
+    "complexity": {
+      "tier": "ultra-complex",
+      "scores": {
+        "silhouetteComplexity": 3,
+        "componentCount": 3,
+        "hierarchyDepth": 3,
+        "repetitionDensity": 3,
+        "materialLayerCount": 3,
+        "localDetailDensity": 3,
+        "occlusionRisk": 3,
+        "actionReadinessNeed": 3
+      },
+      "estimatedCounts": {
+        "macroComponents": 6,
+        "mesoComponents": 15,
+        "microFeatureGroups": 15,
+        "materialLayers": 8,
+        "repetitionSystems": 11
+      },
+      "reasoning": [
+        "Five identity-distinct architectural families surround a deep negative-space centre.",
+        "Mechanical motion requires named pivots, sockets, chains and material-state ownership.",
+        "Phone readability requires real macro silhouettes with quality-scaled meso and micro repetition."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "ultra-complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "The crater, gantries and four external machines must remain distinguishable from overview and orbit views."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "grid-3x3",
+      "targetMinDetails": 6,
+      "details": [
+        {
+          "id": "zone-r0c0",
+          "kind": "contour",
+          "description": "Blastglass Incubator with twin caged furnace bulbs, exhaust stacks and stair plinth",
+          "region": {
+            "x": 0,
+            "y": 0,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "macro",
+          "affects": "silhouette-and-identity",
+          "mapsTo": {
+            "type": "component",
+            "ref": "blastglass-incubator"
+          },
+          "evidenceRef": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/.img2threejs/island-009/detail-zones/zone-r0c0.png",
+          "confidence": 0.94,
+          "realization": "Named procedural geometry or explicit material-state system.",
+          "evidenceRefs": [
+            "reference-heartshaft-overview"
+          ]
+        },
+        {
+          "id": "zone-r0c1",
+          "kind": "ridge",
+          "description": "Rear caldera wall, basalt needles, lava falls and branching lava channels",
+          "region": {
+            "x": 0.3333,
+            "y": 0,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "hierarchy-and-material-read",
+          "mapsTo": {
+            "type": "component",
+            "ref": "caldera-wall-network"
+          },
+          "evidenceRef": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/.img2threejs/island-009/detail-zones/zone-r0c1.png",
+          "confidence": 0.94,
+          "realization": "Named procedural geometry or explicit material-state system.",
+          "evidenceRefs": [
+            "reference-heartshaft-overview"
+          ]
+        },
+        {
+          "id": "zone-r0c2",
+          "kind": "contour",
+          "description": "Great Fuse tower with segmented hot core, pipe return and exposed flywheel",
+          "region": {
+            "x": 0.6667,
+            "y": 0,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "macro",
+          "affects": "silhouette-and-identity",
+          "mapsTo": {
+            "type": "component",
+            "ref": "great-fuse"
+          },
+          "evidenceRef": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/.img2threejs/island-009/detail-zones/zone-r0c2.png",
+          "confidence": 0.94,
+          "realization": "Named procedural geometry or explicit material-state system.",
+          "evidenceRefs": [
+            "reference-heartshaft-overview"
+          ]
+        },
+        {
+          "id": "zone-r1c0",
+          "kind": "linework",
+          "description": "Left crane gantry with pulley wheel, counterweight, chain and embedded footing",
+          "region": {
+            "x": 0,
+            "y": 0.3333,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "hierarchy-and-material-read",
+          "mapsTo": {
+            "type": "component",
+            "ref": "heartshaft-gantry-array"
+          },
+          "evidenceRef": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/.img2threejs/island-009/detail-zones/zone-r1c0.png",
+          "confidence": 0.94,
+          "realization": "Named procedural geometry or explicit material-state system.",
+          "evidenceRefs": [
+            "reference-heartshaft-overview"
+          ]
+        },
+        {
+          "id": "zone-r1c1",
+          "kind": "contour",
+          "description": "Deep open shaft, three asymmetric arms, chain-suspended skeletal ignition ring and small magma heart",
+          "region": {
+            "x": 0.3333,
+            "y": 0.3333,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "macro",
+          "affects": "silhouette-and-identity",
+          "mapsTo": {
+            "type": "component",
+            "ref": "heartshaft-crucible"
+          },
+          "evidenceRef": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/.img2threejs/island-009/detail-zones/zone-r1c1.png",
+          "confidence": 0.94,
+          "realization": "Named procedural geometry or explicit material-state system.",
+          "evidenceRefs": [
+            "reference-heartshaft-overview"
+          ]
+        },
+        {
+          "id": "zone-r1c2",
+          "kind": "linework",
+          "description": "Right crane gantry, rail arm, drive wheel, hanging chain and conduit joint",
+          "region": {
+            "x": 0.6667,
+            "y": 0.3333,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "meso",
+          "affects": "hierarchy-and-material-read",
+          "mapsTo": {
+            "type": "component",
+            "ref": "heartshaft-gantry-array"
+          },
+          "evidenceRef": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/.img2threejs/island-009/detail-zones/zone-r1c2.png",
+          "confidence": 0.94,
+          "realization": "Named procedural geometry or explicit material-state system.",
+          "evidenceRefs": [
+            "reference-heartshaft-overview"
+          ]
+        },
+        {
+          "id": "zone-r2c0",
+          "kind": "ridge",
+          "description": "Memory Press with copper rune drum, flanking teal heat-glass pylons and stamping table",
+          "region": {
+            "x": 0,
+            "y": 0.6667,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "macro",
+          "affects": "silhouette-and-identity",
+          "mapsTo": {
+            "type": "component",
+            "ref": "memory-press"
+          },
+          "evidenceRef": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/.img2threejs/island-009/detail-zones/zone-r2c0.png",
+          "confidence": 0.94,
+          "realization": "Named procedural geometry or explicit material-state system.",
+          "evidenceRefs": [
+            "reference-heartshaft-overview"
+          ]
+        },
+        {
+          "id": "zone-r2c1",
+          "kind": "bevel",
+          "description": "Clean circular wedge route, crater rim trim and glowing conduit crossing under the land",
+          "region": {
+            "x": 0.3333,
+            "y": 0.6667,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "macro",
+          "affects": "silhouette-and-identity",
+          "mapsTo": {
+            "type": "component",
+            "ref": "route-integration"
+          },
+          "evidenceRef": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/.img2threejs/island-009/detail-zones/zone-r2c1.png",
+          "confidence": 0.94,
+          "realization": "Named procedural geometry or explicit material-state system.",
+          "evidenceRefs": [
+            "reference-heartshaft-overview"
+          ]
+        },
+        {
+          "id": "zone-r2c2",
+          "kind": "gloss",
+          "description": "Seismic Switchyard with violet pressure vessel, valve forest, gauges, pistons and rooted pipes",
+          "region": {
+            "x": 0.6667,
+            "y": 0.6667,
+            "width": 0.3333,
+            "height": 0.3333,
+            "units": "normalized"
+          },
+          "scale": "macro",
+          "affects": "silhouette-and-identity",
+          "mapsTo": {
+            "type": "component",
+            "ref": "seismic-switchyard"
+          },
+          "evidenceRef": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/.img2threejs/island-009/detail-zones/zone-r2c2.png",
+          "confidence": 0.94,
+          "realization": "Named procedural geometry or explicit material-state system.",
+          "evidenceRefs": [
+            "reference-heartshaft-overview"
+          ]
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0,
+      "proportions": {
+        "headUnit": 0,
+        "torso": 0,
+        "legs": 0,
+        "shoulderWidth": 0,
+        "hipWidth": 0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0,
+        "eyeSpacing": 0,
+        "noseBase": 0,
+        "mouthLine": 0,
+        "hairline": 0
+      },
+      "features": [],
+      "confidence": 0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/Users/ejmac/.codex/worktrees/e606/Mini Project - iOS and Adroid capcitor/docs/visual-references/island-009-heartshaft-crucible/island-009-heartshaft-crucible-goal-v1.png"
+  },
+  "qualityContract": {
+    "qualityBar": "ultra-complex",
+    "definitionOfDone": [
+      "A phone-readable landlocked volcanic island with exactly 36 canonical wedge tiles, a visibly deep open Heartshaft, five silhouette-distinct L1/L2/L3 landmark families, a reactive mechanical ambience chain and no gameplay authority in the presentation module."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 6,
+      "mesoComponents": 11,
+      "microFeatureGroups": 10,
+      "materialLayers": 8,
+      "repetitionSystems": 9,
+      "reviewViewpoints": 9
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "deep open shaft negative space",
+      "three asymmetric gantries and open ignition ring",
+      "five landmark identity separation",
+      "36-tile route clarity",
+      "black steel/copper/lava/violet/teal material separation",
+      "landlocked caldera continuity",
+      "reactive ambience sequence",
+      "hidden-side orbit completeness"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Island 009 Heartshaft Crucible industrial volcanic architecture gantry crane suspended ring crater basalt black steel copper heat glass emissive lava mobile Three.js mechanical pivots chains pistons flywheel action-ready hierarchy",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.runtime-hierarchy",
+        "file_path": "grimoire/readiness/action_rigging.md",
+        "heading": "Hierarchy Pattern",
+        "key_path": null,
+        "score": 9.194672271936,
+        "snippets": [
+          "An action-ready model uses a root, component pivot groups, visual meshes, sockets, collider metadata or proxies, and destruction-group metadata."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/readiness/action_rigging.md",
+            "heading": "Hierarchy Pattern",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/readiness/action_rigging.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      },
+      {
+        "record_id": "core.description-controlled-vocabulary-aat-facets",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.description_conventions[5]",
+        "score": 7.204472023305,
+        "snippets": [
+          "Standardized terminology (Getty Art & Architecture Thesaurus facets for materials, activities, physical attributes) replacing vague or inconsistent free-text terms. Thuật ngữ chuẩn hóa (các facet của Getty Art & Architecture Thesaurus cho vật ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.description_conventions[5]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-color-space-srgb-vs-linearnocolorspace",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[11]",
+        "score": 4.949707578922,
+        "snippets": [
+          "... và các bản đồ dữ liệu toán học (phải giữ tuyến tính/không hiệu chỉnh). Recognition cues: Base color/albedo and emissive textures are the only ones that should look like natural photographic color; Normal, roughness, metalness, and ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[11]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  }
+}

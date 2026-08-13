@@ -87,6 +87,7 @@ import {
   type TrafficLightPassResult,
 } from './islandRunTrafficLightTile';
 import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragmentPlacements';
+import { grantFrostwellDrillSpinForLanding } from './islandRunSignatureMissions';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
 
@@ -223,6 +224,8 @@ export interface IslandRunRollActionResult {
    * the roll transaction so a later full-record write cannot lose the pass.
    */
   trafficLightPass?: TrafficLightPassResult | null;
+  /** True when this landing granted one canonical Frostwell drill-wheel spin. */
+  frostwellSpinGranted?: boolean;
 }
 
 // ── per-user async mutex (defence-in-depth against concurrent rolls) ──────────
@@ -385,6 +388,15 @@ async function performRollAction(options: {
         islandNumber: state.currentIslandNumber,
       })
     : null;
+  const frostwellLanding = ordinaryTileGameplayActive
+    ? grantFrostwellDrillSpinForLanding({
+        ledger: state.signatureMissionProgressByIsland,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        tileIndex: newTokenIndex,
+        nowMs,
+      })
+    : { ledger: state.signatureMissionProgressByIsland, granted: false };
   const nextState = {
     ...state,
     runtimeVersion: newRuntimeVersion,
@@ -399,6 +411,7 @@ async function performRollAction(options: {
     firstSessionTutorialState: nextFirstSessionTutorialState,
     concordRollProtectionState: concordProtection.state,
     bonusTileChargeByIsland: trafficLightPass?.bonusTileChargeByIsland ?? state.bonusTileChargeByIsland,
+    signatureMissionProgressByIsland: frostwellLanding.ledger,
   };
 
   // Publish immediately, then await persistence inside the action mutex.
@@ -433,5 +446,6 @@ async function performRollAction(options: {
     concordFragmentPickup: concordProtection.pickup,
     ordinaryTileGameplayActive,
     trafficLightPass,
+    frostwellSpinGranted: frostwellLanding.granted,
   };
 }

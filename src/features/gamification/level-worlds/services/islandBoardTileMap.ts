@@ -15,6 +15,7 @@ import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBo
 import { getIslandRunRarity, type IslandRunIslandRarity } from './islandRunIslandMetadata';
 import { TRAFFIC_LIGHT_TILE_INDEX } from './islandRunTrafficLightTile';
 import { isCaretakerClueIsland } from './islandRunCardDrawCadence';
+import { isFrostwellDrillTile } from './islandRunSignatureMissions';
 
 export type IslandLandmarkDoorStopId = 'hatchery' | 'habit' | 'mystery' | 'wisdom' | 'boss';
 
@@ -29,6 +30,8 @@ export type IslandTileMapEntry = {
   doorStopId?: IslandLandmarkDoorStopId;
   /** Present when a door tile belongs to the currently active landmark cluster. */
   isActiveDoorCluster?: boolean;
+  /** Presentation marker for an ordinary tile that grants an Island 003 drill spin. */
+  signatureMissionKind?: 'frostwell_drill';
 };
 
 export type IslandLandmarkDoorTileConfig = {
@@ -295,5 +298,7 @@ export function generateTileMap(
     tiles.push({ index: tileIndex, tileType: TILE_POOL[poolIndex] });
   }
 
-  return tiles;
+  return tiles.map((entry) => isFrostwellDrillTile(islandNumber, entry.index)
+    ? { ...entry, signatureMissionKind: 'frostwell_drill' }
+    : entry);
 }

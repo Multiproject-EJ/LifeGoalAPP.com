@@ -1,4 +1,5 @@
 import { TILE_ANCHORS_36 } from '../islandBoardLayout';
+import * as THREE from 'three';
 import {
   buildIsland5AmbienceLayout,
   buildIsland3DRadialTileMeshData,
@@ -13,6 +14,7 @@ import {
   ISLAND_3D_QUALITY_PROFILES,
   ISLAND_3D_PERFORMANCE_TARGETS,
   ISLAND_3D_PROFILE_DURATION_MS,
+  ISLAND_3D_ROUTE_RADIUS,
   ISLAND_3D_IDLE_OVERVIEW_DELAY_MS,
   ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE,
   ISLAND_3D_TOKEN_HOP_ARC_HEIGHT,
@@ -24,6 +26,7 @@ import {
   resolveIsland3DRadialTileGeometry,
   resolveIsland3DLandingImpact,
   summarizeIsland3DPerformance,
+  shouldFadeCentralLandmarkForCamera,
 } from '../../dev/island5ThreePilotContract';
 import {
   buildIsland1CloudLayout,
@@ -32,15 +35,334 @@ import {
   ISLAND_1_CLOUD_MINIMUM_Y,
   ISLAND_1_OCEAN_SURFACE_Y,
 } from '../../dev/Island1ThreeWorld';
+import { createIsland3FrostmoonMaterials } from '../../dev/Island3FrostmoonThreeWorld';
+import {
+  createFrostwellIceworks,
+  FROSTWELL_OFFSHORE_POSITION,
+  FROSTWELL_PLATFORM_RADIUS,
+} from '../../dev/FrostwellIceworksThreeModel';
 import {
   isIsland6RouteCorridorClear,
   ISLAND_6_ROUTE_CLEARANCE_INNER_RADIUS,
   ISLAND_6_ROUTE_CLEARANCE_OUTER_RADIUS,
 } from '../../dev/Island6MoonveilThreeWorld';
+import {
+  collectIsland7RuntimePartManifest,
+  isIsland7RouteCorridorClear,
+  ISLAND_7_RUNTIME_PART_IDS,
+  ISLAND_7_ROUTE_CLEARANCE_INNER_RADIUS,
+  ISLAND_7_ROUTE_CLEARANCE_OUTER_RADIUS,
+  registerIsland7RuntimePart,
+} from '../../dev/Island7UnderwaterThreeWorld';
+import {
+  buildIsland8EverblossomLandmark,
+  collectIsland8RuntimePartManifest,
+  createIsland8EverblossomMaterials,
+  isIsland8RouteCorridorClear,
+  ISLAND_8_FLOWER_BORDER_INNER_RADIUS,
+  ISLAND_8_FLOWER_BORDER_MAX_FOOTPRINT,
+  ISLAND_8_FLOWER_BORDER_OUTER_RADIUS,
+  ISLAND_8_ROUTE_CLEARANCE_INNER_RADIUS,
+  ISLAND_8_ROUTE_CLEARANCE_OUTER_RADIUS,
+  ISLAND_8_RUNTIME_PART_IDS,
+  registerIsland8RuntimePart,
+} from '../../dev/Island8EverblossomThreeWorld';
+import {
+  buildIsland9HeartshaftLandmark,
+  collectIsland9RuntimePartManifest,
+  createIsland9HeartshaftMaterials,
+  isIsland9RouteCorridorClear,
+  ISLAND_9_ROUTE_CLEARANCE_INNER_RADIUS,
+  ISLAND_9_ROUTE_CLEARANCE_OUTER_RADIUS,
+  ISLAND_9_RUNTIME_PART_IDS,
+  registerIsland9RuntimePart,
+} from '../../dev/Island9HeartshaftThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
+import {
+  ISLAND_RUN_AUTO_ROLL_HOLD_MS,
+  ISLAND_RUN_HARD_THROW_HOLD_MS,
+  resolveIslandRunDiceHoldIntent,
+} from '../islandRunDiceThrowPresentation';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'separates tap, hard-throw release, and auto-roll hold thresholds',
+    run: () => {
+      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_HARD_THROW_HOLD_MS - 1, autoRollActivated: false }), 'normal', 'a tap or short hold remains a normal throw');
+      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_HARD_THROW_HOLD_MS, autoRollActivated: false }), 'hard', 'the first detent charges one hard throw');
+      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_AUTO_ROLL_HOLD_MS - 1, autoRollActivated: false }), 'hard', 'releasing before auto-roll remains one hard throw');
+      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_AUTO_ROLL_HOLD_MS, autoRollActivated: false }), 'auto', 'the long hold belongs to auto-roll');
+      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: 0, autoRollActivated: true }), 'auto', 'an activated auto-roll cannot degrade into a release throw');
+    },
+  },
+  {
+    name: 'fades the central landmark only when it blocks an outer-landmark inspection ray',
+    run: () => {
+      assert(shouldFadeCentralLandmarkForCamera({ cameraPosition: [0, 6, 2], focusPosition: [0, 1, -5] }), 'a camera looking through the centre must fade the boss');
+      assert(!shouldFadeCentralLandmarkForCamera({ cameraPosition: [0, 9, 2], focusPosition: [0, 8, -5] }), 'a ray passing above the central landmark must remain opaque');
+      assert(!shouldFadeCentralLandmarkForCamera({ cameraPosition: [-4, 6, -2], focusPosition: [-5, 1, -5] }), 'a clear same-side view must leave the boss opaque');
+    },
+  },
+  {
+    name: 'wires all 3D islands to stable landmark hit targets and the canonical dice launcher callback',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      const diceSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/board/IslandRunDiceLaunchOverlay.tsx', 'utf8');
+      assert(pilotSource.includes('createLandmarkHitTarget(landmark)'), 'every landmark needs a stable forgiving 3D tap proxy');
+      assert(pilotSource.includes('resolveLandmarkIdFromIntersection'), 'landmark routing must survive merged or nested meshes');
+      assert(pilotSource.includes('makeLandmarkMaterialsIndependent(landmarkRoot)'), 'central transparency may not fade materials shared with other landmarks');
+      assert(diceSource.includes('pointer input') && diceSource.includes('<BoardDice3D'), 'the visible dice must be a pointer-transparent layer above WebGL');
+      assert(diceSource.includes('onTopBarImpactRef.current?.()') && boardSource.includes("triggerImpactHaptic(diceThrowStrength === 'hard' ? 'strong' : 'medium'"), 'the top-bar collision frame needs a native-capable haptic impact');
+      assert(boardSource.includes('faces={rollingDiceFaces}') && boardSource.includes('onRollComplete={() =>'), 'the 3D dice must reuse the canonical result and completion clock');
+      assert(!boardSource.includes('showEggReadyBanner') && boardSource.includes('Open hatchery.'), 'egg readiness should stay in persistent Hatchery access instead of reopening an automatic modal');
+      assert(boardSource.includes("requestActiveStopTransition(null, 'hatchery_landmark_door_non_blocking')"), 'landing on the Hatchery door must not repeatedly open the full remote-egg modal');
+    },
+  },
+  {
+    name: 'keeps Frostwell Iceworks north in the ocean, route-clear, clickable, and state-driven',
+    run: async () => {
+      assertEqual(FROSTWELL_OFFSHORE_POSITION.x, 0, 'the Iceworks should stay centred on the north sightline');
+      assert(FROSTWELL_OFFSHORE_POSITION.z < 0, 'the Iceworks must remain north of Frostmoon');
+      assert(
+        Math.abs(FROSTWELL_OFFSHORE_POSITION.z) - FROSTWELL_PLATFORM_RADIUS > ISLAND_3D_ROUTE_RADIUS + 1,
+        'the detached ice platform must remain safely beyond the canonical tile route',
+      );
+      const materials = createIsland3FrostmoonMaterials();
+      const runtime = createFrostwellIceworks('low', materials);
+      assert(runtime.root.userData.sculptRuntime.clickable, 'the Iceworks runtime must remain explicitly clickable');
+      assertEqual(runtime.hitTarget.userData.signatureMissionId, 'frostwell-iceworks', 'the forgiving hit target must route to the Frostwell mission');
+      const operating = runtime.root.getObjectByName('FROSTWELL_OPERATING_FISHERY_AND_RESERVOIR');
+      assert(Boolean(operating) && !operating!.visible, 'the fishery machinery must remain hidden while drilling');
+      runtime.setPresentation({ metersDrilled: 500, built: true, constructionSequence: 1 });
+      assert(Boolean(operating?.visible), 'funding must reveal the operating fishery and freshwater reservoir');
+      runtime.animate(123.4);
+      assert(runtime.root.getObjectByName('FROSTWELL_BORE_OPENING') !== undefined, 'the 50m bore needs a readable physical opening');
+      assert(runtime.root.getObjectByName('FROSTWELL_CATCH_SORTING_BIN') !== undefined, 'the completed mission needs a visible fish output');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
+      assert(pilotSource.includes('clickableSignatureMissions') && pilotSource.includes('onSignatureMissionClickRef.current?.()'), 'Iceworks ray hits must open the signature mission UI');
+      assert(pilotSource.includes("applyPreset('frostwell', 0.9)") && pilotSource.includes("activeInspectionPreset === 'frostwell'"), 'Frostwell needs its own camera and central-landmark fade');
+      assert(boardSource.includes('isIslandVisualPreview && islandArtPreviewNumber !== 3'), 'Island 003 visual QA must retain the real 3D hit-to-modal path');
+      assert(boardSource.includes('Deliberately keep the special Frostwell inspection camera active'), 'closing the tray must leave the rig available for unobstructed 3D inspection');
+      assert(boardSource.includes('frostwell-mission-modal__wheel-hub') && boardSource.includes('spinFrostwellDrillWheel'), 'the lower half-wheel hub must route through canonical wheel authority');
+      assert(boardSource.includes("params.get('frostwellMissionState')") && boardSource.includes("frostwellMissionState === 'constructing'"), 'development proof mode must cover the construction POOF without creating gameplay state');
+      runtime.root.traverse((object) => {
+        if (object instanceof THREE.Mesh) object.geometry.dispose();
+      });
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: 'keeps Island 009 volcanic scenery outside the route and gives every L1 L2 L3 landmark a distinct additive silhouette',
+    run: async () => {
+      assert(isIsland9RouteCorridorClear(ISLAND_9_ROUTE_CLEARANCE_INNER_RADIUS - 0.2, 0, 0.16), 'the open shaft may remain inside the route with clearance');
+      assert(!isIsland9RouteCorridorClear(3.4, 0, 0.01), 'foundry scenery may not enter the canonical tile centreline');
+      assert(isIsland9RouteCorridorClear(ISLAND_9_ROUTE_CLEARANCE_OUTER_RADIUS + 0.2, 0, 0.16), 'outer caldera scenery may begin beyond the protected route');
+      const materials = createIsland9HeartshaftMaterials();
+      const levelHeightsByLandmark = new Map<string, number[]>();
+      const l3Silhouettes: string[] = [];
+      for (const landmark of ISLAND_5_LANDMARKS) {
+        const heights: number[] = [];
+        for (const level of [1, 2, 3] as const) {
+          const root = buildIsland9HeartshaftLandmark(landmark, level, 'low', materials);
+          const size = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
+          heights.push(size.y);
+          if (level === 3) l3Silhouettes.push(`${size.x.toFixed(2)}:${size.y.toFixed(2)}:${size.z.toFixed(2)}`);
+          root.traverse((object) => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
+        }
+        levelHeightsByLandmark.set(landmark.id, heights);
+      }
+      levelHeightsByLandmark.forEach((heights, id) => {
+        assert(heights[1] > heights[0] && heights[2] > heights[1], `${id} must grow additively at L1, L2 and L3`);
+      });
+      assertEqual(new Set(l3Silhouettes).size, 5, 'all five Heartshaft L3 landmark bounds need distinct silhouettes');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island9HeartshaftThreeWorld.ts', 'utf8');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      assert(worldSource.includes("shaftWall.name = 'ISLAND_9_DEEP_SHAFT_WALL'"), 'Island 009 needs a real open descending shaft wall');
+      assert(worldSource.includes("ringPivot.name = 'ISLAND_9_IGNITION_RING_PIVOT'"), 'Heartshaft L3 needs its open suspended ignition ring');
+      assert(worldSource.includes("const cycle = (elapsed * 0.12) % 1"), 'Island 009 needs the reactive foundry ambience sequence');
+      assert(worldSource.includes('sharedWater.visible = false'), 'Island 009 must remain landlocked with no ocean plane');
+      assert(pilotSource.includes('isHeartshaftCrucible && island9HeartshaftMaterials'), 'Island 009 must reuse the shared renderer shell');
+    },
+  },
+  {
+    name: 'exports the Island 009 action-ready runtime hierarchy',
+    run: () => {
+      const root = new THREE.Group();
+      root.name = 'ISLAND_9_ACTION_READY_TEST_ROOT';
+      root.userData.sculptRuntime = {
+        clickable: true,
+        explodable: true,
+        parts: ISLAND_9_RUNTIME_PART_IDS.map((partId) => {
+          const pivot = new THREE.Object3D();
+          pivot.name = `ISLAND_9_${partId.toUpperCase()}_PIVOT`;
+          root.add(pivot);
+          return registerIsland9RuntimePart(partId, pivot, 'contract-test');
+        }),
+        sockets: { focus: 'ISLAND_9_TEST_FOCUS_SOCKET' },
+        colliders: [{ id: 'test-trigger', type: 'box', isTrigger: true }],
+        destructionGroups: [{ id: 'static-world', breakable: false }],
+      };
+      const manifest = collectIsland9RuntimePartManifest([root]);
+      assertEqual(new Set(manifest.parts.map((part) => part.name)).size, ISLAND_9_RUNTIME_PART_IDS.length, 'every Island 009 runtime part needs a stable selectable ID');
+      assert(root.userData.sculptRuntime.clickable && root.userData.sculptRuntime.explodable, 'Island 009 roots must expose click and exploded-review intent');
+      assert(root.userData.sculptRuntime.sockets.focus, 'Island 009 roots need a named focus socket');
+      assert(root.userData.sculptRuntime.colliders.length > 0, 'Island 009 roots need collider intent');
+    },
+  },
+  {
+    name: 'keeps Island 008 botanical scenery outside the route and all five L3 silhouettes distinct',
+    run: async () => {
+      assert(isIsland8RouteCorridorClear(ISLAND_8_ROUTE_CLEARANCE_INNER_RADIUS - 0.2, 0, 0.16), 'inner citadel gardens may remain inside the route with clearance');
+      assert(!isIsland8RouteCorridorClear(3.4, 0, 0.01), 'Everblossom scenery may not enter the canonical tile centreline');
+      assert(isIsland8RouteCorridorClear(ISLAND_8_ROUTE_CLEARANCE_OUTER_RADIUS + 0.2, 0, 0.16), 'outer garden beds may begin beyond the route with clearance');
+      assert(
+        ISLAND_8_FLOWER_BORDER_INNER_RADIUS - ISLAND_8_FLOWER_BORDER_MAX_FOOTPRINT >= ISLAND_8_ROUTE_CLEARANCE_OUTER_RADIUS,
+        'the inner flower-border row must remain beyond the protected tile corridor',
+      );
+      assert(
+        isIsland8RouteCorridorClear(ISLAND_8_FLOWER_BORDER_OUTER_RADIUS, 0, ISLAND_8_FLOWER_BORDER_MAX_FOOTPRINT),
+        'the outer flower-border row must preserve route clearance at full petal footprint',
+      );
+      const materials = createIsland8EverblossomMaterials();
+      const roots = ISLAND_5_LANDMARKS.map((landmark) => buildIsland8EverblossomLandmark(landmark, 3, 'low', materials));
+      const silhouettes = roots.map((root) => {
+        const bounds = new THREE.Box3().setFromObject(root);
+        const size = bounds.getSize(new THREE.Vector3());
+        return `${size.x.toFixed(2)}:${size.y.toFixed(2)}:${size.z.toFixed(2)}`;
+      });
+      assertEqual(new Set(silhouettes).size, 5, 'all five Everblossom L3 landmarks need distinct bounding silhouettes');
+      const citadel = roots.find((root) => root.name.includes('BOSS'))!;
+      const citadelHeight = new THREE.Box3().setFromObject(citadel).getSize(new THREE.Vector3()).y;
+      const satelliteHeights = roots.filter((root) => root !== citadel).map((root) => new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3()).y);
+      assert(citadelHeight > Math.max(...satelliteHeights), 'Blossom Crown Citadel must remain the dominant vertical landmark');
+      roots.forEach((root) => root.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose();
+          const objectMaterials = Array.isArray(object.material) ? object.material : [object.material];
+          objectMaterials.forEach((material) => material.dispose());
+        }
+      }));
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island8EverblossomThreeWorld.ts', 'utf8');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      assert(worldSource.includes("root.name = 'ISLAND_8_BLOSSOM_CROWN_CITADEL'"), 'Island 008 needs its unique central citadel factory');
+      assert(worldSource.includes("outerCrown"), 'Citadel L3 needs a monumental open crown silhouette');
+      assert(worldSource.includes("root.name = 'ISLAND_8_SUNFLOWER_RHYTHM_PAVILION'"), 'Habit must remain an open sunflower pavilion');
+      assert(worldSource.includes("root.name = 'ISLAND_8_LEAFROOF_GARDEN_HALL'"), 'Mystery must retain a broad leafroof silhouette');
+      assert(worldSource.includes("root.name = 'ISLAND_8_ORCHID_CRYSTAL_ARCHIVE'"), 'Wisdom must retain a faceted orchid-crystal silhouette');
+      assert(worldSource.includes("butterflyRoot.name = 'ISLAND_8_BUTTERFLY_DEPTH_LAYERS'"), 'Everblossom needs quality-scaled butterfly depth layers');
+      assert(worldSource.includes("waterfallRoot.name = 'ISLAND_8_SPRING_WATERFALL_NETWORK'"), 'Everblossom needs visible spring and waterfall motion');
+      assert(worldSource.includes("border.name = 'ISLAND_8_TILE_RING_FLOWER_BORDER'"), 'Everblossom needs a deliberate flower border outside the tile ring');
+      assert(pilotSource.includes("isEverblossomKingdom || isAbyssalPearlKingdom") || pilotSource.includes("isAbyssalPearlKingdom || isEverblossomKingdom"), 'Island 008 must participate in shared renderer conditionals without a separate gameplay shell');
+      assert(pilotSource.includes("new URLSearchParams(window.location.search).get('island3dMapStripped') === '1'"), 'Island 008 must retain deterministic map-stripped evidence mode');
+    },
+  },
+  {
+    name: 'exports the Island 008 action-ready runtime hierarchy',
+    run: () => {
+      const root = new THREE.Group();
+      root.name = 'ISLAND_8_ACTION_READY_TEST_ROOT';
+      root.userData.sculptRuntime = {
+        clickable: true,
+        explodable: true,
+        parts: ISLAND_8_RUNTIME_PART_IDS.map((partId) => {
+          const pivot = new THREE.Object3D();
+          pivot.name = `ISLAND_8_${partId.toUpperCase()}_PIVOT`;
+          root.add(pivot);
+          return registerIsland8RuntimePart(partId, pivot, 'contract-test');
+        }),
+        sockets: { focus: 'ISLAND_8_TEST_FOCUS_SOCKET' },
+        colliders: [{ id: 'test-trigger', type: 'box', isTrigger: true }],
+        destructionGroups: [{ id: 'static-world', breakable: false }],
+      };
+      const manifest = collectIsland8RuntimePartManifest([root]);
+      assertEqual(new Set(manifest.parts.map((part) => part.name)).size, ISLAND_8_RUNTIME_PART_IDS.length, 'every Island 008 runtime part needs a stable selectable ID');
+      assert(root.userData.sculptRuntime.clickable && root.userData.sculptRuntime.explodable, 'Island 008 roots must expose click and exploded-review intent');
+      assert(root.userData.sculptRuntime.sockets.focus, 'Island 008 roots need a named focus socket');
+      assert(root.userData.sculptRuntime.colliders.length > 0, 'Island 008 roots need collider intent');
+    },
+  },
+  {
+    name: 'exports the Island 007 action-ready runtime hierarchy from built Three objects',
+    run: () => {
+      const root = new THREE.Group();
+      root.name = 'ISLAND_7_ACTION_READY_TEST_ROOT';
+      root.userData.sculptRuntime = {
+        clickable: true,
+        explodable: true,
+        parts: ISLAND_7_RUNTIME_PART_IDS.map((partId) => {
+          const pivot = new THREE.Object3D();
+          pivot.name = `ISLAND_7_${partId.toUpperCase()}_PIVOT`;
+          root.add(pivot);
+          return registerIsland7RuntimePart(partId, pivot, 'contract-test');
+        }),
+        sockets: { focus: 'ISLAND_7_TEST_FOCUS_SOCKET' },
+        colliders: [{ id: 'test-trigger', type: 'box', isTrigger: true }],
+        destructionGroups: [{ id: 'static-world', breakable: false }],
+      };
+      const manifest = collectIsland7RuntimePartManifest([root]);
+      assertEqual(new Set(manifest.parts.map((part) => part.name)).size, ISLAND_7_RUNTIME_PART_IDS.length, 'every specified runtime part needs a stable selectable ID');
+      assert(manifest.parts.every((part) => part.kind === 'part' && part.nodeName), 'runtime records must identify their backing pivot node');
+      assert(root.userData.sculptRuntime.clickable && root.userData.sculptRuntime.explodable, 'the hierarchy must expose click and exploded-review intent');
+      assert(root.userData.sculptRuntime.sockets.focus, 'action-ready roots need a named focus socket');
+      assert(root.userData.sculptRuntime.colliders.length > 0, 'action-ready roots need collider intent');
+      assert(root.userData.sculptRuntime.destructionGroups.length > 0, 'action-ready roots need explicit destruction grouping');
+    },
+  },
+  {
+    name: 'keeps Abyssal Pearl scenery outside the protected route and preserves adaptive living-water systems',
+    run: async () => {
+      assert(isIsland7RouteCorridorClear(ISLAND_7_ROUTE_CLEARANCE_INNER_RADIUS - 0.2, 0, 0.16), 'inner palace gardens may remain inside the route with clearance');
+      assert(!isIsland7RouteCorridorClear(3.4, 0, 0.01), 'underwater coral may not enter the canonical tile centreline');
+      assert(isIsland7RouteCorridorClear(ISLAND_7_ROUTE_CLEARANCE_OUTER_RADIUS + 0.2, 0, 0.16), 'outer reef gardens may begin beyond the route with clearance');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island7UnderwaterThreeWorld.ts', 'utf8');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      assert(worldSource.includes("root.name = 'ISLAND_7_FISH_SCHOOLS'"), 'Island 007 needs independently animated fish schools');
+      assert(worldSource.includes("root.name = 'ISLAND_7_BUBBLE_FIELD'"), 'Island 007 needs a quality-scaled bubble field');
+      assert(worldSource.includes("surface.name = 'ISLAND_7_WATER_SURFACE_CEILING'"), 'Island 007 needs a readable animated water-surface ceiling');
+      assert(worldSource.includes("submarineOrbit.name = 'ISLAND_7_SUBMARINE_ORBIT'"), 'Island 007 needs its distinctive fantasy submarine ambience');
+      assert(worldSource.includes("animatedKelp.name = 'ISLAND_7_ANIMATED_KELP_GARDEN'"), 'animated kelp must remain outside static geometry compaction');
+      assert(worldSource.includes("quality === 'high' ? 96 : quality === 'medium' ? 58 : 28"), 'bubble density must scale across all three device tiers');
+      assert(worldSource.includes('new THREE.InstancedMesh(geometry, materials.bubble, count)'), 'bubble ambience must stay one instanced draw-call family');
+      assert(worldSource.includes("'ISLAND_7_PORTAL_VORTEX_RING'"), 'the Compass Current needs a preserved animated outer vortex');
+      assert(worldSource.includes("'ISLAND_7_PORTAL_INNER_VORTEX'"), 'the Compass Current needs a counter-rotating inner vortex');
+      assert(worldSource.includes('portalVortexRings.forEach'), 'portal current depth must animate without per-frame scene traversal');
+      assert(worldSource.includes('isIsland7RouteCorridorClear(fanX, fanZ, scale * 0.34)'), 'architectural sea fans must independently clear the canonical route');
+      assert(worldSource.includes('const surfaceUpdateInterval'), 'water-surface deformation must be cadence-limited per quality tier');
+      assert(worldSource.includes('const focusView = cameraPosition.distanceTo(cameraTarget) < 13.5'), 'underwater landmark focus must cull distant transparent ambience by camera semantics');
+      assert(worldSource.includes('const sideOrbitView = !focusView'), 'side-orbit cameras must cull only off-camera hero fauna before the geometry budget is sampled');
+      assert(pilotSource.includes('livingAmbience.updateView?.(camera.position, controls.target);'), 'view culling must receive the active camera target without reading gameplay state');
+      assert(pilotSource.includes("new URLSearchParams(window.location.search).get('island3dMapStripped') === '1'"), 'the Gauntlet must expose a deterministic map-stripped evidence route');
+      assert(pilotSource.includes('if (object instanceof THREE.Points)'), 'map-stripped structural evidence must hide particles instead of flattening them into opaque clay');
+      assert(pilotSource.includes('new THREE.MeshNormalMaterial'), 'map-stripped evidence must expose form and facing without authored maps or PBR response');
+      assert(pilotSource.includes('opacity: sourceMaterial.transparent'), 'map-stripped evidence must preserve transparent envelope depth rather than occluding the island');
+      assert(!pilotSource.includes('scene.overrideMaterial = evidenceOverrideMaterial'), 'map-stripped evidence must not use one opaque scene override that blanks the water volume');
+      assert(worldSource.includes('bubblePosition.set('), 'bubble animation must reuse scratch vectors instead of allocating per bubble per frame');
+      assert(!worldSource.includes('shaft.position.x +='), 'light shafts must use absolute time-based motion without cumulative drift');
+      assert(!worldSource.includes('fish.position.y +='), 'foreground fish must not accumulate frame-rate-dependent vertical drift');
+      assert(!worldSource.includes('jelly.rotation.y +='), 'jellyfish rotation must remain elapsed-time based across frame rates');
+      assert(pilotSource.includes("'/assets/islands/island-007/background/abyssal-cavern-backdrop-v1.webp'"), 'underwater depth backdrop must remain an optimized WebP asset');
+      assert(pilotSource.includes('ISLAND_7_TILE_BORDER_BATCH_'), 'the clean underwater route needs restrained, instanced gilded edging');
+      assert(pilotSource.includes('createTileBorderMeshGeometry(tileGeometry)'), 'all 36 underwater tiles must share one border geometry');
+      assert(pilotSource.includes('ISLAND_7_TILE_SURFACE_BATCH_'), 'underwater tile surfaces must remain batched while preserving landing impacts');
+      assert(pilotSource.includes('object instanceof THREE.LineSegments'), 'generic scene cleanup must dispose shared line geometry and materials');
+    },
+  },
   {
     name: 'keeps Moonveil scenery outside the protected 36-tile route corridor',
     run: async () => {
@@ -104,7 +426,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
-      const viewUpdateIndex = pilotSource.indexOf('livingAmbience.updateView?.(camera.position);');
+      const viewUpdateIndex = pilotSource.indexOf('livingAmbience.updateView?.(camera.position, controls.target);');
       const reducedMotionIndex = pilotSource.indexOf('if (!isReducedMotion) {', viewUpdateIndex);
       const animateIndex = pilotSource.indexOf('livingAmbience.animate(elapsed);', reducedMotionIndex);
       assert(viewUpdateIndex >= 0 && viewUpdateIndex < reducedMotionIndex, 'camera-side scenery culling must still run in reduced-motion mode');
@@ -212,7 +534,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       // @ts-ignore island-run test tsconfig omits node type libs
       const fsMod = await import('fs');
       const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
-      assert(pilotSource.includes('new THREE.PlaneGeometry(68, 68, qualityProfile.oceanGridSegments'), 'ocean must use the quality-scaled deforming grid');
+      assert(pilotSource.includes('isAbyssalPearlKingdom ? 1 : qualityProfile.oceanGridSegments'), 'ordinary islands must retain the quality-scaled ocean grid while Island 007 skips the hidden grid cost');
       assert(pilotSource.includes("waveBands.name = 'ISLAND_5_OCEAN_WAVE_BANDS'"), 'traveling wave bands should remain one addressable instanced layer');
       assert(pilotSource.includes('function createErodedCoastalCylinderGeometry'), 'terrain plates should use deterministic erosion instead of perfect cylinders');
       assert(pilotSource.includes("strata.name = 'ISLAND_5_INSTANCED_COASTAL_ROCK_STRATA'"), 'layered coastal rocks should remain one instanced draw-call family');
@@ -362,11 +684,11 @@ export const island5ThreePilotContractTests: TestCase[] = [
     },
   },
   {
-    name: 'defines reusable overview, orbit, survey and five landmark camera presets',
+    name: 'defines reusable overview, orbit, survey, five landmarks, and the Frostwell inspection preset',
     run: () => {
-      assertEqual(ISLAND_5_CAMERA_PRESETS.length, 9, 'camera rig should expose nine reusable presets');
-      assertEqual(new Set(ISLAND_5_CAMERA_PRESETS.map((preset) => preset.id)).size, 9, 'camera preset ids must be unique');
-      ['overview', 'survey', 'orbit-left', 'orbit-right', 'boss', 'hatchery', 'habit', 'wisdom', 'event'].forEach((id) => {
+      assertEqual(ISLAND_5_CAMERA_PRESETS.length, 10, 'camera rig should expose ten reusable presets');
+      assertEqual(new Set(ISLAND_5_CAMERA_PRESETS.map((preset) => preset.id)).size, 10, 'camera preset ids must be unique');
+      ['overview', 'survey', 'orbit-left', 'orbit-right', 'frostwell', 'boss', 'hatchery', 'habit', 'wisdom', 'event'].forEach((id) => {
         assert(ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === id), `missing camera preset ${id}`);
       });
       ISLAND_5_CAMERA_PRESETS.forEach((preset) => {
@@ -453,6 +775,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assertEqual(getIsland3DRendererPixelRatio(ISLAND_3D_QUALITY_PROFILES.low, 3), 1, 'low DPR must cap at 1');
       assertEqual(getIsland3DRendererPixelRatio(ISLAND_3D_QUALITY_PROFILES.medium, 3), 1.5, 'medium DPR must cap at 1.5');
       assertEqual(getIsland3DRendererPixelRatio(ISLAND_3D_QUALITY_PROFILES.high, 3), 2, 'high DPR must cap at 2');
+      assertEqual(getIsland3DRendererPixelRatio(ISLAND_3D_QUALITY_PROFILES.high, 3, 1.4), 1.4, 'a world may reserve fill-rate with a stricter DPR cap');
     },
   },
   {
@@ -553,7 +876,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(!modalSource.includes('BuildModalV2ArtworkImage'), 'Build overlay must not cover the real board with standalone landmark artwork');
       assert(modalSource.includes('bm2-build-mode') && modalSource.includes('bm2-dock'), 'Build mode should be a transparent live-board overlay with a compact dock');
       assert(boardSource.includes("if (stopId === 'mystery') return 'event'"), 'Build camera should resolve Mystery to the authored Concord Arena preset');
-      assert(boardSource.includes('cameraFocusPreset={buildCameraFocusRequest?.preset ?? null}'), 'the live 3D board must receive the active Build landmark focus');
+      assert(boardSource.includes('cameraFocusPreset={threeCameraFocusPreset}'), 'the live 3D board must receive Build and ordinary landmark focus requests');
       assert(boardSource.includes("transition: previousStopId === null ? 'standard' : 'quick'"), 'landmark-to-landmark Build handoff should use the quick camera path');
       assert(pilotSource.includes("cameraFocusTransition === 'quick' ? 0.48 : 0.82"), 'the actual 3D camera should shorten Build handoff timing without changing its preset geometry');
       assert(modalSource.includes('onBuildActivePart={onBuildActivePart}') && modalSource.includes('onBuildActivePart(activeStopIndex)'), 'the existing canonical build callback must remain the action owner');
@@ -578,7 +901,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6].includes(islandParam)'), 'the workbench should expose all six authored islands for repeatable landmark QA');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9].includes(islandParam)'), 'the workbench should expose all nine authored islands for repeatable landmark QA');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
       assert(mainSource.includes('import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED'), 'internal profiler bundle must not register the production service worker');
@@ -606,7 +929,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(boardSource.includes('() => !isIslandVisualPreview || isIsland5ThreePreviewRequested'), 'normal Island 5 gameplay should default to 3D while QA previews remain explicit');
       assert(boardSource.includes('presentation="embedded"'), 'real UI shell must hide workbench-only profiler and camera panels');
       assert(pilotSource.includes('qualityOverride?: Island3DQualitySelection'), 'embedded renderer should accept a presentation-only dev quality override');
-      assert(pilotSource.includes('qualityOverride ?? qualitySelection'), 'dev override should take precedence without changing production auto selection');
+      assert(pilotSource.includes('qualityOverride ?? productionQualitySelection'), 'dev override should take precedence without changing production auto selection');
       assert(pilotSource.includes('ISLAND_1_LANDMARK_LABELS[preset.id'), 'Island 001 workbench focus controls must use First Light landmark labels');
       assert(pilotSource.includes('ISLAND_2_CELESTIAL_LANDMARK_LABELS[preset.id') && pilotSource.includes('ISLAND_3_FROSTMOON_LANDMARK_LABELS[preset.id'), 'Islands 002 and 003 workbench focus controls must expose their authored landmark names');
       assert(pilotSource.includes('ISLAND_6_MOONVEIL_LANDMARK_LABELS[preset.id'), 'Island 006 workbench focus controls must expose its authored Moonveil landmark names');
@@ -654,8 +977,10 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('progress * progress * progress'), 'cinematic transitions should use zero-velocity smootherstep endpoints');
       assert(pilotSource.includes('if (activeTour) return;'), 'device profiling and the cinematic tour must be mutually exclusive');
       assert(pilotSource.includes('ISLAND_3D_PROFILE_DURATION_MS'), 'pilot should run the canonical 30-second evidence window');
+      assert(pilotSource.includes("{ atMs: 19_500, preset: 'orbit-right' }"), 'the profile must sample the historically most expensive right orbit rather than reporting only overview maxima');
       assert(pilotSource.includes("document.addEventListener('visibilitychange'"), 'profiler should reject background-tab evidence');
       assert(pilotSource.includes('summarizeIsland3DPerformance'), 'profiler should use the pure tested summary contract');
+      assert(pilotSource.includes('refreshNormalizedP95Ms'), 'profiler should distinguish 60 Hz missed-vsync bands from continuous-frame timing without weakening the raw target');
       assert(pilotSource.includes("profileSchema: 'island-3d-m7-v1'"), 'physical-device evidence should carry one stable schema id across authored island world packs');
       assert(pilotSource.includes('navigator.share'), 'completed phone evidence should be shareable without developer tools');
       assert(pilotSource.includes("gl.getExtension('WEBGL_debug_renderer_info')"), 'device evidence should record the available GPU renderer identity');

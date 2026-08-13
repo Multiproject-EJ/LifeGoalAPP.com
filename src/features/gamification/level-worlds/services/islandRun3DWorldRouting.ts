@@ -1,4 +1,4 @@
-export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6;
+export type IslandRunAuthored3DWorldSource = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export interface IslandRun3DWorldRoute {
   runtimeIslandNumber: number;
@@ -21,6 +21,9 @@ export const ISLAND_RUN_3D_WORLD_ROUTES: readonly IslandRun3DWorldRoute[] = [
   { runtimeIslandNumber: 4, worldSourceNumber: 4, role: 'ordinary' },
   { runtimeIslandNumber: 5, worldSourceNumber: 5, role: 'arena' },
   { runtimeIslandNumber: 6, worldSourceNumber: 6, role: 'ordinary' },
+  { runtimeIslandNumber: 7, worldSourceNumber: 7, role: 'ordinary' },
+  { runtimeIslandNumber: 8, worldSourceNumber: 8, role: 'ordinary' },
+  { runtimeIslandNumber: 9, worldSourceNumber: 9, role: 'ordinary' },
 ];
 
 const ROUTES_BY_RUNTIME_ISLAND = new Map(

@@ -1,10 +1,51 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { IslandTileMapEntry, IslandTileType } from '../services/islandBoardTileMap';
 import type { Island3DQuality, Island5TileTransform } from './island5ThreePilotContract';
+import { compactStaticGeometry } from './CrownCitadelThreeModel';
 
 export interface IslandRunTileRewardThreeRuntime {
   root: THREE.Group;
   animate: (elapsed: number, tokenIndex: number) => void;
+}
+
+function compactRewardToVertexColorMesh(root: THREE.Group, material: THREE.MeshStandardMaterial, name: string) {
+  root.updateMatrixWorld(true);
+  const inverseRoot = root.matrixWorld.clone().invert();
+  const geometries: THREE.BufferGeometry[] = [];
+  const sourceGeometries: THREE.BufferGeometry[] = [];
+  root.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    const clonedGeometry = child.geometry.clone();
+    const geometry = clonedGeometry.index ? clonedGeometry.toNonIndexed() : clonedGeometry;
+    if (geometry !== clonedGeometry) clonedGeometry.dispose();
+    geometry.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverseRoot, child.matrixWorld));
+    for (const attributeName of Object.keys(geometry.attributes)) {
+      if (attributeName !== 'position' && attributeName !== 'normal') geometry.deleteAttribute(attributeName);
+    }
+    if (!geometry.getAttribute('normal')) geometry.computeVertexNormals();
+    const meshMaterial = Array.isArray(child.material) ? child.material[0] : child.material;
+    const color = 'color' in meshMaterial && meshMaterial.color instanceof THREE.Color
+      ? meshMaterial.color
+      : new THREE.Color(0xffffff);
+    const colors = new Float32Array(geometry.getAttribute('position').count * 3);
+    for (let index = 0; index < colors.length; index += 3) {
+      colors[index] = color.r;
+      colors[index + 1] = color.g;
+      colors[index + 2] = color.b;
+    }
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geometries.push(geometry);
+    sourceGeometries.push(child.geometry);
+  });
+  const merged = geometries.length ? mergeGeometries(geometries, false) : null;
+  geometries.forEach((geometry) => geometry.dispose());
+  if (!merged) return;
+  sourceGeometries.forEach((geometry) => geometry.dispose());
+  root.clear();
+  const mesh = new THREE.Mesh(merged, material);
+  mesh.name = name;
+  root.add(mesh);
 }
 
 export type IslandRunTileRewardObjectKind =
@@ -17,11 +58,13 @@ export type IslandRunTileRewardObjectKind =
   | 'caretaker_card'
   | 'build_rush_hammer'
   | 'traffic_beacon'
+  | 'frostwell_drill'
   | 'active_landmark_door';
 
 export function resolveIslandRunTileRewardObjectKind(
-  entry: Pick<IslandTileMapEntry, 'tileType' | 'isActiveDoorCluster'>,
+  entry: Pick<IslandTileMapEntry, 'tileType' | 'isActiveDoorCluster' | 'signatureMissionKind'>,
 ): IslandRunTileRewardObjectKind | null {
+  if (entry.signatureMissionKind === 'frostwell_drill') return 'frostwell_drill';
   if (entry.tileType === 'free_ticket') return 'golden_event_ticket';
   if (entry.tileType === 'currency') return 'essence_crystal';
   if (entry.tileType === 'micro') return 'universal_reward_token';
@@ -92,7 +135,7 @@ function createMaterials(): RewardMaterials {
       roughness: 0.07,
       metalness: 0.04,
       clearcoat: 1,
-      transmission: 0.12,
+      transmission: 0,
       transparent: true,
       opacity: 0.94,
       emissive: 0x6f25e8,
@@ -103,7 +146,7 @@ function createMaterials(): RewardMaterials {
       roughness: 0.06,
       metalness: 0.04,
       clearcoat: 1,
-      transmission: 0.1,
+      transmission: 0,
       transparent: true,
       opacity: 0.94,
       emissive: 0x168bdc,
@@ -306,8 +349,26 @@ function createLandmarkDoorSigil(materials: RewardMaterials, quality: Island3DQu
   return root;
 }
 
+function createFrostwellDrillMarker(materials: RewardMaterials, quality: Island3DQuality) {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_RUN_TILE_OBJECT_FROSTWELL_DRILL';
+  const segments = qualitySegments(quality);
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 6, segments), materials.cyan);
+  halo.rotation.x = Math.PI / 2;
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.34, 7), materials.gold);
+  shaft.position.y = 0.04;
+  const bit = new THREE.Mesh(new THREE.ConeGeometry(0.105, 0.24, 8), materials.gold);
+  bit.position.y = -0.22;
+  bit.rotation.z = Math.PI;
+  const cross = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.045, 0.045), materials.midnight);
+  cross.position.y = 0.18;
+  root.add(halo, shaft, bit, cross);
+  return root;
+}
+
 function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMaterials, quality: Island3DQuality) {
   const kind = resolveIslandRunTileRewardObjectKind(entry);
+  if (kind === 'frostwell_drill') return createFrostwellDrillMarker(materials, quality);
   if (kind === 'golden_event_ticket') return createTicket(materials, quality);
   if (kind === 'essence_crystal') return createEssenceCrystal(materials, quality);
   if (kind === 'universal_reward_token') return createUniversalRewardToken(materials, quality);
@@ -325,6 +386,7 @@ export function createIslandRunTileRewardThreeObjects(options: {
   tileMap: readonly IslandTileMapEntry[];
   tileTransforms: readonly Island5TileTransform[];
   quality: Island3DQuality;
+  compactCollectibles?: boolean;
 }): IslandRunTileRewardThreeRuntime {
   const root = new THREE.Group();
   root.name = 'ISLAND_RUN_CANONICAL_TILE_REWARD_OBJECTS';
@@ -335,6 +397,15 @@ export function createIslandRunTileRewardThreeObjects(options: {
     authority: 'canonical-island-tile-map',
   };
   const materials = createMaterials();
+  const compactCollectibleMaterial = options.compactCollectibles
+    ? new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.28,
+        metalness: 0.3,
+        emissive: 0x14124a,
+        emissiveIntensity: 0.34,
+      })
+    : null;
   const transformByIndex = new Map(options.tileTransforms.map((transform) => [transform.index, transform]));
   const entries: RewardVisualEntry[] = [];
 
@@ -346,8 +417,18 @@ export function createIslandRunTileRewardThreeObjects(options: {
     if (options.quality === 'low' && tileEntry.tileType === 'micro') return;
     const visual = createVisualForTile(tileEntry, materials, options.quality);
     if (!visual) return;
+    // Each collectible still owns its transform for bob, spin and occupancy
+    // hiding, but repeated pieces inside it share one batch per material.
+    // This is especially important for hazard shards, tickets and scrolls.
+    if (compactCollectibleMaterial) {
+      compactRewardToVertexColorMesh(visual, compactCollectibleMaterial, `ISLAND_RUN_TILE_REWARD_${tileEntry.index}`);
+    } else {
+      compactStaticGeometry(visual, `ISLAND_RUN_TILE_REWARD_${tileEntry.index}`);
+    }
     const baseY = transform.position[1] + (tileEntry.tileType === 'hazard' ? 0.26 : 0.46);
-    const baseScale = tileEntry.tileType === 'free_ticket'
+    const baseScale = tileEntry.signatureMissionKind === 'frostwell_drill'
+      ? 1.08
+      : tileEntry.tileType === 'free_ticket'
       ? 1.42
       : tileEntry.tileType === 'landmark_door'
         ? 0.86
@@ -375,6 +456,10 @@ export function createIslandRunTileRewardThreeObjects(options: {
       spinRate: tileEntry.tileType === 'free_ticket' ? 0.52 : tileEntry.tileType === 'currency' ? 0.68 : 0.34,
     });
   });
+
+  if (compactCollectibleMaterial) {
+    Object.values(materials).forEach((material) => material.dispose());
+  }
 
   root.traverse((child) => {
     if (!(child instanceof THREE.Mesh)) return;

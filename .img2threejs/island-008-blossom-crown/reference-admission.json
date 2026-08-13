@@ -1,0 +1,15 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "front-three-quarter",
+    "sourcePath": "docs/visual-references/island-008-flower-kingdom/island-008-flower-kingdom-goal-v1.png",
+    "width": 941,
+    "height": 1672,
+    "foregroundCoverage": 0.9413,
+    "largestComponentFraction": 1.0,
+    "pHash": 15690768416568006661,
+    "duplicateOfHash": null
+  },
+  "scopeNote": "The admitted full-scene reference is used with the existing central upper and middle detail zones for the Blossom Crown Citadel reconstruction."
+}

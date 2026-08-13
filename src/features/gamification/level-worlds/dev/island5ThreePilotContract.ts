@@ -104,6 +104,7 @@ export type Island5CameraPresetId =
   | 'survey'
   | 'orbit-left'
   | 'orbit-right'
+  | 'frostwell'
   | Island5LandmarkId;
 
 export interface Island5CameraPreset {
@@ -161,6 +162,40 @@ export const ISLAND_3D_TILE_IMPACT_DURATION_MS = 420;
 export const ISLAND_3D_IDLE_OVERVIEW_DELAY_MS = 3_600;
 /** Deliberately slower than authored focus changes, so it reads as a drift. */
 export const ISLAND_3D_IDLE_OVERVIEW_DURATION_SCALE = 2.8;
+
+export function shouldFadeCentralLandmarkForCamera(input: {
+  cameraPosition: readonly [number, number, number];
+  focusPosition: readonly [number, number, number];
+  centralPosition?: readonly [number, number, number];
+  centralOcclusionRadius?: number;
+  centralOcclusionHeight?: number;
+}): boolean {
+  const central = input.centralPosition ?? [0, 0, 0];
+  const radius = Math.max(0.1, input.centralOcclusionRadius ?? 1.75);
+  const height = Math.max(0.1, input.centralOcclusionHeight ?? 5.6);
+  const segmentXZ = [
+    input.focusPosition[0] - input.cameraPosition[0],
+    input.focusPosition[2] - input.cameraPosition[2],
+  ] as const;
+  const segmentLengthSquared = segmentXZ[0] ** 2 + segmentXZ[1] ** 2;
+  if (segmentLengthSquared <= 0.0001) return false;
+  const fromCameraToCentralXZ = [
+    central[0] - input.cameraPosition[0],
+    central[2] - input.cameraPosition[2],
+  ] as const;
+  const projection = (
+    fromCameraToCentralXZ[0] * segmentXZ[0]
+    + fromCameraToCentralXZ[1] * segmentXZ[1]
+  ) / segmentLengthSquared;
+  if (projection <= 0.05 || projection >= 0.95) return false;
+  const closestX = input.cameraPosition[0] + segmentXZ[0] * projection;
+  const closestZ = input.cameraPosition[2] + segmentXZ[1] * projection;
+  const closestY = input.cameraPosition[1]
+    + (input.focusPosition[1] - input.cameraPosition[1]) * projection;
+  const crossesFootprint = Math.hypot(central[0] - closestX, central[2] - closestZ) <= radius;
+  const crossesHeight = closestY >= central[1] - 0.25 && closestY <= central[1] + height;
+  return crossesFootprint && crossesHeight;
+}
 
 export type Island3DLandingImpact = 'standard' | 'special' | 'hazard';
 
@@ -614,6 +649,7 @@ export const ISLAND_5_CAMERA_PRESETS: readonly Island5CameraPreset[] = [
   { id: 'survey', label: 'High survey', position: [0, 34, 44], target: [0, 0, 0], durationMs: 1050 },
   { id: 'orbit-left', label: 'Left orbit', position: [-24, 23, 28], target: [0, 0.25, 0], durationMs: 1100 },
   { id: 'orbit-right', label: 'Right orbit', position: [24, 23, 28], target: [0, 0.25, 0], durationMs: 1100 },
+  { id: 'frostwell', label: 'Frostwell drill', position: [0, 5.4, 2.8], target: [0, 0.82, -9.4], durationMs: 880 },
   { id: 'boss', label: 'Crown Citadel', position: [0, 9.2, 13.5], target: [0, 1.85, 0], durationMs: 980 },
   { id: 'hatchery', label: 'Coral Cradle', position: [-8.5, 7, 4.5], target: [-4.36, 0.72, -3.9], durationMs: 900 },
   { id: 'habit', label: 'Tidekeeper Hall', position: [8.5, 7, 4.5], target: [4.36, 0.86, -3.9], durationMs: 900 },
@@ -662,11 +698,14 @@ export function resolveIsland3DQuality(
   return ISLAND_3D_QUALITY_PROFILES.medium;
 }
 
-export function getIsland3DRendererPixelRatio(profile: Island3DQualityProfile, devicePixelRatio: number): number {
+export function getIsland3DRendererPixelRatio(
+  profile: Island3DQualityProfile,
+  devicePixelRatio: number,
+  worldPixelRatioCap = Number.POSITIVE_INFINITY,
+): number {
   const safeDeviceRatio = Number.isFinite(devicePixelRatio) ? Math.max(0.5, devicePixelRatio) : 1;
-  return Math.min(profile.maxPixelRatio, safeDeviceRatio);
+  return Math.min(profile.maxPixelRatio, safeDeviceRatio, worldPixelRatioCap);
 }
-
 export function buildIsland5TileTransforms(anchors: readonly TileAnchor[]): Island5TileTransform[] {
   return anchors.map((anchor, index) => ({
     id: anchor.id,

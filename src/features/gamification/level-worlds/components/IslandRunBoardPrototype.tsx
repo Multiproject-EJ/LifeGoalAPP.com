@@ -1,4 +1,5 @@
 import { lockPageScroll } from '../../../../utils/scrollLock';
+import { triggerImpactHaptic } from '../../../../utils/completionHaptics';
 /**
  * ISLAND RUN ARCHITECTURE WARNING
  *
@@ -33,7 +34,14 @@ import {
 } from '../services/islandRunControllerVisualContract';
 import { resolveIslandRunBuildOpenDisposition } from '../services/islandRunBuildOpenFlow';
 import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
+import {
+  ISLAND_RUN_AUTO_ROLL_HOLD_MS,
+  ISLAND_RUN_HARD_THROW_HOLD_MS,
+  resolveIslandRunDiceHoldIntent,
+  type IslandRunDiceThrowStrength,
+} from '../services/islandRunDiceThrowPresentation';
 import { BoardStage, type BoardStageCameraControls } from './board';
+import { IslandRunDiceLaunchOverlay } from './board/IslandRunDiceLaunchOverlay';
 import { ConfettiBurst } from './ConfettiBurst';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import { IslandTechCollectionModal, type TechCollectionModalResult } from './IslandTechCollectionModal';
@@ -440,6 +448,14 @@ import {
   shouldAutoOpenIslandStopOnLoad,
 } from '../services/islandRunStopCompletion';
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
+import { fundFrostwellIceworks, spinFrostwellDrillWheel } from '../services/islandRunSignatureMissionAction';
+import {
+  FROSTWELL_DEPTH_METERS,
+  FROSTWELL_SPIN_METERS,
+  getFrostwellAvailableSpins,
+  getFrostwellIceworksTechCost,
+  resolveFrostwellIceworksProgress,
+} from '../services/islandRunSignatureMissions';
 import { executeIslandRunTileRewardAction } from '../services/islandRunTileRewardAction';
 import {
   advanceIslandRunLuckyRoll,
@@ -718,11 +734,6 @@ function resolveBuildHoldFeedbackLabel(heldMs: number) {
 
 function buildHydrationSourceOrder(baseSource: 'local_storage' | 'in_memory', hydrationSource: string) {
   return [baseSource, hydrationSource];
-}
-
-/** localStorage key for tracking egg-ready banner dismissal per egg instance. */
-function getEggReadyBannerKey(userId: string, eggSetAtMs: number): string {
-  return `lifegoal:egg_ready_banner_shown:${userId}:${eggSetAtMs}`;
 }
 
 function isIsland120StartupDiagnosticTarget(islandNumber: number) {
@@ -1093,7 +1104,6 @@ const REWARDBAR_TIMERS_AUTO_HIDE_THRESHOLD_MS = 60 * 60 * 1000;
 const REWARDBAR_TIMERS_AUTO_HIDE_DELAY_MS = 10_000;
 const DICE_ROLL_OVERLAY_DURATION_MS = 800;  // how long the "Rolled N!" overlay stays visible
 const MULTIPLIER_MAX_JUMP_DURATION_MS = 540;
-const AUTO_ROLL_HOLD_DELAY_MS = 1400;
 // While a modal/overlay owns attention, auto-roll pauses instead of firing the
 // next roll. We poll this often to resume promptly once every modal is closed.
 const AUTO_ROLL_PAUSE_POLL_MS = 300;
@@ -1725,6 +1735,7 @@ export function IslandRunBoardPrototype({
     const params = new URLSearchParams(window.location.search);
     const requestedVisualLandmark = params.get('islandVisualLandmark');
     const requestedVisualBossState = params.get('islandVisualBossState');
+    const requestedFrostwellMissionState = params.get('frostwellMissionState');
     const islandVisualLandmark = requestedVisualLandmark === 'hatchery'
       || requestedVisualLandmark === 'habit'
       || requestedVisualLandmark === 'mystery'
@@ -1748,6 +1759,12 @@ export function IslandRunBoardPrototype({
       islandVisualLandmark,
       islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
       islandVisualBossState,
+      frostwellMissionState: requestedFrostwellMissionState === 'drilling'
+        || requestedFrostwellMissionState === 'ready'
+        || requestedFrostwellMissionState === 'constructing'
+        || requestedFrostwellMissionState === 'operating'
+        ? requestedFrostwellMissionState
+        : 'operating',
       isIsland5ThreePreviewRequested: import.meta.env.DEV && params.get('island3dPreview') === '1',
       isArenaBattlePreviewRequested: import.meta.env.DEV && params.get('arenaBattlePreview') === '1',
       isCaretakerThreeEncounterPreviewRequested: import.meta.env.DEV && params.get('caretaker3dEncounterPreview') === '1',
@@ -1767,6 +1784,7 @@ export function IslandRunBoardPrototype({
     islandVisualLandmark,
     islandVisualBuildLevel,
     islandVisualBossState,
+    frostwellMissionState,
     isIsland5ThreePreviewRequested,
     isArenaBattlePreviewRequested,
     isCaretakerThreeEncounterPreviewRequested,
@@ -1844,6 +1862,12 @@ export function IslandRunBoardPrototype({
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem(`island_run_landmark_coachmark_seen_${session.user.id}`) !== '1';
   });
+  const [showFrostwellMission, setShowFrostwellMission] = useState(false);
+  const [isFundingFrostwell, setIsFundingFrostwell] = useState(false);
+  const [isSpinningFrostwell, setIsSpinningFrostwell] = useState(false);
+  const [frostwellWheelRotation, setFrostwellWheelRotation] = useState(0);
+  const [frostwellLastSpinMeters, setFrostwellLastSpinMeters] = useState<number | null>(null);
+  const [frostwellConstructionSequence, setFrostwellConstructionSequence] = useState(0);
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
@@ -1898,8 +1922,10 @@ export function IslandRunBoardPrototype({
   const [rollValue, setRollValue] = useState<number | null>(null);
   const [rollingDiceFaces, setRollingDiceFaces] = useState<[number, number]>([1, 1]);
   const [isRolling, setIsRolling] = useState(false);
+  const [diceThrowStrength, setDiceThrowStrength] = useState<IslandRunDiceThrowStrength>('normal');
   const [isAutoRolling, setIsAutoRolling] = useState(false);
   const [isAutoRollHoldPending, setIsAutoRollHoldPending] = useState(false);
+  const [isHardThrowHoldReady, setIsHardThrowHoldReady] = useState(false);
   const [isTimedEventLaunchQueued, setIsTimedEventLaunchQueued] = useState(false);
   const [showSpaceExcavatorRewardBarHint, setShowSpaceExcavatorRewardBarHint] = useState(true);
   /** Shown briefly over the dice after the roll animation finishes (e.g. "Rolled 8!") */
@@ -1957,6 +1983,8 @@ export function IslandRunBoardPrototype({
     setShowTopbarMenu((current) => !current);
   }, []);
   const autoRollHoldTimeoutRef = useRef<number | null>(null);
+  const hardThrowHoldTimeoutRef = useRef<number | null>(null);
+  const rollHoldStartedAtRef = useRef<number | null>(null);
   const autoRollLoopAbortRef = useRef(false);
   const autoRollHoldTriggeredRef = useRef(false);
   // Mirrors `doesModalOwnAttention` so the async auto-roll loop can read the
@@ -1984,6 +2012,10 @@ export function IslandRunBoardPrototype({
     if (autoRollHoldTimeoutRef.current !== null) {
       window.clearTimeout(autoRollHoldTimeoutRef.current);
       autoRollHoldTimeoutRef.current = null;
+    }
+    if (hardThrowHoldTimeoutRef.current !== null) {
+      window.clearTimeout(hardThrowHoldTimeoutRef.current);
+      hardThrowHoldTimeoutRef.current = null;
     }
     isTravellingRef.current = false;
   }, []);
@@ -2459,14 +2491,8 @@ export function IslandRunBoardPrototype({
   // B3-3: market interaction gate
   const [marketInteracted, setMarketInteracted] = useState(false);
 
-  // Egg-ready in-app banner: shown when egg transitions to stage 4 or on app open with ready egg
-  const [showEggReadyBanner, setShowEggReadyBanner] = useState(false);
-  const [hasEggReadyAnimationPlayedOnce, setHasEggReadyAnimationPlayedOnce] = useState(false);
-
-  // M14: persistent shop panel state
-  useEffect(() => {
-    setHasEggReadyAnimationPlayedOnce(false);
-  }, [showEggReadyBanner, activeEgg?.setAtMs]);
+  // Egg readiness is surfaced persistently by the Hatchery quick-access tray.
+  // It must not repeatedly interrupt board play with an automatic modal.
 
   const [showShopPanel, setShowShopPanel] = useState(false);
   const [hasVisitedWebTreat, setHasVisitedWebTreat] = useState(() => hasVisitedLandingPageTreat());
@@ -2477,6 +2503,17 @@ export function IslandRunBoardPrototype({
     preset: Island5CameraPresetId;
     transition: 'standard' | 'quick';
   } | null>(null);
+  const openFrostwellMission = useCallback(() => {
+    setBuildCameraFocusRequest({ preset: 'frostwell', transition: 'quick' });
+    setShowFrostwellMission(true);
+  }, []);
+  const closeFrostwellMission = useCallback(() => {
+    setShowFrostwellMission(false);
+    // Deliberately keep the special Frostwell inspection camera active. The
+    // modal is the minigame tray; closing it is how the player gets an
+    // unobstructed 3D look at the rig. The board magnifier remains the explicit
+    // route back to overview.
+  }, []);
   const previousBuildCameraStopIdRef = useRef<string | null>(null);
   const [buildLevelCompletion, setBuildLevelCompletion] = useState<ActiveBuildLevelReview | null>(null);
   const buildLevelCompletionRef = useRef<ActiveBuildLevelReview | null>(null);
@@ -2788,6 +2825,7 @@ export function IslandRunBoardPrototype({
     isIslandInhabitantFlowOpen ||
     showCreatureChannelModal ||
     showConcordHubModal ||
+    showFrostwellMission ||
     Boolean(dormantDoorMiniGame) ||
     Boolean(trafficLightCoinFlip) ||
     Boolean(techCollectionModal) ||
@@ -2811,18 +2849,6 @@ export function IslandRunBoardPrototype({
       setShowTopbarMenu(false);
     }
   }, [anyBlockingModalOpen]);
-
-  useEffect(() => {
-    if (!showTopbarMenu || !showEggReadyBanner) return;
-    if (activeEgg) {
-      try {
-        window.localStorage.setItem(getEggReadyBannerKey(session.user.id, activeEgg.setAtMs), '1');
-      } catch {
-        // ignore localStorage failures
-      }
-    }
-    setShowEggReadyBanner(false);
-  }, [activeEgg, session.user.id, showEggReadyBanner, showTopbarMenu]);
 
   // B3-4: utility stop state
   const [utilityInteracted, setUtilityInteracted] = useState(false);
@@ -2869,6 +2895,23 @@ export function IslandRunBoardPrototype({
     () => resolvePendingTreasurePathResume({ record: runtimeState }),
     [runtimeState],
   );
+  const frostwellProgress = useMemo(() => resolveFrostwellIceworksProgress({
+    ledger: runtimeState.signatureMissionProgressByIsland,
+    cycleIndex: runtimeState.cycleIndex,
+    islandNumber: 3,
+  }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  const frostwellTechCost = getFrostwellIceworksTechCost(runtimeState.cycleIndex);
+  const frostwellBuilt = frostwellProgress.builtAtMs !== null;
+  const frostwellPreviewActive = isIslandVisualPreview && islandVisualIslandNumber === 3;
+  const frostwellPresentationMeters = frostwellPreviewActive
+    ? frostwellMissionState === 'drilling' ? 235 : FROSTWELL_DEPTH_METERS
+    : frostwellProgress.metersDrilled;
+  const frostwellPresentationBuilt = frostwellPreviewActive
+    ? frostwellMissionState === 'operating' || frostwellMissionState === 'constructing'
+    : frostwellBuilt;
+  const frostwellAvailableSpins = frostwellPreviewActive && frostwellMissionState === 'drilling'
+    ? 1
+    : getFrostwellAvailableSpins(frostwellProgress);
   const pendingTreasurePathResumeCtaLabel = pendingTreasurePathResume?.status === 'active'
     ? 'Continue Treasure Path'
     : 'Collect Treasure';
@@ -5375,6 +5418,16 @@ export function IslandRunBoardPrototype({
       setDormantDoorMiniGame(null);
       setDormantDoorSelectedIndices([]);
       setDormantDoorReward(null);
+      if (doorStopId === 'hatchery') {
+        // Hatchery readiness already has a persistent reward-bar tray. Landing
+        // here may focus the landmark, but must not repeatedly interrupt the
+        // roll loop with the full modal (especially for an egg on another
+        // island). A deliberate 3D landmark/tray tap still opens it normally.
+        setRequiredDoorStopId(null);
+        requestActiveStopTransition(null, 'hatchery_landmark_door_non_blocking');
+        setLandingText('🥚 Hatchery reached. Tap the landmark or egg tray when you want to open it.');
+        return;
+      }
       setRequiredDoorStopId(doorStopId);
       setLandingText(`🚪 Landmark door opened ${doorStopId.toUpperCase()}. Complete it before rolling again.`);
       requestActiveStopTransition(doorStopId, 'landmark_door_landing');
@@ -6025,6 +6078,12 @@ export function IslandRunBoardPrototype({
 
   const eggStage = useMemo(() => getHatcheryEggStage(activeEgg, nowMs), [activeEgg, nowMs]);
 
+  const threeCameraFocusPreset = useMemo<Island5CameraPresetId | null>(() => {
+    if (buildCameraFocusRequest) return buildCameraFocusRequest.preset;
+    if (cameraMode !== 'stop_focus' || !focusedStopId) return null;
+    return resolveIsland5BuildCameraPreset(focusedStopId);
+  }, [buildCameraFocusRequest, cameraMode, focusedStopId]);
+
   const eggRemainingMs = activeEgg && Number.isFinite(activeEgg.hatchAtMs)
     ? Math.max(0, activeEgg.hatchAtMs - nowMs)
     : 0;
@@ -6067,31 +6126,15 @@ export function IslandRunBoardPrototype({
     timeLeftSec,
   ]);
 
-  // M10B: play egg_ready sound when egg transitions to stage 4 (ready-to-open)
+  // M10B: preserve the one-time sound cue, while the persistent Hatchery tray
+  // carries the ready state without an interrupting modal.
   const prevEggStageRef = useRef(0);
   useEffect(() => {
     if (eggStage === 4 && prevEggStageRef.current < 4) {
       playIslandRunSound('egg_ready');
-      // Only show banner if not already dismissed for this specific egg
-      const bannerKey = activeEgg ? getEggReadyBannerKey(session.user.id, activeEgg.setAtMs) : null;
-      const alreadyDismissed = bannerKey ? window.localStorage.getItem(bannerKey) === '1' : false;
-      if (!alreadyDismissed && !showBuildPanel) {
-        setShowEggReadyBanner(true);
-      }
     }
     prevEggStageRef.current = eggStage;
-  }, [eggStage, activeEgg, session.user.id, showBuildPanel]);
-
-  // Show egg-ready banner on initial load if egg is already ready and banner not yet dismissed
-  useEffect(() => {
-    if (eggStage === 4 && hasHydratedRuntimeState && activeEgg) {
-      const bannerKey = getEggReadyBannerKey(session.user.id, activeEgg.setAtMs);
-      const alreadyDismissed = window.localStorage.getItem(bannerKey) === '1';
-      if (!alreadyDismissed && !showBuildPanel) {
-        setShowEggReadyBanner(true);
-      }
-    }
-  }, [eggStage, hasHydratedRuntimeState, activeEgg, session.user.id, showBuildPanel]);
+  }, [eggStage]);
 
   useEffect(() => {
     if (activeStopId !== 'hatchery') {
@@ -6474,6 +6517,8 @@ export function IslandRunBoardPrototype({
   const canHoldForAutoRoll = canRoll && !isIslandTimerPendingStart;
   const rollButtonInteractionClass = isAutoRolling
     ? 'island-run-prototype__roll-btn--auto-active'
+    : isHardThrowHoldReady
+      ? 'island-run-prototype__roll-btn--auto-pending island-run-prototype__roll-btn--hard-ready'
     : isAutoRollHoldPending
       ? 'island-run-prototype__roll-btn--auto-pending'
       : '';
@@ -7008,7 +7053,7 @@ export function IslandRunBoardPrototype({
     });
   };
 
-  const handleRoll = async (): Promise<boolean> => {
+  const handleRoll = async (throwStrength: IslandRunDiceThrowStrength = 'normal'): Promise<boolean> => {
     logIslandRunEntryDebug('roll_click_start', {
       userId: session.user.id,
       tokenIndex: runtimeStateRef.current.tokenIndex,
@@ -7108,6 +7153,7 @@ export function IslandRunBoardPrototype({
       return false;
     }
 
+    setDiceThrowStrength(throwStrength);
     setIsRolling(true);
     setCameraMode('board_follow');
     requestActiveStopTransition(null, 'roll_start_close_stop');
@@ -7384,6 +7430,11 @@ export function IslandRunBoardPrototype({
           setShowEncounterModal(false);
           setEncounterResolved(false);
           setLandingText('The island network is dormant. Follow the Concord fragment signal.');
+        } else if (rollResult.frostwellSpinGranted) {
+          setShowEncounterModal(false);
+          setEncounterResolved(false);
+          setLandingText('⛏ Drill tile! One Frostwell wheel spin is ready.');
+          openFrostwellMission();
         } else if (landedTile?.tileType === 'landmark_door' && landedTile.doorStopId) {
           setShowEncounterModal(false);
           setEncounterResolved(false);
@@ -7448,9 +7499,15 @@ export function IslandRunBoardPrototype({
     autoRollLoopAbortRef.current = true;
     setIsAutoRolling(false);
     setIsAutoRollHoldPending(false);
+    setIsHardThrowHoldReady(false);
+    rollHoldStartedAtRef.current = null;
     if (autoRollHoldTimeoutRef.current !== null) {
       window.clearTimeout(autoRollHoldTimeoutRef.current);
       autoRollHoldTimeoutRef.current = null;
+    }
+    if (hardThrowHoldTimeoutRef.current !== null) {
+      window.clearTimeout(hardThrowHoldTimeoutRef.current);
+      hardThrowHoldTimeoutRef.current = null;
     }
   }, []);
 
@@ -7461,28 +7518,78 @@ export function IslandRunBoardPrototype({
     if (autoRollHoldTimeoutRef.current !== null) {
       window.clearTimeout(autoRollHoldTimeoutRef.current);
     }
+    if (hardThrowHoldTimeoutRef.current !== null) {
+      window.clearTimeout(hardThrowHoldTimeoutRef.current);
+    }
     autoRollHoldTriggeredRef.current = false;
+    rollHoldStartedAtRef.current = performance.now();
     setIsAutoRollHoldPending(true);
+    setIsHardThrowHoldReady(false);
     // Felt confirmation that the hold registered. The charge bar starts filling
     // on the same frame, so touch and sight agree.
     triggerIslandRunHaptic('auto_roll_arm');
+    hardThrowHoldTimeoutRef.current = window.setTimeout(() => {
+      hardThrowHoldTimeoutRef.current = null;
+      if (autoRollHoldTriggeredRef.current) return;
+      setIsHardThrowHoldReady(true);
+      setLandingText('Hard throw ready — release now, or keep holding for auto-roll.');
+      triggerImpactHaptic('light', { channel: 'gamification', minIntervalMs: 90 });
+    }, ISLAND_RUN_HARD_THROW_HOLD_MS);
     autoRollHoldTimeoutRef.current = window.setTimeout(() => {
       autoRollHoldTimeoutRef.current = null;
       autoRollHoldTriggeredRef.current = true;
       suppressNextRollClickRef.current = true;
       autoRollLoopAbortRef.current = false;
+      setIsHardThrowHoldReady(false);
       setIsAutoRolling(true);
       triggerIslandRunHaptic('auto_roll_engage');
       setLandingText('Auto-roll engaged. Release to stop.');
-    }, AUTO_ROLL_HOLD_DELAY_MS);
+    }, ISLAND_RUN_AUTO_ROLL_HOLD_MS);
   }, [dicePool, effectiveDiceCost, isOnboardingCelebrationVisible, isRolling, showTravelOverlay]);
 
   const endAutoRollHold = useCallback(() => {
+    const heldForMs = rollHoldStartedAtRef.current === null
+      ? 0
+      : performance.now() - rollHoldStartedAtRef.current;
+    const intent = resolveIslandRunDiceHoldIntent({
+      heldForMs,
+      autoRollActivated: autoRollHoldTriggeredRef.current,
+    });
+    rollHoldStartedAtRef.current = null;
     if (autoRollHoldTimeoutRef.current !== null) {
       window.clearTimeout(autoRollHoldTimeoutRef.current);
       autoRollHoldTimeoutRef.current = null;
     }
+    if (hardThrowHoldTimeoutRef.current !== null) {
+      window.clearTimeout(hardThrowHoldTimeoutRef.current);
+      hardThrowHoldTimeoutRef.current = null;
+    }
     setIsAutoRollHoldPending(false);
+    setIsHardThrowHoldReady(false);
+    if (intent === 'auto') {
+      autoRollHoldTriggeredRef.current = false;
+      stopAutoRoll();
+      return;
+    }
+    if (intent === 'hard') {
+      suppressNextRollClickRef.current = true;
+      setLandingText('Hard throw charged!');
+      void handleRoll('hard');
+    }
+  }, [handleRoll, stopAutoRoll]);
+
+  const cancelAutoRollHold = useCallback(() => {
+    rollHoldStartedAtRef.current = null;
+    if (autoRollHoldTimeoutRef.current !== null) {
+      window.clearTimeout(autoRollHoldTimeoutRef.current);
+      autoRollHoldTimeoutRef.current = null;
+    }
+    if (hardThrowHoldTimeoutRef.current !== null) {
+      window.clearTimeout(hardThrowHoldTimeoutRef.current);
+      hardThrowHoldTimeoutRef.current = null;
+    }
+    setIsAutoRollHoldPending(false);
+    setIsHardThrowHoldReady(false);
     if (autoRollHoldTriggeredRef.current) {
       autoRollHoldTriggeredRef.current = false;
       stopAutoRoll();
@@ -7493,8 +7600,8 @@ export function IslandRunBoardPrototype({
     ? {
       onPointerDown: beginAutoRollHold,
       onPointerUp: endAutoRollHold,
-      onPointerLeave: endAutoRollHold,
-      onPointerCancel: endAutoRollHold,
+      onPointerLeave: cancelAutoRollHold,
+      onPointerCancel: cancelAutoRollHold,
     }
     : {};
 
@@ -7505,7 +7612,11 @@ export function IslandRunBoardPrototype({
    * one the player actually gets.
    */
   const rollHoldChargeStyle = useMemo<CSSProperties>(
-    () => ({ '--island-run-hold-ms': `${AUTO_ROLL_HOLD_DELAY_MS}ms` } as CSSProperties),
+    () => ({
+      '--island-run-hard-throw-hold-ms': `${ISLAND_RUN_HARD_THROW_HOLD_MS}ms`,
+      '--island-run-hard-throw-threshold': `${(ISLAND_RUN_HARD_THROW_HOLD_MS / ISLAND_RUN_AUTO_ROLL_HOLD_MS) * 100}%`,
+      '--island-run-hold-ms': `${ISLAND_RUN_AUTO_ROLL_HOLD_MS}ms`,
+    } as CSSProperties),
     [],
   );
 
@@ -12098,7 +12209,6 @@ export function IslandRunBoardPrototype({
       lockedStopInfoStopId ||
       showBuildPanel ||
       showClaimModal ||
-      showEggReadyBanner ||
       !hasDismissedEntryAudioModal ||
       showEntryAudioModal ||
       techCollectionModal ||
@@ -12123,9 +12233,68 @@ export function IslandRunBoardPrototype({
       isIslandInhabitantFlowOpen ||
       showCreatureChannelModal ||
       showConcordHubModal ||
+      showFrostwellMission ||
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
+  useEffect(() => {
+    if (!showFrostwellMission || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [showFrostwellMission]);
+
+  const handleSpinFrostwell = useCallback(async () => {
+    if (isSpinningFrostwell) return;
+    setIsSpinningFrostwell(true);
+    setFrostwellLastSpinMeters(null);
+    try {
+      const result = await spinFrostwellDrillWheel({ session, client });
+      if (result.status !== 'ok') {
+        if (result.status === 'no_spins') setLandingText('Land on one of the three blue drill tiles to earn a Frostwell spin.');
+        return;
+      }
+      const segmentIndex = Math.max(0, FROSTWELL_SPIN_METERS.indexOf(result.wheelMeters as typeof FROSTWELL_SPIN_METERS[number]));
+      const segmentAngle = segmentIndex * (360 / FROSTWELL_SPIN_METERS.length) + (180 / FROSTWELL_SPIN_METERS.length);
+      setFrostwellWheelRotation((rotation) => {
+        const currentAngle = ((rotation % 360) + 360) % 360;
+        const correction = ((360 - segmentAngle - currentAngle) + 360) % 360;
+        return rotation + 1_800 + correction;
+      });
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 1_350));
+      refreshIslandRunStateFromLocal(session);
+      const fresh = getIslandRunStateSnapshot(session);
+      runtimeStateRef.current = fresh;
+      setRuntimeStateWithTrace('spin_frostwell_drill_wheel', fresh);
+      setFrostwellLastSpinMeters(result.meters);
+      setLandingText(`⛏ Frostwell auger drilled ${result.meters}m deeper${result.metersAfter >= FROSTWELL_DEPTH_METERS ? ' — breakthrough!' : '.'}`);
+      playIslandRunSound(result.metersAfter >= FROSTWELL_DEPTH_METERS ? 'reward_bar_claim_burst' : 'stop_land');
+      triggerIslandRunHaptic(result.metersAfter >= FROSTWELL_DEPTH_METERS ? 'reward_claim' : 'stop_land');
+    } finally {
+      setIsSpinningFrostwell(false);
+    }
+  }, [client, isSpinningFrostwell, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
+
+  const handleFundFrostwell = useCallback(async () => {
+    if (isFundingFrostwell) return;
+    setIsFundingFrostwell(true);
+    try {
+      const result = await fundFrostwellIceworks({ session, client });
+      if (result.status === 'ok') {
+        refreshIslandRunStateFromLocal(session);
+        const fresh = getIslandRunStateSnapshot(session);
+        runtimeStateRef.current = fresh;
+        setRuntimeStateWithTrace('fund_frostwell_iceworks', fresh);
+        setFrostwellConstructionSequence((value) => value + 1);
+        setLandingText('💨 Frostwell Iceworks online! Fresh water and fish are flowing from beneath the frozen ocean.');
+        playIslandRunSound('reward_bar_claim_burst');
+        triggerIslandRunHaptic('reward_claim');
+        window.setTimeout(() => setShowFrostwellMission(false), 1050);
+      } else if (result.status === 'insufficient_essence') {
+        setLandingText(`The Frostwell needs ${result.cost.toLocaleString()} Essence to install its fishery and reservoir.`);
+      }
+    } finally {
+      setIsFundingFrostwell(false);
+    }
+  }, [client, isFundingFrostwell, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
   const isIslandClearTravelReady = Boolean(
     showIslandClearCelebration &&
       isIslandClearRewardClaimed &&
@@ -12142,7 +12311,6 @@ export function IslandRunBoardPrototype({
       lockedStopInfoStopId ||
       showBuildPanel ||
       showClaimModal ||
-      showEggReadyBanner ||
       !hasDismissedEntryAudioModal ||
       showEntryAudioModal ||
       techCollectionModal ||
@@ -12491,6 +12659,8 @@ export function IslandRunBoardPrototype({
     <section
       className={`island-run-prototype ${isHudCollapsed ? 'island-run-prototype--hud-collapsed' : ''}${showBuildPanel ? ' island-run-prototype--build-exclusive' : ''}${isArenaBattleOpen ? ' island-run-prototype--arena-battle' : ''}`}
       data-island-number={islandNumber}
+      data-dice-launching={shouldRenderIsland5Three && isRolling ? 'true' : undefined}
+      data-dice-throw-strength={shouldRenderIsland5Three && isRolling ? diceThrowStrength : undefined}
     >
       {showEntryAudioModal && (
         <div className="island-run-entry-audio" role="presentation">
@@ -13644,9 +13814,9 @@ export function IslandRunBoardPrototype({
             playIslandRunSound('stop_land');
             triggerIslandRunHaptic('stop_land');
           }}
-          isRolling={isRolling}
+          isRolling={shouldRenderIsland5Three ? false : isRolling}
           diceFaces={rollingDiceFaces}
-          onDiceRollComplete={() => {
+          onDiceRollComplete={shouldRenderIsland5Three ? undefined : () => {
             diceRollCompleteAlreadyFiredRef.current = true;
             diceRollCompleteResolverRef.current?.();
             diceRollCompleteResolverRef.current = null;
@@ -13674,7 +13844,7 @@ export function IslandRunBoardPrototype({
                 isRolling={isRolling}
                 landingTileType={landmarkDoorTileMap[tokenIndex]?.tileType}
                 movementSpeedFactor={storyFastModeState.movementSpeedFactor}
-                cameraFocusPreset={buildCameraFocusRequest?.preset ?? null}
+                cameraFocusPreset={threeCameraFocusPreset}
                 cameraFocusTransition={buildCameraFocusRequest?.transition ?? 'standard'}
                 cameraOverviewRequestVersion={threeCameraOverviewRequestVersion}
                 interactionPaused={doesModalOwnAttention}
@@ -13697,6 +13867,21 @@ export function IslandRunBoardPrototype({
                   if (showBuildPanel) return;
                   handleStopOpenRequest(landmarkId === 'event' ? 'mystery' : landmarkId);
                 }}
+                signatureMissionPresentation={{
+                  metersDrilled: isIslandVisualPreview && islandArtPreviewNumber === 3
+                    ? frostwellPresentationMeters
+                    : frostwellProgress.metersDrilled,
+                  built: isIslandVisualPreview && islandArtPreviewNumber === 3
+                    ? frostwellPresentationBuilt
+                    : frostwellBuilt,
+                  constructionSequence: isIslandVisualPreview && islandArtPreviewNumber === 3 && frostwellMissionState === 'constructing'
+                    ? 1
+                    : frostwellConstructionSequence,
+                  constructionPreviewLoop: isIslandVisualPreview && islandArtPreviewNumber === 3 && frostwellMissionState === 'constructing',
+                }}
+                onSignatureMissionClick={isIslandVisualPreview && islandArtPreviewNumber !== 3
+                  ? undefined
+                  : openFrostwellMission}
                 caretakerEncounterOpen={isIslandInhabitantFlowOpen || activeStopId === 'wisdom'}
                 onCaretakerClick={isIslandVisualPreview ? undefined : () => {
                   if (showBuildPanel) return;
@@ -13709,6 +13894,24 @@ export function IslandRunBoardPrototype({
               <div className="island-run-board__three-preview-badge" aria-hidden="true">
                 DEV · 3D VISUAL PREVIEW
               </div>
+            ) : null}
+            {!isIslandVisualPreview && islandArtPreviewNumber === 3 ? (
+              <button
+                type="button"
+                className="island-run-board__signature-mission-pill"
+                onClick={openFrostwellMission}
+                aria-label="Open Frostwell Iceworks mission"
+              >
+                <span aria-hidden="true">{frostwellBuilt ? '🐟' : '🧊'}</span>
+                <span>
+                  <strong>Frostwell</strong>
+                  {frostwellBuilt
+                    ? 'Waterworks online'
+                    : frostwellProgress.metersDrilled >= FROSTWELL_DEPTH_METERS
+                      ? `Fund ${frostwellTechCost.toLocaleString()}`
+                      : `${frostwellProgress.metersDrilled}/${FROSTWELL_DEPTH_METERS}m · ${frostwellAvailableSpins} spin${frostwellAvailableSpins === 1 ? '' : 's'}`}
+                </span>
+              </button>
             ) : null}
           </div>
         ) : null}
@@ -13743,6 +13946,25 @@ export function IslandRunBoardPrototype({
           </aside>
         ) : null}
       </div>
+
+      {shouldRenderIsland5Three ? (
+        <IslandRunDiceLaunchOverlay
+          faces={rollingDiceFaces}
+          isRolling={isRolling}
+          throwStrength={diceThrowStrength}
+          onTopBarImpact={() => {
+            triggerImpactHaptic(diceThrowStrength === 'hard' ? 'strong' : 'medium', {
+              channel: 'gamification',
+              minIntervalMs: 90,
+            });
+          }}
+          onRollComplete={() => {
+            diceRollCompleteAlreadyFiredRef.current = true;
+            diceRollCompleteResolverRef.current?.();
+            diceRollCompleteResolverRef.current = null;
+          }}
+        />
+      ) : null}
 
       {/* Dice roll total overlay — shown briefly after dice settle */}
       {diceRollTotalOverlay && (
@@ -15485,64 +15707,6 @@ export function IslandRunBoardPrototype({
                 onClick={() => setShowRewardDetailsModal(false)}
               >
                 Close
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {/* ── Egg-ready in-app banner ──────────────────────────────────────── */}
-      {showEggReadyBanner && (
-        <div className="island-run-overlay-root island-stop-modal-backdrop island-egg-ready-modal-backdrop" role="presentation">
-          <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-egg-ready-modal" role="dialog" aria-modal="true" aria-label="Egg ready">
-            <h3 className="island-stop-modal__title island-egg-ready-modal__title">🌟🥚 Egg Ready to Open!</h3>
-            {activeEgg ? (
-              <div className={`island-egg-ready-modal__animation-frame${hasEggReadyAnimationPlayedOnce ? ' island-egg-ready-modal__animation-frame--tinted' : ''}`}>
-                <video
-                  className="island-hatchery-card__stage-art island-egg-ready-modal__animation"
-                  src="/assets/creatures/egg-hatch/egg-hatch-alpha-v1.mp4"
-                  poster={getEggStageArtSrc(activeEgg.tier, 4)}
-                  autoPlay
-                  muted
-                  playsInline
-                  preload="auto"
-                  onEnded={(event) => {
-                    setHasEggReadyAnimationPlayedOnce(true);
-                    event.currentTarget.loop = true;
-                    void event.currentTarget.play();
-                  }}
-                  aria-label={`${activeEgg.tier} egg hatching animation`}
-                />
-              </div>
-            ) : null}
-            <p className="island-stop-modal__copy">
-              Your egg has finished incubating and is ready to open. Head to the Hatchery stop to collect your creature or sell for rewards!
-            </p>
-            <div className="island-stop-modal__actions island-stop-modal__actions--balanced island-stop-modal__actions--aligned island-stop-modal__actions--anchored">
-              <button
-                type="button"
-                className={`island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--primary${hasEggReadyAnimationPlayedOnce ? ' island-egg-ready-modal__primary-btn--ready' : ''}`}
-                onClick={() => {
-                  if (activeEgg) {
-                    try { window.localStorage.setItem(getEggReadyBannerKey(session.user.id, activeEgg.setAtMs), '1'); } catch { /* ignore */ }
-                  }
-                  setShowEggReadyBanner(false);
-                  requestActiveStopTransition('hatchery', 'egg_ready_banner');
-                }}
-              >
-                Go to Hatchery
-              </button>
-              <button
-                type="button"
-                className="island-stop-modal__btn island-stop-modal__btn--action island-stop-modal__btn--secondary"
-                onClick={() => {
-                  if (activeEgg) {
-                    try { window.localStorage.setItem(getEggReadyBannerKey(session.user.id, activeEgg.setAtMs), '1'); } catch { /* ignore */ }
-                  }
-                  setShowEggReadyBanner(false);
-                }}
-              >
-                Later
               </button>
             </div>
           </section>
@@ -17690,6 +17854,119 @@ export function IslandRunBoardPrototype({
           />
         );
       })(), document.body) : null}
+
+      {showFrostwellMission && typeof document !== 'undefined' ? createPortal((
+        <div
+          className="frostwell-mission-modal__backdrop"
+          role="presentation"
+          onClick={closeFrostwellMission}
+        >
+          <section
+            className="frostwell-mission-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="frostwell-mission-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="frostwell-mission-modal__close"
+              onClick={closeFrostwellMission}
+              aria-label="Close Frostwell Iceworks mission"
+            >
+              ×
+            </button>
+            <header className="frostwell-mission-modal__header">
+              <p className="frostwell-mission-modal__eyebrow">Island 003 signature mission</p>
+              <h2 id="frostwell-mission-title">🧊 Frostwell Iceworks</h2>
+              <p className="frostwell-mission-modal__lede">
+                Land on a blue drill tile, then spin to bore toward fresh water.
+              </p>
+            </header>
+            <div className="frostwell-mission-modal__machine">
+              <div
+                className={`frostwell-mission-modal__shaft${isSpinningFrostwell ? ' frostwell-mission-modal__shaft--drilling' : ''}`}
+                aria-label={`${frostwellPresentationMeters} of ${FROSTWELL_DEPTH_METERS} metres drilled`}
+              >
+                <div className="frostwell-mission-modal__ice-cap"><span /></div>
+                <div className="frostwell-mission-modal__bore">
+                  <span className="frostwell-mission-modal__drill-string" style={{ height: `${12 + (frostwellPresentationMeters / FROSTWELL_DEPTH_METERS) * 72}%` }} />
+                  <span className="frostwell-mission-modal__auger" style={{ top: `${8 + (frostwellPresentationMeters / FROSTWELL_DEPTH_METERS) * 72}%` }}>▼</span>
+                  <span className="frostwell-mission-modal__chips" aria-hidden="true">✦ · ✦</span>
+                  <span className="frostwell-mission-modal__waterline">fresh water · 500m</span>
+                </div>
+                <div className="frostwell-mission-modal__depth-readout">
+                  <strong>{frostwellPresentationMeters}m</strong>
+                  <span>of {FROSTWELL_DEPTH_METERS}m</span>
+                </div>
+              </div>
+              <div className="frostwell-mission-modal__wheel-panel">
+                <span className="frostwell-mission-modal__wheel-pointer" aria-hidden="true">▼</span>
+                <div
+                  className={`frostwell-mission-modal__wheel${isSpinningFrostwell ? ' frostwell-mission-modal__wheel--spinning' : ''}`}
+                  style={{ transform: `rotate(${frostwellWheelRotation}deg)` }}
+                  aria-label="Drilling distance wheel"
+                >
+                  {FROSTWELL_SPIN_METERS.map((meters, index) => (
+                    <span key={meters} style={{ transform: `rotate(${index * 45 + 22.5}deg) translateY(-73px) rotate(-${index * 45 + 22.5}deg)` }}>{meters}</span>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="frostwell-mission-modal__wheel-hub"
+                  disabled={isSpinningFrostwell || frostwellAvailableSpins < 1 || frostwellPresentationBuilt || frostwellPresentationMeters >= FROSTWELL_DEPTH_METERS}
+                  onClick={() => void handleSpinFrostwell()}
+                  aria-label={frostwellAvailableSpins > 0 ? 'Spin the Frostwell drill wheel' : 'No Frostwell spins ready'}
+                >
+                  {isSpinningFrostwell ? 'DRILLING' : frostwellAvailableSpins > 0 ? 'SPIN' : 'LOCKED'}
+                  <small>{frostwellAvailableSpins} ready</small>
+                </button>
+                {frostwellLastSpinMeters !== null ? <em>+{frostwellLastSpinMeters}m drilled!</em> : null}
+              </div>
+            </div>
+            <div className="frostwell-mission-modal__depth-track"><span style={{ width: `${Math.min(100, frostwellPresentationMeters / FROSTWELL_DEPTH_METERS * 100)}%` }} /></div>
+            {frostwellPresentationBuilt ? (
+              <div className="frostwell-mission-modal__status frostwell-mission-modal__status--online">
+                <strong>🐟 Iceworks online</strong>
+                <span>Nets now return with fish while fresh water flows through the insulated pipes into the reservoir.</span>
+              </div>
+            ) : frostwellPresentationMeters < FROSTWELL_DEPTH_METERS ? (
+              <div className="frostwell-mission-modal__status">
+                <strong>Drilling in progress</strong>
+                <span>The three ⛏ tiles each grant one wheel spin. Every spin drives the animated offshore auger 15–75 metres deeper.</span>
+              </div>
+            ) : (
+              <div className="frostwell-mission-modal__status frostwell-mission-modal__status--ready">
+                <strong>Breakthrough! Technology installation ready</strong>
+                <span>The bore has reached water. Fund the fishery, reservoir, conveyor nets and pipeworks.</span>
+              </div>
+            )}
+            <div className="frostwell-mission-modal__actions">
+              <button
+                type="button"
+                className="island-stop-modal__btn"
+                onClick={closeFrostwellMission}
+              >
+                {frostwellPresentationBuilt ? 'Return to island' : 'Keep exploring'}
+              </button>
+              {!frostwellPresentationBuilt && frostwellPresentationMeters >= FROSTWELL_DEPTH_METERS ? (
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action"
+                  disabled={isFundingFrostwell || runtimeState.essence < frostwellTechCost}
+                  onClick={() => void handleFundFrostwell()}
+                >
+                  {isFundingFrostwell
+                    ? 'Building Iceworks…'
+                    : runtimeState.essence < frostwellTechCost
+                      ? `Need ${(frostwellTechCost - runtimeState.essence).toLocaleString()} more Essence`
+                      : `Build for ${frostwellTechCost.toLocaleString()} Essence`}
+                </button>
+              ) : null}
+            </div>
+          </section>
+        </div>
+      ), document.body) : null}
 
       {pairedThemeOfferModal && typeof document !== 'undefined' ? createPortal((
         <div
