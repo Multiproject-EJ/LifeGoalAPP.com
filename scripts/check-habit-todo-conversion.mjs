@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const migration = readFileSync(
-  'supabase/migrations/20260813132704_add_reversible_habit_todo_conversion.sql',
+  'supabase/migrations/20260813135940_add_reversible_habit_todo_conversion.sql',
   'utf8',
 ).toLowerCase();
 const tracker = readFileSync('src/features/habits/DailyHabitTracker.tsx', 'utf8');
