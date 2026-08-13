@@ -46,6 +46,7 @@ import {
 } from '../../services/journal';
 import { fetchCompletedActionsForDate, insertAction } from '../../services/actions';
 import { createTodayTodo, deleteTodayTodo, fetchTodayTodos, updateTodayTodo, type TodayTodo } from '../../services/todayTodos';
+import { convertHabitToTodayTodo, convertTodayTodoToHabit } from '../../services/habitTodoConversion';
 import {
   closeHabitTodayCampaign,
   fetchHabitTodayCampaign,
@@ -77,7 +78,7 @@ import {
   isRoutekeeperBreathingHabit,
 } from '../gamification/level-worlds/services/islandRunRoutekeeperTinyActions';
 import { autoResumeDueHabits } from '../../services/habitLifecycleAutoResume';
-import { cancelHabitNotifications } from '../../services/habitAlertNotifications';
+import { cancelHabitNotifications, scheduleHabitNotifications } from '../../services/habitAlertNotifications';
 import {
   AUTO_PROGRESS_TIERS,
   AUTO_PROGRESS_UPGRADE_RULES,
@@ -1748,37 +1749,61 @@ export function DailyHabitTracker({
   }, [activeDate, handleRescheduleTodayTodo]);
 
   const handleConvertTodayTodoToHabit = useCallback(async (todo: TodayTodo) => {
-    if (!window.confirm(`Convert “${todo.title}” into a daily habit? This can’t be undone automatically — the todo will be completed and a new daily habit created.`)) {
+    const restoresOriginalHabit = Boolean(todo.source_habit_snapshot);
+    const confirmation = restoresOriginalHabit
+      ? `Restore “${todo.title}” as the original habit? Its saved settings and history will return, and this todo will be completed.`
+      : `Convert “${todo.title}” into a daily habit? The todo will be completed and a new daily habit created.`;
+    if (!window.confirm(confirmation)) {
       return;
     }
     setTodayTodoActionPendingById((current) => ({ ...current, [todo.id]: true }));
-    const schedule = buildScheduleWithHabitRhythm({ mode: 'daily' }, {
-      daypart: DEFAULT_HABIT_RHYTHM_DAYPART,
-      source: 'default',
-    }) as Json;
-    const { error } = await createHabitV2({
-      title: todo.title,
-      emoji: '✅',
-      type: 'boolean',
-      schedule,
-      start_date: today,
-      habit_intent: todo.notes ?? null,
-      autoprog: buildDefaultAutoProgressState({ schedule, target: null }) as Json,
-      archived: false,
-      status: 'active',
-    }, session.user.id);
+    let conversionError: { message?: string } | null = null;
+    let restoredHabitId: string | null = null;
+
+    if (isDemoSession(session)) {
+      const rhythmSchedule = buildScheduleWithHabitRhythm({ mode: 'daily' }, {
+        daypart: DEFAULT_HABIT_RHYTHM_DAYPART,
+        source: 'default',
+      }) as Json;
+      const schedule = buildScheduleWithNotes(rhythmSchedule, todo.notes ?? '') as Json;
+      const result = await createHabitV2({
+        title: todo.title,
+        emoji: '✅',
+        type: 'boolean',
+        schedule,
+        start_date: today,
+        habit_intent: 'build',
+        autoprog: buildDefaultAutoProgressState({ schedule, target: null }) as Json,
+        archived: false,
+        status: 'active',
+      }, session.user.id);
+      conversionError = result.error;
+      restoredHabitId = result.data?.id ?? null;
+      if (!result.error) await updateTodayTodo(todo.id, { completed: true });
+    } else {
+      const result = await convertTodayTodoToHabit(todo.id);
+      conversionError = result.error;
+      restoredHabitId = result.data?.id ?? null;
+    }
+
     setTodayTodoActionPendingById((current) => {
       const next = { ...current };
       delete next[todo.id];
       return next;
     });
-    if (error) {
+    if (conversionError) {
       setTodayTodoLoadError('Could not convert todo to a habit right now.');
       return;
     }
     setTodayTodoLoadError(null);
-    setTodayTodoStatus(`Converted “${todo.title}” into a daily habit.`);
-    await updateTodayTodo(todo.id, { completed: true });
+    setTodayTodoStatus(
+      restoresOriginalHabit
+        ? `Restored “${todo.title}” with its original habit settings and history.`
+        : `Converted “${todo.title}” into a daily habit.`,
+    );
+    if (restoredHabitId) {
+      await scheduleHabitNotifications(restoredHabitId, session.user.id);
+    }
     void loadTodayTodos(activeDate);
     const { data: habitData } = await fetchHabitsForUser(session.user.id);
     if (habitData) setHabits(habitData);
@@ -7563,6 +7588,51 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
     [isConfigured, isDemoExperience, lifecycleActionHabitIds],
   );
 
+  const handleConvertHabitToTodo = useCallback(async (habit: HabitWithGoal) => {
+    if (!isConfigured || isDemoExperience) {
+      setErrorMessage('Connect Supabase to convert a habit into a todo.');
+      return;
+    }
+    if (lifecycleActionHabitIds.has(habit.id)) return;
+
+    if (!window.confirm(
+      `Convert “${habit.name}” into a todo for ${formatDateLabel(activeDate)}? The habit will be archived, while its settings and history are kept so you can restore it later.`,
+    )) {
+      return;
+    }
+
+    setLifecycleActionHabitIds((current) => new Set(current).add(habit.id));
+    setErrorMessage(null);
+
+    try {
+      const { error } = await convertHabitToTodayTodo({
+        habitId: habit.id,
+        todoDate: activeDate,
+        orderIndex: todayTodos.filter((todo) => !todo.completed).length,
+      });
+      if (error) throw new Error(error.message);
+
+      await cancelHabitNotifications(habit.id);
+      setHabits((current) => current.filter((entry) => entry.id !== habit.id));
+      setCompletions((current) => {
+        const next = { ...current };
+        delete next[habit.id];
+        return next;
+      });
+      setExpandedHabits({});
+      setErrorMessage(`Converted “${habit.name}” into a todo. Its habit settings and history are safe if you restore it.`);
+      await loadTodayTodos(activeDate);
+    } catch {
+      setErrorMessage('Could not convert this habit into a todo right now. Nothing was changed.');
+    } finally {
+      setLifecycleActionHabitIds((current) => {
+        const next = new Set(current);
+        next.delete(habit.id);
+        return next;
+      });
+    }
+  }, [activeDate, isConfigured, isDemoExperience, lifecycleActionHabitIds, loadTodayTodos, todayTodos]);
+
   const handleCreateGoalFromHabit = async () => {
     if (!editHabit) return;
     if (!isConfigured && !isDemoExperience) {
@@ -10152,6 +10222,17 @@ Please give me practical, creative, doable next steps. Break it down from A to Z
                         }}
                       >
                         ✏️ Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="habit-checklist__edit-btn"
+                        disabled={lifecycleActionHabitIds.has(habit.id)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void handleConvertHabitToTodo(habit);
+                        }}
+                      >
+                        {lifecycleActionHabitIds.has(habit.id) ? 'Converting…' : '☑️ Convert to todo'}
                       </button>
                       <button
                         type="button"

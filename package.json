@@ -63,6 +63,7 @@
     "check:mobile-images": "node scripts/check-mobile-runtime-images.mjs",
     "test:image-upload-optimizer": "node scripts/run-image-upload-optimizer-tests.mjs",
     "test:today-todos": "node scripts/run-today-todos-tests.mjs",
+    "test:habit-todo-conversion": "node scripts/check-habit-todo-conversion.mjs",
     "test:theme-access": "node scripts/run-theme-access-tests.mjs",
     "test:compass-book": "node scripts/run-compass-book-tests.mjs",
     "test:rank": "node scripts/run-rank-tests.mjs",

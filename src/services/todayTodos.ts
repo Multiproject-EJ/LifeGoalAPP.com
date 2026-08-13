@@ -148,6 +148,8 @@ export async function createTodayTodo(
       ...payload,
       completed: false,
       completed_at: null,
+      source_habit_id: null,
+      source_habit_snapshot: null,
       created_at: nowIso,
       updated_at: nowIso,
     }),
