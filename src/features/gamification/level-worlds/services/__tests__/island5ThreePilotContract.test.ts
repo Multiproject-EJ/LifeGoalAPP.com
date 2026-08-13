@@ -59,10 +59,80 @@ import {
   ISLAND_8_RUNTIME_PART_IDS,
   registerIsland8RuntimePart,
 } from '../../dev/Island8EverblossomThreeWorld';
+import {
+  buildIsland9HeartshaftLandmark,
+  collectIsland9RuntimePartManifest,
+  createIsland9HeartshaftMaterials,
+  isIsland9RouteCorridorClear,
+  ISLAND_9_ROUTE_CLEARANCE_INNER_RADIUS,
+  ISLAND_9_ROUTE_CLEARANCE_OUTER_RADIUS,
+  ISLAND_9_RUNTIME_PART_IDS,
+  registerIsland9RuntimePart,
+} from '../../dev/Island9HeartshaftThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'keeps Island 009 volcanic scenery outside the route and gives every L1 L2 L3 landmark a distinct additive silhouette',
+    run: async () => {
+      assert(isIsland9RouteCorridorClear(ISLAND_9_ROUTE_CLEARANCE_INNER_RADIUS - 0.2, 0, 0.16), 'the open shaft may remain inside the route with clearance');
+      assert(!isIsland9RouteCorridorClear(3.4, 0, 0.01), 'foundry scenery may not enter the canonical tile centreline');
+      assert(isIsland9RouteCorridorClear(ISLAND_9_ROUTE_CLEARANCE_OUTER_RADIUS + 0.2, 0, 0.16), 'outer caldera scenery may begin beyond the protected route');
+      const materials = createIsland9HeartshaftMaterials();
+      const levelHeightsByLandmark = new Map<string, number[]>();
+      const l3Silhouettes: string[] = [];
+      for (const landmark of ISLAND_5_LANDMARKS) {
+        const heights: number[] = [];
+        for (const level of [1, 2, 3] as const) {
+          const root = buildIsland9HeartshaftLandmark(landmark, level, 'low', materials);
+          const size = new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3());
+          heights.push(size.y);
+          if (level === 3) l3Silhouettes.push(`${size.x.toFixed(2)}:${size.y.toFixed(2)}:${size.z.toFixed(2)}`);
+          root.traverse((object) => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
+        }
+        levelHeightsByLandmark.set(landmark.id, heights);
+      }
+      levelHeightsByLandmark.forEach((heights, id) => {
+        assert(heights[1] > heights[0] && heights[2] > heights[1], `${id} must grow additively at L1, L2 and L3`);
+      });
+      assertEqual(new Set(l3Silhouettes).size, 5, 'all five Heartshaft L3 landmark bounds need distinct silhouettes');
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island9HeartshaftThreeWorld.ts', 'utf8');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      assert(worldSource.includes("shaftWall.name = 'ISLAND_9_DEEP_SHAFT_WALL'"), 'Island 009 needs a real open descending shaft wall');
+      assert(worldSource.includes("ringPivot.name = 'ISLAND_9_IGNITION_RING_PIVOT'"), 'Heartshaft L3 needs its open suspended ignition ring');
+      assert(worldSource.includes("const cycle = (elapsed * 0.12) % 1"), 'Island 009 needs the reactive foundry ambience sequence');
+      assert(worldSource.includes('sharedWater.visible = false'), 'Island 009 must remain landlocked with no ocean plane');
+      assert(pilotSource.includes('isHeartshaftCrucible && island9HeartshaftMaterials'), 'Island 009 must reuse the shared renderer shell');
+    },
+  },
+  {
+    name: 'exports the Island 009 action-ready runtime hierarchy',
+    run: () => {
+      const root = new THREE.Group();
+      root.name = 'ISLAND_9_ACTION_READY_TEST_ROOT';
+      root.userData.sculptRuntime = {
+        clickable: true,
+        explodable: true,
+        parts: ISLAND_9_RUNTIME_PART_IDS.map((partId) => {
+          const pivot = new THREE.Object3D();
+          pivot.name = `ISLAND_9_${partId.toUpperCase()}_PIVOT`;
+          root.add(pivot);
+          return registerIsland9RuntimePart(partId, pivot, 'contract-test');
+        }),
+        sockets: { focus: 'ISLAND_9_TEST_FOCUS_SOCKET' },
+        colliders: [{ id: 'test-trigger', type: 'box', isTrigger: true }],
+        destructionGroups: [{ id: 'static-world', breakable: false }],
+      };
+      const manifest = collectIsland9RuntimePartManifest([root]);
+      assertEqual(new Set(manifest.parts.map((part) => part.name)).size, ISLAND_9_RUNTIME_PART_IDS.length, 'every Island 009 runtime part needs a stable selectable ID');
+      assert(root.userData.sculptRuntime.clickable && root.userData.sculptRuntime.explodable, 'Island 009 roots must expose click and exploded-review intent');
+      assert(root.userData.sculptRuntime.sockets.focus, 'Island 009 roots need a named focus socket');
+      assert(root.userData.sculptRuntime.colliders.length > 0, 'Island 009 roots need collider intent');
+    },
+  },
   {
     name: 'keeps Island 008 botanical scenery outside the route and all five L3 silhouettes distinct',
     run: async () => {
@@ -743,7 +813,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8].includes(islandParam)'), 'the workbench should expose all eight authored islands for repeatable landmark QA');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9].includes(islandParam)'), 'the workbench should expose all nine authored islands for repeatable landmark QA');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
       assert(mainSource.includes('import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED'), 'internal profiler bundle must not register the production service worker');
