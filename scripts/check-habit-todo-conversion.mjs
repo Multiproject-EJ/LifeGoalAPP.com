@@ -7,6 +7,7 @@ const migration = readFileSync(
 ).toLowerCase();
 const tracker = readFileSync('src/features/habits/DailyHabitTracker.tsx', 'utf8');
 const service = readFileSync('src/services/habitTodoConversion.ts', 'utf8');
+const todayTodosService = readFileSync('src/services/todayTodos.ts', 'utf8');
 const types = readFileSync('src/lib/database.types.ts', 'utf8');
 const css = readFileSync('src/index.css', 'utf8');
 
@@ -43,6 +44,11 @@ assert.match(tracker, /Its saved settings and history will return/);
 assert.match(tracker, /buildScheduleWithNotes\(rhythmSchedule, todo\.notes/);
 assert.match(tracker, /scheduleHabitNotifications\(restoredHabitId/);
 assert.match(types, /source_habit_snapshot: Json \| null/);
+assert.match(
+  todayTodosService,
+  /optimistic:\s*\(\)\s*=>\s*\(\{[\s\S]*source_habit_id:\s*null,[\s\S]*source_habit_snapshot:\s*null,/,
+  'Optimistic ordinary todos must satisfy the full generated row type without conversion metadata.',
+);
 
 assert.match(
   css,
