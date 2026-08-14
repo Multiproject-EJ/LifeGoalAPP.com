@@ -227,9 +227,12 @@ export function selectArenaGamePair(input: ArenaPairSelectionInput): ArenaPairSe
   const disabled = new Set(input.disabledGameIds);
   const recent = new Set(input.recentGameIds ?? []);
   const rankIndex = new Map(input.rankedGameIds.map((id, index) => [id, index]));
+  const journeyDiscOwnsTimedEventSurface = isIslandRunFeatureEnabled('journeyDiscArenaEnabled')
+    && isJourneyDiscArenaIsland(input.islandNumber);
   const eligible = ARENA_GAME_CATALOG.filter((game) => {
     if (disabled.has(game.id)) return false;
     if (game.id === 'journey_disc_arena' && (!isIslandRunFeatureEnabled('journeyDiscArenaEnabled') || !isJourneyDiscArenaIsland(input.islandNumber))) return false;
+    if (journeyDiscOwnsTimedEventSurface && game.availability === 'active_event') return false;
     return game.availability === 'exhibition' || game.id === input.activeEventId;
   });
 

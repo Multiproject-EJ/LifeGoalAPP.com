@@ -20,6 +20,7 @@ interface IslandRunArenaChoiceProps {
   tickets: number;
   activeEventName: string;
   activeEventIcon: string;
+  eventTicketIcon?: string;
   rewardProgress: number;
   rewardThreshold: number;
   nextRewardIcon: string;
@@ -109,7 +110,7 @@ export function IslandRunArenaChoice(props: IslandRunArenaChoiceProps) {
       <div className="arena-choice__event">
         <div className="arena-choice__event-heading">
           <span><b aria-hidden="true">{props.activeEventIcon}</b>{props.activeEventName}</span>
-          <strong>{props.tickets} 🎟️</strong>
+          <strong>{props.tickets} {props.eventTicketIcon ?? '🎟️'}</strong>
         </div>
         <div
           className="arena-choice__event-track"

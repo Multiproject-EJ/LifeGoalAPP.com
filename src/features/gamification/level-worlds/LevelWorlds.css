@@ -3162,6 +3162,12 @@
 .island-run-board__rewardbar-banner--companion_feast {
   background: linear-gradient(135deg, #1e8449 0%, #196f3d 50%, #145a32 100%);
 }
+.island-run-board__rewardbar-banner--journey-disc-arena {
+  background:
+    radial-gradient(circle at 22% 0%, rgba(104, 255, 242, 0.72), transparent 38%),
+    linear-gradient(112deg, #073e7a 0%, #4d20a8 52%, #c82579 100%);
+  box-shadow: inset 0 -1px 0 rgba(135, 255, 247, 0.55), 0 0 16px rgba(71, 233, 255, 0.32);
+}
 
 .island-run-board__rewardbar-banner-icon {
   font-style: normal;
@@ -6472,6 +6478,41 @@
 
 .island-event-modal__grid-item--selected {
   background: rgba(62, 157, 203, 0.34);
+}
+
+.island-event-modal__grid-item--journey-disc {
+  border-color: #69fff1;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(94, 255, 241, 0.42), transparent 42%),
+    linear-gradient(145deg, rgba(13, 76, 137, 0.98), rgba(87, 28, 151, 0.98) 60%, rgba(190, 31, 114, 0.92));
+  box-shadow: 0 0 20px rgba(88, 248, 255, 0.55), inset 0 0 12px rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.island-event-modal__grid-item--journey-disc .island-event-modal__grid-icon {
+  color: #8ffff5;
+  font-size: 1.25rem;
+  text-shadow: 0 0 8px rgba(109, 255, 244, 0.95);
+}
+
+.island-event-modal__grid-play-label {
+  padding: 0.06rem 0.32rem;
+  border-radius: 999px;
+  background: #69fff1;
+  color: #082540;
+  font-size: 0.46rem;
+  line-height: 1.15;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+}
+
+.island-event-modal__grid-item--empty {
+  cursor: default;
+  pointer-events: none;
+  border-style: dashed;
+  border-color: rgba(159, 212, 230, 0.2);
+  background: rgba(9, 29, 42, 0.24);
+  box-shadow: inset 0 0 9px rgba(135, 220, 241, 0.03);
 }
 
 .island-event-modal__grid-active-dot {
