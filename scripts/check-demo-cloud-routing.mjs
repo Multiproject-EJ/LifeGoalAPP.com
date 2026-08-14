@@ -13,6 +13,7 @@ const zenGarden = read('src/services/zenGarden.ts');
 const habitMonthly = read('src/services/habitMonthlyQueries.ts');
 const habitsV2 = read('src/services/habitsV2.ts');
 const goalsRepo = read('src/data/goalsRepo.ts');
+const islandRunDebugPanel = read('src/features/gamification/level-worlds/components/IslandRunDebugPanel.tsx');
 const waitlistMigration = read('supabase/migrations/20260801204019_harden_public_launch_waitlist.sql');
 
 assert.match(
@@ -88,6 +89,12 @@ assert.match(
   'The in-demo waitlist must use the public email collector instead of a fake UUID upsert.',
 );
 assert.match(publicWaitlist, /source,[\s\S]{0,80}channel,/, 'Public waitlist writes must include source and channel.');
+
+assert.match(
+  islandRunDebugPanel,
+  /useEffect\(\(\) => \{[\s\S]{0,180}isDemoSession\(session\)[\s\S]{0,220}return;[\s\S]{0,500}\.from\('island_run_runtime_state'\)/,
+  'Island Run debug connectivity checks must stay local for demo sessions.',
+);
 
 assert.match(waitlistMigration, /CREATE TRIGGER public_launch_waitlist_rate_limit/i);
 assert.match(waitlistMigration, /current_attempts > 5/);

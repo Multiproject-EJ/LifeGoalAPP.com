@@ -5868,6 +5868,38 @@ export const islandRunStateActionsTests: TestCase[] = [
     },
   },
   {
+    name: 'postponeIslandRunStop reconciles legacy completion credit before checking accessibility',
+    run: () => {
+      resetAll();
+      const session = makeSession();
+      seedState({
+        runtimeVersion: 8,
+        currentIslandNumber: 4,
+        completedStopsByIsland: { '4': ['hatchery'] },
+        stopStatesByIndex: [
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+          { objectiveComplete: false, buildComplete: false },
+        ],
+      });
+
+      const result = postponeIslandRunStop({
+        session,
+        client: null,
+        islandNumber: 4,
+        stopIndex: 1,
+        nowMs: 23456,
+      });
+
+      assertEqual(result.ok, true, 'legacy Hatchery completion should make the visible Habit action accessible');
+      assertEqual(result.record.stopStatesByIndex[0].objectiveComplete, true, 'completion ledger repairs the stale Hatchery objective');
+      assertEqual(result.record.stopStatesByIndex[1].postponedAtMs, 23456, 'Habit postponement should be recorded');
+      assertEqual(result.record.stopStatesByIndex[2].accessUnlocked, true, 'Mystery should unlock immediately');
+    },
+  },
+  {
     name: 'completing a postponed stop clears postponed marker and full clear remains objective-based',
     run: () => {
       resetAll();
