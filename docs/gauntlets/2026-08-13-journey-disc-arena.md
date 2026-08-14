@@ -1,7 +1,71 @@
 # Journey Disc Arena — Playable 3D Vertical Slice
 
-Status: **Approved for mobile HabitGame event integration** on
-`codex/journey-disc-arena`. Merge, push, and deployment remain unapproved.
+Status: **Release execution approved 2026-08-14** on
+`codex/journey-disc-arena`. Eivind's “do it” approval supersedes the earlier
+merge/push/deployment hold for the bounded release amendment below.
+
+## 2026-08-14 campaign-ladder and release amendment
+
+### Observable outcome
+
+- Island 006 exposes Journey Disc Arena through the active timed-event grid
+  while the canonical Boss finale retains priority whenever it becomes active.
+- Preparation visibly explains the full fight journey: Scout, Challenger,
+  Elite, Guardian I, Guardian II, and Guardian III, including the exact next
+  classification threshold and next claimable prize.
+- All four available player spinners remain staged in 3D. Deployed discs glow
+  green; reserves remain smaller and dimmer. The exact current rival/Guardian
+  lineup is staged opposite them and named in the phone HUD.
+- Event points and claimed nodes remain event-scoped. Rank, weapon levels, and
+  highest Guardian clearance remain permanent in the existing owner-scoped
+  Island Run runtime row and hydrate on later eligible islands.
+
+### Non-negotiables and exclusions
+
+- One deployed spinner atomically spends one canonical active-event ticket.
+- React and Three.js remain presentation only; canonical actions own spending,
+  score banking, claims, and persistence.
+- No new wallet, clock, reward authority, database table, RLS policy, premium
+  entitlement grant, commerce flow, leaderboard, or multiplayer system.
+- The existing additive Journey Disc migration is already present in the live
+  LifeGoalApp project. This release performs read-only schema/RLS verification
+  and does not alter production data, Auth, privileges, or policies.
+- TestFlight/App Store submission and paid external services remain excluded.
+
+### Release evidence and budgets
+
+1. Pure tests prove all six ladder thresholds, deterministic rival identities,
+   1:1 ticket spending, idempotent score banking/claims, and persistent armory
+   conflict merges.
+2. The complete Island Run suite, architecture guard, TypeScript, production
+   Vite build, audio validation, and `git diff --check` pass.
+3. Browser play-through covers the real Island 006 launcher, formation changes,
+   insufficient tickets, a terminal round, reward state, exit/re-entry, and
+   Scout plus Guardian phone presentations.
+4. The complete circular lip and all controls remain reachable at 390×844;
+   preparation does not page-scroll and battle preserves following life bars.
+5. `cap sync ios` copies the exact verified `dist` bundle into the existing
+   local developer iOS project without TestFlight/App Store submission.
+6. The release commit is pushed and reaches the existing GitHub Pages workflow
+   only after every earlier gate passes.
+
+### Rollback, recovery, and stopping conditions
+
+- Before release, discard only this bounded diff; never reset unrelated user
+  work. After release, revert the release commit and let GitHub Pages redeploy.
+- Do not drop the additive database columns during rollback; older clients
+  safely ignore them and player armory/progress must remain recoverable.
+- Stop before push if Island 006 cannot launch through canonical actions,
+  ticket/score/claim replay is non-idempotent, RLS ownership is missing, the
+  phone layout scrolls or hides controls, the build/native sync fails, or
+  unrelated repository changes enter the release diff.
+
+### Handoff
+
+Another worker resumes from this branch and this section, checks the latest
+plan/evidence, preserves the six release gates, and records final commit,
+workflow, native-sync, and residual-risk evidence below rather than recreating
+the task from chat history.
 
 ## Mission
 
@@ -219,8 +283,9 @@ No reference-game asset is downloaded, traced, embedded, or shipped.
 - This is an alternate exhibition surface for the one active timed event. Its
   nested milestone track is keyed to that event and does not add a global
   reward bar, event clock, or ticket wallet.
-- The production feature remains default-off. The initial executable surface
-  is a development-only route.
+- The vertical slice began default-off on a development-only route. The approved
+  Island 006 integration now enables it only on Journey Disc chapter islands,
+  with the canonical Boss finale retaining centre-landmark priority.
 - The existing Journey Disc tier stays cosmetic in board movement and rewards.
   Arena combat stats are event-local and must never alter canonical Island Run
   movement, tiles, landmarks, or global reward math.
@@ -258,7 +323,7 @@ No reference-game asset is downloaded, traced, embedded, or shipped.
 ### Excluded
 
 - Commerce, telemetry expansion, final audio production, matchmaking,
-  multiplayer, leaderboards, and deployment of the included migration.
+  multiplayer, leaderboards, and any new production database mutation.
 - Replacement of Creature Arena or Boss progression.
 - Final GLB/image assets, player-piece art entitlement work, and app-store/PWA
   release.
@@ -325,22 +390,21 @@ or a rank advantage outside this event-local simulation.
 
 ## Rollback
 
-The feature is isolated behind a default-off flag and a development-only route.
-Removing that route, manifest entry, service, and preview folder restores the
-prior app. The unapplied Journey Disc JSONB migration must also be omitted or
-reverted before deployment; because the feature flag remains off, no production
-player data depends on it yet.
+The feature remains isolated behind the Journey Disc eligibility gate and its
+lazy manifest. Reverting the release commit restores the prior Island 006
+surface. The additive JSONB columns must remain during rollback so saved player
+armories and event progress stay recoverable; older clients safely ignore them.
 
 ## Handoff definition
 
-The local branch may be presented for review when the amended evidence gates
-pass. Merge, migration application, telemetry, final asset admission, physical-
-device performance, and release sequencing remain separate decisions.
+The local branch may be released when the amended evidence gates pass. Final
+asset admission, telemetry expansion, physical-device profiling, TestFlight,
+and App Store submission remain separate decisions.
 
 ## Local implementation evidence — 2026-08-13
 
-The mobile event integration is implemented on the isolated branch and remains
-default-off:
+The mobile event integration was implemented on the isolated branch and later
+approved for the eligible Journey Disc islands:
 
 - Refreshed 390×844 evidence:
   `evidence-journey-disc-arena-phone.jpg` (full preparation and deploy action),
@@ -370,7 +434,8 @@ default-off:
 - Canonical actions now start rounds, spend one active-event ticket per deployed
   disc, bank deterministic terminal scores once, and claim milestone rewards.
 - Progress is stored under the active event runtime id in
-  `journeyDiscArenaProgressByEvent`; the included migration has not been applied.
+  `journeyDiscArenaProgressByEvent`; the additive production migration is
+  registered and its owner-scoped RLS path has been verified read-only.
 - The Island 006 integration pass later enabled `journeyDiscArenaEnabled` after the event-scoped persistence, centre-landmark ownership rule, and mobile QA gates were in place.
   The explicit local QA route is `/dev/journey-disc-arena`.
 - TypeScript, production Vite build, `git diff --check`, and the Island Run
@@ -405,7 +470,31 @@ default-off:
 - The four-disc pass exposed an inflated ×28 contact chain; feedback now counts
   only spaced, meaningful impacts and caps the visible chain at ×9.
 
-Known next-pass work before release: replace procedural relic stand-ins through
-the approved player-piece asset pipeline, replace procedural audio with a
-production mix, apply/verify the migration in a staging backend, add telemetry,
-and capture physical-phone GPU/thermal/touch evidence.
+## Release-gate evidence — 2026-08-14
+
+- Real Island 006 browser flow: opened the 12-slot event grid, confirmed Journey
+  Disc replaced only the active event tile, and launched through the production
+  Island Run callback path with six event tickets.
+- Deployed two discs and observed the canonical wallet move from six to four.
+  The terminal loss banked +40 Disc Points; re-entry retained four tickets and
+  80 total event points. Claiming the reached 15-dice node changed the Island
+  Run dice wallet from 111 to 126 and the claim stayed consumed on re-entry.
+- Phone presentation was reviewed at 390×844 for Scout and Guardian III. The
+  whole arena lip, following life bars, lineup readout, six-stage campaign,
+  formation controls, result actions, and reward nodes remained visible.
+- Production Supabase verification found the registered
+  `20260813231212 add_journey_disc_arena_progress` migration, both JSONB runtime
+  columns, RLS enabled, and authenticated owner-only SELECT/INSERT/UPDATE
+  policies. No production schema, policy, Auth, or player-data write was made.
+- Automated release gates: 1,786 Island Run tests passed with zero failures;
+  architecture guard passed with zero violations; audio validation, TypeScript,
+  `git diff --check`, and production Vite build passed. The Journey Disc bundle
+  built as a lazy 71.24 kB JavaScript chunk (22.45 kB gzip).
+- The exact verified `dist` copied into `ios/App/App/public`; Capacitor synced the
+  local iOS project and all seven existing plugins successfully. No TestFlight
+  or App Store action was taken.
+
+Residual follow-up, not a release blocker for this original procedural version:
+replace procedural relic/audio stand-ins through their approved asset pipelines,
+add event telemetry, and capture physical-phone GPU, thermal, and touch evidence
+before a later TestFlight/App Store submission.

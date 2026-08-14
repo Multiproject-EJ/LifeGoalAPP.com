@@ -17,7 +17,7 @@ import {
   type JourneyDiscArenaFighterSeed,
   type JourneyDiscArenaState,
 } from '../journeyDiscArenaGame';
-import { JOURNEY_DISC_ARENA_VISUAL_LIP_RADIUS, resolveJourneyDiscArenaCameraFit } from '../journeyDiscArenaPresentation';
+import { buildJourneyDiscArenaRivalRoster, JOURNEY_DISC_ARENA_VISUAL_LIP_RADIUS, resolveJourneyDiscArenaCameraFit, resolveJourneyDiscArenaCampaign } from '../journeyDiscArenaPresentation';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 const lineup: readonly JourneyDiscArenaFighterSeed[] = [
@@ -112,6 +112,39 @@ export const journeyDiscArenaGameTests: TestCase[] = [
       assert(fit.visibleHalfWidthAtArena >= JOURNEY_DISC_ARENA_VISUAL_LIP_RADIUS, 'the full outer lip must fit horizontally');
       assert(fit.lipWidthPercent >= 92 && fit.lipWidthPercent <= 96, 'the ring should occupy roughly 94% of phone width');
       assertDeepEqual(fit, resolveJourneyDiscArenaCameraFit(390, 844), 'camera framing should be pure and deterministic');
+    },
+  },
+  {
+    name: 'setup roster identifies the exact 3D rival and Guardian models',
+    run: () => {
+      const elite = resolveJourneyDiscArenaEncounter({ eventPoints: 560, deployedDiscs: 4, roundsStarted: 3 });
+      const guardian = resolveJourneyDiscArenaEncounter({ eventPoints: 1200, deployedDiscs: 4, roundsStarted: 10 });
+      const eliteRoster = buildJourneyDiscArenaRivalRoster(elite);
+      const guardianRoster = buildJourneyDiscArenaRivalRoster(guardian);
+      assertEqual(eliteRoster.length, elite.rivalCount, 'every classified rival receives one visible setup model');
+      assertEqual(eliteRoster[0].name, 'Guardian Idol', 'the first staged rival uses the registered player-piece identity');
+      assertDeepEqual(guardianRoster.map((fighter) => fighter.role), ['boss', 'boss_escort'], 'the final Guardian face-off distinguishes the boss and escort');
+      assertDeepEqual(guardianRoster.map((fighter) => fighter.name), ['Guardian Idol', 'Fallen Star'], 'the Guardian lineup shown to the player is deterministic');
+      assertDeepEqual(guardianRoster, buildJourneyDiscArenaRivalRoster(guardian), 'setup lineup presentation replays exactly');
+    },
+  },
+  {
+    name: 'campaign ladder exposes every classified fight threshold and next gate',
+    run: () => {
+      const scout = resolveJourneyDiscArenaCampaign(0);
+      const challenger = resolveJourneyDiscArenaCampaign(160);
+      const elite = resolveJourneyDiscArenaCampaign(899);
+      const guardianII = resolveJourneyDiscArenaCampaign(1050);
+      const finalGuardian = resolveJourneyDiscArenaCampaign(1200);
+      assertEqual(scout.current.id, 'scout', 'a fresh event begins on Scout');
+      assertEqual(scout.pointsToNext, 160, 'Scout states the exact Challenger threshold');
+      assertEqual(challenger.current.id, 'challenger', '160 points advances to Challenger');
+      assertEqual(elite.current.id, 'elite', '899 points remains in Elite immediately before Guardian I');
+      assertEqual(guardianII.current.id, 'guardian_2', '1050 points advances to Guardian II');
+      assertEqual(finalGuardian.current.id, 'guardian_3', '1200 points advances to the final Guardian');
+      assertEqual(finalGuardian.next, null, 'Guardian III is the terminal fight classification');
+      assertDeepEqual(finalGuardian.stages.map((stage) => stage.state), ['cleared', 'cleared', 'cleared', 'cleared', 'cleared', 'current'], 'the ladder marks all prior classifications cleared');
+      assertDeepEqual(finalGuardian, resolveJourneyDiscArenaCampaign(1200), 'campaign presentation replays exactly');
     },
   },
   {

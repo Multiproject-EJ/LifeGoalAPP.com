@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { getJourneyDiscArenaFighterStats } from '../../level-worlds/services/journeyDiscArenaGame';
-import { resolveJourneyDiscArenaCameraFit } from '../../level-worlds/services/journeyDiscArenaPresentation';
+import { buildJourneyDiscArenaRivalRoster, resolveJourneyDiscArenaCameraFit } from '../../level-worlds/services/journeyDiscArenaPresentation';
 import { resolvePlayerPiece, type PlayerPieceId } from '../../level-worlds/services/islandRunPlayerPieces';
 import type { JourneyDiscArenaPreviewSnapshot } from './JourneyDiscArenaPreviewController';
 
@@ -44,10 +44,10 @@ const SPEED_COLOR = 0xcaff18;
 const RANK_METALS = [0xb45528, 0x91bddd, 0xffbd19] as const;
 const FIGHTER_VISUAL_SCALE = 1.27;
 const PREVIEW_FORMATION_POSITIONS = Object.freeze([
-  { x: -4.15, z: -1.05 },
-  { x: -4.95, z: -2.65 },
-  { x: -4.15, z: 1.05 },
-  { x: -4.95, z: 2.65 },
+  { x: -4.65, z: -2.45 },
+  { x: -2.55, z: -2.45 },
+  { x: -4.65, z: -0.15 },
+  { x: -2.55, z: -0.15 },
 ]);
 
 function createMaterial(color: THREE.ColorRepresentation, options: Partial<THREE.MeshStandardMaterialParameters> = {}) {
@@ -348,7 +348,9 @@ export class JourneyDiscArenaThreeScene {
   private arenaFloorDecalMaterial: THREE.MeshBasicMaterial | null = null;
   private arenaFloorTexture: THREE.Texture | null = null;
   private readonly cameraBasePosition = new THREE.Vector3();
+  private readonly cameraFitTarget = new THREE.Vector3();
   private readonly cameraTarget = new THREE.Vector3();
+  private portraitComposition = false;
   private cameraShakeUntil = 0;
   private cameraShakeStrength = 0;
 
@@ -373,6 +375,7 @@ export class JourneyDiscArenaThreeScene {
 
   update(snapshot: JourneyDiscArenaPreviewSnapshot) {
     this.snapshot = snapshot;
+    this.applyCameraComposition();
     this.applyTheme(snapshot.battle?.arenaProfile.theme ?? (snapshot.progress.eventPoints >= 900 ? 'eclipse' : 'pearl'));
     const desired = snapshot.battle?.fighters.map((fighter) => ({
       id: fighter.id,
@@ -382,16 +385,25 @@ export class JourneyDiscArenaThreeScene {
       moduleId: fighter.moduleId,
       weaponLevel: fighter.weaponLevel,
       team: fighter.team,
+      deployed: true,
+      formationSlot: undefined as number | undefined,
     })) ?? [
-      ...snapshot.playerLineup.filter((_, index) => snapshot.formationSlots[index]).map((fighter) => ({ ...fighter, bossTier: 0, team: 'player' as const })),
-      ...Array.from({ length: snapshot.encounter.rivalCount }, (_, index) => ({
-        id: `rival-${index + 1}`,
-        pieceId: RIVAL_PREVIEW_PIECES[index % RIVAL_PREVIEW_PIECES.length],
+      ...snapshot.playerLineup.map((fighter, index) => ({
+        ...fighter,
+        bossTier: 0,
+        team: 'player' as const,
+        deployed: snapshot.formationSlots[index] === true,
+      })),
+      ...buildJourneyDiscArenaRivalRoster(snapshot.encounter).map((rival, index) => ({
+        id: rival.id,
+        pieceId: rival.pieceId,
         rank: snapshot.encounter.rivalRankFloor,
         bossTier: snapshot.encounter.bossTier,
         moduleId: index % 2 === 0 ? 'ram_fin' : 'aegis_ring',
         weaponLevel: Math.min(5, snapshot.encounter.bossTier > 0 ? snapshot.encounter.bossTier + 2 : snapshot.encounter.rivalRankFloor),
         team: 'rival' as const,
+        deployed: true,
+        formationSlot: undefined as number | undefined,
       })),
     ];
     const desiredIds = new Set(desired.map((fighter) => fighter.id));
@@ -408,7 +420,8 @@ export class JourneyDiscArenaThreeScene {
     for (const fighter of desired) {
       const current = this.fighterVisuals.get(fighter.id);
       if (current && current.rank === fighter.rank && current.bossTier === fighter.bossTier && current.weaponLevel === fighter.weaponLevel) {
-        current.root.userData.formationSlot = 'formationSlot' in fighter ? fighter.formationSlot : undefined;
+        current.root.userData.formationSlot = fighter.formationSlot;
+        current.root.userData.deployed = fighter.deployed;
         continue;
       }
       if (current) {
@@ -420,7 +433,8 @@ export class JourneyDiscArenaThreeScene {
         this.disposeObject(current.trail);
       }
       const visual = createFighterVisual(fighter.pieceId, fighter.rank, fighter.bossTier, fighter.moduleId, fighter.weaponLevel, fighter.team, fighter.id);
-      visual.root.userData.formationSlot = 'formationSlot' in fighter ? fighter.formationSlot : undefined;
+      visual.root.userData.formationSlot = fighter.formationSlot;
+      visual.root.userData.deployed = fighter.deployed;
       this.fighterVisuals.set(fighter.id, visual);
       this.fightersRoot.add(visual.trail, visual.root, visual.lifeBar);
     }
@@ -708,18 +722,31 @@ export class JourneyDiscArenaThreeScene {
     const width = Math.max(1, this.canvas.clientWidth);
     const height = Math.max(1, this.canvas.clientHeight);
     const fit = resolveJourneyDiscArenaCameraFit(width, height);
+    this.portraitComposition = fit.isPortrait;
     this.camera.aspect = width / height;
     // Portrait uses the narrow horizontal FOV as the limiting dimension. This
     // high, distant fit keeps the complete 10.2-unit outer board visible on a
     // 390×844 phone with safe space above and below for the HUD.
     this.cameraBasePosition.set(fit.position.x, fit.position.y, fit.position.z);
-    this.cameraTarget.set(fit.target.x, fit.target.y, fit.target.z);
+    this.cameraFitTarget.set(fit.target.x, fit.target.y, fit.target.z);
+    this.applyCameraComposition();
     this.camera.position.copy(this.cameraBasePosition);
     this.camera.lookAt(this.cameraTarget);
     this.camera.updateProjectionMatrix();
     const cap = fit.isPortrait ? 1.75 : 2;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, cap));
     this.renderer.setSize(width, height, false);
+  }
+
+  private applyCameraComposition() {
+    this.cameraTarget.copy(this.cameraFitTarget);
+    if (this.portraitComposition && this.snapshot?.mode === 'prep') {
+      // Lift the setup arena above the formation sheet so both 3D lineups are
+      // actually visible on a phone instead of staged behind the controls.
+      this.cameraTarget.z += 4.35;
+    }
+    this.camera.position.copy(this.cameraBasePosition);
+    this.camera.lookAt(this.cameraTarget);
   }
 
   private animate = () => {
@@ -811,18 +838,40 @@ export class JourneyDiscArenaThreeScene {
         for (const [index, [, visual]] of playerVisuals.entries()) {
           const slot = typeof visual.root.userData.formationSlot === 'number' ? visual.root.userData.formationSlot : index;
           const position = PREVIEW_FORMATION_POSITIONS[slot] ?? PREVIEW_FORMATION_POSITIONS[index];
-          visual.root.position.set(position.x, 0.48 + Math.sin(elapsed * 1.5 + index) * 0.07, position.z);
-          visual.spinner.rotation.y += this.reducedMotion ? 0 : 0.018 + index * 0.003;
-          visual.shield.material.opacity = 0.52;
-          visual.selectionRing.visible = false;
+          const deployed = visual.root.userData.deployed === true;
+          const previewScale = visual.baseScale * (deployed ? 1 : 0.8);
+          visual.root.visible = true;
+          visual.root.scale.setScalar(previewScale);
+          visual.root.position.set(position.x + (deployed ? 0 : -0.28), (deployed ? 0.48 : 0.35) + Math.sin(elapsed * 1.5 + index) * 0.07, position.z);
+          visual.spinner.rotation.y += this.reducedMotion ? 0 : (deployed ? 0.026 : 0.012) + index * 0.003;
+          visual.shield.material.opacity = deployed ? 0.72 : 0.12;
+          visual.energyRail.material.opacity = deployed ? 0.8 : 0.2;
+          visual.selectionRing.visible = deployed;
+          visual.selectionRing.material.color.setHex(PLAYER_COLOR);
+          visual.selectionRing.material.opacity = deployed ? 0.62 + Math.sin(elapsed * 5 + index) * 0.14 : 0;
+          if (deployed && !this.reducedMotion) visual.selectionRing.rotation.z = -elapsed * 0.82;
           visual.lifeBar.visible = false;
           visual.trail.visible = false;
         }
         for (const [index, [, visual]] of rivalVisuals.entries()) {
-          visual.root.position.set(4.25, 0.48 + Math.sin(elapsed * 1.5 + index + 2) * 0.07, (index - (rivalVisuals.length - 1) / 2) * 2.15);
-          visual.spinner.rotation.y -= this.reducedMotion ? 0 : 0.018 + index * 0.003;
-          visual.shield.material.opacity = 0.52;
-          visual.selectionRing.visible = false;
+          const columnCount = rivalVisuals.length > 3 ? 2 : 1;
+          const rowCount = Math.ceil(rivalVisuals.length / columnCount);
+          const column = index % columnCount;
+          const row = Math.floor(index / columnCount);
+          visual.root.visible = true;
+          visual.root.scale.setScalar(visual.baseScale);
+          visual.root.position.set(
+            4.5 - column * 2.05,
+            0.48 + Math.sin(elapsed * 1.5 + index + 2) * 0.07,
+            (row - (rowCount - 1) / 2) * 2.15 - 1.05,
+          );
+          visual.spinner.rotation.y -= this.reducedMotion ? 0 : 0.026 + index * 0.003;
+          visual.shield.material.opacity = 0.72;
+          visual.energyRail.material.opacity = 0.8;
+          visual.selectionRing.visible = true;
+          visual.selectionRing.material.color.setHex(RIVAL_COLOR);
+          visual.selectionRing.material.opacity = 0.62 + Math.sin(elapsed * 5 + index) * 0.14;
+          if (!this.reducedMotion) visual.selectionRing.rotation.z = elapsed * 0.82;
           visual.lifeBar.visible = false;
           visual.trail.visible = false;
         }
@@ -912,13 +961,6 @@ export class JourneyDiscArenaThreeScene {
     });
   }
 }
-
-const RIVAL_PREVIEW_PIECES: readonly PlayerPieceId[] = [
-  'guardian_idol',
-  'fallen_star',
-  'keepers_lantern',
-  'oris_shell',
-];
 
 function clampTilt(value: number): number {
   return Math.max(-0.12, Math.min(0.12, value));
