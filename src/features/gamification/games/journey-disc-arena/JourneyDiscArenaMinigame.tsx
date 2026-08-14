@@ -2,6 +2,7 @@ import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { IslandRunMinigameProps } from '../../level-worlds/services/islandRunMinigameTypes';
 import {
   getJourneyDiscArenaFighterStats,
+  JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS,
   JOURNEY_DISC_ARENA_OPENING_TICKS,
   JOURNEY_DISC_ARENA_SURGE_READY,
   scoreJourneyDiscArenaRound,
@@ -10,7 +11,8 @@ import { buildJourneyDiscArenaRewardTrack } from '../../level-worlds/services/jo
 import type { JourneyDiscArenaProgressEntry } from '../../level-worlds/services/islandRunGameStateStore';
 import { JOURNEY_DISC_WEAPON_NAMES, type JourneyDiscArmoryState } from '../../level-worlds/services/journeyDiscArmory';
 import { buildJourneyDiscArenaRivalRoster, resolveJourneyDiscArenaCampaign } from '../../level-worlds/services/journeyDiscArenaPresentation';
-import { createJourneyDiscArenaPreviewController } from './JourneyDiscArenaPreviewController';
+import { resolvePlayerPiece, type PlayerPieceId } from '../../level-worlds/services/islandRunPlayerPieces';
+import { createJourneyDiscArenaPreviewController, type JourneyDiscArenaLineupEntry } from './JourneyDiscArenaPreviewController';
 import { triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
 import JourneyDiscArenaStage from './JourneyDiscArenaStage';
 import { JourneyDiscArenaAudio } from './journeyDiscArenaAudio';
@@ -27,6 +29,40 @@ type JourneyDiscArenaLaunchConfig = {
   islandConcourseIntegration?: boolean;
   integratedIslandNumber?: number;
 };
+
+const JOURNEY_DISC_RELIC_GLYPHS: Record<PlayerPieceId, string> = {
+  explorer_ship: '▲',
+  ancient_egg: '⬡',
+  living_compass: '✦',
+  keepers_lantern: '◇',
+  quest_journal: '▤',
+  world_seed: '♢',
+  ancient_key: '⚿',
+  fallen_star: '✧',
+  oris_shell: '◒',
+  guardian_idol: '◆',
+};
+
+function JourneyDiscMiniature({ fighter, team = 'player', compact = false }: {
+  fighter: Pick<JourneyDiscArenaLineupEntry, 'pieceId' | 'rank' | 'moduleId'>;
+  team?: 'player' | 'rival';
+  compact?: boolean;
+}) {
+  const piece = resolvePlayerPiece(fighter.pieceId);
+  return (
+    <span
+      className="journey-disc-arena__miniature"
+      data-team={team}
+      data-compact={compact || undefined}
+      data-module={fighter.moduleId ?? 'core'}
+      style={{ '--disc-accent': piece.accentColor } as React.CSSProperties}
+      aria-hidden="true"
+    >
+      <i>{JOURNEY_DISC_RELIC_GLYPHS[fighter.pieceId]}</i>
+      <b>{fighter.rank}</b>
+    </span>
+  );
+}
 
 export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: IslandRunMinigameProps) {
   const config = (launchConfig ?? {}) as JourneyDiscArenaLaunchConfig;
@@ -99,15 +135,22 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
   const nextMilestone = rewardTrack.milestones.find((milestone) => milestone.state !== 'claimed');
   const campaign = resolveJourneyDiscArenaCampaign(snapshot.progress.eventPoints);
   const rivalRoster = buildJourneyDiscArenaRivalRoster(encounter);
-  const rivalRosterShortLabel = `${rivalRoster.slice(0, 2).map((fighter) => fighter.name).join(' · ')}${rivalRoster.length > 2 ? ` +${rivalRoster.length - 2}` : ''}`;
-  const nextFightLabel = campaign.next
-    ? `${campaign.pointsToNext} to ${campaign.next.label.replace('Island ', '')}`
-    : 'Final Guardian active';
   const nextPrizeLabel = nextMilestone
     ? nextMilestone.state === 'claimable'
       ? `Claim ${nextMilestone.label}`
       : `${Math.max(0, nextMilestone.points - rewardTrack.points)} to ${nextMilestone.label}`
     : 'All prizes claimed';
+  const campaignStageNumber = campaign.stages.findIndex((stage) => stage.state === 'current') + 1;
+  const activeFormation = snapshot.playerLineup.filter((_, index) => snapshot.formationSlots[index]);
+  const selectedRosterFighter = snapshot.playerLineup.find((fighter) => fighter.id === snapshot.selectedFighterId) ?? snapshot.playerLineup[0] ?? null;
+  const selectedRosterIndex = selectedRosterFighter ? snapshot.playerLineup.findIndex((fighter) => fighter.id === selectedRosterFighter.id) : -1;
+  const selectedRosterIsActive = selectedRosterIndex >= 0 && snapshot.formationSlots[selectedRosterIndex] === true;
+  const selectedRosterStats = selectedRosterFighter ? getJourneyDiscArenaFighterStats(selectedRosterFighter) : null;
+  const selectedRosterWeapon = selectedRosterFighter?.moduleId ? JOURNEY_DISC_WEAPON_NAMES[selectedRosterFighter.moduleId] : 'Resonance Core';
+  const canAddSelected = Boolean(selectedRosterFighter)
+    && !selectedRosterIsActive
+    && snapshot.deployedDiscCount < JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS
+    && snapshot.deployedDiscCount < snapshot.tickets;
 
   return (
     <main
@@ -124,11 +167,11 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
       <header className="journey-disc-arena__topbar">
         <button className="journey-disc-arena__exit" type="button" onClick={() => onComplete({ completed: false })} aria-label="Leave Journey Disc Arena">×</button>
         <div className="journey-disc-arena__title-block">
-          <p>{encounter.class === 'guardian' ? 'Boss prize battle' : `${encounter.class} class`}</p>
-          <h1>Journey Disc Arena</h1>
+          <p>{snapshot.mode === 'prep' ? `Stage ${campaignStageNumber} · ${campaign.current.shortLabel}` : encounter.class === 'guardian' ? 'Boss prize battle' : `${encounter.class} class`}</p>
+          <h1>{snapshot.mode === 'prep' ? 'Battle Setup' : 'Journey Disc Arena'}</h1>
         </div>
         <div className="journey-disc-arena__wallets" aria-label="Event progress">
-          <span><b>◉</b> {snapshot.tickets}</span>
+          <span><b>🎟</b> {snapshot.tickets}</span>
           <span><b>♛</b> {snapshot.wins}</span>
         </div>
       </header>
@@ -142,18 +185,22 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
       ) : null}
 
       {snapshot.mode === 'prep' ? (
-        <section className="journey-disc-arena__lineup-readout" aria-label={`3D battle lineup. Your roster has ${snapshot.playerLineup.length} available spinners and ${snapshot.deployedDiscCount} deployed. ${encounter.label} fields ${rivalRoster.map((fighter) => fighter.name).join(', ')}.`}>
-          <div data-team="player">
-            <span>Your 3D roster</span>
-            <strong>{snapshot.playerLineup.length} spinners</strong>
-            <small>{snapshot.deployedDiscCount} glowing = deployed</small>
+        <section className="journey-disc-arena__rival-squad" data-class={encounter.class} aria-label={`${encounter.label} rival squad. ${rivalRoster.length} enemies: ${rivalRoster.map((fighter) => fighter.name).join(', ')}.`}>
+          <div className="journey-disc-arena__rival-heading">
+            <span>{encounter.class === 'guardian' ? 'Guardian battle' : 'Rival squad'}</span>
+            <strong>{rivalRoster.length} enem{rivalRoster.length === 1 ? 'y' : 'ies'}</strong>
           </div>
-          <b>VS</b>
-          <div data-team="rival">
-            <span>{encounter.class === 'guardian' ? 'Boss lineup' : 'Rift lineup'}</span>
-            <strong>{encounter.label}</strong>
-            <small>{rivalRosterShortLabel}</small>
+          <div className="journey-disc-arena__rival-models">
+            {rivalRoster.map((fighter, index) => (
+              <JourneyDiscMiniature
+                key={fighter.id}
+                fighter={{ pieceId: fighter.pieceId, rank: encounter.rivalRankFloor, moduleId: index % 2 === 0 ? 'ram_fin' : 'aegis_ring' }}
+                team="rival"
+                compact
+              />
+            ))}
           </div>
+          <div className="journey-disc-arena__rival-meta"><strong>{encounter.label}</strong><small>Victory ×{encounter.victoryScoreMultiplier}</small></div>
         </section>
       ) : null}
 
@@ -179,9 +226,9 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
       ) : null}
 
       {snapshot.mode === 'prep' ? (
-        <section className="journey-disc-arena__prep-panel">
+        <section className="journey-disc-arena__prep-panel" aria-label="Choose your active Journey Disc battle team">
           <div className="journey-disc-arena__reward-track" aria-label="Journey Disc multi reward track">
-            <div><strong>DISC POINTS</strong><span>{rewardTrack.points} / {rewardTrack.maximum}</span></div>
+            <div><strong>REWARDS · {rewardTrack.points}/{rewardTrack.maximum}</strong><span>{nextPrizeLabel}</span></div>
             <i><b style={{ width: `${rewardTrack.fillPercent}%` }} /></i>
             <ol>
               {rewardTrack.milestones.map((milestone) => (
@@ -192,59 +239,99 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
               ))}
             </ol>
           </div>
-          <div className="journey-disc-arena__encounter" data-class={encounter.class}>
-            <span>{encounter.class === 'guardian' ? 'BOSS' : encounter.class.toUpperCase()}</span>
-            <strong>{encounter.label}</strong>
-            <small>{encounter.class === 'guardian' ? 'End-prize gate' : `${encounter.rivalCount} rival${encounter.rivalCount === 1 ? '' : 's'}`} · victory ×{encounter.victoryScoreMultiplier}</small>
+
+          <div className="journey-disc-arena__setup-heading">
+            <strong>MY DISCS <b>{snapshot.playerLineup.length}</b></strong>
+            <span>Tap to inspect · Rank {permanentRank}</span>
           </div>
-          <div className="journey-disc-arena__campaign" aria-label={`Journey Disc campaign. Current level ${campaign.current.label}. ${nextFightLabel}. ${nextPrizeLabel}.`}>
-            <div><strong>Battle journey</strong><span>{nextFightLabel} · {nextPrizeLabel}</span></div>
-            <ol>
-              {campaign.stages.map((stage) => (
-                <li key={stage.id} data-state={stage.state} aria-current={stage.state === 'current' ? 'step' : undefined}>
-                  <i>{stage.state === 'cleared' ? '✓' : stage.id.startsWith('guardian') ? '♜' : '◉'}</i>
-                  <small>{stage.shortLabel}</small>
-                </li>
-              ))}
-            </ol>
-          </div>
-          <div className="journey-disc-arena__matchup" data-matchup={matchupLabel === 'Underdog' ? 'danger' : matchupLabel === 'Favored' ? 'strong' : 'even'}>
-            <span>YOUR FORMATION <b>{Math.round(playerPower)}</b></span>
-            <i><b style={{ width: `${matchupPercent}%` }} /></i>
-            <strong>{snapshot.deployedDiscCount > 0 ? matchupLabel : 'Place a disc'}</strong>
-            <span><b>{Math.round(rivalPower)}</b> RIFT</span>
-          </div>
-          <div className="journey-disc-arena__section-heading">
-            <div><p>1 ticket per deployed spinner</p><h2>Choose your 3D roster</h2></div>
-            <span>{snapshot.playerLineup.length} available · Rank {permanentRank}</span>
-          </div>
-          <div className="journey-disc-arena__formation-grid" aria-label="Tap formation slots to place weapon discs">
+          <div className="journey-disc-arena__collection" role="listbox" aria-label={`${snapshot.playerLineup.length} owned Journey Discs`}>
             {snapshot.playerLineup.map((fighter, index) => {
-              const occupied = snapshot.formationSlots[index] === true;
-              const weaponName = fighter.moduleId ? JOURNEY_DISC_WEAPON_NAMES[fighter.moduleId] : 'Unarmed';
+              const active = snapshot.formationSlots[index] === true;
+              const selected = fighter.id === selectedRosterFighter?.id;
+              const weaponName = fighter.moduleId ? JOURNEY_DISC_WEAPON_NAMES[fighter.moduleId] : 'Core';
               return (
                 <button
                   type="button"
+                  role="option"
                   key={fighter.id}
-                  data-occupied={occupied}
-                  data-slot={index + 1}
-                  onClick={() => { audio.prime(); audio.playPlacement(!occupied); triggerIslandRunHaptic(occupied ? 'stop_land' : 'build_part'); controller.toggleFormationSlot(index); }}
-                  aria-pressed={occupied}
-                  aria-label={`${occupied ? 'Remove' : 'Add'} ${fighter.name} in formation slot ${index + 1}`}
+                  data-selected={selected}
+                  data-active={active}
+                  aria-selected={selected}
+                  onClick={() => { audio.prime(); triggerIslandRunHaptic('stop_land'); controller.selectFighter(fighter.id); }}
                 >
-                  <i>{occupied ? '◉' : '+'}</i>
-                  <span><strong>{fighter.name}</strong><small>{occupied ? `Deployed · ${weaponName} L${fighter.weaponLevel}` : `Available · ${weaponName} L${fighter.weaponLevel}`}</small></span>
-                  <b>{occupied ? 'LIVE' : '+ 1 ◉'}</b>
+                  <JourneyDiscMiniature fighter={fighter} compact />
+                  <span><strong>{fighter.name}</strong><small>Rank {fighter.rank} · {weaponName}</small></span>
+                  {active ? <b>ACTIVE</b> : null}
                 </button>
               );
             })}
           </div>
-          <p className="journey-disc-arena__notice" role="status">{snapshot.notice}</p>
-          <div className="journey-disc-arena__prep-actions">
-            <button type="button" className="journey-disc-arena__launch" disabled={snapshot.deployedDiscCount < 1} onClick={() => { audio.prime(); audio.playLaunch(); triggerIslandRunHaptic('roll'); controller.launchRound(); }}>
-              {snapshot.deployedDiscCount > 0 ? `Deploy ${snapshot.deployedDiscCount} · ${snapshot.deployedDiscCount} ◉` : 'Place a fighter'} <span>→</span>
-            </button>
+
+          {selectedRosterFighter && selectedRosterStats ? (
+            <div className="journey-disc-arena__selected-disc" data-active={selectedRosterIsActive}>
+              <JourneyDiscMiniature fighter={selectedRosterFighter} />
+              <div className="journey-disc-arena__selected-copy">
+                <span>SELECTED DISC</span>
+                <strong>{selectedRosterFighter.name}</strong>
+                <small>Rank {selectedRosterFighter.rank} · {selectedRosterWeapon} L{selectedRosterFighter.weaponLevel}</small>
+              </div>
+              <div className="journey-disc-arena__selected-bars" aria-label="Selected disc stats">
+                <span>Shield<i><b style={{ width: `${Math.min(100, Math.round(selectedRosterStats.maxShield / 2.6))}%` }} /></i></span>
+                <span>Speed<i><b style={{ width: `${Math.min(100, Math.round(selectedRosterStats.maxSpeed * 9))}%` }} /></i></span>
+                <span>Impact<i><b style={{ width: `${Math.min(100, Math.round(selectedRosterStats.impact * 36))}%` }} /></i></span>
+              </div>
+              <button
+                type="button"
+                className="journey-disc-arena__add-team"
+                disabled={!canAddSelected}
+                onClick={() => { audio.prime(); audio.playPlacement(true); triggerIslandRunHaptic('build_part'); controller.addSelectedFighterToFormation(); }}
+              >
+                {selectedRosterIsActive ? 'IN ACTIVE TEAM' : snapshot.deployedDiscCount >= JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS ? 'TEAM FULL' : snapshot.deployedDiscCount >= snapshot.tickets ? 'NEED 1 TICKET' : 'ADD TO TEAM'}
+              </button>
+            </div>
+          ) : null}
+
+          <div className="journey-disc-arena__setup-heading journey-disc-arena__setup-heading--team">
+            <strong>ACTIVE TEAM <b>{snapshot.deployedDiscCount}/{JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS}</b></strong>
+            <span>{snapshot.deployedDiscCount > 0 ? `${matchupLabel} · ${Math.round(playerPower)} vs ${Math.round(rivalPower)}` : 'Choose at least one disc'}</span>
           </div>
+          <div className="journey-disc-arena__active-team" aria-label={`${snapshot.deployedDiscCount} of ${JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS} active team slots filled`}>
+            {Array.from({ length: JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS }, (_, slotIndex) => {
+              const fighter = activeFormation[slotIndex];
+              return fighter ? (
+                <button
+                  type="button"
+                  key={fighter.id}
+                  data-occupied="true"
+                  onClick={() => { audio.prime(); audio.playPlacement(false); triggerIslandRunHaptic('stop_land'); controller.removeFormationFighter(fighter.id); }}
+                  aria-label={`Remove ${fighter.name} from active team slot ${slotIndex + 1}`}
+                >
+                  <JourneyDiscMiniature fighter={fighter} compact />
+                  <span><strong>{fighter.name}</strong><small>Slot {slotIndex + 1}</small></span>
+                  <b aria-hidden="true">−</b>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  key={`empty-${slotIndex + 1}`}
+                  className="journey-disc-arena__empty-team-slot"
+                  disabled={!canAddSelected}
+                  onClick={() => { audio.prime(); audio.playPlacement(true); triggerIslandRunHaptic('build_part'); controller.addSelectedFighterToFormation(); }}
+                  aria-label={`Add selected disc to active team slot ${slotIndex + 1}`}
+                >
+                  <i>+</i><span><strong>ADD</strong><small>Slot {slotIndex + 1}</small></span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="journey-disc-arena__prep-actions">
+            <button type="button" className="journey-disc-arena__launch" disabled={snapshot.deployedDiscCount < 1 || snapshot.tickets < snapshot.deployedDiscCount} onClick={() => { audio.prime(); audio.playLaunch(); triggerIslandRunHaptic('roll'); controller.launchRound(); }}>
+              {snapshot.deployedDiscCount > 0 ? `START BATTLE · ${snapshot.deployedDiscCount} DISCS · ${snapshot.deployedDiscCount} TICKETS` : 'ADD A DISC TO START'} <span>→</span>
+            </button>
+            <small>Tickets are spent only when battle starts.</small>
+          </div>
+          <p className="journey-disc-arena__notice" role="status">{snapshot.notice}</p>
         </section>
       ) : null}
 

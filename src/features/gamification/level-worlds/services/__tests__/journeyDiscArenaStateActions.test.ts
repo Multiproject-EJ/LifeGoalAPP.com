@@ -38,6 +38,21 @@ export const journeyDiscArenaStateActionsTests: TestCase[] = [
     },
   },
   {
+    name: 'six-disc teams spend six tickets and seven-disc launches are rejected',
+    run: () => {
+      reset({ minigameTicketsByEvent: { [EVENT_ID]: 8 } });
+      const six = startJourneyDiscArenaRound({ session: session(), client: null, eventId: EVENT_ID, deployedDiscs: 6, nowMs: 110 });
+      assertEqual(six.ok, true, 'the full six-disc active team launches');
+      assertEqual(six.ticketsRemaining, 2, 'six active discs spend exactly six tickets');
+      assertEqual(six.progress?.totalDiscsDeployed, 6, 'six-disc deployment persists canonically');
+      reset({ minigameTicketsByEvent: { [EVENT_ID]: 8 } });
+      const seven = startJourneyDiscArenaRound({ session: session(), client: null, eventId: EVENT_ID, deployedDiscs: 7, nowMs: 111 });
+      assertEqual(seven.ok, false, 'a seventh active fighter is rejected');
+      assertEqual(seven.failureReason, 'invalid_disc_count', 'capacity failure is explicit');
+      assertEqual(seven.ticketsRemaining, 8, 'invalid capacity spends no tickets');
+    },
+  },
+  {
     name: 'score banks once and a reached reward milestone claims once',
     run: () => {
       reset({ dicePool: 10, minigameTicketsByEvent: { [EVENT_ID]: 4 } });

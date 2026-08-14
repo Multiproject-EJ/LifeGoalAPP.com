@@ -13,6 +13,8 @@ export const JOURNEY_DISC_ARENA_FIXED_STEP_SECONDS = 1 / 60;
 export const JOURNEY_DISC_ARENA_DEFAULT_RADIUS = 8.8;
 export const JOURNEY_DISC_ARENA_DEFAULT_ROUND_SECONDS = 55;
 export const JOURNEY_DISC_ARENA_MAX_FIGHTERS = 16;
+/** Active battle-team capacity. The owned collection is a separate concern. */
+export const JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS = 6;
 export const JOURNEY_DISC_ARENA_MAX_SURGE = 100;
 export const JOURNEY_DISC_ARENA_SURGE_READY = 70;
 export const JOURNEY_DISC_ARENA_SURGE_RECHARGE_PER_SECOND = 34;
@@ -341,7 +343,7 @@ export function resolveJourneyDiscArenaEncounter(options: {
   roundsStarted?: number;
 }): JourneyDiscArenaEncounterProfile {
   const points = Math.max(0, Math.floor(options.eventPoints));
-  const deployed = Math.max(1, Math.min(4, Math.floor(options.deployedDiscs)));
+  const deployed = Math.max(1, Math.min(JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS, Math.floor(options.deployedDiscs)));
   const roundsStarted = Math.max(0, Math.floor(options.roundsStarted ?? 0));
   if (points >= 900) {
     const bossTier: JourneyDiscArenaBossTier = points >= 1200 ? 3 : points >= 1050 ? 2 : 1;

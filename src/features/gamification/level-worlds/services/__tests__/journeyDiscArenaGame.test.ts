@@ -7,6 +7,7 @@ import {
   JOURNEY_DISC_ARENA_ECHO_TICKS,
   JOURNEY_DISC_ARENA_FIXED_STEP_SECONDS,
   JOURNEY_DISC_ARENA_FREEZE_TICKS,
+  JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS,
   JOURNEY_DISC_ARENA_SURGE_READY,
   JOURNEY_DISC_ARENA_SPEED_MULTIPLIER,
   resolveJourneyDiscArenaEncounter,
@@ -46,17 +47,17 @@ export const journeyDiscArenaGameTests: TestCase[] = [
   {
     name: 'encounter classification creates asymmetric waves and a deterministic Guardian finale',
     run: () => {
-      const scout = resolveJourneyDiscArenaEncounter({ eventPoints: 0, deployedDiscs: 4, roundsStarted: 0 });
+      const scout = resolveJourneyDiscArenaEncounter({ eventPoints: 0, deployedDiscs: 6, roundsStarted: 0 });
       const challengerEven = resolveJourneyDiscArenaEncounter({ eventPoints: 160, deployedDiscs: 2, roundsStarted: 0 });
       const challengerOdd = resolveJourneyDiscArenaEncounter({ eventPoints: 160, deployedDiscs: 2, roundsStarted: 1 });
-      const elite = resolveJourneyDiscArenaEncounter({ eventPoints: 560, deployedDiscs: 4, roundsStarted: 3 });
+      const elite = resolveJourneyDiscArenaEncounter({ eventPoints: 560, deployedDiscs: 6, roundsStarted: 3 });
       const guardianI = resolveJourneyDiscArenaEncounter({ eventPoints: 900, deployedDiscs: 4, roundsStarted: 8 });
       const guardianII = resolveJourneyDiscArenaEncounter({ eventPoints: 1050, deployedDiscs: 4, roundsStarted: 9 });
       const guardianIII = resolveJourneyDiscArenaEncounter({ eventPoints: 1200, deployedDiscs: 4, roundsStarted: 10 });
-      assertEqual(scout.rivalCount, 3, 'Scout formation should be one rival smaller than a four-disc player team');
+      assertEqual(scout.rivalCount, 5, 'Scout formation should be one rival smaller than a six-disc player team');
       assertEqual(challengerEven.rivalCount, 2, 'Challenger formation may begin evenly matched');
       assertEqual(challengerOdd.rivalCount, 3, 'the next Challenger wave deterministically adds one rival');
-      assertEqual(elite.rivalCount, 5, 'Elite class should visibly outnumber a full player formation');
+      assertEqual(elite.rivalCount, 6, 'Elite class should field the bounded six-rival maximum against a full player formation');
       assertEqual(guardianI.class, 'guardian', '900 points unlock the named end-prize boss class');
       assertEqual(guardianI.rivalCount, 1, 'Guardian I is one enlarged boss rather than another mirrored formation');
       assertEqual(guardianI.bossTier, 1, 'Guardian I receives the explicit first boss tier');
@@ -68,6 +69,7 @@ export const journeyDiscArenaGameTests: TestCase[] = [
       assertEqual(guardianIII.victoryScoreMultiplier, 1.8, 'the final multiplier remains bounded and explicit');
       assert(guardianI.victoryScoreMultiplier < guardianII.victoryScoreMultiplier && guardianII.victoryScoreMultiplier < guardianIII.victoryScoreMultiplier, 'boss score multipliers climb with each named level');
       assertDeepEqual(guardianI, resolveJourneyDiscArenaEncounter({ eventPoints: 900, deployedDiscs: 4, roundsStarted: 8 }), 'classification should replay exactly');
+      assertEqual(JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS, 6, 'battle-team capacity is explicit and independent from collection size');
     },
   },
   {
@@ -224,9 +226,9 @@ export const journeyDiscArenaGameTests: TestCase[] = [
     },
   },
   {
-    name: 'two-, three-, and four-disc formations preserve team counts and terminate',
+    name: 'two- through six-disc formations preserve team counts and terminate',
     run: () => {
-      [2, 3, 4].forEach((count) => {
+      [2, 3, 4, 5, 6].forEach((count) => {
         const initial = createJourneyDiscArenaState({ seed: 800 + count, fighters: buildFormation(count), durationSeconds: 24 });
         assertEqual(initial.fighters.filter((fighter) => fighter.team === 'player').length, count, `${count} player discs should deploy`);
         assertEqual(initial.fighters.filter((fighter) => fighter.team === 'rival').length, count, `${count} rival discs should deploy`);

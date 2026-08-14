@@ -1,5 +1,6 @@
 import {
   createJourneyDiscArenaState,
+  JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS,
   JOURNEY_DISC_ARENA_OPENING_TICKS,
   resolveJourneyDiscArenaEncounter,
   scoreJourneyDiscArenaRound,
@@ -65,6 +66,8 @@ export interface JourneyDiscArenaPreviewController {
   getSnapshot: () => JourneyDiscArenaPreviewSnapshot;
   setDeployedDiscCount: (count: number) => void;
   toggleFormationSlot: (slotIndex: number) => void;
+  addSelectedFighterToFormation: () => void;
+  removeFormationFighter: (fighterId: string) => void;
   applyExternalProgress: (progress: JourneyDiscArenaProgressEntry, tickets?: number) => void;
   claimMilestone: (milestoneId: string) => void;
   launchRound: () => void;
@@ -90,6 +93,8 @@ const PLAYER_RELICS: readonly { pieceId: PlayerPieceId; name: string }[] = [
   { pieceId: 'world_seed', name: 'World Seed' },
   { pieceId: 'living_compass', name: 'Living Compass' },
   { pieceId: 'ancient_egg', name: 'Ancient Egg' },
+  { pieceId: 'quest_journal', name: 'Quest Journal' },
+  { pieceId: 'ancient_key', name: 'Ancient Key' },
 ];
 
 const MODULE_ROTATION: readonly Exclude<JourneyDiscArenaModuleId, null>[] = [
@@ -112,10 +117,12 @@ function createInitialLineup(rank: JourneyDiscArenaRank, armory: JourneyDiscArmo
 }
 
 const FORMATION_POSITIONS = Object.freeze([
-  { x: -4.15, z: -1.05 },
-  { x: -4.95, z: -2.65 },
-  { x: -4.15, z: 1.05 },
-  { x: -4.95, z: 2.65 },
+  { x: -4.0, z: -2.7 },
+  { x: -4.9, z: -1.7 },
+  { x: -4.0, z: -0.55 },
+  { x: -4.9, z: 0.55 },
+  { x: -4.0, z: 1.7 },
+  { x: -4.9, z: 2.7 },
 ]);
 
 function buildBattleSeeds(
@@ -131,7 +138,7 @@ function buildBattleSeeds(
     rank: fighter.rank,
     moduleId: fighter.moduleId,
     weaponLevel: fighter.weaponLevel,
-    position: FORMATION_POSITIONS[fighter.formationSlot] ?? FORMATION_POSITIONS[index],
+    position: FORMATION_POSITIONS[index] ?? FORMATION_POSITIONS[0],
     // Leave a readable beat before the opening clash so the player can fire
     // the first Surge instead of watching the round decide itself.
     velocity: { x: 3.05 + fighter.rank * 0.18, z: (index - (playerCount - 1) / 2) * -0.18 },
@@ -164,7 +171,7 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
   const initialArmory = options.armory ?? createJourneyDiscArmory(0);
   let lineup = createInitialLineup(Math.max(initialProgress.rank, initialArmory.rank) as JourneyDiscArenaRank, initialArmory);
   const initialTickets = Math.max(0, Math.floor(options.tickets ?? 6));
-  const initialDeployedCount = Math.min(2, initialTickets);
+  const initialDeployedCount = Math.min(3, initialTickets, JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS);
   const initialFormationSlots = lineup.map((_, index) => index < initialDeployedCount);
   let snapshot: JourneyDiscArenaPreviewSnapshot = {
     mode: 'prep',
@@ -178,13 +185,13 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
     armory: initialArmory,
     formationSlots: initialFormationSlots,
     playerLineup: lineup,
-    selectedFighterId: null,
+    selectedFighterId: lineup[0]?.id ?? null,
     battle: null,
     recentEvents: [],
     combo: 0,
     comboExpiresAtMs: 0,
     lastImpactLabel: '',
-    notice: 'Tap a formation slot to spend one ticket on that fighter.',
+    notice: 'Choose a disc to inspect it. Tickets are spent only when battle starts.',
   };
   let animationFrame = 0;
   let previousTimeMs = 0;
@@ -330,16 +337,20 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
     getSnapshot: () => snapshot,
     setDeployedDiscCount(count) {
       if (snapshot.mode !== 'prep') return;
-      const maximum = Math.min(4, snapshot.tickets);
+      const maximum = Math.min(JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS, snapshot.tickets, lineup.length);
       const deployedDiscCount = Math.max(0, Math.min(maximum, Math.floor(count)));
       const formationSlots = lineup.map((_, index) => index < deployedDiscCount);
       const encounter = resolveJourneyDiscArenaEncounter({ eventPoints: snapshot.progress.eventPoints, deployedDiscs: Math.max(1, deployedDiscCount), roundsStarted: snapshot.progress.roundsStarted });
-      commit({ formationSlots, deployedDiscCount, encounter, notice: deployedDiscCount > 0 ? `${deployedDiscCount} disc${deployedDiscCount === 1 ? '' : 's'} · ${encounter.rivalCount} ${encounter.label} rival${encounter.rivalCount === 1 ? '' : 's'}.` : 'Tap a slot to add your first fighter.' });
+      commit({ formationSlots, deployedDiscCount, encounter, notice: deployedDiscCount > 0 ? `${deployedDiscCount} disc${deployedDiscCount === 1 ? '' : 's'} ready · ${deployedDiscCount} ticket${deployedDiscCount === 1 ? '' : 's'} at battle start.` : 'Select a disc, then add it to your active team.' });
     },
     toggleFormationSlot(slotIndex) {
       if (snapshot.mode !== 'prep' || slotIndex < 0 || slotIndex >= lineup.length) return;
       const formationSlots = [...snapshot.formationSlots];
       const wasOccupied = formationSlots[slotIndex] === true;
+      if (!wasOccupied && snapshot.deployedDiscCount >= JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS) {
+        commit({ notice: `Active team full · maximum ${JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS} discs.` });
+        return;
+      }
       if (!wasOccupied && snapshot.deployedDiscCount >= snapshot.tickets) {
         commit({ notice: 'That slot needs one more event ticket.' });
         return;
@@ -352,8 +363,54 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
         deployedDiscCount,
         encounter,
         notice: deployedDiscCount > 0
-          ? `${deployedDiscCount} placed · costs ${deployedDiscCount} ticket${deployedDiscCount === 1 ? '' : 's'} to deploy.`
-          : 'Formation empty. Tap any slot to add a fighter.',
+          ? `${deployedDiscCount} active · ${deployedDiscCount} ticket${deployedDiscCount === 1 ? '' : 's'} when battle starts.`
+          : 'Active team empty. Select a disc, then add it.',
+      });
+    },
+    addSelectedFighterToFormation() {
+      if (snapshot.mode !== 'prep') return;
+      const selectedIndex = lineup.findIndex((fighter) => fighter.id === snapshot.selectedFighterId);
+      if (selectedIndex < 0) {
+        commit({ notice: 'Select a disc from your collection first.' });
+        return;
+      }
+      if (snapshot.formationSlots[selectedIndex]) {
+        commit({ notice: `${lineup[selectedIndex].name} is already in the active team.` });
+        return;
+      }
+      if (snapshot.deployedDiscCount >= JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS) {
+        commit({ notice: `Active team full · remove one of the ${JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS} discs first.` });
+        return;
+      }
+      if (snapshot.deployedDiscCount >= snapshot.tickets) {
+        commit({ notice: 'Earn one more event ticket to add another active disc.' });
+        return;
+      }
+      const formationSlots = [...snapshot.formationSlots];
+      formationSlots[selectedIndex] = true;
+      const deployedDiscCount = formationSlots.filter(Boolean).length;
+      const encounter = resolveJourneyDiscArenaEncounter({ eventPoints: snapshot.progress.eventPoints, deployedDiscs: deployedDiscCount, roundsStarted: snapshot.progress.roundsStarted });
+      commit({
+        formationSlots,
+        deployedDiscCount,
+        encounter,
+        notice: `${lineup[selectedIndex].name} added · tickets remain untouched until battle starts.`,
+      });
+    },
+    removeFormationFighter(fighterId) {
+      if (snapshot.mode !== 'prep') return;
+      const fighterIndex = lineup.findIndex((fighter) => fighter.id === fighterId);
+      if (fighterIndex < 0 || !snapshot.formationSlots[fighterIndex]) return;
+      const formationSlots = [...snapshot.formationSlots];
+      formationSlots[fighterIndex] = false;
+      const deployedDiscCount = formationSlots.filter(Boolean).length;
+      const encounter = resolveJourneyDiscArenaEncounter({ eventPoints: snapshot.progress.eventPoints, deployedDiscs: Math.max(1, deployedDiscCount), roundsStarted: snapshot.progress.roundsStarted });
+      commit({
+        formationSlots,
+        deployedDiscCount,
+        encounter,
+        selectedFighterId: fighterId,
+        notice: `${lineup[fighterIndex].name} moved back to your collection.`,
       });
     },
     applyExternalProgress(progress, tickets) {
@@ -408,8 +465,9 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
         return;
       }
       if (snapshot.tickets < snapshot.deployedDiscCount) {
-        const affordableCount = Math.min(4, snapshot.tickets);
-        const formationSlots = lineup.map((_, index) => index < affordableCount);
+        const affordableCount = Math.min(JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS, snapshot.tickets);
+        let remainingAffordable = affordableCount;
+        const formationSlots = snapshot.formationSlots.map((occupied) => occupied && remainingAffordable-- > 0);
         commit({
           formationSlots,
           deployedDiscCount: affordableCount,
@@ -463,6 +521,12 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
       });
     },
     selectFighter(fighterId) {
+      if (snapshot.mode === 'prep') {
+        const lineupEntry = snapshot.playerLineup.find((candidate) => candidate.id === fighterId);
+        if (!lineupEntry) return;
+        commit({ selectedFighterId: fighterId, notice: `${lineupEntry.name} selected · inspect it, then choose Add to Team.` });
+        return;
+      }
       if (snapshot.mode !== 'battle' || !snapshot.battle) return;
       const fighter = snapshot.battle.fighters.find((candidate) => candidate.id === fighterId);
       if (!fighter || !fighter.active || fighter.isEcho || fighter.team !== 'player') return;
@@ -550,7 +614,7 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
       commit({
         mode: 'prep',
         battle: null,
-        selectedFighterId: null,
+        selectedFighterId: lineup[0]?.id ?? null,
         deployedDiscCount: affordableCount,
         formationSlots,
         encounter: resolveJourneyDiscArenaEncounter({ eventPoints: snapshot.progress.eventPoints, deployedDiscs: Math.max(1, affordableCount), roundsStarted: snapshot.progress.roundsStarted }),
@@ -580,13 +644,13 @@ export function createJourneyDiscArenaPreviewController(options: JourneyDiscAren
         armory: initialArmory,
         formationSlots: initialFormationSlots,
         playerLineup: lineup,
-        selectedFighterId: null,
+        selectedFighterId: lineup[0]?.id ?? null,
         battle: null,
         recentEvents: [],
         combo: 0,
         comboExpiresAtMs: 0,
         lastImpactLabel: '',
-        notice: 'Prototype reset.',
+        notice: 'Battle setup reset. Tickets have not been spent.',
       });
     },
     dispose() {
