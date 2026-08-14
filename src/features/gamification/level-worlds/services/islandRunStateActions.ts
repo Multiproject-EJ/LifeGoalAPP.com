@@ -140,6 +140,7 @@ import {
   getJourneyDiscArenaMilestone,
   resolveJourneyDiscArenaClaimedMilestoneIds,
 } from './journeyDiscArenaProgression';
+import { JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS } from './journeyDiscArenaGame';
 import {
   ISLAND_RUN_ECONOMY_COUNTERS,
   ISLAND_RUN_ECONOMY_SINKS,
@@ -1853,7 +1854,7 @@ export function startJourneyDiscArenaRound(options: {
   if (!eventId) return { record: current, ok: false, roundId: null, deployedDiscs: 0, ticketsRemaining: 0, progress: null, failureReason: 'missing_event' };
   const available = Math.max(0, Math.floor(current.minigameTicketsByEvent[eventId] ?? 0));
   const currentProgress = current.journeyDiscArenaProgressByEvent[eventId] ?? createJourneyDiscArenaProgress(options.nowMs);
-  if (deployedDiscs < 1 || deployedDiscs > 4) return { record: current, ok: false, roundId: null, deployedDiscs: 0, ticketsRemaining: available, progress: currentProgress, failureReason: 'invalid_disc_count' };
+  if (deployedDiscs < 1 || deployedDiscs > JOURNEY_DISC_ARENA_MAX_ACTIVE_DISCS) return { record: current, ok: false, roundId: null, deployedDiscs: 0, ticketsRemaining: available, progress: currentProgress, failureReason: 'invalid_disc_count' };
   if (available < deployedDiscs) return { record: current, ok: false, roundId: null, deployedDiscs: 0, ticketsRemaining: available, progress: currentProgress, failureReason: 'insufficient_tickets' };
   const nowMs = Math.max(0, Math.floor(options.nowMs ?? Date.now()));
   const roundId = `disc:${current.runtimeVersion + 1}:${nowMs}:${deployedDiscs}`;

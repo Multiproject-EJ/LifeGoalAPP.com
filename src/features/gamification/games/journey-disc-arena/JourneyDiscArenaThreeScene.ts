@@ -44,10 +44,12 @@ const SPEED_COLOR = 0xcaff18;
 const RANK_METALS = [0xb45528, 0x91bddd, 0xffbd19] as const;
 const FIGHTER_VISUAL_SCALE = 1.27;
 const PREVIEW_FORMATION_POSITIONS = Object.freeze([
-  { x: -4.65, z: -2.45 },
-  { x: -2.55, z: -2.45 },
-  { x: -4.65, z: -0.15 },
-  { x: -2.55, z: -0.15 },
+  { x: -4.8, z: -2.7 },
+  { x: -2.75, z: -2.7 },
+  { x: -4.8, z: -0.35 },
+  { x: -2.75, z: -0.35 },
+  { x: -4.8, z: 2.0 },
+  { x: -2.75, z: 2.0 },
 ]);
 
 function createMaterial(color: THREE.ColorRepresentation, options: Partial<THREE.MeshStandardMaterialParameters> = {}) {
@@ -104,6 +106,29 @@ function makeRelic(pieceId: PlayerPieceId, accentColor: string): THREE.Group {
       band.rotation.x = Math.PI / 2;
       band.position.y = 0.62;
       root.add(egg, band);
+      break;
+    }
+    case 'quest_journal': {
+      const cover = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.16, 0.9), dark);
+      cover.position.y = 0.58;
+      cover.rotation.y = -0.18;
+      const pages = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.12, 0.8), ivory);
+      pages.position.y = 0.69;
+      pages.rotation.y = -0.18;
+      const sigil = new THREE.Mesh(new THREE.OctahedronGeometry(0.13, 0), glow);
+      sigil.position.set(0, 0.79, 0);
+      root.add(cover, pages, sigil);
+      break;
+    }
+    case 'ancient_key': {
+      const bow = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.07, 7, 24), gold);
+      bow.rotation.x = Math.PI / 2;
+      bow.position.set(-0.2, 0.7, 0);
+      const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.1, 0.12), glow);
+      shaft.position.set(0.25, 0.7, 0);
+      const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.25, 0.12), gold);
+      tooth.position.set(0.56, 0.59, 0);
+      root.add(bow, shaft, tooth);
       break;
     }
     case 'guardian_idol': {
@@ -835,7 +860,7 @@ export class JourneyDiscArenaThreeScene {
         const visuals = Array.from(this.fighterVisuals.entries());
         const playerVisuals = visuals.filter(([id]) => id.startsWith('player-'));
         const rivalVisuals = visuals.filter(([id]) => id.startsWith('rival-'));
-        for (const [index, [, visual]] of playerVisuals.entries()) {
+        for (const [index, [id, visual]] of playerVisuals.entries()) {
           const slot = typeof visual.root.userData.formationSlot === 'number' ? visual.root.userData.formationSlot : index;
           const position = PREVIEW_FORMATION_POSITIONS[slot] ?? PREVIEW_FORMATION_POSITIONS[index];
           const deployed = visual.root.userData.deployed === true;
@@ -846,10 +871,11 @@ export class JourneyDiscArenaThreeScene {
           visual.spinner.rotation.y += this.reducedMotion ? 0 : (deployed ? 0.026 : 0.012) + index * 0.003;
           visual.shield.material.opacity = deployed ? 0.72 : 0.12;
           visual.energyRail.material.opacity = deployed ? 0.8 : 0.2;
-          visual.selectionRing.visible = deployed;
-          visual.selectionRing.material.color.setHex(PLAYER_COLOR);
-          visual.selectionRing.material.opacity = deployed ? 0.62 + Math.sin(elapsed * 5 + index) * 0.14 : 0;
-          if (deployed && !this.reducedMotion) visual.selectionRing.rotation.z = -elapsed * 0.82;
+          const selected = id === snapshot.selectedFighterId;
+          visual.selectionRing.visible = deployed || selected;
+          visual.selectionRing.material.color.setHex(selected ? 0xffd21f : PLAYER_COLOR);
+          visual.selectionRing.material.opacity = deployed || selected ? 0.62 + Math.sin(elapsed * 5 + index) * 0.14 : 0;
+          if ((deployed || selected) && !this.reducedMotion) visual.selectionRing.rotation.z = -elapsed * (selected ? 1.35 : 0.82);
           visual.lifeBar.visible = false;
           visual.trail.visible = false;
         }
