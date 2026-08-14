@@ -9,6 +9,7 @@ import {
 import { buildJourneyDiscArenaRewardTrack } from '../../level-worlds/services/journeyDiscArenaProgression';
 import type { JourneyDiscArenaProgressEntry } from '../../level-worlds/services/islandRunGameStateStore';
 import { JOURNEY_DISC_WEAPON_NAMES, type JourneyDiscArmoryState } from '../../level-worlds/services/journeyDiscArmory';
+import { buildJourneyDiscArenaRivalRoster, resolveJourneyDiscArenaCampaign } from '../../level-worlds/services/journeyDiscArenaPresentation';
 import { createJourneyDiscArenaPreviewController } from './JourneyDiscArenaPreviewController';
 import { triggerIslandRunHaptic } from '../../level-worlds/services/islandRunAudio';
 import JourneyDiscArenaStage from './JourneyDiscArenaStage';
@@ -96,6 +97,17 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
   const matchupLabel = matchupPercent >= 58 ? 'Favored' : matchupPercent >= 43 ? 'Close fight' : 'Underdog';
   const scoreReport = battle ? scoreJourneyDiscArenaRound(battle) : null;
   const nextMilestone = rewardTrack.milestones.find((milestone) => milestone.state !== 'claimed');
+  const campaign = resolveJourneyDiscArenaCampaign(snapshot.progress.eventPoints);
+  const rivalRoster = buildJourneyDiscArenaRivalRoster(encounter);
+  const rivalRosterShortLabel = `${rivalRoster.slice(0, 2).map((fighter) => fighter.name).join(' · ')}${rivalRoster.length > 2 ? ` +${rivalRoster.length - 2}` : ''}`;
+  const nextFightLabel = campaign.next
+    ? `${campaign.pointsToNext} to ${campaign.next.label.replace('Island ', '')}`
+    : 'Final Guardian active';
+  const nextPrizeLabel = nextMilestone
+    ? nextMilestone.state === 'claimable'
+      ? `Claim ${nextMilestone.label}`
+      : `${Math.max(0, nextMilestone.points - rewardTrack.points)} to ${nextMilestone.label}`
+    : 'All prizes claimed';
 
   return (
     <main
@@ -126,6 +138,22 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
           <div data-team="player"><span>Your discs</span><strong>{playerAlive}</strong></div>
           <div className="journey-disc-arena__timer"><span>Round</span><strong>{secondsRemaining}</strong></div>
           <div data-team="rival"><span>Rivals</span><strong>{rivalAlive}</strong></div>
+        </section>
+      ) : null}
+
+      {snapshot.mode === 'prep' ? (
+        <section className="journey-disc-arena__lineup-readout" aria-label={`3D battle lineup. Your roster has ${snapshot.playerLineup.length} available spinners and ${snapshot.deployedDiscCount} deployed. ${encounter.label} fields ${rivalRoster.map((fighter) => fighter.name).join(', ')}.`}>
+          <div data-team="player">
+            <span>Your 3D roster</span>
+            <strong>{snapshot.playerLineup.length} spinners</strong>
+            <small>{snapshot.deployedDiscCount} glowing = deployed</small>
+          </div>
+          <b>VS</b>
+          <div data-team="rival">
+            <span>{encounter.class === 'guardian' ? 'Boss lineup' : 'Rift lineup'}</span>
+            <strong>{encounter.label}</strong>
+            <small>{rivalRosterShortLabel}</small>
+          </div>
         </section>
       ) : null}
 
@@ -169,6 +197,17 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
             <strong>{encounter.label}</strong>
             <small>{encounter.class === 'guardian' ? 'End-prize gate' : `${encounter.rivalCount} rival${encounter.rivalCount === 1 ? '' : 's'}`} · victory ×{encounter.victoryScoreMultiplier}</small>
           </div>
+          <div className="journey-disc-arena__campaign" aria-label={`Journey Disc campaign. Current level ${campaign.current.label}. ${nextFightLabel}. ${nextPrizeLabel}.`}>
+            <div><strong>Battle journey</strong><span>{nextFightLabel} · {nextPrizeLabel}</span></div>
+            <ol>
+              {campaign.stages.map((stage) => (
+                <li key={stage.id} data-state={stage.state} aria-current={stage.state === 'current' ? 'step' : undefined}>
+                  <i>{stage.state === 'cleared' ? '✓' : stage.id.startsWith('guardian') ? '♜' : '◉'}</i>
+                  <small>{stage.shortLabel}</small>
+                </li>
+              ))}
+            </ol>
+          </div>
           <div className="journey-disc-arena__matchup" data-matchup={matchupLabel === 'Underdog' ? 'danger' : matchupLabel === 'Favored' ? 'strong' : 'even'}>
             <span>YOUR FORMATION <b>{Math.round(playerPower)}</b></span>
             <i><b style={{ width: `${matchupPercent}%` }} /></i>
@@ -176,8 +215,8 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
             <span><b>{Math.round(rivalPower)}</b> RIFT</span>
           </div>
           <div className="journey-disc-arena__section-heading">
-            <div><p>1 ticket per fighter</p><h2>Tap formation slots</h2></div>
-            <span>Rank {permanentRank}</span>
+            <div><p>1 ticket per deployed spinner</p><h2>Choose your 3D roster</h2></div>
+            <span>{snapshot.playerLineup.length} available · Rank {permanentRank}</span>
           </div>
           <div className="journey-disc-arena__formation-grid" aria-label="Tap formation slots to place weapon discs">
             {snapshot.playerLineup.map((fighter, index) => {
@@ -194,8 +233,8 @@ export default function JourneyDiscArenaMinigame({ onComplete, launchConfig }: I
                   aria-label={`${occupied ? 'Remove' : 'Add'} ${fighter.name} in formation slot ${index + 1}`}
                 >
                   <i>{occupied ? '◉' : '+'}</i>
-                  <span><strong>{occupied ? fighter.name : `Empty slot ${index + 1}`}</strong><small>{occupied ? `${weaponName} · Level ${fighter.weaponLevel}` : 'Tap to place'}</small></span>
-                  <b>{occupied ? '1 ◉' : ''}</b>
+                  <span><strong>{fighter.name}</strong><small>{occupied ? `Deployed · ${weaponName} L${fighter.weaponLevel}` : `Available · ${weaponName} L${fighter.weaponLevel}`}</small></span>
+                  <b>{occupied ? 'LIVE' : '+ 1 ◉'}</b>
                 </button>
               );
             })}

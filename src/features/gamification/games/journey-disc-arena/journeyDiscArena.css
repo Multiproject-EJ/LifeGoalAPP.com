@@ -127,6 +127,30 @@ body:has(.journey-disc-arena[data-island-concourse="true"]) {
   backdrop-filter: blur(16px);
   transform: translateX(-50%);
 }
+.journey-disc-arena__lineup-readout {
+  position: absolute;
+  z-index: 5;
+  top: clamp(82px, 11.5vh, 106px);
+  left: 50%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
+  align-items: center;
+  width: min(590px, calc(100% - 32px));
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+.journey-disc-arena__lineup-readout > div { min-width: 0; padding: 8px 11px; border: 1px solid rgba(255,255,255,.7); border-radius: 14px; background: rgba(2,24,55,.84); box-shadow: 0 8px 26px rgba(2,24,82,.24); backdrop-filter: blur(12px); }
+.journey-disc-arena__lineup-readout > div[data-team="player"] { border-color: rgba(0,240,120,.78); text-align: left; }
+.journey-disc-arena__lineup-readout > div[data-team="rival"] { border-color: rgba(255,23,61,.78); text-align: right; }
+.journey-disc-arena__lineup-readout > b { color: #fff83e; font-size: 10px; font-style: italic; text-align: center; text-shadow: 0 0 12px rgba(255,226,58,.8); }
+.journey-disc-arena__lineup-readout span,
+.journey-disc-arena__lineup-readout strong,
+.journey-disc-arena__lineup-readout small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.journey-disc-arena__lineup-readout span { color: #9ed7e8; font-size: 7px; font-weight: 950; letter-spacing: .13em; text-transform: uppercase; }
+.journey-disc-arena__lineup-readout strong { margin-top: 1px; color: #fff; font-size: 11px; }
+.journey-disc-arena__lineup-readout [data-team="player"] strong { color: #67ffb5; }
+.journey-disc-arena__lineup-readout [data-team="rival"] strong { color: #ff708a; }
+.journey-disc-arena__lineup-readout small { margin-top: 1px; color: #c2d7e2; font-size: 7px; }
 .journey-disc-arena__score > div { padding: 9px 13px; display: flex; align-items: center; justify-content: space-between; gap: 7px; }
 .journey-disc-arena__score span { color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .journey-disc-arena__score span { color: #d4e7f2; }
@@ -223,6 +247,24 @@ body:has(.journey-disc-arena[data-island-concourse="true"]) {
 .journey-disc-arena__encounter[data-class="guardian"] > span { background: #a45eff; }
 .journey-disc-arena__encounter[data-class="guardian"] strong { color: #fff; }
 .journey-disc-arena__encounter[data-class="guardian"] small { color: #d9c6f7; }
+.journey-disc-arena__campaign { margin: -5px 4px 10px; padding: 7px 9px 6px; border: 1px solid rgba(31,118,145,.18); border-radius: 13px; background: rgba(230,247,250,.76); }
+.journey-disc-arena__campaign > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.journey-disc-arena__campaign > div strong { color: var(--ink); font-size: 8px; letter-spacing: .09em; text-transform: uppercase; }
+.journey-disc-arena__campaign > div span { min-width: 0; overflow: hidden; color: var(--muted); font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.journey-disc-arena__campaign ol { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 6px 0 0; padding: 0; list-style: none; }
+.journey-disc-arena__campaign ol::before { content: ''; position: absolute; z-index: 0; top: 9px; left: 7%; right: 7%; height: 3px; border-radius: 99px; background: linear-gradient(90deg, #00d66f, #78e8d0 42%, #c5d8dd); }
+.journey-disc-arena__campaign li { position: relative; z-index: 1; display: grid; justify-items: center; gap: 2px; min-width: 0; }
+.journey-disc-arena__campaign li i { display: grid; place-items: center; width: 20px; height: 20px; border: 2px solid #9cb5bf; border-radius: 50%; color: #6e8792; background: #e7f1f3; font-size: 8px; font-style: normal; font-weight: 950; }
+.journey-disc-arena__campaign li small { max-width: 100%; overflow: hidden; color: #77909c; font-size: 6px; font-weight: 850; text-overflow: ellipsis; white-space: nowrap; }
+.journey-disc-arena__campaign li[data-state="cleared"] i { border-color: #00b963; color: #fff; background: #00c96b; box-shadow: 0 0 9px rgba(0,214,111,.45); }
+.journey-disc-arena__campaign li[data-state="current"] i { border-color: #fff; color: #071b39; background: var(--gold); box-shadow: 0 0 0 2px #ff9e19, 0 0 14px rgba(255,210,31,.7); transform: scale(1.08); }
+.journey-disc-arena__campaign li[data-state="current"] small { color: var(--ink); font-weight: 950; }
+.journey-disc-arena[data-theme="eclipse"] .journey-disc-arena__campaign { border-color: rgba(158,196,226,.23); background: rgba(16,31,53,.92); }
+.journey-disc-arena[data-theme="eclipse"] .journey-disc-arena__campaign > div strong,
+.journey-disc-arena[data-theme="eclipse"] .journey-disc-arena__campaign li[data-state="current"] small { color: #fff; }
+.journey-disc-arena[data-theme="eclipse"] .journey-disc-arena__campaign > div span,
+.journey-disc-arena[data-theme="eclipse"] .journey-disc-arena__campaign li small { color: #a9c2d2; }
+.journey-disc-arena[data-theme="eclipse"] .journey-disc-arena__campaign ol::before { background: linear-gradient(90deg, #00d66f, #a45eff 62%, #42536a); }
 .journey-disc-arena__matchup { display: grid; grid-template-columns: auto minmax(52px, 1fr) auto auto; align-items: center; gap: 8px; margin: -4px 4px 10px; }
 .journey-disc-arena__matchup > span { color: var(--muted); font-size: 8px; font-weight: 850; letter-spacing: .06em; white-space: nowrap; }
 .journey-disc-arena__matchup > span:last-child { text-align: right; }
@@ -252,6 +294,7 @@ body:has(.journey-disc-arena[data-island-concourse="true"]) {
 .journey-disc-arena__formation-grid strong { font-size: 10px; }
 .journey-disc-arena__formation-grid small { margin-top: 2px; color: #7894a5; font-size: 8px; }
 .journey-disc-arena__formation-grid b { color: #148c61; font-size: 9px; }
+.journey-disc-arena__formation-grid button:not([data-occupied="true"]) b { color: #527789; }
 .journey-disc-arena__section-heading p,
 .journey-disc-arena__section-heading h2 { margin: 0; }
 .journey-disc-arena__section-heading p { color: var(--cyan); font-size: 10px; font-weight: 850; letter-spacing: .15em; text-transform: uppercase; }
@@ -380,6 +423,8 @@ body:has(.journey-disc-arena[data-island-concourse="true"]) {
   .journey-disc-arena__wallets { gap: 5px; }
   .journey-disc-arena__wallets span { min-width: 49px; padding: 8px 7px; border-radius: 12px; font-size: 12px; }
   .journey-disc-arena__score { top: 86px; grid-template-columns: 1fr 58px 1fr; }
+  .journey-disc-arena__lineup-readout { top: 78px; width: calc(100% - 24px); grid-template-columns: minmax(0, 1fr) 27px minmax(0, 1fr); }
+  .journey-disc-arena__lineup-readout > div { padding: 7px 8px; border-radius: 12px; }
   .journey-disc-arena__team-health { top: 139px; gap: 8px; }
   .journey-disc-arena__team-health > div,
   .journey-disc-arena__team-health > div[data-team="rival"] { grid-template-columns: 1fr 31px; }
@@ -390,6 +435,7 @@ body:has(.journey-disc-arena[data-island-concourse="true"]) {
   .journey-disc-arena__prep-panel { padding: 14px; border-radius: 22px; }
   .journey-disc-arena__reward-track { margin-bottom: 12px; }
   .journey-disc-arena__encounter { margin-bottom: 9px; }
+  .journey-disc-arena__campaign { margin-bottom: 8px; }
   .journey-disc-arena__encounter small { max-width: 92px; }
   .journey-disc-arena__reward-track li button { width: 40px; height: 40px; font-size: 16px; }
   .journey-disc-arena__prep-panel { bottom: max(14px, env(safe-area-inset-bottom)); }
@@ -426,6 +472,8 @@ body:has(.journey-disc-arena[data-phone-preview="true"]) { overflow: auto; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__wallets { gap: 5px; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__wallets span { min-width: 49px; padding: 8px 7px; border-radius: 12px; font-size: 12px; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__score { top: 86px; grid-template-columns: 1fr 58px 1fr; }
+.journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__lineup-readout { top: 78px; width: calc(100% - 24px); grid-template-columns: minmax(0, 1fr) 27px minmax(0, 1fr); }
+.journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__lineup-readout > div { padding: 7px 8px; border-radius: 12px; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__score > div { padding: 7px 9px; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__score span { font-size: 8px; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__score strong { font-size: 16px; }
@@ -433,6 +481,7 @@ body:has(.journey-disc-arena[data-phone-preview="true"]) { overflow: auto; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__reward-track { margin-bottom: 12px; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__reward-track li button { width: 40px; height: 40px; font-size: 16px; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__encounter { margin-bottom: 9px; }
+.journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__campaign { margin-bottom: 8px; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__encounter small { max-width: 92px; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__powerup-guide { gap: 4px; }
 .journey-disc-arena[data-phone-preview="true"] .journey-disc-arena__powerup-guide span { padding: 4px 6px; font-size: 8px; }

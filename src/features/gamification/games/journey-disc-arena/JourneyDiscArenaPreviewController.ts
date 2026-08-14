@@ -25,6 +25,7 @@ import {
 } from '../../level-worlds/services/journeyDiscArmory';
 import type { JourneyDiscArenaProgressEntry } from '../../level-worlds/services/islandRunGameStateStore';
 import type { PlayerPieceId } from '../../level-worlds/services/islandRunPlayerPieces';
+import { JOURNEY_DISC_ARENA_RIVAL_PIECES } from '../../level-worlds/services/journeyDiscArenaPresentation';
 
 export type JourneyDiscArenaPreviewMode = 'prep' | 'battle' | 'resolve' | 'result';
 
@@ -91,13 +92,6 @@ const PLAYER_RELICS: readonly { pieceId: PlayerPieceId; name: string }[] = [
   { pieceId: 'ancient_egg', name: 'Ancient Egg' },
 ];
 
-const RIVAL_RELICS: readonly PlayerPieceId[] = [
-  'guardian_idol',
-  'fallen_star',
-  'keepers_lantern',
-  'oris_shell',
-];
-
 const MODULE_ROTATION: readonly Exclude<JourneyDiscArenaModuleId, null>[] = [
   'ram_fin',
   'aegis_ring',
@@ -151,7 +145,7 @@ function buildBattleSeeds(
     ) as JourneyDiscArenaRank;
     return {
       id: `rival-${index + 1}`,
-      pieceId: RIVAL_RELICS[index % RIVAL_RELICS.length],
+      pieceId: JOURNEY_DISC_ARENA_RIVAL_PIECES[index % JOURNEY_DISC_ARENA_RIVAL_PIECES.length],
       team: 'rival' as const,
       rank: rivalRank,
       bossTier: encounter.bossTier,
