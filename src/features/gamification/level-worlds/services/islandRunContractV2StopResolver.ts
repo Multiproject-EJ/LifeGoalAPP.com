@@ -17,13 +17,32 @@ export const ISLAND_RUN_MAX_OPEN_INCOMPLETE_STOPS = 3;
  */
 export type IslandRunContractV2StopStatus = 'completed' | 'active' | 'accessible' | 'postponed' | 'ticket_required' | 'locked';
 
-type StopRuntimeStateEntry = {
+export type StopRuntimeStateEntry = {
   objectiveComplete: boolean;
   buildComplete: boolean;
   accessUnlocked?: boolean;
   postponedAtMs?: number | null;
   completedAtMs?: number;
 };
+
+export function reconcileIslandRunStopObjectivesFromCompletionLedger(options: {
+  stopStatesByIndex: StopRuntimeStateEntry[];
+  completedStops: string[];
+}): StopRuntimeStateEntry[] {
+  const completedStopIds = new Set(options.completedStops);
+  return options.stopStatesByIndex.map((entry, index) => {
+    const stopType = ISLAND_RUN_CONTRACT_V2_STOP_TYPES[index];
+    if (!stopType || !completedStopIds.has(stopType) || entry.objectiveComplete === true) {
+      return entry;
+    }
+    return {
+      ...entry,
+      objectiveComplete: true,
+      accessUnlocked: true,
+      postponedAtMs: null,
+    };
+  });
+}
 
 export interface ResolveIslandRunContractV2StopsResult {
   activeStopIndex: number;

@@ -4,6 +4,7 @@ import {
   resolveIslandRunStep1CompleteForProgression,
   resolveIslandRunFullClearForProgression,
   isIslandRunFinishedForDepartureV2,
+  reconcileIslandRunStopObjectivesFromCompletionLedger,
 } from '../islandRunContractV2StopResolver';
 import { MAX_BUILD_LEVEL } from '../islandRunContractV2EssenceBuild';
 import { assertDeepEqual, assertEqual, type TestCase } from './testHarness';
@@ -583,6 +584,22 @@ export const islandRunContractV2StopResolverTests: TestCase[] = [
       });
       assertEqual(limit.ok, false, 'Configured open incomplete limit should block another postponement');
       if (!limit.ok) assertEqual(limit.reason, 'open_limit_reached', 'Limit block reason should be explicit');
+    },
+  },
+  {
+    name: 'legacy completion ledger repairs stale stop objectives before postponement eligibility',
+    run: () => {
+      const reconciled = reconcileIslandRunStopObjectivesFromCompletionLedger({
+        completedStops: ['hatchery'],
+        stopStatesByIndex: Array.from({ length: 5 }, () => ({
+          objectiveComplete: false,
+          buildComplete: false,
+        })),
+      });
+
+      assertEqual(reconciled[0].objectiveComplete, true, 'Hatchery completion credit repairs its stale objective');
+      const result = canPostponeIslandRunStop({ stopStatesByIndex: reconciled, stopIndex: 1 });
+      assertEqual(result.ok, true, 'reconciled Hatchery completion makes Habit accessible for postponement');
     },
   },
   {

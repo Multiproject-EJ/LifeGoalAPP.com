@@ -10838,7 +10838,9 @@ export function IslandRunBoardPrototype({
         userId: session.user.id,
         eventType: 'island_run_gameplay_event',
         metadata: {
-          stage: 'postponement_blocked_by_open_limit',
+          stage: result.reason === 'open_limit_reached'
+            ? 'postponement_blocked_by_open_limit'
+            : 'postponement_blocked',
           island_number: islandNumber,
           stop_id: activeStopId,
           reason: result.reason,

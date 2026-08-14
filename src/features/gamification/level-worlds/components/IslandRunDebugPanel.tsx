@@ -23,6 +23,7 @@ import {
   ISLAND_RUN_ECONOMY_COUNTERS,
 } from '../services/islandRunEconomyTelemetry';
 import { getIslandRunAudioDiagnostics } from '../services/islandRunAudio';
+import { isDemoSession } from '../../../../services/demoSession';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -204,6 +205,12 @@ export function IslandRunDebugPanel({
 
   // Ping Supabase to check connectivity
   useEffect(() => {
+    if (isDemoSession(session)) {
+      setSupabaseStatus('ok');
+      setSupabaseLatencyMs(null);
+      setSupabaseError(null);
+      return;
+    }
     if (!client) {
       setSupabaseStatus('error');
       setSupabaseError('No Supabase client available');
