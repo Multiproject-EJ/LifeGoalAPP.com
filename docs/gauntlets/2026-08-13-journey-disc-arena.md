@@ -486,7 +486,7 @@ approved for the eligible Journey Disc islands:
   `20260813231212 add_journey_disc_arena_progress` migration, both JSONB runtime
   columns, RLS enabled, and authenticated owner-only SELECT/INSERT/UPDATE
   policies. No production schema, policy, Auth, or player-data write was made.
-- Automated release gates: 1,784 Island Run tests passed with zero failures;
+- Automated release gates: 1,786 Island Run tests passed with zero failures;
   architecture guard passed with zero violations; audio validation, TypeScript,
   `git diff --check`, and production Vite build passed. The Journey Disc bundle
   built as a lazy 71.24 kB JavaScript chunk (22.45 kB gzip).

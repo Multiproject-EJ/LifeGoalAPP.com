@@ -85,6 +85,7 @@ import {
   ISLAND_RUN_CONTRACT_V2_STOP_TYPES,
   ISLAND_RUN_MAX_OPEN_INCOMPLETE_STOPS,
   isIslandRunFullyClearedV2,
+  reconcileIslandRunStopObjectivesFromCompletionLedger,
   type IslandRunContractV2StopType,
   type PostponeIslandRunStopReason,
 } from './islandRunContractV2StopResolver';
@@ -4215,12 +4216,19 @@ export interface PostponeIslandRunStopResult {
 export function postponeIslandRunStop(options: PostponeIslandRunStopOptions): PostponeIslandRunStopResult {
   const { session, client, stopIndex, triggerSource } = options;
   const current = getIslandRunStateSnapshot(session);
-  const eligibility = canPostponeIslandRunStop({
+  // Older saves can have completion credit in completedStopsByIsland while the
+  // contract-v2 objective entry is still false. Reconcile the same source the
+  // renderer uses so a visible "Later" action cannot be rejected as inaccessible.
+  const reconciledStopStates = reconcileIslandRunStopObjectivesFromCompletionLedger({
     stopStatesByIndex: current.stopStatesByIndex,
+    completedStops: current.completedStopsByIsland?.[String(options.islandNumber)] ?? [],
+  });
+  const eligibility = canPostponeIslandRunStop({
+    stopStatesByIndex: reconciledStopStates,
     stopIndex,
     maxOpenIncompleteStops: ISLAND_RUN_MAX_OPEN_INCOMPLETE_STOPS,
   });
-  if (!eligibility.ok) {
+  if (eligibility.ok === false) {
     logIslandRunEntryDebug('island_run_stop_postponement_blocked', {
       islandNumber: options.islandNumber,
       stopIndex,
@@ -4236,7 +4244,7 @@ export function postponeIslandRunStop(options: PostponeIslandRunStopOptions): Po
     };
   }
   const nowMs = Math.max(0, Math.floor(options.nowMs ?? Date.now()));
-  const nextStopStates = current.stopStatesByIndex.map((entry, index) => {
+  const nextStopStates = reconciledStopStates.map((entry, index) => {
     const base = {
       ...entry,
       accessUnlocked: index === 0 || entry.accessUnlocked === true || entry.objectiveComplete === true,
