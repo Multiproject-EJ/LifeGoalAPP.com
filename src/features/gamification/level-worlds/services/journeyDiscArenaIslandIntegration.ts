@@ -16,6 +16,89 @@ export interface JourneyDiscCenterLandmarkPresentation {
     | 'event_ready';
 }
 
+export const ISLAND_EVENT_GRID_SLOT_COUNT = 12;
+
+export interface IslandEventGridTemplate {
+  eventId: string;
+  displayName: string;
+  icon: string;
+}
+
+export type IslandEventGridSlot =
+  | {
+      kind: 'event';
+      id: string;
+      eventId: string;
+      displayName: string;
+      icon: string;
+      active: boolean;
+    }
+  | {
+      kind: 'journey_disc';
+      id: 'journey_disc_arena';
+      displayName: 'Journey Disc Arena';
+      icon: '◉';
+      active: true;
+    }
+  | {
+      kind: 'empty';
+      id: string;
+    };
+
+/**
+ * Journey Disc borrows the one canonical timed-event channel on its chapter
+ * islands. This is deliberately presentation-only: the event timer, ticket
+ * wallet and reward bar continue unchanged and resume their ordinary game on
+ * the next island.
+ */
+export function shouldJourneyDiscReplaceTimedEventSurface(options: {
+  featureEnabled: boolean;
+  islandNumber: number;
+  hasActiveTimedEvent: boolean;
+}): boolean {
+  return options.featureEnabled
+    && options.hasActiveTimedEvent
+    && isJourneyDiscArenaIsland(options.islandNumber);
+}
+
+/** Builds the three-row event launcher grid without introducing event state. */
+export function resolveIslandEventGridSlots(options: {
+  templates: readonly IslandEventGridTemplate[];
+  activeEventType: string | null;
+  journeyDiscReplacesTimedEvent: boolean;
+  slotCount?: number;
+}): IslandEventGridSlot[] {
+  const requestedSlotCount = Math.max(
+    options.templates.length,
+    Math.floor(options.slotCount ?? ISLAND_EVENT_GRID_SLOT_COUNT),
+  );
+  const slots: IslandEventGridSlot[] = options.templates.map((template) => {
+    const isActiveTemplate = template.eventId === options.activeEventType;
+    if (options.journeyDiscReplacesTimedEvent && isActiveTemplate) {
+      return {
+        kind: 'journey_disc',
+        id: 'journey_disc_arena',
+        displayName: 'Journey Disc Arena',
+        icon: '◉',
+        active: true,
+      };
+    }
+    return {
+      kind: 'event',
+      id: template.eventId,
+      eventId: template.eventId,
+      displayName: template.displayName,
+      icon: template.icon,
+      active: !options.journeyDiscReplacesTimedEvent && isActiveTemplate,
+    };
+  });
+
+  while (slots.length < requestedSlotCount) {
+    slots.push({ kind: 'empty', id: `empty-${slots.length}` });
+  }
+  return slots;
+}
+
 /**
  * Pure presentation resolver for the chapter-opening Journey Disc exhibition.
  *

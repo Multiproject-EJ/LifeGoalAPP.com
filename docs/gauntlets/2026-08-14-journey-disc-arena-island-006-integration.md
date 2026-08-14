@@ -61,6 +61,26 @@ Branch: `codex/journey-disc-arena`
 ## Release sequencing
 
 The source feature flag is enabled on this branch. Apply
-`supabase/migrations/20260813183000_add_journey_disc_arena_progress.sql` to the
+`supabase/migrations/20260813231212_add_journey_disc_arena_progress.sql` to the
 target environment before shipping the branch, because Journey Disc event
 progress and permanent armory fields are persisted in the Island Run profile.
+
+## Island 006 event-grid release candidate
+
+- On eligible chapter islands, Journey Disc replaces only the visible active
+  rotating-game surface. The canonical event timer, ticket wallet, reward bar,
+  and persistence record remain unchanged; the ordinary game resumes on the
+  following island.
+- The event modal now renders a three-row, twelve-slot grid. Journey Disc takes
+  the active slot on Island 006 and the two added rows are intentionally empty
+  future-game capacity.
+- The reward banner, quick action, ticket icon, event modal stats, and Arena
+  choice presentation consistently describe event tickets as weapon discs on
+  the Journey Disc surface.
+- Release playtest: the Island 006 reward HUD showed Journey Disc Arena; the
+  modal showed Journey Disc plus eight empty slots; selecting PLAY opened the
+  full arena with six reward milestones and four formation slots.
+- Production Supabase project `muanayogiboxooftkyny` was checked before release:
+  migration `20260813231212` is recorded and both Journey Disc JSONB columns
+  exist with the expected non-null defaults. No release-time schema write was
+  required.

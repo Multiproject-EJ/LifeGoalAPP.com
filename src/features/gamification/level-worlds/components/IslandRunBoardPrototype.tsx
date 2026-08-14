@@ -386,7 +386,11 @@ import { IslandRunArenaPreferencesModal } from './IslandRunArenaPreferencesModal
 import { IslandRunArenaChoice } from './IslandRunArenaChoice';
 import { isArenaPuzzleGameId } from '../services/islandRunArenaCatalog';
 import { isJourneyDiscArenaIsland } from '../services/journeyDiscArmory';
-import { resolveJourneyDiscCenterLandmarkPresentation } from '../services/journeyDiscArenaIslandIntegration';
+import {
+  resolveIslandEventGridSlots,
+  resolveJourneyDiscCenterLandmarkPresentation,
+  shouldJourneyDiscReplaceTimedEventSurface,
+} from '../services/journeyDiscArenaIslandIntegration';
 import {
   DEFAULT_ARENA_MINIGAME_PREFERENCES,
   getArenaSessionSeconds,
@@ -6620,6 +6624,11 @@ export function IslandRunBoardPrototype({
   const timedEventRemainingLabel = effectiveActiveTimedEvent
     ? formatEventRemaining(timedEventRemainingMs)
     : '—';
+  const journeyDiscReplacesTimedEventSurface = shouldJourneyDiscReplaceTimedEventSurface({
+    featureEnabled: isIslandRunFeatureEnabled('journeyDiscArenaEnabled'),
+    islandNumber: islandArtPreviewNumber,
+    hasActiveTimedEvent: Boolean(effectiveActiveTimedEvent && isCanonicalEventId(effectiveActiveTimedEvent.eventType)),
+  });
   // Auto-hide the reward-bar timer/multiplier row: when navigating to the board
   // with more than an hour left on the timer it shows for 10s, then slides up
   // into the bar. With an hour or less remaining it stays visible for urgency.
@@ -6645,6 +6654,9 @@ export function IslandRunBoardPrototype({
       case 'essence':
         return 'money';
       case 'minigame_tokens':
+        if (journeyDiscReplacesTimedEventSurface) {
+          return nextRewardAmount === 1 ? 'weapon disc' : 'weapon discs';
+        }
         return nextRewardAmount === 1
           ? timedEventTokenPresentation.labelSingular
           : timedEventTokenPresentation.labelPlural;
@@ -6658,6 +6670,15 @@ export function IslandRunBoardPrototype({
     ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)
     : 0;
   const activeEventMeta = effectiveActiveTimedEvent ? getEventDisplayMeta(effectiveActiveTimedEvent.eventType) : null;
+  const activeEventSurfaceMeta = journeyDiscReplacesTimedEventSurface
+    ? { displayName: 'Journey Disc Arena', icon: '◉' }
+    : activeEventMeta;
+  const eventSurfaceTicketIcon = journeyDiscReplacesTimedEventSurface ? '◉' : timedEventTokenIcon;
+  const eventGridSlots = useMemo(() => resolveIslandEventGridSlots({
+    templates: getEventRotationTemplates(),
+    activeEventType: effectiveActiveTimedEvent?.eventType ?? null,
+    journeyDiscReplacesTimedEvent: journeyDiscReplacesTimedEventSurface,
+  }), [effectiveActiveTimedEvent?.eventType, journeyDiscReplacesTimedEventSurface]);
   const journeyDiscCenterLandmark = useMemo(() => (
     resolveJourneyDiscCenterLandmarkPresentation({
       featureEnabled: isIslandRunFeatureEnabled('journeyDiscArenaEnabled'),
@@ -6732,21 +6753,26 @@ export function IslandRunBoardPrototype({
     if (reward.rewardBarProgress > 0) {
       items.push({
         id: 'event-progress',
-        icon: activeEventMeta?.icon ?? '⚡',
+        icon: activeEventSurfaceMeta?.icon ?? '⚡',
         amount: reward.rewardBarProgress,
         label: 'Event bar',
-        title: `Adds progress toward the ${activeEventMeta?.displayName ?? 'active event'} reward bar.`,
+        title: `Adds progress toward the ${activeEventSurfaceMeta?.displayName ?? 'active event'} reward bar.`,
       });
     }
     return items;
-  }, [activeEventMeta?.displayName, activeEventMeta?.icon, trafficLightCoinFlip?.reward]);
-  const activeEventIcon = effectiveActiveTimedEvent?.eventType === 'space_excavator' ? SPACE_EXCAVATOR_EVENT_ICON_SRC : activeEventMeta?.icon ?? '';
+  }, [activeEventSurfaceMeta?.displayName, activeEventSurfaceMeta?.icon, trafficLightCoinFlip?.reward]);
+  const activeEventIcon = journeyDiscReplacesTimedEventSurface
+    ? '◉'
+    : effectiveActiveTimedEvent?.eventType === 'space_excavator'
+      ? SPACE_EXCAVATOR_EVENT_ICON_SRC
+      : activeEventMeta?.icon ?? '';
   const renderEventIcon = (className: string) => activeEventIcon.startsWith('/')
     ? <img className={`${className} ${className}--image`} src={activeEventIcon} alt="" aria-hidden="true" loading="lazy" />
     : <i className={className} aria-hidden="true">{activeEventIcon}</i>;
-  const isSpaceExcavatorEffectiveEvent = effectiveActiveTimedEvent?.eventType === 'space_excavator';
+  const isSpaceExcavatorEffectiveEvent = !journeyDiscReplacesTimedEventSurface
+    && effectiveActiveTimedEvent?.eventType === 'space_excavator';
   const isDevTimedEventOverrideActive = isDevModeEnabled && Boolean(devTimedEventOverrideType && devTimedEventOverrideEventId);
-  const rewardBarAvatarIcon = activeEventIcon || timedEventTokenIcon;
+  const rewardBarAvatarIcon = activeEventIcon || eventSurfaceTicketIcon;
   const spaceExcavatorRewardBarHint = isSpaceExcavatorEffectiveEvent
     ? (isDevTimedEventOverrideActive ? SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV : SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT)
     : null;
@@ -7078,7 +7104,7 @@ export function IslandRunBoardPrototype({
     const payoutParts: string[] = [];
     if (totalDice > 0) payoutParts.push(`+${totalDice} 🎲`);
     if (totalEssence > 0) payoutParts.push(`+${totalEssence} 💰`);
-    if (totalMinigameTokens > 0) payoutParts.push(`+${totalMinigameTokens} ${timedEventTokenIcon}`);
+    if (totalMinigameTokens > 0) payoutParts.push(`+${totalMinigameTokens} ${eventSurfaceTicketIcon}`);
     if (totalStickerFragments > 0) payoutParts.push(`+${totalStickerFragments} 🧩`);
     if (totalStickersGranted > 0) payoutParts.push(`+${totalStickersGranted} 🏆sticker`);
     const cascadeNote = chainResult.payouts.length > 1 ? ` (${chainResult.payouts.length}x cascade!)` : '';
@@ -7090,7 +7116,7 @@ export function IslandRunBoardPrototype({
       triggerIslandRunHaptic('sticker_complete');
     }
     return true;
-  }, [client, islandNumber, session]);
+  }, [client, eventSurfaceTicketIcon, islandNumber, session]);
 
   const handleContractV2RewardBarClaim = () => {
     runContractV2RewardBarClaimCascade({
@@ -8470,7 +8496,7 @@ export function IslandRunBoardPrototype({
     if (hatcheryPendingEggCount <= 1) return;
     setSelectedHatcheryEggIndex((current) => (current + 1) % hatcheryPendingEggCount);
   }, [hatcheryPendingEggCount]);
-  const hasRewardBarTimedEventQuickAction = Boolean(effectiveActiveTimedEvent && activeEventMeta);
+  const hasRewardBarTimedEventQuickAction = Boolean(effectiveActiveTimedEvent && activeEventSurfaceMeta);
   const rewardBarEggManiaSlotIndex = isEggManiaActive ? 0 : -1;
   const rewardBarTimedEventSlotIndex = isEggManiaActive ? 1 : 0;
   // Sticker album moved to the left hatchery tray; the side rail now only holds
@@ -9475,6 +9501,11 @@ export function IslandRunBoardPrototype({
 
   const handleLaunchTimedEventMinigame = () => {
     if (!effectiveActiveTimedEvent) return;
+    if (journeyDiscReplacesTimedEventSurface) {
+      setIsTimedEventLaunchQueued(false);
+      setLandingText('Journey Disc Arena replaces the rotating event game on this island.');
+      return;
+    }
     if (!canOpenIslandRunOverlayWhileRollingState({
       isRolling,
       isAnimatingRoll: isAnimatingRollRef.current,
@@ -9791,7 +9822,10 @@ export function IslandRunBoardPrototype({
         setLandingText('Journey Disc Arena is still being tuned for mobile.');
         return;
       }
-      if (!isJourneyDiscArenaIsland(runtimeStateRef.current.currentIslandNumber ?? islandNumber)) {
+      const journeyDiscLaunchIslandNumber = isIslandVisualPreview
+        ? islandArtPreviewNumber
+        : runtimeStateRef.current.currentIslandNumber ?? islandNumber;
+      if (!isJourneyDiscArenaIsland(journeyDiscLaunchIslandNumber)) {
         setLandingText('Journey Disc Arena returns after each five-island chapter: Islands 6, 11, 16 and onward.');
         return;
       }
@@ -9831,7 +9865,7 @@ export function IslandRunBoardPrototype({
         initialProgress: runtimeStateRef.current.journeyDiscArenaProgressByEvent?.[recordEventId] ?? null,
         initialArmory: runtimeStateRef.current.journeyDiscArmory,
         islandConcourseIntegration: true,
-        integratedIslandNumber: runtimeStateRef.current.currentIslandNumber ?? islandNumber,
+        integratedIslandNumber: journeyDiscLaunchIslandNumber,
         requestStartRound: (deployedDiscs: number) => {
           const result = startJourneyDiscArenaRound({ session, client, eventId: recordEventId, deployedDiscs, triggerSource: 'journey_disc_arena_start' });
           if (result.ok) setRuntimeState(result.record);
@@ -9863,6 +9897,10 @@ export function IslandRunBoardPrototype({
 
   useEffect(() => {
     if (!isTimedEventLaunchQueued) return;
+    if (journeyDiscReplacesTimedEventSurface) {
+      setIsTimedEventLaunchQueued(false);
+      return;
+    }
     if (activeLaunchedMinigameId) {
       setIsTimedEventLaunchQueued(false);
       return;
@@ -9874,7 +9912,14 @@ export function IslandRunBoardPrototype({
     })) {
       handleLaunchTimedEventMinigame();
     }
-  }, [activeLaunchedMinigameId, handleLaunchTimedEventMinigame, isRolling, isTimedEventLaunchQueued]);
+  }, [activeLaunchedMinigameId, handleLaunchTimedEventMinigame, isRolling, isTimedEventLaunchQueued, journeyDiscReplacesTimedEventSurface]);
+  const handleLaunchEventSurface = () => {
+    if (journeyDiscReplacesTimedEventSurface) {
+      handleLaunchArenaGame('journey_disc_arena');
+      return;
+    }
+    handleLaunchTimedEventMinigame();
+  };
   const handleSetDevTimedEventOverride = useCallback((eventType: EventId | null) => {
     if (!isDevModeEnabled || typeof window === 'undefined') return;
     setDevTimedEventOverrideType(eventType);
@@ -13709,16 +13754,16 @@ export function IslandRunBoardPrototype({
                     className="island-run-board__rewardbar-cascade-item"
                     style={{ animationDelay: `${i * 0.5}s` }}
                   >
-                    {(p.rewardKind === 'minigame_tokens' ? timedEventTokenIcon : REWARD_KIND_ICON[p.rewardKind])} {p.rewardKind === 'dice' ? `+${p.dice}` : p.rewardKind === 'essence' ? `+${p.essence}` : p.rewardKind === 'minigame_tokens' ? `+${p.minigameTokens}` : `+${p.stickerFragments}`}
+                    {(p.rewardKind === 'minigame_tokens' ? eventSurfaceTicketIcon : REWARD_KIND_ICON[p.rewardKind])} {p.rewardKind === 'dice' ? `+${p.dice}` : p.rewardKind === 'essence' ? `+${p.essence}` : p.rewardKind === 'minigame_tokens' ? `+${p.minigameTokens}` : `+${p.stickerFragments}`}
                   </span>
                 ))}
               </div>
             )}
             {/* Decorative themed event banner — only shown when an event is active */}
-            {effectiveActiveTimedEvent && activeEventMeta ? (
-              <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${effectiveActiveTimedEvent.eventType}`}>
+            {effectiveActiveTimedEvent && activeEventSurfaceMeta ? (
+              <div className={`island-run-board__rewardbar-banner island-run-board__rewardbar-banner--${journeyDiscReplacesTimedEventSurface ? 'journey-disc-arena' : effectiveActiveTimedEvent.eventType}`}>
                 {renderEventIcon('island-run-board__rewardbar-banner-icon')}
-                <span>{activeEventMeta.displayName}</span>
+                <span>{activeEventSurfaceMeta.displayName}</span>
                 {renderEventIcon('island-run-board__rewardbar-banner-icon')}
               </div>
             ) : null}
@@ -13740,7 +13785,7 @@ export function IslandRunBoardPrototype({
                 title={`Next reward: ${nextRewardAccessibleLabel}`}
               >
                 <span className="island-run-board__rewardbar-endcap-icon">
-                  {nextRewardKind === 'minigame_tokens' ? timedEventTokenIcon : nextRewardIcon}
+                  {nextRewardKind === 'minigame_tokens' ? eventSurfaceTicketIcon : nextRewardIcon}
                 </span>
                 <span className="island-run-board__rewardbar-endcap-amount">{nextRewardAmountLabel}</span>
               </span>
@@ -13791,21 +13836,24 @@ export function IslandRunBoardPrototype({
                 );
               }
 
-              if (index === rewardBarTimedEventSlotIndex && hasRewardBarTimedEventQuickAction && activeEventMeta) {
+              if (index === rewardBarTimedEventSlotIndex && hasRewardBarTimedEventQuickAction && activeEventSurfaceMeta) {
                 return (
                   <span key="timed-event" className="island-run-board__rewardbar-side-slot">
                     <button
                       type="button"
-                      className={`island-run-board__minigame-icon-btn${isTimedEventLaunchQueued ? ' island-run-board__minigame-icon-btn--queued' : ''}`}
-                      aria-label={isTimedEventLaunchQueued ? `${activeEventMeta.displayName} queued to auto-open` : `Open ${activeEventMeta.displayName}`}
-                      onClick={handleLaunchTimedEventMinigame}
+                      className={`island-run-board__minigame-icon-btn${isTimedEventLaunchQueued && !journeyDiscReplacesTimedEventSurface ? ' island-run-board__minigame-icon-btn--queued' : ''}`}
+                      aria-label={isTimedEventLaunchQueued && !journeyDiscReplacesTimedEventSurface ? `${activeEventSurfaceMeta.displayName} queued to auto-open` : `Open ${activeEventSurfaceMeta.displayName}`}
+                      onClick={handleLaunchEventSurface}
                     >
                       <span className="island-run-board__minigame-icon-emoji" aria-hidden="true">
                         {activeEventIcon.startsWith('/') ? <img className="island-run-board__minigame-icon-image" src={activeEventIcon} alt="" loading="lazy" /> : activeEventIcon}
                       </span>
-                      <span className="island-run-board__minigame-icon-label">{activeEventTickets} {timedEventTokenIcon}</span>
-                      {isTimedEventLaunchQueued && (
+                      <span className="island-run-board__minigame-icon-label">{activeEventTickets} {eventSurfaceTicketIcon}</span>
+                      {isTimedEventLaunchQueued && !journeyDiscReplacesTimedEventSurface && (
                         <span className="island-run-board__minigame-icon-helper island-run-board__minigame-icon-helper--queued">Queued to auto-open</span>
+                      )}
+                      {journeyDiscReplacesTimedEventSurface && (
+                        <span className="island-run-board__minigame-icon-helper">Each ticket deploys one disc</span>
                       )}
                       {isSpaceExcavatorEffectiveEvent && (
                         <>
@@ -14915,8 +14963,9 @@ export function IslandRunBoardPrototype({
                     activeEventRuntimeId={effectiveActiveTimedEvent.eventId}
                     preferences={arenaPreferences}
                     tickets={activeEventTickets}
-                    activeEventName={activeEventMeta?.displayName ?? 'Active event'}
-                    activeEventIcon={activeEventMeta?.icon ?? '✦'}
+                    activeEventName={activeEventSurfaceMeta?.displayName ?? 'Active event'}
+                    activeEventIcon={activeEventSurfaceMeta?.icon ?? '✦'}
+                    eventTicketIcon={eventSurfaceTicketIcon}
                     rewardProgress={rewardBarProgress}
                     rewardThreshold={rewardBarThreshold}
                     nextRewardIcon={nextRewardIcon}
@@ -15708,10 +15757,10 @@ export function IslandRunBoardPrototype({
         <div className="island-run-overlay-root island-stop-modal-backdrop" role="presentation">
           <section className="island-stop-modal island-stop-modal--readable island-stop-modal--dense island-event-modal" role="dialog" aria-modal="true" aria-label="Event details">
             <header className="island-event-modal__header">
-              <span className="island-event-modal__header-icon" aria-hidden="true">{activeEventMeta?.icon ?? '🎫'}</span>
+              {activeEventSurfaceMeta ? renderEventIcon('island-event-modal__header-icon') : <span className="island-event-modal__header-icon" aria-hidden="true">🎫</span>}
               <div className="island-event-modal__header-text">
                 <h3 className="island-stop-modal__title island-event-modal__title">
-                  {activeEventMeta?.displayName ?? 'No active event'}
+                  {activeEventSurfaceMeta?.displayName ?? 'No active event'}
                 </h3>
                 <span className="island-event-modal__timer">⏱ {timedEventRemainingLabel} left</span>
               </div>
@@ -15727,21 +15776,40 @@ export function IslandRunBoardPrototype({
             </header>
 
             <div className="island-event-modal__grid" role="list" aria-label="Event mini-games">
-              {getEventRotationTemplates().map((template) => {
-                const isActive = effectiveActiveTimedEvent?.eventType === template.eventId;
-                const isSelected = selectedEventInfoEventId === template.eventId;
+              {eventGridSlots.map((slot) => {
+                if (slot.kind === 'empty') {
+                  return (
+                    <span
+                      key={slot.id}
+                      role="listitem"
+                      className="island-event-modal__grid-item island-event-modal__grid-item--empty"
+                      aria-label="Empty future game slot"
+                    />
+                  );
+                }
+                const isJourneyDisc = slot.kind === 'journey_disc';
+                const isSelected = slot.kind === 'event' && selectedEventInfoEventId === slot.eventId;
                 return (
                   <button
-                    key={template.eventId}
+                    key={slot.id}
                     type="button"
                     role="listitem"
-                    className={`island-event-modal__grid-item${isActive ? ' island-event-modal__grid-item--active' : ''}${isSelected ? ' island-event-modal__grid-item--selected' : ''}`}
-                    onClick={() => setSelectedEventInfoEventId(template.eventId)}
-                    aria-label={`${template.displayName}${isActive ? ' (active now)' : ''}`}
+                    className={`island-event-modal__grid-item${slot.active ? ' island-event-modal__grid-item--active' : ''}${isSelected ? ' island-event-modal__grid-item--selected' : ''}${isJourneyDisc ? ' island-event-modal__grid-item--journey-disc' : ''}`}
+                    onClick={() => {
+                      if (slot.kind === 'journey_disc') {
+                        setSelectedEventInfoEventId(null);
+                        setShowRewardDetailsModal(false);
+                        handleLaunchArenaGame('journey_disc_arena');
+                        return;
+                      }
+                      setSelectedEventInfoEventId(slot.eventId as EventId);
+                    }}
+                    aria-label={`${isJourneyDisc ? 'Play ' : ''}${slot.displayName}${slot.active ? ' (active now)' : ''}`}
                   >
-                    <span aria-hidden="true" className="island-event-modal__grid-icon">{template.icon}</span>
-                    <span className="island-event-modal__grid-label">{template.displayName}</span>
-                    {isActive && <span className="island-event-modal__grid-active-dot" aria-hidden="true" />}
+                    <span aria-hidden="true" className="island-event-modal__grid-icon">{slot.icon}</span>
+                    <span className="island-event-modal__grid-label">{slot.displayName}</span>
+                    {isJourneyDisc && <span className="island-event-modal__grid-play-label">PLAY</span>}
+                    {slot.active && <span className="island-event-modal__grid-active-dot" aria-hidden="true" />}
                   </button>
                 );
               })}
@@ -15749,8 +15817,8 @@ export function IslandRunBoardPrototype({
 
             <div className="island-event-modal__stats">
               <div className="island-event-modal__stat">
-                <span className="island-event-modal__stat-value">🎟️ {activeEventTickets}</span>
-                <span className="island-event-modal__stat-label">Tickets</span>
+                <span className="island-event-modal__stat-value">{eventSurfaceTicketIcon} {activeEventTickets}</span>
+                <span className="island-event-modal__stat-label">{journeyDiscReplacesTimedEventSurface ? 'Weapon discs' : 'Tickets'}</span>
               </div>
               <div className="island-event-modal__stat">
                 <span className="island-event-modal__stat-value">{runtimeState.rewardBarClaimCountInEvent}</span>
@@ -15771,6 +15839,11 @@ export function IslandRunBoardPrototype({
 
             {isRewardBarDetailsExpanded && (
               <div className="island-event-modal__extra">
+                {journeyDiscReplacesTimedEventSurface && (
+                  <p className="island-stop-modal__copy">
+                    ◉ Journey Disc takes this island's event slot. Each event ticket deploys one fighter disc; the ordinary rotating game resumes on the next island.
+                  </p>
+                )}
                 {selectedEventInfoEventId && (() => {
                   const selected = getEventRotationTemplates().find((template) => template.eventId === selectedEventInfoEventId);
                   if (!selected) return null;
@@ -17506,7 +17579,7 @@ export function IslandRunBoardPrototype({
             <div className="journey-disc-concourse-invitation__stats" aria-label="Arena entry status">
               <span><small>Weapon discs</small><strong>{activeEventTickets} ◉</strong></span>
               <span><small>Armory rank</small><strong>Rank {runtimeState.journeyDiscArmory.rank}</strong></span>
-              <span><small>{activeEventMeta?.displayName ?? 'Event'} closes</small><strong>{timedEventRemainingLabel}</strong></span>
+              <span><small>{activeEventSurfaceMeta?.displayName ?? 'Event'} closes</small><strong>{timedEventRemainingLabel}</strong></span>
             </div>
             <button
               type="button"

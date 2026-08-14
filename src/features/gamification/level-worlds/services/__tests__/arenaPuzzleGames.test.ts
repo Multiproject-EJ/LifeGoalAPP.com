@@ -45,6 +45,7 @@ export const arenaPuzzleGamesTests: TestCase[] = [
       assert(pair.primary.family !== pair.alternative.family, 'pair should span different game families');
       const pairIds = [pair.primary.id, pair.alternative.id];
       assert(!pairIds.includes('feeding_frenzy'), 'inactive Feeding Frenzy should stay out of the pair');
+      assert(!pairIds.includes('lucky_spin'), 'Journey Disc should suppress the ordinary active game on Island 006');
       assert(!pairIds.includes('space_excavator'), 'inactive Space Excavator should stay out of the pair');
       assert(!pairIds.includes('companion_feast'), 'inactive Companion Feast should stay out of the pair');
     },

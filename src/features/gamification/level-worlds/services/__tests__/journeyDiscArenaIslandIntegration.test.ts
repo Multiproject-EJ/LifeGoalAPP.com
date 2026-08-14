@@ -1,4 +1,9 @@
-import { resolveJourneyDiscCenterLandmarkPresentation } from '../journeyDiscArenaIslandIntegration';
+import {
+  ISLAND_EVENT_GRID_SLOT_COUNT,
+  resolveIslandEventGridSlots,
+  resolveJourneyDiscCenterLandmarkPresentation,
+  shouldJourneyDiscReplaceTimedEventSurface,
+} from '../journeyDiscArenaIslandIntegration';
 import { assertEqual, type TestCase } from './testHarness';
 
 export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
@@ -67,6 +72,66 @@ export const journeyDiscArenaIslandIntegrationTests: TestCase[] = [
       });
       assertEqual(ordinary.reason, 'ineligible_island', 'Island 5 remains its authored arena island');
       assertEqual(disabled.reason, 'feature_disabled', 'rollout flag restores the canonical centre immediately');
+    },
+  },
+  {
+    name: 'Island 006 replaces only the active rotation tile with Journey Disc in a three-row grid',
+    run: () => {
+      const templates = [
+        { eventId: 'feeding_frenzy', displayName: 'Island Workshop', icon: '🛠️' },
+        { eventId: 'lucky_spin', displayName: 'Lucky Spin', icon: '🎰' },
+        { eventId: 'space_excavator', displayName: 'Space Excavator', icon: '🚀' },
+        { eventId: 'companion_feast', displayName: 'Companion Feast', icon: '🐾' },
+      ];
+      const replacesTimedEvent = shouldJourneyDiscReplaceTimedEventSurface({
+        featureEnabled: true,
+        islandNumber: 6,
+        hasActiveTimedEvent: true,
+      });
+      const slots = resolveIslandEventGridSlots({
+        templates,
+        activeEventType: 'lucky_spin',
+        journeyDiscReplacesTimedEvent: replacesTimedEvent,
+      });
+
+      assertEqual(replacesTimedEvent, true, 'the chapter exhibition owns the visible event surface');
+      assertEqual(slots.length, ISLAND_EVENT_GRID_SLOT_COUNT, 'the grid has three complete rows of four');
+      assertEqual(slots[1]?.kind, 'journey_disc', 'Journey Disc occupies the active timed-game slot');
+      assertEqual(slots.filter((slot) => slot.kind === 'empty').length, 8, 'two new rows remain empty');
+      assertEqual(
+        slots.some((slot) => slot.kind === 'event' && slot.eventId === 'lucky_spin'),
+        false,
+        'the ordinary active game is absent on Island 006',
+      );
+    },
+  },
+  {
+    name: 'the ordinary timed game resumes on the island after Journey Disc',
+    run: () => {
+      const replacesTimedEvent = shouldJourneyDiscReplaceTimedEventSurface({
+        featureEnabled: true,
+        islandNumber: 7,
+        hasActiveTimedEvent: true,
+      });
+      const slots = resolveIslandEventGridSlots({
+        templates: [
+          { eventId: 'feeding_frenzy', displayName: 'Island Workshop', icon: '🛠️' },
+          { eventId: 'lucky_spin', displayName: 'Lucky Spin', icon: '🎰' },
+          { eventId: 'space_excavator', displayName: 'Space Excavator', icon: '🚀' },
+          { eventId: 'companion_feast', displayName: 'Companion Feast', icon: '🐾' },
+        ],
+        activeEventType: 'lucky_spin',
+        journeyDiscReplacesTimedEvent: replacesTimedEvent,
+      });
+
+      assertEqual(replacesTimedEvent, false, 'Island 007 restores the rotating event surface');
+      assertEqual(
+        slots.some((slot) => slot.kind === 'event' && slot.eventId === 'lucky_spin' && slot.active),
+        true,
+        'Lucky Spin resumes as the active tile without resetting its event',
+      );
+      assertEqual(slots.some((slot) => slot.kind === 'journey_disc'), false, 'Journey Disc leaves the grid');
+      assertEqual(slots.length, ISLAND_EVENT_GRID_SLOT_COUNT, 'the expanded grid remains available');
     },
   },
 ];
