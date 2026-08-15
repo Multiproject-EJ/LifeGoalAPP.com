@@ -49,6 +49,14 @@ import {
   sanitizeIslandRunSignatureMissionProgress,
   type IslandRunSignatureMissionProgressByIsland,
 } from './islandRunSignatureMissions';
+import {
+  createJourneyDiscArmory,
+  mergeJourneyDiscArmory,
+  sanitizeJourneyDiscArmory,
+  type JourneyDiscArmoryState,
+} from './journeyDiscArmory';
+
+export type { JourneyDiscArmoryState } from './journeyDiscArmory';
 
 export type PerIslandEggStatus = 'incubating' | 'ready' | 'collected' | 'sold';
 
@@ -258,6 +266,22 @@ export interface FortuneEngineProgressEntry {
   updatedAtMs: number;
 }
 
+/** Canonical Journey Disc Arena sub-track for one active timed event. */
+export interface JourneyDiscArenaProgressEntry {
+  eventPoints: number;
+  bestRoundScore: number;
+  roundsStarted: number;
+  roundsCompleted: number;
+  victories: number;
+  totalDiscsDeployed: number;
+  /** Event-earned disc rank. Formation size is controlled by event tickets. */
+  rank: 1 | 2 | 3;
+  claimedMilestoneIds: string[];
+  /** Bounded idempotency ledger for terminal round submissions. */
+  bankedRoundIds: string[];
+  updatedAtMs: number;
+}
+
 export interface SpaceExcavatorProgressEntry {
   eventId: string;
   boardIndex: number;
@@ -461,6 +485,10 @@ export interface IslandRunGameStateRecord {
   spaceExcavatorProgressByEvent: Record<string, SpaceExcavatorProgressEntry>;
   companionFeastProgressByEvent: Record<string, CompanionFeastProgressEntry>;
   fortuneEngineProgressByEvent: Record<string, FortuneEngineProgressEntry>;
+  /** Journey Disc Arena reward-track and round ledger, keyed by active event runtime id. */
+  journeyDiscArenaProgressByEvent: Record<string, JourneyDiscArenaProgressEntry>;
+  /** Permanent Journey Disc fighter rank and weapons carried across eligible HabitGame islands. */
+  journeyDiscArmory: JourneyDiscArmoryState;
   /** Resumable Momentum Matrix exhibition progress, keyed by active timed-event runtime id. */
   momentumMatrixProgressByEvent: Record<string, MomentumMatrixProgressEntry>;
 }
@@ -1009,6 +1037,8 @@ function getDefaultRecord(): IslandRunGameStateRecord {
     spaceExcavatorProgressByEvent: {},
     companionFeastProgressByEvent: {},
     fortuneEngineProgressByEvent: {},
+    journeyDiscArenaProgressByEvent: {},
+    journeyDiscArmory: createJourneyDiscArmory(0),
     momentumMatrixProgressByEvent: {},
   };
 }
@@ -1678,6 +1708,14 @@ function toRecord(value: RawIslandRunGameStateRecord, fallback: IslandRunGameSta
       value.fortuneEngineProgressByEvent,
       fallback.fortuneEngineProgressByEvent,
     ),
+    journeyDiscArenaProgressByEvent: sanitizeJourneyDiscArenaProgressByEvent(
+      value.journeyDiscArenaProgressByEvent,
+      fallback.journeyDiscArenaProgressByEvent,
+    ),
+    journeyDiscArmory: sanitizeJourneyDiscArmory(
+      value.journeyDiscArmory,
+      fallback.journeyDiscArmory,
+    ),
     momentumMatrixProgressByEvent: sanitizeMomentumMatrixProgressByEvent(
       value.momentumMatrixProgressByEvent,
       fallback.momentumMatrixProgressByEvent,
@@ -2186,6 +2224,69 @@ function mergeFortuneEngineProgressByEvent(
   return merged;
 }
 
+function sanitizeJourneyDiscArenaProgressByEvent(
+  value: unknown,
+  fallback: Record<string, JourneyDiscArenaProgressEntry>,
+): Record<string, JourneyDiscArenaProgressEntry> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return { ...fallback };
+  const out: Record<string, JourneyDiscArenaProgressEntry> = {};
+  const count = (input: unknown): number => typeof input === 'number' && Number.isFinite(input)
+    ? Math.max(0, Math.floor(input))
+    : 0;
+  for (const [eventId, rawValue] of Object.entries(value as Record<string, unknown>)) {
+    if (!eventId.trim() || !rawValue || typeof rawValue !== 'object' || Array.isArray(rawValue)) continue;
+    const raw = rawValue as Record<string, unknown>;
+    const rank = count(raw.rank);
+    out[eventId] = {
+      eventPoints: count(raw.eventPoints),
+      bestRoundScore: count(raw.bestRoundScore),
+      roundsStarted: count(raw.roundsStarted),
+      roundsCompleted: count(raw.roundsCompleted),
+      victories: count(raw.victories),
+      totalDiscsDeployed: count(raw.totalDiscsDeployed),
+      rank: rank >= 3 ? 3 : rank >= 2 ? 2 : 1,
+      claimedMilestoneIds: Array.isArray(raw.claimedMilestoneIds)
+        ? Array.from(new Set(raw.claimedMilestoneIds.filter((id): id is string => typeof id === 'string')))
+        : [],
+      bankedRoundIds: Array.isArray(raw.bankedRoundIds)
+        ? Array.from(new Set(raw.bankedRoundIds.filter((id): id is string => typeof id === 'string' && Boolean(id.trim())))).slice(-80)
+        : [],
+      updatedAtMs: count(raw.updatedAtMs),
+    };
+  }
+  return out;
+}
+
+function mergeJourneyDiscArenaProgressByEvent(
+  remote: Record<string, JourneyDiscArenaProgressEntry>,
+  local: Record<string, JourneyDiscArenaProgressEntry>,
+): Record<string, JourneyDiscArenaProgressEntry> {
+  const keys = new Set([...Object.keys(remote), ...Object.keys(local)]);
+  const merged: Record<string, JourneyDiscArenaProgressEntry> = {};
+  keys.forEach((eventId) => {
+    const remoteProgress = remote[eventId];
+    const localProgress = local[eventId];
+    if (!remoteProgress || !localProgress) {
+      merged[eventId] = localProgress ?? remoteProgress;
+      return;
+    }
+    const latest = localProgress.updatedAtMs >= remoteProgress.updatedAtMs ? localProgress : remoteProgress;
+    merged[eventId] = {
+      ...latest,
+      eventPoints: Math.max(remoteProgress.eventPoints, localProgress.eventPoints),
+      bestRoundScore: Math.max(remoteProgress.bestRoundScore, localProgress.bestRoundScore),
+      roundsStarted: Math.max(remoteProgress.roundsStarted, localProgress.roundsStarted),
+      roundsCompleted: Math.max(remoteProgress.roundsCompleted, localProgress.roundsCompleted),
+      victories: Math.max(remoteProgress.victories, localProgress.victories),
+      totalDiscsDeployed: Math.max(remoteProgress.totalDiscsDeployed, localProgress.totalDiscsDeployed),
+      rank: Math.max(remoteProgress.rank, localProgress.rank) as 1 | 2 | 3,
+      claimedMilestoneIds: Array.from(new Set([...remoteProgress.claimedMilestoneIds, ...localProgress.claimedMilestoneIds])),
+      bankedRoundIds: Array.from(new Set([...remoteProgress.bankedRoundIds, ...localProgress.bankedRoundIds])).slice(-80),
+    };
+  });
+  return merged;
+}
+
 function mergeStringArrayByUnion(left: string[] = [], right: string[] = []): string[] {
   return Array.from(new Set([...left, ...right]));
 }
@@ -2514,6 +2615,11 @@ export function mergeRecordForConflict(options: {
       remote.fortuneEngineProgressByEvent,
       local.fortuneEngineProgressByEvent,
     ),
+    journeyDiscArenaProgressByEvent: mergeJourneyDiscArenaProgressByEvent(
+      remote.journeyDiscArenaProgressByEvent,
+      local.journeyDiscArenaProgressByEvent,
+    ),
+    journeyDiscArmory: mergeJourneyDiscArmory(remote.journeyDiscArmory, local.journeyDiscArmory),
     momentumMatrixProgressByEvent: mergeMomentumMatrixProgressByEvent(
       remote.momentumMatrixProgressByEvent,
       local.momentumMatrixProgressByEvent,
@@ -2643,6 +2749,8 @@ function toRemoteRow(record: IslandRunGameStateRecord, runtimeVersion: number, d
     space_excavator_progress_by_event: record.spaceExcavatorProgressByEvent,
     companion_feast_progress_by_event: record.companionFeastProgressByEvent,
     fortune_engine_progress_by_event: record.fortuneEngineProgressByEvent,
+    journey_disc_arena_progress_by_event: record.journeyDiscArenaProgressByEvent,
+    journey_disc_armory: record.journeyDiscArmory,
     momentum_matrix_progress_by_event: record.momentumMatrixProgressByEvent,
     last_writer_device_session_id: deviceSessionId,
     updated_at: new Date().toISOString(),
@@ -2708,7 +2816,7 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
 
   const { data, error } = await client
     .from(ISLAND_RUN_RUNTIME_STATE_TABLE)
-    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,concord_roll_protection_state,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,signature_mission_progress_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,selected_player_piece_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_escalation_tier,reward_bar_last_claim_at_ms,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event,momentum_matrix_progress_by_event')
+    .select('runtime_version,first_run_claimed,first_session_tutorial_state,daily_hearts_claimed_day_key,onboarding_display_name_loop_completed,welcome_pack_claimed,welcome_pack_reward_bundle_claimed,story_prologue_seen,narrative_seen_state,audio_enabled,music_enabled,sfx_enabled,current_island_number,cycle_index,boss_trial_resolved_island_number,active_egg_tier,active_egg_set_at_ms,active_egg_hatch_duration_ms,active_egg_is_dormant,per_island_eggs,egg_reward_inventory,island_started_at_ms,island_expires_at_ms,island_shards,token_index,spin_tokens,dice_pool,bonus_max_dice,shard_tier_index,shard_claim_count,shields,shards,diamonds,creature_treat_inventory,companion_bonus_last_visit_key,completed_stops_by_island,stop_tickets_paid_by_island,bonus_tile_charge_by_island,tech_collection_by_island,concord_roll_protection_state,tech_collection_rewarded_lines_by_island,technology_unlocks_by_id,signature_mission_progress_by_island,market_owned_bundles_by_island,creature_collection,active_companion_id,selected_player_piece_id,perfect_companion_ids,perfect_companion_reasons,perfect_companion_computed_at_ms,perfect_companion_model_version,perfect_companion_computed_cycle_index,active_stop_index,active_stop_type,stop_states_by_index,stop_build_state_by_index,boss_state,essence,essence_lifetime_earned,essence_lifetime_spent,dice_regen_state,reward_bar_progress,reward_bar_threshold,reward_bar_claim_count_in_event,reward_bar_last_claim_at_ms,reward_bar_escalation_tier,reward_bar_bound_event_id,reward_bar_ladder_id,active_timed_event,active_timed_event_progress,sticker_progress,sticker_inventory,last_essence_drift_lost,minigame_tickets_by_event,arena_first_ticket_boost_claimed_by_event,lucky_roll_sessions_by_milestone,space_excavator_progress_by_event,companion_feast_progress_by_event,fortune_engine_progress_by_event,journey_disc_arena_progress_by_event,journey_disc_armory,momentum_matrix_progress_by_event')
     .eq('user_id', session.user.id)
     .maybeSingle();
 
@@ -2850,6 +2958,14 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
             fortuneEngineProgressByEvent: sanitizeFortuneEngineProgressByEvent(
               (legacyData as Record<string, unknown>).fortune_engine_progress_by_event,
               fallback.fortuneEngineProgressByEvent,
+            ),
+            journeyDiscArenaProgressByEvent: sanitizeJourneyDiscArenaProgressByEvent(
+              (legacyData as Record<string, unknown>).journey_disc_arena_progress_by_event,
+              fallback.journeyDiscArenaProgressByEvent,
+            ),
+            journeyDiscArmory: sanitizeJourneyDiscArmory(
+              (legacyData as Record<string, unknown>).journey_disc_armory,
+              fallback.journeyDiscArmory,
             ),
             momentumMatrixProgressByEvent: sanitizeMomentumMatrixProgressByEvent(
               (legacyData as Record<string, unknown>).momentum_matrix_progress_by_event,
@@ -3035,6 +3151,14 @@ export async function hydrateIslandRunGameStateRecordWithSource(options: {
       fortuneEngineProgressByEvent: sanitizeFortuneEngineProgressByEvent(
         (data as Record<string, unknown>).fortune_engine_progress_by_event,
         fallback.fortuneEngineProgressByEvent,
+      ),
+      journeyDiscArenaProgressByEvent: sanitizeJourneyDiscArenaProgressByEvent(
+        (data as Record<string, unknown>).journey_disc_arena_progress_by_event,
+        fallback.journeyDiscArenaProgressByEvent,
+      ),
+      journeyDiscArmory: sanitizeJourneyDiscArmory(
+        (data as Record<string, unknown>).journey_disc_armory,
+        fallback.journeyDiscArmory,
       ),
       momentumMatrixProgressByEvent: sanitizeMomentumMatrixProgressByEvent(
         (data as Record<string, unknown>).momentum_matrix_progress_by_event,

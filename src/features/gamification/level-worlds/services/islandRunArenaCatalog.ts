@@ -1,8 +1,11 @@
 import type { EventId } from './islandRunEventEngine';
+import { isIslandRunFeatureEnabled } from '../../../../config/islandRunFeatureFlags';
+import { isJourneyDiscArenaIsland } from './journeyDiscArmory';
 
 export type ArenaGameId =
   | EventId
   | 'momentum_matrix'
+  | 'journey_disc_arena'
   | 'concord_categories'
   | 'lexicon_relay'
   | 'signal_path'
@@ -27,6 +30,20 @@ export interface ArenaGameDefinition {
 }
 
 export const ARENA_GAME_CATALOG: readonly ArenaGameDefinition[] = Object.freeze([
+  {
+    id: 'journey_disc_arena',
+    displayName: 'Journey Disc Arena',
+    shortName: 'Disc Arena',
+    icon: '◉',
+    family: 'reaction',
+    familyLabel: '3D battle',
+    description: 'Deploy energized relic discs, trigger Surges and knock rivals beyond the ring.',
+    availability: 'exhibition',
+    estimatedSeconds: [20, 45],
+    artSrc: null,
+    accent: '#5af4ff',
+    isNew: true,
+  },
   {
     id: 'feeding_frenzy',
     displayName: 'Island Workshop',
@@ -187,6 +204,7 @@ function hashSeed(value: string): number {
 }
 
 export interface ArenaPairSelectionInput {
+  islandNumber: number;
   activeEventId: EventId | null;
   rankedGameIds: readonly ArenaGameId[];
   disabledGameIds: readonly ArenaGameId[];
@@ -209,12 +227,18 @@ export function selectArenaGamePair(input: ArenaPairSelectionInput): ArenaPairSe
   const disabled = new Set(input.disabledGameIds);
   const recent = new Set(input.recentGameIds ?? []);
   const rankIndex = new Map(input.rankedGameIds.map((id, index) => [id, index]));
+  const journeyDiscOwnsTimedEventSurface = isIslandRunFeatureEnabled('journeyDiscArenaEnabled')
+    && isJourneyDiscArenaIsland(input.islandNumber);
   const eligible = ARENA_GAME_CATALOG.filter((game) => {
     if (disabled.has(game.id)) return false;
+    if (game.id === 'journey_disc_arena' && (!isIslandRunFeatureEnabled('journeyDiscArenaEnabled') || !isJourneyDiscArenaIsland(input.islandNumber))) return false;
+    if (journeyDiscOwnsTimedEventSurface && game.availability === 'active_event') return false;
     return game.availability === 'exhibition' || game.id === input.activeEventId;
   });
 
-  const fallback = ARENA_GAME_CATALOG.filter((game) => game.availability === 'exhibition');
+  const fallback = ARENA_GAME_CATALOG.filter((game) => game.availability === 'exhibition' && (
+    game.id !== 'journey_disc_arena' || (isIslandRunFeatureEnabled('journeyDiscArenaEnabled') && isJourneyDiscArenaIsland(input.islandNumber))
+  ));
   const pool = eligible.length >= 2 ? eligible : fallback;
   const score = (game: ArenaGameDefinition, salt: string) => {
     const rank = rankIndex.get(game.id) ?? input.rankedGameIds.length;

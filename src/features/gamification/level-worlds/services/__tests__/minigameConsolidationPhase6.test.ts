@@ -194,7 +194,7 @@ export const minigameConsolidationPhase6Tests: TestCase[] = [
         'momentum_matrix',
         'timed_event completion should accept the Momentum Matrix exhibition',
       );
-      (['concord_categories', 'lexicon_relay', 'signal_path', 'twin_sigils'] as const).forEach((minigameId) => {
+      (['journey_disc_arena', 'concord_categories', 'lexicon_relay', 'signal_path', 'twin_sigils'] as const).forEach((minigameId) => {
         assertEqual(
           resolveEventMinigameCompletionId({
             launchSource: 'timed_event',

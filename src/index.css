@@ -41059,17 +41059,68 @@ body.habit-wizard-open .mobile-footer-nav {
 .habit-checklist-card__campaign-launch-row::-webkit-scrollbar { display: none; }
 
 .habit-checklist-card__campaign-launcher {
+  align-items: center;
   border: 1px solid rgba(245, 158, 11, 0.42);
   border-radius: 999px;
   background: linear-gradient(135deg, rgba(255, 251, 235, 0.96), rgba(254, 243, 199, 0.88));
   color: #78350f;
   box-shadow: 0 8px 20px rgba(146, 64, 14, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   cursor: pointer;
+  display: inline-grid;
   font-size: 0.78rem;
   font-weight: 850;
+  gap: 0.08rem 0.38rem;
+  grid-template-areas:
+    "icon copy"
+    "progress progress";
+  grid-template-columns: auto minmax(0, 1fr);
+  justify-content: center;
   min-height: 2.15rem;
   padding: 0.42rem 0.62rem;
+  text-align: center;
   white-space: nowrap;
+}
+
+.habit-checklist-card__campaign-icon {
+  grid-area: icon;
+  line-height: 1;
+}
+
+.habit-checklist-card__campaign-label,
+.habit-checklist-card__campaign-copy {
+  grid-area: copy;
+  min-width: 0;
+  text-align: center;
+}
+
+.habit-checklist-card__campaign-copy {
+  display: grid;
+  line-height: 1.05;
+}
+
+.habit-checklist-card__campaign-copy small {
+  font-size: 0.62rem;
+  font-weight: 750;
+  margin-top: 0.12rem;
+}
+
+.habit-checklist-card__campaign-progress {
+  background: rgba(120, 53, 15, 0.16);
+  border-radius: 999px;
+  display: block;
+  grid-area: progress;
+  height: 0.2rem;
+  overflow: hidden;
+  width: 100%;
+}
+
+.habit-checklist-card__campaign-progress > span {
+  background: currentColor;
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+  opacity: 0.62;
+  width: var(--campaign-progress, 0%);
 }
 
 .habit-checklist-card__campaign-launcher--active {

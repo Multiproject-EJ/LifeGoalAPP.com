@@ -507,9 +507,10 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Board should resolve a canonical timed-event token presentation from active event metadata.',
       );
       assert(
-        source.includes("p.rewardKind === 'minigame_tokens' ? timedEventTokenIcon : REWARD_KIND_ICON[p.rewardKind]") &&
-          source.includes("nextRewardKind === 'minigame_tokens' ? timedEventTokenIcon : nextRewardIcon"),
-        'Reward bar should use canonical token icon for minigame-token rewards.',
+        source.includes("const eventSurfaceTicketIcon = journeyDiscReplacesTimedEventSurface ? '◉' : timedEventTokenIcon;") &&
+          source.includes("p.rewardKind === 'minigame_tokens' ? eventSurfaceTicketIcon : REWARD_KIND_ICON[p.rewardKind]") &&
+          source.includes("nextRewardKind === 'minigame_tokens' ? eventSurfaceTicketIcon : nextRewardIcon"),
+        'Reward bar should use the canonical token icon through its Journey Disc presentation adapter.',
       );
       assert(
         source.includes('nextRewardAmountLabel') &&
@@ -518,16 +519,16 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
         'Reward bar marker should render a compact amount label using canonical event-ticket presentation.',
       );
       assert(
-        source.includes('{activeEventTickets} {timedEventTokenIcon}') &&
+        source.includes('{activeEventTickets} {eventSurfaceTicketIcon}') &&
           !source.includes('{activeEventTickets} 🎫'),
-        'Launcher token badge should use canonical token icon (no hardcoded ticket emoji).',
+        'Launcher token badge should use the canonical token icon through its event-surface adapter.',
       );
       assert(
-        source.includes('`+${totalMinigameTokens} ${timedEventTokenIcon}`') &&
+        source.includes('`+${totalMinigameTokens} ${eventSurfaceTicketIcon}`') &&
           source.includes('{timedEventTokenIcon} {formatIslandRunSpinTokenReward(') &&
           !source.includes('`+${totalMinigameTokens} 🎫`') &&
           !source.includes('island-encounter__reward-item">🌀'),
-        'Reward popup/message token copy should use canonical token icon and remove hardcoded token emojis.',
+        'Reward popup/message token copy should preserve canonical icons with the Journey Disc surface override.',
       );
     },
   },

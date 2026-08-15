@@ -21,18 +21,20 @@ import { assert, assertEqual, type TestCase } from './testHarness';
 
 export const arenaPuzzleGamesTests: TestCase[] = [
   {
-    name: 'catalog preserves four rotation games and adds four puzzle exhibitions',
+    name: 'catalog preserves four rotation games and includes Journey Disc plus puzzle exhibitions',
     run: () => {
       const ids = ARENA_GAME_CATALOG.map((game) => game.id);
       assertEqual(new Set(ids).size, ids.length, 'Arena ids must be unique');
       assertEqual(ARENA_GAME_CATALOG.filter((game) => game.availability === 'active_event').length, 4, 'four existing rotation games remain');
       ARENA_PUZZLE_GAME_IDS.forEach((id) => assert(ids.includes(id), `${id} should be in the Arena catalog`));
+      assert(ids.includes('journey_disc_arena'), 'Journey Disc Arena should be a canonical exhibition choice');
     },
   },
   {
     name: 'pair selector offers two different families and excludes inactive event games',
     run: () => {
       const pair = selectArenaGamePair({
+        islandNumber: 6,
         activeEventId: 'lucky_spin',
         rankedGameIds: ARENA_GAME_CATALOG.map((game) => game.id),
         disabledGameIds: [],
@@ -43,6 +45,7 @@ export const arenaPuzzleGamesTests: TestCase[] = [
       assert(pair.primary.family !== pair.alternative.family, 'pair should span different game families');
       const pairIds = [pair.primary.id, pair.alternative.id];
       assert(!pairIds.includes('feeding_frenzy'), 'inactive Feeding Frenzy should stay out of the pair');
+      assert(!pairIds.includes('lucky_spin'), 'Journey Disc should suppress the ordinary active game on Island 006');
       assert(!pairIds.includes('space_excavator'), 'inactive Space Excavator should stay out of the pair');
       assert(!pairIds.includes('companion_feast'), 'inactive Companion Feast should stay out of the pair');
     },

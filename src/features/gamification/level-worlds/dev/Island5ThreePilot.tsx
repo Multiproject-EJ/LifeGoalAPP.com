@@ -183,6 +183,8 @@ interface Island5ThreePilotProps {
   onTokenHop?: (tileIndex: number) => void;
   onTokenLand?: (tileIndex: number, origin?: { viewportX: number; viewportY: number }) => void;
   onLandmarkClick?: (landmarkId: Island5LandmarkDefinition['id']) => void;
+  /** Visual-only centre transformation for the chapter-opening disc exhibition. */
+  journeyDiscArenaCenterActive?: boolean;
   signatureMissionPresentation?: FrostwellIceworksPresentation;
   rootheartPowerworksPresentation?: Island10RootheartPowerworksPresentation;
   onSignatureMissionClick?: () => void;
@@ -3042,6 +3044,7 @@ export default function Island5ThreePilot({
   onTokenHop,
   onTokenLand,
   onLandmarkClick,
+  journeyDiscArenaCenterActive = false,
   signatureMissionPresentation = { metersDrilled: 0, built: false, constructionSequence: 0 },
   rootheartPowerworksPresentation = readInitialRootheartPowerworksPresentation(),
   onSignatureMissionClick,
@@ -3936,7 +3939,13 @@ export default function Island5ThreePilot({
             : isSunshoreAtoll && island5SunshoreMaterials
               ? buildIsland5SunshoreLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island5SunshoreMaterials)
               : isMoonveilNexus && island6MoonveilMaterials
-                ? buildIsland6MoonveilLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island6MoonveilMaterials)
+                ? buildIsland6MoonveilLandmark(
+                    landmark,
+                    resolvedBuildLevel,
+                    qualityProfile.id,
+                    island6MoonveilMaterials,
+                    journeyDiscArenaCenterActive,
+                  )
               : isAbyssalPearlKingdom && island7UnderwaterMaterials
                 ? buildIsland7UnderwaterLandmark(landmark, resolvedBuildLevel, qualityProfile.id, island7UnderwaterMaterials)
               : isEverblossomKingdom && island8EverblossomMaterials
@@ -5200,7 +5209,7 @@ export default function Island5ThreePilot({
       stopTourRef.current = () => undefined;
       startProfilerRef.current = () => undefined;
     };
-  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFrostmoonHaven, isHeartshaftCrucible, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunshoreAtoll, landmarkBuildLevelsKey, qualityProfile, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
+  }, [buildLevel, deviceSignals, islandNumber, isAbyssalPearlKingdom, isCelestialSkyKingdom, isEverblossomKingdom, isFirstLightKingdom, isFrostmoonHaven, isHeartshaftCrucible, isMoonveilNexus, isReducedMotion, isRootheartCanopyCity, isSunshoreAtoll, journeyDiscArenaCenterActive, landmarkBuildLevelsKey, qualityProfile, resolvedTileMap, resolvedWorldSourceNumber, tileRewardMapKey]);
 
   return (
     <section
