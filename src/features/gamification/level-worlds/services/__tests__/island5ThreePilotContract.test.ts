@@ -35,6 +35,11 @@ import {
   ISLAND_1_CLOUD_MINIMUM_Y,
   ISLAND_1_OCEAN_SURFACE_Y,
 } from '../../dev/Island1ThreeWorld';
+import {
+  createIsland2WorldMaterials as createIsland5SunshoreWorldMaterials,
+  createIsland5SunwheelArena,
+  ISLAND_5_SUNWHEEL_OPENING_PRESENTATION_BASELINE_LEVEL,
+} from '../../dev/Island2ThreeWorld';
 import { createIsland3FrostmoonMaterials } from '../../dev/Island3FrostmoonThreeWorld';
 import {
   createFrostwellIceworks,
@@ -80,20 +85,77 @@ import {
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import {
   ISLAND_RUN_AUTO_ROLL_HOLD_MS,
-  ISLAND_RUN_HARD_THROW_HOLD_MS,
+  resolveIslandRunMaxMultiplierThrowCadence,
   resolveIslandRunDiceHoldIntent,
 } from '../islandRunDiceThrowPresentation';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
   {
-    name: 'separates tap, hard-throw release, and auto-roll hold thresholds',
+    name: 'gives Island 005 a Level-2-quality opening arena and four additive restoration silhouettes',
     run: () => {
-      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_HARD_THROW_HOLD_MS - 1, autoRollActivated: false }), 'normal', 'a tap or short hold remains a normal throw');
-      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_HARD_THROW_HOLD_MS, autoRollActivated: false }), 'hard', 'the first detent charges one hard throw');
-      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_AUTO_ROLL_HOLD_MS - 1, autoRollActivated: false }), 'hard', 'releasing before auto-roll remains one hard throw');
+      assertEqual(ISLAND_5_SUNWHEEL_OPENING_PRESENTATION_BASELINE_LEVEL, 2, 'the Island 005 opening composition must declare its richer visual baseline');
+      const materials = createIsland5SunshoreWorldMaterials();
+      const levels = [0, 1, 2, 3] as const;
+      const heights = levels.map((level) => {
+        const arena = createIsland5SunwheelArena(level, 'low', materials);
+        assertEqual(arena.userData.sculptRuntime.buildLevel, level, `visual metadata must retain canonical build level ${level}`);
+        assertEqual(arena.userData.sculptRuntime.presentationBaselineLevel, 2, 'the richer visual baseline may not masquerade as gameplay progress');
+        assert(arena.userData.sculptRuntime.clickable, 'the Sunwheel arena must remain part-addressable and clickable');
+        assert(Boolean(arena.getObjectByName('ISLAND_5_SUNWHEEL_TIDEGLASS_FLOOR')), 'every level needs the complete tideglass arena floor');
+        if (level === 0) {
+          assert(!arena.getObjectByName('ISLAND_5_SUNWHEEL_SIGNAL_POST_L1'), 'unfunded opening presentation must not include the funded L1 signal posts');
+        }
+        if (level === 3) {
+          assert(Boolean(arena.getObjectByName('ISLAND_5_SUNWHEEL_RESTORED_CROWN_HALO')), 'restored L3 needs a clearly additive premium crown halo');
+        }
+        const height = new THREE.Box3().setFromObject(arena).getSize(new THREE.Vector3()).y;
+        arena.traverse((object) => { if (object instanceof THREE.Mesh) object.geometry.dispose(); });
+        return height;
+      });
+      assert(heights[1] > heights[0], 'L1 signal architecture must rise above the opening arena');
+      assert(heights[2] > heights[1], 'L2 crown arches must rise above L1');
+      assert(heights[3] > heights[2], 'L3 restored halo and crown fins must rise above L2');
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
+  {
+    name: 'reserves hard throws for max-multiplier cadence while hold only arms auto-roll',
+    run: () => {
+      assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_AUTO_ROLL_HOLD_MS - 1, autoRollActivated: false }), 'normal', 'releasing before auto-roll remains a normal throw');
       assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: ISLAND_RUN_AUTO_ROLL_HOLD_MS, autoRollActivated: false }), 'auto', 'the long hold belongs to auto-roll');
       assertEqual(resolveIslandRunDiceHoldIntent({ heldForMs: 0, autoRollActivated: true }), 'auto', 'an activated auto-roll cannot degrade into a release throw');
+
+      const firstAtMax = resolveIslandRunMaxMultiplierThrowCadence({
+        isAtMaxAvailableMultiplier: true,
+        firstMaxThrowPending: true,
+        consecutiveMaxMultiplierRolls: 0,
+      });
+      assertEqual(firstAtMax.throwStrength, 'hard', 'the first roll after reaching available max celebrates with one hard throw');
+      let cadence = firstAtMax;
+      for (let roll = 2; roll <= 9; roll += 1) {
+        cadence = resolveIslandRunMaxMultiplierThrowCadence({
+          isAtMaxAvailableMultiplier: true,
+          firstMaxThrowPending: cadence.nextFirstMaxThrowPending,
+          consecutiveMaxMultiplierRolls: cadence.nextConsecutiveMaxMultiplierRolls,
+        });
+        assertEqual(cadence.throwStrength, 'normal', `continued max roll ${roll} stays restrained`);
+      }
+      cadence = resolveIslandRunMaxMultiplierThrowCadence({
+        isAtMaxAvailableMultiplier: true,
+        firstMaxThrowPending: cadence.nextFirstMaxThrowPending,
+        consecutiveMaxMultiplierRolls: cadence.nextConsecutiveMaxMultiplierRolls,
+      });
+      assertEqual(cadence.throwStrength, 'hard', 'the tenth continued max roll repeats the hard celebration');
+      const reset = resolveIslandRunMaxMultiplierThrowCadence({
+        isAtMaxAvailableMultiplier: false,
+        firstMaxThrowPending: false,
+        consecutiveMaxMultiplierRolls: cadence.nextConsecutiveMaxMultiplierRolls,
+      });
+      assertEqual(reset.nextConsecutiveMaxMultiplierRolls, 0, 'leaving max resets the rare-throw streak');
     },
   },
   {
@@ -116,7 +178,12 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pilotSource.includes('resolveLandmarkIdFromIntersection'), 'landmark routing must survive merged or nested meshes');
       assert(pilotSource.includes('makeLandmarkMaterialsIndependent(landmarkRoot)'), 'central transparency may not fade materials shared with other landmarks');
       assert(diceSource.includes('pointer input') && diceSource.includes('<BoardDice3D'), 'the visible dice must be a pointer-transparent layer above WebGL');
-      assert(diceSource.includes('onTopBarImpactRef.current?.()') && boardSource.includes("triggerImpactHaptic(diceThrowStrength === 'hard' ? 'strong' : 'medium'"), 'the top-bar collision frame needs a native-capable haptic impact');
+      assert(
+        diceSource.includes("throwStrength !== 'hard'")
+          && diceSource.includes('onTopBarImpactRef.current?.()')
+          && boardSource.includes("triggerImpactHaptic('strong'"),
+        'only the rare hard top-bar collision frame needs a native-capable haptic impact',
+      );
       assert(boardSource.includes('faces={rollingDiceFaces}') && boardSource.includes('onRollComplete={() =>'), 'the 3D dice must reuse the canonical result and completion clock');
       assert(!boardSource.includes('showEggReadyBanner') && boardSource.includes('Open hatchery.'), 'egg readiness should stay in persistent Hatchery access instead of reopening an automatic modal');
       assert(boardSource.includes("requestActiveStopTransition(null, 'hatchery_landmark_door_non_blocking')"), 'landing on the Hatchery door must not repeatedly open the full remote-egg modal');
@@ -901,7 +968,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9].includes(islandParam)'), 'the workbench should expose all nine authored islands for repeatable landmark QA');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(islandParam)'), 'the workbench should expose all ten authored islands for repeatable landmark QA');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
       assert(mainSource.includes('import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED'), 'internal profiler bundle must not register the production service worker');
@@ -958,7 +1025,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(island1Source.includes('side: THREE.DoubleSide'), 'Island 001 banners and thin emblems must remain visible in rear-angle QA');
       assert(!island1Source.includes('const levelScale = level === 1'), 'Island 001 progression must not regress to scale-only level changes');
       assert(island2Source.includes("boss: 'Sunwheel Arena'") && island2Source.includes("hatchery: 'Egg Grotto Hatchery'"), 'Island 002 must retain its tropical landmark identity lock');
-      assert(island2Source.includes('function createEggGrotto') && island2Source.includes('function createHabitLodge') && island2Source.includes('function createStarArchive') && island2Source.includes('function createTideglassOracle') && island2Source.includes('function createSunwheelArena'), 'Island 002 must keep five distinct procedural landmark factories');
+      assert(island2Source.includes('function createEggGrotto') && island2Source.includes('function createHabitLodge') && island2Source.includes('function createStarArchive') && island2Source.includes('function createTideglassOracle') && island2Source.includes('function createIsland5SunwheelArena'), 'Island 002 must keep five distinct procedural landmark factories');
       assert(island2Source.includes("wave.name = 'ISLAND_2_SHORE_WAVE'") && island2Source.includes("fall.name = 'ISLAND_2_WATERFALL'"), 'Island 002 must retain animated shoreline and waterfall systems');
       assert(island2Source.includes("bird.name = 'ISLAND_2_BIRD'") && island2Source.includes("turtle.name = 'ISLAND_2_TURTLE'"), 'Island 002 must preserve quality-scaled tropical fauna');
       assert(!island2Source.includes('const levelScale = level === 1'), 'Island 002 progression must not regress to scale-only level changes');

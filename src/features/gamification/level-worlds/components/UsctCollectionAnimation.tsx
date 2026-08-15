@@ -5,7 +5,10 @@ export type UsctCollectionAmount = 'small' | 'medium' | 'large';
 export interface UsctCollectionAnimationProps {
   amount?: UsctCollectionAmount;
   originRef?: React.RefObject<HTMLElement | null>;
+  originPoint?: { x: number; y: number } | null;
   targetRef?: React.RefObject<HTMLElement | null>;
+  tokenArtSrc?: string;
+  onComplete?: () => void;
   className?: string;
 }
 
@@ -53,10 +56,18 @@ function resolveElementCenter(element: HTMLElement | null | undefined): { x: num
 export function UsctCollectionAnimation({
   amount = 'medium',
   originRef,
+  originPoint,
   targetRef,
+  tokenArtSrc = USCT_TOKEN_ART,
+  onComplete,
   className = '',
 }: UsctCollectionAnimationProps): React.JSX.Element {
   const [geometry, setGeometry] = React.useState<Geometry>(DEFAULT_GEOMETRY);
+  const onCompleteRef = React.useRef(onComplete);
+
+  React.useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   React.useLayoutEffect(() => {
     const fallbackStart = {
@@ -67,7 +78,7 @@ export function UsctCollectionAnimation({
       x: window.innerWidth - 44,
       y: Math.max(36, window.innerHeight * 0.055),
     };
-    const start = resolveElementCenter(originRef?.current) ?? fallbackStart;
+    const start = originPoint ?? resolveElementCenter(originRef?.current) ?? fallbackStart;
     const target = resolveElementCenter(targetRef?.current) ?? fallbackTarget;
     setGeometry({ startX: start.x, startY: start.y, targetX: target.x, targetY: target.y });
 
@@ -79,13 +90,19 @@ export function UsctCollectionAnimation({
     const clearTimer = window.setTimeout(() => {
       targetElement?.classList.remove('island-run-usct-wallet-target--receiving');
     }, pulseDelay + 720);
+    const finalParticleDelay = (PARTICLE_COUNT[amount] - 1) * (amount === 'large' ? 34 : amount === 'medium' ? 40 : 48);
+    const flightDuration = amount === 'large' ? 1080 : amount === 'medium' ? 890 : 700;
+    const completeTimer = window.setTimeout(() => {
+      onCompleteRef.current?.();
+    }, finalParticleDelay + flightDuration + 80);
 
     return () => {
       window.clearTimeout(pulseTimer);
       window.clearTimeout(clearTimer);
+      window.clearTimeout(completeTimer);
       targetElement?.classList.remove('island-run-usct-wallet-target--receiving');
     };
-  }, [amount, originRef, targetRef]);
+  }, [amount, originPoint, originRef, targetRef]);
 
   const count = PARTICLE_COUNT[amount];
   const deltaX = geometry.targetX - geometry.startX;
@@ -120,7 +137,7 @@ export function UsctCollectionAnimation({
         };
         return (
           <span className="island-run-usct-collection__particle" style={style} key={index}>
-            <img src={USCT_TOKEN_ART} alt="" />
+            <img src={tokenArtSrc} alt="" />
             {index % 4 === 0 ? <i /> : null}
           </span>
         );

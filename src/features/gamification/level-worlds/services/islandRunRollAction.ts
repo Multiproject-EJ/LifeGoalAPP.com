@@ -87,7 +87,11 @@ import {
   type TrafficLightPassResult,
 } from './islandRunTrafficLightTile';
 import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragmentPlacements';
-import { grantFrostwellDrillSpinForLanding } from './islandRunSignatureMissions';
+import {
+  collectRootheartPowerComponentForLanding,
+  grantFrostwellDrillSpinForLanding,
+  type RootheartPowerComponentId,
+} from './islandRunSignatureMissions';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
 
@@ -226,6 +230,8 @@ export interface IslandRunRollActionResult {
   trafficLightPass?: TrafficLightPassResult | null;
   /** True when this landing granted one canonical Frostwell drill-wheel spin. */
   frostwellSpinGranted?: boolean;
+  /** Island 010 Powerworks component collected by this exact landing, if any. */
+  rootheartPowerComponentPickup?: RootheartPowerComponentId | null;
 }
 
 // ── per-user async mutex (defence-in-depth against concurrent rolls) ──────────
@@ -397,6 +403,15 @@ async function performRollAction(options: {
         nowMs,
       })
     : { ledger: state.signatureMissionProgressByIsland, granted: false };
+  const rootheartLanding = ordinaryTileGameplayActive
+    ? collectRootheartPowerComponentForLanding({
+        ledger: frostwellLanding.ledger,
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        tileIndex: newTokenIndex,
+        nowMs,
+      })
+    : { ledger: frostwellLanding.ledger, collectedComponentId: null };
   const nextState = {
     ...state,
     runtimeVersion: newRuntimeVersion,
@@ -411,7 +426,7 @@ async function performRollAction(options: {
     firstSessionTutorialState: nextFirstSessionTutorialState,
     concordRollProtectionState: concordProtection.state,
     bonusTileChargeByIsland: trafficLightPass?.bonusTileChargeByIsland ?? state.bonusTileChargeByIsland,
-    signatureMissionProgressByIsland: frostwellLanding.ledger,
+    signatureMissionProgressByIsland: rootheartLanding.ledger,
   };
 
   // Publish immediately, then await persistence inside the action mutex.
@@ -447,5 +462,6 @@ async function performRollAction(options: {
     ordinaryTileGameplayActive,
     trafficLightPass,
     frostwellSpinGranted: frostwellLanding.granted,
+    rootheartPowerComponentPickup: rootheartLanding.collectedComponentId,
   };
 }

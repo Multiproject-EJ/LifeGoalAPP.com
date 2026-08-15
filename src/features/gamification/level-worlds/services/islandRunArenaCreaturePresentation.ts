@@ -3,6 +3,12 @@ import { MAX_ISLANDS } from './islandContentManifest';
 export const ISLAND_RUN_ARENA_INTERVAL = 5 as const;
 export const ISLAND_RUN_ARENA_CREATURE_COUNT = MAX_ISLANDS / ISLAND_RUN_ARENA_INTERVAL;
 export const ISLAND_RUN_ARENA_CREATURE_MIN_BOSS_LEVEL = 1 as const;
+/**
+ * Island 005 is the authored arena pilot: Crown Drifter is part of its opening
+ * world composition, not a reward for funding Boss landmark Level 1. Later
+ * arena islands retain the normal Level-1 reveal gate.
+ */
+export const ISLAND_RUN_ALWAYS_PRESENT_ARENA_CREATURE_ISLAND = 5 as const;
 
 export type IslandRunArenaCreatureMotionMode = 'hidden' | 'emerging' | 'roaming' | 'following';
 
@@ -40,6 +46,15 @@ export function getIslandRunArenaCreatureSlot(islandNumber: number): number | nu
   return islandNumber / ISLAND_RUN_ARENA_INTERVAL - 1;
 }
 
+export function shouldPresentIslandRunArenaCreature(
+  islandNumber: number,
+  bossBuildLevel: number,
+): boolean {
+  if (!isIslandRunArenaIsland(islandNumber)) return false;
+  return islandNumber === ISLAND_RUN_ALWAYS_PRESENT_ARENA_CREATURE_ISLAND
+    || bossBuildLevel >= ISLAND_RUN_ARENA_CREATURE_MIN_BOSS_LEVEL;
+}
+
 /**
  * Presentation-only motion contract. It never mutates gameplay state and is
  * intentionally independent from stop/tile semantics. The creature spends
@@ -49,10 +64,7 @@ export function getIslandRunArenaCreatureSlot(islandNumber: number): number | nu
 export function resolveIslandRunArenaCreatureMotion(
   options: ResolveIslandRunArenaCreatureMotionOptions,
 ): IslandRunArenaCreatureMotion {
-  if (
-    !isIslandRunArenaIsland(options.islandNumber)
-    || options.bossBuildLevel < ISLAND_RUN_ARENA_CREATURE_MIN_BOSS_LEVEL
-  ) {
+  if (!shouldPresentIslandRunArenaCreature(options.islandNumber, options.bossBuildLevel)) {
     return {
       mode: 'hidden',
       visible: false,
@@ -63,8 +75,11 @@ export function resolveIslandRunArenaCreatureMotion(
   }
 
   const safeElapsed = Math.max(0, Number.isFinite(options.elapsedSeconds) ? options.elapsedSeconds : 0);
+  const startsInWorld = options.islandNumber === ISLAND_RUN_ALWAYS_PRESENT_ARENA_CREATURE_ISLAND;
   const emergenceDurationSeconds = 3.1;
-  const emergenceProgress = options.reducedMotion ? 1 : smootherstep(safeElapsed / emergenceDurationSeconds);
+  const emergenceProgress = options.reducedMotion || startsInWorld
+    ? 1
+    : smootherstep(safeElapsed / emergenceDurationSeconds);
   if (emergenceProgress < 1) {
     const liftProgress = smootherstep(safeElapsed / 1.45);
     const glideProgress = smootherstep((safeElapsed - 1.45) / (emergenceDurationSeconds - 1.45));
@@ -92,17 +107,19 @@ export function resolveIslandRunArenaCreatureMotion(
     };
   }
 
+  const roamingElapsed = startsInWorld ? safeElapsed : safeElapsed - emergenceDurationSeconds;
   const cycleSeconds = 24;
-  const cycle = (safeElapsed - emergenceDurationSeconds) % cycleSeconds;
-  const roamAngle = (safeElapsed - emergenceDurationSeconds) * 0.22;
+  const cycle = roamingElapsed % cycleSeconds;
+  const roamAngle = roamingElapsed * 0.22;
   // Stay clearly outside the boss-landmark footprint while remaining inside
   // the playable tile ring. This prevents the Level 2/3 landmark from
   // swallowing the creature in the phone camera.
   const roamRadiusX = 2.3;
   const roamRadiusZ = 2.02;
+  const roamAltitude = startsInWorld ? 1.72 : 1.43;
   const roamPosition: readonly [number, number, number] = [
     Math.cos(roamAngle) * roamRadiusX,
-    1.43 + Math.sin(safeElapsed * 1.15) * 0.08,
+    roamAltitude + Math.sin(safeElapsed * 1.15) * 0.08,
     Math.sin(roamAngle) * roamRadiusZ,
   ];
 

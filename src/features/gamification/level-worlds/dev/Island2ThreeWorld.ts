@@ -450,56 +450,240 @@ function createTideglassOracle(level: 1 | 2 | 3, quality: Island3DQuality, mater
   return group;
 }
 
-function createSunwheelArena(level: 1 | 2 | 3, quality: Island3DQuality, materials: Island2WorldMaterials) {
-  const group = new THREE.Group();
-  group.name = `ISLAND_2_BOSS_L${level}`;
-  const foundation = cylinder(1.9, 2.12, 0.26, materials.rock, segmentsFor(quality));
-  foundation.position.y = 0.23;
-  const deck = cylinder(1.68, 1.82, 0.18, materials.teak, segmentsFor(quality));
-  deck.position.y = 0.43;
-  const inlay = new THREE.Mesh(new THREE.CylinderGeometry(0.74, 0.74, 0.025, 32), materials.oceanCloth);
-  inlay.position.y = 0.535;
-  group.add(foundation, deck, inlay);
-  const sun = new THREE.Mesh(new THREE.TorusGeometry(0.48, 0.07, 5, 24), materials.mangoGold);
+export const ISLAND_5_SUNWHEEL_OPENING_PRESENTATION_BASELINE_LEVEL = 2 as const;
+
+function addSunwheelInlay(group: THREE.Group, materials: Island2WorldMaterials, quality: Island3DQuality) {
+  const lagoon = cylinder(1.42, 1.48, 0.055, materials.lagoonGlass, segmentsFor(quality));
+  lagoon.name = 'ISLAND_5_SUNWHEEL_TIDEGLASS_FLOOR';
+  lagoon.position.y = 0.505;
+  group.add(lagoon);
+  const sun = new THREE.Mesh(new THREE.TorusGeometry(0.51, 0.072, 6, quality === 'high' ? 36 : 24), materials.mangoGold);
+  sun.name = 'ISLAND_5_SUNWHEEL_MEDALLION';
   sun.rotation.x = Math.PI / 2;
-  sun.position.y = 0.565;
+  sun.position.y = 0.553;
   group.add(sun);
-  const rayCount = quality === 'high' ? 12 : quality === 'medium' ? 8 : 6;
+  const rayCount = quality === 'high' ? 16 : quality === 'medium' ? 12 : 8;
   for (let index = 0; index < rayCount; index += 1) {
     const angle = index / rayCount * Math.PI * 2;
-    const ray = box(0.08, 0.035, 0.42, materials.mangoGold);
-    ray.position.set(Math.sin(angle) * 0.7, 0.57, Math.cos(angle) * 0.7);
+    const ray = box(0.075, 0.038, 0.48, materials.mangoGold);
+    ray.name = `ISLAND_5_SUNWHEEL_INLAY_RAY_${index + 1}`;
+    ray.position.set(Math.sin(angle) * 0.78, 0.557, Math.cos(angle) * 0.78);
     ray.rotation.y = angle;
     group.add(ray);
   }
+  const outerTrim = new THREE.Mesh(
+    new THREE.TorusGeometry(1.63, 0.045, 6, quality === 'low' ? 32 : 48),
+    materials.mangoGold,
+  );
+  outerTrim.name = 'ISLAND_5_SUNWHEEL_GILDED_TIDE_RING';
+  outerTrim.rotation.x = Math.PI / 2;
+  outerTrim.position.y = 0.545;
+  group.add(outerTrim);
+}
+
+function addSunwheelEntryStairs(
+  group: THREE.Group,
+  angle: number,
+  materials: Island2WorldMaterials,
+) {
+  for (let step = 0; step < 4; step += 1) {
+    const distance = 1.8 + step * 0.13;
+    const stair = box(0.72 + step * 0.11, 0.07, 0.3, step % 2 ? materials.rockShade : materials.rock);
+    stair.name = 'ISLAND_5_SUNWHEEL_REEF_STAIR';
+    stair.position.set(Math.sin(angle) * distance, 0.12 + step * 0.065, Math.cos(angle) * distance);
+    stair.rotation.y = angle;
+    group.add(stair);
+  }
+}
+
+function addSunwheelCoralCrest(
+  group: THREE.Group,
+  angle: number,
+  radius: number,
+  level: BuildLevel,
+  materials: Island2WorldMaterials,
+  quality: Island3DQuality,
+) {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_5_SUNWHEEL_CORAL_CREST';
+  root.position.set(Math.sin(angle) * radius, 0.46, Math.cos(angle) * radius);
+  root.rotation.y = angle;
+  const petalCount = quality === 'high' ? 5 : 3;
+  for (let index = 0; index < petalCount; index += 1) {
+    const spread = (index - (petalCount - 1) / 2) * 0.16;
+    const petal = new THREE.Mesh(
+      new THREE.CapsuleGeometry(0.055, 0.28 + level * 0.035, 3, 6),
+      index % 2 ? materials.flowerPink : materials.flowerCoral,
+    );
+    petal.name = 'ISLAND_5_SUNWHEEL_CORAL_PETAL';
+    petal.position.set(spread, 0.15 + Math.abs(spread) * 0.2, 0);
+    petal.rotation.z = spread * 1.6;
+    root.add(petal);
+  }
+  group.add(root);
+}
+
+function addSunwheelSignalPost(
+  group: THREE.Group,
+  angle: number,
+  level: 1 | 2 | 3,
+  materials: Island2WorldMaterials,
+  quality: Island3DQuality,
+) {
+  const radius = 1.68;
+  const postRoot = new THREE.Group();
+  postRoot.name = `ISLAND_5_SUNWHEEL_SIGNAL_POST_L${level}`;
+  postRoot.position.set(Math.sin(angle) * radius, 0, Math.cos(angle) * radius);
+  postRoot.rotation.y = angle;
+  const postHeight = level === 1 ? 0.62 : level === 2 ? 1.16 : 1.42;
+  const footing = cylinder(0.19, 0.25, 0.22, materials.rockShade, segmentsFor(quality));
+  footing.position.y = 0.56;
+  const post = cylinder(0.085, 0.12, postHeight, materials.teakDark, segmentsFor(quality));
+  post.position.y = 0.64 + postHeight / 2;
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.028, 5, 12), materials.mangoGold);
+  collar.rotation.x = Math.PI / 2;
+  collar.position.y = 0.78 + postHeight;
+  const pearl = new THREE.Mesh(
+    new THREE.OctahedronGeometry(level === 1 ? 0.11 : 0.15, quality === 'high' ? 1 : 0),
+    level === 1 ? materials.crystal : materials.egg,
+  );
+  pearl.name = 'ISLAND_5_SUNWHEEL_SIGNAL_PEARL';
+  pearl.position.y = 0.94 + postHeight;
+  postRoot.add(footing, post, collar, pearl);
   if (level >= 2) {
-    for (let side = 0; side < 4; side += 1) {
-      const angle = side / 4 * Math.PI * 2;
-      for (let step = 0; step < 3; step += 1) {
-        const stair = box(0.8 + step * 0.16, 0.08, 0.28, materials.rock);
-        stair.position.set(Math.sin(angle) * (1.8 + step * 0.12), 0.12 + step * 0.08, Math.cos(angle) * (1.8 + step * 0.12));
-        stair.rotation.y = angle;
-        group.add(stair);
-      }
-    }
-    const postCount = quality === 'high' ? 16 : quality === 'medium' ? 12 : 8;
+    [-1, 1].forEach((side) => {
+      const fin = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.52 + level * 0.08, 4), side < 0 ? materials.oceanCloth : materials.leafLight);
+      fin.name = 'ISLAND_5_SUNWHEEL_TIDE_FIN';
+      fin.scale.z = 0.24;
+      fin.position.set(side * 0.19, 0.9 + postHeight * 0.72, 0);
+      fin.rotation.z = side * 0.52;
+      postRoot.add(fin);
+    });
+  }
+  group.add(postRoot);
+}
+
+function addSunwheelCrownArch(
+  group: THREE.Group,
+  angle: number,
+  level: 2 | 3,
+  materials: Island2WorldMaterials,
+  quality: Island3DQuality,
+) {
+  const radius = 1.58;
+  const archRoot = new THREE.Group();
+  archRoot.name = `ISLAND_5_SUNWHEEL_CROWN_ARCH_L${level}`;
+  archRoot.position.set(Math.sin(angle) * radius, 0, Math.cos(angle) * radius);
+  archRoot.rotation.y = angle;
+  [-0.31, 0.31].forEach((x) => {
+    const column = cylinder(0.075, 0.12, level === 3 ? 1.22 : 0.92, materials.teakDark, segmentsFor(quality));
+    column.position.set(x, level === 3 ? 1.12 : 0.97, 0);
+    archRoot.add(column);
+  });
+  const arch = new THREE.Mesh(
+    new THREE.TorusGeometry(0.31, level === 3 ? 0.07 : 0.055, 6, quality === 'low' ? 14 : 22, Math.PI),
+    materials.mangoGold,
+  );
+  arch.name = 'ISLAND_5_SUNWHEEL_OPEN_CROWN_ARCH';
+  arch.position.y = level === 3 ? 1.72 : 1.43;
+  arch.rotation.z = Math.PI;
+  archRoot.add(arch);
+  if (level === 3) {
+    const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.17, quality === 'high' ? 1 : 0), materials.crystal);
+    crystal.name = 'ISLAND_5_SUNWHEEL_ARCH_CRYSTAL';
+    crystal.position.y = 2.02;
+    archRoot.add(crystal);
+  }
+  group.add(archRoot);
+}
+
+/**
+ * Island 005 deliberately opens on a presentation-complete arena even while
+ * canonical Boss build progress remains Level 0. Funded levels restore new
+ * ceremony layers around the open creature airspace instead of replacing the
+ * arena or placing a roof over Crown Drifter.
+ */
+export function createIsland5SunwheelArena(level: BuildLevel, quality: Island3DQuality, materials: Island2WorldMaterials) {
+  const group = new THREE.Group();
+  group.name = level === 0
+    ? 'ISLAND_5_SUNWHEEL_ARENA_OPENING_L2_BASELINE'
+    : `ISLAND_5_SUNWHEEL_ARENA_RESTORATION_L${level}`;
+  group.userData.sculptRuntime = {
+    modelId: 'island-005-sunwheel-arena',
+    buildLevel: level,
+    presentationBaselineLevel: ISLAND_5_SUNWHEEL_OPENING_PRESENTATION_BASELINE_LEVEL,
+    clickable: true,
+    explodable: true,
+    sockets: {
+      creatureAirspace: [0, 1.72, 0],
+      bossFocus: [0, 0.72, 0],
+      entrySouth: [0, 0.25, 2.16],
+    },
+    colliders: [{ id: 'island-005-sunwheel-arena', type: 'open-compound-ring', isTrigger: true }],
+    destructionGroups: [{ id: 'sunwheel-restoration', breakable: false }],
+  };
+  const reefFoundation = cylinder(2.04, 2.2, 0.28, materials.rockShade, segmentsFor(quality));
+  reefFoundation.name = 'ISLAND_5_SUNWHEEL_REEF_FOUNDATION';
+  reefFoundation.position.y = 0.2;
+  const shellCourse = cylinder(1.92, 2.08, 0.2, materials.rock, segmentsFor(quality));
+  shellCourse.name = 'ISLAND_5_SUNWHEEL_CARVED_SHELL_COURSE';
+  shellCourse.position.y = 0.36;
+  const deck = cylinder(1.78, 1.9, 0.13, materials.teak, segmentsFor(quality));
+  deck.name = 'ISLAND_5_SUNWHEEL_TEAK_DECK';
+  deck.position.y = 0.46;
+  group.add(reefFoundation, shellCourse, deck);
+  addSunwheelInlay(group, materials, quality);
+  [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach((angle) => addSunwheelEntryStairs(group, angle, materials));
+  const baselineCrestCount = quality === 'high' ? 12 : quality === 'medium' ? 8 : 6;
+  for (let index = 0; index < baselineCrestCount; index += 1) {
+    addSunwheelCoralCrest(group, index / baselineCrestCount * Math.PI * 2 + Math.PI / baselineCrestCount, 1.82, level, materials, quality);
+  }
+  // Eight low pearl markers make the unfunded opening arena feel complete
+  // while retaining an unobstructed center and a low phone silhouette.
+  for (let index = 0; index < 8; index += 1) {
+    const angle = index / 8 * Math.PI * 2 + Math.PI / 8;
+    const marker = cylinder(0.065, 0.09, 0.34, materials.teakDark, 7);
+    marker.name = 'ISLAND_5_SUNWHEEL_BASELINE_PEARL_MARKER';
+    marker.position.set(Math.sin(angle) * 1.61, 0.71, Math.cos(angle) * 1.61);
+    const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.085, 8, 6), index % 2 ? materials.egg : materials.crystal);
+    pearl.name = 'ISLAND_5_SUNWHEEL_BASELINE_PEARL';
+    pearl.position.set(Math.sin(angle) * 1.61, 0.91, Math.cos(angle) * 1.61);
+    group.add(marker, pearl);
+  }
+  if (level >= 1) {
+    const fundedLevel = level as 1 | 2 | 3;
+    const postCount = quality === 'high' ? 12 : quality === 'medium' ? 8 : 6;
     for (let index = 0; index < postCount; index += 1) {
-      const angle = index / postCount * Math.PI * 2;
-      if (index % (postCount / 4) === 0) continue;
-      const post = cylinder(0.055, 0.075, 0.58, materials.teakDark, 7);
-      post.position.set(Math.cos(angle) * 1.58, 0.81, Math.sin(angle) * 1.58);
-      group.add(post);
+      addSunwheelSignalPost(group, index / postCount * Math.PI * 2, fundedLevel, materials, quality);
+    }
+    const ropeCrown = new THREE.Mesh(new THREE.TorusGeometry(1.68, 0.03, 5, quality === 'low' ? 32 : 52), materials.rope);
+    ropeCrown.name = 'ISLAND_5_SUNWHEEL_TIDE_ROPE_CROWN';
+    ropeCrown.rotation.x = Math.PI / 2;
+    ropeCrown.position.y = level === 1 ? 1.02 : level === 2 ? 1.49 : 1.72;
+    group.add(ropeCrown);
+  }
+  if (level >= 2) {
+    const operationalLevel = level as 2 | 3;
+    for (let side = 0; side < 4; side += 1) {
+      const angle = side / 4 * Math.PI * 2 + Math.PI / 4;
+      addSunwheelCrownArch(group, angle, operationalLevel, materials, quality);
+      addBanner(group, Math.sin(angle) * 1.58, level === 3 ? 1.45 : 1.17, Math.cos(angle) * 1.58, angle, materials);
     }
   }
   if (level === 3) {
-    for (let side = 0; side < 4; side += 1) {
-      const angle = side / 4 * Math.PI * 2 + Math.PI / 4;
-      const arch = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.055, 6, 16, Math.PI), materials.teakDark);
-      arch.position.set(Math.cos(angle) * 1.48, 1.35, Math.sin(angle) * 1.48);
-      arch.rotation.y = -angle;
-      arch.rotation.z = Math.PI;
-      group.add(arch);
-      addBanner(group, Math.cos(angle) * 1.48, 1.05, Math.sin(angle) * 1.48, -angle, materials);
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(1.72, 0.052, 6, quality === 'low' ? 36 : 60), materials.mangoGold);
+    halo.name = 'ISLAND_5_SUNWHEEL_RESTORED_CROWN_HALO';
+    halo.rotation.x = Math.PI / 2;
+    halo.position.y = 2.17;
+    group.add(halo);
+    const crownFinCount = quality === 'high' ? 12 : quality === 'medium' ? 8 : 6;
+    for (let index = 0; index < crownFinCount; index += 1) {
+      const angle = index / crownFinCount * Math.PI * 2;
+      const fin = new THREE.Mesh(new THREE.ConeGeometry(0.105, 0.48 + index % 2 * 0.15, 4), index % 2 ? materials.crystal : materials.mangoGold);
+      fin.name = 'ISLAND_5_SUNWHEEL_RESTORED_CROWN_FIN';
+      fin.position.set(Math.sin(angle) * 1.72, 2.44 + index % 2 * 0.075, Math.cos(angle) * 1.72);
+      fin.rotation.y = angle;
+      group.add(fin);
     }
   }
   return group;
@@ -514,8 +698,13 @@ export function buildIsland2Landmark(
   const root = new THREE.Group();
   root.name = `ISLAND_2_${definition.id.toUpperCase()}_ROOT`;
   root.position.set(...definition.position);
-  if (level === 0) {
-    const foundation = cylinder(definition.id === 'boss' ? 2 : 1.48, definition.id === 'boss' ? 2.12 : 1.6, 0.18, definition.id === 'boss' ? materials.teak : materials.rock, segmentsFor(quality));
+  if (definition.id === 'boss') {
+    const arena = createIsland5SunwheelArena(level, quality, materials);
+    compactStaticGeometry(arena, `ISLAND5_SUNWHEEL_L${level}`);
+    root.userData.sculptRuntime = arena.userData.sculptRuntime;
+    root.add(arena);
+  } else if (level === 0) {
+    const foundation = cylinder(1.48, 1.6, 0.18, materials.rock, segmentsFor(quality));
     foundation.position.y = 0.12;
     root.add(foundation);
   } else {
@@ -526,10 +715,8 @@ export function buildIsland2Landmark(
         ? createHabitLodge(resolved, quality, materials)
         : definition.id === 'wisdom'
           ? createStarArchive(resolved, quality, materials)
-          : definition.id === 'event'
-            ? createTideglassOracle(resolved, quality, materials)
-            : createSunwheelArena(resolved, quality, materials);
-    if (definition.id !== 'boss') building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
+          : createTideglassOracle(resolved, quality, materials);
+    building.rotation.y = Math.atan2(-definition.position[0], -definition.position[2]);
     compactStaticGeometry(building, `ISLAND2_${definition.id.toUpperCase()}_L${resolved}`);
     root.add(building);
   }

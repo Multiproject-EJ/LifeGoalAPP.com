@@ -138,7 +138,7 @@ export interface BoardStageProps {
   onCameraGesture?: () => void;
   /** Sound/haptic callbacks */
   onTokenHop?: (tileIndex: number) => void;
-  onTokenLand?: (tileIndex: number) => void;
+  onTokenLand?: (tileIndex: number, origin?: { viewportX: number; viewportY: number }) => void;
 
   /** 3D dice state */
   isRolling?: boolean;
@@ -396,7 +396,6 @@ export function BoardStage(props: BoardStageProps) {
       camera.goFollowToken(screenX, screenY, leadX, leadY);
     },
     onLand: (idx) => {
-      onTokenLand?.(idx);
       // Determine camera event kind from stop map (per-stop interest scoring)
       const eventKind = landingEventForTile(idx, stopMap);
       const preset = getShotPreset(eventKind);
@@ -405,11 +404,17 @@ export function BoardStage(props: BoardStageProps) {
       const anchor = anchors[idx];
       if (anchor) {
         const pos = toScreen(anchor);
+        const boardRect = boardRef.current?.getBoundingClientRect();
+        onTokenLand?.(idx, boardRect
+          ? { viewportX: boardRect.left + pos.x, viewportY: boardRect.top + pos.y }
+          : undefined);
         camera.goLandingFocus(pos.x, pos.y, preset);
         // Anchor burst to the resolved landing tile position. Reading
         // `tokenAnim.animState` in this callback can be one render behind and
         // place the impact FX on the roll start tile.
         setBurstPos({ x: pos.x, y: pos.y });
+      } else {
+        onTokenLand?.(idx);
       }
       if (preset.shakeAmplitude > 0) {
         camera.shake(preset.shakeAmplitude, preset.shakeDurationMs);

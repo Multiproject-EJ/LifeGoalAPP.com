@@ -1,6 +1,8 @@
 import {
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_DRILL_TILE_INDICES,
+  ROOTHEART_POWER_COMPONENTS,
+  collectRootheartPowerComponentForLanding,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
   getIslandRunSignatureMissionKey,
@@ -8,9 +10,14 @@ import {
   mergeIslandRunSignatureMissionProgress,
   resolveFrostwellIceworksProgress,
   resolveFrostwellSpinMeters,
+  resolveRootheartPowerworksProgress,
   sanitizeIslandRunSignatureMissionProgress,
 } from '../islandRunSignatureMissions';
-import { fundFrostwellIceworks, spinFrostwellDrillWheel } from '../islandRunSignatureMissionAction';
+import {
+  fundFrostwellIceworks,
+  fundRootheartPowerworksStage,
+  spinFrostwellDrillWheel,
+} from '../islandRunSignatureMissionAction';
 import { __resetIslandRunActionMutexesForTests } from '../islandRunActionMutex';
 import {
   readIslandRunGameStateRecord,
@@ -58,7 +65,135 @@ async function seedFrostwell(options: { essence?: number; meters?: number; spins
   refreshIslandRunStateFromLocal(session);
 }
 
+async function seedRootheart(options: {
+  essence?: number;
+  collectedCount?: number;
+  buildStage?: 0 | 1 | 2 | 3;
+} = {}): Promise<void> {
+  resetIslandRunRuntimeCommitCoordinatorForTests();
+  __resetIslandRunActionMutexesForTests();
+  __resetIslandRunStateStoreForTests();
+  installWindowWithStorage(createMemoryStorage());
+  const session = makeSession();
+  const base = readIslandRunGameStateRecord(session);
+  const key = getIslandRunSignatureMissionKey(0, 10);
+  await writeIslandRunGameStateRecord({
+    session,
+    client: null,
+    record: {
+      ...base,
+      currentIslandNumber: 10,
+      cycleIndex: 0,
+      essence: options.essence ?? 4_000,
+      essenceLifetimeSpent: 20,
+      signatureMissionProgressByIsland: {
+        [key]: {
+          missionId: 'rootheart-powerworks',
+          version: 1,
+          collectedComponentIds: ROOTHEART_POWER_COMPONENTS
+            .slice(0, options.collectedCount ?? ROOTHEART_POWER_COMPONENTS.length)
+            .map((component) => component.id),
+          buildStage: options.buildStage ?? 0,
+          essenceSpent: 0,
+          activatedAtMs: null,
+          updatedAtMs: 1,
+        },
+      },
+    },
+  });
+  refreshIslandRunStateFromLocal(session);
+}
+
 export const islandRunSignatureMissionTests: TestCase[] = [
+  {
+    name: 'Rootheart exposes eight stable Powerworks caches clear of doors and special economy stations',
+    run: () => {
+      const map = applyLandmarkDoorTiles(
+        generateTileMap(10, getIslandRarity(10), 'rootheart', 2),
+        { expandedActiveStopId: 'hatchery' },
+      );
+      assertEqual(ROOTHEART_POWER_COMPONENTS.length, 8, 'eight named engine parts ship');
+      ROOTHEART_POWER_COMPONENTS.forEach((component) => {
+        const tile = map[component.tileIndex];
+        assertEqual(tile?.signatureMissionKind, 'rootheart_power_component', `${component.label} is marked`);
+        assert(tile?.tileType !== 'landmark_door', `${component.label} remains clear of door clusters`);
+        assert(!['traffic_light', 'build_discount', 'free_ticket', 'card', 'encounter'].includes(tile?.tileType ?? ''), `${component.label} remains on an ordinary economy tile`);
+      });
+    },
+  },
+  {
+    name: 'Rootheart landing collects each named component once and remains cycle scoped',
+    run: () => {
+      const component = ROOTHEART_POWER_COMPONENTS[0];
+      const first = collectRootheartPowerComponentForLanding({
+        ledger: {}, islandNumber: 10, cycleIndex: 0, tileIndex: component.tileIndex, nowMs: 10,
+      });
+      const duplicate = collectRootheartPowerComponentForLanding({
+        ledger: first.ledger, islandNumber: 10, cycleIndex: 0, tileIndex: component.tileIndex, nowMs: 11,
+      });
+      const nextCycle = collectRootheartPowerComponentForLanding({
+        ledger: first.ledger, islandNumber: 10, cycleIndex: 1, tileIndex: component.tileIndex, nowMs: 12,
+      });
+      assertEqual(first.collectedComponentId, component.id, 'first landing collects exact part');
+      assertEqual(duplicate.collectedComponentId, null, 'repeat landing cannot duplicate a part');
+      assertEqual(nextCycle.collectedComponentId, component.id, 'new cycle receives its own mission');
+      assertEqual(resolveRootheartPowerworksProgress({ ledger: first.ledger, islandNumber: 10, cycleIndex: 1 }).collectedComponentIds.length, 0, 'cycles do not leak progress');
+    },
+  },
+  {
+    name: 'Rootheart merge preserves the union of components and highest funded stage',
+    run: () => {
+      const key = getIslandRunSignatureMissionKey(0, 10);
+      const base = {
+        missionId: 'rootheart-powerworks' as const,
+        version: 1 as const,
+        essenceSpent: 600,
+        activatedAtMs: null,
+        updatedAtMs: 10,
+      };
+      const merged = mergeIslandRunSignatureMissionProgress(
+        { [key]: { ...base, collectedComponentIds: [ROOTHEART_POWER_COMPONENTS[0].id], buildStage: 1 } },
+        { [key]: { ...base, collectedComponentIds: [ROOTHEART_POWER_COMPONENTS[1].id], buildStage: 2, essenceSpent: 1_500, updatedAtMs: 20 } },
+      );
+      const progress = resolveRootheartPowerworksProgress({ ledger: merged, islandNumber: 10, cycleIndex: 0 });
+      assertEqual(progress.collectedComponentIds.length, 2, 'component union survives conflict merge');
+      assertEqual(progress.buildStage, 2, 'highest construction stage wins');
+      assertEqual(progress.essenceSpent, 1_500, 'highest monotonic mission spend wins');
+    },
+  },
+  {
+    name: 'Rootheart staged funding deducts 600, 900, and 1500 exactly once then activates',
+    run: async () => {
+      await seedRootheart();
+      const stage1 = await fundRootheartPowerworksStage({ session: makeSession(), client: null });
+      const stage2 = await fundRootheartPowerworksStage({ session: makeSession(), client: null });
+      const stage3 = await fundRootheartPowerworksStage({ session: makeSession(), client: null });
+      const repeat = await fundRootheartPowerworksStage({ session: makeSession(), client: null });
+      const state = readIslandRunGameStateRecord(makeSession());
+      const progress = resolveRootheartPowerworksProgress({ ledger: state.signatureMissionProgressByIsland, islandNumber: 10, cycleIndex: 0 });
+      assertEqual(stage1.status, 'ok', 'waterworks stage funds');
+      assertEqual(stage2.status, 'ok', 'dynamo stage funds');
+      assertEqual(stage3.status, 'ok', 'heartlight stage funds');
+      assertEqual(repeat.status, 'already_complete', 'completed plant is idempotent');
+      assertEqual(state.essence, 1_000, 'exact total 3000 Essence is deducted');
+      assertEqual(state.essenceLifetimeSpent, 3_020, 'lifetime spend increments atomically');
+      assertEqual(progress.buildStage, 3, 'final stage persists');
+      assert(progress.activatedAtMs !== null, 'activation timestamp persists');
+    },
+  },
+  {
+    name: 'Rootheart funding rejects incomplete collection and insufficient Essence without mutation',
+    run: async () => {
+      await seedRootheart({ collectedCount: 7 });
+      const incomplete = await fundRootheartPowerworksStage({ session: makeSession(), client: null });
+      assertEqual(incomplete.status, 'components_incomplete', 'all eight parts are required');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).essence, 4_000, 'incomplete funding does not mutate wallet');
+      await seedRootheart({ essence: 599 });
+      const poor = await fundRootheartPowerworksStage({ session: makeSession(), client: null });
+      assertEqual(poor.status, 'insufficient_essence', 'wallet guard blocks staged funding');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).essence, 599, 'blocked stage leaves wallet untouched');
+    },
+  },
   {
     name: 'Frostwell exposes exactly three stable drill tiles clear of landmark doors',
     run: () => {
@@ -115,9 +250,11 @@ export const islandRunSignatureMissionTests: TestCase[] = [
         { [firstKey]: record(200, 3, 8) },
         { [firstKey]: record(320, 5, 50, 50), [secondKey]: record(15, 1, 60) },
       );
-      assertEqual(merged[firstKey]?.metersDrilled, 320, 'highest depth wins');
-      assertEqual(merged[firstKey]?.builtAtMs, 50, 'built state is preserved');
-      assertEqual(merged[secondKey]?.metersDrilled, 15, 'next cycle remains separate');
+      const firstProgress = resolveFrostwellIceworksProgress({ ledger: merged, islandNumber: 3, cycleIndex: 0 });
+      const secondProgress = resolveFrostwellIceworksProgress({ ledger: merged, islandNumber: 3, cycleIndex: 1 });
+      assertEqual(firstProgress.metersDrilled, 320, 'highest depth wins');
+      assertEqual(firstProgress.builtAtMs, 50, 'built state is preserved');
+      assertEqual(secondProgress.metersDrilled, 15, 'next cycle remains separate');
     },
   },
   {
@@ -150,8 +287,9 @@ export const islandRunSignatureMissionTests: TestCase[] = [
         '0:3': { rolls_completed: 20, built_at_ms: -4, updated_at_ms: 9 },
         bad: 'nope',
       });
-      assertEqual(sanitized['0:3']?.metersDrilled, 50, 'legacy draft preserves actual drilled metres');
-      assertEqual(sanitized['0:3']?.builtAtMs, 0, 'timestamps are normalized');
+      const progress = resolveFrostwellIceworksProgress({ ledger: sanitized, islandNumber: 3, cycleIndex: 0 });
+      assertEqual(progress.metersDrilled, 50, 'legacy draft preserves actual drilled metres');
+      assertEqual(progress.builtAtMs, 0, 'timestamps are normalized');
       assertEqual(resolveFrostwellSpinMeters(0.999), 75, 'wheel edge maps to final segment');
       assertEqual(getFrostwellIceworksTechCost(0), 1_000, 'Island 003 first-cycle tech cost matches brief');
     },

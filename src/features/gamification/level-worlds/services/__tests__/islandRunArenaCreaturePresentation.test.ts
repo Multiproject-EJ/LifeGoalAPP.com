@@ -3,6 +3,7 @@ import {
   ISLAND_RUN_ARENA_CREATURE_COUNT,
   isIslandRunArenaIsland,
   resolveIslandRunArenaCreatureMotion,
+  shouldPresentIslandRunArenaCreature,
 } from '../islandRunArenaCreaturePresentation';
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
@@ -21,11 +22,16 @@ export const islandRunArenaCreaturePresentationTests: TestCase[] = [
     },
   },
   {
-    name: 'keeps the creature hidden until the boss landmark reaches Level 1',
+    name: 'keeps Crown Drifter present from Island 005 opening without changing later arena reveal gates',
     run: () => {
-      assertEqual(resolveIslandRunArenaCreatureMotion({ islandNumber: 5, bossBuildLevel: 0, elapsedSeconds: 12 }).mode, 'hidden', 'Level 0 must not reveal the arena creature');
-      const emerging = resolveIslandRunArenaCreatureMotion({ islandNumber: 5, bossBuildLevel: 1, elapsedSeconds: 0.8 });
-      assertEqual(emerging.mode, 'emerging', 'Level 1 should stage the creature emergence');
+      const opening = resolveIslandRunArenaCreatureMotion({ islandNumber: 5, bossBuildLevel: 0, elapsedSeconds: 0 });
+      assertEqual(opening.mode, 'roaming', 'Island 005 should open with Crown Drifter already floating in the world');
+      assertEqual(opening.visible, true, 'Island 005 Crown Drifter must remain visible at canonical Boss build Level 0');
+      assertEqual(opening.emergenceProgress, 1, 'the opening creature should not replay a below-ground reveal');
+      assertEqual(shouldPresentIslandRunArenaCreature(5, 0), true, 'only Island 005 receives the always-present pilot exception');
+      assertEqual(shouldPresentIslandRunArenaCreature(10, 0), false, 'Island 010 must keep the ordinary build reveal rule');
+      const emerging = resolveIslandRunArenaCreatureMotion({ islandNumber: 10, bossBuildLevel: 1, elapsedSeconds: 0.8 });
+      assertEqual(emerging.mode, 'emerging', 'later arenas should still stage the creature from Boss Level 1');
       assert(emerging.emergenceProgress > 0 && emerging.emergenceProgress < 1, 'Level-1 emergence should be visibly staged');
       assertEqual(resolveIslandRunArenaCreatureMotion({ islandNumber: 1, bossBuildLevel: 3, elapsedSeconds: 12 }).visible, false, 'non-arena islands stay creature-free');
     },

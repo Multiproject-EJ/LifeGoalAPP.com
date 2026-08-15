@@ -7,6 +7,23 @@ export const FROSTWELL_BASE_TECH_COST = 1_000;
 export const FROSTWELL_DRILL_TILE_INDICES = Object.freeze([8, 17, 27] as const);
 export const FROSTWELL_SPIN_METERS = Object.freeze([15, 20, 25, 30, 40, 50, 60, 75] as const);
 
+export const ROOTHEART_ISLAND_NUMBER = 10;
+export const ROOTHEART_POWERWORKS_MAX_STAGE = 3;
+export const ROOTHEART_POWERWORKS_BASE_STAGE_COSTS = Object.freeze([600, 900, 1_500] as const);
+export const ROOTHEART_POWER_COMPONENTS = Object.freeze([
+  { id: 'root-bearing', tileIndex: 1, label: 'Root bearing' },
+  { id: 'paddle-ring', tileIndex: 8, label: 'Paddle ring' },
+  { id: 'brass-axle', tileIndex: 11, label: 'Brass axle' },
+  { id: 'water-gate', tileIndex: 16, label: 'Water gate' },
+  { id: 'dynamo-coil', tileIndex: 21, label: 'Dynamo coil' },
+  { id: 'flywheel-governor', tileIndex: 26, label: 'Flywheel governor' },
+  { id: 'sapglass-capacitor', tileIndex: 29, label: 'Sapglass capacitor' },
+  { id: 'lantern-relay', tileIndex: 35, label: 'Lantern relay' },
+] as const);
+
+export type RootheartPowerComponentId = typeof ROOTHEART_POWER_COMPONENTS[number]['id'];
+export type RootheartPowerworksBuildStage = 0 | 1 | 2 | 3;
+
 export interface FrostwellIceworksProgress {
   missionId: 'frostwell-iceworks';
   version: 2;
@@ -18,7 +35,18 @@ export interface FrostwellIceworksProgress {
   updatedAtMs: number;
 }
 
-export type IslandRunSignatureMissionProgressByIsland = Record<string, FrostwellIceworksProgress>;
+export interface RootheartPowerworksProgress {
+  missionId: 'rootheart-powerworks';
+  version: 1;
+  collectedComponentIds: RootheartPowerComponentId[];
+  buildStage: RootheartPowerworksBuildStage;
+  essenceSpent: number;
+  activatedAtMs: number | null;
+  updatedAtMs: number;
+}
+
+export type IslandRunSignatureMissionProgress = FrostwellIceworksProgress | RootheartPowerworksProgress;
+export type IslandRunSignatureMissionProgressByIsland = Record<string, IslandRunSignatureMissionProgress>;
 
 export function getIslandRunSignatureMissionKey(cycleIndex: number, islandNumber: number): string {
   return `${Math.max(0, Math.floor(cycleIndex))}:${Math.max(1, Math.floor(islandNumber))}`;
@@ -26,6 +54,21 @@ export function getIslandRunSignatureMissionKey(cycleIndex: number, islandNumber
 
 function finiteInteger(value: unknown, fallback = 0): number {
   return typeof value === 'number' && Number.isFinite(value) ? Math.floor(value) : fallback;
+}
+
+const ROOTHEART_COMPONENT_IDS = new Set<RootheartPowerComponentId>(
+  ROOTHEART_POWER_COMPONENTS.map((component) => component.id),
+);
+
+function sanitizeRootheartComponentIds(value: unknown): RootheartPowerComponentId[] {
+  if (!Array.isArray(value)) return [];
+  const result: RootheartPowerComponentId[] = [];
+  value.forEach((raw) => {
+    if (typeof raw !== 'string' || !ROOTHEART_COMPONENT_IDS.has(raw as RootheartPowerComponentId)) return;
+    const id = raw as RootheartPowerComponentId;
+    if (!result.includes(id)) result.push(id);
+  });
+  return ROOTHEART_POWER_COMPONENTS.map((component) => component.id).filter((id) => result.includes(id));
 }
 
 export function sanitizeIslandRunSignatureMissionProgress(
@@ -36,6 +79,29 @@ export function sanitizeIslandRunSignatureMissionProgress(
   Object.entries(value as Record<string, unknown>).forEach(([key, raw]) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
     const record = raw as Record<string, unknown>;
+    if (record.missionId === 'rootheart-powerworks' || record.mission_id === 'rootheart-powerworks') {
+      const activatedAtRaw = record.activatedAtMs ?? record.activated_at_ms;
+      const updatedAtRaw = record.updatedAtMs ?? record.updated_at_ms;
+      result[key] = {
+        missionId: 'rootheart-powerworks',
+        version: 1,
+        collectedComponentIds: sanitizeRootheartComponentIds(
+          record.collectedComponentIds ?? record.collected_component_ids,
+        ),
+        buildStage: Math.max(0, Math.min(
+          ROOTHEART_POWERWORKS_MAX_STAGE,
+          finiteInteger(record.buildStage ?? record.build_stage),
+        )) as RootheartPowerworksBuildStage,
+        essenceSpent: Math.max(0, finiteInteger(record.essenceSpent ?? record.essence_spent)),
+        activatedAtMs: typeof activatedAtRaw === 'number' && Number.isFinite(activatedAtRaw)
+          ? Math.max(0, activatedAtRaw)
+          : null,
+        updatedAtMs: typeof updatedAtRaw === 'number' && Number.isFinite(updatedAtRaw)
+          ? Math.max(0, updatedAtRaw)
+          : 0,
+      };
+      return;
+    }
     // Version 1 briefly represented the original 50m concept as twenty 2.5m
     // turns. Preserve that actual drilled distance when reading a local draft.
     const legacyRolls = finiteInteger(record.rollsCompleted ?? record.rolls_completed);
@@ -70,7 +136,8 @@ export function resolveFrostwellIceworksProgress(options: {
   islandNumber?: number;
 }): FrostwellIceworksProgress {
   const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber ?? FROSTWELL_ISLAND_NUMBER);
-  return options.ledger[key] ?? {
+  const current = options.ledger[key];
+  return current?.missionId === 'frostwell-iceworks' ? current : {
     missionId: 'frostwell-iceworks',
     version: 2,
     metersDrilled: 0,
@@ -80,6 +147,82 @@ export function resolveFrostwellIceworksProgress(options: {
     builtAtMs: null,
     updatedAtMs: 0,
   };
+}
+
+export function resolveRootheartPowerworksProgress(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  cycleIndex: number;
+  islandNumber?: number;
+}): RootheartPowerworksProgress {
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber ?? ROOTHEART_ISLAND_NUMBER);
+  const current = options.ledger[key];
+  return current?.missionId === 'rootheart-powerworks' ? current : {
+    missionId: 'rootheart-powerworks',
+    version: 1,
+    collectedComponentIds: [],
+    buildStage: 0,
+    essenceSpent: 0,
+    activatedAtMs: null,
+    updatedAtMs: 0,
+  };
+}
+
+export function getRootheartPowerComponentForTile(
+  islandNumber: number,
+  tileIndex: number,
+): typeof ROOTHEART_POWER_COMPONENTS[number] | null {
+  if (islandNumber !== ROOTHEART_ISLAND_NUMBER) return null;
+  return ROOTHEART_POWER_COMPONENTS.find((component) => component.tileIndex === tileIndex) ?? null;
+}
+
+export function isRootheartPowerComponentTile(islandNumber: number, tileIndex: number): boolean {
+  return getRootheartPowerComponentForTile(islandNumber, tileIndex) !== null;
+}
+
+export function collectRootheartPowerComponentForLanding(options: {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  islandNumber: number;
+  cycleIndex: number;
+  tileIndex: number;
+  nowMs: number;
+}): {
+  ledger: IslandRunSignatureMissionProgressByIsland;
+  collectedComponentId: RootheartPowerComponentId | null;
+} {
+  const component = getRootheartPowerComponentForTile(options.islandNumber, options.tileIndex);
+  if (!component) return { ledger: options.ledger, collectedComponentId: null };
+  const current = resolveRootheartPowerworksProgress(options);
+  if (
+    current.buildStage >= ROOTHEART_POWERWORKS_MAX_STAGE
+    || current.collectedComponentIds.includes(component.id)
+  ) {
+    return { ledger: options.ledger, collectedComponentId: null };
+  }
+  const key = getIslandRunSignatureMissionKey(options.cycleIndex, options.islandNumber);
+  const collectedComponentIds = ROOTHEART_POWER_COMPONENTS
+    .map((entry) => entry.id)
+    .filter((id) => current.collectedComponentIds.includes(id) || id === component.id);
+  return {
+    collectedComponentId: component.id,
+    ledger: {
+      ...options.ledger,
+      [key]: { ...current, collectedComponentIds, updatedAtMs: options.nowMs },
+    },
+  };
+}
+
+export function isRootheartPowerworksCollectionComplete(progress: RootheartPowerworksProgress): boolean {
+  return ROOTHEART_POWER_COMPONENTS.every((component) => progress.collectedComponentIds.includes(component.id));
+}
+
+export function getRootheartPowerworksStageCost(cycleIndex: number, nextStage: number): number {
+  const stage = Math.max(1, Math.min(ROOTHEART_POWERWORKS_MAX_STAGE, Math.floor(nextStage)));
+  const effectiveIsland = getEffectiveIslandNumber(ROOTHEART_ISLAND_NUMBER, cycleIndex);
+  return Math.round(ROOTHEART_POWERWORKS_BASE_STAGE_COSTS[stage - 1] * getIslandEssenceMultiplier(effectiveIsland));
+}
+
+export function getRootheartPowerworksNightBlend(progress: RootheartPowerworksProgress): number {
+  return Math.max(0, Math.min(1, progress.buildStage / ROOTHEART_POWERWORKS_MAX_STAGE));
 }
 
 export function getFrostwellAvailableSpins(progress: FrostwellIceworksProgress): number {
@@ -134,6 +277,27 @@ export function mergeIslandRunSignatureMissionProgress(
     const b = local[key];
     if (!a) { merged[key] = b; return; }
     if (!b) { merged[key] = a; return; }
+    if (a.missionId === 'rootheart-powerworks' || b.missionId === 'rootheart-powerworks') {
+      if (a.missionId !== 'rootheart-powerworks') { merged[key] = b; return; }
+      if (b.missionId !== 'rootheart-powerworks') { merged[key] = a; return; }
+      const activatedAtMs = a.activatedAtMs === null
+        ? b.activatedAtMs
+        : b.activatedAtMs === null
+          ? a.activatedAtMs
+          : Math.min(a.activatedAtMs, b.activatedAtMs);
+      merged[key] = {
+        missionId: 'rootheart-powerworks',
+        version: 1,
+        collectedComponentIds: ROOTHEART_POWER_COMPONENTS
+          .map((component) => component.id)
+          .filter((id) => a.collectedComponentIds.includes(id) || b.collectedComponentIds.includes(id)),
+        buildStage: Math.max(a.buildStage, b.buildStage) as RootheartPowerworksBuildStage,
+        essenceSpent: Math.max(a.essenceSpent, b.essenceSpent),
+        activatedAtMs,
+        updatedAtMs: Math.max(a.updatedAtMs, b.updatedAtMs),
+      };
+      return;
+    }
     const builtAtMs = a.builtAtMs === null ? b.builtAtMs : b.builtAtMs === null ? a.builtAtMs : Math.min(a.builtAtMs, b.builtAtMs);
     const latest = a.updatedAtMs >= b.updatedAtMs ? a : b;
     merged[key] = {

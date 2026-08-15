@@ -216,6 +216,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     iconContent = TILE_SVG_ICONS.encounter;
   } else if (signatureMissionKind === 'frostwell_drill') {
     iconContent = '⛏';
+  } else if (signatureMissionKind === 'rootheart_power_component') {
+    iconContent = '⚙';
   } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
     iconContent = BOSS_CROWN_ICON;
   } else if (tileType === 'landmark_door') {
@@ -239,6 +241,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         doorStopClass,
         isActiveDoorCluster ? 'island-tile--active-door-cluster' : '',
         signatureMissionKind === 'frostwell_drill' ? 'island-tile--frostwell-drill' : '',
+        signatureMissionKind === 'rootheart_power_component' ? 'island-tile--rootheart-power-component' : '',
         isTokenCurrent ? 'island-tile--token-current' : '',
         isLandingNeighbor ? 'island-tile--landing-neighbor' : '',
         isUpcoming ? 'island-tile--upcoming' : '',
@@ -246,7 +249,14 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         technologyFragment ? 'island-tile--technology-fragment' : '',
         isDormant ? 'island-tile--dormant' : '',
       ].filter(Boolean).join(' ')}
-      aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}` : signatureMissionKind === 'frostwell_drill' ? `Tile ${index + 1}. Frostwell drill spin` : isDormant ? `Tile ${index + 1}. Dormant` : undefined}
+      aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}`
+        : signatureMissionKind === 'frostwell_drill'
+          ? `Tile ${index + 1}. Frostwell drill spin`
+          : signatureMissionKind === 'rootheart_power_component'
+            ? `Tile ${index + 1}. Rootheart Powerworks component`
+            : isDormant
+              ? `Tile ${index + 1}. Dormant`
+              : undefined}
       style={{
         left: position.x,
         top: position.y,

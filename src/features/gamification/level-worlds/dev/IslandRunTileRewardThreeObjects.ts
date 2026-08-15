@@ -59,12 +59,14 @@ export type IslandRunTileRewardObjectKind =
   | 'build_rush_hammer'
   | 'traffic_beacon'
   | 'frostwell_drill'
+  | 'rootheart_power_component'
   | 'active_landmark_door';
 
 export function resolveIslandRunTileRewardObjectKind(
   entry: Pick<IslandTileMapEntry, 'tileType' | 'isActiveDoorCluster' | 'signatureMissionKind'>,
 ): IslandRunTileRewardObjectKind | null {
   if (entry.signatureMissionKind === 'frostwell_drill') return 'frostwell_drill';
+  if (entry.signatureMissionKind === 'rootheart_power_component') return 'rootheart_power_component';
   if (entry.tileType === 'free_ticket') return 'golden_event_ticket';
   if (entry.tileType === 'currency') return 'essence_crystal';
   if (entry.tileType === 'micro') return 'universal_reward_token';
@@ -366,9 +368,31 @@ function createFrostwellDrillMarker(materials: RewardMaterials, quality: Island3
   return root;
 }
 
+function createRootheartPowerComponent(materials: RewardMaterials, quality: Island3DQuality) {
+  const root = new THREE.Group();
+  root.name = 'ISLAND_RUN_TILE_OBJECT_ROOTHEART_POWER_COMPONENT';
+  const segments = qualitySegments(quality);
+  const gear = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.045, 6, segments), materials.gold);
+  gear.rotation.x = Math.PI / 2;
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.09, segments), materials.green);
+  for (let index = 0; index < 8; index += 1) {
+    const angle = index / 8 * Math.PI * 2;
+    const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.06, 0.09), materials.gold);
+    tooth.position.set(Math.cos(angle) * 0.19, 0, Math.sin(angle) * 0.19);
+    tooth.rotation.y = -angle;
+    root.add(tooth);
+  }
+  const rootCoil = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.018, 5, segments * 2), materials.green);
+  rootCoil.rotation.x = Math.PI / 2;
+  rootCoil.position.y = -0.045;
+  root.add(gear, hub, rootCoil);
+  return root;
+}
+
 function createVisualForTile(entry: IslandTileMapEntry, materials: RewardMaterials, quality: Island3DQuality) {
   const kind = resolveIslandRunTileRewardObjectKind(entry);
   if (kind === 'frostwell_drill') return createFrostwellDrillMarker(materials, quality);
+  if (kind === 'rootheart_power_component') return createRootheartPowerComponent(materials, quality);
   if (kind === 'golden_event_ticket') return createTicket(materials, quality);
   if (kind === 'essence_crystal') return createEssenceCrystal(materials, quality);
   if (kind === 'universal_reward_token') return createUniversalRewardToken(materials, quality);
@@ -428,6 +452,8 @@ export function createIslandRunTileRewardThreeObjects(options: {
     const baseY = transform.position[1] + (tileEntry.tileType === 'hazard' ? 0.26 : 0.46);
     const baseScale = tileEntry.signatureMissionKind === 'frostwell_drill'
       ? 1.08
+      : tileEntry.signatureMissionKind === 'rootheart_power_component'
+        ? 1.04
       : tileEntry.tileType === 'free_ticket'
       ? 1.42
       : tileEntry.tileType === 'landmark_door'

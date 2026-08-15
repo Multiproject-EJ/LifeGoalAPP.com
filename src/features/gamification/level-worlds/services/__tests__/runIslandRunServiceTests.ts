@@ -169,7 +169,10 @@ import { islandRunFirstPlayerModalSchedulerTests } from './islandRunFirstPlayerM
 import { islandCameraLockedKitTests } from './islandCameraLockedKit.test';
 import { islandRun3DWorldRoutingTests } from './islandRun3DWorldRouting.test';
 import { island5ThreePilotContractTests } from './island5ThreePilotContract.test';
+import { island10RootheartThreeWorldContractTests } from './island10RootheartThreeWorldContract.test';
 import { islandRunArenaCreaturePresentationTests } from './islandRunArenaCreaturePresentation.test';
+import { eggHatchThreePresentationTests } from './eggHatchThreePresentation.test';
+import { eggHatchThreeContractTests } from './eggHatchThreeContract.test';
 import { islandRunArenaCreatureRosterTests } from './islandRunArenaCreatureRoster.test';
 import { islandRunCreatureArenaBattleTests } from './islandRunCreatureArenaBattle.test';
 import { islandRunCreatureArenaBattleActionTests } from './islandRunCreatureArenaBattleAction.test';
@@ -186,7 +189,10 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'islandCameraLockedKit', tests: islandCameraLockedKitTests },
   { label: 'islandRun3DWorldRouting', tests: islandRun3DWorldRoutingTests },
   { label: 'island5ThreePilotContract', tests: island5ThreePilotContractTests },
+  { label: 'island10RootheartThreeWorldContract', tests: island10RootheartThreeWorldContractTests },
   { label: 'islandRunArenaCreaturePresentation', tests: islandRunArenaCreaturePresentationTests },
+  { label: 'eggHatchThreePresentation', tests: eggHatchThreePresentationTests },
+  { label: 'eggHatchThreeContract', tests: eggHatchThreeContractTests },
   { label: 'islandRunArenaCreatureRoster', tests: islandRunArenaCreatureRosterTests },
   { label: 'islandRunCreatureArenaBattle', tests: islandRunCreatureArenaBattleTests },
   { label: 'islandRunCreatureArenaBattleAction', tests: islandRunCreatureArenaBattleActionTests },

@@ -36,13 +36,14 @@ import { resolveIslandRunBuildOpenDisposition } from '../services/islandRunBuild
 import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
 import {
   ISLAND_RUN_AUTO_ROLL_HOLD_MS,
-  ISLAND_RUN_HARD_THROW_HOLD_MS,
+  resolveIslandRunMaxMultiplierThrowCadence,
   resolveIslandRunDiceHoldIntent,
   type IslandRunDiceThrowStrength,
 } from '../services/islandRunDiceThrowPresentation';
 import { BoardStage, type BoardStageCameraControls } from './board';
 import { IslandRunDiceLaunchOverlay } from './board/IslandRunDiceLaunchOverlay';
 import { ConfettiBurst } from './ConfettiBurst';
+import { UsctCollectionAnimation, type UsctCollectionAmount } from './UsctCollectionAnimation';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
 import { IslandTechCollectionModal, type TechCollectionModalResult } from './IslandTechCollectionModal';
 import {
@@ -448,13 +449,22 @@ import {
   shouldAutoOpenIslandStopOnLoad,
 } from '../services/islandRunStopCompletion';
 import { executeIslandRunRollAction } from '../services/islandRunRollAction';
-import { fundFrostwellIceworks, spinFrostwellDrillWheel } from '../services/islandRunSignatureMissionAction';
+import {
+  fundFrostwellIceworks,
+  fundRootheartPowerworksStage,
+  spinFrostwellDrillWheel,
+} from '../services/islandRunSignatureMissionAction';
 import {
   FROSTWELL_DEPTH_METERS,
   FROSTWELL_SPIN_METERS,
+  ROOTHEART_POWER_COMPONENTS,
+  ROOTHEART_POWERWORKS_MAX_STAGE,
   getFrostwellAvailableSpins,
   getFrostwellIceworksTechCost,
+  getRootheartPowerworksStageCost,
+  isRootheartPowerworksCollectionComplete,
   resolveFrostwellIceworksProgress,
+  resolveRootheartPowerworksProgress,
 } from '../services/islandRunSignatureMissions';
 import { executeIslandRunTileRewardAction } from '../services/islandRunTileRewardAction';
 import {
@@ -1868,6 +1878,9 @@ export function IslandRunBoardPrototype({
   const [frostwellWheelRotation, setFrostwellWheelRotation] = useState(0);
   const [frostwellLastSpinMeters, setFrostwellLastSpinMeters] = useState<number | null>(null);
   const [frostwellConstructionSequence, setFrostwellConstructionSequence] = useState(0);
+  const [showRootheartPowerworks, setShowRootheartPowerworks] = useState(false);
+  const [isFundingRootheartPowerworks, setIsFundingRootheartPowerworks] = useState(false);
+  const [rootheartConstructionSequence, setRootheartConstructionSequence] = useState(0);
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
@@ -1925,7 +1938,6 @@ export function IslandRunBoardPrototype({
   const [diceThrowStrength, setDiceThrowStrength] = useState<IslandRunDiceThrowStrength>('normal');
   const [isAutoRolling, setIsAutoRolling] = useState(false);
   const [isAutoRollHoldPending, setIsAutoRollHoldPending] = useState(false);
-  const [isHardThrowHoldReady, setIsHardThrowHoldReady] = useState(false);
   const [isTimedEventLaunchQueued, setIsTimedEventLaunchQueued] = useState(false);
   const [showSpaceExcavatorRewardBarHint, setShowSpaceExcavatorRewardBarHint] = useState(true);
   /** Shown briefly over the dice after the roll animation finishes (e.g. "Rolled 8!") */
@@ -1983,7 +1995,6 @@ export function IslandRunBoardPrototype({
     setShowTopbarMenu((current) => !current);
   }, []);
   const autoRollHoldTimeoutRef = useRef<number | null>(null);
-  const hardThrowHoldTimeoutRef = useRef<number | null>(null);
   const rollHoldStartedAtRef = useRef<number | null>(null);
   const autoRollLoopAbortRef = useRef(false);
   const autoRollHoldTriggeredRef = useRef(false);
@@ -2013,13 +2024,15 @@ export function IslandRunBoardPrototype({
       window.clearTimeout(autoRollHoldTimeoutRef.current);
       autoRollHoldTimeoutRef.current = null;
     }
-    if (hardThrowHoldTimeoutRef.current !== null) {
-      window.clearTimeout(hardThrowHoldTimeoutRef.current);
-      hardThrowHoldTimeoutRef.current = null;
-    }
     isTravellingRef.current = false;
   }, []);
   const [landingText, setLandingText] = useState('Ready to roll');
+  const essenceWalletRef = useRef<HTMLDivElement | null>(null);
+  const [boardEssenceCollectionFlight, setBoardEssenceCollectionFlight] = useState<{
+    presentationId: number;
+    amount: UsctCollectionAmount;
+    originPoint: { x: number; y: number };
+  } | null>(null);
   const [ticketTileCelebration, setTicketTileCelebration] = useState<{
     amount: number;
     eventId: string | null;
@@ -2514,6 +2527,13 @@ export function IslandRunBoardPrototype({
     // unobstructed 3D look at the rig. The board magnifier remains the explicit
     // route back to overview.
   }, []);
+  const openRootheartPowerworks = useCallback(() => {
+    setBuildCameraFocusRequest({ preset: 'overview', transition: 'quick' });
+    setShowRootheartPowerworks(true);
+  }, []);
+  const closeRootheartPowerworks = useCallback(() => {
+    setShowRootheartPowerworks(false);
+  }, []);
   const previousBuildCameraStopIdRef = useRef<string | null>(null);
   const [buildLevelCompletion, setBuildLevelCompletion] = useState<ActiveBuildLevelReview | null>(null);
   const buildLevelCompletionRef = useRef<ActiveBuildLevelReview | null>(null);
@@ -2678,6 +2698,8 @@ export function IslandRunBoardPrototype({
   const [diceMultiplier, setDiceMultiplier] = useState(1);
   const [isMultiplierMaxJumping, setIsMultiplierMaxJumping] = useState(false);
   const multiplierMaxJumpLockRef = useRef(false);
+  const firstMaxMultiplierThrowPendingRef = useRef(false);
+  const consecutiveMaxMultiplierRollsRef = useRef(0);
 
   // Derived: available tiers (with unlocked status), effective cost, and auto-clamp
   const multiplierTiers = resolveAvailableMultiplierTiers(dicePool);
@@ -2714,8 +2736,13 @@ export function IslandRunBoardPrototype({
     setDiceMultiplier(step.nextMultiplier);
 
     if (step.reachedMax) {
+      firstMaxMultiplierThrowPendingRef.current = true;
+      consecutiveMaxMultiplierRollsRef.current = 0;
       multiplierMaxJumpLockRef.current = true;
       setIsMultiplierMaxJumping(true);
+    } else if (step.wrappedToOne) {
+      firstMaxMultiplierThrowPendingRef.current = false;
+      consecutiveMaxMultiplierRollsRef.current = 0;
     }
   }, [effectiveMultiplier, unlockedMultipliers]);
 
@@ -2826,6 +2853,7 @@ export function IslandRunBoardPrototype({
     showCreatureChannelModal ||
     showConcordHubModal ||
     showFrostwellMission ||
+    showRootheartPowerworks ||
     Boolean(dormantDoorMiniGame) ||
     Boolean(trafficLightCoinFlip) ||
     Boolean(techCollectionModal) ||
@@ -2912,6 +2940,16 @@ export function IslandRunBoardPrototype({
   const frostwellAvailableSpins = frostwellPreviewActive && frostwellMissionState === 'drilling'
     ? 1
     : getFrostwellAvailableSpins(frostwellProgress);
+  const rootheartPowerworksProgress = useMemo(() => resolveRootheartPowerworksProgress({
+    ledger: runtimeState.signatureMissionProgressByIsland,
+    cycleIndex: runtimeState.cycleIndex,
+    islandNumber: 10,
+  }), [runtimeState.cycleIndex, runtimeState.signatureMissionProgressByIsland]);
+  const rootheartPowerworksCollectionComplete = isRootheartPowerworksCollectionComplete(rootheartPowerworksProgress);
+  const rootheartPowerworksNextCost = getRootheartPowerworksStageCost(
+    runtimeState.cycleIndex,
+    Math.min(ROOTHEART_POWERWORKS_MAX_STAGE, rootheartPowerworksProgress.buildStage + 1),
+  );
   const pendingTreasurePathResumeCtaLabel = pendingTreasurePathResume?.status === 'active'
     ? 'Continue Treasure Path'
     : 'Collect Treasure';
@@ -6517,8 +6555,6 @@ export function IslandRunBoardPrototype({
   const canHoldForAutoRoll = canRoll && !isIslandTimerPendingStart;
   const rollButtonInteractionClass = isAutoRolling
     ? 'island-run-prototype__roll-btn--auto-active'
-    : isHardThrowHoldReady
-      ? 'island-run-prototype__roll-btn--auto-pending island-run-prototype__roll-btn--hard-ready'
     : isAutoRollHoldPending
       ? 'island-run-prototype__roll-btn--auto-pending'
       : '';
@@ -7053,7 +7089,7 @@ export function IslandRunBoardPrototype({
     });
   };
 
-  const handleRoll = async (throwStrength: IslandRunDiceThrowStrength = 'normal'): Promise<boolean> => {
+  const handleRoll = async (): Promise<boolean> => {
     logIslandRunEntryDebug('roll_click_start', {
       userId: session.user.id,
       tokenIndex: runtimeStateRef.current.tokenIndex,
@@ -7153,7 +7189,12 @@ export function IslandRunBoardPrototype({
       return false;
     }
 
-    setDiceThrowStrength(throwStrength);
+    const maxMultiplierThrowCadence = resolveIslandRunMaxMultiplierThrowCadence({
+      isAtMaxAvailableMultiplier,
+      firstMaxThrowPending: firstMaxMultiplierThrowPendingRef.current,
+      consecutiveMaxMultiplierRolls: consecutiveMaxMultiplierRollsRef.current,
+    });
+    setDiceThrowStrength(maxMultiplierThrowCadence.throwStrength);
     setIsRolling(true);
     setCameraMode('board_follow');
     requestActiveStopTransition(null, 'roll_start_close_stop');
@@ -7226,6 +7267,9 @@ export function IslandRunBoardPrototype({
       }
       return false;
     }
+
+    firstMaxMultiplierThrowPendingRef.current = maxMultiplierThrowCadence.nextFirstMaxThrowPending;
+    consecutiveMaxMultiplierRollsRef.current = maxMultiplierThrowCadence.nextConsecutiveMaxMultiplierRolls;
 
     void recordTelemetryEvent({
       userId: session.user.id,
@@ -7499,15 +7543,10 @@ export function IslandRunBoardPrototype({
     autoRollLoopAbortRef.current = true;
     setIsAutoRolling(false);
     setIsAutoRollHoldPending(false);
-    setIsHardThrowHoldReady(false);
     rollHoldStartedAtRef.current = null;
     if (autoRollHoldTimeoutRef.current !== null) {
       window.clearTimeout(autoRollHoldTimeoutRef.current);
       autoRollHoldTimeoutRef.current = null;
-    }
-    if (hardThrowHoldTimeoutRef.current !== null) {
-      window.clearTimeout(hardThrowHoldTimeoutRef.current);
-      hardThrowHoldTimeoutRef.current = null;
     }
   }, []);
 
@@ -7518,29 +7557,17 @@ export function IslandRunBoardPrototype({
     if (autoRollHoldTimeoutRef.current !== null) {
       window.clearTimeout(autoRollHoldTimeoutRef.current);
     }
-    if (hardThrowHoldTimeoutRef.current !== null) {
-      window.clearTimeout(hardThrowHoldTimeoutRef.current);
-    }
     autoRollHoldTriggeredRef.current = false;
     rollHoldStartedAtRef.current = performance.now();
     setIsAutoRollHoldPending(true);
-    setIsHardThrowHoldReady(false);
     // Felt confirmation that the hold registered. The charge bar starts filling
     // on the same frame, so touch and sight agree.
     triggerIslandRunHaptic('auto_roll_arm');
-    hardThrowHoldTimeoutRef.current = window.setTimeout(() => {
-      hardThrowHoldTimeoutRef.current = null;
-      if (autoRollHoldTriggeredRef.current) return;
-      setIsHardThrowHoldReady(true);
-      setLandingText('Hard throw ready — release now, or keep holding for auto-roll.');
-      triggerImpactHaptic('light', { channel: 'gamification', minIntervalMs: 90 });
-    }, ISLAND_RUN_HARD_THROW_HOLD_MS);
     autoRollHoldTimeoutRef.current = window.setTimeout(() => {
       autoRollHoldTimeoutRef.current = null;
       autoRollHoldTriggeredRef.current = true;
       suppressNextRollClickRef.current = true;
       autoRollLoopAbortRef.current = false;
-      setIsHardThrowHoldReady(false);
       setIsAutoRolling(true);
       triggerIslandRunHaptic('auto_roll_engage');
       setLandingText('Auto-roll engaged. Release to stop.');
@@ -7560,21 +7587,15 @@ export function IslandRunBoardPrototype({
       window.clearTimeout(autoRollHoldTimeoutRef.current);
       autoRollHoldTimeoutRef.current = null;
     }
-    if (hardThrowHoldTimeoutRef.current !== null) {
-      window.clearTimeout(hardThrowHoldTimeoutRef.current);
-      hardThrowHoldTimeoutRef.current = null;
-    }
     setIsAutoRollHoldPending(false);
-    setIsHardThrowHoldReady(false);
     if (intent === 'auto') {
       autoRollHoldTriggeredRef.current = false;
       stopAutoRoll();
       return;
     }
-    if (intent === 'hard') {
+    if (intent === 'normal' && heldForMs > 0) {
       suppressNextRollClickRef.current = true;
-      setLandingText('Hard throw charged!');
-      void handleRoll('hard');
+      void handleRoll();
     }
   }, [handleRoll, stopAutoRoll]);
 
@@ -7584,12 +7605,7 @@ export function IslandRunBoardPrototype({
       window.clearTimeout(autoRollHoldTimeoutRef.current);
       autoRollHoldTimeoutRef.current = null;
     }
-    if (hardThrowHoldTimeoutRef.current !== null) {
-      window.clearTimeout(hardThrowHoldTimeoutRef.current);
-      hardThrowHoldTimeoutRef.current = null;
-    }
     setIsAutoRollHoldPending(false);
-    setIsHardThrowHoldReady(false);
     if (autoRollHoldTriggeredRef.current) {
       autoRollHoldTriggeredRef.current = false;
       stopAutoRoll();
@@ -7613,8 +7629,6 @@ export function IslandRunBoardPrototype({
    */
   const rollHoldChargeStyle = useMemo<CSSProperties>(
     () => ({
-      '--island-run-hard-throw-hold-ms': `${ISLAND_RUN_HARD_THROW_HOLD_MS}ms`,
-      '--island-run-hard-throw-threshold': `${(ISLAND_RUN_HARD_THROW_HOLD_MS / ISLAND_RUN_AUTO_ROLL_HOLD_MS) * 100}%`,
       '--island-run-hold-ms': `${ISLAND_RUN_AUTO_ROLL_HOLD_MS}ms`,
     } as CSSProperties),
     [],
@@ -12234,6 +12248,7 @@ export function IslandRunBoardPrototype({
       showCreatureChannelModal ||
       showConcordHubModal ||
       showFrostwellMission ||
+      showRootheartPowerworks ||
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
@@ -12241,6 +12256,10 @@ export function IslandRunBoardPrototype({
     if (!showFrostwellMission || typeof document === 'undefined') return undefined;
     return lockPageScroll();
   }, [showFrostwellMission]);
+  useEffect(() => {
+    if (!showRootheartPowerworks || typeof document === 'undefined') return undefined;
+    return lockPageScroll();
+  }, [showRootheartPowerworks]);
 
   const handleSpinFrostwell = useCallback(async () => {
     if (isSpinningFrostwell) return;
@@ -12295,6 +12314,30 @@ export function IslandRunBoardPrototype({
       setIsFundingFrostwell(false);
     }
   }, [client, isFundingFrostwell, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
+  const handleFundRootheartPowerworks = useCallback(async () => {
+    if (isFundingRootheartPowerworks) return;
+    setIsFundingRootheartPowerworks(true);
+    try {
+      const result = await fundRootheartPowerworksStage({ session, client });
+      if (result.status === 'ok') {
+        refreshIslandRunStateFromLocal(session);
+        const fresh = getIslandRunStateSnapshot(session);
+        runtimeStateRef.current = fresh;
+        setRuntimeStateWithTrace('fund_rootheart_powerworks_stage', fresh);
+        setRootheartConstructionSequence((value) => value + 1);
+        const stageNames = ['Waterworks frame', 'Heartwheel dynamo', 'Heartlight network'];
+        setLandingText(`⚙ ${stageNames[result.buildStage - 1]} restored${result.buildStage >= ROOTHEART_POWERWORKS_MAX_STAGE ? ' — Rootheart is glowing!' : '.'}`);
+        playIslandRunSound(result.buildStage >= ROOTHEART_POWERWORKS_MAX_STAGE ? 'reward_bar_claim_burst' : 'stop_land');
+        triggerIslandRunHaptic(result.buildStage >= ROOTHEART_POWERWORKS_MAX_STAGE ? 'reward_claim' : 'stop_land');
+      } else if (result.status === 'components_incomplete') {
+        setLandingText('Collect all eight Powerworks parts from the ⚙ tiles before construction can begin.');
+      } else if (result.status === 'insufficient_essence') {
+        setLandingText(`The next Powerworks stage needs ${result.cost.toLocaleString()} Essence.`);
+      }
+    } finally {
+      setIsFundingRootheartPowerworks(false);
+    }
+  }, [client, isFundingRootheartPowerworks, playIslandRunSound, session, setRuntimeStateWithTrace, triggerIslandRunHaptic]);
   const isIslandClearTravelReady = Boolean(
     showIslandClearCelebration &&
       isIslandClearRewardClaimed &&
@@ -12593,6 +12636,26 @@ export function IslandRunBoardPrototype({
       pendingHopSequence === null &&
       !isRewardBarClaiming,
   );
+  const presentBoardEssenceCollection = useCallback((
+    tileIndex: number,
+    origin?: { viewportX: number; viewportY: number },
+  ) => {
+    if (!origin) return;
+    const tileType = landmarkDoorTileMap[tileIndex]?.tileType;
+    const amount: UsctCollectionAmount | null = tileType === 'chest'
+      ? 'large'
+      : tileType === 'currency'
+        ? 'medium'
+        : tileType === 'micro'
+          ? 'small'
+          : null;
+    if (!amount) return;
+    setBoardEssenceCollectionFlight({
+      presentationId: Date.now(),
+      amount,
+      originPoint: { x: origin.viewportX, y: origin.viewportY },
+    });
+  }, [landmarkDoorTileMap]);
   const loadingIslandNumber = Math.max(1, Math.floor(runtimeState.currentIslandNumber ?? islandNumber));
   const isCycleCapstoneReadiness = loadingIslandNumber % ISLAND_RUN_MAX_ISLAND === 0;
 
@@ -13223,7 +13286,7 @@ export function IslandRunBoardPrototype({
                 (session.user.user_metadata?.full_name?.[0] ?? session.user.email?.[0] ?? 'P').toUpperCase()
               )}
             </button>
-            <div className="island-run-board__topbar-wallet" aria-label="Essence wallet">
+            <div ref={essenceWalletRef} className="island-run-board__topbar-wallet" aria-label="Essence wallet">
               <img
                 className="island-run-board__topbar-currency-icon"
                 src="/assets/spin-wheel/daily-momentum/prizes/prize-essence-orb-transparent.png"
@@ -13810,9 +13873,10 @@ export function IslandRunBoardPrototype({
               setTrafficLightPassPulse(true);
             }
           }}
-          onTokenLand={(tileIndex) => {
+          onTokenLand={(tileIndex, origin) => {
             playIslandRunSound('stop_land');
             triggerIslandRunHaptic('stop_land');
+            presentBoardEssenceCollection(tileIndex, origin);
           }}
           isRolling={shouldRenderIsland5Three ? false : isRolling}
           diceFaces={rollingDiceFaces}
@@ -13859,9 +13923,10 @@ export function IslandRunBoardPrototype({
                     });
                   }
                 }}
-                onTokenLand={() => {
+                onTokenLand={(tileIndex, origin) => {
                   playIslandRunSound('stop_land');
                   triggerIslandRunHaptic('stop_land');
+                  presentBoardEssenceCollection(tileIndex, origin);
                 }}
                 onLandmarkClick={isIslandVisualPreview ? undefined : (landmarkId) => {
                   if (showBuildPanel) return;
@@ -13878,6 +13943,12 @@ export function IslandRunBoardPrototype({
                     ? 1
                     : frostwellConstructionSequence,
                   constructionPreviewLoop: isIslandVisualPreview && islandArtPreviewNumber === 3 && frostwellMissionState === 'constructing',
+                }}
+                rootheartPowerworksPresentation={{
+                  buildStage: isIslandVisualPreview && islandArtPreviewNumber === 10
+                    ? 3
+                    : rootheartPowerworksProgress.buildStage,
+                  constructionSequence: rootheartConstructionSequence,
                 }}
                 onSignatureMissionClick={isIslandVisualPreview && islandArtPreviewNumber !== 3
                   ? undefined
@@ -13910,6 +13981,24 @@ export function IslandRunBoardPrototype({
                     : frostwellProgress.metersDrilled >= FROSTWELL_DEPTH_METERS
                       ? `Fund ${frostwellTechCost.toLocaleString()}`
                       : `${frostwellProgress.metersDrilled}/${FROSTWELL_DEPTH_METERS}m · ${frostwellAvailableSpins} spin${frostwellAvailableSpins === 1 ? '' : 's'}`}
+                </span>
+              </button>
+            ) : null}
+            {!isIslandVisualPreview && islandArtPreviewNumber === 10 ? (
+              <button
+                type="button"
+                className="island-run-board__signature-mission-pill island-run-board__signature-mission-pill--rootheart"
+                onClick={openRootheartPowerworks}
+                aria-label="Open Rootheart Powerworks mission"
+              >
+                <span aria-hidden="true">{rootheartPowerworksProgress.buildStage >= 3 ? '✨' : '⚙'}</span>
+                <span>
+                  <strong>Powerworks</strong>
+                  {rootheartPowerworksProgress.buildStage >= 3
+                    ? 'Heartlight network online'
+                    : rootheartPowerworksCollectionComplete
+                      ? `Stage ${rootheartPowerworksProgress.buildStage + 1} ready · ${rootheartPowerworksNextCost.toLocaleString()}`
+                      : `${rootheartPowerworksProgress.collectedComponentIds.length}/${ROOTHEART_POWER_COMPONENTS.length} parts found`}
                 </span>
               </button>
             ) : null}
@@ -13952,8 +14041,9 @@ export function IslandRunBoardPrototype({
           faces={rollingDiceFaces}
           isRolling={isRolling}
           throwStrength={diceThrowStrength}
+          landingVariant={rollIndexRef.current}
           onTopBarImpact={() => {
-            triggerImpactHaptic(diceThrowStrength === 'hard' ? 'strong' : 'medium', {
+            triggerImpactHaptic('strong', {
               channel: 'gamification',
               minIntervalMs: 90,
             });
@@ -13965,6 +14055,25 @@ export function IslandRunBoardPrototype({
           }}
         />
       ) : null}
+
+      {boardEssenceCollectionFlight && typeof document !== 'undefined'
+        ? createPortal(
+            <UsctCollectionAnimation
+              key={boardEssenceCollectionFlight.presentationId}
+              amount={boardEssenceCollectionFlight.amount}
+              originPoint={boardEssenceCollectionFlight.originPoint}
+              targetRef={essenceWalletRef}
+              tokenArtSrc="/assets/spin-wheel/daily-momentum/prizes/prize-essence-orb-transparent.png"
+              className="island-run-board__essence-collection-flight"
+              onComplete={() => {
+                setBoardEssenceCollectionFlight((current) => (
+                  current?.presentationId === boardEssenceCollectionFlight.presentationId ? null : current
+                ));
+              }}
+            />,
+            document.body,
+          )
+        : null}
 
       {/* Dice roll total overlay — shown briefly after dice settle */}
       {diceRollTotalOverlay && (
@@ -17051,6 +17160,7 @@ export function IslandRunBoardPrototype({
       {hatchReveal ? (
         <CreatureHatchRevealModal
           open={Boolean(hatchReveal)}
+          creatureId={hatchReveal.creatureId}
           creatureName={hatchReveal.creatureName}
           rarity={hatchReveal.rarity}
           creatureScore={getCreatureRevealScore(hatchReveal.rarity)}
@@ -17963,6 +18073,99 @@ export function IslandRunBoardPrototype({
                       : `Build for ${frostwellTechCost.toLocaleString()} Essence`}
                 </button>
               ) : null}
+            </div>
+          </section>
+        </div>
+      ), document.body) : null}
+
+      {showRootheartPowerworks && typeof document !== 'undefined' ? createPortal((
+        <div
+          className="rootheart-powerworks-modal__backdrop"
+          role="presentation"
+          onClick={closeRootheartPowerworks}
+        >
+          <section
+            className="rootheart-powerworks-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rootheart-powerworks-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="rootheart-powerworks-modal__close"
+              onClick={closeRootheartPowerworks}
+              aria-label="Close Rootheart Powerworks mission"
+            >×</button>
+            <header className="rootheart-powerworks-modal__header">
+              <p>Island 010 restoration mission</p>
+              <h2 id="rootheart-powerworks-title">⚙ Rootheart Powerworks</h2>
+              <span>Rebuild one causal machine: falling water becomes motion, motion becomes Heartlight, and Heartlight wakes the city.</span>
+            </header>
+
+            <div className={`rootheart-powerworks-modal__engine rootheart-powerworks-modal__engine--stage-${rootheartPowerworksProgress.buildStage}`} aria-label={`Powerworks construction stage ${rootheartPowerworksProgress.buildStage} of 3`}>
+              <div className="rootheart-powerworks-modal__water" aria-hidden="true"><i /><i /><i /></div>
+              <div className="rootheart-powerworks-modal__wheel" aria-hidden="true"><span /></div>
+              <div className="rootheart-powerworks-modal__gear rootheart-powerworks-modal__gear--a" aria-hidden="true">✺</div>
+              <div className="rootheart-powerworks-modal__gear rootheart-powerworks-modal__gear--b" aria-hidden="true">✺</div>
+              <div className="rootheart-powerworks-modal__shaft" aria-hidden="true" />
+              <div className="rootheart-powerworks-modal__dynamo" aria-hidden="true"><span>♥</span></div>
+              <div className="rootheart-powerworks-modal__power-lines" aria-hidden="true"><i /><i /><i /><i /></div>
+            </div>
+
+            <div className="rootheart-powerworks-modal__parts" aria-label="Collected Powerworks components">
+              {ROOTHEART_POWER_COMPONENTS.map((component) => {
+                const collected = rootheartPowerworksProgress.collectedComponentIds.includes(component.id);
+                return (
+                  <div key={component.id} className={collected ? 'is-collected' : ''}>
+                    <span aria-hidden="true">{collected ? '✓' : '⚙'}</span>
+                    <strong>{component.label}</strong>
+                    <small>{collected ? 'Recovered' : `Find on tile ${component.tileIndex + 1}`}</small>
+                  </div>
+                );
+              })}
+            </div>
+
+            <ol className="rootheart-powerworks-modal__stages">
+              {[
+                ['Waterworks frame', 'Sluices, bearings and the giant paddle wheel'],
+                ['Heartwheel dynamo', 'Gear train, vertical shaft and flywheel governor'],
+                ['Heartlight network', 'Capacitors, cable pulses, city lights and blue-hour sky'],
+              ].map(([title, description], index) => {
+                const stage = index + 1;
+                const complete = rootheartPowerworksProgress.buildStage >= stage;
+                const active = rootheartPowerworksProgress.buildStage + 1 === stage;
+                return (
+                  <li key={title} className={`${complete ? 'is-complete' : ''} ${active ? 'is-active' : ''}`}>
+                    <span>{complete ? '✓' : stage}</span>
+                    <div><strong>{title}</strong><small>{description}</small></div>
+                  </li>
+                );
+              })}
+            </ol>
+
+            <div className="rootheart-powerworks-modal__actions">
+              <button type="button" className="island-stop-modal__btn" onClick={closeRootheartPowerworks}>
+                View island
+              </button>
+              {rootheartPowerworksProgress.buildStage < ROOTHEART_POWERWORKS_MAX_STAGE ? (
+                <button
+                  type="button"
+                  className="island-stop-modal__btn island-stop-modal__btn--action"
+                  disabled={!rootheartPowerworksCollectionComplete || isFundingRootheartPowerworks || runtimeState.essence < rootheartPowerworksNextCost}
+                  onClick={() => void handleFundRootheartPowerworks()}
+                >
+                  {!rootheartPowerworksCollectionComplete
+                    ? `Recover ${ROOTHEART_POWER_COMPONENTS.length - rootheartPowerworksProgress.collectedComponentIds.length} more part${ROOTHEART_POWER_COMPONENTS.length - rootheartPowerworksProgress.collectedComponentIds.length === 1 ? '' : 's'}`
+                    : isFundingRootheartPowerworks
+                      ? 'Synchronising engine…'
+                      : runtimeState.essence < rootheartPowerworksNextCost
+                        ? `Need ${(rootheartPowerworksNextCost - runtimeState.essence).toLocaleString()} more Essence`
+                        : `Build stage ${rootheartPowerworksProgress.buildStage + 1} · ${rootheartPowerworksNextCost.toLocaleString()} Essence`}
+                </button>
+              ) : (
+                <strong className="rootheart-powerworks-modal__online">✨ Heartlight network online</strong>
+              )}
             </div>
           </section>
         </div>

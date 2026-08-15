@@ -49,6 +49,7 @@ const QUEST_VISUAL_SYSTEM_PREVIEW_PATH = '/dev/quest-journey-visual-system';
 const ISLAND_ART_PREVIEW_PATH = '/dev/island-art-preview';
 const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit';
 const CARETAKER_CHARACTER_LAB_PATH = '/dev/caretaker-character-lab';
+const EGG_HATCH_THREE_LAB_PATH = '/dev/egg-hatch-3d';
 const ISLAND_3D_PROFILER_BUILD_ENABLED = import.meta.env.VITE_ISLAND_3D_PROFILE_ENABLED === 'true';
 const ISLAND_001_STORY_PREVIEW_PATH = '/dev/island-001-story';
 const DAY_ONE_MISSION_PREVIEW_PATH = '/dev/day-one-mission-preview';
@@ -250,6 +251,20 @@ function CaretakerCharacterLabRoute() {
   return CharacterLab ? <CharacterLab /> : null;
 }
 
+function EggHatchThreeLabRoute() {
+  const [EggHatchLab, setEggHatchLab] = useState<ComponentType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    import('./features/gamification/level-worlds/dev/EggHatchThreeLab').then((module) => {
+      if (isMounted) setEggHatchLab(() => module.default);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  return EggHatchLab ? <EggHatchLab /> : null;
+}
+
 function Island001StoryPreviewRoute() {
   const [Preview, setPreview] = useState<ComponentType | null>(null);
 
@@ -343,6 +358,10 @@ function Root() {
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
     window.location.pathname.replace(/\/+$/, '') === CARETAKER_CHARACTER_LAB_PATH;
+  const isEggHatchThreeLabRoute =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    window.location.pathname.replace(/\/+$/, '') === EGG_HATCH_THREE_LAB_PATH;
   const isIsland001StoryPreviewRoute =
     import.meta.env.DEV &&
     typeof window !== 'undefined' &&
@@ -490,6 +509,10 @@ function Root() {
 
   if (isCaretakerCharacterLabRoute) {
     return <CaretakerCharacterLabRoute />;
+  }
+
+  if (isEggHatchThreeLabRoute) {
+    return <EggHatchThreeLabRoute />;
   }
 
   if (
