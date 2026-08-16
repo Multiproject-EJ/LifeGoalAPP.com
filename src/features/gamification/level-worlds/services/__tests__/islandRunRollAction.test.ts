@@ -14,7 +14,14 @@ import {
   resetIslandRunStateSnapshot,
 } from '../islandRunStateStore';
 import { getTrafficLightCharge, TRAFFIC_LIGHT_TILE_INDEX } from '../islandRunTrafficLightTile';
-import { FROSTWELL_DRILL_TILE_INDICES, resolveFrostwellIceworksProgress } from '../islandRunSignatureMissions';
+import {
+  FROSTWELL_DRILL_TILE_INDICES,
+  ROOTHEART_POWER_COMPONENTS,
+  getIslandRunSignatureMissionKey,
+  resolveFrostwellIceworksProgress,
+  resolveRootheartPowerworksProgress,
+} from '../islandRunSignatureMissions';
+import { getIslandRunLivingTicketBeatId, ISLAND_RUN_LIVING_TICKET_REGROW_MS } from '../islandRunLivingTicket';
 import { assert, assertEqual, createMemoryStorage, installWindowWithStorage, type TestCase } from './testHarness';
 
 const USER_ID = 'roll-action-test-user';
@@ -129,6 +136,119 @@ export const islandRunRollActionTests: TestCase[] = [
     },
   },
   {
+    name: 'first halfway crossing emits one cycle-scoped diplomatic briefing and persists its seen beat',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 14,
+        currentIslandNumber: 2,
+        cycleIndex: 0,
+        narrativeSeenState: { beats: {}, episodes: {} },
+      });
+
+      const firstCrossing = await withMockedRandom([0.2, 0.2], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+      assertEqual(firstCrossing.newTokenIndex, 18, '2 + 2 crosses the canonical halfway tile');
+      assertEqual(firstCrossing.missionBriefingTrigger?.beatId, 'MISSION-BRIEFING-C0-I002', 'briefing identifies this island visit');
+      assert(
+        typeof readIslandRunGameStateRecord(makeSession()).narrativeSeenState.beats['MISSION-BRIEFING-C0-I002'] === 'number',
+        'briefing seen marker is committed atomically with the roll',
+      );
+
+      seedState({ tokenIndex: 16, dicePool: 30 });
+      const repeatedCrossing = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+      assertEqual(repeatedCrossing.missionBriefingTrigger, null, 'later crossing in the same island cycle never repeats the briefing');
+
+      seedState({ tokenIndex: 16, dicePool: 30, cycleIndex: 1 });
+      const nextCycle = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+      assertEqual(nextCycle.missionBriefingTrigger?.beatId, 'MISSION-BRIEFING-C1-I002', 'a new 120-island cycle receives a fresh briefing');
+    },
+  },
+  {
+    name: 'Island 1 first-cycle Central Command onboarding suppresses the generic halfway briefing',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 16,
+        currentIslandNumber: 1,
+        cycleIndex: 0,
+        firstSessionTutorialState: 'first_roll_consumed',
+        narrativeSeenState: { beats: {}, episodes: {} },
+      });
+      const result = await withMockedRandom([0, 0], () =>
+        executeIslandRunRollAction({ session: makeSession(), client: null, diceMultiplier: 1 }),
+      );
+      assertEqual(result.newTokenIndex, 18, 'test crosses the halfway tile');
+      assertEqual(result.missionBriefingTrigger, null, 'existing Island 1 Central Command flow remains the only briefing');
+    },
+  },
+  {
+    name: 'living ticket pays once, remains dormant, then regrows through canonical roll state',
+    run: async () => {
+      resetEnvironment();
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: 26,
+        currentIslandNumber: 2,
+        cycleIndex: 0,
+        minigameTicketsByEvent: {},
+        narrativeSeenState: { beats: {}, episodes: {} },
+      });
+
+      const firstPickup = await withMockedRandom([0.2, 0.2, 0.99], () => executeIslandRunRollAction({
+        session: makeSession(),
+        client: null,
+        diceMultiplier: 1,
+        activeTimedEventId: 'rootheart_festival',
+      }));
+      assertEqual(firstPickup.newTokenIndex, 30, 'roll lands on the canonical 85% ticket tile');
+      assertEqual(firstPickup.livingTicketPickup?.applied, 3, 'empty event wallet receives the seeded high grant');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).minigameTicketsByEvent.rootheart_festival, 3, 'ticket grant commits with movement');
+
+      seedState({ tokenIndex: 26, dicePool: 30 });
+      const dormantLanding = await withMockedRandom([0.2, 0.2, 0], () => executeIslandRunRollAction({
+        session: makeSession(),
+        client: null,
+        diceMultiplier: 1,
+        activeTimedEventId: 'rootheart_festival',
+      }));
+      assertEqual(dormantLanding.livingTicketPickup, null, 'a dormant ticket cannot double-pay');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).minigameTicketsByEvent.rootheart_festival, 3, 'dormant landing preserves the wallet');
+
+      const beforeRegrow = readIslandRunGameStateRecord(makeSession());
+      const beatId = getIslandRunLivingTicketBeatId(0, 2);
+      seedState({
+        tokenIndex: 26,
+        dicePool: 30,
+        narrativeSeenState: {
+          episodes: { ...beforeRegrow.narrativeSeenState.episodes },
+          beats: {
+            ...beforeRegrow.narrativeSeenState.beats,
+            [beatId]: Date.now() - ISLAND_RUN_LIVING_TICKET_REGROW_MS - 1000,
+          },
+        },
+      });
+      const regrownLanding = await withMockedRandom([0.2, 0.2, 0], () => executeIslandRunRollAction({
+        session: makeSession(),
+        client: null,
+        diceMultiplier: 1,
+        activeTimedEventId: 'rootheart_festival',
+      }));
+      assertEqual(regrownLanding.livingTicketPickup?.applied, 1, 'fully regrown bud becomes collectible again');
+      assertEqual(readIslandRunGameStateRecord(makeSession()).minigameTicketsByEvent.rootheart_festival, 4, 'regrown pickup composes with the existing event wallet');
+    },
+  },
+  {
     name: 'Island 003 landing on a drill tile grants one Frostwell spin even with a high multiplier',
     run: async () => {
       resetEnvironment();
@@ -149,6 +269,52 @@ export const islandRunRollActionTests: TestCase[] = [
       assertEqual(result.frostwellSpinGranted, false, 'ordinary landing grants nothing');
       const state = readIslandRunGameStateRecord(makeSession());
       assertEqual(resolveFrostwellIceworksProgress({ ledger: state.signatureMissionProgressByIsland, islandNumber: 3, cycleIndex: 0 }).spinsEarned, 0, 'mission remains unchanged');
+    },
+  },
+  {
+    name: 'Island 010 final Powerworks cache emits one exact build-unlocked edge',
+    run: async () => {
+      resetEnvironment();
+      const key = getIslandRunSignatureMissionKey(0, 10);
+      const finalComponent = ROOTHEART_POWER_COMPONENTS[ROOTHEART_POWER_COMPONENTS.length - 1];
+      seedState({
+        runtimeVersion: 0,
+        dicePool: 30,
+        tokenIndex: finalComponent.tileIndex - 2,
+        currentIslandNumber: 10,
+        cycleIndex: 0,
+        signatureMissionProgressByIsland: {
+          [key]: {
+            missionId: 'rootheart-powerworks',
+            version: 1,
+            collectedComponentIds: ROOTHEART_POWER_COMPONENTS.slice(0, -1).map((component) => component.id),
+            buildStage: 0,
+            essenceSpent: 0,
+            activatedAtMs: null,
+            updatedAtMs: 1,
+          },
+        },
+      });
+
+      const finalPickup = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(finalPickup.newTokenIndex, finalComponent.tileIndex, 'roll lands on the final component cache');
+      assertEqual(finalPickup.rootheartPowerComponentPickup, finalComponent.id, 'the final named component is surfaced');
+      assertEqual(finalPickup.rootheartPowerworksUnlocked, true, 'the exact completion landing emits the auto-open edge');
+      const progress = resolveRootheartPowerworksProgress({
+        ledger: readIslandRunGameStateRecord(makeSession()).signatureMissionProgressByIsland,
+        islandNumber: 10,
+        cycleIndex: 0,
+      });
+      assertEqual(progress.collectedComponentIds.length, ROOTHEART_POWER_COMPONENTS.length, 'all eight parts persist atomically');
+
+      seedState({ tokenIndex: finalComponent.tileIndex - 2, dicePool: 30 });
+      const repeat = await withMockedRandom([0, 0], () => executeIslandRunRollAction({
+        session: makeSession(), client: null, diceMultiplier: 1,
+      }));
+      assertEqual(repeat.rootheartPowerComponentPickup, null, 'repeat landing cannot recollect the component');
+      assertEqual(repeat.rootheartPowerworksUnlocked, false, 'repeat landing cannot reopen the modal edge');
     },
   },
   {

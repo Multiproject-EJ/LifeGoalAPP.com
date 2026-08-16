@@ -62,7 +62,7 @@ import { commitIslandRunState, getIslandRunStateSnapshot } from './islandRunStat
 import { resolveWrappedTokenIndex } from './islandBoardTopology';
 import { resolveIslandBoardProfile, type IslandBoardProfileId } from './islandBoardProfiles';
 import { getIslandBoardThemeForIslandNumber } from './islandBoardThemes';
-import { generateTileMap, getIslandRarity, type IslandTileType } from './islandBoardTileMap';
+import { generateTileMap, getFreeTicketTileIndexForTileCount, getIslandRarity, type IslandTileType } from './islandBoardTileMap';
 import { resolveIslandRunContractV2EssenceEarnForTile } from './islandRunContractV2EssenceBuild';
 import {
   __resetIslandRunActionMutexesForTests,
@@ -90,8 +90,19 @@ import { listIslandTechnologyFragmentPlacements } from './islandTechnologyFragme
 import {
   collectRootheartPowerComponentForLanding,
   grantFrostwellDrillSpinForLanding,
+  isRootheartPowerworksCollectionComplete,
+  resolveRootheartPowerworksProgress,
   type RootheartPowerComponentId,
 } from './islandRunSignatureMissions';
+import {
+  markIslandMissionBriefingSeen,
+  resolveIslandMissionBriefingTrigger,
+  type IslandMissionBriefingTrigger,
+} from './islandRunMissionBriefing';
+import {
+  collectIslandRunLivingTicket,
+  type IslandRunLivingTicketPickup,
+} from './islandRunLivingTicket';
 
 // ── roll constants (must match IslandRunBoardPrototype) ───────────────────────
 
@@ -232,6 +243,20 @@ export interface IslandRunRollActionResult {
   frostwellSpinGranted?: boolean;
   /** Island 010 Powerworks component collected by this exact landing, if any. */
   rootheartPowerComponentPickup?: RootheartPowerComponentId | null;
+  /**
+   * True only on the exact landing that completes the eight-part Powerworks
+   * ledger. Presentation may use this edge to open the build surface once;
+   * persisted mission state remains the authority.
+   */
+  rootheartPowerworksUnlocked?: boolean;
+  /**
+   * Cycle-scoped first-lap briefing beat crossed by this roll. Presentation
+   * opens only after the authoritative hop animation and any higher-priority
+   * landing modal have settled.
+   */
+  missionBriefingTrigger?: IslandMissionBriefingTrigger | null;
+  /** Event-ticket bud collected by this landing, if it was fully regrown. */
+  livingTicketPickup?: IslandRunLivingTicketPickup | null;
 }
 
 // ── per-user async mutex (defence-in-depth against concurrent rolls) ──────────
@@ -273,6 +298,8 @@ export function executeIslandRunRollAction(options: {
    * Higher multipliers burn more dice but amplify tile rewards + reward bar progress.
    */
   diceMultiplier?: number;
+  /** Current timed-event bucket. The living ticket does not pay without one. */
+  activeTimedEventId?: string | null;
 }): Promise<IslandRunRollActionResult> {
   return withIslandRunActionLock(options.session.user.id, () => performRollAction(options));
 }
@@ -282,6 +309,7 @@ async function performRollAction(options: {
   client: SupabaseClient | null;
   boardProfileId?: IslandBoardProfileId;
   diceMultiplier?: number;
+  activeTimedEventId?: string | null;
 }): Promise<IslandRunRollActionResult> {
   const { session, client } = options;
   const multiplier = Math.max(1, Math.floor(options.diceMultiplier ?? 1));
@@ -412,6 +440,43 @@ async function performRollAction(options: {
         nowMs,
       })
     : { ledger: frostwellLanding.ledger, collectedComponentId: null };
+  const rootheartPowerworksUnlocked = rootheartLanding.collectedComponentId !== null
+    && isRootheartPowerworksCollectionComplete(resolveRootheartPowerworksProgress({
+      ledger: rootheartLanding.ledger,
+      cycleIndex: state.cycleIndex,
+      islandNumber: state.currentIslandNumber,
+    }));
+  const missionBriefingTrigger = ordinaryTileGameplayActive
+    ? resolveIslandMissionBriefingTrigger({
+        islandNumber: state.currentIslandNumber,
+        cycleIndex: state.cycleIndex,
+        tileCount: boardProfile.tileCount,
+        hopSequence,
+        narrativeSeenState: state.narrativeSeenState,
+      })
+    : null;
+  const missionNarrativeSeenState = markIslandMissionBriefingSeen(
+    state.narrativeSeenState,
+    missionBriefingTrigger,
+    nowMs,
+  );
+  const isLivingTicketLanding = ordinaryTileGameplayActive
+    && newTokenIndex === getFreeTicketTileIndexForTileCount(boardProfile.tileCount);
+  const livingTicketLanding = isLivingTicketLanding
+    ? collectIslandRunLivingTicket({
+        narrativeSeenState: missionNarrativeSeenState,
+        minigameTicketsByEvent: state.minigameTicketsByEvent,
+        cycleIndex: state.cycleIndex,
+        islandNumber: state.currentIslandNumber,
+        activeEventId: options.activeTimedEventId,
+        nowMs,
+        randomValue: Math.random(),
+      })
+    : {
+        narrativeSeenState: missionNarrativeSeenState,
+        minigameTicketsByEvent: state.minigameTicketsByEvent,
+        pickup: null,
+      };
   const nextState = {
     ...state,
     runtimeVersion: newRuntimeVersion,
@@ -427,6 +492,8 @@ async function performRollAction(options: {
     concordRollProtectionState: concordProtection.state,
     bonusTileChargeByIsland: trafficLightPass?.bonusTileChargeByIsland ?? state.bonusTileChargeByIsland,
     signatureMissionProgressByIsland: rootheartLanding.ledger,
+    narrativeSeenState: livingTicketLanding.narrativeSeenState,
+    minigameTicketsByEvent: livingTicketLanding.minigameTicketsByEvent,
   };
 
   // Publish immediately, then await persistence inside the action mutex.
@@ -463,5 +530,8 @@ async function performRollAction(options: {
     trafficLightPass,
     frostwellSpinGranted: frostwellLanding.granted,
     rootheartPowerComponentPickup: rootheartLanding.collectedComponentId,
+    rootheartPowerworksUnlocked,
+    missionBriefingTrigger,
+    livingTicketPickup: livingTicketLanding.pickup,
   };
 }

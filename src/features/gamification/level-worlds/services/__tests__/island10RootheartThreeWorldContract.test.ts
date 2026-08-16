@@ -93,7 +93,9 @@ export const island10RootheartThreeWorldContractTests: TestCase[] = [
       runtime.updatePowerworksStage?.({ buildStage: 3 });
       runtime.animate(7.25);
       assert(Boolean(runtime.root.getObjectByName('ISLAND_10_POWERWORKS_HEARTWHEEL_PIVOT')), 'the below-island heartwheel must be independently animated');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_10_POWERWORKS_SYNCHRONIZED_SLUICE_GATE_ARRAY')), 'the water load must use a named synchronized gate array');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_10_POWERWORKS_TRANSMISSION_ARRAY')), 'the counter-rotating transmission must remain a named assembly');
+      assert(Boolean(runtime.root.getObjectByName('ISLAND_10_POWERWORKS_COUNTER_GEAR')), 'the transmission needs a physically readable counter gear');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_10_POWERWORKS_HEARTLIGHT_DYNAMO')), 'the low central dynamo must remain a named assembly');
       assert(Boolean(runtime.root.getObjectByName('ISLAND_10_POWERWORKS_TRAVELLING_POWER_PULSES')), 'the completed engine must distribute visible power pulses');
       const manifest = collectIsland10RuntimePartManifest([runtime.root]);

@@ -19,6 +19,7 @@ export const ISLAND_10_ROOTHEART_LANDMARK_LABELS = {
   habit: 'Canopy Rhythm Lodge',
   wisdom: 'Spiralwood Library',
   event: 'Firefly Pulley Workshop',
+  powerworks: 'Rootheart Powerworks',
 } as const;
 
 export interface Island10RootheartMaterials {
@@ -257,6 +258,27 @@ function createLeafTexture(size: number, relief = false) {
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(1.5, 2.2);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createSoftGlowPointTexture(size = 32) {
+  const data = new Uint8Array(size * size * 4);
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const offset = (y * size + x) * 4;
+      const nx = (x / Math.max(1, size - 1)) * 2 - 1;
+      const ny = (y / Math.max(1, size - 1)) * 2 - 1;
+      const distance = Math.sqrt(nx * nx + ny * ny);
+      const alpha = Math.pow(THREE.MathUtils.clamp(1 - distance, 0, 1), 1.7);
+      data[offset] = 255;
+      data[offset + 1] = 244;
+      data[offset + 2] = 210;
+      data[offset + 3] = Math.round(alpha * 255);
+    }
+  }
+  const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+  texture.colorSpace = THREE.SRGBColorSpace;
   texture.needsUpdate = true;
   return texture;
 }
@@ -1435,6 +1457,7 @@ function createMechanicalWheel(options: {
   depth: number;
   spokeCount: number;
   paddleCount?: number;
+  toothCount?: number;
   materials: Island10RootheartMaterials;
   quality: Island3DQuality;
   monochrome?: boolean;
@@ -1442,7 +1465,10 @@ function createMechanicalWheel(options: {
   const pivot = new THREE.Group();
   pivot.name = options.name;
   pivot.userData.keepSeparate = true;
-  const segments = qualityAmount(options.quality, 32, 24, 20);
+  // The wheel is intentionally crafted/faceted timber rather than a lathed
+  // perfect circle. This keeps four independently animated mechanisms inside
+  // the full-island phone budget without removing any readable part.
+  const segments = qualityAmount(options.quality, 15, 15, 14);
   const timberMaterial = options.monochrome ? options.materials.brass : options.materials.timber;
   const darkTimberMaterial = options.monochrome ? options.materials.brass : options.materials.timberDark;
   for (const z of [-options.depth * 0.42, options.depth * 0.42]) {
@@ -1453,7 +1479,7 @@ function createMechanicalWheel(options: {
     rim.position.z = z;
     pivot.add(rim);
     const band = new THREE.Mesh(
-      new THREE.TorusGeometry(options.radius * 1.01, options.radius * 0.022, 5, segments),
+      new THREE.TorusGeometry(options.radius * 1.01, options.radius * 0.032, 5, segments),
       options.materials.brass,
     );
     band.position.z = z + Math.sign(z || 1) * 0.025;
@@ -1461,7 +1487,12 @@ function createMechanicalWheel(options: {
   }
   for (let index = 0; index < options.spokeCount; index += 1) {
     const angle = index / options.spokeCount * Math.PI * 2;
-    const spoke = box(options.radius * 1.62, options.radius * 0.055, options.depth * 0.48, index % 2 ? timberMaterial : darkTimberMaterial);
+    const spoke = box(
+      options.radius * 1.62,
+      options.radius * 0.055,
+      options.depth * 0.48,
+      index % 3 === 0 ? darkTimberMaterial : timberMaterial,
+    );
     spoke.rotation.z = angle;
     pivot.add(spoke);
   }
@@ -1472,9 +1503,23 @@ function createMechanicalWheel(options: {
   for (let index = 0; index < paddleCount; index += 1) {
     const angle = index / paddleCount * Math.PI * 2;
     const paddle = box(options.radius * 0.36, options.radius * 0.12, options.depth * 1.18, index % 3 ? timberMaterial : darkTimberMaterial);
-    paddle.position.set(Math.cos(angle) * options.radius, Math.sin(angle) * options.radius, 0);
-    paddle.rotation.z = angle;
+    paddle.position.set(Math.cos(angle) * options.radius * 0.98, Math.sin(angle) * options.radius * 0.98, 0);
+    // Waterwheel buckets follow the tangent of the rim. The earlier radial
+    // blocks read as coarse gear teeth and hid the wheel's crafted structure.
+    paddle.rotation.z = angle + Math.PI / 2;
     pivot.add(paddle);
+  }
+  const toothCount = options.toothCount ?? 0;
+  for (let index = 0; index < toothCount; index += 1) {
+    const angle = index / toothCount * Math.PI * 2;
+    const tooth = box(options.radius * 0.16, options.radius * 0.09, options.depth * 0.86, options.materials.brass);
+    tooth.position.set(
+      Math.cos(angle) * options.radius * 1.075,
+      Math.sin(angle) * options.radius * 1.075,
+      0,
+    );
+    tooth.rotation.z = angle;
+    pivot.add(tooth);
   }
   mergeStaticMeshesByMaterial(pivot);
   pivot.userData.keepSeparate = true;
@@ -1490,32 +1535,60 @@ function createRootheartPowerworks(
   root.name = 'ISLAND_10_ROOTHEART_POWERWORKS';
   root.userData.keepSeparate = true;
 
+  const powerworksTimber = materials.timber.clone();
+  powerworksTimber.color.set(0xc47d36);
+  powerworksTimber.bumpScale = 0.11;
+  powerworksTimber.roughness = 0.5;
+  powerworksTimber.emissive.set(0xa14d18);
+  const powerworksTimberDark = materials.timberDark.clone();
+  powerworksTimberDark.color.set(0x78451f);
+  powerworksTimberDark.bumpScale = 0.075;
+  powerworksTimberDark.roughness = 0.66;
+  powerworksTimberDark.emissive.set(0x5a270c);
+  const powerworksBrass = materials.brass.clone();
+  powerworksBrass.color.set(0xf0b75d);
+  powerworksBrass.roughness = 0.19;
+  powerworksBrass.metalness = 0.84;
+  powerworksBrass.envMapIntensity = 1.35;
+  powerworksBrass.emissive.set(0xd4771f);
+  const mechanicalMaterials: Island10RootheartMaterials = {
+    ...materials,
+    timber: powerworksTimber,
+    timberDark: powerworksTimberDark,
+    brass: powerworksBrass,
+  };
+
   const frame = new THREE.Group();
   frame.name = 'ISLAND_10_POWERWORKS_WATER_GATE_ARRAY';
   // The first blockout sat deep behind the suspended underframe. Keep the
   // signature wheel and falling water on the visible waterfall plane so the
   // locked phone overview can actually explain what powers the city.
-  const enginePlaneZ = 3.28;
+  const enginePlaneZ = 5.35;
   const framePosts = [-1.62, 1.62];
   framePosts.forEach((x) => {
-    const post = cylinder(0.18, 0.25, 4.9, materials.bark, radialSegments(quality));
+    const post = cylinder(0.18, 0.25, 4.9, mechanicalMaterials.timberDark, radialSegments(quality));
     post.position.set(x, -3.35, enginePlaneZ);
     frame.add(post);
-    const bearing = cylinder(0.38, 0.42, 0.42, materials.brass, radialSegments(quality));
+    const bearing = cylinder(0.38, 0.42, 0.42, mechanicalMaterials.brass, radialSegments(quality));
     bearing.rotation.x = Math.PI / 2;
     bearing.position.set(x, -3.35, enginePlaneZ);
     frame.add(bearing);
   });
   for (const y of [-5.4, -1.3]) {
-    frame.add(tubeBetween(new THREE.Vector3(-1.75, y, enginePlaneZ), new THREE.Vector3(1.75, y, enginePlaneZ), 0.13, materials.timberDark, 7));
+    frame.add(tubeBetween(new THREE.Vector3(-1.75, y, enginePlaneZ), new THREE.Vector3(1.75, y, enginePlaneZ), 0.13, mechanicalMaterials.timberDark, 7));
   }
   const sluice = new THREE.Group();
   sluice.name = 'ISLAND_10_POWERWORKS_SLUICE_GATES';
   const gateGeometry = new THREE.BoxGeometry(0.48, 0.62, 0.16);
   const gateInstances = new THREE.InstancedMesh(gateGeometry, materials.brass, 3);
   gateInstances.name = 'ISLAND_10_POWERWORKS_SYNCHRONIZED_SLUICE_GATE_ARRAY';
+  gateInstances.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   const gateDummy = new THREE.Object3D();
-  [-0.72, 0, 0.72].forEach((x, index) => {
+  const gateRestX = [-0.72, 0, 0.72] as const;
+  const powerWaterMaterial = materials.waterMist.clone();
+  powerWaterMaterial.opacity = 0;
+  const waterChannelGeometries: THREE.BufferGeometry[] = [];
+  gateRestX.forEach((x, index) => {
     gateDummy.position.set(x, -0.54, enginePlaneZ - 0.14);
     gateDummy.updateMatrix();
     gateInstances.setMatrixAt(index, gateDummy.matrix);
@@ -1524,9 +1597,26 @@ function createRootheartPowerworks(
       new THREE.Vector3(x + 0.06, -1.5, enginePlaneZ - 0.18),
       new THREE.Vector3(x - 0.08, -3.1, enginePlaneZ - 0.12),
       new THREE.Vector3(x, -6.15, enginePlaneZ - 0.08),
-    ], 0.1, materials.waterMist, quality, 22);
-    sluice.add(channel);
+    ], 0.1, powerWaterMaterial, quality, 22);
+    waterChannelGeometries.push(channel.geometry);
   });
+  const waterChannelGeometry = mergeGeometries(waterChannelGeometries, false);
+  waterChannelGeometries.forEach((geometry) => geometry.dispose());
+  if (waterChannelGeometry) {
+    const waterChannels = new THREE.Mesh(waterChannelGeometry, powerWaterMaterial);
+    waterChannels.name = 'ISLAND_10_POWERWORKS_SYNCHRONIZED_WATER_CHANNEL_ARRAY';
+    sluice.add(waterChannels);
+  }
+  const applyGatePose = (openAmount: number) => {
+    gateRestX.forEach((x, index) => {
+      const stagger = index === 1 ? 1 : 0.92;
+      gateDummy.position.set(x, -0.54 + openAmount * 0.42 * stagger, enginePlaneZ - 0.14);
+      gateDummy.rotation.set(0, 0, (index - 1) * openAmount * 0.018);
+      gateDummy.updateMatrix();
+      gateInstances.setMatrixAt(index, gateDummy.matrix);
+    });
+    gateInstances.instanceMatrix.needsUpdate = true;
+  };
   gateInstances.instanceMatrix.needsUpdate = true;
   sluice.add(gateInstances);
   frame.add(sluice);
@@ -1537,9 +1627,9 @@ function createRootheartPowerworks(
     name: 'ISLAND_10_POWERWORKS_HEARTWHEEL_PIVOT',
     radius: 1.82,
     depth: 0.72,
-    spokeCount: 10,
-    paddleCount: 16,
-    materials,
+    spokeCount: 12,
+    paddleCount: 18,
+    materials: mechanicalMaterials,
     quality,
   });
   heartwheel.position.set(0, -3.36, enginePlaneZ);
@@ -1549,16 +1639,22 @@ function createRootheartPowerworks(
   transmission.userData.keepSeparate = true;
   const transferWheel = createMechanicalWheel({
     name: 'ISLAND_10_POWERWORKS_TRANSFER_GEAR_A', radius: 0.68, depth: 0.34,
-    spokeCount: 7, materials, quality, monochrome: true,
+    spokeCount: 7, toothCount: 14, materials: mechanicalMaterials, quality, monochrome: true,
   });
   transferWheel.position.set(1.76, -2.55, enginePlaneZ + 0.12);
   transferWheel.scale.setScalar(0.92);
+  const counterWheel = createMechanicalWheel({
+    name: 'ISLAND_10_POWERWORKS_COUNTER_GEAR', radius: 0.52, depth: 0.3,
+    spokeCount: 6, toothCount: 10, materials: mechanicalMaterials, quality, monochrome: true,
+  });
+  counterWheel.position.set(-1.54, -1.82, enginePlaneZ + 0.08);
   const bevelWheel = createMechanicalWheel({
     name: 'ISLAND_10_POWERWORKS_TRANSFER_GEAR_B', radius: 0.48, depth: 0.28,
-    spokeCount: 6, materials, quality, monochrome: true,
+    spokeCount: 6, toothCount: 8, materials: mechanicalMaterials, quality, monochrome: true,
   });
-  bevelWheel.position.set(1.68, -1.42, 2.78);
-  transmission.add(transferWheel, bevelWheel);
+  bevelWheel.position.set(1.68, -1.5, enginePlaneZ - 0.36);
+  bevelWheel.rotation.x = Math.PI / 2;
+  transmission.add(transferWheel, counterWheel, bevelWheel);
   const verticalShaft = new THREE.Group();
   verticalShaft.name = 'ISLAND_10_POWERWORKS_VERTICAL_SHAFT';
   const shaftCore = cylinder(0.11, 0.13, 1.92, materials.brass, radialSegments(quality));
@@ -1567,11 +1663,11 @@ function createRootheartPowerworks(
   verticalShaft.add(shaftCore, shaftKey);
   mergeStaticMeshesByMaterial(verticalShaft);
   verticalShaft.userData.keepSeparate = true;
-  verticalShaft.position.set(1.68, -0.38, 2.78);
+  verticalShaft.position.set(1.68, -0.38, enginePlaneZ - 0.5);
   transmission.add(verticalShaft);
   const governor = new THREE.Group();
   governor.name = 'ISLAND_10_POWERWORKS_FLYWHEEL_GOVERNOR';
-  governor.position.set(1.68, 0.34, 2.78);
+  governor.position.set(1.68, 0.34, enginePlaneZ - 0.5);
   const governorRing = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.045, 6, 24), materials.brass);
   governorRing.rotation.x = Math.PI / 2;
   governor.add(governorRing);
@@ -1598,13 +1694,13 @@ function createRootheartPowerworks(
   shell.position.y = 0.24;
   dynamo.add(shell);
   const coreMaterial = materials.lantern.clone();
-  coreMaterial.color.set(0xffcf62);
-  coreMaterial.emissive.set(0xff7b20);
+  coreMaterial.color.set(0xd96818);
+  coreMaterial.emissive.set(0xff6a00);
   coreMaterial.emissiveIntensity = 0;
-  const core = sphere(0.32, coreMaterial, quality === 'low' ? 8 : 10);
+  const core = sphere(0.39, coreMaterial, quality === 'low' ? 8 : 10);
   core.name = 'ISLAND_10_POWERWORKS_HEART_CORE';
-  core.scale.set(1, 1.16, 0.66);
-  core.position.set(0, 0.42, 0.58);
+  core.scale.set(1, 1.22, 0.72);
+  core.position.set(0, 0.42, 0.7);
   dynamo.add(core);
   const flowerCrown = new THREE.Group();
   flowerCrown.name = 'ISLAND_10_POWERWORKS_FLOWER_CROWN';
@@ -1652,7 +1748,9 @@ function createRootheartPowerworks(
   capacitorCollars.instanceMatrix.needsUpdate = true;
   capacitorBank.add(capacitorInstances, capacitorCollars);
   dynamo.add(capacitorBank);
-  dynamo.position.set(0, 0.04, 0);
+  // Keep the flower-crowned generator visually coupled to the wheel in the
+  // dedicated mission camera while it remains physically beneath the board.
+  dynamo.position.set(0, -0.25, 0);
 
   const cableNetwork = new THREE.Group();
   cableNetwork.name = 'ISLAND_10_POWERWORKS_ROOT_CABLE_NETWORK';
@@ -1684,28 +1782,58 @@ function createRootheartPowerworks(
 
   const poweredLights = new THREE.Group();
   poweredLights.name = 'ISLAND_10_POWERWORKS_POWERED_LIGHT_NETWORK';
-  const poweredLightCount = 40;
+  // One batched point field serves two readable systems: cool impact spray at
+  // the paddle contact and the warm, distance-delayed Heartlight city wave.
+  // Reusing this draw call adds visible life without spending another mobile
+  // renderer pass or any triangle budget.
+  const splashCount = 16;
+  const poweredLightCount = 52;
   const poweredLightPositions = new Float32Array(poweredLightCount * 3);
+  const poweredLightColors = new Float32Array(poweredLightCount * 3);
+  const unpoweredColor = new THREE.Color(0x4c3422);
   for (let index = 0; index < poweredLightCount; index += 1) {
-    const angle = index / poweredLightCount * Math.PI * 2 + 0.18;
-    const radius = 4.35 + (index % 5) * 0.36;
-    poweredLightPositions[index * 3] = Math.cos(angle) * radius;
-    poweredLightPositions[index * 3 + 1] = 0.28 + (index % 8) * 0.34;
-    poweredLightPositions[index * 3 + 2] = Math.sin(angle) * radius;
+    if (index < splashCount) {
+      const lane = index % gateRestX.length;
+      const seed = index / splashCount;
+      poweredLightPositions[index * 3] = gateRestX[lane] + Math.sin(seed * Math.PI * 6) * 0.12;
+      poweredLightPositions[index * 3 + 1] = -1.58 - seed * 0.82;
+      poweredLightPositions[index * 3 + 2] = enginePlaneZ + 0.66 + Math.cos(seed * Math.PI * 4) * 0.07;
+    } else {
+      const cityIndex = index - splashCount;
+      const angle = cityIndex / (poweredLightCount - splashCount) * Math.PI * 2 + 0.18;
+      const radius = 4.35 + (cityIndex % 5) * 0.36;
+      poweredLightPositions[index * 3] = Math.cos(angle) * radius;
+      poweredLightPositions[index * 3 + 1] = 0.28 + (cityIndex % 8) * 0.34;
+      poweredLightPositions[index * 3 + 2] = Math.sin(angle) * radius;
+    }
+    poweredLightColors[index * 3] = unpoweredColor.r;
+    poweredLightColors[index * 3 + 1] = unpoweredColor.g;
+    poweredLightColors[index * 3 + 2] = unpoweredColor.b;
   }
   const poweredLightGeometry = new THREE.BufferGeometry();
   poweredLightGeometry.setAttribute('position', new THREE.BufferAttribute(poweredLightPositions, 3));
+  poweredLightGeometry.setAttribute('color', new THREE.BufferAttribute(poweredLightColors, 3));
   const poweredLightMaterial = new THREE.PointsMaterial({
-    color: 0xffc75f,
-    size: quality === 'low' ? 0.18 : 0.22,
+    color: 0xffffff,
+    map: createSoftGlowPointTexture(),
+    size: quality === 'low' ? 0.22 : 0.28,
     transparent: true,
     opacity: 0,
+    alphaTest: 0.025,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
+    vertexColors: true,
+    toneMapped: false,
   });
   const poweredLightField = new THREE.Points(poweredLightGeometry, poweredLightMaterial);
   poweredLightField.name = 'ISLAND_10_POWERWORKS_CITY_LIGHT_FIELD';
   poweredLights.add(poweredLightField);
+  const sleepingLightColor = new THREE.Color(0x4c3422);
+  const wakingLightColor = new THREE.Color(0xff9d32);
+  const poweredLightColor = new THREE.Color(0xffe2a1);
+  const waterSparkColor = new THREE.Color(0x8ee8e8);
+  const waterSparkBright = new THREE.Color(0xe4ffff);
+  const animatedLightColor = new THREE.Color();
 
   root.add(frame, heartwheel, transmission, dynamo, cableNetwork, poweredLights);
   runtimeParts.push(registerIsland10RuntimePart('rootheart-powerworks', root, 'signature-mission'));
@@ -1737,32 +1865,87 @@ function createRootheartPowerworks(
     transmission.visible = stage >= 2;
     dynamo.visible = stage >= 2;
     cableNetwork.visible = stage >= 3;
-    poweredLights.visible = stage >= 3;
+    poweredLights.visible = stage >= 1;
+    const assemblyRamp = 1 - Math.pow(1 - transitionProgress, 3);
+    const firstStageScale = stage === 1 ? THREE.MathUtils.lerp(0.78, 1, assemblyRamp) : 1;
+    const secondStageScale = stage === 2 ? THREE.MathUtils.lerp(0.82, 1, assemblyRamp) : 1;
+    frame.scale.set(1, firstStageScale, 1);
+    heartwheel.scale.setScalar(firstStageScale);
+    transmission.scale.setScalar(secondStageScale);
+    dynamo.scale.setScalar(secondStageScale);
     // Reduced-motion rendering skips animate(), so stage application must
     // still leave a complete, warmly powered static city.
-    coreMaterial.emissiveIntensity = stage < 2 ? 0 : stage === 2 ? 0.65 : 1.42;
+    coreMaterial.emissiveIntensity = stage < 2 ? 0 : stage === 2 ? 0.5 : 0.96;
     capacitorMaterial.emissiveIntensity = stage < 2 ? 0 : stage === 2 ? 0.22 : 1.1;
     pulseMaterial.opacity = stage >= 3 ? 0.62 : 0;
-    poweredLightMaterial.opacity = stage >= 3 ? 0.72 : 0;
+    poweredLightMaterial.opacity = stage >= 3 ? 0.72 : stage >= 1 ? 0.58 : 0;
+    powerWaterMaterial.opacity = stage >= 1 ? 0.42 : 0;
+    powerWaterMaterial.emissiveIntensity = stage >= 3 ? 0.52 : stage >= 1 ? 0.24 : 0;
+    powerworksTimber.emissiveIntensity = stage >= 3 ? 0.62 : 0;
+    powerworksTimberDark.emissiveIntensity = stage >= 3 ? 0.34 : 0;
+    powerworksBrass.emissiveIntensity = stage >= 3 ? 0.72 : 0;
+    applyGatePose(stage >= 1 ? 0.72 : 0);
+    for (let index = 0; index < poweredLightCount; index += 1) {
+      const stageColor = index < splashCount
+        ? waterSparkColor
+        : stage >= 3
+          ? poweredLightColor
+          : unpoweredColor;
+      poweredLightColors[index * 3] = stageColor.r;
+      poweredLightColors[index * 3 + 1] = stageColor.g;
+      poweredLightColors[index * 3 + 2] = stageColor.b;
+    }
+    (poweredLightGeometry.attributes.color as THREE.BufferAttribute).needsUpdate = true;
   };
   setStage({ buildStage: 0 });
 
   const animate = (elapsed: number) => {
     const ramp = 1 - Math.pow(1 - transitionProgress, 3);
+    const completionRamp = stage >= 3 ? THREE.MathUtils.smoothstep(ramp, 0.04, 1) : 1;
     const wheelSpeed = (stage === 1 ? 0.11 : stage === 2 ? 0.2 : stage === 3 ? 0.27 : 0) * ramp;
+    const enginePhase = elapsed * wheelSpeed;
+    const gateBreath = stage >= 1 ? 0.68 + Math.sin(enginePhase * 2.2) * 0.08 : 0;
+    applyGatePose(gateBreath * ramp);
+    powerWaterMaterial.opacity = stage >= 1
+      ? 0.4 + Math.sin(enginePhase * 3.1 + 0.5) * 0.065
+      : 0;
     heartwheel.rotation.z = elapsed * wheelSpeed;
     transferWheel.rotation.z = -elapsed * wheelSpeed * 2.68;
+    counterWheel.rotation.z = elapsed * wheelSpeed * 3.42;
     bevelWheel.rotation.z = elapsed * wheelSpeed * 3.76;
     verticalShaft.rotation.y = elapsed * wheelSpeed * 4.1;
     governor.rotation.y = -elapsed * wheelSpeed * 5.2;
-    coreMaterial.emissiveIntensity = stage < 2 ? 0 : (stage === 2 ? 0.65 : 1.5) + Math.sin(elapsed * 2.1) * 0.08;
+    coreMaterial.emissiveIntensity = stage < 2
+      ? 0
+      : stage === 2
+        ? 0.5
+        : THREE.MathUtils.lerp(0.5, 1 + Math.sin(elapsed * 2.1) * 0.07, completionRamp);
+    if (stage >= 1) {
+      for (let index = 0; index < splashCount; index += 1) {
+        const lane = index % gateRestX.length;
+        const splashT = (elapsed * (0.38 + wheelSpeed * 1.8) + index / splashCount) % 1;
+        const lateral = Math.sin((splashT * Math.PI * 2) + index * 1.73) * (0.08 + splashT * 0.13);
+        poweredLightPositions[index * 3] = gateRestX[lane] + lateral;
+        poweredLightPositions[index * 3 + 1] = -1.54 - splashT * 0.96 + Math.sin(splashT * Math.PI) * 0.16;
+        poweredLightPositions[index * 3 + 2] = enginePlaneZ + 0.64 + Math.cos(index * 2.11 + splashT * 5.2) * 0.08;
+        animatedLightColor.copy(waterSparkColor).lerp(waterSparkBright, 1 - splashT);
+        poweredLightColors[index * 3] = animatedLightColor.r;
+        poweredLightColors[index * 3 + 1] = animatedLightColor.g;
+        poweredLightColors[index * 3 + 2] = animatedLightColor.b;
+      }
+      (poweredLightGeometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
+      (poweredLightGeometry.attributes.color as THREE.BufferAttribute).needsUpdate = true;
+    }
     const electricalCycle = (elapsed * 0.18) % 1;
     let capacitorChargeSum = 0;
     capacitorTransforms.forEach(({ position }, index) => {
       const chargeStart = 0.08 + index * 0.12;
       const chargedIn = THREE.MathUtils.smoothstep(electricalCycle, chargeStart, chargeStart + 0.17);
       const discharged = 1 - THREE.MathUtils.smoothstep(electricalCycle, 0.78, 0.94);
-      const charged = stage >= 3 ? chargedIn * discharged : 0;
+      const commissioningCharge = stage >= 3
+        ? THREE.MathUtils.smoothstep(completionRamp, 0.08 + index * 0.13, 0.26 + index * 0.13)
+        : 0;
+      const charged = stage >= 3 ? Math.max(chargedIn * discharged * completionRamp, commissioningCharge) : 0;
       capacitorChargeSum += charged;
       capacitorDummy.position.copy(position);
       capacitorDummy.rotation.set(0, 0, 0);
@@ -1784,14 +1967,33 @@ function createRootheartPowerworks(
         pulsePositions[index * 3 + 2] = THREE.MathUtils.lerp(0, target.z, eased);
       }
       (pulseGeometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
-      pulseMaterial.opacity = 0.42 + pulseLaunch * 0.5;
+      pulseMaterial.opacity = (0.42 + pulseLaunch * 0.5) * completionRamp;
       const cityArrival = THREE.MathUtils.smoothstep(electricalCycle, 0.58, 0.9);
       const warmBreath = (Math.sin(elapsed * 0.82) + 1) * 0.5;
-      poweredLightMaterial.opacity = 0.62 + cityArrival * 0.18 + warmBreath * 0.12;
-      poweredLightMaterial.size = (quality === 'low' ? 0.18 : 0.22) + cityArrival * 0.045 + warmBreath * 0.018;
+      poweredLightMaterial.opacity = THREE.MathUtils.lerp(
+        0.44,
+        0.62 + cityArrival * 0.18 + warmBreath * 0.12,
+        completionRamp,
+      );
+      poweredLightMaterial.size = (quality === 'low' ? 0.22 : 0.28) + cityArrival * 0.055 + warmBreath * 0.02;
+      for (let index = splashCount; index < poweredLightCount; index += 1) {
+        const cityIndex = index - splashCount;
+        const radialDelay = cityIndex / (poweredLightCount - splashCount) * 0.56;
+        const localArrival = THREE.MathUtils.smoothstep(electricalCycle, 0.54 + radialDelay, 0.64 + radialDelay);
+        const repeatingArrival = Math.max(localArrival, THREE.MathUtils.smoothstep(electricalCycle + 1, 0.54 + radialDelay, 0.64 + radialDelay));
+        const commissioningArrival = THREE.MathUtils.smoothstep(completionRamp, radialDelay, radialDelay + 0.28);
+        const relitArrival = Math.max(repeatingArrival * completionRamp, commissioningArrival);
+        animatedLightColor.copy(sleepingLightColor)
+          .lerp(wakingLightColor, relitArrival)
+          .lerp(poweredLightColor, relitArrival * (0.72 + warmBreath * 0.18));
+        poweredLightColors[index * 3] = animatedLightColor.r;
+        poweredLightColors[index * 3 + 1] = animatedLightColor.g;
+        poweredLightColors[index * 3 + 2] = animatedLightColor.b;
+      }
+      (poweredLightGeometry.attributes.color as THREE.BufferAttribute).needsUpdate = true;
     } else {
       pulseMaterial.opacity = 0;
-      poweredLightMaterial.opacity = 0;
+      poweredLightMaterial.opacity = stage >= 1 ? 0.5 + Math.sin(elapsed * 1.4) * 0.08 : 0;
     }
   };
 
@@ -2370,10 +2572,10 @@ export function createIsland10RootheartLivingAmbience(
     };
     powerworks.setStage(powerworksPresentation);
     const nightBlend = powerworksPresentation.buildStage / 3;
-    scene.backgroundIntensity = THREE.MathUtils.lerp(1, 0.56, nightBlend);
+    scene.backgroundIntensity = THREE.MathUtils.lerp(1, 0.34, nightBlend * nightBlend);
     if (scene.fog instanceof THREE.FogExp2) {
-      scene.fog.color.set(0x665f3d).lerp(new THREE.Color(0x132b31), nightBlend);
-      scene.fog.density = THREE.MathUtils.lerp(0.0036, 0.0052, nightBlend);
+      scene.fog.color.set(0x665f3d).lerp(new THREE.Color(0x0b1721), nightBlend * nightBlend);
+      scene.fog.density = THREE.MathUtils.lerp(0.0036, 0.0062, nightBlend * nightBlend);
     }
   };
   updatePowerworksStage(powerworksPresentation);
@@ -2390,7 +2592,15 @@ export function createIsland10RootheartLivingAmbience(
       trunk.userData.keepSeparate = true;
     }
   });
-  [crownBranchNetwork, verticalCity, landmarkSupportCity, branchSupports, foliage, distantCanopy].forEach((group) => {
+  [
+    crownBranchNetwork,
+    verticalCity,
+    branchSupports,
+    underframe,
+    exteriorBridges,
+    foliage,
+    distantCanopy,
+  ].forEach((group) => {
     mergeStaticMeshesByMaterial(group);
     group.userData.keepSeparate = true;
   });
@@ -2424,12 +2634,16 @@ export function createIsland10RootheartLivingAmbience(
 
   const updateView = (cameraPosition: THREE.Vector3, cameraTarget = new THREE.Vector3()) => {
     const isSideInspection = Math.abs(cameraPosition.x - cameraTarget.x) > 8;
-    branchSupports.visible = !isSideInspection;
+    const isPowerworksInspection = cameraTarget.y < -1.5;
+    branchSupports.visible = !isSideInspection && !isPowerworksInspection;
     // Orbit inspection still needs to feel like a living canopy city. Keep
     // the leaf canopy as context, but fade the cross-frame crown branches when
     // their parent sightline trunk fades so no branch can appear detached.
-    crownBranchNetwork.visible = !isSideInspection;
-    foliage.visible = true;
+    crownBranchNetwork.visible = !isSideInspection && !isPowerworksInspection;
+    verticalCity.visible = !isPowerworksInspection;
+    underframe.visible = !isPowerworksInspection;
+    exteriorBridges.visible = !isPowerworksInspection;
+    foliage.visible = !isPowerworksInspection;
     const cameraX = cameraPosition.x;
     const cameraZ = cameraPosition.z;
     const targetX = cameraTarget.x;

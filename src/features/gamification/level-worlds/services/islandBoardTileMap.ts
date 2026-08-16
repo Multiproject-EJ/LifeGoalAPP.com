@@ -123,6 +123,11 @@ const CARD_STATION_START_FRACTION = 17 / 36;
 const BUILD_DISCOUNT_TILE_FRACTION = 0.35;
 const FREE_TICKET_TILE_FRACTION = 0.85;
 
+export function getFreeTicketTileIndexForTileCount(tileCount: number): number {
+  const safeTileCount = Math.max(1, Math.floor(tileCount));
+  return Math.min(safeTileCount - 1, Math.max(0, Math.floor(FREE_TICKET_TILE_FRACTION * safeTileCount)));
+}
+
 // Non-stop tile pool (weighted). Retired tile types:
 //   - `egg_shard` (shards now only come from reward bar / stops / boss / egg sell).
 //   - `event` (conflicted with the timed minigame terminology; the word "event"
@@ -260,7 +265,7 @@ export function generateTileMap(
   const encounterIndices = computeEncounterIndicesForProfile(rarity, tileCount);
   const cardStationIndices = computeCardStationIndicesForProfile(tileCount, islandNumber);
   const buildDiscountTileIndex = Math.min(tileCount - 1, Math.max(0, Math.floor(BUILD_DISCOUNT_TILE_FRACTION * tileCount)));
-  const freeTicketTileIndex = Math.min(tileCount - 1, Math.max(0, Math.floor(FREE_TICKET_TILE_FRACTION * tileCount)));
+  const freeTicketTileIndex = getFreeTicketTileIndexForTileCount(tileCount);
   const tiles: IslandTileMapEntry[] = [];
 
   for (let tileIndex = 0; tileIndex < tileCount; tileIndex++) {

@@ -150,6 +150,16 @@ const COMPLETED_CHECK_ICON = (
   </svg>
 );
 
+/** Exact board glyph for read-only guides and the live tile renderer. */
+export function getBoardTileGlyph(
+  tileType: IslandTileMapEntry['tileType'],
+  doorStopId?: IslandTileMapEntry['doorStopId'],
+): JSX.Element | string {
+  if (tileType === 'landmark_door' && doorStopId === 'boss') return BOSS_CROWN_ICON;
+  if (tileType === 'landmark_door') return (doorStopId && DOOR_GLYPHS[doorStopId]) || DOOR_GLYPHS.mystery;
+  return TILE_SVG_ICONS[tileType] ?? TILE_SVG_ICONS.micro;
+}
+
 export interface BoardTileProps {
   anchor: TileAnchor;
   index: number;
@@ -176,6 +186,8 @@ export interface BoardTileProps {
   technologyFragment?: VisibleTechnologyFragment;
   /** Presentation-only dormant state; gameplay authority remains in roll action. */
   isDormant?: boolean;
+  /** Event-ticket plant growth. One means ready to collect. */
+  livingTicketGrowthProgress?: number;
   /** Uniform board scale (canonical 1000px → screen px). Used to size tiles to
    *  match the ring geometry regardless of viewport dimensions. */
   uniformScale: number;
@@ -202,11 +214,13 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
     isMinimalBoardArt,
     technologyFragment,
     isDormant = false,
+    livingTicketGrowthProgress = 1,
     uniformScale,
   } = props;
 
   const tileTypeClass = !isStop && tileType ? `island-tile--${tileType}` : '';
   const doorStopClass = tileType === 'landmark_door' && doorStopId ? `island-tile--door-${doorStopId}` : '';
+  const isLivingTicketRegrowing = tileType === 'free_ticket' && livingTicketGrowthProgress < 1;
 
   // Choose icon
   let iconContent: JSX.Element | string;
@@ -219,11 +233,27 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
   } else if (signatureMissionKind === 'rootheart_power_component') {
     iconContent = '⚙';
   } else if (tileType === 'landmark_door' && doorStopId === 'boss') {
-    iconContent = BOSS_CROWN_ICON;
+    iconContent = getBoardTileGlyph(tileType, doorStopId);
   } else if (tileType === 'landmark_door') {
-    iconContent = (doorStopId && DOOR_GLYPHS[doorStopId]) || DOOR_GLYPHS.mystery;
+    iconContent = getBoardTileGlyph(tileType, doorStopId);
+  } else if (isLivingTicketRegrowing) {
+    iconContent = (
+      <span
+        className="island-tile__living-ticket"
+        style={{
+          ['--living-ticket-growth' as string]: String(Math.max(0, Math.min(1, livingTicketGrowthProgress))),
+          ['--living-ticket-delay' as string]: `${(-120 * Math.max(0, Math.min(1, livingTicketGrowthProgress))).toFixed(2)}s`,
+        }}
+        aria-hidden="true"
+      >
+        <i className="island-tile__living-ticket-stem" />
+        <i className="island-tile__living-ticket-leaf island-tile__living-ticket-leaf--left" />
+        <i className="island-tile__living-ticket-leaf island-tile__living-ticket-leaf--right" />
+        <i className="island-tile__living-ticket-bud" />
+      </span>
+    );
   } else if (!isStop && tileType && TILE_SVG_ICONS[tileType]) {
-    iconContent = TILE_SVG_ICONS[tileType];
+    iconContent = getBoardTileGlyph(tileType);
   } else {
     iconContent = <>{index + 1}</>;
   }
@@ -248,6 +278,7 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
         !isMinimalBoardArt && !isDormant ? 'island-tile--alive' : '',
         technologyFragment ? 'island-tile--technology-fragment' : '',
         isDormant ? 'island-tile--dormant' : '',
+        isLivingTicketRegrowing ? 'island-tile--living-ticket-regrowing' : '',
       ].filter(Boolean).join(' ')}
       aria-label={technologyFragment ? `Tile ${index + 1}. ${technologyFragment.ariaLabel}`
         : signatureMissionKind === 'frostwell_drill'
@@ -256,6 +287,8 @@ export const BoardTile = memo(function BoardTile(props: BoardTileProps) {
             ? `Tile ${index + 1}. Rootheart Powerworks component`
             : isDormant
               ? `Tile ${index + 1}. Dormant`
+              : isLivingTicketRegrowing
+                ? `Tile ${index + 1}. Event ticket regrowing`
               : undefined}
       style={{
         left: position.x,

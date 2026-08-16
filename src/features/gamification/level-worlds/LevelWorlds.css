@@ -936,10 +936,57 @@
   bottom: 0;
   z-index: 20;
   padding: 0;
+  transform: translate3d(0, 0, 0);
+  transition: transform 280ms cubic-bezier(0.22, 0.8, 0.28, 1);
+  will-change: transform;
+}
+
+.island-run-prototype__footer--controller-tucked {
+  transform: translate3d(0, calc(100% - 3.2rem - env(safe-area-inset-bottom, 0px)), 0);
 }
 
 .island-run-prototype__footer--build-tutorial-active {
   z-index: 1090;
+  transform: translate3d(0, 0, 0);
+}
+
+.island-run-prototype__footer-tuck-handle {
+  position: absolute;
+  left: 50%;
+  top: -0.2rem;
+  z-index: 22;
+  display: grid;
+  grid-template-columns: 1.6rem auto;
+  place-items: center;
+  gap: 0.2rem;
+  width: 4.9rem;
+  min-height: 2rem;
+  padding: 0.18rem 0.62rem;
+  border: 1px solid rgba(201, 237, 251, 0.58);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(42, 91, 117, 0.96), rgba(8, 29, 45, 0.97));
+  color: #e9f9ff;
+  box-shadow: 0 7px 18px rgba(0, 8, 18, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transform: translate(-50%, -50%);
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.island-run-prototype__footer-tuck-handle:focus-visible {
+  outline: 3px solid rgba(255, 225, 114, 0.92);
+  outline-offset: 2px;
+}
+
+.island-run-prototype__footer-tuck-grip {
+  width: 1.55rem;
+  height: 0.24rem;
+  border-radius: 999px;
+  background: rgba(222, 246, 255, 0.76);
+  box-shadow: 0 0.34rem 0 rgba(222, 246, 255, 0.34);
+}
+
+.island-run-prototype__footer--controller-tucked .island-run-prototype__footer-main {
+  pointer-events: none;
 }
 
 .island-run-prototype__footer-main {
@@ -952,6 +999,12 @@
   box-shadow: none;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-run-prototype__footer {
+    transition-duration: 1ms;
+  }
 }
 
 .island-run-prototype__footer-stats {
@@ -6067,6 +6120,602 @@
   }
 }
 
+/* ── Cycle-scoped first-lap diplomatic mission briefing ──────────────── */
+.island-mission-briefing {
+  position: fixed;
+  inset: 0;
+  z-index: 12400;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding:
+    max(12px, env(safe-area-inset-top, 0px))
+    max(12px, env(safe-area-inset-right, 0px))
+    max(12px, env(safe-area-inset-bottom, 0px))
+    max(12px, env(safe-area-inset-left, 0px));
+  overflow: hidden auto;
+  background:
+    radial-gradient(circle at 50% 25%, rgba(45, 221, 232, 0.17), transparent 42%),
+    radial-gradient(circle at 22% 78%, rgba(196, 151, 57, 0.14), transparent 38%),
+    rgba(0, 7, 15, 0.88);
+  backdrop-filter: blur(8px) saturate(0.86);
+  -webkit-backdrop-filter: blur(8px) saturate(0.86);
+  animation: island-stop-modal-backdrop-in 260ms ease-out both;
+}
+
+.island-mission-briefing__atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  background:
+    linear-gradient(90deg, transparent 49.85%, rgba(94, 230, 237, 0.12) 50%, transparent 50.15%),
+    linear-gradient(0deg, transparent 49.85%, rgba(94, 230, 237, 0.07) 50%, transparent 50.15%);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(circle at 50% 45%, #000, transparent 76%);
+}
+
+.island-mission-briefing__panel {
+  position: relative;
+  width: min(920px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(260px, 0.95fr);
+  grid-template-areas:
+    'header header'
+    'devices body'
+    'command command'
+    'accept accept';
+  gap: clamp(10px, 1.6vw, 16px);
+  box-sizing: border-box;
+  padding: clamp(14px, 2.2vw, 24px);
+  overflow: hidden auto;
+  color: #ecfbff;
+  border: 1px solid rgba(255, 222, 133, 0.58);
+  border-radius: clamp(24px, 4vw, 38px);
+  background:
+    linear-gradient(120deg, rgba(8, 39, 51, 0.94), rgba(4, 18, 31, 0.98) 50%, rgba(15, 28, 32, 0.98)),
+    #071724;
+  box-shadow:
+    0 36px 90px rgba(0, 0, 0, 0.78),
+    0 0 0 6px rgba(4, 31, 42, 0.78),
+    0 0 54px rgba(44, 219, 235, 0.18),
+    inset 0 0 60px rgba(44, 219, 235, 0.07);
+  animation: island-stop-modal-enter 420ms cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+
+.island-mission-briefing__panel::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(96, 228, 237, 0.14);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.island-mission-briefing__header {
+  grid-area: header;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(112, 226, 231, 0.17);
+}
+
+.island-mission-briefing__header p,
+.island-mission-briefing__header h2,
+.island-mission-briefing__header span,
+.island-mission-briefing__command p {
+  margin: 0;
+}
+
+.island-mission-briefing__header p,
+.island-mission-briefing__command > p {
+  color: #f2d98a;
+  font-size: clamp(0.58rem, 1.6vw, 0.72rem);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.island-mission-briefing__header h2 {
+  margin-top: 3px;
+  color: #f6fdff;
+  font-family: 'Cinzel', 'Iowan Old Style', Palatino, Georgia, serif;
+  font-size: clamp(1.25rem, 3.5vw, 2rem);
+  line-height: 1;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(78, 225, 238, 0.22);
+}
+
+.island-mission-briefing__header > span {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  color: #8ff6ee;
+  border: 1px solid rgba(107, 237, 230, 0.3);
+  border-radius: 999px;
+  background: rgba(5, 55, 62, 0.5);
+  font-size: clamp(0.56rem, 1.4vw, 0.68rem);
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.island-mission-briefing__devices {
+  grid-area: devices;
+  position: relative;
+  min-height: 300px;
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) 46px minmax(90px, 1fr);
+  grid-template-rows: minmax(190px, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px 8px;
+  overflow: hidden;
+  border: 1px solid rgba(89, 217, 229, 0.18);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(43, 217, 228, 0.13), transparent 45%),
+    linear-gradient(180deg, rgba(2, 16, 29, 0.76), rgba(6, 30, 37, 0.62));
+}
+
+.island-mission-briefing__device {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  align-self: stretch;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  place-items: center;
+  margin: 0;
+}
+
+.island-mission-briefing__device img {
+  width: 100%;
+  height: min(25dvh, 230px);
+  object-fit: contain;
+  filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.52)) drop-shadow(0 0 14px rgba(64, 225, 239, 0.16));
+  animation: island-mission-device-float 4s ease-in-out infinite;
+}
+
+.island-mission-briefing__device--concord img { animation-delay: -1.7s; }
+
+.island-mission-briefing__device figcaption {
+  color: #b9e7e9;
+  font-size: clamp(0.56rem, 1.6vw, 0.7rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.island-mission-briefing__signal {
+  position: relative;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(102, 242, 232, 0.35);
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgba(67, 232, 232, 0.24), inset 0 0 17px rgba(67, 232, 232, 0.16);
+}
+
+.island-mission-briefing__signal::before,
+.island-mission-briefing__signal::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 90px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(103, 247, 234, 0.75));
+}
+.island-mission-briefing__signal::before { right: 100%; }
+.island-mission-briefing__signal::after { left: 100%; transform: rotate(180deg); }
+.island-mission-briefing__signal i {
+  position: absolute;
+  width: calc(11px + var(--i, 0) * 8px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(112, 247, 237, 0.8);
+  border-radius: 50%;
+  animation: island-mission-signal-pulse 1.8s ease-out infinite;
+}
+.island-mission-briefing__signal i:nth-child(1) { --i: 0; }
+.island-mission-briefing__signal i:nth-child(2) { --i: 1; animation-delay: -.6s; }
+.island-mission-briefing__signal i:nth-child(3) { --i: 2; animation-delay: -1.2s; }
+
+.island-mission-briefing__caretaker {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(241, 211, 127, 0.26);
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(92, 66, 26, 0.32), rgba(5, 26, 35, 0.88));
+}
+
+.island-mission-briefing__caretaker > div:last-child,
+.island-mission-briefing__body,
+.island-mission-briefing__statement,
+.island-mission-briefing__statement h3,
+.island-mission-briefing__statement p,
+.island-mission-briefing__objectives,
+.island-mission-briefing__objectives article,
+.island-mission-briefing__objectives strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.island-mission-briefing__caretaker-portrait {
+  width: 62px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid rgba(246, 220, 143, 0.64);
+  border-radius: 50%;
+  background: radial-gradient(circle, #225660, #071b29 72%);
+  box-shadow: 0 0 16px rgba(90, 237, 224, 0.18);
+}
+
+.island-mission-briefing__caretaker-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center 24%; }
+.island-mission-briefing__caretaker small,
+.island-mission-briefing__caretaker strong,
+.island-mission-briefing__caretaker q { display: block; }
+.island-mission-briefing__caretaker small { color: #73e6dd; font-size: 0.58rem; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; }
+.island-mission-briefing__caretaker strong { margin: 2px 0; color: #ffe8a4; font-size: 0.82rem; }
+.island-mission-briefing__caretaker q { color: #e5f5f2; font-size: clamp(0.68rem, 1.7vw, 0.79rem); font-style: italic; line-height: 1.28; }
+
+.island-mission-briefing__body {
+  grid-area: body;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.island-mission-briefing__statement {
+  padding: 14px;
+  border: 1px solid rgba(241, 213, 137, 0.22);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(239, 194, 84, 0.11), transparent 40%),
+    rgba(3, 20, 31, 0.72);
+}
+
+.island-mission-briefing__kicker {
+  margin: 0 0 5px;
+  color: #86eee7 !important;
+  font-size: 0.61rem !important;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.island-mission-briefing__statement h3 { margin: 0 0 7px; color: #ffe7a2; font-family: 'Cinzel', Georgia, serif; font-size: clamp(1.1rem, 3vw, 1.5rem); line-height: 1.05; }
+.island-mission-briefing__statement p { margin: 0; color: #dceff0; font-size: clamp(0.72rem, 1.8vw, 0.86rem); line-height: 1.43; }
+
+.island-mission-briefing__objectives { display: grid; gap: 7px; }
+.island-mission-briefing__objectives article {
+  display: grid;
+  gap: 3px;
+  padding: 9px 11px;
+  border-left: 3px solid #45d9d4;
+  border-radius: 4px 13px 13px 4px;
+  background: rgba(8, 49, 58, 0.55);
+}
+.island-mission-briefing__objectives article:nth-child(2) { border-left-color: #e4bd61; }
+.island-mission-briefing__objectives article:nth-child(3) { border-left-color: #8bcf73; }
+.island-mission-briefing__objectives small { color: #8adbd8; font-size: 0.55rem; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
+.island-mission-briefing__objectives strong { color: #edf8f5; font-size: clamp(0.66rem, 1.6vw, 0.76rem); line-height: 1.25; }
+
+.island-mission-briefing__command { grid-area: command; position: relative; z-index: 2; display: grid; gap: 7px; }
+.island-mission-briefing__officers { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
+.island-mission-briefing__officer {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 35px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 7px;
+  padding: 7px;
+  border: 1px solid rgba(104, 221, 224, 0.17);
+  border-radius: 13px;
+  background: rgba(7, 28, 38, 0.84);
+}
+.island-mission-briefing__officer--ceo { border-color: rgba(242, 210, 125, 0.48); background: linear-gradient(145deg, rgba(89, 61, 19, 0.44), rgba(7, 28, 38, 0.88)); }
+.island-mission-briefing__officer > div { grid-row: 1 / 3; width: 34px; aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; border: 1px solid rgba(249, 224, 153, 0.5); border-radius: 50%; background: radial-gradient(circle, #1d6a71, #09202e); color: #fff0b5; font-size: 0.58rem; font-weight: 950; }
+.island-mission-briefing__officer img { width: 100%; height: 100%; object-fit: cover; object-position: center 18%; }
+.island-mission-briefing__officer strong { min-width: 0; overflow: hidden; color: #f2fbfa; font-size: clamp(0.57rem, 1.25vw, 0.69rem); line-height: 1.05; text-overflow: ellipsis; white-space: nowrap; }
+.island-mission-briefing__officer small { min-width: 0; color: #8bc5c7; font-size: clamp(0.46rem, 1.05vw, 0.56rem); line-height: 1.08; }
+
+.island-mission-briefing__accept {
+  grid-area: accept;
+  position: relative;
+  z-index: 2;
+  justify-self: center;
+  min-width: min(300px, 80vw);
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border: 2px solid #ffe6a0;
+  border-radius: 999px;
+  color: #082b34;
+  background: linear-gradient(180deg, #fff4bd, #e8bd58 68%, #bd8429);
+  box-shadow: 0 9px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 #fffde8, 0 0 22px rgba(255, 213, 99, 0.16);
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.island-mission-briefing__accept:hover,
+.island-mission-briefing__accept:focus-visible { outline: none; transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 0 0 4px rgba(76, 228, 231, 0.22), 0 12px 24px rgba(0, 0, 0, 0.46); }
+
+@keyframes island-mission-device-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes island-mission-signal-pulse { 0% { opacity: 0.9; transform: scale(0.55); } 100% { opacity: 0; transform: scale(1.4); } }
+
+@media (max-width: 720px) {
+  .island-mission-briefing { place-items: stretch; padding: 0; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .island-mission-briefing__panel {
+    width: 100vw;
+    max-height: 100dvh;
+    min-height: 100dvh;
+    grid-template-columns: 1fr;
+    grid-template-areas: 'header' 'devices' 'body' 'command' 'accept';
+    align-content: start;
+    padding:
+      max(14px, env(safe-area-inset-top, 0px))
+      max(12px, env(safe-area-inset-right, 0px))
+      max(14px, env(safe-area-inset-bottom, 0px))
+      max(12px, env(safe-area-inset-left, 0px));
+    border: 0;
+    border-radius: 0;
+  }
+  .island-mission-briefing__header { align-items: flex-start; }
+  .island-mission-briefing__header > span { max-width: 38%; text-align: right; }
+  .island-mission-briefing__devices { min-height: 230px; grid-template-rows: minmax(130px, 19dvh) auto; }
+  .island-mission-briefing__device img { height: min(19dvh, 170px); }
+  .island-mission-briefing__body { grid-template-columns: 1.04fr 0.96fr; }
+  .island-mission-briefing__statement { padding: 11px; }
+  .island-mission-briefing__officers { grid-template-columns: repeat(5, minmax(62px, 1fr)); overflow-x: auto; padding-bottom: 3px; scrollbar-width: none; }
+  .island-mission-briefing__officer { grid-template-columns: 30px minmax(0, 1fr); padding: 5px; }
+  .island-mission-briefing__officer > div { width: 29px; }
+  .island-mission-briefing__accept { position: sticky; bottom: max(0px, env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (max-width: 520px) {
+  .island-mission-briefing__panel { gap: 9px; }
+  .island-mission-briefing__devices {
+    min-height: 208px;
+    grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr);
+    grid-template-rows: minmax(118px, 16dvh) auto;
+    gap: 3px;
+    padding-inline: 6px;
+  }
+  .island-mission-briefing__device img {
+    width: min(100%, 124px);
+    height: min(16dvh, 146px);
+  }
+  .island-mission-briefing__device figcaption {
+    font-size: 0.52rem;
+    letter-spacing: 0.055em;
+  }
+  .island-mission-briefing__signal { width: 34px; height: 34px; }
+  .island-mission-briefing__signal::before,
+  .island-mission-briefing__signal::after { width: 52px; }
+  .island-mission-briefing__caretaker { grid-template-columns: 50px minmax(0, 1fr); }
+  .island-mission-briefing__caretaker-portrait { width: 48px; }
+  .island-mission-briefing__body { grid-template-columns: 1fr; gap: 8px; }
+  .island-mission-briefing__objectives { grid-template-columns: 1fr; gap: 4px; }
+  .island-mission-briefing__objectives article { padding: 7px; border-left-width: 2px; }
+  .island-mission-briefing__objectives strong { font-size: 0.64rem; }
+}
+
+@media (max-height: 700px) and (orientation: landscape) {
+  .island-mission-briefing__panel { grid-template-columns: minmax(250px, .9fr) minmax(320px, 1.1fr); grid-template-areas: 'header header' 'devices body' 'command command' 'accept accept'; }
+  .island-mission-briefing__devices { min-height: 220px; }
+  .island-mission-briefing__device img { height: 160px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-mission-briefing,
+  .island-mission-briefing__panel,
+  .island-mission-briefing__device img,
+  .island-mission-briefing__signal i { animation: none; }
+}
+
+/* ── Canonical board-symbol field guide ─────────────────────────────── */
+.island-board-symbol-legend {
+  position: fixed;
+  inset: 0;
+  z-index: 12420;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding:
+    max(12px, env(safe-area-inset-top, 0px))
+    max(12px, env(safe-area-inset-right, 0px))
+    max(12px, env(safe-area-inset-bottom, 0px))
+    max(12px, env(safe-area-inset-left, 0px));
+  background: rgba(2, 11, 18, 0.78);
+  backdrop-filter: blur(8px) saturate(0.78);
+  -webkit-backdrop-filter: blur(8px) saturate(0.78);
+  animation: island-stop-modal-backdrop-in 180ms ease-out both;
+}
+
+.island-board-symbol-legend__panel {
+  width: min(760px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  display: grid;
+  gap: 12px;
+  box-sizing: border-box;
+  padding: clamp(15px, 2.8vw, 24px);
+  overflow: hidden auto;
+  color: #eef9f5;
+  border: 1px solid rgba(232, 202, 126, 0.52);
+  border-radius: clamp(22px, 4vw, 34px);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(83, 192, 176, 0.13), transparent 38%),
+    linear-gradient(145deg, rgba(13, 45, 48, 0.98), rgba(5, 22, 31, 0.99));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.72), inset 0 0 50px rgba(63, 187, 171, 0.06);
+  animation: island-stop-modal-enter 300ms cubic-bezier(0.2, 1, 0.3, 1) both;
+}
+
+.island-board-symbol-legend__panel > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(151, 224, 205, 0.16);
+}
+
+.island-board-symbol-legend__panel > header p,
+.island-board-symbol-legend__panel > header h2,
+.island-board-symbol-legend__intro,
+.island-board-symbol-legend__missions p { margin: 0; }
+.island-board-symbol-legend__panel > header p,
+.island-board-symbol-legend__missions > p {
+  color: #e7c875;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.island-board-symbol-legend__panel > header h2 {
+  margin-top: 3px;
+  color: #fff8dc;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+.island-board-symbol-legend__panel > header button {
+  flex: 0 0 auto;
+  width: 40px;
+  aspect-ratio: 1;
+  border: 1px solid rgba(226, 210, 155, 0.36);
+  border-radius: 50%;
+  color: #fff4cf;
+  background: rgba(4, 25, 32, 0.82);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.island-board-symbol-legend__intro {
+  color: #bfddda;
+  font-size: clamp(0.72rem, 2vw, 0.85rem);
+  line-height: 1.4;
+}
+
+.island-board-symbol-legend__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+.island-board-symbol-legend__grid article {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid rgba(120, 203, 187, 0.13);
+  border-radius: 14px;
+  background: rgba(3, 23, 29, 0.58);
+}
+.island-board-symbol-legend__grid article > span:last-child,
+.island-board-symbol-legend__missions > span > span { min-width: 0; }
+.island-board-symbol-legend__grid strong,
+.island-board-symbol-legend__grid small,
+.island-board-symbol-legend__missions strong,
+.island-board-symbol-legend__missions small { display: block; overflow-wrap: anywhere; }
+.island-board-symbol-legend__grid strong,
+.island-board-symbol-legend__missions strong { color: #fff0bd; font-size: 0.75rem; }
+.island-board-symbol-legend__grid small,
+.island-board-symbol-legend__missions small { margin-top: 2px; color: #a9ceca; font-size: 0.64rem; line-height: 1.25; }
+
+.island-board-symbol-legend__tile {
+  width: 44px;
+  aspect-ratio: 1.22;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  border: 1px solid rgba(112, 79, 38, 0.65);
+  border-radius: 8px;
+  background: linear-gradient(150deg, #f0dfba, #b89863);
+  box-shadow: 0 5px 0 #6c4c2c, 0 8px 13px rgba(0, 0, 0, 0.28), inset 0 1px rgba(255, 250, 220, 0.8);
+}
+.island-board-symbol-legend__tile svg { width: 22px; height: 22px; }
+
+.island-board-symbol-legend__missions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  padding-top: 2px;
+}
+.island-board-symbol-legend__missions > p { grid-column: 1 / -1; }
+.island-board-symbol-legend__missions > span {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 13px;
+  background: rgba(94, 132, 71, 0.16);
+}
+.island-board-symbol-legend__missions b { color: #f1d382; font-size: 1.15rem; text-align: center; }
+
+.island-board-symbol-legend__done {
+  justify-self: center;
+  min-width: min(290px, 80vw);
+  min-height: 46px;
+  padding: 9px 20px;
+  border: 2px solid #f3daa0;
+  border-radius: 999px;
+  color: #123235;
+  background: linear-gradient(#fff1bc, #d4a64e);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.34);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+@media (max-width: 520px) {
+  .island-board-symbol-legend { place-items: stretch; padding: 0; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .island-board-symbol-legend__panel {
+    width: 100vw;
+    max-height: 100dvh;
+    min-height: 100dvh;
+    padding:
+      max(14px, env(safe-area-inset-top, 0px))
+      max(12px, env(safe-area-inset-right, 0px))
+      max(14px, env(safe-area-inset-bottom, 0px))
+      max(12px, env(safe-area-inset-left, 0px));
+    border: 0;
+    border-radius: 0;
+  }
+  .island-board-symbol-legend__grid { grid-template-columns: 1fr; }
+  .island-board-symbol-legend__grid article { grid-template-columns: 44px minmax(0, 1fr); padding: 7px; }
+  .island-board-symbol-legend__tile { width: 40px; }
+  .island-board-symbol-legend__missions { grid-template-columns: 1fr; }
+  .island-board-symbol-legend__done { position: sticky; bottom: max(0px, env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-board-symbol-legend,
+  .island-board-symbol-legend__panel { animation: none; }
+}
+
 @keyframes island-stop-modal-backdrop-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -9716,6 +10365,81 @@
   box-shadow:
     var(--tile-face-shadow),
     inset 0 -4px 10px color-mix(in srgb, var(--tile-ticket-accent) 20%, transparent);
+}
+
+/* The event pass grows back from the board itself. The negative delay resumes
+   from the persisted cooldown timestamp after reload; gameplay readiness is
+   still decided by the roll service, never by this animation. */
+.island-tile__living-ticket {
+  --living-ticket-duration: 120s;
+  position: relative;
+  width: 18px;
+  height: 19px;
+  display: block;
+  transform-origin: 50% 100%;
+}
+.island-tile__living-ticket i { position: absolute; display: block; box-sizing: border-box; }
+.island-tile__living-ticket-stem {
+  left: 8px;
+  bottom: 1px;
+  width: 2px;
+  height: 12px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #426e35, #9ac96e);
+  transform-origin: 50% 100%;
+  animation: island-living-ticket-stem var(--living-ticket-duration) linear both;
+  animation-delay: var(--living-ticket-delay, 0s);
+}
+.island-tile__living-ticket-leaf {
+  bottom: 3px;
+  width: 7px;
+  height: 5px;
+  border-radius: 100% 0 100% 0;
+  background: linear-gradient(145deg, #b6d976, #598843);
+  transform-origin: 100% 100%;
+  animation: island-living-ticket-leaf var(--living-ticket-duration) linear both;
+  animation-delay: var(--living-ticket-delay, 0s);
+}
+.island-tile__living-ticket-leaf--left { left: 2px; transform: rotate(17deg); }
+.island-tile__living-ticket-leaf--right { right: 2px; transform: scaleX(-1) rotate(17deg); }
+.island-tile__living-ticket-bud {
+  left: 3px;
+  top: 0;
+  width: 13px;
+  height: 9px;
+  border: 1px solid #8b602b;
+  border-radius: 3px;
+  background:
+    linear-gradient(90deg, transparent 44%, rgba(255, 247, 210, 0.8) 45% 53%, transparent 54%),
+    linear-gradient(145deg, #f0c96e, #b87831);
+  box-shadow: 0 1px 3px rgba(44, 27, 7, 0.38);
+  transform-origin: 50% 100%;
+  animation: island-living-ticket-bud var(--living-ticket-duration) linear both;
+  animation-delay: var(--living-ticket-delay, 0s);
+}
+.island-tile--living-ticket-regrowing .island-tile__face {
+  box-shadow:
+    var(--tile-face-shadow),
+    inset 0 -4px 10px color-mix(in srgb, #8bb765 18%, transparent);
+}
+@keyframes island-living-ticket-stem {
+  0% { opacity: 0.25; transform: scaleY(0.08); }
+  32%, 100% { opacity: 1; transform: scaleY(1); }
+}
+@keyframes island-living-ticket-leaf {
+  0%, 18% { opacity: 0; scale: 0.1; }
+  48%, 100% { opacity: 1; scale: 1; }
+}
+@keyframes island-living-ticket-bud {
+  0%, 38% { opacity: 0; transform: translateY(5px) scale(0.12) rotate(-7deg); }
+  70% { opacity: 1; transform: translateY(0) scale(0.78) rotate(3deg); }
+  92%, 100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .island-tile__living-ticket-stem,
+  .island-tile__living-ticket-leaf,
+  .island-tile__living-ticket-bud { animation-play-state: paused; }
 }
 
 /* A landing celebration, not an attention-owning modal: the canonical ticket
@@ -22231,6 +22955,45 @@
   box-shadow: 0 8px 24px rgba(22, 14, 8, .35), inset 0 0 18px rgba(255, 187, 65, .08);
 }
 
+.island-run-board__rootheart-completion {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  z-index: 46;
+  width: min(19rem, calc(100% - 2rem));
+  min-height: 8.5rem;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: .22rem;
+  padding: 1.25rem 1rem;
+  color: #fff7c8;
+  text-align: center;
+  text-shadow: 0 2px 12px #142117, 0 0 18px rgba(255, 179, 66, .72);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: rootheart-completion-copy 5.2s ease both;
+}
+.island-run-board__rootheart-completion strong { font-size: 1.12rem; letter-spacing: .02em; }
+.island-run-board__rootheart-completion small { color: #e1f0c7; font-weight: 700; }
+.island-run-board__rootheart-completion-ring {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 4rem;
+  height: 4rem;
+  border: 2px solid rgba(255, 217, 120, .9);
+  border-radius: 50%;
+  box-shadow: 0 0 26px rgba(255, 170, 61, .72), inset 0 0 20px rgba(134, 236, 148, .34);
+  transform: translate(-50%, -50%);
+  animation: rootheart-completion-ring 3.8s cubic-bezier(.16, .7, .25, 1) both;
+}
+.island-run-board__rootheart-completion-spark {
+  position: relative;
+  color: #fff5b5;
+  font-size: 2.35rem;
+  animation: rootheart-completion-spark 1.15s ease-in-out 4 alternate;
+}
+
 .rootheart-powerworks-modal__backdrop {
   position: fixed;
   inset: 0;
@@ -22349,6 +23112,21 @@
 @keyframes rootheart-water-flow { from { transform: translateY(-18px); } to { transform: translateY(20px); } }
 @keyframes rootheart-wheel-turn { to { transform: rotate(360deg); } }
 @keyframes rootheart-power-pulse { 50% { opacity: .25; filter: brightness(1.8); } }
+@keyframes rootheart-completion-ring {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.28); }
+  18% { opacity: 1; }
+  78% { opacity: .72; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(4.6); }
+}
+@keyframes rootheart-completion-spark {
+  from { transform: scale(.86) rotate(-7deg); filter: brightness(1); }
+  to { transform: scale(1.14) rotate(7deg); filter: brightness(1.45); }
+}
+@keyframes rootheart-completion-copy {
+  0%, 7% { opacity: 0; }
+  16%, 76% { opacity: 1; }
+  100% { opacity: 0; }
+}
 
 @media (max-width: 560px) {
   .rootheart-powerworks-modal { padding: 18px 14px; border-radius: 20px; }
@@ -22364,7 +23142,10 @@
   .rootheart-powerworks-modal__water i,
   .rootheart-powerworks-modal__wheel,
   .rootheart-powerworks-modal__gear,
-  .rootheart-powerworks-modal__power-lines i { animation: none !important; }
+  .rootheart-powerworks-modal__power-lines i,
+  .island-run-board__rootheart-completion,
+  .island-run-board__rootheart-completion-ring,
+  .island-run-board__rootheart-completion-spark { animation: none !important; }
 }
 
 @keyframes frostwell-auger-drill { to { transform: rotateY(360deg) translateY(2px); } }

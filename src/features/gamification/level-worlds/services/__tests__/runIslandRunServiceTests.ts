@@ -182,6 +182,7 @@ import { journeyDiscArmoryTests } from './journeyDiscArmory.test';
 import { journeyDiscArenaIslandIntegrationTests } from './journeyDiscArenaIslandIntegration.test';
 import { islandRunCreatureArenaBattleActionTests } from './islandRunCreatureArenaBattleAction.test';
 import { islandRunBuildOpenFlowTests } from './islandRunBuildOpenFlow.test';
+import { islandRunControllerTuckPresentationTests } from './islandRunControllerTuckPresentation.test';
 import { caretakerThreeModelContractTests } from './caretakerThreeModelContract.test';
 import { feedPetCompanionPresentationTests } from '../../../../habits/feedPetCompanionPresentation.test';
 import type { TestCase } from './testHarness';
@@ -207,6 +208,7 @@ const suites: Array<{ label: string; tests: TestCase[] }> = [
   { label: 'journeyDiscArenaIslandIntegration', tests: journeyDiscArenaIslandIntegrationTests },
   { label: 'islandRunCreatureArenaBattleAction', tests: islandRunCreatureArenaBattleActionTests },
   { label: 'islandRunBuildOpenFlow', tests: islandRunBuildOpenFlowTests },
+  { label: 'islandRunControllerTuckPresentation', tests: islandRunControllerTuckPresentationTests },
   { label: 'caretakerThreeModelContract', tests: caretakerThreeModelContractTests },
   { label: 'creatureCatalog', tests: creatureCatalogTests },
   { label: 'creatureCollectionService', tests: creatureCollectionServiceTests },

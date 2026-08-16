@@ -11,6 +11,7 @@ export interface BoardTileGridProps {
   stopMap: Map<number, string>;
   tileMap: Record<number, IslandTileMapEntry>;
   ordinaryTilesActive?: boolean;
+  livingTicketGrowthProgress?: number;
   trafficLightCharge?: number;
   trafficLightChargeTarget?: number;
   /** True while the sign is popped open after a pass (until the next roll). */
@@ -37,6 +38,7 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
     stopMap,
     tileMap,
     ordinaryTilesActive = true,
+    livingTicketGrowthProgress = 1,
     trafficLightCharge = 0,
     trafficLightChargeTarget = 8,
     trafficLightPassPulse = false,
@@ -156,6 +158,7 @@ export const BoardTileGrid = memo(function BoardTileGrid(props: BoardTileGridPro
             isMinimalBoardArt={isMinimalBoardArt}
             technologyFragment={technologyFragment}
             isDormant={isDormant}
+            livingTicketGrowthProgress={tileType === 'free_ticket' ? livingTicketGrowthProgress : 1}
             uniformScale={uniformScale}
           />
         );

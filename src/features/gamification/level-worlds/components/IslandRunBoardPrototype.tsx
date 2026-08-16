@@ -32,6 +32,7 @@ import {
   ISLAND_RUN_CONTROLLER_SLOT_MAP,
   getIslandRunControllerSlotStyle,
 } from '../services/islandRunControllerVisualContract';
+import { resolveIslandRunControllerTuckGesture } from '../services/islandRunControllerTuckPresentation';
 import { resolveIslandRunBuildOpenDisposition } from '../services/islandRunBuildOpenFlow';
 import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
 import {
@@ -42,6 +43,8 @@ import {
 } from '../services/islandRunDiceThrowPresentation';
 import { BoardStage, type BoardStageCameraControls } from './board';
 import { IslandRunDiceLaunchOverlay } from './board/IslandRunDiceLaunchOverlay';
+import { IslandMissionBriefingModal } from './IslandMissionBriefingModal';
+import { IslandBoardSymbolLegendModal } from './IslandBoardSymbolLegendModal';
 import { ConfettiBurst } from './ConfettiBurst';
 import { UsctCollectionAnimation, type UsctCollectionAmount } from './UsctCollectionAnimation';
 import { CelebrationFireworks } from '../../../../components/CelebrationFireworks';
@@ -475,6 +478,11 @@ import {
   resolveFrostwellIceworksProgress,
   resolveRootheartPowerworksProgress,
 } from '../services/islandRunSignatureMissions';
+import {
+  getIslandMissionBriefingPresentation,
+  type IslandMissionBriefingTrigger,
+} from '../services/islandRunMissionBriefing';
+import { resolveIslandRunLivingTicketStatus } from '../services/islandRunLivingTicket';
 import { executeIslandRunTileRewardAction } from '../services/islandRunTileRewardAction';
 import {
   advanceIslandRunLuckyRoll,
@@ -1774,6 +1782,11 @@ export function IslandRunBoardPrototype({
       showConcordCompletionPreview: import.meta.env.DEV && params.get('concordCompletionPreview') === '1',
       showConcordFirstContactPreview: import.meta.env.DEV && params.get('concordFirstContactPreview') === '1',
       showExpeditionPhonePreview: import.meta.env.DEV && params.get('expeditionPhonePreview') === '1',
+      showMissionBriefingPreview: import.meta.env.DEV && params.get('missionBriefingPreview') === '1',
+      showBoardLegendPreview: import.meta.env.DEV && params.get('boardLegendPreview') === '1',
+      livingTicketGrowthPreview: import.meta.env.DEV && params.has('livingTicketGrowth')
+        ? readNumericParam(params, 'livingTicketGrowth', 1, 0, 1)
+        : null,
       islandVisualIslandNumber: Math.round(readNumericParam(params, 'islandVisualIsland', 1, 1, 120)),
       islandVisualLandmark,
       islandVisualBuildLevel: Math.round(readNumericParam(params, 'islandVisualBuildLevel', 0, 0, 3)),
@@ -1801,6 +1814,9 @@ export function IslandRunBoardPrototype({
     showConcordCompletionPreview,
     showConcordFirstContactPreview,
     showExpeditionPhonePreview,
+    showMissionBriefingPreview,
+    showBoardLegendPreview,
+    livingTicketGrowthPreview,
     islandVisualIslandNumber,
     islandVisualLandmark,
     islandVisualBuildLevel,
@@ -1847,6 +1863,15 @@ export function IslandRunBoardPrototype({
     return raw && isCanonicalEventId(raw) ? raw : null;
   });
   const [isHudCollapsed, setIsHudCollapsed] = useState(true);
+  const [isControllerTucked, setIsControllerTucked] = useState(false);
+  const controllerTuckPointerRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    startedTucked: boolean;
+  } | null>(null);
+  const suppressNextControllerTuckClickRef = useRef(false);
+  const controllerMainRef = useRef<HTMLDivElement | null>(null);
   const [showTopbarMenu, setShowTopbarMenu] = useState(false);
   const [isIslandInhabitantFlowOpen, setIsIslandInhabitantFlowOpen] = useState(false);
   useEffect(() => {
@@ -1864,6 +1889,21 @@ export function IslandRunBoardPrototype({
     return () => window.clearTimeout(timeoutId);
   }, [caretakerBoardBubbleText]);
   const [showConcordHubModal, setShowConcordHubModal] = useState(false);
+  const [showBoardSymbolLegend, setShowBoardSymbolLegend] = useState(showBoardLegendPreview);
+  const [pendingMissionBriefing, setPendingMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
+  const [activeMissionBriefing, setActiveMissionBriefing] = useState<IslandMissionBriefingTrigger | null>(null);
+  useEffect(() => {
+    if (!showMissionBriefingPreview) return;
+    setActiveMissionBriefing({
+      beatId: `DEV-MISSION-BRIEFING-I${String(islandVisualIslandNumber).padStart(3, '0')}`,
+      islandNumber: islandVisualIslandNumber,
+      cycleIndex: 0,
+      triggerTileIndex: 18,
+    });
+  }, [islandVisualIslandNumber, showMissionBriefingPreview]);
+  useEffect(() => {
+    if (showBoardLegendPreview) setShowBoardSymbolLegend(true);
+  }, [showBoardLegendPreview]);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [isTopbarMenuPrimed, setIsTopbarMenuPrimed] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -1894,6 +1934,8 @@ export function IslandRunBoardPrototype({
   const [showRootheartPowerworks, setShowRootheartPowerworks] = useState(false);
   const [isFundingRootheartPowerworks, setIsFundingRootheartPowerworks] = useState(false);
   const [rootheartConstructionSequence, setRootheartConstructionSequence] = useState(0);
+  const [pendingRootheartPowerworksAutoOpen, setPendingRootheartPowerworksAutoOpen] = useState(false);
+  const [rootheartCompletionCelebrationId, setRootheartCompletionCelebrationId] = useState<number | null>(null);
 
   // BoardStage camera controls (set by BoardStage via onCameraReady)
   const boardCameraRef = useRef<BoardStageCameraControls | null>(null);
@@ -1921,6 +1963,15 @@ export function IslandRunBoardPrototype({
   const isBuildTutorialGameplayBlocked = shouldIslandRunBuildPromptBlockControl(firstSessionTutorialState, 'gameplay');
   const isFirstRollCoachmarkActive = isIslandRunFirstRollCoachmarkActive(firstSessionTutorialState);
   const isKeepRollingCoachmarkActive = isIslandRunKeepRollingCoachmarkActive(firstSessionTutorialState);
+  useEffect(() => {
+    if (isBuildTutorialPromptActive) setIsControllerTucked(false);
+  }, [isBuildTutorialPromptActive]);
+  useEffect(() => {
+    const controllerMain = controllerMainRef.current;
+    if (!controllerMain) return;
+    if (isControllerTucked) controllerMain.setAttribute('inert', '');
+    else controllerMain.removeAttribute('inert');
+  }, [isControllerTucked]);
 
   // C1 shim: setDicePool — commits through the store for unmigrated paths.
   const setDicePool = useCallback((updater: number | ((current: number) => number)) => {
@@ -2006,6 +2057,46 @@ export function IslandRunBoardPrototype({
 
   const handleTopbarMenuButtonClick = useCallback(() => {
     setShowTopbarMenu((current) => !current);
+  }, []);
+  const handleControllerTuckPointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    controllerTuckPointerRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startedTucked: isControllerTucked,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, [isControllerTucked]);
+  const handleControllerTuckPointerUp = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    const gestureStart = controllerTuckPointerRef.current;
+    controllerTuckPointerRef.current = null;
+    if (!gestureStart || gestureStart.pointerId !== event.pointerId) return;
+    const result = resolveIslandRunControllerTuckGesture({
+      deltaX: event.clientX - gestureStart.startX,
+      deltaY: event.clientY - gestureStart.startY,
+      currentlyTucked: gestureStart.startedTucked,
+    });
+    if (result.isSwipe) {
+      suppressNextControllerTuckClickRef.current = true;
+      setIsControllerTucked(result.nextTucked);
+    }
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, []);
+  const handleControllerTuckPointerCancel = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    controllerTuckPointerRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, []);
+  const handleControllerTuckToggle = useCallback(() => {
+    if (suppressNextControllerTuckClickRef.current) {
+      suppressNextControllerTuckClickRef.current = false;
+      return;
+    }
+    setIsControllerTucked((current) => !current);
   }, []);
   const autoRollHoldTimeoutRef = useRef<number | null>(null);
   const rollHoldStartedAtRef = useRef<number | null>(null);
@@ -2544,7 +2635,7 @@ export function IslandRunBoardPrototype({
     // route back to overview.
   }, []);
   const openRootheartPowerworks = useCallback(() => {
-    setBuildCameraFocusRequest({ preset: 'overview', transition: 'quick' });
+    setBuildCameraFocusRequest({ preset: 'powerworks', transition: 'quick' });
     setShowRootheartPowerworks(true);
   }, []);
   const closeRootheartPowerworks = useCallback(() => {
@@ -2868,6 +2959,8 @@ export function IslandRunBoardPrototype({
     isIslandInhabitantFlowOpen ||
     showCreatureChannelModal ||
     showConcordHubModal ||
+    showBoardSymbolLegend ||
+    Boolean(activeMissionBriefing) ||
     showFrostwellMission ||
     showRootheartPowerworks ||
     Boolean(dormantDoorMiniGame) ||
@@ -6702,6 +6795,12 @@ export function IslandRunBoardPrototype({
   })();
   const nextRewardAccessibleLabel = `${nextRewardAmountLabel} ${nextRewardUnitLabel}`;
   const activeTimedEventId = effectiveActiveTimedEvent?.eventId ?? null;
+  const livingTicketStatus = useMemo(() => resolveIslandRunLivingTicketStatus({
+    narrativeSeenState: runtimeState.narrativeSeenState,
+    cycleIndex: runtimeState.cycleIndex,
+    islandNumber: runtimeState.currentIslandNumber,
+    nowMs: Date.now(),
+  }), [runtimeState.currentIslandNumber, runtimeState.cycleIndex, runtimeState.narrativeSeenState]);
   const activeEventTickets = activeTimedEventId
     ? (runtimeState.minigameTicketsByEvent?.[activeTimedEventId] ?? 0)
     : 0;
@@ -7299,6 +7398,7 @@ export function IslandRunBoardPrototype({
       client,
       boardProfileId: ACTIVE_BOARD_PROFILE.id,
       diceMultiplier: effectiveMultiplier,
+      activeTimedEventId,
     });
     logIslandRunEntryDebug('roll_action_result', {
       userId: session.user.id,
@@ -7508,6 +7608,14 @@ export function IslandRunBoardPrototype({
     // cleared by `onHopSequenceComplete`.
         setPendingHopSequence(null);
 
+        // The roll service atomically marks this cycle-scoped narrative beat
+        // seen when the route first crosses its halfway tile. Queue the visual
+        // briefing now; an encounter/landmark/reward modal from the landing is
+        // allowed to finish first, so two full-attention surfaces never stack.
+        if (rollResult.missionBriefingTrigger) {
+          setPendingMissionBriefing(rollResult.missionBriefingTrigger);
+        }
+
         const ordinaryTileGameplayActive = rollResult.ordinaryTileGameplayActive !== false;
         const trafficLightPass = rollResult.trafficLightPass ?? null;
         let trafficLightUnlocked = false;
@@ -7584,19 +7692,15 @@ export function IslandRunBoardPrototype({
         } else if (landedTile?.tileType === 'free_ticket') {
           setShowEncounterModal(false);
           setEncounterResolved(false);
-          const eventId = activeTimedEventId;
-          if (!eventId) {
+          const pickup = rollResult.livingTicketPickup;
+          if (pickup) {
+            setLandingText(`🎟️ Grown ticket collected! +${pickup.applied} event ticket${pickup.applied === 1 ? '' : 's'}. A new bud is forming.`);
+            setTicketTileCelebration({ amount: pickup.applied, eventId: pickup.eventId, presentationId: pickup.collectedAtMs });
+          } else if (!activeTimedEventId) {
             setLandingText('🎟️ Free ticket tile found — no timed event is active yet.');
             setTicketTileCelebration({ amount: 0, eventId: null, presentationId: Date.now() });
           } else {
-            const currentTickets = Math.max(0, Math.floor(runtimeStateRef.current.minigameTicketsByEvent?.[eventId] ?? 0));
-            const maxGrant = currentTickets <= 0 ? 3 : currentTickets <= 2 ? 2 : 1;
-            const grant = 1 + Math.floor(Math.random() * maxGrant);
-            const grantResult = applyTimedEventTicketTileGrant({ session, client, eventId, amount: grant, triggerSource: 'free_ticket_tile_land' });
-            setRuntimeState(grantResult.record);
-            runtimeStateRef.current = grantResult.record;
-            setLandingText(`🎟️ Free ticket tile! +${grantResult.applied} event ticket${grantResult.applied === 1 ? '' : 's'}.`);
-            setTicketTileCelebration({ amount: grantResult.applied, eventId, presentationId: Date.now() });
+            setLandingText('🌱 The ticket bud is still growing. Return after it blooms.');
           }
         } else if (landedTile?.tileType === 'encounter') {
           // M6-COMPLETE: check if this encounter tile was already completed this visit
@@ -7611,6 +7715,22 @@ export function IslandRunBoardPrototype({
           resolveTileLanding(landedTile?.tileType ?? 'micro', currentIndex);
           setShowEncounterModal(false);
           setEncounterResolved(false);
+        }
+        if (rollResult.rootheartPowerComponentPickup) {
+          const component = ROOTHEART_POWER_COMPONENTS.find(
+            (entry) => entry.id === rollResult.rootheartPowerComponentPickup,
+          );
+          if (rollResult.rootheartPowerworksUnlocked) {
+            setLandingText(`⚙ ${component?.label ?? 'Final Powerworks part'} recovered — all eight parts are ready to build!`);
+            setPendingRootheartPowerworksAutoOpen(true);
+          } else {
+            const collectedCount = resolveRootheartPowerworksProgress({
+              ledger: freshRecord.signatureMissionProgressByIsland,
+              cycleIndex: freshRecord.cycleIndex,
+              islandNumber: freshRecord.currentIslandNumber,
+            }).collectedComponentIds.length;
+            setLandingText(`⚙ ${component?.label ?? 'Powerworks part'} recovered · ${collectedCount}/${ROOTHEART_POWER_COMPONENTS.length}`);
+          }
         }
       } finally {
         if (rollActionBarrierActive) {
@@ -12420,12 +12540,32 @@ export function IslandRunBoardPrototype({
       isIslandInhabitantFlowOpen ||
       showCreatureChannelModal ||
       showConcordHubModal ||
+      showBoardSymbolLegend ||
+      Boolean(activeMissionBriefing) ||
       showFrostwellMission ||
       showRootheartPowerworks ||
       showJourneyDiscConcourseInvitation ||
       showTravelOverlay ||
       walletStoreModalKind !== null,
   );
+  useEffect(() => {
+    if (!pendingRootheartPowerworksAutoOpen || doesModalOwnAttention || isIslandVisualPreview) return undefined;
+    const timer = window.setTimeout(() => {
+      setPendingRootheartPowerworksAutoOpen(false);
+      openRootheartPowerworks();
+    }, 620);
+    return () => window.clearTimeout(timer);
+  }, [doesModalOwnAttention, isIslandVisualPreview, openRootheartPowerworks, pendingRootheartPowerworksAutoOpen]);
+  useEffect(() => {
+    if (rootheartCompletionCelebrationId === null) return undefined;
+    const timer = window.setTimeout(() => setRootheartCompletionCelebrationId(null), 5_200);
+    return () => window.clearTimeout(timer);
+  }, [rootheartCompletionCelebrationId]);
+  useEffect(() => {
+    if (!pendingMissionBriefing || doesModalOwnAttention) return;
+    setActiveMissionBriefing(pendingMissionBriefing);
+    setPendingMissionBriefing(null);
+  }, [doesModalOwnAttention, pendingMissionBriefing]);
   useEffect(() => {
     if (!showFrostwellMission || typeof document === 'undefined') return undefined;
     return lockPageScroll();
@@ -12499,10 +12639,18 @@ export function IslandRunBoardPrototype({
         runtimeStateRef.current = fresh;
         setRuntimeStateWithTrace('fund_rootheart_powerworks_stage', fresh);
         setRootheartConstructionSequence((value) => value + 1);
+        setBuildCameraFocusRequest({ preset: 'powerworks', transition: 'quick' });
         const stageNames = ['Waterworks frame', 'Heartwheel dynamo', 'Heartlight network'];
         setLandingText(`⚙ ${stageNames[result.buildStage - 1]} restored${result.buildStage >= ROOTHEART_POWERWORKS_MAX_STAGE ? ' — Rootheart is glowing!' : '.'}`);
         playIslandRunSound(result.buildStage >= ROOTHEART_POWERWORKS_MAX_STAGE ? 'reward_bar_claim_burst' : 'stop_land');
         triggerIslandRunHaptic(result.buildStage >= ROOTHEART_POWERWORKS_MAX_STAGE ? 'reward_claim' : 'stop_land');
+        if (result.buildStage >= ROOTHEART_POWERWORKS_MAX_STAGE) {
+          setRootheartCompletionCelebrationId(Date.now());
+        }
+        // Reveal the actual 3D build and progressive dusk while its authored
+        // construction sequence is still running.
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 520));
+        setShowRootheartPowerworks(false);
       } else if (result.status === 'components_incomplete') {
         setLandingText('Collect all eight Powerworks parts from the ⚙ tiles before construction can begin.');
       } else if (result.status === 'insufficient_essence') {
@@ -13631,6 +13779,16 @@ export function IslandRunBoardPrototype({
               >
                 {isBackgroundHidden ? 'Show background' : 'Hide background'}
               </button>
+              <button
+                type="button"
+                className="island-run-board__topbar-menu-item"
+                onClick={() => {
+                  setShowBoardSymbolLegend(true);
+                  setShowTopbarMenu(false);
+                }}
+              >
+                ◈ Board symbol guide
+              </button>
               {isDevModeEnabled && island3DWorldNumber !== null ? (
                 <button
                   type="button"
@@ -13999,6 +14157,7 @@ export function IslandRunBoardPrototype({
           boardRotateZDeg={boardRotateZDeg}
           tileMap={landmarkDoorTileMap}
           ordinaryTilesActive={ordinaryBoardTilesActive}
+          livingTicketGrowthProgress={livingTicketGrowthPreview ?? livingTicketStatus.growthProgress}
           trafficLightCharge={displayedTrafficLightCharge}
           trafficLightPassPulse={trafficLightPassPulse}
           trafficLightChargeTarget={TRAFFIC_LIGHT_CHARGE_TARGET}
@@ -14128,9 +14287,13 @@ export function IslandRunBoardPrototype({
                     : rootheartPowerworksProgress.buildStage,
                   constructionSequence: rootheartConstructionSequence,
                 }}
-                onSignatureMissionClick={isIslandVisualPreview && islandArtPreviewNumber !== 3
+                onSignatureMissionClick={isIslandVisualPreview && islandArtPreviewNumber !== 3 && islandArtPreviewNumber !== 10
                   ? undefined
-                  : openFrostwellMission}
+                  : islandArtPreviewNumber === 10
+                    ? openRootheartPowerworks
+                    : islandArtPreviewNumber === 3
+                      ? openFrostwellMission
+                      : undefined}
                 caretakerEncounterOpen={isIslandInhabitantFlowOpen || activeStopId === 'wisdom'}
                 onCaretakerClick={isIslandVisualPreview ? undefined : () => {
                   if (showBuildPanel) return;
@@ -14179,6 +14342,19 @@ export function IslandRunBoardPrototype({
                       : `${rootheartPowerworksProgress.collectedComponentIds.length}/${ROOTHEART_POWER_COMPONENTS.length} parts found`}
                 </span>
               </button>
+            ) : null}
+            {!isIslandVisualPreview && rootheartCompletionCelebrationId !== null ? (
+              <div
+                key={rootheartCompletionCelebrationId}
+                className="island-run-board__rootheart-completion"
+                role="status"
+                aria-live="polite"
+              >
+                <span className="island-run-board__rootheart-completion-ring" aria-hidden="true" />
+                <span className="island-run-board__rootheart-completion-spark" aria-hidden="true">✦</span>
+                <strong>Heartlight network online</strong>
+                <small>Water becomes motion. Motion becomes light.</small>
+              </div>
             ) : null}
             {journeyDiscCenterActive ? (
               <button
@@ -14293,10 +14469,30 @@ export function IslandRunBoardPrototype({
       </button>
 
       <div
-        className={`island-run-prototype__footer${isBuildTutorialPromptActive ? ' island-run-prototype__footer--build-tutorial-active' : ''}`}
+        className={`island-run-prototype__footer${isControllerTucked ? ' island-run-prototype__footer--controller-tucked' : ''}${isBuildTutorialPromptActive ? ' island-run-prototype__footer--build-tutorial-active' : ''}`}
         aria-label="Island Run footer controls"
       >
-        <div className="island-run-prototype__footer-main">
+        <button
+          type="button"
+          className="island-run-prototype__footer-tuck-handle"
+          aria-controls="island-run-footer-controller"
+          aria-expanded={!isControllerTucked}
+          aria-label={isControllerTucked ? 'Show game controller' : 'Tuck game controller to reveal more of the island'}
+          title={isControllerTucked ? 'Show controller' : 'Swipe down to tuck controller'}
+          onClick={handleControllerTuckToggle}
+          onPointerDown={handleControllerTuckPointerDown}
+          onPointerUp={handleControllerTuckPointerUp}
+          onPointerCancel={handleControllerTuckPointerCancel}
+        >
+          <span className="island-run-prototype__footer-tuck-grip" aria-hidden="true" />
+          <span aria-hidden="true">{isControllerTucked ? '⌃' : '⌄'}</span>
+        </button>
+        <div
+          ref={controllerMainRef}
+          id="island-run-footer-controller"
+          className="island-run-prototype__footer-main"
+          aria-hidden={isControllerTucked || undefined}
+        >
           {/* Footer stats row removed: essence icon (duplicate of top bar) and 🎯 roll chip removed per UI cleanup */}
 
           <div className="island-run-prototype__footer-actions">
@@ -17735,6 +17931,26 @@ export function IslandRunBoardPrototype({
           setShowWinCelebrationModal(false);
           setWinCelebrationRewards([]);
         }}
+      />
+
+      <IslandMissionBriefingModal
+        isOpen={Boolean(activeMissionBriefing)}
+        presentation={activeMissionBriefing
+          ? getIslandMissionBriefingPresentation(activeMissionBriefing.islandNumber)
+          : null}
+        caretakerName={caretakerInhabitant?.displayName ?? 'Island Caretaker'}
+        caretakerArtSrc={caretakerInhabitant?.premiumArtSrc ?? caretakerInhabitant?.retroSpriteSrc}
+        onAcknowledge={() => {
+          setActiveMissionBriefing(null);
+          setLandingText('Field order accepted. The Concord will keep the caretaker channel open.');
+          playIslandRunSound('stop_land');
+          triggerIslandRunHaptic('stop_land');
+        }}
+      />
+
+      <IslandBoardSymbolLegendModal
+        isOpen={showBoardSymbolLegend}
+        onClose={() => setShowBoardSymbolLegend(false)}
       />
 
       {shouldShowCaretakerTalkAction && caretakerInhabitant ? (

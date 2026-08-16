@@ -90,6 +90,8 @@ export interface BoardStageProps {
   tileMap: Record<number, IslandTileMapEntry>;
   /** False during the Island 1 fragment-only reveal; fragment tiles remain lit. */
   ordinaryTilesActive?: boolean;
+  /** Read-only 0..1 regrowth progress for the event-ticket plant. */
+  livingTicketGrowthProgress?: number;
   /** Traffic-light bonus progress rendered on the traffic-light tile itself. */
   trafficLightCharge?: number;
   trafficLightChargeTarget?: number;
@@ -176,6 +178,7 @@ export function BoardStage(props: BoardStageProps) {
     boardRotateZDeg = BOARD_ROTATE_Z_DEG,
     tileMap,
     ordinaryTilesActive = true,
+    livingTicketGrowthProgress = 1,
     trafficLightCharge = 0,
     trafficLightChargeTarget = 8,
     trafficLightPassPulse = false,
@@ -775,6 +778,7 @@ export function BoardStage(props: BoardStageProps) {
           stopMap={stopMap}
           tileMap={tileMap}
           ordinaryTilesActive={ordinaryTilesActive}
+          livingTicketGrowthProgress={livingTicketGrowthProgress}
           trafficLightCharge={trafficLightCharge}
           trafficLightChargeTarget={trafficLightChargeTarget}
           trafficLightPassPulse={trafficLightPassPulse}

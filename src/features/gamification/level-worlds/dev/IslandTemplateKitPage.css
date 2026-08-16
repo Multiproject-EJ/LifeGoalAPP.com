@@ -129,6 +129,14 @@ body:has(.island-kit-page) .animation-lab-launcher { display: none; }
 
 .island-5-three-pilot__canvas:active { cursor: grabbing; }
 
+.island-5-three-pilot--evidence .island-5-three-pilot__topline,
+.island-5-three-pilot--evidence .island-5-three-pilot__metrics,
+.island-5-three-pilot--evidence .island-5-three-pilot__profiler,
+.island-5-three-pilot--evidence .island-5-three-pilot__camera-controls {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .island-5-three-pilot__loading {
   position: absolute;
   z-index: 8;

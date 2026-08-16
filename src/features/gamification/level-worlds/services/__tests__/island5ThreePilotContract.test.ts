@@ -215,7 +215,11 @@ export const island5ThreePilotContractTests: TestCase[] = [
       const boardSource = fsMod.readFileSync('src/features/gamification/level-worlds/components/IslandRunBoardPrototype.tsx', 'utf8');
       assert(pilotSource.includes('clickableSignatureMissions') && pilotSource.includes('onSignatureMissionClickRef.current?.()'), 'Iceworks ray hits must open the signature mission UI');
       assert(pilotSource.includes("applyPreset('frostwell', 0.9)") && pilotSource.includes("activeInspectionPreset === 'frostwell'"), 'Frostwell needs its own camera and central-landmark fade');
-      assert(boardSource.includes('isIslandVisualPreview && islandArtPreviewNumber !== 3'), 'Island 003 visual QA must retain the real 3D hit-to-modal path');
+      assert(
+        boardSource.includes('isIslandVisualPreview && islandArtPreviewNumber !== 3 && islandArtPreviewNumber !== 10')
+          && boardSource.includes("islandArtPreviewNumber === 3\n                      ? openFrostwellMission"),
+        'Island 003 visual QA must retain the real 3D hit-to-modal path',
+      );
       assert(boardSource.includes('Deliberately keep the special Frostwell inspection camera active'), 'closing the tray must leave the rig available for unobstructed 3D inspection');
       assert(boardSource.includes('frostwell-mission-modal__wheel-hub') && boardSource.includes('spinFrostwellDrillWheel'), 'the lower half-wheel hub must route through canonical wheel authority');
       assert(boardSource.includes("params.get('frostwellMissionState')") && boardSource.includes("frostwellMissionState === 'constructing'"), 'development proof mode must cover the construction POOF without creating gameplay state');
@@ -753,9 +757,9 @@ export const island5ThreePilotContractTests: TestCase[] = [
   {
     name: 'defines reusable overview, orbit, survey, five landmarks, and the Frostwell inspection preset',
     run: () => {
-      assertEqual(ISLAND_5_CAMERA_PRESETS.length, 10, 'camera rig should expose ten reusable presets');
-      assertEqual(new Set(ISLAND_5_CAMERA_PRESETS.map((preset) => preset.id)).size, 10, 'camera preset ids must be unique');
-      ['overview', 'survey', 'orbit-left', 'orbit-right', 'frostwell', 'boss', 'hatchery', 'habit', 'wisdom', 'event'].forEach((id) => {
+      assertEqual(ISLAND_5_CAMERA_PRESETS.length, 11, 'camera rig should expose eleven reusable presets');
+      assertEqual(new Set(ISLAND_5_CAMERA_PRESETS.map((preset) => preset.id)).size, 11, 'camera preset ids must be unique');
+      ['overview', 'survey', 'orbit-left', 'orbit-right', 'frostwell', 'powerworks', 'boss', 'hatchery', 'habit', 'wisdom', 'event'].forEach((id) => {
         assert(ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === id), `missing camera preset ${id}`);
       });
       ISLAND_5_CAMERA_PRESETS.forEach((preset) => {

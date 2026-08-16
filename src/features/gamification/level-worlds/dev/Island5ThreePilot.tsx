@@ -3086,6 +3086,10 @@ export default function Island5ThreePilot({
                     ? ISLAND_10_ROOTHEART_WORLD_NAME
               : 'Crown of Tides';
   const isEmbedded = presentation === 'embedded';
+  const [isEvidenceCapture, setIsEvidenceCapture] = useState(() => (
+    typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('island3dEvidence') === '1'
+  ));
   const [qualitySelection, setQualitySelection] = useState<Island3DQualitySelection>(readInitialQualitySelection);
   const [runtimeQualityCap, setRuntimeQualityCap] = useState<Island3DQuality | null>(null);
   const sustainedQualityMissesRef = useRef(0);
@@ -3330,7 +3334,12 @@ export default function Island5ThreePilot({
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: qualityProfile.antialias, alpha: false, powerPreference: qualityProfile.id === 'high' ? 'high-performance' : 'default' });
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: qualityProfile.antialias,
+        alpha: false,
+        powerPreference: qualityProfile.id === 'high' ? 'high-performance' : 'default',
+      });
     } catch (caught) {
       console.error(`[island-${islandNumber}-3d-pilot] WebGL initialization failed:`, caught);
       setError('This device could not start the 3D renderer. The 2D camera kit is still available.');
@@ -3396,6 +3405,8 @@ export default function Island5ThreePilot({
                   : isRootheartCanopyCity
                     ? 0.0036
               : 0.0048;
+    let rootheartDayBackdrop: THREE.Texture | null = null;
+    let rootheartNightBackdrop: THREE.Texture | null = null;
     scene.background = new THREE.Color(backgroundColor);
     if (isMoonveilNexus) {
       const moonveilSky = new THREE.TextureLoader().load('/assets/islands/island-006/background/moonveil-nebula-sky-portrait-v2.webp');
@@ -3410,11 +3421,15 @@ export default function Island5ThreePilot({
       abyssalCavern.wrapT = THREE.ClampToEdgeWrapping;
       scene.background = abyssalCavern;
     } else if (isRootheartCanopyCity) {
-      const rootheartCanopy = new THREE.TextureLoader().load('/assets/islands/island-010/background/rootheart-canopy-backdrop-v1.webp');
-      rootheartCanopy.colorSpace = THREE.SRGBColorSpace;
-      rootheartCanopy.wrapS = THREE.ClampToEdgeWrapping;
-      rootheartCanopy.wrapT = THREE.ClampToEdgeWrapping;
-      scene.background = rootheartCanopy;
+      const textureLoader = new THREE.TextureLoader();
+      rootheartDayBackdrop = textureLoader.load('/assets/islands/island-010/background/rootheart-canopy-backdrop-v1.webp');
+      rootheartNightBackdrop = textureLoader.load('/assets/islands/island-010/background/rootheart-canopy-backdrop-night-v1.webp');
+      [rootheartDayBackdrop, rootheartNightBackdrop].forEach((backdrop) => {
+        backdrop.colorSpace = THREE.SRGBColorSpace;
+        backdrop.wrapS = THREE.ClampToEdgeWrapping;
+        backdrop.wrapT = THREE.ClampToEdgeWrapping;
+      });
+      scene.background = rootheartDayBackdrop;
     }
     scene.fog = new THREE.FogExp2(fogColor, fogDensity);
 
@@ -3556,6 +3571,20 @@ export default function Island5ThreePilot({
     sunlight.shadow.camera.far = 34;
     sunlight.shadow.bias = -0.0006;
     scene.add(sunlight);
+    const rootheartDaySky = new THREE.Color(0xffedc2);
+    const rootheartEveningSky = new THREE.Color(0x52647a);
+    const rootheartDayGround = new THREE.Color(0x24351f);
+    const rootheartEveningGround = new THREE.Color(0x070d0b);
+    const rootheartDaySun = new THREE.Color(0xffc36d);
+    const rootheartEveningSun = new THREE.Color(0xff8d52);
+    const rootheartDayFog = new THREE.Color(0x665f3d);
+    const rootheartEveningFog = new THREE.Color(0x0b1721);
+    const rootheartLightingScratch = new THREE.Color();
+    let rootheartLastConstructionSequence = Math.max(
+      0,
+      Math.floor(rootheartPowerworksPresentationRef.current.constructionSequence ?? 0),
+    );
+    let rootheartConstructionStartedAtMs = Number.NEGATIVE_INFINITY;
 
     const materials = createPilotMaterials(qualityProfile.id, resolvedWorldSourceNumber);
     const island1Materials = isFirstLightKingdom ? createIsland1WorldMaterials() : null;
@@ -3677,7 +3706,11 @@ export default function Island5ThreePilot({
       ? [livingAmbience.root.getObjectByName('ISLAND_3_FROSTWELL_ICEWORKS_OFFSHORE_ROOT')].filter(
           (candidate): candidate is THREE.Object3D => Boolean(candidate),
         )
-      : [];
+      : isRootheartCanopyCity
+        ? [livingAmbience.root.getObjectByName('ISLAND_10_ROOTHEART_POWERWORKS')].filter(
+            (candidate): candidate is THREE.Object3D => Boolean(candidate),
+          )
+        : [];
 
     const tileTransforms = buildIsland5TileTransforms(TILE_ANCHORS_36);
     const tileGeometry = createRadialTileGeometry(tileTransforms.length);
@@ -4237,7 +4270,8 @@ export default function Island5ThreePilot({
         || preset === 'habit'
         || preset === 'wisdom'
         || preset === 'event'
-        || preset === 'frostwell';
+        || preset === 'frostwell'
+        || preset === 'powerworks';
       const visible = !isLandmarkInspection;
       playerPiece.root.visible = visible;
       playerPiece.shadow.visible = visible;
@@ -4245,6 +4279,15 @@ export default function Island5ThreePilot({
       caretakerFootplate.visible = visible;
       caretakerContactShadow.visible = visible;
       caretakerHitTarget.visible = visible;
+      const showPlayableRoute = preset !== 'powerworks';
+      tileMeshes.forEach((entry) => { entry.mesh.visible = showPlayableRoute; });
+      tileRewardObjects.root.visible = showPlayableRoute;
+      routeGlow.visible = showPlayableRoute;
+      if (isRootheartCanopyCity) {
+        landmarkRootsById.forEach((landmarkRoot) => {
+          landmarkRoot.visible = preset !== 'powerworks';
+        });
+      }
       if (isAbyssalPearlKingdom) {
         landmarkRootsById.forEach((landmarkRoot, landmarkId) => {
           landmarkRoot.visible = !isLandmarkInspection || landmarkId === preset;
@@ -4369,6 +4412,9 @@ export default function Island5ThreePilot({
         habit: { position: [-1.5, 10.7, 5.8], target: [4.36, 1.58, -3.9] },
         wisdom: { position: [-13.3, 11.0, 11.9], target: [-4.36, 1.5, 3.9] },
         event: { position: [13.3, 11.0, 11.9], target: [4.36, 1.5, 3.9] },
+        powerworks: canvas.clientWidth / Math.max(1, canvas.clientHeight) < 0.75
+          ? { position: [0, 2.4, 20.8], target: [0, -1.85, 3.2] }
+          : { position: [0, 1.8, 18.4], target: [0, -1.85, 3.2] },
       };
       const frostmoonFocusOverrides: Partial<Record<Island5CameraPresetId, {
         position: readonly [number, number, number];
@@ -4459,6 +4505,12 @@ export default function Island5ThreePilot({
     applyControlledCameraFocusRef.current = applyControlledCameraFocus;
     if (controlledCameraFocusRequestRef.current) {
       applyControlledCameraFocus(controlledCameraFocusRequestRef.current);
+    }
+    if (new URLSearchParams(window.location.search).get('island3dEvidence') === '1') {
+      const evidencePreset = new URLSearchParams(window.location.search).get('island3dEvidencePreset');
+      if (evidencePreset && ISLAND_5_CAMERA_PRESETS.some((preset) => preset.id === evidencePreset)) {
+        applyPreset(evidencePreset as Island5CameraPresetId, 0.2);
+      }
     }
 
     const stopTour = (returnToOverview = true) => {
@@ -4577,6 +4629,7 @@ export default function Island5ThreePilot({
       if (signatureMissionIntersection) {
         idleOverviewAt = null;
         if (isFrostmoonHaven) applyPreset('frostwell', 0.9);
+        if (isRootheartCanopyCity) applyPreset('powerworks', 0.9);
         onSignatureMissionClickRef.current?.();
         return;
       }
@@ -4605,7 +4658,68 @@ export default function Island5ThreePilot({
       // motion, so it must still run when reduced motion freezes ambience.
       livingAmbience.updateView?.(camera.position, controls.target);
       if (isRootheartCanopyCity) {
-        livingAmbience.updatePowerworksStage?.(rootheartPowerworksPresentationRef.current);
+        const powerworksPresentation = rootheartPowerworksPresentationRef.current;
+        const requestedSequence = Math.max(0, Math.floor(powerworksPresentation.constructionSequence ?? 0));
+        if (requestedSequence > rootheartLastConstructionSequence) {
+          rootheartLastConstructionSequence = requestedSequence;
+          rootheartConstructionStartedAtMs = now;
+        }
+        const constructionDurationMs = powerworksPresentation.buildStage >= 3 ? 5_200 : 3_200;
+        const derivedTransitionProgress = Number.isFinite(rootheartConstructionStartedAtMs)
+          ? THREE.MathUtils.smoothstep(
+              THREE.MathUtils.clamp((now - rootheartConstructionStartedAtMs) / constructionDurationMs, 0, 1),
+              0,
+              1,
+            )
+          : 1;
+        const resolvedPowerworksPresentation: Island10RootheartPowerworksPresentation = {
+          ...powerworksPresentation,
+          transitionProgress: powerworksPresentation.transitionProgress ?? derivedTransitionProgress,
+        };
+        livingAmbience.updatePowerworksStage?.(resolvedPowerworksPresentation);
+        const completedStageBase = Math.max(0, resolvedPowerworksPresentation.buildStage - 1);
+        const activeStageProgress = resolvedPowerworksPresentation.buildStage === 0
+          ? 0
+          : THREE.MathUtils.clamp(resolvedPowerworksPresentation.transitionProgress ?? 1, 0, 1);
+        const twilightProgress = THREE.MathUtils.clamp(
+          (completedStageBase + activeStageProgress) / 3,
+          0,
+          1,
+        );
+        // Keep the first construction beats welcoming, then let the completed
+        // Powerworks land as a true enchanted night reveal. The squared curve
+        // protects board readability at stages one and two while giving stage
+        // three enough darkness for the powered interiors to become the focus.
+        const nightDepth = twilightProgress * twilightProgress;
+        const isMoonlitBackdrop = twilightProgress >= 0.82;
+        if (rootheartDayBackdrop && rootheartNightBackdrop) {
+          // Both textures share the exact same source pixels and registration;
+          // only the deterministic colour grade differs. Switch during the
+          // final build transition so no branch, bridge, or lantern can jump.
+          scene.background = isMoonlitBackdrop
+            ? rootheartNightBackdrop
+            : rootheartDayBackdrop;
+        }
+        // The Powerworks reward is an island-wide emotional change, not only
+        // a brighter dynamo. Each funded stage advances the canopy from warm
+        // afternoon into blue-hour dusk so lanterns, sapglass and travelling
+        // power pulses become progressively legible.
+        scene.backgroundIntensity = isMoonlitBackdrop
+          ? 0.76
+          : THREE.MathUtils.lerp(1, 0.48, nightDepth);
+        hemisphere.intensity = THREE.MathUtils.lerp(1.78, 0.82, nightDepth);
+        hemisphere.color.copy(rootheartLightingScratch.copy(rootheartDaySky).lerp(rootheartEveningSky, nightDepth));
+        hemisphere.groundColor.copy(rootheartLightingScratch.copy(rootheartDayGround).lerp(rootheartEveningGround, nightDepth));
+        sunlight.intensity = THREE.MathUtils.lerp(3.8, 1.12, nightDepth);
+        sunlight.color.copy(rootheartLightingScratch.copy(rootheartDaySun).lerp(rootheartEveningSun, nightDepth));
+        renderer.toneMappingExposure = THREE.MathUtils.lerp(1.1, 0.96, nightDepth);
+        if (island10RootheartMaterials) {
+          island10RootheartMaterials.lantern.emissiveIntensity = THREE.MathUtils.lerp(1.05, 2.75, nightDepth);
+          island10RootheartMaterials.sapglass.emissiveIntensity = THREE.MathUtils.lerp(0.46, 1.35, nightDepth);
+        }
+        if (scene.fog instanceof THREE.FogExp2) {
+          scene.fog.color.copy(rootheartLightingScratch.copy(rootheartDayFog).lerp(rootheartEveningFog, nightDepth));
+        }
       }
       if (!isReducedMotion) {
         if (isFrostmoonHaven) {
@@ -5194,7 +5308,10 @@ export default function Island5ThreePilot({
       }
       scene.remove(boardCaretaker.root);
       boardCaretaker.dispose();
+      const disposedSceneBackground = scene.background;
       disposeScene(scene);
+      if (rootheartDayBackdrop && rootheartDayBackdrop !== disposedSceneBackground) rootheartDayBackdrop.dispose();
+      if (rootheartNightBackdrop && rootheartNightBackdrop !== disposedSceneBackground) rootheartNightBackdrop.dispose();
       evidenceMaterials.forEach((material) => material.dispose());
       tileGeometry.dispose();
       tileMaterials.forEach((material) => material.dispose());
@@ -5213,7 +5330,7 @@ export default function Island5ThreePilot({
 
   return (
     <section
-      className={`island-5-three-pilot${isEmbedded ? ' island-5-three-pilot--embedded' : ''}`}
+      className={`island-5-three-pilot${isEmbedded ? ' island-5-three-pilot--embedded' : ''}${isEvidenceCapture ? ' island-5-three-pilot--evidence' : ''}`}
       data-quality={qualityProfile.id}
       data-camera-preset={activePreset}
       aria-label={isEmbedded ? `Interactive 3D Island ${islandNumber}` : `Actual 3D Island ${islandNumber} pilot`}
@@ -5316,7 +5433,12 @@ export default function Island5ThreePilot({
           onChange={(event) => event.target.value && applyPresetRef.current(event.target.value as Island5CameraPresetId)}
         >
           <option value="">Focus landmark…</option>
-          {ISLAND_5_CAMERA_PRESETS.slice(4).map((preset) => (
+          {ISLAND_5_CAMERA_PRESETS.slice(4)
+            .filter((preset) => (
+              (preset.id !== 'frostwell' || isFrostmoonHaven)
+              && (preset.id !== 'powerworks' || isRootheartCanopyCity)
+            ))
+            .map((preset) => (
             <option key={preset.id} value={preset.id}>
               {isFirstLightKingdom
                 ? ISLAND_1_LANDMARK_LABELS[preset.id as keyof typeof ISLAND_1_LANDMARK_LABELS]
@@ -5348,6 +5470,9 @@ export default function Island5ThreePilot({
           onClick={() => (tourStatus === 'running' ? stopTourRef.current() : startTourRef.current())}
         >
           {tourStatus === 'running' ? 'Stop cinematic tour' : 'Play cinematic tour'}
+        </button>
+        <button type="button" onClick={() => setIsEvidenceCapture(true)}>
+          Hide overlays for evidence
         </button>
         <p>{tourStatus === 'running' ? 'Touring the island and all five landmarks…' : 'Drag to orbit · pinch to zoom · tap a building to focus'}</p>
       </div>
