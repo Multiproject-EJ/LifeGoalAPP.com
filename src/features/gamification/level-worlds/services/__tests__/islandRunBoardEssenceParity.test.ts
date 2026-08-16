@@ -327,21 +327,18 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
       );
       assert(
         source.includes('while (holdBuildSpendActiveRef.current) {') &&
-          source.includes('let holdBatchSteps = resolveBuildHoldBatchSteps(heldMs);') &&
-          source.includes('const spendApplied = await handleSpendEssenceOnBuild(idx, holdBatchSteps);') &&
-          source.includes('await wait(BUILD_HOLD_INITIAL_DELAY_MS);') &&
-          source.includes('await wait(resolveBuildHoldRepeatDelayMs(heldMs));') &&
+          source.includes('const spendApplied = await handleSpendEssenceOnBuild(stopIndex, 1);') &&
+          source.includes('await wait(BUILD_HOLD_REPEAT_DELAY_MS);') &&
+          source.includes('buildLevelCompletionRef.current') &&
           !source.includes('holdInterval = window.setInterval(() => {'),
-        'Hold-to-build should sequence spends by awaiting each spend result rather than firing blind interval commits.',
+        'Hold-to-build should apply one awaited canonical step per steady beat and stop at each level review.',
       );
       assert(
-        source.includes('const BUILD_HOLD_INITIAL_DELAY_MS = 400;') &&
-          source.includes('if (heldMs >= 3_000) return MAX_REPEATED_BUILD_BATCH_STEPS;') &&
-          source.includes('if (heldMs >= 1_500) return 2;') &&
-          source.includes('if (heldMs >= 3_000) return 95;') &&
-          source.includes('if (heldMs >= 1_500) return 150;') &&
-          source.includes('return 250;'),
-        'Hold-to-build should use accelerating batch and delay curves as hold duration increases, with max batch delegated to the repeated-build speed cap.',
+        source.includes('const BUILD_HOLD_REPEAT_DELAY_MS = 520;') &&
+          source.includes("setBuildHoldFeedbackLabel('⚒️ Building steadily…');") &&
+          !source.includes('resolveBuildHoldBatchSteps') &&
+          !source.includes('resolveBuildHoldRepeatDelayMs'),
+        'Hold-to-build should stay deliberately slow enough for construction transitions to remain readable.',
       );
       // aria-disabled lives in BuildModalV2 (v2 tray cards) — verify it is
       // present in either the board source or the v2 modal component.
@@ -358,25 +355,20 @@ export const islandRunBoardEssenceParityTests: TestCase[] = [
             source.includes('const isBuildDisabled = isFullyBuilt || !canAfford;') ||
             source.includes('const isBuildDisabled = isFullyBuilt || !canAfford || isBuildSpendInFlight;') ||
             source.includes('const isBuildInteractionDisabled = tutorialRowState.isUnavailable || isBuildDisabled;') ||
-            buildModalV2Source.includes('const isDisabled = !isActive || disabledByWalletOrTutorial;')
+            buildModalV2Source.includes('const isDisabled = isComplete || !part.canAfford || disabledByTutorial || isBuildHoldActive;')
           ) &&
-          source.includes('⚒️ Max build…'),
-        'Build button should expose disabled state for true non-buildable rows and provide hold feedback.',
+          buildModalV2Source.includes('Hold to auto-build'),
+        'Build choices and hold control should expose true affordability/interaction disabled states.',
       );
       assert(
-        (
-          source.includes('const handleRepeatedBuildActivation = async (') ||
-          source.includes('const handleRepeatedBuildActivation = useCallback(async (')
-        ) &&
-          source.includes('requestedAtMs = Date.now(),') &&
-          source.includes('nowMs: requestedAtMs,') &&
-          source.includes('let repeatedBuildBatchSteps = resolveRepeatedBuildBatchSteps(nextStreak.count);') &&
-          source.includes('const spendApplied = await handleSpendEssenceOnBuild(stopIndex, repeatedBuildBatchSteps);') &&
-          source.includes('buildRepeatStreakRef.current = nextStreak;') &&
+        source.includes('const resolveQueuedBuildPartSteps = useCallback((') &&
+          source.includes('const latestRuntimeState = getIslandRunStateSnapshot(session);') &&
+          source.includes('const selectedPart = latestViewModel.parts.find((part) => part.partNumber === targetPartNumber);') &&
           source.includes('const processBuildTapQueue = useCallback(async (): Promise<void> => {') &&
           source.includes('const isBuildTapQueueProcessingRef = useRef(false);') &&
-          source.includes('await handleRepeatedBuildActivation(nextTap.stopIndex, nextTap.requestedAtMs);'),
-        'Repeated build activation should resolve UI-local streak speed, preserve tap timestamps through the queue, and only persist the streak after a successful canonical spend.',
+          source.includes('const maxSteps = resolveQueuedBuildPartSteps(nextTap.stopIndex, nextTap.targetPartNumber);') &&
+          source.includes('await handleSpendEssenceOnBuild(nextTap.stopIndex, maxSteps);'),
+        'Independent part choices should reprice from the latest canonical snapshot and serialize through the canonical batch action.',
       );
     },
   },

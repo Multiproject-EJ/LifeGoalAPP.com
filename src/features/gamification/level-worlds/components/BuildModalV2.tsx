@@ -13,7 +13,9 @@ export interface BuildModalV2Props {
   discountExpiresAtMs?: number | null;
   levelReview?: BuildModalV2LevelReview | null;
   onAdvanceLevelReview: () => void;
-  onBuildActivePart: (stopIndex: number) => void;
+  onBuildPartChoice: (stopIndex: number, partNumber: BuildModalV2PartViewModel['partNumber']) => void;
+  onStartBuildHold: (stopIndex: number) => void;
+  onStopBuildHold: () => void;
 }
 
 export interface BuildModalV2LevelReview {
@@ -107,44 +109,100 @@ function BuildModalV2PartButton({
   activeTitle,
   targetLevel,
   activeStopIndex,
-  disabledByWalletOrTutorial,
-  nextTapEssenceCost,
-  onBuildActivePart,
+  disabledByTutorial,
+  isBuildHoldActive,
+  onBuildPartChoice,
 }: {
   part: BuildModalV2PartViewModel;
   activeTitle: string;
   targetLevel: number;
   activeStopIndex: number;
-  disabledByWalletOrTutorial: boolean;
-  nextTapEssenceCost: number;
-  onBuildActivePart: (stopIndex: number) => void;
+  disabledByTutorial: boolean;
+  isBuildHoldActive: boolean;
+  onBuildPartChoice: (stopIndex: number, partNumber: BuildModalV2PartViewModel['partNumber']) => void;
 }) {
-  const isActive = part.status === 'active';
-  const isDisabled = !isActive || disabledByWalletOrTutorial;
+  const isComplete = part.status === 'complete';
+  const isDisabled = isComplete || !part.canAfford || disabledByTutorial || isBuildHoldActive;
   const metaLabel = part.status === 'complete'
     ? 'Done'
-    : part.status === 'locked'
-      ? ''
-      : `${nextTapEssenceCost} Money`;
-  const titleLabel = isActive ? `Build ${part.partNumber}` : `${part.partNumber}`;
+    : `${part.essenceCost} Money`;
+  const titleLabel = isComplete ? `Part ${part.partNumber}` : `Build ${part.partNumber}`;
   const ariaLabel = part.status === 'complete'
     ? `${activeTitle} Level ${targetLevel}, Part ${part.partNumber} complete`
-    : part.status === 'locked'
-      ? `${activeTitle} Level ${targetLevel}, Part ${part.partNumber} locked`
-      : `Build ${activeTitle} Level ${targetLevel}, Part ${part.partNumber}. ${part.remainingEssence} Money left in this part. Next tap spends ${nextTapEssenceCost} Money.`;
+    : `Build ${activeTitle} Level ${targetLevel} through Part ${part.partNumber}. Costs ${part.essenceCost} Money and funds ${part.remainingEssence} construction progress.`;
 
   return (
     <button
       type="button"
-      className={`bm2-part bm2-part--${part.status}`}
+      className={`bm2-part bm2-part--${part.status}${!isComplete ? ' bm2-part--choice' : ''}`}
       disabled={isDisabled}
       aria-disabled={isDisabled}
       aria-label={ariaLabel}
-      onClick={isActive && !isDisabled ? () => onBuildActivePart(activeStopIndex) : undefined}
+      onClick={!isDisabled ? () => onBuildPartChoice(activeStopIndex, part.partNumber) : undefined}
     >
-      <span className="bm2-part__icon" aria-hidden="true">{part.status === 'complete' ? '✓' : part.status === 'locked' ? '🔒' : '🔨'}</span>
+      <span className="bm2-part__icon" aria-hidden="true">{part.status === 'complete' ? '✓' : '🔨'}</span>
       <span className="bm2-part__title">{titleLabel}</span>
       <span className="bm2-part__meta">{metaLabel}</span>
+    </button>
+  );
+}
+
+function BuildModalV2HoldButton({
+  activeTitle,
+  activeStopIndex,
+  nextTapEssenceCost,
+  isActive,
+  isDisabled,
+  onStartBuildHold,
+  onStopBuildHold,
+}: {
+  activeTitle: string;
+  activeStopIndex: number;
+  nextTapEssenceCost: number;
+  isActive: boolean;
+  isDisabled: boolean;
+  onStartBuildHold: (stopIndex: number) => void;
+  onStopBuildHold: () => void;
+}) {
+  const startHold = () => {
+    if (!isDisabled) onStartBuildHold(activeStopIndex);
+  };
+
+  return (
+    <button
+      type="button"
+      className={`bm2-hold-build${isActive ? ' bm2-hold-build--active' : ''}`}
+      disabled={isDisabled}
+      aria-disabled={isDisabled}
+      aria-label={`Press and hold to build ${activeTitle} steadily. Each beat costs up to ${nextTapEssenceCost} Money.`}
+      onPointerDown={(event) => {
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        startHold();
+      }}
+      onPointerUp={onStopBuildHold}
+      onPointerCancel={onStopBuildHold}
+      onLostPointerCapture={onStopBuildHold}
+      onKeyDown={(event) => {
+        if ((event.key === ' ' || event.key === 'Enter') && !event.repeat) {
+          event.preventDefault();
+          startHold();
+        }
+      }}
+      onKeyUp={(event) => {
+        if (event.key === ' ' || event.key === 'Enter') {
+          event.preventDefault();
+          onStopBuildHold();
+        }
+      }}
+      onContextMenu={(event) => event.preventDefault()}
+    >
+      <span className="bm2-hold-build__icon" aria-hidden="true">⚒️</span>
+      <span className="bm2-hold-build__copy">
+        <strong>{isActive ? 'Building steadily…' : 'Hold to auto-build'}</strong>
+        <small>{nextTapEssenceCost} Money per smooth build beat</small>
+      </span>
+      <span className="bm2-hold-build__meter" aria-hidden="true" />
     </button>
   );
 }
@@ -162,7 +220,9 @@ export function BuildModalV2({
   discountExpiresAtMs = null,
   levelReview = null,
   onAdvanceLevelReview,
-  onBuildActivePart,
+  onBuildPartChoice,
+  onStartBuildHold,
+  onStopBuildHold,
 }: BuildModalV2Props) {
   const active = viewModel.activeLandmark;
   const isComplete = viewModel.sequentialBuildView.isFullyBuilt || !active;
@@ -245,7 +305,16 @@ export function BuildModalV2({
                 <BuildModalV2LevelRail viewModel={viewModel} />
               </div>
 
-              <p className="sr-only">{active.title} Level {active.targetLevel}: {active.completedParts} of 5 construction parts complete. Only the active part can be built.</p>
+              <p className="sr-only">{active.title} Level {active.targetLevel}: {active.completedParts} of 5 construction parts complete. Choose any unfinished milestone or hold to build steadily.</p>
+              <BuildModalV2HoldButton
+                activeTitle={active.title}
+                activeStopIndex={active.stopIndex}
+                nextTapEssenceCost={active.nextTapEssenceCost}
+                isActive={isBuildHoldActive}
+                isDisabled={!canBuildActive || isBuildModalHatcheryGuidanceActive && active.activePart !== 1}
+                onStartBuildHold={onStartBuildHold}
+                onStopBuildHold={onStopBuildHold}
+              />
               <div className="bm2-tray" role="list" aria-label={`${active.title} construction parts`}>
                 {viewModel.parts.map((part) => (
                   <BuildModalV2PartButton
@@ -254,9 +323,9 @@ export function BuildModalV2({
                     activeTitle={active.title}
                     targetLevel={active.targetLevel}
                     activeStopIndex={active.stopIndex}
-                    disabledByWalletOrTutorial={!canBuildActive}
-                    nextTapEssenceCost={active.nextTapEssenceCost}
-                    onBuildActivePart={onBuildActivePart}
+                    disabledByTutorial={isBuildModalHatcheryGuidanceActive && part.partNumber !== active.activePart}
+                    isBuildHoldActive={isBuildHoldActive}
+                    onBuildPartChoice={onBuildPartChoice}
                   />
                 ))}
               </div>

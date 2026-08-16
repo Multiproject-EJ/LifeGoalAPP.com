@@ -64,14 +64,19 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
     },
   },
   {
-    name: 'parts expose five controls with complete active locked status and actual next tap cost',
+    name: 'parts expose five independently priced cumulative build choices',
     run: () => {
-      const view = vm([build(0, 20, 100), build(0), build(0), build(0), build(0)], 20);
+      const view = vm([build(0, 20, 100), build(0), build(0), build(0), build(0)], 100);
       assertEqual(view.parts.length, 5, 'Incomplete target should render five part controls');
       assertEqual(view.parts[0].status, 'complete', 'Part 1 should be complete at first threshold');
       assertEqual(view.parts[1].status, 'active', 'Exactly next unfinished part should be active');
       assertEqual(view.parts.filter((part) => part.status === 'active').length, 1, 'Exactly one part should be active');
-      assertEqual(view.parts[2].status, 'locked', 'Future part should be locked');
+      assertEqual(view.parts[2].status, 'locked', 'Future part remains a derived visual milestone, not persisted state');
+      assertEqual(view.parts[1].essenceCost, 20, 'Part 2 should price the next canonical spend step');
+      assertEqual(view.parts[2].essenceCost, 40, 'Part 3 should price all canonical steps needed from current progress');
+      assertEqual(view.parts[4].essenceCost, 80, 'Part 5 should price the cumulative finish choice');
+      assertEqual(view.parts[4].maxSteps, 4, 'Part 5 should request four canonical spend steps from current progress');
+      assertEqual(view.parts[4].canAfford, true, 'Every unfinished milestone should be selectable when its full price is affordable');
       assertEqual(view.activeLandmark?.nextTapCost, 20, 'Next tap cost should use canonical spend-step formula');
       assertEqual(view.activeLandmark?.canAffordNextTap, true, 'Essence balance should afford next tap');
     },
@@ -90,9 +95,12 @@ export const islandRunBuildModalV2ViewModelTests: TestCase[] = [
       assertEqual(discounted.activeLandmark?.nextTapCost, 24, 'Nominal tap should still fund 24 progress');
       assertEqual(discounted.activeLandmark?.nextTapEssenceCost, 18, '25% Build Rush should deduct 18 Money');
       assertEqual(discounted.activeLandmark?.canAffordNextTap, true, '18 Money should afford the discounted tap');
+      assertEqual(discounted.parts[0].essenceCost, 18, 'Part choice price should use the same discounted canonical step cost');
+      assertEqual(discounted.parts[1].essenceCost, 36, 'Cumulative Part 2 price should sum two discounted canonical steps');
 
       const short = vm([build(1, 0, 120), build(1), build(1), build(1), build(1)], 17, null, 0.25);
       assertEqual(short.activeLandmark?.canAffordNextTap, false, '17 Money should not afford an 18 Money discounted tap');
+      assertEqual(short.parts.filter((part) => part.canAfford).length, 0, 'No cumulative milestone should claim affordability below one discounted step');
     },
   },
   {

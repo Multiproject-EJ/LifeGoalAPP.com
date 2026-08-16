@@ -984,7 +984,8 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(boardSource.includes('cameraFocusPreset={threeCameraFocusPreset}'), 'the live 3D board must receive Build and ordinary landmark focus requests');
       assert(boardSource.includes("transition: previousStopId === null ? 'standard' : 'quick'"), 'landmark-to-landmark Build handoff should use the quick camera path');
       assert(pilotSource.includes("cameraFocusTransition === 'quick' ? 0.48 : 0.82"), 'the actual 3D camera should shorten Build handoff timing without changing its preset geometry');
-      assert(modalSource.includes('onBuildActivePart={onBuildActivePart}') && modalSource.includes('onBuildActivePart(activeStopIndex)'), 'the existing canonical build callback must remain the action owner');
+      assert(modalSource.includes('onBuildPartChoice={onBuildPartChoice}') && modalSource.includes('onBuildPartChoice(activeStopIndex, part.partNumber)'), 'independent part choices must remain presentational callbacks into the canonical board action owner');
+      assert(modalSource.includes('onStartBuildHold={onStartBuildHold}') && modalSource.includes('onStopBuildHold={onStopBuildHold}'), 'the dedicated hold control must delegate building to the canonical board action owner');
       assert(!/persistIslandRunRuntimeStatePatch|commitIslandRunState/.test(modalSource), 'presentational modal must not add a gameplay persistence path');
     },
   },

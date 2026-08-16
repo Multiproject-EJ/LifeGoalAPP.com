@@ -514,13 +514,6 @@ import {
   resolveBossCreatureArtState,
 } from '../services/islandRunBossEncounter';
 import {
-  getInitialBuildRepeatStreakState,
-  MAX_REPEATED_BUILD_BATCH_STEPS,
-  resolveNextBuildRepeatStreak,
-  resolveRepeatedBuildBatchSteps,
-  type BuildRepeatStreakState,
-} from '../services/islandRunBuildAcceleration';
-import {
   BASE_DICE_PER_ROLL,
   claimIslandRunContractV2RewardBar,
   isPuzzleCollectionAvailableForIsland,
@@ -702,7 +695,7 @@ const ISLAND_RUN_120_STOP_PAIR_DELIMITER = '_to_';
 const ISLAND_RUN_REGEN_INTERVAL_NOOP_LOG_THROTTLE_MS = 45_000;
 const ISLAND_RUN_EARLY_FEATURED_CREATURE_POOL_WEIGHT_PERCENT = 70;
 const DEV_LUCKY_ROLL_TEST_ROLL = 3;
-const BUILD_HOLD_INITIAL_DELAY_MS = 400;
+const BUILD_HOLD_REPEAT_DELAY_MS = 520;
 const BUILD_LEVEL_REVIEW_MIN_DWELL_MS = 1_000;
 const BUILD_LEVEL_COMPLETION_AUTO_DISMISS_MS = 3_000;
 
@@ -740,24 +733,6 @@ const TRAFFIC_LIGHT_ANIMATION_IMAGE_SRCS = [
 ] as const;
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT = 'Reward bar can award Space Excavator tickets';
 const SPACE_EXCAVATOR_REWARD_BAR_HINT_TEXT_DEV = 'Reward bar can award Space Excavator tickets (DEV override tickets)';
-
-function resolveBuildHoldRepeatDelayMs(heldMs: number) {
-  if (heldMs >= 3_000) return 95;
-  if (heldMs >= 1_500) return 150;
-  return 250;
-}
-
-function resolveBuildHoldBatchSteps(heldMs: number) {
-  if (heldMs >= 3_000) return MAX_REPEATED_BUILD_BATCH_STEPS;
-  if (heldMs >= 1_500) return 2;
-  return 1;
-}
-
-function resolveBuildHoldFeedbackLabel(heldMs: number) {
-  if (heldMs >= 3_000) return '⚒️ Max build…';
-  if (heldMs >= 1_500) return '⚒️ Fast build…';
-  return '⚒️ Building…';
-}
 
 function buildHydrationSourceOrder(baseSource: 'local_storage' | 'in_memory', hydrationSource: string) {
   return [baseSource, hydrationSource];
@@ -3254,33 +3229,27 @@ export function IslandRunBoardPrototype({
   const regenIntervalNoopLogSuppressedCountRef = useRef<number>(0);
   const islandClearCelebrationShownForVisitRef = useRef<string | null>(null);
   const isBuildSpendInFlightRef = useRef(false);
-  const buildTapQueueRef = useRef<Array<{ stopIndex: number; requestedAtMs: number }>>([]);
+  const buildTapQueueRef = useRef<Array<{ stopIndex: number; targetPartNumber: 1 | 2 | 3 | 4 | 5 }>>([]);
   const isBuildTapQueueProcessingRef = useRef(false);
   const holdBuildSpendActiveRef = useRef(false);
-  const holdBuildSpendStartAtMsRef = useRef<number | null>(null);
-  const buildRepeatStreakRef = useRef<BuildRepeatStreakState>(getInitialBuildRepeatStreakState());
   const completedStopsSyncDispatchKeyRef = useRef<string | null>(null);
   const marketOwnedBundleSyncRequestedRef = useRef(false);
   const marketOwnedBundleSyncDispatchKeyRef = useRef<string | null>(null);
   const [isBuildHoldActive, setIsBuildHoldActive] = useState(false);
   const [buildHoldFeedbackLabel, setBuildHoldFeedbackLabel] = useState('⚒️ Building…');
-  const resetBuildRepeatStreak = useCallback(() => {
-    buildRepeatStreakRef.current = getInitialBuildRepeatStreakState();
-  }, []);
-
   useEffect(() => {
-    resetBuildRepeatStreak();
     buildTapQueueRef.current = [];
     clearBuildLevelReview();
-  }, [clearBuildLevelReview, islandNumber, resetBuildRepeatStreak]);
+  }, [clearBuildLevelReview, islandNumber]);
 
   useEffect(() => {
     if (!showBuildPanel) {
-      resetBuildRepeatStreak();
       buildTapQueueRef.current = [];
+      holdBuildSpendActiveRef.current = false;
+      setIsBuildHoldActive(false);
       clearBuildLevelReview();
     }
-  }, [clearBuildLevelReview, resetBuildRepeatStreak, showBuildPanel]);
+  }, [clearBuildLevelReview, showBuildPanel]);
   const isIsland120StartupDiagnosticActive = isIsland120StartupDiagnosticTarget(
     runtimeState.currentIslandNumber ?? islandNumber,
   )
@@ -3299,7 +3268,6 @@ export function IslandRunBoardPrototype({
   useEffect(() => () => {
     buildTapQueueRef.current = [];
     holdBuildSpendActiveRef.current = false;
-    holdBuildSpendStartAtMsRef.current = null;
   }, []);
 
   const updateMarketOwnedBundles = useCallback((
@@ -10629,48 +10597,24 @@ export function IslandRunBoardPrototype({
     }
   }, [activeBuildDiscountRate, client, effectiveIslandNumber, islandStopPlan, playIslandRunSound, session]);
 
-  const handleRepeatedBuildActivation = useCallback(async (
-    stopIndex: number,
-    requestedAtMs = Date.now(),
-  ): Promise<boolean> => {
-    const nextStreak = resolveNextBuildRepeatStreak({
-      current: buildRepeatStreakRef.current,
-      stopIndex,
-      nowMs: requestedAtMs,
+  const resolveQueuedBuildPartSteps = useCallback((stopIndex: number, targetPartNumber: 1 | 2 | 3 | 4 | 5): number => {
+    const latestRuntimeState = getIslandRunStateSnapshot(session);
+    const latestViewModel = deriveBuildModalV2ViewModel({
+      stopBuildStateByIndex: latestRuntimeState.stopBuildStateByIndex,
+      islandStopPlan,
+      essenceAvailable: latestRuntimeState.essence,
+      islandArtManifest: null,
+      discountRate: activeBuildDiscountRate,
     });
-    let repeatedBuildBatchSteps = resolveRepeatedBuildBatchSteps(nextStreak.count);
-    if (isBuildModalHatcheryGuidanceActive) {
-      repeatedBuildBatchSteps = 1;
-    }
-    const spendApplied = await handleSpendEssenceOnBuild(stopIndex, repeatedBuildBatchSteps);
-    if (!spendApplied) {
-      resetBuildRepeatStreak();
-      return false;
-    }
+    if (latestViewModel.activeLandmark?.stopIndex !== stopIndex) return 0;
+    const selectedPart = latestViewModel.parts.find((part) => part.partNumber === targetPartNumber);
+    return selectedPart?.canAfford ? selectedPart.maxSteps : 0;
+  }, [activeBuildDiscountRate, islandStopPlan, session]);
 
-    if (runtimeStateRef.current.firstSessionTutorialState === 'hatchery_l1_built') {
-      resetBuildRepeatStreak();
-      return true;
-    }
-
-    buildRepeatStreakRef.current = nextStreak;
-    const latestBuildState = runtimeStateRef.current.stopBuildStateByIndex[stopIndex];
-    const remaining = latestBuildState
-      ? Math.max(0, latestBuildState.requiredEssence - latestBuildState.spentEssence)
-      : 0;
-    if (
-      !latestBuildState
-      || isStopBuildFullyComplete(latestBuildState)
-      || runtimeStateRef.current.essence < Math.min(resolveBuildSpendStepForTier(latestBuildState.requiredEssence), remaining)
-    ) {
-      resetBuildRepeatStreak();
-    }
-    return true;
-  }, [activeBuildDiscountRate, handleSpendEssenceOnBuild, isBuildModalHatcheryGuidanceActive, resetBuildRepeatStreak]);
-
-  // ── BuildModalV2 tap handler ──────────────────────────────────────────────
-  // Tap-to-build for the v2 tray.  Hold-to-build is intentionally omitted in
-  // v2 to avoid gesture conflicts with the horizontal scroll tray.
+  // ── BuildModalV2 selectable milestone handler ─────────────────────────────
+  // Every unfinished construction part is a cumulative choice. The UI queues
+  // the requested milestone, then reprices it against the latest canonical
+  // snapshot before spending so rapid taps cannot overspend stale prices.
   const processBuildTapQueue = useCallback(async (): Promise<void> => {
     try {
       while (buildTapQueueRef.current.length > 0) {
@@ -10680,21 +10624,22 @@ export function IslandRunBoardPrototype({
         }
         const nextTap = buildTapQueueRef.current.shift();
         if (!nextTap) continue;
-        await handleRepeatedBuildActivation(nextTap.stopIndex, nextTap.requestedAtMs);
+        const maxSteps = resolveQueuedBuildPartSteps(nextTap.stopIndex, nextTap.targetPartNumber);
+        if (maxSteps > 0) await handleSpendEssenceOnBuild(nextTap.stopIndex, maxSteps);
       }
     } finally {
       isBuildTapQueueProcessingRef.current = false;
     }
-  }, [handleRepeatedBuildActivation]);
+  }, [handleSpendEssenceOnBuild, resolveQueuedBuildPartSteps]);
 
-  const handleBuildCardTap = useCallback((stopIndex: number): void => {
+  const handleBuildPartChoice = useCallback((stopIndex: number, targetPartNumber: 1 | 2 | 3 | 4 | 5): void => {
     if (buildLevelCompletionRef.current) {
       handleAdvanceBuildLevelReview();
       return;
     }
     buildTapQueueRef.current.push({
       stopIndex,
-      requestedAtMs: Date.now(),
+      targetPartNumber,
     });
     if (!isBuildTapQueueProcessingRef.current) {
       isBuildTapQueueProcessingRef.current = true;
@@ -10702,77 +10647,31 @@ export function IslandRunBoardPrototype({
     }
   }, [handleAdvanceBuildLevelReview, processBuildTapQueue]);
 
-  // ── Legacy hold-to-build handler (retained for future hold-gesture PR) ────
-  // Not wired to the v2 tray UI yet; hold interactions on a horizontal scroll
-  // tray require dedicated gesture disambiguation.  Keep in board source so
-  // source-guard assertions on the canonical hold flow remain valid.
-  const createBuildCardHoldHandler = (idx: number, isBuildInteractionDisabled: boolean) =>
-    (e: React.MouseEvent | React.TouchEvent): void => {
-      e.preventDefault();
-      if (isBuildInteractionDisabled) return;
-      holdBuildSpendActiveRef.current = true;
-      holdBuildSpendStartAtMsRef.current = Date.now();
-      setIsBuildHoldActive(true);
-      setBuildHoldFeedbackLabel('⚒️ Building…');
-      const stopHold = () => {
-        holdBuildSpendActiveRef.current = false;
-        holdBuildSpendStartAtMsRef.current = null;
-        setIsBuildHoldActive(false);
-        window.removeEventListener('mouseup', stopHold);
-        window.removeEventListener('touchend', stopHold);
-      };
-      window.addEventListener('mouseup', stopHold, { once: true });
-      window.addEventListener('touchend', stopHold, { once: true });
-      void (async () => {
-        const initialSpendApplied = await handleRepeatedBuildActivation(idx);
-        if (!initialSpendApplied || !holdBuildSpendActiveRef.current) {
-          stopHold();
+  const stopBuildHold = useCallback((): void => {
+    holdBuildSpendActiveRef.current = false;
+    setIsBuildHoldActive(false);
+  }, []);
+
+  const startBuildHold = useCallback((stopIndex: number): void => {
+    if (holdBuildSpendActiveRef.current || buildLevelCompletionRef.current) return;
+    holdBuildSpendActiveRef.current = true;
+    setIsBuildHoldActive(true);
+    setBuildHoldFeedbackLabel('⚒️ Building steadily…');
+    void (async () => {
+      while (holdBuildSpendActiveRef.current) {
+        const spendApplied = await handleSpendEssenceOnBuild(stopIndex, 1);
+        if (
+          !spendApplied
+          || buildLevelCompletionRef.current
+          || runtimeStateRef.current.firstSessionTutorialState === 'hatchery_l1_built'
+        ) {
+          stopBuildHold();
           return;
         }
-        await wait(BUILD_HOLD_INITIAL_DELAY_MS);
-        while (holdBuildSpendActiveRef.current) {
-          const liveRuntimeState = getIslandRunStateSnapshot(session);
-          if (liveRuntimeState.firstSessionTutorialState === 'hatchery_l1_built') {
-            resetBuildRepeatStreak();
-            stopHold();
-            return;
-          }
-          const liveBuildState = liveRuntimeState.stopBuildStateByIndex[idx];
-          const liveRemaining = liveBuildState
-            ? Math.max(0, liveBuildState.requiredEssence - liveBuildState.spentEssence)
-            : 0;
-          const liveCanAfford = liveRuntimeState.essence >= Math.min(resolveBuildSpendStepForTier(liveBuildState.requiredEssence), liveRemaining);
-          if (!liveBuildState || isStopBuildFullyComplete(liveBuildState) || !liveCanAfford) {
-            resetBuildRepeatStreak();
-            stopHold();
-            return;
-          }
-          const holdStartedAtMs = holdBuildSpendStartAtMsRef.current ?? Date.now();
-          const heldMs = Math.max(0, Date.now() - holdStartedAtMs);
-          let holdBatchSteps = resolveBuildHoldBatchSteps(heldMs);
-          if (isBuildModalHatcheryGuidanceActive) {
-            holdBatchSteps = 1;
-          }
-          setBuildHoldFeedbackLabel(resolveBuildHoldFeedbackLabel(heldMs));
-          const spendApplied = await handleSpendEssenceOnBuild(idx, holdBatchSteps);
-          if (!spendApplied) {
-            resetBuildRepeatStreak();
-            stopHold();
-            return;
-          }
-          if (runtimeStateRef.current.firstSessionTutorialState === 'hatchery_l1_built') {
-            resetBuildRepeatStreak();
-            stopHold();
-            return;
-          }
-          await wait(resolveBuildHoldRepeatDelayMs(heldMs));
-        }
-      })();
-    };
-  // createBuildCardHoldHandler is not wired to the v2 tray yet (hold-to-build
-  // requires gesture disambiguation with horizontal scroll, tracked as a
-  // follow-up PR).  The function body preserves the canonical hold loop strings
-  // that islandRunBoardEssenceParity.test.ts source-guards check.
+        await wait(BUILD_HOLD_REPEAT_DELAY_MS);
+      }
+    })();
+  }, [handleSpendEssenceOnBuild, stopBuildHold]);
 
   const handleCompleteActiveStop = (successMessage?: string) => {
     if (!activeStopId) return;
@@ -16512,7 +16411,9 @@ export function IslandRunBoardPrototype({
           discountExpiresAtMs={buildDiscountExpiresAtMs}
           levelReview={buildModalLevelReview}
           onAdvanceLevelReview={handleAdvanceBuildLevelReview}
-          onBuildActivePart={handleBuildCardTap}
+          onBuildPartChoice={handleBuildPartChoice}
+          onStartBuildHold={startBuildHold}
+          onStopBuildHold={stopBuildHold}
         />
       )}
 

@@ -15,7 +15,11 @@ import {
 export type BuildModalV2PartViewModel = {
   partNumber: IslandRunSequentialBuildPartNumber;
   status: IslandRunSequentialBuildPartStatus;
+  thresholdEssence: number;
   remainingEssence: number;
+  maxSteps: number;
+  essenceCost: number;
+  canAfford: boolean;
 };
 
 export type BuildModalV2LevelRailItemViewModel = {
@@ -154,9 +158,58 @@ export function deriveBuildModalV2ViewModel(options: {
     parts: sequentialBuildView.parts.map((part) => ({
       partNumber: part.partNumber,
       status: part.status,
-      remainingEssence: part.remainingEssence,
+      thresholdEssence: part.thresholdEssence,
+      ...resolveBuildModalV2PartPurchase({
+        requiredEssence: sequentialBuildView.requiredEssence,
+        spentEssence: sequentialBuildView.spentEssence,
+        targetEssence: part.thresholdEssence,
+        essenceAvailable: options.essenceAvailable,
+        discountRate: normalizedDiscountRate,
+      }),
     })),
     levelRail,
+  };
+}
+
+/**
+ * Prices an independently selectable construction milestone without adding a
+ * second gameplay state. The action still applies the same canonical spend
+ * step repeatedly; this helper only tells the UI how many steps and how much
+ * wallet Money are required to reach a selected visual part from live state.
+ */
+export function resolveBuildModalV2PartPurchase(options: {
+  requiredEssence: number;
+  spentEssence: number;
+  targetEssence: number;
+  essenceAvailable: number;
+  discountRate?: number;
+}): Pick<BuildModalV2PartViewModel, 'remainingEssence' | 'maxSteps' | 'essenceCost' | 'canAfford'> {
+  const requiredEssence = Math.max(0, Math.floor(options.requiredEssence));
+  const spentEssence = Math.min(requiredEssence, Math.max(0, Math.floor(options.spentEssence)));
+  const targetEssence = Math.min(requiredEssence, Math.max(0, Math.floor(options.targetEssence)));
+  const remainingEssence = Math.max(0, targetEssence - spentEssence);
+  if (remainingEssence < 1 || requiredEssence < 1) {
+    return { remainingEssence: 0, maxSteps: 0, essenceCost: 0, canAfford: false };
+  }
+
+  const discountRate = Number.isFinite(options.discountRate)
+    ? Math.min(0.95, Math.max(0, options.discountRate ?? 0))
+    : 0;
+  const spendStep = resolveBuildSpendStepForTier(requiredEssence);
+  const maxSteps = Math.ceil(remainingEssence / spendStep);
+  let simulatedSpent = spentEssence;
+  let essenceCost = 0;
+  for (let stepIndex = 0; stepIndex < maxSteps && simulatedSpent < targetEssence; stepIndex += 1) {
+    const progressThisStep = Math.min(spendStep, requiredEssence - simulatedSpent);
+    essenceCost += Math.max(1, Math.ceil(progressThisStep * (1 - discountRate)));
+    simulatedSpent += progressThisStep;
+  }
+
+  return {
+    remainingEssence,
+    maxSteps,
+    essenceCost,
+    canAfford: essenceCost > 0 && Math.max(0, Math.floor(options.essenceAvailable)) >= essenceCost,
   };
 }
 
