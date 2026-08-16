@@ -1,4 +1,8 @@
-import { buildFreshIslandRunRecord } from '../islandRunProgressReset';
+import {
+  buildFreshIslandRunRecord,
+  buildIslandRunResetRecord,
+} from '../islandRunProgressReset';
+import { resolveIslandRunRecordForConflict } from '../islandRunGameStateStore';
 import { ISLAND_RUN_DEFAULT_STARTING_DICE } from '../islandRunEconomy';
 import { assert, assertEqual, assertDeepEqual, type TestCase } from './testHarness';
 
@@ -126,6 +130,87 @@ export const islandRunProgressResetTests: TestCase[] = [
         record.islandExpiresAtMs <= after + fortyEightHoursMs,
         'islandExpiresAtMs should be <= after + 48h',
       );
+    },
+  },
+  {
+    name: 'reset can preserve creatures and eggs while always clearing Concord and island progress',
+    run: () => {
+      const current = buildFreshIslandRunRecord({
+        audioEnabled: true,
+        musicEnabled: true,
+        sfxEnabled: true,
+        onboardingDisplayNameLoopCompleted: true,
+      });
+      current.currentIslandNumber = 9;
+      current.techCollectionByIsland = { '1': [3] };
+      current.technologyUnlocksById = { concord: { unlockedAtMs: 123 } } as never;
+      current.activeEggTier = 'rare';
+      current.activeEggSetAtMs = 500;
+      current.perIslandEggs = {
+        '9': [{ id: 'egg-9', tier: 'rare', status: 'incubating', createdAtMs: 500 }],
+      } as never;
+      current.eggRewardInventory = [{ id: 'reward-egg', tier: 'rare', grantedAtMs: 500 }] as never;
+      current.creatureCollection = [{
+        creatureId: 'common-sproutling',
+        copies: 1,
+        firstCollectedAtMs: 100,
+        lastCollectedAtMs: 100,
+        lastCollectedIslandNumber: 1,
+        bondXp: 0,
+        bondLevel: 1,
+        lastFedAtMs: null,
+        claimedBondMilestones: [],
+      }];
+
+      const reset = buildIslandRunResetRecord(current, { resetCreaturesAndEggs: false });
+
+      assertEqual(reset.currentIslandNumber, 1, 'reset should always return to island 1');
+      assertDeepEqual(reset.techCollectionByIsland, {}, 'reset should always clear Concord fragments');
+      assertDeepEqual(reset.technologyUnlocksById, {}, 'reset should always clear Concord unlocks');
+      assertEqual(reset.activeEggTier, 'rare', 'egg incubation should be preserved when unchecked');
+      assertDeepEqual(reset.perIslandEggs, current.perIslandEggs, 'egg ledger should be preserved when unchecked');
+      assertDeepEqual(reset.eggRewardInventory, current.eggRewardInventory, 'egg rewards should be preserved when unchecked');
+      assertDeepEqual(reset.creatureCollection, current.creatureCollection, 'creatures should be preserved when unchecked');
+    },
+  },
+  {
+    name: 'authoritative reset conflict replacement cannot resurrect remote Concord eggs or creatures',
+    run: () => {
+      const localReset = buildFreshIslandRunRecord({
+        audioEnabled: true,
+        musicEnabled: true,
+        sfxEnabled: true,
+        onboardingDisplayNameLoopCompleted: true,
+      });
+      localReset.runtimeVersion = 4;
+      const remote = {
+        ...localReset,
+        runtimeVersion: 11,
+        currentIslandNumber: 10,
+        techCollectionByIsland: { '1': [3] },
+        creatureCollection: [{
+          creatureId: 'common-sproutling',
+          copies: 1,
+          firstCollectedAtMs: 100,
+          lastCollectedAtMs: 100,
+          lastCollectedIslandNumber: 1,
+          bondXp: 0,
+          bondLevel: 1,
+          lastFedAtMs: null,
+          claimedBondMilestones: [],
+        }],
+      };
+
+      const resolved = resolveIslandRunRecordForConflict({
+        remote,
+        local: localReset,
+        conflictMode: 'replace',
+      });
+
+      assertEqual(resolved.runtimeVersion, 11, 'replacement should rebase to latest remote version');
+      assertEqual(resolved.currentIslandNumber, 1, 'replacement should retain reset island');
+      assertDeepEqual(resolved.techCollectionByIsland, {}, 'replacement must not merge old Concord state');
+      assertDeepEqual(resolved.creatureCollection, [], 'replacement must not merge old creatures');
     },
   },
 ];

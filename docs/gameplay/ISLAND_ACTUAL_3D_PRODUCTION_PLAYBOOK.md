@@ -2,7 +2,7 @@
 
 Status: **Active reusable workflow**
 
-Scope: authored interactive 3D worlds for Islands 001–120
+Scope: authored interactive 3D worlds for Islands 001–120 and later volumes
 
 Project authority: HabitGame repository contracts and runtime code
 
@@ -23,8 +23,9 @@ Before changing Island Run code, read these files completely:
 5. `docs/gameplay/ISLAND_VISUAL_PRODUCTION_CONTRACT.md`
 6. `docs/gameplay/ISLAND_CAMERA_LOCKED_KIT.md`
 7. this playbook
-8. the target island's dated file under `docs/gauntlets/`
-9. the complete `img2threejs` skill when a reference is being reconstructed
+8. `docs/gauntlets/2026-08-16-island-content-pack-reuse-and-volume-strategy.md`
+9. the target island's dated file under `docs/gauntlets/`
+10. the complete `img2threejs` skill when a reference is being reconstructed
 
 Useful implementation precedents:
 
@@ -71,7 +72,7 @@ Reuse:
 - runtime metadata conventions (part IDs, focus sockets, colliders and
   non-breakable presentation groups).
 
-Author uniquely per island:
+Author for each new **base world family**:
 
 - terrain/root silhouette and horizon;
 - palette, materials, architectural language and tile material palette;
@@ -82,6 +83,11 @@ Author uniquely per island:
 
 Never create a new island by merely copying Island 005 geometry and changing
 colors. Copy infrastructure and interfaces; author a new world factory.
+
+An explicitly planned `variant-overlay` may reuse a base world family. Reuse
+must be dependency-based rather than copied, and its phone comparison must
+demonstrate at least two changed sensory systems plus one changed experiential
+system. Reuse structure; create a different visit.
 
 ## Required source pack
 
@@ -116,6 +122,8 @@ add only the focus/turnaround evidence needed to remove actual ambiguity.
 - Record its role as inspiration/goal, never runtime board art.
 - Lock island role (ordinary or every-fifth arena), identity, palette,
   landmark names, ambience, avoid list and phone composition.
+- Classify delivery as `new-base`, `variant-overlay` or `hero-exception`; name
+  base/shared dependencies and set the expected deployed-byte tier.
 - Reject reference tile counts and approximate geometry; the real 36-tile ring
   remains authoritative.
 
@@ -189,6 +197,8 @@ single flattering camera.
 - Verify Auto quality and forced High. Prefer runtime downgrade over jank.
 - Run TypeScript, production build, Island Run tests, architecture guard,
   geometry/routing contracts and `git diff --check`.
+- Report island-specific deployed bytes, dependency bytes, duplicate-asset
+  findings and any approved pack-budget waiver.
 - Install the normal Capacitor app after any dedicated profiling build. A
   profiling/demo build must never be left on Eivind's phone as the handoff.
 - PWA/main publishing or merging still requires explicit authority.
@@ -203,6 +213,8 @@ An island is complete only when:
 - ambience is alive but quality-scalable and reduced-motion safe;
 - overview/orbits/focus/level/motion evidence matches current code;
 - physical-device and static budgets pass, or any review/waiver is explicit;
+- its pack/reuse classification, dependencies and expected/actual deployed
+  bytes are recorded without avoidable duplicated binaries;
 - the normal app—not a lab—is installed for user testing;
 - its Gauntlet records delivered work, known gaps and the next optional pass.
 

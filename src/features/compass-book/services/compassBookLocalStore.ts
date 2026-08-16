@@ -40,3 +40,12 @@ export function saveLocalChapterState(userId: string, state: CompassChapterState
     /* best-effort */
   }
 }
+
+/** Remove the local mirror for a user's Compass Book. */
+export function clearLocalCompassBook(userId: string): void {
+  try {
+    localStorage.removeItem(storageKey(userId));
+  } catch {
+    /* best-effort */
+  }
+}

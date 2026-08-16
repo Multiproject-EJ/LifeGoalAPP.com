@@ -12,6 +12,12 @@ image changes, the latest commit, and every championship micro-film image. It
 also reports the total public raster footprint so the legacy asset library can
 be reduced deliberately without blocking unrelated releases.
 
+This per-image ceiling is not the complete island delivery budget. New island
+production must also follow the pack tiers, dependency deduplication, variant
+overlay rules and explicit hero exceptions in
+`docs/gauntlets/2026-08-16-island-content-pack-reuse-and-volume-strategy.md`.
+An island does not pass merely because every individual image is below 550 KB.
+
 For artwork with transparency, prefer lossless WebP only when edges require it.
 For painted scenes and photographic material, use lossy WebP/AVIF and inspect
 faces, type, gradients, and dark skies at phone size before accepting the

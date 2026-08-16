@@ -14,9 +14,14 @@ The mass-production handoff, layer stack, fixed landmark envelope, screenshot
 folders, and all-L3 acceptance sequence are defined in
 [`ISLAND_120_PRODUCTION_SYSTEM.md`](../../work/island-visual-library/ISLAND_120_PRODUCTION_SYSTEM.md).
 
-Status: **Active pilot contract**
-Pilot scope: Islands 1–5
-Scale target: Islands 1–120
+The approved multi-volume reuse, downloadable-pack, cache and exception-budget
+strategy is defined in
+[`2026-08-16-island-content-pack-reuse-and-volume-strategy.md`](../gauntlets/2026-08-16-island-content-pack-reuse-and-volume-strategy.md).
+Every new island brief must classify its reuse model and delivery tier.
+
+Status: **Active production contract**
+Pilot foundation: Islands 1–5
+Scale target: Islands 1–120 and later volumes
 
 ## Purpose
 
@@ -182,6 +187,44 @@ Runtime filenames are stable and status-free so approving a better revision does
 
 The manifest is the only runtime mapping authority.
 
+## Reusable world families and variants
+
+Reuse shared geometry, materials, vegetation, audio and construction primitives
+through explicit dependencies rather than copied files. A later island may
+reuse a base world family when its brief declares a `variant-overlay` and the
+result changes at least two sensory systems plus one experiential system under
+the approved strategy. A dark, illuminated, seasonal, damaged or restored
+state can feel substantially different while remaining a small delta pack.
+
+Reuse is not permission to recolour an existing island and call it finished.
+Phone side-by-side review must demonstrate a distinct emotional read,
+civilization/story consequence and landmark or mission identity. If it does
+not, keep the work as another state of the original island.
+
+Runtime assets must be referenced once through dependency-aware manifests.
+Never duplicate the same binary into several island folders merely to make
+each pack self-contained.
+
+## Pack budget and hero exceptions
+
+Before production, classify the island as:
+
+- `new-base` — a new world family;
+- `variant-overlay` — a small delta over a declared base;
+- `hero-exception` — an entry, arena or major story world with explicit extra
+  quality/value justification.
+
+Normal islands target a 2–5 MiB deployed island-specific delta and trigger
+review above 8 MiB. Variant overlays target 1.5 MiB and trigger review above
+3 MiB. Hero islands target 8–15 MiB and trigger an explicit exception review
+above 25 MiB. These are production guides, not hard creative ceilings.
+
+Every exception must remain optimized and record compressed/installed bytes,
+reuse attempts, cache impact, download behavior and physical-phone evidence.
+Island 001 is the essential Hero Entry: it is available before first play and
+receives a dedicated visual/onboarding quality pass because first-session
+retention is more important than forcing it into the Standard tier.
+
 ## Approval gates
 
 An asset moves from draft → selected → approved only after all applicable gates pass:
@@ -193,6 +236,9 @@ An asset moves from draft → selected → approved only after all applicable ga
 5. **Technical:** correct alpha behavior, dimensions, file type, color consistency, and no placeholder filename.
 6. **Runtime:** `check:island-art-assets`, `check:island-art-render-wiring`, and Island Run tests pass after wiring.
 7. **Responsive QA:** 390×844 portrait phone is the primary approval view; a shorter phone, a wider phone, desktop preview, and reduced-motion states receive spot checks.
+8. **Delivery:** pack classification, dependency list, compressed/installed
+   bytes and any approved exception are recorded; no avoidable duplicate binary
+   is introduced.
 
 ## Pilot roles for Islands 1–5
 

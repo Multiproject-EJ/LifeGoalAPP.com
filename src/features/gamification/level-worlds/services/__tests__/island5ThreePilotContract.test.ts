@@ -29,8 +29,10 @@ import {
   shouldFadeCentralLandmarkForCamera,
 } from '../../dev/island5ThreePilotContract';
 import {
+  buildIsland1Landmark,
   buildIsland1CloudLayout,
   buildIsland1MountainLayout,
+  createIsland1WorldMaterials,
   getIsland1AmbienceLifeBudget,
   ISLAND_1_CLOUD_MINIMUM_Y,
   ISLAND_1_OCEAN_SURFACE_Y,
@@ -91,6 +93,37 @@ import {
 import { assert, assertDeepEqual, assertEqual, type TestCase } from './testHarness';
 
 export const island5ThreePilotContractTests: TestCase[] = [
+  {
+    name: 'gives First Light a monumental L3 oak and a mission-ready noble council table',
+    run: () => {
+      const materials = createIsland1WorldMaterials();
+      const habit = ISLAND_5_LANDMARKS.find((landmark) => landmark.id === 'habit');
+      const boss = ISLAND_5_LANDMARKS.find((landmark) => landmark.id === 'boss');
+      assert(Boolean(habit) && Boolean(boss), 'First Light needs both its Rhythm Tree and central Sun Court definitions');
+      const l2Tree = buildIsland1Landmark(habit!, 2, 'low', materials);
+      const l3Tree = buildIsland1Landmark(habit!, 3, 'low', materials);
+      const l2Height = new THREE.Box3().setFromObject(l2Tree).getSize(new THREE.Vector3()).y;
+      const l3Height = new THREE.Box3().setFromObject(l3Tree).getSize(new THREE.Vector3()).y;
+      assert(l3Height > l2Height * 1.25, 'the completed ancient oak must become a materially grander landmark, not a recoloured L2 tree');
+      const oak = l3Tree.children[0];
+      assertEqual(oak.userData.heroIdentity, 'glorious-old-giant-oak', 'the L3 tree needs a stable hero identity for camera and story QA');
+
+      const sunCourt = buildIsland1Landmark(boss!, 3, 'low', materials);
+      const briefing = sunCourt.children[0]?.userData.missionBriefing;
+      assert(Boolean(briefing), 'the completed Sun Court must expose stable council-table mission metadata');
+      assertEqual(briefing.seatCount, 8, 'the noble council chamber should retain one player seat and seven council seats');
+      assertEqual(briefing.tableCenter.length, 3, 'mission camera authority needs a stable table-center anchor');
+      assertEqual(briefing.playerSeat.length, 3, 'mission camera authority needs a stable player-seat anchor');
+
+      [l2Tree, l3Tree, sunCourt].forEach((root) => root.traverse((object) => {
+        if (object instanceof THREE.Mesh) object.geometry.dispose();
+      }));
+      Object.values(materials).forEach((material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+  },
   {
     name: 'gives Island 005 a Level-2-quality opening arena and four additive restoration silhouettes',
     run: () => {
@@ -476,7 +509,8 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(worldSource.includes("springRipples.name = 'ISLAND_1_SPRING_SOURCE_RIPPLES'"), 'spring sources need a readable medium-speed ripple rhythm');
       assert(worldSource.includes("dawnMotes.name = 'ISLAND_1_DAWN_GARDEN_MOTES'"), 'capable phones need one draw-call atmospheric garden life');
       assert(worldSource.includes('ISLAND_1_SHORELINE_WAVE_FRONT_'), 'the ocean edge needs broken moving wave fronts rather than one mechanical full ring');
-      assert(worldSource.includes('floatingIslets.forEach((islet)'), 'distant floating scenery should breathe on the existing ambience clock');
+      assert(worldSource.includes("islet.name = 'ISLAND_1_OCEAN_ROOTED_SEA_STACK'"), 'distant First Light islands must visibly root into the shared ocean instead of levitating');
+      assert(!worldSource.includes('addFloatingIslet'), 'First Light must not reintroduce levitating background islands');
       assert(worldSource.includes('animate: (elapsed) =>'), 'water and fauna should share the one ambience animation clock');
     },
   },

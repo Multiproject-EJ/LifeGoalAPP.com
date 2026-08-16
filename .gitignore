@@ -23,3 +23,6 @@ avatar-mobile-test.html
 
 # tsc scratch output from scripts/run-island-run-service-tests.mjs
 .tmp-island-run-tests/
+# Python tooling caches
+__pycache__/
+*.py[cod]

@@ -1,8 +1,15 @@
 # Capacitor and Storage Architecture Plan
 
-> **Status: planned — not implemented yet.**
+> **Status: Capacitor iOS shell implemented; storage abstraction and optional
+> asset-pack migration remain planned.**
 >
 > This document describes the intended migration of HabitGame from the current React/Vite PWA into iOS and Android applications using Capacitor, together with the storage architecture required to keep Supabase lean, preserve offline support, and avoid unbounded database growth.
+
+The approved Island Run multi-volume delivery decision now lives in
+`docs/gauntlets/2026-08-16-island-content-pack-reuse-and-volume-strategy.md`.
+That contract governs current/next/recent caching, archive revisiting,
+dependency packs, variant overlays, hero exceptions and the Island 001 entry
+quality decision. This older document remains the broader storage plan.
 
 ## Purpose
 
@@ -498,6 +505,18 @@ Cache policy:
 - expose “Clear downloaded assets” in Settings
 - verify checksums before activating downloaded files
 
+For Island Run specifically:
+
+- the full island catalogue/progress archive remains lightweight and visible;
+- playable assets are independently downloadable and evictable;
+- retain current + next two + recent three as the initial product policy;
+- player-pinned islands are not automatically evicted;
+- begin with a 200 MiB optional island-cache target and tune from evidence;
+- variant packs declare a base pack and contain only their delta;
+- Island 001 remains essential/local as the Hero Entry;
+- presentation packs contain assets and validated data, never downloaded
+  executable gameplay or renderer code.
+
 ## User-uploaded pictures
 
 User images should use two copies:
@@ -821,11 +840,16 @@ Add alarms for:
 
 ## Phase 4 — Asset packs
 
-- [ ] Define pack manifest schema
+- [ ] Add deterministic bundled/core/shared/per-island byte inventory
+- [ ] Define pack manifest schema, dependency graph and budget/waiver fields
 - [ ] Bundle essential app/first-island content
 - [ ] Host optional packs on object storage/CDN
-- [ ] Implement download, checksum, activation, and rollback
-- [ ] Add cache size controls and LRU eviction
+- [ ] Implement PWA and Capacitor download, checksum, atomic activation, and rollback
+- [ ] Add 200 MiB initial cache target, current/next/recent policy and LRU eviction
+- [ ] Keep gameplay/progress state independent from pack removal
+- [ ] Prove Island 010 pack awareness without remote executable world code
+- [ ] Extract one heavy legacy island (Island 005) to prove native size reduction
+- [ ] Verify offline revisit, interrupted download, corrupt pack and storage pressure
 - [ ] Add user setting to clear downloaded assets
 
 ## Phase 5 — Offline-first feature migration

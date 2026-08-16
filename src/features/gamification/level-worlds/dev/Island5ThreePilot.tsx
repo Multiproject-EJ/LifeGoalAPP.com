@@ -69,6 +69,7 @@ import {
   createIsland1LivingAmbience,
   createIsland1WorldMaterials,
   ISLAND_1_LANDMARK_LABELS,
+  ISLAND_1_OCEAN_SURFACE_Y,
   ISLAND_1_WORLD_NAME,
 } from './Island1ThreeWorld';
 import {
@@ -552,6 +553,49 @@ function createTerrainPlate(options: {
   group.add(land);
   addShadowFlags(group, false);
   return group;
+}
+
+function createFirstLightSunriseBackdrop() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 512;
+  const context = canvas.getContext('2d');
+  if (!context) return null;
+  const sky = context.createLinearGradient(0, 0, 0, canvas.height);
+  sky.addColorStop(0, '#6fb8d3');
+  sky.addColorStop(0.46, '#b9e1df');
+  sky.addColorStop(0.72, '#e9ead4');
+  sky.addColorStop(1, '#f6c99b');
+  context.fillStyle = sky;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  const sunrise = context.createRadialGradient(128, 96, 3, 128, 96, 96);
+  sunrise.addColorStop(0, 'rgba(255, 245, 194, 0.96)');
+  sunrise.addColorStop(0.18, 'rgba(255, 225, 159, 0.7)');
+  sunrise.addColorStop(1, 'rgba(255, 188, 122, 0)');
+  context.fillStyle = sunrise;
+  context.fillRect(0, 0, canvas.width, 240);
+  context.fillStyle = 'rgba(255, 247, 205, 0.92)';
+  context.beginPath();
+  context.ellipse(128, 96, 9, 14, 0, 0, Math.PI * 2);
+  context.fill();
+  const cloudBands = [176, 226, 282];
+  cloudBands.forEach((y, bandIndex) => {
+    const cloud = context.createLinearGradient(0, y, canvas.width, y + 30);
+    cloud.addColorStop(0, 'rgba(255,255,255,0)');
+    cloud.addColorStop(0.22, `rgba(255,250,235,${0.07 + (bandIndex % 2) * 0.03})`);
+    cloud.addColorStop(0.72, `rgba(255,243,223,${0.045 + (bandIndex % 3) * 0.018})`);
+    cloud.addColorStop(1, 'rgba(255,255,255,0)');
+    context.fillStyle = cloud;
+    context.beginPath();
+    context.ellipse(128 + Math.sin(bandIndex * 1.8) * 34, y, 126, 12 + (bandIndex % 2) * 6, 0, 0, Math.PI * 2);
+    context.fill();
+  });
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.name = 'ISLAND_1_FIRST_LIGHT_SUNRISE_BACKDROP';
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  return texture;
 }
 
 function createBridge(
@@ -1854,7 +1898,7 @@ function createCitadelPatternTexture(size: number, pattern: CitadelTexturePatter
 }
 
 interface PilotMaterials extends CrownCitadelMaterials {
-  reef: THREE.MeshBasicMaterial;
+  reef: THREE.Material;
   grass: THREE.MeshStandardMaterial;
   bridge: THREE.MeshStandardMaterial;
   coral: THREE.MeshStandardMaterial;
@@ -1914,7 +1958,7 @@ function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: Islan
               ? 0xf5fff3
             : 0xfff1cf;
   const reefColor = isFirstLightKingdom
-    ? 0xa9a7a8
+    ? 0x918d84
     : isCelestialSkyKingdom
       ? 0x66768b
       : isFrostmoonHaven
@@ -1927,7 +1971,7 @@ function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: Islan
               ? 0x164454
             : 0xb9a6b3;
   const grassColor = isFirstLightKingdom
-    ? 0x779851
+    ? 0x6fa34a
     : isCelestialSkyKingdom
       ? 0x6fa45d
       : isFrostmoonHaven
@@ -1974,7 +2018,9 @@ function createPilotMaterials(quality: Island3DQuality, worldSourceNumber: Islan
     limestone: new THREE.MeshStandardMaterial({ color: limestoneColor, map: stoneMap, roughness: 0.72, metalness: 0.04 }),
     limestoneShade: new THREE.MeshStandardMaterial({ color: limestoneShadeColor, map: stoneMap, roughness: 0.8, metalness: 0.02 }),
     limestoneBright: new THREE.MeshStandardMaterial({ color: limestoneBrightColor, map: stoneMap, roughness: 0.6, metalness: 0.04 }),
-    reef: new THREE.MeshBasicMaterial({ color: reefColor }),
+    reef: isFirstLightKingdom
+      ? new THREE.MeshLambertMaterial({ color: reefColor, map: stoneMap })
+      : new THREE.MeshBasicMaterial({ color: reefColor }),
     grass: new THREE.MeshStandardMaterial({ color: grassColor, roughness: 0.88 }),
     bridge: new THREE.MeshStandardMaterial({ color: bridgeColor, roughness: 0.78 }),
     purpleRoof: new THREE.MeshStandardMaterial({ color: roofColor, map: roofMap, roughness: 0.42, metalness: 0.12 }),
@@ -3408,7 +3454,9 @@ export default function Island5ThreePilot({
     let rootheartDayBackdrop: THREE.Texture | null = null;
     let rootheartNightBackdrop: THREE.Texture | null = null;
     scene.background = new THREE.Color(backgroundColor);
-    if (isMoonveilNexus) {
+    if (isFirstLightKingdom) {
+      scene.background = createFirstLightSunriseBackdrop() ?? scene.background;
+    } else if (isMoonveilNexus) {
       const moonveilSky = new THREE.TextureLoader().load('/assets/islands/island-006/background/moonveil-nebula-sky-portrait-v2.webp');
       moonveilSky.colorSpace = THREE.SRGBColorSpace;
       moonveilSky.wrapS = THREE.ClampToEdgeWrapping;
@@ -3436,12 +3484,22 @@ export default function Island5ThreePilot({
     // Leave enough depth for the First Light horizon ring at every camera
     // azimuth; foreground gameplay geometry remains inside the shadow budget.
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 210);
-    camera.zoom = isMoonveilNexus ? 1.2 : isAbyssalPearlKingdom ? 1.12 : 1;
+    camera.zoom = isMoonveilNexus ? 1.2 : isAbyssalPearlKingdom ? 1.12 : isFirstLightKingdom ? 1.03 : 1;
     camera.updateProjectionMatrix();
     const overview = getIsland5CameraPreset('overview');
+    const firstLightInitialOverview = {
+      // First Light is the onboarding hero, so its board must read at phone
+      // scale instead of dissolving into a large field of empty ocean. The
+      // lower target keeps the taller ocean-rooted cliff and waterfall feet
+      // visible above the controller safe area.
+      position: [0, 16, 31] as const,
+      target: [0, -0.8, 0] as const,
+    };
     const restoredCameraPose = cameraPoseSnapshotRef.current;
-    camera.position.set(...(restoredCameraPose?.position ?? overview.position));
-    camera.lookAt(...(restoredCameraPose?.target ?? overview.target));
+    const initialOverviewPosition = isFirstLightKingdom ? firstLightInitialOverview.position : overview.position;
+    const initialOverviewTarget = isFirstLightKingdom ? firstLightInitialOverview.target : overview.target;
+    camera.position.set(...(restoredCameraPose?.position ?? initialOverviewPosition));
+    camera.lookAt(...(restoredCameraPose?.target ?? initialOverviewTarget));
     if (!restoredCameraPose) setActivePreset('overview');
 
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -3484,7 +3542,7 @@ export default function Island5ThreePilot({
     renderer.shadowMap.needsUpdate = sceneUsesRealtimeShadows;
 
     const controls = new OrbitControls(camera, canvas);
-    controls.target.set(...(restoredCameraPose?.target ?? overview.target));
+    controls.target.set(...(restoredCameraPose?.target ?? initialOverviewTarget));
     controls.enableDamping = !isReducedMotion;
     controls.dampingFactor = 0.075;
     controls.enablePan = false;
@@ -3599,7 +3657,7 @@ export default function Island5ThreePilot({
     const hasBrightWater = isFirstLightKingdom || isCelestialSkyKingdom || isSunshoreAtoll || isAbyssalPearlKingdom || isEverblossomKingdom;
     const waterMaterial = new THREE.MeshPhysicalMaterial({
       color: isFirstLightKingdom
-        ? 0x52c7e8
+        ? 0x2fb8d3
         : isCelestialSkyKingdom
           ? 0x75dff7
           : isFrostmoonHaven
@@ -3622,28 +3680,31 @@ export default function Island5ThreePilot({
     });
     const water = new THREE.Mesh(
       new THREE.PlaneGeometry(
-        68,
-        68,
+        isFirstLightKingdom ? 120 : 68,
+        isFirstLightKingdom ? 120 : 68,
         isAbyssalPearlKingdom ? 1 : qualityProfile.oceanGridSegments,
         isAbyssalPearlKingdom ? 1 : qualityProfile.oceanGridSegments,
       ),
       waterMaterial,
     );
     water.rotation.x = -Math.PI / 2;
-    water.position.y = -0.62;
+    water.position.y = isFirstLightKingdom ? ISLAND_1_OCEAN_SURFACE_Y : -0.62;
     water.receiveShadow = true;
     if (!isAbyssalPearlKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity) scene.add(water);
 
     // Island 007 owns a dedicated seabed/root system. Do not construct and then
     // hide the generic coastal plates, bridges and lagoon underneath it.
     if (!isAbyssalPearlKingdom && !isEverblossomKingdom && !isHeartshaftCrucible && !isRootheartCanopyCity) {
+      const firstLightMainDepth = 3.4;
       const island = createTerrainPlate({
         radius: 6.25,
-        depth: 0.82,
+        depth: isFirstLightKingdom ? firstLightMainDepth : 0.82,
         segments: qualityProfile.terrainSegments,
         topMaterial: materials.grass,
         reefMaterial: materials.reef,
-        position: [0, 0, 0],
+        // First Light is a tall ocean-rooted island. Keep the gameplay crown
+        // at the shared Y while extending its cliff body down into the sea.
+        position: [0, isFirstLightKingdom ? 0.26 - firstLightMainDepth * 0.32 : 0, 0],
         seed: 0x15c05a,
       });
       // Celestial Sky Kingdom and Moonveil own their deeper procedural roots.
@@ -3651,13 +3712,16 @@ export default function Island5ThreePilot({
       scene.add(island);
 
       ISLAND_5_LANDMARKS.filter((entry) => entry.id !== 'boss').forEach((landmark, landmarkIndex) => {
+        const firstLightSatelliteDepth = 3.1;
         const satellite = createTerrainPlate({
-          radius: 2.58,
-          depth: 0.68,
+          radius: isFirstLightKingdom ? 2.3 : 2.58,
+          depth: isFirstLightKingdom ? firstLightSatelliteDepth : 0.68,
           segments: qualityProfile.terrainSegments,
           topMaterial: materials.grass,
           reefMaterial: materials.reef,
-          position: landmark.position,
+          position: isFirstLightKingdom
+            ? [landmark.position[0], 0.26 - firstLightSatelliteDepth * 0.32, landmark.position[2]]
+            : landmark.position,
           seed: 0x51a7 + landmarkIndex * 0x913,
         });
         satellite.visible = !isCelestialSkyKingdom && !isMoonveilNexus;
@@ -3678,7 +3742,7 @@ export default function Island5ThreePilot({
     }
 
     const livingAmbience: Island5AmbienceRuntime = isFirstLightKingdom && island1Materials
-      ? createIsland1LivingAmbience(scene, qualityProfile, island1Materials, water)
+      ? createIsland1LivingAmbience(scene, qualityProfile, island1Materials, water, materials.reef)
       : isCelestialSkyKingdom && island2CelestialMaterials
         ? createIsland2CelestialLivingAmbience(scene, qualityProfile, island2CelestialMaterials, water)
         : isFrostmoonHaven && island3FrostmoonMaterials
@@ -4326,6 +4390,10 @@ export default function Island5ThreePilot({
         position: readonly [number, number, number];
         target: readonly [number, number, number];
       }>> = {
+        overview: { position: [0, 16, 31], target: [0, -0.8, 0] },
+        survey: { position: [0, 27, 38], target: [0, -0.45, 0] },
+        'orbit-left': { position: [-21.5, 16, 27], target: [0, -0.8, 0] },
+        'orbit-right': { position: [21.5, 16, 27], target: [0, -0.8, 0] },
         boss: { position: [0, 7.8, 9.8], target: [0, 0.82, 0] },
         hatchery: { position: [2.3, 7.8, -0.9], target: [-4.36, 1.55, -3.9] },
         habit: { position: [0.6, 7.7, 2.4], target: [4.36, 1.62, -3.9] },

@@ -6,11 +6,12 @@
  * **What is reset:**
  * - Island position → island 1, tile 0
  * - Currencies → starting dice (30), 0 essence, 3 diamonds, 0 shards
- * - Stops, boss, reward bar, eggs, egg reward inventory, creatures → default/empty
+ * - Stops, boss, reward bar, Concord and island missions → default/empty
+ * - Eggs, egg reward inventory, creatures → default/empty by default; optional preserve
  * - Onboarding flags (firstRunClaimed, storyPrologueSeen) → false
- * - Persisted creature collection + active companion (localStorage:
+ * - By default, persisted creature collection + active companion (localStorage:
  *   `island_run_creature_collection_*`, `island_run_active_companion_*`)
- * - Persisted creature-treat inventory (localStorage:
+ * - By default, persisted creature-treat inventory (localStorage:
  *   `island_run_creature_treat_inventory_*`) — kept in sync with the
  *   runtime record's reset `creatureTreatInventory` defaults.
  * - XP → 0, Level → 1 (gamification_profiles / demo localStorage)
@@ -23,6 +24,7 @@
  * - Journals, habits, telemetry, achievements, identity data
  * - Streak data, lives, power-ups
  * - XP transaction history (preserved as a historical log)
+ * - Compass Book (unless explicitly selected in the reset confirmation)
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
@@ -38,6 +40,19 @@ import { resetIslandRunStateSnapshot } from './islandRunStateStore';
 import { clearCreatureCollectionForUser } from './creatureCollectionService';
 import { clearCreatureTreatInventoryForUser } from './creatureTreatInventoryService';
 import { resetXP } from '../../../../services/gamification';
+import { resetCompassBookForUser } from '../../../compass-book/services/compassBookService';
+
+export type IslandRunProgressResetChoices = {
+  /** Clear collected creatures, active/pending eggs, companion state, and treats. */
+  resetCreaturesAndEggs: boolean;
+  /** Clear the separate six-chapter Compass Book and all its answers. */
+  resetCompassBook: boolean;
+};
+
+export const DEFAULT_ISLAND_RUN_PROGRESS_RESET_CHOICES: IslandRunProgressResetChoices = {
+  resetCreaturesAndEggs: true,
+  resetCompassBook: false,
+};
 
 /**
  * Builds a fresh Island Run game state record, preserving only user
@@ -157,6 +172,44 @@ export function buildFreshIslandRunRecord(
 }
 
 /**
+ * Build the canonical reset record, optionally carrying the separate creature
+ * ecosystem into the new Island 1 run. Island progression itself (including
+ * Concord fragments/build state) is always reset.
+ */
+export function buildIslandRunResetRecord(
+  current: IslandRunGameStateRecord,
+  choices: Pick<IslandRunProgressResetChoices, 'resetCreaturesAndEggs'>,
+): IslandRunGameStateRecord {
+  const fresh = buildFreshIslandRunRecord({
+    audioEnabled: current.audioEnabled,
+    musicEnabled: current.musicEnabled ?? current.audioEnabled,
+    sfxEnabled: current.sfxEnabled ?? current.audioEnabled,
+    onboardingDisplayNameLoopCompleted: current.onboardingDisplayNameLoopCompleted,
+  });
+
+  if (choices.resetCreaturesAndEggs) return fresh;
+
+  return {
+    ...fresh,
+    activeEggTier: current.activeEggTier,
+    activeEggSetAtMs: current.activeEggSetAtMs,
+    activeEggHatchDurationMs: current.activeEggHatchDurationMs,
+    activeEggIsDormant: current.activeEggIsDormant,
+    perIslandEggs: current.perIslandEggs,
+    eggRewardInventory: current.eggRewardInventory,
+    creatureTreatInventory: current.creatureTreatInventory,
+    companionBonusLastVisitKey: current.companionBonusLastVisitKey,
+    creatureCollection: current.creatureCollection,
+    activeCompanionId: current.activeCompanionId,
+    perfectCompanionIds: current.perfectCompanionIds,
+    perfectCompanionReasons: current.perfectCompanionReasons,
+    perfectCompanionComputedAtMs: current.perfectCompanionComputedAtMs,
+    perfectCompanionModelVersion: current.perfectCompanionModelVersion,
+    perfectCompanionComputedCycleIndex: current.perfectCompanionComputedCycleIndex,
+  };
+}
+
+/**
  * Resets the player's Island Run progress to a fresh start and resets
  * their XP and level to 1.
  *
@@ -170,8 +223,13 @@ export function buildFreshIslandRunRecord(
 export async function resetIslandRunProgress(options: {
   session: Session;
   client: SupabaseClient | null;
+  choices?: Partial<IslandRunProgressResetChoices>;
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
   const { session, client } = options;
+  const choices: IslandRunProgressResetChoices = {
+    ...DEFAULT_ISLAND_RUN_PROGRESS_RESET_CHOICES,
+    ...options.choices,
+  };
 
   // Reset XP and level first. If this fails we bail before touching island state.
   const xpResetResult = await resetXP(session.user.id);
@@ -182,32 +240,44 @@ export async function resetIslandRunProgress(options: {
   // Read current state to preserve user preferences.
   const current = readIslandRunGameStateRecord(session);
 
-  const freshRecord = buildFreshIslandRunRecord({
-    audioEnabled: current.audioEnabled,
-    musicEnabled: current.musicEnabled ?? current.audioEnabled,
-    sfxEnabled: current.sfxEnabled ?? current.audioEnabled,
-    onboardingDisplayNameLoopCompleted: current.onboardingDisplayNameLoopCompleted,
-  });
-
-  // Clear creature-related localStorage that lives outside the runtime
-  // record (the sanctuary UI reads animals from these keys directly).
-  // Without this, animals collected on later islands would persist into
-  // the fresh-start run on island 1.
-  clearCreatureCollectionForUser(session.user.id);
-  clearCreatureTreatInventoryForUser(session.user.id);
+  const freshRecord = buildIslandRunResetRecord(current, choices);
 
   const persistResult = await writeIslandRunGameStateRecord({
     session,
     client,
     record: freshRecord,
+    skipQueueReplay: true,
     triggerSource: 'island_run_progress_reset',
+    conflictMode: 'replace',
   });
 
-  if (persistResult.ok) {
-    // Keep the in-memory state store in sync so active Island Run screens reset
-    // immediately without requiring a manual refresh.
-    resetIslandRunStateSnapshot(session, freshRecord);
+  if (!persistResult.ok) return persistResult;
+
+  if (choices.resetCreaturesAndEggs) {
+    // Clear the two legacy/local mirrors only after the canonical write has
+    // accepted the reset. This avoids a partial local creature wipe if remote
+    // runtime persistence fails.
+    clearCreatureCollectionForUser(session.user.id);
+    clearCreatureTreatInventoryForUser(session.user.id);
   }
 
-  return persistResult;
+  // Keep the in-memory state store in sync so active Island Run screens reset
+  // immediately without requiring a manual refresh.
+  const persistedFreshRecord = readIslandRunGameStateRecord(session);
+  resetIslandRunStateSnapshot(session, persistedFreshRecord);
+
+  if (choices.resetCompassBook) {
+    const compassResult = await resetCompassBookForUser({
+      userId: session.user.id,
+      client,
+    });
+    if (!compassResult.ok) {
+      return {
+        ok: false,
+        errorMessage: `Island Run was reset, but the Compass Book could not be cleared: ${compassResult.errorMessage}`,
+      };
+    }
+  }
+
+  return { ok: true };
 }

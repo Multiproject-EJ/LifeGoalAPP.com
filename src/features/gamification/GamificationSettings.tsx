@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { fetchGamificationEnabled, updateGamificationEnabled } from '../../services/gamificationPrefs';
 import { canUseSupabaseData, getSupabaseClient } from '../../lib/supabaseClient';
-import { resetIslandRunProgress } from './level-worlds/services/islandRunProgressReset';
+import {
+  DEFAULT_ISLAND_RUN_PROGRESS_RESET_CHOICES,
+  resetIslandRunProgress,
+} from './level-worlds/services/islandRunProgressReset';
 
 interface GamificationSettingsProps {
   session: Session;
@@ -17,6 +20,12 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [resetCreaturesAndEggs, setResetCreaturesAndEggs] = useState(
+    DEFAULT_ISLAND_RUN_PROGRESS_RESET_CHOICES.resetCreaturesAndEggs,
+  );
+  const [resetCompassBook, setResetCompassBook] = useState(
+    DEFAULT_ISLAND_RUN_PROGRESS_RESET_CHOICES.resetCompassBook,
+  );
 
   const isDemoMode = !canUseSupabaseData();
   const userId = session.user.id;
@@ -143,7 +152,11 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
         {!resetConfirmOpen ? (
           <button
             type="button"
-            onClick={() => setResetConfirmOpen(true)}
+            onClick={() => {
+              setResetCreaturesAndEggs(DEFAULT_ISLAND_RUN_PROGRESS_RESET_CHOICES.resetCreaturesAndEggs);
+              setResetCompassBook(DEFAULT_ISLAND_RUN_PROGRESS_RESET_CHOICES.resetCompassBook);
+              setResetConfirmOpen(true);
+            }}
             disabled={resetting}
             style={{
               padding: '0.5rem 1rem',
@@ -163,9 +176,38 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
               ⚠️ Are you sure?
             </p>
             <p style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', color: 'var(--color-text-secondary, #666)' }}>
-              This will reset your island game to island 1 with 30 dice, 0 money, and clear all
-              island stops, eggs, and creatures. Your XP and level will also be reset to 1.
-              This cannot be undone.
+              This always resets the island game to island 1 with 30 dice, 0 money, fresh
+              landmarks, and a fresh Concord. Your XP and level will also reset to 1.
+              Choose whether the separate collections below should also be erased.
+            </p>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.55rem', margin: '0 0 0.6rem', fontSize: '0.8rem' }}>
+              <input
+                type="checkbox"
+                checked={resetCreaturesAndEggs}
+                onChange={(event) => setResetCreaturesAndEggs(event.target.checked)}
+                disabled={resetting}
+                style={{ marginTop: '0.15rem' }}
+              />
+              <span>
+                <strong>Also clear creatures and eggs</strong><br />
+                Collected creatures, pending/ready eggs, companion selection, and creature treats.
+              </span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.55rem', margin: '0 0 0.75rem', fontSize: '0.8rem' }}>
+              <input
+                type="checkbox"
+                checked={resetCompassBook}
+                onChange={(event) => setResetCompassBook(event.target.checked)}
+                disabled={resetting}
+                style={{ marginTop: '0.15rem' }}
+              />
+              <span>
+                <strong>Also clear Compass Book</strong><br />
+                All Compass Book chapters and answers. Leave unchecked to keep your Compass while restarting Island 1.
+              </span>
+            </label>
+            <p style={{ margin: '0 0 0.75rem', fontSize: '0.76rem', color: 'var(--color-danger, #dc3545)' }}>
+              The selected reset cannot be undone.
             </p>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
@@ -213,13 +255,24 @@ export function GamificationSettings({ session }: GamificationSettingsProps) {
 
     try {
       const client = canUseSupabaseData() ? getSupabaseClient() : null;
-      const result = await resetIslandRunProgress({ session, client });
+      const result = await resetIslandRunProgress({
+        session,
+        client,
+        choices: {
+          resetCreaturesAndEggs,
+          resetCompassBook,
+        },
+      });
 
       if (result.ok) {
         setResetConfirmOpen(false);
         setMessage({
           type: 'success',
-          text: 'Island Run progress and XP have been reset! Your level is now 1.',
+          text: [
+            'Island Run progress, Concord, and XP have been reset.',
+            resetCreaturesAndEggs ? 'Creatures and eggs were cleared.' : 'Creatures and eggs were kept.',
+            resetCompassBook ? 'Compass Book was cleared.' : 'Compass Book was kept.',
+          ].join(' '),
         });
         // Notify the gamification hook so the level chip updates immediately.
         if (typeof window !== 'undefined') {

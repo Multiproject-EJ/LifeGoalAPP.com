@@ -66,7 +66,10 @@ export interface Island1AmbienceLifeBudget {
   skiffCount: number;
 }
 
-export const ISLAND_1_OCEAN_SURFACE_Y = -0.58;
+// First Light's buildings and canonical route remain at the shared board Y,
+// while the sea sits lower so the kingdom can read as a tall, ocean-rooted
+// archipelago rather than a thin plate or a levitating island.
+export const ISLAND_1_OCEAN_SURFACE_Y = -2.65;
 export const ISLAND_1_CLOUD_MINIMUM_Y = 13.5;
 const ISLAND_1_CLOUD_LOCAL_LOWER_EXTENT = 1.08;
 const ISLAND_1_CLOUD_VERTICAL_DRIFT = 0.16;
@@ -905,20 +908,45 @@ function createRhythmTree(level: 1 | 2 | 3, quality: Island3DQuality, materials:
     );
   });
 
-  const trunkHeight = level === 1 ? 2.05 : level === 2 ? 2.3 : 2.48;
-  const trunk = cylinder(0.2, 0.42, trunkHeight, segments, materials.bark);
+  const trunkHeight = level === 1 ? 2.05 : level === 2 ? 2.3 : 3.22;
+  const trunk = cylinder(level === 3 ? 0.31 : 0.2, level === 3 ? 0.56 : 0.42, trunkHeight, segments, materials.bark);
+  trunk.name = level === 3 ? 'ISLAND_1_GLORIOUS_OAK_ANCIENT_TRUNK' : 'ISLAND_1_RHYTHM_TREE_TRUNK';
   trunk.position.y = 0.52 + trunkHeight / 2;
   group.add(trunk);
-  for (let rootIndex = 0; rootIndex < 8; rootIndex += 1) {
-    const angle = rootIndex / 8 * Math.PI * 2;
+  const rootCount = level === 3 ? (quality === 'low' ? 10 : 14) : 8;
+  for (let rootIndex = 0; rootIndex < rootCount; rootIndex += 1) {
+    const angle = rootIndex / rootCount * Math.PI * 2;
+    const rootReach = level === 3 ? 0.88 + (rootIndex % 3) * 0.1 : 0.72;
     addBeamBetween(
       group,
-      new THREE.Vector3(Math.cos(angle) * 0.12, 0.62, Math.sin(angle) * 0.12),
-      new THREE.Vector3(Math.cos(angle) * 0.72, 0.55, Math.sin(angle) * 0.72),
-      0.085,
+      new THREE.Vector3(Math.cos(angle) * (level === 3 ? 0.2 : 0.12), 0.74, Math.sin(angle) * (level === 3 ? 0.2 : 0.12)),
+      new THREE.Vector3(Math.cos(angle) * rootReach, 0.55 + (rootIndex % 2) * 0.035, Math.sin(angle) * rootReach),
+      level === 3 ? 0.105 + (rootIndex % 3) * 0.012 : 0.085,
       materials.bark,
       7,
     );
+  }
+  if (level === 3) {
+    const buttressCount = quality === 'low' ? 4 : 7;
+    for (let index = 0; index < buttressCount; index += 1) {
+      const angle = index / buttressCount * Math.PI * 2 + 0.18;
+      const buttress = new THREE.Mesh(
+        new THREE.ConeGeometry(0.2 + (index % 2) * 0.035, 1.05 + (index % 3) * 0.12, 7),
+        materials.bark,
+      );
+      buttress.position.set(Math.cos(angle) * 0.37, 0.9, Math.sin(angle) * 0.37);
+      buttress.rotation.z = Math.cos(angle) * 0.19;
+      buttress.rotation.x = -Math.sin(angle) * 0.19;
+      group.add(buttress);
+    }
+    const burlCount = quality === 'high' ? 7 : quality === 'medium' ? 5 : 3;
+    for (let index = 0; index < burlCount; index += 1) {
+      const angle = index / burlCount * Math.PI * 2 + 0.44;
+      const burl = new THREE.Mesh(new THREE.DodecahedronGeometry(0.19 + (index % 3) * 0.025, 1), materials.bark);
+      burl.position.set(Math.cos(angle) * 0.37, 1.18 + index * 0.27, Math.sin(angle) * 0.37);
+      burl.scale.set(1, 1.35, 0.78);
+      group.add(burl);
+    }
   }
   for (let vineIndex = 0; vineIndex < 3; vineIndex += 1) {
     const vine = new THREE.Mesh(new THREE.TorusGeometry(0.38 + vineIndex * 0.06, 0.028, 5, segments, Math.PI * 1.55), materials.gold);
@@ -936,21 +964,36 @@ function createRhythmTree(level: 1 | 2 | 3, quality: Island3DQuality, materials:
     group.add(new THREE.Mesh(new THREE.TubeGeometry(stemCurve, quality === 'high' ? 14 : 8, stemIndex % 3 === 0 ? 0.095 : 0.072, 7, false), stemIndex % 3 === 0 ? materials.ivoryShade : materials.bark));
   }
 
-  const branchCount = level === 1 ? 7 : level === 2 ? 11 : 16;
+  const branchCount = level === 1 ? 7 : level === 2 ? 11 : quality === 'low' ? 12 : 16;
   for (let index = 0; index < branchCount; index += 1) {
     const angle = index / branchCount * Math.PI * 2;
-    const start = new THREE.Vector3(Math.cos(angle * 1.7) * 0.08, 1.28 + (index % 4) * 0.26, Math.sin(angle * 1.7) * 0.08);
-    const reach = 0.58 + (index % 4) * 0.17 + level * 0.06;
-    const end = new THREE.Vector3(Math.cos(angle) * reach, trunkHeight + 0.06 + (index % 5) * 0.17, Math.sin(angle) * reach);
+    const start = new THREE.Vector3(Math.cos(angle * 1.7) * (level === 3 ? 0.16 : 0.08), (level === 3 ? 1.5 : 1.28) + (index % 4) * (level === 3 ? 0.34 : 0.26), Math.sin(angle * 1.7) * (level === 3 ? 0.16 : 0.08));
+    const reach = level === 3 ? 0.9 + (index % 4) * 0.18 : 0.58 + (index % 4) * 0.17 + level * 0.06;
+    const end = new THREE.Vector3(Math.cos(angle) * reach, trunkHeight - 0.12 + (index % 5) * (level === 3 ? 0.21 : 0.17), Math.sin(angle) * reach);
     const curve = new THREE.QuadraticBezierCurve3(start, start.clone().lerp(end, 0.55).add(new THREE.Vector3(0, 0.36, 0)), end);
     group.add(new THREE.Mesh(new THREE.TubeGeometry(curve, quality === 'high' ? 14 : 8, 0.075 - (index % 3) * 0.008, 6, false), materials.bark));
-    const clusterCount = quality === 'high' ? 4 : quality === 'medium' ? 3 : 2;
+    if (level === 3 && index < (quality === 'low' ? 8 : 12)) {
+      const forkDirection = index % 2 === 0 ? -1 : 1;
+      const forkEnd = end.clone().add(new THREE.Vector3(
+        Math.cos(angle + forkDirection * 0.62) * (0.28 + (index % 3) * 0.07),
+        0.12 + (index % 2) * 0.12,
+        Math.sin(angle + forkDirection * 0.62) * (0.28 + (index % 3) * 0.07),
+      ));
+      const forkCurve = new THREE.QuadraticBezierCurve3(
+        end.clone().lerp(start, 0.16),
+        end.clone().add(new THREE.Vector3(0, 0.16, 0)),
+        forkEnd,
+      );
+      group.add(new THREE.Mesh(new THREE.TubeGeometry(forkCurve, quality === 'high' ? 10 : 6, 0.042, 5, false), materials.bark));
+    }
+    const clusterCount = level === 3 ? (quality === 'high' ? 2 : 1) : quality === 'high' ? 4 : quality === 'medium' ? 3 : 2;
     for (let leafIndex = 0; leafIndex < clusterCount; leafIndex += 1) {
       const leafAngle = leafIndex / clusterCount * Math.PI * 2 + index * 0.7;
       const leafMaterial = (index + leafIndex) % 5 === 0 ? materials.leafLight : (index + leafIndex) % 4 === 0 ? materials.leafDark : materials.leaf;
-      const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(0.18 + ((index + leafIndex) % 3) * 0.032, quality === 'high' ? 2 : 1), leafMaterial);
-      crown.position.copy(end).add(new THREE.Vector3(Math.cos(leafAngle) * 0.23, (leafIndex % 3 - 1) * 0.13, Math.sin(leafAngle) * 0.23));
-      crown.scale.set(1.24, 0.68, 1.04);
+      const crown = new THREE.Mesh(new THREE.IcosahedronGeometry((level === 3 ? 0.21 : 0.18) + ((index + leafIndex) % 3) * 0.026, 1), leafMaterial);
+      crown.position.copy(end).add(new THREE.Vector3(Math.cos(leafAngle) * (level === 3 ? 0.22 : 0.23), (leafIndex % 3 - 1) * (level === 3 ? 0.11 : 0.13), Math.sin(leafAngle) * (level === 3 ? 0.22 : 0.23)));
+      crown.rotation.set((index % 3 - 1) * 0.12, angle * 0.37, ((index + leafIndex) % 3 - 1) * 0.16);
+      crown.scale.set(level === 3 ? 1.62 : 1.24, level === 3 ? 0.52 : 0.68, level === 3 ? 1.24 : 1.04);
       group.add(crown);
     }
     if (level === 3 || (level === 2 && index % 2 === 0) || (level === 1 && index % 3 === 0)) {
@@ -962,23 +1005,41 @@ function createRhythmTree(level: 1 | 2 | 3, quality: Island3DQuality, materials:
   }
 
   const crownCenters = [
-    [0, trunkHeight + 0.72, 0],
-    [-0.38, trunkHeight + 0.5, 0.08],
-    [0.4, trunkHeight + 0.45, -0.04],
-    [0.05, trunkHeight + 0.38, 0.38],
-    [-0.02, trunkHeight + 0.34, -0.42],
+    [0, trunkHeight + (level === 3 ? 0.88 : 0.72), 0],
+    [level === 3 ? -0.7 : -0.38, trunkHeight + (level === 3 ? 0.64 : 0.5), 0.08],
+    [level === 3 ? 0.74 : 0.4, trunkHeight + (level === 3 ? 0.59 : 0.45), -0.04],
+    [0.05, trunkHeight + (level === 3 ? 0.49 : 0.38), level === 3 ? 0.68 : 0.38],
+    [-0.02, trunkHeight + (level === 3 ? 0.44 : 0.34), level === 3 ? -0.72 : -0.42],
   ] as const;
   const visibleCrownCenters = crownCenters.slice(0, level === 1 ? 1 : level === 2 ? 3 : crownCenters.length);
   visibleCrownCenters.forEach(([x, y, z], index) => {
     const crown = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(0.32 - index * 0.018, quality === 'high' ? 2 : 1),
+      new THREE.IcosahedronGeometry((level === 3 ? 0.36 : 0.32) - index * 0.014, 1),
       index % 3 === 0 ? materials.leafLight : index % 2 === 0 ? materials.leafDark : materials.leaf,
     );
     crown.position.set(x, y, z);
     const maturityScale = level === 1 ? 0.66 : level === 2 ? 0.84 : 1;
-    crown.scale.set(1.34 * maturityScale, 0.68 * maturityScale, 1.08 * maturityScale);
+    crown.rotation.set((index % 3 - 1) * 0.1, index * 0.58, (index % 2 === 0 ? -1 : 1) * 0.12);
+    crown.scale.set((level === 3 ? 1.58 : 1.34) * maturityScale, (level === 3 ? 0.58 : 0.68) * maturityScale, (level === 3 ? 1.3 : 1.08) * maturityScale);
     group.add(crown);
   });
+
+  if (level === 3) {
+    const lanternCount = quality === 'low' ? 5 : 9;
+    for (let index = 0; index < lanternCount; index += 1) {
+      const angle = index / lanternCount * Math.PI * 2 + 0.31;
+      const radius = 0.82 + (index % 3) * 0.23;
+      const hangerTop = new THREE.Vector3(Math.cos(angle) * radius, trunkHeight + 0.18 + (index % 2) * 0.16, Math.sin(angle) * radius);
+      const hangerBottom = hangerTop.clone().add(new THREE.Vector3(0, -0.48 - (index % 3) * 0.12, 0));
+      addBeamBetween(group, hangerTop, hangerBottom, 0.012, materials.gold, 5);
+      const lantern = new THREE.Mesh(new THREE.OctahedronGeometry(0.065 + (index % 2) * 0.012), materials.warmGlow);
+      lantern.position.copy(hangerBottom);
+      lantern.scale.set(0.78, 1.35, 0.78);
+      group.add(lantern);
+    }
+    group.userData.heroIdentity = 'glorious-old-giant-oak';
+    group.userData.heroHeight = 4.35;
+  }
 
   const heartCount = level === 1 ? 2 : level === 2 ? 4 : 6;
   for (let index = 0; index < heartCount; index += 1) {
@@ -1018,7 +1079,7 @@ function createRhythmTree(level: 1 | 2 | 3, quality: Island3DQuality, materials:
       group.add(shrub);
     }
   }
-  group.scale.setScalar(0.92);
+  group.scale.set(level === 3 ? 0.98 : 0.92, level === 3 ? 1 : 0.92, level === 3 ? 0.98 : 0.92);
   shadow(group, quality !== 'low');
   return group;
 }
@@ -1413,6 +1474,66 @@ function createSunCourt(level: 1 | 2 | 3, quality: Island3DQuality, materials: I
   sunWellRing.position.y = 0.71;
   group.add(sunSocket, sunOrb, sunWellRing);
 
+  if (level === 3) {
+    const tableShape = new THREE.Shape();
+    tableShape.absarc(0, 0, 0.79, 0, Math.PI * 2, false);
+    const tableOpening = new THREE.Path();
+    tableOpening.absarc(0, 0, 0.38, 0, Math.PI * 2, true);
+    tableShape.holes.push(tableOpening);
+    const councilTable = new THREE.Mesh(
+      new THREE.ExtrudeGeometry(tableShape, {
+        depth: 0.1,
+        bevelEnabled: true,
+        bevelSegments: 2,
+        bevelSize: 0.025,
+        bevelThickness: 0.025,
+        curveSegments: Math.max(16, segments),
+      }),
+      materials.bark,
+    );
+    councilTable.name = 'ISLAND_1_MISSION_COUNCIL_TABLE';
+    councilTable.rotation.x = Math.PI / 2;
+    councilTable.position.y = 0.88;
+    group.add(councilTable);
+
+    const tableInlay = new THREE.Mesh(new THREE.TorusGeometry(0.59, 0.025, 6, segments), materials.gold);
+    tableInlay.name = 'ISLAND_1_MISSION_COUNCIL_TABLE_INLAY';
+    tableInlay.rotation.x = Math.PI / 2;
+    tableInlay.position.y = 0.945;
+    group.add(tableInlay);
+
+    const seatCount = 8;
+    const seatRadius = 1.11;
+    const seatAngles = Array.from({ length: seatCount }, (_, index) => (index / seatCount * Math.PI * 2) + Math.PI / 8);
+    seatAngles.forEach((angle, index) => {
+      const seatRoot = new THREE.Group();
+      seatRoot.name = index === 0 ? 'ISLAND_1_MISSION_PLAYER_SEAT' : `ISLAND_1_MISSION_COUNCIL_SEAT_${index}`;
+      seatRoot.position.set(Math.sin(angle) * seatRadius, 0, Math.cos(angle) * seatRadius);
+      seatRoot.rotation.y = angle + Math.PI;
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.09, 0.28), index === 0 ? materials.sapphire : materials.ivoryShade);
+      seat.position.y = 0.76;
+      const back = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.38, 0.08), index === 0 ? materials.sapphire : materials.ivoryShade);
+      back.position.set(0, 0.91, 0.13);
+      back.rotation.x = -0.12;
+      const crest = new THREE.Mesh(new THREE.OctahedronGeometry(index === 0 ? 0.07 : 0.05), index === 0 ? materials.warmGlow : materials.gold);
+      crest.position.set(0, 1.13, 0.13);
+      crest.scale.set(1.25, 0.82, 0.42);
+      const pedestal = cylinder(0.07, 0.1, 0.2, 6, materials.gold);
+      pedestal.position.y = 0.65;
+      seatRoot.add(seat, back, crest, pedestal);
+      group.add(seatRoot);
+    });
+    const playerSeatAngle = seatAngles[0];
+    group.userData.missionBriefing = {
+      tableCenter: [0, 0.91, 0],
+      playerSeat: [Math.sin(playerSeatAngle) * seatRadius, 0.76, Math.cos(playerSeatAngle) * seatRadius],
+      playerFacing: [0, 0.86, 0],
+      cameraPosition: [Math.sin(playerSeatAngle) * 1.46, 1.28, Math.cos(playerSeatAngle) * 1.46],
+      cameraTarget: [0, 0.88, 0],
+      seatCount,
+    };
+  }
+
   for (let entry = 0; entry < 4; entry += 1) addRadialStairs(group, entry / 4 * Math.PI * 2, 1.7, 0.74, materials);
 
   const pylonCount = level === 1 ? 4 : level === 2 ? 8 : 12;
@@ -1754,28 +1875,180 @@ function createFirstLightSkiff(
   return skiff;
 }
 
-function addFloatingIslet(group: THREE.Group, x: number, y: number, z: number, scale: number, materials: Island1WorldMaterials, quality: Island3DQuality) {
+function addSeaStack(group: THREE.Group, x: number, z: number, scale: number, materials: Island1WorldMaterials, quality: Island3DQuality) {
   const islet = new THREE.Group();
-  islet.position.set(x, y, z);
+  islet.name = 'ISLAND_1_OCEAN_ROOTED_SEA_STACK';
+  islet.position.set(x, 0, z);
   islet.scale.setScalar(scale);
-  const top = cylinder(0.9, 1.04, 0.22, radialSegmentsFor(quality), materials.ivoryShade);
-  const underside = new THREE.Mesh(new THREE.ConeGeometry(1.02, 1.4, radialSegmentsFor(quality)), materials.ivoryShade);
-  underside.position.y = -0.78;
-  underside.rotation.x = Math.PI;
-  islet.add(top, underside);
+  const segments = radialSegmentsFor(quality);
+  const reefFoot = cylinder(1.06, 1.2, 0.46, segments, materials.ivoryShade);
+  reefFoot.position.y = ISLAND_1_OCEAN_SURFACE_Y + 0.16;
+  const cliff = cylinder(0.72, 0.98, 1.78, segments, materials.ivoryShade);
+  cliff.position.y = ISLAND_1_OCEAN_SURFACE_Y + 1.02;
+  const gardenShelf = cylinder(0.78, 0.72, 0.2, segments, materials.ivory);
+  gardenShelf.position.y = ISLAND_1_OCEAN_SURFACE_Y + 1.93;
+  islet.add(reefFoot, cliff, gardenShelf);
   const tower = cylinder(0.18, 0.23, 0.65, 8, materials.ivory);
-  tower.position.y = 0.42;
+  tower.position.y = ISLAND_1_OCEAN_SURFACE_Y + 2.34;
   const roof = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.45, 8), materials.sapphire);
-  roof.position.y = 0.96;
+  roof.position.y = ISLAND_1_OCEAN_SURFACE_Y + 2.88;
   islet.add(tower, roof);
   const waterfall = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.3, 1.5),
+    new THREE.PlaneGeometry(0.24, 1.68),
     new THREE.MeshBasicMaterial({ color: 0x9deaff, transparent: true, opacity: 0.58, side: THREE.DoubleSide, depthWrite: false }),
   );
-  waterfall.position.set(0.52, -0.72, 0.12);
-  islet.add(waterfall);
+  waterfall.position.set(0.54, ISLAND_1_OCEAN_SURFACE_Y + 0.9, 0.12);
+  const splash = new THREE.Mesh(
+    new THREE.RingGeometry(0.12, 0.34, quality === 'low' ? 10 : 18),
+    new THREE.MeshBasicMaterial({ color: 0xe8fdff, transparent: true, opacity: 0.54, side: THREE.DoubleSide, depthWrite: false }),
+  );
+  splash.rotation.x = -Math.PI / 2;
+  splash.position.set(0.54, ISLAND_1_OCEAN_SURFACE_Y + 0.025, 0.12);
+  islet.add(waterfall, splash);
   group.add(islet);
   return islet;
+}
+
+function addIsland1CoastalRelief(
+  root: THREE.Group,
+  profile: Island3DQualityProfile,
+  materials: Island1WorldMaterials,
+  cliffMaterial: THREE.Material,
+) {
+  const relief = new THREE.Group();
+  relief.name = 'ISLAND_1_HERO_COASTAL_RELIEF';
+  const ledgeCount = profile.id === 'high' ? 28 : profile.id === 'medium' ? 18 : 10;
+  const ledgeGeometry = new THREE.DodecahedronGeometry(0.38, 0);
+  const ledges = new THREE.InstancedMesh(ledgeGeometry, cliffMaterial, ledgeCount);
+  ledges.name = 'ISLAND_1_CLIFF_STRATA_LEDGE_ARRAY';
+  const greenery = new THREE.InstancedMesh(
+    new THREE.IcosahedronGeometry(0.2, 0),
+    materials.leafDark,
+    ledgeCount,
+  );
+  greenery.name = 'ISLAND_1_CLIFF_GREENERY_SEAM_ARRAY';
+  const dummy = new THREE.Object3D();
+  for (let index = 0; index < ledgeCount; index += 1) {
+    const angle = index / ledgeCount * Math.PI * 2 + Math.sin(index * 2.13) * 0.09;
+    const verticalBand = index % 4;
+    const radius = 6.48 + verticalBand * 0.18 + Math.sin(index * 1.71) * 0.12;
+    const y = 0.05 - verticalBand * 0.44 + Math.sin(index * 1.33) * 0.08;
+    dummy.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+    dummy.rotation.set(index * 0.17, -angle, index * 0.11);
+    dummy.scale.set(1.45 + (index % 3) * 0.24, 0.42 + (index % 2) * 0.12, 0.72);
+    dummy.updateMatrix();
+    ledges.setMatrixAt(index, dummy.matrix);
+    dummy.position.set(Math.cos(angle) * (radius - 0.12), y + 0.24, Math.sin(angle) * (radius - 0.12));
+    dummy.rotation.set(0, -angle, 0);
+    dummy.scale.set(1.25 + (index % 2) * 0.35, 0.34, 0.7);
+    dummy.updateMatrix();
+    greenery.setMatrixAt(index, dummy.matrix);
+  }
+  relief.add(ledges, greenery);
+
+  // Broad vertical buttresses break the generic cylinder into an inhabited,
+  // water-eroded cliff crown. Instancing keeps this extra silhouette detail to
+  // one draw call at every quality tier.
+  const buttressCount = profile.id === 'high' ? 42 : profile.id === 'medium' ? 28 : 16;
+  const buttresses = new THREE.InstancedMesh(
+    new THREE.DodecahedronGeometry(0.46, 0),
+    cliffMaterial,
+    buttressCount,
+  );
+  buttresses.name = 'ISLAND_1_ERODED_CLIFF_BUTTRESS_ARRAY';
+  for (let index = 0; index < buttressCount; index += 1) {
+    const angle = index / buttressCount * Math.PI * 2 + Math.sin(index * 1.91) * 0.075;
+    const band = index % 3;
+    const radius = 6.52 + Math.sin(index * 2.37) * 0.22 + band * 0.08;
+    dummy.position.set(
+      Math.cos(angle) * radius,
+      -0.42 - band * 0.55 + Math.sin(index * 0.83) * 0.1,
+      Math.sin(angle) * radius,
+    );
+    dummy.rotation.set(index * 0.09, -angle, Math.sin(index * 1.17) * 0.16);
+    dummy.scale.set(
+      0.74 + (index % 4) * 0.11,
+      1.18 + (index % 5) * 0.18,
+      0.62 + (index % 3) * 0.12,
+    );
+    dummy.updateMatrix();
+    buttresses.setMatrixAt(index, dummy.matrix);
+  }
+  relief.add(buttresses);
+
+  const reefRockCount = profile.id === 'high' ? 30 : profile.id === 'medium' ? 20 : 12;
+  const reefRocks = new THREE.InstancedMesh(
+    new THREE.IcosahedronGeometry(0.3, 0),
+    cliffMaterial,
+    reefRockCount,
+  );
+  reefRocks.name = 'ISLAND_1_OCEAN_ROOTED_REEF_FOOT_ARRAY';
+  for (let index = 0; index < reefRockCount; index += 1) {
+    const angle = index / reefRockCount * Math.PI * 2 + Math.sin(index * 2.73) * 0.11;
+    const radius = 7.08 + (index % 3) * 0.2;
+    dummy.position.set(
+      Math.cos(angle) * radius,
+      ISLAND_1_OCEAN_SURFACE_Y + 0.12 + (index % 2) * 0.08,
+      Math.sin(angle) * radius,
+    );
+    dummy.rotation.set(index * 0.21, -angle, index * 0.13);
+    dummy.scale.set(1.15 + (index % 4) * 0.18, 0.48 + (index % 3) * 0.14, 0.85);
+    dummy.updateMatrix();
+    reefRocks.setMatrixAt(index, dummy.matrix);
+  }
+  relief.add(reefRocks);
+
+  const hangingGardenCount = profile.id === 'high' ? 34 : profile.id === 'medium' ? 22 : 12;
+  const hangingGardens = new THREE.InstancedMesh(
+    new THREE.IcosahedronGeometry(0.18, 0),
+    materials.leaf,
+    hangingGardenCount,
+  );
+  hangingGardens.name = 'ISLAND_1_HANGING_CLIFF_GARDEN_ARRAY';
+  const cliffFlowers = new THREE.InstancedMesh(
+    new THREE.OctahedronGeometry(0.055, 0),
+    materials.warmGlow,
+    hangingGardenCount,
+  );
+  cliffFlowers.name = 'ISLAND_1_HANGING_GARDEN_FLOWER_LIGHTS';
+  for (let index = 0; index < hangingGardenCount; index += 1) {
+    const angle = index / hangingGardenCount * Math.PI * 2 + 0.14;
+    const band = index % 3;
+    const radius = 6.66 + band * 0.12;
+    const y = -0.18 - band * 0.54 + Math.sin(index * 1.47) * 0.1;
+    dummy.position.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius);
+    dummy.rotation.set(0, -angle, index * 0.08);
+    dummy.scale.set(1.25 + (index % 2) * 0.28, 0.52 + band * 0.1, 0.72);
+    dummy.updateMatrix();
+    hangingGardens.setMatrixAt(index, dummy.matrix);
+    dummy.position.set(
+      Math.cos(angle) * (radius + 0.05),
+      y + 0.08,
+      Math.sin(angle) * (radius + 0.05),
+    );
+    dummy.scale.setScalar(index % 4 === 0 ? 1.3 : 0.8);
+    dummy.updateMatrix();
+    cliffFlowers.setMatrixAt(index, dummy.matrix);
+  }
+  relief.add(hangingGardens, cliffFlowers);
+
+  const coveLightCount = profile.id === 'high' ? 16 : profile.id === 'medium' ? 10 : 6;
+  const coveLights = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(0.055, 7, 5),
+    materials.warmGlow,
+    coveLightCount,
+  );
+  coveLights.name = 'ISLAND_1_INHABITED_CLIFF_COVE_LIGHTS';
+  for (let index = 0; index < coveLightCount; index += 1) {
+    const angle = index / coveLightCount * Math.PI * 2 + 0.21;
+    const radius = 6.68 + (index % 2) * 0.12;
+    dummy.position.set(Math.cos(angle) * radius, -0.24 - (index % 3) * 0.36, Math.sin(angle) * radius);
+    dummy.scale.set(1.4, 0.72, 0.48);
+    dummy.updateMatrix();
+    coveLights.setMatrixAt(index, dummy.matrix);
+  }
+  relief.add(coveLights);
+  root.add(relief);
 }
 
 export function createIsland1LivingAmbience(
@@ -1783,6 +2056,7 @@ export function createIsland1LivingAmbience(
   profile: Island3DQualityProfile,
   materials: Island1WorldMaterials,
   ocean: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshPhysicalMaterial>,
+  cliffMaterial: THREE.Material,
 ): Island1AmbienceRuntime {
   const root = new THREE.Group();
   root.name = 'ISLAND_1_LIVING_AMBIENCE';
@@ -1808,14 +2082,14 @@ export function createIsland1LivingAmbience(
   });
   const mountains = addIsland1DistantMountains(root, profile.id);
 
+  addIsland1CoastalRelief(root, profile, materials, cliffMaterial);
+
   const isletCount = profile.id === 'high' ? 6 : profile.id === 'medium' ? 4 : 2;
-  const floatingIslets: THREE.Group[] = [];
+  const seaStacks: THREE.Group[] = [];
   for (let index = 0; index < isletCount; index += 1) {
     const angle = index / isletCount * Math.PI * 2 + 0.4;
-    const floatingIslet = addFloatingIslet(root, Math.cos(angle) * (17 + index), 3.4 + (index % 3) * 1.2, Math.sin(angle) * (17 + index), 0.55 + (index % 2) * 0.18, materials, profile.id);
-    floatingIslet.userData.baseY = floatingIslet.position.y;
-    floatingIslet.userData.lifePhase = index * 1.37;
-    floatingIslets.push(floatingIslet);
+    const seaStack = addSeaStack(root, Math.cos(angle) * (17 + index), Math.sin(angle) * (17 + index), 0.62 + (index % 2) * 0.2, materials, profile.id);
+    seaStacks.push(seaStack);
   }
 
   const cascadeCount = lifeBudget.cascadeCount;
@@ -1910,8 +2184,9 @@ export function createIsland1LivingAmbience(
       // rock profile outward so the fall sits on the cliff face instead of
       // disappearing inside its underwater cylinder.
       new THREE.Vector3(Math.cos(angle) * 6.46, 0.04, Math.sin(angle) * 6.46),
-      new THREE.Vector3(Math.cos(angle) * 7.02, -0.24, Math.sin(angle) * 7.02),
-      new THREE.Vector3(Math.cos(angle) * 7.52, -0.55, Math.sin(angle) * 7.52),
+      new THREE.Vector3(Math.cos(angle) * 6.82, -0.5, Math.sin(angle) * 6.82),
+      new THREE.Vector3(Math.cos(angle) * 7.08, -1.28, Math.sin(angle) * 7.08),
+      new THREE.Vector3(Math.cos(angle) * 7.3, ISLAND_1_OCEAN_SURFACE_Y + 0.04, Math.sin(angle) * 7.3),
     ];
     const ribbon = new THREE.Mesh(
       createWaterRibbonGeometry(points, 0.19 + (index % 3) * 0.035),
@@ -1942,7 +2217,7 @@ export function createIsland1LivingAmbience(
     instanceDummy.updateMatrix();
     springRipples.setMatrixAt(index, instanceDummy.matrix);
 
-    instanceDummy.position.copy(points[points.length - 1]).setY(-0.545);
+    instanceDummy.position.copy(points[points.length - 1]).setY(ISLAND_1_OCEAN_SURFACE_Y + 0.035);
     instanceDummy.rotation.set(0, angle, 0);
     instanceDummy.scale.set(1.15, 1, 0.62);
     instanceDummy.updateMatrix();
@@ -2102,7 +2377,7 @@ export function createIsland1LivingAmbience(
   for (let index = 0; index < sparkCount; index += 1) {
     const angle = index * 2.399963;
     const radius = 8 + (index % 17) * 1.45;
-    sparkPositions.set([Math.cos(angle) * radius, -0.54, Math.sin(angle) * radius], index * 3);
+    sparkPositions.set([Math.cos(angle) * radius, ISLAND_1_OCEAN_SURFACE_Y + 0.04, Math.sin(angle) * radius], index * 3);
   }
   sparkGeometry.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
   const sparkMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: profile.id === 'high' ? 0.12 : 0.09, transparent: true, opacity: 0.74, depthWrite: false });
@@ -2118,7 +2393,7 @@ export function createIsland1LivingAmbience(
     updateView: (cameraPosition) => {
       const cameraRadius = Math.hypot(cameraPosition.x, cameraPosition.z);
       if (cameraRadius > 0.001) {
-        [...mountains.children, ...floatingIslets].forEach((distantScenery) => {
+        [...mountains.children, ...seaStacks].forEach((distantScenery) => {
           const sceneryRadius = Math.hypot(distantScenery.position.x, distantScenery.position.z);
           const cameraFacingDot = sceneryRadius > 0.001
             ? (cameraPosition.x * distantScenery.position.x + cameraPosition.z * distantScenery.position.z) / (cameraRadius * sceneryRadius)
@@ -2138,13 +2413,6 @@ export function createIsland1LivingAmbience(
         );
         cloud.rotation.y = -orbitAngle + Math.sin(elapsed * 0.035 + index) * 0.04;
       });
-      floatingIslets.forEach((islet) => {
-        const baseY = islet.userData.baseY as number;
-        const phase = islet.userData.lifePhase as number;
-        islet.position.y = baseY + Math.sin(elapsed * 0.23 + phase) * 0.055;
-        islet.rotation.x = Math.sin(elapsed * 0.17 + phase) * 0.006;
-        islet.rotation.z = Math.cos(elapsed * 0.19 + phase) * 0.008;
-      });
       waterfallMaterial.opacity = (profile.id === 'low' ? 0.62 : 0.72) + Math.sin(elapsed * 1.3) * 0.08;
       springMaterial.opacity = 0.7 + Math.sin(elapsed * 1.05) * 0.08;
       springRippleMaterial.opacity = (profile.id === 'low' ? 0.26 : 0.38) + Math.sin(elapsed * 0.82) * 0.08;
@@ -2155,7 +2423,7 @@ export function createIsland1LivingAmbience(
       });
       for (let index = 0; index < cascadeCount; index += 1) {
         const points = cascadePoints[index];
-        instanceDummy.position.copy(points[points.length - 1]).setY(-0.545 + Math.sin(elapsed * 1.7 + index) * 0.008);
+        instanceDummy.position.copy(points[points.length - 1]).setY(ISLAND_1_OCEAN_SURFACE_Y + 0.035 + Math.sin(elapsed * 1.7 + index) * 0.008);
         instanceDummy.rotation.set(0, waterfallAngles[index], 0);
         const foamPulse = 1 + Math.sin(elapsed * 1.9 + index * 0.8) * 0.16;
         instanceDummy.scale.set(1.15 * foamPulse, 1, 0.62 * foamPulse);

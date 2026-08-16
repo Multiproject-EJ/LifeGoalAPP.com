@@ -637,6 +637,7 @@ function mergeIslandIndexLedgerByUnion(
 
 type IslandRunRuntimeCommitSyncState = 'idle' | 'committing' | 'blocked_remote_backoff' | 'blocked_conflict_recovery';
 type IslandRunRuntimeCommitParkReason = 'single_flight' | 'backoff' | 'conflict_recovery';
+export type IslandRunRuntimeConflictMode = 'merge' | 'replace';
 
 /**
  * Runtime commit coordinator — enforced invariants:
@@ -654,6 +655,7 @@ interface IslandRunRuntimeCommitCoordinator {
   inFlightActionIds: Set<string>;
   parkedActionId: string | null;
   parkedRecord: IslandRunGameStateRecord | null;
+  parkedConflictMode: IslandRunRuntimeConflictMode;
   parkedReason: IslandRunRuntimeCommitParkReason | null;
 }
 
@@ -679,6 +681,7 @@ function getRuntimeCommitCoordinator(userId: string): IslandRunRuntimeCommitCoor
     inFlightActionIds: new Set<string>(),
     parkedActionId: null,
     parkedRecord: null,
+    parkedConflictMode: 'merge',
     parkedReason: null,
   };
   runtimeCommitCoordinatorByUser.set(userId, created);
@@ -842,6 +845,10 @@ function getRemoteBackoffStorageKey(userId: string) {
 
 function getPendingWriteStorageKey(userId: string) {
   return `${getStorageKey(userId)}_pending_write`;
+}
+
+function getPendingWriteConflictModeStorageKey(userId: string) {
+  return `${getPendingWriteStorageKey(userId)}_conflict_mode`;
 }
 
 function getNormalizedRuntimeStateError(error: { message?: string | null; code?: string | null } | null | undefined) {
@@ -2627,6 +2634,27 @@ export function mergeRecordForConflict(options: {
   };
 }
 
+/**
+ * Resolve a version conflict without changing normal gameplay semantics.
+ * Ordinary writes merge monotonic progress. Explicit destructive operations
+ * (currently Settings -> Reset Island Run) replace the remote gameplay payload
+ * while rebasing onto the latest runtime version.
+ */
+export function resolveIslandRunRecordForConflict(options: {
+  remote: IslandRunGameStateRecord;
+  local: IslandRunGameStateRecord;
+  conflictMode: IslandRunRuntimeConflictMode;
+}): IslandRunGameStateRecord {
+  const { remote, local, conflictMode } = options;
+  if (conflictMode === 'replace') {
+    return {
+      ...local,
+      runtimeVersion: remote.runtimeVersion,
+    };
+  }
+  return mergeRecordForConflict({ remote, local });
+}
+
 function mergeMinigameTicketsByEvent(options: {
   remote: Record<string, number>;
   local: Record<string, number>;
@@ -3206,8 +3234,16 @@ export async function writeIslandRunGameStateRecord(options: {
   record: IslandRunGameStateRecord;
   skipQueueReplay?: boolean;
   triggerSource?: string;
+  conflictMode?: IslandRunRuntimeConflictMode;
 }): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
-  const { session, client, record, skipQueueReplay = false, triggerSource = 'runtime_state_write' } = options;
+  const {
+    session,
+    client,
+    record,
+    skipQueueReplay = false,
+    triggerSource = 'runtime_state_write',
+    conflictMode = 'merge',
+  } = options;
   const existingLocalRecord = readIslandRunGameStateRecord(session);
   const localRecord: IslandRunGameStateRecord = {
     ...record,
@@ -3254,10 +3290,17 @@ export async function writeIslandRunGameStateRecord(options: {
     }
   }
 
-  const enqueuePendingWrite = (pendingRecord: IslandRunGameStateRecord) => {
+  const enqueuePendingWrite = (
+    pendingRecord: IslandRunGameStateRecord,
+    pendingConflictMode: IslandRunRuntimeConflictMode = conflictMode,
+  ) => {
     if (typeof window === 'undefined') return;
     try {
       window.localStorage.setItem(getPendingWriteStorageKey(session.user.id), JSON.stringify(pendingRecord));
+      window.localStorage.setItem(
+        getPendingWriteConflictModeStorageKey(session.user.id),
+        pendingConflictMode,
+      );
     } catch {
       // ignore local persistence failures in prototype mode
     }
@@ -3275,10 +3318,22 @@ export async function writeIslandRunGameStateRecord(options: {
     }
   };
 
+  const readPendingWriteConflictMode = (): IslandRunRuntimeConflictMode => {
+    if (typeof window === 'undefined') return 'merge';
+    try {
+      return window.localStorage.getItem(getPendingWriteConflictModeStorageKey(session.user.id)) === 'replace'
+        ? 'replace'
+        : 'merge';
+    } catch {
+      return 'merge';
+    }
+  };
+
   const clearPendingWrite = () => {
     if (typeof window === 'undefined') return;
     try {
       window.localStorage.removeItem(getPendingWriteStorageKey(session.user.id));
+      window.localStorage.removeItem(getPendingWriteConflictModeStorageKey(session.user.id));
     } catch {
       // ignore local persistence failures in prototype mode
     }
@@ -3287,10 +3342,12 @@ export async function writeIslandRunGameStateRecord(options: {
   const parkCommitAction = (
     reason: IslandRunRuntimeCommitParkReason,
     parkedRecord: IslandRunGameStateRecord,
+    parkedConflictMode: IslandRunRuntimeConflictMode = conflictMode,
   ) => {
     coordinator.parkedReason = reason;
     coordinator.parkedActionId = buildRuntimeClientActionId(session.user.id, parkedRecord);
     coordinator.parkedRecord = parkedRecord;
+    coordinator.parkedConflictMode = parkedConflictMode;
   };
 
   if (isDemoSession(session) || !client) {
@@ -3400,6 +3457,7 @@ export async function writeIslandRunGameStateRecord(options: {
   if (!skipQueueReplay) {
     const pendingWrite = readPendingWrite();
     if (pendingWrite) {
+      const pendingConflictMode = readPendingWriteConflictMode();
       const resumedActionId = buildRuntimeClientActionId(session.user.id, pendingWrite);
       logIslandRunEntryDebug('runtime_state_commit_resumed', {
         userId: session.user.id,
@@ -3419,6 +3477,7 @@ export async function writeIslandRunGameStateRecord(options: {
         record: pendingWrite,
         skipQueueReplay: true,
         triggerSource: 'queue_replay',
+        conflictMode: pendingConflictMode,
       });
       if (replayResult.ok) {
         clearPendingWrite();
@@ -3480,9 +3539,10 @@ export async function writeIslandRunGameStateRecord(options: {
     if (writeResult.status === 'conflict') {
       const latest = await hydrateIslandRunGameStateRecordWithSource({ session, client });
       if (latest.source === 'table') {
-        const merged = mergeRecordForConflict({
+        const merged = resolveIslandRunRecordForConflict({
           remote: latest.record,
           local: localRecord,
+          conflictMode,
         });
         writeResult = await tryConditionalWrite(merged);
         if (writeResult.status === 'ok') {
@@ -3609,8 +3669,10 @@ export async function writeIslandRunGameStateRecord(options: {
       const resumedRecord = coordinator.parkedRecord;
       const resumedActionId = coordinator.parkedActionId;
       const resumedReason = coordinator.parkedReason;
+      const resumedConflictMode = coordinator.parkedConflictMode;
       coordinator.parkedRecord = null;
       coordinator.parkedActionId = null;
+      coordinator.parkedConflictMode = 'merge';
       coordinator.parkedReason = null;
 
       // Targeted debug log for mobile Safari debugging — captures field-level diff
@@ -3652,6 +3714,7 @@ export async function writeIslandRunGameStateRecord(options: {
             record: resumedRecord,
             skipQueueReplay: true,
             triggerSource: nextTriggerSource,
+            conflictMode: resumedConflictMode,
           });
         }, 0);
       } else {
@@ -3662,6 +3725,7 @@ export async function writeIslandRunGameStateRecord(options: {
             record: resumedRecord,
             skipQueueReplay: true,
             triggerSource: nextTriggerSource,
+            conflictMode: resumedConflictMode,
           }),
         );
       }
@@ -3710,10 +3774,14 @@ export async function flushIslandRunPendingWrite(options: {
   if (typeof window === 'undefined' || !client || isDemoSession(session)) return;
 
   let pending: IslandRunGameStateRecord | null = null;
+  let pendingConflictMode: IslandRunRuntimeConflictMode = 'merge';
   try {
     const raw = window.localStorage.getItem(getPendingWriteStorageKey(session.user.id));
     if (raw) {
       pending = toRecord(JSON.parse(raw) as Partial<IslandRunGameStateRecord>, getDefaultRecord());
+      pendingConflictMode = window.localStorage.getItem(
+        getPendingWriteConflictModeStorageKey(session.user.id),
+      ) === 'replace' ? 'replace' : 'merge';
     }
   } catch {
     pending = null;
@@ -3732,5 +3800,6 @@ export async function flushIslandRunPendingWrite(options: {
     record: pending,
     skipQueueReplay: true,
     triggerSource,
+    conflictMode: pendingConflictMode,
   });
 }

@@ -10,6 +10,7 @@
  * client). Pure mapping/merging logic lives in `compassBookSerialization.ts`.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { canUseSupabaseData, getSupabaseClient } from '../../../lib/supabaseClient';
 import type { Database } from '../../../lib/database.types';
 import {
@@ -27,7 +28,7 @@ import {
   upsertAnswer,
 } from './compassBookSerialization';
 import { getIslandFragment } from '../logic/islandFragment';
-import { loadLocalChapterStates } from './compassBookLocalStore';
+import { clearLocalCompassBook, loadLocalChapterStates } from './compassBookLocalStore';
 
 type BookRow = Database['public']['Tables']['compass_books']['Row'];
 type ChapterRow = Database['public']['Tables']['compass_chapter_states']['Row'];
@@ -196,4 +197,38 @@ export async function recordChapterAnswer(
   };
   await saveChapterState(userId, bookId, next);
   return next;
+}
+
+/**
+ * Explicitly erase the user's Compass Book and its chapter answers.
+ *
+ * This is intentionally separate from Island Run's normal reset. The caller
+ * must opt in from a destructive confirmation surface. Deleting the book also
+ * removes its chapter rows through the database's ON DELETE CASCADE rule.
+ */
+export async function resetCompassBookForUser(options: {
+  userId: string;
+  client: SupabaseClient | null;
+}): Promise<{ ok: true } | { ok: false; errorMessage: string }> {
+  const { userId, client } = options;
+
+  if (client) {
+    try {
+      const { error } = await client
+        .from('compass_books')
+        .delete()
+        .eq('user_id', userId);
+      if (error) {
+        return { ok: false, errorMessage: error.message };
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown Compass Book reset error.',
+      };
+    }
+  }
+
+  clearLocalCompassBook(userId);
+  return { ok: true };
 }
