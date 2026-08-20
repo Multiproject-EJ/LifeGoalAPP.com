@@ -923,6 +923,165 @@ function createReadingSignalMarkers(
   return group;
 }
 
+function createLivingWheelRelief(
+  materials: BookMaterials,
+  quality: CompassBookThreeQuality,
+) {
+  const root = new THREE.Group();
+  root.name = 'COMPASS_BOOK_LIVING_WHEEL_RELIEF';
+  root.userData.compassPageId = 'living_wheel';
+  const radialSegments = quality === 'high' ? 48 : 24;
+  const wedgeSegments = quality === 'high' ? 18 : 9;
+
+  const contactShadow = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.61, 1.64, 0.05, radialSegments),
+    materials.leatherEdge,
+  );
+  contactShadow.name = 'COMPASS_BOOK_LIVING_WHEEL_CONTACT_SHADOW';
+  contactShadow.position.y = 0.025;
+  contactShadow.castShadow = true;
+  root.add(contactShadow);
+
+  const enamelColors = [
+    0x492a78,
+    0x6a368e,
+    0x2c4d86,
+    0x23635a,
+    0x416323,
+    0x873b3b,
+    0xa85d16,
+    0xa37a13,
+  ];
+  const wedgeGap = 0.035;
+  const wedgeAngle = (Math.PI * 2) / enamelColors.length;
+  enamelColors.forEach((color, index) => {
+    const material = new THREE.MeshPhysicalMaterial({
+      color,
+      roughness: 0.43,
+      roughnessMap: materials.paper.roughnessMap,
+      bumpMap: materials.paper.bumpMap,
+      bumpScale: quality === 'high' ? 0.018 : 0.01,
+      metalness: 0.04,
+      clearcoat: quality === 'high' ? 0.58 : 0.34,
+      clearcoatRoughness: 0.28,
+    });
+    material.name = `COMPASS_BOOK_LIVING_WHEEL_ENAMEL_${index + 1}_MATERIAL`;
+    const wedge = new THREE.Mesh(
+      new THREE.RingGeometry(
+        0.5,
+        1.47,
+        wedgeSegments,
+        2,
+        index * wedgeAngle + wedgeGap / 2,
+        wedgeAngle - wedgeGap,
+      ),
+      material,
+    );
+    wedge.name = `COMPASS_BOOK_LIVING_WHEEL_SECTOR_${index + 1}`;
+    wedge.rotation.x = -Math.PI / 2;
+    wedge.position.y = 0.11;
+    wedge.castShadow = true;
+    wedge.receiveShadow = true;
+    root.add(wedge);
+  });
+
+  [1.58, 1.49, 0.52].forEach((radius, index) => {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(
+        radius,
+        index === 0 ? 0.075 : 0.045,
+        quality === 'high' ? 10 : 5,
+        radialSegments,
+      ),
+      index === 1 ? materials.giltDark : materials.gilt,
+    );
+    ring.name = `COMPASS_BOOK_LIVING_WHEEL_BEZEL_${index + 1}`;
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.17 + index * 0.018;
+    ring.castShadow = true;
+    root.add(ring);
+  });
+
+  for (let index = 0; index < 8; index += 1) {
+    const angle = index * wedgeAngle;
+    const divider = roundedBox(
+      `COMPASS_BOOK_LIVING_WHEEL_DIVIDER_${index + 1}`,
+      0.055,
+      0.075,
+      1.14,
+      0.018,
+      quality === 'high' ? 2 : 1,
+      materials.gilt,
+    );
+    divider.position.set(Math.sin(angle) * 0.97, 0.205, Math.cos(angle) * 0.97);
+    divider.rotation.y = angle;
+    divider.castShadow = true;
+    root.add(divider);
+
+    const stud = new THREE.Mesh(
+      new THREE.SphereGeometry(
+        0.095,
+        quality === 'high' ? 18 : 9,
+        quality === 'high' ? 10 : 6,
+      ),
+      materials.gilt,
+    );
+    stud.name = `COMPASS_BOOK_LIVING_WHEEL_STUD_${index + 1}`;
+    stud.position.set(Math.sin(angle) * 1.57, 0.245, Math.cos(angle) * 1.57);
+    stud.scale.y = 0.5;
+    stud.castShadow = true;
+    root.add(stud);
+  }
+
+  const hubShadow = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.41, 0.45, 0.1, radialSegments),
+    materials.giltDark,
+  );
+  hubShadow.name = 'COMPASS_BOOK_LIVING_WHEEL_HUB_SHADOW';
+  hubShadow.position.y = 0.2;
+  root.add(hubShadow);
+
+  const compassRose = new THREE.Group();
+  compassRose.name = 'COMPASS_BOOK_LIVING_WHEEL_COMPASS_ROSE';
+  compassRose.position.y = 0.28;
+  for (let index = 0; index < 8; index += 1) {
+    const longPoint = index % 2 === 0;
+    const needle = createNeedleBlade(
+      `COMPASS_BOOK_LIVING_WHEEL_ROSE_POINT_${index + 1}`,
+      longPoint ? 0.94 : 0.68,
+      longPoint ? 0.21 : 0.15,
+      longPoint ? 0.045 : 0.035,
+      index % 2 === 0 ? materials.gilt : materials.giltDark,
+      quality,
+    );
+    needle.rotation.y = index * (Math.PI / 4);
+    needle.castShadow = true;
+    compassRose.add(needle);
+  }
+  root.add(compassRose);
+
+  const hubBezel = new THREE.Mesh(
+    new THREE.TorusGeometry(0.27, 0.065, quality === 'high' ? 10 : 5, radialSegments),
+    materials.gilt,
+  );
+  hubBezel.name = 'COMPASS_BOOK_LIVING_WHEEL_HUB_BEZEL';
+  hubBezel.rotation.x = Math.PI / 2;
+  hubBezel.position.y = 0.43;
+  root.add(hubBezel);
+
+  const jewel = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(0.2, quality === 'high' ? 1 : 0),
+    materials.violet,
+  );
+  jewel.name = 'COMPASS_BOOK_LIVING_WHEEL_VIOLET_CABOCHON';
+  jewel.position.y = 0.45;
+  jewel.scale.y = 0.52;
+  jewel.castShadow = true;
+  root.add(jewel);
+
+  return { root, compassRose, jewel };
+}
+
 function createPageBlock(
   materials: BookMaterials,
   quality: CompassBookThreeQuality,
@@ -1398,18 +1557,11 @@ export function createCompassBookThreeModel(
   frontPivot.add(readingCompass.root);
   const readingSignalMarkers = createReadingSignalMarkers(materials, quality);
   frontPivot.add(readingSignalMarkers);
-
-  // A second physical tab rail rides the hinged left page. The canonical DOM
-  // rail still owns accessibility; this exposed rail makes spatial/raycast
-  // navigation genuinely reachable in the wide production spread.
-  const leftPageTabs = quality === 'high'
-    ? createChapterTabs(materials, quality, false)
-    : new THREE.Group();
-  leftPageTabs.name = 'COMPASS_BOOK_LEFT_PAGE_TAB_RAIL';
-  leftPageTabs.position.x = -4.8;
-  leftPageTabs.children.forEach((child) => { child.position.y = -Math.abs(child.position.y); });
-  leftPageTabs.visible = false;
-  frontPivot.add(leftPageTabs);
+  const livingWheel = createLivingWheelRelief(materials, quality);
+  livingWheel.root.position.set(COVER_CENTER_X, -0.48, -0.22);
+  livingWheel.root.rotation.z = Math.PI;
+  livingWheel.root.visible = false;
+  frontPivot.add(livingWheel.root);
 
   const openGlow = new THREE.PointLight(0x8745e3, quality === 'high' ? 5.4 : 3.2, 8, 2);
   openGlow.name = 'COMPASS_BOOK_VIOLET_PAGE_LIGHT';
@@ -1477,6 +1629,7 @@ export function createCompassBookThreeModel(
     'left-reading-page': leftPage,
     'reading-compass': readingCompass.root,
     'reading-signal-markers': readingSignalMarkers,
+    'living-wheel-relief': livingWheel.root,
     'page-turn-socket': pageTurnSocket,
   };
   Object.entries(parts).forEach(([partId, part]) => {
@@ -1517,10 +1670,15 @@ export function createCompassBookThreeModel(
     coverCompass.root.visible = eased < 0.72;
     spineMedallion.root.visible = eased < 0.72;
     clasp.visible = eased < 0.72;
+    // The accessible DOM rail occupies the exposed fore-edge in the open
+    // spread. Keep the physical rail for the closed prop, then hand off to the
+    // DOM rail so Chapter I never shows duplicate tab systems at the gutter.
+    tabs.visible = eased < 0.72;
     const readingPageVisible = eased > 0.43 && selectedPageId === 'reading';
+    const livingWheelVisible = eased > 0.43 && selectedPageId === 'living_wheel';
     readingCompass.root.visible = readingPageVisible;
     readingSignalMarkers.visible = readingPageVisible;
-    leftPageTabs.visible = eased > 0.52;
+    livingWheel.root.visible = livingWheelVisible;
     openGlow.intensity = THREE.MathUtils.lerp(0.08, quality === 'high' ? 5.4 : 3.2, eased);
   }
 
@@ -1540,6 +1698,7 @@ export function createCompassBookThreeModel(
     const readingActive = pageId === 'reading';
     readingCompass.root.visible = openProgress > 0.43 && readingActive;
     readingSignalMarkers.visible = openProgress > 0.43 && readingActive;
+    livingWheel.root.visible = openProgress > 0.43 && pageId === 'living_wheel';
     (coverCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
     (readingCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
   }
@@ -1568,6 +1727,8 @@ export function createCompassBookThreeModel(
     const readingNeedleAngle = reducedMotion ? -0.05 : Math.sin(elapsedSeconds * 0.29 + 0.8) * 0.09;
     coverCompass.needleRoot.rotation.y = coverNeedleAngle;
     readingCompass.needleRoot.rotation.y = readingNeedleAngle;
+    livingWheel.compassRose.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.24 + 0.5) * 0.025;
+    livingWheel.jewel.rotation.y = reducedMotion ? Math.PI / 8 : elapsedSeconds * 0.08;
     spineMedallion.needleRoot.rotation.y = coverNeedleAngle * 0.5;
     bookmark.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.42) * 0.025;
     const pulse = reducedMotion ? 0.14 : 0.12 + (Math.sin(elapsedSeconds * 1.05) + 1) * 0.04;

@@ -36,6 +36,12 @@ function readInitialQuality(): CompassBookThreeQuality {
   return new URLSearchParams(window.location.search).get('quality') === 'low' ? 'low' : 'high';
 }
 
+function readInitialPage() {
+  return new URLSearchParams(window.location.search).get('page') === 'living_wheel'
+    ? 'living_wheel'
+    : 'reading';
+}
+
 function readInitialReducedMotion() {
   const requested = new URLSearchParams(window.location.search).get('reducedMotion');
   if (requested === '1') return true;
@@ -236,6 +242,7 @@ function ReadingSpread({ phoneProof }: { phoneProof: boolean }) {
 export default function CompassBookThreeLab() {
   const phoneProof = useMemo(readPhoneProof, []);
   const orbit = useMemo(readOrbit, []);
+  const activePage = useMemo(readInitialPage, []);
   const mapStrippedReview = useMemo(readMapStrippedReview, []);
   const [pose, setPose] = useState<CompassBookThreePose>(readInitialPose);
   const [quality, setQuality] = useState<CompassBookThreeQuality>(readInitialQuality);
@@ -286,6 +293,7 @@ export default function CompassBookThreeLab() {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 80);
     const model = createCompassBookThreeModel(quality, { includeLettering: true });
+    model.setActivePage(activePage);
     if (mapStrippedReview) stripMaterialMapsForReview(model.root);
     modelRef.current = model;
     (window as CompassBookReviewWindow).__compassBookSculptRuntime = model.root.userData.sculptRuntime;
@@ -399,7 +407,7 @@ export default function CompassBookThreeLab() {
       delete (window as CompassBookReviewWindow).__compassBookSculptRuntime;
       delete canvas.dataset.partManifest;
     };
-  }, [mapStrippedReview, quality]);
+  }, [activePage, mapStrippedReview, quality]);
 
   const modelMetrics = modelRef.current?.metrics;
 
@@ -419,7 +427,13 @@ export default function CompassBookThreeLab() {
         <header className="compass-book-three-lab__workbench">
           <div>
             <span>Compass Book · 3D Lab</span>
-            <strong>{pose === 'closed' ? 'Closed cover' : 'The Reading'}</strong>
+            <strong>
+              {pose === 'closed'
+                ? 'Closed cover'
+                : activePage === 'living_wheel'
+                  ? 'Chapter I relief'
+                  : 'The Reading'}
+            </strong>
           </div>
           <div className="compass-book-three-lab__controls">
             <button type="button" onClick={() => setPose('closed')} aria-pressed={pose === 'closed'}>Cover</button>
@@ -450,7 +464,7 @@ export default function CompassBookThreeLab() {
             <small>Tap the book to begin</small>
           </span>
         </button>
-      ) : (
+      ) : activePage === 'reading' ? (
         <>
           <button
             type="button"
@@ -462,7 +476,7 @@ export default function CompassBookThreeLab() {
           </button>
           <ReadingSpread phoneProof={phoneProof} />
         </>
-      )}
+      ) : null}
 
       {error ? <p className="compass-book-three-lab__fallback" role="status">{error}</p> : null}
       {!phoneProof ? (

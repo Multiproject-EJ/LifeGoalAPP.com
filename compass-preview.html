@@ -4,9 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Compass Preview (dev harness — not shipped)</title>
-    <style>body { margin: 0; background: #0a0f20; font-family: system-ui, sans-serif; }</style>
+    <style>
+      body { margin: 0; background: #0a0f20; font-family: system-ui, sans-serif; }
+      /* The dev harness must remain capturable in short landscape QA windows;
+         the production app keeps its portrait-only phone guard. */
+      @media screen and (orientation: landscape) and (max-height: 540px) {
+        body.compass-preview::before { display: none !important; }
+        body.compass-preview #root { display: block !important; }
+      }
+    </style>
   </head>
-  <body>
+  <body class="compass-preview">
     <div id="root"></div>
     <script type="module" src="/src/scripts/compassPreviewHarness.tsx"></script>
   </body>

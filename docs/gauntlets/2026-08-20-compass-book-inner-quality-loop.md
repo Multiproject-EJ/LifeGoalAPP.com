@@ -8,6 +8,7 @@ ImageGen goal images are art-direction contracts, not product data or UI assets:
 
 - `evidence/compass-book-inner-goals-2026-08-20/01-desktop-reading-goal.png`
 - `evidence/compass-book-inner-goals-2026-08-20/02-phone-chapter-goal.png`
+- `evidence/compass-book-inner-goals-2026-08-20/11-wide-chapter-1-goal.png`
 
 The real DOM remains authoritative for text, answers, progress, controls, focus, and persistence. Generated words or values must never enter canonical Compass data.
 
@@ -57,3 +58,38 @@ Acceptance: no duplicate compass relief around the open spread; phone content re
 - The active canonical page ID is exposed only as a presentation attribute; it does not create another state owner.
 
 Acceptance: no chapter can display a visually impressive but semantically wrong Reading compass. Chapter-specific relief production becomes an explicit later slice rather than hidden prototype debt.
+
+### Loop 4 — Chapter I Living Wheel production relief
+
+- Add a page-bound `living_wheel` relief with eight enamel sectors, independent bump/roughness response, three concentric brass bezels, eight raised dividers and studs, a compass-rose hub, and a faceted violet cabochon.
+- Keep the relief presentation-only. Player labels, answers, scores, progress, controls, focus, and persistence remain canonical DOM/state concerns.
+- Extend the wide hybrid spread only to Chapter I; other chapters stay centered until their own physical relief passes a separate loop.
+- Hide the closed-prop physical tab rail once the DOM rail takes over in the open spread, preventing duplicate navigation systems at the gutter.
+
+Evidence:
+
+- Goal: `evidence/compass-book-inner-goals-2026-08-20/11-wide-chapter-1-goal.png`
+- Render: `evidence/compass-book-inner-goals-2026-08-20/12-loop-chapter-1-relief.png`
+- Comparison: `evidence/compass-book-inner-goals-2026-08-20/13-chapter-1-comparison.png`
+- Orbit right: `evidence/compass-book-inner-goals-2026-08-20/14-chapter-1-orbit-right.png`
+- Orbit left: `evidence/compass-book-inner-goals-2026-08-20/15-chapter-1-orbit-left.png`
+- Map-stripped geometry: `evidence/compass-book-inner-goals-2026-08-20/16-chapter-1-map-stripped.png`
+
+Review action: `continue` for the Chapter I relief component, not `stop` for the whole inner-book programme.
+
+Agent-vision scorecard against the generated achievable goal:
+
+- global fidelity: **0.78**
+- silhouette/proportion: **0.79**
+- component structure: **0.87**
+- form detail: **0.81**
+- material/surface: **0.74**
+- lighting/camera: **0.70**
+- critical eight-sector/bezel/divider system: **0.88**
+- critical compass-rose hub: **0.83** after reducing the backplate/jewel and exposing longer blades
+- critical page attachment and contact shadow: **0.84**
+- critical DOM/3D state ownership separation: **0.98**
+
+The render now reads as a real Chapter I physical relief and clears the 0.70 **agent-vision component** gate. After correcting the capture crop, the deterministic Tier-1 blockout diagnostic passes with silhouette IoU **0.9838**, scale delta **0.0**, aspect-ratio delta **0.0**, and symmetry error **0.025**; the map-stripped lab capture proves the relief is geometry rather than painted detail. The diagnostic still warns that both full-spread images lack isolatable backgrounds, so it is evidence for framing/structure rather than exact material likeness. This component is not a near-reference manual-art match: enamel ornament remains procedural, the generated goal's left-page typography is intentionally omitted, and the current sealed demo legitimately shows canonical summary content rather than the goal image's answer-mode controls. Those are explicit differences, not hidden pass claims.
+
+The orbit pair confirms that rings, sectors, ribs, studs, rose blades, and cabochon retain thickness rather than collapsing into a textured plane. At the normal 1500×1125 high-tier lab viewport the full book held **60 FPS**, **313 render calls**, and **109,572 triangles**; the low tier held **60 FPS**, **134 calls**, and **13,532 triangles**. The inflated 1800×1250 capture briefly produced misleading warm-up readings, so it is not used as performance authority.

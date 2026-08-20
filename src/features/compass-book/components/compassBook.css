@@ -182,10 +182,9 @@
     padding: 22px 24px 34px;
   }
 
-  /* Until each chapter has its own approved physical relief, never leave the
-     Reading compass beside unrelated chapter copy. Those pages retain the
-     complete centered DOM book; Reading alone uses the true hybrid spread. */
-  .compass-book:not([data-page-id='reading']) .compass-book__sheet {
+  /* Only pages with approved physical left-page reliefs use the hybrid spread.
+     Remaining pages stay centered until their own relief loop is complete. */
+  .compass-book:not([data-page-id='reading']):not([data-page-id='living_wheel']) .compass-book__sheet {
     width: min(680px, 82vw);
     margin-left: 0;
     border-radius: 22px;

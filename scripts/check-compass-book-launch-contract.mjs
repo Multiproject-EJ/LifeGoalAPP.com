@@ -4,6 +4,7 @@ const read = (path) => readFileSync(path, 'utf8');
 const screen = read('src/features/compass-book/components/CompassBookScreen.tsx');
 const shell = read('src/features/compass-book/components/CompassBookThreeShell.tsx');
 const model = read('src/features/compass-book/three/CompassBookThreeModel.ts');
+const styles = read('src/features/compass-book/components/compassBook.css');
 const availability = read('src/config/featureAvailability.ts');
 
 const compassEntryStart = availability.indexOf("'app.compass_book':");
@@ -31,6 +32,12 @@ requireText(shell, 'model.getPageTarget', 'Production 3D tabs must route canonic
 requireText(shell, "setStatus('fallback')", 'Production shell must retain a WebGL fallback path.');
 rejectText(shell, '../dev/', 'Production 3D must not depend on developer-lab modules.');
 requireText(model, 'includeLettering ?? false', 'Production 3D lettering must be opt-in and default off.');
+requireText(model, 'createLivingWheelRelief(', 'Chapter I must retain its production Living Wheel relief.');
+requireText(model, "root.userData.compassPageId = 'living_wheel'", 'The Living Wheel relief must map to the canonical Chapter I page ID.');
+requireText(model, "'living-wheel-relief': livingWheel.root", 'The Living Wheel must remain a named runtime part.');
+requireText(model, "selectedPageId === 'living_wheel'", 'The Living Wheel must be visibility-gated by canonical active page.');
+requireText(model, 'tabs.visible = eased < 0.72', 'Open spreads must hand tab navigation from the physical rail to the accessible DOM rail.');
+requireText(styles, ":not([data-page-id='living_wheel'])", 'Chapter I must retain the approved wide hybrid spread.');
 requireText(compassAvailability, "status: 'live'", 'Compass Book must not ship behind a stale coming-soon status.');
 requireText(compassAvailability, "publicAccess: 'open'", 'Compass Book public access must be open.');
 requireText(compassAvailability, "adminAccess: 'open'", 'Compass Book admin access must be open.');
