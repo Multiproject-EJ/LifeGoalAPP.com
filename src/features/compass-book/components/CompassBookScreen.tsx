@@ -1,6 +1,17 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
+import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import './compassBook.css';
+import { lockPageScroll } from '../../../utils/scrollLock';
 import type { CompassBookChapterId } from '../types';
 import { isChapterPage, type CompassBookPageId } from '../logic/reading';
 import { CompassQuestLedger, type CompassQuestLedgerEntry } from './CompassQuestLedger';
@@ -16,6 +27,10 @@ import { CompassBookCoverPlate } from './CompassBookCoverPlate';
 import { CompassReading } from './CompassReading';
 import { CompassChapterScreen } from './CompassChapterScreen';
 import { CompassGuidedFlow } from './CompassGuidedFlow';
+
+const CompassBookThreeShell = lazy(() =>
+  import('./CompassBookThreeShell').then((module) => ({ default: module.CompassBookThreeShell })),
+);
 
 /** True when the player has asked the OS for less motion. */
 function prefersReducedMotion(): boolean {
@@ -116,6 +131,27 @@ export function CompassBookScreen({
     key: 0,
   });
   const turnSeqRef = useRef(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const lastFocusedRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    lastFocusedRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const releaseScroll = lockPageScroll(['body', 'documentElement']);
+    const focusFrame = window.requestAnimationFrame(() => {
+      const closeButton = dialogRef.current?.querySelector<HTMLElement>(
+        '[aria-label="Close Compass Book"]',
+      );
+      (closeButton ?? dialogRef.current)?.focus();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      releaseScroll();
+      lastFocusedRef.current?.focus?.();
+    };
+  }, []);
 
   const openPage = useCallback((pageId: CompassBookPageId) => {
     setView((current) => {
@@ -174,9 +210,27 @@ export function CompassBookScreen({
   // never looks like it left the book.
   const activePageId: CompassBookPageId = view.kind === 'flow' ? view.chapterId : view.pageId;
 
-  return (
-    <div className="compass-book" role="dialog" aria-modal="true" aria-label="Compass Book">
+  return createPortal(
+    <div
+      ref={dialogRef}
+      className="compass-book"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Compass Book"
+      tabIndex={-1}
+    >
       <div className="compass-book__backdrop" aria-hidden="true" onClick={onClose} />
+      <Suspense fallback={null}>
+        <CompassBookThreeShell
+          activePageId={activePageId}
+          open={!coverOpen}
+          turnKey={turn.key}
+          turnMs={turn.ms}
+          showQuestLedger={Boolean(questLedger)}
+          onSelectPage={openPage}
+          onBackgroundClick={onClose}
+        />
+      </Suspense>
       <div className="compass-book__sheet">
         {coverOpen ? <CompassBookCoverPlate onOpened={() => setCoverOpen(false)} /> : null}
         <div className="compass-book__spread">
@@ -283,6 +337,7 @@ export function CompassBookScreen({
           />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

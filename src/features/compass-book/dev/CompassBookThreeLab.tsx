@@ -4,7 +4,7 @@ import {
   createCompassBookThreeModel,
   type CompassBookThreeModel,
   type CompassBookThreeQuality,
-} from './CompassBookThreeModel';
+} from '../three/CompassBookThreeModel';
 import './CompassBookThreeLab.css';
 
 type CompassBookThreePose = 'closed' | 'reading';
@@ -285,7 +285,7 @@ export default function CompassBookThreeLab() {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 80);
-    const model = createCompassBookThreeModel(quality);
+    const model = createCompassBookThreeModel(quality, { includeLettering: true });
     if (mapStrippedReview) stripMaterialMapsForReview(model.root);
     modelRef.current = model;
     (window as CompassBookReviewWindow).__compassBookSculptRuntime = model.root.userData.sculptRuntime;

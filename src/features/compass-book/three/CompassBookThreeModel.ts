@@ -12,9 +12,17 @@ export type CompassBookThreeMetrics = {
 export type CompassBookThreeModel = {
   root: THREE.Group;
   setOpenProgress: (progress: number) => void;
+  setActivePage: (pageId: string) => void;
+  setPageTurnProgress: (progress: number, direction: -1 | 1) => void;
+  getPageTarget: (object: THREE.Object3D | null) => string | null;
   animate: (elapsedSeconds: number, reducedMotion: boolean) => void;
   metrics: CompassBookThreeMetrics;
   dispose: () => void;
+};
+
+export type CompassBookThreeModelOptions = {
+  /** Runtime copy and values stay in the accessible DOM; lettering is lab-only. */
+  includeLettering?: boolean;
 };
 
 type BookMaterials = {
@@ -79,16 +87,16 @@ function createSurfaceTexture(
       let blue = 128;
       if (kind === 'leather-color') {
         const crease = fibre > 0.84 ? -7 : 0;
-        red = 7 + fine * 7 + meso * 5 + macro * 3 + crease;
-        green = 9 + fine * 8 + meso * 6 + macro * 3 + crease;
-        blue = 22 + fine * 12 + meso * 10 + macro * 6 + crease;
+        red = 11 + fine * 8 + meso * 6 + macro * 4 + crease;
+        green = 13 + fine * 9 + meso * 7 + macro * 4 + crease;
+        blue = 31 + fine * 14 + meso * 12 + macro * 7 + crease;
       }
       if (kind === 'gilt-color') {
-        const tarnish = meso > 0.72 ? -22 : 0;
+        const tarnish = meso > 0.72 ? -18 : 0;
         const highlight = fibre > 0.82 ? 16 : 0;
-        red = 178 + fine * 35 + macro * 14 + tarnish + highlight;
-        green = 116 + fine * 28 + macro * 12 + tarnish * 0.72 + highlight;
-        blue = 40 + fine * 18 + macro * 8 + tarnish * 0.34 + highlight * 0.45;
+        red = 195 + fine * 32 + macro * 13 + tarnish + highlight;
+        green = 139 + fine * 27 + macro * 12 + tarnish * 0.72 + highlight;
+        blue = 54 + fine * 18 + macro * 8 + tarnish * 0.34 + highlight * 0.45;
       }
       let value = red;
       if (kind === 'leather-bump') value = 105 + fine * 48 + meso * 22;
@@ -285,7 +293,7 @@ function createMaterials(textures: MaterialTextures): BookMaterials {
       envMapIntensity: 1.3,
     }),
     giltDark: new THREE.MeshStandardMaterial({
-      color: 0x66421f,
+      color: 0x7c5427,
       roughness: 0.42,
       roughnessMap: textures.giltRoughness,
       metalness: 0.76,
@@ -918,11 +926,21 @@ function createPageBlock(
 function createChapterTabs(
   materials: BookMaterials,
   quality: CompassBookThreeQuality,
+  includeLettering: boolean,
 ) {
   const group = new THREE.Group();
   group.name = 'COMPASS_BOOK_CHAPTER_TAB_RAIL';
   const colors = [0x8f765d, 0x693a91, 0x2d5696, 0x285e53, 0x814729, 0x3a326d, 0x395a35];
   const positions = [-2.65, -1.78, -0.91, -0.04, 0.83, 1.7, 2.62];
+  const pageIds = [
+    'living_wheel',
+    'inner_compass',
+    'living_horizon',
+    'ikigai_map',
+    'quest_forge',
+    'personal_playbook',
+    'quest_ledger',
+  ];
   positions.forEach((z, index) => {
     const backing = roundedBox(
       `COMPASS_BOOK_TAB_${index + 1}_GOLD_EDGE`,
@@ -951,11 +969,16 @@ function createChapterTabs(
       quality === 'high' ? 3 : 1,
       material,
     );
+    tab.userData.compassPageId = pageIds[index];
+    tab.userData.baseScaleY = tab.scale.y;
+    material.userData.baseEmissiveIntensity = material.emissiveIntensity;
     tab.position.set(COVER_WIDTH + (index === 6 ? 0.34 : 0.28), 0.61, z);
     group.add(tab);
-    const label = createTabLettering(index === 6 ? 'QUEST' : ['I', 'II', 'III', 'IV', 'V', 'VI'][index], index);
-    label.position.set(COVER_WIDTH + (index === 6 ? 0.38 : 0.32), 0.69, z);
-    group.add(label);
+    if (includeLettering) {
+      const label = createTabLettering(index === 6 ? 'QUEST' : ['I', 'II', 'III', 'IV', 'V', 'VI'][index], index);
+      label.position.set(COVER_WIDTH + (index === 6 ? 0.38 : 0.32), 0.69, z);
+      group.add(label);
+    }
   });
   return group;
 }
@@ -1028,7 +1051,9 @@ function easeInOutCubic(value: number) {
 
 export function createCompassBookThreeModel(
   quality: CompassBookThreeQuality,
+  options: CompassBookThreeModelOptions = {},
 ): CompassBookThreeModel {
+  const includeLettering = options.includeLettering ?? false;
   const textures = createTextures(quality);
   const materials = createMaterials(textures);
   const root = new THREE.Group();
@@ -1129,7 +1154,7 @@ export function createCompassBookThreeModel(
   spineMedallion.root.position.set(-0.39, 0.28, 0.65);
   root.add(spineMedallion.root);
 
-  const tabs = createChapterTabs(materials, quality);
+  const tabs = createChapterTabs(materials, quality, includeLettering);
   root.add(tabs);
 
   const bookmark = createBookmark(materials, quality);
@@ -1208,15 +1233,20 @@ export function createCompassBookThreeModel(
   frontPivot.add(coverFiligree);
 
   const coverCompass = createCompassMechanism(materials, quality, 'COMPASS_BOOK_COVER_COMPASS', 0.86);
+  coverCompass.root.userData.compassPageId = 'reading';
   coverCompass.root.position.set(COVER_CENTER_X, 0.37, 0.68);
   frontPivot.add(coverCompass.root);
 
-  const coverTitleLettering = createCoverTitleLettering();
-  coverTitleLettering.position.set(COVER_CENTER_X, 0.6, -1.76);
-  frontPivot.add(coverTitleLettering);
-  const cardinalLettering = createCoverCardinalLettering();
-  cardinalLettering.position.set(COVER_CENTER_X, 0.68, 0.68);
-  frontPivot.add(cardinalLettering);
+  const coverTitleLettering = includeLettering ? createCoverTitleLettering() : null;
+  if (coverTitleLettering) {
+    coverTitleLettering.position.set(COVER_CENTER_X, 0.6, -1.76);
+    frontPivot.add(coverTitleLettering);
+  }
+  if (includeLettering) {
+    const cardinalLettering = createCoverCardinalLettering();
+    cardinalLettering.position.set(COVER_CENTER_X, 0.68, 0.68);
+    frontPivot.add(cardinalLettering);
+  }
 
   const titleUnderline = roundedBox(
     'COMPASS_BOOK_TITLE_UNDERLINE',
@@ -1323,8 +1353,25 @@ export function createCompassBookThreeModel(
   leftPageBorder.position.x = COVER_CENTER_X;
   frontPivot.add(leftPageBorder);
   const readingCompass = createCompassMechanism(materials, quality, 'COMPASS_BOOK_READING_COMPASS', 0.76);
+  readingCompass.root.userData.compassPageId = 'reading';
   readingCompass.root.position.set(COVER_CENTER_X, -0.48, -0.25);
+  // The left page is the inside face of the hinged cover. Its local +Y becomes
+  // world -Y after the cover rotates 180°, so flip the relief stack once here
+  // to keep rings/needles above the opened parchment instead of under it.
+  readingCompass.root.rotation.z = Math.PI;
   frontPivot.add(readingCompass.root);
+
+  // A second physical tab rail rides the hinged left page. The canonical DOM
+  // rail still owns accessibility; this exposed rail makes spatial/raycast
+  // navigation genuinely reachable in the wide production spread.
+  const leftPageTabs = quality === 'high'
+    ? createChapterTabs(materials, quality, false)
+    : new THREE.Group();
+  leftPageTabs.name = 'COMPASS_BOOK_LEFT_PAGE_TAB_RAIL';
+  leftPageTabs.position.x = -4.8;
+  leftPageTabs.children.forEach((child) => { child.position.y = -Math.abs(child.position.y); });
+  leftPageTabs.visible = false;
+  frontPivot.add(leftPageTabs);
 
   const openGlow = new THREE.PointLight(0x8745e3, quality === 'high' ? 5.4 : 3.2, 8, 2);
   openGlow.name = 'COMPASS_BOOK_VIOLET_PAGE_LIGHT';
@@ -1335,6 +1382,23 @@ export function createCompassBookThreeModel(
   pageTurnSocket.name = 'COMPASS_BOOK_PAGE_TURN_SOCKET';
   pageTurnSocket.position.set(COVER_CENTER_X, 0.7, COVER_DEPTH * 0.38);
   root.add(pageTurnSocket);
+
+  const pageTurnPivot = new THREE.Group();
+  pageTurnPivot.name = 'COMPASS_BOOK_PAGE_TURN_PIVOT';
+  pageTurnPivot.position.set(0.1, 0.74, 0);
+  const pageTurnLeaf = roundedBox(
+    'COMPASS_BOOK_PAGE_TURN_LEAF',
+    COVER_WIDTH - 0.42,
+    0.025,
+    COVER_DEPTH - 0.42,
+    0.11,
+    quality === 'high' ? 3 : 1,
+    materials.paper,
+  );
+  pageTurnLeaf.position.x = COVER_CENTER_X;
+  pageTurnPivot.add(pageTurnLeaf);
+  pageTurnPivot.visible = false;
+  root.add(pageTurnPivot);
 
   const nodes: Record<string, THREE.Object3D> = {};
   root.traverse((child) => {
@@ -1360,7 +1424,7 @@ export function createCompassBookThreeModel(
     'front-panel-field': frontInset,
     'cover-frame': outerFrame,
     'corner-plates': requireNode('COMPASS_BOOK_CORNER_NW'),
-    'title-relief': coverTitleLettering,
+    'title-relief': coverTitleLettering ?? titleUnderline,
     'cover-studs': requireNode('COMPASS_BOOK_COVER_STUD_1'),
     'cover-compass': coverCompass.root,
     'compass-rings': requireNode('COMPASS_BOOK_COVER_COMPASS_BEZEL_1'),
@@ -1408,7 +1472,43 @@ export function createCompassBookThreeModel(
     root.rotation.z = THREE.MathUtils.lerp(-0.03, 0, eased);
     bookmark.position.x = THREE.MathUtils.lerp(COVER_WIDTH * 0.42, 0.22, eased);
     readingCompass.root.visible = eased > 0.43;
+    leftPageTabs.visible = eased > 0.52;
     openGlow.intensity = THREE.MathUtils.lerp(0.08, quality === 'high' ? 5.4 : 3.2, eased);
+  }
+
+  function setActivePage(pageId: string) {
+    root.traverse((node) => {
+      if (!(node instanceof THREE.Mesh) || !node.userData.compassPageId) return;
+      const active = node.userData.compassPageId === pageId;
+      node.scale.y = active ? 1.2 : Number(node.userData.baseScaleY ?? 1);
+      const meshMaterial = Array.isArray(node.material) ? node.material[0] : node.material;
+      if (!(meshMaterial instanceof THREE.MeshStandardMaterial)) return;
+      meshMaterial.emissive.set(active ? 0x5e2aa8 : 0x000000);
+      meshMaterial.emissiveIntensity = active
+        ? 0.62
+        : Number(meshMaterial.userData.baseEmissiveIntensity ?? 0);
+    });
+    const readingActive = pageId === 'reading';
+    (coverCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
+    (readingCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
+  }
+
+  function setPageTurnProgress(progress: number, direction: -1 | 1) {
+    const clamped = THREE.MathUtils.clamp(progress, 0, 1);
+    pageTurnPivot.visible = clamped > 0.001 && clamped < 0.999;
+    pageTurnPivot.rotation.z = direction * Math.PI * clamped;
+    pageTurnLeaf.position.y = Math.sin(Math.PI * clamped) * 0.22;
+  }
+
+  function getPageTarget(object: THREE.Object3D | null) {
+    let current = object;
+    while (current) {
+      if (typeof current.userData.compassPageId === 'string') {
+        return current.userData.compassPageId;
+      }
+      current = current.parent;
+    }
+    return null;
   }
   setOpenProgress(0);
 
@@ -1428,6 +1528,9 @@ export function createCompassBookThreeModel(
   return {
     root,
     setOpenProgress,
+    setActivePage,
+    setPageTurnProgress,
+    getPageTarget,
     animate,
     metrics: countMetrics(root),
     dispose: () => disposeObject(root),
