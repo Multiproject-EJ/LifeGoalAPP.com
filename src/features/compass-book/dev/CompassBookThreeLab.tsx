@@ -38,7 +38,11 @@ function readInitialQuality(): CompassBookThreeQuality {
 
 function readInitialPage() {
   const requestedPage = new URLSearchParams(window.location.search).get('page');
-  if (requestedPage === 'living_wheel' || requestedPage === 'inner_compass') return requestedPage;
+  if (
+    requestedPage === 'living_wheel'
+    || requestedPage === 'inner_compass'
+    || requestedPage === 'living_horizon'
+  ) return requestedPage;
   return 'reading';
 }
 
@@ -91,7 +95,17 @@ function createRuntimePartManifest(root: THREE.Object3D) {
     destructionGroups?: Record<string, unknown>;
   } | undefined;
   if (!runtime?.parts) return null;
-  const parts = Object.entries(runtime.parts).map(([name, object]) => {
+  const partEntries = Object.entries(runtime.parts);
+  Object.values(runtime.parts).forEach((object) => {
+    const nestedRuntime = object.userData.sculptRuntime as {
+      parts?: Record<string, THREE.Object3D>;
+    } | undefined;
+    if (nestedRuntime?.parts) partEntries.push(...Object.entries(nestedRuntime.parts));
+  });
+  const seenPartNames = new Set<string>();
+  const parts = partEntries.flatMap(([name, object]) => {
+    if (seenPartNames.has(name)) return [];
+    seenPartNames.add(name);
     let triangles = 0;
     object.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return;
@@ -99,7 +113,7 @@ function createRuntimePartManifest(root: THREE.Object3D) {
         ? child.geometry.index.count / 3
         : (child.geometry.getAttribute('position')?.count ?? 0) / 3;
     });
-    return { name, kind: 'part', module: object.name, triangles: Math.round(triangles) };
+    return [{ name, kind: 'part', module: object.name, triangles: Math.round(triangles) }];
   });
   let unnamedMeshes = 0;
   let integralMeshes = 0;

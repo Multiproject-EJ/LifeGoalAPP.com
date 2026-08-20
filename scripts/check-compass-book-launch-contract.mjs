@@ -41,6 +41,9 @@ requireText(model, "selectedPageId === 'living_wheel'", 'The Living Wheel must b
 requireText(model, 'createInnerCompassRelief(', 'Chapter II must retain its production Inner Compass relief.');
 requireText(model, "root.userData.compassPageId = 'inner_compass'", 'The Inner Compass relief must map to the canonical Chapter II page ID.');
 requireText(model, "'inner-compass-relief': innerCompass.root", 'The Inner Compass must remain a named runtime part.');
+requireText(model, "'living-horizon-relief': livingHorizon.root", 'The Living Horizon must remain a named runtime part.');
+requireText(model, "root.userData.compassPageId = 'living_horizon'", 'Chapter III must own a page-addressable Living Horizon relief.');
+requireText(model, "selectedPageId === 'living_horizon'", 'Chapter III relief visibility must follow the canonical active page.');
 requireText(model, "selectedPageId === 'inner_compass'", 'The Inner Compass must be visibility-gated by canonical active page.');
 requireText(model, 'tabs.visible = eased < 0.72', 'Open spreads must hand tab navigation from the physical rail to the accessible DOM rail.');
 requireText(styles, ":not([data-page-id='living_wheel'])", 'Chapter I must retain the approved wide hybrid spread.');

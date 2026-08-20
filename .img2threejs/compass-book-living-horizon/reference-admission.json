@@ -1,0 +1,15 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "reference",
+    "sourcePath": ".img2threejs/compass-book-living-horizon/living-horizon-admission-reference-white.png",
+    "width": 2048,
+    "height": 1536,
+    "foregroundCoverage": 0.5,
+    "largestComponentFraction": 1.0,
+    "pHash": 18439144131931464704,
+    "duplicateOfHash": null,
+    "note": "The original goal image was preserved. This admitted derivative adds only a deterministic white review margin so the silhouette gate can isolate the target."
+  }
+}

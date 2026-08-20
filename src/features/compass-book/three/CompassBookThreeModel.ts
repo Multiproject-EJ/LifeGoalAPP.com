@@ -1233,6 +1233,642 @@ function createInnerCompassRelief(
   return { root, compassRose, jewel };
 }
 
+function createLivingHorizonRelief(
+  materials: BookMaterials,
+  quality: CompassBookThreeQuality,
+) {
+  const root = new THREE.Group();
+  root.name = 'COMPASS_BOOK_LIVING_HORIZON_RELIEF';
+  root.userData.compassPageId = 'living_horizon';
+  const high = quality === 'high';
+  const radialSegments = high ? 32 : 16;
+  const curveSegments = high ? 64 : 28;
+
+  const terrainDark = new THREE.MeshStandardMaterial({
+    name: 'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_DARK_MATERIAL',
+    color: 0x34391f,
+    roughness: 0.83,
+    roughnessMap: materials.paper.roughnessMap,
+    bumpMap: materials.paper.bumpMap,
+    bumpScale: high ? 0.024 : 0.012,
+  });
+  const terrainMid = new THREE.MeshStandardMaterial({
+    name: 'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_MID_MATERIAL',
+    color: 0x545a31,
+    roughness: 0.76,
+    roughnessMap: materials.paper.roughnessMap,
+    bumpMap: materials.paper.bumpMap,
+    bumpScale: high ? 0.02 : 0.01,
+  });
+  const terrainLight = new THREE.MeshStandardMaterial({
+    name: 'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_LIGHT_MATERIAL',
+    color: 0x74734a,
+    roughness: 0.72,
+    roughnessMap: materials.paper.roughnessMap,
+    bumpMap: materials.paper.bumpMap,
+    bumpScale: high ? 0.018 : 0.009,
+  });
+  const timber = new THREE.MeshStandardMaterial({
+    name: 'COMPASS_BOOK_LIVING_HORIZON_TIMBER_MATERIAL',
+    color: 0x6b4024,
+    roughness: 0.66,
+    roughnessMap: materials.paper.roughnessMap,
+    bumpMap: materials.paper.bumpMap,
+    bumpScale: high ? 0.014 : 0.007,
+  });
+  const timberDark = new THREE.MeshStandardMaterial({
+    name: 'COMPASS_BOOK_LIVING_HORIZON_TIMBER_DARK_MATERIAL',
+    color: 0x38231a,
+    roughness: 0.76,
+  });
+  const teal = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_LIVING_HORIZON_TEAL_ENAMEL_MATERIAL',
+    color: 0x1c7477,
+    roughness: 0.3,
+    roughnessMap: materials.paper.roughnessMap,
+    bumpMap: materials.paper.bumpMap,
+    bumpScale: high ? 0.009 : 0.004,
+    metalness: 0.08,
+    clearcoat: high ? 0.52 : 0.3,
+    clearcoatRoughness: 0.24,
+  });
+  const water = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_LIVING_HORIZON_WATER_ENAMEL_MATERIAL',
+    color: 0x167e84,
+    emissive: 0x063c43,
+    emissiveIntensity: 0.2,
+    roughness: 0.17,
+    metalness: 0.05,
+    clearcoat: high ? 0.78 : 0.48,
+    clearcoatRoughness: 0.12,
+    envMapIntensity: 1.1,
+  });
+  const violetPath = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_LIVING_HORIZON_VIOLET_PATH_MATERIAL',
+    color: 0x512d73,
+    emissive: 0x25103f,
+    emissiveIntensity: 0.3,
+    roughness: 0.27,
+    roughnessMap: materials.paper.roughnessMap,
+    bumpMap: materials.paper.bumpMap,
+    bumpScale: high ? 0.008 : 0.004,
+    metalness: 0.05,
+    clearcoat: high ? 0.58 : 0.36,
+    clearcoatRoughness: 0.18,
+  });
+  const amber = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_LIVING_HORIZON_AMBER_MATERIAL',
+    color: 0xe37b1f,
+    emissive: 0x8f300b,
+    emissiveIntensity: 0.68,
+    roughness: 0.3,
+    metalness: 0.03,
+    clearcoat: 0.48,
+    clearcoatRoughness: 0.18,
+  });
+
+  const createTerrainPlate = (
+    name: string,
+    points: Array<[number, number]>,
+    height: number,
+    y: number,
+    material: THREE.Material,
+  ) => {
+    const shape = new THREE.Shape();
+    points.forEach(([x, z], index) => {
+      if (index === 0) shape.moveTo(x, -z);
+      else shape.lineTo(x, -z);
+    });
+    shape.closePath();
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth: height,
+      bevelEnabled: true,
+      bevelSegments: high ? 3 : 1,
+      bevelSize: high ? 0.045 : 0.025,
+      bevelThickness: high ? 0.025 : 0.014,
+      curveSegments: high ? 18 : 8,
+      steps: 1,
+    });
+    geometry.rotateX(-Math.PI / 2);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.name = name;
+    mesh.position.y = y;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    return mesh;
+  };
+
+  const addPitchedRoof = (
+    group: THREE.Group,
+    name: string,
+    x: number,
+    y: number,
+    z: number,
+    width: number,
+    depth: number,
+  ) => {
+    const halfWidth = width * 0.58;
+    const left = roundedBox(`${name}_LEFT`, halfWidth, 0.085, depth, 0.025, high ? 2 : 1, teal);
+    const right = roundedBox(`${name}_RIGHT`, halfWidth, 0.085, depth, 0.025, high ? 2 : 1, teal);
+    left.position.set(x - width * 0.22, y, z);
+    right.position.set(x + width * 0.22, y, z);
+    left.rotation.z = -0.46;
+    right.rotation.z = 0.46;
+    group.add(left, right);
+  };
+
+  const contactPlate = roundedBox(
+    'COMPASS_BOOK_LIVING_HORIZON_CONTACT_PLATE',
+    3.82,
+    0.055,
+    5.66,
+    0.16,
+    high ? 4 : 2,
+    materials.leatherEdge,
+  );
+  contactPlate.position.y = 0.025;
+  root.add(contactPlate);
+
+  const outerFrame = createFrame(
+    'COMPASS_BOOK_LIVING_HORIZON_OUTER_FRAME',
+    3.72,
+    5.54,
+    0.095,
+    materials.gilt,
+    quality,
+  );
+  const innerFrame = createFrame(
+    'COMPASS_BOOK_LIVING_HORIZON_INNER_FRAME',
+    3.5,
+    5.3,
+    0.105,
+    materials.giltDark,
+    quality,
+  );
+  root.add(outerFrame, innerFrame);
+  ([[-1.72, -2.63], [1.72, -2.63], [-1.72, 2.63], [1.72, 2.63]] as Array<[number, number]>).forEach(
+    ([x, z], index) => {
+      const medallion = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.14, 0.075, radialSegments),
+        index % 2 === 0 ? materials.gilt : materials.giltDark,
+      );
+      medallion.name = `COMPASS_BOOK_LIVING_HORIZON_FRAME_MEDALLION_${index + 1}`;
+      medallion.position.set(x, 0.145, z);
+      medallion.castShadow = true;
+      root.add(medallion);
+    },
+  );
+
+  const terrainField = new THREE.Group();
+  terrainField.name = 'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_FIELD';
+  terrainField.userData.sculptPartId = 'terrain-field';
+  const horizonTerrain = createTerrainPlate(
+    'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_HORIZON',
+    [[-1.55, -2.35], [-0.75, -2.58], [0.3, -2.48], [1.52, -2.28], [1.62, -1.25], [0.72, -1.08], [-0.28, -1.24], [-1.58, -1.12]],
+    0.1,
+    0.075,
+    terrainDark,
+  );
+  const workshopTerrain = createTerrainPlate(
+    'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_WORKSHOP',
+    [[-1.6, -1.18], [-0.52, -1.34], [0.25, -0.7], [0.08, 0.28], [-0.62, 0.78], [-1.6, 0.55]],
+    0.12,
+    0.105,
+    terrainMid,
+  );
+  const gatheringTerrain = createTerrainPlate(
+    'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_GATHERING',
+    [[0.15, -0.82], [1.52, -1.02], [1.62, 0.72], [0.88, 1.17], [0.02, 0.66]],
+    0.15,
+    0.13,
+    terrainMid,
+  );
+  const sanctuaryTerrain = createTerrainPlate(
+    'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_SANCTUARY',
+    [[-1.56, 0.46], [-0.56, 0.58], [0.34, 1.1], [1.2, 1.52], [1.46, 2.34], [0.48, 2.55], [-0.75, 2.5], [-1.62, 2.1]],
+    0.19,
+    0.155,
+    terrainLight,
+  );
+  terrainField.add(horizonTerrain, workshopTerrain, gatheringTerrain, sanctuaryTerrain);
+  root.add(terrainField);
+
+  const pathPoints: Array<[number, number]> = [
+    [0.42, 2.42], [0.02, 1.78], [-0.12, 1.1], [0.44, 0.48], [0.18, -0.16], [-0.35, -0.78], [0.03, -1.5], [0.03, -2.18],
+  ];
+  const createPathCurve = (offsetX: number, y: number) => new THREE.CatmullRomCurve3(
+    pathPoints.map(([x, z]) => new THREE.Vector3(x + offsetX, y, z)),
+    false,
+    'centripetal',
+  );
+  const vitalPath = new THREE.Group();
+  vitalPath.name = 'COMPASS_BOOK_LIVING_HORIZON_VITAL_PATH';
+  vitalPath.userData.sculptPartId = 'vital-path';
+  const pathCurve = createPathCurve(0, 0.38);
+  const pathCore = new THREE.Mesh(
+    new THREE.TubeGeometry(pathCurve, curveSegments, 0.12, high ? 10 : 6, false),
+    violetPath,
+  );
+  pathCore.name = 'COMPASS_BOOK_LIVING_HORIZON_PATH_CORE';
+  pathCore.castShadow = true;
+  vitalPath.add(pathCore);
+  const pathRails = new THREE.Group();
+  pathRails.name = 'COMPASS_BOOK_LIVING_HORIZON_PATH_RAILS';
+  [-0.145, 0.145].forEach((offset, index) => {
+    const rail = new THREE.Mesh(
+      new THREE.TubeGeometry(createPathCurve(offset, 0.405), curveSegments, 0.031, high ? 8 : 5, false),
+      materials.gilt,
+    );
+    rail.name = `COMPASS_BOOK_LIVING_HORIZON_PATH_RAIL_${index + 1}`;
+    rail.castShadow = true;
+    pathRails.add(rail);
+  });
+  vitalPath.add(pathRails);
+  for (let index = 1; index <= 8; index += 1) {
+    const point = pathCurve.getPointAt(index / 9);
+    const stud = new THREE.Mesh(
+      new THREE.SphereGeometry(0.055, high ? 12 : 7, high ? 8 : 5),
+      index % 3 === 0 ? amber : materials.gilt,
+    );
+    stud.name = `COMPASS_BOOK_LIVING_HORIZON_PATH_MILESTONE_${index}`;
+    stud.position.copy(point);
+    stud.position.y += 0.095;
+    stud.scale.y = 0.55;
+    stud.castShadow = true;
+    vitalPath.add(stud);
+  }
+  root.add(vitalPath);
+
+  const sanctuary = new THREE.Group();
+  sanctuary.name = 'COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_ZONE';
+  sanctuary.userData.sculptPartId = 'sanctuary-zone';
+  const inlet = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.58, 0.63, 0.075, radialSegments),
+    water,
+  );
+  inlet.name = 'COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_INLET';
+  inlet.position.set(-0.82, 0.38, 1.68);
+  inlet.scale.set(1.18, 1, 0.82);
+  sanctuary.add(inlet);
+  const cottage = roundedBox(
+    'COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_COTTAGE',
+    0.72,
+    0.32,
+    0.64,
+    0.08,
+    high ? 3 : 1,
+    timber,
+  );
+  cottage.position.set(-0.92, 0.55, 1.35);
+  sanctuary.add(cottage);
+  addPitchedRoof(sanctuary, 'COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_ROOF', -0.92, 0.78, 1.35, 0.84, 0.76);
+  const cottageGable = new THREE.Mesh(
+    new THREE.CircleGeometry(0.23, 3),
+    materials.giltDark,
+  );
+  cottageGable.name = 'COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_GABLE';
+  cottageGable.rotation.x = -Math.PI / 2;
+  cottageGable.rotation.z = Math.PI / 2;
+  cottageGable.position.set(-0.92, 0.86, 1.64);
+  sanctuary.add(cottageGable);
+  const cottageWindow = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.075, 0.075, 0.045, radialSegments),
+    amber,
+  );
+  cottageWindow.name = 'COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_WINDOW';
+  cottageWindow.position.set(-0.92, 0.91, 1.62);
+  sanctuary.add(cottageWindow);
+  const cottageChimney = roundedBox(
+    'COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_CHIMNEY',
+    0.12,
+    0.31,
+    0.12,
+    0.025,
+    high ? 2 : 1,
+    materials.giltDark,
+  );
+  cottageChimney.position.set(-1.16, 0.86, 1.16);
+  sanctuary.add(cottageChimney);
+  const doorway = roundedBox(
+    'COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_DOORWAY',
+    0.18,
+    0.08,
+    0.24,
+    0.035,
+    high ? 2 : 1,
+    amber,
+  );
+  doorway.position.set(-0.72, 0.755, 1.58);
+  sanctuary.add(doorway);
+  for (let index = 0; index < 3; index += 1) {
+    const plank = roundedBox(
+      `COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_JETTY_${index + 1}`,
+      0.12,
+      0.07,
+      0.66,
+      0.02,
+      1,
+      timberDark,
+    );
+    plank.position.set(-0.61 + index * 0.13, 0.51, 1.85);
+    plank.rotation.y = -0.14;
+    sanctuary.add(plank);
+  }
+  root.add(sanctuary);
+
+  const workshop = new THREE.Group();
+  workshop.name = 'COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_ZONE';
+  workshop.userData.sculptPartId = 'workshop-zone';
+  const workshopBody = roundedBox(
+    'COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_BODY',
+    0.86,
+    0.34,
+    0.72,
+    0.09,
+    high ? 3 : 1,
+    timber,
+  );
+  workshopBody.position.set(-0.9, 0.48, -0.18);
+  workshop.add(workshopBody);
+  const workshopAnnex = roundedBox(
+    'COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_ANNEX',
+    0.48,
+    0.25,
+    0.52,
+    0.07,
+    high ? 2 : 1,
+    timberDark,
+  );
+  workshopAnnex.position.set(-0.42, 0.43, 0.02);
+  workshop.add(workshopAnnex);
+  addPitchedRoof(workshop, 'COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_ROOF', -0.9, 0.72, -0.18, 0.98, 0.82);
+  addPitchedRoof(workshop, 'COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_ANNEX_ROOF', -0.42, 0.61, 0.02, 0.56, 0.6);
+  const workshopWindow = roundedBox(
+    'COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_WINDOW',
+    0.24,
+    0.075,
+    0.16,
+    0.03,
+    high ? 2 : 1,
+    amber,
+  );
+  workshopWindow.position.set(-0.84, 0.85, 0.15);
+  workshop.add(workshopWindow);
+  for (let index = 0; index < 3; index += 1) {
+    const step = roundedBox(
+      `COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_STEP_${index + 1}`,
+      0.44 - index * 0.08,
+      0.055,
+      0.12,
+      0.02,
+      1,
+      index === 0 ? materials.giltDark : timberDark,
+    );
+    step.position.set(-0.78, 0.67 + index * 0.045, 0.25 + index * 0.09);
+    workshop.add(step);
+  }
+  const chimney = roundedBox(
+    'COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_CHIMNEY',
+    0.16,
+    0.38,
+    0.16,
+    0.03,
+    high ? 2 : 1,
+    materials.giltDark,
+  );
+  chimney.position.set(-1.18, 0.79, -0.32);
+  workshop.add(chimney);
+  const gear = new THREE.Mesh(
+    new THREE.TorusGeometry(0.17, 0.045, high ? 8 : 5, high ? 24 : 12),
+    materials.gilt,
+  );
+  gear.name = 'COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_GEAR';
+  gear.rotation.x = Math.PI / 2;
+  gear.position.set(-0.73, 0.84, 0.05);
+  workshop.add(gear);
+  root.add(workshop);
+
+  const gathering = new THREE.Group();
+  gathering.name = 'COMPASS_BOOK_LIVING_HORIZON_GATHERING_ZONE';
+  gathering.userData.sculptPartId = 'gathering-zone';
+  const arenaFloor = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.67, 0.73, 0.13, radialSegments),
+    terrainLight,
+  );
+  arenaFloor.name = 'COMPASS_BOOK_LIVING_HORIZON_GATHERING_FLOOR';
+  arenaFloor.position.set(0.91, 0.43, 0.3);
+  gathering.add(arenaFloor);
+  const arenaRing = new THREE.Mesh(
+    new THREE.TorusGeometry(0.56, 0.07, high ? 9 : 5, radialSegments),
+    materials.giltDark,
+  );
+  arenaRing.name = 'COMPASS_BOOK_LIVING_HORIZON_GATHERING_RING';
+  arenaRing.rotation.x = Math.PI / 2;
+  arenaRing.position.set(0.91, 0.54, 0.3);
+  gathering.add(arenaRing);
+  for (let index = 0; index < 6; index += 1) {
+    const seat = new THREE.Mesh(
+      new THREE.TorusGeometry(0.47, 0.055, high ? 8 : 5, high ? 10 : 6, Math.PI / 5),
+      index % 2 === 0 ? materials.gilt : materials.giltDark,
+    );
+    seat.name = `COMPASS_BOOK_LIVING_HORIZON_GATHERING_SEAT_${index + 1}`;
+    seat.rotation.x = Math.PI / 2;
+    seat.rotation.z = index * (Math.PI / 3) + 0.12;
+    seat.position.set(0.91, 0.6, 0.3);
+    gathering.add(seat);
+  }
+  const hearth = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(0.17, high ? 1 : 0),
+    amber,
+  );
+  hearth.name = 'COMPASS_BOOK_LIVING_HORIZON_GATHERING_HEARTH';
+  hearth.position.set(0.91, 0.69, 0.3);
+  hearth.scale.y = 0.58;
+  hearth.castShadow = true;
+  gathering.add(hearth);
+  root.add(gathering);
+
+  const horizon = new THREE.Group();
+  horizon.name = 'COMPASS_BOOK_LIVING_HORIZON_GATE_SYSTEM';
+  horizon.userData.sculptPartId = 'horizon-system';
+  const rayFan = new THREE.Group();
+  rayFan.name = 'COMPASS_BOOK_LIVING_HORIZON_RAY_FAN';
+  rayFan.position.set(0, 0.37, -2.31);
+  for (let index = 0; index < 9; index += 1) {
+    const angle = -1.08 + index * 0.27;
+    const ray = roundedBox(
+      `COMPASS_BOOK_LIVING_HORIZON_SUN_RAY_${index + 1}`,
+      0.038,
+      0.045,
+      index % 2 === 0 ? 0.58 : 0.45,
+      0.012,
+      1,
+      materials.giltDark,
+    );
+    ray.position.set(Math.sin(angle) * 0.34, 0, Math.cos(angle) * 0.34);
+    ray.rotation.y = angle;
+    rayFan.add(ray);
+  }
+  horizon.add(rayFan);
+  const sun = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.34, 0.37, 0.11, radialSegments),
+    amber,
+  );
+  sun.name = 'COMPASS_BOOK_LIVING_HORIZON_SUN';
+  sun.position.set(0, 0.47, -2.31);
+  sun.castShadow = true;
+  horizon.add(sun);
+  [-0.4, 0.4].forEach((x, index) => {
+    const post = roundedBox(
+      `COMPASS_BOOK_LIVING_HORIZON_GATE_POST_${index + 1}`,
+      0.13,
+      0.28,
+      0.92,
+      0.035,
+      high ? 2 : 1,
+      materials.gilt,
+    );
+    post.position.set(x, 0.51, -1.87);
+    horizon.add(post);
+    const finial = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.13, high ? 1 : 0),
+      materials.gilt,
+    );
+    finial.name = `COMPASS_BOOK_LIVING_HORIZON_GATE_FINIAL_${index + 1}`;
+    finial.position.set(x, 0.7, -2.34);
+    finial.scale.y = 0.62;
+    horizon.add(finial);
+  });
+  const createGateLeaf = (side: -1 | 1) => {
+    const leaf = new THREE.Group();
+    leaf.name = `COMPASS_BOOK_LIVING_HORIZON_GATE_LEAF_${side < 0 ? 'LEFT' : 'RIGHT'}`;
+    leaf.position.set(side * 0.38, 0.55, -1.87);
+    leaf.rotation.y = side * -0.7;
+    for (let index = 0; index < 3; index += 1) {
+      const bar = roundedBox(
+        `${leaf.name}_BAR_${index + 1}`,
+        0.045,
+        0.07,
+        0.66,
+        0.012,
+        1,
+        materials.gilt,
+      );
+      bar.position.x = side * (0.08 + index * 0.13);
+      leaf.add(bar);
+    }
+    [-0.25, 0.02, 0.29].forEach((z, index) => {
+      const brace = roundedBox(
+        `${leaf.name}_BRACE_${index + 1}`,
+        0.43,
+        0.065,
+        0.045,
+        0.012,
+        1,
+        index === 1 ? materials.gilt : materials.giltDark,
+      );
+      brace.position.z = z;
+      leaf.add(brace);
+    });
+    horizon.add(leaf);
+    return leaf;
+  };
+  const gateLeft = createGateLeaf(-1);
+  const gateRight = createGateLeaf(1);
+  root.add(horizon);
+
+  const clusterPlacements: Array<[number, number, number]> = [
+    [-1.36, -1.62, 0.68], [-1.43, 0.72, 0.62], [1.33, -1.33, 0.6],
+    [1.42, 1.1, 0.68], [-0.15, 2.1, 0.64], [0.92, -1.58, 0.58],
+  ];
+  clusterPlacements.forEach(([x, z, scale], index) => {
+    const cluster = new THREE.Group();
+    cluster.name = `COMPASS_BOOK_LIVING_HORIZON_TERRAIN_CLUSTER_${index + 1}`;
+    cluster.position.set(x, 0.38, z);
+    const tree = new THREE.Mesh(
+      new THREE.ConeGeometry(0.12 * scale, 0.42 * scale, high ? 8 : 5),
+      index % 2 === 0 ? terrainDark : terrainMid,
+    );
+    tree.name = `${cluster.name}_TREE`;
+    tree.position.y = 0.18 * scale;
+    tree.castShadow = true;
+    const rock = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(0.11 * scale, 0),
+      terrainLight,
+    );
+    rock.name = `${cluster.name}_ROCK`;
+    rock.position.set(0.14 * scale, 0.02, 0.1 * scale);
+    rock.scale.y = 0.58;
+    cluster.add(tree, rock);
+    terrainField.add(cluster);
+  });
+
+  const reliefNodes: Record<string, THREE.Object3D> = {};
+  root.traverse((node) => {
+    if (node.name) reliefNodes[node.name] = node;
+  });
+  const requireReliefNode = (name: string) => {
+    const node = reliefNodes[name];
+    if (!node) throw new Error(`[compass-book-three-model] Missing Living Horizon part ${name}`);
+    return node;
+  };
+  const reliefParts: Record<string, THREE.Object3D> = {
+    root,
+    'contact-frame': outerFrame,
+    'terrain-field': terrainField,
+    'vital-path': vitalPath,
+    'sanctuary-zone': sanctuary,
+    'workshop-zone': workshop,
+    'gathering-zone': gathering,
+    'horizon-system': horizon,
+    'terrain-lower': sanctuaryTerrain,
+    'terrain-middle-left': workshopTerrain,
+    'terrain-middle-right': gatheringTerrain,
+    'terrain-horizon': horizonTerrain,
+    'path-core': pathCore,
+    'path-rails': pathRails,
+    'sanctuary-inlet': inlet,
+    'sanctuary-cottage-body': cottage,
+    'sanctuary-cottage-roof': requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_ROOF_LEFT'),
+    'sanctuary-jetty': requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_JETTY_1'),
+    'workshop-body': workshopBody,
+    'workshop-roofs': requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_ROOF_LEFT'),
+    'workshop-gear': gear,
+    'gathering-floor': arenaFloor,
+    'gathering-seats': arenaRing,
+    'gathering-hearth': hearth,
+    'gate-posts': requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_GATE_POST_1'),
+    'gate-leaves': gateLeft,
+    'horizon-sun': sun,
+    'horizon-rays': rayFan,
+  };
+  Object.entries(reliefParts).forEach(([partId, part]) => {
+    part.userData.sculptPartId = partId;
+  });
+  root.userData.sculptRuntime = {
+    nodes: reliefNodes,
+    parts: reliefParts,
+    sockets: {
+      pathOrigin: vitalPath,
+      sanctuary: sanctuary,
+      workshop,
+      gathering,
+      horizon,
+    },
+    colliders: {
+      relief: { type: 'box', center: [0, 0.25, 0], size: [3.82, 0.7, 5.66] },
+    },
+    destructionGroups: {
+      landscape: [terrainField, vitalPath],
+      lifeZones: [sanctuary, workshop, gathering],
+      horizon: [horizon],
+    },
+    presentationOnly: true,
+  };
+
+  return { root, violetPath, amber, rayFan, sun, hearth, gateLeft, gateRight };
+}
+
 function createPageBlock(
   materials: BookMaterials,
   quality: CompassBookThreeQuality,
@@ -1718,6 +2354,11 @@ export function createCompassBookThreeModel(
   innerCompass.root.rotation.z = Math.PI;
   innerCompass.root.visible = false;
   frontPivot.add(innerCompass.root);
+  const livingHorizon = createLivingHorizonRelief(materials, quality);
+  livingHorizon.root.position.set(COVER_CENTER_X, -0.48, -0.22);
+  livingHorizon.root.rotation.z = Math.PI;
+  livingHorizon.root.visible = false;
+  frontPivot.add(livingHorizon.root);
 
   const openGlow = new THREE.PointLight(0x8745e3, quality === 'high' ? 5.4 : 3.2, 8, 2);
   openGlow.name = 'COMPASS_BOOK_VIOLET_PAGE_LIGHT';
@@ -1787,6 +2428,7 @@ export function createCompassBookThreeModel(
     'reading-signal-markers': readingSignalMarkers,
     'living-wheel-relief': livingWheel.root,
     'inner-compass-relief': innerCompass.root,
+    'living-horizon-relief': livingHorizon.root,
     'page-turn-socket': pageTurnSocket,
   };
   Object.entries(parts).forEach(([partId, part]) => {
@@ -1834,10 +2476,12 @@ export function createCompassBookThreeModel(
     const readingPageVisible = eased > 0.43 && selectedPageId === 'reading';
     const livingWheelVisible = eased > 0.43 && selectedPageId === 'living_wheel';
     const innerCompassVisible = eased > 0.43 && selectedPageId === 'inner_compass';
+    const livingHorizonVisible = eased > 0.43 && selectedPageId === 'living_horizon';
     readingCompass.root.visible = readingPageVisible;
     readingSignalMarkers.visible = readingPageVisible;
     livingWheel.root.visible = livingWheelVisible;
     innerCompass.root.visible = innerCompassVisible;
+    livingHorizon.root.visible = livingHorizonVisible;
     openGlow.intensity = THREE.MathUtils.lerp(0.08, quality === 'high' ? 5.4 : 3.2, eased);
   }
 
@@ -1859,6 +2503,7 @@ export function createCompassBookThreeModel(
     readingSignalMarkers.visible = openProgress > 0.43 && readingActive;
     livingWheel.root.visible = openProgress > 0.43 && pageId === 'living_wheel';
     innerCompass.root.visible = openProgress > 0.43 && pageId === 'inner_compass';
+    livingHorizon.root.visible = openProgress > 0.43 && pageId === 'living_horizon';
     (coverCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
     (readingCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
   }
@@ -1890,6 +2535,19 @@ export function createCompassBookThreeModel(
     livingWheel.compassRose.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.24 + 0.5) * 0.025;
     livingWheel.jewel.rotation.y = reducedMotion ? Math.PI / 8 : elapsedSeconds * 0.08;
     innerCompass.jewel.rotation.y = reducedMotion ? Math.PI / 8 : elapsedSeconds * 0.08;
+    livingHorizon.rayFan.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.16) * 0.025;
+    livingHorizon.sun.scale.setScalar(
+      reducedMotion ? 1 : 1 + (Math.sin(elapsedSeconds * 0.82) + 1) * 0.025,
+    );
+    livingHorizon.hearth.rotation.y = reducedMotion ? 0 : elapsedSeconds * 0.14;
+    livingHorizon.gateLeft.rotation.y = 0.7 + (reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.22) * 0.018);
+    livingHorizon.gateRight.rotation.y = -0.7 - (reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.22) * 0.018);
+    livingHorizon.violetPath.emissiveIntensity = reducedMotion
+      ? 0.3
+      : 0.25 + (Math.sin(elapsedSeconds * 0.9) + 1) * 0.08;
+    livingHorizon.amber.emissiveIntensity = reducedMotion
+      ? 0.68
+      : 0.58 + (Math.sin(elapsedSeconds * 0.76 + 0.4) + 1) * 0.1;
     spineMedallion.needleRoot.rotation.y = coverNeedleAngle * 0.5;
     bookmark.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.42) * 0.025;
     const pulse = reducedMotion ? 0.14 : 0.12 + (Math.sin(elapsedSeconds * 1.05) + 1) * 0.04;

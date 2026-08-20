@@ -130,3 +130,44 @@ Agent-vision scorecard against the achievable generated goal:
 The deterministic Tier-1 blockout diagnostic passes with silhouette IoU **0.9766**, scale delta **0.0**, aspect-ratio delta **0.0**, and symmetry error **0.0366**. As in Loop 4, the diagnostic warns that the full-spread images are not isolated masks, so these numbers support framing and bilateral structure rather than exact material likeness. The generated goal uses a tighter illustrated book composition; production intentionally retains the existing functional hybrid shell and scrollable canonical DOM page. No generated text or invented answer entered product data.
 
 At the 1200×900 high-tier orbit viewport the full book held **60 FPS**, **285 render calls**, **102,100 rendered triangles**, and **467 meshes**. Both orbit views keep the rings, blades, tip bezels, signal stones, intercardinals, and central cabochon volumetric. The map-stripped capture preserves the complete direction system, proving it is procedural geometry rather than baked image detail.
+
+### Loop 6 — Chapter III Living Horizon production relief
+
+- Add a page-bound `living_horizon` landscape relief with four layered terrain solids, one uninterrupted violet-and-gilt S-path, sanctuary cottage and inlet, workshop and gear medallion, gathering arena and hearth, and an open horizon gate with a separate sun and ray fan.
+- Keep the five canonical zones visually distinct: Sanctuary, Workshop, Gathering Place, Vital Path, and Open Gate.
+- Expose the zones, path, gate, sun, rays, and hearth as named presentation parts/animation anchors for later Island Run completion ceremonies.
+- Keep all words, player values, answers, progress, controls, focus, and persistence in the canonical DOM/state layer.
+- Extend the approved wide hybrid spread to Chapter III only; later chapters remain centered until their own relief passes a separate loop.
+
+Evidence:
+
+- ImageGen goal: `evidence/compass-book-inner-goals-2026-08-20/24-wide-chapter-3-goal.png`
+- Pass 1 render: `evidence/compass-book-inner-goals-2026-08-20/25-loop-chapter-3-relief-pass-1.png`
+- Pass 1 comparison: `evidence/compass-book-inner-goals-2026-08-20/26-chapter-3-comparison-pass-1.png`
+- Production pass 2: `evidence/compass-book-inner-goals-2026-08-20/27-loop-chapter-3-relief-pass-2.png`
+- Goal/render comparison: `evidence/compass-book-inner-goals-2026-08-20/28-chapter-3-comparison-pass-2.png`
+- Orbit right: `evidence/compass-book-inner-goals-2026-08-20/29-chapter-3-orbit-right.png`
+- Orbit left: `evidence/compass-book-inner-goals-2026-08-20/30-chapter-3-orbit-left.png`
+- Map-stripped geometry: `evidence/compass-book-inner-goals-2026-08-20/31-chapter-3-map-stripped.png`
+
+Review action: `continue` for the inner-book programme; the Chapter III semantic and structural component gates pass after two visual correction passes.
+
+Agent-vision scorecard against the achievable generated goal:
+
+- global fidelity: **0.80**
+- silhouette/proportion: **0.84**
+- component structure: **0.83**
+- form detail: **0.74**
+- material/surface: **0.76**
+- lighting/camera: **0.78**
+- critical continuous vital path: **0.92**
+- critical five-zone readability: **0.84**
+- critical open gate, sun, and ray fan: **0.86** after separating the sun and widening the leaves
+- critical page attachment and contact depth: **0.94**
+- important material-family separation: **0.78**
+
+Pass 1 proved the architecture but exposed two identity defects: the sanctuary read too much like a teal block/book, and the sun was crowded by the gate/path terminus. Pass 2 adds a cottage gable, lit window and chimney; a workshop facade, window and steps; and a wider gate with the sun moved into a clear horizon position. The remaining difference from the ImageGen ceiling is explicit production density: fewer trees, rocks, masonry units, clouds, and patina layers. The semantic spine and color hierarchy are preserved.
+
+The deterministic Tier-1 diagnostic passes with silhouette IoU **0.9699**, scale delta **0.0**, aspect-ratio delta **0.0**, and symmetry error **0.0271**. As with the earlier chapters, the full-spread background mask makes these framing signals advisory rather than an exact material-likeness score. Two axial orbits and the map-stripped render preserve terrace height, building volumes, path rails, ring depth, gate solids, and parchment contact. Part coverage finds zero errors, zero warnings, and zero unnamed meshes across the 27 specified selectable components.
+
+The constrained-device low tier held **60 FPS**, **193 render calls**, and **18.8k rendered triangles** in the lab. High-tier browser capture varied between **24 and 49 FPS** at **412 calls** and **131.5k rendered triangles**; the original aspirational 50 FPS high-tier target is therefore not claimed as proven. Production already auto-selects low tier on narrow or constrained devices, and the high-tier optimization gap remains explicit rather than hidden.

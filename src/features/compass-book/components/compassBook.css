@@ -329,7 +329,7 @@
 
   /* Only pages with approved physical left-page reliefs use the hybrid spread.
      Remaining pages stay centered until their own relief loop is complete. */
-  .compass-book:not([data-page-id='reading']):not([data-page-id='living_wheel']):not([data-page-id='inner_compass']) .compass-book__sheet {
+  .compass-book:not([data-page-id='reading']):not([data-page-id='living_wheel']):not([data-page-id='inner_compass']):not([data-page-id='living_horizon']) .compass-book__sheet {
     width: min(680px, 82vw);
     margin-left: 0;
     border-radius: 22px;
