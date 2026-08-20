@@ -171,3 +171,36 @@ Pass 1 proved the architecture but exposed two identity defects: the sanctuary r
 The deterministic Tier-1 diagnostic passes with silhouette IoU **0.9699**, scale delta **0.0**, aspect-ratio delta **0.0**, and symmetry error **0.0271**. As with the earlier chapters, the full-spread background mask makes these framing signals advisory rather than an exact material-likeness score. Two axial orbits and the map-stripped render preserve terrace height, building volumes, path rails, ring depth, gate solids, and parchment contact. Part coverage finds zero errors, zero warnings, and zero unnamed meshes across the 27 specified selectable components.
 
 The constrained-device low tier held **60 FPS**, **193 render calls**, and **18.8k rendered triangles** in the lab. High-tier browser capture varied between **24 and 49 FPS** at **412 calls** and **131.5k rendered triangles**; the original aspirational 50 FPS high-tier target is therefore not claimed as proven. Production already auto-selects low tier on narrow or constrained devices, and the high-tier optimization gap remains explicit rather than hidden.
+
+### Loop 7 — Chapter III GPU workload refinement (2026-08-21)
+
+- Replace repeated frame medallions, path milestones, gathering seats, sun rays, terrain trees, and rocks with shared `InstancedMesh` geometry while retaining their named semantic parent systems.
+- Reduce only excess high-tier curve/radial/bevel tessellation; keep the low-tier silhouette and triangle budget unchanged.
+- Limit the directional-light shadow pass to the macro terrain, path, building, arena, sun, and gate-post forms that communicate relief depth. Every relief solid still receives shadows.
+- Preserve the five zones, uninterrupted violet-and-gilt path, cottage/workshop/arena identities, open gate, separate sun and rays, named animation anchors, DOM ownership, and presentation-only runtime contract.
+
+Evidence:
+
+- High-tier baseline: `evidence/compass-book-inner-goals-2026-08-20/32-chapter-3-high-baseline.png`
+- Instancing pass: `evidence/compass-book-inner-goals-2026-08-20/33-chapter-3-high-optimized-pass-1.png`
+- Final high-tier render: `evidence/compass-book-inner-goals-2026-08-20/34-chapter-3-high-optimized-pass-2.png`
+- Final low-tier render: `evidence/compass-book-inner-goals-2026-08-20/35-chapter-3-low-optimized.png`
+- Baseline/final comparison: `evidence/compass-book-inner-goals-2026-08-20/36-chapter-3-performance-comparison.png`
+- Optimized orbit right: `evidence/compass-book-inner-goals-2026-08-20/37-chapter-3-optimized-orbit-right.png`
+- Optimized orbit left: `evidence/compass-book-inner-goals-2026-08-20/38-chapter-3-optimized-orbit-left.png`
+
+Review action: `continue` for the inner-book programme. This is a `refine-code` performance correction against a sound sculpt specification; it does not change the approved Chapter III direction.
+
+Agent-vision preservation scorecard against the pre-optimization production render:
+
+- global visual parity: **0.98**
+- silhouette/proportion parity: **0.99**
+- critical five-zone readability: **1.00**
+- critical continuous path and milestone placement: **1.00**
+- critical gate, sun, and radial-ray system: **1.00**
+- important terrace/building contact depth: **0.97** after narrowing the shadow-caster set
+- off-axis volumetric readability: **0.98** across both optimized orbit views
+
+The deterministic workload delta is the acceptance authority for this pass. At the same high-tier lab view, the full book falls from **412 to 324 render calls** (−21.4%), **131.5k to 114.6k rendered triangles** (−12.9%), and **565 to 536 meshes**. Low tier falls from **193 to 164 calls** while remaining at **18.8k rendered triangles**. Browser FPS remains scheduling-sensitive and is not promoted to physical-device proof; the supported-iPhone high-tier ≥50 FPS gate remains open until tested on hardware.
+
+The refreshed runtime manifest still contains 60 book parts and covers all **27 specified Living Horizon components with zero errors and zero warnings**. Strict sculpt validation passes with the pre-existing `actionProfile` advisories; the live runtime continues to expose the independent sun, ray fan, gate leaves, hearth, violet path, and amber material anchors needed by later Island Run ceremonies. TypeScript, Compass Book assertions, the launch contract, and the production Vite build all pass; existing repository chunk-size/dynamic-import warnings remain unrelated.

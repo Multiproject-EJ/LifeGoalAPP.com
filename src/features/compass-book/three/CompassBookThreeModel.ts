@@ -1241,8 +1241,8 @@ function createLivingHorizonRelief(
   root.name = 'COMPASS_BOOK_LIVING_HORIZON_RELIEF';
   root.userData.compassPageId = 'living_horizon';
   const high = quality === 'high';
-  const radialSegments = high ? 32 : 16;
-  const curveSegments = high ? 64 : 28;
+  const radialSegments = high ? 24 : 16;
+  const curveSegments = high ? 48 : 28;
 
   const terrainDark = new THREE.MeshStandardMaterial({
     name: 'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_DARK_MATERIAL',
@@ -1343,10 +1343,10 @@ function createLivingHorizonRelief(
     const geometry = new THREE.ExtrudeGeometry(shape, {
       depth: height,
       bevelEnabled: true,
-      bevelSegments: high ? 3 : 1,
+      bevelSegments: high ? 2 : 1,
       bevelSize: high ? 0.045 : 0.025,
       bevelThickness: high ? 0.025 : 0.014,
-      curveSegments: high ? 18 : 8,
+      curveSegments: high ? 12 : 8,
       steps: 1,
     });
     geometry.rotateX(-Math.PI / 2);
@@ -1406,18 +1406,21 @@ function createLivingHorizonRelief(
     quality,
   );
   root.add(outerFrame, innerFrame);
+  const medallionGeometry = new THREE.CylinderGeometry(0.12, 0.14, 0.075, radialSegments);
+  const medallionLight = new THREE.InstancedMesh(medallionGeometry, materials.gilt, 2);
+  medallionLight.name = 'COMPASS_BOOK_LIVING_HORIZON_FRAME_MEDALLIONS_LIGHT';
+  const medallionDark = new THREE.InstancedMesh(medallionGeometry, materials.giltDark, 2);
+  medallionDark.name = 'COMPASS_BOOK_LIVING_HORIZON_FRAME_MEDALLIONS_DARK';
+  const medallionMatrix = new THREE.Matrix4();
   ([[-1.72, -2.63], [1.72, -2.63], [-1.72, 2.63], [1.72, 2.63]] as Array<[number, number]>).forEach(
     ([x, z], index) => {
-      const medallion = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.12, 0.14, 0.075, radialSegments),
-        index % 2 === 0 ? materials.gilt : materials.giltDark,
-      );
-      medallion.name = `COMPASS_BOOK_LIVING_HORIZON_FRAME_MEDALLION_${index + 1}`;
-      medallion.position.set(x, 0.145, z);
-      medallion.castShadow = true;
-      root.add(medallion);
+      medallionMatrix.makeTranslation(x, 0.145, z);
+      (index % 2 === 0 ? medallionLight : medallionDark).setMatrixAt(Math.floor(index / 2), medallionMatrix);
     },
   );
+  medallionLight.instanceMatrix.needsUpdate = true;
+  medallionDark.instanceMatrix.needsUpdate = true;
+  root.add(medallionLight, medallionDark);
 
   const terrainField = new THREE.Group();
   terrainField.name = 'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_FIELD';
@@ -1466,7 +1469,7 @@ function createLivingHorizonRelief(
   vitalPath.userData.sculptPartId = 'vital-path';
   const pathCurve = createPathCurve(0, 0.38);
   const pathCore = new THREE.Mesh(
-    new THREE.TubeGeometry(pathCurve, curveSegments, 0.12, high ? 10 : 6, false),
+    new THREE.TubeGeometry(pathCurve, curveSegments, 0.12, high ? 8 : 6, false),
     violetPath,
   );
   pathCore.name = 'COMPASS_BOOK_LIVING_HORIZON_PATH_CORE';
@@ -1476,7 +1479,7 @@ function createLivingHorizonRelief(
   pathRails.name = 'COMPASS_BOOK_LIVING_HORIZON_PATH_RAILS';
   [-0.145, 0.145].forEach((offset, index) => {
     const rail = new THREE.Mesh(
-      new THREE.TubeGeometry(createPathCurve(offset, 0.405), curveSegments, 0.031, high ? 8 : 5, false),
+      new THREE.TubeGeometry(createPathCurve(offset, 0.405), curveSegments, 0.031, high ? 6 : 5, false),
       materials.gilt,
     );
     rail.name = `COMPASS_BOOK_LIVING_HORIZON_PATH_RAIL_${index + 1}`;
@@ -1484,19 +1487,31 @@ function createLivingHorizonRelief(
     pathRails.add(rail);
   });
   vitalPath.add(pathRails);
+  const milestoneGeometry = new THREE.SphereGeometry(0.055, high ? 10 : 7, high ? 7 : 5);
+  const milestoneGilt = new THREE.InstancedMesh(milestoneGeometry, materials.gilt, 6);
+  milestoneGilt.name = 'COMPASS_BOOK_LIVING_HORIZON_PATH_MILESTONES_GILT';
+  const milestoneAmber = new THREE.InstancedMesh(milestoneGeometry, amber, 2);
+  milestoneAmber.name = 'COMPASS_BOOK_LIVING_HORIZON_PATH_MILESTONES_AMBER';
+  const milestoneMatrix = new THREE.Matrix4();
+  const milestoneQuaternion = new THREE.Quaternion();
+  const milestoneScale = new THREE.Vector3(1, 0.55, 1);
+  let giltMilestoneIndex = 0;
+  let amberMilestoneIndex = 0;
   for (let index = 1; index <= 8; index += 1) {
     const point = pathCurve.getPointAt(index / 9);
-    const stud = new THREE.Mesh(
-      new THREE.SphereGeometry(0.055, high ? 12 : 7, high ? 8 : 5),
-      index % 3 === 0 ? amber : materials.gilt,
-    );
-    stud.name = `COMPASS_BOOK_LIVING_HORIZON_PATH_MILESTONE_${index}`;
-    stud.position.copy(point);
-    stud.position.y += 0.095;
-    stud.scale.y = 0.55;
-    stud.castShadow = true;
-    vitalPath.add(stud);
+    point.y += 0.095;
+    milestoneMatrix.compose(point, milestoneQuaternion, milestoneScale);
+    if (index % 3 === 0) {
+      milestoneAmber.setMatrixAt(amberMilestoneIndex, milestoneMatrix);
+      amberMilestoneIndex += 1;
+    } else {
+      milestoneGilt.setMatrixAt(giltMilestoneIndex, milestoneMatrix);
+      giltMilestoneIndex += 1;
+    }
   }
+  milestoneGilt.instanceMatrix.needsUpdate = true;
+  milestoneAmber.instanceMatrix.needsUpdate = true;
+  vitalPath.add(milestoneGilt, milestoneAmber);
   root.add(vitalPath);
 
   const sanctuary = new THREE.Group();
@@ -1666,17 +1681,24 @@ function createLivingHorizonRelief(
   arenaRing.rotation.x = Math.PI / 2;
   arenaRing.position.set(0.91, 0.54, 0.3);
   gathering.add(arenaRing);
+  const seatGeometry = new THREE.TorusGeometry(0.47, 0.055, high ? 7 : 5, high ? 9 : 6, Math.PI / 5);
+  const seatsLight = new THREE.InstancedMesh(seatGeometry, materials.gilt, 3);
+  seatsLight.name = 'COMPASS_BOOK_LIVING_HORIZON_GATHERING_SEATS_LIGHT';
+  const seatsDark = new THREE.InstancedMesh(seatGeometry, materials.giltDark, 3);
+  seatsDark.name = 'COMPASS_BOOK_LIVING_HORIZON_GATHERING_SEATS_DARK';
+  const seatPosition = new THREE.Vector3(0.91, 0.6, 0.3);
+  const seatScale = new THREE.Vector3(1, 1, 1);
+  const seatMatrix = new THREE.Matrix4();
   for (let index = 0; index < 6; index += 1) {
-    const seat = new THREE.Mesh(
-      new THREE.TorusGeometry(0.47, 0.055, high ? 8 : 5, high ? 10 : 6, Math.PI / 5),
-      index % 2 === 0 ? materials.gilt : materials.giltDark,
+    const seatQuaternion = new THREE.Quaternion().setFromEuler(
+      new THREE.Euler(Math.PI / 2, 0, index * (Math.PI / 3) + 0.12),
     );
-    seat.name = `COMPASS_BOOK_LIVING_HORIZON_GATHERING_SEAT_${index + 1}`;
-    seat.rotation.x = Math.PI / 2;
-    seat.rotation.z = index * (Math.PI / 3) + 0.12;
-    seat.position.set(0.91, 0.6, 0.3);
-    gathering.add(seat);
+    seatMatrix.compose(seatPosition, seatQuaternion, seatScale);
+    (index % 2 === 0 ? seatsLight : seatsDark).setMatrixAt(Math.floor(index / 2), seatMatrix);
   }
+  seatsLight.instanceMatrix.needsUpdate = true;
+  seatsDark.instanceMatrix.needsUpdate = true;
+  gathering.add(seatsLight, seatsDark);
   const hearth = new THREE.Mesh(
     new THREE.DodecahedronGeometry(0.17, high ? 1 : 0),
     amber,
@@ -1694,21 +1716,21 @@ function createLivingHorizonRelief(
   const rayFan = new THREE.Group();
   rayFan.name = 'COMPASS_BOOK_LIVING_HORIZON_RAY_FAN';
   rayFan.position.set(0, 0.37, -2.31);
+  const rayGeometry = new RoundedBoxGeometry(0.038, 0.045, 0.58, 1, 0.012);
+  const rays = new THREE.InstancedMesh(rayGeometry, materials.giltDark, 9);
+  rays.name = 'COMPASS_BOOK_LIVING_HORIZON_SUN_RAYS';
+  const rayMatrix = new THREE.Matrix4();
   for (let index = 0; index < 9; index += 1) {
     const angle = -1.08 + index * 0.27;
-    const ray = roundedBox(
-      `COMPASS_BOOK_LIVING_HORIZON_SUN_RAY_${index + 1}`,
-      0.038,
-      0.045,
-      index % 2 === 0 ? 0.58 : 0.45,
-      0.012,
-      1,
-      materials.giltDark,
+    rayMatrix.compose(
+      new THREE.Vector3(Math.sin(angle) * 0.34, 0, Math.cos(angle) * 0.34),
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(0, angle, 0)),
+      new THREE.Vector3(1, 1, index % 2 === 0 ? 1 : 0.45 / 0.58),
     );
-    ray.position.set(Math.sin(angle) * 0.34, 0, Math.cos(angle) * 0.34);
-    ray.rotation.y = angle;
-    rayFan.add(ray);
+    rays.setMatrixAt(index, rayMatrix);
   }
+  rays.instanceMatrix.needsUpdate = true;
+  rayFan.add(rays);
   horizon.add(rayFan);
   const sun = new THREE.Mesh(
     new THREE.CylinderGeometry(0.34, 0.37, 0.11, radialSegments),
@@ -1781,30 +1803,43 @@ function createLivingHorizonRelief(
     [-1.36, -1.62, 0.68], [-1.43, 0.72, 0.62], [1.33, -1.33, 0.6],
     [1.42, 1.1, 0.68], [-0.15, 2.1, 0.64], [0.92, -1.58, 0.58],
   ];
+  const treeGeometry = new THREE.ConeGeometry(0.12, 0.42, high ? 7 : 5);
+  const treesDark = new THREE.InstancedMesh(treeGeometry, terrainDark, 3);
+  treesDark.name = 'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_TREES_DARK';
+  const treesMid = new THREE.InstancedMesh(treeGeometry, terrainMid, 3);
+  treesMid.name = 'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_TREES_MID';
+  const rocks = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(0.11, 0), terrainLight, 6);
+  rocks.name = 'COMPASS_BOOK_LIVING_HORIZON_TERRAIN_ROCKS';
+  const clusterMatrix = new THREE.Matrix4();
+  const clusterQuaternion = new THREE.Quaternion();
   clusterPlacements.forEach(([x, z, scale], index) => {
-    const cluster = new THREE.Group();
-    cluster.name = `COMPASS_BOOK_LIVING_HORIZON_TERRAIN_CLUSTER_${index + 1}`;
-    cluster.position.set(x, 0.38, z);
-    const tree = new THREE.Mesh(
-      new THREE.ConeGeometry(0.12 * scale, 0.42 * scale, high ? 8 : 5),
-      index % 2 === 0 ? terrainDark : terrainMid,
+    clusterMatrix.compose(
+      new THREE.Vector3(x, 0.38 + 0.18 * scale, z),
+      clusterQuaternion,
+      new THREE.Vector3(scale, scale, scale),
     );
-    tree.name = `${cluster.name}_TREE`;
-    tree.position.y = 0.18 * scale;
-    tree.castShadow = true;
-    const rock = new THREE.Mesh(
-      new THREE.DodecahedronGeometry(0.11 * scale, 0),
-      terrainLight,
+    (index % 2 === 0 ? treesDark : treesMid).setMatrixAt(Math.floor(index / 2), clusterMatrix);
+    clusterMatrix.compose(
+      new THREE.Vector3(x + 0.14 * scale, 0.4, z + 0.1 * scale),
+      clusterQuaternion,
+      new THREE.Vector3(scale, 0.58 * scale, scale),
     );
-    rock.name = `${cluster.name}_ROCK`;
-    rock.position.set(0.14 * scale, 0.02, 0.1 * scale);
-    rock.scale.y = 0.58;
-    cluster.add(tree, rock);
-    terrainField.add(cluster);
+    rocks.setMatrixAt(index, clusterMatrix);
   });
+  treesDark.instanceMatrix.needsUpdate = true;
+  treesMid.instanceMatrix.needsUpdate = true;
+  rocks.instanceMatrix.needsUpdate = true;
+  terrainField.add(treesDark, treesMid, rocks);
 
   const reliefNodes: Record<string, THREE.Object3D> = {};
   root.traverse((node) => {
+    if (node instanceof THREE.Mesh) {
+      // One directional shadow pass can nearly double relief draw calls. Keep
+      // receiving on every solid, but reserve casting for the large forms that
+      // materially communicate terrace and building depth.
+      node.castShadow = false;
+      node.receiveShadow = true;
+    }
     if (node.name) reliefNodes[node.name] = node;
   });
   const requireReliefNode = (name: string) => {
@@ -1812,6 +1847,30 @@ function createLivingHorizonRelief(
     if (!node) throw new Error(`[compass-book-three-model] Missing Living Horizon part ${name}`);
     return node;
   };
+  if (high) {
+    [
+      horizonTerrain,
+      workshopTerrain,
+      gatheringTerrain,
+      sanctuaryTerrain,
+      pathCore,
+      cottage,
+      workshopBody,
+      workshopAnnex,
+      arenaFloor,
+      sun,
+      requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_ROOF_LEFT'),
+      requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_ROOF_RIGHT'),
+      requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_ROOF_LEFT'),
+      requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_ROOF_RIGHT'),
+      requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_ANNEX_ROOF_LEFT'),
+      requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_WORKSHOP_ANNEX_ROOF_RIGHT'),
+      requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_GATE_POST_1'),
+      requireReliefNode('COMPASS_BOOK_LIVING_HORIZON_GATE_POST_2'),
+    ].forEach((node) => {
+      node.castShadow = true;
+    });
+  }
   const reliefParts: Record<string, THREE.Object3D> = {
     root,
     'contact-frame': outerFrame,

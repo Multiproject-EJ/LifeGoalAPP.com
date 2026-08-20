@@ -53,7 +53,7 @@
       "name": "front-cover-hinge",
       "kind": "part",
       "module": "COMPASS_BOOK_FRONT_COVER_HINGE",
-      "triangles": 93731
+      "triangles": 88699
     },
     {
       "name": "front-cover",
@@ -185,7 +185,7 @@
       "name": "living-horizon-relief",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_RELIEF",
-      "triangles": 22223
+      "triangles": 17191
     },
     {
       "name": "page-turn-socket",
@@ -197,7 +197,7 @@
       "name": "root",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_RELIEF",
-      "triangles": 22223
+      "triangles": 17191
     },
     {
       "name": "contact-frame",
@@ -209,19 +209,19 @@
       "name": "terrain-field",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_TERRAIN_FIELD",
-      "triangles": 728
+      "triangles": 372
     },
     {
       "name": "vital-path",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_VITAL_PATH",
-      "triangles": 4672
+      "triangles": 2160
     },
     {
       "name": "sanctuary-zone",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_ZONE",
-      "triangles": 2371
+      "triangles": 2307
     },
     {
       "name": "workshop-zone",
@@ -233,55 +233,55 @@
       "name": "gathering-zone",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_GATHERING_ZONE",
-      "triangles": 1808
+      "triangles": 924
     },
     {
       "name": "horizon-system",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_GATE_SYSTEM",
-      "triangles": 3060
+      "triangles": 2164
     },
     {
       "name": "terrain-lower",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_TERRAIN_SANCTUARY",
-      "triangles": 124
+      "triangles": 92
     },
     {
       "name": "terrain-middle-left",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_TERRAIN_WORKSHOP",
-      "triangles": 92
+      "triangles": 68
     },
     {
       "name": "terrain-middle-right",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_TERRAIN_GATHERING",
-      "triangles": 76
+      "triangles": 56
     },
     {
       "name": "terrain-horizon",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_TERRAIN_HORIZON",
-      "triangles": 124
+      "triangles": 92
     },
     {
       "name": "path-core",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_PATH_CORE",
-      "triangles": 1280
+      "triangles": 768
     },
     {
       "name": "path-rails",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_PATH_RAILS",
-      "triangles": 2048
+      "triangles": 1152
     },
     {
       "name": "sanctuary-inlet",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_SANCTUARY_INLET",
-      "triangles": 128
+      "triangles": 96
     },
     {
       "name": "sanctuary-cottage-body",
@@ -323,13 +323,13 @@
       "name": "gathering-floor",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_GATHERING_FLOOR",
-      "triangles": 128
+      "triangles": 96
     },
     {
       "name": "gathering-seats",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_GATHERING_RING",
-      "triangles": 576
+      "triangles": 432
     },
     {
       "name": "gathering-hearth",
@@ -353,17 +353,17 @@
       "name": "horizon-sun",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_SUN",
-      "triangles": 128
+      "triangles": 96
     },
     {
       "name": "horizon-rays",
       "kind": "part",
       "module": "COMPASS_BOOK_LIVING_HORIZON_RAY_FAN",
-      "triangles": 972
+      "triangles": 108
     }
   ],
   "unnamedMeshes": 0,
-  "integralMeshes": 565,
+  "integralMeshes": 536,
   "sockets": [
     "coverHinge",
     "coverNeedles",
