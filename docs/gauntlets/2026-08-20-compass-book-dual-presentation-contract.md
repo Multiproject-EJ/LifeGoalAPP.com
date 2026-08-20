@@ -1,6 +1,6 @@
 # Compass Book dual-presentation Gauntlet
 
-**Status:** representative vertical slice complete
+**Status:** representative vertical slice and Island Run entrance complete
 
 **Approved by:** Eivind, 2026-08-20
 
@@ -42,7 +42,6 @@ Included:
 
 Deferred:
 
-- Island-specific camera choreography around a world-space book prop.
 - A diegetic inventory placement system.
 - Unique completion sculptures for Chapters III–VI.
 - Cloud-syncing the presentation preference across devices.
@@ -83,6 +82,14 @@ Authorised: repository code, tests, local preference storage, developer preview,
 - TypeScript and production build pass.
 - Wide screenshots prove explicit 2D and 3D modes; Island Auto flow remains readable.
 - WebGL fallback exposes the full 2D book.
+
+### Slice 5 — Island Run summon and hand-off
+
+- Choosing `Continue` from the compact in-game Compass first reveals the physical 3D book in `Auto`, then hands the player to the canonical 2D activity.
+- The entrance is a bounded presentation event: a low gold compass sigil, a short rise/turn of the same production model, and the existing cover-open beat.
+- Explicit 2D, reduced motion, and WebGL fallback skip the cinematic and enter the activity immediately.
+- The transition owns no answer, reward, stop, dice, unlock, chapter, or Island Run persistence state.
+- Explicit 3D remains an honoured player choice after the hand-off; `Auto` settles into 2D for focused work.
 
 ## Performance and accessibility budgets
 
@@ -126,6 +133,10 @@ Evidence:
 - `evidence/compass-book-dual-presentation-2026-08-20/04-island-auto-page-3d.png`
 - `evidence/compass-book-dual-presentation-2026-08-20/05-island-auto-completion-ceremony.png`
 - `evidence/compass-book-dual-presentation-2026-08-20/06-mobile-2d-flow.png`
+- `evidence/compass-book-dual-presentation-2026-08-20/07-island-summon-goal.png`
+- `evidence/compass-book-dual-presentation-2026-08-20/08-island-summon-3d.png`
+- `evidence/compass-book-dual-presentation-2026-08-20/09-island-auto-flow-2d.png`
+- `evidence/compass-book-dual-presentation-2026-08-20/10-mobile-island-auto-flow-2d.png`
 
 Verification:
 
@@ -136,4 +147,23 @@ Verification:
 - Production Vite build: pass with the repository's pre-existing dynamic-import and large-chunk warnings.
 - Browser assertions: 2D canvas count `0`; 3D canvas count `1`; WebGL fallback canvas count `0`; high-tier Island Auto browsing `60 FPS` at 1200×900.
 
-Gauntlet action: `continue` for later world-space choreography and Chapter III–VI reliefs; `pass` for the dual-presentation architecture and representative player flow.
+Gauntlet action: `continue` for Chapter III–VI reliefs and any later board-world inventory placement; `pass` for the dual-presentation architecture and representative player flow.
+
+## Island Run entrance completion record — 2026-08-20
+
+Delivered:
+
+- Compact-game `Continue` deep links now stage the canonical production book before opening the requested activity.
+- The model rises from a thin concentric compass sigil, settles into the established hybrid spread, and hands `Auto` to the canonical 2D flow after 1.75 seconds.
+- The same presentation parent owns the entrance transform; canonical model parts, hit targets, DOM content, forms, and persistence remain unchanged.
+- Explicit 2D, reduced-motion policy, and WebGL fallback bypass the entrance; explicit 3D remains available.
+- The developer harness can lengthen only the preview timing for deterministic screenshots; production duration remains fixed by policy.
+
+Visual Gauntlet findings and corrections:
+
+- First held frame exposed an oversized pale crescent and a prematurely visible parchment sheet.
+- The final frame uses two thin gold tooling rings, centers the summoned artifact, and delays parchment opacity until the book settles.
+- Desktop final hand-off and the primary 390×844 mobile flow are fully readable; mobile Auto settles with zero canvases and locked background scrolling.
+- A fresh preview load records no console warnings or errors.
+
+Gauntlet action: `pass` for the Island Run summon-to-2D hand-off; `continue` for Chapters III–VI reliefs and any later true board-world inventory placement.

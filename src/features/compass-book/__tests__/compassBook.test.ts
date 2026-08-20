@@ -95,6 +95,7 @@ import {
 import {
   parseCompassBookPresentationMode,
   resolveCompassBookPresentation,
+  shouldStageCompassBookIslandEntrance,
 } from '../logic/presentation';
 import type {
   CompassAnswerRecord,
@@ -1343,6 +1344,43 @@ function testPresentationPolicy(): void {
   assert(resolve('3d', 'pwa', 'flow', true) === '3d', 'explicit 3D remains available with reduced animation');
   assert(resolve('3d', 'island_run', 'page', false, false) === '2d', 'WebGL failure falls back to 2D');
   assert(resolve('2d', 'island_run', 'page') === '2d', 'explicit 2D wins in Island Run');
+
+  assert(
+    shouldStageCompassBookIslandEntrance({
+      context: 'island_run',
+      initialActivityId: 'living_wheel.a01',
+      preference: 'auto',
+      reducedMotion: false,
+    }),
+    'Island Run Auto stages a deep-linked fragment through the physical book',
+  );
+  assert(
+    !shouldStageCompassBookIslandEntrance({
+      context: 'island_run',
+      initialActivityId: 'living_wheel.a01',
+      preference: '2d',
+      reducedMotion: false,
+    }),
+    'explicit 2D skips the Island Run entrance',
+  );
+  assert(
+    !shouldStageCompassBookIslandEntrance({
+      context: 'island_run',
+      initialActivityId: 'living_wheel.a01',
+      preference: 'auto',
+      reducedMotion: true,
+    }),
+    'reduced motion skips the Island Run entrance',
+  );
+  assert(
+    !shouldStageCompassBookIslandEntrance({
+      context: 'pwa',
+      initialActivityId: 'living_wheel.a01',
+      preference: '3d',
+      reducedMotion: false,
+    }),
+    'PWA deep links do not borrow the Island Run entrance',
+  );
 }
 
 export function runAllCompassBookTests(): void {

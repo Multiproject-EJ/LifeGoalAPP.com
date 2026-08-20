@@ -52,6 +52,11 @@ requireText(screen, "resolvedPresentation === '3d'", 'The 3D shell must mount on
 requireText(screen, '<CompassBookPresentationControl', 'Players must retain an accessible presentation selector.');
 requireText(presentation, "context === 'island_run' && surface === 'page'", 'Auto mode must reserve 3D for Island Run browsing.');
 requireText(presentation, "if (preference === '2d' || !threeAvailable) return '2d'", 'Explicit 2D and WebGL failure must resolve to the complete 2D book.');
+requireText(presentation, 'shouldStageCompassBookIslandEntrance', 'Island Run deep links must use the bounded presentation policy.');
+requireText(screen, "data-entry-choreography={pendingInitialFlow ? 'island_summon' : 'idle'}", 'The Island Run entrance must remain observable and bounded in the Compass modal.');
+requireText(shell, 'const presentationRoot = new THREE.Group()', 'Island choreography must transform a presentation parent, not canonical model parts.');
+requireText(shell, "data-entrance={islandEntranceActive ? 'island_summon' : 'idle'}", 'The production shell must expose the entrance state for QA.');
+rejectText(screen, 'persistIslandRunRuntimeStatePatch', 'Compass Book presentation must never write Island Run runtime state.');
 requireText(compassAvailability, "status: 'live'", 'Compass Book must not ship behind a stale coming-soon status.');
 requireText(compassAvailability, "publicAccess: 'open'", 'Compass Book public access must be open.');
 requireText(compassAvailability, "adminAccess: 'open'", 'Compass Book admin access must be open.');

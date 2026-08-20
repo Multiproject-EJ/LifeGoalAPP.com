@@ -16,6 +16,8 @@ type Props = {
   celebrationKey: number;
   celebrationKind: 'fragment' | 'chapter';
   celebrationIssuedAt: number;
+  islandEntranceActive: boolean;
+  islandEntranceDurationMs: number;
   onAvailabilityChange: (available: boolean) => void;
   onSelectPage: (pageId: CompassBookPageId) => void;
   onBackgroundClick: () => void;
@@ -44,6 +46,8 @@ export function CompassBookThreeShell({
   celebrationKey,
   celebrationKind,
   celebrationIssuedAt,
+  islandEntranceActive,
+  islandEntranceDurationMs,
   onAvailabilityChange,
   onSelectPage,
   onBackgroundClick,
@@ -57,6 +61,7 @@ export function CompassBookThreeShell({
   const reducedMotionRef = useRef(false);
   const celebrationRef = useRef({ key: 0, startedAt: -Infinity });
   const celebrationKindRef = useRef(celebrationKind);
+  const islandEntranceRef = useRef({ active: islandEntranceActive, startedAt: 0 });
   const turnRef = useRef({ startedAt: 0, duration: 0, direction: 1 as -1 | 1 });
   const [status, setStatus] = useState<'warming' | 'ready' | 'fallback'>('warming');
   const [celebrating, setCelebrating] = useState(false);
@@ -69,6 +74,13 @@ export function CompassBookThreeShell({
   useEffect(() => {
     celebrationKindRef.current = celebrationKind;
   }, [celebrationKind]);
+
+  useEffect(() => {
+    const entrance = islandEntranceRef.current;
+    if (islandEntranceActive && !entrance.active) entrance.startedAt = performance.now();
+    if (islandEntranceActive && entrance.startedAt === 0) entrance.startedAt = performance.now();
+    entrance.active = islandEntranceActive;
+  }, [islandEntranceActive]);
 
   useEffect(() => {
     if (celebrationKey <= 0 || celebrationKey === celebrationRef.current.key) return undefined;
@@ -142,7 +154,12 @@ export function CompassBookThreeShell({
     const model = createCompassBookThreeModel(quality);
     modelRef.current = model;
     model.setActivePage(activePageRef.current);
-    scene.add(model.root);
+    // A separate presentation root lets the Island Run entrance lift and turn
+    // the artifact without interfering with the model's canonical open/page
+    // transforms or its hit targets.
+    const presentationRoot = new THREE.Group();
+    presentationRoot.add(model.root);
+    scene.add(presentationRoot);
 
     scene.add(new THREE.HemisphereLight(0xdce1ff, 0x120a25, quality === 'high' ? 1.75 : 1.45));
     const key = new THREE.DirectionalLight(0xffe5a4, quality === 'high' ? 5.1 : 3.8);
@@ -156,6 +173,27 @@ export function CompassBookThreeShell({
     const completionGlow = new THREE.PointLight(0xffcf58, 0, 11, 2);
     completionGlow.position.set(0.5, 4.8, 1.2);
     scene.add(completionGlow);
+    const summonGlow = new THREE.PointLight(0xffc95c, 0, 14, 1.8);
+    summonGlow.position.set(0, -1.4, 1.2);
+    scene.add(summonGlow);
+    const sigilGeometry = new THREE.RingGeometry(3.04, 3.11, quality === 'high' ? 72 : 40);
+    const innerSigilGeometry = new THREE.RingGeometry(2.25, 2.3, quality === 'high' ? 64 : 36);
+    const sigilMaterial = new THREE.MeshBasicMaterial({
+      color: 0xf0bd50,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+    });
+    const summonSigil = new THREE.Mesh(sigilGeometry, sigilMaterial);
+    summonSigil.rotation.x = -Math.PI / 2;
+    summonSigil.position.set(0, -3.25, 0.5);
+    scene.add(summonSigil);
+    const innerSummonSigil = new THREE.Mesh(innerSigilGeometry, sigilMaterial);
+    innerSummonSigil.rotation.x = -Math.PI / 2;
+    innerSummonSigil.position.copy(summonSigil.position);
+    scene.add(innerSummonSigil);
 
     let width = 1;
     let height = 1;
@@ -236,13 +274,47 @@ export function CompassBookThreeShell({
       model.setPageTurnProgress(THREE.MathUtils.clamp(rawTurn, 0, 1), pageTurn.direction);
 
       const compact = width / height < 0.62;
-      const distance = THREE.MathUtils.lerp(compact ? 24 : 18.2, compact ? 45 : 18.8, openProgress);
+      const entrance = islandEntranceRef.current;
+      const entranceAge = Math.max(0, now - entrance.startedAt);
+      const entranceRaw = entrance.active
+        ? THREE.MathUtils.clamp(entranceAge / (islandEntranceDurationMs * 0.81), 0, 1)
+        : 1;
+      const entranceProgress = 1 - (1 - entranceRaw) ** 3;
+      const entranceLift = 1 - entranceProgress;
+      presentationRoot.scale.setScalar(THREE.MathUtils.lerp(0.68, 1, entranceProgress));
+      presentationRoot.position.set(
+        THREE.MathUtils.lerp(compact ? 0 : 4.2, 0, entranceProgress),
+        THREE.MathUtils.lerp(-2.35, 0, entranceProgress),
+        THREE.MathUtils.lerp(-1.4, 0, entranceProgress),
+      );
+      presentationRoot.rotation.set(
+        THREE.MathUtils.lerp(-0.08, 0, entranceProgress),
+        THREE.MathUtils.lerp(-0.26, 0, entranceProgress),
+        THREE.MathUtils.lerp(0.065, 0, entranceProgress),
+      );
+      sigilMaterial.opacity = entrance.active
+        ? Math.sin(entranceProgress * Math.PI) * 0.58
+        : 0;
+      summonSigil.scale.setScalar(THREE.MathUtils.lerp(0.72, 1.22, entranceProgress));
+      summonSigil.rotation.z = entranceProgress * -0.34;
+      innerSummonSigil.scale.copy(summonSigil.scale);
+      innerSummonSigil.rotation.z = summonSigil.rotation.z + 0.16;
+      summonGlow.intensity = entrance.active ? entranceLift * 7.2 : 0;
+
+      const distance = THREE.MathUtils.lerp(compact ? 24 : 18.2, compact ? 45 : 18.8, openProgress)
+        + entranceLift * (compact ? 6.2 : 3.8);
       camera.position.set(
-        THREE.MathUtils.lerp(compact ? 2 : 1.55, 0, openProgress),
-        distance * THREE.MathUtils.lerp(compact ? 0.62 : 0.67, 0.74, openProgress),
+        THREE.MathUtils.lerp(compact ? 2 : 1.55, 0, openProgress) + entranceLift * 1.2,
+        distance * THREE.MathUtils.lerp(compact ? 0.62 : 0.67, 0.74, openProgress)
+          - entranceLift * 1.1,
         distance * THREE.MathUtils.lerp(compact ? 0.68 : 0.64, 0.56, openProgress),
       );
-      camera.lookAt(0.28 * (1 - openProgress), THREE.MathUtils.lerp(0.18, compact ? -2.15 : 0.18, openProgress), 0.08);
+      camera.lookAt(
+        0.28 * (1 - openProgress),
+        THREE.MathUtils.lerp(0.18, compact ? -2.15 : 0.18, openProgress)
+          - entranceLift * 0.9,
+        0.08,
+      );
       renderer.render(scene, camera);
       warmedFrames += 1;
       metricsFrames += 1;
@@ -266,11 +338,14 @@ export function CompassBookThreeShell({
       canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('webglcontextlost', onContextLost);
       model.dispose();
+      sigilGeometry.dispose();
+      innerSigilGeometry.dispose();
+      sigilMaterial.dispose();
       renderer.dispose();
       modelRef.current = null;
       cameraRef.current = null;
     };
-  }, [onAvailabilityChange, onBackgroundClick, onSelectPage, quality, showQuestLedger]);
+  }, [islandEntranceDurationMs, onAvailabilityChange, onBackgroundClick, onSelectPage, quality, showQuestLedger]);
 
   return (
     <div
@@ -281,6 +356,7 @@ export function CompassBookThreeShell({
       data-open={open ? 'true' : 'false'}
       data-celebrating={celebrating ? 'true' : 'false'}
       data-celebration-kind={celebrationKind}
+      data-entrance={islandEntranceActive ? 'island_summon' : 'idle'}
       aria-hidden="true"
     >
       <canvas ref={canvasRef} className="compass-book-three-shell__canvas" />
