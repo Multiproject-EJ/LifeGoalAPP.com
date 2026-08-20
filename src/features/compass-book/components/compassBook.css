@@ -152,20 +152,67 @@
    the unobstructed physical left page, hinge, and compass remain visible. */
 @media (min-width: 900px) {
   .compass-book__sheet {
-    width: min(680px, 58vw);
-    margin-left: min(38vw, 420px);
+    width: min(640px, 49vw);
+    margin-left: min(48vw, 620px);
+    border-radius: 4px 22px 22px 4px;
+    box-shadow:
+      -22px 0 34px rgba(65, 39, 10, 0.28),
+      0 0 0 7px #21150a,
+      0 0 0 8px rgba(242, 193, 78, 0.35),
+      0 34px 90px rgba(0, 0, 0, 0.65);
+  }
+
+  .compass-book__sheet::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 3;
+    width: 22px;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(67, 42, 12, 0.38), rgba(67, 42, 12, 0.1) 45%, transparent);
+    mix-blend-mode: multiply;
+  }
+
+  .compass-book__topbar {
+    padding-block: 10px 9px;
+    background: rgba(232, 211, 163, 0.82);
+  }
+
+  .compass-book__scroll {
+    padding: 22px 24px 34px;
+  }
+
+  /* Until each chapter has its own approved physical relief, never leave the
+     Reading compass beside unrelated chapter copy. Those pages retain the
+     complete centered DOM book; Reading alone uses the true hybrid spread. */
+  .compass-book:not([data-page-id='reading']) .compass-book__sheet {
+    width: min(680px, 82vw);
+    margin-left: 0;
+    border-radius: 22px;
   }
 }
 
 @media (max-width: 719px) {
   .compass-book-three-shell {
-    opacity: 0.22;
+    opacity: 0;
     pointer-events: none;
   }
 
   .compass-book-three-shell[data-open='false'] {
     z-index: 3;
     opacity: 1;
+  }
+
+  .compass-book__sheet {
+    border: 5px solid #171329;
+    box-shadow:
+      inset 0 0 0 1px rgba(242, 193, 78, 0.48),
+      inset 0 0 22px rgba(88, 55, 16, 0.18);
+  }
+
+  .compass-book__topbar {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+    padding-bottom: 9px;
   }
 }
 

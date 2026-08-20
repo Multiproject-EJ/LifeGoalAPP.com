@@ -887,6 +887,42 @@ function createCompassMechanism(
   return { root, needleRoot, glow };
 }
 
+function createReadingSignalMarkers(
+  materials: BookMaterials,
+  quality: CompassBookThreeQuality,
+) {
+  const group = new THREE.Group();
+  group.name = 'COMPASS_BOOK_READING_SIGNAL_MARKERS';
+  const placements = [
+    { x: COVER_CENTER_X, z: -2.2, rotate: 0 },
+    { x: COVER_CENTER_X, z: 1.72, rotate: 0 },
+    { x: 0.58, z: -0.25, rotate: Math.PI / 2 },
+    { x: COVER_WIDTH - 0.58, z: -0.25, rotate: Math.PI / 2 },
+  ];
+  placements.forEach((placement, signalIndex) => {
+    const signal = new THREE.Group();
+    signal.name = `COMPASS_BOOK_READING_SIGNAL_${signalIndex + 1}`;
+    signal.position.set(placement.x, -0.5, placement.z);
+    signal.rotation.y = placement.rotate;
+    for (let index = 0; index < 5; index += 1) {
+      const marker = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          index < 3 ? 0.065 : 0.052,
+          index < 3 ? 0.065 : 0.052,
+          0.035,
+          quality === 'high' ? 16 : 8,
+        ),
+        index < 3 ? materials.violet : materials.giltDark,
+      );
+      marker.name = `COMPASS_BOOK_READING_SIGNAL_${signalIndex + 1}_MARK_${index + 1}`;
+      marker.position.x = (index - 2) * 0.18;
+      signal.add(marker);
+    }
+    group.add(signal);
+  });
+  return group;
+}
+
 function createPageBlock(
   materials: BookMaterials,
   quality: CompassBookThreeQuality,
@@ -1360,6 +1396,8 @@ export function createCompassBookThreeModel(
   // to keep rings/needles above the opened parchment instead of under it.
   readingCompass.root.rotation.z = Math.PI;
   frontPivot.add(readingCompass.root);
+  const readingSignalMarkers = createReadingSignalMarkers(materials, quality);
+  frontPivot.add(readingSignalMarkers);
 
   // A second physical tab rail rides the hinged left page. The canonical DOM
   // rail still owns accessibility; this exposed rail makes spatial/raycast
@@ -1438,6 +1476,7 @@ export function createCompassBookThreeModel(
     bookmark,
     'left-reading-page': leftPage,
     'reading-compass': readingCompass.root,
+    'reading-signal-markers': readingSignalMarkers,
     'page-turn-socket': pageTurnSocket,
   };
   Object.entries(parts).forEach(([partId, part]) => {
@@ -1462,6 +1501,7 @@ export function createCompassBookThreeModel(
   };
 
   let openProgress = 0;
+  let selectedPageId = 'reading';
   function setOpenProgress(progress: number) {
     openProgress = THREE.MathUtils.clamp(progress, 0, 1);
     const eased = easeInOutCubic(openProgress);
@@ -1471,12 +1511,21 @@ export function createCompassBookThreeModel(
     root.position.x = THREE.MathUtils.lerp(-COVER_CENTER_X, 0, eased);
     root.rotation.z = THREE.MathUtils.lerp(-0.03, 0, eased);
     bookmark.position.x = THREE.MathUtils.lerp(COVER_WIDTH * 0.42, 0.22, eased);
-    readingCompass.root.visible = eased > 0.43;
+    // The exterior compass turns face-down beneath the opened cover. Hiding it
+    // after the hinge crosses the page plane prevents its emissive relief from
+    // leaking around the inner-page edge while retaining the opening reveal.
+    coverCompass.root.visible = eased < 0.72;
+    spineMedallion.root.visible = eased < 0.72;
+    clasp.visible = eased < 0.72;
+    const readingPageVisible = eased > 0.43 && selectedPageId === 'reading';
+    readingCompass.root.visible = readingPageVisible;
+    readingSignalMarkers.visible = readingPageVisible;
     leftPageTabs.visible = eased > 0.52;
     openGlow.intensity = THREE.MathUtils.lerp(0.08, quality === 'high' ? 5.4 : 3.2, eased);
   }
 
   function setActivePage(pageId: string) {
+    selectedPageId = pageId;
     root.traverse((node) => {
       if (!(node instanceof THREE.Mesh) || !node.userData.compassPageId) return;
       const active = node.userData.compassPageId === pageId;
@@ -1489,6 +1538,8 @@ export function createCompassBookThreeModel(
         : Number(meshMaterial.userData.baseEmissiveIntensity ?? 0);
     });
     const readingActive = pageId === 'reading';
+    readingCompass.root.visible = openProgress > 0.43 && readingActive;
+    readingSignalMarkers.visible = openProgress > 0.43 && readingActive;
     (coverCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
     (readingCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
   }

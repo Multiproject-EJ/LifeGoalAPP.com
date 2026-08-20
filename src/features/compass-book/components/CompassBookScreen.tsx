@@ -214,6 +214,7 @@ export function CompassBookScreen({
     <div
       ref={dialogRef}
       className="compass-book"
+      data-page-id={activePageId}
       role="dialog"
       aria-modal="true"
       aria-label="Compass Book"
