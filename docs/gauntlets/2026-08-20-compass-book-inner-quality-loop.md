@@ -204,3 +204,18 @@ Agent-vision preservation scorecard against the pre-optimization production rend
 The deterministic workload delta is the acceptance authority for this pass. At the same high-tier lab view, the full book falls from **412 to 324 render calls** (−21.4%), **131.5k to 114.6k rendered triangles** (−12.9%), and **565 to 536 meshes**. Low tier falls from **193 to 164 calls** while remaining at **18.8k rendered triangles**. Browser FPS remains scheduling-sensitive and is not promoted to physical-device proof; the supported-iPhone high-tier ≥50 FPS gate remains open until tested on hardware.
 
 The refreshed runtime manifest still contains 60 book parts and covers all **27 specified Living Horizon components with zero errors and zero warnings**. Strict sculpt validation passes with the pre-existing `actionProfile` advisories; the live runtime continues to expose the independent sun, ray fan, gate leaves, hearth, violet path, and amber material anchors needed by later Island Run ceremonies. TypeScript, Compass Book assertions, the launch contract, and the production Vite build all pass; existing repository chunk-size/dynamic-import warnings remain unrelated.
+
+### Loop 8 — Chapter IV Ikigai Map direction lock and intake (in progress, 2026-08-21)
+
+- Preserve the canonical Chapter IV metaphor: five forces—Curiosity, Capability, Contribution, Viability, and Willingness—form a constellation, **not** a four-circle Venn diagram.
+- Give the five perimeter forces separate raised medallions, connect them with one pentagon and five inward spokes, and keep the central Trial physically independent so it cannot read as a sixth force.
+- Represent three candidate paths as subordinate routes and place one dark Mirage marker outside the valid graph with only a broken tether.
+- Keep all personal labels, paths, experiment text, warnings, progress, controls, focus, and persistence in the canonical DOM/state layer.
+
+Evidence:
+
+- ImageGen wide production goal: `evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png`
+- Resumable intake: `.img2threejs/compass-book-ikigai-map/`
+- Dedicated white-backed admission reference passes at **50.46% foreground coverage** with one connected component.
+
+The goal-image component gate passes: five countable nodes, central Trial, three candidate routes, isolated Mirage, page contact, and separable raised solids are all present. The full book image is intentionally not used as silhouette-admission evidence because its 97.5% foreground coverage is not segmentable; the dedicated orthographic plate reference closes that deterministic intake gap. Geometry implementation remains blocked until the detail inventory, sculpt specification, material route, and strict-quality gate complete.
