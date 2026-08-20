@@ -37,9 +37,9 @@ function readInitialQuality(): CompassBookThreeQuality {
 }
 
 function readInitialPage() {
-  return new URLSearchParams(window.location.search).get('page') === 'living_wheel'
-    ? 'living_wheel'
-    : 'reading';
+  const requestedPage = new URLSearchParams(window.location.search).get('page');
+  if (requestedPage === 'living_wheel' || requestedPage === 'inner_compass') return requestedPage;
+  return 'reading';
 }
 
 function readInitialReducedMotion() {
@@ -432,6 +432,8 @@ export default function CompassBookThreeLab() {
                 ? 'Closed cover'
                 : activePage === 'living_wheel'
                   ? 'Chapter I relief'
+                  : activePage === 'inner_compass'
+                    ? 'Chapter II relief'
                   : 'The Reading'}
             </strong>
           </div>

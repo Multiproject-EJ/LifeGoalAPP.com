@@ -9,6 +9,7 @@ ImageGen goal images are art-direction contracts, not product data or UI assets:
 - `evidence/compass-book-inner-goals-2026-08-20/01-desktop-reading-goal.png`
 - `evidence/compass-book-inner-goals-2026-08-20/02-phone-chapter-goal.png`
 - `evidence/compass-book-inner-goals-2026-08-20/11-wide-chapter-1-goal.png`
+- `evidence/compass-book-inner-goals-2026-08-20/18-wide-chapter-2-goal.png`
 
 The real DOM remains authoritative for text, answers, progress, controls, focus, and persistence. Generated words or values must never enter canonical Compass data.
 
@@ -93,3 +94,39 @@ Agent-vision scorecard against the generated achievable goal:
 The render now reads as a real Chapter I physical relief and clears the 0.70 **agent-vision component** gate. After correcting the capture crop, the deterministic Tier-1 blockout diagnostic passes with silhouette IoU **0.9838**, scale delta **0.0**, aspect-ratio delta **0.0**, and symmetry error **0.025**; the map-stripped lab capture proves the relief is geometry rather than painted detail. The diagnostic still warns that both full-spread images lack isolatable backgrounds, so it is evidence for framing/structure rather than exact material likeness. This component is not a near-reference manual-art match: enamel ornament remains procedural, the generated goal's left-page typography is intentionally omitted, and the current sealed demo legitimately shows canonical summary content rather than the goal image's answer-mode controls. Those are explicit differences, not hidden pass claims.
 
 The orbit pair confirms that rings, sectors, ribs, studs, rose blades, and cabochon retain thickness rather than collapsing into a textured plane. At the normal 1500×1125 high-tier lab viewport the full book held **60 FPS**, **313 render calls**, and **109,572 triangles**; the low tier held **60 FPS**, **134 calls**, and **13,532 triangles**. The inflated 1800×1250 capture briefly produced misleading warm-up readings, so it is not used as performance authority.
+
+### Loop 5 — Chapter II Inner Compass production relief
+
+- Add a page-bound `inner_compass` relief with four fixed canonical cardinal blades, four colored signal stones, four gilt intercardinal points, three concentric bezels, a violet faceted hub, and independent enamel material response.
+- Preserve the semantic mapping through the opened-cover transform: North/value is violet, East/energy is amber, South/need is teal, and West/shadow pull is orange.
+- Keep all words, personal values, boundary text, result statements, controls, focus, and persistence in the canonical DOM/state layer.
+- Extend the approved wide hybrid spread to Chapter II only; later chapters remain centered until their own relief passes a separate loop.
+
+Evidence:
+
+- Baseline: `evidence/compass-book-inner-goals-2026-08-20/17-chapter-2-baseline.png`
+- ImageGen goal: `evidence/compass-book-inner-goals-2026-08-20/18-wide-chapter-2-goal.png`
+- Production render: `evidence/compass-book-inner-goals-2026-08-20/19-loop-chapter-2-relief.png`
+- Goal/render comparison: `evidence/compass-book-inner-goals-2026-08-20/20-chapter-2-comparison.png`
+- Orbit positive: `evidence/compass-book-inner-goals-2026-08-20/21-chapter-2-orbit-positive.png`
+- Orbit negative: `evidence/compass-book-inner-goals-2026-08-20/22-chapter-2-orbit-negative.png`
+- Map-stripped geometry: `evidence/compass-book-inner-goals-2026-08-20/23-chapter-2-map-stripped.png`
+
+Review action: `continue` for the inner-book programme; the Chapter II relief itself clears the component gate.
+
+Agent-vision scorecard against the achievable generated goal:
+
+- global fidelity: **0.80**
+- silhouette/proportion: **0.84**
+- component structure: **0.91**
+- form detail: **0.84**
+- material/surface: **0.79**
+- lighting/camera: **0.76**
+- critical four-direction semantic mapping: **1.00** after the Gauntlet corrected both blade and signal-stone transforms
+- critical bezel/intercardinal/hub system: **0.90**
+- critical page attachment and orbit thickness: **0.88**
+- critical DOM/3D state ownership separation: **0.99**
+
+The deterministic Tier-1 blockout diagnostic passes with silhouette IoU **0.9766**, scale delta **0.0**, aspect-ratio delta **0.0**, and symmetry error **0.0366**. As in Loop 4, the diagnostic warns that the full-spread images are not isolated masks, so these numbers support framing and bilateral structure rather than exact material likeness. The generated goal uses a tighter illustrated book composition; production intentionally retains the existing functional hybrid shell and scrollable canonical DOM page. No generated text or invented answer entered product data.
+
+At the 1200×900 high-tier orbit viewport the full book held **60 FPS**, **285 render calls**, **102,100 rendered triangles**, and **467 meshes**. Both orbit views keep the rings, blades, tip bezels, signal stones, intercardinals, and central cabochon volumetric. The map-stripped capture preserves the complete direction system, proving it is procedural geometry rather than baked image detail.

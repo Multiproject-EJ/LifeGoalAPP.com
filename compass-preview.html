@@ -6,6 +6,34 @@
     <title>Compass Preview (dev harness — not shipped)</title>
     <style>
       body { margin: 0; background: #0a0f20; font-family: system-ui, sans-serif; }
+      .compass-preview-launcher {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        box-sizing: border-box;
+        color: #f7e8b7;
+        background: radial-gradient(circle at 50% 30%, #25204a 0, #0a0f20 58%);
+      }
+      .compass-preview-launcher__card {
+        width: min(560px, 100%);
+        padding: 28px;
+        border: 1px solid rgba(224, 177, 79, 0.55);
+        border-radius: 20px;
+        background: rgba(10, 9, 27, 0.9);
+        box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+      }
+      .compass-preview-launcher h1 { margin: 0 0 10px; font-family: Georgia, serif; }
+      .compass-preview-launcher p { color: #d6cfae; line-height: 1.55; }
+      .compass-preview-launcher code {
+        display: block;
+        overflow-wrap: anywhere;
+        padding: 12px;
+        border-radius: 10px;
+        color: #fff7db;
+        background: #151329;
+      }
+      .compass-preview-launcher a { color: #f3c969; }
       /* The dev harness must remain capturable in short landscape QA windows;
          the production app keeps its portrait-only phone guard. */
       @media screen and (orientation: landscape) and (max-height: 540px) {
@@ -16,6 +44,40 @@
   </head>
   <body class="compass-preview">
     <div id="root"></div>
-    <script type="module" src="/src/scripts/compassPreviewHarness.tsx"></script>
+    <script>
+      (() => {
+        const root = document.getElementById('root');
+        if (window.location.protocol !== 'file:') {
+          const entry = document.createElement('script');
+          entry.type = 'module';
+          entry.src = '/src/scripts/compassPreviewHarness.tsx';
+          document.body.appendChild(entry);
+          return;
+        }
+
+        const target = `http://127.0.0.1:5174/compass-preview.html${window.location.search}`;
+        root.className = 'compass-preview-launcher';
+        root.innerHTML = `
+          <main class="compass-preview-launcher__card">
+            <h1>Starting Compass Preview…</h1>
+            <p>This preview is a React/WebGL development surface, so it needs the local Vite server instead of a direct <code>file://</code> launch.</p>
+            <p>If it does not open automatically, run this from the Compass Book worktree:</p>
+            <code>npm run dev -- --host 127.0.0.1 --port 5174 --strictPort</code>
+            <p><a href="${target}">Open the live preview</a></p>
+          </main>`;
+
+        let attempts = 0;
+        const connect = async () => {
+          attempts += 1;
+          try {
+            await fetch(target, { mode: 'no-cors', cache: 'no-store' });
+            window.location.replace(target);
+          } catch {
+            if (attempts < 40) window.setTimeout(connect, 500);
+          }
+        };
+        connect();
+      })();
+    </script>
   </body>
 </html>

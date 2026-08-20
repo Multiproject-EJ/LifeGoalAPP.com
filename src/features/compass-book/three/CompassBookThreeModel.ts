@@ -1082,6 +1082,157 @@ function createLivingWheelRelief(
   return { root, compassRose, jewel };
 }
 
+function createInnerCompassRelief(
+  materials: BookMaterials,
+  quality: CompassBookThreeQuality,
+) {
+  const root = new THREE.Group();
+  root.name = 'COMPASS_BOOK_INNER_COMPASS_RELIEF';
+  root.userData.compassPageId = 'inner_compass';
+  const radialSegments = quality === 'high' ? 48 : 24;
+
+  const contactShadow = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.62, 1.65, 0.05, radialSegments),
+    materials.leatherEdge,
+  );
+  contactShadow.name = 'COMPASS_BOOK_INNER_COMPASS_CONTACT_SHADOW';
+  contactShadow.position.y = 0.025;
+  contactShadow.castShadow = true;
+  root.add(contactShadow);
+
+  [1.56, 1.4, 1.12].forEach((radius, index) => {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(
+        radius,
+        index === 0 ? 0.075 : index === 1 ? 0.04 : 0.025,
+        quality === 'high' ? 10 : 5,
+        radialSegments,
+      ),
+      index === 1 ? materials.giltDark : materials.gilt,
+    );
+    ring.name = `COMPASS_BOOK_INNER_COMPASS_RING_${index + 1}`;
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.14 + index * 0.015;
+    ring.castShadow = true;
+    root.add(ring);
+  });
+
+  const directionColors = [0x6741a5, 0xd7a629, 0x28745f, 0xb45a28];
+  // The relief is mounted on the inside face and then flipped with the opened
+  // cover. These local angles therefore look inverted in model space; after
+  // that hinge transform they preserve the canonical DOM mapping on screen:
+  // North/value, East/energy, South/need, West/shadow pull.
+  const directionAngles = [0, -Math.PI / 2, Math.PI, Math.PI / 2];
+  const directionMaterials = directionColors.map((color, index) => {
+    const material = new THREE.MeshPhysicalMaterial({
+      color,
+      roughness: 0.4,
+      roughnessMap: materials.paper.roughnessMap,
+      bumpMap: materials.paper.bumpMap,
+      bumpScale: quality === 'high' ? 0.016 : 0.009,
+      metalness: 0.08,
+      clearcoat: quality === 'high' ? 0.62 : 0.34,
+      clearcoatRoughness: 0.24,
+    });
+    material.name = `COMPASS_BOOK_INNER_COMPASS_DIRECTION_${index + 1}_MATERIAL`;
+    return material;
+  });
+
+  const compassRose = new THREE.Group();
+  compassRose.name = 'COMPASS_BOOK_INNER_COMPASS_ROSE';
+  compassRose.position.y = 0.24;
+  directionAngles.forEach((angle, index) => {
+    const backing = createNeedleBlade(
+      `COMPASS_BOOK_INNER_COMPASS_DIRECTION_BACKING_${index + 1}`,
+      1.38,
+      0.36,
+      0.055,
+      materials.gilt,
+      quality,
+    );
+    backing.rotation.y = angle;
+    backing.castShadow = true;
+    compassRose.add(backing);
+
+    const direction = createNeedleBlade(
+      `COMPASS_BOOK_INNER_COMPASS_DIRECTION_${index + 1}`,
+      1.29,
+      0.27,
+      0.07,
+      directionMaterials[index],
+      quality,
+    );
+    direction.rotation.y = angle;
+    direction.position.y = 0.07;
+    direction.castShadow = true;
+    compassRose.add(direction);
+
+    const tipBezel = new THREE.Mesh(
+      new THREE.SphereGeometry(0.13, quality === 'high' ? 18 : 9, quality === 'high' ? 10 : 6),
+      materials.gilt,
+    );
+    tipBezel.name = `COMPASS_BOOK_INNER_COMPASS_TIP_BEZEL_${index + 1}`;
+    tipBezel.position.set(-Math.sin(angle) * 1.56, 0.14, -Math.cos(angle) * 1.56);
+    tipBezel.scale.y = 0.5;
+    tipBezel.castShadow = true;
+    root.add(tipBezel);
+
+    const signal = new THREE.Mesh(
+      new THREE.DodecahedronGeometry(0.075, quality === 'high' ? 1 : 0),
+      directionMaterials[index],
+    );
+    signal.name = `COMPASS_BOOK_INNER_COMPASS_SIGNAL_${index + 1}`;
+    signal.position.set(-Math.sin(angle) * 1.56, 0.23, -Math.cos(angle) * 1.56);
+    signal.scale.y = 0.5;
+    root.add(signal);
+  });
+
+  for (let index = 0; index < 4; index += 1) {
+    const point = createNeedleBlade(
+      `COMPASS_BOOK_INNER_COMPASS_INTERCARDINAL_${index + 1}`,
+      0.91,
+      0.18,
+      0.04,
+      index % 2 === 0 ? materials.giltDark : materials.gilt,
+      quality,
+    );
+    point.rotation.y = Math.PI / 4 + index * (Math.PI / 2);
+    point.position.y = 0.02;
+    point.castShadow = true;
+    compassRose.add(point);
+  }
+  root.add(compassRose);
+
+  const hubShadow = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.38, 0.42, 0.1, radialSegments),
+    materials.giltDark,
+  );
+  hubShadow.name = 'COMPASS_BOOK_INNER_COMPASS_HUB_SHADOW';
+  hubShadow.position.y = 0.25;
+  root.add(hubShadow);
+
+  const hubBezel = new THREE.Mesh(
+    new THREE.TorusGeometry(0.3, 0.07, quality === 'high' ? 10 : 5, radialSegments),
+    materials.gilt,
+  );
+  hubBezel.name = 'COMPASS_BOOK_INNER_COMPASS_HUB_BEZEL';
+  hubBezel.rotation.x = Math.PI / 2;
+  hubBezel.position.y = 0.43;
+  root.add(hubBezel);
+
+  const jewel = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(0.22, quality === 'high' ? 1 : 0),
+    materials.violet,
+  );
+  jewel.name = 'COMPASS_BOOK_INNER_COMPASS_VIOLET_CABOCHON';
+  jewel.position.y = 0.45;
+  jewel.scale.y = 0.52;
+  jewel.castShadow = true;
+  root.add(jewel);
+
+  return { root, compassRose, jewel };
+}
+
 function createPageBlock(
   materials: BookMaterials,
   quality: CompassBookThreeQuality,
@@ -1562,6 +1713,11 @@ export function createCompassBookThreeModel(
   livingWheel.root.rotation.z = Math.PI;
   livingWheel.root.visible = false;
   frontPivot.add(livingWheel.root);
+  const innerCompass = createInnerCompassRelief(materials, quality);
+  innerCompass.root.position.set(COVER_CENTER_X, -0.48, -0.22);
+  innerCompass.root.rotation.z = Math.PI;
+  innerCompass.root.visible = false;
+  frontPivot.add(innerCompass.root);
 
   const openGlow = new THREE.PointLight(0x8745e3, quality === 'high' ? 5.4 : 3.2, 8, 2);
   openGlow.name = 'COMPASS_BOOK_VIOLET_PAGE_LIGHT';
@@ -1630,6 +1786,7 @@ export function createCompassBookThreeModel(
     'reading-compass': readingCompass.root,
     'reading-signal-markers': readingSignalMarkers,
     'living-wheel-relief': livingWheel.root,
+    'inner-compass-relief': innerCompass.root,
     'page-turn-socket': pageTurnSocket,
   };
   Object.entries(parts).forEach(([partId, part]) => {
@@ -1676,9 +1833,11 @@ export function createCompassBookThreeModel(
     tabs.visible = eased < 0.72;
     const readingPageVisible = eased > 0.43 && selectedPageId === 'reading';
     const livingWheelVisible = eased > 0.43 && selectedPageId === 'living_wheel';
+    const innerCompassVisible = eased > 0.43 && selectedPageId === 'inner_compass';
     readingCompass.root.visible = readingPageVisible;
     readingSignalMarkers.visible = readingPageVisible;
     livingWheel.root.visible = livingWheelVisible;
+    innerCompass.root.visible = innerCompassVisible;
     openGlow.intensity = THREE.MathUtils.lerp(0.08, quality === 'high' ? 5.4 : 3.2, eased);
   }
 
@@ -1699,6 +1858,7 @@ export function createCompassBookThreeModel(
     readingCompass.root.visible = openProgress > 0.43 && readingActive;
     readingSignalMarkers.visible = openProgress > 0.43 && readingActive;
     livingWheel.root.visible = openProgress > 0.43 && pageId === 'living_wheel';
+    innerCompass.root.visible = openProgress > 0.43 && pageId === 'inner_compass';
     (coverCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
     (readingCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
   }
@@ -1729,6 +1889,7 @@ export function createCompassBookThreeModel(
     readingCompass.needleRoot.rotation.y = readingNeedleAngle;
     livingWheel.compassRose.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.24 + 0.5) * 0.025;
     livingWheel.jewel.rotation.y = reducedMotion ? Math.PI / 8 : elapsedSeconds * 0.08;
+    innerCompass.jewel.rotation.y = reducedMotion ? Math.PI / 8 : elapsedSeconds * 0.08;
     spineMedallion.needleRoot.rotation.y = coverNeedleAngle * 0.5;
     bookmark.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.42) * 0.025;
     const pulse = reducedMotion ? 0.14 : 0.12 + (Math.sin(elapsedSeconds * 1.05) + 1) * 0.04;
