@@ -27,6 +27,14 @@ import { CompassBookCoverPlate } from './CompassBookCoverPlate';
 import { CompassReading } from './CompassReading';
 import { CompassChapterScreen } from './CompassChapterScreen';
 import { CompassGuidedFlow } from './CompassGuidedFlow';
+import { CompassBookPresentationControl } from './CompassBookPresentationControl';
+import {
+  COMPASS_BOOK_PRESENTATION_STORAGE_KEY,
+  parseCompassBookPresentationMode,
+  resolveCompassBookPresentation,
+  type CompassBookPresentationContext,
+  type CompassBookPresentationMode,
+} from '../logic/presentation';
 
 const CompassBookThreeShell = lazy(() =>
   import('./CompassBookThreeShell').then((module) => ({ default: module.CompassBookThreeShell })),
@@ -36,6 +44,26 @@ const CompassBookThreeShell = lazy(() =>
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function readPresentationPreference(): CompassBookPresentationMode {
+  if (typeof window === 'undefined') return 'auto';
+  try {
+    return parseCompassBookPresentationMode(
+      window.localStorage.getItem(COMPASS_BOOK_PRESENTATION_STORAGE_KEY),
+    );
+  } catch {
+    return 'auto';
+  }
+}
+
+function storePresentationPreference(mode: CompassBookPresentationMode) {
+  try {
+    window.localStorage.setItem(COMPASS_BOOK_PRESENTATION_STORAGE_KEY, mode);
+  } catch {
+    // Private browsing and hardened storage settings may reject writes. The
+    // selected mode still remains active for this mounted book session.
+  }
 }
 
 export type CompassBookScreenProps = {
@@ -74,6 +102,10 @@ export type CompassBookScreenProps = {
   allowDemo?: boolean;
   /** Start already in demo mode (used by the dev preview harness). */
   initialDemo?: boolean;
+  /** Host context used only to resolve the `auto` presentation policy. */
+  presentationContext?: CompassBookPresentationContext;
+  /** Optional host/dev override; otherwise the locally saved preference wins. */
+  initialPresentationMode?: CompassBookPresentationMode;
   onClose: () => void;
 };
 
@@ -102,6 +134,8 @@ export function CompassBookScreen({
   hasBlockingOverlay = false,
   allowDemo = false,
   initialDemo = false,
+  presentationContext = 'pwa',
+  initialPresentationMode,
   onClose,
 }: CompassBookScreenProps) {
   const [view, setView] = useState<CompassBookView>(() => {
@@ -113,6 +147,17 @@ export function CompassBookScreen({
     return { kind: 'page', pageId: 'reading' };
   });
   const [demo, setDemo] = useState(allowDemo && initialDemo);
+  const [presentationPreference, setPresentationPreference] =
+    useState<CompassBookPresentationMode>(
+      () => initialPresentationMode ?? readPresentationPreference(),
+    );
+  const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion);
+  const [threeAvailable, setThreeAvailable] = useState(true);
+  const [completionMoment, setCompletionMoment] = useState<{
+    key: number;
+    kind: 'fragment' | 'chapter';
+    issuedAt: number;
+  }>({ key: 0, kind: 'fragment', issuedAt: -Infinity });
   const book = useCompassBook(session, { demo });
   const userId = session?.user?.id ?? 'local';
 
@@ -151,6 +196,14 @@ export function CompassBookScreen({
       releaseScroll();
       lastFocusedRef.current?.focus?.();
     };
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const update = () => setReducedMotion(media?.matches ?? false);
+    update();
+    media?.addEventListener?.('change', update);
+    return () => media?.removeEventListener?.('change', update);
   }, []);
 
   const openPage = useCallback((pageId: CompassBookPageId) => {
@@ -209,29 +262,56 @@ export function CompassBookScreen({
   // The rail highlights the chapter a flow belongs to, so answering a fragment
   // never looks like it left the book.
   const activePageId: CompassBookPageId = view.kind === 'flow' ? view.chapterId : view.pageId;
+  const resolvedPresentation = resolveCompassBookPresentation({
+    preference: presentationPreference,
+    context: presentationContext,
+    surface: view.kind,
+    reducedMotion,
+    threeAvailable,
+  });
+
+  const changePresentation = useCallback((mode: CompassBookPresentationMode) => {
+    setPresentationPreference(mode);
+    storePresentationPreference(mode);
+    if (mode !== '2d') setThreeAvailable(true);
+  }, []);
 
   return createPortal(
     <div
       ref={dialogRef}
       className="compass-book"
       data-page-id={activePageId}
+      data-presentation={resolvedPresentation}
+      data-presentation-preference={presentationPreference}
+      data-presentation-context={presentationContext}
       role="dialog"
       aria-modal="true"
       aria-label="Compass Book"
       tabIndex={-1}
     >
       <div className="compass-book__backdrop" aria-hidden="true" onClick={onClose} />
-      <Suspense fallback={null}>
-        <CompassBookThreeShell
-          activePageId={activePageId}
-          open={!coverOpen}
-          turnKey={turn.key}
-          turnMs={turn.ms}
-          showQuestLedger={Boolean(questLedger)}
-          onSelectPage={openPage}
-          onBackgroundClick={onClose}
-        />
-      </Suspense>
+      {resolvedPresentation === '3d' ? (
+        <Suspense fallback={null}>
+          <CompassBookThreeShell
+            activePageId={activePageId}
+            open={!coverOpen}
+            turnKey={turn.key}
+            turnMs={turn.ms}
+            showQuestLedger={Boolean(questLedger)}
+            celebrationKey={completionMoment.key}
+            celebrationKind={completionMoment.kind}
+            celebrationIssuedAt={completionMoment.issuedAt}
+            onAvailabilityChange={setThreeAvailable}
+            onSelectPage={openPage}
+            onBackgroundClick={onClose}
+          />
+        </Suspense>
+      ) : null}
+      <CompassBookPresentationControl
+        preference={presentationPreference}
+        resolved={resolvedPresentation}
+        onChange={changePresentation}
+      />
       <div className="compass-book__sheet">
         {coverOpen ? <CompassBookCoverPlate onOpened={() => setCoverOpen(false)} /> : null}
         <div className="compass-book__spread">
@@ -323,6 +403,22 @@ export function CompassBookScreen({
                 startActivityId={view.startActivityId}
                 getChapterState={book.getChapterState}
                 onSaveActivity={book.saveActivityAnswers}
+                onActivityCompleted={({ chapterSealed }) => {
+                  const shouldCelebrateInThree = threeAvailable && (
+                    presentationPreference === '3d'
+                    || (
+                      presentationPreference === 'auto'
+                      && presentationContext === 'island_run'
+                      && !reducedMotion
+                    )
+                  );
+                  if (!shouldCelebrateInThree) return;
+                  setCompletionMoment((current) => ({
+                    key: current.key + 1,
+                    kind: chapterSealed ? 'chapter' : 'fragment',
+                    issuedAt: performance.now(),
+                  }));
+                }}
                 saving={book.saving}
                 onExit={() => openPage(view.chapterId)}
               />

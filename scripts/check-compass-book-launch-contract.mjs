@@ -7,6 +7,7 @@ const model = read('src/features/compass-book/three/CompassBookThreeModel.ts');
 const styles = read('src/features/compass-book/components/compassBook.css');
 const availability = read('src/config/featureAvailability.ts');
 const preview = read('compass-preview.html');
+const presentation = read('src/features/compass-book/logic/presentation.ts');
 
 const compassEntryStart = availability.indexOf("'app.compass_book':");
 const compassEntryEnd = availability.indexOf("'today.visionStar':", compassEntryStart);
@@ -47,6 +48,10 @@ requireText(styles, ":not([data-page-id='inner_compass'])", 'Chapter II must ret
 requireText(preview, "window.location.protocol !== 'file:'", 'The preview must distinguish direct file launches from Vite-served launches.');
 requireText(preview, 'http://127.0.0.1:5174/compass-preview.html', 'The direct-file launcher must route to the local preview server.');
 requireText(preview, "entry.src = '/src/scripts/compassPreviewHarness.tsx'", 'The Vite-served preview must retain its React entry module.');
+requireText(screen, "resolvedPresentation === '3d'", 'The 3D shell must mount only when the presentation policy resolves to 3D.');
+requireText(screen, '<CompassBookPresentationControl', 'Players must retain an accessible presentation selector.');
+requireText(presentation, "context === 'island_run' && surface === 'page'", 'Auto mode must reserve 3D for Island Run browsing.');
+requireText(presentation, "if (preference === '2d' || !threeAvailable) return '2d'", 'Explicit 2D and WebGL failure must resolve to the complete 2D book.');
 requireText(compassAvailability, "status: 'live'", 'Compass Book must not ship behind a stale coming-soon status.');
 requireText(compassAvailability, "publicAccess: 'open'", 'Compass Book public access must be open.');
 requireText(compassAvailability, "adminAccess: 'open'", 'Compass Book admin access must be open.');

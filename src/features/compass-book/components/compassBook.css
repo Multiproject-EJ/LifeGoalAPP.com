@@ -110,6 +110,102 @@
   pointer-events: none;
 }
 
+.compass-book-three-shell__ceremony {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 52%, rgba(255, 214, 103, 0.24), transparent 32%);
+}
+
+.compass-book-three-shell__ceremony span {
+  position: absolute;
+  bottom: 11%;
+  left: 25%;
+  transform: translateX(-50%);
+  padding: 9px 16px;
+  border: 1px solid rgba(242, 193, 78, 0.66);
+  border-radius: 999px;
+  color: #fff0b9;
+  background: rgba(18, 12, 39, 0.88);
+  box-shadow: 0 0 36px rgba(237, 183, 62, 0.42);
+  font-family: var(--cbk-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 899px) {
+  .compass-book-three-shell__ceremony span {
+    display: none;
+  }
+}
+
+.compass-book-three-shell[data-celebrating='true'] .compass-book-three-shell__ceremony {
+  animation: cbk-three-ceremony 1800ms ease-out both;
+}
+
+.compass-book[data-presentation='2d'] .compass-book-three-shell {
+  display: none;
+}
+
+.compass-book__presentation-control {
+  position: fixed;
+  z-index: 8;
+  top: max(14px, env(safe-area-inset-top, 0px));
+  left: max(14px, env(safe-area-inset-left, 0px));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 7px 6px 10px;
+  border: 1px solid rgba(242, 193, 78, 0.4);
+  border-radius: 999px;
+  color: rgba(255, 241, 193, 0.82);
+  background: rgba(12, 10, 29, 0.9);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(12px);
+}
+
+.compass-book__presentation-label {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.compass-book__presentation-options {
+  display: flex;
+  gap: 2px;
+}
+
+.compass-book__presentation-options button {
+  min-width: 38px;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  color: rgba(255, 246, 213, 0.78);
+  background: transparent;
+  font: 800 0.72rem/1 system-ui, sans-serif;
+}
+
+.compass-book__presentation-options button:hover {
+  color: #fff8dd;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.compass-book__presentation-options button.is-selected {
+  color: #20150a;
+  background: #efc865;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
+}
+
+.compass-book__presentation-options button:focus-visible {
+  outline: 3px solid #78e8ff;
+  outline-offset: 2px;
+}
+
 /* Paper, not pixels: grain, a few foxing blotches, an aged-edge vignette, and
    the spine shadow on the binding side. Purely decorative. */
 .compass-book__sheet::before {
@@ -189,6 +285,16 @@
     margin-left: 0;
     border-radius: 22px;
   }
+
+  .compass-book[data-presentation='2d'] .compass-book__sheet {
+    width: min(760px, 88vw);
+    margin-left: 0;
+    border-radius: 22px;
+  }
+
+  .compass-book[data-presentation='2d'] .compass-book__sheet::after {
+    display: none;
+  }
 }
 
 @media (max-width: 719px) {
@@ -213,6 +319,17 @@
     padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
     padding-bottom: 9px;
   }
+
+  .compass-book__presentation-control {
+    top: auto;
+    bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .compass-book__scroll {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @keyframes cbk-fade {
@@ -228,6 +345,12 @@
   }
 }
 
+@keyframes cbk-three-ceremony {
+  0% { opacity: 0; transform: scale(0.96); }
+  18%, 68% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .compass-book__backdrop,
   .compass-book__sheet {
@@ -236,6 +359,10 @@
 
   .compass-book-three-shell {
     transition: none;
+  }
+
+  .compass-book-three-shell[data-celebrating='true'] .compass-book-three-shell__ceremony {
+    animation: cbk-fade 900ms ease-out both reverse;
   }
 }
 

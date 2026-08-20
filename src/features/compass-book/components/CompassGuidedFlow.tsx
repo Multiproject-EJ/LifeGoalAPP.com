@@ -59,6 +59,11 @@ export type CompassGuidedFlowProps = {
     activityId: string,
     entries: CompassAnswerEntry[],
   ) => Promise<void>;
+  onActivityCompleted?: (event: {
+    chapterId: CompassBookChapterId;
+    activityId: string;
+    chapterSealed: boolean;
+  }) => void;
   saving: boolean;
   onExit: () => void;
 };
@@ -84,6 +89,7 @@ export function CompassGuidedFlow({
   startActivityId,
   getChapterState,
   onSaveActivity,
+  onActivityCompleted,
   saving,
   onExit,
 }: CompassGuidedFlowProps) {
@@ -176,6 +182,11 @@ export function CompassGuidedFlow({
     }
 
     await onSaveActivity(chapterId, activity.id, entries);
+    onActivityCompleted?.({
+      chapterId,
+      activityId: activity.id,
+      chapterSealed: isSealActivity,
+    });
 
     if (isLast) {
       onExit();

@@ -8,6 +8,7 @@ import { createRoot } from 'react-dom/client';
 import { CompassBookScreen } from '../features/compass-book/components/CompassBookScreen';
 import { DEMO_ISLAND_NUMBER } from '../features/compass-book/content/demoBook';
 import type { CompassBookChapterId } from '../features/compass-book/types';
+import { parseCompassBookPresentationMode } from '../features/compass-book/logic/presentation';
 import { QuickAddSheet } from '../components/QuickAddSheet';
 import { GoalPillarMeter } from '../features/goals/GoalPillarMeter';
 import { MyQuestHub } from '../features/goals/MyQuestHub';
@@ -64,6 +65,12 @@ function Harness() {
           session={null}
           initialChapterId={chapter ?? (activity ? 'living_wheel' : undefined)}
           initialActivityId={activity}
+          presentationContext={params.get('context') === 'island_run' ? 'island_run' : 'pwa'}
+          initialPresentationMode={
+            params.has('presentation')
+              ? parseCompassBookPresentationMode(params.get('presentation'))
+              : undefined
+          }
           // `?page=quest_ledger` opens straight onto the Quest Ledger page.
           initialPageId={params.get('page') === 'quest_ledger' ? 'quest_ledger' : undefined}
           questLedger={{

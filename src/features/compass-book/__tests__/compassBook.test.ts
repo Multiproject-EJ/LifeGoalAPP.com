@@ -92,6 +92,10 @@ import {
   turnDistance,
   turnDurationMs,
 } from '../logic/pageTurn';
+import {
+  parseCompassBookPresentationMode,
+  resolveCompassBookPresentation,
+} from '../logic/presentation';
 import type {
   CompassAnswerRecord,
   CompassAnswerValue,
@@ -1313,6 +1317,34 @@ function testWisdomCompassUsefulness(): void {
   assert(testedActivities === 120, 'all 120 island reflections pass the usefulness gate');
 }
 
+function testPresentationPolicy(): void {
+  assert(parseCompassBookPresentationMode('2d') === '2d', '2D preference parses');
+  assert(parseCompassBookPresentationMode('3d') === '3d', '3D preference parses');
+  assert(parseCompassBookPresentationMode('unknown') === 'auto', 'unknown preference is safe');
+
+  const resolve = (
+    preference: 'auto' | '2d' | '3d',
+    context: 'pwa' | 'island_run',
+    surface: 'page' | 'flow',
+    reducedMotion = false,
+    threeAvailable = true,
+  ) => resolveCompassBookPresentation({
+    preference,
+    context,
+    surface,
+    reducedMotion,
+    threeAvailable,
+  });
+
+  assert(resolve('auto', 'pwa', 'page') === '2d', 'PWA Auto defaults to clear 2D');
+  assert(resolve('auto', 'island_run', 'page') === '3d', 'Island Run Auto browses in 3D');
+  assert(resolve('auto', 'island_run', 'flow') === '2d', 'Island Run Auto answers in 2D');
+  assert(resolve('auto', 'island_run', 'page', true) === '2d', 'Auto respects reduced motion');
+  assert(resolve('3d', 'pwa', 'flow', true) === '3d', 'explicit 3D remains available with reduced animation');
+  assert(resolve('3d', 'island_run', 'page', false, false) === '2d', 'WebGL failure falls back to 2D');
+  assert(resolve('2d', 'island_run', 'page') === '2d', 'explicit 2D wins in Island Run');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -1332,5 +1364,6 @@ export function runAllCompassBookTests(): void {
   testReading();
   testPageTurn();
   testDemoBook();
+  testPresentationPolicy();
   testWisdomCompassUsefulness();
 }

@@ -13,6 +13,10 @@ type Props = {
   turnKey: number;
   turnMs: number;
   showQuestLedger: boolean;
+  celebrationKey: number;
+  celebrationKind: 'fragment' | 'chapter';
+  celebrationIssuedAt: number;
+  onAvailabilityChange: (available: boolean) => void;
   onSelectPage: (pageId: CompassBookPageId) => void;
   onBackgroundClick: () => void;
 };
@@ -37,6 +41,10 @@ export function CompassBookThreeShell({
   turnKey,
   turnMs,
   showQuestLedger,
+  celebrationKey,
+  celebrationKind,
+  celebrationIssuedAt,
+  onAvailabilityChange,
   onSelectPage,
   onBackgroundClick,
 }: Props) {
@@ -47,13 +55,30 @@ export function CompassBookThreeShell({
   const openRef = useRef(open);
   const activePageRef = useRef(activePageId);
   const reducedMotionRef = useRef(false);
+  const celebrationRef = useRef({ key: 0, startedAt: -Infinity });
+  const celebrationKindRef = useRef(celebrationKind);
   const turnRef = useRef({ startedAt: 0, duration: 0, direction: 1 as -1 | 1 });
   const [status, setStatus] = useState<'warming' | 'ready' | 'fallback'>('warming');
+  const [celebrating, setCelebrating] = useState(false);
   const quality = useMemo(selectQuality, []);
 
   useEffect(() => {
     openRef.current = open;
   }, [open]);
+
+  useEffect(() => {
+    celebrationKindRef.current = celebrationKind;
+  }, [celebrationKind]);
+
+  useEffect(() => {
+    if (celebrationKey <= 0 || celebrationKey === celebrationRef.current.key) return undefined;
+    const age = performance.now() - celebrationIssuedAt;
+    if (age > 2200) return undefined;
+    celebrationRef.current = { key: celebrationKey, startedAt: celebrationIssuedAt };
+    setCelebrating(true);
+    const timer = window.setTimeout(() => setCelebrating(false), Math.max(0, 1800 - age));
+    return () => window.clearTimeout(timer);
+  }, [celebrationIssuedAt, celebrationKey]);
 
   useEffect(() => {
     const previous = activePageRef.current;
@@ -85,6 +110,7 @@ export function CompassBookThreeShell({
       && new URLSearchParams(window.location.search).get('compass3d') === 'fallback'
     ) {
       setStatus('fallback');
+      onAvailabilityChange(false);
       return undefined;
     }
 
@@ -99,8 +125,10 @@ export function CompassBookThreeShell({
     } catch (error) {
       console.warn('[compass-book-three] WebGL unavailable; using the complete DOM book.', error);
       setStatus('fallback');
+      onAvailabilityChange(false);
       return undefined;
     }
+    onAvailabilityChange(true);
 
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -125,6 +153,9 @@ export function CompassBookThreeShell({
     const rim = new THREE.DirectionalLight(0x7755ff, quality === 'high' ? 1.3 : 0.9);
     rim.position.set(7, 5, -8);
     scene.add(rim);
+    const completionGlow = new THREE.PointLight(0xffcf58, 0, 11, 2);
+    completionGlow.position.set(0.5, 4.8, 1.2);
+    scene.add(completionGlow);
 
     let width = 1;
     let height = 1;
@@ -170,6 +201,7 @@ export function CompassBookThreeShell({
     const onContextLost = (event: Event) => {
       event.preventDefault();
       setStatus('fallback');
+      onAvailabilityChange(false);
     };
     canvas.addEventListener('pointermove', onPointerMove);
     canvas.addEventListener('pointerup', onPointerUp);
@@ -189,6 +221,15 @@ export function CompassBookThreeShell({
       openProgress = reducedMotionRef.current ? target : easeToward(openProgress, target, deltaSeconds);
       model.setOpenProgress(openProgress);
       model.animate(now / 1000, reducedMotionRef.current);
+
+      const celebrationAge = now - celebrationRef.current.startedAt;
+      const celebrationProgress = THREE.MathUtils.clamp(celebrationAge / 1800, 0, 1);
+      const celebrationStrength = celebrationAge >= 0 && celebrationAge < 1800
+        ? (1 - celebrationProgress) * (0.58 + Math.sin(celebrationProgress * Math.PI * 5) * 0.22)
+        : 0;
+      completionGlow.intensity = reducedMotionRef.current
+        ? celebrationStrength * 2.2
+        : celebrationStrength * (celebrationKindRef.current === 'chapter' ? 8.5 : 5.8);
 
       const pageTurn = turnRef.current;
       const rawTurn = pageTurn.duration <= 0 ? 1 : (now - pageTurn.startedAt) / pageTurn.duration;
@@ -229,7 +270,7 @@ export function CompassBookThreeShell({
       modelRef.current = null;
       cameraRef.current = null;
     };
-  }, [onBackgroundClick, onSelectPage, quality, showQuestLedger]);
+  }, [onAvailabilityChange, onBackgroundClick, onSelectPage, quality, showQuestLedger]);
 
   return (
     <div
@@ -238,9 +279,14 @@ export function CompassBookThreeShell({
       data-quality={quality}
       data-active-page={activePageId}
       data-open={open ? 'true' : 'false'}
+      data-celebrating={celebrating ? 'true' : 'false'}
+      data-celebration-kind={celebrationKind}
       aria-hidden="true"
     >
       <canvas ref={canvasRef} className="compass-book-three-shell__canvas" />
+      <div className="compass-book-three-shell__ceremony">
+        <span>{celebrationKind === 'chapter' ? 'Chapter sealed' : 'Fragment inscribed'}</span>
+      </div>
     </div>
   );
 }
