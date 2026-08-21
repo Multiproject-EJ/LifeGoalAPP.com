@@ -1,0 +1,44 @@
+[
+  {
+    "id": "five-node-identities",
+    "score": 0.88,
+    "critical": true,
+    "notes": "The comet, star, cupped beacon, bridge-wheel, and nested-flame identities retain distinct enamel/metal palettes in fixed and orbit views."
+  },
+  {
+    "id": "material-light-hierarchy",
+    "score": 0.89,
+    "critical": false,
+    "notes": "Antique gilt, dark chart field, five force materials, faceted Trial, and low-signal Mirage remain ordered under all controlled captures."
+  },
+  {
+    "id": "eight-region-palette",
+    "score": 0.9,
+    "critical": true,
+    "notes": "All eight named regions pass visible-footprint comparison; final scores range from 0.726 for brass to 0.918 for rose."
+  },
+  {
+    "id": "roughness-and-grazing-response",
+    "score": 0.84,
+    "critical": true,
+    "notes": "Front and opposite orbit views preserve distinct glazed enamel, satin metal, faceted Trial, and subdued Mirage response."
+  },
+  {
+    "id": "independent-pbr-channels",
+    "score": 0.88,
+    "critical": true,
+    "notes": "High tier now uses separately seeded 1024px albedo, roughness, bump, and AO maps; low tier retains 128px channels."
+  },
+  {
+    "id": "material-hierarchy",
+    "score": 0.89,
+    "critical": true,
+    "notes": "Gilt structure, five force colors, luminous Trial, and low-signal Mirage remain legible without relying on one camera angle."
+  },
+  {
+    "id": "controlled-material-evidence",
+    "score": 0.93,
+    "critical": true,
+    "notes": "Eight region comparisons, 32 planned views, four saved capture classes, compatibility checks, and the component-aware Tier-1 bridge pass."
+  }
+]

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "kind": "img2threejs.material-comparison",
+  "materialId": "teal",
+  "reference": {
+    "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/03-capability-teal-enamel.png",
+    "meanRgb": [
+      57,
+      54,
+      43
+    ],
+    "features": {
+      "meanLuma": 0.21024201908508544,
+      "lumaVariance": 0.02993036260261984,
+      "horizontalGradient": 0.08023991412877203,
+      "verticalGradient": 0.07494184814351275,
+      "anisotropyProxy": 1.070695694281699
+    },
+    "width": 112,
+    "height": 112,
+    "foregroundCoverage": 0.9605,
+    "warnings": [
+      "image is not clearly isolated from background; using most pixels as material evidence"
+    ],
+    "readback": true,
+    "diagnostics": {
+      "backgroundColor": "#1F1E2A",
+      "backgroundNoise": 19.209,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.9531
+    }
+  },
+  "render": {
+    "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/material-regions/render-teal.png",
+    "meanRgb": [
+      70,
+      78,
+      68
+    ],
+    "features": {
+      "meanLuma": 0.2956088947586219,
+      "lumaVariance": 0.02526476201603516,
+      "horizontalGradient": 0.04586943401474059,
+      "verticalGradient": 0.04958483416770961,
+      "anisotropyProxy": 1.080999476727248
+    },
+    "width": 130,
+    "height": 132,
+    "foregroundCoverage": 0.9666,
+    "warnings": [
+      "image is not clearly isolated from background; using most pixels as material evidence"
+    ],
+    "readback": true,
+    "diagnostics": {
+      "backgroundColor": "#2B2327",
+      "backgroundNoise": 37.162,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.9642
+    }
+  },
+  "metrics": {
+    "deltaE00": 9.493,
+    "scores": {
+      "baseColor": 0.810141484717551,
+      "meanLuma": 0.8102958318365856,
+      "microstructure": 0.9611199951117944,
+      "directionalResponse": 0.9948481087772255,
+      "overall": 0.8756
+    }
+  },
+  "mismatches": [],
+  "passed": true,
+  "nextAction": "continue",
+  "limitation": "Deterministic crop metrics are evidence; material identity still requires vision review for ambiguous cases."
+}

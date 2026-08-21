@@ -71,6 +71,10 @@ function readMaterialProof() {
   return new URLSearchParams(window.location.search).get('materialProof') === '1';
 }
 
+function readLegacyColorProof() {
+  return new URLSearchParams(window.location.search).get('legacyColorProof') === '1';
+}
+
 function stripMaterialMapsForReview(root: THREE.Object3D) {
   root.traverse((node) => {
     if (!(node instanceof THREE.Mesh)) return;
@@ -270,6 +274,7 @@ export default function CompassBookThreeLab() {
   const activePage = useMemo(readInitialPage, []);
   const mapStrippedReview = useMemo(readMapStrippedReview, []);
   const materialProof = useMemo(readMaterialProof, []);
+  const legacyColorProof = useMemo(readLegacyColorProof, []);
   const [pose, setPose] = useState<CompassBookThreePose>(readInitialPose);
   const [quality, setQuality] = useState<CompassBookThreeQuality>(readInitialQuality);
   const [reducedMotion, setReducedMotion] = useState(readInitialReducedMotion);
@@ -337,6 +342,21 @@ export default function CompassBookThreeLab() {
       } | undefined;
       const activeRelief = runtime?.parts?.[`${activePage.replace(/_/g, '-')}-relief`];
       if (activeRelief) {
+        if (legacyColorProof) {
+          const reliefRuntime = activeRelief.userData.sculptRuntime as {
+            parts?: Record<string, THREE.Object3D>;
+          } | undefined;
+          [
+            'curiosity-node',
+            'capability-node',
+            'contribution-node',
+            'viability-node',
+            'willingness-node',
+            'mirage-node',
+          ].forEach((partId) => reliefRuntime?.parts?.[partId]?.scale.setScalar(1.72));
+          reliefRuntime?.parts?.['trial-crystal']?.scale.multiplyScalar(1.34);
+          if (reliefRuntime?.parts?.['chart-stars']) reliefRuntime.parts['chart-stars'].visible = false;
+        }
         scene.attach(activeRelief);
         model.root.visible = false;
         activeRelief.visible = true;
@@ -467,7 +487,7 @@ export default function CompassBookThreeLab() {
       delete (window as CompassBookReviewWindow).__compassBookSculptRuntime;
       delete canvas.dataset.partManifest;
     };
-  }, [activePage, mapStrippedReview, materialProof, quality]);
+  }, [activePage, legacyColorProof, mapStrippedReview, materialProof, quality]);
 
   const modelMetrics = modelRef.current?.metrics;
 

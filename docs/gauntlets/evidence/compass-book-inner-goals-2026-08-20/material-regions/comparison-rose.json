@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "kind": "img2threejs.material-comparison",
+  "materialId": "rose",
+  "reference": {
+    "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/04-contribution-rose-copper.png",
+    "meanRgb": [
+      97,
+      58,
+      36
+    ],
+    "features": {
+      "meanLuma": 0.25278286026945085,
+      "lumaVariance": 0.03350927534250494,
+      "horizontalGradient": 0.0958291239048814,
+      "verticalGradient": 0.10167471144486173,
+      "anisotropyProxy": 1.0610001145975474
+    },
+    "width": 118,
+    "height": 118,
+    "foregroundCoverage": 0.9488,
+    "warnings": [
+      "image is not clearly isolated from background; using most pixels as material evidence"
+    ],
+    "readback": true,
+    "diagnostics": {
+      "backgroundColor": "#231F26",
+      "backgroundNoise": 58.992,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.949
+    }
+  },
+  "render": {
+    "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/material-regions/render-rose.png",
+    "meanRgb": [
+      108,
+      66,
+      43
+    ],
+    "features": {
+      "meanLuma": 0.2883133344531416,
+      "lumaVariance": 0.01653621416807119,
+      "horizontalGradient": 0.05191529724655812,
+      "verticalGradient": 0.04503910965095256,
+      "anisotropyProxy": 1.152671481494531
+    },
+    "width": 138,
+    "height": 138,
+    "foregroundCoverage": 0.76,
+    "warnings": [],
+    "readback": true,
+    "diagnostics": {
+      "backgroundColor": "#2E2C30",
+      "backgroundNoise": 9.274,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.7617
+    }
+  },
+  "metrics": {
+    "deltaE00": 2.977,
+    "scores": {
+      "baseColor": 0.9404544346126572,
+      "meanLuma": 0.9210433907029094,
+      "microstructure": 0.8585578235463854,
+      "directionalResponse": 0.9541643165515082,
+      "overall": 0.9182
+    }
+  },
+  "mismatches": [],
+  "passed": true,
+  "nextAction": "continue",
+  "limitation": "Deterministic crop metrics are evidence; material identity still requires vision review for ambiguous cases."
+}

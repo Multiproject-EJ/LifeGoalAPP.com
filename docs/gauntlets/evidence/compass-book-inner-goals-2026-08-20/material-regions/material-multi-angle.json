@@ -1,0 +1,20 @@
+{
+  "referenceAreaFraction": 0.9977580499166022,
+  "angles": [
+    {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/75-wide-chapter-4-material-1024-steady-right.png",
+      "areaFraction": 0.9971344737805622,
+      "ratio": 0.9993750226960413,
+      "degenerate": false
+    },
+    {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/72-wide-chapter-4-material-1024-steady.png",
+      "areaFraction": 0.9993147654692649,
+      "ratio": 1.0015602134733894,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "The deterministic result is non-degenerate, but its foreground mask includes nearly the whole dark frame. The angled screenshots remain the stronger relief-depth evidence."
+}

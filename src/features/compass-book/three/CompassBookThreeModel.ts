@@ -129,7 +129,7 @@ function createSurfaceTexture(
 }
 
 function createTextures(quality: CompassBookThreeQuality): MaterialTextures {
-  const size = quality === 'high' ? 512 : 128;
+  const size = quality === 'high' ? 1024 : 128;
   return {
     leatherColor: createSurfaceTexture(size, 'leather-color'),
     leatherBump: createSurfaceTexture(size, 'leather-bump'),
@@ -1938,8 +1938,8 @@ function createIkigaiMapRelief(
   const high = quality === 'high';
   const radialSegments = high ? 24 : 14;
   const tubeSegments = high ? 36 : 20;
-  const createEnamelDataTexture = (kind: 'roughness' | 'bump') => {
-    const size = high ? 128 : 48;
+  const createEnamelTexture = (kind: 'albedo' | 'roughness' | 'bump' | 'ao') => {
+    const size = high ? 1024 : 128;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -1948,11 +1948,17 @@ function createIkigaiMapRelief(
     const pixels = context.createImageData(size, size);
     for (let y = 0; y < size; y += 1) {
       for (let x = 0; x < size; x += 1) {
-        const fine = seededNoise(x, y, kind === 'roughness' ? 151 : 173);
-        const meso = seededNoise(Math.floor(x / 9), Math.floor(y / 9), kind === 'roughness' ? 211 : 239);
-        const value = kind === 'roughness'
-          ? 172 + fine * 46 + meso * 24
-          : 112 + fine * 28 + meso * 16;
+        const seed = kind === 'albedo' ? 137 : kind === 'roughness' ? 151 : kind === 'bump' ? 173 : 197;
+        const fine = seededNoise(x, y, seed);
+        const meso = seededNoise(Math.floor(x / 9), Math.floor(y / 9), seed + 60);
+        const macro = seededNoise(Math.floor(x / 41), Math.floor(y / 41), seed + 116);
+        const value = kind === 'albedo'
+          ? 226 + fine * 14 + macro * 12
+          : kind === 'roughness'
+            ? 172 + fine * 46 + meso * 24
+            : kind === 'bump'
+              ? 112 + fine * 28 + meso * 16
+              : 220 + meso * 22 + macro * 13;
         const offset = (y * size + x) * 4;
         pixels.data[offset] = value;
         pixels.data[offset + 1] = value;
@@ -1963,15 +1969,21 @@ function createIkigaiMapRelief(
     context.putImageData(pixels, 0, 0);
     const texture = new THREE.CanvasTexture(canvas);
     texture.name = `COMPASS_BOOK_IKIGAI_ENAMEL_${kind.toUpperCase()}`;
-    texture.colorSpace = THREE.NoColorSpace;
+    texture.colorSpace = kind === 'albedo' ? THREE.SRGBColorSpace : THREE.NoColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(2.4, 2.4);
+    texture.repeat.set(
+      kind === 'albedo' ? 1.7 : kind === 'ao' ? 1.35 : kind === 'bump' ? 3.2 : 2.4,
+      kind === 'albedo' ? 1.7 : kind === 'ao' ? 1.35 : kind === 'bump' ? 3.2 : 2.4,
+    );
+    if (kind === 'ao') texture.channel = 0;
     texture.needsUpdate = true;
     return texture;
   };
-  const enamelRoughness = createEnamelDataTexture('roughness');
-  const enamelBump = createEnamelDataTexture('bump');
+  const enamelAlbedo = createEnamelTexture('albedo');
+  const enamelRoughness = createEnamelTexture('roughness');
+  const enamelBump = createEnamelTexture('bump');
+  const enamelAo = createEnamelTexture('ao');
 
   const chart = new THREE.MeshStandardMaterial({
     name: 'COMPASS_BOOK_IKIGAI_CHART_MATERIAL',
@@ -1991,6 +2003,9 @@ function createIkigaiMapRelief(
   const curiosity = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_CURIOSITY_MATERIAL',
     color: 0x7139b6,
+    map: enamelAlbedo,
+    aoMap: enamelAo,
+    aoMapIntensity: 0.24,
     emissive: 0x24103f,
     emissiveIntensity: 0.28,
     roughness: 0.25,
@@ -2006,6 +2021,9 @@ function createIkigaiMapRelief(
   const capability = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_CAPABILITY_MATERIAL',
     color: 0x147985,
+    map: enamelAlbedo,
+    aoMap: enamelAo,
+    aoMapIntensity: 0.22,
     emissive: 0x082f36,
     emissiveIntensity: 0.23,
     roughness: 0.28,
@@ -2021,6 +2039,9 @@ function createIkigaiMapRelief(
   const contribution = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_CONTRIBUTION_MATERIAL',
     color: 0xa85f45,
+    map: enamelAlbedo,
+    aoMap: enamelAo,
+    aoMapIntensity: 0.26,
     emissive: 0x3c1912,
     emissiveIntensity: 0.18,
     roughness: 0.38,
@@ -2035,6 +2056,9 @@ function createIkigaiMapRelief(
   const viability = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_VIABILITY_MATERIAL',
     color: 0xb27a18,
+    map: enamelAlbedo,
+    aoMap: enamelAo,
+    aoMapIntensity: 0.25,
     emissive: 0x4b2805,
     emissiveIntensity: 0.2,
     roughness: 0.34,
@@ -2049,6 +2073,9 @@ function createIkigaiMapRelief(
   const willingness = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_WILLINGNESS_MATERIAL',
     color: 0xd84b10,
+    map: enamelAlbedo,
+    aoMap: enamelAo,
+    aoMapIntensity: 0.22,
     emissive: 0x7b1d04,
     emissiveIntensity: 0.5,
     roughness: 0.25,
@@ -2064,6 +2091,9 @@ function createIkigaiMapRelief(
   const mirageMaterial = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_MIRAGE_MATERIAL',
     color: 0x30283e,
+    map: enamelAlbedo,
+    aoMap: enamelAo,
+    aoMapIntensity: 0.34,
     emissive: 0x0c0912,
     emissiveIntensity: 0.08,
     roughness: 0.66,
@@ -2088,6 +2118,9 @@ function createIkigaiMapRelief(
   const trialMaterial = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_TRIAL_CRYSTAL_MATERIAL',
     color: 0x8e48f1,
+    map: enamelAlbedo,
+    aoMap: enamelAo,
+    aoMapIntensity: 0.2,
     emissive: 0x48208f,
     emissiveIntensity: 0.88,
     roughness: 0.14,

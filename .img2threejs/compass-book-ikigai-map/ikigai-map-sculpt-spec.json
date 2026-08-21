@@ -41,17 +41,17 @@
   "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
   "referenceCamera": {
     "solved": false,
-    "fovDegrees": 40.0,
-    "aspect": 1.0,
+    "fovDegrees": 40,
+    "aspect": 1,
     "orientation": {
-      "yaw": 0.0,
-      "pitch": 0.0,
-      "roll": 0.0
+      "yaw": 0,
+      "pitch": 0,
+      "roll": 0
     },
     "positionHint": [
-      0.0,
-      0.0,
-      3.0
+      0,
+      0,
+      3
     ],
     "note": "For likeness work, solve the reference camera (forge/stage1_intake/solve_camera_pose.py) so the review render aligns with the photo and the reference can be projected. Confirm by overlay review."
   },
@@ -144,10 +144,10 @@
           "kind": "linework",
           "description": "Recessed gilt orbit and constellation arcs",
           "region": {
-            "x": 0.0,
-            "y": 0.0,
-            "width": 1.0,
-            "height": 1.0,
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1,
             "units": "normalized"
           },
           "scale": "micro repeated arcs",
@@ -187,7 +187,7 @@
           "description": "External dark satellite with segmented broken tether",
           "region": {
             "x": 0.66,
-            "y": 0.0,
+            "y": 0,
             "width": 0.34,
             "height": 0.34,
             "units": "normalized"
@@ -207,7 +207,7 @@
           "kind": "ridge",
           "description": "Teal eight-point faceted star/tool insert",
           "region": {
-            "x": 0.0,
+            "x": 0,
             "y": 0.3,
             "width": 0.34,
             "height": 0.34,
@@ -270,7 +270,7 @@
           "kind": "ridge",
           "description": "Amber bridge arch, pylons and wheel inset",
           "region": {
-            "x": 0.0,
+            "x": 0,
             "y": 0.66,
             "width": 0.34,
             "height": 0.34,
@@ -353,27 +353,27 @@
     },
     "anatomy": {
       "applies": false,
-      "styleHeads": 0.0,
+      "styleHeads": 0,
       "proportions": {
-        "headUnit": 0.0,
-        "torso": 0.0,
-        "legs": 0.0,
-        "shoulderWidth": 0.0,
-        "hipWidth": 0.0
+        "headUnit": 0,
+        "torso": 0,
+        "legs": 0,
+        "shoulderWidth": 0,
+        "hipWidth": 0
       },
       "pose": {
         "type": "unassessed",
         "jointAngles": {}
       },
       "faceLandmarks": {
-        "eyeLine": 0.0,
-        "eyeSpacing": 0.0,
-        "noseBase": 0.0,
-        "mouthLine": 0.0,
-        "hairline": 0.0
+        "eyeLine": 0,
+        "eyeSpacing": 0,
+        "noseBase": 0,
+        "mouthLine": 0,
+        "hairline": 0
       },
       "features": [],
-      "confidence": 0.0,
+      "confidence": 0,
       "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
     },
     "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png"
@@ -824,30 +824,20 @@
       "interaction-pass",
       "optimization-pass"
     ],
-    "currentPass": "material-pass",
+    "currentPass": "surface-pass",
     "completedPasses": [
       "blockout",
       "structural-pass",
-      "form-refinement"
+      "form-refinement",
+      "material-pass"
     ],
-    "lastCompletedPass": "form-refinement",
+    "lastCompletedPass": "material-pass",
     "blockedReason": "",
     "nextRequiredEvidence": [
-      "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
-      "Each important material defines roughness variation and at least one normal/bump/displacement response.",
-      "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
-      "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
-      "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
-      "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
-      "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
-      "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+      "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
+      "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
       "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
-      "reference-derived albedo palette with dominant, secondary, and accent colors",
-      "independent albedo, roughness, height/normal, and AO maps",
-      "macro, meso, and micro surface-frequency response at 1024px or higher",
-      "local material masks: AO, dirt, wear, stains, moss, chips, scratches, wetness, or equivalent",
-      "neutral, grazing-light close-up, and reference-matched browser screenshots",
-      "AI vision comparison sheet score meeting the visual acceptance threshold",
+      "component surfaceDetail for tactile normal/bump/displacement and locality",
       "browser render screenshot from your agent's browser/screenshot tool",
       "side-by-side reference/render comparison sheet for AI vision review",
       "AI vision score at or above the visual acceptance threshold",
@@ -977,10 +967,10 @@
       "id": "full-object",
       "view": "primary",
       "imageRegion": {
-        "x": 0.0,
-        "y": 0.0,
-        "width": 1.0,
-        "height": 1.0,
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1,
         "units": "normalized"
       },
       "observations": [],
@@ -1008,7 +998,7 @@
       "name": "Compass Book Chapter IV Ikigai Map Relief",
       "level": "macro",
       "role": "body",
-      "importance": 1.0,
+      "importance": 1,
       "confidence": 0.5,
       "primitive": "box",
       "topologyClass": "assembled-solid",
@@ -1017,7 +1007,7 @@
         "topologyIntent": "low-poly blockout with bevel-ready edges",
         "edgeTreatment": {
           "type": "none",
-          "bevelRadius": 0.0,
+          "bevelRadius": 0,
           "segments": 1
         },
         "deformationStack": [],
@@ -1027,9 +1017,9 @@
       "parent": null,
       "attachment": null,
       "dimensions": {
-        "width": 1.0,
-        "height": 1.0,
-        "depth": 1.0,
+        "width": 1,
+        "height": 1,
+        "depth": 1,
         "units": "relative",
         "confidence": 0.5
       },
@@ -1098,7 +1088,7 @@
           "fractureGroup": "root",
           "seamRefs": [],
           "detachableFragments": [],
-          "breakImpulse": 0.0,
+          "breakImpulse": 0,
           "debrisMaterial": "base"
         }
       },
@@ -1111,9 +1101,9 @@
       "seams": [],
       "localFeatures": [],
       "surfaceDetail": {
-        "macroRoughness": 0.0,
-        "microRoughness": 0.0,
-        "bumpAmplitude": 0.0,
+        "macroRoughness": 0,
+        "microRoughness": 0,
+        "bumpAmplitude": 0,
         "normalPattern": "",
         "displacementPattern": "",
         "occlusionPattern": "",
@@ -1333,6 +1323,31 @@
           "geometryEffect": "concentric orbit and constellation curves",
           "confidence": 0.94
         }
+      ],
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "base"
+      },
+      "materialRegions": [
+        {
+          "regionId": "chart-field-navy-leather",
+          "materialId": "base",
+          "profileId": "leather.matte",
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/00-chart-field-navy-leather.png",
+            "bbox": {
+              "x": 190,
+              "y": 684,
+              "width": 138,
+              "height": 92
+            },
+            "sourceWidth": 1504,
+            "sourceHeight": 1046,
+            "loaderWarnings": [],
+            "coverage": 0.0081
+          }
+        }
       ]
     },
     {
@@ -1376,6 +1391,31 @@
           "type": "seam",
           "geometryEffect": "overlapping collars at twenty rail endpoints",
           "confidence": 0.95
+        }
+      ],
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "brass"
+      },
+      "materialRegions": [
+        {
+          "regionId": "gilt-rail-and-bezel",
+          "materialId": "brass",
+          "profileId": "metal.brass",
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/01-gilt-rail-and-bezel.png",
+            "bbox": {
+              "x": 168,
+              "y": 185,
+              "width": 242,
+              "height": 58
+            },
+            "sourceWidth": 1504,
+            "sourceHeight": 1046,
+            "loaderWarnings": [],
+            "coverage": 0.0089
+          }
         }
       ]
     },
@@ -1421,6 +1461,31 @@
           "geometryEffect": "faceted comet tail and star core",
           "confidence": 0.98
         }
+      ],
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "violet"
+      },
+      "materialRegions": [
+        {
+          "regionId": "curiosity-violet-enamel",
+          "materialId": "violet",
+          "profileId": "ceramic.glazed",
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/02-curiosity-violet-enamel.png",
+            "bbox": {
+              "x": 442,
+              "y": 215,
+              "width": 108,
+              "height": 108
+            },
+            "sourceWidth": 1504,
+            "sourceHeight": 1046,
+            "loaderWarnings": [],
+            "coverage": 0.0074
+          }
+        }
       ]
     },
     {
@@ -1464,6 +1529,31 @@
           "type": "raised-ridge",
           "geometryEffect": "eight-point faceted star insert",
           "confidence": 0.98
+        }
+      ],
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "teal"
+      },
+      "materialRegions": [
+        {
+          "regionId": "capability-teal-enamel",
+          "materialId": "teal",
+          "profileId": "ceramic.glazed",
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/03-capability-teal-enamel.png",
+            "bbox": {
+              "x": 548,
+              "y": 356,
+              "width": 112,
+              "height": 112
+            },
+            "sourceWidth": 1504,
+            "sourceHeight": 1046,
+            "loaderWarnings": [],
+            "coverage": 0.008
+          }
         }
       ]
     },
@@ -1509,6 +1599,31 @@
           "geometryEffect": "paired cupped forms and beacon star",
           "confidence": 0.96
         }
+      ],
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "rose"
+      },
+      "materialRegions": [
+        {
+          "regionId": "contribution-rose-copper",
+          "materialId": "rose",
+          "profileId": "metal.copper",
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/04-contribution-rose-copper.png",
+            "bbox": {
+              "x": 508,
+              "y": 544,
+              "width": 118,
+              "height": 118
+            },
+            "sourceWidth": 1504,
+            "sourceHeight": 1046,
+            "loaderWarnings": [],
+            "coverage": 0.0089
+          }
+        }
       ]
     },
     {
@@ -1552,6 +1667,31 @@
           "type": "raised-ridge",
           "geometryEffect": "bridge arch pylons and wheel inset",
           "confidence": 0.98
+        }
+      ],
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "amber"
+      },
+      "materialRegions": [
+        {
+          "regionId": "viability-amber-brass",
+          "materialId": "amber",
+          "profileId": "metal.brass",
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/05-viability-amber-brass.png",
+            "bbox": {
+              "x": 296,
+              "y": 548,
+              "width": 118,
+              "height": 112
+            },
+            "sourceWidth": 1504,
+            "sourceHeight": 1046,
+            "loaderWarnings": [],
+            "coverage": 0.0084
+          }
         }
       ]
     },
@@ -1597,6 +1737,31 @@
           "geometryEffect": "nested solid flame lobes",
           "confidence": 0.98
         }
+      ],
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "ember"
+      },
+      "materialRegions": [
+        {
+          "regionId": "willingness-ember-enamel",
+          "materialId": "ember",
+          "profileId": "ceramic.glazed",
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/06-willingness-ember-enamel.png",
+            "bbox": {
+              "x": 263,
+              "y": 354,
+              "width": 116,
+              "height": 116
+            },
+            "sourceWidth": 1504,
+            "sourceHeight": 1046,
+            "loaderWarnings": [],
+            "coverage": 0.0086
+          }
+        }
       ]
     },
     {
@@ -1640,6 +1805,31 @@
           "type": "raised-ridge",
           "geometryEffect": "segmented broken tether beads",
           "confidence": 0.97
+        }
+      ],
+      "uvContract": {
+        "status": "unwrapped",
+        "strategy": "generated procedural coordinates",
+        "materialId": "mirage"
+      },
+      "materialRegions": [
+        {
+          "regionId": "mirage-dim-enamel",
+          "materialId": "mirage",
+          "profileId": "plastic.matte",
+          "crop": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/07-mirage-dim-enamel.png",
+            "bbox": {
+              "x": 570,
+              "y": 670,
+              "width": 104,
+              "height": 104
+            },
+            "sourceWidth": 1504,
+            "sourceHeight": 1046,
+            "loaderWarnings": [],
+            "coverage": 0.0069
+          }
         }
       ]
     },
@@ -2303,8 +2493,8 @@
       "textureProjection": {
         "mode": "uv",
         "repeat": [
-          2.0,
-          2.0
+          2,
+          2
         ],
         "anisotropy": 8,
         "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
@@ -2312,25 +2502,25 @@
       "surfaceFrequencyBands": [
         {
           "id": "macro",
-          "frequency": 2.0,
+          "frequency": 2,
           "amplitude": 0.477,
           "role": "reference-derived broad albedo and height breakup"
         },
         {
           "id": "meso",
-          "frequency": 14.0,
+          "frequency": 14,
           "amplitude": 0.35,
           "role": "reference-derived cracks, ridges, pores, grain, or leaf clusters"
         },
         {
           "id": "micro",
-          "frequency": 72.0,
+          "frequency": 72,
           "amplitude": 0.14,
           "role": "reference-derived micro highlight breakup under grazing light"
         }
       ],
       "roughness": {
-        "base": 0.742,
+        "base": 0.62,
         "variation": 0.165,
         "map": {
           "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_roughness.png",
@@ -2341,8 +2531,8 @@
         "localResponse": "reference-derived roughness estimate; cavities and textured zones trend rougher, bright highlights trend smoother"
       },
       "metalness": {
-        "base": 0.0,
-        "variation": 0.0
+        "base": 0,
+        "variation": 0
       },
       "normal": {
         "pattern": "reference-derived height-gradient normal map",
@@ -2373,8 +2563,8 @@
       },
       "displacement": {
         "pattern": "none",
-        "amplitude": 0.0,
-        "scale": 1.0,
+        "amplitude": 0,
+        "scale": 1,
         "silhouetteAffects": false
       },
       "ambientOcclusion": {
@@ -2389,13 +2579,13 @@
         "notes": "Reference-derived cavity estimate from local height minima; verify against grazing-light screenshot."
       },
       "wear": {
-        "edgeWear": 0.0,
+        "edgeWear": 0,
         "scratches": [],
         "chips": []
       },
       "dirt": {
-        "amount": 0.0,
-        "cavityBias": 0.0,
+        "amount": 0,
+        "cavityBias": 0,
         "color": "#2F2A22"
       },
       "localOverrides": [
@@ -2426,82 +2616,206 @@
       "notes": "Replace with image-derived color, roughness, noise, and edge-wear notes.",
       "referencePbr": {
         "version": "1.0",
-        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/ikigai-map-admission-reference-white.png",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/00-chart-field-navy-leather.png",
         "extractor": "stage1_intake/extract_pbr_evidence.py",
         "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
         "usable": true,
         "verdict": "pass",
-        "confidence": 0.86,
-        "estimatedFidelity": 0.86,
+        "confidence": 0.852,
+        "estimatedFidelity": 0.852,
         "targetThreshold": 0.7,
         "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
         "maps": {
           "albedo": {
-            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_albedo.png",
-            "url": "/compass-book/pbr/ikigai-map/base_albedo.png",
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-00-chart-field-navy-leather/base_albedo.png",
+            "url": "base_albedo.png",
             "channel": "albedo",
             "source": "reference-pixel-extraction"
           },
           "roughness": {
-            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_roughness.png",
-            "url": "/compass-book/pbr/ikigai-map/base_roughness.png",
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-00-chart-field-navy-leather/base_roughness.png",
+            "url": "base_roughness.png",
             "channel": "roughness",
             "source": "reference-pixel-extraction"
           },
           "height": {
-            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_height.png",
-            "url": "/compass-book/pbr/ikigai-map/base_height.png",
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-00-chart-field-navy-leather/base_height.png",
+            "url": "base_height.png",
             "channel": "height",
             "source": "reference-pixel-extraction"
           },
           "normal": {
-            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_normal.png",
-            "url": "/compass-book/pbr/ikigai-map/base_normal.png",
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-00-chart-field-navy-leather/base_normal.png",
+            "url": "base_normal.png",
             "channel": "normal",
             "source": "reference-pixel-extraction"
           },
           "ao": {
-            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_ao.png",
-            "url": "/compass-book/pbr/ikigai-map/base_ao.png",
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-00-chart-field-navy-leather/base_ao.png",
+            "url": "base_ao.png",
             "channel": "ao",
             "source": "reference-pixel-extraction"
           }
         },
         "diagnostics": {
-          "sourceWidth": 1122,
-          "sourceHeight": 1402,
-          "mapSize": 1024,
+          "sourceWidth": 138,
+          "sourceHeight": 92,
+          "mapSize": 512,
           "cropBBoxPixels": {
-            "x": 156,
-            "y": 93,
-            "width": 799,
-            "height": 1130
+            "x": 0,
+            "y": 0,
+            "width": 138,
+            "height": 92
           },
           "mask": {
-            "backgroundColor": "#FEFEFE",
-            "backgroundNoise": 1.414,
-            "transparentPixelFraction": 0.0,
-            "foregroundCoverage": 0.5046
+            "backgroundColor": "#633821",
+            "backgroundNoise": 75.013,
+            "transparentPixelFraction": 0,
+            "foregroundCoverage": 0.6334
           },
           "mapStats": {
-            "valueRange": 0.5627,
-            "heightP90Gradient": 0.09589,
-            "roughnessBase": 0.742,
-            "roughnessVariation": 0.165,
-            "normalStrength": 0.269,
-            "blurRadius": 21
+            "valueRange": 0.2519,
+            "heightP90Gradient": 0.07013,
+            "roughnessBase": 0.741,
+            "roughnessVariation": 0.117,
+            "normalStrength": 0.238,
+            "blurRadius": 10
           },
           "palette": [
-            "#1A1C28",
-            "#170F09",
-            "#333045",
-            "#774E1E",
-            "#CEAB73"
+            "#27232C",
+            "#211C25",
+            "#332A2D",
+            "#100D13",
+            "#A16830"
           ]
         },
         "warnings": [
           "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
         ]
+      },
+      "referenceMaterialId": "leather.matte",
+      "materialFamily": "leather",
+      "materialSubtype": "natural-or-synthetic",
+      "materialFinish": "matte-worn",
+      "materialReference": {
+        "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+        "profileId": "leather.matte",
+        "method": "explicit-material-id",
+        "confidence": 1,
+        "sourceRefs": [
+          "three.mesh-physical",
+          "three.mesh-standard",
+          "adobe.pbr-guide-2",
+          "mit.material-recognition"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap",
+          "normalMap"
+        ],
+        "optionalMaps": [
+          "aoMap",
+          "clearcoatMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing",
+          "reference-beauty"
+        ]
+      },
+      "clearcoat": {
+        "base": 0.08,
+        "variation": 0
+      },
+      "clearcoatRoughness": {
+        "base": 0.45,
+        "variation": 0
+      },
+      "textureAnalysis": {
+        "finishClass": "painted-metal",
+        "recipe": {
+          "metalness": 0,
+          "roughness": 0.5,
+          "clearcoat": 1,
+          "clearcoatRoughness": 0.05,
+          "transmission": 0,
+          "ior": 1.5,
+          "envMapIntensity": 1,
+          "anisotropy": 0,
+          "procedural": "flat-clearcoat"
+        },
+        "palette": [
+          "#2E272C",
+          "#2E272C",
+          "#2D272E",
+          "#2C272F",
+          "#A96D2E"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#2D272E",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              46,
+              39,
+              45
+            ]
+          },
+          {
+            "stop": "#2C272F",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              47,
+              39,
+              44
+            ]
+          }
+        ],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 43.3,
+          "meanSaturation": 0.223,
+          "gradientStrength": 0.504,
+          "mottle": 0.032,
+          "streakRatio": 0.89,
+          "hueSpread": 0.48,
+          "specularFraction": 0
+        }
+      },
+      "materialEvidence": {
+        "componentId": "chart-field",
+        "regionId": "chart-field-navy-leather",
+        "crop": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/00-chart-field-navy-leather.png",
+          "bbox": {
+            "x": 190,
+            "y": 684,
+            "width": 138,
+            "height": 92
+          },
+          "sourceWidth": 1504,
+          "sourceHeight": 1046,
+          "loaderWarnings": [],
+          "coverage": 0.0081
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "strong image-space gradient; verify it is material pattern, not lighting",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "chart-field",
+          "regionId": "chart-field-navy-leather",
+          "materialId": "leather.matte",
+          "family": null,
+          "subtype": null,
+          "finish": null,
+          "aliases": [],
+          "confidence": 0.852,
+          "source": "vision"
+        },
+        "alternatives": []
       }
     },
     {
@@ -2531,11 +2845,11 @@
         }
       ],
       "roughness": {
-        "base": 0.34,
+        "base": 0.3,
         "variation": 0.12
       },
       "metalness": {
-        "base": 0.72,
+        "base": 1,
         "variation": 0.08
       },
       "normal": {
@@ -2565,7 +2879,211 @@
           ],
           "notes": "Darken recessed bezel and socket seams."
         }
-      ]
+      ],
+      "referenceMaterialId": "metal.brass",
+      "materialFamily": "metal",
+      "materialSubtype": "brass-bronze",
+      "materialFinish": "polished-or-aged",
+      "materialReference": {
+        "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+        "profileId": "metal.brass",
+        "method": "explicit-material-id",
+        "confidence": 1,
+        "sourceRefs": [
+          "three.mesh-standard",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "aoMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "environment-reflection",
+          "grazing",
+          "reference-beauty"
+        ]
+      },
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1,
+          1
+        ],
+        "anisotropy": 8,
+        "colorSpace": "SRGBColorSpace for albedo; NoColorSpace for scalar/normal maps",
+        "mapBindings": [
+          "map",
+          "roughnessMap"
+        ]
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/01-gilt-rail-and-bezel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-01-gilt-rail-and-bezel/brass_albedo.png",
+            "url": "brass_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-01-gilt-rail-and-bezel/brass_roughness.png",
+            "url": "brass_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-01-gilt-rail-and-bezel/brass_height.png",
+            "url": "brass_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-01-gilt-rail-and-bezel/brass_normal.png",
+            "url": "brass_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-01-gilt-rail-and-bezel/brass_ao.png",
+            "url": "brass_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 242,
+          "sourceHeight": 58,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 242,
+            "height": 58
+          },
+          "mask": {
+            "backgroundColor": "#1E1C25",
+            "backgroundNoise": 39.862,
+            "transparentPixelFraction": 0,
+            "foregroundCoverage": 0.9651
+          },
+          "mapStats": {
+            "valueRange": 0.8329,
+            "heightP90Gradient": 0.07768,
+            "roughnessBase": 0.695,
+            "roughnessVariation": 0.144,
+            "normalStrength": 0.247,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#23202A",
+            "#0C090E",
+            "#E4D7BC",
+            "#5A3416",
+            "#9B7340"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#07060E",
+          "#58545A",
+          "#422B1C",
+          "#3C322F",
+          "#3B312E"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#07060E",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              14,
+              6,
+              7
+            ]
+          }
+        ],
+        "gradientAxis": "horizontal",
+        "stats": {
+          "meanLum": 71.1,
+          "meanSaturation": 0.366,
+          "gradientStrength": 0.834,
+          "mottle": 0.043,
+          "streakRatio": 1.12,
+          "hueSpread": 0.638,
+          "specularFraction": 0
+        }
+      },
+      "materialEvidence": {
+        "componentId": "rail-system",
+        "regionId": "gilt-rail-and-bezel",
+        "crop": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/01-gilt-rail-and-bezel.png",
+          "bbox": {
+            "x": 168,
+            "y": 185,
+            "width": 242,
+            "height": 58
+          },
+          "sourceWidth": 1504,
+          "sourceHeight": 1046,
+          "loaderWarnings": [],
+          "coverage": 0.0089
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "visible meso/micro variation",
+          "strong image-space gradient; verify it is material pattern, not lighting",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "rail-system",
+          "regionId": "gilt-rail-and-bezel",
+          "materialId": "metal.brass",
+          "family": null,
+          "subtype": null,
+          "finish": null,
+          "aliases": [],
+          "confidence": 0.829,
+          "source": "vision"
+        },
+        "alternatives": []
+      },
+      "needsEnvironment": true
     },
     {
       "id": "violet",
@@ -2594,11 +3112,11 @@
         }
       ],
       "roughness": {
-        "base": 0.2,
+        "base": 0.26,
         "variation": 0.08
       },
       "metalness": {
-        "base": 0.08,
+        "base": 0,
         "variation": 0.02
       },
       "normal": {
@@ -2628,7 +3146,210 @@
           ],
           "notes": "Independent restrained violet emission."
         }
-      ]
+      ],
+      "referenceMaterialId": "ceramic.glazed",
+      "materialFamily": "ceramic",
+      "materialSubtype": "glazed",
+      "materialFinish": "glossy",
+      "materialReference": {
+        "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+        "profileId": "ceramic.glazed",
+        "method": "explicit-material-id",
+        "confidence": 1,
+        "sourceRefs": [
+          "three.mesh-physical",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ]
+      },
+      "clearcoat": {
+        "base": 0.7,
+        "variation": 0
+      },
+      "clearcoatRoughness": {
+        "base": 0.12,
+        "variation": 0
+      },
+      "ior": {
+        "base": 1.5,
+        "variation": 0
+      },
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1,
+          1
+        ],
+        "anisotropy": 8,
+        "colorSpace": "SRGBColorSpace for albedo; NoColorSpace for scalar/normal maps",
+        "mapBindings": [
+          "map",
+          "roughnessMap"
+        ]
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/02-curiosity-violet-enamel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-02-curiosity-violet-enamel/violet_albedo.png",
+            "url": "violet_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-02-curiosity-violet-enamel/violet_roughness.png",
+            "url": "violet_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-02-curiosity-violet-enamel/violet_height.png",
+            "url": "violet_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-02-curiosity-violet-enamel/violet_normal.png",
+            "url": "violet_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-02-curiosity-violet-enamel/violet_ao.png",
+            "url": "violet_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 108,
+          "sourceHeight": 108,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 108,
+            "height": 108
+          },
+          "mask": {
+            "backgroundColor": "#212028",
+            "backgroundNoise": 13.077,
+            "transparentPixelFraction": 0,
+            "foregroundCoverage": 0.9716
+          },
+          "mapStats": {
+            "valueRange": 0.5897,
+            "heightP90Gradient": 0.14187,
+            "roughnessBase": 0.726,
+            "roughnessVariation": 0.193,
+            "normalStrength": 0.323,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#291C20",
+            "#68338F",
+            "#100807",
+            "#7D4C22",
+            "#D8B170"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#2D272D",
+          "#663C54",
+          "#502C4E",
+          "#654423",
+          "#2B201E"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 56.5,
+          "meanSaturation": 0.569,
+          "gradientStrength": 0.252,
+          "mottle": 0.071,
+          "streakRatio": 0.8,
+          "hueSpread": 0.452,
+          "specularFraction": 0.006
+        }
+      },
+      "materialEvidence": {
+        "componentId": "curiosity-node",
+        "regionId": "curiosity-violet-enamel",
+        "crop": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/02-curiosity-violet-enamel.png",
+          "bbox": {
+            "x": 442,
+            "y": 215,
+            "width": 108,
+            "height": 108
+          },
+          "sourceWidth": 1504,
+          "sourceHeight": 1046,
+          "loaderWarnings": [],
+          "coverage": 0.0074
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "visible meso/micro variation",
+          "strong image-space gradient; verify it is material pattern, not lighting",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "curiosity-node",
+          "regionId": "curiosity-violet-enamel",
+          "materialId": "ceramic.glazed",
+          "family": null,
+          "subtype": null,
+          "finish": null,
+          "aliases": [],
+          "confidence": 0.829,
+          "source": "vision"
+        },
+        "alternatives": []
+      }
     },
     {
       "id": "teal",
@@ -2657,11 +3378,11 @@
         }
       ],
       "roughness": {
-        "base": 0.24,
+        "base": 0.26,
         "variation": 0.08
       },
       "metalness": {
-        "base": 0.06,
+        "base": 0,
         "variation": 0.02
       },
       "normal": {
@@ -2691,7 +3412,210 @@
           ],
           "notes": "Lower roughness on star facets."
         }
-      ]
+      ],
+      "referenceMaterialId": "ceramic.glazed",
+      "materialFamily": "ceramic",
+      "materialSubtype": "glazed",
+      "materialFinish": "glossy",
+      "materialReference": {
+        "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+        "profileId": "ceramic.glazed",
+        "method": "explicit-material-id",
+        "confidence": 1,
+        "sourceRefs": [
+          "three.mesh-physical",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ]
+      },
+      "clearcoat": {
+        "base": 0.7,
+        "variation": 0
+      },
+      "clearcoatRoughness": {
+        "base": 0.12,
+        "variation": 0
+      },
+      "ior": {
+        "base": 1.5,
+        "variation": 0
+      },
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1,
+          1
+        ],
+        "anisotropy": 8,
+        "colorSpace": "SRGBColorSpace for albedo; NoColorSpace for scalar/normal maps",
+        "mapBindings": [
+          "map",
+          "roughnessMap"
+        ]
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/03-capability-teal-enamel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-03-capability-teal-enamel/teal_albedo.png",
+            "url": "teal_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-03-capability-teal-enamel/teal_roughness.png",
+            "url": "teal_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-03-capability-teal-enamel/teal_height.png",
+            "url": "teal_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-03-capability-teal-enamel/teal_normal.png",
+            "url": "teal_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-03-capability-teal-enamel/teal_ao.png",
+            "url": "teal_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 112,
+          "sourceHeight": 112,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 112,
+            "height": 112
+          },
+          "mask": {
+            "backgroundColor": "#1F1E2A",
+            "backgroundNoise": 19.209,
+            "transparentPixelFraction": 0,
+            "foregroundCoverage": 0.9531
+          },
+          "mapStats": {
+            "valueRange": 0.4958,
+            "heightP90Gradient": 0.13462,
+            "roughnessBase": 0.73,
+            "roughnessVariation": 0.193,
+            "normalStrength": 0.314,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#1D1C24",
+            "#120905",
+            "#603813",
+            "#398382",
+            "#A4753E"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#3F5149",
+          "#48412D",
+          "#505139",
+          "#261E1F",
+          "#2C2325"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 52.8,
+          "meanSaturation": 0.523,
+          "gradientStrength": 0.248,
+          "mottle": 0.067,
+          "streakRatio": 1.03,
+          "hueSpread": 0.634,
+          "specularFraction": 0.001
+        }
+      },
+      "materialEvidence": {
+        "componentId": "capability-node",
+        "regionId": "capability-teal-enamel",
+        "crop": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/03-capability-teal-enamel.png",
+          "bbox": {
+            "x": 548,
+            "y": 356,
+            "width": 112,
+            "height": 112
+          },
+          "sourceWidth": 1504,
+          "sourceHeight": 1046,
+          "loaderWarnings": [],
+          "coverage": 0.008
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "visible meso/micro variation",
+          "strong image-space gradient; verify it is material pattern, not lighting",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "capability-node",
+          "regionId": "capability-teal-enamel",
+          "materialId": "ceramic.glazed",
+          "family": null,
+          "subtype": null,
+          "finish": null,
+          "aliases": [],
+          "confidence": 0.829,
+          "source": "vision"
+        },
+        "alternatives": []
+      }
     },
     {
       "id": "rose",
@@ -2720,11 +3644,11 @@
         }
       ],
       "roughness": {
-        "base": 0.38,
+        "base": 0.28,
         "variation": 0.1
       },
       "metalness": {
-        "base": 0.58,
+        "base": 1,
         "variation": 0.08
       },
       "normal": {
@@ -2754,7 +3678,201 @@
           ],
           "notes": "Beacon tips are slightly more polished."
         }
-      ]
+      ],
+      "referenceMaterialId": "metal.copper",
+      "materialFamily": "metal",
+      "materialSubtype": "copper",
+      "materialFinish": "polished-or-aged",
+      "materialReference": {
+        "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+        "profileId": "metal.copper",
+        "method": "explicit-material-id",
+        "confidence": 1,
+        "sourceRefs": [
+          "three.mesh-standard",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "metalnessMap",
+          "aoMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "environment-reflection",
+          "grazing",
+          "reference-beauty"
+        ]
+      },
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1,
+          1
+        ],
+        "anisotropy": 8,
+        "colorSpace": "SRGBColorSpace for albedo; NoColorSpace for scalar/normal maps",
+        "mapBindings": [
+          "map",
+          "roughnessMap"
+        ]
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/04-contribution-rose-copper.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-04-contribution-rose-copper/rose_albedo.png",
+            "url": "rose_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-04-contribution-rose-copper/rose_roughness.png",
+            "url": "rose_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-04-contribution-rose-copper/rose_height.png",
+            "url": "rose_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-04-contribution-rose-copper/rose_normal.png",
+            "url": "rose_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-04-contribution-rose-copper/rose_ao.png",
+            "url": "rose_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 118,
+          "sourceHeight": 118,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 118,
+            "height": 118
+          },
+          "mask": {
+            "backgroundColor": "#231F26",
+            "backgroundNoise": 58.992,
+            "transparentPixelFraction": 0,
+            "foregroundCoverage": 0.949
+          },
+          "mapStats": {
+            "valueRange": 0.544,
+            "heightP90Gradient": 0.15823,
+            "roughnessBase": 0.765,
+            "roughnessVariation": 0.201,
+            "normalStrength": 0.342,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#9D5631",
+            "#241C1F",
+            "#120805",
+            "#673819",
+            "#D9AB6E"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#553E27",
+          "#7E4629",
+          "#61341B",
+          "#573D22",
+          "#2E2426"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 64.2,
+          "meanSaturation": 0.597,
+          "gradientStrength": 0.3,
+          "mottle": 0.079,
+          "streakRatio": 0.9,
+          "hueSpread": 0.14,
+          "specularFraction": 0.004
+        }
+      },
+      "materialEvidence": {
+        "componentId": "contribution-node",
+        "regionId": "contribution-rose-copper",
+        "crop": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/04-contribution-rose-copper.png",
+          "bbox": {
+            "x": 508,
+            "y": 544,
+            "width": 118,
+            "height": 118
+          },
+          "sourceWidth": 1504,
+          "sourceHeight": 1046,
+          "loaderWarnings": [],
+          "coverage": 0.0089
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "visible meso/micro variation",
+          "strong image-space gradient; verify it is material pattern, not lighting",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "contribution-node",
+          "regionId": "contribution-rose-copper",
+          "materialId": "metal.copper",
+          "family": null,
+          "subtype": null,
+          "finish": null,
+          "aliases": [],
+          "confidence": 0.829,
+          "source": "vision"
+        },
+        "alternatives": []
+      },
+      "needsEnvironment": true
     },
     {
       "id": "amber",
@@ -2783,11 +3901,11 @@
         }
       ],
       "roughness": {
-        "base": 0.32,
+        "base": 0.3,
         "variation": 0.09
       },
       "metalness": {
-        "base": 0.52,
+        "base": 1,
         "variation": 0.08
       },
       "normal": {
@@ -2817,7 +3935,211 @@
           ],
           "notes": "Bridge crest catches a brighter highlight."
         }
-      ]
+      ],
+      "referenceMaterialId": "metal.brass",
+      "materialFamily": "metal",
+      "materialSubtype": "brass-bronze",
+      "materialFinish": "polished-or-aged",
+      "materialReference": {
+        "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+        "profileId": "metal.brass",
+        "method": "explicit-material-id",
+        "confidence": 1,
+        "sourceRefs": [
+          "three.mesh-standard",
+          "gltf.2",
+          "khronos.gltf-pbr",
+          "adobe.pbr-guide-2",
+          "google.filament-pbr"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "aoMap",
+          "metalnessMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "environment-reflection",
+          "grazing",
+          "reference-beauty"
+        ]
+      },
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1,
+          1
+        ],
+        "anisotropy": 8,
+        "colorSpace": "SRGBColorSpace for albedo; NoColorSpace for scalar/normal maps",
+        "mapBindings": [
+          "map",
+          "roughnessMap"
+        ]
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/05-viability-amber-brass.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-05-viability-amber-brass/amber_albedo.png",
+            "url": "amber_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-05-viability-amber-brass/amber_roughness.png",
+            "url": "amber_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-05-viability-amber-brass/amber_height.png",
+            "url": "amber_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-05-viability-amber-brass/amber_normal.png",
+            "url": "amber_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-05-viability-amber-brass/amber_ao.png",
+            "url": "amber_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 118,
+          "sourceHeight": 112,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 118,
+            "height": 112
+          },
+          "mask": {
+            "backgroundColor": "#27242D",
+            "backgroundNoise": 18.601,
+            "transparentPixelFraction": 0,
+            "foregroundCoverage": 0.9539
+          },
+          "mapStats": {
+            "valueRange": 0.6507,
+            "heightP90Gradient": 0.14058,
+            "roughnessBase": 0.731,
+            "roughnessVariation": 0.191,
+            "normalStrength": 0.321,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#9D6723",
+            "#231E26",
+            "#140A05",
+            "#623A14",
+            "#DFB46B"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#432F1C",
+          "#956931",
+          "#644015",
+          "#574129",
+          "#26232C"
+        ],
+        "paletteHueRisk": [
+          {
+            "stop": "#26232C",
+            "hueRisk": "blue-collapse",
+            "suggestedRgb": [
+              44,
+              35,
+              38
+            ]
+          }
+        ],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 69.9,
+          "meanSaturation": 0.589,
+          "gradientStrength": 0.507,
+          "mottle": 0.062,
+          "streakRatio": 0.66,
+          "hueSpread": 0.168,
+          "specularFraction": 0.005
+        }
+      },
+      "materialEvidence": {
+        "componentId": "viability-node",
+        "regionId": "viability-amber-brass",
+        "crop": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/05-viability-amber-brass.png",
+          "bbox": {
+            "x": 296,
+            "y": 548,
+            "width": 118,
+            "height": 112
+          },
+          "sourceWidth": 1504,
+          "sourceHeight": 1046,
+          "loaderWarnings": [],
+          "coverage": 0.0084
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "visible meso/micro variation",
+          "strong image-space gradient; verify it is material pattern, not lighting",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "viability-node",
+          "regionId": "viability-amber-brass",
+          "materialId": "metal.brass",
+          "family": null,
+          "subtype": null,
+          "finish": null,
+          "aliases": [],
+          "confidence": 0.829,
+          "source": "vision"
+        },
+        "alternatives": []
+      },
+      "needsEnvironment": true
     },
     {
       "id": "ember",
@@ -2846,11 +4168,11 @@
         }
       ],
       "roughness": {
-        "base": 0.22,
+        "base": 0.26,
         "variation": 0.08
       },
       "metalness": {
-        "base": 0.05,
+        "base": 0,
         "variation": 0.02
       },
       "normal": {
@@ -2880,7 +4202,210 @@
           ],
           "notes": "Inner flame has warm restrained emission."
         }
-      ]
+      ],
+      "referenceMaterialId": "ceramic.glazed",
+      "materialFamily": "ceramic",
+      "materialSubtype": "glazed",
+      "materialFinish": "glossy",
+      "materialReference": {
+        "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+        "profileId": "ceramic.glazed",
+        "method": "explicit-material-id",
+        "confidence": 1,
+        "sourceRefs": [
+          "three.mesh-physical",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "clearcoatMap",
+          "clearcoatRoughnessMap"
+        ],
+        "validationViews": [
+          "neutral-studio",
+          "grazing",
+          "environment-reflection",
+          "reference-beauty"
+        ]
+      },
+      "clearcoat": {
+        "base": 0.7,
+        "variation": 0
+      },
+      "clearcoatRoughness": {
+        "base": 0.12,
+        "variation": 0
+      },
+      "ior": {
+        "base": 1.5,
+        "variation": 0
+      },
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1,
+          1
+        ],
+        "anisotropy": 8,
+        "colorSpace": "SRGBColorSpace for albedo; NoColorSpace for scalar/normal maps",
+        "mapBindings": [
+          "map",
+          "roughnessMap"
+        ]
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/06-willingness-ember-enamel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.829,
+        "estimatedFidelity": 0.829,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-06-willingness-ember-enamel/ember_albedo.png",
+            "url": "ember_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-06-willingness-ember-enamel/ember_roughness.png",
+            "url": "ember_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-06-willingness-ember-enamel/ember_height.png",
+            "url": "ember_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-06-willingness-ember-enamel/ember_normal.png",
+            "url": "ember_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-06-willingness-ember-enamel/ember_ao.png",
+            "url": "ember_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 116,
+          "sourceHeight": 116,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 116,
+            "height": 116
+          },
+          "mask": {
+            "backgroundColor": "#201C25",
+            "backgroundNoise": 17.493,
+            "transparentPixelFraction": 0,
+            "foregroundCoverage": 0.9214
+          },
+          "mapStats": {
+            "valueRange": 0.5648,
+            "heightP90Gradient": 0.1424,
+            "roughnessBase": 0.735,
+            "roughnessVariation": 0.193,
+            "normalStrength": 0.323,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#221F28",
+            "#130905",
+            "#D5813C",
+            "#814C1D",
+            "#502A10"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "textureAnalysis": {
+        "finishClass": "candy-coat",
+        "recipe": {
+          "metalness": 0.35,
+          "roughness": 0.18,
+          "clearcoat": 0.6,
+          "clearcoatRoughness": 0.15,
+          "transmission": 0,
+          "ior": 1.5,
+          "envMapIntensity": 0.7,
+          "anisotropy": 0,
+          "procedural": "gradient-smoke"
+        },
+        "palette": [
+          "#6E431D",
+          "#844B20",
+          "#935825",
+          "#2E2422",
+          "#322726"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 63.7,
+          "meanSaturation": 0.578,
+          "gradientStrength": 0.342,
+          "mottle": 0.077,
+          "streakRatio": 1,
+          "hueSpread": 0.148,
+          "specularFraction": 0.003
+        }
+      },
+      "materialEvidence": {
+        "componentId": "willingness-node",
+        "regionId": "willingness-ember-enamel",
+        "crop": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/06-willingness-ember-enamel.png",
+          "bbox": {
+            "x": 263,
+            "y": 354,
+            "width": 116,
+            "height": 116
+          },
+          "sourceWidth": 1504,
+          "sourceHeight": 1046,
+          "loaderWarnings": [],
+          "coverage": 0.0086
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "visible meso/micro variation",
+          "strong image-space gradient; verify it is material pattern, not lighting",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "willingness-node",
+          "regionId": "willingness-ember-enamel",
+          "materialId": "ceramic.glazed",
+          "family": null,
+          "subtype": null,
+          "finish": null,
+          "aliases": [],
+          "confidence": 0.829,
+          "source": "vision"
+        },
+        "alternatives": []
+      }
     },
     {
       "id": "mirage",
@@ -2909,11 +4434,11 @@
         }
       ],
       "roughness": {
-        "base": 0.62,
+        "base": 0.68,
         "variation": 0.12
       },
       "metalness": {
-        "base": 0.12,
+        "base": 0,
         "variation": 0.04
       },
       "normal": {
@@ -2943,7 +4468,199 @@
           ],
           "notes": "Must remain dimmer than every valid force."
         }
-      ]
+      ],
+      "referenceMaterialId": "plastic.matte",
+      "materialFamily": "plastic",
+      "materialSubtype": "generic-polymer",
+      "materialFinish": "matte",
+      "materialReference": {
+        "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+        "profileId": "plastic.matte",
+        "method": "explicit-material-id",
+        "confidence": 1,
+        "sourceRefs": [
+          "three.mesh-standard",
+          "adobe.pbr-guide-1",
+          "google.filament-pbr",
+          "mit.material-recognition"
+        ],
+        "requiredMaps": [
+          "map",
+          "roughnessMap"
+        ],
+        "optionalMaps": [
+          "normalMap",
+          "aoMap"
+        ],
+        "validationViews": [
+          "albedo-unlit",
+          "neutral-studio",
+          "grazing"
+        ]
+      },
+      "ior": {
+        "base": 1.5,
+        "variation": 0
+      },
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          1,
+          1
+        ],
+        "anisotropy": 8,
+        "colorSpace": "SRGBColorSpace for albedo; NoColorSpace for scalar/normal maps",
+        "mapBindings": [
+          "map",
+          "roughnessMap"
+        ]
+      },
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/07-mirage-dim-enamel.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.794,
+        "estimatedFidelity": 0.794,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-07-mirage-dim-enamel/mirage_albedo.png",
+            "url": "mirage_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-07-mirage-dim-enamel/mirage_roughness.png",
+            "url": "mirage_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-07-mirage-dim-enamel/mirage_height.png",
+            "url": "mirage_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-07-mirage-dim-enamel/mirage_normal.png",
+            "url": "mirage_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/pbr-07-mirage-dim-enamel/mirage_ao.png",
+            "url": "mirage_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 104,
+          "sourceHeight": 104,
+          "mapSize": 512,
+          "cropBBoxPixels": {
+            "x": 0,
+            "y": 0,
+            "width": 104,
+            "height": 104
+          },
+          "mask": {
+            "backgroundColor": "#222029",
+            "backgroundNoise": 31.273,
+            "transparentPixelFraction": 0,
+            "foregroundCoverage": 0.9794
+          },
+          "mapStats": {
+            "valueRange": 0.3405,
+            "heightP90Gradient": 0.09544,
+            "roughnessBase": 0.729,
+            "roughnessVariation": 0.161,
+            "normalStrength": 0.268,
+            "blurRadius": 10
+          },
+          "palette": [
+            "#1F1C26",
+            "#302241",
+            "#0F090A",
+            "#5B3417",
+            "#996B38"
+          ]
+        },
+        "warnings": [
+          "image is not clearly isolated from background; using most pixels as material evidence",
+          "object/background separation is weak",
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      },
+      "textureAnalysis": {
+        "finishClass": "painted-metal",
+        "recipe": {
+          "metalness": 0,
+          "roughness": 0.5,
+          "clearcoat": 1,
+          "clearcoatRoughness": 0.05,
+          "transmission": 0,
+          "ior": 1.5,
+          "envMapIntensity": 1,
+          "anisotropy": 0,
+          "procedural": "flat-clearcoat"
+        },
+        "palette": [
+          "#30212A",
+          "#3F2B2E",
+          "#2A1C20",
+          "#2A2226",
+          "#3A2414"
+        ],
+        "paletteHueRisk": [],
+        "gradientAxis": "vertical",
+        "stats": {
+          "meanLum": 38.2,
+          "meanSaturation": 0.452,
+          "gradientStrength": 0.149,
+          "mottle": 0.035,
+          "streakRatio": 0.99,
+          "hueSpread": 0.52,
+          "specularFraction": 0
+        }
+      },
+      "materialEvidence": {
+        "componentId": "mirage-node",
+        "regionId": "mirage-dim-enamel",
+        "crop": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis-data/07-mirage-dim-enamel.png",
+          "bbox": {
+            "x": 570,
+            "y": 670,
+            "width": 104,
+            "height": 104
+          },
+          "sourceWidth": 1504,
+          "sourceHeight": 1046,
+          "loaderWarnings": [],
+          "coverage": 0.0069
+        },
+        "observations": [
+          "chromatic base-colour response",
+          "single-image PBR inference requires controlled render validation"
+        ],
+        "hypothesis": {
+          "componentId": "mirage-node",
+          "regionId": "mirage-dim-enamel",
+          "materialId": "plastic.matte",
+          "family": null,
+          "subtype": null,
+          "finish": null,
+          "aliases": [],
+          "confidence": 0.794,
+          "source": "vision"
+        },
+        "alternatives": []
+      }
     }
   ],
   "repetitionSystems": [
@@ -3255,6 +4972,137 @@
       "cameraView": "fixed-front plus long-axis and thickness-axis",
       "notes": "High tier measured 304 calls and 121.2k rendered triangles at 35-43 FPS in the desktop browser sample; this is not physical iPhone proof.",
       "aiVisionNotes": "Agent vision inspected one full side-by-side sheet after deterministic Tier 1 passed. The faceted Trial and force emblems are clearer than the structural pass; goal-image ornament and map scale remain approximate. Orbit views prove relief depth but do not substitute for physical-device performance."
+    },
+    {
+      "timestamp": "2026-08-21T01:23:52.252050+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.68,
+      "aiVisionScore": null,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {},
+      "featureReviews": [],
+      "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+      "renderScreenshot": "",
+      "comparisonImage": "",
+      "cameraView": "fixed-front, grazing orbit, opposite orbit, focused actual-relief proof",
+      "notes": "No Tier-2 acceptance review was run because material Tier-1 remains failed.",
+      "aiVisionNotes": ""
+    },
+    {
+      "timestamp": "2026-08-21T01:46:32.176791+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.83,
+      "aiVisionScore": 0.83,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.88,
+        "componentStructure": 0.93,
+        "formDetail": 0.86,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "eight-region-palette",
+          "score": 0.88,
+          "critical": true,
+          "notes": "All eight named material regions pass visible-footprint comparison; scores range from 0.726 for brass to 0.912 for ember."
+        },
+        {
+          "id": "roughness-and-grazing-response",
+          "score": 0.78,
+          "critical": true,
+          "notes": "Grazing and opposite-axis views show distinct glossy enamel, satin metal, and dim Mirage responses, but high-tier texture resolution is below contract."
+        },
+        {
+          "id": "independent-pbr-channels",
+          "score": 0.72,
+          "critical": true,
+          "notes": "Roughness and bump are independent, but enamel still lacks independent albedo and AO maps in the live Three.js implementation."
+        },
+        {
+          "id": "material-hierarchy",
+          "score": 0.88,
+          "critical": true,
+          "notes": "Gilt structure, five force colors, luminous Trial, and subdued Mirage remain ordered at the fixed view."
+        },
+        {
+          "id": "controlled-material-evidence",
+          "score": 0.91,
+          "critical": true,
+          "notes": "Eight component crops, four controlled capture classes, material compatibility, and the component-aware gate all pass."
+        }
+      ],
+      "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "renderScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/59-wide-chapter-4-material-pass.png",
+      "comparisonImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/68-wide-chapter-4-material-comparison.png",
+      "cameraView": "fixed-front plus grazing, opposite-axis, and focused actual-relief views",
+      "notes": "The generated goal remains larger and more ornate; this review isolates the material layer and does not raise the form score.",
+      "aiVisionNotes": "Agent vision inspected the full comparison once after component-aware Tier 1 passed. Color identities and material hierarchy read clearly, but production acceptance is withheld until the high-tier independent-channel implementation matches the declared 1024px contract."
+    },
+    {
+      "timestamp": "2026-08-21T01:58:48.984331+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.86,
+      "aiVisionScore": 0.86,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.94,
+        "formDetail": 0.86,
+        "materialSurface": 0.88,
+        "lightingCamera": 0.85
+      },
+      "featureReviews": [
+        {
+          "id": "five-node-identities",
+          "score": 0.88,
+          "critical": true,
+          "notes": "The comet, star, cupped beacon, bridge-wheel, and nested-flame identities retain distinct enamel/metal palettes in fixed and orbit views."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.89,
+          "critical": false,
+          "notes": "Antique gilt, dark chart field, five force materials, faceted Trial, and low-signal Mirage remain ordered under all controlled captures."
+        },
+        {
+          "id": "eight-region-palette",
+          "score": 0.9,
+          "critical": true,
+          "notes": "All eight named regions pass visible-footprint comparison; final scores range from 0.726 for brass to 0.918 for rose."
+        },
+        {
+          "id": "roughness-and-grazing-response",
+          "score": 0.84,
+          "critical": true,
+          "notes": "Front and opposite orbit views preserve distinct glazed enamel, satin metal, faceted Trial, and subdued Mirage response."
+        },
+        {
+          "id": "independent-pbr-channels",
+          "score": 0.88,
+          "critical": true,
+          "notes": "High tier now uses separately seeded 1024px albedo, roughness, bump, and AO maps; low tier retains 128px channels."
+        },
+        {
+          "id": "material-hierarchy",
+          "score": 0.89,
+          "critical": true,
+          "notes": "Gilt structure, five force colors, luminous Trial, and low-signal Mirage remain legible without relying on one camera angle."
+        },
+        {
+          "id": "controlled-material-evidence",
+          "score": 0.93,
+          "critical": true,
+          "notes": "Eight region comparisons, 32 planned views, four saved capture classes, compatibility checks, and the component-aware Tier-1 bridge pass."
+        }
+      ],
+      "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "renderScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/73-wide-chapter-4-material-1024-steady-front.png",
+      "comparisonImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/76-wide-chapter-4-material-1024-comparison.png",
+      "cameraView": "fixed-front, right orbit, left orbit, and focused actual-relief",
+      "notes": "All final captures were allowed to settle beyond first texture upload. Reported steady desktop samples are 38, 42, 32, and 39 FPS respectively.",
+      "aiVisionNotes": "Agent vision inspected one final side-by-side sheet after the component-aware Tier 1 and material gate passed. The pass is accepted for real-time browser production; it is not a claim of exact recovered PBR or physical-device performance."
     }
   ],
   "reviewHistory": [
@@ -3515,6 +5363,233 @@
         "notes": "High tier measured 304 calls and 121.2k rendered triangles at 35-43 FPS in the desktop browser sample; this is not physical iPhone proof.",
         "aiVisionNotes": "Agent vision inspected one full side-by-side sheet after deterministic Tier 1 passed. The faceted Trial and force emblems are clearer than the structural pass; goal-image ornament and map scale remain approximate. Orbit views prove relief depth but do not substitute for physical-device performance."
       }
+    },
+    {
+      "timestamp": "2026-08-21T01:23:52.252050+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.68,
+      "aiVisionScore": null,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {},
+      "featureReviews": [],
+      "action": "refine-spec",
+      "summary": "Material implementation is visible, but the evidence contract is under-specified: materialPipeline is absent and component recipes lack componentId, so the coarse whole-frame Tier-1 color gate cannot identify the small enamel regions.",
+      "matched": [
+        "independent deterministic roughness and bump maps are implemented",
+        "neutral, grazing, and focused actual-relief captures exist",
+        "relief remains within the proven geometry and performance envelope"
+      ],
+      "mismatches": [
+        "materialPipeline is absent",
+        "component color recipes omit componentId",
+        "whole-frame five-cluster diagnostic drops small teal and ember regions",
+        "no per-region visible-footprint comparison gate is recorded"
+      ],
+      "specFixes": [
+        "wire eight observed material regions to component IDs and material IDs",
+        "record controlled view-plan and per-region crop comparisons",
+        "retain existing color thresholds and palettes"
+      ],
+      "codeFixes": [],
+      "evidence": [
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/59-wide-chapter-4-material-pass.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/60-wide-chapter-4-material-grazing.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/61-wide-chapter-4-material-neutral.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/66-chapter-4-material-proof.png"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+        "renderScreenshot": "",
+        "comparisonImage": "",
+        "cameraView": "fixed-front, grazing orbit, opposite orbit, focused actual-relief proof",
+        "notes": "No Tier-2 acceptance review was run because material Tier-1 remains failed.",
+        "aiVisionNotes": ""
+      }
+    },
+    {
+      "timestamp": "2026-08-21T01:46:32.176791+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.83,
+      "aiVisionScore": 0.83,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.88,
+        "componentStructure": 0.93,
+        "formDetail": 0.86,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "eight-region-palette",
+          "score": 0.88,
+          "critical": true,
+          "notes": "All eight named material regions pass visible-footprint comparison; scores range from 0.726 for brass to 0.912 for ember."
+        },
+        {
+          "id": "roughness-and-grazing-response",
+          "score": 0.78,
+          "critical": true,
+          "notes": "Grazing and opposite-axis views show distinct glossy enamel, satin metal, and dim Mirage responses, but high-tier texture resolution is below contract."
+        },
+        {
+          "id": "independent-pbr-channels",
+          "score": 0.72,
+          "critical": true,
+          "notes": "Roughness and bump are independent, but enamel still lacks independent albedo and AO maps in the live Three.js implementation."
+        },
+        {
+          "id": "material-hierarchy",
+          "score": 0.88,
+          "critical": true,
+          "notes": "Gilt structure, five force colors, luminous Trial, and subdued Mirage remain ordered at the fixed view."
+        },
+        {
+          "id": "controlled-material-evidence",
+          "score": 0.91,
+          "critical": true,
+          "notes": "Eight component crops, four controlled capture classes, material compatibility, and the component-aware gate all pass."
+        }
+      ],
+      "action": "refine-code",
+      "summary": "Chapter IV material palette and hierarchy pass component-aware review, but the live high tier remains below the quality-first texture contract.",
+      "matched": [
+        "eight visible-footprint material comparisons pass",
+        "materialGate compatibility passes",
+        "neutral, grazing, reference, and focused actual-relief captures read correctly",
+        "Trial and Mirage retain distinct energy hierarchy"
+      ],
+      "mismatches": [
+        "high-tier enamel maps are 128px rather than 1024px",
+        "enamel uses flat tint without an independent albedo map",
+        "enamel has no independent AO channel",
+        "physical-device performance remains unverified"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "raise high-tier procedural enamel channels to 1024px while retaining a 128px low tier",
+        "add independently seeded albedo and AO maps",
+        "keep albedo, roughness, bump, and AO on separate channels"
+      ],
+      "evidence": [
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/68-wide-chapter-4-material-comparison.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/material-regions/material-gate.json",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/60-wide-chapter-4-material-grazing.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/66-chapter-4-material-proof.png"
+      ],
+      "reviewViewpoints": [
+        "fixed-front",
+        "grazing-orbit",
+        "opposite-axis",
+        "focused-actual-relief"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+        "renderScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/59-wide-chapter-4-material-pass.png",
+        "comparisonImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/68-wide-chapter-4-material-comparison.png",
+        "cameraView": "fixed-front plus grazing, opposite-axis, and focused actual-relief views",
+        "notes": "The generated goal remains larger and more ornate; this review isolates the material layer and does not raise the form score.",
+        "aiVisionNotes": "Agent vision inspected the full comparison once after component-aware Tier 1 passed. Color identities and material hierarchy read clearly, but production acceptance is withheld until the high-tier independent-channel implementation matches the declared 1024px contract."
+      }
+    },
+    {
+      "timestamp": "2026-08-21T01:58:48.984331+00:00",
+      "passId": "material-pass",
+      "estimatedFidelity": 0.86,
+      "aiVisionScore": 0.86,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.94,
+        "formDetail": 0.86,
+        "materialSurface": 0.88,
+        "lightingCamera": 0.85
+      },
+      "featureReviews": [
+        {
+          "id": "five-node-identities",
+          "score": 0.88,
+          "critical": true,
+          "notes": "The comet, star, cupped beacon, bridge-wheel, and nested-flame identities retain distinct enamel/metal palettes in fixed and orbit views."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.89,
+          "critical": false,
+          "notes": "Antique gilt, dark chart field, five force materials, faceted Trial, and low-signal Mirage remain ordered under all controlled captures."
+        },
+        {
+          "id": "eight-region-palette",
+          "score": 0.9,
+          "critical": true,
+          "notes": "All eight named regions pass visible-footprint comparison; final scores range from 0.726 for brass to 0.918 for rose."
+        },
+        {
+          "id": "roughness-and-grazing-response",
+          "score": 0.84,
+          "critical": true,
+          "notes": "Front and opposite orbit views preserve distinct glazed enamel, satin metal, faceted Trial, and subdued Mirage response."
+        },
+        {
+          "id": "independent-pbr-channels",
+          "score": 0.88,
+          "critical": true,
+          "notes": "High tier now uses separately seeded 1024px albedo, roughness, bump, and AO maps; low tier retains 128px channels."
+        },
+        {
+          "id": "material-hierarchy",
+          "score": 0.89,
+          "critical": true,
+          "notes": "Gilt structure, five force colors, luminous Trial, and low-signal Mirage remain legible without relying on one camera angle."
+        },
+        {
+          "id": "controlled-material-evidence",
+          "score": 0.93,
+          "critical": true,
+          "notes": "Eight region comparisons, 32 planned views, four saved capture classes, compatibility checks, and the component-aware Tier-1 bridge pass."
+        }
+      ],
+      "action": "continue",
+      "summary": "Chapter IV material pass now meets the production evidence contract with component-aware palette proof and independent 1024px high-tier PBR channels.",
+      "matched": [
+        "eight named material regions pass at 0.726 to 0.918",
+        "independent albedo roughness bump and AO channels",
+        "32-view controlled material plan with four saved capture classes",
+        "component-aware Tier 1 silhouette 0.974",
+        "steady desktop evidence 32 to 42 FPS",
+        "material compatibility passes"
+      ],
+      "mismatches": [
+        "generated goal remains larger and more ornate than the runtime relief",
+        "first high-tier texture upload has a short warmup",
+        "physical iPhone performance is not yet verified",
+        "single-image PBR extraction is evidence rather than exact inverse rendering"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/73-wide-chapter-4-material-1024-steady-front.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/75-wide-chapter-4-material-1024-steady-right.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/72-wide-chapter-4-material-1024-steady.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/74-chapter-4-material-1024-focused.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/material-regions/material-gate.json"
+      ],
+      "reviewViewpoints": [
+        "fixed-front",
+        "long-axis",
+        "thickness-axis",
+        "orbit-right-plus-0.65",
+        "orbit-left-minus-0.65",
+        "focused-actual-relief"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+        "renderScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/73-wide-chapter-4-material-1024-steady-front.png",
+        "comparisonImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/76-wide-chapter-4-material-1024-comparison.png",
+        "cameraView": "fixed-front, right orbit, left orbit, and focused actual-relief",
+        "notes": "All final captures were allowed to settle beyond first texture upload. Reported steady desktop samples are 38, 42, 32, and 39 FPS respectively.",
+        "aiVisionNotes": "Agent vision inspected one final side-by-side sheet after the component-aware Tier 1 and material gate passed. The pass is accepted for real-time browser production; it is not a claim of exact recovered PBR or physical-device performance."
+      }
     }
   ],
   "lodPlan": [
@@ -3692,8 +5767,8 @@
       "passed": false,
       "checks": {
         "silhouetteIoU": 0.9749,
-        "aspectRatioDelta": 0.0,
-        "scaleDelta": 0.0,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
         "bilateralSymmetryError": 0.0037,
         "colorDelta": {
           "checked": 29,
@@ -3833,8 +5908,8 @@
       "passed": false,
       "checks": {
         "silhouetteIoU": 0.9749,
-        "aspectRatioDelta": 0.0,
-        "scaleDelta": 0.0,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
         "bilateralSymmetryError": 0.0037,
         "colorDelta": {
           "checked": 29,
@@ -3974,8 +6049,8 @@
       "passed": true,
       "checks": {
         "silhouetteIoU": 0.9749,
-        "aspectRatioDelta": 0.0,
-        "scaleDelta": 0.0,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
         "bilateralSymmetryError": 0.0037,
         "colorDelta": {
           "checked": 29,
@@ -4114,8 +6189,8 @@
       "passed": true,
       "checks": {
         "silhouetteIoU": 0.9749,
-        "aspectRatioDelta": 0.0,
-        "scaleDelta": 0.0,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
         "bilateralSymmetryError": 0.0037,
         "colorDelta": {
           "checked": 29,
@@ -4211,7 +6286,7 @@
             },
             {
               "componentId": null,
-              "deltaE": 41.0
+              "deltaE": 41
             },
             {
               "componentId": null,
@@ -4253,8 +6328,8 @@
       "passed": true,
       "checks": {
         "silhouetteIoU": 0.9729,
-        "aspectRatioDelta": 0.0,
-        "scaleDelta": 0.0,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
         "bilateralSymmetryError": 0.0078,
         "colorDelta": {
           "checked": 29,
@@ -4392,8 +6467,8 @@
       "passed": true,
       "checks": {
         "silhouetteIoU": 0.9729,
-        "aspectRatioDelta": 0.0,
-        "scaleDelta": 0.0,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
         "bilateralSymmetryError": 0.0078,
         "colorDelta": {
           "checked": 29,
@@ -4531,8 +6606,8 @@
       "passed": false,
       "checks": {
         "silhouetteIoU": 0.9729,
-        "aspectRatioDelta": 0.0,
-        "scaleDelta": 0.0,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
         "bilateralSymmetryError": 0.0078,
         "colorDelta": {
           "checked": 29,
@@ -4672,8 +6747,8 @@
       "passed": false,
       "checks": {
         "silhouetteIoU": 0.9915,
-        "aspectRatioDelta": 0.0,
-        "scaleDelta": 0.0,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
         "bilateralSymmetryError": 0.0078,
         "colorDelta": {
           "checked": 29,
@@ -4813,8 +6888,8 @@
       "passed": false,
       "checks": {
         "silhouetteIoU": 0.8554,
-        "aspectRatioDelta": 0.0,
-        "scaleDelta": 0.0,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
         "bilateralSymmetryError": 0.168,
         "colorDelta": {
           "checked": 29,
@@ -4946,6 +7021,217 @@
       "maskWarnings": [],
       "renderHash": "f392281f629ea901",
       "passId": "material-pass"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9468,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
+        "bilateralSymmetryError": 0.0623,
+        "colorDelta": {
+          "gated": true,
+          "mode": "component-aware-visible-footprint",
+          "legacyWholeFrameMode": "advisory-only-known-limitation",
+          "comparisonCount": 8,
+          "requiredRegionCount": 8,
+          "regionIds": [
+            "chart-field-navy-leather",
+            "gilt-rail-and-bezel",
+            "curiosity-violet-enamel",
+            "capability-teal-enamel",
+            "contribution-rose-copper",
+            "viability-amber-brass",
+            "willingness-ember-enamel",
+            "mirage-dim-enamel"
+          ],
+          "materialGatePassed": true,
+          "compatibilityPassed": true
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "7f901a4245d8e182",
+      "materialGateHash": "acfb935173e0cddb",
+      "passId": "material-pass",
+      "diagnosticBridge": {
+        "geometryAuthority": "img2threejs diagnose_render.py",
+        "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",
+        "reason": "The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families."
+      }
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9742,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
+        "bilateralSymmetryError": 0.0051,
+        "colorDelta": {
+          "gated": true,
+          "mode": "component-aware-visible-footprint",
+          "legacyWholeFrameMode": "advisory-only-known-limitation",
+          "comparisonCount": 8,
+          "requiredRegionCount": 8,
+          "regionIds": [
+            "chart-field-navy-leather",
+            "gilt-rail-and-bezel",
+            "curiosity-violet-enamel",
+            "capability-teal-enamel",
+            "contribution-rose-copper",
+            "viability-amber-brass",
+            "willingness-ember-enamel",
+            "mirage-dim-enamel"
+          ],
+          "materialGatePassed": true,
+          "compatibilityPassed": true
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "0fab6d7b1c200b2a",
+      "materialGateHash": "acfb935173e0cddb",
+      "passId": "material-pass",
+      "diagnosticBridge": {
+        "geometryAuthority": "img2threejs diagnose_render.py",
+        "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",
+        "reason": "The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families."
+      }
     }
-  ]
+  ],
+  "materialPipeline": {
+    "schemaVersion": 1,
+    "status": "proceed",
+    "registry": "/Users/ejmac/.codex/skills/img2threejs/docs/materials/material-reference.json",
+    "analysisArtifact": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis.json",
+    "targetThreshold": 0.7,
+    "unresolvedNotObservedMaterials": [],
+    "regions": [
+      {
+        "componentId": "chart-field",
+        "regionId": "chart-field-navy-leather",
+        "specMaterialId": "base",
+        "profileId": "leather.matte",
+        "status": "proceed"
+      },
+      {
+        "componentId": "rail-system",
+        "regionId": "gilt-rail-and-bezel",
+        "specMaterialId": "brass",
+        "profileId": "metal.brass",
+        "status": "proceed"
+      },
+      {
+        "componentId": "curiosity-node",
+        "regionId": "curiosity-violet-enamel",
+        "specMaterialId": "violet",
+        "profileId": "ceramic.glazed",
+        "status": "proceed"
+      },
+      {
+        "componentId": "capability-node",
+        "regionId": "capability-teal-enamel",
+        "specMaterialId": "teal",
+        "profileId": "ceramic.glazed",
+        "status": "proceed"
+      },
+      {
+        "componentId": "contribution-node",
+        "regionId": "contribution-rose-copper",
+        "specMaterialId": "rose",
+        "profileId": "metal.copper",
+        "status": "proceed"
+      },
+      {
+        "componentId": "viability-node",
+        "regionId": "viability-amber-brass",
+        "specMaterialId": "amber",
+        "profileId": "metal.brass",
+        "status": "proceed"
+      },
+      {
+        "componentId": "willingness-node",
+        "regionId": "willingness-ember-enamel",
+        "specMaterialId": "ember",
+        "profileId": "ceramic.glazed",
+        "status": "proceed"
+      },
+      {
+        "componentId": "mirage-node",
+        "regionId": "mirage-dim-enamel",
+        "specMaterialId": "mirage",
+        "profileId": "plastic.matte",
+        "status": "proceed"
+      }
+    ],
+    "controlledViewsRequired": [
+      "albedo-unlit",
+      "environment-reflection",
+      "grazing",
+      "neutral-studio",
+      "reference-beauty"
+    ]
+  },
+  "materialAnalysisHistory": [
+    {
+      "analysisArtifact": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/material-analysis.json",
+      "status": "proceed",
+      "unresolvedNotObservedMaterials": [],
+      "regions": 8
+    }
+  ],
+  "materialGate": {
+    "schemaVersion": 1,
+    "kind": "img2threejs.material-gate",
+    "passed": true,
+    "failures": [],
+    "warnings": [
+      "material 'base' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+      "material 'brass' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+      "material 'violet' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+      "material 'teal' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+      "material 'rose' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+      "material 'amber' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+      "material 'ember' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+      "material 'mirage' profile requires map slots not present in extracted PBR maps: ['roughnessMap']"
+    ],
+    "comparisonCount": 8,
+    "compatibility": {
+      "schemaVersion": 1,
+      "passed": true,
+      "failures": [],
+      "warnings": [
+        "material 'base' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+        "material 'brass' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+        "material 'violet' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+        "material 'teal' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+        "material 'rose' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+        "material 'amber' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+        "material 'ember' profile requires map slots not present in extracted PBR maps: ['roughnessMap']",
+        "material 'mirage' profile requires map slots not present in extracted PBR maps: ['roughnessMap']"
+      ],
+      "checked": {
+        "materialCount": 8,
+        "componentCount": 29,
+        "referencedMaterialCount": 8,
+        "riggedComponentCount": 0,
+        "lodPresent": true,
+        "collisionPresent": false
+      },
+      "invariant": "material IDs and UV/map contracts survive geometry, skinning, collision and LOD changes"
+    },
+    "requiredEvidence": [
+      "materialPipeline.status=proceed",
+      "all material regions status=proceed",
+      "per-region crop comparison passed",
+      "multi-angle controlled view plan and screenshot readback",
+      "geometry/UV/skinning/collision/LOD material ID compatibility passed"
+    ]
+  }
 }
