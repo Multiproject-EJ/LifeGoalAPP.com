@@ -97,6 +97,11 @@ import {
   resolveCompassBookPresentation,
   shouldStageCompassBookIslandEntrance,
 } from '../logic/presentation';
+import {
+  getCompassBookProfileTargetFps,
+  parseCompassBookProfileQuality,
+  summarizeCompassBookPerformance,
+} from '../logic/deviceProfiling';
 import type {
   CompassAnswerRecord,
   CompassAnswerValue,
@@ -1383,6 +1388,24 @@ function testPresentationPolicy(): void {
   );
 }
 
+function testDeviceProfiling(): void {
+  assert(parseCompassBookProfileQuality('high') === 'high', 'High profiling override parses');
+  assert(parseCompassBookProfileQuality('low') === 'low', 'Low profiling override parses');
+  assert(parseCompassBookProfileQuality('auto') === null, 'Auto cannot masquerade as forced evidence');
+  assert(getCompassBookProfileTargetFps('high') === 50, 'High keeps the approved 50 FPS gate');
+  assert(getCompassBookProfileTargetFps('low') === 55, 'Low keeps the approved 55 FPS gate');
+
+  const highPass = summarizeCompassBookPerformance(Array.from({ length: 1_800 }, () => 16.67), 'high');
+  assert(highPass.rating === 'pass', '60 FPS High evidence passes');
+  assert(highPass.averageFps >= 59.9, 'High report computes average FPS');
+  assert(highPass.p95FrameMs === 16.7, 'High report keeps p95 frame time');
+
+  const lowReview = summarizeCompassBookPerformance(Array.from({ length: 1_410 }, () => 20), 'low');
+  assert(lowReview.rating === 'review', '50 FPS Low evidence remains review below its 55 FPS gate');
+  const failed = summarizeCompassBookPerformance([], 'high');
+  assert(failed.rating === 'fail' && failed.sampleCount === 0, 'Empty evidence can never pass');
+}
+
 export function runAllCompassBookTests(): void {
   testCurriculum();
   testUnlock();
@@ -1403,5 +1426,6 @@ export function runAllCompassBookTests(): void {
   testPageTurn();
   testDemoBook();
   testPresentationPolicy();
+  testDeviceProfiling();
   testWisdomCompassUsefulness();
 }

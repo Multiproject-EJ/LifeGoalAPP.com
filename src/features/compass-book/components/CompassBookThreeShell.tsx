@@ -6,6 +6,7 @@ import {
   type CompassBookThreeModel,
   type CompassBookThreeQuality,
 } from '../three/CompassBookThreeModel';
+import { parseCompassBookProfileQuality } from '../logic/deviceProfiling';
 
 type Props = {
   activePageId: CompassBookPageId;
@@ -24,6 +25,12 @@ type Props = {
 };
 
 function selectQuality(): CompassBookThreeQuality {
+  if (import.meta.env.DEV || import.meta.env.VITE_COMPASS_BOOK_PROFILE_ENABLED === 'true') {
+    const forced = parseCompassBookProfileQuality(
+      new URLSearchParams(window.location.search).get('compass3dQuality'),
+    );
+    if (forced) return forced;
+  }
   const deviceMemory = Number((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8);
   const constrained = window.innerWidth < 520 || deviceMemory <= 4 || navigator.hardwareConcurrency <= 4;
   return constrained ? 'low' : 'high';
@@ -148,6 +155,22 @@ export function CompassBookThreeShell({
     renderer.shadowMap.enabled = quality === 'high';
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality === 'high' ? 1.55 : 1));
+    if (
+      (import.meta.env.DEV || import.meta.env.VITE_COMPASS_BOOK_PROFILE_ENABLED === 'true')
+      && shellRef.current
+    ) {
+      const gl = renderer.getContext();
+      const debugRendererInfo = gl.getExtension('WEBGL_debug_renderer_info') as {
+        UNMASKED_VENDOR_WEBGL: number;
+        UNMASKED_RENDERER_WEBGL: number;
+      } | null;
+      shellRef.current.dataset.gpuVendor = String(
+        gl.getParameter(debugRendererInfo?.UNMASKED_VENDOR_WEBGL ?? gl.VENDOR),
+      );
+      shellRef.current.dataset.gpuRenderer = String(
+        gl.getParameter(debugRendererInfo?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER),
+      );
+    }
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 80);
@@ -334,10 +357,13 @@ export function CompassBookThreeShell({
       if (warmedFrames === 3) setStatus('ready');
       if (now - metricsStartedAt >= 850 && shellRef.current) {
         const elapsed = Math.max(1, now - metricsStartedAt);
+        const rendererSize = renderer.getSize(new THREE.Vector2());
         shellRef.current.dataset.fps = String(Math.round((metricsFrames * 1000) / elapsed));
         shellRef.current.dataset.renderCalls = String(renderer.info.render.calls);
         shellRef.current.dataset.renderedTriangles = String(renderer.info.render.triangles);
         shellRef.current.dataset.modelTriangles = String(model.metrics.triangles);
+        shellRef.current.dataset.rendererWidth = String(Math.round(rendererSize.x * renderer.getPixelRatio()));
+        shellRef.current.dataset.rendererHeight = String(Math.round(rendererSize.y * renderer.getPixelRatio()));
         metricsStartedAt = now;
         metricsFrames = 0;
       }

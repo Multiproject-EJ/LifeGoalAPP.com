@@ -95,7 +95,7 @@ Authorised: repository code, tests, local preference storage, developer preview,
 
 - 2D mounts no WebGL renderer.
 - Existing 3D quality-tier selection and fallback remain intact.
-- 3D target: 30 FPS minimum on the low tier and 50 FPS minimum on the high-tier QA device.
+- Production launch targets: at least 55 FPS on Low and 50 FPS on High on a supported physical iPhone.
 - All mode controls have programmatic names, pressed/selected state, and visible focus.
 - Text, forms, and controls remain DOM-owned in every mode.
 

@@ -1,7 +1,7 @@
 # Compass Book production 3D launch gauntlet
 
 **Date:** 2026-08-20  
-**Status:** Implementation complete in branch; launch remains gated on physical-device and live-environment proof  
+**Status:** Implementation and device-proof tooling complete in branch; launch remains gated on recorded physical-device and live-environment proof
 **Branch:** `codex/compass-book-launch-3d-20260820`  
 **Clean worktree:** `worktrees/compass-book-launch-3d-20260820`
 
@@ -154,7 +154,20 @@ Visual evidence is under `docs/gauntlets/evidence/compass-book-production-3d-202
 Honest remaining launch gates:
 
 - High ≥50 FPS and Low ≥55 FPS still require a supported physical iPhone run; browser readings cannot close that gate.
-- The img2threejs structural and form passes are accepted. Material review remains at its deterministic gate: a bounded correction brightened the indigo leather and shifted the gilt away from brown-orange, but dark-on-dark segmentation still produced no component IDs and a non-actionable ΔE failure. Exact PBR sign-off requires a clean isolated material reference, or Eivind's explicit acceptance of the current stylized real-time match.
+- The img2threejs Chapter IV pipeline is complete through blockout, structural, form, material, surface, lighting, interaction, and optimization. Its accepted visual evidence and scores are recorded in the inner-quality Gauntlet; the earlier material-only diagnostic is superseded by those later gated passes.
 - Supabase migrations/RLS, signed-in cloud persistence, native AI, and the deployed Player Menu entry require live-environment verification. No production account or deployment was changed in this task.
 - Merge, deployment, and store submission remain outside the authority granted to this branch.
 - Legacy Personality/Shield records remain preserved. The obsolete 11-chapter plan is only a retention map; no silent migration was introduced.
+
+## 2026-08-21 supported-iPhone proof tooling
+
+The remaining performance gate is now executable rather than a prose-only handoff:
+
+- `?profile=1&compass3dQuality=high|low` mounts a dev-only 30-second panel around the real production Compass screen and shell.
+- The run is cancelled whenever Safari/WebView leaves the foreground.
+- Reports use the stable `compass-book-3d-device-v1` schema and include average FPS, p95/worst frame time, slow-frame share, viewport, renderer resolution, GPU string when available, active page, and maximum calls/triangles.
+- `npm run build:compass-profiler` and `npm run cap:sync:ios:compass-profiler` provide an explicit internal Capacitor proof build; the production service worker is disabled in that build.
+- High and Low are forced only in development or the flagged internal profiler build. The player-facing Compass Book never mounts the profiler.
+- The complete physical-device procedure and restoration step are in `docs/gauntlets/COMPASS_BOOK_SUPPORTED_IPHONE_PROFILING.md`.
+
+Automated browser smoke evidence verified that the panel mounts at 390×844, reads the forced High tier and real Chapter IV renderer workload, completes a 30-second trace, and correctly returns `FAIL` for a below-target automation-held desktop run. This proves the gate logic, not physical-iPhone performance. The launch gate stays open until the required phone reports are recorded.

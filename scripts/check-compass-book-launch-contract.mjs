@@ -8,6 +8,9 @@ const styles = read('src/features/compass-book/components/compassBook.css');
 const availability = read('src/config/featureAvailability.ts');
 const preview = read('compass-preview.html');
 const presentation = read('src/features/compass-book/logic/presentation.ts');
+const previewHarness = read('src/scripts/compassPreviewHarness.tsx');
+const profiler = read('src/features/compass-book/dev/CompassBookDeviceProfiler.tsx');
+const main = read('src/main.tsx');
 
 const compassEntryStart = availability.indexOf("'app.compass_book':");
 const compassEntryEnd = availability.indexOf("'today.visionStar':", compassEntryStart);
@@ -59,6 +62,14 @@ requireText(presentation, 'shouldStageCompassBookIslandEntrance', 'Island Run de
 requireText(screen, "data-entry-choreography={pendingInitialFlow ? 'island_summon' : 'idle'}", 'The Island Run entrance must remain observable and bounded in the Compass modal.');
 requireText(shell, 'const presentationRoot = new THREE.Group()', 'Island choreography must transform a presentation parent, not canonical model parts.');
 requireText(shell, "data-entrance={islandEntranceActive ? 'island_summon' : 'idle'}", 'The production shell must expose the entrance state for QA.');
+requireText(shell, "import.meta.env.VITE_COMPASS_BOOK_PROFILE_ENABLED === 'true'", 'Forced quality must stay inside development or the internal profiler build.');
+requireText(shell, "get('compass3dQuality')", 'The internal profiler must be able to force High and Low quality explicitly.');
+requireText(previewHarness, "params.get('profile') === '1'", 'The LAN preview must opt into the device profiler explicitly.');
+requireText(profiler, "document.visibilityState !== 'visible'", 'Background-tab evidence must never start or pass.');
+requireText(profiler, "profileSchema: 'compass-book-3d-device-v1'", 'Physical-device reports must use a stable evidence schema.');
+requireText(main, 'VITE_COMPASS_BOOK_PROFILE_ENABLED', 'The native internal profiler build must have an explicit build flag.');
+requireText(main, '&& !COMPASS_BOOK_PROFILER_BUILD_ENABLED', 'The internal profiler build must not register the production service worker.');
+rejectText(screen, 'CompassBookDeviceProfiler', 'Player-facing Compass Book UI must not mount internal profiler controls.');
 rejectText(screen, 'persistIslandRunRuntimeStatePatch', 'Compass Book presentation must never write Island Run runtime state.');
 requireText(compassAvailability, "status: 'live'", 'Compass Book must not ship behind a stale coming-soon status.');
 requireText(compassAvailability, "publicAccess: 'open'", 'Compass Book public access must be open.');

@@ -9,6 +9,7 @@ import { CompassBookScreen } from '../features/compass-book/components/CompassBo
 import { DEMO_ISLAND_NUMBER } from '../features/compass-book/content/demoBook';
 import type { CompassBookChapterId } from '../features/compass-book/types';
 import { parseCompassBookPresentationMode } from '../features/compass-book/logic/presentation';
+import { CompassBookDeviceProfiler } from '../features/compass-book/dev/CompassBookDeviceProfiler';
 import { QuickAddSheet } from '../components/QuickAddSheet';
 import { GoalPillarMeter } from '../features/goals/GoalPillarMeter';
 import { MyQuestHub } from '../features/goals/MyQuestHub';
@@ -137,6 +138,7 @@ function Harness() {
           <GoalPillarMeter pillars={pillars} size="full" />
         </div>
       ) : null}
+      {params.get('profile') === '1' ? <CompassBookDeviceProfiler /> : null}
     </div>
   );
 }
