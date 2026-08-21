@@ -1938,6 +1938,40 @@ function createIkigaiMapRelief(
   const high = quality === 'high';
   const radialSegments = high ? 24 : 14;
   const tubeSegments = high ? 36 : 20;
+  const createEnamelDataTexture = (kind: 'roughness' | 'bump') => {
+    const size = high ? 128 : 48;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Ikigai enamel texture canvas is unavailable.');
+    const pixels = context.createImageData(size, size);
+    for (let y = 0; y < size; y += 1) {
+      for (let x = 0; x < size; x += 1) {
+        const fine = seededNoise(x, y, kind === 'roughness' ? 151 : 173);
+        const meso = seededNoise(Math.floor(x / 9), Math.floor(y / 9), kind === 'roughness' ? 211 : 239);
+        const value = kind === 'roughness'
+          ? 172 + fine * 46 + meso * 24
+          : 112 + fine * 28 + meso * 16;
+        const offset = (y * size + x) * 4;
+        pixels.data[offset] = value;
+        pixels.data[offset + 1] = value;
+        pixels.data[offset + 2] = value;
+        pixels.data[offset + 3] = 255;
+      }
+    }
+    context.putImageData(pixels, 0, 0);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.name = `COMPASS_BOOK_IKIGAI_ENAMEL_${kind.toUpperCase()}`;
+    texture.colorSpace = THREE.NoColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(2.4, 2.4);
+    texture.needsUpdate = true;
+    return texture;
+  };
+  const enamelRoughness = createEnamelDataTexture('roughness');
+  const enamelBump = createEnamelDataTexture('bump');
 
   const chart = new THREE.MeshStandardMaterial({
     name: 'COMPASS_BOOK_IKIGAI_CHART_MATERIAL',
@@ -1959,60 +1993,87 @@ function createIkigaiMapRelief(
     color: 0x7139b6,
     emissive: 0x24103f,
     emissiveIntensity: 0.28,
-    roughness: 0.24,
+    roughness: 0.25,
+    roughnessMap: enamelRoughness,
+    bumpMap: enamelBump,
+    bumpScale: high ? 0.012 : 0.006,
     metalness: 0.08,
-    clearcoat: high ? 0.64 : 0.38,
-    clearcoatRoughness: 0.16,
+    clearcoat: high ? 0.76 : 0.44,
+    clearcoatRoughness: 0.12,
+    envMapIntensity: 0.95,
+    specularIntensity: 0.92,
   });
   const capability = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_CAPABILITY_MATERIAL',
     color: 0x147985,
     emissive: 0x082f36,
     emissiveIntensity: 0.23,
-    roughness: 0.27,
+    roughness: 0.28,
+    roughnessMap: enamelRoughness,
+    bumpMap: enamelBump,
+    bumpScale: high ? 0.01 : 0.005,
     metalness: 0.08,
-    clearcoat: high ? 0.56 : 0.32,
-    clearcoatRoughness: 0.2,
+    clearcoat: high ? 0.7 : 0.4,
+    clearcoatRoughness: 0.15,
+    envMapIntensity: 0.9,
+    specularIntensity: 0.88,
   });
   const contribution = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_CONTRIBUTION_MATERIAL',
     color: 0xa85f45,
     emissive: 0x3c1912,
     emissiveIntensity: 0.18,
-    roughness: 0.36,
-    metalness: 0.44,
+    roughness: 0.38,
+    roughnessMap: enamelRoughness,
+    bumpMap: enamelBump,
+    bumpScale: high ? 0.009 : 0.004,
+    metalness: 0.54,
     clearcoat: high ? 0.42 : 0.24,
     clearcoatRoughness: 0.24,
+    envMapIntensity: 0.88,
   });
   const viability = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_VIABILITY_MATERIAL',
     color: 0xb27a18,
     emissive: 0x4b2805,
     emissiveIntensity: 0.2,
-    roughness: 0.32,
-    metalness: 0.42,
-    clearcoat: high ? 0.46 : 0.26,
-    clearcoatRoughness: 0.22,
+    roughness: 0.34,
+    roughnessMap: enamelRoughness,
+    bumpMap: enamelBump,
+    bumpScale: high ? 0.008 : 0.004,
+    metalness: 0.64,
+    clearcoat: high ? 0.4 : 0.22,
+    clearcoatRoughness: 0.24,
+    envMapIntensity: 0.96,
   });
   const willingness = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_WILLINGNESS_MATERIAL',
     color: 0xd84b10,
     emissive: 0x7b1d04,
     emissiveIntensity: 0.5,
-    roughness: 0.24,
+    roughness: 0.25,
+    roughnessMap: enamelRoughness,
+    bumpMap: enamelBump,
+    bumpScale: high ? 0.012 : 0.006,
     metalness: 0.05,
-    clearcoat: high ? 0.58 : 0.34,
-    clearcoatRoughness: 0.18,
+    clearcoat: high ? 0.72 : 0.42,
+    clearcoatRoughness: 0.13,
+    envMapIntensity: 0.92,
+    specularIntensity: 0.9,
   });
   const mirageMaterial = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_MIRAGE_MATERIAL',
     color: 0x30283e,
     emissive: 0x0c0912,
     emissiveIntensity: 0.08,
-    roughness: 0.62,
+    roughness: 0.66,
+    roughnessMap: enamelRoughness,
+    bumpMap: enamelBump,
+    bumpScale: high ? 0.006 : 0.003,
     metalness: 0.12,
     clearcoat: high ? 0.18 : 0.08,
     clearcoatRoughness: 0.52,
+    envMapIntensity: 0.42,
   });
   const mirageTetherMaterial = new THREE.MeshPhysicalMaterial({
     name: 'COMPASS_BOOK_IKIGAI_MIRAGE_TETHER_MATERIAL',
@@ -2029,10 +2090,15 @@ function createIkigaiMapRelief(
     color: 0x8e48f1,
     emissive: 0x48208f,
     emissiveIntensity: 0.88,
-    roughness: 0.16,
+    roughness: 0.14,
+    roughnessMap: enamelRoughness,
+    bumpMap: enamelBump,
+    bumpScale: high ? 0.008 : 0.004,
     metalness: 0.06,
-    clearcoat: high ? 0.76 : 0.46,
-    clearcoatRoughness: 0.1,
+    clearcoat: high ? 0.9 : 0.52,
+    clearcoatRoughness: 0.06,
+    envMapIntensity: 1.16,
+    specularIntensity: 1,
   });
 
   const contactPlate = roundedBox(

@@ -67,6 +67,10 @@ function readMapStrippedReview() {
   return new URLSearchParams(window.location.search).get('mapStripped') === '1';
 }
 
+function readMaterialProof() {
+  return new URLSearchParams(window.location.search).get('materialProof') === '1';
+}
+
 function stripMaterialMapsForReview(root: THREE.Object3D) {
   root.traverse((node) => {
     if (!(node instanceof THREE.Mesh)) return;
@@ -265,6 +269,7 @@ export default function CompassBookThreeLab() {
   const orbit = useMemo(readOrbit, []);
   const activePage = useMemo(readInitialPage, []);
   const mapStrippedReview = useMemo(readMapStrippedReview, []);
+  const materialProof = useMemo(readMaterialProof, []);
   const [pose, setPose] = useState<CompassBookThreePose>(readInitialPose);
   const [quality, setQuality] = useState<CompassBookThreeQuality>(readInitialQuality);
   const [reducedMotion, setReducedMotion] = useState(readInitialReducedMotion);
@@ -321,6 +326,25 @@ export default function CompassBookThreeLab() {
     const partManifest = createRuntimePartManifest(model.root, activePage);
     if (partManifest) canvas.dataset.partManifest = JSON.stringify(partManifest);
     scene.add(model.root);
+    let materialProofRelief: THREE.Object3D | null = null;
+    const materialProofCenter = new THREE.Vector3();
+    const materialProofSize = new THREE.Vector3();
+    if (materialProof) {
+      model.setOpenProgress(1);
+      model.root.updateMatrixWorld(true);
+      const runtime = model.root.userData.sculptRuntime as {
+        parts?: Record<string, THREE.Object3D>;
+      } | undefined;
+      const activeRelief = runtime?.parts?.[`${activePage.replace(/_/g, '-')}-relief`];
+      if (activeRelief) {
+        scene.attach(activeRelief);
+        model.root.visible = false;
+        activeRelief.visible = true;
+        materialProofRelief = activeRelief;
+        new THREE.Box3().setFromObject(activeRelief).getCenter(materialProofCenter);
+        new THREE.Box3().setFromObject(activeRelief).getSize(materialProofSize);
+      }
+    }
 
     const stars = createStarField(quality);
     scene.add(stars);
@@ -386,17 +410,28 @@ export default function CompassBookThreeLab() {
       model.animate(now / 1000, reducedMotionRef.current);
 
       const compact = width / height < 0.62;
-      const cameraDistance = THREE.MathUtils.lerp(compact ? 24 : 18.2, compact ? 46 : 18.8, openProgress);
-      camera.position.set(
-        THREE.MathUtils.lerp(compact ? 2 : 1.55, 0, openProgress) + orbit * (compact ? 3.2 : 3.8),
-        cameraDistance * THREE.MathUtils.lerp(compact ? 0.62 : 0.67, 0.74, openProgress),
-        cameraDistance * THREE.MathUtils.lerp(compact ? 0.68 : 0.64, 0.56, openProgress),
-      );
-      camera.lookAt(
-        (0.28 + orbit * 0.18) * (1 - openProgress),
-        THREE.MathUtils.lerp(0.18, compact ? -2.15 : 0.18, openProgress),
-        0.08,
-      );
+      if (materialProofRelief) {
+        const proofDistance = Math.max(materialProofSize.x, materialProofSize.z) * 1.75;
+        camera.up.set(0, 0, -1);
+        camera.position.set(
+          materialProofCenter.x + orbit * 2.2,
+          materialProofCenter.y + proofDistance,
+          materialProofCenter.z + proofDistance * 0.12,
+        );
+        camera.lookAt(materialProofCenter);
+      } else {
+        const cameraDistance = THREE.MathUtils.lerp(compact ? 24 : 18.2, compact ? 46 : 18.8, openProgress);
+        camera.position.set(
+          THREE.MathUtils.lerp(compact ? 2 : 1.55, 0, openProgress) + orbit * (compact ? 3.2 : 3.8),
+          cameraDistance * THREE.MathUtils.lerp(compact ? 0.62 : 0.67, 0.74, openProgress),
+          cameraDistance * THREE.MathUtils.lerp(compact ? 0.68 : 0.64, 0.56, openProgress),
+        );
+        camera.lookAt(
+          (0.28 + orbit * 0.18) * (1 - openProgress),
+          THREE.MathUtils.lerp(0.18, compact ? -2.15 : 0.18, openProgress),
+          0.08,
+        );
+      }
       stars.rotation.y = reducedMotionRef.current ? 0 : now * 0.000012;
       renderer.render(scene, camera);
 
@@ -418,6 +453,10 @@ export default function CompassBookThreeLab() {
     return () => {
       window.cancelAnimationFrame(frame);
       observer.disconnect();
+      if (materialProofRelief) {
+        model.root.visible = true;
+        model.root.attach(materialProofRelief);
+      }
       model.dispose();
       stars.geometry.dispose();
       (stars.material as THREE.Material).dispose();
@@ -428,7 +467,7 @@ export default function CompassBookThreeLab() {
       delete (window as CompassBookReviewWindow).__compassBookSculptRuntime;
       delete canvas.dataset.partManifest;
     };
-  }, [activePage, mapStrippedReview, quality]);
+  }, [activePage, mapStrippedReview, materialProof, quality]);
 
   const modelMetrics = modelRef.current?.metrics;
 
