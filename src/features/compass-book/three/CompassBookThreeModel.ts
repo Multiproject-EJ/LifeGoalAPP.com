@@ -2228,6 +2228,14 @@ function createIkigaiMapRelief(
     [0, -0.22], [0.14, -0.07], [0.09, 0.03], [0.18, 0.1], [0.04, 0.23],
     [-0.02, 0.1], [-0.12, 0.18], [-0.16, 0.02], [-0.1, -0.1],
   ]);
+  const innerFlameGeometry = createIconShape([
+    [0, -0.12], [0.075, -0.025], [0.04, 0.04], [0.085, 0.1],
+    [-0.015, 0.145], [-0.075, 0.035], [-0.06, -0.045],
+  ]);
+  const cometTailGeometry = createIconShape([
+    [-0.23, 0.13], [-0.12, -0.06], [0.04, -0.09], [-0.02, 0.04],
+    [0.08, 0.12], [-0.09, 0.08],
+  ]);
   nodeData.forEach((node, index) => {
     const group = new THREE.Group();
     group.name = `COMPASS_BOOK_IKIGAI_${node.id}_NODE`;
@@ -2245,13 +2253,14 @@ function createIkigaiMapRelief(
     group.add(insertPart);
 
     if (index === 0) {
-      const cometCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.145, 0), materials.gilt);
+      const cometCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.135, 0), materials.gilt);
       cometCore.name = 'COMPASS_BOOK_IKIGAI_CURIOSITY_COMET_CORE';
-      cometCore.position.set(0.06, 0.39, -0.04);
-      const cometTail = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.32, 4), materials.giltDark);
+      cometCore.position.set(0.075, 0.405, -0.055);
+      cometCore.scale.set(1, 0.72, 1);
+      cometCore.rotation.y = Math.PI / 4;
+      const cometTail = new THREE.Mesh(cometTailGeometry, materials.giltDark);
       cometTail.name = 'COMPASS_BOOK_IKIGAI_CURIOSITY_COMET_TAIL';
-      cometTail.position.set(-0.12, 0.37, 0.1);
-      cometTail.rotation.z = -0.72;
+      cometTail.position.set(-0.035, 0.39, 0.035);
       insertPart.add(cometCore, cometTail);
     } else if (index === 1) {
       const star = new THREE.Mesh(createIconShape(starPoints), materials.gilt);
@@ -2259,9 +2268,10 @@ function createIkigaiMapRelief(
       star.position.y = 0.39;
       insertPart.add(star);
     } else if (index === 2) {
-      const beacon = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), materials.gilt);
+      const beacon = new THREE.Mesh(createIconShape(starPoints), materials.gilt);
       beacon.name = 'COMPASS_BOOK_IKIGAI_CONTRIBUTION_BEACON';
-      beacon.position.set(0, 0.4, -0.08);
+      beacon.position.set(0, 0.405, -0.085);
+      beacon.scale.setScalar(0.58);
       const hands = [-1, 1].map((direction) => {
         const hand = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.035, 6, 18, Math.PI * 0.7), materials.giltDark);
         hand.name = `COMPASS_BOOK_IKIGAI_CONTRIBUTION_HAND_${direction < 0 ? 'LEFT' : 'RIGHT'}`;
@@ -2277,12 +2287,19 @@ function createIkigaiMapRelief(
       arch.name = 'COMPASS_BOOK_IKIGAI_VIABILITY_BRIDGE_ARCH';
       arch.rotation.set(Math.PI / 2, 0, Math.PI);
       arch.position.set(0, 0.385, 0.08);
-      insertPart.add(deck, arch);
+      const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.052, 0.018, 5, 14), materials.gilt);
+      wheel.name = 'COMPASS_BOOK_IKIGAI_VIABILITY_WHEEL_INSET';
+      wheel.rotation.x = Math.PI / 2;
+      wheel.position.set(0, 0.405, 0.08);
+      insertPart.add(deck, arch, wheel);
     } else {
       const flame = new THREE.Mesh(flameGeometry, materials.gilt);
       flame.name = 'COMPASS_BOOK_IKIGAI_WILLINGNESS_FLAME';
       flame.position.y = 0.4;
-      insertPart.add(flame);
+      const innerFlame = new THREE.Mesh(innerFlameGeometry, materials.giltDark);
+      innerFlame.name = 'COMPASS_BOOK_IKIGAI_WILLINGNESS_INNER_FLAME';
+      innerFlame.position.y = 0.448;
+      insertPart.add(flame, innerFlame);
     }
     forceInserts.push(insertPart);
     forceNodes.push(group);
@@ -2295,10 +2312,10 @@ function createIkigaiMapRelief(
   trial.position.set(0, 0, 0.06);
   const trialRingStack = new THREE.Group();
   trialRingStack.name = 'COMPASS_BOOK_IKIGAI_TRIAL_RING_STACK';
-  [0.49, 0.38, 0.285].forEach((radius, index) => {
+  [0.49, 0.38, 0.285, 0.205].forEach((radius, index) => {
     const ring = new THREE.Mesh(
       new THREE.TorusGeometry(radius, 0.035 - index * 0.006, high ? 8 : 5, radialSegments),
-      index === 1 ? materials.giltDark : materials.gilt,
+      index % 2 === 1 ? materials.giltDark : materials.gilt,
     );
     ring.name = `COMPASS_BOOK_IKIGAI_TRIAL_RING_${index + 1}`;
     ring.rotation.x = Math.PI / 2;
@@ -2308,7 +2325,7 @@ function createIkigaiMapRelief(
   });
   trial.add(trialRingStack);
   const trialCrystal = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.205, high ? 1 : 0),
+    new THREE.DodecahedronGeometry(0.205, 0),
     trialMaterial,
   );
   trialCrystal.name = 'COMPASS_BOOK_IKIGAI_TRIAL_CRYSTAL';
@@ -2316,11 +2333,14 @@ function createIkigaiMapRelief(
   trialCrystal.scale.y = 1.28;
   trialCrystal.castShadow = true;
   trial.add(trialCrystal);
-  const trialProngGeometry = new RoundedBoxGeometry(0.055, 0.16, 0.16, 1, 0.018);
-  const trialProngs = new THREE.InstancedMesh(trialProngGeometry, materials.giltDark, 4);
+  const trialProngGeometry = new RoundedBoxGeometry(0.045, 0.19, 0.12, 1, 0.018);
+  const trialProngs = new THREE.InstancedMesh(trialProngGeometry, materials.giltDark, 8);
   trialProngs.name = 'COMPASS_BOOK_IKIGAI_TRIAL_PRONGS';
-  [[-0.29, 0], [0.29, 0], [0, -0.29], [0, 0.29]].forEach(([x, z], index) => {
-    instanceMatrix.compose(new THREE.Vector3(x, 0.38, z), new THREE.Quaternion(), new THREE.Vector3(1, 1, 1));
+  Array.from({ length: 8 }, (_, index) => index * Math.PI / 4).forEach((angle, index) => {
+    const x = Math.cos(angle) * 0.29;
+    const z = Math.sin(angle) * 0.29;
+    instanceQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -angle);
+    instanceMatrix.compose(new THREE.Vector3(x, 0.39, z), instanceQuaternion, new THREE.Vector3(1, 1, 1));
     trialProngs.setMatrixAt(index, instanceMatrix);
   });
   trialProngs.instanceMatrix.needsUpdate = true;

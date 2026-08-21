@@ -824,19 +824,30 @@
       "interaction-pass",
       "optimization-pass"
     ],
-    "currentPass": "form-refinement",
+    "currentPass": "material-pass",
     "completedPasses": [
       "blockout",
-      "structural-pass"
+      "structural-pass",
+      "form-refinement"
     ],
-    "lastCompletedPass": "structural-pass",
+    "lastCompletedPass": "form-refinement",
     "blockedReason": "",
     "nextRequiredEvidence": [
-      "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
-      "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+      "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+      "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+      "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+      "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+      "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+      "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+      "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+      "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
       "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
-      "attachment contracts for child appendages/connectors",
-      "no floating child roots/joints in the browser screenshot",
+      "reference-derived albedo palette with dominant, secondary, and accent colors",
+      "independent albedo, roughness, height/normal, and AO maps",
+      "macro, meso, and micro surface-frequency response at 1024px or higher",
+      "local material masks: AO, dirt, wear, stains, moss, chips, scratches, wetness, or equivalent",
+      "neutral, grazing-light close-up, and reference-matched browser screenshots",
+      "AI vision comparison sheet score meeting the visual acceptance threshold",
       "browser render screenshot from your agent's browser/screenshot tool",
       "side-by-side reference/render comparison sheet for AI vision review",
       "AI vision score at or above the visual acceptance threshold",
@@ -3192,6 +3203,58 @@
       "cameraView": "fixed-front plus long-axis and thickness-axis orbit views",
       "notes": "Part coverage proves spec-to-runtime structure, not completeness of the intake spec.",
       "aiVisionNotes": "Visual appearance is intentionally unchanged from the accepted blockout; the score increases only for independently verified hierarchy and attachment coverage."
+    },
+    {
+      "timestamp": "2026-08-21T00:48:13.441907+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.88,
+      "aiVisionScore": 0.88,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.94,
+        "formDetail": 0.86,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "five-force-graph",
+          "score": 0.94,
+          "critical": true,
+          "notes": "Exactly five perimeter nodes remain legible, with a closed pentagon, five inward spokes, and no accidental sixth force."
+        },
+        {
+          "id": "trial-path-mirage",
+          "score": 0.93,
+          "critical": true,
+          "notes": "The faceted Trial gem, four-ring stack, eight prongs, three paths, and externally tethered Mirage remain visually separate."
+        },
+        {
+          "id": "five-node-identities",
+          "score": 0.86,
+          "critical": true,
+          "notes": "The comet, star, cupped beacon, bridge with wheel, and nested flame are distinct at the fixed view; their ornament remains simpler than the generated goal."
+        },
+        {
+          "id": "page-contact-depth",
+          "score": 0.9,
+          "critical": true,
+          "notes": "Long-axis and thickness-axis views preserve raised medallions, rails, hub layers, and contact shadows without silhouette collapse."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.83,
+          "critical": true,
+          "notes": "Gold structure, five enamel colors, luminous Trial, and dim Mirage retain the intended hierarchy; material nuance is reserved for the next pass."
+        }
+      ],
+      "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "renderScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/53-wide-chapter-4-form-refinement.png",
+      "comparisonImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/57-wide-chapter-4-form-comparison.png",
+      "cameraView": "fixed-front plus long-axis and thickness-axis",
+      "notes": "High tier measured 304 calls and 121.2k rendered triangles at 35-43 FPS in the desktop browser sample; this is not physical iPhone proof.",
+      "aiVisionNotes": "Agent vision inspected one full side-by-side sheet after deterministic Tier 1 passed. The faceted Trial and force emblems are clearer than the structural pass; goal-image ornament and map scale remain approximate. Orbit views prove relief depth but do not substitute for physical-device performance."
     }
   ],
   "reviewHistory": [
@@ -3364,6 +3427,93 @@
         "cameraView": "fixed-front plus long-axis and thickness-axis orbit views",
         "notes": "Part coverage proves spec-to-runtime structure, not completeness of the intake spec.",
         "aiVisionNotes": "Visual appearance is intentionally unchanged from the accepted blockout; the score increases only for independently verified hierarchy and attachment coverage."
+      }
+    },
+    {
+      "timestamp": "2026-08-21T00:48:13.441907+00:00",
+      "passId": "form-refinement",
+      "estimatedFidelity": 0.88,
+      "aiVisionScore": 0.88,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.94,
+        "formDetail": 0.86,
+        "materialSurface": 0.8,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "five-force-graph",
+          "score": 0.94,
+          "critical": true,
+          "notes": "Exactly five perimeter nodes remain legible, with a closed pentagon, five inward spokes, and no accidental sixth force."
+        },
+        {
+          "id": "trial-path-mirage",
+          "score": 0.93,
+          "critical": true,
+          "notes": "The faceted Trial gem, four-ring stack, eight prongs, three paths, and externally tethered Mirage remain visually separate."
+        },
+        {
+          "id": "five-node-identities",
+          "score": 0.86,
+          "critical": true,
+          "notes": "The comet, star, cupped beacon, bridge with wheel, and nested flame are distinct at the fixed view; their ornament remains simpler than the generated goal."
+        },
+        {
+          "id": "page-contact-depth",
+          "score": 0.9,
+          "critical": true,
+          "notes": "Long-axis and thickness-axis views preserve raised medallions, rails, hub layers, and contact shadows without silhouette collapse."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.83,
+          "critical": true,
+          "notes": "Gold structure, five enamel colors, luminous Trial, and dim Mirage retain the intended hierarchy; material nuance is reserved for the next pass."
+        }
+      ],
+      "action": "continue",
+      "summary": "Chapter IV form refinement strengthens the Trial mechanism and five nonverbal force emblems without changing the proven graph semantics.",
+      "matched": [
+        "faceted Trial gem and four-ring stack",
+        "eight-prong central setting",
+        "five distinct force emblems",
+        "bridge wheel inset",
+        "nested willingness flame",
+        "three candidate paths",
+        "isolated Mirage"
+      ],
+      "mismatches": [
+        "valid graph remains smaller in the page field than the generated goal",
+        "emblem ornament remains deliberately simpler",
+        "physical iPhone performance is not yet verified"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "none required for form-pass acceptance"
+      ],
+      "evidence": [
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/53-wide-chapter-4-form-refinement.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/54-wide-chapter-4-form-orbit-right.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/55-wide-chapter-4-form-orbit-left.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/56-chapter-4-form-multi-angle.json"
+      ],
+      "reviewViewpoints": [
+        "fixed-front",
+        "long-axis",
+        "thickness-axis",
+        "orbit-right-plus-0.65",
+        "orbit-left-minus-0.65"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+        "renderScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/53-wide-chapter-4-form-refinement.png",
+        "comparisonImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/57-wide-chapter-4-form-comparison.png",
+        "cameraView": "fixed-front plus long-axis and thickness-axis",
+        "notes": "High tier measured 304 calls and 121.2k rendered triangles at 35-43 FPS in the desktop browser sample; this is not physical iPhone proof.",
+        "aiVisionNotes": "Agent vision inspected one full side-by-side sheet after deterministic Tier 1 passed. The faceted Trial and force emblems are clearer than the structural pass; goal-image ornament and map scale remain approximate. Orbit views prove relief depth but do not substitute for physical-device performance."
       }
     }
   ],
@@ -4098,6 +4248,284 @@
       ],
       "renderHash": "742f91c52ca71c9f",
       "passId": "structural-pass"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9729,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0078,
+        "colorDelta": {
+          "checked": 29,
+          "maxDeltaE": 63.45,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 4.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.18
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 47.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 42.48
+            },
+            {
+              "componentId": null,
+              "deltaE": 58.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.9
+            },
+            {
+              "componentId": null,
+              "deltaE": 27.23
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 34.74
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 35.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.35
+            },
+            {
+              "componentId": null,
+              "deltaE": 45.71
+            },
+            {
+              "componentId": null,
+              "deltaE": 27.47
+            },
+            {
+              "componentId": null,
+              "deltaE": 50.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 63.45
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.9
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "25f85b8d135daa30",
+      "passId": "form-refinement"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9729,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0078,
+        "colorDelta": {
+          "checked": 29,
+          "maxDeltaE": 63.45,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 4.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 20.18
+            },
+            {
+              "componentId": null,
+              "deltaE": 4.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.5
+            },
+            {
+              "componentId": null,
+              "deltaE": 47.26
+            },
+            {
+              "componentId": null,
+              "deltaE": 22.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 42.48
+            },
+            {
+              "componentId": null,
+              "deltaE": 58.76
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.9
+            },
+            {
+              "componentId": null,
+              "deltaE": 27.23
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 34.74
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 35.06
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.35
+            },
+            {
+              "componentId": null,
+              "deltaE": 45.71
+            },
+            {
+              "componentId": null,
+              "deltaE": 27.47
+            },
+            {
+              "componentId": null,
+              "deltaE": 50.44
+            },
+            {
+              "componentId": null,
+              "deltaE": 63.45
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.9
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.86
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "25f85b8d135daa30",
+      "passId": "form-refinement"
     }
   ]
 }

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "five-force-graph",
+    "score": 0.94,
+    "critical": true,
+    "notes": "Exactly five perimeter nodes remain legible, with a closed pentagon, five inward spokes, and no accidental sixth force."
+  },
+  {
+    "id": "trial-path-mirage",
+    "score": 0.93,
+    "critical": true,
+    "notes": "The faceted Trial gem, four-ring stack, eight prongs, three paths, and externally tethered Mirage remain visually separate."
+  },
+  {
+    "id": "five-node-identities",
+    "score": 0.86,
+    "critical": true,
+    "notes": "The comet, star, cupped beacon, bridge with wheel, and nested flame are distinct at the fixed view; their ornament remains simpler than the generated goal."
+  },
+  {
+    "id": "page-contact-depth",
+    "score": 0.9,
+    "critical": true,
+    "notes": "Long-axis and thickness-axis views preserve raised medallions, rails, hub layers, and contact shadows without silhouette collapse."
+  },
+  {
+    "id": "material-light-hierarchy",
+    "score": 0.83,
+    "critical": true,
+    "notes": "Gold structure, five enamel colors, luminous Trial, and dim Mirage retain the intended hierarchy; material nuance is reserved for the next pass."
+  }
+]
