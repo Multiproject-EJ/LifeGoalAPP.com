@@ -305,3 +305,26 @@ The final runtime manifest reports **zero unnamed meshes**, six interaction sock
 ### Launch boundary
 
 Chapter V is approved for the wide hybrid spread and is now protected by the Compass Book launch-contract assertions. Production 3D remains a launch requirement. The existing supported-iPhone High ≥50 FPS and Low ≥55 FPS traces must still be recorded on physical hardware; neither these desktop results nor browser emulation close that gate.
+
+## Loop 9 — Chapter VI: Personal Playbook
+
+Status: **INTAKE COMPLETE; SCULPT SPEC AUTHORING IN PROGRESS.** No Chapter VI production relief claim is made yet.
+
+### Accepted direction
+
+Chapter VI will use the existing dual-presentation contract. Its 3D side is a presentation-only rocket cockpit and completion-animation surface; the complete readable Personal Playbook remains in the canonical DOM. The accepted ImageGen goal is `evidence/compass-book-inner-goals-2026-08-20/79-wide-chapter-6-goal.png`.
+
+The non-negotiable semantic structure is:
+
+- exactly one central rocket;
+- exactly seven separately countable flight-system modules: ignition, momentum, minimum power, warning radar, environment shield, recovery route, and weekly navigation;
+- exactly seven attached connector sockets with no floating module;
+- one curved Earth/orbit horizon;
+- one subordinate seven-cell launch-window arc that cannot read as an eighth system;
+- no generated labels, answers, progress values, or gameplay state in Three.js.
+
+### img2threejs intake
+
+The resumable package is `.img2threejs/compass-book-personal-playbook/`. The cropped reference passes deterministic admission at **81.84% foreground coverage**, one connected component, and `1536 × 1024` source / `900 × 1024` relief-reference resolution. The complex quality contract requires six macro assemblies, at least 24 meso components, 16 mapped detail targets, seven material layers, six repetition systems, and four review viewpoints.
+
+Projection is deliberately not used. This is an art-direction reference for a procedural real-time prop, not a photographed patterned surface; projection would bake concept lighting into albedo and weaken dynamic brass/enamel/crystal response. The generated specification skeleton is not yet strict-quality ready and remains correctly blocked at `spec-authoring` until its component hierarchy, materials, attachments, repetition systems, and semantic feature targets are fully authored.
