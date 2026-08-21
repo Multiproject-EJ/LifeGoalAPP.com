@@ -2,7 +2,7 @@
 
 Status: **PASS after two fixes**
 
-Surface under test: production Compass Book preview at `1280 × 720`, Chapter II (`inner_compass`), with demo answers filling all 20 fragments.
+Surface under test: production Compass Book preview at `1280 × 720` and `390 × 844`, Chapter II (`inner_compass`), with demo answers filling all 20 fragments.
 
 ## Coverage
 
@@ -11,6 +11,7 @@ Surface under test: production Compass Book preview at `1280 × 720`, Chapter II
 - The chapter sheet stayed inside the viewport and the document did not gain page overflow.
 - The completed chapter exposed its question, five output fields, Guardian Boundary, compass statement, sealed state, and all 20 activities.
 - The first activity opened as a centered, readable guided-flow surface while body scrolling remained locked.
+- At 390×844 the complete chapter and flow used an exactly viewport-sized sheet (`390 × 844`), with no document overflow or horizontal content overflow.
 
 ## Defect 1 — chart-label collision
 
@@ -34,6 +35,8 @@ Evidence:
 - `inner-compass-production-2d.png` — initial 2D collision.
 - `inner-compass-production-hybrid-fixed.png` — corrected hybrid chapter.
 - `inner-compass-production-2d-fixed.png` — corrected 2D chapter.
+- `inner-compass-phone-hybrid.png` — Island Run Auto resolves to 3D while preserving the complete readable phone sheet.
+- `inner-compass-phone-2d.png` — explicit PWA 2D chapter at 390×844.
 
 ## Defect 2 — guided-flow focus return
 
@@ -58,6 +61,9 @@ Evidence:
 
 - `inner-compass-fragment-modal.png` — centered guided-flow view.
 - `inner-compass-focus-restored.png` — the originating activity has the visible keyboard focus ring after return.
+- `inner-compass-phone-fragment.png` — all first-fragment choices and the save action remain visible at 390×844 without inner scrolling.
+
+Phone return-focus result matched desktop: `BUTTON`, `Most alive moment — done`, `inner_compass.a01`; body overflow remained `hidden`.
 
 ## Gate result
 
