@@ -171,3 +171,11 @@ The remaining performance gate is now executable rather than a prose-only handof
 - The complete physical-device procedure and restoration step are in `docs/gauntlets/COMPASS_BOOK_SUPPORTED_IPHONE_PROFILING.md`.
 
 Automated browser smoke evidence verified that the panel mounts at 390×844, reads the forced High tier and real Chapter IV renderer workload, completes a 30-second trace, and correctly returns `FAIL` for a below-target automation-held desktop run. This proves the gate logic, not physical-iPhone performance. The launch gate stays open until the required phone reports are recorded.
+
+### 2026-08-21 signed profiler build attempt
+
+The internal Compass profiler bundle built, synchronized, and signed successfully for physical iOS with the existing Apple Development identity. The paired target resolved as an iPhone 16 Pro (`iPhone17,1`) with Developer Mode enabled, but it had no live CoreDevice tunnel or DDI service; installation stopped before changing the phone. No performance trace was started and the High/Low gate remains open. The normal production bundle and service worker were rebuilt and synchronized back into the Capacitor project immediately afterward. Detailed evidence and the exact resume point are in `evidence/2026-08-21-compass-book-supported-iphone/00-profiler-build-readiness.md`.
+
+## 2026-08-21 Inner Compass priority smoke
+
+Chapter II was exercised in the production 3D hybrid and explicit 2D presentations at 1280×720. The pass found and fixed two user-facing defects: East/West values colliding through the chart hub, and guided-flow exit returning keyboard focus to the document body. The value lanes are now separated and outlined for contrast; flow exit restores focus to the exact chapter control that opened it. Browser geometry confirmed no East/West overlap, the chapter and activity surfaces stayed inside the viewport, and background scroll remained locked. Focus restoration now lands on the originating activity with a visible focus ring. Focused Compass tests, the launch contract, TypeScript, and the production Vite build passed. Full evidence is in `evidence/2026-08-21-compass-book-inner-priority-smoke/00-inner-compass-smoke.md`.

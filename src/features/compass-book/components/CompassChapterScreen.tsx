@@ -16,7 +16,7 @@ export type CompassChapterScreenProps = {
   session: Session | null;
   getProgress: CompassGetProgress;
   getChapterState: (chapterId: CompassBookChapterId) => CompassChapterState | null;
-  onStartFlow: (activityId?: string) => void;
+  onStartFlow: (activityId: string | undefined, returnFocusKey: string) => void;
   onBack: () => void;
   onClose: () => void;
 };
@@ -119,7 +119,8 @@ export function CompassChapterScreen({
           <button
             type="button"
             className="compass-book__primary compass-book__primary--block"
-            onClick={() => onStartFlow(progress.nextActivityId ?? undefined)}
+            data-compass-flow-trigger="chapter-primary"
+            onClick={() => onStartFlow(progress.nextActivityId ?? undefined, 'chapter-primary')}
           >
             {hasProgress
               ? `Continue · ${progress.completedCount}/${progress.totalCount}`
@@ -148,7 +149,8 @@ export function CompassChapterScreen({
                   type="button"
                   className={`compass-book__activity ${locked ? 'compass-book__activity--locked' : ''}`}
                   disabled={locked}
-                  onClick={() => onStartFlow(activity.id)}
+                  data-compass-flow-trigger={activity.id}
+                  onClick={() => onStartFlow(activity.id, activity.id)}
                   aria-label={`${activity.title} — ${locked ? 'locked' : done ? 'done' : 'available'}`}
                 >
                   <span className="compass-book__activity-order" aria-hidden="true">

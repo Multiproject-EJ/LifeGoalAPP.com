@@ -213,6 +213,10 @@ export function CompassBookScreen({
   const turnSeqRef = useRef(0);
   const dialogRef = useRef<HTMLDivElement>(null);
   const lastFocusedRef = useRef<HTMLElement | null>(null);
+  const flowReturnFocusRef = useRef<{
+    chapterId: CompassBookChapterId;
+    key: string;
+  } | null>(null);
 
   useEffect(() => {
     lastFocusedRef.current = document.activeElement instanceof HTMLElement
@@ -269,11 +273,34 @@ export function CompassBookScreen({
     openPage(initialPageId);
   }, [initialPageId, openPage]);
 
-  const startFlow = useCallback(
-    (chapterId: CompassBookChapterId, startActivityId?: string) =>
-      setView({ kind: 'flow', chapterId, startActivityId }),
-    [],
-  );
+  const startFlow = useCallback((
+    chapterId: CompassBookChapterId,
+    startActivityId?: string,
+    returnFocusKey?: string,
+  ) => {
+    flowReturnFocusRef.current = returnFocusKey ? { chapterId, key: returnFocusKey } : null;
+    setView({ kind: 'flow', chapterId, startActivityId });
+  }, []);
+
+  useEffect(() => {
+    if (view.kind !== 'page' || !isChapterPage(view.pageId)) return undefined;
+    const pending = flowReturnFocusRef.current;
+    if (!pending || pending.chapterId !== view.pageId) return undefined;
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      const triggers = dialogRef.current?.querySelectorAll<HTMLElement>(
+        '[data-compass-flow-trigger]',
+      );
+      const target = triggers
+        ? Array.from(triggers).find(
+            (trigger) => trigger.dataset.compassFlowTrigger === pending.key,
+          )
+        : null;
+      target?.focus();
+      flowReturnFocusRef.current = null;
+    });
+    return () => window.cancelAnimationFrame(focusFrame);
+  }, [view]);
 
   useEffect(() => {
     // Escape belongs to whatever is on top. While an overlay covers the book,
@@ -451,8 +478,12 @@ export function CompassBookScreen({
                 session={session}
                 getProgress={book.getProgress}
                 getChapterState={book.getChapterState}
-                onStartFlow={(activityId) =>
-                  startFlow(view.pageId as CompassBookChapterId, activityId)
+                onStartFlow={(activityId, returnFocusKey) =>
+                  startFlow(
+                    view.pageId as CompassBookChapterId,
+                    activityId,
+                    returnFocusKey,
+                  )
                 }
                 onBack={() => openPage('reading')}
                 onClose={onClose}

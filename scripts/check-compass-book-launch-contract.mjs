@@ -10,6 +10,8 @@ const preview = read('compass-preview.html');
 const presentation = read('src/features/compass-book/logic/presentation.ts');
 const previewHarness = read('src/scripts/compassPreviewHarness.tsx');
 const profiler = read('src/features/compass-book/dev/CompassBookDeviceProfiler.tsx');
+const innerCompassGraphic = read('src/features/compass-book/components/chapter-graphics/InnerCompassGraphic.tsx');
+const chapterScreen = read('src/features/compass-book/components/CompassChapterScreen.tsx');
 const main = read('src/main.tsx');
 
 const compassEntryStart = availability.indexOf("'app.compass_book':");
@@ -30,6 +32,10 @@ requireText(screen, 'createPortal(', 'Compass Book must use a top-level portal.'
 requireText(screen, 'document.body', 'Compass Book portal must target document.body.');
 requireText(screen, "lockPageScroll(['body', 'documentElement'])", 'Compass Book must lock viewport scrolling.');
 requireText(screen, 'lastFocusedRef.current?.focus?.()', 'Compass Book must restore prior focus.');
+requireText(screen, 'flowReturnFocusRef', 'Compass Book must remember the control that opened a guided flow.');
+requireText(screen, 'target?.focus()', 'Compass Book must restore focus after leaving a guided flow.');
+requireText(chapterScreen, 'data-compass-flow-trigger="chapter-primary"', 'The chapter primary action must remain a focus-return target.');
+requireText(chapterScreen, 'data-compass-flow-trigger={activity.id}', 'Every chapter activity must remain a focus-return target.');
 requireText(screen, '<CompassBookThreeShell', 'Production Compass Book must mount its 3D shell.');
 requireText(screen, "import('./CompassBookThreeShell')", 'Production 3D must be lazy-loaded.');
 requireText(shell, 'createCompassBookThreeModel(quality)', 'Production shell must build the reusable model.');
@@ -59,6 +65,10 @@ requireText(model, 'tabs.visible = eased < 0.72', 'Open spreads must hand tab na
 requireText(styles, ":not([data-page-id='living_wheel'])", 'Chapter I must retain the approved wide hybrid spread.');
 requireText(styles, ":not([data-page-id='inner_compass'])", 'Chapter II must retain the approved wide hybrid spread.');
 requireText(styles, ":not([data-page-id='quest_forge'])", 'Chapter V must retain the approved wide hybrid spread.');
+requireText(innerCompassGraphic, 'y={cy - 10}', 'The Inner Compass East meaning must stay on its own upper lane.');
+requireText(innerCompassGraphic, 'y={cy + 20}', 'The Inner Compass West meaning must stay on its own lower lane.');
+requireText(innerCompassGraphic, 'data-direction="east"', 'The Inner Compass East meaning must remain independently addressable for visual QA.');
+requireText(innerCompassGraphic, 'data-direction="west"', 'The Inner Compass West meaning must remain independently addressable for visual QA.');
 requireText(preview, "window.location.protocol !== 'file:'", 'The preview must distinguish direct file launches from Vite-served launches.');
 requireText(preview, 'http://127.0.0.1:5174/compass-preview.html', 'The direct-file launcher must route to the local preview server.');
 requireText(preview, "entry.src = '/src/scripts/compassPreviewHarness.tsx'", 'The Vite-served preview must retain its React entry module.');

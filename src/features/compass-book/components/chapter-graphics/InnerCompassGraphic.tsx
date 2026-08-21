@@ -47,8 +47,27 @@ export function InnerCompassGraphic({ output, mode }: InnerCompassGraphicProps) 
           <>
             <text x={cx} y={44} className="compass-wheel__compass-value" textAnchor="middle">{labelOf(output.trueNorthValueId)}</text>
             <text x={cx} y={196} className="compass-wheel__compass-value" textAnchor="middle">{labelOf(output.essentialNeedId)}</text>
-            <text x={150} y={cy + 20} className="compass-wheel__compass-value" textAnchor="middle">{labelOf(output.lifeSparkId)}</text>
-            <text x={70} y={cy + 20} className="compass-wheel__compass-value" textAnchor="middle">{labelOf(output.shadowPullId)}</text>
+            {/* Keep the longer East/West meanings on separate visual lanes.
+                Centering both on the same baseline made real labels such as
+                “People-pleasing” and “Exploring somewhere” collide at the hub. */}
+            <text
+              x={158}
+              y={cy - 10}
+              className="compass-wheel__compass-value compass-wheel__compass-value--east"
+              data-direction="east"
+              textAnchor="middle"
+            >
+              {labelOf(output.lifeSparkId)}
+            </text>
+            <text
+              x={62}
+              y={cy + 20}
+              className="compass-wheel__compass-value compass-wheel__compass-value--west"
+              data-direction="west"
+              textAnchor="middle"
+            >
+              {labelOf(output.shadowPullId)}
+            </text>
           </>
         ) : null}
       </svg>

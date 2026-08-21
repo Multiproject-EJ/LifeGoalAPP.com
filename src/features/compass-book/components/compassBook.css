@@ -2709,6 +2709,10 @@
   fill: var(--cbk-ink-soft);
   font-size: 7.5px;
   font-weight: 700;
+  paint-order: stroke;
+  stroke: rgba(246, 233, 197, 0.86);
+  stroke-width: 2.4px;
+  stroke-linejoin: round;
 }
 
 .compass-wheel__svg--wide {
