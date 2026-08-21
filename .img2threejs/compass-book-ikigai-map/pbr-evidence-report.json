@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "verdict": "pass",
+  "confidence": 0.86,
+  "estimatedFidelity": 0.86,
+  "targetThreshold": 0.7,
+  "materialId": "base",
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/ikigai-map-admission-reference-white.png",
+  "outDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence",
+  "palette": [
+    "#1A1C28",
+    "#170F09",
+    "#333045",
+    "#774E1E",
+    "#CEAB73"
+  ],
+  "maps": {
+    "albedo": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_albedo.png",
+      "url": "/compass-book/pbr/ikigai-map/base_albedo.png",
+      "channel": "albedo",
+      "source": "reference-pixel-extraction"
+    },
+    "roughness": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_roughness.png",
+      "url": "/compass-book/pbr/ikigai-map/base_roughness.png",
+      "channel": "roughness",
+      "source": "reference-pixel-extraction"
+    },
+    "height": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_height.png",
+      "url": "/compass-book/pbr/ikigai-map/base_height.png",
+      "channel": "height",
+      "source": "reference-pixel-extraction"
+    },
+    "normal": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_normal.png",
+      "url": "/compass-book/pbr/ikigai-map/base_normal.png",
+      "channel": "normal",
+      "source": "reference-pixel-extraction"
+    },
+    "ao": {
+      "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_ao.png",
+      "url": "/compass-book/pbr/ikigai-map/base_ao.png",
+      "channel": "ao",
+      "source": "reference-pixel-extraction"
+    }
+  },
+  "diagnostics": {
+    "sourceWidth": 1122,
+    "sourceHeight": 1402,
+    "mapSize": 1024,
+    "cropBBoxPixels": {
+      "x": 156,
+      "y": 93,
+      "width": 799,
+      "height": 1130
+    },
+    "mask": {
+      "backgroundColor": "#FEFEFE",
+      "backgroundNoise": 1.414,
+      "transparentPixelFraction": 0.0,
+      "foregroundCoverage": 0.5046
+    },
+    "mapStats": {
+      "valueRange": 0.5627,
+      "heightP90Gradient": 0.09589,
+      "roughnessBase": 0.742,
+      "roughnessVariation": 0.165,
+      "normalStrength": 0.269,
+      "blurRadius": 21
+    },
+    "palette": [
+      "#1A1C28",
+      "#170F09",
+      "#333045",
+      "#774E1E",
+      "#CEAB73"
+    ]
+  },
+  "warnings": [
+    "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+  ],
+  "limitation": "single-image PBR extraction is an estimate; 70%+ extraction confidence still needs render screenshot review"
+}

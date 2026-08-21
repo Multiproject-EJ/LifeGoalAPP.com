@@ -205,7 +205,7 @@ The deterministic workload delta is the acceptance authority for this pass. At t
 
 The refreshed runtime manifest still contains 60 book parts and covers all **27 specified Living Horizon components with zero errors and zero warnings**. Strict sculpt validation passes with the pre-existing `actionProfile` advisories; the live runtime continues to expose the independent sun, ray fan, gate leaves, hearth, violet path, and amber material anchors needed by later Island Run ceremonies. TypeScript, Compass Book assertions, the launch contract, and the production Vite build all pass; existing repository chunk-size/dynamic-import warnings remain unrelated.
 
-### Loop 8 — Chapter IV Ikigai Map direction lock and intake (in progress, 2026-08-21)
+### Loop 8 — Chapter IV Ikigai Map blockout and structural acceptance (in progress, 2026-08-21)
 
 - Preserve the canonical Chapter IV metaphor: five forces—Curiosity, Capability, Contribution, Viability, and Willingness—form a constellation, **not** a four-circle Venn diagram.
 - Give the five perimeter forces separate raised medallions, connect them with one pentagon and five inward spokes, and keep the central Trial physically independent so it cannot read as a sixth force.
@@ -217,5 +217,20 @@ Evidence:
 - ImageGen wide production goal: `evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png`
 - Resumable intake: `.img2threejs/compass-book-ikigai-map/`
 - Dedicated white-backed admission reference passes at **50.46% foreground coverage** with one connected component.
+- Strict sculpt specification: `.img2threejs/compass-book-ikigai-map/ikigai-map-sculpt-spec.json`
+- Image-guided iteration target: `evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png`
+- Corrected high-tier render: `evidence/compass-book-inner-goals-2026-08-20/45-wide-chapter-4-render-high-corrected.png`
+- Map-stripped geometry proof: `evidence/compass-book-inner-goals-2026-08-20/46-wide-chapter-4-map-stripped.png`
+- Orbit proofs: `evidence/compass-book-inner-goals-2026-08-20/47-wide-chapter-4-orbit-left.png` and `48-wide-chapter-4-orbit-right.png`
+- ImageGen comparison sheet: `evidence/compass-book-inner-goals-2026-08-20/49-wide-chapter-4-comparison.png`
+- Scoped runtime manifest and coverage: `evidence/compass-book-inner-goals-2026-08-20/50-chapter-4-part-manifest.json` and `51-chapter-4-part-coverage.json`
 
-The goal-image component gate passes: five countable nodes, central Trial, three candidate routes, isolated Mirage, page contact, and separable raised solids are all present. The full book image is intentionally not used as silhouette-admission evidence because its 97.5% foreground coverage is not segmentable; the dedicated orthographic plate reference closes that deterministic intake gap. Geometry implementation remains blocked until the detail inventory, sculpt specification, material route, and strict-quality gate complete.
+The goal-image component gate passes: five countable nodes, central Trial, three candidate routes, isolated Mirage, page contact, and separable raised solids are all present. The full book image is intentionally not used as silhouette-admission evidence because its 97.5% foreground coverage is not segmentable; the dedicated orthographic plate reference closes that deterministic intake gap.
+
+Strict-quality now passes with **29 components**, **five repetition systems**, **ten mapped intake details**, complete attachment contracts, and source-derived PBR evidence at **0.86 confidence** against a 0.70 target. The integrated production relief uses instanced perimeter rails, spokes, bezels, sockets, chart studs, rivets, and Mirage tether beads. The image-guided correction made the broken Mirage tether visible without adding a draw call.
+
+Agent-vision review accepts the blockout at **0.84** and the structural pass at **0.87**. The procedural force emblems remain simpler than the generated concept art, so neither score is represented as near-reference fidelity. Tier 1 passes with silhouette IoU **0.9749**, and the map-stripped plus two orbit captures prove that the relief is geometry rather than a projected plate. The deterministic orbit check reports no degenerate view.
+
+The scoped runtime manifest contains **29 named parts**, **zero unnamed meshes**, seven interaction sockets, a relief collider, and separate valid-graph/invalid-satellite destruction groups. Part coverage reports **zero errors and zero warnings**. High tier samples at **301 calls / 119.9k rendered triangles**; low tier preserves the chapter silhouette at **141 calls / 18.6k rendered triangles** and sampled **51 FPS** in the browser. These are browser measurements, not supported-iPhone proof.
+
+Compass Book assertions, the launch contract, TypeScript, and diff hygiene pass. The img2threejs pipeline has advanced through blockout and structural-pass acceptance; **form-refinement** is the next gated pass.

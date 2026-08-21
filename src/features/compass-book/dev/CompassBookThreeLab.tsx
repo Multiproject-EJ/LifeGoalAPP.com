@@ -42,6 +42,7 @@ function readInitialPage() {
     requestedPage === 'living_wheel'
     || requestedPage === 'inner_compass'
     || requestedPage === 'living_horizon'
+    || requestedPage === 'ikigai_map'
   ) return requestedPage;
   return 'reading';
 }
@@ -87,21 +88,27 @@ function stripMaterialMapsForReview(root: THREE.Object3D) {
   });
 }
 
-function createRuntimePartManifest(root: THREE.Object3D) {
-  const runtime = root.userData.sculptRuntime as {
+function createRuntimePartManifest(root: THREE.Object3D, activePage: string) {
+  const bookRuntime = root.userData.sculptRuntime as {
     parts?: Record<string, THREE.Object3D>;
     sockets?: Record<string, unknown>;
     colliders?: Record<string, unknown>;
     destructionGroups?: Record<string, unknown>;
   } | undefined;
-  if (!runtime?.parts) return null;
-  const partEntries = Object.entries(runtime.parts);
-  Object.values(runtime.parts).forEach((object) => {
-    const nestedRuntime = object.userData.sculptRuntime as {
-      parts?: Record<string, THREE.Object3D>;
-    } | undefined;
-    if (nestedRuntime?.parts) partEntries.push(...Object.entries(nestedRuntime.parts));
-  });
+  if (!bookRuntime?.parts) return null;
+  const activeRelief = bookRuntime.parts[`${activePage.replace(/_/g, '-')}-relief`];
+  const activeRuntime = activeRelief?.userData.sculptRuntime as typeof bookRuntime | undefined;
+  const manifestRoot = activeRuntime?.parts ? activeRelief : root;
+  const runtime = activeRuntime?.parts ? activeRuntime : bookRuntime;
+  const partEntries = Object.entries(runtime.parts ?? {});
+  if (!activeRuntime?.parts) {
+    Object.values(bookRuntime.parts).forEach((object) => {
+      const nestedRuntime = object.userData.sculptRuntime as {
+        parts?: Record<string, THREE.Object3D>;
+      } | undefined;
+      if (nestedRuntime?.parts) partEntries.push(...Object.entries(nestedRuntime.parts));
+    });
+  }
   const seenPartNames = new Set<string>();
   const parts = partEntries.flatMap(([name, object]) => {
     if (seenPartNames.has(name)) return [];
@@ -117,7 +124,7 @@ function createRuntimePartManifest(root: THREE.Object3D) {
   });
   let unnamedMeshes = 0;
   let integralMeshes = 0;
-  root.traverse((child) => {
+  manifestRoot.traverse((child) => {
     if (!(child instanceof THREE.Mesh)) return;
     integralMeshes += 1;
     if (!child.name) unnamedMeshes += 1;
@@ -311,7 +318,7 @@ export default function CompassBookThreeLab() {
     if (mapStrippedReview) stripMaterialMapsForReview(model.root);
     modelRef.current = model;
     (window as CompassBookReviewWindow).__compassBookSculptRuntime = model.root.userData.sculptRuntime;
-    const partManifest = createRuntimePartManifest(model.root);
+    const partManifest = createRuntimePartManifest(model.root, activePage);
     if (partManifest) canvas.dataset.partManifest = JSON.stringify(partManifest);
     scene.add(model.root);
 
@@ -448,7 +455,11 @@ export default function CompassBookThreeLab() {
                   ? 'Chapter I relief'
                   : activePage === 'inner_compass'
                     ? 'Chapter II relief'
-                  : 'The Reading'}
+                  : activePage === 'living_horizon'
+                    ? 'Chapter III relief'
+                    : activePage === 'ikigai_map'
+                      ? 'Chapter IV relief'
+                      : 'The Reading'}
             </strong>
           </div>
           <div className="compass-book-three-lab__controls">

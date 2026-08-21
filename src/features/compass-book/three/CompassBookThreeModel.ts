@@ -1928,6 +1928,553 @@ function createLivingHorizonRelief(
   return { root, violetPath, amber, rayFan, sun, hearth, gateLeft, gateRight };
 }
 
+function createIkigaiMapRelief(
+  materials: BookMaterials,
+  quality: CompassBookThreeQuality,
+) {
+  const root = new THREE.Group();
+  root.name = 'COMPASS_BOOK_IKIGAI_MAP_RELIEF';
+  root.userData.compassPageId = 'ikigai_map';
+  const high = quality === 'high';
+  const radialSegments = high ? 24 : 14;
+  const tubeSegments = high ? 36 : 20;
+
+  const chart = new THREE.MeshStandardMaterial({
+    name: 'COMPASS_BOOK_IKIGAI_CHART_MATERIAL',
+    color: 0x171a2b,
+    roughness: 0.76,
+    roughnessMap: materials.leatherInset.roughnessMap,
+    bumpMap: materials.leatherInset.bumpMap,
+    bumpScale: high ? 0.018 : 0.009,
+    metalness: 0.08,
+  });
+  const chartLine = new THREE.MeshStandardMaterial({
+    name: 'COMPASS_BOOK_IKIGAI_CHART_LINE_MATERIAL',
+    color: 0x6d5732,
+    roughness: 0.56,
+    metalness: 0.28,
+  });
+  const curiosity = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_IKIGAI_CURIOSITY_MATERIAL',
+    color: 0x7139b6,
+    emissive: 0x24103f,
+    emissiveIntensity: 0.28,
+    roughness: 0.24,
+    metalness: 0.08,
+    clearcoat: high ? 0.64 : 0.38,
+    clearcoatRoughness: 0.16,
+  });
+  const capability = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_IKIGAI_CAPABILITY_MATERIAL',
+    color: 0x147985,
+    emissive: 0x082f36,
+    emissiveIntensity: 0.23,
+    roughness: 0.27,
+    metalness: 0.08,
+    clearcoat: high ? 0.56 : 0.32,
+    clearcoatRoughness: 0.2,
+  });
+  const contribution = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_IKIGAI_CONTRIBUTION_MATERIAL',
+    color: 0xa85f45,
+    emissive: 0x3c1912,
+    emissiveIntensity: 0.18,
+    roughness: 0.36,
+    metalness: 0.44,
+    clearcoat: high ? 0.42 : 0.24,
+    clearcoatRoughness: 0.24,
+  });
+  const viability = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_IKIGAI_VIABILITY_MATERIAL',
+    color: 0xb27a18,
+    emissive: 0x4b2805,
+    emissiveIntensity: 0.2,
+    roughness: 0.32,
+    metalness: 0.42,
+    clearcoat: high ? 0.46 : 0.26,
+    clearcoatRoughness: 0.22,
+  });
+  const willingness = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_IKIGAI_WILLINGNESS_MATERIAL',
+    color: 0xd84b10,
+    emissive: 0x7b1d04,
+    emissiveIntensity: 0.5,
+    roughness: 0.24,
+    metalness: 0.05,
+    clearcoat: high ? 0.58 : 0.34,
+    clearcoatRoughness: 0.18,
+  });
+  const mirageMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_IKIGAI_MIRAGE_MATERIAL',
+    color: 0x30283e,
+    emissive: 0x0c0912,
+    emissiveIntensity: 0.08,
+    roughness: 0.62,
+    metalness: 0.12,
+    clearcoat: high ? 0.18 : 0.08,
+    clearcoatRoughness: 0.52,
+  });
+  const mirageTetherMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_IKIGAI_MIRAGE_TETHER_MATERIAL',
+    color: 0x6f5d86,
+    emissive: 0x21172e,
+    emissiveIntensity: 0.16,
+    roughness: 0.52,
+    metalness: 0.18,
+    clearcoat: high ? 0.22 : 0.1,
+    clearcoatRoughness: 0.46,
+  });
+  const trialMaterial = new THREE.MeshPhysicalMaterial({
+    name: 'COMPASS_BOOK_IKIGAI_TRIAL_CRYSTAL_MATERIAL',
+    color: 0x8e48f1,
+    emissive: 0x48208f,
+    emissiveIntensity: 0.88,
+    roughness: 0.16,
+    metalness: 0.06,
+    clearcoat: high ? 0.76 : 0.46,
+    clearcoatRoughness: 0.1,
+  });
+
+  const contactPlate = roundedBox(
+    'COMPASS_BOOK_IKIGAI_CONTACT_PLATE',
+    3.82,
+    0.055,
+    5.66,
+    0.16,
+    high ? 4 : 2,
+    materials.leatherEdge,
+  );
+  contactPlate.position.y = 0.025;
+  contactPlate.receiveShadow = true;
+  root.add(contactPlate);
+
+  const chartField = roundedBox(
+    'COMPASS_BOOK_IKIGAI_CHART_FIELD',
+    3.48,
+    0.075,
+    5.26,
+    0.2,
+    high ? 4 : 2,
+    chart,
+  );
+  chartField.position.y = 0.075;
+  chartField.receiveShadow = true;
+  root.add(chartField);
+  const contactFrame = new THREE.Group();
+  contactFrame.name = 'COMPASS_BOOK_IKIGAI_CONTACT_FRAME';
+  const frameBezel = createFrame(
+    'COMPASS_BOOK_IKIGAI_OUTER_FRAME',
+    3.72,
+    5.54,
+    0.1,
+    materials.gilt,
+    quality,
+  );
+  const frameInset = createFrame(
+    'COMPASS_BOOK_IKIGAI_INNER_FRAME',
+    3.5,
+    5.3,
+    0.115,
+    materials.giltDark,
+    quality,
+  );
+  contactFrame.add(frameBezel, frameInset);
+  root.add(contactFrame);
+
+  const orbitGroup = new THREE.Group();
+  orbitGroup.name = 'COMPASS_BOOK_IKIGAI_CHART_ORBITS';
+  [0.58, 1.08, 1.54].forEach((radius, index) => {
+    const orbit = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, index === 2 ? 0.012 : 0.016, high ? 6 : 4, high ? 56 : 28),
+      chartLine,
+    );
+    orbit.name = `COMPASS_BOOK_IKIGAI_CHART_ORBIT_${index + 1}`;
+    orbit.rotation.x = Math.PI / 2;
+    orbit.position.set(index === 1 ? -0.12 : 0.04, 0.145 + index * 0.004, index === 2 ? -0.05 : 0.18);
+    orbit.scale.z = 1.28 - index * 0.08;
+    orbitGroup.add(orbit);
+  });
+  root.add(orbitGroup);
+
+  const starPositions: Array<[number, number, number]> = [
+    [-1.48, -2.14, 0.03], [-0.94, -1.95, 0.02], [-0.34, -2.32, 0.035],
+    [0.42, -2.06, 0.025], [1.32, -1.84, 0.03], [-1.52, -1.05, 0.022],
+    [1.48, -0.96, 0.025], [-1.35, 0.18, 0.03], [1.5, 0.28, 0.022],
+    [-1.52, 1.12, 0.028], [1.46, 1.22, 0.035], [-1.36, 2.18, 0.024],
+    [-0.36, 2.34, 0.03], [0.62, 2.2, 0.026], [1.34, 2.48, 0.02],
+  ];
+  const starStuds = new THREE.InstancedMesh(
+    new THREE.OctahedronGeometry(0.035, 0),
+    materials.gilt,
+    starPositions.length,
+  );
+  starStuds.name = 'COMPASS_BOOK_IKIGAI_CHART_STAR_STUDS';
+  const instanceMatrix = new THREE.Matrix4();
+  const instanceQuaternion = new THREE.Quaternion();
+  const instanceScale = new THREE.Vector3();
+  starPositions.forEach(([x, z, scaleOffset], index) => {
+    instanceScale.setScalar(0.8 + scaleOffset * 8 + (index % 3) * 0.08);
+    instanceMatrix.compose(new THREE.Vector3(x, 0.175, z), instanceQuaternion, instanceScale);
+    starStuds.setMatrixAt(index, instanceMatrix);
+  });
+  starStuds.instanceMatrix.needsUpdate = true;
+  root.add(starStuds);
+
+  const nodeData = [
+    { id: 'CURIOSITY', x: 0, z: -1.72, material: curiosity },
+    { id: 'CAPABILITY', x: 1.34, z: -0.48, material: capability },
+    { id: 'CONTRIBUTION', x: 0.88, z: 1.28, material: contribution },
+    { id: 'VIABILITY', x: -0.88, z: 1.28, material: viability },
+    { id: 'WILLINGNESS', x: -1.34, z: -0.48, material: willingness },
+  ] as const;
+
+  const graph = new THREE.Group();
+  graph.name = 'COMPASS_BOOK_IKIGAI_FIVE_FORCE_GRAPH';
+  const railSystem = new THREE.Group();
+  railSystem.name = 'COMPASS_BOOK_IKIGAI_RAIL_SYSTEM';
+  const railGeometry = new RoundedBoxGeometry(1, 0.07, 0.075, high ? 2 : 1, 0.018);
+  const outerRails = new THREE.InstancedMesh(railGeometry, materials.giltDark, 5);
+  outerRails.name = 'COMPASS_BOOK_IKIGAI_OUTER_RAILS';
+  const hubSpokes = new THREE.InstancedMesh(railGeometry, materials.gilt, 5);
+  hubSpokes.name = 'COMPASS_BOOK_IKIGAI_HUB_SPOKES';
+  const setRail = (
+    mesh: THREE.InstancedMesh,
+    index: number,
+    start: { x: number; z: number },
+    end: { x: number; z: number },
+    y: number,
+    inset: number,
+  ) => {
+    const dx = end.x - start.x;
+    const dz = end.z - start.z;
+    const length = Math.max(0.01, Math.hypot(dx, dz) - inset);
+    const angle = -Math.atan2(dz, dx);
+    instanceQuaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+    instanceScale.set(length, 1, 1);
+    instanceMatrix.compose(
+      new THREE.Vector3((start.x + end.x) * 0.5, y, (start.z + end.z) * 0.5),
+      instanceQuaternion,
+      instanceScale,
+    );
+    mesh.setMatrixAt(index, instanceMatrix);
+  };
+  nodeData.forEach((node, index) => {
+    const next = nodeData[(index + 1) % nodeData.length];
+    setRail(outerRails, index, node, next, 0.19, 0.64);
+    setRail(hubSpokes, index, node, { x: 0, z: 0.06 }, 0.205, 0.56);
+  });
+  outerRails.instanceMatrix.needsUpdate = true;
+  hubSpokes.instanceMatrix.needsUpdate = true;
+  railSystem.add(outerRails, hubSpokes);
+
+  const bezelGeometry = new THREE.TorusGeometry(0.36, 0.045, high ? 8 : 5, radialSegments);
+  const bezelInnerGeometry = new THREE.TorusGeometry(0.285, 0.024, high ? 7 : 4, radialSegments);
+  const bezels = new THREE.InstancedMesh(bezelGeometry, materials.gilt, 5);
+  bezels.name = 'COMPASS_BOOK_IKIGAI_NODE_BEZELS';
+  const innerBezels = new THREE.InstancedMesh(bezelInnerGeometry, materials.giltDark, 5);
+  innerBezels.name = 'COMPASS_BOOK_IKIGAI_NODE_INNER_BEZELS';
+  instanceQuaternion.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
+  instanceScale.set(1, 1, 1);
+  nodeData.forEach((node, index) => {
+    instanceMatrix.compose(new THREE.Vector3(node.x, 0.28, node.z), instanceQuaternion, instanceScale);
+    bezels.setMatrixAt(index, instanceMatrix);
+    instanceMatrix.compose(new THREE.Vector3(node.x, 0.3, node.z), instanceQuaternion, instanceScale);
+    innerBezels.setMatrixAt(index, instanceMatrix);
+  });
+  bezels.instanceMatrix.needsUpdate = true;
+  innerBezels.instanceMatrix.needsUpdate = true;
+  graph.add(bezels, innerBezels);
+
+  const socketGeometry = new THREE.CylinderGeometry(0.075, 0.085, 0.055, high ? 10 : 7);
+  const socketCollars = new THREE.InstancedMesh(socketGeometry, materials.gilt, 10);
+  socketCollars.name = 'COMPASS_BOOK_IKIGAI_SOCKET_COLLARS';
+  nodeData.forEach((node, index) => {
+    const direction = new THREE.Vector2(node.x, node.z - 0.06).normalize();
+    const nodeSocket = new THREE.Vector3(node.x - direction.x * 0.31, 0.25, node.z - direction.y * 0.31);
+    instanceMatrix.compose(nodeSocket, new THREE.Quaternion(), new THREE.Vector3(1, 1, 1));
+    socketCollars.setMatrixAt(index * 2, instanceMatrix);
+    const hubSocket = new THREE.Vector3(direction.x * 0.43, 0.25, 0.06 + direction.y * 0.43);
+    instanceMatrix.compose(hubSocket, new THREE.Quaternion(), new THREE.Vector3(0.84, 1, 0.84));
+    socketCollars.setMatrixAt(index * 2 + 1, instanceMatrix);
+  });
+  socketCollars.instanceMatrix.needsUpdate = true;
+  railSystem.add(socketCollars);
+  graph.add(railSystem);
+
+  const forceNodes: THREE.Group[] = [];
+  const forceInserts: THREE.Group[] = [];
+  const createIconShape = (points: Array<[number, number]>) => {
+    const shape = new THREE.Shape();
+    points.forEach(([x, y], index) => index === 0 ? shape.moveTo(x, y) : shape.lineTo(x, y));
+    shape.closePath();
+    const geometry = new THREE.ExtrudeGeometry(shape, {
+      depth: high ? 0.07 : 0.05,
+      bevelEnabled: true,
+      bevelSegments: high ? 2 : 1,
+      bevelSize: 0.018,
+      bevelThickness: 0.012,
+      curveSegments: high ? 8 : 4,
+    });
+    geometry.center();
+    geometry.rotateX(-Math.PI / 2);
+    return geometry;
+  };
+  const starPoints = Array.from({ length: 16 }, (_, index) => {
+    const angle = -Math.PI / 2 + index * Math.PI / 8;
+    const radius = index % 2 === 0 ? 0.2 : 0.085;
+    return [Math.cos(angle) * radius, Math.sin(angle) * radius] as [number, number];
+  });
+  const flameGeometry = createIconShape([
+    [0, -0.22], [0.14, -0.07], [0.09, 0.03], [0.18, 0.1], [0.04, 0.23],
+    [-0.02, 0.1], [-0.12, 0.18], [-0.16, 0.02], [-0.1, -0.1],
+  ]);
+  nodeData.forEach((node, index) => {
+    const group = new THREE.Group();
+    group.name = `COMPASS_BOOK_IKIGAI_${node.id}_NODE`;
+    group.position.set(node.x, 0, node.z);
+    const disc = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.3, 0.32, 0.105, radialSegments),
+      node.material,
+    );
+    disc.name = `COMPASS_BOOK_IKIGAI_${node.id}_DISC`;
+    disc.position.y = 0.275;
+    disc.castShadow = high;
+    group.add(disc);
+    const insertPart = new THREE.Group();
+    insertPart.name = `COMPASS_BOOK_IKIGAI_${node.id}_INSERT`;
+    group.add(insertPart);
+
+    if (index === 0) {
+      const cometCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.145, 0), materials.gilt);
+      cometCore.name = 'COMPASS_BOOK_IKIGAI_CURIOSITY_COMET_CORE';
+      cometCore.position.set(0.06, 0.39, -0.04);
+      const cometTail = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.32, 4), materials.giltDark);
+      cometTail.name = 'COMPASS_BOOK_IKIGAI_CURIOSITY_COMET_TAIL';
+      cometTail.position.set(-0.12, 0.37, 0.1);
+      cometTail.rotation.z = -0.72;
+      insertPart.add(cometCore, cometTail);
+    } else if (index === 1) {
+      const star = new THREE.Mesh(createIconShape(starPoints), materials.gilt);
+      star.name = 'COMPASS_BOOK_IKIGAI_CAPABILITY_STAR';
+      star.position.y = 0.39;
+      insertPart.add(star);
+    } else if (index === 2) {
+      const beacon = new THREE.Mesh(new THREE.OctahedronGeometry(0.11, 0), materials.gilt);
+      beacon.name = 'COMPASS_BOOK_IKIGAI_CONTRIBUTION_BEACON';
+      beacon.position.set(0, 0.4, -0.08);
+      const hands = [-1, 1].map((direction) => {
+        const hand = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.035, 6, 18, Math.PI * 0.7), materials.giltDark);
+        hand.name = `COMPASS_BOOK_IKIGAI_CONTRIBUTION_HAND_${direction < 0 ? 'LEFT' : 'RIGHT'}`;
+        hand.rotation.set(Math.PI / 2, 0, direction * 0.45);
+        hand.position.set(direction * 0.09, 0.385, 0.08);
+        return hand;
+      });
+      insertPart.add(beacon, ...hands);
+    } else if (index === 3) {
+      const deck = roundedBox('COMPASS_BOOK_IKIGAI_VIABILITY_BRIDGE_DECK', 0.34, 0.055, 0.07, 0.018, 1, materials.gilt);
+      deck.position.set(0, 0.4, -0.04);
+      const arch = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.034, 6, 20, Math.PI), materials.giltDark);
+      arch.name = 'COMPASS_BOOK_IKIGAI_VIABILITY_BRIDGE_ARCH';
+      arch.rotation.set(Math.PI / 2, 0, Math.PI);
+      arch.position.set(0, 0.385, 0.08);
+      insertPart.add(deck, arch);
+    } else {
+      const flame = new THREE.Mesh(flameGeometry, materials.gilt);
+      flame.name = 'COMPASS_BOOK_IKIGAI_WILLINGNESS_FLAME';
+      flame.position.y = 0.4;
+      insertPart.add(flame);
+    }
+    forceInserts.push(insertPart);
+    forceNodes.push(group);
+    graph.add(group);
+  });
+  root.add(graph);
+
+  const trial = new THREE.Group();
+  trial.name = 'COMPASS_BOOK_IKIGAI_TRIAL_SYSTEM';
+  trial.position.set(0, 0, 0.06);
+  const trialRingStack = new THREE.Group();
+  trialRingStack.name = 'COMPASS_BOOK_IKIGAI_TRIAL_RING_STACK';
+  [0.49, 0.38, 0.285].forEach((radius, index) => {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(radius, 0.035 - index * 0.006, high ? 8 : 5, radialSegments),
+      index === 1 ? materials.giltDark : materials.gilt,
+    );
+    ring.name = `COMPASS_BOOK_IKIGAI_TRIAL_RING_${index + 1}`;
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.29 + index * 0.035;
+    ring.castShadow = high && index === 0;
+    trialRingStack.add(ring);
+  });
+  trial.add(trialRingStack);
+  const trialCrystal = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.205, high ? 1 : 0),
+    trialMaterial,
+  );
+  trialCrystal.name = 'COMPASS_BOOK_IKIGAI_TRIAL_CRYSTAL';
+  trialCrystal.position.y = 0.46;
+  trialCrystal.scale.y = 1.28;
+  trialCrystal.castShadow = true;
+  trial.add(trialCrystal);
+  const trialProngGeometry = new RoundedBoxGeometry(0.055, 0.16, 0.16, 1, 0.018);
+  const trialProngs = new THREE.InstancedMesh(trialProngGeometry, materials.giltDark, 4);
+  trialProngs.name = 'COMPASS_BOOK_IKIGAI_TRIAL_PRONGS';
+  [[-0.29, 0], [0.29, 0], [0, -0.29], [0, 0.29]].forEach(([x, z], index) => {
+    instanceMatrix.compose(new THREE.Vector3(x, 0.38, z), new THREE.Quaternion(), new THREE.Vector3(1, 1, 1));
+    trialProngs.setMatrixAt(index, instanceMatrix);
+  });
+  trialProngs.instanceMatrix.needsUpdate = true;
+  trial.add(trialProngs);
+  root.add(trial);
+
+  const candidatePaths = new THREE.Group();
+  candidatePaths.name = 'COMPASS_BOOK_IKIGAI_CANDIDATE_PATHS';
+  const candidatePathMaterials = [curiosity.clone(), capability.clone(), willingness.clone()];
+  const candidateStarts: Array<[number, number]> = [[-1.18, 0.46], [0, 1.18], [1.18, 0.46]];
+  candidateStarts.forEach(([x, z], index) => {
+    const midpoint = new THREE.Vector3(x * 0.58, 0.255, z * 0.58 + 0.08);
+    const curve = new THREE.QuadraticBezierCurve3(
+      new THREE.Vector3(x, 0.24, z),
+      midpoint,
+      new THREE.Vector3((index - 1) * 0.15, 0.285, 0.45),
+    );
+    candidatePathMaterials[index].name = `COMPASS_BOOK_IKIGAI_CANDIDATE_PATH_${index + 1}_MATERIAL`;
+    candidatePathMaterials[index].emissiveIntensity = 0.38;
+    const path = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, tubeSegments, 0.035, high ? 7 : 5, false),
+      candidatePathMaterials[index],
+    );
+    path.name = `COMPASS_BOOK_IKIGAI_CANDIDATE_PATH_${index + 1}`;
+    candidatePaths.add(path);
+  });
+  root.add(candidatePaths);
+
+  const mirage = new THREE.Group();
+  mirage.name = 'COMPASS_BOOK_IKIGAI_MIRAGE_NODE';
+  mirage.position.set(1.38, 0, 2.1);
+  const mirageRing = new THREE.Mesh(
+    new THREE.TorusGeometry(0.28, 0.035, high ? 7 : 5, radialSegments),
+    materials.giltDark,
+  );
+  mirageRing.name = 'COMPASS_BOOK_IKIGAI_MIRAGE_BEZEL';
+  mirageRing.rotation.x = Math.PI / 2;
+  mirageRing.position.y = 0.24;
+  const mirageDisc = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.22, 0.24, 0.085, radialSegments),
+    mirageMaterial,
+  );
+  mirageDisc.name = 'COMPASS_BOOK_IKIGAI_MIRAGE_DISC';
+  mirageDisc.position.y = 0.22;
+  const mirageShard = new THREE.Mesh(new THREE.OctahedronGeometry(0.105, 0), chartLine);
+  mirageShard.name = 'COMPASS_BOOK_IKIGAI_MIRAGE_SHARD';
+  mirageShard.position.y = 0.34;
+  mirage.add(mirageRing, mirageDisc, mirageShard);
+  const tether = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(0.048, high ? 8 : 6, high ? 6 : 4),
+    mirageTetherMaterial,
+    6,
+  );
+  tether.name = 'COMPASS_BOOK_IKIGAI_MIRAGE_BROKEN_TETHER';
+  for (let index = 0; index < 6; index += 1) {
+    instanceScale.setScalar(1 - index * 0.07);
+    instanceMatrix.compose(
+      new THREE.Vector3(-0.29 - index * 0.12, 0.255, -0.13 - index * 0.1),
+      new THREE.Quaternion(),
+      instanceScale,
+    );
+    tether.setMatrixAt(index, instanceMatrix);
+  }
+  tether.instanceMatrix.needsUpdate = true;
+  mirage.add(tether);
+  root.add(mirage);
+
+  const rivetPositions: Array<[number, number]> = [];
+  for (let index = 0; index < 5; index += 1) {
+    const angle = -Math.PI / 2 + index * Math.PI * 2 / 5;
+    rivetPositions.push([Math.cos(angle) * 0.42, Math.sin(angle) * 0.42]);
+  }
+  [[-1.68, -2.54], [1.68, -2.54], [-1.68, 2.54], [1.68, 2.54]].forEach((point) => rivetPositions.push(point as [number, number]));
+  const rivets = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(0.052, high ? 10 : 7, high ? 7 : 5),
+    materials.gilt,
+    rivetPositions.length,
+  );
+  rivets.name = 'COMPASS_BOOK_IKIGAI_RADIAL_RIVETS';
+  rivetPositions.forEach(([x, z], index) => {
+    const localX = index < 5 ? nodeData[index].x + x : x;
+    const localZ = index < 5 ? nodeData[index].z + z : z;
+    instanceMatrix.compose(new THREE.Vector3(localX, 0.355, localZ), new THREE.Quaternion(), new THREE.Vector3(1, 0.62, 1));
+    rivets.setMatrixAt(index, instanceMatrix);
+  });
+  rivets.instanceMatrix.needsUpdate = true;
+  contactFrame.add(rivets);
+
+  const reliefParts: Record<string, THREE.Object3D> = {
+    root,
+    'contact-frame': contactFrame,
+    'chart-field': chartField,
+    'force-graph': graph,
+    'rail-system': railSystem,
+    'outer-rails': outerRails,
+    'hub-spokes': hubSpokes,
+    'frame-bezel': frameBezel,
+    'node-bezel-system': bezels,
+    'socket-collars': socketCollars,
+    'curiosity-node': forceNodes[0],
+    'capability-node': forceNodes[1],
+    'contribution-node': forceNodes[2],
+    'viability-node': forceNodes[3],
+    'willingness-node': forceNodes[4],
+    'trial-system': trial,
+    'trial-rings': trialRingStack,
+    'trial-crystal': trialCrystal,
+    'candidate-paths': candidatePaths,
+    'mirage-node': mirage,
+    'mirage-tether': tether,
+    'chart-stars': starStuds,
+    'chart-orbits': orbitGroup,
+    'curiosity-insert': forceInserts[0],
+    'capability-insert': forceInserts[1],
+    'contribution-insert': forceInserts[2],
+    'viability-insert': forceInserts[3],
+    'willingness-insert': forceInserts[4],
+    'radial-rivets': rivets,
+  };
+  Object.entries(reliefParts).forEach(([partId, part]) => {
+    part.userData.sculptPartId = partId;
+  });
+  root.userData.sculptRuntime = {
+    parts: reliefParts,
+    sockets: {
+      trial,
+      curiosity: forceNodes[0],
+      capability: forceNodes[1],
+      contribution: forceNodes[2],
+      viability: forceNodes[3],
+      willingness: forceNodes[4],
+      mirage,
+    },
+    colliders: {
+      relief: { type: 'box', center: [0, 0.25, 0], size: [3.82, 0.72, 5.66] },
+    },
+    destructionGroups: {
+      validGraph: [graph, trial, candidatePaths],
+      invalidSatellite: [mirage],
+    },
+    presentationOnly: true,
+  };
+
+  return {
+    root,
+    forceNodes,
+    trialCrystal,
+    trialRingStack,
+    candidatePathMaterials,
+    mirage,
+    willingness,
+  };
+}
+
 function createPageBlock(
   materials: BookMaterials,
   quality: CompassBookThreeQuality,
@@ -2418,6 +2965,11 @@ export function createCompassBookThreeModel(
   livingHorizon.root.rotation.z = Math.PI;
   livingHorizon.root.visible = false;
   frontPivot.add(livingHorizon.root);
+  const ikigaiMap = createIkigaiMapRelief(materials, quality);
+  ikigaiMap.root.position.set(COVER_CENTER_X, -0.48, -0.22);
+  ikigaiMap.root.rotation.z = Math.PI;
+  ikigaiMap.root.visible = false;
+  frontPivot.add(ikigaiMap.root);
 
   const openGlow = new THREE.PointLight(0x8745e3, quality === 'high' ? 5.4 : 3.2, 8, 2);
   openGlow.name = 'COMPASS_BOOK_VIOLET_PAGE_LIGHT';
@@ -2488,6 +3040,7 @@ export function createCompassBookThreeModel(
     'living-wheel-relief': livingWheel.root,
     'inner-compass-relief': innerCompass.root,
     'living-horizon-relief': livingHorizon.root,
+    'ikigai-map-relief': ikigaiMap.root,
     'page-turn-socket': pageTurnSocket,
   };
   Object.entries(parts).forEach(([partId, part]) => {
@@ -2536,11 +3089,13 @@ export function createCompassBookThreeModel(
     const livingWheelVisible = eased > 0.43 && selectedPageId === 'living_wheel';
     const innerCompassVisible = eased > 0.43 && selectedPageId === 'inner_compass';
     const livingHorizonVisible = eased > 0.43 && selectedPageId === 'living_horizon';
+    const ikigaiMapVisible = eased > 0.43 && selectedPageId === 'ikigai_map';
     readingCompass.root.visible = readingPageVisible;
     readingSignalMarkers.visible = readingPageVisible;
     livingWheel.root.visible = livingWheelVisible;
     innerCompass.root.visible = innerCompassVisible;
     livingHorizon.root.visible = livingHorizonVisible;
+    ikigaiMap.root.visible = ikigaiMapVisible;
     openGlow.intensity = THREE.MathUtils.lerp(0.08, quality === 'high' ? 5.4 : 3.2, eased);
   }
 
@@ -2563,6 +3118,7 @@ export function createCompassBookThreeModel(
     livingWheel.root.visible = openProgress > 0.43 && pageId === 'living_wheel';
     innerCompass.root.visible = openProgress > 0.43 && pageId === 'inner_compass';
     livingHorizon.root.visible = openProgress > 0.43 && pageId === 'living_horizon';
+    ikigaiMap.root.visible = openProgress > 0.43 && pageId === 'ikigai_map';
     (coverCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
     (readingCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
   }
@@ -2607,6 +3163,25 @@ export function createCompassBookThreeModel(
     livingHorizon.amber.emissiveIntensity = reducedMotion
       ? 0.68
       : 0.58 + (Math.sin(elapsedSeconds * 0.76 + 0.4) + 1) * 0.1;
+    ikigaiMap.trialCrystal.rotation.y = reducedMotion ? Math.PI / 4 : elapsedSeconds * 0.24;
+    ikigaiMap.trialCrystal.scale.set(
+      1,
+      reducedMotion ? 1.28 : 1.28 + Math.sin(elapsedSeconds * 1.05) * 0.045,
+      1,
+    );
+    ikigaiMap.trialRingStack.rotation.y = reducedMotion ? 0 : elapsedSeconds * 0.06;
+    ikigaiMap.candidatePathMaterials.forEach((material, index) => {
+      material.emissiveIntensity = reducedMotion
+        ? 0.38
+        : 0.28 + (Math.sin(elapsedSeconds * 0.9 - index * 0.7) + 1) * 0.1;
+    });
+    ikigaiMap.forceNodes.forEach((node, index) => {
+      node.position.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.46 + index * 0.72) * 0.006;
+    });
+    ikigaiMap.mirage.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.2) * 0.035;
+    ikigaiMap.willingness.emissiveIntensity = reducedMotion
+      ? 0.5
+      : 0.42 + (Math.sin(elapsedSeconds * 0.82 + 1.2) + 1) * 0.08;
     spineMedallion.needleRoot.rotation.y = coverNeedleAngle * 0.5;
     bookmark.rotation.y = reducedMotion ? 0 : Math.sin(elapsedSeconds * 0.42) * 0.025;
     const pulse = reducedMotion ? 0.14 : 0.12 + (Math.sin(elapsedSeconds * 1.05) + 1) * 0.04;

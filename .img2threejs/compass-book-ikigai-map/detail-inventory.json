@@ -3,12 +3,12 @@
   "zonesDir": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/detail-zones",
   "detailInventory": {
     "scanMethod": "grid-3x3",
-    "targetMinDetails": 6,
+    "targetMinDetails": 10,
     "details": [
       {
-        "id": "zone-r0c0",
-        "kind": "",
-        "description": "",
+        "id": "chart-engraved-orbits",
+        "kind": "linework",
+        "description": "Thin recessed gilt orbit and constellation lines remain subordinate to the force graph.",
         "region": {
           "x": 0.0,
           "y": 0.0,
@@ -16,19 +16,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "micro repeated arcs, 0.01-0.025 of plate width",
+        "affects": "geometry and cavity-darkened material response",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "chart-field.constellation-grooves"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/detail-zones/zone-r0c0.png",
-        "confidence": 0.0
+        "confidence": 0.94
       },
       {
-        "id": "zone-r0c1",
-        "kind": "",
-        "description": "",
+        "id": "curiosity-comet-insert",
+        "kind": "ridge",
+        "description": "Violet comet jewel has a raised faceted tail, star point and independent bright core.",
         "region": {
           "x": 0.3333,
           "y": 0.0,
@@ -36,19 +36,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "meso insert, about 0.13 of plate width",
+        "affects": "silhouette, enamel facets and emissive anchor",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "curiosity-node.comet-facets"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/detail-zones/zone-r0c1.png",
-        "confidence": 0.0
+        "confidence": 0.98
       },
       {
-        "id": "zone-r0c2",
-        "kind": "",
-        "description": "",
+        "id": "mirage-broken-tether",
+        "kind": "ridge",
+        "description": "Small dark satellite sits outside the pentagon and connects only through a segmented broken tether.",
         "region": {
           "x": 0.6667,
           "y": 0.0,
@@ -56,19 +56,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "micro satellite and 7-9 tether beads",
+        "affects": "semantic separation and repeated geometry",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "mirage-node.broken-tether"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/detail-zones/zone-r0c2.png",
-        "confidence": 0.0
+        "confidence": 0.97
       },
       {
-        "id": "zone-r1c0",
-        "kind": "",
-        "description": "",
+        "id": "capability-faceted-star",
+        "kind": "ridge",
+        "description": "Teal capability medallion carries an eight-point faceted star/tool insert inside a double bezel.",
         "region": {
           "x": 0.0,
           "y": 0.3333,
@@ -76,19 +76,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "meso insert, about 0.11 of plate width",
+        "affects": "raised geometry, teal enamel and gilt edge highlights",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "capability-node.star-facets"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/detail-zones/zone-r1c0.png",
-        "confidence": 0.0
+        "confidence": 0.98
       },
       {
-        "id": "zone-r1c1",
-        "kind": "",
-        "description": "",
+        "id": "trial-concentric-stack",
+        "kind": "bevel",
+        "description": "Central Trial uses multiple concentric gilt/violet rings, four cardinal prongs and a separate luminous crystal.",
         "region": {
           "x": 0.3333,
           "y": 0.3333,
@@ -96,19 +96,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "meso hub, about 0.16 of plate width",
+        "affects": "layered depth, socket contact and animation hierarchy",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "trial-hub.ring-stack"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/detail-zones/zone-r1c1.png",
-        "confidence": 0.0
+        "confidence": 0.99
       },
       {
-        "id": "zone-r1c2",
-        "kind": "",
-        "description": "",
+        "id": "contribution-beacon-hands",
+        "kind": "ridge",
+        "description": "Rose-gold contribution node carries two cupped relief forms beneath a separate radiant beacon star.",
         "region": {
           "x": 0.6667,
           "y": 0.3333,
@@ -116,19 +116,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "meso insert, about 0.12 of plate width",
+        "affects": "raised emblem silhouette and satin copper response",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "contribution-node.beacon-relief"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/detail-zones/zone-r1c2.png",
-        "confidence": 0.0
+        "confidence": 0.96
       },
       {
-        "id": "zone-r2c0",
-        "kind": "",
-        "description": "",
+        "id": "viability-bridge-relief",
+        "kind": "ridge",
+        "description": "Amber viability node contains a raised bridge arch, two pylons and a small lower wheel/coin inset.",
         "region": {
           "x": 0.0,
           "y": 0.6667,
@@ -136,19 +136,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "meso insert, about 0.12 of plate width",
+        "affects": "raised geometry and amber metallic hierarchy",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "viability-node.bridge-relief"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/detail-zones/zone-r2c0.png",
-        "confidence": 0.0
+        "confidence": 0.98
       },
       {
-        "id": "zone-r2c1",
-        "kind": "",
-        "description": "",
+        "id": "frame-radial-fasteners",
+        "kind": "fastener",
+        "description": "Small raised gilt rivets repeat around node bezels, rail sockets and the contact frame.",
         "region": {
           "x": 0.3333,
           "y": 0.6667,
@@ -156,19 +156,19 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "micro hemispheres, 0.006-0.012 of plate width",
+        "affects": "instanced geometry and specular highlights",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "contact-frame.radial-rivets"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/detail-zones/zone-r2c1.png",
-        "confidence": 0.0
+        "confidence": 0.93
       },
       {
-        "id": "zone-r2c2",
-        "kind": "",
-        "description": "",
+        "id": "willingness-flame-facets",
+        "kind": "ridge",
+        "description": "Ember willingness node uses nested solid flame lobes over a faceted lower jewel.",
         "region": {
           "x": 0.6667,
           "y": 0.6667,
@@ -176,14 +176,25 @@
           "height": 0.3333,
           "units": "normalized"
         },
-        "scale": "",
-        "affects": "",
+        "scale": "meso insert, about 0.12 of plate width",
+        "affects": "raised silhouette, orange enamel and emissive centre",
         "mapsTo": {
-          "type": "",
-          "ref": ""
+          "type": "component.localFeatures",
+          "ref": "willingness-node.flame-facets"
         },
         "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/detail-zones/zone-r2c2.png",
-        "confidence": 0.0
+        "confidence": 0.98
+      },
+      {
+        "id": "rail-socket-collars",
+        "kind": "seam",
+        "description": "Each pentagon rail and inward spoke terminates in a visible overlap collar instead of touching node bezels in mid-air.",
+        "region": { "x": 0.18, "y": 0.2, "width": 0.64, "height": 0.62, "units": "normalized" },
+        "scale": "20 repeated meso rail endpoints",
+        "affects": "attachment geometry and cavity AO",
+        "mapsTo": { "type": "component.localFeatures", "ref": "rail-system.socket-collars" },
+        "evidenceRef": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/ikigai-map-admission-reference-white.png",
+        "confidence": 0.95
       }
     ]
   },

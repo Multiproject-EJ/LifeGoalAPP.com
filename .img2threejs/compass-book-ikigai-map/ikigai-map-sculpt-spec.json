@@ -1,0 +1,4103 @@
+{
+  "targetName": "Compass Book Chapter IV Ikigai Map Relief",
+  "targetId": "compass-book-chapter-iv-ikigai-map-relief",
+  "schemaVersion": "2.1",
+  "terminologyProfile": {
+    "domain": "real-time procedural Three.js asset",
+    "geometryTerms": [
+      "silhouette",
+      "topology",
+      "primitive",
+      "bevel",
+      "chamfer",
+      "taper",
+      "bend",
+      "boolean cut",
+      "edge loop",
+      "surface normal",
+      "displacement"
+    ],
+    "materialTerms": [
+      "albedo",
+      "baseColor",
+      "roughness",
+      "metalness",
+      "normal map",
+      "bump map",
+      "ambient occlusion",
+      "cavity dirt",
+      "edge wear",
+      "clearcoat"
+    ],
+    "lightingTerms": [
+      "key light",
+      "fill light",
+      "rim light",
+      "HDRI/environment reflection",
+      "contact shadow"
+    ],
+    "descriptionRule": "Use measurable 3D graphics terms. Avoid vague words unless they are paired with concrete geometry/material/shader parameters."
+  },
+  "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+  "referenceCamera": {
+    "solved": false,
+    "fovDegrees": 40.0,
+    "aspect": 1.0,
+    "orientation": {
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "roll": 0.0
+    },
+    "positionHint": [
+      0.0,
+      0.0,
+      3.0
+    ],
+    "note": "For likeness work, solve the reference camera (forge/stage1_intake/solve_camera_pose.py) so the review render aligns with the photo and the reference can be projected. Confirm by overlay review."
+  },
+  "suitability": "conditional",
+  "scores": {
+    "object_isolation": 0,
+    "silhouette_readability": 0,
+    "depth_inference": 0,
+    "primitive_decomposition": 0,
+    "material_procedurality": 0,
+    "occlusion_risk": 0,
+    "interaction_fit": 0
+  },
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "page-bound five-force constellation instrument relief",
+      "primaryDomain": "object",
+      "formLanguage": [
+        "hard-surface",
+        "mechanical",
+        "sculptural",
+        "radial"
+      ],
+      "structureKind": [
+        "layered shell",
+        "assembled object",
+        "repeated modules",
+        "shallow relief"
+      ],
+      "motionPotential": [
+        "presentation-only",
+        "whole-object transform",
+        "independent emissive anchors",
+        "detachable visual modules"
+      ],
+      "materialFamilies": [
+        "antique metal",
+        "leather-like chart field",
+        "enamel",
+        "gemstone-like crystal"
+      ],
+      "notes": "The target is the left-page relief only. Personal text and state remain in the canonical DOM layer."
+    },
+    "complexity": {
+      "tier": "complex",
+      "scores": {
+        "silhouetteComplexity": 2,
+        "componentCount": 3,
+        "hierarchyDepth": 2,
+        "repetitionDensity": 3,
+        "materialLayerCount": 3,
+        "localDetailDensity": 3,
+        "occlusionRisk": 1,
+        "actionReadinessNeed": 2
+      },
+      "estimatedCounts": {
+        "macroComponents": 4,
+        "mesoComponents": 15,
+        "microFeatureGroups": 10,
+        "materialLayers": 7,
+        "repetitionSystems": 5
+      },
+      "reasoning": [
+        "Five semantic perimeter modules, a separate Trial mechanism, candidate routes, and Mirage satellite require named hierarchy rather than one decorative plate.",
+        "Radial rivets, chart stars, rail collars, and repeated nodes require instancing and bounded distributions.",
+        "Seven visibly distinct metal/enamel/crystal responses and independent animation anchors justify the complex tier."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "complex",
+      "minimumComponentLevels": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "needsRepetitionSystems": true,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "Choose simple/moderate/complex/ultra-complex from observed structure, not from a hardcoded domain."
+    },
+    "unknownsToResolveBeforeImplementation": [],
+    "detailInventory": {
+      "scanMethod": "component-zones",
+      "targetMinDetails": 10,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {
+          "id": "chart-engraved-orbits",
+          "kind": "linework",
+          "description": "Recessed gilt orbit and constellation arcs",
+          "region": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 1.0,
+            "height": 1.0,
+            "units": "normalized"
+          },
+          "scale": "micro repeated arcs",
+          "affects": "geometry and cavity response",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "chart-field.constellation-grooves"
+          },
+          "evidenceRef": "fixed-front",
+          "confidence": 0.94,
+          "realization": "unreported"
+        },
+        {
+          "id": "curiosity-comet-insert",
+          "kind": "ridge",
+          "description": "Violet raised comet jewel and bright core",
+          "region": {
+            "x": 0.33,
+            "y": 0.02,
+            "width": 0.34,
+            "height": 0.3,
+            "units": "normalized"
+          },
+          "scale": "meso insert",
+          "affects": "geometry and emission",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "curiosity-node.comet-facets"
+          },
+          "evidenceRef": "fixed-front",
+          "confidence": 0.98,
+          "realization": "unreported"
+        },
+        {
+          "id": "mirage-broken-tether",
+          "kind": "ridge",
+          "description": "External dark satellite with segmented broken tether",
+          "region": {
+            "x": 0.66,
+            "y": 0.0,
+            "width": 0.34,
+            "height": 0.34,
+            "units": "normalized"
+          },
+          "scale": "micro repeated beads",
+          "affects": "semantic separation",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "mirage-node.broken-tether"
+          },
+          "evidenceRef": "fixed-front",
+          "confidence": 0.97,
+          "realization": "unreported"
+        },
+        {
+          "id": "capability-faceted-star",
+          "kind": "ridge",
+          "description": "Teal eight-point faceted star/tool insert",
+          "region": {
+            "x": 0.0,
+            "y": 0.3,
+            "width": 0.34,
+            "height": 0.34,
+            "units": "normalized"
+          },
+          "scale": "meso insert",
+          "affects": "geometry and enamel",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "capability-node.star-facets"
+          },
+          "evidenceRef": "fixed-front",
+          "confidence": 0.98,
+          "realization": "unreported"
+        },
+        {
+          "id": "trial-concentric-stack",
+          "kind": "bevel",
+          "description": "Concentric Trial rings, prongs and luminous crystal",
+          "region": {
+            "x": 0.33,
+            "y": 0.33,
+            "width": 0.34,
+            "height": 0.34,
+            "units": "normalized"
+          },
+          "scale": "meso hub",
+          "affects": "depth and animation hierarchy",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "trial-hub.ring-stack"
+          },
+          "evidenceRef": "fixed-front",
+          "confidence": 0.99,
+          "realization": "unreported"
+        },
+        {
+          "id": "contribution-beacon-hands",
+          "kind": "ridge",
+          "description": "Rose-gold cupped relief and beacon star",
+          "region": {
+            "x": 0.66,
+            "y": 0.3,
+            "width": 0.34,
+            "height": 0.34,
+            "units": "normalized"
+          },
+          "scale": "meso insert",
+          "affects": "geometry and satin metal",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "contribution-node.beacon-relief"
+          },
+          "evidenceRef": "fixed-front",
+          "confidence": 0.96,
+          "realization": "unreported"
+        },
+        {
+          "id": "viability-bridge-relief",
+          "kind": "ridge",
+          "description": "Amber bridge arch, pylons and wheel inset",
+          "region": {
+            "x": 0.0,
+            "y": 0.66,
+            "width": 0.34,
+            "height": 0.34,
+            "units": "normalized"
+          },
+          "scale": "meso insert",
+          "affects": "geometry and metallic hierarchy",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "viability-node.bridge-relief"
+          },
+          "evidenceRef": "fixed-front",
+          "confidence": 0.98,
+          "realization": "unreported"
+        },
+        {
+          "id": "frame-radial-fasteners",
+          "kind": "fastener",
+          "description": "Instanced rivets around bezels, sockets and frame",
+          "region": {
+            "x": 0.1,
+            "y": 0.1,
+            "width": 0.8,
+            "height": 0.8,
+            "units": "normalized"
+          },
+          "scale": "micro hemispheres",
+          "affects": "instanced geometry",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "contact-frame.radial-rivets"
+          },
+          "evidenceRef": "fixed-front",
+          "confidence": 0.93,
+          "realization": "unreported"
+        },
+        {
+          "id": "willingness-flame-facets",
+          "kind": "ridge",
+          "description": "Nested solid flame lobes and lower jewel",
+          "region": {
+            "x": 0.66,
+            "y": 0.66,
+            "width": 0.34,
+            "height": 0.34,
+            "units": "normalized"
+          },
+          "scale": "meso insert",
+          "affects": "geometry and emission",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "willingness-node.flame-facets"
+          },
+          "evidenceRef": "fixed-front",
+          "confidence": 0.98,
+          "realization": "unreported"
+        },
+        {
+          "id": "rail-socket-collars",
+          "kind": "seam",
+          "description": "Overlapping collars at all outer rail and spoke endpoints",
+          "region": {
+            "x": 0.18,
+            "y": 0.2,
+            "width": 0.64,
+            "height": 0.62,
+            "units": "normalized"
+          },
+          "scale": "20 repeated endpoints",
+          "affects": "attachment geometry and AO",
+          "mapsTo": {
+            "type": "component.localFeatures",
+            "ref": "rail-system.socket-collars"
+          },
+          "evidenceRef": "fixed-front",
+          "confidence": 0.95,
+          "realization": "unreported"
+        }
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png"
+  },
+  "qualityContract": {
+    "qualityBar": "complex",
+    "definitionOfDone": [
+      "The opened production book presents a physically attached Chapter IV relief with exactly five countable perimeter forces, one separate central Trial, three candidate paths, and one isolated Mirage marker.",
+      "The five-force pentagon, inward spokes, node palettes, central ring stack, and off-axis thickness remain readable at the normal book camera in high and low tiers.",
+      "Every semantic system is named and presentation-only; no answer, label, experiment text, warning copy, focus, progress, or persistence moves into Three.js."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 4,
+      "mesoComponents": 15,
+      "microFeatureGroups": 10,
+      "materialLayers": 7,
+      "repetitionSystems": 5,
+      "reviewViewpoints": 4
+    },
+    "featureGroups": [
+      {
+        "id": "five-force-graph",
+        "name": "Exactly five perimeter forces and complete graph",
+        "required": true,
+        "qualityCriteria": [
+          "Five and only five countable perimeter medallions occupy pentagon vertices.",
+          "Five outer rails and five inward spokes remain solid, attached, and visually continuous."
+        ],
+        "evidenceRefs": [
+          "full-object",
+          "fixed-front",
+          "orbit-pair"
+        ],
+        "failureModes": [
+          "reads as a four-circle Venn",
+          "central Trial reads as a sixth perimeter force",
+          "rail or spoke floats or breaks"
+        ]
+      },
+      {
+        "id": "trial-path-mirage",
+        "name": "Separate Trial, candidate routes, and Mirage",
+        "required": true,
+        "qualityCriteria": [
+          "The central Trial has its own concentric ring and crystal hierarchy.",
+          "Three subordinate candidate routes approach the centre and the Mirage remains outside the valid graph with only a broken tether."
+        ],
+        "evidenceRefs": [
+          "full-object",
+          "fixed-front"
+        ],
+        "failureModes": [
+          "Mirage mistaken for a sixth force",
+          "candidate paths dominate the five-force graph",
+          "Trial fused into chart field"
+        ]
+      },
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ],
+    "mustNotDo": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md).",
+      "Adjacent components must overlap by at least 0.02 world units at shared seams (source: grimoire/build/geometry_patterns.md).",
+      "Raised or recessed relief and fasteners must be geometry, instanced micro-parts, or displacement; a map alone is an approximation (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "qualityTargets": {
+    "targetFidelity": 0.7,
+    "mustMatch": [
+      "macro silhouette and proportions",
+      "primary material albedo/roughness response",
+      "reference-derived PBR material response at or above 0.7 confidence when source pixels are usable",
+      "most recognizable local features"
+    ],
+    "niceToHave": [
+      "micro scratches, stains, chips, and dirt masks",
+      "secondary lighting match"
+    ],
+    "fpsTarget": 60,
+    "reviewViewpoints": [
+      "front",
+      "three-quarter",
+      "side",
+      "thickness-axis",
+      "long-axis"
+    ]
+  },
+  "selfCorrectLoop": {
+    "enabled": true,
+    "visualAcceptance": {
+      "reviewer": "ai-vision",
+      "threshold": 0.7,
+      "comparisonArtifactRequired": true,
+      "layerScoresRequired": true,
+      "codePixelDiffIsAcceptanceAuthority": false,
+      "scoringRule": "AI vision must inspect a side-by-side reference/render sheet and score the current pass from 0 to 1. Pixel-diff code may assist diagnostics but cannot approve a pass.",
+      "requiredLayerScores": [
+        "silhouetteProportion",
+        "componentStructure",
+        "formDetail",
+        "materialSurface",
+        "lightingCamera"
+      ],
+      "featureReviewPolicy": {
+        "enabled": true,
+        "reviewUnit": "semantic-subsystem",
+        "maxCriticalFeaturesPerPass": 5,
+        "maxImportantFeaturesPerPass": 3,
+        "criticalDefaultThreshold": 0.8,
+        "importantAverageThreshold": 0.65,
+        "adaptiveEscalation": true,
+        "singleImagePairOnly": true,
+        "selectionRule": "Choose only the most visually salient, identity-defining, user-prioritized, or high-risk semantic systems. Group repeated parts instead of reviewing every mesh. AI vision scores every selected feature from the same full reference/render pair."
+      }
+    },
+    "reviewAfterPasses": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "allowedActions": [
+      "continue",
+      "refine-spec",
+      "refine-code",
+      "request-input",
+      "stop"
+    ],
+    "specRefineTriggers": [
+      "missing component",
+      "wrong primitive family",
+      "wrong proportions",
+      "material layer under-specified",
+      "local feature not traceable to viewEvidence",
+      "reference ambiguity discovered during implementation"
+    ],
+    "codeRefineTriggers": [
+      "spec is adequate but generated geometry/material does not match",
+      "browser render differs from reference",
+      "performance budget exceeded",
+      "lighting hides geometry or material response"
+    ],
+    "stopCriteria": [
+      "target fidelity reached or user accepts current approximation",
+      "remaining gaps require new reference images or manual art"
+    ],
+    "screenshotPolicy": {
+      "requiredForPasses": [
+        "blockout",
+        "structural-pass",
+        "form-refinement",
+        "material-pass",
+        "surface-pass",
+        "lighting-pass",
+        "interaction-pass"
+      ],
+      "preferredCapture": "in-app-browser-screenshot",
+      "fallbackCapture": "user-supplied-screenshot-path",
+      "minimumEvidence": "Each visual pass needs a reference image, rendered screenshot, side-by-side comparison sheet, AI vision score, layer scores, and critique before choosing continue.",
+      "reviewPairRule": "Compare the same camera/viewpoint whenever possible; do not judge a front reference against a random render angle.",
+      "acceptanceAuthority": "AI vision review of the comparison sheet. Code-generated pixel similarity is not sufficient evidence."
+    }
+  },
+  "featureReviewTargetsLegacy": [
+    {
+      "id": "overall-silhouette",
+      "name": "Overall silhouette and proportion system",
+      "tier": "critical",
+      "passIds": [
+        "blockout"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "primary-structure",
+      "name": "Primary identity-defining structure",
+      "tier": "critical",
+      "passIds": [
+        "structural-pass",
+        "form-refinement"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "reference-material-system",
+      "name": "Primary reference material and surface response",
+      "tier": "critical",
+      "passIds": [
+        "material-pass",
+        "surface-pass"
+      ],
+      "minimumScore": 0.75,
+      "mustPass": true,
+      "componentRefs": [
+        "root"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    }
+  ],
+  "featureReviewTargets": [
+    {
+      "id": "five-force-graph",
+      "name": "Exactly five perimeter forces and complete graph",
+      "tier": "critical",
+      "passIds": [
+        "blockout",
+        "structural-pass",
+        "form-refinement"
+      ],
+      "minimumScore": 0.85,
+      "mustPass": true,
+      "componentRefs": [
+        "force-graph",
+        "rail-system",
+        "outer-rails",
+        "hub-spokes"
+      ],
+      "evidenceRefs": [
+        "fixed-front"
+      ]
+    },
+    {
+      "id": "trial-path-mirage",
+      "name": "Separate Trial, candidate routes, and external Mirage",
+      "tier": "critical",
+      "passIds": [
+        "structural-pass",
+        "form-refinement",
+        "interaction-pass"
+      ],
+      "minimumScore": 0.82,
+      "mustPass": true,
+      "componentRefs": [
+        "trial-system",
+        "candidate-paths",
+        "mirage-node",
+        "mirage-tether"
+      ],
+      "evidenceRefs": [
+        "fixed-front"
+      ]
+    },
+    {
+      "id": "five-node-identities",
+      "name": "Five nonverbal force identities and palettes",
+      "tier": "critical",
+      "passIds": [
+        "form-refinement",
+        "material-pass"
+      ],
+      "minimumScore": 0.78,
+      "mustPass": true,
+      "componentRefs": [
+        "curiosity-node",
+        "capability-node",
+        "contribution-node",
+        "viability-node",
+        "willingness-node"
+      ],
+      "evidenceRefs": [
+        "fixed-front"
+      ]
+    },
+    {
+      "id": "page-contact-depth",
+      "name": "Page attachment, bezels, sockets, and orbit thickness",
+      "tier": "critical",
+      "passIds": [
+        "structural-pass",
+        "surface-pass",
+        "lighting-pass"
+      ],
+      "minimumScore": 0.8,
+      "mustPass": true,
+      "componentRefs": [
+        "contact-frame",
+        "frame-bezel",
+        "node-bezel-system",
+        "socket-collars"
+      ],
+      "evidenceRefs": [
+        "fixed-front",
+        "orbit-pair"
+      ]
+    },
+    {
+      "id": "material-light-hierarchy",
+      "name": "Antique gilt, dark chart, enamel and crystal response",
+      "tier": "important",
+      "passIds": [
+        "material-pass",
+        "surface-pass",
+        "lighting-pass"
+      ],
+      "minimumScore": 0.75,
+      "mustPass": false,
+      "componentRefs": [
+        "chart-field",
+        "trial-crystal",
+        "force-graph"
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    }
+  ],
+  "sculptPipeline": {
+    "passGateMode": "locked-sequential",
+    "passOrder": [
+      "blockout",
+      "structural-pass",
+      "form-refinement",
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass",
+      "optimization-pass"
+    ],
+    "currentPass": "form-refinement",
+    "completedPasses": [
+      "blockout",
+      "structural-pass"
+    ],
+    "lastCompletedPass": "structural-pass",
+    "blockedReason": "",
+    "nextRequiredEvidence": [
+      "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+      "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+      "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
+      "attachment contracts for child appendages/connectors",
+      "no floating child roots/joints in the browser screenshot",
+      "browser render screenshot from your agent's browser/screenshot tool",
+      "side-by-side reference/render comparison sheet for AI vision review",
+      "AI vision score at or above the visual acceptance threshold",
+      "all critical semantic feature scores from the shared image pair at or above their thresholds",
+      "self-correction review appended with action=continue before the next pass"
+    ]
+  },
+  "lookDevTargets": {
+    "qualityPriority": "reference-fidelity",
+    "materialPass": {
+      "albedoPaletteRequired": true,
+      "roughnessVariationRequired": true,
+      "normalOrBumpRequired": true,
+      "localOverridesRequired": true,
+      "minimumTextureResolution": 1024,
+      "preferredTextureResolution": 2048,
+      "independentMapChannels": [
+        "albedo",
+        "roughness",
+        "height",
+        "normal",
+        "ambient-occlusion"
+      ],
+      "requiredSurfaceFrequencyBands": [
+        "macro",
+        "meso",
+        "micro"
+      ],
+      "geometryReliefRequiredWhenSilhouetteAffected": true,
+      "referencePbrExtraction": {
+        "requiredWhenSourceImagePresent": true,
+        "targetThreshold": 0.7,
+        "stopOnLowConfidence": true,
+        "script": "forge/stage1_intake/extract_pbr_evidence.py",
+        "acceptedLimitation": "single-image extraction is reference-derived inference, not exact photogrammetry"
+      },
+      "mustAvoid": [
+        "single flat albedo per material",
+        "uniform roughness",
+        "albedo texture reused as roughness/height/normal/AO",
+        "single-frequency random noise",
+        "plastic-looking smooth bark, stone, cloth, foliage, or aged material",
+        "local color/detail described only in prose without material masks",
+        "claiming exact PBR recovery when confidence is below the target threshold"
+      ]
+    },
+    "lightingPass": {
+      "requiredTerms": [
+        "key light",
+        "fill light",
+        "rim or environment light",
+        "exposure",
+        "tone mapping",
+        "background",
+        "contact shadow"
+      ],
+      "mustAvoid": [
+        "ambient-only lighting",
+        "flat value range",
+        "missing contact shadow",
+        "reference lighting copied without separating material readability"
+      ]
+    },
+    "screenshotReview": [
+      "Compare albedo palette and local color zones.",
+      "Compare roughness/normal/bump response under light.",
+      "Compare cavity dirt, edge wear, stains, moss, scratches, or other local masks.",
+      "Compare key/fill/rim structure, exposure, tone mapping, background, and contact shadows.",
+      "Capture a neutral-light render to verify material readability without reference lighting.",
+      "Capture a grazing-light close-up to expose flat normals, uniform roughness, tiling, and plastic highlights.",
+      "Capture a reference-matched render from the same camera framing as the source."
+    ]
+  },
+  "actionReadiness": {
+    "contract": "Every macro/meso component should be generated as a stable named Object3D pivot node with a mesh child, action metadata, optional sockets, collider proxy, and destruction metadata.",
+    "defaultRigType": "action-ready-static-rig",
+    "rootMotionNode": "root",
+    "requiredComponentFields": [
+      "id",
+      "parent",
+      "transform",
+      "attachment for child appendages, connectors, limbs, tubes, handles, legs, horns, wings, branches, or cables",
+      "actionProfile.animationRole",
+      "actionProfile.pivot",
+      "actionProfile.collider",
+      "actionProfile.destruction"
+    ],
+    "transformChannels": [
+      "translate",
+      "rotate",
+      "scale",
+      "bend",
+      "twist",
+      "detach",
+      "visibility",
+      "material-state"
+    ],
+    "authoringRules": [
+      "Do not collapse independently movable parts into one mesh.",
+      "Put transforms on component pivot groups, not only on raw meshes.",
+      "For attached child parts, put the pivot at the semantic root/socket and build visible geometry from localStart to localEnd.",
+      "Represent hinge, socket, detachable, and breakable intent even when no animation is implemented yet.",
+      "Use simplified collider proxies for runtime physics instead of visual mesh colliders by default."
+    ],
+    "destructionPolicy": {
+      "defaultBreakable": false,
+      "fractureGroupNaming": "Use stable semantic names such as body-shell, left-hinge, glass-panel, branch-segment.",
+      "debrisStrategy": "Prefer detachable component groups and a small number of procedural fragments over random mesh explosion."
+    }
+  },
+  "assumptions": [],
+  "coordinateFrame": {
+    "front": "camera-facing side in the reference image",
+    "up": "image up direction",
+    "scaleReference": "unit scale; adjust after first browser render"
+  },
+  "silhouette": {
+    "boundingShape": "",
+    "aspectRatios": [],
+    "symmetry": "",
+    "dominantCurves": [],
+    "negativeSpaces": [],
+    "landmarks": []
+  },
+  "viewEvidence": [
+    {
+      "id": "full-object",
+      "view": "primary",
+      "imageRegion": {
+        "x": 0.0,
+        "y": 0.0,
+        "width": 1.0,
+        "height": 1.0,
+        "units": "normalized"
+      },
+      "observations": [],
+      "confidence": 0.5
+    },
+    {
+      "id": "fixed-front",
+      "view": "primary",
+      "imageRegion": {
+        "x": 0.05,
+        "y": 0.05,
+        "width": 0.9,
+        "height": 0.9,
+        "units": "normalized"
+      },
+      "observations": [
+        "Five perimeter nodes, central Trial hub, three candidate paths, and isolated Mirage remain readable in a fixed-front inspection."
+      ],
+      "confidence": 0.96
+    }
+  ],
+  "componentTreeLegacy": [
+    {
+      "id": "root",
+      "name": "Compass Book Chapter IV Ikigai Map Relief",
+      "level": "macro",
+      "role": "body",
+      "importance": 1.0,
+      "confidence": 0.5,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Placeholder root blockout; reclassify per Workstream A's decision tree (grimoire/intake/surface_topology.md) once real geometry is authored.",
+      "geometryDescriptor": {
+        "topologyIntent": "low-poly blockout with bevel-ready edges",
+        "edgeTreatment": {
+          "type": "none",
+          "bevelRadius": 0.0,
+          "segments": 1
+        },
+        "deformationStack": [],
+        "uvStrategy": "generated procedural coordinates",
+        "normalStrategy": "vertex normals from generated geometry"
+      },
+      "parent": null,
+      "attachment": null,
+      "dimensions": {
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0,
+        "units": "relative",
+        "confidence": 0.5
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "root",
+        "pivot": {
+          "mode": "center",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.5
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": false,
+          "notes": "Replace with sphere/capsule/compound proxy when the object shape demands it."
+        },
+        "constraints": [],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "root",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0.0,
+          "debrisMaterial": "base"
+        }
+      },
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "deformations": [],
+      "joints": [],
+      "seams": [],
+      "localFeatures": [],
+      "surfaceDetail": {
+        "macroRoughness": 0.0,
+        "microRoughness": 0.0,
+        "bumpAmplitude": 0.0,
+        "normalPattern": "",
+        "displacementPattern": "",
+        "occlusionPattern": "",
+        "edgeWearPattern": "",
+        "notes": ""
+      },
+      "evidenceRefs": [
+        "full-object"
+      ],
+      "details": [],
+      "fidelityTier": "blockout"
+    }
+  ],
+  "componentTree": [
+    {
+      "id": "root",
+      "name": "Ikigai Map relief root",
+      "level": "macro",
+      "role": "presentation-body",
+      "importance": 1,
+      "confidence": 1,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Closed shallow page contact plate anchors every system.",
+      "parent": null,
+      "material": "base",
+      "materialLayers": [
+        "base"
+      ],
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(26, 28, 40, 1)",
+        "secondaryAlbedo": "rgba(23, 15, 9, 1)",
+        "materialClass": "fabric",
+        "materialClassConfidence": 0.9
+      },
+      "localFeatures": [],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "contact-frame",
+      "name": "Page-bound gilt contact frame",
+      "level": "macro",
+      "role": "presentation-frame",
+      "importance": 0.96,
+      "confidence": 0.98,
+      "primitive": "extrude",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Raised rectangular frame and medallions bind the chart to parchment.",
+      "parent": "root",
+      "material": "brass",
+      "materialLayers": [
+        "brass"
+      ],
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "page-surface",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(206, 171, 115, 1)",
+        "secondaryAlbedo": "rgba(119, 78, 30, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.96
+      },
+      "localFeatures": [
+        {
+          "id": "contact-frame.radial-rivets",
+          "type": "fastener",
+          "geometryEffect": "instanced gilt rivets around frame and bezels",
+          "confidence": 0.93
+        }
+      ],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "force-graph",
+      "name": "Five-force constellation graph",
+      "level": "macro",
+      "role": "semantic-graph",
+      "importance": 1,
+      "confidence": 1,
+      "primitive": "box",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Five separate nodes, pentagon rails and inward spokes form the chapter identity.",
+      "parent": "root",
+      "material": "brass",
+      "materialLayers": [
+        "brass"
+      ],
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "page-surface",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.03,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(206, 171, 115, 1)",
+        "secondaryAlbedo": "rgba(119, 78, 30, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.96
+      },
+      "localFeatures": [],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "trial-system",
+      "name": "Central Trial mechanism",
+      "level": "macro",
+      "role": "animation-anchor",
+      "importance": 1,
+      "confidence": 0.99,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Independent concentric hub and crystal remain distinct from perimeter forces.",
+      "parent": "root",
+      "material": "violet",
+      "materialLayers": [
+        "violet",
+        "brass"
+      ],
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "page-surface",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.05,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(111, 53, 181, 1)",
+        "secondaryAlbedo": "rgba(206, 171, 115, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.9
+      },
+      "localFeatures": [],
+      "evidenceRefs": [
+        "full-object"
+      ]
+    },
+    {
+      "id": "chart-field",
+      "name": "Dark engraved star chart",
+      "level": "meso",
+      "role": "static-part",
+      "importance": 0.82,
+      "confidence": 0.96,
+      "primitive": "box",
+      "topologyClass": "conforming-shell",
+      "topologyRationale": "Shallow dark panel carries subordinate chart relief.",
+      "parent": "root",
+      "material": "base",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "page-surface",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.01,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(26, 28, 40, 1)",
+        "secondaryAlbedo": "rgba(51, 48, 69, 1)",
+        "materialClass": "fabric",
+        "materialClassConfidence": 0.9
+      },
+      "localFeatures": [
+        {
+          "id": "chart-field.constellation-grooves",
+          "type": "recessed-groove",
+          "geometryEffect": "concentric orbit and constellation curves",
+          "confidence": 0.94
+        }
+      ]
+    },
+    {
+      "id": "rail-system",
+      "name": "Pentagon and spoke rail system",
+      "level": "meso",
+      "role": "static-part",
+      "importance": 1,
+      "confidence": 0.99,
+      "primitive": "curve-sweep",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Ten solid connecting rails establish the exact five-force topology.",
+      "parent": "force-graph",
+      "material": "brass",
+      "attachment": {
+        "parentId": "force-graph",
+        "parentSocket": "graph-surface",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(206, 171, 115, 1)",
+        "secondaryAlbedo": "rgba(119, 78, 30, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.96
+      },
+      "localFeatures": [
+        {
+          "id": "rail-system.socket-collars",
+          "type": "seam",
+          "geometryEffect": "overlapping collars at twenty rail endpoints",
+          "confidence": 0.95
+        }
+      ]
+    },
+    {
+      "id": "curiosity-node",
+      "name": "Curiosity force node",
+      "level": "meso",
+      "role": "force-node",
+      "importance": 1,
+      "confidence": 0.99,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Separate top medallion carries the violet comet identity.",
+      "parent": "force-graph",
+      "material": "violet",
+      "attachment": {
+        "parentId": "force-graph",
+        "parentSocket": "top-node",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.04,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(113, 57, 182, 1)",
+        "secondaryAlbedo": "rgba(227, 167, 255, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.94
+      },
+      "localFeatures": [
+        {
+          "id": "curiosity-node.comet-facets",
+          "type": "raised-ridge",
+          "geometryEffect": "faceted comet tail and star core",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "id": "capability-node",
+      "name": "Capability force node",
+      "level": "meso",
+      "role": "force-node",
+      "importance": 1,
+      "confidence": 0.99,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Separate teal medallion carries an eight-point star/tool insert.",
+      "parent": "force-graph",
+      "material": "teal",
+      "attachment": {
+        "parentId": "force-graph",
+        "parentSocket": "upper-right-node",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.04,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(20, 121, 133, 1)",
+        "secondaryAlbedo": "rgba(125, 229, 233, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.94
+      },
+      "localFeatures": [
+        {
+          "id": "capability-node.star-facets",
+          "type": "raised-ridge",
+          "geometryEffect": "eight-point faceted star insert",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "id": "contribution-node",
+      "name": "Contribution force node",
+      "level": "meso",
+      "role": "force-node",
+      "importance": 1,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Separate rose medallion carries beacon and paired relief forms.",
+      "parent": "force-graph",
+      "material": "rose",
+      "attachment": {
+        "parentId": "force-graph",
+        "parentSocket": "lower-right-node",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.04,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(168, 95, 69, 1)",
+        "secondaryAlbedo": "rgba(242, 176, 138, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.9
+      },
+      "localFeatures": [
+        {
+          "id": "contribution-node.beacon-relief",
+          "type": "raised-ridge",
+          "geometryEffect": "paired cupped forms and beacon star",
+          "confidence": 0.96
+        }
+      ]
+    },
+    {
+      "id": "viability-node",
+      "name": "Viability force node",
+      "level": "meso",
+      "role": "force-node",
+      "importance": 1,
+      "confidence": 0.99,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Separate amber medallion carries bridge and wheel relief.",
+      "parent": "force-graph",
+      "material": "amber",
+      "attachment": {
+        "parentId": "force-graph",
+        "parentSocket": "lower-left-node",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.04,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(178, 122, 24, 1)",
+        "secondaryAlbedo": "rgba(240, 198, 93, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.92
+      },
+      "localFeatures": [
+        {
+          "id": "viability-node.bridge-relief",
+          "type": "raised-ridge",
+          "geometryEffect": "bridge arch pylons and wheel inset",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "id": "willingness-node",
+      "name": "Willingness force node",
+      "level": "meso",
+      "role": "force-node",
+      "importance": 1,
+      "confidence": 0.99,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Separate ember medallion carries nested flame facets.",
+      "parent": "force-graph",
+      "material": "ember",
+      "attachment": {
+        "parentId": "force-graph",
+        "parentSocket": "upper-left-node",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.04,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(216, 75, 16, 1)",
+        "secondaryAlbedo": "rgba(255, 178, 45, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.94
+      },
+      "localFeatures": [
+        {
+          "id": "willingness-node.flame-facets",
+          "type": "raised-ridge",
+          "geometryEffect": "nested solid flame lobes",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "id": "mirage-node",
+      "name": "External Mirage satellite",
+      "level": "meso",
+      "role": "warning-anchor",
+      "importance": 0.88,
+      "confidence": 0.98,
+      "primitive": "cylinder",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "A dark satellite outside the valid graph remains intentionally separate.",
+      "parent": "root",
+      "material": "mirage",
+      "attachment": {
+        "parentId": "root",
+        "parentSocket": "mirage-surface",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.03,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(48, 40, 62, 1)",
+        "secondaryAlbedo": "rgba(114, 100, 127, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.88
+      },
+      "localFeatures": [
+        {
+          "id": "mirage-node.broken-tether",
+          "type": "raised-ridge",
+          "geometryEffect": "segmented broken tether beads",
+          "confidence": 0.97
+        }
+      ]
+    },
+    {
+      "id": "candidate-paths",
+      "name": "Three candidate path arcs",
+      "level": "meso",
+      "role": "signal-paths",
+      "importance": 0.86,
+      "confidence": 0.96,
+      "primitive": "curve-sweep",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Three subordinate curved routes approach Trial without changing the graph.",
+      "parent": "trial-system",
+      "material": "violet",
+      "attachment": {
+        "parentId": "trial-system",
+        "parentSocket": "trial-rim",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(141, 69, 223, 1)",
+        "secondaryAlbedo": "rgba(42, 139, 157, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.9
+      }
+    },
+    {
+      "id": "trial-rings",
+      "name": "Trial concentric ring stack",
+      "level": "meso",
+      "role": "animation-anchor",
+      "importance": 1,
+      "confidence": 0.99,
+      "primitive": "torus",
+      "topologyClass": "assembled-solid",
+      "topologyRationale": "Separate rings and prongs provide real layered hub depth.",
+      "parent": "trial-system",
+      "material": "brass",
+      "attachment": {
+        "parentId": "trial-system",
+        "parentSocket": "hub-surface",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.03,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(206, 171, 115, 1)",
+        "secondaryAlbedo": "rgba(119, 78, 30, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.96
+      },
+      "localFeatures": [
+        {
+          "id": "trial-hub.ring-stack",
+          "type": "bevel",
+          "geometryEffect": "three concentric rings and four prongs",
+          "confidence": 0.99
+        }
+      ]
+    },
+    {
+      "id": "trial-crystal",
+      "name": "Trial violet crystal",
+      "level": "meso",
+      "role": "animation-anchor",
+      "importance": 1,
+      "confidence": 0.99,
+      "primitive": "ellipsoid",
+      "topologyClass": "continuous-sculpt",
+      "topologyRationale": "Faceted luminous centre is a separate transform and material anchor.",
+      "parent": "trial-system",
+      "material": "violet",
+      "attachment": {
+        "parentId": "trial-system",
+        "parentSocket": "hub-centre",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.08,
+          0
+        ],
+        "contactType": "socketed",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(142, 72, 241, 1)",
+        "secondaryAlbedo": "rgba(228, 192, 255, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.94
+      }
+    },
+    {
+      "id": "outer-rails",
+      "name": "Five pentagon rails",
+      "level": "meso",
+      "role": "static-part",
+      "importance": 1,
+      "confidence": 0.99,
+      "primitive": "instanced-cluster",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Five solid beams close the perimeter pentagon.",
+      "parent": "rail-system",
+      "material": "brass",
+      "attachment": {
+        "parentId": "rail-system",
+        "parentSocket": "rail-sockets",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "overlapping",
+        "overlap": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(206, 171, 115, 1)",
+        "secondaryAlbedo": "rgba(119, 78, 30, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.96
+      }
+    },
+    {
+      "id": "hub-spokes",
+      "name": "Five inward spokes",
+      "level": "meso",
+      "role": "static-part",
+      "importance": 1,
+      "confidence": 0.99,
+      "primitive": "instanced-cluster",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Five solid beams connect each force to the Trial socket.",
+      "parent": "rail-system",
+      "material": "brass",
+      "attachment": {
+        "parentId": "rail-system",
+        "parentSocket": "spoke-sockets",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "overlapping",
+        "overlap": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(206, 171, 115, 1)",
+        "secondaryAlbedo": "rgba(119, 78, 30, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.96
+      }
+    },
+    {
+      "id": "frame-bezel",
+      "name": "Double rectangular frame bezel",
+      "level": "meso",
+      "role": "static-part",
+      "importance": 0.9,
+      "confidence": 0.97,
+      "primitive": "box",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Nested raised tool lines establish page contact.",
+      "parent": "contact-frame",
+      "material": "brass",
+      "attachment": {
+        "parentId": "contact-frame",
+        "parentSocket": "frame-surface",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(206, 171, 115, 1)",
+        "secondaryAlbedo": "rgba(119, 78, 30, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.96
+      }
+    },
+    {
+      "id": "node-bezel-system",
+      "name": "Five force double bezels",
+      "level": "meso",
+      "role": "static-part",
+      "importance": 0.95,
+      "confidence": 0.98,
+      "primitive": "instanced-cluster",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Repeated ring stacks give all force nodes equal structural weight.",
+      "parent": "force-graph",
+      "material": "brass",
+      "attachment": {
+        "parentId": "force-graph",
+        "parentSocket": "node-sockets",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.01,
+        "gapTolerance": 0.01
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(206, 171, 115, 1)",
+        "secondaryAlbedo": "rgba(119, 78, 30, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.96
+      }
+    },
+    {
+      "id": "chart-stars",
+      "name": "Sparse chart star studs",
+      "level": "micro",
+      "role": "surface-detail",
+      "importance": 0.55,
+      "confidence": 0.9,
+      "primitive": "instanced-cluster",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Sparse small studs add depth without competing with the graph.",
+      "parent": "chart-field",
+      "material": "brass",
+      "attachment": {
+        "parentId": "chart-field",
+        "parentSocket": "chart-surface",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.01,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.005,
+        "gapTolerance": 0.005
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(206, 171, 115, 1)",
+        "secondaryAlbedo": "rgba(119, 78, 30, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.94
+      }
+    },
+    {
+      "id": "chart-orbits",
+      "name": "Engraved chart orbit arcs",
+      "level": "micro",
+      "role": "surface-detail",
+      "importance": 0.62,
+      "confidence": 0.94,
+      "primitive": "curve-sweep",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Thin recessed arcs remain visible under grazing light.",
+      "parent": "chart-field",
+      "material": "brass",
+      "attachment": {
+        "parentId": "chart-field",
+        "parentSocket": "chart-surface",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.01,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.005,
+        "gapTolerance": 0.005
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(154, 111, 22, 1)",
+        "secondaryAlbedo": "rgba(78, 54, 16, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.9
+      }
+    },
+    {
+      "id": "curiosity-insert",
+      "name": "Comet faceted insert",
+      "level": "micro",
+      "role": "node-detail",
+      "importance": 0.88,
+      "confidence": 0.98,
+      "primitive": "extrude",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Raised comet silhouette identifies Curiosity.",
+      "parent": "curiosity-node",
+      "material": "violet",
+      "attachment": {
+        "parentId": "curiosity-node",
+        "parentSocket": "node-face",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.005,
+        "gapTolerance": 0.005
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(154, 85, 244, 1)",
+        "secondaryAlbedo": "rgba(241, 197, 255, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.92
+      }
+    },
+    {
+      "id": "capability-insert",
+      "name": "Capability star insert",
+      "level": "micro",
+      "role": "node-detail",
+      "importance": 0.88,
+      "confidence": 0.98,
+      "primitive": "extrude",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Eight-point solid star identifies Capability.",
+      "parent": "capability-node",
+      "material": "teal",
+      "attachment": {
+        "parentId": "capability-node",
+        "parentSocket": "node-face",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.005,
+        "gapTolerance": 0.005
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(31, 162, 170, 1)",
+        "secondaryAlbedo": "rgba(146, 240, 237, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.92
+      }
+    },
+    {
+      "id": "contribution-insert",
+      "name": "Contribution beacon insert",
+      "level": "micro",
+      "role": "node-detail",
+      "importance": 0.86,
+      "confidence": 0.96,
+      "primitive": "extrude",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Paired cupped forms and beacon identify Contribution.",
+      "parent": "contribution-node",
+      "material": "rose",
+      "attachment": {
+        "parentId": "contribution-node",
+        "parentSocket": "node-face",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.005,
+        "gapTolerance": 0.005
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(185, 111, 80, 1)",
+        "secondaryAlbedo": "rgba(243, 185, 154, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.9
+      }
+    },
+    {
+      "id": "viability-insert",
+      "name": "Viability bridge insert",
+      "level": "micro",
+      "role": "node-detail",
+      "importance": 0.88,
+      "confidence": 0.98,
+      "primitive": "extrude",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Bridge profile and wheel identify Viability.",
+      "parent": "viability-node",
+      "material": "amber",
+      "attachment": {
+        "parentId": "viability-node",
+        "parentSocket": "node-face",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.005,
+        "gapTolerance": 0.005
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(198, 138, 27, 1)",
+        "secondaryAlbedo": "rgba(255, 211, 106, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.92
+      }
+    },
+    {
+      "id": "willingness-insert",
+      "name": "Willingness flame insert",
+      "level": "micro",
+      "role": "node-detail",
+      "importance": 0.9,
+      "confidence": 0.98,
+      "primitive": "extrude",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Nested flame profile identifies Willingness.",
+      "parent": "willingness-node",
+      "material": "ember",
+      "attachment": {
+        "parentId": "willingness-node",
+        "parentSocket": "node-face",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.005,
+        "gapTolerance": 0.005
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(233, 87, 19, 1)",
+        "secondaryAlbedo": "rgba(255, 193, 61, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.94
+      }
+    },
+    {
+      "id": "mirage-tether",
+      "name": "Broken Mirage tether beads",
+      "level": "micro",
+      "role": "warning-detail",
+      "importance": 0.72,
+      "confidence": 0.97,
+      "primitive": "instanced-cluster",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Separated dark beads communicate a broken invalid connection.",
+      "parent": "mirage-node",
+      "material": "mirage",
+      "attachment": {
+        "parentId": "mirage-node",
+        "parentSocket": "tether-socket",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.02,
+          0
+        ],
+        "contactType": "socketed",
+        "embedDepth": 0.005,
+        "gapTolerance": 0.005
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(48, 40, 62, 1)",
+        "secondaryAlbedo": "rgba(114, 100, 127, 1)",
+        "materialClass": "glass",
+        "materialClassConfidence": 0.88
+      }
+    },
+    {
+      "id": "radial-rivets",
+      "name": "Radial bezel and frame rivets",
+      "level": "micro",
+      "role": "surface-detail",
+      "importance": 0.58,
+      "confidence": 0.93,
+      "primitive": "instanced-cluster",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Instanced hemispheres add crafted contact highlights.",
+      "parent": "contact-frame",
+      "material": "brass",
+      "attachment": {
+        "parentId": "contact-frame",
+        "parentSocket": "frame-surface",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.01,
+          0
+        ],
+        "contactType": "embedded",
+        "embedDepth": 0.005,
+        "gapTolerance": 0.005
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(206, 171, 115, 1)",
+        "secondaryAlbedo": "rgba(119, 78, 30, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.94
+      }
+    },
+    {
+      "id": "socket-collars",
+      "name": "Rail endpoint socket collars",
+      "level": "micro",
+      "role": "attachment-detail",
+      "importance": 0.78,
+      "confidence": 0.95,
+      "primitive": "instanced-cluster",
+      "topologyClass": "surface-relief",
+      "topologyRationale": "Overlapping collars prevent rails and spokes from appearing to float.",
+      "parent": "rail-system",
+      "material": "brass",
+      "attachment": {
+        "parentId": "rail-system",
+        "parentSocket": "rail-endpoints",
+        "localStart": [
+          0,
+          0,
+          0
+        ],
+        "localEnd": [
+          0,
+          0.01,
+          0
+        ],
+        "contactType": "overlapping",
+        "overlap": 0.005,
+        "gapTolerance": 0.005
+      },
+      "colorMaterialRecipe": {
+        "dominantAlbedo": "rgba(206, 171, 115, 1)",
+        "secondaryAlbedo": "rgba(119, 78, 30, 1)",
+        "materialClass": "metal",
+        "materialClassConfidence": 0.94
+      }
+    }
+  ],
+  "materials": [
+    {
+      "id": "base",
+      "name": "Base material",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial / PBR approximation",
+      "baseColor": "#8A7A5F",
+      "color": "#8A7A5F",
+      "albedo": {
+        "dominant": "#1A1C28",
+        "secondary": [
+          "#170F09",
+          "#333045",
+          "#774E1E"
+        ],
+        "samplingNotes": "Reference-derived from foreground pixels; de-lit to reduce baked shadows/highlights.",
+        "map": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_albedo.png",
+          "url": "/compass-book/pbr/ikigai-map/base_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        }
+      },
+      "colorVariation": {
+        "palette": [
+          "#1A1C28",
+          "#170F09",
+          "#333045",
+          "#774E1E",
+          "#CEAB73"
+        ],
+        "pattern": "reference-derived pixel palette",
+        "amplitude": 0.236,
+        "heightCorrelation": 0.42
+      },
+      "textureResolution": 1024,
+      "textureProjection": {
+        "mode": "uv",
+        "repeat": [
+          2.0,
+          2.0
+        ],
+        "anisotropy": 8,
+        "texelDensityIntent": "Preserve stable world/object-scale detail; do not stretch micro detail with component scale."
+      },
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2.0,
+          "amplitude": 0.477,
+          "role": "reference-derived broad albedo and height breakup"
+        },
+        {
+          "id": "meso",
+          "frequency": 14.0,
+          "amplitude": 0.35,
+          "role": "reference-derived cracks, ridges, pores, grain, or leaf clusters"
+        },
+        {
+          "id": "micro",
+          "frequency": 72.0,
+          "amplitude": 0.14,
+          "role": "reference-derived micro highlight breakup under grazing light"
+        }
+      ],
+      "roughness": {
+        "base": 0.742,
+        "variation": 0.165,
+        "map": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_roughness.png",
+          "url": "/compass-book/pbr/ikigai-map/base_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "localResponse": "reference-derived roughness estimate; cavities and textured zones trend rougher, bright highlights trend smoother"
+      },
+      "metalness": {
+        "base": 0.0,
+        "variation": 0.0
+      },
+      "normal": {
+        "pattern": "reference-derived height-gradient normal map",
+        "strength": 0.269,
+        "map": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_normal.png",
+          "url": "/compass-book/pbr/ikigai-map/base_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "heightSource": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_height.png",
+          "url": "/compass-book/pbr/ikigai-map/base_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "space": "tangent"
+      },
+      "bump": {
+        "pattern": "reference-derived height field",
+        "amplitude": 0.043,
+        "map": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_height.png",
+          "url": "/compass-book/pbr/ikigai-map/base_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        }
+      },
+      "displacement": {
+        "pattern": "none",
+        "amplitude": 0.0,
+        "scale": 1.0,
+        "silhouetteAffects": false
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.38,
+        "contactShadowBias": 0.35,
+        "map": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_ao.png",
+          "url": "/compass-book/pbr/ikigai-map/base_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        },
+        "notes": "Reference-derived cavity estimate from local height minima; verify against grazing-light screenshot."
+      },
+      "wear": {
+        "edgeWear": 0.0,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.0,
+        "cavityBias": 0.0,
+        "color": "#2F2A22"
+      },
+      "localOverrides": [
+        {
+          "id": "reference-pbr-pixel-evidence",
+          "type": "material-map-evidence",
+          "evidenceRefs": [
+            "full-object"
+          ],
+          "channels": [
+            "albedo",
+            "roughness",
+            "height",
+            "normal",
+            "ambient-occlusion"
+          ],
+          "notes": "Use generated maps as material evidence, then refine after browser screenshot comparison."
+        }
+      ],
+      "shaderNotes": [
+        "Prefer MeshPhysicalMaterial when clearcoat, sheen, transmission, or thin-surface response is observed; otherwise use MeshStandardMaterial-compatible PBR channels.",
+        "Generate albedo, roughness, height/normal, and AO independently; never alias albedo into roughness.",
+        "Use normal/bump/displacement only when they map to observed surface relief.",
+        "Use displacement geometry when the observed relief changes the close-up silhouette; texture-only relief is insufficient there.",
+        "Reference-derived maps are estimates from image pixels; verify with neutral, grazing, and reference-matched renders.",
+        "Do not treat baked image shadows as final albedo; rerun extraction with a tighter material crop if highlights/shadows pollute the maps."
+      ],
+      "notes": "Replace with image-derived color, roughness, noise, and edge-wear notes.",
+      "referencePbr": {
+        "version": "1.0",
+        "sourceImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/ikigai-map-admission-reference-white.png",
+        "extractor": "stage1_intake/extract_pbr_evidence.py",
+        "method": "single-image pixel evidence with de-lighting estimate; not photogrammetry",
+        "usable": true,
+        "verdict": "pass",
+        "confidence": 0.86,
+        "estimatedFidelity": 0.86,
+        "targetThreshold": 0.7,
+        "hardLimit": "A single image cannot uniquely recover true albedo/roughness/normal/AO; maps are reference-derived estimates.",
+        "maps": {
+          "albedo": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_albedo.png",
+            "url": "/compass-book/pbr/ikigai-map/base_albedo.png",
+            "channel": "albedo",
+            "source": "reference-pixel-extraction"
+          },
+          "roughness": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_roughness.png",
+            "url": "/compass-book/pbr/ikigai-map/base_roughness.png",
+            "channel": "roughness",
+            "source": "reference-pixel-extraction"
+          },
+          "height": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_height.png",
+            "url": "/compass-book/pbr/ikigai-map/base_height.png",
+            "channel": "height",
+            "source": "reference-pixel-extraction"
+          },
+          "normal": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_normal.png",
+            "url": "/compass-book/pbr/ikigai-map/base_normal.png",
+            "channel": "normal",
+            "source": "reference-pixel-extraction"
+          },
+          "ao": {
+            "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_ao.png",
+            "url": "/compass-book/pbr/ikigai-map/base_ao.png",
+            "channel": "ao",
+            "source": "reference-pixel-extraction"
+          }
+        },
+        "diagnostics": {
+          "sourceWidth": 1122,
+          "sourceHeight": 1402,
+          "mapSize": 1024,
+          "cropBBoxPixels": {
+            "x": 156,
+            "y": 93,
+            "width": 799,
+            "height": 1130
+          },
+          "mask": {
+            "backgroundColor": "#FEFEFE",
+            "backgroundNoise": 1.414,
+            "transparentPixelFraction": 0.0,
+            "foregroundCoverage": 0.5046
+          },
+          "mapStats": {
+            "valueRange": 0.5627,
+            "heightP90Gradient": 0.09589,
+            "roughnessBase": 0.742,
+            "roughnessVariation": 0.165,
+            "normalStrength": 0.269,
+            "blurRadius": 21
+          },
+          "palette": [
+            "#1A1C28",
+            "#170F09",
+            "#333045",
+            "#774E1E",
+            "#CEAB73"
+          ]
+        },
+        "warnings": [
+          "single-image inverse rendering cannot prove true physical PBR; confidence is capped"
+        ]
+      }
+    },
+    {
+      "id": "brass",
+      "name": "Antique gilt structural metal",
+      "qualityTier": "utility",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#B9852E",
+      "color": "#B9852E",
+      "textureResolution": 1024,
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.15
+        },
+        {
+          "id": "meso",
+          "frequency": 16,
+          "amplitude": 0.1
+        },
+        {
+          "id": "micro",
+          "frequency": 72,
+          "amplitude": 0.05
+        }
+      ],
+      "roughness": {
+        "base": 0.34,
+        "variation": 0.12
+      },
+      "metalness": {
+        "base": 0.72,
+        "variation": 0.08
+      },
+      "normal": {
+        "pattern": "fine hammered gilt",
+        "strength": 0.08
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.35,
+        "contactShadowBias": 0.3
+      },
+      "wear": {
+        "edgeWear": 0.12,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.12,
+        "cavityBias": 0.8,
+        "color": "#40250F"
+      },
+      "localOverrides": [
+        {
+          "id": "brass-cavity-patina",
+          "type": "cavity-darkening",
+          "evidenceRefs": [
+            "fixed-front"
+          ],
+          "notes": "Darken recessed bezel and socket seams."
+        }
+      ]
+    },
+    {
+      "id": "violet",
+      "name": "Violet Trial and Curiosity enamel",
+      "qualityTier": "utility",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#7139B6",
+      "color": "#7139B6",
+      "textureResolution": 1024,
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.1
+        },
+        {
+          "id": "meso",
+          "frequency": 14,
+          "amplitude": 0.08
+        },
+        {
+          "id": "micro",
+          "frequency": 80,
+          "amplitude": 0.04
+        }
+      ],
+      "roughness": {
+        "base": 0.2,
+        "variation": 0.08
+      },
+      "metalness": {
+        "base": 0.08,
+        "variation": 0.02
+      },
+      "normal": {
+        "pattern": "faceted enamel",
+        "strength": 0.06
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.22,
+        "contactShadowBias": 0.2
+      },
+      "wear": {
+        "edgeWear": 0.04,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.02,
+        "cavityBias": 0.3,
+        "color": "#251038"
+      },
+      "localOverrides": [
+        {
+          "id": "violet-emissive-core",
+          "type": "emissive",
+          "evidenceRefs": [
+            "fixed-front"
+          ],
+          "notes": "Independent restrained violet emission."
+        }
+      ]
+    },
+    {
+      "id": "teal",
+      "name": "Capability teal enamel",
+      "qualityTier": "utility",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#147985",
+      "color": "#147985",
+      "textureResolution": 1024,
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.1
+        },
+        {
+          "id": "meso",
+          "frequency": 14,
+          "amplitude": 0.08
+        },
+        {
+          "id": "micro",
+          "frequency": 80,
+          "amplitude": 0.04
+        }
+      ],
+      "roughness": {
+        "base": 0.24,
+        "variation": 0.08
+      },
+      "metalness": {
+        "base": 0.06,
+        "variation": 0.02
+      },
+      "normal": {
+        "pattern": "faceted enamel",
+        "strength": 0.05
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.2,
+        "contactShadowBias": 0.2
+      },
+      "wear": {
+        "edgeWear": 0.03,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.02,
+        "cavityBias": 0.3,
+        "color": "#08363B"
+      },
+      "localOverrides": [
+        {
+          "id": "teal-star-highlight",
+          "type": "clearcoat-highlight",
+          "evidenceRefs": [
+            "fixed-front"
+          ],
+          "notes": "Lower roughness on star facets."
+        }
+      ]
+    },
+    {
+      "id": "rose",
+      "name": "Contribution rose-gold metal",
+      "qualityTier": "utility",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#A85F45",
+      "color": "#A85F45",
+      "textureResolution": 1024,
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.1
+        },
+        {
+          "id": "meso",
+          "frequency": 14,
+          "amplitude": 0.07
+        },
+        {
+          "id": "micro",
+          "frequency": 76,
+          "amplitude": 0.04
+        }
+      ],
+      "roughness": {
+        "base": 0.38,
+        "variation": 0.1
+      },
+      "metalness": {
+        "base": 0.58,
+        "variation": 0.08
+      },
+      "normal": {
+        "pattern": "satin copper",
+        "strength": 0.05
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.28,
+        "contactShadowBias": 0.25
+      },
+      "wear": {
+        "edgeWear": 0.06,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.05,
+        "cavityBias": 0.5,
+        "color": "#4A251D"
+      },
+      "localOverrides": [
+        {
+          "id": "rose-beacon-polish",
+          "type": "roughness-mask",
+          "evidenceRefs": [
+            "fixed-front"
+          ],
+          "notes": "Beacon tips are slightly more polished."
+        }
+      ]
+    },
+    {
+      "id": "amber",
+      "name": "Viability amber-gold metal",
+      "qualityTier": "utility",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#B27A18",
+      "color": "#B27A18",
+      "textureResolution": 1024,
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.1
+        },
+        {
+          "id": "meso",
+          "frequency": 14,
+          "amplitude": 0.07
+        },
+        {
+          "id": "micro",
+          "frequency": 76,
+          "amplitude": 0.04
+        }
+      ],
+      "roughness": {
+        "base": 0.32,
+        "variation": 0.09
+      },
+      "metalness": {
+        "base": 0.52,
+        "variation": 0.08
+      },
+      "normal": {
+        "pattern": "satin gold",
+        "strength": 0.05
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.3,
+        "contactShadowBias": 0.25
+      },
+      "wear": {
+        "edgeWear": 0.07,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.05,
+        "cavityBias": 0.5,
+        "color": "#4C300A"
+      },
+      "localOverrides": [
+        {
+          "id": "amber-bridge-edge",
+          "type": "edge-polish",
+          "evidenceRefs": [
+            "fixed-front"
+          ],
+          "notes": "Bridge crest catches a brighter highlight."
+        }
+      ]
+    },
+    {
+      "id": "ember",
+      "name": "Willingness ember enamel",
+      "qualityTier": "utility",
+      "type": "physical",
+      "shaderModel": "MeshPhysicalMaterial",
+      "baseColor": "#D84B10",
+      "color": "#D84B10",
+      "textureResolution": 1024,
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.1
+        },
+        {
+          "id": "meso",
+          "frequency": 14,
+          "amplitude": 0.08
+        },
+        {
+          "id": "micro",
+          "frequency": 80,
+          "amplitude": 0.04
+        }
+      ],
+      "roughness": {
+        "base": 0.22,
+        "variation": 0.08
+      },
+      "metalness": {
+        "base": 0.05,
+        "variation": 0.02
+      },
+      "normal": {
+        "pattern": "faceted flame enamel",
+        "strength": 0.05
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.22,
+        "contactShadowBias": 0.2
+      },
+      "wear": {
+        "edgeWear": 0.03,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.02,
+        "cavityBias": 0.3,
+        "color": "#541505"
+      },
+      "localOverrides": [
+        {
+          "id": "ember-flame-core",
+          "type": "emissive",
+          "evidenceRefs": [
+            "fixed-front"
+          ],
+          "notes": "Inner flame has warm restrained emission."
+        }
+      ]
+    },
+    {
+      "id": "mirage",
+      "name": "Desaturated Mirage enamel",
+      "qualityTier": "utility",
+      "type": "standard",
+      "shaderModel": "MeshStandardMaterial",
+      "baseColor": "#30283E",
+      "color": "#30283E",
+      "textureResolution": 1024,
+      "surfaceFrequencyBands": [
+        {
+          "id": "macro",
+          "frequency": 2,
+          "amplitude": 0.1
+        },
+        {
+          "id": "meso",
+          "frequency": 14,
+          "amplitude": 0.08
+        },
+        {
+          "id": "micro",
+          "frequency": 72,
+          "amplitude": 0.05
+        }
+      ],
+      "roughness": {
+        "base": 0.62,
+        "variation": 0.12
+      },
+      "metalness": {
+        "base": 0.12,
+        "variation": 0.04
+      },
+      "normal": {
+        "pattern": "matte pitted enamel",
+        "strength": 0.07
+      },
+      "ambientOcclusion": {
+        "cavityStrength": 0.32,
+        "contactShadowBias": 0.25
+      },
+      "wear": {
+        "edgeWear": 0.08,
+        "scratches": [],
+        "chips": []
+      },
+      "dirt": {
+        "amount": 0.1,
+        "cavityBias": 0.7,
+        "color": "#17131E"
+      },
+      "localOverrides": [
+        {
+          "id": "mirage-low-signal",
+          "type": "emissive-suppression",
+          "evidenceRefs": [
+            "fixed-front"
+          ],
+          "notes": "Must remain dimmer than every valid force."
+        }
+      ]
+    }
+  ],
+  "repetitionSystems": [
+    {
+      "id": "five-force-node-layout",
+      "parent": "force-graph",
+      "realization": "instanced-layout",
+      "buildsGeometry": true,
+      "geometry": "five equal node sockets at deterministic pentagon vertices",
+      "instances": 5,
+      "acceptance": "exactly five countable perimeter nodes"
+    },
+    {
+      "id": "outer-pentagon-rails",
+      "parent": "rail-system",
+      "realization": "instanced-geometry",
+      "buildsGeometry": true,
+      "geometry": "five solid gilt beams between adjacent node sockets",
+      "instances": 5,
+      "acceptance": "closed pentagon with no gaps or sixth edge"
+    },
+    {
+      "id": "inward-hub-spokes",
+      "parent": "rail-system",
+      "realization": "instanced-geometry",
+      "buildsGeometry": true,
+      "geometry": "five solid gilt beams from nodes to Trial collars",
+      "instances": 5,
+      "acceptance": "five continuous inward connections"
+    },
+    {
+      "id": "crafted-rivets",
+      "parent": "contact-frame",
+      "realization": "instanced-geometry",
+      "buildsGeometry": true,
+      "geometry": "small hemispherical gilt fasteners around frame and bezels",
+      "instances": 28,
+      "acceptance": "bounded crafted rhythm without call explosion"
+    },
+    {
+      "id": "mirage-tether-beads",
+      "parent": "mirage-node",
+      "realization": "instanced-geometry",
+      "buildsGeometry": true,
+      "geometry": "seven separated dark beads on one broken curve",
+      "instances": 7,
+      "acceptance": "reads as broken and never joins the valid graph"
+    }
+  ],
+  "buildPasses": [
+    {
+      "id": "blockout",
+      "goal": "Match macro silhouette and proportions.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Silhouette reads correctly without materials.",
+        "Quality contract has named all required macro feature groups before code generation.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "structural-pass",
+      "goal": "Build the component hierarchy implied by the pre-spec complexity assessment.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro, meso, and repeated structures meet qualityContract.minimumSpecDepth.",
+        "Parent-child relations, joints, seams, sockets, and contact points are explicit.",
+        "Every attached child appendage/connector has parentSocket, localStart/localEnd, contactType, embedDepth or overlap, and gapTolerance.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "form-refinement",
+      "goal": "Refine shape, deformation, bevels, tapers, curves, asymmetry, and visible local geometry.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Important visible forms are represented in component geometryDescriptor, deformations, localFeatures, or repetitionSystems.",
+        "Endpoint-based child parts are rooted at their attachment sockets and do not visibly float away from parents.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "material-pass",
+      "goal": "Match material color, roughness, bump, and local variation.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Reference-derived albedo palette records dominant, secondary, and accent colors per visible material.",
+        "Each important material defines roughness variation and at least one normal/bump/displacement response.",
+        "Local material overrides, dirt/wear/stains/moss/chips/scratches or equivalent masks are tied to evidenceRefs.",
+        "Thin, transparent, reflective, wet, or fibrous materials document alpha/transmission/clearcoat/metalness/fiber response when relevant.",
+        "Generated preview uses procedural albedo/roughness/bump texture or vertex color variation instead of one flat color.",
+        "Generated preview uses independent PBR maps at 1024px or higher for the quality-first tier.",
+        "If source pixels are available, referencePbr extraction passed at confidence >= 0.7 or the pass is stopped/requesting better references.",
+        "Macro, meso, and micro surface frequency bands are visible at the intended review distance without obvious tiling.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "surface-pass",
+      "goal": "Add procedural surface locality such as normal/bump/displacement, AO, dirt, stains, chips, grain, moss, scratches, and wear.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
+        "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "lighting-pass",
+      "goal": "Make material and form readable under neutral turntable lighting plus optional reference lighting.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "lightingFromPhoto identifies key light direction/color/intensity, fill light, rim or environment light, and ambient color.",
+        "Exposure, tone mapping, background color/gradient, shadow softness, and contact shadow behavior are specified.",
+        "Lighting does not hide geometry/material gaps and screenshots can be compared fairly to the reference.",
+        "Neutral, grazing, and reference-matched lighting checks distinguish material errors from lighting errors.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "interaction-pass",
+      "goal": "Make the model ready for future animation, transformation, physics, or destruction.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Macro and movable meso components have stable pivot nodes.",
+        "Sockets, collider proxies, and destruction metadata are present for future runtime actions.",
+        "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold."
+      ]
+    },
+    {
+      "id": "optimization-pass",
+      "goal": "Protect runtime performance after visual fidelity is accepted.",
+      "componentRefs": [
+        "root"
+      ],
+      "acceptance": [
+        "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
+        "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
+      ]
+    }
+  ],
+  "visualEvidence": [
+    {
+      "timestamp": "2026-08-20T23:48:31.731552+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.84,
+      "aiVisionScore": 0.84,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.88,
+        "formDetail": 0.78,
+        "materialSurface": 0.78,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "five-force-graph",
+          "score": 0.93,
+          "critical": true,
+          "notes": "Exactly five perimeter nodes with closed rails and five inward spokes."
+        },
+        {
+          "id": "trial-and-paths",
+          "score": 0.89,
+          "critical": true,
+          "notes": "One layered Trial crystal and exactly three independently colored candidate paths."
+        },
+        {
+          "id": "force-node-identities",
+          "score": 0.82,
+          "critical": true,
+          "notes": "Five distinct colors and emblem silhouettes; simpler than the concept ornament."
+        },
+        {
+          "id": "mirage-isolation",
+          "score": 0.92,
+          "critical": true,
+          "notes": "One dim satellite outside the graph with a visibly broken six-bead tether."
+        },
+        {
+          "id": "page-contact-depth",
+          "score": 0.86,
+          "critical": true,
+          "notes": "Map-stripped and orbit views prove raised geometry and non-degenerate depth."
+        }
+      ],
+      "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "renderScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/45-wide-chapter-4-render-high-corrected.png",
+      "comparisonImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/49-wide-chapter-4-comparison.png",
+      "cameraView": "fixed-front plus long-axis and thickness-axis orbit views",
+      "notes": "High tier: 301 calls and 119.9k rendered triangles. Low tier: 141 calls and 18.6k rendered triangles at 51 FPS in browser sampling. Not physical-device proof.",
+      "aiVisionNotes": "Agent vision inspected the full comparison once. Topology, hierarchy, depth and warning semantics pass; detail remains an intentional procedural approximation and no 0.9-plus claim is made from a single concept view."
+    },
+    {
+      "timestamp": "2026-08-20T23:54:50.566380+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.87,
+      "aiVisionScore": 0.87,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.96,
+        "formDetail": 0.78,
+        "materialSurface": 0.78,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "five-force-graph",
+          "score": 0.95,
+          "critical": true,
+          "notes": "Independent graph, rail system, outer rails, spokes, bezels and sockets are all addressable."
+        },
+        {
+          "id": "trial-path-mirage",
+          "score": 0.93,
+          "critical": true,
+          "notes": "Trial rings, crystal, three paths, Mirage and broken tether are separate runtime parts."
+        },
+        {
+          "id": "five-node-identities",
+          "score": 0.9,
+          "critical": true,
+          "notes": "Five node shells and five emblem inserts are individually named runtime parts."
+        },
+        {
+          "id": "page-contact-depth",
+          "score": 0.9,
+          "critical": true,
+          "notes": "Contact frame, frame bezel and chart field are structurally distinct."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.82,
+          "critical": true,
+          "notes": "Gold structure, five enamel identities, bright Trial and dim Mirage remain visually ordered."
+        }
+      ],
+      "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+      "renderScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/52-wide-chapter-4-structural-pass.png",
+      "comparisonImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/49-wide-chapter-4-comparison.png",
+      "cameraView": "fixed-front plus long-axis and thickness-axis orbit views",
+      "notes": "Part coverage proves spec-to-runtime structure, not completeness of the intake spec.",
+      "aiVisionNotes": "Visual appearance is intentionally unchanged from the accepted blockout; the score increases only for independently verified hierarchy and attachment coverage."
+    }
+  ],
+  "reviewHistory": [
+    {
+      "timestamp": "2026-08-20T23:48:31.731552+00:00",
+      "passId": "blockout",
+      "estimatedFidelity": 0.84,
+      "aiVisionScore": 0.84,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.88,
+        "formDetail": 0.78,
+        "materialSurface": 0.78,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "five-force-graph",
+          "score": 0.93,
+          "critical": true,
+          "notes": "Exactly five perimeter nodes with closed rails and five inward spokes."
+        },
+        {
+          "id": "trial-and-paths",
+          "score": 0.89,
+          "critical": true,
+          "notes": "One layered Trial crystal and exactly three independently colored candidate paths."
+        },
+        {
+          "id": "force-node-identities",
+          "score": 0.82,
+          "critical": true,
+          "notes": "Five distinct colors and emblem silhouettes; simpler than the concept ornament."
+        },
+        {
+          "id": "mirage-isolation",
+          "score": 0.92,
+          "critical": true,
+          "notes": "One dim satellite outside the graph with a visibly broken six-bead tether."
+        },
+        {
+          "id": "page-contact-depth",
+          "score": 0.86,
+          "critical": true,
+          "notes": "Map-stripped and orbit views prove raised geometry and non-degenerate depth."
+        }
+      ],
+      "action": "continue",
+      "summary": "Chapter IV reads as a production-ready semantic blockout with real relief depth and efficient instancing.",
+      "matched": [
+        "exactly five valid forces",
+        "one central Trial",
+        "exactly three candidate paths",
+        "isolated Mirage with broken tether",
+        "material hierarchy",
+        "non-degenerate orbit depth"
+      ],
+      "mismatches": [
+        "procedural emblems are simpler than the image-guided goal",
+        "valid graph is slightly smaller in the page field",
+        "micro-ornament remains restrained for real-time performance"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "none required for blockout acceptance",
+        "retain low-quality production tier for mobile safety"
+      ],
+      "evidence": [
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/45-wide-chapter-4-render-high-corrected.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/46-wide-chapter-4-map-stripped.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/47-wide-chapter-4-orbit-left.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/48-wide-chapter-4-orbit-right.png"
+      ],
+      "mapStrippedRender": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/46-wide-chapter-4-map-stripped.png",
+      "reviewViewpoints": [
+        "fixed-front",
+        "long-axis",
+        "thickness-axis",
+        "orbit-left-minus-0.42",
+        "orbit-right-plus-0.42"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+        "renderScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/45-wide-chapter-4-render-high-corrected.png",
+        "comparisonImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/49-wide-chapter-4-comparison.png",
+        "cameraView": "fixed-front plus long-axis and thickness-axis orbit views",
+        "notes": "High tier: 301 calls and 119.9k rendered triangles. Low tier: 141 calls and 18.6k rendered triangles at 51 FPS in browser sampling. Not physical-device proof.",
+        "aiVisionNotes": "Agent vision inspected the full comparison once. Topology, hierarchy, depth and warning semantics pass; detail remains an intentional procedural approximation and no 0.9-plus claim is made from a single concept view."
+      }
+    },
+    {
+      "timestamp": "2026-08-20T23:54:50.566380+00:00",
+      "passId": "structural-pass",
+      "estimatedFidelity": 0.87,
+      "aiVisionScore": 0.87,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.9,
+        "componentStructure": 0.96,
+        "formDetail": 0.78,
+        "materialSurface": 0.78,
+        "lightingCamera": 0.84
+      },
+      "featureReviews": [
+        {
+          "id": "five-force-graph",
+          "score": 0.95,
+          "critical": true,
+          "notes": "Independent graph, rail system, outer rails, spokes, bezels and sockets are all addressable."
+        },
+        {
+          "id": "trial-path-mirage",
+          "score": 0.93,
+          "critical": true,
+          "notes": "Trial rings, crystal, three paths, Mirage and broken tether are separate runtime parts."
+        },
+        {
+          "id": "five-node-identities",
+          "score": 0.9,
+          "critical": true,
+          "notes": "Five node shells and five emblem inserts are individually named runtime parts."
+        },
+        {
+          "id": "page-contact-depth",
+          "score": 0.9,
+          "critical": true,
+          "notes": "Contact frame, frame bezel and chart field are structurally distinct."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.82,
+          "critical": true,
+          "notes": "Gold structure, five enamel identities, bright Trial and dim Mirage remain visually ordered."
+        }
+      ],
+      "action": "continue",
+      "summary": "Structural pass aligns the visible relief with a complete selectable runtime hierarchy.",
+      "matched": [
+        "29 runtime parts",
+        "zero unnamed meshes",
+        "zero coverage errors",
+        "zero coverage warnings",
+        "seven sockets",
+        "separate valid and invalid destruction groups"
+      ],
+      "mismatches": [
+        "visual ornament remains intentionally simpler than the generated concept target"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "none required for structural acceptance"
+      ],
+      "evidence": [
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/52-wide-chapter-4-structural-pass.png",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/51-chapter-4-part-coverage.json",
+        "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/50-chapter-4-part-manifest.json"
+      ],
+      "reviewViewpoints": [
+        "fixed-front",
+        "long-axis",
+        "thickness-axis",
+        "orbit-left-minus-0.42",
+        "orbit-right-plus-0.42"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/44-wide-chapter-4-goal-iteration-2.png",
+        "renderScreenshot": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/52-wide-chapter-4-structural-pass.png",
+        "comparisonImage": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/49-wide-chapter-4-comparison.png",
+        "cameraView": "fixed-front plus long-axis and thickness-axis orbit views",
+        "notes": "Part coverage proves spec-to-runtime structure, not completeness of the intake spec.",
+        "aiVisionNotes": "Visual appearance is intentionally unchanged from the accepted blockout; the score increases only for independently verified hierarchy and attachment coverage."
+      }
+    }
+  ],
+  "lodPlan": [
+    {
+      "tier": "near",
+      "distance": 0,
+      "strategy": "full component tree and material layers"
+    },
+    {
+      "tier": "far",
+      "distance": 30,
+      "strategy": "merge static components and reduce local feature geometry"
+    }
+  ],
+  "performanceBudget": {
+    "qualityPriority": "reference-fidelity",
+    "targetTriangles": 250000,
+    "maxDrawCalls": 160,
+    "textureSize": 2048,
+    "fpsTarget": 30,
+    "optimizationPolicy": "Reach accepted visual fidelity first, then optimize without removing reference-critical geometry or surface layers."
+  },
+  "lightingFromPhoto": [
+    "Scene-owned warm key from upper-left at soft intensity around 2.2; reference highlights are excluded from albedo.",
+    "Cool violet-blue fill from camera-right around 0.65 plus restrained hemisphere ambient around 0.45.",
+    "Warm rim/environment reflection separates gilt silhouettes; use ACES filmic tone mapping with exposure near 1.0.",
+    "Existing parchment receives soft contact shadows beneath macro relief solids; no independent ground plane."
+  ],
+  "proceduralStrategy": [
+    "Block out macro silhouette first.",
+    "Add component hierarchy and joints.",
+    "Create stable pivot groups, sockets, collider proxies, and destruction metadata before visual polish.",
+    "Refine forms with bevels, tapers, bends, and procedural noise.",
+    "Run reference PBR extraction for important source-image materials and stop when confidence is below the target threshold.",
+    "Add material variation before adding expensive micro-geometry."
+  ],
+  "animationAnchors": [
+    "root pivot node supports whole-object translation, rotation, scale, and visibility changes",
+    "component pivot groups support later local transforms without rebuilding geometry"
+  ],
+  "destructionAnchors": [
+    "actionProfile.destruction.fractureGroup marks detachable or breakable component sets",
+    "component seams and sockets define plausible break points instead of random explosions"
+  ],
+  "risks": [],
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Compass Book Chapter IV Ikigai Map Relief page-bound hard-surface relief instanced radial fasteners five-point constellation medallion rings emissive crystal real-time browser performance shadow draw calls",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "6857e5ab528b42ac12f4f411f862610a0bffce8e47aee3610a7603c318072fe8"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-color-space-srgb-vs-linearnocolorspace",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[11]",
+        "score": 6.08588319546,
+        "snippets": [
+          "... và các bản đồ dữ liệu toán học (phải giữ tuyến tính/không hiệu chỉnh). Recognition cues: Base color/albedo and emissive textures are the only ones that should look like natural photographic color; Normal, roughness, metalness, and ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[11]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.topology-intent",
+        "file_path": "grimoire/glossary/3d_vocabulary.md",
+        "heading": "Geometry And Topology",
+        "key_path": null,
+        "score": 5.143858634031,
+        "snippets": [
+          "Topology intent classifies a surface as hard-surface blockout, subdivision-ready, low-poly prop, organic deformed mesh, or alpha-card cluster."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/glossary/3d_vocabulary.md",
+            "heading": "Geometry And Topology",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/glossary/3d_vocabulary.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      },
+      {
+        "record_id": "core.pbr-hand-painted-vs-pbr-texture",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[12]",
+        "score": 5.080796749726,
+        "snippets": [
+          "... stay fixed in place even as the object rotates or lighting changes; visible brushstrokes; single diffuse-only map; PBR: specular highlights and shadow shapes move logically with view/light angle; micro-detail (pores, scratches) ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[12]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      }
+    ]
+  },
+  "pbrExtractionHistory": [
+    {
+      "materialId": "base",
+      "confidence": 0.86,
+      "verdict": "pass",
+      "usable": true,
+      "maps": {
+        "albedo": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_albedo.png",
+          "url": "/compass-book/pbr/ikigai-map/base_albedo.png",
+          "channel": "albedo",
+          "source": "reference-pixel-extraction"
+        },
+        "roughness": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_roughness.png",
+          "url": "/compass-book/pbr/ikigai-map/base_roughness.png",
+          "channel": "roughness",
+          "source": "reference-pixel-extraction"
+        },
+        "height": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_height.png",
+          "url": "/compass-book/pbr/ikigai-map/base_height.png",
+          "channel": "height",
+          "source": "reference-pixel-extraction"
+        },
+        "normal": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_normal.png",
+          "url": "/compass-book/pbr/ikigai-map/base_normal.png",
+          "channel": "normal",
+          "source": "reference-pixel-extraction"
+        },
+        "ao": {
+          "path": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/.img2threejs/compass-book-ikigai-map/pbr-evidence/base_ao.png",
+          "url": "/compass-book/pbr/ikigai-map/base_ao.png",
+          "channel": "ao",
+          "source": "reference-pixel-extraction"
+        }
+      }
+    }
+  ],
+  "tier1Results": [
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9749,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0037,
+        "colorDelta": {
+          "checked": 29,
+          "maxDeltaE": 92.42,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 5.57
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 69.98
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.57
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 68.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 42.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.01
+            },
+            {
+              "componentId": null,
+              "deltaE": 35.77
+            },
+            {
+              "componentId": null,
+              "deltaE": 53.64
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 85.02
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 92.42
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 28.62
+            },
+            {
+              "componentId": null,
+              "deltaE": 89.22
+            },
+            {
+              "componentId": null,
+              "deltaE": 45.74
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 43.65
+            },
+            {
+              "componentId": null,
+              "deltaE": 58.01
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "blockout requires --map-stripped-render evidence"
+      ],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "e197ee152b53f21d",
+      "passId": "blockout"
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.9749,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0037,
+        "colorDelta": {
+          "checked": 29,
+          "maxDeltaE": 92.42,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 5.57
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 69.98
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.57
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 68.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 42.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.01
+            },
+            {
+              "componentId": null,
+              "deltaE": 35.77
+            },
+            {
+              "componentId": null,
+              "deltaE": 53.64
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 85.02
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 92.42
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 28.62
+            },
+            {
+              "componentId": null,
+              "deltaE": 89.22
+            },
+            {
+              "componentId": null,
+              "deltaE": 45.74
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 43.65
+            },
+            {
+              "componentId": null,
+              "deltaE": 58.01
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [
+        "blockout requires --map-stripped-render evidence"
+      ],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "e197ee152b53f21d",
+      "passId": "blockout"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9749,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0037,
+        "colorDelta": {
+          "checked": 29,
+          "maxDeltaE": 92.42,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 5.57
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 69.98
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.57
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 68.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 42.86
+            },
+            {
+              "componentId": null,
+              "deltaE": 18.01
+            },
+            {
+              "componentId": null,
+              "deltaE": 35.77
+            },
+            {
+              "componentId": null,
+              "deltaE": 53.64
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 85.02
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 92.42
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 28.62
+            },
+            {
+              "componentId": null,
+              "deltaE": 89.22
+            },
+            {
+              "componentId": null,
+              "deltaE": 45.74
+            },
+            {
+              "componentId": null,
+              "deltaE": 21.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 43.65
+            },
+            {
+              "componentId": null,
+              "deltaE": 58.01
+            },
+            {
+              "componentId": null,
+              "deltaE": 9.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.8
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "e197ee152b53f21d",
+      "passId": "blockout",
+      "mapStrippedRender": "/Users/ejmac/Documents/Mini Project - iOS and Adroid capcitor/worktrees/compass-book-launch-3d-20260820/docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/46-wide-chapter-4-map-stripped.png"
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9749,
+        "aspectRatioDelta": 0.0,
+        "scaleDelta": 0.0,
+        "bilateralSymmetryError": 0.0037,
+        "colorDelta": {
+          "checked": 29,
+          "maxDeltaE": 92.13,
+          "perComponent": [
+            {
+              "componentId": null,
+              "deltaE": 5.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 23.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 23.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 69.71
+            },
+            {
+              "componentId": null,
+              "deltaE": 5.1
+            },
+            {
+              "componentId": null,
+              "deltaE": 23.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 68.57
+            },
+            {
+              "componentId": null,
+              "deltaE": 41.99
+            },
+            {
+              "componentId": null,
+              "deltaE": 24.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 44.62
+            },
+            {
+              "componentId": null,
+              "deltaE": 60.32
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.82
+            },
+            {
+              "componentId": null,
+              "deltaE": 84.7
+            },
+            {
+              "componentId": null,
+              "deltaE": 23.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 92.13
+            },
+            {
+              "componentId": null,
+              "deltaE": 23.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 23.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 23.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 23.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 23.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 37.12
+            },
+            {
+              "componentId": null,
+              "deltaE": 88.85
+            },
+            {
+              "componentId": null,
+              "deltaE": 41.0
+            },
+            {
+              "componentId": null,
+              "deltaE": 29.51
+            },
+            {
+              "componentId": null,
+              "deltaE": 52.62
+            },
+            {
+              "componentId": null,
+              "deltaE": 65.11
+            },
+            {
+              "componentId": null,
+              "deltaE": 8.82
+            },
+            {
+              "componentId": null,
+              "deltaE": 23.92
+            },
+            {
+              "componentId": null,
+              "deltaE": 23.92
+            }
+          ],
+          "gated": false
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "742f91c52ca71c9f",
+      "passId": "structural-pass"
+    }
+  ]
+}
