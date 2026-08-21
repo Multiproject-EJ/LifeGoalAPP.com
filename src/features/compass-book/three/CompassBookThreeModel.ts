@@ -145,19 +145,19 @@ function createSurfaceTexture(
 }
 
 function createTextures(quality: CompassBookThreeQuality): MaterialTextures {
-  const size = quality === 'high' ? 1024 : 128;
-  const auxiliarySize = quality === 'high' ? 512 : 128;
+  const colorSize = quality === 'high' ? 1024 : 128;
+  const dataSize = quality === 'high' ? 512 : 128;
   return {
-    leatherColor: createSurfaceTexture(size, 'leather-color'),
-    leatherBump: createSurfaceTexture(size, 'leather-bump'),
-    leatherRoughness: createSurfaceTexture(size, 'leather-roughness'),
-    leatherAo: createSurfaceTexture(auxiliarySize, 'leather-ao'),
-    paperBump: createSurfaceTexture(size, 'paper-bump'),
-    paperRoughness: createSurfaceTexture(size, 'paper-roughness'),
-    giltColor: createSurfaceTexture(size, 'gilt-color'),
-    giltRoughness: createSurfaceTexture(size, 'gilt-roughness'),
-    giltBump: createSurfaceTexture(auxiliarySize, 'gilt-bump'),
-    giltAo: createSurfaceTexture(auxiliarySize, 'gilt-ao'),
+    leatherColor: createSurfaceTexture(colorSize, 'leather-color'),
+    leatherBump: createSurfaceTexture(dataSize, 'leather-bump'),
+    leatherRoughness: createSurfaceTexture(dataSize, 'leather-roughness'),
+    leatherAo: createSurfaceTexture(dataSize, 'leather-ao'),
+    paperBump: createSurfaceTexture(dataSize, 'paper-bump'),
+    paperRoughness: createSurfaceTexture(dataSize, 'paper-roughness'),
+    giltColor: createSurfaceTexture(colorSize, 'gilt-color'),
+    giltRoughness: createSurfaceTexture(dataSize, 'gilt-roughness'),
+    giltBump: createSurfaceTexture(dataSize, 'gilt-bump'),
+    giltAo: createSurfaceTexture(dataSize, 'gilt-ao'),
   };
 }
 

@@ -824,7 +824,7 @@
       "interaction-pass",
       "optimization-pass"
     ],
-    "currentPass": "optimization-pass",
+    "currentPass": "complete",
     "completedPasses": [
       "blockout",
       "structural-pass",
@@ -832,14 +832,12 @@
       "material-pass",
       "surface-pass",
       "lighting-pass",
-      "interaction-pass"
+      "interaction-pass",
+      "optimization-pass"
     ],
-    "lastCompletedPass": "interaction-pass",
-    "blockedReason": "",
-    "nextRequiredEvidence": [
-      "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
-      "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
-    ]
+    "lastCompletedPass": "optimization-pass",
+    "blockedReason": "all build passes completed",
+    "nextRequiredEvidence": []
   },
   "lookDevTargets": {
     "qualityPriority": "reference-fidelity",
@@ -7689,6 +7687,52 @@
       "cameraView": "goal comparison, idle/completion pair, reduced-motion, long-axis and thickness-axis orbit",
       "notes": "Accepted for interaction-pass. The ceremony is transient presentation logic; canonical state remains in the DOM/store path.",
       "aiVisionNotes": "The idle model preserves the accepted visual score, while the separate idle-versus-completion sheet proves the requested presentation behavior without changing the chapter metaphor. Reduced-motion evidence preserves stable authored transforms."
+    },
+    {
+      "timestamp": "2026-08-21T02:45:15.422769+00:00",
+      "passId": "optimization-pass",
+      "estimatedFidelity": 0.99,
+      "aiVisionScore": 0.99,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.99,
+        "componentStructure": 0.99,
+        "formDetail": 0.99,
+        "materialSurface": 0.99,
+        "lightingCamera": 0.99
+      },
+      "featureReviews": [
+        {
+          "id": "optimization-visual-parity",
+          "score": 0.99,
+          "passed": true,
+          "notes": "The pre/post focused comparison preserves navy grain, gilt breakup, enamel response, node identities, Trial facets, candidate paths, and Mirage separation."
+        },
+        {
+          "id": "tier-semantic-parity",
+          "score": 0.93,
+          "passed": true,
+          "notes": "The low tier keeps all five forces, central Trial, three candidate paths, and external Mirage countable while reducing tessellation, data maps, and shadow cost."
+        },
+        {
+          "id": "runtime-budget",
+          "score": 0.95,
+          "passed": true,
+          "notes": "Focused high stays at 69 calls and 31.5k rendered triangles; full high records 296/118.4k and low 137/19k, with repeated rails, spokes, bezels, sockets, stars, rivets, and tether beads instanced."
+        },
+        {
+          "id": "texture-upload-budget",
+          "score": 0.96,
+          "passed": true,
+          "notes": "Five non-color full-book maps move from 1024 to 512 for about 15 MiB RGBA-equivalent savings while 1024 color and Chapter IV enamel channels remain intact."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/idle.png",
+      "renderScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/high-focused.png",
+      "comparisonImage": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/before-after.png",
+      "cameraView": "pre/post focused front, full high, full low, production shell, long-axis and thickness-axis orbit",
+      "notes": "Accepted for optimization-pass. Do not claim the separate supported-iPhone launch gate until hardware profiling is recorded.",
+      "aiVisionNotes": "Pre/post browser evidence is visually indistinguishable at the accepted review scale while reducing non-color upload cost. The high/low sheet confirms semantic, not pixel, parity for constrained devices."
     }
   ],
   "reviewHistory": [
@@ -8481,27 +8525,141 @@
         "notes": "Accepted for interaction-pass. The ceremony is transient presentation logic; canonical state remains in the DOM/store path.",
         "aiVisionNotes": "The idle model preserves the accepted visual score, while the separate idle-versus-completion sheet proves the requested presentation behavior without changing the chapter metaphor. Reduced-motion evidence preserves stable authored transforms."
       }
+    },
+    {
+      "timestamp": "2026-08-21T02:45:15.422769+00:00",
+      "passId": "optimization-pass",
+      "estimatedFidelity": 0.99,
+      "aiVisionScore": 0.99,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.99,
+        "componentStructure": 0.99,
+        "formDetail": 0.99,
+        "materialSurface": 0.99,
+        "lightingCamera": 0.99
+      },
+      "featureReviews": [
+        {
+          "id": "optimization-visual-parity",
+          "score": 0.99,
+          "passed": true,
+          "notes": "The pre/post focused comparison preserves navy grain, gilt breakup, enamel response, node identities, Trial facets, candidate paths, and Mirage separation."
+        },
+        {
+          "id": "tier-semantic-parity",
+          "score": 0.93,
+          "passed": true,
+          "notes": "The low tier keeps all five forces, central Trial, three candidate paths, and external Mirage countable while reducing tessellation, data maps, and shadow cost."
+        },
+        {
+          "id": "runtime-budget",
+          "score": 0.95,
+          "passed": true,
+          "notes": "Focused high stays at 69 calls and 31.5k rendered triangles; full high records 296/118.4k and low 137/19k, with repeated rails, spokes, bezels, sockets, stars, rivets, and tether beads instanced."
+        },
+        {
+          "id": "texture-upload-budget",
+          "score": 0.96,
+          "passed": true,
+          "notes": "Five non-color full-book maps move from 1024 to 512 for about 15 MiB RGBA-equivalent savings while 1024 color and Chapter IV enamel channels remain intact."
+        }
+      ],
+      "action": "continue",
+      "summary": "Optimization pass accepted with 0.99 pre/post visual parity: 1024 color and enamel channels remain, five non-color full-book maps move to 512 for about 15 MiB RGBA-equivalent upload savings, and the existing high/low semantic tiers remain intact.",
+      "matched": [
+        "focused high remains 69 calls and 31.5k rendered triangles",
+        "full high records 296 calls and 118.4k rendered triangles",
+        "full low records 137 calls and 19k rendered triangles",
+        "repeated rails spokes bezels sockets stars rivets and tether beads remain instanced",
+        "before-after surface and material parity scores 0.99",
+        "low tier preserves five forces Trial paths and Mirage",
+        "production hybrid shell remains readable",
+        "Tier1 and multi-angle gates pass"
+      ],
+      "mismatches": [
+        "desktop FPS samples remain scheduling-sensitive",
+        "physical supported-iPhone performance has not been measured",
+        "the full-book shell remains above the Chapter IV scoped 160-call budget because it includes all chapter assets"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/high-focused.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/high-full-book.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/low-full-book.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/production-shell.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/orbit-left.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/orbit-right.png"
+      ],
+      "reviewViewpoints": [
+        "front",
+        "high-tier",
+        "low-tier",
+        "production-shell",
+        "long-axis",
+        "thickness-axis"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/idle.png",
+        "renderScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/high-focused.png",
+        "comparisonImage": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/before-after.png",
+        "cameraView": "pre/post focused front, full high, full low, production shell, long-axis and thickness-axis orbit",
+        "notes": "Accepted for optimization-pass. Do not claim the separate supported-iPhone launch gate until hardware profiling is recorded.",
+        "aiVisionNotes": "Pre/post browser evidence is visually indistinguishable at the accepted review scale while reducing non-color upload cost. The high/low sheet confirms semantic, not pixel, parity for constrained devices."
+      }
     }
   ],
   "lodPlan": [
     {
-      "tier": "near",
+      "tier": "high",
       "distance": 0,
-      "strategy": "full component tree and material layers"
+      "strategy": "Full named component tree, accepted high-tier tessellation, 1024 color/enamel channels, 512 book data/localized bump channels, and soft key shadows."
     },
     {
-      "tier": "far",
-      "distance": 30,
-      "strategy": "merge static components and reduce local feature geometry"
+      "tier": "low",
+      "distance": 0,
+      "strategy": "Same semantic component tree with reduced radial/tube/bevel segments, 128 channels, disabled renderer shadow pass, and automatic selection on narrow or constrained devices."
     }
   ],
   "performanceBudget": {
     "qualityPriority": "reference-fidelity",
     "targetTriangles": 250000,
     "maxDrawCalls": 160,
-    "textureSize": 2048,
+    "textureSize": 1024,
     "fpsTarget": 30,
-    "optimizationPolicy": "Reach accepted visual fidelity first, then optimize without removing reference-critical geometry or surface layers."
+    "optimizationPolicy": "Reach accepted visual fidelity first, then optimize without removing reference-critical geometry or surface layers.",
+    "scope": "Chapter IV focused relief; full-book shell is tracked separately because it includes all chapter assets.",
+    "observedHighFocused": {
+      "drawCalls": 69,
+      "renderedTriangles": 31500,
+      "desktopBrowserFpsRange": [
+        30,
+        60
+      ]
+    },
+    "observedHighFullBook": {
+      "drawCalls": 296,
+      "renderedTriangles": 118400,
+      "note": "Desktop browser evidence only; scheduling-sensitive and not physical-device proof."
+    },
+    "observedLowFullBook": {
+      "drawCalls": 137,
+      "renderedTriangles": 19000,
+      "sampledDesktopBrowserFpsRange": [
+        30,
+        51
+      ]
+    },
+    "texturePolicy": {
+      "highColor": 1024,
+      "highEnamelChannels": 1024,
+      "highBookDataChannels": 512,
+      "highLocalizedMirageAndCrystalBump": 512,
+      "lowAllChannels": 128,
+      "estimatedBookDataUploadReduction": "15 MiB RGBA-equivalent versus five additional 1024 maps"
+    },
+    "launchGate": "Supported-iPhone profiling remains required; desktop browser FPS is not promoted to device proof."
   },
   "lightingFromPhoto": [
     "Scene-owned warm-gold directional key from upper-left, calibrated to 4.4 in the current physically based renderer; reference highlights remain excluded from albedo.",
@@ -10287,6 +10445,47 @@
       "renderHash": "08b9c4be6b1b6614",
       "materialGateHash": "acfb935173e0cddb",
       "passId": "interaction-pass",
+      "diagnosticBridge": {
+        "geometryAuthority": "img2threejs diagnose_render.py",
+        "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",
+        "reason": "The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families; the component gate remains authoritative for material, surface, and lighting passes."
+      }
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.907,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
+        "bilateralSymmetryError": 0.1454,
+        "colorDelta": {
+          "gated": true,
+          "mode": "component-aware-visible-footprint",
+          "legacyWholeFrameMode": "advisory-only-known-limitation",
+          "comparisonCount": 8,
+          "requiredRegionCount": 8,
+          "regionIds": [
+            "chart-field-navy-leather",
+            "gilt-rail-and-bezel",
+            "curiosity-violet-enamel",
+            "capability-teal-enamel",
+            "contribution-rose-copper",
+            "viability-amber-brass",
+            "willingness-ember-enamel",
+            "mirage-dim-enamel"
+          ],
+          "materialGatePassed": true,
+          "compatibilityPassed": true
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "5709267c1eb17ca4",
+      "materialGateHash": "acfb935173e0cddb",
+      "passId": "optimization-pass",
       "diagnosticBridge": {
         "geometryAuthority": "img2threejs diagnose_render.py",
         "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",

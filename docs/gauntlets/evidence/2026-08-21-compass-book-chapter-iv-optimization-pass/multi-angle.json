@@ -1,0 +1,20 @@
+{
+  "referenceAreaFraction": 0.9275938271604939,
+  "angles": [
+    {
+      "path": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/orbit-left.png",
+      "areaFraction": 0.9488123456790123,
+      "ratio": 1.0228747948695083,
+      "degenerate": false
+    },
+    {
+      "path": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-optimization-pass/orbit-right.png",
+      "areaFraction": 0.9188456790123457,
+      "ratio": 0.9905689883955701,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "The optimized channel sizes preserve the accepted volumetric silhouette across both axial views."
+}
