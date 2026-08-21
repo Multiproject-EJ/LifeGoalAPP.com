@@ -106,6 +106,7 @@ Create this structure before approval:
 work/island-visual-library/island-NNN-slug/
   BRIEF.md
   ASSET_TRACKER.md
+  SOURCE_LOCK.md
   references/
   masters/
   technical/
@@ -123,6 +124,14 @@ work/island-visual-library/island-NNN-slug/
 The `390x844/l3/` folder must include one clean-art screenshot with all four L3
 buildings present simultaneously. The `focus/` folder must include one capture
 after tapping and then closing each landmark modal.
+
+`SOURCE_LOCK.md` records the immutable external `NNN-source` filename/hash,
+runtime island mapping, embedded-label discrepancies, authoritative visual
+features, approved board adaptations and forbidden drift. Blockout,
+terrain/background, landmarks, materials/life, integration and final review
+must each include a source/current comparison recorded by the Source Fidelity
+Workloop. A later generated target may refine construction detail but may not
+silently replace the original composition target.
 
 ## Required QA sequence
 

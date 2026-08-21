@@ -1,0 +1,17 @@
+{
+  "overall": 0.56,
+  "dimensions": {
+    "composition": 0.43,
+    "landmarkIdentity": 0.48,
+    "paletteMaterials": 0.72,
+    "terrainBackground": 0.58,
+    "phoneReadability": 0.78
+  },
+  "criticalMismatches": [
+    "The source's monumental teal-domed citadel and four distinct satellite landmarks became a smaller pavilion-led settlement.",
+    "The source's dense oasis-city composition, waterways and close architectural layering became an open sandy island with much lower landmark density.",
+    "The source image visibly says ISLAND 011 even though the filename and runtime mapping designate Island 012."
+  ],
+  "decision": "user-accepted-drift",
+  "userApprovalNote": "Eivind accepted the visual drift for Island 012 on 2026-08-21 while requiring the source-fidelity workloop for all subsequent islands and revisits."
+}

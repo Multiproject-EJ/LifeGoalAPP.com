@@ -169,6 +169,23 @@ Pattern:
 
 Source status is explicit and immutable. A new revision creates a new file; it never overwrites an approved master.
 
+For Eivind's `011-120 islands HERE` drop inbox, the simpler intake and review
+names are canonical before the detailed library export:
+
+- `NNN-source.<ext>` — immutable dropped visual target;
+- `NNN-done-v001.<ext>` — accepted production overview;
+- later accepted revisions increment `v002`, `v003`, and so on;
+- `_workflow/NNN/status.json` — source hash, checkpoints, fidelity reviews and
+  accepted versions.
+
+An exact dropped `NNN.<ext>` is renamed once by
+`scripts/island_source_workloop.py intake`. Ambiguous filenames are never
+mapped automatically. Every meaningful 3D pass must return to the original
+source under the dated Source Fidelity Workloop; a generated refinement image
+does not supersede it. Ordinary completion requires overall fidelity ≥0.80,
+each required dimension ≥0.75 and no unresolved critical identity mismatch.
+Only Eivind may approve a recorded `user-accepted-drift` exception.
+
 ### PWA runtime assets
 
 Only optimized approved exports belong under:

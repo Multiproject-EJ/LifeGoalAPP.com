@@ -93,7 +93,8 @@ system. Reuse structure; create a different visit.
 
 Create before broad 3D implementation:
 
-1. one selected vertical goal image in
+1. one immutable `NNN-source.<ext>` image admitted through the Source Fidelity
+   Workloop, plus one selected repository copy in
    `docs/visual-references/island-NNN-<slug>/`;
 2. a dated Gauntlet/brief in `docs/gauntlets/`;
 3. a 3×3 detail inventory of the selected image;
@@ -105,6 +106,12 @@ Create before broad 3D implementation:
 
 Do not require ten arbitrary images. Start with one coherent master overview;
 add only the focus/turnaround evidence needed to remove actual ambiguity.
+
+The source image is a recurring visual target, not a one-time prompt. Read
+[`2026-08-21-island-source-fidelity-workloop.md`](../gauntlets/2026-08-21-island-source-fidelity-workloop.md)
+before intake. Preserve its SHA-256, keep runtime island numbering separate
+from text embedded in the concept, and never overwrite a source or accepted
+`done-vNNN` proof.
 
 ## Production loop
 
@@ -118,7 +125,10 @@ add only the focus/turnaround evidence needed to remove actual ambiguity.
 
 ### 1. Reference admission
 
-- Save the chosen master under `docs/visual-references/`.
+- Dry-run then apply `scripts/island_source_workloop.py intake` so an exact
+  dropped `NNN.<ext>` becomes immutable `NNN-source.<ext>`.
+- Resolve collisions and ambiguous names instead of guessing their island.
+- Save the chosen repository copy under `docs/visual-references/`.
 - Record its role as inspiration/goal, never runtime board art.
 - Lock island role (ordinary or every-fifth arena), identity, palette,
   landmark names, ambience, avoid list and phone composition.
@@ -126,6 +136,9 @@ add only the focus/turnaround evidence needed to remove actual ambiguity.
   base/shared dependencies and set the expected deployed-byte tier.
 - Reject reference tile counts and approximate geometry; the real 36-tile ring
   remains authoritative.
+- Write the reference-lock sheet: landmark identities/placement, depth stack,
+  palette/materials, critical features, approved board adaptations, forbidden
+  drift and hidden-side limitations.
 
 ### 2. img2threejs intake
 
@@ -182,6 +195,13 @@ After each meaningful pass capture:
 - timed ambience proof (for example t0/t6 or a short clip);
 - goal/current comparison.
 
+At blockout, terrain/background, landmark, materials/life, integration and
+final review, also return to the original `NNN-source` image. Record the five
+Source Fidelity scores (`composition`, `landmarkIdentity`,
+`paletteMaterials`, `terrainBackground`, `phoneReadability`), critical
+mismatches and one decision (`pass`, `revise`, `user-accepted-drift`) with the
+workloop helper. The latest generated target never replaces this source check.
+
 Critique the largest observed mismatch first. Change one bounded problem group,
 recapture and log the delta. Do not claim 10/10 from code inspection or a
 single flattering camera.
@@ -217,6 +237,11 @@ An island is complete only when:
   bytes are recorded without avoidable duplicated binaries;
 - the normal app—not a lab—is installed for user testing;
 - its Gauntlet records delivered work, known gaps and the next optional pass.
+- its original source hash is intact and the final source/current review has
+  overall fidelity ≥0.80, every dimension ≥0.75 and no critical mismatch, or
+  Eivind explicitly recorded a `user-accepted-drift` exception;
+- its accepted overview exists as immutable `NNN-done-vNNN.<ext>` evidence and
+  `_workflow/NNN/status.json` records the version.
 
 ## New-chat starter
 
@@ -228,5 +253,7 @@ Use this prompt, replacing `NNN` and the slug:
 > existing work. Run the img2threejs state gate, then continue from its exact
 > next step. Keep the real 36-tile board and gameplay authority unchanged. Use
 > the selected goal image in docs/visual-references as the visual target. Work
-> one landmark at a time, capture phone/360 evidence, enforce High mobile
+> one landmark at a time. Return to the immutable NNN-source image at every
+> major pass, record the five source-fidelity scores and block unresolved
+> identity drift. Capture phone/360 evidence, enforce High mobile
 > budgets, and never leave a profiler build installed in place of HabitGame.
