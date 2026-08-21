@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TILE_ANCHORS_36 } from '../services/islandBoardLayout';
 import { resolveIslandRun3DWorldRoute } from '../services/islandRun3DWorldRouting';
 import { evaluateIslandKit, ISLAND_KIT_SCENE, ISLAND_KIT_VERSION } from './islandCameraLockedKit';
@@ -16,7 +16,7 @@ function readInitialPreviewState() {
   const requestedLevelParam = params.get('level');
   const requestedLevel = requestedLevelParam === null ? Number.NaN : Number(requestedLevelParam);
   const islandParam = Number(params.get('island'));
-  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(islandParam) ? islandParam : 5;
+  const islandNumber = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].includes(islandParam) ? islandParam : 5;
   const worldSourceNumber = resolveIslandRun3DWorldRoute(islandNumber)?.worldSourceNumber ?? 5;
   return {
     mode: requestedMode === 'clay' || requestedMode === 'proof' || requestedMode === '3d'
@@ -136,6 +136,16 @@ export default function IslandTemplateKitPage() {
   const [overlays, setOverlays] = useState(initialState.overlays);
   const checks = useMemo(() => evaluateIslandKit(), []);
   const passCount = checks.filter((check) => check.passed).length;
+  const evidenceCapture = useMemo(
+    () => new URLSearchParams(window.location.search).get('island3dEvidence') === '1',
+    [],
+  );
+
+  useEffect(() => {
+    if (!evidenceCapture) return undefined;
+    document.body.classList.add('island-3d-evidence-capture');
+    return () => document.body.classList.remove('island-3d-evidence-capture');
+  }, [evidenceCapture]);
 
   return (
     <main className="island-kit-page">
@@ -177,7 +187,10 @@ export default function IslandTemplateKitPage() {
           </dl>
         </aside>
 
-        <div className="island-kit-phone" data-testid="island-kit-phone">
+        <div
+          className={`island-kit-phone${evidenceCapture ? ' island-kit-phone--evidence-frame' : ''}`}
+          data-testid="island-kit-phone"
+        >
           <div className="island-kit-phone__notch" />
           {mode === '3d' ? (
             <Island5ThreePilot

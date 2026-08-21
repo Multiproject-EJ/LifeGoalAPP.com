@@ -84,6 +84,10 @@ import {
   ISLAND_9_RUNTIME_PART_IDS,
   registerIsland9RuntimePart,
 } from '../../dev/Island9HeartshaftThreeWorld';
+import {
+  ISLAND_12_PALM_PLACEMENTS,
+  isIsland12RouteCorridorClear,
+} from '../../dev/Island12SunkenSandsThreeWorld';
 import { resolveIslandRunTileRewardObjectKind } from '../../dev/IslandRunTileRewardThreeObjects';
 import {
   ISLAND_RUN_AUTO_ROLL_HOLD_MS,
@@ -491,6 +495,76 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'micro', isActiveDoorCluster: false }), 'universal_reward_token', 'ordinary reward progress may use the Universal Reward Token visual language');
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: true }), 'active_landmark_door', 'only the active door cluster gets a door sigil');
       assertEqual(resolveIslandRunTileRewardObjectKind({ tileType: 'landmark_door', isActiveDoorCluster: false }), null, 'inactive doors must not imply a collectible reward');
+    },
+  },
+  {
+    name: 'batches the Island 012 canonical route and tile rewards without adding gameplay authority',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const pilotSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island5ThreePilot.tsx', 'utf8');
+      const rewardSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/IslandRunTileRewardThreeObjects.ts', 'utf8');
+      assert(pilotSource.includes('const useInstancedRouteTiles = isAbyssalPearlKingdom || isSunkenSands;'), 'Island 012 should use the proven per-material instanced route path');
+      assert(pilotSource.includes('ISLAND_12_TILE_SURFACE_BATCH_'), 'Island 012 needs stable named route batches for renderer evidence');
+      assert(pilotSource.includes('compactCollectibles: isAbyssalPearlKingdom || isSunkenSands'), 'Island 012 rewards should collapse their static submeshes while retaining per-tile transforms');
+      assert(pilotSource.includes('tileEntry.mesh.setMatrixAt(tileEntry.instanceId, tileMatrixScratch);'), 'batched route tiles must retain the canonical landing-impact animation path');
+      assert(pilotSource.includes('canvas.dataset.island12ScenePerformanceInventory'), 'the full Island 012 scene must expose read-only renderer-family evidence');
+      assert(rewardSource.includes('root.userData.sculptRuntime = {'), 'reward objects must keep explicit presentation-only runtime metadata');
+      assert(rewardSource.includes("authority: 'canonical-island-tile-map'"), 'reward batching must continue to project the canonical tile map rather than own reward logic');
+    },
+  },
+  {
+    name: 'keeps Island 012 palm families varied and civic ground life route-clear',
+    run: async () => {
+      ISLAND_12_PALM_PLACEMENTS.forEach(([x, z], index) => {
+        assert(isIsland12RouteCorridorClear(x, z, 0.18), `palm trunk ${index} must stay outside the protected route corridor`);
+      });
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island12SunkenSandsThreeWorld.ts', 'utf8');
+      assert(worldSource.includes('const highFrondCounts = [12, 3, 5, 3] as const;'), 'lush, wind-thinned, sun-yellowed and young palms need distinct crown densities');
+      assert(worldSource.includes("frondInstances.name = 'ISLAND_12_MIXED_DENSITY_PALM_FROND_ARRAY'"), 'mixed crowns must remain one batched palm-frond family');
+      assert(worldSource.includes("civicCobbles.name = 'ISLAND_12_CIVIC_COBBLE_POCKET_ARRAY'"), 'outer civic districts need named cobblestone ground pockets');
+      assert(worldSource.includes("groundRosettes.name = 'ISLAND_12_OASIS_GROUND_ROSETTE_ARRAY'"), 'oasis ground cover needs a named batched rosette family');
+      assert(worldSource.includes("groundBlooms.name = 'ISLAND_12_OASIS_GROUND_BLOOM_ARRAY'"), 'small colour accents should remain a named batched bloom family');
+      assert(worldSource.includes('const levelPalmCount = level <= 1 ? 2 : level === 2 ? 14 : positions.length;'), 'L0 and L1 need two old palms, L2 a partial grove, and L3 the full palm population');
+      assert(worldSource.includes('const grassLevelScale = level === 0 ? 0 : level === 1 ? 0.4 : level === 2 ? 0.72 : 1;'), 'small ground plants must visibly begin at L1 and mature through L3');
+      assert(worldSource.includes("mesh.name = `ISLAND_12_TRAVELING_OCEAN_WAVE_LAYER_${layerIndex + 1}`"), 'ocean wave fronts must stay named, batched, and addressable for animation');
+      assert(worldSource.includes('oceanWaves.animate(elapsed);'), 'the ocean wave field must advance in the ambience loop rather than remain static');
+      assert(worldSource.includes("shorelineBreakers.name = 'ISLAND_12_FOREGROUND_ANIMATED_SHORE_BREAKER_ARRAY'"), 'foreground quay foam must use broken moving ribbons rather than static white bars');
+      assert(worldSource.includes('waterDetails.animateShoreBreakers(elapsed);'), 'localized shoreline breakers must advance inside the shared ambience clock');
+      assert(worldSource.includes("tidelineSaltBands.name = 'ISLAND_12_IRREGULAR_TIDELINE_SALT_BAND_ARRAY'"), 'quay walls need a visible wet-to-dry mineral transition at the ocean line');
+      assert(worldSource.includes("erodedSandLips.name = 'ISLAND_12_FOREGROUND_ERODED_SAND_LIP_ARRAY'"), 'foreground sand must break into irregular shoreline lips instead of ending as a clean polygon');
+      assert(worldSource.includes("tidelineDebris.name = 'ISLAND_12_FOREGROUND_TIDELINE_DEBRIS_ARRAY'"), 'the sand-water contact needs a restrained named family of tide-worn debris');
+      assert(worldSource.includes("token.name = 'ISLAND_12_CITADEL_PRESENTATION_ONLY_PLACEHOLDER_TOKEN'"), 'the L3 Citadel needs an explicit placeholder reward token');
+      assert(worldSource.includes('token.userData.presentationOnly = true;'), 'the placeholder reward must remain presentation-only and never grant gameplay rewards');
+      assert(worldSource.includes("pivot.name = `ISLAND_12_CITADEL_REWARD_GLASS_HINGE_${index + 1}`"), 'the L3 glass chamber must expose six separately addressable hinges');
+      assert(worldSource.includes('Math.cos(angle) * domeRadius'), 'each chamber hinge must sit on the lower dome rim rather than at the shell centre');
+      assert(worldSource.includes('panel.position.x = -domeRadius;'), 'each glass panel must be offset back from its rim-mounted pivot');
+      assert(worldSource.includes("hingeAxle.name = `ISLAND_12_CITADEL_REWARD_GLASS_HINGE_AXLE_${index + 1}`"), 'the glass opening needs visible mechanical hinge hardware');
+      assert(worldSource.includes('const staggeredReveal = THREE.MathUtils.smoothstep('), 'the hinged panels should peel back with a restrained sequential reveal');
+      assert(worldSource.includes("forecourtLife.name = 'ISLAND_12_CITADEL_CIVIC_FORECOURT_LIFE'"), 'the Citadel needs a readable civic terrace outside its portal axis');
+      assert(worldSource.includes("petitionTablets.name = 'ISLAND_12_CITADEL_FORECOURT_PETITION_TABLET_ARRAY'"), 'restored Citadel seating needs small signs of civic use');
+      assert(worldSource.includes("registerIsland12RuntimePart('citadel-forecourt-life'"), 'Citadel forecourt life must remain an addressable presentation-only family');
+    },
+  },
+  {
+    name: 'builds the Scarab Egg Vault as a route-clear working hatchery instead of an empty rib cage',
+    run: async () => {
+      // @ts-ignore island-run test tsconfig omits node type libs
+      const fsMod = await import('fs');
+      const worldSource = fsMod.readFileSync('src/features/gamification/level-worlds/dev/Island12SunkenSandsThreeWorld.ts', 'utf8');
+      assert(worldSource.includes("retainingRing.name = 'ISLAND_12_VAULT_EXCAVATED_RETAINING_RING'"), 'the Vault needs a readable excavated chamber boundary');
+      assert(worldSource.includes("entranceSteps.name = 'ISLAND_12_VAULT_DESCENDING_ENTRANCE_STAIR_ARRAY'"), 'the hatchery approach must remain visible at phone scale');
+      assert(worldSource.includes("coolingChannels.name = 'ISLAND_12_VAULT_COOLING_CHANNEL_ARRAY'"), 'the egg nest needs a connected incubation-water function');
+      assert(worldSource.includes("ribButtresses.name = 'ISLAND_12_VAULT_RIB_SOCKET_BUTTRESS_ARRAY'"), 'every segmented rib family needs visible structural sockets');
+      assert(worldSource.includes("caretakingProps.name = 'ISLAND_12_VAULT_CARETAKING_TERRACES'"), 'the Vault needs compact tools and jars that make its hatchery use legible');
+      assert(worldSource.includes("registerIsland12RuntimePart('vault-caretaking-props'"), 'new hatchery life must stay under the existing action-ready landmark hierarchy');
+      assert(worldSource.includes("'ISLAND_12_VAULT_GYPSUM_GARDEN_GROUND_LIFE'"), 'the Vault perimeter needs level-scaled low gypsum-garden life');
+      assert(worldSource.includes("registerIsland12RuntimePart('vault-ground-life'"), 'Vault ground life must remain an addressable presentation-only landmark family');
+      assert(worldSource.includes("'ISLAND_12_PAVILION_DYE_GARDEN_GROUND_LIFE'"), 'the Pavilion perimeter needs level-scaled dye-garden ground life');
+      assert(worldSource.includes("registerIsland12RuntimePart('pavilion-ground-life'"), 'Pavilion ground life must remain an addressable presentation-only landmark family');
+      assert(worldSource.includes("compactIsland12StaticPresentationGeometry(caretakingProps"), 'new static hatchery props must remain material-compacted');
     },
   },
   {
@@ -1007,7 +1081,7 @@ export const island5ThreePilotContractTests: TestCase[] = [
       assert(pageSource.includes("requestedMode === '3d'"), 'camera kit route should accept mode=3d');
       assert(pageSource.includes('requestedLevelParam === null ? Number.NaN'), 'clean profiler URL must default to L3 instead of coercing a missing level to L0');
       assert(pageSource.includes('worldSourceNumber={initialState.worldSourceNumber}'), 'the internal workbench should keep runtime identity separate from its authored visual source');
-      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(islandParam)'), 'the workbench should expose all ten authored islands for repeatable landmark QA');
+      assert(pageSource.includes('[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12].includes(islandParam)'), 'the workbench should expose all eleven authored islands for repeatable landmark QA');
       assert(mainSource.includes("const ISLAND_TEMPLATE_KIT_PATH = '/dev/island-template-kit'"), 'workbench must retain its explicit dev route');
       assert(mainSource.includes("VITE_ISLAND_3D_PROFILE_ENABLED === 'true'"), 'native/LAN profiler bundle must require an explicit internal build flag');
       assert(mainSource.includes('import.meta.env.PROD && !ISLAND_3D_PROFILER_BUILD_ENABLED'), 'internal profiler bundle must not register the production service worker');
