@@ -144,8 +144,9 @@ export function CompassBookThreeShell({
 
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.02;
+    renderer.toneMappingExposure = 1;
     renderer.shadowMap.enabled = quality === 'high';
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality === 'high' ? 1.55 : 1));
 
     const scene = new THREE.Scene();
@@ -161,13 +162,19 @@ export function CompassBookThreeShell({
     presentationRoot.add(model.root);
     scene.add(presentationRoot);
 
-    scene.add(new THREE.HemisphereLight(0xdce1ff, 0x120a25, quality === 'high' ? 1.75 : 1.45));
-    const key = new THREE.DirectionalLight(0xffe5a4, quality === 'high' ? 5.1 : 3.8);
+    scene.add(new THREE.HemisphereLight(0xdce1ff, 0x120a25, quality === 'high' ? 1.25 : 1));
+    const key = new THREE.DirectionalLight(0xffe5a4, quality === 'high' ? 4.4 : 3.2);
     key.position.set(-6, 12, 8);
     key.castShadow = quality === 'high';
-    key.shadow.mapSize.set(768, 768);
+    key.shadow.mapSize.set(quality === 'high' ? 1024 : 512, quality === 'high' ? 1024 : 512);
+    key.shadow.bias = -0.00015;
+    key.shadow.normalBias = 0.035;
+    key.shadow.radius = quality === 'high' ? 2.5 : 1.5;
     scene.add(key);
-    const rim = new THREE.DirectionalLight(0x7755ff, quality === 'high' ? 1.3 : 0.9);
+    const fill = new THREE.DirectionalLight(0x8f86ff, quality === 'high' ? 0.7 : 0.52);
+    fill.position.set(6, 8, 7);
+    scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xffb766, quality === 'high' ? 0.8 : 0.55);
     rim.position.set(7, 5, -8);
     scene.add(rim);
     const completionGlow = new THREE.PointLight(0xffcf58, 0, 11, 2);
@@ -265,6 +272,12 @@ export function CompassBookThreeShell({
       const celebrationStrength = celebrationAge >= 0 && celebrationAge < 1800
         ? (1 - celebrationProgress) * (0.58 + Math.sin(celebrationProgress * Math.PI * 5) * 0.22)
         : 0;
+      model.setCelebrationProgress(
+        celebrationProgress,
+        celebrationStrength,
+        celebrationKindRef.current,
+        reducedMotionRef.current,
+      );
       completionGlow.intensity = reducedMotionRef.current
         ? celebrationStrength * 2.2
         : celebrationStrength * (celebrationKindRef.current === 'chapter' ? 8.5 : 5.8);

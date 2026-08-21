@@ -3,7 +3,7 @@
   "status": "active",
   "profile": "generic",
   "currentStep": "build-current-pass",
-  "currentPass": "surface-pass",
+  "currentPass": "optimization-pass",
   "checklist": [
     {
       "id": "image-analysis",
@@ -198,9 +198,10 @@
   ],
   "loops": {
     "perPass": {
-      "material-pass": 2
+      "material-pass": 2,
+      "surface-pass": 1
     },
-    "total": 2,
+    "total": 3,
     "maxPerPass": 3,
     "maxTotal": 6
   },
@@ -710,9 +711,342 @@
           "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
         }
       ]
+    },
+    {
+      "passId": "surface-pass",
+      "iteration": "refine",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "component surfaceDetail plus independent leather/gilt AO-height channels and localized Mirage/Trial bump profiles; strict spec validation, TypeScript, Compass tests, and diff check passed"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "front and two grazing orbit captures at 900x900; shading realism and surface-pass gate contracts read and applied"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "front and two grazing orbit captures at 900x900; shading realism and surface-pass gate contracts read and applied"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "Tier1 calibration passed against Chapter IV goal: IoU 0.8884, aspect 0, scale 0; component-aware 8/8 material gate passed; multi-angle ratios 0.9709 and 1.0078 non-degenerate"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "Tier1 calibration passed against Chapter IV goal: IoU 0.8884, aspect 0, scale 0; component-aware 8/8 material gate passed; multi-angle ratios 0.9709 and 1.0078 non-degenerate"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "surface-pass",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "correction loop: chart albedo restored to visible navy grain; hammered gilt/patina response strengthened; enamel orange-peel raised; corrected fixed/orbit/close grazing browser captures recorded"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "correction loop: chart albedo restored to visible navy grain; hammered gilt/patina response strengthened; enamel orange-peel raised; corrected fixed/orbit/close grazing browser captures recorded"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "correction loop: chart albedo restored to visible navy grain; hammered gilt/patina response strengthened; enamel orange-peel raised; corrected fixed/orbit/close grazing browser captures recorded"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "corrected Tier1 passed: IoU 0.9168, aspect 0, scale 0, 8/8 component material gate; corrected orbit ratios 1.0003 and 0.9806; orchestrate surface-pass gate unlocked"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "corrected Tier1 passed: IoU 0.9168, aspect 0, scale 0, 8/8 component material gate; corrected orbit ratios 1.0003 and 0.9806; orchestrate surface-pass gate unlocked"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "corrected Tier1 passed: IoU 0.9168, aspect 0, scale 0, 8/8 component material gate; corrected orbit ratios 1.0003 and 0.9806; orchestrate surface-pass gate unlocked"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "agent vision comparison accepted at 0.79 >= 0.70; critical page-contact-depth 0.84, material hierarchy 0.82, surface microrelief 0.80; review action=continue"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "surface-pass review action=continue synced; sculptPipeline now currentPass=lighting-pass and completedPasses includes surface-pass"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "lighting-pass",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "production and lab lighting calibrated: ACES exposure 1, warm key, cool fill, warm rim, restrained hemisphere, PCF soft shadow contract; matched/neutral/grazing/orbit/production-shell captures recorded; TypeScript, Compass tests, strict spec validation and diff check passed"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "production and lab lighting calibrated: ACES exposure 1, warm key, cool fill, warm rim, restrained hemisphere, PCF soft shadow contract; matched/neutral/grazing/orbit/production-shell captures recorded; TypeScript, Compass tests, strict spec validation and diff check passed"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "production and lab lighting calibrated: ACES exposure 1, warm key, cool fill, warm rim, restrained hemisphere, PCF soft shadow contract; matched/neutral/grazing/orbit/production-shell captures recorded; TypeScript, Compass tests, strict spec validation and diff check passed"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "lighting Tier1 passed: IoU 0.9074, aspect 0, scale 0 and 8/8 material gate; final orbit ratios 1.0228 and 0.9905; lighting-pass orchestration gate unlocked"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "lighting Tier1 passed: IoU 0.9074, aspect 0, scale 0 and 8/8 material gate; final orbit ratios 1.0228 and 0.9905; lighting-pass orchestration gate unlocked"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "lighting Tier1 passed: IoU 0.9074, aspect 0, scale 0 and 8/8 material gate; final orbit ratios 1.0228 and 0.9905; lighting-pass orchestration gate unlocked"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "agent vision lighting comparison accepted at 0.80 >= 0.70; page-contact-depth 0.85, material hierarchy 0.83, lighting separation 0.82; review action=continue"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "lighting review action=continue synced; sculptPipeline currentPass=interaction-pass and completedPasses includes lighting-pass"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
+    },
+    {
+      "passId": "interaction-pass",
+      "checklist": [
+        {
+          "id": "build-current-pass",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "29 action profiles with stable pivots, sockets, trigger colliders and non-breakable destruction metadata; production setCelebrationProgress binding; idle/chapter/reduced-motion/orbit screenshots; live manifest 29 parts, 0 unnamed meshes, 7 sockets; TypeScript, Compass tests, strict spec and diff check passed"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/generate_threejs_factory.py {spec} --out src/createObjectModel.ts --pass-id {pass_id}"
+        },
+        {
+          "id": "render-capture",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "29 action profiles with stable pivots, sockets, trigger colliders and non-breakable destruction metadata; production setCelebrationProgress binding; idle/chapter/reduced-motion/orbit screenshots; live manifest 29 parts, 0 unnamed meshes, 7 sockets; TypeScript, Compass tests, strict spec and diff check passed"
+          ],
+          "reason": "",
+          "command": "Render {pass_id} and capture the fixed review view plus meaningful orbit views"
+        },
+        {
+          "id": "review-contract-read",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "29 action profiles with stable pivots, sockets, trigger colliders and non-breakable destruction metadata; production setCelebrationProgress binding; idle/chapter/reduced-motion/orbit screenshots; live manifest 29 parts, 0 unnamed meshes, 7 sockets; TypeScript, Compass tests, strict spec and diff check passed"
+          ],
+          "reason": "",
+          "command": "Read grimoire/review/gates_reference.md and grimoire/review/self_correction.md completely"
+        },
+        {
+          "id": "tier1-diagnostics",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "interaction Tier1 passed: IoU 0.9069, aspect 0, scale 0, 8/8 material gate; axial ratios 1.0228 and 0.9905; interaction orchestration gate unlocked"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render.py --reference {reference} --render <shot> --spec {spec} --pass-id {pass_id} --in-place"
+        },
+        {
+          "id": "multi-angle-review",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "interaction Tier1 passed: IoU 0.9069, aspect 0, scale 0, 8/8 material gate; axial ratios 1.0228 and 0.9905; interaction orchestration gate unlocked"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage4_review/diagnose_render_multi_angle.py --reference <fixed-shot> --orbit <orbit-shot> --orbit <orbit-shot>"
+        },
+        {
+          "id": "pass-gate-check",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "interaction Tier1 passed: IoU 0.9069, aspect 0, scale 0, 8/8 material gate; axial ratios 1.0228 and 0.9905; interaction orchestration gate unlocked"
+          ],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py check {spec} --pass-id {pass_id}"
+        },
+        {
+          "id": "ai-review-recorded",
+          "scope": "pass",
+          "status": "done",
+          "evidence": [
+            "interaction vision accepted at 0.80; Trial/path/Mirage 0.95, pivot integrity 0.94, reduced motion 0.96, state ownership 0.99; review action=continue"
+          ],
+          "reason": "",
+          "command": "Create the comparison sheet, inspect it with agent vision, and append exactly one review action"
+        },
+        {
+          "id": "pipeline-sync",
+          "scope": "pass",
+          "status": "pending",
+          "evidence": [],
+          "reason": "",
+          "command": "python3 forge/stage3_build/orchestrate_passes.py sync {spec} --in-place"
+        }
+      ]
     }
   ],
-  "reviewCursor": 6,
+  "reviewCursor": 10,
   "iterationAction": "new-pass",
   "stopReason": ""
 }

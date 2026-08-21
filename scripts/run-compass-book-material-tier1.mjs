@@ -13,10 +13,16 @@ function readArg(name) {
   return process.argv[index + 1];
 }
 
+function readOptionalArg(name, fallback) {
+  const index = process.argv.indexOf(name);
+  return index >= 0 && process.argv[index + 1] ? process.argv[index + 1] : fallback;
+}
+
 const skillRoot = resolve(readArg('--skill-root'));
 const referencePath = resolve(readArg('--reference'));
 const renderPath = resolve(readArg('--render'));
 const specPath = resolve(readArg('--spec'));
+const passId = readOptionalArg('--pass-id', 'material-pass');
 const python = process.env.PYTHON || 'python3';
 
 const spec = JSON.parse(readFileSync(specPath, 'utf8'));
@@ -91,12 +97,12 @@ const result = {
     .update(JSON.stringify(materialGate ?? null))
     .digest('hex')
     .slice(0, 16),
-  passId: 'material-pass',
+  passId,
   diagnosticBridge: {
     geometryAuthority: 'img2threejs diagnose_render.py',
     materialAuthority: 'img2threejs material_gate.py with per-region visible-footprint comparisons',
     reason:
-      'The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families.',
+      'The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families; the component gate remains authoritative for material, surface, and lighting passes.',
   },
 };
 

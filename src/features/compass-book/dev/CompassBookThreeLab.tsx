@@ -71,6 +71,28 @@ function readMaterialProof() {
   return new URLSearchParams(window.location.search).get('materialProof') === '1';
 }
 
+function readSurfaceProof() {
+  return new URLSearchParams(window.location.search).get('surfaceProof') === '1';
+}
+
+function readLightingProof() {
+  return new URLSearchParams(window.location.search).get('lightingProof') === 'neutral'
+    ? 'neutral'
+    : 'matched';
+}
+
+function readCompletionProof() {
+  const requested = new URLSearchParams(window.location.search).get('completionProof');
+  return requested === 'fragment' || requested === 'chapter' ? requested : null;
+}
+
+function readCompletionFrame() {
+  const raw = new URLSearchParams(window.location.search).get('completionFrame');
+  if (raw === null) return null;
+  const requested = Number(raw);
+  return Number.isFinite(requested) ? THREE.MathUtils.clamp(requested, 0, 1) : null;
+}
+
 function readLegacyColorProof() {
   return new URLSearchParams(window.location.search).get('legacyColorProof') === '1';
 }
@@ -274,6 +296,10 @@ export default function CompassBookThreeLab() {
   const activePage = useMemo(readInitialPage, []);
   const mapStrippedReview = useMemo(readMapStrippedReview, []);
   const materialProof = useMemo(readMaterialProof, []);
+  const surfaceProof = useMemo(readSurfaceProof, []);
+  const lightingProof = useMemo(readLightingProof, []);
+  const completionProof = useMemo(readCompletionProof, []);
+  const completionFrame = useMemo(readCompletionFrame, []);
   const legacyColorProof = useMemo(readLegacyColorProof, []);
   const [pose, setPose] = useState<CompassBookThreePose>(readInitialPose);
   const [quality, setQuality] = useState<CompassBookThreeQuality>(readInitialQuality);
@@ -316,9 +342,9 @@ export default function CompassBookThreeLab() {
 
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.08;
+    renderer.toneMappingExposure = 1;
     renderer.shadowMap.enabled = quality === 'high';
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality === 'high' ? 1.75 : 1.08));
 
     const scene = new THREE.Scene();
@@ -369,18 +395,52 @@ export default function CompassBookThreeLab() {
     const stars = createStarField(quality);
     scene.add(stars);
 
-    const hemisphere = new THREE.HemisphereLight(0xd9ddff, 0x120b28, quality === 'high' ? 1.9 : 1.55);
+    const neutralLighting = lightingProof === 'neutral';
+    const pageGlow = new THREE.PointLight(
+      0x8745e3,
+      !neutralLighting && materialProofRelief && activePage === 'ikigai_map'
+        ? quality === 'high' ? 1.8 : 1.1
+        : 0,
+      8,
+      2,
+    );
+    pageGlow.position.set(
+      materialProofCenter.x,
+      materialProofCenter.y + 2.2,
+      materialProofCenter.z,
+    );
+    scene.add(pageGlow);
+    const hemisphere = new THREE.HemisphereLight(
+      neutralLighting ? 0xffffff : 0xd9ddff,
+      neutralLighting ? 0x363636 : 0x120b28,
+      neutralLighting ? 1.1 : quality === 'high' ? 1.25 : 1,
+    );
     scene.add(hemisphere);
-    const key = new THREE.DirectionalLight(0xffe7aa, quality === 'high' ? 5.8 : 4.2);
-    key.position.set(-6, 12, 8);
+    const key = new THREE.DirectionalLight(
+      neutralLighting ? 0xffffff : 0xffe7aa,
+      neutralLighting ? 3.6 : quality === 'high' ? 4.4 : 3.2,
+    );
+    key.position.set(surfaceProof ? -10 : -6, surfaceProof ? 7 : 12, surfaceProof ? 6 : 8);
     key.castShadow = quality === 'high';
     key.shadow.mapSize.set(quality === 'high' ? 1024 : 512, quality === 'high' ? 1024 : 512);
+    key.shadow.bias = -0.00015;
+    key.shadow.normalBias = 0.035;
+    key.shadow.radius = quality === 'high' ? 2.5 : 1.5;
     key.shadow.camera.left = -5;
     key.shadow.camera.right = 5;
     key.shadow.camera.top = 6;
     key.shadow.camera.bottom = -6;
     scene.add(key);
-    const rim = new THREE.DirectionalLight(0x7957ff, quality === 'high' ? 1.45 : 1.05);
+    const fill = new THREE.DirectionalLight(
+      neutralLighting ? 0xffffff : 0x8f86ff,
+      neutralLighting ? 0.45 : quality === 'high' ? 0.7 : 0.52,
+    );
+    fill.position.set(6, 8, 7);
+    scene.add(fill);
+    const rim = new THREE.DirectionalLight(
+      neutralLighting ? 0xffffff : 0xffb766,
+      neutralLighting ? 0.18 : quality === 'high' ? 0.8 : 0.55,
+    );
     rim.position.set(7, 5, -8);
     scene.add(rim);
 
@@ -428,13 +488,25 @@ export default function CompassBookThreeLab() {
         : easeToward(openProgress, target, deltaSeconds);
       model.setOpenProgress(openProgress);
       model.animate(now / 1000, reducedMotionRef.current);
+      if (completionProof) {
+        const proofProgress = completionFrame ?? (now % 2200) / 1800;
+        const proofActive = proofProgress <= 1;
+        model.setCelebrationProgress(
+          THREE.MathUtils.clamp(proofProgress, 0, 1),
+          proofActive ? completionFrame === null ? 0.78 : 0.86 : 0,
+          completionProof,
+          reducedMotionRef.current,
+        );
+      } else {
+        model.setCelebrationProgress(1, 0, 'chapter', reducedMotionRef.current);
+      }
 
       const compact = width / height < 0.62;
       if (materialProofRelief) {
-        const proofDistance = Math.max(materialProofSize.x, materialProofSize.z) * 1.75;
+        const proofDistance = Math.max(materialProofSize.x, materialProofSize.z) * (surfaceProof ? 0.92 : 1.75);
         camera.up.set(0, 0, -1);
         camera.position.set(
-          materialProofCenter.x + orbit * 2.2,
+          materialProofCenter.x + orbit * (surfaceProof ? 1.2 : 2.2),
           materialProofCenter.y + proofDistance,
           materialProofCenter.z + proofDistance * 0.12,
         );
@@ -487,7 +559,7 @@ export default function CompassBookThreeLab() {
       delete (window as CompassBookReviewWindow).__compassBookSculptRuntime;
       delete canvas.dataset.partManifest;
     };
-  }, [activePage, legacyColorProof, mapStrippedReview, materialProof, quality]);
+  }, [activePage, completionFrame, completionProof, legacyColorProof, lightingProof, mapStrippedReview, materialProof, quality, surfaceProof]);
 
   const modelMetrics = modelRef.current?.metrics;
 

@@ -824,25 +824,21 @@
       "interaction-pass",
       "optimization-pass"
     ],
-    "currentPass": "surface-pass",
+    "currentPass": "optimization-pass",
     "completedPasses": [
       "blockout",
       "structural-pass",
       "form-refinement",
-      "material-pass"
+      "material-pass",
+      "surface-pass",
+      "lighting-pass",
+      "interaction-pass"
     ],
-    "lastCompletedPass": "material-pass",
+    "lastCompletedPass": "interaction-pass",
     "blockedReason": "",
     "nextRequiredEvidence": [
-      "Every required material feature group has local overrides or surfaceDetail tied to evidenceRefs.",
-      "A grazing-angle close-up proves that normal/height detail breaks highlights naturally and does not read as smooth plastic.",
-      "AI vision comparison score meets selfCorrectLoop.visualAcceptance.threshold.",
-      "component surfaceDetail for tactile normal/bump/displacement and locality",
-      "browser render screenshot from your agent's browser/screenshot tool",
-      "side-by-side reference/render comparison sheet for AI vision review",
-      "AI vision score at or above the visual acceptance threshold",
-      "all critical semantic feature scores from the shared image pair at or above their thresholds",
-      "self-correction review appended with action=continue before the next pass"
+      "Triangle count, draw calls, instancing, LOD strategy, and FPS target are documented or verified.",
+      "Repeated detail is instanced or simplified where possible without breaking silhouette/material believability."
     ]
   },
   "lookDevTargets": {
@@ -913,7 +909,7 @@
   },
   "actionReadiness": {
     "contract": "Every macro/meso component should be generated as a stable named Object3D pivot node with a mesh child, action metadata, optional sockets, collider proxy, and destruction metadata.",
-    "defaultRigType": "action-ready-static-rig",
+    "defaultRigType": "presentation-ceremony-rig",
     "rootMotionNode": "root",
     "requiredComponentFields": [
       "id",
@@ -946,6 +942,27 @@
       "defaultBreakable": false,
       "fractureGroupNaming": "Use stable semantic names such as body-shell, left-hinge, glass-panel, branch-segment.",
       "debrisStrategy": "Prefer detachable component groups and a small number of procedural fragments over random mesh explosion."
+    },
+    "implementedActions": {
+      "fragmentCompletion": [
+        "pulse Trial crystal",
+        "raise candidate-path emissive response"
+      ],
+      "chapterCompletion": [
+        "cascade five force-node pivots in canonical order",
+        "pulse and rotate the Trial assembly",
+        "fill all three candidate paths",
+        "recede Mirage without deleting or reclassifying it"
+      ],
+      "reducedMotion": [
+        "keep pivots at authored transforms",
+        "use restrained material-state emphasis only"
+      ]
+    },
+    "runtimeBinding": {
+      "method": "CompassBookThreeModel.setCelebrationProgress",
+      "owner": "CompassBookThreeShell presentation event",
+      "stateAuthority": "canonical DOM/store; the model receives transient progress only"
     }
   },
   "assumptions": [],
@@ -1142,7 +1159,94 @@
       "localFeatures": [],
       "evidenceRefs": [
         "full-object"
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "presentation-root",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [
+          {
+            "id": "page-surface",
+            "localPosition": [
+              0,
+              0,
+              0
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0.25,
+            0
+          ],
+          "scale": [
+            3.82,
+            0.72,
+            5.66
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "base"
+        }
+      }
     },
     {
       "id": "contact-frame",
@@ -1192,7 +1296,80 @@
       ],
       "evidenceRefs": [
         "full-object"
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
+      }
     },
     {
       "id": "force-graph",
@@ -1235,7 +1412,159 @@
       "localFeatures": [],
       "evidenceRefs": [
         "full-object"
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "chapter-completion-constellation",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [
+          {
+            "id": "curiosity",
+            "localPosition": [
+              0,
+              0.28,
+              -1.72
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": "capability",
+            "localPosition": [
+              1.34,
+              0.28,
+              -0.48
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": "contribution",
+            "localPosition": [
+              0.88,
+              0.28,
+              1.28
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": "viability",
+            "localPosition": [
+              -0.88,
+              0.28,
+              1.28
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": "willingness",
+            "localPosition": [
+              -1.34,
+              0.28,
+              -0.48
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": "trial",
+            "localPosition": [
+              0,
+              0.34,
+              0.06
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0.26,
+            0
+          ],
+          "scale": [
+            3.32,
+            0.48,
+            4
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
+      }
     },
     {
       "id": "trial-system",
@@ -1279,7 +1608,94 @@
       "localFeatures": [],
       "evidenceRefs": [
         "full-object"
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "completion-trial-pivot",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [
+          {
+            "id": "hub-centre",
+            "localPosition": [
+              0,
+              0.46,
+              0
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "collider": {
+          "type": "cylinder",
+          "offset": [
+            0,
+            0.34,
+            0.06
+          ],
+          "scale": [
+            0.98,
+            0.72,
+            0.98
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "violet"
+        }
+      }
     },
     {
       "id": "chart-field",
@@ -1293,6 +1709,16 @@
       "topologyRationale": "Shallow dark panel carries subordinate chart relief.",
       "parent": "root",
       "material": "base",
+      "surfaceDetail": {
+        "macroRoughness": 0.62,
+        "microRoughness": 0.78,
+        "bumpAmplitude": 0.028,
+        "normalPattern": "fine crossed leather grain with restrained low-frequency waviness",
+        "displacementPattern": "shallow constellation grooves and star-chart emboss only",
+        "occlusionPattern": "darkened groove beds, rail contacts, and chart-field perimeter",
+        "edgeWearPattern": "subtle burnishing where the gilt frame meets the navy field",
+        "notes": "Keep the chart field matte and tactile; grazing light must reveal grain without competing with the five force nodes."
+      },
       "attachment": {
         "parentId": "root",
         "parentSocket": "page-surface",
@@ -1348,7 +1774,80 @@
             "coverage": 0.0081
           }
         }
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "chart-field",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "base"
+        }
+      }
     },
     {
       "id": "rail-system",
@@ -1362,6 +1861,16 @@
       "topologyRationale": "Ten solid connecting rails establish the exact five-force topology.",
       "parent": "force-graph",
       "material": "brass",
+      "surfaceDetail": {
+        "macroRoughness": 0.32,
+        "microRoughness": 0.44,
+        "bumpAmplitude": 0.012,
+        "normalPattern": "fine hammered gilt with long polished rail highlights",
+        "displacementPattern": "none beyond modeled rail and socket-collar relief",
+        "occlusionPattern": "warm patina at rail crossings, collars, and recessed seams",
+        "edgeWearPattern": "brighter polished crowns with darker aged flanks",
+        "notes": "Metal response must remain anisotropic-looking in motion and never read as flat yellow plastic."
+      },
       "attachment": {
         "parentId": "force-graph",
         "parentSocket": "graph-surface",
@@ -1417,7 +1926,80 @@
             "coverage": 0.0089
           }
         }
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
+      }
     },
     {
       "id": "curiosity-node",
@@ -1431,6 +2013,16 @@
       "topologyRationale": "Separate top medallion carries the violet comet identity.",
       "parent": "force-graph",
       "material": "violet",
+      "surfaceDetail": {
+        "macroRoughness": 0.21,
+        "microRoughness": 0.36,
+        "bumpAmplitude": 0.009,
+        "normalPattern": "subtle glazed-enamel orange peel",
+        "displacementPattern": "raised comet insert and beveled medallion crown",
+        "occlusionPattern": "violet cavity shadow beneath bezel and symbol insert",
+        "edgeWearPattern": "thin polished rim with minute softened glaze wear",
+        "notes": "Curiosity remains jewel-like but sufficiently rough to hold readable violet color."
+      },
       "attachment": {
         "parentId": "force-graph",
         "parentSocket": "top-node",
@@ -1486,7 +2078,94 @@
             "coverage": 0.0074
           }
         }
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "completion-cascade-node-1",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "insert-centre",
+            "localPosition": [
+              0,
+              0.4,
+              0
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "collider": {
+          "type": "cylinder",
+          "offset": [
+            0,
+            0.3,
+            0
+          ],
+          "scale": [
+            0.72,
+            0.28,
+            0.72
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "violet"
+        }
+      }
     },
     {
       "id": "capability-node",
@@ -1500,6 +2179,16 @@
       "topologyRationale": "Separate teal medallion carries an eight-point star/tool insert.",
       "parent": "force-graph",
       "material": "teal",
+      "surfaceDetail": {
+        "macroRoughness": 0.24,
+        "microRoughness": 0.39,
+        "bumpAmplitude": 0.009,
+        "normalPattern": "subtle glazed-enamel orange peel",
+        "displacementPattern": "raised star insert and beveled medallion crown",
+        "occlusionPattern": "cool teal cavity shadow beneath bezel and symbol insert",
+        "edgeWearPattern": "thin polished rim with restrained glaze wear",
+        "notes": "Capability should read as cool enamel, not translucent plastic."
+      },
       "attachment": {
         "parentId": "force-graph",
         "parentSocket": "upper-right-node",
@@ -1555,7 +2244,94 @@
             "coverage": 0.008
           }
         }
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "completion-cascade-node-2",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "insert-centre",
+            "localPosition": [
+              0,
+              0.4,
+              0
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "collider": {
+          "type": "cylinder",
+          "offset": [
+            0,
+            0.3,
+            0
+          ],
+          "scale": [
+            0.72,
+            0.28,
+            0.72
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "teal"
+        }
+      }
     },
     {
       "id": "contribution-node",
@@ -1569,6 +2345,16 @@
       "topologyRationale": "Separate rose medallion carries beacon and paired relief forms.",
       "parent": "force-graph",
       "material": "rose",
+      "surfaceDetail": {
+        "macroRoughness": 0.29,
+        "microRoughness": 0.42,
+        "bumpAmplitude": 0.011,
+        "normalPattern": "fine rose-copper enamel stipple",
+        "displacementPattern": "raised heart-hand insert and beveled crown",
+        "occlusionPattern": "warm copper shadow at bezel and insert recesses",
+        "edgeWearPattern": "polished rose-metal rim with faint darker oxidation",
+        "notes": "Contribution balances warm metallic flecks with an enamel body."
+      },
       "attachment": {
         "parentId": "force-graph",
         "parentSocket": "lower-right-node",
@@ -1624,7 +2410,94 @@
             "coverage": 0.0089
           }
         }
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "completion-cascade-node-3",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "insert-centre",
+            "localPosition": [
+              0,
+              0.4,
+              0
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "collider": {
+          "type": "cylinder",
+          "offset": [
+            0,
+            0.3,
+            0
+          ],
+          "scale": [
+            0.72,
+            0.28,
+            0.72
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "rose"
+        }
+      }
     },
     {
       "id": "viability-node",
@@ -1638,6 +2511,16 @@
       "topologyRationale": "Separate amber medallion carries bridge and wheel relief.",
       "parent": "force-graph",
       "material": "amber",
+      "surfaceDetail": {
+        "macroRoughness": 0.27,
+        "microRoughness": 0.4,
+        "bumpAmplitude": 0.01,
+        "normalPattern": "fine amber-brass enamel stipple",
+        "displacementPattern": "raised sprout insert and beveled crown",
+        "occlusionPattern": "burnished amber shadow at bezel and insert recesses",
+        "edgeWearPattern": "bright brass rim with localized aged-gold patina",
+        "notes": "Viability must retain amber color under highlight rather than bleaching to white."
+      },
       "attachment": {
         "parentId": "force-graph",
         "parentSocket": "lower-left-node",
@@ -1693,7 +2576,94 @@
             "coverage": 0.0084
           }
         }
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "completion-cascade-node-4",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "insert-centre",
+            "localPosition": [
+              0,
+              0.4,
+              0
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "collider": {
+          "type": "cylinder",
+          "offset": [
+            0,
+            0.3,
+            0
+          ],
+          "scale": [
+            0.72,
+            0.28,
+            0.72
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "amber"
+        }
+      }
     },
     {
       "id": "willingness-node",
@@ -1707,6 +2677,16 @@
       "topologyRationale": "Separate ember medallion carries nested flame facets.",
       "parent": "force-graph",
       "material": "ember",
+      "surfaceDetail": {
+        "macroRoughness": 0.25,
+        "microRoughness": 0.39,
+        "bumpAmplitude": 0.01,
+        "normalPattern": "subtle ember enamel orange peel",
+        "displacementPattern": "raised flame insert and beveled crown",
+        "occlusionPattern": "deep red-orange cavity shadow beneath bezel and insert",
+        "edgeWearPattern": "warm polished rim with restrained edge darkening",
+        "notes": "Willingness stays saturated and tactile without a toy-plastic gloss."
+      },
       "attachment": {
         "parentId": "force-graph",
         "parentSocket": "upper-left-node",
@@ -1762,7 +2742,94 @@
             "coverage": 0.0086
           }
         }
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "completion-cascade-node-5",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [
+          {
+            "id": "insert-centre",
+            "localPosition": [
+              0,
+              0.4,
+              0
+            ],
+            "localRotation": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "collider": {
+          "type": "cylinder",
+          "offset": [
+            0,
+            0.3,
+            0
+          ],
+          "scale": [
+            0.72,
+            0.28,
+            0.72
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "ember"
+        }
+      }
     },
     {
       "id": "mirage-node",
@@ -1776,6 +2843,16 @@
       "topologyRationale": "A dark satellite outside the valid graph remains intentionally separate.",
       "parent": "root",
       "material": "mirage",
+      "surfaceDetail": {
+        "macroRoughness": 0.58,
+        "microRoughness": 0.68,
+        "bumpAmplitude": 0.017,
+        "normalPattern": "muted matte pitting and worn enamel bloom",
+        "displacementPattern": "shallow fractured mirage emblem",
+        "occlusionPattern": "dusty violet-gray cavities and tether contact shadow",
+        "edgeWearPattern": "soft rubbed edge with no bright jewel highlight",
+        "notes": "Mirage is deliberately quieter, rougher, and less saturated than the five true forces."
+      },
       "attachment": {
         "parentId": "root",
         "parentSocket": "mirage-surface",
@@ -1831,7 +2908,80 @@
             "coverage": 0.0069
           }
         }
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "chapter-completion-recession",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "cylinder",
+          "offset": [
+            0,
+            0.25,
+            0
+          ],
+          "scale": [
+            0.64,
+            0.42,
+            0.64
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "invalid-satellite",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "mirage"
+        }
+      }
     },
     {
       "id": "candidate-paths",
@@ -1867,6 +3017,79 @@
         "secondaryAlbedo": "rgba(42, 139, 157, 1)",
         "materialClass": "glass",
         "materialClassConfidence": 0.9
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "progressive-emissive-fill",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0.27,
+            0.55
+          ],
+          "scale": [
+            2.7,
+            0.15,
+            1.8
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "violet"
+        }
       }
     },
     {
@@ -1911,7 +3134,80 @@
           "geometryEffect": "three concentric rings and four prongs",
           "confidence": 0.99
         }
-      ]
+      ],
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "completion-ring-rotation",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
+      }
     },
     {
       "id": "trial-crystal",
@@ -1925,6 +3221,16 @@
       "topologyRationale": "Faceted luminous centre is a separate transform and material anchor.",
       "parent": "trial-system",
       "material": "violet",
+      "surfaceDetail": {
+        "macroRoughness": 0.08,
+        "microRoughness": 0.2,
+        "bumpAmplitude": 0.004,
+        "normalPattern": "facet-local micro-scratches aligned to crystal planes",
+        "displacementPattern": "modeled faceted crystal silhouette only",
+        "occlusionPattern": "violet depth at the crystal socket, never painted into convex faces",
+        "edgeWearPattern": "razor-thin bright facet edges with restrained bloom",
+        "notes": "Crystal contrast comes from facets and transmission cues; avoid concave/convex color inversion."
+      },
       "attachment": {
         "parentId": "trial-system",
         "parentSocket": "hub-centre",
@@ -1947,6 +3253,79 @@
         "secondaryAlbedo": "rgba(228, 192, 255, 1)",
         "materialClass": "glass",
         "materialClassConfidence": 0.94
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "fragment-and-chapter-pulse",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.98
+        },
+        "transformChannels": {
+          "translate": true,
+          "rotate": true,
+          "scale": true,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": true
+        },
+        "sockets": [],
+        "collider": {
+          "type": "sphere",
+          "offset": [
+            0,
+            0.46,
+            0
+          ],
+          "scale": [
+            0.42,
+            0.52,
+            0.42
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "violet"
+        }
       }
     },
     {
@@ -1961,6 +3340,16 @@
       "topologyRationale": "Five solid beams close the perimeter pentagon.",
       "parent": "rail-system",
       "material": "brass",
+      "surfaceDetail": {
+        "macroRoughness": 0.34,
+        "microRoughness": 0.47,
+        "bumpAmplitude": 0.014,
+        "normalPattern": "aged hammered gilt with irregular hand-finished grain",
+        "displacementPattern": "modeled outer frame relief only",
+        "occlusionPattern": "patina gathered along inner and outer frame channels",
+        "edgeWearPattern": "polished exposed crest, darker recessed sidewalls",
+        "notes": "Outer rails should frame the hierarchy with controlled, non-uniform gilt response."
+      },
       "attachment": {
         "parentId": "rail-system",
         "parentSocket": "rail-sockets",
@@ -1983,6 +3372,79 @@
         "secondaryAlbedo": "rgba(119, 78, 30, 1)",
         "materialClass": "metal",
         "materialClassConfidence": 0.96
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
       }
     },
     {
@@ -2019,6 +3481,79 @@
         "secondaryAlbedo": "rgba(119, 78, 30, 1)",
         "materialClass": "metal",
         "materialClassConfidence": 0.96
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
       }
     },
     {
@@ -2033,6 +3568,16 @@
       "topologyRationale": "Nested raised tool lines establish page contact.",
       "parent": "contact-frame",
       "material": "brass",
+      "surfaceDetail": {
+        "macroRoughness": 0.31,
+        "microRoughness": 0.45,
+        "bumpAmplitude": 0.013,
+        "normalPattern": "fine cast-brass stipple with intermittent polished segments",
+        "displacementPattern": "modeled stepped bezel relief",
+        "occlusionPattern": "aged patina in step seams and page-contact recess",
+        "edgeWearPattern": "brighter outer crown and softly worn corners",
+        "notes": "The frame bezel reads as old gilt hardware, not a uniformly glossy border."
+      },
       "attachment": {
         "parentId": "contact-frame",
         "parentSocket": "frame-surface",
@@ -2055,6 +3600,79 @@
         "secondaryAlbedo": "rgba(119, 78, 30, 1)",
         "materialClass": "metal",
         "materialClassConfidence": 0.96
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
       }
     },
     {
@@ -2091,6 +3709,79 @@
         "secondaryAlbedo": "rgba(119, 78, 30, 1)",
         "materialClass": "metal",
         "materialClassConfidence": 0.96
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
       }
     },
     {
@@ -2127,6 +3818,79 @@
         "secondaryAlbedo": "rgba(119, 78, 30, 1)",
         "materialClass": "metal",
         "materialClassConfidence": 0.94
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "chart-field",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
       }
     },
     {
@@ -2163,6 +3927,79 @@
         "secondaryAlbedo": "rgba(78, 54, 16, 1)",
         "materialClass": "metal",
         "materialClassConfidence": 0.9
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "chart-field",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
       }
     },
     {
@@ -2199,6 +4036,79 @@
         "secondaryAlbedo": "rgba(241, 197, 255, 1)",
         "materialClass": "glass",
         "materialClassConfidence": 0.92
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "violet"
+        }
       }
     },
     {
@@ -2235,6 +4145,79 @@
         "secondaryAlbedo": "rgba(146, 240, 237, 1)",
         "materialClass": "glass",
         "materialClassConfidence": 0.92
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "teal"
+        }
       }
     },
     {
@@ -2271,6 +4254,79 @@
         "secondaryAlbedo": "rgba(243, 185, 154, 1)",
         "materialClass": "metal",
         "materialClassConfidence": 0.9
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "rose"
+        }
       }
     },
     {
@@ -2307,6 +4363,79 @@
         "secondaryAlbedo": "rgba(255, 211, 106, 1)",
         "materialClass": "metal",
         "materialClassConfidence": 0.92
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "amber"
+        }
       }
     },
     {
@@ -2343,6 +4472,79 @@
         "secondaryAlbedo": "rgba(255, 193, 61, 1)",
         "materialClass": "glass",
         "materialClassConfidence": 0.94
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "ember"
+        }
       }
     },
     {
@@ -2379,6 +4581,79 @@
         "secondaryAlbedo": "rgba(114, 100, 127, 1)",
         "materialClass": "glass",
         "materialClassConfidence": 0.88
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "invalid-satellite",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "mirage"
+        }
       }
     },
     {
@@ -2415,6 +4690,79 @@
         "secondaryAlbedo": "rgba(119, 78, 30, 1)",
         "materialClass": "metal",
         "materialClassConfidence": 0.94
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
       }
     },
     {
@@ -2451,6 +4799,79 @@
         "secondaryAlbedo": "rgba(119, 78, 30, 1)",
         "materialClass": "metal",
         "materialClassConfidence": 0.94
+      },
+      "transform": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "actionProfile": {
+        "animationRole": "static-relief-part",
+        "pivot": {
+          "mode": "stable-component-origin",
+          "localPosition": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            1,
+            0
+          ],
+          "confidence": 0.92
+        },
+        "transformChannels": {
+          "translate": false,
+          "rotate": false,
+          "scale": false,
+          "bend": false,
+          "twist": false,
+          "detach": false,
+          "visibility": true,
+          "materialState": false
+        },
+        "sockets": [],
+        "collider": {
+          "type": "box",
+          "offset": [
+            0,
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "isTrigger": true,
+          "notes": "Presentation-only proxy; gameplay collision and progression remain outside the Compass Book UI."
+        },
+        "constraints": [
+          "presentation-only",
+          "no-gameplay-state-write",
+          "return-to-authored-transform-after-ceremony"
+        ],
+        "destruction": {
+          "breakable": false,
+          "fractureGroup": "valid-graph",
+          "seamRefs": [],
+          "detachableFragments": [],
+          "breakImpulse": 0,
+          "debrisMaterial": "brass"
+        }
       }
     }
   ],
@@ -5103,6 +7524,171 @@
       "cameraView": "fixed-front, right orbit, left orbit, and focused actual-relief",
       "notes": "All final captures were allowed to settle beyond first texture upload. Reported steady desktop samples are 38, 42, 32, and 39 FPS respectively.",
       "aiVisionNotes": "Agent vision inspected one final side-by-side sheet after the component-aware Tier 1 and material gate passed. The pass is accepted for real-time browser production; it is not a claim of exact recovered PBR or physical-device performance."
+    },
+    {
+      "timestamp": "2026-08-21T02:17:48.102862+00:00",
+      "passId": "surface-pass",
+      "estimatedFidelity": 0.68,
+      "aiVisionScore": 0.68,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.88,
+        "material": 0.78,
+        "lighting": 0.72,
+        "surface": 0.66
+      },
+      "featureReviews": [
+        {
+          "id": "page-contact-depth",
+          "score": 0.78,
+          "passed": false,
+          "notes": "Bezels, sockets, and orbit thickness remain readable, but the broad gilt highlight does not yet reveal enough hand-finished surface breakup."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.73,
+          "passed": false,
+          "notes": "The material families separate clearly, but the navy chart is crushed toward black and the gilt/enamel response is still too uniform versus the goal."
+        },
+        {
+          "id": "surface-microrelief",
+          "score": 0.66,
+          "passed": false,
+          "notes": "The close grazing view shows some texture response, but not enough leather grain, hammered gilt, or enamel orange-peel to reject a smooth-plastic reading."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/front.png",
+      "comparisonImage": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/comparison.png",
+      "cameraView": "fixed-front plus left/right orbit and close grazing",
+      "notes": "Do not accept until leather grain, aged gilt variation, and enamel micro-relief survive the actual 900px WebGL proof.",
+      "aiVisionNotes": "Comparison and close grazing evidence show strong hierarchy but insufficient tactile breakup versus the generated goal. The problem is localized to surface response rather than geometry."
+    },
+    {
+      "timestamp": "2026-08-21T02:21:50.862436+00:00",
+      "passId": "surface-pass",
+      "estimatedFidelity": 0.79,
+      "aiVisionScore": 0.79,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.81,
+        "materialSurface": 0.82,
+        "lightingCamera": 0.76
+      },
+      "featureReviews": [
+        {
+          "id": "page-contact-depth",
+          "score": 0.84,
+          "passed": true,
+          "notes": "The fixed and orbit views preserve bezel thickness, socket overlap, rail relief, and grounded page contact while the stronger gilt breakup keeps crowns and cavities distinct."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.82,
+          "passed": true,
+          "notes": "The corrected navy field remains subordinate but visibly grained; aged gilt, colored enamel, faceted Trial, and matte Mirage retain separate highlight behavior."
+        },
+        {
+          "id": "surface-microrelief",
+          "score": 0.8,
+          "passed": true,
+          "notes": "The close grazing capture now exposes crossed leather grain, uneven gilt response, enamel orange-peel, and localized crystal/mirage bump without noisy geometry."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/front-corrected.png",
+      "comparisonImage": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/comparison-corrected.png",
+      "cameraView": "fixed-front plus corrected long-axis/thickness-axis orbit and close grazing",
+      "notes": "Accepted for surface-pass. Defer scene-wide light placement and physical-device proof to lighting and optimization passes.",
+      "aiVisionNotes": "The corrected pair and close grazing proof clear the 0.70 acceptance threshold. The biggest improvement is the restored navy leather response; highlights now reveal texture without overpowering the force graph."
+    },
+    {
+      "timestamp": "2026-08-21T02:29:42.963721+00:00",
+      "passId": "lighting-pass",
+      "estimatedFidelity": 0.8,
+      "aiVisionScore": 0.8,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.82,
+        "materialSurface": 0.83,
+        "lightingCamera": 0.82
+      },
+      "featureReviews": [
+        {
+          "id": "page-contact-depth",
+          "score": 0.85,
+          "passed": true,
+          "notes": "Softer key shadows preserve contact beneath the node bezels and central ring stack without swallowing socket thickness or rail overlap."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.83,
+          "passed": true,
+          "notes": "Warm key and rim separate gilt, cool fill protects teal/violet identities, and the neutral proof confirms that the navy, enamel, crystal, and Mirage hierarchy is material-driven."
+        },
+        {
+          "id": "lighting-separation",
+          "score": 0.82,
+          "passed": true,
+          "notes": "Reference-matched, neutral, grazing, orbit, and production-shell captures remain readable; no single light direction hides the underlying relief or surface response."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/reference-matched.png",
+      "comparisonImage": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/comparison.png",
+      "cameraView": "reference-matched front, neutral front, grazing close-up, long-axis and thickness-axis orbit, production shell",
+      "notes": "Accepted for lighting-pass. Preserve these calibrated values through interaction work; physical-device proof belongs to optimization.",
+      "aiVisionNotes": "The generated goal remains richer in ornament and bloom, but the runtime lighting now exposes rather than conceals the accepted geometry and surface work. Neutral, grazing, orbit, and production captures support the 0.80 score."
+    },
+    {
+      "timestamp": "2026-08-21T02:39:06.694942+00:00",
+      "passId": "interaction-pass",
+      "estimatedFidelity": 0.8,
+      "aiVisionScore": 0.8,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.9,
+        "formDetail": 0.82,
+        "materialSurface": 0.83,
+        "lightingCamera": 0.82
+      },
+      "featureReviews": [
+        {
+          "id": "trial-path-mirage",
+          "score": 0.95,
+          "passed": true,
+          "notes": "The completion frame brightens the three candidate routes and pulses Trial while Mirage remains outside the valid graph and visibly recedes instead of becoming a sixth force."
+        },
+        {
+          "id": "completion-pivot-integrity",
+          "score": 0.94,
+          "passed": true,
+          "notes": "Five force discs cascade inside stable bezels, Trial retains its independent ring/crystal pivot, and the authored idle transforms are restored when the transient ceremony ends."
+        },
+        {
+          "id": "reduced-motion-ceremony",
+          "score": 0.96,
+          "passed": true,
+          "notes": "Reduced-motion proof keeps all pivots at authored transforms and limits the ceremony to restrained material-state emphasis."
+        },
+        {
+          "id": "presentation-state-ownership",
+          "score": 0.99,
+          "passed": true,
+          "notes": "The shell passes transient celebration progress to the model; no gameplay field, answer, persistence path, or UI runtime-state mirror is introduced."
+        }
+      ],
+      "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+      "renderScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/idle.png",
+      "comparisonImage": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/goal-vs-idle.png",
+      "cameraView": "goal comparison, idle/completion pair, reduced-motion, long-axis and thickness-axis orbit",
+      "notes": "Accepted for interaction-pass. The ceremony is transient presentation logic; canonical state remains in the DOM/store path.",
+      "aiVisionNotes": "The idle model preserves the accepted visual score, while the separate idle-versus-completion sheet proves the requested presentation behavior without changing the chapter metaphor. Reduced-motion evidence preserves stable authored transforms."
     }
   ],
   "reviewHistory": [
@@ -5590,6 +8176,311 @@
         "notes": "All final captures were allowed to settle beyond first texture upload. Reported steady desktop samples are 38, 42, 32, and 39 FPS respectively.",
         "aiVisionNotes": "Agent vision inspected one final side-by-side sheet after the component-aware Tier 1 and material gate passed. The pass is accepted for real-time browser production; it is not a claim of exact recovered PBR or physical-device performance."
       }
+    },
+    {
+      "timestamp": "2026-08-21T02:17:48.102862+00:00",
+      "passId": "surface-pass",
+      "estimatedFidelity": 0.68,
+      "aiVisionScore": 0.68,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouette": 0.88,
+        "material": 0.78,
+        "lighting": 0.72,
+        "surface": 0.66
+      },
+      "featureReviews": [
+        {
+          "id": "page-contact-depth",
+          "score": 0.78,
+          "passed": false,
+          "notes": "Bezels, sockets, and orbit thickness remain readable, but the broad gilt highlight does not yet reveal enough hand-finished surface breakup."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.73,
+          "passed": false,
+          "notes": "The material families separate clearly, but the navy chart is crushed toward black and the gilt/enamel response is still too uniform versus the goal."
+        },
+        {
+          "id": "surface-microrelief",
+          "score": 0.66,
+          "passed": false,
+          "notes": "The close grazing view shows some texture response, but not enough leather grain, hammered gilt, or enamel orange-peel to reject a smooth-plastic reading."
+        }
+      ],
+      "action": "refine-code",
+      "summary": "Surface locality is specified and wired, but grazing evidence still reads too smooth: chart navy is crushed, gilt variation is broad, and enamel orange-peel is too subtle.",
+      "matched": [
+        "five-force topology and node identities preserved",
+        "distinct material families preserved",
+        "Trial facets and Mirage matte hierarchy remain readable",
+        "multi-angle depth remains non-degenerate"
+      ],
+      "mismatches": [
+        "chart leather grain is hidden by multiplicative tint",
+        "gilt roughness and hammered height do not break highlights strongly enough",
+        "enamel micro-relief remains below player-view readability"
+      ],
+      "specFixes": [],
+      "codeFixes": [
+        "restore chart albedo visibility without lifting it out of dark navy",
+        "increase controlled gilt patina and bump response",
+        "raise enamel bump scales without adding noisy geometry"
+      ],
+      "evidence": [
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/front.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/grazing-left.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/grazing-right.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/close-grazing.png"
+      ],
+      "reviewViewpoints": [
+        "fixed-front",
+        "orbit-left",
+        "orbit-right",
+        "close-grazing"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/front.png",
+        "comparisonImage": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/comparison.png",
+        "cameraView": "fixed-front plus left/right orbit and close grazing",
+        "notes": "Do not accept until leather grain, aged gilt variation, and enamel micro-relief survive the actual 900px WebGL proof.",
+        "aiVisionNotes": "Comparison and close grazing evidence show strong hierarchy but insufficient tactile breakup versus the generated goal. The problem is localized to surface response rather than geometry."
+      }
+    },
+    {
+      "timestamp": "2026-08-21T02:21:50.862436+00:00",
+      "passId": "surface-pass",
+      "estimatedFidelity": 0.79,
+      "aiVisionScore": 0.79,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.81,
+        "materialSurface": 0.82,
+        "lightingCamera": 0.76
+      },
+      "featureReviews": [
+        {
+          "id": "page-contact-depth",
+          "score": 0.84,
+          "passed": true,
+          "notes": "The fixed and orbit views preserve bezel thickness, socket overlap, rail relief, and grounded page contact while the stronger gilt breakup keeps crowns and cavities distinct."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.82,
+          "passed": true,
+          "notes": "The corrected navy field remains subordinate but visibly grained; aged gilt, colored enamel, faceted Trial, and matte Mirage retain separate highlight behavior."
+        },
+        {
+          "id": "surface-microrelief",
+          "score": 0.8,
+          "passed": true,
+          "notes": "The close grazing capture now exposes crossed leather grain, uneven gilt response, enamel orange-peel, and localized crystal/mirage bump without noisy geometry."
+        }
+      ],
+      "action": "continue",
+      "summary": "Surface pass accepted after one correction loop: the navy leather grain is legible, gilt highlights break across hammered/patina variation, and enamel, Trial, and Mirage have localized tactile response.",
+      "matched": [
+        "component surfaceDetail is explicit and evidence-linked",
+        "corrected navy field exposes crossed leather grain",
+        "gilt crowns and cavities show non-uniform aged response",
+        "enamel orange-peel survives the close grazing proof",
+        "Trial facets and Mirage matte pitting remain materially distinct",
+        "corrected Tier1 and multi-angle gates pass"
+      ],
+      "mismatches": [
+        "generated goal remains more ornate and densely engraved",
+        "surface microdetail is deliberately restrained for runtime readability",
+        "physical iPhone performance remains unverified"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/front-corrected.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/grazing-left-corrected.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/grazing-right-corrected.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/close-grazing-corrected.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/tier1-calibration-corrected.png"
+      ],
+      "reviewViewpoints": [
+        "front",
+        "long-axis",
+        "thickness-axis",
+        "grazing"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/front-corrected.png",
+        "comparisonImage": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-surface-pass/comparison-corrected.png",
+        "cameraView": "fixed-front plus corrected long-axis/thickness-axis orbit and close grazing",
+        "notes": "Accepted for surface-pass. Defer scene-wide light placement and physical-device proof to lighting and optimization passes.",
+        "aiVisionNotes": "The corrected pair and close grazing proof clear the 0.70 acceptance threshold. The biggest improvement is the restored navy leather response; highlights now reveal texture without overpowering the force graph."
+      }
+    },
+    {
+      "timestamp": "2026-08-21T02:29:42.963721+00:00",
+      "passId": "lighting-pass",
+      "estimatedFidelity": 0.8,
+      "aiVisionScore": 0.8,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.88,
+        "formDetail": 0.82,
+        "materialSurface": 0.83,
+        "lightingCamera": 0.82
+      },
+      "featureReviews": [
+        {
+          "id": "page-contact-depth",
+          "score": 0.85,
+          "passed": true,
+          "notes": "Softer key shadows preserve contact beneath the node bezels and central ring stack without swallowing socket thickness or rail overlap."
+        },
+        {
+          "id": "material-light-hierarchy",
+          "score": 0.83,
+          "passed": true,
+          "notes": "Warm key and rim separate gilt, cool fill protects teal/violet identities, and the neutral proof confirms that the navy, enamel, crystal, and Mirage hierarchy is material-driven."
+        },
+        {
+          "id": "lighting-separation",
+          "score": 0.82,
+          "passed": true,
+          "notes": "Reference-matched, neutral, grazing, orbit, and production-shell captures remain readable; no single light direction hides the underlying relief or surface response."
+        }
+      ],
+      "action": "continue",
+      "summary": "Lighting pass accepted: production and lab now share ACES exposure, warm key, cool fill, warm rim, restrained ambient, and soft contact-shadow behavior; neutral and grazing proofs keep the surface defects visible.",
+      "matched": [
+        "lightingFromPhoto specifies key fill rim ambient exposure background and shadow behavior",
+        "warm gilt remains separated without bleaching enamel",
+        "cool fill preserves teal and violet identities",
+        "neutral proof confirms material-driven hierarchy",
+        "grazing proof preserves leather and gilt surface breakup",
+        "production 3D shell remains readable beside the 2D chapter page",
+        "Tier1 and multi-angle gates pass"
+      ],
+      "mismatches": [
+        "generated goal remains more ornate and uses stronger localized bloom",
+        "lab background is intentionally simpler than the concept environment",
+        "physical iPhone lighting/performance remains unverified"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/reference-matched.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/neutral.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/grazing.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/orbit-left.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/orbit-right.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/production-shell.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/tier1-calibration.png"
+      ],
+      "reviewViewpoints": [
+        "front",
+        "neutral",
+        "grazing",
+        "long-axis",
+        "thickness-axis",
+        "production-shell"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/reference-matched.png",
+        "comparisonImage": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/comparison.png",
+        "cameraView": "reference-matched front, neutral front, grazing close-up, long-axis and thickness-axis orbit, production shell",
+        "notes": "Accepted for lighting-pass. Preserve these calibrated values through interaction work; physical-device proof belongs to optimization.",
+        "aiVisionNotes": "The generated goal remains richer in ornament and bloom, but the runtime lighting now exposes rather than conceals the accepted geometry and surface work. Neutral, grazing, orbit, and production captures support the 0.80 score."
+      }
+    },
+    {
+      "timestamp": "2026-08-21T02:39:06.694942+00:00",
+      "passId": "interaction-pass",
+      "estimatedFidelity": 0.8,
+      "aiVisionScore": 0.8,
+      "visualAcceptanceThreshold": 0.7,
+      "layerScores": {
+        "silhouetteProportion": 0.89,
+        "componentStructure": 0.9,
+        "formDetail": 0.82,
+        "materialSurface": 0.83,
+        "lightingCamera": 0.82
+      },
+      "featureReviews": [
+        {
+          "id": "trial-path-mirage",
+          "score": 0.95,
+          "passed": true,
+          "notes": "The completion frame brightens the three candidate routes and pulses Trial while Mirage remains outside the valid graph and visibly recedes instead of becoming a sixth force."
+        },
+        {
+          "id": "completion-pivot-integrity",
+          "score": 0.94,
+          "passed": true,
+          "notes": "Five force discs cascade inside stable bezels, Trial retains its independent ring/crystal pivot, and the authored idle transforms are restored when the transient ceremony ends."
+        },
+        {
+          "id": "reduced-motion-ceremony",
+          "score": 0.96,
+          "passed": true,
+          "notes": "Reduced-motion proof keeps all pivots at authored transforms and limits the ceremony to restrained material-state emphasis."
+        },
+        {
+          "id": "presentation-state-ownership",
+          "score": 0.99,
+          "passed": true,
+          "notes": "The shell passes transient celebration progress to the model; no gameplay field, answer, persistence path, or UI runtime-state mirror is introduced."
+        }
+      ],
+      "action": "continue",
+      "summary": "Interaction pass accepted: the existing completion event now drives a transient five-force cascade, Trial pulse/ring turn, candidate-path fill, and Mirage recession through 29 action-ready component profiles, with a reduced-motion-safe material-only alternative.",
+      "matched": [
+        "all 29 specified components have stable transforms and action profiles",
+        "five force nodes expose independent ceremony pivots",
+        "Trial crystal and rings remain independent anchors",
+        "candidate paths expose material-state fill",
+        "Mirage remains outside the valid graph and recedes during completion",
+        "live manifest has 29 parts 0 unnamed meshes and 7 sockets",
+        "part coverage has 0 errors and 0 warnings",
+        "reduced-motion proof preserves authored transforms",
+        "no gameplay or persistence write path is introduced"
+      ],
+      "mismatches": [
+        "the generated goal is a static concept and cannot specify exact animation timing",
+        "disc pulses occur inside instanced stable bezels rather than moving the full bezel assembly",
+        "physical-device animation performance remains unverified"
+      ],
+      "specFixes": [],
+      "codeFixes": [],
+      "evidence": [
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/idle.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/chapter-completion.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/reduced-motion.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/orbit-left.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/orbit-right.png",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/part-manifest.json",
+        "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/part-coverage.json"
+      ],
+      "reviewViewpoints": [
+        "front",
+        "completion-frame",
+        "reduced-motion",
+        "long-axis",
+        "thickness-axis"
+      ],
+      "visualEvidence": {
+        "referenceScreenshot": "docs/gauntlets/evidence/compass-book-inner-goals-2026-08-20/41-wide-chapter-4-goal.png",
+        "renderScreenshot": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/idle.png",
+        "comparisonImage": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/goal-vs-idle.png",
+        "cameraView": "goal comparison, idle/completion pair, reduced-motion, long-axis and thickness-axis orbit",
+        "notes": "Accepted for interaction-pass. The ceremony is transient presentation logic; canonical state remains in the DOM/store path.",
+        "aiVisionNotes": "The idle model preserves the accepted visual score, while the separate idle-versus-completion sheet proves the requested presentation behavior without changing the chapter metaphor. Reduced-motion evidence preserves stable authored transforms."
+      }
     }
   ],
   "lodPlan": [
@@ -5613,10 +8504,12 @@
     "optimizationPolicy": "Reach accepted visual fidelity first, then optimize without removing reference-critical geometry or surface layers."
   },
   "lightingFromPhoto": [
-    "Scene-owned warm key from upper-left at soft intensity around 2.2; reference highlights are excluded from albedo.",
-    "Cool violet-blue fill from camera-right around 0.65 plus restrained hemisphere ambient around 0.45.",
-    "Warm rim/environment reflection separates gilt silhouettes; use ACES filmic tone mapping with exposure near 1.0.",
-    "Existing parchment receives soft contact shadows beneath macro relief solids; no independent ground plane."
+    "Scene-owned warm-gold directional key from upper-left, calibrated to 4.4 in the current physically based renderer; reference highlights remain excluded from albedo.",
+    "Cool violet-blue directional fill from camera-right at 0.7 plus restrained cool-over-violet hemisphere ambient at 1.25 high tier / 1.0 low tier.",
+    "Warm amber rim from rear-right at 0.8 separates gilt silhouettes without tinting enamel; ACES filmic tone mapping uses exposure 1.0 and sRGB output.",
+    "High tier uses 1024 PCF soft key shadows with bias -0.00015, normal bias 0.035, and radius 2.5; low tier remains shadow-disabled at the renderer gate.",
+    "Existing parchment receives soft contact shadows beneath macro relief solids; no independent player-facing ground plane is introduced.",
+    "The player-facing canvas remains transparent over the existing book surface; the lab-only background stays dark navy-violet so neutral, grazing, and reference-matched captures remain comparable."
   ],
   "proceduralStrategy": [
     "Block out macro silhouette first.",
@@ -5627,8 +8520,11 @@
     "Add material variation before adding expensive micro-geometry."
   ],
   "animationAnchors": [
-    "root pivot node supports whole-object translation, rotation, scale, and visibility changes",
-    "component pivot groups support later local transforms without rebuilding geometry"
+    "root is the whole-relief presentation pivot and remains subordinate to the book hinge/page transform",
+    "force-graph owns the five completion-cascade node pivots and the central Trial socket",
+    "trial-crystal and trial-rings are independent animation anchors for fragment and chapter completion pulses",
+    "candidate-paths exposes material-state animation for progressive path illumination without semantic state writes",
+    "mirage-node is a separate pivot that may recede during completion while remaining visibly outside the valid graph"
   ],
   "destructionAnchors": [
     "actionProfile.destruction.fractureGroup marks detachable or breakable component sets",
@@ -7102,6 +9998,299 @@
         "geometryAuthority": "img2threejs diagnose_render.py",
         "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",
         "reason": "The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families."
+      }
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.5421,
+        "aspectRatioDelta": 0.1429,
+        "scaleDelta": 0.8512,
+        "bilateralSymmetryError": 0.1818,
+        "colorDelta": {
+          "gated": true,
+          "mode": "component-aware-visible-footprint",
+          "legacyWholeFrameMode": "advisory-only-known-limitation",
+          "comparisonCount": 8,
+          "requiredRegionCount": 8,
+          "regionIds": [
+            "chart-field-navy-leather",
+            "gilt-rail-and-bezel",
+            "curiosity-violet-enamel",
+            "capability-teal-enamel",
+            "contribution-rose-copper",
+            "viability-amber-brass",
+            "willingness-ember-enamel",
+            "mirage-dim-enamel"
+          ],
+          "materialGatePassed": true,
+          "compatibilityPassed": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.542 is below threshold 0.85",
+        "aspect-ratio delta 0.143 exceeds threshold 0.05",
+        "scale delta 0.851 exceeds threshold 0.08"
+      ],
+      "maskWarnings": [
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "452588203cfe50df",
+      "materialGateHash": "acfb935173e0cddb",
+      "passId": "surface-pass",
+      "diagnosticBridge": {
+        "geometryAuthority": "img2threejs diagnose_render.py",
+        "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",
+        "reason": "The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families; the component gate remains authoritative for material, surface, and lighting passes."
+      }
+    },
+    {
+      "passed": false,
+      "checks": {
+        "silhouetteIoU": 0.5317,
+        "aspectRatioDelta": 0.1429,
+        "scaleDelta": 0.8512,
+        "bilateralSymmetryError": 0.1822,
+        "colorDelta": {
+          "gated": true,
+          "mode": "component-aware-visible-footprint",
+          "legacyWholeFrameMode": "advisory-only-known-limitation",
+          "comparisonCount": 8,
+          "requiredRegionCount": 8,
+          "regionIds": [
+            "chart-field-navy-leather",
+            "gilt-rail-and-bezel",
+            "curiosity-violet-enamel",
+            "capability-teal-enamel",
+            "contribution-rose-copper",
+            "viability-amber-brass",
+            "willingness-ember-enamel",
+            "mirage-dim-enamel"
+          ],
+          "materialGatePassed": true,
+          "compatibilityPassed": true
+        }
+      },
+      "failures": [
+        "silhouette IoU 0.532 is below threshold 0.85",
+        "aspect-ratio delta 0.143 exceeds threshold 0.05",
+        "scale delta 0.851 exceeds threshold 0.08"
+      ],
+      "maskWarnings": [
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "8735385c79a67b1b",
+      "materialGateHash": "acfb935173e0cddb",
+      "passId": "surface-pass",
+      "diagnosticBridge": {
+        "geometryAuthority": "img2threejs diagnose_render.py",
+        "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",
+        "reason": "The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families; the component gate remains authoritative for material, surface, and lighting passes."
+      }
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.8884,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
+        "bilateralSymmetryError": 0.1822,
+        "colorDelta": {
+          "gated": true,
+          "mode": "component-aware-visible-footprint",
+          "legacyWholeFrameMode": "advisory-only-known-limitation",
+          "comparisonCount": 8,
+          "requiredRegionCount": 8,
+          "regionIds": [
+            "chart-field-navy-leather",
+            "gilt-rail-and-bezel",
+            "curiosity-violet-enamel",
+            "capability-teal-enamel",
+            "contribution-rose-copper",
+            "viability-amber-brass",
+            "willingness-ember-enamel",
+            "mirage-dim-enamel"
+          ],
+          "materialGatePassed": true,
+          "compatibilityPassed": true
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "8735385c79a67b1b",
+      "materialGateHash": "acfb935173e0cddb",
+      "passId": "surface-pass",
+      "diagnosticBridge": {
+        "geometryAuthority": "img2threejs diagnose_render.py",
+        "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",
+        "reason": "The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families; the component gate remains authoritative for material, surface, and lighting passes."
+      }
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9168,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
+        "bilateralSymmetryError": 0.1283,
+        "colorDelta": {
+          "gated": true,
+          "mode": "component-aware-visible-footprint",
+          "legacyWholeFrameMode": "advisory-only-known-limitation",
+          "comparisonCount": 8,
+          "requiredRegionCount": 8,
+          "regionIds": [
+            "chart-field-navy-leather",
+            "gilt-rail-and-bezel",
+            "curiosity-violet-enamel",
+            "capability-teal-enamel",
+            "contribution-rose-copper",
+            "viability-amber-brass",
+            "willingness-ember-enamel",
+            "mirage-dim-enamel"
+          ],
+          "materialGatePassed": true,
+          "compatibilityPassed": true
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "d7404201b4ff5cb9",
+      "materialGateHash": "acfb935173e0cddb",
+      "passId": "surface-pass",
+      "diagnosticBridge": {
+        "geometryAuthority": "img2threejs diagnose_render.py",
+        "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",
+        "reason": "The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families; the component gate remains authoritative for material, surface, and lighting passes."
+      }
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9082,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
+        "bilateralSymmetryError": 0.1434,
+        "colorDelta": {
+          "gated": true,
+          "mode": "component-aware-visible-footprint",
+          "legacyWholeFrameMode": "advisory-only-known-limitation",
+          "comparisonCount": 8,
+          "requiredRegionCount": 8,
+          "regionIds": [
+            "chart-field-navy-leather",
+            "gilt-rail-and-bezel",
+            "curiosity-violet-enamel",
+            "capability-teal-enamel",
+            "contribution-rose-copper",
+            "viability-amber-brass",
+            "willingness-ember-enamel",
+            "mirage-dim-enamel"
+          ],
+          "materialGatePassed": true,
+          "compatibilityPassed": true
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "d151fcd9b4c89181",
+      "materialGateHash": "acfb935173e0cddb",
+      "passId": "lighting-pass",
+      "diagnosticBridge": {
+        "geometryAuthority": "img2threejs diagnose_render.py",
+        "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",
+        "reason": "The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families; the component gate remains authoritative for material, surface, and lighting passes."
+      }
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9074,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
+        "bilateralSymmetryError": 0.1454,
+        "colorDelta": {
+          "gated": true,
+          "mode": "component-aware-visible-footprint",
+          "legacyWholeFrameMode": "advisory-only-known-limitation",
+          "comparisonCount": 8,
+          "requiredRegionCount": 8,
+          "regionIds": [
+            "chart-field-navy-leather",
+            "gilt-rail-and-bezel",
+            "curiosity-violet-enamel",
+            "capability-teal-enamel",
+            "contribution-rose-copper",
+            "viability-amber-brass",
+            "willingness-ember-enamel",
+            "mirage-dim-enamel"
+          ],
+          "materialGatePassed": true,
+          "compatibilityPassed": true
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "5a5035bfe30c4421",
+      "materialGateHash": "acfb935173e0cddb",
+      "passId": "lighting-pass",
+      "diagnosticBridge": {
+        "geometryAuthority": "img2threejs diagnose_render.py",
+        "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",
+        "reason": "The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families; the component gate remains authoritative for material, surface, and lighting passes."
+      }
+    },
+    {
+      "passed": true,
+      "checks": {
+        "silhouetteIoU": 0.9069,
+        "aspectRatioDelta": 0,
+        "scaleDelta": 0,
+        "bilateralSymmetryError": 0.1456,
+        "colorDelta": {
+          "gated": true,
+          "mode": "component-aware-visible-footprint",
+          "legacyWholeFrameMode": "advisory-only-known-limitation",
+          "comparisonCount": 8,
+          "requiredRegionCount": 8,
+          "regionIds": [
+            "chart-field-navy-leather",
+            "gilt-rail-and-bezel",
+            "curiosity-violet-enamel",
+            "capability-teal-enamel",
+            "contribution-rose-copper",
+            "viability-amber-brass",
+            "willingness-ember-enamel",
+            "mirage-dim-enamel"
+          ],
+          "materialGatePassed": true,
+          "compatibilityPassed": true
+        }
+      },
+      "failures": [],
+      "maskWarnings": [
+        "reference: image is not clearly isolated from background; using most pixels as material evidence",
+        "render: image is not clearly isolated from background; using most pixels as material evidence"
+      ],
+      "renderHash": "08b9c4be6b1b6614",
+      "materialGateHash": "acfb935173e0cddb",
+      "passId": "interaction-pass",
+      "diagnosticBridge": {
+        "geometryAuthority": "img2threejs diagnose_render.py",
+        "materialAuthority": "img2threejs material_gate.py with per-region visible-footprint comparisons",
+        "reason": "The legacy five-cluster color check is documented as whole-frame and cannot represent eight named material families; the component gate remains authoritative for material, surface, and lighting passes."
       }
     }
   ],

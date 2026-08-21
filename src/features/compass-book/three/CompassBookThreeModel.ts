@@ -14,6 +14,12 @@ export type CompassBookThreeModel = {
   setOpenProgress: (progress: number) => void;
   setActivePage: (pageId: string) => void;
   setPageTurnProgress: (progress: number, direction: -1 | 1) => void;
+  setCelebrationProgress: (
+    progress: number,
+    strength: number,
+    kind: 'fragment' | 'chapter',
+    reducedMotion: boolean,
+  ) => void;
   getPageTarget: (object: THREE.Object3D | null) => string | null;
   animate: (elapsedSeconds: number, reducedMotion: boolean) => void;
   metrics: CompassBookThreeMetrics;
@@ -44,10 +50,13 @@ type MaterialTextures = {
   leatherColor: THREE.CanvasTexture;
   leatherBump: THREE.CanvasTexture;
   leatherRoughness: THREE.CanvasTexture;
+  leatherAo: THREE.CanvasTexture;
   paperBump: THREE.CanvasTexture;
   paperRoughness: THREE.CanvasTexture;
   giltColor: THREE.CanvasTexture;
   giltRoughness: THREE.CanvasTexture;
+  giltBump: THREE.CanvasTexture;
+  giltAo: THREE.CanvasTexture;
 };
 
 type CompassMechanism = {
@@ -67,7 +76,7 @@ function seededNoise(x: number, y: number, seed: number) {
 
 function createSurfaceTexture(
   size: number,
-  kind: 'leather-color' | 'leather-bump' | 'leather-roughness' | 'paper-bump' | 'paper-roughness' | 'gilt-color' | 'gilt-roughness',
+  kind: 'leather-color' | 'leather-bump' | 'leather-roughness' | 'leather-ao' | 'paper-bump' | 'paper-roughness' | 'gilt-color' | 'gilt-roughness' | 'gilt-bump' | 'gilt-ao',
 ) {
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -75,13 +84,16 @@ function createSurfaceTexture(
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Compass Book texture canvas is unavailable.');
   const image = context.createImageData(size, size);
+  const channelSeed = Array.from(kind).reduce((total, character) => total + character.charCodeAt(0), 0);
 
   for (let y = 0; y < size; y += 1) {
     for (let x = 0; x < size; x += 1) {
-      const fine = seededNoise(x, y, kind.length);
-      const meso = seededNoise(Math.floor(x / 5), Math.floor(y / 5), kind.length + 9);
-      const macro = seededNoise(Math.floor(x / 26), Math.floor(y / 26), kind.length + 21);
+      const fine = seededNoise(x, y, channelSeed);
+      const meso = seededNoise(Math.floor(x / 5), Math.floor(y / 5), channelSeed + 29);
+      const macro = seededNoise(Math.floor(x / 26), Math.floor(y / 26), channelSeed + 71);
       const fibre = Math.sin((x * 0.43 + y * 0.18) + meso * 3.4) * 0.5 + 0.5;
+      const crossFibre = Math.sin((x * -0.16 + y * 0.51) + macro * 2.8) * 0.5 + 0.5;
+      const hammer = seededNoise(Math.floor(x / 11), Math.floor(y / 11), channelSeed + 113);
       let red = 128;
       let green = 128;
       let blue = 128;
@@ -92,18 +104,21 @@ function createSurfaceTexture(
         blue = 31 + fine * 14 + meso * 12 + macro * 7 + crease;
       }
       if (kind === 'gilt-color') {
-        const tarnish = meso > 0.72 ? -18 : 0;
-        const highlight = fibre > 0.82 ? 16 : 0;
+        const tarnish = (meso > 0.64 ? -26 : 0) + (macro < 0.2 ? -22 : 0);
+        const highlight = fibre > 0.84 ? 21 : 0;
         red = 195 + fine * 32 + macro * 13 + tarnish + highlight;
         green = 139 + fine * 27 + macro * 12 + tarnish * 0.72 + highlight;
         blue = 54 + fine * 18 + macro * 8 + tarnish * 0.34 + highlight * 0.45;
       }
       let value = red;
-      if (kind === 'leather-bump') value = 105 + fine * 48 + meso * 22;
-      if (kind === 'leather-roughness') value = 142 + fine * 38 + meso * 31;
+      if (kind === 'leather-bump') value = 94 + fine * 28 + fibre * 46 + crossFibre * 34 + meso * 12;
+      if (kind === 'leather-roughness') value = 139 + fine * 28 + fibre * 24 + crossFibre * 18 + meso * 24;
+      if (kind === 'leather-ao') value = 207 + meso * 27 + macro * 14 - (fibre > 0.88 ? 26 : 0) - (crossFibre > 0.9 ? 18 : 0);
       if (kind === 'paper-bump') value = 125 + fine * 16 + fibre * 13;
       if (kind === 'paper-roughness') value = 204 + fine * 25 + fibre * 9;
-      if (kind === 'gilt-roughness') value = 60 + fine * 39 + meso * 31;
+      if (kind === 'gilt-roughness') value = 48 + fine * 34 + meso * 26 + hammer * 54;
+      if (kind === 'gilt-bump') value = 92 + fine * 17 + hammer * 72 + fibre * 20;
+      if (kind === 'gilt-ao') value = 205 + meso * 24 + macro * 18 - (hammer < 0.2 ? 46 : 0);
       if (kind !== 'leather-color' && kind !== 'gilt-color') {
         red = value;
         green = value;
@@ -124,20 +139,25 @@ function createSurfaceTexture(
   if (kind === 'leather-color') texture.repeat.set(2, 3);
   else texture.repeat.set(kind.startsWith('paper') ? 4 : 3, kind.startsWith('paper') ? 7 : 5);
   texture.colorSpace = kind.endsWith('-color') ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+  if (kind.endsWith('-ao')) texture.channel = 0;
   texture.needsUpdate = true;
   return texture;
 }
 
 function createTextures(quality: CompassBookThreeQuality): MaterialTextures {
   const size = quality === 'high' ? 1024 : 128;
+  const auxiliarySize = quality === 'high' ? 512 : 128;
   return {
     leatherColor: createSurfaceTexture(size, 'leather-color'),
     leatherBump: createSurfaceTexture(size, 'leather-bump'),
     leatherRoughness: createSurfaceTexture(size, 'leather-roughness'),
+    leatherAo: createSurfaceTexture(auxiliarySize, 'leather-ao'),
     paperBump: createSurfaceTexture(size, 'paper-bump'),
     paperRoughness: createSurfaceTexture(size, 'paper-roughness'),
     giltColor: createSurfaceTexture(size, 'gilt-color'),
     giltRoughness: createSurfaceTexture(size, 'gilt-roughness'),
+    giltBump: createSurfaceTexture(auxiliarySize, 'gilt-bump'),
+    giltAo: createSurfaceTexture(auxiliarySize, 'gilt-ao'),
   };
 }
 
@@ -257,6 +277,8 @@ function createMaterials(textures: MaterialTextures): BookMaterials {
     leather: new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
       map: textures.leatherColor,
+      aoMap: textures.leatherAo,
+      aoMapIntensity: 0.24,
       roughness: 0.66,
       roughnessMap: textures.leatherRoughness,
       bumpMap: textures.leatherBump,
@@ -268,6 +290,8 @@ function createMaterials(textures: MaterialTextures): BookMaterials {
     leatherInset: new THREE.MeshPhysicalMaterial({
       color: 0xd7dcff,
       map: textures.leatherColor,
+      aoMap: textures.leatherAo,
+      aoMapIntensity: 0.28,
       roughness: 0.58,
       roughnessMap: textures.leatherRoughness,
       bumpMap: textures.leatherBump,
@@ -278,6 +302,8 @@ function createMaterials(textures: MaterialTextures): BookMaterials {
     }),
     leatherEdge: new THREE.MeshStandardMaterial({
       color: 0x090814,
+      aoMap: textures.leatherAo,
+      aoMapIntensity: 0.34,
       roughness: 0.74,
       bumpMap: textures.leatherBump,
       bumpScale: 0.035,
@@ -285,8 +311,12 @@ function createMaterials(textures: MaterialTextures): BookMaterials {
     gilt: new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
       map: textures.giltColor,
+      aoMap: textures.giltAo,
+      aoMapIntensity: 0.26,
       roughness: 0.29,
       roughnessMap: textures.giltRoughness,
+      bumpMap: textures.giltBump,
+      bumpScale: 0.034,
       metalness: 0.9,
       clearcoat: 0.5,
       clearcoatRoughness: 0.2,
@@ -294,8 +324,12 @@ function createMaterials(textures: MaterialTextures): BookMaterials {
     }),
     giltDark: new THREE.MeshStandardMaterial({
       color: 0x7c5427,
+      aoMap: textures.giltAo,
+      aoMapIntensity: 0.34,
       roughness: 0.42,
       roughnessMap: textures.giltRoughness,
+      bumpMap: textures.giltBump,
+      bumpScale: 0.022,
       metalness: 0.76,
     }),
     paper: new THREE.MeshStandardMaterial({
@@ -1938,8 +1972,11 @@ function createIkigaiMapRelief(
   const high = quality === 'high';
   const radialSegments = high ? 24 : 14;
   const tubeSegments = high ? 36 : 20;
-  const createEnamelTexture = (kind: 'albedo' | 'roughness' | 'bump' | 'ao') => {
-    const size = high ? 1024 : 128;
+  const createEnamelTexture = (
+    kind: 'albedo' | 'roughness' | 'bump' | 'ao',
+    profile: 'glaze' | 'mirage' | 'crystal' = 'glaze',
+  ) => {
+    const size = high ? (profile === 'glaze' ? 1024 : 512) : 128;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
@@ -1948,16 +1985,25 @@ function createIkigaiMapRelief(
     const pixels = context.createImageData(size, size);
     for (let y = 0; y < size; y += 1) {
       for (let x = 0; x < size; x += 1) {
-        const seed = kind === 'albedo' ? 137 : kind === 'roughness' ? 151 : kind === 'bump' ? 173 : 197;
+        const profileSeed = profile === 'mirage' ? 401 : profile === 'crystal' ? 733 : 0;
+        const seed = (kind === 'albedo' ? 137 : kind === 'roughness' ? 151 : kind === 'bump' ? 173 : 197) + profileSeed;
         const fine = seededNoise(x, y, seed);
         const meso = seededNoise(Math.floor(x / 9), Math.floor(y / 9), seed + 60);
         const macro = seededNoise(Math.floor(x / 41), Math.floor(y / 41), seed + 116);
+        const orangePeel = (
+          Math.sin(x * 0.12 + meso * 4.2)
+          + Math.sin(y * 0.14 + macro * 3.4)
+        ) * 0.25 + 0.5;
+        const miragePit = profile === 'mirage' && meso < 0.16 ? -52 : 0;
+        const crystalScratch = profile === 'crystal'
+          ? (Math.sin(x * 0.2 + y * 0.075 + fine * 1.8) * 0.5 + 0.5) * 24
+          : 0;
         const value = kind === 'albedo'
           ? 226 + fine * 14 + macro * 12
           : kind === 'roughness'
             ? 172 + fine * 46 + meso * 24
             : kind === 'bump'
-              ? 112 + fine * 28 + meso * 16
+              ? 94 + fine * 18 + meso * 14 + orangePeel * 64 + miragePit + crystalScratch
               : 220 + meso * 22 + macro * 13;
         const offset = (y * size + x) * 4;
         pixels.data[offset] = value;
@@ -1968,7 +2014,7 @@ function createIkigaiMapRelief(
     }
     context.putImageData(pixels, 0, 0);
     const texture = new THREE.CanvasTexture(canvas);
-    texture.name = `COMPASS_BOOK_IKIGAI_ENAMEL_${kind.toUpperCase()}`;
+    texture.name = `COMPASS_BOOK_IKIGAI_${profile.toUpperCase()}_${kind.toUpperCase()}`;
     texture.colorSpace = kind === 'albedo' ? THREE.SRGBColorSpace : THREE.NoColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
@@ -1984,20 +2030,31 @@ function createIkigaiMapRelief(
   const enamelRoughness = createEnamelTexture('roughness');
   const enamelBump = createEnamelTexture('bump');
   const enamelAo = createEnamelTexture('ao');
+  const mirageBump = createEnamelTexture('bump', 'mirage');
+  const crystalBump = createEnamelTexture('bump', 'crystal');
 
   const chart = new THREE.MeshStandardMaterial({
     name: 'COMPASS_BOOK_IKIGAI_CHART_MATERIAL',
-    color: 0x171a2b,
-    roughness: 0.76,
+    color: 0xe4e6f4,
+    map: materials.leatherInset.map,
+    aoMap: materials.leatherInset.aoMap,
+    aoMapIntensity: 0.38,
+    roughness: 0.82,
     roughnessMap: materials.leatherInset.roughnessMap,
     bumpMap: materials.leatherInset.bumpMap,
-    bumpScale: high ? 0.018 : 0.009,
+    bumpScale: high ? 0.028 : 0.012,
     metalness: 0.08,
   });
   const chartLine = new THREE.MeshStandardMaterial({
     name: 'COMPASS_BOOK_IKIGAI_CHART_LINE_MATERIAL',
     color: 0x6d5732,
+    map: materials.gilt.map,
+    aoMap: materials.gilt.aoMap,
+    aoMapIntensity: 0.3,
     roughness: 0.56,
+    roughnessMap: materials.gilt.roughnessMap,
+    bumpMap: materials.gilt.bumpMap,
+    bumpScale: high ? 0.009 : 0.004,
     metalness: 0.28,
   });
   const curiosity = new THREE.MeshPhysicalMaterial({
@@ -2011,7 +2068,7 @@ function createIkigaiMapRelief(
     roughness: 0.25,
     roughnessMap: enamelRoughness,
     bumpMap: enamelBump,
-    bumpScale: high ? 0.012 : 0.006,
+    bumpScale: high ? 0.022 : 0.009,
     metalness: 0.08,
     clearcoat: high ? 0.76 : 0.44,
     clearcoatRoughness: 0.12,
@@ -2029,7 +2086,7 @@ function createIkigaiMapRelief(
     roughness: 0.28,
     roughnessMap: enamelRoughness,
     bumpMap: enamelBump,
-    bumpScale: high ? 0.01 : 0.005,
+    bumpScale: high ? 0.018 : 0.008,
     metalness: 0.08,
     clearcoat: high ? 0.7 : 0.4,
     clearcoatRoughness: 0.15,
@@ -2047,7 +2104,7 @@ function createIkigaiMapRelief(
     roughness: 0.38,
     roughnessMap: enamelRoughness,
     bumpMap: enamelBump,
-    bumpScale: high ? 0.009 : 0.004,
+    bumpScale: high ? 0.017 : 0.007,
     metalness: 0.54,
     clearcoat: high ? 0.42 : 0.24,
     clearcoatRoughness: 0.24,
@@ -2064,7 +2121,7 @@ function createIkigaiMapRelief(
     roughness: 0.34,
     roughnessMap: enamelRoughness,
     bumpMap: enamelBump,
-    bumpScale: high ? 0.008 : 0.004,
+    bumpScale: high ? 0.016 : 0.007,
     metalness: 0.64,
     clearcoat: high ? 0.4 : 0.22,
     clearcoatRoughness: 0.24,
@@ -2081,7 +2138,7 @@ function createIkigaiMapRelief(
     roughness: 0.25,
     roughnessMap: enamelRoughness,
     bumpMap: enamelBump,
-    bumpScale: high ? 0.012 : 0.006,
+    bumpScale: high ? 0.022 : 0.009,
     metalness: 0.05,
     clearcoat: high ? 0.72 : 0.42,
     clearcoatRoughness: 0.13,
@@ -2098,8 +2155,8 @@ function createIkigaiMapRelief(
     emissiveIntensity: 0.08,
     roughness: 0.66,
     roughnessMap: enamelRoughness,
-    bumpMap: enamelBump,
-    bumpScale: high ? 0.006 : 0.003,
+    bumpMap: mirageBump,
+    bumpScale: high ? 0.02 : 0.009,
     metalness: 0.12,
     clearcoat: high ? 0.18 : 0.08,
     clearcoatRoughness: 0.52,
@@ -2125,8 +2182,8 @@ function createIkigaiMapRelief(
     emissiveIntensity: 0.88,
     roughness: 0.14,
     roughnessMap: enamelRoughness,
-    bumpMap: enamelBump,
-    bumpScale: high ? 0.008 : 0.004,
+    bumpMap: crystalBump,
+    bumpScale: high ? 0.006 : 0.003,
     metalness: 0.06,
     clearcoat: high ? 0.9 : 0.52,
     clearcoatRoughness: 0.06,
@@ -3090,7 +3147,7 @@ export function createCompassBookThreeModel(
   ikigaiMap.root.visible = false;
   frontPivot.add(ikigaiMap.root);
 
-  const openGlow = new THREE.PointLight(0x8745e3, quality === 'high' ? 5.4 : 3.2, 8, 2);
+  const openGlow = new THREE.PointLight(0x8745e3, quality === 'high' ? 3.2 : 2.1, 8, 2);
   openGlow.name = 'COMPASS_BOOK_VIOLET_PAGE_LIGHT';
   openGlow.position.set(0, 2.2, 0.15);
   root.add(openGlow);
@@ -3215,7 +3272,7 @@ export function createCompassBookThreeModel(
     innerCompass.root.visible = innerCompassVisible;
     livingHorizon.root.visible = livingHorizonVisible;
     ikigaiMap.root.visible = ikigaiMapVisible;
-    openGlow.intensity = THREE.MathUtils.lerp(0.08, quality === 'high' ? 5.4 : 3.2, eased);
+    openGlow.intensity = THREE.MathUtils.lerp(0.08, quality === 'high' ? 3.2 : 2.1, eased);
   }
 
   function setActivePage(pageId: string) {
@@ -3240,6 +3297,48 @@ export function createCompassBookThreeModel(
     ikigaiMap.root.visible = openProgress > 0.43 && pageId === 'ikigai_map';
     (coverCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
     (readingCompass.glow.material as THREE.MeshBasicMaterial).opacity = readingActive ? 0.28 : 0.12;
+  }
+
+  function setCelebrationProgress(
+    progress: number,
+    strength: number,
+    kind: 'fragment' | 'chapter',
+    reducedMotion: boolean,
+  ) {
+    const clampedProgress = THREE.MathUtils.clamp(progress, 0, 1);
+    const clampedStrength = THREE.MathUtils.clamp(strength, 0, 1);
+    const chapterCelebration = kind === 'chapter' && selectedPageId === 'ikigai_map';
+    const fragmentCelebration = kind === 'fragment' && selectedPageId === 'ikigai_map';
+
+    ikigaiMap.forceNodes.forEach((node, index) => {
+      const staggeredProgress = THREE.MathUtils.clamp(clampedProgress * 1.8 - index * 0.14, 0, 1);
+      const nodeWave = chapterCelebration
+        ? Math.sin(staggeredProgress * Math.PI) * clampedStrength
+        : 0;
+      const nodeScale = reducedMotion ? 1 : 1 + nodeWave * 0.11;
+      node.scale.setScalar(nodeScale);
+      if (!reducedMotion) node.position.y += nodeWave * 0.065;
+    });
+
+    const trialPulse = chapterCelebration || fragmentCelebration
+      ? Math.sin(clampedProgress * Math.PI) * clampedStrength
+      : 0;
+    if (!reducedMotion) {
+      ikigaiMap.trialCrystal.scale.x *= 1 + trialPulse * 0.12;
+      ikigaiMap.trialCrystal.scale.y *= 1 + trialPulse * 0.16;
+      ikigaiMap.trialCrystal.scale.z *= 1 + trialPulse * 0.12;
+      ikigaiMap.trialRingStack.rotation.y += trialPulse * 0.18;
+    }
+    ikigaiMap.candidatePathMaterials.forEach((material, index) => {
+      const pathFill = chapterCelebration
+        ? THREE.MathUtils.clamp(clampedProgress * 1.65 - index * 0.18, 0, 1)
+        : fragmentCelebration ? trialPulse : 0;
+      material.emissiveIntensity += pathFill * clampedStrength * 0.46;
+    });
+
+    const mirageRecession = chapterCelebration ? clampedStrength * 0.06 : 0;
+    ikigaiMap.mirage.scale.setScalar(reducedMotion ? 1 : 1 - mirageRecession);
+    ikigaiMap.mirage.position.y = reducedMotion ? 0 : -mirageRecession * 0.45;
   }
 
   function setPageTurnProgress(progress: number, direction: -1 | 1) {
@@ -3314,6 +3413,7 @@ export function createCompassBookThreeModel(
     setOpenProgress,
     setActivePage,
     setPageTurnProgress,
+    setCelebrationProgress,
     getPageTarget,
     animate,
     metrics: countMetrics(root),

@@ -1,0 +1,20 @@
+{
+  "referenceAreaFraction": 0.9275222222222222,
+  "angles": [
+    {
+      "path": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/orbit-left.png",
+      "areaFraction": 0.9486358024691358,
+      "ratio": 1.0227634225262314,
+      "degenerate": false
+    },
+    {
+      "path": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-interaction-pass/orbit-right.png",
+      "areaFraction": 0.9187024691358024,
+      "ratio": 0.9904910600790903,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "Interaction pivots preserve the accepted non-degenerate relief silhouette across both axial orbit proofs."
+}

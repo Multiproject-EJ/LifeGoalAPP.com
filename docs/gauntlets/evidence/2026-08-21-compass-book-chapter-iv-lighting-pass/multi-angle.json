@@ -1,0 +1,20 @@
+{
+  "referenceAreaFraction": 0.9275234567901235,
+  "angles": [
+    {
+      "path": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/orbit-left.png",
+      "areaFraction": 0.9486370370370371,
+      "ratio": 1.0227633922272772,
+      "degenerate": false
+    },
+    {
+      "path": "docs/gauntlets/evidence/2026-08-21-compass-book-chapter-iv-lighting-pass/orbit-right.png",
+      "areaFraction": 0.9186987654320987,
+      "ratio": 0.9904857485884353,
+      "degenerate": false
+    }
+  ],
+  "degenerate": false,
+  "collapseRatio": 0.15,
+  "note": "Deterministic orbit gate passed; the matched, neutral, and grazing captures separately prove that the material hierarchy is not an artifact of one light direction."
+}

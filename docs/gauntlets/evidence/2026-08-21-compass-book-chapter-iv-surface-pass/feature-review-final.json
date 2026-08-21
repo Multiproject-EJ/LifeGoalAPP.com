@@ -1,0 +1,20 @@
+[
+  {
+    "id": "page-contact-depth",
+    "score": 0.84,
+    "passed": true,
+    "notes": "The fixed and orbit views preserve bezel thickness, socket overlap, rail relief, and grounded page contact while the stronger gilt breakup keeps crowns and cavities distinct."
+  },
+  {
+    "id": "material-light-hierarchy",
+    "score": 0.82,
+    "passed": true,
+    "notes": "The corrected navy field remains subordinate but visibly grained; aged gilt, colored enamel, faceted Trial, and matte Mirage retain separate highlight behavior."
+  },
+  {
+    "id": "surface-microrelief",
+    "score": 0.8,
+    "passed": true,
+    "notes": "The close grazing capture now exposes crossed leather grain, uneven gilt response, enamel orange-peel, and localized crystal/mirage bump without noisy geometry."
+  }
+]
